@@ -337,18 +337,28 @@ void FilterFieldConvert::OutputField(
     }
     m_modules[m_modules.size()-1]->RegisterConfig("outfile", outname.str());
 
-    // Prevent checking before overwritting
+    // Prevent checking before overwriting
     po::options_description desc("Available options");
         desc.add_options()
             ("forceoutput,f",
                 "Force the output to be written without any checks");
     po::variables_map vm;
     vm.insert(std::make_pair("forceoutput", po::variable_value()));
+
+    // Check if modules provided are compatible
+    CheckModules(m_modules);
+
     // Run field process.
-    for (int i = 0; i < m_modules.size(); ++i)
+    for (int n = 0; n < SIZE_ModulePriority; ++n)
     {
-        m_modules[i]->Process(vm);
-        cout.flush();
+        ModulePriority priority = static_cast<ModulePriority>(n);
+        for (int i = 0; i < m_modules.size(); ++i)
+        {
+            if(m_modules[i]->GetModulePriority() == priority)
+            {
+                m_modules[i]->Process(vm);
+            }
+        }
     }
 
     // Empty m_f to save memory
@@ -469,7 +479,7 @@ void FilterFieldConvert::CreateFields(
     int nfield;
     for (int n = 0; n < m_variables.size(); ++n)
     {
-        // if n >= pFields.num_elements() assum we have used n=0 field
+        // if n >= pFields.num_elements() assume we have used n=0 field
         nfield = (n < pFields.num_elements())? n: 0;
         
         m_f->m_exp[n] = m_f->AppendExpList(
@@ -486,19 +496,7 @@ void FilterFieldConvert::CreateFields(
         m_f->m_exp[n]->BwdTrans( m_f->m_exp[n]->GetCoeffs(),
                                  m_f->m_exp[n]->UpdatePhys());
     }
-    std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef =
-        pFields[0]->GetFieldDefinitions();
-    std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
-    for (int n = 0; n < m_outFields.size(); ++n)
-    {
-        for (int i = 0; i < FieldDef.size(); ++i)
-        {
-            FieldDef[i]->m_fields.push_back(m_variables[n]);
-            m_f->m_exp[n]->AppendFieldData(FieldDef[i], FieldData[i]);
-        }
-    }
-    m_f->m_fielddef = FieldDef;
-    m_f->m_data     = FieldData;
+    m_f->m_variables= m_variables;
 }
 
 void FilterFieldConvert::ClearFields()
@@ -507,6 +505,43 @@ void FilterFieldConvert::ClearFields()
     m_f->m_exp.clear();
     m_f->m_fielddef = std::vector<LibUtilities::FieldDefinitionsSharedPtr>();
     m_f->m_data = std::vector<std::vector<NekDouble> > ();
+}
+
+// This function checks validity conditions for the list of modules provided
+void FilterFieldConvert::CheckModules(vector<ModuleSharedPtr> &modules)
+{
+    // Count number of modules by priority
+    Array< OneD, int>  modulesCount(SIZE_ModulePriority,0);
+    for (int i = 0; i < modules.size(); ++i)
+    {
+        ++modulesCount[modules[i]->GetModulePriority()];
+    }
+
+    // FilterFieldConvert already starts with m_exp, so anything before
+    //    eModifyExp is not valid
+    if( modulesCount[eCreateGraph] != 0 ||
+        modulesCount[eCreateFieldData] != 0 ||
+        modulesCount[eModifyFieldData] != 0 ||
+        modulesCount[eCreateExp] != 0 ||
+        modulesCount[eFillExp] != 0)
+    {
+        stringstream ss;
+        ss << "Module(s): ";
+        for (int i = 0; i < modules.size(); ++i)
+        {
+            if(modules[i]->GetModulePriority() == eCreateGraph ||
+               modules[i]->GetModulePriority() == eCreateFieldData ||
+               modules[i]->GetModulePriority() == eModifyFieldData ||
+               modules[i]->GetModulePriority() == eCreateExp ||
+               modules[i]->GetModulePriority() == eFillExp )
+            {
+                ss << modules[i]->GetModuleName()<<" ";
+            }
+        }
+        ss << "not compatible with FilterFieldConvert.";
+        ASSERTL0(false, ss.str());
+    }
+
 }
 
 }

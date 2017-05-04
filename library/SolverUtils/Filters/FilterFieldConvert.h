@@ -112,6 +112,8 @@ protected:
 
     void ClearFields();
 
+    void CheckModules(vector<ModuleSharedPtr> &modules);
+
     unsigned int m_numSamples;
     unsigned int m_outputFrequency;
     unsigned int m_sampleFrequency;

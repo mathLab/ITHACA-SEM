@@ -67,21 +67,21 @@ void ProcessVorticity::Process(po::variables_map &vm)
 {
     int i, s;
     int expdim   = m_f->m_graph->GetMeshDimension();
-    int spacedim = expdim;
+    m_spacedim = expdim;
     if ((m_f->m_numHomogeneousDir) == 1 || (m_f->m_numHomogeneousDir) == 2)
     {
-        spacedim = 3;
+        m_spacedim = 3;
     }
     int nfields = m_f->m_variables.size();
-    if (spacedim == 1)
+    if (m_spacedim == 1)
     {
         ASSERTL0(false, "Error: Vorticity for a 1D problem cannot "
                         "be computed")
     }
-    int addfields = (spacedim == 2) ? 1 : 3;
+    int addfields = (m_spacedim == 2) ? 1 : 3;
 
     int npoints = m_f->m_exp[0]->GetNpoints();
-    Array<OneD, Array<OneD, NekDouble> > grad(spacedim * spacedim);
+    Array<OneD, Array<OneD, NekDouble> > grad(m_spacedim * m_spacedim);
     Array<OneD, Array<OneD, NekDouble> > outfield(addfields);
 
     int nstrips;
@@ -90,7 +90,7 @@ void ProcessVorticity::Process(po::variables_map &vm)
 
     m_f->m_exp.resize(nfields * nstrips);
 
-    for (i = 0; i < spacedim * spacedim; ++i)
+    for (i = 0; i < m_spacedim * m_spacedim; ++i)
     {
         grad[i] = Array<OneD, NekDouble>(npoints);
     }
@@ -100,8 +100,8 @@ void ProcessVorticity::Process(po::variables_map &vm)
         outfield[i] = Array<OneD, NekDouble>(npoints);
     }
 
-    Array<OneD, Array<OneD, NekDouble> > tmp(spacedim);
-    for (int i = 0; i < spacedim; i++)
+    Array<OneD, Array<OneD, NekDouble> > tmp(m_spacedim);
+    for (int i = 0; i < m_spacedim; i++)
     {
         tmp[i] = Array<OneD, NekDouble>(npoints);
     }
@@ -115,25 +115,18 @@ void ProcessVorticity::Process(po::variables_map &vm)
     {
         // Get velocity and convert to Cartesian system,
         //      if it is still in transformed system
-        Array<OneD, Array<OneD, NekDouble> > vel(spacedim);
+        Array<OneD, Array<OneD, NekDouble> > vel(m_spacedim);
+        GetVelocity(vel, s);
         if (m_f->m_fieldMetaDataMap.count("MappingCartesianVel"))
         {
             if (m_f->m_fieldMetaDataMap["MappingCartesianVel"] == "False")
             {
                 // Initialize arrays and copy velocity
-                for (int i = 0; i < spacedim; ++i)
+                if (m_f->m_exp[0]->GetWaveSpace())
                 {
-                    vel[i] = Array<OneD, NekDouble>(npoints);
-                    if (m_f->m_exp[0]->GetWaveSpace())
+                    for (int i = 0; i < m_spacedim; ++i)
                     {
-                        m_f->m_exp[0]->HomogeneousBwdTrans(
-                            m_f->m_exp[s * nfields + i]->GetPhys(), vel[i]);
-                    }
-                    else
-                    {
-                        Vmath::Vcopy(npoints,
-                                     m_f->m_exp[s * nfields + i]->GetPhys(), 1,
-                                     vel[i], 1);
+                        m_f->m_exp[0]->HomogeneousBwdTrans(vel[i], vel[i]);
                     }
                 }
                 // Convert velocity to cartesian system
@@ -141,71 +134,52 @@ void ProcessVorticity::Process(po::variables_map &vm)
                 // Convert back to wavespace if necessary
                 if (m_f->m_exp[0]->GetWaveSpace())
                 {
-                    for (int i = 0; i < spacedim; ++i)
+                    for (int i = 0; i < m_spacedim; ++i)
                     {
                         m_f->m_exp[0]->HomogeneousFwdTrans(vel[i], vel[i]);
                     }
                 }
             }
-            else
-            {
-                for (int i = 0; i < spacedim; ++i)
-                {
-                    vel[i] = Array<OneD, NekDouble>(npoints);
-                    Vmath::Vcopy(npoints,
-                                 m_f->m_exp[s * nfields + i]->GetPhys(), 1,
-                                 vel[i], 1);
-                }
-            }
-        }
-        else
-        {
-            for (int i = 0; i < spacedim; ++i)
-            {
-                vel[i] = Array<OneD, NekDouble>(npoints);
-                Vmath::Vcopy(npoints, m_f->m_exp[s * nfields + i]->GetPhys(), 1,
-                             vel[i], 1);
-            }
         }
 
         // Calculate Gradient & Vorticity
-        if (spacedim == 2)
+        if (m_spacedim == 2)
         {
-            for (i = 0; i < spacedim; ++i)
+            for (i = 0; i < m_spacedim; ++i)
             {
                 m_f->m_exp[s * nfields + i]->PhysDeriv(vel[i], tmp[0], tmp[1]);
                 mapping->CovarToCartesian(tmp, tmp);
-                for (int j = 0; j < spacedim; j++)
+                for (int j = 0; j < m_spacedim; j++)
                 {
-                    Vmath::Vcopy(npoints, tmp[j], 1, grad[i * spacedim + j], 1);
+                    Vmath::Vcopy(npoints, tmp[j], 1, grad[i * m_spacedim + j], 1);
                 }
             }
             // W_z = Vx - Uy
-            Vmath::Vsub(npoints, grad[1 * spacedim + 0], 1,
-                        grad[0 * spacedim + 1], 1, outfield[0], 1);
+            Vmath::Vsub(npoints, grad[1 * m_spacedim + 0], 1,
+                        grad[0 * m_spacedim + 1], 1, outfield[0], 1);
         }
         else
         {
-            for (i = 0; i < spacedim; ++i)
+            for (i = 0; i < m_spacedim; ++i)
             {
                 m_f->m_exp[s * nfields + i]->PhysDeriv(vel[i], tmp[0], tmp[1],
                                                        tmp[2]);
                 mapping->CovarToCartesian(tmp, tmp);
-                for (int j = 0; j < spacedim; j++)
+                for (int j = 0; j < m_spacedim; j++)
                 {
-                    Vmath::Vcopy(npoints, tmp[j], 1, grad[i * spacedim + j], 1);
+                    Vmath::Vcopy(npoints, tmp[j], 1, grad[i * m_spacedim + j], 1);
                 }
             }
 
             // W_x = Wy - Vz
-            Vmath::Vsub(npoints, grad[2 * spacedim + 1], 1,
-                        grad[1 * spacedim + 2], 1, outfield[0], 1);
+            Vmath::Vsub(npoints, grad[2 * m_spacedim + 1], 1,
+                        grad[1 * m_spacedim + 2], 1, outfield[0], 1);
             // W_y = Uz - Wx
-            Vmath::Vsub(npoints, grad[0 * spacedim + 2], 1,
-                        grad[2 * spacedim + 0], 1, outfield[1], 1);
+            Vmath::Vsub(npoints, grad[0 * m_spacedim + 2], 1,
+                        grad[2 * m_spacedim + 0], 1, outfield[1], 1);
             // W_z = Vx - Uy
-            Vmath::Vsub(npoints, grad[1 * spacedim + 0], 1,
-                        grad[0 * spacedim + 1], 1, outfield[2], 1);
+            Vmath::Vsub(npoints, grad[1 * m_spacedim + 0], 1,
+                        grad[0 * m_spacedim + 1], 1, outfield[2], 1);
         }
 
         for (i = 0; i < addfields; ++i)
@@ -239,5 +213,42 @@ void ProcessVorticity::Process(po::variables_map &vm)
         m_f->m_variables.push_back("W_z");
     }
 }
+
+void ProcessVorticity::GetVelocity( Array<OneD, Array<OneD, NekDouble> > &vel,
+                                    int strip)
+{
+    int nfields = m_f->m_variables.size();
+    int npoints = m_f->m_exp[0]->GetNpoints();
+    if(boost::iequals(m_f->m_variables[0], "u"))
+    {
+        // IncNavierStokesSolver
+        for (int i = 0; i < m_spacedim; ++i)
+        {
+            vel[i] = Array<OneD, NekDouble>(npoints);
+            Vmath::Vcopy(npoints,
+                         m_f->m_exp[strip * nfields + i]->GetPhys(), 1,
+                         vel[i], 1);
+        }
+    }
+    else if(boost::iequals(m_f->m_variables[0], "rho") &&
+            boost::iequals(m_f->m_variables[1], "rhou"))
+    {
+        // CompressibleFlowSolver
+        for (int i = 0; i < m_spacedim; ++i)
+        {
+            vel[i] = Array<OneD, NekDouble>(npoints);
+            Vmath::Vdiv(npoints,
+                         m_f->m_exp[strip * nfields + i + 1]->GetPhys(), 1,
+                         m_f->m_exp[strip * nfields + 0    ]->GetPhys(), 1,
+                         vel[i], 1);
+        }
+    }
+    else
+    {
+        // Unknown
+        ASSERTL0(false, "Could not identify velocity for ProcessVorticity");
+    }
+}
+
 }
 }

@@ -77,6 +77,12 @@ public:
         return eModifyExp;
     }
 
+protected:
+    void GetVelocity( Array<OneD, Array<OneD, NekDouble> > &vel, int strip = 0);
+
+private:
+    int     m_spacedim;
+
 };
 }
 }

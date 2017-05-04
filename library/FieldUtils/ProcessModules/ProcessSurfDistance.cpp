@@ -71,9 +71,6 @@ void ProcessSurfDistance::Process(po::variables_map &vm)
 
     ASSERTL0(surf >= 0, "Invalid surface " + boost::lexical_cast<string>(surf));
 
-    // Add this boundary region to the list that we will output.
-    m_f->m_bndRegionsToWrite.push_back(surf);
-
     // Remove existing fields.
     m_f->m_exp.resize(1);
     m_f->m_variables.resize(1);

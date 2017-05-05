@@ -149,6 +149,10 @@ FilterFieldConvert::FilterFieldConvert(
     modcmds.push_back(m_outputFile);
     // Create modules
     CreateModules(modcmds);
+    // Strip options from m_outputFile
+    vector<string> tmp;
+    boost::split(tmp, m_outputFile, boost::is_any_of(":"));
+    m_outputFile = tmp[0];
 }
 
 FilterFieldConvert::~FilterFieldConvert()

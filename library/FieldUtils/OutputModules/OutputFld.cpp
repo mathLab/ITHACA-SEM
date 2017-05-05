@@ -69,12 +69,26 @@ void OutputFld::Process(po::variables_map &vm)
     // Extract the output filename and extension
     string filename = m_config["outfile"].as<string>();
 
+    // Get IO format
+    std::string iofmt("Xml");
+    if (m_f->m_session->DefinesSolverInfo("IOFormat"))
+    {
+        iofmt = m_f->m_session->GetSolverInfo("IOFormat");
+    }
+    if (m_f->m_session->DefinesCmdLineArgument("io-format"))
+    {
+        iofmt = m_f->m_session->GetCmdLineArgument<std::string>("io-format");
+    }
+    if(m_config["format"].m_beenSet)
+    {
+        iofmt = m_config["format"].as<string>();
+    }
+
     // Set up communicator and FieldIO object.
     LibUtilities::CommSharedPtr c = m_f->m_session ? m_f->m_session->GetComm() :
         LibUtilities::GetCommFactory().CreateInstance("Serial", 0, 0);
     LibUtilities::FieldIOSharedPtr fld =
-        LibUtilities::GetFieldIOFactory().CreateInstance(
-            m_config["format"].as<string>(), c, true);
+        LibUtilities::GetFieldIOFactory().CreateInstance(iofmt, c, true);
 
     if (m_f->m_writeBndFld)
     {

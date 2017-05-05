@@ -71,13 +71,17 @@ void OutputFld::Process(po::variables_map &vm)
 
     // Get IO format
     std::string iofmt("Xml");
-    if (m_f->m_session->DefinesSolverInfo("IOFormat"))
+    if(m_f->m_session)
     {
-        iofmt = m_f->m_session->GetSolverInfo("IOFormat");
-    }
-    if (m_f->m_session->DefinesCmdLineArgument("io-format"))
-    {
-        iofmt = m_f->m_session->GetCmdLineArgument<std::string>("io-format");
+        if (m_f->m_session->DefinesSolverInfo("IOFormat"))
+        {
+            iofmt = m_f->m_session->GetSolverInfo("IOFormat");
+        }
+        if (m_f->m_session->DefinesCmdLineArgument("io-format"))
+        {
+            iofmt =
+                m_f->m_session->GetCmdLineArgument<std::string>("io-format");
+        }
     }
     if(m_config["format"].m_beenSet)
     {

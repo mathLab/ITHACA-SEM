@@ -852,6 +852,27 @@ namespace Nektar
                                     getNumberOfBndCoefficients(P, Q, R);
         }
 
+        int StdPyrExp::v_NumDGBndryCoeffs() const
+        {
+            ASSERTL1(GetBasisType(0) == LibUtilities::eModified_A ||
+                     GetBasisType(0) == LibUtilities::eGLL_Lagrange,
+                     "BasisType is not a boundary interior form");
+            ASSERTL1(GetBasisType(1) == LibUtilities::eModified_A ||
+                     GetBasisType(1) == LibUtilities::eGLL_Lagrange,
+                     "BasisType is not a boundary interior form");
+            ASSERTL1(GetBasisType(2) == LibUtilities::eModifiedPyr_C ||
+                     GetBasisType(2) == LibUtilities::eGLL_Lagrange,
+                     "BasisType is not a boundary interior form");
+
+            int P = m_base[0]->GetNumModes()-1;
+            int Q = m_base[1]->GetNumModes()-1;
+            int R = m_base[2]->GetNumModes()-1;
+
+            return (P+1)*(Q+1)               // 1 rect. face on base
+                + 2*(R+1) + P*(1 + 2*R - P)  // 2 tri. (P,R) faces
+                + 2*(R+1) + Q*(1 + 2*R - Q); // 2 tri. (Q,R) faces
+        }
+        
         int StdPyrExp::v_GetEdgeNcoeffs(const int i) const
         {
             ASSERTL2(i >= 0 && i <= 7, "edge id is out of range");

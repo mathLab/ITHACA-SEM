@@ -308,7 +308,7 @@ fs::path OutputVtk::GetFullOutName(std::string &filename,
     {
         // Guess at filename that might belong to this process.
         boost::format pad("P%1$07d.%2$s");
-        pad % m_f->m_comm->GetRank() % ".vtu";
+        pad % m_f->m_comm->GetRank() % "vtu";
 
         // Generate full path name
         fs::path specPath = GetPath(filename, vm);

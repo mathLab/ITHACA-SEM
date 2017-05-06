@@ -83,7 +83,7 @@ void OutputFld::OutputFromExp(po::variables_map &vm)
         LibUtilities::GetCommFactory().CreateInstance("Serial", 0, 0);
     LibUtilities::FieldIOSharedPtr fld =
         LibUtilities::GetFieldIOFactory().CreateInstance(
-            m_config["format"].as<string>(), c, true);
+            GetIOFormat(), c, true);
 
     int i, j, s;
     int nfields = m_f->m_variables.size();
@@ -160,10 +160,32 @@ void OutputFld::OutputFromData(po::variables_map &vm)
         LibUtilities::GetCommFactory().CreateInstance("Serial", 0, 0);
     LibUtilities::FieldIOSharedPtr fld =
         LibUtilities::GetFieldIOFactory().CreateInstance(
-            m_config["format"].as<string>(), c, true);
+            GetIOFormat(), c, true);
 
     fld->Write(filename, m_f->m_fielddef, m_f->m_data,
                    m_f->m_fieldMetaDataMap);
+}
+
+std::string OutputFld::GetIOFormat()
+{
+    std::string iofmt("Xml");
+    if(m_f->m_session)
+    {
+        if (m_f->m_session->DefinesSolverInfo("IOFormat"))
+        {
+            iofmt = m_f->m_session->GetSolverInfo("IOFormat");
+        }
+        if (m_f->m_session->DefinesCmdLineArgument("io-format"))
+        {
+            iofmt =
+                m_f->m_session->GetCmdLineArgument<std::string>("io-format");
+        }
+    }
+    if(m_config["format"].m_beenSet)
+    {
+        iofmt = m_config["format"].as<string>();
+    }
+    return iofmt;
 }
 
 }

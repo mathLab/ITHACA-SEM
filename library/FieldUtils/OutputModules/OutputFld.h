@@ -77,6 +77,9 @@ public:
         return "Writing file";
     }
 
+private:
+    std::string GetIOFormat();
+
 };
 }
 }

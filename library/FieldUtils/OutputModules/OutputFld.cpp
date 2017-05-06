@@ -66,8 +66,7 @@ OutputFld::~OutputFld()
 
 void OutputFld::OutputFromPts(po::variables_map &vm)
 {
-    //ASSERTL0(false, "OutputFld can't write using Pts information.");
-    OutputFromExp(vm);
+    ASSERTL0(false, "OutputFld can't write using Pts information.");
 }
 
 void OutputFld::OutputFromExp(po::variables_map &vm)

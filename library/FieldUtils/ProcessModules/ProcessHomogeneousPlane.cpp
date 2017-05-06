@@ -73,6 +73,13 @@ void ProcessHomogeneousPlane::Process(po::variables_map &vm)
         ASSERTL0(false,
                  "ProcessHomogeneousPlane only works for Homogeneous1D.");
     }
+    m_f->m_numHomogeneousDir = 0;
+
+    // Skip in case of empty partition
+    if (m_f->m_exp[0]->GetNumElmts() == 0)
+    {
+        return;
+    }
 
     ASSERTL0(m_config["planeid"].m_beenSet,
              "Missing parameter planeid for ProcessHomogeneousPlane");
@@ -127,7 +134,6 @@ void ProcessHomogeneousPlane::Process(po::variables_map &vm)
             }
         }
     }
-    m_f->m_numHomogeneousDir = 0;
 }
 }
 }

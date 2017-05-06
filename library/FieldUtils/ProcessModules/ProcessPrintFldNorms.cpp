@@ -63,6 +63,12 @@ ProcessPrintFldNorms::~ProcessPrintFldNorms()
 
 void ProcessPrintFldNorms::Process(po::variables_map &vm)
 {
+    // Skip in case of empty partition
+    if (m_f->m_exp[0]->GetNumElmts() == 0)
+    {
+        return;
+    }
+
     // Evaluate norms and print
     for (int j = 0; j < m_f->m_exp.size(); ++j)
     {

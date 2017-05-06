@@ -64,6 +64,12 @@ ProcessGrad::~ProcessGrad()
 
 void ProcessGrad::Process(po::variables_map &vm)
 {
+    // Skip in case of empty partition
+    if (m_f->m_exp[0]->GetNumElmts() == 0)
+    {
+        return;
+    }
+
     int i, j;
     int expdim    = m_f->m_graph->GetMeshDimension();
     int spacedim  = m_f->m_numHomogeneousDir + expdim;

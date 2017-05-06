@@ -61,6 +61,12 @@ ProcessDeform::~ProcessDeform()
 
 void ProcessDeform::Process(po::variables_map &vm)
 {
+    // Skip in case of empty partition
+    if (m_f->m_exp[0]->GetNumElmts() == 0)
+    {
+        return;
+    }
+
     Array<OneD, MultiRegions::ExpListSharedPtr> exp(m_f->m_exp.size());
 
     for (int i = 0; i < exp.num_elements(); ++i)

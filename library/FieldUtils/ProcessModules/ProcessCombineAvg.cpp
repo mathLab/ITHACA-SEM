@@ -69,6 +69,12 @@ ProcessCombineAvg::~ProcessCombineAvg()
 
 void ProcessCombineAvg::Process(po::variables_map &vm)
 {
+    // Skip in case of empty partition
+    if (m_f->m_exp[0]->GetNumElmts() == 0)
+    {
+        return;
+    }
+
     int nfields  = m_f->m_variables.size();
     int nq       = m_f->m_exp[0]->GetTotPoints();
     int expdim   = m_f->m_graph->GetMeshDimension();

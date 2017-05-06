@@ -66,6 +66,12 @@ ProcessAddCompositeID::~ProcessAddCompositeID()
 
 void ProcessAddCompositeID::Process(po::variables_map &vm)
 {
+    // Skip in case of empty partition
+    if (m_f->m_exp[0]->GetNumElmts() == 0)
+    {
+        return;
+    }
+
     int nfields           = m_f->m_variables.size();
     int NumHomogeneousDir = m_f->m_numHomogeneousDir;
     MultiRegions::ExpListSharedPtr exp;
@@ -94,7 +100,7 @@ void ProcessAddCompositeID::Process(po::variables_map &vm)
     {
         LocalRegions::ExpansionSharedPtr elmt = exp->GetExp(n);
 
-        // loop over composite list and search for geomtry pointer in list
+        // loop over composite list and search for geometry pointer in list
         for (it = CompositeMap.begin(); it != CompositeMap.end(); ++it)
         {
             if (find(it->second->begin(), it->second->end(), elmt->GetGeom()) !=

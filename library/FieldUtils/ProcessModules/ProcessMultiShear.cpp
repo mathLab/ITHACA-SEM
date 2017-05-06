@@ -74,6 +74,12 @@ ProcessMultiShear::~ProcessMultiShear()
 
 void ProcessMultiShear::Process(po::variables_map &vm)
 {
+    // Skip in case of empty partition
+    if (m_f->m_exp[0]->GetNumElmts() == 0)
+    {
+        return;
+    }
+
     int nstart, i, j, nfields=0;
     bool wssg      = false;
     NekDouble nfld = m_config["N"].as<NekDouble>();

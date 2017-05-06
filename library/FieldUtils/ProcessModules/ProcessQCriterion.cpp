@@ -63,6 +63,12 @@ ProcessQCriterion::~ProcessQCriterion()
 
 void ProcessQCriterion::Process(po::variables_map &vm)
 {
+    // Skip in case of empty partition
+    if (m_f->m_exp[0]->GetNumElmts() == 0)
+    {
+        return;
+    }
+
     int i, s;
     int expdim   = m_f->m_graph->GetMeshDimension();
     int spacedim = expdim;

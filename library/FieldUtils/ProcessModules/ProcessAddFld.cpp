@@ -157,6 +157,12 @@ void ProcessAddFld::Process(po::variables_map &vm)
     }
     else
     {
+        // Skip in case of empty partition
+        if (m_f->m_exp[0]->GetNumElmts() == 0)
+        {
+            return;
+        }
+
         int nfields = m_f->m_variables.size();
         int ncoeffs = m_f->m_exp[0]->GetNcoeffs();
         Array<OneD, NekDouble> SaveFld(ncoeffs);

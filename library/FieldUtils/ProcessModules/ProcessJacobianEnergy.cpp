@@ -66,6 +66,12 @@ ProcessJacobianEnergy::~ProcessJacobianEnergy()
 
 void ProcessJacobianEnergy::Process(po::variables_map &vm)
 {
+    // Skip in case of empty partition
+    if (m_f->m_exp[0]->GetNumElmts() == 0)
+    {
+        return;
+    }
+
     Array<OneD, NekDouble> phys   = m_f->m_exp[0]->UpdatePhys();
     Array<OneD, NekDouble> coeffs = m_f->m_exp[0]->UpdateCoeffs();
     Array<OneD, NekDouble> tmp;

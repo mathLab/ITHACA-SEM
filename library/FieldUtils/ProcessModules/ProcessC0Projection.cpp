@@ -74,6 +74,12 @@ ProcessC0Projection::~ProcessC0Projection()
 
 void ProcessC0Projection::Process(po::variables_map &vm)
 {
+    // Skip in case of empty partition
+    if (m_f->m_exp[0]->GetNumElmts() == 0)
+    {
+        return;
+    }
+
     // ensure not using diagonal preconditioner since tends not to converge fo
     // mass matrix
     if (m_f->m_graph->GetMeshDimension() == 3)

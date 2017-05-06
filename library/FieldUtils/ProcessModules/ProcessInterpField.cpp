@@ -193,19 +193,6 @@ void ProcessInterpField::Process(po::variables_map &vm)
 
     int nq1 = m_f->m_exp[0]->GetTotPoints();
 
-    Array<OneD, NekDouble> x1(nq1);
-    Array<OneD, NekDouble> y1(nq1);
-    Array<OneD, NekDouble> z1(nq1);
-
-    if (coordim == 2)
-    {
-        m_f->m_exp[0]->GetCoords(x1, y1);
-    }
-    else if (coordim == 3)
-    {
-        m_f->m_exp[0]->GetCoords(x1, y1, z1);
-    }
-
     NekDouble clamp_low = m_config["clamptolowervalue"].as<NekDouble>();
     NekDouble clamp_up  = m_config["clamptouppervalue"].as<NekDouble>();
     NekDouble def_value = m_config["defaultvalue"].as<NekDouble>();

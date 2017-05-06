@@ -58,6 +58,12 @@ public:
     OutputVtk(FieldSharedPtr f);
     virtual ~OutputVtk();
 
+    virtual std::string GetModuleName()
+    {
+        return "OutputVtk";
+    }
+
+protected:
     /// Write from pts to output file.
     virtual void OutputFromPts(po::variables_map &vm);
 
@@ -67,10 +73,11 @@ public:
     /// Write from data to output file.
     virtual void OutputFromData(po::variables_map &vm);
 
-    virtual std::string GetModuleName()
-    {
-        return "OutputVtk";
-    }
+    virtual fs::path GetPath(std::string &filename,
+                                    po::variables_map &vm);
+
+    virtual fs::path GetFullOutName(std::string &filename,
+                                    po::variables_map &vm);
 
 private:
     void WriteVtkHeader(std::ostream &outfile);
@@ -79,11 +86,9 @@ private:
 
     void WriteEmptyVtkPiece(std::ofstream &outfile);
 
-    void WritePVtu();
+    void WritePVtu(po::variables_map &vm);
 
-    std::string GetFullOutName();
-
-    std::string GetPath();
+    std::string PrepareOutput(po::variables_map &vm);
 };
 }
 }

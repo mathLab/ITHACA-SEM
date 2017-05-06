@@ -135,6 +135,34 @@ void OutputFld::OutputFromData(po::variables_map &vm)
                    m_f->m_fieldMetaDataMap);
 }
 
+fs::path OutputFld::GetPath(std::string &filename,
+                            po::variables_map &vm)
+{
+    return   fs::path(filename);
+}
+
+fs::path OutputFld::GetFullOutName(std::string &filename,
+                            po::variables_map &vm)
+{
+    int nprocs = m_f->m_comm->GetSize();
+    fs::path specPath(filename), fulloutname;
+    if (nprocs == 1)
+    {
+        fulloutname = specPath;
+    }
+    else
+    {
+        // Guess at filename that might belong to this process.
+        boost::format pad("P%1$07d.%2$s");
+        pad % m_f->m_comm->GetRank() % "fld";
+
+        // Generate full path name
+        fs::path poutfile(pad.str());
+        fulloutname = specPath / poutfile;
+    }
+    return   fulloutname;
+}
+
 std::string OutputFld::GetIOFormat()
 {
     std::string iofmt("Xml");

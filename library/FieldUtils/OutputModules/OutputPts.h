@@ -58,6 +58,12 @@ public:
     OutputPts(FieldSharedPtr f);
     virtual ~OutputPts();
 
+    virtual std::string GetModuleName()
+    {
+        return "OutputPts";
+    }
+
+protected:
     /// Write from pts to output file.
     virtual void OutputFromPts(po::variables_map &vm);
 
@@ -67,10 +73,12 @@ public:
     /// Write from data to output file.
     virtual void OutputFromData(po::variables_map &vm);
 
-    virtual std::string GetModuleName()
-    {
-        return "OutputPts";
-    }
+    virtual fs::path GetPath(std::string &filename,
+                                    po::variables_map &vm);
+
+    virtual fs::path GetFullOutName(std::string &filename,
+                                    po::variables_map &vm);
+
 };
 }
 }

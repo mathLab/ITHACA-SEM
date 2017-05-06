@@ -287,18 +287,12 @@ void OutputTecplot::OutputFromData(po::variables_map &vm)
     ASSERTL0(false, "OutputTecplot can't write using only FieldData.");
 }
 
-void OutputTecplot::WriteTecplotFile(po::variables_map &vm)
+fs::path OutputTecplot::GetPath(std::string &filename,
+                                    po::variables_map &vm)
 {
-    // Extract the output filename and extension
-    string filename = m_config["outfile"].as<string>();
-
-    // Variable names
-    std::string coordVars[] = { "x", "y", "z" };
-    vector<string> variables = m_f->m_variables;
-    variables.insert(variables.begin(), coordVars, coordVars + m_coordim);
-
     int nprocs = m_f->m_comm->GetSize();
     int rank   = m_f->m_comm->GetRank();
+    string       returnstr(filename);
 
     if(m_config["writemultiplefiles"].as<bool>())
     {
@@ -306,7 +300,7 @@ void OutputTecplot::WriteTecplotFile(po::variables_map &vm)
     }
     else
     {
-        m_oneOutputFile = nprocs > 1;
+        m_oneOutputFile = (nprocs > 1) && (vm.count("procid") == 0 );
     }
 
     // Amend for parallel output if required
@@ -316,14 +310,36 @@ void OutputTecplot::WriteTecplotFile(po::variables_map &vm)
         string ext    = filename.substr(dot, filename.length() - dot);
         string procId = "_P" + boost::lexical_cast<std::string>(rank);
         string start  = filename.substr(0, dot);
-        filename      = start + procId + ext;
+        returnstr     = start + procId + ext;
     }
+    return   fs::path(returnstr);
+}
+
+fs::path OutputTecplot::GetFullOutName(std::string &filename,
+                                        po::variables_map &vm)
+{
+    return   GetPath(filename, vm);
+}
+
+void OutputTecplot::WriteTecplotFile(po::variables_map &vm)
+{
+    // Extract the output filename and extension
+    string filename = m_config["outfile"].as<string>();
+    string outFile  = LibUtilities::PortablePath(GetFullOutName(filename, vm));
+
+    // Variable names
+    std::string coordVars[] = { "x", "y", "z" };
+    vector<string> variables = m_f->m_variables;
+    variables.insert(variables.begin(), coordVars, coordVars + m_coordim);
+
+    int nprocs = m_f->m_comm->GetSize();
+    int rank   = m_f->m_comm->GetRank();
 
     // Open output file
     ofstream outfile;
     if ((m_oneOutputFile && rank == 0) || !m_oneOutputFile)
     {
-        outfile.open(filename.c_str(), m_binary ? ios::binary : ios::out);
+        outfile.open(outFile.c_str(), m_binary ? ios::binary : ios::out);
     }
 
     if (m_oneOutputFile)

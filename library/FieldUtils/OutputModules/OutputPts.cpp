@@ -112,5 +112,17 @@ void OutputPts::OutputFromData(po::variables_map &vm)
     ASSERTL0(false, "OutputPts can't write using only FieldData.");
 }
 
+fs::path OutputPts::GetPath(std::string &filename,
+                            po::variables_map &vm)
+{
+    return   fs::path(filename);
+}
+
+fs::path OutputPts::GetFullOutName(std::string &filename,
+                                po::variables_map &vm)
+{
+    return   fs::path(filename);
+}
+
 }
 }

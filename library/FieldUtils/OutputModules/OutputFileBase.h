@@ -54,15 +54,6 @@ public:
     /// Write fld to output file.
     virtual void Process(po::variables_map &vm);
 
-    /// Write from pts to output file.
-    virtual void OutputFromPts(po::variables_map &vm) = 0;
-
-    /// Write from m_exp to output file.
-    virtual void OutputFromExp(po::variables_map &vm) = 0;
-
-    /// Write from data to output file.
-    virtual void OutputFromData(po::variables_map &vm) = 0;
-
     virtual std::string GetModuleName()
     {
         return "OutputFileBase";
@@ -79,6 +70,21 @@ public:
     }
 
 protected:
+    /// Write from pts to output file.
+    virtual void OutputFromPts(po::variables_map &vm) = 0;
+
+    /// Write from m_exp to output file.
+    virtual void OutputFromExp(po::variables_map &vm) = 0;
+
+    /// Write from data to output file.
+    virtual void OutputFromData(po::variables_map &vm) = 0;
+
+    virtual fs::path GetPath(std::string &filename,
+                                    po::variables_map &vm) = 0;
+
+    virtual fs::path GetFullOutName(std::string &filename,
+                                    po::variables_map &vm) = 0;
+
     bool m_requireEquiSpaced;
 
 private:

@@ -221,11 +221,11 @@ void OutputFileBase::Process(po::variables_map &vm)
 
                 if (BndRegionMap.count(m_f->m_bndRegionsToWrite[i]) == 1)
                 {
+                    RegisterConfig("outfile", outname);
                     if(!WriteFile(outname, vm))
                     {
                         continue;
                     }
-                    RegisterConfig("outfile", outname);
 
                     int Border = BndRegionMap[m_f->m_bndRegionsToWrite[i]];
 
@@ -290,7 +290,18 @@ void OutputFileBase::Process(po::variables_map &vm)
 
 bool OutputFileBase::WriteFile(std::string &filename, po::variables_map &vm)
 {
-    fs::path outFile(filename);
+    // Get path to file. If procid was defined, get the full name
+    //     to avoid checking files from other partitions
+    fs::path outFile;
+    if(vm.count("procid"))
+    {
+        outFile = GetFullOutName(filename, vm);
+    }
+    else
+    {
+        outFile = GetPath(filename, vm);
+    }
+
     int writeFile = 1;
     if (fs::exists(outFile) && (vm.count("forceoutput") == 0))
     {
@@ -310,7 +321,7 @@ bool OutputFileBase::WriteFile(std::string &filename, po::variables_map &vm)
         if (comm->TreatAsRankZero())
         {
             string answer;
-            cout << "Did you wish to overwrite " << filename << " (y/n)? ";
+            cout << "Did you wish to overwrite " << outFile << " (y/n)? ";
             getline(cin, answer);
             if (answer.compare("y") == 0)
             {

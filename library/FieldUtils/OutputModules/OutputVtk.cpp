@@ -65,7 +65,7 @@ void OutputVtk::OutputFromPts(po::variables_map &vm)
     LibUtilities::PtsFieldSharedPtr fPts = m_f->m_fieldPts;
 
     // Extract the output filename and extension
-    string filename = GetFullOutName();
+    string filename = PrepareOutput(vm);
 
     // Write solution.
     ofstream outfile(filename.c_str());
@@ -217,7 +217,7 @@ void OutputVtk::OutputFromPts(po::variables_map &vm)
     if ( (m_f->m_comm->GetRank() == 0) &&
          (m_f->m_comm->GetSize() != 1))
     {
-        WritePVtu();
+        WritePVtu(vm);
         cout << "Written file: " << filename << endl;
     }
 }
@@ -226,7 +226,7 @@ void OutputVtk::OutputFromExp(po::variables_map &vm)
 {
     int i,j;
     // Extract the output filename and extension
-    string filename = GetFullOutName();
+    string filename = PrepareOutput(vm);
 
     // Write solution.
     ofstream outfile(filename.c_str());
@@ -266,13 +266,56 @@ void OutputVtk::OutputFromExp(po::variables_map &vm)
     if ( (m_f->m_comm->GetRank() == 0) &&
          (m_f->m_comm->GetSize() != 1))
     {
-        WritePVtu();
+        WritePVtu(vm);
     }
 }
 
 void OutputVtk::OutputFromData(po::variables_map &vm)
 {
     ASSERTL0(false, "OutputVtk can't write using only FieldData.");
+}
+
+fs::path OutputVtk::GetPath(std::string &filename,
+                            po::variables_map &vm)
+{
+    int nprocs = m_f->m_comm->GetSize();
+    fs::path specPath;
+    if (nprocs == 1)
+    {
+        specPath = fs::path(filename);
+    }
+    else
+    {
+        // replace .vtu by _vtu
+        int    dot  = filename.find_last_of('.');
+        string path = filename.substr(0, dot) + "_vtu";
+        specPath = fs::path(path);
+    }
+    return   fs::path(specPath);
+}
+
+fs::path OutputVtk::GetFullOutName(std::string &filename,
+                                po::variables_map &vm)
+{
+    int nprocs = m_f->m_comm->GetSize();
+
+    fs::path fulloutname;
+    if (nprocs == 1)
+    {
+        fulloutname = filename;
+    }
+    else
+    {
+        // Guess at filename that might belong to this process.
+        boost::format pad("P%1$07d.%2$s");
+        pad % m_f->m_comm->GetRank() % ".vtu";
+
+        // Generate full path name
+        fs::path specPath = GetPath(filename, vm);
+        fs::path poutfile(pad.str());
+        fulloutname = specPath / poutfile;
+    }
+    return   fulloutname;
 }
 
 void OutputVtk::WriteVtkHeader(std::ostream &outfile)
@@ -321,7 +364,7 @@ void OutputVtk::WriteEmptyVtkPiece(std::ofstream &outfile)
     outfile << "    </Piece>" << endl;
 }
 
-void OutputVtk::WritePVtu()
+void OutputVtk::WritePVtu(po::variables_map &vm)
 {
     string filename  = m_config["outfile"].as<string>();
     int dot          = filename.find_last_of('.');
@@ -331,7 +374,7 @@ void OutputVtk::WritePVtu()
     ofstream outfile(filename.c_str());
 
     int nprocs  = m_f->m_comm->GetSize();
-    string path = GetPath();
+    string path = LibUtilities::PortablePath(GetPath(filename,vm));
 
     outfile << "<?xml version=\"1.0\"?>" << endl;
     outfile << "<VTKFile type=\"PUnstructuredGrid\" version=\"0.1\" "
@@ -373,24 +416,17 @@ void OutputVtk::WritePVtu()
     cout << "Written file: " << filename << endl;
 }
 
-std::string OutputVtk::GetFullOutName()
+std::string OutputVtk::PrepareOutput(po::variables_map &vm)
 {
     // Extract the output filename and extension
     string filename = m_config["outfile"].as<string>();
-    string path;
 
-    // amend for parallel output if required
+    fs::path specPath    = GetPath(filename,vm);
+    fs::path fulloutname = GetFullOutName(filename,vm);
+    filename = LibUtilities::PortablePath(fulloutname);
+
     if (m_f->m_session->GetComm()->GetSize() != 1)
     {
-        path         = GetPath();
-
-        boost::format pad("P%1$07d.vtu");
-        pad % m_f->m_session->GetComm()->GetRank();
-        filename = pad.str();
-
-        fs::path poutfile(filename.c_str());
-        fs::path specPath(path.c_str());
-
         if (m_f->m_comm->TreatAsRankZero())
         {
             try
@@ -403,32 +439,14 @@ std::string OutputVtk::GetFullOutName()
             }
             cout << "Writing files to directory: " << specPath << endl;
         }
-
-        fs::path fulloutname = specPath / poutfile;
-        filename             = LibUtilities::PortablePath(fulloutname);
         m_f->m_comm->Block();
     }
     else
     {
-        fs::path specPath(filename.c_str());
         cout << "Writing: " << specPath << endl;
-        filename = LibUtilities::PortablePath(specPath);
     }
     return filename;
 }
-
-std::string OutputVtk::GetPath()
-{
-    string filename = m_config["outfile"].as<string>();
-    string path;
-    int dot      = filename.find_last_of('.');
-    string ext   = filename.substr(dot, filename.length() - dot);
-    string start = filename.substr(0, dot);
-    path         = start + "_vtu";
-
-    return path;
-}
-
 
 }
 }

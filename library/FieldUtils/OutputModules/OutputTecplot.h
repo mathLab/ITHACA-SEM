@@ -71,6 +71,12 @@ public:
     OutputTecplot(FieldSharedPtr f);
     virtual ~OutputTecplot();
 
+    virtual std::string GetModuleName()
+    {
+        return "OutputTecplot";
+    }
+
+protected:
     /// Write from pts to output file.
     virtual void OutputFromPts(po::variables_map &vm);
 
@@ -80,7 +86,12 @@ public:
     /// Write from data to output file.
     virtual void OutputFromData(po::variables_map &vm);
 
-protected:
+    virtual fs::path GetPath(std::string &filename,
+                                    po::variables_map &vm);
+
+    virtual fs::path GetFullOutName(std::string &filename,
+                                    po::variables_map &vm);
+
     /// True if writing binary field output
     bool            m_binary;
     /// True if writing a single output file
@@ -115,17 +126,6 @@ protected:
 
     int GetNumTecplotBlocks();
     void CalculateConnectivity();
-
-    /// Returns this module's name.
-    virtual std::string GetModuleName()
-    {
-        return "OutputTecplot";
-    }
-
-    virtual std::string GetModuleDescription()
-    {
-        return "Writing file";
-    }
 
 };
 

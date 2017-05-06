@@ -78,7 +78,7 @@ public:
 
     virtual ModulePriority GetModulePriority()
     {
-        return eModifyPts;
+        return eCreatePts;
     }
 
 private:

@@ -67,7 +67,7 @@ ModuleKey ProcessIsoContour::className =
                         "smoothing");
 
 ProcessIsoContour::ProcessIsoContour(FieldSharedPtr f) :
-    ProcessEquiSpacedOutput(f)
+    ProcessModule(f)
 {
 
     m_config["fieldstr"]           = ConfigOption(false, "NotSet",
@@ -119,8 +119,12 @@ void ProcessIsoContour::Process(po::variables_map &vm)
 
     vector<IsoSharedPtr> iso;
 
-    if(m_f->m_fieldPts.get()) // assume we have read .dat file to directly input dat file.
+    ASSERTL0(m_f->m_fieldPts.get(),
+            "Should have m_fieldPts for IsoContour.");
+
+    if(m_f->m_fieldPts->GetPtsType() == LibUtilities::ePtsTriBlock)
     {
+        // assume we have read .dat file to directly input dat file.
         if(verbose)
         {
             cout << "Process read iso from Field Pts" << endl;
@@ -128,11 +132,8 @@ void ProcessIsoContour::Process(po::variables_map &vm)
 
         SetupIsoFromFieldPts(iso);
     }
-    else // extract isocontour from field
+    else if(m_f->m_fieldPts->GetPtsType() == LibUtilities::ePtsTetBlock)
     {
-        // extract all fields to equi-spaced
-        SetupEquiSpacedField();
-
         if(m_f->m_fieldPts->GetNpoints() == 0)
         {
             return;
@@ -184,7 +185,6 @@ void ProcessIsoContour::Process(po::variables_map &vm)
         value   = m_config["fieldvalue"].as<NekDouble>();
 
         iso = ExtractContour(fieldid,value);
-
     }
 
     // Process isocontour

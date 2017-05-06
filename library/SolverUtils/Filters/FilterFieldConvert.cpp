@@ -460,6 +460,23 @@ void FilterFieldConvert::CreateModules( vector<string> &modcmds)
         // Ensure configuration options have been set.
         mod->SetDefaults();
     }
+
+    // Include equispaced output if needed
+    Array< OneD, int>  modulesCount(SIZE_ModulePriority,0);
+    for (int i = 0; i < m_modules.size(); ++i)
+    {
+        ++modulesCount[m_modules[i]->GetModulePriority()];
+    }
+    if( modulesCount[eModifyPts] != 0 &&
+        modulesCount[eCreatePts] == 0)
+    {
+        ModuleKey               module;
+        ModuleSharedPtr         mod;
+        module.first  = eProcessModule;
+        module.second = string("equispacedoutput");
+        mod = GetModuleFactory().CreateInstance(module, m_f);
+        m_modules.insert(m_modules.end()-1, mod);
+    }
 }
 
 void FilterFieldConvert::CreateFields(

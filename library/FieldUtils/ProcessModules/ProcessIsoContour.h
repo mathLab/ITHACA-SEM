@@ -235,7 +235,7 @@ class IsoVertex
 /**
  * @brief This processing module extracts an isocontour
  */
-class ProcessIsoContour : public ProcessEquiSpacedOutput
+class ProcessIsoContour : public ProcessModule
 {
     public:
         /// Creates an instance of this class
@@ -259,6 +259,11 @@ class ProcessIsoContour : public ProcessEquiSpacedOutput
         virtual std::string GetModuleDescription()
         {
             return "Extracting contour";
+        }
+
+        virtual ModulePriority GetModulePriority()
+        {
+            return eModifyPts;
         }
 
     protected:

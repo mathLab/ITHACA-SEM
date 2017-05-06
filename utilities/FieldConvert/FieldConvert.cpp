@@ -239,6 +239,8 @@ int main(int argc, char* argv[])
 
     vector<ModuleSharedPtr> modules;
     vector<string>          modcmds;
+    ModuleKey               module;
+    ModuleSharedPtr         mod;
 
 
     if (vm.count("verbose"))
@@ -272,7 +274,6 @@ int main(int argc, char* argv[])
     {
         // First split each command by the colon separator.
         vector<string> tmp1;
-        ModuleKey module;
         int offset = 1;
 
         boost::split(tmp1, modcmds[i], boost::is_any_of(":"));
@@ -319,7 +320,6 @@ int main(int argc, char* argv[])
         }
 
         // Create module.
-        ModuleSharedPtr mod;
         mod = GetModuleFactory().CreateInstance(module, f);
         modules.push_back(mod);
 
@@ -356,12 +356,25 @@ int main(int argc, char* argv[])
     }
 
     // Include dummy module to create m_exp
-    ModuleKey module;
     module.first  = eProcessModule;
     module.second = string("createExp");
-    ModuleSharedPtr mod;
     mod = GetModuleFactory().CreateInstance(module, f);
     modules.push_back(mod);
+
+    // Include equispaced output if needed
+    Array< OneD, int>  modulesCount(SIZE_ModulePriority,0);
+    for (int i = 0; i < modules.size(); ++i)
+    {
+        ++modulesCount[modules[i]->GetModulePriority()];
+    }
+    if( modulesCount[eModifyPts] != 0 &&
+        modulesCount[eCreatePts] == 0)
+    {
+        module.first  = eProcessModule;
+        module.second = string("equispacedoutput");
+        mod = GetModuleFactory().CreateInstance(module, f);
+        modules.push_back(mod);
+    }
 
     // Check if modules provided are compatible
     CheckModules(modules);

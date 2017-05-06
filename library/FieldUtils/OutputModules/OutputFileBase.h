@@ -90,6 +90,8 @@ protected:
 private:
     bool WriteFile(std::string &filename, po::variables_map &vm);
 
+    void ConvertExpToEquispaced(po::variables_map &vm);
+
     void PrintErrorFromPts();
 
     void PrintErrorFromExp();

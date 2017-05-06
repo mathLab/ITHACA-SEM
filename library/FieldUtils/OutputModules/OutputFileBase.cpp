@@ -80,58 +80,7 @@ void OutputFileBase::Process(po::variables_map &vm)
         if (m_requireEquiSpaced && (vm.count("noequispaced") == 0 ) &&
             m_f->m_exp[0]->GetNumElmts() != 0)
         {
-            // Information to create new expansion
-            int numFields   = m_f->m_exp.size();
-            m_f->m_fielddef = m_f->m_exp[0]->GetFieldDefinitions();
-
-            // Set points to equispaced
-            int nPointsNew  = 0;
-            if (vm.count("output-points"))
-            {
-                nPointsNew = vm["output-points"].as<int>();
-            }
-            m_f->m_graph->SetExpansionsToEvenlySpacedPoints(nPointsNew);
-
-            // Save original expansion
-            vector<MultiRegions::ExpListSharedPtr> expOld = m_f->m_exp;
-            // Create new expansion
-            m_f->m_exp[0] = m_f->SetUpFirstExpList(m_f->m_numHomogeneousDir,
-                                            true);
-            for(int i = 1; i < numFields; ++i)
-            {
-                m_f->m_exp[i] =
-                        m_f->AppendExpList(m_f->m_numHomogeneousDir);
-            }
-            // Extract result to new expansion
-            for(int i = 0; i < numFields; ++i)
-            {
-                m_f->m_exp[i]->ExtractCoeffsToCoeffs(
-                        expOld[i],
-                        expOld[i]->GetCoeffs(),
-                        m_f->m_exp[i]->UpdateCoeffs());
-                m_f->m_exp[i]->BwdTrans(
-                        m_f->m_exp[i]->GetCoeffs(),
-                        m_f->m_exp[i]->UpdatePhys());
-            }
-            // Extract boundary expansion if needed
-            if (m_f->m_writeBndFld)
-            {
-                Array<OneD, const MultiRegions::ExpListSharedPtr> BndExpOld;
-                MultiRegions::ExpListSharedPtr                    BndExp;
-                for(int i = 0; i < numFields; ++i)
-                {
-                    BndExpOld = expOld[i]->GetBndCondExpansions();
-                    for(int j = 0; j < BndExpOld.num_elements(); ++j)
-                    {
-                        BndExp = m_f->m_exp[i]->UpdateBndCondExpansion(j);
-
-                        BndExp->ExtractCoeffsToCoeffs(
-                            BndExpOld[j],
-                            BndExpOld[j]->GetCoeffs(),
-                            BndExp->UpdateCoeffs());
-                    }
-                }
-            }
+            ConvertExpToEquispaced(vm);
         }
 
         if (m_f->m_writeBndFld)
@@ -216,8 +165,8 @@ void OutputFileBase::Process(po::variables_map &vm)
             {
                 string outname =
                     name + "_b" +
-                    boost::lexical_cast<string>(m_f->m_bndRegionsToWrite[i]) + "." +
-                    ext;
+                    boost::lexical_cast<string>(m_f->m_bndRegionsToWrite[i]) +
+                    "." + ext;
 
                 if (BndRegionMap.count(m_f->m_bndRegionsToWrite[i]) == 1)
                 {
@@ -337,6 +286,62 @@ bool OutputFileBase::WriteFile(std::string &filename, po::variables_map &vm)
         comm->AllReduce(writeFile, LibUtilities::ReduceSum);
     }
     return (writeFile == 0) ? false : true;
+}
+
+void OutputFileBase::ConvertExpToEquispaced(po::variables_map &vm)
+{
+    // Information to create new expansion
+    int numFields   = m_f->m_exp.size();
+    m_f->m_fielddef = m_f->m_exp[0]->GetFieldDefinitions();
+
+    // Set points to equispaced
+    int nPointsNew  = 0;
+    if (vm.count("output-points"))
+    {
+        nPointsNew = vm["output-points"].as<int>();
+    }
+    m_f->m_graph->SetExpansionsToEvenlySpacedPoints(nPointsNew);
+
+    // Save original expansion
+    vector<MultiRegions::ExpListSharedPtr> expOld = m_f->m_exp;
+    // Create new expansion
+    m_f->m_exp[0] = m_f->SetUpFirstExpList(m_f->m_numHomogeneousDir,
+                                    true);
+    for(int i = 1; i < numFields; ++i)
+    {
+        m_f->m_exp[i] =
+                m_f->AppendExpList(m_f->m_numHomogeneousDir);
+    }
+    // Extract result to new expansion
+    for(int i = 0; i < numFields; ++i)
+    {
+        m_f->m_exp[i]->ExtractCoeffsToCoeffs(
+                expOld[i],
+                expOld[i]->GetCoeffs(),
+                m_f->m_exp[i]->UpdateCoeffs());
+        m_f->m_exp[i]->BwdTrans(
+                m_f->m_exp[i]->GetCoeffs(),
+                m_f->m_exp[i]->UpdatePhys());
+    }
+    // Extract boundary expansion if needed
+    if (m_f->m_writeBndFld)
+    {
+        Array<OneD, const MultiRegions::ExpListSharedPtr> BndExpOld;
+        MultiRegions::ExpListSharedPtr                    BndExp;
+        for(int i = 0; i < numFields; ++i)
+        {
+            BndExpOld = expOld[i]->GetBndCondExpansions();
+            for(int j = 0; j < BndExpOld.num_elements(); ++j)
+            {
+                BndExp = m_f->m_exp[i]->UpdateBndCondExpansion(j);
+
+                BndExp->ExtractCoeffsToCoeffs(
+                    BndExpOld[j],
+                    BndExpOld[j]->GetCoeffs(),
+                    BndExp->UpdateCoeffs());
+            }
+        }
+    }
 }
 
 void OutputFileBase::PrintErrorFromPts()

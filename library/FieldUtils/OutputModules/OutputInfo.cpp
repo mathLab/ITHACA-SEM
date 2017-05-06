@@ -77,7 +77,7 @@ void OutputInfo::Process(po::variables_map &vm)
         new FieldConvertComm(0, NULL, nprocs, 0));
     vComm->SplitComm(1, nprocs);
 
-    // define new session with psuedo parallel communicator
+    // define new session with pseudo parallel communicator
     string xml_ending    = "xml";
     string xml_gz_ending = "xml.gz";
 

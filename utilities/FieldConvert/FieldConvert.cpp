@@ -51,50 +51,52 @@ void RunModule(ModuleSharedPtr module, po::variables_map &vm, bool verbose);
 int main(int argc, char* argv[])
 {
     Timer     timer;
-    Timer     moduleTimer;
     timer.Start();
     po::options_description desc("Available options");
     desc.add_options()
         ("help,h",
-                "Produce this help message.")
+            "Produce this help message.")
         ("modules-list,l",
-                "Print the list of available modules.")
+            "Print the list of available modules.")
         ("output-points,n", po::value<int>(),
-                "Output at n equipspaced points along the collapsed coordinates (for .dat, .vtk).")
+            "Output at n equipspaced points along the "
+            "collapsed coordinates (for .dat, .vtu).")
         ("output-points-hom-z", po::value<int>(),
-                "Number of planes in the z-direction for output of Homogeneous 1D expansion(for .dat, .vtk).")
+            "Number of planes in the z-direction for output of "
+            "Homogeneous 1D expansion(for .dat, .vtu).")
         ("error,e",
-                "Write error of fields for regression checking")
+            "Write error of fields for regression checking")
         ("forceoutput,f",
-                "Force the output to be written without any checks")
+            "Force the output to be written without any checks")
         ("range,r", po::value<string>(),
-                "Define output range i.e. (-r xmin,xmax,ymin,ymax,zmin,zmax) "
-                "in which any vertex is contained.")
-        ("noequispaced","Do not use equispaced output. Currently stops the output-points option")
+            "Define output range i.e. (-r xmin,xmax,ymin,ymax,zmin,zmax) "
+            "in which any vertex is contained.")
+        ("noequispaced",
+            "Do not use equispaced output.")
         ("nprocs", po::value<int>(),
-                "Used to define nprocs if running serial problem to mimic "
-                "parallel run.")
+            "Used to define nprocs if running serial problem to mimic "
+            "parallel run.")
         ("npz", po::value<int>(),
-                "Used to define number of partitions in z for Homogeneous1D "
-                "expansions for parallel runs.")
+            "Used to define number of partitions in z for Homogeneous1D "
+            "expansions for parallel runs.")
         ("onlyshape", po::value<string>(),
-                 "Only use element with defined shape type i.e. -onlyshape "
-                 " Tetrahedron")
+            "Only use element with defined shape type i.e. -onlyshape "
+            " Tetrahedron")
         ("part-only", po::value<int>(),
-                "Partition into specfiied npart partitions and exit")
+            "Partition into specified npart partitions and exit")
         ("part-only-overlapping", po::value<int>(),
-                "Partition into specfiied npart overlapping partitions and exit")
+            "Partition into specified npart overlapping partitions and exit")
         ("procid", po::value<int>(),
-                "Process as single procid of a partition of size nproc "
-                "(-nproc must be specified).")
+            "Process as single procid of a partition of size nprocs "
+            "(--nprocs must be specified).")
         ("modules-opt,p", po::value<string>(),
-                "Print options for a module.")
+            "Print options for a module.")
         ("module,m", po::value<vector<string> >(),
-                "Specify modules which are to be used.")
+            "Specify modules which are to be used.")
         ("useSessionVariables",
-                "Use variables defined in session for output")
+            "Use variables defined in session for output")
         ("verbose,v",
-                "Enable verbose mode.");
+            "Enable verbose mode.");
 
     po::options_description hidden("Hidden options");
     hidden.add_options()
@@ -173,7 +175,8 @@ int main(int argc, char* argv[])
         return 1;
     }
 
-    if (vm.count("help") || vm.count("input-file") != 1) {
+    if (vm.count("help") || vm.count("input-file") != 1)
+    {
         cerr << "Usage: FieldConvert [options] inputfile.ext1 outputfile.ext2"
              << endl;
         cout << desc;
@@ -205,7 +208,6 @@ int main(int argc, char* argv[])
      * where the only required argument is 'modname', specifing the
      * name of the module to load.
      */
-
     FieldSharedPtr f = boost::shared_ptr<Field>(new Field());
     if (LibUtilities::GetCommFactory().ModuleExists("ParallelMPI"))
     {
@@ -220,9 +222,6 @@ int main(int argc, char* argv[])
 
             f->m_comm = boost::shared_ptr<FieldConvertComm>(
                                 new FieldConvertComm(argc, argv, nprocs,rank));
-
-            // Set forceoutput option. Otherwise only procid 0 will write file
-            vm.insert(std::make_pair("forceoutput", po::variable_value()));
         }
         else
         {
@@ -361,7 +360,7 @@ int main(int argc, char* argv[])
     mod = GetModuleFactory().CreateInstance(module, f);
     modules.push_back(mod);
 
-    // Include equispaced output if needed
+    // Include equispacedoutput module if needed
     Array< OneD, int>  modulesCount(SIZE_ModulePriority,0);
     for (int i = 0; i < modules.size(); ++i)
     {

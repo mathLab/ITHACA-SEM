@@ -79,10 +79,14 @@ public:
     }
 
 protected:
-    bool WriteFile(std::string &filename, po::variables_map &vm);
-
     bool m_requireEquiSpaced;
 
+private:
+    bool WriteFile(std::string &filename, po::variables_map &vm);
+
+    void PrintErrorFromPts();
+
+    void PrintErrorFromExp();
 };
 }
 }

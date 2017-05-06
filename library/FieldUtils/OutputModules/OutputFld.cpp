@@ -119,36 +119,6 @@ void OutputFld::OutputFromExp(po::variables_map &vm)
             std::vector<std::vector<NekDouble> >();
         fld->Write(filename, FieldDef, FieldData, m_f->m_fieldMetaDataMap);
     }
-
-    // output error for regression checking.
-    if (vm.count("error"))
-    {
-        int rank = m_f->m_session->GetComm()->GetRank();
-
-        for (int j = 0; j < m_f->m_exp.size(); ++j)
-        {
-            if (m_f->m_exp[j]->GetPhysState() == false)
-            {
-                m_f->m_exp[j]->BwdTrans(m_f->m_exp[j]->GetCoeffs(),
-                                        m_f->m_exp[j]->UpdatePhys());
-            }
-
-            NekDouble l2err = m_f->m_exp[j]->L2(m_f->m_exp[j]->GetPhys());
-
-            NekDouble linferr =
-                m_f->m_exp[j]->Linf(m_f->m_exp[j]->GetPhys());
-            if (rank == 0)
-            {
-                cout << "L 2 error (variable "
-                     << m_f->m_variables[j] << ") : " << l2err
-                     << endl;
-
-                cout << "L inf error (variable "
-                     << m_f->m_variables[j] << ") : " << linferr
-                     << endl;
-            }
-        }
-    }
 }
 
 void OutputFld::OutputFromData(po::variables_map &vm)

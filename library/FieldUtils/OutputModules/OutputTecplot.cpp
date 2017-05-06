@@ -140,12 +140,6 @@ void OutputTecplot::OutputFromPts(po::variables_map &vm)
     int rank   = m_f->m_comm->GetRank();
     m_numBlocks = 0;
 
-    // Extract the output filename and extension
-    string filename = m_config["outfile"].as<string>();
-
-    std::string coordVars[] = { "x", "y", "z" };
-    bool doError = (vm.count("error") == 1) ? true : false;
-
     m_coordim = fPts->GetDim();
 
     if (fPts->GetNpoints() == 0)
@@ -155,10 +149,6 @@ void OutputTecplot::OutputFromPts(po::variables_map &vm)
 
     // Grab connectivity information.
     fPts->GetConnectivity(m_conn);
-
-    // Get field names
-    m_f->m_variables.insert(m_f->m_variables.begin(),
-                            coordVars, coordVars + m_coordim);
 
     switch (fPts->GetPtsType())
     {
@@ -204,7 +194,8 @@ void OutputTecplot::OutputFromPts(po::variables_map &vm)
     }
 
     // Get fields and coordinates
-    m_fields = Array<OneD, Array<OneD, NekDouble> >(m_f->m_variables.size());
+    m_fields =
+        Array<OneD, Array<OneD, NekDouble> >(m_f->m_variables.size()+m_coordim);
 
     // We can just grab everything from points. This should be a
     // reference, not a copy.
@@ -214,46 +205,13 @@ void OutputTecplot::OutputFromPts(po::variables_map &vm)
     // write header
     m_writeHeader = (m_zoneType != eOrdered || rank == 0) || m_binary;
 
-    if (doError)
-    {
-        NekDouble l2err;
-        for (int i = 0; i < m_fields.num_elements(); ++i)
-        {
-            // calculate rms value
-            int npts = m_fields[i].num_elements();
-
-            l2err = 0.0;
-            for (int j = 0; j < npts; ++j)
-            {
-                l2err += m_fields[i][j] * m_fields[i][j];
-            }
-
-            m_f->m_comm->AllReduce(l2err, LibUtilities::ReduceSum);
-            m_f->m_comm->AllReduce(npts, LibUtilities::ReduceSum);
-
-            l2err /= npts;
-            l2err = sqrt(l2err);
-
-            if (rank == 0)
-            {
-                cout << "L 2 error (variable "
-                     << m_f->m_variables[i] << ") : "
-                     << l2err << endl;
-            }
-        }
-    }
-
     WriteTecplotFile(vm);
 }
 
 void OutputTecplot::OutputFromExp(po::variables_map &vm)
 {
-    int rank   = m_f->m_comm->GetRank();
     m_numBlocks = 0;
     m_writeHeader = true;
-
-    std::string coordVars[] = { "x", "y", "z" };
-    bool doError = (vm.count("error") == 1) ? true : false;
 
     // Calculate number of FE blocks
     m_numBlocks = GetNumTecplotBlocks();
@@ -285,16 +243,14 @@ void OutputTecplot::OutputFromExp(po::variables_map &vm)
         m_coordim += 2;
     }
 
-    m_f->m_variables.insert(m_f->m_variables.begin(),
-                            coordVars, coordVars + m_coordim);
-
     m_zoneType = (TecplotZoneType)(2*(nBases-1) + 1);
 
     // Calculate connectivity
     CalculateConnectivity();
 
     // Set up storage for output fields
-    m_fields = Array<OneD, Array<OneD, NekDouble> >(m_f->m_variables.size());
+    m_fields =
+        Array<OneD, Array<OneD, NekDouble> >(m_f->m_variables.size()+m_coordim);
 
     // Get coordinates
     int totpoints = m_f->m_exp[0]->GetTotPoints();
@@ -317,38 +273,10 @@ void OutputTecplot::OutputFromExp(po::variables_map &vm)
         m_f->m_exp[0]->GetCoords(m_fields[0], m_fields[1], m_fields[2]);
     }
 
-    if (m_f->m_variables.size() > m_coordim)
+    // Add references to m_fields
+    for (int i = 0; i < m_f->m_exp.size(); ++i)
     {
-        // Backward transform all data
-        for (int i = 0; i < m_f->m_exp.size(); ++i)
-        {
-            if (m_f->m_exp[i]->GetPhysState() == false)
-            {
-                m_f->m_exp[i]->BwdTrans(m_f->m_exp[i]->GetCoeffs(),
-                                        m_f->m_exp[i]->UpdatePhys());
-            }
-        }
-
-        // Add references to m_fields
-        for (int i = 0; i < m_f->m_exp.size(); ++i)
-        {
-            m_fields[i + m_coordim] = m_f->m_exp[i]->UpdatePhys();
-        }
-    }
-
-    // Dump L2 errors of fields.
-    if (doError)
-    {
-        for (int i = 0; i < m_fields.num_elements(); ++i)
-        {
-            NekDouble l2err = m_f->m_exp[0]->L2(m_fields[i]);
-            if (rank == 0)
-            {
-                cout << "L 2 error (variable "
-                     << m_f->m_variables[i] << ") : "
-                     << l2err << endl;
-            }
-        }
+        m_fields[i + m_coordim] = m_f->m_exp[i]->UpdatePhys();
     }
 
     WriteTecplotFile(vm);
@@ -363,6 +291,11 @@ void OutputTecplot::WriteTecplotFile(po::variables_map &vm)
 {
     // Extract the output filename and extension
     string filename = m_config["outfile"].as<string>();
+
+    // Variable names
+    std::string coordVars[] = { "x", "y", "z" };
+    vector<string> variables = m_f->m_variables;
+    variables.insert(variables.begin(), coordVars, coordVars + m_coordim);
 
     int nprocs = m_f->m_comm->GetSize();
     int rank   = m_f->m_comm->GetRank();
@@ -422,7 +355,7 @@ void OutputTecplot::WriteTecplotFile(po::variables_map &vm)
 
     if (m_writeHeader)
     {
-        WriteTecplotHeader(outfile, m_f->m_variables);
+        WriteTecplotHeader(outfile, variables);
     }
 
     // Write zone data.

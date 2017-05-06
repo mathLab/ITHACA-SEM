@@ -67,6 +67,11 @@ void OutputFileBase::Process(po::variables_map &vm)
         if( WriteFile(filename, vm))
         {
             OutputFromPts(vm);
+
+            if (vm.count("error"))
+            {
+                PrintErrorFromPts();
+            }
         }
     }
     else if(m_f->m_exp.size())
@@ -251,6 +256,11 @@ void OutputFileBase::Process(po::variables_map &vm)
                         }
                     }
                     OutputFromExp(vm);
+                    // output error for regression checking.
+                    if (vm.count("error"))
+                    {
+                        PrintErrorFromExp();
+                    }
                 }
             }
         }
@@ -259,6 +269,11 @@ void OutputFileBase::Process(po::variables_map &vm)
             if( WriteFile(filename, vm))
             {
                 OutputFromExp(vm);
+                // output error for regression checking.
+                if (vm.count("error"))
+                {
+                    PrintErrorFromExp();
+                }
             }
         }
     }
@@ -311,6 +326,117 @@ bool OutputFileBase::WriteFile(std::string &filename, po::variables_map &vm)
         comm->AllReduce(writeFile, LibUtilities::ReduceSum);
     }
     return (writeFile == 0) ? false : true;
+}
+
+void OutputFileBase::PrintErrorFromPts()
+{
+    int coordim = m_f->m_fieldPts->GetDim();
+    std::string coordVars[] = { "x", "y", "z" };
+
+    vector<string> variables = m_f->m_variables;
+    variables.insert(variables.begin(),
+                    coordVars,
+                    coordVars + coordim);
+    // Get fields and coordinates
+    Array<OneD, Array<OneD, NekDouble> > fields(variables.size());
+
+    // We can just grab everything from points. This should be a
+    // reference, not a copy.
+    m_f->m_fieldPts->GetPts(fields);
+    for (int i = 0; i < fields.num_elements(); ++i)
+    {
+        // calculate L2 and Linf value
+        int npts = fields[i].num_elements();
+
+        NekDouble l2err   = 0.0;
+        NekDouble linferr = 0.0;
+        for (int j = 0; j < npts; ++j)
+        {
+            l2err  += fields[i][j] * fields[i][j];
+            linferr = max(linferr, fabs(fields[i][j]));
+        }
+
+        m_f->m_comm->AllReduce(l2err  , LibUtilities::ReduceSum);
+        m_f->m_comm->AllReduce(npts   , LibUtilities::ReduceSum);
+        m_f->m_comm->AllReduce(linferr, LibUtilities::ReduceMax);
+
+        l2err /= npts;
+        l2err = sqrt(l2err);
+
+        if (m_f->m_comm->TreatAsRankZero())
+        {
+            cout << "L 2 error (variable "
+                 << variables[i] << ") : " << l2err
+                 << endl;
+
+            cout << "L inf error (variable "
+                 << variables[i] << ") : " << linferr
+                 << endl;
+        }
+    }
+}
+
+void OutputFileBase::PrintErrorFromExp()
+{
+    int coordim =
+        m_f->m_exp[0]->GetExp(0)->GetCoordim() + m_f->m_numHomogeneousDir;
+    int totpoints = m_f->m_exp[0]->GetTotPoints();
+    std::string coordVars[] = { "x", "y", "z" };
+
+    // Set up storage for coordinates
+    Array<OneD, Array<OneD, NekDouble> > coords(coordim);
+    for (int i = 0; i < coordim; ++i)
+    {
+        coords[i] = Array<OneD, NekDouble>(totpoints);
+    }
+
+    // Get coordinates
+    if (coordim == 1)
+    {
+        m_f->m_exp[0]->GetCoords(coords[0]);
+    }
+    else if (coordim == 2)
+    {
+        m_f->m_exp[0]->GetCoords(coords[0], coords[1]);
+    }
+    else
+    {
+        m_f->m_exp[0]->GetCoords(coords[0], coords[1], coords[2]);
+    }
+
+    for (int j = 0; j < coordim; ++j)
+    {
+        NekDouble l2err   = m_f->m_exp[0]->L2  (coords[j]);
+        NekDouble linferr = m_f->m_exp[0]->Linf(coords[j]);
+
+        if (m_f->m_comm->TreatAsRankZero())
+        {
+            cout << "L 2 error (variable "
+                 << coordVars[j] << ") : " << l2err
+                 << endl;
+
+            cout << "L inf error (variable "
+                 << coordVars[j] << ") : " << linferr
+                 << endl;
+        }
+    }
+
+    for (int j = 0; j < m_f->m_exp.size(); ++j)
+    {
+        NekDouble l2err   = m_f->m_exp[j]->L2  (m_f->m_exp[j]->GetPhys());
+        NekDouble linferr = m_f->m_exp[j]->Linf(m_f->m_exp[j]->GetPhys());
+
+        if (m_f->m_comm->TreatAsRankZero())
+        {
+            cout << "L 2 error (variable "
+                 << m_f->m_variables[j] << ") : " << l2err
+                 << endl;
+
+            cout << "L inf error (variable "
+                 << m_f->m_variables[j] << ") : " << linferr
+                 << endl;
+        }
+    }
 }
 
 }

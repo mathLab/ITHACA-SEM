@@ -280,11 +280,9 @@ bool OutputFileBase::WriteFile(std::string &filename, po::variables_map &vm)
     if (fs::exists(outFile) && (vm.count("forceoutput") == 0))
     {
         LibUtilities::CommSharedPtr comm;
-        int rank = 0;
-        if (m_f->m_session)
+        if (m_f->m_comm)
         {
-            comm = m_f->m_session->GetComm();
-            rank = comm->GetRank();
+            comm = m_f->m_comm;
         }
         else
         {
@@ -294,7 +292,7 @@ bool OutputFileBase::WriteFile(std::string &filename, po::variables_map &vm)
 
         writeFile = 0; // set to zero for reduce all to be correct.
 
-        if (rank == 0)
+        if (comm->TreatAsRankZero())
         {
             string answer;
             cout << "Did you wish to overwrite " << filename << " (y/n)? ";

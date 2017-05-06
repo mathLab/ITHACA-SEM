@@ -2,7 +2,7 @@
 <test>
     <description> Process 3DH1D stretch output </description>
     <executable>FieldConvert</executable>
-    <parameters> --output-points-hom-z 16 -m homstretch:factor=2 -e chan3DH1D.xml chan3DH1D.fld chan3DH1D_stretch.fld</parameters>
+    <parameters> -f --output-points-hom-z 16 -m homstretch:factor=2 -e chan3DH1D.xml chan3DH1D.fld chan3DH1D_stretch.fld</parameters>
     <files>
         <file description="Session File">chan3DH1D.xml</file>
 	<file description="Session File">chan3DH1D.fld</file>

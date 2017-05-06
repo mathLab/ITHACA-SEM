@@ -2,7 +2,7 @@
 <test>
     <description>Surface distance calculation on 3D hex/prism mesh</description>
     <executable>FieldConvert</executable>
-    <parameters>-e -m surfdistance:bnd=0 cube_prismhex.xml out.fld</parameters>
+    <parameters> -f -e -m surfdistance:bnd=0 cube_prismhex.xml out.fld</parameters>
     <files>
         <file description="Session File">cube_prismhex.xml</file>
     </files>

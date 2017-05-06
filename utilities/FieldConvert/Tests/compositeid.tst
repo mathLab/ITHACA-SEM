@@ -2,7 +2,7 @@
 <test>
     <description>Add composite ID to field</description>
     <executable>FieldConvert</executable>
-    <parameters>-e -m addcompositeid compositeid.xml compositeid.fld</parameters>
+    <parameters> -f -e -m addcompositeid compositeid.xml compositeid.fld</parameters>
     <files>
         <file description="Session File">compositeid.xml</file>
     </files>

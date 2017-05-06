@@ -2,7 +2,7 @@
 <test>
     <description> Process 2D vorticity output </description>
     <executable>FieldConvert</executable>
-    <parameters> -r -1,1,-1,1 -e -m vorticity bfs_tg.xml bfs_tg.fld bfs_tg_vort.fld</parameters>
+    <parameters> -f -r -1,1,-1,1 -e -m vorticity bfs_tg.xml bfs_tg.fld bfs_tg_vort.fld</parameters>
     <files>
         <file description="Session File">bfs_tg.xml</file>
 	<file description="Session File">bfs_tg.fld</file>

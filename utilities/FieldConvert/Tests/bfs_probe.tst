@@ -2,7 +2,7 @@
 <test>
     <description> Probe line of 2D points from 2D file </description>
     <executable>FieldConvert</executable>
-    <parameters> -e -m interppoints:fromxml=bfs_tg.xml:fromfld=bfs_tg.fld bfs_probe.pts bfs_probe.dat</parameters>
+    <parameters> -f -e -m interppoints:fromxml=bfs_tg.xml:fromfld=bfs_tg.fld bfs_probe.pts bfs_probe.dat</parameters>
     <files>
         <file description="Session File">bfs_tg.xml</file>
 	<file description="Session File">bfs_tg.fld</file>

@@ -2,7 +2,7 @@
 <test>
     <description> Equispaced output of a 2DH1D field </description>
     <executable>FieldConvert</executable>
-    <parameters>-e -m equispacedoutput naca0012_bnd.xml naca0012_b0.fld output.fld</parameters>
+    <parameters> -f -e -m equispacedoutput naca0012_bnd.xml naca0012_b0.fld output.fld</parameters>
     <files>
         <file description="Session File">naca0012_bnd.xml</file>
         <file description="Session File">naca0012_b0.fld</file>

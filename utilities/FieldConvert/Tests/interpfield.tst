@@ -2,7 +2,7 @@
 <test>
     <description> Interp field to a box of points (also calculate cp and cp0)</description>
     <executable>FieldConvert</executable>
-    <parameters>-e -m interpfield:fromxml=interptest.xml:fromfld=interptest.fld  interptest.xml new.fld </parameters>
+    <parameters> -f -e -m interpfield:fromxml=interptest.xml:fromfld=interptest.fld  interptest.xml new.fld </parameters>
     <files>
         <file description="Session File">interptest.xml</file>
         <file description="Session File">interptest.fld</file>

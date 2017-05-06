@@ -2,7 +2,7 @@
 <test>
     <description> Process 3D vorticity output </description>
     <executable>FieldConvert</executable>
-    <parameters> -m vorticity -e chan3D.xml chan3D.fld chan3D_vort.fld</parameters>
+    <parameters> -f -m vorticity -e chan3D.xml chan3D.fld chan3D_vort.fld</parameters>
     <files>
         <file description="Session File">chan3D.xml</file>
 	<file description="Session File">chan3D.fld</file>

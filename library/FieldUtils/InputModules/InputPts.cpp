@@ -53,7 +53,7 @@ ModuleKey InputPts::m_className[5] = {
     GetModuleFactory().RegisterCreatorFunction(
         ModuleKey(eInputModule, "pts"), InputPts::create, "Reads Pts file."),
     GetModuleFactory().RegisterCreatorFunction(
-        ModuleKey(eInputModule, "pts.gz"), InputPts::create, "Reads Pts file."),
+        ModuleKey(eInputModule, "pts.gz"), InputPts::create, "Reads Pts file.")
 };
 
 /**

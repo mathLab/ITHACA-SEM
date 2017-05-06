@@ -238,7 +238,8 @@ void InputNek5000::Process(po::variables_map &vm)
             case ' ':
                 continue;
             default:
-                cerr << "Field contains unknown variable: " << remain[i] << endl;
+                cerr << "Field contains unknown variable: "
+                     << remain[i] << endl;
                 abort();
         }
     }

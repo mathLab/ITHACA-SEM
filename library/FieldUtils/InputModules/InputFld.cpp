@@ -40,9 +40,6 @@ using namespace std;
 #include "InputFld.h"
 using namespace Nektar;
 
-static std::string npts = LibUtilities::SessionReader::RegisterCmdLineArgument(
-    "NumberOfPoints", "n", "Define number of points to dump output");
-
 namespace Nektar
 {
 namespace FieldUtils
@@ -50,17 +47,18 @@ namespace FieldUtils
 
 ModuleKey InputFld::m_className[4] = {
     GetModuleFactory().RegisterCreatorFunction(
-        ModuleKey(eInputModule, "fld"), InputFld::create, "Reads Fld file."),
-    GetModuleFactory().RegisterCreatorFunction(ModuleKey(eInputModule, "chk"),
-                                               InputFld::create,
-                                               "Reads checkpoint file."),
-    GetModuleFactory().RegisterCreatorFunction(ModuleKey(eInputModule, "rst"),
-                                               InputFld::create,
-                                               "Reads restart file."),
+        ModuleKey(eInputModule, "fld"),
+        InputFld::create, "Reads Fld file."),
+    GetModuleFactory().RegisterCreatorFunction(
+        ModuleKey(eInputModule, "chk"),
+        InputFld::create, "Reads checkpoint file."),
+    GetModuleFactory().RegisterCreatorFunction(
+        ModuleKey(eInputModule, "rst"),
+        InputFld::create, "Reads restart file."),
     GetModuleFactory().RegisterCreatorFunction(
         ModuleKey(eInputModule, "bse"),
-        InputFld::create,
-        "Reads stability base-flow file.")};
+        InputFld::create, "Reads stability base-flow file.")
+};
 
 /**
  * @brief Set up InputFld object.
@@ -120,7 +118,7 @@ void InputFld::Process(po::variables_map &vm)
             const SpatialDomains::ExpansionMap &expansions =
                 m_f->m_graph->GetExpansions();
 
-            // if Range has been speficied it is possible to have a
+            // if Range has been specified it is possible to have a
             // partition which is empty so check this and return if
             // no elements present.
 

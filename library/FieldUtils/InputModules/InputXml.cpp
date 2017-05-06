@@ -43,9 +43,6 @@ using namespace std;
 #include "InputXml.h"
 using namespace Nektar;
 
-static std::string npts = LibUtilities::SessionReader::RegisterCmdLineArgument(
-    "NumberOfPoints", "n", "Define number of points to dump output");
-
 namespace Nektar
 {
 namespace FieldUtils
@@ -66,9 +63,6 @@ InputXml::InputXml(FieldSharedPtr f) : InputModule(f)
 {
     m_allowedFiles.insert("xml");
     m_allowedFiles.insert("xml.gz");
-    m_allowedFiles.insert("fld"); // these files could be allowed with xml files
-    m_allowedFiles.insert("chk");
-    m_allowedFiles.insert("rst");
 }
 
 /**

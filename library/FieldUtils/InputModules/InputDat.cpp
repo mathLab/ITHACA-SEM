@@ -53,7 +53,7 @@ ModuleKey InputDat::m_className[1] = {
     GetModuleFactory().RegisterCreatorFunction(
         ModuleKey(eInputModule, "dat"),
         InputDat::create,
-        "Reads Tecplot dat file for FE block triangular format."),
+        "Reads Tecplot dat file for FE block triangular format.")
 };
 
 /**

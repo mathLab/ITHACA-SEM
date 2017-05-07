@@ -395,7 +395,7 @@ void OutputTecplot::WriteTecplotFile(po::variables_map &vm)
 
     if ((m_oneOutputFile && rank == 0) || !m_oneOutputFile)
     {
-        cout << "Written file: " << filename << endl;
+        cout << "Written file: " << GetFullOutName(filename,vm) << endl;
     }
 }
 

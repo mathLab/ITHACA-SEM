@@ -211,6 +211,8 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
 
 void ProcessInterpPoints::CreateFieldPts(po::variables_map &vm)
 {
+    int rank   = m_f->m_comm->GetRank();
+    int nprocs = m_f->m_comm->GetSize();
     // Check for command line point specification
     if (m_config["line"].as<string>().compare("NotSet") != 0)
     {
@@ -229,19 +231,33 @@ void ProcessInterpPoints::CreateFieldPts(po::variables_map &vm)
 
         int dim  = (values.size() - 1) / 2;
         int npts = values[0];
+
+        // Information for partitioning
+        int ptsPerProc = npts / nprocs;
+        int extraPts   = (rank < nprocs - 1) ? 0: npts % nprocs;
+        int locPts     = ptsPerProc + extraPts;
+        int start      = rank * ptsPerProc;
+        int end        = start + locPts;
+
         Array<OneD, Array<OneD, NekDouble> > pts(dim);
         Array<OneD, NekDouble>               delta(dim);
         for (int i = 0; i < dim; ++i)
         {
-            pts[i]   = Array<OneD, NekDouble>(npts);
+            pts[i]   = Array<OneD, NekDouble>(locPts);
             delta[i] = (values[dim + i + 1] - values[ i + 1]) / (npts - 1);
         }
 
-        for (int i = 0; i < npts; ++i)
+
+
+        for (int i = 0, cntLoc = 0; i < npts; ++i)
         {
-            for (int n = 0; n < dim; ++n)
+            if (i >= start && i < end)
             {
-                pts[n][i] = values[n+1] + i * delta[n];
+                for (int n = 0; n < dim; ++n)
+                {
+                    pts[n][cntLoc] = values[n+1] + i * delta[n];
+                }
+                ++cntLoc;
             }
         }
 
@@ -279,27 +295,38 @@ void ProcessInterpPoints::CreateFieldPts(po::variables_map &vm)
 
         int totpts  = npts[0] * npts[1];
 
+        // Information for partitioning
+        int ptsPerProc = totpts / nprocs;
+        int extraPts   = (rank < nprocs - 1) ? 0: totpts % nprocs;
+        int locPts     = ptsPerProc + extraPts;
+        int start      = rank * ptsPerProc;
+        int end        = start + locPts;
+
         Array<OneD, Array<OneD, NekDouble> > pts(dim);
         Array<OneD, NekDouble>               delta1(dim);
         Array<OneD, NekDouble>               delta2(dim);
         for (int i = 0; i < dim; ++i)
         {
-            pts[i]    = Array<OneD, NekDouble>(totpts);
+            pts[i]    = Array<OneD, NekDouble>(locPts);
             delta1[i] = (values[2+1*dim + i] - values[2+0*dim + i])/(npts[0]-1);
             delta2[i] = (values[2+2*dim + i] - values[2+3*dim + i])/(npts[0]-1);
         }
 
-        for (int j = 0, cnt = 0; j < npts[1]; ++j)
+        for (int j = 0, cnt = 0, cntLoc = 0; j < npts[1]; ++j)
         {
             for (int i = 0; i < npts[0]; ++i, ++cnt)
             {
-                for (int n = 0; n < dim; ++n)
+                if (cnt >= start && cnt < end)
                 {
-                    pts[n][cnt] = 
-                        (values[2+n] + i * delta1[n]) *
-                            (1.0 - j / ((NekDouble)(npts[1]-1))) +
-                        (values[2 + 3*dim + n] + i * delta2[n]) *
-                            (      j / ((NekDouble)(npts[1]-1)));
+                    for (int n = 0; n < dim; ++n)
+                    {
+                        pts[n][cntLoc] =
+                            (values[2+n] + i * delta1[n]) *
+                                (1.0 - j / ((NekDouble)(npts[1]-1))) +
+                            (values[2 + 3*dim + n] + i * delta2[n]) *
+                                (      j / ((NekDouble)(npts[1]-1)));
+                    }
+                    ++cntLoc;
                 }
             }
         }
@@ -334,22 +361,35 @@ void ProcessInterpPoints::CreateFieldPts(po::variables_map &vm)
 
         Array<OneD, Array<OneD, NekDouble> > pts(dim);
         Array<OneD, NekDouble>               delta(dim);
-        
+
+        // Information for partitioning
+        int ptsPerProc = totpts / nprocs;
+        int extraPts   = (rank < nprocs - 1) ? 0: totpts % nprocs;
+        int locPts     = ptsPerProc + extraPts;
+        int start      = rank * ptsPerProc;
+        int end        = start + locPts;
+
         for (int i = 0; i < dim; ++i)
         {
-            pts[i]   = Array<OneD, NekDouble>(totpts);
+            pts[i]   = Array<OneD, NekDouble>(locPts);
             delta[i] = (values[4 + 2*i] - values[3 + 2*i]) / (npts[i] - 1);
         }
 
-        for (int k = 0, cnt = 0; k < npts[2]; ++k)
+
+
+        for (int k = 0, cnt = 0, cntLoc = 0; k < npts[2]; ++k)
         {
             for (int j = 0; j < npts[1]; ++j)
             {
                 for (int i = 0; i < npts[0]; ++i, ++cnt)
                 {
-                    pts[0][cnt] = values[3] + i * delta[0];
-                    pts[1][cnt] = values[5] + j * delta[1];
-                    pts[2][cnt] = values[7] + k * delta[2];
+                    if (cnt >= start && cnt < end)
+                    {
+                        pts[0][cntLoc] = values[3] + i * delta[0];
+                        pts[1][cntLoc] = values[5] + j * delta[1];
+                        pts[2][cntLoc] = values[7] + k * delta[2];
+                        ++cntLoc;
+                    }
                 }
             }
         }

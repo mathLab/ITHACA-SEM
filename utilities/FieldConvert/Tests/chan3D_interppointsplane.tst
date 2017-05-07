@@ -2,7 +2,7 @@
 <test>
     <description> Interp field to a plane of points (also calculate cp and cp0)</description>
     <executable>FieldConvert</executable>
-    <parameters> -f -e  -m interppoints:cp=0,0.5:plane=10,10,0.1,-0.9,-0.9,0.1,0.9,-0.9,0.1,0.9,0.9,0.1,-0.9,0.9:fromxml=chan3D.xml:fromfld=chan3D.fld chan3D_plane.dat</parameters>
+    <parameters> -f -e  -m interppoints:cp=0,0.5:plane=10,10,0.1,-0.9,-0.9,0.1,0.9,-0.9,0.1,0.9,0.9,0.1,-0.9,0.9 chan3D.xml chan3D.fld chan3D_plane.dat</parameters>
     <files>
         <file description="Session File">chan3D.xml</file>
         <file description="Session File">chan3D.fld</file>

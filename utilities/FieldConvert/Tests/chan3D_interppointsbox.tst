@@ -2,7 +2,7 @@
 <test>
     <description> Interp field to a box of points (also calculate cp and cp0)</description>
     <executable>FieldConvert</executable>
-    <parameters> -f -e  -m interppoints:cp=0,0.5:box=10,10,10,-0.5,0.5,-0.5,0.5,-0.5,0.5:fromxml=chan3D.xml:fromfld=chan3D.fld chan3D_box.dat</parameters>
+    <parameters> -f -e  -m interppoints:cp=0,0.5:box=10,10,10,-0.5,0.5,-0.5,0.5,-0.5,0.5 chan3D.xml chan3D.fld chan3D_box.dat</parameters>
     <files>
         <file description="Session File">chan3D.xml</file>
         <file description="Session File">chan3D.fld</file>

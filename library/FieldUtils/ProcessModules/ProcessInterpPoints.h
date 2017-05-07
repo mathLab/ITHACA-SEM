@@ -82,6 +82,8 @@ public:
     }
 
 private:
+    void CreateFieldPts(po::variables_map &vm);
+
     void InterpolateFieldToPts(vector<MultiRegions::ExpListSharedPtr> &field0,
                                LibUtilities::PtsFieldSharedPtr &pts,
                                NekDouble clamp_low,

@@ -137,6 +137,7 @@ template<typename T> void WriteStream(std::ostream  &outfile,
 void OutputTecplot::OutputFromPts(po::variables_map &vm)
 {
     LibUtilities::PtsFieldSharedPtr fPts = m_f->m_fieldPts;
+    int nprocs = m_f->m_comm->GetSize();
     int rank   = m_f->m_comm->GetRank();
     m_numBlocks = 0;
 
@@ -145,6 +146,15 @@ void OutputTecplot::OutputFromPts(po::variables_map &vm)
     if (fPts->GetNpoints() == 0)
     {
         return;
+    }
+
+    if(m_config["writemultiplefiles"].as<bool>())
+    {
+        m_oneOutputFile = false;
+    }
+    else
+    {
+        m_oneOutputFile = (nprocs > 1) && (vm.count("procid") == 0 );
     }
 
     // Grab connectivity information.
@@ -203,13 +213,15 @@ void OutputTecplot::OutputFromPts(po::variables_map &vm)
 
     // Only write header if we're root or FE block; binary files always
     // write header
-    m_writeHeader = (m_zoneType != eOrdered || rank == 0) || m_binary;
+    m_writeHeader =
+        (m_zoneType != eOrdered || rank == 0) || m_binary || (!m_oneOutputFile);
 
     WriteTecplotFile(vm);
 }
 
 void OutputTecplot::OutputFromExp(po::variables_map &vm)
 {
+    int nprocs = m_f->m_comm->GetSize();
     m_numBlocks = 0;
     m_writeHeader = true;
 
@@ -221,6 +233,15 @@ void OutputTecplot::OutputFromExp(po::variables_map &vm)
     MultiRegions::ExpansionType HomoExpType = m_f->m_exp[0]->GetExpType();
 
     m_coordim = m_f->m_exp[0]->GetExp(0)->GetCoordim();
+
+    if(m_config["writemultiplefiles"].as<bool>())
+    {
+        m_oneOutputFile = false;
+    }
+    else
+    {
+        m_oneOutputFile = (nprocs > 1) && (vm.count("procid") == 0 );
+    }
 
     if (HomoExpType == MultiRegions::e3DH1D)
     {
@@ -293,15 +314,6 @@ fs::path OutputTecplot::GetPath(std::string &filename,
     int nprocs = m_f->m_comm->GetSize();
     int rank   = m_f->m_comm->GetRank();
     string       returnstr(filename);
-
-    if(m_config["writemultiplefiles"].as<bool>())
-    {
-        m_oneOutputFile = false;
-    }
-    else
-    {
-        m_oneOutputFile = (nprocs > 1) && (vm.count("procid") == 0 );
-    }
 
     // Amend for parallel output if required
     if (nprocs != 1 && !m_oneOutputFile)

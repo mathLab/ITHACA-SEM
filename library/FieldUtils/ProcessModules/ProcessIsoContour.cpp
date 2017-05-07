@@ -127,7 +127,7 @@ void ProcessIsoContour::Process(po::variables_map &vm)
         // assume we have read .dat file to directly input dat file.
         if(verbose)
         {
-            cout << "Process read iso from Field Pts" << endl;
+            cout << "\t Process read iso from Field Pts" << endl;
         }
 
         SetupIsoFromFieldPts(iso);
@@ -186,6 +186,10 @@ void ProcessIsoContour::Process(po::variables_map &vm)
 
         iso = ExtractContour(fieldid,value);
     }
+    else
+    {
+        ASSERTL0(false, "PtsType not supported for isocontour.");
+    }
 
     // Process isocontour
     bool smoothing      = m_config["smooth"].m_beenSet;
@@ -194,7 +198,7 @@ void ProcessIsoContour::Process(po::variables_map &vm)
     {
         if(verbose)
         {
-            cout << "Process global condense ..." << endl;
+            cout << "\t Process global condense ..." << endl;
         }
         int nfields = m_f->m_fieldPts->GetNFields() + m_f->m_fieldPts->GetDim();
         IsoSharedPtr g_iso = MemoryManager<Iso>::AllocateSharedPtr(nfields-3);
@@ -212,7 +216,7 @@ void ProcessIsoContour::Process(po::variables_map &vm)
 
         if(verbose)
         {
-            cout << "Process Contour smoothing ..." << endl;
+            cout << "\t Process Contour smoothing ..." << endl;
             timersm.Start();
         }
 
@@ -231,7 +235,7 @@ void ProcessIsoContour::Process(po::variables_map &vm)
 
             stringstream ss;
             ss << cpuTime << "s";
-            cout << "Process smooth CPU Time: " << setw(8) << left
+            cout << "\t Process smooth CPU Time: " << setw(8) << left
                  << ss.str() << endl;
             cpuTime = 0.0;
         }
@@ -244,7 +248,7 @@ void ProcessIsoContour::Process(po::variables_map &vm)
 
         if(verbose)
         {
-            cout << "Identifying separate regions [." << flush ;
+            cout << "\t Identifying separate regions [." << flush ;
         }
         for(int i =0 ; i < iso.size(); ++i)
         {
@@ -822,7 +826,7 @@ void Iso::GlobalCondense(vector<IsoSharedPtr> &iso, bool verbose)
 
     if(verbose)
     {
-        cout << "Process building tree ..." << endl;
+        cout << "\t Process building tree ..." << endl;
     }
 
     //Build tree

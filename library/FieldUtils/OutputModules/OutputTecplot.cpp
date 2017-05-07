@@ -214,7 +214,7 @@ void OutputTecplot::OutputFromPts(po::variables_map &vm)
     // Only write header if we're root or FE block; binary files always
     // write header
     m_writeHeader =
-        (m_zoneType != eOrdered || rank == 0) || m_binary || (!m_oneOutputFile);
+        (m_zoneType != eOrdered || rank == 0) || m_binary;
 
     WriteTecplotFile(vm);
 }

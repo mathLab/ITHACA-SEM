@@ -137,7 +137,6 @@ template<typename T> void WriteStream(std::ostream  &outfile,
 void OutputTecplot::OutputFromPts(po::variables_map &vm)
 {
     LibUtilities::PtsFieldSharedPtr fPts = m_f->m_fieldPts;
-    int nprocs = m_f->m_comm->GetSize();
     int rank   = m_f->m_comm->GetRank();
     m_numBlocks = 0;
 
@@ -146,15 +145,6 @@ void OutputTecplot::OutputFromPts(po::variables_map &vm)
     if (fPts->GetNpoints() == 0)
     {
         return;
-    }
-
-    if(m_config["writemultiplefiles"].as<bool>())
-    {
-        m_oneOutputFile = false;
-    }
-    else
-    {
-        m_oneOutputFile = (nprocs > 1) && (vm.count("procid") == 0 );
     }
 
     // Grab connectivity information.
@@ -226,7 +216,6 @@ void OutputTecplot::OutputFromPts(po::variables_map &vm)
 
 void OutputTecplot::OutputFromExp(po::variables_map &vm)
 {
-    int nprocs = m_f->m_comm->GetSize();
     m_numBlocks = 0;
     m_writeHeader = true;
 
@@ -238,15 +227,6 @@ void OutputTecplot::OutputFromExp(po::variables_map &vm)
     MultiRegions::ExpansionType HomoExpType = m_f->m_exp[0]->GetExpType();
 
     m_coordim = m_f->m_exp[0]->GetExp(0)->GetCoordim();
-
-    if(m_config["writemultiplefiles"].as<bool>())
-    {
-        m_oneOutputFile = false;
-    }
-    else
-    {
-        m_oneOutputFile = (nprocs > 1) && (vm.count("procid") == 0 );
-    }
 
     if (HomoExpType == MultiRegions::e3DH1D)
     {
@@ -351,6 +331,15 @@ void OutputTecplot::WriteTecplotFile(po::variables_map &vm)
 
     int nprocs = m_f->m_comm->GetSize();
     int rank   = m_f->m_comm->GetRank();
+
+    if(m_config["writemultiplefiles"].as<bool>())
+    {
+        m_oneOutputFile = false;
+    }
+    else
+    {
+        m_oneOutputFile = (nprocs > 1) && (vm.count("procid") == 0 );
+    }
 
     // Open output file
     ofstream outfile;

@@ -108,45 +108,42 @@ void InputFld::Process(po::variables_map &vm)
         ASSERTL0(false, "no input file found");
     }
 
+    LibUtilities::FieldIOSharedPtr fld =
+                m_f->FieldIOForFile(m_f->m_inputfiles[fldending][0]);
+
     if(m_f->m_graph)
     {
-        if (m_f->m_data.size() == 0)
+        // currently load all field (possibly could read data from
+        //  expansion list but it is re-arranged in expansion)
+
+        const SpatialDomains::ExpansionMap &expansions =
+            m_f->m_graph->GetExpansions();
+
+        // if Range has been specified it is possible to have a
+        // partition which is empty so check this and return if
+        // no elements present.
+
+        if (!expansions.size())
         {
-            // currently load all field (possibly could read data from
-            //  expansion list but it is re-arranged in expansion)
-
-            const SpatialDomains::ExpansionMap &expansions =
-                m_f->m_graph->GetExpansions();
-
-            // if Range has been specified it is possible to have a
-            // partition which is empty so check this and return if
-            // no elements present.
-
-            if (!expansions.size())
-            {
-                return;
-            }
-
-            Array<OneD, int> ElementGIDs(expansions.size());
-            SpatialDomains::ExpansionMap::const_iterator expIt;
-
-            i = 0;
-            for (expIt = expansions.begin(); expIt != expansions.end(); ++expIt)
-            {
-                ElementGIDs[i++] = expIt->second->m_geomShPtr->GetGlobalID();
-            }
-
-            m_f->m_fielddef.clear();
-            m_f->m_data.clear();
-
-            m_f->FieldIOForFile(m_f->m_inputfiles[fldending][0])->Import(
-                m_f->m_inputfiles[fldending][0], m_f->m_fielddef, m_f->m_data,
-                m_f->m_fieldMetaDataMap, ElementGIDs);
+            return;
         }
+
+        Array<OneD, int> ElementGIDs(expansions.size());
+        SpatialDomains::ExpansionMap::const_iterator expIt;
+
+        i = 0;
+        for (expIt = expansions.begin(); expIt != expansions.end(); ++expIt)
+        {
+            ElementGIDs[i++] = expIt->second->m_geomShPtr->GetGlobalID();
+        }
+
+        fld->Import(
+            m_f->m_inputfiles[fldending][0], m_f->m_fielddef, m_f->m_data,
+            m_f->m_fieldMetaDataMap, ElementGIDs);
     }
     else // load all data.
     {
-        m_f->FieldIOForFile(m_f->m_inputfiles[fldending][0])->Import(
+        fld->Import(
             m_f->m_inputfiles[fldending][0], m_f->m_fielddef, m_f->m_data,
             m_f->m_fieldMetaDataMap);
     }

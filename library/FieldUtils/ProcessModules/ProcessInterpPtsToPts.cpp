@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: ProcessInterpPoints.cpp
+//  File: ProcessInterpPtsToPts.cpp
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -37,7 +37,7 @@
 #include <string>
 using namespace std;
 
-#include "ProcessInterpPoints.h"
+#include "ProcessInterpPtsToPts.h"
 
 #include <FieldUtils/Interpolator.h>
 #include <LibUtilities/BasicUtils/ParseUtils.hpp>
@@ -51,22 +51,16 @@ namespace Nektar
 namespace FieldUtils
 {
 
-ModuleKey ProcessInterpPoints::className =
+ModuleKey ProcessInterpPtsToPts::className =
     GetModuleFactory().RegisterCreatorFunction(
-        ModuleKey(eProcessModule, "interppoints"),
-        ProcessInterpPoints::create,
+        ModuleKey(eProcessModule, "interpptstopts"),
+        ProcessInterpPtsToPts::create,
         "Interpolates a set of points to another, requires fromfld and "
         "fromxml to be defined, a line, plane or block of points can be "
         "defined");
 
-ProcessInterpPoints::ProcessInterpPoints(FieldSharedPtr f) : ProcessModule(f)
+ProcessInterpPtsToPts::ProcessInterpPtsToPts(FieldSharedPtr f) : ProcessModule(f)
 {
-    m_config["fromxml"] = ConfigOption(
-        false, "NotSet", "Xml file from which to interpolate field");
-
-    m_config["fromfld"] = ConfigOption(
-        false, "NotSet", "Fld file from which to interpolate field");
-
     m_config["line"] =  ConfigOption(
         false, "NotSet", "Specify a line of N points using "
                          "line=N,x0,y0,z0,z1,y1,z1");
@@ -91,116 +85,36 @@ ProcessInterpPoints::ProcessInterpPoints(FieldSharedPtr f) : ProcessModule(f)
                      "(box only currently)");
 }
 
-ProcessInterpPoints::~ProcessInterpPoints()
+ProcessInterpPtsToPts::~ProcessInterpPtsToPts()
 {
 }
 
-void ProcessInterpPoints::Process(po::variables_map &vm)
+void ProcessInterpPtsToPts::Process(po::variables_map &vm)
 {
-    if (m_f->m_fieldPts == LibUtilities::NullPtsField)
-    {
-        CreateFieldPts(vm);
-    }
+    ASSERTL0(m_f->m_fieldPts != LibUtilities::NullPtsField,
+        "Should have a PtsField for ProcessInterpPtsToPts.");
+    ASSERTL0(m_f->m_comm->GetSize() == 1,
+        "ProcessInterpPtsToPts not implemented in parallel.");
 
-    FieldSharedPtr fromField = boost::shared_ptr<Field>(new Field());
-    std::vector<std::string> files;
-    ParseUtils::GenerateOrderedStringVector(
-        m_config["fromxml"].as<string>().c_str(), files);
-    // set up session file for from field
-    fromField->m_session =
-        LibUtilities::SessionReader::CreateInstance(0, 0, files);
-    // Set up range based on min and max of local parallel partition
-    SpatialDomains::DomainRangeShPtr rng =
-        MemoryManager<SpatialDomains::DomainRange>::AllocateSharedPtr();
-    int coordim = m_f->m_fieldPts->GetDim();
-    int npts    = m_f->m_fieldPts->GetNpoints();
-    Array<OneD, Array<OneD, NekDouble> > pts;
-    m_f->m_fieldPts->GetPts(pts);
-    rng->m_checkShape = false;
-    rng->m_zmin       = -1;
-    rng->m_zmax       =  1;
-    rng->m_ymin       = -1;
-    rng->m_ymax       =  1;
-    switch (coordim)
-    {
-        case 3:
-            rng->m_doZrange = true;
-            rng->m_zmin     = Vmath::Vmin(npts, pts[2], 1);
-            rng->m_zmax     = Vmath::Vmax(npts, pts[2], 1);
-            if (rng->m_zmax == rng->m_zmin)
-            {
-                rng->m_zmin -= 1;
-                rng->m_zmax += 1;
-            }
-        case 2:
-            rng->m_doYrange = true;
-            rng->m_ymin     = Vmath::Vmin(npts, pts[1], 1);
-            rng->m_ymax     = Vmath::Vmax(npts, pts[1], 1);
-        case 1:
-            rng->m_doXrange = true;
-            rng->m_xmin     = Vmath::Vmin(npts, pts[0], 1);
-            rng->m_xmax     = Vmath::Vmax(npts, pts[0], 1);
-            break;
-        default:
-            ASSERTL0(false, "too many values specfied in range");
-    }
-    // setup rng parameters.
-    fromField->m_graph =
-        SpatialDomains::MeshGraph::Read(fromField->m_session, rng);
-    // Read in local from field partitions
-    const SpatialDomains::ExpansionMap &expansions =
-        fromField->m_graph->GetExpansions();
-    Array<OneD, int> ElementGIDs(expansions.size());
-    SpatialDomains::ExpansionMap::const_iterator expIt;
-    int i = 0;
-    for (expIt = expansions.begin(); expIt != expansions.end(); ++expIt)
-    {
-        ElementGIDs[i++] = expIt->second->m_geomShPtr->GetGlobalID();
-    }
-    // check to see that we do have some elmement in teh domain since
-    // possibly all points could be outside of the domain
-    ASSERTL0(i > 0, "No elements are set. Are the interpolated points "
-                    "wihtin the domain given by the xml files?");
-    string fromfld = m_config["fromfld"].as<string>();
-    m_f->FieldIOForFile(fromfld)->Import(
-        fromfld, fromField->m_fielddef, fromField->m_data,
-        LibUtilities::NullFieldMetaDataMap, ElementGIDs);
-    int NumHomogeneousDir = fromField->m_fielddef[0]->m_numHomogeneousDir;
-    //----------------------------------------------
-    // Set up Expansion information to use mode order from field
-    fromField->m_graph->SetExpansions(fromField->m_fielddef);
-    int nfields = fromField->m_fielddef[0]->m_fields.size();
-    fromField->m_exp.resize(nfields);
-    fromField->m_exp[0] = fromField->SetUpFirstExpList(NumHomogeneousDir, true);
-    m_f->m_exp.resize(nfields);
-    // declare auxiliary fields.
-    for (i = 1; i < nfields; ++i)
-    {
-        fromField->m_exp[i] = fromField->AppendExpList(NumHomogeneousDir);
-    }
-    // load field into expansion in fromfield.
+    // Move m_f->m_fieldPts
+    LibUtilities::PtsFieldSharedPtr oldPts = m_f->m_fieldPts;
+    m_f->m_fieldPts                        = LibUtilities::NullPtsField;
+
+    // Create new fieldPts
+    CreateFieldPts(vm);
+
+    int nfields = m_f->m_variables.size();
     for (int j = 0; j < nfields; ++j)
     {
-        for (i = 0; i < fromField->m_fielddef.size(); i++)
-        {
-            fromField->m_exp[j]->ExtractDataToCoeffs(
-                fromField->m_fielddef[i], fromField->m_data[i],
-                fromField->m_fielddef[0]->m_fields[j],
-                fromField->m_exp[j]->UpdateCoeffs());
-        }
-        fromField->m_exp[j]->BwdTrans(fromField->m_exp[j]->GetCoeffs(),
-                                      fromField->m_exp[j]->UpdatePhys());
         Array<OneD, NekDouble> newPts(m_f->m_fieldPts->GetNpoints());
-        m_f->m_fieldPts->AddField(newPts,
-                                  fromField->m_fielddef[0]->m_fields[j]);
-        m_f->m_variables.push_back(fromField->m_fielddef[0]->m_fields[j]);
+        m_f->m_fieldPts->AddField(newPts, m_f->m_variables[j]);
     }
 
     NekDouble clamp_low = m_config["clamptolowervalue"].as<NekDouble>();
     NekDouble clamp_up  = m_config["clamptouppervalue"].as<NekDouble>();
     NekDouble def_value = m_config["defaultvalue"].as<NekDouble>();
 
-    InterpolateFieldToPts(fromField->m_exp, m_f->m_fieldPts, clamp_low,
+    InterpolatePtsToPts(oldPts, m_f->m_fieldPts, clamp_low,
                           clamp_up, def_value);
 
     if (!boost::iequals(m_config["cp"].as<string>(), "NotSet"))
@@ -209,7 +123,7 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
     }
 }
 
-void ProcessInterpPoints::CreateFieldPts(po::variables_map &vm)
+void ProcessInterpPtsToPts::CreateFieldPts(po::variables_map &vm)
 {
     int rank   = m_f->m_comm->GetRank();
     int nprocs = m_f->m_comm->GetSize();
@@ -410,28 +324,29 @@ void ProcessInterpPoints::CreateFieldPts(po::variables_map &vm)
     else
     {
         ASSERTL0(false,
-            "Missing target points for ProcessInterpPoints.");
+            "ProcessInterpPtsToPts requires line, plane or box option.");
     }
 }
 
-void ProcessInterpPoints::InterpolateFieldToPts(
-    vector<MultiRegions::ExpListSharedPtr> &field0,
-    LibUtilities::PtsFieldSharedPtr &pts,
-    NekDouble clamp_low,
-    NekDouble clamp_up,
-    NekDouble def_value)
+void ProcessInterpPtsToPts::InterpolatePtsToPts(
+        LibUtilities::PtsFieldSharedPtr &fromPts,
+        LibUtilities::PtsFieldSharedPtr &toPts,
+        NekDouble clamp_low,
+        NekDouble clamp_up,
+        NekDouble def_value)
 {
-    ASSERTL0(pts->GetNFields() >= field0.size(), "ptField has too few fields");
+    ASSERTL0(toPts->GetNFields() >= fromPts->GetNFields(),
+            "ptField has too few fields");
 
-    int nfields = field0.size();
+    int nfields = fromPts->GetNFields();
 
     Interpolator interp;
     if (m_f->m_comm->GetRank() == 0)
     {
-        interp.SetProgressCallback(&ProcessInterpPoints::PrintProgressbar,
+        interp.SetProgressCallback(&ProcessInterpPtsToPts::PrintProgressbar,
                                    this);
     }
-    interp.Interpolate(field0, pts);
+    interp.Interpolate(fromPts, toPts);
     if (m_f->m_comm->GetRank() == 0)
     {
         cout << endl;
@@ -439,21 +354,21 @@ void ProcessInterpPoints::InterpolateFieldToPts(
 
     for (int f = 0; f < nfields; ++f)
     {
-        for (int i = 0; i < pts->GetNpoints(); ++i)
+        for (int i = 0; i < toPts->GetNpoints(); ++i)
         {
-            if (pts->GetPointVal(f, i) > clamp_up)
+            if (toPts->GetPointVal(f, i) > clamp_up)
             {
-                pts->SetPointVal(f, i, clamp_up);
+                toPts->SetPointVal(f, i, clamp_up);
             }
-            else if (pts->GetPointVal(f, i) < clamp_low)
+            else if (toPts->GetPointVal(f, i) < clamp_low)
             {
-                pts->SetPointVal(f, i, clamp_low);
+                toPts->SetPointVal(f, i, clamp_low);
             }
         }
     }
 }
 
-void ProcessInterpPoints::calcCp0()
+void ProcessInterpPtsToPts::calcCp0()
 {
     LibUtilities::PtsFieldSharedPtr pts = m_f->m_fieldPts;
     int dim = pts->GetDim();
@@ -541,7 +456,7 @@ void ProcessInterpPoints::calcCp0()
     }
 }
 
-void ProcessInterpPoints::PrintProgressbar(const int position,
+void ProcessInterpPtsToPts::PrintProgressbar(const int position,
                                            const int goal) const
 {
     LibUtilities::PrintProgressbar(position, goal, "Interpolating");

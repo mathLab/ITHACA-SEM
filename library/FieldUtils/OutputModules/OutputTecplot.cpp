@@ -320,10 +320,6 @@ fs::path OutputTecplot::GetFullOutName(std::string &filename,
 
 void OutputTecplot::WriteTecplotFile(po::variables_map &vm)
 {
-    // Extract the output filename and extension
-    string filename = m_config["outfile"].as<string>();
-    string outFile  = LibUtilities::PortablePath(GetFullOutName(filename, vm));
-
     // Variable names
     std::string coordVars[] = { "x", "y", "z" };
     vector<string> variables = m_f->m_variables;
@@ -341,6 +337,9 @@ void OutputTecplot::WriteTecplotFile(po::variables_map &vm)
         m_oneOutputFile = (nprocs > 1) && (vm.count("procid") == 0 );
     }
 
+    // Extract the output filename and extension
+    string filename = m_config["outfile"].as<string>();
+    string outFile  = LibUtilities::PortablePath(GetFullOutName(filename, vm));
     // Open output file
     ofstream outfile;
     if ((m_oneOutputFile && rank == 0) || !m_oneOutputFile)

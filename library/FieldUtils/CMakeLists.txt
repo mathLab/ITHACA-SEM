@@ -31,6 +31,7 @@ SET(FieldUtilsHeaders
     ProcessModules/ProcessInterpField.h
     ProcessModules/ProcessInterpPoints.h
     ProcessModules/ProcessInterpPointDataToFld.h
+    ProcessModules/ProcessInterpPtsToPts.h
     ProcessModules/ProcessIsoContour.h
     ProcessModules/ProcessJacobianEnergy.h
     ProcessModules/ProcessMapping.h
@@ -81,6 +82,7 @@ SET(FieldUtilsSources
     ProcessModules/ProcessInterpField.cpp
     ProcessModules/ProcessInterpPoints.cpp
     ProcessModules/ProcessInterpPointDataToFld.cpp
+    ProcessModules/ProcessInterpPtsToPts.cpp
     ProcessModules/ProcessIsoContour.cpp
     ProcessModules/ProcessJacobianEnergy.cpp
     ProcessModules/ProcessMapping.cpp

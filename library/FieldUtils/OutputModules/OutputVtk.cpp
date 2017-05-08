@@ -425,7 +425,7 @@ std::string OutputVtk::PrepareOutput(po::variables_map &vm)
     fs::path fulloutname = GetFullOutName(filename,vm);
     filename = LibUtilities::PortablePath(fulloutname);
 
-    if (m_f->m_session->GetComm()->GetSize() != 1)
+    if (m_f->m_comm->GetSize() != 1)
     {
         if (m_f->m_comm->TreatAsRankZero())
         {

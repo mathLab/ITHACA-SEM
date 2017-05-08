@@ -251,20 +251,23 @@ bool OutputFileBase::WriteFile(std::string &filename, po::variables_map &vm)
         outFile = GetPath(filename, vm);
     }
 
-    int writeFile = 1;
-    if (fs::exists(outFile) && (vm.count("forceoutput") == 0))
+    LibUtilities::CommSharedPtr comm;
+    if (m_f->m_comm)
     {
-        LibUtilities::CommSharedPtr comm;
-        if (m_f->m_comm)
-        {
-            comm = m_f->m_comm;
-        }
-        else
-        {
-            comm = LibUtilities::GetCommFactory().CreateInstance(
-                "Serial", 0, 0);
-        }
+        comm = m_f->m_comm;
+    }
+    else
+    {
+        comm = LibUtilities::GetCommFactory().CreateInstance(
+            "Serial", 0, 0);
+    }
 
+    int count = fs::exists(outFile) ? 1 : 0;
+    comm->AllReduce(count, LibUtilities::ReduceSum);
+
+    int writeFile = 1;
+    if (count && (vm.count("forceoutput") == 0))
+    {
         writeFile = 0; // set to zero for reduce all to be correct.
 
         if (comm->TreatAsRankZero())

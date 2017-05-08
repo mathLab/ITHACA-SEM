@@ -163,9 +163,14 @@ void OutputTecplot::OutputFromPts(po::variables_map &vm)
     switch (fPts->GetPtsType())
     {
         case LibUtilities::ePtsFile:
-        case LibUtilities::ePtsLine:
             m_numPoints.resize(1);
             m_numPoints[0] = fPts->GetNpoints();
+            m_f->m_comm->AllReduce(m_numPoints[0], LibUtilities::ReduceSum);
+            m_zoneType     = eOrdered;
+            break;
+        case LibUtilities::ePtsLine:
+            m_numPoints.resize(1);
+            m_numPoints[0] = fPts->GetPointsPerEdge(0);
             m_zoneType     = eOrdered;
             break;
         case LibUtilities::ePtsPlane:
@@ -358,10 +363,6 @@ void OutputTecplot::WriteTecplotFile(po::variables_map &vm)
     {
         // Reduce on number of blocks and number of points.
         m_f->m_comm->AllReduce(m_numBlocks, LibUtilities::ReduceSum);
-        for (int i = 0; i < m_numPoints.size(); ++i)
-        {
-            m_f->m_comm->AllReduce(m_numPoints[i], LibUtilities::ReduceSum);
-        }
 
         // Root process needs to know how much data everyone else has for
         // writing in parallel.
@@ -536,23 +537,66 @@ void OutputTecplot::WriteTecplotZone(std::ofstream &outfile)
     }
     else
     {
-        std::string dirs[] = { "I", "J", "K" };
-        outfile << "Zone";
-        for (int i = 0; i < m_numPoints.size(); ++i)
+        if((m_oneOutputFile && m_f->m_comm->GetRank() == 0) || !m_oneOutputFile)
         {
-            outfile << ", " << dirs[i] << "=" << m_numPoints[i];
-        }
-        outfile << ", F=POINT" << std::endl;
-
-        // Write out coordinates and field data: ordered by each point then each
-        // field.
-        for (int i = 0; i < m_fields[0].num_elements(); ++i)
-        {
-            for (int j = 0; j < m_fields.num_elements(); ++j)
+            std::string dirs[] = { "I", "J", "K" };
+            outfile << "Zone";
+            for (int i = 0; i < m_numPoints.size(); ++i)
             {
-                outfile << setw(12) << m_fields[j][i] << " ";
+                outfile << ", " << dirs[i] << "=" << m_numPoints[i];
             }
-            outfile << std::endl;
+            outfile << ", F=POINT" << std::endl;
+        }
+
+        if (m_oneOutputFile && m_f->m_comm->GetRank() == 0)
+        {
+            Array<OneD, NekDouble> tmp(m_fields.num_elements());
+            for (int i = 0; i < m_fields[0].num_elements(); ++i)
+            {
+                for (int j = 0; j < m_fields.num_elements(); ++j)
+                {
+                    outfile << setw(12) << m_fields[j][i] << " ";
+                }
+                outfile << std::endl;
+            }
+
+            for (int n = 1; n < m_f->m_comm->GetSize(); ++n)
+            {
+                for (int i = 0; i < m_rankFieldSizes[n]; ++i)
+                {
+                    m_f->m_comm->Recv(n, tmp);
+                    for (int j = 0; j < m_fields.num_elements(); ++j)
+                    {
+                        outfile << setw(12) << tmp[j] << " ";
+                    }
+                    outfile << std::endl;
+                }
+            }
+        }
+        else if (m_oneOutputFile && m_f->m_comm->GetRank() > 0)
+        {
+            Array<OneD, NekDouble> tmp(m_fields.num_elements());
+            for (int i = 0; i < m_fields[0].num_elements(); ++i)
+            {
+                for (int j = 0; j < m_fields.num_elements(); ++j)
+                {
+                    tmp[j] = m_fields[j][i];
+                }
+                m_f->m_comm->Send(0, tmp);
+            }
+        }
+        else
+        {
+            // Write out coordinates and field data: ordered by each
+            // point then each field.
+            for (int i = 0; i < m_fields[0].num_elements(); ++i)
+            {
+                for (int j = 0; j < m_fields.num_elements(); ++j)
+                {
+                    outfile << setw(12) << m_fields[j][i] << " ";
+                }
+                outfile << std::endl;
+            }
         }
     }
 }

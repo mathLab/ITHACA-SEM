@@ -142,11 +142,6 @@ void OutputTecplot::OutputFromPts(po::variables_map &vm)
 
     m_coordim = fPts->GetDim();
 
-    if (fPts->GetNpoints() == 0)
-    {
-        return;
-    }
-
     // Grab connectivity information.
     fPts->GetConnectivity(m_conn);
 
@@ -483,16 +478,19 @@ void OutputTecplot::WriteTecplotZone(std::ofstream &outfile)
 
                 for (int n = 1; n < m_f->m_comm->GetSize(); ++n)
                 {
-                    Array<OneD, NekDouble> tmp(m_rankFieldSizes[n]);
-                    m_f->m_comm->Recv(n, tmp);
-
-                    for (int i = 0; i < m_rankFieldSizes[n]; ++i)
+                    if(m_rankFieldSizes[n])
                     {
-                        if ((!(i % 1000)) && i)
+                        Array<OneD, NekDouble> tmp(m_rankFieldSizes[n]);
+                        m_f->m_comm->Recv(n, tmp);
+
+                        for (int i = 0; i < m_rankFieldSizes[n]; ++i)
                         {
-                            outfile << std::endl;
+                            if ((!(i % 1000)) && i)
+                            {
+                                outfile << std::endl;
+                            }
+                            outfile << tmp[i] << " ";
                         }
-                        outfile << tmp[i] << " ";
                     }
                 }
                 outfile << std::endl;
@@ -500,9 +498,12 @@ void OutputTecplot::WriteTecplotZone(std::ofstream &outfile)
         }
         else if (m_oneOutputFile && m_f->m_comm->GetRank() > 0)
         {
-            for (int i = 0; i < m_fields.num_elements(); ++i)
+            if(m_fields[0].num_elements())
             {
-                m_f->m_comm->Send(0, m_fields[i]);
+                for (int i = 0; i < m_fields.num_elements(); ++i)
+                {
+                    m_f->m_comm->Send(0, m_fields[i]);
+                }
             }
         }
         else
@@ -767,14 +768,20 @@ void OutputTecplot::WriteTecplotConnectivity(std::ofstream &outfile)
     if (m_oneOutputFile && m_f->m_comm->GetRank() > 0)
     {
         // Need to amalgamate connectivity information
-        Array<OneD, int> conn(m_totConn);
-        for (int i = 0, cnt = 0; i < m_conn.size(); ++i)
+        if (m_totConn)
         {
-            Vmath::Vcopy(m_conn[i].num_elements(), &m_conn[i][0], 1,
-                         &conn[cnt], 1);
-            cnt += m_conn[i].num_elements();
+            Array<OneD, int> conn(m_totConn);
+            for (int i = 0, cnt = 0; i < m_conn.size(); ++i)
+            {
+                if(m_conn[i].num_elements())
+                {
+                    Vmath::Vcopy(m_conn[i].num_elements(), &m_conn[i][0], 1,
+                                 &conn[cnt], 1);
+                    cnt += m_conn[i].num_elements();
+                }
+            }
+            m_f->m_comm->Send(0, conn);
         }
-        m_f->m_comm->Send(0, conn);
     }
     else
     {
@@ -799,14 +806,17 @@ void OutputTecplot::WriteTecplotConnectivity(std::ofstream &outfile)
 
             for (int n = 1; n < m_f->m_comm->GetSize(); ++n)
             {
-                Array<OneD, int> conn(m_rankConnSizes[n]);
-                m_f->m_comm->Recv(n, conn);
-                for (int j = 0; j < conn.num_elements(); ++j)
+                if(m_rankConnSizes[n])
                 {
-                    outfile << conn[j] + offset + 1 << " ";
-                    if ((!(j % 1000)) && j)
+                    Array<OneD, int> conn(m_rankConnSizes[n]);
+                    m_f->m_comm->Recv(n, conn);
+                    for (int j = 0; j < conn.num_elements(); ++j)
                     {
-                        outfile << std::endl;
+                        outfile << conn[j] + offset + 1 << " ";
+                        if ((!(j % 1000)) && j)
+                        {
+                            outfile << std::endl;
+                        }
                     }
                 }
                 offset += m_rankFieldSizes[n];

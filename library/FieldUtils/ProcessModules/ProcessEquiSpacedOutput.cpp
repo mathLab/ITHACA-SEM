@@ -60,8 +60,6 @@ ModuleKey ProcessEquiSpacedOutput::className =
 ProcessEquiSpacedOutput::ProcessEquiSpacedOutput(FieldSharedPtr f)
     : ProcessModule(f)
 {
-    f->m_setUpEquiSpacedFields = true;
-
     m_config["tetonly"] =
         ConfigOption(true, "NotSet", "Only process tetrahedral elements");
 
@@ -74,11 +72,6 @@ ProcessEquiSpacedOutput::~ProcessEquiSpacedOutput()
 }
 
 void ProcessEquiSpacedOutput::Process(po::variables_map &vm)
-{
-    SetupEquiSpacedField();
-}
-
-void ProcessEquiSpacedOutput::SetupEquiSpacedField(void)
 {
     int nel = m_f->m_exp[0]->GetExpSize();
     if (!nel)

@@ -73,7 +73,7 @@ struct Field
           m_declareExpansionAsDisContField(false),
           m_requireBoundaryExpansion(false), m_writeBndFld(false),
           m_fldToBnd(false), m_addNormals(false),
-          m_setUpEquiSpacedFields(false), m_fieldPts(LibUtilities::NullPtsField)
+          m_fieldPts(LibUtilities::NullPtsField)
     {
     }
 
@@ -108,8 +108,6 @@ struct Field
     std::vector<unsigned int> m_bndRegionsToWrite;
     bool m_fldToBnd;
     bool m_addNormals;
-
-    bool m_setUpEquiSpacedFields;
 
     LibUtilities::PtsFieldSharedPtr m_fieldPts;
 

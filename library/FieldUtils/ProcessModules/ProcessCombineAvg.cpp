@@ -58,9 +58,6 @@ ProcessCombineAvg::ProcessCombineAvg(FieldSharedPtr f) : ProcessModule(f)
 {
     m_config["fromfld"] =
         ConfigOption(false, "NotSet", "Fld file form which to add field");
-
-    ASSERTL0(m_config["fromfld"].as<string>().compare("NotSet") != 0,
-             "Need to specify fromfld=file.fld ");
 }
 
 ProcessCombineAvg::~ProcessCombineAvg()
@@ -74,6 +71,9 @@ void ProcessCombineAvg::Process(po::variables_map &vm)
     {
         return;
     }
+
+    ASSERTL0(m_config["fromfld"].as<string>().compare("NotSet") != 0,
+             "Need to specify fromfld=file.fld ");
 
     int nfields  = m_f->m_variables.size();
     int nq       = m_f->m_exp[0]->GetTotPoints();
@@ -121,7 +121,7 @@ void ProcessCombineAvg::Process(po::variables_map &vm)
         {
             m_f->m_exp[j]->ExtractDataToCoeffs(
                 fromField->m_fielddef[i], fromField->m_data[i],
-                fromField->m_fielddef[i]->m_fields[j],
+                m_f->m_variables[j],
                 m_f->m_exp[j]->UpdateCoeffs());
         }
         m_f->m_exp[j]->BwdTrans(m_f->m_exp[j]->GetCoeffs(), fromPhys[j]);

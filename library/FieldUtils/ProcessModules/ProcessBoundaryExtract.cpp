@@ -119,7 +119,10 @@ void ProcessBoundaryExtract::Process(po::variables_map &vm)
         ASSERTL0(m_f->m_bndRegionsToWrite == bndRegions,
                 "Incompatible bnd parameters.");
     }
-    m_f->m_bndRegionsToWrite = bndRegions;
+    else
+    {
+        m_f->m_bndRegionsToWrite = bndRegions;
+    }
 }
 }
 }

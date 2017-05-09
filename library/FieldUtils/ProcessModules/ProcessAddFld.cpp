@@ -172,29 +172,21 @@ void ProcessAddFld::Process(po::variables_map &vm)
         {
             Vmath::Vcopy(ncoeffs, m_f->m_exp[j]->GetCoeffs(), 1, SaveFld, 1);
 
-            // since expansion is set up according to m_f search for same
-            // variable in new field
-            int nfield;
-            for (nfield = 0; nfield < fromFieldDef[0]->m_fields.size();
-                 ++nfield)
-            {
-                if (fromFieldDef[0]->m_fields[nfield] ==
-                    m_f->m_variables[j])
-                {
-                    break;
-                }
-            }
+            // Check if new field has this variable
+            vector<string>::iterator it =
+                find (fromFieldDef[0]->m_fields.begin(),
+                      fromFieldDef[0]->m_fields.end(),
+                      m_f->m_variables[j]);
 
-            ASSERTL0(nfield != fromFieldDef[0]->m_fields.size(),
-                     "Could not find field " + m_f->m_variables[j] +
-                         " in from field");
+            ASSERTL0(it != fromFieldDef[0]->m_fields.end(),
+              "Could not find field " + m_f->m_variables[j] + " in from field");
 
             // load new field
             for (int i = 0; i < fromFieldData.size(); ++i)
             {
                 m_f->m_exp[j]->ExtractDataToCoeffs(
                     fromFieldDef[i], fromFieldData[i],
-                    fromFieldDef[i]->m_fields[nfield],
+                    m_f->m_variables[j],
                     m_f->m_exp[j]->UpdateCoeffs());
             }
 

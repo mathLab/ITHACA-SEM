@@ -78,9 +78,6 @@ public:
     }
 
 protected:
-    ProcessEquiSpacedOutput(){};
-    void SetupEquiSpacedField(void);
-
     void SetHomogeneousConnectivity(void);
 
     void GenOrthoModes(int n,

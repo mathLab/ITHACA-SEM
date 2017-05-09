@@ -191,7 +191,7 @@ void ProcessInnerProduct::Process(po::variables_map &vm)
                     m_f->m_exp[fid]->ExtractDataToCoeffs(
                         allFromField[g]->m_fielddef[i],
                         allFromField[g]->m_data[i],
-                        allFromField[g]->m_fielddef[i]->m_fields[fid],
+                        m_f->m_variables[fid],
                         m_f->m_exp[fid]->UpdateCoeffs());
                 }
 
@@ -231,7 +231,7 @@ NekDouble ProcessInnerProduct::IProduct(
         {
             m_f->m_exp[fid]->ExtractDataToCoeffs(
                 fromField->m_fielddef[i], fromField->m_data[i],
-                fromField->m_fielddef[i]->m_fields[fid],
+                m_f->m_variables[fid],
                 m_f->m_exp[fid]->UpdateCoeffs());
         }
 

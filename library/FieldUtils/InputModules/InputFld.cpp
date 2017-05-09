@@ -85,32 +85,12 @@ InputFld::~InputFld()
 void InputFld::Process(po::variables_map &vm)
 {
     int i;
-    string fldending;
-    // Determine appropriate field input
-    if (m_f->m_inputfiles.count("fld") != 0)
-    {
-        fldending = "fld";
-    }
-    else if (m_f->m_inputfiles.count("chk") != 0)
-    {
-        fldending = "chk";
-    }
-    else if (m_f->m_inputfiles.count("rst") != 0)
-    {
-        fldending = "rst";
-    }
-    else if (m_f->m_inputfiles.count("bse") != 0)
-    {
-        fldending = "bse";
-    }
-    else
-    {
-        ASSERTL0(false, "no input file found");
-    }
+    string fileName = m_config["infile"].as<string>();
 
     LibUtilities::FieldIOSharedPtr fld =
-                m_f->FieldIOForFile(m_f->m_inputfiles[fldending][0]);
+                m_f->FieldIOForFile(fileName);
 
+    int oldSize = m_f->m_fielddef.size();
     if(m_f->m_graph)
     {
         // currently load all field (possibly could read data from
@@ -138,18 +118,30 @@ void InputFld::Process(po::variables_map &vm)
         }
 
         fld->Import(
-            m_f->m_inputfiles[fldending][0], m_f->m_fielddef, m_f->m_data,
+            fileName, m_f->m_fielddef, m_f->m_data,
             m_f->m_fieldMetaDataMap, ElementGIDs);
     }
     else // load all data.
     {
         fld->Import(
-            m_f->m_inputfiles[fldending][0], m_f->m_fielddef, m_f->m_data,
+            fileName, m_f->m_fielddef, m_f->m_data,
             m_f->m_fieldMetaDataMap);
     }
 
     // save field names
-    m_f->m_variables = m_f->m_fielddef[0]->m_fields;
+    for(i = 0; i < m_f->m_fielddef[oldSize]->m_fields.size(); ++i)
+    {
+        // check for multiple fld files
+        vector<string>::iterator it =
+            find (m_f->m_variables.begin(),
+                  m_f->m_variables.end(),
+                  m_f->m_fielddef[oldSize]->m_fields[i]);
+
+        if(it == m_f->m_variables.end())
+        {
+            m_f->m_variables.push_back(m_f->m_fielddef[oldSize]->m_fields[i]);
+        }
+    }
 }
 }
 }

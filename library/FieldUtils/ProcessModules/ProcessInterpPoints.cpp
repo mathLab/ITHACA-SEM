@@ -55,7 +55,7 @@ ModuleKey ProcessInterpPoints::className =
     GetModuleFactory().RegisterCreatorFunction(
         ModuleKey(eProcessModule, "interppoints"),
         ProcessInterpPoints::create,
-        "Interpolates a set of points to another, requires fromfld and "
+        "Interpolates a field to a set of points. Requires fromfld and "
         "fromxml to be defined, a line, plane or block of points can be "
         "defined");
 

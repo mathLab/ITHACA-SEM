@@ -60,9 +60,6 @@ ProcessAddFld::ProcessAddFld(FieldSharedPtr f) : ProcessModule(f)
     m_config["fromfld"] =
         ConfigOption(false, "NotSet", "Fld file form which to add field");
 
-    ASSERTL0(m_config["fromfld"].as<string>().compare("NotSet") != 0,
-             "Need to specify fromfld=file.fld ");
-
     if(f->m_inputfiles.count("xml"))
     {
         m_priority = eModifyExp;
@@ -82,8 +79,12 @@ void ProcessAddFld::Process(po::variables_map &vm)
     string scalestr = m_config["scale"].as<string>();
     NekDouble scale = boost::lexical_cast<NekDouble>(scalestr);
 
+    ASSERTL0(m_config["fromfld"].as<string>().compare("NotSet") != 0,
+             "Need to specify fromfld=file.fld ");
     string fromfld           = m_config["fromfld"].as<string>();
-    FieldSharedPtr fromField = boost::shared_ptr<Field>(new Field());
+
+    vector<LibUtilities::FieldDefinitionsSharedPtr> fromFieldDef;
+    vector<vector<double> >                         fromFieldData;
 
     if (m_f->m_graph)
     {
@@ -108,29 +109,29 @@ void ProcessAddFld::Process(po::variables_map &vm)
             ElementGIDs[i++] = expIt->second->m_geomShPtr->GetGlobalID();
         }
         m_f->FieldIOForFile(fromfld)->Import(
-            fromfld, fromField->m_fielddef, fromField->m_data,
+            fromfld, fromFieldDef, fromFieldData,
             LibUtilities::NullFieldMetaDataMap, ElementGIDs);
     }
     else
     {
         m_f->FieldIOForFile(fromfld)->Import(
-            fromfld, fromField->m_fielddef, fromField->m_data,
+            fromfld, fromFieldDef, fromFieldData,
             LibUtilities::NullFieldMetaDataMap);
     }
 
     bool samelength = true;
-    if (fromField->m_data.size() != m_f->m_data.size())
+    if (fromFieldData.size() != m_f->m_data.size())
     {
         samelength = false;
     }
 
     // scale input field
-    for (int i = 0; i < fromField->m_data.size(); ++i)
+    for (int i = 0; i < fromFieldData.size(); ++i)
     {
-        int datalen = fromField->m_data[i].size();
+        int datalen = fromFieldData[i].size();
 
-        Vmath::Smul(datalen, scale, &(fromField->m_data[i][0]), 1,
-                    &(fromField->m_data[i][0]), 1);
+        Vmath::Smul(datalen, scale, &(fromFieldData[i][0]), 1,
+                    &(fromFieldData[i][0]), 1);
 
         if (samelength)
         {
@@ -151,7 +152,7 @@ void ProcessAddFld::Process(po::variables_map &vm)
             int datalen = m_f->m_data[i].size();
 
             Vmath::Vadd(datalen, &(m_f->m_data[i][0]), 1,
-                        &(fromField->m_data[i][0]), 1, &(m_f->m_data[i][0]), 1);
+                        &(fromFieldData[i][0]), 1, &(m_f->m_data[i][0]), 1);
         }
         
     }
@@ -174,26 +175,26 @@ void ProcessAddFld::Process(po::variables_map &vm)
             // since expansion is set up according to m_f search for same
             // variable in new field
             int nfield;
-            for (nfield = 0; nfield < fromField->m_fielddef[0]->m_fields.size();
+            for (nfield = 0; nfield < fromFieldDef[0]->m_fields.size();
                  ++nfield)
             {
-                if (fromField->m_fielddef[0]->m_fields[nfield] ==
+                if (fromFieldDef[0]->m_fields[nfield] ==
                     m_f->m_variables[j])
                 {
                     break;
                 }
             }
 
-            ASSERTL0(nfield != fromField->m_fielddef[0]->m_fields.size(),
+            ASSERTL0(nfield != fromFieldDef[0]->m_fields.size(),
                      "Could not find field " + m_f->m_variables[j] +
                          " in from field");
 
             // load new field
-            for (int i = 0; i < fromField->m_data.size(); ++i)
+            for (int i = 0; i < fromFieldData.size(); ++i)
             {
                 m_f->m_exp[j]->ExtractDataToCoeffs(
-                    fromField->m_fielddef[i], fromField->m_data[i],
-                    fromField->m_fielddef[i]->m_fields[nfield],
+                    fromFieldDef[i], fromFieldData[i],
+                    fromFieldDef[i]->m_fields[nfield],
                     m_f->m_exp[j]->UpdateCoeffs());
             }
 

@@ -105,8 +105,7 @@ InputNek5000::~InputNek5000()
  */
 void InputNek5000::Process(po::variables_map &vm)
 {
-    string fldending = "fld5000";
-    ifstream file(m_f->m_inputfiles[fldending][0].c_str(), ios::binary);
+    ifstream file(m_config["infile"].as<string>().c_str(), ios::binary);
 
     // Header: 132 bytes for binary.
     vector<char> data(132);

@@ -242,11 +242,21 @@ void ProcessCreateExp::Process(po::variables_map &vm)
                 {
                     for (i = 0; i < m_f->m_data.size() / nstrips; ++i)
                     {
-                        m_f->m_exp[s * nfields + j]->ExtractDataToCoeffs(
-                            m_f->m_fielddef[i * nstrips + s],
-                            m_f->m_data[i * nstrips + s],
-                            m_f->m_fielddef[i * nstrips + s]->m_fields[j],
-                            m_f->m_exp[s * nfields + j]->UpdateCoeffs());
+                        int n = i * nstrips + s;
+                        // In case of multiple flds, we might not have a
+                        //   variable in this m_data[n] -> skip in this case
+                        vector<string>::iterator it =
+                            find (m_f->m_fielddef[n]->m_fields.begin(),
+                                  m_f->m_fielddef[n]->m_fields.end(),
+                                  m_f->m_variables[j]);
+                        if(it !=m_f->m_fielddef[n]->m_fields.end())
+                        {
+                            m_f->m_exp[s * nfields + j]->ExtractDataToCoeffs(
+                                m_f->m_fielddef[n],
+                                m_f->m_data[n],
+                                m_f->m_variables[j],
+                                m_f->m_exp[s * nfields + j]->UpdateCoeffs());
+                        }
                     }
                     m_f->m_exp[s * nfields + j]->BwdTrans(
                         m_f->m_exp[s * nfields + j]->GetCoeffs(),

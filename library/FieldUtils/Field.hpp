@@ -61,8 +61,6 @@
 
 #include "FieldUtilsDeclspec.h"
 
-using namespace std;
-
 namespace Nektar
 {
 namespace FieldUtils
@@ -87,10 +85,10 @@ struct Field
         }
     }
     bool m_verbose;
-    vector<LibUtilities::FieldDefinitionsSharedPtr> m_fielddef;
-    vector<vector<double> > m_data;
-    vector<MultiRegions::ExpListSharedPtr> m_exp;
-    vector<string> m_variables;
+    std::vector<LibUtilities::FieldDefinitionsSharedPtr> m_fielddef;
+    std::vector<std::vector<double> > m_data;
+    std::vector<MultiRegions::ExpListSharedPtr> m_exp;
+    std::vector<std::string> m_variables;
 
     int m_numHomogeneousDir;
 
@@ -104,10 +102,10 @@ struct Field
     LibUtilities::CommSharedPtr m_comm;
     LibUtilities::SessionReaderSharedPtr m_session;
     SpatialDomains::MeshGraphSharedPtr m_graph;
-    map<string, vector<string> > m_inputfiles;
+    std::map<std::string, std::vector<std::string> > m_inputfiles;
 
     bool m_writeBndFld;
-    vector<unsigned int> m_bndRegionsToWrite;
+    std::vector<unsigned int> m_bndRegionsToWrite;
     bool m_fldToBnd;
     bool m_addNormals;
 
@@ -420,7 +418,7 @@ struct Field
      * @return Reader for @p filename.
      */
     FIELD_UTILS_EXPORT LibUtilities::FieldIOSharedPtr FieldIOForFile(
-        string filename)
+        std::string filename)
     {
         LibUtilities::CommSharedPtr c = m_session ? m_session->GetComm() :
             LibUtilities::GetCommFactory().CreateInstance("Serial", 0, 0);
@@ -442,7 +440,9 @@ struct Field
     }
 
     FIELD_UTILS_EXPORT MultiRegions::ExpListSharedPtr AppendExpList(
-        int NumHomogeneousDir, string var = "DefaultVar", bool NewField = false)
+        int NumHomogeneousDir,
+        std::string var = "DefaultVar",
+        bool NewField = false)
     {
         if (var.compare("DefaultVar") == 0 && m_requireBoundaryExpansion)
         {
@@ -736,7 +736,7 @@ struct Field
 private:
     /// Map to store FieldIO instances. Key is the reader type, value is the
     /// FieldIO object.
-    map<string, LibUtilities::FieldIOSharedPtr> m_fld;
+    std::map<std::string, LibUtilities::FieldIOSharedPtr> m_fld;
 };
 
 typedef boost::shared_ptr<Field> FieldSharedPtr;

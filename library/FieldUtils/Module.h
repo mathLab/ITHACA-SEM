@@ -59,8 +59,6 @@ namespace Nektar
 {
 namespace FieldUtils
 {
-using namespace std;
-
 /**
  * Denotes different types of mesh converter modules: so far only
  * input, output and process modules are defined.
@@ -102,7 +100,7 @@ struct ConfigOption
      * @param defValue  Default value of the option.
      * @param desc      Description of the option.
      */
-    ConfigOption(bool isBool, string defValue, string desc)
+    ConfigOption(bool isBool, std::string defValue, std::string desc)
         : m_isBool(isBool), m_beenSet(false), m_value(), m_defValue(defValue),
           m_desc(desc)
     {
@@ -136,11 +134,11 @@ struct ConfigOption
     /// line. If false, the default value will be put into #value.
     bool m_beenSet;
     /// The value of the configuration option.
-    string m_value;
+    std::string m_value;
     /// Default value of the configuration option.
-    string m_defValue;
+    std::string m_defValue;
     /// Description of the configuration option.
-    string m_desc;
+    std::string m_desc;
 };
 
 /**
@@ -166,7 +164,7 @@ public:
 
     virtual ModulePriority GetModulePriority() = 0;
 
-    FIELD_UTILS_EXPORT void RegisterConfig(string key, string value);
+    FIELD_UTILS_EXPORT void RegisterConfig(std::string key, std::string value);
     FIELD_UTILS_EXPORT void PrintConfig();
     FIELD_UTILS_EXPORT void SetDefaults();
 
@@ -181,7 +179,7 @@ protected:
     /// Field object
     FieldSharedPtr m_f;
     /// List of configuration values.
-    map<string, ConfigOption> m_config;
+    std::map<std::string, ConfigOption> m_config;;
 };
 
 /**
@@ -197,12 +195,12 @@ class InputModule : public Module
 {
 public:
     InputModule(FieldSharedPtr p_m);
-    FIELD_UTILS_EXPORT void AddFile(string fileType, string fileName);
+    FIELD_UTILS_EXPORT void AddFile(std::string fileType, std::string fileName);
 
 protected:
     /// Print summary of elements.
     void PrintSummary();
-    set<string> m_allowedFiles;
+    std::set<std::string> m_allowedFiles;
 };
 
 typedef boost::shared_ptr<InputModule> InputModuleSharedPtr;
@@ -234,11 +232,11 @@ public:
 
 protected:
     /// Output stream
-    ofstream m_fldFile;
+    std::ofstream m_fldFile;
 };
 
-typedef pair<ModuleType, string> ModuleKey;
-FIELD_UTILS_EXPORT ostream &operator<<(ostream &os, const ModuleKey &rhs);
+typedef pair<ModuleType, std::string> ModuleKey;
+FIELD_UTILS_EXPORT std::ostream &operator<<(ostream &os, const ModuleKey &rhs);
 
 typedef boost::shared_ptr<Module> ModuleSharedPtr;
 typedef LibUtilities::NekFactory<ModuleKey, Module, FieldSharedPtr>
@@ -254,13 +252,13 @@ public:
     {
         m_size = size;
         m_rank = rank;
-        m_type = "FieldConvert parallel";
+       m_type = "FieldConvert parallel";
     }
     FieldConvertComm(int size, int rank) : CommSerial(0, NULL)
     {
         m_size = size;
         m_rank = rank;
-        m_type = "FieldConvert parallel";
+       m_type = "FieldConvert parallel";
     }
     virtual ~FieldConvertComm()
     {

@@ -101,8 +101,8 @@ class LEE : public UnsteadySystem
                 const Array<OneD, Array<OneD, NekDouble> > &physfield,
                 Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &flux);
 
-        void GetLinTerm(const Array< OneD, const Array< OneD, NekDouble > > &inarray,
-                        Array<OneD, Array<OneD, NekDouble> > &linTerm);
+        void AddLinTerm(const Array< OneD, const Array< OneD, NekDouble > > &inarray,
+                        Array<OneD, Array<OneD, NekDouble> > &outarray);
 
         virtual bool v_PreIntegrate(int step);
 

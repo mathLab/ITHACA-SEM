@@ -166,8 +166,6 @@ void LEE::GetFluxVector(
         Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &flux)
 {
     int nq = physfield[0].num_elements();
-    Array<OneD, NekDouble> tmp1(nq);
-    Array<OneD, NekDouble> tmp2(nq);
 
     ASSERTL1(flux[0].num_elements() == m_spacedim,
                  "Dimension of flux array and velocity array do not match");
@@ -188,52 +186,37 @@ void LEE::GetFluxVector(
         ru[i] = physfield[2+i];
     }
 
+    Array<OneD, NekDouble> c0sq(nq);
+    Vmath::Vdiv(nq, p0, 1, rho0, 1, c0sq, 1);
+    Vmath::Smul(nq, m_gamma, c0sq, 1, c0sq, 1);
+
     // F_{adv,p',j} = c0^2 * ru_j + u0_j * p
     for (int j = 0; j < m_spacedim; ++j)
     {
         int i = 0;
-        Vmath::Zero(nq, flux[i][j], 1);
-
-        // c0^2 * ru_j
-        Vmath::Smul(nq, m_gamma, p0, 1, tmp1, 1);
-        Vmath::Vdiv(nq, tmp1, 1, rho0, 1, tmp1, 1);
-        Vmath::Vmul(nq, tmp1, 1, ru[j], 1, tmp1, 1);
-
-        // u0_j * p
-        Vmath::Vmul(nq, u0[j], 1, p, 1, tmp2, 1);
-
-        Vmath::Vadd(nq, tmp1, 1, tmp2, 1, flux[i][j], 1);
+        Vmath::Vvtvvtp(nq, c0sq, 1, ru[j], 1, u0[j], 1, p, 1,  flux[i][j], 1);
     }
 
     // F_{adv,rho',j} = u0_j * rho' + ru_j
     for (int j = 0; j < m_spacedim; ++j)
     {
         int i = 1;
-        Vmath::Zero(nq, flux[i][j], 1);
-
-        // u0_j * rho'
-        Vmath::Vmul(nq, u0[j], 1, rho, 1, tmp1, 1);
-
-        Vmath::Vadd(nq, tmp1, 1, ru[j], 1, flux[i][j], 1);
+        // u0_j * rho' + ru_j
+        Vmath::Vvtvp(nq, u0[j], 1, rho, 1, ru[j], 1, flux[i][j], 1);
     }
 
     for (int i = 2; i < flux.num_elements(); ++i)
     {
-        ASSERTL1(flux[i].num_elements() == m_spacedim,
-                 "Dimension of flux array and velocity array do not match");
-
         // F_{adv,u'_i,j} = ru_i * u0_j + delta_ij * p
         for (int j = 0; j < m_spacedim; ++j)
         {
-            Vmath::Zero(nq, flux[i][j], 1);
-
             // ru_i * u0_j
             Vmath::Vmul(nq, ru[i-2], 1, u0[j], 1, flux[i][j], 1);
 
             // kronecker delta
             if (i - 2 == j)
             {
-                // delta_ij * p
+                // delta_ij + p
                 Vmath::Vadd(nq, p, 1, flux[i][j], 1, flux[i][j], 1);
             }
         }
@@ -242,10 +225,22 @@ void LEE::GetFluxVector(
 
 
 
-void LEE::GetLinTerm(const Array< OneD, const Array< OneD, NekDouble > > &inarray,
-                     Array<OneD, Array<OneD, NekDouble> > &linTerm)
+void LEE::AddLinTerm(const Array< OneD, const Array< OneD, NekDouble > > &inarray,
+                     Array<OneD, Array<OneD, NekDouble> > &outarray)
 {
     int nq = GetTotPoints();
+
+    Array<OneD, Array<OneD, NekDouble> > linTerm(m_spacedim + 2);
+    for (int i = 0; i < m_spacedim + 2; ++i)
+    {
+        if (i == 1)
+        {
+            // skip rho
+            continue;
+        }
+
+        linTerm[i] = Array<OneD, NekDouble> (nq);
+    }
 
     Array<OneD, NekDouble> p0 = m_bf[0];
     Array<OneD, NekDouble> rho0 = m_bf[1];
@@ -265,7 +260,6 @@ void LEE::GetLinTerm(const Array< OneD, const Array< OneD, NekDouble > > &inarra
 
     Array<OneD, NekDouble> grad(nq);
     Array<OneD, NekDouble> tmp1(nq);
-    Array<OneD, NekDouble> tmp2(nq);
 
     // p
     for (int j = 0; j < m_spacedim; ++j)
@@ -280,54 +274,45 @@ void LEE::GetLinTerm(const Array< OneD, const Array< OneD, NekDouble > > &inarra
             m_fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[j], p0, grad);
             Vmath::Vmul(nq, grad, 1, ru[j], 1, tmp1, 1);
             Vmath::Vdiv(nq, tmp1, 1, rho0, 1, tmp1, 1);
-
-            // p * du0_j/dx_j
+            // p * du0_j/dx_j - 1/rho0 * dp0/dx_j * ru_j
             m_fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[j], u0[j], grad);
-            Vmath::Vmul(nq, grad, 1, p, 1, tmp2, 1);
-
-            // (1-gamma) ( 1/rho0 * dp0/dx_j * ru_j - p * du0_j/dx_j )
-            Vmath::Vsub(nq, tmp1, 1, tmp2, 1, tmp1, 1);
-            Vmath::Smul(nq, (1-m_gamma), tmp1, 1, tmp1, 1);
-
-            Vmath::Vadd(nq, tmp1, 1, linTerm[i], 1, linTerm[i], 1);
+            Vmath::Vvtvm(nq, grad, 1, p, 1, tmp1, 1, tmp1, 1);
+            // -(1-gamma) (p * du0_j/dx_j - 1/rho0 * dp0/dx_j * ru_j)
+            Vmath::Svtvp(nq, (m_gamma-1), tmp1, 1, linTerm[i], 1, linTerm[i], 1);
         }
     }
 
-    // rho
-    for (int j = 0; j < m_spacedim; ++j)
-    {
-        int i = 1;
-        Vmath::Zero(nq, linTerm[i], 1);
-    }
-
+    // rho has no linTerm
 
     // ru_i
     for (int i = 2; i < m_spacedim + 2; ++i)
     {
         Vmath::Zero(nq, linTerm[i], 1);
-
         // du0_i/dx_j * (u0_j * rho + ru_j)
         for (int j = 0; j < m_spacedim; ++j)
         {
             // d u0_i / d x_j
             m_fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[j], u0[i-2], grad);
-
             // u0_j * rho + ru_j
-            Vmath::Vmul(nq, u0[j], 1, rho, 1, tmp1, 1);
-            Vmath::Vadd(nq, ru[j], 1, tmp1, 1, tmp1, 1);
-
-            Vmath::Vmul(nq, grad, 1, tmp1, 1, tmp1, 1);
-
-            Vmath::Vadd(nq, tmp1, 1, linTerm[i], 1, linTerm[i], 1);
+            Vmath::Vvtvp(nq, u0[j], 1, rho, 1, ru[j], 1, tmp1, 1);
+            // du0_i/dx_j * (u0_j * rho + ru_j)
+            Vmath::Vvtvp(nq, grad, 1, tmp1, 1, linTerm[i], 1, linTerm[i], 1);
         }
     }
 
+    Array<OneD, NekDouble> tmpC(GetNcoeffs());
     for (int i = 0; i < m_spacedim + 2; ++i)
     {
-        Array<OneD, NekDouble> tmpC(GetNcoeffs());
+        if (i == 1)
+        {
+            // skip rho
+            continue;
+        }
 
         m_fields[0]->FwdTrans(linTerm[i], tmpC);
         m_fields[0]->BwdTrans(tmpC, linTerm[i]);
+
+        Vmath::Vadd(nq, outarray[i], 1, linTerm[i], 1, outarray[i], 1);
     }
 }
 
@@ -366,16 +351,7 @@ void LEE::DoOdeRhs(const Array<OneD, const Array<OneD, NekDouble> >&inarray,
     Array<OneD, Array<OneD, NekDouble> > advVel(m_spacedim);
     m_advection->Advect(nVariables, m_fields, advVel, inarray, outarray, time);
 
-    Array<OneD, Array<OneD, NekDouble> > linT(nVariables);
-    for (int i = 0; i < nVariables; ++i)
-    {
-        linT[i] = Array<OneD, NekDouble> (nq);
-    }
-    GetLinTerm(inarray, linT);
-    for (int i = 0; i < nVariables; ++i)
-    {
-        Vmath::Vadd(nq, outarray[i], 1, linT[i], 1, outarray[i], 1);
-    }
+    AddLinTerm(inarray, outarray);
 
     // Negate the LHS terms
     for (int i = 0; i < nVariables; ++i)

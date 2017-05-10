@@ -10,6 +10,8 @@ v4.5.0
 **Library**
 - Added in sum factorisation version for pyramid expansions and orthogonal
   expansion in pyramids (!750)
+- Fixed extreme memory consumption of Interpolator when interpolating from pts
+  to fld or between different meshes (!783)
 
 **FieldConvert**:
 - Add input module for Semtex field files (!777)

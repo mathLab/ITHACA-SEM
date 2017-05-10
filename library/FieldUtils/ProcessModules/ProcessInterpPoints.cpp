@@ -55,9 +55,8 @@ ModuleKey ProcessInterpPoints::className =
     GetModuleFactory().RegisterCreatorFunction(
         ModuleKey(eProcessModule, "interppoints"),
         ProcessInterpPoints::create,
-        "Interpolates a field to a set of points. Requires fromfld and "
-        "fromxml to be defined, a line, plane or block of points can be "
-        "defined");
+        "Interpolates a field to a set of points. Requires fromfld, fromxml "
+        "to be defined, and a topts, line, plane or block of target points  ");
 
 ProcessInterpPoints::ProcessInterpPoints(FieldSharedPtr f) : ProcessModule(f)
 {
@@ -67,6 +66,8 @@ ProcessInterpPoints::ProcessInterpPoints(FieldSharedPtr f) : ProcessModule(f)
     m_config["fromfld"] = ConfigOption(
         false, "NotSet", "Fld file from which to interpolate field");
 
+    m_config["topts"] = ConfigOption(
+        false, "NotSet", "Pts file to which interpolate field");
     m_config["line"] =  ConfigOption(
         false, "NotSet", "Specify a line of N points using "
                          "line=N,x0,y0,z0,z1,y1,z1");
@@ -96,10 +97,7 @@ ProcessInterpPoints::~ProcessInterpPoints()
 
 void ProcessInterpPoints::Process(po::variables_map &vm)
 {
-    if (m_f->m_fieldPts == LibUtilities::NullPtsField)
-    {
-        CreateFieldPts(vm);
-    }
+    CreateFieldPts(vm);
 
     FieldSharedPtr fromField = boost::shared_ptr<Field>(new Field());
     std::vector<std::string> files;
@@ -213,7 +211,16 @@ void ProcessInterpPoints::CreateFieldPts(po::variables_map &vm)
     int rank   = m_f->m_comm->GetRank();
     int nprocs = m_f->m_comm->GetSize();
     // Check for command line point specification
-    if (m_config["line"].as<string>().compare("NotSet") != 0)
+    if (m_config["topts"].as<string>().compare("NotSet") != 0)
+    {
+        string inFile = m_config["topts"].as<string>();
+
+        LibUtilities::PtsIOSharedPtr ptsIO =
+            MemoryManager<LibUtilities::PtsIO>::AllocateSharedPtr(m_f->m_comm);
+
+        ptsIO->Import(inFile, m_f->m_fieldPts);
+    }
+    else if (m_config["line"].as<string>().compare("NotSet") != 0)
     {
         vector<NekDouble> values;
         ASSERTL0(ParseUtils::GenerateUnOrderedVector(

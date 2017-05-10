@@ -50,14 +50,7 @@
 #include <MultiRegions/ContField3D.h>
 #include <MultiRegions/ContField3DHomogeneous1D.h>
 #include <MultiRegions/ContField3DHomogeneous2D.h>
-#include <MultiRegions/ExpList.h>
 #include <MultiRegions/ExpList2DHomogeneous1D.h>
-
-#include <MultiRegions/DisContField1D.h>
-#include <MultiRegions/DisContField2D.h>
-#include <MultiRegions/DisContField3D.h>
-#include <MultiRegions/DisContField3DHomogeneous1D.h>
-#include <MultiRegions/DisContField3DHomogeneous2D.h>
 
 #include "FieldUtilsDeclspec.h"
 
@@ -108,8 +101,6 @@ struct Field
     bool m_addNormals;
 
     LibUtilities::PtsFieldSharedPtr m_fieldPts;
-
-    MultiRegions::AssemblyMapCGSharedPtr m_locToGlobalMap;
 
     LibUtilities::FieldMetaDataMap m_fieldMetaDataMap;
 
@@ -688,8 +679,6 @@ struct Field
 
                         tmp = MemoryManager<MultiRegions::ContField3D>::
                             AllocateSharedPtr(*tmp2, m_graph, var);
-
-                        m_locToGlobalMap = tmp2->GetLocalToGlobalMap();
                     }
                 }
                 else if (m_declareExpansionAsDisContField)

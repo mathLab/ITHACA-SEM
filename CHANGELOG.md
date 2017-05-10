@@ -11,6 +11,10 @@ v4.5.0
 - Added in sum factorisation version for pyramid expansions and orthogonal
   expansion in pyramids (!750)
 
+**APESolver:**
+ - Added two new boundary conditions to the APE system: RiemannInvariantBC
+   and WhiteNoise (!782)
+
 **Documentation**:
 - Added the developer-guide repository as a submodule (!751)
 

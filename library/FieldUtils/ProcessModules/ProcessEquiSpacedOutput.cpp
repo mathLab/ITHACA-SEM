@@ -89,7 +89,7 @@ void ProcessEquiSpacedOutput::Process(po::variables_map &vm)
 
         m_f->m_fieldPts =
             MemoryManager<LibUtilities::PtsField>::AllocateSharedPtr(
-                3, m_f->m_variables, pts);
+                coordim, m_f->m_variables, pts);
         m_f->m_fieldPts->SetPtsType(LibUtilities::ePtsTetBlock);
         m_f->m_fieldPts->SetConnectivity(ptsConn);
         return;

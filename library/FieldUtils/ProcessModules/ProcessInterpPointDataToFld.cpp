@@ -74,7 +74,7 @@ ProcessInterpPointDataToFld::~ProcessInterpPointDataToFld()
 void ProcessInterpPointDataToFld::Process(po::variables_map &vm)
 {
     int i, j;
-
+    LibUtilities::PtsFieldSharedPtr fieldPts;
     // Load pts file
     ASSERTL0( m_config["frompts"].as<string>().compare("NotSet") != 0,
             "ProcessInterpPointDataToFld requires frompts parameter");
@@ -83,9 +83,9 @@ void ProcessInterpPointDataToFld::Process(po::variables_map &vm)
             LibUtilities::GetCommFactory().CreateInstance("Serial", 0, 0);
     LibUtilities::PtsIOSharedPtr ptsIO =
             MemoryManager<LibUtilities::PtsIO>::AllocateSharedPtr(c);
-    ptsIO->Import(inFile, m_f->m_fieldPts);
+    ptsIO->Import(inFile, fieldPts);
 
-    int nFields = m_f->m_fieldPts->GetNFields();
+    int nFields = fieldPts->GetNFields();
     ASSERTL0(nFields > 0, "No field values provided in input");
 
     // Define new expansions.
@@ -109,7 +109,7 @@ void ProcessInterpPointDataToFld::Process(po::variables_map &vm)
         MemoryManager<LibUtilities::PtsField>::AllocateSharedPtr(3, intFields);
 
     int coord_id = m_config["interpcoord"].as<int>();
-    ASSERTL0(coord_id <= m_f->m_fieldPts->GetDim() - 1,
+    ASSERTL0(coord_id <= fieldPts->GetDim() - 1,
              "interpcoord is bigger than the Pts files dimension");
 
     Interpolator interp(eNoMethod, coord_id);
@@ -119,7 +119,7 @@ void ProcessInterpPointDataToFld::Process(po::variables_map &vm)
         interp.SetProgressCallback(
             &ProcessInterpPointDataToFld::PrintProgressbar, this);
     }
-    interp.Interpolate(m_f->m_fieldPts, outPts);
+    interp.Interpolate(fieldPts, outPts);
     if (m_f->m_verbose && m_f->m_comm->TreatAsRankZero())
     {
         cout << endl;
@@ -141,13 +141,10 @@ void ProcessInterpPointDataToFld::Process(po::variables_map &vm)
     }
 
     // save field names
-    for (int j = 0; j < m_f->m_fieldPts->GetNFields(); ++j)
+    for (int j = 0; j < fieldPts->GetNFields(); ++j)
     {
-        m_f->m_variables.push_back(m_f->m_fieldPts->GetFieldName(j));
+        m_f->m_variables.push_back(fieldPts->GetFieldName(j));
     }
-
-    // Remove m_fieldPts to avoid confusion
-    m_f->m_fieldPts = LibUtilities::NullPtsField;
 }
 }
 }

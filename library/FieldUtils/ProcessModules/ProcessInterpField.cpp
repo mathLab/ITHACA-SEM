@@ -173,7 +173,7 @@ void ProcessInterpField::Process(po::variables_map &vm)
     // declare auxiliary fields.
     for (i = 1; i < nfields; ++i)
     {
-        m_f->m_exp[i]         = m_f->AppendExpList(NumHomogeneousDir);
+        m_f->m_exp[i]       = m_f->AppendExpList(NumHomogeneousDir);
         fromField->m_exp[i] = fromField->AppendExpList(NumHomogeneousDir);
     }
 

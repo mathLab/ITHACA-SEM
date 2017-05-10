@@ -66,8 +66,6 @@ ProcessScaleInFld::~ProcessScaleInFld()
 
 void ProcessScaleInFld::Process(po::variables_map &vm)
 {
-    ASSERTL0(m_f->m_data.size() != 0, "No input data defined");
-
     string scalestr = m_config["scale"].as<string>();
     NekDouble scale = boost::lexical_cast<NekDouble>(scalestr);
 

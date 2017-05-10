@@ -71,18 +71,29 @@ void ProcessSurfDistance::Process(po::variables_map &vm)
 
     ASSERTL0(surf >= 0, "Invalid surface " + boost::lexical_cast<string>(surf));
 
-    // Remove existing fields.
-    m_f->m_exp.resize(1);
-    m_f->m_variables.resize(1);
-    m_f->m_variables[0] = "dist";
+    int nfields           = m_f->m_variables.size();
+    int NumHomogeneousDir = m_f->m_numHomogeneousDir;
+    MultiRegions::ExpListSharedPtr exp;
+    if (nfields)
+    {
+        m_f->m_exp.resize(nfields + 1);
+        exp = m_f->AppendExpList(NumHomogeneousDir, "dist");
+
+        m_f->m_exp[nfields] = exp;
+    }
+    else
+    {
+        exp = m_f->m_exp[0];
+    }
+    m_f->m_variables.push_back("dist");
 
     // Grab boundary expansions.
     Array<OneD, MultiRegions::ExpListSharedPtr> BndExp =
-        m_f->m_exp[0]->GetBndCondExpansions();
+        exp->GetBndCondExpansions();
 
     // Get map that takes us from boundary element to element.
     Array<OneD, int> BoundarytoElmtID, BoundarytoTraceID;
-    m_f->m_exp[0]->GetBoundaryToElmtMap(BoundarytoElmtID, BoundarytoTraceID);
+    exp->GetBoundaryToElmtMap(BoundarytoElmtID, BoundarytoTraceID);
 
     ASSERTL0(!(m_f->m_numHomogeneousDir),
             "Homogeneous expansions not supported");
@@ -104,7 +115,7 @@ void ProcessSurfDistance::Process(po::variables_map &vm)
             // Get boundary and element expansions.
             LocalRegions::ExpansionSharedPtr bndElmt = BndExp[i]->GetExp(j);
             LocalRegions::ExpansionSharedPtr elmt =
-                m_f->m_exp[0]->GetExp(elmtNum);
+                exp->GetExp(elmtNum);
 
             // Determine which face is opposite to the surface
             switch (elmt->DetShapeType())

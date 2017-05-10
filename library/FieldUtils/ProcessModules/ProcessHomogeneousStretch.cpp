@@ -60,7 +60,8 @@ ModuleKey ProcessHomogeneousStretch::className =
 ProcessHomogeneousStretch::ProcessHomogeneousStretch(FieldSharedPtr f)
     : ProcessModule(f)
 {
-    m_config["factor"] = ConfigOption(false, "NotSet", "stretch factor");
+    m_config["factor"] =
+        ConfigOption(false, "NotSet", "integer stretch factor");
 }
 
 ProcessHomogeneousStretch::~ProcessHomogeneousStretch()
@@ -88,7 +89,7 @@ void ProcessHomogeneousStretch::Process(po::variables_map &vm)
     int nfields = m_f->m_variables.size();
     int nplanes = m_f->m_exp[0]->GetHomogeneousBasis()->GetZ().num_elements();
 
-    ASSERTL0(factor >= 1, "Parameter factor must be greater than 1.");
+    ASSERTL0(factor > 1, "Parameter factor must be an int greater than 1.");
 
     int nstrips;
     m_f->m_session->LoadParameter("Strip_Z", nstrips, 1);

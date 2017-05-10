@@ -61,6 +61,8 @@ ModuleKey ProcessInterpPtsToPts::className =
 
 ProcessInterpPtsToPts::ProcessInterpPtsToPts(FieldSharedPtr f) : ProcessModule(f)
 {
+    m_config["topts"] = ConfigOption(
+        false, "NotSet", "Pts file to which interpolate field");
     m_config["line"] =  ConfigOption(
         false, "NotSet", "Specify a line of N points using "
                          "line=N,x0,y0,z0,z1,y1,z1");
@@ -128,7 +130,16 @@ void ProcessInterpPtsToPts::CreateFieldPts(po::variables_map &vm)
     int rank   = m_f->m_comm->GetRank();
     int nprocs = m_f->m_comm->GetSize();
     // Check for command line point specification
-    if (m_config["line"].as<string>().compare("NotSet") != 0)
+    if (m_config["topts"].as<string>().compare("NotSet") != 0)
+    {
+        string inFile = m_config["topts"].as<string>();
+
+        LibUtilities::PtsIOSharedPtr ptsIO =
+            MemoryManager<LibUtilities::PtsIO>::AllocateSharedPtr(m_f->m_comm);
+
+        ptsIO->Import(inFile, m_f->m_fieldPts);
+    }
+    else if (m_config["line"].as<string>().compare("NotSet") != 0)
     {
         vector<NekDouble> values;
         ASSERTL0(ParseUtils::GenerateUnOrderedVector(

@@ -77,20 +77,10 @@ InputPts::~InputPts()
  */
 void InputPts::Process(po::variables_map &vm)
 {
-    string inFile = (m_f->m_inputfiles["pts"][0]).c_str();
+    string inFile = m_config["infile"].as<string>();
 
-    LibUtilities::PtsIOSharedPtr ptsIO;
-    if (m_f->m_session)
-    {
-        ptsIO = MemoryManager<LibUtilities::PtsIO>::AllocateSharedPtr(
-            m_f->m_session->GetComm());
-    }
-    else // serial communicator
-    {
-        LibUtilities::CommSharedPtr c =
-            LibUtilities::GetCommFactory().CreateInstance("Serial", 0, 0);
-        ptsIO = MemoryManager<LibUtilities::PtsIO>::AllocateSharedPtr(c);
-    }
+    LibUtilities::PtsIOSharedPtr ptsIO =
+        MemoryManager<LibUtilities::PtsIO>::AllocateSharedPtr(m_f->m_comm);
 
     ptsIO->Import(inFile, m_f->m_fieldPts);
 

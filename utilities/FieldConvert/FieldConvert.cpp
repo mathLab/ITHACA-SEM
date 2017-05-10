@@ -458,23 +458,63 @@ void CheckModules(vector<ModuleSharedPtr> &modules)
         }
     }
 
-    // Modules using m_exp require a eCreateGraph module
-    if( modulesCount[eCreateGraph] == 0)
+    // Modules of type eModifyExp and eBndExtraction
+    //      require a eCreateGraph module
+    if( (modulesCount[eModifyExp] != 0 || modulesCount[eBndExtraction] != 0) &&
+        modulesCount[eCreateGraph] == 0)
     {
-        if( modulesCount[eModifyExp]     != 0 ||
-            modulesCount[eBndExtraction] != 0)
+        stringstream ss;
+        ss << "Module(s): ";
+        for (int i = 0; i < modules.size(); ++i)
+        {
+            if(modules[i]->GetModulePriority() == eModifyExp ||
+               modules[i]->GetModulePriority() == eBndExtraction)
+            {
+                ss << modules[i]->GetModuleName()<<" ";
+            }
+        }
+        ss << "require xml input.";
+        ASSERTL0(false, ss.str());
+    }
+
+    // Modules of type eConvertExpToPts require eCreateGraph, but are not
+    //    compatible with eBndExtraction
+    if( modulesCount[eConvertExpToPts] != 0)
+    {
+        if( modulesCount[eCreateGraph]       == 0)
         {
             stringstream ss;
             ss << "Module(s): ";
             for (int i = 0; i < modules.size(); ++i)
             {
-                if(modules[i]->GetModulePriority() == eModifyExp ||
-                   modules[i]->GetModulePriority() == eBndExtraction)
+                if(modules[i]->GetModulePriority() == eConvertExpToPts)
                 {
                     ss << modules[i]->GetModuleName()<<" ";
                 }
             }
             ss << "require xml input.";
+            ASSERTL0(false, ss.str());
+        }
+        if( modulesCount[eBndExtraction]   != 0)
+        {
+            stringstream ss;
+            ss << "Module(s): ";
+            for (int i = 0; i < modules.size(); ++i)
+            {
+                if(modules[i]->GetModulePriority() == eBndExtraction)
+                {
+                    ss << modules[i]->GetModuleName()<<" ";
+                }
+            }
+            ss << "is not compatible with module(s): ";
+            for (int i = 0; i < modules.size(); ++i)
+            {
+                if(modules[i]->GetModulePriority() == eConvertExpToPts)
+                {
+                    ss << modules[i]->GetModuleName()<<" ";
+                }
+            }
+            ss << ".";
             ASSERTL0(false, ss.str());
         }
     }

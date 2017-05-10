@@ -349,9 +349,6 @@ void FilterFieldConvert::OutputField(
     po::variables_map vm;
     vm.insert(std::make_pair("forceoutput", po::variable_value()));
 
-    // Check if modules provided are compatible
-    CheckModules(m_modules);
-
     // Run field process.
     for (int n = 0; n < SIZE_ModulePriority; ++n)
     {
@@ -468,7 +465,8 @@ void FilterFieldConvert::CreateModules( vector<string> &modcmds)
         ++modulesCount[m_modules[i]->GetModulePriority()];
     }
     if( modulesCount[eModifyPts] != 0 &&
-        modulesCount[eCreatePts] == 0)
+        modulesCount[eCreatePts] == 0 &&
+        modulesCount[eConvertExpToPts] == 0)
     {
         ModuleKey               module;
         ModuleSharedPtr         mod;
@@ -477,6 +475,9 @@ void FilterFieldConvert::CreateModules( vector<string> &modcmds)
         mod = GetModuleFactory().CreateInstance(module, m_f);
         m_modules.insert(m_modules.end()-1, mod);
     }
+
+    // Check if modules provided are compatible
+    CheckModules(m_modules);
 }
 
 void FilterFieldConvert::CreateFields(
@@ -560,6 +561,31 @@ void FilterFieldConvert::CheckModules(vector<ModuleSharedPtr> &modules)
             }
         }
         ss << "not compatible with FilterFieldConvert.";
+        ASSERTL0(false, ss.str());
+    }
+
+    // Modules of type eConvertExpToPts are not compatible with eBndExtraction
+    if( modulesCount[eConvertExpToPts] != 0 &&
+        modulesCount[eBndExtraction]   != 0)
+    {
+        stringstream ss;
+        ss << "Module(s): ";
+        for (int i = 0; i < modules.size(); ++i)
+        {
+            if(modules[i]->GetModulePriority() == eBndExtraction)
+            {
+                ss << modules[i]->GetModuleName()<<" ";
+            }
+        }
+        ss << "is not compatible with module(s): ";
+        for (int i = 0; i < modules.size(); ++i)
+        {
+            if(modules[i]->GetModulePriority() == eConvertExpToPts)
+            {
+                ss << modules[i]->GetModuleName()<<" ";
+            }
+        }
+        ss << ".";
         ASSERTL0(false, ss.str());
     }
 

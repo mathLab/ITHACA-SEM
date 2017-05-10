@@ -367,7 +367,8 @@ int main(int argc, char* argv[])
         ++modulesCount[modules[i]->GetModulePriority()];
     }
     if( modulesCount[eModifyPts] != 0 &&
-        modulesCount[eCreatePts] == 0)
+        modulesCount[eCreatePts] == 0 &&
+        modulesCount[eConvertExpToPts] == 0)
     {
         module.first  = eProcessModule;
         module.second = string("equispacedoutput");

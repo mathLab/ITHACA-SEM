@@ -83,6 +83,7 @@ enum ModulePriority
     eModifyExp,
     eBndExtraction,
     eCreatePts,
+    eConvertExpToPts,
     eModifyPts,
     eOutput,
     SIZE_ModulePriority

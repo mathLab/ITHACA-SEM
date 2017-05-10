@@ -74,7 +74,7 @@ public:
 
     virtual ModulePriority GetModulePriority()
     {
-        return eCreatePts;
+        return eConvertExpToPts;
     }
 
 protected:

@@ -61,11 +61,6 @@ ProcessMultiShear::ProcessMultiShear(FieldSharedPtr f) : ProcessModule(f)
     m_config["fromfld"] = ConfigOption(
         false, "NotSet",
         "First fld file. First underscore flags position of id in name.");
-
-    ASSERTL0(m_config["fromfld"].as<string>().compare("NotSet") != 0,
-             "Need to specify fromfld=file.fld ");
-
-    m_f->m_fldToBnd = false;
 }
 
 ProcessMultiShear::~ProcessMultiShear()
@@ -79,6 +74,9 @@ void ProcessMultiShear::Process(po::variables_map &vm)
     {
         return;
     }
+
+    ASSERTL0(m_config["fromfld"].as<string>().compare("NotSet") != 0,
+             "Need to specify fromfld=file.fld ");
 
     int nstart, i, j, nfields=0;
     bool wssg      = false;

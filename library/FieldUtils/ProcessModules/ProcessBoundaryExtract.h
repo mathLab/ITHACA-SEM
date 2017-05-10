@@ -76,12 +76,6 @@ public:
         return eBndExtraction;
     }
 
-protected:
-    virtual bool FldToBoundary()
-    {
-        return true;
-    }
-
 };
 }
 }

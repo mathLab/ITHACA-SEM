@@ -73,12 +73,6 @@ public:
         return "Calculating scalar gradient";
     }
 
-protected:
-    virtual bool FldToBoundary()
-    {
-        return false;
-    }
-
 };
 }
 }

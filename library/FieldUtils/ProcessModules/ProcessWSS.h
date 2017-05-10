@@ -73,12 +73,6 @@ public:
         return "Calculating wall shear stress";
     }
 
-protected:
-    virtual bool FldToBoundary()
-    {
-        return false;
-    }
-
 };
 }
 }

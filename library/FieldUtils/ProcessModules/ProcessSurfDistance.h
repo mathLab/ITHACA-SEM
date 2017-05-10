@@ -73,12 +73,6 @@ public:
         return "Calculating distance to surface";
     }
 
-protected:
-    virtual bool FldToBoundary()
-    {
-        return false;
-    }
-
 };
 }
 }

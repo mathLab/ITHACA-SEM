@@ -72,7 +72,6 @@ ProcessBoundaryExtract::~ProcessBoundaryExtract()
 
 void ProcessBoundaryExtract::Process(po::variables_map &vm)
 {
-    m_f->m_fldToBnd   = FldToBoundary();
     m_f->m_addNormals = m_config["addnormals"].m_beenSet;
 
     // Set up Field options to output boundary fld
@@ -116,12 +115,18 @@ void ProcessBoundaryExtract::Process(po::variables_map &vm)
 
     if(m_f->m_bndRegionsToWrite.size())
     {
+        // This was already called. Just check if the bnd option is the same
         ASSERTL0(m_f->m_bndRegionsToWrite == bndRegions,
                 "Incompatible bnd parameters.");
     }
     else
     {
         m_f->m_bndRegionsToWrite = bndRegions;
+
+        for (int i = 0; i < m_f->m_exp.size(); ++i)
+        {
+            m_f->m_exp[i]->FillBndCondFromField();
+        }
     }
 }
 }

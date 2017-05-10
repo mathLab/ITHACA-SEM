@@ -69,12 +69,6 @@ public:
         return "Calculating displacement";
     }
 
-protected:
-    virtual bool FldToBoundary()
-    {
-        return false;
-    }
-
 };
 }
 }

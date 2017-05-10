@@ -100,7 +100,7 @@ void OutputFileBase::Process(po::variables_map &vm)
                 cout << endl;
             }
         }
-        if (m_f->m_writeBndFld && m_f->m_exp[0]->GetNumElmts() != 0)
+        if (m_f->m_writeBndFld)
         {
             int nfields = m_f->m_exp.size();
             int normdim = m_f->m_graph->GetMeshDimension();
@@ -121,18 +121,9 @@ void OutputFileBase::Process(po::variables_map &vm)
                 }
             }
 
-            // Move m_exp to a new expansion
+            // Move m_exp to a new expansion vector
             vector<MultiRegions::ExpListSharedPtr> exp(m_f->m_exp.size());
             exp.swap(m_f->m_exp);
-
-            // Extract data to boundaryconditions
-            if (m_f->m_fldToBnd)
-            {
-                for (int i = 0; i < exp.size(); ++i)
-                {
-                    exp[i]->FillBndCondFromField();
-                }
-            }
 
             Array<OneD, Array<OneD, const MultiRegions::ExpListSharedPtr> >
                 BndExp(exp.size());
@@ -168,14 +159,14 @@ void OutputFileBase::Process(po::variables_map &vm)
                     boost::lexical_cast<string>(m_f->m_bndRegionsToWrite[i]) +
                     "." + ext;
 
+                if(!WriteFile(outname, vm))
+                {
+                    continue;
+                }
+                RegisterConfig("outfile", outname);
+
                 if (BndRegionMap.count(m_f->m_bndRegionsToWrite[i]) == 1)
                 {
-                    RegisterConfig("outfile", outname);
-                    if(!WriteFile(outname, vm))
-                    {
-                        continue;
-                    }
-
                     int Border = BndRegionMap[m_f->m_bndRegionsToWrite[i]];
 
                     for (int j = 0; j < exp.size(); ++j)
@@ -203,6 +194,22 @@ void OutputFileBase::Process(po::variables_map &vm)
                                     m_f->m_exp[nfields+j]->GetPhys(),
                                     m_f->m_exp[nfields+j]->UpdateCoeffs());
                         }
+                    }
+                    OutputFromExp(vm);
+                    // output error for regression checking.
+                    if (vm.count("error"))
+                    {
+                        PrintErrorFromExp();
+                    }
+                }
+                else
+                {
+                    // Empty expansion for parallel communication
+                    for (int j = 0; j < exp.size(); ++j)
+                    {
+                        m_f->m_exp[j] =
+                            MemoryManager<MultiRegions::ExpList>::
+                                AllocateSharedPtr();
                     }
                     OutputFromExp(vm);
                     // output error for regression checking.

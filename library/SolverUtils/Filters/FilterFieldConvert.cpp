@@ -540,22 +540,24 @@ void FilterFieldConvert::CheckModules(vector<ModuleSharedPtr> &modules)
     }
 
     // FilterFieldConvert already starts with m_exp, so anything before
-    //    eModifyExp is not valid
-    if( modulesCount[eCreateGraph] != 0 ||
+    //    eModifyExp is not valid, and also eCreatePts
+    if( modulesCount[eCreateGraph] != 0     ||
         modulesCount[eCreateFieldData] != 0 ||
         modulesCount[eModifyFieldData] != 0 ||
-        modulesCount[eCreateExp] != 0 ||
-        modulesCount[eFillExp] != 0)
+        modulesCount[eCreateExp] != 0       ||
+        modulesCount[eFillExp] != 0         ||
+        modulesCount[eCreatePts] != 0)
     {
         stringstream ss;
         ss << "Module(s): ";
         for (int i = 0; i < modules.size(); ++i)
         {
-            if(modules[i]->GetModulePriority() == eCreateGraph ||
+            if(modules[i]->GetModulePriority() == eCreateGraph     ||
                modules[i]->GetModulePriority() == eCreateFieldData ||
                modules[i]->GetModulePriority() == eModifyFieldData ||
-               modules[i]->GetModulePriority() == eCreateExp ||
-               modules[i]->GetModulePriority() == eFillExp )
+               modules[i]->GetModulePriority() == eCreateExp       ||
+               modules[i]->GetModulePriority() == eFillExp         ||
+               modules[i]->GetModulePriority() == eCreatePts)
             {
                 ss << modules[i]->GetModuleName()<<" ";
             }

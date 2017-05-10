@@ -477,11 +477,30 @@ void CheckModules(vector<ModuleSharedPtr> &modules)
         ASSERTL0(false, ss.str());
     }
 
+    // Modules of type eCreatePts should not be used with xml or fld inputs
+    if( modulesCount[eCreatePts] != 0)
+    {
+        if(modulesCount[eCreateGraph]!=0 || modulesCount[eCreateFieldData]!=0)
+        {
+            stringstream ss;
+            ss << "Module(s): ";
+            for (int i = 0; i < modules.size(); ++i)
+            {
+                if(modules[i]->GetModulePriority() == eCreatePts)
+                {
+                    ss << modules[i]->GetModuleName()<<" ";
+                }
+            }
+            ss << "should not use xml or fld inputs.";
+            ASSERTL0(false, ss.str());
+        }
+    }
+
     // Modules of type eConvertExpToPts require eCreateGraph, but are not
     //    compatible with eBndExtraction
     if( modulesCount[eConvertExpToPts] != 0)
     {
-        if( modulesCount[eCreateGraph]       == 0)
+        if( modulesCount[eCreateGraph] == 0)
         {
             stringstream ss;
             ss << "Module(s): ";
@@ -495,7 +514,7 @@ void CheckModules(vector<ModuleSharedPtr> &modules)
             ss << "require xml input.";
             ASSERTL0(false, ss.str());
         }
-        if( modulesCount[eBndExtraction]   != 0)
+        if( modulesCount[eBndExtraction] != 0)
         {
             stringstream ss;
             ss << "Module(s): ";

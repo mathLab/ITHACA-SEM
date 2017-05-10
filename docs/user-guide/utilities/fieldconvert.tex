@@ -106,7 +106,7 @@ to define the $z$ range.
 \section{FieldConvert modules \textit{-m}}
 FieldConvert allows the user to manipulate the \nekpp output
 binary files (.chk and .fld) by using the flag \inltt{-m} (which
-stands for \inltt{m}odule)..
+stands for \inltt{m}odule).
 Specifically, FieldConvert has these additional functionalities
 %
 \begin{enumerate}
@@ -116,7 +116,7 @@ Specifically, FieldConvert has these additional functionalities
 \item \inltt{addFld}: Sum two .fld files;
 \item \inltt{combineAvg}: Combine two \nekpp binary output (.chk or .fld) field file containing averages of fields (and
 possibly also Reynolds stresses) into single file;
-\item \inltt{concatenate}: Concatenate a \nekpp binary output (.chk or .fld) field file into single file;
+\item \inltt{concatenate}: Concatenate a \nekpp binary output (.chk or .fld) field file into single file (deprecated);
 \item \inltt{equispacedoutput}: Write data as equi-spaced output using simplices to represent the data for connecting points;
 \item \inltt{extract}: Extract a boundary field;
 \item \inltt{homplane}: Extract a plane from 3DH1D expansions;
@@ -260,17 +260,19 @@ To concatenate \inltt{file1.fld} and \inltt{file2.fld} into \inltt{file-conc.fld
 one can run the following command
 %
 \begin{lstlisting}[style=BashInputStyle]
-FieldConvert -m concatenate file.xml  file1.fld  file2.fld  file-conc.fld
+FieldConvert file.xml  file1.fld  file2.fld  file-conc.fld
 \end{lstlisting}
 %
 where the file \inltt{file-conc.fld} can be processed in a similar
 way as described in section \ref{s:utilities:fieldconvert:sub:convert}
-to visualise the result either in Tecplot, Paraview or VisIt.
+to visualise the result either in Tecplot, Paraview or VisIt. The
+\inltt{concatenate} module previously used for this purpose is not
+required anymore, and will be removed in a future release.
 %
 %
 %
 \subsection{Equi-spaced output of data: \textit{equispacedoutput} module}
-This module interpolates the output data to an truly equispaced set of
+This module interpolates the output data to a truly equispaced set of
 points (not equispaced along the collapsed coordinate
 system). Therefore a tetrahedron is represented by a tetrahedral
 number of poinst. This produces much smaller output files. The points
@@ -297,24 +299,21 @@ The boundary region of a domain can be extracted from the output
 data using the following command line
 %
 \begin{lstlisting}[style=BashInputStyle]
-FieldConvert -m extract:bnd=2:fldtoboundary=1 test.xml \
+FieldConvert -m extract:bnd=2 test.xml \
 	test.fld test-boundary.fld
 \end{lstlisting}
 %
 The option \inltt{bnd} specifies which boundary region to extract.
 Note this is different to NekMesh where the parameter \inltt{surf}
 is specified and corresponds to composites rather boundaries. If \inltt{bnd}
-is not provided, all boundaries are extracted to different fields. The \inltt{fldtoboundary}
-is an optional command argument which copies the expansion of test.fld into
-the boundary region before outputting the .fld file. This option is on by default.
-If it turned off using \inltt{fldtoboundary=0} the extraction will only evaluate the
-boundary condition from the xml file. The output will be placed in test-boundary-b2.fld.
-If more than one boundary region is specified the extension -b0.fld, -b1.fld etc will be
+is not provided, all boundaries are extracted to different fields.
+The output will be placed in test-boundary\_b2.fld.
+If more than one boundary region is specified the extension \_b0.fld, \_b1.fld etc will be
 outputted. To process this file you will need an xml file of the same region.
 This can be generated using the command:
 %
 \begin{lstlisting}[style=BashInputStyle]
-NekMesh -m extract:surf=5  test.xml test-b0.xml
+NekMesh -m extract:surf=5  test.xml test\_b0.xml
 \end{lstlisting}
 %
 The surface to be extracted in this command is the composite
@@ -322,7 +321,7 @@ number and so needs to correspond to the boundary region
 of interest. Finally to process the surface file one can use
 %
 \begin{lstlisting}[style=BashInputStyle]
-FieldConvert  test-b0.xml test-b0.fld test-b0.dat
+FieldConvert  test\_b0.xml test\_b0.fld test\_b0.dat
 \end{lstlisting}
 %
 This will obviously generate a Tecplot output if a .dat file
@@ -370,9 +369,7 @@ To stretch a 3DH1D expansion in the z-direction, use the command:
 FieldConvert -m homstretch:factor=value file.xml file.fld file-stretch.fld
 \end{lstlisting}
 The number of modes in the resulting field can be chosen using the command-line
-parameter \inltt{output-points-hom-z}. Note that the output for
-this module should always be a \inltt{.fld} file and this should not
-be used in combination with other modules using a single command.
+parameter \inltt{output-points-hom-z}.
 
 The output file \inltt{file-stretch.fld} can be processed in a similar
 way as described in section \ref{s:utilities:fieldconvert:sub:convert}
@@ -394,7 +391,7 @@ determine the inner product of these fields. The input option
 Optional arguments for this module are \inltt{fields} which allow you to specify
 the fields that you wish to use for the inner product, i.e.
 \begin{lstlisting}[style=BashInputStyle]
-  FieldConvert -m innerproduct:fromfld=file1.fld:fields=''0,1,2'' file2.xml \
+  FieldConvert -m innerproduct:fromfld=file1.fld:fields="0,1,2" file2.xml \
   file2.fld out.stdout
 \end{lstlisting}
 will only take the inner product between the variables 0,1 and 2 in
@@ -405,7 +402,7 @@ Additional options include \inltt{multifldids} and \inltt{allfromflds}
 which allow for a series of fields to be evaluated in the following
 manner:
 \begin{lstlisting}[style=BashInputStyle]
-  FieldConvert -m innerproduct:fromfld=file1.fld:multifldids=''0-3''\
+  FieldConvert -m innerproduct:fromfld=file1.fld:multifldids="0-3"\
   file2.xml  file2.fld out.stdout
 \end{lstlisting}
 will take the inner product between a file names
@@ -414,7 +411,7 @@ respect to field2.fld.
 
 Analogously including the options \inltt{allfromflds}, i.e.
 \begin{lstlisting}[style=BashInputStyle]
-  FieldConvert -m innerproduct:fromfld=file1.fld:multifldids=''0-3'':\
+  FieldConvert -m innerproduct:fromfld=file1.fld:multifldids="0-3":\
   allfromflds  file2.xml file2.fld out.stdout
 \end{lstlisting}
 Will take the inner product of all the from fields,
@@ -460,7 +457,7 @@ faster.
 To interpolate discrete point data to a field, use the interppointdatatofld module:
 %
 \begin{lstlisting}[style=BashInputStyle]
-FieldConvert -m interppointdatatofld file1.xml file1.pts file1.fld
+FieldConvert -m interppointdatatofld:frompts=file1.pts file1.xml file1.fld
 \end{lstlisting}
 %
 This command will interpolate the data from \inltt{file1.pts} to the mesh
@@ -490,8 +487,8 @@ In order to interpolate 1D data to a $n$D field, specify the matching coordinate
 the output field using the \inltt{interpcoord} argument:
 %
 \begin{lstlisting}[style=BashInputStyle]
-FieldConvert -m interppointdatatofld:interppointdatatofld=1 3D-file1.xml \
-		1D-file1.pts 3D-file1.fld
+FieldConvert -m interppointdatatofld:frompts=1D-file1.pts:interppointdatatofld=1 \
+        3D-file1.xml 3D-file1.fld
 \end{lstlisting}
 %
 This will interpolate the 1D scattered point data from \inltt{1D-file1.pts} to the
@@ -561,15 +558,14 @@ where \inltt{npts1,npts2,npts3} is the number of equispaced points in each
 direction and $(xmin,ymin,zmin)$ and $(xmax,ymax,zmax3)$
 define the limits of the box of points.
 
-For the plane and box interpolation there is an additional optional
-argument \inltt{cp=p0,q} which adds to the interpolated fields the value of
-$c_p=(p-p0)/q$ and $c_{p0}=(p-p0+0.5 u^2)/q$ where $p0$ is a reference
-pressure and $q$ is the free stream dynamics pressure. If the input
-does not contain a field ``p'' or a velocity field ``u,v,w'' then $cp$
+There is also an additional optional argument \inltt{cp=p0,q} which adds to the
+interpolated fields the value of $c_p=(p-p0)/q$ and $c_{p0}=(p-p0+0.5 u^2)/q$
+where $p0$ is a reference pressure and $q$ is the free stream dynamics pressure.
+If the input does not contain a field ``p'' or a velocity field ``u,v,w'' then $cp$
 and $cp0$ are not evaluated accordingly
 %
 \begin{notebox}
-This module  runs in parallel for the plane and box extraction of points. In this case a series of .dat files are generated that can be concatinated together. Other options do not run in parallel.
+This module  runs in parallel for the line, plane and box extraction of points.
 \end{notebox}
 %
 %
@@ -589,9 +585,9 @@ isocontour to be extracted.
           test-isocontour.dat
 \end{lstlisting}
 
-Alternatively \inltt{fieldstr}=''u+v'' can be specified to calculate
-the field $u^2$ and extract its isocontour. You can also specify
-\inltt{fieldname}=''UplusV'' to define the name of the isocontour in
+Alternatively \inltt{fieldstr="u+v"} can be specified to calculate
+the field $u+v$ and extract its isocontour. You can also specify
+\inltt{fieldname="UplusV"} to define the name of the isocontour in
 the .dat file, i.e.
 \begin{lstlisting}[style=BashInputStyle]
   FieldConvert -m isocontour:fieldstr="u+v":fieldvalue=0.5:\
@@ -691,7 +687,7 @@ to visualise the result either in Tecplot or in Paraview or VisIt.
 To project a series of points given at the same quadrature distribution as the .xml file and write out a .fld file use the pointdatatofld module:
 %
 \begin{lstlisting}[style=BashInputStyle]
-FieldConvert --noequispaced -m pointdatatofld file.pts file.xml file.fld
+FieldConvert -m pointdatatofld:frompts=file.pts file.xml file.fld
 \end{lstlisting}
 %
 This command will read in the points provided in the \inltt{file.pts}
@@ -722,19 +718,19 @@ this case the $p$-value So in the general case of $n$-dimensional
 data, the $n$ coordinates are specified in the first $n$ columns
 accordingly followed by the field data.
 
-The default argument is to use the equipapced (but potentially
+The default argument is to use the equispaced (but potentially
 collapsed) coordinates which can  be obtained from the command.
 
 \begin{lstlisting}[style=BashInputStyle]
 FieldConvert file.xml file.dat
 \end{lstlisting}
 
-In this case the pointdatatofld module shoudl be used without the
+In this case the pointdatatofld module should be used without the
 \inltt{--noequispaced} option. However this can lead to problems when
 peforming an elemental forward projection/transform since the mass
 matrix in a deformed element can be singular as the equispaced points
 do not have a sufficiently accurate quadrature rule that spans the
-polynomial space. Therefore it is adviseable to use the set of points
+polynomial space. Therefore it is advisable to use the set of points
 given by
 
 \begin{lstlisting}[style=BashInputStyle]
@@ -742,8 +738,7 @@ FieldConvert --noequispaced file.xml file.dat
 \end{lstlisting}
 
 which produces a set of points at the gaussian collapsed
-coordinates. In this case one must also use the \inltt{--noequispaced}
-option when projecting to a field.
+coordinates.
 
 Finally the option \inltt{setnantovalue=0} can also be used which sets
 any nan values in the interpolation to zero or any specified value in
@@ -780,11 +775,11 @@ The option \inltt{bnd} specifies which boundary region to extract. Note this is 
 \subsection{Scale a given .fld: \textit{scaleinputfld} module}
 To scale a .fld file by a given scalar quantity, the user can run:
 \begin{lstlisting}[style=BashInputStyle]
-FieldConvert -m scaleinputfld:scale=value test.xml test.fld test-scal.fld
+FieldConvert -m scaleinputfld:scale=value test.fld test-scal.fld
 \end{lstlisting}
 The argument \inltt{scale=value} rescales of a factor \inltt{value}
 \inltt{test.fld} by the factor value.
-The output file \inltt{file-conc.fld} can be processed in a similar
+The output file \inltt{file-scal.fld} can be processed in a similar
 way as described in section \ref{s:utilities:fieldconvert:sub:convert}
 to visualise the result  either in Tecplot, Paraview or VisIt.
 
@@ -805,7 +800,8 @@ Time-dependent wall shear stress derived metrics relevant to cardiovascular flui
 
 To compute these, the user can run:
 \begin{lstlisting}[style=BashInputStyle]
-FieldConvert -m shear:N=value:fromfld=test_id_b0.fld test.xml test-multishear.fld
+FieldConvert -m shear:N=value:fromfld=test_id_b0.fld \
+    test.xml test-multishear.fld
 \end{lstlisting}
 The argument \inltt{N} and \inltt{fromfld} are compulsory arguments that respectively define the number of \inltt{fld} files corresponding to the number of discrete equispaced time-steps, and the first \inltt{fld} file which should have the form of \inltt{test\_id\_b0.fld} where the first underscore in the name marks the starting time-step file ID.
 
@@ -817,7 +813,8 @@ The input \inltt{.fld} files are the outputs of the \textit{wss} module. If they
 %
 \subsection{Boundary layer height calculation: \textit{surfdistance} module}
 
-The surface distance module computes the height of a prismatic boundary layer
+The surface distance module computes the height of a boundary layer formed by
+quadrilaterals (in 2D) or prisms and hexahedrons (in 3D)
 and projects this value onto the surface of the boundary, in a similar fashion
 to the \inltt{extract} module. In conjunction with a mesh of the surface, which
 can be obtained with \inltt{NekMesh}, and a value of the average wall shear
@@ -854,7 +851,13 @@ To obtain the wall shear stres vector and magnitude, the user can run:
 \begin{lstlisting}[style=BashInputStyle]
 FieldConvert -m wss:bnd=0:addnormals=1 test.xml test.fld test-wss.fld
 \end{lstlisting}
-The option \inltt{bnd} specifies which boundary region to extract. Note this is different to NekMesh where the parameter \inltt{surf} is specified and corresponds to composites rather boundaries. If \inltt{bnd} is not provided, all boundaries are extracted to different fields. The \inltt{addnormals} is an optional command argument which, when turned on, outputs the normal vector of the extracted boundary region as well as the shear stress vector and magnitude. This option is off by default. To process the output file(s) you will need an xml file of the same region.
+The option \inltt{bnd} specifies which boundary region to extract. Note this is
+different to NekMesh where the parameter \inltt{surf} is specified and corresponds
+to composites rather boundaries. If \inltt{bnd} is not provided, all boundaries
+are extracted to different fields. The \inltt{addnormals} is an optional command
+argument which, when turned on, outputs the normal vector of the extracted boundary
+region as well as the shear stress vector and magnitude. This option is off by default.
+To process the output file(s) you will need an xml file of the same region.
 %
 %
 %
@@ -931,9 +934,9 @@ can be done by using the \inltt{writemultiplefiles} option, i.e.
 \end{lstlisting}
 
 For the \inltt{.vtu} format multiple files will by default be produced
-of the form \inltt{test\_P0.vtu}, \inltt{test\_P1.vtu},
-\inltt{test\_P2.vtu}. For this format an additional file called
-\inltt{.pvtu} is written out which allows for parallel reading of the
+of the form \inltt{test\_vtu/P0000000.vtu}, {test\_vtu/P0000001.vtu},
+{test\_vtu/P0000002.vtu}. For this format an additional file called
+\inltt{test.pvtu} is written out which allows for parallel reading of the
 individual \inltt{.vtu} files.
 
 FieldConvert functions that produce a \inltt{.fld} file output will

@@ -77,12 +77,10 @@ void OutputFld::OutputFromExp(po::variables_map &vm)
     // Extract the output filename and extension
     string filename = m_config["outfile"].as<string>();
 
-    // Set up communicator and FieldIO object.
-    LibUtilities::CommSharedPtr c = m_f->m_session ? m_f->m_session->GetComm() :
-        LibUtilities::GetCommFactory().CreateInstance("Serial", 0, 0);
+    // Set up FieldIO object.
     LibUtilities::FieldIOSharedPtr fld =
         LibUtilities::GetFieldIOFactory().CreateInstance(
-            GetIOFormat(), c, true);
+            GetIOFormat(), m_f->m_comm, true);
 
     int i, j, s;
     int nfields = m_f->m_variables.size();
@@ -124,12 +122,10 @@ void OutputFld::OutputFromData(po::variables_map &vm)
 {
     // Extract the output filename and extension
     string filename = m_config["outfile"].as<string>();
-    // Set up communicator and FieldIO object.
-    LibUtilities::CommSharedPtr c = m_f->m_session ? m_f->m_session->GetComm() :
-        LibUtilities::GetCommFactory().CreateInstance("Serial", 0, 0);
+    // Set up FieldIO object.
     LibUtilities::FieldIOSharedPtr fld =
         LibUtilities::GetFieldIOFactory().CreateInstance(
-            GetIOFormat(), c, true);
+            GetIOFormat(), m_f->m_comm, true);
 
     fld->Write(filename, m_f->m_fielddef, m_f->m_data,
                    m_f->m_fieldMetaDataMap);

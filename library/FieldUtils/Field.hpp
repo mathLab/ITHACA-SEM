@@ -416,8 +416,7 @@ struct Field
     FIELD_UTILS_EXPORT LibUtilities::FieldIOSharedPtr FieldIOForFile(
         std::string filename)
     {
-        LibUtilities::CommSharedPtr c = m_session ? m_session->GetComm() :
-            LibUtilities::GetCommFactory().CreateInstance("Serial", 0, 0);
+        LibUtilities::CommSharedPtr c = m_comm;
         string fmt = LibUtilities::FieldIO::GetFileType(filename, c);
         map<string, LibUtilities::FieldIOSharedPtr>::iterator it =
             m_fld.find(fmt);

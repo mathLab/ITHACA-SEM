@@ -196,11 +196,6 @@ void ProcessPointDataToFld::Process(po::variables_map &vm)
             }
         }
 
-        if (m_f->m_session->GetComm()->GetRank() == 0)
-        {
-            cout << endl;
-        }
-
         // forward transform fields
         for (i = 0; i < nFields; ++i)
         {

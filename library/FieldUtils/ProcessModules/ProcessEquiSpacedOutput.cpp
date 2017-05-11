@@ -409,6 +409,9 @@ void ProcessEquiSpacedOutput::Process(po::variables_map &vm)
     {
         SetHomogeneousConnectivity();
     }
+
+    // Clear m_exp
+    m_f->m_exp = vector<MultiRegions::ExpListSharedPtr>();
 }
 
 void ProcessEquiSpacedOutput::SetHomogeneousConnectivity(void)

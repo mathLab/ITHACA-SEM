@@ -263,6 +263,10 @@ void ProcessCreateExp::Process(po::variables_map &vm)
                         m_f->m_exp[s * nfields + j]->UpdatePhys());
                 }
             }
+            // Clear fielddef and data
+            //    (they should not be used after running this module)
+            m_f->m_fielddef = vector<LibUtilities::FieldDefinitionsSharedPtr>();
+            m_f->m_data     = vector<std::vector<NekDouble> >();
         }
     }
 

@@ -173,12 +173,7 @@ GlobalMapping::MappingSharedPtr ProcessMapping::GetMapping(FieldSharedPtr f)
     // Get field information
     int npoints  = f->m_exp[0]->GetNpoints();
     int expdim   = f->m_graph->GetMeshDimension();
-    int spacedim = expdim;
-    if ((f->m_fielddef[0]->m_numHomogeneousDir) == 1 ||
-        (f->m_fielddef[0]->m_numHomogeneousDir) == 2)
-    {
-        spacedim = 3;
-    }
+    int spacedim = expdim + f->m_numHomogeneousDir;
 
     // Declare coordinates storage
     Array<OneD, Array<OneD, NekDouble> > coords_new(3);

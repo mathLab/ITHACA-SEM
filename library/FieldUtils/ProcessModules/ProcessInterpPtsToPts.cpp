@@ -83,8 +83,7 @@ ProcessInterpPtsToPts::ProcessInterpPtsToPts(FieldSharedPtr f) : ProcessModule(f
 
     m_config["cp"] =
         ConfigOption(false, "NotSet",
-                     "Parameters p0 and q to determine pressure coefficients "
-                     "(box only currently)");
+                     "Parameters p0 and q to determine pressure coefficients");
 }
 
 ProcessInterpPtsToPts::~ProcessInterpPtsToPts()

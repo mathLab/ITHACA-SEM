@@ -116,7 +116,7 @@ void ProcessHomogeneousPlane::Process(po::variables_map &vm)
                 }
                 else
                 {
-                    m_f->m_exp[n]->FwdTrans(m_f->m_exp[n]->GetPhys(),
+                    m_f->m_exp[n]->FwdTrans_IterPerExp(m_f->m_exp[n]->GetPhys(),
                                             m_f->m_exp[n]->UpdateCoeffs());
                 }
             }

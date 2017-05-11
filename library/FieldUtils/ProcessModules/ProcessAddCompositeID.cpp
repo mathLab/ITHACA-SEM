@@ -80,7 +80,7 @@ void ProcessAddCompositeID::Process(po::variables_map &vm)
     if (nfields)
     {
         m_f->m_exp.resize(nfields + 1);
-        exp = m_f->AppendExpList(NumHomogeneousDir, "Composite ID");
+        exp = m_f->AppendExpList(NumHomogeneousDir);
 
         m_f->m_exp[nfields] = exp;
     }

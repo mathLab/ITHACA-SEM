@@ -378,6 +378,12 @@ int main(int argc, char* argv[])
 
     // Check if modules provided are compatible
     CheckModules(modules);
+    // Can't have ContField with range option (because of boundaries)
+    if (vm.count("range") && f->m_declareExpansionAsContField)
+    {
+        ASSERTL0(false, "Can't use range option with module requiring "
+            "a continuous expansion.");
+    }
 
     bool verbose = (f->m_verbose && f->m_comm->TreatAsRankZero());
     if(verbose)

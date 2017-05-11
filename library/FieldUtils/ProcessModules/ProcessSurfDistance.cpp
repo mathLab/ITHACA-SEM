@@ -235,7 +235,8 @@ void ProcessSurfDistance::Process(po::variables_map &vm)
             Vmath::Vsqrt(nqBnd, dist, 1, dist, 1);
         }
 
-        BndExp[i]->FwdTrans(BndExp[i]->GetPhys(), BndExp[i]->UpdateCoeffs());
+        BndExp[i]->FwdTrans_IterPerExp(BndExp[i]->GetPhys(),
+                                       BndExp[i]->UpdateCoeffs());
     }
 }
 }

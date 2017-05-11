@@ -72,16 +72,14 @@ void ProcessPrintFldNorms::Process(po::variables_map &vm)
     // Evaluate norms and print
     for (int j = 0; j < m_f->m_exp.size(); ++j)
     {
-        m_f->m_exp[j]->BwdTrans(m_f->m_exp[j]->GetCoeffs(),
-                                m_f->m_exp[j]->UpdatePhys());
         NekDouble L2   = m_f->m_exp[j]->L2(m_f->m_exp[j]->GetPhys());
         NekDouble LInf = m_f->m_exp[j]->Linf(m_f->m_exp[j]->GetPhys());
 
         if (m_f->m_comm->TreatAsRankZero())
         {
-            cout << "L 2 error (variable " << m_f->m_session->GetVariable(j)
+            cout << "L 2 error (variable "   << m_f->m_variables[j]
                  << ") : " << L2 << endl;
-            cout << "L inf error (variable " << m_f->m_session->GetVariable(j)
+            cout << "L inf error (variable " << m_f->m_variables[j]
                  << ") : " << LInf << endl;
         }
     }

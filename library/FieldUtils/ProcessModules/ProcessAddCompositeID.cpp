@@ -66,6 +66,7 @@ ProcessAddCompositeID::~ProcessAddCompositeID()
 
 void ProcessAddCompositeID::Process(po::variables_map &vm)
 {
+    int nfields           = m_f->m_variables.size();
     m_f->m_variables.push_back("compositeID");
     // Skip in case of empty partition
     if (m_f->m_exp[0]->GetNumElmts() == 0)
@@ -73,7 +74,6 @@ void ProcessAddCompositeID::Process(po::variables_map &vm)
         return;
     }
 
-    int nfields           = m_f->m_variables.size();
     int NumHomogeneousDir = m_f->m_numHomogeneousDir;
     MultiRegions::ExpListSharedPtr exp;
 

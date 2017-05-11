@@ -91,14 +91,13 @@ void ProcessNumModes::Process(po::variables_map &vm)
 
     m_f->m_session->LoadParameter("Strip_Z", nstrips, 1);
 
-    m_f->m_exp.resize(nfields * nstrips);
-
     for (i = 0; i < addfields; ++i)
     {
         outfield[i] = Array<OneD, NekDouble>(npoints);
     }
 
-    vector<MultiRegions::ExpListSharedPtr> Exp(nstrips * addfields);
+    vector<MultiRegions::ExpListSharedPtr>::iterator it;
+    MultiRegions::ExpListSharedPtr Exp;
 
     int nExp, nq, offset;
     nExp = m_f->m_exp[0]->GetExpSize();
@@ -120,23 +119,15 @@ void ProcessNumModes::Process(po::variables_map &vm)
     {
         for (i = 0; i < addfields; ++i)
         {
-            int n = s * addfields + i;
-            Exp[n] =
-                m_f->AppendExpList(m_f->m_numHomogeneousDir);
-            Vmath::Vcopy(npoints, outfield[i], 1, Exp[n]->UpdatePhys(), 1);
-            Exp[n]->FwdTrans_IterPerExp(outfield[i], Exp[n]->UpdateCoeffs());
+            Exp = m_f->AppendExpList(m_f->m_numHomogeneousDir);
+            Vmath::Vcopy(npoints, outfield[i], 1, Exp->UpdatePhys(), 1);
+            Exp->FwdTrans_IterPerExp(outfield[i], Exp->UpdateCoeffs());
+
+            it = m_f->m_exp.begin() + s * (nfields + addfields) + nfields + i;
+            m_f->m_exp.insert(it, Exp);
         }
     }
 
-    vector<MultiRegions::ExpListSharedPtr>::iterator it;
-    for (s = 0; s < nstrips; ++s)
-    {
-        for (i = 0; i < addfields; ++i)
-        {
-            it = m_f->m_exp.begin() + s * (nfields + addfields) + nfields + i;
-            m_f->m_exp.insert(it, Exp[s * addfields + i]);
-        }
-    }
 }
 }
 }

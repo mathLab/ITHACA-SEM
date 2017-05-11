@@ -105,8 +105,6 @@ void ProcessVorticity::Process(po::variables_map &vm)
 
     m_f->m_session->LoadParameter("Strip_Z", nstrips, 1);
 
-    m_f->m_exp.resize(nfields * nstrips);
-
     for (i = 0; i < m_spacedim * m_spacedim; ++i)
     {
         grad[i] = Array<OneD, NekDouble>(npoints);

@@ -303,6 +303,7 @@ void OutputFileBase::ConvertExpToEquispaced(po::variables_map &vm)
     // Information to create new expansion
     int numFields   = m_f->m_exp.size();
     m_f->m_fielddef = m_f->m_exp[0]->GetFieldDefinitions();
+    m_f->m_declareExpansionAsContField = false;
 
     // Set points to equispaced
     int nPointsNew  = 0;

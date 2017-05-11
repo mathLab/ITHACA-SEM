@@ -62,12 +62,6 @@ ProcessMapping::~ProcessMapping()
 
 void ProcessMapping::Process(po::variables_map &vm)
 {
-    // Skip in case of empty partition
-    if (m_f->m_exp[0]->GetNumElmts() == 0)
-    {
-        return;
-    }
-
     // Determine dimensions of mesh, solution, etc...
     int npoints  = m_f->m_exp[0]->GetNpoints();
     int expdim   = m_f->m_graph->GetMeshDimension();
@@ -78,6 +72,19 @@ void ProcessMapping::Process(po::variables_map &vm)
     }
     int nfields   = m_f->m_variables.size();
     int addfields = expdim;
+
+    string fieldNames[3] = {"xCoord", "yCoord", "zCoord"};
+    for (int i = 0; i < addfields; ++i)
+    {
+        m_f->m_variables.push_back(fieldNames[i]);
+    }
+
+    // Skip in case of empty partition
+    if (m_f->m_exp[0]->GetNumElmts() == 0)
+    {
+        return;
+    }
+
     m_f->m_exp.resize(nfields + addfields);
 
     // Load mapping
@@ -132,8 +139,6 @@ void ProcessMapping::Process(po::variables_map &vm)
     mapping->GetCartesianCoordinates(coords[0], coords[1], coords[2]);
 
     // Add new information to m_f
-    string fieldNames[3] = {"xCoord", "yCoord", "zCoord"};
-
     for (int i = 0; i < addfields; ++i)
     {
         m_f->m_exp[nfields + i] =
@@ -142,7 +147,6 @@ void ProcessMapping::Process(po::variables_map &vm)
                      m_f->m_exp[nfields + i]->UpdatePhys(), 1);
         m_f->m_exp[nfields + i]->FwdTrans_IterPerExp(
             coords[i], m_f->m_exp[nfields + i]->UpdateCoeffs());
-        m_f->m_variables.push_back(fieldNames[i]);
     }
 }
 

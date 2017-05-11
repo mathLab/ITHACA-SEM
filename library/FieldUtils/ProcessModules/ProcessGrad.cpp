@@ -64,17 +64,36 @@ ProcessGrad::~ProcessGrad()
 
 void ProcessGrad::Process(po::variables_map &vm)
 {
-    // Skip in case of empty partition
-    if (m_f->m_exp[0]->GetNumElmts() == 0)
-    {
-        return;
-    }
-
     int i, j;
     int expdim    = m_f->m_graph->GetMeshDimension();
     int spacedim  = m_f->m_numHomogeneousDir + expdim;
     int nfields   = m_f->m_variables.size();
     int addfields = nfields * spacedim;
+
+    for (i = 0; i < nfields; ++i)
+    {
+        if (spacedim == 1)
+        {
+            m_f->m_variables.push_back(m_f->m_variables[i] + "_x");
+        }
+        else if (spacedim == 2)
+        {
+            m_f->m_variables.push_back(m_f->m_variables[i] + "_x");
+            m_f->m_variables.push_back(m_f->m_variables[i] + "_y");
+        }
+        else if (spacedim == 3)
+        {
+            m_f->m_variables.push_back(m_f->m_variables[i] + "_x");
+            m_f->m_variables.push_back(m_f->m_variables[i] + "_y");
+            m_f->m_variables.push_back(m_f->m_variables[i] + "_z");
+        }
+    }
+
+    // Skip in case of empty partition
+    if (m_f->m_exp[0]->GetNumElmts() == 0)
+    {
+        return;
+    }
 
     int npoints = m_f->m_exp[0]->GetNpoints();
     Array<OneD, Array<OneD, NekDouble> > grad(addfields);
@@ -176,25 +195,6 @@ void ProcessGrad::Process(po::variables_map &vm)
                      1);
         m_f->m_exp[nfields + i]->FwdTrans_IterPerExp(
             grad[i], m_f->m_exp[nfields + i]->UpdateCoeffs());
-    }
-
-    for (i = 0; i < nfields; ++i)
-    {
-        if (spacedim == 1)
-        {
-            m_f->m_variables.push_back(m_f->m_variables[i] + "_x");
-        }
-        else if (spacedim == 2)
-        {
-            m_f->m_variables.push_back(m_f->m_variables[i] + "_x");
-            m_f->m_variables.push_back(m_f->m_variables[i] + "_y");
-        }
-        else if (spacedim == 3)
-        {
-            m_f->m_variables.push_back(m_f->m_variables[i] + "_x");
-            m_f->m_variables.push_back(m_f->m_variables[i] + "_y");
-            m_f->m_variables.push_back(m_f->m_variables[i] + "_z");
-        }
     }
 }
 }

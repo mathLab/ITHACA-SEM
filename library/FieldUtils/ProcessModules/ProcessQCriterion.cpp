@@ -63,6 +63,7 @@ ProcessQCriterion::~ProcessQCriterion()
 
 void ProcessQCriterion::Process(po::variables_map &vm)
 {
+    m_f->m_variables.push_back("Q");
     // Skip in case of empty partition
     if (m_f->m_exp[0]->GetNumElmts() == 0)
     {
@@ -236,9 +237,6 @@ void ProcessQCriterion::Process(po::variables_map &vm)
             m_f->m_exp.insert(it, Exp[s * addfields + i]);
         }
     }
-
-    m_f->m_variables.push_back("Q");
-
 }
 
 }

@@ -65,12 +65,6 @@ ProcessVorticity::~ProcessVorticity()
 
 void ProcessVorticity::Process(po::variables_map &vm)
 {
-    // Skip in case of empty partition
-    if (m_f->m_exp[0]->GetNumElmts() == 0)
-    {
-        return;
-    }
-
     int i, s;
     int expdim   = m_f->m_graph->GetMeshDimension();
     m_spacedim = expdim;
@@ -86,6 +80,23 @@ void ProcessVorticity::Process(po::variables_map &vm)
     }
     int addfields = (m_spacedim == 2) ? 1 : 3;
 
+    // Append field names
+    if (addfields == 1)
+    {
+        m_f->m_variables.push_back("W_z");
+    }
+    else
+    {
+        m_f->m_variables.push_back("W_x");
+        m_f->m_variables.push_back("W_y");
+        m_f->m_variables.push_back("W_z");
+    }
+
+    // Skip in case of empty partition
+    if (m_f->m_exp[0]->GetNumElmts() == 0)
+    {
+        return;
+    }
     int npoints = m_f->m_exp[0]->GetNpoints();
     Array<OneD, Array<OneD, NekDouble> > grad(m_spacedim * m_spacedim);
     Array<OneD, Array<OneD, NekDouble> > outfield(addfields);
@@ -206,17 +217,6 @@ void ProcessVorticity::Process(po::variables_map &vm)
             it = m_f->m_exp.begin() + s * (nfields + addfields) + nfields + i;
             m_f->m_exp.insert(it, Exp[s * addfields + i]);
         }
-    }
-
-    if (addfields == 1)
-    {
-        m_f->m_variables.push_back("W_z");
-    }
-    else
-    {
-        m_f->m_variables.push_back("W_x");
-        m_f->m_variables.push_back("W_y");
-        m_f->m_variables.push_back("W_z");
     }
 }
 

@@ -66,6 +66,7 @@ ProcessAddCompositeID::~ProcessAddCompositeID()
 
 void ProcessAddCompositeID::Process(po::variables_map &vm)
 {
+    m_f->m_variables.push_back("compositeID");
     // Skip in case of empty partition
     if (m_f->m_exp[0]->GetNumElmts() == 0)
     {
@@ -124,9 +125,6 @@ void ProcessAddCompositeID::Process(po::variables_map &vm)
 
     // forward transform
     exp->FwdTrans_IterPerExp(exp->GetPhys(), exp->UpdateCoeffs());
-
-    m_f->m_variables.push_back("compositeID");
-
 }
 }
 }

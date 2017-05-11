@@ -64,19 +64,29 @@ ProcessNumModes::~ProcessNumModes()
 
 void ProcessNumModes::Process(po::variables_map &vm)
 {
+    int i, s;
+    int expdim    = m_f->m_graph->GetMeshDimension();
+    int nfields   = m_f->m_variables.size();
+    int addfields = expdim;
+
+    m_f->m_variables.push_back("P1");
+    if (addfields >= 2)
+    {
+        m_f->m_variables.push_back("P2");
+    }
+    if (addfields == 3)
+    {
+        m_f->m_variables.push_back("P3");
+    }
+
     // Skip in case of empty partition
     if (m_f->m_exp[0]->GetNumElmts() == 0)
     {
         return;
     }
 
-    int i, s;
-    int expdim    = m_f->m_graph->GetMeshDimension();
-    int nfields   = m_f->m_variables.size();
-    int addfields = expdim;
     int npoints   = m_f->m_exp[0]->GetNpoints();
     Array<OneD, Array<OneD, NekDouble> > outfield(addfields);
-
     int nstrips;
 
     m_f->m_session->LoadParameter("Strip_Z", nstrips, 1);
@@ -127,17 +137,6 @@ void ProcessNumModes::Process(po::variables_map &vm)
             m_f->m_exp.insert(it, Exp[s * addfields + i]);
         }
     }
-
-    m_f->m_variables.push_back("P1");
-    if (addfields >= 2)
-    {
-        m_f->m_variables.push_back("P2");
-    }
-    if (addfields == 3)
-    {
-        m_f->m_variables.push_back("P3");
-    }
-
 }
 }
 }

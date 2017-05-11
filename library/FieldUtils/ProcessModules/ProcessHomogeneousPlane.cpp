@@ -121,9 +121,41 @@ void ProcessHomogeneousPlane::Process(po::variables_map &vm)
                 }
             }
         }
+
+        // Create new SessionReader with RowComm. This is done because when
+        //  using a module requiring m_f->m_declareExpansionAsContField and
+        //  outputting to vtu/dat, a new ContField with equispaced points
+        //  is created. Since creating ContFields require communication, we have
+        //  to change m_session->m_comm to prevent mpi from hanging
+        //  (RowComm will only be used when creating the new expansion,
+        //   since in other places we use m_f->m_comm)
+        std::vector<std::string> files;
+        for (int i = 0; i < m_f->m_inputfiles["xml"].size(); ++i)
+        {
+            files.push_back(m_f->m_inputfiles["xml"][i]);
+        }
+        for (int j = 0; j < m_f->m_inputfiles["xml.gz"].size(); ++j)
+        {
+            files.push_back(m_f->m_inputfiles["xml.gz"][j]);
+        }
+        vector<string> cmdArgs;
+        cmdArgs.push_back("FieldConvert");
+        if (m_f->m_verbose)
+        {
+            cmdArgs.push_back("--verbose");
+        }
+        int argc          = cmdArgs.size();
+        const char **argv = new const char *[argc];
+        for (int i = 0; i < argc; ++i)
+        {
+            argv[i] = cmdArgs[i].c_str();
+        }
+        m_f->m_session = LibUtilities::SessionReader::CreateInstance(
+            argc, (char **)argv, files, m_f->m_comm->GetRowComm());
     }
     else
     {
+        // Create empty expansion
         for (int s = 0; s < nstrips; ++s)
         {
             for (int i = 0; i < nfields; ++i)

@@ -2,7 +2,7 @@
 <test>
     <description> Convert a .pts file to .dat </description>
     <executable>FieldConvert</executable>
-    <parameters> -f -e -m interppoints:fromxml=chan3D.xml:fromfld=chan3D.fld chan3D_probe.pts chan3D_probe.dat</parameters>
+    <parameters> -f -e -m interppoints:fromxml=chan3D.xml:fromfld=chan3D.fld:topts=chan3D_probe.pts chan3D_probe.dat</parameters>
     <files>
         <file description="Session File">chan3D.xml</file>
         <file description="Session File">chan3D.fld</file>

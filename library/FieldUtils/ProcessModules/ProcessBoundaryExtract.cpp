@@ -123,9 +123,12 @@ void ProcessBoundaryExtract::Process(po::variables_map &vm)
     {
         m_f->m_bndRegionsToWrite = bndRegions;
 
-        for (int i = 0; i < m_f->m_exp.size(); ++i)
+        if (m_f->m_exp[0]->GetNumElmts() != 0)
         {
-            m_f->m_exp[i]->FillBndCondFromField();
+            for (int i = 0; i < m_f->m_exp.size(); ++i)
+            {
+                m_f->m_exp[i]->FillBndCondFromField();
+            }
         }
     }
 }

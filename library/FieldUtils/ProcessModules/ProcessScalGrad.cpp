@@ -75,8 +75,20 @@ void ProcessScalGrad::Process(po::variables_map &vm)
     }
 
     int nfields = m_f->m_variables.size();
-    // ASSERTL0(nfields == 1,"Implicit assumption that input is in ADR format of
-    // (u)");
+
+    string var;
+    for (i = 0; i < nfields; i++)
+    {
+        var = m_f->m_variables[i];
+        stringstream filename;
+        filename << var << "_scalar_gradient";
+        filename >> var;
+        m_f->m_variables[i] = var;
+    }
+    if (m_f->m_exp[0]->GetNumElmts() == 0)
+    {
+        return;
+    }
 
     if (spacedim == 1)
     {
@@ -87,7 +99,6 @@ void ProcessScalGrad::Process(po::variables_map &vm)
     int ngrad = spacedim;
     int n, cnt, elmtid, nq, offset, boundary, nfq;
     int npoints = m_f->m_exp[0]->GetNpoints();
-    string var;
     Array<OneD, NekDouble> scalar;
     Array<OneD, Array<OneD, NekDouble> > grad(ngrad), fgrad(ngrad),
         outfield(nfields);
@@ -101,13 +112,6 @@ void ProcessScalGrad::Process(po::variables_map &vm)
 
     for (i = 0; i < nfields; i++)
     {
-        var = m_f->m_variables[i];
-        stringstream filename;
-        filename << var << "_scalar_gradient";
-        filename >> var;
-        m_f->m_variables[i] = var;
-        m_f->m_variables[i] = var;
-
         BndExp[i]   = m_f->m_exp[i]->GetBndCondExpansions();
         outfield[i] = Array<OneD, NekDouble>(npoints);
     }

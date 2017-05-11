@@ -68,13 +68,31 @@ void ProcessWSS::Process(po::variables_map &vm)
     NekDouble kinvis = m_f->m_session->GetParameter("Kinvis");
 
     int i, j;
+    int nfields = m_f->m_variables.size();
     int spacedim = m_f->m_graph->GetSpaceDimension();
     if ((m_f->m_numHomogeneousDir) == 1 || (m_f->m_numHomogeneousDir) == 2)
     {
         spacedim += m_f->m_numHomogeneousDir;
     }
 
-    int nfields = m_f->m_variables.size();
+    if (spacedim == 2)
+    {
+        m_f->m_variables.push_back("Shear_x");
+        m_f->m_variables.push_back("Shear_y");
+        m_f->m_variables.push_back("Shear_mag");
+    }
+    else
+    {
+        m_f->m_variables.push_back("Shear_x");
+        m_f->m_variables.push_back("Shear_y");
+        m_f->m_variables.push_back("Shear_z");
+        m_f->m_variables.push_back("Shear_mag");
+    }
+    if (m_f->m_exp[0]->GetNumElmts() == 0)
+    {
+        return;
+    }
+
     ASSERTL0(m_f->m_variables[0] == "u",
              "Implicit assumption that input is in incompressible format of "
              "(u,v,p) or (u,v,w,p)");
@@ -98,12 +116,6 @@ void ProcessWSS::Process(po::variables_map &vm)
     Array<OneD, MultiRegions::ExpListSharedPtr> BndExp(newfields);
     Array<OneD, MultiRegions::ExpListSharedPtr> BndElmtExp(spacedim);
 
-    // Extract original fields to boundary (for output)
-    for (int i = 0; i < m_f->m_exp.size(); ++i)
-    {
-        m_f->m_exp[i]->FillBndCondFromField();
-    }
-
     m_f->m_exp.resize(nfields + newfields);
     for (i = 0; i < newfields; ++i)
     {
@@ -111,19 +123,7 @@ void ProcessWSS::Process(po::variables_map &vm)
             m_f->AppendExpList(m_f->m_numHomogeneousDir);
     }
 
-    if (spacedim == 2)
-    {
-        m_f->m_variables.push_back("Shear_x");
-        m_f->m_variables.push_back("Shear_y");
-        m_f->m_variables.push_back("Shear_mag");
-    }
-    else
-    {
-        m_f->m_variables.push_back("Shear_x");
-        m_f->m_variables.push_back("Shear_y");
-        m_f->m_variables.push_back("Shear_z");
-        m_f->m_variables.push_back("Shear_mag");
-    }
+
 
     // Create map of boundary ids for partitioned domains
     SpatialDomains::BoundaryConditions bcs(m_f->m_session,

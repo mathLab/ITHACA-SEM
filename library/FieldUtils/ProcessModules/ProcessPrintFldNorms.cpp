@@ -77,10 +77,13 @@ void ProcessPrintFldNorms::Process(po::variables_map &vm)
         NekDouble L2   = m_f->m_exp[j]->L2(m_f->m_exp[j]->GetPhys());
         NekDouble LInf = m_f->m_exp[j]->Linf(m_f->m_exp[j]->GetPhys());
 
-        cout << "L 2 error (variable " << m_f->m_session->GetVariable(j)
-             << ") : " << L2 << endl;
-        cout << "L inf error (variable " << m_f->m_session->GetVariable(j)
-             << ") : " << LInf << endl;
+        if (m_f->m_comm->TreatAsRankZero())
+        {
+            cout << "L 2 error (variable " << m_f->m_session->GetVariable(j)
+                 << ") : " << L2 << endl;
+            cout << "L inf error (variable " << m_f->m_session->GetVariable(j)
+                 << ") : " << LInf << endl;
+        }
     }
 }
 }

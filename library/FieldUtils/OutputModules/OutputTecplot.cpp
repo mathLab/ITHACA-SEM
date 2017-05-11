@@ -275,7 +275,7 @@ void OutputTecplot::OutputFromExp(po::variables_map &vm)
     }
 
     // Add references to m_fields
-    for (int i = 0; i < m_f->m_exp.size(); ++i)
+    for (int i = 0; i < m_f->m_variables.size(); ++i)
     {
         m_fields[i + m_coordim] = m_f->m_exp[i]->UpdatePhys();
     }

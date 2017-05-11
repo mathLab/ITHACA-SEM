@@ -150,6 +150,7 @@ void ProcessDisplacement::Process(po::variables_map &vm)
     if (bndGraph->GetMeshDimension() == 1)
     {
         m_f->m_exp.push_back(m_f->AppendExpList(0, "v"));
+        m_f->m_variables.push_back("v");
 
         MultiRegions::ExpListSharedPtr bndCondExpU =
             m_f->m_exp[0]->GetBndCondExpansions()[bndCondId];
@@ -212,6 +213,8 @@ void ProcessDisplacement::Process(po::variables_map &vm)
     {
         m_f->m_exp.push_back(m_f->AppendExpList(0, "v"));
         m_f->m_exp.push_back(m_f->AppendExpList(0, "w"));
+        m_f->m_variables.push_back("v");
+        m_f->m_variables.push_back("w");
 
         MultiRegions::ExpListSharedPtr bndCondExpU =
             m_f->m_exp[0]->GetBndCondExpansions()[bndCondId];

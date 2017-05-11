@@ -72,12 +72,19 @@ void ProcessSurfDistance::Process(po::variables_map &vm)
     ASSERTL0(surf >= 0, "Invalid surface " + boost::lexical_cast<string>(surf));
 
     int nfields           = m_f->m_variables.size();
+    m_f->m_variables.push_back("dist");
+
+    if (m_f->m_exp[0]->GetNumElmts() == 0)
+    {
+        return;
+    }
+
     int NumHomogeneousDir = m_f->m_numHomogeneousDir;
     MultiRegions::ExpListSharedPtr exp;
     if (nfields)
     {
         m_f->m_exp.resize(nfields + 1);
-        exp = m_f->AppendExpList(NumHomogeneousDir, "dist");
+        exp = m_f->AppendExpList(NumHomogeneousDir);
 
         m_f->m_exp[nfields] = exp;
     }
@@ -85,7 +92,6 @@ void ProcessSurfDistance::Process(po::variables_map &vm)
     {
         exp = m_f->m_exp[0];
     }
-    m_f->m_variables.push_back("dist");
 
     // Grab boundary expansions.
     Array<OneD, MultiRegions::ExpListSharedPtr> BndExp =

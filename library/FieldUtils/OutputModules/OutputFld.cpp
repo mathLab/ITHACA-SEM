@@ -35,6 +35,7 @@
 
 #include <set>
 #include <string>
+#include <boost/format.hpp>
 using namespace std;
 
 #include "OutputFld.h"

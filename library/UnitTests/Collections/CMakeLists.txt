@@ -3,6 +3,7 @@ SET(CollectionsUnitTestsSources
     TestHexCollection.cpp
     TestQuadCollection.cpp
     TestPrismCollection.cpp
+    TestPyrCollection.cpp
     TestSegCollection.cpp
     TestTetCollection.cpp
     TestTriCollection.cpp

@@ -30,6 +30,7 @@ v4.4.1
 - Fix Hdf5 output in FilterFieldConvert (!781)
 - Fixed extreme memory consumption of Interpolator when interpolating from pts
   to fld or between different meshes (!783)
+- Fix deadlock with HDF5 input (!786)
 
 **FieldConvert:**
 - Fix issue with field ordering in the interppointdatatofld module (!754)

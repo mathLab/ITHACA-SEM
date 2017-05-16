@@ -11,7 +11,15 @@ ENDMACRO()
 
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/library ${CMAKE_SOURCE_DIR}/utilities)
 
-ADD_UTILITIES_EXECUTABLE(MeshConvert COMPONENT utilities SOURCES MeshConvert.cpp)
+CMAKE_DEPENDENT_OPTION(NEKTAR_UTILITY_NEKMESH
+    "Build the NekMesh pre-processing utility." ON
+    "NEKTAR_BUILD_UTILITIES" OFF)
+CMAKE_DEPENDENT_OPTION(NEKTAR_UTILITY_FIELDCONVERT
+    "Build the FieldConvert post-processing utility." ON
+    "NEKTAR_BUILD_UTILITIES" OFF)
+CMAKE_DEPENDENT_OPTION(NEKTAR_UTILITY_EXTRAS
+    "Build extra Nektar++ utilities." OFF
+    "NEKTAR_BUILD_UTILITIES" OFF)
 
 # Generate list of available utilities
 SUBDIRS(NekMesh FieldConvert Extras)

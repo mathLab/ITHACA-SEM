@@ -241,10 +241,6 @@ SET(LinearAlgebraHeaders
     ./LinearAlgebra/SparseUtils.hpp
 )
 
-IF(NEKTAR_USING_SMV)
-    SET(LinearAlgebraHeaders ${LinearAlgebraHeaders} ./LinearAlgebra/LibSMV.hpp)
-ENDIF(NEKTAR_USING_SMV)
-
 SET(LinearAlgebraSources
     ./LinearAlgebra/blas.cpp
     ./LinearAlgebra/BlockMatrix.cpp
@@ -260,10 +256,6 @@ SET(LinearAlgebraSources
     ./LinearAlgebra/SparseDiagBlkMatrix.cpp
     ./LinearAlgebra/SparseMatrix.cpp
 )
-
-IF(NEKTAR_USING_SMV)
-    SET(LinearAlgebraSources ${LinearAlgebraSources} ./LinearAlgebra/LibSMV.cpp)
-ENDIF(NEKTAR_USING_SMV)
 
 SET(MemoryHeaders
     ./Memory/ThreadSpecificPool.hpp
@@ -483,10 +475,6 @@ IF( NEKTAR_USE_BLAS_LAPACK )
     IF( NEKTAR_USE_OPENBLAS AND OPENBLAS_FOUND )
         TARGET_LINK_LIBRARIES(LibUtilities LINK_PUBLIC ${OPENBLAS})
     ENDIF( NEKTAR_USE_OPENBLAS AND OPENBLAS_FOUND )
-
-    IF( NEKTAR_USE_SMV AND SMV_FOUND )
-        TARGET_LINK_LIBRARIES(LibUtilities LINK_PUBLIC ${SMV_LIBRARY})
-    ENDIF( NEKTAR_USE_SMV AND SMV_FOUND )
 
     IF( NEKTAR_USE_SYSTEM_BLAS_LAPACK )
         TARGET_LINK_LIBRARIES(LibUtilities LINK_PUBLIC ${NATIVE_LAPACK} ${NATIVE_BLAS})

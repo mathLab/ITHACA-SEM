@@ -717,21 +717,19 @@ void LEE::WhiteNoiseBC(int bcRegion,
         // pressure perturbation
         Vmath::Fill(nBCEdgePts, m_whiteNoiseBC_p, &tmp[0][0], 1);
 
-        // TODO: density perturbation
-        ASSERTL0(false, "not implemented yet");
-
-        // velocity perturbation
         for (int i = 0; i < nBCEdgePts; ++i)
         {
-            NekDouble u = m_whiteNoiseBC_p /
-                          sqrt(m_gamma * BfFwd[0][id2 + i] * BfFwd[1][id2 + i]);
+            // density perturbation
+            tmp[1][i] = m_whiteNoiseBC_p / (BfFwd[0][id2 + i] / BfFwd[1][id2 + i]);
+
+            // velocity perturbation
+            NekDouble ru = m_whiteNoiseBC_p /
+                          sqrt(m_gamma * BfFwd[0][id2 + i] / BfFwd[1][id2 + i]);
             for (int j = 0; j < m_spacedim; ++j)
             {
-                tmp[2 + j][i] = -1.0 * u * m_traceNormals[j][id2 + i];
+                tmp[2 + j][i] = -1.0 * ru * m_traceNormals[j][id2 + i];
             }
         }
-
-
 
         // Copy boundary adjusted values into the boundary expansion
         for (int i = 0; i < nVariables; ++i)

@@ -162,8 +162,7 @@ namespace Nektar
             // (vert,edge,face) triples.
             for (cnt = n = 0; n < nExp; ++n)
             {
-                nel = expList->GetOffset_Elmt_Id(n);
-                exp = expList->GetExp(nel);
+                exp = expList->GetExp(n);
 
                 // Grab reference to local Schur complement matrix.
                 DNekScalMatSharedPtr schurMat =
@@ -601,7 +600,7 @@ namespace Nektar
             // Assemble block matrices for each trace element.
             for (cnt = n = 0; n < expList->GetExpSize(); ++n)
             {
-                int elmt = expList->GetOffset_Elmt_Id(n);
+                int elmt = n;
                 locExpansion = expList->GetExp(elmt);
 
                 Array<OneD, LocalRegions::ExpansionSharedPtr> &elmtToTraceMap =

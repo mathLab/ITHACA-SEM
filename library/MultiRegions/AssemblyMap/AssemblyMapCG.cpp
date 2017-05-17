@@ -275,7 +275,7 @@ namespace Nektar
 
                 for(j = 0; j < locExpVector.size(); j++)
                 {
-                    exp = locExpVector[locExp.GetOffset_Elmt_Id(j)];
+                    exp = locExpVector[j];
 
                     for(k = 0; k < exp->GetNverts(); k++)
                     {
@@ -580,7 +580,7 @@ namespace Nektar
             /// -  Count verts, edges, face and add up edges and face sizes
             for(i = 0; i < locExpVector.size(); ++i)
             {
-                exp = locExpVector[locExp.GetOffset_Elmt_Id(i)];
+                exp = locExpVector[i];
                 nTotalVerts += exp->GetNverts();
                 nTotalEdges += exp->GetNedges();
                 nTotalFaces += exp->GetNfaces();
@@ -1073,7 +1073,7 @@ namespace Nektar
                 // edges respectively which are local to this process.
                 for(i = cnt = 0; i < locExpVector.size(); ++i)
                 {
-                    int elmtid = locExp.GetOffset_Elmt_Id(i);
+                    int elmtid = i;
                     exp = locExpVector[elmtid];
                     for (j = 0; j < exp->GetNverts(); ++j)
                     {
@@ -1552,7 +1552,7 @@ namespace Nektar
 
             for(i = 0; i < locExpVector.size(); ++i)
             {
-                exp = locExpVector[locExp.GetOffset_Elmt_Id(i)];
+                exp = locExpVector[i];
 
                 for(j = 0; j < exp->GetNverts(); ++j)
                 {
@@ -1612,10 +1612,10 @@ namespace Nektar
             for(i = 0; i < m_numPatches; ++i)
             {
                 m_numLocalBndCoeffsPerPatch[i] = (unsigned int)
-                    locExpVector[locExp.GetOffset_Elmt_Id(i)]->NumBndryCoeffs();
+                    locExpVector[i]->NumBndryCoeffs();
                 m_numLocalIntCoeffsPerPatch[i] = (unsigned int)
-                    locExpVector[locExp.GetOffset_Elmt_Id(i)]->GetNcoeffs() -
-                    locExpVector[locExp.GetOffset_Elmt_Id(i)]->NumBndryCoeffs();
+                    locExpVector[i]->GetNcoeffs() -
+                    locExpVector[i]->NumBndryCoeffs();
             }
 
             /**
@@ -1987,7 +1987,7 @@ namespace Nektar
 
                     for (i = 0; i < locExpVector.size(); ++i)
                     {
-                        exp = locExpVector[locExp.GetOffset_Elmt_Id(i)];
+                        exp = locExpVector[i];
 
                         for (j = 0; j < exp->GetNverts(); ++j)
                         {

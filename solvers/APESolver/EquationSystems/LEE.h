@@ -76,31 +76,16 @@ class LEE : public APE
         void GetFluxVector(
                 const Array<OneD, Array<OneD, NekDouble> > &physfield,
                 Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &flux);
+    private:
 
         virtual void v_AddLinTerm(const Array< OneD, const Array< OneD, NekDouble > > &inarray,
                         Array<OneD, Array<OneD, NekDouble> > &outarray);
 
-        virtual void v_SetBoundaryConditions(Array<OneD, Array<OneD, NekDouble> > &physarray,
-                                   NekDouble time);
-
-    private:
-
-        void WallBC(int bcRegion,
-                    int cnt,
-                    Array<OneD, Array<OneD, NekDouble> > &Fwd,
-                    Array<OneD, Array<OneD, NekDouble> > &physarray);
-
-        void RiemannInvariantBC(int bcRegion,
+        virtual void v_RiemannInvariantBC(int bcRegion,
                                 int cnt,
                                 Array<OneD, Array<OneD, NekDouble> > &Fwd,
                                 Array<OneD, Array<OneD, NekDouble> > &BfFwd,
                                 Array<OneD, Array<OneD, NekDouble> > &physarray);
-
-        void WhiteNoiseBC(int bcRegion,
-                        int cnt,
-                        Array<OneD, Array<OneD, NekDouble> > &Fwd,
-                        Array<OneD, Array<OneD, NekDouble> > &BfFwd,
-                        Array<OneD, Array<OneD, NekDouble> > &physarray);
 
 };
 }

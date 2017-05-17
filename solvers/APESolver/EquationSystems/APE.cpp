@@ -62,7 +62,7 @@ APE::APE(
     const LibUtilities::SessionReaderSharedPtr& pSession,
     const SpatialDomains::MeshGraphSharedPtr& pGraph)
     : UnsteadySystem(pSession, pGraph),
-      AdvectionSystem(pSession, pGraph)
+      AdvectionSystem(pSession, pGraph), _ip(0), _irho(-1), _iu(1), m_conservative(false)
 {
 }
 
@@ -73,10 +73,6 @@ APE::APE(
 void APE::v_InitObject()
 {
     AdvectionSystem::v_InitObject();
-
-    _ip = 0;
-    _irho = -1;
-    _iu = 1;
 
     // TODO: We have a bug somewhere in the 1D boundary conditions. Therefore 1D
     // problems are currently disabled. This should get fixed in the future.
@@ -106,13 +102,13 @@ void APE::v_InitObject()
     }
     GetFunction("Baseflow", m_fields[0], true)->Evaluate(m_bfNames, m_bf, m_time);
 
-    m_forcing = SolverUtils::Forcing::Load(m_session, m_fields, m_spacedim + 1);
+    m_forcing = SolverUtils::Forcing::Load(m_session, m_fields, m_fields.num_elements());
 
     // Do not forwards transform initial condition
     m_homoInitialFwd = false;
 
     // Define the normal velocity fields
-    m_bfFwdBwd = Array<OneD, Array<OneD, NekDouble> > (2*(m_spacedim + 2));
+    m_bfFwdBwd = Array<OneD, Array<OneD, NekDouble> > (2*m_bfNames.size());
     for (int i = 0; i < m_bfFwdBwd.num_elements(); i++)
     {
         m_bfFwdBwd[i] = Array<OneD, NekDouble>(GetTraceNpoints(), 0.0);
@@ -124,7 +120,7 @@ void APE::v_InitObject()
     for (int i = 0; i < m_spacedim; ++i)
     {
         // u', v', w'
-        m_vecLocs[0][i] = 1 + i;
+        m_vecLocs[0][i] = _iu + i;
     }
 
     string riemName;
@@ -297,14 +293,14 @@ void APE::DoOdeProjection(const Array<OneD, const Array<OneD, NekDouble> >&inarr
 
     UpdateBasefieldFwdBwd();
 
-    v_SetBoundaryConditions(outarray, time);
+    SetBoundaryConditions(outarray, time);
 }
 
 
 /**
  * @brief Apply the Boundary Conditions to the APE equations.
  */
-void APE::v_SetBoundaryConditions(Array<OneD, Array<OneD, NekDouble> > &inarray,
+void APE::SetBoundaryConditions(Array<OneD, Array<OneD, NekDouble> > &inarray,
                                 NekDouble time)
 {
     std::string varName;
@@ -333,15 +329,15 @@ void APE::v_SetBoundaryConditions(Array<OneD, Array<OneD, NekDouble> > &inarray,
             // Wall Boundary Condition
             if (boost::iequals(userDefStr, "Wall"))
             {
-                WallBC(n, cnt, Fwd, inarray);
+                v_WallBC(n, cnt, Fwd, inarray);
             }
             else if (boost::iequals(userDefStr, "WhiteNoise"))
             {
-                WhiteNoiseBC(n, cnt, Fwd, bfFwd, inarray);
+                v_WhiteNoiseBC(n, cnt, Fwd, bfFwd, inarray);
             }
             else if (boost::iequals(userDefStr, "RiemannInvariantBC"))
             {
-                RiemannInvariantBC(n, cnt, Fwd, bfFwd, inarray);
+                v_RiemannInvariantBC(n, cnt, Fwd, bfFwd, inarray);
             }
             else if (boost::iequals(userDefStr, "TimeDependent"))
             {
@@ -375,7 +371,7 @@ void APE::v_SetBoundaryConditions(Array<OneD, Array<OneD, NekDouble> > &inarray,
 /**
  * @brief Wall boundary conditions for the APE equations.
  */
-void APE::WallBC(int bcRegion, int cnt,
+void APE::v_WallBC(int bcRegion, int cnt,
                  Array<OneD, Array<OneD, NekDouble> > &Fwd,
                  Array<OneD, Array<OneD, NekDouble> > &physarray)
 {
@@ -402,7 +398,7 @@ void APE::WallBC(int bcRegion, int cnt,
         for (int i = 0; i < m_spacedim; ++i)
         {
             Vmath::Vvtvp(nBCEdgePts,
-                         &Fwd[1+i][id2], 1,
+                         &Fwd[_iu+i][id2], 1,
                          &m_traceNormals[i][id2], 1,
                          &tmp[0], 1,
                          &tmp[0], 1);
@@ -417,8 +413,8 @@ void APE::WallBC(int bcRegion, int cnt,
             Vmath::Vvtvp(nBCEdgePts,
                          &tmp[0], 1,
                          &m_traceNormals[i][id2], 1,
-                         &Fwd[1+i][id2], 1,
-                         &Fwd[1+i][id2], 1);
+                         &Fwd[_iu+i][id2], 1,
+                         &Fwd[_iu+i][id2], 1);
         }
 
         // Copy boundary adjusted values into the boundary expansion
@@ -436,7 +432,7 @@ void APE::WallBC(int bcRegion, int cnt,
  * @brief Outflow characteristic boundary conditions for compressible
  * flow problems.
  */
-void APE::RiemannInvariantBC(int bcRegion,
+void APE::v_RiemannInvariantBC(int bcRegion,
                              int cnt,
                              Array<OneD, Array<OneD, NekDouble> > &Fwd,
                              Array<OneD, Array<OneD, NekDouble> > &BfFwd,
@@ -463,7 +459,7 @@ void APE::RiemannInvariantBC(int bcRegion,
         for (int i = 0; i < m_spacedim; ++i)
         {
             Vmath::Vvtvp(nBCEdgePts,
-                         &Fwd[1 + i][id2], 1,
+                         &Fwd[_iu + i][id2], 1,
                          &m_traceNormals[i][id2], 1,
                          &Vn[0], 1,
                          &Vn[0], 1);
@@ -493,7 +489,7 @@ void APE::RiemannInvariantBC(int bcRegion,
             if (l0 > 0)
             {
                 // p/2 + u*c*rho0/2
-                h0 = Fwd[0][id2 + i] / 2 + Vn[i] * c * BfFwd[1][id2 + i] / 2;
+                h0 = Fwd[_ip][id2 + i] / 2 + Vn[i] * c * BfFwd[1][id2 + i] / 2;
             }
             // incoming
             else
@@ -505,7 +501,7 @@ void APE::RiemannInvariantBC(int bcRegion,
             if (l1 > 0)
             {
                 // p/2 - u*c*rho0/2
-                h1 = Fwd[0][id2 + i] / 2 - Vn[i] * c * BfFwd[1][id2 + i] / 2;
+                h1 = Fwd[_ip][id2 + i] / 2 - Vn[i] * c * BfFwd[1][id2 + i] / 2;
             }
             // incoming
             else
@@ -516,14 +512,14 @@ void APE::RiemannInvariantBC(int bcRegion,
             // compute primitive variables
             // p = h0 + h1
             // u = ( h0 - h1) / (c*rho0)
-            Fwd[0][id2 + i] = h0 + h1;
+            Fwd[_ip][id2 + i] = h0 + h1;
             NekDouble VnNew = (h0 - h1) / (c * BfFwd[1][id2 + i]);
 
             // adjust velocity pert. according to new value
             for (int j = 0; j < m_spacedim; ++j)
             {
-                Fwd[1 + j][id2 + i] =
-                    Fwd[1 + j][id2 + i] +
+                Fwd[_iu + j][id2 + i] =
+                    Fwd[_iu + j][id2 + i] +
                     (VnNew - Vn[i]) * m_traceNormals[j][id2 + i];
             }
         }
@@ -544,7 +540,7 @@ void APE::RiemannInvariantBC(int bcRegion,
 /**
  * @brief Wall boundary conditions for the APE equations.
  */
-void APE::WhiteNoiseBC(int bcRegion,
+void APE::v_WhiteNoiseBC(int bcRegion,
                        int cnt,
                        Array<OneD, Array<OneD, NekDouble> > &Fwd,
                        Array<OneD, Array<OneD, NekDouble> > &BfFwd,
@@ -600,16 +596,37 @@ void APE::WhiteNoiseBC(int bcRegion,
         }
 
         // pressure perturbation
-        Vmath::Fill(nBCEdgePts, m_whiteNoiseBC_p, &tmp[0][0], 1);
+        Vmath::Fill(nBCEdgePts, m_whiteNoiseBC_p, &tmp[_ip][0], 1);
 
-        // velocity perturbation
-        for (int i = 0; i < nBCEdgePts; ++i)
+        if (m_conservative)
         {
-            NekDouble u = m_whiteNoiseBC_p /
-                          sqrt(m_gamma * BfFwd[0][id2 + i] * BfFwd[1][id2 + i]);
-            for (int j = 0; j < m_spacedim; ++j)
+            for (int i = 0; i < nBCEdgePts; ++i)
             {
-                tmp[1 + j][i] = -1.0 * u * m_traceNormals[j][id2 + i];
+                // density perturbation
+                tmp[_irho][i] = m_whiteNoiseBC_p / (BfFwd[0][id2 + i] / BfFwd[1][id2 + i]);
+
+                // velocity perturbation
+
+                NekDouble ru = m_whiteNoiseBC_p /
+                            sqrt(m_gamma * BfFwd[0][id2 + i] / BfFwd[1][id2 + i]);
+                for (int j = 0; j < m_spacedim; ++j)
+                {
+                    tmp[_iu + j][i] = -1.0 * ru * m_traceNormals[j][id2 + i];
+                }
+            }
+        }
+        else
+        {
+            for (int i = 0; i < nBCEdgePts; ++i)
+            {
+                // velocity perturbation
+                NekDouble u = m_whiteNoiseBC_p /
+                            sqrt(m_gamma * BfFwd[0][id2 + i] * BfFwd[1][id2 + i]);
+
+                for (int j = 0; j < m_spacedim; ++j)
+                {
+                    tmp[_iu + j][i] = -1.0 * u * m_traceNormals[j][id2 + i];
+                }
             }
         }
 
@@ -639,7 +656,7 @@ Array<OneD, NekDouble> APE::v_GetMaxStdVelocity(void)
     Array<OneD, NekDouble> stdV(nElm, 0.0);
 
     Array<OneD, Array<OneD, NekDouble> > stdVelocity(m_spacedim);
-    Array<OneD, Array<OneD, NekDouble> > velocity(m_spacedim+1);
+    Array<OneD, Array<OneD, NekDouble> > velocity(m_spacedim);
     LibUtilities::PointsKeyVector ptsKeys;
 
     int cnt = 0;
@@ -778,9 +795,9 @@ const Array<OneD, const Array<OneD, NekDouble> > &APE::GetBasefieldFwdBwd()
 
 void APE::UpdateBasefieldFwdBwd()
 {
-    for (int i = 0; i < m_spacedim + 2; i++)
+    for (int i = 0; i < m_bfNames.size(); i++)
     {
-        int j = (m_spacedim + 2) + i;
+        int j = m_bfNames.size() + i;
         m_fields[0]->GetFwdBwdTracePhys(m_bf[i], m_bfFwdBwd[i], m_bfFwdBwd[j]);
         CopyBoundaryTrace(m_bfFwdBwd[i], m_bfFwdBwd[j]);
     }

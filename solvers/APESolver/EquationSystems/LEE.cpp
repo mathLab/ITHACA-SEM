@@ -62,6 +62,11 @@ LEE::LEE(
         const LibUtilities::SessionReaderSharedPtr& pSession)
     : APE(pSession)
 {
+    _ip = 0;
+    _irho = 1;
+    _iu = 2;
+
+    m_conservative = true;
 }
 
 
@@ -71,15 +76,6 @@ LEE::LEE(
 void LEE::v_InitObject()
 {
     APE::v_InitObject();
-
-    // Set up locations of velocity and base velocity vectors.
-    m_vecLocs = Array<OneD, Array<OneD, NekDouble> >(1);
-    m_vecLocs[0] = Array<OneD, NekDouble>(m_spacedim);
-    for (int i = 0; i < m_spacedim; ++i)
-    {
-        // u', v', w'
-        m_vecLocs[0][i] = 2 + i;
-    }
 
     string riemName;
     m_session->LoadSolverInfo("UpwindType", riemName, "Upwind");
@@ -293,142 +289,10 @@ void LEE::v_AddLinTerm(const Array< OneD, const Array< OneD, NekDouble > > &inar
 
 
 /**
- * @brief Apply the Boundary Conditions to the LEE equations.
- */
-void LEE::v_SetBoundaryConditions(Array<OneD, Array<OneD, NekDouble> > &inarray,
-                                NekDouble time)
-{
-    std::string varName;
-    int nvariables = m_fields.num_elements();
-    int cnt        = 0;
-    int nTracePts  = GetTraceTotPoints();
-
-    // Extract trace for boundaries. Needs to be done on all processors to avoid
-    // deadlock.
-    Array<OneD, Array<OneD, NekDouble> > Fwd(nvariables);
-    for (int i = 0; i < nvariables; ++i)
-    {
-        Fwd[i] = Array<OneD, NekDouble>(nTracePts);
-        m_fields[i]->ExtractTracePhys(inarray[i], Fwd[i]);
-    }
-    Array<OneD, Array<OneD, NekDouble> > bfFwd = GetBasefieldFwdBwd();
-
-    // loop over Boundary Regions
-    for (int n = 0; n < m_fields[0]->GetBndConditions().num_elements(); ++n)
-    {
-        std::string userDefStr =
-            m_fields[0]->GetBndConditions()[n]->GetUserDefined();
-
-        if (!userDefStr.empty())
-        {
-            // Wall Boundary Condition
-            if (boost::iequals(userDefStr, "Wall"))
-            {
-                WallBC(n, cnt, Fwd, inarray);
-            }
-            else if (boost::iequals(userDefStr, "WhiteNoise"))
-            {
-                WhiteNoiseBC(n, cnt, Fwd, bfFwd, inarray);
-            }
-            else if (boost::iequals(userDefStr, "RiemannInvariantBC"))
-            {
-                RiemannInvariantBC(n, cnt, Fwd, bfFwd, inarray);
-            }
-            else if (boost::iequals(userDefStr, "TimeDependent"))
-            {
-                for (int i = 0; i < nvariables; ++i)
-                {
-                    varName = m_session->GetVariable(i);
-                    m_fields[i]->EvaluateBoundaryConditions(time, varName);
-                }
-            }
-            else
-            {
-                string errmsg = "Unrecognised boundary condition: ";
-                errmsg += userDefStr;
-                ASSERTL0(false, errmsg.c_str());
-            }
-        }
-        else
-        {
-            for (int i = 0; i < nvariables; ++i)
-            {
-                varName = m_session->GetVariable(i);
-                m_fields[i]->EvaluateBoundaryConditions(time, varName);
-            }
-        }
-
-        cnt += m_fields[0]->GetBndCondExpansions()[n]->GetExpSize();
-    }
-}
-
-
-/**
- * @brief Wall boundary conditions for the LEE equations.
- */
-void LEE::WallBC(int bcRegion, int cnt,
-                 Array<OneD, Array<OneD, NekDouble> > &Fwd,
-                 Array<OneD, Array<OneD, NekDouble> > &physarray)
-{
-    int nVariables = physarray.num_elements();
-
-    const Array<OneD, const int> &traceBndMap = m_fields[0]->GetTraceBndMap();
-
-    // Adjust the physical values of the trace to take
-    // user defined boundaries into account
-    int id1, id2, nBCEdgePts;
-    int eMax = m_fields[0]->GetBndCondExpansions()[bcRegion]->GetExpSize();
-
-    for (int e = 0; e < eMax; ++e)
-    {
-        nBCEdgePts = m_fields[0]->GetBndCondExpansions()[bcRegion]->
-                GetExp(e)->GetTotPoints();
-        id1 = m_fields[0]->GetBndCondExpansions()[bcRegion]->GetPhys_Offset(e);
-        id2 = m_fields[0]->GetTrace()->GetPhys_Offset(traceBndMap[cnt+e]);
-
-        // For 2D/3D, define: v* = v - 2(v.n)n
-        Array<OneD, NekDouble> tmp(nBCEdgePts, 0.0);
-
-        // Calculate (v.n)
-        for (int i = 0; i < m_spacedim; ++i)
-        {
-            Vmath::Vvtvp(nBCEdgePts,
-                         &Fwd[2+i][id2], 1,
-                         &m_traceNormals[i][id2], 1,
-                         &tmp[0], 1,
-                         &tmp[0], 1);
-        }
-
-        // Calculate 2.0(v.n)
-        Vmath::Smul(nBCEdgePts, -2.0, &tmp[0], 1, &tmp[0], 1);
-
-        // Calculate v* = v - 2.0(v.n)n
-        for (int i = 0; i < m_spacedim; ++i)
-        {
-            Vmath::Vvtvp(nBCEdgePts,
-                         &tmp[0], 1,
-                         &m_traceNormals[i][id2], 1,
-                         &Fwd[2+i][id2], 1,
-                         &Fwd[2+i][id2], 1);
-        }
-
-        // Copy boundary adjusted values into the boundary expansion
-        for (int i = 0; i < nVariables; ++i)
-        {
-            Vmath::Vcopy(nBCEdgePts,
-                         &Fwd[i][id2], 1,
-                         &(m_fields[i]->GetBndCondExpansions()[bcRegion]->UpdatePhys())[id1], 1);
-        }
-    }
-}
-
-
-
-/**
  * @brief Outflow characteristic boundary conditions for compressible
  * flow problems.
  */
-void LEE::RiemannInvariantBC(int bcRegion,
+void LEE::v_RiemannInvariantBC(int bcRegion,
                              int cnt,
                              Array<OneD, Array<OneD, NekDouble> > &Fwd,
                              Array<OneD, Array<OneD, NekDouble> > &BfFwd,
@@ -547,93 +411,6 @@ void LEE::RiemannInvariantBC(int bcRegion,
     }
 }
 
-
-/**
- * @brief Wall boundary conditions for the LEE equations.
- */
-void LEE::WhiteNoiseBC(int bcRegion,
-                       int cnt,
-                       Array<OneD, Array<OneD, NekDouble> > &Fwd,
-                       Array<OneD, Array<OneD, NekDouble> > &BfFwd,
-                       Array<OneD, Array<OneD, NekDouble> > &physarray)
-{
-    int id1, id2, nBCEdgePts;
-    int nVariables = physarray.num_elements();
-
-    const Array<OneD, const int> &traceBndMap = m_fields[0]->GetTraceBndMap();
-
-    if (m_rng.count(bcRegion) == 0)
-    {
-        m_rng[bcRegion] = boost::mt19937(bcRegion);
-    }
-
-    ASSERTL0(
-        m_fields[0]->GetBndConditions()[bcRegion]->GetBoundaryConditionType() ==
-            SpatialDomains::eDirichlet,
-        "WhiteNoise BCs must be Dirichlet type BCs");
-
-    LibUtilities::Equation cond =
-        boost::static_pointer_cast<SpatialDomains::DirichletBoundaryCondition>(
-            m_fields[0]->GetBndConditions()[bcRegion])
-            ->m_dirichletCondition;
-    NekDouble sigma = cond.Evaluate();
-
-    ASSERTL0(sigma > NekConstants::kNekZeroTol,
-             "sigma must be greater than zero");
-
-    // random velocity perturbation
-    if (m_whiteNoiseBC_lastUpdate < m_time)
-    {
-        m_whiteNoiseBC_lastUpdate = m_time;
-
-        boost::normal_distribution<> dist(0, sigma);
-        m_whiteNoiseBC_p = dist(m_rng[bcRegion]);
-    }
-
-    int eMax = m_fields[0]->GetBndCondExpansions()[bcRegion]->GetExpSize();
-    for (int e = 0; e < eMax; ++e)
-    {
-        nBCEdgePts = m_fields[0]
-                         ->GetBndCondExpansions()[bcRegion]
-                         ->GetExp(e)
-                         ->GetTotPoints();
-        id1 = m_fields[0]->GetBndCondExpansions()[bcRegion]->GetPhys_Offset(e);
-        id2 = m_fields[0]->GetTrace()->GetPhys_Offset(traceBndMap[cnt + e]);
-
-        Array<OneD, Array<OneD, NekDouble> > tmp(nVariables);
-        for (int i = 0; i < nVariables; ++i)
-        {
-            tmp[i] = Array<OneD, NekDouble>(nBCEdgePts, 0.0);
-        }
-
-        // pressure perturbation
-        Vmath::Fill(nBCEdgePts, m_whiteNoiseBC_p, &tmp[0][0], 1);
-
-        for (int i = 0; i < nBCEdgePts; ++i)
-        {
-            // density perturbation
-            tmp[1][i] = m_whiteNoiseBC_p / (BfFwd[0][id2 + i] / BfFwd[1][id2 + i]);
-
-            // velocity perturbation
-            NekDouble ru = m_whiteNoiseBC_p /
-                          sqrt(m_gamma * BfFwd[0][id2 + i] / BfFwd[1][id2 + i]);
-            for (int j = 0; j < m_spacedim; ++j)
-            {
-                tmp[2 + j][i] = -1.0 * ru * m_traceNormals[j][id2 + i];
-            }
-        }
-
-        // Copy boundary adjusted values into the boundary expansion
-        for (int i = 0; i < nVariables; ++i)
-        {
-            Vmath::Vcopy(nBCEdgePts,
-                         &tmp[i][0], 1,
-                         &(m_fields[i]
-                               ->GetBndCondExpansions()[bcRegion]
-                               ->UpdatePhys())[id1], 1);
-        }
-    }
-}
 
 } //end of namespace
 

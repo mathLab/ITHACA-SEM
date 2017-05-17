@@ -37,19 +37,15 @@
 #ifndef NEKTAR_SOLVERS_LEESOLVER_EQUATIONSYSTEMS_LEE_H
 #define NEKTAR_SOLVERS_LEESOLVER_EQUATIONSYSTEMS_LEE_H
 
-#include <boost/random/mersenne_twister.hpp>
+#include <APESolver/EquationSystems/APE.h>
 
-#include <SolverUtils/UnsteadySystem.h>
-#include <SolverUtils/Advection/Advection.h>
-#include <SolverUtils/Forcing/Forcing.h>
-#include <SolverUtils/RiemannSolvers/RiemannSolver.h>
 
 using namespace Nektar::SolverUtils;
 
 namespace Nektar
 {     
 
-class LEE : public UnsteadySystem
+class LEE : public APE
 {
     public:
 
@@ -72,73 +68,22 @@ class LEE : public UnsteadySystem
 
     protected:
 
-        SolverUtils::AdvectionSharedPtr                 m_advection;
-        std::vector<SolverUtils::ForcingSharedPtr>      m_forcing;
-        SolverUtils::RiemannSolverSharedPtr             m_riemannSolver;
-        Array<OneD, Array<OneD, NekDouble> >            m_bfFwdBwd;
-        Array<OneD, Array<OneD, NekDouble> >            m_vecLocs;
-        /// Isentropic coefficient, Ratio of specific heats (LEE)
-        NekDouble                                       m_gamma;
-        Array<OneD, Array<OneD, NekDouble> >            m_bf;
-        std::vector<std::string>                        m_bfNames;
-        /// dump cfl estimate
-        int                                             m_cflsteps;
-
         /// Initialises UnsteadySystem class members.
         LEE(const LibUtilities::SessionReaderSharedPtr& pSession);
 
         virtual void v_InitObject();
 
-        void DoOdeRhs(const Array<OneD,  const  Array<OneD, NekDouble> > &inarray,
-                            Array<OneD,  Array<OneD, NekDouble> > &outarray,
-                      const NekDouble time);
-
-        void DoOdeProjection(const Array<OneD,  const  Array<OneD, NekDouble> > &inarray,
-                                   Array<OneD,  Array<OneD, NekDouble> > &outarray,
-                             const NekDouble time);
-
         void GetFluxVector(
                 const Array<OneD, Array<OneD, NekDouble> > &physfield,
                 Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &flux);
 
-        void AddLinTerm(const Array< OneD, const Array< OneD, NekDouble > > &inarray,
+        virtual void v_AddLinTerm(const Array< OneD, const Array< OneD, NekDouble > > &inarray,
                         Array<OneD, Array<OneD, NekDouble> > &outarray);
 
-        virtual bool v_PreIntegrate(int step);
-
-        virtual bool v_PostIntegrate(int step);
-
-        void GetStdVelocity(Array< OneD, NekDouble >& stdV);
-
-        virtual void v_AuxFields(
-                std::vector<Array<OneD, NekDouble> > &fieldcoeffs,
-                std::vector<Array<OneD, NekDouble> > &fieldphys,
-                std::vector<MultiRegions::ExpListSharedPtr> &expansions,
-                std::vector<std::string> &variables);
-
-        const Array<OneD, const Array<OneD, NekDouble> > &GetNormals();
-
-        const Array<OneD, const Array<OneD, NekDouble> > &GetVecLocs();
-
-        void GetLinTerm(const Array< OneD, const Array< OneD, NekDouble > > &inarray,
-                        Array<OneD, NekDouble> &linTerm);
-
-        const Array<OneD, const Array<OneD, NekDouble> > &GetBasefieldFwdBwd();
-
-        NekDouble GetGamma();
-
-        void UpdateBasefieldFwdBwd();
+        virtual void v_SetBoundaryConditions(Array<OneD, Array<OneD, NekDouble> > &physarray,
+                                   NekDouble time);
 
     private:
-
-        std::map<int, boost::mt19937>  m_rng;
-
-        NekDouble                 m_whiteNoiseBC_lastUpdate;
-
-        NekDouble                 m_whiteNoiseBC_p;
-
-        void SetBoundaryConditions(Array<OneD, Array<OneD, NekDouble> > &physarray,
-                                   NekDouble time);
 
         void WallBC(int bcRegion,
                     int cnt,
@@ -156,9 +101,6 @@ class LEE : public UnsteadySystem
                         Array<OneD, Array<OneD, NekDouble> > &Fwd,
                         Array<OneD, Array<OneD, NekDouble> > &BfFwd,
                         Array<OneD, Array<OneD, NekDouble> > &physarray);
-
-        void CopyBoundaryTrace(const Array<OneD, NekDouble>&Fwd,
-                                     Array<OneD, NekDouble>&Bwd);
 
 };
 }

@@ -74,6 +74,8 @@ class APE : public AdvectionSystem
 
     protected:
 
+        int                                             _iu, _ip, _irho;
+
         SolverUtils::AdvectionSharedPtr                 m_advection;
         std::vector<SolverUtils::ForcingSharedPtr>      m_forcing;
         SolverUtils::RiemannSolverSharedPtr             m_riemannSolver;
@@ -85,6 +87,10 @@ class APE : public AdvectionSystem
         std::vector<std::string>                        m_bfNames;
         /// dump cfl estimate
         int                                             m_cflsteps;
+
+        std::map<int, boost::mt19937>                   m_rng;
+        NekDouble                                       m_whiteNoiseBC_lastUpdate;
+        NekDouble                                       m_whiteNoiseBC_p;
 
         /// Initialises UnsteadySystem class members.
         APE(const LibUtilities::SessionReaderSharedPtr& pSession,
@@ -119,16 +125,13 @@ class APE : public AdvectionSystem
 
         NekDouble GetGamma();
 
+        virtual void v_SetBoundaryConditions(Array<OneD, Array<OneD, NekDouble> > &physarray,
+                                   NekDouble time);
+
+        void UpdateBasefieldFwdBwd();
+
     private:
 
-        std::map<int, boost::mt19937>  m_rng;
-
-        NekDouble                 m_whiteNoiseBC_lastUpdate;
-
-        NekDouble                 m_whiteNoiseBC_p;
-
-        void SetBoundaryConditions(Array<OneD, Array<OneD, NekDouble> > &physarray,
-                                   NekDouble time);
 
         void WallBC(int bcRegion,
                     int cnt,

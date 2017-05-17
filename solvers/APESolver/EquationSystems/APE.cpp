@@ -74,6 +74,10 @@ void APE::v_InitObject()
 {
     AdvectionSystem::v_InitObject();
 
+    _ip = 0;
+    _irho = -1;
+    _iu = 1;
+
     // TODO: We have a bug somewhere in the 1D boundary conditions. Therefore 1D
     // problems are currently disabled. This should get fixed in the future.
     ASSERTL0(m_spacedim > 1, "1D problems currently not supported by the APE class.");
@@ -291,14 +295,16 @@ void APE::DoOdeProjection(const Array<OneD, const Array<OneD, NekDouble> >&inarr
         Vmath::Vcopy(nq, inarray[i], 1, outarray[i], 1);
     }
 
-    SetBoundaryConditions(outarray, time);
+    UpdateBasefieldFwdBwd();
+
+    v_SetBoundaryConditions(outarray, time);
 }
 
 
 /**
  * @brief Apply the Boundary Conditions to the APE equations.
  */
-void APE::SetBoundaryConditions(Array<OneD, Array<OneD, NekDouble> > &inarray,
+void APE::v_SetBoundaryConditions(Array<OneD, Array<OneD, NekDouble> > &inarray,
                                 NekDouble time)
 {
     std::string varName;
@@ -719,7 +725,7 @@ void APE::v_ExtraFldOutput(
     std::vector<Array<OneD, NekDouble> > &fieldcoeffs,
     std::vector<std::string>             &variables)
 {
-    for (int i = 0; i < m_spacedim + 2; i++)
+    for (int i = 0; i < m_bfNames.size(); i++)
     {
         variables.push_back(m_bfNames[i]);
         Array<OneD, NekDouble> tmpC(GetNcoeffs());
@@ -821,6 +827,7 @@ NekDouble APE::GetGamma()
 {
     return m_gamma;
 }
+
 
 } //end of namespace
 

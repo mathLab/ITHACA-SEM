@@ -60,7 +60,7 @@ string LEE::className = GetEquationSystemFactory().RegisterCreatorFunction(
 
 LEE::LEE(
         const LibUtilities::SessionReaderSharedPtr& pSession)
-    : UnsteadySystem(pSession)
+    : APE(pSession)
 {
 }
 
@@ -70,42 +70,7 @@ LEE::LEE(
  */
 void LEE::v_InitObject()
 {
-    UnsteadySystem::v_InitObject();
-
-    ASSERTL0(m_projectionType == MultiRegions::eDiscontinuous,
-             "Only Projection=DisContinuous supported by the LEE class.");
-
-    // Load isentropic coefficient, Ratio of specific heats
-    m_session->LoadParameter("Gamma", m_gamma, 1.4);
-
-    m_bfNames.push_back("p0");
-    m_bfNames.push_back("rho0");
-    m_bfNames.push_back("u0");
-    m_bfNames.push_back("v0");
-    m_bfNames.push_back("w0");
-
-    // Resize the advection velocities vector to dimension of the problem
-    m_bfNames.resize(m_spacedim + 2);
-
-    // Initialize basefield
-    m_bf = Array<OneD, Array<OneD, NekDouble> >(m_bfNames.size());
-    for (int i = 0; i < m_bf.num_elements(); ++i)
-    {
-        m_bf[i] = Array<OneD, NekDouble>(GetTotPoints());
-    }
-    GetFunction("Baseflow", m_fields[0], true)->Evaluate(m_bfNames, m_bf, m_time);
-
-    m_forcing = SolverUtils::Forcing::Load(m_session, m_fields, m_spacedim + 2);
-
-    // Do not forwards transform initial condition
-    m_homoInitialFwd = false;
-
-    // Define the normal velocity fields
-    m_bfFwdBwd = Array<OneD, Array<OneD, NekDouble> > (2*m_bfNames.size());
-    for (int i = 0; i < m_bfFwdBwd.num_elements(); i++)
-    {
-        m_bfFwdBwd[i] = Array<OneD, NekDouble>(GetTraceNpoints(), 0.0);
-    }
+    APE::v_InitObject();
 
     // Set up locations of velocity and base velocity vectors.
     m_vecLocs = Array<OneD, Array<OneD, NekDouble> >(1);
@@ -235,7 +200,7 @@ void LEE::GetFluxVector(
 
 
 
-void LEE::AddLinTerm(const Array< OneD, const Array< OneD, NekDouble > > &inarray,
+void LEE::v_AddLinTerm(const Array< OneD, const Array< OneD, NekDouble > > &inarray,
                      Array<OneD, Array<OneD, NekDouble> > &outarray)
 {
     int nq = GetTotPoints();
@@ -328,82 +293,9 @@ void LEE::AddLinTerm(const Array< OneD, const Array< OneD, NekDouble > > &inarra
 
 
 /**
- * @brief v_PostIntegrate
- */
-bool LEE::v_PreIntegrate(int step)
-{
-    GetFunction("Baseflow", m_fields[0], true)->Evaluate(m_bfNames, m_bf, m_time);
-
-    return UnsteadySystem::v_PreIntegrate(step);
-}
-
-
-/**
- * @brief v_PostIntegrate
- */
-bool LEE::v_PostIntegrate(int step)
-{
-    return UnsteadySystem::v_PostIntegrate(step);
-}
-
-
-/**
- * @brief Compute the right-hand side.
- */
-void LEE::DoOdeRhs(const Array<OneD, const Array<OneD, NekDouble> >&inarray,
-                         Array<OneD,       Array<OneD, NekDouble> >&outarray,
-                   const NekDouble time)
-{
-    int nVariables = inarray.num_elements();
-    int nq = GetTotPoints();
-
-    // WeakDG does not use advVel, so we only provide a dummy array
-    Array<OneD, Array<OneD, NekDouble> > advVel(m_spacedim);
-    m_advection->Advect(nVariables, m_fields, advVel, inarray, outarray, time);
-
-    AddLinTerm(inarray, outarray);
-
-    // Negate the LHS terms
-    for (int i = 0; i < nVariables; ++i)
-    {
-        Vmath::Neg(nq, outarray[i], 1);
-    }
-
-    std::vector<SolverUtils::ForcingSharedPtr>::const_iterator x;
-    for (x = m_forcing.begin(); x != m_forcing.end(); ++x)
-    {
-        (*x)->Apply(m_fields, inarray, outarray, m_time);
-    }
-}
-
-
-/**
- * @brief Compute the projection and call the method for imposing the
- * boundary conditions in case of discontinuous projection.
- */
-void LEE::DoOdeProjection(const Array<OneD, const Array<OneD, NekDouble> >&inarray,
-                                Array<OneD,       Array<OneD, NekDouble> >&outarray,
-                          const NekDouble time)
-{
-    int nvariables = inarray.num_elements();
-    int nq = m_fields[0]->GetNpoints();
-
-    // deep copy
-    for (int i = 0; i < nvariables; ++i)
-    {
-        Vmath::Vcopy(nq, inarray[i], 1, outarray[i], 1);
-    }
-
-    UpdateBasefieldFwdBwd();
-
-    SetBoundaryConditions(outarray, time);
-}
-
-
-/**
  * @brief Apply the Boundary Conditions to the LEE equations.
  */
-void LEE::SetBoundaryConditions(Array<OneD, Array<OneD, NekDouble> > &inarray,
+void LEE::v_SetBoundaryConditions(Array<OneD, Array<OneD, NekDouble> > &inarray,
                                 NekDouble time)
 {
     std::string varName;
@@ -742,132 +634,6 @@ void LEE::WhiteNoiseBC(int bcRegion,
         }
     }
 }
-
-
-
-void LEE::v_AuxFields(
-        std::vector<Array<OneD, NekDouble> > &fieldcoeffs,
-        std::vector<Array<OneD, NekDouble> > &fieldphys,
-        std::vector<MultiRegions::ExpListSharedPtr> &expansions,
-        std::vector<std::string> &variables)
-{
-    for (int i = 0; i < m_bfNames.size(); i++)
-    {
-        fieldphys.push_back(m_bf[i]);
-
-        Array<OneD, NekDouble> tmpC(GetNcoeffs());
-        m_fields[0]->FwdTrans(m_bf[i], tmpC);
-        fieldcoeffs.push_back(tmpC);
-
-        variables.push_back(m_bfNames[i]);
-
-        expansions.push_back(m_fields[0]);
-    }
-
-    int f = 0;
-    std::vector<SolverUtils::ForcingSharedPtr>::const_iterator x;
-    for (x = m_forcing.begin(); x != m_forcing.end(); ++x)
-    {
-        for (int i = 0; i < (*x)->GetForces().num_elements(); ++i)
-        {
-            fieldphys.push_back((*x)->GetForces()[i]);
-
-            Array<OneD, NekDouble> tmpC(GetNcoeffs());
-
-            m_fields[0]->FwdTrans((*x)->GetForces()[i], tmpC);
-
-            fieldcoeffs.push_back(tmpC);
-
-            variables.push_back("F_" + boost::lexical_cast<string>(f) +
-                                "_" + m_session->GetVariable(i));
-
-            expansions.push_back(m_fields[0]);
-        }
-        f++;
-    }
-
-}
-
-
-/**
- * @brief Get the normal vectors.
- */
-const Array<OneD, const Array<OneD, NekDouble> > &LEE::GetNormals()
-{
-    return m_traceNormals;
-}
-
-
-/**
- * @brief Get the locations of the components of the directed fields within the fields array.
- */
-const Array<OneD, const Array<OneD, NekDouble> > &LEE::GetVecLocs()
-{
-    return m_vecLocs;
-}
-
-
-/**
- * @brief Get the baseflow field.
- */
-const Array<OneD, const Array<OneD, NekDouble> > &LEE::GetBasefieldFwdBwd()
-{
-    return m_bfFwdBwd;
-}
-
-
-void LEE::UpdateBasefieldFwdBwd()
-{
-    for (int i = 0; i < m_bfNames.size(); i++)
-    {
-        int j = (m_bfNames.size()) + i;
-        m_fields[0]->GetFwdBwdTracePhys(m_bf[i], m_bfFwdBwd[i], m_bfFwdBwd[j]);
-        CopyBoundaryTrace(m_bfFwdBwd[i], m_bfFwdBwd[j]);
-    }
-}
-
-
-void LEE::CopyBoundaryTrace(const Array<OneD, NekDouble> &Fwd,
-                                  Array<OneD, NekDouble> &Bwd)
-{
-    int cnt = 0;
-    // loop over Boundary Regions
-    for (int bcRegion = 0;
-         bcRegion < m_fields[0]->GetBndConditions().num_elements();
-         ++bcRegion)
-    {
-        // Copy the forward trace of the field to the backward trace
-        int e, id2, npts;
-
-        for (e = 0;
-             e < m_fields[0]->GetBndCondExpansions()[bcRegion]->GetExpSize();
-             ++e)
-        {
-            npts = m_fields[0]
-                       ->GetBndCondExpansions()[bcRegion]
-                       ->GetExp(e)
-                       ->GetTotPoints();
-            id2 = m_fields[0]->GetTrace()->GetPhys_Offset(
-                m_fields[0]->GetTraceMap()->GetBndCondCoeffsToGlobalCoeffsMap(
-                    cnt + e));
-
-            Vmath::Vcopy(npts, &Fwd[id2], 1, &Bwd[id2], 1);
-        }
-
-        cnt += m_fields[0]->GetBndCondExpansions()[bcRegion]->GetExpSize();
-    }
-}
-
-
-/**
- * @brief Get the heat capacity ratio.
- */
-NekDouble LEE::GetGamma()
-{
-    return m_gamma;
-}
-
-
 
 } //end of namespace
 

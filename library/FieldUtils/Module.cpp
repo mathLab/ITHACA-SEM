@@ -178,7 +178,7 @@ string InputModule::GuessFormat(string filename)
 
     // Semtex format: first line should contain the string "Session" at
     // character 27.
-    if (check.compare(27, 7, "Session") == 0)
+    if (check.compare(26, 7, "Session") == 0)
     {
         inFile.close();
         return "fldsem";

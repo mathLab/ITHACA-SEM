@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: InputSem.h
+//  File: InputSemtex.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,44 +29,44 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Semtex session converter.
+//  Description: Reads a Semtex checkpoint file.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef UTILITIES_NEKMESH_INPUTSEM
-#define UTILITIES_NEKMESH_INPUTSEM
+#ifndef FIELDUTILS_INPUTSEMTEX
+#define FIELDUTILS_INPUTSEMTEX
 
-#include <NekMeshUtils/Module/Module.h>
+#include "../Module.h"
 
 namespace Nektar
 {
-namespace Utilities
+namespace FieldUtils
 {
 
 /**
- * Converter for Semtex session files.
+ * Converter for Fld files.
  */
-class InputSem : public NekMeshUtils::InputModule
+class InputSemtex : public InputModule
 {
 public:
-    InputSem(NekMeshUtils::MeshSharedPtr m);
-    virtual ~InputSem();
-    virtual void Process();
+    InputSemtex(FieldSharedPtr f);
+    virtual ~InputSemtex();
+    virtual void Process(po::variables_map &vm);
 
     /// Creates an instance of this class
-    static NekMeshUtils::ModuleSharedPtr create(NekMeshUtils::MeshSharedPtr m)
+    static ModuleSharedPtr create(FieldSharedPtr f)
     {
-        return MemoryManager<InputSem>::AllocateSharedPtr(m);
+        return MemoryManager<InputSemtex>::AllocateSharedPtr(f);
     }
     /// %ModuleKey for class.
-    static NekMeshUtils::ModuleKey className;
+    static ModuleKey m_className[];
+
+    virtual std::string GetModuleName()
+    {
+        return "InputSemtex";
+    }
 
 private:
-    stringstream m_fileStream;
-    void insertEdge(int elmt, int side, int tagId);
-
-    /// Maps Semtex sections to positions inside the input file.
-    std::map<std::string, std::streampos> sectionMap;
 };
 }
 }

@@ -1038,7 +1038,15 @@ namespace Nektar
                     }
                     
                     int eid = it->second;
-                        
+                    bool sameBasis = true;
+                    for (int j = 0; j < fielddef->m_basis.size()-1; ++j)
+                    {
+                        if (fielddef->m_basis[j] != (*m_exp)[eid]->GetBasisType(j))
+                        {
+                            sameBasis = false;
+                            break;
+                        }
+                    }
                     
                     for(n = 0; n < nzmodes; ++n, offset += datalen)
                     {
@@ -1052,7 +1060,7 @@ namespace Nektar
                         } 
                         
                         planes_offset = it->second;
-                        if(datalen == (*m_exp)[eid]->GetNcoeffs())
+                        if(datalen == (*m_exp)[eid]->GetNcoeffs() && sameBasis)
                         {
                             Vmath::Vcopy(datalen,&fielddata[offset],1,&coeffs[m_coeff_offset[eid]+planes_offset*ncoeffs_per_plane],1);
                         }

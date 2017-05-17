@@ -135,7 +135,7 @@ void CouplingCwipi::v_Init()
         "recvFieldNames", m_config["RECEIVEVARIABLES"].c_str());
     cwipi_add_local_string_control_parameter("sendFieldNames",
                                              m_config["SENDVARIABLES"].c_str());
-    m_recvTag = boost::hash<std::string>()(m_couplingName + m_config["REMOTENAME"] + m_config["LOCALNAME"]) / UINT_MAX;
+    m_recvTag = boost::hash<std::string>()(m_couplingName + m_config["REMOTENAME"] + m_config["LOCALNAME"]) % INT_MAX;
     cwipi_add_local_int_control_parameter("receiveTag", m_recvTag);
 
     m_spacedim = m_evalField->GetGraph()->GetSpaceDimension();

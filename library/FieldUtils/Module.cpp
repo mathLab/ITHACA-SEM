@@ -170,14 +170,15 @@ string InputModule::GuessFormat(string filename)
     string check(&data[0], 64);
 
     // Nek5000 format: first four characters are: #std
-    if (data[0] == '#' && data[1] == 's' && data[2] == 't' && data[3] == 'd')
+    if (check.compare(0, 4, "#std") == 0)
     {
         inFile.close();
         return "fld5000";
     }
 
-    // Semtex format: first line should contain the string "Session"
-    if (check.find("Session") != string::npos)
+    // Semtex format: first line should contain the string "Session" at
+    // character 27.
+    if (check.compare(27, 7, "Session") == 0)
     {
         inFile.close();
         return "fldsem";

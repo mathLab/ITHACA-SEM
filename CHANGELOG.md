@@ -11,6 +11,9 @@ v4.5.0
 - Added in sum factorisation version for pyramid expansions and orthogonal
   expansion in pyramids (!750)
 
+**FieldConvert**:
+- Add input module for Semtex field files (!777)
+
 **Documentation**:
 - Added the developer-guide repository as a submodule (!751)
 
@@ -22,9 +25,15 @@ v4.4.1
 - Remove the duplicate output of errorutil (!756)
 - Fix BLAS CMake dependencies (!763)
 - Fix interpolation issue with Lagrange basis functions (!768)
+- Fix issue with average fields not working with different polynomial order
+  fields (!776)
+- Fix Hdf5 output in FilterFieldConvert (!781)
+- Fixed extreme memory consumption of Interpolator when interpolating from pts
+  to fld or between different meshes (!783)
 - Fix deadlock with HDF5 input (!786)
 
-**FieldConvert**:
+**FieldConvert:**
+- Fix issue with field ordering in the interppointdatatofld module (!754)
 - Fix issue with FieldConvert when range flag used (!761)
 
 **NekMesh**:
@@ -34,8 +43,8 @@ v4.4.1
 - Add manifold meshing option (!756)
 - Fix issue with older rea input files (!765)
 
-**FieldConvert:**
-- Fix issue with field ordering in the interppointdatatofld module (!754)
+**IncNavierStokesSolver**
+- Fix an initialisation issue when using an additional advective field (!779)
 
 v4.4.0
 ------

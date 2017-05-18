@@ -194,14 +194,10 @@ void ProcessCreateExp::Process(po::variables_map &vm)
             vector<string> vars;
             if (vm.count("useSessionVariables"))
             {
-                nfields = m_f->m_session->GetVariables().size();
-                vars = m_f->m_session->GetVariables();
+                m_f->m_variables = m_f->m_session->GetVariables();
             }
-            else
-            {
-                nfields = m_f->m_variables.size();
-                vars    = m_f->m_variables;
-            }
+            nfields = m_f->m_variables.size();
+            vars    = m_f->m_variables;
 
             m_f->m_exp.resize(nfields * nstrips);
 

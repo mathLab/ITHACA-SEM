@@ -371,21 +371,11 @@ void LEE::v_RiemannInvariantBC(int bcRegion,
 
             // compute conservative variables
             // p = c0*(h2-h1)
-            // rho = h0 + c0*(h2-h1)
+            // rho = h0 + (h2-h1)/c0
             // ru = h1+h2
             Fwd[_ip][id2 + i]  = c * (h2 - h1);
-            Fwd[_irho][id2 + i]  = h0 + c * (h2 - h1);
+            Fwd[_irho][id2 + i]  = h0 + (h2 - h1) / c;
             NekDouble RVnNew = h1 + h2;
-
-            // ignore h0 and compute rho from p
-            if (RVn0[i] > 0)
-            {
-                Fwd[_irho][id2 + i] = m_gamma * Fwd[_ip][id2 + i] / (c * c);
-            }
-            else
-            {
-                Fwd[_irho][id2 + i] = 0.0;
-            }
 
             // adjust velocity pert. according to new value
             for (int j = 0; j < m_spacedim; ++j)

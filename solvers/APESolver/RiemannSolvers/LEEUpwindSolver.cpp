@@ -131,7 +131,7 @@ void LEEUpwindSolver::v_PointSolve(
     // rho = h0 + c0*(h2-h1)
     // ru = h1+h2
     NekDouble p   = cM * (h2 - h1);
-    NekDouble rho = h0 + cM *(h2 - h1);
+    NekDouble rho = h0 + (h2 - h1) / cM;
     NekDouble ru  = h1 + h2;
 
     pF   = ru * cM * cM + u0M * p;

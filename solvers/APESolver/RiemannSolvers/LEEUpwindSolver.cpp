@@ -137,8 +137,8 @@ void LEEUpwindSolver::v_PointSolve(
     pF   = ru * cM * cM + u0M * p;
     rhoF = ru + rho * u0M;
     ruF  = p + ru * u0M;
-    rvF  = 0;
-    rwF  = 0;
+    rvF  = (rvL + rvR) / 2 * u0M;
+    rwF  = (rwL + rwR) / 2* u0M;
 
 }
 }

@@ -100,31 +100,31 @@ void LEEUpwindSolver::v_PointSolve(
     if (u0M > 0)
     {
         // rho - p / c^2
-        h0 = rhoL - pL / (cL * cL);
+        h0 = rhoL - pL / (cM * cM);
     }
     else
     {
-        h0 = rhoR - pR / (cR * cR);
+        h0 = rhoR - pR / (cM * cM);
     }
 
     if (u0M - cM > 0)
     {
         // ru / 2 - p / (2*c)
-        h1 = ruL / 2 - pL / (2 * cL);
+        h1 = ruL / 2 - pL / (2 * cM);
     }
     else
     {
-        h1 = ruR / 2 - pR / (2 * cR);
+        h1 = ruR / 2 - pR / (2 * cM);
     }
 
     if (u0M + cM > 0)
     {
         // ru / 2 + p / (2*c)
-        h2 = ruL / 2 + pL / (2 * cL);
+        h2 = ruL / 2 + pL / (2 * cM);
     }
     else
     {
-        h2 = ruR / 2 + pR / (2 * cR);
+        h2 = ruR / 2 + pR / (2 * cM);
     }
 
     // p = c0*(h2-h1)

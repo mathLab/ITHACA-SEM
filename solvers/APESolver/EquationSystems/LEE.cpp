@@ -374,8 +374,10 @@ void LEE::v_RiemannInvariantBC(int bcRegion,
             // rho = h0 + (h2-h1)/c0
             // ru = h1+h2
             Fwd[_ip][id2 + i]  = c * (h2 - h1);
-            Fwd[_irho][id2 + i]  = h0 + (h2 - h1) / c;
+//             Fwd[_irho][id2 + i]  = h0 + (h2 - h1) / c;
             NekDouble RVnNew = h1 + h2;
+
+            Fwd[_irho][id2 + i] = m_gamma * Fwd[_ip][id2 + i] / pow(c, 2);
 
             // adjust velocity pert. according to new value
             for (int j = 0; j < m_spacedim; ++j)

@@ -95,50 +95,49 @@ void LEEUpwindSolver::v_PointSolve(
     NekDouble cM  = (cL + cR) / 2;
     NekDouble u0M = (u0L + u0R) / 2;
 
-    NekDouble h0, h1, h2;
+    NekDouble h1, h2, h3, h4, h5;
 
     if (u0M > 0)
     {
-        // rho - p / c^2
-        h0 = rhoL - pL / (cM * cM);
+        h1 = rhoL - pL / pow(cL, 2);
+        h2 = rvL;
+        h3 = rwL;
     }
     else
     {
-        h0 = rhoR - pR / (cM * cM);
+        h1 = rhoR - pR / pow(cR, 2);
+        h2 = rvR;
+        h3 = rwR;
     }
 
     if (u0M - cM > 0)
     {
-        // ru / 2 - p / (2*c)
-        h1 = ruL / 2 - pL / (2 * cM);
+        h4 = ruL / 2.0 - pL / (2 * cL);
     }
     else
     {
-        h1 = ruR / 2 - pR / (2 * cM);
+        h4 = ruR / 2.0 - pR / (2 * cR);
     }
 
     if (u0M + cM > 0)
     {
-        // ru / 2 + p / (2*c)
-        h2 = ruL / 2 + pL / (2 * cM);
+        h5 = ruL / 2.0 + pL / (2 * cL);
     }
     else
     {
-        h2 = ruR / 2 + pR / (2 * cM);
+        h5 = ruR / 2.0 + pR / (2 * cR);
     }
 
-    // p = c0*(h2-h1)
-    // rho = h0 + c0*(h2-h1)
-    // ru = h1+h2
-    NekDouble p   = cM * (h2 - h1);
-    NekDouble rho = h0 + (h2 - h1) / cM;
-    NekDouble ru  = h1 + h2;
+    NekDouble p   = cM * (h5 - h4);
+    NekDouble rho = h1 - cM * (h4 + h5);
+    NekDouble ru  = h4 + h5;
+    NekDouble rv  = h2;
+    NekDouble rw  = h3;
 
-    pF   = ru * cM * cM + u0M * p;
+    pF   = ru * pow(cM, 2) + u0M * p;
     rhoF = ru + rho * u0M;
-    ruF  = p + ru * u0M;
-    rvF  = (rvL + rvR) / 2 * u0M;
-    rwF  = (rwL + rwR) / 2* u0M;
-
+    ruF  = ru * u0M + p;
+    rvF  = rv * u0M;
+    rwF  = rw * u0M;
 }
 }

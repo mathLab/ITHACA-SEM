@@ -20,7 +20,7 @@
 
 /// Precision tolerance for two points to be similar 
 
-#define EPS   1E6*DBL_EPSILON
+#define EPS   100*DBL_EPSILON
 
 /// return the sign(b)*a
 
@@ -36,20 +36,22 @@ namespace Polylib {
 
 	double optinvsub(double xl, double xr)
 	{
-    	        double m_expn, m_xln, m_xrn;
-        	double m_digits = fabs(floor(log10(DBL_EPSILON)))-1;
+    	        int    m_expn;
+		double m_xln, m_xrn;
+        	int    m_digits = static_cast<double>(std::fabs(floor(std::log10(DBL_EPSILON)))-1);
+		double base=10.0;
 	        if (fabs(xl-xr)<1.e-4){
 
-	                m_expn = floor(log10(fabs(xl-xr)));
+	                m_expn = static_cast<double>(std::floor(log10(fabs(xl-xr))));
                         // vacate space for implementing reciprocal operations of significant digits (difference)
-       		        m_xln  = xl*pow(10.0,-m_expn)-floor(xl*pow(10.0,-m_expn)); // substract the digits overlap part
-           		m_xrn  = xr*pow(10.0,-m_expn)-floor(xl*pow(10.0,-m_expn)); // substract the common digits overlap part
-               		m_xln  = round(m_xln*pow(10.0,m_digits+m_expn));           // git rid of rubbish
-	        	m_xrn  = round(m_xrn*pow(10.0,m_digits+m_expn));
+       		        m_xln  = xl*std::pow(base,-m_expn)-std::floor(xl*std::pow(base,-m_expn)); // substract the digits overlap part
+           		m_xrn  = xr*std::pow(base,-m_expn)-std::floor(xl*std::pow(base,-m_expn)); // substract the common digits overlap part
+               		m_xln  = round(m_xln*std::pow(base,m_digits+m_expn));           // git rid of rubbish
+	        	m_xrn  = round(m_xrn*std::pow(base,m_digits+m_expn));
 
-                	return pow(10.0,m_digits)/(m_xln-m_xrn);
+                	return std::pow(base,m_digits)/(m_xln-m_xrn);
         	}else{  
-           	    	return 1.0/(xl-xr);
+           	    	return double(1.0)/(xl-xr);
         	}
 	}
 

@@ -32,7 +32,7 @@ IF (NEKTAR_BUILD_DOC)
 
     CONFIGURE_FILE(${CMAKE_SOURCE_DIR}/docs/doxygen/Doxyfile.in     
                    ${PROJECT_BINARY_DIR}/Doxyfile @ONLY IMMEDIATE)
-    ADD_CUSTOM_TARGET(doc ALL
+    ADD_CUSTOM_TARGET(doc
         COMMAND ${DOXYGEN_EXECUTABLE} ${PROJECT_BINARY_DIR}/Doxyfile
         SOURCES ${PROJECT_BINARY_DIR}/Doxyfile)
 

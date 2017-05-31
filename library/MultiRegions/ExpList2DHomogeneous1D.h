@@ -74,7 +74,9 @@ namespace Nektar
                 const NekDouble                             lz,
                 const bool                                  useFFT,
                 const bool                                  dealiasing,
-                const SpatialDomains::MeshGraphSharedPtr   &graph1D);
+                const SpatialDomains::MeshGraphSharedPtr   &graph1D,
+                const Collections::ImplementationType ImpType
+                                             = Collections::eNoImpType);
 
             MULTI_REGIONS_EXPORT ExpList2DHomogeneous1D(
                 const LibUtilities::SessionReaderSharedPtr &pSession,

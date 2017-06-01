@@ -36,13 +36,14 @@
 #include <string>
 using namespace std;
 
-#include "ProcessInterpField.h"
-
 #include <FieldUtils/Interpolator.h>
 #include <LibUtilities/BasicUtils/ParseUtils.hpp>
 #include <LibUtilities/BasicUtils/Progressbar.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <boost/math/special_functions/fpclassify.hpp>
+
+#include "ProcessInterpField.h"
+
 namespace Nektar
 {
 namespace FieldUtils

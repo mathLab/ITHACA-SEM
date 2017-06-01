@@ -36,6 +36,7 @@
 #ifndef NEKTAR_SOLVERUTILS_EQUATIONSYSTEM_H
 #define NEKTAR_SOLVERUTILS_EQUATIONSYSTEM_H
 
+#include <FieldUtils/Interpolator.h>
 #include <LibUtilities/Communication/Comm.h>
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
@@ -46,7 +47,6 @@
 #include <LibUtilities/BasicUtils/PtsField.h>
 #include <LibUtilities/BasicUtils/PtsIO.h>
 #include <MultiRegions/ExpList.h>
-#include <FieldUtils/Interpolator.h>
 #include <SolverUtils/SolverUtilsDeclspec.h>
 #include <SolverUtils/Core/Misc.h>
 

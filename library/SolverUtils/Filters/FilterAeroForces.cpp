@@ -33,6 +33,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <SolverUtils/Filters/FilterAeroForces.h>
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 #include <iomanip>
 #include <boost/algorithm/string.hpp>
@@ -42,7 +43,6 @@
 #include <MultiRegions/ExpList2D.h>     
 #include <MultiRegions/ExpList3D.h>    
 #include <MultiRegions/ExpList3DHomogeneous1D.h>
-#include <SolverUtils/Filters/FilterAeroForces.h>
 
 using namespace std;
 

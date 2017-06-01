@@ -39,13 +39,13 @@
 
 #include <vector>
 
-#include <boost/function.hpp>
-#include <boost/shared_ptr.hpp>
-
 #include <boost/geometry.hpp>
 #include <boost/geometry/geometries/box.hpp>
 #include <boost/geometry/geometries/point.hpp>
 #include <boost/geometry/index/rtree.hpp>
+
+#include <boost/function.hpp>
+#include <boost/shared_ptr.hpp>
 
 #include <MultiRegions/ExpList.h>
 

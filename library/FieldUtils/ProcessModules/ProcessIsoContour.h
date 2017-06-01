@@ -36,13 +36,13 @@
 #ifndef FIELDUTILS_PROCESSISOCONTOUR
 #define FIELDUTILS_PROCESSISOCONTOUR
 
-#include "../Module.h"
-#include "ProcessEquiSpacedOutput.h"
-
 #include <boost/geometry.hpp>
 #include <boost/geometry/geometries/point.hpp>
 #include <boost/geometry/geometries/box.hpp>
 #include <boost/geometry/index/rtree.hpp>
+
+#include "../Module.h"
+#include "ProcessEquiSpacedOutput.h"
 
 namespace bg  = boost::geometry;
 namespace bgi = boost::geometry::index;

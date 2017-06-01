@@ -36,13 +36,13 @@
 #ifndef SOLVERUTILS_DRIVER_H
 #define SOLVERUTILS_DRIVER_H
 
+#include <SolverUtils/EquationSystem.h>
+#include <SolverUtils/SolverUtils.hpp>
+
 #include <LibUtilities/Communication/Comm.h>
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
-
-#include <SolverUtils/SolverUtils.hpp>
-#include <SolverUtils/EquationSystem.h>
 
 namespace Nektar
 {

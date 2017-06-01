@@ -38,13 +38,14 @@
 
 using namespace std;
 
-#include "ProcessInterpPointDataToFld.h"
-
 #include <FieldUtils/Interpolator.h>
 #include <LibUtilities/BasicUtils/ParseUtils.hpp>
 #include <LibUtilities/BasicUtils/PtsField.h>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <boost/math/special_functions/fpclassify.hpp>
+
+#include "ProcessInterpPointDataToFld.h"
+
 namespace Nektar
 {
 namespace FieldUtils

@@ -355,7 +355,7 @@ ADD_DEPENDENCIES(LibUtilities modmetis-5.1.0 boost tinyxml-2.6.2 zlib-1.2.7)
 ### Static libraries do not need to be linked by
 # Scotch
 IF( NEKTAR_USE_SCOTCH )
-    TARGET_LINK_LIBRARIES(LibUtilities LINK_PRIVATE
+    TARGET_LINK_LIBRARIES(LibUtilities LINK_PUBLIC
         ${SCOTCH_LIBRARY} ${SCOTCHERR_LIBRARY})
     ADD_DEPENDENCIES(LibUtilities scotch-6.0.0)
 ENDIF ()

@@ -39,12 +39,15 @@
 #include <LibUtilities/BasicUtils/VmathArray.hpp>
 
 #include <iostream>
+#include <iomanip>
 #include <algorithm>
 #include <boost/config.hpp>
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/cuthill_mckee_ordering.hpp>
 #include <boost/graph/properties.hpp>
 #include <boost/graph/bandwidth.hpp>
+
+#include <scotch.h>
 
 using std::max;
 using std::cout;
@@ -451,11 +454,16 @@ namespace Nektar
         }
 
         BottomUpSubStructuredGraph::BottomUpSubStructuredGraph(
-            const MultiLevelBisectedGraphSharedPtr& graph) :
+            const MultiLevelBisectedGraphSharedPtr& graph,
+            bool globaloffset) :
             m_IntBlocks    (),
             m_daughterGraph()
         {
             int ncuts;
+            if (globaloffset)
+            {
+                graph->SetGlobalNumberingOffset();
+            }
             graph->CutEmptyLeaves();
             graph->CollectLeaves(m_IntBlocks);
             ncuts = graph->CutLeaves();
@@ -963,9 +971,65 @@ namespace Nektar
                 // forehand the size of the separator tree that METIS will
                 // return, so we just assume a really big value and try with
                 // that
-                int sizeSeparatorTree = nGraphVerts*10;
-                Array<OneD,int> septreeTmp(sizeSeparatorTree,-1);  
-                
+
+                // construct scotch graph
+                int ierr;
+                SCOTCH_Graph scGraph;
+                SCOTCH_Strat strat;
+                ierr = SCOTCH_graphBuild(
+                    &scGraph, 0, nNonPartition, &xadj[0], &xadj[1], NULL, NULL,
+                    xadj[nNonPartition], &adjncy[0], NULL);
+                ierr = SCOTCH_stratInit(&strat);
+                ierr = SCOTCH_stratGraphOrderBuild(
+                    &strat, SCOTCH_STRATLEVELMIN, 5, 0.2);
+
+                Array<OneD, int> treetab(nNonPartition, -1);
+                Array<OneD, int> rangtab(nNonPartition + 1, -1);
+                int cblknbr = 0;
+                ierr = SCOTCH_graphOrder(
+                    &scGraph, &strat, &iperm_tmp[0], &perm_tmp[0], &cblknbr,
+                    &rangtab[0], &treetab[0]);
+
+                // Setup root block
+                std::vector<MultiLevelBisectedGraphSharedPtr> graphs(cblknbr);
+
+                for (i = cblknbr-1; i >= 0; --i)
+                {
+                    graphs[i] = MemoryManager<MultiLevelBisectedGraph>
+                        ::AllocateSharedPtr(
+                            rangtab[i+1] - rangtab[i]);
+
+                    if (treetab[i] == -1)
+                    {
+                        continue;
+                    }
+
+                    MultiLevelBisectedGraphSharedPtr tmp = graphs[treetab[i]];
+                    int nDaughter = tmp->GetNdaughterGraphs();
+
+                    if (nDaughter == 0)
+                    {
+                        tmp->SetLeftDaughterGraph(graphs[i]);
+                    }
+                    else if (nDaughter == 1)
+                    {
+                        tmp->SetRightDaughterGraph(graphs[i]);
+                    }
+                    else
+                    {
+                        ASSERTL0(false, "lol");
+                    }
+                }
+
+                cout << "Blocks: " << cblknbr << endl;
+                for (i = 0; i < nNonPartition; ++i)
+                {
+                    cout << std::setw(5) << perm_tmp[i]
+                         << std::setw(5) << iperm_tmp[i]
+                         << std::setw(5) << rangtab[i]
+                         << std::setw(5) << treetab[i] << endl;
+                }
+
                 // The separator tree returned by metis has the following
                 // structure: It is a one dimensional array and information per
                 // level is contained per 5 elements:
@@ -978,21 +1042,23 @@ namespace Nektar
                 // m_septree[i*5 + 3]: the number of 'interior' DOFs in right 
                 //                     branch
                 // m_septree[i*5 + 4]: the number of 'boundary' DOFs     
-                
+                int sizeSeparatorTree = nGraphVerts*10;
+                Array<OneD,int> septreeTmp(sizeSeparatorTree,-1);
+
                 // Now try to call Call METIS.
-                try
-                {
-                    Metis::as_onmetis(
-                        nNonPartition,xadj,adjncy,perm_tmp,iperm_tmp,
-                        septreeTmp, mdswitch);
-                }
-                catch(...)
-                {
-                    NEKERROR(ErrorUtil::efatal,
-                             "Error in calling metis (the size of the separator"
-                             " tree might not be sufficient)");
-                }
-                
+                // try
+                // {
+                //     Metis::as_onmetis(
+                //         nNonPartition,xadj,adjncy,perm_tmp,iperm_tmp,
+                //         septreeTmp, mdswitch);
+                // }
+                // catch(...)
+                // {
+                //     NEKERROR(ErrorUtil::efatal,
+                //              "Error in calling metis (the size of the separator"
+                //              " tree might not be sufficient)");
+                // }
+
                 // Change permutations from METIS to account for initial offset.
                 for (i = 0; i < nGraphVerts; ++i)
                 {
@@ -1010,29 +1076,32 @@ namespace Nektar
                     perm [i]   = *it;
                     iperm[*it] = i;
                 }
-                
+
                 for (i = 0; i < nGraphVerts; ++i)
                 {
                     ASSERTL0(perm[iperm[i]] == i, 
                              "Perm error " + boost::lexical_cast<std::string>(i));
                 }
-                
-                // Post-process the separator tree
-                int trueSizeSepTree = 0;
-                for (i = 0; septreeTmp[i] != -1; i++)
-                {
-                    trueSizeSepTree++;
-                }
-                Array<OneD,int> septree(trueSizeSepTree);
-                Vmath::Vcopy(trueSizeSepTree,septreeTmp,1,septree,1);
+
+                // // Post-process the separator tree
+                // int trueSizeSepTree = 0;
+                // for (i = 0; septreeTmp[i] != -1; i++)
+                // {
+                //     trueSizeSepTree++;
+                // }
+                // Array<OneD,int> septree(trueSizeSepTree);
+                // Vmath::Vcopy(trueSizeSepTree,septreeTmp,1,septree,1);
                 
                 // Based upon the separator tree, where are going to set up an
                 // object of the class BottomUpSubStructuredGraph. The
                 // constructor will read the separatortree and will interprete
                 // the information from a bottom-up point of view.
+                //substructgraph = MemoryManager<BottomUpSubStructuredGraph>::
+                //    AllocateSharedPtr(septree, nPartition);
                 substructgraph = MemoryManager<BottomUpSubStructuredGraph>::
-                    AllocateSharedPtr(septree, nPartition);
-                
+                    AllocateSharedPtr(graphs[graphs.size()-1], true);
+                substructgraph->Dump();
+
                 // Important, we cannot simply use the ordering given by metis
                 // as it does not order the different blocks as we would like
                 // it. Therefore, we use following command to re-order them
@@ -1048,6 +1117,13 @@ namespace Nektar
                 // and convention in the standard (non-multi-level) static
                 // condensation approach)
                 substructgraph->UpdateBottomUpReordering(perm,iperm);
+
+                for (i = 0 ; i < nNonPartition; ++i)
+                {
+                    cout << std::setw(5) << perm[i]
+                         << std::setw(5) << iperm[i]
+                         << endl;
+                }
             }
             else
             {

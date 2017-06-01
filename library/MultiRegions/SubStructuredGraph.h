@@ -176,10 +176,22 @@ namespace Nektar
                 return m_BndDofs;
             }
 
+            inline void SetLeftDaughterGraph(
+                MultiLevelBisectedGraphSharedPtr graph)
+            {
+                m_leftDaughterGraph = graph;
+            }
+
+            inline void SetRightDaughterGraph(
+                MultiLevelBisectedGraphSharedPtr graph)
+            {
+                m_rightDaughterGraph = graph;
+            }
+
         protected:
             SubGraphSharedPtr                m_BndDofs;
             MultiLevelBisectedGraphSharedPtr m_leftDaughterGraph;
-            MultiLevelBisectedGraphSharedPtr m_rightDaughterGraph;            
+            MultiLevelBisectedGraphSharedPtr m_rightDaughterGraph;
         };
 
 
@@ -190,7 +202,8 @@ namespace Nektar
                 const Array<OneD, const int> septree,
                 const int                    nPartition);
             MULTI_REGIONS_EXPORT BottomUpSubStructuredGraph(
-                const MultiLevelBisectedGraphSharedPtr& graph);
+                const MultiLevelBisectedGraphSharedPtr& graph,
+                bool globaloffset = false);
             MULTI_REGIONS_EXPORT BottomUpSubStructuredGraph(
                 const int nVerts);
             MULTI_REGIONS_EXPORT ~BottomUpSubStructuredGraph(void);

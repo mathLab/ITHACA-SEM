@@ -116,6 +116,12 @@ namespace SolverUtils
 
         int npts = pFields[0]->GetTotPoints();
 
+        m_Absorption = Array<OneD, Array<OneD, NekDouble> >(m_NumVariable);
+        for (int i = 0; i < m_NumVariable; ++i)
+        {
+            m_Absorption[i] = Array<OneD, NekDouble>(npts, 0.0);
+        }
+
         funcNameElmt = pForce->FirstChildElement("BOUNDARYREGIONS");
         if (funcNameElmt)
         {
@@ -140,6 +146,11 @@ namespace SolverUtils
                 n++;
             }
             m_bRegions = localBRegions;
+
+            if (m_bRegions.size() == 0)
+            {
+                return;
+            }
 
             std::vector<Array<OneD, const NekDouble> > points;
 
@@ -191,13 +202,11 @@ namespace SolverUtils
             points.push_back(r);
 
             std::string s_FieldStr;
-            m_Absorption = Array<OneD, Array<OneD, NekDouble> >(m_NumVariable);
             for (int i = 0; i < m_NumVariable; ++i)
             {
                 s_FieldStr = m_session->GetVariable(i);
                 ASSERTL0(m_session->DefinesFunction(funcName, s_FieldStr),
                         "Variable '" + s_FieldStr + "' not defined.");
-                m_Absorption[i] = Array<OneD, NekDouble>(npts, 0.0);
 
                 LibUtilities::EquationSharedPtr ffunc =
                     m_session->GetFunction(funcName, s_FieldStr);
@@ -209,8 +218,6 @@ namespace SolverUtils
         }
         else
         {
-            m_Absorption = Array<OneD, Array<OneD, NekDouble> >(m_NumVariable);
-
             for (int i = 0; i < m_NumVariable; ++i)
             {
                 std::string s_FieldStr = m_session->GetVariable(i);

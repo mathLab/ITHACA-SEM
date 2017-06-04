@@ -54,7 +54,7 @@ namespace Polylib {
                 }
         }
 
-	double lagrageinterp(double z, int j, const double *zj, int np)
+	double laginterp(double z, int j, const double *zj, int np)
 	{
         	double temp = 1.0;
         	for (int i=0; i<np; i++)
@@ -1391,7 +1391,7 @@ namespace Polylib {
 
 	if (fabs(dz) < EPS) return 1.0;
 
-	return lagrageinterp(z, i, zgj, np);
+	return laginterp(z, i, zgj, np);
 
     }
 
@@ -1454,7 +1454,7 @@ namespace Polylib {
 
         if (fabs(dz) < EPS) return 1.0;
 
-	return lagrageinterp(z, i, zgrj, np);
+	return laginterp(z, i, zgrj, np);
 
     }
 
@@ -1519,7 +1519,7 @@ namespace Polylib {
 
         if (fabs(dz) < EPS) return 1.0;
 
-	return lagrageinterp(z, i, zgrj, np);
+	return laginterp(z, i, zgrj, np);
 
     }
 
@@ -1583,7 +1583,7 @@ namespace Polylib {
 
         if (fabs(dz) < EPS) return 1.0;
 	
-	return lagrageinterp(z, i, zglj, np);
+	return laginterp(z, i, zglj, np);
 
     }
 

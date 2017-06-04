@@ -10,8 +10,8 @@
     <metrics>
         <metric type="L2" id="1">
             <value variable="u" tolerance="1e-8">0.00192614</value>
-            <value variable="v" tolerance="1e-8">0.001712065</value>
-	        <value variable="w" tolerance="1e-8">0.0338439</value>
+            <value variable="v" tolerance="1e-8">0.00171205</value>
+	        <value variable="w" tolerance="1e-8">0.033844</value>
 	        <value variable="p" tolerance="1e-8">0.0721993</value>
         </metric>
         <metric type="Linf" id="2">

@@ -48,7 +48,7 @@ namespace Nektar
         static const NekDouble kNekMinResidInit = 1e16;
         static const NekDouble kVertexTheSameDouble  = 1.0e-8;
         static const NekDouble kGeomFactorsTol = 1.0e-8;
-        static const NekDouble kNekZeroTol = 1.0e-12;
+        static const NekDouble kNekZeroTol = 1.0e-11;
         static const NekDouble kGeomRightAngleTol = 1e-14;
         static const NekDouble kNekSqrtTol = 1.0e-16;
         static const NekDouble kNekIterativeTol = 1e-09;

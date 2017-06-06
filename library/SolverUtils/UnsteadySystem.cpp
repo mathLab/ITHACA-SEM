@@ -36,10 +36,10 @@
 #include <iostream>
 #include <iomanip>
 
-#include <SolverUtils/UnsteadySystem.h>
 #include <LibUtilities/TimeIntegration/TimeIntegrationWrapper.h>
 #include <LibUtilities/BasicUtils/Timer.h>
 #include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
+#include <SolverUtils/UnsteadySystem.h>
 
 using namespace std;
 

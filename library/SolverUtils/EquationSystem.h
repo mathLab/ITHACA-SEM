@@ -36,7 +36,6 @@
 #ifndef NEKTAR_SOLVERUTILS_EQUATIONSYSTEM_H
 #define NEKTAR_SOLVERUTILS_EQUATIONSYSTEM_H
 
-#include <FieldUtils/Interpolator.h>
 #include <LibUtilities/Communication/Comm.h>
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
@@ -52,6 +51,9 @@
 
 namespace Nektar
 {
+namespace FieldUtils {
+class Interpolator;
+}
     namespace SolverUtils
     {
         class EquationSystem;

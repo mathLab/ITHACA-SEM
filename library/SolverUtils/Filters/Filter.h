@@ -36,12 +36,12 @@
 #ifndef NEKTAR_SOLVERUTILS_FILTER_FILTER_H
 #define NEKTAR_SOLVERUTILS_FILTER_FILTER_H
 
-#include <SolverUtils/EquationSystem.h>
-#include <SolverUtils/SolverUtilsDeclspec.h>
-
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <MultiRegions/ExpList.h>
+#include <SolverUtils/EquationSystem.h>
+
+#include <SolverUtils/SolverUtilsDeclspec.h>
 
 namespace Nektar
 {

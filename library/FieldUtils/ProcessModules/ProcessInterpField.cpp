@@ -36,13 +36,17 @@
 #include <string>
 using namespace std;
 
+#include <boost/geometry.hpp>
+#include "ProcessInterpField.h"
+
 #include <FieldUtils/Interpolator.h>
 #include <LibUtilities/BasicUtils/ParseUtils.hpp>
 #include <LibUtilities/BasicUtils/Progressbar.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <boost/math/special_functions/fpclassify.hpp>
 
-#include "ProcessInterpField.h"
+namespace bg  = boost::geometry;
+namespace bgi = boost::geometry::index;
 
 namespace Nektar
 {

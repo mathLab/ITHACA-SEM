@@ -39,7 +39,6 @@
 
 #include <vector>
 
-#include <boost/geometry.hpp>
 #include <boost/geometry/geometries/box.hpp>
 #include <boost/geometry/geometries/point.hpp>
 #include <boost/geometry/index/rtree.hpp>
@@ -55,9 +54,6 @@
 #include <LibUtilities/BasicUtils/VmathArray.hpp>
 
 #include "FieldUtilsDeclspec.h"
-
-namespace bg  = boost::geometry;
-namespace bgi = boost::geometry::index;
 
 namespace Nektar
 {
@@ -182,9 +178,9 @@ private:
 
     /// dimension of this interpolator. Hardcoded to 3
     static const int m_dim = 3;
-    typedef bg::model::point<NekDouble, m_dim, bg::cs::cartesian> BPoint;
+    typedef boost::geometry::model::point<NekDouble, m_dim, boost::geometry::cs::cartesian> BPoint;
     typedef std::pair<BPoint, unsigned int> PtsPointPair;
-    typedef bgi::rtree<PtsPointPair, bgi::rstar<16> > PtsRtree;
+    typedef boost::geometry::index::rtree<PtsPointPair, boost::geometry::index::rstar<16> > PtsRtree;
 
     /// input field
     LibUtilities::PtsFieldSharedPtr m_ptsInField;

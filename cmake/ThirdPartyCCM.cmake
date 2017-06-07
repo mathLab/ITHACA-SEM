@@ -27,8 +27,9 @@ IF (THIRDPARTY_BUILD_CCMIO)
     EXTERNALPROJECT_ADD(
         ccmio-2.06
         PREFIX ${TPSRC}
-        URL ${TPURL}/ccmio-2.06.tar.bz2
-        URL_MD5 d41d8cd98f00b204e9800998ecf8427e
+        URL http://ae-nektar.ae.ic.ac.uk/~ssherw/ccmio-2.06.tar.bz2
+        #URL ${TPURL}/ccmio-2.06.tar.bz2
+        URL_MD5 809ee34a983cbc8931ca23879d92b4d0
         STAMP_DIR ${TPBUILD}/stamp
         DOWNLOAD_DIR ${TPSRC}
         SOURCE_DIR ${TPSRC}/ccmio-2.06

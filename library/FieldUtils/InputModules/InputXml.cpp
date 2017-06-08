@@ -353,7 +353,7 @@ void InputXml::Process(po::variables_map &vm)
     }
 
     // reset expansion defintion to use equispaced points if required.
-    if (m_requireEquiSpaced || vm.count("output-points"))
+    if (m_requireEquiSpaced)
     {
         int nPointsNew = 0;
 

@@ -54,9 +54,9 @@ int main(int argc, char* argv[])
         ("modules-list,l",
                 "Print the list of available modules.")
         ("output-points,n", po::value<int>(),
-                "Output at n equipspaced points along the collapsed coordinates (for .dat, .vtk).")
+                "Output at n points along the collapsed coordinates (for .dat, .vtu).")
         ("output-points-hom-z", po::value<int>(),
-                "Number of planes in the z-direction for output of Homogeneous 1D expansion(for .dat, .vtk).")
+                "Number of planes in the z-direction for output of Homogeneous 1D expansion(for .dat, .vtu).")
         ("error,e",
                 "Write error of fields for regression checking")
         ("forceoutput,f",
@@ -64,7 +64,7 @@ int main(int argc, char* argv[])
         ("range,r", po::value<string>(),
                 "Define output range i.e. (-r xmin,xmax,ymin,ymax,zmin,zmax) "
                 "in which any vertex is contained.")
-        ("noequispaced","Do not use equispaced output. Currently stops the output-points option")
+        ("noequispaced","Do not use equispaced output.")
         ("nprocs", po::value<int>(),
                 "Used to define nprocs if running serial problem to mimic "
                 "parallel run.")

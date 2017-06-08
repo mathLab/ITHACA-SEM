@@ -656,14 +656,14 @@ void ProcessEquiSpacedOutput::SetHomogeneousConnectivity(void)
                     }
 
                     // Interior numbering
-                    int mode = np+1;
+                    edge2 = 0;
                     for (int n = 1; n < np-1; n++)
                     {
+                        edge2 += np+1-n;
                         for (int m = 1; m < np-n-1; m++)
                         {
-                            vId[cnt1+mode] = 4*nel + maxN*4*nel + cnt2;
+                            vId[cnt1+edge2+m] = 4*nel + maxN*4*nel + cnt2;
                             cnt2++;
-                            mode++;
                         }
                     }
                     cnt1+= newpoints;

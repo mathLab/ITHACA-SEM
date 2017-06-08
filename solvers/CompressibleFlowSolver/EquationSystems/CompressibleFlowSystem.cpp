@@ -630,30 +630,31 @@ namespace Nektar
         const int nFields = m_fields.num_elements();
 
         // Holds L2 errors.
-        Array<OneD, NekDouble> L2      (nFields);
-        Array<OneD, NekDouble> residual(nFields);
+        Array<OneD, NekDouble> L2       (nFields);
+        Array<OneD, NekDouble> residual (nFields);
+        Array<OneD, NekDouble> reference(nFields);
 
         for (int i = 0; i < nFields; ++i)
         {
-            Array<OneD, NekDouble> diff(nPoints);
+            Array<OneD, NekDouble> tmp(nPoints);
 
-            Vmath::Vsub(nPoints, m_fields[i]->GetPhys(), 1, m_un[i], 1, diff, 1);
-            Vmath::Vmul(nPoints, diff, 1, diff, 1, diff, 1);
-            residual[i] = Vmath::Vsum(nPoints, diff, 1);
+            Vmath::Vsub(nPoints, m_fields[i]->GetPhys(), 1, m_un[i], 1, tmp, 1);
+            Vmath::Vmul(nPoints, tmp, 1, tmp, 1, tmp, 1);
+            residual[i] = Vmath::Vsum(nPoints, tmp, 1);
+
+            Vmath::Vmul(nPoints, m_un[i], 1, m_un[i], 1, tmp, 1);
+            reference[i] = Vmath::Vsum(nPoints, tmp, 1);
         }
 
-        m_comm->AllReduce(residual, LibUtilities::ReduceSum);
+        m_comm->AllReduce(residual , LibUtilities::ReduceSum);
+        m_comm->AllReduce(reference, LibUtilities::ReduceSum);
 
         // L2 error
-        L2[0] = sqrt(residual[0]) / m_rhoInf;
-
-        for (int i = 1; i < nFields-1; ++i)
+        for (int i = 0; i < nFields; ++i)
         {
-            L2[i] = sqrt(residual[i]) / m_UInf / m_rhoInf;
+            reference[i] = (reference[i] == 0) ? 1 : reference[i];
+            L2[i] = sqrt(residual[i] / reference[i]);
         }
-
-        NekDouble Einf = m_pInf / (m_gamma-1.0) + 0.5 * m_rhoInf * m_UInf;
-        L2[nFields-1] = sqrt(residual[nFields-1]) / Einf;
 
         if (m_comm->GetRank() == 0 && output)
         {

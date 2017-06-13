@@ -46,6 +46,7 @@ v4.4.1
   when some part of the system fails (!756)
 - Add manifold meshing option (!756)
 - Fix issue with older rea input files (!765)
+- Fix memory leak in variational optimiser, add small optimisations (!785)
 
 **IncNavierStokesSolver**
 - Fix an initialisation issue when using an additional advective field (!779)

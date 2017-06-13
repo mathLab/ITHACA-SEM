@@ -86,8 +86,8 @@ void InputSem::Process()
 
     // Read through input file and populate the section map.
     map<string, streampos>::iterator it;
-    string line, word;
-    stringstream ss;
+    string fileContents, line, word;
+    stringstream ss, ssFile;
     streampos linePos;
 
     sectionMap["NODES"]    = -1;
@@ -98,10 +98,14 @@ void InputSem::Process()
     sectionMap["BCS"]      = -1;
     sectionMap["FIELDS"]   = -1;
 
-    while (!m_mshFile.eof())
+    // We need to read entire file into a string and wrap around a stringstream,
+    // since boost::io::filtered_stream does not support seeking with zlib.
+    m_fileStream << m_mshFile.rdbuf();
+
+    while (!m_fileStream.eof())
     {
-        linePos = m_mshFile.tellg();
-        getline(m_mshFile, line);
+        linePos = m_fileStream.tellg();
+        getline(m_fileStream, line);
         ss.clear();
         ss.str(line);
         ss >> word;
@@ -118,8 +122,8 @@ void InputSem::Process()
     }
 
     // Clear eofbit and go back to the beginning of the file.
-    m_mshFile.clear();
-    m_mshFile.seekg(0);
+    m_fileStream.clear();
+    m_fileStream.seekg(0);
 
     // Check that required sections exist in the file.
     if (sectionMap["NODES"] == std::streampos(-1))
@@ -168,8 +172,8 @@ void InputSem::Process()
 
     // Begin by reading in list of nodes which define the linear
     // elements.
-    m_mshFile.seekg(sectionMap["NODES"]);
-    getline(m_mshFile, line);
+    m_fileStream.seekg(sectionMap["NODES"]);
+    getline(m_fileStream, line);
     ss.clear();
     ss.str(line);
     ss >> word;
@@ -182,7 +186,7 @@ void InputSem::Process()
     i = id = 0;
     while (i < nVertices)
     {
-        getline(m_mshFile, line);
+        getline(m_fileStream, line);
         if (line.length() < 7)
             continue;
         ss.clear();
@@ -205,8 +209,8 @@ void InputSem::Process()
     }
 
     // Now read in elements
-    m_mshFile.seekg(sectionMap["ELEMENTS"]);
-    getline(m_mshFile, line);
+    m_fileStream.seekg(sectionMap["ELEMENTS"]);
+    getline(m_fileStream, line);
     ss.clear();
     ss.str(line);
     ss >> word;
@@ -219,7 +223,7 @@ void InputSem::Process()
     i = id = 0;
     while (i < nEntities)
     {
-        getline(m_mshFile, line);
+        getline(m_fileStream, line);
         if (line.length() < 18)
         {
             continue;
@@ -260,8 +264,8 @@ void InputSem::Process()
     {
         int np, nel, nodeId = m_mesh->m_node.size();
 
-        m_mshFile.seekg(sectionMap["CURVES"]);
-        getline(m_mshFile, line);
+        m_fileStream.seekg(sectionMap["CURVES"]);
+        getline(m_fileStream, line);
         ss.clear();
         ss.str(line);
         ss >> word;
@@ -320,7 +324,7 @@ void InputSem::Process()
         i = id = 0;
         while (i < nCurves)
         {
-            getline(m_mshFile, line);
+            getline(m_fileStream, line);
             if (line.length() < 18)
             {
                 continue;
@@ -427,9 +431,9 @@ void InputSem::Process()
     // Process field names
     if (sectionMap["FIELDS"] != std::streampos(-1))
     {
-        m_mshFile.seekg(sectionMap["FIELDS"]);
-        getline(m_mshFile, line);
-        getline(m_mshFile, line);
+        m_fileStream.seekg(sectionMap["FIELDS"]);
+        getline(m_fileStream, line);
+        getline(m_fileStream, line);
         ss.clear();
         ss.str(line);
 
@@ -447,8 +451,8 @@ void InputSem::Process()
         int maxTag = -1;
 
         // First read in list of groups, which defines each condition tag.
-        m_mshFile.seekg(sectionMap["GROUPS"]);
-        getline(m_mshFile, line);
+        m_fileStream.seekg(sectionMap["GROUPS"]);
+        getline(m_fileStream, line);
         ss.clear();
         ss.str(line);
         ss >> word;
@@ -461,7 +465,7 @@ void InputSem::Process()
         i = id = 0;
         while (i < nGroups)
         {
-            getline(m_mshFile, line);
+            getline(m_fileStream, line);
             ss.clear();
             ss.str(line);
             ss >> id >> tag;
@@ -472,8 +476,8 @@ void InputSem::Process()
 
         // Now read in actual values for boundary conditions from BCS
         // section.
-        m_mshFile.seekg(sectionMap["BCS"]);
-        getline(m_mshFile, line);
+        m_fileStream.seekg(sectionMap["BCS"]);
+        getline(m_fileStream, line);
         ss.clear();
         ss.str(line);
         ss >> word;
@@ -489,7 +493,7 @@ void InputSem::Process()
             int nF;
             string tmp;
             ConditionSharedPtr p;
-            getline(m_mshFile, line);
+            getline(m_fileStream, line);
             ss.clear();
             ss.str(line);
             ss >> id >> tag >> nF;
@@ -501,7 +505,7 @@ void InputSem::Process()
             j = 0;
             while (j < nF)
             {
-                getline(m_mshFile, line);
+                getline(m_fileStream, line);
                 ss.clear();
                 ss.str(line);
                 ss >> tmp;
@@ -560,8 +564,8 @@ void InputSem::Process()
         }
 
         // Finally read surface information.
-        m_mshFile.seekg(sectionMap["SURFACES"]);
-        getline(m_mshFile, line);
+        m_fileStream.seekg(sectionMap["SURFACES"]);
+        getline(m_fileStream, line);
         ss.clear();
         ss.str(line);
         ss >> word;
@@ -579,7 +583,7 @@ void InputSem::Process()
 
         while (i < nSurf)
         {
-            getline(m_mshFile, line);
+            getline(m_fileStream, line);
             ss.clear();
             ss.str(line);
             ss >> id >> elmt >> side >> word;
@@ -649,7 +653,6 @@ void InputSem::Process()
     }
 
     PrintSummary();
-    m_mshFile.reset();
 
     // Process rest of mesh.
     ProcessVertices();

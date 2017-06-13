@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: SurfaceMeshing.h
+//  File: InputSemtex.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,68 +29,44 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: class containing all surfacemeshing routines and classes.
+//  Description: Reads a Semtex checkpoint file.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKMESHUTILS_2D_2D
-#define NEKMESHUTILS_2D_2D
+#ifndef FIELDUTILS_INPUTSEMTEX
+#define FIELDUTILS_INPUTSEMTEX
 
-#include <NekMeshUtils/Module/Module.h>
-#include <NekMeshUtils/SurfaceMeshing/CurveMesh.h>
-#include <NekMeshUtils/SurfaceMeshing/FaceMesh.h>
-
-#include <LibUtilities/Interpreter/AnalyticExpressionEvaluator.hpp>
+#include "../Module.h"
 
 namespace Nektar
 {
-namespace NekMeshUtils
+namespace FieldUtils
 {
 
 /**
- * @brief class containing all surface meshing routines methods and classes
+ * Converter for Fld files.
  */
-class Generator2D : public ProcessModule
+class InputSemtex : public InputModule
 {
 public:
+    InputSemtex(FieldSharedPtr f);
+    virtual ~InputSemtex();
+    virtual void Process(po::variables_map &vm);
+
     /// Creates an instance of this class
-    static boost::shared_ptr<Module> create(MeshSharedPtr m)
+    static ModuleSharedPtr create(FieldSharedPtr f)
     {
-        return MemoryManager<Generator2D>::AllocateSharedPtr(m);
+        return MemoryManager<InputSemtex>::AllocateSharedPtr(f);
     }
-    static ModuleKey className;
+    /// %ModuleKey for class.
+    static ModuleKey m_className[];
 
-    Generator2D(MeshSharedPtr m);
-
-    virtual ~Generator2D();
-
-    virtual void Process();
+    virtual std::string GetModuleName()
+    {
+        return "InputSemtex";
+    }
 
 private:
-    void FindBLEnds();
-
-    void MakeBLPrep();
-
-    void PeriodicPrep();
-
-    void MakePeriodic();
-
-    void MakeBL(int faceid);
-
-    void Report();
-    /// map of individual surface meshes from parametric surfaces
-    std::map<int, FaceMeshSharedPtr> m_facemeshes;
-    /// map of individual curve meshes of the curves in the domain
-    std::map<int, CurveMeshSharedPtr> m_curvemeshes;
-    /// map of periodic curve pairs
-    std::map<unsigned, unsigned> m_periodicPairs;
-
-    std::vector<unsigned int> m_blCurves;
-    /// map of curves and Bl ends: 0, 1 or 2 (for both)
-    std::map<unsigned, unsigned> m_blends;
-    LibUtilities::AnalyticExpressionEvaluator m_thickness;
-    int m_thickness_ID;
-    std::map<NodeSharedPtr, std::vector<EdgeSharedPtr> > m_nodesToEdge;
 };
 }
 }

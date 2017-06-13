@@ -319,7 +319,7 @@ NekDouble NodeOpti::GetFunctional(NekDouble &minJacNew, bool gradient)
     {
         case eLinEl:
         {
-            const NekDouble nu = 0.45;
+            const NekDouble nu = 0.4;
             const NekDouble mu = 1.0 / 2.0 / (1.0 + nu);
             const NekDouble K  = 1.0 / 3.0 / (1.0 - 2.0 * nu);
 
@@ -327,6 +327,7 @@ NekDouble NodeOpti::GetFunctional(NekDouble &minJacNew, bool gradient)
             {
                 const int nElmt = typeIt->second.size();
                 const int pts = m_derivUtils[typeIt->first]->pts;
+
                 NekVector<NekDouble> &quadW =
                     m_derivUtils[typeIt->first]->quadW;
 
@@ -389,12 +390,12 @@ NekDouble NodeOpti::GetFunctional(NekDouble &minJacNew, bool gradient)
                         if (gradient)
                         {
                             NekDouble jacDerivPhi[DIM];
-                            NekDouble jacDetDeriv[DIM]; 
+                            NekDouble jacDetDeriv[DIM];
 
                             NekDouble derivDet = Determinant<DIM>(phiM);
-                            NekDouble jacInvTrans[DIM][DIM];                                
+                            NekDouble jacInvTrans[DIM][DIM];
                             InvTrans<DIM>(phiM, jacInvTrans);
-                
+
                             NekDouble basisDeriv[DIM];
                             for (int m = 0; m < DIM; ++m)
                             {
@@ -413,15 +414,15 @@ NekDouble NodeOpti::GetFunctional(NekDouble &minJacNew, bool gradient)
                             }
 
                             // jacDerivPhi is actually a tensor,
-                            // but can be stored as a vector due to the simple form of jacDeriv 
+                            // but can be stored as a vector due to the simple form of jacDeriv
                             for (int n = 0; n < DIM; ++n)
                             {
-                                jacDerivPhi[n] = 0.0;                                   
+                                jacDerivPhi[n] = 0.0;
                                 for (int l = 0; l < DIM; ++l)
                                 {
                                     jacDerivPhi[n] += jacDeriv[l] *
-                                            typeIt->second[i]->maps[k][l + 3 * n];                      
-                                }                    
+                                            typeIt->second[i]->maps[k][l + 3 * n];
+                                }
                             }
 
                             for (int m = 0; m < DIM; ++m)
@@ -436,7 +437,7 @@ NekDouble NodeOpti::GetFunctional(NekDouble &minJacNew, bool gradient)
                             // end of common part to all four versionsNekDouble
 
 
-                            NekDouble M2[DIM][DIM][DIM];                            
+                            NekDouble M2[DIM][DIM][DIM];
                             // use the delta function in jacDeriv and do some tensor calculus
                             // to come up with this simplified expression for:
                             // LEM2<DIM>(jacIdeal, jacDerivPhi, M2);
@@ -451,11 +452,11 @@ NekDouble NodeOpti::GetFunctional(NekDouble &minJacNew, bool gradient)
                                     }
                                 }
                             }
-                            
+
                             for (int m = 0; m < DIM; ++m)
                             {
                                 NekDouble frobProdA = FrobProd<DIM>(M2[m], Emat);
-                                         
+
                                 m_grad[m] +=
                                     quadW[k] * absIdealMapDet *
                                     (2.0 * mu * frobProdA +
@@ -478,10 +479,10 @@ NekDouble NodeOpti::GetFunctional(NekDouble &minJacNew, bool gradient)
                                         for (int p = 0; p < DIM; ++p)
                                         {
                                             for (int q = 0; q < DIM; ++q)
-                                            {                                                
-                                                M3[p][q] = jacDerivPhi[p] * jacDerivPhi[q];                                                
+                                            {
+                                                M3[p][q] = jacDerivPhi[p] * jacDerivPhi[q];
                                             }
-                                        }    
+                                        }
                                         frobProdBC += FrobProd<DIM>(M3,Emat);
                                     }
 
@@ -575,12 +576,12 @@ NekDouble NodeOpti::GetFunctional(NekDouble &minJacNew, bool gradient)
                         if (gradient)
                         {
                             NekDouble jacDerivPhi[DIM];
-                            NekDouble jacDetDeriv[DIM]; 
+                            NekDouble jacDetDeriv[DIM];
 
                             NekDouble derivDet = Determinant<DIM>(phiM);
-                            NekDouble jacInvTrans[DIM][DIM];                                
+                            NekDouble jacInvTrans[DIM][DIM];
                             InvTrans<DIM>(phiM, jacInvTrans);
-                
+
                             NekDouble basisDeriv[DIM];
                             for (int m = 0; m < DIM; ++m)
                             {
@@ -600,15 +601,15 @@ NekDouble NodeOpti::GetFunctional(NekDouble &minJacNew, bool gradient)
                             }
 
                             // jacDerivPhi is actually a tensor,
-                            // but can be stored as a vector due to the simple form of jacDeriv 
+                            // but can be stored as a vector due to the simple form of jacDeriv
                             for (int n = 0; n < DIM; ++n)
                             {
-                                jacDerivPhi[n] = 0.0;                                   
+                                jacDerivPhi[n] = 0.0;
                                 for (int l = 0; l < DIM; ++l)
                                 {
                                     jacDerivPhi[n] += jacDeriv[l] *
-                                            typeIt->second[i]->maps[k][l + 3 * n];                      
-                                }                    
+                                            typeIt->second[i]->maps[k][l + 3 * n];
+                                }
                             }
 
                             for (int m = 0; m < DIM; ++m)
@@ -628,14 +629,14 @@ NekDouble NodeOpti::GetFunctional(NekDouble &minJacNew, bool gradient)
                                 // the Frobenius-product becomes a scalar product
                                 NekDouble frobProd =
                                     ScalarProd<DIM>(jacIdeal[m],jacDerivPhi);
-                           
+
                                 m_grad[m] +=
                                     quadW[k] * absIdealMapDet *
                                     (mu * frobProd +
                                      (jacDetDeriv[m] / (2.0 * sigma - jacDet) *
                                       (K * lsigma - mu)));
                             }
-                            
+
                             int ct = 0;
                             for (int m = 0; m < DIM; ++m)
                             {
@@ -648,9 +649,9 @@ NekDouble NodeOpti::GetFunctional(NekDouble &minJacNew, bool gradient)
                                     {
                                         // because of the zero entries of the tensor jacDerivPhi,
                                         // the Frobenius-product becomes a scalar product
-                                        frobProdHes = ScalarProd<DIM>(jacDerivPhi,jacDerivPhi);                                
+                                        frobProdHes = ScalarProd<DIM>(jacDerivPhi,jacDerivPhi);
                                     }
-                  
+
                                     m_grad[ct + DIM] +=
                                         quadW[k] * absIdealMapDet *
                                         (mu * frobProdHes +
@@ -672,13 +673,17 @@ NekDouble NodeOpti::GetFunctional(NekDouble &minJacNew, bool gradient)
         {
             for (typeIt = m_data.begin(); typeIt != m_data.end(); typeIt++)
             {
+                const int nElmt = typeIt->second.size();
+                const int pts = m_derivUtils[typeIt->first]->pts;
+
                 NekVector<NekDouble> &quadW =
                     m_derivUtils[typeIt->first]->quadW;
-                for (int i = 0; i < typeIt->second.size(); ++i)
+
+                for (int i = 0; i < nElmt; ++i)
                 {
-                    for (int k = 0; k < m_derivUtils[typeIt->first]->pts; ++k)
+                    for (int k = 0; k < pts; ++k)
                     {
-                        NekDouble phiM[DIM][DIM];                        
+                        NekDouble phiM[DIM][DIM];
                         for (int l = 0; l < DIM; ++l)
                         {
                             for (int n = 0; n < DIM; ++n)
@@ -692,7 +697,7 @@ NekDouble NodeOpti::GetFunctional(NekDouble &minJacNew, bool gradient)
                         {
                             for (int n = 0; n < DIM; ++n)
                             {
-                                jacIdeal[n][m] = 0.0;                                
+                                jacIdeal[n][m] = 0.0;
                                 for (int l = 0; l < DIM; ++l)
                                 {
                                     jacIdeal[n][m] += phiM[n][l] *
@@ -701,7 +706,7 @@ NekDouble NodeOpti::GetFunctional(NekDouble &minJacNew, bool gradient)
                             }
                         }
                         jacDet = Determinant(jacIdeal);
-                        // end CalcIdealJac    
+                        // end CalcIdealJac
 
                         NekDouble absIdealMapDet = fabs(typeIt->second[i]->maps[k][9]);
                         minJacNew      = min(minJacNew, jacDet);
@@ -729,12 +734,12 @@ NekDouble NodeOpti::GetFunctional(NekDouble &minJacNew, bool gradient)
                         if (gradient)
                         {
                             NekDouble jacDerivPhi[DIM];
-                            NekDouble jacDetDeriv[DIM]; 
+                            NekDouble jacDetDeriv[DIM];
 
                             NekDouble derivDet = Determinant<DIM>(phiM);
-                            NekDouble jacInvTrans[DIM][DIM];                                
+                            NekDouble jacInvTrans[DIM][DIM];
                             InvTrans<DIM>(phiM, jacInvTrans);
-                
+
                             NekDouble basisDeriv[DIM];
                             for (int m = 0; m < DIM; ++m)
                             {
@@ -753,15 +758,15 @@ NekDouble NodeOpti::GetFunctional(NekDouble &minJacNew, bool gradient)
                             }
 
                             // jacDerivPhi is actually a tensor,
-                            // but can be stored as a vector due to the simple form of jacDeriv 
+                            // but can be stored as a vector due to the simple form of jacDeriv
                             for (int n = 0; n < DIM; ++n)
                             {
-                                jacDerivPhi[n] = 0.0;                                   
+                                jacDerivPhi[n] = 0.0;
                                 for (int l = 0; l < DIM; ++l)
                                 {
                                     jacDerivPhi[n] += jacDeriv[l] *
-                                            typeIt->second[i]->maps[k][l + 3 * n];                      
-                                }                    
+                                            typeIt->second[i]->maps[k][l + 3 * n];
+                                }
                             }
 
                             for (int m = 0; m < DIM; ++m)
@@ -782,7 +787,7 @@ NekDouble NodeOpti::GetFunctional(NekDouble &minJacNew, bool gradient)
                                 // because of the zero entries of the tensor jacDerivPhi,
                                 // the Frobenius-product becomes a scalar product
                                 frobProd[m] = ScalarProd<DIM>(jacIdeal[m],jacDerivPhi);
-                        
+
                                 inc[m] =
                                     quadW[k] * absIdealMapDet *
                                     (2.0 * W * (frobProd[m] / frob -
@@ -791,7 +796,7 @@ NekDouble NodeOpti::GetFunctional(NekDouble &minJacNew, bool gradient)
                                 m_grad[m] += inc[m];
                             }
 
-                            
+
 
                             int ct = 0;
                             for (int m = 0; m < DIM; ++m)
@@ -805,7 +810,7 @@ NekDouble NodeOpti::GetFunctional(NekDouble &minJacNew, bool gradient)
                                     {
                                         // because of the zero entries of the tensor jacDerivPhi,
                                         // the Frobenius-product becomes a scalar product
-                                        frobProdHes = ScalarProd<DIM>(jacDerivPhi,jacDerivPhi);                                
+                                        frobProdHes = ScalarProd<DIM>(jacDerivPhi,jacDerivPhi);
                                     }
 
                                     m_grad[ct + DIM] +=
@@ -834,13 +839,17 @@ NekDouble NodeOpti::GetFunctional(NekDouble &minJacNew, bool gradient)
         {
             for (typeIt = m_data.begin(); typeIt != m_data.end(); typeIt++)
             {
+                const int nElmt = typeIt->second.size();
+                const int pts = m_derivUtils[typeIt->first]->pts;
+
                 NekVector<NekDouble> &quadW =
                     m_derivUtils[typeIt->first]->quadW;
-                for (int i = 0; i < typeIt->second.size(); ++i)
+
+                for (int i = 0; i < nElmt; ++i)
                 {
-                    for (int k = 0; k < m_derivUtils[typeIt->first]->pts; ++k)
+                    for (int k = 0; k < pts; ++k)
                     {
-                        NekDouble phiM[DIM][DIM];                        
+                        NekDouble phiM[DIM][DIM];
                         for (int l = 0; l < DIM; ++l)
                         {
                             for (int n = 0; n < DIM; ++n)
@@ -854,7 +863,7 @@ NekDouble NodeOpti::GetFunctional(NekDouble &minJacNew, bool gradient)
                         {
                             for (int n = 0; n < DIM; ++n)
                             {
-                                jacIdeal[n][m] = 0.0;                                
+                                jacIdeal[n][m] = 0.0;
                                 for (int l = 0; l < DIM; ++l)
                                 {
                                     jacIdeal[n][m] += phiM[n][l] *
@@ -863,7 +872,7 @@ NekDouble NodeOpti::GetFunctional(NekDouble &minJacNew, bool gradient)
                             }
                         }
                         jacDet = Determinant(jacIdeal);
-                        // end CalcIdealJac    
+                        // end CalcIdealJac
 
                         NekDouble absIdealMapDet = fabs(typeIt->second[i]->maps[k][9]);
                         minJacNew      = min(minJacNew, jacDet);
@@ -891,12 +900,12 @@ NekDouble NodeOpti::GetFunctional(NekDouble &minJacNew, bool gradient)
                         if (gradient)
                         {
                             NekDouble jacDerivPhi[DIM];
-                            NekDouble jacDetDeriv[DIM]; 
+                            NekDouble jacDetDeriv[DIM];
 
                             NekDouble derivDet = Determinant<DIM>(phiM);
-                            NekDouble jacInvTrans[DIM][DIM];                                
+                            NekDouble jacInvTrans[DIM][DIM];
                             InvTrans<DIM>(phiM, jacInvTrans);
-                
+
                             NekDouble basisDeriv[DIM];
                             for (int m = 0; m < DIM; ++m)
                             {
@@ -915,15 +924,15 @@ NekDouble NodeOpti::GetFunctional(NekDouble &minJacNew, bool gradient)
                             }
 
                             // jacDerivPhi is actually a tensor,
-                            // but can be stored as a vector due to the simple form of jacDeriv 
+                            // but can be stored as a vector due to the simple form of jacDeriv
                             for (int n = 0; n < DIM; ++n)
                             {
-                                jacDerivPhi[n] = 0.0;                                   
+                                jacDerivPhi[n] = 0.0;
                                 for (int l = 0; l < DIM; ++l)
                                 {
                                     jacDerivPhi[n] += jacDeriv[l] *
-                                            typeIt->second[i]->maps[k][l + 3 * n];                      
-                                }                    
+                                            typeIt->second[i]->maps[k][l + 3 * n];
+                                }
                             }
 
                             for (int m = 0; m < DIM; ++m)
@@ -953,7 +962,7 @@ NekDouble NodeOpti::GetFunctional(NekDouble &minJacNew, bool gradient)
                                       jacDetDeriv[m] / (2.0 * sigma - jacDet)));
                                 m_grad[m] += inc[m];
                             }
-                            
+
                             int ct = 0;
                             for (int m = 0; m < DIM; ++m)
                             {
@@ -966,7 +975,7 @@ NekDouble NodeOpti::GetFunctional(NekDouble &minJacNew, bool gradient)
                                     {
                                         // because of the zero entries of the tensor jacDerivPhi,
                                         // the Frobenius-product becomes a scalar product
-                                        frobProdHes = ScalarProd<DIM>(jacDerivPhi,jacDerivPhi);                                
+                                        frobProdHes = ScalarProd<DIM>(jacDerivPhi,jacDerivPhi);
                                     }
 
                                     m_grad[ct + DIM] +=

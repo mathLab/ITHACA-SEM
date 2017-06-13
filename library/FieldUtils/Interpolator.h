@@ -38,6 +38,7 @@
 #define FIELDUTILS_INTERPOLATOR_H
 
 #include <vector>
+#include <iostream>
 
 #include <boost/geometry/geometries/box.hpp>
 #include <boost/geometry/geometries/point.hpp>

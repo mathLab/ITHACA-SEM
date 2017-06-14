@@ -34,6 +34,7 @@ v4.4.1
   to fld or between different meshes (!783)
 - Fix deadlock with HDF5 input (!786)
 - Fix missing entriess in LibUtilities::kPointsTypeStr (!792)
+- Fix compiler warnings with CommDataType (!793)
 
 **FieldConvert:**
 - Fix issue with field ordering in the interppointdatatofld module (!754)

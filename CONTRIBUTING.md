@@ -165,7 +165,8 @@ major release, `y` a minor release and `z` a patch release:
   denote major changes in functionality and the API;
 - minor releases occur around twice per year and contain new features with minor
   API changes;
-- patch releases are targeted on rougly a monthly basis and are intended to 
+- patch releases are targeted on roughly a monthly basis and are intended to
+  fix minor issues in the code.
 
 The repository contains a number of _release branches_ named `release/x.y` for
 each minor release, which are intended to contain **fixes and very minor
@@ -210,6 +211,23 @@ following additional steps to cherry pick commits into the `release/x.y` branch.
    - `git cherry-pick --continue`
 8. If everything becomes horribly broken, `git cherry-pick --abort`.
 9. Once you're happy, `git push` to send your changes back to GitLab.
+
+Steps 5 and 6 can be simplified by creating a script
+```bash
+#!/bin/bash
+src=$1
+
+logopts="--oneline --no-merges --reverse"
+commits=`git log $logopts master..$1 | cut -f 1 -d " " | xargs`
+
+echo "Will cherry-pick the following commits: $commits"
+echo "Press ENTER to continue..."
+read
+
+cherryopts="-x --allow-empty --allow-empty-message"
+git cherry-pick $cherryopts $commits
+```
+which accepts the name of the source branch as the sole argument.
 
 ## Formatting guidelines
 Nektar++ uses C++, a language notorious for being easy to make obtuse and

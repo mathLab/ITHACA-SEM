@@ -53,6 +53,9 @@ v4.4.1
 **IncNavierStokesSolver**
 - Fix an initialisation issue when using an additional advective field (!779)
 
+**Packaging**
+- Added missing package for FieldUtils library (!755)
+
 v4.4.0
 ------
 **Library**:

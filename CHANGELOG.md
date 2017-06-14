@@ -47,6 +47,7 @@ v4.4.1
 - Add manifold meshing option (!756)
 - Fix issue with older rea input files (!765)
 - Fix memory leak in variational optimiser, add small optimisations (!785)
+- Check the dimensionality of the CAD system before running the 2D generator (!780)
 
 **IncNavierStokesSolver**
 - Fix an initialisation issue when using an additional advective field (!779)

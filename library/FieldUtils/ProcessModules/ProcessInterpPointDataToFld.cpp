@@ -38,6 +38,7 @@
 
 using namespace std;
 
+#include <boost/geometry.hpp>
 #include "ProcessInterpPointDataToFld.h"
 
 #include <FieldUtils/Interpolator.h>
@@ -45,6 +46,10 @@ using namespace std;
 #include <LibUtilities/BasicUtils/PtsField.h>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <boost/math/special_functions/fpclassify.hpp>
+
+namespace bg  = boost::geometry;
+namespace bgi = boost::geometry::index;
+
 namespace Nektar
 {
 namespace FieldUtils
@@ -91,7 +96,7 @@ void ProcessInterpPointDataToFld::Process(po::variables_map &vm)
     ASSERTL0(nFields > 0, "No field values provided in input");
 
     // assume one field is already defined from input file.
-    m_f->m_exp.resize(nFields + 1);
+    m_f->m_exp.resize(nFields);
     for (i = 1; i < nFields; ++i)
     {
         m_f->m_exp[i] = m_f->AppendExpList(0);
@@ -128,7 +133,7 @@ void ProcessInterpPointDataToFld::Process(po::variables_map &vm)
     {
         for (j = 0; j < nFields; ++j)
         {
-            m_f->m_exp[j]->SetPhys(i, outPts->GetPointVal(j, i));
+            m_f->m_exp[j]->SetPhys(i, outPts->GetPointVal(3 + j, i));
         }
     }
 

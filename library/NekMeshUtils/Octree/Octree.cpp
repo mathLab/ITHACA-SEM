@@ -959,8 +959,8 @@ void Octree::CompileSourcePointList()
 
         // these are the acutal number of sample points in each parametric
         // direction
-        int nu = ceil(DeltaU / m_minDelta) * 2;
-        int nv = ceil(DeltaV / m_minDelta) * 2;
+        int nu = ceil(DeltaU / m_minDelta) * 40 * 2;
+        int nv = ceil(DeltaV / m_minDelta) * 40 * 2;
 
         for (int j = 0; j < nu; j++)
         {

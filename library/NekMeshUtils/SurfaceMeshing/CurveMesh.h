@@ -54,6 +54,10 @@ namespace Nektar
 namespace NekMeshUtils
 {
 
+//forward
+class CurveMesh;
+typedef boost::shared_ptr<CurveMesh> CurveMeshSharedPtr;
+
 class CurveMesh
 {
 public:
@@ -125,6 +129,18 @@ public:
         return m_curvelength;
     }
 
+    void PeriodicOverwrite(CurveMeshSharedPtr from);
+
+    int GetId()
+    {
+        return m_id;
+    }
+
+    void SetOffset(unsigned i, NekDouble offset)
+    {
+        m_endoffset[i] = offset;
+    }
+
 private:
     /**
      * @brief get node spacing sampling function
@@ -177,9 +193,10 @@ private:
     std::vector<NodeSharedPtr> m_meshpoints;
     LibUtilities::AnalyticExpressionEvaluator m_bl;
     int m_blID;
+    /// offset of second point at each end
+    std::map<unsigned, NekDouble> m_endoffset;
 };
 
-typedef boost::shared_ptr<CurveMesh> CurveMeshSharedPtr;
 }
 }
 

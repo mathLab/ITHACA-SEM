@@ -263,7 +263,7 @@ namespace Nektar
             /// -  Count  edges, face and add up edges and face sizes
             for(n = 0; n < n_exp; ++n)
             {
-                eid = expList->GetOffset_Elmt_Id(n);
+                eid = n;
                 locExpansion = expList->GetExp(eid);
 
                 nEdges = locExpansion->GetNedges();
@@ -348,7 +348,7 @@ namespace Nektar
             
             for(cnt=n=0; n < n_exp; ++n)
             {
-                eid = expList->GetOffset_Elmt_Id(n);
+                eid = n;
                 locExpansion = expList->GetExp(eid);
 
                 for (j = 0; j < locExpansion->GetNedges(); ++j)
@@ -436,7 +436,7 @@ namespace Nektar
 
             for(cnt=n=0; n < n_exp; ++n)
             {
-                eid = expList->GetOffset_Elmt_Id(n);
+                eid = n;
                 
                 locExpansion = expList->GetExp(eid);
 
@@ -488,7 +488,7 @@ namespace Nektar
             
             for(n=0; n < n_exp; ++n)
             {
-                eid = expList->GetOffset_Elmt_Id(n);
+                eid = n;
                 
                 locExpansion = expList->GetExp(eid);
                 
@@ -587,7 +587,7 @@ namespace Nektar
             //matrices.
             for(cnt=n=0; n < n_exp; ++n)
             {
-                eid = expList->GetOffset_Elmt_Id(n);
+                eid = n;
                 
                 locExpansion = expList->GetExp(eid);
                 nCoeffs=locExpansion->NumBndryCoeffs();
@@ -968,7 +968,7 @@ namespace Nektar
 
            for(n=0; n < n_exp; ++n)
            {
-               nel = expList->GetOffset_Elmt_Id(n);
+               nel = n;
                
                locExpansion = expList->GetExp(nel);
                LibUtilities::ShapeType eType=locExpansion->DetShapeType();

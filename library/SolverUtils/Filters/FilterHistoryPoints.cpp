@@ -84,7 +84,7 @@ FilterHistoryPoints::FilterHistoryPoints(
     else
     {
         LibUtilities::Equation equ(m_session, it->second);
-        m_outputFrequency = floor(equ.Evaluate());
+        m_outputFrequency = round(equ.Evaluate());
     }
 
     // OutputPlane
@@ -99,7 +99,7 @@ FilterHistoryPoints::FilterHistoryPoints(
         else
         {
             LibUtilities::Equation equ(m_session, it->second);
-            m_outputPlane = floor(equ.Evaluate());
+            m_outputPlane = round(equ.Evaluate());
         }
 
         it = pParams.find("WaveSpace");

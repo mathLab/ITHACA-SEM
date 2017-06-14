@@ -61,13 +61,19 @@ public:
     static ModuleKey className;
 
     Generator2D(MeshSharedPtr m);
+
     virtual ~Generator2D();
 
     virtual void Process();
 
 private:
+    void FindBLEnds();
 
     void MakeBLPrep();
+
+    void PeriodicPrep();
+
+    void MakePeriodic();
 
     void MakeBL(int faceid);
 
@@ -76,8 +82,12 @@ private:
     std::map<int, FaceMeshSharedPtr> m_facemeshes;
     /// map of individual curve meshes of the curves in the domain
     std::map<int, CurveMeshSharedPtr> m_curvemeshes;
+    /// map of periodic curve pairs
+    std::map<unsigned, unsigned> m_periodicPairs;
 
     std::vector<unsigned int> m_blCurves;
+    /// map of curves and Bl ends: 0, 1 or 2 (for both)
+    std::map<unsigned, unsigned> m_blends;
     LibUtilities::AnalyticExpressionEvaluator m_thickness;
     int m_thickness_ID;
     std::map<NodeSharedPtr, std::vector<EdgeSharedPtr> > m_nodesToEdge;

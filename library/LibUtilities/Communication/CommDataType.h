@@ -82,13 +82,9 @@ int CommDataTypeGetSize(CommDataType);
 
 template <class T> class CommDataTypeTraits
 {
-    LIB_UTILITIES_EXPORT static CommDataType type;
-
 public:
-    static CommDataType &GetDataType()
-    {
-        return type;
-    }
+    LIB_UTILITIES_EXPORT static CommDataType &GetDataType();
+
     static void *GetPointer(T &val)
     {
         return &val;

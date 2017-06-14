@@ -34,9 +34,13 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
+#include <boost/geometry.hpp>
 #include <FieldUtils/Interpolator.h>
 
 using namespace std;
+
+namespace bg  = boost::geometry;
+namespace bgi = boost::geometry::index;
 
 namespace Nektar
 {

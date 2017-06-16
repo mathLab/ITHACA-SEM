@@ -51,6 +51,7 @@ IF (NEKTAR_USE_CWIPI)
             STAMP_DIR ${TPBUILD}/stamp
             DOWNLOAD_DIR ${TPSRC}
             SOURCE_DIR ${TPSRC}/cwipi-0.8.2
+            PATCH_COMMAND patch -p 0 < ${PROJECT_SOURCE_DIR}/cmake/thirdparty-patches/cwipi_fix-compile.patch
             BINARY_DIR ${TPBUILD}/cwipi-0.8.2
             TMP_DIR ${TPBUILD}/cwipi-0.8.2-tmp
             INSTALL_DIR ${TPDIST}
@@ -58,6 +59,8 @@ IF (NEKTAR_USE_CWIPI)
                 OMPI_FC=${CMAKE_Fortran_COMPILER}
                 OMPI_CC=${CMAKE_C_COMPILER}
                 OMPI_CXX=${CMAKE_CXX_COMPILER}
+                CFLAGS=-std=c99
+                CXXFLAGS=-std=c++11
                 ${TPSRC}/cwipi-0.8.2/configure
                 CC=${MPI_C_COMPILER}
                 CXX=${MPI_CXX_COMPILER}

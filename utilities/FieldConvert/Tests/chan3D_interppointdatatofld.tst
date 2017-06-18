@@ -12,7 +12,7 @@
             <value variable="p" tolerance="10">385033</value>
         </metric>
         <metric type="Linf" id="2">
-            <value variable="p" tolerance="10">175442</value>
+            <value variable="p" tolerance="20">175442</value>
         </metric>
     </metrics>
 </test>

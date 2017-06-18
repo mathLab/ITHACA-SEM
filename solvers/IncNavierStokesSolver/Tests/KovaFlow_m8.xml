@@ -4,7 +4,8 @@
     xsi:noNamespaceSchemaLocation="http://www.nektar.info/schema/nektar.xsd">
 
     <EXPANSIONS>
-        <E COMPOSITE="C[0]" NUMMODES="6" FIELDS="u,v,p" TYPE="MODIFIED" />
+        <E COMPOSITE="C[0]" NUMMODES="6" FIELDS="u,v" TYPE="MODIFIED" />
+        <E COMPOSITE="C[0]" NUMMODES="5" FIELDS="p" TYPE="MODIFIEDQUADPLUS1" />
     </EXPANSIONS>
 
     <CONDITIONS>
@@ -81,4 +82,13 @@
         </COMPOSITE>
         <DOMAIN> C[0] </DOMAIN>
     </GEOMETRY>
+    <FILTERS>
+      <FILTER TYPE="AverageFields">
+        <PARAM NAME="OutputFile"> KovaFlow_m8 </PARAM>
+        <PARAM NAME="RestartFile"> KovaFlow_m8_avg.rst </PARAM>
+        <PARAM NAME="OutputFrequency">100</PARAM>
+        <PARAM NAME="SampleFrequency"> 10 </PARAM>
+      </FILTER>
+    </FILTERS>    
+
 </NEKTAR>

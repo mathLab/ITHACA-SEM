@@ -76,6 +76,38 @@ enum ModuleType
 const char *const ModuleTypeMap[] = {"Input", "Process", "Output"};
 
 /**
+ * @brief Swap endian ordering of the input variable.
+ */
+template <typename T>
+void swap_endian(T &u)
+{
+    union
+    {
+        T u;
+        unsigned char u8[sizeof(T)];
+    } source, dest;
+
+    source.u = u;
+
+    for (size_t k = 0; k < sizeof(T); k++)
+    {
+        dest.u8[k] = source.u8[sizeof(T) - k - 1];
+    }
+
+    u = dest.u;
+}
+
+template <typename T>
+void swap_endian(vector<T> &u)
+{
+    size_t vecSize = u.size();
+    for (int i = 0; i < vecSize; ++i)
+    {
+        swap_endian(u[i]);
+    }
+}
+
+/**
  * @brief Represents a command-line configuration option.
  */
 struct ConfigOption
@@ -187,6 +219,7 @@ class InputModule : public Module
 public:
     InputModule(FieldSharedPtr p_m);
     FIELD_UTILS_EXPORT void AddFile(string fileType, string fileName);
+    FIELD_UTILS_EXPORT static string GuessFormat(string fileName);
 
 protected:
     /// Print summary of elements.

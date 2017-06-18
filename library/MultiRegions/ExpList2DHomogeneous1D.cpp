@@ -176,7 +176,6 @@ namespace Nektar
             int nel = m_planes[0]->GetExpSize();
             m_coeff_offset   = Array<OneD,int>(nel*nzplanes);
             m_phys_offset    = Array<OneD,int>(nel*nzplanes);
-            m_offset_elmt_id = Array<OneD,int>(nel*nzplanes);
             Array<OneD, NekDouble> tmparray;
 
             for (cnt  = n = 0; n < nzplanes; ++n)
@@ -190,10 +189,8 @@ namespace Nektar
                 {
                     m_coeff_offset[cnt] = m_planes[n]->GetCoeff_Offset(i)
                         + n*ncoeffs_per_plane;
-                    m_phys_offset[cnt] =  m_planes[n]->GetPhys_Offset(i)
+                    m_phys_offset[cnt++] =  m_planes[n]->GetPhys_Offset(i)
                         + n*npoints_per_plane;
-                    m_offset_elmt_id[cnt++] = m_planes[n]->GetOffset_Elmt_Id(i)
-                        + n*nel;
                 }
             }
         }

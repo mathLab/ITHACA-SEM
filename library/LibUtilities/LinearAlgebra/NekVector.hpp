@@ -59,9 +59,6 @@
 #include <type_traits>
 #include <boost/call_traits.hpp>
 #include <boost/shared_array.hpp>
-#include <boost/typeof/typeof.hpp>
-
-#include  BOOST_TYPEOF_INCREMENT_REGISTRATION_GROUP()
 
 namespace Nektar
 {
@@ -241,8 +238,6 @@ namespace Nektar
             Array<OneD, DataType> m_data;
             PointerWrapper m_wrapperType;
     };
-
-    BOOST_TYPEOF_REGISTER_TEMPLATE(NekVector, 1);
 
     template<typename DataType>
     LIB_UTILITIES_EXPORT void Add(NekVector<DataType>& result,
@@ -473,13 +468,11 @@ namespace expt
     struct NodeCanUnroll<expt::Node<LhsType, OpType, RhsType>,
         typename std::enable_if
         <
-            boost::mpl::and_
-            <
-                Nektar::IsVector<typename LhsType::ResultType>,
-                Nektar::IsVector<typename RhsType::ResultType>,
-                NodeCanUnroll<LhsType>,
-                NodeCanUnroll<RhsType>,
-        > >::type >: public std::true_type
+            Nektar::IsVector<typename LhsType::ResultType>::value &&
+            Nektar::IsVector<typename RhsType::ResultType>::value &&
+            NodeCanUnroll<LhsType>::value &&
+            NodeCanUnroll<RhsType>::value
+        >::type >: public std::true_type
     {
     };
 

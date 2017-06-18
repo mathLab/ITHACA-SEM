@@ -193,7 +193,7 @@ namespace Nektar
 
         STD_REGIONS_EXPORT std::ostream& operator<<(std::ostream& os, const StdMatrixKey& rhs);
 
-        typedef  boost::shared_ptr<StdMatrixKey> StdMatrixKeySharedPtr;
+        typedef  std::shared_ptr<StdMatrixKey> StdMatrixKeySharedPtr;
 
     } // end of namespace
 } // end of namespace

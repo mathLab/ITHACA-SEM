@@ -38,9 +38,6 @@
 #define NEKTAR_LIB_UTILITIES_BASIC_UTILS_CONSISTENT_ACCESS_OBJECT_HPP
 
 #include <memory>
-
-#include <boost/call_traits.hpp>
-#include <boost/type_traits.hpp>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 
 namespace Nektar

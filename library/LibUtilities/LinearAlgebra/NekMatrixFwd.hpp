@@ -44,9 +44,6 @@
 
 #include <type_traits>
 
-#include <boost/typeof/typeof.hpp>
-#include  BOOST_TYPEOF_INCREMENT_REGISTRATION_GROUP()
-
 namespace Nektar
 {
     template<typename DataType>
@@ -71,9 +68,6 @@ namespace Nektar
     typedef NekMatrix<NekMatrix<NekDouble, StandardMatrixTag>, ScaledMatrixTag> DNekScalMat;
     typedef std::shared_ptr<DNekScalMat> DNekScalMatSharedPtr;
     
-    // Type registration must occur for the expression template machinery to 
-    // automatically detect the types of matrix operations.
-    BOOST_TYPEOF_REGISTER_TEMPLATE(NekMatrix, 2);
     
 #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
     template<typename T>

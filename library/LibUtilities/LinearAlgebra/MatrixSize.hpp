@@ -36,7 +36,6 @@
 
 #include <type_traits>
 #include <tuple>
-#include <boost/mpl/or.hpp>
 
 #include <ExpressionTemplates/Node.hpp>
 #include <ExpressionTemplates/Operators.hpp>
@@ -84,30 +83,18 @@ namespace Nektar
         }
 
         template<typename R>
-        static unsigned int GetRequiredRowsFromMatrix(const R& matrix,
-            typename std::disable_if
-            <
-                boost::mpl::or_
-                <
-                    IsMatrix<R> ,
-                    IsVector<R> 
-                >
-            >::type* dummy = 0)
+        static unsigned int GetRequiredRowsFromMatrix(
+            const R& matrix,
+            typename std::enable_if<!IsMatrix<R>::value && !IsVector<R>::value>::type* dummy = 0)
         {
             return 1;
         }
 
 
         template<typename R>
-        static unsigned int GetRequiredColumnsFromMatrix(const R& matrix,
-            typename std::disable_if
-            <
-                boost::mpl::or_
-                <
-                    IsMatrix<R> ,
-                    IsVector<R> 
-                >
-            >::type* dummy = 0)
+        static unsigned int GetRequiredColumnsFromMatrix(
+            const R& matrix,
+            typename std::enable_if<!IsMatrix<R>::value && !IsVector<R>::value>::type* dummy = 0)
         {
             return 1;
         }      
@@ -180,14 +167,9 @@ namespace Nektar
     // Addition or subtraction.
     template<typename LhsType, typename OpType, typename RhsType,typename Indices, unsigned int index>
     struct BinaryMatrixSizeEvaluator<LhsType, OpType, RhsType, Indices, index,
-        typename std::enable_if
-        <
-            boost::mpl::or_
-            <
-                std::is_same<OpType, expt::AddOp>,
-                std::is_same<OpType, expt::SubtractOp>
-            >
-        >::type>
+                                     typename std::enable_if<std::is_same<OpType, expt::AddOp>::value ||
+                                                             std::is_same<OpType, expt::SubtractOp>::value
+                                                             >::type>
     {
         template<typename ArgumentVectorType>
         static std::tuple<unsigned int, unsigned int, unsigned int>
@@ -204,11 +186,8 @@ namespace Nektar
     struct BinaryMatrixSizeEvaluator<LhsType, OpType, RhsType, Indices, index,
         typename std::enable_if
         <
-            boost::mpl::and_
-            <
-                expt::IsConstantNode<LhsType>,
-                std::is_same<typename LhsType::ResultType, double>
-            >
+            expt::IsConstantNode<LhsType>::value &&
+            std::is_same<typename LhsType::ResultType, double>::value
         >::type>
     {
         template<typename ArgumentVectorType>
@@ -227,11 +206,8 @@ namespace Nektar
     struct BinaryMatrixSizeEvaluator<LhsType, OpType, RhsType, Indices, index,
         typename std::enable_if
         <
-            boost::mpl::and_
-            <
-                expt::IsConstantNode<RhsType>,
-                std::is_same<typename RhsType::ResultType, double>
-            >
+            expt::IsConstantNode<RhsType>::value
+            std::is_same<typename RhsType::ResultType, double>
         >::type>
     {
         template<typename ArgumentVectorType>
@@ -249,37 +225,20 @@ namespace Nektar
     struct BinaryMatrixSizeEvaluator<LhsType, expt::MultiplyOp, RhsType, Indices, index,
         typename std::enable_if
         <
-            boost::mpl::and_
-            <
-                // Test for both nodes being constant matrices.
-                // Negate to account for the next specialization.
-                boost::mpl::not_<boost::mpl::and_
-                <
-                    boost::mpl::and_
-                    <
-                        expt::IsConstantNode<RhsType>,
-                        boost::mpl::not_<std::is_same<typename RhsType::ResultType, double> >
-                    >,
-                    boost::mpl::and_
-                    <
-                        expt::IsConstantNode<LhsType>,
-                        boost::mpl::not_<std::is_same<typename LhsType::ResultType, double> >
-                    >
-                > >,
-
+            // Test for both nodes being constant matrices.
+            // Negate to account for the next specialization.
+            !(expt::IsConstantNode<RhsType>::value &&
+              !std::is_same<typename RhsType::ResultType, double>::value &&
+              expt::IsConstantNode<LhsType>::value &&
+              !std::is_same<typename LhsType::ResultType, double>::value)
+            && !(
                 // Tests to make sure if either is constant, it is a matrix.
-                boost::mpl::not_<boost::mpl::and_
-                <
-                    expt::IsConstantNode<RhsType>,
-                    std::is_same<typename RhsType::ResultType, double>
-                > >,
-                boost::mpl::not_<boost::mpl::and_
-                <
-                    expt::IsConstantNode<LhsType>,
-                    std::is_same<typename LhsType::ResultType, double>
-                > >
-            >
-        >::type>
+                expt::IsConstantNode<RhsType>::value &&
+                std::is_same<typename RhsType::ResultType, double>::value)
+            && !(
+                expt::IsConstantNode<LhsType>::value &&
+                std::is_same<typename LhsType::ResultType, double>::value)
+            >::type>
     {
         template<typename ArgumentVectorType>
         static std::tuple<unsigned int, unsigned int, unsigned int>
@@ -294,19 +253,10 @@ namespace Nektar
         typename std::enable_if
         <
             // Test for both nodes being constant matrices.
-            boost::mpl::and_
-            <
-                boost::mpl::and_
-                <
-                    expt::IsConstantNode<RhsType>,
-                    boost::mpl::not_<std::is_same<typename RhsType::ResultType, double> >
-                >,
-                boost::mpl::and_
-                <
-                    expt::IsConstantNode<LhsType>,
-                    boost::mpl::not_<std::is_same<typename LhsType::ResultType, double> >
-                >
-            >
+            expt::IsConstantNode<RhsType>::value &&
+            !std::is_same<typename RhsType::ResultType, double>::value &&
+            expt::IsConstantNode<LhsType>::value &&
+            !std::is_same<typename LhsType::ResultType, double>
         >::type>
     {
         template<typename ArgumentVectorType>
@@ -327,235 +277,6 @@ namespace Nektar
             return std::make_tuple(leftRows, rightColumns, bufferSize);
         }
     };
-
-    ///// \brief Implementation of the MatrixSize class for binary nodes.
-    /////        The code is slightly cleaner by moving the evaluation to this class
-    /////        instead of creating the specializations in the MatrixSize class.
-    //template<typename L1, typename LOp, typename L2,
-    //         typename Op,
-    //         typename R1, typename ROp, typename R2,
-    //        typename Indices, unsigned int index,
-    //        typename enabled = void>
-    //struct BinaryMatrixSizeEvaluator;
-
-    ///// \brief Matrix sizes for two constant children with addition/subtraction.
-    //template<typename L, typename Op, typename R, typename Indices, unsigned int index>
-    //struct BinaryMatrixSizeEvaluator<L, void, void, Op, R, void, void, Indices, index>
-    //{
-    //    typedef expt::Node<L, void, void> LeftNodeType;
-    //    typedef expt::Node<R, void, void> RightNodeType;
-    //    
-    //    template<typename ArgumentVectorType>
-    //    static std::tuple<unsigned int, unsigned int, unsigned int>
-    //    GetRequiredSize(const ArgumentVectorType& args)
-    //    {
-    //        std::tuple<unsigned int, unsigned int, unsigned int> lhsSizes = 
-    //            MatrixSize<LeftNodeType, Indices, index>::GetRequiredSize(args);
-    //        return lhsSizes;
-    //    }
-    //};
- 
-    ///// \brief Matrix sizes for two constant children with multiplication.
-    //template<typename L, typename R, typename Indices, unsigned int index>
-    //struct BinaryMatrixSizeEvaluator<L, void, void, expt::MultiplyOp, R, void, void, Indices, index>
-    //{
-    //    typedef expt::Node<L, void, void> LeftNodeType;
-    //    typedef expt::Node<R, void, void> RightNodeType;
-    //    
-    //    template<typename ArgumentVectorType>
-    //    static std::tuple<unsigned int, unsigned int, unsigned int>
-    //    GetRequiredSize(const ArgumentVectorType& args)
-    //    {
-    //        std::tuple<unsigned int, unsigned int, unsigned int> lhsSizes = 
-    //            MatrixSize<LeftNodeType, Indices, index>::GetRequiredSize(args);
-
-    //        std::tuple<unsigned int, unsigned int, unsigned int> rhsSizes = 
-    //            MatrixSize<RightNodeType, Indices, index + LeftNodeType::TotalCount>::GetRequiredSize(args);
-
-    //        unsigned int leftRows = lhsSizes.get<0>();
-    //        unsigned int rightColumns = rhsSizes.get<1>();
-
-    //        unsigned int bufferSize = leftRows*rightColumns;
-    //        
-    //        return std::make_tuple(leftRows, rightColumns, bufferSize);
-    //    }
-    //};
-
-    //template<typename R, typename Indices, unsigned int index>
-    //struct BinaryMatrixSizeEvaluator<NekDouble, void, void, expt::MultiplyOp, R, void, void, Indices, index>
-    //{
-    //    typedef expt::Node<NekDouble, void, void> LeftNodeType;
-    //    typedef expt::Node<R, void, void> RightNodeType;
-    //    
-    //    template<typename ArgumentVectorType>
-    //    static std::tuple<unsigned int, unsigned int, unsigned int>
-    //    GetRequiredSize(const ArgumentVectorType& args)
-    //    {
-    //        std::tuple<unsigned int, unsigned int, unsigned int> rhsSizes = 
-    //            MatrixSize<RightNodeType, Indices, index + LeftNodeType::TotalCount>::GetRequiredSize(args);
-    //        return rhsSizes;
-    //    }
-    //};
-
-    //template<typename L, typename Indices, unsigned int index>
-    //struct BinaryMatrixSizeEvaluator<L, void, void, expt::MultiplyOp, NekDouble, void, void, Indices, index>
-    //{
-    //    typedef expt::Node<L, void, void> LeftNodeType;
-    //    typedef expt::Node<NekDouble, void, void> RightNodeType;
-    //    
-    //    template<typename ArgumentVectorType>
-    //    static std::tuple<unsigned int, unsigned int, unsigned int>
-    //    GetRequiredSize(const ArgumentVectorType& args)
-    //    {
-    //        std::tuple<unsigned int, unsigned int, unsigned int> lhsSizes = 
-    //            MatrixSize<LeftNodeType, Indices, index>::GetRequiredSize(args);
-    //        return lhsSizes;
-    //    }
-    //};
-
-
-    //template<typename L1, typename LOp, typename L2, typename Op, typename Indices, unsigned int index>
-    //struct BinaryMatrixSizeEvaluator<L1, LOp, L2, Op, NekDouble, void, void, Indices, index,
-    //    typename std::enable_if
-    //    <
-    //        boost::mpl::and_
-    //        <
-    //            boost::mpl::not_<std::is_same<LOp, void> >,
-    //            boost::mpl::not_<std::is_same<L1, void> >
-    //        >
-    //    >::type >
-    //{
-    //    typedef expt::Node<L1, LOp, L2> LeftNodeType;
-    //    
-    //    template<typename ArgumentVectorType>
-    //    static std::tuple<unsigned int, unsigned int, unsigned int>
-    //    GetRequiredSize(const ArgumentVectorType& args)
-    //    {
-    //        std::tuple<unsigned int, unsigned int, unsigned int> lhsSizes = 
-    //            MatrixSize<LeftNodeType, Indices, index>::GetRequiredSize(args);
-    //        return lhsSizes;
-    //    }
-    //};
-
-    //template<typename L1, typename LOp, typename L2, typename Op, typename R, typename Indices, unsigned int index>
-    //struct BinaryMatrixSizeEvaluator<L1, LOp, L2, Op, R, void, void, Indices, index,
-    //    typename std::enable_if
-    //    <
-    //        boost::mpl::and_
-    //        <
-    //            boost::mpl::not_<std::is_same<LOp, void> >,
-    //            boost::mpl::not_<std::is_same<L1, void> >
-    //        >
-    //    >::type >
-    //{
-    //    typedef expt::Node<R, void, void> RightNodeType;
-    //    typedef expt::Node<L1, LOp, L2> LeftNodeType;
-    //    
-    //    template<typename ArgumentVectorType>
-    //    static std::tuple<unsigned int, unsigned int, unsigned int>
-    //    GetRequiredSize(const ArgumentVectorType& args)
-    //    {
-    //        return CalculateLargestRequiredSize<LeftNodeType, RightNodeType, Indices, index>::GetRequiredSize(args);
-    //    }
-    //};
-
-    //template<typename Op, typename R1, typename ROp, typename R2, typename Indices, unsigned int index>
-    //struct BinaryMatrixSizeEvaluator<NekDouble, void, void, Op, R1, ROp, R2, Indices, index,
-    //    typename std::enable_if
-    //    <
-    //        boost::mpl::and_
-    //        <
-    //            boost::mpl::not_<std::is_same<ROp, void> >,
-    //            boost::mpl::not_<std::is_same<R1, void> >
-    //        >
-    //    >::type >
-    //{
-    //    typedef expt::Node<R1, ROp, R2> RightNodeType;
-    //    
-    //    template<typename ArgumentVectorType>
-    //    static std::tuple<unsigned int, unsigned int, unsigned int>
-    //    GetRequiredSize(const ArgumentVectorType& args)
-    //    {
-    //        std::tuple<unsigned int, unsigned int, unsigned int> rhsSizes = 
-    //            MatrixSize<RightNodeType, Indices, index+1>::GetRequiredSize(args);
-    //        return rhsSizes;
-    //    }
-    //};
-
-    //template<typename L, typename Op, typename R1, typename ROp, typename R2, typename Indices, unsigned int index>
-    //struct BinaryMatrixSizeEvaluator<L, void, void, Op, R1, ROp, R2, Indices, index,
-    //    typename std::enable_if
-    //    <
-    //        boost::mpl::and_
-    //        <
-    //            boost::mpl::not_<std::is_same<ROp, void> >,
-    //            boost::mpl::not_<std::is_same<R1, void> >
-    //        >
-    //    >::type >
-    //{
-    //    typedef expt::Node<L, void, void> LeftNodeType;
-    //    typedef expt::Node<R1, ROp, R2> RightNodeType;
-    //    
-    //    template<typename ArgumentVectorType>
-    //    static std::tuple<unsigned int, unsigned int, unsigned int>
-    //    GetRequiredSize(const ArgumentVectorType& args)
-    //    {
-    //        return CalculateLargestRequiredSize<LeftNodeType, RightNodeType, Indices, index>::GetRequiredSize(args);
-    //    }
-    //};
-
-    //template<typename L1, typename LOp, typename L2, 
-    //         typename Op,
-    //         typename R1, typename ROp, typename R2, typename Indices, unsigned int index>
-    //struct BinaryMatrixSizeEvaluator<L1, LOp, L2, Op, R1, ROp, R2, Indices, index,
-    //    typename std::enable_if
-    //    <
-    //        boost::mpl::and_
-    //        <
-    //            boost::mpl::not_<std::is_same<ROp, void> >,
-    //            boost::mpl::not_<std::is_same<R2, void> >,
-    //            boost::mpl::not_<std::is_same<LOp, void> >,
-    //            boost::mpl::not_<std::is_same<L2, void> >
-    //        >
-    //    >::type >
-    //{
-    //    typedef expt::Node<L1, LOp, L2> LeftNodeType;
-    //    typedef expt::Node<R1, ROp, R2> RightNodeType;
-    //    
-    //    template<typename ArgumentVectorType>
-    //    static std::tuple<unsigned int, unsigned int, unsigned int>
-    //    GetRequiredSize(const ArgumentVectorType& args)
-    //    {
-    //        std::tuple<unsigned int, unsigned int, unsigned int> lhsSizes = 
-    //            MatrixSize<LeftNodeType, Indices, index>::GetRequiredSize(args);
-    //        return lhsSizes;
-    //    }
-    //};
-
-    //template<typename L1, typename LOp, typename L2, 
-    //         typename R1, typename ROp, typename R2, typename Indices, unsigned int index>
-    //struct BinaryMatrixSizeEvaluator<L1, LOp, L2, expt::MultiplyOp, R1, ROp, R2, Indices, index,
-    //    typename std::enable_if
-    //    <
-    //        boost::mpl::and_
-    //        <
-    //            boost::mpl::not_<std::is_same<ROp, void> >,
-    //            boost::mpl::not_<std::is_same<R2, void> >,
-    //            boost::mpl::not_<std::is_same<LOp, void> >,
-    //            boost::mpl::not_<std::is_same<L2, void> >
-    //        >
-    //    >::type >
-    //{
-    //    typedef expt::Node<L1, LOp, L2> LeftNodeType;
-    //    typedef expt::Node<R1, ROp, R2> RightNodeType;
-    //    
-    //    template<typename ArgumentVectorType>
-    //    static std::tuple<unsigned int, unsigned int, unsigned int>
-    //    GetRequiredSize(const ArgumentVectorType& args)
-    //    {
-    //        return CalculateLargestRequiredSize<LeftNodeType, RightNodeType, Indices, index>::GetRequiredSize(args);
-    //    }
-    //};
 
     template<typename L1, typename LOp, typename L2,
              typename Op,

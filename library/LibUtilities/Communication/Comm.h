@@ -273,7 +273,7 @@ template <class T> void Comm::AllReduce(T &pData, enum ReduceOperator pOp)
 
 template <class T> void Comm::AlltoAll(T &pSendData, T &pRecvData)
 {
-    BOOST_STATIC_ASSERT_MSG(
+    static_assert(
         CommDataTypeTraits<T>::IsVector,
         "AlltoAll only valid with Array or vector arguments.");
     int sendSize = CommDataTypeTraits<T>::GetCount(pSendData);
@@ -336,7 +336,7 @@ void Comm::Exscan(T &pData, const enum ReduceOperator pOp, T &ans)
  */
 template <class T> T Comm::Gather(const int rootProc, T &val)
 {
-    BOOST_STATIC_ASSERT_MSG(
+    static_assert(
         CommDataTypeTraits<T>::IsVector,
         "Gather only valid with Array or vector arguments.");
     bool amRoot  = (GetRank() == rootProc);
@@ -356,7 +356,7 @@ template <class T> T Comm::Gather(const int rootProc, T &val)
  */
 template <class T> T Comm::Scatter(const int rootProc, T &pData)
 {
-    BOOST_STATIC_ASSERT_MSG(
+    static_assert(
         CommDataTypeTraits<T>::IsVector,
         "Scatter only valid with Array or vector arguments.");
 

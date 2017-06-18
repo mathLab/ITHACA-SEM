@@ -16,6 +16,5 @@
 #endif
 
 #include <tinyxml.h>
-#include <boost/shared_ptr.hpp>
 
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>

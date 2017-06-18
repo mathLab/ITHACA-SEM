@@ -36,7 +36,8 @@
 #ifndef NEKTAR_SPATIALDOMAINS_GEOMFACTORS_H
 #define NEKTAR_SPATIALDOMAINS_GEOMFACTORS_H
 
-#include <boost/unordered_set.hpp>
+#include <unordered_set>
+#include <boost/functional/hash.hpp>
 
 #include <LibUtilities/Foundations/Basis.h>
 #include <SpatialDomains/SpatialDomains.hpp>
@@ -52,23 +53,23 @@ namespace SpatialDomains
     class GeomFactors;
     class Geometry;
 
-    typedef boost::shared_ptr<Geometry> GeometrySharedPtr;
+    typedef std::shared_ptr<Geometry> GeometrySharedPtr;
 
     /// Equivalence test for GeomFactors objects
     SPATIAL_DOMAINS_EXPORT bool operator==(const GeomFactors &lhs,
                                            const GeomFactors &rhs);
 
     /// Pointer to a GeomFactors object.
-    typedef boost::shared_ptr<GeomFactors>      GeomFactorsSharedPtr;
+    typedef std::shared_ptr<GeomFactors>        GeomFactorsSharedPtr;
     /// A vector of GeomFactor pointers.
     typedef std::vector< GeomFactorsSharedPtr > GeomFactorsVector;
     /// Iterator for the GeomFactorsVector.
     typedef GeomFactorsVector::iterator         GeomFactorsVectorIter;
     /// An unordered set of GeomFactor pointers.
-    typedef boost::unordered_set< GeomFactorsSharedPtr >
+    typedef std::unordered_set< GeomFactorsSharedPtr >
                                                 GeomFactorsSet;
     /// Iterator for the GeomFactorsSet
-    typedef boost::unordered_set< GeomFactorsSharedPtr >::iterator
+    typedef std::unordered_set< GeomFactorsSharedPtr >::iterator
                                                 GeomFactorsSetIter;
     /// Storage type for derivative of mapping.
     typedef Array<OneD, Array<OneD, Array<OneD,NekDouble> > >

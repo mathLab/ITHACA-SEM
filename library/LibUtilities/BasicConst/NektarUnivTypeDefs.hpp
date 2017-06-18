@@ -37,18 +37,18 @@
 #define  NEKTARUNIVTYPEDEF_HPP
 
 #include <map>
-#include <boost/cstdint.hpp>
+#include <cstdint>
 
 namespace Nektar
 {
     typedef double NekDouble;
 
-    typedef boost::int32_t  NekInt;
-    typedef boost::int32_t  NekInt32;
-    typedef boost::int64_t  NekInt64;
-    typedef boost::uint32_t NekUInt;
-    typedef boost::uint32_t NekUInt32;
-    typedef boost::uint64_t NekUInt64;
+    typedef std::int32_t  NekInt;
+    typedef std::int32_t  NekInt32;
+    typedef std::int64_t  NekInt64;
+    typedef std::uint32_t NekUInt;
+    typedef std::uint32_t NekUInt32;
+    typedef std::uint64_t NekUInt64;
 
     struct OneD
     {

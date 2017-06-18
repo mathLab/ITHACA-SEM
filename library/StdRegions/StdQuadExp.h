@@ -51,7 +51,7 @@ namespace Nektar
         class StdQuadExp: virtual public StdExpansion2D
         {
 
-        typedef boost::shared_ptr<StdExpansion1D> StdExpansion1DSharedPtr;
+        typedef std::shared_ptr<StdExpansion1D> StdExpansion1DSharedPtr;
 
         public:
             STD_REGIONS_EXPORT StdQuadExp();
@@ -259,7 +259,7 @@ namespace Nektar
                     Array<OneD, int> &conn,
                     bool standard = true);
         };
-        typedef boost::shared_ptr<StdQuadExp> StdQuadExpSharedPtr;
+        typedef std::shared_ptr<StdQuadExp> StdQuadExpSharedPtr;
 
     } //end of namespace
 } //end of namespace

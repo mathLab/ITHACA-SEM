@@ -570,7 +570,7 @@ namespace Nektar
                                 Geometry2DSharedPtr face =
                                     GetGeometry2D(data[i].f[j]);
                                 tfaces[j] =
-                                    boost::static_pointer_cast<TriGeom>(face);
+                                    std::static_pointer_cast<TriGeom>(face);
                             }
 
                             TetGeomSharedPtr tetgeom(MemoryManager<TetGeom>
@@ -610,14 +610,14 @@ namespace Nektar
                                 else if (face->GetShapeType() ==
                                             LibUtilities::eTriangle)
                                 {
-                                    faces[j] = boost
+                                    faces[j] = std
                                         ::static_pointer_cast<TriGeom>(face);
                                     Ntfaces++;
                                 }
                                 else if (face->GetShapeType() ==
                                             LibUtilities::eQuadrilateral)
                                 {
-                                    faces[j] = boost
+                                    faces[j] = std
                                         ::static_pointer_cast<QuadGeom>(face);
                                     Nqfaces++;
                                 }
@@ -663,14 +663,14 @@ namespace Nektar
                                 else if (face->GetShapeType() ==
                                                 LibUtilities::eTriangle)
                                 {
-                                    faces[j] = boost
+                                    faces[j] = std
                                         ::static_pointer_cast<TriGeom>(face);
                                     Ntfaces++;
                                 }
                                 else if (face->GetShapeType() ==
                                                 LibUtilities::eQuadrilateral)
                                 {
-                                    faces[j] = boost
+                                    faces[j] = std
                                         ::static_pointer_cast<QuadGeom>(face);
                                     Nqfaces++;
                                 }
@@ -702,7 +702,7 @@ namespace Nektar
                             {
                                 Geometry2DSharedPtr face =
                                         GetGeometry2D(data[i].f[j]);
-                                faces[j] = boost
+                                faces[j] = std
                                         ::static_pointer_cast<QuadGeom>(face);
                             }
 
@@ -770,7 +770,7 @@ namespace Nektar
                                 else if (face->GetShapeType() == LibUtilities::eTriangle)
                                 {
                                     ASSERTL0(Ntfaces < kNtfaces, errorstring.str().c_str());
-                                    tfaces[Ntfaces++] = boost::static_pointer_cast<TriGeom>(face);
+                                    tfaces[Ntfaces++] = std::static_pointer_cast<TriGeom>(face);
                                 }
                                 else if (face->GetShapeType() == LibUtilities::eQuadrilateral)
                                 {
@@ -827,13 +827,13 @@ namespace Nektar
                                 else if (face->GetShapeType() == LibUtilities::eTriangle)
                                 {
                                     ASSERTL0(Ntfaces < kNtfaces, errorstring.str().c_str());
-                                    faces[Nfaces++] = boost::static_pointer_cast<TriGeom>(face);
+                                    faces[Nfaces++] = std::static_pointer_cast<TriGeom>(face);
                                     Ntfaces++;
                                 }
                                 else if (face->GetShapeType() == LibUtilities::eQuadrilateral)
                                 {
                                     ASSERTL0(Nqfaces < kNqfaces, errorstring.str().c_str());
-                                    faces[Nfaces++] = boost::static_pointer_cast<QuadGeom>(face);
+                                    faces[Nfaces++] = std::static_pointer_cast<QuadGeom>(face);
                                     Nqfaces++;
                                 }
                             }
@@ -890,13 +890,13 @@ namespace Nektar
                                 else if (face->GetShapeType() == LibUtilities::eTriangle)
                                 {
                                     ASSERTL0(Ntfaces < kNtfaces, errorstring.str().c_str());
-                                    faces[Nfaces++] = boost::static_pointer_cast<TriGeom>(face);
+                                    faces[Nfaces++] = std::static_pointer_cast<TriGeom>(face);
                                     Ntfaces++;
                                 }
                                 else if (face->GetShapeType() == LibUtilities::eQuadrilateral)
                                 {
                                     ASSERTL0(Nqfaces < kNqfaces, errorstring.str().c_str());
-                                    faces[Nfaces++] = boost::static_pointer_cast<QuadGeom>(face);
+                                    faces[Nfaces++] = std::static_pointer_cast<QuadGeom>(face);
                                     Nqfaces++;
                                 }
                             }
@@ -950,12 +950,12 @@ namespace Nektar
                                 else if (face->GetShapeType() == LibUtilities::eTriangle)
                                 {
                                     ASSERTL0(Ntfaces < kNtfaces, errorstring.str().c_str());
-                                    //tfaces[Ntfaces++] = boost::static_pointer_cast<TriGeom>(face);
+                                    //tfaces[Ntfaces++] = std::static_pointer_cast<TriGeom>(face);
                                 }
                                 else if (face->GetShapeType() == LibUtilities::eQuadrilateral)
                                 {
                                     ASSERTL0(Nqfaces < kNqfaces, errorstring.str().c_str());
-                                    qfaces[Nqfaces++] = boost::static_pointer_cast<QuadGeom>(face);
+                                    qfaces[Nqfaces++] = std::static_pointer_cast<QuadGeom>(face);
                                 }
                             }
                             
@@ -1088,14 +1088,11 @@ namespace Nektar
 
         Geometry2DSharedPtr MeshGraph3D::GetGeometry2D(int gID)
         {
-            TriGeomMapIter it1;
-            QuadGeomMapIter it2;
-            
-            it1 = m_triGeoms.find(gID);
+            auto it1 = m_triGeoms.find(gID);
             if (it1 != m_triGeoms.end())
                 return it1->second;
             
-            it2 = m_quadGeoms.find(gID);
+            auto it2 = m_quadGeoms.find(gID);
             if (it2 != m_quadGeoms.end())
                 return it2->second;
             
@@ -1341,7 +1338,7 @@ namespace Nektar
 
         ElementFaceVectorSharedPtr MeshGraph3D::GetElementsFromFace(Geometry2DSharedPtr face)
         {
-            boost::unordered_map<int, ElementFaceVectorSharedPtr>::iterator it = 
+            std::unordered_map<int, ElementFaceVectorSharedPtr>::iterator it = 
                 m_faceToElMap.find(face->GetGlobalID());
 
             ASSERTL0(it != m_faceToElMap.end(), "Unable to find corresponding face!");
@@ -1380,7 +1377,7 @@ namespace Nektar
 
             // Retrieve the geometry object of the element as a Geometry3D.
             Geometry3DSharedPtr geom3d =
-                    boost::dynamic_pointer_cast<SpatialDomains::Geometry3D>(
+                    std::dynamic_pointer_cast<SpatialDomains::Geometry3D>(
                             expansion->m_geomShPtr);
 
             // Use the geometry of the element to calculate the coordinate
@@ -1430,7 +1427,7 @@ namespace Nektar
                 elementFace->m_FaceIndx = i;
                 
                 // Search map to see if face already exists.
-                boost::unordered_map<int, ElementFaceVectorSharedPtr>::iterator it = 
+                std::unordered_map<int, ElementFaceVectorSharedPtr>::iterator it = 
                     m_faceToElMap.find(faceId);
                 
                 if (it == m_faceToElMap.end())

@@ -755,7 +755,7 @@ namespace Nektar
         {
             SegGeomSharedPtr Sedge;
 
-            if(!(Sedge = boost::dynamic_pointer_cast<SegGeom>(edge)))
+            if(!(Sedge = std::dynamic_pointer_cast<SegGeom>(edge)))
             {
                 ASSERTL0(false,"Dynamics cast failed");
 
@@ -773,21 +773,18 @@ namespace Nektar
 
             ElementEdgeVectorSharedPtr returnval = MemoryManager<ElementEdgeVector>::AllocateSharedPtr();
 
-            CompositeMapIter compIter;
             TriGeomSharedPtr triGeomShPtr;
             QuadGeomSharedPtr quadGeomShPtr;
 
-            GeometryVectorIter geomIter;
-
             for(int d = 0; d < m_domain.size(); ++d)
             {
-                for (compIter = m_domain[d].begin(); compIter != m_domain[d].end(); ++compIter)
+                for (auto &compIter : m_domain[d])
                 {
-                    for (geomIter = (compIter->second)->begin(); geomIter != (compIter->second)->end(); ++geomIter)
+                    for (auto &geomIter : *compIter.second)
                     {
-                        triGeomShPtr = boost::dynamic_pointer_cast<TriGeom>(*geomIter);
-                        quadGeomShPtr = boost::dynamic_pointer_cast<QuadGeom>(*geomIter);
-                        
+                        triGeomShPtr = std::dynamic_pointer_cast<TriGeom>(geomIter);
+                        quadGeomShPtr = std::dynamic_pointer_cast<QuadGeom>(geomIter);
+
                         if (triGeomShPtr || quadGeomShPtr)
                         {
                             int edgeNum;

@@ -65,7 +65,6 @@
 #include <boost/iostreams/copy.hpp>
 #include <boost/iostreams/filter/zlib.hpp>
 #include <boost/iostreams/filtering_stream.hpp>
-#include <boost/make_shared.hpp>
 
 using namespace std;
 
@@ -121,11 +120,11 @@ namespace Nektar
         /**
          *
          */
-        boost::shared_ptr<MeshGraph> MeshGraph::Read(
+        std::shared_ptr<MeshGraph> MeshGraph::Read(
                       const LibUtilities::SessionReaderSharedPtr &pSession,
                       DomainRangeShPtr &rng)
         {
-            boost::shared_ptr<MeshGraph> returnval;
+            std::shared_ptr<MeshGraph> returnval;
 
             // read the geometry tag to get the dimension
 
@@ -182,11 +181,11 @@ namespace Nektar
 
 
         /*  ====  OUTDATED ROUTINE, PLEASE NOT USE  ==== */
-        boost::shared_ptr<MeshGraph> MeshGraph::Read(
+        std::shared_ptr<MeshGraph> MeshGraph::Read(
                 const std::string& infilename,
                 bool pReadExpansions)
         {
-            boost::shared_ptr<MeshGraph> returnval;
+            std::shared_ptr<MeshGraph> returnval;
 
             MeshGraph mesh;
 
@@ -569,7 +568,7 @@ namespace Nektar
             {
                 std::string geomProperty = infoItem->Attribute("PROPERTY");
                 std::string geomValue    = infoItem->Attribute("VALUE");
-                GeomInfoMap::iterator x  = m_geomInfo.find(geomProperty);
+                auto        x            = m_geomInfo.find(geomProperty);
 
                 ASSERTL0(x == m_geomInfo.end(),
                         "Property " + geomProperty + " already specified.");
@@ -824,21 +823,19 @@ namespace Nektar
                         // all composites for the geomShPtrs and set the modes
                         // and types for the elements contained in the element
                         // list.
-                        CompositeMapIter compVecIter;
-                        for (compVecIter = compositeVector.begin(); compVecIter != compositeVector.end(); ++compVecIter)
+                        for (auto &compVecIter : compositeVector)
                         {
-                            GeometryVectorIter geomVecIter;
-                            for (geomVecIter = (compVecIter->second)->begin(); geomVecIter != (compVecIter->second)->end(); ++geomVecIter)
+                            for (auto &geomVecIter : *compVecIter.second)
                             {
-                                ExpansionMapIter x = expansionMap->find((*geomVecIter)->GetGlobalID());
+                                auto x = expansionMap->find(geomVecIter->GetGlobalID());
                                 ASSERTL0(x != expansionMap->end(), "Expansion not found!!");
                                 if(useExpansionType)
                                 {
-                                    (x->second)->m_basisKeyVector = MeshGraph::DefineBasisKeyFromExpansionType(*geomVecIter,expansion_type,num_modes);
+                                    (x->second)->m_basisKeyVector = MeshGraph::DefineBasisKeyFromExpansionType(geomVecIter,expansion_type,num_modes);
                                 }
                                 else
                                 {
-                                    ASSERTL0((*geomVecIter)->GetShapeDim() == basiskeyvec.size()," There is an incompatible expansion dimension with geometry dimension");
+                                    ASSERTL0(geomVecIter->GetShapeDim() == basiskeyvec.size()," There is an incompatible expansion dimension with geometry dimension");
                                     (x->second)->m_basisKeyVector = basiskeyvec;
                                 }
                             }
@@ -1023,17 +1020,15 @@ namespace Nektar
 
                         }
 
-                        CompositeMapIter compVecIter;
-                        for (compVecIter = compositeVector.begin(); compVecIter != compositeVector.end(); ++compVecIter)
+                        for (auto &compVecIter : compositeVector)
                         {
-                            GeometryVectorIter geomVecIter;
-                            for (geomVecIter = (compVecIter->second)->begin(); geomVecIter != (compVecIter->second)->end(); ++geomVecIter)
+                            for (auto &geomVecIter : *compVecIter.second)
                             {
-                                ExpansionMapIter expVecIter;
-                                for (expVecIter = expansionMap->begin(); expVecIter != expansionMap->end(); ++expVecIter)
+                                for (auto &expVecIter : *expansionMap)
                                 {
-
-                                    (expVecIter->second)->m_basisKeyVector = DefineBasisKeyFromExpansionTypeHomo(*geomVecIter,
+                                    (expVecIter.second)->m_basisKeyVector =
+                                        DefineBasisKeyFromExpansionTypeHomo(
+                                            geomVecIter,
                                             expansion_type_x,
                                             expansion_type_y,
                                             expansion_type_z,
@@ -1052,7 +1047,7 @@ namespace Nektar
                     std::vector<LibUtilities::FieldDefinitionsSharedPtr> fielddefs;
 
                     // This has to use the XML reader since we are treating the already parsed XML as a standard FLD file.
-                    boost::shared_ptr<LibUtilities::FieldIOXml> f = boost::make_shared<LibUtilities::FieldIOXml>(m_session->GetComm(), false);
+                    std::shared_ptr<LibUtilities::FieldIOXml> f = std::make_shared<LibUtilities::FieldIOXml>(m_session->GetComm(), false);
                     f->ImportFieldDefs(LibUtilities::XmlDataSource::create(doc), fielddefs, true);
                     cout << "    Number of elements: " << fielddefs.size() << endl;
                     SetExpansions(fielddefs);
@@ -1709,16 +1704,15 @@ namespace Nektar
 
             // Construct <VERTEX> block
             TiXmlElement *vertTag = new TiXmlElement("VERTEX");
-            PointGeomMap::iterator pIt;
 
-            for (pIt = m_vertSet.begin(); pIt != m_vertSet.end(); ++pIt)
+            for (auto &pIt : m_vertSet)
             {
                 stringstream s;
                 s << scientific << setprecision(8)
-                  << (*pIt->second)(0) << " " << (*pIt->second)(1) << " "
-                  << (*pIt->second)(2);
+                  << (*pIt.second)(0) << " " << (*pIt.second)(1) << " "
+                  << (*pIt.second)(2);
                 TiXmlElement * v = new TiXmlElement("V");
-                v->SetAttribute("ID", pIt->second->GetVid());
+                v->SetAttribute("ID", pIt.second->GetVid());
                 v->LinkEndChild(new TiXmlText(s.str()));
                 vertTag->LinkEndChild(v);
             }
@@ -1731,13 +1725,13 @@ namespace Nektar
             SegGeomMap::iterator sIt;
             string tag = m_meshDimension == 1 ? "S" : "E";
 
-            for (sIt = m_segGeoms.begin(); sIt != m_segGeoms.end(); ++sIt)
+            for (auto &sIt : m_segGeoms)
             {
                 stringstream s;
-                SegGeomSharedPtr seg = sIt->second;
+                SegGeomSharedPtr seg = sIt.second;
                 s << seg->GetVid(0) << " " << seg->GetVid(1);
                 TiXmlElement *e = new TiXmlElement(tag);
-                e->SetAttribute("ID", sIt->first);
+                e->SetAttribute("ID", sIt.first);
                 e->LinkEndChild(new TiXmlText(s.str()));
                 edgeTag->LinkEndChild(e);
             }
@@ -1750,32 +1744,30 @@ namespace Nektar
                 TiXmlElement *faceTag = new TiXmlElement(
                     m_meshDimension == 2 ? "ELEMENT" : "FACE");
 
-                TriGeomMap::iterator tIt;
                 tag = "T";
 
-                for (tIt = m_triGeoms.begin(); tIt != m_triGeoms.end(); ++tIt)
+                for (auto &tIt : m_triGeoms)
                 {
                     stringstream s;
-                    TriGeomSharedPtr tri = tIt->second;
+                    TriGeomSharedPtr tri = tIt.second;
                     s << tri->GetEid(0) << " " << tri->GetEid(1) << " "
                       << tri->GetEid(2);
                     TiXmlElement *t = new TiXmlElement(tag);
-                    t->SetAttribute("ID", tIt->first);
+                    t->SetAttribute("ID", tIt.first);
                     t->LinkEndChild(new TiXmlText(s.str()));
                     faceTag->LinkEndChild(t);
                 }
 
-                QuadGeomMap::iterator qIt;
                 tag = "Q";
 
-                for (qIt = m_quadGeoms.begin(); qIt != m_quadGeoms.end(); ++qIt)
+                for (auto qIt : m_quadGeoms)
                 {
                     stringstream s;
-                    QuadGeomSharedPtr quad = qIt->second;
+                    QuadGeomSharedPtr quad = qIt.second;
                     s << quad->GetEid(0) << " " << quad->GetEid(1) << " "
                       << quad->GetEid(2) << " " << quad->GetEid(3);
                     TiXmlElement *q = new TiXmlElement(tag);
-                    q->SetAttribute("ID", qIt->first);
+                    q->SetAttribute("ID", qIt.first);
                     q->LinkEndChild(new TiXmlText(s.str()));
                     faceTag->LinkEndChild(q);
                 }
@@ -1787,65 +1779,61 @@ namespace Nektar
             {
                 TiXmlElement *elmtTag = new TiXmlElement("ELEMENT");
 
-                HexGeomMap::iterator hIt;
                 tag = "H";
 
-                for (hIt = m_hexGeoms.begin(); hIt != m_hexGeoms.end(); ++hIt)
+                for (auto &hIt : m_hexGeoms)
                 {
                     stringstream s;
-                    HexGeomSharedPtr hex = hIt->second;
+                    HexGeomSharedPtr hex = hIt.second;
                     s << hex->GetFid(0) << " " << hex->GetFid(1) << " "
                       << hex->GetFid(2) << " " << hex->GetFid(3) << " "
                       << hex->GetFid(4) << " " << hex->GetFid(5) << " ";
                     TiXmlElement *h = new TiXmlElement(tag);
-                    h->SetAttribute("ID", hIt->first);
+                    h->SetAttribute("ID", hIt.first);
                     h->LinkEndChild(new TiXmlText(s.str()));
                     elmtTag->LinkEndChild(h);
                 }
 
-                PrismGeomMap::iterator rIt;
                 tag = "R";
 
-                for (rIt = m_prismGeoms.begin(); rIt != m_prismGeoms.end(); ++rIt)
+                for (auto &rIt : m_prismGeoms)
                 {
                     stringstream s;
-                    PrismGeomSharedPtr prism = rIt->second;
+                    PrismGeomSharedPtr prism = rIt.second;
                     s << prism->GetFid(0) << " " << prism->GetFid(1) << " "
                       << prism->GetFid(2) << " " << prism->GetFid(3) << " "
                       << prism->GetFid(4) << " ";
                     TiXmlElement *p = new TiXmlElement(tag);
-                    p->SetAttribute("ID", rIt->first);
+                    p->SetAttribute("ID", rIt.first);
                     p->LinkEndChild(new TiXmlText(s.str()));
                     elmtTag->LinkEndChild(p);
                 }
 
-                PyrGeomMap::iterator pIt;
                 tag = "P";
 
-                for (pIt = m_pyrGeoms.begin(); pIt != m_pyrGeoms.end(); ++pIt)
+                for (auto &pIt : m_pyrGeoms)
                 {
                     stringstream s;
-                    PyrGeomSharedPtr pyr = pIt->second;
+                    PyrGeomSharedPtr pyr = pIt.second;
                     s << pyr->GetFid(0) << " " << pyr->GetFid(1) << " "
                       << pyr->GetFid(2) << " " << pyr->GetFid(3) << " "
                       << pyr->GetFid(4) << " ";
                     TiXmlElement *p = new TiXmlElement(tag);
-                    p->SetAttribute("ID", pIt->first);
+                    p->SetAttribute("ID", pIt.first);
                     p->LinkEndChild(new TiXmlText(s.str()));
                     elmtTag->LinkEndChild(p);
                 }
 
-                TetGeomMap::iterator tIt;
                 tag = "A";
 
-                for (tIt = m_tetGeoms.begin(); tIt != m_tetGeoms.end(); ++tIt)
+                for (auto &tIt : m_tetGeoms)
                 {
                     stringstream s;
-                    TetGeomSharedPtr tet = tIt->second;
+                    TetGeomSharedPtr tet = tIt.second;
                     s << tet->GetFid(0) << " " << tet->GetFid(1) << " "
                       << tet->GetFid(2) << " " << tet->GetFid(3) << " ";
                     TiXmlElement *t = new TiXmlElement(tag);
-                    t->SetAttribute("ID", tIt->first);
+                    t->SetAttribute("ID", tIt.first);
                     t->LinkEndChild(new TiXmlText(s.str()));
                     elmtTag->LinkEndChild(t);
                 }
@@ -1855,13 +1843,11 @@ namespace Nektar
 
             // Construct <CURVED> block
             TiXmlElement *curveTag = new TiXmlElement("CURVED");
-            CurveMap::iterator curveIt;
             int curveId = 0;
 
-            for (curveIt  = m_curvedEdges.begin();
-                 curveIt != m_curvedEdges.end(); ++curveIt)
+            for (auto &curveIt : m_curvedEdges)
             {
-                CurveSharedPtr curve = curveIt->second;
+                CurveSharedPtr curve = curveIt.second;
                 TiXmlElement *c = new TiXmlElement("E");
                 stringstream s;
                 s.precision(8);
@@ -1880,10 +1866,9 @@ namespace Nektar
                 curveTag->LinkEndChild(c);
             }
 
-            for (curveIt  = m_curvedFaces.begin();
-                 curveIt != m_curvedFaces.end(); ++curveIt)
+            for (auto &curveIt : m_curvedFaces)
             {
-                CurveSharedPtr curve = curveIt->second;
+                CurveSharedPtr curve = curveIt.second;
                 TiXmlElement *c = new TiXmlElement("F");
                 stringstream s;
                 s.precision(8);
@@ -1906,7 +1891,6 @@ namespace Nektar
 
             // Construct <COMPOSITE> blocks
             TiXmlElement *compTag = new TiXmlElement("COMPOSITE");
-            CompositeMap::iterator cIt;
 
             // Create a map that gets around the issue of mapping faces -> F and
             // edges -> E inside the tag.
@@ -1921,17 +1905,17 @@ namespace Nektar
 
             std::vector<unsigned int> idxList;
 
-            for (cIt = m_meshComposites.begin(); cIt != m_meshComposites.end(); ++cIt)
+            for (auto &cIt : m_meshComposites)
             {
                 stringstream s;
                 TiXmlElement *c = new TiXmlElement("C");
 
-                if (cIt->second->size() == 0)
+                if (cIt.second->size() == 0)
                 {
                     continue;
                 }
 
-                GeometrySharedPtr firstGeom = cIt->second->at(0);
+                GeometrySharedPtr firstGeom = cIt.second->at(0);
                 int shapeDim = firstGeom->GetShapeDim();
                 string tag = (shapeDim < m_meshDimension) ?
                     compMap[firstGeom->GetShapeType()].second :
@@ -1940,14 +1924,14 @@ namespace Nektar
                 idxList.clear();
                 s << " " << tag << "[";
 
-                for (int i = 0; i < cIt->second->size(); ++i)
+                for (int i = 0; i < cIt.second->size(); ++i)
                 {
-                    idxList.push_back((*cIt->second)[i]->GetGlobalID());
+                    idxList.push_back((*cIt.second)[i]->GetGlobalID());
                 }
 
                 s << ParseUtils::GenerateSeqString(idxList) << "] ";
 
-                c->SetAttribute("ID", cIt->first);
+                c->SetAttribute("ID", cIt.first);
                 c->LinkEndChild(new TiXmlText(s.str()));
                 compTag->LinkEndChild(c);
             }
@@ -1960,9 +1944,9 @@ namespace Nektar
 
             // @todo Fix this to accomodate multi domain output
             idxList.clear();
-            for (cIt = m_domain[0].begin(); cIt != m_domain[0].end(); ++cIt)
+            for (auto &cIt : m_domain[0])
             {
-                idxList.push_back(cIt->first);
+                idxList.push_back(cIt.first);
             }
 
             domString << " C[" << ParseUtils::GenerateSeqString(idxList) << "] ";

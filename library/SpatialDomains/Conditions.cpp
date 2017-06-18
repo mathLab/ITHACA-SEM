@@ -70,7 +70,7 @@ namespace Nektar
         Array<OneD, int> ToArray(const std::set<int>& set)
         {
             Array<OneD, int> ans(set.size());
-            std::set<int>::const_iterator it = set.begin(), end = set.end();
+            auto it = set.begin(), end = set.end();
             for (int i = 0; it != end; ++it, ++i)
             {
                 ans[i] = *it;
@@ -93,8 +93,7 @@ namespace Nektar
         {
             // Turn the keys of boundaryRegions into set.
             std::set<int> ids;
-            BoundaryRegionCollection::const_iterator it =
-                    boundaryRegions.begin(), end = boundaryRegions.end();
+            auto it = boundaryRegions.begin(), end = boundaryRegions.end();
             int i = 0;
             for (; it != end; ++it, ++i)
                 ids.insert(it->first);
@@ -178,12 +177,9 @@ namespace Nektar
 
             std::set<int> allids = ShareAllBoundaryIDs(m_boundaryRegions, comm);
 
-            std::set<int>::const_iterator it = allids.begin(), end =
-                    allids.end();
-            for (; it != end; ++it)
+            for (auto &it : allids)
             {
-                BoundaryRegionCollection::iterator reg_it =
-                        m_boundaryRegions.find(*it);
+                auto reg_it = m_boundaryRegions.find(it);
                 int this_rank_participates = (reg_it != m_boundaryRegions.end());
                 LibUtilities::CommSharedPtr comm_region = comm->CommCreateIf(
                         this_rank_participates);

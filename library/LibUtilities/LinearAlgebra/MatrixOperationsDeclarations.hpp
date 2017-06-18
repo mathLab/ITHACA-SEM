@@ -50,9 +50,7 @@
 #include <LibUtilities/BasicUtils/RawType.hpp>
 #include <LibUtilities/LinearAlgebra/CanGetRawPtr.hpp>
 
-#include <boost/utility/enable_if.hpp>
-#include <boost/type_traits.hpp>
-
+#include <type_traits>
 #include <string>
 
 namespace Nektar
@@ -116,13 +114,10 @@ namespace Nektar
     void NekMultiplyFullMatrixFullMatrix(NekMatrix<NekDouble, StandardMatrixTag>& result,
                                          const NekMatrix<LhsDataType, LhsMatrixType>& lhs,
                                          const NekMatrix<RhsDataType, RhsMatrixType>& rhs,
-                                         typename boost::enable_if
+                                         typename std::enable_if
                                          <
-                                            boost::mpl::and_
-                                            <
-                                                CanGetRawPtr<NekMatrix<LhsDataType, LhsMatrixType> >,
-                                                CanGetRawPtr<NekMatrix<RhsDataType, RhsMatrixType> >
-                                            >
+                                         CanGetRawPtr<NekMatrix<LhsDataType, LhsMatrixType> >::value &&
+                                         CanGetRawPtr<NekMatrix<RhsDataType, RhsMatrixType> >::value
                                          >::type* p = 0)
     {
         ASSERTL1(lhs.GetType() == eFULL && rhs.GetType() == eFULL, "Only full matrices are supported.");
@@ -160,13 +155,9 @@ namespace Nektar
     template<typename RhsInnerType, typename RhsMatrixType>
     void MultiplyEqual(NekMatrix<double, StandardMatrixTag>& result,
                           const NekMatrix<RhsInnerType, RhsMatrixType>& rhs,
-                          typename boost::enable_if
-                          <
-                            boost::mpl::and_
-                            <
-                                boost::is_same<typename RawType<typename NekMatrix<RhsInnerType, RhsMatrixType>::NumberType>::type, double>,
-                                CanGetRawPtr<NekMatrix<RhsInnerType, RhsMatrixType> >
-                            >
+                          typename std::enable_if<
+                              std::is_same<typename RawType<typename NekMatrix<RhsInnerType, RhsMatrixType>::NumberType>::type, double>::value
+                              && CanGetRawPtr<NekMatrix<RhsInnerType, RhsMatrixType> >::value
                           >::type* t = 0)
     {
         ASSERTL0(result.GetType() == eFULL && rhs.GetType() == eFULL, "Only full matrices supported.");
@@ -197,13 +188,10 @@ namespace Nektar
     template<typename DataType, typename RhsInnerType, typename RhsMatrixType>
     void MultiplyEqual(NekMatrix<DataType, StandardMatrixTag>& result,
                           const NekMatrix<RhsInnerType, RhsMatrixType>& rhs,
-                          typename boost::enable_if
+                          typename std::enable_if
                           <
-                            boost::mpl::or_
-                            <
-                                boost::mpl::not_<boost::is_same<typename RawType<typename NekMatrix<RhsInnerType, RhsMatrixType>::NumberType>::type, double> >,
-                                boost::mpl::not_<CanGetRawPtr<NekMatrix<RhsInnerType, RhsMatrixType> > >
-                            >
+                             !std::is_same<typename RawType<typename NekMatrix<RhsInnerType, RhsMatrixType>::NumberType>::type, double>::value ||
+                             !CanGetRawPtr<NekMatrix<RhsInnerType, RhsMatrixType> >::value
                           >::type* t = 0)
     {
         ASSERTL1(result.GetColumns() == rhs.GetRows(), std::string("A left side matrix with column count ") + 
@@ -232,11 +220,11 @@ namespace Nektar
 
 	template<typename LhsDataType, typename RhsDataType,
              typename LhsMatrixType, typename RhsMatrixType>
-    NekMatrix<typename boost::remove_const<typename NekMatrix<LhsDataType, LhsMatrixType>::NumberType>::type, StandardMatrixTag> 
+    NekMatrix<typename std::remove_const<typename NekMatrix<LhsDataType, LhsMatrixType>::NumberType>::type, StandardMatrixTag> 
     Multiply(const NekMatrix<LhsDataType, LhsMatrixType>& lhs,
                 const NekMatrix<RhsDataType, RhsMatrixType>& rhs)
     {
-        typedef typename boost::remove_const<typename NekMatrix<LhsDataType, LhsMatrixType>::NumberType>::type NumberType;
+        typedef typename std::remove_const<typename NekMatrix<LhsDataType, LhsMatrixType>::NumberType>::type NumberType;
         NekMatrix<NumberType, StandardMatrixTag> result(lhs.GetRows(), rhs.GetColumns());
         Multiply(result, lhs, rhs);
         return result;

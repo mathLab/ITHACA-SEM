@@ -93,7 +93,7 @@ namespace Nektar
                     typedef unsigned int difference_type;
                     typedef typename boost::call_traits<value_type>::reference reference;
                     typedef typename boost::call_traits<value_type>::const_reference const_reference;
-                    typedef typename boost::remove_reference<value_type>::type* pointer;
+                    typedef typename std::remove_reference<value_type>::type* pointer;
 
                 public:
                     iterator_impl(pointer d, pointer e, bool isEnd = false) :
@@ -186,7 +186,7 @@ namespace Nektar
                         }
                         else
                         {
-                            boost::tie(m_curRow, m_curColumn) =
+                            std::tie(m_curRow, m_curColumn) =
                                 m_matrix->Advance(m_curRow, m_curColumn, m_transpose);
                             if( m_curRow == std::numeric_limits<unsigned int>::max() )
                             {
@@ -315,7 +315,7 @@ namespace Nektar
                     m_numberOfSubDiagonals(std::numeric_limits<unsigned int>::max()),
                     m_tempSpace()
                 {
-                    boost::tuple<unsigned int, unsigned int, unsigned int> sizes  =
+                    std::tuple<unsigned int, unsigned int, unsigned int> sizes  =
                             MatrixSize<expt::Node<L, Op, R>, typename expt::Node<L, Op, R>::Indices, 0>::GetRequiredSize(rhs.GetData());
                             
                     unsigned int rows = sizes.get<0>();
@@ -380,7 +380,7 @@ namespace Nektar
 					{
                         // If the matrix is not wrapped, then we are free to resize as necessary.
 
-						boost::tuple<unsigned int, unsigned int, unsigned int> sizes = 
+						std::tuple<unsigned int, unsigned int, unsigned int> sizes = 
                         MatrixSize<expt::Node<L, Op, R>, typename expt::Node<L, Op, R>::Indices, 0>::GetRequiredSize(rhs.GetData());
 						unsigned int rows = sizes.get<0>();
 						unsigned int columns = sizes.get<1>();
@@ -506,15 +506,15 @@ namespace Nektar
 
             LIB_UTILITIES_EXPORT PointerWrapper GetWrapperType() const;
 
-            LIB_UTILITIES_EXPORT boost::tuples::tuple<unsigned int, unsigned int> 
+            LIB_UTILITIES_EXPORT std::tuple<unsigned int, unsigned int> 
             Advance(unsigned int curRow, unsigned int curColumn) const;
             
-            LIB_UTILITIES_EXPORT boost::tuples::tuple<unsigned int, unsigned int> 
+            LIB_UTILITIES_EXPORT std::tuple<unsigned int, unsigned int> 
             Advance(unsigned int curRow, unsigned int curColumn, char transpose) const;
          
             LIB_UTILITIES_EXPORT static ThisType CreateWrapper(const ThisType& rhs);
             
-            LIB_UTILITIES_EXPORT static boost::shared_ptr<ThisType> CreateWrapper(const boost::shared_ptr<ThisType>& rhs);
+            LIB_UTILITIES_EXPORT static std::shared_ptr<ThisType> CreateWrapper(const std::shared_ptr<ThisType>& rhs);
 
             LIB_UTILITIES_EXPORT void SetSize(unsigned int rows, unsigned int cols);
 
@@ -620,7 +620,7 @@ namespace expt
         template<typename ArgVectorType>
         static Nektar::NekMatrix<DataType, Nektar::StandardMatrixTag> Apply(const ArgVectorType& tree)
         {
-            boost::tuple<unsigned int, unsigned int, unsigned int> sizes = 
+            std::tuple<unsigned int, unsigned int, unsigned int> sizes = 
                 Nektar::MatrixSize<NodeType, Indices, StartIndex>::GetRequiredSize(tree);
 
             unsigned int rows = sizes.get<0>();

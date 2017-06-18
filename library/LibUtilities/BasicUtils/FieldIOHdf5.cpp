@@ -34,7 +34,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include <LibUtilities/BasicUtils/FieldIOHdf5.h>
-#include <boost/unordered_set.hpp>
+#include <unordered_set>
+#include <functional>
 
 namespace berrc = boost::system::errc;
 
@@ -414,7 +415,7 @@ void FieldIOHdf5::v_Write(const std::string &outFile,
             cnts[ORDER_CNT_IDX] += fielddefs[f]->m_numModes.size();
         }
 
-        boost::hash<std::string> string_hasher;
+        std::hash<std::string> string_hasher;
         std::stringstream fieldNameStream;
         uint64_t fieldDefHash = string_hasher(hashStream.str());
 
@@ -883,7 +884,7 @@ void FieldIOHdf5::v_Import(const std::string &infilename,
 
     // Open the root group of the hdf5 file
     H5DataSourceSharedPtr h5 =
-        boost::static_pointer_cast<H5DataSource>(dataSource);
+        std::static_pointer_cast<H5DataSource>(dataSource);
     ASSERTL1(h5, prfx.str() + "cannot open HDF5 file.");
     H5::GroupSharedPtr root = h5->Get()->OpenGroup("NEKTAR");
     ASSERTL1(root, prfx.str() + "cannot open root group.");
@@ -934,7 +935,7 @@ void FieldIOHdf5::v_Import(const std::string &infilename,
 
     ids_dset->Read(ids, ids_fspace, readPL);
 
-    boost::unordered_set<uint64_t> toread;
+    std::unordered_set<uint64_t> toread;
     if (ElementIDs != NullInt1DArray)
     {
         for (uint64_t i = 0; i < ElementIDs.num_elements(); ++i)
@@ -1314,7 +1315,7 @@ void FieldIOHdf5::ImportHDF5FieldMetaData(DataSourceSharedPtr dataSource,
                                           FieldMetaDataMap &fieldmetadatamap)
 {
     H5DataSourceSharedPtr hdf =
-        boost::static_pointer_cast<H5DataSource>(dataSource);
+        std::static_pointer_cast<H5DataSource>(dataSource);
 
     H5::GroupSharedPtr master = hdf->Get()->OpenGroup("NEKTAR");
     // New metadata format only in HDF

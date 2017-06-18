@@ -37,10 +37,6 @@ TARGET_LINK_LIBRARIES(SteadyLinearAdvectionReaction2D ${LinkLibraries})
 #TARGET_LINK_LIBRARIES(EigValsLinearAdvection2D ${LinkLibraries})
 #SET_LAPACK_LINK_LIBRARIES(EigValsLinearAdvection2D)
 
-SET(PostProcessingSource  PostProcessing.cpp)
-ADD_NEKTAR_EXECUTABLE(PostProcessing extra-demos PostProcessingSource)
-TARGET_LINK_LIBRARIES(PostProcessing ${LinkLibraries})
-
 ADD_NEKTAR_TEST(ProjectionCont2D_P7)
 
 IF (NEKTAR_USE_MPI)

@@ -339,13 +339,13 @@ void CommMpi::v_SplitComm(int pRows, int pColumns)
     // the same communicator. The rank within this communicator is the
     // column index.
     MPI_Comm_split(m_comm, myRow, myCol, &newComm);
-    m_commRow = boost::shared_ptr<Comm>(new CommMpi(newComm));
+    m_commRow = std::shared_ptr<Comm>(new CommMpi(newComm));
 
     // Split Comm into columns - all processes with same myCol are put
     // in the same communicator. The rank within this communicator is
     // the row index.
     MPI_Comm_split(m_comm, myCol, myRow, &newComm);
-    m_commColumn = boost::shared_ptr<Comm>(new CommMpi(newComm));
+    m_commColumn = std::shared_ptr<Comm>(new CommMpi(newComm));
 }
 
 /**
@@ -362,12 +362,12 @@ CommSharedPtr CommMpi::v_CommCreateIf(int flag)
     if (flag == 0)
     {
         // flag == 0 => get back MPI_COMM_NULL, return a null ptr instead.
-        return boost::shared_ptr<Comm>();
+        return std::shared_ptr<Comm>();
     }
     else
     {
         // Return a real communicator
-        return boost::shared_ptr<Comm>(new CommMpi(newComm));
+        return std::shared_ptr<Comm>(new CommMpi(newComm));
     }
 }
 }

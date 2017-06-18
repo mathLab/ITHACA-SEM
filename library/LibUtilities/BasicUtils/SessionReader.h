@@ -38,6 +38,7 @@
 
 #include <map>
 #include <string>
+#include <memory>
 
 #include <LibUtilities/Communication/Comm.h>
 #include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
@@ -45,7 +46,6 @@
 #include <LibUtilities/Interpreter/AnalyticExpressionEvaluator.hpp>
 
 #include <boost/algorithm/string.hpp>
-#include <boost/enable_shared_from_this.hpp>
 #include <boost/program_options/variables_map.hpp>
 
 class TiXmlElement;
@@ -98,7 +98,7 @@ namespace Nektar
         };
 
         class Equation;
-        typedef boost::shared_ptr<Equation> EquationSharedPtr;
+        typedef std::shared_ptr<Equation> EquationSharedPtr;
 
         typedef std::map<int, std::vector<unsigned int> > CompositeOrdering;
         typedef std::map<int, std::vector<unsigned int> > BndRegionOrdering;
@@ -117,11 +117,10 @@ namespace Nektar
             FunctionMap;
 
         class SessionReader;
-        typedef boost::shared_ptr<SessionReader> SessionReaderSharedPtr;
+        typedef std::shared_ptr<SessionReader> SessionReaderSharedPtr;
 
         /// Reads and parses information from a Nektar++ XML session file.
-        class SessionReader :
-            public boost::enable_shared_from_this<SessionReader>
+        class SessionReader : public std::enable_shared_from_this<SessionReader>
         {
         public:
             /// Support creation through MemoryManager.

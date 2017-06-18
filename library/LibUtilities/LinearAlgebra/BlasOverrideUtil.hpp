@@ -37,47 +37,40 @@
 #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
 
 #include <ExpressionTemplates/Node.hpp>
-#include <boost/type_traits.hpp>
-#include <boost/utility/enable_if.hpp>
+#include <type_traits>
 
 namespace expt
 {
     template<typename NodeType, template <typename> class LhsTest, typename TestOpType,
         template <typename> class RhsTest, typename enabled=void>
-    struct TestBinaryNode : public boost::false_type {};
+    struct TestBinaryNode : public std::false_type {};
 
     template<typename L, typename OpType, typename R, template <typename> class LhsTest,
         typename TestOpType, template <typename> class RhsTest>
     struct TestBinaryNode<Node<L, OpType, R>, LhsTest, TestOpType, RhsTest,
-        typename boost::enable_if
+        typename std::enable_if
         <
-            boost::mpl::and_
-            <
-                boost::is_same<OpType, TestOpType>,
-                LhsTest<typename L::ResultType>,
-                RhsTest<typename R::ResultType>
-            >
-        >::type> : public boost::true_type {};
+            std::is_same<OpType, TestOpType>::value &&
+            LhsTest<typename L::ResultType> &&
+            RhsTest<typename R::ResultType>
+        >::type> : public std::true_type {};
 
     template<typename NodeType, template <typename> class T1Type, typename TestOp1Type, template <typename> class T2Type,
         typename TestOp2Type, template <typename> class T3Type, typename enabled=void>
-    struct Test3ArgumentAssociativeNode : public boost::false_type {};
+    struct Test3ArgumentAssociativeNode : public std::false_type {};
 
     template<typename A1, typename Op1Type, typename A2, typename Op2Type, typename A3,
              template <typename> class T1Type, typename TestOp1Type, template <typename> class T2Type, typename TestOp2Type,
              template <typename> class T3Type>
     struct Test3ArgumentAssociativeNode<Node<Node<A1, Op1Type, A2>, Op2Type, A3>, T1Type, TestOp1Type, T2Type, TestOp2Type, T3Type,
-        typename boost::enable_if
+        typename std::enable_if
         <
-            boost::mpl::and_
-            <
-                boost::is_same<Op1Type, TestOp1Type>,
-                boost::is_same<Op2Type, TestOp2Type>,
-                T1Type<typename A1::ResultType>,
-                T2Type<typename A2::ResultType>,
-                T3Type<typename A3::ResultType>
-            >
-        >::type> : public boost::true_type {};
+            std::is_same<Op1Type, TestOp1Type>::value &&
+            std::is_same<Op2Type, TestOp2Type>::value &&
+            T1Type<typename A1::ResultType> &&
+            T2Type<typename A2::ResultType> &&
+            T3Type<typename A3::ResultType>
+        >::type> : public std::true_type {};
 
 }
 

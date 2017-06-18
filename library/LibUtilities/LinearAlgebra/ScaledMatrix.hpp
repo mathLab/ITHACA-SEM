@@ -52,7 +52,7 @@ namespace Nektar
             typedef ConstMatrix<DataType> BaseType;
             typedef NekMatrix<DataType, InnerMatrixType> InnerType;
             typedef NekMatrix<InnerType, ScaledMatrixTag> ThisType;
-            typedef typename boost::remove_const<typename InnerType::NumberType>::type NumberType;
+            typedef typename std::remove_const<typename InnerType::NumberType>::type NumberType;
             
             typedef NumberType GetValueType;
             typedef NumberType ConstGetValueType;
@@ -110,7 +110,7 @@ namespace Nektar
             LIB_UTILITIES_EXPORT NekMatrix() ;
             
             LIB_UTILITIES_EXPORT NekMatrix(typename boost::call_traits<NumberType>::const_reference scale,
-                      boost::shared_ptr<const InnerType> m);
+                      std::shared_ptr<const InnerType> m);
             
             LIB_UTILITIES_EXPORT NekMatrix(const ThisType& rhs);
 
@@ -127,7 +127,7 @@ namespace Nektar
             
             LIB_UTILITIES_EXPORT const NumberType* GetRawPtr() const;
             
-            LIB_UTILITIES_EXPORT boost::shared_ptr<const InnerType> GetOwnedMatrix() const;
+            LIB_UTILITIES_EXPORT std::shared_ptr<const InnerType> GetOwnedMatrix() const;
             
             LIB_UTILITIES_EXPORT unsigned int GetNumberOfSubDiagonals() const;
             LIB_UTILITIES_EXPORT unsigned int GetNumberOfSuperDiagonals() const;
@@ -137,7 +137,7 @@ namespace Nektar
             
             LIB_UTILITIES_EXPORT static ThisType CreateWrapper(const ThisType& rhs);
             
-            LIB_UTILITIES_EXPORT static boost::shared_ptr<ThisType> CreateWrapper(const boost::shared_ptr<ThisType>& rhs);
+            LIB_UTILITIES_EXPORT static std::shared_ptr<ThisType> CreateWrapper(const std::shared_ptr<ThisType>& rhs);
             
         public:
         
@@ -149,7 +149,7 @@ namespace Nektar
             
             LIB_UTILITIES_EXPORT virtual char v_GetTransposeFlag() const;
 
-            boost::shared_ptr<const InnerType> m_matrix;
+            std::shared_ptr<const InnerType> m_matrix;
             NumberType m_scale;
     };
 

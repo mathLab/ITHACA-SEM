@@ -44,7 +44,6 @@
 
 #include <LibUtilities/LinearAlgebra/NekVectorMetadata.hpp>
 #include <LibUtilities/LinearAlgebra/NekVectorFwd.hpp>
-#include <LibUtilities/LinearAlgebra/NekVectorConstantSized.hpp>
 #include <LibUtilities/LinearAlgebra/NekVectorVariableSized.hpp>
 #include <LibUtilities/LinearAlgebra/PointerWrapper.h>
 
@@ -56,8 +55,9 @@
 #include <algorithm>
 #include <math.h>
 
+
+#include <type_traits>
 #include <boost/call_traits.hpp>
-#include <boost/type_traits.hpp>
 #include <boost/shared_array.hpp>
 #include <boost/typeof/typeof.hpp>
 
@@ -106,7 +106,7 @@ namespace Nektar
                 template<typename L, typename Op, typename R>
                 NekVector<DataType>& operator=(const expt::Node<L, Op, R>& rhs)
                 {
-                    boost::tuple<unsigned int, unsigned int, unsigned int> sizes =
+                    std::tuple<unsigned int, unsigned int, unsigned int> sizes =
                             MatrixSize<expt::Node<L, Op, R>, typename expt::Node<L, Op, R>::Indices, 0>::GetRequiredSize(rhs.GetData());
                     unsigned int newRows = sizes.get<0>();
 
@@ -446,7 +446,7 @@ namespace expt
         template<typename ArgVectorType>
         static Nektar::NekVector<DataType> Apply(const ArgVectorType& tree)
         {
-            boost::tuple<unsigned int, unsigned int, unsigned int> sizes =
+            std::tuple<unsigned int, unsigned int, unsigned int> sizes =
                 Nektar::MatrixSize<NodeType, Indices, StartIndex>::GetRequiredSize(tree);
 
             unsigned int rows = sizes.get<0>();
@@ -458,20 +458,20 @@ namespace expt
     // Optimal execution is obtained by loop unrolling.
 
     template<typename NodeType, typename enabled = void>
-    struct NodeCanUnroll : public boost::false_type {};
+    struct NodeCanUnroll : public std::false_type {};
 
     template<typename Type>
     struct NodeCanUnroll<expt::Node<Type, void, void>,
-        typename boost::enable_if
+        typename std::enable_if
         <
             Nektar::IsVector<typename expt::Node<Type, void, void>::ResultType>
-        >::type > : public boost::true_type
+        >::type > : public std::true_type
     {
     };
         
     template<typename LhsType, typename OpType, typename RhsType>
     struct NodeCanUnroll<expt::Node<LhsType, OpType, RhsType>,
-        typename boost::enable_if
+        typename std::enable_if
         <
             boost::mpl::and_
             <
@@ -479,12 +479,7 @@ namespace expt
                 Nektar::IsVector<typename RhsType::ResultType>,
                 NodeCanUnroll<LhsType>,
                 NodeCanUnroll<RhsType>,
-                //boost::mpl::or_
-                //<
-                    boost::is_same<OpType, expt::AddOp>
-                //    boost::is_same<OpType, expt::SubtractOp>
-                //>
-        > >::type >: public boost::true_type
+        > >::type >: public std::true_type
     {
     };
 
@@ -563,97 +558,16 @@ namespace expt
 
     BOOST_PP_REPEAT_FROM_TO(2, NEKTAR_NEKVECTOR_MAX_UNROLL_ARGS, NEKTAR_NEKVECTOR_UNROLL_IMPL, Unroll);
 
-    //template<typename IndicesType, unsigned int startIndex, unsigned int endIndex>
-    //struct Unroll<IndicesType, startIndex, endIndex,
-    //    typename boost::enable_if_c
-    //    <
-    //        endIndex-startIndex == 2u
-    //    >::type>
-    //{
-    //    static const unsigned int index0 = boost::mpl::at_c<IndicesType, startIndex>::type::value;
-    //    static const unsigned int index1 = boost::mpl::at_c<IndicesType, startIndex+1>::type::value;
-    //    ;
-    //    template<typename AccumulatorType, typename ArgumentVectorType>
-    //    static inline void Execute(AccumulatorType& accumulator, const ArgumentVectorType& args)
-    //    {
-    //        BOOST_AUTO(a, accumulator.GetRawPtr());
-    //        BOOST_AUTO(t0, boost::fusion::at_c<index0>(args).GetRawPtr());
-    //        BOOST_AUTO(t1, boost::fusion::at_c<index1>(args).GetRawPtr());
-
-    //        const unsigned int r = accumulator.GetRows();
-    //        for(unsigned int i = 0; i < r; ++i)
-    //        {
-    //            accumulator[i] = t0[i] + t1[i];
-    //        }
-    //    }
-    //};
-
-    //template<typename IndicesType, unsigned int startIndex, unsigned int endIndex>
-    //struct Unroll<IndicesType, startIndex, endIndex,
-    //    typename boost::enable_if_c
-    //    <
-    //        endIndex-startIndex == 3u
-    //    >::type>
-    //{
-    //    static const unsigned int index0 = boost::mpl::at_c<IndicesType, startIndex>::type::value;
-    //    static const unsigned int index1 = boost::mpl::at_c<IndicesType, startIndex+1>::type::value;
-    //    static const unsigned int index2 = boost::mpl::at_c<IndicesType, startIndex+2>::type::value;
-
-    //    template<typename AccumulatorType, typename ArgumentVectorType>
-    //    static inline void Execute(AccumulatorType& accumulator, const ArgumentVectorType& args)
-    //    {
-    //        BOOST_AUTO(a, accumulator.GetRawPtr());
-    //        BOOST_AUTO(t0, boost::fusion::at_c<index0>(args).GetRawPtr());
-    //        BOOST_AUTO(t1, boost::fusion::at_c<index1>(args).GetRawPtr());
-    //        BOOST_AUTO(t2, boost::fusion::at_c<index2>(args).GetRawPtr());
-
-    //        const unsigned int r = accumulator.GetRows();
-    //        for(unsigned int i = 0; i < r; ++i)
-    //        {
-    //            accumulator[i] = t0[i] + t1[i] + t2[i];
-    //        }
-    //    }
-    //};
-
-    //template<typename IndicesType, unsigned int startIndex, unsigned int endIndex>
-    //struct Unroll<IndicesType, startIndex, endIndex,
-    //    typename boost::enable_if_c
-    //    <
-    //        endIndex-startIndex == 4u
-    //    >::type>
-    //{
-    //    static const unsigned int index0 = boost::mpl::at_c<IndicesType, startIndex>::type::value;
-    //    static const unsigned int index1 = boost::mpl::at_c<IndicesType, startIndex+1>::type::value;
-    //    static const unsigned int index2 = boost::mpl::at_c<IndicesType, startIndex+2>::type::value;
-    //    static const unsigned int index3 = boost::mpl::at_c<IndicesType, startIndex+3>::type::value;
-
-    //    template<typename AccumulatorType, typename ArgumentVectorType>
-    //    static inline void Execute(AccumulatorType& accumulator, const ArgumentVectorType& args)
-    //    {
-    //        BOOST_AUTO(a, accumulator.GetRawPtr());
-    //        BOOST_AUTO(t0, boost::fusion::at_c<index0>(args).GetRawPtr());
-    //        BOOST_AUTO(t1, boost::fusion::at_c<index1>(args).GetRawPtr());
-    //        BOOST_AUTO(t2, boost::fusion::at_c<index2>(args).GetRawPtr());
-    //        BOOST_AUTO(t3, boost::fusion::at_c<index3>(args).GetRawPtr());
-
-    //        const unsigned int r = accumulator.GetRows();
-    //        for(unsigned int i = 0; i < r; ++i)
-    //        {
-    //            accumulator[i] = t0[i] + t1[i] + t2[i] + t3[i];
-    //        }
-    //    }
-    //};
-
         // Conditions
         // Lhs and Rhs must result in a vector.
         // Op must be Plus or Minus
         // Must apply recursively.
     template<typename LhsType, typename Op, typename RhsType, typename IndicesType, unsigned int index>
     struct BinaryBinaryEvaluateNodeOverride<LhsType, Op, RhsType, IndicesType, index,
-        typename boost::enable_if
+        typename std::enable_if
         <
             NodeCanUnroll<expt::Node<LhsType, Op, RhsType> >
-        >::type> : public boost::true_type 
+        >::type> : public std::true_type 
     {
         static const int endIndex = index + LhsType::TotalCount + RhsType::TotalCount;
 

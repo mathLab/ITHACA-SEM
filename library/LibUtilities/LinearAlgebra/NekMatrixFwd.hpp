@@ -42,8 +42,7 @@
 #include <LibUtilities/LinearAlgebra/MatrixStorageType.h>
 #include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
 
-#include <boost/shared_ptr.hpp>
-#include <boost/type_traits.hpp>
+#include <type_traits>
 
 #include <boost/typeof/typeof.hpp>
 #include  BOOST_TYPEOF_INCREMENT_REGISTRATION_GROUP()
@@ -68,9 +67,9 @@ namespace Nektar
     template<typename DataType>
     class NekMatrix<DataType, StandardMatrixTag>;
     
-    typedef boost::shared_ptr<NekMatrix<NekDouble, StandardMatrixTag> > SharedNekMatrixPtr;
+    typedef std::shared_ptr<NekMatrix<NekDouble, StandardMatrixTag> > SharedNekMatrixPtr;
     typedef NekMatrix<NekMatrix<NekDouble, StandardMatrixTag>, ScaledMatrixTag> DNekScalMat;
-    typedef boost::shared_ptr<DNekScalMat> DNekScalMatSharedPtr;
+    typedef std::shared_ptr<DNekScalMat> DNekScalMatSharedPtr;
     
     // Type registration must occur for the expression template machinery to 
     // automatically detect the types of matrix operations.
@@ -78,57 +77,18 @@ namespace Nektar
     
 #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
     template<typename T>
-    struct IsMatrix : public boost::false_type {};
+    struct IsMatrix : public std::false_type {};
     
     template<typename DataType, typename MatrixType>
-    struct IsMatrix<NekMatrix<DataType, MatrixType> > : public boost::true_type {};
+    struct IsMatrix<NekMatrix<DataType, MatrixType> > : public std::true_type {};
     
     template<typename DataType>
-    struct IsMatrix<ConstMatrix<DataType> > : public boost::true_type {};
+    struct IsMatrix<ConstMatrix<DataType> > : public std::true_type {};
     
     template<typename DataType>
-    struct IsMatrix<Matrix<DataType> > : public boost::true_type {};
+    struct IsMatrix<Matrix<DataType> > : public std::true_type {};
 #endif
     
 };
     
 #endif //NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_NEK_MATRIX_FWD_HPP
-
-/**
-    $Log: NekMatrixFwd.hpp,v $
-    Revision 1.15  2008/03/09 22:39:29  bnelson
-    Added IsMatrix.
-
-    Revision 1.14  2007/08/16 02:08:12  bnelson
-    Removed typeof registration
-
-    Revision 1.13  2007/07/25 23:47:45  bnelson
-    *** empty log message ***
-
-    Revision 1.12  2007/07/22 23:03:28  bnelson
-    Backed out Nektar::ptr.
-
-    Revision 1.11  2007/07/20 00:24:13  bnelson
-    Replaced boost::shared_ptr with Nektar::ptr
-
-    Revision 1.10  2007/07/12 04:04:14  bnelson
-    *** empty log message ***
-
-    Revision 1.9  2007/06/24 17:59:33  bnelson
-    *** empty log message ***
-
-    Revision 1.8  2007/06/10 23:42:15  bnelson
-    Matrix updates.
-
-    Revision 1.7  2007/03/29 18:59:05  bnelson
-    Refactoring in preparation for scaled matrices.  Fixed transpose problem.
-
-    Revision 1.6  2007/02/15 06:56:55  bnelson
-    *** empty log message ***
-
-    Revision 1.5  2006/12/17 22:36:35  bnelson
-    Removed Macintosh line endings.
-
-**/
-
-

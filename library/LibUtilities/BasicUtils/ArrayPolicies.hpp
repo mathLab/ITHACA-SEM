@@ -37,11 +37,13 @@
 #ifndef NEKTAR_LIB_UTILITIES_BASIC_UTILS_ARRAY_POLICIES_HPP
 #define NEKTAR_LIB_UTILITIES_BASIC_UTILS_ARRAY_POLICIES_HPP
 
+#include <type_traits>
+#include <memory>
+#include <functional>
+
 #include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
-#include <boost/shared_ptr.hpp>
 #include <boost/multi_array.hpp>
-#include <boost/bind.hpp>
 
 namespace Nektar
 {
@@ -51,8 +53,9 @@ namespace Nektar
     /// \internal
     /// \brief Does nothing.
     template<typename ObjectType>
-    class ArrayInitializationPolicy<ObjectType, 
-                                typename boost::enable_if<boost::is_fundamental<ObjectType> >::type >
+    class ArrayInitializationPolicy<
+        ObjectType,
+        typename std::enable_if<std::is_fundamental<ObjectType>::value>::type >
     {
         public:
             static void Initialize(ObjectType* data, unsigned int itemsToCreate)
@@ -81,8 +84,9 @@ namespace Nektar
     ///
     /// 
     template<typename ObjectType>
-    class ArrayInitializationPolicy<ObjectType, 
-                                typename boost::disable_if<boost::is_fundamental<ObjectType> >::type >
+    class ArrayInitializationPolicy<
+        ObjectType,
+        typename std::enable_if<!std::is_fundamental<ObjectType>::value>::type>
     {
         public:
             /// \brief Initalize each element in the array with ObjectType's default constructor.
@@ -91,7 +95,8 @@ namespace Nektar
             static void Initialize(ObjectType* data, unsigned int itemsToCreate)
             {
                 DoInitialization(data, itemsToCreate, 
-                                    boost::bind(&ArrayInitializationPolicy<ObjectType>::DefaultConstructionWithPlacementNew, _1));
+                                 std::bind(&ArrayInitializationPolicy<ObjectType>::DefaultConstructionWithPlacementNew,
+                                           std::placeholders::_1));
             }
             
             /// \brief Initalize each element in the array with ObjectType's copy constructor.
@@ -101,13 +106,13 @@ namespace Nektar
             static void Initialize(ObjectType* data, unsigned int itemsToCreate, const ObjectType& initValue)
             {
                 DoInitialization(data, itemsToCreate, 
-                                    boost::bind(&ArrayInitializationPolicy<ObjectType>::CopyConstructionWithPlacementNew, _1, boost::ref(initValue)));
+                                 std::bind(&ArrayInitializationPolicy<ObjectType>::CopyConstructionWithPlacementNew, std::placeholders::_1, std::ref(initValue)));
             }
 
             static void Initialize(ObjectType* data, unsigned int itemsToCreate, const ObjectType* initValue)
             {
                 DoInitialization(data, itemsToCreate, 
-                        boost::bind(&ArrayInitializationPolicy<ObjectType>::CopyConstructionFromArray, _1, boost::ref(initValue)));
+                                 std::bind(&ArrayInitializationPolicy<ObjectType>::CopyConstructionFromArray, std::placeholders::_1, std::ref(initValue)));
             }
             
             private:
@@ -157,8 +162,8 @@ namespace Nektar
     class ArrayDestructionPolicy;
     
     template<typename ObjectType>
-    class ArrayDestructionPolicy<ObjectType, 
-                            typename boost::enable_if<boost::is_fundamental<ObjectType> >::type >
+    class ArrayDestructionPolicy<ObjectType,
+                                 typename std::enable_if<std::is_fundamental<ObjectType>::value>::type>
     {
         public:
             static void Destroy(ObjectType* data, unsigned int itemsToDestroy)
@@ -167,8 +172,8 @@ namespace Nektar
     };
     
     template<typename ObjectType>
-    class ArrayDestructionPolicy<ObjectType, 
-                            typename boost::disable_if<boost::is_fundamental<ObjectType> >::type >
+    class ArrayDestructionPolicy<ObjectType,
+                                 typename std::enable_if<!std::is_fundamental<ObjectType>::value>::type>
     {
         public:
             static void Destroy(ObjectType* data, unsigned int itemsToDestroy)
@@ -189,7 +194,7 @@ namespace Nektar
     }
     
     template<typename Dim, typename DataType, typename ExtentListType>
-    boost::shared_ptr<boost::multi_array_ref<DataType, Dim::Value> > 
+    std::shared_ptr<boost::multi_array_ref<DataType, Dim::Value> > 
     CreateStorage(const ExtentListType& extent)
     {
         typedef boost::multi_array_ref<DataType, Dim::Value> ArrayType;
@@ -197,12 +202,12 @@ namespace Nektar
             std::multiplies<unsigned int>());
         DataType* storage = MemoryManager<DataType>::RawAllocate(size);
         return MemoryManager<ArrayType>::AllocateSharedPtrD(
-                boost::bind(DeleteStorage<DataType>, storage, size),
+                std::bind(DeleteStorage<DataType>, storage, size),
                 storage, extent);
     }
     
     template<typename DataType>
-    boost::shared_ptr<boost::multi_array_ref<DataType, 1> >
+    std::shared_ptr<boost::multi_array_ref<DataType, 1> >
     CreateStorage(unsigned int d1)
     {
         std::vector<unsigned int> extents(1, d1);
@@ -210,7 +215,7 @@ namespace Nektar
     } 
     
     template<typename DataType>
-    boost::shared_ptr<boost::multi_array_ref<DataType, 2> >
+    std::shared_ptr<boost::multi_array_ref<DataType, 2> >
     CreateStorage(unsigned int d1, unsigned int d2)
     {
         unsigned int vals[]  = {d1, d2};
@@ -219,7 +224,7 @@ namespace Nektar
     }
     
     template<typename DataType>
-    boost::shared_ptr<boost::multi_array_ref<DataType, 3> >
+    std::shared_ptr<boost::multi_array_ref<DataType, 3> >
     CreateStorage(unsigned int d1, unsigned int d2, unsigned int d3)
     {
         unsigned int vals[]  = {d1, d2, d3};

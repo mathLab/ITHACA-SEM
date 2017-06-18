@@ -39,6 +39,7 @@
 #include <LibUtilities/BasicConst/GitRevision.h>
 
 #include <set>
+#include <cstdint>
 
 #ifdef NEKTAR_USE_MPI
 #include <mpi.h>
@@ -61,8 +62,8 @@ namespace LibUtilities
     {
         union
         {
-            boost::uint32_t value;
-            boost::uint8_t  data[sizeof(boost::uint32_t)];
+            std::uint32_t value;
+            std::uint8_t  data[sizeof(std::uint32_t)];
         } number;
 
         number.data[0] = 0x00;

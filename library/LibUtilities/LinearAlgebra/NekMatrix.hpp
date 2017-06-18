@@ -119,25 +119,25 @@ namespace Nektar
 namespace expt
 {
     template<typename T>
-    struct IsBlockMatrix : public boost::false_type {};
+    struct IsBlockMatrix : public std::false_type {};
 
     template<typename T>
-    struct IsBlockMatrix<Nektar::NekMatrix<T, Nektar::BlockMatrixTag> > : public boost::true_type {};
+    struct IsBlockMatrix<Nektar::NekMatrix<T, Nektar::BlockMatrixTag> > : public std::true_type {};
 
     template<typename DataType>
-    struct HasUnaryOp<NegateOp, DataType, typename boost::enable_if<IsBlockMatrix<DataType> >::type> : public boost::false_type {};
+    struct HasUnaryOp<NegateOp, DataType, typename std::enable_if<IsBlockMatrix<DataType> >::type> : public std::false_type {};
 
         template<typename LhsDataType, typename LhsMatrixType,
             typename RhsDataType, typename RhsMatrixType>
         struct CommutativeTraits<Nektar::NekMatrix<LhsDataType, LhsMatrixType> ,
-            expt::MultiplyOp, Nektar::NekMatrix<RhsDataType, RhsMatrixType> > : public boost::false_type
+            expt::MultiplyOp, Nektar::NekMatrix<RhsDataType, RhsMatrixType> > : public std::false_type
         {
         };
 
     template<typename LhsDataType, typename LhsMatrixType,
         typename RhsDataType>
     struct CommutativeTraits<Nektar::NekMatrix<LhsDataType, LhsMatrixType> ,
-        expt::MultiplyOp, Nektar::NekVector<RhsDataType> > : public boost::false_type
+        expt::MultiplyOp, Nektar::NekVector<RhsDataType> > : public std::false_type
     {
     };
 }

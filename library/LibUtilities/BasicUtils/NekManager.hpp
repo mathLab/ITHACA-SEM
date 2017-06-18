@@ -37,14 +37,14 @@
 #define NEKTAR_LIB_UTILITIES_BASIC_UTILS_NEK_MANAGER_HPP
 
 #include <map>
+#include <memory>
+#include <functional>
 
-#include <boost/function.hpp>
 #include <boost/call_traits.hpp>
 #include <boost/concept_check.hpp>
 #include <boost/thread/shared_mutex.hpp>
 #include <boost/thread/locks.hpp>
 
-#include <boost/shared_ptr.hpp>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 
 namespace Nektar
@@ -71,13 +71,13 @@ namespace Nektar
             public:
                 BOOST_CLASS_REQUIRE(KeyType, boost, LessThanComparableConcept);
 
-                typedef boost::shared_ptr<ValueT> ValueType;
-                typedef boost::function<ValueType (const KeyType& key)> CreateFuncType;
+                typedef std::shared_ptr<ValueT> ValueType;
+                typedef std::function<ValueType (const KeyType& key)> CreateFuncType;
                 typedef std::map<KeyType, ValueType> ValueContainer;
-                typedef boost::shared_ptr<ValueContainer> ValueContainerShPtr;
+                typedef std::shared_ptr<ValueContainer> ValueContainerShPtr;
                 typedef std::map<KeyType, CreateFuncType, opLessCreator> CreateFuncContainer;
-                typedef std::map<std::string, boost::shared_ptr<ValueContainer> > ValueContainerPool;
-                typedef boost::shared_ptr<bool> BoolSharedPtr;
+                typedef std::map<std::string, std::shared_ptr<ValueContainer> > ValueContainerPool;
+                typedef std::shared_ptr<bool> BoolSharedPtr;
                 typedef std::map<std::string, BoolSharedPtr> FlagContainerPool;
 
                 NekManager(std::string whichPool="") :

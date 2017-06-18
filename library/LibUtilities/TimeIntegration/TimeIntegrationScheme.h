@@ -51,10 +51,10 @@ namespace Nektar
         class TimeIntegrationSolution;
 
         // typedefs
-        typedef boost::shared_ptr<TimeIntegrationScheme>                TimeIntegrationSchemeSharedPtr;
+        typedef std::shared_ptr<TimeIntegrationScheme>                  TimeIntegrationSchemeSharedPtr;
         typedef std::vector<TimeIntegrationSchemeSharedPtr>             TimeIntegrationSchemeVector; 
         typedef std::vector<TimeIntegrationSchemeSharedPtr>::iterator   TimeIntegrationSchemeVectorIter; 
-        typedef boost::shared_ptr<TimeIntegrationSolution>              TimeIntegrationSolutionSharedPtr;
+        typedef std::shared_ptr<TimeIntegrationSolution>                TimeIntegrationSolutionSharedPtr;
         typedef std::vector<TimeIntegrationSolutionSharedPtr>           TimeIntegrationSolutionVector; 
         typedef std::vector<TimeIntegrationSolutionSharedPtr>::iterator TimeIntegrationSolutionVectorIter; 
 
@@ -165,8 +165,8 @@ namespace Nektar
             typedef const Array<OneD, const Array<OneD, NekDouble> > InArrayType;
             typedef       Array<OneD,       Array<OneD, NekDouble> > OutArrayType;
             
-            typedef boost::function< void (InArrayType&, OutArrayType&, const NekDouble) >                  FunctorType1;
-            typedef boost::function< void (InArrayType&, OutArrayType&, const NekDouble, const NekDouble) > FunctorType2;
+            typedef std::function< void (InArrayType&, OutArrayType&, const NekDouble) >                  FunctorType1;
+            typedef std::function< void (InArrayType&, OutArrayType&, const NekDouble, const NekDouble) > FunctorType2;
 
             typedef const FunctorType1& ConstFunctorType1Ref;
             typedef const FunctorType2& ConstFunctorType2Ref;
@@ -183,31 +183,36 @@ namespace Nektar
             template<typename FuncPointerT, typename ObjectPointerT> 
                 void DefineOdeRhs(FuncPointerT func, ObjectPointerT obj)
             {
-                m_functors1[0] =  boost::bind(func, obj, _1, _2, _3);
+                using namespace std::placeholders;
+                m_functors1[0] =  std::bind(func, obj, _1, _2, _3);
             }
 
             template<typename FuncPointerT, typename ObjectPointerT> 
                 void DefineOdeExplicitRhs(FuncPointerT func, ObjectPointerT obj)
             {
-                m_functors1[1] =  boost::bind(func, obj, _1, _2, _3);
+                using namespace std::placeholders;
+                m_functors1[1] =  std::bind(func, obj, _1, _2, _3);
             }
 
             template<typename FuncPointerT, typename ObjectPointerT> 
                 void DefineOdeImplicitRhs(FuncPointerT func, ObjectPointerT obj)
             {
-                m_functors1[2] =  boost::bind(func, obj, _1, _2, _3);
+                using namespace std::placeholders;
+                m_functors1[2] =  std::bind(func, obj, _1, _2, _3);
             }
 
             template<typename FuncPointerT, typename ObjectPointerT> 
                 void DefineProjection(FuncPointerT func, ObjectPointerT obj)
             {
-                m_functors1[3] =  boost::bind(func, obj, _1, _2, _3);
+                using namespace std::placeholders;
+                m_functors1[3] =  std::bind(func, obj, _1, _2, _3);
             }
 
             template<typename FuncPointerT, typename ObjectPointerT> 
                 void DefineImplicitSolve(FuncPointerT func, ObjectPointerT obj)
             {
-                m_functors2[0] =  boost::bind(func, obj, _1, _2, _3, _4);
+                using namespace std::placeholders;
+                m_functors2[0] =  std::bind(func, obj, _1, _2, _3, _4);
             }
 
             
@@ -368,8 +373,8 @@ namespace Nektar
                 typedef       Array<OneD,       Array<OneD, NekDouble> >               DoubleArray;
                 typedef const Array<OneD, const NekDouble >                            ConstSingleArray;
                 typedef       Array<OneD,       NekDouble >                            SingleArray;
-                typedef boost::function< void (ConstDoubleArray&, DoubleArray&, const NekDouble) >                  FunctorType1;
-                typedef boost::function< void (ConstDoubleArray&, DoubleArray&, const NekDouble, const NekDouble) > FunctorType2;
+                typedef std::function< void (ConstDoubleArray&, DoubleArray&, const NekDouble) >                  FunctorType1;
+                typedef std::function< void (ConstDoubleArray&, DoubleArray&, const NekDouble, const NekDouble) > FunctorType2;
 
         public:
 
@@ -552,7 +557,7 @@ namespace Nektar
             template <typename> friend class Nektar::MemoryManager;
             LIB_UTILITIES_EXPORT friend TimeIntegrationSchemeManagerT &TimeIntegrationSchemeManager(void);
 
-            LIB_UTILITIES_EXPORT static boost::shared_ptr<TimeIntegrationScheme> Create(const TimeIntegrationSchemeKey &key);
+            LIB_UTILITIES_EXPORT static std::shared_ptr<TimeIntegrationScheme> Create(const TimeIntegrationSchemeKey &key);
 
             TimeIntegrationScheme(const TimeIntegrationSchemeKey &key);
             

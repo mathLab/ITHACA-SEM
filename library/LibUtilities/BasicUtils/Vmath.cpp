@@ -131,7 +131,7 @@ namespace Vmath
     #undef EPS
     #undef RNMX
 
-    static boost::mutex mutex;
+    static std::mutex mutex;
     template LIB_UTILITIES_EXPORT Nektar::NekDouble ran2 (long* idum);
 
     /// \brief Fills a vector with white noise.
@@ -139,7 +139,7 @@ namespace Vmath
                                       const int incx, int outseed)
     {
         // Protect the static vars here and in ran2
-        boost::mutex::scoped_lock l(mutex);
+        std::unique_lock<std::mutex> l(mutex);
 
         // Define static variables for generating random numbers
         static int     iset = 0;

@@ -36,7 +36,6 @@
 #include <boost/asio/ip/host_name.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/date_time/posix_time/posix_time_io.hpp>
-#include <boost/make_shared.hpp>
 #include <boost/format.hpp>
 
 #include <LibUtilities/BasicConst/GitRevision.h>

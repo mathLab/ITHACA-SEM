@@ -36,9 +36,9 @@
 
 #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
 
+#include <type_traits>
+
 #include <ExpressionTemplates/ExpressionTemplates.hpp>
-#include <boost/utility/enable_if.hpp>
-#include <boost/type_traits.hpp>
 #include <LibUtilities/LinearAlgebra/CanGetRawPtr.hpp>
 #include <LibUtilities/LinearAlgebra/Blas.hpp>
 #include <LibUtilities/LinearAlgebra/BlasOverrideUtil.hpp>
@@ -210,31 +210,25 @@ namespace expt
         };
 
         template<typename T>
-        struct IsDouble : public boost::false_type{};
+        struct IsDouble : public std::false_type{};
 
         template<>
-        struct IsDouble<double> : public boost::true_type {};
+        struct IsDouble<double> : public std::true_type {};
         
     }
 
     namespace impl
     {
         template<typename NodeType, typename IndicesType, unsigned int index, typename enabled=void>
-        struct AlphaABParameterAccessImpl : public boost::false_type {};
+        struct AlphaABParameterAccessImpl : public std::false_type {};
 
         template<typename A1, typename A2, typename A3, typename IndicesType, unsigned int index>
         struct AlphaABParameterAccessImpl< Node<Node<A1, MultiplyOp, A2>, MultiplyOp, A3>, IndicesType, index,
-            typename boost::enable_if
+            typename std::enable_if
             <
                 Test3ArgumentAssociativeNode<Node<Node<A1, MultiplyOp, A2>, MultiplyOp, A3>, IsDouble, MultiplyOp,
                                              Nektar::CanGetRawPtr, MultiplyOp, Nektar::CanGetRawPtr>
-                //boost::mpl::and_    
-                //<
-                //    boost::is_same<typename A1::ResultType, double>,
-                //    CanGetRawPtr<typename A2::ResultType>,
-                //    CanGetRawPtr<typename A3::ResultType>
-                //>
-            >::type> : public boost::true_type
+            >::type> : public std::true_type
         {
             typedef DgemmNodeEvaluator<A1, IndicesType, index> AlphaWrappedEvaluator;
             typedef typename AlphaWrappedEvaluator::Evaluator AlphaEvaluator;
@@ -256,17 +250,11 @@ namespace expt
 
         template<typename A1, typename A2, typename A3, typename IndicesType, unsigned int index>
         struct AlphaABParameterAccessImpl< Node<Node<A1, MultiplyOp, A2>, MultiplyOp, A3>, IndicesType, index,
-            typename boost::enable_if
+            typename std::enable_if
             <
                 Test3ArgumentAssociativeNode<Node<Node<A1, MultiplyOp, A2>, MultiplyOp, A3>, Nektar::CanGetRawPtr, MultiplyOp,
                                              IsDouble, MultiplyOp, Nektar::CanGetRawPtr>
-                //boost::mpl::and_    
-                //<
-                //    CanGetRawPtr<typename A1::ResultType>,
-                //    boost::is_same<typename A2::ResultType, double>,
-                //    CanGetRawPtr<typename A3::ResultType>
-                //>
-            >::type> : public boost::true_type
+            >::type> : public std::true_type
         {
             typedef DgemmNodeEvaluator<A1, IndicesType, index> AWrappedEvaluator;
             typedef typename AWrappedEvaluator::Evaluator AEvaluator;
@@ -288,17 +276,11 @@ namespace expt
 
         template<typename A1, typename A2, typename A3, typename IndicesType, unsigned int index>
         struct AlphaABParameterAccessImpl< Node<Node<A1, MultiplyOp, A2>, MultiplyOp, A3>, IndicesType, index,
-            typename boost::enable_if
+            typename std::enable_if
             <
                 Test3ArgumentAssociativeNode<Node<Node<A1, MultiplyOp, A2>, MultiplyOp, A3>, Nektar::CanGetRawPtr, MultiplyOp,
                                              Nektar::CanGetRawPtr, MultiplyOp, IsDouble>
-                //boost::mpl::and_    
-                //<
-                //    CanGetRawPtr<typename A1::ResultType>,
-                //    CanGetRawPtr<typename A2::ResultType>,
-                //    boost::is_same<typename A3::ResultType, double>
-                //>
-            >::type> : public boost::true_type
+            >::type> : public std::true_type
         {
             typedef DgemmNodeEvaluator<A1, IndicesType, index> AWrappedEvaluator;
             typedef typename AWrappedEvaluator::Evaluator AEvaluator;
@@ -321,22 +303,13 @@ namespace expt
         // Plain M*M
         template<typename A1, typename A2, typename IndicesType, unsigned int index>
         struct AlphaABParameterAccessImpl< Node<A1, MultiplyOp, A2>, IndicesType, index,
-            typename boost::enable_if
+            typename std::enable_if
             <
-                boost::mpl::and_
-                <
-                    TestBinaryNode<Node<A1, MultiplyOp, A2>, Nektar::CanGetRawPtr, MultiplyOp, Nektar::CanGetRawPtr>,
-                    boost::mpl::not_<Test3ArgumentAssociativeNode<Node<A1, MultiplyOp, A2>, Nektar::CanGetRawPtr, MultiplyOp, Nektar::CanGetRawPtr, MultiplyOp, IsDouble> >,
-                    boost::mpl::not_<Test3ArgumentAssociativeNode<Node<A1, MultiplyOp, A2>, Nektar::CanGetRawPtr, MultiplyOp, IsDouble, MultiplyOp, Nektar::CanGetRawPtr> >,
-                    boost::mpl::not_<Test3ArgumentAssociativeNode<Node<A1, MultiplyOp, A2>, IsDouble, MultiplyOp, Nektar::CanGetRawPtr, MultiplyOp, Nektar::CanGetRawPtr> >
-                >
-                //boost::mpl::and_
-                //<
-                //    CanGetRawPtr<typename A1::ResultType>,
-                //    CanGetRawPtr<typename A2::ResultType>,
-                //    boost::is_same<typename A3::ResultType, double>
-                //>
-            >::type> : public boost::true_type
+                TestBinaryNode<Node<A1, MultiplyOp, A2>, Nektar::CanGetRawPtr, MultiplyOp, Nektar::CanGetRawPtr>::value &&
+                !Test3ArgumentAssociativeNode<Node<A1, MultiplyOp, A2>, Nektar::CanGetRawPtr, MultiplyOp, Nektar::CanGetRawPtr, MultiplyOp, IsDouble>::value &&
+                !Test3ArgumentAssociativeNode<Node<A1, MultiplyOp, A2>, Nektar::CanGetRawPtr, MultiplyOp, IsDouble, MultiplyOp, Nektar::CanGetRawPtr>::value &&
+                !Test3ArgumentAssociativeNode<Node<A1, MultiplyOp, A2>, IsDouble, MultiplyOp, Nektar::CanGetRawPtr, MultiplyOp, Nektar::CanGetRawPtr>::value
+            >::type> : public std::true_type
         {
             typedef DgemmNodeEvaluator<A1, IndicesType, index> AWrappedEvaluator;
             typedef typename AWrappedEvaluator::Evaluator AEvaluator;
@@ -370,10 +343,10 @@ namespace expt
         
 
         template<typename NodeType, typename IndicesType, unsigned int index, typename enabled=void>
-        struct BetaCParameterAccessImpl : public boost::false_type {};
+        struct BetaCParameterAccessImpl : public std::false_type {};
 
         template<typename T, typename IndicesType, unsigned int index>
-        struct BetaCParameterAccessImpl< Node<T, void, void>, IndicesType, index> : public boost::true_type
+        struct BetaCParameterAccessImpl< Node<T, void, void>, IndicesType, index> : public std::true_type
         {
             typedef Node<T, void, void> NodeType;
             typedef DgemmNodeEvaluator<NodeType, IndicesType, index> CWrappedEvaluator;
@@ -388,14 +361,11 @@ namespace expt
 
         template<typename L, typename R, typename IndicesType, unsigned int index>
         struct BetaCParameterAccessImpl< Node<L, expt::MultiplyOp, R>, IndicesType, index, 
-            typename boost::enable_if
+            typename std::enable_if
             <
-                boost::mpl::and_    
-                <
-                Nektar::CanGetRawPtr<typename L::ResultType>,
-                    boost::is_same<typename R::ResultType, double>
-                >
-            >::type> : public boost::true_type
+                Nektar::CanGetRawPtr<typename L::ResultType>::value &&
+                std::is_same<typename R::ResultType, double>::value
+            >::type> : public std::true_type
         {
             typedef DgemmNodeEvaluator<L, IndicesType, index> CWrappedEvaluator;
             typedef typename CWrappedEvaluator::Evaluator CEvaluator;
@@ -413,14 +383,11 @@ namespace expt
 
         template<typename L, typename R, typename IndicesType, unsigned int index>
         struct BetaCParameterAccessImpl< Node<L, expt::MultiplyOp, R>, IndicesType, index, 
-            typename boost::enable_if
+            typename std::enable_if
             <
-                boost::mpl::and_    
-                <
-                    Nektar::CanGetRawPtr<typename R::ResultType>,
-                    boost::is_same<typename L::ResultType, double>
-                >
-            >::type> : public boost::true_type
+                Nektar::CanGetRawPtr<typename R::ResultType>::value &&
+                std::is_same<typename L::ResultType, double>::value
+            >::type> : public std::true_type
         {
             typedef DgemmNodeEvaluator<L, IndicesType, index> BetaWrappedEvaluator;
             typedef typename BetaWrappedEvaluator::Evaluator BetaEvaluator;
@@ -463,17 +430,12 @@ namespace expt
     ///////////////////////////////////////////////////////////
     template<typename L, typename OpType, typename R, typename IndicesType, unsigned int index>
     struct BinaryBinaryEvaluateNodeOverride<L, OpType, R, IndicesType, index,
-        typename boost::enable_if
+        typename std::enable_if
         <
-            boost::mpl::and_
-            <
-                IsAdditiveOperator<OpType>,
-                impl::AlphaABParameterAccess<L, IndicesType, index>,
-                impl::BetaCParameterAccess<R, IndicesType, index + L::TotalCount>
-                //IsAlphaABNode<L>,
-                //IsBetaCNode<R>
-            >
-        >::type> : public boost::true_type
+            IsAdditiveOperator<OpType>::value &&
+            impl::AlphaABParameterAccess<L, IndicesType, index>::value &&
+            impl::BetaCParameterAccess<R, IndicesType, index + L::TotalCount>::value
+        >::type> : public std::true_type
     {
         typedef Node<L, OpType, R> NodeType;
         typedef impl::AlphaABParameterAccess<L, IndicesType, index> LhsAccess;
@@ -503,19 +465,13 @@ namespace expt
     ////////////////////////////////////////////////////////////
     template<typename L, typename OpType, typename R, typename IndicesType, unsigned int index>
     struct BinaryBinaryEvaluateNodeOverride<L, OpType, R, IndicesType, index,
-        typename boost::enable_if
+        typename std::enable_if
         <
-            boost::mpl::and_
-            <
-                IsAdditiveOperator<OpType>,
-                impl::AlphaABParameterAccess<R, IndicesType, index + L::TotalCount>,
-                impl::BetaCParameterAccess<L, IndicesType, index>,
-                boost::mpl::not_<impl::AlphaABParameterAccess<L, IndicesType, index> >
-                //IsAlphaABNode<R>,
-                //IsBetaCNode<L>,
-                //boost::mpl::not_<IsAlphaABNode<L> >
-            >
-        >::type> : public boost::true_type
+            IsAdditiveOperator<OpType>::value &&
+            impl::AlphaABParameterAccess<R, IndicesType, index + L::TotalCount>::value &&
+            impl::BetaCParameterAccess<L, IndicesType, index>::value &&
+            !impl::AlphaABParameterAccess<L, IndicesType, index>::value
+        >::type> : public std::true_type
     {
         typedef Node<L, OpType, R> NodeType;
 
@@ -547,11 +503,11 @@ namespace expt
     ////////////////////////////////////////////////////////////
     template<typename L, typename OpType, typename R, typename IndicesType, unsigned int index>
     struct BinaryBinaryEvaluateNodeOverride<L, OpType, R, IndicesType, index,
-        typename boost::enable_if
+        typename std::enable_if
         <
             //IsAlphaABNode<Node<L, OpType, R> >
             impl::AlphaABParameterAccess<Node<L, OpType, R>, IndicesType, index>
-        >::type> : public boost::true_type
+        >::type> : public std::true_type
     {
         typedef Node<L, OpType, R> NodeType;
         typedef impl::AlphaABParameterAccess<NodeType, IndicesType, index> LhsAccess;

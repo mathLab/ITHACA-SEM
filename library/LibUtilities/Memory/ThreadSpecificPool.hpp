@@ -38,9 +38,8 @@
 #ifndef NEKATAR_LIB_UTILITES_THREAD_SPECIFIC_POOL_HPP
 #define NEKATAR_LIB_UTILITES_THREAD_SPECIFIC_POOL_HPP
 
-#include <boost/thread/tss.hpp>
 #include <boost/pool/pool.hpp>
-#include <boost/thread/mutex.hpp>
+#include <mutex>
 
 #include <map>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
@@ -99,7 +98,7 @@ namespace Nektar
                 /// \throw std::bad_alloc if memory is exhausted.
                 void* Allocate()
                 {
-                    boost::mutex::scoped_lock l(m_mutex);
+                    std::unique_lock<std::mutex> l(m_mutex);
                     void* result = m_pool->malloc();
 
 #if defined(NEKTAR_DEBUG) || defined(NEKTAR_FULLDEBUG)
@@ -115,7 +114,7 @@ namespace Nektar
                 /// from this pool.  Doing this will result in undefined behavior.
                 void Deallocate(const void* p)
                 {
-                    boost::mutex::scoped_lock l(m_mutex);
+                    std::unique_lock<std::mutex> l(m_mutex);
 #if defined(NEKTAR_DEBUG) || defined(NEKTAR_FULLDEBUG)
                     // The idea here is to fill the returned memory with some known
                     // pattern, then detect that pattern on the allocate.  If the 
@@ -134,14 +133,14 @@ namespace Nektar
                 //boost::thread_specific_ptr<boost::pool<> > m_pool;
                 boost::pool<>* m_pool;
                 size_t m_blockSize;
-                boost::mutex m_mutex;
+                std::mutex m_mutex;
         };
     }
 
     class MemPool
     {
         public:
-            typedef std::map<size_t, boost::shared_ptr<detail::ThreadSpecificPool> > PoolMapType;
+            typedef std::map<size_t, std::shared_ptr<detail::ThreadSpecificPool> > PoolMapType;
             
         public:
             MemPool() :
@@ -155,14 +154,14 @@ namespace Nektar
                 // bytes, then a request for 10 bytes will return a 32 byte chunk of memory from the 32 byte pool.
                 
                 typedef PoolMapType::value_type PairType;
-                m_pools.insert(PairType(8, boost::shared_ptr<detail::ThreadSpecificPool>(new detail::ThreadSpecificPool(8))));
-                m_pools.insert(PairType(16, boost::shared_ptr<detail::ThreadSpecificPool>(new detail::ThreadSpecificPool(16))));
-                m_pools.insert(PairType(32, boost::shared_ptr<detail::ThreadSpecificPool>(new detail::ThreadSpecificPool(32))));
-                m_pools.insert(PairType(64, boost::shared_ptr<detail::ThreadSpecificPool>(new detail::ThreadSpecificPool(64))));
-                m_pools.insert(PairType(128, boost::shared_ptr<detail::ThreadSpecificPool>(new detail::ThreadSpecificPool(128))));
-                m_pools.insert(PairType(256, boost::shared_ptr<detail::ThreadSpecificPool>(new detail::ThreadSpecificPool(256))));
-                m_pools.insert(PairType(512, boost::shared_ptr<detail::ThreadSpecificPool>(new detail::ThreadSpecificPool(512))));
-                m_pools.insert(PairType(1024, boost::shared_ptr<detail::ThreadSpecificPool>(new detail::ThreadSpecificPool(1024))));
+                m_pools.insert(PairType(8, std::shared_ptr<detail::ThreadSpecificPool>(new detail::ThreadSpecificPool(8))));
+                m_pools.insert(PairType(16, std::shared_ptr<detail::ThreadSpecificPool>(new detail::ThreadSpecificPool(16))));
+                m_pools.insert(PairType(32, std::shared_ptr<detail::ThreadSpecificPool>(new detail::ThreadSpecificPool(32))));
+                m_pools.insert(PairType(64, std::shared_ptr<detail::ThreadSpecificPool>(new detail::ThreadSpecificPool(64))));
+                m_pools.insert(PairType(128, std::shared_ptr<detail::ThreadSpecificPool>(new detail::ThreadSpecificPool(128))));
+                m_pools.insert(PairType(256, std::shared_ptr<detail::ThreadSpecificPool>(new detail::ThreadSpecificPool(256))));
+                m_pools.insert(PairType(512, std::shared_ptr<detail::ThreadSpecificPool>(new detail::ThreadSpecificPool(512))));
+                m_pools.insert(PairType(1024, std::shared_ptr<detail::ThreadSpecificPool>(new detail::ThreadSpecificPool(1024))));
             }
             
             ~MemPool()
@@ -225,7 +224,7 @@ namespace Nektar
             
         private:
             detail::ThreadSpecificPool m_fourBytePool;
-            std::map<size_t, boost::shared_ptr<detail::ThreadSpecificPool> > m_pools;
+            std::map<size_t, std::shared_ptr<detail::ThreadSpecificPool> > m_pools;
             size_t m_upperBound;
     };
 

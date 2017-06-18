@@ -606,7 +606,7 @@ DataSourceSharedPtr FieldIOXml::v_ImportFieldMetaData(
     const std::string &filename, FieldMetaDataMap &fieldmetadatamap)
 {
     DataSourceSharedPtr doc    = XmlDataSource::create(filename);
-    XmlDataSourceSharedPtr xml = boost::static_pointer_cast<XmlDataSource>(doc);
+    XmlDataSourceSharedPtr xml = std::static_pointer_cast<XmlDataSource>(doc);
     TiXmlElement *metadata     = 0;
     TiXmlElement *master       = 0; // Master tag within which all data is
                                     // contained.
@@ -765,7 +765,7 @@ void FieldIOXml::ImportFieldDefs(
     bool expChild)
 {
     XmlDataSourceSharedPtr xml =
-        boost::static_pointer_cast<XmlDataSource>(dataSource);
+        std::static_pointer_cast<XmlDataSource>(dataSource);
     TiXmlElement *master =
         NULL; // Master tag within which all data is contained.
 
@@ -1105,7 +1105,7 @@ void FieldIOXml::ImportFieldData(
 {
     int cntdumps = 0;
     XmlDataSourceSharedPtr xml =
-        boost::static_pointer_cast<XmlDataSource>(dataSource);
+        std::static_pointer_cast<XmlDataSource>(dataSource);
 
     TiXmlElement *master =
         NULL; // Master tag within which all data is contained.

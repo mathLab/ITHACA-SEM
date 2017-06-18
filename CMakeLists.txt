@@ -4,15 +4,31 @@ options are: None(CMAKE_CXX_FLAGS or CMAKE_C_FLAGS used) Debug Release
 RelWithDebInfo MinSizeRel.")
 
 PROJECT(Nektar++ C CXX)
-SET(CMAKE_CXX_STANDARD 11)
+
+# Nektar++ requires C++11. Try to infer this for older CMake versions (less than
+# 3.1.0)
+IF ("${CMAKE_VERSION}" VERSION_LESS "3.1" AND NOT MSVC)
+    INCLUDE(CheckCXXCompilerFlag)
+    CHECK_CXX_COMPILER_FLAG("-std=c++11" COMPILER_SUPPORTS_CXX11)
+
+    IF (COMPILER_SUPPORTS_CXX11)
+        SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+    ELSE()
+        MESSAGE(STATUS "Nektar++ requires a compiler with C++11 support.")
+    ENDIF()
+ELSE()
+    SET(CMAKE_CXX_STANDARD 11)
+    SET(CMAKE_CXX_STANDARD_REQUIRED ON)
+    SET(CMAKE_CXX_EXTENSIONS OFF)
+ENDIF()
 
 INCLUDE(CheckLanguage)
 
 CHECK_LANGUAGE(Fortran)
 IF(CMAKE_Fortran_COMPILER)
-  ENABLE_LANGUAGE(Fortran)
+    ENABLE_LANGUAGE(Fortran)
 ELSE()
-  MESSAGE(STATUS "No Fortran support")
+    MESSAGE(STATUS "No Fortran support")
 ENDIF()
 
 # Helps organize projects in IDEs.

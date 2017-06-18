@@ -177,6 +177,7 @@ public:
     ///
     /// The allocated object must be returned to the memory pool
     /// via Deallocate.
+    template<typename... Args>
     static DataType* Allocate(const Args &...args)
     {
         return new DataType(args...);

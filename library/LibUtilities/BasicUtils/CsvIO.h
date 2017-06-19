@@ -1,12 +1,12 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File PtsIO.h
+// File CsvIO.h
 //
 // For more information, please see: http://www.nektar.info
 //
 // The MIT License
 //
-// Copyright (c) 2014 Kilian Lackhove
+// Copyright (c) 2017 Kilian Lackhove
 // Copyright (c) 2006 Division of Applied Mathematics, Brown University (USA),
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
@@ -30,19 +30,18 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Pts IO prototype definitions
+// Description: Csv IO
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_LIB_UTILITIES_BASIC_UTILS_PTSIO_H
-#define NEKTAR_LIB_UTILITIES_BASIC_UTILS_PTSIO_H
+#ifndef NEKTAR_LIB_UTILITIES_BASIC_UTILS_CSVIO_H
+#define NEKTAR_LIB_UTILITIES_BASIC_UTILS_CSVIO_H
 
 #include <string>
 #include <vector>
 
 #include <boost/shared_ptr.hpp>
 
-#include <tinyxml.h>
 
 #include <LibUtilities/Communication/Comm.h>
 
@@ -50,7 +49,7 @@
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/BasicUtils/ParseUtils.hpp>
 #include <LibUtilities/BasicUtils/PtsField.h>
-#include <LibUtilities/BasicUtils/FieldIOXml.h>
+#include <LibUtilities/BasicUtils/PtsIO.h>
 
 namespace Nektar
 {
@@ -58,45 +57,34 @@ namespace LibUtilities
 {
 using namespace std;
 
-typedef std::map<std::string, std::string> PtsMetaDataMap;
-static PtsMetaDataMap NullPtsMetaDataMap;
 
-class PtsIO : public FieldIOXml
+class CsvIO : public PtsIO
 {
 public:
-    LIB_UTILITIES_EXPORT PtsIO(LibUtilities::CommSharedPtr pComm,
+    LIB_UTILITIES_EXPORT CsvIO(LibUtilities::CommSharedPtr pComm,
                                bool sharedFilesystem = false);
 
-    LIB_UTILITIES_EXPORT virtual ~PtsIO()
+    LIB_UTILITIES_EXPORT virtual ~CsvIO()
     {
     }
-
-    LIB_UTILITIES_EXPORT void Import(
-        const string &inFile,
-        PtsFieldSharedPtr &ptsField,
-        FieldMetaDataMap &fieldmetadatamap = NullFieldMetaDataMap);
 
     LIB_UTILITIES_EXPORT void Write(const string &outFile,
                                     const PtsFieldSharedPtr &ptsField,
                                     const bool backup = false);
 
-    LIB_UTILITIES_EXPORT void ImportFieldData(const string inFile,
-                                              PtsFieldSharedPtr &ptsField);
+
 
 protected:
-
     LIB_UTILITIES_EXPORT virtual void v_ImportFieldData(const string inFile,
                                               PtsFieldSharedPtr &ptsField);
 
-    LIB_UTILITIES_EXPORT void SetUpFieldMetaData(const std::string outname);
-
     LIB_UTILITIES_EXPORT virtual std::string GetFileEnding() const
     {
-        return "pts";
+        return "csv";
     };
 };
 
-typedef boost::shared_ptr<PtsIO> PtsIOSharedPtr;
+typedef boost::shared_ptr<CsvIO> CsvIOSharedPtr;
 }
 }
 #endif

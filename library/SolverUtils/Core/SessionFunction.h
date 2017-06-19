@@ -44,6 +44,7 @@
 #include <LibUtilities/BasicUtils/Progressbar.hpp>
 #include <LibUtilities/BasicUtils/PtsField.h>
 #include <LibUtilities/BasicUtils/PtsIO.h>
+#include <LibUtilities/BasicUtils/CsvIO.h>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <MultiRegions/ExpList.h>
 #include <SolverUtils/SolverUtilsDeclspec.h>

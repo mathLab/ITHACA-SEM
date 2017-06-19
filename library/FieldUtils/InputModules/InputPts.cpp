@@ -39,6 +39,7 @@ using namespace std;
 
 #include <LibUtilities/BasicUtils/PtsField.h>
 #include <LibUtilities/BasicUtils/PtsIO.h>
+#include <LibUtilities/BasicUtils/CsvIO.h>
 
 #include <tinyxml.h>
 
@@ -54,6 +55,10 @@ ModuleKey InputPts::m_className[5] = {
         ModuleKey(eInputModule, "pts"), InputPts::create, "Reads Pts file."),
     GetModuleFactory().RegisterCreatorFunction(
         ModuleKey(eInputModule, "pts.gz"), InputPts::create, "Reads Pts file."),
+    GetModuleFactory().RegisterCreatorFunction(
+        ModuleKey(eInputModule, "csv"), InputPts::create, "Reads csv file."),
+    GetModuleFactory().RegisterCreatorFunction(
+        ModuleKey(eInputModule, "csv.gz"), InputPts::create, "Reads csv file."),
 };
 
 /**
@@ -63,6 +68,7 @@ ModuleKey InputPts::m_className[5] = {
 InputPts::InputPts(FieldSharedPtr f) : InputModule(f)
 {
     m_allowedFiles.insert("pts");
+    m_allowedFiles.insert("csv");
 }
 
 /**
@@ -85,18 +91,50 @@ void InputPts::Process(po::variables_map &vm)
         }
     }
 
-    string inFile = (m_f->m_inputfiles["pts"][0]).c_str();
+    string ptsending;
+    // Determine appropriate field input
+    if (m_f->m_inputfiles.count("pts") != 0)
+    {
+        ptsending = "pts";
+    }
+    else if (m_f->m_inputfiles.count("csv") != 0)
+    {
+        ptsending = "csv";
+    }
+    else
+    {
+        ASSERTL0(false, "no input file found");
+    }
+
+
+    string inFile = (m_f->m_inputfiles[ptsending][0]).c_str();
 
     if (m_f->m_session)
     {
-        m_f->m_ptsIO = MemoryManager<LibUtilities::PtsIO>::AllocateSharedPtr(
+        if (!ptsending.compare("pts"))
+        {
+            m_f->m_ptsIO = MemoryManager<LibUtilities::PtsIO>::AllocateSharedPtr(
             m_f->m_session->GetComm());
+        }
+        else
+        {
+            m_f->m_ptsIO = MemoryManager<LibUtilities::CsvIO>::AllocateSharedPtr(
+            m_f->m_session->GetComm());
+        }
     }
     else // serial communicator
     {
         LibUtilities::CommSharedPtr c =
             LibUtilities::GetCommFactory().CreateInstance("Serial", 0, 0);
-        m_f->m_ptsIO = MemoryManager<LibUtilities::PtsIO>::AllocateSharedPtr(c);
+        if (!ptsending.compare("pts"))
+        {
+            m_f->m_ptsIO = MemoryManager<LibUtilities::PtsIO>::AllocateSharedPtr(c);
+        }
+        else
+        {
+            m_f->m_ptsIO = MemoryManager<LibUtilities::CsvIO>::AllocateSharedPtr(c);
+        }
+
     }
 
     m_f->m_ptsIO->Import(inFile, m_f->m_fieldPts);

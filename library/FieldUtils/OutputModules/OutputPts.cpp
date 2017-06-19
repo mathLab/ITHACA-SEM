@@ -6,7 +6,7 @@
 //
 //  The MIT License
 //
-//  Copyright (c) 2016 Kilian Lackhove
+//  Copyright (c) 2017 Kilian Lackhove
 //  Copyright (c) 2006 Division of Applied Mathematics, Brown University (USA),
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
@@ -40,14 +40,21 @@ using namespace std;
 
 #include "OutputPts.h"
 #include <LibUtilities/BasicUtils/FileSystem.h>
+#include <LibUtilities/BasicUtils/PtsIO.h>
+#include <LibUtilities/BasicUtils/CsvIO.h>
 
 namespace Nektar
 {
 namespace FieldUtils
 {
 
-ModuleKey OutputPts::m_className = GetModuleFactory().RegisterCreatorFunction(
-    ModuleKey(eOutputModule, "pts"), OutputPts::create, "Writes a pts file.");
+ModuleKey OutputPts::m_className[5] = {
+    GetModuleFactory().RegisterCreatorFunction(
+        ModuleKey(eOutputModule, "pts"), OutputPts::create, "Writes a pts file."),
+    GetModuleFactory().RegisterCreatorFunction(
+        ModuleKey(eOutputModule, "csv"), OutputPts::create, "Writes a csv file."),
+};
+
 
 OutputPts::OutputPts(FieldSharedPtr f) : OutputModule(f)
 {
@@ -99,7 +106,6 @@ void OutputPts::Process(po::variables_map &vm)
 
     if (writepts)
     {
-        LibUtilities::PtsIO ptsIO(m_f->m_comm);
         LibUtilities::PtsFieldSharedPtr fPts = m_f->m_fieldPts;
         if(m_f->m_fieldPts == LibUtilities::NullPtsField)
         {
@@ -139,7 +145,59 @@ void OutputPts::Process(po::variables_map &vm)
                     m_f->m_fielddef[0]->m_fields,
                     tmp);
         }
-        ptsIO.Write(filename, fPts);
+
+        if (boost::filesystem::path(filename).extension() == ".csv")
+        {
+            LibUtilities::CsvIO csvIO(m_f->m_comm);
+            csvIO.Write(filename, fPts);
+        }
+        else
+        {
+            LibUtilities::PtsIO ptsIO(m_f->m_comm);
+            ptsIO.Write(filename, fPts);
+        }
+
+        // output error for regression checking.
+        if (vm.count("error"))
+        {
+            int rank = m_f->m_comm->GetRank();
+
+            for (int j = 0; j < fPts->GetNFields(); ++j)
+            {
+                Array<OneD, NekDouble> tmp(fPts->GetNpoints());
+                Vmath::Vmul(fPts->GetNpoints(),
+                            fPts->GetPts(fPts->GetDim() + j), 1,
+                            fPts->GetPts(fPts->GetDim() + j), 1,
+                            tmp, 1);
+                NekDouble l2err = Vmath::Vsum(fPts->GetNpoints(), tmp, 1);
+
+                // if val too small, sqrt returns nan.
+                if (fabs(l2err) < NekConstants::kNekSqrtTol*NekConstants::kNekSqrtTol)
+                {
+                    l2err =  0.0;
+                }
+                else
+                {
+                    l2err = sqrt(l2err);
+                }
+
+                NekDouble linferr = Vmath::Vamax(fPts->GetNpoints(),
+                                                 fPts->GetPts(fPts->GetDim() + j), 1);
+
+                if (rank == 0)
+                {
+                    cout << "L 2 error (variable "
+                         << fPts->GetFieldName(j) << ") : " << l2err
+                         << endl;
+
+                    cout << "L inf error (variable "
+                         << fPts->GetFieldName(j) << ") : " << linferr
+                         << endl;
+                }
+            }
+        }
+
+
     }
 }
 }

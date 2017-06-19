@@ -688,9 +688,9 @@ void LinearElasticSystem::v_DoSolve()
         {
             for (i = 0; i < it->second.size(); ++i)
             {
-                inout[it->second.at(i).get<1>()*nVel + nv] =
+                inout[std::get<1>(it->second.at(i))*nVel + nv] =
                     bndCondExp[it->first]->GetCoeffs()[
-                        it->second.at(i).get<0>()]*it->second.at(i).get<2>();
+                        std::get<0>(it->second.at(i))]*std::get<2>(it->second.at(i));
             }
         }
     }

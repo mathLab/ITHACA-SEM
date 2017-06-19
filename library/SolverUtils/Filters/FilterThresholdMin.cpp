@@ -53,7 +53,7 @@ std::string FilterThresholdMin::className =
 FilterThresholdMin::FilterThresholdMin(
         const LibUtilities::SessionReaderSharedPtr &pSession,
         const ParamMap &pParams)
-    : Filter(pSession)
+    : LegacyFilter(pSession)
 {
     ParamMap::const_iterator it;
 

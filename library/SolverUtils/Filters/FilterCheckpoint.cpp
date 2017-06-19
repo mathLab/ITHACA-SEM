@@ -34,6 +34,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <SolverUtils/Filters/FilterCheckpoint.h>
+#include <GlobalMapping/Mapping.h>
 
 namespace Nektar
 {
@@ -77,15 +78,28 @@ FilterCheckpoint::~FilterCheckpoint()
 }
 
 void FilterCheckpoint::v_Initialise(
+        const LibUtilities::FieldMetaDataMap &fieldMetaDataMap,
+        const Array<OneD, const Array<OneD, NekDouble > > &coeffs,
         const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
         const NekDouble &time)
 {
     m_index = 0;
     m_outputIndex = 0;
-    v_Update(pFields, time);
+
+    LibUtilities::FieldMetaDataMap tmp = fieldMetaDataMap;
+    LibUtilities::FieldMetaDataMap::iterator iter;
+    iter = tmp.find("ChkFileNum");
+    if (iter != fieldMetaDataMap.end())
+    {
+        m_outputIndex = boost::lexical_cast<NekDouble>(iter->second);
+    }
+
+    v_Update(fieldMetaDataMap, coeffs, pFields, time);
 }
 
 void FilterCheckpoint::v_Update(
+        const LibUtilities::FieldMetaDataMap &fieldMetaDataMap,
+        const Array<OneD, const Array<OneD, NekDouble > > &coeffs,
         const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
         const NekDouble &time)
 {
@@ -94,30 +108,80 @@ void FilterCheckpoint::v_Update(
         return;
     }
 
-    std::stringstream vOutputFilename;
-    vOutputFilename << m_outputFile << "_" << m_outputIndex << ".chk";
+    std::vector<std::string> variables;
+    LibUtilities::FieldMetaDataMap tmp = fieldMetaDataMap;
+    std::string allVars = tmp["Variables"] + tmp["AuxVariables"];
+    ParseUtils::GenerateOrderedStringVector(allVars.c_str(), variables);
+
+    std::string outname =  m_outputFile +  "_" +
+        boost::lexical_cast<std::string>(m_outputIndex) + ".chk";
+
+    // make sure the coeffs match the first expansion in pFields
+    std::vector<Array<OneD, NekDouble> > fieldcoeffs(
+        pFields.num_elements());
+    for (int i = 0; i < pFields.num_elements(); ++i)
+    {
+        if (pFields[i]->GetNcoeffs() == pFields[0]->GetNcoeffs())
+        {
+            fieldcoeffs[i] = coeffs[i];
+        }
+        else
+        {
+            fieldcoeffs[i] = Array<OneD,NekDouble>(pFields[0]->GetNcoeffs());
+            pFields[0]->ExtractCoeffsToCoeffs(pFields[i],
+                                              coeffs[i],
+                                              fieldcoeffs[i]);
+        }
+    }
 
     std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef
         = pFields[0]->GetFieldDefinitions();
     std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
 
-    // copy Data into FieldData and set variable
-    for(int j = 0; j < pFields.num_elements(); ++j)
+    // Copy Data into FieldData and set variable
+    for(int j = 0; j < fieldcoeffs.size(); ++j)
     {
         for(int i = 0; i < FieldDef.size(); ++i)
         {
             // Could do a search here to find correct variable
-            FieldDef[i]->m_fields.push_back(m_session->GetVariable(j));
+            FieldDef[i]->m_fields.push_back(variables[j]);
             pFields[0]->AppendFieldData(FieldDef[i],
                                         FieldData[i],
-                                        pFields[j]->UpdateCoeffs());
+                                        fieldcoeffs[j]);
         }
     }
-    m_fld->Write(vOutputFilename.str(),FieldDef,FieldData);
+
+    // adjust the metadata before writing to file
+    LibUtilities::FieldMetaDataMap metaDataMap = fieldMetaDataMap;
+
+    // Update time in field info if required
+    if(metaDataMap.find("Time") != metaDataMap.end())
+    {
+        metaDataMap["Time"] = boost::lexical_cast<std::string>(time);
+    }
+
+    // Update step in field info if required
+    if(metaDataMap.find("ChkFileNum") != metaDataMap.end())
+    {
+        metaDataMap["ChkFileNum"] = boost::lexical_cast<std::string>(m_outputIndex);
+    }
+
+    // If necessary, add mapping information to metadata
+    //      and output mapping coordinates
+    Array<OneD, MultiRegions::ExpListSharedPtr> fields(1);
+    fields[0] = pFields[0];
+    GlobalMapping::MappingSharedPtr mapping =
+            GlobalMapping::Mapping::Load(m_session, fields);
+    mapping->Output(metaDataMap, outname);
+
+    m_fld->Write(outname, FieldDef, FieldData, metaDataMap, true);
+
     m_outputIndex++;
 }
 
 void FilterCheckpoint::v_Finalise(
+        const LibUtilities::FieldMetaDataMap &fieldMetaDataMap,
+        const Array<OneD, const Array<OneD, NekDouble > > &coeffs,
         const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
         const NekDouble &time)
 {

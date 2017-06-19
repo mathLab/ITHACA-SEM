@@ -223,10 +223,15 @@ namespace Nektar
                 m_timestep, fields, m_time, m_ode);
 
             // Initialise filters
+            Array<OneD, Array<OneD, NekDouble> > coeffs;
+            Array<OneD, Array<OneD, NekDouble> > phys;
+            Array<OneD, MultiRegions::ExpListSharedPtr> expansions;
+            GetAllFields(m_fieldMetaDataMap, coeffs, phys, expansions);
+
             std::vector<FilterSharedPtr>::iterator x;
             for (x = m_filters.begin(); x != m_filters.end(); ++x)
             {
-                (*x)->Initialise(m_fields, m_time);
+                (*x)->Initialise(m_fieldMetaDataMap, coeffs, expansions, m_time);
             }
 
             // Ensure that there is no conflict of parameters
@@ -352,10 +357,11 @@ namespace Nektar
                                 "NaN found during time integration.");
                 }
                 // Update filters
+                GetAllFields(m_fieldMetaDataMap, coeffs, phys, expansions);
                 std::vector<FilterSharedPtr>::iterator x;
                 for (x = m_filters.begin(); x != m_filters.end(); ++x)
                 {
-                    (*x)->Update(m_fields, m_time);
+                    (*x)->Update(m_fieldMetaDataMap, coeffs, expansions, m_time);
                 }
 
                 // Write out checkpoint files
@@ -441,9 +447,14 @@ namespace Nektar
             }
 
             // Finalise filters
+            for (int i = 0; i < m_session->GetVariables().size(); ++i)
+            {
+                coeffs[i] = m_fields[i]->GetCoeffs();
+                expansions[i] = m_fields[i];
+            }
             for (x = m_filters.begin(); x != m_filters.end(); ++x)
             {
-                (*x)->Finalise(m_fields, m_time);
+                (*x)->Finalise(m_fieldMetaDataMap, coeffs, expansions, m_time);
             }
             
             // Print for 1D problems
@@ -905,7 +916,8 @@ namespace Nektar
                 }
             }
         }
-	
+
+
         /**
          * @brief Return the timestep to be used for the next step in the
          * time-marching loop.

@@ -60,7 +60,7 @@ std::string FilterAeroForces::className =
 FilterAeroForces::FilterAeroForces(
     const LibUtilities::SessionReaderSharedPtr &pSession,
     const ParamMap &pParams) :
-    Filter(pSession)
+    LegacyFilter(pSession)
 {
     ParamMap::const_iterator it;
 

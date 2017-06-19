@@ -37,7 +37,7 @@
 #ifndef NEKTAR_SOLVERUTILS_FILTERS_FILTERFIELDCONVERT_H
 #define NEKTAR_SOLVERUTILS_FILTERS_FILTERFIELDCONVERT_H
 
-#include <SolverUtils/Filters/Filter.h>
+#include <SolverUtils/Filters/LegacyFilter.h>
 #include <FieldUtils/Module.h>
 
 using namespace Nektar::FieldUtils;
@@ -46,7 +46,7 @@ namespace Nektar
 {
 namespace SolverUtils
 {
-class FilterFieldConvert : public Filter
+class FilterFieldConvert : public LegacyFilter
 {
 public:
     friend class MemoryManager<FilterFieldConvert>;

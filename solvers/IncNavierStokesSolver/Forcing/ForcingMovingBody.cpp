@@ -1252,7 +1252,9 @@ void ForcingMovingBody::InitialiseFilter(
                                     AllocateSharedPtr(pSession, vParams);
 
     // Initialise the object of MovingBody filter
-    m_MovBodyfilter->Initialise(pFields, 0.0);
+    const Array<OneD, const Array<OneD, NekDouble> > dummyCoeffs;
+    LibUtilities::FieldMetaDataMap dummyMap;
+    m_MovBodyfilter->Initialise(dummyMap, dummyCoeffs, pFields, 0.0);
 
 }
 

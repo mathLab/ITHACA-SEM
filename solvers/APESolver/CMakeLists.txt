@@ -10,13 +10,6 @@ IF( NEKTAR_SOLVER_APE )
        ./RiemannSolvers/UpwindSolver.cpp
        ./RiemannSolvers/LaxFriedrichsSolver.cpp)
 
-    IF ( NEKTAR_USE_CWIPI )
-        SET(APESolverSource
-            ${APESolverSource}
-            ./EquationSystems/APE_coupled.cpp
-        )
-    ENDIF ( NEKTAR_USE_CWIPI )
-
     ADD_SOLVER_EXECUTABLE(APESolver solvers 
 			${APESolverSource})
 

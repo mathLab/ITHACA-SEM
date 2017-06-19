@@ -50,6 +50,7 @@
 #include <SolverUtils/SolverUtilsDeclspec.h>
 #include <SolverUtils/Core/Misc.h>
 #include <SolverUtils/Core/SessionFunction.h>
+#include <SolverUtils/CwipiExchange.h>
 
 namespace Nektar
 {
@@ -435,6 +436,8 @@ namespace Nektar
             SpatialDomains::BoundaryConditionsSharedPtr m_boundaryConditions;
             /// Pointer to graph defining mesh.
             SpatialDomains::MeshGraphSharedPtr          m_graph;
+            /// Interface for external solvers
+            SolverUtils::CwipiCouplingSharedPointer     m_coupling;
             /// Name of the session.
             std::string                                 m_sessionName;
             /// Current time of simulation.
@@ -591,6 +594,11 @@ namespace Nektar
                 Array<OneD, Array<OneD, NekDouble> > &coeffs,
                 Array<OneD, Array<OneD, NekDouble> > &phys,
                 Array<OneD, MultiRegions::ExpListSharedPtr> &expansions);
+
+            SOLVER_UTILS_EXPORT void SendFields(int step);
+
+            SOLVER_UTILS_EXPORT void ReceiveFields(int step);
+
             
         private:
             

@@ -35,7 +35,6 @@
 #define NEKTAR_CWIPIEXCHANGE
 
 #include <FieldUtils/Interpolator.h>
-#include <SolverUtils/EquationSystem.h>
 
 #include <cwipi.h>
 

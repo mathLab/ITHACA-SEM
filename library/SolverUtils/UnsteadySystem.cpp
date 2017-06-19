@@ -291,6 +291,9 @@ namespace Nektar
                     break;
                 }
 
+                SendFields(step);
+                ReceiveFields(step);
+
                 fields = m_intScheme->TimeIntegrate(
                     step, m_timestep, m_intSoln, m_ode);
                 timer.Stop();

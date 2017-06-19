@@ -40,7 +40,7 @@
 
 #include <boost/pool/pool.hpp>
 #include <mutex>
-
+#include <memory>
 #include <map>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/LibUtilitiesDeclspec.h>

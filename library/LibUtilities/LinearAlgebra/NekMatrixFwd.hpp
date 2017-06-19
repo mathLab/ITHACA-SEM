@@ -42,6 +42,7 @@
 #include <LibUtilities/LinearAlgebra/MatrixStorageType.h>
 #include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
 
+#include <memory>
 #include <type_traits>
 
 namespace Nektar

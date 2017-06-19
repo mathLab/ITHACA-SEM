@@ -113,7 +113,12 @@ namespace Nektar
             if (m_session->DefinesElement("Nektar/Coupling"))
             {
                 TiXmlElement* vCoupling = m_session->GetElement("Nektar/Coupling");
+
+                ASSERTL0(vCoupling->Attribute("TYPE"),
+                         "Missing TYPE attribute in Coupling");
                 string vType = vCoupling->Attribute("TYPE");
+                ASSERTL0(!vType.empty(),
+                         "TYPE attribute must be non-empty in Coupling");
 
                 m_coupling = GetCouplingFactory().CreateInstance(vType, m_fields[0]);
             }

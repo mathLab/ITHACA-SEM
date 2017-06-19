@@ -284,7 +284,7 @@ namespace Nektar
 
         };
 
-        typedef boost::shared_ptr<ContField2D>      ContField2DSharedPtr;
+        typedef std::shared_ptr<ContField2D>      ContField2DSharedPtr;
 
         /**
          * This operation is evaluated as:

@@ -51,7 +51,7 @@ namespace Nektar
             DisContField3DHomogeneous2D (In,false)
         {
             
-            ContField1DSharedPtr zero_line = boost::dynamic_pointer_cast<ContField1D> (In.m_lines[0]);
+            ContField1DSharedPtr zero_line = std::dynamic_pointer_cast<ContField1D> (In.m_lines[0]);
             
             for(int n = 0; n < m_lines.num_elements(); ++n)
             {

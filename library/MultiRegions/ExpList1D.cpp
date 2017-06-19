@@ -147,7 +147,7 @@ namespace Nektar
             SpatialDomains::ExpansionMap::const_iterator expIt;
             for (expIt = expansions.begin(); expIt != expansions.end(); ++expIt)
             {
-                if ((SegmentGeom = boost::dynamic_pointer_cast<
+                if ((SegmentGeom = std::dynamic_pointer_cast<
                          SpatialDomains::SegGeom>(
                              expIt->second->m_geomShPtr)))
                 {
@@ -220,7 +220,7 @@ namespace Nektar
                 // Retrieve basis key from expansion
                 LibUtilities::BasisKey bkey = expIt->second->m_basisKeyVector[0];
 
-                if ((SegmentGeom = boost::dynamic_pointer_cast<
+                if ((SegmentGeom = std::dynamic_pointer_cast<
                          SpatialDomains::SegGeom>(
                              expIt->second->m_geomShPtr)))
                 {
@@ -309,7 +309,7 @@ namespace Nektar
                 {
                     SpatialDomains::ExpansionMap::const_iterator expIt;
 
-                    if((SegmentGeom = boost::dynamic_pointer_cast<
+                    if((SegmentGeom = std::dynamic_pointer_cast<
                             SpatialDomains::SegGeom>(
                                 (*compIt->second)[j])))
                     {
@@ -409,13 +409,13 @@ namespace Nektar
                 // Process each expansion in the region.
                 for(j = 0; j < compIt->second->size(); ++j)
                 {
-                    if((SegmentGeom = boost::dynamic_pointer_cast<
+                    if((SegmentGeom = std::dynamic_pointer_cast<
                             SpatialDomains::SegGeom>(
                                 (*compIt->second)[j])))
                     {
                         // Retrieve the basis key from the expansion.
                         LibUtilities::BasisKey bkey
-                            = boost::dynamic_pointer_cast<SpatialDomains::MeshGraph2D>(graph2D)->GetEdgeBasisKey(SegmentGeom, variable);
+                            = std::dynamic_pointer_cast<SpatialDomains::MeshGraph2D>(graph2D)->GetEdgeBasisKey(SegmentGeom, variable);
 
                         seg = MemoryManager<LocalRegions::SegExp>
                                         ::AllocateSharedPtr(bkey, SegmentGeom);

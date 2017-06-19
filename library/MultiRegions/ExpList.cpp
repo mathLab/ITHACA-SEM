@@ -904,7 +904,7 @@ namespace Nektar
                                                gkey.GetConstFactors(),
                                                varcoeffs );
 
-                loc_mat = boost::dynamic_pointer_cast<LocalRegions::Expansion>((*m_exp)[elmt_id.find(i)->second])->GetLocMatrix(matkey);
+                loc_mat = std::dynamic_pointer_cast<LocalRegions::Expansion>((*m_exp)[elmt_id.find(i)->second])->GetLocMatrix(matkey);
                 BlkMatrix->SetBlock(i,i,loc_mat);
             }
 
@@ -1077,7 +1077,7 @@ namespace Nektar
                                               *((*m_exp)[eid]),
                                               mkey.GetConstFactors(),varcoeffs);
 
-                loc_mat = boost::dynamic_pointer_cast<LocalRegions::Expansion>((*m_exp)[n])->GetLocMatrix(matkey);
+                loc_mat = std::dynamic_pointer_cast<LocalRegions::Expansion>((*m_exp)[n])->GetLocMatrix(matkey);
 
                 loc_rows = loc_mat->GetRows();
                 loc_cols = loc_mat->GetColumns();
@@ -1197,7 +1197,7 @@ namespace Nektar
                                               *((*m_exp)[eid]),
                                               mkey.GetConstFactors(),varcoeffs);
 
-                loc_mat = boost::dynamic_pointer_cast<LocalRegions::Expansion>((*m_exp)[n])->GetLocMatrix(matkey);
+                loc_mat = std::dynamic_pointer_cast<LocalRegions::Expansion>((*m_exp)[n])->GetLocMatrix(matkey);
 
 
                 if(RobinBCInfo.count(n) != 0) // add robin mass matrix
@@ -1277,7 +1277,7 @@ namespace Nektar
                     const AssemblyMapCGSharedPtr &locToGloMap)
         {
             GlobalLinSysSharedPtr returnlinsys;
-            boost::shared_ptr<ExpList> vExpList = GetSharedThisPtr();
+            std::shared_ptr<ExpList> vExpList = GetSharedThisPtr();
 
             MultiRegions::GlobalSysSolnType vType = mkey.GetGlobalSysSolnType();
 
@@ -1295,7 +1295,7 @@ namespace Nektar
                     const GlobalLinSysKey     &mkey,
                     const AssemblyMapSharedPtr &locToGloMap)
         {
-            boost::shared_ptr<ExpList> vExpList = GetSharedThisPtr();
+            std::shared_ptr<ExpList> vExpList = GetSharedThisPtr();
             const map<int,RobinBCInfoSharedPtr> vRobinBCInfo = GetRobinBCInfo();
 
             MultiRegions::GlobalSysSolnType vType = mkey.GetGlobalSysSolnType();
@@ -1701,11 +1701,11 @@ namespace Nektar
             int nbase = (*m_exp)[0]->GetNumBases();
             int cnt = 0;
 
-            boost::shared_ptr<LocalRegions::ExpansionVector> exp = m_exp;
+            std::shared_ptr<LocalRegions::ExpansionVector> exp = m_exp;
 
             if (expansion != -1)
             {
-                exp = boost::shared_ptr<LocalRegions::ExpansionVector>(
+                exp = std::shared_ptr<LocalRegions::ExpansionVector>(
                     new LocalRegions::ExpansionVector(1));
                 (*exp)[0] = (*m_exp)[expansion];
             }
@@ -2012,7 +2012,7 @@ namespace Nektar
             const std::string               &fileName,
             LibUtilities::CommSharedPtr      comm,
             const std::string               &varName,
-            const boost::shared_ptr<ExpList> locExpList)
+            const std::shared_ptr<ExpList> locExpList)
         {
             string varString = fileName.substr(0, fileName.find_last_of("."));
             int j, k, len = varString.length();
@@ -2246,7 +2246,7 @@ namespace Nektar
             v_ExtractDataToCoeffs(fielddef,fielddata,field,coeffs);
         }
 
-        void ExpList::ExtractCoeffsToCoeffs(const boost::shared_ptr<ExpList> &fromExpList, const Array<OneD, const NekDouble> &fromCoeffs, Array<OneD, NekDouble> &toCoeffs)
+        void ExpList::ExtractCoeffsToCoeffs(const std::shared_ptr<ExpList> &fromExpList, const Array<OneD, const NekDouble> &fromCoeffs, Array<OneD, NekDouble> &toCoeffs)
         {
             v_ExtractCoeffsToCoeffs(fromExpList,fromCoeffs,toCoeffs);
         }
@@ -2294,7 +2294,7 @@ namespace Nektar
                 }
             }
 
-            boost::unordered_map<int, int>::iterator eIt;
+            std::unordered_map<int, int>::iterator eIt;
 
             for (i = 0; i < fielddef->m_elementIDs.size(); ++i)
             {
@@ -2350,7 +2350,7 @@ namespace Nektar
             return;
         }
 
-        void ExpList::v_ExtractCoeffsToCoeffs(const boost::shared_ptr<ExpList> &fromExpList, const Array<OneD, const NekDouble> &fromCoeffs, Array<OneD, NekDouble> &toCoeffs)
+        void ExpList::v_ExtractCoeffsToCoeffs(const std::shared_ptr<ExpList> &fromExpList, const Array<OneD, const NekDouble> &fromCoeffs, Array<OneD, NekDouble> &toCoeffs)
         {
             int i;
             int offset = 0;
@@ -2374,20 +2374,20 @@ namespace Nektar
         }
 
 
-        const Array<OneD,const boost::shared_ptr<ExpList> >
+        const Array<OneD,const std::shared_ptr<ExpList> >
                                         &ExpList::v_GetBndCondExpansions(void)
         {
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
-            static Array<OneD,const boost::shared_ptr<ExpList> > result;
+            static Array<OneD,const std::shared_ptr<ExpList> > result;
             return result;
         }
 
-        boost::shared_ptr<ExpList>  &ExpList::v_UpdateBndCondExpansion(int i)
+        std::shared_ptr<ExpList>  &ExpList::v_UpdateBndCondExpansion(int i)
         {
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
-            static boost::shared_ptr<ExpList> result;
+            static std::shared_ptr<ExpList> result;
             return result;
         }
 
@@ -2411,19 +2411,19 @@ namespace Nektar
                      "This method is not defined or valid for this class type");
         }
 
-        boost::shared_ptr<ExpList> &ExpList::v_GetTrace()
+        std::shared_ptr<ExpList> &ExpList::v_GetTrace()
         {
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
-            static boost::shared_ptr<ExpList> returnVal;
+            static std::shared_ptr<ExpList> returnVal;
             return returnVal;
         }
 
-        boost::shared_ptr<AssemblyMapDG> &ExpList::v_GetTraceMap()
+        std::shared_ptr<AssemblyMapDG> &ExpList::v_GetTraceMap()
         {
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
-            static boost::shared_ptr<AssemblyMapDG> result;
+            static std::shared_ptr<AssemblyMapDG> result;
             return result;
         }
 
@@ -2815,7 +2815,7 @@ namespace Nektar
         /**
          */
         void ExpList::v_GetBndElmtExpansion(int i,
-                            boost::shared_ptr<ExpList> &result,
+                            std::shared_ptr<ExpList> &result,
                             const bool DeclareCoeffPhysArrays)
         {
             ASSERTL0(false,

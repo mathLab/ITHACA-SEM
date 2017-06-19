@@ -90,7 +90,7 @@ void ProcessInterpField::Process(po::variables_map &vm)
         }
     }
 
-    m_fromField = boost::shared_ptr<Field>(new Field());
+    m_fromField = std::shared_ptr<Field>(new Field());
 
     std::vector<std::string> files;
 

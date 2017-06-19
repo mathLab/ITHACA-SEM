@@ -234,7 +234,7 @@ SpatialDomains::GeometrySharedPtr Tetrahedron::GetGeom(int coordDim)
 
     for (int i = 0; i < 4; ++i)
     {
-        tfaces[i] = boost::dynamic_pointer_cast<SpatialDomains::TriGeom>(
+        tfaces[i] = std::dynamic_pointer_cast<SpatialDomains::TriGeom>(
             m_face[i]->GetGeom(coordDim));
     }
 
@@ -333,7 +333,7 @@ void Tetrahedron::MakeOrder(int                                order,
             x[j] = xmap->PhysEvaluate(xp, phys[j]);
         }
 
-        m_volumeNodes[cnt] = boost::shared_ptr<Node>(
+        m_volumeNodes[cnt] = std::shared_ptr<Node>(
             new Node(id++, x[0], x[1], x[2]));
     }
 }
@@ -368,7 +368,7 @@ struct TetOrientHash : std::unary_function<struct TetOrient, std::size_t>
         return boost::hash_range(p.nid.begin(), p.nid.end());
     }
 };
-typedef boost::unordered_set<struct TetOrient, TetOrientHash> TetOrientSet;
+typedef std::unordered_set<struct TetOrient, TetOrientHash> TetOrientSet;
 
 bool operator==(const struct TetOrient &a, const struct TetOrient &b)
 {

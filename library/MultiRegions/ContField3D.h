@@ -203,7 +203,7 @@ namespace Nektar
             virtual void v_ClearGlobalLinSysManager(void);
 
         };
-        typedef boost::shared_ptr<ContField3D>      ContField3DSharedPtr;
+        typedef std::shared_ptr<ContField3D>      ContField3DSharedPtr;
 
         inline const Array<OneD,const MultiRegions::ExpListSharedPtr>
                 &ContField3D::GetBndCondExp()

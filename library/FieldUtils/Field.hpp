@@ -36,7 +36,7 @@
 #ifndef FIELDUTILS_FIELD
 #define FIELDUTILS_FIELD
 
-#include <boost/shared_ptr.hpp>
+#include <memory>
 
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
 #include <LibUtilities/BasicUtils/PtsField.h>
@@ -463,7 +463,7 @@ struct Field
                              "implemented");
 
                     MultiRegions::ExpList2DHomogeneous1DSharedPtr tmp2 =
-                        boost::dynamic_pointer_cast<
+                        std::dynamic_pointer_cast<
                             MultiRegions::ExpList2DHomogeneous1D>(m_exp[0]);
 
                     tmp = MemoryManager<MultiRegions::ExpList2DHomogeneous1D>::
@@ -474,7 +474,7 @@ struct Field
                     if (m_declareExpansionAsContField)
                     {
                         MultiRegions::ContField3DHomogeneous2DSharedPtr tmp2 =
-                            boost::dynamic_pointer_cast<
+                            std::dynamic_pointer_cast<
                                 MultiRegions::ContField3DHomogeneous2D>(
                                 m_exp[0]);
 
@@ -485,7 +485,7 @@ struct Field
                     else if (m_declareExpansionAsDisContField)
                     {
                         MultiRegions::DisContField3DHomogeneous2DSharedPtr
-                            tmp2 = boost::dynamic_pointer_cast<
+                            tmp2 = std::dynamic_pointer_cast<
                                 MultiRegions::DisContField3DHomogeneous2D>(
                                 m_exp[0]);
 
@@ -496,7 +496,7 @@ struct Field
                     else
                     {
                         MultiRegions::ExpList3DHomogeneous2DSharedPtr tmp2 =
-                            boost::dynamic_pointer_cast<
+                            std::dynamic_pointer_cast<
                                 MultiRegions::ExpList3DHomogeneous2D>(m_exp[0]);
 
                         tmp = MemoryManager<
@@ -509,7 +509,7 @@ struct Field
                     if (m_declareExpansionAsContField)
                     {
                         MultiRegions::ContField1DSharedPtr tmp2 =
-                            boost::dynamic_pointer_cast<
+                            std::dynamic_pointer_cast<
                                 MultiRegions::ContField1D>(m_exp[0]);
 
                         tmp = MemoryManager<MultiRegions::ContField1D>::
@@ -518,7 +518,7 @@ struct Field
                     else if (m_declareExpansionAsDisContField)
                     {
                         MultiRegions::DisContField1DSharedPtr tmp2 =
-                            boost::dynamic_pointer_cast<
+                            std::dynamic_pointer_cast<
                                 MultiRegions::DisContField1D>(m_exp[0]);
 
                         tmp = MemoryManager<MultiRegions::DisContField1D>::
@@ -527,7 +527,7 @@ struct Field
                     else
                     {
                         MultiRegions::ExpList1DSharedPtr tmp2 =
-                            boost::dynamic_pointer_cast<
+                            std::dynamic_pointer_cast<
                                 MultiRegions::ExpList1D>(m_exp[0]);
 
                         tmp = MemoryManager<
@@ -558,7 +558,7 @@ struct Field
                         else
                         {
                             MultiRegions::ContField3DHomogeneous1DSharedPtr
-                                tmp2 = boost::dynamic_pointer_cast<
+                                tmp2 = std::dynamic_pointer_cast<
                                     MultiRegions::ContField3DHomogeneous1D>(
                                     m_exp[0]);
 
@@ -586,7 +586,7 @@ struct Field
                         else
                         {
                             MultiRegions::DisContField3DHomogeneous1DSharedPtr
-                                tmp2 = boost::dynamic_pointer_cast<
+                                tmp2 = std::dynamic_pointer_cast<
                                     MultiRegions::DisContField3DHomogeneous1D>(
                                     m_exp[0]);
                             ASSERTL0(tmp2, "Failed to type cast m_exp[0]");
@@ -614,7 +614,7 @@ struct Field
                         else
                         {
                             MultiRegions::ExpList3DHomogeneous1DSharedPtr tmp2 =
-                                boost::dynamic_pointer_cast<
+                                std::dynamic_pointer_cast<
                                     MultiRegions::ExpList3DHomogeneous1D>(
                                     m_exp[0]);
                             ASSERTL0(tmp2, "Failed to type cast m_exp[0]");
@@ -638,7 +638,7 @@ struct Field
                         {
 
                             MultiRegions::ContField2DSharedPtr tmp2 =
-                                boost::dynamic_pointer_cast<
+                                std::dynamic_pointer_cast<
                                     MultiRegions::ContField2D>(m_exp[0]);
 
                             tmp = MemoryManager<MultiRegions::ContField2D>::
@@ -655,7 +655,7 @@ struct Field
                         else // call copy constructor
                         {
                             MultiRegions::DisContField2DSharedPtr tmp2 =
-                                boost::dynamic_pointer_cast<
+                                std::dynamic_pointer_cast<
                                     MultiRegions::DisContField2D>(m_exp[0]);
 
                             tmp = MemoryManager<MultiRegions::DisContField2D>::
@@ -665,7 +665,7 @@ struct Field
                     else
                     {
                         MultiRegions::ExpList2DSharedPtr tmp2 =
-                            boost::dynamic_pointer_cast<
+                            std::dynamic_pointer_cast<
                                 MultiRegions::ExpList2D>(m_exp[0]);
 
                         tmp = MemoryManager<
@@ -686,7 +686,7 @@ struct Field
                     else
                     {
                         MultiRegions::ContField3DSharedPtr tmp2 =
-                            boost::dynamic_pointer_cast<
+                            std::dynamic_pointer_cast<
                                 MultiRegions::ContField3D>(m_exp[0]);
 
                         tmp = MemoryManager<MultiRegions::ContField3D>::
@@ -705,7 +705,7 @@ struct Field
                     else
                     {
                         MultiRegions::DisContField3DSharedPtr tmp2 =
-                            boost::dynamic_pointer_cast<
+                            std::dynamic_pointer_cast<
                                 MultiRegions::DisContField3D>(m_exp[0]);
 
                         tmp = MemoryManager<MultiRegions::DisContField3D>::
@@ -715,7 +715,7 @@ struct Field
                 else
                 {
                     MultiRegions::ExpList3DSharedPtr tmp2 =
-                        boost::dynamic_pointer_cast<MultiRegions::ExpList3D>(
+                        std::dynamic_pointer_cast<MultiRegions::ExpList3D>(
                             m_exp[0]);
 
                     tmp = MemoryManager<
@@ -737,7 +737,7 @@ private:
     map<string, LibUtilities::FieldIOSharedPtr> m_fld;
 };
 
-typedef boost::shared_ptr<Field> FieldSharedPtr;
+typedef std::shared_ptr<Field> FieldSharedPtr;
 }
 }
 

@@ -50,7 +50,7 @@ namespace Nektar
         class ExpList1DHomogeneous2D;
 
         /// Shared pointer to an ExpList1DHomogeneous2D object.
-        typedef boost::shared_ptr<ExpList1DHomogeneous2D>      ExpList1DHomogeneous2DSharedPtr;
+        typedef std::shared_ptr<ExpList1DHomogeneous2D>      ExpList1DHomogeneous2DSharedPtr;
         /// Vector of pointers to ExpList1DHomogeneous2D objects.
         typedef std::vector< ExpList1DHomogeneous2DSharedPtr > ExpList1DHomogeneous2DVector;
         /// Iterator for the vector of ExpList1DHomogeneous2D pointers.

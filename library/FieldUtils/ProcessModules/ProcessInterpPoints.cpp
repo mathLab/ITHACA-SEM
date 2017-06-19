@@ -447,7 +447,7 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
         }
     }
 
-    FieldSharedPtr fromField = boost::shared_ptr<Field>(new Field());
+    FieldSharedPtr fromField = std::shared_ptr<Field>(new Field());
 
     std::vector<std::string> files;
     ParseUtils::GenerateOrderedStringVector(m_config["fromxml"].as<string>().c_str(), files);

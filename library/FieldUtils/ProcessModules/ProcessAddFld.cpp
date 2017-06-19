@@ -84,7 +84,7 @@ void ProcessAddFld::Process(po::variables_map &vm)
     NekDouble scale = boost::lexical_cast<NekDouble>(scalestr);
 
     string fromfld           = m_config["fromfld"].as<string>();
-    FieldSharedPtr fromField = boost::shared_ptr<Field>(new Field());
+    FieldSharedPtr fromField = std::shared_ptr<Field>(new Field());
 
     if (m_f->m_exp.size())
     {

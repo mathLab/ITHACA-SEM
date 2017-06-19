@@ -50,7 +50,7 @@ namespace Nektar
         class ExpList1D;
 
         /// Shared pointer to an ExpList1D object.
-        typedef boost::shared_ptr<ExpList1D>      ExpList1DSharedPtr;
+        typedef std::shared_ptr<ExpList1D>      ExpList1DSharedPtr;
         /// Vector of pointers to ExpList1D objects.
         typedef std::vector<ExpList1DSharedPtr>   ExpList1DVector;
         /// Iterator for the vector of ExpList1D pointers.

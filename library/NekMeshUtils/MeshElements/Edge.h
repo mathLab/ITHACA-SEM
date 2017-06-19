@@ -47,7 +47,7 @@ namespace NekMeshUtils
 {
 
 class Element;
-typedef boost::shared_ptr<Element> ElementSharedPtr;
+typedef std::shared_ptr<Element> ElementSharedPtr;
 
 /**
  * @brief Represents an edge which joins two points.
@@ -133,7 +133,7 @@ private:
     SpatialDomains::SegGeomSharedPtr m_geom;
 };
 /// Shared pointer to an edge.
-typedef boost::shared_ptr<Edge> EdgeSharedPtr;
+typedef std::shared_ptr<Edge> EdgeSharedPtr;
 
 NEKMESHUTILS_EXPORT bool operator==(EdgeSharedPtr const &p1,
                                     EdgeSharedPtr const &p2);
@@ -159,7 +159,7 @@ struct EdgeHash : std::unary_function<EdgeSharedPtr, std::size_t>
         return seed;
     }
 };
-typedef boost::unordered_set<EdgeSharedPtr, EdgeHash> EdgeSet;
+typedef std::unordered_set<EdgeSharedPtr, EdgeHash> EdgeSet;
 }
 }
 

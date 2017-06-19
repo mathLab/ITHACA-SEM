@@ -64,7 +64,7 @@ namespace Nektar
 	 */
         
         PreconditionerLowEnergy::PreconditionerLowEnergy(
-            const boost::shared_ptr<GlobalLinSys> &plinsys,
+            const std::shared_ptr<GlobalLinSys> &plinsys,
             const AssemblyMapSharedPtr &pLocToGloMap)
             : Preconditioner(plinsys, pLocToGloMap),
               m_linsys(plinsys),
@@ -78,7 +78,7 @@ namespace Nektar
             ASSERTL0(solvertype == eIterativeStaticCond ||
                      solvertype == ePETScStaticCond, "Solver type not valid");
 
-            boost::shared_ptr<MultiRegions::ExpList> 
+            std::shared_ptr<MultiRegions::ExpList> 
                 expList=((m_linsys.lock())->GetLocMat()).lock();
             
             StdRegions::StdExpansionSharedPtr locExpansion;
@@ -120,7 +120,7 @@ namespace Nektar
 	 */
        void PreconditionerLowEnergy::v_BuildPreconditioner()
         {
-            boost::shared_ptr<MultiRegions::ExpList> 
+            std::shared_ptr<MultiRegions::ExpList> 
                 expList=((m_linsys.lock())->GetLocMat()).lock();
             LocalRegions::ExpansionSharedPtr locExpansion;
             GlobalLinSysKey m_linSysKey=(m_linsys.lock())->GetKey();
@@ -229,7 +229,7 @@ namespace Nektar
                 cnt = 0;
                 for(j = 0; j < bndCondExp[i]->GetNumElmts(); j++)
                 {
-                    bndCondFaceExp = boost::dynamic_pointer_cast<
+                    bndCondFaceExp = std::dynamic_pointer_cast<
                     StdRegions::StdExpansion2D>(bndCondExp[i]->GetExp(j));
                     if (bndConditions[i]->GetBoundaryConditionType() == 
                         SpatialDomains::eDirichlet)
@@ -917,7 +917,7 @@ namespace Nektar
         */
        void PreconditionerLowEnergy::SetupBlockTransformationMatrix()
        {
-           boost::shared_ptr<MultiRegions::ExpList> 
+           std::shared_ptr<MultiRegions::ExpList> 
                expList=((m_linsys.lock())->GetLocMat()).lock();
            StdRegions::StdExpansionSharedPtr locExpansion;
 
@@ -1221,9 +1221,9 @@ namespace Nektar
         DNekScalMatSharedPtr PreconditionerLowEnergy::
         v_TransformedSchurCompl(
             int offset, 
-            const boost::shared_ptr<DNekScalMat > &loc_mat)
+            const std::shared_ptr<DNekScalMat > &loc_mat)
 	{
-            boost::shared_ptr<MultiRegions::ExpList> 
+            std::shared_ptr<MultiRegions::ExpList> 
                 expList=((m_linsys.lock())->GetLocMat()).lock();
          
             StdRegions::StdExpansionSharedPtr locExpansion;                
@@ -1344,7 +1344,7 @@ namespace Nektar
                 {-1,1,0}, {0,-1,sqrt(double(3))}, {0,1,sqrt(double(3))},
             };
             
-            //boost::shared_ptr<SpatialDomains::PointGeom> verts[6];
+            //std::shared_ptr<SpatialDomains::PointGeom> verts[6];
             SpatialDomains::PointGeomSharedPtr verts[6];
             for(int i=0; i < nVerts; ++i)
             {
@@ -1436,7 +1436,7 @@ namespace Nektar
                 {0,2/sqrt(double(3)),-1/sqrt(double(6))},
                 {0,0,3/sqrt(double(6))}};
             
-            boost::shared_ptr<SpatialDomains::PointGeom> verts[4];
+            std::shared_ptr<SpatialDomains::PointGeom> verts[4];
 	    for(i=0; i < nVerts; ++i)
 	    {
 	        verts[i] =  
@@ -1459,7 +1459,7 @@ namespace Nektar
             SpatialDomains::SegGeomSharedPtr edges[nEdges];
             for(i=0; i < nEdges; ++i)
             {
-                boost::shared_ptr<SpatialDomains::PointGeom>
+                std::shared_ptr<SpatialDomains::PointGeom>
                     vertsArray[2];
                 for(j=0; j<2; ++j)
                 {
@@ -1605,7 +1605,7 @@ namespace Nektar
         void PreconditionerLowEnergy::SetUpReferenceElements()
         {
             int cnt,i,j;
-            boost::shared_ptr<MultiRegions::ExpList> 
+            std::shared_ptr<MultiRegions::ExpList> 
                 expList=((m_linsys.lock())->GetLocMat()).lock();
             GlobalLinSysKey m_linSysKey=(m_linsys.lock())->GetKey();
             StdRegions::VarCoeffMap vVarCoeffMap;

@@ -182,7 +182,7 @@ void ProcessScalGrad::Process(po::variables_map &vm)
                         }
 
                         // Get face 2D expansion from element expansion
-                        bc = boost::dynamic_pointer_cast<
+                        bc = std::dynamic_pointer_cast<
                             StdRegions::StdExpansion2D>(
                             BndExp[0][n]->GetExp(i));
                         nfq = bc->GetTotPoints();

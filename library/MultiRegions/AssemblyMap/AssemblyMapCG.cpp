@@ -1395,7 +1395,7 @@ namespace Nektar
 
                         // Get shape of this face
                         SpatialDomains::Geometry3DSharedPtr geom;
-                        geom = boost::dynamic_pointer_cast<SpatialDomains::
+                        geom = std::dynamic_pointer_cast<SpatialDomains::
                                 Geometry3D> (exp->GetGeom());
                         faceType[meshFaceId] =
                                 geom->GetFace(j)->GetShapeType();
@@ -1957,7 +1957,7 @@ namespace Nektar
             {
                 for (i = 0; i < Tit->second.size(); ++i)
                 {
-                    valence[Tit->second[i].get<1>()] = 1.0;
+                    valence[std::get<1>(Tit->second[i])] = 1.0;
                 }
             }
 
@@ -1968,7 +1968,8 @@ namespace Nektar
             {
                 for (i = 0; i < Tit->second.size(); ++i)
                 {
-                    boost::get<2>(Tit->second.at(i)) /= valence[Tit->second.at(i).get<1>()];
+                    std::get<2>(Tit->second.at(i)) /=
+                        valence[std::get<1>(Tit->second.at(i))];
                 }
             }
 
@@ -2392,7 +2393,7 @@ namespace Nektar
 
             int i, j;
             int nverts = 0;
-            const boost::shared_ptr<LocalRegions::ExpansionVector> exp
+            const std::shared_ptr<LocalRegions::ExpansionVector> exp
                 = locexp.GetExp();
             int nelmts = exp->size();
             const bool verbose = locexp.GetSession()->DefinesCmdLineArgument("verbose");

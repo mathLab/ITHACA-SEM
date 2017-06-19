@@ -257,7 +257,7 @@ void Triangle::MakeOrder(int                                order,
             x[j] = xmap->PhysEvaluate(xp, phys[j]);
         }
 
-        m_volumeNodes[cnt] = boost::shared_ptr<Node>(
+        m_volumeNodes[cnt] = std::shared_ptr<Node>(
             new Node(id++, x[0], x[1], x[2]));
     }
 

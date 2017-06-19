@@ -178,7 +178,7 @@ template <typename T> struct HOTriangle
 };
 
 typedef HOTriangle<NodeSharedPtr> HOSurf;
-typedef boost::shared_ptr<HOSurf> HOSurfSharedPtr;
+typedef std::shared_ptr<HOSurf> HOSurfSharedPtr;
 
 /**
  * Hash class for high-order surfaces.
@@ -206,7 +206,7 @@ struct HOSurfHash : std::unary_function<HOSurfSharedPtr, std::size_t>
 NEKMESHUTILS_EXPORT bool operator==(HOSurfSharedPtr const &p1,
                                     HOSurfSharedPtr const &p2);
 
-typedef boost::unordered_set<HOSurfSharedPtr, HOSurfHash> HOSurfSet;
+typedef std::unordered_set<HOSurfSharedPtr, HOSurfHash> HOSurfSet;
 
 /**
  * @brief A lightweight struct for dealing with high-order quadrilateral

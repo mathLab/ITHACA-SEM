@@ -48,7 +48,7 @@ namespace Nektar
 namespace NekMeshUtils
 {
 class Node;
-typedef boost::shared_ptr<Node> NodeSharedPtr;
+typedef std::shared_ptr<Node> NodeSharedPtr;
 
 /**
  * @brief Represents a point in the domain.
@@ -148,7 +148,7 @@ public:
 
     NEKMESHUTILS_EXPORT NodeSharedPtr copy()
     {
-        return boost::shared_ptr<Node>(new Node(m_id, m_x, m_y, m_z));
+        return std::shared_ptr<Node>(new Node(m_id, m_x, m_y, m_z));
     }
 
     NEKMESHUTILS_EXPORT NekDouble abs2() const
@@ -438,7 +438,7 @@ struct NodeHash : std::unary_function<NodeSharedPtr, std::size_t>
         return seed;
     }
 };
-typedef boost::unordered_set<NodeSharedPtr, NodeHash> NodeSet;
+typedef std::unordered_set<NodeSharedPtr, NodeHash> NodeSet;
 }
 }
 

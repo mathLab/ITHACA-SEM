@@ -89,7 +89,7 @@ void ProcessMultiShear::Process(po::variables_map &vm)
     string fromfld, basename, endname, nstartStr;
     stringstream filename;
     vector<string> infiles(nfld);
-    vector<boost::shared_ptr<Field> > m_fromField(nfld);
+    vector<std::shared_ptr<Field> > m_fromField(nfld);
 
     // Set up list of input fld files.
     fromfld  = m_config["fromfld"].as<string>();
@@ -113,7 +113,7 @@ void ProcessMultiShear::Process(po::variables_map &vm)
 
     for (i = 0; i < nfld; ++i)
     {
-        m_fromField[i]            = boost::shared_ptr<Field>(new Field());
+        m_fromField[i]            = std::shared_ptr<Field>(new Field());
         m_fromField[i]->m_session = m_f->m_session;
         m_fromField[i]->m_graph   = m_f->m_graph;
     }

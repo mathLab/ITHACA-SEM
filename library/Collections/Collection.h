@@ -49,6 +49,14 @@
 namespace Nektar {
 namespace Collections {
 
+struct EnumHash
+{
+    template <typename T>
+    std::size_t operator()(T t) const
+    {
+        return static_cast<std::size_t>(t);
+    }
+};
 
 /**
  * @brief Collection
@@ -88,15 +96,15 @@ class Collection
         inline bool HasOperator(const OperatorType &op);
 
     protected:
-        StdRegions::StdExpansionSharedPtr                     m_stdExp;
-        std::vector<SpatialDomains::GeometrySharedPtr>        m_geom;
-        boost::unordered_map<OperatorType, OperatorSharedPtr> m_ops;
-        CoalescedGeomDataSharedPtr                            m_geomData;
+        StdRegions::StdExpansionSharedPtr                             m_stdExp;
+        std::vector<SpatialDomains::GeometrySharedPtr>                m_geom;
+        std::unordered_map<OperatorType, OperatorSharedPtr, EnumHash> m_ops;
+        CoalescedGeomDataSharedPtr                                    m_geomData;
 
 };
 
 typedef std::vector<Collection> CollectionVector;
-typedef boost::shared_ptr<CollectionVector> CollectionVectorSharedPtr;
+typedef std::shared_ptr<CollectionVector> CollectionVectorSharedPtr;
 
 
 /**

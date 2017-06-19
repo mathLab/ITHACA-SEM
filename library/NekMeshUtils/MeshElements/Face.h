@@ -49,7 +49,7 @@ namespace NekMeshUtils
 {
 
 class Element;
-typedef boost::shared_ptr<Element> ElementSharedPtr;
+typedef std::shared_ptr<Element> ElementSharedPtr;
 
 /**
  * @brief Represents a face comprised of three or more edges.
@@ -150,7 +150,7 @@ public:
     CADObjectSharedPtr m_parentCAD;
 };
 
-typedef boost::shared_ptr<Face> FaceSharedPtr;
+typedef std::shared_ptr<Face> FaceSharedPtr;
 
 NEKMESHUTILS_EXPORT bool operator==(FaceSharedPtr const &p1,
                                     FaceSharedPtr const &p2);
@@ -176,7 +176,7 @@ struct FaceHash : std::unary_function<FaceSharedPtr, std::size_t>
         return seed;
     }
 };
-typedef boost::unordered_set<FaceSharedPtr, FaceHash> FaceSet;
+typedef std::unordered_set<FaceSharedPtr, FaceHash> FaceSet;
 
 }
 }

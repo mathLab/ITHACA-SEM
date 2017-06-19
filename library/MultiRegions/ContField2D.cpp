@@ -90,8 +90,8 @@ namespace Nektar
             m_locToGloMap(),
             m_globalMat(),
             m_globalLinSysManager(
-                    boost::bind(&ContField2D::GenGlobalLinSys, this, _1),
-                    std::string("GlobalLinSys"))
+                std::bind(&ContField2D::GenGlobalLinSys, this, std::placeholders::_1),
+                std::string("GlobalLinSys"))
         {
         }
 
@@ -125,8 +125,8 @@ namespace Nektar
             DisContField2D(pSession,graph2D,variable,false,DeclareCoeffPhysArrays),
             m_globalMat(MemoryManager<GlobalMatrixMap>::AllocateSharedPtr()),
             m_globalLinSysManager(
-                    boost::bind(&ContField2D::GenGlobalLinSys, this, _1),
-                    std::string("GlobalLinSys"))
+                std::bind(&ContField2D::GenGlobalLinSys, this, std::placeholders::_1),
+                std::string("GlobalLinSys"))
         {
             m_locToGloMap = MemoryManager<AssemblyMapCG>
                 ::AllocateSharedPtr(m_session,m_ncoeffs,*this,
@@ -175,8 +175,8 @@ namespace Nektar
             DisContField2D(In,graph2D,variable,false,DeclareCoeffPhysArrays),
             m_globalMat   (MemoryManager<GlobalMatrixMap>::AllocateSharedPtr()),
             m_globalLinSysManager(
-                    boost::bind(&ContField2D::GenGlobalLinSys, this, _1),
-                    std::string("GlobalLinSys"))
+                std::bind(&ContField2D::GenGlobalLinSys, this, std::placeholders::_1),
+                std::string("GlobalLinSys"))
         {
             if(!SameTypeOfBoundaryConditions(In) || CheckIfSingularSystem)
             {
@@ -659,9 +659,9 @@ namespace Nektar
             {
                 for (i = 0; i < it->second.size(); ++i)
                 {
-                    tmp[it->second.at(i).get<1>()] = 
+                    tmp[std::get<1>(it->second.at(i))] =
                         m_bndCondExpansions[it->first]->GetCoeffs()[
-                            it->second.at(i).get<0>()]*it->second.at(i).get<2>(); 
+                            std::get<0>(it->second.at(i))]*std::get<2>(it->second.at(i));
                 }
             }
             m_locToGloMap->UniversalAssembleBnd(tmp);

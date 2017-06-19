@@ -87,7 +87,7 @@ namespace Nektar
             if (In.m_trace)
             {
                 m_trace = MemoryManager<ExpList1D>::AllocateSharedPtr(
-                    *boost::dynamic_pointer_cast<ExpList1D>(In.m_trace),
+                    *std::dynamic_pointer_cast<ExpList1D>(In.m_trace),
                     DeclareCoeffPhysArrays);
             }
         }
@@ -385,7 +385,7 @@ namespace Nektar
             
             ExpList1DSharedPtr trace;
             SpatialDomains::MeshGraph2DSharedPtr graph2D = 
-                boost::dynamic_pointer_cast<SpatialDomains::MeshGraph2D>(
+                std::dynamic_pointer_cast<SpatialDomains::MeshGraph2D>(
                     m_graph);
                 
             // Set up matrix map
@@ -397,7 +397,7 @@ namespace Nektar
                 m_session, m_bndCondExpansions, m_bndConditions, *m_exp,
                 graph2D, m_periodicEdges);
             
-            m_trace = boost::dynamic_pointer_cast<ExpList>(trace);
+            m_trace = std::dynamic_pointer_cast<ExpList>(trace);
             m_traceMap = MemoryManager<AssemblyMapDG>::
                 AllocateSharedPtr(m_session, graph2D, trace, *this,
                                   m_bndCondExpansions, m_bndConditions,
@@ -477,8 +477,8 @@ namespace Nektar
             }
                 
             // Set up information for periodic boundary conditions.
-            boost::unordered_map<int,pair<int,int> > perEdgeToExpMap;
-            boost::unordered_map<int,pair<int,int> >::iterator it2;
+            std::unordered_map<int,pair<int,int> > perEdgeToExpMap;
+            std::unordered_map<int,pair<int,int> >::iterator it2;
             for (cnt = n = 0; n < m_exp->size(); ++n)
             {
                 for (e = 0; e < (*m_exp)[n]->GetNedges(); ++e, ++cnt)
@@ -717,7 +717,7 @@ namespace Nektar
             const SpatialDomains::BoundaryConditionCollection &bconditions
                 = bcs.GetBoundaryConditions();
             SpatialDomains::MeshGraph2DSharedPtr graph2D
-                = boost::dynamic_pointer_cast<
+                = std::dynamic_pointer_cast<
                     SpatialDomains::MeshGraph2D>(m_graph);
             SpatialDomains::BoundaryRegionCollection::const_iterator it;
 
@@ -765,7 +765,7 @@ namespace Nektar
 
                 // Identify periodic boundary region IDs.
                 region1ID = it->first;
-                region2ID = boost::static_pointer_cast<
+                region2ID = std::static_pointer_cast<
                     SpatialDomains::PeriodicBoundaryCondition>(
                         locBCond)->m_connectedBoundaryRegion;
 
@@ -795,7 +795,7 @@ namespace Nektar
                 for (i = 0; i < c->size(); ++i)
                 {
                     SpatialDomains::SegGeomSharedPtr segGeom =
-                        boost::dynamic_pointer_cast<
+                        std::dynamic_pointer_cast<
                             SpatialDomains::SegGeom>((*c)[i]);
                     ASSERTL0(segGeom, "Unable to cast to shared ptr");
 
@@ -806,7 +806,7 @@ namespace Nektar
                              "more than one element of the mesh");
 
                     SpatialDomains::Geometry2DSharedPtr geom =
-                        boost::dynamic_pointer_cast<SpatialDomains::Geometry2D>(
+                        std::dynamic_pointer_cast<SpatialDomains::Geometry2D>(
                             (*elmt)[0]->m_Element);
                     
                     allEdges[(*c)[i]->GetGlobalID()] = 
@@ -1387,7 +1387,7 @@ namespace Nektar
                 int nexp = GetExpSize();
                 Array<OneD,NekDouble> e_tmp;
                 PeriodicMap::iterator it2;
-                boost::unordered_map<int,pair<int,int> >::iterator it3;
+                std::unordered_map<int,pair<int,int> >::iterator it3;
                 LocalRegions::Expansion2DSharedPtr exp2d;
 
                 Array<OneD, Array<OneD, LocalRegions::ExpansionSharedPtr> >
@@ -1686,7 +1686,7 @@ namespace Nektar
                 int nbcs = 0;
 
                 SpatialDomains::MeshGraph2DSharedPtr graph2D =
-                    boost::dynamic_pointer_cast<SpatialDomains::MeshGraph2D>(
+                    std::dynamic_pointer_cast<SpatialDomains::MeshGraph2D>(
                         m_graph);
 
                 // Populate global ID map (takes global geometry ID to local
@@ -1729,7 +1729,7 @@ namespace Nektar
         }
         
         void DisContField2D::v_GetBndElmtExpansion(int i,
-                            boost::shared_ptr<ExpList> &result,
+                            std::shared_ptr<ExpList> &result,
                             const bool DeclareCoeffPhysArrays)
         {
             int n, cnt, nq;
@@ -2060,7 +2060,7 @@ namespace Nektar
                     locExpList->GetCoords(x0, x1, x2);
 
                     LibUtilities::Equation coeffeqn =
-                        boost::static_pointer_cast<
+                        std::static_pointer_cast<
                             SpatialDomains::RobinBoundaryCondition>
                         (m_bndConditions[i])->m_robinPrimitiveCoeff;
 
@@ -2172,7 +2172,7 @@ namespace Nektar
                         const LibUtilities::PointsKey PkeyQ2(num_points1,LibUtilities::eGaussLobattoLegendre);
                         LibUtilities::BasisKey  BkeyQ1(LibUtilities::eOrtho_A, num_modes0, PkeyQ1);
                         LibUtilities::BasisKey  BkeyQ2(LibUtilities::eOrtho_A, num_modes1, PkeyQ2);
-                        SpatialDomains::QuadGeomSharedPtr qGeom = boost::dynamic_pointer_cast<SpatialDomains::QuadGeom>((*m_exp)[i]->GetGeom());
+                        SpatialDomains::QuadGeomSharedPtr qGeom = std::dynamic_pointer_cast<SpatialDomains::QuadGeom>((*m_exp)[i]->GetGeom());
                         ppExp = MemoryManager<LocalRegions::QuadExp>::AllocateSharedPtr(BkeyQ1, BkeyQ2, qGeom);
                     }
                     break;
@@ -2182,7 +2182,7 @@ namespace Nektar
                         const LibUtilities::PointsKey PkeyT2(num_points1,LibUtilities::eGaussRadauMAlpha1Beta0);
                         LibUtilities::BasisKey  BkeyT1(LibUtilities::eOrtho_A, num_modes0, PkeyT1);
                         LibUtilities::BasisKey  BkeyT2(LibUtilities::eOrtho_B, num_modes1, PkeyT2);
-                        SpatialDomains::TriGeomSharedPtr tGeom = boost::dynamic_pointer_cast<SpatialDomains::TriGeom>((*m_exp)[i]->GetGeom());
+                        SpatialDomains::TriGeomSharedPtr tGeom = std::dynamic_pointer_cast<SpatialDomains::TriGeom>((*m_exp)[i]->GetGeom());
                         ppExp = MemoryManager<LocalRegions::TriExp>::AllocateSharedPtr(BkeyT1, BkeyT2, tGeom);
                     }
                     break;
@@ -2284,7 +2284,7 @@ namespace Nektar
                         == SpatialDomains::eDirichlet)
                     {
                         SpatialDomains::DirichletBCShPtr bcPtr
-                            = boost::static_pointer_cast<
+                            = std::static_pointer_cast<
                                 SpatialDomains::DirichletBoundaryCondition>(
                                     m_bndConditions[i]);
                         string filebcs = bcPtr->m_filename;
@@ -2296,7 +2296,7 @@ namespace Nektar
                         else
                         {
                             LibUtilities::Equation condition = 
-                                boost::static_pointer_cast<
+                                std::static_pointer_cast<
                                     SpatialDomains::DirichletBoundaryCondition>
                                         (m_bndConditions[i])->
                                             m_dirichletCondition;
@@ -2312,7 +2312,7 @@ namespace Nektar
                     else if (m_bndConditions[i]->GetBoundaryConditionType()
                              == SpatialDomains::eNeumann)
                     {
-                        SpatialDomains::NeumannBCShPtr bcPtr = boost::static_pointer_cast<
+                        SpatialDomains::NeumannBCShPtr bcPtr = std::static_pointer_cast<
                                 SpatialDomains::NeumannBoundaryCondition>(
                                         m_bndConditions[i]);
                         string filebcs  = bcPtr->m_filename;
@@ -2323,7 +2323,7 @@ namespace Nektar
                         else
                         {
                             LibUtilities::Equation condition =
-                                boost::static_pointer_cast<
+                                std::static_pointer_cast<
                                     SpatialDomains::NeumannBoundaryCondition>
                                         (m_bndConditions[i])->
                                             m_neumannCondition;
@@ -2338,7 +2338,7 @@ namespace Nektar
                     else if (m_bndConditions[i]->GetBoundaryConditionType()
                              == SpatialDomains::eRobin)
                     {
-                        SpatialDomains::RobinBCShPtr bcPtr = boost::static_pointer_cast<
+                        SpatialDomains::RobinBCShPtr bcPtr = std::static_pointer_cast<
                             SpatialDomains::RobinBoundaryCondition>
                                 (m_bndConditions[i]);
                         string filebcs = bcPtr->m_filename;
@@ -2350,7 +2350,7 @@ namespace Nektar
                         else
                         {
                             LibUtilities::Equation condition = 
-                                boost::static_pointer_cast<
+                                std::static_pointer_cast<
                                     SpatialDomains::RobinBoundaryCondition>
                                         (m_bndConditions[i])->
                                             m_robinFunction;

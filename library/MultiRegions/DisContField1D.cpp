@@ -133,7 +133,7 @@ namespace Nektar
             }
             
             SpatialDomains::MeshGraph1DSharedPtr graph1D = 
-                boost::dynamic_pointer_cast<SpatialDomains::MeshGraph1D>(
+                std::dynamic_pointer_cast<SpatialDomains::MeshGraph1D>(
                     m_graph);
 
             m_globalBndMat = MemoryManager<GlobalLinSysMap>::AllocateSharedPtr();
@@ -145,7 +145,7 @@ namespace Nektar
                     *m_exp,graph1D,
                     m_periodicVerts);
 
-            m_trace = boost::dynamic_pointer_cast<ExpList>(trace);
+            m_trace = std::dynamic_pointer_cast<ExpList>(trace);
 
             m_traceMap = MemoryManager<AssemblyMapDG>::
                 AllocateSharedPtr(m_session, graph1D, trace, *this,
@@ -224,8 +224,8 @@ namespace Nektar
             }
 
 
-            boost::unordered_map<int,pair<int,int> > perVertToExpMap;
-            boost::unordered_map<int,pair<int,int> >::iterator it2;
+            std::unordered_map<int,pair<int,int> > perVertToExpMap;
+            std::unordered_map<int,pair<int,int> >::iterator it2;
             for (n = 0; n < m_exp->size(); ++n)
             {
                 for (int v = 0; v < (*m_exp)[n]->GetNverts(); ++v)
@@ -578,7 +578,7 @@ namespace Nektar
                     = bcs.GetBoundaryConditions();
 
             SpatialDomains::MeshGraph1DSharedPtr graph1D
-                = boost::dynamic_pointer_cast<
+                = std::dynamic_pointer_cast<
                     SpatialDomains::MeshGraph1D>(m_graph);
             SpatialDomains::BoundaryRegionCollection::const_iterator it;
 
@@ -658,7 +658,7 @@ namespace Nektar
 
                 // Identify periodic boundary region IDs.
                 region1ID = it->first;
-                region2ID = boost::static_pointer_cast<
+                region2ID = std::static_pointer_cast<
                     SpatialDomains::PeriodicBoundaryCondition>(
                         locBCond)->m_connectedBoundaryRegion;
 
@@ -725,7 +725,7 @@ namespace Nektar
                     {
                         for (k = 0; k < bregionIt->second->size(); k++)
                         {
-                            if((vert = boost::dynamic_pointer_cast
+                            if((vert = std::dynamic_pointer_cast
                                     <SpatialDomains::PointGeom>(
                                         (*bregionIt->second)[k])))
                             {
@@ -1321,7 +1321,7 @@ namespace Nektar
                         SpatialDomains::eDirichlet)
                     {
                         m_bndCondExpansions[i]->SetCoeff(0,
-                            (boost::static_pointer_cast<SpatialDomains
+                            (std::static_pointer_cast<SpatialDomains
                              ::DirichletBoundaryCondition>(m_bndConditions[i])
                              ->m_dirichletCondition).Evaluate(x0[0],x1[0],x2[0],time));
                         m_bndCondExpansions[i]->SetPhys(0,m_bndCondExpansions[i]->GetCoeff(0));
@@ -1330,7 +1330,7 @@ namespace Nektar
                             == SpatialDomains::eNeumann)
                     {
                         m_bndCondExpansions[i]->SetCoeff(0,
-                            (boost::static_pointer_cast<SpatialDomains
+                            (std::static_pointer_cast<SpatialDomains
                              ::NeumannBoundaryCondition>(m_bndConditions[i])
                              ->m_neumannCondition).Evaluate(x0[0],x1[0],x2[0],time));
                     }
@@ -1338,7 +1338,7 @@ namespace Nektar
                             == SpatialDomains::eRobin)
                     {
                         m_bndCondExpansions[i]->SetCoeff(0,
-                            (boost::static_pointer_cast<SpatialDomains
+                            (std::static_pointer_cast<SpatialDomains
                              ::RobinBoundaryCondition>(m_bndConditions[i])
                              ->m_robinFunction).Evaluate(x0[0],x1[0],x2[0],time));
                         
@@ -1411,7 +1411,7 @@ namespace Nektar
         }
         
         void DisContField1D::v_GetBndElmtExpansion(int i,
-                            boost::shared_ptr<ExpList> &result,
+                            std::shared_ptr<ExpList> &result,
                             const bool DeclareCoeffPhysArrays)
         {
             int n, cnt, nq;
@@ -1508,7 +1508,7 @@ namespace Nektar
                     
                     m_bndCondExpansions[i]->GetCoords(x0, x1, x2);
 
-                    coeffphys[0]  = (boost::static_pointer_cast<SpatialDomains
+                    coeffphys[0]  = (std::static_pointer_cast<SpatialDomains
                          ::RobinBoundaryCondition>(m_bndConditions[i])
                          ->m_robinPrimitiveCoeff).Evaluate(x0[0],x1[0],x2[0],0.0);
                         

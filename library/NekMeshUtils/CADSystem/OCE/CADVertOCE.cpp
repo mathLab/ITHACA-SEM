@@ -57,7 +57,7 @@ void CADVertOCE::Initialise(int i, TopoDS_Shape in)
     m_id      = i;
     m_occVert = BRep_Tool::Pnt(TopoDS::Vertex(in));
 
-    m_node = boost::shared_ptr<Node>(
+    m_node = std::shared_ptr<Node>(
         new Node(i - 1, m_occVert.X(), m_occVert.Y(), m_occVert.Z()));
     degen = false;
 

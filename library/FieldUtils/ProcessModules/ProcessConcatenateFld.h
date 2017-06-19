@@ -50,7 +50,7 @@ class ProcessConcatenateFld : public ProcessModule
 {
 public:
     /// Creates an instance of this class
-    static boost::shared_ptr<Module> create(FieldSharedPtr f)
+    static std::shared_ptr<Module> create(FieldSharedPtr f)
     {
         return MemoryManager<ProcessConcatenateFld>::AllocateSharedPtr(f);
     }

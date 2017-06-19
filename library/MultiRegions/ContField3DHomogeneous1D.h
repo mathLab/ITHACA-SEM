@@ -102,7 +102,7 @@ namespace Nektar
             virtual void v_ClearGlobalLinSysManager(void);
         };
 
-        typedef boost::shared_ptr<ContField3DHomogeneous1D>  
+        typedef std::shared_ptr<ContField3DHomogeneous1D>  
             ContField3DHomogeneous1DSharedPtr;
 
     } //end of namespace

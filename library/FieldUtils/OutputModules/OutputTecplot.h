@@ -62,7 +62,7 @@ class OutputTecplot : public OutputModule
 {
 public:
     /// Creates an instance of this class
-    static boost::shared_ptr<Module> create(FieldSharedPtr f)
+    static std::shared_ptr<Module> create(FieldSharedPtr f)
     {
         return MemoryManager<OutputTecplot>::AllocateSharedPtr(f);
     }
@@ -119,7 +119,7 @@ class OutputTecplotBinary : public OutputTecplot
 {
 public:
     /// Creates an instance of this class
-    static boost::shared_ptr<Module> create(FieldSharedPtr f)
+    static std::shared_ptr<Module> create(FieldSharedPtr f)
     {
         return MemoryManager<OutputTecplotBinary>::AllocateSharedPtr(f);
     }

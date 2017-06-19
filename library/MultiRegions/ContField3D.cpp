@@ -50,8 +50,9 @@ namespace Nektar
             m_locToGloMap(),
             m_globalMat(),
             m_globalLinSysManager(
-                    boost::bind(&ContField3D::GenGlobalLinSys, this, _1),
-                    std::string("GlobalLinSys"))
+                std::bind(
+                    &ContField3D::GenGlobalLinSys, this, std::placeholders::_1),
+                std::string("GlobalLinSys"))
         {
         }
 
@@ -80,11 +81,11 @@ namespace Nektar
                                  const SpatialDomains::MeshGraphSharedPtr &graph3D,
                                  const std::string &variable,
                                  const bool CheckIfSingularSystem):
-                DisContField3D(pSession,graph3D,variable,false),
+            DisContField3D(pSession,graph3D,variable,false),
                 m_globalMat(MemoryManager<GlobalMatrixMap>::AllocateSharedPtr()),
                 m_globalLinSysManager(
-                        boost::bind(&ContField3D::GenGlobalLinSys, this, _1),
-                        std::string("GlobalLinSys"))
+                    std::bind(&ContField3D::GenGlobalLinSys, this,  std::placeholders::_1),
+                    std::string("GlobalLinSys"))
         {
             m_locToGloMap = MemoryManager<AssemblyMapCG>::AllocateSharedPtr(
                 m_session,m_ncoeffs,*this,m_bndCondExpansions,m_bndConditions,
@@ -127,8 +128,9 @@ namespace Nektar
                                  const bool CheckIfSingularSystem):
 	    DisContField3D(In,graph3D,variable,false),
             m_globalMat   (MemoryManager<GlobalMatrixMap>::AllocateSharedPtr()),
-            m_globalLinSysManager(boost::bind(&ContField3D::GenGlobalLinSys, this, _1),
-                                  std::string("GlobalLinSys"))
+            m_globalLinSysManager(
+                std::bind(&ContField3D::GenGlobalLinSys, this,  std::placeholders::_1),
+                std::string("GlobalLinSys"))
 
         {
             if(!SameTypeOfBoundaryConditions(In) || CheckIfSingularSystem)
@@ -452,9 +454,9 @@ namespace Nektar
           {
               for (i = 0; i < it->second.size(); ++i)
               {
-                  tmp[it->second.at(i).get<1>()] = 
+                  tmp[std::get<1>(it->second.at(i))] =
                       m_bndCondExpansions[it->first]->GetCoeffs()[
-                           it->second.at(i).get<0>()]*it->second.at(i).get<2>();
+                          std::get<0>(it->second.at(i))]*std::get<2>(it->second.at(i));
               }
           }
 

@@ -123,7 +123,7 @@ namespace Nektar
             if(DeclareLinesSetCoeffPhys)
             {
                 bool False = false;
-                ExpList1DSharedPtr zero_line = boost::dynamic_pointer_cast<ExpList1D> (In.m_lines[0]);
+                ExpList1DSharedPtr zero_line = std::dynamic_pointer_cast<ExpList1D> (In.m_lines[0]);
 
                 for(int n = 0; n < m_lines.num_elements(); ++n)
                 {
@@ -156,7 +156,7 @@ namespace Nektar
                 }
                 
                 ExpList1DSharedPtr zero_line_old =
-                        boost::dynamic_pointer_cast<ExpList1D> (In.m_lines[0]);
+                        std::dynamic_pointer_cast<ExpList1D> (In.m_lines[0]);
                 
                 ExpList1DSharedPtr zero_line = 
                         MemoryManager<ExpList1D>::AllocateSharedPtr(*(zero_line_old), eIDsLine);

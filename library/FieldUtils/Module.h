@@ -227,7 +227,7 @@ protected:
     set<string> m_allowedFiles;
 };
 
-typedef boost::shared_ptr<InputModule> InputModuleSharedPtr;
+typedef std::shared_ptr<InputModule> InputModuleSharedPtr;
 
 /**
  * @brief Abstract base class for processing modules.
@@ -262,7 +262,7 @@ protected:
 typedef pair<ModuleType, string> ModuleKey;
 FIELD_UTILS_EXPORT ostream &operator<<(ostream &os, const ModuleKey &rhs);
 
-typedef boost::shared_ptr<Module> ModuleSharedPtr;
+typedef std::shared_ptr<Module> ModuleSharedPtr;
 typedef LibUtilities::NekFactory<ModuleKey, Module, FieldSharedPtr>
     ModuleFactory;
 
@@ -290,10 +290,10 @@ public:
     void v_SplitComm(int pRows, int pColumns)
     {
         // Compute row and column in grid.
-        m_commRow = boost::shared_ptr<FieldConvertComm>(
+        m_commRow = std::shared_ptr<FieldConvertComm>(
             new FieldConvertComm(pColumns, m_rank));
         m_commColumn =
-            boost::shared_ptr<FieldConvertComm>(new FieldConvertComm(pRows, 0));
+            std::shared_ptr<FieldConvertComm>(new FieldConvertComm(pRows, 0));
     }
 
 protected:

@@ -65,7 +65,7 @@ namespace Nektar
         */
 
         PreconditionerBlock::PreconditionerBlock(
-            const boost::shared_ptr<GlobalLinSys> &plinsys,
+            const std::shared_ptr<GlobalLinSys> &plinsys,
             const AssemblyMapSharedPtr &pLocToGloMap)
             : Preconditioner(plinsys, pLocToGloMap),
               m_linsys(plinsys),
@@ -543,14 +543,14 @@ namespace Nektar
          */
         void PreconditionerBlock::BlockPreconditionerHDG()
         {
-            boost::shared_ptr<MultiRegions::ExpList>
+            std::shared_ptr<MultiRegions::ExpList>
                 expList = ((m_linsys.lock())->GetLocMat()).lock();
-            boost::shared_ptr<MultiRegions::ExpList> trace = expList->GetTrace();
+            std::shared_ptr<MultiRegions::ExpList> trace = expList->GetTrace();
             LocalRegions::ExpansionSharedPtr locExpansion;
             DNekScalBlkMatSharedPtr loc_mat;
             DNekScalMatSharedPtr    bnd_mat;
 
-            AssemblyMapDGSharedPtr asmMap = boost::dynamic_pointer_cast<
+            AssemblyMapDGSharedPtr asmMap = std::dynamic_pointer_cast<
                 AssemblyMapDG>(m_locToGloMap);
 
             int i, j, k, n, cnt, cnt2;

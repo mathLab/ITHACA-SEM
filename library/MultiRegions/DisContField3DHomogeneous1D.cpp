@@ -73,7 +73,7 @@ namespace Nektar
             if (DeclarePlanesSetCoeffPhys)
             {
                 DisContField2DSharedPtr zero_plane =
-                    boost::dynamic_pointer_cast<DisContField2D> (In.m_planes[0]);
+                    std::dynamic_pointer_cast<DisContField2D> (In.m_planes[0]);
 
                 for(int n = 0; n < m_planes.num_elements(); ++n)
                 {
@@ -321,7 +321,7 @@ namespace Nektar
             EvaluateBoundaryConditions(time, varName);
         }
 
-        boost::shared_ptr<ExpList> &DisContField3DHomogeneous1D::
+        std::shared_ptr<ExpList> &DisContField3DHomogeneous1D::
             v_UpdateBndCondExpansion(int i)
         {
             return UpdateBndCondExpansion(i);
@@ -381,7 +381,7 @@ namespace Nektar
         }
         
         void DisContField3DHomogeneous1D::v_GetBndElmtExpansion(int i,
-                            boost::shared_ptr<ExpList> &result,
+                            std::shared_ptr<ExpList> &result,
                             const bool DeclareCoeffPhysArrays)
         {
             int n, cnt, nq;
@@ -465,7 +465,7 @@ namespace Nektar
                                 GetExp(i+k*exp_size_per_plane)->GetTotPoints();
                             offset      = GetPhys_Offset(elmtID);
                             elmt        = GetExp(elmtID);
-                            temp_BC_exp = boost::dynamic_pointer_cast<
+                            temp_BC_exp = std::dynamic_pointer_cast<
                                 StdRegions::StdExpansion1D>(
                                     m_bndCondExpansions[n]->GetExp(
                                         i+k*exp_size_per_plane));
@@ -516,7 +516,7 @@ namespace Nektar
                                 GetCoeff_Offset(i+k*exp_size_per_plane);
 
                             elmt = GetExp(elmtID);
-                            temp_BC_exp = boost::dynamic_pointer_cast<
+                            temp_BC_exp = std::dynamic_pointer_cast<
                                 StdRegions::StdExpansion1D>(
                                     m_bndCondExpansions[n]->GetExp(
                                         i+k*exp_size_per_plane));

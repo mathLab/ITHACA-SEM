@@ -47,10 +47,6 @@ using namespace std;
 #include <StdRegions/StdSegExp.h>
 #include <StdRegions/StdTriExp.h>
 
-#include <boost/tuple/tuple.hpp>
-#include <boost/tuple/tuple_comparison.hpp>
-#include <boost/unordered_set.hpp>
-
 namespace Nektar
 {
 namespace FieldUtils
@@ -97,7 +93,7 @@ bool operator==(TriFaceIDs const &p1, TriFaceIDs const &p2)
     return ids1[0] == ids2[0] && ids1[1] == ids2[1] && ids1[2] == ids2[2];
 }
 
-typedef boost::unordered_map<TriFaceIDs, int, TriFaceHash> TriFaceMap;
+typedef std::unordered_map<TriFaceIDs, int, TriFaceHash> TriFaceMap;
 
 ModuleKey ProcessDisplacement::className =
     GetModuleFactory().RegisterCreatorFunction(
@@ -187,7 +183,7 @@ void ProcessDisplacement::Process(po::variables_map &vm)
             int e = mIt->second;
 
             SpatialDomains::SegGeomSharedPtr from =
-                boost::dynamic_pointer_cast<SpatialDomains::SegGeom>(
+                std::dynamic_pointer_cast<SpatialDomains::SegGeom>(
                     bndCondExpU->GetExp(e)->GetGeom());
 
             SpatialDomains::SegGeomSharedPtr to = sIt->second;
@@ -242,7 +238,7 @@ void ProcessDisplacement::Process(po::variables_map &vm)
             for (int i = 0; i < bndCondExpU->GetExpSize(); ++i)
             {
                 SpatialDomains::TriGeomSharedPtr from =
-                    boost::dynamic_pointer_cast<SpatialDomains::TriGeom>(
+                    std::dynamic_pointer_cast<SpatialDomains::TriGeom>(
                         bndCondExpU->GetExp(i)->GetGeom());
 
                 TriFaceIDs t(from->GetVid(0), from->GetVid(1), from->GetVid(2));
@@ -280,7 +276,7 @@ void ProcessDisplacement::Process(po::variables_map &vm)
             }
 
             SpatialDomains::TriGeomSharedPtr from =
-                boost::dynamic_pointer_cast<SpatialDomains::TriGeom>(
+                std::dynamic_pointer_cast<SpatialDomains::TriGeom>(
                     bndCondExpU->GetExp(e)->GetGeom());
 
             SpatialDomains::TriGeomSharedPtr to = sIt->second;

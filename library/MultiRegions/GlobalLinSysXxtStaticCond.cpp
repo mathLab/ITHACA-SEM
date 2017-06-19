@@ -87,8 +87,8 @@ namespace Nektar
          */
         GlobalLinSysXxtStaticCond::GlobalLinSysXxtStaticCond(
                      const GlobalLinSysKey &pKey,
-                     const boost::weak_ptr<ExpList> &pExpList,
-                     const boost::shared_ptr<AssemblyMap>
+                     const std::weak_ptr<ExpList> &pExpList,
+                     const std::shared_ptr<AssemblyMap>
                                                             &pLocToGloMap)
             : GlobalLinSys          (pKey, pExpList, pLocToGloMap),
               GlobalLinSysXxt       (pKey, pExpList, pLocToGloMap),
@@ -110,12 +110,12 @@ namespace Nektar
          */
         GlobalLinSysXxtStaticCond::GlobalLinSysXxtStaticCond(
                      const GlobalLinSysKey &pKey,
-                     const boost::weak_ptr<ExpList> &pExpList,
+                     const std::weak_ptr<ExpList> &pExpList,
                      const DNekScalBlkMatSharedPtr pSchurCompl,
                      const DNekScalBlkMatSharedPtr pBinvD,
                      const DNekScalBlkMatSharedPtr pC,
                      const DNekScalBlkMatSharedPtr pInvD,
-                     const boost::shared_ptr<AssemblyMap>
+                     const std::shared_ptr<AssemblyMap>
                                                             &pLocToGloMap)
             : GlobalLinSys          (pKey, pExpList, pLocToGloMap),
               GlobalLinSysXxt       (pKey, pExpList, pLocToGloMap),
@@ -142,7 +142,7 @@ namespace Nektar
          * @param   locToGloMap Local to global mapping information.
          */
         void GlobalLinSysXxtStaticCond::CreateMap(
-                    const boost::shared_ptr<AssemblyMap> &pLocToGloMap)
+                    const std::shared_ptr<AssemblyMap> &pLocToGloMap)
         {
             const Array<OneD, const int> &vMap
                                     = pLocToGloMap->GetLocalToGlobalBndMap();
@@ -176,7 +176,7 @@ namespace Nektar
          * @param   locToGloMap Local to global mapping information.
          */
         void GlobalLinSysXxtStaticCond::v_AssembleSchurComplement(
-            boost::shared_ptr<AssemblyMap> pLocToGloMap)
+            std::shared_ptr<AssemblyMap> pLocToGloMap)
         {
             CreateMap(pLocToGloMap);
 
@@ -262,12 +262,12 @@ namespace Nektar
 
         GlobalLinSysStaticCondSharedPtr GlobalLinSysXxtStaticCond::v_Recurse(
             const GlobalLinSysKey                &mkey,
-            const boost::weak_ptr<ExpList>       &pExpList,
+            const std::weak_ptr<ExpList>         &pExpList,
             const DNekScalBlkMatSharedPtr         pSchurCompl,
             const DNekScalBlkMatSharedPtr         pBinvD,
             const DNekScalBlkMatSharedPtr         pC,
             const DNekScalBlkMatSharedPtr         pInvD,
-            const boost::shared_ptr<AssemblyMap> &l2gMap)
+            const std::shared_ptr<AssemblyMap>   &l2gMap)
         {
             GlobalLinSysXxtStaticCondSharedPtr sys = MemoryManager<
                 GlobalLinSysXxtStaticCond>::AllocateSharedPtr(

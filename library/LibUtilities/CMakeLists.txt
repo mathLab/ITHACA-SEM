@@ -185,6 +185,14 @@ SET(InterpreterSources
         ./Interpreter/AnalyticExpressionEvaluator.cpp
 )
 
+SET(KernelHeaders
+    ./Kernel/kernel.h
+)
+
+SET(KernelSources
+    ./Kernel/kernel.cpp
+)
+
 SET(LinearAlgebraHeaders
     ./LinearAlgebra/Arpack.hpp
     ./LinearAlgebra/BlasArray.hpp
@@ -326,6 +334,9 @@ SOURCE_GROUP("Interpreter Sources" FILES ${InterpreterSources})
 SOURCE_GROUP("Communication Headers" FILES ${CommunicationHeaders})
 SOURCE_GROUP("Communication Sources" FILES ${CommunicationSources})
 
+SOURCE_GROUP("Kernel Headers" FILES ${KernelHeaders})
+SOURCE_GROUP("Kernel Sources" FILES ${KernelSources})
+
 SOURCE_GROUP("TimeIntegration Headers" FILES ${TimeIntegrationHeaders})
 SOURCE_GROUP("TimeIntegration Sources" FILES ${TimeIntegrationSources})
 
@@ -345,6 +356,7 @@ SET(LibUtilityHeaders
     ${LinearAlgebraHeaders}
     ${BasicConstHeaders}
     ${InterpreterHeaders}
+    ${KernelHeaders}
     ${TimeIntegrationHeaders}
     ${FFTHeaders}
     ${BaseHeaders}
@@ -365,6 +377,7 @@ SET(LibUtilitySources
     ${CommunicationSources}
     ${LinearAlgebraSources}
     ${InterpreterSources}
+    ${KernelSources}
     ${TimeIntegrationSources}
     ${FFTSources}
     ${MemorySources}

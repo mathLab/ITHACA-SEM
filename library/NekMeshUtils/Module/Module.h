@@ -255,7 +255,7 @@ namespace NekMeshUtils
     typedef std::pair<ModuleType,std::string> ModuleKey;
     NEKMESHUTILS_EXPORT std::ostream& operator<<(std::ostream& os, const ModuleKey& rhs);
 
-    typedef boost::shared_ptr<Module> ModuleSharedPtr;
+    typedef std::shared_ptr<Module> ModuleSharedPtr;
     typedef LibUtilities::NekFactory< ModuleKey, Module, MeshSharedPtr > ModuleFactory;
 
     NEKMESHUTILS_EXPORT ModuleFactory& GetModuleFactory();

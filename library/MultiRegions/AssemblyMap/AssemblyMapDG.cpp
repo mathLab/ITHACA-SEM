@@ -514,7 +514,7 @@ namespace Nektar
             }
 
             // Now set up mapping from global coefficients to universal.
-            ExpListSharedPtr tr = boost::dynamic_pointer_cast<ExpList>(trace);
+            ExpListSharedPtr tr = std::dynamic_pointer_cast<ExpList>(trace);
             SetUpUniversalDGMap   (locExp);
             SetUpUniversalTraceMap(locExp, tr, periodicTrace);
 

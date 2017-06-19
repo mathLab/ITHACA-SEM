@@ -983,7 +983,7 @@ namespace Nektar
                 int modes_offset = 0;
                 int planes_offset = 0;
                 Array<OneD, NekDouble> coeff_tmp;
-                boost::unordered_map<int,int>::iterator it;
+                std::unordered_map<int,int>::iterator it;
                 
                 // Build map of plane IDs lying on this processor and determine
                 // mapping from element ids to location in expansion list.
@@ -1076,7 +1076,7 @@ namespace Nektar
         
         //Extract the data in fielddata into the m_coeff list
         void ExpListHomogeneous1D::v_ExtractCoeffsToCoeffs(
-                                                           const boost::shared_ptr<ExpList> &fromExpList,const  Array<OneD, const NekDouble> &fromCoeffs, Array<OneD, NekDouble> &toCoeffs)
+                                                           const std::shared_ptr<ExpList> &fromExpList,const  Array<OneD, const NekDouble> &fromCoeffs, Array<OneD, NekDouble> &toCoeffs)
         {
             int i;
             int fromNcoeffs_per_plane = fromExpList->GetPlane(0)->GetNcoeffs();

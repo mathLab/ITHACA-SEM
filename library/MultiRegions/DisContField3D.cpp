@@ -42,9 +42,9 @@
 #include <LocalRegions/TetExp.h>
 #include <LocalRegions/PrismExp.h>
 #include <LibUtilities/Foundations/Interp.h>
-#include <LibUtilities/Foundations/ManagerAccess.h> 
+#include <LibUtilities/Foundations/ManagerAccess.h>
 #include <boost/assign/std/vector.hpp>
-#include <boost/tuple/tuple.hpp>
+#include <tuple>
 
 using namespace std;
 using namespace boost::assign;
@@ -314,7 +314,7 @@ using namespace boost::assign;
              ExpList2DSharedPtr trace;
 
              SpatialDomains::MeshGraph3DSharedPtr graph3D = 
-                 boost::dynamic_pointer_cast<SpatialDomains::MeshGraph3D>(
+                 std::dynamic_pointer_cast<SpatialDomains::MeshGraph3D>(
                      m_graph);
 
              // Set up matrix map
@@ -406,8 +406,8 @@ using namespace boost::assign;
              }
 
              // Set up information for periodic boundary conditions.
-             boost::unordered_map<int,pair<int,int> > perFaceToExpMap;
-             boost::unordered_map<int,pair<int,int> >::iterator it2;
+             std::unordered_map<int,pair<int,int> > perFaceToExpMap;
+             std::unordered_map<int,pair<int,int> >::iterator it2;
              cnt = 0;
              LocalRegions::Expansion3DSharedPtr exp3d;
              for (int n = 0; n < m_exp->size(); ++n)
@@ -679,7 +679,7 @@ using namespace boost::assign;
             const SpatialDomains::BoundaryConditionCollection &bconditions
                 = bcs.GetBoundaryConditions();
             SpatialDomains::MeshGraph3DSharedPtr graph3D
-                = boost::dynamic_pointer_cast<
+                = std::dynamic_pointer_cast<
                     SpatialDomains::MeshGraph3D>(m_graph);
             SpatialDomains::BoundaryRegionCollection::const_iterator it;
 
@@ -748,7 +748,7 @@ using namespace boost::assign;
 
                 // Identify periodic boundary region IDs.
                 region1ID = it->first;
-                region2ID = boost::static_pointer_cast<
+                region2ID = std::static_pointer_cast<
                     SpatialDomains::PeriodicBoundaryCondition>(
                         locBCond)->m_connectedBoundaryRegion;
 
@@ -784,7 +784,7 @@ using namespace boost::assign;
                 for (i = 0; i < c->size(); ++i)
                 {
                     SpatialDomains::Geometry2DSharedPtr faceGeom =
-                        boost::dynamic_pointer_cast<
+                        std::dynamic_pointer_cast<
                             SpatialDomains::Geometry2D>((*c)[i]);
                     ASSERTL1(faceGeom, "Unable to cast to shared ptr");
 
@@ -1909,7 +1909,7 @@ using namespace boost::assign;
                 int nbcs = 0;
 
                 SpatialDomains::MeshGraph3DSharedPtr graph3D = 
-                    boost::dynamic_pointer_cast<SpatialDomains::MeshGraph3D>(
+                    std::dynamic_pointer_cast<SpatialDomains::MeshGraph3D>(
                         m_graph);
 
                 // Populate global ID map (takes global geometry ID to local
@@ -1953,7 +1953,7 @@ using namespace boost::assign;
         }
         
         void DisContField3D::v_GetBndElmtExpansion(int i,
-                            boost::shared_ptr<ExpList> &result,
+                            std::shared_ptr<ExpList> &result,
                             const bool DeclareCoeffPhysArrays)
         {
             int n, cnt, nq;
@@ -2216,7 +2216,7 @@ using namespace boost::assign;
                     locExpList->GetCoords(x0, x1, x2);
                     
                     LibUtilities::Equation coeffeqn =
-                        boost::static_pointer_cast<
+                        std::static_pointer_cast<
                             SpatialDomains::RobinBoundaryCondition>
                         (m_bndConditions[i])->m_robinPrimitiveCoeff;
                     
@@ -2329,7 +2329,7 @@ using namespace boost::assign;
                         LibUtilities::BasisKey  BkeyH1(LibUtilities::eOrtho_A, num_modes0, PkeyH1);
                         LibUtilities::BasisKey  BkeyH2(LibUtilities::eOrtho_A, num_modes1, PkeyH2);
                         LibUtilities::BasisKey  BkeyH3(LibUtilities::eOrtho_A, num_modes2, PkeyH3);
-                        SpatialDomains::HexGeomSharedPtr hGeom = boost::dynamic_pointer_cast<SpatialDomains::HexGeom>((*m_exp)[i]->GetGeom());
+                        SpatialDomains::HexGeomSharedPtr hGeom = std::dynamic_pointer_cast<SpatialDomains::HexGeom>((*m_exp)[i]->GetGeom());
                         ppExp = MemoryManager<LocalRegions::HexExp>::AllocateSharedPtr(BkeyH1, BkeyH2, BkeyH3, hGeom);
                     }
                     break;
@@ -2341,7 +2341,7 @@ using namespace boost::assign;
                         LibUtilities::BasisKey  BkeyT1(LibUtilities::eOrtho_A, num_modes0, PkeyT1);
                         LibUtilities::BasisKey  BkeyT2(LibUtilities::eOrtho_B, num_modes1, PkeyT2);
                         LibUtilities::BasisKey  BkeyT3(LibUtilities::eOrtho_C, num_modes2, PkeyT3);
-                        SpatialDomains::TetGeomSharedPtr tGeom = boost::dynamic_pointer_cast<SpatialDomains::TetGeom>((*m_exp)[i]->GetGeom());
+                        SpatialDomains::TetGeomSharedPtr tGeom = std::dynamic_pointer_cast<SpatialDomains::TetGeom>((*m_exp)[i]->GetGeom());
                         ppExp = MemoryManager<LocalRegions::TetExp>::AllocateSharedPtr(BkeyT1, BkeyT2, BkeyT3, tGeom);
                     }
                     break;
@@ -2353,7 +2353,7 @@ using namespace boost::assign;
                         LibUtilities::BasisKey  BkeyP1(LibUtilities::eOrtho_A, num_modes0, PkeyP1);
                         LibUtilities::BasisKey  BkeyP2(LibUtilities::eOrtho_A, num_modes1, PkeyP2);
                         LibUtilities::BasisKey  BkeyP3(LibUtilities::eOrtho_B, num_modes2, PkeyP3);
-                        SpatialDomains::PrismGeomSharedPtr pGeom = boost::dynamic_pointer_cast<SpatialDomains::PrismGeom>((*m_exp)[i]->GetGeom());
+                        SpatialDomains::PrismGeomSharedPtr pGeom = std::dynamic_pointer_cast<SpatialDomains::PrismGeom>((*m_exp)[i]->GetGeom());
                         ppExp = MemoryManager<LocalRegions::PrismExp>::AllocateSharedPtr(BkeyP1, BkeyP2, BkeyP3, pGeom);
                     }
                     break;
@@ -2471,7 +2471,7 @@ using namespace boost::assign;
                     if (m_bndConditions[i]->GetBoundaryConditionType()
                         == SpatialDomains::eDirichlet)
                     {
-                        SpatialDomains::DirichletBCShPtr bcPtr = boost::static_pointer_cast<
+                        SpatialDomains::DirichletBCShPtr bcPtr = std::static_pointer_cast<
                             SpatialDomains::DirichletBoundaryCondition>(
                                 m_bndConditions[i]);
                         string filebcs = bcPtr->m_filename;
@@ -2485,7 +2485,7 @@ using namespace boost::assign;
                         
                         if (exprbcs != "")
                         {
-                            LibUtilities::Equation  condition = boost::static_pointer_cast<SpatialDomains::
+                            LibUtilities::Equation  condition = std::static_pointer_cast<SpatialDomains::
                                     DirichletBoundaryCondition >(
                                     m_bndConditions[i])->m_dirichletCondition;
                             
@@ -2501,7 +2501,7 @@ using namespace boost::assign;
                     else if (m_bndConditions[i]->GetBoundaryConditionType()
                              == SpatialDomains::eNeumann)
                     {
-                        SpatialDomains::NeumannBCShPtr bcPtr = boost::static_pointer_cast<
+                        SpatialDomains::NeumannBCShPtr bcPtr = std::static_pointer_cast<
                             SpatialDomains::NeumannBoundaryCondition>(
                                 m_bndConditions[i]);
                         string filebcs = bcPtr->m_filename;
@@ -2513,7 +2513,7 @@ using namespace boost::assign;
                         else
                         {
                             
-                            LibUtilities::Equation condition = boost::
+                            LibUtilities::Equation condition = std::
                                 static_pointer_cast<SpatialDomains::
                                                     NeumannBoundaryCondition>(
                                     m_bndConditions[i])->m_neumannCondition;
@@ -2528,7 +2528,7 @@ using namespace boost::assign;
                     else if (m_bndConditions[i]->GetBoundaryConditionType()
                              == SpatialDomains::eRobin)
                     {
-                        SpatialDomains::RobinBCShPtr bcPtr = boost::static_pointer_cast<
+                        SpatialDomains::RobinBCShPtr bcPtr = std::static_pointer_cast<
                             SpatialDomains::RobinBoundaryCondition>(
                                 m_bndConditions[i]);
                         string filebcs = bcPtr->m_filename;
@@ -2539,7 +2539,7 @@ using namespace boost::assign;
                         }
                         else
                         {
-                            LibUtilities::Equation condition = boost::
+                            LibUtilities::Equation condition = std::
                                 static_pointer_cast<SpatialDomains::
                                                     RobinBoundaryCondition>(
                                     m_bndConditions[i])->m_robinFunction;

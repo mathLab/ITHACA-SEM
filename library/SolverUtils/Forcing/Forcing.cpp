@@ -156,79 +156,29 @@ namespace Nektar
             pEqn->Evaluate(x0, x0, x0, pTime, pArray);
         }
         
-
-
-        void Forcing::EvaluateFunction(
-                Array<OneD, MultiRegions::ExpListSharedPtr>       pFields,
-                LibUtilities::SessionReaderSharedPtr              pSession,
-                std::string                                       pFieldName,
-                Array<OneD, NekDouble>&                           pArray,
-                const std::string&                                pFunctionName,
-                NekDouble                                         pTime)
+        SessionFunctionSharedPtr Forcing::GetFunction(
+                const Array<OneD, MultiRegions::ExpListSharedPtr>  &pFields,
+                const LibUtilities::SessionReaderSharedPtr         &pSession,
+                std::string                                         pName,
+                bool                                                pCache)
         {
-            ASSERTL0(pSession->DefinesFunction(pFunctionName),
-                     "Function '" + pFunctionName + "' does not exist.");
-
-            unsigned int nq = pFields[0]->GetNpoints();
-            if (pArray.num_elements() != nq)
+            if (pCache)
             {
-                pArray = Array<OneD, NekDouble> (nq);
-            }
-
-            LibUtilities::FunctionType vType;
-            vType = pSession->GetFunctionType(pFunctionName, pFieldName);
-            if (vType == LibUtilities::eFunctionTypeExpression)
-            {
-                Array<OneD, NekDouble> x0(nq);
-                Array<OneD, NekDouble> x1(nq);
-                Array<OneD, NekDouble> x2(nq);
-                
-                pFields[0]->GetCoords(x0, x1, x2);
-                LibUtilities::EquationSharedPtr ffunc =
-                    pSession->GetFunction(pFunctionName, pFieldName);
-                
-                ffunc->Evaluate(x0, x1, x2, pTime, pArray);
-            }
-            else if (vType == LibUtilities::eFunctionTypeFile)
-            {
-                std::string filename = pSession->GetFunctionFilename(
-                                                    pFunctionName,
-                                                    pFieldName);
-
-                std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef;
-                std::vector<std::vector<NekDouble> > FieldData;
-                Array<OneD, NekDouble> vCoeffs(pFields[0]->GetNcoeffs());
-                Vmath::Zero(vCoeffs.num_elements(), vCoeffs, 1);
-
-                LibUtilities::FieldIOSharedPtr fld =
-                    LibUtilities::FieldIO::CreateForFile(m_session, filename);
-                fld->Import(filename, FieldDef, FieldData);
-
-                int idx = -1;
-                for (int i = 0; i < FieldDef.size(); ++i)
+                if ((m_sessionFunctions.find(pName) == m_sessionFunctions.end())
+                    || (m_sessionFunctions[pName]->GetSession() != pSession)
+                    || (m_sessionFunctions[pName]->GetExpansion() != pFields[0])
+                )
                 {
-                    for (int j = 0; j < FieldDef[i]->m_fields.size(); ++j)
-                    {
-                        if (FieldDef[i]->m_fields[j] == pFieldName)
-                        {
-                            idx = j;
-                        }
-                    }
-
-                    if (idx >= 0)
-                    {
-                        pFields[0]->ExtractDataToCoeffs(
-                                                    FieldDef[i],
-                                                    FieldData[i],
-                                                    FieldDef[i]->m_fields[idx],
-                                                    vCoeffs);
-                    }
-                    else
-                    {
-                        cout << "Field " + pFieldName + " not found." << endl;
-                    }
+                    m_sessionFunctions[pName] =
+                        MemoryManager<SessionFunction>::AllocateSharedPtr(
+                            pSession, pFields[0], pName, pCache);
                 }
-                pFields[0]->BwdTrans_IterPerExp(vCoeffs, pArray);
+
+                return m_sessionFunctions[pName];
+            }
+            else
+            {
+                return SessionFunctionSharedPtr(new SessionFunction(pSession, pFields[0], pName, pCache));
             }
         }
 

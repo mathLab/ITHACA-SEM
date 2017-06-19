@@ -166,13 +166,13 @@ namespace Nektar
 
   void ShallowWaterSystem::EvaluateWaterDepth(void)
   {
-    EvaluateFunction("d",m_depth,"WaterDepth");
+    GetFunction("WaterDepth")->Evaluate("d", m_depth);
   }
   
   
   void ShallowWaterSystem::EvaluateCoriolis(void)
   {
-    EvaluateFunction("f",m_coriolis,"Coriolis");
+    GetFunction("Coriolis")->Evaluate("f", m_coriolis);
   }
 
   void ShallowWaterSystem::CopyBoundaryTrace(const Array<OneD, NekDouble>&Fwd, Array<OneD, NekDouble>&Bwd)

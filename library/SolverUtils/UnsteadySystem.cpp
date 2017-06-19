@@ -342,7 +342,7 @@ namespace Nektar
                 // Transform data into coefficient space
                 for (i = 0; i < nvariables; ++i)
                 {
-                    m_fields[m_intVariables[i]]->SetPhys(fields[i]);
+                    m_fields[m_intVariables[i]]->UpdatePhys() = fields[i];
                     if( v_RequireFwdTrans() )
                     {
                         m_fields[m_intVariables[i]]->FwdTrans_IterPerExp(

@@ -99,10 +99,7 @@ bool Dummy::v_PreIntegrate(int step)
     {
         Timer timer1;
         timer1.Start();
-        EvaluateFunction(m_coupling->GetSendFieldNames(),
-                         m_sendFields,
-                         "SendFields",
-                         m_time);
+        GetFunction("SendFields", m_fields[0])->Evaluate(m_coupling->GetSendFieldNames(), m_sendFields, m_time);
         timer1.Stop();
         if (m_session->DefinesCmdLineArgument("verbose"))
         {

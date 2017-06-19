@@ -52,7 +52,7 @@ namespace SolverUtils
 class Driver;
 
 /// A shared pointer to a Driver object
-typedef boost::shared_ptr<Driver> DriverSharedPtr;
+typedef std::shared_ptr<Driver> DriverSharedPtr;
 
 /// Datatype of the NekFactory used to instantiate classes derived from
 /// the Driver class.

@@ -247,13 +247,13 @@ namespace Nektar
 			int npoints = m_fields[0]->GetExp(el)->GetTotPoints();
 			Array<OneD, NekDouble> one2D(npoints, 1.0);
 			//NekDouble Area = m_fields[0]->GetExp(el)->Integral(one2D);
-			if(boost::dynamic_pointer_cast<LocalRegions::TriExp>(m_fields[0]->GetExp(el)))
+			if(std::dynamic_pointer_cast<LocalRegions::TriExp>(m_fields[0]->GetExp(el)))
 			{
 				//tstep[el] =  timeCFL/(stdVelocity[el]*cLambda*(ExpOrder[el]-1)*(ExpOrder[el]-1));
 				//tstep[el] =  timeCFL*minLengthStdTri/(stdVelocity[el]*cLambda*(ExpOrder[el]-1)*(ExpOrder[el]-1));
 				tstep[el] = CFL[el]/(stdVelocity[el]);
 			}
-			else if(boost::dynamic_pointer_cast<LocalRegions::QuadExp>(m_fields[0]->GetExp(el)))
+			else if(std::dynamic_pointer_cast<LocalRegions::QuadExp>(m_fields[0]->GetExp(el)))
 			{ 
 				//tstep[el] =  timeCFL/(stdVelocity[el]*cLambda*(ExpOrder[el]-1)*(ExpOrder[el]-1));
 				//tstep[el] =  timeCFL*minLengthStdQuad/(stdVelocity[el]*cLambda*(ExpOrder[el]-1)*(ExpOrder[el]-1));

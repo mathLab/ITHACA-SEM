@@ -141,7 +141,7 @@ void ProcessLinear::Process()
 
         set<int> neigh;
         vector<NodeSharedPtr> zeroNodes;
-        boost::unordered_set<int> clearedEdges, clearedFaces, clearedElmts;
+        std::unordered_set<int> clearedEdges, clearedFaces, clearedElmts;
 
         vector<ElementSharedPtr> dumpEls;
 
@@ -205,7 +205,7 @@ void ProcessLinear::Process()
 
             el.clear();
             set<int>::iterator it1;
-            boost::unordered_set<int>::iterator it2;
+            std::unordered_set<int>::iterator it2;
             for(int i = 0; i < els.size(); i++)
             {
                 it1 = neigh.find(els[i]->GetId());
@@ -227,7 +227,7 @@ void ProcessLinear::Process()
 
         if(m_config["extract"].beenSet)
         {
-            MeshSharedPtr dmp = boost::shared_ptr<Mesh>(new Mesh());
+            MeshSharedPtr dmp = std::shared_ptr<Mesh>(new Mesh());
             dmp->m_expDim     = 3;
             dmp->m_spaceDim   = 3;
             dmp->m_nummode    = 2;

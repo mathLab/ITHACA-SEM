@@ -55,7 +55,6 @@
 #include <GlobalMapping/Mapping.h>
 
 #include <boost/format.hpp>
-# include <boost/function.hpp>
 
 #include <iostream>
 #include <string>

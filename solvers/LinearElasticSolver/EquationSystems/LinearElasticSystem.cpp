@@ -158,7 +158,7 @@ void LinearElasticSystem::v_InitObject()
     // fields together.
     if (nVel == 2)
     {
-        MultiRegions::ContField2DSharedPtr u = boost::dynamic_pointer_cast<
+        MultiRegions::ContField2DSharedPtr u = std::dynamic_pointer_cast<
             MultiRegions::ContField2D>(m_fields[0]);
         m_assemblyMap = MemoryManager<CoupledAssemblyMap>
             ::AllocateSharedPtr(m_session,
@@ -170,7 +170,7 @@ void LinearElasticSystem::v_InitObject()
 
     if (nVel == 3)
     {
-        MultiRegions::ContField3DSharedPtr u = boost::dynamic_pointer_cast<
+        MultiRegions::ContField3DSharedPtr u = std::dynamic_pointer_cast<
             MultiRegions::ContField3D>(m_fields[0]);
         m_assemblyMap = MemoryManager<CoupledAssemblyMap>
             ::AllocateSharedPtr(m_session,

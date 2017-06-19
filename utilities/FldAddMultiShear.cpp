@@ -161,7 +161,7 @@ int main(int argc, char *argv[])
     BndExp[0]   = Exp[0]->GetBndCondExpansions();
 
     // Get face 2D expansion from element expansion
-    bc =  boost::dynamic_pointer_cast<StdRegions::StdExpansion2D> (BndExp[0][surfID]->GetExp(0));
+    bc =  std::dynamic_pointer_cast<StdRegions::StdExpansion2D> (BndExp[0][surfID]->GetExp(0));
 
     int nfq=  bc->GetTotPoints();
     int nelem = BndExp[0][surfID]->GetExpSize();
@@ -233,7 +233,7 @@ int main(int argc, char *argv[])
                     else
                     {
                         // Get face 2D expansion from element expansion
-                        bc =  boost::dynamic_pointer_cast<StdRegions::StdExpansion2D> (BndExp[0][n]->GetExp(i));
+                        bc =  std::dynamic_pointer_cast<StdRegions::StdExpansion2D> (BndExp[0][n]->GetExp(i));
 
                         //identify boundary of element looking at.
                         boundary = BoundarytoTraceID[cnt];
@@ -341,7 +341,7 @@ int main(int argc, char *argv[])
                     else
                     {
                         // Get face 2D expansion from element expansion
-                        bc =  boost::dynamic_pointer_cast<StdRegions::StdExpansion2D> (BndExp[0][n]->GetExp(i));
+                        bc =  std::dynamic_pointer_cast<StdRegions::StdExpansion2D> (BndExp[0][n]->GetExp(i));
 
                         //identify boundary of element looking at.
                         boundary = BoundarytoTraceID[cnt];
@@ -460,7 +460,7 @@ int main(int argc, char *argv[])
                 else
                 {
                     // Get face 2D expansion from element expansion
-                    bc =  boost::dynamic_pointer_cast<StdRegions::StdExpansion2D> (BndExp[0][n]->GetExp(i));
+                    bc =  std::dynamic_pointer_cast<StdRegions::StdExpansion2D> (BndExp[0][n]->GetExp(i));
 
                     //identify boundary of element looking at.
                     boundary = BoundarytoTraceID[cnt];

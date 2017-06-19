@@ -34,8 +34,8 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <StdRegions/StdMatrixKey.h>
-#include <boost/functional/hash.hpp>
 #include <StdRegions/StdExpansion.h>
+#include <LibUtilities/BasicUtils/HashUtils.hpp>
 
 using namespace std;
 
@@ -62,8 +62,8 @@ namespace Nektar
             int i = 0;
             for (VarCoeffMap::const_iterator x = varCoeffMap.begin(); x != varCoeffMap.end(); ++x)
             {
-                m_varcoeff_hashes[i] = boost::hash_range(x->second.begin(), x->second.begin() + stdExpansion.GetTotPoints());
-                boost::hash_combine(m_varcoeff_hashes[i], (int)x->first);
+                m_varcoeff_hashes[i] = hash_range(x->second.begin(), x->second.begin() + stdExpansion.GetTotPoints());
+                hash_combine(m_varcoeff_hashes[i], (int)x->first);
                 i++;
             }
         }

@@ -161,7 +161,7 @@ int main(int argc, char *argv[])
                     }
                    
                     // Get face 2D expansion from element expansion
-                    bc =  boost::dynamic_pointer_cast<StdRegions::StdExpansion2D> (BndExp[0][n]->GetExp(i));
+                    bc =  std::dynamic_pointer_cast<StdRegions::StdExpansion2D> (BndExp[0][n]->GetExp(i));
 
                     // Number of face quadrature points
                     nfq = bc->GetTotPoints();

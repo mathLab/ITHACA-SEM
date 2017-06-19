@@ -36,6 +36,7 @@
 #ifndef NEKMESHUTILS_MESHELEMENTS_NODE
 #define NEKMESHUTILS_MESHELEMENTS_NODE
 
+#include <LibUtilities/BasicUtils/HashUtils.hpp>
 #include <NekMeshUtils/NekMeshUtilsDeclspec.h>
 
 #include <iomanip>
@@ -431,11 +432,7 @@ struct NodeHash : std::unary_function<NodeSharedPtr, std::size_t>
 {
     std::size_t operator()(NodeSharedPtr const &p) const
     {
-        std::size_t seed = 0;
-        boost::hash_combine(seed, p->m_x);
-        boost::hash_combine(seed, p->m_y);
-        boost::hash_combine(seed, p->m_z);
-        return seed;
+        return hash_combine(p->m_x, p->m_y, p->m_z);
     }
 };
 typedef std::unordered_set<NodeSharedPtr, NodeHash> NodeSet;

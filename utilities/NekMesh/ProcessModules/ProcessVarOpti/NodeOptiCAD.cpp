@@ -44,7 +44,7 @@ namespace Nektar
 namespace Utilities
 {
 
-boost::mutex mtx;
+std::mutex mtx;
 
 int NodeOpti1D3D::m_type = GetNodeOptiFactory().RegisterCreatorFunction(
     13, NodeOpti1D3D::create, "1D3D");

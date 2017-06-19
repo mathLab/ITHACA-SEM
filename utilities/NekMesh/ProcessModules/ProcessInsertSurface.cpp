@@ -86,7 +86,7 @@ void ProcessInsertSurface::Process()
     {
         cout << "inserting surface from " << file << endl;
     }
-    MeshSharedPtr inMsh = boost::shared_ptr<Mesh>(new Mesh());
+    MeshSharedPtr inMsh = std::shared_ptr<Mesh>(new Mesh());
     inMsh->m_verbose = m_mesh->m_verbose;
     ModuleSharedPtr mod = GetModuleFactory().CreateInstance(
         ModuleKey(eInputModule, "xml"), inMsh);
@@ -190,7 +190,7 @@ void ProcessInsertSurface::Process()
         }
         NodeSharedPtr inN2 = inMshnodeList[result[0].second];
 
-        EdgeSharedPtr tst = boost::shared_ptr<Edge>(new Edge(inN1,inN2));
+        EdgeSharedPtr tst = std::shared_ptr<Edge>(new Edge(inN1,inN2));
 
         EdgeSet::iterator f = inMsh->m_edgeSet.find(tst);
 

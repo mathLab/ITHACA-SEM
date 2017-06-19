@@ -34,6 +34,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <LinearElasticSolver/EquationSystems/CoupledAssemblyMap.h>
+#include <LibUtilities/BasicUtils/HashUtils.hpp>
 #include <SpatialDomains/MeshGraph.h>
 #include <LocalRegions/SegExp.h>
 #include <LocalRegions/Expansion1D.h>
@@ -273,7 +274,7 @@ CoupledAssemblyMap::CoupledAssemblyMap(
         m_globalToUniversalBndMapUnique[i] = (tmp2[i] >= 0 ? 1 : 0);
     }
 
-    m_hash = boost::hash_range(
+    m_hash = hash_range(
         m_localToGlobalMap.begin(), m_localToGlobalMap.end());
 }
 

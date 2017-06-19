@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File: Metric.h
+// File SessionReader.cpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,61 +29,75 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Definition of the metric base class.
+// Description: Session reader
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_TESTS_METRIC_H
-#define NEKTAR_TESTS_METRIC_H
+#ifndef LIBUTILITIES_BASICUTILS_HASHUTILS
+#define LIBUTILITIES_BASICUTILS_HASHUTILS
 
-#include <tinyxml.h>
-#include <string>
-
-#include <LibUtilities/BasicUtils/NekFactory.hpp>
-#include <boost/version.hpp>
-#include <boost/filesystem.hpp>
-
-namespace fs = boost::filesystem;
-
-std::string PortablePath(const boost::filesystem::path& path);
+#include <functional>
 
 namespace Nektar
 {
-    class Metric
-    {
-    public:
-        Metric(TiXmlElement *metric, bool generate);
-        
-        /// Perform the test, given the standard output and error streams
-        bool Test     (std::istream& pStdout, std::istream& pStderr);
-        /// Perform the test, given the standard output and error streams
-        void Generate (std::istream& pStdout, std::istream& pStderr);
-        
-    protected:
-        /// Stores the ID of this metric.
-        int m_id;
-        /// Stores the type of this metric (uppercase).
-        std::string m_type;
-        /// 
-        bool m_generate;
-        TiXmlElement *m_metric;
-        
-        virtual bool v_Test     (std::istream& pStdout, 
-                                 std::istream& pStderr) = 0;
-        virtual void v_Generate (std::istream& pStdout, 
-                                 std::istream& pSrderr) = 0;
-    };
 
-    /// A shared pointer to an EquationSystem object
-    typedef std::shared_ptr<Metric> MetricSharedPtr;
-    
-    /// Datatype of the NekFactory used to instantiate classes derived from the
-    /// Advection class.
-    typedef LibUtilities::NekFactory<std::string, Metric, TiXmlElement*, bool>
-        MetricFactory;
-
-    MetricFactory& GetMetricFactory();
+inline void hash_combine(std::size_t& seed)
+{
 }
 
+template <typename T, typename... Args>
+inline void hash_combine(std::size_t& seed, const T& v, Args... args)
+{
+    std::hash<T> hasher;
+    seed ^= hasher(v) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+    hash_combine(seed, args...);
+}
 
+template <typename T, typename... Args>
+inline std::size_t hash_combine(const T& v, Args... args)
+{
+    std::size_t seed;
+    hash_combine(seed, args...);
+    return seed;
+}
+
+template<typename Iter>
+std::size_t hash_range(Iter first, Iter last)
+{
+    std::size_t seed = 0;
+    for(; first != last; ++first)
+    {
+        hash_combine(seed, *first);
+    }
+    return seed;
+}
+
+template<typename Iter>
+void hash_range(std::size_t &seed, Iter first, Iter last)
+{
+    hash_combine(seed, hash_range(first, last));
+}
+
+struct EnumHash
+{
+    template <typename T>
+    std::size_t operator()(T t) const
+    {
+        return static_cast<std::size_t>(t);
+    }
+};
+
+struct PairHash {
+    template <class T1, class T2>
+    std::size_t operator()(const std::pair<T1, T2> &p) const
+    {
+        std::size_t seed = 0;
+        auto h1 = std::hash<T1>{}(p.first);
+        auto h2 = std::hash<T2>{}(p.second);
+        hash_combine(seed, h1, h2);
+        return seed;
+    }
+};
+
+}
 #endif

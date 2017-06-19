@@ -120,14 +120,14 @@ namespace Nektar
 
             for (it1 = scalars.begin(); it1 != scalars.end(); ++it1)
             {
-                boost::shared_ptr<HomoRSScalar> tmp = MemoryManager<HomoRSScalar>
+                std::shared_ptr<HomoRSScalar> tmp = MemoryManager<HomoRSScalar>
                     ::AllocateSharedPtr(it1->second, m_numPlanes);
                 m_riemann->SetScalar(it1->first, &HomoRSScalar::Exec, tmp);
             }
 
             for (it2 = vectors.begin(); it2 != vectors.end(); ++it2)
             {
-                boost::shared_ptr<HomoRSVector> tmp = MemoryManager<HomoRSVector>
+                std::shared_ptr<HomoRSVector> tmp = MemoryManager<HomoRSVector>
                     ::AllocateSharedPtr(it2->second, m_numPlanes, it2->first);
                 m_riemann->SetVector(it2->first, &HomoRSVector::Exec, tmp);
             }

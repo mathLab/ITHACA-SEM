@@ -183,36 +183,41 @@ namespace Nektar
             template<typename FuncPointerT, typename ObjectPointerT> 
                 void DefineOdeRhs(FuncPointerT func, ObjectPointerT obj)
             {
-                using namespace std::placeholders;
-                m_functors1[0] =  std::bind(func, obj, _1, _2, _3);
+                m_functors1[0] =  std::bind(
+                    func, obj, std::placeholders::_1, std::placeholders::_2,
+                    std::placeholders::_3);
             }
 
             template<typename FuncPointerT, typename ObjectPointerT> 
                 void DefineOdeExplicitRhs(FuncPointerT func, ObjectPointerT obj)
             {
-                using namespace std::placeholders;
-                m_functors1[1] =  std::bind(func, obj, _1, _2, _3);
+                m_functors1[1] =  std::bind(
+                    func, obj, std::placeholders::_1, std::placeholders::_2,
+                    std::placeholders::_3);
             }
 
             template<typename FuncPointerT, typename ObjectPointerT> 
                 void DefineOdeImplicitRhs(FuncPointerT func, ObjectPointerT obj)
             {
-                using namespace std::placeholders;
-                m_functors1[2] =  std::bind(func, obj, _1, _2, _3);
+                m_functors1[2] =  std::bind(
+                    func, obj, std::placeholders::_1, std::placeholders::_2,
+                    std::placeholders::_3);
             }
 
             template<typename FuncPointerT, typename ObjectPointerT> 
                 void DefineProjection(FuncPointerT func, ObjectPointerT obj)
             {
-                using namespace std::placeholders;
-                m_functors1[3] =  std::bind(func, obj, _1, _2, _3);
+                m_functors1[3] =  std::bind(
+                    func, obj, std::placeholders::_1, std::placeholders::_2,
+                    std::placeholders::_3);
             }
 
             template<typename FuncPointerT, typename ObjectPointerT> 
                 void DefineImplicitSolve(FuncPointerT func, ObjectPointerT obj)
             {
-                using namespace std::placeholders;
-                m_functors2[0] =  std::bind(func, obj, _1, _2, _3, _4);
+                m_functors2[0] =  std::bind(
+                    func, obj, std::placeholders::_1, std::placeholders::_2,
+                    std::placeholders::_3, std::placeholders::_4);
             }
 
             

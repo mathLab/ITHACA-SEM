@@ -173,7 +173,7 @@ void ProcessVarOpti::Process()
         ASSERTL0(false, "cannot deal with manifolds");
     }
 
-    m_res      = boost::shared_ptr<Residual>(new Residual);
+    m_res      = std::shared_ptr<Residual>(new Residual);
     m_res->val = 1.0;
 
     
@@ -436,7 +436,7 @@ protected:
         return NekVector<NekDouble>();
     }
 
-    virtual boost::shared_ptr<NodalUtil> v_CreateUtil(
+    virtual std::shared_ptr<NodalUtil> v_CreateUtil(
         Array<OneD, Array<OneD, NekDouble> > &xi)
     {
         return MemoryManager<NodalUtilTriMonomial>::AllocateSharedPtr(

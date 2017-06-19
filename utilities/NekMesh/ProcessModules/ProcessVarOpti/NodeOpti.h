@@ -38,6 +38,7 @@
 
 #include <ostream>
 
+#include <LibUtilities/BasicUtils/HashUtils.hpp>
 #include <LibUtilities/BasicUtils/Thread.h>
 
 #include "ProcessVarOpti.h"
@@ -104,11 +105,11 @@ public:
 
 protected:
     NodeSharedPtr m_node;
-    boost::mutex mtx;
+    std::mutex mtx;
     std::map<LibUtilities::ShapeType, std::vector<ElUtilSharedPtr> > m_data;
     Array<OneD, NekDouble> m_grad;
     std::vector<NekDouble> m_tmpStore;
-    boost::unordered_map<LibUtilities::ShapeType, DerivArray> m_derivs;
+    std::unordered_map<LibUtilities::ShapeType, DerivArray, EnumHash> m_derivs;
 
 
     template <int DIM> int IsIndefinite();
@@ -132,7 +133,7 @@ protected:
     }
 };
 
-typedef boost::shared_ptr<NodeOpti> NodeOptiSharedPtr;
+typedef std::shared_ptr<NodeOpti> NodeOptiSharedPtr;
 typedef LibUtilities::NekFactory<
     int, NodeOpti, NodeSharedPtr, std::vector<ElUtilSharedPtr>,
     ResidualSharedPtr, std::map<LibUtilities::ShapeType, DerivUtilSharedPtr>,

@@ -89,8 +89,8 @@ void OutputGmsh::Process()
         cout << "OutputGmsh: Writing file..." << endl;
     }
 
-    boost::unordered_map<int, vector<int> > orderingMap;
-    boost::unordered_map<int, vector<int> >::iterator oIt;
+    std::unordered_map<int, vector<int> > orderingMap;
+    std::unordered_map<int, vector<int> >::iterator oIt;
 
     // Open the file stream.
     OpenStream();

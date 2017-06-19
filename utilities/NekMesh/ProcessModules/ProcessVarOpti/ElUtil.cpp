@@ -45,7 +45,7 @@ namespace Nektar
 namespace Utilities
 {
 
-boost::mutex mtx2;
+std::mutex mtx2;
 
 ElUtil::ElUtil(ElementSharedPtr e, DerivUtilSharedPtr d, ResidualSharedPtr r,
                int n, int o)

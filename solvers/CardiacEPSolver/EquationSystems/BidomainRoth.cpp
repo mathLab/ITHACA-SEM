@@ -303,8 +303,8 @@ void BidomainRoth::v_InitObject()
     {
         if (x->first == "CheckpointCellModel")
         {
-            boost::shared_ptr<FilterCheckpointCellModel> c
-                = boost::dynamic_pointer_cast<FilterCheckpointCellModel>(
+            std::shared_ptr<FilterCheckpointCellModel> c
+                = std::dynamic_pointer_cast<FilterCheckpointCellModel>(
                                                             m_filters[k]);
             c->SetCellModel(m_cell);
         }

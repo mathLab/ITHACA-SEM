@@ -495,7 +495,7 @@ void FilterHistoryPoints::v_Update(const Array<OneD, const MultiRegions::ExpList
 
                     // Create new 3DH1D expansion with one element per plane
                     MultiRegions::ExpList3DHomogeneous1DSharedPtr tmp =
-                            boost::dynamic_pointer_cast<MultiRegions::
+                            std::dynamic_pointer_cast<MultiRegions::
                             ExpList3DHomogeneous1D>(pFields[j]);
                     ASSERTL0(tmp,"Failed to type cast expansion");
 

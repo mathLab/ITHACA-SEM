@@ -78,9 +78,9 @@ OutputNekpp::~OutputNekpp()
 
 template <typename T> void TestElmts(SpatialDomains::MeshGraphSharedPtr &graph)
 {
-    const std::map<int, boost::shared_ptr<T> > &tmp =
+    const std::map<int, std::shared_ptr<T> > &tmp =
         graph->GetAllElementsOfType<T>();
-    typename std::map<int, boost::shared_ptr<T> >::const_iterator it1, it2;
+    typename std::map<int, std::shared_ptr<T> >::const_iterator it1, it2;
 
     SpatialDomains::CurveMap &curvedEdges = graph->GetCurvedEdges();
     SpatialDomains::CurveMap &curvedFaces = graph->GetCurvedFaces();

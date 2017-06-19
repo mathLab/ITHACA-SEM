@@ -191,15 +191,9 @@ struct HOSurfHash : std::unary_function<HOSurfSharedPtr, std::size_t>
      */
     std::size_t operator()(HOSurfSharedPtr const &p) const
     {
-        std::size_t seed     = 0;
         std::vector<int> ids = p->vertId;
-
         std::sort(ids.begin(), ids.end());
-        for (int i = 0; i < ids.size(); ++i)
-        {
-            boost::hash_combine(seed, ids[i]);
-        }
-        return seed;
+        return hash_range(ids.begin(), ids.end());
     }
 };
 

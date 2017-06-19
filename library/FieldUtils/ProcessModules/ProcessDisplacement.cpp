@@ -39,6 +39,7 @@ using namespace std;
 
 #include "ProcessDisplacement.h"
 
+#include <LibUtilities/BasicUtils/HashUtils.hpp>
 #include <LibUtilities/BasicUtils/ParseUtils.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LocalRegions/SegExp.h>
@@ -72,7 +73,7 @@ struct TriFaceHash : std::unary_function<TriFaceIDs, std::size_t>
         ids[2] = p.c;
 
         std::sort(ids.begin(), ids.end());
-        return boost::hash_range(ids.begin(), ids.end());
+        return hash_combine(ids[0], ids[1], ids[2]);
     }
 };
 

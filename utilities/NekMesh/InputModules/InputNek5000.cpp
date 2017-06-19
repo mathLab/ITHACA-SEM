@@ -39,6 +39,7 @@
 #include <string>
 
 #include <boost/algorithm/string.hpp>
+#include <LibUtilities/BasicUtils/HashUtils.hpp>
 #include <LibUtilities/Foundations/ManagerAccess.h>
 #include <NekMeshUtils/MeshElements/Element.h>
 
@@ -215,7 +216,7 @@ void InputNek5000::Process()
         vector<NodeSharedPtr> nodeList(nNodes);
         for (k = 0; k < nNodes; ++k)
         {
-            nodeList[k] = boost::shared_ptr<Node>(
+            nodeList[k] = std::shared_ptr<Node>(
                 new Node(
                     0, vertex[k][0], vertex[k][1], vertex[k][2]));
             pair<NodeSet::iterator, bool> testIns =
@@ -436,7 +437,7 @@ void InputNek5000::Process()
     }
 
     int nSurfaces = 0;
-    boost::unordered_set<pair<int, int> > periodicIn;
+    std::unordered_set<pair<int, int>, PairHash> periodicIn;
     int periodicInId = -1, periodicOutId = -1;
 
     // Boundary conditions: should be precisely nElements * nFaces lines to

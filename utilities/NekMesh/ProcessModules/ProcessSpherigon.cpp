@@ -301,7 +301,7 @@ void ProcessSpherigon::FindNormalFromPlyFile(MeshSharedPtr &plymesh,
 void ProcessSpherigon::GenerateNormals(std::vector<ElementSharedPtr> &el,
                                        MeshSharedPtr &mesh)
 {
-    boost::unordered_map<int, Node>::iterator nIt;
+    std::unordered_map<int, Node>::iterator nIt;
 
     for (int i = 0; i < el.size(); ++i)
     {
@@ -378,8 +378,8 @@ void ProcessSpherigon::Process()
     ASSERTL0(m_mesh->m_spaceDim == 3 || m_mesh->m_spaceDim == 2,
              "Spherigon implementation only valid in 2D/3D.");
 
-    boost::unordered_set<int>::iterator eIt;
-    boost::unordered_set<int> visitedEdges;
+    std::unordered_set<int>::iterator eIt;
+    std::unordered_set<int> visitedEdges;
 
     // First construct vector of elements to process.
     vector<ElementSharedPtr> el;
@@ -558,8 +558,8 @@ void ProcessSpherigon::Process()
 
         inply.push(inplyTmp);
 
-        MeshSharedPtr m = boost::shared_ptr<Mesh>(new Mesh());
-        plyfile = boost::shared_ptr<InputPly>(new InputPly(m));
+        MeshSharedPtr m = std::shared_ptr<Mesh>(new Mesh());
+        plyfile = std::shared_ptr<InputPly>(new InputPly(m));
         plyfile->ReadPly(inply, scale);
         plyfile->ProcessVertices();
 
@@ -762,7 +762,7 @@ void ProcessSpherigon::Process()
         if (e->GetConf().m_e == LibUtilities::eSegment)
         {
             SpatialDomains::SegGeomSharedPtr geom =
-                boost::dynamic_pointer_cast<SpatialDomains::SegGeom>(
+                std::dynamic_pointer_cast<SpatialDomains::SegGeom>(
                     e->GetGeom(m_mesh->m_spaceDim));
             LocalRegions::SegExpSharedPtr seg =
                 MemoryManager<LocalRegions::SegExp>::AllocateSharedPtr(B2,
@@ -773,7 +773,7 @@ void ProcessSpherigon::Process()
         else if (e->GetConf().m_e == LibUtilities::eTriangle)
         {
             SpatialDomains::TriGeomSharedPtr geom =
-                boost::dynamic_pointer_cast<SpatialDomains::TriGeom>(
+                std::dynamic_pointer_cast<SpatialDomains::TriGeom>(
                     e->GetGeom(3));
             LocalRegions::NodalTriExpSharedPtr tri =
                 MemoryManager<LocalRegions::NodalTriExp>::AllocateSharedPtr(
@@ -807,7 +807,7 @@ void ProcessSpherigon::Process()
         else if (e->GetConf().m_e == LibUtilities::eQuadrilateral)
         {
             SpatialDomains::QuadGeomSharedPtr geom =
-                boost::dynamic_pointer_cast<SpatialDomains::QuadGeom>(
+                std::dynamic_pointer_cast<SpatialDomains::QuadGeom>(
                     e->GetGeom(3));
             LocalRegions::QuadExpSharedPtr quad =
                 MemoryManager<LocalRegions::QuadExp>::AllocateSharedPtr(

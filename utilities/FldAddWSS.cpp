@@ -263,7 +263,7 @@ int main(int argc, char *argv[])
                     else
                     {   
                         // Get face 2D expansion from element expansion
-                        bc =  boost::dynamic_pointer_cast<StdRegions::StdExpansion2D> (BndExp[0][n]->GetExp(i));
+                        bc =  std::dynamic_pointer_cast<StdRegions::StdExpansion2D> (BndExp[0][n]->GetExp(i));
                         nfq=  bc->GetTotPoints();
                         
                         //identify boundary of element looking at.

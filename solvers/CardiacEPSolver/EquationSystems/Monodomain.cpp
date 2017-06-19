@@ -286,15 +286,15 @@ namespace Nektar
         {
             if (x->first == "CheckpointCellModel")
             {
-                boost::shared_ptr<FilterCheckpointCellModel> c
-                    = boost::dynamic_pointer_cast<FilterCheckpointCellModel>(
+                std::shared_ptr<FilterCheckpointCellModel> c
+                    = std::dynamic_pointer_cast<FilterCheckpointCellModel>(
                                                                 m_filters[k]);
                 c->SetCellModel(m_cell);
             }
             if (x->first == "CellHistoryPoints")
             {
-                boost::shared_ptr<FilterCellHistoryPoints> c
-                    = boost::dynamic_pointer_cast<FilterCellHistoryPoints>(
+                std::shared_ptr<FilterCellHistoryPoints> c
+                    = std::dynamic_pointer_cast<FilterCellHistoryPoints>(
                                                                 m_filters[k]);
                 c->SetCellModel(m_cell);
             }

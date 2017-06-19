@@ -1001,7 +1001,7 @@ void FilterAeroForces::CalculateForcesMapping(
             if (m_isHomogeneous1D)
             {
                 MultiRegions::ExpList3DHomogeneous1DSharedPtr Exp3DH1;
-                Exp3DH1 = boost::dynamic_pointer_cast
+                Exp3DH1 = std::dynamic_pointer_cast
                                 <MultiRegions::ExpList3DHomogeneous1D>
                                                     (pFields[0]);
                 for(i = 0; i < nVel*nVel; i++)
@@ -1021,7 +1021,7 @@ void FilterAeroForces::CalculateForcesMapping(
             else
             {
                 MultiRegions::ExpList2DSharedPtr Exp2D;
-                Exp2D = boost::dynamic_pointer_cast
+                Exp2D = std::dynamic_pointer_cast
                                 <MultiRegions::ExpList2D>
                                                     (pFields[0]);
                 for(i = 0; i < nVel*nVel; i++)
@@ -1043,7 +1043,7 @@ void FilterAeroForces::CalculateForcesMapping(
         case 3:
         {
             MultiRegions::ExpList3DSharedPtr Exp3D;
-            Exp3D = boost::dynamic_pointer_cast
+            Exp3D = std::dynamic_pointer_cast
                             <MultiRegions::ExpList3D>
                                                 (pFields[0]);
             for(i = 0; i < nVel*nVel; i++)

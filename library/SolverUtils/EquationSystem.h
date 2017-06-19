@@ -59,7 +59,7 @@ class Interpolator;
         class EquationSystem;
         
         /// A shared pointer to an EquationSystem object
-        typedef boost::shared_ptr<EquationSystem> EquationSystemSharedPtr;
+        typedef std::shared_ptr<EquationSystem> EquationSystemSharedPtr;
         /// Datatype of the NekFactory used to instantiate classes derived from
         /// the EquationSystem class.
         typedef LibUtilities::NekFactory<
@@ -74,7 +74,7 @@ class Interpolator;
         } ;
 
         /// A base class for describing how to solve specific equations.
-        class EquationSystem : public boost::enable_shared_from_this<EquationSystem>
+        class EquationSystem : public std::enable_shared_from_this<EquationSystem>
         {
         public:
             /// Destructor
@@ -111,16 +111,9 @@ class Interpolator;
             }
 
             template<class T>
-            boost::shared_ptr<T> as()
+            std::shared_ptr<T> as()
             {
-#if defined __INTEL_COMPILER && BOOST_VERSION > 105200
-                typedef typename boost::shared_ptr<T>::element_type E;
-                E * p = dynamic_cast< E* >( shared_from_this().get() );
-                ASSERTL1(p, "Cannot perform cast");
-                return boost::shared_ptr<T>( shared_from_this(), p );
-#else
-                return boost::dynamic_pointer_cast<T>( shared_from_this() );
-#endif
+                return std::dynamic_pointer_cast<T>( shared_from_this() );
             }
 
             /// Reset Session name

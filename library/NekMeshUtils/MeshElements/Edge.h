@@ -36,6 +36,7 @@
 #ifndef NEKMESHUTILS_MESHELEMENTS_EDGE
 #define NEKMESHUTILS_MESHELEMENTS_EDGE
 
+#include <LibUtilities/BasicUtils/HashUtils.hpp>
 #include <SpatialDomains/SegGeom.h>
 
 #include <NekMeshUtils/NekMeshUtilsDeclspec.h>
@@ -151,12 +152,9 @@ struct EdgeHash : std::unary_function<EdgeSharedPtr, std::size_t>
 {
     std::size_t operator()(EdgeSharedPtr const &p) const
     {
-        std::size_t seed = 0;
-        unsigned int id1 = p->m_n1->m_id;
-        unsigned int id2 = p->m_n2->m_id;
-        boost::hash_combine(seed, id1 < id2 ? id1 : id2);
-        boost::hash_combine(seed, id2 < id1 ? id1 : id2);
-        return seed;
+        const unsigned int id1 = p->m_n1->m_id;
+        const unsigned int id2 = p->m_n2->m_id;
+        return id1 < id2 ? hash_combine(id1, id2) : hash_combine(id2, id1);
     }
 };
 typedef std::unordered_set<EdgeSharedPtr, EdgeHash> EdgeSet;

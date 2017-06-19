@@ -33,6 +33,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <LibUtilities/BasicUtils/HashUtils.hpp>
 #include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
 #include <MultiRegions/ExpList.h>
 #include <LocalRegions/SegExp.h>
@@ -518,8 +519,8 @@ namespace Nektar
             SetUpUniversalDGMap   (locExp);
             SetUpUniversalTraceMap(locExp, tr, periodicTrace);
 
-            m_hash = boost::hash_range(m_localToGlobalBndMap.begin(),
-                                       m_localToGlobalBndMap.end());
+            m_hash = hash_range(m_localToGlobalBndMap.begin(),
+                                m_localToGlobalBndMap.end());
         }
 
         /**

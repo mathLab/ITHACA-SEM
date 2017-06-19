@@ -37,9 +37,9 @@
 #define NEKTAR_SPATIALDOMAINS_GEOMFACTORS_H
 
 #include <unordered_set>
-#include <boost/functional/hash.hpp>
 
 #include <LibUtilities/Foundations/Basis.h>
+#include <LibUtilities/BasicUtils/HashUtils.hpp>
 #include <SpatialDomains/SpatialDomains.hpp>
 #include <SpatialDomains/SpatialDomainsDeclspec.h>
 #include <StdRegions/StdExpansion.h>
@@ -321,16 +321,14 @@ namespace SpatialDomains
         const Array<OneD, const NekDouble> jac = GetJac(ptsKeys);
 
         size_t hash = 0;
-        boost::hash_combine(hash, (int)m_type);
-        boost::hash_combine(hash, m_expDim);
-        boost::hash_combine(hash, m_coordDim);
+        hash_combine(hash, (int)m_type, m_expDim, m_coordDim);
         if (m_type == eDeformed)
         {
-            boost::hash_range(hash, jac.begin(), jac.end());
+            hash_range(hash, jac.begin(), jac.end());
         }
         else
         {
-            boost::hash_combine(hash, jac[0]);
+            hash_combine(hash, jac[0]);
         }
         return hash;
     }

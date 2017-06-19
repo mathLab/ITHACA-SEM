@@ -159,7 +159,7 @@ int main(int argc, char* argv[])
             t = eProcessModule;
         }
 
-        FieldSharedPtr f = boost::shared_ptr<Field>(new Field());
+        FieldSharedPtr f = std::shared_ptr<Field>(new Field());
         ModuleSharedPtr mod = GetModuleFactory().CreateInstance(
             ModuleKey(t, tmp1[1]), f);
         cerr << "Options for module " << tmp1[1] << ":" << endl;
@@ -200,7 +200,7 @@ int main(int argc, char* argv[])
      * name of the module to load.
      */
 
-    FieldSharedPtr f = boost::shared_ptr<Field>(new Field());
+    FieldSharedPtr f = std::shared_ptr<Field>(new Field());
     if (LibUtilities::GetCommFactory().ModuleExists("ParallelMPI"))
     {
         if(vm.count("procid"))
@@ -212,7 +212,7 @@ int main(int argc, char* argv[])
             nprocs = vm["nprocs"].as<int>();
             rank   = vm["procid"].as<int>();
 
-            f->m_comm = boost::shared_ptr<FieldConvertComm>(
+            f->m_comm = std::shared_ptr<FieldConvertComm>(
                                 new FieldConvertComm(argc, argv, nprocs,rank));
 
             // Set forceoutput option. Otherwise only procid 0 will write file
@@ -343,7 +343,7 @@ int main(int argc, char* argv[])
 
         if (i < nInput)
         {
-            inputModule = boost::dynamic_pointer_cast<InputModule>(mod);
+            inputModule = std::dynamic_pointer_cast<InputModule>(mod);
             inputModule->AddFile(module.second, tmp1[0]);
         }
 

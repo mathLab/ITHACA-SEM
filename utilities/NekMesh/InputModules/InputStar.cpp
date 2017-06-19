@@ -955,7 +955,7 @@ void InputStar::ReadNodes(std::vector<NodeSharedPtr> &Nodes)
 
     for (int i = 0; i < nVertices; ++i)
     {
-        Nodes.push_back(boost::shared_ptr<Node>(
+        Nodes.push_back(std::shared_ptr<Node>(
             new Node(i, verts[3 * i], verts[3 * i + 1], verts[3 * i + 2])));
     }
 }

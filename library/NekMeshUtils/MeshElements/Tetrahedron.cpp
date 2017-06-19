@@ -40,6 +40,7 @@
 #include <NekMeshUtils/MeshElements/Tetrahedron.h>
 #include <NekMeshUtils/MeshElements/Triangle.h>
 
+#include <LibUtilities/BasicUtils/HashUtils.hpp>
 #include <LibUtilities/Foundations/ManagerAccess.h>
 
 using namespace std;
@@ -365,7 +366,7 @@ struct TetOrientHash : std::unary_function<struct TetOrient, std::size_t>
 {
     std::size_t operator()(struct TetOrient const &p) const
     {
-        return boost::hash_range(p.nid.begin(), p.nid.end());
+        return hash_range(p.nid.begin(), p.nid.end());
     }
 };
 typedef std::unordered_set<struct TetOrient, TetOrientHash> TetOrientSet;

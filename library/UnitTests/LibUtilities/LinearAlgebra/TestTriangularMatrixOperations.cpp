@@ -78,7 +78,7 @@ namespace Nektar
             NekDouble a_buf[] = {1, 2, 5, 3, 6, 8, 4, 7, 9, 10};
             NekDouble x_buf[] = {10, 20, 30, 40};
 
-            boost::shared_ptr<NekMatrix<NekDouble, StandardMatrixTag> > m(
+            std::shared_ptr<NekMatrix<NekDouble, StandardMatrixTag> > m(
                 new NekMatrix<NekDouble>(4, 4, a_buf, eUPPER_TRIANGULAR));
             NekMatrix<NekMatrix<NekDouble>, ScaledMatrixTag> scaled(2, m);
             NekVector<NekDouble> x(4, x_buf);
@@ -120,7 +120,7 @@ namespace Nektar
             NekDouble a_buf[] = {1, 2, 5, 3, 6, 8, 4, 7, 9, 10};
             NekDouble x_buf[] = {10, 20, 30, 40};
 
-            boost::shared_ptr<NekMatrix<NekDouble, StandardMatrixTag> > m(
+            std::shared_ptr<NekMatrix<NekDouble, StandardMatrixTag> > m(
                 new NekMatrix<NekDouble>(4, 4, a_buf, eLOWER_TRIANGULAR));
             NekMatrix<NekMatrix<NekDouble>, ScaledMatrixTag > scaled(3.0, m);
             NekVector<NekDouble> x(4, x_buf);

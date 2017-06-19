@@ -62,9 +62,9 @@
 //
 //        
 //        // Test stuff.
-//        boost::shared_ptr<DoubleWrapper> MyCreator(const int &key)
+//        std::shared_ptr<DoubleWrapper> MyCreator(const int &key)
 //        {
-//            return boost::shared_ptr<DoubleWrapper>(new DoubleWrapper(key + 2.5));;
+//            return std::shared_ptr<DoubleWrapper>(new DoubleWrapper(key + 2.5));;
 //        };
 //        
 //        class Temp
@@ -72,18 +72,18 @@
 //            public:
 //                Temp() {};
 //                
-//                static boost::shared_ptr<DoubleWrapper> create(const int &key)
+//                static std::shared_ptr<DoubleWrapper> create(const int &key)
 //                {
-//                    return boost::shared_ptr<DoubleWrapper>(new DoubleWrapper(key*1.025));
+//                    return std::shared_ptr<DoubleWrapper>(new DoubleWrapper(key*1.025));
 //                }
 //        };
 //        
 //        class GlobalCreator
 //        {
 //            public:
-//                boost::shared_ptr<DoubleWrapper> operator()(const int& key)
+//                std::shared_ptr<DoubleWrapper> operator()(const int& key)
 //                {
-//                    return boost::shared_ptr<DoubleWrapper>(new DoubleWrapper(key));
+//                    return std::shared_ptr<DoubleWrapper>(new DoubleWrapper(key));
 //                }
 //        };
 //
@@ -102,18 +102,18 @@
 //            // Registering a static class method
 //            manager.RegisterCreator(20, Temp::create);
 //            
-//            boost::shared_ptr<DoubleWrapper> value = manager[key];
+//            std::shared_ptr<DoubleWrapper> value = manager[key];
 //            BOOST_CHECK(value->val == 12.5);
 //
 //            value = manager[20];
 //            BOOST_CHECK(value->val == 20.5);
 //            
-//            manager[17] = boost::shared_ptr<DoubleWrapper>(new DoubleWrapper(-2.0));
+//            manager[17] = std::shared_ptr<DoubleWrapper>(new DoubleWrapper(-2.0));
 //            BOOST_CHECK_EQUAL(manager[17]->val, -2.0);
 //        }
 //        
 //
-////         typedef boost::shared_ptr<NekMatrix<double, FullMatrixTag, eBlock> > MatrixType;
+////         typedef std::shared_ptr<NekMatrix<double, FullMatrixTag, eBlock> > MatrixType;
 ////         
 ////         MatrixType create(int k)
 ////         {
@@ -124,7 +124,7 @@
 ////         {
 ////             NekManager<int, NekMatrix<double, DiagonalMatrixTag> > manager(create);
 ////             
-////             manager[10] = boost::shared_ptr<NekMatrix<double, DiagonalMatrixTag> >(new NekMatrix<double, DiagonalMatrixTag>(3, 3));
+////             manager[10] = std::shared_ptr<NekMatrix<double, DiagonalMatrixTag> >(new NekMatrix<double, DiagonalMatrixTag>(3, 3));
 ////            
 ////            if( manager[11] )
 ////            {

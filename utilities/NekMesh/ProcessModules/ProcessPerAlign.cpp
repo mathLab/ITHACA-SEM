@@ -197,7 +197,7 @@ void ProcessPerAlign::Process()
         centroidMap[i] = centroid;
     }
 
-    boost::unordered_set<int> elmtDone;
+    std::unordered_set<int> elmtDone;
     map<int, int> elmtPairs;
     map<int, int> vertCheck;
 

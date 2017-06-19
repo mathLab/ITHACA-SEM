@@ -51,7 +51,7 @@ namespace SolverUtils
     class Forcing;
 
     /// A shared pointer to an EquationSystem object
-    SOLVER_UTILS_EXPORT typedef boost::shared_ptr<Forcing> ForcingSharedPtr;
+    SOLVER_UTILS_EXPORT typedef std::shared_ptr<Forcing> ForcingSharedPtr;
 
     /// Declaration of the forcing factory
     typedef LibUtilities::NekFactory<std::string, Forcing,

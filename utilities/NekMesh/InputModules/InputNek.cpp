@@ -90,7 +90,7 @@ void InputNek::Process()
     map<LibUtilities::ShapeType, int> domainComposite;
     map<LibUtilities::ShapeType, vector<vector<NodeSharedPtr> > > elNodes;
     map<LibUtilities::ShapeType, vector<int> > elIds;
-    boost::unordered_map<int, int> elMap;
+    std::unordered_map<int, int> elMap;
     vector<LibUtilities::ShapeType> elmOrder;
 
     bool scalar = m_config["scalar"].as<bool>();
@@ -272,7 +272,7 @@ void InputNek::Process()
         vector<NodeSharedPtr> nodeList;
         for (k = 0; k < nNodes; ++k)
         {
-            NodeSharedPtr n = boost::shared_ptr<Node>(new Node(
+            NodeSharedPtr n = std::shared_ptr<Node>(new Node(
                 nodeCounter++, vertex[0][k], vertex[1][k], vertex[2][k]));
             nodeList.push_back(n);
         }
@@ -420,8 +420,8 @@ void InputNek::Process()
 
             if (el->GetConf().m_e == LibUtilities::ePrism && faceId % 2 == 0)
             {
-                boost::shared_ptr<Prism> p =
-                    boost::dynamic_pointer_cast<Prism>(el);
+                std::shared_ptr<Prism> p =
+                    std::dynamic_pointer_cast<Prism>(el);
                 if (p->m_orientation == 1)
                 {
                     faceId = (faceId + 2) % 6;
@@ -433,8 +433,8 @@ void InputNek::Process()
             }
             else if (el->GetConf().m_e == LibUtilities::eTetrahedron)
             {
-                boost::shared_ptr<Tetrahedron> t =
-                    boost::dynamic_pointer_cast<Tetrahedron>(el);
+                std::shared_ptr<Tetrahedron> t =
+                    std::dynamic_pointer_cast<Tetrahedron>(el);
                 faceId = t->m_orientationMap[faceId];
             }
 
@@ -457,7 +457,7 @@ void InputNek::Process()
                     faceId % 2 == 1)
                 {
                     offset =
-                        boost::dynamic_pointer_cast<Prism>(el)->m_orientation;
+                        std::dynamic_pointer_cast<Prism>(el)->m_orientation;
                 }
 
                 // Read x/y/z coordinates.
@@ -488,7 +488,7 @@ void InputNek::Process()
                 for (j = 0; j < tmp.size(); ++j)
                 {
                     int id = tmp[(j + offset) % tmp.size()]->m_id;
-                    boost::unordered_map<int, Node>::iterator vIt =
+                    std::unordered_map<int, Node>::iterator vIt =
                         m_mesh->m_vertexNormals.find(id);
 
                     if (vIt == m_mesh->m_vertexNormals.end())
@@ -515,8 +515,8 @@ void InputNek::Process()
                 // vertex ids accordingly.
                 if (el->GetConf().m_e == LibUtilities::eTetrahedron)
                 {
-                    boost::shared_ptr<Tetrahedron> tet =
-                        boost::static_pointer_cast<Tetrahedron>(el);
+                    std::shared_ptr<Tetrahedron> tet =
+                        std::static_pointer_cast<Tetrahedron>(el);
                     vector<int> tmpVertId = vertId;
 
                     for (j = 0; j < 3; ++j)
@@ -539,8 +539,8 @@ void InputNek::Process()
                 }
                 else if (el->GetConf().m_e == LibUtilities::ePrism)
                 {
-                    boost::shared_ptr<Prism> pr =
-                        boost::static_pointer_cast<Prism>(el);
+                    std::shared_ptr<Prism> pr =
+                        std::static_pointer_cast<Prism>(el);
                     if (pr->m_orientation == 1)
                     {
                         swap(vertId[2], vertId[1]);
@@ -554,7 +554,7 @@ void InputNek::Process()
                 }
 
                 HOSurfSharedPtr hs =
-                    boost::shared_ptr<HOSurf>(new HOSurf(vertId));
+                    std::shared_ptr<HOSurf>(new HOSurf(vertId));
                 // Find vertex combination in hoData.
                 hoIt = hoData[word].find(hs);
 
@@ -806,8 +806,8 @@ void InputNek::Process()
             // change.
             if (elm->GetConf().m_e == LibUtilities::ePrism && faceId % 2 == 0)
             {
-                boost::shared_ptr<Prism> p =
-                    boost::dynamic_pointer_cast<Prism>(elm);
+                std::shared_ptr<Prism> p =
+                    std::dynamic_pointer_cast<Prism>(elm);
                 if (p->m_orientation == 1)
                 {
                     faceId = (faceId + 2) % 6;
@@ -819,8 +819,8 @@ void InputNek::Process()
             }
             else if (elm->GetConf().m_e == LibUtilities::eTetrahedron)
             {
-                boost::shared_ptr<Tetrahedron> t =
-                    boost::dynamic_pointer_cast<Tetrahedron>(elm);
+                std::shared_ptr<Tetrahedron> t =
+                    std::dynamic_pointer_cast<Tetrahedron>(elm);
                 faceId = t->m_orientationMap[faceId];
             }
 

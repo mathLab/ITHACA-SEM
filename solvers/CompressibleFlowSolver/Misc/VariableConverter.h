@@ -43,7 +43,7 @@ namespace Nektar
 {
     // Forward declarations
     class VariableConverter;
-    typedef boost::shared_ptr<VariableConverter>  VariableConverterSharedPtr;
+    typedef std::shared_ptr<VariableConverter>  VariableConverterSharedPtr;
     /**
      *
      */

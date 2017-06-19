@@ -35,7 +35,7 @@ using namespace Nektar;
             int k;
             int nquad= to_key.GetNumPoints();
             Geometry2DSharedPtr g;
-            ASSERTL0(g= boost::dynamic_pointer_cast<Geometry2D>(geom),
+            ASSERTL0(g= std::dynamic_pointer_cast<Geometry2D>(geom),
                      "FAIL");
 
             GeomFactorsSharedPtr gf = geom->GetMetricInfo();
@@ -872,7 +872,7 @@ cout<<"layer region="<<Ireg<<endl;
                 {
                     
                      if(
-                             !(segmentGeomreg = boost::dynamic_pointer_cast<
+                             !(segmentGeomreg = std::dynamic_pointer_cast<
                              	     SpatialDomains::SegGeom>((*Icompreg)[k]))
                      )
 		     { ASSERTL0(false, "dynamic cast to a SegGeom failed");  }
@@ -880,13 +880,13 @@ cout<<"layer region="<<Ireg<<endl;
 		     int EIDreg = segmentGeomreg->GetEid();	     
                      offsetregIExp = Ilayer->GetPlane(0)->GetCoeff_Offset(k);
 //cout<<"edge="<<EIDreg<<"  CHECK OFFSET="<<offsetregIExp<<endl;                                   
-                     elementreg = boost::dynamic_pointer_cast<SpatialDomains::MeshGraph2D>(mesh)
+                     elementreg = std::dynamic_pointer_cast<SpatialDomains::MeshGraph2D>(mesh)
                                     ->GetElementsFromEdge(segmentGeomreg);
 	     	     int elmtidreg = ((*elementreg)[0]->m_Element)->GetGlobalID();   
                      int dimelmtreg = ((*elementreg)[0]->m_Element)->GetNumEdges();
                      Elmtid[k] = elmtidreg;
 		     Edgeid[k] = EIDreg;
-                     orientreg =(boost::dynamic_pointer_cast<SpatialDomains::Geometry2D>
+                     orientreg =(std::dynamic_pointer_cast<SpatialDomains::Geometry2D>
                      	           ((*elementreg)[0]->m_Element))->GetEorient((*elementreg)[0]
                      	           	   ->m_EdgeIndx);
 
@@ -899,7 +899,7 @@ cout<<"layer region="<<Ireg<<endl;
 		     int id,cnt,f;
                      for(cnt=f=0; f<dimelmtreg; f++)
 		     {
-			   id = (boost::dynamic_pointer_cast<SpatialDomains::Geometry2D>
+			   id = (std::dynamic_pointer_cast<SpatialDomains::Geometry2D>
                      	           ((*elementreg)[0]->m_Element))->GetEid(f);
 			   EdgeGIDreg[id]=cnt++;		     	     
 		     }
@@ -971,7 +971,7 @@ cout<<"layer region="<<Ireg<<endl;
 
                      //check if the metrix is the same for streak and Ilayer obj
                      StdRegions::StdExpansion1DSharedPtr edgestdexp;
-                     edgestdexp =  boost::dynamic_pointer_cast<StdRegions::StdExpansion1D>  (
+                     edgestdexp =  std::dynamic_pointer_cast<StdRegions::StdExpansion1D>  (
                      	     Ilayer->GetPlane(0)->GetExp(k)  );
                      edgestdexp->BwdTrans(Recoeffsedgereg, Pre_edge);                     
 //cout<<"call PhysTensorDERIV......"<<endl;                     
@@ -990,13 +990,13 @@ cout<<"layer region="<<Ireg<<endl;
                      //cout<<"extract tangent for edge="<<k<<endl;
               	     //k is the number of the edge according to the composite list
 		     LocalRegions::Expansion1DSharedPtr edgeexp = 
-		     		boost::dynamic_pointer_cast<LocalRegions::Expansion1D>
+		     		std::dynamic_pointer_cast<LocalRegions::Expansion1D>
 		       (Ilayer->GetPlane(0)->GetExp(k) );
 		     int localEid = edgeexp->GetLeftAdjacentElementEdge();
                      normals = edgeexp->
                             GetLeftAdjacentElementExp()->GetEdgeNormal(localEid);
 		     LocalRegions::SegExpSharedPtr  bndSegExp = 
-		          boost::dynamic_pointer_cast<LocalRegions::SegExp>(Ilayer->GetPlane(0)->GetExp(k));                             
+		          std::dynamic_pointer_cast<LocalRegions::SegExp>(Ilayer->GetPlane(0)->GetExp(k));                             
 	         // This function call has be deprecated -- cc
 		     //tangents = (bndSegExp)->GetMetricInfo()->GetEdgeTangent();
                      int  physoffsetregIExp = Ilayer->GetPlane(0)->GetPhys_Offset(k);
@@ -1370,7 +1370,7 @@ cout<<"x"<<"  P_re"<<"  dP_re"<<"   streak"<<"   dstreak"<<"   pjump"<<endl;
             	 Vmath::Vcopy(nqedge,&(fun1D_b[w*nqedge]),1,&(phys_edge[0]),1);    
                  //check if the metrix is the same for streak and Ilayer obj
                  StdRegions::StdExpansion1DSharedPtr edgestdexp;
-                 edgestdexp =  boost::dynamic_pointer_cast<StdRegions::StdExpansion1D>  (
+                 edgestdexp =  std::dynamic_pointer_cast<StdRegions::StdExpansion1D>  (
                      	     Ilayer->GetPlane(0)->GetExp(w)  );
                  edgestdexp->StdPhysDeriv(phys_edge, 
                      	      der_edge);                 

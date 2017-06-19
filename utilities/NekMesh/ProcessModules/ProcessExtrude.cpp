@@ -170,11 +170,11 @@ void ProcessExtrude::Process()
                 for (int i = 0; i < ns.size(); i++)
                 {
                     NodeSharedPtr n = (*eit)->m_edgeNodes[i];
-                    ns[i]           = boost::shared_ptr<Node>(
+                    ns[i]           = std::shared_ptr<Node>(
                         new Node(0, n->m_x, n->m_y, j * dz));
                 }
 
-                EdgeSharedPtr e = boost::shared_ptr<Edge>(
+                EdgeSharedPtr e = std::shared_ptr<Edge>(
                     new Edge(id2node[(*eit)->m_n1->m_id + j * nodes.size()],
                              id2node[(*eit)->m_n2->m_id + j * nodes.size()]));
 

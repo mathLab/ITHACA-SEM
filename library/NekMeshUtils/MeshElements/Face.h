@@ -36,6 +36,7 @@
 #ifndef NEKMESHUTILS_MESHELEMENTS_FACE
 #define NEKMESHUTILS_MESHELEMENTS_FACE
 
+#include <LibUtilities/BasicUtils/HashUtils.hpp>
 #include <SpatialDomains/TriGeom.h>
 #include <SpatialDomains/QuadGeom.h>
 
@@ -171,7 +172,7 @@ struct FaceHash : std::unary_function<FaceSharedPtr, std::size_t>
         }
 
         std::sort(ids.begin(), ids.end());
-        boost::hash_range(seed, ids.begin(), ids.end());
+        hash_range(seed, ids.begin(), ids.end());
 
         return seed;
     }

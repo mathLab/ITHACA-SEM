@@ -43,8 +43,8 @@
 #include <unordered_set>
 #include <unordered_map>
 #include <memory>
-#include <boost/functional/hash.hpp>
 #include <SpatialDomains/SpatialDomainsDeclspec.h>
+#include <LibUtilities/BasicUtils/HashUtils.hpp>
 
 namespace Nektar
 {
@@ -256,13 +256,13 @@ namespace Nektar
                 size_t seed  = 0;
                 int nVert = p->GetNumVerts();
                 std::vector<unsigned int> ids(nVert);
-                
+
                 for (i = 0; i < nVert; ++i)
                 {
                     ids[i] = p->GetVid(i);
                 }
                 std::sort(ids.begin(), ids.end());
-                boost::hash_range(seed, ids.begin(), ids.end());
+                hash_range(seed, ids.begin(), ids.end());
 
                 return seed;
             }

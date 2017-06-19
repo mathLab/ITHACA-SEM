@@ -79,7 +79,7 @@ map<LibUtilities::ShapeType, DerivUtilSharedPtr> ProcessVarOpti::BuildDerivUtil(
     for (it = typeMap.begin(); it != typeMap.end(); it++)
     {
         PTypes pType           = it->second;
-        DerivUtilSharedPtr der = boost::shared_ptr<DerivUtil>(new DerivUtil());
+        DerivUtilSharedPtr der = std::shared_ptr<DerivUtil>(new DerivUtil());
 
         LibUtilities::PointsKey pkey1(m_mesh->m_nummode, pType.second);
         LibUtilities::PointsKey pkey2(m_mesh->m_nummode + o, pType.first);
@@ -525,7 +525,7 @@ void ProcessVarOpti::GetElementMap(
         ElementSharedPtr el = m_mesh->m_element[m_mesh->m_expDim][i];
         vector<NodeSharedPtr> ns;
         el->GetCurvedNodes(ns);
-        ElUtilSharedPtr d = boost::shared_ptr<ElUtil>(new ElUtil(
+        ElUtilSharedPtr d = std::shared_ptr<ElUtil>(new ElUtil(
             el, derMap[el->GetShapeType()], m_res, m_mesh->m_nummode, o));
         m_dataSet.push_back(d);
     }
@@ -557,8 +557,8 @@ vector<ElUtilSharedPtr> ProcessVarOpti::GetLockedElements(NekDouble thres)
         }
     }
 
-    boost::unordered_set<int> inmesh;
-    pair<boost::unordered_set<int>::iterator, bool> t;
+    std::unordered_set<int> inmesh;
+    pair<std::unordered_set<int>::iterator, bool> t;
     vector<ElUtilSharedPtr> totest;
 
     for (int i = 0; i < elBelowThres.size(); i++)
@@ -613,7 +613,7 @@ vector<ElUtilSharedPtr> ProcessVarOpti::GetLockedElements(NekDouble thres)
     vector<ElUtilSharedPtr> ret;
     for (int i = 0; i < m_dataSet.size(); ++i)
     {
-        boost::unordered_set<int>::iterator s =
+        std::unordered_set<int>::iterator s =
             inmesh.find(m_dataSet[i]->GetId());
         if (s == inmesh.end())
         {

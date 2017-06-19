@@ -59,8 +59,8 @@ namespace Nektar
         //double a_buf[] = {1, 2, 3, 4};
         //double b_buf[] = {4, 5, 6, 7};
         //
-        //boost::shared_ptr<NekMatrix<double> > ia(new NekMatrix<double>(2, 2, a_buf));
-        //boost::shared_ptr<NekMatrix<double> > ib(new NekMatrix<double>(2, 2, b_buf));
+        //std::shared_ptr<NekMatrix<double> > ia(new NekMatrix<double>(2, 2, a_buf));
+        //std::shared_ptr<NekMatrix<double> > ib(new NekMatrix<double>(2, 2, b_buf));
         //
         //NekMatrix<double> result = 3.0*(*ia)*(*ib);
         //
@@ -132,9 +132,9 @@ namespace Nektar
         double beta = 7.0;
         double alpha = 2.0;
         
-        boost::shared_ptr<NekMatrix<double> > innerA(new NekMatrix<double>(2, 2, abuf));
-        boost::shared_ptr<NekMatrix<double> > innerB(new NekMatrix<double>(2, 2, bbuf));
-        boost::shared_ptr<NekMatrix<double> > innerC(new NekMatrix<double>(2, 2, cbuf));
+        std::shared_ptr<NekMatrix<double> > innerA(new NekMatrix<double>(2, 2, abuf));
+        std::shared_ptr<NekMatrix<double> > innerB(new NekMatrix<double>(2, 2, bbuf));
+        std::shared_ptr<NekMatrix<double> > innerC(new NekMatrix<double>(2, 2, cbuf));
         
         ScaledMatrix A(2.0, innerA);
         ScaledMatrix B(3.0, innerB);
@@ -190,10 +190,10 @@ namespace Nektar
         double beta = 7.0;
         double alpha = 2.0;
         
-        boost::shared_ptr<NekMatrix<double> > innerA(new NekMatrix<double>(2, 2, abuf));
-        boost::shared_ptr<NekMatrix<double> > innerB(new NekMatrix<double>(2, 2, bbuf));
-        boost::shared_ptr<NekMatrix<double> > innerC(new NekMatrix<double>(2, 2, cbuf));
-        boost::shared_ptr<NekMatrix<double> > innerD(new NekMatrix<double>(2, 2, dbuf));
+        std::shared_ptr<NekMatrix<double> > innerA(new NekMatrix<double>(2, 2, abuf));
+        std::shared_ptr<NekMatrix<double> > innerB(new NekMatrix<double>(2, 2, bbuf));
+        std::shared_ptr<NekMatrix<double> > innerC(new NekMatrix<double>(2, 2, cbuf));
+        std::shared_ptr<NekMatrix<double> > innerD(new NekMatrix<double>(2, 2, dbuf));
         
         BlockMatrix A(2, 2, 2, 2);
         BlockMatrix B(2, 2, 2, 2);

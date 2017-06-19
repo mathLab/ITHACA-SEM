@@ -191,8 +191,8 @@ void ProcessBL::BoundaryLayer2D()
     // are generated along that edge when a prism is split, and is used
     // to avoid generation of duplicate vertices. It is stored as an
     // unordered map for speed.
-    boost::unordered_map<int, vector<NodeSharedPtr> > edgeMap;
-    boost::unordered_map<int, vector<NodeSharedPtr> >::iterator eIt;
+    std::unordered_map<int, vector<NodeSharedPtr> > edgeMap;
+    std::unordered_map<int, vector<NodeSharedPtr> >::iterator eIt;
 
     string surf = m_config["surf"].as<string>();
     if (surf.size() > 0)
@@ -289,7 +289,7 @@ void ProcessBL::BoundaryLayer2D()
 
         // Get elemental geometry object.
         SpatialDomains::QuadGeomSharedPtr geom =
-            boost::dynamic_pointer_cast<SpatialDomains::QuadGeom>(
+            std::dynamic_pointer_cast<SpatialDomains::QuadGeom>(
                 el[i]->GetGeom(m_mesh->m_spaceDim));
 
         // Determine whether to use reverse points.
@@ -627,8 +627,8 @@ void ProcessBL::BoundaryLayer3D()
 
     // Map which takes element ID to face on surface. This enables
     // splitting to occur in either y-direction of the prism.
-    boost::unordered_map<int, int> splitEls;
-    boost::unordered_map<int, int>::iterator sIt;
+    std::unordered_map<int, int> splitEls;
+    std::unordered_map<int, int>::iterator sIt;
 
     // Set up maps which takes an edge (in nektar++ ordering) and return
     // their offset and stride in the 3d array of collapsed quadrature
@@ -726,8 +726,8 @@ void ProcessBL::BoundaryLayer3D()
     // are generated along that edge when a prism is split, and is used
     // to avoid generation of duplicate vertices. It is stored as an
     // unordered map for speed.
-    boost::unordered_map<int, vector<NodeSharedPtr> > edgeMap;
-    boost::unordered_map<int, vector<NodeSharedPtr> >::iterator eIt;
+    std::unordered_map<int, vector<NodeSharedPtr> > edgeMap;
+    std::unordered_map<int, vector<NodeSharedPtr> >::iterator eIt;
 
     string surf = m_config["surf"].as<string>();
     if (surf.size() > 0)
@@ -840,7 +840,7 @@ void ProcessBL::BoundaryLayer3D()
         }
 
         // Get elemental geometry object and put into map.
-        geomMap[elId] = boost::dynamic_pointer_cast<SpatialDomains::Geometry3D>(
+        geomMap[elId] = std::dynamic_pointer_cast<SpatialDomains::Geometry3D>(
             el[i]->GetGeom(m_mesh->m_spaceDim));
     }
 
@@ -917,7 +917,7 @@ void ProcessBL::BoundaryLayer3D()
 
             // Create local region.
             SpatialDomains::PrismGeomSharedPtr g =
-                boost::dynamic_pointer_cast<SpatialDomains::PrismGeom>(geom);
+                std::dynamic_pointer_cast<SpatialDomains::PrismGeom>(geom);
             q = MemoryManager<LocalRegions::PrismExp>::AllocateSharedPtr(
                 B0, B1, B2, g);
         }
@@ -932,7 +932,7 @@ void ProcessBL::BoundaryLayer3D()
 
             // Create local region.
             SpatialDomains::HexGeomSharedPtr g =
-                boost::dynamic_pointer_cast<SpatialDomains::HexGeom>(geom);
+                std::dynamic_pointer_cast<SpatialDomains::HexGeom>(geom);
             q = MemoryManager<LocalRegions::HexExp>::AllocateSharedPtr(
                 B0, B0, B1, g);
         }

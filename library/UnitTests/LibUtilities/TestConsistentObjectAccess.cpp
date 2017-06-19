@@ -108,32 +108,32 @@ namespace Nektar
             double* d1 = new double(1.0);
             const double* d2 = new double(2.0);
             
-            boost::shared_ptr<double> sd1(d1);
-            boost::shared_ptr<const double> sd2(d2);
+            std::shared_ptr<double> sd1(d1);
+            std::shared_ptr<const double> sd2(d2);
             
-            BOOST_CHECK_EQUAL(*d1, ConsistentObjectAccess<boost::shared_ptr<double> >::reference(sd1));
-            BOOST_CHECK_EQUAL(d1, &ConsistentObjectAccess<boost::shared_ptr<double> >::reference(sd1));
-            BOOST_CHECK_EQUAL(*d1, ConsistentObjectAccess<boost::shared_ptr<double> >::const_reference(sd1));
-            BOOST_CHECK_EQUAL(d1, &ConsistentObjectAccess<boost::shared_ptr<double> >::const_reference(sd1));
-            BOOST_CHECK_EQUAL(d1, ConsistentObjectAccess<boost::shared_ptr<double> >::pointer(sd1));
-            BOOST_CHECK_EQUAL(d1, ConsistentObjectAccess<boost::shared_ptr<double> >::const_pointer(sd1));
-            BOOST_CHECK(ConsistentObjectAccess<boost::shared_ptr<double> >::ReferencesObject(sd1));
-            BOOST_CHECK(!ConsistentObjectAccess<boost::shared_ptr<double> >::ReferencesObject(boost::shared_ptr<double>()));
+            BOOST_CHECK_EQUAL(*d1, ConsistentObjectAccess<std::shared_ptr<double> >::reference(sd1));
+            BOOST_CHECK_EQUAL(d1, &ConsistentObjectAccess<std::shared_ptr<double> >::reference(sd1));
+            BOOST_CHECK_EQUAL(*d1, ConsistentObjectAccess<std::shared_ptr<double> >::const_reference(sd1));
+            BOOST_CHECK_EQUAL(d1, &ConsistentObjectAccess<std::shared_ptr<double> >::const_reference(sd1));
+            BOOST_CHECK_EQUAL(d1, ConsistentObjectAccess<std::shared_ptr<double> >::pointer(sd1));
+            BOOST_CHECK_EQUAL(d1, ConsistentObjectAccess<std::shared_ptr<double> >::const_pointer(sd1));
+            BOOST_CHECK(ConsistentObjectAccess<std::shared_ptr<double> >::ReferencesObject(sd1));
+            BOOST_CHECK(!ConsistentObjectAccess<std::shared_ptr<double> >::ReferencesObject(std::shared_ptr<double>()));
             
-            BOOST_CHECK_EQUAL(*d2, ConsistentObjectAccess<boost::shared_ptr<const double> >::reference(sd2));
-            BOOST_CHECK_EQUAL(d2, &ConsistentObjectAccess<boost::shared_ptr<const double> >::reference(sd2));
-            BOOST_CHECK_EQUAL(*d2, ConsistentObjectAccess<boost::shared_ptr<const double> >::const_reference(sd2));
-            BOOST_CHECK_EQUAL(d2, &ConsistentObjectAccess<boost::shared_ptr<const double> >::const_reference(sd2));
-            BOOST_CHECK_EQUAL(d2, ConsistentObjectAccess<boost::shared_ptr<const double> >::pointer(sd2));
-            BOOST_CHECK_EQUAL(d2, ConsistentObjectAccess<boost::shared_ptr<const double> >::const_pointer(sd2));
-            BOOST_CHECK(ConsistentObjectAccess<boost::shared_ptr<const double> >::ReferencesObject(sd2));
-            BOOST_CHECK(!ConsistentObjectAccess<boost::shared_ptr<const double> >::ReferencesObject(boost::shared_ptr<const double>()));
+            BOOST_CHECK_EQUAL(*d2, ConsistentObjectAccess<std::shared_ptr<const double> >::reference(sd2));
+            BOOST_CHECK_EQUAL(d2, &ConsistentObjectAccess<std::shared_ptr<const double> >::reference(sd2));
+            BOOST_CHECK_EQUAL(*d2, ConsistentObjectAccess<std::shared_ptr<const double> >::const_reference(sd2));
+            BOOST_CHECK_EQUAL(d2, &ConsistentObjectAccess<std::shared_ptr<const double> >::const_reference(sd2));
+            BOOST_CHECK_EQUAL(d2, ConsistentObjectAccess<std::shared_ptr<const double> >::pointer(sd2));
+            BOOST_CHECK_EQUAL(d2, ConsistentObjectAccess<std::shared_ptr<const double> >::const_pointer(sd2));
+            BOOST_CHECK(ConsistentObjectAccess<std::shared_ptr<const double> >::ReferencesObject(sd2));
+            BOOST_CHECK(!ConsistentObjectAccess<std::shared_ptr<const double> >::ReferencesObject(std::shared_ptr<const double>()));
             
             #if defined(NEKTAR_DEBUG) || defined(NEKTAR_FULLDEBUG)
-                BOOST_CHECK_THROW(ConsistentObjectAccess<boost::shared_ptr<double> >::const_reference(boost::shared_ptr<double>()), ErrorUtil::NekError);
-                BOOST_CHECK_THROW(ConsistentObjectAccess<boost::shared_ptr<const double> >::const_reference(boost::shared_ptr<const double>()), ErrorUtil::NekError);
-                BOOST_CHECK_THROW(ConsistentObjectAccess<boost::shared_ptr<double> >::reference(boost::shared_ptr<double>()), ErrorUtil::NekError);
-                BOOST_CHECK_THROW(ConsistentObjectAccess<boost::shared_ptr<const double> >::reference(boost::shared_ptr<const double>()), ErrorUtil::NekError);
+                BOOST_CHECK_THROW(ConsistentObjectAccess<std::shared_ptr<double> >::const_reference(std::shared_ptr<double>()), ErrorUtil::NekError);
+                BOOST_CHECK_THROW(ConsistentObjectAccess<std::shared_ptr<const double> >::const_reference(std::shared_ptr<const double>()), ErrorUtil::NekError);
+                BOOST_CHECK_THROW(ConsistentObjectAccess<std::shared_ptr<double> >::reference(std::shared_ptr<double>()), ErrorUtil::NekError);
+                BOOST_CHECK_THROW(ConsistentObjectAccess<std::shared_ptr<const double> >::reference(std::shared_ptr<const double>()), ErrorUtil::NekError);
             #endif
             
         }

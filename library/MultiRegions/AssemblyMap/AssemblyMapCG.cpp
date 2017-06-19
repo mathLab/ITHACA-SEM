@@ -39,7 +39,7 @@
 #include <LocalRegions/Expansion2D.h>
 #include <LocalRegions/Expansion3D.h>
 #include <LibUtilities/BasicUtils/ShapeType.hpp>
-
+#include <LibUtilities/BasicUtils/HashUtils.hpp>
 
 #include <boost/config.hpp>
 #include <boost/graph/adjacency_list.hpp>
@@ -2033,8 +2033,8 @@ namespace Nektar
                 }
             }
 
-            m_hash = boost::hash_range(m_localToGlobalMap.begin(),
-                                       m_localToGlobalMap.end());
+            m_hash = hash_range(m_localToGlobalMap.begin(),
+                                m_localToGlobalMap.end());
 
             // Add up hash values if parallel
             int hash = m_hash;

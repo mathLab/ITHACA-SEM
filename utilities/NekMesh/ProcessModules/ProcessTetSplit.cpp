@@ -231,7 +231,7 @@ void ProcessTetSplit::Process()
         // Create local prismatic region so that co-ordinates of the
         // mapped element can be read from.
         SpatialDomains::PrismGeomSharedPtr geomLayer =
-            boost::dynamic_pointer_cast<SpatialDomains::PrismGeom>(
+            std::dynamic_pointer_cast<SpatialDomains::PrismGeom>(
                 el[i]->GetGeom(m_mesh->m_spaceDim));
         LibUtilities::BasisKey B0(
             LibUtilities::eOrtho_A,

@@ -221,7 +221,7 @@ void InputTec::ReadZone(int &nComposite)
     for (i = 0; i < nnodes; ++i)
     {
         Nodes.push_back(
-            boost::shared_ptr<Node>(
+            std::shared_ptr<Node>(
                 new Node(i, nodeLocs[i], nodeLocs[i+nnodes],
                          nodeLocs[i+2*nnodes])));
     }

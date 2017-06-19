@@ -204,7 +204,7 @@ void InputSem::Process()
         }
         id -= 1; // counter starts at 0
         m_mesh->m_node.push_back(
-            boost::shared_ptr<Node>(new Node(id, x, y, z)));
+            std::shared_ptr<Node>(new Node(id, x, y, z)));
         ++i;
     }
 
@@ -387,7 +387,7 @@ void InputSem::Process()
                     double x = hoXData[offset + j * stride];
                     double y = hoYData[offset + j * stride];
                     NodeSharedPtr n =
-                        boost::shared_ptr<Node>(new Node(nodeId, x, y, 0.0));
+                        std::shared_ptr<Node>(new Node(nodeId, x, y, 0.0));
                     edgeNodes.push_back(n);
                 }
             }
@@ -401,7 +401,7 @@ void InputSem::Process()
                     double x = hoXData[offset + k];
                     double y = hoYData[offset + k];
                     NodeSharedPtr n =
-                        boost::shared_ptr<Node>(new Node(nodeId, x, y, 0.0));
+                        std::shared_ptr<Node>(new Node(nodeId, x, y, 0.0));
                     edgeNodes.push_back(n);
                 }
             }

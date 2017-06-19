@@ -100,8 +100,8 @@ void ProcessOptiExtract::Process()
             }
         }
 
-        boost::unordered_set<int> inmesh;
-        pair<boost::unordered_set<int>::iterator, bool> t;
+        std::unordered_set<int> inmesh;
+        pair<std::unordered_set<int>::iterator, bool> t;
         vector<ElementSharedPtr> totest;
 
         for (int i = 0; i < invalid.size(); i++)
@@ -297,7 +297,7 @@ void ProcessOptiExtract::Process()
     {
         // insert other mesh
         cout << ins << endl;
-        MeshSharedPtr inp_mesh = boost::shared_ptr<Mesh>(new Mesh());
+        MeshSharedPtr inp_mesh = std::shared_ptr<Mesh>(new Mesh());
         ModuleSharedPtr mod = GetModuleFactory().CreateInstance(
             ModuleKey(eInputModule, "xml"), inp_mesh);
         mod->RegisterConfig("infile", ins);

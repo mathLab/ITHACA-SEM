@@ -114,7 +114,7 @@ void ProcessExtractSurf::Process()
     }
 
     // keptIds stores IDs of elements we processed earlier.
-    boost::unordered_set<int> keptIds;
+    std::unordered_set<int> keptIds;
 
     EdgeSet bndEdgeSet;
 

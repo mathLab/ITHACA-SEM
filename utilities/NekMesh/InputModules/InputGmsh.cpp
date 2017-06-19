@@ -37,7 +37,7 @@
 #include <iostream>
 using namespace std;
 
-#include <boost/tuple/tuple.hpp>
+#include <tuple>
 
 #include <NekMeshUtils/MeshElements/Element.h>
 #include <NekMeshUtils/MeshElements/Point.h>
@@ -218,28 +218,28 @@ std::vector<int> triTensorNodeOrdering(const std::vector<int> &nodes, int n)
     return nodeList;
 }
 
-typedef boost::tuple<int, int, int> Mode;
+typedef std::tuple<int, int, int> Mode;
 struct cmpop
 {
     bool operator()(Mode const &a, Mode const &b) const
     {
-        if (a.get<0>() < b.get<0>())
+        if (std::get<0>(a) < std::get<0>(b))
         {
             return true;
         }
-        if (a.get<0>() > b.get<0>())
+        if (std::get<0>(a) > std::get<0>(b))
         {
             return false;
         }
-        if (a.get<1>() < b.get<1>())
+        if (std::get<1>(a) < std::get<1>(b))
         {
             return true;
         }
-        if (a.get<1>() > b.get<1>())
+        if (std::get<1>(a) > std::get<1>(b))
         {
             return false;
         }
-        if (a.get<2>() < b.get<2>())
+        if (std::get<2>(a) < std::get<2>(b))
         {
             return true;
         }
@@ -734,8 +734,8 @@ void InputGmsh::Process()
     // This map takes each element ID and maps it to a permutation map
     // that is required to take Gmsh element node orderings and map them
     // to Nektar++ orderings.
-    boost::unordered_map<int, vector<int> > orderingMap;
-    boost::unordered_map<int, vector<int> >::iterator oIt;
+    std::unordered_map<int, vector<int> > orderingMap;
+    std::unordered_map<int, vector<int> >::iterator oIt;
 
     if (m_mesh->m_verbose)
     {
@@ -785,7 +785,7 @@ void InputGmsh::Process()
                 }
                 prevId = id;
                 m_mesh->m_node.push_back(
-                    boost::shared_ptr<Node>(new Node(id, x, y, z)));
+                    std::shared_ptr<Node>(new Node(id, x, y, z)));
             }
         }
         // Process elements

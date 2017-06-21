@@ -51,6 +51,12 @@
 #include <LibUtilities/BasicUtils/Timer.h>
 #include <LibUtilities/Foundations/NodalUtil.h>
 
+// Including Timer.h includes Windows.h, which causes GetJob to be set as a
+// macro for some reason.
+#if _WIN32
+#undef GetJob
+#endif
+
 using namespace std;
 using namespace Nektar::NekMeshUtils;
 

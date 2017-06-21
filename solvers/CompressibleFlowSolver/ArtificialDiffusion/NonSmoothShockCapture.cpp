@@ -42,8 +42,8 @@ namespace Nektar
 
 std::string NonSmoothShockCapture::className = GetArtificialDiffusionFactory().
     RegisterCreatorFunction("NonSmooth",
-                            NonSmoothShockCapture::create,
-                            "NonSmooth artificial diffusion for shock capture.");
+                        NonSmoothShockCapture::create,
+                        "NonSmooth artificial diffusion for shock capture.");
 
 NonSmoothShockCapture::NonSmoothShockCapture(
            const LibUtilities::SessionReaderSharedPtr& pSession,
@@ -51,60 +51,17 @@ NonSmoothShockCapture::NonSmoothShockCapture(
            const int spacedim)
     : ArtificialDiffusion(pSession, pFields, spacedim)
 {
+    m_session->LoadParameter ("SensorOffset",  m_offset, 1);
 }
 
 void NonSmoothShockCapture::v_GetArtificialViscosity(
             const Array<OneD, Array<OneD, NekDouble> > &physfield,
                   Array<OneD, NekDouble  >             &mu)
 {
-    const int nElements = m_fields[0]->GetExpSize();
-    int PointCount      = 0;
-    int nTotQuadPoints  = m_fields[0]->GetTotPoints();
+    int nTotPoints = m_fields[0]->GetTotPoints();
 
-    Array<OneD, NekDouble> Sensor     (nTotQuadPoints, 0.0);
-    Array<OneD, NekDouble> SensorKappa(nTotQuadPoints, 0.0);
-
-    m_varConv->GetSensor(m_fields[0], physfield, Sensor, SensorKappa, m_offset);
-
-    for (int e = 0; e < nElements; e++)
-    {
-        // Threshold value specified in C. Biottos thesis.  Based on a 1D
-        // shock tube problem S_k = log10(1/p^4). See G.E. Barter and
-        // D.L. Darmofal. Shock Capturing with PDE-based artificial
-        // diffusion for DGFEM: Part 1 Formulation, Journal of Computational
-        // Physics 229 (2010) 1810-1827 for further reference
-
-        // Adjustable depending on the coarsness of the mesh. Might want to
-        // move this variable into the session file
-
-        int nQuadPointsElement = m_fields[0]->GetExp(e)->GetTotPoints();
-
-        for (int n = 0; n < nQuadPointsElement; n++)
-        {
-            NekDouble mu_0 = m_mu0;
-
-            if (m_fields[0]->GetExp(e)->GetNcoeffs() <= m_offset)
-            {
-                mu[n+PointCount] = 0;
-            }
-            else if (Sensor[n+PointCount] < (m_Skappa-m_Kappa))
-            {
-                mu[n+PointCount] = 0;
-            }
-            else if (Sensor[n+PointCount] > (m_Skappa+m_Kappa))
-            {
-                mu[n+PointCount] = mu_0;
-            }
-            else
-            {
-                mu[n+PointCount] = mu_0 * (0.5 * (1 + sin(
-                                       M_PI * (Sensor[n+PointCount] -
-                                               m_Skappa) / (2*m_Kappa))));
-            }
-        }
-
-        PointCount += nQuadPointsElement;
-    }
+    Array<OneD, NekDouble> Sensor (nTotPoints, 0.0);
+    m_varConv->GetSensor(m_fields[0], physfield, Sensor, mu, m_offset);
 }
 
 }

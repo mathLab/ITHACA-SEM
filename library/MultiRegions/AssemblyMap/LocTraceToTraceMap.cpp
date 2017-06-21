@@ -297,18 +297,19 @@ void LocTraceToTraceMap::Setup2D(
     Array<OneD, int> locTraceToTraceMap;
     cnt = 0;
 
-    for (auto &it : TraceInterpMap)
+    for (auto it = TraceInterpMap.begin(); it != TraceInterpMap.end();
+         ++it, ++cnt1)
     {
-        LibUtilities::PointsKey fromPointsKey0 = std::get<0>(it.first);
-        LibUtilities::PointsKey toPointsKey0   = std::get<2>(it.first);
+        LibUtilities::PointsKey fromPointsKey0 = std::get<0>(it->first);
+        LibUtilities::PointsKey toPointsKey0   = std::get<2>(it->first);
 
         bool fwdSet = false;
         bool bwdSet = false;
 
-        for (int f = 0; f < it.second.size(); ++f, ++cnt2)
+        for (int f = 0; f < it->second.size(); ++f, ++cnt2)
         {
-            n = it.second[f].first;
-            e = it.second[f].second;
+            n = it->second[f].first;
+            e = it->second[f].second;
 
             StdRegions::StdExpansionSharedPtr edge = elmtToTrace[n][e];
 
@@ -372,7 +373,7 @@ void LocTraceToTraceMap::Setup2D(
 
             if ((fwdSet == false && set == 0) || (bwdSet == false && set == 1))
             {
-                m_interpPoints[set][cnt1] = it.first;
+                m_interpPoints[set][cnt1] = it->first;
 
                 if (fromPointsKey0 == toPointsKey0)
                 {
@@ -634,20 +635,21 @@ void LocTraceToTraceMap::Setup3D(
     Array<OneD, int> faceids;
     Array<OneD, int> locTraceToTraceMap;
     cnt = 0;
-    for (auto &it : TraceInterpMap)
+    for (auto it = TraceInterpMap.begin(); it != TraceInterpMap.end();
+         ++it, ++cnt1)
     {
-        LibUtilities::PointsKey fromPointsKey0 = std::get<0>(it.first);
-        LibUtilities::PointsKey fromPointsKey1 = std::get<1>(it.first);
-        LibUtilities::PointsKey toPointsKey0   = std::get<2>(it.first);
-        LibUtilities::PointsKey toPointsKey1   = std::get<3>(it.first);
+        LibUtilities::PointsKey fromPointsKey0 = std::get<0>(it->first);
+        LibUtilities::PointsKey fromPointsKey1 = std::get<1>(it->first);
+        LibUtilities::PointsKey toPointsKey0   = std::get<2>(it->first);
+        LibUtilities::PointsKey toPointsKey1   = std::get<3>(it->first);
 
         bool fwdSet = false;
         bool bwdSet = false;
 
-        for (int f = 0; f < it.second.size(); ++f, ++cnt2)
+        for (int f = 0; f < it->second.size(); ++f, ++cnt2)
         {
-            n = it.second[f].first;
-            e = it.second[f].second;
+            n = it->second[f].first;
+            e = it->second[f].second;
 
             StdRegions::StdExpansionSharedPtr face = elmtToTrace[n][e];
 
@@ -712,7 +714,7 @@ void LocTraceToTraceMap::Setup3D(
             if (((fwdSet == false) && (set == 0)) ||
                 ((bwdSet == false) && (set == 1)))
             {
-                m_interpPoints[set][cnt1] = it.first;
+                m_interpPoints[set][cnt1] = it->first;
 
                 if (fromPointsKey0 == toPointsKey0)
                 {

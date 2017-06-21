@@ -398,7 +398,7 @@ namespace Nektar
                         loc_lda = loc_mat->GetRows();
 
                         ASSERTL1(loc_lda >= 0,
-                                 std::lexical_cast<std::string>(n) + "-th "
+                                 boost::lexical_cast<std::string>(n) + "-th "
                                  "matrix block in Schur complement has "
                                  "rank 0!");
 
@@ -429,7 +429,7 @@ namespace Nektar
                             loc_lda = loc_mat->GetRows();
 
                             ASSERTL1(loc_lda == partitions[part].second,
-                                     std::lexical_cast<std::string>(n) + "-th"
+                                     boost::lexical_cast<std::string>(n) + "-th"
                                      " matrix block in Schur complement has "
                                      "unexpected rank");
 

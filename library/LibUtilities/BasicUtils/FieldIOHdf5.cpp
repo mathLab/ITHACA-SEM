@@ -1022,10 +1022,10 @@ void FieldIOHdf5::v_Import(const std::string &infilename,
 
             FieldDefinitionsSharedPtr fielddef =
                 MemoryManager<FieldDefinitions>::AllocateSharedPtr();
-            ImportFieldDef(readPLInd, root, decomps, *sIt, decompsToOffsets[*sIt],
+            ImportFieldDef(readPLInd, root, decomps, sIt, decompsToOffsets[sIt],
                            fieldNameStream.str(), fielddef);
 
-            fielddef->m_elementIDs = groupsToElmts[*sIt];
+            fielddef->m_elementIDs = groupsToElmts[sIt];
             fielddefs.push_back(fielddef);
 
             if (fielddata != NullVectorNekDoubleVector)
@@ -1033,7 +1033,7 @@ void FieldIOHdf5::v_Import(const std::string &infilename,
                 std::vector<NekDouble> decompFieldData;
                 ImportFieldData(
                     readPLInd, data_dset, data_fspace,
-                    decompsToOffsets[*sIt].data, decomps, *sIt, fielddef,
+                    decompsToOffsets[sIt].data, decomps, sIt, fielddef,
                     decompFieldData);
                 fielddata.push_back(decompFieldData);
             }

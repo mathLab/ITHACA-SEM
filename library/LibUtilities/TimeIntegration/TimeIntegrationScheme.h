@@ -225,7 +225,7 @@ namespace Nektar
                                  OutArrayType    &outarray, 
                                  const NekDouble time) const
             {
-                ASSERTL1(!(m_functors1[0].empty()),"OdeRhs should be defined for this time integration scheme");
+                ASSERTL1(m_functors1[0],"OdeRhs should be defined for this time integration scheme");
                 m_functors1[0](inarray,outarray,time);
             }
             
@@ -233,7 +233,7 @@ namespace Nektar
                                          OutArrayType    &outarray, 
                                          const NekDouble time) const
             {
-                ASSERTL1(!(m_functors1[1].empty()),"OdeExplicitRhs should be defined for this time integration scheme");
+                ASSERTL1(m_functors1[1],"OdeExplicitRhs should be defined for this time integration scheme");
                 m_functors1[1](inarray,outarray,time);
             }
             
@@ -241,7 +241,7 @@ namespace Nektar
                                         OutArrayType    &outarray, 
                                         const NekDouble time) const
             {
-                ASSERTL1(!(m_functors1[2].empty()),"OdeImplictRhs should be defined for this time integration scheme");
+                ASSERTL1(m_functors1[2],"OdeImplictRhs should be defined for this time integration scheme");
                 m_functors1[2](inarray,outarray,time);
             }
 
@@ -249,7 +249,7 @@ namespace Nektar
                                      OutArrayType    &outarray, 
                                      const NekDouble time) const
             {
-                ASSERTL1(!(m_functors1[3].empty()),"Projection operation should be defined for this time integration scheme");
+                ASSERTL1(m_functors1[3],"Projection operation should be defined for this time integration scheme");
                 m_functors1[3](inarray,outarray,time);
             }
             
@@ -258,7 +258,7 @@ namespace Nektar
                                         const NekDouble time, 
                                         const NekDouble lambda) const
             {
-                ASSERTL1(!(m_functors2[0].empty()),"ImplicitSolve should be defined for this time integration scheme");
+                ASSERTL1(m_functors2[0],"ImplicitSolve should be defined for this time integration scheme");
                 m_functors2[0](inarray,outarray,time,lambda);
             }
 

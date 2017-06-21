@@ -55,6 +55,7 @@ ModuleKey OutputInfo::m_className =
 
 OutputInfo::OutputInfo(FieldSharedPtr f) : OutputModule(f)
 {
+    m_config["nprocs"] = ConfigOption(false, "1", "number of partitions");
 }
 
 OutputInfo::~OutputInfo()
@@ -68,10 +69,9 @@ void OutputInfo::Process(po::variables_map &vm)
     int i;
 
     // partition mesh
-    ASSERTL0(vm.count("nprocs") > 0,
-             "--nprocs nust be specified with info output");
-
-    int nprocs = vm["nprocs"].as<int>();
+    ASSERTL0(m_config["nprocs"].as<string>().compare("NotSet") != 0,
+             "Need to specify nprocs for info output");
+    int nprocs = m_config["nprocs"].as<int>();
 
     LibUtilities::CommSharedPtr vComm = boost::shared_ptr<FieldConvertComm>(
         new FieldConvertComm(0, NULL, nprocs, 0));

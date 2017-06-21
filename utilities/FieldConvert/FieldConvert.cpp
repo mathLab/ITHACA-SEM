@@ -209,16 +209,22 @@ int main(int argc, char* argv[])
      * name of the module to load.
      */
     FieldSharedPtr f = boost::shared_ptr<Field>(new Field());
+    int nParts = 1;
     if (LibUtilities::GetCommFactory().ModuleExists("ParallelMPI"))
     {
-        if(vm.count("procid"))
+        if(vm.count("nprocs"))
         {
             int nprocs, rank;
-
-            ASSERTL0(vm.count("nprocs"),
-                     "Must specify --nprocs when using --procid option");
             nprocs = vm["nprocs"].as<int>();
-            rank   = vm["procid"].as<int>();
+            if(vm.count("procid"))
+            {
+                rank   = vm["procid"].as<int>();
+            }
+            else
+            {
+                nParts = nprocs;
+                rank   = 0;
+            }
 
             f->m_comm = boost::shared_ptr<FieldConvertComm>(
                                 new FieldConvertComm(argc, argv, nprocs,rank));
@@ -415,15 +421,30 @@ int main(int argc, char* argv[])
         PrintExecutionSequence(modules);
     }
 
-    // Run field process.
-    for (int n = 0; n < SIZE_ModulePriority; ++n)
+    // Loop on partitions when using nprocs without procid
+    for(int p = 0; p < nParts; ++p)
     {
-        ModulePriority priority = static_cast<ModulePriority>(n);
-        for (int i = 0; i < modules.size(); ++i)
+        if(verbose && nParts > 1)
         {
-            if(modules[i]->GetModulePriority() == priority)
+            cout << endl << "Processing partition: " << p << endl;
+        }
+        if (p > 0)
+        {
+            int rank = p;
+            f->ClearField();
+            f->m_comm = boost::shared_ptr<FieldConvertComm>(
+                                new FieldConvertComm(argc, argv, nParts,rank));
+        }
+        // Run field process.
+        for (int n = 0; n < SIZE_ModulePriority; ++n)
+        {
+            ModulePriority priority = static_cast<ModulePriority>(n);
+            for (int i = 0; i < modules.size(); ++i)
             {
-                RunModule(modules[i], vm, verbose);
+                if(modules[i]->GetModulePriority() == priority)
+                {
+                    RunModule(modules[i], vm, verbose);
+                }
             }
         }
     }

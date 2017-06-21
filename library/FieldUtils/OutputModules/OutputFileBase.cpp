@@ -249,7 +249,7 @@ bool OutputFileBase::WriteFile(std::string &filename, po::variables_map &vm)
     // Get path to file. If procid was defined, get the full name
     //     to avoid checking files from other partitions
     fs::path outFile;
-    if(vm.count("procid"))
+    if(vm.count("nprocs"))
     {
         outFile = GetFullOutName(filename, vm);
     }

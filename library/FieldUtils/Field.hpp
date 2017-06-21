@@ -717,6 +717,17 @@ struct Field
         return tmp;
     }
 
+    FIELD_UTILS_EXPORT void ClearField()
+    {
+        m_session  = LibUtilities::SessionReaderSharedPtr();
+        m_graph    = SpatialDomains::MeshGraphSharedPtr();
+        m_fieldPts = LibUtilities::NullPtsField;
+        m_exp.clear();
+        m_fielddef = std::vector<LibUtilities::FieldDefinitionsSharedPtr>();
+        m_data     = std::vector<std::vector<NekDouble> > ();
+        m_variables.clear();
+    }
+
 private:
     /// Map to store FieldIO instances. Key is the reader type, value is the
     /// FieldIO object.

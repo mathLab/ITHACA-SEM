@@ -110,8 +110,6 @@ protected:
     void CreateFields(
         const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields);
 
-    void ClearFields();
-
     void CheckModules(vector<ModuleSharedPtr> &modules);
 
     unsigned int m_numSamples;

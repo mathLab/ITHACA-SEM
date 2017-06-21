@@ -179,11 +179,6 @@ void FilterFieldConvert::v_Initialise(
     
     m_fieldMetaData["InitialTime"] = boost::lexical_cast<std::string>(time);
 
-    // Fill some parameters of m_f
-    m_f->m_session = m_session;
-    m_f->m_graph = pFields[0]->GetGraph();
-    m_f->m_comm = m_f->m_session->GetComm();
-
     // Load restart file if necessary
     if (m_restartFile != "")
     {
@@ -363,7 +358,7 @@ void FilterFieldConvert::OutputField(
     }
 
     // Empty m_f to save memory
-    ClearFields();
+    m_f->ClearField();
 
     if (dump != -1) // not final dump so rescale
     {
@@ -483,6 +478,10 @@ void FilterFieldConvert::CreateModules( vector<string> &modcmds)
 void FilterFieldConvert::CreateFields(
         const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields)
 {
+    // Fill some parameters of m_f
+    m_f->m_session = m_session;
+    m_f->m_graph = pFields[0]->GetGraph();
+    m_f->m_comm = m_f->m_session->GetComm();
     m_f->m_fieldMetaDataMap = m_fieldMetaData;
     m_f->m_fieldPts = LibUtilities::NullPtsField;
     // Create m_f->m_exp
@@ -519,14 +518,6 @@ void FilterFieldConvert::CreateFields(
                                  m_f->m_exp[n]->UpdatePhys());
     }
     m_f->m_variables= m_variables;
-}
-
-void FilterFieldConvert::ClearFields()
-{
-    m_f->m_fieldPts = LibUtilities::NullPtsField;
-    m_f->m_exp.clear();
-    m_f->m_fielddef = std::vector<LibUtilities::FieldDefinitionsSharedPtr>();
-    m_f->m_data = std::vector<std::vector<NekDouble> > ();
 }
 
 // This function checks validity conditions for the list of modules provided

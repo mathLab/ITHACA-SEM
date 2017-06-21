@@ -1,6 +1,4 @@
-#include <vtkVersionMacros.h>
-
-#if VTK_MAJOR_VERSION == 6 && VTK_MINOR_VERSION == 0 && VTK_PATCH_VERSION == 0
+#if NEKTAR_HAS_VTK_6_0_0
 #include <vtkMathConfigure.h>
 #undef VTK_HAS_ISNAN
 #undef VTK_HAS_ISINF

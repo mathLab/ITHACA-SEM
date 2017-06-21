@@ -38,6 +38,7 @@
 
 using namespace std;
 
+#include <boost/geometry.hpp>
 #include "ProcessInterpPointDataToFld.h"
 
 #include <FieldUtils/Interpolator.h>
@@ -45,6 +46,10 @@ using namespace std;
 #include <LibUtilities/BasicUtils/PtsField.h>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <boost/math/special_functions/fpclassify.hpp>
+
+namespace bg  = boost::geometry;
+namespace bgi = boost::geometry::index;
+
 namespace Nektar
 {
 namespace FieldUtils

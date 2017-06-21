@@ -719,7 +719,7 @@ namespace Nektar
             ParameterMap::const_iterator paramIter = m_parameters.find(vName);
             ASSERTL0(paramIter != m_parameters.end(), "Required parameter '" +
                      pName + "' not specified in session.");
-            pVar = (int)floor(paramIter->second);
+            pVar = (int)round(paramIter->second);
         }
 
 
@@ -733,7 +733,7 @@ namespace Nektar
             ParameterMap::const_iterator paramIter = m_parameters.find(vName);
             if(paramIter != m_parameters.end())
             {
-                pVar = (int)floor(paramIter->second);
+                pVar = (int)round(paramIter->second);
             }
             else
             {

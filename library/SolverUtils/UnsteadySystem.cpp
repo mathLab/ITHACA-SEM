@@ -111,14 +111,11 @@ namespace Nektar
             m_homoInitialFwd = true;
 
             // Set up filters
-            LibUtilities::FilterMap::const_iterator x;
-            LibUtilities::FilterMap f = m_session->GetFilters();
-            for (x = f.begin(); x != f.end(); ++x)
+            for (auto &x : m_session->GetFilters())
             {
-                m_filters.push_back(GetFilterFactory().CreateInstance(
-                                                                x->first, 
-                                                                m_session, 
-                                                                x->second));
+                m_filters.push_back(
+                    GetFilterFactory().CreateInstance(
+                        x.first, m_session, x.second));
             }
         }
         
@@ -223,10 +220,9 @@ namespace Nektar
                 m_timestep, fields, m_time, m_ode);
 
             // Initialise filters
-            std::vector<FilterSharedPtr>::iterator x;
-            for (x = m_filters.begin(); x != m_filters.end(); ++x)
+            for (auto &x : m_filters)
             {
-                (*x)->Initialise(m_fields, m_time);
+                x->Initialise(m_fields, m_time);
             }
 
             // Ensure that there is no conflict of parameters
@@ -352,10 +348,9 @@ namespace Nektar
                                 "NaN found during time integration.");
                 }
                 // Update filters
-                std::vector<FilterSharedPtr>::iterator x;
-                for (x = m_filters.begin(); x != m_filters.end(); ++x)
+                for (auto &x : m_filters)
                 {
-                    (*x)->Update(m_fields, m_time);
+                    x->Update(m_fields, m_time);
                 }
 
                 // Write out checkpoint files
@@ -732,9 +727,7 @@ namespace Nektar
                         if (m_fieldMetaDataMap !=
                                 LibUtilities::NullFieldMetaDataMap)
                         {
-                            LibUtilities::FieldMetaDataMap::iterator iter; 
-                            
-                            iter = m_fieldMetaDataMap.find("Time");
+                            auto iter = m_fieldMetaDataMap.find("Time");
                             if (iter != m_fieldMetaDataMap.end())
                             {
                                 time = boost::lexical_cast<NekDouble>(

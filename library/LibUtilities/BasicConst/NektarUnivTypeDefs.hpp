@@ -105,8 +105,8 @@ namespace Nektar
         }
         bool isSet(const FlagType &key) const
         {
-            std::map<FlagType, bool>::const_iterator x;
-            return ((x = m_data.find(key)) != m_data.end() && x->second);
+            auto x = m_data.find(key);
+            return x != m_data.end() && x->second;
         }
     private:
         std::map<FlagType, bool> m_data;

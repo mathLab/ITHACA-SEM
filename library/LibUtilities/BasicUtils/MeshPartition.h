@@ -165,15 +165,6 @@ namespace Nektar
             typedef boost::graph_traits<
                         BoostGraph
                     >::edge_descriptor BoostEdge;
-            typedef boost::graph_traits<
-                        BoostGraph
-                    >::edge_iterator BoostEdgeIterator;
-            typedef boost::graph_traits<
-                        BoostGraph
-                    >::vertex_iterator BoostVertexIterator;
-            typedef boost::graph_traits<
-                        BoostGraph
-                    >::adjacency_iterator BoostAdjacencyIterator;
 
             typedef std::vector<unsigned int>       NumModes;
             typedef std::map<std::string, NumModes> NummodesPerField;

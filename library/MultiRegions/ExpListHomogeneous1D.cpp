@@ -730,7 +730,7 @@ namespace Nektar
 
         DNekBlkMatSharedPtr ExpListHomogeneous1D::GetHomogeneous1DBlockMatrix(Homogeneous1DMatType mattype, CoeffState coeffstate) const
         {
-            Homo1DBlockMatrixMap::iterator matrixIter = m_homogeneous1DBlockMat->find(mattype);
+            auto matrixIter = m_homogeneous1DBlockMat->find(mattype);
             
             if(matrixIter == m_homogeneous1DBlockMat->end())
             {
@@ -983,7 +983,6 @@ namespace Nektar
                 int modes_offset = 0;
                 int planes_offset = 0;
                 Array<OneD, NekDouble> coeff_tmp;
-                std::unordered_map<int,int>::iterator it;
                 
                 // Build map of plane IDs lying on this processor and determine
                 // mapping from element ids to location in expansion list.
@@ -1025,7 +1024,7 @@ namespace Nektar
                                                                         fielddef->m_numModes,
                                                                         modes_offset);
 
-                    it = m_elmtToExpId.find(fielddef->m_elementIDs[i]);
+                    auto it = m_elmtToExpId.find(fielddef->m_elementIDs[i]);
                     
                     // ensure element is on this partition for parallel case. 
                     if(it == m_elmtToExpId.end())

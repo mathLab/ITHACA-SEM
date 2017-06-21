@@ -355,24 +355,19 @@ void FieldIO::AddInfoTag(TagWriterSharedPtr root,
 
     TagWriterSharedPtr infoTag = root->AddChild("Metadata");
 
-    FieldMetaDataMap::const_iterator infoit;
-
     TagWriterSharedPtr provTag = infoTag->AddChild("Provenance");
-    for (infoit = ProvenanceMap.begin(); infoit != ProvenanceMap.end();
-         ++infoit)
+    for (auto &infoit : ProvenanceMap)
     {
-        provTag->SetAttr(infoit->first, infoit->second);
+        provTag->SetAttr(infoit.first, infoit.second);
     }
 
     //---------------------------------------------
     // write field info section
     if (fieldmetadatamap != NullFieldMetaDataMap)
     {
-        for (infoit = fieldmetadatamap.begin();
-             infoit != fieldmetadatamap.end();
-             ++infoit)
+        for (auto &infoit : fieldmetadatamap)
         {
-            infoTag->SetAttr(infoit->first, infoit->second);
+            infoTag->SetAttr(infoit.first, infoit.second);
         }
     }
 }

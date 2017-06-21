@@ -257,13 +257,11 @@ namespace Nektar
             // retrieve variable coefficients
             if(m_linSysKey.GetNVarCoeffs() > 0)
             {
-                StdRegions::VarCoeffMap::const_iterator x;
                 cnt = expList->GetPhys_Offset(n);
-                
-                for (x = m_linSysKey.GetVarCoeffs().begin(); 
-                     x != m_linSysKey.GetVarCoeffs().end(); ++x)
+
+                for (auto &x : m_linSysKey.GetVarCoeffs())
                 {
-                    vVarCoeffMap[x->first] = x->second + cnt;
+                    vVarCoeffMap[x.first] = x.second + cnt;
                 }
             }
 
@@ -327,12 +325,10 @@ namespace Nektar
             // retrieve variable coefficients
             if(m_linSysKey.GetNVarCoeffs() > 0)
             {
-                StdRegions::VarCoeffMap::const_iterator x;
                 cnt = expList->GetPhys_Offset(n);
-                for (x  = m_linSysKey.GetVarCoeffs().begin(); 
-                     x != m_linSysKey.GetVarCoeffs().end  (); ++x)
+                for (auto &x : m_linSysKey.GetVarCoeffs())
                 {
-                    vVarCoeffMap[x->first] = x->second + cnt;
+                    vVarCoeffMap[x.first] = x.second + cnt;
                 }
             }
 
@@ -403,12 +399,10 @@ namespace Nektar
             // retrieve variable coefficients
             if(m_linSysKey.GetNVarCoeffs() > 0)
             {
-                StdRegions::VarCoeffMap::const_iterator x;
                 int cnt = expList->GetPhys_Offset(n);
-                for (x  = m_linSysKey.GetVarCoeffs().begin(); 
-                     x != m_linSysKey.GetVarCoeffs().end  (); ++x)
+                for (auto &x : m_linSysKey.GetVarCoeffs())
                 {
-                    vVarCoeffMap[x->first] = x->second + cnt;
+                    vVarCoeffMap[x.first] = x.second + cnt;
                 }
             }
 

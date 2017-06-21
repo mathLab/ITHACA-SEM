@@ -403,10 +403,6 @@ class Interpolator;
             
             SOLVER_UTILS_EXPORT inline void SetModifiedBasis(
                 const bool modbasis);
-            
-            /// Perform a case-insensitive string comparison.
-            SOLVER_UTILS_EXPORT int NoCaseStringCompare(
-                const std::string & s1, const std::string& s2) ;
 
             SOLVER_UTILS_EXPORT int GetCheckpointNumber()
             {
@@ -553,12 +549,6 @@ class Interpolator;
             
             /// Initialises EquationSystem class members.
             SOLVER_UTILS_EXPORT EquationSystem( const LibUtilities::SessionReaderSharedPtr& pSession);
-            
-            // Here for consistency purposes with old version
-            int nocase_cmp(const std::string & s1, const std::string& s2)
-            {
-                return NoCaseStringCompare(s1,s2);
-            }
             
             SOLVER_UTILS_EXPORT virtual void v_InitObject();
             
@@ -794,12 +784,11 @@ class Interpolator;
                 v_GenerateSummary(vSummary);
 
                 out << "=======================================================================" << std::endl;
-                SummaryList::const_iterator x;
-                for (x = vSummary.begin(); x != vSummary.end(); ++x)
+                for (auto &x : vSummary)
                 {
                     out << "\t";
                     out.width(20);
-                    out << x->first << ": " << x->second << std::endl;
+                    out << x.first << ": " << x.second << std::endl;
                 }
                 out << "=======================================================================" << std::endl;
             }

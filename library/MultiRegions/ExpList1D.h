@@ -53,8 +53,6 @@ namespace Nektar
         typedef std::shared_ptr<ExpList1D>      ExpList1DSharedPtr;
         /// Vector of pointers to ExpList1D objects.
         typedef std::vector<ExpList1DSharedPtr>   ExpList1DVector;
-        /// Iterator for the vector of ExpList1D pointers.
-        typedef std::vector<ExpList1DSharedPtr>::iterator ExpList1DVectorIter;
 
         /// This class is the abstraction of a one-dimensional multi-elemental
         /// expansions which is merely a collection of local expansions.

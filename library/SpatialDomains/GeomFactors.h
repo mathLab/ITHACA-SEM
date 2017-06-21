@@ -63,14 +63,9 @@ namespace SpatialDomains
     typedef std::shared_ptr<GeomFactors>        GeomFactorsSharedPtr;
     /// A vector of GeomFactor pointers.
     typedef std::vector< GeomFactorsSharedPtr > GeomFactorsVector;
-    /// Iterator for the GeomFactorsVector.
-    typedef GeomFactorsVector::iterator         GeomFactorsVectorIter;
     /// An unordered set of GeomFactor pointers.
     typedef std::unordered_set< GeomFactorsSharedPtr >
                                                 GeomFactorsSet;
-    /// Iterator for the GeomFactorsSet
-    typedef std::unordered_set< GeomFactorsSharedPtr >::iterator
-                                                GeomFactorsSetIter;
     /// Storage type for derivative of mapping.
     typedef Array<OneD, Array<OneD, Array<OneD,NekDouble> > >
                                                 DerivStorage;
@@ -224,10 +219,9 @@ namespace SpatialDomains
     inline const Array<OneD, const NekDouble> GeomFactors::GetJac(
             const LibUtilities::PointsKeyVector &keyTgt)
     {
-        std::map<LibUtilities::PointsKeyVector,
-            Array<OneD, NekDouble> >::const_iterator x;
-        
-        if ((x = m_jacCache.find(keyTgt)) != m_jacCache.end())
+        auto x = m_jacCache.find(keyTgt);
+
+        if (x != m_jacCache.end())
         {
             return x->second;
         }
@@ -263,10 +257,9 @@ namespace SpatialDomains
     inline const Array<TwoD, const NekDouble> GeomFactors::GetDerivFactors(
             const LibUtilities::PointsKeyVector &keyTgt)
     {
-        std::map<LibUtilities::PointsKeyVector,
-                 Array<TwoD, NekDouble> >::const_iterator x;
+        auto x = m_derivFactorCache.find(keyTgt);
 
-        if ((x = m_derivFactorCache.find(keyTgt)) != m_derivFactorCache.end())
+        if (x != m_derivFactorCache.end())
         {
             return x->second;
         }

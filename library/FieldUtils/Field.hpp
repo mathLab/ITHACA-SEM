@@ -423,8 +423,7 @@ struct Field
         LibUtilities::CommSharedPtr c = m_session ? m_session->GetComm() :
             LibUtilities::GetCommFactory().CreateInstance("Serial", 0, 0);
         string fmt = LibUtilities::FieldIO::GetFileType(filename, c);
-        map<string, LibUtilities::FieldIOSharedPtr>::iterator it =
-            m_fld.find(fmt);
+        auto it = m_fld.find(fmt);
 
         if (it == m_fld.end())
         {

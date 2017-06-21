@@ -111,15 +111,14 @@ namespace Nektar
 
             const SpatialDomains::ExpansionMap &expansions = graph3D->GetExpansions();
 
-            SpatialDomains::ExpansionMap::const_iterator expIt;
-            for (expIt = expansions.begin(); expIt != expansions.end(); ++expIt)
+            for (auto &expIt : expansions)
             {
                 SpatialDomains::TetGeomSharedPtr TetGeom;
                 SpatialDomains::HexGeomSharedPtr HexGeom;
                 SpatialDomains::PrismGeomSharedPtr PrismGeom;
                 SpatialDomains::PyrGeomSharedPtr PyrGeom;
 
-                if((TetGeom = std::dynamic_pointer_cast<SpatialDomains::TetGeom>(expIt->second->m_geomShPtr)))
+                if((TetGeom = std::dynamic_pointer_cast<SpatialDomains::TetGeom>(expIt.second->m_geomShPtr)))
                 {
                     if(TetNb < LibUtilities::SIZE_PointsType)
                     {
@@ -156,7 +155,7 @@ namespace Nektar
 
                 }
 */
-                else if((HexGeom = std::dynamic_pointer_cast<SpatialDomains::HexGeom>(expIt->second->m_geomShPtr)))
+                else if((HexGeom = std::dynamic_pointer_cast<SpatialDomains::HexGeom>(expIt.second->m_geomShPtr)))
                 {
                     hex = MemoryManager<LocalRegions::HexExp>::AllocateSharedPtr(HBa,HBb,HBc, HexGeom);
                     (*m_exp).push_back(hex);
@@ -214,8 +213,7 @@ namespace Nektar
             const SpatialDomains::ExpansionMap &expansions
                                         = graph3D->GetExpansions(variable);
 
-            SpatialDomains::ExpansionMap::const_iterator expIt;
-            for (expIt = expansions.begin(); expIt != expansions.end(); ++expIt)
+            for (auto &expIt : expansions)
             {
                 SpatialDomains::TetGeomSharedPtr   TetGeom;
                 SpatialDomains::HexGeomSharedPtr   HexGeom;
@@ -223,14 +221,14 @@ namespace Nektar
                 SpatialDomains::PyrGeomSharedPtr   PyrGeom;
 
                 if((TetGeom = std::dynamic_pointer_cast<
-                        SpatialDomains::TetGeom>(expIt->second->m_geomShPtr)))
+                        SpatialDomains::TetGeom>(expIt.second->m_geomShPtr)))
                 {
                     LibUtilities::BasisKey TetBa
-                                        = expIt->second->m_basisKeyVector[0];
+                                        = expIt.second->m_basisKeyVector[0];
                     LibUtilities::BasisKey TetBb
-                                        = expIt->second->m_basisKeyVector[1];
+                                        = expIt.second->m_basisKeyVector[1];
                     LibUtilities::BasisKey TetBc
-                                        = expIt->second->m_basisKeyVector[2];
+                                        = expIt.second->m_basisKeyVector[2];
 
                     if(TetBa.GetBasisType() == LibUtilities::eGLL_Lagrange ||
                        TetBa.GetBasisType() == LibUtilities::eGauss_Lagrange)
@@ -248,14 +246,14 @@ namespace Nektar
                     }
                 }
                 else if((PrismGeom = std::dynamic_pointer_cast<SpatialDomains
-                             ::PrismGeom>(expIt->second->m_geomShPtr)))
+                             ::PrismGeom>(expIt.second->m_geomShPtr)))
                 {
                     LibUtilities::BasisKey PrismBa
-                                        = expIt->second->m_basisKeyVector[0];
+                                        = expIt.second->m_basisKeyVector[0];
                     LibUtilities::BasisKey PrismBb
-                                        = expIt->second->m_basisKeyVector[1];
+                                        = expIt.second->m_basisKeyVector[1];
                     LibUtilities::BasisKey PrismBc
-                                        = expIt->second->m_basisKeyVector[2];
+                                        = expIt.second->m_basisKeyVector[2];
 
                     prism = MemoryManager<LocalRegions::PrismExp>
                                         ::AllocateSharedPtr(PrismBa,PrismBb,
@@ -264,14 +262,14 @@ namespace Nektar
                     (*m_exp).push_back(prism);
                 }
                 else if((PyrGeom = std::dynamic_pointer_cast<
-                         SpatialDomains::PyrGeom>(expIt->second->m_geomShPtr)))
+                         SpatialDomains::PyrGeom>(expIt.second->m_geomShPtr)))
                 {
                     LibUtilities::BasisKey PyrBa
-                                        = expIt->second->m_basisKeyVector[0];
+                                        = expIt.second->m_basisKeyVector[0];
                     LibUtilities::BasisKey PyrBb
-                                        = expIt->second->m_basisKeyVector[1];
+                                        = expIt.second->m_basisKeyVector[1];
                     LibUtilities::BasisKey PyrBc
-                                        = expIt->second->m_basisKeyVector[2];
+                                        = expIt.second->m_basisKeyVector[2];
 
                     pyramid = MemoryManager<LocalRegions::PyrExp>
                                         ::AllocateSharedPtr(PyrBa,PyrBb,PyrBc,
@@ -280,14 +278,14 @@ namespace Nektar
                     (*m_exp).push_back(pyramid);
                 }
                 else if((HexGeom = std::dynamic_pointer_cast<
-                         SpatialDomains::HexGeom>(expIt->second->m_geomShPtr)))
+                         SpatialDomains::HexGeom>(expIt.second->m_geomShPtr)))
                 {
                     LibUtilities::BasisKey HexBa
-                                        = expIt->second->m_basisKeyVector[0];
+                                        = expIt.second->m_basisKeyVector[0];
                     LibUtilities::BasisKey HexBb
-                                        = expIt->second->m_basisKeyVector[1];
+                                        = expIt.second->m_basisKeyVector[1];
                     LibUtilities::BasisKey HexBc
-                                        = expIt->second->m_basisKeyVector[2];
+                                        = expIt.second->m_basisKeyVector[2];
 
                     hex = MemoryManager<LocalRegions::HexExp>
                                         ::AllocateSharedPtr(HexBa,HexBb,HexBc,
@@ -351,7 +349,7 @@ namespace Nektar
                 SpatialDomains::PrismGeomSharedPtr PrismGeom;
                 SpatialDomains::PyrGeomSharedPtr PyrGeom;
 
-                SpatialDomains::ExpansionMap::const_iterator expmap = expansions.find(i);
+                auto expmap = expansions.find(i);
                 ASSERTL1(expmap != expansions.end(), "Unable to find expansion.");
                 const SpatialDomains::ExpansionShPtr exp = expmap->second;
 

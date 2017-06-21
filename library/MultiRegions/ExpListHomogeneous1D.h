@@ -69,8 +69,6 @@ namespace Nektar
         typedef std::shared_ptr<ExpListHomogeneous1D>   ExpListHomogeneous1DSharedPtr;
         /// Vector of pointers to ExpList3DHomogeneous1D objects.
         typedef std::vector< ExpListHomogeneous1DSharedPtr > ExpListHomogeneous1DVector;
-        /// Iterator for the vector of ExpList3DHomogeneous1D pointers.
-        typedef std::vector< ExpListHomogeneous1DSharedPtr >::iterator ExpListHomogeneous1DVectorIter;
 
         /// Abstraction of a two-dimensional multi-elemental expansion which
         /// is merely a collection of local expansions.

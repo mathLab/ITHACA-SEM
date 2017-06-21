@@ -122,10 +122,9 @@ void ProcessBoundaryExtract::Process(po::variables_map &vm)
         const SpatialDomains::BoundaryRegionCollection bregions =
             bcs.GetBoundaryRegions();
 
-        SpatialDomains::BoundaryRegionCollection::const_iterator breg_it;
-        for (breg_it = bregions.begin(); breg_it != bregions.end(); ++breg_it)
+        for (auto &breg_it : bregions)
         {
-            numBndExp = max(numBndExp, breg_it->first);
+            numBndExp = max(numBndExp, breg_it.first);
         }
         // assuming all boundary regions are consecutive number if
         // regions is one more tham maximum id

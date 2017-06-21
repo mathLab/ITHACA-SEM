@@ -141,12 +141,11 @@ void InputFld::Process(po::variables_map &vm)
             m_f->m_exp.resize(1);
 
             Array<OneD, int> ElementGIDs(expansions.size());
-            SpatialDomains::ExpansionMap::const_iterator expIt;
 
             i = 0;
-            for (expIt = expansions.begin(); expIt != expansions.end(); ++expIt)
+            for (auto &expIt : expansions)
             {
-                ElementGIDs[i++] = expIt->second->m_geomShPtr->GetGlobalID();
+                ElementGIDs[i++] = expIt.second->m_geomShPtr->GetGlobalID();
             }
 
             m_f->m_fielddef.clear();

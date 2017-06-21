@@ -144,12 +144,11 @@ namespace Nektar
 
             // For each element in the mesh, create a segment expansion using
             // the supplied BasisKey and segment geometry.
-            SpatialDomains::ExpansionMap::const_iterator expIt;
-            for (expIt = expansions.begin(); expIt != expansions.end(); ++expIt)
+            for (auto &expIt : expansions)
             {
                 if ((SegmentGeom = std::dynamic_pointer_cast<
                          SpatialDomains::SegGeom>(
-                             expIt->second->m_geomShPtr)))
+                             expIt.second->m_geomShPtr)))
                 {
                     seg = MemoryManager<LocalRegions::SegExp>
                         ::AllocateSharedPtr(Ba,SegmentGeom);
@@ -214,15 +213,14 @@ namespace Nektar
                                                     = graph1D->GetExpansions();
 
             // Process each expansion in the graph
-            SpatialDomains::ExpansionMap::const_iterator expIt;
-            for (expIt = expansions.begin(); expIt != expansions.end(); ++expIt)
+            for (auto &expIt : expansions)
             {
                 // Retrieve basis key from expansion
-                LibUtilities::BasisKey bkey = expIt->second->m_basisKeyVector[0];
+                LibUtilities::BasisKey bkey = expIt.second->m_basisKeyVector[0];
 
                 if ((SegmentGeom = std::dynamic_pointer_cast<
                          SpatialDomains::SegGeom>(
-                             expIt->second->m_geomShPtr)))
+                             expIt.second->m_geomShPtr)))
                 {
                     seg = MemoryManager<LocalRegions::SegExp>
                                         ::AllocateSharedPtr(bkey, SegmentGeom);
@@ -293,28 +291,26 @@ namespace Nektar
             LocalRegions::SegExpSharedPtr seg;
             SpatialDomains::SegGeomSharedPtr SegmentGeom;
             SpatialDomains::Composite comp;
-            SpatialDomains::CompositeMap::const_iterator compIt;
 
             // Retrieve the list of expansions
             const SpatialDomains::ExpansionMap &expansions
                 = graph1D->GetExpansions(var);
 
             // Process each composite region in domain
-            for(compIt = domain.begin(); compIt != domain.end(); ++compIt)
+            for(auto &compIt : domain)
             {
-                comp = compIt->second;
+                comp = compIt.second;
 
                 // Process each expansion in the graph
-                for(j = 0; j < compIt->second->size(); ++j)
+                for(j = 0; j < compIt.second->size(); ++j)
                 {
-                    SpatialDomains::ExpansionMap::const_iterator expIt;
-
                     if((SegmentGeom = std::dynamic_pointer_cast<
                             SpatialDomains::SegGeom>(
-                                (*compIt->second)[j])))
+                                (*compIt.second)[j])))
                     {
                         // Retrieve basis key from expansion and define expansion
-                        if((expIt = expansions.find(SegmentGeom->GetGlobalID())) != expansions.end())
+                        auto expIt = expansions.find(SegmentGeom->GetGlobalID());
+                        if(expIt != expansions.end())
                         {
                             LibUtilities::BasisKey bkey = expIt->second->m_basisKeyVector[0];
                             
@@ -398,24 +394,25 @@ namespace Nektar
 
             int j, id=0;
             SpatialDomains::Composite comp;
-            SpatialDomains::CompositeMap::const_iterator compIt;
             SpatialDomains::SegGeomSharedPtr SegmentGeom;
             LocalRegions::SegExpSharedPtr seg;
 
             // Process each composite region.
-            for(compIt = domain.begin(); compIt != domain.end(); ++compIt)
+            for(auto &compIt : domain)
             {
-                comp = compIt->second;
+                comp = compIt.second;
+
                 // Process each expansion in the region.
-                for(j = 0; j < compIt->second->size(); ++j)
+                for(j = 0; j < compIt.second->size(); ++j)
                 {
                     if((SegmentGeom = std::dynamic_pointer_cast<
                             SpatialDomains::SegGeom>(
-                                (*compIt->second)[j])))
+                                (*compIt.second)[j])))
                     {
                         // Retrieve the basis key from the expansion.
-                        LibUtilities::BasisKey bkey
-                            = std::dynamic_pointer_cast<SpatialDomains::MeshGraph2D>(graph2D)->GetEdgeBasisKey(SegmentGeom, variable);
+                        LibUtilities::BasisKey bkey = std::dynamic_pointer_cast<
+                            SpatialDomains::MeshGraph2D>(graph2D)
+                            ->GetEdgeBasisKey(SegmentGeom, variable);
 
                         seg = MemoryManager<LocalRegions::SegExp>
                                         ::AllocateSharedPtr(bkey, SegmentGeom);
@@ -521,9 +518,7 @@ namespace Nektar
 
             map<int, pair<SpatialDomains::Geometry1DSharedPtr,
                           LibUtilities::BasisKey> > edgeOrders;
-            map<int, pair<SpatialDomains::Geometry1DSharedPtr,
-                          LibUtilities::BasisKey> >::iterator it;
-            
+
             for(i = 0; i < locexp.size(); ++i)
             {
                 exp2D = locexp[i]->as<LocalRegions::Expansion2D>();
@@ -538,7 +533,7 @@ namespace Nektar
                         continue;
                     }
 
-                    it = edgeOrders.find(id);
+                    auto it = edgeOrders.find(id);
 
                     if (it == edgeOrders.end())
                     {
@@ -633,7 +628,7 @@ namespace Nektar
 
                 for (i = 0; i < totEdgeCnt; ++i)
                 {
-                    it = edgeOrders.find(EdgesTotID[i]);
+                    auto it = edgeOrders.find(EdgesTotID[i]);
 
                     if (it == edgeOrders.end())
                     {
@@ -670,10 +665,10 @@ namespace Nektar
                 }
             }
 
-            for (it = edgeOrders.begin(); it != edgeOrders.end(); ++it)
+            for (auto &it : edgeOrders)
             {
                 seg = MemoryManager<LocalRegions::SegExp>
-                    ::AllocateSharedPtr(it->second.second, it->second.first);
+                    ::AllocateSharedPtr(it.second.second, it.second.first);
                 seg->SetElmtId(elmtid++);
                 (*m_exp).push_back(seg);
             }

@@ -176,14 +176,13 @@ namespace Nektar
                 bcs.GetBoundaryRegions();
             const SpatialDomains::BoundaryConditionCollection &bconditions =
                 bcs.GetBoundaryConditions();
-            SpatialDomains::BoundaryRegionCollection::const_iterator it;
 
             // count the number of non-periodic boundary regions
             int cnt = 0;
-            for (it = bregions.begin(); it != bregions.end(); ++it)
+            for (auto &it : bregions)
             {
                 SpatialDomains::BoundaryConditionShPtr boundaryCondition =
-                    GetBoundaryCondition(bconditions, it->first, variable);
+                    GetBoundaryCondition(bconditions, it.first, variable);
                 if (boundaryCondition->GetBoundaryConditionType()
                         != SpatialDomains::ePeriodic)
                 {
@@ -200,10 +199,10 @@ namespace Nektar
                 PlanesBndCondExp(nplanes);
 
             cnt = 0;
-            for (it = bregions.begin(); it != bregions.end(); ++it)
+            for (auto &it : bregions)
             {
                 SpatialDomains::BoundaryConditionShPtr boundaryCondition =
-                    GetBoundaryCondition(bconditions, it->first, variable);
+                    GetBoundaryCondition(bconditions, it.first, variable);
                 if(boundaryCondition->GetBoundaryConditionType() !=
                    SpatialDomains::ePeriodic)
                 {

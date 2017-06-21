@@ -62,10 +62,8 @@ FilterAeroForces::FilterAeroForces(
     const ParamMap &pParams) :
     Filter(pSession)
 {
-    ParamMap::const_iterator it;
-
     // OutputFile
-    it = pParams.find("OutputFile");
+    auto it = pParams.find("OutputFile");
     if (it == pParams.end())
     {
         m_outputFile = m_session->GetSessionName();
@@ -234,17 +232,17 @@ void FilterAeroForces::v_Initialise(
                                             pFields[0]->GetGraph());
     const SpatialDomains::BoundaryRegionCollection &bregions =
                                             bcs.GetBoundaryRegions();
-    SpatialDomains::BoundaryRegionCollection::const_iterator it;
 
-    for (cnt = 0, it = bregions.begin(); it != bregions.end();
-            ++it, cnt++)
+    cnt = 0;
+    for (auto &it : bregions)
     {
         if ( std::find(m_boundaryRegionsIdList.begin(),
-                       m_boundaryRegionsIdList.end(), it->first) !=
+                       m_boundaryRegionsIdList.end(), it.first) !=
                 m_boundaryRegionsIdList.end() )
         {
             m_boundaryRegionIsInList[cnt] = 1;
         }
+        cnt++;
     }
 
     // Create map for element and edge/face of each boundary expansion

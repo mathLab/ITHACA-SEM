@@ -103,7 +103,6 @@ namespace Nektar
             TiXmlHandle docHandle(&doc);
             TiXmlElement* mesh = docHandle.FirstChildElement("NEKTAR").FirstChildElement("GEOMETRY").Element();
             TiXmlElement* field = NULL;
-            CurveMap::iterator it;
 
             /// Look for elements in ELEMENT block.
             field = mesh->FirstChildElement("EDGE");
@@ -144,7 +143,7 @@ namespace Nektar
                         {GetVertex(edgeData[i].v0), GetVertex(edgeData[i].v1)};
                     SegGeomSharedPtr edge;
 
-                    it = m_curvedEdges.find(indx);
+                    auto it = m_curvedEdges.find(indx);
                     if (it == m_curvedEdges.end())
                     {
                         edge = MemoryManager<SegGeom>::AllocateSharedPtr(
@@ -207,7 +206,7 @@ namespace Nektar
                                 
                                 SegGeomSharedPtr edge;
                                 
-                                it = m_curvedEdges.find(indx);
+                                auto it = m_curvedEdges.find(indx);
                                 
                                 if(it == m_curvedEdges.end())
                                 {
@@ -247,7 +246,6 @@ namespace Nektar
             ASSERTL0(field, "Unable to find ELEMENT tag in file.");
 
             // Set up curve map for curved elements on an embedded manifold.
-            CurveMap::iterator it;
 
             /// All elements are of the form: "<? ID="#"> ... </?>", with
             /// ? being the element type.
@@ -295,7 +293,7 @@ namespace Nektar
                             indx = faceData[i].id;
 
                             /// See if this face has curves.
-                            it = m_curvedFaces.find(indx);
+                            auto it = m_curvedFaces.find(indx);
 
                             /// Create a TriGeom to hold the new definition.
                             SegGeomSharedPtr edges[TriGeom::kNedges] =
@@ -341,7 +339,7 @@ namespace Nektar
                             indx = faceData[i].id;
 
                             /// See if this face has curves.
-                            it = m_curvedFaces.find(indx);
+                            auto it = m_curvedFaces.find(indx);
 
                             /// Create a QuadGeom to hold the new definition.
                             SegGeomSharedPtr edges[QuadGeom::kNedges] =
@@ -384,7 +382,7 @@ namespace Nektar
                     int err = element->QueryIntAttribute("ID", &indx);
                     ASSERTL0(err == TIXML_SUCCESS, "Unable to read element attribute ID.");
                     
-                    it = m_curvedFaces.find(indx);
+                    auto it = m_curvedFaces.find(indx);
                 
                     /// Read text element description.
                     TiXmlNode* elementChild = element->FirstChild();
@@ -611,8 +609,7 @@ namespace Nektar
 
         SegGeomSharedPtr MeshGraph2D::GetSegGeom(int eID)
         {
-            SegGeomSharedPtr returnval;
-            SegGeomMap::iterator x = m_segGeoms.find(eID);
+            auto x = m_segGeoms.find(eID);
             ASSERTL0(x != m_segGeoms.end(), "Segment not found.");
             return x->second;
         };
@@ -644,7 +641,6 @@ namespace Nektar
 
                 std::string indxStr = token.substr(indxBeg, indxEnd - indxBeg + 1);
                 std::vector<unsigned int> seqVector;
-                std::vector<unsigned int>::iterator seqIter;
 
                 bool err = ParseUtils::GenerateSeqVector(indxStr.c_str(), seqVector);
 
@@ -666,36 +662,36 @@ namespace Nektar
                 switch(type)
                 {
                 case 'E':   // Edge
-                    for (seqIter = seqVector.begin(); seqIter != seqVector.end(); ++seqIter)
+                    for (auto &seqIter : seqVector)
                     {
-                        if (m_segGeoms.find(*seqIter) == m_segGeoms.end())
+                        if (m_segGeoms.find(seqIter) == m_segGeoms.end())
                         {
                             char errStr[16] = "";
-                            ::sprintf(errStr, "%d", *seqIter);
+                            ::sprintf(errStr, "%d", seqIter);
                             NEKERROR(ErrorUtil::ewarning, (std::string("Unknown edge index: ") + errStr).c_str());
                         }
                         else
                         {
-                            composite->push_back(m_segGeoms[*seqIter]);
+                            composite->push_back(m_segGeoms[seqIter]);
                         }
                     }
                     break;
 
                 case 'T':   // Triangle
                     {
-                        for (seqIter = seqVector.begin(); seqIter != seqVector.end(); ++seqIter)
+                        for (auto &seqIter : seqVector)
                         {
-                            if (m_triGeoms.count(*seqIter) == 0 )
+                            if (m_triGeoms.count(seqIter) == 0 )
                             {
                                 char errStr[16] = "";
-                                ::sprintf(errStr, "%d", *seqIter);
+                                ::sprintf(errStr, "%d", seqIter);
                                 NEKERROR(ErrorUtil::ewarning, (std::string("Unknown triangle index: ") + errStr).c_str());
                             }
                             else
                             {
-                                if(CheckRange(*m_triGeoms[*seqIter]))
+                                if(CheckRange(*m_triGeoms[seqIter]))
                                 {
-                                    composite->push_back(m_triGeoms[*seqIter]);
+                                    composite->push_back(m_triGeoms[seqIter]);
                                 }
                             }
                         }
@@ -704,19 +700,19 @@ namespace Nektar
 
                 case 'Q':   // Quad
                     {
-                        for (seqIter = seqVector.begin(); seqIter != seqVector.end(); ++seqIter)
+                        for (auto &seqIter : seqVector)
                         {
-                            if (m_quadGeoms.count(*seqIter) == 0)
+                            if (m_quadGeoms.count(seqIter) == 0)
                             {
                                 char errStr[16] = "";
-                                ::sprintf(errStr, "%d", *seqIter);
+                                ::sprintf(errStr, "%d", seqIter);
                                 NEKERROR(ErrorUtil::ewarning, (std::string("Unknown quad index: ") + errStr +std::string(" in Composite section")).c_str());
                             }
                             else
                             {
-                                if(CheckRange(*m_quadGeoms[*seqIter]))
+                                if(CheckRange(*m_quadGeoms[seqIter]))
                                 {
-                                    composite->push_back(m_quadGeoms[*seqIter]);
+                                    composite->push_back(m_quadGeoms[seqIter]);
                                 }
                             }
                         }
@@ -724,17 +720,17 @@ namespace Nektar
                     break;
 
                 case 'V':   // Vertex
-                    for (seqIter = seqVector.begin(); seqIter != seqVector.end(); ++seqIter)
+                    for (auto &seqIter : seqVector)
                     {
-                        if (*seqIter >= m_vertSet.size())
+                        if (seqIter >= m_vertSet.size())
                         {
                             char errStr[16] = "";
-                            ::sprintf(errStr, "%d", *seqIter);
+                            ::sprintf(errStr, "%d", seqIter);
                             NEKERROR(ErrorUtil::ewarning, (std::string("Unknown vertex index: ") + errStr).c_str());
                         }
                         else
                         {
-                            composite->push_back(m_vertSet[*seqIter]);
+                            composite->push_back(m_vertSet[seqIter]);
                         }
                     }
                     break;

@@ -227,13 +227,13 @@ void ProcessVorticity::Process(po::variables_map &vm)
         }
     }
 
-    vector<MultiRegions::ExpListSharedPtr>::iterator it;
     for (s = 0; s < nstrips; ++s)
     {
         for (i = 0; i < addfields; ++i)
         {
-            it = m_f->m_exp.begin() + s * (nfields + addfields) + nfields + i;
-            m_f->m_exp.insert(it, Exp[s * addfields + i]);
+            m_f->m_exp.insert(
+                m_f->m_exp.begin() + s * (nfields + addfields) + nfields + i,
+                Exp[s * addfields + i]);
         }
     }
 

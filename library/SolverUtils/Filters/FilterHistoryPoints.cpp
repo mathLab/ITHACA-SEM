@@ -56,10 +56,8 @@ FilterHistoryPoints::FilterHistoryPoints(
     const ParamMap &pParams) :
     Filter(pSession)
 {
-    ParamMap::const_iterator it;
-
     // OutputFile
-    it = pParams.find("OutputFile");
+    auto it = pParams.find("OutputFile");
     if (it == pParams.end())
     {
         m_outputFile = m_session->GetSessionName();
@@ -437,8 +435,6 @@ void FilterHistoryPoints::v_Update(const Array<OneD, const MultiRegions::ExpList
     int numFields = pFields.num_elements();
     LibUtilities::CommSharedPtr vComm = pFields[0]->GetComm();
     Array<OneD, NekDouble> data(numPoints*numFields, 0.0);
-    std::list<std::pair<SpatialDomains::PointGeomSharedPtr, Array<OneD, NekDouble> > >::iterator x;
-
     Array<OneD, NekDouble> physvals;
     Array<OneD, NekDouble> locCoord;
     int expId;
@@ -448,8 +444,8 @@ void FilterHistoryPoints::v_Update(const Array<OneD, const MultiRegions::ExpList
     {
         if(m_isHomogeneous1D)
         {
-            for (k = 0, x = m_historyList.begin(); x != m_historyList.end();
-                 ++x, ++k)
+            k = 0;
+            for (auto &x : &m_historyList)
             {
                 locCoord = (*x).second;
                 expId    = (*x).first->GetVid();
@@ -541,6 +537,8 @@ void FilterHistoryPoints::v_Update(const Array<OneD, const MultiRegions::ExpList
                 {
                     data[m_historyLocalPointMap[k]*numFields+j] = value;
                 }
+
+                ++k;
             }
         }
         else

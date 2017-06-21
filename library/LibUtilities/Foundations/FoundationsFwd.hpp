@@ -72,13 +72,8 @@ namespace Nektar
 
         /// Name for a vector of BasisKeys.
         typedef std::vector< BasisKey > BasisKeyVector;
-        /// Name for an iterator over a BasisKeyVector.
-        typedef std::vector< BasisKey >::iterator BasisKeyVectorIter;
-
-
         typedef std::shared_ptr<Basis> BasisSharedPtr;
         typedef std::vector< BasisSharedPtr > BasisVector;
-        typedef std::vector< BasisSharedPtr >::iterator BasisVectorIter;
 
         typedef Points<NekDouble> PointsBaseType;
         typedef std::shared_ptr<Points<NekDouble> > PointsSharedPtr;

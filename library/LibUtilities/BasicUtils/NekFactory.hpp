@@ -125,8 +125,6 @@ public:
 
     /// Factory map between key and module data.
     typedef std::map<tKey, ModuleEntry, tPredicator> TMapFactory;
-    /// Iterator for factory map
-    typedef typename TMapFactory::iterator TMapFactoryIterator;
 
 public:
     NekFactory() : m_mutex() {}
@@ -145,7 +143,7 @@ public:
         ReadLock vReadLock(m_mutex);
 
         // Now try and find the key in the map.
-        TMapFactoryIterator it = getMapFactory()->find(idKey);
+        auto it = getMapFactory()->find(idKey);
 
         // If successful, check the CreatorFunction is defined and
         // create a new instance of the class.
@@ -210,7 +208,7 @@ public:
         ReadLock vReadLock(m_mutex);
 
         // Now try and find the key in the map.
-        TMapFactoryIterator it = getMapFactory()->find(idKey);
+        auto it = getMapFactory()->find(idKey);
 
         if (it != getMapFactory()->end())
         {
@@ -228,23 +226,17 @@ public:
         ReadLock vReadLock(m_mutex);
 
         pOut << std::endl << "Available classes: " << std::endl;
-        TMapFactoryIterator it;
-        for (it = getMapFactory()->begin(); it != getMapFactory()->end(); ++it)
+        for (auto &it : *getMapFactory())
         {
-            pOut << std::endl << "Available classes: " << std::endl;
-            TMapFactoryIterator it;
-            for (it = getMapFactory()->begin(); it != getMapFactory()->end(); ++it)
+            pOut << "  " << it.first;
+            if (it.second.m_desc != "")
             {
-                pOut << "  " << it->first;
-                if (it->second.m_desc != "")
-                {
-                    pOut << ":" << std::endl << "    "
-                         << it->second.m_desc << std::endl;
-                }
-                else
-                {
-                    pOut << std::endl;
-                }
+                pOut << ":" << std::endl << "    "
+                     << it.second.m_desc << std::endl;
+            }
+            else
+            {
+                pOut << std::endl;
             }
         }
     }
@@ -257,12 +249,11 @@ public:
     {
         ReadLock vReadLock(m_mutex);
 
-        TMapFactoryIterator it;
-        for (it = getMapFactory()->begin(); it != getMapFactory()->end(); ++it)
+        for (auto &it : *getMapFactory())
         {
-            if (it->second.m_desc == pDesc)
+            if (it.second.m_desc == pDesc)
             {
-                return it->first;
+                return it.first;
             }
         }
         std::string errstr = "Module '"
@@ -280,7 +271,7 @@ public:
         ReadLock vReadLock(m_mutex);
 
         // Now try and find the key in the map.
-        TMapFactoryIterator it = getMapFactory()->find(idKey);
+        auto it = getMapFactory()->find(idKey);
 
         std::stringstream errstr;
         errstr << "No such module: " << idKey << std::endl;

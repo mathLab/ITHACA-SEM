@@ -55,9 +55,6 @@ namespace Nektar
         /// Vector of pointers to ExpList2DHomogeneous1D objects.
         typedef std::vector< ExpList2DHomogeneous1DSharedPtr >
             ExpList2DHomogeneous1DVector;
-        /// Iterator for the vector of ExpList2DHomogeneous1D pointers.
-        typedef std::vector< ExpList2DHomogeneous1DSharedPtr >::iterator
-            ExpList2DHomogeneous1DVectorIter;
 
         /// Abstraction of a two-dimensional multi-elemental expansion which
         /// is merely a collection of local expansions.

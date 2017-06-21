@@ -1722,7 +1722,6 @@ namespace Nektar
             // Construct <EDGE> or <ELEMENT> block
             TiXmlElement *edgeTag = new TiXmlElement(
                 m_meshDimension == 1 ? "ELEMENT" : "EDGE");
-            SegGeomMap::iterator sIt;
             string tag = m_meshDimension == 1 ? "S" : "E";
 
             for (auto &sIt : m_segGeoms)
@@ -2268,33 +2267,32 @@ namespace Nektar
             ASSERTL0(parseGood && !seqVector.empty(), (std::string("Unable to read composite index range: ") + compositeStr).c_str());
 
             SeqVector addedVector;    // Vector of those composites already added to compositeVector;
-            for (SeqVector::iterator iter = seqVector.begin(); iter != seqVector.end(); ++iter)
+            for (auto &iter : seqVector)
             {
                 // Only add a new one if it does not already exist in vector.
                 // Can't go back and delete with a vector, so prevent it from
                 // being added in the first place.
-                if (std::find(addedVector.begin(), addedVector.end(), *iter) == addedVector.end())
+                if (std::find(addedVector.begin(), addedVector.end(), iter) == addedVector.end())
                 {
 
                     // If the composite listed is not found and we are working
                     // on a partitioned mesh, silently ignore it.
-                    if (m_meshComposites.find(*iter) == m_meshComposites.end()
+                    if (m_meshComposites.find(iter) == m_meshComposites.end()
                             && m_meshPartitioned)
                     {
                         continue;
                     }
 
-                    addedVector.push_back(*iter);
-                    Composite composite = GetComposite(*iter);
-                    CompositeMap::iterator compIter;
+                    addedVector.push_back(iter);
+                    Composite composite = GetComposite(iter);
                     if (composite)
                     {
-                        compositeVector[*iter] = composite;
+                        compositeVector[iter] = composite;
                     }
                     else
                     {
                         char str[64];
-                        ::sprintf(str, "%d", *iter);
+                        ::sprintf(str, "%d", iter);
                         NEKERROR(ErrorUtil::ewarning, (std::string("Undefined composite: ") + str).c_str());
 
                     }
@@ -2335,10 +2333,9 @@ namespace Nektar
          */
         ExpansionShPtr MeshGraph::GetExpansion(GeometrySharedPtr geom, const std::string variable)
         {
-            ExpansionMapIter iter;
             ExpansionMapShPtr expansionMap = m_expansionMapShPtrMap.find(variable)->second;
 
-            iter = expansionMap->find(geom->GetGlobalID());
+            auto iter = expansionMap->find(geom->GetGlobalID());
             ASSERTL1(iter != expansionMap->end(),
                      "Could not find expansion " +
                      boost::lexical_cast<string>(geom->GetGlobalID()) +
@@ -3052,18 +3049,14 @@ namespace Nektar
          */
         void MeshGraph::SetExpansionsToEvenlySpacedPoints(int npoints)
         {
-            ExpansionMapShPtrMapIter   it;
-
             // iterate over all defined expansions
-            for(it = m_expansionMapShPtrMap.begin(); it != m_expansionMapShPtrMap.end(); ++it)
+            for(auto &it : m_expansionMapShPtrMap)
             {
-                ExpansionMapIter expIt;
-
-                for(expIt = it->second->begin(); expIt != it->second->end(); ++expIt)
+                for(auto &expIt : *it.second)
                 {
-                    for(int i = 0; i < expIt->second->m_basisKeyVector.size(); ++i)
+                    for(int i = 0; i < expIt.second->m_basisKeyVector.size(); ++i)
                     {
-                        LibUtilities::BasisKey  bkeyold = expIt->second->m_basisKeyVector[i];
+                        LibUtilities::BasisKey  bkeyold = expIt.second->m_basisKeyVector[i];
 
                         int npts;
 
@@ -3079,7 +3072,7 @@ namespace Nektar
 
                         const LibUtilities::PointsKey pkey(npts,LibUtilities::ePolyEvenlySpaced);
                         LibUtilities::BasisKey bkeynew(bkeyold.GetBasisType(),bkeyold.GetNumModes(), pkey);
-                        expIt->second->m_basisKeyVector[i] = bkeynew;
+                        expIt.second->m_basisKeyVector[i] = bkeynew;
 
                     }
                 }
@@ -3094,25 +3087,20 @@ namespace Nektar
          */
         void MeshGraph::SetExpansionsToPolyOrder(int nmodes)
         {
-            ExpansionMapShPtrMapIter   it;
-
             // iterate over all defined expansions
-            for(it = m_expansionMapShPtrMap.begin(); it != m_expansionMapShPtrMap.end(); ++it)
+            for(auto &it : m_expansionMapShPtrMap)
             {
-                ExpansionMapIter expIt;
-                
-                for(expIt = it->second->begin(); expIt != it->second->end(); ++expIt)
+                for(auto &expIt : *it.second)
                 {
-                    for(int i = 0; i < expIt->second->m_basisKeyVector.size(); ++i)
+                    for(int i = 0; i < expIt.second->m_basisKeyVector.size(); ++i)
                     {
-                        LibUtilities::BasisKey  bkeyold = expIt->second->m_basisKeyVector[i]; 
+                        LibUtilities::BasisKey  bkeyold = expIt.second->m_basisKeyVector[i]; 
                         
                         int npts = nmodes + (bkeyold.GetNumPoints() - bkeyold.GetNumModes());
                         
                         const LibUtilities::PointsKey pkey(npts,bkeyold.GetPointsType());
                         LibUtilities::BasisKey bkeynew(bkeyold.GetBasisType(),nmodes, pkey);
-                        expIt->second->m_basisKeyVector[i] = bkeynew; 
-                        
+                        expIt.second->m_basisKeyVector[i] = bkeynew; 
                     }
                 }
             }
@@ -3127,25 +3115,15 @@ namespace Nektar
          */
         void MeshGraph::SetExpansionsToPointOrder(int npts)
         {
-            ExpansionMapShPtrMapIter   it;
-
             // iterate over all defined expansions
-            for (it = m_expansionMapShPtrMap.begin();
-                 it != m_expansionMapShPtrMap.end();
-                 ++it)
+            for (auto &it : m_expansionMapShPtrMap)
             {
-                ExpansionMapIter expIt;
-
-                for (expIt = it->second->begin();
-                     expIt != it->second->end();
-                     ++expIt)
+                for (auto &expIt : *it.second)
                 {
-                    for(int i = 0;
-                        i < expIt->second->m_basisKeyVector.size();
-                        ++i)
+                    for(int i = 0; i < expIt.second->m_basisKeyVector.size(); ++i)
                     {
                         LibUtilities::BasisKey  bkeyold =
-                            expIt->second->m_basisKeyVector[i];
+                            expIt.second->m_basisKeyVector[i];
 
                         const LibUtilities::PointsKey pkey(
                             npts, bkeyold.GetPointsType());
@@ -3153,7 +3131,7 @@ namespace Nektar
                         LibUtilities::BasisKey bkeynew(bkeyold.GetBasisType(),
                                                        bkeyold.GetNumModes(),
                                                        pkey);
-                        expIt->second->m_basisKeyVector[i] = bkeynew;
+                        expIt.second->m_basisKeyVector[i] = bkeynew;
                     }
                 }
             }
@@ -3176,15 +3154,13 @@ namespace Nektar
             LibUtilities::BasisKeyVector    &keys,
             std::string                     var)
         {
-            ExpansionMapIter elemIter;
+            auto expansionMap = m_expansionMapShPtrMap.find(var)->second;
 
-            ExpansionMapShPtr expansionMap = m_expansionMapShPtrMap.find(var)->second;
-
-            for (elemIter = expansionMap->begin(); elemIter != expansionMap->end(); ++elemIter)
+            for (auto &elemIter : *expansionMap)
             {
-                if ((elemIter->second)->m_geomShPtr->GetShapeType() == shape)
+                if (elemIter.second->m_geomShPtr->GetShapeType() == shape)
                 {
-                    (elemIter->second)->m_basisKeyVector = keys;
+                    elemIter.second->m_basisKeyVector = keys;
                 }
             }
         }
@@ -4127,17 +4103,14 @@ namespace Nektar
 
             for(int d = 0; d < m_domain.size(); ++d)
             {
-                CompositeMap::const_iterator compIter;
-
-                for (compIter = m_domain[d].begin(); compIter != m_domain[d].end(); ++compIter)
+                for (auto &compIter : m_domain[d])
                 {
-                    GeometryVector::const_iterator x;
-                    for (x = compIter->second->begin(); x != compIter->second->end(); ++x)
+                    for (auto &x : *compIter.second)
                     {
                         LibUtilities::BasisKeyVector def;
                         ExpansionShPtr expansionElementShPtr =
-                            MemoryManager<Expansion>::AllocateSharedPtr(*x, def);
-                        int id = (*x)->GetGlobalID();
+                            MemoryManager<Expansion>::AllocateSharedPtr(x, def);
+                        int id = x->GetGlobalID();
                         (*returnval)[id] = expansionElementShPtr;
                     }
                 }

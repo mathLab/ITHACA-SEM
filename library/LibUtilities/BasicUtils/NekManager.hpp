@@ -88,7 +88,7 @@ namespace Nektar
                 {
                     if (!whichPool.empty())
                     {
-                        typename ValueContainerPool::iterator iter = m_ValueContainerPool.find(whichPool);
+                        auto iter = m_ValueContainerPool.find(whichPool);
                         if (iter != m_ValueContainerPool.end())
                         {
                             m_values = iter->second;
@@ -121,7 +121,7 @@ namespace Nektar
                     if (!whichPool.empty())
                     {
                         ReadLock v_rlock(m_mutex); // reading static members
-                        typename ValueContainerPool::iterator iter = m_ValueContainerPool.find(whichPool);
+                        auto iter = m_ValueContainerPool.find(whichPool);
                         if (iter != m_ValueContainerPool.end())
                         {
                             m_values = iter->second;
@@ -178,7 +178,7 @@ namespace Nektar
                 bool AlreadyCreated(typename boost::call_traits<KeyType>::const_reference key)
                 {
                     bool value = false;
-                    typename ValueContainer::iterator found = m_values->find(key);
+                    auto found = m_values->find(key);
                     if( found != m_values->end() )
                     {
                         value = true;
@@ -189,7 +189,7 @@ namespace Nektar
 
                 ValueType operator[](typename boost::call_traits<KeyType>::const_reference key)
                 {
-                    typename ValueContainer::iterator found = m_values->find(key);
+                    auto found = m_values->find(key);
 
                     if( found != m_values->end() )
                     {
@@ -199,7 +199,7 @@ namespace Nektar
                     {
                         // No object, create a new one.
                         CreateFuncType f = m_globalCreateFunc;
-                        typename CreateFuncContainer::iterator keyFound = m_keySpecificCreateFuncs.find(key);
+                        auto keyFound = m_keySpecificCreateFuncs.find(key);
                         if( keyFound != m_keySpecificCreateFuncs.end() )
                         {
                             f = (*keyFound).second;
@@ -227,7 +227,7 @@ namespace Nektar
 
                 void DeleteObject(typename boost::call_traits<KeyType>::const_reference key)
                 {
-                    typename ValueContainer::iterator found = m_values->find(key);
+                    auto found = m_values->find(key);
 
                     if( found != m_values->end() )
                     {
@@ -237,12 +237,11 @@ namespace Nektar
 
                 static void ClearManager(std::string whichPool = "")
                 {
-                    typename ValueContainerPool::iterator x;
                     if (!whichPool.empty())
                     {
                         WriteLock v_wlock(m_mutex);
 
-                        x = m_ValueContainerPool.find(whichPool);
+                        auto x = m_ValueContainerPool.find(whichPool);
                         ASSERTL1(x != m_ValueContainerPool.end(),
                                 "Could not find pool " + whichPool);
                         x->second->clear();
@@ -251,9 +250,9 @@ namespace Nektar
                     {
                         WriteLock v_wlock(m_mutex);
 
-                        for (x = m_ValueContainerPool.begin(); x != m_ValueContainerPool.end(); ++x)
+                        for (auto &x : m_ValueContainerPool)
                         {
-                            x->second->clear();
+                            x.second->clear();
                         }
                     }
                 }
@@ -261,9 +260,7 @@ namespace Nektar
                 static bool PoolCreated(std::string whichPool)
                 {
                     bool value = false;
-                    typename ValueContainerPool::iterator x;
-
-                    x = m_ValueContainerPool.find(whichPool);
+                    auto x = m_ValueContainerPool.find(whichPool);
                     if (x != m_ValueContainerPool.end())
                     {
                         value = true;
@@ -273,12 +270,11 @@ namespace Nektar
 
                 static void EnableManagement(std::string whichPool = "")
                 {
-                    typename FlagContainerPool::iterator x;
                     if (!whichPool.empty())
                     {
                         WriteLock v_wlock(m_mutex);
 
-                        x = m_managementEnabledContainerPool.find(whichPool);
+                        auto x = m_managementEnabledContainerPool.find(whichPool);
                         if (x != m_managementEnabledContainerPool.end())
                         {
                             (*x->second) = true;
@@ -292,12 +288,11 @@ namespace Nektar
 
                 static void DisableManagement(std::string whichPool = "")
                 {
-                    typename FlagContainerPool::iterator x;
                     if (!whichPool.empty())
                     {
                         WriteLock v_wlock(m_mutex);
 
-                        x = m_managementEnabledContainerPool.find(whichPool);
+                        auto x = m_managementEnabledContainerPool.find(whichPool);
                         if (x != m_managementEnabledContainerPool.end())
                         {
                             (*x->second) = false;

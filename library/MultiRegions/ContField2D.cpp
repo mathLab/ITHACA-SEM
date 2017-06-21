@@ -568,7 +568,7 @@ namespace Nektar
                      "attached to key");
 
             GlobalMatrixSharedPtr glo_matrix;
-            GlobalMatrixMap::iterator matrixIter = m_globalMat->find(mkey);
+            auto matrixIter = m_globalMat->find(mkey);
 
             if(matrixIter == m_globalMat->end())
             {
@@ -654,14 +654,14 @@ namespace Nektar
             // periodic boundary conditiosn)
             map<int, vector<ExtraDirDof> > &extraDirDofs =
                 m_locToGloMap->GetExtraDirDofs();
-            map<int, vector<ExtraDirDof> >::iterator it;
-            for (it = extraDirDofs.begin(); it != extraDirDofs.end(); ++it)
+
+            for (auto &it : extraDirDofs)
             {
-                for (i = 0; i < it->second.size(); ++i)
+                for (i = 0; i < it.second.size(); ++i)
                 {
-                    tmp[std::get<1>(it->second.at(i))] =
-                        m_bndCondExpansions[it->first]->GetCoeffs()[
-                            std::get<0>(it->second.at(i))]*std::get<2>(it->second.at(i));
+                    tmp[std::get<1>(it.second.at(i))] =
+                        m_bndCondExpansions[it.first]->GetCoeffs()[
+                            std::get<0>(it.second.at(i))]*std::get<2>(it.second.at(i));
                 }
             }
             m_locToGloMap->UniversalAssembleBnd(tmp);

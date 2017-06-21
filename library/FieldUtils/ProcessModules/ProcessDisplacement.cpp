@@ -169,15 +169,14 @@ void ProcessDisplacement::Process(po::variables_map &vm)
         }
 
         const SpatialDomains::SegGeomMap &tmp = bndGraph->GetAllSegGeoms();
-        SpatialDomains::SegGeomMap::const_iterator sIt;
 
-        for (sIt = tmp.begin(); sIt != tmp.end(); ++sIt)
+        for (auto &sIt : tmp)
         {
-            map<int, int>::iterator mIt = bndCondIds.find(sIt->first);
+            auto mIt = bndCondIds.find(sIt.first);
 
             if (mIt == bndCondIds.end())
             {
-                cout << "Warning: couldn't find element " << sIt->first << endl;
+                cout << "Warning: couldn't find element " << sIt.first << endl;
                 continue;
             }
 
@@ -187,7 +186,7 @@ void ProcessDisplacement::Process(po::variables_map &vm)
                 std::dynamic_pointer_cast<SpatialDomains::SegGeom>(
                     bndCondExpU->GetExp(e)->GetGeom());
 
-            SpatialDomains::SegGeomSharedPtr to = sIt->second;
+            SpatialDomains::SegGeomSharedPtr to = sIt.second;
 
             // Create temporary SegExp
             LocalRegions::SegExpSharedPtr toSeg =
@@ -248,31 +247,28 @@ void ProcessDisplacement::Process(po::variables_map &vm)
         }
 
         const SpatialDomains::TriGeomMap &tmp = bndGraph->GetAllTriGeoms();
-        SpatialDomains::TriGeomMap::const_iterator sIt;
 
-        for (sIt = tmp.begin(); sIt != tmp.end(); ++sIt)
+        for (auto &sIt : tmp)
         {
-            TriFaceMap::iterator tIt;
             int e;
 
             if (useVertexIds)
             {
-                TriFaceIDs t(sIt->second->GetVid(0), sIt->second->GetVid(1),
-                             sIt->second->GetVid(2));
+                TriFaceIDs t(sIt.second->GetVid(0), sIt.second->GetVid(1),
+                             sIt.second->GetVid(2));
 
-                tIt = vertexFaceMap.find(t);
-                e   = tIt == vertexFaceMap.end() ? -1 : tIt->second;
+                auto tIt = vertexFaceMap.find(t);
+                e = tIt == vertexFaceMap.end() ? -1 : tIt->second;
             }
             else
             {
-                map<int, int>::iterator mIt;
-                mIt = bndCondIds.find(sIt->first);
-                e   = mIt == bndCondIds.end() ? -1 : mIt->second;
+                auto mIt = bndCondIds.find(sIt.first);
+                e = mIt == bndCondIds.end() ? -1 : mIt->second;
             }
 
             if (e == -1)
             {
-                cout << "Warning: couldn't find element " << sIt->first << endl;
+                cout << "Warning: couldn't find element " << sIt.first << endl;
                 continue;
             }
 
@@ -280,7 +276,7 @@ void ProcessDisplacement::Process(po::variables_map &vm)
                 std::dynamic_pointer_cast<SpatialDomains::TriGeom>(
                     bndCondExpU->GetExp(e)->GetGeom());
 
-            SpatialDomains::TriGeomSharedPtr to = sIt->second;
+            SpatialDomains::TriGeomSharedPtr to = sIt.second;
 
             // Create temporary SegExp
             LocalRegions::TriExpSharedPtr toSeg =

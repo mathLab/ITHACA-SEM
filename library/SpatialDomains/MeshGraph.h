@@ -113,8 +113,6 @@ namespace Nektar
 
         typedef std::shared_ptr< GeometryVector >     Composite;
         typedef std::map<int, Composite>                CompositeMap;
-        typedef std::map<int, Composite>::iterator      CompositeMapIter;
-        typedef std::map<int, Composite>::const_iterator      CompositeMapConstIter;
 
         struct ElementEdge
         {
@@ -172,13 +170,9 @@ namespace Nektar
 
         typedef std::shared_ptr<Expansion> ExpansionShPtr;
         typedef std::map<int, ExpansionShPtr> ExpansionMap;
-        typedef std::map<int, ExpansionShPtr>::iterator ExpansionMapIter;
-        typedef std::map<int, ExpansionShPtr>::const_iterator ExpansionMapConstIter;
 
         typedef std::shared_ptr<ExpansionMap> ExpansionMapShPtr;
         typedef std::map<std::string, ExpansionMapShPtr> ExpansionMapShPtrMap;
-        typedef std::map<std::string, ExpansionMapShPtr>::iterator  ExpansionMapShPtrMapIter;
-
 
         typedef std::map<std::string, std::string> GeomInfoMap;
 
@@ -587,7 +581,7 @@ namespace Nektar
         inline PointGeomSharedPtr MeshGraph::GetVertex(int id)
         {
             PointGeomSharedPtr returnval;
-            PointGeomMap::iterator x = m_vertSet.find(id);
+            auto x = m_vertSet.find(id);
             ASSERTL0(x != m_vertSet.end(),
                      "Vertex " + boost::lexical_cast<std::string>(id)
                      + " not found.");

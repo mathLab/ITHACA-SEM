@@ -759,7 +759,7 @@ namespace Nektar
 
                     // Check to see if this vert is periodic. If it is, then we
                     // need use the unique eid of the two points
-                    PeriodicMap::const_iterator it = perMap.find(eid);
+                    auto it = perMap.find(eid);
                     if (perMap.count(eid) > 0)
                     {
                         PeriodicEntity ent = it->second[0];
@@ -784,7 +784,7 @@ namespace Nektar
                     // need to reverse the trace order of one edge only in the
                     // universal map so that the data are reversed w.r.t each
                     // other. We do this by using the minimum of the two IDs.
-                    PeriodicMap::const_iterator it = perMap.find(eid);
+                    auto it = perMap.find(eid);
                     bool realign = false;
                     if (perMap.count(eid) > 0)
                     {

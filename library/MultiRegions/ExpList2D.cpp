@@ -148,19 +148,18 @@ namespace Nektar
             const SpatialDomains::ExpansionMap &expansions
                                         = graph2D->GetExpansions(var);
 
-            SpatialDomains::ExpansionMap::const_iterator expIt;
-            for (expIt = expansions.begin(); expIt != expansions.end(); ++expIt)
+            for (auto &expIt : expansions)
             {
                 SpatialDomains::TriGeomSharedPtr  TriangleGeom;
                 SpatialDomains::QuadGeomSharedPtr QuadrilateralGeom;
 
                 if ((TriangleGeom = std::dynamic_pointer_cast<SpatialDomains
-                        ::TriGeom>(expIt->second->m_geomShPtr)))
+                        ::TriGeom>(expIt.second->m_geomShPtr)))
                 {
                     LibUtilities::BasisKey TriBa
-                                        = expIt->second->m_basisKeyVector[0];
+                                        = expIt.second->m_basisKeyVector[0];
                     LibUtilities::BasisKey TriBb
-                                        = expIt->second->m_basisKeyVector[1];
+                                        = expIt.second->m_basisKeyVector[1];
 
                     // This is not elegantly implemented needs re-thinking.
                     if (TriBa.GetBasisType() == LibUtilities::eGLL_Lagrange)
@@ -190,12 +189,12 @@ namespace Nektar
                     m_npoints += TriBa.GetNumPoints()*TriBb.GetNumPoints();
                 }
                 else if ((QuadrilateralGeom = std::dynamic_pointer_cast<
-                         SpatialDomains::QuadGeom>(expIt->second->m_geomShPtr)))
+                         SpatialDomains::QuadGeom>(expIt.second->m_geomShPtr)))
                 {
                     LibUtilities::BasisKey QuadBa
-                                        = expIt->second->m_basisKeyVector[0];
+                                        = expIt.second->m_basisKeyVector[0];
                     LibUtilities::BasisKey QuadBb
-                                        = expIt->second->m_basisKeyVector[1];
+                                        = expIt.second->m_basisKeyVector[1];
 
                     quad = MemoryManager<LocalRegions::QuadExp>
                         ::AllocateSharedPtr(QuadBa,QuadBb,
@@ -269,19 +268,18 @@ namespace Nektar
             LocalRegions::QuadExpSharedPtr     quad;
             SpatialDomains::Composite          comp;
 
-            SpatialDomains::ExpansionMapConstIter expIt;
-            for (expIt = expansions.begin(); expIt != expansions.end(); ++expIt)
+            for (auto &expIt : expansions)
             {
                 SpatialDomains::TriGeomSharedPtr  TriangleGeom;
                 SpatialDomains::QuadGeomSharedPtr QuadrilateralGeom;
 
                 if ((TriangleGeom = std::dynamic_pointer_cast<SpatialDomains
-                        ::TriGeom>(expIt->second->m_geomShPtr)))
+                        ::TriGeom>(expIt.second->m_geomShPtr)))
                 {
                     LibUtilities::BasisKey TriBa
-                                        = expIt->second->m_basisKeyVector[0];
+                                        = expIt.second->m_basisKeyVector[0];
                     LibUtilities::BasisKey TriBb
-                                        = expIt->second->m_basisKeyVector[1];
+                                        = expIt.second->m_basisKeyVector[1];
 
                     // This is not elegantly implemented needs re-thinking.
                     if (TriBa.GetBasisType() == LibUtilities::eGLL_Lagrange)
@@ -311,12 +309,12 @@ namespace Nektar
                     m_npoints += TriBa.GetNumPoints()*TriBb.GetNumPoints();
                 }
                 else if ((QuadrilateralGeom = std::dynamic_pointer_cast<
-                         SpatialDomains::QuadGeom>(expIt->second->m_geomShPtr)))
+                         SpatialDomains::QuadGeom>(expIt.second->m_geomShPtr)))
                 {
                     LibUtilities::BasisKey QuadBa
-                        = expIt->second->m_basisKeyVector[0];
+                        = expIt.second->m_basisKeyVector[0];
                     LibUtilities::BasisKey QuadBb
-                        = expIt->second->m_basisKeyVector[1];
+                        = expIt.second->m_basisKeyVector[1];
 
                     quad = MemoryManager<LocalRegions::QuadExp>
                         ::AllocateSharedPtr(QuadBa,QuadBb,
@@ -405,14 +403,13 @@ namespace Nektar
 
             m_physState = false;
 
-            SpatialDomains::ExpansionMap::const_iterator expIt;
-            for (expIt = expansions.begin(); expIt != expansions.end(); ++expIt)
+            for (auto &expIt : expansions)
             {
                 SpatialDomains::TriGeomSharedPtr TriangleGeom;
                 SpatialDomains::QuadGeomSharedPtr QuadrilateralGeom;
 
                 if ((TriangleGeom = std::dynamic_pointer_cast<SpatialDomains::
-                        TriGeom>(expIt->second->m_geomShPtr)))
+                        TriGeom>(expIt.second->m_geomShPtr)))
                 {
                     if (TriNb < LibUtilities::SIZE_PointsType)
                     {
@@ -436,7 +433,7 @@ namespace Nektar
                     m_npoints += TriBa.GetNumPoints()*TriBb.GetNumPoints();
                 }
                 else if ((QuadrilateralGeom = std::dynamic_pointer_cast<
-                         SpatialDomains::QuadGeom>(expIt->second->m_geomShPtr)))
+                         SpatialDomains::QuadGeom>(expIt.second->m_geomShPtr)))
                 {
                     quad = MemoryManager<LocalRegions::QuadExp>::
                         AllocateSharedPtr(QuadBa, QuadBb, QuadrilateralGeom);
@@ -556,9 +553,6 @@ namespace Nektar
             map<int, pair<SpatialDomains::Geometry2DSharedPtr,
                           pair<LibUtilities::BasisKey,
                                LibUtilities::BasisKey> > > faceOrders;
-            map<int, pair<SpatialDomains::Geometry2DSharedPtr,
-                          pair<LibUtilities::BasisKey,
-                               LibUtilities::BasisKey> > >::iterator it;
 
             for(i = 0; i < locexp.size(); ++i)
             {
@@ -572,7 +566,7 @@ namespace Nektar
                     {
                         continue;
                     }
-                    it = faceOrders.find(id);
+                    auto it = faceOrders.find(id);
 
                     if (it == faceOrders.end())
                     {
@@ -695,7 +689,7 @@ namespace Nektar
 
                 for (i = 0; i < totFaceCnt; ++i)
                 {
-                    it = faceOrders.find(FacesTotID[i]);
+                    auto it = faceOrders.find(FacesTotID[i]);
 
                     if (it == faceOrders.end())
                     {
@@ -744,16 +738,16 @@ namespace Nektar
                 }
             }
 
-            for (it = faceOrders.begin(); it != faceOrders.end(); ++it)
+            for (auto &it : faceOrders)
             {
-                FaceGeom = it->second.first;
+                FaceGeom = it.second.first;
 
                 if ((FaceQuadGeom = std::dynamic_pointer_cast<
                      SpatialDomains::QuadGeom>(FaceGeom)))
                 {
                     FaceQuadExp = MemoryManager<LocalRegions::QuadExp>
-                        ::AllocateSharedPtr(it->second.second.first,
-                                            it->second.second.second,
+                        ::AllocateSharedPtr(it.second.second.first,
+                                            it.second.second.second,
                                             FaceQuadGeom);
                     FaceQuadExp->SetElmtId(elmtid++);
                     (*m_exp).push_back(FaceQuadExp);
@@ -762,8 +756,8 @@ namespace Nektar
                           SpatialDomains::TriGeom>(FaceGeom)))
                 {
                     FaceTriExp = MemoryManager<LocalRegions::TriExp>
-                        ::AllocateSharedPtr(it->second.second.first,
-                                            it->second.second.second,
+                        ::AllocateSharedPtr(it.second.second.first,
+                                            it.second.second.second,
                                             FaceTriGeom);
                     FaceTriExp->SetElmtId(elmtid++);
                     (*m_exp).push_back(FaceTriExp);
@@ -825,18 +819,17 @@ namespace Nektar
              LibUtilities::PointsType TriNb;
              LocalRegions::QuadExpSharedPtr quad;
 
-             SpatialDomains::CompositeMap::const_iterator compIt;
-             for (compIt = domain.begin(); compIt != domain.end(); ++compIt)
+             for (auto &compIt : domain)
              {
-                 nel += (compIt->second)->size();
+                 nel += compIt.second->size();
              }
 
-             for (compIt = domain.begin(); compIt != domain.end(); ++compIt)
+             for (auto &compIt : domain)
              {
-                 for (j = 0; j < compIt->second->size(); ++j)
+                 for (j = 0; j < compIt.second->size(); ++j)
                  {
                      if ((TriangleGeom = std::dynamic_pointer_cast<
-                             SpatialDomains::TriGeom>((*compIt->second)[j])))
+                             SpatialDomains::TriGeom>((*compIt.second)[j])))
                      {
                          LibUtilities::BasisKey TriBa
                              = std::dynamic_pointer_cast<
@@ -876,7 +869,7 @@ namespace Nektar
                          m_npoints += TriBa.GetNumPoints()*TriBb.GetNumPoints();
                      }
                      else if ((QuadrilateralGeom = std::dynamic_pointer_cast<
-                              SpatialDomains::QuadGeom>((*compIt->second)[j])))
+                              SpatialDomains::QuadGeom>((*compIt.second)[j])))
                      {
                          LibUtilities::BasisKey QuadBa
                              = std::dynamic_pointer_cast<

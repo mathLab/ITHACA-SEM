@@ -891,10 +891,9 @@ namespace Nektar
                 eid = elmt_id[i];
                 if(nvarcoeffs>0)
                 {
-                    StdRegions::VarCoeffMap::const_iterator x;
-                    for (x = gkey.GetVarCoeffs().begin(); x != gkey.GetVarCoeffs().end(); ++x)
+                    for (auto &x : gkey.GetVarCoeffs())
                     {
-                        varcoeffs[x->first] = x->second + m_phys_offset[eid];
+                        varcoeffs[x.first] = x.second + m_phys_offset[eid];
                     }
                 }
 
@@ -914,7 +913,7 @@ namespace Nektar
         const DNekScalBlkMatSharedPtr& ExpList::GetBlockMatrix(
                                                                const GlobalMatrixKey &gkey)
         {
-            BlockMatrixMap::iterator matrixIter = m_blockMat->find(gkey);
+            auto matrixIter = m_blockMat->find(gkey);
 
             if(matrixIter == m_blockMat->end())
             {
@@ -967,10 +966,9 @@ namespace Nektar
                         eid = cnt++;
                         if(nvarcoeffs>0)
                         {
-                            StdRegions::VarCoeffMap::const_iterator x;
-                            for (x = gkey.GetVarCoeffs().begin(); x != gkey.GetVarCoeffs().end(); ++x)
+                            for (auto &x : gkey.GetVarCoeffs())
                             {
-                                varcoeffs[x->first] = x->second + m_phys_offset[eid];
+                                varcoeffs[x.first] = x.second + m_phys_offset[eid];
                             }
                         }
 
@@ -1065,10 +1063,9 @@ namespace Nektar
                 eid = n;
                 if(nvarcoeffs>0)
                 {
-                    StdRegions::VarCoeffMap::const_iterator x;
-                    for (x = mkey.GetVarCoeffs().begin(); x != mkey.GetVarCoeffs().end(); ++x)
+                    for (auto &x : mkey.GetVarCoeffs())
                     {
-                        varcoeffs[x->first] = x->second + m_phys_offset[eid];
+                        varcoeffs[x.first] = x.second + m_phys_offset[eid];
                     }
                 }
 
@@ -1185,10 +1182,9 @@ namespace Nektar
                 eid = n;
                 if(nvarcoeffs>0)
                 {
-                    StdRegions::VarCoeffMap::const_iterator x;
-                    for (x = mkey.GetVarCoeffs().begin(); x != mkey.GetVarCoeffs().end(); ++x)
+                    for (auto &x : mkey.GetVarCoeffs())
                     {
-                        varcoeffs[x->first] = x->second + m_phys_offset[eid];
+                        varcoeffs[x.first] = x.second + m_phys_offset[eid];
                     }
                 }
 
@@ -2294,8 +2290,6 @@ namespace Nektar
                 }
             }
 
-            std::unordered_map<int, int>::iterator eIt;
-
             for (i = 0; i < fielddef->m_elementIDs.size(); ++i)
             {
                 // Reset modes_offset in the case where all expansions of
@@ -2309,7 +2303,7 @@ namespace Nektar
                     fielddef->m_shapeType, fielddef->m_numModes, modes_offset);
 
                 const int elmtId = fielddef->m_elementIDs[i];
-                eIt = m_elmtToExpId.find(elmtId);
+                auto eIt = m_elmtToExpId.find(elmtId);
 
                 if (eIt == m_elmtToExpId.end())
                 {
@@ -3062,12 +3056,20 @@ namespace Nektar
             unsigned int regionId,
             const std::string& variable)
         {
-            SpatialDomains::BoundaryConditionCollection::const_iterator collectionIter = collection.find(regionId);
-            ASSERTL1(collectionIter != collection.end(), "Unable to locate collection "+boost::lexical_cast<string>(regionId));
-            const SpatialDomains::BoundaryConditionMapShPtr boundaryConditionMap = (*collectionIter).second;
-            SpatialDomains::BoundaryConditionMap::const_iterator conditionMapIter = boundaryConditionMap->find(variable);
-            ASSERTL1(conditionMapIter != boundaryConditionMap->end(), "Unable to locate condition map.");
-            const SpatialDomains::BoundaryConditionShPtr boundaryCondition = (*conditionMapIter).second;
+            auto collectionIter = collection.find(regionId);
+            ASSERTL1(collectionIter != collection.end(),
+                     "Unable to locate collection " +
+                     boost::lexical_cast<string>(regionId));
+
+            const SpatialDomains::BoundaryConditionMapShPtr bndCondMap
+                = (*collectionIter).second;
+            auto conditionMapIter = bndCondMap->find(variable);
+            ASSERTL1(conditionMapIter != bndCondMap->end(),
+                     "Unable to locate condition map.");
+
+            const SpatialDomains::BoundaryConditionShPtr boundaryCondition
+                = (*conditionMapIter).second;
+
             return boundaryCondition;
         }
 
@@ -3153,8 +3155,6 @@ namespace Nektar
         {
             map<LibUtilities::ShapeType,
                 vector<std::pair<LocalRegions::ExpansionSharedPtr,int> > > collections;
-            map<LibUtilities::ShapeType,
-                vector<std::pair<LocalRegions::ExpansionSharedPtr,int> > >::iterator it;
 
             // Figure out optimisation parameters if provided in
             // session file or default given
@@ -3180,23 +3180,23 @@ namespace Nektar
                     std::pair<LocalRegions::ExpansionSharedPtr,int> ((*m_exp)[i],i));
             }
 
-            for (it = collections.begin(); it != collections.end(); ++it)
+            for (auto &it : collections)
             {
-                LocalRegions::ExpansionSharedPtr exp = it->second[0].first;
+                LocalRegions::ExpansionSharedPtr exp = it.second[0].first;
 
                 Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(exp);
                 vector<StdRegions::StdExpansionSharedPtr> collExp;
 
-                int prevCoeffOffset     = m_coeff_offset[it->second[0].second];
-                int prevPhysOffset      = m_phys_offset [it->second[0].second];
+                int prevCoeffOffset     = m_coeff_offset[it.second[0].second];
+                int prevPhysOffset      = m_phys_offset [it.second[0].second];
                 int collcnt;
 
                 m_coll_coeff_offset.push_back(prevCoeffOffset);
                 m_coll_phys_offset .push_back(prevPhysOffset);
 
-                if(it->second.size() == 1) // single element case
+                if(it.second.size() == 1) // single element case
                 {
-                    collExp.push_back(it->second[0].first);
+                    collExp.push_back(it.second[0].first);
 
                     // if no Imp Type provided and No settign in xml file.
                     // reset impTypes using timings
@@ -3212,17 +3212,17 @@ namespace Nektar
                 else
                 {
                     // set up first geometry
-                    collExp.push_back(it->second[0].first);
-                    int prevnCoeff = it->second[0].first->GetNcoeffs();
-                    int prevnPhys  = it->second[0].first->GetTotPoints();
+                    collExp.push_back(it.second[0].first);
+                    int prevnCoeff = it.second[0].first->GetNcoeffs();
+                    int prevnPhys  = it.second[0].first->GetTotPoints();
                     collcnt = 1;
 
-                    for (int i = 1; i < it->second.size(); ++i)
+                    for (int i = 1; i < it.second.size(); ++i)
                     {
-                        int nCoeffs     = it->second[i].first->GetNcoeffs();
-                        int nPhys       = it->second[i].first->GetTotPoints();
-                        int coeffOffset = m_coeff_offset[it->second[i].second];
-                        int physOffset  = m_phys_offset [it->second[i].second];
+                        int nCoeffs     = it.second[i].first->GetNcoeffs();
+                        int nPhys       = it.second[i].first->GetTotPoints();
+                        int coeffOffset = m_coeff_offset[it.second[i].second];
+                        int physOffset  = m_phys_offset [it.second[i].second];
 
                         // check to see if next elmt is different or
                         // collmax reached and if so end collection
@@ -3252,17 +3252,17 @@ namespace Nektar
 
                             m_coll_coeff_offset.push_back(coeffOffset);
                             m_coll_phys_offset .push_back(physOffset);
-                            collExp.push_back(it->second[i].first);
+                            collExp.push_back(it.second[i].first);
                             collcnt = 1;
                         }
                         else // add to list of collections
                         {
-                            collExp.push_back(it->second[i].first);
+                            collExp.push_back(it.second[i].first);
                             collcnt++;
                         }
 
                         // if end of list finish up collection
-                        if (i == it->second.size() - 1)
+                        if (i == it.second.size() - 1)
                         {
                             // if no Imp Type provided and No
                             // settign in xml file.

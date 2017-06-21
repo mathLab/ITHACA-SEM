@@ -466,7 +466,7 @@ namespace Nektar
                      "To use method must have a AssemblyMap "
                      "attached to key");
 
-            GlobalMatrixMap::iterator matrixIter = m_globalMat->find(gkey);
+            auto matrixIter = m_globalMat->find(gkey);
 
             if(matrixIter == m_globalMat->end())
             {

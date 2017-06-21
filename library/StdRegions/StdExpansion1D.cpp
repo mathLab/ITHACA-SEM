@@ -132,8 +132,7 @@ namespace Nektar
 		
 	const NormalVector & StdExpansion1D::v_GetVertexNormal(const int vertex) const
     {
-         std::map<int, NormalVector>::const_iterator x;
-         x = m_vertexNormals.find(vertex);
+         auto x = m_vertexNormals.find(vertex);
          ASSERTL0 (x != m_vertexNormals.end(),
 				  "vertex normal not computed.");
          return x->second;

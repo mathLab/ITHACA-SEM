@@ -564,13 +564,12 @@ namespace Nektar
                      "Solver info '" + pName + "' not defined.");
 
             std::string vValue = GetSolverInfo(vName);
-            EnumMapList::iterator x;
-            ASSERTL0((x = GetSolverInfoEnums().find(vName)) !=
-                          GetSolverInfoEnums().end(),
+            auto x = GetSolverInfoEnums().find(vName);
+            ASSERTL0(x != GetSolverInfoEnums().end(),
                      "Enum for SolverInfo property '" + pName + "' not found.");
 
-            EnumMap::iterator y;
-            ASSERTL0((y = x->second.find(vValue)) != x->second.end(),
+            auto y = x->second.find(vValue);
+            ASSERTL0(y != x->second.end(),
                      "Value of SolverInfo property '" + pName +
                      "' is invalid.");
 
@@ -589,13 +588,12 @@ namespace Nektar
         {
             std::string vName  = boost::to_upper_copy(pName);
 
-            EnumMapList::iterator x;
-            ASSERTL0((x = GetSolverInfoEnums().find(vName)) !=
-                          GetSolverInfoEnums().end(),
+            auto x = GetSolverInfoEnums().find(vName);
+            ASSERTL0(x != GetSolverInfoEnums().end(),
                      "Enum for property '" + pName + "' not found.");
 
-            EnumMap::iterator y;
-            ASSERTL0((y = x->second.find(pValue)) != x->second.end(),
+            auto y = x->second.find(pValue);
+            ASSERTL0(y != x->second.end(),
                      "Value of property '" + pValue + "' is invalid.");
             return T(y->second);
         }
@@ -631,13 +629,14 @@ namespace Nektar
             std::string pEnum, std::string pString, int pEnumValue)
         {
             std::string vEnum = boost::to_upper_copy(pEnum);
-            EnumMapList::iterator x;
-            if ((x = GetSolverInfoEnums().find(vEnum)) ==
-                     GetSolverInfoEnums().end())
+            auto x = GetSolverInfoEnums().find(vEnum);
+
+            if (x == GetSolverInfoEnums().end())
             {
                 GetSolverInfoEnums()[vEnum] = EnumMap();
                 x = GetSolverInfoEnums().find(vEnum);
             }
+
             x->second[pString] = pEnumValue;
             return pString;
         }

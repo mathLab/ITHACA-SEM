@@ -584,10 +584,9 @@ void FieldIOHdf5::v_Write(const std::string &outFile,
     }
 
     // Having constructed the map, go ahead and write the attributes out.
-    map<int, std::vector<uint64_t> >::iterator sIt;
-    for (sIt = writingProcs.begin(); sIt != writingProcs.end(); sIt++)
+    for (auto &sIt : writingProcs)
     {
-        int rank = sIt->first;
+        int rank = sIt.first;
 
         // Write out this rank's groups.
         if (m_comm->GetRank() == rank)
@@ -604,18 +603,18 @@ void FieldIOHdf5::v_Write(const std::string &outFile,
 
             // Write a HDF5 group for each field
             hashToProc.clear();
-            for (int i = 0; i < sIt->second.size(); ++i)
+            for (int i = 0; i < sIt.second.size(); ++i)
             {
                 for (int f = 0; f < nFields; ++f)
                 {
-                    if (sIt->second[i] !=
+                    if (sIt.second[i] !=
                         all_hashes[m_comm->GetRank() * nMaxFields + f] ||
-                        hashToProc.find(sIt->second[i]) != hashToProc.end())
+                        hashToProc.find(sIt.second[i]) != hashToProc.end())
                     {
                         continue;
                     }
 
-                    hashToProc.insert(sIt->second[i]);
+                    hashToProc.insert(sIt.second[i]);
 
                     // Just in case we've already written this
                     H5::GroupSharedPtr field_group =
@@ -1013,16 +1012,13 @@ void FieldIOHdf5::v_Import(const std::string &infilename,
         running.homs  += decomps[cnt + HOMS_DCMP_IDX];
     }
 
-    map<uint64_t, set<uint64_t> >::iterator gIt;
-    for (gIt = groupsToDecomps.begin(); gIt != groupsToDecomps.end(); ++gIt)
+    for (auto &gIt : groupsToDecomps)
     {
-        set<uint64_t>::iterator sIt;
-
         // Select region from dataset for this decomposition.
-        for (sIt = gIt->second.begin(); sIt != gIt->second.end(); ++sIt)
+        for (auto &sIt : gIt.second)
         {
             std::stringstream fieldNameStream;
-            fieldNameStream << gIt->first;
+            fieldNameStream << gIt.first;
 
             FieldDefinitionsSharedPtr fielddef =
                 MemoryManager<FieldDefinitions>::AllocateSharedPtr();
@@ -1129,11 +1125,9 @@ void FieldIOHdf5::ImportFieldDef(
         {
             field->GetAttribute(attrName, def->m_basis);
             // check the basis is in range
-            std::vector<BasisType>::const_iterator bIt  = def->m_basis.begin();
-            std::vector<BasisType>::const_iterator bEnd = def->m_basis.end();
-            for (; bIt != bEnd; ++bIt)
+            for (auto &bIt : def->m_basis)
             {
-                BasisType bt = *bIt;
+                BasisType bt = bIt;
                 ASSERTL0(bt >= 0 && bt < SIZE_BasisType,
                          prfx.str() +
                          "unable to correctly parse the basis types.");

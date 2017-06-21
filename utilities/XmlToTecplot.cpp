@@ -72,15 +72,14 @@ int main(int argc, char *argv[])
     //----------------------------------------------
     // Set up Expansion information
     SpatialDomains::ExpansionMap emap = graphShPt->GetExpansions();
-    SpatialDomains::ExpansionMapIter it;
 
-    for (it = emap.begin(); it != emap.end(); ++it)
+    for (auto &it : emap)
     {
-        for (int i = 0; i < it->second->m_basisKeyVector.size(); ++i)
+        for (int i = 0; i < it.second->m_basisKeyVector.size(); ++i)
         {
-            LibUtilities::BasisKey  tmp1 = it->second->m_basisKeyVector[i];
+            LibUtilities::BasisKey  tmp1 = it.second->m_basisKeyVector[i];
             LibUtilities::PointsKey tmp2 = tmp1.GetPointsKey();
-            it->second->m_basisKeyVector[i] = LibUtilities::BasisKey(
+            it.second->m_basisKeyVector[i] = LibUtilities::BasisKey(
                 tmp1.GetBasisType(), tmp1.GetNumModes(),
                 LibUtilities::PointsKey(tmp1.GetNumModes(),
                                         LibUtilities::ePolyEvenlySpaced));

@@ -436,9 +436,9 @@ namespace Nektar
             }
 
             // Finalise filters
-            for (x = m_filters.begin(); x != m_filters.end(); ++x)
+            for (auto &x : m_filters)
             {
-                (*x)->Finalise(m_fields, m_time);
+                x->Finalise(m_fields, m_time);
             }
             
             // Print for 1D problems

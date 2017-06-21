@@ -676,7 +676,6 @@ void LinearElasticSystem::v_DoSolve()
     // ContField2D::v_ImposeDirichletConditions for more detail.
     map<int, vector<MultiRegions::ExtraDirDof> > &extraDirDofs =
         m_assemblyMap->GetExtraDirDofs();
-    map<int, vector<MultiRegions::ExtraDirDof> >::iterator it;
 
     for (nv = 0; nv < nVel; ++nv)
     {
@@ -684,13 +683,13 @@ void LinearElasticSystem::v_DoSolve()
             = m_fields[nv]->GetBndCondExpansions();
 
         // First try to do parallel stuff
-        for (it = extraDirDofs.begin(); it != extraDirDofs.end(); ++it)
+        for (auto &it : extraDirDofs)
         {
-            for (i = 0; i < it->second.size(); ++i)
+            for (i = 0; i < it.second.size(); ++i)
             {
-                inout[std::get<1>(it->second.at(i))*nVel + nv] =
-                    bndCondExp[it->first]->GetCoeffs()[
-                        std::get<0>(it->second.at(i))]*std::get<2>(it->second.at(i));
+                inout[std::get<1>(it.second.at(i))*nVel + nv] =
+                    bndCondExp[it.first]->GetCoeffs()[
+                        std::get<0>(it.second.at(i))]*std::get<2>(it.second.at(i));
             }
         }
     }

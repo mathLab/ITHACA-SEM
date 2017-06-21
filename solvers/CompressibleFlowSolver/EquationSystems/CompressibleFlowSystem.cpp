@@ -291,10 +291,9 @@ namespace Nektar
         DoDiffusion(inarray, outarray, Fwd, Bwd);
 
         // Add forcing terms
-        std::vector<SolverUtils::ForcingSharedPtr>::const_iterator x;
-        for (x = m_forcing.begin(); x != m_forcing.end(); ++x)
+        for (auto &x : m_forcing)
         {
-            (*x)->Apply(m_fields, inarray, outarray, time);
+            x->Apply(m_fields, inarray, outarray, time);
         }
     }
 
@@ -388,10 +387,9 @@ namespace Nektar
         if (m_bndConds.size())
         {
             // Loop over user-defined boundary conditions
-            std::vector<CFSBndCondSharedPtr>::iterator x;
-            for (x = m_bndConds.begin(); x != m_bndConds.end(); ++x)
+            for (auto &x : m_bndConds)
             {
-                (*x)->Apply(Fwd, physarray, time);
+                x->Apply(Fwd, physarray, time);
             }
         }
     }

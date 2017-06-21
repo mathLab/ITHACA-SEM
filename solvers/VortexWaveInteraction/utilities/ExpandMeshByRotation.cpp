@@ -430,14 +430,13 @@ void ExpandElmts(TiXmlElement* mesh, map<int,int> &newEdges, int &nelmts)
 string GetXmlString(char tag, vector<unsigned int> &ids)
 {
     stringstream st;
-    vector<unsigned int>::iterator it;
     bool range = false;
     int vId = ids[0];
     int prevId = vId;
     
     st << " " << tag << "[" << vId;
     
-    for (it = ids.begin()+1; it != ids.end(); ++it){
+    for (auto it = ids.begin()+1; it != ids.end(); ++it){
         // store previous element ID and get current one
         prevId = vId;
         vId = (*it);
@@ -525,7 +524,6 @@ void  ExpandComposites(TiXmlElement * mesh, map<int,int> newEdges, int nOrigElmt
             
             std::string indxStr = compositeElementStr.substr(indxBeg, indxEnd - indxBeg + 1);
             std::vector<unsigned int> seqVector;
-            std::vector<unsigned int>::iterator seqIter;
             
             bool err = ParseUtils::GenerateSeqVector(indxStr.c_str(), seqVector);
             

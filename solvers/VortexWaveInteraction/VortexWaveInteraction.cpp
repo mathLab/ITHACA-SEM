@@ -209,7 +209,7 @@ namespace Nektar
             std::string IterationTypeStr = m_sessionVWI->GetSolverInfo("VWIIterationType");
             for(int i = 0; i < (int) eVWIIterationTypeSize; ++i)
             {
-                if(m_solverRoll->NoCaseStringCompare(VWIIterationTypeMap[i],IterationTypeStr) == 0 )
+                if(boost::iequals(VWIIterationTypeMap[i],IterationTypeStr))
                 {
                     m_VWIIterationType = (VWIIterationType)i; 
                     break;

@@ -445,10 +445,10 @@ void FilterHistoryPoints::v_Update(const Array<OneD, const MultiRegions::ExpList
         if(m_isHomogeneous1D)
         {
             k = 0;
-            for (auto &x : &m_historyList)
+            for (auto &x : m_historyList)
             {
-                locCoord = (*x).second;
-                expId    = (*x).first->GetVid();
+                locCoord = x.second;
+                expId    = x.first->GetVid();
                 NekDouble value;
                 int plane = m_planeIDs[m_historyLocalPointMap[k]];
 
@@ -543,10 +543,11 @@ void FilterHistoryPoints::v_Update(const Array<OneD, const MultiRegions::ExpList
         }
         else
         {
-            for (k = 0, x = m_historyList.begin(); x != m_historyList.end(); ++x, ++k)
+            k = 0;
+            for (auto &x : m_historyList)
             {
-                locCoord = (*x).second;
-                expId    = (*x).first->GetVid();
+                locCoord = x.second;
+                expId    = x.first->GetVid();
 
                 physvals = pFields[j]->UpdatePhys() + pFields[j]->GetPhys_Offset(expId);
 
@@ -558,6 +559,7 @@ void FilterHistoryPoints::v_Update(const Array<OneD, const MultiRegions::ExpList
 
                 // interpolate point
                 data[m_historyLocalPointMap[k]*numFields+j] = pFields[j]->GetExp(expId)->StdPhysEvaluate(locCoord,physvals);
+                ++k;
             }
         }
     }

@@ -1,3 +1,4 @@
+#include <LibUtilities/BasicUtils/VtkUtil.hpp>
 #include <vtkPolyDataReader.h>
 #include <vtkPolyData.h>
 #include <vtkPointData.h>

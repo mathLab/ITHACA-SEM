@@ -45,7 +45,6 @@
 #include <boost/enable_shared_from_this.hpp>
 
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
-#include <loki/Singleton.h>
 
 namespace Nektar
 {

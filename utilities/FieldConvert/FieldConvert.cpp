@@ -319,8 +319,8 @@ int main(int argc, char* argv[])
                 }
                 else
                 {
-                    int    dot    = tmp1[0].find_last_of('.') + 1;
-                    string ext    = tmp1[0].substr(dot, tmp1[0].length() - dot);
+                    int    dot = tmp1[0].find_last_of('.') + 1;
+                    string ext = tmp1[0].substr(dot, tmp1[0].length() - dot);
 
                     if(ext == "gz")
                     {
@@ -330,8 +330,8 @@ int main(int argc, char* argv[])
                     }
 
                     module.second = ext;
-                    tmp1.push_back(string(i < nInput ? "infile=" : "outfile=")
-                                   +tmp1[0]);
+                    tmp1.push_back(string(i < nInput ? "infile=" :
+                                          "outfile=")  +tmp1[0]);
                 }
             }
             else
@@ -428,13 +428,23 @@ int main(int argc, char* argv[])
         {
             cout << endl << "Processing partition: " << p << endl;
         }
-        if (p > 0)
+
+        if (nParts > 0)
         {
             int rank = p;
             f->ClearField();
             f->m_comm = boost::shared_ptr<FieldConvertComm>(
-                                new FieldConvertComm(argc, argv, nParts,rank));
+                             new FieldConvertComm(argc, argv, nParts,rank));
+            
+            for (int i = 0; i < modules.size(); ++i)
+            {
+                if(modules[i]->GetModulePriority() == eOutput)
+                {
+                    modules[i]->RegisterConfig("writemultiplefiles","true");
+                }
+            }
         }
+        
         // Run field process.
         for (int n = 0; n < SIZE_ModulePriority; ++n)
         {

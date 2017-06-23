@@ -41,11 +41,8 @@ namespace SolverUtils
 {
 FilterFactory& GetFilterFactory()
 {
-    typedef Loki::SingletonHolder<FilterFactory,
-                                  Loki::CreateUsingNew,
-                                  Loki::NoDestroy,
-                                  Loki::SingleThreaded> Type;
-    return Type::Instance();
+    static FilterFactory instance;
+    return instance;
 }
 
 

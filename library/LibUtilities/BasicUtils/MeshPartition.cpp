@@ -69,11 +69,8 @@ namespace Nektar
     {
         MeshPartitionFactory& GetMeshPartitionFactory()
         {
-            typedef Loki::SingletonHolder<MeshPartitionFactory,
-                Loki::CreateUsingNew,
-                Loki::NoDestroy,
-                Loki::SingleThreaded> Type;
-            return Type::Instance();
+            static MeshPartitionFactory instance;
+            return instance;
         }
 
         MeshPartition::MeshPartition(const LibUtilities::SessionReaderSharedPtr& pSession) :

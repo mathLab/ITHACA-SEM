@@ -43,8 +43,6 @@
 #include <LibUtilities/BasicUtils/FieldIO.h>
 #include <LibUtilities/BasicUtils/FileSystem.h>
 
-#include <loki/Singleton.h>
-
 #include <fstream>
 #include <set>
 
@@ -73,10 +71,8 @@ std::string fldCmdFormat = SessionReader::RegisterCmdLineArgument(
  */
 FieldIOFactory &GetFieldIOFactory()
 {
-    typedef Loki::
-        SingletonHolder<FieldIOFactory, Loki::CreateUsingNew, Loki::NoDestroy,
-                        Loki::ClassLevelLockable> Type;
-    return Type::Instance();
+    static FieldIOFactory instance;
+    return instance;
 }
 
 /// Enumerator for auto-detection of FieldIO types.

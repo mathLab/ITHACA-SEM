@@ -33,7 +33,6 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <loki/Singleton.h>
 #include <Collections/Operator.h>
 #include <Collections/Collection.h>
 
@@ -109,11 +108,8 @@ Operator::~Operator()
  */
 OperatorFactory& GetOperatorFactory()
 {
-    typedef Loki::SingletonHolder<OperatorFactory,
-                                  Loki::CreateUsingNew,
-                                  Loki::NoDestroy,
-                                  Loki::SingleThreaded> Type;
-    return Type::Instance();
+    static OperatorFactory instance;
+    return instance;
 }
 
 

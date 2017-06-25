@@ -53,7 +53,9 @@ namespace Nektar
         
         BOOST_AUTO_TEST_CASE(TestDefaultConstructor)
         {
-            SMat m;
+            double buf[] = {};
+            boost::shared_ptr<InnerMatrix> in(new InnerMatrix(0, 0, buf));
+            SMat m(0.0, in);
             BOOST_CHECK_EQUAL(0u, m.GetRows());
             BOOST_CHECK_EQUAL(0u, m.GetColumns());
             BOOST_CHECK(boost::shared_ptr<InnerMatrix>() != m.GetOwnedMatrix());

@@ -47,34 +47,26 @@ namespace NekMeshUtils
 
 EngineFactory &GetEngineFactory()
 {
-    typedef Loki::SingletonHolder<EngineFactory, Loki::CreateUsingNew,
-                                  Loki::NoDestroy, Loki::SingleThreaded>
-        Type;
-    return Type::Instance();
+    static EngineFactory instance;
+    return instance;
 }
 
 CADVertFactory &GetCADVertFactory()
 {
-    typedef Loki::SingletonHolder<CADVertFactory, Loki::CreateUsingNew,
-                                  Loki::NoDestroy, Loki::SingleThreaded>
-        Type;
-    return Type::Instance();
+    static CADVertFactory instance;
+    return instance;
 }
 
 CADCurveFactory &GetCADCurveFactory()
 {
-    typedef Loki::SingletonHolder<CADCurveFactory, Loki::CreateUsingNew,
-                                  Loki::NoDestroy, Loki::SingleThreaded>
-        Type;
-    return Type::Instance();
+    static CADCurveFactory instance;
+    return instance;
 }
 
 CADSurfFactory &GetCADSurfFactory()
 {
-    typedef Loki::SingletonHolder<CADSurfFactory, Loki::CreateUsingNew,
-                                  Loki::NoDestroy, Loki::SingleThreaded>
-        Type;
-    return Type::Instance();
+    static CADSurfFactory instance;
+    return instance;
 }
 
 Array<OneD, NekDouble> CADSystem::GetPeriodicTranslationVector(int first,

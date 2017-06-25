@@ -34,7 +34,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <LibUtilities/Communication/Comm.h>
-#include <loki/Singleton.h> // for CreateUsingNew, NoDestroy, etc
 
 namespace Nektar
 {
@@ -60,10 +59,8 @@ bool Comm::v_RemoveExistingFiles(void)
 
 CommFactory &GetCommFactory()
 {
-    typedef Loki::SingletonHolder<CommFactory, Loki::CreateUsingNew,
-                                  Loki::NoDestroy, Loki::SingleThreaded>
-        Type;
-    return Type::Instance();
+    static CommFactory instance;
+    return instance;
 }
 }
 }

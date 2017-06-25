@@ -38,6 +38,7 @@
 #define NEKTAR_LIB_UTILITIES_BASIC_UTILS_TIMER_H
 
 #ifdef _WIN32
+#define NOMINMAX
 #include <windows.h>
 #else
 #include <sys/time.h>

@@ -1,16 +1,16 @@
 \chapter{FieldConvert}
 \label{s:utilities:fieldconvert}
-FieldConvert is a utility embedded in \nekpp with the primary aim of
-allowing the user to convert the \nekpp output binary files (.chk and
-.fld) into a format which can be read by two common visualisation
-softwares: Paraview/VisIt (.vtu format) or Tecplot/VisIt (.dat or .plt
-formats). FieldConvert also allows the user to manipulate the \nekpp
-output binary files by using some additional modules which can be
-called with the option \inltt{-m} which stands for
-\inltt{m}odule. Note that another flag, \inltt{-r} (which stand for
-\inltt{r}ange) allows the user to specify a sub-range of the domain on
-which the conversion or manipulation of the \nekpp output binary files
-will be performed.
+FieldConvert is a utility embedded in \nekpp with the primary aim of allowing
+the user to convert the \nekpp output binary files (\inltt{.chk} and
+\inltt{.fld}) into formats which can be read by common visualisation and
+post-processing software, primarily Paraview/VisIt (in unstructured VTK
+\inltt{.vtu} format) or Tecplot/VisIt (in ASCII \inltt{.dat} or binary
+\inltt{.plt} formats). FieldConvert also allows the user to manipulate the
+\nekpp output binary files by using some additional modules which can be called
+with the option \inltt{-m} which stands for \inltt{m}odule. Note that another
+flag, \inltt{-r} (which stand for \inltt{r}ange) allows the user to specify a
+sub-range of the domain on which the conversion or manipulation of the \nekpp
+output binary files will be performed.
 
 Almost all of the FieldConvert functionalities can be run in parallel if \nekpp
 is compiled using MPI (see the installation documentation for additional info on
@@ -19,6 +19,49 @@ how to implement \nekpp using MPI). \footnote{Modules that do not have parallel
 %
 %
 %
+\section{Basic usage}
+FieldConvert expects at least one input specification (such as a session file
+and its corresponding field file) and one output specification. These are
+specified on the command line as
+%
+\begin{lstlisting}[style=BashInputStyle]
+  FieldConvert in1.xml in2.fld out.dat
+\end{lstlisting}
+%
+These can be combined with a processing module by adding the \inltt{-m} command
+line option. There can be more than one module specified, and they can appear
+anywhere in the command line arguments, although the order of execution is
+inferred from their order in the command line. For example, the command
+%
+\begin{lstlisting}[style=BashInputStyle]
+  FieldConvert in1.xml -m module1 in2.fld -m module2 out.dat
+\end{lstlisting}
+%
+causes \inltt{in1.xml} and \inltt{in2.fld} to be read, followed by the
+\inltt{module1} processing module, the \inltt{module2} processing module, and
+finally output to the \inltt{out.dat} Tecplot file.
+
+\subsection{Input formats}
+
+FieldConvert supports XML and FLD-format files as produced by \nekpp. It also
+supports the reading of data files from two external spectral element codes:
+\emph{Semtex}\footnote{http://users.monash.edu.au/~bburn/semtex.html} and
+\emph{Nek5000}\footnote{https://nek5000.mcs.anl.gov}. These files can be
+directly converted to \nekpp format files by using the command
+%
+\begin{lstlisting}[style=BashInputStyle]
+  FieldConvert input.fld output.fld
+\end{lstlisting}
+%
+Note that even though the \inltt{.fld} extension is typically associated with
+\nekpp files, FieldConvert can automatically identify \emph{Semtex} and
+\emph{Nek5000} input field files.
+
+To use these files in a simulation, or to post-process the results of a
+simulation, an appropriate mesh must also be defined in the \nekpp XML format.
+\nm can be used to convert these input files to XML, as outlined in
+section~\ref{s:utilities:nekmesh}.
+
 \section{Convert .fld / .chk files into Paraview, VisIt or Tecplot format}
 \label{s:utilities:fieldconvert:sub:convert}
 To convert the \nekpp output binary files (.chk and .fld) into a

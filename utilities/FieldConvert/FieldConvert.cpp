@@ -429,7 +429,7 @@ int main(int argc, char* argv[])
             cout << endl << "Processing partition: " << p << endl;
         }
 
-        if (nParts > 0)
+        if (nParts > 1)
         {
             int rank = p;
             f->ClearField();

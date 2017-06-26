@@ -315,6 +315,10 @@ INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR})
 
 # Build active components. Add utilities and solvers directories first, because
 # that allows us to detect library dependencies automatically.
+IF (NEKTAR_BUILD_LIBRARY)
+    INCLUDE_DIRECTORIES(library)
+ENDIF()
+
 INCLUDE_DIRECTORIES(utilities)
 ADD_SUBDIRECTORY(utilities)
 
@@ -325,7 +329,6 @@ IF (NEKTAR_BUILD_LIBRARY)
     # List of Nektar++ libraries will be rebuilt every configuration.
     SET(NEKTAR++_LIBRARIES "" CACHE INTERNAL "")
 
-    INCLUDE_DIRECTORIES(library)
     ADD_SUBDIRECTORY(library)
     INSTALL(EXPORT Nektar++Libraries DESTINATION ${LIB_DIR}/cmake COMPONENT dev)
 ENDIF (NEKTAR_BUILD_LIBRARY)

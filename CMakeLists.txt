@@ -302,8 +302,9 @@ INCLUDE_DIRECTORIES(solvers)
 ADD_SUBDIRECTORY(solvers)
 
 IF (NEKTAR_BUILD_LIBRARY)
-    SET(NEKTAR++_LIBRARIES SolverUtils LibUtilities StdRegions SpatialDomains LocalRegions
-        MultiRegions Collections GlobalMapping FieldUtils NekMeshUtils)
+    # List of Nektar++ libraries will be rebuilt every configuration.
+    SET(NEKTAR++_LIBRARIES "" CACHE INTERNAL "")
+
     INCLUDE_DIRECTORIES(library)
     ADD_SUBDIRECTORY(library)
     INSTALL(EXPORT Nektar++Libraries DESTINATION ${LIB_DIR}/cmake COMPONENT dev)

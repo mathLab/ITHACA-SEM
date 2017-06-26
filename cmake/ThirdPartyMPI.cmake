@@ -29,7 +29,6 @@ IF( NEKTAR_USE_MPI )
         IF (NOT THIRDPARTY_BUILD_MPI)
             FIND_PACKAGE(MPI)
             INCLUDE (FindMPI)
-
             IF (NOT MPI_CXX_FOUND)
                 # No MPI at all: we have to build it
                 SET(BUILD_MPI ON)

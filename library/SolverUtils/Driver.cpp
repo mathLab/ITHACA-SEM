@@ -65,11 +65,8 @@ std::string Driver::driverDefault =
 
 DriverFactory& GetDriverFactory()
 {
-    typedef Loki::SingletonHolder<DriverFactory,
-    Loki::CreateUsingNew,
-    Loki::NoDestroy,
-    Loki::SingleThreaded> Type;
-    return Type::Instance();
+    static DriverFactory instance;
+    return instance;
 }
 
 /**

@@ -59,7 +59,7 @@ public:
     {
     }
 
-    ~CADSurfOCE()
+    virtual ~CADSurfOCE()
     {
     }
 

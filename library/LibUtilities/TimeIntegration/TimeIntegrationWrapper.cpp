@@ -41,11 +41,8 @@ namespace LibUtilities {
 
     TimeIntegrationWrapperFactory &GetTimeIntegrationWrapperFactory()
     {
-        typedef Loki::SingletonHolder<TimeIntegrationWrapperFactory,
-            Loki::CreateUsingNew,
-            Loki::NoDestroy,
-            Loki::SingleThreaded> Type;
-        return Type::Instance();
+        static TimeIntegrationWrapperFactory instance;
+        return instance;
     }
 
     TimeIntegrationWrapper::TimeIntegrationWrapper()

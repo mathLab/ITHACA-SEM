@@ -105,7 +105,7 @@ FilterFieldConvert::FilterFieldConvert(
     else
     {
         LibUtilities::Equation equ(m_session, it->second);
-        m_sampleFrequency = floor(equ.Evaluate());
+        m_sampleFrequency = round(equ.Evaluate());
     }
 
     // OutputFrequency
@@ -117,7 +117,7 @@ FilterFieldConvert::FilterFieldConvert(
     else
     {
         LibUtilities::Equation equ(m_session, it->second);
-        m_outputFrequency = floor(equ.Evaluate());
+        m_outputFrequency = round(equ.Evaluate());
     }
 
     m_numSamples  = 0;
@@ -196,7 +196,7 @@ void FilterFieldConvert::v_Initialise(
         fld->Import(m_restartFile, fieldDef, fieldData, fieldMetaData);
 
         // Extract fields to output
-        int nfield,k;
+        int nfield = -1, k;
         for (int j = 0; j < m_variables.size(); ++j)
         {
             // see if m_variables is part of pFields definition and if
@@ -210,7 +210,7 @@ void FilterFieldConvert::v_Initialise(
                     break;
                 }
             }
-            if(k == pFields.num_elements())
+            if(nfield == -1)
             {
                 nfield = 0;
             }

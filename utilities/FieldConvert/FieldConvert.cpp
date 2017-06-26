@@ -210,8 +210,15 @@ int main(int argc, char* argv[])
      */
     FieldSharedPtr f = boost::shared_ptr<Field>(new Field());
     int nParts = 1;
+    int MPInprocs = 1;
+    int MPIrank   = 0;
+    LibUtilities::CommSharedPtr MPIComm;
     if (LibUtilities::GetCommFactory().ModuleExists("ParallelMPI"))
     {
+        // get hold of parallel communicator first
+        MPIComm = LibUtilities::GetCommFactory().CreateInstance(
+                                                    "ParallelMPI", argc, argv);
+
         if(vm.count("nprocs"))
         {
             int nprocs, rank;
@@ -222,6 +229,10 @@ int main(int argc, char* argv[])
             }
             else
             {
+                //work out number of ranks an
+                MPInprocs = MPIComm->GetSize();
+                MPIrank   = MPIComm->GetRank();
+
                 nParts = nprocs;
                 rank   = 0;
             }
@@ -231,8 +242,7 @@ int main(int argc, char* argv[])
         }
         else
         {
-            f->m_comm = LibUtilities::GetCommFactory().CreateInstance(
-                                                    "ParallelMPI", argc, argv);
+            f->m_comm = MPIComm; 
         }
     }
     else
@@ -246,7 +256,6 @@ int main(int argc, char* argv[])
     vector<string>          modcmds;
     ModuleKey               module;
     ModuleSharedPtr         mod;
-
 
     if (vm.count("verbose"))
     {
@@ -421,29 +430,33 @@ int main(int argc, char* argv[])
         PrintExecutionSequence(modules);
     }
 
-    // Loop on partitions when using nprocs without procid
-    for(int p = 0; p < nParts; ++p)
+    // if nParts is specified then ensure output modules write out mutipile files
+    if(nParts > 1)
     {
-        if(verbose && nParts > 1)
+        for (int i = 0; i < modules.size(); ++i)
+        {
+            if(modules[i]->GetModulePriority() == eOutput)
+            {
+                modules[i]->RegisterConfig("writemultiplefiles","true");
+            }
+        }
+    }
+
+    // Loop on partitions if required
+    for(int p = MPIrank; p < nParts; p += MPInprocs)
+    {
+        // write out which partition is being processed and defined a
+        // new serial communicator
+        if(nParts > 1)
         {
             cout << endl << "Processing partition: " << p << endl;
-        }
-
-        if (nParts > 0)
-        {
+            
             int rank = p;
             f->ClearField();
             f->m_comm = boost::shared_ptr<FieldConvertComm>(
                              new FieldConvertComm(argc, argv, nParts,rank));
-            
-            for (int i = 0; i < modules.size(); ++i)
-            {
-                if(modules[i]->GetModulePriority() == eOutput)
-                {
-                    modules[i]->RegisterConfig("writemultiplefiles","true");
-                }
-            }
         }
+        
         
         // Run field process.
         for (int n = 0; n < SIZE_ModulePriority; ++n)
@@ -469,6 +482,12 @@ int main(int argc, char* argv[])
         cout << "Total CPU Time: " << setw(8) << left
              << ss.str() << endl;
     }
+    if(nParts > 1)
+    {
+        MPIComm->Block();
+        MPIComm->Finalise();
+    }
+
     return 0;
 }
 

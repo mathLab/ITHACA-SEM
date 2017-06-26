@@ -293,7 +293,14 @@ ENDIF (APPLE)
 
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR})
 
-# Build active components
+# Build active components. Add utilities and solvers directories first, because
+# that allows us to detect library dependencies automatically.
+INCLUDE_DIRECTORIES(utilities)
+ADD_SUBDIRECTORY(utilities)
+
+INCLUDE_DIRECTORIES(solvers)
+ADD_SUBDIRECTORY(solvers)
+
 IF (NEKTAR_BUILD_LIBRARY)
     SET(NEKTAR++_LIBRARIES SolverUtils LibUtilities StdRegions SpatialDomains LocalRegions
         MultiRegions Collections GlobalMapping FieldUtils NekMeshUtils)
@@ -301,14 +308,6 @@ IF (NEKTAR_BUILD_LIBRARY)
     ADD_SUBDIRECTORY(library)
     INSTALL(EXPORT Nektar++Libraries DESTINATION ${LIB_DIR}/cmake COMPONENT dev)
 ENDIF (NEKTAR_BUILD_LIBRARY)
-
-IF (NEKTAR_BUILD_SOLVERS)
-    INCLUDE_DIRECTORIES(solvers)
-    ADD_SUBDIRECTORY(solvers)
-ENDIF(NEKTAR_BUILD_SOLVERS)
-
-INCLUDE_DIRECTORIES(utilities)
-ADD_SUBDIRECTORY(utilities)
 
 IF (NEKTAR_BUILD_TESTS)
     INCLUDE_DIRECTORIES(tests)

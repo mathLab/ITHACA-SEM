@@ -2,6 +2,10 @@ CMAKE_DEPENDENT_OPTION(NEKTAR_SOLVER_VORTEXWAVE
     "Build the Vortex-Wave interaction solver." ON
     "NEKTAR_BUILD_SOLVERS" OFF)
 
+IF (NOT NEKTAR_BUILD_SOLVERS)
+    SET(NEKTAR_SOLVER_VORTEXWAVE OFF CACHE INTERNAL "")
+ENDIF()
+
 IF( NEKTAR_SOLVER_VORTEXWAVE )
     SET(VortexWaveInteractionSolverSource
        ../ADRSolver/EquationSystems/SteadyAdvectionDiffusion.cpp

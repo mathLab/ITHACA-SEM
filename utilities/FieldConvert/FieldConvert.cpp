@@ -226,6 +226,8 @@ int main(int argc, char* argv[])
             if(vm.count("procid"))
             {
                 rank   = vm["procid"].as<int>();
+                f->m_comm = boost::shared_ptr<FieldConvertComm>(
+                                new FieldConvertComm(argc, argv, nprocs,rank));
             }
             else
             {
@@ -235,10 +237,11 @@ int main(int argc, char* argv[])
 
                 nParts = nprocs;
                 rank   = 0;
+
+                f->m_comm = LibUtilities::GetCommFactory().CreateInstance(
+                                                    "Serial", argc, argv);
             }
 
-            f->m_comm = boost::shared_ptr<FieldConvertComm>(
-                                new FieldConvertComm(argc, argv, nprocs,rank));
         }
         else
         {
@@ -443,6 +446,8 @@ int main(int argc, char* argv[])
     }
 
     // Loop on partitions if required
+    LibUtilities::CommSharedPtr defComm = f->m_comm;
+    LibUtilities::CommSharedPtr partComm;
     for(int p = MPIrank; p < nParts; p += MPInprocs)
     {
         // write out which partition is being processed and defined a
@@ -453,15 +458,25 @@ int main(int argc, char* argv[])
             
             int rank = p;
             f->ClearField();
-            f->m_comm = boost::shared_ptr<FieldConvertComm>(
+            partComm = boost::shared_ptr<FieldConvertComm>(
                              new FieldConvertComm(argc, argv, nParts,rank));
         }
         
-        
+                                                              
         // Run field process.
         for (int n = 0; n < SIZE_ModulePriority; ++n)
         {
             ModulePriority priority = static_cast<ModulePriority>(n);
+
+            if(((priority == eCreateGraph)||(priority == eOutput))&&(nParts > 1))
+            {
+                f->m_comm = partComm;
+            }
+            else
+            {
+                f->m_comm = defComm;
+            }
+
             for (int i = 0; i < modules.size(); ++i)
             {
                 if(modules[i]->GetModulePriority() == priority)

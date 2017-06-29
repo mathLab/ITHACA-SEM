@@ -5,7 +5,7 @@
 ##
 
 #
-# THIRDPARTY_LIBRARY(varname DESCRIPTION <description> [BINDIR] [STATIC|SHARED] lib1 [lib2]...)
+# THIRDPARTY_LIBRARY(varname DESCRIPTION <description> [STATIC|SHARED] lib1 [lib2]...)
 #
 # Updates a variable containing the name of a third-party shared or static
 # library to point to an absolute path defining its location instead of adding
@@ -19,11 +19,9 @@
 #     command).
 #   - `SHARED`: if the library will be built as a shared library
 #   - `STATIC`: if the library will be built as a static library
-#   - `BINDIR`: if the library actually lives in ThirdParty/bin instead of
-#     ThirdParty/lib (as happens occasionally on Windows, e.g. zlib)
 #
 MACRO(THIRDPARTY_LIBRARY varname)
-    CMAKE_PARSE_ARGUMENTS(TPLIB "BINDIR" "DESCRIPTION" "STATIC;SHARED" ${ARGN})
+    CMAKE_PARSE_ARGUMENTS(TPLIB "" "DESCRIPTION" "STATIC;SHARED" ${ARGN})
 
     IF(TPLIB_SHARED)
         SET(LIBTYPE "SHARED")
@@ -33,24 +31,16 @@ MACRO(THIRDPARTY_LIBRARY varname)
         SET(TPLIBS ${TPLIB_STATIC})
     ENDIF()
 
-    IF(TPLIB_BINDIR)
-        SET(DIRNAME bin)
-    ELSE()
-        SET(DIRNAME lib)
-    ENDIF()
-    
     FOREACH (lib ${TPLIBS})
-        LIST(APPEND tmplist "${TPDIST}/${DIRNAME}/${CMAKE_${LIBTYPE}_LIBRARY_PREFIX}${lib}${CMAKE_${LIBTYPE}_LIBRARY_SUFFIX}")
+        LIST(APPEND tmplist "${TPDIST}/lib/${CMAKE_${LIBTYPE}_LIBRARY_PREFIX}${lib}${CMAKE_${LIBTYPE}_LIBRARY_SUFFIX}")
     ENDFOREACH()
 
     SET(${varname} ${tmplist} CACHE FILEPATH ${TPLIB_DESCRIPTION} FORCE)
     UNSET(tmplist)
     UNSET(LIBTYPE)
-    UNSET(DIRNAME)
     UNSET(TPLIBS)
     UNSET(TPLIB_SHARED)
     UNSET(TPLIB_STATIC)
-    UNSET(TPLIB_BINDIR)
     UNSET(lib)
 ENDMACRO()
 

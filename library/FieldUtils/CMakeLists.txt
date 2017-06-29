@@ -103,3 +103,5 @@ ADD_NEKTAR_LIBRARY(FieldUtils
     SOURCES ${FieldUtilsSources}
     HEADERS ${FieldUtilsHeaders}
     DEPENDS GlobalMapping)
+
+ADD_DEFINITIONS(-DFIELD_UTILS_EXPORTS)

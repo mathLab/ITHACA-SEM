@@ -5,7 +5,7 @@
 ##
 
 #
-# THIRDPARTY_LIBRARY(varname DESCRIPTION <description> [STATIC|SHARED] [BINDIR])
+# THIRDPARTY_LIBRARY(varname DESCRIPTION <description> [BINDIR] [STATIC|SHARED] lib1 [lib2]...)
 #
 # Updates a variable containing the name of a third-party shared or static
 # library to point to an absolute path defining its location instead of adding
@@ -23,7 +23,7 @@
 #     ThirdParty/lib (as happens occasionally on Windows, e.g. zlib)
 #
 MACRO(THIRDPARTY_LIBRARY varname)
-    CMAKE_PARSE_ARGUMENTS(TPLIB "" "DESCRIPTION" "STATIC;SHARED;BINDIR" ${ARGN})
+    CMAKE_PARSE_ARGUMENTS(TPLIB "BINDIR" "DESCRIPTION" "STATIC;SHARED" ${ARGN})
 
     IF(TPLIB_SHARED)
         SET(LIBTYPE "SHARED")

@@ -842,22 +842,22 @@ example which generates a 2D NACA wing.
         <MESHING>
 
             <INFORMATION>
-                <I PROPERTY="CADFile" VALUE="6412"  />
-                <I PROPERTY="MeshType" VALUE="2D" />
+                <I PROPERTY="CADFile"   VALUE="6412"  />
+                <I PROPERTY="MeshType"  VALUE="2D"    />
             </INFORMATION>
 
             <PARAMETERS>
-                <P PARAM="MinDelta" VALUE="0.01"    />
-                <P PARAM="MaxDelta" VALUE="1.0"     />
-                <P PARAM="EPS"      VALUE="0.1"     />
-                <P PARAM="Order"    VALUE="4"       />
+                <P PARAM="MinDelta"     VALUE="0.01"  />
+                <P PARAM="MaxDelta"     VALUE="1.0"   />
+                <P PARAM="EPS"          VALUE="0.1"   />
+                <P PARAM="Order"        VALUE="4"     />
 
                 <!-- 2D Domain !-->
-                <P PARAM="Xmin"     VALUE="-1.0"    />
-                <P PARAM="Ymin"     VALUE="-2.0"    />
-                <P PARAM="Xmax"     VALUE="3.0"     />
-                <P PARAM="Ymax"     VALUE="2.0"     />
-                <P PARAM="AOA"      VALUE="15.0"    />
+                <P PARAM="Xmin"         VALUE="-1.0"  />
+                <P PARAM="Ymin"         VALUE="-2.0"  />
+                <P PARAM="Xmax"         VALUE="3.0"   />
+                <P PARAM="Ymax"         VALUE="2.0"   />
+                <P PARAM="AOA"          VALUE="15.0"  />
             </PARAMETERS>
 
         </MESHING>
@@ -868,9 +868,9 @@ parameters. It firstly needs to know the CAD file with which to work. In the
 example above this is listed as a 4 digit number, this is because the mesh
 generator is equiped with a NACA wing generator. In all other cases this
 parameter would be a STEP file. Secondly, what type of mesh to make, the options
-are \inltt{EULER} and \inltt{BL} for 3D meshes and \inltt{2D} and \inltt{2DBL}
+are \inltt{EULER} and \inltt{BndLayer} for 3D meshes and \inltt{2D} and \inltt{2DBndLayer}
 for 2D meshes. In the case of \inltt{EULER} the mesh will be made with only
-tetrahedra. For \inltt{BL} the mesh generator will attempt to insert a single
+tetrahedra. For \inltt{BndLayer} the mesh generator will attempt to insert a single
 macro prism layer onto the geometry surface. This option requires additional
 parameters. This is similar for the 2D scenarios. The automatic mesh
 specification system requires three parameters to build the specification of a
@@ -889,35 +889,35 @@ An example is shown.
         <MESHING>
 
             <INFORMATION>
-                <I PROPERTY="CADFile" VALUE="6412"  />
-                <I PROPERTY="MeshType" VALUE="2DBL" />
+                <I PROPERTY="CADFile"           VALUE="6412"        />
+                <I PROPERTY="MeshType"          VALUE="2DBndLayer"  />
             </INFORMATION>
 
             <PARAMETERS>
-                <P PARAM="MinDelta" VALUE="0.01"    />
-                <P PARAM="MaxDelta" VALUE="1.0"     />
-                <P PARAM="EPS"      VALUE="0.1"     />
-                <P PARAM="Order"    VALUE="4"       />
+                <P PARAM="MinDelta"             VALUE="0.01"        />
+                <P PARAM="MaxDelta"             VALUE="1.0"         />
+                <P PARAM="EPS"                  VALUE="0.1"         />
+                <P PARAM="Order"                VALUE="4"           />
 
                 <!-- Boundary layer !-->
-                <P PARAM="BLSurfs"  VALUE="5,6"     />
-                <P PARAM="BLThick"  VALUE="0.03"    />
-                <P PARAM="BLLayers" VALUE="4"       />
-                <P PARAM="BLProg"   VALUE="2.0"     />
+                <P PARAM="BndLayerSurfaces"     VALUE="5,6"         />
+                <P PARAM="BndLayerThickness"    VALUE="0.03"        />
+                <P PARAM="BndLayerLayers"       VALUE="4"           />
+                <P PARAM="BndLayerProgression"  VALUE="2.0"         />
 
                 <!-- 2D Domain !-->
-                <P PARAM="Xmin"     VALUE="-1.0"    />
-                <P PARAM="Ymin"     VALUE="-2.0"    />
-                <P PARAM="Xmax"     VALUE="3.0"     />
-                <P PARAM="Ymax"     VALUE="2.0"     />
-                <P PARAM="AOA"      VALUE="15.0"    />
+                <P PARAM="Xmin"                 VALUE="-1.0"        />
+                <P PARAM="Ymin"                 VALUE="-2.0"        />
+                <P PARAM="Xmax"                 VALUE="3.0"         />
+                <P PARAM="Ymax"                 VALUE="2.0"         />
+                <P PARAM="AOA"                  VALUE="15.0"        />
             </PARAMETERS>
 
         </MESHING>
     </NEKTAR>
 \end{lstlisting}
 A list of the CAD surfaces which will have a prism generated on is described by
-\inltt{BLSurfs} and the thickness of the boundary to aim for is \inltt{BLThick}.
+\inltt{BndLayerSurfaces} and the thickness of the boundary to aim for is \inltt{BndLayerThickness}.
 %
 The mesh generator has been created with a range of error messages to aid in
 debugging. If you encounter an error and the mesh generator fails, run \nm with

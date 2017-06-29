@@ -838,7 +838,7 @@ void Iso::GlobalCondense(vector<IsoSharedPtr> &iso, bool verbose)
     bgi::rtree<PointPair, bgi::rstar<16> > rtree;
     rtree.insert(inPoints.begin(), inPoints.end());
 
-    //Find neipghbours
+    //Find neighbours
     int      unique_index = 0;
     int      prog=0;
     for(i = 0; i < m_nvert; ++i)
@@ -859,7 +859,6 @@ void Iso::GlobalCondense(vector<IsoSharedPtr> &iso, bool verbose)
         }
         else
         {
-
             // find nearest 10 points within the distance box
             std::vector<PointPair> result;
             rtree.query(bgi::nearest(queryPoint, 10), std::back_inserter(result));

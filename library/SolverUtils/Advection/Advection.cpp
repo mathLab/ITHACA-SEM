@@ -45,11 +45,8 @@ namespace SolverUtils
  */
 AdvectionFactory& GetAdvectionFactory()
 {
-    typedef Loki::SingletonHolder<AdvectionFactory,
-    Loki::CreateUsingNew,
-    Loki::NoDestroy,
-    Loki::SingleThreaded> Type;
-    return Type::Instance();
+    static AdvectionFactory instance;
+    return instance;
 }
 
 

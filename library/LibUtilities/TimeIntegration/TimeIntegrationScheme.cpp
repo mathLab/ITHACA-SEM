@@ -44,9 +44,9 @@ namespace Nektar
     {  
         TimeIntegrationSchemeManagerT &TimeIntegrationSchemeManager(void)
         {
-            TimeIntegrationSchemeManagerT& m = Loki::SingletonHolder<TimeIntegrationSchemeManagerT>::Instance();
-            m.RegisterGlobalCreator(TimeIntegrationScheme::Create);
-            return m;
+            static TimeIntegrationSchemeManagerT instance;
+            instance.RegisterGlobalCreator(TimeIntegrationScheme::Create);
+            return instance;
         }
         
 

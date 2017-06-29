@@ -213,8 +213,7 @@ namespace Nektar
             {
                 for (n = 0; n < nElmt; ++n)
                 {
-                    i = vExp->GetOffset_Elmt_Id(n);
-                    vSizes[n] = vExp->GetExp(i)->GetNverts();
+                    vSizes[n] = vExp->GetExp(n)->GetNverts();
                     nEntries += vSizes[n]*vSizes[n];
                 }
             }
@@ -222,8 +221,7 @@ namespace Nektar
             {
                 for (n = 0; n < nElmt; ++n)
                 {
-                    i = vExp->GetOffset_Elmt_Id(n);
-                    vSizes[n] = vExp->GetExp(i)->GetNcoeffs();
+                    vSizes[n] = vExp->GetExp(n)->GetNcoeffs();
                     nEntries += vSizes[n]*vSizes[n];
                 }
             }
@@ -240,7 +238,7 @@ namespace Nektar
             // and set the universal ID array
             for(n = iCount = 0; n < nElmt; ++n)
             {
-                loc_mat = GetBlock(vExp->GetOffset_Elmt_Id(n));
+                loc_mat = GetBlock(n);
                 nRows = loc_mat->GetRows();
 
                 for(i = 0; i < nRows; ++i)

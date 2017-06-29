@@ -67,13 +67,18 @@ public:
                              std::vector<EdgeSharedPtr> pEdgeList,
                               LibUtilities::PointsType pCurveType)
                 : m_vertexList(pVertexList), m_edgeList(pEdgeList),
-                  m_faceNodes(pFaceNodes), m_curveType(pCurveType), m_geom(){}
+                  m_faceNodes(pFaceNodes), m_curveType(pCurveType), m_geom()
+    {
+    }
 
     /// Copy an existing face.
     NEKMESHUTILS_EXPORT Face(const Face &pSrc)
-            : m_vertexList(pSrc.m_vertexList), m_edgeList(pSrc.m_edgeList),
-              m_faceNodes(pSrc.m_faceNodes), m_curveType(pSrc.m_curveType),
-              m_geom(pSrc.m_geom){}
+        : m_id(pSrc.m_id), m_vertexList(pSrc.m_vertexList),
+          m_edgeList(pSrc.m_edgeList), m_faceNodes(pSrc.m_faceNodes),
+          m_curveType(pSrc.m_curveType), m_geom(pSrc.m_geom),
+          m_parentCAD(pSrc.m_parentCAD)
+    {
+    }
 
     NEKMESHUTILS_EXPORT ~Face()
     {

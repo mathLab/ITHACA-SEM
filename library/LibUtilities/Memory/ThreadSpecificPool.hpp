@@ -42,7 +42,6 @@
 #include <boost/pool/pool.hpp>
 #include <boost/thread/mutex.hpp>
 
-#include <loki/Singleton.h>
 #include <map>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/LibUtilitiesDeclspec.h>

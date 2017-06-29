@@ -34,7 +34,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <PulseWaveSolver/EquationSystems/PulseWavePressureArea.h>
-#include <loki/Singleton.h>
 
 using namespace std;
 
@@ -63,9 +62,7 @@ namespace Nektar
      */
     PressureAreaFactory& GetPressureAreaFactory()
     {
-        typedef Loki::SingletonHolder<PressureAreaFactory,
-                                      Loki::CreateUsingNew,
-                                      Loki::NoDestroy > Type;
-        return Type::Instance();
+        static PressureAreaFactory instance;
+        return instance;
     }
 }

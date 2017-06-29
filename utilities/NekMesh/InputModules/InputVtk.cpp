@@ -34,6 +34,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include <NekMeshUtils/MeshElements/Element.h>
+#include <LibUtilities/BasicUtils/VtkUtil.hpp>
 
 #include <vtkPolyDataReader.h>
 #include <vtkPolyData.h>

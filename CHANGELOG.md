@@ -5,13 +5,59 @@ v4.5.0
 ------
 
 **NekMesh**:
-
+- Add feature to read basic 2D geo files as CAD (!731)
 - Add periodic boundary condition meshing in 2D (!733)
 - Adjust boundary layer thickness in corners in 2D (!739)
-- Add feature to read basic 2D geo files as CAD (!731)
+- Add non-O BL meshing in 2D (!757)
+
+**Library**
+- Added in sum factorisation version for pyramid expansions and orthogonal
+  expansion in pyramids (!750)
+
+**FieldConvert**:
+- Add input module for Semtex field files (!777)
 
 **Documentation**:
 - Added the developer-guide repository as a submodule (!751)
+
+v4.4.1
+------
+**Library**
+- Remove m_offset_elmt_id and GetOffsetElmtId which fixed problems in 2D when 
+  quad elements are listed before tri elements (!758)
+- Remove the duplicate output of errorutil (!756)
+- Fix BLAS CMake dependencies (!763)
+- Fix interpolation issue with Lagrange basis functions (!768)
+- Fix issue with average fields not working with different polynomial order
+  fields (!776)
+- Fix rounding of integer parameters (!774)
+- Fix Hdf5 output in FilterFieldConvert (!781)
+- Fixed extreme memory consumption of Interpolator when interpolating from pts
+  to fld or between different meshes (!783)
+- Fix deadlock with HDF5 input (!786)
+- Fix missing entriess in LibUtilities::kPointsTypeStr (!792)
+- Fix compiler warnings with CommDataType (!793)
+
+**FieldConvert:**
+- Fix issue with field ordering in the interppointdatatofld module (!754)
+- Fix issue with FieldConvert when range flag used (!761)
+- Fix issue when using output-points combined with noequispaced (!775)
+- Fix equispacedoutput for 3DH1D with triangles (!787)
+
+**NekMesh**:
+- Fix memory consumption issue with Gmsh output (!747, !762)
+- Rework meshing control so that if possible viewable meshes will be dumped
+  when some part of the system fails (!756)
+- Add manifold meshing option (!756)
+- Fix issue with older rea input files (!765)
+- Fix memory leak in variational optimiser, add small optimisations (!785)
+- Check the dimensionality of the CAD system before running the 2D generator (!780)
+
+**IncNavierStokesSolver**
+- Fix an initialisation issue when using an additional advective field (!779)
+
+**Packaging**
+- Added missing package for FieldUtils library (!755)
 
 v4.4.0
 ------
@@ -54,6 +100,7 @@ v4.4.0
 - Fix bug in FieldUtils when using half mode expansions (!734)
 - Do not read the same fld/pts files again for every variable (!670)
 - Fix bug in CMake PETSc detection for Ubuntu 16.04/Debian 9 (!735)
+- Fix warnings with Intel compiler (!742)
 
 **ADRSolver:**
 - Add a projection equation system for C^0 projections (!675)

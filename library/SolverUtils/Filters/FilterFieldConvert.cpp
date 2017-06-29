@@ -105,7 +105,7 @@ FilterFieldConvert::FilterFieldConvert(
     else
     {
         LibUtilities::Equation equ(m_session, it->second);
-        m_sampleFrequency = floor(equ.Evaluate());
+        m_sampleFrequency = round(equ.Evaluate());
     }
 
     // OutputFrequency
@@ -117,7 +117,7 @@ FilterFieldConvert::FilterFieldConvert(
     else
     {
         LibUtilities::Equation equ(m_session, it->second);
-        m_outputFrequency = floor(equ.Evaluate());
+        m_outputFrequency = round(equ.Evaluate());
     }
 
     m_numSamples  = 0;
@@ -149,6 +149,10 @@ FilterFieldConvert::FilterFieldConvert(
     modcmds.push_back(m_outputFile);
     // Create modules
     CreateModules(modcmds);
+    // Strip options from m_outputFile
+    vector<string> tmp;
+    boost::split(tmp, m_outputFile, boost::is_any_of(":"));
+    m_outputFile = tmp[0];
 }
 
 FilterFieldConvert::~FilterFieldConvert()
@@ -161,15 +165,18 @@ void FilterFieldConvert::v_Initialise(
 {
     v_FillVariablesName(pFields);
 
-    int ncoeff = pFields[0]->GetNcoeffs();
     // m_variables need to be filled by a derived class
     m_outFields.resize(m_variables.size());
-
+    int nfield;
+    
     for (int n = 0; n < m_variables.size(); ++n)
     {
-        m_outFields[n] = Array<OneD, NekDouble>(ncoeff, 0.0);
-    }
+        // if n >= pFields.num_elements() assum we have used n=0 field
+        nfield = (n < pFields.num_elements())? n: 0;
 
+        m_outFields[n] = Array<OneD, NekDouble>(pFields[nfield]->GetNcoeffs(), 0.0);
+    }
+    
     m_fieldMetaData["InitialTime"] = boost::lexical_cast<std::string>(time);
 
     // Fill some parameters of m_f
@@ -189,11 +196,28 @@ void FilterFieldConvert::v_Initialise(
         fld->Import(m_restartFile, fieldDef, fieldData, fieldMetaData);
 
         // Extract fields to output
+        int nfield = -1, k;
         for (int j = 0; j < m_variables.size(); ++j)
         {
+            // see if m_variables is part of pFields definition and if
+            // so use that field for extract
+            for(k = 0; k < pFields.num_elements(); ++k)
+            {
+                if(pFields[k]->GetSession()->GetVariable(k)
+                   == m_variables[j])
+                {
+                    nfield = k;
+                    break;
+                }
+            }
+            if(nfield == -1)
+            {
+                nfield = 0;
+            }
+            
             for (int i = 0; i < fieldData.size(); ++i)
             {
-                pFields[0]->ExtractDataToCoeffs(
+                pFields[nfield]->ExtractDataToCoeffs(
                     fieldDef[i],
                     fieldData[i],
                     m_variables[j],
@@ -211,6 +235,11 @@ void FilterFieldConvert::v_Initialise(
             m_numSamples = 1;
         }
 
+        if(fieldMetaData.count("InitialTime"))
+        {
+            m_fieldMetaData["InitialTime"] = fieldMetaData["InitialTime"];
+        }
+        
         // Divide by scale
         NekDouble scale = v_GetScale();
         for (int n = 0; n < m_outFields.size(); ++n)
@@ -457,14 +486,23 @@ void FilterFieldConvert::CreateFields(
 
     m_f->m_exp.resize(m_variables.size());
     m_f->m_exp[0] = pFields[0];
+    int nfield;
     for (int n = 0; n < m_variables.size(); ++n)
     {
+        // if n >= pFields.num_elements() assum we have used n=0 field
+        nfield = (n < pFields.num_elements())? n: 0;
+        
         m_f->m_exp[n] = m_f->AppendExpList(
                             NumHomogeneousDir, m_variables[0]);
         m_f->m_exp[n]->SetWaveSpace(false);
-        Vmath::Vcopy( m_outFields[n].num_elements(),
-                      m_outFields[n], 1,
-                      m_f->m_exp[n]->UpdateCoeffs(), 1);
+
+        ASSERTL1(pFields[nfield]->GetNcoeffs() == m_outFields[n].num_elements(),
+                 "pFields[nfield] does not have the "
+                 "same number of coefficients as m_outFields[n]");
+        
+        m_f->m_exp[n]->ExtractCoeffsToCoeffs(pFields[nfield], m_outFields[n],
+                                             m_f->m_exp[n]->UpdateCoeffs());
+
         m_f->m_exp[n]->BwdTrans( m_f->m_exp[n]->GetCoeffs(),
                                  m_f->m_exp[n]->UpdatePhys());
     }

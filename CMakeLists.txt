@@ -5,14 +5,34 @@ RelWithDebInfo MinSizeRel.")
 
 PROJECT(Nektar++ C CXX)
 
+# Nektar++ requires C++11. Try to infer this for older CMake versions (less than
+# 3.1.0)
+IF ("${CMAKE_VERSION}" VERSION_LESS "3.1")
+    IF (NOT MSVC)
+        INCLUDE(CheckCXXCompilerFlag)
+        CHECK_CXX_COMPILER_FLAG("-std=c++11" COMPILER_SUPPORTS_CXX11)
+
+        IF (COMPILER_SUPPORTS_CXX11)
+            SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+        ELSE()
+            MESSAGE(FATAL_ERROR "Nektar++ requires a compiler with C++11 support.")
+        ENDIF()
+    ELSEIF(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 18.0)
+        MESSAGE(FATAL_ERROR "Nektar++ requires full C++11 support: please upgrade to Visual Studio 2013 or later")
+    ENDIF()
+ELSE()
+    SET(CMAKE_CXX_STANDARD 11)
+    SET(CMAKE_CXX_STANDARD_REQUIRED ON)
+    SET(CMAKE_CXX_EXTENSIONS OFF)
+ENDIF()
 
 INCLUDE(CheckLanguage)
 
 CHECK_LANGUAGE(Fortran)
 IF(CMAKE_Fortran_COMPILER)
-  ENABLE_LANGUAGE(Fortran)
+    ENABLE_LANGUAGE(Fortran)
 ELSE()
-  MESSAGE(STATUS "No Fortran support")
+    MESSAGE(STATUS "No Fortran support")
 ENDIF()
 
 # Helps organize projects in IDEs.
@@ -222,7 +242,6 @@ ENDIF ()
 
 # Find ThirdParty libraries and headers.
 INCLUDE (ThirdPartyTinyxml)
-INCLUDE (ThirdPartyLoki)
 INCLUDE (ThirdPartyMetis)
 INCLUDE (ThirdPartyHDF5)
 INCLUDE (ThirdPartyScotch)

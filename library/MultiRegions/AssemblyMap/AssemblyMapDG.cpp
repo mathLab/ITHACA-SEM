@@ -178,7 +178,7 @@ namespace Nektar
             int nbndry = 0;
             for(i = 0; i < nel; ++i) // count number of elements in array
             {
-                eid     = locExp.GetOffset_Elmt_Id(i);
+                eid     = i;
                 nbndry += expList[eid]->NumDGBndryCoeffs();
                 m_numLocalIntCoeffsPerPatch[i] = 0;
                 m_numLocalBndCoeffsPerPatch[i] =
@@ -230,7 +230,7 @@ namespace Nektar
             // Set up boost Graph
             for(i = 0; i < nel; ++i)
             {
-                eid = locExp.GetOffset_Elmt_Id(i);
+                eid = i;
 
                 for(j = 0; j < expList[eid]->GetNtrace(); ++j)
                 {
@@ -319,8 +319,7 @@ namespace Nektar
             cnt = 0;
             for(i = 0; i < nel; ++i)
             {
-                // order list according to m_offset_elmt_id details in expList
-                eid = locExp.GetOffset_Elmt_Id(i);
+                eid = i;
                 exp = expList[eid];
 
                 for(j = 0; j < exp->GetNtrace(); ++j)
@@ -585,9 +584,7 @@ namespace Nektar
             cnt = 0;
             for(i = 0; i < locExpVector.size(); ++i)
             {
-                // Order list according to m_offset_elmt_id details in Exp
-                // so that triangules are listed first and then quads
-                eid = locExp.GetOffset_Elmt_Id(i);
+                eid = i;
                 locExpansion = locExpVector[eid];
                 nDim = locExpansion->GetShapeDimension();
 

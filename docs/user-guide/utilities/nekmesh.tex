@@ -867,7 +867,8 @@ In all cases the mesh generator needs two pieces of information and four
 parameters. It firstly needs to know the CAD file with which to work. In the
 example above this is listed as a 4 digit number, this is because the mesh
 generator is equiped with a NACA wing generator. In all other cases this
-parameter would be a STEP file. Secondly, what type of mesh to make, the options
+parameter would be the name of a CAD file (in either STEP or GEO format).
+Secondly, what type of mesh to make, the options
 are \inltt{EULER} and \inltt{BndLayer} for 3D meshes and \inltt{2D} and \inltt{2DBndLayer}
 for 2D meshes. In the case of \inltt{EULER} the mesh will be made with only
 tetrahedra. For \inltt{BndLayer} the mesh generator will attempt to insert a single
@@ -924,6 +925,32 @@ debugging. If you encounter an error and the mesh generator fails, run \nm with
 the verbose \inltt{-v} flag and send the stdout with the .mcf and .step files
 to \inltt{m.turner14@imperial.ac.uk}. Without the feedback this functionality
 cannot improve.
+
+\subsubsection{GEO format}
+
+Recent developments have been made to facilitate the generation of meshes from
+simple 2D geometries. The GEO file format, used by Gmsh, is a popular option
+that allows the user to script geometrical and meshing operations without the
+need of a GUI. A simplified reader has been implemented in NekMesh for 2D geometries.
+Although very basic this reader may be extended in the future to cover a wider
+range of geometrical features.
+
+For a full description of the GEO format the user should refer to Gmsh's
+documentation. The following commands are currently supported:
+\begin{itemize}
+  \item \inltt{//} (comments)
+  \item \inltt{Point}
+  \item \inltt{Line}
+  \item \inltt{Spline}
+  \item \inltt{Line Loop}
+  \item \inltt{Plane Surface}
+\end{itemize}
+
+At the present time, NekMesh does not support the full scripting capabilities of the
+GEO format. The used GEO files should be a straightforward succession of entity
+creations (see list above). This should however allow for the creation of quite
+a wide range of 2D geometries by transformation of arbitrary curves into generic
+splines.
 
 
 %%% Local Variables:

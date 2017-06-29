@@ -137,6 +137,13 @@ template<typename T> void WriteStream(std::ostream  &outfile,
 void OutputTecplot::OutputFromPts(po::variables_map &vm)
 {
     LibUtilities::PtsFieldSharedPtr fPts = m_f->m_fieldPts;
+
+    // do not output if zone is empty
+    if (fPts->GetNpoints() == 0)
+    {
+        return;
+    }
+
     int rank   = m_f->m_comm->GetRank();
     m_numBlocks = 0;
 

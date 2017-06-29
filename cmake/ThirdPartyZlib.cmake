@@ -63,11 +63,11 @@ IF (THIRDPARTY_BUILD_ZLIB)
 
     IF (WIN32)
         THIRDPARTY_LIBRARY(ZLIB_LIBRARY SHARED zlib
-            DESCRIPTION "Zlib library")
+            DESCRIPTION "Zlib library" BINDIR)
         THIRDPARTY_LIBRARY(ZLIB_LIBRARY_DEBUG SHARED zlibd
-            DESCRIPTION "Zlib library")
+            DESCRIPTION "Zlib library" BINDIR)
         THIRDPARTY_LIBRARY(ZLIB_LIBRARY_RELEASE SHARED zlib
-            DESCRIPTION "Zlib library")
+            DESCRIPTION "Zlib library" BINDIR)
     ELSE ()
         THIRDPARTY_LIBRARY(ZLIB_LIBRARY SHARED z
             DESCRIPTION "Zlib library")

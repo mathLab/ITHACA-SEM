@@ -39,7 +39,6 @@
 #include <UnitTests/util.h>
 
 #include <LibUtilities/LinearAlgebra/NekVector.hpp>
-#include <LibUtilities/LinearAlgebra/NekVectorVariableSized.hpp>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 
 #include <boost/test/auto_unit_test.hpp>

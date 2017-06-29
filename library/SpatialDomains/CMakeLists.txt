@@ -13,7 +13,6 @@ MeshGraph.cpp
 MeshGraph1D.cpp
 MeshGraph2D.cpp
 MeshGraph3D.cpp
-pchSpatialDomains.cpp
 PrismGeom.cpp
 PyrGeom.cpp
 QuadGeom.cpp
@@ -39,7 +38,6 @@ MeshGraph1D.h
 MeshGraph2D.h
 MeshGraph3D.h
 MeshGraph.h
-pchSpatialDomains.h
 PrismGeom.h
 PyrGeom.h
 QuadGeom.h

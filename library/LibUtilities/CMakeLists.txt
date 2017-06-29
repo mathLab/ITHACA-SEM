@@ -204,7 +204,6 @@ SET(LinearAlgebraHeaders
     ./LinearAlgebra/DgemmOverride.hpp
     ./LinearAlgebra/DgemvOverride.hpp
     ./LinearAlgebra/ExplicitInstantiation.h
-    ./LinearAlgebra/IsDgemmTraits.hpp
     ./LinearAlgebra/Lapack.hpp
     ./LinearAlgebra/MatrixBase.hpp
     ./LinearAlgebra/MatrixFuncs.h
@@ -213,27 +212,19 @@ SET(LinearAlgebraHeaders
     ./LinearAlgebra/MatrixSize.hpp
     ./LinearAlgebra/MatrixStorageType.h
     ./LinearAlgebra/MatrixType.h
-    ./LinearAlgebra/MatrixVectorMultiplication.hpp
     ./LinearAlgebra/NekLinAlgAlgorithms.hpp
     ./LinearAlgebra/NekLinSys.hpp
     ./LinearAlgebra/NekMatrixFwd.hpp
     ./LinearAlgebra/NekMatrix.hpp
-    ./LinearAlgebra/NekMatrixMetadata.hpp
     ./LinearAlgebra/NekPoint.hpp
     ./LinearAlgebra/NekTypeDefs.hpp
     ./LinearAlgebra/NekVectorCommon.hpp
-    ./LinearAlgebra/NekVectorConstantSized.hpp
     ./LinearAlgebra/NekVectorFwd.hpp
     ./LinearAlgebra/NekVector.hpp
-    ./LinearAlgebra/NekVectorMetadata.hpp
-    ./LinearAlgebra/NekVectorTypeTraits.hpp
-    ./LinearAlgebra/NekVectorVariableSized.hpp
     ./LinearAlgebra/PointerWrapper.h
     ./LinearAlgebra/ScaledMatrix.hpp
-    ./LinearAlgebra/Space.h
     ./LinearAlgebra/StandardMatrix.hpp
     ./LinearAlgebra/TransF77.hpp
-
     ./LinearAlgebra/StorageSmvBsr.hpp
     ./LinearAlgebra/NistSparseDescriptors.hpp
     ./LinearAlgebra/SparseDiagBlkMatrix.hpp

@@ -5,7 +5,7 @@
 ##
 
 #
-# THIRDPARTY_LIBRARY(varname DESCRIPTION <description> [STATIC|SHARED])
+# THIRDPARTY_LIBRARY(varname DESCRIPTION <description> [STATIC|SHARED] [BINDIR])
 #
 # Updates a variable containing the name of a third-party shared or static
 # library to point to an absolute path defining its location instead of adding
@@ -19,9 +19,11 @@
 #     command).
 #   - `SHARED`: if the library will be built as a shared library
 #   - `STATIC`: if the library will be built as a static library
+#   - `BINDIR`: if the library actually lives in ThirdParty/bin instead of
+#     ThirdParty/lib (as happens occasionally on Windows, e.g. zlib)
 #
 MACRO(THIRDPARTY_LIBRARY varname)
-    CMAKE_PARSE_ARGUMENTS(TPLIB "" "DESCRIPTION" "STATIC;SHARED" ${ARGN})
+    CMAKE_PARSE_ARGUMENTS(TPLIB "" "DESCRIPTION" "STATIC;SHARED;BINDIR" ${ARGN})
 
     IF(TPLIB_SHARED)
         SET(LIBTYPE "SHARED")
@@ -29,6 +31,12 @@ MACRO(THIRDPARTY_LIBRARY varname)
     ELSEIF(TPLIB_STATIC)
         SET(LIBTYPE "STATIC")
         SET(TPLIBS ${TPLIB_STATIC})
+    ENDIF()
+
+    IF(TPLIB_BINDIR)
+        SET(DIRNAME bin)
+    ELSE()
+        SET(DIRNAME lib)
     ENDIF()
     
     FOREACH (lib ${TPLIBS})
@@ -39,6 +47,9 @@ MACRO(THIRDPARTY_LIBRARY varname)
     UNSET(tmplist)
     UNSET(LIBTYPE)
     UNSET(TPLIBS)
+    UNSET(TPLIB_SHARED)
+    UNSET(TPLIB_STATIC)
+    UNSET(TPLIB_BINDIR)
     UNSET(lib)
 ENDMACRO()
 

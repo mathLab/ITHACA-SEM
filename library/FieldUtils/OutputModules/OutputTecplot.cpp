@@ -76,7 +76,7 @@ OutputTecplot::OutputTecplot(FieldSharedPtr f) : OutputFileBase(f),
 {
     m_requireEquiSpaced = true;
     m_config["writemultiplefiles"] =
-        ConfigOption(true,"0","Write multiple files in parallel");
+        ConfigOption(true,"0","Write multiple files in parallel or when using nparts option");
 }
 
 OutputTecplot::~OutputTecplot()

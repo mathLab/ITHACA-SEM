@@ -277,7 +277,7 @@ bool OutputFileBase::WriteFile(std::string &filename, po::variables_map &vm)
     {
         writeFile = 0; // set to zero for reduce all to be correct.
 
-        if (comm->TreatAsRankZero())
+        if (comm->GetRank() == 0)
         {
             string answer;
             cout << "Did you wish to overwrite " << outFile << " (y/n)? ";
@@ -291,6 +291,10 @@ bool OutputFileBase::WriteFile(std::string &filename, po::variables_map &vm)
                 cout << "Not writing file " << filename
                      << " because it already exists" << endl;
             }
+        }
+        else if (comm->TreatAsRankZero())
+        {
+            writeFile = 1;
         }
 
         comm->AllReduce(writeFile, LibUtilities::ReduceSum);

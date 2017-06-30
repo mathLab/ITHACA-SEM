@@ -55,7 +55,7 @@ ModuleKey OutputInfo::m_className =
 
 OutputInfo::OutputInfo(FieldSharedPtr f) : OutputModule(f)
 {
-    m_config["nprocs"] = ConfigOption(false, "1", "number of partitions");
+    m_config["nparts"] = ConfigOption(false, "NotSet", "Number of partitions over which to create the info file");
 }
 
 OutputInfo::~OutputInfo()
@@ -69,13 +69,13 @@ void OutputInfo::Process(po::variables_map &vm)
     int i;
 
     // partition mesh
-    ASSERTL0(m_config["nprocs"].as<string>().compare("NotSet") != 0,
-             "Need to specify nprocs for info output");
-    int nprocs = m_config["nprocs"].as<int>();
+    ASSERTL0(m_config["nparts"].as<string>().compare("NotSet") != 0,
+             "Need to specify nparts for info output");
+    int nparts = m_config["nparts"].as<int>();
 
     LibUtilities::CommSharedPtr vComm = boost::shared_ptr<FieldConvertComm>(
-        new FieldConvertComm(0, NULL, nprocs, 0));
-    vComm->SplitComm(1, nprocs);
+        new FieldConvertComm(0, NULL, nparts, 0));
+    vComm->SplitComm(1, nparts);
 
     // define new session with pseudo parallel communicator
     string xml_ending    = "xml";
@@ -120,13 +120,13 @@ void OutputInfo::Process(po::variables_map &vm)
         LibUtilities::GetMeshPartitionFactory().CreateInstance(vPartitionerName,
                                                                vSession);
 
-    vMeshPartition->PartitionMesh(nprocs, true);
+    vMeshPartition->PartitionMesh(nparts, true);
 
     // get hold of local partition ids
-    std::vector<std::vector<unsigned int> > ElementIDs(nprocs);
+    std::vector<std::vector<unsigned int> > ElementIDs(nparts);
 
     // Populate the list of element ID lists from all processes
-    for (i = 0; i < nprocs; ++i)
+    for (i = 0; i < nparts; ++i)
     {
         std::vector<unsigned int> tmp;
         vMeshPartition->GetElementIDs(i, tmp);
@@ -135,7 +135,7 @@ void OutputInfo::Process(po::variables_map &vm)
 
     // Set up output names
     std::vector<std::string> filenames;
-    for (int i = 0; i < nprocs; ++i)
+    for (int i = 0; i < nparts; ++i)
     {
         boost::format pad("P%1$07d.fld");
         pad % i;

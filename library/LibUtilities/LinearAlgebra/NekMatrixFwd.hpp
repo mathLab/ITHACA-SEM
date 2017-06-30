@@ -69,21 +69,6 @@ namespace Nektar
     typedef NekMatrix<NekMatrix<NekDouble, StandardMatrixTag>, ScaledMatrixTag> DNekScalMat;
     typedef std::shared_ptr<DNekScalMat> DNekScalMatSharedPtr;
     
-    
-#ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
-    template<typename T>
-    struct IsMatrix : public std::false_type {};
-    
-    template<typename DataType, typename MatrixType>
-    struct IsMatrix<NekMatrix<DataType, MatrixType> > : public std::true_type {};
-    
-    template<typename DataType>
-    struct IsMatrix<ConstMatrix<DataType> > : public std::true_type {};
-    
-    template<typename DataType>
-    struct IsMatrix<Matrix<DataType> > : public std::true_type {};
-#endif
-    
 };
     
 #endif //NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_NEK_MATRIX_FWD_HPP

@@ -36,7 +36,6 @@
 #ifndef NEKTAR_LIB_UTILITIES_NEK_POINT_HPP
 #define NEKTAR_LIB_UTILITIES_NEK_POINT_HPP
 
-#include <ExpressionTemplates/ExpressionTemplates.hpp>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/BasicUtils/Concepts.hpp>
 #include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>

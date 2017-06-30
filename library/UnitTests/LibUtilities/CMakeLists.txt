@@ -24,8 +24,3 @@ ADD_NEKTAR_EXECUTABLE(LibUtilitiesUnitTests
 ADD_TEST(NAME LibUtilitiesUnitTests COMMAND LibUtilitiesUnitTests --detect_memory_leaks=0)
 
 SUBDIRS(LinearAlgebra)
-
-IF( NEKTAR_USE_EXPRESSION_TEMPLATES )
-    SUBDIRS(ExpressionTemplates)
-ENDIF()
-

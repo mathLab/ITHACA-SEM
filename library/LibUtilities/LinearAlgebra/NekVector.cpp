@@ -368,10 +368,8 @@ namespace Nektar
         return (*this)(2);
     }
 
-    #ifndef NEKTAR_USE_EXPRESSION_TEMPLATES
     template<typename DataType>
     NekVector<DataType> NekVector<DataType>::operator-() const { return Negate(*this); }
-    #endif
 
     template<typename DataType>
     DataType NekVector<DataType>::Magnitude() const { return Nektar::Magnitude(*this); }

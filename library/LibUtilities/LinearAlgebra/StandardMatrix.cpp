@@ -779,15 +779,13 @@ namespace Nektar
         std::swap(m_tempSpace, this->GetData());
     }
 
-    #ifndef NEKTAR_USE_EXPRESSION_TEMPLATES
     template<typename DataType>
     NekMatrix<DataType, StandardMatrixTag> NekMatrix<DataType, StandardMatrixTag>::operator-() const 
-    { 
+    {
         NekMatrix<DataType, StandardMatrixTag> result(*this);
         NegateInPlace(result);
         return result;
     }
-    #endif
 
     template<typename DataType>
     NekMatrix<DataType, StandardMatrixTag>& NekMatrix<DataType, StandardMatrixTag>::operator*=(const DataType& s)

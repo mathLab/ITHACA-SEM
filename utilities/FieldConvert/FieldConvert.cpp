@@ -73,9 +73,9 @@ int main(int argc, char* argv[])
             "in which any vertex is contained.")
         ("noequispaced",
             "Do not use equispaced output.")
-        ("nprocs", po::value<int>(),
-            "Used to define nprocs if running serial problem to mimic "
-            "parallel run.")
+        ("nparts", po::value<int>(),
+            "Define nparts if running serial problem to mimic "
+            "parallel run with many partitions.")
         ("npz", po::value<int>(),
             "Used to define number of partitions in z for Homogeneous1D "
             "expansions for parallel runs.")
@@ -86,9 +86,6 @@ int main(int argc, char* argv[])
             "Partition into specified npart partitions and exit")
         ("part-only-overlapping", po::value<int>(),
             "Partition into specified npart overlapping partitions and exit")
-        ("procid", po::value<int>(),
-            "Process as single procid of a partition of size nprocs "
-            "(--nprocs must be specified).")
         ("modules-opt,p", po::value<string>(),
             "Print options for a module.")
         ("module,m", po::value<vector<string> >(),
@@ -219,29 +216,16 @@ int main(int argc, char* argv[])
         MPIComm = LibUtilities::GetCommFactory().CreateInstance(
                                                     "ParallelMPI", argc, argv);
 
-        if(vm.count("nprocs"))
+        if(vm.count("nparts"))
         {
-            int nprocs, rank;
-            nprocs = vm["nprocs"].as<int>();
-            if(vm.count("procid"))
-            {
-                rank   = vm["procid"].as<int>();
-                f->m_comm = boost::shared_ptr<FieldConvertComm>(
-                                new FieldConvertComm(argc, argv, nprocs,rank));
-            }
-            else
-            {
-                //work out number of ranks an
-                MPInprocs = MPIComm->GetSize();
-                MPIrank   = MPIComm->GetRank();
+            //work out number of processors to run in serial over partitions
+            MPInprocs = MPIComm->GetSize();
+            MPIrank   = MPIComm->GetRank();
 
-                nParts = nprocs;
-                rank   = 0;
+            nParts = vm["nparts"].as<int>();
 
-                f->m_comm = LibUtilities::GetCommFactory().CreateInstance(
+            f->m_comm = LibUtilities::GetCommFactory().CreateInstance(
                                                     "Serial", argc, argv);
-            }
-
         }
         else
         {

@@ -36,7 +36,6 @@
 #include <type_traits>
 
 #include <LibUtilities/LinearAlgebra/ExplicitInstantiation.h>
-#include <LibUtilities/LinearAlgebra/MatrixVectorMultiplication.hpp>
 #include <LibUtilities/LinearAlgebra/NekTypeDefs.hpp>
 
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>

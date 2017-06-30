@@ -23,10 +23,19 @@ IF( NEKTAR_USE_MPI )
     SET(MPI_BUILTIN OFF CACHE INTERNAL
         "Determines whether MPI is built into the compiler")
     IF (NOT "${HAVE_MPI_H}" OR NOT "${HAVE_MPI_SEND}")
-        FIND_PACKAGE(MPI REQUIRED)
-
-        INCLUDE_DIRECTORIES(SYSTEM ${MPI_CXX_INCLUDE_PATH} )
-        MESSAGE(STATUS "Found MPI: ${MPI_CXX_LIBRARIES}")
+        # No in-built MPI: try to find it on the system instead.
+        IF (NOT THIRDPARTY_BUILD_MPI)
+            FIND_PACKAGE(MPI)
+            INCLUDE (FindMPI)
+            IF (NOT MPI_CXX_FOUND)
+                # No MPI at all: we have to build it
+                SET(BUILD_MPI ON)
+            ELSE()
+                MARK_AS_ADVANCED(file_cmd)
+                INCLUDE_DIRECTORIES(SYSTEM ${MPI_CXX_INCLUDE_PATH})
+                MESSAGE(STATUS "Found MPI: ${MPI_CXX_LIBRARIES}")
+            ENDIF()
+        ENDIF()
     ELSE()
         SET(MPI_BUILTIN ON)
         MESSAGE(STATUS "Found MPI: built in")

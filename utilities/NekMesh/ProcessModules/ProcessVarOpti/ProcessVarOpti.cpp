@@ -54,9 +54,7 @@
 // Including Timer.h includes Windows.h, which causes GetJob to be set as a
 // macro for some reason.
 #if _WIN32
-#ifdef GetJob
 #undef GetJob
-#endif
 #endif
 
 using namespace std;

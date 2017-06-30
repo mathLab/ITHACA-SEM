@@ -45,8 +45,6 @@
 #include <LibUtilities/LinearAlgebra/NekVectorFwd.hpp>
 #include <LibUtilities/BasicUtils/OperatorGenerators.hpp>
 #include <LibUtilities/BasicUtils/RawType.hpp>
-#include <LibUtilities/LinearAlgebra/MatrixVectorMultiplication.hpp>
-#include <LibUtilities/LinearAlgebra/NekMatrixMetadata.hpp>
 #include <LibUtilities/BasicUtils/RawType.hpp>
 #include <LibUtilities/LinearAlgebra/CanGetRawPtr.hpp>
 

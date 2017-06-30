@@ -87,7 +87,6 @@ namespace Nektar
                            Array<OneD, DataType>& data,
                            const char transpose)
         {
-#ifdef NEKTAR_USING_BLAS
                 ASSERTL0(rows==columns, "Only square matrices can be inverted.");
                 ASSERTL0(transpose=='N', "Only untransposed matrices may be inverted.");
 
@@ -123,11 +122,6 @@ namespace Nektar
                     std::string message = "ERROR: Element u_" + boost::lexical_cast<std::string>(info) +   boost::lexical_cast<std::string>(info) + " is 0 from dgetri";
                     ASSERTL0(false, message.c_str());
                 }
-
-            #else
-                // error Full matrix inversion not supported without blas.
-                static_assert(sizeof(DataType) == 0);
-            #endif
         }
 
         static void EigenSolve(unsigned int n,
@@ -206,7 +200,6 @@ namespace Nektar
         static void Invert(unsigned int rows, unsigned int columns,
                            Array<OneD, DataType>& data)
         {
-#ifdef NEKTAR_USING_BLAS
             ASSERTL0(rows==columns, "Only square matrices can be inverted.");
 
             int n = columns;
@@ -240,11 +233,6 @@ namespace Nektar
                 std::string message = "ERROR: Element u_" + boost::lexical_cast<std::string>(info) +   boost::lexical_cast<std::string>(info) + " is 0 from dsptri";
                 ASSERTL0(false, message.c_str());
             }
-
-#else
-            // error Full matrix inversion not supported without blas.
-            static_assert(sizeof(DataType) == 0);
-#endif
         }
 
         static std::tuple<unsigned int, unsigned int>

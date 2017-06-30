@@ -39,7 +39,7 @@ namespace Nektar
 {
     template<typename DataType, typename InnerMatrixType>
     NekMatrix<NekMatrix< DataType, InnerMatrixType>, ScaledMatrixTag>::NekMatrix() :
-        NekMatrix<NekMatrix< DataType, InnerMatrixType>, ScaledMatrixTag>::BaseType(0,0,m_matrix->GetStorageType()),
+        NekMatrix<NekMatrix< DataType, InnerMatrixType>, ScaledMatrixTag>::BaseType(0,0,eFULL),
         m_matrix(new typename NekMatrix<NekMatrix< DataType, InnerMatrixType>, ScaledMatrixTag>::InnerType()),
         m_scale(0)
     {

@@ -48,30 +48,3 @@
 
 #endif
 #endif //TRANSF77_HPP
-
-/***
-$Log: TransF77.hpp,v $
-Revision 1.3  2007/02/04 03:00:29  bnelson
-*** empty log message ***
-
-Revision 1.2  2007/02/04 00:15:40  bnelson
-*** empty log message ***
-
-Revision 1.1  2006/06/01 11:07:52  kirby
-*** empty log message ***
-
-Revision 1.1  2006/05/04 18:57:44  kirby
-*** empty log message ***
-
-Revision 1.3  2006/02/26 21:13:45  bnelson
-Fixed a variety of compiler errors caused by updates to the coding standard.
-
-Revision 1.2  2006/02/12 21:51:42  sherwin
-
-Added licence
-
-Revision 1.1  2006/02/12 21:24:09  sherwin
-
-Changed filename to march coding standard
-
-**/

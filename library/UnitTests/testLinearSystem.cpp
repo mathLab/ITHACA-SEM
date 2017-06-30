@@ -33,7 +33,6 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <UnitTests/testLinearSystem.h>
 #include <LibUtilities/LinearAlgebra/NekLinSys.hpp>
 #include <boost/test/auto_unit_test.hpp>
 #include <boost/test/auto_unit_test.hpp>

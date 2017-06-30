@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File: TestLowerTriangularMatrix.cpp
+// File: TestUpperTriangularMatrix.cpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -33,9 +33,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include "LibUtilitiesUnitTestsPrecompiledHeader.h"
-
 #include <LibUtilities/LinearAlgebra/NekMatrix.hpp>
+
 #include <boost/test/auto_unit_test.hpp>
 #include <boost/test/test_case_template.hpp>
 #include <boost/test/floating_point_comparison.hpp>
@@ -45,23 +44,23 @@
 
 namespace Nektar
 {
-    namespace LowerTriangularMatrixUnitTests
+    namespace UpperTriangularMatrixUnitTests
     {
-        typedef LowerTriangularMatrixFuncs Policy;
+        typedef UpperTriangularMatrixFuncs Policy;
 
         BOOST_AUTO_TEST_CASE(TestMatrixVectorMultiply)
         {
             {
-                double matrix_buf[] = {1, 
-                                       2, 3};
-                NekMatrix<double> matrix(2,2,matrix_buf,eLOWER_TRIANGULAR);
+                double matrix_buf[] = {1, 2,
+                                          3};
+                NekMatrix<double> matrix(2,2,matrix_buf,eUPPER_TRIANGULAR);
 
                 double vector_buf[] = {10, 11};
                 NekVector<double> vector(2, vector_buf);
 
                 NekVector<double> result = matrix*vector;
 
-                double expected_buf[] = {10, 53};
+                double expected_buf[] = {32, 33};
                 NekVector<double> expected_result(2, expected_buf);
 
                 BOOST_CHECK_EQUAL(expected_result, result);
@@ -71,24 +70,25 @@ namespace Nektar
         BOOST_AUTO_TEST_CASE(Test3x3MatrixVectorMultiply)
         {
             {
-                //double matrix_buf[] = {1, 
-                //                       2, 3, 
-                //                       4, 5, 6};
-                double matrix_buf[] = {1, 2, 4,
-                                       3, 5,
-                                       6};
-                NekMatrix<double> matrix(3,3,matrix_buf,eLOWER_TRIANGULAR);
+                //double matrix_buf[] = {1, 2, 3,
+                //                          4, 5,
+                //                             6};
+                double matrix_buf[] = {1,
+                                       2, 4,
+                                       3, 5, 6};
+                NekMatrix<double> matrix(3,3,matrix_buf,eUPPER_TRIANGULAR);
 
                 double vector_buf[] = {10, 11, 12};
                 NekVector<double> vector(3, vector_buf);
 
                 NekVector<double> result = matrix*vector;
 
-                double expected_buf[] = {10, 53, 167};
+                double expected_buf[] = {68, 104, 72};
                 NekVector<double> expected_result(3, expected_buf);
 
                 BOOST_CHECK_EQUAL(expected_result, result);
             }
+
         }
     }
 }

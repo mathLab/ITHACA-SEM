@@ -259,9 +259,3 @@ namespace Nektar
 } //end of namespace
 
 #endif//EXPLISTHOMO2D_H
-
-/**
-* $Log: v $
-*
-**/
-

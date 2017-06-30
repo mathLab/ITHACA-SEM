@@ -222,9 +222,3 @@ namespace Nektar
 } //end of namespace
 
 #endif //COUPLEDSTOKESSCHEME_H
-
-/**
- * $Log:$
- *
- **/
-

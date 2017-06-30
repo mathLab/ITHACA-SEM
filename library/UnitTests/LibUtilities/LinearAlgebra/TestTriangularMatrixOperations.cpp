@@ -34,7 +34,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <LibUtilities/LinearAlgebra/NekMatrix.hpp>
-#include <UnitTests/LibUtilities/LinearAlgebra/TestCombinationRunner.h>
 #include <LibUtilities/LinearAlgebra/NekLinSys.hpp>
 
 #include <boost/test/auto_unit_test.hpp>

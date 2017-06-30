@@ -2236,7 +2236,3 @@ namespace Nektar
         return m_session->GetVariables().size();
     }
 }
-
-/**
- * $Log: CoupledLinearNS.cpp,v $
- **/

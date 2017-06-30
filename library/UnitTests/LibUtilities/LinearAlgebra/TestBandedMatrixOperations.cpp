@@ -522,8 +522,6 @@ namespace Nektar
                                        400, 568, 924, 1640,
                                        0, 504, 756, 1128};
                 NekMatrix<double> result(4, 4, result_buf);
-                
-                //RunAllTestCombinations(lhs1, *lhs2, *lhs3, rhs1, *rhs2, *rhs3, result, DoMultiplication());
             }
         }
     }

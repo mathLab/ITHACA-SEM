@@ -1445,10 +1445,3 @@ namespace Nektar
         }
     } //end of namespace
 } //end of namespace
-
-
-/**
-* $Log: v $
-*
-**/
-

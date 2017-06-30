@@ -43,6 +43,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include <boost/test/auto_unit_test.hpp>
+#include <functional>
 #include <UnitTests/LibUtilities/LinearAlgebra/TestCombinationRunner.h>
 
 namespace Nektar
@@ -159,8 +160,8 @@ namespace Nektar
                                    45, 50, 55, 60,
                                    65, 70, 75, 80};
             NekMatrix<double> result(4, 4, result_buf);
-            
-            RunAllTestCombinations(lhs1, *lhs2, *lhs3, rhs1, *rhs2, *rhs3, result, DoAddition());
+
+            RunAllAddCombinations(lhs1, *lhs2, *lhs3, rhs1, *rhs2, *rhs3, result);
 
             NekMatrix<double> rhs_transposed = Transpose(rhs1);
             NekMatrix<double> result_with_one_operand_transposed = lhs1 + rhs_transposed;
@@ -202,7 +203,7 @@ namespace Nektar
                                    -13, -14, -15, -16};
             NekMatrix<double> result(4, 4, result_buf);
             
-            RunAllTestCombinations(lhs1, *lhs2, *lhs3, rhs1, *rhs2, *rhs3, result, DoSubtraction());
+            RunAllSubCombinations(lhs1, *lhs2, *lhs3, rhs1, *rhs2, *rhs3, result);
         }
 
         BOOST_AUTO_TEST_CASE(TestThreeAdditions)

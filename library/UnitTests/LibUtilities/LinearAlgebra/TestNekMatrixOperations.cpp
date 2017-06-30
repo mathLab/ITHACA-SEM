@@ -33,9 +33,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include "LibUtilitiesUnitTestsPrecompiledHeader.h"
-
 #include <LibUtilities/LinearAlgebra/NekMatrix.hpp>
+#include <UnitTests/LibUtilities/LinearAlgebra/TestCombinationRunner.h>
 #include <LibUtilities/BasicUtils/BoostUtil.hpp>
 #include <boost/test/auto_unit_test.hpp>
 #include <boost/test/test_case_template.hpp>
@@ -47,54 +46,6 @@
 
 namespace Nektar
 {
-    class DoAddition
-    {
-        public:
-            template<typename LhsType, typename RhsType>
-            typename expt::AddOp::ResultType<LhsType, RhsType>::type 
-            operator()(const LhsType& lhs, const RhsType& rhs) const
-            {
-                return lhs + rhs;
-            }
-    };
-
-    class DoSubtraction
-    {
-        public:
-            template<typename LhsType, typename RhsType>
-            typename expt::SubtractOp::ResultType<LhsType, RhsType>::type 
-            operator()(const LhsType& lhs, const RhsType& rhs) const
-            {
-                return lhs - rhs;
-            }
-    };
-
-    template<typename LhsScaledInnerMatrixType,
-             typename LhsBlockInnerMatrixType,
-             typename RhsScaledInnerMatrixType,
-             typename RhsBlockInnerMatrixType,
-             typename OpType>
-    void RunAllTestCombinations(const NekMatrix<NekDouble, StandardMatrixTag>& l1,
-                                const NekMatrix<NekMatrix<NekDouble, LhsScaledInnerMatrixType>, ScaledMatrixTag>& l2,
-                                const NekMatrix<NekMatrix<NekDouble, LhsBlockInnerMatrixType>, BlockMatrixTag>& l3,
-                                const NekMatrix<NekDouble, StandardMatrixTag>& r1,
-                                const NekMatrix<NekMatrix<NekDouble, RhsScaledInnerMatrixType>, ScaledMatrixTag>& r2,
-                                const NekMatrix<NekMatrix<NekDouble, RhsBlockInnerMatrixType>, BlockMatrixTag>& r3,
-                                const NekMatrix<NekDouble, StandardMatrixTag>& result,
-                                const OpType& f)
-    {
-        BOOST_CHECK_EQUAL(f(l1, r1), result);
-        BOOST_CHECK_EQUAL(f(l1, r2), result);
-        BOOST_CHECK_EQUAL(f(l1, r3), result);
-        BOOST_CHECK_EQUAL(f(l2, r1), result);
-        BOOST_CHECK_EQUAL(f(l2, r2), result);
-        BOOST_CHECK_EQUAL(f(l2, r3), result);
-        BOOST_CHECK_EQUAL(f(l3, r1), result);
-        BOOST_CHECK_EQUAL(f(l3, r2), result);
-        BOOST_CHECK_EQUAL(f(l3, r3), result);
-    }
-
-    
     void GenerateFullMatrices(double values[], double scale,
         std::shared_ptr<NekMatrix<NekDouble, StandardMatrixTag> >& m1,
         std::shared_ptr<NekMatrix<NekMatrix<NekDouble>, ScaledMatrixTag> >& m2,
@@ -162,41 +113,6 @@ namespace Nektar
 
     namespace MatrixOperationTests
     {
-        
-//         void GenerateDiagonalMatrices(double values[], double scale,
-//             std::shared_ptr<NekMatrix<NekDouble, FullMatrixTag, StandardMatrixTag> >& m1,
-//             std::shared_ptr<NekMatrix<NekMatrix<NekDouble>, FullMatrixTag, ScaledMatrixTag> >& m2,
-//             std::shared_ptr<NekMatrix<NekMatrix<NekDouble>, FullMatrixTag, BlockMatrixTag> >& m3)
-//         {
-//             m1 = MakePtr(new NekMatrix<NekDouble, DiagonalMatrixTag, StandardMatrixTag>(4, 4, values));
-//             
-//             double inner_values[4];
-//             std::transform(values, values+4, inner_values, std::bind(std::divides<NekDouble>(), std::placeholders::_1, scale));
-// 
-//             std::shared_ptr<NekMatrix<NekDouble, DiagonalMatrixTag> > inner(
-//                 new NekMatrix<NekDouble, DiagonalMatrixTag>(4, 4, inner_values)); 
-//             m2 = MakePtr(new NekMatrix<NekMatrix<NekDouble, DiagonalMatrixTag>, DiagonalMatrixTag, ScaledMatrixTag>(scale, inner));
-//             
-//             double block_1_values[] = {values[0], values[1], 
-//                                 values[4], values[5]};
-//             double block_2_values[] = {values[2], values[3],
-//                                 values[6], values[7]};
-//             double block_3_values[] = {values[8], values[9], 
-//                                 values[12], values[13]};
-//             double block_4_values[] = {values[10], values[11],
-//                                 values[14], values[15]};
-//             std::shared_ptr<NekMatrix<NekDouble> > block1(new NekMatrix<NekDouble>(2, 2, block_1_values));
-//             std::shared_ptr<NekMatrix<NekDouble> > block2(new NekMatrix<NekDouble>(2, 2, block_2_values));
-//             std::shared_ptr<NekMatrix<NekDouble> > block3(new NekMatrix<NekDouble>(2, 2, block_3_values));
-//             std::shared_ptr<NekMatrix<NekDouble> > block4(new NekMatrix<NekDouble>(2, 2, block_4_values));
-//             
-//             m3 = MakePtr(new NekMatrix<NekMatrix<NekDouble>, FullMatrixTag, BlockMatrixTag>(2, 2, 2, 2));
-//             m3->SetBlock(0,0, block1);
-//             m3->SetBlock(0,1, block2);
-//             m3->SetBlock(1,0, block3);
-//             m3->SetBlock(1,1, block4);
-//        }
-
         BOOST_AUTO_TEST_CASE(TestLhsFullRhsFull)
         {
             //double lhs_values[] = {2, 4, 6, 8,
@@ -230,29 +146,9 @@ namespace Nektar
             std::transform(lhs_values, lhs_values+16, rhs_values, result_values, std::plus<NekDouble>());
             NekMatrix<NekDouble> result(4, 4, result_values);
             
-            RunAllTestCombinations(*lhs1, *lhs2, *lhs3, *rhs1, *rhs2, *rhs3, result, DoAddition());
+            RunAllAddCombinations(*lhs1, *lhs2, *lhs3, *rhs1, *rhs2, *rhs3, result);
         }
-        
-        BOOST_AUTO_TEST_CASE(TestLhsFullRhsDiagonal)
-        {
-//             double lhs_values[] = {2, 4, 6, 8,
-//                                    10, 12, 14, 16,
-//                                    18, 20, 22, 24,
-//                                    26, 28, 30, 32};
-//                                    
-//             std::shared_ptr<NekMatrix<NekDouble, FullMatrixTag, StandardMatrixTag> > lhs1;
-//             std::shared_ptr<NekMatrix<NekMatrix<NekDouble>, FullMatrixTag, ScaledMatrixTag> > lhs2;
-//             std::shared_ptr<NekMatrix<NekMatrix<NekDouble>, FullMatrixTag, BlockMatrixTag> > lhs3;
-//             GenerateMatrices(lhs_values, 2.0, lhs1, lhs2, lhs3);
-            
-//             double rhs_values[] = {10, 20, 30, 40};
-//             std::shared_ptr<NekMatrix<NekDouble, DiagonalMatrixTag, StandardMatrixTag> > rhs1;
-//             std::shared_ptr<NekMatrix<NekMatrix<NekDouble>, DiagonalMatrixTag, ScaledMatrixTag> > rhs2;
-//             std::shared_ptr<NekMatrix<NekMatrix<NekDouble>, DiagonalMatrixTag, BlockMatrixTag> > rhs3;
-//             GenerateDiagonalMatrices(rhs_values, 2.0, rhs1, rhs2, rhs3);
-            
-        }
-        
+
         BOOST_AUTO_TEST_CASE(TestComboExpression)
         {
             {
@@ -326,8 +222,6 @@ namespace Nektar
             double result_values[10];
             std::transform(lhs_values, lhs_values+10, rhs_values, result_values, std::plus<NekDouble>());
             NekMatrix<NekDouble, StandardMatrixTag> result(4, 4, result_values, eUPPER_TRIANGULAR);
-            
-            //RunAllTestCombinations(*lhs1, *lhs2, *lhs3, *rhs1, *rhs2, *rhs3, result, DoAddition());
         }
 
         BOOST_AUTO_TEST_CASE(TestLhsLowerTriangularRhsLowerTriangular)
@@ -370,7 +264,7 @@ namespace Nektar
             double result_values[16];
             std::transform(lhs_values, lhs_values+16, rhs_values, result_values, std::minus<NekDouble>());
             NekMatrix<NekDouble> result(4, 4, result_values);
-            RunAllTestCombinations(*lhs1, *lhs2, *lhs3, *rhs1, *rhs2, *rhs3, result, DoSubtraction());
+            RunAllSubCombinations(*lhs1, *lhs2, *lhs3, *rhs1, *rhs2, *rhs3, result);
         }
     }
 }

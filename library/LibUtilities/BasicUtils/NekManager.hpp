@@ -40,8 +40,6 @@
 #include <memory>
 #include <functional>
 
-#include <boost/call_traits.hpp>
-#include <boost/concept_check.hpp>
 #include <boost/thread/shared_mutex.hpp>
 #include <boost/thread/locks.hpp>
 
@@ -69,8 +67,6 @@ namespace Nektar
         class NekManager
         {
             public:
-                BOOST_CLASS_REQUIRE(KeyType, boost, LessThanComparableConcept);
-
                 typedef std::shared_ptr<ValueT> ValueType;
                 typedef std::function<ValueType (const KeyType& key)> CreateFuncType;
                 typedef std::map<KeyType, ValueType> ValueContainer;
@@ -158,7 +154,7 @@ namespace Nektar
 
                 /// Register the given function and associate it with the key.
                 /// The return value is just to facilitate calling statically.
-                bool RegisterCreator(typename boost::call_traits<KeyType>::const_reference key,
+                bool RegisterCreator(const KeyType& key,
                                      const CreateFuncType& createFunc)
                 {
                     m_keySpecificCreateFuncs[key] = createFunc;
@@ -175,7 +171,7 @@ namespace Nektar
                     return true;
                 }
 
-                bool AlreadyCreated(typename boost::call_traits<KeyType>::const_reference key)
+                bool AlreadyCreated(const KeyType &key)
                 {
                     bool value = false;
                     auto found = m_values->find(key);
@@ -187,7 +183,7 @@ namespace Nektar
                     return value;
                 }
 
-                ValueType operator[](typename boost::call_traits<KeyType>::const_reference key)
+                ValueType operator[](const KeyType &key)
                 {
                     auto found = m_values->find(key);
 
@@ -225,7 +221,7 @@ namespace Nektar
                     }
                 }
 
-                void DeleteObject(typename boost::call_traits<KeyType>::const_reference key)
+                void DeleteObject(const KeyType &key)
                 {
                     auto found = m_values->find(key);
 

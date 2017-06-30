@@ -33,7 +33,6 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include "LibUtilitiesUnitTestsPrecompiledHeader.h"
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/BasicUtils/ConsistentObjectAccess.hpp>
 #include <UnitTests/util.h>

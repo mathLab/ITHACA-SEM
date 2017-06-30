@@ -59,6 +59,8 @@ OutputFld::OutputFld(FieldSharedPtr f) : OutputFileBase(f)
 {
     m_config["format"] = ConfigOption(
         false, "Xml", "Output format of field file");
+    m_config["writemultiplefiles"] =
+        ConfigOption(true,"0","Write multiple files in parallel or using nparts option");
 }
 
 OutputFld::~OutputFld()

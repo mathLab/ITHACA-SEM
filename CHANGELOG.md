@@ -1,7 +1,7 @@
 Changelog
 =========
 
-v4.5.0
+v5.0.0
 ------
 
 **NekMesh**:
@@ -9,6 +9,7 @@ v4.5.0
 - Add periodic boundary condition meshing in 2D (!733)
 - Adjust boundary layer thickness in corners in 2D (!739)
 - Add non-O BL meshing in 2D (!757)
+- Fix issue with reading CCM files due to definition of default arrays rather than a vector (!797)
 
 **Library**
 - Added in sum factorisation version for pyramid expansions and orthogonal

@@ -75,12 +75,25 @@ OutputTecplot::OutputTecplot(FieldSharedPtr f) : OutputFileBase(f),
                                                  m_oneOutputFile(false)
 {
     m_requireEquiSpaced = true;
-    m_config["writemultiplefiles"] =
-        ConfigOption(true,"0","Write multiple files in parallel or when using nparts option");
 }
 
 OutputTecplot::~OutputTecplot()
 {
+}
+
+void OutputTecplot::Process(po::variables_map &vm)
+{
+
+    if(m_config["writemultiplefiles"].as<bool>())
+    {
+        m_oneOutputFile = false;
+    }
+    else
+    {
+        m_oneOutputFile = (m_f->m_comm->GetSize()> 1);
+    }
+    
+    OutputFileBase::Process(vm);
 }
 
 /**
@@ -299,12 +312,12 @@ fs::path OutputTecplot::GetPath(std::string &filename,
                                     po::variables_map &vm)
 {
     int nprocs = m_f->m_comm->GetSize();
-    int rank   = m_f->m_comm->GetRank();
     string       returnstr(filename);
 
     // Amend for parallel output if required
     if (nprocs != 1 && !m_oneOutputFile)
     {
+        int rank   = m_f->m_comm->GetRank();
         int dot       = filename.find_last_of('.');
         string ext    = filename.substr(dot, filename.length() - dot);
         string procId = "_P" + boost::lexical_cast<std::string>(rank);
@@ -330,14 +343,6 @@ void OutputTecplot::WriteTecplotFile(po::variables_map &vm)
     int nprocs = m_f->m_comm->GetSize();
     int rank   = m_f->m_comm->GetRank();
 
-    if(m_config["writemultiplefiles"].as<bool>())
-    {
-        m_oneOutputFile = false;
-    }
-    else
-    {
-        m_oneOutputFile = (nprocs > 1) && (vm.count("procid") == 0 );
-    }
 
     // Extract the output filename and extension
     string filename = m_config["outfile"].as<string>();

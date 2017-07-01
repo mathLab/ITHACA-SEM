@@ -71,6 +71,9 @@ public:
     OutputTecplot(FieldSharedPtr f);
     virtual ~OutputTecplot();
 
+
+    virtual void Process(po::variables_map &vm);
+
     virtual std::string GetModuleName()
     {
         return "OutputTecplot";

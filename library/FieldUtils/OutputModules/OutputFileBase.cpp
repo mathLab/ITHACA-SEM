@@ -50,6 +50,8 @@ namespace FieldUtils
 OutputFileBase::OutputFileBase(FieldSharedPtr f) : OutputModule(f)
 {
     m_requireEquiSpaced = false;
+    m_config["writemultiplefiles"] =
+        ConfigOption(true,"0","Write multiple files in parallel or when using nparts option");
 }
 
 OutputFileBase::~OutputFileBase()
@@ -249,7 +251,7 @@ bool OutputFileBase::WriteFile(std::string &filename, po::variables_map &vm)
     // Get path to file. If procid was defined, get the full name
     //     to avoid checking files from other partitions
     fs::path outFile;
-    if(vm.count("nprocs"))
+    if(vm.count("nparts"))
     {
         outFile = GetFullOutName(filename, vm);
     }
@@ -275,29 +277,28 @@ bool OutputFileBase::WriteFile(std::string &filename, po::variables_map &vm)
     int writeFile = 1;
     if (count && (vm.count("forceoutput") == 0))
     {
-        writeFile = 0; // set to zero for reduce all to be correct.
-
-        if (comm->GetRank() == 0)
+        if(vm.count("nparts") == 0 ) // do not do check if --nparts is enabled. 
         {
-            string answer;
-            cout << "Did you wish to overwrite " << outFile << " (y/n)? ";
-            getline(cin, answer);
-            if (answer.compare("y") == 0)
-            {
-                writeFile = 1;
-            }
-            else
-            {
-                cout << "Not writing file " << filename
-                     << " because it already exists" << endl;
-            }
-        }
-        else if (comm->TreatAsRankZero())
-        {
-            writeFile = 1;
-        }
 
-        comm->AllReduce(writeFile, LibUtilities::ReduceSum);
+            writeFile = 0; // set to zero for reduce all to be correct.
+            
+            if (comm->TreatAsRankZero())
+            {
+                string answer;
+                cout << "Did you wish to overwrite " << outFile << " (y/n)? ";
+                getline(cin, answer);
+                if (answer.compare("y") == 0)
+                {
+                    writeFile = 1;
+                }
+                else
+                {
+                    cout << "Not writing file " << filename
+                         << " because it already exists" << endl;
+                }
+            }
+            comm->AllReduce(writeFile, LibUtilities::ReduceSum);
+        }
     }
     return (writeFile == 0) ? false : true;
 }

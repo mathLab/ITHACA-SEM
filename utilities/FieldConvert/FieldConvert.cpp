@@ -52,6 +52,7 @@ int main(int argc, char* argv[])
 {
     Timer     timer;
     timer.Start();
+
     po::options_description desc("Available options");
     desc.add_options()
         ("help,h",
@@ -446,19 +447,21 @@ int main(int argc, char* argv[])
                              new FieldConvertComm(argc, argv, nParts,rank));
         }
         
-                                                              
         // Run field process.
         for (int n = 0; n < SIZE_ModulePriority; ++n)
         {
             ModulePriority priority = static_cast<ModulePriority>(n);
 
-            if(((priority == eCreateGraph)||(priority == eOutput))&&(nParts > 1))
+            if(nParts > 1)
             {
-                f->m_comm = partComm;
-            }
-            else
-            {
-                f->m_comm = defComm;
+                if(((priority == eCreateGraph)||(priority == eOutput)))
+                {
+                    f->m_comm = partComm;
+                }
+                else
+                {
+                    f->m_comm = defComm;
+                }
             }
 
             for (int i = 0; i < modules.size(); ++i)

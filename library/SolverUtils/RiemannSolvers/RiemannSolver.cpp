@@ -33,7 +33,6 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#define LOKI_CLASS_LEVEL_THREADING
 #include <LibUtilities/BasicUtils/VmathArray.hpp>
 #include <SolverUtils/RiemannSolvers/RiemannSolver.h>
 
@@ -62,11 +61,8 @@ namespace Nektar
          */
         RiemannSolverFactory& GetRiemannSolverFactory()
         {
-            typedef Loki::SingletonHolder<RiemannSolverFactory,
-                                          Loki::CreateUsingNew,
-                                          Loki::NoDestroy,
-                                          Loki::SingleThreaded> Type;
-            return Type::Instance();
+            static RiemannSolverFactory instance;
+            return instance;
         }
         
         /**

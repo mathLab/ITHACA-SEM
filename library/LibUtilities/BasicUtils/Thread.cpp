@@ -48,11 +48,8 @@ namespace Thread
  */
 ThreadManagerFactory& GetThreadManagerFactory()
 {
-    typedef Loki::SingletonHolder<ThreadManagerFactory,
-        Loki::CreateUsingNew,
-        Loki::NoDestroy,
-        Loki::SingleThreaded> Type;
-    return Type::Instance();
+    static ThreadManagerFactory instance;
+    return instance;
 }
 
 /**
@@ -142,11 +139,8 @@ ThreadMaster::~ThreadMaster()
  */
 ThreadMaster& GetThreadMaster()
 {
-    typedef Loki::SingletonHolder<ThreadMaster,
-            Loki::CreateUsingNew,
-            Loki::NoDestroy,
-            Loki::SingleThreaded> Type;
-    return Type::Instance();
+    static ThreadMaster instance;
+    return instance;
 }
 
 

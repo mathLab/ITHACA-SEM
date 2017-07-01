@@ -24,11 +24,11 @@ OPTION(THIRDPARTY_BUILD_CCMIO
 
 IF (THIRDPARTY_BUILD_CCMIO)
     INCLUDE(ExternalProject)
+    MESSAGE(WARNING "We are seeking permission to distribute ccmio with Nektar++. If you are entitled to use libccmio please contact nektar-users@imperial.ac.uk and place the file ccmio-2.06.tar.bz2 in the director $NEKTAR/ThirdParty")
     EXTERNALPROJECT_ADD(
         ccmio-2.06
         PREFIX ${TPSRC}
-        URL http://ae-nektar.ae.ic.ac.uk/~ssherw/ccmio-2.06.tar.bz2
-        #URL ${TPURL}/ccmio-2.06.tar.bz2
+        URL ${TPURL}/ccmio-2.06.tar.bz2
         URL_MD5 809ee34a983cbc8931ca23879d92b4d0
         STAMP_DIR ${TPBUILD}/stamp
         DOWNLOAD_DIR ${TPSRC}

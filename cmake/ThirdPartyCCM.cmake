@@ -8,7 +8,7 @@
 OPTION(NEKTAR_USE_CCM
    "use CCM star i/o" OFF)
 
-# First search for system TinyXML installs. Hint /usr/local 
+# First search for system ccmioL installs. Hint /usr/local 
 FIND_PATH   (CCMIO_INCLUDE_DIR ccmio.h PATHS /usr/local/include)
 FIND_LIBRARY(CCMIO_LIBRARY NAMES "ccmio" PATHS /usr/local/lib)
 
@@ -54,10 +54,10 @@ IF (THIRDPARTY_BUILD_CCMIO)
 
     IF (WIN32)
         MESSAGE(STATUS 
-                "Build TinyXML: ${TPDIST}/${LIB_DIR}/${CCMIO_LIBRARY}.dll")
+                "Build CCMIO: ${TPDIST}/${LIB_DIR}/${CCMIO_LIBRARY}.dll")
     ELSE ()
         MESSAGE(STATUS 
-                "Build TinyXML: ${TPDIST}/${LIB_DIR}/lib${CCMIO_LIBRARY}.a")
+                "Build CCMIO: ${TPDIST}/${LIB_DIR}/lib${CCMIO_LIBRARY}.a")
     ENDIF ()
 
     SET(CCMIO_CONFIG_INCLUDE_DIR ${TPINC})

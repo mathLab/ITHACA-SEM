@@ -64,33 +64,40 @@ ProcessNumModes::~ProcessNumModes()
 
 void ProcessNumModes::Process(po::variables_map &vm)
 {
-    if (m_f->m_verbose)
+    int i, s;
+    int expdim    = m_f->m_graph->GetMeshDimension();
+    int nfields   = m_f->m_variables.size();
+    int addfields = expdim;
+
+    m_f->m_variables.push_back("P1");
+    if (addfields >= 2)
     {
-        if (m_f->m_comm->TreatAsRankZero())
-        {
-            cout << "ProcessNumModes: Calculating number of modes..." << endl;
-        }
+        m_f->m_variables.push_back("P2");
+    }
+    if (addfields == 3)
+    {
+        m_f->m_variables.push_back("P3");
     }
 
-    int i, j, s;
-    int expdim    = m_f->m_graph->GetMeshDimension();
-    int nfields   = m_f->m_fielddef[0]->m_fields.size();
-    int addfields = expdim;
+    // Skip in case of empty partition
+    if (m_f->m_exp[0]->GetNumElmts() == 0)
+    {
+        return;
+    }
+
     int npoints   = m_f->m_exp[0]->GetNpoints();
     Array<OneD, Array<OneD, NekDouble> > outfield(addfields);
-
     int nstrips;
 
     m_f->m_session->LoadParameter("Strip_Z", nstrips, 1);
-
-    m_f->m_exp.resize(nfields * nstrips);
 
     for (i = 0; i < addfields; ++i)
     {
         outfield[i] = Array<OneD, NekDouble>(npoints);
     }
 
-    vector<MultiRegions::ExpListSharedPtr> Exp(nstrips * addfields);
+    vector<MultiRegions::ExpListSharedPtr>::iterator it;
+    MultiRegions::ExpListSharedPtr Exp;
 
     int nExp, nq, offset;
     nExp = m_f->m_exp[0]->GetExpSize();
@@ -112,67 +119,15 @@ void ProcessNumModes::Process(po::variables_map &vm)
     {
         for (i = 0; i < addfields; ++i)
         {
-            int n = s * addfields + i;
-            Exp[n] =
-                m_f->AppendExpList(m_f->m_fielddef[0]->m_numHomogeneousDir);
-            Vmath::Vcopy(npoints, outfield[i], 1, Exp[n]->UpdatePhys(), 1);
-            Exp[n]->FwdTrans_IterPerExp(outfield[i], Exp[n]->UpdateCoeffs());
+            Exp = m_f->AppendExpList(m_f->m_numHomogeneousDir);
+            Vmath::Vcopy(npoints, outfield[i], 1, Exp->UpdatePhys(), 1);
+            Exp->FwdTrans_IterPerExp(outfield[i], Exp->UpdateCoeffs());
+
+            it = m_f->m_exp.begin() + s * (nfields + addfields) + nfields + i;
+            m_f->m_exp.insert(it, Exp);
         }
     }
 
-    for (s = 0; s < nstrips; ++s)
-    {
-        for (i = 0; i < addfields; ++i)
-        {
-            m_f->m_exp.insert(
-                m_f->m_exp.begin() + s * (nfields + addfields) + nfields + i,
-                Exp[s * addfields + i]);
-        }
-    }
-
-    vector<string> outname;
-    outname.push_back("P1");
-    if (addfields >= 2)
-    {
-        outname.push_back("P2");
-    }
-
-    if (addfields == 3)
-    {
-        outname.push_back("P3");
-    }
-
-    std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef =
-        m_f->m_exp[0]->GetFieldDefinitions();
-    std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
-
-    // homogeneous strip variant
-    for (s = 0; s < nstrips; ++s)
-    {
-        for (j = 0; j < nfields + addfields; ++j)
-        {
-            for (i = 0; i < FieldDef.size() / nstrips; ++i)
-            {
-                int n = s * FieldDef.size() / nstrips + i;
-
-                if (j >= nfields)
-                {
-                    FieldDef[n]->m_fields.push_back(outname[j - nfields]);
-                }
-                else
-                {
-                    FieldDef[n]->m_fields.push_back(
-                        m_f->m_fielddef[0]->m_fields[j]);
-                }
-
-                m_f->m_exp[s * (nfields + addfields) + j]->AppendFieldData(
-                    FieldDef[n], FieldData[n]);
-            }
-        }
-    }
-
-    m_f->m_fielddef = FieldDef;
-    m_f->m_data     = FieldData;
 }
 }
 }

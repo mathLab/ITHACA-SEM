@@ -845,6 +845,7 @@ namespace Nektar
                         switch(expansion->m_basisKeyVector[edge_id].GetPointsType())
                         {
                         case LibUtilities::eGaussLobattoLegendre:
+                        case LibUtilities::ePolyEvenlySpaced:
                             {
                                 const  LibUtilities::PointsKey pkey(numpoints,LibUtilities::eGaussLobattoLegendre);
                                 return LibUtilities::BasisKey(expansion->m_basisKeyVector[0].GetBasisType(),nummodes,pkey);
@@ -899,6 +900,7 @@ namespace Nektar
                             }
                             break;
                         case LibUtilities::eGaussLobattoLegendre:
+                        case LibUtilities::ePolyEvenlySpaced:
                             {
                                 const LibUtilities::PointsKey pkey(numpoints,LibUtilities::eGaussLobattoLegendre);
                                 return LibUtilities::BasisKey(expansion->m_basisKeyVector[0].GetBasisType(),nummodes,pkey);
@@ -923,6 +925,7 @@ namespace Nektar
                         switch(expansion->m_basisKeyVector[edge_id].GetPointsType())
                         {
                         case LibUtilities::eGaussLobattoLegendre:
+                        case LibUtilities::ePolyEvenlySpaced:
                         {
                             const LibUtilities::PointsKey pkey(numpoints,LibUtilities::eGaussLobattoLegendre);
                             return LibUtilities::BasisKey(expansion->m_basisKeyVector[0].GetBasisType(),nummodes,pkey);

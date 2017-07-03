@@ -67,10 +67,17 @@ public:
         return "ProcessEquiSpacedOutput";
     }
 
-protected:
-    ProcessEquiSpacedOutput(){};
-    void SetupEquiSpacedField(void);
+    virtual std::string GetModuleDescription()
+    {
+        return "Interpolating fields to equispaced";
+    }
 
+    virtual ModulePriority GetModulePriority()
+    {
+        return eConvertExpToPts;
+    }
+
+protected:
     void SetHomogeneousConnectivity(void);
 
     void GenOrthoModes(int n,

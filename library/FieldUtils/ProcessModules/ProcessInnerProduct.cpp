@@ -73,16 +73,11 @@ ProcessInnerProduct::~ProcessInnerProduct()
 
 void ProcessInnerProduct::Process(po::variables_map &vm)
 {
-    if (m_f->m_verbose)
+    // Skip in case of empty partition
+    if (m_f->m_exp[0]->GetNumElmts() == 0)
     {
-        if (m_f->m_comm->TreatAsRankZero())
-        {
-            cout << "ProcessInnerProduct: Evaluating inner product..." << endl;
-        }
+        return;
     }
-
-    ASSERTL0(m_f->m_exp.size() != 0, "input xml file needs to be specified");
-    ASSERTL0(m_f->m_data.size() != 0, "No input data has been defined");
 
     string fromfld           = m_config["fromfld"].as<string>();
     FieldSharedPtr fromField = std::shared_ptr<Field>(new Field());
@@ -98,7 +93,7 @@ void ProcessInnerProduct::Process(po::variables_map &vm)
         ElementGIDs[i] = m_f->m_exp[0]->GetExp(i)->GetGeom()->GetGlobalID();
     }
 
-    int nfields = m_f->m_fielddef[0]->m_fields.size();
+    int nfields = m_f->m_variables.size();
     int nphys   = m_f->m_exp[0]->GetTotPoints();
     NekDouble totiprod;
     string fields = m_config["fields"].as<string>();
@@ -196,7 +191,7 @@ void ProcessInnerProduct::Process(po::variables_map &vm)
                     m_f->m_exp[fid]->ExtractDataToCoeffs(
                         allFromField[g]->m_fielddef[i],
                         allFromField[g]->m_data[i],
-                        allFromField[g]->m_fielddef[i]->m_fields[fid],
+                        m_f->m_variables[fid],
                         m_f->m_exp[fid]->UpdateCoeffs());
                 }
 
@@ -236,7 +231,7 @@ NekDouble ProcessInnerProduct::IProduct(
         {
             m_f->m_exp[fid]->ExtractDataToCoeffs(
                 fromField->m_fielddef[i], fromField->m_data[i],
-                fromField->m_fielddef[i]->m_fields[fid],
+                m_f->m_variables[fid],
                 m_f->m_exp[fid]->UpdateCoeffs());
         }
 

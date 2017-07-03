@@ -2,7 +2,7 @@
 <test>
     <description> Process 2D tecplot output with a range restriction</description>
     <executable>FieldConvert</executable>
-    <parameters> -r -1,1,-1,1 -e bfs_tg.xml bfs_tg.fld bfs_tg.dat</parameters>
+    <parameters> -f -r -1,1,-1,1 -e bfs_tg.xml bfs_tg.fld bfs_tg.dat</parameters>
     <files>
         <file description="Session File">bfs_tg.xml</file>
 	<file description="Session File">bfs_tg.fld</file>

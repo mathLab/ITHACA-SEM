@@ -177,11 +177,6 @@ void FilterFieldConvert::v_Initialise(
     
     m_fieldMetaData["InitialTime"] = boost::lexical_cast<std::string>(time);
 
-    // Fill some parameters of m_f
-    m_f->m_session = m_session;
-    m_f->m_graph = pFields[0]->GetGraph();
-    m_f->m_comm = m_f->m_session->GetComm();
-
     // Load restart file if necessary
     if (m_restartFile != "")
     {
@@ -339,22 +334,29 @@ void FilterFieldConvert::OutputField(
     }
     m_modules[m_modules.size()-1]->RegisterConfig("outfile", outname.str());
 
-    // Prevent checking before overwritting
+    // Prevent checking before overwriting
     po::options_description desc("Available options");
         desc.add_options()
             ("forceoutput,f",
                 "Force the output to be written without any checks");
     po::variables_map vm;
     vm.insert(std::make_pair("forceoutput", po::variable_value()));
+
     // Run field process.
-    for (int i = 0; i < m_modules.size(); ++i)
+    for (int n = 0; n < SIZE_ModulePriority; ++n)
     {
-        m_modules[i]->Process(vm);
-        cout.flush();
+        ModulePriority priority = static_cast<ModulePriority>(n);
+        for (int i = 0; i < m_modules.size(); ++i)
+        {
+            if(m_modules[i]->GetModulePriority() == priority)
+            {
+                m_modules[i]->Process(vm);
+            }
+        }
     }
 
     // Empty m_f to save memory
-    ClearFields();
+    m_f->ClearField();
 
     if (dump != -1) // not final dump so rescale
     {
@@ -449,26 +451,35 @@ void FilterFieldConvert::CreateModules( vector<string> &modcmds)
         mod->SetDefaults();
     }
 
-    bool RequiresEquiSpaced = false;
+    // Include equispaced output if needed
+    Array< OneD, int>  modulesCount(SIZE_ModulePriority,0);
     for (int i = 0; i < m_modules.size(); ++i)
     {
-        if(m_modules[i]->GetRequireEquiSpaced())
-        {
-            RequiresEquiSpaced = true;
-        }
+        ++modulesCount[m_modules[i]->GetModulePriority()];
     }
-    if (RequiresEquiSpaced)
+    if( modulesCount[eModifyPts] != 0 &&
+        modulesCount[eCreatePts] == 0 &&
+        modulesCount[eConvertExpToPts] == 0)
     {
-        for (int i = 0; i < m_modules.size(); ++i)
-        {
-            m_modules[i]->SetRequireEquiSpaced(true);
-        }
+        ModuleKey               module;
+        ModuleSharedPtr         mod;
+        module.first  = eProcessModule;
+        module.second = string("equispacedoutput");
+        mod = GetModuleFactory().CreateInstance(module, m_f);
+        m_modules.insert(m_modules.end()-1, mod);
     }
+
+    // Check if modules provided are compatible
+    CheckModules(m_modules);
 }
 
 void FilterFieldConvert::CreateFields(
         const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields)
 {
+    // Fill some parameters of m_f
+    m_f->m_session = m_session;
+    m_f->m_graph = pFields[0]->GetGraph();
+    m_f->m_comm = m_f->m_session->GetComm();
     m_f->m_fieldMetaDataMap = m_fieldMetaData;
     m_f->m_fieldPts = LibUtilities::NullPtsField;
     // Create m_f->m_exp
@@ -487,7 +498,7 @@ void FilterFieldConvert::CreateFields(
     int nfield;
     for (int n = 0; n < m_variables.size(); ++n)
     {
-        // if n >= pFields.num_elements() assum we have used n=0 field
+        // if n >= pFields.num_elements() assume we have used n=0 field
         nfield = (n < pFields.num_elements())? n: 0;
         
         m_f->m_exp[n] = m_f->AppendExpList(
@@ -504,27 +515,71 @@ void FilterFieldConvert::CreateFields(
         m_f->m_exp[n]->BwdTrans( m_f->m_exp[n]->GetCoeffs(),
                                  m_f->m_exp[n]->UpdatePhys());
     }
-    std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef =
-        pFields[0]->GetFieldDefinitions();
-    std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
-    for (int n = 0; n < m_outFields.size(); ++n)
-    {
-        for (int i = 0; i < FieldDef.size(); ++i)
-        {
-            FieldDef[i]->m_fields.push_back(m_variables[n]);
-            m_f->m_exp[n]->AppendFieldData(FieldDef[i], FieldData[i]);
-        }
-    }
-    m_f->m_fielddef = FieldDef;
-    m_f->m_data     = FieldData;
+    m_f->m_variables= m_variables;
 }
 
-void FilterFieldConvert::ClearFields()
+// This function checks validity conditions for the list of modules provided
+void FilterFieldConvert::CheckModules(vector<ModuleSharedPtr> &modules)
 {
-    m_f->m_fieldPts = LibUtilities::NullPtsField;
-    m_f->m_exp.clear();
-    m_f->m_fielddef = std::vector<LibUtilities::FieldDefinitionsSharedPtr>();
-    m_f->m_data = std::vector<std::vector<NekDouble> > ();
+    // Count number of modules by priority
+    Array< OneD, int>  modulesCount(SIZE_ModulePriority,0);
+    for (int i = 0; i < modules.size(); ++i)
+    {
+        ++modulesCount[modules[i]->GetModulePriority()];
+    }
+
+    // FilterFieldConvert already starts with m_exp, so anything before
+    //    eModifyExp is not valid, and also eCreatePts
+    if( modulesCount[eCreateGraph] != 0     ||
+        modulesCount[eCreateFieldData] != 0 ||
+        modulesCount[eModifyFieldData] != 0 ||
+        modulesCount[eCreateExp] != 0       ||
+        modulesCount[eFillExp] != 0         ||
+        modulesCount[eCreatePts] != 0)
+    {
+        stringstream ss;
+        ss << "Module(s): ";
+        for (int i = 0; i < modules.size(); ++i)
+        {
+            if(modules[i]->GetModulePriority() == eCreateGraph     ||
+               modules[i]->GetModulePriority() == eCreateFieldData ||
+               modules[i]->GetModulePriority() == eModifyFieldData ||
+               modules[i]->GetModulePriority() == eCreateExp       ||
+               modules[i]->GetModulePriority() == eFillExp         ||
+               modules[i]->GetModulePriority() == eCreatePts)
+            {
+                ss << modules[i]->GetModuleName()<<" ";
+            }
+        }
+        ss << "not compatible with FilterFieldConvert.";
+        ASSERTL0(false, ss.str());
+    }
+
+    // Modules of type eConvertExpToPts are not compatible with eBndExtraction
+    if( modulesCount[eConvertExpToPts] != 0 &&
+        modulesCount[eBndExtraction]   != 0)
+    {
+        stringstream ss;
+        ss << "Module(s): ";
+        for (int i = 0; i < modules.size(); ++i)
+        {
+            if(modules[i]->GetModulePriority() == eBndExtraction)
+            {
+                ss << modules[i]->GetModuleName()<<" ";
+            }
+        }
+        ss << "is not compatible with module(s): ";
+        for (int i = 0; i < modules.size(); ++i)
+        {
+            if(modules[i]->GetModulePriority() == eConvertExpToPts)
+            {
+                ss << modules[i]->GetModuleName()<<" ";
+            }
+        }
+        ss << ".";
+        ASSERTL0(false, ss.str());
+    }
+
 }
 
 }

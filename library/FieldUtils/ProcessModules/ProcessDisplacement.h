@@ -36,14 +36,14 @@
 #ifndef FIELDUTILS_PROCESSDISPLACEMENT
 #define FIELDUTILS_PROCESSDISPLACEMENT
 
-#include "../Module.h"
+#include "ProcessBoundaryExtract.h"
 
 namespace Nektar
 {
 namespace FieldUtils
 {
 
-class ProcessDisplacement : public ProcessModule
+class ProcessDisplacement : public ProcessBoundaryExtract
 {
 public:
     /// Creates an instance of this class
@@ -63,6 +63,12 @@ public:
     {
         return "ProcessDisplacement";
     }
+
+    virtual std::string GetModuleDescription()
+    {
+        return "Calculating displacement";
+    }
+
 };
 }
 }

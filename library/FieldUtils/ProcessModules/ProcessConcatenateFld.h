@@ -65,6 +65,17 @@ public:
     {
         return "ProcessConcatenateFld";
     }
+
+    virtual std::string GetModuleDescription()
+    {
+        return "Concatenating field file";
+    }
+
+    virtual ModulePriority GetModulePriority()
+    {
+        return eModifyFieldData;
+    }
+
 };
 }
 }

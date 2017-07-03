@@ -65,6 +65,16 @@ public:
         return "ProcessQualityMetric";
     }
 
+    virtual std::string GetModuleDescription()
+    {
+        return "Adding quality metric to field";
+    }
+
+    virtual ModulePriority GetModulePriority()
+    {
+        return eModifyExp;
+    }
+
 private:
     Array<OneD, NekDouble> GetQ(LocalRegions::ExpansionSharedPtr e, bool s);
 };

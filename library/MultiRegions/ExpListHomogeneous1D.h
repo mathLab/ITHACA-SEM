@@ -270,6 +270,8 @@ namespace Nektar
             
             virtual NekDouble v_GetHomoLen(void);
             
+            virtual void v_SetHomoLen(const NekDouble lhom);
+
         private:
             
             //Padding operations variables

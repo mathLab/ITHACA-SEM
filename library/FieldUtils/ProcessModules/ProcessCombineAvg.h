@@ -69,6 +69,16 @@ public:
         return "ProcessCombineAvg";
     }
 
+    virtual std::string GetModuleDescription()
+    {
+        return "Combining new fld into input avg fld";
+    }
+
+    virtual ModulePriority GetModulePriority()
+    {
+        return eModifyExp;
+    }
+
 private:
 };
 }

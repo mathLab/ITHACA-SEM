@@ -97,10 +97,10 @@ const std::string FieldIO::GetFileType(const std::string &filename,
                                        CommSharedPtr comm)
 {
     FieldIOType ioType = eXML;
-    int size = comm->GetSize();
-    int rank = comm->GetRank();
+    int size  = comm->GetSize();
+    bool root = comm->TreatAsRankZero();
 
-    if (size == 1 || rank == 0)
+    if (size == 1 || root)
     {
         std::string datafilename;
 
@@ -392,14 +392,14 @@ std::string FieldIO::SetUpOutput(const std::string outname, bool perRank, bool b
     ASSERTL0(!outname.empty(), "Empty path given to SetUpOutput()");
 
     int nprocs = m_comm->GetSize();
-    int rank   = m_comm->GetRank();
+    bool root  = m_comm->TreatAsRankZero();
 
     // Path to output: will be directory if parallel, normal file if
     // serial.
     fs::path specPath(outname), fulloutname;
 
     // in case we are rank 0 or not on a shared filesystem, check if the specPath already exists
-    if (backup && (rank == 0 || !m_sharedFilesystem) && fs::exists(specPath))
+    if (backup && (root || !m_sharedFilesystem) && fs::exists(specPath))
     {
         // rename. foo/bar_123.chk -> foo/bar_123.bak0.chk and in case
         // foo/bar_123.bak0.chk already exists, foo/bar_123.chk -> foo/bar_123.bak1.chk
@@ -466,7 +466,7 @@ std::string FieldIO::SetUpOutput(const std::string outname, bool perRank, bool b
         m_comm->Block();
 
         // Now get rank 0 processor to tidy everything else up.
-        if (rank == 0 || !m_sharedFilesystem)
+        if (root || !m_sharedFilesystem)
         {
             try
             {
@@ -482,7 +482,7 @@ std::string FieldIO::SetUpOutput(const std::string outname, bool perRank, bool b
         m_comm->Block();
     }
 
-    if (rank == 0)
+    if (root)
     {
         cout << "Writing: " << specPath;
     }
@@ -498,7 +498,7 @@ std::string FieldIO::SetUpOutput(const std::string outname, bool perRank, bool b
     {
         try
         {
-            if (rank == 0 || !m_sharedFilesystem)
+            if (root || !m_sharedFilesystem)
             {
                 fs::create_directory(specPath);
             }

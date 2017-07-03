@@ -1970,6 +1970,12 @@ namespace Nektar
             return len;
         }
 
+        void ExpList::v_SetHomoLen(const NekDouble lhom)
+        {
+            ASSERTL0(false,
+                     "This method is not defined or valid for this class type");
+        }
+
         Array<OneD, const unsigned int> ExpList::v_GetZIDs(void)
         {
             ASSERTL0(false,

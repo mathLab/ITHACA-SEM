@@ -69,10 +69,18 @@ public:
         return "ProcessMapping";
     }
 
+    virtual std::string GetModuleDescription()
+    {
+        return "Applying mapping to field";
+    }
+
+    virtual ModulePriority GetModulePriority()
+    {
+        return eModifyExp;
+    }
+
     static GlobalMapping::MappingSharedPtr GetMapping(FieldSharedPtr f);
 
-private:
-    FieldSharedPtr m_fromField;
 };
 }
 }

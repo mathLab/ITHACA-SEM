@@ -60,8 +60,14 @@ ProcessAddFld::ProcessAddFld(FieldSharedPtr f) : ProcessModule(f)
     m_config["fromfld"] =
         ConfigOption(false, "NotSet", "Fld file form which to add field");
 
-    ASSERTL0(m_config["fromfld"].as<string>().compare("NotSet") != 0,
-             "Need to specify fromfld=file.fld ");
+    if(f->m_inputfiles.count("xml"))
+    {
+        m_priority = eModifyExp;
+    }
+    else
+    {
+        m_priority = eModifyFieldData;
+    }
 }
 
 ProcessAddFld::~ProcessAddFld()
@@ -70,54 +76,62 @@ ProcessAddFld::~ProcessAddFld()
 
 void ProcessAddFld::Process(po::variables_map &vm)
 {
-    if (m_f->m_verbose)
-    {
-        if (m_f->m_comm->TreatAsRankZero())
-        {
-            cout << "ProcessAddFld: Adding new fld to input fld..." << endl;
-        }
-    }
-
-    ASSERTL0(m_f->m_data.size() != 0, "No input data defined");
-
     string scalestr = m_config["scale"].as<string>();
     NekDouble scale = boost::lexical_cast<NekDouble>(scalestr);
 
+    ASSERTL0(m_config["fromfld"].as<string>().compare("NotSet") != 0,
+             "Need to specify fromfld=file.fld ");
     string fromfld           = m_config["fromfld"].as<string>();
-    FieldSharedPtr fromField = std::shared_ptr<Field>(new Field());
 
-    if (m_f->m_exp.size())
+    vector<LibUtilities::FieldDefinitionsSharedPtr> fromFieldDef;
+    vector<vector<double> >                         fromFieldData;
+
+    if (m_f->m_graph)
     {
-        // Set up ElementGIDs in case of parallel processing
-        Array<OneD, int> ElementGIDs(m_f->m_exp[0]->GetExpSize());
-        for (int i = 0; i < m_f->m_exp[0]->GetExpSize(); ++i)
+        const SpatialDomains::ExpansionMap &expansions =
+            m_f->m_graph->GetExpansions();
+
+        // if Range has been speficied it is possible to have a
+        // partition which is empty so check this and return if
+        // no elements present.
+
+        if (!expansions.size())
         {
-            ElementGIDs[i] = m_f->m_exp[0]->GetExp(i)->GetGeom()->GetGlobalID();
+            return;
+        }
+
+        Array<OneD, int> ElementGIDs(expansions.size());
+        SpatialDomains::ExpansionMap::const_iterator expIt;
+
+        int i = 0;
+        for (expIt = expansions.begin(); expIt != expansions.end(); ++expIt)
+        {
+            ElementGIDs[i++] = expIt->second->m_geomShPtr->GetGlobalID();
         }
         m_f->FieldIOForFile(fromfld)->Import(
-            fromfld, fromField->m_fielddef, fromField->m_data,
+            fromfld, fromFieldDef, fromFieldData,
             LibUtilities::NullFieldMetaDataMap, ElementGIDs);
     }
     else
     {
         m_f->FieldIOForFile(fromfld)->Import(
-            fromfld, fromField->m_fielddef, fromField->m_data,
+            fromfld, fromFieldDef, fromFieldData,
             LibUtilities::NullFieldMetaDataMap);
     }
 
     bool samelength = true;
-    if (fromField->m_data.size() != m_f->m_data.size())
+    if (fromFieldData.size() != m_f->m_data.size())
     {
         samelength = false;
     }
 
     // scale input field
-    for (int i = 0; i < fromField->m_data.size(); ++i)
+    for (int i = 0; i < fromFieldData.size(); ++i)
     {
-        int datalen = fromField->m_data[i].size();
+        int datalen = fromFieldData[i].size();
 
-        Vmath::Smul(datalen, scale, &(fromField->m_data[i][0]), 1,
-                    &(fromField->m_data[i][0]), 1);
+        Vmath::Smul(datalen, scale, &(fromFieldData[i][0]), 1,
+                    &(fromFieldData[i][0]), 1);
 
         if (samelength)
         {
@@ -128,23 +142,29 @@ void ProcessAddFld::Process(po::variables_map &vm)
         }
     }
 
-    if (samelength == true)
+    if (m_priority == eModifyFieldData)
     {
+        ASSERTL0(samelength == true,
+                "Input fields have partitions of different length and so xml "
+                 "file needs to be specified");
         for (int i = 0; i < m_f->m_data.size(); ++i)
         {
             int datalen = m_f->m_data[i].size();
 
             Vmath::Vadd(datalen, &(m_f->m_data[i][0]), 1,
-                        &(fromField->m_data[i][0]), 1, &(m_f->m_data[i][0]), 1);
+                        &(fromFieldData[i][0]), 1, &(m_f->m_data[i][0]), 1);
         }
+        
     }
     else
     {
-        ASSERTL0(m_f->m_exp.size() != 0,
-                 "Input fields have partitions of different length and so xml "
-                 "file needs to be specified");
+        // Skip in case of empty partition
+        if (m_f->m_exp[0]->GetNumElmts() == 0)
+        {
+            return;
+        }
 
-        int nfields = m_f->m_fielddef[0]->m_fields.size();
+        int nfields = m_f->m_variables.size();
         int ncoeffs = m_f->m_exp[0]->GetNcoeffs();
         Array<OneD, NekDouble> SaveFld(ncoeffs);
 
@@ -152,52 +172,30 @@ void ProcessAddFld::Process(po::variables_map &vm)
         {
             Vmath::Vcopy(ncoeffs, m_f->m_exp[j]->GetCoeffs(), 1, SaveFld, 1);
 
-            // since expansion is set up according to m_f search for same
-            // variable in new field
-            int nfield;
-            for (nfield = 0; nfield < fromField->m_fielddef[0]->m_fields.size();
-                 ++nfield)
-            {
-                if (fromField->m_fielddef[0]->m_fields[nfield] ==
-                    m_f->m_fielddef[0]->m_fields[j])
-                {
-                    break;
-                }
-            }
+            // Check if new field has this variable
+            vector<string>::iterator it =
+                find (fromFieldDef[0]->m_fields.begin(),
+                      fromFieldDef[0]->m_fields.end(),
+                      m_f->m_variables[j]);
 
-            ASSERTL0(nfield != fromField->m_fielddef[0]->m_fields.size(),
-                     "Could not find field " + m_f->m_fielddef[0]->m_fields[j] +
-                         " in from field");
+            ASSERTL0(it != fromFieldDef[0]->m_fields.end(),
+              "Could not find field " + m_f->m_variables[j] + " in from field");
 
             // load new field
-            for (int i = 0; i < fromField->m_data.size(); ++i)
+            for (int i = 0; i < fromFieldData.size(); ++i)
             {
                 m_f->m_exp[j]->ExtractDataToCoeffs(
-                    fromField->m_fielddef[i], fromField->m_data[i],
-                    fromField->m_fielddef[i]->m_fields[nfield],
+                    fromFieldDef[i], fromFieldData[i],
+                    m_f->m_variables[j],
                     m_f->m_exp[j]->UpdateCoeffs());
             }
 
             Vmath::Vadd(ncoeffs, m_f->m_exp[j]->GetCoeffs(), 1, SaveFld, 1,
                         m_f->m_exp[j]->UpdateCoeffs(), 1);
+            m_f->m_exp[j]->BwdTrans(
+                        m_f->m_exp[j]->GetCoeffs(),
+                        m_f->m_exp[j]->UpdatePhys());
         }
-
-        std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef =
-            m_f->m_exp[0]->GetFieldDefinitions();
-        std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
-
-        for (int i = 0; i < nfields; ++i)
-        {
-            for (int j = 0; j < FieldDef.size(); ++j)
-            {
-                FieldDef[j]->m_fields.push_back(
-                    m_f->m_fielddef[0]->m_fields[i]);
-                m_f->m_exp[i]->AppendFieldData(FieldDef[j], FieldData[j]);
-            }
-        }
-
-        m_f->m_fielddef = FieldDef;
-        m_f->m_data     = FieldData;
     }
 }
 }

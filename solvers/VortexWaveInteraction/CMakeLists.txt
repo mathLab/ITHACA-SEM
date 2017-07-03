@@ -1,8 +1,8 @@
 CMAKE_DEPENDENT_OPTION(NEKTAR_SOLVER_VORTEXWAVE
     "Build the Vortex-Wave interaction solver." ON
-    "NEKTAR_BUILD_SOLVERS" OFF)
+    "NEKTAR_BUILD_SOLVERS;NEKTAR_SOLVER_INCNAVIERSTOKES" OFF)
 
-IF (NOT NEKTAR_BUILD_SOLVERS)
+IF (NOT NEKTAR_BUILD_SOLVERS OR NOT NEKTAR_SOLVER_INCNAVIERSTOKES)
     SET(NEKTAR_SOLVER_VORTEXWAVE OFF CACHE INTERNAL "")
 ENDIF()
 
@@ -19,7 +19,6 @@ IF( NEKTAR_SOLVER_VORTEXWAVE )
        ../ADRSolver/EquationSystems/SteadyAdvectionDiffusion.cpp
        ../ADRSolver/EquationSystems/SteadyAdvectionDiffusionReaction.cpp
        ./CalcL2ToLinfPressure.cpp
-       ./VortexWaveInteraction.h
        ./VortexWaveInteraction.cpp 
        $<TARGET_OBJECTS:IncNavierStokesSolver-obj>
        )

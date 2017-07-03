@@ -68,6 +68,16 @@ public:
         return "ProcessScaleInFld";
     }
 
+    virtual std::string GetModuleDescription()
+    {
+        return "Rescaling input fld";
+    }
+
+    virtual ModulePriority GetModulePriority()
+    {
+        return eModifyFieldData;
+    }
+
 private:
 };
 }

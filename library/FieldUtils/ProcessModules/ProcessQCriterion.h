@@ -67,6 +67,17 @@ public:
     {
         return "ProcessQCriterion";
     }
+
+    virtual std::string GetModuleDescription()
+    {
+        return "Calculating Q Criterion";
+    }
+
+    virtual ModulePriority GetModulePriority()
+    {
+        return eModifyExp;
+    }
+
 };
 }
 }

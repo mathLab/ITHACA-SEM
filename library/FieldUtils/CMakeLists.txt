@@ -8,6 +8,7 @@ SET(FieldUtilsHeaders
     InputModules/InputPts.h
     InputModules/InputNek5000.h
     InputModules/InputSemtex.h
+    OutputModules/OutputFileBase.h
     OutputModules/OutputInfo.h
     OutputModules/OutputTecplot.h
     OutputModules/OutputVtk.h
@@ -20,6 +21,7 @@ SET(FieldUtilsHeaders
     ProcessModules/ProcessBoundaryExtract.h
     ProcessModules/ProcessCombineAvg.h
     ProcessModules/ProcessConcatenateFld.h
+    ProcessModules/ProcessCreateExp.h
     ProcessModules/ProcessDeform.h
     ProcessModules/ProcessDisplacement.h
     ProcessModules/ProcessEquiSpacedOutput.h
@@ -30,6 +32,7 @@ SET(FieldUtilsHeaders
     ProcessModules/ProcessInterpField.h
     ProcessModules/ProcessInterpPoints.h
     ProcessModules/ProcessInterpPointDataToFld.h
+    ProcessModules/ProcessInterpPtsToPts.h
     ProcessModules/ProcessIsoContour.h
     ProcessModules/ProcessJacobianEnergy.h
     ProcessModules/ProcessMapping.h
@@ -57,6 +60,7 @@ SET(FieldUtilsSources
     InputModules/InputPts.cpp
     InputModules/InputNek5000.cpp
     InputModules/InputSemtex.cpp
+    OutputModules/OutputFileBase.cpp
     OutputModules/OutputInfo.cpp
     OutputModules/OutputTecplot.cpp
     OutputModules/OutputVtk.cpp
@@ -69,6 +73,7 @@ SET(FieldUtilsSources
     ProcessModules/ProcessBoundaryExtract.cpp
     ProcessModules/ProcessCombineAvg.cpp
     ProcessModules/ProcessConcatenateFld.cpp
+    ProcessModules/ProcessCreateExp.cpp
     ProcessModules/ProcessDeform.cpp
     ProcessModules/ProcessDisplacement.cpp
     ProcessModules/ProcessEquiSpacedOutput.cpp
@@ -79,6 +84,7 @@ SET(FieldUtilsSources
     ProcessModules/ProcessInterpField.cpp
     ProcessModules/ProcessInterpPoints.cpp
     ProcessModules/ProcessInterpPointDataToFld.cpp
+    ProcessModules/ProcessInterpPtsToPts.cpp
     ProcessModules/ProcessIsoContour.cpp
     ProcessModules/ProcessJacobianEnergy.cpp
     ProcessModules/ProcessMapping.cpp

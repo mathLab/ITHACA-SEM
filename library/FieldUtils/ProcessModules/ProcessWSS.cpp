@@ -53,15 +53,8 @@ ModuleKey ProcessWSS::className = GetModuleFactory().RegisterCreatorFunction(
     ProcessWSS::create,
     "Computes wall shear stress field.");
 
-ProcessWSS::ProcessWSS(FieldSharedPtr f) : ProcessModule(f)
+ProcessWSS::ProcessWSS(FieldSharedPtr f) : ProcessBoundaryExtract(f)
 {
-    m_config["bnd"] = ConfigOption(false, "All", "Boundary to be extracted");
-    m_config["addnormals"] =
-        ConfigOption(true, "NotSet", "Add normals to output");
-    f->m_writeBndFld                 = true;
-    f->m_declareExpansionAsContField = true;
-    f->m_requireBoundaryExpansion    = true;
-    m_f->m_fldToBnd                  = false;
 }
 
 ProcessWSS::~ProcessWSS()
@@ -70,48 +63,37 @@ ProcessWSS::~ProcessWSS()
 
 void ProcessWSS::Process(po::variables_map &vm)
 {
-    if (m_f->m_verbose)
-    {
-        if (m_f->m_comm->TreatAsRankZero())
-        {
-            cout << "ProcessWSS: Calculating wall shear stress..." << endl;
-        }
-    }
-
-    m_f->m_addNormals = m_config["addnormals"].m_beenSet;
-
-    // Set up Field options to output boundary fld
-    string bvalues = m_config["bnd"].as<string>();
-
-    if (bvalues.compare("All") == 0)
-    {
-        Array<OneD, const MultiRegions::ExpListSharedPtr> BndExp =
-            m_f->m_exp[0]->GetBndCondExpansions();
-
-        for (int i = 0; i < BndExp.num_elements(); ++i)
-        {
-            m_f->m_bndRegionsToWrite.push_back(i);
-        }
-    }
-    else
-    {
-        ASSERTL0(ParseUtils::GenerateOrderedVector(bvalues.c_str(),
-                                                   m_f->m_bndRegionsToWrite),
-                 "Failed to interpret range string");
-    }
+    ProcessBoundaryExtract::Process(vm);
 
     NekDouble kinvis = m_f->m_session->GetParameter("Kinvis");
 
     int i, j;
+    int nfields = m_f->m_variables.size();
     int spacedim = m_f->m_graph->GetSpaceDimension();
-    if ((m_f->m_fielddef[0]->m_numHomogeneousDir) == 1 ||
-        (m_f->m_fielddef[0]->m_numHomogeneousDir) == 2)
+    if ((m_f->m_numHomogeneousDir) == 1 || (m_f->m_numHomogeneousDir) == 2)
     {
-        spacedim += m_f->m_fielddef[0]->m_numHomogeneousDir;
+        spacedim += m_f->m_numHomogeneousDir;
     }
 
-    int nfields = m_f->m_fielddef[0]->m_fields.size();
-    ASSERTL0(m_f->m_fielddef[0]->m_fields[0] == "u",
+    if (spacedim == 2)
+    {
+        m_f->m_variables.push_back("Shear_x");
+        m_f->m_variables.push_back("Shear_y");
+        m_f->m_variables.push_back("Shear_mag");
+    }
+    else
+    {
+        m_f->m_variables.push_back("Shear_x");
+        m_f->m_variables.push_back("Shear_y");
+        m_f->m_variables.push_back("Shear_z");
+        m_f->m_variables.push_back("Shear_mag");
+    }
+    if (m_f->m_exp[0]->GetNumElmts() == 0)
+    {
+        return;
+    }
+
+    ASSERTL0(m_f->m_variables[0] == "u",
              "Implicit assumption that input is in incompressible format of "
              "(u,v,p) or (u,v,w,p)");
 
@@ -134,33 +116,14 @@ void ProcessWSS::Process(po::variables_map &vm)
     Array<OneD, MultiRegions::ExpListSharedPtr> BndExp(newfields);
     Array<OneD, MultiRegions::ExpListSharedPtr> BndElmtExp(spacedim);
 
-    // Extract original fields to boundary (for output)
-    for (int i = 0; i < m_f->m_exp.size(); ++i)
-    {
-        m_f->m_exp[i]->FillBndCondFromField();
-    }
-
     m_f->m_exp.resize(nfields + newfields);
-    string var = "u";
     for (i = 0; i < newfields; ++i)
     {
         m_f->m_exp[nfields + i] =
-            m_f->AppendExpList(m_f->m_fielddef[0]->m_numHomogeneousDir, var);
+            m_f->AppendExpList(m_f->m_numHomogeneousDir);
     }
 
-    if (spacedim == 2)
-    {
-        m_f->m_fielddef[0]->m_fields.push_back("Shear_x");
-        m_f->m_fielddef[0]->m_fields.push_back("Shear_y");
-        m_f->m_fielddef[0]->m_fields.push_back("Shear_mag");
-    }
-    else
-    {
-        m_f->m_fielddef[0]->m_fields.push_back("Shear_x");
-        m_f->m_fielddef[0]->m_fields.push_back("Shear_y");
-        m_f->m_fielddef[0]->m_fields.push_back("Shear_z");
-        m_f->m_fielddef[0]->m_fields.push_back("Shear_mag");
-    }
+
 
     // Create map of boundary ids for partitioned domains
     SpatialDomains::BoundaryConditions bcs(m_f->m_session,
@@ -303,7 +266,8 @@ void ProcessWSS::Process(po::variables_map &vm)
             {
                 Vmath::Vvtvp(nqb, normals[i], 1, fshear[nshear - 1], 1,
                              fshear[i], 1, fshear[i], 1);
-                BndExp[i]->FwdTrans(fshear[i], BndExp[i]->UpdateCoeffs());
+                BndExp[i]->FwdTrans_IterPerExp(fshear[i],
+                                        BndExp[i]->UpdateCoeffs());
             }
 
             // Tw
@@ -314,7 +278,7 @@ void ProcessWSS::Process(po::variables_map &vm)
                              fshear[nshear - 1], 1, fshear[nshear - 1], 1);
             }
             Vmath::Vsqrt(nqb, fshear[nshear - 1], 1, fshear[nshear - 1], 1);
-            BndExp[nshear - 1]->FwdTrans(fshear[nshear - 1],
+            BndExp[nshear - 1]->FwdTrans_IterPerExp(fshear[nshear - 1],
                                          BndExp[nshear - 1]->UpdateCoeffs());
         }
     }

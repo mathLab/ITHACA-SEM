@@ -36,7 +36,7 @@
 #ifndef FIELDUTILS_OUTPUTFLD
 #define FIELDUTILS_OUTPUTFLD
 
-#include "../Module.h"
+#include "OutputFileBase.h"
 #include <tinyxml.h>
 
 namespace Nektar
@@ -44,8 +44,8 @@ namespace Nektar
 namespace FieldUtils
 {
 
-/// Converter from fld to vtk.
-class OutputFld : public OutputModule
+/// Output to fld format.
+class OutputFld : public OutputFileBase
 {
 public:
     /// Creates an instance of this class
@@ -58,13 +58,30 @@ public:
     OutputFld(FieldSharedPtr f);
     virtual ~OutputFld();
 
-    /// Write fld to output file.
-    virtual void Process(po::variables_map &vm);
-
     virtual std::string GetModuleName()
     {
         return "OutputFld";
     }
+
+protected:
+    /// Write from pts to output file.
+    virtual void OutputFromPts(po::variables_map &vm);
+
+    /// Write from m_exp to output file.
+    virtual void OutputFromExp(po::variables_map &vm);
+
+    /// Write from data to output file.
+    virtual void OutputFromData(po::variables_map &vm);
+
+    virtual fs::path GetPath(std::string &filename,
+                                    po::variables_map &vm);
+
+    virtual fs::path GetFullOutName(std::string &filename,
+                                    po::variables_map &vm);
+
+private:
+    std::string GetIOFormat();
+
 };
 }
 }

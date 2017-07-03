@@ -64,19 +64,36 @@ ProcessGrad::~ProcessGrad()
 
 void ProcessGrad::Process(po::variables_map &vm)
 {
-    if (m_f->m_verbose)
+    int i, j;
+    int expdim    = m_f->m_graph->GetMeshDimension();
+    int spacedim  = m_f->m_numHomogeneousDir + expdim;
+    int nfields   = m_f->m_variables.size();
+    int addfields = nfields * spacedim;
+
+    for (i = 0; i < nfields; ++i)
     {
-        if (m_f->m_comm->TreatAsRankZero())
+        if (spacedim == 1)
         {
-            cout << "ProcessGrad: Calculating gradients..." << endl;
+            m_f->m_variables.push_back(m_f->m_variables[i] + "_x");
+        }
+        else if (spacedim == 2)
+        {
+            m_f->m_variables.push_back(m_f->m_variables[i] + "_x");
+            m_f->m_variables.push_back(m_f->m_variables[i] + "_y");
+        }
+        else if (spacedim == 3)
+        {
+            m_f->m_variables.push_back(m_f->m_variables[i] + "_x");
+            m_f->m_variables.push_back(m_f->m_variables[i] + "_y");
+            m_f->m_variables.push_back(m_f->m_variables[i] + "_z");
         }
     }
 
-    int i, j;
-    int expdim    = m_f->m_graph->GetMeshDimension();
-    int spacedim  = m_f->m_fielddef[0]->m_numHomogeneousDir + expdim;
-    int nfields   = m_f->m_fielddef[0]->m_fields.size();
-    int addfields = nfields * spacedim;
+    // Skip in case of empty partition
+    if (m_f->m_exp[0]->GetNumElmts() == 0)
+    {
+        return;
+    }
 
     int npoints = m_f->m_exp[0]->GetNpoints();
     Array<OneD, Array<OneD, NekDouble> > grad(addfields);
@@ -173,56 +190,12 @@ void ProcessGrad::Process(po::variables_map &vm)
     for (i = 0; i < addfields; ++i)
     {
         m_f->m_exp[nfields + i] =
-            m_f->AppendExpList(m_f->m_fielddef[0]->m_numHomogeneousDir);
+            m_f->AppendExpList(m_f->m_numHomogeneousDir);
         Vmath::Vcopy(npoints, grad[i], 1, m_f->m_exp[nfields + i]->UpdatePhys(),
                      1);
         m_f->m_exp[nfields + i]->FwdTrans_IterPerExp(
             grad[i], m_f->m_exp[nfields + i]->UpdateCoeffs());
     }
-
-    vector<string> outname;
-    for (i = 0; i < nfields; ++i)
-    {
-        if (spacedim == 1)
-        {
-            outname.push_back(m_f->m_fielddef[0]->m_fields[i] + "_x");
-        }
-        else if (spacedim == 2)
-        {
-            outname.push_back(m_f->m_fielddef[0]->m_fields[i] + "_x");
-            outname.push_back(m_f->m_fielddef[0]->m_fields[i] + "_y");
-        }
-        else if (spacedim == 3)
-        {
-            outname.push_back(m_f->m_fielddef[0]->m_fields[i] + "_x");
-            outname.push_back(m_f->m_fielddef[0]->m_fields[i] + "_y");
-            outname.push_back(m_f->m_fielddef[0]->m_fields[i] + "_z");
-        }
-    }
-
-    std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef =
-        m_f->m_exp[0]->GetFieldDefinitions();
-    std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
-
-    for (j = 0; j < nfields + addfields; ++j)
-    {
-        for (i = 0; i < FieldDef.size(); ++i)
-        {
-            if (j >= nfields)
-            {
-                FieldDef[i]->m_fields.push_back(outname[j - nfields]);
-            }
-            else
-            {
-                FieldDef[i]->m_fields.push_back(
-                    m_f->m_fielddef[0]->m_fields[j]);
-            }
-            m_f->m_exp[j]->AppendFieldData(FieldDef[i], FieldData[i]);
-        }
-    }
-
-    m_f->m_fielddef = FieldDef;
-    m_f->m_data     = FieldData;
 }
 }
 }

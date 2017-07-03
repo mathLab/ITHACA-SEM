@@ -105,17 +105,14 @@ ModuleKey ProcessDisplacement::className =
         ProcessDisplacement::create,
         "Deform a mesh given an input field defining displacement");
 
-ProcessDisplacement::ProcessDisplacement(FieldSharedPtr f) : ProcessModule(f)
+ProcessDisplacement::ProcessDisplacement(FieldSharedPtr f)
+    : ProcessBoundaryExtract(f)
 {
     m_config["to"] =
         ConfigOption(false, "", "Name of file containing high order boundary");
-    m_config["id"] =
-        ConfigOption(false, "", "Boundary ID to calculate displacement for");
+
     m_config["usevertexids"] = ConfigOption(
         false, "0", "Use vertex IDs instead of face IDs for matching");
-    f->m_declareExpansionAsContField = true;
-    f->m_writeBndFld                 = true;
-    f->m_fldToBnd                    = false;
 }
 
 ProcessDisplacement::~ProcessDisplacement()
@@ -124,13 +121,9 @@ ProcessDisplacement::~ProcessDisplacement()
 
 void ProcessDisplacement::Process(po::variables_map &vm)
 {
-    if (m_f->m_verbose)
-    {
-        if (m_f->m_comm->TreatAsRankZero())
-        {
-            cout << "ProcessDisplacement: Calculating displacement..." << endl;
-        }
-    }
+    ProcessBoundaryExtract::Process(vm);
+    ASSERTL0( !boost::iequals(m_config["bnd"].as<string>(), "All"),
+        "ProcessDisplacement needs bnd parameter with a single id.");
 
     string toFile = m_config["to"].as<string>();
 
@@ -150,15 +143,14 @@ void ProcessDisplacement::Process(po::variables_map &vm)
         SpatialDomains::MeshGraph::Read(bndSession);
 
     // Try to find boundary condition expansion.
-    int bndCondId = m_config["id"].as<int>();
+    int bndCondId = m_config["bnd"].as<int>();
 
     // FIXME: We should be storing boundary condition IDs
     // somewhere...
-    m_f->m_bndRegionsToWrite.push_back(bndCondId);
-
     if (bndGraph->GetMeshDimension() == 1)
     {
         m_f->m_exp.push_back(m_f->AppendExpList(0, "v"));
+        m_f->m_variables.push_back("v");
 
         MultiRegions::ExpListSharedPtr bndCondExpU =
             m_f->m_exp[0]->GetBndCondExpansions()[bndCondId];
@@ -221,6 +213,8 @@ void ProcessDisplacement::Process(po::variables_map &vm)
     {
         m_f->m_exp.push_back(m_f->AppendExpList(0, "v"));
         m_f->m_exp.push_back(m_f->AppendExpList(0, "w"));
+        m_f->m_variables.push_back("v");
+        m_f->m_variables.push_back("w");
 
         MultiRegions::ExpListSharedPtr bndCondExpU =
             m_f->m_exp[0]->GetBndCondExpansions()[bndCondId];

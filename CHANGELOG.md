@@ -1,12 +1,15 @@
 Changelog
 =========
 
-v4.5.0
+v5.0.0
 ------
+
 **NekMesh**:
+- Add feature to read basic 2D geo files as CAD (!731)
 - Add periodic boundary condition meshing in 2D (!733)
 - Adjust boundary layer thickness in corners in 2D (!739)
 - Add non-O BL meshing in 2D (!757)
+- Fix issue with reading CCM files due to definition of default arrays rather than a vector (!797)
 
 **Library**
 - Added in sum factorisation version for pyramid expansions and orthogonal
@@ -152,6 +155,7 @@ v4.4.0
   (!712)
 - 2D to 3D mesh extrusion module (!715)
 - Add new two-dimensional mesher from NACA code or step file (!720)
+- Add basic gmsh cad (.geo) reader to the meshing system (!731)
 - Fix inverted boundary layer in 2D (!736)
 - More sensible element sizing with boundary layers in 2D (!736)
 - Change variable names in mcf file to make more sense (!736)

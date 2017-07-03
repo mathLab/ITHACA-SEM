@@ -1555,6 +1555,9 @@ namespace Nektar
                             id = vIt->second.list[j];
                             vVertices[id] = m_meshVertices[id];
                         }
+                        // Compile list of edges (for curved information)
+                        id = vIt->second.id;
+                        vEdges[id] = m_meshEdges[id];
                     }
                 }
             }
@@ -1952,163 +1955,160 @@ namespace Nektar
                 }
             }
 
-            if (m_dim >= 2)
+            std::map<MeshCurvedKey, MeshCurved>::const_iterator vItCurve;
+
+            if(m_isCompressed)
             {
-                std::map<MeshCurvedKey, MeshCurved>::const_iterator vItCurve;
+                std::vector<MeshCurvedInfo> edgeinfo;
+                std::vector<MeshCurvedInfo> faceinfo;
+                MeshCurvedPts  curvedpts;
+                curvedpts.id = 0; // assume all points are going in here
+                int ptoffset = 0;
+                int newidx   = 0;
+                std::map<int,int> idxmap;
 
-                if(m_isCompressed)
+                for (vItCurve  = m_meshCurved.begin();
+                     vItCurve != m_meshCurved.end();
+                     ++vItCurve)
                 {
-                    std::vector<MeshCurvedInfo> edgeinfo;
-                    std::vector<MeshCurvedInfo> faceinfo;
-                    MeshCurvedPts  curvedpts;
-                    curvedpts.id = 0; // assume all points are going in here
-                    int ptoffset = 0;
-                    int newidx   = 0;
-                    std::map<int,int> idxmap;
+                    MeshCurved c = vItCurve->second;
 
-                    for (vItCurve  = m_meshCurved.begin();
-                         vItCurve != m_meshCurved.end();
-                         ++vItCurve)
+                    bool IsEdge = boost::iequals(c.entitytype,"E");
+                    bool IsFace = boost::iequals(c.entitytype,"F");
+
+                    if((IsEdge&&vEdges.find(c.entityid) != vEdges.end())||
+                       (IsFace&&vFaces.find(c.entityid) != vFaces.end()))
                     {
-                        MeshCurved c = vItCurve->second;
-
-                        bool IsEdge = boost::iequals(c.entitytype,"E");
-                        bool IsFace = boost::iequals(c.entitytype,"F");
-
-                        if((IsEdge&&vEdges.find(c.entityid) != vEdges.end())||
-                           (IsFace&&vFaces.find(c.entityid) != vFaces.end()))
+                        MeshCurvedInfo cinfo;
+                        // add in
+                        cinfo.id       = c.id;
+                        cinfo.entityid = c.entityid;
+                        cinfo.npoints  = c.npoints;
+                        for(int i = 0; i < SIZE_PointsType; ++i)
                         {
-                            MeshCurvedInfo cinfo;
-                            // add in
-                            cinfo.id       = c.id;
-                            cinfo.entityid = c.entityid;
-                            cinfo.npoints  = c.npoints;
-                            for(int i = 0; i < SIZE_PointsType; ++i)
+                            if(c.type.compare(kPointsTypeStr[i]) == 0)
                             {
-                                if(c.type.compare(kPointsTypeStr[i]) == 0)
-                                {
-                                    cinfo.ptype = (PointsType) i;
-                                    break;
-                                }
+                                cinfo.ptype = (PointsType) i;
+                                break;
                             }
-                            cinfo.ptid   = 0; // set to just one point set
-                            cinfo.ptoffset = ptoffset;
-                            ptoffset += c.npoints;
+                        }
+                        cinfo.ptid   = 0; // set to just one point set
+                        cinfo.ptoffset = ptoffset;
+                        ptoffset += c.npoints;
 
-                            if (IsEdge)
+                        if (IsEdge)
+                        {
+                            edgeinfo.push_back(cinfo);
+                        }
+                        else
+                        {
+                            faceinfo.push_back(cinfo);
+                        }
+
+                        // fill in points to list.
+                        for(int i =0; i < c.npoints; ++i)
+                        {
+                            // get index from full list;
+                            int idx = m_meshCurvedPts[c.ptid]
+                                .index[c.ptoffset+i];
+
+                            // if index is not already in curved
+                            // points add it or set index to location
+                            if(idxmap.count(idx) == 0)
                             {
-                                edgeinfo.push_back(cinfo);
+                                idxmap[idx] = newidx;
+                                curvedpts.index.push_back(newidx);
+                                curvedpts.pts.push_back(
+                                        m_meshCurvedPts[c.ptid].pts[idx]);
+                                newidx++;
                             }
                             else
                             {
-                                faceinfo.push_back(cinfo);
-                            }
-
-                            // fill in points to list.
-                            for(int i =0; i < c.npoints; ++i)
-                            {
-                                // get index from full list;
-                                int idx = m_meshCurvedPts[c.ptid]
-                                    .index[c.ptoffset+i];
-
-                                // if index is not already in curved
-                                // points add it or set index to location
-                                if(idxmap.count(idx) == 0)
-                                {
-                                    idxmap[idx] = newidx;
-                                    curvedpts.index.push_back(newidx);
-                                    curvedpts.pts.push_back(
-                                            m_meshCurvedPts[c.ptid].pts[idx]);
-                                    newidx++;
-                                }
-                                else
-                                {
-                                    curvedpts.index.push_back(idxmap[idx]);
-                                }
+                                curvedpts.index.push_back(idxmap[idx]);
                             }
                         }
-                    }
-
-                    // add xml information
-                    if(edgeinfo.size())
-                    {
-                        vCurved->SetAttribute("COMPRESSED",
-                                    CompressData::GetCompressString());
-                        vCurved->SetAttribute("BITSIZE",
-                                    CompressData::GetBitSizeStr());
-
-                        x = new TiXmlElement("E");
-                        std::string dataStr;
-                        CompressData::ZlibEncodeToBase64Str(edgeinfo,dataStr);
-                        x->LinkEndChild(new TiXmlText(dataStr));
-                        vCurved->LinkEndChild(x);
-                    }
-
-                    if(faceinfo.size())
-                    {
-                        vCurved->SetAttribute("COMPRESSED",
-                                    CompressData::GetCompressString());
-                        vCurved->SetAttribute("BITSIZE",
-                                    CompressData::GetBitSizeStr());
-
-                        x = new TiXmlElement("F");
-                        std::string dataStr;
-                        CompressData::ZlibEncodeToBase64Str(faceinfo,dataStr);
-                        x->LinkEndChild(new TiXmlText(dataStr));
-                        vCurved->LinkEndChild(x);
-                    }
-
-                    if(edgeinfo.size()||faceinfo.size())
-                    {
-                        x = new TiXmlElement("DATAPOINTS");
-                        x->SetAttribute("ID", curvedpts.id);
-
-                        TiXmlElement *subx = new TiXmlElement("INDEX");
-                        std::string dataStr;
-                        CompressData::ZlibEncodeToBase64Str(curvedpts.index,
-                                                            dataStr);
-                        subx->LinkEndChild(new TiXmlText(dataStr));
-                        x->LinkEndChild(subx);
-
-                        subx = new TiXmlElement("POINTS");
-                        CompressData::ZlibEncodeToBase64Str(curvedpts.pts,
-                                                            dataStr);
-                        subx->LinkEndChild(new TiXmlText(dataStr));
-                        x->LinkEndChild(subx);
-
-                        vCurved->LinkEndChild(x);
                     }
                 }
-                else
+
+                // add xml information
+                if(edgeinfo.size())
                 {
-                    for (vItCurve  = m_meshCurved.begin();
-                         vItCurve != m_meshCurved.end();
-                         ++vItCurve)
+                    vCurved->SetAttribute("COMPRESSED",
+                                CompressData::GetCompressString());
+                    vCurved->SetAttribute("BITSIZE",
+                                CompressData::GetBitSizeStr());
+
+                    x = new TiXmlElement("E");
+                    std::string dataStr;
+                    CompressData::ZlibEncodeToBase64Str(edgeinfo,dataStr);
+                    x->LinkEndChild(new TiXmlText(dataStr));
+                    vCurved->LinkEndChild(x);
+                }
+
+                if(faceinfo.size())
+                {
+                    vCurved->SetAttribute("COMPRESSED",
+                                CompressData::GetCompressString());
+                    vCurved->SetAttribute("BITSIZE",
+                                CompressData::GetBitSizeStr());
+
+                    x = new TiXmlElement("F");
+                    std::string dataStr;
+                    CompressData::ZlibEncodeToBase64Str(faceinfo,dataStr);
+                    x->LinkEndChild(new TiXmlText(dataStr));
+                    vCurved->LinkEndChild(x);
+                }
+
+                if(edgeinfo.size()||faceinfo.size())
+                {
+                    x = new TiXmlElement("DATAPOINTS");
+                    x->SetAttribute("ID", curvedpts.id);
+
+                    TiXmlElement *subx = new TiXmlElement("INDEX");
+                    std::string dataStr;
+                    CompressData::ZlibEncodeToBase64Str(curvedpts.index,
+                                                        dataStr);
+                    subx->LinkEndChild(new TiXmlText(dataStr));
+                    x->LinkEndChild(subx);
+
+                    subx = new TiXmlElement("POINTS");
+                    CompressData::ZlibEncodeToBase64Str(curvedpts.pts,
+                                                        dataStr);
+                    subx->LinkEndChild(new TiXmlText(dataStr));
+                    x->LinkEndChild(subx);
+
+                    vCurved->LinkEndChild(x);
+                }
+            }
+            else
+            {
+                for (vItCurve  = m_meshCurved.begin();
+                     vItCurve != m_meshCurved.end();
+                     ++vItCurve)
+                {
+                    MeshCurved c = vItCurve->second;
+
+                    bool IsEdge = boost::iequals(c.entitytype,"E");
+                    bool IsFace = boost::iequals(c.entitytype,"F");
+
+                    if((IsEdge&&vEdges.find(c.entityid) != vEdges.end())||
+                       (IsFace&&vFaces.find(c.entityid) != vFaces.end()))
                     {
-                        MeshCurved c = vItCurve->second;
-
-                        bool IsEdge = boost::iequals(c.entitytype,"E");
-                        bool IsFace = boost::iequals(c.entitytype,"F");
-
-                        if((IsEdge&&vEdges.find(c.entityid) != vEdges.end())||
-                           (IsFace&&vFaces.find(c.entityid) != vFaces.end()))
+                        x = new TiXmlElement(c.entitytype);
+                        x->SetAttribute("ID", c.id);
+                        if (IsEdge)
                         {
-                            x = new TiXmlElement(c.entitytype);
-                            x->SetAttribute("ID", c.id);
-                            if (IsEdge)
-                            {
-                                x->SetAttribute("EDGEID", c.entityid);
-                            }
-                            else
-                            {
-                                x->SetAttribute("FACEID", c.entityid);
-                            }
-                            x->SetAttribute("TYPE", c.type);
-                            x->SetAttribute("NUMPOINTS", c.npoints);
-                            y = new TiXmlText(c.data);
-                            x->LinkEndChild(y);
-                            vCurved->LinkEndChild(x);
+                            x->SetAttribute("EDGEID", c.entityid);
                         }
+                        else
+                        {
+                            x->SetAttribute("FACEID", c.entityid);
+                        }
+                        x->SetAttribute("TYPE", c.type);
+                        x->SetAttribute("NUMPOINTS", c.npoints);
+                        y = new TiXmlText(c.data);
+                        x->LinkEndChild(y);
+                        vCurved->LinkEndChild(x);
                     }
                 }
             }
@@ -2191,10 +2191,7 @@ namespace Nektar
                 vElmtGeometry->LinkEndChild(vFace);
             }
             vElmtGeometry->LinkEndChild(vElement);
-            if (m_dim >= 2)
-            {
-                vElmtGeometry->LinkEndChild(vCurved);
-            }
+            vElmtGeometry->LinkEndChild(vCurved);
             vElmtGeometry->LinkEndChild(vComposite);
             vElmtGeometry->LinkEndChild(vDomain);
 

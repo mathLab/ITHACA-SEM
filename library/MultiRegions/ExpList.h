@@ -579,6 +579,13 @@ namespace Nektar
             {
                 return v_GetHomoLen();
             }
+
+            /// This function sets the Width of homogeneous direction
+            /// associaed with the homogeneous expansion.
+            void SetHomoLen(const NekDouble lhom)
+            {
+                return v_SetHomoLen(lhom);
+            }
             
             /// This function returns a vector containing the wave
             /// numbers in y-direction associated
@@ -1401,6 +1408,7 @@ namespace Nektar
             virtual Array<OneD, const NekDouble> v_HomogeneousEnergy(void);
             virtual LibUtilities::TranspositionSharedPtr v_GetTransposition(void);
             virtual NekDouble v_GetHomoLen(void);
+            virtual void      v_SetHomoLen(const NekDouble lhom);
             virtual Array<OneD, const unsigned int> v_GetZIDs(void);
             virtual Array<OneD, const unsigned int> v_GetYIDs(void);
             

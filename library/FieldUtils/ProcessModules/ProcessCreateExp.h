@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: ProcessQCriterion.h
+//  File: ProcessCreateExp.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,12 +29,12 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Computes Q Criterion field.
+//  Description: Dummy module to create m_exp.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef FIELDUTILS_PROCESSQCRITERION
-#define FIELDUTILS_PROCESSQCRITERION
+#ifndef FIELDUTILS_PROCESSCREATEEXP
+#define FIELDUTILS_PROCESSCREATEEXP
 
 #include "../Module.h"
 
@@ -44,40 +44,41 @@ namespace FieldUtils
 {
 
 /**
- * @brief This processing module calculates the Q Criterion and adds it
- * as an extra-field to the output file.
+ * @brief This processing module scales the input fld file
+ *
  */
-class ProcessQCriterion : public ProcessModule
+class ProcessCreateExp : public ProcessModule
 {
 public:
     /// Creates an instance of this class
     static boost::shared_ptr<Module> create(FieldSharedPtr f)
     {
-        return MemoryManager<ProcessQCriterion>::AllocateSharedPtr(f);
+        return MemoryManager<ProcessCreateExp>::AllocateSharedPtr(f);
     }
     static ModuleKey className;
 
-    ProcessQCriterion(FieldSharedPtr f);
-    virtual ~ProcessQCriterion();
+    ProcessCreateExp(FieldSharedPtr f);
+    virtual ~ProcessCreateExp();
 
     /// Write mesh to output file.
     virtual void Process(po::variables_map &vm);
 
     virtual std::string GetModuleName()
     {
-        return "ProcessQCriterion";
+        return "ProcessCreateExp";
     }
 
     virtual std::string GetModuleDescription()
     {
-        return "Calculating Q Criterion";
+        return "Creating m_exp if needed";
     }
 
     virtual ModulePriority GetModulePriority()
     {
-        return eModifyExp;
+        return eCreateExp;
     }
 
+private:
 };
 }
 }

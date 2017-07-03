@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: ProcessQCriterion.h
+//  File: OutputFileBase.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,55 +29,72 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Computes Q Criterion field.
+//  Description: Base class for outputting to a file
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef FIELDUTILS_PROCESSQCRITERION
-#define FIELDUTILS_PROCESSQCRITERION
+#ifndef FIELDUTILS_OUTPUTFILEBASE
+#define FIELDUTILS_OUTPUTFILEBASE
 
 #include "../Module.h"
+#include <tinyxml.h>
 
 namespace Nektar
 {
 namespace FieldUtils
 {
 
-/**
- * @brief This processing module calculates the Q Criterion and adds it
- * as an extra-field to the output file.
- */
-class ProcessQCriterion : public ProcessModule
+/// Converter from fld to vtk.
+class OutputFileBase : public OutputModule
 {
 public:
-    /// Creates an instance of this class
-    static boost::shared_ptr<Module> create(FieldSharedPtr f)
-    {
-        return MemoryManager<ProcessQCriterion>::AllocateSharedPtr(f);
-    }
-    static ModuleKey className;
+    OutputFileBase(FieldSharedPtr f);
+    virtual ~OutputFileBase();
 
-    ProcessQCriterion(FieldSharedPtr f);
-    virtual ~ProcessQCriterion();
-
-    /// Write mesh to output file.
+    /// Write fld to output file.
     virtual void Process(po::variables_map &vm);
 
     virtual std::string GetModuleName()
     {
-        return "ProcessQCriterion";
+        return "OutputFileBase";
     }
 
     virtual std::string GetModuleDescription()
     {
-        return "Calculating Q Criterion";
+        return "Writing file";
     }
 
     virtual ModulePriority GetModulePriority()
     {
-        return eModifyExp;
+        return eOutput;
     }
 
+protected:
+    /// Write from pts to output file.
+    virtual void OutputFromPts(po::variables_map &vm) = 0;
+
+    /// Write from m_exp to output file.
+    virtual void OutputFromExp(po::variables_map &vm) = 0;
+
+    /// Write from data to output file.
+    virtual void OutputFromData(po::variables_map &vm) = 0;
+
+    virtual fs::path GetPath(std::string &filename,
+                                    po::variables_map &vm) = 0;
+
+    virtual fs::path GetFullOutName(std::string &filename,
+                                    po::variables_map &vm) = 0;
+
+    bool m_requireEquiSpaced;
+
+private:
+    bool WriteFile(std::string &filename, po::variables_map &vm);
+
+    void ConvertExpToEquispaced(po::variables_map &vm);
+
+    void PrintErrorFromPts();
+
+    void PrintErrorFromExp();
 };
 }
 }

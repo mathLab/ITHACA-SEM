@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: ProcessQCriterion.h
+//  File: ProcessInterpPtsToPts.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,14 +29,16 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Computes Q Criterion field.
+//  Description: Interp point data.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef FIELDUTILS_PROCESSQCRITERION
-#define FIELDUTILS_PROCESSQCRITERION
+#ifndef FIELDUTILS_PROCESSINTERPPOINTS
+#define FIELDUTILS_PROCESSINTERPPOINTS
 
 #include "../Module.h"
+
+#include <LibUtilities/BasicUtils/PtsField.h>
 
 namespace Nektar
 {
@@ -44,40 +46,51 @@ namespace FieldUtils
 {
 
 /**
- * @brief This processing module calculates the Q Criterion and adds it
- * as an extra-field to the output file.
+ * @brief This processing module interpolates one field to another
  */
-class ProcessQCriterion : public ProcessModule
+class ProcessInterpPtsToPts : public ProcessModule
 {
 public:
     /// Creates an instance of this class
     static boost::shared_ptr<Module> create(FieldSharedPtr f)
     {
-        return MemoryManager<ProcessQCriterion>::AllocateSharedPtr(f);
+        return MemoryManager<ProcessInterpPtsToPts>::AllocateSharedPtr(f);
     }
     static ModuleKey className;
 
-    ProcessQCriterion(FieldSharedPtr f);
-    virtual ~ProcessQCriterion();
+    ProcessInterpPtsToPts(FieldSharedPtr f);
+    virtual ~ProcessInterpPtsToPts();
 
     /// Write mesh to output file.
     virtual void Process(po::variables_map &vm);
 
+    void PrintProgressbar(const int position, const int goal) const;
+
     virtual std::string GetModuleName()
     {
-        return "ProcessQCriterion";
+        return "ProcessInterpPtsToPts";
     }
 
     virtual std::string GetModuleDescription()
     {
-        return "Calculating Q Criterion";
+        return "Interpolating to points";
     }
 
     virtual ModulePriority GetModulePriority()
     {
-        return eModifyExp;
+        return eModifyPts;
     }
 
+private:
+    void CreateFieldPts(po::variables_map &vm);
+
+    void InterpolatePtsToPts(LibUtilities::PtsFieldSharedPtr &fromPts,
+                               LibUtilities::PtsFieldSharedPtr &toPts,
+                               NekDouble clamp_low,
+                               NekDouble clamp_up,
+                               NekDouble def_value);
+
+    void calcCp0();
 };
 }
 }

@@ -7,7 +7,7 @@ IF (NOT NEKTAR_BUILD_SOLVERS)
 ENDIF()
 
 IF( NEKTAR_SOLVER_ADR )
-    SET(ADRSolverSource
+    ADD_SOLVER_EXECUTABLE(ADRSolver SOURCES
         ./ADRSolver.cpp 
         ./EquationSystems/Helmholtz.cpp
         ./EquationSystems/Laplace.cpp
@@ -21,8 +21,6 @@ IF( NEKTAR_SOLVER_ADR )
         ./EquationSystems/UnsteadyInviscidBurger.cpp
         ./EquationSystems/UnsteadyViscousBurgers.cpp
         ./EquationSystems/EigenValuesAdvection.cpp)
-
-    ADD_SOLVER_EXECUTABLE(ADRSolver SOURCES ${ADRSolverSource})
 
     # 1D discontinuous advection (weak DG/flux reconstruction)
     ADD_NEKTAR_TEST(Advection1D_FRDG_GLL_LAGRANGE_SEM LENGTHY)

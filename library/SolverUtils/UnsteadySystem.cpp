@@ -354,10 +354,21 @@ namespace Nektar
                             abortFlags[0] = 1;
                         }
                     }
-                    abortFlags[1] = (bool)boost::filesystem::exists(abortFile);
+
+                    //rank zero looks for abort file and deltes it
+                    //if it exists. The communicates the abort
+                    if(m_session->GetComm()->GetRank() == 0)
+                    {
+                        if(boost::filesystem::exists(abortFile))
+                        {
+                            boost::filesystem::remove(abortFile);
+                            abortFlags[1] = 1;
+                        }
+                    }                    
 
                     m_session->GetComm()->AllReduce(abortFlags,
                                 LibUtilities::ReduceMax);
+
                     ASSERTL0 (!abortFlags[0],
                                 "NaN found during time integration.");
                 }
@@ -460,12 +471,6 @@ namespace Nektar
             if(m_spacedim == 1)
             {
                 v_AppendOutput1D(fields);   
-            }
-
-            // If we have aborted because of abort file, remove it.
-            if (boost::filesystem::exists(abortFile))
-            {
-                boost::filesystem::remove(abortFile);
             }
         }
         

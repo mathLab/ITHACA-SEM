@@ -109,7 +109,6 @@ void InputFld::Process(po::variables_map &vm)
         }
 
         Array<OneD, int> ElementGIDs(expansions.size());
-        SpatialDomains::ExpansionMap::const_iterator expIt;
 
         i = 0;
         for (auto &expIt : expansions)
@@ -132,10 +131,9 @@ void InputFld::Process(po::variables_map &vm)
     for(i = 0; i < m_f->m_fielddef[oldSize]->m_fields.size(); ++i)
     {
         // check for multiple fld files
-        vector<string>::iterator it =
-            find (m_f->m_variables.begin(),
-                  m_f->m_variables.end(),
-                  m_f->m_fielddef[oldSize]->m_fields[i]);
+        auto it = find (m_f->m_variables.begin(),
+                        m_f->m_variables.end(),
+                        m_f->m_fielddef[oldSize]->m_fields[i]);
 
         if(it == m_f->m_variables.end())
         {

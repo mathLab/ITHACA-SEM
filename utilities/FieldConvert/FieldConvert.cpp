@@ -444,7 +444,7 @@ int main(int argc, char* argv[])
             
             int rank = p;
             f->ClearField();
-            partComm = boost::shared_ptr<FieldConvertComm>(
+            partComm = std::shared_ptr<FieldConvertComm>(
                              new FieldConvertComm(argc, argv, nParts,rank));
         }
         

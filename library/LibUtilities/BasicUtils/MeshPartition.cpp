@@ -1538,7 +1538,7 @@ namespace Nektar
                             vVertices[id] = m_meshVertices[id];
                         }
                         // Compile list of edges (for curved information)
-                        id = vIt->second.id;
+                        id = vIt.second.id;
                         vEdges[id] = m_meshEdges[id];
                     }
                 }
@@ -1947,7 +1947,7 @@ namespace Nektar
 
                 for (auto &vItCurve : m_meshCurved)
                 {
-                    MeshCurved c = vItCurve->second;
+                    MeshCurved c = vItCurve.second;
 
                     bool IsEdge = boost::iequals(c.entitytype,"E");
                     bool IsFace = boost::iequals(c.entitytype,"F");

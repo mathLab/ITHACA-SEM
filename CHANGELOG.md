@@ -10,6 +10,7 @@ v5.0.0
 - Adjust boundary layer thickness in corners in 2D (!739)
 - Add non-O BL meshing in 2D (!757)
 - Fix issue with reading CCM files due to definition of default arrays rather than a vector (!797)
+- Additional curve types in GEO reader: BSpline, Circle, Ellipse (!800)
 
 **Library**
 - Added in sum factorisation version for pyramid expansions and orthogonal

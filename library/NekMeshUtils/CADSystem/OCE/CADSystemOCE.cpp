@@ -43,6 +43,11 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
 
+#include <Geom_BSplineCurve.hxx>
+#include <Geom_BezierCurve.hxx>
+#include <TColStd_Array1OfReal.hxx>
+#include <TColStd_Array1OfInteger.hxx>
+
 using namespace std;
 
 namespace Nektar
@@ -412,6 +417,7 @@ TopoDS_Shape CADSystemOCE::BuildGeo(string geo)
     map<int, string> points;
     map<int, string> lines;
     map<int, string> splines;
+    map<int, string> bsplines;
     map<int, string> loops;
     map<int, string> surfs;
 
@@ -470,6 +476,10 @@ TopoDS_Shape CADSystemOCE::BuildGeo(string geo)
         {
             splines[id] = var;
         }
+        else if (boost::iequals(type, "BSpline"))
+        {
+            bsplines[id] = var;
+        }
         else if (boost::iequals(type, "Line Loop"))
         {
             //line loops sometimes have negative entries for gmsh
@@ -523,6 +533,22 @@ TopoDS_Shape CADSystemOCE::BuildGeo(string geo)
         }
         GeomAPI_PointsToBSpline spline(pointArray);
         Handle(Geom_BSplineCurve) curve = spline.Curve();
+
+        BRepBuilderAPI_MakeEdge em(curve);
+        cEdges[it->first] = em.Edge();
+    }
+    for (it = bsplines.begin(); it != bsplines.end(); it++)
+    {
+        vector<unsigned int> data;
+        ParseUtils::GenerateUnOrderedVector(it->second.c_str(), data);
+
+        TColgp_Array1OfPnt pointArray(0, data.size() - 1);
+
+        for (int i = 0; i < data.size(); i++)
+        {
+            pointArray.SetValue(i, cPoints[data[i]]);
+        }
+        Handle(Geom_BezierCurve) curve = new Geom_BezierCurve(pointArray);
 
         BRepBuilderAPI_MakeEdge em(curve);
         cEdges[it->first] = em.Edge();

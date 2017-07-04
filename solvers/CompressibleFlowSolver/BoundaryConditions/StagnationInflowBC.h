@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File: SmoothShockCapture.h
+// File: StagnationInflowBC.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,37 +29,39 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Smooth artificial diffusion for shock capture
+// Description: Stagnation conditions inflow boundary condition
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_SOLVERS_COMPRESSIBLEFLOWSOLVER_ARTIFICIALDIFFUSION_SMOOTH
-#define NEKTAR_SOLVERS_COMPRESSIBLEFLOWSOLVER_ARTIFICIALDIFFUSION_SMOOTH
+#ifndef NEKTAR_SOLVERS_COMPRESSIBLEFLOWSOLVER_BNDCOND_STAGINFLOWBC
+#define NEKTAR_SOLVERS_COMPRESSIBLEFLOWSOLVER_BNDCOND_STAGINFLOWBC
 
-#include "ArtificialDiffusion.h"
+#include "CFSBndCond.h"
 
 
 namespace Nektar
 {
 
 /**
- * @brief Smooth artificial diffusion for shock capture for compressible flow
- * problems.
-*/
-class SmoothShockCapture : public ArtificialDiffusion
+ * @brief Stagnation conditions inflow boundary conditions 
+ * for compressible flow problems where the energy and density are prescribed
+ */
+class StagnationInflowBC : public CFSBndCond
 {
     public:
 
-        friend class MemoryManager<SmoothShockCapture>;
+        friend class MemoryManager<StagnationInflowBC>;
 
         /// Creates an instance of this class
-        static ArtificialDiffusionSharedPtr create(
+        static CFSBndCondSharedPtr create(
                 const LibUtilities::SessionReaderSharedPtr& pSession,
                 const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields,
-                const int spacedim)
+                const Array<OneD, Array<OneD, NekDouble> >& pTraceNormals,
+                const int pSpaceDim, const int bcRegion, const int cnt)
         {
-            ArtificialDiffusionSharedPtr p = MemoryManager<SmoothShockCapture>::
-                                AllocateSharedPtr(pSession, pFields, spacedim);
+            CFSBndCondSharedPtr p = MemoryManager<StagnationInflowBC>::
+                                    AllocateSharedPtr(pSession, pFields,
+                                    pTraceNormals, pSpaceDim, bcRegion, cnt);
             return p;
         }
 
@@ -68,33 +70,26 @@ class SmoothShockCapture : public ArtificialDiffusion
 
     protected:
 
-        virtual void v_DoArtificialDiffusion(
-            const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-            Array<OneD,       Array<OneD, NekDouble> > &outarray);
-
-        virtual void v_GetArtificialViscosity(
-            const Array<OneD, Array<OneD, NekDouble> > &physfield,
-                  Array<OneD, NekDouble  >             &mu);
+        virtual void v_Apply(
+            Array<OneD, Array<OneD, NekDouble> >               &Fwd,
+            Array<OneD, Array<OneD, NekDouble> >               &physarray,
+            const NekDouble                                    &time);
 
     private:
-        SmoothShockCapture(const LibUtilities::SessionReaderSharedPtr& pSession,
+        StagnationInflowBC(const LibUtilities::SessionReaderSharedPtr& pSession,
                const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields,
-               const int spacedim);
+               const Array<OneD, Array<OneD, NekDouble> >& pTraceNormals,
+               const int pSpaceDim,
+               const int bcRegion,
+               const int cnt);
+        
+        virtual ~StagnationInflowBC(void){};
 
-        virtual ~SmoothShockCapture(void){};
+        // Field storage for StagnationInflowBC
+        Array<OneD, Array<OneD, NekDouble> > m_fieldStorage;
 
-        void GetForcingTerm(
-            const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-                  Array<OneD,       Array<OneD, NekDouble> > outarrayForcing);
-
-        /// Parameters
-        NekDouble       m_FacL;
-        NekDouble       m_FacH;
-        NekDouble       m_hFactor;
-        NekDouble       m_C1;
-        NekDouble       m_C2;
-        NekDouble       m_mu0;
-        int             m_offset;
+        // Flag determining if we have an axi-symmetric case with swirl
+        bool                                 m_swirl;
 };
 
 }

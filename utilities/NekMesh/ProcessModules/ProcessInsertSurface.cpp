@@ -150,10 +150,9 @@ void ProcessInsertSurface::Process()
         }
     }
 
-    EdgeSet::iterator it;
-    for(it = surfEdges.begin(); it != surfEdges.end(); it++)
+    for(auto &it : surfEdges)
     {
-        Point queryPt1((*it)->m_n1->m_x, (*it)->m_n1->m_y, (*it)->m_n1->m_z);
+        Point queryPt1(it->m_n1->m_x, it->m_n1->m_y, it->m_n1->m_z);
         vector<PointI> result;
         rtree.query(bgi::nearest(queryPt1, 1), std::back_inserter(result));
 
@@ -172,7 +171,7 @@ void ProcessInsertSurface::Process()
 
         NodeSharedPtr inN1 = inMshnodeList[result[0].second];
 
-        Point queryPt2((*it)->m_n2->m_x, (*it)->m_n2->m_y, (*it)->m_n2->m_z);
+        Point queryPt2(it->m_n2->m_x, it->m_n2->m_y, it->m_n2->m_z);
         result.clear();
         rtree.query(bgi::nearest(queryPt2, 1), std::back_inserter(result));
 
@@ -192,16 +191,16 @@ void ProcessInsertSurface::Process()
 
         EdgeSharedPtr tst = std::shared_ptr<Edge>(new Edge(inN1,inN2));
 
-        EdgeSet::iterator f = inMsh->m_edgeSet.find(tst);
+        auto f = inMsh->m_edgeSet.find(tst);
 
         ASSERTL0(f != inMsh->m_edgeSet.end(),"could not find edge in input");
 
-        (*it)->m_edgeNodes = (*f)->m_edgeNodes;
-        (*it)->m_curveType = (*f)->m_curveType;
+        it->m_edgeNodes = (*f)->m_edgeNodes;
+        it->m_curveType = (*f)->m_curveType;
 
-        if((*f)->m_n1->Distance((*it)->m_n1) > tol)
+        if((*f)->m_n1->Distance(it->m_n1) > tol)
         {
-            reverse((*it)->m_edgeNodes.begin(),(*it)->m_edgeNodes.end());
+            reverse(it->m_edgeNodes.begin(), it->m_edgeNodes.end());
         }
     }
 }

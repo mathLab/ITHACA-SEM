@@ -139,7 +139,6 @@ void ProcessVarOpti::Process()
 
     // m_mesh->m_nummode = m_config["nq"].as<int>();
 
-    EdgeSet::iterator eit;
     bool fd = false;
 
     if (m_config["nq"].beenSet)
@@ -150,12 +149,11 @@ void ProcessVarOpti::Process()
 
     if (!fd)
     {
-        for (eit = m_mesh->m_edgeSet.begin(); eit != m_mesh->m_edgeSet.end();
-             eit++)
+        for (auto &edge : m_mesh->m_edgeSet)
         {
-            if ((*eit)->m_edgeNodes.size() > 0)
+            if (edge->m_edgeNodes.size() > 0)
             {
-                m_mesh->m_nummode = (*eit)->m_edgeNodes.size() + 2;
+                m_mesh->m_nummode = edge->m_edgeNodes.size() + 2;
                 fd                = true;
                 break;
             }
@@ -223,7 +221,7 @@ void ProcessVarOpti::Process()
         vector<NodeOptiSharedPtr> ns;
         for (int j = 0; j < freenodes[i].size(); j++)
         {
-            NodeElMap::iterator it = m_nodeElMap.find(freenodes[i][j]->m_id);
+            auto it = m_nodeElMap.find(freenodes[i][j]->m_id);
             ASSERTL0(it != m_nodeElMap.end(), "could not find");
 
             int optiKind = m_mesh->m_spaceDim;
@@ -241,7 +239,7 @@ void ProcessVarOpti::Process()
                 optiKind += 10 * m_mesh->m_expDim;
             }
 
-            set<int>::iterator c = check.find(freenodes[i][j]->m_id);
+            auto c = check.find(freenodes[i][j]->m_id);
             ASSERTL0(c == check.end(), "duplicate node");
             check.insert(freenodes[i][j]->m_id);
 

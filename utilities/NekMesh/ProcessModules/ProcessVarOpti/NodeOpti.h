@@ -71,20 +71,19 @@ public:
 
         // Set up storage for GetFunctional to avoid reallocation on each call.
         size_t storageCount = 0;
-        std::map<LibUtilities::ShapeType, std::vector<ElUtilSharedPtr> >
-            ::iterator typeIt;
+
         // Count total storage needed.
-        for (typeIt = m_data.begin(); typeIt != m_data.end(); typeIt++)
+        for (auto &typeIt : m_data)
         {
-            const int pts    = m_derivUtils[typeIt->first]->pts;
-            const int nElmt  = typeIt->second.size();
+            const int pts    = m_derivUtils[typeIt.first]->pts;
+            const int nElmt  = typeIt.second.size();
 
             storageCount = std::max(storageCount,
-                                    3 * m_derivUtils[typeIt->first]->ptsStd *
-                                    typeIt->second.size());
+                                    3 * m_derivUtils[typeIt.first]->ptsStd *
+                                    typeIt.second.size());
 
             m_derivs.insert(std::make_pair(
-                                typeIt->first,
+                                typeIt.first,
                                 DerivArray(boost::extents[3][nElmt][3][pts])));
         }
 

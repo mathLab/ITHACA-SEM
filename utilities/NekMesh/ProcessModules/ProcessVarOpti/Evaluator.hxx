@@ -268,13 +268,11 @@ inline NekDouble FrobeniusNorm<3>(NekDouble inarray[][3])
 template <int DIM>
 NekDouble NodeOpti::GetFunctional(NekDouble &minJacNew, bool gradient)
 {
-    map<LibUtilities::ShapeType, vector<ElUtilSharedPtr> >::iterator typeIt;
-
-    for (typeIt = m_data.begin(); typeIt != m_data.end(); typeIt++)
+    for (auto &typeIt : m_data)
     {
-        const int ptsStd = m_derivUtils[typeIt->first]->ptsStd;
-        const int pts    = m_derivUtils[typeIt->first]->pts;
-        const int nElmt  = typeIt->second.size();
+        const int ptsStd = m_derivUtils[typeIt.first]->ptsStd;
+        const int pts    = m_derivUtils[typeIt.first]->pts;
+        const int nElmt  = typeIt.second.size();
 
         NekDouble* X = &m_tmpStore[0];
 
@@ -286,7 +284,7 @@ NekDouble NodeOpti::GetFunctional(NekDouble &minJacNew, bool gradient)
                 for (int d = 0; d < DIM; ++d)
                 {
                     X[cnt + d * ptsStd + j] =
-                        *(typeIt->second[i]->nodes[j][d]);
+                        *(typeIt.second[i]->nodes[j][d]);
                 }
             }
             cnt += DIM * ptsStd;
@@ -302,9 +300,9 @@ NekDouble NodeOpti::GetFunctional(NekDouble &minJacNew, bool gradient)
         for (int d = 0; d < DIM; ++d)
         {
             Blas::Dgemm('N', 'N', pts, DIM * nElmt, ptsStd, 1.0,
-                        m_derivUtils[typeIt->first]->VdmD[d].GetRawPtr(),
+                        m_derivUtils[typeIt.first]->VdmD[d].GetRawPtr(),
                         pts, X, ptsStd, 0.0,
-                        &m_derivs[typeIt->first][d][0][0][0], pts);
+                        &m_derivs[typeIt.first][d][0][0][0], pts);
         }
     }
 
@@ -323,13 +321,13 @@ NekDouble NodeOpti::GetFunctional(NekDouble &minJacNew, bool gradient)
             const NekDouble mu = 1.0 / 2.0 / (1.0 + nu);
             const NekDouble K  = 1.0 / 3.0 / (1.0 - 2.0 * nu);
 
-            for (typeIt = m_data.begin(); typeIt != m_data.end(); typeIt++)
+            for (auto &typeIt : m_data)
             {
-                const int nElmt = typeIt->second.size();
-                const int pts = m_derivUtils[typeIt->first]->pts;
+                const int nElmt = typeIt.second.size();
+                const int pts = m_derivUtils[typeIt.first]->pts;
 
                 NekVector<NekDouble> &quadW =
-                    m_derivUtils[typeIt->first]->quadW;
+                    m_derivUtils[typeIt.first]->quadW;
 
                 for (int i = 0; i < nElmt; ++i)
                 {
@@ -341,7 +339,7 @@ NekDouble NodeOpti::GetFunctional(NekDouble &minJacNew, bool gradient)
                             for (int n = 0; n < DIM; ++n)
                             {
                                 phiM[n][l] =
-                                    m_derivs[typeIt->first][l][i][n][k];
+                                    m_derivs[typeIt.first][l][i][n][k];
                             }
                         }
 
@@ -354,14 +352,14 @@ NekDouble NodeOpti::GetFunctional(NekDouble &minJacNew, bool gradient)
                                 for (int l = 0; l < DIM; ++l)
                                 {
                                     jacIdeal[n][m] += phiM[n][l] *
-                                        typeIt->second[i]->maps[k][m * 3 + l];
+                                        typeIt.second[i]->maps[k][m * 3 + l];
                                 }
                             }
                         }
                         jacDet = Determinant(jacIdeal);
                         // end CalcIdealJac
 
-                        NekDouble absIdealMapDet = fabs(typeIt->second[i]->maps[k][9]);
+                        NekDouble absIdealMapDet = fabs(typeIt.second[i]->maps[k][9]);
                         minJacNew = min(minJacNew, jacDet);
 
                         NekDouble Emat[DIM][DIM];
@@ -400,8 +398,8 @@ NekDouble NodeOpti::GetFunctional(NekDouble &minJacNew, bool gradient)
                             for (int m = 0; m < DIM; ++m)
                             {
                                 basisDeriv[m] = *(
-                                    m_derivUtils[typeIt->first]->VdmD[m])(
-                                    k, typeIt->second[i]->NodeId(m_node->m_id));
+                                    m_derivUtils[typeIt.first]->VdmD[m])(
+                                    k, typeIt.second[i]->NodeId(m_node->m_id));
                             }
                             // jacDeriv is actually a tensor,
                             // but can be stored as a vector, as 18 out of 27 entries are zero
@@ -421,7 +419,7 @@ NekDouble NodeOpti::GetFunctional(NekDouble &minJacNew, bool gradient)
                                 for (int l = 0; l < DIM; ++l)
                                 {
                                     jacDerivPhi[n] += jacDeriv[l] *
-                                            typeIt->second[i]->maps[k][l + 3 * n];
+                                            typeIt.second[i]->maps[k][l + 3 * n];
                                 }
                             }
 
@@ -509,13 +507,13 @@ NekDouble NodeOpti::GetFunctional(NekDouble &minJacNew, bool gradient)
             const NekDouble mu = 1.0 / 2.0 / (1.0 + nu);
             const NekDouble K  = 1.0 / 3.0 / (1.0 - 2.0 * nu);
 
-            for (typeIt = m_data.begin(); typeIt != m_data.end(); typeIt++)
+            for (auto &typeIt : m_data)
             {
-                const int nElmt = typeIt->second.size();
-                const int pts   = m_derivUtils[typeIt->first]->pts;
+                const int nElmt = typeIt.second.size();
+                const int pts   = m_derivUtils[typeIt.first]->pts;
 
                 NekVector<NekDouble> &quadW =
-                    m_derivUtils[typeIt->first]->quadW;
+                    m_derivUtils[typeIt.first]->quadW;
 
                 for (int i = 0; i < nElmt; ++i)
                 {
@@ -527,7 +525,7 @@ NekDouble NodeOpti::GetFunctional(NekDouble &minJacNew, bool gradient)
                             for (int n = 0; n < DIM; ++n)
                             {
                                 phiM[n][l] =
-                                    m_derivs[typeIt->first][l][i][n][k];
+                                    m_derivs[typeIt.first][l][i][n][k];
                             }
                         }
                         // begin CalcIdealJac
@@ -539,7 +537,7 @@ NekDouble NodeOpti::GetFunctional(NekDouble &minJacNew, bool gradient)
                                 for (int l = 0; l < DIM; ++l)
                                 {
                                     jacIdeal[n][m] += phiM[n][l] *
-                                            typeIt->second[i]->maps[k][m * 3 + l];
+                                            typeIt.second[i]->maps[k][m * 3 + l];
                                 }
                             }
                         }
@@ -548,7 +546,7 @@ NekDouble NodeOpti::GetFunctional(NekDouble &minJacNew, bool gradient)
 
                         minJacNew    = min(minJacNew, jacDet);
 
-                        NekDouble absIdealMapDet = fabs(typeIt->second[i]->maps[k][9]);
+                        NekDouble absIdealMapDet = fabs(typeIt.second[i]->maps[k][9]);
 
                         NekDouble I1 = FrobeniusNorm(jacIdeal);
 
@@ -586,8 +584,8 @@ NekDouble NodeOpti::GetFunctional(NekDouble &minJacNew, bool gradient)
                             for (int m = 0; m < DIM; ++m)
                             {
                                 basisDeriv[m] =
-                                    *(m_derivUtils[typeIt->first]->VdmD[m].GetRawPtr() +
-                                      typeIt->second[i]->NodeId(m_node->m_id) * pts + k);
+                                    *(m_derivUtils[typeIt.first]->VdmD[m].GetRawPtr() +
+                                      typeIt.second[i]->NodeId(m_node->m_id) * pts + k);
                             }
 
                             // jacDeriv is actually a tensor,
@@ -608,7 +606,7 @@ NekDouble NodeOpti::GetFunctional(NekDouble &minJacNew, bool gradient)
                                 for (int l = 0; l < DIM; ++l)
                                 {
                                     jacDerivPhi[n] += jacDeriv[l] *
-                                            typeIt->second[i]->maps[k][l + 3 * n];
+                                            typeIt.second[i]->maps[k][l + 3 * n];
                                 }
                             }
 
@@ -671,13 +669,13 @@ NekDouble NodeOpti::GetFunctional(NekDouble &minJacNew, bool gradient)
 
         case eRoca:
         {
-            for (typeIt = m_data.begin(); typeIt != m_data.end(); typeIt++)
+            for (auto &typeIt : m_data)
             {
-                const int nElmt = typeIt->second.size();
-                const int pts = m_derivUtils[typeIt->first]->pts;
+                const int nElmt = typeIt.second.size();
+                const int pts = m_derivUtils[typeIt.first]->pts;
 
                 NekVector<NekDouble> &quadW =
-                    m_derivUtils[typeIt->first]->quadW;
+                    m_derivUtils[typeIt.first]->quadW;
 
                 for (int i = 0; i < nElmt; ++i)
                 {
@@ -689,7 +687,7 @@ NekDouble NodeOpti::GetFunctional(NekDouble &minJacNew, bool gradient)
                             for (int n = 0; n < DIM; ++n)
                             {
                                 phiM[n][l] =
-                                    m_derivs[typeIt->first][l][i][n][k];
+                                    m_derivs[typeIt.first][l][i][n][k];
                             }
                         }
                         // begin CalcIdealJac
@@ -701,14 +699,14 @@ NekDouble NodeOpti::GetFunctional(NekDouble &minJacNew, bool gradient)
                                 for (int l = 0; l < DIM; ++l)
                                 {
                                     jacIdeal[n][m] += phiM[n][l] *
-                                            typeIt->second[i]->maps[k][m * 3 + l];
+                                            typeIt.second[i]->maps[k][m * 3 + l];
                                 }
                             }
                         }
                         jacDet = Determinant(jacIdeal);
                         // end CalcIdealJac
 
-                        NekDouble absIdealMapDet = fabs(typeIt->second[i]->maps[k][9]);
+                        NekDouble absIdealMapDet = fabs(typeIt.second[i]->maps[k][9]);
                         minJacNew      = min(minJacNew, jacDet);
                         NekDouble frob = FrobeniusNorm(jacIdeal);
                         NekDouble sigma =
@@ -744,8 +742,8 @@ NekDouble NodeOpti::GetFunctional(NekDouble &minJacNew, bool gradient)
                             for (int m = 0; m < DIM; ++m)
                             {
                                 basisDeriv[m] = *(
-                                    m_derivUtils[typeIt->first]->VdmD[m])(
-                                    k, typeIt->second[i]->NodeId(m_node->m_id));
+                                    m_derivUtils[typeIt.first]->VdmD[m])(
+                                    k, typeIt.second[i]->NodeId(m_node->m_id));
                             }
                             // jacDeriv is actually a tensor,
                             // but can be stored as a vector, as 18 out of 27 entries are zero
@@ -765,7 +763,7 @@ NekDouble NodeOpti::GetFunctional(NekDouble &minJacNew, bool gradient)
                                 for (int l = 0; l < DIM; ++l)
                                 {
                                     jacDerivPhi[n] += jacDeriv[l] *
-                                            typeIt->second[i]->maps[k][l + 3 * n];
+                                            typeIt.second[i]->maps[k][l + 3 * n];
                                 }
                             }
 
@@ -837,13 +835,13 @@ NekDouble NodeOpti::GetFunctional(NekDouble &minJacNew, bool gradient)
 
         case eWins:
         {
-            for (typeIt = m_data.begin(); typeIt != m_data.end(); typeIt++)
+            for (auto &typeIt : m_data)
             {
-                const int nElmt = typeIt->second.size();
-                const int pts = m_derivUtils[typeIt->first]->pts;
+                const int nElmt = typeIt.second.size();
+                const int pts = m_derivUtils[typeIt.first]->pts;
 
                 NekVector<NekDouble> &quadW =
-                    m_derivUtils[typeIt->first]->quadW;
+                    m_derivUtils[typeIt.first]->quadW;
 
                 for (int i = 0; i < nElmt; ++i)
                 {
@@ -855,7 +853,7 @@ NekDouble NodeOpti::GetFunctional(NekDouble &minJacNew, bool gradient)
                             for (int n = 0; n < DIM; ++n)
                             {
                                 phiM[n][l] =
-                                    m_derivs[typeIt->first][l][i][n][k];
+                                    m_derivs[typeIt.first][l][i][n][k];
                             }
                         }
                         // begin CalcIdealJac
@@ -867,14 +865,14 @@ NekDouble NodeOpti::GetFunctional(NekDouble &minJacNew, bool gradient)
                                 for (int l = 0; l < DIM; ++l)
                                 {
                                     jacIdeal[n][m] += phiM[n][l] *
-                                            typeIt->second[i]->maps[k][m * 3 + l];
+                                            typeIt.second[i]->maps[k][m * 3 + l];
                                 }
                             }
                         }
                         jacDet = Determinant(jacIdeal);
                         // end CalcIdealJac
 
-                        NekDouble absIdealMapDet = fabs(typeIt->second[i]->maps[k][9]);
+                        NekDouble absIdealMapDet = fabs(typeIt.second[i]->maps[k][9]);
                         minJacNew      = min(minJacNew, jacDet);
                         NekDouble frob = FrobeniusNorm(jacIdeal);
                         NekDouble sigma =
@@ -910,8 +908,8 @@ NekDouble NodeOpti::GetFunctional(NekDouble &minJacNew, bool gradient)
                             for (int m = 0; m < DIM; ++m)
                             {
                                 basisDeriv[m] = *(
-                                    m_derivUtils[typeIt->first]->VdmD[m])(
-                                    k, typeIt->second[i]->NodeId(m_node->m_id));
+                                    m_derivUtils[typeIt.first]->VdmD[m])(
+                                    k, typeIt.second[i]->NodeId(m_node->m_id));
                             }
                             // jacDeriv is actually a tensor,
                             // but can be stored as a vector, as 18 out of 27 entries are zero
@@ -931,7 +929,7 @@ NekDouble NodeOpti::GetFunctional(NekDouble &minJacNew, bool gradient)
                                 for (int l = 0; l < DIM; ++l)
                                 {
                                     jacDerivPhi[n] += jacDeriv[l] *
-                                            typeIt->second[i]->maps[k][l + 3 * n];
+                                            typeIt.second[i]->maps[k][l + 3 * n];
                                 }
                             }
 

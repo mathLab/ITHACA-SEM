@@ -224,29 +224,20 @@ void ProcessSpherigon::SuperBlend(vector<double> &r,
 void ProcessSpherigon::FindNormalFromPlyFile(MeshSharedPtr &plymesh,
                                              map<int,NodeSharedPtr> &surfverts)
 {
-    int      cnt = 0;
-    int      j;
-    int      prog=0,cntmin;
-    NodeSet::iterator it;
-    map<int, NodeSharedPtr>::iterator vIt;
+    int cnt  = 0, j = 0, prog = 0, n_neighbs = 5, cntmin;
 
     typedef bg::model::point<NekDouble, 3, bg::cs::cartesian> Point;
     typedef pair<Point, unsigned int> PointI;
 
-    int n_neighbs = 5;
-
-    map<int,int>  TreeidtoPlyid;
+    vector<PointI> dataPts;
+    map<int, int>  TreeidtoPlyid;
 
     //Fill vertex array into tree format
-    vector<PointI> dataPts;
-    for (j = 0, it = plymesh->m_vertexSet.begin();
-         it != plymesh->m_vertexSet.end();
-         ++it, ++j)
+    for (auto &it : plymesh->m_vertexSet)
     {
-        dataPts.push_back(make_pair(Point( (*it)->m_x,
-                                           (*it)->m_y,
-                                           (*it)->m_z), j));
-        TreeidtoPlyid[j] = (*it)->m_id;
+        dataPts.push_back(
+            make_pair(Point(it->m_x, it->m_y, it->m_z), j));
+        TreeidtoPlyid[j++] = it->m_id;
     }
 
     //Build tree
@@ -254,55 +245,53 @@ void ProcessSpherigon::FindNormalFromPlyFile(MeshSharedPtr &plymesh,
     rtree.insert(dataPts.begin(), dataPts.end());
 
     //Find neipghbours
-    for (cnt = 0, vIt = surfverts.begin(); vIt != surfverts.end();
-         ++vIt, ++cnt)
+    for (auto &vIt : surfverts)
     {
         if(m_mesh->m_verbose)
         {
-            prog = LibUtilities::PrintProgressbar(cnt,surfverts.size(),
-                                                  "Nearest ply verts",prog);
+            prog = LibUtilities::PrintProgressbar(
+                cnt, surfverts.size(), "Nearest ply verts", prog);
         }
 
-
-        //I dont know why 5 nearest points are searched for when
-        //only the nearest point is used for the data
-        //was left like this in the ann->boost rewrite (MT 6/11/16)
-        Point queryPt(vIt->second->m_x, vIt->second->m_y, vIt->second->m_z);
+        // I dont know why 5 nearest points are searched for when only the
+        // nearest point is used for the data was left like this in the
+        // ann->boost rewrite (MT 6/11/16)
+        Point queryPt(vIt.second->m_x, vIt.second->m_y, vIt.second->m_z);
         n_neighbs  = 5;
         vector<PointI> result;
-        rtree.query(bgi::nearest(queryPt, n_neighbs), std::back_inserter(result));
+        rtree.query(
+            bgi::nearest(queryPt, n_neighbs), std::back_inserter(result));
 
-        ASSERTL1(bg::distance(result[0].first,queryPt) < bg::distance(result[1].first,queryPt),
-            "Assumption that dist values are ordered from smallest to largest is not correct");
+        ASSERTL1(bg::distance(result[0].first,queryPt) <
+                 bg::distance(result[1].first,queryPt),
+                 "Assumption that dist values are ordered from smallest to "
+                 "largest is not correct");
 
         cntmin = TreeidtoPlyid[result[0].second];
 
         ASSERTL1(cntmin < plymesh->m_vertexNormals.size(),
                  "cntmin is out of range");
 
-        m_mesh->m_vertexNormals[vIt->first] =
-            plymesh->m_vertexNormals[cntmin];
+        m_mesh->m_vertexNormals[vIt.first] = plymesh->m_vertexNormals[cntmin];
+        ++cnt;
     }
 }
 
 /**
- * @brief Generate a set of approximate vertex normals to a surface
- * represented by line segments in 2D and a hybrid
- * triangular/quadrilateral mesh in 3D.
+ * @brief Generate a set of approximate vertex normals to a surface represented
+ * by line segments in 2D and a hybrid triangular/quadrilateral mesh in 3D.
  *
- * This routine approximates the true vertex normals to a surface by
- * averaging the normals of all edges/faces which connect to the
- * vertex. It is better to use the exact surface normals which can be
- * set in Mesh::vertexNormals, but where they are not supplied this
- * routine calculates an approximation for the spherigon implementation.
+ * This routine approximates the true vertex normals to a surface by averaging
+ * the normals of all edges/faces which connect to the vertex. It is better to
+ * use the exact surface normals which can be set in Mesh::vertexNormals, but
+ * where they are not supplied this routine calculates an approximation for the
+ * spherigon implementation.
  *
  * @param el  Vector of elements denoting the surface mesh.
  */
 void ProcessSpherigon::GenerateNormals(std::vector<ElementSharedPtr> &el,
                                        MeshSharedPtr &mesh)
 {
-    std::unordered_map<int, Node>::iterator nIt;
-
     for (int i = 0; i < el.size(); ++i)
     {
         ElementSharedPtr e = el[i];
@@ -347,7 +336,7 @@ void ProcessSpherigon::GenerateNormals(std::vector<ElementSharedPtr> &el,
         // value.
         for (int j = 0; j < nV; ++j)
         {
-            nIt = mesh->m_vertexNormals.find(e->GetVertex(j)->m_id);
+            auto nIt = mesh->m_vertexNormals.find(e->GetVertex(j)->m_id);
             if (nIt == mesh->m_vertexNormals.end())
             {
                 mesh->m_vertexNormals[e->GetVertex(j)->m_id] = n;
@@ -360,11 +349,8 @@ void ProcessSpherigon::GenerateNormals(std::vector<ElementSharedPtr> &el,
     }
 
     // Normalize resulting vectors.
-    for (nIt = mesh->m_vertexNormals.begin();
-         nIt != mesh->m_vertexNormals.end();
-         ++nIt)
+    for (auto &n : mesh->m_vertexNormals)
     {
-        Node &n = mesh->m_vertexNormals[nIt->first];
         n /= sqrt(n.abs2());
     }
 
@@ -378,7 +364,6 @@ void ProcessSpherigon::Process()
     ASSERTL0(m_mesh->m_spaceDim == 3 || m_mesh->m_spaceDim == 2,
              "Spherigon implementation only valid in 2D/3D.");
 
-    std::unordered_set<int>::iterator eIt;
     std::unordered_set<int> visitedEdges;
 
     // First construct vector of elements to process.
@@ -398,7 +383,6 @@ void ProcessSpherigon::Process()
     {
         // Full 2D or 3D case - iterate over stored edges/faces and
         // create segments/triangles representing those edges/faces.
-        set<pair<int, int> >::iterator it;
         vector<int> t;
         t.push_back(0);
 
@@ -467,13 +451,11 @@ void ProcessSpherigon::Process()
 
         if (m_mesh->m_expDim == 3)
         {
-            for (it = m_mesh->m_spherigonSurfs.begin();
-                 it != m_mesh->m_spherigonSurfs.end();
-                 ++it)
+            for (auto &it : m_mesh->m_spherigonSurfs)
             {
                 FaceSharedPtr f =
-                    m_mesh->m_element[m_mesh->m_expDim][it->first]->GetFace(
-                        it->second);
+                    m_mesh->m_element[m_mesh->m_expDim][it.first]->GetFace(
+                        it.second);
                 vector<NodeSharedPtr> nodes = f->m_vertexList;
                 LibUtilities::ShapeType eType =
                     (LibUtilities::ShapeType)(nodes.size());
@@ -498,13 +480,11 @@ void ProcessSpherigon::Process()
         }
         else
         {
-            for (it = m_mesh->m_spherigonSurfs.begin();
-                 it != m_mesh->m_spherigonSurfs.end();
-                 ++it)
+            for (auto &it : m_mesh->m_spherigonSurfs)
             {
                 EdgeSharedPtr edge =
-                    m_mesh->m_element[m_mesh->m_expDim][it->first]->GetEdge(
-                        it->second);
+                    m_mesh->m_element[m_mesh->m_expDim][it.first]->GetEdge(
+                        it.second);
                 vector<NodeSharedPtr> nodes;
                 LibUtilities::ShapeType eType = LibUtilities::eSegment;
                 ElmtConfig conf(eType, 1, false, false);
@@ -521,8 +501,8 @@ void ProcessSpherigon::Process()
                 elmt->SetVertex(1, nodes[1]);
                 elmt->SetEdge(
                     0,
-                    m_mesh->m_element[m_mesh->m_expDim][it->first]->GetEdge(
-                        it->second));
+                    m_mesh->m_element[m_mesh->m_expDim][it.first]->GetEdge(
+                        it.second));
                 el.push_back(elmt);
             }
         }
@@ -573,8 +553,6 @@ void ProcessSpherigon::Process()
         // finally find nearest vertex and set normal to mesh surface file
         // normal.  probably should have a hex tree search ?
         Node minx(0, 0.0, 0.0, 0.0), tmp, tmpsav;
-        NodeSet::iterator it;
-        map<int, NodeSharedPtr>::iterator vIt;
         map<int, NodeSharedPtr> surfverts;
 
         // make a map of normal vertices to visit based on elements el
@@ -630,7 +608,6 @@ void ProcessSpherigon::Process()
             cout << endl;
         }
 
-        map<int, NodeSharedPtr>::iterator vIt;
         map<int, NodeSharedPtr> surfverts;
 
         // make a map of normal vertices to visit based on elements el
@@ -645,7 +622,7 @@ void ProcessSpherigon::Process()
             }
         }
 
-        for (vIt = surfverts.begin(); vIt != surfverts.end(); ++vIt)
+        for (auto &vIt : surfverts)
         {
             bool AddNoise = false;
 
@@ -656,8 +633,8 @@ void ProcessSpherigon::Process()
                 {
                     case 1:
                     {
-                        if (((vIt->second)->m_x > values[2 * i + 1]) &&
-                            ((vIt->second)->m_x < values[2 * i + 2]))
+                        if ((vIt.second->m_x > values[2 * i + 1]) &&
+                            (vIt.second->m_x < values[2 * i + 2]))
                         {
                             AddNoise = true;
                         }
@@ -665,10 +642,10 @@ void ProcessSpherigon::Process()
                     break;
                     case 2:
                     {
-                        if (((vIt->second)->m_x > values[2 * i + 1]) &&
-                            ((vIt->second)->m_x < values[2 * i + 2]) &&
-                            ((vIt->second)->m_y > values[2 * i + 3]) &&
-                            ((vIt->second)->m_y < values[2 * i + 4]))
+                        if ((vIt.second->m_x > values[2 * i + 1]) &&
+                            (vIt.second->m_x < values[2 * i + 2]) &&
+                            (vIt.second->m_y > values[2 * i + 3]) &&
+                            (vIt.second->m_y < values[2 * i + 4]))
                         {
                             AddNoise = true;
                         }
@@ -676,12 +653,12 @@ void ProcessSpherigon::Process()
                     break;
                     case 3:
                     {
-                        if (((vIt->second)->m_x > values[2 * i + 1]) &&
-                            ((vIt->second)->m_x < values[2 * i + 2]) &&
-                            ((vIt->second)->m_y > values[2 * i + 3]) &&
-                            ((vIt->second)->m_y < values[2 * i + 4]) &&
-                            ((vIt->second)->m_z > values[2 * i + 5]) &&
-                            ((vIt->second)->m_z < values[2 * i + 6]))
+                        if ((vIt.second->m_x > values[2 * i + 1]) &&
+                            (vIt.second->m_x < values[2 * i + 2]) &&
+                            (vIt.second->m_y > values[2 * i + 3]) &&
+                            (vIt.second->m_y < values[2 * i + 4]) &&
+                            (vIt.second->m_z > values[2 * i + 5]) &&
+                            (vIt.second->m_z < values[2 * i + 6]))
 
                         {
                             AddNoise = true;
@@ -696,12 +673,12 @@ void ProcessSpherigon::Process()
                     Node rvec(0, rand(), rand(), rand());
                     rvec *= values[0] / sqrt(rvec.abs2());
 
-                    Node normal = m_mesh->m_vertexNormals[vIt->first];
+                    Node normal = m_mesh->m_vertexNormals[vIt.first];
 
                     normal += rvec;
                     normal /= sqrt(normal.abs2());
 
-                    m_mesh->m_vertexNormals[vIt->first] = normal;
+                    m_mesh->m_vertexNormals[vIt.first] = normal;
                 }
             }
         }
@@ -941,7 +918,7 @@ void ProcessSpherigon::Process()
 
         for (int edge = 0; edge < e->GetEdgeCount(); ++edge)
         {
-            eIt = visitedEdges.find(e->GetEdge(edge)->m_id);
+            auto eIt = visitedEdges.find(e->GetEdge(edge)->m_id);
             if (eIt == visitedEdges.end())
             {
                 bool reverseEdge =
@@ -1016,17 +993,14 @@ void ProcessSpherigon::Process()
     // Copy face nodes back into 3D element faces
     if (m_mesh->m_expDim == 3)
     {
-        set<pair<int, int> >::iterator it;
         int elmt = 0;
-        for (it = m_mesh->m_spherigonSurfs.begin();
-             it != m_mesh->m_spherigonSurfs.end();
-             ++it, ++elmt)
+        for (auto &it : m_mesh->m_spherigonSurfs)
         {
             FaceSharedPtr f =
-                m_mesh->m_element[m_mesh->m_expDim][it->first]->GetFace(
-                    it->second);
+                m_mesh->m_element[m_mesh->m_expDim][it.first]->GetFace(
+                    it.second);
 
-            f->m_faceNodes = el[elmt]->GetVolumeNodes();
+            f->m_faceNodes = el[elmt++]->GetVolumeNodes();
             f->m_curveType = f->m_vertexList.size() == 3
                                  ? LibUtilities::eNodalTriElec
                                  : LibUtilities::eGaussLobattoLegendre;

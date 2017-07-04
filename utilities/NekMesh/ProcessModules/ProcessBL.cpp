@@ -192,7 +192,6 @@ void ProcessBL::BoundaryLayer2D()
     // to avoid generation of duplicate vertices. It is stored as an
     // unordered map for speed.
     std::unordered_map<int, vector<NodeSharedPtr> > edgeMap;
-    std::unordered_map<int, vector<NodeSharedPtr> >::iterator eIt;
 
     string surf = m_config["surf"].as<string>();
     if (surf.size() > 0)
@@ -355,7 +354,7 @@ void ProcessBL::BoundaryLayer2D()
 
             // Determine whether we have already generated vertices
             // along this edge.
-            eIt = edgeMap.find(edgeId);
+            auto eIt = edgeMap.find(edgeId);
 
             if (eIt == edgeMap.end())
             {
@@ -442,7 +441,7 @@ void ProcessBL::BoundaryLayer2D()
             else
             {
                 // Check orientation
-                if (eIt->second[0] ==   el[i]->GetVertex(locEdge))
+                if (eIt->second[0] == el[i]->GetVertex(locEdge))
                 {
                     // Same orientation: copy nodes
                     edgeNodes[j] = eIt->second;
@@ -542,11 +541,10 @@ void ProcessBL::BoundaryLayer2D()
 
             // Change the elements on the boundary
             // to match the layers
-            map<int,int>::iterator it;
-            for (it = bLink.begin(); it != bLink.end(); ++it)
+            for (auto &it : bLink)
             {
-                int eid = it->first;
-                int bl  = it->second;
+                int eid = it.first;
+                int bl  = it.second;
 
                 if (j == 0)
                 {
@@ -628,7 +626,6 @@ void ProcessBL::BoundaryLayer3D()
     // Map which takes element ID to face on surface. This enables
     // splitting to occur in either y-direction of the prism.
     std::unordered_map<int, int> splitEls;
-    std::unordered_map<int, int>::iterator sIt;
 
     // Set up maps which takes an edge (in nektar++ ordering) and return
     // their offset and stride in the 3d array of collapsed quadrature
@@ -727,7 +724,6 @@ void ProcessBL::BoundaryLayer3D()
     // to avoid generation of duplicate vertices. It is stored as an
     // unordered map for speed.
     std::unordered_map<int, vector<NodeSharedPtr> > edgeMap;
-    std::unordered_map<int, vector<NodeSharedPtr> >::iterator eIt;
 
     string surf = m_config["surf"].as<string>();
     if (surf.size() > 0)
@@ -833,8 +829,7 @@ void ProcessBL::BoundaryLayer3D()
     for (int i = 0; i < el.size(); ++i)
     {
         const int elId = el[i]->GetId();
-        sIt = splitEls.find(elId);
-        if (sIt == splitEls.end())
+        if (splitEls.find(elId) == splitEls.end())
         {
             continue;
         }
@@ -848,7 +843,7 @@ void ProcessBL::BoundaryLayer3D()
     for (int i = 0; i < el.size(); ++i)
     {
         const int elId = el[i]->GetId();
-        sIt            = splitEls.find(elId);
+        auto sIt       = splitEls.find(elId);
 
         if (sIt == splitEls.end())
         {
@@ -954,7 +949,7 @@ void ProcessBL::BoundaryLayer3D()
 
             // Determine whether we have already generated vertices
             // along this edge.
-            eIt = edgeMap.find(edgeId);
+            auto eIt = edgeMap.find(edgeId);
 
             if (eIt == edgeMap.end())
             {
@@ -1061,11 +1056,10 @@ void ProcessBL::BoundaryLayer3D()
 
             // Change the surface elements to match the layers of
             // elements on the boundary of the domain.
-            map<int, int>::iterator it;
-            for (it = bLink.begin(); it != bLink.end(); ++it)
+            for (auto &it : bLink)
             {
-                int fid = it->first;
-                int bl  = it->second;
+                int fid = it.first;
+                int bl  = it.second;
 
                 vector<NodeSharedPtr> qNodeList(4);
                 for (int k = 0; k < 4; ++k)

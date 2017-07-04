@@ -45,8 +45,6 @@
 #include <Collections/Operator.h>
 #include <Collections/CoalescedGeomData.h>
 
-#include <boost/unordered_map.hpp>
-
 namespace Nektar {
 namespace Collections {
 

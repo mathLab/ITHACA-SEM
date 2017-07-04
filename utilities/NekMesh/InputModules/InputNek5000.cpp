@@ -219,8 +219,7 @@ void InputNek5000::Process()
             nodeList[k] = std::shared_ptr<Node>(
                 new Node(
                     0, vertex[k][0], vertex[k][1], vertex[k][2]));
-            pair<NodeSet::iterator, bool> testIns =
-                m_mesh->m_vertexSet.insert(nodeList[k]);
+            auto testIns = m_mesh->m_vertexSet.insert(nodeList[k]);
 
             if (!testIns.second)
             {
@@ -671,15 +670,13 @@ void InputNek5000::Process()
         // Now attempt to find this boundary condition inside
         // m_mesh->condition. This is currently a linear search and should
         // probably be made faster!
-        ConditionMap::iterator it;
         bool found = false;
-        for (it = m_mesh->m_condition.begin(); it != m_mesh->m_condition.end();
-             ++it)
+        for (auto &it : m_mesh->m_condition)
         {
-            if (c == it->second)
+            if (c == it.second)
             {
                 found = true;
-                c = it->second;
+                c = it.second;
                 break;
             }
         }

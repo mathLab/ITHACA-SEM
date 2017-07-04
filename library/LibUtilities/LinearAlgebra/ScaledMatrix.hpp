@@ -41,8 +41,6 @@
 #include <LibUtilities/LinearAlgebra/MatrixBase.hpp>
 #include <LibUtilities/LinearAlgebra/NekVector.hpp>
 
-#include <boost/shared_ptr.hpp>
-
 namespace Nektar
 {
     template<typename DataType, typename InnerMatrixType>

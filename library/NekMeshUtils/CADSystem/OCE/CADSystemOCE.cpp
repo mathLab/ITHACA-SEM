@@ -45,6 +45,11 @@
 
 #include <Geom_BSplineCurve.hxx>
 #include <Geom_BezierCurve.hxx>
+#include <Geom_Circle.hxx>
+#include <gce_MakeCirc.hxx>
+#include <gce_MakePln.hxx>
+#include <ElCLib.hxx>
+#include <GC_MakeCircle.hxx>
 #include <TColStd_Array1OfReal.hxx>
 #include <TColStd_Array1OfInteger.hxx>
 
@@ -418,6 +423,7 @@ TopoDS_Shape CADSystemOCE::BuildGeo(string geo)
     map<int, string> lines;
     map<int, string> splines;
     map<int, string> bsplines;
+    map<int, string> circles;
     map<int, string> loops;
     map<int, string> surfs;
 
@@ -479,6 +485,10 @@ TopoDS_Shape CADSystemOCE::BuildGeo(string geo)
         else if (boost::iequals(type, "BSpline"))
         {
             bsplines[id] = var;
+        }
+        else if (boost::iequals(type, "Circle"))
+        {
+            circles[id] = var;
         }
         else if (boost::iequals(type, "Line Loop"))
         {
@@ -551,6 +561,31 @@ TopoDS_Shape CADSystemOCE::BuildGeo(string geo)
         Handle(Geom_BezierCurve) curve = new Geom_BezierCurve(pointArray);
 
         BRepBuilderAPI_MakeEdge em(curve);
+        cEdges[it->first] = em.Edge();
+    }
+    for (it = circles.begin(); it != circles.end(); it++)
+    {
+        vector<unsigned int> data;
+        ParseUtils::GenerateUnOrderedVector(it->second.c_str(), data);
+
+        ASSERTL0(data.size() == 3, "Wrong definition of circle arc");
+        gp_Pnt start = cPoints[data[0]];
+        gp_Pnt centre = cPoints[data[1]];
+        gp_Pnt end = cPoints[data[2]];
+
+        NekDouble r1 = start.Distance(centre);
+        NekDouble r2 = end.Distance(centre);
+        ASSERTL0(r1 == r2, "Non-matching radii");
+
+        gce_MakeCirc mc(centre, gce_MakePln(start, centre, end).Value(), r1);
+        const gp_Circ &circ = mc.Value();
+        NekDouble p1 = ElCLib::Parameter(circ, start);
+        NekDouble p2 = ElCLib::Parameter(circ, end);
+        Handle(Geom_Circle) c = new Geom_Circle(circ);
+        Handle(Geom_TrimmedCurve) tc =  new Geom_TrimmedCurve(c, p2, p1, false);
+
+        BRepBuilderAPI_MakeEdge em(tc);
+        em.Build();
         cEdges[it->first] = em.Edge();
     }
 

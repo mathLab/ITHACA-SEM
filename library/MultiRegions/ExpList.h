@@ -254,6 +254,12 @@ namespace Nektar
                       Array<OneD,       NekDouble> &outarray,
                       CoeffState coeffstate = eLocal);
 
+            MULTI_REGIONS_EXPORT void   ExponentialFilter(
+                Array<OneD, NekDouble> &array,
+                const NekDouble        alpha,
+                const NekDouble        exponent,
+                const NekDouble        cutoff);
+
             /// This function elementally mulplies the coefficient space of
             /// Sin my the elemental inverse of the mass matrix.
             MULTI_REGIONS_EXPORT void  MultiplyByElmtInvMass (

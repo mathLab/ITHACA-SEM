@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File: SmoothShockCapture.h
+// File: ForcingQuasi1D.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,37 +29,36 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Smooth artificial diffusion for shock capture
+// Description: Forcing for quasi-1D nozzle flow.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_SOLVERS_COMPRESSIBLEFLOWSOLVER_ARTIFICIALDIFFUSION_SMOOTH
-#define NEKTAR_SOLVERS_COMPRESSIBLEFLOWSOLVER_ARTIFICIALDIFFUSION_SMOOTH
+#ifndef NEKTAR_SOLVERUTILS_FORCINGQUASI1D
+#define NEKTAR_SOLVERUTILS_FORCINGQUASI1D
 
-#include "ArtificialDiffusion.h"
-
+#include <SolverUtils/Forcing/Forcing.h>
+#include <CompressibleFlowSolver/Misc/VariableConverter.h>
 
 namespace Nektar
 {
 
-/**
- * @brief Smooth artificial diffusion for shock capture for compressible flow
- * problems.
-*/
-class SmoothShockCapture : public ArtificialDiffusion
+class ForcingQuasi1D : public SolverUtils::Forcing
 {
     public:
 
-        friend class MemoryManager<SmoothShockCapture>;
+        friend class MemoryManager<ForcingQuasi1D>;
 
         /// Creates an instance of this class
-        static ArtificialDiffusionSharedPtr create(
+        static SolverUtils::ForcingSharedPtr create(
                 const LibUtilities::SessionReaderSharedPtr& pSession,
                 const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields,
-                const int spacedim)
+                const unsigned int& pNumForcingFields,
+                const TiXmlElement* pForce)
         {
-            ArtificialDiffusionSharedPtr p = MemoryManager<SmoothShockCapture>::
-                                AllocateSharedPtr(pSession, pFields, spacedim);
+            SolverUtils::ForcingSharedPtr p =
+                                    MemoryManager<ForcingQuasi1D>::
+                                            AllocateSharedPtr(pSession);
+            p->InitObject(pFields, pNumForcingFields, pForce);
             return p;
         }
 
@@ -67,34 +66,24 @@ class SmoothShockCapture : public ArtificialDiffusion
         static std::string className;
 
     protected:
+        virtual void v_InitObject(
+            const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields,
+            const unsigned int&                         pNumForcingFields,
+            const TiXmlElement*                         pForce);
 
-        virtual void v_DoArtificialDiffusion(
-            const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-            Array<OneD,       Array<OneD, NekDouble> > &outarray);
-
-        virtual void v_GetArtificialViscosity(
-            const Array<OneD, Array<OneD, NekDouble> > &physfield,
-                  Array<OneD, NekDouble  >             &mu);
+        virtual void v_Apply(
+            const Array<OneD, MultiRegions::ExpListSharedPtr>& fields,
+            const Array<OneD, Array<OneD, NekDouble> >& inarray,
+                  Array<OneD, Array<OneD, NekDouble> >& outarray,
+            const NekDouble&                            time);
 
     private:
-        SmoothShockCapture(const LibUtilities::SessionReaderSharedPtr& pSession,
-               const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields,
-               const int spacedim);
 
-        virtual ~SmoothShockCapture(void){};
+        ForcingQuasi1D(
+            const LibUtilities::SessionReaderSharedPtr& pSession);
 
-        void GetForcingTerm(
-            const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-                  Array<OneD,       Array<OneD, NekDouble> > outarrayForcing);
-
-        /// Parameters
-        NekDouble       m_FacL;
-        NekDouble       m_FacH;
-        NekDouble       m_hFactor;
-        NekDouble       m_C1;
-        NekDouble       m_C2;
-        NekDouble       m_mu0;
-        int             m_offset;
+        Array<OneD, NekDouble>               m_geomFactor;
+        VariableConverterSharedPtr           m_varConv;
 };
 
 }

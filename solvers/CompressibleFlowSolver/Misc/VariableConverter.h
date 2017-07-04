@@ -98,7 +98,8 @@ namespace Nektar
             const MultiRegions::ExpListSharedPtr             &field,
             const Array<OneD, const Array<OneD, NekDouble> > &physarray,
                   Array<OneD,                   NekDouble>   &Sensor,
-                  Array<OneD,                   NekDouble>   &SensorKappa);
+                  Array<OneD,                   NekDouble>   &SensorKappa,
+                  int                                         offset = 1);
 
     protected:
         LibUtilities::SessionReaderSharedPtr m_session;

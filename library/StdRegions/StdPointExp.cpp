@@ -97,7 +97,8 @@ namespace Nektar
             }
             else
             {
-                Blas::Dgemv('N',nquad,m_base[0]->GetNumModes(),1.0, (m_base[0]->GetBdata()).get(),
+                Blas::Dgemv('N',nquad,m_base[0]->GetNumModes(),1.0,
+                            (m_base[0]->GetBdata()).get(),
                             nquad,&inarray[0],1,0.0,&outarray[0],1);
             }
         }

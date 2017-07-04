@@ -46,10 +46,13 @@
 #include <Geom_BSplineCurve.hxx>
 #include <Geom_BezierCurve.hxx>
 #include <Geom_Circle.hxx>
+#include <Geom_Ellipse.hxx>
 #include <gce_MakeCirc.hxx>
+#include <gce_MakeElips.hxx>
 #include <gce_MakePln.hxx>
 #include <ElCLib.hxx>
 #include <GC_MakeCircle.hxx>
+#include <GC_MakeEllipse.hxx>
 #include <TColStd_Array1OfReal.hxx>
 #include <TColStd_Array1OfInteger.hxx>
 
@@ -424,6 +427,7 @@ TopoDS_Shape CADSystemOCE::BuildGeo(string geo)
     map<int, string> splines;
     map<int, string> bsplines;
     map<int, string> circles;
+    map<int, string> ellipses;
     map<int, string> loops;
     map<int, string> surfs;
 
@@ -489,6 +493,10 @@ TopoDS_Shape CADSystemOCE::BuildGeo(string geo)
         else if (boost::iequals(type, "Circle"))
         {
             circles[id] = var;
+        }
+        else if (boost::iequals(type, "Ellipse"))
+        {
+            ellipses[id] = var;
         }
         else if (boost::iequals(type, "Line Loop"))
         {
@@ -583,6 +591,36 @@ TopoDS_Shape CADSystemOCE::BuildGeo(string geo)
         NekDouble p2 = ElCLib::Parameter(circ, end);
         Handle(Geom_Circle) c = new Geom_Circle(circ);
         Handle(Geom_TrimmedCurve) tc =  new Geom_TrimmedCurve(c, p2, p1, false);
+
+        BRepBuilderAPI_MakeEdge em(tc);
+        em.Build();
+        cEdges[it->first] = em.Edge();
+    }
+    for (it = ellipses.begin(); it != ellipses.end(); it++)
+    {
+        vector<unsigned int> data;
+        ParseUtils::GenerateUnOrderedVector(it->second.c_str(), data);
+
+        ASSERTL0(data.size() == 4, "Wrong definition of ellipse arc");
+        gp_Pnt start = cPoints[data[0]];
+        gp_Pnt centre = cPoints[data[1]];
+        // data[2] useless??
+        gp_Pnt end = cPoints[data[3]];
+
+        // Check that start point is major axis
+        NekDouble d1 = start.Distance(centre);
+        NekDouble d2 = end.Distance(centre);
+        if (d2 > d1)
+        {
+            swap(start, end);
+        }
+
+        gce_MakeElips me(start, end, centre);
+        const gp_Elips &elips = me.Value();
+        NekDouble p1 = ElCLib::Parameter(elips, start);
+        NekDouble p2 = ElCLib::Parameter(elips, end);
+        Handle(Geom_Ellipse) e = new Geom_Ellipse(elips);
+        Handle(Geom_TrimmedCurve) tc = new Geom_TrimmedCurve(e, p1, p2, true);
 
         BRepBuilderAPI_MakeEdge em(tc);
         em.Build();

@@ -198,7 +198,7 @@ show :
     else (WIN32)
       set (libname ${name})
     endif (WIN32)
-    find_library (PETSC_LIBRARY_${suffix} NAMES ${libname} HINTS ${petsc_lib_dir} NO_DEFAULT_PATH)
+    find_library (PETSC_LIBRARY_${suffix} NAMES ${libname} ${libname}_real HINTS ${petsc_lib_dir} NO_DEFAULT_PATH)
     set (PETSC_LIBRARIES_${suffix} "${PETSC_LIBRARY_${suffix}}")
     mark_as_advanced (PETSC_LIBRARY_${suffix})
   endmacro (PETSC_FIND_LIBRARY suffix name)

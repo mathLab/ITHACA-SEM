@@ -53,11 +53,13 @@ namespace Nektar
                            const LibUtilities::SessionReaderSharedPtr &pSession,
                            const LibUtilities::BasisKey &HomoBasis,
                            const NekDouble lhom,
-						   const bool useFFT,
-						   const bool dealiasing,
+                           const bool useFFT,
+                           const bool dealiasing,
                            const SpatialDomains::MeshGraphSharedPtr &graph2D,
                            const std::string &variable,
-						   const bool CheckIfSingularSystem = false);
+                           const bool CheckIfSingularSystem = false,
+                           const Collections::ImplementationType ImpType
+                           = Collections::eNoImpType);
             
             /// Copy constructor.
             MULTI_REGIONS_EXPORT ContField3DHomogeneous1D(const ContField3DHomogeneous1D &In);

@@ -64,6 +64,17 @@ public:
     {
         return "OutputXml";
     }
+
+    virtual std::string GetModuleDescription()
+    {
+        return "Writing file";
+    }
+
+    virtual ModulePriority GetModulePriority()
+    {
+        return eOutput;
+    }
+
 };
 }
 }

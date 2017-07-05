@@ -55,7 +55,6 @@ namespace Blas
                    const double *y, const int& incy);
     }
 
-#ifdef NEKTAR_USING_BLAS
     static inline void Dcopy (const int& n, const Nektar::Array <Nektar::OneD, const double> &x, const int& incx,  Nektar::Array<Nektar::OneD,double> &y, const int& incy)
     {
         ASSERTL1(static_cast<unsigned int>(n*incx) <= x.num_elements()+x.GetOffset(),"Array out of bounds");
@@ -79,25 +78,5 @@ namespace Blas
     {
         return F77NAME(ddot)(n,&x[0],incx,&y[0],incy);
     }
-#endif // NEKTAR_USING BLAS
 }
 #endif // NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_BLASARRAY_HPP
-
-/***
-$Log: BlasArray.hpp,v $
-Revision 1.5  2008/05/10 18:27:32  sherwin
-Modifications necessary for QuadExp Unified DG Solver
-
-Revision 1.4  2008/04/30 02:55:51  bnelson
-Fixed gcc compiler warning.
-
-Revision 1.3  2008/04/06 05:55:11  bnelson
-Changed ConstArray to Array<const>
-
-Revision 1.2  2008/03/12 15:22:45  pvos
-Clean up of the code
-
-Revision 1.1  2008/02/28 09:57:08  sherwin
-Added array version of some routines
-
-**/

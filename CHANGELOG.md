@@ -13,14 +13,25 @@ v5.0.0
 - Add periodic boundary condition meshing in 2D (!733)
 - Adjust boundary layer thickness in corners in 2D (!739)
 - Add non-O BL meshing in 2D (!757)
-- Fix issue with reading CCM files due to definition of default arrays
-  rather than a vector (!797)
+- Fix issue with reading CCM files due to definition of default arrays 
+- rather than a vector (!797)
+- Fix inverted triangles and small memory issue in surface meshing (!798)
+
+**Library**
+- Added in sum factorisation version for pyramid expansions and orthogonal
+  expansion in pyramids (!750)
 
 **FieldConvert**:
 - Add input module for Semtex field files (!777)
 
 **Documentation**:
 - Added the developer-guide repository as a submodule (!751)
+
+v4.4.2
+------
+**Library**
+- Fix ability to set default implementation in Collections and added an option 
+  to set eNoCollections in FieldConvert as default (!789)
 
 v4.4.1
 ------

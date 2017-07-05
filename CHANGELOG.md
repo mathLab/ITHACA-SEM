@@ -3,17 +3,18 @@ Changelog
 
 v5.0.0
 ------
+**Library**
+- Added in sum factorisation version for pyramid expansions and orthogonal
+  expansion in pyramids (!750)
+- Significant overhaul of CMake infrastructure (!770)
 
 **NekMesh**:
 - Add feature to read basic 2D geo files as CAD (!731)
 - Add periodic boundary condition meshing in 2D (!733)
 - Adjust boundary layer thickness in corners in 2D (!739)
 - Add non-O BL meshing in 2D (!757)
-- Fix issue with reading CCM files due to definition of default arrays rather than a vector (!797)
-
-**Library**
-- Added in sum factorisation version for pyramid expansions and orthogonal
-  expansion in pyramids (!750)
+- Fix issue with reading CCM files due to definition of default arrays
+  rather than a vector (!797)
 
 **FieldConvert**:
 - Add input module for Semtex field files (!777)

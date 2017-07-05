@@ -22,6 +22,11 @@ v5.0.0
 **Documentation**:
 - Added the developer-guide repository as a submodule (!751)
 
+v4.4.2
+------
+**NekMesh**:
+- Fix uninitialised memory bug in Nek5000 input module (!801)
+
 v4.4.1
 ------
 **Library**

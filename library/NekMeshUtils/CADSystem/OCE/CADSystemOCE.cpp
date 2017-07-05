@@ -424,11 +424,6 @@ TopoDS_Shape CADSystemOCE::BuildGeo(string geo)
 
         boost::erase_all(fline, "\r");
 
-        if (fline.size() == 0)
-        {
-            continue;
-        }
-
         if (boost::starts_with(fline, "//"))
         {
             continue;

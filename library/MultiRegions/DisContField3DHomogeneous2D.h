@@ -49,24 +49,30 @@ namespace Nektar
         public:
             MULTI_REGIONS_EXPORT DisContField3DHomogeneous2D();
 
-            MULTI_REGIONS_EXPORT DisContField3DHomogeneous2D(const LibUtilities::SessionReaderSharedPtr &pSession,
-                                                             const LibUtilities::BasisKey &HomoBasis_y,
-															 const LibUtilities::BasisKey &HomoBasis_z,
-															 const NekDouble lhom_y,
-															 const NekDouble lhom_z,
-															 const bool useFFT,
-															 const bool dealiasing);
+            MULTI_REGIONS_EXPORT DisContField3DHomogeneous2D(
+                      const LibUtilities::SessionReaderSharedPtr &pSession,
+                      const LibUtilities::BasisKey &HomoBasis_y,
+                      const LibUtilities::BasisKey &HomoBasis_z,
+                      const NekDouble lhom_y,
+                      const NekDouble lhom_z,
+                      const bool useFFT,
+                      const bool dealiasing,
+                      const Collections::ImplementationType ImpType
+                      = Collections::eNoImpType);
 
-            MULTI_REGIONS_EXPORT DisContField3DHomogeneous2D(const LibUtilities::SessionReaderSharedPtr &pSession,
-                                                             const LibUtilities::BasisKey &HomoBasis_y,
-															 const LibUtilities::BasisKey &HomoBasis_z,
-															 const NekDouble lhom_y,
-															 const NekDouble lhom_z,
-															 const bool useFFT,
-															 const bool dealiasing,
-															 const SpatialDomains::MeshGraphSharedPtr &graph1D,
-															 const std::string &variable);
-
+            MULTI_REGIONS_EXPORT DisContField3DHomogeneous2D(
+                      const LibUtilities::SessionReaderSharedPtr &pSession,
+                      const LibUtilities::BasisKey &HomoBasis_y,
+                      const LibUtilities::BasisKey &HomoBasis_z,
+                      const NekDouble lhom_y,
+                      const NekDouble lhom_z,
+                      const bool useFFT,
+                      const bool dealiasing,
+                      const SpatialDomains::MeshGraphSharedPtr &graph1D,
+                      const std::string &variable,
+                      const Collections::ImplementationType ImpType
+                      = Collections::eNoImpType);
+            
             /// Copy constructor.
             MULTI_REGIONS_EXPORT DisContField3DHomogeneous2D(const DisContField3DHomogeneous2D &In,
 															 const bool DeclareLinesSetCoeffPhys = true);

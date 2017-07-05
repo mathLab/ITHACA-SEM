@@ -33,7 +33,6 @@
 //
 //
 ////////////////////////////////////////////////////////////////////////////////
-//#include "pchSpatialDomains.h"
 
 #include <SpatialDomains/PointGeom.h>
 #include <SpatialDomains/SegGeom.h>

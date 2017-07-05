@@ -21,6 +21,12 @@ v5.0.0
 **Documentation**:
 - Added the developer-guide repository as a submodule (!751)
 
+v4.4.2
+------
+**Library**
+- Fix ability to set default implementation in Collections and added an option 
+  to set eNoCollections in FieldConvert as default (!789)
+
 v4.4.1
 ------
 **Library**
@@ -36,8 +42,6 @@ v4.4.1
 - Fixed extreme memory consumption of Interpolator when interpolating from pts
   to fld or between different meshes (!783)
 - Fix deadlock with HDF5 input (!786)
-- Fix ability to set default implementation in Collections and added an option 
-  to set eNoCollections in FieldConvert as default (!789)
 - Fix missing entriess in LibUtilities::kPointsTypeStr (!792)
 - Fix compiler warnings with CommDataType (!793)
 

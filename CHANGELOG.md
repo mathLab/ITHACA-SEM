@@ -22,6 +22,12 @@ v5.0.0
 **Documentation**:
 - Added the developer-guide repository as a submodule (!751)
 
+v4.4.2
+------
+**Library**
+- Fix ability to set default implementation in Collections and added an option 
+  to set eNoCollections in FieldConvert as default (!789)
+
 v4.4.1
 ------
 **Library**

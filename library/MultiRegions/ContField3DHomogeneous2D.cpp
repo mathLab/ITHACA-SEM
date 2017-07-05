@@ -47,7 +47,8 @@ namespace Nektar
         {
         }
 
-        ContField3DHomogeneous2D::ContField3DHomogeneous2D(const ContField3DHomogeneous2D &In):
+        ContField3DHomogeneous2D::ContField3DHomogeneous2D(
+                                   const ContField3DHomogeneous2D &In):
             DisContField3DHomogeneous2D (In,false)
         {
             
@@ -65,22 +66,24 @@ namespace Nektar
         {
         }
 
-        ContField3DHomogeneous2D::ContField3DHomogeneous2D(const LibUtilities::SessionReaderSharedPtr &pSession,
-                                                           const LibUtilities::BasisKey &HomoBasis_y,
-														   const LibUtilities::BasisKey &HomoBasis_z,
-														   const NekDouble lhom_y,
-														   const NekDouble lhom_z,
-														   const bool useFFT,
-														   const bool dealiasing,
-														   const SpatialDomains::MeshGraphSharedPtr &graph1D,
-														   const std::string &variable):
-            DisContField3DHomogeneous2D(pSession,HomoBasis_y,HomoBasis_z,lhom_y,lhom_z,useFFT,dealiasing)
+        ContField3DHomogeneous2D::ContField3DHomogeneous2D(
+                         const LibUtilities::SessionReaderSharedPtr &pSession,
+                         const LibUtilities::BasisKey &HomoBasis_y,
+                         const LibUtilities::BasisKey &HomoBasis_z,
+                         const NekDouble lhom_y,
+                         const NekDouble lhom_z,
+                         const bool useFFT,
+                         const bool dealiasing,
+                         const SpatialDomains::MeshGraphSharedPtr &graph1D,
+                         const std::string &variable,
+                         const Collections::ImplementationType ImpType):
+            DisContField3DHomogeneous2D(pSession,HomoBasis_y,HomoBasis_z,lhom_y,lhom_z,useFFT,dealiasing,ImpType)
         {
             int i,n,nel;
             ContField1DSharedPtr line_zero;
             SpatialDomains::BoundaryConditions bcs(pSession, graph1D);
 
-            m_lines[0] = line_zero = MemoryManager<ContField1D>::AllocateSharedPtr(pSession,graph1D,variable);
+            m_lines[0] = line_zero = MemoryManager<ContField1D>::AllocateSharedPtr(pSession,graph1D,variable,ImpType);
 
             m_exp = MemoryManager<LocalRegions::ExpansionVector>::AllocateSharedPtr();
             nel = m_lines[0]->GetExpSize();
@@ -95,7 +98,7 @@ namespace Nektar
 
             for(n = 1; n < nylines*nzlines; ++n)
             {
-                m_lines[n] = MemoryManager<ContField1D>::AllocateSharedPtr(pSession,graph1D,variable);
+                m_lines[n] = MemoryManager<ContField1D>::AllocateSharedPtr(pSession,graph1D,variable,ImpType);
                 
                 for(i = 0; i < nel; ++i)
                 {

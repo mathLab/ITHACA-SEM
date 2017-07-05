@@ -38,7 +38,7 @@ namespace Nektar
 
     template<typename DataType>
     NekMatrix<DataType, StandardMatrixTag>::NekMatrix() :
-        Matrix<DataType>(0, 0),
+        Matrix<DataType>(0, 0, eFULL),
         m_data(),
         m_wrapperType(eCopy),
         m_numberOfSuperDiagonals(std::numeric_limits<unsigned int>::max()),

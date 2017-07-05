@@ -42,7 +42,6 @@
 #include <LibUtilities/LinearAlgebra/PointerWrapper.h>
 #include <LibUtilities/LinearAlgebra/NekVectorFwd.hpp>
 #include <ExpressionTemplates/ExpressionTemplates.hpp>
-#include <LibUtilities/LinearAlgebra/NekMatrixMetadata.hpp>
 #include <LibUtilities/LinearAlgebra/MatrixFuncs.h>
 #include <LibUtilities/LinearAlgebra/MatrixSize.hpp>
 

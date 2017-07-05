@@ -10,6 +10,7 @@ v5.0.0
 - Adjust boundary layer thickness in corners in 2D (!739)
 - Add non-O BL meshing in 2D (!757)
 - Fix issue with reading CCM files due to definition of default arrays rather than a vector (!797)
+- Add ability to compile CCIO library but tar file is not yet openly available whist we seek permission from Simens (!799)
 
 **Library**
 - Added in sum factorisation version for pyramid expansions and orthogonal

@@ -13,8 +13,10 @@ v5.0.0
 - Add periodic boundary condition meshing in 2D (!733)
 - Adjust boundary layer thickness in corners in 2D (!739)
 - Add non-O BL meshing in 2D (!757)
+- Add ability to compile CCIO library but tar file is not yet openly 
+  available whist we seek permission from Simens (!799)
 - Fix issue with reading CCM files due to definition of default arrays 
-- rather than a vector (!797)
+  rather than a vector (!797)
 - Fix inverted triangles and small memory issue in surface meshing (!798)
 
 **Library**

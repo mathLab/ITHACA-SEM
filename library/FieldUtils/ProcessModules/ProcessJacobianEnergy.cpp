@@ -66,27 +66,40 @@ ProcessJacobianEnergy::~ProcessJacobianEnergy()
 
 void ProcessJacobianEnergy::Process(po::variables_map &vm)
 {
-    if (m_f->m_verbose)
+    int nfields           = m_f->m_variables.size();
+    m_f->m_variables.push_back("jacenergy");
+    // Skip in case of empty partition
+    if (m_f->m_exp[0]->GetNumElmts() == 0)
     {
-        if (m_f->m_comm->TreatAsRankZero())
-        {
-            cout << "ProcessJacobianEnergy: Processing Jacobian..." << endl;
-        }
+        return;
     }
 
-    Array<OneD, NekDouble> phys   = m_f->m_exp[0]->UpdatePhys();
-    Array<OneD, NekDouble> coeffs = m_f->m_exp[0]->UpdateCoeffs();
-    Array<OneD, NekDouble> tmp, tmp1;
+    int NumHomogeneousDir = m_f->m_numHomogeneousDir;
+    MultiRegions::ExpListSharedPtr exp;
 
-    for (int i = 0; i < m_f->m_exp[0]->GetExpSize(); ++i)
+    if (nfields)
+    {
+        m_f->m_exp.resize(nfields + 1);
+        exp = m_f->AppendExpList(NumHomogeneousDir);
+
+        m_f->m_exp[nfields] = exp;
+    }
+    else
+    {
+        exp = m_f->m_exp[0];
+    }
+
+    Array<OneD, NekDouble> phys   = exp->UpdatePhys();
+    Array<OneD, NekDouble> coeffs = exp->UpdateCoeffs();
+    Array<OneD, NekDouble> tmp;
+
+    for (int i = 0; i < exp->GetExpSize(); ++i)
     {
         // copy Jacobian into field
-        StdRegions::StdExpansionSharedPtr Elmt = m_f->m_exp[0]->GetExp(i);
+        StdRegions::StdExpansionSharedPtr Elmt = exp->GetExp(i);
 
-        int ncoeffs     = Elmt->GetNcoeffs();
         int nquad       = Elmt->GetTotPoints();
-        int coeffoffset = m_f->m_exp[0]->GetCoeff_Offset(i);
-        Array<OneD, NekDouble> coeffs1(ncoeffs);
+        int coeffoffset = exp->GetCoeff_Offset(i);
         Array<OneD, const NekDouble> Jac =
             Elmt->GetMetricInfo()->GetJac(Elmt->GetPointsKeys());
         if (Elmt->GetMetricInfo()->GetGtype() == SpatialDomains::eRegular)
@@ -113,19 +126,7 @@ void ProcessJacobianEnergy::Process(po::variables_map &vm)
 
         Elmt->FwdTrans(phys, tmp = coeffs + coeffoffset);
     }
-
-    std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef =
-        m_f->m_exp[0]->GetFieldDefinitions();
-    std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
-
-    for (int i = 0; i < FieldDef.size(); ++i)
-    {
-        FieldDef[i]->m_fields.push_back("JacobianEnergy");
-        m_f->m_exp[0]->AppendFieldData(FieldDef[i], FieldData[i]);
-    }
-
-    m_f->m_fielddef = FieldDef;
-    m_f->m_data     = FieldData;
+    exp->BwdTrans(coeffs, phys);
 }
 }
 }

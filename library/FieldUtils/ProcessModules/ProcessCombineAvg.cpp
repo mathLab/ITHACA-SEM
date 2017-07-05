@@ -58,9 +58,6 @@ ProcessCombineAvg::ProcessCombineAvg(FieldSharedPtr f) : ProcessModule(f)
 {
     m_config["fromfld"] =
         ConfigOption(false, "NotSet", "Fld file form which to add field");
-
-    ASSERTL0(m_config["fromfld"].as<string>().compare("NotSet") != 0,
-             "Need to specify fromfld=file.fld ");
 }
 
 ProcessCombineAvg::~ProcessCombineAvg()
@@ -69,25 +66,22 @@ ProcessCombineAvg::~ProcessCombineAvg()
 
 void ProcessCombineAvg::Process(po::variables_map &vm)
 {
-    if (m_f->m_verbose)
+    // Skip in case of empty partition
+    if (m_f->m_exp[0]->GetNumElmts() == 0)
     {
-        if (m_f->m_comm->TreatAsRankZero())
-        {
-            cout << "ProcessCombineAvg: Combining new fld into input avg fld..."
-                 << endl;
-        }
+        return;
     }
 
-    ASSERTL0(m_f->m_exp.size() != 0, "No input expansion defined");
+    ASSERTL0(m_config["fromfld"].as<string>().compare("NotSet") != 0,
+             "Need to specify fromfld=file.fld ");
 
-    int nfields  = m_f->m_fielddef[0]->m_fields.size();
+    int nfields  = m_f->m_variables.size();
     int nq       = m_f->m_exp[0]->GetTotPoints();
     int expdim   = m_f->m_graph->GetMeshDimension();
     int spacedim = expdim;
-    if ((m_f->m_fielddef[0]->m_numHomogeneousDir) == 1 ||
-        (m_f->m_fielddef[0]->m_numHomogeneousDir) == 2)
+    if ((m_f->m_numHomogeneousDir) == 1 || (m_f->m_numHomogeneousDir) == 2)
     {
-        spacedim += m_f->m_fielddef[0]->m_numHomogeneousDir;
+        spacedim += m_f->m_numHomogeneousDir;
     }
 
     // Allocate storage for new field and correction (for Reynolds stress)
@@ -119,7 +113,7 @@ void ProcessCombineAvg::Process(po::variables_map &vm)
     for (int j = 0; j < nfields; ++j)
     {
         ASSERTL0(fromField->m_fielddef[0]->m_fields[j] ==
-                     m_f->m_fielddef[0]->m_fields[j],
+                     m_f->m_variables[j],
                  "Field names do not match.");
 
         // load new field (overwrite m_f->m_exp coeffs for now)
@@ -127,7 +121,7 @@ void ProcessCombineAvg::Process(po::variables_map &vm)
         {
             m_f->m_exp[j]->ExtractDataToCoeffs(
                 fromField->m_fielddef[i], fromField->m_data[i],
-                fromField->m_fielddef[i]->m_fields[j],
+                m_f->m_variables[j],
                 m_f->m_exp[j]->UpdateCoeffs());
         }
         m_f->m_exp[j]->BwdTrans(m_f->m_exp[j]->GetCoeffs(), fromPhys[j]);
@@ -148,7 +142,7 @@ void ProcessCombineAvg::Process(po::variables_map &vm)
     int stress = -1;
     for (int j = 0; j < nfields; ++j)
     {
-        if (m_f->m_fielddef[0]->m_fields[j] == "uu")
+        if (m_f->m_variables[j] == "uu")
         {
             stress = j;
             break;
@@ -246,21 +240,6 @@ void ProcessCombineAvg::Process(po::variables_map &vm)
             boost::lexical_cast<std::string>(finTime);
     }
 
-    // Update field def and data
-    std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef =
-        m_f->m_exp[0]->GetFieldDefinitions();
-    std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
-    for (int i = 0; i < nfields; ++i)
-    {
-        for (int j = 0; j < FieldDef.size(); ++j)
-        {
-            FieldDef[j]->m_fields.push_back(m_f->m_fielddef[0]->m_fields[i]);
-            m_f->m_exp[i]->AppendFieldData(FieldDef[j], FieldData[j]);
-        }
-    }
-
-    m_f->m_fielddef = FieldDef;
-    m_f->m_data     = FieldData;
 }
 }
 }

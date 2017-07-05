@@ -67,6 +67,17 @@ public:
     {
         return "ProcessMeanMode";
     }
+
+    virtual std::string GetModuleDescription()
+    {
+        return "Extracting mean mode";
+    }
+
+    virtual ModulePriority GetModulePriority()
+    {
+        return eModifyExp;
+    }
+
 };
 }
 }

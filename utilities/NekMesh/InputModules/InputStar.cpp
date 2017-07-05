@@ -107,7 +107,7 @@ void InputStar::SetupElements(void)
     // Read in Nodes
     std::vector<NodeSharedPtr> Nodes;
     ReadNodes(Nodes);
-
+    
     // Get list of faces nodes and adjacents elements.
     map<int, vector<int> > FaceNodes;
     Array<OneD, vector<int> > ElementFaces;
@@ -115,7 +115,7 @@ void InputStar::SetupElements(void)
     // Read interior faces and set up first part of Element
     // Faces and FaceNodes
     ReadInternalFaces(FaceNodes, ElementFaces);
-
+    
     vector<vector<int> > BndElementFaces;
     vector<string> Facelabels;
     ReadBoundaryFaces(BndElementFaces, FaceNodes, ElementFaces, Facelabels);
@@ -137,12 +137,12 @@ void InputStar::SetupElements(void)
     // Reset node ordering so that all prism faces have
     // consistent numbering for singular vertex re-ordering
     ResetNodes(Nodes, ElementFaces, FaceNodes);
-
+    
     m_mesh->m_node = Nodes;
 
     // create Prisms/Pyramids first
     int nelements = ElementFaces.num_elements();
-    cout << " Generating 3D Zones: ";
+    cout << " Generating 3D Zones: " << endl;
     int cnt = 0;
     for (i = 0; i < nelements; ++i)
     {
@@ -154,7 +154,7 @@ void InputStar::SetupElements(void)
             ++cnt;
         }
     }
-    cout << cnt << " Prisms,";
+    cout <<" \t" << cnt << " Prisms" << endl;
 
     nComposite++;
 
@@ -169,7 +169,7 @@ void InputStar::SetupElements(void)
             ++cnt;
         }
     }
-    cout << cnt << " Tets" << endl;
+    cout <<"\t" << cnt << " Tets" << endl;
     nComposite++;
 
     ProcessVertices();
@@ -899,6 +899,7 @@ void InputStar::InitCCM(void)
     // and then assign the return value to 'err'.).
     string fname = m_config["infile"].as<string>();
     m_ccmErr     = CCMIOOpenFile(NULL, fname.c_str(), kCCMIORead, &root);
+    ASSERTL0(m_ccmErr == kCCMIONoErr,"Error opening file");
 
     CCMIOSize_t i = CCMIOSIZEC(0);
     CCMIOID state, problem;
@@ -918,6 +919,7 @@ void InputStar::InitCCM(void)
     // initialized to 0) and read the mesh and solution
     // information.
     CCMIONextEntity(&m_ccmErr, state, kCCMIOProcessor, &i, &m_ccmProcessor);
+    ASSERTL0(m_ccmErr == kCCMIONoErr,"Failed to find Next Entity");
 }
 
 void InputStar::ReadNodes(std::vector<NodeSharedPtr> &Nodes)
@@ -927,7 +929,9 @@ void InputStar::ReadNodes(std::vector<NodeSharedPtr> &Nodes)
 
     CCMIOReadProcessor(
         &m_ccmErr, m_ccmProcessor, &vertices, &m_ccmTopology, NULL, NULL);
+    ASSERTL0(m_ccmErr == kCCMIONoErr,"Error Reading Processor");
     CCMIOEntitySize(&m_ccmErr, vertices, &nVertices, NULL);
+    ASSERTL0(m_ccmErr == kCCMIONoErr,"Error Reading NextEntitySize in ReadNodes");
 
     // Read the vertices.  This involves reading both the vertex data and
     // the map, which maps the index into the data array with the ID number.
@@ -935,23 +939,33 @@ void InputStar::ReadNodes(std::vector<NodeSharedPtr> &Nodes)
     // appropriate scaling factor.  The offset is just to show you can read
     // any chunk.  Normally this would be in a for loop.
     float scale;
-    int mapData[nVertices.getValue()];
-    float verts[3 * nVertices.getValue()];
-    for (int k = 0; k < nVertices; ++k)
+    int nvert  = nVertices.getValue();
+    vector<int> mapData;
+    mapData.resize(nvert);
+    vector<float> verts;
+    verts.resize(3*nvert);
+
+    for (int k = 0; k < nvert; ++k)
     {
         verts[3 * k] = verts[3 * k + 1] = verts[3 * k + 2] = 0.0;
         mapData[k] = 0;
     }
+
     CCMIOReadVerticesf(&m_ccmErr,
                        vertices,
                        &dims,
                        &scale,
                        &mapID,
-                       verts,
+                       &verts[0],
                        CCMIOINDEXC(0),
                        CCMIOINDEXC(0 + nVertices));
-    CCMIOReadMap(
-        &m_ccmErr, mapID, mapData, CCMIOINDEXC(0), CCMIOINDEXC(0 + nVertices));
+    ASSERTL0(m_ccmErr == kCCMIONoErr,"Error Reading Vertices in ReadNodes");
+    CCMIOReadMap(&m_ccmErr,
+                 mapID,
+                 &mapData[0],
+                 CCMIOINDEXC(0),
+                 CCMIOINDEXC(0 + nVertices));
+    ASSERTL0(m_ccmErr == kCCMIONoErr,"Error Reading Map in ReadNodes");
 
     for (int i = 0; i < nVertices; ++i)
     {

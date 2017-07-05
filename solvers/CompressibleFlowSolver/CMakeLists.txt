@@ -16,6 +16,7 @@ IF( NEKTAR_SOLVER_COMPRESSIBLE_FLOW )
        ./BoundaryConditions/PressureOutflowNonReflectiveBC.cpp
        ./BoundaryConditions/RiemannInvariantBC.cpp
        ./BoundaryConditions/RinglebFlowBC.cpp
+       ./BoundaryConditions/StagnationInflowBC.cpp
        ./BoundaryConditions/SymmetryBC.cpp
        ./BoundaryConditions/TimeDependentBC.cpp
        ./BoundaryConditions/WallBC.cpp
@@ -27,6 +28,8 @@ IF( NEKTAR_SOLVER_COMPRESSIBLE_FLOW )
        ./EquationSystems/NavierStokesCFE.cpp
        ./EquationSystems/RinglebFlow.cpp
        ./Filters/FilterEnergy.cpp
+       ./Forcing/ForcingAxiSymmetric.cpp
+       ./Forcing/ForcingQuasi1D.cpp
        ./Misc/VariableConverter.cpp
        ./RiemannSolvers/AverageSolver.cpp
        ./RiemannSolvers/AUSM0Solver.cpp
@@ -88,6 +91,9 @@ IF( NEKTAR_SOLVER_COMPRESSIBLE_FLOW )
     ADD_NEKTAR_TEST        (CylinderSubsonic_NS_FRHU_LFRHU_SEM_3DHOMO1D_MVM)
     ADD_NEKTAR_TEST        (Couette_FRSD_LFRSD_MODIFIED_3DHOMO1D_MVM)
     ADD_NEKTAR_TEST        (CylinderSubsonic_NS_FRSD_LFRSD_MODIFIED_3DHOMO1D_MVM)
+    ADD_NEKTAR_TEST        (Nozzle_AxiSym_NoSwirl)
+    ADD_NEKTAR_TEST        (Nozzle_AxiSym_Swirl)
+    ADD_NEKTAR_TEST        (Nozzle_Quasi1D_P6)
 
     IF (NEKTAR_USE_MPI)
         #ADD_NEKTAR_TEST_LENGTHY(Perturbation_M05_square_CBC_par)

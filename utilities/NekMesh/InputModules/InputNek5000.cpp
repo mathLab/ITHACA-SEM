@@ -466,6 +466,13 @@ void InputNek5000::Process()
         s.str(line.substr(0, 4));
         s >> bcType;
 
+        // Some lines have no boundary condition entries
+        if (s.fail())
+        {
+            lineCnt++;
+            continue;
+        }
+
         if (nElements < 1000)
         {
             // elmt in chars 4-6, side in next 3

@@ -56,8 +56,8 @@ namespace Nektar
             const LibUtilities::BasisKey               &HomoBasis,
             const NekDouble                             lhom,
             const bool                                  useFFT,
-            const bool                                  dealiasing)
-            : ExpList3DHomogeneous1D(pSession,HomoBasis,lhom,useFFT,dealiasing),
+            const bool                                  dealiasing):
+            ExpList3DHomogeneous1D(pSession,HomoBasis,lhom,useFFT,dealiasing),
               m_bndCondExpansions(),
               m_bndConditions()
         {
@@ -93,9 +93,10 @@ namespace Nektar
             const bool                                  useFFT,
             const bool                                  dealiasing,
             const SpatialDomains::MeshGraphSharedPtr   &graph2D,
-            const std::string                          &variable)
-            : ExpList3DHomogeneous1D(pSession, HomoBasis, lhom, useFFT,
-                                     dealiasing),
+            const std::string                          &variable,
+            const Collections::ImplementationType       ImpType):
+            ExpList3DHomogeneous1D(pSession, HomoBasis, lhom, useFFT,
+                                   dealiasing),
               m_bndCondExpansions(),
               m_bndConditions()
         {
@@ -105,7 +106,8 @@ namespace Nektar
 
             // note that nzplanes can be larger than nzmodes
             m_planes[0] = plane_zero = MemoryManager<DisContField2D>::
-                AllocateSharedPtr(pSession, graph2D, variable, true, false);
+                AllocateSharedPtr(pSession, graph2D, variable, true, false,
+                                  ImpType);
 
             m_exp = MemoryManager<LocalRegions::ExpansionVector>
                 ::AllocateSharedPtr();
@@ -136,7 +138,8 @@ namespace Nektar
             }
 
             m_trace = MemoryManager<ExpList2DHomogeneous1D>::AllocateSharedPtr(
-                pSession, HomoBasis, lhom, useFFT, dealiasing, trace);
+                               pSession, HomoBasis, lhom, useFFT,
+                               dealiasing, trace);
 
             // Setup default optimisation information
             nel = GetExpSize();

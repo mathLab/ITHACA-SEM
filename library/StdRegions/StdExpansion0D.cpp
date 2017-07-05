@@ -69,7 +69,7 @@ namespace Nektar
         {
             int nquad = GetTotPoints();
             DNekMatSharedPtr D = m_base[0]->GetD();
-            
+
             if( inarray.data() == outarray.data())
             {
                 Array<OneD, NekDouble> wsp(nquad);

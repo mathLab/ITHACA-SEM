@@ -74,11 +74,15 @@ class NonSmoothShockCapture : public ArtificialDiffusion
                   Array<OneD, NekDouble  >             &mu);
 
     private:
-        NonSmoothShockCapture(const LibUtilities::SessionReaderSharedPtr& pSession,
+        NonSmoothShockCapture(
+               const LibUtilities::SessionReaderSharedPtr& pSession,
                const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields,
                const int spacedim);
 
         virtual ~NonSmoothShockCapture(void){};
+
+        /// Parameters
+        int             m_offset;
 };
 
 }

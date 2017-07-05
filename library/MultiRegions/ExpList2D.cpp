@@ -99,7 +99,8 @@ namespace Nektar
         ExpList2D::ExpList2D(
             const ExpList2D &In, 
             const std::vector<unsigned int> &eIDs,
-            const bool DeclareCoeffPhysArrays):
+            const bool DeclareCoeffPhysArrays,
+            const Collections::ImplementationType ImpType):
             ExpList(In,eIDs,DeclareCoeffPhysArrays)
         {
             SetExpType(e2D);
@@ -113,7 +114,7 @@ namespace Nektar
             SetCoeffPhysOffsets();
 
             ReadGlobalOptimizationParameters();
-            CreateCollections();
+            CreateCollections(ImpType);
         }
 
 
@@ -133,7 +134,8 @@ namespace Nektar
                 const LibUtilities::SessionReaderSharedPtr &pSession,
                 const SpatialDomains::MeshGraphSharedPtr &graph2D,
                 const bool DeclareCoeffPhysArrays,
-                const std::string &var):
+                const std::string &var,
+                const Collections::ImplementationType ImpType):
             ExpList(pSession,graph2D)
         {
             SetExpType(e2D);
@@ -236,7 +238,7 @@ namespace Nektar
              }
 
             ReadGlobalOptimizationParameters();
-            CreateCollections();
+            CreateCollections(ImpType);
          }
 
 
@@ -257,7 +259,9 @@ namespace Nektar
         ExpList2D::ExpList2D(
             const LibUtilities::SessionReaderSharedPtr &pSession,
             const SpatialDomains::ExpansionMap &expansions,
-            const bool DeclareCoeffPhysArrays):ExpList(pSession)
+            const bool DeclareCoeffPhysArrays,
+            const Collections::ImplementationType ImpType):
+            ExpList(pSession)
         {
             SetExpType(e2D);
 
@@ -350,7 +354,7 @@ namespace Nektar
              }
 
             ReadGlobalOptimizationParameters();
-            CreateCollections();
+            CreateCollections(ImpType);
         }
 
 
@@ -386,7 +390,9 @@ namespace Nektar
             const LibUtilities::BasisKey &QuadBa,
             const LibUtilities::BasisKey &QuadBb,
             const SpatialDomains::MeshGraphSharedPtr &graph2D,
-            const LibUtilities::PointsType TriNb):ExpList(pSession, graph2D)
+            const LibUtilities::PointsType TriNb,
+            const Collections::ImplementationType ImpType):
+            ExpList(pSession, graph2D)
         {
             SetExpType(e2D);
 
@@ -462,7 +468,7 @@ namespace Nektar
             m_phys   = Array<OneD, NekDouble>(m_npoints);
 
             ReadGlobalOptimizationParameters();
-            CreateCollections();
+            CreateCollections(ImpType);
         }
 
         /**
@@ -489,7 +495,8 @@ namespace Nektar
             const SpatialDomains::MeshGraphSharedPtr &graph3D,
             const PeriodicMap &periodicFaces,
             const bool DeclareCoeffPhysArrays, 
-            const std::string variable):
+            const std::string variable,
+            const Collections::ImplementationType ImpType):            
             ExpList(pSession, graph3D)
         {
             SetExpType(e2D);
@@ -780,7 +787,7 @@ namespace Nektar
                 m_phys   = Array<OneD, NekDouble>(m_npoints);
             }
 
-            CreateCollections();
+            CreateCollections(ImpType);
         }
 
          /**
@@ -794,11 +801,13 @@ namespace Nektar
           * @param   graph3D     A mesh, containing information about the domain
           *                      and the spectral/hp element expansions.
           */
-         ExpList2D::ExpList2D(   
+        ExpList2D::ExpList2D(   
             const LibUtilities::SessionReaderSharedPtr &pSession,
             const SpatialDomains::CompositeMap &domain,
             const SpatialDomains::MeshGraphSharedPtr &graph3D,
-            const std::string variable):ExpList(pSession, graph3D)
+            const std::string variable,
+            const Collections::ImplementationType ImpType):
+            ExpList(pSession, graph3D)
          {
 
              SetExpType(e2D);
@@ -912,7 +921,7 @@ namespace Nektar
             m_phys   = Array<OneD, NekDouble>(m_npoints);
 
             ReadGlobalOptimizationParameters(); 
-            CreateCollections();
+            CreateCollections(ImpType);
         }
         
         /**

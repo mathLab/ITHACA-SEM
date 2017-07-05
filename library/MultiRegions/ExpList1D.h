@@ -66,24 +66,31 @@ namespace Nektar
             MULTI_REGIONS_EXPORT ExpList1D(
                 const ExpList1D &In,
                 const bool DeclareCoeffPhysArrays = true);
+                
             
             /// Constructor copying only elements defined in eIds.
             MULTI_REGIONS_EXPORT ExpList1D(  const ExpList1D &In,
                 const std::vector<unsigned int> &eIDs,
-                const bool DeclareCoeffPhysArrays = true);
+                const bool DeclareCoeffPhysArrays = true,
+                const Collections::ImplementationType ImpType
+                                             = Collections::eNoImpType);
 
             /// Construct an ExpList1D from a given graph.
             MULTI_REGIONS_EXPORT ExpList1D(
                 const LibUtilities::SessionReaderSharedPtr &pSession,
                 const LibUtilities::BasisKey &Ba,
-                const SpatialDomains::MeshGraphSharedPtr &graph1D);
+                const SpatialDomains::MeshGraphSharedPtr &graph1D,
+                const Collections::ImplementationType ImpType
+                                             = Collections::eNoImpType);
 
             /// This constructor sets up a list of local expansions based on an
             /// input graph1D.
             MULTI_REGIONS_EXPORT ExpList1D(
                 const LibUtilities::SessionReaderSharedPtr &pSession,
                 const SpatialDomains::MeshGraphSharedPtr &graph1D,
-                const bool DeclareCoeffPhysArrays = true);
+                const bool DeclareCoeffPhysArrays = true,
+                const Collections::ImplementationType ImpType
+                                             = Collections::eNoImpType);
 
 
             /// This constructor sets up a list of local expansions based on an
@@ -94,7 +101,10 @@ namespace Nektar
                       const SpatialDomains::CompositeMap &domain,
                       const bool DeclareCoeffPhysArrays = true,
                       const std::string var = "DefaultVar",
-                      bool SetToOneSpaceDimension = false);
+                      bool SetToOneSpaceDimension = false,
+                      const Collections::ImplementationType ImpType
+                                             = Collections::eNoImpType);
+
 
 
             /// Specialised constructor for Neumann boundary conditions in
@@ -104,7 +114,9 @@ namespace Nektar
                 const SpatialDomains::CompositeMap &domain,
                 const SpatialDomains::MeshGraphSharedPtr &graph2D,
                 const bool DeclareCoeffPhysArrays = true,
-                const std::string variable = "DefaultVar");
+                const std::string variable = "DefaultVar",
+                const Collections::ImplementationType ImpType
+                                             = Collections::eNoImpType);  
 			
 			
             MULTI_REGIONS_EXPORT ExpList1D(
@@ -112,8 +124,10 @@ namespace Nektar
                 const SpatialDomains::CompositeMap &domain,
                 const SpatialDomains::MeshGraphSharedPtr &graph1D,
                 int i,
-                const bool DeclareCoeffPhysArrays = true);
-            
+                const bool DeclareCoeffPhysArrays = true,
+                const Collections::ImplementationType ImpType
+                                             = Collections::eNoImpType);  
+           
             /// Specialised constructor for trace expansions.
             MULTI_REGIONS_EXPORT ExpList1D(
                 const LibUtilities::SessionReaderSharedPtr &pSession,
@@ -124,7 +138,10 @@ namespace Nektar
                 const SpatialDomains::MeshGraphSharedPtr &graph2D,
                 const PeriodicMap &periodicEdges,
                 const bool DeclareCoeffPhysArrays = true,
-                const std::string variable = "DefaultVar");
+                const std::string variable = "DefaultVar",
+                const Collections::ImplementationType ImpType
+                                             = Collections::eNoImpType);
+                
 
             /// Destructor.
             MULTI_REGIONS_EXPORT virtual ~ExpList1D();

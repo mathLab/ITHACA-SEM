@@ -79,8 +79,9 @@ using namespace boost::assign;
              const LibUtilities::SessionReaderSharedPtr &pSession,
              const SpatialDomains::MeshGraphSharedPtr   &graph3D,
              const std::string                          &variable,
-             const bool                                  SetUpJustDG)
-             : ExpList3D          (pSession, graph3D, variable),
+             const bool                                  SetUpJustDG,
+             const Collections::ImplementationType       ImpType):
+             ExpList3D          (pSession, graph3D, variable, ImpType),
                m_bndCondExpansions(),
                m_bndConditions    (),
                m_trace(NullExpListSharedPtr)

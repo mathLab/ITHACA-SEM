@@ -422,6 +422,8 @@ TopoDS_Shape CADSystemOCE::BuildGeo(string geo)
     {
         getline(f, fline);
 
+        boost::erase_all(fline, "\r");
+
         if (fline.size() == 0)
         {
             continue;

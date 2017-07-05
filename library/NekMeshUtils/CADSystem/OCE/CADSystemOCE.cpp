@@ -423,11 +423,10 @@ TopoDS_Shape CADSystemOCE::BuildGeo(string geo)
         getline(f, fline);
 
         boost::erase_all(fline, "\r");
-
-        if (boost::starts_with(fline, "//"))
-        {
-            continue;
-        }
+        
+        vector<string> tmp1, tmp2;
+        boost::split(tmp1, fline, boost::is_any_of("//"));
+        fline = tmp1[0];
 
         if (!boost::contains(fline, ";"))
         {
@@ -438,7 +437,6 @@ TopoDS_Shape CADSystemOCE::BuildGeo(string geo)
         fline = flinetmp + fline;
         flinetmp.clear();
 
-        vector<string> tmp1, tmp2;
         boost::split(tmp1, fline, boost::is_any_of("="));
 
         boost::split(tmp2, tmp1[0], boost::is_any_of("("));

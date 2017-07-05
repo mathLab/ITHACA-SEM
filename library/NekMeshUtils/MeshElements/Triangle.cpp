@@ -105,6 +105,7 @@ Triangle::Triangle(ElmtConfig pConf,
     {
         if (sum > 0.0)
         {
+            swap(m_vertex[1], m_vertex[2]);
             reverse(m_edge.begin(), m_edge.end());
         }
     }

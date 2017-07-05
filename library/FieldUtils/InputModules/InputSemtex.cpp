@@ -81,20 +81,12 @@ InputSemtex::~InputSemtex()
  */
 void InputSemtex::Process(po::variables_map &vm)
 {
-    if (m_f->m_verbose)
-    {
-        if (m_f->m_comm->TreatAsRankZero())
-        {
-            cout << "Processing Semtex field file" << endl;
-        }
-    }
-
     // Variables to be read from session file
     string sessionName, date, fields, endian;
     int nr, ns, nz, nelmt, step;
     NekDouble time, dt, kinvis, beta;
 
-    ifstream file(m_f->m_inputfiles["fldsem"][0].c_str(), ios::binary);
+    ifstream file(m_config["infile"].as<string>().c_str(), ios::binary);
 
     // -- Read header information.
     char buf[25];
@@ -278,31 +270,8 @@ void InputSemtex::Process(po::variables_map &vm)
 
     m_f->m_fielddef.push_back(fielddef);
 
-    // If we have defined expansion lists, then create additional expansion
-    // lists.
-    if (m_f->m_exp.size())
-    {
-        int nfields = m_f->m_fielddef[0]->m_fields.size();
-        m_f->m_exp.resize(nfields);
-
-        for (string::size_type i = 0; i < fields.size(); ++i)
-        {
-            if (!m_f->m_exp[i])
-            {
-                m_f->m_exp[i] = m_f->AppendExpList(
-                    m_f->m_fielddef[0]->m_numHomogeneousDir);
-            }
-
-            m_f->m_exp[i]->ExtractDataToCoeffs(
-                m_f->m_fielddef[0],
-                m_f->m_data[0],
-                m_f->m_fielddef[0]->m_fields[i],
-                m_f->m_exp[i]->UpdateCoeffs());
-
-            m_f->m_exp[i]->BwdTrans(
-                m_f->m_exp[i]->GetCoeffs(), m_f->m_exp[i]->UpdatePhys());
-        }
-    }
+    // save field names
+    m_f->m_variables = m_f->m_fielddef[0]->m_fields;
 }
 
 }

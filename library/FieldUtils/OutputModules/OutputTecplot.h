@@ -36,7 +36,7 @@
 #ifndef FIELDUTILS_OUTPUTTECPLOT
 #define FIELDUTILS_OUTPUTTECPLOT
 
-#include "../Module.h"
+#include "OutputFileBase.h"
 #include <tinyxml.h>
 
 namespace Nektar
@@ -58,7 +58,7 @@ enum TecplotZoneType{
 /**
  * @brief Tecplot output class.
  */
-class OutputTecplot : public OutputModule
+class OutputTecplot : public OutputFileBase
 {
 public:
     /// Creates an instance of this class
@@ -71,13 +71,36 @@ public:
     OutputTecplot(FieldSharedPtr f);
     virtual ~OutputTecplot();
 
+
     virtual void Process(po::variables_map &vm);
 
+    virtual std::string GetModuleName()
+    {
+        return "OutputTecplot";
+    }
+
 protected:
+    /// Write from pts to output file.
+    virtual void OutputFromPts(po::variables_map &vm);
+
+    /// Write from m_exp to output file.
+    virtual void OutputFromExp(po::variables_map &vm);
+
+    /// Write from data to output file.
+    virtual void OutputFromData(po::variables_map &vm);
+
+    virtual fs::path GetPath(std::string &filename,
+                                    po::variables_map &vm);
+
+    virtual fs::path GetFullOutName(std::string &filename,
+                                    po::variables_map &vm);
+
     /// True if writing binary field output
     bool            m_binary;
     /// True if writing a single output file
     bool            m_oneOutputFile;
+    /// True if writing header
+    bool            m_writeHeader;
     /// Tecplot zone type of output
     TecplotZoneType m_zoneType;
     /// Number of points per block in Tecplot file
@@ -102,14 +125,11 @@ protected:
     virtual void WriteTecplotZone(std::ofstream &outfile);
     virtual void WriteTecplotConnectivity(std::ofstream &outfile);
 
+    void WriteTecplotFile(po::variables_map &vm);
+
     int GetNumTecplotBlocks();
     void CalculateConnectivity();
 
-    /// Returns this module's name.
-    virtual std::string GetModuleName()
-    {
-        return "OutputTecplot";
-    }
 };
 
 /**

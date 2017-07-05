@@ -254,6 +254,12 @@ namespace Nektar
                       Array<OneD,       NekDouble> &outarray,
                       CoeffState coeffstate = eLocal);
 
+            MULTI_REGIONS_EXPORT void   ExponentialFilter(
+                Array<OneD, NekDouble> &array,
+                const NekDouble        alpha,
+                const NekDouble        exponent,
+                const NekDouble        cutoff);
+
             /// This function elementally mulplies the coefficient space of
             /// Sin my the elemental inverse of the mass matrix.
             MULTI_REGIONS_EXPORT void  MultiplyByElmtInvMass (
@@ -578,6 +584,13 @@ namespace Nektar
             NekDouble GetHomoLen(void)
             {
                 return v_GetHomoLen();
+            }
+
+            /// This function sets the Width of homogeneous direction
+            /// associaed with the homogeneous expansion.
+            void SetHomoLen(const NekDouble lhom)
+            {
+                return v_SetHomoLen(lhom);
             }
             
             /// This function returns a vector containing the wave
@@ -1401,6 +1414,7 @@ namespace Nektar
             virtual Array<OneD, const NekDouble> v_HomogeneousEnergy(void);
             virtual LibUtilities::TranspositionSharedPtr v_GetTransposition(void);
             virtual NekDouble v_GetHomoLen(void);
+            virtual void      v_SetHomoLen(const NekDouble lhom);
             virtual Array<OneD, const unsigned int> v_GetZIDs(void);
             virtual Array<OneD, const unsigned int> v_GetYIDs(void);
             

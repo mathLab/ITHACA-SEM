@@ -53,7 +53,7 @@ ModuleKey InputPts::m_className[5] = {
     GetModuleFactory().RegisterCreatorFunction(
         ModuleKey(eInputModule, "pts"), InputPts::create, "Reads Pts file."),
     GetModuleFactory().RegisterCreatorFunction(
-        ModuleKey(eInputModule, "pts.gz"), InputPts::create, "Reads Pts file."),
+        ModuleKey(eInputModule, "pts.gz"), InputPts::create, "Reads Pts file.")
 };
 
 /**
@@ -77,29 +77,18 @@ InputPts::~InputPts()
  */
 void InputPts::Process(po::variables_map &vm)
 {
-    if (m_f->m_verbose)
-    {
-        if (m_f->m_comm->TreatAsRankZero())
-        {
-            cout << "Processing input pts file" << endl;
-        }
-    }
+    string inFile = m_config["infile"].as<string>();
 
-    string inFile = (m_f->m_inputfiles["pts"][0]).c_str();
+    LibUtilities::PtsIOSharedPtr ptsIO =
+        MemoryManager<LibUtilities::PtsIO>::AllocateSharedPtr(m_f->m_comm);
 
-    if (m_f->m_session)
-    {
-        m_f->m_ptsIO = MemoryManager<LibUtilities::PtsIO>::AllocateSharedPtr(
-            m_f->m_session->GetComm());
-    }
-    else // serial communicator
-    {
-        LibUtilities::CommSharedPtr c =
-            LibUtilities::GetCommFactory().CreateInstance("Serial", 0, 0);
-        m_f->m_ptsIO = MemoryManager<LibUtilities::PtsIO>::AllocateSharedPtr(c);
-    }
+    ptsIO->Import(inFile, m_f->m_fieldPts);
 
-    m_f->m_ptsIO->Import(inFile, m_f->m_fieldPts);
+    // save field names
+    for (int j = 0; j < m_f->m_fieldPts->GetNFields(); ++j)
+    {
+        m_f->m_variables.push_back(m_f->m_fieldPts->GetFieldName(j));
+    }
 }
 }
 }

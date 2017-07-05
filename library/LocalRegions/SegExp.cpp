@@ -426,7 +426,9 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
                     case LibUtilities::eModified_A:
                     case LibUtilities::eModified_B:
                         {
-                            ASSERTL1(m_base[0]->GetPointsType() == LibUtilities::eGaussLobattoLegendre,"Cannot use FwdTrans_BndConstrained method with non GLL points");
+                            ASSERTL1(m_base[0]->GetPointsType() == LibUtilities::eGaussLobattoLegendre ||
+                                     m_base[0]->GetPointsType() == LibUtilities::ePolyEvenlySpaced,
+                                     "Cannot use FwdTrans_BndConstrained with these points.");
                             offset = 2;
                         }
                         break;

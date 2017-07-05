@@ -66,6 +66,16 @@ public:
         return "InputSemtex";
     }
 
+    virtual std::string GetModuleDescription()
+    {
+        return "Processing Semtex field file";
+    }
+
+    virtual ModulePriority GetModulePriority()
+    {
+        return eCreateFieldData;
+    }
+
 private:
 };
 }

@@ -55,19 +55,9 @@ ModuleKey ProcessScaleInFld::className =
 
 ProcessScaleInFld::ProcessScaleInFld(FieldSharedPtr f) : ProcessModule(f)
 {
-    if ((f->m_inputfiles.count("fld") == 0) &&
-        (f->m_inputfiles.count("rst") == 0) &&
-        (f->m_inputfiles.count("chk") == 0))
-    {
-        cout << "A fld, chk or rst input file must be specified for the "
-                "scaleinputfld module"
-             << endl;
-        exit(3);
-    }
-
     m_config["scale"] = ConfigOption(false, "NotSet", "scale factor");
     ASSERTL0(m_config["scale"].as<string>().compare("NotSet") != 0,
-             "scaleinputfld: Need to specify a sacle factor");
+             "scaleinputfld: Need to specify a scale factor");
 }
 
 ProcessScaleInFld::~ProcessScaleInFld()
@@ -76,19 +66,8 @@ ProcessScaleInFld::~ProcessScaleInFld()
 
 void ProcessScaleInFld::Process(po::variables_map &vm)
 {
-    ASSERTL0(m_f->m_data.size() != 0, "No input data defined");
-
     string scalestr = m_config["scale"].as<string>();
     NekDouble scale = boost::lexical_cast<NekDouble>(scalestr);
-
-    if (m_f->m_verbose)
-    {
-        if (m_f->m_comm->TreatAsRankZero())
-        {
-            cout << "ProcessScaleInFld: Rescaling input fld by factor" << scale
-                 << "..." << endl;
-        }
-    }
 
     for (int i = 0; i < m_f->m_data.size(); ++i)
     {
@@ -96,23 +75,6 @@ void ProcessScaleInFld::Process(po::variables_map &vm)
 
         Vmath::Smul(datalen, scale, &(m_f->m_data[i][0]), 1,
                     &(m_f->m_data[i][0]), 1);
-    }
-
-    if (m_f->m_exp.size()) // expansiosn are defined reload field
-    {
-        int nfields = m_f->m_fielddef[0]->m_fields.size();
-
-        // import basic field again in case of rescaling
-        for (int j = 0; j < nfields; ++j)
-        {
-            for (int i = 0; i < m_f->m_data.size(); ++i)
-            {
-                m_f->m_exp[j]->ExtractDataToCoeffs(
-                    m_f->m_fielddef[i], m_f->m_data[i],
-                    m_f->m_fielddef[i]->m_fields[j],
-                    m_f->m_exp[j]->UpdateCoeffs());
-            }
-        }
     }
 }
 }

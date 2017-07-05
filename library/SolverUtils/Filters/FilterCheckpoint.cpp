@@ -66,7 +66,7 @@ FilterCheckpoint::FilterCheckpoint(
     it = pParams.find("OutputFrequency");
     ASSERTL0(it != pParams.end(), "Missing parameter 'OutputFrequency'.");
     LibUtilities::Equation equ(m_session, it->second);
-    m_outputFrequency = floor(equ.Evaluate());
+    m_outputFrequency = round(equ.Evaluate());
 
     m_fld = LibUtilities::FieldIO::CreateDefault(pSession);
 }

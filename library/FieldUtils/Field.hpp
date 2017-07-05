@@ -50,18 +50,9 @@
 #include <MultiRegions/ContField3D.h>
 #include <MultiRegions/ContField3DHomogeneous1D.h>
 #include <MultiRegions/ContField3DHomogeneous2D.h>
-#include <MultiRegions/ExpList.h>
 #include <MultiRegions/ExpList2DHomogeneous1D.h>
 
-#include <MultiRegions/DisContField1D.h>
-#include <MultiRegions/DisContField2D.h>
-#include <MultiRegions/DisContField3D.h>
-#include <MultiRegions/DisContField3DHomogeneous1D.h>
-#include <MultiRegions/DisContField3DHomogeneous2D.h>
-
 #include "FieldUtilsDeclspec.h"
-
-using namespace std;
 
 namespace Nektar
 {
@@ -74,8 +65,7 @@ struct Field
         : m_verbose(false), m_declareExpansionAsContField(false),
           m_declareExpansionAsDisContField(false),
           m_requireBoundaryExpansion(false), m_writeBndFld(false),
-          m_fldToBnd(false), m_addNormals(false),
-          m_setUpEquiSpacedFields(false), m_fieldPts(LibUtilities::NullPtsField)
+          m_addNormals(false), m_fieldPts(LibUtilities::NullPtsField)
     {
     }
 
@@ -87,9 +77,12 @@ struct Field
         }
     }
     bool m_verbose;
-    vector<LibUtilities::FieldDefinitionsSharedPtr> m_fielddef;
-    vector<vector<double> > m_data;
-    vector<MultiRegions::ExpListSharedPtr> m_exp;
+    std::vector<LibUtilities::FieldDefinitionsSharedPtr> m_fielddef;
+    std::vector<std::vector<double> > m_data;
+    std::vector<MultiRegions::ExpListSharedPtr> m_exp;
+    std::vector<std::string> m_variables;
+
+    int m_numHomogeneousDir;
 
     bool m_declareExpansionAsContField;
     bool m_declareExpansionAsDisContField;
@@ -101,19 +94,13 @@ struct Field
     LibUtilities::CommSharedPtr m_comm;
     LibUtilities::SessionReaderSharedPtr m_session;
     SpatialDomains::MeshGraphSharedPtr m_graph;
-    LibUtilities::PtsIOSharedPtr m_ptsIO;
-    map<string, vector<string> > m_inputfiles;
+    std::map<std::string, std::vector<std::string> > m_inputfiles;
 
     bool m_writeBndFld;
-    vector<unsigned int> m_bndRegionsToWrite;
-    bool m_fldToBnd;
+    std::vector<unsigned int> m_bndRegionsToWrite;
     bool m_addNormals;
 
-    bool m_setUpEquiSpacedFields;
-
     LibUtilities::PtsFieldSharedPtr m_fieldPts;
-
-    MultiRegions::AssemblyMapCGSharedPtr m_locToGlobalMap;
 
     LibUtilities::FieldMetaDataMap m_fieldMetaDataMap;
 
@@ -445,10 +432,9 @@ struct Field
      * @return Reader for @p filename.
      */
     FIELD_UTILS_EXPORT LibUtilities::FieldIOSharedPtr FieldIOForFile(
-        string filename)
+        std::string filename)
     {
-        LibUtilities::CommSharedPtr c = m_session ? m_session->GetComm() :
-            LibUtilities::GetCommFactory().CreateInstance("Serial", 0, 0);
+        LibUtilities::CommSharedPtr c = m_comm;
         string fmt = LibUtilities::FieldIO::GetFileType(filename, c);
         map<string, LibUtilities::FieldIOSharedPtr>::iterator it =
             m_fld.find(fmt);
@@ -467,7 +453,9 @@ struct Field
     }
 
     FIELD_UTILS_EXPORT MultiRegions::ExpListSharedPtr AppendExpList(
-        int NumHomogeneousDir, string var = "DefaultVar", bool NewField = false)
+        int NumHomogeneousDir,
+        std::string var = "DefaultVar",
+        bool NewField = false)
     {
         if (var.compare("DefaultVar") == 0 && m_requireBoundaryExpansion)
         {
@@ -718,8 +706,6 @@ struct Field
 
                         tmp = MemoryManager<MultiRegions::ContField3D>::
                             AllocateSharedPtr(*tmp2, m_graph, var);
-
-                        m_locToGlobalMap = tmp2->GetLocalToGlobalMap();
                     }
                 }
                 else if (m_declareExpansionAsDisContField)
@@ -758,10 +744,21 @@ struct Field
         return tmp;
     }
 
+    FIELD_UTILS_EXPORT void ClearField()
+    {
+        m_session  = LibUtilities::SessionReaderSharedPtr();
+        m_graph    = SpatialDomains::MeshGraphSharedPtr();
+        m_fieldPts = LibUtilities::NullPtsField;
+        m_exp.clear();
+        m_fielddef = std::vector<LibUtilities::FieldDefinitionsSharedPtr>();
+        m_data     = std::vector<std::vector<NekDouble> > ();
+        m_variables.clear();
+    }
+
 private:
     /// Map to store FieldIO instances. Key is the reader type, value is the
     /// FieldIO object.
-    map<string, LibUtilities::FieldIOSharedPtr> m_fld;
+    std::map<std::string, LibUtilities::FieldIOSharedPtr> m_fld;
 };
 
 typedef boost::shared_ptr<Field> FieldSharedPtr;

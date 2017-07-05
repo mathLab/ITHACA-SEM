@@ -87,11 +87,8 @@ namespace Nektar
          */
         PreconFactory& GetPreconFactory()
         {
-            typedef Loki::SingletonHolder<PreconFactory,
-                Loki::CreateUsingNew,
-                Loki::NoDestroy,
-                Loki::SingleThreaded> Type;
-            return Type::Instance();
+            static PreconFactory instance;
+            return instance;
         }
 
         void Preconditioner::v_InitObject()

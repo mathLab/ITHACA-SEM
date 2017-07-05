@@ -74,13 +74,10 @@ ProcessC0Projection::~ProcessC0Projection()
 
 void ProcessC0Projection::Process(po::variables_map &vm)
 {
-    if (m_f->m_verbose)
+    // Skip in case of empty partition
+    if (m_f->m_exp[0]->GetNumElmts() == 0)
     {
-        if (m_f->m_comm->TreatAsRankZero())
-        {
-            cout << "ProcessC0Projection: Projecting field into C0 space..."
-                 << endl;
-        }
+        return;
     }
 
     // ensure not using diagonal preconditioner since tends not to converge fo
@@ -136,7 +133,7 @@ void ProcessC0Projection::Process(po::variables_map &vm)
         m_f->m_declareExpansionAsContField = true;
         m_f->m_requireBoundaryExpansion    = false;
         C0ProjectExp[0]                    = m_f->AppendExpList(
-            m_f->m_fielddef[0]->m_numHomogeneousDir, "DefaultVar", true);
+            m_f->m_numHomogeneousDir, "DefaultVar", true);
         m_f->m_declareExpansionAsContField = savedef;
         m_f->m_requireBoundaryExpansion    = savedef2;
         for (int i = 1; i < nfields; ++i)
@@ -212,10 +209,6 @@ void ProcessC0Projection::Process(po::variables_map &vm)
                     Velocity[j] = Array<OneD, NekDouble>(npoints, 0.0);
                 }
 
-                C0ProjectExp[processFields[i]]->BwdTrans(
-                    m_f->m_exp[processFields[i]]->GetCoeffs(),
-                    m_f->m_exp[processFields[i]]->UpdatePhys());
-
                 Vmath::Smul(npoints, -lambda,
                             m_f->m_exp[processFields[i]]->GetPhys(), 1, forcing,
                             1);
@@ -233,33 +226,16 @@ void ProcessC0Projection::Process(po::variables_map &vm)
             }
             else
             {
-                C0ProjectExp[processFields[i]]->BwdTrans(
-                    m_f->m_exp[processFields[i]]->GetCoeffs(),
-                    m_f->m_exp[processFields[i]]->UpdatePhys());
                 C0ProjectExp[processFields[i]]->FwdTrans(
                     m_f->m_exp[processFields[i]]->GetPhys(),
                     m_f->m_exp[processFields[i]]->UpdateCoeffs());
             }
         }
+        C0ProjectExp[processFields[i]]->BwdTrans(
+                    m_f->m_exp[processFields[i]]->GetCoeffs(),
+                    m_f->m_exp[processFields[i]]->UpdatePhys());
     }
 
-    // reset FieldDef in case of serial input and parallel output
-    std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef =
-        m_f->m_exp[0]->GetFieldDefinitions();
-    // reset up FieldData with new values before projecting
-    std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
-
-    for (int i = 0; i < nfields; ++i)
-    {
-        for (int j = 0; j < FieldDef.size(); ++j)
-        {
-            FieldDef[j]->m_fields.push_back(m_f->m_fielddef[0]->m_fields[i]);
-            m_f->m_exp[i]->AppendFieldData(FieldDef[j], FieldData[j]);
-        }
-    }
-
-    m_f->m_fielddef = FieldDef;
-    m_f->m_data     = FieldData;
 }
 }
 }

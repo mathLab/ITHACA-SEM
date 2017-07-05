@@ -69,9 +69,7 @@ namespace Nektar
         {
             int nquad = GetTotPoints();
             DNekMatSharedPtr D = m_base[0]->GetD();
-            
-#ifdef NEKTAR_USING_DIRECT_BLAS_CALLS
-            
+
             if( inarray.data() == outarray.data())
             {
                 Array<OneD, NekDouble> wsp(nquad);
@@ -84,23 +82,6 @@ namespace Nektar
                 Blas::Dgemv('N',nquad,nquad,1.0,&(D->GetPtr())[0],nquad,
                             &inarray[0],1,0.0,&outarray[0],1);
             }
-            
-#else //NEKTAR_USING_DIRECT_BLAS_CALLS
-            
-            NekVector<NekDouble> out(nquad,outarray,eWrapper);
-            
-            if(inarray.data() == outarray.data()) // copy intput array
-            {
-                NekVector<NekDouble> in(nquad,inarray,eCopy);
-                out = (*D)*in;
-            }
-            else
-            {
-                NekVector<NekDouble> in (nquad,inarray,eWrapper);
-                out = (*D)*in;
-            }
-            
-#endif //NEKTAR_USING_DIRECT_BLAS_CALLS
         }
 	
         NekDouble StdExpansion0D::v_PhysEvaluate(const Array<OneD, const NekDouble>& Lcoord, const Array<OneD, const NekDouble>& physvals)

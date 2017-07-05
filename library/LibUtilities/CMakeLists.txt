@@ -37,6 +37,7 @@ SET(BasicUtilsHeaders
     ./BasicUtils/Vmath.hpp
     ./BasicUtils/VmathArray.hpp
     ./BasicUtils/Metis.hpp
+    ./BasicUtils/VtkUtil.hpp
     ./BasicUtils/XmlUtil.h
 )
 
@@ -484,6 +485,9 @@ IF( NEKTAR_USE_BLAS_LAPACK )
         TARGET_LINK_LIBRARIES(LibUtilities LINK_PUBLIC ${NATIVE_LAPACK} ${NATIVE_BLAS})
     ENDIF( NEKTAR_USE_SYSTEM_BLAS_LAPACK )
 
+    IF(THIRDPARTY_BUILD_BLAS_LAPACK)
+        ADD_DEPENDENCIES(LibUtilities lapack-3.7.0)
+    ENDIF()
 ENDIF( NEKTAR_USE_BLAS_LAPACK )
 
 IF( NEKTAR_USE_PETSC )

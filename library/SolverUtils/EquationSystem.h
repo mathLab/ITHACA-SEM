@@ -46,12 +46,14 @@
 #include <LibUtilities/BasicUtils/PtsField.h>
 #include <LibUtilities/BasicUtils/PtsIO.h>
 #include <MultiRegions/ExpList.h>
-#include <FieldUtils/Interpolator.h>
 #include <SolverUtils/SolverUtilsDeclspec.h>
 #include <SolverUtils/Core/Misc.h>
 
 namespace Nektar
 {
+namespace FieldUtils {
+class Interpolator;
+}
     namespace SolverUtils
     {
         class EquationSystem;

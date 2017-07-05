@@ -63,6 +63,17 @@ public:
     {
         return "ProcessDeform";
     }
+
+    virtual std::string GetModuleDescription()
+    {
+        return "Deforming grid";
+    }
+
+    virtual ModulePriority GetModulePriority()
+    {
+        return eModifyExp;
+    }
+
 };
 }
 }

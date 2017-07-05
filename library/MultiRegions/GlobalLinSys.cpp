@@ -203,11 +203,8 @@ namespace Nektar
          */
         GlobalLinSysFactory& GetGlobalLinSysFactory()
         {
-            typedef Loki::SingletonHolder<GlobalLinSysFactory,
-                Loki::CreateUsingNew,
-                Loki::NoDestroy,
-                Loki::SingleThreaded> Type;
-            return Type::Instance();
+            static GlobalLinSysFactory instance;
+            return instance;
         }
 
         /**

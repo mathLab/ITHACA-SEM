@@ -190,6 +190,31 @@ namespace Nektar
             
             SetUpPhysNormals();
 
+            // Set up information for parallel and periodic problems.
+            for (int i = 0; i < m_trace->GetExpSize(); ++i)
+            {
+                LocalRegions::Expansion0DSharedPtr traceEl =
+                        m_trace->GetExp(i)->as<LocalRegions::Expansion0D>();
+
+                int offset      = m_trace->GetPhys_Offset(i);
+                int traceGeomId = traceEl->GetGeom0D()->GetGlobalID();
+                PeriodicMap::iterator pIt = m_periodicVerts.find(traceGeomId);
+
+                if (pIt != m_periodicVerts.end() && !pIt->second[0].isLocal)
+                {
+                    if (traceGeomId != min(pIt->second[0].id, traceGeomId))
+                    {
+                        traceEl->GetLeftAdjacentElementExp()->NegateVertexNormal(
+                            traceEl->GetLeftAdjacentElementVertex());
+                    }
+                }
+                else if (m_traceMap->GetTraceToUniversalMapUnique(offset) < 0)
+                {
+                    traceEl->GetLeftAdjacentElementExp()->NegateVertexNormal(
+                        traceEl->GetLeftAdjacentElementVertex());
+                }
+            }
+
             int cnt, n, e;
 
             // Identify boundary verts
@@ -806,6 +831,13 @@ namespace Nektar
                         else
                         {
                             m_negatedFluxNormal[2*i+v] = false;
+                        }
+
+                        if(vertExp->GetLeftAdjacentElementExp()->
+                            VertexNormalNegated(vertExp->GetLeftAdjacentElementVertex()))
+                        {
+                            m_negatedFluxNormal[2*i+v] =
+                                (!m_negatedFluxNormal[2*i+v]);
                         }
                     }
                 }

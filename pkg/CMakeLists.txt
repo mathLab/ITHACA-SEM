@@ -1,5 +1,9 @@
 include (CMakeCommon.cmake)
 
+SET(NEKTAR_PKG_VERSION 1 CACHE STRING "Packaging version (default=1)")
+MARK_AS_ADVANCED(NEKTAR_PKG_VERSION)
+SET(VER "${NEKTAR_VERSION}-${NEKTAR_PKG_VERSION}")
+
 # Package content lists
 
 # Libraries
@@ -11,6 +15,7 @@ list(APPEND libnektar++-nekmeshutils_LIBS   NekMeshUtils)
 list(APPEND libnektar++-collections_LIBS    Collections)
 list(APPEND libnektar++-multiregions_LIBS   MultiRegions)
 list(APPEND libnektar++-globalmapping_LIBS  GlobalMapping)
+list(APPEND libnektar++-fieldutils_LIBS     FieldUtils)
 list(APPEND libnektar++-solverutils_LIBS    SolverUtils)
 
 # Solvers
@@ -39,7 +44,7 @@ list(APPEND nektar++-demos_BINS Helmholtz1D Helmholtz2D Helmholtz3D
 # Nektar++ binary archive
 list(APPEND nektar++_LIBS LibUtilities StdRegions SpatialDomains LocalRegions
                           NekMeshUtils Collections MultiRegions GlobalMapping
-                          SolverUtils)
+                          FieldUtils SolverUtils)
 list(APPEND nektar++_BINS ADRSolver IncNavierStokesSolver CardiacEPSolver
                           CompressibleFlowSolver DiffusionSolver
                           DiffusionSolverTimeInt ShallowWaterSolver
@@ -69,7 +74,7 @@ if (NEKTAR_BUILD_LIBRARY AND DPKG)
  with ThirdParty libraries."
         DEPENDS "${NEK_DEP}"
         INSTALL_LIBS "${libnektar++-utilities_LIBS}")
-    set(NEK_DEP "${NEK_DEP}, libnektar++-utilities (= ${NEKTAR_VERSION})")
+    set(NEK_DEP "${NEK_DEP}, libnektar++-utilities (= ${VER})")
 
     add_nektar_package(
         NAME libnektar++-stdregions
@@ -80,7 +85,7 @@ if (NEKTAR_BUILD_LIBRARY AND DPKG)
  various 1D, 2D and 3D regions."
         DEPENDS "${NEK_DEP}"
         INSTALL_LIBS "${libnektar++-stdregions_LIBS}")
-    set(NEK_DEP "${NEK_DEP}, libnektar++-stdregions (= ${NEKTAR_VERSION})")
+    set(NEK_DEP "${NEK_DEP}, libnektar++-stdregions (= ${VER})")
 
     add_nektar_package(
         NAME libnektar++-spatialdomains
@@ -91,7 +96,7 @@ if (NEKTAR_BUILD_LIBRARY AND DPKG)
  regions in the domain."
         DEPENDS "${NEK_DEP}"
         INSTALL_LIBS "${libnektar++-spatialdomains_LIBS}")
-    set(NEK_DEP "${NEK_DEP}, libnektar++-spatialdomains (= ${NEKTAR_VERSION})")
+    set(NEK_DEP "${NEK_DEP}, libnektar++-spatialdomains (= ${VER})")
 
     add_nektar_package(
         NAME libnektar++-localregions
@@ -102,7 +107,7 @@ if (NEKTAR_BUILD_LIBRARY AND DPKG)
  regions."
         DEPENDS "${NEK_DEP}"
         INSTALL_LIBS "${libnektar++-localregions_LIBS}")
-    set(NEK_DEP "${NEK_DEP}, libnektar++-localregions (= ${NEKTAR_VERSION})")
+    set(NEK_DEP "${NEK_DEP}, libnektar++-localregions (= ${VER})")
 
     add_nektar_package(
         NAME libnektar++-nekmeshutils
@@ -123,7 +128,7 @@ if (NEKTAR_BUILD_LIBRARY AND DPKG)
  on the various supported regions."
         DEPENDS "${NEK_DEP}"
         INSTALL_LIBS "${libnektar++-collections_LIBS}")
-    set(NEK_DEP "${NEK_DEP}, libnektar++-collections (= ${NEKTAR_VERSION})")
+    set(NEK_DEP "${NEK_DEP}, libnektar++-collections (= ${VER})")
 
     add_nektar_package(
         NAME libnektar++-multiregions
@@ -133,7 +138,7 @@ if (NEKTAR_BUILD_LIBRARY AND DPKG)
  This library provides global expansions on multi-element domains."
         DEPENDS "${NEK_DEP}"
         INSTALL_LIBS "${libnektar++-multiregions_LIBS}")
-    set(NEK_DEP "${NEK_DEP}, libnektar++-multiregions (= ${NEKTAR_VERSION})")
+    set(NEK_DEP "${NEK_DEP}, libnektar++-multiregions (= ${VER})")
 
     add_nektar_package(
         NAME libnektar++-globalmapping
@@ -143,7 +148,17 @@ if (NEKTAR_BUILD_LIBRARY AND DPKG)
  This library provides deformation routines for Nektar++ simulations."
         DEPENDS "${NEK_DEP}"
         INSTALL_LIBS "${libnektar++-globalmapping_LIBS}")
-    set(NEK_DEP "${NEK_DEP}, libnektar++-globalmapping (= ${NEKTAR_VERSION})")
+    set(NEK_DEP "${NEK_DEP}, libnektar++-globalmapping (= ${VER})")
+
+    add_nektar_package(
+        NAME libnektar++-fieldutils
+        TYPE deb
+        SUMMARY "Nektar++ FieldUtils library"
+        DESCRIPTION "
+ This library provides post-processing functionality for Nektar++ simulations."
+        DEPENDS "${NEK_DEP}"
+        INSTALL_LIBS "${libnektar++-fieldutils_LIBS}")
+    set(NEK_DEP "${NEK_DEP}, libnektar++-fieldutils (= ${VER})")
 
     if (NEKTAR_BUILD_DEMOS)
         add_nektar_package(
@@ -166,7 +181,7 @@ if (NEKTAR_BUILD_LIBRARY AND DPKG)
  spectral/hp element solvers."
         DEPENDS ${NEK_DEP}
         INSTALL_LIBS "${libnektar++-solverutils_LIBS}")
-    set(NEK_DEP "${NEK_DEP}, libnektar++-solverutils (= ${NEKTAR_VERSION})")
+    set(NEK_DEP "${NEK_DEP}, libnektar++-solverutils (= ${VER})")
 
     if (NEKTAR_SOLVER_INCNAVIERSTOKES)
         add_nektar_package(
@@ -243,7 +258,7 @@ if (NEKTAR_BUILD_LIBRARY AND DPKG)
             DESCRIPTION "
  This package contains the mesh conversion utility and other utilities for
  converting output files into common visualisation formats"
-            DEPENDS "${NEK_DEP}, libnektar++-nekmeshutils (= ${NEKTAR_VERSION})"
+            DEPENDS "${NEK_DEP}, libnektar++-nekmeshutils (= ${VER})"
             INSTALL_BINS "${nektar++-utilities_BINS}")
     endif (NEKTAR_BUILD_UTILITIES)
 
@@ -254,7 +269,7 @@ if (NEKTAR_BUILD_LIBRARY AND DPKG)
         SUMMARY "Nektar++ complete meta package"
         DESCRIPTION "
  This meta-package depends on the entire Nektar++ suite."
-        DEPENDS "${NEK_DEP}, nektar++-incnavierstokes-solver (= ${NEKTAR_VERSION}), nektar++-adr-solver (=${NEKTAR_VERSION}), nektar++-cardiacep-solver (=${NEKTAR_VERSION}), nektar++-shallowwater-solver (=${NEKTAR_VERSION}), nektar++-compressibleflow-solver (=${NEKTAR_VERSION}), nektar++-pulsewave-solver (=${NEKTAR_VERSION}),  nektar++-utilities (=${NEKTAR_VERSION})")
+        DEPENDS "${NEK_DEP}, nektar++-incnavierstokes-solver (= ${VER}), nektar++-adr-solver (=${VER}), nektar++-cardiacep-solver (=${VER}), nektar++-shallowwater-solver (=${VER}), nektar++-compressibleflow-solver (=${VER}), nektar++-pulsewave-solver (=${VER}),  nektar++-utilities (=${VER})")
 endif()
 
 if (NEKTAR_BUILD_LIBRARY AND RPMBUILD)
@@ -321,6 +336,14 @@ if (NEKTAR_BUILD_LIBRARY AND RPMBUILD)
         DESCRIPTION 
         "This library provides deformation routines for Nektar++ simulations."
         INSTALL_LIBS "${libnektar++-globalmapping_LIBS}")
+    add_nektar_package(
+        NAME libnektar++-fieldutils
+        TYPE rpm
+        SUMMARY "Nektar++ FieldUtils library"
+        DESCRIPTION
+        "This library provides post-processing functionality for Nektar++
+         simulations."
+        INSTALL_LIBS "${libnektar++-fieldutils_LIBS}")
     add_nektar_package(
         NAME libnektar++-solverutils
         TYPE rpm

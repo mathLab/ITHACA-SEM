@@ -66,7 +66,7 @@ public:
         m_orientation = CADOrientation::eForwards;
     }
 
-    ~CADSurf()
+    virtual ~CADSurf()
     {
     }
 

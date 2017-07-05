@@ -45,7 +45,8 @@ std::string SmoothShockCapture::className = GetArtificialDiffusionFactory().
                             SmoothShockCapture::create,
                             "Smooth artificial diffusion for shock capture.");
 
-SmoothShockCapture::SmoothShockCapture(const LibUtilities::SessionReaderSharedPtr& pSession,
+SmoothShockCapture::SmoothShockCapture(
+           const LibUtilities::SessionReaderSharedPtr& pSession,
            const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields,
            const int spacedim)
     : ArtificialDiffusion(pSession, pFields, spacedim)
@@ -53,6 +54,14 @@ SmoothShockCapture::SmoothShockCapture(const LibUtilities::SessionReaderSharedPt
     ASSERTL0(m_fields.num_elements() == spacedim + 3,
              "Not enough variables for smooth shock capturing; "
              "make sure you have added eps to variable list.");
+
+    m_session->LoadParameter ("FL",            m_FacL,          0.0);
+    m_session->LoadParameter ("FH",            m_FacH,          0.0);
+    m_session->LoadParameter ("hFactor",       m_hFactor,       1.0);
+    m_session->LoadParameter ("C1",            m_C1,            3.0);
+    m_session->LoadParameter ("C2",            m_C2,            5.0);
+    m_session->LoadParameter ("mu0",           m_mu0,           1.0);
+    m_session->LoadParameter ("SensorOffset",  m_offset,         1);
 }
 
 void SmoothShockCapture::v_DoArtificialDiffusion(
@@ -127,19 +136,9 @@ void SmoothShockCapture::v_GetArtificialViscosity(
                   Array<OneD, NekDouble  >             &mu)
 {
     int nvariables = physfield.num_elements();
-    int nPts       = m_fields[0]->GetTotPoints();
 
-    Array<OneD, NekDouble > sensor     (nPts, 0.0);
-    Array<OneD, NekDouble > SensorKappa(nPts, 0.0);
-
-    // Calculate sensor
-    m_varConv->GetSensor(m_fields[0], physfield, sensor, SensorKappa);
-
-    NekDouble ThetaH = m_FacH;
-    NekDouble ThetaL = m_FacL;
-
-    NekDouble Phi0     = (ThetaH+ThetaL)/2;
-    NekDouble DeltaPhi = ThetaH-Phi0;
+    NekDouble Phi0     = (m_FacH+m_FacL)/2;
+    NekDouble DeltaPhi = m_FacH-Phi0;
 
     for (int e = 0; e < mu.num_elements(); e++)
     {
@@ -170,19 +169,19 @@ void SmoothShockCapture::GetForcingTerm(
     Array<OneD,  NekDouble>  Sensor(nPts, 0.0);
     Array<OneD,  NekDouble>  SensorKappa(nPts, 0.0);
     Array <OneD, NekDouble > Lambda(nPts, 0.0);
-    Array <OneD, NekDouble > Tau(nPts, 1.0);
     Array <OneD, NekDouble > soundspeed(nPts, 0.0);
     Array <OneD, NekDouble > pressure(nPts, 0.0);
     Array <OneD, NekDouble > absVelocity(nPts, 0.0);
 
+    NekDouble tau, pOrder;
+
     Array<OneD,int> pOrderElmt = m_fields[0]->EvalBasisNumModesMaxPerExp();
-    Array<OneD, NekDouble> pOrder (nPts, 0.0);
 
     // Thermodynamic related quantities
     m_varConv->GetPressure(inarray, pressure);
     m_varConv->GetSoundSpeed(inarray, pressure, soundspeed);
     m_varConv->GetAbsoluteVelocity(inarray, absVelocity);
-    m_varConv->GetSensor(m_fields[0], inarray, Sensor, SensorKappa);
+    m_varConv->GetSensor(m_fields[0], inarray, Sensor, SensorKappa, m_offset);
 
     // Determine the maximum wavespeed
     Vmath::Vadd(nPts, absVelocity, 1, soundspeed, 1, Lambda, 1);
@@ -197,15 +196,14 @@ void SmoothShockCapture::GetForcingTerm(
 
         for (int n = 0; n < nQuadPointsElement; n++)
         {
-            pOrder[n + PointCount] = pOrderElmt[e];
+            pOrder = pOrderElmt[e];
 
             // order 1.0e-06
-            Tau[n + PointCount] =
-                1.0 / (m_C1*pOrder[n + PointCount]*LambdaMax);
+            tau = 1.0 / (m_C1*pOrder*LambdaMax);
 
             outarrayForcing[nvariables-1][n + PointCount] =
-                1 / Tau[n + PointCount] * (m_hFactor * LambdaMax /
-                                    pOrder[n + PointCount] *
+                1 / tau * (m_hFactor * LambdaMax /
+                                    pOrder *
                                     SensorKappa[n + PointCount] -
                                     inarray[nvariables-1][n + PointCount]);
         }

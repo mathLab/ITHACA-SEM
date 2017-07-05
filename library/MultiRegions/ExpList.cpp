@@ -654,6 +654,24 @@ namespace Nektar
             }
         }
 
+        void ExpList::ExponentialFilter(
+                Array<OneD, NekDouble> &array,
+                const NekDouble        alpha,
+                const NekDouble        exponent,
+                const NekDouble        cutoff)
+        {
+            Array<OneD,NekDouble> e_array;
+
+            for(int i = 0; i < (*m_exp).size(); ++i)
+            {
+                (*m_exp)[i]->ExponentialFilter(
+                            e_array = array+m_phys_offset[i],
+                            alpha,
+                            exponent,
+                            cutoff);
+            }
+        }
+
         /**
          * The coefficients of the function to be acted upon
          * should be contained in the \param inarray. The
@@ -1974,6 +1992,12 @@ namespace Nektar
             return len;
         }
 
+        void ExpList::v_SetHomoLen(const NekDouble lhom)
+        {
+            ASSERTL0(false,
+                     "This method is not defined or valid for this class type");
+        }
+
         Array<OneD, const unsigned int> ExpList::v_GetZIDs(void)
         {
             ASSERTL0(false,
@@ -2305,8 +2329,8 @@ namespace Nektar
                     modes_offset = 0;
                 }
 
-                datalen = LibUtilities::GetNumberOfCoefficients(fielddef->m_shapeType,
-                                                                fielddef->m_numModes, modes_offset);
+                datalen = LibUtilities::GetNumberOfCoefficients(
+                    fielddef->m_shapeType, fielddef->m_numModes, modes_offset);
 
                 const int elmtId = fielddef->m_elementIDs[i];
                 eIt = m_elmtToExpId.find(elmtId);

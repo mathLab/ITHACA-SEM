@@ -51,6 +51,12 @@
 #include <LibUtilities/BasicUtils/Timer.h>
 #include <LibUtilities/Foundations/NodalUtil.h>
 
+// Including Timer.h includes Windows.h, which causes GetJob to be set as a
+// macro for some reason.
+#if _WIN32
+#undef GetJob
+#endif
+
 using namespace std;
 using namespace Nektar::NekMeshUtils;
 
@@ -157,7 +163,11 @@ void ProcessVarOpti::Process()
     }
     ASSERTL0(fd, "failed to find order of mesh");
 
-    int intOrder = m_config["overint"].as<NekDouble>();
+    // Safety feature: limit over-integration order for high-order triangles
+    // over order 5.
+    int intOrder = m_config["overint"].as<int>();
+    intOrder = m_mesh->m_nummode + intOrder <= 11 ?
+        intOrder : 11 - m_mesh->m_nummode;
 
     if (m_mesh->m_verbose)
     {
@@ -386,7 +396,7 @@ void ProcessVarOpti::Process()
 
     t.Stop();
 
-    RemoveLinearCurvature();
+    //RemoveLinearCurvature();
 
     if(m_mesh->m_verbose)
     {

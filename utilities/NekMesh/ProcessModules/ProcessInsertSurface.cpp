@@ -33,13 +33,13 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <NekMeshUtils/MeshElements/Element.h>
-#include "ProcessInsertSurface.h"
-
 #include <boost/geometry.hpp>
 #include <boost/geometry/geometries/point.hpp>
 #include <boost/geometry/geometries/box.hpp>
 #include <boost/geometry/index/rtree.hpp>
+
+#include <NekMeshUtils/MeshElements/Element.h>
+#include "ProcessInsertSurface.h"
 
 namespace bg  = boost::geometry;
 namespace bgi = boost::geometry::index;

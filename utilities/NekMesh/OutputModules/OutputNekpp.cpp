@@ -80,12 +80,11 @@ template <typename T> void TestElmts(SpatialDomains::MeshGraphSharedPtr &graph)
 {
     const std::map<int, std::shared_ptr<T> > &tmp =
         graph->GetAllElementsOfType<T>();
-    typename std::map<int, std::shared_ptr<T> >::const_iterator it1, it2;
 
     SpatialDomains::CurveMap &curvedEdges = graph->GetCurvedEdges();
     SpatialDomains::CurveMap &curvedFaces = graph->GetCurvedFaces();
 
-    for (it1 = tmp.begin(), it2 = tmp.end(); it1 != it2; ++it1)
+    for (auto it1 = tmp.begin(), it2 = tmp.end(); it1 != it2; ++it1)
     {
         SpatialDomains::GeometrySharedPtr geom = it1->second;
         geom->FillGeom();
@@ -182,16 +181,14 @@ void OutputNekpp::WriteXmlNodes(TiXmlElement *pRoot)
     bool UnCompressed = m_config["uncompress"].beenSet;
 
     TiXmlElement *verTag = new TiXmlElement("VERTEX");
-    std::set<NodeSharedPtr>::iterator it;
 
     std::set<NodeSharedPtr> tmp(m_mesh->m_vertexSet.begin(),
                                 m_mesh->m_vertexSet.end());
 
     if (UnCompressed)
     {
-        for (it = tmp.begin(); it != tmp.end(); ++it)
+        for (auto &n : tmp)
         {
-            NodeSharedPtr n = *it;
             stringstream s;
             s << scientific << setprecision(8) << n->m_x << " " << n->m_y << " "
               << n->m_z;
@@ -204,14 +201,13 @@ void OutputNekpp::WriteXmlNodes(TiXmlElement *pRoot)
     else
     {
         std::vector<LibUtilities::MeshVertex> vertInfo;
-        for (it = tmp.begin(); it != tmp.end(); ++it)
+        for (auto &n : tmp)
         {
             LibUtilities::MeshVertex v;
-            NodeSharedPtr n = *it;
-            v.id            = n->m_id;
-            v.x             = n->m_x;
-            v.y             = n->m_y;
-            v.z = n->m_z;
+            v.id = n->m_id;
+            v.x  = n->m_x;
+            v.y  = n->m_y;
+            v.z  = n->m_z;
             vertInfo.push_back(v);
         }
         std::string vertStr;
@@ -235,16 +231,13 @@ void OutputNekpp::WriteXmlEdges(TiXmlElement *pRoot)
     {
         TiXmlElement *verTag = new TiXmlElement("EDGE");
 
-        std::set<EdgeSharedPtr>::iterator it;
         std::set<EdgeSharedPtr> tmp(m_mesh->m_edgeSet.begin(),
                                     m_mesh->m_edgeSet.end());
         if (UnCompressed)
         {
-            for (it = tmp.begin(); it != tmp.end(); ++it)
+            for (auto &ed : tmp)
             {
-                EdgeSharedPtr ed = *it;
                 stringstream s;
-
                 s << setw(5) << ed->m_n1->m_id << "  " << ed->m_n2->m_id
                   << "   ";
                 TiXmlElement *e = new TiXmlElement("E");
@@ -256,11 +249,9 @@ void OutputNekpp::WriteXmlEdges(TiXmlElement *pRoot)
         else
         {
             std::vector<LibUtilities::MeshEdge> edgeInfo;
-            for (it = tmp.begin(); it != tmp.end(); ++it)
+            for (auto &ed : tmp)
             {
                 LibUtilities::MeshEdge e;
-                EdgeSharedPtr ed = *it;
-
                 e.id = ed->m_id;
                 e.v0 = ed->m_n1->m_id;
                 e.v1 = ed->m_n2->m_id;
@@ -287,16 +278,14 @@ void OutputNekpp::WriteXmlFaces(TiXmlElement *pRoot)
     if (m_mesh->m_expDim == 3)
     {
         TiXmlElement *verTag = new TiXmlElement("FACE");
-        std::set<FaceSharedPtr>::iterator it;
         std::set<FaceSharedPtr> tmp(m_mesh->m_faceSet.begin(),
                                     m_mesh->m_faceSet.end());
 
         if (UnCompressed)
         {
-            for (it = tmp.begin(); it != tmp.end(); ++it)
+            for (auto &fa : tmp)
             {
                 stringstream s;
-                FaceSharedPtr fa = *it;
 
                 for (int j = 0; j < fa->m_edgeList.size(); ++j)
                 {
@@ -324,10 +313,8 @@ void OutputNekpp::WriteXmlFaces(TiXmlElement *pRoot)
             std::vector<LibUtilities::MeshTri> TriFaceInfo;
             std::vector<LibUtilities::MeshQuad> QuadFaceInfo;
 
-            for (it = tmp.begin(); it != tmp.end(); ++it)
+            for (auto &fa : tmp)
             {
-                FaceSharedPtr fa = *it;
-
                 switch (fa->m_edgeList.size())
                 {
                     case 3:
@@ -613,13 +600,11 @@ void OutputNekpp::WriteXmlCurves(TiXmlElement *pRoot)
     int edgecnt = 0;
 
     bool curve = false;
-    EdgeSet::iterator it;
     if (m_mesh->m_expDim > 1)
     {
-        for (it = m_mesh->m_edgeSet.begin(); it != m_mesh->m_edgeSet.end();
-             ++it)
+        for (auto &edge : m_mesh->m_edgeSet)
         {
-            if ((*it)->m_edgeNodes.size() > 0)
+            if (edge->m_edgeNodes.size() > 0)
             {
                 curve = true;
                 break;
@@ -637,25 +622,27 @@ void OutputNekpp::WriteXmlCurves(TiXmlElement *pRoot)
             }
         }
     }
+
     if (!curve)
+    {
         return;
+    }
 
     TiXmlElement *curved = new TiXmlElement("CURVED");
 
     if (UnCompressed)
     {
-        for (it = m_mesh->m_edgeSet.begin(); it != m_mesh->m_edgeSet.end();
-             ++it)
+        for (auto &edge : m_mesh->m_edgeSet)
         {
-            if ((*it)->m_edgeNodes.size() > 0)
+            if (edge->m_edgeNodes.size() > 0)
             {
                 TiXmlElement *e = new TiXmlElement("E");
                 e->SetAttribute("ID", edgecnt++);
-                e->SetAttribute("EDGEID", (*it)->m_id);
-                e->SetAttribute("NUMPOINTS", (*it)->GetNodeCount());
+                e->SetAttribute("EDGEID", edge->m_id);
+                e->SetAttribute("NUMPOINTS", edge->GetNodeCount());
                 e->SetAttribute(
-                    "TYPE", LibUtilities::kPointsTypeStr[(*it)->m_curveType]);
-                TiXmlText *t0 = new TiXmlText((*it)->GetXmlCurveString());
+                    "TYPE", LibUtilities::kPointsTypeStr[edge->m_curveType]);
+                TiXmlText *t0 = new TiXmlText(edge->GetXmlCurveString());
                 e->LinkEndChild(t0);
                 curved->LinkEndChild(e);
             }
@@ -665,23 +652,20 @@ void OutputNekpp::WriteXmlCurves(TiXmlElement *pRoot)
 
         if (m_mesh->m_expDim == 1 && m_mesh->m_spaceDim > 1)
         {
-            vector<ElementSharedPtr>::iterator it;
-            for (it = m_mesh->m_element[m_mesh->m_expDim].begin();
-                 it != m_mesh->m_element[m_mesh->m_expDim].end();
-                 ++it)
+            for (auto &elmt : m_mesh->m_element[m_mesh->m_expDim])
             {
                 // Only generate face curve if there are volume nodes
-                if ((*it)->GetVolumeNodes().size() > 0)
+                if (elmt->GetVolumeNodes().size() > 0)
                 {
                     TiXmlElement *e = new TiXmlElement("E");
                     e->SetAttribute("ID", facecnt++);
-                    e->SetAttribute("EDGEID", (*it)->GetId());
-                    e->SetAttribute("NUMPOINTS", (*it)->GetNodeCount());
+                    e->SetAttribute("EDGEID", elmt->GetId());
+                    e->SetAttribute("NUMPOINTS", elmt->GetNodeCount());
                     e->SetAttribute(
                         "TYPE",
-                        LibUtilities::kPointsTypeStr[(*it)->GetCurveType()]);
+                        LibUtilities::kPointsTypeStr[elmt->GetCurveType()]);
 
-                    TiXmlText *t0 = new TiXmlText((*it)->GetXmlCurveString());
+                    TiXmlText *t0 = new TiXmlText(elmt->GetXmlCurveString());
                     e->LinkEndChild(t0);
                     curved->LinkEndChild(e);
                 }
@@ -691,23 +675,20 @@ void OutputNekpp::WriteXmlCurves(TiXmlElement *pRoot)
         else if (m_mesh->m_expDim == 2 &&
                  m_mesh->m_spaceDim >= 2)
         {
-            vector<ElementSharedPtr>::iterator it;
-            for (it = m_mesh->m_element[m_mesh->m_expDim].begin();
-                 it != m_mesh->m_element[m_mesh->m_expDim].end();
-                 ++it)
+            for (auto &elmt : m_mesh->m_element[m_mesh->m_expDim])
             {
                 // Only generate face curve if there are volume nodes
-                if ((*it)->GetVolumeNodes().size() > 0)
+                if (elmt->GetVolumeNodes().size() > 0)
                 {
                     TiXmlElement *e = new TiXmlElement("F");
                     e->SetAttribute("ID", facecnt++);
-                    e->SetAttribute("FACEID", (*it)->GetId());
-                    e->SetAttribute("NUMPOINTS", (*it)->GetNodeCount());
+                    e->SetAttribute("FACEID", elmt->GetId());
+                    e->SetAttribute("NUMPOINTS", elmt->GetNodeCount());
                     e->SetAttribute(
                         "TYPE",
-                        LibUtilities::kPointsTypeStr[(*it)->GetCurveType()]);
+                        LibUtilities::kPointsTypeStr[elmt->GetCurveType()]);
 
-                    TiXmlText *t0 = new TiXmlText((*it)->GetXmlCurveString());
+                    TiXmlText *t0 = new TiXmlText(elmt->GetXmlCurveString());
                     e->LinkEndChild(t0);
                     curved->LinkEndChild(e);
                 }
@@ -715,21 +696,18 @@ void OutputNekpp::WriteXmlCurves(TiXmlElement *pRoot)
         }
         else if (m_mesh->m_expDim == 3)
         {
-            FaceSet::iterator it2;
-            for (it2 = m_mesh->m_faceSet.begin();
-                 it2 != m_mesh->m_faceSet.end();
-                 ++it2)
+            for (auto &face : m_mesh->m_faceSet)
             {
-                if ((*it2)->m_faceNodes.size() > 0)
+                if (face->m_faceNodes.size() > 0)
                 {
                     TiXmlElement *f = new TiXmlElement("F");
                     f->SetAttribute("ID", facecnt++);
-                    f->SetAttribute("FACEID", (*it2)->m_id);
-                    f->SetAttribute("NUMPOINTS", (*it2)->GetNodeCount());
+                    f->SetAttribute("FACEID", face->m_id);
+                    f->SetAttribute("NUMPOINTS", face->GetNodeCount());
                     f->SetAttribute(
                         "TYPE",
-                        LibUtilities::kPointsTypeStr[(*it2)->m_curveType]);
-                    TiXmlText *t0 = new TiXmlText((*it2)->GetXmlCurveString());
+                        LibUtilities::kPointsTypeStr[face->m_curveType]);
+                    TiXmlText *t0 = new TiXmlText(fave->GetXmlCurveString());
                     f->LinkEndChild(t0);
                     curved->LinkEndChild(f);
                 }
@@ -746,29 +724,27 @@ void OutputNekpp::WriteXmlCurves(TiXmlElement *pRoot)
         int newidx   = 0;
         NodeSet cvertlist;
 
-        for (it = m_mesh->m_edgeSet.begin(); it != m_mesh->m_edgeSet.end();
-             ++it)
+        for (auto &edge : m_mesh->m_edgeSet)
         {
-            if ((*it)->m_edgeNodes.size() > 0)
+            if (edge->m_edgeNodes.size() > 0)
             {
                 LibUtilities::MeshCurvedInfo cinfo;
                 cinfo.id       = edgecnt++;
-                cinfo.entityid = (*it)->m_id;
-                cinfo.npoints  = (*it)->m_edgeNodes.size() + 2;
-                cinfo.ptype    = (*it)->m_curveType;
+                cinfo.entityid = edge->m_id;
+                cinfo.npoints  = edge->m_edgeNodes.size() + 2;
+                cinfo.ptype    = edge->m_curveType;
                 cinfo.ptid     = 0; // set to just one point set
                 cinfo.ptoffset = ptoffset;
 
                 edgeinfo.push_back(cinfo);
 
                 std::vector<NodeSharedPtr> nodeList;
-                (*it)->GetCurvedNodes(nodeList);
+                edge->GetCurvedNodes(nodeList);
 
                 // fill in points
                 for (int i = 0; i < nodeList.size(); ++i)
                 {
-                    pair<NodeSet::iterator, bool> testIns =
-                        cvertlist.insert(nodeList[i]);
+                    auto testIns = cvertlist.insert(nodeList[i]);
 
                     if (testIns.second) // have inserted node
                     {
@@ -795,19 +771,16 @@ void OutputNekpp::WriteXmlCurves(TiXmlElement *pRoot)
         // 1D element in 2 or 3 space
         if (m_mesh->m_expDim == 1 && m_mesh->m_spaceDim > 1)
         {
-            vector<ElementSharedPtr>::iterator it;
-            for (it = m_mesh->m_element[m_mesh->m_expDim].begin();
-                 it != m_mesh->m_element[m_mesh->m_expDim].end();
-                 ++it)
+            for (auto &elmt : m_mesh->m_element[m_mesh->m_expDim])
             {
                 // Only generate face curve if there are volume nodes
-                if ((*it)->GetVolumeNodes().size() > 0)
+                if (elmt->GetVolumeNodes().size() > 0)
                 {
                     LibUtilities::MeshCurvedInfo cinfo;
                     cinfo.id       = facecnt++;
-                    cinfo.entityid = (*it)->GetId();
-                    cinfo.npoints  = (*it)->GetNodeCount();
-                    cinfo.ptype    = (*it)->GetCurveType();
+                    cinfo.entityid = elmt->GetId();
+                    cinfo.npoints  = elmt->GetNodeCount();
+                    cinfo.ptype    = elmt->GetCurveType();
                     cinfo.ptid     = 0; // set to just one point set
                     cinfo.ptoffset = ptoffset;
 
@@ -815,12 +788,11 @@ void OutputNekpp::WriteXmlCurves(TiXmlElement *pRoot)
 
                     // fill in points
                     vector<NodeSharedPtr> tmp;
-                    (*it)->GetCurvedNodes(tmp);
+                    elmt->GetCurvedNodes(tmp);
 
                     for (int i = 0; i < tmp.size(); ++i)
                     {
-                        pair<NodeSet::iterator, bool> testIns =
-                            cvertlist.insert(tmp[i]);
+                        auto testIns = cvertlist.insert(tmp[i]);
 
                         if (testIns.second) // have inserted node
                         {
@@ -843,19 +815,16 @@ void OutputNekpp::WriteXmlCurves(TiXmlElement *pRoot)
         // 2D elements in 3-space, output face curvature information
         else if (m_mesh->m_expDim == 2 && m_mesh->m_spaceDim == 3)
         {
-            vector<ElementSharedPtr>::iterator it;
-            for (it = m_mesh->m_element[m_mesh->m_expDim].begin();
-                 it != m_mesh->m_element[m_mesh->m_expDim].end();
-                 ++it)
+            for (auto &elmt : m_mesh->m_element[m_mesh->m_expDim])
             {
                 // Only generate face curve if there are volume nodes
-                if ((*it)->GetVolumeNodes().size() > 0)
+                if (elmt->GetVolumeNodes().size() > 0)
                 {
                     LibUtilities::MeshCurvedInfo cinfo;
                     cinfo.id       = facecnt++;
-                    cinfo.entityid = (*it)->GetId();
-                    cinfo.npoints  = (*it)->GetNodeCount();
-                    cinfo.ptype    = (*it)->GetCurveType();
+                    cinfo.entityid = elmt->GetId();
+                    cinfo.npoints  = elmt->GetNodeCount();
+                    cinfo.ptype    = elmt->GetCurveType();
                     cinfo.ptid     = 0; // set to just one point set
                     cinfo.ptoffset = ptoffset;
 
@@ -863,12 +832,11 @@ void OutputNekpp::WriteXmlCurves(TiXmlElement *pRoot)
 
                     // fill in points
                     vector<NodeSharedPtr> tmp;
-                    (*it)->GetCurvedNodes(tmp);
+                    elmt->GetCurvedNodes(tmp);
 
                     for (int i = 0; i < tmp.size(); ++i)
                     {
-                        pair<NodeSet::iterator, bool> testIns =
-                            cvertlist.insert(tmp[i]);
+                        auto testIns = cvertlist.insert(tmp[i]);
 
                         if (testIns.second) // have inserted node
                         {
@@ -890,21 +858,18 @@ void OutputNekpp::WriteXmlCurves(TiXmlElement *pRoot)
         }
         else if (m_mesh->m_expDim == 3)
         {
-            FaceSet::iterator it2;
-            for (it2 = m_mesh->m_faceSet.begin();
-                 it2 != m_mesh->m_faceSet.end();
-                 ++it2)
+            for (auto &face : m_mesh->m_faceSet)
             {
-                if ((*it2)->m_faceNodes.size() > 0)
+                if (face->m_faceNodes.size() > 0)
                 {
                     vector<NodeSharedPtr> tmp;
-                    (*it2)->GetCurvedNodes(tmp);
+                    face->GetCurvedNodes(tmp);
 
                     LibUtilities::MeshCurvedInfo cinfo;
                     cinfo.id       = facecnt++;
-                    cinfo.entityid = (*it2)->m_id;
+                    cinfo.entityid = face->m_id;
                     cinfo.npoints  = tmp.size();
-                    cinfo.ptype    = (*it2)->m_curveType;
+                    cinfo.ptype    = face->m_curveType;
                     cinfo.ptid     = 0; // set to just one point set
                     cinfo.ptoffset = ptoffset;
 
@@ -912,8 +877,7 @@ void OutputNekpp::WriteXmlCurves(TiXmlElement *pRoot)
 
                     for (int i = 0; i < tmp.size(); ++i)
                     {
-                        pair<NodeSet::iterator, bool> testIns =
-                            cvertlist.insert(tmp[i]);
+                        auto testIns = cvertlist.insert(tmp[i]);
 
                         if (testIns.second) // have inserted node
                         {
@@ -992,24 +956,19 @@ void OutputNekpp::WriteXmlCurves(TiXmlElement *pRoot)
 void OutputNekpp::WriteXmlComposites(TiXmlElement *pRoot)
 {
     TiXmlElement *verTag = new TiXmlElement("COMPOSITE");
-    CompositeMap::iterator it;
-    ConditionMap::iterator it2;
     int j = 0;
 
-    for (it = m_mesh->m_composite.begin(); it != m_mesh->m_composite.end();
-         ++it, ++j)
+    for (auto &it : m_mesh->m_composite)
     {
-        if (it->second->m_items.size() > 0)
+        if (it.second->m_items.size() > 0)
         {
             TiXmlElement *comp_tag = new TiXmlElement("C"); // Composite
             bool doSort            = true;
 
             // Ensure that this composite is not used for periodic BCs!
-            for (it2 = m_mesh->m_condition.begin();
-                 it2 != m_mesh->m_condition.end();
-                 ++it2)
+            for (auto &it2 : m_mesh->m_condition)
             {
-                ConditionSharedPtr c = it2->second;
+                ConditionSharedPtr c = it2.second;
 
                 // Ignore non-periodic boundary conditions.
                 if (find(c->type.begin(), c->type.end(), ePeriodic) ==
@@ -1027,21 +986,23 @@ void OutputNekpp::WriteXmlComposites(TiXmlElement *pRoot)
                 }
             }
 
-            doSort = doSort && it->second->m_reorder;
-            comp_tag->SetAttribute("ID", it->second->m_id);
-            if (it->second->m_label.size())
+            doSort = doSort && it.second->m_reorder;
+            comp_tag->SetAttribute("ID", it.second->m_id);
+            if (it.second->m_label.size())
             {
-                comp_tag->SetAttribute("LABEL", it->second->m_label);
+                comp_tag->SetAttribute("LABEL", it.second->m_label);
             }
             comp_tag->LinkEndChild(
-                new TiXmlText(it->second->GetXmlString(doSort)));
+                new TiXmlText(it.second->GetXmlString(doSort)));
             verTag->LinkEndChild(comp_tag);
         }
         else
         {
-            cout << "Composite " << it->second->m_id << " "
+            cout << "Composite " << it.second->m_id << " "
                  << "contains nothing." << endl;
         }
+
+        ++j;
     }
 
     pRoot->LinkEndChild(verTag);
@@ -1052,18 +1013,16 @@ void OutputNekpp::WriteXmlDomain(TiXmlElement *pRoot)
     // Write the <DOMAIN> subsection.
     TiXmlElement *domain = new TiXmlElement("DOMAIN");
     std::string list;
-    CompositeMap::iterator it;
 
-    for (it = m_mesh->m_composite.begin(); it != m_mesh->m_composite.end();
-         ++it)
+    for (auto &it : m_mesh->m_composite)
     {
-        if (it->second->m_items[0]->GetDim() == m_mesh->m_expDim)
+        if (it.second->m_items[0]->GetDim() == m_mesh->m_expDim)
         {
             if (list.length() > 0)
             {
                 list += ",";
             }
-            list += boost::lexical_cast<std::string>(it->second->m_id);
+            list += boost::lexical_cast<std::string>(it.second->m_id);
         }
     }
     domain->LinkEndChild(new TiXmlText(" C[" + list + "] "));
@@ -1074,17 +1033,15 @@ void OutputNekpp::WriteXmlExpansions(TiXmlElement *pRoot)
 {
     // Write a default <EXPANSIONS> section.
     TiXmlElement *expansions = new TiXmlElement("EXPANSIONS");
-    CompositeMap::iterator it;
 
-    for (it = m_mesh->m_composite.begin(); it != m_mesh->m_composite.end();
-         ++it)
+    for (auto &it : m_mesh->m_composite)
     {
-        if (it->second->m_items[0]->GetDim() == m_mesh->m_expDim)
+        if (it.second->m_items[0]->GetDim() == m_mesh->m_expDim)
         {
             TiXmlElement *exp = new TiXmlElement("E");
             exp->SetAttribute(
                 "COMPOSITE",
-                "C[" + boost::lexical_cast<std::string>(it->second->m_id) +
+                "C[" + boost::lexical_cast<std::string>(it.second->m_id) +
                     "]");
             exp->SetAttribute("NUMMODES", 4);
             exp->SetAttribute("TYPE", "MODIFIED");
@@ -1116,17 +1073,15 @@ void OutputNekpp::WriteXmlConditions(TiXmlElement *pRoot)
     TiXmlElement *boundaryregions    = new TiXmlElement("BOUNDARYREGIONS");
     TiXmlElement *boundaryconditions = new TiXmlElement("BOUNDARYCONDITIONS");
     TiXmlElement *variables          = new TiXmlElement("VARIABLES");
-    ConditionMap::iterator it;
 
-    for (it = m_mesh->m_condition.begin(); it != m_mesh->m_condition.end();
-         ++it)
+    for (auto &it : m_mesh->m_condition)
     {
-        ConditionSharedPtr c = it->second;
+        ConditionSharedPtr c = it.second;
         string tmp;
 
         // First set up boundary regions.
         TiXmlElement *b = new TiXmlElement("B");
-        b->SetAttribute("ID", boost::lexical_cast<string>(it->first));
+        b->SetAttribute("ID", boost::lexical_cast<string>(it.first));
 
         for (int i = 0; i < c->m_composite.size(); ++i)
         {
@@ -1140,7 +1095,7 @@ void OutputNekpp::WriteXmlConditions(TiXmlElement *pRoot)
         boundaryregions->LinkEndChild(b);
 
         TiXmlElement *region = new TiXmlElement("REGION");
-        region->SetAttribute("REF", boost::lexical_cast<string>(it->first));
+        region->SetAttribute("REF", boost::lexical_cast<string>(it.first));
 
         for (int i = 0; i < c->type.size(); ++i)
         {

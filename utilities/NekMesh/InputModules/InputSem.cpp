@@ -85,7 +85,6 @@ void InputSem::Process()
     }
 
     // Read through input file and populate the section map.
-    map<string, streampos>::iterator it;
     string fileContents, line, word;
     stringstream ss, ssFile;
     streampos linePos;
@@ -112,11 +111,11 @@ void InputSem::Process()
 
         // Iterate over all tokens and see if section exists on this
         // line.
-        for (it = sectionMap.begin(); it != sectionMap.end(); ++it)
+        for (auto &it : sectionMap)
         {
-            if (word == "<" + it->first || word == "<" + it->first + ">")
+            if (word == "<" + it.first || word == "<" + it.first + ">")
             {
-                sectionMap[it->first] = linePos;
+                sectionMap[it.first] = linePos;
             }
         }
     }

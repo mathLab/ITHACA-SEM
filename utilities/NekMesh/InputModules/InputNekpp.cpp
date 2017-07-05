@@ -91,9 +91,7 @@ void InputNekpp::Process()
     }
 
     map<int, EdgeSharedPtr> eIdMap;
-    map<int, EdgeSharedPtr>::iterator itEmap;
     map<int, FaceSharedPtr> fIdMap;
-    map<int, FaceSharedPtr>::iterator itFmap;
 
     // Load up all edges from graph
     {

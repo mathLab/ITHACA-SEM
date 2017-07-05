@@ -292,8 +292,7 @@ void InputNek::Process()
         for (j = 0; j < tmp.size(); ++j)
         {
             vector<int> tags;
-            map<LibUtilities::ShapeType, int>::iterator compIt =
-                domainComposite.find(elType);
+            auto compIt = domainComposite.find(elType);
             if (compIt == domainComposite.end())
             {
                 tags.push_back(nComposite);
@@ -311,8 +310,7 @@ void InputNek::Process()
 
             for (k = 0; k < nodeList.size(); ++k)
             {
-                pair<NodeSet::iterator, bool> testIns =
-                    m_mesh->m_vertexSet.insert(nodeList[k]);
+                auto testIns = m_mesh->m_vertexSet.insert(nodeList[k]);
 
                 if (!testIns.second)
                 {
@@ -397,8 +395,6 @@ void InputNek::Process()
 
         int nCurvedSides;
         int faceId, elId;
-        map<string, pair<NekCurve, string> >::iterator it;
-        HOSurfSet::iterator hoIt;
 
         s.clear();
         s.str(line);
@@ -438,7 +434,7 @@ void InputNek::Process()
                 faceId = t->m_orientationMap[faceId];
             }
 
-            it = curveTags.find(word);
+            auto it = curveTags.find(word);
             if (it == curveTags.end())
             {
                 cerr << "Unrecognised curve tag " << word << " in curved lines"
@@ -488,8 +484,7 @@ void InputNek::Process()
                 for (j = 0; j < tmp.size(); ++j)
                 {
                     int id = tmp[(j + offset) % tmp.size()]->m_id;
-                    std::unordered_map<int, Node>::iterator vIt =
-                        m_mesh->m_vertexNormals.find(id);
+                    auto vIt = m_mesh->m_vertexNormals.find(id);
 
                     if (vIt == m_mesh->m_vertexNormals.end())
                     {
@@ -556,7 +551,7 @@ void InputNek::Process()
                 HOSurfSharedPtr hs =
                     std::shared_ptr<HOSurf>(new HOSurf(vertId));
                 // Find vertex combination in hoData.
-                hoIt = hoData[word].find(hs);
+                auto hoIt = hoData[word].find(hs);
 
                 if (hoIt == hoData[word].end())
                 {
@@ -781,12 +776,10 @@ void InputNek::Process()
         // Now attempt to find this boundary condition inside
         // m_mesh->condition. This is currently a linear search and should
         // probably be made faster!
-        ConditionMap::iterator it;
         bool found = false;
-        for (it = m_mesh->m_condition.begin(); it != m_mesh->m_condition.end();
-             ++it)
+        for (auto &it : m_mesh->m_condition)
         {
-            if (c == it->second)
+            if (c == it.second)
             {
                 found = true;
                 break;
@@ -893,9 +886,7 @@ void InputNek::Process()
         else
         {
             // Otherwise find existing composite inside surfaceCompMap.
-            map<int, vector<pair<int, LibUtilities::ShapeType> > >::iterator
-                it2;
-            it2 = surfaceCompMap.find(it->first);
+            auto it2 = surfaceCompMap.find(it->first);
 
             found = false;
             if (it2 == surfaceCompMap.end())
@@ -958,17 +949,16 @@ void InputNek::Process()
  */
 void InputNek::LoadHOSurfaces()
 {
-    map<string, pair<NekCurve, string> >::iterator it;
     int nodeId = m_mesh->GetNumEntities();
 
-    for (it = curveTags.begin(); it != curveTags.end(); ++it)
+    for (auto &it : curveTags)
     {
         ifstream hsf;
-        string line, fileName = it->second.second;
+        string line, fileName = it.second.second;
         size_t pos;
         int N, Nface, dot;
 
-        if (it->second.first != eFile)
+        if (it.second.first != eFile)
         {
             continue;
         }
@@ -1109,7 +1099,7 @@ void InputNek::LoadHOSurfaces()
                 abort();
             }
 
-            hoData[it->first].insert(
+            hoData[it.first].insert(
                 HOSurfSharedPtr(new HOSurf(nodeIds, faceMap[i])));
         }
 

@@ -85,18 +85,16 @@ void ProcessExtrude::Process()
 
     map<int, NodeSharedPtr> id2node;
 
-    NodeSet::iterator it;
-    for (it = nodes.begin(); it != nodes.end(); ++it)
+    for (auto &n : nodes)
     {
-        id2node[(*it)->m_id] = *it;
+        id2node[n->m_id] = n;
     }
 
     // Create vertices for subsequent layers.
     for (int i = 1; i < nLayers + 1; ++i)
     {
-        for (it = nodes.begin(); it != nodes.end(); ++it)
+        for (auto &n : nodes)
         {
-            NodeSharedPtr n = *it;
             NodeSharedPtr newNode(
                 new Node(i * nodes.size() + n->m_id, n->m_x, n->m_y, i * dz));
             m_mesh->m_vertexSet.insert(newNode);
@@ -159,26 +157,25 @@ void ProcessExtrude::Process()
     ProcessElements();
     ProcessComposites();
 
-    EdgeSet::iterator eit;
-    for (eit = es.begin(); eit != es.end(); eit++)
+    for (auto &edge : es)
     {
-        if ((*eit)->m_edgeNodes.size() > 0)
+        if (edge->m_edgeNodes.size() > 0)
         {
             for (int j = 0; j < nLayers + 1; ++j)
             {
-                vector<NodeSharedPtr> ns((*eit)->m_edgeNodes.size());
+                vector<NodeSharedPtr> ns(edge->m_edgeNodes.size());
                 for (int i = 0; i < ns.size(); i++)
                 {
-                    NodeSharedPtr n = (*eit)->m_edgeNodes[i];
+                    NodeSharedPtr n = edge->m_edgeNodes[i];
                     ns[i]           = std::shared_ptr<Node>(
                         new Node(0, n->m_x, n->m_y, j * dz));
                 }
 
                 EdgeSharedPtr e = std::shared_ptr<Edge>(
-                    new Edge(id2node[(*eit)->m_n1->m_id + j * nodes.size()],
-                             id2node[(*eit)->m_n2->m_id + j * nodes.size()]));
+                    new Edge(id2node[edge->m_n1->m_id + j * nodes.size()],
+                             id2node[edge->m_n2->m_id + j * nodes.size()]));
 
-                EdgeSet::iterator f = m_mesh->m_edgeSet.find(e);
+                auto f = m_mesh->m_edgeSet.find(e);
                 ASSERTL0(f != m_mesh->m_edgeSet.end(), "could not find edge");
 
                 if ((*f)->m_n1 == e->m_n1)

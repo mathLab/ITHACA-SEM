@@ -729,13 +729,10 @@ void InputGmsh::Process()
     int prevId    = -1;
     int maxTagId  = -1;
 
-    map<unsigned int, ElmtConfig>::iterator it;
-
     // This map takes each element ID and maps it to a permutation map
     // that is required to take Gmsh element node orderings and map them
     // to Nektar++ orderings.
     std::unordered_map<int, vector<int> > orderingMap;
-    std::unordered_map<int, vector<int> >::iterator oIt;
 
     if (m_mesh->m_verbose)
     {
@@ -803,7 +800,7 @@ void InputGmsh::Process()
                 st >> id >> elm_type >> num_tag;
                 id -= 1; // counter starts at 0
 
-                it = elmMap.find(elm_type);
+                auto it = elmMap.find(elm_type);
                 if (it == elmMap.end())
                 {
                     cerr << "Error: element type " << elm_type
@@ -835,7 +832,7 @@ void InputGmsh::Process()
                 }
 
                 // Look up reordering.
-                oIt = orderingMap.find(elm_type);
+                auto oIt = orderingMap.find(elm_type);
 
                 // If it's not created, then create it.
                 if (oIt == orderingMap.end())
@@ -872,8 +869,6 @@ void InputGmsh::Process()
 
     // Go through element and remap tags if necessary.
     map<int, map<LibUtilities::ShapeType, int> > compMap;
-    map<int, map<LibUtilities::ShapeType, int> >::iterator cIt;
-    map<LibUtilities::ShapeType, int>::iterator sIt;
 
     for (int i = 0; i < m_mesh->m_element[m_mesh->m_expDim].size(); ++i)
     {
@@ -883,7 +878,7 @@ void InputGmsh::Process()
         vector<int> tags = el->GetTagList();
         int tag          = tags[0];
 
-        cIt = compMap.find(tag);
+        auto cIt = compMap.find(tag);
 
         if (cIt == compMap.end())
         {
@@ -892,7 +887,7 @@ void InputGmsh::Process()
         }
 
         // Reset tag for this element.
-        sIt = cIt->second.find(type);
+        auto sIt = cIt->second.find(type);
         if (sIt == cIt->second.end())
         {
             maxTagId++;
@@ -908,9 +903,9 @@ void InputGmsh::Process()
     }
 
     bool printInfo = false;
-    for (cIt = compMap.begin(); cIt != compMap.end(); ++cIt)
+    for (auto &cIt : compMap)
     {
-        if (cIt->second.size() > 1)
+        if (cIt.second.size() > 1)
         {
             printInfo = true;
             break;
@@ -920,16 +915,16 @@ void InputGmsh::Process()
     if (printInfo)
     {
         cout << "Multiple elements in composite detected; remapped:" << endl;
-        for (cIt = compMap.begin(); cIt != compMap.end(); ++cIt)
+        for (auto &cIt : compMap)
         {
-            if (cIt->second.size() > 1)
+            if (cIt.second.size() > 1)
             {
-                sIt = cIt->second.begin();
-                cout << "- Tag " << cIt->first << " => " << sIt->second << " ("
+                auto sIt = cIt.second.begin();
+                cout << "- Tag " << cIt.first << " => " << sIt->second << " ("
                      << LibUtilities::ShapeTypeMap[sIt->first] << ")";
                 sIt++;
 
-                for (; sIt != cIt->second.end(); ++sIt)
+                for (; sIt != cIt.second.end(); ++sIt)
                 {
                     cout << ", " << sIt->second << " ("
                          << LibUtilities::ShapeTypeMap[sIt->first] << ")";
@@ -954,9 +949,8 @@ void InputGmsh::Process()
 int InputGmsh::GetNnodes(unsigned int InputGmshEntity)
 {
     int nNodes;
-    map<unsigned int, ElmtConfig>::iterator it;
 
-    it = elmMap.find(InputGmshEntity);
+    auto it = elmMap.find(InputGmshEntity);
 
     if (it == elmMap.end())
     {
@@ -1010,9 +1004,7 @@ int InputGmsh::GetNnodes(unsigned int InputGmshEntity)
  */
 vector<int> InputGmsh::CreateReordering(unsigned int InputGmshEntity)
 {
-    map<unsigned int, ElmtConfig>::iterator it;
-
-    it = elmMap.find(InputGmshEntity);
+    auto it = elmMap.find(InputGmshEntity);
 
     if (it == elmMap.end())
     {

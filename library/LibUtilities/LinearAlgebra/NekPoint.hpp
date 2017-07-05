@@ -37,10 +37,8 @@
 #define NEKTAR_LIB_UTILITIES_NEK_POINT_HPP
 
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
-#include <LibUtilities/BasicUtils/Concepts.hpp>
 #include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
 
-#include <boost/concept_check.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/tokenizer.hpp>
 #include <boost/call_traits.hpp>
@@ -91,8 +89,6 @@ namespace Nektar
 
             explicit NekPoint(typename boost::call_traits<DataType>::const_reference a)
             {
-                boost::function_requires< Nektar::AssignableConcept<DataType> >();
-
                 for(unsigned int i = 0; i < dim::Value; ++i)
                 {
                     m_data[i] = a;

@@ -8,6 +8,8 @@
 OPTION(NEKTAR_USE_CCM
    "use CCM star i/o" OFF)
 
+IF(NEKTAR_USE_CCM)
+
 # First search for system ccmioL installs. Hint /usr/local 
 FIND_PATH   (CCMIO_INCLUDE_DIR ccmio.h PATHS /usr/local/include)
 FIND_LIBRARY(CCMIO_LIBRARY NAMES "ccmio" PATHS /usr/local/lib)
@@ -79,3 +81,5 @@ SET(CCMIO_LIBRARIES ccmio adf)
 
 MARK_AS_ADVANCED(CCMIO_INCLUDE_DIR)
 MARK_AS_ADVANCED(CCMIO_LIBRARY)
+
+ENDIF(NEKTAR_USE_CCM)

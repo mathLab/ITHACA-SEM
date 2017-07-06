@@ -29,8 +29,8 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: 0-based sparse BSR storage class with own unrolled and
-//              LibSMV multiply kernels.
+// Description: 0-based sparse BSR storage class with own unrolled multiply
+//              kernels.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -44,8 +44,6 @@
 #include <LibUtilities/LinearAlgebra/Blas.hpp>
 #include <LibUtilities/LinearAlgebra/StorageSmvBsr.hpp>
 #include <LibUtilities/LinearAlgebra/NistSparseDescriptors.hpp>
-
-#include <LibUtilities/LinearAlgebra/LibSMV.hpp>
 
 #include <boost/preprocessor/iteration/local.hpp>
 #include <boost/lexical_cast.hpp>
@@ -243,17 +241,6 @@ namespace Nektar
             throw 1;
         }
 
-#ifdef NEKTAR_USING_SMV
-        // Set pointer to rank-specific matrix-vector multiply kernel.
-        // Number of ranks is defined by LibSMV library
-        switch (blkDim)
-        {
-            #define BOOST_PP_LOCAL_MACRO(n)   case n: m_mvKernel = Smv::F77NAME(smv_##n); break;
-            #define BOOST_PP_LOCAL_LIMITS     (1, LIBSMV_MAX_RANK)
-            #include BOOST_PP_LOCAL_ITERATE()
-        }
-#endif
-
         processBcoInput(blkRows,blkCols,blkDim,bcoMat);
     }
 
@@ -389,18 +376,7 @@ namespace Nektar
         {
         case 1:  Multiply_1x1(mb,kb,val,bindx,bpntrb,bpntre,b,c); return;
         case 2:  Multiply_2x2(mb,kb,val,bindx,bpntrb,bpntre,b,c); return;
-#ifndef NEKTAR_USING_SMV
-        case 3:  Multiply_3x3(mb,kb,val,bindx,bpntrb,bpntre,b,c); return;
-        case 4:  Multiply_4x4(mb,kb,val,bindx,bpntrb,bpntre,b,c); return;
-#endif
         default:
-#ifdef NEKTAR_USING_SMV
-            if (m_blkDim <= LIBSMV_MAX_RANK)
-            {
-                Multiply_libsmv(mb,kb,val,bindx,bpntrb,bpntre,b,c); return;
-            }
-            else
-#endif
             {
                 Multiply_generic(mb,kb,val,bindx,bpntrb,bpntre,b,c); return;
             }
@@ -426,18 +402,7 @@ namespace Nektar
         {
         case 1:  Multiply_1x1(mb,kb,val,bindx,bpntrb,bpntre,b,c); return;
         case 2:  Multiply_2x2(mb,kb,val,bindx,bpntrb,bpntre,b,c); return;
-#ifndef NEKTAR_USING_SMV
-        case 3:  Multiply_3x3(mb,kb,val,bindx,bpntrb,bpntre,b,c); return;
-        case 4:  Multiply_4x4(mb,kb,val,bindx,bpntrb,bpntre,b,c); return;
-#endif
         default:
-#ifdef NEKTAR_USING_SMV
-            if (m_blkDim <= LIBSMV_MAX_RANK)
-            {
-                Multiply_libsmv(mb,kb,val,bindx,bpntrb,bpntre,b,c); return;
-            }
-            else
-#endif
             {
                 Multiply_generic(mb,kb,val,bindx,bpntrb,bpntre,b,c); return;
             }
@@ -465,18 +430,7 @@ namespace Nektar
         {
         case 1:  Multiply_1x1(mb,kb,val,bindx,bpntrb,bpntre,b,c); return;
         case 2:  Multiply_2x2(mb,kb,val,bindx,bpntrb,bpntre,b,c); return;
-#ifndef NEKTAR_USING_SMV
-        case 3:  Multiply_3x3(mb,kb,val,bindx,bpntrb,bpntre,b,c); return;
-        case 4:  Multiply_4x4(mb,kb,val,bindx,bpntrb,bpntre,b,c); return;
-#endif
         default:
-#ifdef NEKTAR_USING_SMV
-            if (m_blkDim <= LIBSMV_MAX_RANK)
-            {
-                Multiply_libsmv(mb,kb,val,bindx,bpntrb,bpntre,b,c); return;
-            }
-            else
-#endif
             {
                 Multiply_generic(mb,kb,val,bindx,bpntrb,bpntre,b,c); return;
             }
@@ -625,42 +579,6 @@ namespace Nektar
             pc += 4;
         }
     }
-
-#ifdef NEKTAR_USING_SMV
-    /// Generic zero-based BSR multiply
-    template<typename DataType>
-    void StorageSmvBsr<DataType>::Multiply_libsmv(
-            const int mb,
-            const int kb,
-            const double* val,
-            const int* bindx,
-            const int* bpntrb,
-            const int* bpntre,
-            const double* b,
-                  double* c)
-    {
-        const int lb = m_blkDim;
-
-        const double *pval = val;
-        const int mm=lb*lb;
-
-        double *pc=c;
-        for (int i=0;i!=mb*lb;i++) *pc++ = 0;
-
-        pc=c;
-        for (int i=0;i!=mb;i++)
-        {
-            int jb = bpntrb[i];
-            int je = bpntre[i];
-            for (int j=jb;j!=je;j++)
-            {
-                m_mvKernel(pval,&b[bindx[j]*lb],pc);
-                pval+=mm;
-            }
-            pc += lb;
-        }
-    }
-#endif
 
     /// Generic zero-based BSR multiply for higher matrix ranks
     template<typename DataType>

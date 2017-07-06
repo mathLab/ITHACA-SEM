@@ -39,7 +39,6 @@
 #include <ExpressionTemplates/ExpressionTemplates.hpp>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/BasicUtils/Concepts.hpp>
-#include <LibUtilities/LinearAlgebra/Space.h>
 #include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
 
 #include <boost/concept_check.hpp>

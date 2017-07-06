@@ -69,7 +69,10 @@ namespace Nektar
                 const bool                                  useFFT,
                 const bool                                  dealiasing,
                 const SpatialDomains::MeshGraphSharedPtr   &graph2D,
-                const std::string                          &variable);
+                const std::string                          &variable,
+                const Collections::ImplementationType ImpType
+                = Collections::eNoImpType);
+                                                       
 
             /// Copy constructor.
             MULTI_REGIONS_EXPORT DisContField3DHomogeneous1D(

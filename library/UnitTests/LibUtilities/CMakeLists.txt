@@ -1,5 +1,4 @@
-
-SET(PrecompiledHeaderSources
+SET(LibUtilitiesUnitTestSources
     TestConsistentObjectAccess.cpp
     TestLowerTriangularMatrix.cpp
     TestMatrixStoragePolicies.cpp
@@ -8,6 +7,7 @@ SET(PrecompiledHeaderSources
     TestRawType.cpp
     TestUpperTriangularMatrix.cpp
     TestSharedArray.cpp
+    main.cpp
     ../util.cpp
 )
 
@@ -19,15 +19,10 @@ SET(UnitTestHeaders
 )
 
 ADD_DEFINITIONS(-DENABLE_NEKTAR_EXCEPTIONS)
-LINK_DIRECTORIES(${Boost_LIBRARY_DIRS})
+ADD_NEKTAR_EXECUTABLE(LibUtilitiesUnitTests
+    COMPONENT unit-test DEPENDS LibUtilities SOURCES ${LibUtilitiesUnitTestSources})
+ADD_TEST(NAME LibUtilitiesUnitTests COMMAND LibUtilitiesUnitTests --detect_memory_leaks=0)
 
-ADD_NEKTAR_EXECUTABLE(LibUtilitiesUnitTests unit-test UnitTestSources UnitTestHeaders)
-TARGET_LINK_LIBRARIES(LibUtilitiesUnitTests LibUtilities)
-
-#SET(PrecompiledHeaderName LibUtilitiesUnitTestsPrecompiledHeader.h)
-#SETUP_PRECOMPILED_HEADERS(PrecompiledHeaderSources PrecompiledHeaderName)
-
-ADD_TEST(NAME LibUtilities COMMAND LibUtilitiesUnitTests --detect_memory_leaks=0)
 SUBDIRS(LinearAlgebra)
 
 IF( NEKTAR_USE_EXPRESSION_TEMPLATES )

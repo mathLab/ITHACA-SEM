@@ -1,32 +1,41 @@
-MACRO(ADD_UTILITIES_EXECUTABLE name component source)
-    ADD_EXECUTABLE(${name} ${source} ${ARGN})
-    SET_COMMON_PROPERTIES(${name})
-    TARGET_LINK_LIBRARIES(${name} MultiRegions)
-    SET_PROPERTY(TARGET ${name} PROPERTY FOLDER ${component})
-    INSTALL(TARGETS ${name}
-	RUNTIME DESTINATION ${NEKTAR_BIN_DIR} COMPONENT ${component})
+MACRO(ADD_UTILITIES_EXECUTABLE name)
+    CMAKE_PARSE_ARGUMENTS(UTIL "" "COMPONENT" "SOURCES;DEPENDS" ${ARGN})
+
+    IF(NOT UTIL_DEPENDS)
+        SET(UTIL_DEPENDS MultiRegions)
+    ENDIF()
+
+    ADD_NEKTAR_EXECUTABLE(${name}
+        COMPONENT ${UTIL_COMPONENT} DEPENDS ${UTIL_DEPENDS} SOURCES ${UTIL_SOURCES})
 ENDMACRO()
 
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/library ${CMAKE_SOURCE_DIR}/utilities)
 
-ADD_UTILITIES_EXECUTABLE(FldAddFld         util FldAddFld.cpp)
-ADD_UTILITIES_EXECUTABLE(FldAddScalGrad    util FldAddScalGrad.cpp)
-ADD_UTILITIES_EXECUTABLE(FldAddScalGrad_elmt util FldAddScalGrad_elmt.cpp)
-ADD_UTILITIES_EXECUTABLE(FldAddWSS         util FldAddWSS.cpp)
-ADD_UTILITIES_EXECUTABLE(FldAddMultiShear  util FldAddMultiShear.cpp)
-ADD_UTILITIES_EXECUTABLE(MeshConvert       util MeshConvert.cpp)
-ADD_UTILITIES_EXECUTABLE(ProbeFld          util-extra ProbeFld.cpp)
-ADD_UTILITIES_EXECUTABLE(XmlToTecplot      util XmlToTecplot.cpp)
-ADD_UTILITIES_EXECUTABLE(XmlToTecplotWireFrame  util XmlToTecplotWireFrame.cpp)
-ADD_UTILITIES_EXECUTABLE(XmlToVtk          util XmlToVtk.cpp)
+CMAKE_DEPENDENT_OPTION(NEKTAR_UTILITY_NEKMESH
+    "Build the NekMesh pre-processing utility." ON
+    "NEKTAR_BUILD_UTILITIES" OFF)
+CMAKE_DEPENDENT_OPTION(NEKTAR_UTILITY_FIELDCONVERT
+    "Build the FieldConvert post-processing utility." ON
+    "NEKTAR_BUILD_UTILITIES" OFF)
+CMAKE_DEPENDENT_OPTION(NEKTAR_UTILITY_EXTRAS
+    "Build extra Nektar++ utilities." OFF
+    "NEKTAR_BUILD_UTILITIES" OFF)
 
-#SUBDIRS(PostProcessing FieldConvert NekMesh SimpleMeshGen Extras)
+IF (NOT NEKTAR_BUILD_UTILITIES)
+    SET(NEKTAR_UTILITY_NEKMESH OFF CACHE INTERNAL "")
+    SET(NEKTAR_UTILITY_FIELDCONVERT OFF CACHE INTERNAL "")
+    SET(NEKTAR_UTILITY_EXTRAS OFF CACHE INTERNAL "")
+ENDIF()
 
 # Generate list of available utilities
-FILE(GLOB dir_list "*")
-LIST(REMOVE_ITEM dir_list "${CMAKE_SOURCE_DIR}/.svn")
-FOREACH(dir ${dir_list})
-    IF(IS_DIRECTORY ${dir} AND EXISTS ${dir}/CMakeLists.txt)
-        ADD_SUBDIRECTORY(${dir})
-    ENDIF(IS_DIRECTORY ${dir} AND EXISTS ${dir}/CMakeLists.txt)
-ENDFOREACH(dir ${dir_list})
+IF (NEKTAR_UTILITY_NEKMESH)
+    SUBDIRS(NekMesh)
+ENDIF()
+
+IF (NEKTAR_UTILITY_FIELDCONVERT)
+    SUBDIRS(FieldConvert)
+ENDIF()
+
+IF (NEKTAR_UTILITY_EXTRAS)
+    SUBDIRS(Extras)
+ENDIF()

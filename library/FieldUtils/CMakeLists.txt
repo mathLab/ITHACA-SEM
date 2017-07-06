@@ -103,11 +103,11 @@ SET(FieldUtilsSources
     ProcessModules/ProcessQualityMetric.cpp
 )
 
-ADD_NEKTAR_LIBRARY(FieldUtils lib ${NEKTAR_LIBRARY_TYPE} ${FieldUtilsSources} ${FieldUtilsHeaders})
-TARGET_LINK_LIBRARIES(FieldUtils LINK_PUBLIC GlobalMapping)
+ADD_NEKTAR_LIBRARY(FieldUtils
+    SUMMARY "Nektar++ FieldUtils library"
+    DESCRIPTION "Collection of post-processing modules for the FieldConvert utility and filter"
+    SOURCES ${FieldUtilsSources}
+    HEADERS ${FieldUtilsHeaders}
+    DEPENDS GlobalMapping)
 
 ADD_DEFINITIONS(-DFIELD_UTILS_EXPORTS)
-
-INSTALL(DIRECTORY ./ DESTINATION ${NEKTAR_INCLUDE_DIR}/FieldUtils COMPONENT dev FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp")
-
-

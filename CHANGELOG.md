@@ -3,24 +3,38 @@ Changelog
 
 v5.0.0
 ------
+**Library**
+- Added in sum factorisation version for pyramid expansions and orthogonal
+  expansion in pyramids (!750)
+- Significant overhaul of CMake infrastructure (!770, !804)
+- Fix ThridpartyCCM options (!802)
 
 **NekMesh**:
 - Add feature to read basic 2D geo files as CAD (!731)
 - Add periodic boundary condition meshing in 2D (!733)
 - Adjust boundary layer thickness in corners in 2D (!739)
 - Add non-O BL meshing in 2D (!757)
-- Fix issue with reading CCM files due to definition of default arrays rather than a vector (!797)
+- Add ability to compile CCIO library but tar file is not yet openly 
+  available whist we seek permission from Simens (!799)
+- Fix issue with reading CCM files due to definition of default arrays 
+  rather than a vector (!797)
+- Fix inverted triangles and small memory issue in surface meshing (!798)
 - Additional curve types in GEO reader: BSpline, Circle, Ellipse (!800)
-
-**Library**
-- Added in sum factorisation version for pyramid expansions and orthogonal
-  expansion in pyramids (!750)
 
 **FieldConvert**:
 - Add input module for Semtex field files (!777)
 
 **Documentation**:
 - Added the developer-guide repository as a submodule (!751)
+
+v4.4.2
+------
+**NekMesh**:
+- Fix uninitialised memory bug in Nek5000 input module (!801)
+
+**Library**
+- Fix ability to set default implementation in Collections and added an option 
+  to set eNoCollections in FieldConvert as default (!789)
 
 v4.4.1
 ------

@@ -43,19 +43,6 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
 
-#include <ElCLib.hxx>
-#include <GC_MakeCircle.hxx>
-#include <GC_MakeEllipse.hxx>
-#include <Geom_BSplineCurve.hxx>
-#include <Geom_BezierCurve.hxx>
-#include <Geom_Circle.hxx>
-#include <Geom_Ellipse.hxx>
-#include <TColStd_Array1OfInteger.hxx>
-#include <TColStd_Array1OfReal.hxx>
-#include <gce_MakeCirc.hxx>
-#include <gce_MakeElips.hxx>
-#include <gce_MakePln.hxx>
-
 using namespace std;
 
 namespace Nektar

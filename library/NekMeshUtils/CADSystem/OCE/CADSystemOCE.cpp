@@ -57,9 +57,9 @@ bool CADSystemOCE::LoadCAD()
 {
     if (m_naca.size() == 0)
     {
-        //not a naca profile behave normally
-        //could be a geo
-        string ext  = boost::filesystem::extension(m_name);
+        // not a naca profile behave normally
+        // could be a geo
+        string ext = boost::filesystem::extension(m_name);
 
         if (boost::iequals(ext, ".geo"))
         {
@@ -423,7 +423,7 @@ TopoDS_Shape CADSystemOCE::BuildGeo(string geo)
         getline(f, fline);
 
         boost::erase_all(fline, "\r");
-        
+
         vector<string> tmp1, tmp2;
         boost::split(tmp1, fline, boost::is_any_of("//"));
         fline = tmp1[0];
@@ -467,9 +467,9 @@ TopoDS_Shape CADSystemOCE::BuildGeo(string geo)
         }
         else if (boost::iequals(type, "Line Loop"))
         {
-            //line loops sometimes have negative entries for gmsh
-            //orientaton purposes
-            //we dont care so remove it
+            // line loops sometimes have negative entries for gmsh
+            // orientaton purposes
+            // we dont care so remove it
             boost::erase_all(var, "-");
             loops[id] = var;
         }
@@ -556,6 +556,5 @@ TopoDS_Shape CADSystemOCE::BuildGeo(string geo)
 
     return sf.Face();
 }
-
 }
 }

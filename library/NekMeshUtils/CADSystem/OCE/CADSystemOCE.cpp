@@ -583,7 +583,7 @@ TopoDS_Shape CADSystemOCE::BuildGeo(string geo)
 
         NekDouble r1 = start.Distance(centre);
         NekDouble r2 = end.Distance(centre);
-        ASSERTL0(r1 == r2, "Non-matching radii");
+        ASSERTL0(fabs(r1 - r2) < 1e-7, "Non-matching radii");
 
         gp_Circ c;
         c.SetLocation(centre);
@@ -596,7 +596,7 @@ TopoDS_Shape CADSystemOCE::BuildGeo(string geo)
         sac.Project(gc, end, 1e-8, end, p2);
 
         // Make sure the arc is always of length less than pi
-        if ((p1 > p2) ^ (abs(p2 - p1) > M_PI))
+        if ((p1 > p2) ^ (fabs(p2 - p1) > M_PI))
         {
             swap(p1, p2);
         }
@@ -632,7 +632,7 @@ TopoDS_Shape CADSystemOCE::BuildGeo(string geo)
         }
 
         v2.Rotate(gp_Ax1(), angle);
-        NekDouble minor = abs(v2.Y() / sqrt(1.0 - v2.X() * v2.X() / (major * major)));
+        NekDouble minor = fabs(v2.Y() / sqrt(1.0 - v2.X() * v2.X() / (major * major)));
 
         gp_Elips e;
         e.SetLocation(centre);
@@ -647,7 +647,7 @@ TopoDS_Shape CADSystemOCE::BuildGeo(string geo)
         sac.Project(ge, end, 1e-8, end, p2);
 
         // Make sure the arc is always of length less than pi
-        if (abs(p2 - p1) > M_PI)
+        if (fabs(p2 - p1) > M_PI)
         {
             swap(p1, p2);
         }

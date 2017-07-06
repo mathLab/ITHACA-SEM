@@ -595,7 +595,13 @@ TopoDS_Shape CADSystemOCE::BuildGeo(string geo)
         sac.Project(gc, start, 1e-8, start, p1);
         sac.Project(gc, end, 1e-8, end, p2);
 
-        Handle(Geom_TrimmedCurve) tc = new Geom_TrimmedCurve(gc, p2, p1, false);
+        // Make sure the arc is always of length less than pi
+        if ((p1 > p2) ^ (abs(p2 - p1) > M_PI))
+        {
+            swap(p1, p2);
+        }
+
+        Handle(Geom_TrimmedCurve) tc = new Geom_TrimmedCurve(gc, p1, p2, false);
 
         BRepBuilderAPI_MakeEdge em(tc);
         em.Build();
@@ -629,6 +635,11 @@ TopoDS_Shape CADSystemOCE::BuildGeo(string geo)
         gp_Vec v1(centre, start);
         gp_Vec vx(1.0, 0.0, 0.0);
         NekDouble angle = v1.Angle(vx);
+        // Check for negative rotation
+        if (v1.Y() < 0)
+        {
+            angle *= -1;
+        }
         e.Rotate(e.Axis(), angle);
 
         Handle(Geom_Ellipse) ge = new Geom_Ellipse(e);
@@ -638,6 +649,7 @@ TopoDS_Shape CADSystemOCE::BuildGeo(string geo)
         sac.Project(ge, start, 1e-8, start, p1);
         sac.Project(ge, end, 1e-8, end, p2);
 
+        // Make sure the arc is always of length less than pi
         if (abs(p2 - p1) > M_PI)
         {
             swap(p1, p2);

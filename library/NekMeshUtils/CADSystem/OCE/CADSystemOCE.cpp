@@ -618,21 +618,11 @@ TopoDS_Shape CADSystemOCE::BuildGeo(string geo)
         // data[2] useless??
         gp_Pnt end = cPoints[data[3]];
 
-        // Check that start point is major axis
-        NekDouble d1 = start.Distance(centre);
-        NekDouble d2 = end.Distance(centre);
-        if (d2 > d1)
-        {
-            swap(start, end);
-            swap(d1, d2);
-        }
-
-        gp_Elips e;
-        e.SetLocation(centre);
-        e.SetMajorRadius(d1);
-        e.SetMinorRadius(d2);
+        NekDouble major = start.Distance(centre);
 
         gp_Vec v1(centre, start);
+        gp_Vec v2(centre, end);
+
         gp_Vec vx(1.0, 0.0, 0.0);
         NekDouble angle = v1.Angle(vx);
         // Check for negative rotation
@@ -640,8 +630,15 @@ TopoDS_Shape CADSystemOCE::BuildGeo(string geo)
         {
             angle *= -1;
         }
-        e.Rotate(e.Axis(), angle);
 
+        v2.Rotate(gp_Ax1(), angle);
+        NekDouble minor = abs(v2.Y() / sqrt(1.0 - v2.X() * v2.X() / (major * major)));
+
+        gp_Elips e;
+        e.SetLocation(centre);
+        e.SetMajorRadius(major);
+        e.SetMinorRadius(minor);
+        e.Rotate(e.Axis(), angle);
         Handle(Geom_Ellipse) ge = new Geom_Ellipse(e);
 
         ShapeAnalysis_Curve sac;

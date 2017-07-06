@@ -585,12 +585,18 @@ TopoDS_Shape CADSystemOCE::BuildGeo(string geo)
         NekDouble r2 = end.Distance(centre);
         ASSERTL0(r1 == r2, "Non-matching radii");
 
-        gce_MakeCirc mc(centre, gce_MakePln(start, centre, end).Value(), r1);
-        const gp_Circ &circ          = mc.Value();
-        NekDouble p1                 = ElCLib::Parameter(circ, start);
-        NekDouble p2                 = ElCLib::Parameter(circ, end);
-        Handle(Geom_Circle) c        = new Geom_Circle(circ);
-        Handle(Geom_TrimmedCurve) tc = new Geom_TrimmedCurve(c, p2, p1, false);
+        gp_Circ c;
+        c.SetLocation(centre);
+        c.SetRadius(r1);
+        Handle(Geom_Circle) gc = new Geom_Circle(c);
+
+        ShapeAnalysis_Curve sac;
+        NekDouble p1, p2;
+        gp_Pnt tmp;
+        sac.Project(gc, start, 1e-8, start, p1);
+        sac.Project(gc, end, 1e-8, end, p2);
+
+        Handle(Geom_TrimmedCurve) tc = new Geom_TrimmedCurve(gc, p2, p1, false);
 
         BRepBuilderAPI_MakeEdge em(tc);
         em.Build();

@@ -8,6 +8,7 @@ v5.0.0
   expansion in pyramids (!750)
 - Significant overhaul of CMake infrastructure (!770)
 - Fix ThridpartyCCM options (!802)
+- Fix Windows CRLF tokens in GEO reader and improve comment handling (!805)
 
 **NekMesh**:
 - Add feature to read basic 2D geo files as CAD (!731)

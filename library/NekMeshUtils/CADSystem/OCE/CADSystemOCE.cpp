@@ -592,7 +592,6 @@ TopoDS_Shape CADSystemOCE::BuildGeo(string geo)
 
         ShapeAnalysis_Curve sac;
         NekDouble p1, p2;
-        gp_Pnt tmp;
         sac.Project(gc, start, 1e-8, start, p1);
         sac.Project(gc, end, 1e-8, end, p2);
 
@@ -619,14 +618,32 @@ TopoDS_Shape CADSystemOCE::BuildGeo(string geo)
         if (d2 > d1)
         {
             swap(start, end);
+            swap(d1, d2);
         }
 
-        gce_MakeElips me(start, end, centre);
-        const gp_Elips &elips        = me.Value();
-        NekDouble p1                 = ElCLib::Parameter(elips, start);
-        NekDouble p2                 = ElCLib::Parameter(elips, end);
-        Handle(Geom_Ellipse) e       = new Geom_Ellipse(elips);
-        Handle(Geom_TrimmedCurve) tc = new Geom_TrimmedCurve(e, p1, p2, true);
+        gp_Elips e;
+        e.SetLocation(centre);
+        e.SetMajorRadius(d1);
+        e.SetMinorRadius(d2);
+
+        gp_Vec v1(centre, start);
+        gp_Vec vx(1.0, 0.0, 0.0);
+        NekDouble angle = v1.Angle(vx);
+        e.Rotate(e.Axis(), angle);
+
+        Handle(Geom_Ellipse) ge = new Geom_Ellipse(e);
+
+        ShapeAnalysis_Curve sac;
+        NekDouble p1, p2;
+        sac.Project(ge, start, 1e-8, start, p1);
+        sac.Project(ge, end, 1e-8, end, p2);
+
+        if (abs(p2 - p1) > M_PI)
+        {
+            swap(p1, p2);
+        }
+
+        Handle(Geom_TrimmedCurve) tc = new Geom_TrimmedCurve(ge, p1, p2, true);
 
         BRepBuilderAPI_MakeEdge em(tc);
         em.Build();

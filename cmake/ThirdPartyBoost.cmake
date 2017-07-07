@@ -9,7 +9,8 @@
 #If the user has not set BOOST_ROOT, look in a couple common places first.
 MESSAGE(STATUS "Searching for Boost:")
 SET(MIN_VER "1.56.0")
-SET(NEEDED_BOOST_LIBS thread iostreams date_time filesystem program_options)
+SET(NEEDED_BOOST_LIBS thread iostreams date_time filesystem system
+    program_options regex)
 SET(Boost_DEBUG 0)
 SET(Boost_NO_BOOST_CMAKE ON)
 IF( BOOST_ROOT )

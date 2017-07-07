@@ -209,6 +209,7 @@ void ProcessPerAlign::Process()
         }
         centroid /= (NekDouble)c1->m_items[i]->GetVertexCount();
 
+        bool found = false;
         for (auto &it : centroidMap)
         {
             if (elmtDone.count(it.first) > 0)
@@ -302,11 +303,12 @@ void ProcessPerAlign::Process()
                     perFaces[id2] =
                         make_pair(c1->m_items[i]->GetFaceLink(), perVertsInv);
                 }
+                found = true;
                 break;
             }
         }
 
-        if (it == centroidMap.end())
+        if (!found)
         {
             cerr << "WARNING: Could not find matching edge for surface "
                  << "element " << c1->m_items[i]->GetId() << ". "

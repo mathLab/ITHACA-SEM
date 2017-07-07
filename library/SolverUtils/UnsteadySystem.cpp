@@ -249,7 +249,7 @@ namespace Nektar
                      "Only one of IO_CheckTime and IO_CheckSteps "
                      "should be set!");
 
-            Timer     timer;
+            LibUtilities::Timer     timer;
             bool      doCheckTime   = false;
             int       step          = m_initialStep;
             NekDouble intTime       = 0.0;

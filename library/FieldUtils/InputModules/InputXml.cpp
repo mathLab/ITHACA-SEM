@@ -77,7 +77,7 @@ InputXml::~InputXml()
  */
 void InputXml::Process(po::variables_map &vm)
 {
-    Timer timerpart;
+    LibUtilities::Timer timerpart;
     if (m_f->m_verbose)
     {
         if (m_f->m_comm->TreatAsRankZero())

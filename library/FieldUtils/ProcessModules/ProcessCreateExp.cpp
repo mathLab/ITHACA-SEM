@@ -67,7 +67,7 @@ void ProcessCreateExp::Process(po::variables_map &vm)
     if(m_f->m_graph)
     {
         int i, j;
-        Timer timerpart;
+        LibUtilities::Timer timerpart;
         if (m_f->m_verbose)
         {
             if (m_f->m_comm->TreatAsRankZero())

@@ -37,6 +37,8 @@
 
 namespace Nektar
 {
+namespace LibUtilities
+{
 
 Timer::Timer() :
     m_start(),
@@ -68,4 +70,5 @@ NekDouble Timer::TimePerTest(unsigned int n)
     return Elapsed().count() / static_cast<NekDouble>(n);
 }
 
+}
 }

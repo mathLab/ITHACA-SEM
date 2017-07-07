@@ -44,6 +44,8 @@
 
 namespace Nektar
 {
+namespace LibUtilities
+{
 
 class Timer
 {
@@ -72,6 +74,7 @@ class Timer
         CounterType m_end;
 };
 
+}
 }
 
 #endif //NEKTAR_LIB_UTILITIES_BASIC_UTILS_TIMER_H

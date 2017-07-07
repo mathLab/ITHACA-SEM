@@ -36,7 +36,6 @@
 #include <LibUtilities/Communication/Xxt.hpp>
 #include <LibUtilities/BasicUtils/VDmathArray.hpp>
 #include <MultiRegions/GlobalLinSysXxtStaticCond.h>
-#include <LibUtilities/BasicUtils/Timer.h>
 
 using namespace std;
 

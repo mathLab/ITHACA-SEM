@@ -36,6 +36,7 @@
 #include <string>
 #include <boost/algorithm/string.hpp>
 #include <boost/program_options.hpp>
+#include <LibUtilities/BasicUtils/Timer.h>
 #include <FieldUtils/Module.h>
 
 using namespace std;
@@ -50,7 +51,7 @@ void RunModule(ModuleSharedPtr module, po::variables_map &vm, bool verbose);
 
 int main(int argc, char* argv[])
 {
-    Timer     timer;
+    LibUtilities::Timer    timer;
     timer.Start();
 
     po::options_description desc("Available options");
@@ -649,7 +650,7 @@ void PrintExecutionSequence(vector<ModuleSharedPtr> &modules)
 
 void RunModule(ModuleSharedPtr module, po::variables_map &vm, bool verbose)
 {
-    Timer moduleTimer;
+    LibUtilities::Timer moduleTimer;
     if(verbose)
     {
         moduleTimer.Start();

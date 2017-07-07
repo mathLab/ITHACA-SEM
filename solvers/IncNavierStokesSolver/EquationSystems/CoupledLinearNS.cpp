@@ -455,7 +455,7 @@ namespace Nektar
         ::AllocateSharedPtr(nsize_p_m1,nsize_p_m1,blkmatStorage);
         
         
-        Timer timer;
+        LibUtilities::Timer timer;
         timer.Start();
         for(n = 0; n < nel; ++n)
         {
@@ -1445,7 +1445,7 @@ namespace Nektar
             }
             case eSteadyNavierStokes:
             {	
-                Timer Generaltimer;
+                LibUtilities::Timer Generaltimer;
                 Generaltimer.Start();
                 
                 int Check(0);
@@ -1562,7 +1562,7 @@ namespace Nektar
     
     void CoupledLinearNS::SolveSteadyNavierStokes(void)
     {
-        Timer Newtontimer;
+        LibUtilities::Timer Newtontimer;
         Newtontimer.Start();
         
         Array<OneD, Array<OneD, NekDouble> > RHS_Coeffs(m_velocity.num_elements());

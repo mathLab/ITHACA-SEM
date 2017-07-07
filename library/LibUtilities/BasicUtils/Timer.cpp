@@ -40,16 +40,6 @@ namespace Nektar
 namespace LibUtilities
 {
 
-Timer::Timer() :
-    m_start(),
-    m_end()
-{
-}
-
-Timer::~Timer()
-{
-}
-
 void Timer::Start()
 {
     m_start = Clock::now();

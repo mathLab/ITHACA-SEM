@@ -45,7 +45,6 @@
 #include <vector>
 
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
-#include <LibUtilities/BasicUtils/Timer.h>
 #include <LibUtilities/Communication/CommSerial.h>
 #include <StdRegions/StdNodalTriExp.h>
 

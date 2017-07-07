@@ -337,7 +337,7 @@ OperatorImpMap CollectionOptimisation::SetWithTimings(
     Array<OneD, NekDouble> outarray2(maxsize);
     Array<OneD, NekDouble> outarray3(maxsize);
 
-    Timer t;
+    LibUtilities::Timer t;
 
     if(verbose)
     {

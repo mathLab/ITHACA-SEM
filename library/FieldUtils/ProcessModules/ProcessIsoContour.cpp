@@ -43,6 +43,7 @@
 #include "ProcessIsoContour.h"
 
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
+#include <LibUtilities/BasicUtils/Timer.h>
 #include <LibUtilities/BasicUtils/ParseUtils.hpp>
 #include <LibUtilities/BasicUtils/Progressbar.hpp>
 #include <boost/math/special_functions/fpclassify.hpp>
@@ -217,7 +218,7 @@ void ProcessIsoContour::Process(po::variables_map &vm)
 
     if(smoothing)
     {
-        Timer timersm;
+        LibUtilities::Timer timersm;
 
         if(verbose)
         {

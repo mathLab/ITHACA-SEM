@@ -707,7 +707,7 @@ void OutputNekpp::WriteXmlCurves(TiXmlElement *pRoot)
                     f->SetAttribute(
                         "TYPE",
                         LibUtilities::kPointsTypeStr[face->m_curveType]);
-                    TiXmlText *t0 = new TiXmlText(fave->GetXmlCurveString());
+                    TiXmlText *t0 = new TiXmlText(face->GetXmlCurveString());
                     f->LinkEndChild(t0);
                     curved->LinkEndChild(f);
                 }

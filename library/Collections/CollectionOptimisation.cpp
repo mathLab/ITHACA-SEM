@@ -90,7 +90,7 @@ CollectionOptimisation::CollectionOptimisation(
             // For 1<=N<=3 use SumFac otherwise NoCollection. Note that
             // default is not currently overwritten by given default
             // type
-            defaultsPhysDeriv [ElmtOrder(it2->second, -1)] = eNoCollection;
+            defaultsPhysDeriv [ElmtOrder(it2.second, -1)] = eNoCollection;
             for (int i = 1; i < 3; ++i)
             {
                 defaultsPhysDeriv[ElmtOrder(it2.second, i)] = eSumFac;

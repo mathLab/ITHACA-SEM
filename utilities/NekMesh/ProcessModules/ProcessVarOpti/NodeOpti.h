@@ -60,7 +60,7 @@ public:
     NodeOpti(NodeSharedPtr n, std::vector<ElUtilSharedPtr> e,
              ResidualSharedPtr r,
              std::map<LibUtilities::ShapeType, DerivUtilSharedPtr> d,
-             optiType o)
+             optiType o, int dim)
         : m_node(n), m_res(r), m_derivUtils(d), m_opti(o)
     {
         // filter element types within d vector
@@ -79,12 +79,12 @@ public:
             const int nElmt  = typeIt.second.size();
 
             storageCount = std::max(storageCount,
-                                    3 * m_derivUtils[typeIt.first]->ptsStd *
+                                    dim * m_derivUtils[typeIt.first]->ptsStd *
                                     typeIt.second.size());
 
             m_derivs.insert(std::make_pair(
                                 typeIt.first,
-                                DerivArray(boost::extents[3][nElmt][3][pts])));
+                                DerivArray(boost::extents[dim][nElmt][dim][pts])));
         }
 
         m_tmpStore.resize(storageCount);
@@ -148,7 +148,7 @@ public:
                  ResidualSharedPtr r,
                  std::map<LibUtilities::ShapeType, DerivUtilSharedPtr> d,
                  optiType o)
-        : NodeOpti(n, e, r, d, o)
+        : NodeOpti(n, e, r, d, o, 3)
     {
     }
 
@@ -174,7 +174,7 @@ public:
                  ResidualSharedPtr r,
                  std::map<LibUtilities::ShapeType, DerivUtilSharedPtr> d,
                  optiType o)
-        : NodeOpti(n, e, r, d, o)
+        : NodeOpti(n, e, r, d, o, 2)
     {
     }
 

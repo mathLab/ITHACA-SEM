@@ -777,9 +777,10 @@ void InputNek::Process()
         // m_mesh->condition. This is currently a linear search and should
         // probably be made faster!
         bool found = false;
-        for (auto &it : m_mesh->m_condition)
+        auto it = m_mesh->m_condition.begin();
+        for (; it != m_mesh->m_condition.end(); ++it)
         {
-            if (c == it.second)
+            if (c == it->second)
             {
                 found = true;
                 break;

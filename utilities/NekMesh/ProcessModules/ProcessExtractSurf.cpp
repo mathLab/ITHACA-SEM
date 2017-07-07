@@ -241,7 +241,7 @@ void ProcessExtractSurf::Process()
             continue;
         }
 
-        m_mesh->m_composite.insert(*it);
+        m_mesh->m_composite.insert(it);
 
         // Figure out the maximum ID so if we need to create new
         // composites we can give them a unique ID.
@@ -276,7 +276,7 @@ void ProcessExtractSurf::Process()
             // composite, otherwise we create a new composite and store
             // it in newComps.
             string tag = el[i]->GetTag();
-            it2 = newComps.find(tag);
+            auto it2 = newComps.find(tag);
             if (it2 == newComps.end())
             {
                 CompositeSharedPtr newComp(new Composite());
@@ -298,14 +298,16 @@ void ProcessExtractSurf::Process()
         }
 
         // Insert new composites.
-        for (i = 0, it2 = newComps.begin(); it2 != newComps.end(); ++it2, ++i)
+        i = 0;
+        for (auto &it2 : newComps)
         {
             if (m_mesh->m_verbose && newComps.size() > 1)
             {
-                cout << (i > 0 ? ", " : " ") << it2->second->m_id << "("
-                     << it2->second->m_tag << ")";
+                cout << (i > 0 ? ", " : " ") << it2.second->m_id << "("
+                     << it2.second->m_tag << ")";
             }
-            m_mesh->m_composite[it2->second->m_id] = it2->second;
+            m_mesh->m_composite[it2.second->m_id] = it2.second;
+            ++i;
         }
 
         if (m_mesh->m_verbose && newComps.size() > 1)

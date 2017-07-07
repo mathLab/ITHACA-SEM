@@ -350,7 +350,7 @@ vector<vector<NodeSharedPtr> > ProcessVarOpti::GetColouredNodes(
     // check if volume nodes are in boundary or ignored nodes, otherwise add to VOLUME remain nodes
     for (int i = 0; i < m_mesh->m_element[m_mesh->m_expDim].size(); i++)
     {
-        vector<NodeSharedPtr> &ns =
+        vector<NodeSharedPtr> ns =
             m_mesh->m_element[m_mesh->m_expDim][i]->GetVolumeNodes();
         for (int j = 0; j < ns.size(); j++)
         {

@@ -313,7 +313,7 @@ void ProcessOptiExtract::Process()
 
         for (auto &node : inp_mesh->m_vertexSet)
         {
-            nmap[node->m_id] = *nit;
+            nmap[node->m_id] = node;
         }
         // for all the nodes in the main mesh see if they are in nmap, if so
         // update the node

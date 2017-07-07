@@ -164,7 +164,8 @@ struct Field
                     Exp2DH1 =
                         MemoryManager<MultiRegions::ExpList2DHomogeneous1D>::
                             AllocateSharedPtr(m_session, Bkey, ly, m_useFFT,
-                                              dealiasing, m_graph);
+                                              dealiasing, m_graph,
+                                              Collections::eNoCollection);
                     exp = Exp2DH1;
                 }
                 else if (NumHomogeneousDir == 2)
@@ -210,7 +211,8 @@ struct Field
                             MultiRegions::ContField3DHomogeneous2D>::
                             AllocateSharedPtr(m_session, BkeyY, BkeyZ, ly, lz,
                                               m_useFFT, dealiasing, m_graph,
-                                              m_session->GetVariable(0));
+                                              m_session->GetVariable(0),
+                                              Collections::eNoCollection);
                     }
                     else if (m_declareExpansionAsDisContField)
                     {
@@ -218,14 +220,16 @@ struct Field
                             MultiRegions::DisContField3DHomogeneous2D>::
                             AllocateSharedPtr(m_session, BkeyY, BkeyZ, ly, lz,
                                               m_useFFT, dealiasing, m_graph,
-                                              m_session->GetVariable(0));
+                                              m_session->GetVariable(0),
+                                              Collections::eNoCollection);
                     }
                     else
                     {
                         Exp3DH2 = MemoryManager<
                             MultiRegions::ExpList3DHomogeneous2D>::
                             AllocateSharedPtr(m_session, BkeyY, BkeyZ, ly, lz,
-                                              m_useFFT, dealiasing, m_graph);
+                                              m_useFFT, dealiasing, m_graph,
+                                              Collections::eNoCollection);
                     }
 
                     exp = Exp3DH2;
@@ -238,18 +242,23 @@ struct Field
                     {
                         Exp1D = MemoryManager<MultiRegions::ContField1D>::
                             AllocateSharedPtr(m_session, m_graph,
-                                              m_session->GetVariable(0));
+                                              m_session->GetVariable(0),
+                                              Collections::eNoCollection);
                     }
                     else if (m_declareExpansionAsDisContField)
                     {
                         Exp1D = MemoryManager<MultiRegions::DisContField1D>::
                             AllocateSharedPtr(m_session, m_graph,
-                                              m_session->GetVariable(0));
+                                              m_session->GetVariable(0),
+                                              true,
+                                              Collections::eNoCollection);
                     }
                     else
                     {
                         Exp1D = MemoryManager<MultiRegions::ExpList1D>::
-                            AllocateSharedPtr(m_session, m_graph);
+                            AllocateSharedPtr(m_session, m_graph,
+                                              true,
+                                              Collections::eNoCollection);
                     }
 
                     exp = Exp1D;
@@ -314,7 +323,8 @@ struct Field
                             MultiRegions::ContField3DHomogeneous1D>::
                             AllocateSharedPtr(m_session, Bkey, lz, m_useFFT,
                                               dealiasing, m_graph,
-                                              m_session->GetVariable(0));
+                                              m_session->GetVariable(0),
+                                              Collections::eNoCollection);
                     }
                     else if (m_declareExpansionAsDisContField)
                     {
@@ -322,14 +332,17 @@ struct Field
                             MultiRegions::DisContField3DHomogeneous1D>::
                             AllocateSharedPtr(m_session, Bkey, lz, m_useFFT,
                                               dealiasing, m_graph,
-                                              m_session->GetVariable(0));
+                                              m_session->GetVariable(0),
+                                              Collections::eNoCollection);
                     }
                     else
                     {
                         Exp3DH1 = MemoryManager<
                             MultiRegions::ExpList3DHomogeneous1D>::
                             AllocateSharedPtr(m_session, Bkey, lz, m_useFFT,
-                                              dealiasing, m_graph);
+                                              dealiasing, m_graph,
+                                              "DefaultVar",
+                                              Collections::eNoCollection);
                     }
                     exp = Exp3DH1;
                 }
@@ -341,18 +354,25 @@ struct Field
                     {
                         Exp2D = MemoryManager<MultiRegions::ContField2D>::
                             AllocateSharedPtr(m_session, m_graph,
-                                              m_session->GetVariable(0));
+                                              m_session->GetVariable(0),
+                                              true,false,
+                                              Collections::eNoCollection);
                     }
                     else if (m_declareExpansionAsDisContField)
                     {
                         Exp2D = MemoryManager<MultiRegions::DisContField2D>::
                             AllocateSharedPtr(m_session, m_graph,
-                                              m_session->GetVariable(0));
+                                              m_session->GetVariable(0),
+                                              true,true,
+                                              Collections::eNoCollection);
                     }
                     else
                     {
                         Exp2D = MemoryManager<MultiRegions::ExpList2D>::
-                            AllocateSharedPtr(m_session, m_graph);
+                            AllocateSharedPtr(m_session, m_graph,
+                                              true, 
+                                              "DefaultVar",
+                                              Collections::eNoCollection);
                     }
 
                     exp = Exp2D;
@@ -367,19 +387,26 @@ struct Field
                 {
                     Exp3D = MemoryManager<MultiRegions::ContField3D>::
                         AllocateSharedPtr(m_session, m_graph,
-                                          m_session->GetVariable(0));
+                                          m_session->GetVariable(0),
+                                          false,
+                                          Collections::eNoCollection);
                 }
                 else if (m_declareExpansionAsDisContField)
                 {
                     Exp3D = MemoryManager<MultiRegions::DisContField3D>::
                         AllocateSharedPtr(m_session, m_graph,
-                                          m_session->GetVariable(0));
+                                          m_session->GetVariable(0),
+                                          true,
+                                          Collections::eNoCollection);
                 }
                 else
                 {
                     Exp3D = MemoryManager<
-                        MultiRegions::ExpList3D>::AllocateSharedPtr(m_session,
-                                                                    m_graph);
+                        MultiRegions::ExpList3D>::AllocateSharedPtr(
+                                               m_session,
+                                               m_graph,
+                                               "DefaultVar",
+                                               Collections::eNoCollection);
                 }
 
                 exp = Exp3D;

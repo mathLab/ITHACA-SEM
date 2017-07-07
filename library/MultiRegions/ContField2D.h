@@ -66,7 +66,9 @@ namespace Nektar
                         const SpatialDomains::MeshGraphSharedPtr &graph2D,
                         const std::string &variable  = "DefaultVar",
                         const bool DeclareCoeffPhysArrays = true,
-                        const bool CheckIfSingularSystem = false);
+                        const bool CheckIfSingularSystem = false,
+                        const Collections::ImplementationType ImpType
+                                             = Collections::eNoImpType);
 
             /// Construct a global continuous field with solution type based on
             /// another field but using a separate input mesh and boundary

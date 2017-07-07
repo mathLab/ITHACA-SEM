@@ -117,12 +117,14 @@ namespace Nektar
          * @param   variable    An optional parameter to indicate for which
          *                      variable the field should be constructed.
          */
-        ContField2D::ContField2D(const LibUtilities::SessionReaderSharedPtr &pSession,
-                                 const SpatialDomains::MeshGraphSharedPtr &graph2D,
-                                 const std::string &variable,
-                                 const bool DeclareCoeffPhysArrays,
-                                 const bool CheckIfSingularSystem):
-            DisContField2D(pSession,graph2D,variable,false,DeclareCoeffPhysArrays),
+        ContField2D::ContField2D(
+                         const LibUtilities::SessionReaderSharedPtr &pSession,
+                         const SpatialDomains::MeshGraphSharedPtr &graph2D,
+                         const std::string &variable,
+                         const bool DeclareCoeffPhysArrays,
+                         const bool CheckIfSingularSystem,
+                         const Collections::ImplementationType ImpType):
+            DisContField2D(pSession,graph2D,variable,false,DeclareCoeffPhysArrays,ImpType),
             m_globalMat(MemoryManager<GlobalMatrixMap>::AllocateSharedPtr()),
             m_globalLinSysManager(
                 std::bind(&ContField2D::GenGlobalLinSys, this, std::placeholders::_1),

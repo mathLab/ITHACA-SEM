@@ -229,8 +229,9 @@ void ProcessSpherigon::FindNormalFromPlyFile(MeshSharedPtr &plymesh,
     typedef bg::model::point<NekDouble, 3, bg::cs::cartesian> Point;
     typedef pair<Point, unsigned int> PointI;
 
-    vector<PointI> dataPts;
-    map<int, int>  TreeidtoPlyid;
+    int n_neighbs = 1;
+
+    map<int,int>  TreeidtoPlyid;
 
     //Fill vertex array into tree format
     for (auto &it : plymesh->m_vertexSet)
@@ -253,19 +254,10 @@ void ProcessSpherigon::FindNormalFromPlyFile(MeshSharedPtr &plymesh,
                 cnt, surfverts.size(), "Nearest ply verts", prog);
         }
 
-        // I dont know why 5 nearest points are searched for when only the
-        // nearest point is used for the data was left like this in the
-        // ann->boost rewrite (MT 6/11/16)
         Point queryPt(vIt.second->m_x, vIt.second->m_y, vIt.second->m_z);
-        n_neighbs  = 5;
         vector<PointI> result;
-        rtree.query(
-            bgi::nearest(queryPt, n_neighbs), std::back_inserter(result));
-
-        ASSERTL1(bg::distance(result[0].first,queryPt) <
-                 bg::distance(result[1].first,queryPt),
-                 "Assumption that dist values are ordered from smallest to "
-                 "largest is not correct");
+        rtree.query(bgi::nearest(queryPt, n_neighbs),
+                    std::back_inserter(result));
 
         cntmin = TreeidtoPlyid[result[0].second];
 

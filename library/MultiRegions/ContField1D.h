@@ -64,7 +64,9 @@ namespace Nektar
             MULTI_REGIONS_EXPORT ContField1D(
                         const LibUtilities::SessionReaderSharedPtr &pSession,
                         const SpatialDomains::MeshGraphSharedPtr &graph1D,
-                        const std::string &variable  = "DefaultVar");
+                        const std::string &variable  = "DefaultVar",
+                        const Collections::ImplementationType ImpType
+                                  = Collections::eNoImpType);
 
             /// Copy constructor.
             MULTI_REGIONS_EXPORT ContField1D(const ContField1D &In);

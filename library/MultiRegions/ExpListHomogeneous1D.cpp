@@ -55,15 +55,20 @@ namespace Nektar
         {
         }
 
-        ExpListHomogeneous1D::ExpListHomogeneous1D(const LibUtilities::SessionReaderSharedPtr
-                &pSession,const LibUtilities::BasisKey &HomoBasis, const NekDouble lhom, const bool useFFT, const bool dealiasing):
+        ExpListHomogeneous1D::ExpListHomogeneous1D(
+                   const LibUtilities::SessionReaderSharedPtr
+                   &pSession,const LibUtilities::BasisKey &HomoBasis,
+                   const NekDouble lhom,
+                   const bool useFFT,
+                   const bool dealiasing):
             ExpList(pSession),
             m_useFFT(useFFT),
             m_lhom(lhom),
             m_homogeneous1DBlockMat(MemoryManager<Homo1DBlockMatrixMap>::AllocateSharedPtr()),
             m_dealiasing(dealiasing)
         {
-            ASSERTL2(HomoBasis != LibUtilities::NullBasisKey,"Homogeneous Basis is a null basis");
+            ASSERTL2(HomoBasis != LibUtilities::NullBasisKey,
+                     "Homogeneous Basis is a null basis");
             
             m_homogeneousBasis = LibUtilities::BasisManager()[HomoBasis];
 
@@ -87,7 +92,8 @@ namespace Nektar
             }
 
             m_transposition = MemoryManager<LibUtilities::Transposition>
-                                ::AllocateSharedPtr(HomoBasis, m_comm, m_StripZcomm);
+                                ::AllocateSharedPtr(HomoBasis, m_comm,
+                                                    m_StripZcomm);
 
             m_planes = Array<OneD,ExpListSharedPtr>(
                                 m_homogeneousBasis->GetNumPoints() /

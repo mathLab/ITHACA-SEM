@@ -66,10 +66,10 @@ namespace Nektar
         }
 
         ContField3DHomogeneous1D::ContField3DHomogeneous1D(
-                                const ContField3DHomogeneous1D &In,
-                                const SpatialDomains::MeshGraphSharedPtr &graph2D,
-                                const std::string                        &variable):
-                                DisContField3DHomogeneous1D (In, false)
+                            const ContField3DHomogeneous1D &In,
+                            const SpatialDomains::MeshGraphSharedPtr &graph2D,
+                            const std::string                        &variable):
+            DisContField3DHomogeneous1D (In, false)
         {
             ContField2DSharedPtr zero_plane_old =
                     std::dynamic_pointer_cast<ContField2D> (In.m_planes[0]);
@@ -101,15 +101,17 @@ namespace Nektar
         }
 
         ContField3DHomogeneous1D::ContField3DHomogeneous1D(
-                            const LibUtilities::SessionReaderSharedPtr &pSession,
-                            const LibUtilities::BasisKey &HomoBasis,
-                            const NekDouble lhom,
-                            const bool useFFT,
-                            const bool dealiasing,
-                            const SpatialDomains::MeshGraphSharedPtr &graph2D,
-                            const std::string &variable,
-                            const bool CheckIfSingularSystem):
-            DisContField3DHomogeneous1D(pSession,HomoBasis,lhom,useFFT,dealiasing)
+                          const LibUtilities::SessionReaderSharedPtr &pSession,
+                          const LibUtilities::BasisKey &HomoBasis,
+                          const NekDouble lhom,
+                          const bool useFFT,
+                          const bool dealiasing,
+                          const SpatialDomains::MeshGraphSharedPtr &graph2D,
+                          const std::string &variable,
+                          const bool CheckIfSingularSystem,
+                          const Collections::ImplementationType ImpType):
+            DisContField3DHomogeneous1D(pSession,HomoBasis,lhom,
+                                        useFFT,dealiasing)
         {
             int i,n,nel;
             ContField2DSharedPtr plane_zero;
@@ -122,11 +124,11 @@ namespace Nektar
             // problems
             plane_zero = MemoryManager<ContField2D>::AllocateSharedPtr(
                                         pSession, graph2D, variable, false,
-                                        CheckIfSingularSystem);
+                                        CheckIfSingularSystem, ImpType);
 
             plane_two  = MemoryManager<ContField2D>::AllocateSharedPtr(
                                         pSession, graph2D, variable, false,
-                                        false);
+                                        false, ImpType);
 
             m_exp = MemoryManager<LocalRegions::ExpansionVector>
                                         ::AllocateSharedPtr();

@@ -86,6 +86,15 @@ class SmoothShockCapture : public ArtificialDiffusion
         void GetForcingTerm(
             const Array<OneD, const Array<OneD, NekDouble> > &inarray,
                   Array<OneD,       Array<OneD, NekDouble> > outarrayForcing);
+
+        /// Parameters
+        NekDouble       m_FacL;
+        NekDouble       m_FacH;
+        NekDouble       m_hFactor;
+        NekDouble       m_C1;
+        NekDouble       m_C2;
+        NekDouble       m_mu0;
+        int             m_offset;
 };
 
 }

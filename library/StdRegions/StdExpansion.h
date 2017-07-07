@@ -999,6 +999,14 @@ namespace Nektar
                 v_SVVLaplacianFilter(array,mkey);
             }
 
+            void ExponentialFilter(       Array<OneD, NekDouble> &array,
+                                    const NekDouble        alpha,
+                                    const NekDouble        exponent,
+                                    const NekDouble        cutoff)
+            {
+                v_ExponentialFilter(array, alpha, exponent, cutoff);
+            }
+
             void LaplacianMatrixOp(const int k1, const int k2,
                                    const Array<OneD, const NekDouble> &inarray,
                                    Array<OneD,NekDouble> &outarray,
@@ -1302,6 +1310,16 @@ namespace Nektar
             void ComputeVertexNormal(const int vertex)
             {
                 v_ComputeVertexNormal(vertex);
+            }
+
+            void NegateVertexNormal(const int vertex)
+            {
+                v_NegateVertexNormal(vertex);
+            }
+
+            bool VertexNormalNegated(const int vertex)
+            {
+                return v_VertexNormalNegated(vertex);
             }
 
             const NormalVector & GetFaceNormal(const int face) const
@@ -1785,6 +1803,12 @@ namespace Nektar
             STD_REGIONS_EXPORT virtual void v_SVVLaplacianFilter(Array<OneD,NekDouble> &array,
                                              const StdMatrixKey &mkey);
 
+            STD_REGIONS_EXPORT virtual void v_ExponentialFilter(
+                                          Array<OneD, NekDouble> &array,
+                                    const NekDouble        alpha,
+                                    const NekDouble        exponent,
+                                    const NekDouble        cutoff);
+
             STD_REGIONS_EXPORT virtual void v_ReduceOrderCoeffs(
                                             int numMin,
                                             const Array<OneD, const NekDouble> &inarray,
@@ -1848,6 +1872,10 @@ namespace Nektar
             STD_REGIONS_EXPORT virtual const NormalVector & v_GetVertexNormal(const int vertex) const;
 
             STD_REGIONS_EXPORT virtual void v_ComputeVertexNormal(const int vertex);
+
+            STD_REGIONS_EXPORT virtual void v_NegateVertexNormal(const int vertex);
+
+            STD_REGIONS_EXPORT virtual bool v_VertexNormalNegated(const int vertex);
 
             STD_REGIONS_EXPORT virtual const NormalVector & v_GetFaceNormal(const int face) const;
             STD_REGIONS_EXPORT virtual const NormalVector &

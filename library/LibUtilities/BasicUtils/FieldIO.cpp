@@ -34,14 +34,15 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include <boost/asio/ip/host_name.hpp>
-#include <boost/date_time/posix_time/posix_time.hpp>
-#include <boost/date_time/posix_time/posix_time_io.hpp>
 #include <boost/format.hpp>
 
 #include <LibUtilities/BasicConst/GitRevision.h>
 #include <LibUtilities/BasicUtils/FieldIO.h>
 #include <LibUtilities/BasicUtils/FileSystem.h>
 
+#include <chrono>
+#include <ctime>
+#include <iomanip>
 #include <fstream>
 #include <set>
 
@@ -54,7 +55,6 @@
 #endif
 
 namespace berrc = boost::system::errc;
-namespace ptime = boost::posix_time;
 namespace ip    = boost::asio::ip;
 
 namespace Nektar
@@ -335,11 +335,12 @@ void FieldIO::AddInfoTag(TagWriterSharedPtr root,
     ProvenanceMap["NektarVersion"] = string(NEKTAR_VERSION);
 
     // Date/time stamp
-    ptime::time_facet *facet = new ptime::time_facet("%d-%b-%Y %H:%M:%S");
-    std::stringstream wss;
-    wss.imbue(locale(wss.getloc(), facet));
-    wss << ptime::second_clock::local_time();
-    ProvenanceMap["Timestamp"] = wss.str();
+    auto now = std::chrono::system_clock::now();
+    auto now_t = std::chrono::system_clock::to_time_t(now);
+    auto now_tm = *std::localtime(&now_t);
+    char buffer[128];
+    strftime(buffer, sizeof(buffer), "%d-%b-%Y %H:%M:%S", &now_tm);
+    ProvenanceMap["Timestamp"] = buffer;
 
     // Hostname
     boost::system::error_code ec;

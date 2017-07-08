@@ -1,5 +1,4 @@
 ADD_UTILITIES_EXECUTABLE(CheckXmlFile COMPONENT utilities-extra SOURCES CheckXmlFile.cpp)
-ADD_UTILITIES_EXECUTABLE(StreamFunction2D COMPONENT utilities-extra SOURCES StreamFunction2D.cpp)
 
 IF (NEKTAR_USE_VTK)
     ADD_UTILITIES_EXECUTABLE(VtkToFld COMPONENT utilities-extra SOURCES VtkToFld.cpp)

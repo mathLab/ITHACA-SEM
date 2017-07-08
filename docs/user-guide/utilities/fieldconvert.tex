@@ -178,6 +178,7 @@ possibly also Reynolds stresses) into single file;
 \item \inltt{scalargrad}: Computes scalar gradient field;
 \item \inltt{scaleinputfld}: Rescale input field by a constant factor;
 \item \inltt{shear}: Computes time-averaged shear stress metrics: TAWSS, OSI, transWSS, TAAFI, TACFI, WSSG;
+\item \inltt{streamfunction}: Calculates stream function of a 2D incompressible flow.
 \item \inltt{surfdistance}: Computes height of a prismatic boundary layer mesh and projects onto the surface (for e.g. $y^+$ calculation).
 \item \inltt{vorticity}: Computes the vorticity field.
 \item \inltt{wss}: Computes wall shear stress field.
@@ -850,6 +851,26 @@ The argument \inltt{N} and \inltt{fromfld} are compulsory arguments that respect
 
 The input \inltt{.fld} files are the outputs of the \textit{wss} module. If they do not contain the surface normals (an optional output of the \textit{wss} modle), then the \textit{shear} module will not compute the last metric, |WSSG|.
 
+%
+%
+%
+\subsection{Stream function of a 2D incompressible flow: \textit{streamfunction} module}
+
+The streamfunction module calculates the stream function of a 2D incompressible flow, by
+solving the Poisson equation
+\[
+\nabla^2 \psi = -\omega
+\]
+where $\omega$ is the vorticity. Note that this module applies the same boundary conditions
+specified for the y-direction velocity component \inltt{v} to the stream function,
+what may not be the most appropriate choice.
+
+To use this module, the user can run
+\begin{lstlisting}[style=BashInputStyle]
+FieldConvert -m streamfunction test.xml test.fld test-streamfunc.fld
+\end{lstlisting}
+where the file \inltt{test-streamfunc.fld} can be processed in a similar
+way as described in section \ref{s:utilities:fieldconvert:sub:convert}.
 
 %
 %

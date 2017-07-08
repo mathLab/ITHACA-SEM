@@ -37,6 +37,9 @@ v4.4.2
 - Fix ability to set default implementation in Collections and added an option 
   to set eNoCollections in FieldConvert as default (!789)
 
+**Utilities**
+- Fix vtkToFld missing dependency which prevented compiling with VTK 7.1 (!808)
+
 v4.4.1
 ------
 **Library**

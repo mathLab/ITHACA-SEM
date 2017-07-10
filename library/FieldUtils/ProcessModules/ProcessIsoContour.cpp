@@ -198,8 +198,8 @@ void ProcessIsoContour::Process(po::variables_map &vm)
     }
 
     // Process isocontour
-    bool smoothing      = m_config["smooth"].m_beenSet;
-    bool globalcondense = m_config["globalcondense"].m_beenSet;
+    bool smoothing      = m_config["smooth"].as<bool>();
+    bool globalcondense = m_config["globalcondense"].as<bool>();
     if(globalcondense)
     {
         if(verbose)

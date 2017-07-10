@@ -72,7 +72,7 @@ ProcessBoundaryExtract::~ProcessBoundaryExtract()
 
 void ProcessBoundaryExtract::Process(po::variables_map &vm)
 {
-    m_f->m_addNormals = m_config["addnormals"].m_beenSet;
+    m_f->m_addNormals = m_config["addnormals"].as<bool>();
 
     // Set up Field options to output boundary fld
     string bvalues = m_config["bnd"].as<string>();

@@ -101,7 +101,7 @@ void ProcessInnerProduct::Process(po::variables_map &vm)
     string multifldidsstr = m_config["multifldids"].as<string>();
     vector<unsigned int> multiFldIds;
     vector<string> fromfiles;
-    bool allfromflds = m_config["allfromflds"].m_beenSet;
+    bool allfromflds = m_config["allfromflds"].as<bool>();
 
     if (fields.compare("All") == 0)
     {

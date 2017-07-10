@@ -102,7 +102,7 @@ void ProcessQualityMetric::Process(po::variables_map &vm)
         // copy Jacobian into field
         LocalRegions::ExpansionSharedPtr Elmt = exp->GetExp(i);
         int offset = exp->GetPhys_Offset(i);
-        Array<OneD, NekDouble> q = GetQ(Elmt,m_config["scaled"].m_beenSet);
+        Array<OneD, NekDouble> q = GetQ(Elmt,m_config["scaled"].as<bool>());
         Array<OneD, NekDouble> out = phys + offset;
 
         ASSERTL0(q.num_elements() == Elmt->GetTotPoints(),

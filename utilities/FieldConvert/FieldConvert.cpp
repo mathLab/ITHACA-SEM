@@ -387,6 +387,7 @@ int main(int argc, char* argv[])
     module.second = string("createExp");
     mod = GetModuleFactory().CreateInstance(module, f);
     modules.push_back(mod);
+    mod->SetDefaults();
 
     // Include equispacedoutput module if needed
     Array< OneD, int>  modulesCount(SIZE_ModulePriority,0);
@@ -402,6 +403,7 @@ int main(int argc, char* argv[])
         module.second = string("equispacedoutput");
         mod = GetModuleFactory().CreateInstance(module, f);
         modules.push_back(mod);
+        mod->SetDefaults();
     }
 
     // Check if modules provided are compatible

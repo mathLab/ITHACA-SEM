@@ -24,6 +24,7 @@ v5.0.0
 
 **FieldConvert**:
 - Add input module for Semtex field files (!777)
+- Extend wss module to compressible flows (!810)
 
 **Documentation**:
 - Added the developer-guide repository as a submodule (!751)

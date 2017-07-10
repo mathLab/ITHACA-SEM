@@ -51,11 +51,15 @@ class NodeOptiJob;
 
 class NodeOpti
 {
+    // Typedef for derivative storage, we use boost::multi_array so we can pass
+    // this to functions easily
+    typedef boost::multi_array<NekDouble, 4> DerivArray;
+
 public:
     NodeOpti(NodeSharedPtr n, std::vector<ElUtilSharedPtr> e,
              ResidualSharedPtr r,
              std::map<LibUtilities::ShapeType, DerivUtilSharedPtr> d,
-             optiType o)
+             optiType o, int dim)
         : m_node(n), m_res(r), m_derivUtils(d), m_opti(o)
     {
         // filter element types within d vector
@@ -63,6 +67,27 @@ public:
         {
             m_data[e[i]->GetEl()->GetShapeType()].push_back(e[i]);
         }
+
+        // Set up storage for GetFunctional to avoid reallocation on each call.
+        size_t storageCount = 0;
+        std::map<LibUtilities::ShapeType, std::vector<ElUtilSharedPtr> >
+            ::iterator typeIt;
+        // Count total storage needed.
+        for (typeIt = m_data.begin(); typeIt != m_data.end(); typeIt++)
+        {
+            const int pts    = m_derivUtils[typeIt->first]->pts;
+            const int nElmt  = typeIt->second.size();
+
+            storageCount = std::max(storageCount,
+                                    dim * m_derivUtils[typeIt->first]->ptsStd *
+                                    typeIt->second.size());
+
+            m_derivs.insert(std::make_pair(
+                                typeIt->first,
+                                DerivArray(boost::extents[dim][nElmt][dim][pts])));
+        }
+
+        m_tmpStore.resize(storageCount);
     }
 
     virtual ~NodeOpti(){};
@@ -82,6 +107,9 @@ protected:
     boost::mutex mtx;
     std::map<LibUtilities::ShapeType, std::vector<ElUtilSharedPtr> > m_data;
     Array<OneD, NekDouble> m_grad;
+    std::vector<NekDouble> m_tmpStore;
+    boost::unordered_map<LibUtilities::ShapeType, DerivArray> m_derivs;
+
 
     template <int DIM> int IsIndefinite();
 
@@ -120,7 +148,7 @@ public:
                  ResidualSharedPtr r,
                  std::map<LibUtilities::ShapeType, DerivUtilSharedPtr> d,
                  optiType o)
-        : NodeOpti(n, e, r, d, o)
+        : NodeOpti(n, e, r, d, o, 3)
     {
     }
 
@@ -146,7 +174,7 @@ public:
                  ResidualSharedPtr r,
                  std::map<LibUtilities::ShapeType, DerivUtilSharedPtr> d,
                  optiType o)
-        : NodeOpti(n, e, r, d, o)
+        : NodeOpti(n, e, r, d, o, 2)
     {
     }
 

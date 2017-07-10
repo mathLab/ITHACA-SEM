@@ -46,10 +46,8 @@ namespace Nektar
 {
     CellModelFactory& GetCellModelFactory()
     {
-        typedef Loki::SingletonHolder<CellModelFactory,
-            Loki::CreateUsingNew,
-            Loki::NoDestroy > Type;
-        return Type::Instance();
+        static CellModelFactory instance;
+        return instance;
     }
 
     /**

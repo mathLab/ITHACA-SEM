@@ -60,7 +60,8 @@ ModuleKey ProcessHomogeneousStretch::className =
 ProcessHomogeneousStretch::ProcessHomogeneousStretch(FieldSharedPtr f)
     : ProcessModule(f)
 {
-    m_config["factor"] = ConfigOption(false, "NotSet", "stretch factor");
+    m_config["factor"] =
+        ConfigOption(false, "NotSet", "integer stretch factor");
 }
 
 ProcessHomogeneousStretch::~ProcessHomogeneousStretch()
@@ -69,16 +70,13 @@ ProcessHomogeneousStretch::~ProcessHomogeneousStretch()
 
 void ProcessHomogeneousStretch::Process(po::variables_map &vm)
 {
-    if (m_f->m_verbose)
+    // Skip in case of empty partition
+    if (m_f->m_exp[0]->GetNumElmts() == 0)
     {
-        if (m_f->m_comm->GetRank() == 0)
-        {
-            cout << "ProcessHomogeneousStretch: Stretching expansion..."
-                 << endl;
-        }
+        return;
     }
 
-    if ((m_f->m_fielddef[0]->m_numHomogeneousDir) != 1)
+    if ((m_f->m_numHomogeneousDir) != 1)
     {
         ASSERTL0(false,
                  "ProcessHomogeneousStretch only works for Homogeneous1D.");
@@ -88,10 +86,10 @@ void ProcessHomogeneousStretch::Process(po::variables_map &vm)
              "Missing parameter factor for ProcessHomogeneousStretch");
 
     int factor  = m_config["factor"].as<int>();
-    int nfields = m_f->m_fielddef[0]->m_fields.size();
+    int nfields = m_f->m_variables.size();
     int nplanes = m_f->m_exp[0]->GetHomogeneousBasis()->GetZ().num_elements();
 
-    ASSERTL0(factor > 1, "Parameter factor must be greater than 1.");
+    ASSERTL0(factor > 1, "Parameter factor must be an int greater than 1.");
 
     int nstrips;
     m_f->m_session->LoadParameter("Strip_Z", nstrips, 1);
@@ -118,34 +116,9 @@ void ProcessHomogeneousStretch::Process(po::variables_map &vm)
 
             m_f->m_exp[n]->BwdTrans(m_f->m_exp[n]->GetCoeffs(),
                                     m_f->m_exp[n]->UpdatePhys());
+            m_f->m_exp[n]->SetHomoLen(factor*m_f->m_exp[n]->GetHomoLen());
         }
     }
-    std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef =
-        m_f->m_exp[0]->GetFieldDefinitions();
-    std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
-
-    for (int s = 0; s < nstrips; ++s)
-    {
-        for (int j = 0; j < nfields; ++j)
-        {
-            for (int i = 0; i < FieldDef.size() / nstrips; ++i)
-            {
-                int n = s * FieldDef.size() / nstrips + i;
-
-                FieldDef[n]->m_fields.push_back(
-                    m_f->m_fielddef[0]->m_fields[j]);
-                m_f->m_exp[s * nfields + j]->AppendFieldData(FieldDef[n],
-                                                             FieldData[n]);
-            }
-        }
-    }
-    for (int i = 0; i < FieldDef.size(); ++i)
-    {
-        FieldDef[i]->m_homogeneousLengths[0] =
-            factor * m_f->m_fielddef[i]->m_homogeneousLengths[0];
-    }
-    m_f->m_fielddef = FieldDef;
-    m_f->m_data     = FieldData;
 }
 }
 }

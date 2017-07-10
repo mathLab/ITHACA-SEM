@@ -76,6 +76,7 @@ namespace H5
                              0);                                               \
     }
 
+
 class Error : public std::exception
 {
 };
@@ -474,12 +475,9 @@ public:
         DataTypeSharedPtr mem_t     = DataTypeTraits<T>::GetType();
         DataSpaceSharedPtr memspace = DataSpace::OneD(data.size());
 
-        H5Dwrite(m_Id,
-                 mem_t->GetId(),
-                 memspace->GetId(),
-                 filespace->GetId(),
-                 dxpl->GetId(),
-                 &data[0]);
+        H5_CALL(H5Dwrite,
+                (m_Id, mem_t->GetId(), memspace->GetId(), filespace->GetId(),
+                 dxpl->GetId(), &data[0]) );
     }
     template <class T> void Read(std::vector<T> &data)
     {
@@ -508,12 +506,8 @@ public:
         data.resize(len);
 
         DataSpaceSharedPtr memspace = DataSpace::OneD(len);
-        H5Dread(m_Id,
-                mem_t->GetId(),
-                memspace->GetId(),
-                filespace->GetId(),
-                dxpl->GetId(),
-                &data[0]);
+        H5_CALL(H5Dread, (m_Id, mem_t->GetId(), memspace->GetId(),
+                          filespace->GetId(), dxpl->GetId(), &data[0]));
     }
 
 private:

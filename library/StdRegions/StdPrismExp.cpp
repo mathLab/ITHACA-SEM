@@ -1074,6 +1074,8 @@ namespace Nektar
                 nummodesA = m_base[1]->GetNumModes();
                 nummodesB = m_base[2]->GetNumModes();
                 break;
+            default:
+                ASSERTL0(false,"fid must be between 0 and 4");
             }
 
             bool CheckForZeroedModes = false;
@@ -1238,10 +1240,10 @@ namespace Nektar
                 // direction reversed); swap edge modes.
                 if ((int)faceOrient == 7)
                 {
-                    swap(maparray[0], maparray[P]);
-                    for (i = 1; i < P-1; ++i)
+                    swap(maparray[0], maparray[Q]);
+                    for (i = 1; i < Q-1; ++i)
                     {
-                        swap(maparray[i+1], maparray[P+i]);
+                        swap(maparray[i+1], maparray[Q+i]);
                     }
                 }
             }
@@ -1782,7 +1784,7 @@ namespace Nektar
                 {
                     for (q = 0; q <= Q; ++q)
                     {
-                        for (r = 0; r <= R-p; ++r)
+                        for (r = 0; r <= R-p; ++r) 
                         {
                             maparray[idx++] = GetMode(p,q,r);
                         }

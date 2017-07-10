@@ -422,7 +422,7 @@ namespace Nektar
         // Set up block matrix sizes - 
         for(n = 0; n < nel; ++n)
         {
-            eid = m_fields[m_velocity[0]]->GetOffset_Elmt_Id(n);
+            eid = n;
             nsize_bndry[n] = nvel*m_fields[m_velocity[0]]->GetExp(eid)->NumBndryCoeffs()*nz_loc;
             nsize_bndry_p1[n] = nsize_bndry[n]+nz_loc;
             nsize_int  [n] = (nvel*m_fields[m_velocity[0]]->GetExp(eid)->GetNcoeffs()*nz_loc - nsize_bndry[n]);
@@ -455,11 +455,11 @@ namespace Nektar
         ::AllocateSharedPtr(nsize_p_m1,nsize_p_m1,blkmatStorage);
         
         
-        Timer timer;
+        LibUtilities::Timer timer;
         timer.Start();
         for(n = 0; n < nel; ++n)
         {
-            eid = m_fields[m_velocity[0]]->GetOffset_Elmt_Id(n);
+            eid = n;
             nbndry = nsize_bndry[n];
             nint   = nsize_int[n];
             k = nsize_bndry_p1[n];
@@ -1445,7 +1445,7 @@ namespace Nektar
             }
             case eSteadyNavierStokes:
             {	
-                Timer Generaltimer;
+                LibUtilities::Timer Generaltimer;
                 Generaltimer.Start();
                 
                 int Check(0);
@@ -1562,7 +1562,7 @@ namespace Nektar
     
     void CoupledLinearNS::SolveSteadyNavierStokes(void)
     {
-        Timer Newtontimer;
+        LibUtilities::Timer Newtontimer;
         Newtontimer.Start();
         
         Array<OneD, Array<OneD, NekDouble> > RHS_Coeffs(m_velocity.num_elements());
@@ -1964,7 +1964,7 @@ namespace Nektar
         cnt = cnt1 = 0;
         for(i = 0; i < nel; ++i) // loop over elements
         {
-            eid = fields[m_velocity[0]]->GetOffset_Elmt_Id(i);
+            eid = i;
             fields[m_velocity[0]]->GetExp(eid)->GetBoundaryMap(bmap);
             fields[m_velocity[0]]->GetExp(eid)->GetInteriorMap(imap);
             nbnd   = bmap.num_elements();
@@ -2012,7 +2012,7 @@ namespace Nektar
         offset = cnt = 0; 
         for(i = 0; i < nel; ++i)
         {
-            eid  = fields[0]->GetOffset_Elmt_Id(i);
+            eid  = i;
             nbnd = nz_loc*fields[0]->GetExp(eid)->NumBndryCoeffs(); 
             
             for(j = 0; j < nvel; ++j)
@@ -2032,7 +2032,7 @@ namespace Nektar
         offset = cnt1 = 0; 
         for(i = 0; i <  nel; ++i)
         {
-            eid  = fields[0]->GetOffset_Elmt_Id(i);
+            eid  = i;
             nbnd = nz_loc*fields[0]->GetExp(eid)->NumBndryCoeffs(); 
             nint = pressure->GetExp(eid)->GetNcoeffs(); 
             
@@ -2111,7 +2111,7 @@ namespace Nektar
         Array<OneD, NekDouble> p_coeffs = pressure->UpdateCoeffs();
         for(i = 0; i <  nel; ++i)
         {
-            eid  = fields[0]->GetOffset_Elmt_Id(i);
+            eid  = i;
             nbnd = nz_loc*fields[0]->GetExp(eid)->NumBndryCoeffs(); 
             nint = pressure->GetExp(eid)->GetNcoeffs(); 
             
@@ -2131,7 +2131,7 @@ namespace Nektar
         offset = cnt = cnt1 = 0;
         for(i = 0; i < nel; ++i)
         {
-            eid  = fields[0]->GetOffset_Elmt_Id(i);
+            eid  = i;
             nint = pressure->GetExp(eid)->GetNcoeffs(); 
             nbnd = fields[0]->GetExp(eid)->NumBndryCoeffs(); 
             cnt1 = pressure->GetCoeff_Offset(eid);
@@ -2160,7 +2160,7 @@ namespace Nektar
         cnt = cnt1 = 0;
         for(i = 0; i < nel; ++i) // loop over elements
         {
-            eid  = fields[m_velocity[0]]->GetOffset_Elmt_Id(i);
+            eid  = i;
             fields[0]->GetExp(eid)->GetBoundaryMap(bmap);
             fields[0]->GetExp(eid)->GetInteriorMap(imap);
             nbnd   = bmap.num_elements();

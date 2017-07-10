@@ -33,6 +33,11 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
+#include <boost/geometry.hpp>
+#include <boost/geometry/geometries/point.hpp>
+#include <boost/geometry/geometries/box.hpp>
+#include <boost/geometry/index/rtree.hpp>
+
 #include <LibUtilities/BasicUtils/ParseUtils.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/BasicUtils/Progressbar.hpp>
@@ -45,11 +50,6 @@
 #include <NekMeshUtils/MeshElements/Element.h>
 
 #include "ProcessSpherigon.h"
-
-#include <boost/geometry.hpp>
-#include <boost/geometry/geometries/point.hpp>
-#include <boost/geometry/geometries/box.hpp>
-#include <boost/geometry/index/rtree.hpp>
 
 namespace bg  = boost::geometry;
 namespace bgi = boost::geometry::index;
@@ -233,7 +233,7 @@ void ProcessSpherigon::FindNormalFromPlyFile(MeshSharedPtr &plymesh,
     typedef bg::model::point<NekDouble, 3, bg::cs::cartesian> Point;
     typedef pair<Point, unsigned int> PointI;
 
-    int n_neighbs = 5;
+    int n_neighbs = 1;
 
     map<int,int>  TreeidtoPlyid;
 
@@ -263,17 +263,10 @@ void ProcessSpherigon::FindNormalFromPlyFile(MeshSharedPtr &plymesh,
                                                   "Nearest ply verts",prog);
         }
 
-
-        //I dont know why 5 nearest points are searched for when
-        //only the nearest point is used for the data
-        //was left like this in the ann->boost rewrite (MT 6/11/16)
         Point queryPt(vIt->second->m_x, vIt->second->m_y, vIt->second->m_z);
-        n_neighbs  = 5;
         vector<PointI> result;
-        rtree.query(bgi::nearest(queryPt, n_neighbs), std::back_inserter(result));
-
-        ASSERTL1(bg::distance(result[0].first,queryPt) < bg::distance(result[1].first,queryPt),
-            "Assumption that dist values are ordered from smallest to largest is not correct");
+        rtree.query(bgi::nearest(queryPt, n_neighbs),
+                    std::back_inserter(result));
 
         cntmin = TreeidtoPlyid[result[0].second];
 

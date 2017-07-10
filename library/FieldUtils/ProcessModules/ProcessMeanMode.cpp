@@ -63,14 +63,6 @@ ProcessMeanMode::~ProcessMeanMode()
 
 void ProcessMeanMode::Process(po::variables_map &vm)
 {
-    if (m_f->m_verbose)
-    {
-        if (m_f->m_comm->TreatAsRankZero())
-        {
-            cout << "ProcessMeanMode: Extracting mean mode..." << endl;
-        }
-    }
-
     // Set parameters for mean mode
     RegisterConfig("planeid", "0");
     RegisterConfig("wavespace", "1");

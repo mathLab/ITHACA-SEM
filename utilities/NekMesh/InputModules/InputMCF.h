@@ -66,7 +66,7 @@ private:
                 m_nacadomain, m_periodic, m_adjustment;
 
     bool m_makeBL, m_surfopti, m_varopti, m_refine, m_woct, m_2D, m_splitBL,
-         m_naca, m_adjust, m_adjustall;
+         m_naca, m_adjust, m_adjustall, m_manifold;
 
 };
 }

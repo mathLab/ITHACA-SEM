@@ -37,10 +37,9 @@
 #include <cstdlib>
 #include <iomanip>
 
-#include <boost/timer/timer.hpp>
-
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 #include <LibUtilities/BasicUtils/SessionReader.h>
+#include <LibUtilities/BasicUtils/Timer.h>
 #include <LibUtilities/Communication/Comm.h>
 #include <MultiRegions/ExpList3D.h>
 #include <Collections/Collection.h>
@@ -48,11 +47,6 @@
 
 using namespace std;
 using namespace Nektar;
-
-using boost::timer::cpu_timer;
-using boost::timer::cpu_times;
-using boost::timer::nanosecond_type;
-using boost::timer::format;
 
 MultiRegions::ExpListSharedPtr SetupExpList(
     int                                  N,
@@ -71,33 +65,21 @@ MultiRegions::ExpListSharedPtr SetupExpList(
     return expList;
 }
 
-void printOutput(int N, int Ntest, cpu_timer &timer, bool fmt)
+void printOutput(int N, int Ntest, LibUtilities::Timer &timer, bool fmt)
 {
-    cpu_times times = timer.elapsed();
-    nanosecond_type total = times.user + times.system;
-
-    const double sec = 1000000000.0L;
-
-    // Normalize timings
-    double wall_sec  = times.wall / sec;
-    double total_sec = total / sec;
-
-    wall_sec /= Ntest;
-    total_sec /= Ntest;
+    // Get timings
+    NekDouble total_sec = timer.TimePerTest(Ntest);
 
     if (fmt)
     {
         cout << setw(6)  << N-1
-             << setw(18) << wall_sec
              << setw(18) << total_sec
              << endl;
     }
     else
     {
         cout << "P = " << N-1 << ": "
-             << wall_sec << " (wall) "
-             << total_sec << " (total), "
-             << (100.0 * total_sec / wall_sec) << "% CPU"
+             << total_sec << " s, "
              << endl;
     }
 }
@@ -113,7 +95,7 @@ int main(int argc, char *argv[])
 
     MultiRegions::ExpListSharedPtr expList;
 
-    cpu_timer timer;
+    LibUtilities::Timer timer;
 
     int Ntest, maxOrder;
     session->LoadParameter("Ntest",    Ntest,    1000);
@@ -141,12 +123,12 @@ int main(int argc, char *argv[])
             Array<OneD, NekDouble> input (expList->GetNcoeffs());
             Array<OneD, NekDouble> output(expList->GetNpoints());
 
-            timer.start();
+            timer.Start();
             for (int i = 0; i < Ntest; ++i)
             {
                 expList->BwdTrans(input, output);
             }
-            timer.stop();
+            timer.Stop();
 
             printOutput(N, Ntest, timer, fmt);
         }
@@ -158,12 +140,12 @@ int main(int argc, char *argv[])
             Array<OneD, NekDouble> input (expList->GetNpoints());
             Array<OneD, NekDouble> output(expList->GetNcoeffs());
 
-            timer.start();
+            timer.Start();
             for (int i = 0; i < Ntest; ++i)
             {
                 expList->IProductWRTBase(input, output);
             }
-            timer.stop();
+            timer.Stop();
 
             printOutput(N, Ntest, timer, fmt);
         }
@@ -181,12 +163,12 @@ int main(int argc, char *argv[])
                 input[i] = Array<OneD, NekDouble>(expList->GetNpoints());
             }
 
-            timer.start();
+            timer.Start();
             for (int i = 0; i < Ntest; ++i)
             {
                 expList->IProductWRTDerivBase(input, output);
             }
-            timer.stop();
+            timer.Stop();
 
             printOutput(N, Ntest, timer, fmt);
         }
@@ -200,12 +182,12 @@ int main(int argc, char *argv[])
             Array<OneD, NekDouble> output1(expList->GetNpoints());
             Array<OneD, NekDouble> output2(expList->GetNpoints());
 
-            timer.start();
+            timer.Start();
             for (int i = 0; i < Ntest; ++i)
             {
                 expList->PhysDeriv(input, output0, output1, output2);
             }
-            timer.stop();
+            timer.Stop();
 
             printOutput(N, Ntest, timer, fmt);
         }

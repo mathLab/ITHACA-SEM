@@ -66,6 +66,16 @@ public:
         return "InputFld";
     }
 
+    virtual std::string GetModuleDescription()
+    {
+        return "Processing input fld file";
+    }
+
+    virtual ModulePriority GetModulePriority()
+    {
+        return eCreateFieldData;
+    }
+
 private:
 };
 }

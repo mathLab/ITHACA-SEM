@@ -75,19 +75,19 @@ namespace Nektar
 
 
     template<typename SparseStorageType>
-    const IndexType NekSparseMatrix<SparseStorageType>::GetRows() const
+    IndexType NekSparseMatrix<SparseStorageType>::GetRows() const
     {
         return m_sparseStorage->GetRows();
     }
 
     template<typename SparseStorageType>
-    const IndexType NekSparseMatrix<SparseStorageType>::GetColumns() const
+    IndexType NekSparseMatrix<SparseStorageType>::GetColumns() const
     {
         return m_sparseStorage->GetColumns();
     }
 
     template<typename SparseStorageType>
-    const IndexType NekSparseMatrix<SparseStorageType>::GetNumNonZeroEntries() const
+    IndexType NekSparseMatrix<SparseStorageType>::GetNumNonZeroEntries() const
     {
         return m_sparseStorage->GetNumNonZeroEntries();
     }
@@ -137,7 +137,7 @@ namespace Nektar
     }
 
     template<typename SparseStorageType>
-    const size_t NekSparseMatrix<SparseStorageType>::GetMemoryFootprint() const
+    size_t NekSparseMatrix<SparseStorageType>::GetMemoryFootprint() const
     {
         return m_sparseStorage->GetMemoryUsage(
                     m_sparseStorage->GetNumNonZeroEntries(),
@@ -148,7 +148,7 @@ namespace Nektar
     }
 
     template<typename SparseStorageType>
-    const unsigned long NekSparseMatrix<SparseStorageType>::GetMulCallsCounter() const
+    unsigned long NekSparseMatrix<SparseStorageType>::GetMulCallsCounter() const
     {
         return m_mulCallsCounter;
     }
@@ -161,7 +161,7 @@ namespace Nektar
     }
 
     template<typename SparseStorageType>
-    const IndexType NekSparseMatrix<SparseStorageType>::GetBandwidth()
+    IndexType NekSparseMatrix<SparseStorageType>::GetBandwidth()
     {
         int bandwidth = 0;
 

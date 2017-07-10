@@ -82,7 +82,7 @@ namespace Nektar
         MultiRegions::PeriodicMap::const_iterator pIt;
 
         const LocalRegions::ExpansionVector &locExpVector = *(fields[0]->GetExp());
-        int eid, id, diff;
+        int id, diff;
         int nel = fields[0]->GetNumElmts();
 
         MultiRegions::PeriodicMap periodicVerts;
@@ -247,10 +247,9 @@ namespace Nektar
 
         for(i = 0; i < nel; ++i)
         {
-            eid = fields[0]->GetOffset_Elmt_Id(i);
-            for(j = 0; j < locExpVector[eid]->GetNverts(); ++j)
+            for(j = 0; j < locExpVector[i]->GetNverts(); ++j)
             {
-                vertId = (locExpVector[eid]->as<LocalRegions::Expansion2D>()
+                vertId = (locExpVector[i]->as<LocalRegions::Expansion2D>()
                                            ->GetGeom2D())->GetVid(j);
                 if(Dofs[0].count(vertId) == 0)
                 {
@@ -263,17 +262,17 @@ namespace Nektar
                     }
                 }
 
-                edgeId = (locExpVector[eid]->as<LocalRegions::Expansion2D>()
+                edgeId = (locExpVector[i]->as<LocalRegions::Expansion2D>()
                                            ->GetGeom2D())->GetEid(j);
                 if(Dofs[1].count(edgeId) == 0)
                 {
-                    Dofs[1][edgeId] = nvel*(locExpVector[eid]->GetEdgeNcoeffs(j)-2)*nz_loc;
+                    Dofs[1][edgeId] = nvel*(locExpVector[i]->GetEdgeNcoeffs(j)-2)*nz_loc;
                 }
 
                 // Adjust for Dirichlet boundary conditions to give number to be solved
                 if(IsDirEdgeDof.count(edgeId) != 0)
                 {
-                    Dofs[1][edgeId] -= IsDirEdgeDof[edgeId]*nz_loc*(locExpVector[eid]->GetEdgeNcoeffs(j)-2);
+                    Dofs[1][edgeId] -= IsDirEdgeDof[edgeId]*nz_loc*(locExpVector[i]->GetEdgeNcoeffs(j)-2);
                 }
             }
         }
@@ -318,26 +317,25 @@ namespace Nektar
         // pressure dof to a dirichlet edge
         for(i = 0; i < nel; ++i)
         {
-            eid = fields[0]->GetOffset_Elmt_Id(i);
-            for(j = 0; j < locExpVector[eid]->GetNverts(); ++j)
+            for(j = 0; j < locExpVector[i]->GetNverts(); ++j)
             {
-                edgeId = (locExpVector[eid]->as<LocalRegions::Expansion2D>()
+                edgeId = (locExpVector[i]->as<LocalRegions::Expansion2D>()
                                            ->GetGeom2D())->GetEid(j);
 
                 if(IsDirEdgeDof.count(edgeId) == 0) // interior edge
                 {
                     // setup AddMeanPressureToEdgeId to decide where to
                     // put pressure
-                    if(AddMeanPressureToEdgeId[eid] == -1)
+                    if(AddMeanPressureToEdgeId[i] == -1)
                     {
-                        AddMeanPressureToEdgeId[eid] = edgeId;
+                        AddMeanPressureToEdgeId[i] = edgeId;
                     }
                 }
             }
-            ASSERTL0((AddMeanPressureToEdgeId[eid] != -1),"Did not determine "
+            ASSERTL0((AddMeanPressureToEdgeId[i] != -1),"Did not determine "
                      "an edge to attach mean pressure dof");
             // Add the mean pressure degree of freedom to this edge
-            Dofs[1][AddMeanPressureToEdgeId[eid]] += nz_loc;
+            Dofs[1][AddMeanPressureToEdgeId[i]] += nz_loc;
         }
 
         map<int,int> pressureEdgeOffset;
@@ -389,8 +387,7 @@ namespace Nektar
 
         for(i = 0; i < nel; ++i)
         {
-            eid = fields[0]->GetOffset_Elmt_Id(i);
-            locExpansion = locExpVector[eid]->as<StdRegions::StdExpansion2D>();
+            locExpansion = locExpVector[i]->as<StdRegions::StdExpansion2D>();
 
             for(j = 0; j < locExpansion->GetNedges(); ++j)
             {
@@ -573,7 +570,7 @@ namespace Nektar
 
         for(i = 0; i < nel; ++i)
         {
-            m_numLocalBndCoeffsPerPatch[i] = (unsigned int) nz_loc*(nvel*locExpVector[fields[0]->GetOffset_Elmt_Id(i)]->NumBndryCoeffs() + 1);
+            m_numLocalBndCoeffsPerPatch[i] = (unsigned int) nz_loc*(nvel*locExpVector[i]->NumBndryCoeffs() + 1);
             m_numLocalIntCoeffsPerPatch[i] = (unsigned int) nz_loc*(pressure->GetExp(i)->GetNcoeffs()-1);
         }
 
@@ -595,8 +592,7 @@ namespace Nektar
         // ordering (element type consistency)
         for(i = 0; i < nel; ++i)
         {
-            eid = fields[0]->GetOffset_Elmt_Id(i);
-            locExpansion = locExpVector[eid]->as<StdRegions::StdExpansion2D>();
+            locExpansion = locExpVector[i]->as<StdRegions::StdExpansion2D>();
 
             velnbndry = locExpansion->NumBndryCoeffs();
 
@@ -662,14 +658,14 @@ namespace Nektar
             }
 
             // use difference between two edges of the AddMeanPressureEdgeId to det nEdgeInteriorCoeffs.
-            nEdgeInteriorCoeffs = graphVertOffset[(ReorderedGraphVertId[1][AddMeanPressureToEdgeId[eid]])*nvel*nz_loc+1] - graphVertOffset[(ReorderedGraphVertId[1][AddMeanPressureToEdgeId[eid]])*nvel*nz_loc];
+            nEdgeInteriorCoeffs = graphVertOffset[(ReorderedGraphVertId[1][AddMeanPressureToEdgeId[i]])*nvel*nz_loc+1] - graphVertOffset[(ReorderedGraphVertId[1][AddMeanPressureToEdgeId[i]])*nvel*nz_loc];
 
-            int psize = pressure->GetExp(eid)->GetNcoeffs();
+            int psize = pressure->GetExp(i)->GetNcoeffs();
             for(n = 0; n < nz_loc; ++n)
             {
-                m_localToGlobalMap[cnt + nz_loc*nvel*velnbndry + n*psize] = graphVertOffset[(ReorderedGraphVertId[1][AddMeanPressureToEdgeId[eid]]+1)*nvel*nz_loc-1]+nEdgeInteriorCoeffs + pressureEdgeOffset[AddMeanPressureToEdgeId[eid]];
+                m_localToGlobalMap[cnt + nz_loc*nvel*velnbndry + n*psize] = graphVertOffset[(ReorderedGraphVertId[1][AddMeanPressureToEdgeId[i]]+1)*nvel*nz_loc-1]+nEdgeInteriorCoeffs + pressureEdgeOffset[AddMeanPressureToEdgeId[i]];
 
-                pressureEdgeOffset[AddMeanPressureToEdgeId[eid]] += 1;
+                pressureEdgeOffset[AddMeanPressureToEdgeId[i]] += 1;
             }
 
             cnt += (velnbndry*nvel+ psize)*nz_loc;
@@ -753,8 +749,7 @@ namespace Nektar
                     Dofs[0].size()+Dofs[1].size()-firstNonDirGraphVertId);
                 for(i = 0; i < locExpVector.size(); ++i)
                 {
-                    eid = fields[0]->GetOffset_Elmt_Id(i);
-                    locExpansion = locExpVector[eid]
+                    locExpansion = locExpVector[i]
                                             ->as<StdRegions::StdExpansion2D>();
                     for(j = 0; j < locExpansion->GetNverts(); ++j)
                     {

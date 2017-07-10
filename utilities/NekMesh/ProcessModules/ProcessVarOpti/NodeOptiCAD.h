@@ -52,7 +52,7 @@ public:
                  ResidualSharedPtr r,
                  std::map<LibUtilities::ShapeType, DerivUtilSharedPtr> d,
                  optiType o, CADCurveSharedPtr c)
-        : NodeOpti(n, e, r, d, o), curve(c)
+        : NodeOpti(n, e, r, d, o, 3), curve(c)
     {
     }
 
@@ -81,7 +81,7 @@ public:
                  ResidualSharedPtr r,
                  std::map<LibUtilities::ShapeType, DerivUtilSharedPtr> d,
                  optiType o, CADSurfSharedPtr s)
-        : NodeOpti(n, e, r, d, o), surf(s)
+        : NodeOpti(n, e, r, d, o, 3), surf(s)
     {
     }
 

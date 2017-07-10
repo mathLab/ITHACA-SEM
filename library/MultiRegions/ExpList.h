@@ -254,6 +254,12 @@ namespace Nektar
                       Array<OneD,       NekDouble> &outarray,
                       CoeffState coeffstate = eLocal);
 
+            MULTI_REGIONS_EXPORT void   ExponentialFilter(
+                Array<OneD, NekDouble> &array,
+                const NekDouble        alpha,
+                const NekDouble        exponent,
+                const NekDouble        cutoff);
+
             /// This function elementally mulplies the coefficient space of
             /// Sin my the elemental inverse of the mass matrix.
             MULTI_REGIONS_EXPORT void  MultiplyByElmtInvMass (
@@ -579,6 +585,13 @@ namespace Nektar
             {
                 return v_GetHomoLen();
             }
+
+            /// This function sets the Width of homogeneous direction
+            /// associaed with the homogeneous expansion.
+            void SetHomoLen(const NekDouble lhom)
+            {
+                return v_SetHomoLen(lhom);
+            }
             
             /// This function returns a vector containing the wave
             /// numbers in y-direction associated
@@ -664,10 +677,6 @@ namespace Nektar
             /// Get the start offset position for a global list of m_phys
             /// correspoinding to element n.
             inline int GetPhys_Offset(int n) const;
-
-            /// Get the element id associated with the n th
-            /// consecutive block of data in  #m_phys and #m_coeffs
-            inline int GetOffset_Elmt_Id(int n) const;
 
             /// This function returns (a reference to) the array
             /// \f$\boldsymbol{\hat{u}}_l\f$ (implemented as #m_coeffs)
@@ -958,6 +967,10 @@ namespace Nektar
             MULTI_REGIONS_EXPORT void ClearGlobalLinSysManager(void);
 
         protected:
+            /// Definition of the total number of degrees of freedom and
+            /// quadrature points and offsets to access data
+            void SetCoeffPhysOffsets();
+
             boost::shared_ptr<DNekMat> GenGlobalMatrixFull(
                 const GlobalLinSysKey &mkey,
                 const boost::shared_ptr<AssemblyMapCG> &locToGloMap);
@@ -1048,14 +1061,6 @@ namespace Nektar
 
             /// Offset of elemental data into the array #m_phys
             Array<OneD, int>  m_phys_offset;
-
-            /// Array containing the element id #m_offset_elmt_id[n]
-            /// that the n^th consecutive block of data in #m_coeffs
-            /// and #m_phys is associated, i.e. for an array of
-            /// constant expansion size and single shape elements
-            /// m_phys[n*m_npoints] is the data related to
-            /// m_exp[m_offset_elmt_id[n]];
-            Array<OneD, int>  m_offset_elmt_id;
 
             NekOptimize::GlobalOptParamSharedPtr m_globalOptParam;
 
@@ -1409,6 +1414,7 @@ namespace Nektar
             virtual Array<OneD, const NekDouble> v_HomogeneousEnergy(void);
             virtual LibUtilities::TranspositionSharedPtr v_GetTransposition(void);
             virtual NekDouble v_GetHomoLen(void);
+            virtual void      v_SetHomoLen(const NekDouble lhom);
             virtual Array<OneD, const unsigned int> v_GetZIDs(void);
             virtual Array<OneD, const unsigned int> v_GetYIDs(void);
             
@@ -2092,14 +2098,6 @@ namespace Nektar
         inline int ExpList::GetPhys_Offset(int n) const
         {
             return m_phys_offset[n];
-        }
-
-        /**
-         *
-         */
-        inline int ExpList::GetOffset_Elmt_Id(int n) const
-        {
-            return m_offset_elmt_id[n];
         }
 
         /**

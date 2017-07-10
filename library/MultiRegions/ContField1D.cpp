@@ -114,10 +114,12 @@ namespace Nektar
          * @param   variable    An optional parameter to indicate for which
          *                      variable the field should be constructed.
          */
-        ContField1D::ContField1D(const LibUtilities::SessionReaderSharedPtr &pSession,
-                                 const SpatialDomains::MeshGraphSharedPtr &graph1D,
-                                 const std::string &variable):
-            DisContField1D(pSession,graph1D,variable,false),
+        ContField1D::ContField1D(
+                      const LibUtilities::SessionReaderSharedPtr &pSession,
+                      const SpatialDomains::MeshGraphSharedPtr &graph1D,
+                      const std::string &variable,
+                      const Collections::ImplementationType ImpType):
+            DisContField1D(pSession,graph1D,variable,false,ImpType),
             m_locToGloMap(),
             m_globalLinSysManager(
                     boost::bind(&ContField1D::GenGlobalLinSys, this, _1),

@@ -2,7 +2,7 @@
 <test>
     <description> Extract an isocontour</description>
     <executable>FieldConvert</executable>
-    <parameters>-e -n6 -m isocontour:fieldstr="p":fieldvalue=0.1:globalcondense:smooth smallmesh.xml smallmesh.fld iso.dat</parameters>
+    <parameters> -f -e -n6 -m isocontour:fieldstr="p":fieldvalue=0.1:globalcondense:smooth smallmesh.xml smallmesh.fld iso.dat</parameters>
     <files>
         <file description="Session File">smallmesh.xml</file>
         <file description="Session File">smallmesh.fld</file>

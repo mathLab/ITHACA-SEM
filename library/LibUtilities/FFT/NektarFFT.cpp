@@ -34,7 +34,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <LibUtilities/FFT/NektarFFT.h>
-#include <loki/Singleton.h>             // for CreateUsingNew, NoDestroy, etc
 
 namespace Nektar
 {
@@ -68,11 +67,8 @@ namespace Nektar
 		
 		NektarFFTFactory& GetNektarFFTFactory()
 		{
-            typedef Loki::SingletonHolder<NektarFFTFactory,
-                Loki::CreateUsingNew,
-                Loki::NoDestroy,
-                Loki::ClassLevelLockable> Type;
-            return Type::Instance();
+                    static NektarFFTFactory instance;
+                    return instance;
 		}
 
 		/**

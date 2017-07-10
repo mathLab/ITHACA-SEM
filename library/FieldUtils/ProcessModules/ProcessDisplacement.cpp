@@ -112,7 +112,7 @@ ProcessDisplacement::ProcessDisplacement(FieldSharedPtr f)
         ConfigOption(false, "", "Name of file containing high order boundary");
 
     m_config["usevertexids"] = ConfigOption(
-        false, "0", "Use vertex IDs instead of face IDs for matching");
+        true, "0", "Use vertex IDs instead of face IDs for matching");
 }
 
 ProcessDisplacement::~ProcessDisplacement()

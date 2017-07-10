@@ -22,7 +22,7 @@
             <value variable="rhou" tolerance="1e-12">55.621</value>
             <value variable="rhov" tolerance="1e-12">0.0616358</value>
             <value variable="rhow" tolerance="1e-12">0.444359</value>
-            <value variable="E" tolerance="1e-12">60457.9</value>
+            <value variable="E" tolerance="1e-12">60454.3</value>
         </metric>
     </metrics>
 </test>

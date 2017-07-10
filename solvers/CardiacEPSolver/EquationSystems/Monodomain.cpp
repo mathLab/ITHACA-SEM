@@ -168,8 +168,7 @@ namespace Nektar
                                                     aniso_var[j]),
                          "Function 'AnisotropicConductivity' not correctly "
                          "defined.");
-                EvaluateFunction(aniso_var[j], vTemp_j,
-                                 "AnisotropicConductivity");
+                GetFunction("AnisotropicConductivity")->Evaluate(aniso_var[j], vTemp_j);
 
                 // Loop through rows of D
                 for (int i = 0; i < j + 1; ++i)
@@ -178,8 +177,7 @@ namespace Nektar
                                         "AnisotropicConductivity",aniso_var[i]),
                              "Function 'AnisotropicConductivity' not correctly "
                              "defined.");
-                    EvaluateFunction(aniso_var[i], vTemp_i,
-                                     "AnisotropicConductivity");
+                    GetFunction("AnisotropicConductivity")->Evaluate(aniso_var[i], vTemp_i);
 
                     Vmath::Vmul(nq, vTemp_i, 1, vTemp_j, 1,
                                     m_vardiff[varCoeffEnum[k]], 1);
@@ -223,7 +221,7 @@ namespace Nektar
 
             const std::string varName  = "intensity";
             Array<OneD, NekDouble> vTemp;
-            EvaluateFunction(varName, vTemp, "IsotropicConductivity");
+            GetFunction( "IsotropicConductivity")->Evaluate(varName,  vTemp);
 
             // If the d_min and d_max parameters are defined, then we need to
             // rescale the isotropic conductivity to convert from the source

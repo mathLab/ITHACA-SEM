@@ -83,11 +83,11 @@ ProcessIsoContour::ProcessIsoContour(FieldSharedPtr f) :
     m_config["fieldvalue"]         = ConfigOption(false, "NotSet",
                                         "field value to extract");
 
-    m_config["globalcondense"]     = ConfigOption(true, "NotSet",
+    m_config["globalcondense"]     = ConfigOption(true, "0",
                                         "Globally condense contour to unique "
                                         "values");
 
-    m_config["smooth"]             = ConfigOption(true, "NotSet",
+    m_config["smooth"]             = ConfigOption(true, "0",
                                         "Smooth isocontour (might require "
                                                   "globalcondense)");
 

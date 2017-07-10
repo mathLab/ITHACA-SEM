@@ -59,7 +59,7 @@ ProcessBoundaryExtract::ProcessBoundaryExtract(FieldSharedPtr f)
     // set up dafault values.
     m_config["bnd"] = ConfigOption(false, "All", "Boundary to be processed");
     m_config["addnormals"] =
-        ConfigOption(true, "NotSet", "Add normals to output");
+        ConfigOption(true, "0", "Add normals to output");
 
     f->m_writeBndFld                 = true;
     f->m_declareExpansionAsContField = true;

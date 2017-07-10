@@ -59,7 +59,7 @@ ProcessHomogeneousPlane::ProcessHomogeneousPlane(FieldSharedPtr f)
 {
     m_config["planeid"] = ConfigOption(false, "NotSet", "plane id to extract");
     m_config["wavespace"] =
-        ConfigOption(true, "NotSet", "Extract plane in Fourier space");
+        ConfigOption(true, "0", "Extract plane in Fourier space");
 }
 
 ProcessHomogeneousPlane::~ProcessHomogeneousPlane()

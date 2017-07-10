@@ -62,7 +62,7 @@ ModuleKey ProcessQualityMetric::className =
 ProcessQualityMetric::ProcessQualityMetric(FieldSharedPtr f) : ProcessModule(f)
 {
     m_config["scaled"] =
-        ConfigOption(true, "", "use scaled jacobian instead");
+        ConfigOption(true, "0", "use scaled jacobian instead");
 }
 
 ProcessQualityMetric::~ProcessQualityMetric()

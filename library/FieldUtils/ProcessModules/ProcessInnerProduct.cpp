@@ -63,7 +63,7 @@ ProcessInnerProduct::ProcessInnerProduct(FieldSharedPtr f) : ProcessModule(f)
         false, "NotSet", "Take inner product of multiple field fields with "
                          "ids given in string. i.e. file_0.chk file_1.chk ...");
     m_config["allfromflds"] =
-        ConfigOption(true, "NotSet", "Take inner product between all fromflds, "
+        ConfigOption(true, "0", "Take inner product between all fromflds, "
                                      "requires multifldids to be set");
 }
 

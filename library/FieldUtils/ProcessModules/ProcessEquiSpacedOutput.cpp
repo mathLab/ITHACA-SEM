@@ -61,10 +61,10 @@ ProcessEquiSpacedOutput::ProcessEquiSpacedOutput(FieldSharedPtr f)
     : ProcessModule(f)
 {
     m_config["tetonly"] =
-        ConfigOption(true, "NotSet", "Only process tetrahedral elements");
+        ConfigOption(true, "0", "Only process tetrahedral elements");
 
     m_config["modalenergy"] =
-        ConfigOption(true, "NotSet", "Write output as modal energy");
+        ConfigOption(true, "0", "Write output as modal energy");
 }
 
 ProcessEquiSpacedOutput::~ProcessEquiSpacedOutput()

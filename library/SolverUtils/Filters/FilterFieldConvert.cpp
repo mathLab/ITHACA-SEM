@@ -435,7 +435,7 @@ void FilterFieldConvert::CreateModules( vector<string> &modcmds)
 
             if (tmp2.size() == 1)
             {
-                mod->RegisterConfig(tmp2[0], "1");
+                mod->RegisterConfig(tmp2[0]);
             }
             else if (tmp2.size() == 2)
             {

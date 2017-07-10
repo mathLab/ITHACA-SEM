@@ -196,7 +196,8 @@ public:
 
     virtual ModulePriority GetModulePriority() = 0;
 
-    FIELD_UTILS_EXPORT void RegisterConfig(std::string key, std::string value);
+    FIELD_UTILS_EXPORT void RegisterConfig(std::string key,
+                                           std::string value = "");
     FIELD_UTILS_EXPORT void PrintConfig();
     FIELD_UTILS_EXPORT void SetDefaults();
 

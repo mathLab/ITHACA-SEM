@@ -943,8 +943,15 @@ documentation. The following commands are currently supported:
   \item \inltt{Line}
   \item \inltt{Spline} (through points)
   \item \inltt{BSpline} (i.e. a B\'{e}zier curve)
-  \item \inltt{Circle} (arc)
-  \item \inltt{Ellipse} (arc)
+  \item \inltt{Ellipse} (arc): as defined in Gmsh's OpenCASCADE kernel, the first
+    point defines the start of the arc, the second point the centre and the fourth
+    point the end. The third point is not used. The start point along with the centre
+    point form the major axis and the minor axis is then computed so that the end
+    point falls onto the arc. The major axis must always be greater or equal to the
+    minor axis.
+  \item \inltt{Circle} (arc): the circle is a special case of the ellipse where the
+    third point is skipped. The distances between the start and end points and the
+    centre point must be equal or an error will be thrown.
   \item \inltt{Line Loop}
   \item \inltt{Plane Surface}
 \end{itemize}

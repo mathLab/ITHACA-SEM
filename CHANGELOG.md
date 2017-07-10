@@ -10,6 +10,8 @@ v5.0.0
 - Fix ThridpartyCCM options (!802)
 - Fix Windows CRLF tokens in GEO reader and improve comment handling (!805)
 - Use chrono in Timer (!807)
+- Fix caching of FUNCTION tags that read from file and provide the same
+  functionality in FUNCTIONs defined for forcings (!759)
 
 **NekMesh**:
 - Add feature to read basic 2D geo files as CAD (!731)

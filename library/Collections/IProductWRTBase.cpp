@@ -33,10 +33,11 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <loki/Singleton.h>
 #include <Collections/Operator.h>
 #include <Collections/Collection.h>
 #include <Collections/IProduct.h>
+
+using namespace std;
 
 namespace Nektar {
 namespace Collections {
@@ -77,6 +78,15 @@ class IProductWRTBase_StdMat : public Operator
                         m_mat->GetColumns(), 1.0, m_mat->GetRawPtr(),
                         m_mat->GetRows(), wsp.get(), m_stdExp->GetTotPoints(),
                         0.0, output.get(), m_stdExp->GetNcoeffs());
+        }
+
+        virtual void operator()(
+                      int                           dir,
+                const Array<OneD, const NekDouble> &input,
+                      Array<OneD,       NekDouble> &output,
+                      Array<OneD,       NekDouble> &wsp)
+        {
+            ASSERTL0(false, "Not valid for this operator.");
         }
 
     protected:
@@ -166,6 +176,15 @@ class IProductWRTBase_IterPerExp : public Operator
                                                  tmp = output + i*nCoeffs,
                                                  false);
             }
+        }
+
+        virtual void operator()(
+                      int                           dir,
+                const Array<OneD, const NekDouble> &input,
+                      Array<OneD,       NekDouble> &output,
+                      Array<OneD,       NekDouble> &wsp)
+        {
+            ASSERTL0(false, "Not valid for this operator.");
         }
 
     protected:
@@ -268,6 +287,15 @@ class IProductWRTBase_NoCollection : public Operator
 
         }
 
+        virtual void operator()(
+                      int                           dir,
+                const Array<OneD, const NekDouble> &input,
+                      Array<OneD,       NekDouble> &output,
+                      Array<OneD,       NekDouble> &wsp)
+        {
+            ASSERTL0(false, "Not valid for this operator.");
+        }
+
     protected:
         vector<StdRegions::StdExpansionSharedPtr> m_expList;
 
@@ -362,6 +390,15 @@ class IProductWRTBase_SumFac_Seg : public Operator
             }
         }
 
+        virtual void operator()(
+                      int                           dir,
+                const Array<OneD, const NekDouble> &input,
+                      Array<OneD,       NekDouble> &output,
+                      Array<OneD,       NekDouble> &wsp)
+        {
+            ASSERTL0(false, "Not valid for this operator.");
+        }
+
     protected:
         const int                       m_nquad0;
         const int                       m_nmodes0;
@@ -418,6 +455,15 @@ class IProductWRTBase_SumFac_Quad : public Operator
                          m_nmodes0, m_nmodes1,
                          m_base0,   m_base1,
                          m_jac, input, output, wsp);
+        }
+
+        virtual void operator()(
+                      int                           dir,
+                const Array<OneD, const NekDouble> &input,
+                      Array<OneD,       NekDouble> &output,
+                      Array<OneD,       NekDouble> &wsp)
+        {
+            ASSERTL0(false, "Not valid for this operator.");
         }
 
     protected:
@@ -485,6 +531,15 @@ class IProductWRTBase_SumFac_Tri : public Operator
                         output,wsp);
         }
 
+        virtual void operator()(
+                      int                           dir,
+                const Array<OneD, const NekDouble> &input,
+                      Array<OneD,       NekDouble> &output,
+                      Array<OneD,       NekDouble> &wsp)
+        {
+            ASSERTL0(false, "Not valid for this operator.");
+        }
+
     protected:
         const int                       m_nquad0;
         const int                       m_nquad1;
@@ -530,7 +585,7 @@ OperatorKey IProductWRTBase_SumFac_Tri::m_type = GetOperatorFactory().
 
 
 /**
- * @brief Backward transform operator using sum-factorisation (Hex)
+ * @brief Inner Product operator using sum-factorisation (Hex)
  */
 class IProductWRTBase_SumFac_Hex : public Operator
 {
@@ -557,6 +612,15 @@ class IProductWRTBase_SumFac_Hex : public Operator
                         m_nmodes0, m_nmodes1, m_nmodes2,
                         m_base0,   m_base1,   m_base2,
                         m_jac,input,output,wsp);
+        }
+
+        virtual void operator()(
+                      int                           dir,
+                const Array<OneD, const NekDouble> &input,
+                      Array<OneD,       NekDouble> &output,
+                      Array<OneD,       NekDouble> &wsp)
+        {
+            ASSERTL0(false, "Not valid for this operator.");
         }
 
     protected:
@@ -637,6 +701,15 @@ class IProductWRTBase_SumFac_Tet : public Operator
 
         }
 
+        virtual void operator()(
+                      int                           dir,
+                const Array<OneD, const NekDouble> &input,
+                      Array<OneD,       NekDouble> &output,
+                      Array<OneD,       NekDouble> &wsp)
+        {
+            ASSERTL0(false, "Not valid for this operator.");
+        }
+
     protected:
         const int                       m_nquad0;
         const int                       m_nquad1;
@@ -691,7 +764,7 @@ OperatorKey IProductWRTBase_SumFac_Tet::m_type = GetOperatorFactory().
 
 
 /**
- * @brief Backward transform operator using sum-factorisation (Prism)
+ * @brief Inner Product operator using sum-factorisation (Prism)
  */
 class IProductWRTBase_SumFac_Prism : public Operator
 {
@@ -718,6 +791,15 @@ class IProductWRTBase_SumFac_Prism : public Operator
                         m_nmodes0, m_nmodes1, m_nmodes2,
                         m_base0,   m_base1,   m_base2,
                         m_jac,input,output,wsp);
+        }
+
+        virtual void operator()(
+                      int                           dir,
+                const Array<OneD, const NekDouble> &input,
+                      Array<OneD,       NekDouble> &output,
+                      Array<OneD,       NekDouble> &wsp)
+        {
+            ASSERTL0(false, "Not valid for this operator.");
         }
 
     protected:
@@ -772,6 +854,100 @@ OperatorKey IProductWRTBase_SumFac_Prism::m_type = GetOperatorFactory().
     RegisterCreatorFunction(
         OperatorKey(ePrism, eIProductWRTBase, eSumFac,false),
         IProductWRTBase_SumFac_Prism::create, "IProductWRTBase_SumFac_Prism");
+
+
+/**
+ * @brief Inner Product operator using sum-factorisation (Pyr)
+ */
+class IProductWRTBase_SumFac_Pyr : public Operator
+{
+    public:
+        OPERATOR_CREATE(IProductWRTBase_SumFac_Pyr)
+
+        virtual ~IProductWRTBase_SumFac_Pyr()
+        {
+        }
+
+        virtual void operator()(
+                const Array<OneD, const NekDouble> &input,
+                      Array<OneD, NekDouble> &output,
+                      Array<OneD, NekDouble> &output1,
+                      Array<OneD, NekDouble> &output2,
+                      Array<OneD, NekDouble> &wsp)
+        {
+
+            ASSERTL1(wsp.num_elements() == m_wspSize,
+                    "Incorrect workspace size");
+
+            PyrIProduct(m_sortTopVertex, m_numElmt,
+                        m_nquad0,  m_nquad1,  m_nquad2,
+                        m_nmodes0, m_nmodes1, m_nmodes2,
+                        m_base0,   m_base1,   m_base2,
+                        m_jac,input,output,wsp);
+        }
+
+        virtual void operator()(
+                      int                           dir,
+                const Array<OneD, const NekDouble> &input,
+                      Array<OneD,       NekDouble> &output,
+                      Array<OneD,       NekDouble> &wsp)
+        {
+            ASSERTL0(false, "Not valid for this operator.");
+        }
+
+    protected:
+        const int                       m_nquad0;
+        const int                       m_nquad1;
+        const int                       m_nquad2;
+        const int                       m_nmodes0;
+        const int                       m_nmodes1;
+        const int                       m_nmodes2;
+        Array<OneD, const NekDouble>    m_jac;
+        Array<OneD, const NekDouble>    m_base0;
+        Array<OneD, const NekDouble>    m_base1;
+        Array<OneD, const NekDouble>    m_base2;
+        bool                            m_sortTopVertex;
+
+    private:
+        IProductWRTBase_SumFac_Pyr(
+                vector<StdRegions::StdExpansionSharedPtr> pCollExp,
+                CoalescedGeomDataSharedPtr                pGeomData)
+            : Operator  (pCollExp, pGeomData),
+              m_nquad0  (m_stdExp->GetNumPoints(0)),
+              m_nquad1  (m_stdExp->GetNumPoints(1)),
+              m_nquad2  (m_stdExp->GetNumPoints(2)),
+              m_nmodes0 (m_stdExp->GetBasisNumModes(0)),
+              m_nmodes1 (m_stdExp->GetBasisNumModes(1)),
+              m_nmodes2 (m_stdExp->GetBasisNumModes(2)),
+              m_base0   (m_stdExp->GetBasis(0)->GetBdata()),
+              m_base1   (m_stdExp->GetBasis(1)->GetBdata()),
+              m_base2   (m_stdExp->GetBasis(2)->GetBdata())
+
+        {
+            m_jac = pGeomData->GetJacWithStdWeights(pCollExp);
+
+            m_wspSize = m_numElmt * m_nquad2
+                                  *(max(m_nquad0*m_nquad1,m_nmodes0*m_nmodes1))
+                      + m_nquad1*m_nquad2*m_numElmt*m_nmodes0;
+
+            if(m_stdExp->GetBasis(0)->GetBasisType()
+                    == LibUtilities::eModified_A)
+            {
+                m_sortTopVertex = true;
+            }
+            else
+            {
+                m_sortTopVertex = false;
+            }
+        }
+};
+
+/// Factory initialisation for the IProductWRTBase_SumFac_Pyr operator
+OperatorKey IProductWRTBase_SumFac_Pyr::m_type = GetOperatorFactory().
+    RegisterCreatorFunction(
+        OperatorKey(ePyramid, eIProductWRTBase, eSumFac,false),
+        IProductWRTBase_SumFac_Pyr::create, "IProductWRTBase_SumFac_Pyr");
+
 
 }
 }

@@ -39,6 +39,7 @@
 
 #include <SolverUtils/UnsteadySystem.h>
 #include <SolverUtils/Advection/Advection.h>
+#include <SolverUtils/Forcing/Forcing.h>
 #include <SolverUtils/RiemannSolvers/RiemannSolver.h>
 
 using namespace Nektar::SolverUtils;
@@ -66,18 +67,23 @@ class APE : public UnsteadySystem
         /// Destructor
         virtual ~APE();
 
+        NekDouble GetCFLEstimate();
+
 
     protected:
 
         SolverUtils::AdvectionSharedPtr                 m_advection;
+        std::vector<SolverUtils::ForcingSharedPtr>      m_forcing;
         SolverUtils::RiemannSolverSharedPtr             m_riemannSolver;
         Array<OneD, Array<OneD, NekDouble> >            m_traceBasefield;
         Array<OneD, Array<OneD, NekDouble> >            m_vecLocs;
         /// Isentropic coefficient, Ratio of specific heats (APE)
         NekDouble                                       m_gamma;
-        Array<OneD, Array<OneD, NekDouble> >            m_basefield;
-        Array<OneD, NekDouble>                          m_sourceTerms;
-        std::vector<std::string>                        m_basefield_names;
+        Array<OneD, Array<OneD, NekDouble> >            m_bf;
+        MultiRegions::ExpListSharedPtr                  m_bfField;
+        std::vector<std::string>                        m_bfNames;
+        /// dump cfl estimate
+        int                                             m_cflsteps;
 
         /// Initialises UnsteadySystem class members.
         APE(const LibUtilities::SessionReaderSharedPtr& pSession);
@@ -96,7 +102,11 @@ class APE : public UnsteadySystem
                 const Array<OneD, Array<OneD, NekDouble> > &physfield,
                 Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &flux);
 
-        void AddSource(Array< OneD, Array< OneD, NekDouble > >& outarray);
+        virtual bool v_PreIntegrate(int step);
+
+        virtual bool v_PostIntegrate(int step);
+
+        void GetStdVelocity(Array< OneD, NekDouble >& stdV);
 
         virtual void v_ExtraFldOutput(std::vector<Array<OneD, NekDouble> > &fieldcoeffs,
                                       std::vector<std::string>             &variables);
@@ -109,14 +119,11 @@ class APE : public UnsteadySystem
 
         NekDouble GetGamma();
 
-        void UpdateBasefield();
-        void UpdateSourceTerms();
-
     private:
 
         void SetBoundaryConditions(Array<OneD, Array<OneD, NekDouble> > &physarray, NekDouble time);
 
-        void WallBC(int bcRegion, int cnt, Array<OneD, Array<OneD, NekDouble> > &physarray);
+        void WallBC(int bcRegion, int cnt, Array<OneD, Array<OneD, NekDouble> > &Fwd, Array<OneD, Array<OneD, NekDouble> > &physarray);
 };
 }
 

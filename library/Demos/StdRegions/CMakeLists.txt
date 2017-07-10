@@ -1,41 +1,19 @@
-SET(LinkLibraries StdRegions)
-
-SET(StdProject0DSource  StdProject0D.cpp)
-ADD_NEKTAR_EXECUTABLE(StdProject0D demos StdProject0DSource)
-TARGET_LINK_LIBRARIES(StdProject0D ${LinkLibraries})
-	  
-SET(StdProject1DSource  StdProject1D.cpp)
-ADD_NEKTAR_EXECUTABLE(StdProject1D demos StdProject1DSource)
-TARGET_LINK_LIBRARIES(StdProject1D ${LinkLibraries})
-
-SET(StdProject_Diff1DSource  StdProject_Diff1D.cpp)
-ADD_NEKTAR_EXECUTABLE(StdProject_Diff1D demos StdProject_Diff1DSource)
-TARGET_LINK_LIBRARIES(StdProject_Diff1D ${LinkLibraries})
-
-SET(StdProject2DSource  StdProject2D.cpp)
-ADD_NEKTAR_EXECUTABLE(StdProject2D demos StdProject2DSource)
-TARGET_LINK_LIBRARIES(StdProject2D ${LinkLibraries})
-
-SET(StdProject_Diff2DSource  StdProject_Diff2D.cpp)
-ADD_NEKTAR_EXECUTABLE(StdProject_Diff2D demos StdProject_Diff2DSource)
-TARGET_LINK_LIBRARIES(StdProject_Diff2D ${LinkLibraries})
-
-SET(StdProject3DSource  StdProject3D.cpp)
-ADD_NEKTAR_EXECUTABLE(StdProject3D demos StdProject3DSource)
-TARGET_LINK_LIBRARIES(StdProject3D ${LinkLibraries})
-
-SET(StdProject_Diff3DSource  StdProject_Diff3D.cpp)
-ADD_NEKTAR_EXECUTABLE(StdProject_Diff3D demos StdProject_Diff3DSource)
-TARGET_LINK_LIBRARIES(StdProject_Diff3D ${LinkLibraries})
-
-# Generate list of available subdirectories
-FILE(GLOB dir_list "*")
-LIST(REMOVE_ITEM dir_list "${CMAKE_SOURCE_DIR}/.svn")
-FOREACH(dir ${dir_list})
-    IF(IS_DIRECTORY ${dir} AND EXISTS ${dir}/CMakeLists.txt)
-        ADD_SUBDIRECTORY(${dir})
-    ENDIF(IS_DIRECTORY ${dir} AND EXISTS ${dir}/CMakeLists.txt)
-ENDFOREACH(dir ${dir_list})
+ADD_NEKTAR_EXECUTABLE(StdProject0D
+    COMPONENT demos DEPENDS StdRegions SOURCES StdProject0D.cpp)
+ADD_NEKTAR_EXECUTABLE(StdProject1D
+    COMPONENT demos DEPENDS StdRegions SOURCES StdProject1D.cpp)
+ADD_NEKTAR_EXECUTABLE(StdProject2D
+    COMPONENT demos DEPENDS StdRegions SOURCES StdProject2D.cpp)
+ADD_NEKTAR_EXECUTABLE(StdProject3D
+    COMPONENT demos DEPENDS StdRegions SOURCES StdProject3D.cpp)
+ADD_NEKTAR_EXECUTABLE(StdProject_Diff1D
+    COMPONENT demos DEPENDS StdRegions SOURCES StdProject_Diff1D.cpp)
+ADD_NEKTAR_EXECUTABLE(StdProject_Diff2D
+    COMPONENT demos DEPENDS StdRegions SOURCES StdProject_Diff2D.cpp)
+ADD_NEKTAR_EXECUTABLE(StdProject_Diff3D
+    COMPONENT demos DEPENDS StdRegions SOURCES StdProject_Diff3D.cpp)
+ADD_NEKTAR_EXECUTABLE(StdEquiToCoeff2D
+    COMPONENT demos DEPENDS StdRegions SOURCES StdEquiToCoeff2D.cpp)
 
 ADD_NEKTAR_TEST(StdProject1D_Seg_Orth_P6_Q7)
 ADD_NEKTAR_TEST(StdProject1D_Seg_Mod_P6_Q7)
@@ -61,6 +39,7 @@ ADD_NEKTAR_TEST(StdProject3D_Tet_Orth_P6_Q7)
 ADD_NEKTAR_TEST(StdProject3D_Tet_Mod_P6_Q7)
 ADD_NEKTAR_TEST(StdProject3D_Prism_Orth_P6_Q7)
 ADD_NEKTAR_TEST(StdProject3D_Prism_Mod_P6_Q7)
+ADD_NEKTAR_TEST(StdProject3D_Pyr_Ortho_P6_Q7)
 ADD_NEKTAR_TEST(StdProject3D_Pyr_Mod_P6_Q7)
 ADD_NEKTAR_TEST(StdProject3D_Hex_Orth_P6_Q7)
 ADD_NEKTAR_TEST(StdProject3D_Hex_Mod_P6_Q7)

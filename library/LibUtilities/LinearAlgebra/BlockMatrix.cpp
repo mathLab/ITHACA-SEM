@@ -40,14 +40,13 @@ namespace Nektar
 {
     template<typename DataType, typename InnerMatrixType>
     NekMatrix<NekMatrix<DataType, InnerMatrixType>, BlockMatrixTag>::NekMatrix(MatrixStorage type) :
-        BaseType(0,0),
+        BaseType(0,0,type),
         m_data(),
         m_rowSizes(),
         m_columnSizes(),
         m_storageSize(),
         m_numberOfBlockRows(0),
-        m_numberOfBlockColumns(0),
-        m_storageType(type)
+        m_numberOfBlockColumns(0)
     {
     }
 
@@ -55,14 +54,13 @@ namespace Nektar
     NekMatrix<NekMatrix<DataType, InnerMatrixType>, BlockMatrixTag>::NekMatrix(unsigned int numberOfBlockRows, unsigned int numberOfBlockColumns,
               unsigned int rowsPerBlock, unsigned int columnsPerBlock,
               MatrixStorage type) :
-        BaseType(numberOfBlockRows*rowsPerBlock, numberOfBlockColumns*columnsPerBlock),
+        BaseType(numberOfBlockRows*rowsPerBlock, numberOfBlockColumns*columnsPerBlock,type),
         m_data(),
         m_rowSizes(numberOfBlockRows),
         m_columnSizes(numberOfBlockColumns),
         m_storageSize(0),
         m_numberOfBlockRows(numberOfBlockRows),
-        m_numberOfBlockColumns(numberOfBlockColumns),
-        m_storageType(type)
+        m_numberOfBlockColumns(numberOfBlockColumns)
     {
         m_storageSize = GetRequiredStorageSize();
         m_data = Array<OneD, boost::shared_ptr<InnerType> >(m_storageSize, boost::shared_ptr<InnerType>());
@@ -82,14 +80,14 @@ namespace Nektar
               const unsigned int* rowsPerBlock, const unsigned int* columnsPerBlock,
               MatrixStorage type) :
         BaseType(std::accumulate(rowsPerBlock, rowsPerBlock + numberOfBlockRows, 0),
-                 std::accumulate(columnsPerBlock, columnsPerBlock + numberOfBlockColumns, 0)),
+                 std::accumulate(columnsPerBlock, columnsPerBlock + numberOfBlockColumns, 0),
+                 type),
         m_data(),
         m_rowSizes(numberOfBlockRows),
         m_columnSizes(numberOfBlockColumns),
         m_storageSize(0),
         m_numberOfBlockRows(numberOfBlockRows),
-        m_numberOfBlockColumns(numberOfBlockColumns),
-        m_storageType(type)
+        m_numberOfBlockColumns(numberOfBlockColumns)
     {
         m_storageSize = GetRequiredStorageSize();
         m_data = Array<OneD, boost::shared_ptr<InnerType> >(m_storageSize, boost::shared_ptr<InnerType>());
@@ -101,14 +99,14 @@ namespace Nektar
               const Array<OneD, const unsigned int>& rowsPerBlock, const Array<OneD, const unsigned int>& columnsPerBlock,
               MatrixStorage type) :
         BaseType(std::accumulate(rowsPerBlock.data(), rowsPerBlock.data() + numberOfBlockRows, 0),
-                 std::accumulate(columnsPerBlock.data(), columnsPerBlock.data() + numberOfBlockColumns, 0)),
+                 std::accumulate(columnsPerBlock.data(), columnsPerBlock.data() + numberOfBlockColumns, 0),
+                 type),
         m_data(),
         m_rowSizes(numberOfBlockRows),
         m_columnSizes(numberOfBlockColumns),
         m_storageSize(0),
         m_numberOfBlockRows(numberOfBlockRows),
-        m_numberOfBlockColumns(numberOfBlockColumns),
-        m_storageType(type)
+        m_numberOfBlockColumns(numberOfBlockColumns)
     {
         m_storageSize = GetRequiredStorageSize();
         m_data = Array<OneD, boost::shared_ptr<InnerType> >(m_storageSize, boost::shared_ptr<InnerType>());
@@ -120,14 +118,14 @@ namespace Nektar
               const Array<OneD, const unsigned int>& columnsPerBlock,
               MatrixStorage type) :
         BaseType(std::accumulate(rowsPerBlock.begin(), rowsPerBlock.end(), 0),
-                 std::accumulate(columnsPerBlock.begin(), columnsPerBlock.end(), 0)),
+                 std::accumulate(columnsPerBlock.begin(), columnsPerBlock.end(), 0),
+                 type),
         m_data(),
         m_rowSizes(rowsPerBlock.num_elements()),
         m_columnSizes(columnsPerBlock.num_elements()),
         m_storageSize(0),
         m_numberOfBlockRows(rowsPerBlock.num_elements()),
-        m_numberOfBlockColumns(columnsPerBlock.num_elements()),
-        m_storageType(type)
+        m_numberOfBlockColumns(columnsPerBlock.num_elements())
     {
         m_storageSize = GetRequiredStorageSize();
         m_data = Array<OneD, boost::shared_ptr<InnerType> >(m_storageSize, boost::shared_ptr<InnerType>());
@@ -142,8 +140,7 @@ namespace Nektar
         m_columnSizes(rhs.m_columnSizes),
         m_storageSize(rhs.m_storageSize),
         m_numberOfBlockRows(rhs.m_numberOfBlockRows),
-        m_numberOfBlockColumns(rhs.m_numberOfBlockColumns),
-        m_storageType(rhs.m_storageType)
+        m_numberOfBlockColumns(rhs.m_numberOfBlockColumns)
     {
         for(unsigned int i = 0; i < rhs.m_data.num_elements(); ++i)
         {
@@ -161,28 +158,22 @@ namespace Nektar
     template<typename DataType, typename InnerMatrixType>
     unsigned int NekMatrix<NekMatrix<DataType, InnerMatrixType>, BlockMatrixTag>::CalculateBlockIndex(unsigned int row, unsigned int column) const
     {
-        unsigned int blockRows = GetNumberOfBlockRows();
-        unsigned int blockCols = GetNumberOfBlockColumns();
-
-        if( this->GetTransposeFlag() == 'T' )
-        {
-            std::swap(blockRows, blockCols);
-        }
-
         return BaseType::CalculateIndex(this->GetStorageType(),
-            row, column, blockRows, blockCols, this->GetTransposeFlag());
+            row, column, m_numberOfBlockRows, m_numberOfBlockColumns, this->GetTransposeFlag());
     }
 
     template<typename DataType, typename InnerMatrixType>
     const typename NekMatrix<NekMatrix<DataType, InnerMatrixType>, BlockMatrixTag>::InnerType*
     NekMatrix<NekMatrix<DataType, InnerMatrixType>, BlockMatrixTag>::GetBlockPtr(unsigned int row, unsigned int column) const
     {
-        ASSERTL2(row < m_numberOfBlockRows, std::string("Row ") + boost::lexical_cast<std::string>(row) +
-            std::string(" requested in a block matrix with a maximum of ") + boost::lexical_cast<std::string>(m_numberOfBlockRows) +
-            std::string(" rows"));
-        ASSERTL2(column < m_numberOfBlockColumns, std::string("Column ") + boost::lexical_cast<std::string>(column) +
-            std::string(" requested in a block matrix with a maximum of ") + boost::lexical_cast<std::string>(m_numberOfBlockColumns) +
-            std::string(" columns"));
+        ASSERTL2(this->GetTransposeFlag() == 'N' ? row < m_numberOfBlockRows : row < m_numberOfBlockColumns,
+                 std::string("Row ") + boost::lexical_cast<std::string>(row) +
+                 std::string(" requested in a block matrix with a maximum of ") + boost::lexical_cast<std::string>(m_numberOfBlockRows) +
+                 std::string(" rows"));
+        ASSERTL2(this->GetTransposeFlag() == 'N' ? column < m_numberOfBlockColumns : column < m_numberOfBlockColumns,
+                 std::string("Column ") + boost::lexical_cast<std::string>(column) +
+                 std::string(" requested in a block matrix with a maximum of ") + boost::lexical_cast<std::string>(m_numberOfBlockColumns) +
+                 std::string(" columns"));
         int x = CalculateBlockIndex(row,column);
         if (x == -1)
         {
@@ -198,12 +189,14 @@ namespace Nektar
     boost::shared_ptr<const typename NekMatrix<NekMatrix<DataType, InnerMatrixType>, BlockMatrixTag>::InnerType>
     NekMatrix<NekMatrix<DataType, InnerMatrixType>, BlockMatrixTag>::GetBlock(unsigned int row, unsigned int column) const
     {
-        ASSERTL2(row < m_numberOfBlockRows, std::string("Row ") + boost::lexical_cast<std::string>(row) +
-            std::string(" requested in a block matrix with a maximum of ") + boost::lexical_cast<std::string>(m_numberOfBlockRows) +
-            std::string(" rows"));
-        ASSERTL2(column < m_numberOfBlockColumns, std::string("Column ") + boost::lexical_cast<std::string>(column) +
-            std::string(" requested in a block matrix with a maximum of ") + boost::lexical_cast<std::string>(m_numberOfBlockColumns) +
-            std::string(" columns"));
+        ASSERTL2(this->GetTransposeFlag() == 'N' ? row < m_numberOfBlockRows : row < m_numberOfBlockColumns,
+                 std::string("Row ") + boost::lexical_cast<std::string>(row) +
+                 std::string(" requested in a block matrix with a maximum of ") + boost::lexical_cast<std::string>(m_numberOfBlockRows) +
+                 std::string(" rows"));
+        ASSERTL2(this->GetTransposeFlag() == 'N' ? column < m_numberOfBlockColumns : column < m_numberOfBlockRows,
+                 std::string("Column ") + boost::lexical_cast<std::string>(column) +
+                 std::string(" requested in a block matrix with a maximum of ") + boost::lexical_cast<std::string>(m_numberOfBlockColumns) +
+                 std::string(" columns"));
         int x = CalculateBlockIndex(row,column);
         if (x < 0)
         {
@@ -219,12 +212,14 @@ namespace Nektar
     boost::shared_ptr<typename NekMatrix<NekMatrix<DataType, InnerMatrixType>, BlockMatrixTag>::InnerType>&
     NekMatrix<NekMatrix<DataType, InnerMatrixType>, BlockMatrixTag>::GetBlock(unsigned int row, unsigned int column)
     {
-        ASSERTL2(row < m_numberOfBlockRows, std::string("Row ") + boost::lexical_cast<std::string>(row) +
-            std::string(" requested in a block matrix with a maximum of ") + boost::lexical_cast<std::string>(m_numberOfBlockRows) +
-            std::string(" rows"));
-        ASSERTL2(column < m_numberOfBlockColumns, std::string("Column ") + boost::lexical_cast<std::string>(column) +
-            std::string(" requested in a block matrix with a maximum of ") + boost::lexical_cast<std::string>(m_numberOfBlockColumns) +
-            std::string(" columns"));
+        ASSERTL2(this->GetTransposeFlag() == 'N' ? row < m_numberOfBlockRows : row < m_numberOfBlockColumns,
+                 std::string("Row ") + boost::lexical_cast<std::string>(row) +
+                 std::string(" requested in a block matrix with a maximum of ") + boost::lexical_cast<std::string>(m_numberOfBlockRows) +
+                 std::string(" rows"));
+        ASSERTL2(this->GetTransposeFlag() == 'N' ? column < m_numberOfBlockColumns : column < m_numberOfBlockRows,
+                 std::string("Column ") + boost::lexical_cast<std::string>(column) +
+                 std::string(" requested in a block matrix with a maximum of ") + boost::lexical_cast<std::string>(m_numberOfBlockColumns) +
+                 std::string(" columns"));
         int x = CalculateBlockIndex(row,column);
         if (x == -1)
         {
@@ -239,12 +234,14 @@ namespace Nektar
     template<typename DataType, typename InnerMatrixType>
     void NekMatrix<NekMatrix<DataType, InnerMatrixType>, BlockMatrixTag>::SetBlock(unsigned int row, unsigned int column, boost::shared_ptr<InnerType>& m)
     {
-        ASSERTL2(row < m_numberOfBlockRows, std::string("Row ") + boost::lexical_cast<std::string>(row) +
-            std::string(" requested in a block matrix with a maximum of ") + boost::lexical_cast<std::string>(m_numberOfBlockRows) +
-            std::string(" rows"));
-        ASSERTL2(column < m_numberOfBlockColumns, std::string("Column ") + boost::lexical_cast<std::string>(column) +
-            std::string(" requested in a block matrix with a maximum of ") + boost::lexical_cast<std::string>(m_numberOfBlockColumns) +
-            std::string(" columns"));
+        ASSERTL2(this->GetTransposeFlag() == 'N' ? row < m_numberOfBlockRows : row < m_numberOfBlockColumns,
+                 std::string("Row ") + boost::lexical_cast<std::string>(row) +
+                 std::string(" requested in a block matrix with a maximum of ") + boost::lexical_cast<std::string>(m_numberOfBlockRows) +
+                 std::string(" rows"));
+        ASSERTL2(this->GetTransposeFlag() == 'N' ? column < m_numberOfBlockColumns : column < m_numberOfBlockRows,
+                 std::string("Column ") + boost::lexical_cast<std::string>(column) +
+                 std::string(" requested in a block matrix with a maximum of ") + boost::lexical_cast<std::string>(m_numberOfBlockColumns) +
+                 std::string(" columns"));
         m_data[CalculateBlockIndex(row, column)] = InnerType::CreateWrapper(m);
     }
 
@@ -304,12 +301,6 @@ namespace Nektar
     }
 
     template<typename DataType, typename InnerMatrixType>
-    MatrixStorage NekMatrix<NekMatrix<DataType, InnerMatrixType>, BlockMatrixTag>::GetType() const
-    {
-        return m_storageType;
-    }
-
-    template<typename DataType, typename InnerMatrixType>
     unsigned int NekMatrix<NekMatrix<DataType, InnerMatrixType>, BlockMatrixTag>::GetNumberOfBlockRows() const
     {
         if( this->GetTransposeFlag() == 'N' )
@@ -358,6 +349,23 @@ namespace Nektar
         else
         {
             return GetNumberOfElementsInBlock(blockCol, m_numberOfBlockColumns, m_columnSizes);
+        }
+    }
+
+    template<typename DataType, typename InnerMatrixType>
+    void NekMatrix<NekMatrix<DataType, InnerMatrixType>, BlockMatrixTag>::GetBlockSizes(
+                                            Array<OneD, unsigned int>& rowSizes,
+                                            Array<OneD, unsigned int>& colSizes) const
+    {
+        if( this->GetTransposeFlag() == 'T' )
+        {
+            rowSizes = m_columnSizes;
+            colSizes = m_rowSizes;
+        }
+        else
+        {
+            rowSizes = m_rowSizes;
+            colSizes = m_columnSizes;
         }
     }
 
@@ -436,12 +444,6 @@ namespace Nektar
     unsigned int NekMatrix<NekMatrix<DataType, InnerMatrixType>, BlockMatrixTag>::v_GetStorageSize() const
     {
         return this->GetStorageSize();
-    }
-
-    template<typename DataType, typename InnerMatrixType>
-    MatrixStorage NekMatrix<NekMatrix<DataType, InnerMatrixType>, BlockMatrixTag>::v_GetStorageType() const
-    {
-        return this->GetType();
     }
 
     template<typename DataType, typename InnerMatrixType>

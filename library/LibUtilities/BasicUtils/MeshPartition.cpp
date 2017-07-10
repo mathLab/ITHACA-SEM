@@ -52,9 +52,9 @@
 #include <LibUtilities/BasicUtils/ShapeType.hpp>
 #include <LibUtilities/BasicUtils/FileSystem.h>
 #include <LibUtilities/BasicUtils/CompressData.h>
+#include <LibUtilities/BasicUtils/FieldIO.h>
 
 #include <LibUtilities/Foundations/Foundations.hpp>
-
 
 
 #include <boost/algorithm/string.hpp>
@@ -69,11 +69,8 @@ namespace Nektar
     {
         MeshPartitionFactory& GetMeshPartitionFactory()
         {
-            typedef Loki::SingletonHolder<MeshPartitionFactory,
-                Loki::CreateUsingNew,
-                Loki::NoDestroy,
-                Loki::SingleThreaded> Type;
-            return Type::Instance();
+            static MeshPartitionFactory instance;
+            return instance;
         }
 
         MeshPartition::MeshPartition(const LibUtilities::SessionReaderSharedPtr& pSession) :
@@ -81,7 +78,9 @@ namespace Nektar
                 m_numFields(0),
                 m_fieldNameToId(),
                 m_comm(pSession->GetComm()),
-                m_weightingRequired(false)
+                m_weightingRequired(false),
+                m_weightBnd(false),
+                m_weightDofs(false)
         {
             ReadConditions(pSession);
             ReadGeometry(pSession);
@@ -93,7 +92,8 @@ namespace Nektar
 
         }
 
-        void MeshPartition::PartitionMesh(int nParts, bool shared)
+        void MeshPartition::PartitionMesh(int nParts, bool shared,
+                                          bool overlapping)
         {
             ASSERTL0(m_meshElements.size() >= nParts,
                      "Too few elements for this many processes.");
@@ -104,7 +104,7 @@ namespace Nektar
                 WeightElements();
             }
             CreateGraph(m_mesh);
-            PartitionGraph(m_mesh, nParts, m_localPartition);
+            PartitionGraph(m_mesh, nParts, m_localPartition, overlapping);
         }
 
         void MeshPartition::WriteLocalPartition(LibUtilities::SessionReaderSharedPtr& pSession)
@@ -195,12 +195,6 @@ namespace Nektar
             TiXmlElement *expansion = expansionTypes->FirstChildElement();
             std::string   expType   = expansion->Value();
 
-
-            if(expType != "E")
-            {
-                ASSERTL0(false,"Expansion type not defined or not supported at the moment");
-            }
-
             /// Expansiontypes will contain plenty of data,
             /// where relevant at this stage are composite
             /// ID(s) that this expansion type describes,
@@ -208,81 +202,199 @@ namespace Nektar
             /// expansion relates to. If this does not exist
             /// the variable is only set to "DefaultVar".
 
-            while (expansion)
+            if(expType == "E")
             {
-                std::vector<unsigned int> composite;
-                std::vector<unsigned int> nummodes;
-                std::vector<std::string>  fieldName;
-
-                const char *nModesStr = expansion->Attribute("NUMMODES");
-                ASSERTL0(nModesStr,"NUMMODES was not defined in EXPANSION section of input");
-                std::string numModesStr = nModesStr;
-                bool valid = ParseUtils::GenerateOrderedVector(numModesStr.c_str(), nummodes);
-                ASSERTL0(valid, "Unable to correctly parse the number of modes.");
-
-                if (nummodes.size() == 1)
+                while (expansion)
                 {
-                    for (int i = 1; i < m_dim; i++)
+                    std::vector<unsigned int> composite;
+                    std::vector<unsigned int> nummodes;
+                    std::vector<std::string>  fieldName;
+
+                    const char *nModesStr = expansion->Attribute("NUMMODES");
+                    ASSERTL0(nModesStr,"NUMMODES was not defined in EXPANSION section of input");
+                    std::string numModesStr = nModesStr;
+                    bool valid = ParseUtils::GenerateOrderedVector(numModesStr.c_str(), nummodes);
+                    ASSERTL0(valid, "Unable to correctly parse the number of modes.");
+
+                    if (nummodes.size() == 1)
                     {
-                        nummodes.push_back( nummodes[0] );
-                    }
-                }
-                ASSERTL0(nummodes.size() == m_dim,"Number of modes should match mesh dimension");
-
-
-                const char *fStr = expansion->Attribute("FIELDS");
-                if(fStr)
-                {
-                    std::string fieldStr = fStr;
-                    bool  valid = ParseUtils::GenerateOrderedStringVector(fieldStr.c_str(),fieldName);
-                    ASSERTL0(valid,"Unable to correctly parse the field string in ExpansionTypes.");
-
-                    for (int i = 0; i < fieldName.size(); ++i)
-                    {
-                        if (m_fieldNameToId.count(fieldName[i]) == 0)
+                        for (int i = 1; i < m_dim; i++)
                         {
-                            int k = m_fieldNameToId.size();
-                            m_fieldNameToId[ fieldName[i] ] = k;
+                            nummodes.push_back( nummodes[0] );
+                        }
+                    }
+                    ASSERTL0(nummodes.size() == m_dim,"Number of modes should match mesh dimension");
+
+
+                    const char *fStr = expansion->Attribute("FIELDS");
+                    if(fStr)
+                    {
+                        std::string fieldStr = fStr;
+                        bool  valid = ParseUtils::GenerateOrderedStringVector(fieldStr.c_str(),fieldName);
+                        ASSERTL0(valid,"Unable to correctly parse the field string in ExpansionTypes.");
+
+                        for (int i = 0; i < fieldName.size(); ++i)
+                        {
+                            if (m_fieldNameToId.count(fieldName[i]) == 0)
+                            {
+                                int k = m_fieldNameToId.size();
+                                m_fieldNameToId[ fieldName[i] ] = k;
+                                m_numFields++;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        fieldName.push_back("DefaultVar");
+                        int k = m_fieldNameToId.size();
+
+                        if (m_fieldNameToId.count("DefaultVar") == 0)
+                        {
+                            ASSERTL0(k == 0,
+                                     "Omitting field variables and explicitly listing " \
+                                     "them in different ExpansionTypes is wrong practise");
+
+                            m_fieldNameToId[ "DefaultVar" ] = k;
                             m_numFields++;
                         }
                     }
-                }
-                else
-                {
-                    fieldName.push_back("DefaultVar");
-                    int k = m_fieldNameToId.size();
 
-                    if (m_fieldNameToId.count("DefaultVar") == 0)
+                    std::string compositeStr = expansion->Attribute("COMPOSITE");
+                    ASSERTL0(compositeStr.length() > 3, "COMPOSITE must be specified in expansion definition");
+                    int beg = compositeStr.find_first_of("[");
+                    int end = compositeStr.find_first_of("]");
+                    std::string compositeListStr = compositeStr.substr(beg+1,end-beg-1);
+                    bool parseGood = ParseUtils::GenerateSeqVector(compositeListStr.c_str(), composite);
+                    ASSERTL0(parseGood && !composite.empty(),
+                        (std::string("Unable to read composite index range: ") + compositeListStr).c_str());
+
+
+                    // construct mapping (elmt id, field name) -> nummodes
+                    for (int i = 0; i < composite.size(); ++i)
                     {
-                        ASSERTL0(k == 0,
-                                 "Omitting field variables and explicitly listing " \
-                                 "them in different ExpansionTypes is wrong practise");
-
-                        m_fieldNameToId[ "DefaultVar" ] = k;
-                        m_numFields++;
+                        for (int j = 0; j < fieldName.size(); j++)
+                        {
+                            for (unsigned int k = 0; k < m_meshComposites[composite[i]].list.size(); ++k)
+                            {
+                                int elid = m_meshComposites[composite[i]].list[k];
+                                m_expansions[elid][fieldName[j]] = nummodes;
+                                m_shape[elid] = m_meshComposites[composite[i]].type;
+                            }
+                        }
                     }
+
+                    expansion = expansion->NextSiblingElement("E");
                 }
+            }
+            else if(expType == "F")
+            {
+                    ASSERTL0(expansion->Attribute("FILE"),
+                                "Attribute FILE expected for type F expansion");
+                    std::string filenameStr = expansion->Attribute("FILE");
+                    ASSERTL0(!filenameStr.empty(),
+                                "A filename must be specified for the FILE "
+                                "attribute of expansion");
 
-                std::string compositeStr = expansion->Attribute("COMPOSITE");
-                ASSERTL0(compositeStr.length() > 3, "COMPOSITE must be specified in expansion definition");
-                int beg = compositeStr.find_first_of("[");
-                int end = compositeStr.find_first_of("]");
-                std::string compositeListStr = compositeStr.substr(beg+1,end-beg-1);
-                bool parseGood = ParseUtils::GenerateSeqVector(compositeListStr.c_str(), composite);
-                ASSERTL0(parseGood && !composite.empty(),
-                    (std::string("Unable to read composite index range: ") + compositeListStr).c_str());
+                    // Create fieldIO object to load file
+                    //    need a serial communicator to avoid problems with
+                    //    shared file system
+                    CommSharedPtr comm=
+                            GetCommFactory().CreateInstance("Serial", 0, 0);
+                    std::string iofmt = FieldIO::GetFileType(
+                                filenameStr, comm);
+                    FieldIOSharedPtr f = GetFieldIOFactory().CreateInstance(
+                                iofmt,
+                                comm,
+                                pSession->GetSharedFilesystem());
+                    // Load field definitions from file
+                    std::vector<LibUtilities::FieldDefinitionsSharedPtr> fielddefs;
+                    f->Import(filenameStr, fielddefs);
 
-
-                // construct mapping (field name, CompositeID) -> nummodes
-                for (int i = 0; i < composite.size(); ++i)
-                {
-                    for (int j = 0; j < fieldName.size(); j++)
+                    // Parse field definitions
+                    for (int i = 0; i < fielddefs.size(); ++i)
                     {
-                        m_expansions[composite[i]][fieldName[j]] = nummodes;
+                        // Name of fields
+                        for (int j = 0; j < fielddefs[i]->m_fields.size(); ++j)
+                        {
+                            std::string fieldName = fielddefs[i]->m_fields[j];
+                            if (m_fieldNameToId.count(fieldName) == 0)
+                            {
+                                int k = m_fieldNameToId.size();
+                                m_fieldNameToId[ fieldName ] = k;
+                                m_numFields++;
+                            }
+                        }
+                        // Number of modes and shape for each element
+                        int numHomoDir = fielddefs[i]->m_numHomogeneousDir;
+                        int cnt = 0;
+                        for (int j = 0; j < fielddefs[i]->m_elementIDs.size(); ++j)
+                        {
+                            int elid = fielddefs[i]->m_elementIDs[j];
+                            std::vector<unsigned int> nummodes;
+                            for (int k = 0; k < m_dim; k++)
+                            {
+                                nummodes.push_back(fielddefs[i]->m_numModes[cnt++]);
+                            }
+                            if (fielddefs[i]->m_uniOrder)
+                            {
+                                cnt = 0;
+                            }
+                            else
+                            {
+                                cnt += numHomoDir;
+                            }
+                            for (int k = 0; k < fielddefs[i]->m_fields.size(); k++)
+                            {
+                                std::string fieldName = fielddefs[i]->m_fields[k];
+                                m_expansions[elid][fieldName] = nummodes;
+                            }
+                            switch (fielddefs[i]->m_shapeType)
+                            {
+                                case eSegment:
+                                {
+                                    m_shape[elid] = 'S';
+                                    break;
+                                }
+                                case eTriangle:
+                                {
+                                    m_shape[elid] = 'T';
+                                    break;
+                                }
+                                case eQuadrilateral:
+                                {
+                                    m_shape[elid] = 'Q';
+                                    break;
+                                }
+                                case eTetrahedron:
+                                {
+                                    m_shape[elid] = 'A';
+                                    break;
+                                }
+                                case ePyramid:
+                                {
+                                    m_shape[elid] = 'R';
+                                    break;
+                                }
+                                case ePrism:
+                                {
+                                    m_shape[elid] = 'P';
+                                    break;
+                                }
+                                case eHexahedron:
+                                {
+                                    m_shape[elid] = 'H';
+                                    break;
+                                }
+                                default:
+                                    ASSERTL0 (false, "Shape not recognized.");
+                                    break;
+                            }
+                        }
                     }
-                }
-
-                expansion = expansion->NextSiblingElement("E");
+            }
+            else
+            {
+                ASSERTL0(false,"Expansion type not defined or not supported at the moment");
             }
         }
 
@@ -312,7 +424,6 @@ namespace Nektar
                 }
             }
 
-            // check to see if compressed
             // check to see if compressed
             std::string IsCompressed;
             vSubElement->QueryStringAttribute("COMPRESSED",&IsCompressed); 
@@ -932,40 +1043,38 @@ namespace Nektar
             std::map<int, int> elmtSizes;
             std::map<int, int> elmtBndSizes;
 
-            for (unsigned int i = 0; i < m_domain.size(); ++i)
+            for (std::map<int, NummodesPerField>::iterator expIt =
+                    m_expansions.begin(); expIt != m_expansions.end(); ++expIt)
             {
-                int cId = m_domain[i];
-                NummodesPerField npf = m_expansions[cId];
+                int elid = expIt->first;
+                NummodesPerField npf = expIt->second;
 
                 for (NummodesPerField::iterator it = npf.begin(); it != npf.end(); ++it)
                 {
                     ASSERTL0(it->second.size() == m_dim,
                         " Number of directional" \
-                        " modes in expansion spec for composite id = " + 
-                        boost::lexical_cast<std::string>(cId) +
+                        " modes in expansion spec for element id = " +
+                        boost::lexical_cast<std::string>(elid) +
                         " and field " +
                         boost::lexical_cast<std::string>(it->first) +
                         " does not correspond to mesh dimension");
 
                     int na = it->second[0];
-                    int nb = it->second[1];
+                    int nb = 0;
                     int nc = 0;
+                    if (m_dim >= 2)
+                    {
+                        nb = it->second[1];
+                    }
                     if (m_dim == 3)
                     {
                         nc = it->second[2];
                     }
 
-                    int weight    = CalculateElementWeight(
-                        m_meshComposites[cId].type, false, na, nb, nc);
-                    int bndWeight = CalculateElementWeight(
-                        m_meshComposites[cId].type, true,  na, nb, nc);
-
-                    for (unsigned int j = 0; j < m_meshComposites[cId].list.size(); ++j)
-                    {
-                        int elid = m_meshComposites[cId].list[j];
-                        elmtSizes[elid] = weight;
-                        elmtBndSizes[elid] = bndWeight;
-                    }
+                    elmtSizes[elid]    = CalculateElementWeight(
+                        m_shape[elid], false, na, nb, nc);
+                    elmtBndSizes[elid] = CalculateElementWeight(
+                        m_shape[elid], true,  na, nb, nc);
                 }
             }
 
@@ -1028,9 +1137,21 @@ namespace Nektar
 
                 if (solverPropertyUpper == "WEIGHTPARTITIONS") 
                 {
-                    if (propertyValueUpper != "UNIFORM")
+                    if (propertyValueUpper == "DOF")
                     {
                         m_weightingRequired = true;
+                        m_weightDofs        = true;
+                    }
+                    else if (propertyValueUpper == "BOUNDARY")
+                    {
+                        m_weightingRequired = true;
+                        m_weightBnd        = true;
+                    }
+                    else if (propertyValueUpper == "BOTH")
+                    {
+                        m_weightingRequired = true;
+                        m_weightDofs        = true;
+                        m_weightBnd        = true;
                     }
                     return;
                 }
@@ -1060,19 +1181,22 @@ namespace Nektar
             for (eIt = m_meshElements.begin(); eIt != m_meshElements.end(); ++eIt)
             {
                 m_vertWeights[eIt->first] = weight;
+                m_vertBndWeights[eIt->first] = weight;
+                m_edgeWeights[eIt->first] = weight;
             }
 
-            for (unsigned int i = 0; i < m_domain.size(); ++i)
+            for (std::map<int, NummodesPerField>::iterator expIt =
+                    m_expansions.begin(); expIt != m_expansions.end(); ++expIt)
             {
-                int cId = m_domain[i];
-                NummodesPerField npf = m_expansions[cId];
+                int elid = expIt->first;
+                NummodesPerField npf = expIt->second;
 
                 for (NummodesPerField::iterator it = npf.begin(); it != npf.end(); ++it)
                 {
                     ASSERTL0(it->second.size() == m_dim,
                         " Number of directional" \
-                        " modes in expansion spec for composite id = " + 
-                        boost::lexical_cast<std::string>(cId) +
+                        " modes in expansion spec for element id = " +
+                        boost::lexical_cast<std::string>(elid) +
                         " and field " +
                         boost::lexical_cast<std::string>(it->first) +
                         " does not correspond to mesh dimension");
@@ -1089,14 +1213,15 @@ namespace Nektar
                         nc = it->second[2];
                     }
 
-                    int bndWeight = CalculateElementWeight(
-                        m_meshComposites[cId].type, true, na, nb, nc);
-
-                    for (unsigned int j = 0; j < m_meshComposites[cId].list.size(); ++j)
-                    {
-                        int elmtId = m_meshComposites[cId].list[j];
-                        m_vertWeights[elmtId][m_fieldNameToId[it->first]] = bndWeight;
-                    }
+                    m_vertWeights[elid][m_fieldNameToId[it->first]] =
+                            CalculateElementWeight(m_shape[elid], false,
+                                                   na, nb, nc);
+                    m_vertBndWeights[elid][m_fieldNameToId[it->first]] =
+                            CalculateElementWeight(m_shape[elid], true,
+                                                   na, nb, nc);
+                    m_edgeWeights[elid][m_fieldNameToId[it->first]] =
+                            CalculateEdgeWeight(m_shape[elid],
+                                                   na, nb, nc);
                 }
             } // for i
         }
@@ -1118,7 +1243,9 @@ namespace Nektar
 
                 if (m_weightingRequired)
                 {
-                    pGraph[v].weight = m_vertWeights[eIt->first];
+                    pGraph[v].weight     = m_vertWeights[eIt->first];
+                    pGraph[v].bndWeight  = m_vertBndWeights[eIt->first];
+                    pGraph[v].edgeWeight = m_edgeWeights[eIt->first];
                 }
 
                 // Process element entries and add graph edges
@@ -1141,26 +1268,50 @@ namespace Nektar
             }
         }
 
+        /**
+         * @brief Partition the graph.
+         *
+         * This routine partitions the graph @p pGraph into @p nParts, producing
+         * subgraphs that are populated in @p pLocalPartition. If the @p
+         * overlapping option is set (which is used for post-processing
+         * purposes), the resulting partitions are extended to cover
+         * neighbouring elements by additional vertex on the dual graph, which
+         * produces overlapping partitions (i.e. the intersection of two
+         * connected partitions is non-empty).
+         *
+         * @param pGraph           Graph to be partitioned.
+         * @param nParts           Number of partitions.
+         * @param pLocalPartition  Vector of sub-graphs representing each
+         *                         partition.
+         * @param overlapping      True if resulting partitions should overlap.
+         */
         void MeshPartition::PartitionGraph(BoostSubGraph& pGraph,
                                            int nParts,
-                                           std::vector<BoostSubGraph>& pLocalPartition)
+                                           std::vector<BoostSubGraph>& pLocalPartition,
+                                           bool overlapping)
         {
             int i;
             int nGraphVerts = boost::num_vertices(pGraph);
             int nGraphEdges = boost::num_edges(pGraph);
 
+            int ncon = 1;
+            if (m_weightDofs && m_weightBnd)
+            {
+                ncon = 2;
+            }
             // Convert boost graph into CSR format
             BoostVertexIterator    vertit, vertit_end;
+            BoostAdjacencyIterator adjvertit, adjvertit_end;
             Array<OneD, int> part(nGraphVerts,0);
 
             if (m_comm->GetRowComm()->TreatAsRankZero())
             {
                 int acnt = 0;
                 int vcnt = 0;
-                int nWeight = nGraphVerts;
-                BoostAdjacencyIterator adjvertit, adjvertit_end;
+                int nWeight = ncon*nGraphVerts;
                 Array<OneD, int> xadj(nGraphVerts+1,0);
                 Array<OneD, int> adjncy(2*nGraphEdges);
+                Array<OneD, int> adjwgt(2*nGraphEdges, 1);
                 Array<OneD, int> vwgt(nWeight, 1);
                 Array<OneD, int> vsize(nGraphVerts, 1);
 
@@ -1173,17 +1324,26 @@ namespace Nektar
                           ++adjvertit)
                     {
                         adjncy[acnt++] = *adjvertit;
+                        if (m_weightingRequired)
+                        {
+                            adjwgt[acnt-1] = pGraph[*vertit].edgeWeight[0];
+                        }
                     }
 
                     xadj[++vcnt] = acnt;
 
                     if (m_weightingRequired)
                     {
-                        vwgt[vcnt-1] = pGraph[*vertit].weight[0];
-                    }
-                    else
-                    {
-                        vwgt[vcnt-1] = 1;
+                        int ccnt = 0;
+                        if (m_weightDofs)
+                        {
+                            vwgt[ncon*(vcnt-1)+ccnt] = pGraph[*vertit].weight[0];
+                            ccnt++;
+                        }
+                        if (m_weightBnd)
+                        {
+                            vwgt[ncon*(vcnt-1)+ccnt] = pGraph[*vertit].bndWeight[0];
+                        }
                     }
                 }
 
@@ -1198,8 +1358,7 @@ namespace Nektar
                     if(m_comm->GetColumnComm()->GetRank() == 0)
                     {
                         // Attempt partitioning using METIS.
-                        int ncon = 1;
-                        PartitionGraphImpl(nGraphVerts, ncon, xadj, adjncy, vwgt, vsize, nParts, vol, part);
+                        PartitionGraphImpl(nGraphVerts, ncon, xadj, adjncy, vwgt, vsize, adjwgt, nParts, vol, part);
 
                         // Check METIS produced a valid partition and fix if not.
                         CheckPartitions(nParts, part);
@@ -1255,6 +1414,25 @@ namespace Nektar
             {
                 pGraph[*vertit].partition = part[i];
                 boost::add_vertex(i, pLocalPartition[part[i]]);
+            }
+
+            // If the overlapping option is set (for post-processing purposes),
+            // add vertices that correspond to the neighbouring elements.
+            if (overlapping)
+            {
+                for ( boost::tie(vertit, vertit_end) = boost::vertices(pGraph);
+                      vertit != vertit_end;
+                      ++vertit)
+                {
+                    for (boost::tie(adjvertit, adjvertit_end) = boost::adjacent_vertices(*vertit,pGraph);
+                         adjvertit != adjvertit_end; ++adjvertit)
+                    {
+                        if(part[*adjvertit] != part[*vertit])
+                        {
+                            boost::add_vertex(*adjvertit, pLocalPartition[part[*vertit]]);
+                        }
+                    }
+                }
             }
         }
 
@@ -1377,6 +1555,9 @@ namespace Nektar
                             id = vIt->second.list[j];
                             vVertices[id] = m_meshVertices[id];
                         }
+                        // Compile list of edges (for curved information)
+                        id = vIt->second.id;
+                        vEdges[id] = m_meshEdges[id];
                     }
                 }
             }
@@ -1774,163 +1955,160 @@ namespace Nektar
                 }
             }
 
-            if (m_dim >= 2)
+            std::map<MeshCurvedKey, MeshCurved>::const_iterator vItCurve;
+
+            if(m_isCompressed)
             {
-                std::map<MeshCurvedKey, MeshCurved>::const_iterator vItCurve;
+                std::vector<MeshCurvedInfo> edgeinfo;
+                std::vector<MeshCurvedInfo> faceinfo;
+                MeshCurvedPts  curvedpts;
+                curvedpts.id = 0; // assume all points are going in here
+                int ptoffset = 0;
+                int newidx   = 0;
+                std::map<int,int> idxmap;
 
-                if(m_isCompressed)
+                for (vItCurve  = m_meshCurved.begin();
+                     vItCurve != m_meshCurved.end();
+                     ++vItCurve)
                 {
-                    std::vector<MeshCurvedInfo> edgeinfo;
-                    std::vector<MeshCurvedInfo> faceinfo;
-                    MeshCurvedPts  curvedpts;
-                    curvedpts.id = 0; // assume all points are going in here
-                    int ptoffset = 0;
-                    int newidx   = 0;
-                    std::map<int,int> idxmap;
+                    MeshCurved c = vItCurve->second;
 
-                    for (vItCurve  = m_meshCurved.begin();
-                         vItCurve != m_meshCurved.end();
-                         ++vItCurve)
+                    bool IsEdge = boost::iequals(c.entitytype,"E");
+                    bool IsFace = boost::iequals(c.entitytype,"F");
+
+                    if((IsEdge&&vEdges.find(c.entityid) != vEdges.end())||
+                       (IsFace&&vFaces.find(c.entityid) != vFaces.end()))
                     {
-                        MeshCurved c = vItCurve->second;
-
-                        bool IsEdge = boost::iequals(c.entitytype,"E");
-                        bool IsFace = boost::iequals(c.entitytype,"F");
-
-                        if((IsEdge&&vEdges.find(c.entityid) != vEdges.end())||
-                           (IsFace&&vFaces.find(c.entityid) != vFaces.end()))
+                        MeshCurvedInfo cinfo;
+                        // add in
+                        cinfo.id       = c.id;
+                        cinfo.entityid = c.entityid;
+                        cinfo.npoints  = c.npoints;
+                        for(int i = 0; i < SIZE_PointsType; ++i)
                         {
-                            MeshCurvedInfo cinfo;
-                            // add in
-                            cinfo.id       = c.id;
-                            cinfo.entityid = c.entityid;
-                            cinfo.npoints  = c.npoints;
-                            for(int i = 0; i < SIZE_PointsType; ++i)
+                            if(c.type.compare(kPointsTypeStr[i]) == 0)
                             {
-                                if(c.type.compare(kPointsTypeStr[i]) == 0)
-                                {
-                                    cinfo.ptype = (PointsType) i;
-                                    break;
-                                }
+                                cinfo.ptype = (PointsType) i;
+                                break;
                             }
-                            cinfo.ptid   = 0; // set to just one point set
-                            cinfo.ptoffset = ptoffset;
-                            ptoffset += c.npoints;
+                        }
+                        cinfo.ptid   = 0; // set to just one point set
+                        cinfo.ptoffset = ptoffset;
+                        ptoffset += c.npoints;
 
-                            if (IsEdge)
+                        if (IsEdge)
+                        {
+                            edgeinfo.push_back(cinfo);
+                        }
+                        else
+                        {
+                            faceinfo.push_back(cinfo);
+                        }
+
+                        // fill in points to list.
+                        for(int i =0; i < c.npoints; ++i)
+                        {
+                            // get index from full list;
+                            int idx = m_meshCurvedPts[c.ptid]
+                                .index[c.ptoffset+i];
+
+                            // if index is not already in curved
+                            // points add it or set index to location
+                            if(idxmap.count(idx) == 0)
                             {
-                                edgeinfo.push_back(cinfo);
+                                idxmap[idx] = newidx;
+                                curvedpts.index.push_back(newidx);
+                                curvedpts.pts.push_back(
+                                        m_meshCurvedPts[c.ptid].pts[idx]);
+                                newidx++;
                             }
                             else
                             {
-                                faceinfo.push_back(cinfo);
-                            }
-
-                            // fill in points to list.
-                            for(int i =0; i < c.npoints; ++i)
-                            {
-                                // get index from full list;
-                                int idx = m_meshCurvedPts[c.ptid]
-                                                    .index[c.ptoffset+i];
-
-                                // if index is not already in curved
-                                // points add it or set index to location
-                                if(idxmap.count(idx) == 0)
-                                {
-                                    idxmap[idx] = newidx;
-                                    curvedpts.index.push_back(newidx);
-                                    curvedpts.pts.push_back(
-                                            m_meshCurvedPts[c.ptid].pts[idx]);
-                                    newidx++;
-                                }
-                                else
-                                {
-                                    curvedpts.index.push_back(idxmap[idx]);
-                                }
+                                curvedpts.index.push_back(idxmap[idx]);
                             }
                         }
-                    }
-
-                    // add xml information
-                    if(edgeinfo.size())
-                    {
-                        vCurved->SetAttribute("COMPRESSED",
-                                    CompressData::GetCompressString());
-                        vCurved->SetAttribute("BITSIZE",
-                                    CompressData::GetBitSizeStr());
-
-                        x = new TiXmlElement("E");
-                        std::string dataStr;
-                        CompressData::ZlibEncodeToBase64Str(edgeinfo,dataStr);
-                        x->LinkEndChild(new TiXmlText(dataStr));
-                        vCurved->LinkEndChild(x);
-                    }
-
-                    if(faceinfo.size())
-                    {
-                        vCurved->SetAttribute("COMPRESSED",
-                                    CompressData::GetCompressString());
-                        vCurved->SetAttribute("BITSIZE",
-                                    CompressData::GetBitSizeStr());
-
-                        x = new TiXmlElement("F");
-                        std::string dataStr;
-                        CompressData::ZlibEncodeToBase64Str(faceinfo,dataStr);
-                        x->LinkEndChild(new TiXmlText(dataStr));
-                        vCurved->LinkEndChild(x);
-                    }
-
-                    if(edgeinfo.size()||faceinfo.size())
-                    {
-                        x = new TiXmlElement("DATAPOINTS");
-                        x->SetAttribute("ID", curvedpts.id);
-
-                        TiXmlElement *subx = new TiXmlElement("INDEX");
-                        std::string dataStr;
-                        CompressData::ZlibEncodeToBase64Str(curvedpts.index,
-                                                            dataStr);
-                        subx->LinkEndChild(new TiXmlText(dataStr));
-                        x->LinkEndChild(subx);
-
-                        subx = new TiXmlElement("POINTS");
-                        CompressData::ZlibEncodeToBase64Str(curvedpts.pts,
-                                                            dataStr);
-                        subx->LinkEndChild(new TiXmlText(dataStr));
-                        x->LinkEndChild(subx);
-
-                        vCurved->LinkEndChild(x);
                     }
                 }
-                else
+
+                // add xml information
+                if(edgeinfo.size())
                 {
-                    for (vItCurve  = m_meshCurved.begin();
-                         vItCurve != m_meshCurved.end();
-                         ++vItCurve)
+                    vCurved->SetAttribute("COMPRESSED",
+                                CompressData::GetCompressString());
+                    vCurved->SetAttribute("BITSIZE",
+                                CompressData::GetBitSizeStr());
+
+                    x = new TiXmlElement("E");
+                    std::string dataStr;
+                    CompressData::ZlibEncodeToBase64Str(edgeinfo,dataStr);
+                    x->LinkEndChild(new TiXmlText(dataStr));
+                    vCurved->LinkEndChild(x);
+                }
+
+                if(faceinfo.size())
+                {
+                    vCurved->SetAttribute("COMPRESSED",
+                                CompressData::GetCompressString());
+                    vCurved->SetAttribute("BITSIZE",
+                                CompressData::GetBitSizeStr());
+
+                    x = new TiXmlElement("F");
+                    std::string dataStr;
+                    CompressData::ZlibEncodeToBase64Str(faceinfo,dataStr);
+                    x->LinkEndChild(new TiXmlText(dataStr));
+                    vCurved->LinkEndChild(x);
+                }
+
+                if(edgeinfo.size()||faceinfo.size())
+                {
+                    x = new TiXmlElement("DATAPOINTS");
+                    x->SetAttribute("ID", curvedpts.id);
+
+                    TiXmlElement *subx = new TiXmlElement("INDEX");
+                    std::string dataStr;
+                    CompressData::ZlibEncodeToBase64Str(curvedpts.index,
+                                                        dataStr);
+                    subx->LinkEndChild(new TiXmlText(dataStr));
+                    x->LinkEndChild(subx);
+
+                    subx = new TiXmlElement("POINTS");
+                    CompressData::ZlibEncodeToBase64Str(curvedpts.pts,
+                                                        dataStr);
+                    subx->LinkEndChild(new TiXmlText(dataStr));
+                    x->LinkEndChild(subx);
+
+                    vCurved->LinkEndChild(x);
+                }
+            }
+            else
+            {
+                for (vItCurve  = m_meshCurved.begin();
+                     vItCurve != m_meshCurved.end();
+                     ++vItCurve)
+                {
+                    MeshCurved c = vItCurve->second;
+
+                    bool IsEdge = boost::iequals(c.entitytype,"E");
+                    bool IsFace = boost::iequals(c.entitytype,"F");
+
+                    if((IsEdge&&vEdges.find(c.entityid) != vEdges.end())||
+                       (IsFace&&vFaces.find(c.entityid) != vFaces.end()))
                     {
-                        MeshCurved c = vItCurve->second;
-
-                        bool IsEdge = boost::iequals(c.entitytype,"E");
-                        bool IsFace = boost::iequals(c.entitytype,"F");
-
-                        if((IsEdge&&vEdges.find(c.entityid) != vEdges.end())||
-                           (IsFace&&vFaces.find(c.entityid) != vFaces.end()))
+                        x = new TiXmlElement(c.entitytype);
+                        x->SetAttribute("ID", c.id);
+                        if (IsEdge)
                         {
-                            x = new TiXmlElement(c.entitytype);
-                            x->SetAttribute("ID", c.id);
-                            if (IsEdge)
-                            {
-                                x->SetAttribute("EDGEID", c.entityid);
-                            }
-                            else
-                            {
-                                x->SetAttribute("FACEID", c.entityid);
-                            }
-                            x->SetAttribute("TYPE", c.type);
-                            x->SetAttribute("NUMPOINTS", c.npoints);
-                            y = new TiXmlText(c.data);
-                            x->LinkEndChild(y);
-                            vCurved->LinkEndChild(x);
+                            x->SetAttribute("EDGEID", c.entityid);
                         }
+                        else
+                        {
+                            x->SetAttribute("FACEID", c.entityid);
+                        }
+                        x->SetAttribute("TYPE", c.type);
+                        x->SetAttribute("NUMPOINTS", c.npoints);
+                        y = new TiXmlText(c.data);
+                        x->LinkEndChild(y);
+                        vCurved->LinkEndChild(x);
                     }
                 }
             }
@@ -2013,10 +2191,7 @@ namespace Nektar
                 vElmtGeometry->LinkEndChild(vFace);
             }
             vElmtGeometry->LinkEndChild(vElement);
-            if (m_dim >= 2)
-            {
-                vElmtGeometry->LinkEndChild(vCurved);
-            }
+            vElmtGeometry->LinkEndChild(vCurved);
             vElmtGeometry->LinkEndChild(vComposite);
             vElmtGeometry->LinkEndChild(vDomain);
 
@@ -2179,6 +2354,52 @@ namespace Nektar
                         StdSegData  ::getNumberOfCoefficients   (na);
                     break;
                 case 'V':
+                    weight = 1;
+                    break;
+                default:
+                    break;
+            }
+
+            return weight;
+        }
+
+        /**
+         *     Calculate the number of modes needed for communication when
+         *        in partition boundary, to be used as weighting for edges.
+         *     Since we do not know exactly which face this refers to, assume
+         *        the max order and quad face (for prisms) as arbitrary choices
+         */
+        int MeshPartition::CalculateEdgeWeight(
+            char elmtType,
+            int  na,
+            int  nb,
+            int  nc)
+        {
+            int weight = 0;
+            int n = std::max ( na, std::max(nb, nc));
+            switch (elmtType)
+            {
+                case 'A':
+                    weight =
+                        StdTriData ::getNumberOfCoefficients   (n, n);
+                    break;
+                case 'R':
+                    weight =
+                        StdQuadData ::getNumberOfCoefficients   (n, n);
+                    break;
+                case 'H':
+                    weight =
+                        StdQuadData ::getNumberOfCoefficients   (n, n);
+                    break;
+                case 'P':
+                    weight =
+                        StdQuadData ::getNumberOfCoefficients   (n, n);
+                    break;
+                case 'Q':
+                case 'T':
+                    weight = n;
+                    break;
+                case 'S':
                     weight = 1;
                     break;
                 default:

@@ -39,6 +39,8 @@
 #include <SolverUtils/Driver.h>
 #include <IncNavierStokesSolver/EquationSystems/IncNavierStokes.h>
 
+using namespace std;
+
 namespace Nektar
 {
 
@@ -2037,8 +2039,7 @@ cout<<"cr="<<cr_str<<endl;
 
 
           file += "_u_5.bc";
-          LibUtilities::FieldIOSharedPtr fld =
-              MemoryManager<LibUtilities::FieldIO>::AllocateSharedPtr(m_sessionVWI->GetComm());
+          LibUtilities::FieldIOSharedPtr fld = LibUtilities::FieldIO::CreateDefault(m_sessionVWI);
           fld->Import(file,FieldDef_u, FieldData_u);
           Ilayer->ExtractDataToCoeffs(FieldDef_u[0], FieldData_u[0], FieldDef_u[0]->m_fields[0],Ilayer->UpdateCoeffs());
           Ilayer->BwdTrans_IterPerExp(Ilayer->GetCoeffs(), Ilayer->UpdatePhys());

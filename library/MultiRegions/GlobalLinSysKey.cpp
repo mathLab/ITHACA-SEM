@@ -36,6 +36,8 @@
 
 #include <MultiRegions/GlobalLinSysKey.h>
 
+using namespace std;
+
 namespace Nektar
 {
     namespace MultiRegions

@@ -35,6 +35,8 @@
 
 #include <SolverUtils/Filters/FilterThresholdMin.h>
 
+using namespace std;
+
 namespace Nektar
 {
 namespace SolverUtils
@@ -99,8 +101,7 @@ FilterThresholdMin::FilterThresholdMin(
         m_thresholdVar = x - varlist.begin();
     }
 
-    m_fld = MemoryManager<LibUtilities::FieldIO>
-                ::AllocateSharedPtr(pSession->GetComm());
+    m_fld = LibUtilities::FieldIO::CreateDefault(pSession);
 }
 
 

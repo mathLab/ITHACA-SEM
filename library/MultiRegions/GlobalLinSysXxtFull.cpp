@@ -37,6 +37,8 @@
 #include <MultiRegions/GlobalLinSysXxtFull.h>
 #include <MultiRegions/ExpList.h>
 
+using namespace std;
+
 namespace Nektar
 {
     namespace MultiRegions
@@ -211,8 +213,7 @@ namespace Nektar
             {
                 for (n = 0; n < nElmt; ++n)
                 {
-                    i = vExp->GetOffset_Elmt_Id(n);
-                    vSizes[n] = vExp->GetExp(i)->GetNverts();
+                    vSizes[n] = vExp->GetExp(n)->GetNverts();
                     nEntries += vSizes[n]*vSizes[n];
                 }
             }
@@ -220,8 +221,7 @@ namespace Nektar
             {
                 for (n = 0; n < nElmt; ++n)
                 {
-                    i = vExp->GetOffset_Elmt_Id(n);
-                    vSizes[n] = vExp->GetExp(i)->GetNcoeffs();
+                    vSizes[n] = vExp->GetExp(n)->GetNcoeffs();
                     nEntries += vSizes[n]*vSizes[n];
                 }
             }
@@ -238,7 +238,7 @@ namespace Nektar
             // and set the universal ID array
             for(n = iCount = 0; n < nElmt; ++n)
             {
-                loc_mat = GetBlock(vExp->GetOffset_Elmt_Id(n));
+                loc_mat = GetBlock(n);
                 nRows = loc_mat->GetRows();
 
                 for(i = 0; i < nRows; ++i)
@@ -275,7 +275,10 @@ namespace Nektar
             // Set up XXT and output some stats
             LibUtilities::CommSharedPtr vComm = pLocToGloMap->GetComm();
             m_crsData = Xxt::Init(nLocal, vId, m_Ai, m_Aj, m_Ar, vComm);
-            Xxt::nektar_crs_stats(m_crsData);
+            if (m_verbose)
+            {
+                Xxt::nektar_crs_stats(m_crsData);
+            }
         }
     }
 }

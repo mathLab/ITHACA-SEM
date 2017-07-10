@@ -13,6 +13,7 @@
 #include <SpatialDomains/MeshComponents.h>
 #include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
 
+using namespace std;
 using namespace Nektar;
 using namespace Nektar::LibUtilities;
 using namespace Nektar::LocalRegions;
@@ -87,10 +88,12 @@ int main(int argc, char *argv[]){
         fprintf(stderr,"\t Modified_A = 4\n");
         fprintf(stderr,"\t Modified_B = 5\n");
         fprintf(stderr,"\t Modified_C = 6\n");
-        fprintf(stderr,"\t Fourier    = 7\n");
-        fprintf(stderr,"\t Lagrange   = 8\n");
-        fprintf(stderr,"\t Legendre   = 9\n");
-        fprintf(stderr,"\t Chebyshev  = 10\n");
+        fprintf(stderr,"\t OrthoPyr_C = 7\n");
+        fprintf(stderr,"\t ModifiedPyr_C = 8\n");
+        fprintf(stderr,"\t Fourier    = 9\n");
+        fprintf(stderr,"\t Lagrange   = 10\n");
+        fprintf(stderr,"\t Legendre   = 11\n");
+        fprintf(stderr,"\t Chebyshev  = 12\n");
 
         exit(1);
     }
@@ -141,25 +144,28 @@ int main(int argc, char *argv[]){
             break;
         case LibUtilities::ePyramid:
             if((btype1 == eOrtho_B) || (btype1 == eOrtho_C)
-               || (btype1 == eModified_B) || (btype1 == eModified_C))
+               || (btype1 == eModified_B) || (btype1 == eModified_C)
+               || (btype1 == eModifiedPyr_C))
             {
                 NEKERROR(ErrorUtil::efatal,
-                         "Basis 1 cannot be of type Ortho_B, Ortho_C, Modified_B "
-                         "or Modified_C");
+                         "Basis 1 cannot be of type Ortho_B, Ortho_C, Modified_B, "
+                         "Modified_C or ModifiedPyr_C");
             }
             if((btype2 == eOrtho_B) || (btype2 == eOrtho_C)
-               || (btype2 == eModified_B) || (btype2 == eModified_C))
+               || (btype2 == eModified_B) || (btype2 == eModified_C)
+               || (btype2 == eModifiedPyr_C))
             {
                 NEKERROR(ErrorUtil::efatal,
-                         "Basis 2 cannot be of type Ortho_B, Ortho_C, Modified_B "
-                         "or Modified_C");
+                         "Basis 2 cannot be of type Ortho_B, Ortho_C, Modified_B, "
+                         "Modified_C or ModifiedPyr_C");
             }
             if((btype3 == eOrtho_A) || (btype3 == eOrtho_B)
-               || (btype3 == eModified_A) || (btype3 == eModified_B))
+               || (btype3 == eModified_A) || (btype3 == eModified_B)
+               || (btype3 == eModified_C))
             {
                 NEKERROR(ErrorUtil::efatal,
-                         "Basis 3 cannot be of type Ortho_A, Ortho_B, Modified_A "
-                         "or Modified_B");
+                         "Basis 3 cannot be of type Ortho_A, Ortho_B, Modified_A, "
+                         "Modified_B or ModifiedPyr_C");
             }
             break;
         case LibUtilities::ePrism:

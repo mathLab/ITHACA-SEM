@@ -1,27 +1,44 @@
-MACRO(ADD_SOLVER_EXECUTABLE name component source)
+MACRO(SOLVER_COMPONENT_NAME name var)
+    # Lower-case solver name
+    STRING(TOLOWER ${name} ${var})
+    # Then replace ending "solver" with "-solver"
+    STRING(REPLACE "solver" "-solver" ${var} ${${var}})
+ENDMACRO()
 
-    ADD_EXECUTABLE(${name} ${source} ${ARGN})
-    
-    SET_TARGET_PROPERTIES(${name} PROPERTIES DEBUG_POSTFIX -g)
-    SET_TARGET_PROPERTIES(${name} PROPERTIES MINSIZEREL_POSTFIX -ms)
-    SET_TARGET_PROPERTIES(${name} PROPERTIES RELWITHDEBINFO_POSTFIX -rg)
+MACRO(ADD_SOLVER_EXECUTABLE name)
+    CMAKE_PARSE_ARGUMENTS(SOLVER "" "COMPONENT" "SOURCES;LIBRARY_SOURCES" ${ARGN})
 
-    SET_COMMON_PROPERTIES(${name})
+    IF (SOLVER_LIBRARY_SOURCES)
+        ADD_LIBRARY(${name}-obj OBJECT ${SOLVER_LIBRARY_SOURCES})
+        ADD_DEPENDENCIES(${name}-obj SolverUtils)
+        LIST(APPEND SOLVER_SOURCES $<TARGET_OBJECTS:${name}-obj>)
+    ENDIF()
 
+    IF (NOT SOLVER_COMPONENT)
+        SOLVER_COMPONENT_NAME(${name} SOLVER_COMPONENT)
+    ENDIF()
 
-    TARGET_LINK_LIBRARIES(${name} SolverUtils)
+    ADD_NEKTAR_EXECUTABLE(${name}
+        COMPONENT ${SOLVER_COMPONENT} DEPENDS SolverUtils SOURCES ${SOLVER_SOURCES})
+ENDMACRO()
 
-    IF( ${CMAKE_SYSTEM} MATCHES "Darwin-*")
-        SET_TARGET_PROPERTIES(${name} 
-            PROPERTIES LINK_FLAGS "-Wl,-undefined,dynamic_lookup -Wl,-rpath,${CMAKE_INSTALL_PREFIX}/${LIB_DIR} -Wl,-rpath,${Boost_LIBRARY_DIRS}")
-    ENDIF( ${CMAKE_SYSTEM} MATCHES "Darwin-*")
-    SET_PROPERTY(TARGET ${name} PROPERTY FOLDER ${component})
+MACRO(ADD_SOLVER_UTILITY name solver)
+    CMAKE_PARSE_ARGUMENTS(UTIL "USELIBRARY" "COMPONENT" "SOURCES" ${ARGN})
 
-	INSTALL(TARGETS ${name} 
-		RUNTIME DESTINATION ${NEKTAR_BIN_DIR} COMPONENT ${component} OPTIONAL)
+    IF (NOT UTIL_COMPONENT)
+        SOLVER_COMPONENT_NAME(${solver} UTIL_COMPONENT)
+    ENDIF()
 
-ENDMACRO(ADD_SOLVER_EXECUTABLE name component source)
-
+    IF (UTIL_USELIBRARY)
+        ADD_NEKTAR_EXECUTABLE(${name}
+            COMPONENT ${UTIL_COMPONENT} DEPENDS SolverUtils
+            SOURCES ${UTIL_SOURCES} $<TARGET_OBJECTS:${solver}-obj>)
+    ELSE()
+        ADD_NEKTAR_EXECUTABLE(${name}
+            COMPONENT ${UTIL_COMPONENT} DEPENDS SolverUtils
+            SOURCES ${UTIL_SOURCES})
+    ENDIF()
+ENDMACRO()
 
 # Generate list of available subdirectories
 FILE(GLOB dir_list "*")
@@ -30,12 +47,3 @@ FOREACH(dir ${dir_list})
         ADD_SUBDIRECTORY(${dir})
     ENDIF(IS_DIRECTORY ${dir} AND EXISTS ${dir}/CMakeLists.txt)
 ENDFOREACH(dir ${dir_list})
-
-
-SET(CPACK_COMPONENTS_ALL solvers)
-
-SET(CPACK_COMPONENT_SOLVERS_NAME "nektar++-solvers")
-SET(CPACK_COMPONENT_SOLVERS_DESCRIPTION "Solvers for Nektar++")
-#SET(CPACK_COMPONENT_SOLVERS_DEPENDS lib)
-
-INCLUDE(CPack)

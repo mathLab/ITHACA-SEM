@@ -44,13 +44,16 @@ project. It's a pretty simple process:
    diff and are not quite ready to merge, use the `[WIP]` tag in the title to
    prevent your code from being accidentally merged.
 5. Put a comment in the MR saying that it's ready to be merged.
-6. Respond to any comments in the code review.
+6. If your branch is a minor fix that could appear in the next patch release,
+   then add the `Proposed patch` label to the merge request.
+7. Respond to any comments in the code review.
 
 ## Submission checklist
 - Did you add regression tests (for fixes) or unit tests and/or normal tests for
   new features?
 - Have you run your branch through buildbot and do all the tests pass?
 - Is there documentation in the user guide and/or developer guide?
+- Have you added a CHANGELOG entry, including the MR number?
 - Are there any massive files you might have added in the commit history? We try
   to keep test files as small as possible. If so you'll need to rebase or
   filter-branch to remove those from the commit history.
@@ -128,6 +131,14 @@ should provide:
 - Generally, code should be well-commented using regular C++ comments to explain
   its function to help in reviewing it.
 
+Nektar++ also has a growing number of tutorials to help introduce users and
+developers to the use of the library and the range of application solvers. These
+are stored in a separate repository, but are available from the main repository
+through a git submodule. To populate the docs/tutorial directory run `git
+submodule init` followed by `git submodule update --remote`. The latter command
+will ensure you have the latest master branch of the tutorials within your
+source tree.
+
 ## Code review and merging
 All merge requests will be reviewed by one of the senior developers. We try to
 stick to the following process:
@@ -145,6 +156,78 @@ stick to the following process:
   added.
 - Once feedback received from the branch author (if necessary) and reviewers are
   happy, the branch will be merged.
+
+## Release branches
+Nektar++ releases are versioned in the standard form `x.y.z` where `x` is a
+major release, `y` a minor release and `z` a patch release:
+
+- major releases are extremely infrequent (on the order of every 2-3 years) and
+  denote major changes in functionality and the API;
+- minor releases occur around twice per year and contain new features with minor
+  API changes;
+- patch releases are targeted on roughly a monthly basis and are intended to
+  fix minor issues in the code.
+
+The repository contains a number of _release branches_ named `release/x.y` for
+each minor release, which are intended to contain **fixes and very minor
+changes** from `master` and which form the next patch release. This allows us to
+use `master` for the next minor release, whilst still having key fixes in patch
+releases.
+
+### Cherry-picking process
+
+Any branches that are marked with the `Proposed patch` label should follow the
+following additional steps to cherry pick commits into the `release/x.y` branch.
+
+1. If the branch is on a remote other than `nektar/nektar`, make sure that's
+   added to your local repository.
+2. On a local terminal, run `git fetch --all` to pull the latest changes. It's
+   important for the commands below that you do this _before_ you merge the
+   branch into `master`.
+3. Merge the branch into master as usual using GitLab.
+4. Switch to the appropriate branch with `git checkout release/x.y` and update
+   with `git pull`.
+5. Now check the list of commits to cherry-pick.
+
+   ```bash
+   git log --oneline --no-merges --reverse origin/master..REMOTE/fix/BRANCHNAME
+   ```
+
+   where `REMOTE` is the remote on which the branch lives and `BRANCHNAME` is
+   the fix branch. If the list is empty, you probably did a `git fetch` after
+   you merged the branch into `master`; in this case use `origin/master^`.
+6. If you're happy with the list (compare to the MR list on the GitLab MR if
+   necessary), cherry-pick the commits with the command:
+
+   ```bash
+   git cherry-pick -x $(git rev-list --no-merges --reverse origin/master..REMOTE/fix/BRANCHNAME)
+   ```
+
+7. It's likely you'll encounter some conflicts, particularly with the
+   `CHANGELOG`. To fix these:
+   - `git status` to see what's broken
+   - Fix appropriately
+   - `git commit -a` to commit your fix
+   - `git cherry-pick --continue`
+8. If everything becomes horribly broken, `git cherry-pick --abort`.
+9. Once you're happy, `git push` to send your changes back to GitLab.
+
+Steps 5 and 6 can be simplified by creating a script
+```bash
+#!/bin/bash
+src=$1
+
+logopts="--oneline --no-merges --reverse"
+commits=`git log $logopts master..$1 | cut -f 1 -d " " | xargs`
+
+echo "Will cherry-pick the following commits: $commits"
+echo "Press ENTER to continue..."
+read
+
+cherryopts="-x --allow-empty --allow-empty-message"
+git cherry-pick $cherryopts $commits
+```
+which accepts the name of the source branch as the sole argument.
 
 ## Formatting guidelines
 Nektar++ uses C++, a language notorious for being easy to make obtuse and
@@ -199,7 +282,7 @@ for new files, or cosmetic `tidy/*` branches, but try to stick to existing
 formatting elsewhere.
 
 Installing it is straightforward on most package managers. Nektar++ relies on
-options that are used in version 3.6 or later.
+options that are used in version 3.7 or later.
 
 There are a number of instructions on how to use `clang-format` inside a number
 of text editors on the

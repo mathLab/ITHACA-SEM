@@ -164,6 +164,16 @@ namespace Nektar
                     Array<OneD,NekDouble> &outarray,
                     const StdMatrixKey &mkey);
 
+            STD_REGIONS_EXPORT virtual void v_SVVLaplacianFilter(
+                    Array<OneD, NekDouble> &array,
+                    const StdMatrixKey &mkey);
+
+            STD_REGIONS_EXPORT virtual void v_ExponentialFilter(
+                          Array<OneD, NekDouble> &array,
+                    const NekDouble        alpha,
+                    const NekDouble        exponent,
+                    const NekDouble        cutoff);
+
             STD_REGIONS_EXPORT virtual void v_MultiplyByStdQuadratureMetric(
                     const Array<OneD, const NekDouble> &inarray,
                     Array<OneD,       NekDouble> &outarray);
@@ -214,6 +224,21 @@ namespace Nektar
 
             STD_REGIONS_EXPORT virtual DNekMatSharedPtr v_CreateStdMatrix(
                     const StdMatrixKey &mkey);
+
+            //---------------------------------------
+            // Output interpolation functions
+            //---------------------------------------
+            STD_REGIONS_EXPORT virtual void v_GetSimplexEquiSpacedConnectivity(
+                    Array<OneD, int> &conn,
+                    bool standard = true);
+
+            // Operator evaluation functions
+            //---------------------------------------
+
+	    STD_REGIONS_EXPORT virtual void v_ReduceOrderCoeffs(
+                    int numMin,
+                    const Array<OneD, const NekDouble> &inarray,
+                    Array<OneD, NekDouble> &outarray);
 
         private:
 

@@ -1,61 +1,23 @@
+ADD_NEKTAR_EXECUTABLE(PartitionAnalyse
+    COMPONENT demos DEPENDS LibUtilities SOURCES PartitionAnalyse.cpp)
+ADD_NEKTAR_EXECUTABLE(FoundationDemo
+    COMPONENT demos DEPENDS LibUtilities SOURCES FoundationDemo.cpp)
+ADD_NEKTAR_EXECUTABLE(NodalDemo
+    COMPONENT demos DEPENDS LibUtilities SOURCES NodalDemo.cpp)
+ADD_NEKTAR_EXECUTABLE(TimeIntegrationDemo
+    COMPONENT demos DEPENDS LibUtilities SOURCES TimeIntegrationDemo.cpp)
 
-#SET(GraphSources 
-#    GraphExample.cpp)
-    
-SET(MemoryManagerSources 
-    MemoryManager.cpp)
-    
-SET(PartitionAnalyseSources
-    PartitionAnalyse.cpp)
-    
-SET(FoundationSources
-    FoundationDemo.cpp)	
-	
-SET(NodalTriFeketeSources
-	NodalTriFeketeDemo.cpp)
+IF(NEKTAR_USE_MPI)
+    ADD_NEKTAR_EXECUTABLE(FieldIOBenchmarker
+        COMPONENT demos DEPENDS LibUtilities SOURCES FieldIOBenchmarker.cpp)
+ENDIF()
 
-SET(NodalTriElecSources
-    NodalTriElecDemo.cpp)
-
-SET(NodalTriEvenlySpacedSources
-    NodalTriEvenlySpacedDemo.cpp)
-
-SET(NodalTetEvenlySpacedSources
-    NodalTetEvenlySpacedDemo.cpp)
-
-SET(NodalTetElecSources
-	NodalTetElecDemo.cpp)
-
-SET(TimeIntegrationDemoSources
-	TimeIntegrationDemo.cpp)
-
-
-#ADD_NEKTAR_EXECUTABLE(Graph demos GraphSources )
-#SET_LAPACK_LINK_LIBRARIES(Graph)
-
-#ADD_NEKTAR_EXECUTABLE(MemoryManager MemoryManagerSources )
-
-ADD_NEKTAR_EXECUTABLE(PartitionAnalyse demos PartitionAnalyseSources)
-TARGET_LINK_LIBRARIES(PartitionAnalyse LibUtilities)
-
-ADD_NEKTAR_EXECUTABLE(FoundationDemo demos FoundationSources )
-TARGET_LINK_LIBRARIES(FoundationDemo LibUtilities)
-
-ADD_NEKTAR_EXECUTABLE(NodalTriFeketeDemo demos NodalTriFeketeSources )
-TARGET_LINK_LIBRARIES(NodalTriFeketeDemo LibUtilities)
-
-ADD_NEKTAR_EXECUTABLE(NodalTriElecDemo demos NodalTriElecSources)
-TARGET_LINK_LIBRARIES(NodalTriElecDemo LibUtilities)
-
-ADD_NEKTAR_EXECUTABLE(NodalTriEvenlySpacedDemo demos NodalTriEvenlySpacedSources)
-TARGET_LINK_LIBRARIES(NodalTriEvenlySpacedDemo LibUtilities)
-
-ADD_NEKTAR_EXECUTABLE(NodalTetEvenlySpacedDemo demos NodalTetEvenlySpacedSources)
-TARGET_LINK_LIBRARIES(NodalTetEvenlySpacedDemo LibUtilities)
-
-ADD_NEKTAR_EXECUTABLE(NodalTetElecDemo demos NodalTetElecSources)
-TARGET_LINK_LIBRARIES(NodalTetElecDemo LibUtilities)
-
-ADD_NEKTAR_EXECUTABLE(TimeIntegrationDemo demos TimeIntegrationDemoSources)
-TARGET_LINK_LIBRARIES(TimeIntegrationDemo LibUtilities)
-
+ADD_NEKTAR_TEST(NodalDemo_Tri_Deriv_P8)
+ADD_NEKTAR_TEST(NodalDemo_Tri_Integral_P6)
+ADD_NEKTAR_TEST(NodalDemo_Tri_Interp_P7)
+ADD_NEKTAR_TEST(NodalDemo_Prism_Deriv_P8)
+ADD_NEKTAR_TEST(NodalDemo_Prism_Integral_P6)
+ADD_NEKTAR_TEST(NodalDemo_Prism_Interp_P7)
+ADD_NEKTAR_TEST(NodalDemo_Tet_Deriv_P8)
+ADD_NEKTAR_TEST(NodalDemo_Tet_Integral_P6)
+ADD_NEKTAR_TEST(NodalDemo_Tet_Interp_P7)

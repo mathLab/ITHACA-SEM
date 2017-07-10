@@ -36,7 +36,8 @@
 #include <LibUtilities/Communication/Xxt.hpp>
 #include <LibUtilities/BasicUtils/VDmathArray.hpp>
 #include <MultiRegions/GlobalLinSysXxtStaticCond.h>
-#include <LibUtilities/BasicUtils/Timer.h>
+
+using namespace std;
 
 namespace Nektar
 {
@@ -252,7 +253,10 @@ namespace Nektar
             // Set up XXT and output some stats
             LibUtilities::CommSharedPtr vComm = pLocToGloMap->GetComm()->GetRowComm();
             m_crsData = Xxt::Init(nLocal, vId, m_Ai, m_Aj, m_Ar, vComm);
-            Xxt::nektar_crs_stats(m_crsData);
+            if (m_verbose)
+            {
+                Xxt::nektar_crs_stats(m_crsData);
+            }
         }
 
         GlobalLinSysStaticCondSharedPtr GlobalLinSysXxtStaticCond::v_Recurse(

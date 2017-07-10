@@ -37,6 +37,7 @@
 #include <LocalRegions/SegExp.h>
 #include <LibUtilities/Foundations/Interp.h>
 
+using namespace std;
 
 namespace Nektar
 {
@@ -425,6 +426,9 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
                     case LibUtilities::eModified_A:
                     case LibUtilities::eModified_B:
                         {
+                            ASSERTL1(m_base[0]->GetPointsType() == LibUtilities::eGaussLobattoLegendre ||
+                                     m_base[0]->GetPointsType() == LibUtilities::ePolyEvenlySpaced,
+                                     "Cannot use FwdTrans_BndConstrained with these points.");
                             offset = 2;
                         }
                         break;
@@ -636,6 +640,13 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
             v_IProductWRTBase(Fn,outarray);
         }
 
+        void SegExp::v_NormVectorIProductWRTBase(
+            const Array<OneD, const Array<OneD, NekDouble> > &Fvec,
+                  Array<OneD,       NekDouble>               &outarray)
+        {
+            NormVectorIProductWRTBase(Fvec[0], Fvec[1], outarray);
+        }
+
         //-----------------------------
         // Evaluation functions
         //-----------------------------
@@ -783,6 +794,15 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
                 ::AllocateSharedPtr(m_base[0]->GetBasisKey());
         }
 
+        StdRegions::StdExpansionSharedPtr SegExp::v_GetLinStdExp(void) const
+        {
+            LibUtilities::BasisKey bkey0(m_base[0]->GetBasisType(),
+                           2, m_base[0]->GetPointsKey());
+
+            return MemoryManager<StdRegions::StdSegExp>
+                ::AllocateSharedPtr( bkey0);
+        }
+
         int SegExp::v_GetCoordim()
         {
             return m_geom->GetCoordim();
@@ -833,7 +853,8 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
                 const NekDouble *data, 
                 const std::vector<unsigned int > &nummodes, 
                 const int mode_offset,
-                NekDouble *coeffs)
+                NekDouble *coeffs,
+                std::vector<LibUtilities::BasisType> &fromType)
         {
             switch(m_base[0]->GetBasisType())
             { 

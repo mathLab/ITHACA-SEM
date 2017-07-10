@@ -35,11 +35,12 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <MultiRegions/GlobalLinSysIterativeStaticCond.h>
-#include <LibUtilities/BasicUtils/Timer.h>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/LinearAlgebra/StorageSmvBsr.hpp>
 #include <LibUtilities/LinearAlgebra/SparseDiagBlkMatrix.hpp>
 #include <LibUtilities/LinearAlgebra/SparseUtils.hpp>
+
+using namespace std;
 
 namespace Nektar
 {
@@ -184,8 +185,7 @@ namespace Nektar
                         StdRegions::eHybridDGHelmBndLam)
                 {
                     DNekScalMatSharedPtr mat = m_S1Blk->GetBlock(n, n);
-                    DNekScalMatSharedPtr t = m_precon->TransformedSchurCompl(
-                        m_expList.lock()->GetOffset_Elmt_Id(n), mat);
+                    DNekScalMatSharedPtr t = m_precon->TransformedSchurCompl(n, mat);
                     m_schurCompl->SetBlock(n, n, t);
                 }
             }
@@ -372,8 +372,7 @@ namespace Nektar
                                 }
                             }
                             ptr += blockSize;
-                            GlobalLinSys::v_DropStaticCondBlock(
-                                m_expList.lock()->GetOffset_Elmt_Id(n));
+                            GlobalLinSys::v_DropStaticCondBlock(n);
                         }
                         else
                         {
@@ -447,8 +446,7 @@ namespace Nektar
                                 loc_lda*loc_lda, loc_mat->GetRawPtr());
                             }
 
-                            GlobalLinSys::v_DropStaticCondBlock(
-                                m_expList.lock()->GetOffset_Elmt_Id(n));
+                            GlobalLinSys::v_DropStaticCondBlock(n);
                         }
 
                         sparseStorage[part] =
@@ -537,12 +535,17 @@ namespace Nektar
                     m_precon = CreatePrecon(m_locToGloMap);
                     m_precon->BuildPreconditioner();
                 }
-
+                
                 Set_Rhs_Magnitude(F_GlobBnd);
+
                 return m_S1Blk;
             }
             else
             {
+                // for multilevel iterative solver always use rhs
+                // vector value with no weighting
+                m_rhs_magnitude = NekConstants::kNekUnsetDouble;
+
                 return m_schurCompl;
             }
         }

@@ -39,6 +39,8 @@
 #include <MultiRegions/GlobalLinSysIterativeStaticCond.h>
 #include <math.h>
 
+using namespace std;
+
 namespace Nektar
 {
     namespace MultiRegions
@@ -116,7 +118,7 @@ namespace Nektar
              int nElmt = expList->GetNumElmts();
              for(n = cnt = 0; n < nElmt; ++n)
              {
-                 loc_mat = (m_linsys.lock())->GetBlock(expList->GetOffset_Elmt_Id(n));
+                 loc_mat = (m_linsys.lock())->GetBlock(n);
                  loc_row = loc_mat->GetRows();
 
                  for(i = 0; i < loc_row; ++i)

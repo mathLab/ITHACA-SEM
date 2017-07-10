@@ -35,6 +35,8 @@
 
 #include <MultiRegions/ExpList0D.h>
 
+using namespace std;
+
 namespace Nektar
 {
     namespace MultiRegions
@@ -197,27 +199,6 @@ namespace Nektar
         }
 		
 		
-        void ExpList0D::SetCoeffPhysOffsets()
-        {
-            int i;
-			
-            // Set up offset information and array sizes
-            m_coeff_offset   = Array<OneD,int>(m_exp->size());
-            m_phys_offset    = Array<OneD,int>(m_exp->size());
-            m_offset_elmt_id = Array<OneD,int>(m_exp->size());
-			
-            m_ncoeffs = m_npoints = 0;
-			
-            for(i = 0; i < m_exp->size(); ++i)
-            {
-                m_coeff_offset[i]   = m_ncoeffs;
-                m_phys_offset [i]   = m_npoints;
-                m_offset_elmt_id[i] = i;
-                m_ncoeffs += (*m_exp)[i]->GetNcoeffs();
-                m_npoints += (*m_exp)[i]->GetTotPoints();
-            }
-        }
-
         /**
          *
          */

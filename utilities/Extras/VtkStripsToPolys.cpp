@@ -1,4 +1,5 @@
 #include <LibUtilities/BasicUtils/SessionReader.h>
+#include <LibUtilities/BasicUtils/VtkUtil.hpp>
 
 #include <vtkPolyDataReader.h>
 #include <vtkPolyDataWriter.h>

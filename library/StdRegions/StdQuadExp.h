@@ -198,10 +198,11 @@ namespace Nektar
                     Array<OneD, unsigned int> &maparray,
                     Array<OneD, int> &signarray);
             STD_REGIONS_EXPORT void v_GetEdgeToElementMap(
-                    const int eid,
-                    const Orientation edgeOrient,
-                    Array<OneD, unsigned int> &maparray,
-                    Array<OneD, int> &signarray);
+                    const int                  eid,
+                    const Orientation          edgeOrient,
+                    Array<OneD, unsigned int>& maparray,
+                    Array<OneD, int>&          signarray,
+                    int                        P = -1);
 
             //---------------------------------------
             // Wrapper functions
@@ -239,6 +240,11 @@ namespace Nektar
             STD_REGIONS_EXPORT virtual void v_SVVLaplacianFilter(
                     Array<OneD, NekDouble> &array,
                     const StdMatrixKey &mkey);
+            STD_REGIONS_EXPORT virtual void v_ExponentialFilter(
+                          Array<OneD, NekDouble> &array,
+                    const NekDouble        alpha,
+                    const NekDouble        exponent,
+                    const NekDouble        cutoff);
             STD_REGIONS_EXPORT virtual void v_ReduceOrderCoeffs(
                     int numMin,
                     const Array<OneD, const NekDouble> &inarray,

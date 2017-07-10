@@ -252,6 +252,8 @@ namespace Nektar
         {
             if(mkey.GetNVarCoeff() == 0)
             {
+                using std::max;
+
                 int nquad0  = m_base[0]->GetNumPoints();
                 int nquad1  = m_base[1]->GetNumPoints();
                 int nquad2  = m_base[2]->GetNumPoints();
@@ -341,6 +343,11 @@ namespace Nektar
             }
         }
 
+        bool StdExpansion3D::v_FaceNormalNegated(const int face)
+        {
+            return m_negatedNormals[face];
+        }
+
         LibUtilities::BasisKey EvaluateQuadFaceBasisKey(
             const int                     facedir,
             const LibUtilities::BasisType faceDirBasisType,
@@ -415,6 +422,7 @@ namespace Nektar
                 }
                 case LibUtilities::eModified_B:
                 case LibUtilities::eModified_C:
+                case LibUtilities::eModifiedPyr_C:
                 {
                     switch (facedir)
                     {
@@ -428,14 +436,18 @@ namespace Nektar
                         }
                         case 1:
                         {
+//                            const LibUtilities::PointsKey pkey(
+//                                numpoints+1,
+//                                LibUtilities::eGaussLobattoLegendre);
                             const LibUtilities::PointsKey pkey(
-                                numpoints+1,
-                                LibUtilities::eGaussLobattoLegendre);
+	 			numpoints, 	
+				LibUtilities::eGaussRadauMAlpha1Beta0);
                             return LibUtilities::BasisKey(
                                 LibUtilities::eModified_B, nummodes, pkey);
                         }
                         default:
                         {
+
                             ASSERTL0(false,"invalid value to flag");
                             break;
                         }
@@ -473,6 +485,7 @@ namespace Nektar
                 case LibUtilities::eOrtho_A:
                 case LibUtilities::eOrtho_B:
                 case LibUtilities::eOrtho_C:
+                case LibUtilities::eOrthoPyr_C:
                 {
                     switch (facedir)
                     {

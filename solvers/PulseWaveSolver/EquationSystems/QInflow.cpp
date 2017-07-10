@@ -35,6 +35,8 @@
 
 #include <PulseWaveSolver/EquationSystems/QInflow.h>
 
+using namespace std;
+
 namespace Nektar
 {
 

@@ -35,6 +35,8 @@
 
 #include <StdRegions/StdPointExp.h>
 
+using namespace std;
+
 namespace Nektar
 {
     namespace StdRegions
@@ -95,21 +97,9 @@ namespace Nektar
             }
             else
             {
-                
-#ifdef NEKTAR_USING_DIRECT_BLAS_CALLS
-		
-                Blas::Dgemv('N',nquad,m_base[0]->GetNumModes(),1.0, (m_base[0]->GetBdata()).get(),
+                Blas::Dgemv('N',nquad,m_base[0]->GetNumModes(),1.0,
+                            (m_base[0]->GetBdata()).get(),
                             nquad,&inarray[0],1,0.0,&outarray[0],1);
-				
-#else //NEKTAR_USING_DIRECT_BLAS_CALLS
-				
-                NekVector<NekDouble> in(m_ncoeffs,inarray,eWrapper);
-                NekVector<NekDouble> out(nquad,outarray,eWrapper);
-                NekMatrix<NekDouble> B(nquad,m_ncoeffs,m_base[0]->GetBdata(),eWrapper);
-                out = B * in;
-				
-#endif //NEKTAR_USING_DIRECT_BLAS_CALLS 
-				
             }
         }
 		

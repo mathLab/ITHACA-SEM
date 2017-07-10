@@ -28,8 +28,8 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
-// 
-// Description: pyramadic routines built upon StdExpansion3D
+//
+// Description: pyramidic routines built upon StdExpansion3D
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -37,17 +37,19 @@
 #include <LibUtilities/Foundations/ManagerAccess.h>
 #include <iomanip>
 
+using namespace std;
+
 namespace Nektar
 {
     namespace StdRegions
     {
-        StdPyrExp::StdPyrExp() // Deafult construct of standard expansion directly called. 
+        StdPyrExp::StdPyrExp() // Deafult construct of standard expansion directly called.
         {
         }
-        
+
         StdPyrExp::StdPyrExp(const LibUtilities::BasisKey &Ba,
                              const LibUtilities::BasisKey &Bb,
-                             const LibUtilities::BasisKey &Bc) 
+                             const LibUtilities::BasisKey &Bc)
             : StdExpansion  (LibUtilities::StdPyrData::getNumberOfCoefficients(
                                  Ba.GetNumModes(),
                                  Bb.GetNumModes(),
@@ -59,163 +61,15 @@ namespace Nektar
                                  Bc.GetNumModes()),
                              Ba, Bb, Bc)
         {
-            if (Ba.GetNumModes() > Bc.GetNumModes())
-            {
-                ASSERTL0(false, "order in 'a' direction is higher "
-                         "than order in 'c' direction");
-            }
-            if (Bb.GetNumModes() > Bc.GetNumModes())
-            {
-                ASSERTL0(false, "order in 'b' direction is higher "
-                         "than order in 'c' direction");
-            }
 
-            // Set up mode mapping which takes 0\leq i\leq N_coeffs -> (p,q,r)
-            // of the 3D tensor product
-            const int P = Ba.GetNumModes() - 1;
-            const int Q = Bb.GetNumModes() - 1;
-            const int R = Bc.GetNumModes() - 1;
-            int cnt = 0;
-
-            // Vertices
-            m_map[Mode(0, 0, 0, 0)] = cnt++;
-            m_map[Mode(1, 0, 0, 0)] = cnt++;
-            m_map[Mode(1, 1, 0, 0)] = cnt++;
-            m_map[Mode(0, 1, 0, 0)] = cnt++;
-            m_map[Mode(0, 0, 1, 1)] = cnt++;
-
-            // Edge 0
-            for (int i = 2; i <= P; ++i)
-            {
-                m_map[Mode(i, 0, 0, GetTetMode(i, 0, 0))] = cnt++;
-            }
-
-            // Edge 1
-            for (int i = 2; i <= Q; ++i)
-            {
-                m_map[Mode(1, i, 0, GetTetMode(0, i, 0))] = cnt++;
-            }
-
-            // Edge 2
-            for (int i = 2; i <= P; ++i)
-            {
-                m_map[Mode(i, 1, 0, GetTetMode(i, 0, 0))] = cnt++;
-            }
-
-            // Edge 3
-            for (int i = 2; i <= Q; ++i)
-            {
-                m_map[Mode(0, i, 0, GetTetMode(0, i, 0))] = cnt++;
-            }
-
-            // Edge 4
-            for (int i = 2; i <= R; ++i)
-            {
-                m_map[Mode(0, 0, i, i)] = cnt++;
-            }
-
-            // Edge 5
-            for (int i = 2; i <= R; ++i)
-            {
-                m_map[Mode(1, 0, i, i)] = cnt++;
-            }
-
-            // Edge 6
-            for (int i = 2; i <= R; ++i)
-            {
-                m_map[Mode(1, 1, i, i)] = cnt++;
-            }
-
-            // Edge 7
-            for (int i = 2; i <= R; ++i)
-            {
-                m_map[Mode(0, 1, i, i)] = cnt++;
-            }
-
-            // Face 0 - TODO check this
-            for (int j = 2; j <= Q; ++j)
-            {
-                for (int i = 2; i <= P; ++i)
-                {
-                    m_map[Mode(i, j, 0, GetTetMode((i-2+j-2) % (Q-1) + 2, 0, 0))] = cnt++;
-                }
-            }
-
-            // Face 1
-            for (int i = 2; i <= P; ++i)
-            {
-                for (int j = 1; j <= R-i; ++j)
-                {
-                    m_map[Mode(i, 0, j, GetTetMode(i, 0, j))] = cnt++;
-                }
-            }
-
-            // Face 2
-            for (int i = 2; i <= Q; ++i)
-            {
-                for (int j = 1; j <= R-i; ++j)
-                {
-                    m_map[Mode(1, i, j, GetTetMode(0, i, j))] = cnt++;
-                }
-            }
-
-            // Face 3
-            for (int i = 2; i <= P; ++i)
-            {
-                for (int j = 1; j <= R-i; ++j)
-                {
-                    m_map[Mode(i, 1, j, GetTetMode(i, 0, j))] = cnt++;
-                }
-            }
-
-            // Face 4
-            for (int i = 2; i <= Q; ++i)
-            {
-                for (int j = 1; j <= R-i; ++j)
-                {
-                    m_map[Mode(0, i, j, GetTetMode(0, i, j))] = cnt++;
-                }
-            }
-
-            // Interior (tetrahedral modes)
-            for (int i = 2; i <= P+1; ++i)
-            {
-                for (int j = 1; j <= Q-i+1; ++j)
-                {
-                    for (int k = 1; k <= R-i-j+1; ++k)
-                    {
-                        // need to go to j+1-th mode in the 'b' direction to
-                        // select correct modified_a mode
-                        m_map[Mode(i, j+1, k, GetTetMode(i-1, j, k))] = cnt++;
-                    }
-                }
-            }
-
-            ASSERTL0(m_map.size() == m_ncoeffs,
-                     "Duplicate coefficient entries in map");
-
-            map<Mode, unsigned int, cmpop>::iterator it;
-            for (it = m_map.begin(); it != m_map.end(); ++it)
-            {
-                const int p  = it->first.get<0>();
-                const int q  = it->first.get<1>();
-                const int r  = it->first.get<2>();
-                const int rp = it->first.get<3>();
-                if (m_idxMap.find(p) == m_idxMap.end())
-                {
-                    m_idxMap[p] = map<int, map<int, pair<int, int> > >();
-                }
-
-                if (m_idxMap[p].find(q) == m_idxMap[p].end())
-                {
-                    m_idxMap[p][q] = map<int, pair<int, int> >();
-                }
-
-                if (m_idxMap[p][q].find(r) == m_idxMap[p][q].end())
-                {
-                    m_idxMap[p][q][r] = pair<int, int>(it->second, rp);
-                }
-            }
+            ASSERTL0(Ba.GetNumModes() <= Bc.GetNumModes(), "order in 'a' direction is higher "
+                     "than order in 'c' direction");
+            ASSERTL0(Bb.GetNumModes() <= Bc.GetNumModes(), "order in 'b' direction is higher "
+                     "than order in 'c' direction");
+            ASSERTL1(Bc.GetBasisType() == LibUtilities::eModifiedPyr_C ||
+                     Bc.GetBasisType() == LibUtilities::eOrthoPyr_C,
+                     "Expected basis type in 'c' direction to be ModifiedPyr_C or OrthoPyr_C");
+            
         }
 
         StdPyrExp::StdPyrExp(const StdPyrExp &T)
@@ -227,20 +81,20 @@ namespace Nektar
 
         // Destructor
         StdPyrExp::~StdPyrExp()
-        {   
-        } 
+        {
+        }
 
 
         //---------------------------------------
         // Differentiation/integration Methods
         //---------------------------------------
-        
+
         /**
-         * \brief Calculate the derivative of the physical points 
-         *  
+         * \brief Calculate the derivative of the physical points
+         *
          * The derivative is evaluated at the nodal physical points.
          * Derivatives with respect to the local Cartesian coordinates.
-         *  
+         *
          * \f$\begin{Bmatrix} \frac {\partial} {\partial \xi_1} \\ \frac
          * {\partial} {\partial \xi_2} \\ \frac {\partial} {\partial \xi_3}
          * \end{Bmatrix} = \begin{Bmatrix} \frac 2 {(1-\eta_3)} \frac \partial
@@ -270,21 +124,51 @@ namespace Nektar
             eta_z = m_base[2]->GetZ();
 
             int i, j, k, n;
-
-            for (k = 0, n = 0; k < Qz; ++k)
+            
+            if (out_dxi1.num_elements() > 0)
             {
-                for (j = 0; j < Qy; ++j)
+                for (k = 0, n = 0; k < Qz; ++k)
                 {
-                    for (i = 0; i < Qx; ++i, ++n)
+                    NekDouble fac = 2.0/(1.0 - eta_z[k]);
+                    for (j = 0; j < Qy; ++j)
                     {
-                        if (out_dxi1.num_elements() > 0)
-                            out_dxi1[n] = 2.0/(1.0 - eta_z[k]) * dEta_bar1[n];
-                        if (out_dxi2.num_elements() > 0)
-                            out_dxi2[n] = 2.0/(1.0 - eta_z[k]) * dXi2[n];
-                        if (out_dxi3.num_elements() > 0)
-                            out_dxi3[n] = (1.0+eta_x[i])/(1.0-eta_z[k])*dEta_bar1[n] +
-                                (1.0+eta_y[j])/(1.0-eta_z[k])*dXi2[n] + dEta3[n];
-                    } 
+                        for (i = 0; i < Qx; ++i, ++n)
+                        {
+                            out_dxi1[n] = fac * dEta_bar1[n];
+                        }
+                    }
+                }
+            }
+
+            if (out_dxi2.num_elements() > 0)
+            {
+                for (k = 0, n = 0; k < Qz; ++k)
+                {
+                    NekDouble fac = 2.0/(1.0 - eta_z[k]);
+                    for (j = 0; j < Qy; ++j)
+                    {
+                        for (i = 0; i < Qx; ++i, ++n)
+                        {
+                            out_dxi2[n] = fac * dXi2[n];
+                        }
+                    }
+                }
+            }
+
+            if (out_dxi3.num_elements() > 0)
+            {
+                for (k = 0, n = 0; k < Qz; ++k)
+                {
+                    NekDouble fac = 1.0/(1.0 - eta_z[k]);
+                    for (j = 0; j < Qy; ++j)
+                    {
+                        NekDouble fac1 = (1.0+eta_y[j]);
+                        for (i = 0; i < Qx; ++i, ++n)
+                        {
+                            out_dxi3[n] = (1.0+eta_x[i])*fac*dEta_bar1[n] +
+                                fac1*fac*dXi2[n] + dEta3[n];
+                        }
+                    }
                 }
             }
         }
@@ -301,21 +185,21 @@ namespace Nektar
                                 NullNekDouble1DArray);
                     break;
                 }
-                
+
                 case 1:
                 {
                     v_PhysDeriv(inarray, NullNekDouble1DArray, outarray,
                                 NullNekDouble1DArray);
                     break;
                 }
-                
+
                 case 2:
                 {
                     v_PhysDeriv(inarray, NullNekDouble1DArray,
                                 NullNekDouble1DArray, outarray);
                     break;
                 }
-                
+
                 default:
                 {
                     ASSERTL1(false,"input dir is out of range");
@@ -324,7 +208,7 @@ namespace Nektar
             }
         }
 
-        void StdPyrExp::v_StdPhysDeriv(const Array<OneD, const NekDouble> &inarray, 
+        void StdPyrExp::v_StdPhysDeriv(const Array<OneD, const NekDouble> &inarray,
                                              Array<OneD,       NekDouble> &out_d0,
                                              Array<OneD,       NekDouble> &out_d1,
                                              Array<OneD,       NekDouble> &out_d2)
@@ -338,18 +222,18 @@ namespace Nektar
         {
             StdPyrExp::v_PhysDeriv(dir, inarray, outarray);
         }
-        
+
         //---------------------------------------
         // Transforms
         //---------------------------------------
-        
-	/** 
+
+	/**
          * \brief Backward transformation is evaluated at the quadrature
          * points.
          *
          * \f$ u^{\delta} (\xi_{1i}, \xi_{2j}, \xi_{3k}) = \sum_{m(pqr)} \hat
          * u_{pqr} \phi_{pqr} (\xi_{1i}, \xi_{2j}, \xi_{3k})\f$
-         * 
+         *
          * Backward transformation is three dimensional tensorial expansion
          *
          * \f$ u (\xi_{1i}, \xi_{2j}, \xi_{3k}) = \sum_{p=0}^{Q_x} \psi_p^a
@@ -367,7 +251,7 @@ namespace Nektar
         void StdPyrExp::v_BwdTrans(const Array<OneD, const NekDouble> &inarray,
                                          Array<OneD,       NekDouble> &outarray)
         {
-            if (m_base[0]->Collocation() && 
+            if (m_base[0]->Collocation() &&
                 m_base[1]->Collocation() &&
                 m_base[2]->Collocation())
             {
@@ -389,7 +273,15 @@ namespace Nektar
             const Array<OneD, const NekDouble>& inarray,
                   Array<OneD,       NekDouble>& outarray)
         {
-            Array<OneD, NekDouble> wsp;
+            int  nquad0 = m_base[0]->GetNumPoints();
+            int  nquad1 = m_base[1]->GetNumPoints();
+            int  nquad2 = m_base[2]->GetNumPoints();
+            int  order0 = m_base[0]->GetNumModes();
+            int  order1 = m_base[1]->GetNumModes();
+
+            Array<OneD, NekDouble> wsp(nquad2*order0*order1+
+                                       nquad2*nquad1*nquad0);
+
             v_BwdTrans_SumFacKernel(m_base[0]->GetBdata(),
                                     m_base[1]->GetBdata(),
                                     m_base[2]->GetBdata(),
@@ -408,131 +300,131 @@ namespace Nektar
             bool                                doCheckCollDir1,
             bool                                doCheckCollDir2)
         {
-            const int Qx = m_base[0]->GetNumPoints();
-            const int Qy = m_base[1]->GetNumPoints();
-            const int Qz = m_base[2]->GetNumPoints();
+            int  nquad0 = m_base[0]->GetNumPoints();
+            int  nquad1 = m_base[1]->GetNumPoints();
+            int  nquad2 = m_base[2]->GetNumPoints();
 
-            const NekDouble *bx = base0.get();
-            const NekDouble *by = base1.get();
-            const NekDouble *bz = base2.get();
+            int  order0 = m_base[0]->GetNumModes();
+            int  order1 = m_base[1]->GetNumModes();
+            int  order2 = m_base[2]->GetNumModes();
 
-            // Need to count coeffs for storage...
-            map<int, map<int, map<int, pair<int, int> > > >::iterator it_p;
-            map<int, map<int,          pair<int, int> > >  ::iterator it_q;
-            map<int,                   pair<int, int> >    ::iterator it_r;
+            Array<OneD, NekDouble > tmp  = wsp;
+            Array<OneD, NekDouble > tmp1 = tmp + nquad2*order0*order1;
 
-            int pqcnt = 0;
-            for (it_p = m_idxMap.begin(); it_p != m_idxMap.end(); ++it_p)
+            int i, j, mode, mode1, cnt;
+
+            // Perform summation over '2' direction
+            mode = mode1 = cnt = 0;
+            for(i = 0; i < order0; ++i)
             {
-                for (it_q = it_p->second.begin(); it_q != it_p->second.end(); ++it_q)
+                for(j = 0; j < order1; ++j, ++cnt)
                 {
-                    pqcnt++;
+                    int ijmax = max(i,j);
+                    Blas::Dgemv('N', nquad2, order2-ijmax,
+                                1.0, base2.get()+mode*nquad2, nquad2,
+                                     inarray.get()+mode1,     1,
+                                0.0, tmp.get()+cnt*nquad2,    1);
+                    mode  += order2-ijmax;
+                    mode1 += order2-ijmax;
+                }
+                //increment mode in case order1!=order2
+                for(j = order1; j < order2-i; ++j)
+                {
+                    int ijmax = max(i,j);
+                    mode += order2-ijmax;
                 }
             }
 
-            Array<OneD, NekDouble> fpq(pqcnt);
-            Array<OneD, NekDouble> fp (m_base[0]->GetNumModes());
-            int i ,j, k, s = 0, cnt = 0, cnt2 = 0;
-
-            for (k = 0; k < Qz; ++k)
+            // fix for modified basis by adding split of top singular
+            // vertex mode - currently (1+c)/2 x (1-b)/2 x (1-a)/2
+            // component is evaluated
+            if(m_base[0]->GetBasisType() == LibUtilities::eModified_A)
             {
-                NekDouble bz1 = bz[k+Qz];
 
-                cnt = 0;
-                for (it_p = m_idxMap.begin(); it_p != m_idxMap.end(); ++it_p)
-                {
-                    for (it_q = it_p->second.begin(); it_q != it_p->second.end(); ++it_q)
-                    {
-                        NekDouble sum = 0.0;
-                        for (it_r = it_q->second.begin(); it_r != it_q->second.end(); ++it_r)
-                        {
-                            sum += inarray[it_r->second.first] * bz[k + Qz*it_r->second.second];
-                        }
-                        fpq[cnt++] = sum;
-                    }
-                }
+                // Not sure why we could not use basis as 1.0 
+                // top singular vertex - (1+c)/2 x (1+b)/2 x (1-a)/2 component
+                Blas::Daxpy(nquad2,inarray[1],base2.get()+nquad2,1,
+                            &tmp[0]+nquad2,1);
 
-                for (j = 0; j < Qy; ++j)
-                {
-                    NekDouble by0 = bz1*by[j];
-                    NekDouble by1 = bz1*by[j+Qy];
+                // top singular vertex - (1+c)/2 x (1-b)/2 x (1+a)/2 component
+                Blas::Daxpy(nquad2,inarray[1],base2.get()+nquad2,1,
+                            &tmp[0]+order1*nquad2,1);
 
-                    cnt = cnt2 = 0;
-                    for (it_p = m_idxMap.begin(); it_p != m_idxMap.end(); ++it_p)
-                    {
-                        NekDouble sum = 0.0;
-                        for (it_q = it_p->second.begin(); it_q != it_p->second.end(); ++it_q)
-                        {
-                            sum += by[j + Qy*it_q->first] * fpq[cnt++];
-                        }
-                        fp[cnt2++] = sum;
-                    }
+                // top singular vertex - (1+c)/2 x (1+b)/2 x (1+a)/2 component
+                Blas::Daxpy(nquad2,inarray[1],base2.get()+nquad2,1,
+                            &tmp[0]+order1*nquad2+nquad2,1);
+}
 
-                    for (i = 0; i < Qx; ++i, ++s)
-                    {
-                        cnt2 = 0;
-                        NekDouble sum = 0.0;
-                        for (it_p = m_idxMap.begin(); it_p != m_idxMap.end(); ++it_p)
-                        {
-                            sum += bx[i + Qx*it_p->first] * fp[cnt2++];
-                        }
-                        sum += inarray[4]*(by1*(bx[i] + bx[i+Qx]) + by0*bx[i+Qx]);
-                        outarray[s] = sum;
-                    }
-                }
+            // Perform summation over '1' direction
+            mode = 0;
+            for(i = 0; i < order0; ++i)
+            {
+                Blas::Dgemm('N', 'T', nquad1, nquad2, order1,
+                            1.0, base1.get(),      nquad1,
+                            tmp.get()+mode*nquad2, nquad2,
+                            0.0, tmp1.get()+i*nquad1*nquad2, nquad1);
+                mode  += order1;
             }
+
+            // Perform summation over '0' direction
+            Blas::Dgemm('N', 'T', nquad0, nquad1*nquad2, order0,
+                        1.0, base0.get(),    nquad0,
+                             tmp1.get(),     nquad1*nquad2,
+                        0.0, outarray.get(), nquad0);
+            
         }
 
 	/** \brief Forward transform from physical quadrature space
             stored in \a inarray and evaluate the expansion coefficients and
             store in \a outarray
-            
+
             Inputs:\n
-            
+
             - \a inarray: array of physical quadrature points to be transformed
-            
+
             Outputs:\n
-            
-            - \a outarray: updated array of expansion coefficients. 
-            
-        */    
+
+            - \a outarray: updated array of expansion coefficients.
+
+        */
         void StdPyrExp::v_FwdTrans(const Array<OneD, const NekDouble> &inarray,
                                          Array<OneD,       NekDouble> &outarray)
         {
             v_IProductWRTBase(inarray,outarray);
 
             // get Mass matrix inverse
-            StdMatrixKey      masskey(eInvMass,DetShapeType(),*this);
-            DNekMatSharedPtr  matsys = GetStdMatrix(masskey);
+            StdMatrixKey      imasskey(eInvMass,DetShapeType(),*this);
+            DNekMatSharedPtr  imatsys = GetStdMatrix(imasskey);
 
+            
             // copy inarray in case inarray == outarray
             DNekVec in (m_ncoeffs, outarray);
             DNekVec out(m_ncoeffs, outarray, eWrapper);
 
-            out = (*matsys)*in;
+            out = (*imatsys)*in;
         }
-        
-        
+
+
         //---------------------------------------
         // Inner product functions
         //---------------------------------------
 
-        /** \brief  Inner product of \a inarray over region with respect to the 
-            expansion basis m_base[0]->GetBdata(),m_base[1]->GetBdata(), m_base[2]->GetBdata() and return in \a outarray 
-            
+        /** \brief  Inner product of \a inarray over region with respect to the
+            expansion basis m_base[0]->GetBdata(),m_base[1]->GetBdata(), m_base[2]->GetBdata() and return in \a outarray
+
             Wrapper call to StdPyrExp::IProductWRTBase
-            
+
             Input:\n
-            
+
             - \a inarray: array of function evaluated at the physical collocation points
-            
+
             Output:\n
-            
+
             - \a outarray: array of inner product with respect to each basis over region
-            
+
         */
         void StdPyrExp::v_IProductWRTBase(
-            const Array<OneD, const NekDouble> &inarray, 
+            const Array<OneD, const NekDouble> &inarray,
                   Array<OneD,       NekDouble> &outarray)
         {
             if (m_base[0]->Collocation() &&
@@ -552,7 +444,13 @@ namespace Nektar
                   Array<OneD,       NekDouble>& outarray,
             bool                                multiplybyweights)
         {
-            Array<OneD, NekDouble> wsp;
+
+            int  nquad1 = m_base[1]->GetNumPoints();
+            int  nquad2 = m_base[2]->GetNumPoints();
+            int  order0 = m_base[0]->GetNumModes();
+            int  order1 = m_base[1]->GetNumModes();
+
+            Array<OneD, NekDouble> wsp(order0*nquad2*(nquad1 + order1));
 
             if(multiplybyweights)
             {
@@ -587,81 +485,79 @@ namespace Nektar
             bool                                doCheckCollDir1,
             bool                                doCheckCollDir2)
         {
-            int i, j, k, s;
-            int Qx = m_base[0]->GetNumPoints();
-            int Qy = m_base[1]->GetNumPoints();
-            int Qz = m_base[2]->GetNumPoints();
+            int  nquad0 = m_base[0]->GetNumPoints();
+            int  nquad1 = m_base[1]->GetNumPoints();
+            int  nquad2 = m_base[2]->GetNumPoints();
 
-            const NekDouble *bx = base0.get();
-            const NekDouble *by = base1.get();
-            const NekDouble *bz = base2.get();
-            
-            map<int, map<int, map<int, pair<int, int> > > >::iterator it_p;
-            map<int, map<int,          pair<int, int> > >  ::iterator it_q;
-            map<int,                   pair<int, int> >    ::iterator it_r;
+            int  order0 = m_base[0]->GetNumModes();
+            int  order1 = m_base[1]->GetNumModes();
+            int  order2 = m_base[2]->GetNumModes();
 
-            Array<OneD, NekDouble> f (Qy*Qz);
-            Array<OneD, NekDouble> fb(Qz);
+            ASSERTL1(wsp.num_elements() >= nquad1*nquad2*order0 +
+                                           nquad2*order0*order1,
+                     "Insufficient workspace size");
 
-            for (it_p = m_idxMap.begin(); it_p != m_idxMap.end(); ++it_p)
+            Array<OneD, NekDouble > tmp1 = wsp;
+            Array<OneD, NekDouble > tmp2 = wsp + nquad1*nquad2*order0;
+
+            int i,j, mode,mode1, cnt;
+
+            // Inner product with respect to the '0' direction
+            Blas::Dgemm('T', 'N', nquad1*nquad2, order0, nquad0,
+                        1.0, inarray.get(), nquad0,
+                             base0.get(),   nquad0,
+                        0.0, tmp1.get(),    nquad1*nquad2);
+
+            // Inner product with respect to the '1' direction
+            for(mode=i=0; i < order0; ++i)
             {
-                const int p = it_p->first;
-                s = 0;
-                for (k = 0; k < Qz; ++k)
+                Blas::Dgemm('T', 'N', nquad2, order1, nquad1,
+                            1.0, tmp1.get()+i*nquad1*nquad2, nquad1,
+                                 base1.get(),    nquad1,
+                            0.0, tmp2.get()+mode*nquad2,     nquad2);
+                mode  += order1;
+            }
+
+
+            // Inner product with respect to the '2' direction
+            mode = mode1 = cnt = 0;
+            for(i = 0; i < order0; ++i)
+            {
+                for(j = 0; j < order1; ++j, ++cnt)
                 {
-                    for (j = 0; j < Qy; ++j)
-                    {
-                        NekDouble sum = 0.0;
-                        for (i = 0; i < Qx; ++i, ++s)
-                        {
-                            sum += bx[i + Qx*p]*inarray[s];
-                        }
-                        f[j+Qy*k] = sum;
-                    }
+                    int ijmax = max(i,j);
+
+                    Blas::Dgemv('T', nquad2, order2-ijmax,
+                                1.0, base2.get()+mode*nquad2, nquad2,
+                                     tmp2.get()+cnt*nquad2,   1,
+                                0.0, outarray.get()+mode1,    1);
+                    mode  += order2-ijmax;
+                    mode1 += order2-ijmax;
                 }
-
-                for (it_q = it_p->second.begin(); it_q != it_p->second.end(); ++it_q)
+                
+                //increment mode in case order1!=order2
+                for(j = order1; j < order2; ++j)
                 {
-                    const int q = it_q->first;
-
-                    for (k = 0; k < Qz; ++k)
-                    {
-                        NekDouble sum = 0.0;
-                        for (j = 0; j < Qy; ++j)
-                        {
-                            sum += by[j + Qy*q]*f[j+Qy*k];
-                        }
-                        fb[k] = sum;
-                    }
-
-                    for (it_r = it_q->second.begin(); it_r != it_q->second.end(); ++it_r)
-                    {
-                        const int rpqr = it_r->second.second;
-                        NekDouble sum = 0.0;
-                        for (k = 0; k < Qz; ++k)
-                        {
-                            sum += bz[k + Qz*rpqr]*fb[k];
-                        }
-
-                        outarray[it_r->second.first] = sum;
-                    }
+                    int ijmax = max(i,j);
+                    mode += order2-ijmax;
                 }
             }
 
-            // Correct for top mode
-            s = 0;
-            for (k = 0; k < Qz; ++k)
+            // fix for modified basis for top singular vertex component
+            // Already have evaluated (1+c)/2 (1-b)/2 (1-a)/2
+            if(m_base[0]->GetBasisType() == LibUtilities::eModified_A)
             {
-                for (j = 0; j < Qy; ++j)
-                {
-                    for (i = 0; i < Qx; ++i, ++s)
-                    {
-                        outarray[4] += inarray[s] * bz[k+Qz]*(
-                            bx[i+Qx]*by[j+Qy] + 
-                            bx[i+Qx]*by[j   ] + 
-                            bx[i   ]*by[j+Qy]);
-                    }
-                }
+                // add in (1+c)/2 (1+b)/2 (1-a)/2  component
+                outarray[1] += Blas::Ddot(nquad2,base2.get()+nquad2,1,
+                                          &tmp2[nquad2],1);
+
+                // add in (1+c)/2 (1-b)/2 (1+a)/2 component
+                outarray[1] += Blas::Ddot(nquad2,base2.get()+nquad2,1,
+                                          &tmp2[nquad2*order1],1);
+
+                // add in (1+c)/2 (1+b)/2 (1+a)/2 component
+                outarray[1] += Blas::Ddot(nquad2,base2.get()+nquad2,1,
+                                          &tmp2[nquad2*order1+nquad2],1);
             }
         }
 
@@ -694,7 +590,13 @@ namespace Nektar
             Array<OneD, NekDouble> gfac1(nquad1);
             Array<OneD, NekDouble> gfac2(nquad2);
             Array<OneD, NekDouble> tmp0 (nqtot);
-            Array<OneD, NekDouble> wsp;
+
+
+            int  order0 = m_base[0]->GetNumModes();
+            int  order1 = m_base[1]->GetNumModes();
+
+            Array<OneD, NekDouble> wsp(nquad1*nquad2*order0 +
+                                       nquad2*order0*order1);
 
             const Array<OneD, const NekDouble>& z0 = m_base[0]->GetZ();
             const Array<OneD, const NekDouble>& z1 = m_base[1]->GetZ();
@@ -810,7 +712,7 @@ namespace Nektar
         //---------------------------------------
         // Evaluation functions
         //---------------------------------------
-        
+
         void StdPyrExp::v_LocCoordToLocCollapsed(
             const Array<OneD, const NekDouble>& xi,
                   Array<OneD,       NekDouble>& eta)
@@ -822,16 +724,16 @@ namespace Nektar
                 eta[1] = -1.0;
                 eta[2] = xi[2];
             }
-            else  
+            else
             {
                 // Below the line-singularity -- Common case
                 eta[2] = xi[2]; // eta_z = xi_z
-                eta[1] = 2.0*(1.0 + xi[1])/(1.0 - xi[2]) - 1.0; 
+                eta[1] = 2.0*(1.0 + xi[1])/(1.0 - xi[2]) - 1.0;
                 eta[0] = 2.0*(1.0 + xi[0])/(1.0 - xi[2]) - 1.0;
-            } 
+            }
         }
 
-        void StdPyrExp::v_GetCoords(Array<OneD, NekDouble> &xi_x, 
+        void StdPyrExp::v_GetCoords(Array<OneD, NekDouble> &xi_x,
                                     Array<OneD, NekDouble> &xi_y,
                                     Array<OneD, NekDouble> &xi_z)
         {
@@ -845,9 +747,9 @@ namespace Nektar
             // Convert collapsed coordinates into cartesian coordinates: eta --> xi
             for (int k = 0; k < Qz; ++k )
             {
-                for (int j = 0; j < Qy; ++j) 
+                for (int j = 0; j < Qy; ++j)
                 {
-                    for (int i = 0; i < Qx; ++i) 
+                    for (int i = 0; i < Qx; ++i)
                     {
                         int s = i + Qx*(j + Qy*k);
 
@@ -865,8 +767,47 @@ namespace Nektar
             tmp[mode] = 1.0;
             v_BwdTrans(tmp, outarray);
         }
-        
-        
+
+        void StdPyrExp::v_GetFaceNumModes(
+                    const int                  fid,
+                    const Orientation          faceOrient,
+                    int &numModes0,
+                    int &numModes1)
+        {
+            int nummodes [3] = {m_base[0]->GetNumModes(),
+                                m_base[1]->GetNumModes(),
+                                m_base[2]->GetNumModes()};
+            switch(fid)
+            {
+            // quad
+            case 0:
+                {
+                    numModes0 = nummodes[0];
+                    numModes1 = nummodes[1];
+                }
+                break;
+            case 1:
+            case 3:
+                {
+                    numModes0 = nummodes[0];
+                    numModes1 = nummodes[2];
+                }
+                break;
+            case 2:
+            case 4:
+                {
+                    numModes0 = nummodes[1];
+                    numModes1 = nummodes[2];
+                }
+                break;
+            }
+
+            if ( faceOrient >= 9 )
+            {
+                std::swap(numModes0, numModes1);
+            }
+        }
+
         //---------------------------------------
         // Helper functions
         //---------------------------------------
@@ -885,7 +826,7 @@ namespace Nektar
         {
             return 5;
         }
-        
+
         LibUtilities::ShapeType StdPyrExp::v_DetShapeType() const
         {
             return LibUtilities::ePyramid;
@@ -899,14 +840,14 @@ namespace Nektar
             ASSERTL1(GetBasisType(1) == LibUtilities::eModified_A ||
                      GetBasisType(1) == LibUtilities::eGLL_Lagrange,
                      "BasisType is not a boundary interior form");
-            ASSERTL1(GetBasisType(2) == LibUtilities::eModified_C ||
+            ASSERTL1(GetBasisType(2) == LibUtilities::eModifiedPyr_C ||
                      GetBasisType(2) == LibUtilities::eGLL_Lagrange,
                      "BasisType is not a boundary interior form");
-            
+
             int P = m_base[0]->GetNumModes();
             int Q = m_base[1]->GetNumModes();
             int R = m_base[2]->GetNumModes();
-            
+
             return LibUtilities::StdPyrData::
                                     getNumberOfBndCoefficients(P, Q, R);
         }
@@ -914,7 +855,7 @@ namespace Nektar
         int StdPyrExp::v_GetEdgeNcoeffs(const int i) const
         {
             ASSERTL2(i >= 0 && i <= 7, "edge id is out of range");
-            
+
             if (i == 0 || i == 2)
             {
                 return GetBasisNumModes(0);
@@ -932,7 +873,7 @@ namespace Nektar
         int StdPyrExp::v_GetFaceNcoeffs(const int i) const
         {
             ASSERTL2(i >= 0 && i <= 4, "face id is out of range");
-            
+
             if (i == 0)
             {
                 return GetBasisNumModes(0)*GetBasisNumModes(1);
@@ -948,7 +889,7 @@ namespace Nektar
                 return Q+1 + (P*(1 + 2*Q - P))/2;
             }
         }
-        
+
         int StdPyrExp::v_GetFaceIntNcoeffs(const int i) const
         {
             ASSERTL2(i >= 0 && i <= 4, "face id is out of range");
@@ -974,7 +915,7 @@ namespace Nektar
         int StdPyrExp::v_GetFaceNumPoints(const int i) const
         {
             ASSERTL2(i >= 0 && i <= 4, "face id is out of range");
-            
+
             if (i == 0)
             {
                 return m_base[0]->GetNumPoints()*
@@ -1007,7 +948,7 @@ namespace Nektar
                                                     m_base[k]->GetBasisType(),
                                                     m_base[k]->GetNumPoints(),
                                                     m_base[k]->GetNumModes());
-                    
+
                 }
                 case 1:
                 case 3:
@@ -1032,18 +973,18 @@ namespace Nektar
         }
 
         int StdPyrExp::v_CalcNumberOfCoefficients(
-            const std::vector<unsigned int> &nummodes, 
+            const std::vector<unsigned int> &nummodes,
             int &modes_offset)
         {
             int nmodes = LibUtilities::StdPyrData::getNumberOfCoefficients(
                 nummodes[modes_offset],
                 nummodes[modes_offset+1],
                 nummodes[modes_offset+2]);
-            
+
             modes_offset += 3;
             return nmodes;
         }
-        
+
         LibUtilities::BasisType StdPyrExp::v_GetEdgeBasisType(const int i) const
         {
             ASSERTL2(i >= 0 && i <= 7, "edge id is out of range");
@@ -1065,58 +1006,68 @@ namespace Nektar
         //---------------------------------------
         // Mappings
         //---------------------------------------
-        
+
         void StdPyrExp::v_GetFaceToElementMap(
-            const int                  fid, 
+            const int                  fid,
             const Orientation          faceOrient,
             Array<OneD, unsigned int> &maparray,
             Array<OneD,          int> &signarray,
-            int                        nummodesA, 
-            int                        nummodesB)
+            int                        P,
+            int                        Q)
         {
             ASSERTL1(GetEdgeBasisType(0) == GetEdgeBasisType(1),
                      "Method only implemented if BasisType is identical"
                      "in x and y directions");
-            ASSERTL1(GetEdgeBasisType(0) == LibUtilities::eModified_A && 
-                     GetEdgeBasisType(4) == LibUtilities::eModified_C,
+            ASSERTL1(GetEdgeBasisType(0) == LibUtilities::eModified_A &&
+                     GetEdgeBasisType(4) == LibUtilities::eModifiedPyr_C,
                      "Method only implemented for Modified_A BasisType"
-                     "(x and y direction) and Modified_C BasisType (z "
+                     "(x and y direction) and ModifiedPyr_C BasisType (z "
                      "direction)");
 
-            int i, j, p, q, r, nFaceCoeffs;
+            int i, j, k, p, q, r, nFaceCoeffs, idx = 0;
+            int nummodesA=0, nummodesB=0;
 
             int order0 = m_base[0]->GetNumModes();
             int order1 = m_base[1]->GetNumModes();
             int order2 = m_base[2]->GetNumModes();
 
-            if (nummodesA == -1)
+            switch (fid)
             {
-                switch (fid)
-                {
-                    case 0:
-                        nummodesA = m_base[0]->GetNumModes();
-                        nummodesB = m_base[1]->GetNumModes();
-                        break;
-                    case 1:
-                    case 3:
-                        nummodesA = m_base[0]->GetNumModes();
-                        nummodesB = m_base[2]->GetNumModes();
-                        break;
-                    case 2:
-                    case 4:
-                        nummodesA = m_base[1]->GetNumModes();
-                        nummodesB = m_base[2]->GetNumModes();
-                        break;
-                }
+            case 0:
+                nummodesA = order0;
+                nummodesB = order1;
+                break;
+            case 1:
+            case 3:
+                nummodesA = order0;
+                nummodesB = order2;
+                break;
+            case 2:
+            case 4:
+                nummodesA = order1;
+                nummodesB = order2;
+                break;
+            default:
+                ASSERTL0(false,"fid must be between 0 and 4");
+            }
+
+            bool CheckForZeroedModes = false;
+
+            if (P == -1)
+            {
+                P = nummodesA;
+                Q = nummodesB;
                 nFaceCoeffs = GetFaceNcoeffs(fid);
             }
             else if (fid > 0)
             {
-                nFaceCoeffs = nummodesB + (nummodesA-1)*(1+2*(nummodesB-1)-(nummodesA-1))/2;
+                nFaceCoeffs = P*(2*Q-P+1)/2;
+                CheckForZeroedModes = true;
             }
             else
             {
-                nFaceCoeffs = nummodesA*nummodesB;
+                nFaceCoeffs = P*Q;
+                CheckForZeroedModes = true;
             }
 
             // Allocate the map array and sign array; set sign array to ones (+)
@@ -1124,7 +1075,7 @@ namespace Nektar
             {
                 maparray = Array<OneD, unsigned int>(nFaceCoeffs);
             }
-            
+
             if (signarray.num_elements() != nFaceCoeffs)
             {
                 signarray = Array<OneD, int>(nFaceCoeffs,1);
@@ -1140,17 +1091,17 @@ namespace Nektar
 
             if (fid == 0)
             {
-                for (i = 0; i < nummodesB; i++)
+                for (i = 0; i < Q; i++)
                 {
-                    for (j = 0; j < nummodesA; j++)
+                    for (j = 0; j < P; j++)
                     {
                         if (faceOrient < 9)
                         {
-                            arrayindx[i*nummodesA+j] = i*nummodesA+j;
+                            arrayindx[i*P+j] = i*P+j;
                         }
                         else
                         {
-                            arrayindx[i*nummodesA+j] = j*nummodesB+i;
+                            arrayindx[i*P+j] = j*Q+i;
                         }
                     }
                 }
@@ -1158,309 +1109,156 @@ namespace Nektar
 
             // Set up ordering inside each 2D face. Also for triangular faces,
             // populate signarray.
-            int cnt = 0, cnt2;
-            switch (fid) 
+            switch (fid)
             {
-                case 0: // Bottom quad
+            case 0: // Bottom quad
 
-                    // Fill in vertices
-                    maparray[arrayindx[0]]           = 0;
-                    maparray[arrayindx[1]]           = 1;
-                    maparray[arrayindx[nummodesA+1]] = 2;
-                    maparray[arrayindx[nummodesA]]   = 3;
-
-                    // Edge 0
-                    cnt = 5;
-                    for (p = 2; p < nummodesA; ++p)
+                for (q = 0; q < Q; ++q)
+                {
+                    for (p = 0; p < P; ++p)
                     {
-                        maparray[arrayindx[p]] = p-2 + cnt;
+                        maparray[arrayindx[q*P+p]] = GetMode(p,q,0);
                     }
-
-                    // Edge 1
-                    cnt += nummodesA-2;
-                    for (q = 2; q < nummodesB; ++q)
+                }
+                break;
+                
+            case 1: // Front triangle
+                for (p = 0; p < P; ++p)
+                {
+                    for (r = 0; r < Q-p; ++r)
                     {
-                        maparray[arrayindx[q*nummodesA+1]] = q-2 + cnt;
-                    }
-
-                    // Edge 2
-                    cnt += nummodesB-2;
-                    for (p = 2; p < nummodesA; ++p)
-                    {
-                        maparray[arrayindx[nummodesA+p]] = p-2 + cnt;
-                    }
-
-                    // Edge 3
-                    cnt += nummodesA-2;
-                    for (q = 2; q < nummodesB; ++q)
-                    {
-                        maparray[arrayindx[q*nummodesA]] = q-2 + cnt;
-                    }
-
-                    // Interior
-                    cnt += nummodesB-2 + 4*(nummodesA-2);
-                    for (q = 2; q < nummodesB; ++q)
-                    {
-                        for (p = 2; p < nummodesA; ++p)
+                        if ((int)faceOrient == 7 && p > 1)
                         {
-                            maparray[arrayindx[q*nummodesA+p]] = cnt + (q-2)*nummodesA+(p-2);
+                            signarray[idx] = p % 2 ? -1 : 1;
                         }
+                        maparray[idx++] = GetMode(p,0,r);
                     }
-                    break;
+                }
+                break;
+                
+            case 2: // Right triangle
+                maparray[idx++] = GetMode(1,0,0);
+                maparray[idx++] = GetMode(0,0,1);
+                for (r = 1; r < Q-1; ++r)
+                {
+                    maparray[idx++] = GetMode(1,0,r);
+                }
 
-                case 1: // Left triangle
-                    // Vertices
-                    maparray[0]         = 0;
-                    maparray[1]         = 4;
-                    maparray[nummodesB] = 1;
+                for (q = 1; q < P; ++q)
+                {
+                    for (r = 0; r < Q-q; ++r)
+                    {
+                        if ((int)faceOrient == 7 && q > 1)
+                        {
+                            signarray[idx] = q % 2 ? -1 : 1;
+                        }
+                        maparray[idx++] = GetMode(1,q,r);
+                    }
+                }
+                break;
 
-                    // Edge 0 (pyramid edge 0)
-                    cnt = 5;
-                    q   = 2*nummodesB-1;
-                    for (p = 2; p < nummodesA; q += nummodesB-p, ++p)
-                    {
-                        maparray[q] = cnt++;
-                        if ((int)faceOrient == 7)
-                        {
-                            signarray[q] = p % 2 ? -1 : 1;
-                        }
-                    }
+            case 3: // Rear triangle
+                maparray[idx++] = GetMode(0,1,0);
+                maparray[idx++] = GetMode(0,0,1);
+                for (r = 1; r < Q-1; ++r)
+                {
+                    maparray[idx++] = GetMode(0,1,r);
+                }
 
-                    // Edge 1 (pyramid edge 5)
-                    cnt = 5 + 2*(order0-2) + 2*(order1-2) + (order2-2);
-                    for (q = 2; q < nummodesB; ++q)
+                for (p = 1; p < P; ++p)
+                {
+                    for (r = 0; r < Q-p; ++r)
                     {
-                        maparray[q] = cnt++;
-                        if ((int)faceOrient == 7)
+                        if ((int)faceOrient == 7 && p > 1)
                         {
-                            signarray[q] = q % 2 ? -1 : 1;
+                            signarray[idx] = p % 2 ? -1 : 1;
                         }
+                        maparray[idx++] = GetMode(p, 1, r);
                     }
-                    
-                    // Edge 2 (pyramid edge 4)
-                    cnt = 5 + 2*(order0-2) + 2*(order1-2);
-                    for (q = 2; q < nummodesB; ++q)
+                }
+                break;
+                
+            case 4: // Left triangle
+                for (q = 0; q < P; ++q)
+                {
+                    for (r = 0; r < Q-q; ++r)
                     {
-                        maparray[nummodesB+q-1] = cnt++;
-                        if ((int)faceOrient == 7)
+                        if ((int)faceOrient == 7 && q > 1)
                         {
-                            signarray[nummodesB+q-1] = q % 2 ? -1 : 1;
+                            signarray[idx] = q % 2 ? -1 : 1;
                         }
+                        maparray[idx++] = GetMode(0,q,r);
                     }
+                }
+                break;
 
-                    // Interior
-                    cnt  = 5 + 2*(order0-2) + 2*(order1-2) + 4*(order2-2)
-                        + v_GetFaceIntNcoeffs(0);
-                    cnt2 = 2*nummodesB + 1;
-                    for (p = 2; p < nummodesA; ++p)
-                    {
-                        for (r = 2; r < nummodesB-p; ++r)
-                        {
-                            maparray[cnt2] = cnt++;
-                            if ((int)faceOrient == 7 && p > 1)
-                            {
-                                signarray[cnt2++] = p % 2 ? -1 : 1;
-                            }
-                        }
-                        cnt2++;
-                    }
-                    break;
-
-                case 2:
-                    // Vertices
-                    maparray[0]         = 1;
-                    maparray[1]         = 4;
-                    maparray[nummodesB] = 2;
-
-                    // Edge 0 (pyramid edge 1)
-                    cnt = 5 + (order0-2);
-                    q   = 2*nummodesB-1;
-                    for (p = 2; p < nummodesA; q += nummodesB-p, ++p)
-                    {
-                        maparray[q] = cnt++;
-                        if ((int)faceOrient == 7)
-                        {
-                            signarray[q] = p % 2 ? -1 : 1;
-                        }
-                    }
-
-                    // Edge 1 (pyramid edge 6)
-                    cnt = 5 + 2*(order0-2) + 2*(order1-2) + 2*(order2-2);
-                    for (q = 2; q < nummodesB; ++q)
-                    {
-                        maparray[q] = cnt++;
-                        if ((int)faceOrient == 7)
-                        {
-                            signarray[q] = q % 2 ? -1 : 1;
-                        }
-                    }
-                    
-                    // Edge 2 (pyramid edge 5)
-                    cnt = 5 + 2*(order0-2) + 2*(order1-2) + (order2-2);
-                    for (q = 2; q < nummodesB; ++q)
-                    {
-                        maparray[nummodesB+q-1] = cnt++;
-                        if ((int)faceOrient == 7)
-                        {
-                            signarray[nummodesB+q-1] = q % 2 ? -1 : 1;
-                        }
-                    }
-
-                    // Interior
-                    cnt  = 5 + 2*(order0-2) + 2*(order1-2) + 4*(order2-2)
-                        + v_GetFaceIntNcoeffs(0) + v_GetFaceIntNcoeffs(1);
-                    cnt2 = 2*nummodesB + 1;
-                    for (p = 2; p < nummodesA; ++p)
-                    {
-                        for (r = 2; r < nummodesB-p; ++r)
-                        {
-                            maparray[cnt2] = cnt++;
-                            if ((int)faceOrient == 7 && p > 1)
-                            {
-                                signarray[cnt2++] = p % 2 ? -1 : 1;
-                            }
-                        }
-                        cnt2++;
-                    }
-                    break;
-
-                case 3: // Right triangle
-                    // Vertices
-                    maparray[0]         = 3;
-                    maparray[1]         = 4;
-                    maparray[nummodesB] = 2;
-
-                    // Edge 0 (pyramid edge 2)
-                    cnt = 5 + (order0-2) + (order1-2);
-                    q   = 2*nummodesB-1;
-                    for (p = 2; p < nummodesA; q += nummodesB-p, ++p)
-                    {
-                        maparray[q] = cnt++;
-                        if ((int)faceOrient == 7)
-                        {
-                            signarray[q] = p % 2 ? -1 : 1;
-                        }
-                    }
-
-                    // Edge 1 (pyramid edge 6)
-                    cnt = 5 + 2*(order0-2) + 2*(order1-2) + 2*(order2-2);
-                    for (q = 2; q < nummodesB; ++q)
-                    {
-                        maparray[q] = cnt++;
-                        if ((int)faceOrient == 7)
-                        {
-                            signarray[q] = q % 2 ? -1 : 1;
-                        }
-                    }
-                    
-                    // Edge 2 (pyramid edge 7)
-                    cnt = 5 + 2*(order0-2) + 2*(order1-2) + 3*(order2-2);
-                    for (q = 2; q < nummodesB; ++q)
-                    {
-                        maparray[nummodesB+q-1] = cnt++;
-                        if ((int)faceOrient == 7)
-                        {
-                            signarray[nummodesB+q-1] = q % 2 ? -1 : 1;
-                        }
-                    }
-
-                    // Interior
-                    cnt  = 5 + 2*(order0-2) + 2*(order1-2) + 4*(order2-2)
-                        + v_GetFaceIntNcoeffs(0) + v_GetFaceIntNcoeffs(1)
-                        + v_GetFaceIntNcoeffs(2);
-                    cnt2 = 2*nummodesB + 1;
-                    for (p = 2; p < nummodesA; ++p)
-                    {
-                        for (r = 2; r < nummodesB-p; ++r)
-                        {
-                            maparray[cnt2] = cnt++;
-                            if ((int)faceOrient == 7 && p > 1)
-                            {
-                                signarray[cnt2++] = p % 2 ? -1 : 1;
-                            }
-                        }
-                        cnt2++;
-                    }
-                    break;
-
-                case 4: // Rear quad
-                    // Vertices
-                    maparray[0]         = 0;
-                    maparray[1]         = 4;
-                    maparray[nummodesB] = 3;
-
-                    // Edge 0 (pyramid edge 3)
-                    cnt = 5 + 2*(order0-2) + (order1-2);
-                    q   = 2*nummodesB-1;
-                    for (p = 2; p < nummodesA; q += nummodesB-p, ++p)
-                    {
-                        maparray[q] = cnt++;
-                        if ((int)faceOrient == 7)
-                        {
-                            signarray[q] = p % 2 ? -1 : 1;
-                        }
-                    }
-
-                    // Edge 1 (pyramid edge 7)
-                    cnt = 5 + 2*(order0-2) + 2*(order1-2) + 3*(order2-2);
-                    for (q = 2; q < nummodesB; ++q)
-                    {
-                        maparray[q] = cnt++;
-                        if ((int)faceOrient == 7)
-                        {
-                            signarray[q] = q % 2 ? -1 : 1;
-                        }
-                    }
-                    
-                    // Edge 2 (pyramid edge 4)
-                    cnt = 5 + 2*(order0-2) + 2*(order1-2);
-                    for (q = 2; q < nummodesB; ++q)
-                    {
-                        maparray[nummodesB+q-1] = cnt++;
-                        if ((int)faceOrient == 7)
-                        {
-                            signarray[nummodesB+q-1] = q % 2 ? -1 : 1;
-                        }
-                    }
-
-                    // Interior
-                    cnt  = 5 + 2*(order0-2) + 2*(order1-2) + 4*(order2-2)
-                        + v_GetFaceIntNcoeffs(0) + v_GetFaceIntNcoeffs(1)
-                        + v_GetFaceIntNcoeffs(2) + v_GetFaceIntNcoeffs(3);
-                    cnt2 = 2*nummodesB + 1;
-                    for (p = 2; p < nummodesA; ++p)
-                    {
-                        for (r = 2; r < nummodesB-p; ++r)
-                        {
-                            maparray[cnt2] = cnt++;
-                            if ((int)faceOrient == 7 && p > 1)
-                            {
-                                signarray[cnt2++] = p % 2 ? -1 : 1;
-                            }
-                        }
-                        cnt2++;
-                    }
-                    break;
-                    
-                default:
-                    ASSERTL0(false, "Face to element map unavailable.");
+            default:
+                ASSERTL0(false, "Face to element map unavailable.");
             }
 
             if (fid > 0)
             {
+               if(CheckForZeroedModes)
+                {
+                    // zero signmap and set maparray to zero if elemental
+                    // modes are not as large as face modesl
+                    int idx = 0;
+                    for (j = 0; j < P; ++j)
+                    {
+                        idx += Q-j;
+                        for (k = Q-j; k < Q-j; ++k)
+                        {
+                            signarray[idx]  = 0.0;
+                            maparray[idx++] = maparray[0];
+                        }
+                    }
+
+                    for (j = P; j < P; ++j)
+                    {
+                        for (k = 0; k < Q-j; ++k)
+                        {
+                            signarray[idx]  = 0.0;
+                            maparray[idx++] = maparray[0];
+                        }
+                    }
+                }
+
                 // Triangles only have one possible orientation (base
                 // direction reversed); swap edge modes.
                 if ((int)faceOrient == 7)
                 {
-                    swap(maparray[0], maparray[nummodesA]);
-                    for (i = 1; i < nummodesA-1; ++i)
+                    swap(maparray[0], maparray[Q]);
+                    for (i = 1; i < Q-1; ++i)
                     {
-                        swap(maparray[i+1], maparray[nummodesA+i]);
+                        swap(maparray[i+1], maparray[Q+i]);
                     }
                 }
             }
             else
             {
+                if(CheckForZeroedModes)
+                {
+                    // zero signmap and set maparray to zero if elemental
+                    // modes are not as large as face modesl
+                    for (j = 0; j < P; ++j)
+                    {
+                        for (k = Q; k < Q; ++k)
+                        {
+                            signarray[arrayindx[j+k*P]] = 0.0;
+                            maparray[arrayindx[j+k*P]]  = maparray[0];
+                        }
+                    }
+
+                    for (j = P; j < P; ++j)
+                    {
+                        for (k = 0; k < Q; ++k)
+                        {
+                            signarray[arrayindx[j+k*P]] = 0.0;
+                            maparray[arrayindx[j+k*P]]  = maparray[0];
+                        }
+                    }
+                }
+
                 // The code below is exactly the same as that taken from
                 // StdHexExp and reverses the 'b' and 'a' directions as
                 // appropriate (1st and 2nd if statements respectively) in
@@ -1470,34 +1268,34 @@ namespace Nektar
                 {
                     if (faceOrient < 9)
                     {
-                        for (i = 3; i < nummodesB; i += 2)
+                        for (i = 3; i < Q; i += 2)
                         {
-                            for (j = 0; j < nummodesA; j++)
+                            for (j = 0; j < P; j++)
                             {
-                                signarray[arrayindx[i*nummodesA+j]] *= -1;
+                                signarray[arrayindx[i*P+j]] *= -1;
                             }
                         }
-                        
-                        for (i = 0; i < nummodesA; i++)
+
+                        for (i = 0; i < P; i++)
                         {
-                            swap(maparray [i], maparray [i+nummodesA]);
-                            swap(signarray[i], signarray[i+nummodesA]);
+                            swap(maparray [i], maparray [i+P]);
+                            swap(signarray[i], signarray[i+P]);
                         }
                     }
                     else
                     {
-                        for (i = 0; i < nummodesB; i++)
+                        for (i = 0; i < Q; i++)
                         {
-                            for (j = 3; j < nummodesA; j += 2)
+                            for (j = 3; j < P; j += 2)
                             {
-                                signarray[arrayindx[i*nummodesA+j]] *= -1;
+                                signarray[arrayindx[i*P+j]] *= -1;
                             }
                         }
 
-                        for (i = 0; i < nummodesB; i++)
+                        for (i = 0; i < Q; i++)
                         {
-                            swap (maparray [i], maparray [i+nummodesB]);
-                            swap (signarray[i], signarray[i+nummodesB]);
+                            swap (maparray [i], maparray [i+Q]);
+                            swap (signarray[i], signarray[i+Q]);
                         }
                     }
                 }
@@ -1507,34 +1305,34 @@ namespace Nektar
                 {
                     if (faceOrient < 9)
                     {
-                        for (i = 0; i < nummodesB; i++)
+                        for (i = 0; i < Q; i++)
                         {
-                            for (j = 3; j < nummodesA; j += 2)
+                            for (j = 3; j < P; j += 2)
                             {
-                                signarray[arrayindx[i*nummodesA+j]] *= -1;
+                                signarray[arrayindx[i*P+j]] *= -1;
                             }
                         }
 
-                        for(i = 0; i < nummodesB; i++)
+                        for(i = 0; i < Q; i++)
                         {
-                            swap(maparray [i*nummodesA], maparray [i*nummodesA+1]);
-                            swap(signarray[i*nummodesA], signarray[i*nummodesA+1]);
+                            swap(maparray [i*P], maparray [i*P+1]);
+                            swap(signarray[i*P], signarray[i*P+1]);
                         }
                     }
                     else
                     {
-                        for (i = 3; i < nummodesB; i += 2)
+                        for (i = 3; i < Q; i += 2)
                         {
-                            for (j = 0; j < nummodesA; j++)
+                            for (j = 0; j < P; j++)
                             {
-                                signarray[arrayindx[i*nummodesA+j]] *= -1;
+                                signarray[arrayindx[i*P+j]] *= -1;
                             }
                         }
 
-                        for (i = 0; i < nummodesA; i++)
+                        for (i = 0; i < P; i++)
                         {
-                            swap(maparray [i*nummodesB], maparray [i*nummodesB+1]);
-                            swap(signarray[i*nummodesB], signarray[i*nummodesB+1]);
+                            swap(maparray [i*Q], maparray [i*Q+1]);
+                            swap(signarray[i*Q], signarray[i*Q+1]);
                         }
                     }
                 }
@@ -1545,9 +1343,61 @@ namespace Nektar
         {
             ASSERTL0(GetEdgeBasisType(vId) == LibUtilities::eModified_A ||
                      GetEdgeBasisType(vId) == LibUtilities::eModified_A ||
-                     GetEdgeBasisType(vId) == LibUtilities::eModified_C,
+                     GetEdgeBasisType(vId) == LibUtilities::eModifiedPyr_C,
                      "Mapping not defined for this type of basis");
-            return vId;
+
+
+
+            int l = 0;
+
+            if(useCoeffPacking == true) // follow packing of coefficients i.e q,r,p
+            {
+                switch (vId)
+                {
+                case 0:
+                    l = GetMode(0,0,0);
+                    break;
+                case 1:
+                    l = GetMode(0,0,1);
+                    break;
+                case 2:
+                    l = GetMode(0,1,0);
+                    break;
+                case 3:
+                    l = GetMode(1,0,0);
+                    break;
+                case 4:
+                    l = GetMode(1,1,0);
+                    break;
+                default:
+                    ASSERTL0(false, "local vertex id must be between 0 and 4");
+                }
+            }
+            else
+            {
+                switch (vId)
+                {
+                case 0:
+                    l = GetMode(0,0,0);
+                    break;
+                case 1:
+                    l = GetMode(1,0,0);
+                    break;
+                case 2:
+                    l = GetMode(1,1,0);
+                    break;
+                case 3:
+                    l = GetMode(0,1,0);
+                    break;
+                case 4:
+                    l = GetMode(0,0,1);
+                    break;
+                default:
+                    ASSERTL0(false, "local vertex id must be between 0 and 4");
+                }
+            }
+            
+            return l;
         }
 
         void StdPyrExp::v_GetEdgeInteriorMap(
@@ -1558,16 +1408,16 @@ namespace Nektar
         {
             int       i;
             bool      signChange;
-            const int P              = m_base[0]->GetNumModes() - 2;
-            const int Q              = m_base[1]->GetNumModes() - 2;
-            const int R              = m_base[2]->GetNumModes() - 2;
+            const int P              = m_base[0]->GetNumModes() - 1;
+            const int Q              = m_base[1]->GetNumModes() - 1;
+            const int R              = m_base[2]->GetNumModes() - 1;
             const int nEdgeIntCoeffs = v_GetEdgeNcoeffs(eid) - 2;
-            
+
             if (maparray.num_elements() != nEdgeIntCoeffs)
             {
                 maparray = Array<OneD, unsigned int>(nEdgeIntCoeffs);
             }
-            
+
             if(signarray.num_elements() != nEdgeIntCoeffs)
             {
                 signarray = Array<OneD, int>(nEdgeIntCoeffs,1);
@@ -1576,48 +1426,70 @@ namespace Nektar
             {
                 fill(signarray.get(), signarray.get()+nEdgeIntCoeffs, 1);
             }
-            
+
             // If edge is oriented backwards, change sign of modes which have
             // degree 2n+1, n >= 1.
             signChange = edgeOrient == eBackwards;
 
-            int offset = 5;
-            
             switch (eid)
             {
-                case 0:
-                    break;
-                case 1:
-                    offset += P;
-                    break;
-                case 2:
-                    offset += P+Q;
-                    break;
-                case 3:
-                    offset += 2*P+Q;
-                    break;
-                case 4:
-                    offset += 2*(P+Q);
-                    break;
-                case 5:
-                    offset += 2*(P+Q)+R;
-                    break;
-                case 6:
-                    offset += 2*(P+Q+R);
-                    break;
-                case 7:
-                    offset += 2*(P+Q)+3*R;
-                    break;
-                default:
-                    ASSERTL0(false, "Edge not defined.");
-                    break;
+            case 0:
+                for (i = 2; i <= P; ++i)
+                {
+                    maparray[i-2] = GetMode(i,0,0);
+                }
+                break;
+                
+            case 1:
+                for (i = 2; i <= Q; ++i)
+                {
+                    maparray[i-2] = GetMode(1,i,0);
+                }
+                break;
+            case 2:
+                for (i = 2; i <= P; ++i)
+                {
+                    maparray[i-2] = GetMode(i,1,0);
+                }
+                break;
+                
+            case 3:
+                for (i = 2; i <= Q; ++i)
+                {
+                    maparray[i-2] = GetMode(0,i,0);
+                }
+                break;
+            case 4:
+                for (i = 2; i <= R; ++i)
+                {
+                    maparray[i-2] = GetMode(0,0,i);
+                }
+                break;
+                
+            case 5:
+                for (i = 1; i <= R-1; ++i)
+                {
+                    maparray[i-1] = GetMode(1,0,i);
+                }
+                break;                
+            case 6:
+                for (i = 1; i <= R-1; ++i)
+                {
+                    maparray[i-1] = GetMode(1,1,i);
+                }
+                break;
+                
+            case 7:
+                for (i = 1; i <= R-1; ++i)
+                {
+                    maparray[i-1] = GetMode(0,1,i);
+                }
+                break;
+            default:
+                ASSERTL0(false, "Edge not defined.");
+                break;
             }
-
-            for (i = 0; i < nEdgeIntCoeffs; ++i)
-            {
-                maparray[i] = offset + i;
-            }
-
+            
             if (signChange)
             {
                 for (i = 1; i < nEdgeIntCoeffs; i += 2)
@@ -1626,7 +1498,7 @@ namespace Nektar
                 }
             }
         }
-        
+
         void StdPyrExp::v_GetFaceInteriorMap(
             const int                  fid,
             const Orientation          faceOrient,
@@ -1646,7 +1518,7 @@ namespace Nektar
             {
                 maparray = Array<OneD, unsigned int>(nFaceIntCoeffs);
             }
-            
+
             if (signarray.num_elements() != nFaceIntCoeffs)
             {
                 signarray = Array<OneD, int>(nFaceIntCoeffs, 1);
@@ -1659,7 +1531,7 @@ namespace Nektar
             // Set up an array indexing for quad faces, since the ordering may
             // need to be transposed depending on orientation.
             Array<OneD, int> arrayindx(nFaceIntCoeffs);
-            if (fid == 0) 
+            if (fid == 0)
             {
                 nummodesA = P-1;
                 nummodesB = Q-1;
@@ -1680,60 +1552,75 @@ namespace Nektar
                 }
             }
 
-            int offset = 5 + 2*(P-1) + 2*(Q-1) + 4*(R-1);
-
-            for (i = 0; i < fid; ++i)
-            {
-                offset += v_GetFaceIntNcoeffs(i);
-            }
-
             switch (fid)
             {
-                case 0:
-                    for (q = 2; q <= Q; ++q)
-                    {
-                        for (p = 2; p <= P; ++p)
-                        {
-                            maparray[arrayindx[(q-2)*nummodesA+(p-2)]]
-                                    = offset + (q-2)*nummodesA+(p-2);
-                        }
-                    }
-                    break;
-
-                case 1:
-                case 3:
+            case 0: // Bottom quad
+                for (q = 2; q <= Q; ++q)
+                {
                     for (p = 2; p <= P; ++p)
                     {
-                        for (r = 1; r <= R-p; ++r, ++idx)
-                        {
-                            if ((int)faceOrient == 7)
-                            {
-                                signarray[idx] = p % 2 ? -1 : 1;
-                            }
-                            maparray[idx] = offset + idx;
-                        }
+                        maparray[arrayindx[(q-2)*nummodesA+(p-2)]] = GetMode(p,q,0);
                     }
-                    break;
-
-                case 2:
-                case 4:
-                    for (q = 2; q <= Q; ++q)
+                }
+                break;
+            case 1: // Front triangle
+                for (p = 2; p <= P; ++p)
+                {
+                    for (r = 1; r <= R-p; ++r)
                     {
-                        for (r = 1; r <= R-q; ++r, ++idx)
+                        if ((int)faceOrient == 7)
                         {
-                            if ((int)faceOrient == 7)
-                            {
-                                signarray[idx] = q % 2 ? -1 : 1;
-                            }
-                            maparray[idx] = offset + idx;
+                                signarray[idx] = p % 2 ? -1 : 1;
                         }
+                        maparray[idx++] = GetMode(p,0,r);
                     }
+                }
+                break;
+            case 2: // Right triangle
+                for (q = 2; q <= Q; ++q)
+                {
+                    for (r = 1; r <= R-q; ++r)
+                    {
+                        if ((int)faceOrient == 7)
+                        {
+                            signarray[idx] = q % 2 ? -1 : 1;
+                        }
+                        maparray[idx++] = GetMode(1, q, r);
+                    }
+                }
                     break;
-
-                default:
-                    ASSERTL0(false, "Face interior map not available.");
+                    
+            case 3: // Rear triangle
+                for (p = 2; p <= P; ++p)
+                {
+                    for (r = 1; r <= R-p; ++r)
+                    {
+                        if ((int)faceOrient == 7)
+                        {
+                            signarray[idx] = p % 2 ? -1 : 1;
+                        }
+                        maparray[idx++] = GetMode(p, 1, r);
+                    }
+                }
+                break;
+                
+            case 4: // Left triangle
+                for (q = 2; q <= Q; ++q)
+                {
+                    for (r = 1; r <= R-q; ++r)
+                    {
+                        if ((int)faceOrient == 7)
+                        {
+                            signarray[idx] = q % 2 ? -1 : 1;
+                        }
+                        maparray[idx++] = GetMode(0, q, r);
+                        }
+                }
+                break;
+            default:
+                ASSERTL0(false, "Face interior map not available.");
             }
-
+            
             // Triangular faces are processed in the above switch loop; for
             // remaining quad faces, set up orientation if necessary.
             if (fid > 0)
@@ -1800,23 +1687,35 @@ namespace Nektar
             ASSERTL1(GetBasisType(1) == LibUtilities::eModified_A ||
                      GetBasisType(1) == LibUtilities::eGLL_Lagrange,
                      "BasisType is not a boundary interior form");
-            ASSERTL1(GetBasisType(2) == LibUtilities::eModified_C ||
+            ASSERTL1(GetBasisType(2) == LibUtilities::eModifiedPyr_C ||
                      GetBasisType(2) == LibUtilities::eGLL_Lagrange,
                      "BasisType is not a boundary interior form");
 
-            const int nBndCoeffs = v_NumBndryCoeffs();
-            const int nIntCoeffs = m_ncoeffs - NumBndryCoeffs();
 
-            if (outarray.num_elements() != nIntCoeffs)
+            int P   = m_base[0]->GetNumModes() - 1, p;
+            int Q   = m_base[1]->GetNumModes() - 1, q;
+            int R   = m_base[2]->GetNumModes() - 1, r;
+
+            int nIntCoeffs = m_ncoeffs - NumBndryCoeffs();
+
+            if(outarray.num_elements()!=nIntCoeffs)
             {
                 outarray = Array<OneD, unsigned int>(nIntCoeffs);
             }
 
+            int idx = 0;
+
             // Loop over all interior modes.
-            int p, idx = 0;
-            for (p = nBndCoeffs; p < m_ncoeffs; ++p)
+            for (p = 2; p <= P; ++p)
             {
-                outarray[idx++] = p;
+            	for (q = 2; q <= Q; ++q)
+            	{
+                    int maxpq = max(p,q);
+                    for (r = 1; r <= R-maxpq; ++r)
+                    {
+                        outarray[idx++] = GetMode(p,q,r);
+                    }
+                }
             }
         }
 
@@ -1828,79 +1727,150 @@ namespace Nektar
             ASSERTL1(GetBasisType(1) == LibUtilities::eModified_A ||
                      GetBasisType(1) == LibUtilities::eGLL_Lagrange,
                      "BasisType is not a boundary interior form");
-            ASSERTL1(GetBasisType(2) == LibUtilities::eModified_C ||
+            ASSERTL1(GetBasisType(2) == LibUtilities::eModifiedPyr_C ||
                      GetBasisType(2) == LibUtilities::eGLL_Lagrange,
                      "BasisType is not a boundary interior form");
 
-            int idx = 0, nBndry = v_NumBndryCoeffs();
+            int P   = m_base[0]->GetNumModes() - 1, p;
+            int Q   = m_base[1]->GetNumModes() - 1, q;
+            int R   = m_base[2]->GetNumModes() - 1, r;
+            int idx = 0;
 
-            for (idx = 0; idx < nBndry; ++idx)
+            int nBnd = NumBndryCoeffs();
+
+            if (maparray.num_elements() != nBnd)
             {
-                maparray[idx] = idx;
+                maparray = Array<OneD, unsigned int>(nBnd);
+            }
+
+            // Loop over all boundary modes (in ascending order).
+            for (p = 0; p <= P; ++p)
+            {
+                // First two q-r planes are entirely boundary modes.
+                if (p <= 1)
+                {
+                    for (q = 0; q <= Q; ++q)
+                    {
+                        int maxpq = max(p,q);
+                        for (r = 0; r <= R-maxpq; ++r)
+                        {
+                            maparray[idx++] = GetMode(p,q,r);
+                        }
+                    }
+                }
+                else
+                {
+                    // Remaining q-r planes contain boundary modes on the two
+                    // front and back sides and edges 0 2.
+                    for (q = 0; q <= Q; ++q)
+                    {
+                        if (q <= 1)
+                        {
+                            for (r = 0; r <= R-p; ++r)
+                            {
+                                maparray[idx++] = GetMode(p,q,r);
+                            }
+                        }
+                        else
+                        {
+                            maparray[idx++] = GetMode(p,q,0);
+                        }
+                    }
+                }
             }
         }
 
         //---------------------------------------
         // Wrapper functions
         //---------------------------------------
-        
+
         DNekMatSharedPtr StdPyrExp::v_GenMatrix(const StdMatrixKey &mkey)
         {
             return CreateGeneralMatrix(mkey);
         }
-        
+
         DNekMatSharedPtr StdPyrExp::v_CreateStdMatrix(const StdMatrixKey &mkey)
         {
             return v_GenMatrix(mkey);
         }
 
+
         /**
-         * @brief Number tetrahedral modes in r-direction. Much the same as
-         * StdTetExp::GetTetMode but slightly simplified since we know that the
-         * polynomial order is the same in each direction.
+         * @brief Compute the mode number in the expansion for a
+         * particular tensorial combination.
+         *
+         * Modes are numbered with the r index travelling fastest,
+         * followed by q and then p, and each q-r plane is of size
+         * 
+         * (R+1-p)*(Q+1) - l(l+1)/2 where l = max(0,Q-p) 
+         *
+         * For example, when P=2, Q=3 and R=4 the indexing inside each
+         * q-r plane (with r increasing upwards and q to the right)
+         * is:
+         *
+         * p = 0:      p = 1:       p = 2:
+         * ----------------------------------
+         * 4
+         * 3 8         17 21
+         * 2 7 11      16 20 24     29 32 35
+         * 1 6 10 13   15 19 23 26  28 31 34 37 
+         * 0 5 9  12   14 18 22 25  27 30 33 36 
+         *
+         * Note that in this element, we must have that \f$ P,Q \leq
+         * R\f$.
          */
-        int StdPyrExp::GetTetMode(const int I, const int J, const int K)
+        int StdPyrExp::GetMode(const int I, const int J, const int K)
         {
-            const int R = m_base[2]->GetNumModes();
-            int i, j, cnt = 0;
+            const int Q = m_base[1]->GetNumModes()-1;
+            const int R = m_base[2]->GetNumModes()-1;
+
+            int i,l; 
+            int cnt = 0;
+
+            // Traverse to q-r plane number I
             for (i = 0; i < I; ++i)
             {
-                cnt += (R-i)*(R-i+1)/2;
+                // Size of triangle part
+                l = max(0,Q-i);
+                
+                // Size of rectangle part
+                cnt += (R+1-i)*(Q+1) - l*(l+1)/2;
             }
 
-            i = R-I;
-            for (j = 0; j < J; ++j)
-            {
-                cnt += i;
-                i--;
-            }
+            // Traverse to q column J (Pretend this is a face of width J)
+            l = max(0,J-1-I);
+            cnt += (R+1-I)*J - l*(l+1)/2;
+            
+            // Traverse up stacks to K
+            cnt += K;
 
-            return cnt + K;
+            return cnt;
         }
+
 
         void StdPyrExp::v_MultiplyByStdQuadratureMetric(
             const Array<OneD, const NekDouble>& inarray,
                   Array<OneD,       NekDouble>& outarray)
         {
             int i, j;
-            
+
             int  nquad0 = m_base[0]->GetNumPoints();
             int  nquad1 = m_base[1]->GetNumPoints();
             int  nquad2 = m_base[2]->GetNumPoints();
-            
+
             const Array<OneD, const NekDouble>& w0 = m_base[0]->GetW();
             const Array<OneD, const NekDouble>& w1 = m_base[1]->GetW();
             const Array<OneD, const NekDouble>& w2 = m_base[2]->GetW();
-            
+
             const Array<OneD, const NekDouble>& z2 = m_base[2]->GetZ();
-            
+
             // Multiply by integration constants in x-direction
             for(i = 0; i < nquad1*nquad2; ++i)
             {
                 Vmath::Vmul(nquad0, inarray.get()+i*nquad0, 1,
                             w0.get(), 1, outarray.get()+i*nquad0,1);
             }
-            
+
             // Multiply by integration constants in y-direction
             for(j = 0; j < nquad2; ++j)
             {
@@ -1910,7 +1880,7 @@ namespace Nektar
                                 j*nquad0*nquad1,1);
                 }
             }
-            
+
             // Multiply by integration constants in z-direction; need to
             // incorporate factor [(1-eta_3)/2]^2 into weights, but only if
             // using GLL quadrature points.
@@ -1924,7 +1894,7 @@ namespace Nektar
                                     &outarray[0]+i*nquad0*nquad1, 1);
                     }
                     break;
-                
+
                 default:
                     for(i = 0; i < nquad2; ++i)
                     {
@@ -1934,5 +1904,145 @@ namespace Nektar
                     break;
             }
         }
+
+
+        void StdPyrExp::v_SVVLaplacianFilter(Array<OneD, NekDouble> &array,
+                                             const StdMatrixKey &mkey)
+        {
+            // Generate an orthonogal expansion
+            int qa = m_base[0]->GetNumPoints();
+            int qb = m_base[1]->GetNumPoints();
+            int qc = m_base[2]->GetNumPoints();
+            int nmodes_a = m_base[0]->GetNumModes();
+            int nmodes_b = m_base[1]->GetNumModes();
+            int nmodes_c = m_base[2]->GetNumModes();
+            // Declare orthogonal basis.
+            LibUtilities::PointsKey pa(qa,m_base[0]->GetPointsType());
+            LibUtilities::PointsKey pb(qb,m_base[1]->GetPointsType());
+            LibUtilities::PointsKey pc(qc,m_base[2]->GetPointsType());
+
+            LibUtilities::BasisKey Ba(LibUtilities::eOrtho_A,nmodes_a,pa);
+            LibUtilities::BasisKey Bb(LibUtilities::eOrtho_A,nmodes_b,pb);
+            LibUtilities::BasisKey Bc(LibUtilities::eOrthoPyr_C,nmodes_c,pc);
+            StdPyrExp OrthoExp(Ba,Bb,Bc);
+
+            Array<OneD, NekDouble> orthocoeffs(OrthoExp.GetNcoeffs());
+            int i,j,k,cnt = 0;
+
+            //SVV filter paramaters (how much added diffusion relative to physical one
+            // and fraction of modes from which you start applying this added diffusion)
+            //
+            NekDouble  SvvDiffCoeff = mkey.GetConstFactor(StdRegions::eFactorSVVDiffCoeff);
+            NekDouble  SVVCutOff    = mkey.GetConstFactor(StdRegions::eFactorSVVCutoffRatio);
+
+            //Defining the cut of mode
+            int cutoff_a = (int) (SVVCutOff*nmodes_a);
+            int cutoff_b = (int) (SVVCutOff*nmodes_b);
+            int cutoff_c = (int) (SVVCutOff*nmodes_c);
+            //To avoid the fac[j] from blowing up
+            NekDouble epsilon = 1;
+
+            // project onto modal  space.
+            OrthoExp.FwdTrans(array,orthocoeffs);
+            int nmodes = min(min(nmodes_a,nmodes_b),nmodes_c);
+            NekDouble cutoff = min(min(cutoff_a,cutoff_b),cutoff_c);
+
+            for(i = 0; i < nmodes_a; ++i)//P
+            {
+                for(j = 0; j < nmodes_b; ++j) //Q
+                {
+                    int maxij = max(i,j);
+                    for(k = 0; k < nmodes_c-maxij; ++k) //R
+                    {
+                        if(j + k >= cutoff ||  i + k >= cutoff)
+                        {
+                            orthocoeffs[cnt] *=
+                                (SvvDiffCoeff*exp(-(i+k-nmodes)*(i+k-nmodes)/
+                                ((NekDouble)((i+k-cutoff+epsilon)*
+                                             (i+k-cutoff+epsilon))))*
+                                 exp(-(j-nmodes)*(j-nmodes)/
+                                ((NekDouble)((j-cutoff+epsilon)*
+                                             (j-cutoff+epsilon)))));
+                        }
+                        else
+                        {
+                            orthocoeffs[cnt] *= 0.0;
+                        }
+                        cnt++;
+                    }
+                }
+            }
+
+            // backward transform to physical space
+            OrthoExp.BwdTrans(orthocoeffs,array);
+        }
+
+
+
+        void StdPyrExp::v_ReduceOrderCoeffs(
+            int                                 numMin,
+            const Array<OneD, const NekDouble> &inarray,
+                  Array<OneD,       NekDouble> &outarray)
+        {
+            int nquad0   = m_base[0]->GetNumPoints();
+            int nquad1   = m_base[1]->GetNumPoints();
+            int nquad2   = m_base[2]->GetNumPoints();
+            int nqtot    = nquad0*nquad1*nquad2;
+            int nmodes0  = m_base[0]->GetNumModes();
+            int nmodes1  = m_base[1]->GetNumModes();
+            int nmodes2  = m_base[2]->GetNumModes();
+            int numMax   = nmodes0;
+
+            Array<OneD, NekDouble> coeff     (m_ncoeffs);
+            Array<OneD, NekDouble> coeff_tmp1(m_ncoeffs, 0.0);
+            Array<OneD, NekDouble> phys_tmp  (nqtot,     0.0);
+            Array<OneD, NekDouble> tmp, tmp2, tmp3, tmp4;
+
+
+            const LibUtilities::PointsKey Pkey0 = m_base[0]->GetPointsKey();
+            const LibUtilities::PointsKey Pkey1 = m_base[1]->GetPointsKey();
+            const LibUtilities::PointsKey Pkey2 = m_base[2]->GetPointsKey();
+
+            LibUtilities::BasisKey bortho0(
+                LibUtilities::eOrtho_A,    nmodes0, Pkey0);
+            LibUtilities::BasisKey bortho1(
+                LibUtilities::eOrtho_A,    nmodes1, Pkey1);
+            LibUtilities::BasisKey bortho2(
+                LibUtilities::eOrthoPyr_C, nmodes2, Pkey2);
+
+            int cnt = 0;
+            int u   = 0;
+            int i   = 0;
+            StdRegions::StdPyrExpSharedPtr OrthoPyrExp;
+
+            OrthoPyrExp = MemoryManager<StdRegions::StdPyrExp>
+                ::AllocateSharedPtr(bortho0, bortho1, bortho2);
+
+            BwdTrans(inarray,phys_tmp);
+            OrthoPyrExp->FwdTrans(phys_tmp, coeff);
+
+            // filtering
+            for (u = 0; u < numMin; ++u)
+            {
+                 for (i = 0; i < numMin; ++i)
+                 {
+                     
+                     int maxui = max(u,i);
+                     Vmath::Vcopy(numMin - maxui, tmp  = coeff      + cnt, 1,
+                                  tmp2 = coeff_tmp1 + cnt, 1);
+                     cnt   += nmodes2 - maxui;
+                 }
+
+                 for (i = numMin; i < nmodes1; ++i)
+                 {
+                     int maxui = max(u,i);
+                     cnt += numMax - maxui;
+                 }
+            }
+
+            OrthoPyrExp->BwdTrans(coeff_tmp1, phys_tmp);
+            StdPyrExp::FwdTrans(phys_tmp, outarray);
+        }
+        
     }
 }

@@ -34,7 +34,8 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <PulseWaveSolver/EquationSystems/PulseWaveBoundary.h>
-#include <loki/Singleton.h>
+
+using namespace std;
 
 namespace Nektar
 {
@@ -66,9 +67,7 @@ namespace Nektar
      */
     BoundaryFactory& GetBoundaryFactory()
     {
-        typedef Loki::SingletonHolder<BoundaryFactory,
-                                      Loki::CreateUsingNew,
-                                      Loki::NoDestroy > Type;
-        return Type::Instance();
+        static BoundaryFactory instance;
+        return instance;
     }
 }

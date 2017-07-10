@@ -38,14 +38,14 @@
 
 #include <CardiacEPSolver/Stimuli/Stimulus.h>
 
+using namespace std;
+
 namespace Nektar
 {
     StimulusFactory& GetStimulusFactory()
     {
-        typedef Loki::SingletonHolder<StimulusFactory,
-        Loki::CreateUsingNew,
-        Loki::NoDestroy > Type;
-        return Type::Instance();
+        static StimulusFactory instance;
+        return instance;
     }
 
     /**

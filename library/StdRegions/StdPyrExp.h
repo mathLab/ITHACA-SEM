@@ -98,8 +98,6 @@ namespace Nektar
 
             STD_REGIONS_EXPORT ~StdPyrExp();
 
-            STD_REGIONS_EXPORT int GetTetMode(int I, int J, int K);
-
         protected:
             //---------------------------------------
             // Differentiation/integration Methods
@@ -191,6 +189,11 @@ namespace Nektar
             STD_REGIONS_EXPORT virtual void v_FillMode(
                 const int mode, 
                 Array<OneD, NekDouble> &outarray);  
+            STD_REGIONS_EXPORT virtual void v_GetFaceNumModes(
+                    const int                  fid,
+                    const Orientation          faceOrient,
+                    int &numModes0,
+                    int &numModes1);
 
             //---------------------------------------
             // Helper functions
@@ -248,12 +251,21 @@ namespace Nektar
             STD_REGIONS_EXPORT virtual DNekMatSharedPtr v_CreateStdMatrix(
                 const StdMatrixKey &mkey);
 
+            STD_REGIONS_EXPORT virtual void v_SVVLaplacianFilter(Array<OneD, NekDouble> &array,
+                                                                    const StdMatrixKey &mkey);
+
+            //---------------------------------------
+            // Method for applying sensors
+            //---------------------------------------
+            STD_REGIONS_EXPORT virtual void v_ReduceOrderCoeffs(
+                int                                 numMin,
+                const Array<OneD, const NekDouble> &inarray,
+                      Array<OneD,       NekDouble> &outarray);
         private:
             //---------------------------------------
             // Private helper functions
             //---------------------------------------
-            map<Mode, unsigned int, cmpop> m_map;
-            map<int, map<int, map<int, pair<int, int> > > > m_idxMap;
+            STD_REGIONS_EXPORT int GetMode(int I, int J, int K);
         };    
         typedef boost::shared_ptr<StdPyrExp> StdPyrExpSharedPtr;
     } //end of namespace

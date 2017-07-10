@@ -79,7 +79,7 @@ namespace Blas
         void F77NAME(dtpmv) (const char& uplo, const char& trans, const char& diag,
                  const int& n, const double* ap, double* x, const int& incx);
 
-        void F77NAME(dspmv) (const char& trans, const int& n,    const double& alpha,
+        void F77NAME(dspmv) (const char& uplo, const int& n,    const double& alpha,
                  const double* a,   const double* x, const int& incx,
                  const double& beta,      double* y, const int& incy);
 
@@ -98,7 +98,6 @@ namespace Blas
                  const double& beta,  double* c, const int& ldc);
     }
 
-#ifdef NEKTAR_USING_BLAS
     /// \brief BLAS level 1: Copy \a x to \a y
     static inline void Dcopy (const int& n, const double *x, const int& incx,
              double *y, const int& incy)
@@ -192,11 +191,11 @@ namespace Blas
 
     /// \brief BLAS level 2: Matrix vector multiply y = A \e x where A
     /// is symmetric packed
-    static inline void Dspmv (const char& trans,  const int& n,    const double& alpha,
+    static inline void Dspmv (const char& uplo,  const int& n,    const double& alpha,
              const double* a,    const double* x, const int& incx,
              const double& beta,       double* y, const int& incy)
     {
-        F77NAME(dspmv) (trans,n,alpha,a,x,incx,beta,y,incy);
+        F77NAME(dspmv) (uplo,n,alpha,a,x,incx,beta,y,incy);
     }  
 
     static inline void Dsbmv (const char& uplo,   const int& m,    const int& k,
@@ -227,55 +226,5 @@ namespace Blas
     {
         Dgemm('N','N',N,M,K,a,B,N,A,K,b,C,N) ;
     }
-#endif //NEKTAR_USING_BLAS
 }
 #endif //NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_BLAS_HPP
-
-/***
-$Log: Blas.hpp,v $
-Revision 1.6  2008/04/06 05:55:11  bnelson
-Changed ConstArray to Array<const>
-
-Revision 1.5  2008/02/28 09:57:08  sherwin
-Added array version of some routines
-
-Revision 1.4  2007/09/02 23:33:04  bnelson
-*** empty log message ***
-
-Revision 1.3  2007/08/29 22:35:21  bnelson
-Added upper triangular matrix time vector.
-
-Revision 1.2  2007/06/17 22:54:23  bnelson
-Fixed the row-major matrix multiplication wrapper function.
-
-Revision 1.1  2007/04/03 03:59:24  bnelson
-Moved Lapack.hpp, Blas.hpp, Transf77.hpp to LinearAlgebra
-
-Revision 1.3  2007/02/04 00:15:40  bnelson
-*** empty log message ***
-
-Revision 1.2  2006/06/01 13:44:28  kirby
-*** empty log message ***
-
-Revision 1.1  2006/06/01 11:07:52  kirby
-*** empty log message ***
-
-Revision 1.1  2006/05/04 18:57:41  kirby
-*** empty log message ***
-
-Revision 1.4  2006/02/26 21:13:45  bnelson
-Fixed a variety of compiler errors caused by updates to the coding standard.
-
-Revision 1.3  2006/02/15 08:07:15  sherwin
-
-Put codes into standard although have not yet been compiled
-
-Revision 1.2  2006/02/12 21:51:42  sherwin
-
-Added licence
-
-Revision 1.1  2006/02/12 15:06:12  sherwin
-
-Changed .h files to .hpp
-
-**/

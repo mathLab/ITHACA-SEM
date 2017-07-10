@@ -36,6 +36,8 @@
 
 #include <MultiRegions/ExpList1DHomogeneous2D.h>
 
+using namespace std;
+
 namespace Nektar
 {
     namespace MultiRegions
@@ -66,6 +68,7 @@ namespace Nektar
             for(n = 0; n < points.num_elements(); ++n)
             {
                 m_lines[n] = points[n];
+                (*m_exp).push_back(points[n]->GetExp(0));
             }
 
             // Setup Default optimisation information.
@@ -115,7 +118,6 @@ namespace Nektar
             int nel = m_lines[0]->GetExpSize();
             m_coeff_offset   = Array<OneD,int>(nel*nyzlines);
             m_phys_offset    = Array<OneD,int>(nel*nyzlines);
-            m_offset_elmt_id = Array<OneD,int>(nel*nyzlines);
             Array<OneD, NekDouble> tmparray;
 
             for(cnt  = n = 0; n < nyzlines; ++n)
@@ -126,8 +128,7 @@ namespace Nektar
                 for(i = 0; i < nel; ++i)
                 {
                     m_coeff_offset[cnt] = m_lines[n]->GetCoeff_Offset(i) + n*ncoeffs_per_line;
-                    m_phys_offset[cnt] =  m_lines[n]->GetPhys_Offset(i) + n*npoints_per_line;
-                    m_offset_elmt_id[cnt++] = m_lines[n]->GetOffset_Elmt_Id(i) + n*nel;
+                    m_phys_offset[cnt++] =  m_lines[n]->GetPhys_Offset(i) + n*npoints_per_line;
                 }
             }
         }

@@ -45,7 +45,6 @@
 
 namespace Nektar
 {     
-
     enum EquationType
     {
         eNoEquationType,
@@ -97,6 +96,33 @@ namespace Nektar
         "NoAdvection"
     };
 
+
+    struct WomersleyParams
+    {
+        WomersleyParams(int dim)
+        {
+            m_axisnormal = Array<OneD, NekDouble>(dim,0.0);
+            m_axispoint  = Array<OneD, NekDouble>(dim,0.0);
+        };
+
+        virtual ~WomersleyParams()
+        {};
+        
+        /// Real and imaginary velocity comp. of wom
+        std::vector<NekDouble> m_wom_vel_r;
+        std::vector<NekDouble> m_wom_vel_i;
+
+        /// Womersley  BC constants
+        NekDouble m_radius;
+        NekDouble m_period;
+        Array<OneD, NekDouble> m_axisnormal;
+        // currently this needs to be the point in the middle of the
+        // axis but shoudl be generalised to be any point on the axis
+        Array<OneD, NekDouble> m_axispoint;
+
+    };
+    typedef boost::shared_ptr<WomersleyParams> WomersleyParamsSharedPtr;
+
     /**
      * \brief This class is the base class for Navier Stokes problems
      *
@@ -145,12 +171,8 @@ namespace Nektar
         /// modal energy file
         std::ofstream m_mdlFile;
 
-        /// bool to identify if using a substepping scheme
-        bool m_subSteppingScheme;
         /// bool to identify if advection term smoothing is requested
         bool m_SmoothAdvection;
-
-        LibUtilities::TimeIntegrationWrapperSharedPtr m_subStepIntegrationScheme;
 
         /// Forcing terms
         std::vector<SolverUtils::ForcingSharedPtr>               m_forcing;
@@ -198,8 +220,7 @@ namespace Nektar
         }
 
         void EvaluateAdvectionTerms(const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-									Array<OneD, Array<OneD, NekDouble> > &outarray,
-									Array<OneD, NekDouble> &wk = NullNekDouble1DArray);
+									Array<OneD, Array<OneD, NekDouble> > &outarray);
 
         void WriteModalEnergy(void);
 
@@ -209,8 +230,20 @@ namespace Nektar
         /// Set Radiation forcing term
         void SetRadiationBoundaryForcing(int fieldid);
 
+        /// Set Normal Velocity Component to Zero
+        void SetZeroNormalVelocity();
+
+        /// Set Womersley Profile if specified
+        void SetWomersleyBoundary(const int fldid, const int bndid);
+
+        /// Set Up Womersley details
+        void SetUpWomersley(const int bndid, std::string womstr);
+        
         /// evaluate steady state
         bool CalcSteadyState(void);
+
+        /// Womersley parameters if required 
+        std::map<int,WomersleyParamsSharedPtr> m_womersleyParams;
 
         virtual MultiRegions::ExpListSharedPtr v_GetPressure()
         {

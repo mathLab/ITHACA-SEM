@@ -69,7 +69,10 @@ namespace Nektar
                 const bool                                  useFFT,
                 const bool                                  dealiasing,
                 const SpatialDomains::MeshGraphSharedPtr   &graph2D,
-                const std::string                          &variable);
+                const std::string                          &variable,
+                const Collections::ImplementationType ImpType
+                = Collections::eNoImpType);
+                                                       
 
             /// Copy constructor.
             MULTI_REGIONS_EXPORT DisContField3DHomogeneous1D(
@@ -139,7 +142,8 @@ namespace Nektar
                 Array<OneD,int> &EdgeID);
             
             virtual void v_GetBndElmtExpansion(int i,
-                            boost::shared_ptr<ExpList> &result);
+                            boost::shared_ptr<ExpList> &result,
+                            const bool DeclareCoeffPhysArrays);
 
             /// This funtion extract form a vector containing a full
             /// 3D-homogenous-1D field the value associated with a
@@ -251,9 +255,9 @@ namespace Nektar
            }
 
            /// @todo Fix Robin BCs for homogeneous case
-           virtual map<int, RobinBCInfoSharedPtr> v_GetRobinBCInfo()
+           virtual std::map<int, RobinBCInfoSharedPtr> v_GetRobinBCInfo()
            {
-               return map<int, RobinBCInfoSharedPtr>();
+               return std::map<int, RobinBCInfoSharedPtr>();
            }
 
            virtual void v_ExtractTracePhys(
@@ -274,7 +278,8 @@ namespace Nektar
                 const FlagList                     &flags,
                 const StdRegions::ConstFactorMap   &factors,
                 const StdRegions::VarCoeffMap      &varcoeff,
-                const Array<OneD, const NekDouble> &dirForcing);
+                const Array<OneD, const NekDouble> &dirForcing,
+                const bool PhysSpaceForcing);
 
             virtual void v_EvaluateBoundaryConditions(
                 const NekDouble   time    = 0.0,

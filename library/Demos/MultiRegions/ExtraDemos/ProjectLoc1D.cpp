@@ -4,6 +4,7 @@
 #include <MultiRegions/ExpList1D.h>
 #include <SpatialDomains/MeshGraph1D.h>
 
+using namespace std;
 using namespace Nektar;
 
 // compile using Builds/Demos/StdRegions -> make DEBUG=1 ProjectLoc1D

@@ -6,6 +6,7 @@
 #include <SpatialDomains/MeshGraph2D.h>
 #include <MultiRegions/ContField2D.h>
 
+using namespace std;
 using namespace Nektar;
 
 std::string PortablePath(const boost::filesystem::path& path);
@@ -19,7 +20,7 @@ int main(int argc, char *argv[])
     NekDouble  lambda;
     vector<string> vFilenames;
     //defining timing variables
-    Timer timer;
+    LibUtilities::Timer timer;
     NekDouble exeTime, fullTime, ppTime = 0.0;
 
     if(argc < 6)//< allows to parse "verbose" option

@@ -8,6 +8,7 @@
 
 #include <LibUtilities/Foundations/Foundations.hpp>
 
+using namespace std;
 using namespace Nektar;
 
 NekDouble Tri_sol(NekDouble x, NekDouble y, int order1, int order2);
@@ -50,17 +51,18 @@ int main(int argc, char *argv[])
         fprintf(stderr,"\t Ortho_B    = 2\n");
         fprintf(stderr,"\t Modified_A = 4\n");
         fprintf(stderr,"\t Modified_B = 5\n");
-        fprintf(stderr,"\t Fourier    = 7\n");
-        fprintf(stderr,"\t Lagrange   = 8\n");
-        fprintf(stderr,"\t Gauss Lagrange = 9\n");
-        fprintf(stderr,"\t Legendre   = 10\n");
-        fprintf(stderr,"\t Chebyshev  = 11\n");
-        fprintf(stderr,"\t FourierSingleMode  = 12\n");
-        fprintf(stderr,"\t Nodal tri (Electro) = 13\n");
-        fprintf(stderr,"\t Nodal tri (Fekete)  = 14\n");
+        fprintf(stderr,"\t Fourier    = 9\n");
+        fprintf(stderr,"\t Lagrange   = 10\n");
+        fprintf(stderr,"\t Gauss Lagrange = 11\n");
+        fprintf(stderr,"\t Legendre   = 12\n");
+        fprintf(stderr,"\t Chebyshev  = 13\n");
+        fprintf(stderr,"\t Monomial   = 14\n");
+        fprintf(stderr,"\t FourierSingleMode  = 15\n");
+        fprintf(stderr,"\t Nodal tri (Electro) = 18\n");
+        fprintf(stderr,"\t Nodal tri (Fekete)  = 19\n");
 
 
-        fprintf(stderr,"Note type = 3,6 are for three-dimensional basis\n");
+        fprintf(stderr,"Note type = 3,6,7,8 are for three-dimensional basis\n");
 
         exit(1);
     }
@@ -76,17 +78,17 @@ int main(int argc, char *argv[])
     int btype1_val = atoi(argv[2]);
     int btype2_val = atoi(argv[3]);
 
-    if(( btype1_val <= 12)&&( btype2_val <= 12))
+    if(( btype1_val <= 15)&&( btype2_val <= 15))
     {
         btype1 =   (LibUtilities::BasisType) btype1_val;
         btype2 =   (LibUtilities::BasisType) btype2_val;
     }
-    else if(( btype1_val >=13)&&(btype2_val <= 14))
+    else if(( btype1_val >=18)&&(btype2_val <= 19))
     {
         btype1 =   LibUtilities::eOrtho_A;
         btype2 =   LibUtilities::eOrtho_B;
 
-        if(btype1_val == 13)
+        if(btype1_val == 18)
         {
             NodalType = LibUtilities::eNodalTriElec;
         }

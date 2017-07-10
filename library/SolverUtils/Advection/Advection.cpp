@@ -45,11 +45,8 @@ namespace SolverUtils
  */
 AdvectionFactory& GetAdvectionFactory()
 {
-    typedef Loki::SingletonHolder<AdvectionFactory,
-    Loki::CreateUsingNew,
-    Loki::NoDestroy,
-    Loki::SingleThreaded> Type;
-    return Type::Instance();
+    static AdvectionFactory instance;
+    return instance;
 }
 
 
@@ -79,9 +76,12 @@ void Advection::Advect(
     const Array<OneD, Array<OneD, NekDouble> >        &pAdvVel,
     const Array<OneD, Array<OneD, NekDouble> >        &pInarray,
     Array<OneD, Array<OneD, NekDouble> >              &pOutarray,
-    const NekDouble                                   &pTime)
+    const NekDouble                                   &pTime,
+    const Array<OneD, Array<OneD, NekDouble> >        &pFwd,
+    const Array<OneD, Array<OneD, NekDouble> >        &pBwd)
 {
-    v_Advect(nConvectiveFields, pFields, pAdvVel, pInarray, pOutarray, pTime);
+    v_Advect(nConvectiveFields, pFields, pAdvVel, pInarray,
+            pOutarray, pTime, pFwd, pBwd);
 }
 
 
@@ -122,7 +122,8 @@ void Advection::v_InitObject(
  *
  */
 void Advection::v_SetBaseFlow(
-        const Array<OneD, Array<OneD, NekDouble> >    &inarray)
+        const Array<OneD, Array<OneD, NekDouble> >    &inarray,
+        const Array<OneD, MultiRegions::ExpListSharedPtr> &fields)
 {
     ASSERTL0(false,
             "A baseflow is not appropriate for this advection type.");

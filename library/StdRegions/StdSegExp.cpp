@@ -28,12 +28,16 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
-// 
+//
 // Description: Routines within Standard Segment Expansions
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <StdRegions/StdSegExp.h> 
+#include <StdRegions/StdSegExp.h>
+#include <LibUtilities/Foundations/InterpCoeff.h>
+
+
+using namespace std;
 
 namespace Nektar
 {
@@ -47,10 +51,10 @@ namespace Nektar
         }
 
 
-        /** \brief Constructor using BasisKey class for quadrature points and 
+        /** \brief Constructor using BasisKey class for quadrature points and
          *  order definition
          *
-         *  \param Ba BasisKey class definition containing order and quadrature 
+         *  \param Ba BasisKey class definition containing order and quadrature
          *  points.
          */
 
@@ -107,11 +111,11 @@ namespace Nektar
         // Integration Methods
         //---------------------------------------------------------------------
 
-        /** \brief Integrate the physical point list \a inarray over region 
+        /** \brief Integrate the physical point list \a inarray over region
          *  and return the value
          *
-         *  \param inarray definition of function to be integrated evauluated at 
-         *  quadrature point of expansion. 
+         *  \param inarray definition of function to be integrated evauluated at
+         *  quadrature point of expansion.
          *  \return returns \f$\int^1_{-1} u(\xi_1)d \xi_1 \f$ where \f$inarray[i]
          *  = u(\xi_{1i}) \f$
          */
@@ -123,7 +127,7 @@ namespace Nektar
             Array<OneD, const NekDouble> z  = m_base[0]->GetZ();
             Array<OneD, const NekDouble> w0 = m_base[0]->GetW();
 
-            // multiply by integration constants 
+            // multiply by integration constants
             Vmath::Vmul(nquad0, inarray, 1, w0, 1, tmp, 1);
 
             Int = Vmath::Vsum(nquad0, tmp, 1);
@@ -139,13 +143,13 @@ namespace Nektar
         //---------------------------------------------------------------------
 
 
-        /** \brief Evaluate the derivative \f$ d/d{\xi_1} \f$ at the physical 
+        /** \brief Evaluate the derivative \f$ d/d{\xi_1} \f$ at the physical
          *  quadrature points given by \a inarray and return in \a outarray.
          *
          *  This is a wrapper around StdExpansion1D::Tensor_Deriv
          *  \param inarray array of a function evaluated at the quadrature points
          *  \param  outarray the resulting array of the derivative \f$
-         *  du/d_{\xi_1}|_{\xi_{1i}} \f$ will be stored in the array \a outarra 
+         *  du/d_{\xi_1}|_{\xi_{1i}} \f$ will be stored in the array \a outarra
          */
 
         void StdSegExp::v_PhysDeriv(const Array<OneD, const NekDouble>& inarray,
@@ -197,7 +201,7 @@ namespace Nektar
          *  points \a outarray
          *
          *  Operation can be evaluated as \f$ u(\xi_{1i}) =
-         *  \sum_{p=0}^{order-1} \hat{u}_p \phi_p(\xi_{1i}) \f$ or equivalently 
+         *  \sum_{p=0}^{order-1} \hat{u}_p \phi_p(\xi_{1i}) \f$ or equivalently
          *  \f$ {\bf u} = {\bf B}^T {\bf \hat{u}} \f$ where
          *  \f${\bf B}[i][j] = \phi_i(\xi_{1j}), \mbox{\_coeffs}[p] = {\bf
          *  \hat{u}}[p] \f$
@@ -205,9 +209,9 @@ namespace Nektar
          *  The function takes the coefficient array \a inarray as
          *  input for the transformation
          *
-         *  \param inarray: the coeffficients of the expansion 
+         *  \param inarray: the coeffficients of the expansion
          *
-         *  \param outarray: the resulting array of the values of the function at 
+         *  \param outarray: the resulting array of the values of the function at
          *  the physical quadrature points will be stored in the array \a outarray
          */
 
@@ -224,42 +228,67 @@ namespace Nektar
             else
             {
 
-#ifdef NEKTAR_USING_DIRECT_BLAS_CALLS
-
-                Blas::Dgemv('N',nquad,m_base[0]->GetNumModes(),1.0, (m_base[0]->GetBdata()).get(),
-                            nquad,&inarray[0],1,0.0,&outarray[0],1);
-
-#else //NEKTAR_USING_DIRECT_BLAS_CALLS
-
-                NekVector<NekDouble> in(m_ncoeffs,inarray,eWrapper);
-                NekVector<NekDouble> out(nquad,outarray,eWrapper);
-                NekMatrix<NekDouble> B(nquad,m_ncoeffs,m_base[0]->GetBdata(),eWrapper);
-                out = B * in;
-
-#endif //NEKTAR_USING_DIRECT_BLAS_CALLS 
+            Blas::Dgemv('N',nquad,m_base[0]->GetNumModes(),1.0,
+                        (m_base[0]->GetBdata()).get(),
+                        nquad,&inarray[0],1,0.0,&outarray[0],1);
 
             }
         }
 
-        /** \brief Forward transform from physical quadrature space stored in 
-         *  \a inarray and evaluate the expansion coefficients and store in 
-         *  \a outarray
-         *
-         *  Perform a forward transform using a Galerkin projection by taking the 
-         *  inner product of the physical points and multiplying by the inverse of
-         *  the mass matrix using the Solve method of the standard matrix 
-         *  container holding the local mass matrix, i.e. \f$ {\bf \hat{u}} = 
-         *  {\bf M}^{-1} {\bf I} \f$ where \f$ {\bf I}[p] =  \int^1_{-1} 
-         *  \phi_p(\xi_1) u(\xi_1) d\xi_1 \f$
-         *
-         *  This function stores the expansion coefficients calculated by the 
-         *  transformation in the coefficient space array \a outarray
-         *
-         *  \param inarray: array of physical quadrature points to be transformed
-         *
-         *  \param outarray: the coeffficients of the expansion 
-         */ 
+        void StdSegExp::v_ReduceOrderCoeffs(
+            int                                 numMin,
+            const Array<OneD, const NekDouble> &inarray,
+                  Array<OneD,       NekDouble> &outarray)
+        {
+            int n_coeffs = inarray.num_elements();
 
+            Array<OneD, NekDouble> coeff(n_coeffs);
+            Array<OneD, NekDouble> coeff_tmp(n_coeffs,0.0);
+            Array<OneD, NekDouble> tmp;
+            Array<OneD, NekDouble> tmp2;
+
+            int       nmodes0 = m_base[0]->GetNumModes();
+
+            Vmath::Vcopy(n_coeffs,inarray,1,coeff_tmp,1);
+
+            const LibUtilities::PointsKey Pkey0(
+                nmodes0, LibUtilities::eGaussLobattoLegendre);
+
+            LibUtilities::BasisKey b0(m_base[0]->GetBasisType(),nmodes0,Pkey0);
+
+            LibUtilities::BasisKey bortho0(LibUtilities::eOrtho_A,nmodes0,Pkey0);
+
+            LibUtilities::InterpCoeff1D(
+                b0, coeff_tmp, bortho0, coeff);
+
+            Vmath::Zero(n_coeffs,coeff_tmp,1);
+
+            Vmath::Vcopy(numMin,
+                         tmp  = coeff,1,
+                         tmp2 = coeff_tmp,1);
+
+            LibUtilities::InterpCoeff1D(
+                bortho0, coeff_tmp, b0, outarray);
+        }
+
+        /**
+         * \brief Forward transform from physical quadrature space stored in \a
+         * inarray and evaluate the expansion coefficients and store in \a
+         * outarray
+         *
+         * Perform a forward transform using a Galerkin projection by taking the
+         * inner product of the physical points and multiplying by the inverse
+         * of the mass matrix using the Solve method of the standard matrix
+         * container holding the local mass matrix, i.e. \f$ {\bf \hat{u}} =
+         * {\bf M}^{-1} {\bf I} \f$ where \f$ {\bf I}[p] = \int^1_{-1}
+         * \phi_p(\xi_1) u(\xi_1) d\xi_1 \f$
+         *
+         * This function stores the expansion coefficients calculated by the
+         * transformation in the coefficient space array \a outarray
+         *
+         * \param inarray: array of physical quadrature points to be transformed
+         * \param outarray: the coeffficients of the expansion
+         */
         void StdSegExp::v_FwdTrans(const Array<OneD, const NekDouble>& inarray,
                 Array<OneD, NekDouble> &outarray)
         {
@@ -319,7 +348,7 @@ namespace Nektar
                 }
 
                 fill(outarray.get(), outarray.get()+m_ncoeffs, 0.0 );
-                
+
                 if(m_base[0]->GetBasisType() != LibUtilities::eGauss_Lagrange)
                 {
                     outarray[GetVertexMap(0)] = inarray[0];
@@ -370,23 +399,23 @@ namespace Nektar
 
 
 
-        /** \brief  Inner product of \a inarray over region with respect to 
-         *  expansion basis \a base and return in \a outarray 
+        /** \brief  Inner product of \a inarray over region with respect to
+         *  expansion basis \a base and return in \a outarray
          *
          *  Calculate \f$ I[p] = \int^{1}_{-1} \phi_p(\xi_1) u(\xi_1) d\xi_1
          *  = \sum_{i=0}^{nq-1} \phi_p(\xi_{1i}) u(\xi_{1i}) w_i \f$ where
          *  \f$ outarray[p] = I[p], inarray[i] = u(\xi_{1i}), base[p*nq+i] =
          *  \phi_p(\xi_{1i}) \f$.
          *
-         *  \param  base an array defining the local basis for the inner product 
+         *  \param  base an array defining the local basis for the inner product
          *  usually passed from Basis->GetBdata() or Basis->GetDbdata()
          *  \param inarray: physical point array of function to be integrated
          *  \f$ u(\xi_1) \f$
-         *  \param coll_check flag to identify when a Basis->Collocation() call 
-         *  should be performed to see if this is a GLL_Lagrange basis with a 
-         *  collocation property. (should be set to 0 if taking the inner  
+         *  \param coll_check flag to identify when a Basis->Collocation() call
+         *  should be performed to see if this is a GLL_Lagrange basis with a
+         *  collocation property. (should be set to 0 if taking the inner
          *  product with respect to the derivative of basis)
-         *  \param outarray  the values of the inner product with respect to 
+         *  \param outarray  the values of the inner product with respect to
          *  each basis over region will be stored in the array \a outarray as
          *  output of the function
          */
@@ -402,7 +431,7 @@ namespace Nektar
             Array<OneD, const NekDouble> w =  m_base[0]->GetW();
 
             Vmath::Vmul(nquad, inarray, 1, w, 1, tmp, 1);
-            
+
             /* Comment below was a bug for collocated basis
             if(coll_check&&m_base[0]->Collocation())
             {
@@ -413,7 +442,7 @@ namespace Nektar
                 Blas::Dgemv('T',nquad,m_ncoeffs,1.0,base.get(),nquad,
                             &tmp[0],1,0.0,outarray.get(),1);
             }*/
-            
+
             // Correct implementation
             Blas::Dgemv('T',nquad,m_ncoeffs,1.0,base.get(),nquad,
                         &tmp[0],1,0.0,outarray.get(),1);
@@ -425,11 +454,11 @@ namespace Nektar
          *  Wrapper call to StdSegExp::IProductWRTBase
          *  \param inarray array of function values evaluated at the physical
          *  collocation points
-         *  \param outarray  the values of the inner product with respect to 
+         *  \param outarray  the values of the inner product with respect to
          *  each basis over region will be stored in the array \a outarray as
          *  output of the function
          */
-        void StdSegExp::v_IProductWRTBase(const Array<OneD, const NekDouble>& inarray, 
+        void StdSegExp::v_IProductWRTBase(const Array<OneD, const NekDouble>& inarray,
                 Array<OneD, NekDouble> &outarray)
         {
             v_IProductWRTBase(m_base[0]->GetBdata(),inarray,outarray,1);
@@ -535,13 +564,94 @@ namespace Nektar
             Blas::Daxpy(m_ncoeffs, mkey.GetConstFactor(eFactorLambda), wsp.get(), 1, outarray.get(), 1);
         }
 
+        void StdSegExp::v_SVVLaplacianFilter(Array<OneD, NekDouble> &array,
+                                            const StdMatrixKey &mkey)
+        {
+            // Generate an orthogonal expansion
+            int nq = m_base[0]->GetNumPoints();
+            int nmodes = m_base[0]->GetNumModes();
+            // Declare orthogonal basis.
+            LibUtilities::PointsKey pKey(nq,m_base[0]->GetPointsType());
+
+            LibUtilities::BasisKey B(LibUtilities::eOrtho_A, nmodes, pKey);
+            StdSegExp OrthoExp(B);
+
+            //SVV parameters loaded from the .xml case file
+            NekDouble  SvvDiffCoeff  = mkey.GetConstFactor(eFactorSVVDiffCoeff);
+            int cutoff = (int) (mkey.GetConstFactor(eFactorSVVCutoffRatio))*nmodes;
+
+            Array<OneD, NekDouble> orthocoeffs(OrthoExp.GetNcoeffs());
+
+            // project onto modal  space.
+            OrthoExp.FwdTrans(array,orthocoeffs);
+
+            //
+            for(int j = 0; j < nmodes; ++j)
+            {
+                if(j >= cutoff)//to filter out only the "high-modes"
+                {
+                     orthocoeffs[j] *=
+                         (SvvDiffCoeff*exp(-(j-nmodes)*(j-nmodes)/
+                                            ((NekDouble)((j-cutoff+1)*
+                                                 (j-cutoff+1)))));
+                 }
+                else
+                {
+                     orthocoeffs[j] *= 0.0;
+                }
+            }
+
+            // backward transform to physical space
+            OrthoExp.BwdTrans(orthocoeffs,array);
+        }
+
+        void StdSegExp::v_ExponentialFilter(
+                                          Array<OneD, NekDouble> &array,
+                                    const NekDouble        alpha,
+                                    const NekDouble        exponent,
+                                    const NekDouble        cutoff)
+        {
+            // Generate an orthogonal expansion
+            int nq     = m_base[0]->GetNumPoints();
+            int nmodes = m_base[0]->GetNumModes();
+            int P  = nmodes - 1;
+            // Declare orthogonal basis.
+            LibUtilities::PointsKey pKey(nq,m_base[0]->GetPointsType());
+
+            LibUtilities::BasisKey B(LibUtilities::eOrtho_A, nmodes, pKey);
+            StdSegExp OrthoExp(B);
+
+            // Cutoff
+            int Pcut = cutoff*P;
+
+            // Project onto orthogonal space.
+            Array<OneD, NekDouble> orthocoeffs(OrthoExp.GetNcoeffs());
+            OrthoExp.FwdTrans(array,orthocoeffs);
+
+            //
+            NekDouble fac;
+            for(int j = 0; j < nmodes; ++j)
+            {
+                //to filter out only the "high-modes"
+                if(j > Pcut)
+                {
+                    fac = (NekDouble) (j - Pcut) / ( (NekDouble) (P - Pcut) );
+                    fac = pow(fac, exponent);
+                    orthocoeffs[j] *= exp(-alpha*fac);
+                }
+            }
+
+            // backward transform to physical space
+            OrthoExp.BwdTrans(orthocoeffs,array);
+        }
+
         //up to here
         void StdSegExp::v_MultiplyByStdQuadratureMetric(
             const Array<OneD, const NekDouble> &inarray,
                   Array<OneD,       NekDouble> &outarray)
-        {         
+        {
             int nquad0 = m_base[0]->GetNumPoints();
-                
+
             const Array<OneD, const NekDouble>& w0 = m_base[0]->GetW();
 
             Vmath::Vmul(nquad0, inarray.get(),1,
@@ -568,17 +678,17 @@ namespace Nektar
         int StdSegExp::v_GetNverts() const
         {
             return 2;
-        } 
+        }
 
         int StdSegExp::v_NumBndryCoeffs() const
         {
             return 2;
-        } 
+        }
 
         int StdSegExp::v_NumDGBndryCoeffs() const
         {
             return 2;
-        } 
+        }
 
         int StdSegExp::v_CalcNumberOfCoefficients(
                 const std::vector<unsigned int> &nummodes,
@@ -601,6 +711,32 @@ namespace Nektar
 
             switch(mattype = mkey.GetMatrixType())
             {
+            case ePhysInterpToEquiSpaced:
+                {
+                    int nq = m_base[0]->GetNumPoints();
+
+                    // take definition from key
+                    if(mkey.ConstFactorExists(eFactorConst))
+                    {
+                        nq = (int) mkey.GetConstFactor(eFactorConst);
+                    }
+
+                    int neq = LibUtilities::StdSegData::
+                                              getNumberOfCoefficients(nq);
+                    Array<OneD, NekDouble >   coords (1);
+                    DNekMatSharedPtr          I     ;
+                    Mat                     = MemoryManager<DNekMat>::
+                                                AllocateSharedPtr(neq, nq);
+
+                    for(int i = 0; i < neq; ++i)
+                    {
+                        coords[0] = -1.0 + 2*i/(NekDouble)(neq-1);
+                        I         = m_base[0]->GetI(coords);
+                        Vmath::Vcopy(nq, I->GetRawPtr(), 1,
+                                         Mat->GetRawPtr()+i,neq);
+                    }
+                }
+                break;
             case eFwdTrans:
                 {
                     Mat = MemoryManager<DNekMat>::AllocateSharedPtr(m_ncoeffs,m_ncoeffs);
@@ -721,7 +857,20 @@ namespace Nektar
             return localDOF;
         }
 
+        void StdSegExp::v_GetSimplexEquiSpacedConnectivity(
+            Array<OneD, int> &conn,
+            bool              standard)
+        {
+            int np = m_base[0]->GetNumPoints();
+
+            conn     = Array<OneD, int>(2*(np-1));
+            int cnt  = 0;
+            for(int i = 0; i < np-1; ++i)
+            {
+                conn[cnt++] = i;
+                conn[cnt++] = i+1;
+            }
+        }
 
     }//end namespace
 }//end namespace
-

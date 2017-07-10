@@ -41,6 +41,8 @@
 #include <LocalRegions/MatrixKey.h>
 #include <MultiRegions/GlobalLinSysDirectStaticCond.h>
 
+using namespace std;
+
 namespace Nektar
 {
 
@@ -420,7 +422,7 @@ namespace Nektar
         // Set up block matrix sizes - 
         for(n = 0; n < nel; ++n)
         {
-            eid = m_fields[m_velocity[0]]->GetOffset_Elmt_Id(n);
+            eid = n;
             nsize_bndry[n] = nvel*m_fields[m_velocity[0]]->GetExp(eid)->NumBndryCoeffs()*nz_loc;
             nsize_bndry_p1[n] = nsize_bndry[n]+nz_loc;
             nsize_int  [n] = (nvel*m_fields[m_velocity[0]]->GetExp(eid)->GetNcoeffs()*nz_loc - nsize_bndry[n]);
@@ -453,11 +455,11 @@ namespace Nektar
         ::AllocateSharedPtr(nsize_p_m1,nsize_p_m1,blkmatStorage);
         
         
-        Timer timer;
+        LibUtilities::Timer timer;
         timer.Start();
         for(n = 0; n < nel; ++n)
         {
-            eid = m_fields[m_velocity[0]]->GetOffset_Elmt_Id(n);
+            eid = n;
             nbndry = nsize_bndry[n];
             nint   = nsize_int[n];
             k = nsize_bndry_p1[n];
@@ -1381,12 +1383,13 @@ namespace Nektar
             lambda_store = lambda;
         }
         
-        SetBoundaryConditions(time);		
-        
         // Forcing for advection solve 
         for(i = 0; i < m_velocity.num_elements(); ++i)
         {
+            bool waveSpace = m_fields[m_velocity[i]]->GetWaveSpace();
+            m_fields[m_velocity[i]]->SetWaveSpace(true);
             m_fields[m_velocity[i]]->IProductWRTBase(inarray[i],m_fields[m_velocity[i]]->UpdateCoeffs());
+            m_fields[m_velocity[i]]->SetWaveSpace(waveSpace);
             Vmath::Smul(m_fields[m_velocity[i]]->GetNcoeffs(),lambda,m_fields[m_velocity[i]]->GetCoeffs(), 1,m_fields[m_velocity[i]]->UpdateCoeffs(),1);
             forcing[i] = m_fields[m_velocity[i]]->GetCoeffs();
         }
@@ -1442,7 +1445,7 @@ namespace Nektar
             }
             case eSteadyNavierStokes:
             {	
-                Timer Generaltimer;
+                LibUtilities::Timer Generaltimer;
                 Generaltimer.Start();
                 
                 int Check(0);
@@ -1518,7 +1521,10 @@ namespace Nektar
         }
         for (unsigned int i = 0; i < ncmpt; ++i)
         {
+            bool waveSpace = m_fields[m_velocity[i]]->GetWaveSpace();
+            m_fields[i]->SetWaveSpace(true);
             m_fields[i]->IProductWRTBase(forcing_phys[i], forcing[i]);
+            m_fields[i]->SetWaveSpace(waveSpace);
         }
 
         SolveLinearNS(forcing);
@@ -1556,7 +1562,7 @@ namespace Nektar
     
     void CoupledLinearNS::SolveSteadyNavierStokes(void)
     {
-        Timer Newtontimer;
+        LibUtilities::Timer Newtontimer;
         Newtontimer.Start();
         
         Array<OneD, Array<OneD, NekDouble> > RHS_Coeffs(m_velocity.num_elements());
@@ -1672,7 +1678,10 @@ namespace Nektar
             m_fields[m_velocity[i]]->PhysDeriv(i, u_N[i], tmp_RHS[i]);
             Vmath::Smul(tmp_RHS[i].num_elements(), m_kinvis, tmp_RHS[i], 1, tmp_RHS[i], 1);
             
+            bool waveSpace = m_fields[m_velocity[i]]->GetWaveSpace();
+            m_fields[m_velocity[i]]->SetWaveSpace(true);
             m_fields[m_velocity[i]]->IProductWRTDerivBase(i, tmp_RHS[i], RHS[i]);
+            m_fields[m_velocity[i]]->SetWaveSpace(waveSpace);
         }
         
         SetUpCoupledMatrix(0.0, u_N, true);
@@ -1755,9 +1764,12 @@ namespace Nektar
         
         for(int i = 0; i < m_velocity.num_elements(); ++i)
         {
+            bool waveSpace = m_fields[m_velocity[i]]->GetWaveSpace();
+            m_fields[m_velocity[i]]->SetWaveSpace(true);
             m_fields[m_velocity[i]]->IProductWRTBase(Eval_Adv[i], AdvTerm[i]); //(w, (u.grad)u)
             m_fields[m_velocity[i]]->IProductWRTDerivBase(i, tmp_DerVel[i], ViscTerm[i]); //(grad w, grad u)
             m_fields[m_velocity[i]]->IProductWRTBase(m_ForcingTerm[i], Forc[i]); //(w, f)
+            m_fields[m_velocity[i]]->SetWaveSpace(waveSpace);
             
             Vmath::Vsub(outarray[i].num_elements(), outarray[i], 1, AdvTerm[i], 1, outarray[i], 1);
             Vmath::Vsub(outarray[i].num_elements(), outarray[i], 1, ViscTerm[i], 1, outarray[i], 1);
@@ -1952,7 +1964,7 @@ namespace Nektar
         cnt = cnt1 = 0;
         for(i = 0; i < nel; ++i) // loop over elements
         {
-            eid = fields[m_velocity[0]]->GetOffset_Elmt_Id(i);
+            eid = i;
             fields[m_velocity[0]]->GetExp(eid)->GetBoundaryMap(bmap);
             fields[m_velocity[0]]->GetExp(eid)->GetInteriorMap(imap);
             nbnd   = bmap.num_elements();
@@ -2000,7 +2012,7 @@ namespace Nektar
         offset = cnt = 0; 
         for(i = 0; i < nel; ++i)
         {
-            eid  = fields[0]->GetOffset_Elmt_Id(i);
+            eid  = i;
             nbnd = nz_loc*fields[0]->GetExp(eid)->NumBndryCoeffs(); 
             
             for(j = 0; j < nvel; ++j)
@@ -2020,7 +2032,7 @@ namespace Nektar
         offset = cnt1 = 0; 
         for(i = 0; i <  nel; ++i)
         {
-            eid  = fields[0]->GetOffset_Elmt_Id(i);
+            eid  = i;
             nbnd = nz_loc*fields[0]->GetExp(eid)->NumBndryCoeffs(); 
             nint = pressure->GetExp(eid)->GetNcoeffs(); 
             
@@ -2099,7 +2111,7 @@ namespace Nektar
         Array<OneD, NekDouble> p_coeffs = pressure->UpdateCoeffs();
         for(i = 0; i <  nel; ++i)
         {
-            eid  = fields[0]->GetOffset_Elmt_Id(i);
+            eid  = i;
             nbnd = nz_loc*fields[0]->GetExp(eid)->NumBndryCoeffs(); 
             nint = pressure->GetExp(eid)->GetNcoeffs(); 
             
@@ -2119,7 +2131,7 @@ namespace Nektar
         offset = cnt = cnt1 = 0;
         for(i = 0; i < nel; ++i)
         {
-            eid  = fields[0]->GetOffset_Elmt_Id(i);
+            eid  = i;
             nint = pressure->GetExp(eid)->GetNcoeffs(); 
             nbnd = fields[0]->GetExp(eid)->NumBndryCoeffs(); 
             cnt1 = pressure->GetCoeff_Offset(eid);
@@ -2148,7 +2160,7 @@ namespace Nektar
         cnt = cnt1 = 0;
         for(i = 0; i < nel; ++i) // loop over elements
         {
-            eid  = fields[m_velocity[0]]->GetOffset_Elmt_Id(i);
+            eid  = i;
             fields[0]->GetExp(eid)->GetBoundaryMap(bmap);
             fields[0]->GetExp(eid)->GetInteriorMap(imap);
             nbnd   = bmap.num_elements();

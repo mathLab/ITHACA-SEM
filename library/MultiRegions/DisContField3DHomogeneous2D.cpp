@@ -50,14 +50,16 @@ namespace Nektar
         {
         }
 
-        DisContField3DHomogeneous2D::DisContField3DHomogeneous2D(const LibUtilities::SessionReaderSharedPtr &pSession,
-                                                                 const LibUtilities::BasisKey &HomoBasis_y,
-																 const LibUtilities::BasisKey &HomoBasis_z,
-                                                                 const NekDouble lhom_y,
-																 const NekDouble lhom_z,
-																 const bool useFFT,
-																 const bool dealiasing):
-            ExpList3DHomogeneous2D(pSession,HomoBasis_y,HomoBasis_z,lhom_y,lhom_z,useFFT,dealiasing),
+        DisContField3DHomogeneous2D::DisContField3DHomogeneous2D(
+                    const LibUtilities::SessionReaderSharedPtr &pSession,
+                    const LibUtilities::BasisKey &HomoBasis_y,
+                    const LibUtilities::BasisKey &HomoBasis_z,
+                    const NekDouble lhom_y,
+                    const NekDouble lhom_z,
+                    const bool useFFT,
+                    const bool dealiasing,
+                    const Collections::ImplementationType ImpType):
+            ExpList3DHomogeneous2D(pSession,HomoBasis_y,HomoBasis_z,lhom_y,lhom_z,useFFT,dealiasing,ImpType),
             m_bndCondExpansions(),
             m_bndConditions()
         {
@@ -81,16 +83,18 @@ namespace Nektar
             }
         }
 
-        DisContField3DHomogeneous2D::DisContField3DHomogeneous2D(const LibUtilities::SessionReaderSharedPtr &pSession,
-                                                                 const LibUtilities::BasisKey &HomoBasis_y,
-																 const LibUtilities::BasisKey &HomoBasis_z,
-																 const NekDouble lhom_y,
-																 const NekDouble lhom_z,
-																 const bool useFFT,
-																 const bool dealiasing,
-																 const SpatialDomains::MeshGraphSharedPtr &graph1D,
-																 const std::string &variable):
-            ExpList3DHomogeneous2D(pSession,HomoBasis_y,HomoBasis_z,lhom_y,lhom_z,useFFT,dealiasing),
+        DisContField3DHomogeneous2D::DisContField3DHomogeneous2D(
+                         const LibUtilities::SessionReaderSharedPtr &pSession,
+                         const LibUtilities::BasisKey &HomoBasis_y,
+                         const LibUtilities::BasisKey &HomoBasis_z,
+                         const NekDouble lhom_y,
+                         const NekDouble lhom_z,
+                         const bool useFFT,
+                         const bool dealiasing,
+                         const SpatialDomains::MeshGraphSharedPtr &graph1D,
+                         const std::string &variable,
+                         const Collections::ImplementationType ImpType):
+            ExpList3DHomogeneous2D(pSession,HomoBasis_y,HomoBasis_z,lhom_y,lhom_z,useFFT,dealiasing,ImpType),
             m_bndCondExpansions(),
             m_bndConditions()
         {
@@ -99,7 +103,7 @@ namespace Nektar
             SpatialDomains::BoundaryConditions bcs(pSession, graph1D);
 
             //  
-            m_lines[0] = line_zero = MemoryManager<DisContField1D>::AllocateSharedPtr(pSession,graph1D,variable);
+            m_lines[0] = line_zero = MemoryManager<DisContField1D>::AllocateSharedPtr(pSession,graph1D,variable,ImpType);
 
             m_exp = MemoryManager<LocalRegions::ExpansionVector>::AllocateSharedPtr();
             nel = m_lines[0]->GetExpSize();
@@ -108,13 +112,13 @@ namespace Nektar
             {
                 (*m_exp).push_back(m_lines[0]->GetExp(i));
             }
-			
-			int nylines = m_homogeneousBasis_y->GetNumPoints();
-			int nzlines = m_homogeneousBasis_z->GetNumPoints();
-
+            
+            int nylines = m_homogeneousBasis_y->GetNumPoints();
+            int nzlines = m_homogeneousBasis_z->GetNumPoints();
+            
             for(n = 1; n < nylines*nzlines; ++n)
             {
-                m_lines[n] = MemoryManager<DisContField1D>::AllocateSharedPtr(pSession,graph1D,variable);
+                m_lines[n] = MemoryManager<DisContField1D>::AllocateSharedPtr(pSession,graph1D,variable,ImpType);
                 for(i = 0; i < nel; ++i)
                 {
                     (*m_exp).push_back((*m_exp)[i]);
@@ -211,7 +215,8 @@ namespace Nektar
                 const FlagList &flags,
                 const StdRegions::ConstFactorMap &factors,
                 const StdRegions::VarCoeffMap &varcoeff,
-                const Array<OneD, const NekDouble> &dirForcing)
+                const Array<OneD, const NekDouble> &dirForcing,
+                const bool PhysSpaceForcing)
         {
             int n,m;
             int cnt = 0;
@@ -224,34 +229,39 @@ namespace Nektar
 			
             Array<OneD, NekDouble> e_out;
             Array<OneD, NekDouble> fce(inarray.num_elements());
+            Array<OneD, const NekDouble> wfce;
 
             // Fourier transform forcing function
-			if(m_WaveSpace)
-			{
-				fce = inarray;
-			}
-			else 
-			{
-				HomogeneousFwdTrans(inarray,fce);
-			}
+            if(m_WaveSpace)
+            {
+                fce = inarray;
+            }
+            else 
+            {
+                HomogeneousFwdTrans(inarray,fce);
+            }
 
             for(n = 0; n < nhom_modes_z; ++n)
             {
-				for(m = 0; m < nhom_modes_y; ++m)
-				{
-					beta_z = 2*M_PI*(n/2)/m_lhom_z;
-					beta_y = 2*M_PI*(m/2)/m_lhom_y;
-					new_factors = factors;
-					new_factors[StdRegions::eFactorLambda] += beta_y*beta_y + beta_z*beta_z;
-					
-					m_lines[n]->HelmSolve(fce + cnt,
-                                         e_out = outarray + cnt1,
-                                         flags, new_factors, varcoeff, dirForcing);
-                
-					cnt  += m_lines[n]->GetTotPoints();
-					cnt1 += m_lines[n]->GetNcoeffs();
-				}
-			}
+                for(m = 0; m < nhom_modes_y; ++m)
+                {
+                    beta_z = 2*M_PI*(n/2)/m_lhom_z;
+                    beta_y = 2*M_PI*(m/2)/m_lhom_y;
+                    new_factors = factors;
+                    new_factors[StdRegions::eFactorLambda] +=
+                        beta_y*beta_y + beta_z*beta_z;
+                    
+                    wfce = (PhysSpaceForcing)? fce+cnt:fce+cnt1;
+                    m_lines[n]->HelmSolve(wfce,
+                                          e_out = outarray + cnt1,
+                                          flags, new_factors,
+                                          varcoeff, dirForcing,
+                                          PhysSpaceForcing);
+                    
+                    cnt  += m_lines[n]->GetTotPoints();
+                    cnt1 += m_lines[n]->GetNcoeffs();
+                }
+            }
         }
 		
         void DisContField3DHomogeneous2D::v_EvaluateBoundaryConditions(
@@ -283,9 +293,8 @@ namespace Nektar
 			return UpdateBndConditions();
 		}
 		
-		void DisContField3DHomogeneous2D::GetBoundaryToElmtMap(Array<OneD, int> &ElmtID, Array<OneD,int> &EdgeID)
+        void DisContField3DHomogeneous2D::GetBoundaryToElmtMap(Array<OneD, int> &ElmtID, Array<OneD,int> &EdgeID)
         {
-            
             if(m_BCtoElmMap.num_elements() == 0)
             {
                 Array<OneD, int> ElmtID_tmp;
@@ -297,42 +306,43 @@ namespace Nektar
 				
                 int MapSize = ElmtID_tmp.num_elements();
 				
-                ElmtID = Array<OneD, int>(nlines*MapSize);
-                EdgeID = Array<OneD, int>(nlines*MapSize);
-                for(int i = 0; i < nlines; i++)
-                {
-                    for(int j = 0; j < MapSize; j++)
-                    {
-                        ElmtID[j+i*MapSize] = ElmtID_tmp[j] + i*nel_per_lines;
-                        EdgeID[j+i*MapSize] = EdgeID_tmp[j];
-                    }
-                }
                 m_BCtoElmMap = Array<OneD, int>(nlines*MapSize);
                 m_BCtoEdgMap = Array<OneD, int>(nlines*MapSize);
-				
-                Vmath::Vcopy(nlines*MapSize,ElmtID,1,m_BCtoElmMap,1);
-                Vmath::Vcopy(nlines*MapSize,EdgeID,1,m_BCtoEdgMap,1);
+                if (MapSize > 0)
+                {
+                    int i ,j, n, cnt;
+                    int cntLine = 0;
+                    for (cnt=n=0; n < m_bndCondExpansions.num_elements(); ++n)
+                    {
+                        int lineExpSize = m_lines[0]
+                                                ->GetBndCondExpansions()[n]
+                                                ->GetExpSize();
+                        for (i = 0; i < lineExpSize ; ++i, ++cntLine)
+                        {
+                            for(j = 0; j < nlines; j++)
+                            {
+                                m_BCtoElmMap[cnt+i+j*lineExpSize] =
+                                        ElmtID_tmp[cntLine]+j*nel_per_lines;
+                                m_BCtoEdgMap[cnt+i+j*lineExpSize] =
+                                        EdgeID_tmp[cntLine];
+                            }
+                        }
+                        cnt += m_bndCondExpansions[n]->GetExpSize();
+                    }
+                }
             }
-            else 
-            {
-                int MapSize = m_BCtoElmMap.num_elements();
-				
-                ElmtID = Array<OneD, int>(MapSize);
-                EdgeID = Array<OneD, int>(MapSize);
-				
-                Vmath::Vcopy(MapSize,m_BCtoElmMap,1,ElmtID,1);
-                Vmath::Vcopy(MapSize,m_BCtoEdgMap,1,EdgeID,1);
-            }			
+            ElmtID = m_BCtoElmMap;
+            EdgeID = m_BCtoEdgMap;
         }
 
         void DisContField3DHomogeneous2D::v_GetBndElmtExpansion(int i,
-                            boost::shared_ptr<ExpList> &result)
+                            boost::shared_ptr<ExpList> &result,
+                            const bool DeclareCoeffPhysArrays)
         {
             int n, cnt, nq;
             int offsetOld, offsetNew;
-            Array<OneD, NekDouble> tmp1, tmp2;
-            std::vector<unsigned int> eIDs;
             
+            std::vector<unsigned int> eIDs;
             Array<OneD, int> ElmtID,EdgeID;
             GetBoundaryToElmtMap(ElmtID,EdgeID);
             
@@ -350,23 +360,31 @@ namespace Nektar
             
             // Create expansion list
             result = 
-                MemoryManager<ExpList3DHomogeneous2D>::AllocateSharedPtr(*this, eIDs);
+                MemoryManager<ExpList3DHomogeneous2D>::AllocateSharedPtr
+                    (*this, eIDs);
             
             // Copy phys and coeffs to new explist
-            for (n = 0; n < result->GetExpSize(); ++n)
+            if ( DeclareCoeffPhysArrays)
             {
-                nq = GetExp(ElmtID[cnt+n])->GetTotPoints();
-                offsetOld = GetPhys_Offset(ElmtID[cnt+n]);
-                offsetNew = result->GetPhys_Offset(n);
-                Vmath::Vcopy(nq, tmp1 = GetPhys()+ offsetOld, 1,
-                                 tmp2 = result->UpdatePhys()+ offsetNew, 1);
-                
-                nq = GetExp(ElmtID[cnt+n])->GetNcoeffs();
-                offsetOld = GetCoeff_Offset(ElmtID[cnt+n]);
-                offsetNew = result->GetCoeff_Offset(n);
-                Vmath::Vcopy(nq, tmp1 = GetCoeffs()+ offsetOld, 1,
-                                 tmp2 = result->UpdateCoeffs()+ offsetNew, 1);
+                Array<OneD, NekDouble> tmp1, tmp2;
+                for (n = 0; n < result->GetExpSize(); ++n)
+                {
+                    nq = GetExp(ElmtID[cnt+n])->GetTotPoints();
+                    offsetOld = GetPhys_Offset(ElmtID[cnt+n]);
+                    offsetNew = result->GetPhys_Offset(n);
+                    Vmath::Vcopy(nq, tmp1 = GetPhys()+ offsetOld, 1,
+                                tmp2 = result->UpdatePhys()+ offsetNew, 1);
+
+                    nq = GetExp(ElmtID[cnt+n])->GetNcoeffs();
+                    offsetOld = GetCoeff_Offset(ElmtID[cnt+n]);
+                    offsetNew = result->GetCoeff_Offset(n);
+                    Vmath::Vcopy(nq, tmp1 = GetCoeffs()+ offsetOld, 1,
+                                tmp2 = result->UpdateCoeffs()+ offsetNew, 1);
+                }
             }
+
+            // Set wavespace value
+            result->SetWaveSpace(GetWaveSpace());
         }
 
     } // end of namespace

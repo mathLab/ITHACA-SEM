@@ -45,8 +45,6 @@
 #include <LibUtilities/LinearAlgebra/NekVectorFwd.hpp>
 #include <LibUtilities/BasicUtils/OperatorGenerators.hpp>
 #include <LibUtilities/BasicUtils/RawType.hpp>
-#include <LibUtilities/LinearAlgebra/MatrixVectorMultiplication.hpp>
-#include <LibUtilities/LinearAlgebra/NekMatrixMetadata.hpp>
 #include <LibUtilities/BasicUtils/RawType.hpp>
 #include <LibUtilities/LinearAlgebra/CanGetRawPtr.hpp>
 
@@ -74,6 +72,10 @@ namespace Nektar
     void Multiply(NekVector<DataType>& result,
                   const NekMatrix<LhsInnerMatrixType, BlockMatrixTag>& lhs,
                   const NekVector<DataType>& rhs);
+
+    LIB_UTILITIES_EXPORT void DiagonalBlockFullScalMatrixMultiply(NekVector<double>& result,
+                     const NekMatrix<NekMatrix<NekMatrix<NekDouble, StandardMatrixTag>, ScaledMatrixTag>, BlockMatrixTag>& lhs,
+                     const NekVector<double>& rhs);
 
     ////////////////////////////////////////////////////////////////////////////////////
     // Matrix-Constant Multiplication

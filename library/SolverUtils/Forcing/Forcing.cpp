@@ -35,17 +35,16 @@
 
 #include <SolverUtils/Forcing/Forcing.h>
 
+using namespace std;
+
 namespace Nektar
 {
     namespace SolverUtils
     {
         ForcingFactory& GetForcingFactory()
         {
-            typedef Loki::SingletonHolder<ForcingFactory,
-                                          Loki::CreateUsingNew,
-                                          Loki::NoDestroy,
-                                          Loki::SingleThreaded> Type;
-            return Type::Instance();
+            static ForcingFactory instance;
+            return instance;
         }
 
         Forcing::Forcing(const LibUtilities::SessionReaderSharedPtr& pSession)
@@ -114,6 +113,16 @@ namespace Nektar
                 }
             }
             return vForceList;
+        }
+
+        Nektar::Array<OneD, Array<OneD, NekDouble> > &Forcing::UpdateForces()
+        {
+            return m_Forcing;
+        }
+
+        const Nektar::Array<OneD, const Array<OneD, NekDouble> > &Forcing::GetForces()
+        {
+            return m_Forcing;
         }
 
         void Forcing::EvaluateTimeFunction(
@@ -189,7 +198,7 @@ namespace Nektar
                 Vmath::Zero(vCoeffs.num_elements(), vCoeffs, 1);
 
                 LibUtilities::FieldIOSharedPtr fld =
-                    MemoryManager<LibUtilities::FieldIO>::AllocateSharedPtr(m_session->GetComm());
+                    LibUtilities::FieldIO::CreateForFile(m_session, filename);
                 fld->Import(filename, FieldDef, FieldData);
 
                 int idx = -1;

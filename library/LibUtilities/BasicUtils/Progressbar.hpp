@@ -38,6 +38,7 @@
 #include <iostream>
 #include <iomanip>
 #include <string>
+#include <cmath>
 
 #ifdef _WIN32
 #include <io.h>
@@ -47,12 +48,11 @@
 #define ISTTY isatty(fileno(stdout))
 #endif
 
-using namespace std;
-
 namespace Nektar
 {
 namespace LibUtilities
 {
+using namespace std;
 
 /**
  * @brief Prints a progressbar
@@ -66,33 +66,46 @@ namespace LibUtilities
  * calling this routine. Ideally, this should be called only when the
  * percentage is increased by an integer.
  */
-inline void PrintProgressbar(const int position, const int goal, const string message)
+inline int PrintProgressbar(const int position, const int goal, const string message,
+                                 int lastprogress = -1)
 {
+    std::cout.unsetf ( std::ios::floatfield );
     if (ISTTY)
     {
-        // carriage return
-        cout << "\r";
-
-        cout << message << ": ";
         float progress = position / float(goal);
-        cout << setw(3) << int(100 * progress) << "% [";
-        for (int j = 0; j < int(progress * 49); j++)
+        int  numeq = ceil(progress *49); 
+        if(lastprogress == numeq)
         {
-            cout << "=";
+            return numeq;
         }
-        for (int j = int(progress * 49); j < 49; j++)
+        else
         {
-            cout << " ";
+            // carriage return
+            cout << "\r";
+
+            cout << message << ": ";
+
+            cout << setw(3) << ceil(100 * progress) << "% [";
+            for (int j = 0; j < numeq; j++)
+            {
+                cout << "=";
+            }
+            for (int j = numeq; j < 49; j++)
+            {
+                cout << " ";
+            }
+            cout << "]" << flush;
+            return numeq;
         }
-        cout << "]" << flush;
     }
     else
     {
         // print only every 2 percent
-        if (int(100 * position / goal) % 2 ==  0)
+        if (int(ceil(double(100 * position / goal))) % 2 ==  0)
         {
             cout << "." <<  flush;
         }
+        return -1;
     }
 }
 

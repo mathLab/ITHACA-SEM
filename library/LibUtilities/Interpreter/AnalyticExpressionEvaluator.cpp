@@ -42,16 +42,6 @@
 #include <boost/algorithm/string/trim.hpp>
 #include <boost/random/detail/seed.hpp>
 
-#ifdef _MSC_VER
-#include <boost/preprocessor/cat.hpp>
-#endif //MSC_VER
-
-#ifdef _MSC_VER
-#define NEKTAR_MATH_NAME(x) BOOST_PP_CAT(_, x)
-#else
-#define NEKTAR_MATH_NAME(x) x
-#endif
-
 #if( BOOST_VERSION / 100 % 1000 >= 36 )
 using namespace boost::spirit::classic;
 #else
@@ -247,6 +237,7 @@ namespace Nektar
             m_functionMapNameToInstanceType["atan"]  =  E_ATAN;
             m_functionMapNameToInstanceType["atan2"] =  E_ATAN2;
             m_functionMapNameToInstanceType["ang"]   =  E_ANG;
+            m_functionMapNameToInstanceType["bessel"]  =  E_BESSEL;
             m_functionMapNameToInstanceType["ceil"]  =  E_CEIL;
             m_functionMapNameToInstanceType["cos"]   =  E_COS;
             m_functionMapNameToInstanceType["cosh"]  =  E_COSH;
@@ -285,6 +276,8 @@ namespace Nektar
             m_function2[E_ATAN2] = atan2;
             m_function2[E_ANG]   = ang;
             m_function2[E_RAD]   = rad;
+            m_function2[E_BESSEL]   = boost::math::cyl_bessel_j;
+
             // there is no entry to m_function that correspond to awgn function.
             // this is made in purpose. This function need not be pre-evaluated once!
         }
@@ -779,6 +772,9 @@ namespace Nektar
                         return std::make_pair(false,0);
                     case E_ANG:
                         stack.push_back ( makeStep<EvalAng>( stateIndex, stateIndex, stateIndex+1 ) );
+                        return std::make_pair(false,0);
+                    case E_BESSEL:
+                        stack.push_back ( makeStep<EvalBessel>( stateIndex, stateIndex, stateIndex+1 ) );
                         return std::make_pair(false,0);
                     case E_CEIL:
                         stack.push_back ( makeStep<EvalCeil>( stateIndex, stateIndex ) );

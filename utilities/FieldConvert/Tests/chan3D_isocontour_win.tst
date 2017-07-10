@@ -2,7 +2,7 @@
 <test>
     <description> Extract a isocontour</description>
     <executable>FieldConvert</executable>
-    <parameters>-m isocontour:fieldstr="u+v":fieldvalue=0.5:fieldname="UplusV":smooth chan3D.xml chan3D.fld isocontour.dat</parameters>
+    <parameters> -f -m isocontour:fieldstr="u+v":fieldvalue=0.5:fieldname="UplusV":smooth chan3D.xml chan3D.fld isocontour.dat</parameters>
     <files>
         <file description="Session File">chan3D.xml</file>
         <file description="Session File">chan3D.fld</file>

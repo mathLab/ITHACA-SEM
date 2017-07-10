@@ -43,7 +43,6 @@
 namespace Nektar
 {
 
-
 class LinearisedAdvection: public SolverUtils::Advection
 {
     enum FloquetMatType
@@ -54,7 +53,7 @@ class LinearisedAdvection: public SolverUtils::Advection
 
     /// A map between  matrix keys and their associated block
     /// matrices.
-    typedef map< FloquetMatType, DNekBlkMatSharedPtr> FloquetBlockMatrixMap;
+    typedef std::map< FloquetMatType, DNekBlkMatSharedPtr> FloquetBlockMatrixMap;
     /// A shared pointer to a BlockMatrixMap.
     typedef boost::shared_ptr<FloquetBlockMatrixMap> FloquetBlockMatrixMapShPtr;
 
@@ -62,7 +61,8 @@ public:
     friend class MemoryManager<LinearisedAdvection>;
 
     /// Creates an instance of this class
-    static SolverUtils::AdvectionSharedPtr create(std::string) {
+    static SolverUtils::AdvectionSharedPtr create(std::string)
+    {
         return MemoryManager<LinearisedAdvection>::AllocateSharedPtr();
     }
     /// Name of class
@@ -76,6 +76,7 @@ protected:
 
     /// Storage for base flow
     Array<OneD, Array<OneD, NekDouble> >            m_baseflow;
+    Array<OneD, Array<OneD, NekDouble> >            m_gradBase;
 
     /// number of slices
     int                                             m_slices;
@@ -118,10 +119,13 @@ protected:
         const Array<OneD, Array<OneD, NekDouble> >        &advVel,
         const Array<OneD, Array<OneD, NekDouble> >        &inarray,
               Array<OneD, Array<OneD, NekDouble> >        &outarray,
-        const NekDouble                                   &time);
+        const NekDouble                                   &time,
+        const Array<OneD, Array<OneD, NekDouble> > &pFwd = NullNekDoubleArrayofArray,
+        const Array<OneD, Array<OneD, NekDouble> > &pBwd = NullNekDoubleArrayofArray);
 
     virtual void v_SetBaseFlow(
-        const Array<OneD, Array<OneD, NekDouble> >        &inarray);
+        const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+        const Array<OneD, MultiRegions::ExpListSharedPtr> &fields);
 
     void UpdateBase(
         const NekDouble                                    m_slices,
@@ -130,8 +134,12 @@ protected:
         const NekDouble                                    m_time,
         const NekDouble                                    m_period);
 
+    void UpdateGradBase(
+        const int                                          var,
+        const MultiRegions::ExpListSharedPtr              &field);
+
     void DFT(
-        const string                                       file,
+        const std::string                                  file,
               Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
         const NekDouble                                    m_slices);
 

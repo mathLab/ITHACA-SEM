@@ -63,12 +63,11 @@
         </PARAMETERS>
 
         <SOLVERINFO>
-            <I PROPERTY="EQType"                VALUE="EulerCFE"            />
+            <I PROPERTY="EQType"                VALUE="IsentropicVortex"                    />
             <I PROPERTY="Projection"            VALUE="DisContinuous"       />
             <I PROPERTY="AdvectionType"         VALUE="FRHU"              />
             <I PROPERTY="TimeIntegrationMethod" VALUE="ClassicalRungeKutta4"/>
             <I PROPERTY="UpwindType"            VALUE="ExactToro"               />
-            <I PROPERTY="ProblemType"           VALUE="IsentropicVortex"    />
         </SOLVERINFO>
 
         <VARIABLES>

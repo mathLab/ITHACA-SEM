@@ -1,5 +1,4 @@
 SET(SOLVER_UTILS_SOURCES
-  Core/Deform.cpp
   Core/Misc.cpp
   AdvectionSystem.cpp
   Advection/Advection.cpp
@@ -28,6 +27,8 @@ SET(SOLVER_UTILS_SOURCES
   Filters/FilterEnergyBase.cpp
   Filters/FilterHistoryPoints.cpp
   Filters/FilterModalEnergy.cpp
+  Filters/FilterMovingAverage.cpp
+  Filters/FilterFieldConvert.cpp
   Filters/FilterThresholdMax.cpp
   Filters/FilterThresholdMin.cpp
   RiemannSolvers/RiemannSolver.cpp
@@ -39,11 +40,9 @@ SET(SOLVER_UTILS_SOURCES
   Forcing/ForcingBody.cpp
   Forcing/ForcingNoise.cpp
   Forcing/ForcingProgrammatic.cpp
-  Forcing/ForcingWavyness.cpp
 )
 
 SET(SOLVER_UTILS_HEADERS
-  Core/Deform.h
   Core/Misc.h
   AdvectionSystem.h
   Advection/Advection.h
@@ -72,6 +71,8 @@ SET(SOLVER_UTILS_HEADERS
   Filters/FilterEnergyBase.h
   Filters/FilterHistoryPoints.h
   Filters/FilterModalEnergy.h
+  Filters/FilterMovingAverage.h
+  Filters/FilterFieldConvert.h
   Filters/FilterThresholdMax.h
   Filters/FilterThresholdMin.h
   RiemannSolvers/RiemannSolver.h
@@ -85,7 +86,6 @@ SET(SOLVER_UTILS_HEADERS
   Forcing/ForcingBody.h
   Forcing/ForcingNoise.h
   Forcing/ForcingProgrammatic.h
-  Forcing/ForcingWavyness.h
 )
 
 IF (NEKTAR_USE_ARPACK)
@@ -97,7 +97,9 @@ ENDIF (NEKTAR_USE_ARPACK)
 
 ADD_DEFINITIONS(-DSOLVER_UTILS_EXPORTS)
 
-ADD_NEKTAR_LIBRARY(SolverUtils lib ${NEKTAR_LIBRARY_TYPE} ${SOLVER_UTILS_SOURCES} ${SOLVER_UTILS_HEADERS})
-TARGET_LINK_LIBRARIES(SolverUtils MultiRegions)
-
-INSTALL(DIRECTORY ./ DESTINATION ${NEKTAR_INCLUDE_DIR}/SolverUtils COMPONENT dev FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp")
+ADD_NEKTAR_LIBRARY(SolverUtils
+    SOURCES ${SOLVER_UTILS_SOURCES}
+    HEADERS ${SOLVER_UTILS_HEADERS}
+    DEPENDS FieldUtils
+    SUMMARY "Nektar++ SolverUtils library"
+    DESCRIPTION "This library provides support classes and routines for constructing complete spectral/hp element solvers.")

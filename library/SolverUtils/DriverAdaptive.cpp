@@ -38,7 +38,13 @@
 #include <SolverUtils/DriverAdaptive.h>
 #include <StdRegions/StdQuadExp.h>
 #include <StdRegions/StdTriExp.h>
-//#include <GlobalMapping/Mapping.h>
+#include <StdRegions/StdTetExp.h>
+#include <StdRegions/StdPrismExp.h>
+#include <StdRegions/StdPyrExp.h>
+#include <StdRegions/StdHexExp.h>
+#include <GlobalMapping/Mapping.h>
+
+using namespace std;
 
 namespace Nektar
 {
@@ -113,15 +119,23 @@ void DriverAdaptive::v_Execute(ostream &out)
         nExp    = m_equ[0]->UpdateFields()[0]->GetExpSize();
         nPlanes = 1;
     }
+    int  expdim   = m_equ[0]->UpdateFields()[0]->GetGraph()->GetMeshDimension();
 
     int       nFields  = m_equ[0]->UpdateFields().num_elements();
     int       numSteps = m_session->GetParameter("NumSteps");
     NekDouble period   = m_session->GetParameter("TimeStep") * numSteps;
 
     Array<OneD, NekDouble> coeffs, phys, physReduced, tmpArray;
-    // GlobalMapping::MappingSharedPtr mapping;
+
+    // Get mapping
+    GlobalMapping::MappingSharedPtr mapping;
+    mapping = GlobalMapping::Mapping::Load(m_session,
+                                           m_equ[0]->UpdateFields());
 
     // Adaptive loop
+    Array<OneD, int> P(expdim);
+    Array<OneD, int> numPoints(expdim);
+    Array<OneD, LibUtilities::PointsKey> ptsKey(expdim);
     LocalRegions::ExpansionSharedPtr Exp;
     for (int i = 1; i < nRuns; i++)
     {
@@ -137,37 +151,89 @@ void DriverAdaptive::v_Execute(ostream &out)
             offset = fields[sensorVar]->GetPhys_Offset(n);
             Exp    = fields[sensorVar]->GetExp(n);
 
-            int P  = Exp->GetBasis(0)->GetNumModes();
-            int Q  = Exp->GetBasis(1)->GetNumModes();
-            int qa = Exp->GetBasis(0)->GetNumPoints();
-            int qb = Exp->GetBasis(1)->GetNumPoints();
+            for( int k = 0; k < expdim; ++k)
+            {
+                P[k]         = Exp->GetBasis(k)->GetNumModes();
+                numPoints[k] = Exp->GetBasis(k)->GetNumPoints();
+                ptsKey[k]    = LibUtilities::PointsKey (numPoints[k],
+                               Exp->GetBasis(k)->GetPointsType());
+            }
 
             // Declare orthogonal basis.
-            LibUtilities::PointsKey pa(qa, Exp->GetBasis(0)->GetPointsType());
-            LibUtilities::PointsKey pb(qb, Exp->GetBasis(1)->GetPointsType());
-
             StdRegions::StdExpansionSharedPtr OrthoExp;
             switch (Exp->GetGeom()->GetShapeType())
             {
                 case LibUtilities::eQuadrilateral:
                 {
-                    LibUtilities::BasisKey Ba(LibUtilities::eOrtho_A, P - 1,
-                                              pa);
-                    LibUtilities::BasisKey Bb(LibUtilities::eOrtho_A, Q - 1,
-                                              pb);
+                    LibUtilities::BasisKey Ba(LibUtilities::eOrtho_A, P[0] - 1,
+                                              ptsKey[0]);
+                    LibUtilities::BasisKey Bb(LibUtilities::eOrtho_A, P[1] - 1,
+                                              ptsKey[1]);
                     OrthoExp = MemoryManager<
                         StdRegions::StdQuadExp>::AllocateSharedPtr(Ba, Bb);
                     break;
                 }
                 case LibUtilities::eTriangle:
                 {
-                    LibUtilities::BasisKey Ba(LibUtilities::eOrtho_A, P - 1,
-                                              pa);
-                    LibUtilities::BasisKey Bb(LibUtilities::eOrtho_B, Q - 1,
-                                              pb);
+                    LibUtilities::BasisKey Ba(LibUtilities::eOrtho_A, P[0] - 1,
+                                              ptsKey[0]);
+                    LibUtilities::BasisKey Bb(LibUtilities::eOrtho_B, P[1] - 1,
+                                              ptsKey[1]);
                     OrthoExp =
                         MemoryManager<StdRegions::StdTriExp>::AllocateSharedPtr(
                             Ba, Bb);
+                    break;
+                }
+                case LibUtilities::eTetrahedron:
+                {
+                    LibUtilities::BasisKey Ba(LibUtilities::eOrtho_A, P[0] - 1,
+                                              ptsKey[0]);
+                    LibUtilities::BasisKey Bb(LibUtilities::eOrtho_B, P[1] - 1,
+                                              ptsKey[1]);
+                    LibUtilities::BasisKey Bc(LibUtilities::eOrtho_C, P[2] - 1,
+                                              ptsKey[2]);
+                    OrthoExp =
+                        MemoryManager<StdRegions::StdTetExp>::AllocateSharedPtr(
+                            Ba, Bb, Bc);
+                    break;
+                }
+                case LibUtilities::ePyramid:
+                {
+                    LibUtilities::BasisKey Ba(LibUtilities::eOrtho_A, P[0] - 1,
+                                              ptsKey[0]);
+                    LibUtilities::BasisKey Bb(LibUtilities::eOrtho_A, P[1] - 1,
+                                              ptsKey[1]);
+                    LibUtilities::BasisKey Bc(LibUtilities::eOrtho_C, P[2] - 1,
+                                              ptsKey[2]);
+                    OrthoExp =
+                        MemoryManager<StdRegions::StdPyrExp>::AllocateSharedPtr(
+                            Ba, Bb, Bc);
+                    break;
+                }
+                case LibUtilities::ePrism:
+                {
+                    LibUtilities::BasisKey Ba(LibUtilities::eOrtho_A, P[0] - 1,
+                                              ptsKey[0]);
+                    LibUtilities::BasisKey Bb(LibUtilities::eOrtho_A, P[1] - 1,
+                                              ptsKey[1]);
+                    LibUtilities::BasisKey Bc(LibUtilities::eOrtho_B, P[2] - 1,
+                                              ptsKey[2]);
+                    OrthoExp =
+                        MemoryManager<StdRegions::StdPrismExp>::AllocateSharedPtr(
+                            Ba, Bb, Bc);
+                    break;
+                }
+                case LibUtilities::eHexahedron:
+                {
+                    LibUtilities::BasisKey Ba(LibUtilities::eOrtho_A, P[0] - 1,
+                                              ptsKey[0]);
+                    LibUtilities::BasisKey Bb(LibUtilities::eOrtho_A, P[1] - 1,
+                                              ptsKey[1]);
+                    LibUtilities::BasisKey Bc(LibUtilities::eOrtho_A, P[2] - 1,
+                                              ptsKey[2]);
+                    OrthoExp =
+                        MemoryManager<StdRegions::StdHexExp>::AllocateSharedPtr(
+                            Ba, Bb, Bc);
                     break;
                 }
                 default:
@@ -266,11 +332,11 @@ void DriverAdaptive::v_Execute(ostream &out)
             }
 
             // Determine what to do with the polynomial order
-            if ((error > upperTol) && (P < maxP))
+            if ((error > upperTol) && (P[0] < maxP))
             {
                 deltaP[Exp->GetGeom()->GetGlobalID()] = 1;
             }
-            else if ((error < lowerTol) && P > minP)
+            else if ((error < lowerTol) && P[0] > minP)
             {
                 deltaP[Exp->GetGeom()->GetGlobalID()] = -1;
             }
@@ -280,10 +346,6 @@ void DriverAdaptive::v_Execute(ostream &out)
             }
         }
 
-        // Get mapping (not in master yet...)
-        // mapping = GlobalMapping::Mapping::Load(m_session,
-        //                                      m_equ[0]->UpdateFields());
-
         // Write new expansion section to the session reader
         ReplaceExpansion(fields, deltaP);
 
@@ -291,15 +353,23 @@ void DriverAdaptive::v_Execute(ostream &out)
         //
         // @todo This could be made better by replacing individual matrices
         //       within the linear system.
-        LibUtilities::NekManager<MultiRegions::GlobalLinSysKey,
-                                 MultiRegions::GlobalLinSys>::
-            ClearManager(std::string("GlobalLinSys"));
+        if (LibUtilities::NekManager<MultiRegions::GlobalLinSysKey,
+                                     MultiRegions::GlobalLinSys>::
+                PoolCreated(std::string("GlobalLinSys")))
+        {
+            LibUtilities::NekManager<MultiRegions::GlobalLinSysKey,
+                                     MultiRegions::GlobalLinSys>::
+                ClearManager(std::string("GlobalLinSys"));
+        }
 
         int chkNumber = m_equ[0]->GetCheckpointNumber();
         int chkSteps  = m_equ[0]->GetCheckpointSteps();
 
         // Initialise driver again
         Driver::v_InitObject(out);
+
+        // Update mapping (must be before m_equ[0]->DoInitialise();)
+        mapping->ReplaceField(m_equ[0]->UpdateFields());
 
         // Set chkSteps to zero to avoid writing initial condition
         m_equ[0]->SetCheckpointSteps(0);
@@ -323,9 +393,6 @@ void DriverAdaptive::v_Execute(ostream &out)
                 m_equ[0]->UpdateFields()[n]->GetCoeffs(),
                 m_equ[0]->UpdateFields()[n]->UpdatePhys());
         }
-
-        // Update mapping
-        // mapping->ReplaceField(m_equ[0]->UpdateFields());
 
         // Solve equation
         m_equ[0]->DoSolve();
@@ -380,20 +447,19 @@ void DriverAdaptive::ReplaceExpansion(
     map<int, int>                                deltaP)
 {
     int nExp, nDim;
+    int  expdim   = m_equ[0]->UpdateFields()[0]->GetGraph()->GetMeshDimension();
 
     // Get field definitions
     std::vector<LibUtilities::FieldDefinitionsSharedPtr> fielddefs =
         fields[0]->GetFieldDefinitions();
 
-    int expDim = 2;
-
     if (fielddefs[0]->m_numHomogeneousDir == 1)
     {
-        nDim = 3;
+        nDim = expdim+1;
     }
     else
     {
-        nDim = 2;
+        nDim = expdim;
     }
 
     // Add variables to field definition
@@ -562,7 +628,7 @@ void DriverAdaptive::ReplaceExpansion(
             {
                 eId = fielddefs[f]->m_elementIDs[n];
 
-                for (int i = 0; i < expDim; i++)
+                for (int i = 0; i < expdim; i++)
                 {
                     order[i] = deltaP[eId];
                 }

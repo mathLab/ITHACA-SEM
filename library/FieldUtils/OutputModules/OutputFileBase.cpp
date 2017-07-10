@@ -104,7 +104,7 @@ void OutputFileBase::Process(po::variables_map &vm)
         }
         if (m_f->m_writeBndFld)
         {
-            int nfields = m_f->m_exp.size();
+            int nfields = m_f->m_variables.size();
             int normdim = m_f->m_graph->GetMeshDimension();
 
             // Prepare for normals output

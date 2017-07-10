@@ -24,6 +24,7 @@ v5.0.0
 
 **FieldConvert**:
 - Add input module for Semtex field files (!777)
+- Allow explicitly setting bool options of FieldConvert modules as false (!811)
 
 **Documentation**:
 - Added the developer-guide repository as a submodule (!751)

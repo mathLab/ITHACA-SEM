@@ -126,6 +126,7 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
 
     Array<OneD, Array<OneD, NekDouble> > pts;
     m_f->m_fieldPts->GetPts(pts);
+
     rng->m_checkShape = false;
     rng->m_zmin       = -1;
     rng->m_zmax       =  1;
@@ -245,7 +246,7 @@ void ProcessInterpPoints::CreateFieldPts(po::variables_map &vm)
         }
         else
         {
-            ASSERTL0(false, "no input file found");
+            ASSERTL0(false, "unknown topts file type");
         }
 
     }

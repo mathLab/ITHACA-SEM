@@ -63,8 +63,9 @@ namespace Nektar
         
         ExpList3D::ExpList3D(const ExpList3D &In,
                 const std::vector<unsigned int> &eIDs,
-                const bool DeclareCoeffPhysArrays)
-                : ExpList(In, eIDs, DeclareCoeffPhysArrays)
+                const bool DeclareCoeffPhysArrays,
+                const Collections::ImplementationType ImpType):
+            ExpList(In, eIDs, DeclareCoeffPhysArrays)
         {
             SetExpType(e3D);
             
@@ -73,10 +74,17 @@ namespace Nektar
             m_globalOptParam = MemoryManager<NekOptimize::GlobalOptParam>
                 ::AllocateSharedPtr(nel);
 
-            SetCoeffPhys();
+            SetCoeffPhysOffsets();
+
+            if (DeclareCoeffPhysArrays)
+            {
+                // Set up m_coeffs, m_phys.
+                m_coeffs = Array<OneD, NekDouble>(m_ncoeffs);
+                m_phys   = Array<OneD, NekDouble>(m_npoints);
+             }
 
             ReadGlobalOptimizationParameters();
-            CreateCollections();
+            CreateCollections(ImpType);
         }
 
         ExpList3D::~ExpList3D()
@@ -92,7 +100,8 @@ namespace Nektar
                              const LibUtilities::BasisKey &HBb,
                              const LibUtilities::BasisKey &HBc,
                              const SpatialDomains::MeshGraphSharedPtr &graph3D,
-                             const LibUtilities::PointsType TetNb):
+                             const LibUtilities::PointsType TetNb,
+                             const Collections::ImplementationType ImpType):
             ExpList(pSession,graph3D)
         {
             SetExpType(e3D);
@@ -169,10 +178,14 @@ namespace Nektar
             m_globalOptParam = MemoryManager<NekOptimize::GlobalOptParam>
                 ::AllocateSharedPtr(nel);
 
-            SetCoeffPhys();
+            SetCoeffPhysOffsets();
+
+            // Set up m_coeffs, m_phys.
+            m_coeffs = Array<OneD, NekDouble>(m_ncoeffs);
+            m_phys   = Array<OneD, NekDouble>(m_npoints);
 
             ReadGlobalOptimizationParameters();
-            CreateCollections();
+            CreateCollections(ImpType);
         }
 
         /**
@@ -189,7 +202,8 @@ namespace Nektar
          */
         ExpList3D::ExpList3D(const LibUtilities::SessionReaderSharedPtr &pSession,
                              const SpatialDomains::MeshGraphSharedPtr &graph3D,
-                             const std::string  &variable) :
+                             const std::string  &variable,
+                             const Collections::ImplementationType ImpType):
             ExpList(pSession,graph3D)
         {
             SetExpType(e3D);
@@ -297,9 +311,14 @@ namespace Nektar
             m_globalOptParam = MemoryManager<NekOptimize::GlobalOptParam>
                 ::AllocateSharedPtr(nel);
 
-            SetCoeffPhys();
+            SetCoeffPhysOffsets();
+
+            // Set up m_coeffs, m_phys.
+            m_coeffs = Array<OneD, NekDouble>(m_ncoeffs);
+            m_phys   = Array<OneD, NekDouble>(m_npoints);
+
             ReadGlobalOptimizationParameters();
-            CreateCollections();
+            CreateCollections(ImpType);
         }
 
         /**
@@ -316,7 +335,8 @@ namespace Nektar
          *                   information about the domain and the
          *                   spectral/hp element expansion.
          */
-        ExpList3D::ExpList3D(const SpatialDomains::ExpansionMap &expansions):
+        ExpList3D::ExpList3D(const SpatialDomains::ExpansionMap &expansions,
+                             const Collections::ImplementationType ImpType):
             ExpList()
         {
             SetExpType(e3D);
@@ -425,44 +445,13 @@ namespace Nektar
             m_globalOptParam = MemoryManager<NekOptimize::GlobalOptParam>
                 ::AllocateSharedPtr(nel);
 
-            SetCoeffPhys();
-            CreateCollections();
-        }
+            SetCoeffPhysOffsets();
 
-        /**
-         * Set up the storage for the concatenated list of
-         * coefficients and physical evaluations at the quadrature
-         * points. Each expansion (local element) is processed in turn
-         * to determine the number of coefficients and physical data
-         * points it contributes to the domain. Three arrays,
-         * #m_coeff_offset, #m_phys_offset and #m_offset_elmt_id, are
-         * also initialised and updated to store the data offsets of
-         * each element in the #m_coeffs and #m_phys arrays, and the
-         * element id that each consecutive block is associated
-         * respectively.
-         */
-        void ExpList3D::SetCoeffPhys()
-        {
-            int i;
-
-            // Set up offset information and array sizes
-            m_coeff_offset   = Array<OneD,int>(m_exp->size());
-            m_phys_offset    = Array<OneD,int>(m_exp->size());
-            m_offset_elmt_id = Array<OneD,int>(m_exp->size());
-
-            m_ncoeffs = m_npoints = 0;
-
-            for(i = 0; i < m_exp->size(); ++i)
-            {
-                m_coeff_offset[i]   = m_ncoeffs;
-                m_phys_offset [i]   = m_npoints;
-                m_offset_elmt_id[i] = i;
-                m_ncoeffs += (*m_exp)[i]->GetNcoeffs();
-                m_npoints += (*m_exp)[i]->GetTotPoints();
-            }
-
+            // Set up m_coeffs, m_phys.
             m_coeffs = Array<OneD, NekDouble>(m_ncoeffs);
             m_phys   = Array<OneD, NekDouble>(m_npoints);
+
+            CreateCollections(ImpType);
         }
 
         void ExpList3D::v_ReadGlobalOptimizationParameters()

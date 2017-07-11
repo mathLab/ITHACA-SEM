@@ -63,26 +63,25 @@ ProcessPrintFldNorms::~ProcessPrintFldNorms()
 
 void ProcessPrintFldNorms::Process(po::variables_map &vm)
 {
-    if (m_f->m_verbose)
+    // Skip in case of empty partition
+    if (m_f->m_exp[0]->GetNumElmts() == 0)
     {
-        if (m_f->m_comm->TreatAsRankZero())
-        {
-            cout << "ProcessPrintFldNorms: Printing norms..." << endl;
-        }
+        return;
     }
 
     // Evaluate norms and print
     for (int j = 0; j < m_f->m_exp.size(); ++j)
     {
-        m_f->m_exp[j]->BwdTrans(m_f->m_exp[j]->GetCoeffs(),
-                                m_f->m_exp[j]->UpdatePhys());
         NekDouble L2   = m_f->m_exp[j]->L2(m_f->m_exp[j]->GetPhys());
         NekDouble LInf = m_f->m_exp[j]->Linf(m_f->m_exp[j]->GetPhys());
 
-        cout << "L 2 error (variable " << m_f->m_session->GetVariable(j)
-             << ") : " << L2 << endl;
-        cout << "L inf error (variable " << m_f->m_session->GetVariable(j)
-             << ") : " << LInf << endl;
+        if (m_f->m_comm->TreatAsRankZero())
+        {
+            cout << "L 2 error (variable "   << m_f->m_variables[j]
+                 << ") : " << L2 << endl;
+            cout << "L inf error (variable " << m_f->m_variables[j]
+                 << ") : " << LInf << endl;
+        }
     }
 }
 }

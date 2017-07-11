@@ -228,19 +228,9 @@ namespace Nektar
             else
             {
 
-#ifdef NEKTAR_USING_DIRECT_BLAS_CALLS
-
-                Blas::Dgemv('N',nquad,m_base[0]->GetNumModes(),1.0, (m_base[0]->GetBdata()).get(),
-                            nquad,&inarray[0],1,0.0,&outarray[0],1);
-
-#else //NEKTAR_USING_DIRECT_BLAS_CALLS
-
-                NekVector<NekDouble> in(m_ncoeffs,inarray,eWrapper);
-                NekVector<NekDouble> out(nquad,outarray,eWrapper);
-                NekMatrix<NekDouble> B(nquad,m_ncoeffs,m_base[0]->GetBdata(),eWrapper);
-                out = B * in;
-
-#endif //NEKTAR_USING_DIRECT_BLAS_CALLS
+            Blas::Dgemv('N',nquad,m_base[0]->GetNumModes(),1.0,
+                        (m_base[0]->GetBdata()).get(),
+                        nquad,&inarray[0],1,0.0,&outarray[0],1);
 
             }
         }
@@ -572,6 +562,87 @@ namespace Nektar
             v_PhysDeriv(physValues,dPhysValuesdx);
             v_IProductWRTBase(m_base[0]->GetDbdata(),dPhysValuesdx,outarray,1);
             Blas::Daxpy(m_ncoeffs, mkey.GetConstFactor(eFactorLambda), wsp.get(), 1, outarray.get(), 1);
+        }
+
+        void StdSegExp::v_SVVLaplacianFilter(Array<OneD, NekDouble> &array,
+                                            const StdMatrixKey &mkey)
+        {
+            // Generate an orthogonal expansion
+            int nq = m_base[0]->GetNumPoints();
+            int nmodes = m_base[0]->GetNumModes();
+            // Declare orthogonal basis.
+            LibUtilities::PointsKey pKey(nq,m_base[0]->GetPointsType());
+
+            LibUtilities::BasisKey B(LibUtilities::eOrtho_A, nmodes, pKey);
+            StdSegExp OrthoExp(B);
+
+            //SVV parameters loaded from the .xml case file
+            NekDouble  SvvDiffCoeff  = mkey.GetConstFactor(eFactorSVVDiffCoeff);
+            int cutoff = (int) (mkey.GetConstFactor(eFactorSVVCutoffRatio))*nmodes;
+
+            Array<OneD, NekDouble> orthocoeffs(OrthoExp.GetNcoeffs());
+
+            // project onto modal  space.
+            OrthoExp.FwdTrans(array,orthocoeffs);
+
+            //
+            for(int j = 0; j < nmodes; ++j)
+            {
+                if(j >= cutoff)//to filter out only the "high-modes"
+                {
+                     orthocoeffs[j] *=
+                         (SvvDiffCoeff*exp(-(j-nmodes)*(j-nmodes)/
+                                            ((NekDouble)((j-cutoff+1)*
+                                                 (j-cutoff+1)))));
+                 }
+                else
+                {
+                     orthocoeffs[j] *= 0.0;
+                }
+            }
+
+            // backward transform to physical space
+            OrthoExp.BwdTrans(orthocoeffs,array);
+        }
+
+        void StdSegExp::v_ExponentialFilter(
+                                          Array<OneD, NekDouble> &array,
+                                    const NekDouble        alpha,
+                                    const NekDouble        exponent,
+                                    const NekDouble        cutoff)
+        {
+            // Generate an orthogonal expansion
+            int nq     = m_base[0]->GetNumPoints();
+            int nmodes = m_base[0]->GetNumModes();
+            int P  = nmodes - 1;
+            // Declare orthogonal basis.
+            LibUtilities::PointsKey pKey(nq,m_base[0]->GetPointsType());
+
+            LibUtilities::BasisKey B(LibUtilities::eOrtho_A, nmodes, pKey);
+            StdSegExp OrthoExp(B);
+
+            // Cutoff
+            int Pcut = cutoff*P;
+
+            // Project onto orthogonal space.
+            Array<OneD, NekDouble> orthocoeffs(OrthoExp.GetNcoeffs());
+            OrthoExp.FwdTrans(array,orthocoeffs);
+
+            //
+            NekDouble fac;
+            for(int j = 0; j < nmodes; ++j)
+            {
+                //to filter out only the "high-modes"
+                if(j > Pcut)
+                {
+                    fac = (NekDouble) (j - Pcut) / ( (NekDouble) (P - Pcut) );
+                    fac = pow(fac, exponent);
+                    orthocoeffs[j] *= exp(-alpha*fac);
+                }
+            }
+
+            // backward transform to physical space
+            OrthoExp.BwdTrans(orthocoeffs,array);
         }
 
         //up to here

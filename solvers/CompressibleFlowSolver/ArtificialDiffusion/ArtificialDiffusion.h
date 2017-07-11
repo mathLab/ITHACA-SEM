@@ -91,18 +91,9 @@ class ArtificialDiffusion
         /// LDG Diffusion operator
         SolverUtils::DiffusionSharedPtr             m_diffusion;
 
-        /// Parameters
-        NekDouble       m_FacL;
-        NekDouble       m_FacH;
-        NekDouble       m_hFactor;
-        NekDouble       m_C1;
-        NekDouble       m_C2;
-        NekDouble       m_mu0;
-        NekDouble       m_Skappa;
-        NekDouble       m_Kappa;
-
         /// Constructor
-        ArtificialDiffusion(const LibUtilities::SessionReaderSharedPtr& pSession,
+        ArtificialDiffusion(
+                const LibUtilities::SessionReaderSharedPtr& pSession,
                 const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields,
                 const int spacedim);
 

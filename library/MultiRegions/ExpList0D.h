@@ -99,7 +99,6 @@ namespace Nektar
                 Array<OneD, Array<OneD, NekDouble> > &normals);
 
         private:
-            void SetCoeffPhysOffsets(void);
         };
 
         /// Empty ExpList0D object.

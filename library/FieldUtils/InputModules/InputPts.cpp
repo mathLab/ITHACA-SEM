@@ -107,18 +107,19 @@ void InputPts::Process(po::variables_map &vm)
     }
 
 
-    string inFile = (m_f->m_inputfiles[ptsending][0]).c_str();
+    string inFile = m_config["infile"].as<string>();
 
+    LibUtilities::PtsIOSharedPtr ptsIO;
     if (m_f->m_session)
     {
         if (!ptsending.compare("pts"))
         {
-            m_f->m_ptsIO = MemoryManager<LibUtilities::PtsIO>::AllocateSharedPtr(
+            ptsIO = MemoryManager<LibUtilities::PtsIO>::AllocateSharedPtr(
             m_f->m_session->GetComm());
         }
         else
         {
-            m_f->m_ptsIO = MemoryManager<LibUtilities::CsvIO>::AllocateSharedPtr(
+            ptsIO = MemoryManager<LibUtilities::CsvIO>::AllocateSharedPtr(
             m_f->m_session->GetComm());
         }
     }
@@ -128,16 +129,22 @@ void InputPts::Process(po::variables_map &vm)
             LibUtilities::GetCommFactory().CreateInstance("Serial", 0, 0);
         if (!ptsending.compare("pts"))
         {
-            m_f->m_ptsIO = MemoryManager<LibUtilities::PtsIO>::AllocateSharedPtr(c);
+            ptsIO = MemoryManager<LibUtilities::PtsIO>::AllocateSharedPtr(c);
         }
         else
         {
-            m_f->m_ptsIO = MemoryManager<LibUtilities::CsvIO>::AllocateSharedPtr(c);
+            ptsIO = MemoryManager<LibUtilities::CsvIO>::AllocateSharedPtr(c);
         }
 
     }
 
-    m_f->m_ptsIO->Import(inFile, m_f->m_fieldPts);
+    ptsIO->Import(inFile, m_f->m_fieldPts);
+
+    // save field names
+    for (int j = 0; j < m_f->m_fieldPts->GetNFields(); ++j)
+    {
+        m_f->m_variables.push_back(m_f->m_fieldPts->GetFieldName(j));
+    }
 }
 }
 }

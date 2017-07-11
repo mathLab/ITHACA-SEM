@@ -53,7 +53,7 @@ ModuleKey InputDat::m_className[1] = {
     GetModuleFactory().RegisterCreatorFunction(
         ModuleKey(eInputModule, "dat"),
         InputDat::create,
-        "Reads Tecplot dat file for FE block triangular format."),
+        "Reads Tecplot dat file for FE block triangular format.")
 };
 
 /**
@@ -77,18 +77,8 @@ InputDat::~InputDat()
  */
 void InputDat::Process(po::variables_map &vm)
 {
-
-    if (m_f->m_verbose)
-    {
-        if (m_f->m_comm->TreatAsRankZero())
-        {
-            cout << "Processing input dat file" << endl;
-        }
-    }
-
-    string line, word, tag;
+    string line;
     std::ifstream datFile;
-    stringstream s;
 
     // Open the file stream.
     string fname = m_f->m_inputfiles["dat"][0];
@@ -101,7 +91,7 @@ void InputDat::Process(po::variables_map &vm)
     }
 
     // read variables
-    // currently assum there are x y and z coordinates
+    // currently assume there are x y and z coordinates
     int dim = 3;
     vector<string> fieldNames;
     while (!datFile.eof())
@@ -153,6 +143,9 @@ void InputDat::Process(po::variables_map &vm)
         dim, fieldNames, pts);
     m_f->m_fieldPts->SetPtsType(LibUtilities::ePtsTriBlock);
     m_f->m_fieldPts->SetConnectivity(ptsConn);
+
+    // save field names
+    m_f->m_variables = fieldNames;
 }
 
 /**

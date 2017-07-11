@@ -42,16 +42,6 @@
 #include <boost/algorithm/string/trim.hpp>
 #include <boost/random/detail/seed.hpp>
 
-#ifdef _MSC_VER
-#include <boost/preprocessor/cat.hpp>
-#endif //MSC_VER
-
-#ifdef _MSC_VER
-#define NEKTAR_MATH_NAME(x) BOOST_PP_CAT(_, x)
-#else
-#define NEKTAR_MATH_NAME(x) x
-#endif
-
 #if( BOOST_VERSION / 100 % 1000 >= 36 )
 using namespace boost::spirit::classic;
 #else

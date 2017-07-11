@@ -42,10 +42,7 @@
 
 #include <LibUtilities/LinearAlgebra/NekPoint.hpp>
 
-#include <LibUtilities/LinearAlgebra/NekVectorMetadata.hpp>
 #include <LibUtilities/LinearAlgebra/NekVectorFwd.hpp>
-#include <LibUtilities/LinearAlgebra/NekVectorConstantSized.hpp>
-#include <LibUtilities/LinearAlgebra/NekVectorVariableSized.hpp>
 #include <LibUtilities/LinearAlgebra/PointerWrapper.h>
 
 #include <LibUtilities/LinearAlgebra/MatrixSize.hpp>

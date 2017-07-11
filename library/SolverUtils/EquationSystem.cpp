@@ -33,7 +33,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-
+#include <FieldUtils/Interpolator.h>
 #include <SolverUtils/EquationSystem.h>
 
 #include <LocalRegions/MatrixKey.h>
@@ -82,11 +82,8 @@ namespace Nektar
          */
         EquationSystemFactory& GetEquationSystemFactory()
         {
-            typedef Loki::SingletonHolder<EquationSystemFactory,
-                                          Loki::CreateUsingNew,
-                                          Loki::NoDestroy,
-                                          Loki::ClassLevelLockable> Type;
-            return Type::Instance();
+            static EquationSystemFactory instance;
+            return instance;
         }
 
         /**
@@ -697,7 +694,9 @@ namespace Nektar
                     || (m_sessionFunctions[name]->GetExpansion() != vField)
                 )
                 {
-                    m_sessionFunctions[name] = SessionFunctionSharedPtr(new SessionFunction(m_session, vField, name, cache));
+                    m_sessionFunctions[name] =
+                        MemoryManager<SessionFunction>::AllocateSharedPtr(
+                            m_session, vField, name, cache);
                 }
 
                 return m_sessionFunctions[name];

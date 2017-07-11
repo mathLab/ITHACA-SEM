@@ -600,7 +600,7 @@ namespace Nektar
                     if (fabs(elementAaxis_length*faceBaxis_length
                             - fabs(dotproduct1)) > NekConstants::kNekZeroTol)
                     {
-                        cout << "Warning: Prism axes not parallel" << endl;
+                        cout << "Warning: Pyramid axes not parallel" << endl;
                     }
 
                     // if the result is negative, both axis point in reverse
@@ -621,7 +621,7 @@ namespace Nektar
                     if (fabs(elementBaxis_length*faceAaxis_length
                             - fabs(dotproduct2)) > NekConstants::kNekZeroTol)
                     {
-                        cout << "Warning: Prism axes not parallel" << endl;
+                        cout << "Warning: Pyramid axes not parallel" << endl;
                     }
 
                     if( dotproduct2 < 0.0 )
@@ -710,7 +710,7 @@ namespace Nektar
                 LibUtilities::PointsKey(
                     order1+1, LibUtilities::eGaussLobattoLegendre));
             const LibUtilities::BasisKey C(
-                LibUtilities::eModified_C, order2,
+                LibUtilities::eModifiedPyr_C, order2,
                 LibUtilities::PointsKey(
                     order2, LibUtilities::eGaussRadauMAlpha2Beta0));
 

@@ -84,9 +84,13 @@ namespace Nektar
 
         bool StdHexExp::v_IsBoundaryInteriorExpansion()
         {
-            return (m_base[0]->GetBasisType() == LibUtilities::eModified_A) &&
-                   (m_base[1]->GetBasisType() == LibUtilities::eModified_A) &&
-                   (m_base[2]->GetBasisType() == LibUtilities::eModified_A);
+            return
+                (m_base[0]->GetBasisType() == LibUtilities::eModified_A &&
+                 m_base[1]->GetBasisType() == LibUtilities::eModified_A &&
+                 m_base[2]->GetBasisType() == LibUtilities::eModified_A) ||
+                (m_base[0]->GetBasisType() == LibUtilities::eGLL_Lagrange &&
+                 m_base[1]->GetBasisType() == LibUtilities::eGLL_Lagrange &&
+                 m_base[1]->GetBasisType() == LibUtilities::eGLL_Lagrange);
         }
 
 
@@ -1015,6 +1019,8 @@ namespace Nektar
                 nummodesA = nummodes1;
                 nummodesB = nummodes2;
                 break;
+            default:
+                ASSERTL0(false,"fid must be between 0 and 5");
             }
 
             bool CheckForZeroedModes = false;

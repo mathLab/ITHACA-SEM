@@ -41,7 +41,7 @@
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <MultiRegions/ExpList.h>
-#include <SolverUtils/SessionFunction.h>
+#include <SolverUtils/Core/SessionFunction.h>
 #include <SolverUtils/SolverUtilsDeclspec.h>
 
 namespace Nektar

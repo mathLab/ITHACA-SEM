@@ -2,7 +2,7 @@
 <test>
     <description> Project point data to a fld file </description>
     <executable>FieldConvert</executable>
-    <parameters>-e --noequispaced -m pointdatatofld outflow.pts outflow.xml outflow.fld</parameters>
+    <parameters> -f -e --noequispaced -m pointdatatofld outflow.pts outflow.xml outflow.fld</parameters>
     <files>
         <file description="Session File">outflow.pts</file>
         <file description="Session File">outflow.xml</file>

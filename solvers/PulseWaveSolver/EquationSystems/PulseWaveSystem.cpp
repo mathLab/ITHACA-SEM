@@ -489,7 +489,7 @@ namespace Nektar
         // Time loop
         for(n = 0; n < m_steps; ++n)
         {				
-            Timer timer;
+            LibUtilities::Timer timer;
             timer.Start();
             fields = m_intScheme->TimeIntegrate(n,m_timestep,m_intSoln,m_ode);
             //cout<<"integration: "<<fields[0][fields[0].num_elements()-1]<<endl;                

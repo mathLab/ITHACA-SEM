@@ -43,11 +43,8 @@ namespace Nektar
     {
         ForcingFactory& GetForcingFactory()
         {
-            typedef Loki::SingletonHolder<ForcingFactory,
-                                          Loki::CreateUsingNew,
-                                          Loki::NoDestroy,
-                                          Loki::SingleThreaded> Type;
-            return Type::Instance();
+            static ForcingFactory instance;
+            return instance;
         }
 
         Forcing::Forcing(const LibUtilities::SessionReaderSharedPtr& pSession)
@@ -169,7 +166,9 @@ namespace Nektar
                     || (m_sessionFunctions[pName]->GetExpansion() != pFields[0])
                 )
                 {
-                    m_sessionFunctions[pName] = SessionFunctionSharedPtr(new SessionFunction(pSession, pFields[0], pName, pCache));
+                    m_sessionFunctions[pName] =
+                        MemoryManager<SessionFunction>::AllocateSharedPtr(
+                            pSession, pFields[0], pName, pCache);
                 }
 
                 return m_sessionFunctions[pName];

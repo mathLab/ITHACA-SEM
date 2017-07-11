@@ -43,6 +43,8 @@
 #undef min
 #endif
 
+using namespace std;
+
 namespace Nektar
 {
     namespace LibUtilities
@@ -240,26 +242,19 @@ namespace Nektar
                         "than order in 'c' direction.");
 
                 // Count number of coefficients explicitly.
-                const int Pi = Na - 2, Qi = Nb - 2, Ri = Nc - 2;
-                int nCoeff = 
-                    5 +                        // vertices
-                    Pi * 2 + Qi * 2 + Ri * 4 + // base edges
-                    Pi * Qi +                  // base quad
-                    Pi * (2*Ri - Pi - 1) +     // p-r triangles;
-                    Qi * (2*Ri - Qi - 1);      // q-r triangles;
+                int nCoeff = 0;
 
                 // Count number of interior tet modes
-                for (int a = 0; a < Pi - 1; ++a)
+                for (int a = 0; a < Na; ++a)
                 {
-                    for (int b = 0; b < Qi - a - 1; ++b)
+                    for (int b = 0; b < Nb; ++b)
                     {
-                        for (int c = 0; c < Ri - a - b -1; ++c)
+                        for (int c = 0; c < Nc - max(a,b); ++c)
                         {
                             ++nCoeff;
                         }
                     }
                 }
-
                 return nCoeff;
             }
 

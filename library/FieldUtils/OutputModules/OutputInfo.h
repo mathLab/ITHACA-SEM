@@ -64,6 +64,17 @@ public:
     {
         return "OutputInfo";
     }
+
+    virtual std::string GetModuleDescription()
+    {
+        return "Writing Info file";
+    }
+
+    virtual ModulePriority GetModulePriority()
+    {
+        return eOutput;
+    }
+
 };
 }
 }

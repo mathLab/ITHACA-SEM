@@ -864,6 +864,7 @@ void FieldIOHdf5::v_Import(const std::string &infilename,
     // Set properties for parallel file access (if we're in parallel)
     H5::PListSharedPtr parallelProps = H5::PList::Default();
     H5::PListSharedPtr readPL = H5::PList::Default();
+    H5::PListSharedPtr readPLInd = H5::PList::Default();
 
     if (nRanks > 1)
     {
@@ -873,6 +874,8 @@ void FieldIOHdf5::v_Import(const std::string &infilename,
         // Use collective IO
         readPL = H5::PList::DatasetXfer();
         readPL->SetDxMpioCollective();
+        readPLInd = H5::PList::DatasetXfer();
+        readPLInd->SetDxMpioIndependent();
     }
 
     DataSourceSharedPtr dataSource = H5DataSource::create(
@@ -1012,8 +1015,9 @@ void FieldIOHdf5::v_Import(const std::string &infilename,
     map<uint64_t, set<uint64_t> >::iterator gIt;
     for (gIt = groupsToDecomps.begin(); gIt != groupsToDecomps.end(); ++gIt)
     {
-        // Select region from dataset for this decomposition.
         set<uint64_t>::iterator sIt;
+
+        // Select region from dataset for this decomposition.
         for (sIt = gIt->second.begin(); sIt != gIt->second.end(); ++sIt)
         {
             std::stringstream fieldNameStream;
@@ -1021,7 +1025,7 @@ void FieldIOHdf5::v_Import(const std::string &infilename,
 
             FieldDefinitionsSharedPtr fielddef =
                 MemoryManager<FieldDefinitions>::AllocateSharedPtr();
-            ImportFieldDef(readPL, root, decomps, *sIt, decompsToOffsets[*sIt],
+            ImportFieldDef(readPLInd, root, decomps, *sIt, decompsToOffsets[*sIt],
                            fieldNameStream.str(), fielddef);
 
             fielddef->m_elementIDs = groupsToElmts[*sIt];
@@ -1031,7 +1035,7 @@ void FieldIOHdf5::v_Import(const std::string &infilename,
             {
                 std::vector<NekDouble> decompFieldData;
                 ImportFieldData(
-                    readPL, data_dset, data_fspace,
+                    readPLInd, data_dset, data_fspace,
                     decompsToOffsets[*sIt].data, decomps, *sIt, fielddef,
                     decompFieldData);
                 fielddata.push_back(decompFieldData);
@@ -1276,7 +1280,6 @@ void FieldIOHdf5::ImportFieldData(
 
     data_fspace->SelectRange(data_i, nFieldVals);
     data_dset->Read(fielddata, data_fspace, readPL);
-
     int datasize = CheckFieldDefinition(fielddef);
     ASSERTL0(
         fielddata.size() == datasize * fielddef->m_fields.size(),

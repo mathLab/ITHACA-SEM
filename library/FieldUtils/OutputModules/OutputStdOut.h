@@ -64,6 +64,17 @@ public:
     {
         return "OutputStdOut";
     }
+
+    virtual std::string GetModuleDescription()
+    {
+        return "Output written to StdOut";
+    }
+
+    virtual ModulePriority GetModulePriority()
+    {
+        return eOutput;
+    }
+
 };
 }
 }

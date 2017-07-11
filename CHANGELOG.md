@@ -27,6 +27,7 @@ v5.0.0
 
 **FieldConvert**:
 - Add input module for Semtex field files (!777)
+- Fixed interppoints module (!760)
 
 **Documentation**:
 - Added the developer-guide repository as a submodule (!751)

@@ -133,10 +133,8 @@ void CsvIO::v_ImportFieldData(const std::string inFile, PtsFieldSharedPtr& ptsFi
             dim++;
         }
     }
-    fieldNames.erase(fieldNames.begin(), fieldNames.begin() + dim);
 
-    int nfields = fieldNames.size();
-    int totvars = dim + nfields;
+    int totvars = fieldNames.size();
 
     vector<NekDouble> ptsSerial;
     typedef boost::tokenizer< boost::escaped_list_separator<char> > Tokenizer;
@@ -175,6 +173,31 @@ void CsvIO::v_ImportFieldData(const std::string inFile, PtsFieldSharedPtr& ptsFi
             pts[j][i] = ptsSerial[i * totvars + j];
         }
     }
+
+    // reorder pts to make x,y,z the first columns
+    vector<string> dimNames = {"x", "y", "z"};
+    for (int i = 0; i < dim; ++i)
+    {
+        auto p = find(fieldNames.begin(), fieldNames.end(), dimNames[i]);
+        if (p != fieldNames.end())
+        {
+            int j = distance(fieldNames.begin(), p);
+
+            if (i == j)
+            {
+                continue;
+            }
+
+            Array<OneD, NekDouble> tmp = pts[i];
+            pts[i] = pts[j];
+            pts[j] = tmp;
+
+            string tmp2 = fieldNames[i];
+            fieldNames[i] = fieldNames[j];
+            fieldNames[j] = tmp2;
+        }
+    }
+    fieldNames.erase(fieldNames.begin(), fieldNames.begin() + dim);
 
     ptsField = MemoryManager<PtsField>::AllocateSharedPtr(dim, fieldNames, pts);
 }

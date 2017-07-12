@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <test>
-    <description> Convert a .fld file to .pts </description>
+    <description> Convert a .fld file to .csv </description>
     <executable>FieldConvert</executable>
-    <parameters> -f -e -m interppoints:fromxml=chan3D.xml:fromfld=chan3D.fld:topts=chan3D_pts.pts out.pts</parameters>
+    <parameters> -f -e -m interppoints:fromxml=chan3D.xml:fromfld=chan3D.fld:topts=chan3D_pts.csv out.csv</parameters>
     <files>
         <file description="Session File">chan3D.xml</file>
         <file description="Session File">chan3D.fld</file>
-        <file description="Session File">chan3D_pts.pts</file>
+        <file description="Session File">chan3D_pts.csv</file>
     </files>
     <metrics>
         <metric type="L2" id="1">
@@ -29,3 +29,4 @@
         </metric>
     </metrics>
 </test>
+

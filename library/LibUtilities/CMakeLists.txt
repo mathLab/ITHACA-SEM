@@ -11,6 +11,7 @@ SET(BasicUtilsHeaders
     ./BasicUtils/Concepts.hpp
     ./BasicUtils/ConsistentObjectAccess.hpp
     ./BasicUtils/CompressData.h
+    ./BasicUtils/CsvIO.h
     ./BasicUtils/Equation.h
     ./BasicUtils/FieldIO.h
     ./BasicUtils/FieldIOXml.h
@@ -44,6 +45,7 @@ SET(BasicUtilsHeaders
 SET(BasicUtilsSources
     ./BasicUtils/ArrayEqualityComparison.cpp
     ./BasicUtils/CompressData.cpp
+    ./BasicUtils/CsvIO.cpp
     ./BasicUtils/Equation.cpp
     ./BasicUtils/FieldIO.cpp
     ./BasicUtils/FieldIOXml.cpp

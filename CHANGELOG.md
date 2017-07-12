@@ -12,6 +12,7 @@ v5.0.0
 - Use chrono in Timer (!807)
 - Fix caching of FUNCTION tags that read from file and provide the same
   functionality in FUNCTIONs defined for forcings (!759)
+- Added native support for csv files in addititon to pts (!760)
 
 **NekMesh**:
 - Add feature to read basic 2D geo files as CAD (!731)
@@ -26,6 +27,7 @@ v5.0.0
 
 **FieldConvert**:
 - Add input module for Semtex field files (!777)
+- Fixed interppoints module (!760)
 
 **Documentation**:
 - Added the developer-guide repository as a submodule (!751)

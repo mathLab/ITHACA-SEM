@@ -83,8 +83,10 @@ protected:
 
     virtual bool v_PreIntegrate(int step);
 
-    virtual void v_ExtraFldOutput(
+    virtual void v_AuxFields(
         std::vector<Array<OneD, NekDouble> > &fieldcoeffs,
+        std::vector<Array<OneD, NekDouble> > &fieldphys,
+        std::vector<MultiRegions::ExpListSharedPtr> &expansions,
         std::vector<std::string> &variables);
 
     virtual bool v_RequireFwdTrans()

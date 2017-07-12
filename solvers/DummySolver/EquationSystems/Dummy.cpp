@@ -87,6 +87,7 @@ Dummy::~Dummy()
 {
 }
 
+
 /**
  * @brief v_PreIntegrate
  */
@@ -131,25 +132,35 @@ void Dummy::DoOdeProjection(
 }
 
 
-void Dummy::v_ExtraFldOutput(std::vector<Array<OneD, NekDouble> > &fieldcoeffs,
-                             std::vector<std::string> &variables)
+void Dummy::v_AuxFields(std::vector<Array<OneD, NekDouble> > &fieldcoeffs,
+                      std::vector<Array<OneD, NekDouble> > &fieldphys,
+                      std::vector<MultiRegions::ExpListSharedPtr> &expansions,
+                      std::vector<std::string> &variables)
 {
     for (int i = 0; i < m_recFields.num_elements(); i++)
     {
-        Array<OneD, NekDouble> tmpC(GetNcoeffs());
+        fieldphys.push_back(m_recFields[i]);
 
+        Array<OneD, NekDouble> tmpC(GetNcoeffs());
         m_fields[0]->FwdTrans(m_recFields[i], tmpC);
-        variables.push_back(m_coupling->GetRecvFieldNames()[i]);
         fieldcoeffs.push_back(tmpC);
+
+        variables.push_back(m_coupling->GetRecvFieldNames()[i]);
+
+        expansions.push_back(m_fields[0]);
     }
 
     for (int i = 0; i < m_sendFields.num_elements(); i++)
     {
-        Array<OneD, NekDouble> tmpC(GetNcoeffs());
+        fieldphys.push_back(m_sendFields[i]);
 
+        Array<OneD, NekDouble> tmpC(GetNcoeffs());
         m_fields[0]->FwdTrans(m_sendFields[i], tmpC);
-        variables.push_back(m_coupling->GetSendFieldNames()[i]);
         fieldcoeffs.push_back(tmpC);
+
+        variables.push_back(m_coupling->GetSendFieldNames()[i]);
+
+        expansions.push_back(m_fields[0]);
     }
 }
 

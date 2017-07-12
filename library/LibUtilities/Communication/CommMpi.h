@@ -100,12 +100,13 @@ protected:
     virtual void v_AllReduce(void *buf, int count, CommDataType dt,
                              enum ReduceOperator pOp);
     virtual void v_AlltoAll(void *sendbuf, int sendcount, CommDataType sendtype,
-                            void *recvbuf, int recvcount,
-                            CommDataType recvtype);
+                            void *recvbuf, int recvcount, CommDataType recvtype);
     virtual void v_AlltoAllv(void *sendbuf, int sendcounts[], int sensdispls[],
                              CommDataType sendtype, void *recvbuf,
                              int recvcounts[], int rdispls[],
                              CommDataType recvtype);
+    virtual void v_AllGather(void *sendbuf, int sendcount, CommDataType sendtype,
+                          void *recvbuf, int recvcount, CommDataType recvtype);
     virtual void v_Bcast(void *buffer, int count, CommDataType dt, int root);
     virtual void v_Exscan(Array<OneD, unsigned long long> &pData,
                           const enum ReduceOperator pOp,

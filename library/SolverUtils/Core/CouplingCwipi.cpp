@@ -37,6 +37,7 @@
 #include <LibUtilities/BasicUtils/PtsField.h>
 #include <LibUtilities/BasicUtils/PtsIO.h>
 #include <LibUtilities/BasicUtils/Timer.h>
+#include <LibUtilities/BasicUtils/Vmath.hpp>
 #include <LibUtilities/Foundations/Interp.h>
 #include <LibUtilities/Foundations/PhysGalerkinProject.h>
 
@@ -808,14 +809,17 @@ void CouplingCwipi::ReceiveCwipi(const int step,
         // set to -1 so we know we can start receiving again
         m_recvHandle = -1;
 
-        int tmp           = -1;
-        const int *notLoc = &tmp;
+
         int nNotLoc = cwipi_get_n_not_located_points(m_couplingName.c_str());
+        Array<OneD, int> notLoc (1, -1.0);
         if (nNotLoc != 0)
         {
             cout << "WARNING: relocating " << nNotLoc << " of " << m_nPoints
                 << " points" << endl;
-            notLoc = cwipi_get_not_located_points(m_couplingName.c_str());
+            int tmp           = -1;
+            const int *tmp2 = &tmp;
+            tmp2 = cwipi_get_not_located_points(m_couplingName.c_str());
+            notLoc = Array<OneD, int>(nNotLoc, tmp2);
 
             // interpolate from m_evalField to m_recvField
             for (int i = 0; i < m_nRecvVars; ++i)
@@ -847,6 +851,8 @@ void CouplingCwipi::ReceiveCwipi(const int step,
                 }
             }
         }
+
+        ExtrapolateFields(rVals, notLoc);
 
         OverrrideFields(rVals);
 
@@ -986,6 +992,88 @@ void CouplingCwipi::OverrrideFields(Array<OneD, Array<OneD, NekDouble> > &rVals)
             {
                 rVals[5][i] = 0.0;
             }
+        }
+    }
+}
+
+void CouplingCwipi::ExtrapolateFields(Array<OneD, Array<OneD, NekDouble> > &rVals, Array<OneD, int> &notLoc)
+{
+    int totvars = 3 + m_nRecvVars;
+
+    Array<OneD, Array<OneD, NekDouble> > allVals(totvars);
+    Array<OneD, Array<OneD, NekDouble> > scatterVals(totvars);
+    Array<OneD, Array<OneD, NekDouble> > gatheredVals(totvars);
+    for (int i = 0; i < 3; ++i)
+    {
+        allVals[i] = Array<OneD, NekDouble>(m_nPoints);
+        scatterVals[i] = Array<OneD, NekDouble>(m_nPoints - notLoc.num_elements());
+    }
+    m_recvField->GetCoords(allVals[0], allVals[1], allVals[2]);
+
+    if (m_spacedim < 3)
+    {
+        Vmath::Zero(m_nPoints, allVals[2], 1);
+    }
+    if (m_spacedim < 2)
+    {
+        Vmath::Zero(m_nPoints, allVals[1], 1);
+    }
+
+    for (int i = 0; i < m_nRecvVars; ++i)
+    {
+        allVals[3 + i] = rVals[i];
+        scatterVals[3 + i] = Array<OneD, NekDouble>(m_nPoints - notLoc.num_elements());
+    }
+
+    // only copy points from allVals to scatterVals that were located
+    for (int i = 0, j = 0, locPos = 0; i < m_nPoints; ++i)
+    {
+        if (notLoc[locPos] - 1 == i)
+        {
+            // do nothing
+            locPos++;
+        }
+        else
+        {
+            for (int k = 0; k < totvars; ++k)
+            {
+                scatterVals[k][j] = allVals[k][i];
+            }
+            j++;
+        }
+    }
+
+    // this is probably horribly expensive
+    for (int i = 0; i < totvars; ++i)
+    {
+        m_evalField->GetSession()->GetComm()->AllGather(scatterVals[i], gatheredVals[i]);
+    }
+
+    LibUtilities::PtsFieldSharedPtr gatheredPts =
+        MemoryManager<LibUtilities::PtsField>::AllocateSharedPtr(3, gatheredVals);
+
+    Array<OneD, Array<OneD, NekDouble > > tmp(totvars);
+    for (int j = 0;  j < totvars; ++j)
+    {
+        tmp[j] = Array<OneD, NekDouble>(notLoc.num_elements());
+        for (int i = 0; i < notLoc.num_elements(); ++i)
+        {
+            tmp[j][i] = allVals[j][notLoc[i] -1 ];
+        }
+    }
+    LibUtilities::PtsFieldSharedPtr notlocPts =
+        MemoryManager<LibUtilities::PtsField>::AllocateSharedPtr(3, tmp);
+
+    // perform a nearest neighbour interpolation from gatheredVals to the not located rVals
+    FieldUtils::InterpolatorSharedPtr interp =
+        MemoryManager<FieldUtils::Interpolator>::AllocateSharedPtr(FieldUtils::eNearestNeighbour);
+    interp->Interpolate(gatheredPts, notlocPts);
+
+    for (int j = 3;  j < totvars; ++j)
+    {
+        for (int i = 0; i < notLoc.num_elements(); ++i)
+        {
+            allVals[j][notLoc[i] -1] = tmp[j][i];
         }
     }
 }

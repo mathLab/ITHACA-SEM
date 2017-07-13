@@ -811,21 +811,17 @@ void CouplingCwipi::ReceiveCwipi(const int step,
 
 
         int nNotLoc = cwipi_get_n_not_located_points(m_couplingName.c_str());
-        Array<OneD, int> notLoc (1, -1.0);
+        Array<OneD, int> notLoc(1, -10);
         if (nNotLoc != 0)
         {
             cout << "WARNING: relocating " << nNotLoc << " of " << m_nPoints
                 << " points" << endl;
-            int tmp           = -1;
-            const int *tmp2 = &tmp;
-            tmp2 = cwipi_get_not_located_points(m_couplingName.c_str());
-            notLoc = Array<OneD, int>(nNotLoc, tmp2);
 
-            // interpolate from m_evalField to m_recvField
-            for (int i = 0; i < m_nRecvVars; ++i)
+            const int *tmp = cwipi_get_not_located_points(m_couplingName.c_str());
+            notLoc = Array<OneD, int>(nNotLoc);
+            for (int i = 0; i < nNotLoc; ++i)
             {
-                m_evalField->FwdTrans(field[i], tmpC);
-                m_recvField->BwdTrans(tmpC, rVals[i]);
+                notLoc[i] = tmp[i] - 1;
             }
         }
 
@@ -839,7 +835,7 @@ void CouplingCwipi::ReceiveCwipi(const int step,
             for (int i = 0; i < m_nPoints; ++i)
             {
                 // cwipi indices start from 1
-                if (notLoc[locPos] - 1 == i)
+                if (notLoc[locPos] == i)
                 {
                     // keep the original value of field[j][i]
                     locPos++;
@@ -852,7 +848,10 @@ void CouplingCwipi::ReceiveCwipi(const int step,
             }
         }
 
-        ExtrapolateFields(rVals, notLoc);
+        if (nNotLoc != 0)
+        {
+            ExtrapolateFields(rVals, notLoc);
+        }
 
         OverrrideFields(rVals);
 
@@ -1028,7 +1027,7 @@ void CouplingCwipi::ExtrapolateFields(Array<OneD, Array<OneD, NekDouble> > &rVal
     // only copy points from allVals to scatterVals that were located
     for (int i = 0, j = 0, locPos = 0; i < m_nPoints; ++i)
     {
-        if (notLoc[locPos] - 1 == i)
+        if (notLoc[locPos] == i)
         {
             // do nothing
             locPos++;
@@ -1077,7 +1076,7 @@ void CouplingCwipi::ExtrapolateFields(Array<OneD, Array<OneD, NekDouble> > &rVal
         tmp[j] = Array<OneD, NekDouble>(notLoc.num_elements());
         for (int i = 0; i < notLoc.num_elements(); ++i)
         {
-            tmp[j][i] = allVals[j][notLoc[i] -1 ];
+            tmp[j][i] = allVals[j][notLoc[i]];
         }
     }
     LibUtilities::PtsFieldSharedPtr notlocPts =
@@ -1092,7 +1091,7 @@ void CouplingCwipi::ExtrapolateFields(Array<OneD, Array<OneD, NekDouble> > &rVal
     {
         for (int i = 0; i < notLoc.num_elements(); ++i)
         {
-            allVals[j][notLoc[i] -1] = tmp[j][i];
+            allVals[j][notLoc[i]] = tmp[j][i];
         }
     }
 }

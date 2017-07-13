@@ -813,7 +813,7 @@ void CouplingCwipi::ReceiveCwipi(const int step,
 
 
         int nNotLoc = cwipi_get_n_not_located_points(m_couplingName.c_str());
-        Array<OneD, int> notLoc(1, -10);
+        Array<OneD, int> notLoc;
         if (nNotLoc != 0)
         {
             cout << "WARNING: relocating " << nNotLoc << " of " << m_nPoints
@@ -855,9 +855,18 @@ void CouplingCwipi::ReceiveCwipi(const int step,
             }
         }
 
-        if (nNotLoc != 0 && boost::to_upper_copy(m_config["NOTLOCMETHOD"]) == "EXTRAPOLATE")
+        if (boost::to_upper_copy(m_config["NOTLOCMETHOD"]) == "EXTRAPOLATE")
         {
-            ExtrapolateFields(rVals, notLoc);
+            int doExtrapolate = 0;
+            if (nNotLoc != 0)
+            {
+                doExtrapolate = 1;
+            }
+            m_evalField->GetSession()->GetComm()->AllReduce(doExtrapolate, LibUtilities::ReduceMax);
+            if (doExtrapolate > 0)
+            {
+                ExtrapolateFields(rVals, notLoc);
+            }
         }
 
         OverrrideFields(rVals);
@@ -1078,31 +1087,34 @@ void CouplingCwipi::ExtrapolateFields(Array<OneD, Array<OneD, NekDouble> > &rVal
             recvDataOffsetMap);
     }
 
-    LibUtilities::PtsFieldSharedPtr gatheredPts =
-        MemoryManager<LibUtilities::PtsField>::AllocateSharedPtr(3, gatheredVals);
-
-    Array<OneD, Array<OneD, NekDouble > > tmp(totvars);
-    for (int j = 0;  j < totvars; ++j)
+    if (nNotLoc > 0)
     {
-        tmp[j] = Array<OneD, NekDouble>(nNotLoc);
-        for (int i = 0; i < nNotLoc; ++i)
+        LibUtilities::PtsFieldSharedPtr gatheredPts =
+            MemoryManager<LibUtilities::PtsField>::AllocateSharedPtr(3, gatheredVals);
+
+        Array<OneD, Array<OneD, NekDouble > > tmp(totvars);
+        for (int j = 0;  j < totvars; ++j)
         {
-            tmp[j][i] = allVals[j][notLoc[i]];
+            tmp[j] = Array<OneD, NekDouble>(nNotLoc);
+            for (int i = 0; i < nNotLoc; ++i)
+            {
+                tmp[j][i] = allVals[j][notLoc[i]];
+            }
         }
-    }
-    LibUtilities::PtsFieldSharedPtr notlocPts =
-        MemoryManager<LibUtilities::PtsField>::AllocateSharedPtr(3, tmp);
+        LibUtilities::PtsFieldSharedPtr notlocPts =
+            MemoryManager<LibUtilities::PtsField>::AllocateSharedPtr(3, tmp);
 
-    // perform a nearest neighbour interpolation from gatheredVals to the not located rVals
-    FieldUtils::InterpolatorSharedPtr interp =
-        MemoryManager<FieldUtils::Interpolator>::AllocateSharedPtr(FieldUtils::eNearestNeighbour);
-    interp->Interpolate(gatheredPts, notlocPts);
+        // perform a nearest neighbour interpolation from gatheredVals to the not located rVals
+        FieldUtils::InterpolatorSharedPtr interp =
+            MemoryManager<FieldUtils::Interpolator>::AllocateSharedPtr(FieldUtils::eNearestNeighbour);
+        interp->Interpolate(gatheredPts, notlocPts);
 
-    for (int j = 3;  j < totvars; ++j)
-    {
-        for (int i = 0; i < nNotLoc; ++i)
+        for (int j = 3;  j < totvars; ++j)
         {
-            allVals[j][notLoc[i]] = tmp[j][i];
+            for (int i = 0; i < nNotLoc; ++i)
+            {
+                allVals[j][notLoc[i]] = tmp[j][i];
+            }
         }
     }
 

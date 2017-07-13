@@ -837,26 +837,21 @@ void CouplingCwipi::ReceiveCwipi(const int step,
             }
         }
 
-        int locPos = 0;
-        int intPos = 0;
-        for (int j = 0; j < m_nRecvVars; ++j)
-        {
-            locPos = 0;
-            intPos = 0;
 
-            for (int i = 0; i < m_nPoints; ++i)
+        for (int i = 0, locPos = 0, intPos = 0; i < m_nPoints; ++i)
+        {
+            if (locPos < nNotLoc && notLoc[locPos] == i)
             {
-                // cwipi indices start from 1
-                if (notLoc[locPos] == i)
-                {
-                    // keep the original value of field[j][i]
-                    locPos++;
-                }
-                else
+                // keep the original value of field[j][i]
+                locPos++;
+            }
+            else
+            {
+                for (int j = 0; j < m_nRecvVars; ++j)
                 {
                     rVals[j][i] = m_rValsInterl[intPos * m_nRecvVars + j];
-                    intPos++;
                 }
+                intPos++;
             }
         }
 
@@ -1013,6 +1008,7 @@ void CouplingCwipi::ExtrapolateFields(Array<OneD, Array<OneD, NekDouble> > &rVal
     timer1.Start();
 
     int totvars = 3 + m_nRecvVars;
+    int nNotLoc = notLoc.num_elements();
 
     Array<OneD, Array<OneD, NekDouble> > allVals(totvars);
     Array<OneD, Array<OneD, NekDouble> > scatterVals(totvars);
@@ -1020,7 +1016,7 @@ void CouplingCwipi::ExtrapolateFields(Array<OneD, Array<OneD, NekDouble> > &rVal
     for (int i = 0; i < 3; ++i)
     {
         allVals[i] = Array<OneD, NekDouble>(m_nPoints);
-        scatterVals[i] = Array<OneD, NekDouble>(m_nPoints - notLoc.num_elements());
+        scatterVals[i] = Array<OneD, NekDouble>(m_nPoints - nNotLoc);
     }
     m_recvField->GetCoords(allVals[0], allVals[1], allVals[2]);
 
@@ -1036,13 +1032,13 @@ void CouplingCwipi::ExtrapolateFields(Array<OneD, Array<OneD, NekDouble> > &rVal
     for (int i = 0; i < m_nRecvVars; ++i)
     {
         allVals[3 + i] = rVals[i];
-        scatterVals[3 + i] = Array<OneD, NekDouble>(m_nPoints - notLoc.num_elements());
+        scatterVals[3 + i] = Array<OneD, NekDouble>(m_nPoints - nNotLoc);
     }
 
     // only copy points from allVals to scatterVals that were located
-    for (int i = 0, j = 0, locPos = 0; i < m_nPoints; ++i)
+    for (int i = 0, intPos = 0, locPos = 0; i < m_nPoints; ++i)
     {
-        if (notLoc[locPos] == i)
+        if (locPos < nNotLoc && notLoc[locPos] == i)
         {
             // do nothing
             locPos++;
@@ -1051,9 +1047,9 @@ void CouplingCwipi::ExtrapolateFields(Array<OneD, Array<OneD, NekDouble> > &rVal
         {
             for (int k = 0; k < totvars; ++k)
             {
-                scatterVals[k][j] = allVals[k][i];
+                scatterVals[k][intPos] = allVals[k][i];
             }
-            j++;
+            intPos++;
         }
     }
 
@@ -1088,8 +1084,8 @@ void CouplingCwipi::ExtrapolateFields(Array<OneD, Array<OneD, NekDouble> > &rVal
     Array<OneD, Array<OneD, NekDouble > > tmp(totvars);
     for (int j = 0;  j < totvars; ++j)
     {
-        tmp[j] = Array<OneD, NekDouble>(notLoc.num_elements());
-        for (int i = 0; i < notLoc.num_elements(); ++i)
+        tmp[j] = Array<OneD, NekDouble>(nNotLoc);
+        for (int i = 0; i < nNotLoc; ++i)
         {
             tmp[j][i] = allVals[j][notLoc[i]];
         }
@@ -1104,7 +1100,7 @@ void CouplingCwipi::ExtrapolateFields(Array<OneD, Array<OneD, NekDouble> > &rVal
 
     for (int j = 3;  j < totvars; ++j)
     {
-        for (int i = 0; i < notLoc.num_elements(); ++i)
+        for (int i = 0; i < nNotLoc; ++i)
         {
             allVals[j][notLoc[i]] = tmp[j][i];
         }

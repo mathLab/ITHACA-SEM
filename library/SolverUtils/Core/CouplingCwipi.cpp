@@ -35,7 +35,7 @@
 
 #include <LibUtilities/BasicUtils/ParseUtils.hpp>
 #include <LibUtilities/BasicUtils/PtsField.h>
-#include <LibUtilities/BasicUtils/PtsIO.h>
+#include <LibUtilities/BasicUtils/CsvIO.h>
 #include <LibUtilities/BasicUtils/Timer.h>
 #include <LibUtilities/BasicUtils/Vmath.hpp>
 #include <LibUtilities/Foundations/Interp.h>
@@ -1126,11 +1126,11 @@ void CouplingCwipi::DumpRawFields(const NekDouble time,
         tmp[m_spacedim + i] = rVals[i];
     }
 
-    LibUtilities::PtsIO ptsIO(m_evalField->GetSession()->GetComm());
+    LibUtilities::CsvIO csvIO(m_evalField->GetSession()->GetComm());
     LibUtilities::PtsFieldSharedPtr rvPts =
         MemoryManager<LibUtilities::PtsField>::AllocateSharedPtr(
             m_spacedim, m_recvFieldNames, tmp);
-    ptsIO.Write(filename, rvPts);
+    csvIO.Write(filename, rvPts);
 
     timer1.Stop();
     if (m_evalField->GetComm()->GetRank() == 0 &&

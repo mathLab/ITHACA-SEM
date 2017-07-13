@@ -47,7 +47,6 @@
 
 #include <boost/functional/hash.hpp>
 
-#define GEOM_TOL 1.0
 #define OUTPUT_FREQ 0
 
 namespace Nektar
@@ -116,12 +115,14 @@ CouplingCwipi::CouplingCwipi(MultiRegions::ExpListSharedPtr field): Coupling(fie
       m_connec(NULL), m_rValsInterl(NULL), m_sValsInterl(NULL)
 {
     // defaults
+    m_config["GEOMTOL"]          = "0.1";
     m_config["LOCALNAME"]        = "nektar";
     m_config["REMOTENAME"]       = "precise";
     m_config["OVERSAMPLE"]       = "0";
     m_config["FILTERWIDTH"]      = "-1";
     m_config["DUMPRAW"]          = "0";
     m_config["SENDMETHOD"]       = "NEARESTNEIGHBOUR";
+    m_config["NOTLOCMETHOD"]     = "NOTOUCH";
 }
 
 void CouplingCwipi::v_Init()
@@ -149,11 +150,12 @@ void CouplingCwipi::v_Init()
 
     //  Init Coupling
     cwipi_solver_type_t solver_type = CWIPI_SOLVER_CELL_VERTEX;
+    NekDouble geom_tol = boost::lexical_cast<NekDouble>(m_config["GEOMTOL"]);
     cwipi_create_coupling(m_couplingName.c_str(),
                           CWIPI_COUPLING_PARALLEL_WITH_PARTITIONING,
                           m_config["REMOTENAME"].c_str(),
                           m_spacedim,
-                          GEOM_TOL,
+                          geom_tol,
                           CWIPI_STATIC_MESH,
                           solver_type,
                           OUTPUT_FREQ,
@@ -419,7 +421,7 @@ void CouplingCwipi::SetupSendInterpolation()
         MemoryManager<LibUtilities::PtsField>::AllocateSharedPtr(3, dist);
 
     FieldUtils::InterpMethod method = FieldUtils::eNearestNeighbour;
-    if (m_config["SENDMETHOD"] == "SHEPARD")
+    if (boost::to_upper_copy(m_config["SENDMETHOD"]) == "SHEPARD")
     {
         method = FieldUtils::eShepard;
     }
@@ -573,8 +575,8 @@ void CouplingCwipi::SendCallback(
         interpField[i] = Array<OneD, NekDouble>(distCoords.num_elements());
     }
 
-    if (m_config["SENDMETHOD"] == "NEARESTNEIGHBOUR" ||
-        m_config["SENDMETHOD"] == "SHEPARD"
+    if (boost::to_upper_copy(m_config["SENDMETHOD"]) == "NEARESTNEIGHBOUR" ||
+        boost::to_upper_copy(m_config["SENDMETHOD"]) == "SHEPARD"
     )
     {
         if (not m_sendInterpolator)
@@ -823,6 +825,16 @@ void CouplingCwipi::ReceiveCwipi(const int step,
             {
                 notLoc[i] = tmp[i] - 1;
             }
+
+            if (boost::to_upper_copy(m_config["NOTLOCMETHOD"]) == "NOTOUCH")
+            {
+                // interpolate from m_evalField to m_recvField
+                for (int i = 0; i < m_nRecvVars; ++i)
+                {
+                    m_evalField->FwdTrans(field[i], tmpC);
+                    m_recvField->BwdTrans(tmpC, rVals[i]);
+                }
+            }
         }
 
         int locPos = 0;
@@ -848,7 +860,7 @@ void CouplingCwipi::ReceiveCwipi(const int step,
             }
         }
 
-        if (nNotLoc != 0)
+        if (nNotLoc != 0 && boost::to_upper_copy(m_config["NOTLOCMETHOD"]) == "EXTRAPOLATE")
         {
             ExtrapolateFields(rVals, notLoc);
         }

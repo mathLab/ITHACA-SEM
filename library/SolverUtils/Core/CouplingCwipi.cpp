@@ -1009,6 +1009,9 @@ void CouplingCwipi::OverrrideFields(Array<OneD, Array<OneD, NekDouble> > &rVals)
 
 void CouplingCwipi::ExtrapolateFields(Array<OneD, Array<OneD, NekDouble> > &rVals, Array<OneD, int> &notLoc)
 {
+    Timer timer1;
+    timer1.Start();
+
     int totvars = 3 + m_nRecvVars;
 
     Array<OneD, Array<OneD, NekDouble> > allVals(totvars);
@@ -1105,6 +1108,13 @@ void CouplingCwipi::ExtrapolateFields(Array<OneD, Array<OneD, NekDouble> > &rVal
         {
             allVals[j][notLoc[i]] = tmp[j][i];
         }
+    }
+
+    timer1.Stop();
+    if (m_evalField->GetComm()->GetRank() == 0 &&
+            m_evalField->GetSession()->DefinesCmdLineArgument("verbose"))
+    {
+        cout << "ExtrapolateFields total time: " << timer1.TimePerTest(1) << endl;
     }
 }
 

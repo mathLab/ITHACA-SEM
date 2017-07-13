@@ -1059,7 +1059,7 @@ void CouplingCwipi::ExtrapolateFields(Array<OneD, Array<OneD, NekDouble> > &rVal
 
     // send all located points to all ranks. This is probably horribly expensive
     int nranks = m_evalField->GetSession()->GetComm()->GetSize();
-    Array<OneD, int> nThisNotLoc(1, notLoc.num_elements());
+    Array<OneD, int> nThisNotLoc(1, m_nPoints - nNotLoc);
     Array<OneD, int> recvDataSizeMap(nranks);
     m_evalField->GetSession()->GetComm()->AllGather(nThisNotLoc, recvDataSizeMap);
 

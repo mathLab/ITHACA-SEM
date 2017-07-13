@@ -273,8 +273,19 @@ void CommMpi::v_AllGather(void *sendbuf, int sendcount, CommDataType sendtype,
                           void *recvbuf, int recvcount, CommDataType recvtype)
 {
     int retval = MPI_Allgather(sendbuf, sendcount, sendtype, recvbuf, recvcount,
+                               recvtype, m_comm);
 
     ASSERTL0(retval == MPI_SUCCESS, "MPI error performing Allgather.");
+}
+
+void CommMpi::v_AllGatherv(void *sendbuf, int sendcount, CommDataType sendtype,
+                             void *recvbuf, int recvcounts[], int rdispls[],
+                             CommDataType recvtype)
+{
+    int retval = MPI_Allgatherv(sendbuf, sendcount, sendtype, recvbuf,
+                               recvcounts, rdispls, recvtype, m_comm);
+
+    ASSERTL0(retval == MPI_SUCCESS, "MPI error performing All-to-All-v.");
 }
 
 void CommMpi::v_Bcast(void *buffer, int count, CommDataType dt, int root)

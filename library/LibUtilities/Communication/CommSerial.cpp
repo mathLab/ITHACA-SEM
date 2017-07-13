@@ -165,6 +165,12 @@ void CommSerial::v_AllGather(void *sendbuf, int sendcount, CommDataType sendtype
 {
 }
 
+void CommSerial::v_AllGatherv(void *sendbuf, int sendcount, CommDataType sendtype,
+                             void *recvbuf, int recvcounts[], int rdispls[],
+                             CommDataType recvtype)
+{
+}
+
 void CommSerial::v_Bcast(void *buffer, int count, CommDataType dt, int root)
 {
 }

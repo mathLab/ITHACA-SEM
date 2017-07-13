@@ -1043,10 +1043,29 @@ void CouplingCwipi::ExtrapolateFields(Array<OneD, Array<OneD, NekDouble> > &rVal
         }
     }
 
-    // this is probably horribly expensive
+    // send all located points to all ranks. This is probably horribly expensive
+    int nranks = m_evalField->GetSession()->GetComm()->GetSize();
+    Array<OneD, int> nThisNotLoc(1, notLoc.num_elements());
+    Array<OneD, int> recvDataSizeMap(nranks);
+    m_evalField->GetSession()->GetComm()->AllGather(nThisNotLoc, recvDataSizeMap);
+
+    Array<OneD, int> recvDataOffsetMap(nranks);
+    recvDataOffsetMap[0] = 0;
+    for (int i = 1; i < nranks; ++i)
+    {
+        recvDataOffsetMap[i] = recvDataOffsetMap[i - 1] + recvDataSizeMap[i - 1];
+    }
+    int totRecvDataSize = recvDataOffsetMap[nranks - 1] + recvDataSizeMap[nranks - 1];
+
     for (int i = 0; i < totvars; ++i)
     {
-        m_evalField->GetSession()->GetComm()->AllGather(scatterVals[i], gatheredVals[i]);
+        gatheredVals[i] = Array<OneD, NekDouble>(totRecvDataSize);
+
+        m_evalField->GetSession()->GetComm()->AllGatherv(
+            scatterVals[i],
+            gatheredVals[i],
+            recvDataSizeMap,
+            recvDataOffsetMap);
     }
 
     LibUtilities::PtsFieldSharedPtr gatheredPts =

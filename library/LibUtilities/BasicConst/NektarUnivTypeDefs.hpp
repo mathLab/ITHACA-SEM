@@ -38,10 +38,12 @@
 
 #include <map>
 #include <boost/cstdint.hpp>
+#include <complex>
 
 namespace Nektar
 {
     typedef double NekDouble;
+    typedef std::complex<double> NekCDouble;
 
     typedef boost::int32_t  NekInt;
     typedef boost::int32_t  NekInt32;

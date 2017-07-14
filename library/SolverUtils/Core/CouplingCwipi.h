@@ -178,7 +178,8 @@ private:
 
     void OverrrideFields(Array<OneD, Array<OneD, NekDouble> > &rVals);
 
-    void ExtrapolateFields(Array<OneD, Array<OneD, NekDouble> > &rVals, Array<OneD, int> &notLoc);
+    void ExtrapolateFields(Array<OneD, Array<OneD, NekDouble> > &rVals,
+                           Array<OneD, int> &notLoc);
 
     template <typename T>
     void AddElementsToMesh(T geom,

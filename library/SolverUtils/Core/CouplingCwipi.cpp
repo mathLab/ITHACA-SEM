@@ -1011,26 +1011,27 @@ void CouplingCwipi::OverrrideFields(Array<OneD, Array<OneD, NekDouble> > &rVals)
     }
 }
 
-void CouplingCwipi::ExtrapolateFields(Array<OneD, Array<OneD, NekDouble> > &rVals, Array<OneD, int> &notLoc)
+void CouplingCwipi::ExtrapolateFields(
+    Array<OneD, Array<OneD, NekDouble> > &rVals, Array<OneD, int> &notLoc)
 {
     Timer timer1, timer2;
     timer1.Start();
 
     int totvars = 3 + m_nRecvVars;
     int nNotLoc = notLoc.num_elements();
-    int nranks = m_evalField->GetSession()->GetComm()->GetSize();
+    int nranks  = m_evalField->GetSession()->GetComm()->GetSize();
 
-    Array<OneD, int> nThisLoc(1, m_nPoints - nNotLoc);
-    Array<OneD, int> recvDataSizeMap(nranks);
-    m_evalField->GetSession()->GetComm()->AllGather(nThisLoc, recvDataSizeMap);
+    Array<OneD, int> thisNLoc(1, m_nPoints - nNotLoc);
+    Array<OneD, int> sizeMap(nranks);
+    m_evalField->GetSession()->GetComm()->AllGather(thisNLoc, sizeMap);
 
-    Array<OneD, int> recvDataOffsetMap(nranks);
-    recvDataOffsetMap[0] = 0;
+    Array<OneD, int> offsetMap(nranks);
+    offsetMap[0] = 0;
     for (int i = 1; i < nranks; ++i)
     {
-        recvDataOffsetMap[i] = recvDataOffsetMap[i - 1] + recvDataSizeMap[i - 1];
+        offsetMap[i] = offsetMap[i - 1] + sizeMap[i - 1];
     }
-    int totRecvDataSize = recvDataOffsetMap[nranks - 1] + recvDataSizeMap[nranks - 1];
+    int totNLoc = offsetMap[nranks - 1] + sizeMap[nranks - 1];
 
     Array<OneD, Array<OneD, NekDouble> > allVals(totvars);
     for (int i = 0; i < 3; ++i)
@@ -1056,11 +1057,11 @@ void CouplingCwipi::ExtrapolateFields(Array<OneD, Array<OneD, NekDouble> > &rVal
     Array<OneD, Array<OneD, NekDouble> > locatedVals(totvars);
     for (int i = 0; i < totvars; ++i)
     {
-        locatedVals[i] = Array<OneD, NekDouble>(totRecvDataSize, -42.0);
+        locatedVals[i] = Array<OneD, NekDouble>(totNLoc, -42.0);
     }
 
     // only copy points from allVals to locatedVals that were located
-    int offset = recvDataOffsetMap[m_evalField->GetSession()->GetComm()->GetRank()];
+    int offset = offsetMap[m_evalField->GetSession()->GetComm()->GetRank()];
     for (int i = 0, intPos = 0, locPos = 0; i < m_nPoints; ++i)
     {
         if (locPos < nNotLoc && notLoc[locPos] == i)
@@ -1083,54 +1084,56 @@ void CouplingCwipi::ExtrapolateFields(Array<OneD, Array<OneD, NekDouble> > &rVal
     for (int i = 0; i < totvars; ++i)
     {
         m_evalField->GetSession()->GetComm()->AllGathervI(
-            locatedVals[i],
-            recvDataSizeMap,
-            recvDataOffsetMap);
+            locatedVals[i], sizeMap, offsetMap);
     }
     timer2.Stop();
 
     if (nNotLoc > 0)
     {
-        LibUtilities::PtsFieldSharedPtr gatheredPts =
-            MemoryManager<LibUtilities::PtsField>::AllocateSharedPtr(3, locatedVals);
+        LibUtilities::PtsFieldSharedPtr locatedPts =
+            MemoryManager<LibUtilities::PtsField>::AllocateSharedPtr(
+                3, locatedVals);
 
-        Array<OneD, Array<OneD, NekDouble > > tmp(totvars);
-        for (int j = 0;  j < totvars; ++j)
+        Array<OneD, Array<OneD, NekDouble> > notLocVals(totvars);
+        for (int j = 0; j < totvars; ++j)
         {
-            tmp[j] = Array<OneD, NekDouble>(nNotLoc);
+            notLocVals[j] = Array<OneD, NekDouble>(nNotLoc);
             for (int i = 0; i < nNotLoc; ++i)
             {
-                tmp[j][i] = allVals[j][notLoc[i]];
+                notLocVals[j][i] = allVals[j][notLoc[i]];
             }
         }
         LibUtilities::PtsFieldSharedPtr notlocPts =
-            MemoryManager<LibUtilities::PtsField>::AllocateSharedPtr(3, tmp);
+            MemoryManager<LibUtilities::PtsField>::AllocateSharedPtr(
+                3, notLocVals);
 
-        // perform a nearest neighbour interpolation from locatedVals to the not located rVals
+        // perform a nearest neighbour interpolation from locatedVals to the not
+        // located rVals
         if (not m_extrapInterpolator)
         {
             m_extrapInterpolator =
-                MemoryManager<FieldUtils::Interpolator>::AllocateSharedPtr(FieldUtils::eNearestNeighbour);
-            m_extrapInterpolator->CalcWeights(gatheredPts, notlocPts);
+                MemoryManager<FieldUtils::Interpolator>::AllocateSharedPtr(
+                    FieldUtils::eNearestNeighbour);
+            m_extrapInterpolator->CalcWeights(locatedPts, notlocPts);
             m_extrapInterpolator->PrintStatistics();
         }
-        m_extrapInterpolator->Interpolate(gatheredPts, notlocPts);
+        m_extrapInterpolator->Interpolate(locatedPts, notlocPts);
 
-        for (int j = 3;  j < totvars; ++j)
+        for (int j = 3; j < totvars; ++j)
         {
             for (int i = 0; i < nNotLoc; ++i)
             {
-                allVals[j][notLoc[i]] = tmp[j][i];
+                allVals[j][notLoc[i]] = notLocVals[j][i];
             }
         }
     }
 
     timer1.Stop();
     if (m_evalField->GetComm()->GetRank() == 0 &&
-            m_evalField->GetSession()->DefinesCmdLineArgument("verbose"))
+        m_evalField->GetSession()->DefinesCmdLineArgument("verbose"))
     {
         cout << "ExtrapolateFields total time: " << timer1.TimePerTest(1);
-        cout << " (AllGatherv: " << timer2.TimePerTest(1) << ")" << endl;
+        cout << " (AllGathervI: " << timer2.TimePerTest(1) << ")" << endl;
     }
 }
 

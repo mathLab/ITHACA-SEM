@@ -130,6 +130,8 @@ protected:
 
     FieldUtils::InterpolatorSharedPtr m_sendInterpolator;
 
+    FieldUtils::InterpolatorSharedPtr m_extrapInterpolator;
+
     virtual void v_Init();
 
     virtual void v_Send(const int step,

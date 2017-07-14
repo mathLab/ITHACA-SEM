@@ -1013,7 +1013,7 @@ void CouplingCwipi::OverrrideFields(Array<OneD, Array<OneD, NekDouble> > &rVals)
 
 void CouplingCwipi::ExtrapolateFields(Array<OneD, Array<OneD, NekDouble> > &rVals, Array<OneD, int> &notLoc)
 {
-    Timer timer1;
+    Timer timer1, timer2;
     timer1.Start();
 
     int totvars = 3 + m_nRecvVars;
@@ -1076,6 +1076,7 @@ void CouplingCwipi::ExtrapolateFields(Array<OneD, Array<OneD, NekDouble> > &rVal
     }
     int totRecvDataSize = recvDataOffsetMap[nranks - 1] + recvDataSizeMap[nranks - 1];
 
+    timer2.Start();
     for (int i = 0; i < totvars; ++i)
     {
         gatheredVals[i] = Array<OneD, NekDouble>(totRecvDataSize);
@@ -1086,6 +1087,7 @@ void CouplingCwipi::ExtrapolateFields(Array<OneD, Array<OneD, NekDouble> > &rVal
             recvDataSizeMap,
             recvDataOffsetMap);
     }
+    timer2.Stop();
 
     if (nNotLoc > 0)
     {
@@ -1105,9 +1107,14 @@ void CouplingCwipi::ExtrapolateFields(Array<OneD, Array<OneD, NekDouble> > &rVal
             MemoryManager<LibUtilities::PtsField>::AllocateSharedPtr(3, tmp);
 
         // perform a nearest neighbour interpolation from gatheredVals to the not located rVals
-        FieldUtils::InterpolatorSharedPtr interp =
-            MemoryManager<FieldUtils::Interpolator>::AllocateSharedPtr(FieldUtils::eNearestNeighbour);
-        interp->Interpolate(gatheredPts, notlocPts);
+        if (not m_extrapInterpolator)
+        {
+            m_extrapInterpolator =
+                MemoryManager<FieldUtils::Interpolator>::AllocateSharedPtr(FieldUtils::eNearestNeighbour);
+            m_extrapInterpolator->CalcWeights(gatheredPts, notlocPts);
+            m_extrapInterpolator->PrintStatistics();
+        }
+        m_extrapInterpolator->Interpolate(gatheredPts, notlocPts);
 
         for (int j = 3;  j < totvars; ++j)
         {
@@ -1122,7 +1129,8 @@ void CouplingCwipi::ExtrapolateFields(Array<OneD, Array<OneD, NekDouble> > &rVal
     if (m_evalField->GetComm()->GetRank() == 0 &&
             m_evalField->GetSession()->DefinesCmdLineArgument("verbose"))
     {
-        cout << "ExtrapolateFields total time: " << timer1.TimePerTest(1) << endl;
+        cout << "ExtrapolateFields total time: " << timer1.TimePerTest(1);
+        cout << " (AllGatherv: " << timer2.TimePerTest(1) << ")" << endl;
     }
 }
 

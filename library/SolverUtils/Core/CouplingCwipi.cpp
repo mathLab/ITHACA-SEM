@@ -122,7 +122,7 @@ CouplingCwipi::CouplingCwipi(MultiRegions::ExpListSharedPtr field): Coupling(fie
     m_config["FILTERWIDTH"]      = "-1";
     m_config["DUMPRAW"]          = "0";
     m_config["SENDMETHOD"]       = "NEARESTNEIGHBOUR";
-    m_config["NOTLOCMETHOD"]     = "NOTOUCH";
+    m_config["NOTLOCMETHOD"]     = "KEEP";
 }
 
 void CouplingCwipi::v_Init()
@@ -826,7 +826,7 @@ void CouplingCwipi::ReceiveCwipi(const int step,
                 notLoc[i] = tmp[i] - 1;
             }
 
-            if (boost::to_upper_copy(m_config["NOTLOCMETHOD"]) == "NOTOUCH")
+            if (boost::to_upper_copy(m_config["NOTLOCMETHOD"]) == "KEEP")
             {
                 // interpolate from m_evalField to m_recvField
                 for (int i = 0; i < m_nRecvVars; ++i)

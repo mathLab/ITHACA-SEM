@@ -1018,14 +1018,24 @@ void CouplingCwipi::ExtrapolateFields(Array<OneD, Array<OneD, NekDouble> > &rVal
 
     int totvars = 3 + m_nRecvVars;
     int nNotLoc = notLoc.num_elements();
+    int nranks = m_evalField->GetSession()->GetComm()->GetSize();
+
+    Array<OneD, int> nThisLoc(1, m_nPoints - nNotLoc);
+    Array<OneD, int> recvDataSizeMap(nranks);
+    m_evalField->GetSession()->GetComm()->AllGather(nThisLoc, recvDataSizeMap);
+
+    Array<OneD, int> recvDataOffsetMap(nranks);
+    recvDataOffsetMap[0] = 0;
+    for (int i = 1; i < nranks; ++i)
+    {
+        recvDataOffsetMap[i] = recvDataOffsetMap[i - 1] + recvDataSizeMap[i - 1];
+    }
+    int totRecvDataSize = recvDataOffsetMap[nranks - 1] + recvDataSizeMap[nranks - 1];
 
     Array<OneD, Array<OneD, NekDouble> > allVals(totvars);
-    Array<OneD, Array<OneD, NekDouble> > scatterVals(totvars);
-    Array<OneD, Array<OneD, NekDouble> > gatheredVals(totvars);
     for (int i = 0; i < 3; ++i)
     {
         allVals[i] = Array<OneD, NekDouble>(m_nPoints);
-        scatterVals[i] = Array<OneD, NekDouble>(m_nPoints - nNotLoc);
     }
     m_recvField->GetCoords(allVals[0], allVals[1], allVals[2]);
 
@@ -1041,10 +1051,16 @@ void CouplingCwipi::ExtrapolateFields(Array<OneD, Array<OneD, NekDouble> > &rVal
     for (int i = 0; i < m_nRecvVars; ++i)
     {
         allVals[3 + i] = rVals[i];
-        scatterVals[3 + i] = Array<OneD, NekDouble>(m_nPoints - nNotLoc);
     }
 
-    // only copy points from allVals to scatterVals that were located
+    Array<OneD, Array<OneD, NekDouble> > locatedVals(totvars);
+    for (int i = 0; i < totvars; ++i)
+    {
+        locatedVals[i] = Array<OneD, NekDouble>(totRecvDataSize, -42.0);
+    }
+
+    // only copy points from allVals to locatedVals that were located
+    int offset = recvDataOffsetMap[m_evalField->GetSession()->GetComm()->GetRank()];
     for (int i = 0, intPos = 0, locPos = 0; i < m_nPoints; ++i)
     {
         if (locPos < nNotLoc && notLoc[locPos] == i)
@@ -1056,34 +1072,18 @@ void CouplingCwipi::ExtrapolateFields(Array<OneD, Array<OneD, NekDouble> > &rVal
         {
             for (int k = 0; k < totvars; ++k)
             {
-                scatterVals[k][intPos] = allVals[k][i];
+                locatedVals[k][offset + intPos] = allVals[k][i];
             }
             intPos++;
         }
     }
 
     // send all located points to all ranks. This is probably horribly expensive
-    int nranks = m_evalField->GetSession()->GetComm()->GetSize();
-    Array<OneD, int> nThisNotLoc(1, m_nPoints - nNotLoc);
-    Array<OneD, int> recvDataSizeMap(nranks);
-    m_evalField->GetSession()->GetComm()->AllGather(nThisNotLoc, recvDataSizeMap);
-
-    Array<OneD, int> recvDataOffsetMap(nranks);
-    recvDataOffsetMap[0] = 0;
-    for (int i = 1; i < nranks; ++i)
-    {
-        recvDataOffsetMap[i] = recvDataOffsetMap[i - 1] + recvDataSizeMap[i - 1];
-    }
-    int totRecvDataSize = recvDataOffsetMap[nranks - 1] + recvDataSizeMap[nranks - 1];
-
     timer2.Start();
     for (int i = 0; i < totvars; ++i)
     {
-        gatheredVals[i] = Array<OneD, NekDouble>(totRecvDataSize);
-
-        m_evalField->GetSession()->GetComm()->AllGatherv(
-            scatterVals[i],
-            gatheredVals[i],
+        m_evalField->GetSession()->GetComm()->AllGathervI(
+            locatedVals[i],
             recvDataSizeMap,
             recvDataOffsetMap);
     }
@@ -1092,7 +1092,7 @@ void CouplingCwipi::ExtrapolateFields(Array<OneD, Array<OneD, NekDouble> > &rVal
     if (nNotLoc > 0)
     {
         LibUtilities::PtsFieldSharedPtr gatheredPts =
-            MemoryManager<LibUtilities::PtsField>::AllocateSharedPtr(3, gatheredVals);
+            MemoryManager<LibUtilities::PtsField>::AllocateSharedPtr(3, locatedVals);
 
         Array<OneD, Array<OneD, NekDouble > > tmp(totvars);
         for (int j = 0;  j < totvars; ++j)
@@ -1106,7 +1106,7 @@ void CouplingCwipi::ExtrapolateFields(Array<OneD, Array<OneD, NekDouble> > &rVal
         LibUtilities::PtsFieldSharedPtr notlocPts =
             MemoryManager<LibUtilities::PtsField>::AllocateSharedPtr(3, tmp);
 
-        // perform a nearest neighbour interpolation from gatheredVals to the not located rVals
+        // perform a nearest neighbour interpolation from locatedVals to the not located rVals
         if (not m_extrapInterpolator)
         {
             m_extrapInterpolator =

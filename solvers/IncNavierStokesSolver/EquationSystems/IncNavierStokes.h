@@ -108,17 +108,20 @@ namespace Nektar
         virtual ~WomersleyParams()
         {};
 
-        /// Real and imaginary velocity comp. of wom
-        std::vector<NekDouble> m_wom_vel_r;
-        std::vector<NekDouble> m_wom_vel_i;
+        // Real and imaginary velocity comp. of wom
+        std::vector<NekCDouble> m_wom_vel;
 
-        /// Womersley  BC constants
+        // Womersley  BC constants
         NekDouble m_radius;
         NekDouble m_period;
         Array<OneD, NekDouble> m_axisnormal;
         // currently this needs to be the point in the middle of the
         // axis but should be generalised to be any point on the axis
         Array<OneD, NekDouble> m_axispoint;
+
+        // poiseuille flow and fourier coefficients
+        Array<OneD, Array<OneD, NekDouble> > m_poiseuille;
+        Array<OneD, Array<OneD, Array<OneD, NekCDouble> > > m_zvel;
 
     };
     typedef boost::shared_ptr<WomersleyParams> WomersleyParamsSharedPtr;

@@ -97,12 +97,17 @@ protected:
         CommDataType sendtype, void *recvbuf, int recvcounts[], int rdispls[],
         CommDataType recvtype);
      LIB_UTILITIES_EXPORT virtual void v_AllGather(void *sendbuf, int sendcount,
-                                                 CommDataType sendtype,
-                                                 void *recvbuf, int recvcount,
-                                                 CommDataType recvtype);
-    LIB_UTILITIES_EXPORT virtual void v_AllGatherv(void *sendbuf, int sendcount, CommDataType sendtype,
-                             void *recvbuf, int recvcounts[], int rdispls[],
-                             CommDataType recvtype);
+                                                   CommDataType sendtype,
+                                                   void *recvbuf, int recvcount,
+                                                   CommDataType recvtype);
+    LIB_UTILITIES_EXPORT virtual void v_AllGatherv(void *sendbuf, int sendcount,
+                                                   CommDataType sendtype,
+                                                   void *recvbuf, int recvcounts[],
+                                                   int rdispls[],
+                                                   CommDataType recvtype);
+    LIB_UTILITIES_EXPORT virtual void v_AllGathervI(void *recvbuf, int recvcounts[],
+                                                    int rdispls[],
+                                                    CommDataType recvtype);
     LIB_UTILITIES_EXPORT virtual void v_Bcast(void *buffer, int count,
                                               CommDataType dt, int root);
     LIB_UTILITIES_EXPORT virtual void v_Exscan(

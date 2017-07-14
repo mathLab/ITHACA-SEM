@@ -161,13 +161,18 @@ void CommSerial::v_AlltoAllv(void *sendbuf, int sendcounts[], int sensdispls[],
  *
  */
 void CommSerial::v_AllGather(void *sendbuf, int sendcount, CommDataType sendtype,
-                            void *recvbuf, int recvcount, CommDataType recvtype)
+                             void *recvbuf, int recvcount, CommDataType recvtype)
 {
 }
 
 void CommSerial::v_AllGatherv(void *sendbuf, int sendcount, CommDataType sendtype,
-                             void *recvbuf, int recvcounts[], int rdispls[],
-                             CommDataType recvtype)
+                              void *recvbuf, int recvcounts[], int rdispls[],
+                              CommDataType recvtype)
+{
+}
+
+void CommSerial::v_AllGathervI(void *recvbuf, int recvcounts[], int rdispls[],
+                               CommDataType recvtype)
 {
 }
 

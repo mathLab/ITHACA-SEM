@@ -539,19 +539,14 @@ namespace Nektar
         ASSERTL1(m_womersleyParams.count(bndid) == 1, "Womersley parameters for this boundary have not been set up");
 
         WomersleyParamsSharedPtr WomParam = m_womersleyParams[fldid][bndid];
-        NekCDouble lamda_n, zJ0, zJ0r, zvel, A_n;
+        NekCDouble zvel;
         int  i,j,k;
 
         int M_coeffs = WomParam->m_wom_vel.size();
 
-        //NekDouble R = WomParam->m_radius;
         NekDouble T = WomParam->m_period;
-
-        //Array<OneD, NekDouble > axis_normal = WomParam->m_axisnormal;
         NekDouble axis_normal = WomParam->m_axisnormal[fldid];
-        Array<OneD, NekDouble > x0      = WomParam->m_axispoint;
 
-        NekCDouble rqR;
         // Womersley Number
         NekCDouble omega_c (2.0*M_PI/T, 0.0);
         NekCDouble k_c (0.0, 0.0);
@@ -571,13 +566,14 @@ namespace Nektar
 
         Array<OneD, NekCDouble> zt(M_coeffs);
 
+        // preallocate the exponent
         for (k=1; k < M_coeffs; k++)
         {
             k_c  = NekCDouble((NekDouble) k, 0.0);
             zt[k] = std::exp(zi * omega_c * k_c * m_time_c);
         }
 
-        //Loop over each element in an expansion
+        // Loop over each element in an expansion
         for(i = 0; i < exp_npts; ++i,cnt++)
         {
             // Get Boundary and trace expansion
@@ -585,7 +581,7 @@ namespace Nektar
             nfq = bc->GetTotPoints();
             Array<OneD, NekDouble> wbc(nfq,0.0);
 
-            //Compute womersley solution
+            // Compute womersley solution
             for (j=0; j < nfq; j++)
             {
                 wbc[j] = WomParam->m_poiseuille[i][j];
@@ -598,7 +594,7 @@ namespace Nektar
 
             // Multiply w by normal to get u,v,w component of velocity
             Vmath::Smul(nfq,axis_normal,wbc,1,wbc,1);
-
+            // get the offset
             Bvals = BndCondExp->UpdateCoeffs()+
                     BndCondExp->GetCoeff_Offset(i);
 
@@ -728,15 +724,13 @@ namespace Nektar
             ASSERTL0(parseGood,(std::string("Problem reading value of fourier coefficient, ID=") + boost::lexical_cast<string>(indx)).c_str());
             ASSERTL1(coeffvals.size() == 2,(std::string("Have not read two entries of Fourier coefficicent from ID="+ boost::lexical_cast<string>(indx)).c_str()));
             m_womersleyParams[fldid][bndid]->m_wom_vel.push_back(NekCDouble (coeffvals[0], coeffvals[1]));
-            //m_womersleyParams[fldid][bndid]->m_wom_vel_i.push_back(coeffvals[1]);
 
             fval = fval->NextSiblingElement("F");
         }
-        // starting point of precalculation
-        NekCDouble zJ0r, zt, zvel, A_n;
-        int  i,j,k;
 
-        //M fourier coefficients
+        // starting point of precalculation
+        int  i,j,k;
+        // M fourier coefficients
         int M_coeffs = m_womersleyParams[fldid][bndid]->m_wom_vel.size();
         NekDouble R = m_womersleyParams[fldid][bndid]->m_radius;
         NekDouble T = m_womersleyParams[fldid][bndid]->m_period;
@@ -760,13 +754,14 @@ namespace Nektar
         int exp_npts = BndCondExp->GetExpSize();
         Array<OneD, NekDouble> wbc(exp_npts,0.0);
 
-        // allocate arrays
+        // allocate time indepedent variables
         m_womersleyParams[fldid][bndid]->m_poiseuille = Array<OneD, Array<OneD, NekDouble> > (exp_npts);
         m_womersleyParams[fldid][bndid]->m_zvel = Array<OneD, Array<OneD, Array<OneD, NekCDouble> > > (exp_npts);
         // could use M_coeffs - 1 but need to avoid complicating things
         Array<OneD, NekCDouble> zJ0(M_coeffs);
         Array<OneD, NekCDouble> lamda_n(M_coeffs);
         Array<OneD, NekCDouble> k_c(M_coeffs);
+        NekCDouble zJ0r;
 
         for (k=1; k < M_coeffs; k++)
         {
@@ -775,7 +770,7 @@ namespace Nektar
             zJ0[k]  = Polylib::ImagBesselComp(0,lamda_n[k]);
         }
 
-        //Loop over each element in an expansion
+        // Loop over each element in an expansion
         for(i = 0; i < exp_npts; ++i,cnt++)
         {
             // Get Boundary and trace expansion
@@ -792,7 +787,7 @@ namespace Nektar
             m_womersleyParams[fldid][bndid]->m_zvel[i] =
                     Array<OneD, Array<OneD, NekCDouble> > (nfq);
 
-            //Compute coefficients
+            // Compute coefficients
             for (j=0; j < nfq; j++)
             {
                 rqR = NekCDouble (sqrt((x[j]-x0[0])*(x[j]-x0[0]) +
@@ -804,8 +799,11 @@ namespace Nektar
                         m_womersleyParams[fldid][bndid]->m_wom_vel[0].real() *
                         (1. - rqR.real()*rqR.real());
 
+
                 m_womersleyParams[fldid][bndid]->m_zvel[i][j] =
                         Array<OneD, NekCDouble> (M_coeffs);
+
+                // compute the velocity information
                 for (k=1; k < M_coeffs; k++)
                 {
                     zJ0r = Polylib::ImagBesselComp(0,rqR * lamda_n[k]);

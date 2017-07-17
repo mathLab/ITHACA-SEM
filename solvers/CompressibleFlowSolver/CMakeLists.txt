@@ -31,7 +31,6 @@ IF( NEKTAR_SOLVER_COMPRESSIBLE_FLOW )
        ./EquationSystems/IsentropicVortex.cpp
        ./EquationSystems/NavierStokesCFE.cpp
        ./EquationSystems/RinglebFlow.cpp
-       ./Filters/FilterEnergy.cpp
        ./Forcing/ForcingAxiSymmetric.cpp
        ./Forcing/ForcingQuasi1D.cpp
        ./Misc/VariableConverter.cpp

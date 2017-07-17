@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File FilterEnergyBase.cpp
+// File FilterEnergy.cpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -35,7 +35,7 @@
 
 #include <iomanip>
 
-#include <SolverUtils/Filters/FilterEnergyBase.h>
+#include <SolverUtils/Filters/FilterEnergy.h>
 
 using namespace std;
 
@@ -43,16 +43,17 @@ namespace Nektar
 {
 namespace SolverUtils
 {
-FilterEnergyBase::FilterEnergyBase(
+std::string FilterEnergy::className = SolverUtils::GetFilterFactory().
+    RegisterCreatorFunction("Energy", FilterEnergy::create);
+
+FilterEnergy::FilterEnergy(
     const LibUtilities::SessionReaderSharedPtr &pSession,
     const boost::weak_ptr<EquationSystem>      &pEquation,
-    const ParamMap &pParams,
-    const bool pConstDensity)
+    const ParamMap &pParams)
     : Filter        (pSession, pEquation),
       m_index       (-1),
       m_homogeneous (false),
-      m_planes      (),
-      m_constDensity(pConstDensity)
+      m_planes      ()
 {
     ParamMap::const_iterator it;
     std::string outName;
@@ -92,12 +93,12 @@ FilterEnergyBase::FilterEnergyBase(
     m_outputFrequency = round(equ.Evaluate());
 }
 
-FilterEnergyBase::~FilterEnergyBase()
+FilterEnergy::~FilterEnergy()
 {
 
 }
 
-void FilterEnergyBase::v_Initialise(
+void FilterEnergy::v_Initialise(
     const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
     const NekDouble &time)
 {
@@ -136,7 +137,7 @@ void FilterEnergyBase::v_Initialise(
     v_Update(pFields, time);
 }
 
-void FilterEnergyBase::v_Update(
+void FilterEnergy::v_Update(
     const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
     const NekDouble &time)
 {
@@ -149,16 +150,30 @@ void FilterEnergyBase::v_Update(
         return;
     }
 
+    // Lock equation system pointer
+    auto equ = m_equ.lock();
+    ASSERTL0(equ, "Weak pointer expired");
+
+    // Store physical values in an array
+    Array<OneD, Array<OneD, NekDouble> > physfields(pFields.num_elements());
+    for(i = 0; i < pFields.num_elements(); ++i)
+    {
+        physfields[i] = pFields[i]->GetPhys();
+    }
+
     // Calculate kinetic energy.
     NekDouble Ek = 0.0;
     Array<OneD, NekDouble> tmp(nPoints, 0.0);
+    Array<OneD, NekDouble> density;
     Array<OneD, Array<OneD, NekDouble> > u(3);
     for (i = 0; i < 3; ++i)
     {
         u[i] = Array<OneD, NekDouble>(nPoints);
+    }
+    equ->GetVelocity(physfields, u);
 
-        v_GetVelocity(pFields, i, u[i]);
-
+    for (i = 0; i < 3; ++i)
+    {
         if (m_homogeneous && pFields[i]->GetWaveSpace())
         {
             pFields[i]->HomogeneousBwdTrans(u[i], u[i]);
@@ -167,9 +182,11 @@ void FilterEnergyBase::v_Update(
         Vmath::Vvtvp(nPoints, u[i], 1, u[i], 1, tmp, 1, tmp, 1);
     }
 
-    if (!m_constDensity)
+    if (!equ->HasConstantDensity())
     {
-        Vmath::Vmul(nPoints, v_GetDensity(pFields), 1, tmp, 1, tmp, 1);
+        density = Array<OneD, NekDouble>(nPoints);
+        equ->GetDensity(physfields, density);
+        Vmath::Vmul(nPoints, density, 1, tmp, 1, tmp, 1);
     }
 
     if (m_homogeneous)
@@ -218,9 +235,9 @@ void FilterEnergyBase::v_Update(
         Vmath::Vvtvp(nPoints, tmp2, 1, tmp2, 1, tmp, 1, tmp, 1);
     }
 
-    if (!m_constDensity)
+    if (!equ->HasConstantDensity())
     {
-        Vmath::Vmul(nPoints, v_GetDensity(pFields), 1, tmp, 1, tmp, 1);
+        Vmath::Vmul(nPoints, density, 1, tmp, 1, tmp, 1);
     }
 
     if (m_homogeneous)
@@ -245,31 +262,17 @@ void FilterEnergyBase::v_Update(
     }
 }
 
-void FilterEnergyBase::v_Finalise(
+void FilterEnergy::v_Finalise(
     const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
     const NekDouble &time)
 {
     m_outFile.close();
 }
 
-bool FilterEnergyBase::v_IsTimeDependent()
+bool FilterEnergy::v_IsTimeDependent()
 {
     return true;
 }
 
-void FilterEnergyBase::v_GetVelocity(
-    const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
-    const int i,
-    Array<OneD, NekDouble> &velocity)
-{
-    ASSERTL0(false, "Needs to implemented by subclass");
-}
-
-Array<OneD, NekDouble> FilterEnergyBase::v_GetDensity(
-    const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields)
-{
-    ASSERTL0(false, "Needs to implemented by subclass");
-    return Array<OneD, NekDouble>();
-}
 }
 }

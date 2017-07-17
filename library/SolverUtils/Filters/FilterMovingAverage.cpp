@@ -96,6 +96,7 @@ FilterMovingAverage::~FilterMovingAverage()
 
 void FilterMovingAverage::v_ProcessSample(
     const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
+          std::vector<Array<OneD, NekDouble> > &fieldcoeffs,
     const NekDouble &time)
 {
     // Take first sample as initial vector
@@ -106,11 +107,11 @@ void FilterMovingAverage::v_ProcessSample(
     }
 
     // \bar{u}_n = alpha * u_n + (1-alpha) * \bar{u}_{n-1}
-    for (int n = 0; n < pFields.num_elements(); ++n)
+    for (int n = 0; n < m_outFields.size(); ++n)
     {
         Vmath::Svtsvtp(m_outFields[n].num_elements(),
                        alpha,
-                       pFields[n]->GetCoeffs(),
+                       fieldcoeffs[n],
                        1,
                        (1.0 - alpha),
                        m_outFields[n],

@@ -70,6 +70,7 @@ public:
 protected:
     virtual void v_ProcessSample(
         const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
+              std::vector<Array<OneD, NekDouble> > &fieldcoeffs,
         const NekDouble &time);
     virtual void v_PrepareOutput(
         const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,

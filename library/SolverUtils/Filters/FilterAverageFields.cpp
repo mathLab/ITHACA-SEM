@@ -57,12 +57,13 @@ FilterAverageFields::~FilterAverageFields()
 
 void FilterAverageFields::v_ProcessSample(
     const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
+          std::vector<Array<OneD, NekDouble> > &fieldcoeffs,
     const NekDouble &time)
 {
-    for(int n = 0; n < pFields.num_elements(); ++n)
+    for(int n = 0; n < m_outFields.size(); ++n)
     {
         Vmath::Vadd(m_outFields[n].num_elements(),
-                    pFields[n]->GetCoeffs(),
+                    fieldcoeffs[n],
                     1,
                     m_outFields[n],
                     1,

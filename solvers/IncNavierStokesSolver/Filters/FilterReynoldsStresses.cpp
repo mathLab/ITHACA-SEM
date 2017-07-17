@@ -204,6 +204,7 @@ void FilterReynoldsStresses::v_FillVariablesName(
 
 void FilterReynoldsStresses::v_ProcessSample(
     const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
+          std::vector<Array<OneD, NekDouble> > &fieldcoeffs,
     const NekDouble &time)
 {
     int i, j, n;

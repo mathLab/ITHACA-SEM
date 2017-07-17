@@ -85,13 +85,14 @@ protected:
         const NekDouble &time);
     SOLVER_UTILS_EXPORT virtual void v_ProcessSample(
         const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
+              std::vector<Array<OneD, NekDouble> > &fieldcoeffs,
+        const NekDouble &time);
+    SOLVER_UTILS_EXPORT virtual void v_PrepareOutput(
+        const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
         const NekDouble &time)
     {
         // Do nothing by default
     }
-    SOLVER_UTILS_EXPORT virtual void v_PrepareOutput(
-        const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
-        const NekDouble &time);
     SOLVER_UTILS_EXPORT virtual NekDouble v_GetScale()
     {
         return 1.0;

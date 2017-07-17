@@ -831,8 +831,10 @@ namespace Nektar
                     for(i=0;  i < coordim; ++i)
                     {
                         // MMFCHANGES in eHybridDGHelmholtz
-                        if ((x = varcoeffs.find(StdRegions::eVarCoeffMF1x)) != varcoeffs.end() && i < shapedim)
+                        if ((x = varcoeffs.find(StdRegions::eVarCoeffMF1x)) != varcoeffs.end())
                         {
+                            if(i < shapedim)
+                            {
                                 StdRegions::VarCoeffMap VarCoeffDirDeriv;
                                 VarCoeffDirDeriv[StdRegions::eVarCoeffMF] = v_GetMF(i,shapedim,varcoeffs);
                                 VarCoeffDirDeriv[StdRegions::eVarCoeffMFDiv] = v_GetMFDiv(i,varcoeffs);
@@ -851,6 +853,7 @@ namespace Nektar
                                 DNekScalMat &invMass = *GetLocMatrix(invMasskey);
                                 
                                 Mat = Mat + Dmat*invMass*Transpose(Dmat);
+                            }
                            
                         }
                         else if(mkey.HasVarCoeff(Coeffs[i]))

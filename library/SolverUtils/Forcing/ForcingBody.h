@@ -57,13 +57,14 @@ namespace SolverUtils
 
             /// Creates an instance of this class
             SOLVER_UTILS_EXPORT static ForcingSharedPtr create(
-                    const LibUtilities::SessionReaderSharedPtr& pSession,
+                    const LibUtilities::SessionReaderSharedPtr &pSession,
+                    const boost::weak_ptr<EquationSystem>      &pEquation,
                     const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields,
                     const unsigned int& pNumForcingFields,
                     const TiXmlElement* pForce)
             {
                 ForcingSharedPtr p = MemoryManager<ForcingBody>::
-                                                AllocateSharedPtr(pSession);
+                                        AllocateSharedPtr(pSession, pEquation);
                 p->InitObject(pFields, pNumForcingFields, pForce);
                 return p;
             }
@@ -90,7 +91,9 @@ namespace SolverUtils
             LibUtilities::EquationSharedPtr m_timeFcnEqn;
             bool                            m_transform;
 
-            ForcingBody(const LibUtilities::SessionReaderSharedPtr& pSession);
+            ForcingBody(
+                const LibUtilities::SessionReaderSharedPtr &pSession,
+                const boost::weak_ptr<EquationSystem>      &pEquation);
 
             virtual ~ForcingBody(void){};
 

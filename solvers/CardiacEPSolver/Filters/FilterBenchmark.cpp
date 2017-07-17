@@ -59,9 +59,10 @@ std::string FilterBenchmark::className =
  * @param       pParams     Parameters of filter
  */
 FilterBenchmark::FilterBenchmark(
-        const LibUtilities::SessionReaderSharedPtr &pSession,
+        const LibUtilities::SessionReaderSharedPtr         &pSession,
+        const boost::weak_ptr<SolverUtils::EquationSystem> &pEquation,
         const ParamMap &pParams)
-    : Filter(pSession)
+    : Filter(pSession, pEquation)
 {
     ParamMap::const_iterator it;
 

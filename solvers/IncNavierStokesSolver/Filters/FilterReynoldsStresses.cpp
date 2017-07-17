@@ -65,9 +65,10 @@ std::string FilterReynoldsStresses::className =
  * or the time constant \f$ \tau \f$ must be prescribed.
  */
 FilterReynoldsStresses::FilterReynoldsStresses(
-    const LibUtilities::SessionReaderSharedPtr &pSession,
+    const LibUtilities::SessionReaderSharedPtr         &pSession,
+    const boost::weak_ptr<SolverUtils::EquationSystem> &pEquation,
     const std::map<std::string, std::string> &pParams)
-    : FilterFieldConvert(pSession, pParams)
+    : FilterFieldConvert(pSession, pEquation, pParams)
 {
     ParamMap::const_iterator it;
 

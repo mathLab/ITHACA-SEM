@@ -48,10 +48,12 @@ public:
 
     /// Creates an instance of this class
     static SolverUtils::FilterSharedPtr create(
-        const LibUtilities::SessionReaderSharedPtr &pSession,
-        const ParamMap &pParams) {
+        const LibUtilities::SessionReaderSharedPtr         &pSession,
+        const boost::weak_ptr<SolverUtils::EquationSystem> &pEquation,
+        const ParamMap &pParams)
+    {
         SolverUtils::FilterSharedPtr p = MemoryManager<FilterEnergy>
-                                        ::AllocateSharedPtr(pSession, pParams);
+                            ::AllocateSharedPtr(pSession, pEquation, pParams);
         return p;
     }
 
@@ -59,7 +61,8 @@ public:
     static std::string className;
 
     SOLVER_UTILS_EXPORT FilterEnergy(
-        const LibUtilities::SessionReaderSharedPtr &pSession,
+        const LibUtilities::SessionReaderSharedPtr         &pSession,
+        const boost::weak_ptr<SolverUtils::EquationSystem> &pEquation,
         const ParamMap &pParams);
     SOLVER_UTILS_EXPORT ~FilterEnergy();
 

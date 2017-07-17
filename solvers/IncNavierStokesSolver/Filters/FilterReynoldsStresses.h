@@ -49,12 +49,13 @@ public:
 
     /// Creates an instance of this class
     static FilterSharedPtr create(
-        const LibUtilities::SessionReaderSharedPtr &pSession,
+        const LibUtilities::SessionReaderSharedPtr         &pSession,
+        const boost::weak_ptr<SolverUtils::EquationSystem> &pEquation,
         const std::map<std::string, std::string> &pParams)
     {
         FilterSharedPtr p =
             MemoryManager<FilterReynoldsStresses>::AllocateSharedPtr(pSession,
-                                                                     pParams);
+                                                        pEquation, pParams);
         return p;
     }
 
@@ -62,8 +63,10 @@ public:
     static std::string className;
 
     SOLVER_UTILS_EXPORT
-    FilterReynoldsStresses(const LibUtilities::SessionReaderSharedPtr &pSession,
-                           const std::map<std::string, std::string> &pParams);
+    FilterReynoldsStresses(
+        const LibUtilities::SessionReaderSharedPtr         &pSession,
+        const boost::weak_ptr<SolverUtils::EquationSystem> &pEquation,
+        const std::map<std::string, std::string> &pParams);
     SOLVER_UTILS_EXPORT ~FilterReynoldsStresses();
 
 protected:

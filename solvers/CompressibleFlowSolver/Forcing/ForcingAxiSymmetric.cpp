@@ -45,8 +45,9 @@ std::string ForcingAxiSymmetric::className = SolverUtils::GetForcingFactory().
                                 "Forcing for axi-symmetric flow (around x=0)");
 
 ForcingAxiSymmetric::ForcingAxiSymmetric(
-        const LibUtilities::SessionReaderSharedPtr& pSession)
-    : Forcing(pSession)
+                const LibUtilities::SessionReaderSharedPtr         &pSession,
+                const boost::weak_ptr<SolverUtils::EquationSystem> &pEquation)
+    : Forcing(pSession, pEquation)
 {
 }
 

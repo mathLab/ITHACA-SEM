@@ -89,8 +89,8 @@ namespace Nektar
         }
 
         // Forcing terms for the sponge region
-        m_forcing = SolverUtils::Forcing::Load(m_session, m_fields,
-                                               m_fields.num_elements());
+        m_forcing = SolverUtils::Forcing::Load(m_session, shared_from_this(),
+                                        m_fields, m_fields.num_elements());
 
         // User-defined boundary conditions
         int cnt = 0;

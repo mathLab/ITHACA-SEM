@@ -49,11 +49,13 @@ class FilterCellHistoryPoints : public SolverUtils::FilterHistoryPoints
 
         /// Creates an instance of this class
         static SolverUtils::FilterSharedPtr create(
-            const LibUtilities::SessionReaderSharedPtr &pSession,
-            const ParamMap &pParams) {
+            const LibUtilities::SessionReaderSharedPtr         &pSession,
+            const boost::weak_ptr<SolverUtils::EquationSystem> &pEquation,
+            const ParamMap &pParams)
+        {
             SolverUtils::FilterSharedPtr p
-                            = MemoryManager<FilterCellHistoryPoints>
-                                    ::AllocateSharedPtr(pSession, pParams);
+                        = MemoryManager<FilterCellHistoryPoints>
+                            ::AllocateSharedPtr(pSession, pEquation, pParams);
             return p;
         }
 
@@ -61,7 +63,8 @@ class FilterCellHistoryPoints : public SolverUtils::FilterHistoryPoints
         static std::string className;
 
         FilterCellHistoryPoints(
-            const LibUtilities::SessionReaderSharedPtr &pSession,
+            const LibUtilities::SessionReaderSharedPtr         &pSession,
+            const boost::weak_ptr<SolverUtils::EquationSystem> &pEquation,
             const ParamMap &pParams);
         ~FilterCellHistoryPoints();
 

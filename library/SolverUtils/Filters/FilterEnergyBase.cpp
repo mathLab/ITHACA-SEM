@@ -45,9 +45,10 @@ namespace SolverUtils
 {
 FilterEnergyBase::FilterEnergyBase(
     const LibUtilities::SessionReaderSharedPtr &pSession,
+    const boost::weak_ptr<EquationSystem>      &pEquation,
     const ParamMap &pParams,
     const bool pConstDensity)
-    : Filter        (pSession),
+    : Filter        (pSession, pEquation),
       m_index       (-1),
       m_homogeneous (false),
       m_planes      (),

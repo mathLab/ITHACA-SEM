@@ -62,11 +62,11 @@ public:
     // Creates an instance of this class
     static FilterSharedPtr create(
         const LibUtilities::SessionReaderSharedPtr  &pSession,
+        const boost::weak_ptr<EquationSystem>       &pEquation,
         const ParamMap                              &pParams)
     {
         FilterSharedPtr p = MemoryManager<FilterModalEnergy>::
-                                AllocateSharedPtr(pSession, pParams);
-        //p->InitObject();
+                                AllocateSharedPtr(pSession, pEquation, pParams);
         return p;
     }
 
@@ -75,6 +75,7 @@ public:
 
     SOLVER_UTILS_EXPORT FilterModalEnergy(
         const LibUtilities::SessionReaderSharedPtr &pSession,
+        const boost::weak_ptr<EquationSystem>      &pEquation,
         const ParamMap                             &pParams);
     SOLVER_UTILS_EXPORT virtual ~FilterModalEnergy();
 

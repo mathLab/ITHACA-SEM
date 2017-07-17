@@ -45,8 +45,9 @@ std::string ForcingQuasi1D::className = SolverUtils::GetForcingFactory().
                                     "Quasi-1D nozzle Forcing");
 
 ForcingQuasi1D::ForcingQuasi1D(
-        const LibUtilities::SessionReaderSharedPtr& pSession)
-    : Forcing(pSession)
+        const LibUtilities::SessionReaderSharedPtr         &pSession,
+        const boost::weak_ptr<SolverUtils::EquationSystem> &pEquation)
+    : Forcing(pSession, pEquation)
 {
 }
 

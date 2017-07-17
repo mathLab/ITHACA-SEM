@@ -170,8 +170,8 @@ namespace Nektar
         m_advObject->InitObject( m_session, m_fields);
 
         // Forcing terms
-        m_forcing = SolverUtils::Forcing::Load(m_session, m_fields,
-                                               v_GetForceDimension());
+        m_forcing = SolverUtils::Forcing::Load(m_session, shared_from_this(),
+                                            m_fields, v_GetForceDimension());
 
         // check to see if any Robin boundary conditions and if so set
         // up m_field to boundary condition maps;

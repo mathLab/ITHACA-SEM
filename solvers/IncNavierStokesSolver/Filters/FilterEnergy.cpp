@@ -42,9 +42,10 @@ std::string FilterEnergy::className = SolverUtils::GetFilterFactory().
     RegisterCreatorFunction("Energy", FilterEnergy::create);
 
 FilterEnergy::FilterEnergy(
-    const LibUtilities::SessionReaderSharedPtr &pSession,
+    const LibUtilities::SessionReaderSharedPtr         &pSession,
+    const boost::weak_ptr<SolverUtils::EquationSystem> &pEquation,
     const ParamMap &pParams)
-    : FilterEnergyBase(pSession, pParams, true)
+    : FilterEnergyBase(pSession, pEquation, pParams, true)
 {
 }
 

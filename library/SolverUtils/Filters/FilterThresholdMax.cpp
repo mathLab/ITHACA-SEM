@@ -48,8 +48,9 @@ std::string FilterThresholdMax::className =
 
 FilterThresholdMax::FilterThresholdMax(
     const LibUtilities::SessionReaderSharedPtr &pSession,
+    const boost::weak_ptr<EquationSystem>      &pEquation,
     const ParamMap &pParams) :
-    Filter(pSession)
+    Filter(pSession, pEquation)
 {
     ParamMap::const_iterator it;
 

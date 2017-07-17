@@ -46,8 +46,9 @@ std::string FilterMovingAverage::className =
 
 FilterMovingAverage::FilterMovingAverage(
     const LibUtilities::SessionReaderSharedPtr &pSession,
+    const boost::weak_ptr<EquationSystem>      &pEquation,
     const ParamMap &pParams)
-    : FilterFieldConvert(pSession, pParams)
+    : FilterFieldConvert(pSession, pEquation, pParams)
 {
     ParamMap::const_iterator it;
 

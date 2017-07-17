@@ -47,6 +47,7 @@ class FilterEnergyBase : public Filter
 public:
     SOLVER_UTILS_EXPORT FilterEnergyBase(
         const LibUtilities::SessionReaderSharedPtr &pSession,
+        const boost::weak_ptr<EquationSystem>      &pEquation,
         const ParamMap                             &pParams,
         const bool pConstDensity = true);
     SOLVER_UTILS_EXPORT ~FilterEnergyBase();

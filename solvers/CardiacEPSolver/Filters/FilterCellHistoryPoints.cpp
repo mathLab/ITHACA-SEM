@@ -50,9 +50,10 @@ std::string FilterCellHistoryPoints::className
  *
  */
 FilterCellHistoryPoints::FilterCellHistoryPoints(
-    const LibUtilities::SessionReaderSharedPtr &pSession,
+    const LibUtilities::SessionReaderSharedPtr         &pSession,
+    const boost::weak_ptr<SolverUtils::EquationSystem> &pEquation,
     const ParamMap &pParams) :
-    FilterHistoryPoints(pSession, pParams)
+    FilterHistoryPoints(pSession, pEquation, pParams)
 {
 }
 

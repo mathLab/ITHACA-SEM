@@ -47,8 +47,10 @@ namespace SolverUtils
                                                         ForcingAbsorption::create,
                                                         "Forcing Absorption");
 
-    ForcingAbsorption::ForcingAbsorption(const LibUtilities::SessionReaderSharedPtr& pSession)
-            : Forcing(pSession),
+    ForcingAbsorption::ForcingAbsorption(
+            const LibUtilities::SessionReaderSharedPtr &pSession,
+            const boost::weak_ptr<EquationSystem>      &pEquation)
+            : Forcing(pSession, pEquation),
               m_hasRefFlow(false),	
               m_hasRefFlowTime(false)
     {

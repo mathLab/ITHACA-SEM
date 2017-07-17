@@ -116,9 +116,8 @@ namespace Nektar
             for (x = f.begin(); x != f.end(); ++x)
             {
                 m_filters.push_back(GetFilterFactory().CreateInstance(
-                                                                x->first, 
-                                                                m_session, 
-                                                                x->second));
+                                        x->first, m_session,
+                                        shared_from_this(), x->second));
             }
         }
         

@@ -56,13 +56,14 @@ namespace SolverUtils
 
             /// Creates an instance of this class
             SOLVER_UTILS_EXPORT static ForcingSharedPtr create(
-                    const LibUtilities::SessionReaderSharedPtr& pSession,
+                    const LibUtilities::SessionReaderSharedPtr &pSession,
+                    const boost::weak_ptr<EquationSystem>      &pEquation,
                     const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields,
                     const unsigned int& pNumForcingFields,
                     const TiXmlElement* pForce)
             {
                 ForcingSharedPtr p = MemoryManager<ForcingNoise>::
-                                                AllocateSharedPtr(pSession);
+                                        AllocateSharedPtr(pSession, pEquation);
                 p->InitObject(pFields, pNumForcingFields, pForce);
                 return p;
             }
@@ -83,7 +84,9 @@ namespace SolverUtils
                     const NekDouble &time);
 
         private:
-            ForcingNoise(const LibUtilities::SessionReaderSharedPtr& pSession);
+            ForcingNoise(
+                    const LibUtilities::SessionReaderSharedPtr &pSession,
+                    const boost::weak_ptr<EquationSystem>      &pEquation);
             virtual ~ForcingNoise(void){};
 
             int             m_index;

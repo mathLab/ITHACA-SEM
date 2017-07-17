@@ -134,6 +134,23 @@ class Interpolator;
             /// Get pressure field if available
             SOLVER_UTILS_EXPORT MultiRegions::ExpListSharedPtr GetPressure();
 
+            /// Extract array with pressure from physfield
+            SOLVER_UTILS_EXPORT void GetPressure(
+                const Array<OneD, const Array<OneD, NekDouble> > &physfield,
+                      Array<OneD, NekDouble>                     &pressure);
+
+            /// Extract array with density from physfield
+            SOLVER_UTILS_EXPORT void GetDensity(
+                const Array<OneD, const Array<OneD, NekDouble> > &physfield,
+                      Array<OneD, NekDouble>                     &density);
+
+            SOLVER_UTILS_EXPORT bool HasConstantDensity();
+
+            /// Extract array with velocity from physfield
+            SOLVER_UTILS_EXPORT void GetVelocity(
+                const Array<OneD, const Array<OneD, NekDouble> > &physfield,
+                      Array<OneD, Array<OneD, NekDouble> >       &velocity);
+
             SOLVER_UTILS_EXPORT inline void ExtraFldOutput(
                 std::vector<Array<OneD, NekDouble> > &fieldcoeffs,
                 std::vector<std::string>             &variables);
@@ -585,6 +602,23 @@ class Interpolator;
             // Get pressure field if available
             SOLVER_UTILS_EXPORT virtual MultiRegions::ExpListSharedPtr v_GetPressure(void); 
 
+            // Extract array with pressure from physfield
+            SOLVER_UTILS_EXPORT virtual void v_GetPressure(
+                const Array<OneD, const Array<OneD, NekDouble> > &physfield,
+                      Array<OneD, NekDouble>                     &pressure);
+
+            // Extract array with density from physfield
+            SOLVER_UTILS_EXPORT virtual void v_GetDensity(
+                const Array<OneD, const Array<OneD, NekDouble> > &physfield,
+                      Array<OneD, NekDouble>                     &density);
+
+            SOLVER_UTILS_EXPORT virtual bool v_HasConstantDensity();
+
+            // Extract array with velocity from physfield
+            SOLVER_UTILS_EXPORT virtual void v_GetVelocity(
+                const Array<OneD, const Array<OneD, NekDouble> > &physfield,
+                      Array<OneD, Array<OneD, NekDouble> >       &velocity);
+
             SOLVER_UTILS_EXPORT virtual void v_ExtraFldOutput(
                 std::vector<Array<OneD, NekDouble> > &fieldcoeffs,
                 std::vector<std::string>             &variables);
@@ -721,6 +755,41 @@ class Interpolator;
         inline  MultiRegions::ExpListSharedPtr EquationSystem::GetPressure(void)
         {
             return v_GetPressure();
+        }
+
+        /**
+         *  Extract array with pressure from physfield
+         */
+        inline void EquationSystem::GetPressure(
+            const Array<OneD, const Array<OneD, NekDouble> > &physfield,
+                  Array<OneD, NekDouble>                     &pressure)
+        {
+            v_GetPressure(physfield,pressure);
+        }
+
+        /**
+         *  Extract array with density from physfield
+         */
+        inline void EquationSystem::GetDensity(
+            const Array<OneD, const Array<OneD, NekDouble> > &physfield,
+                  Array<OneD, NekDouble>                     &density)
+        {
+            v_GetDensity(physfield, density);
+        }
+
+        inline bool EquationSystem::HasConstantDensity()
+        {
+            return v_HasConstantDensity();
+        }
+
+        /**
+         *  Extract array with velocity from physfield
+         */
+        inline void EquationSystem::GetVelocity(
+            const Array<OneD, const Array<OneD, NekDouble> > &physfield,
+                  Array<OneD, Array<OneD, NekDouble> >       &velocity)
+        {
+            v_GetVelocity(physfield, velocity);
         }
 
         /**

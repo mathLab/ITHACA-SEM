@@ -52,6 +52,18 @@ FilterMovingAverage::FilterMovingAverage(
 {
     ParamMap::const_iterator it;
 
+    // Load sampling frequency
+    it = pParams.find("SampleFrequency");
+    if (it == pParams.end())
+    {
+        m_sampleFrequency = 1;
+    }
+    else
+    {
+        LibUtilities::Equation equ(m_session, it->second);
+        m_sampleFrequency = round(equ.Evaluate());
+    }
+
     // Load filter parameter
     it = pParams.find("alpha");
     if (it == pParams.end())

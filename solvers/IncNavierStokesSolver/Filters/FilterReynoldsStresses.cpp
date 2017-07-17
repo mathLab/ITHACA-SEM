@@ -72,6 +72,18 @@ FilterReynoldsStresses::FilterReynoldsStresses(
 {
     ParamMap::const_iterator it;
 
+    // Load sampling frequency
+    it = pParams.find("SampleFrequency");
+    if (it == pParams.end())
+    {
+        m_sampleFrequency = 1;
+    }
+    else
+    {
+        LibUtilities::Equation equ(m_session, it->second);
+        m_sampleFrequency = round(equ.Evaluate());
+    }
+
     // Check if should use moving average
     it = pParams.find("MovingAverage");
     if (it == pParams.end())

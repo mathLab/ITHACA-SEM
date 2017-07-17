@@ -49,6 +49,17 @@ FilterAverageFields::FilterAverageFields(
     const ParamMap &pParams)
     : FilterFieldConvert(pSession, pEquation, pParams)
 {
+    // Load sampling frequency
+    auto it = pParams.find("SampleFrequency");
+    if (it == pParams.end())
+    {
+        m_sampleFrequency = 1;
+    }
+    else
+    {
+        LibUtilities::Equation equ(m_session, it->second);
+        m_sampleFrequency = round(equ.Evaluate());
+    }
 }
 
 FilterAverageFields::~FilterAverageFields()

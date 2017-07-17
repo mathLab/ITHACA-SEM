@@ -97,18 +97,6 @@ FilterFieldConvert::FilterFieldConvert(
         }
     }
 
-    // SampleFrequency
-    it = pParams.find("SampleFrequency");
-    if (it == pParams.end())
-    {
-        m_sampleFrequency = 1;
-    }
-    else
-    {
-        LibUtilities::Equation equ(m_session, it->second);
-        m_sampleFrequency = round(equ.Evaluate());
-    }
-
     // OutputFrequency
     it = pParams.find("OutputFrequency");
     if (it == pParams.end())
@@ -120,6 +108,10 @@ FilterFieldConvert::FilterFieldConvert(
         LibUtilities::Equation equ(m_session, it->second);
         m_outputFrequency = round(equ.Evaluate());
     }
+
+    // The base class can use SampleFrequency = OutputFrequency
+    //    (Derived classes need to override this if needed)
+    m_sampleFrequency = m_outputFrequency;
 
     m_numSamples  = 0;
     m_index       = 0;

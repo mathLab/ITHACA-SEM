@@ -935,7 +935,8 @@ namespace Nektar
         const Array<OneD, const Array<OneD, NekDouble> > &physfield,
               Array<OneD, NekDouble>                     &density)
     {
-        Vmath::Fill(GetTotPoints(), 1.0, density, 1);
+        int nPts  = physfield[0].num_elements();
+        Vmath::Fill(nPts, 1.0, density, 1);
     }
 
     /**

@@ -198,6 +198,23 @@ namespace Nektar
         {
             // Do nothing by default
         }
+
+        virtual void v_GetPressure(
+            const Array<OneD, const Array<OneD, NekDouble> > &physfield,
+                  Array<OneD, NekDouble>                     &pressure);
+
+        virtual void v_GetDensity(
+            const Array<OneD, const Array<OneD, NekDouble> > &physfield,
+                  Array<OneD, NekDouble>                     &density);
+
+        virtual bool v_HasConstantDensity()
+        {
+            return false;
+        }
+
+        virtual void v_GetVelocity(
+            const Array<OneD, const Array<OneD, NekDouble> > &physfield,
+                  Array<OneD, Array<OneD, NekDouble> >       &velocity);
     };
 }
 #endif

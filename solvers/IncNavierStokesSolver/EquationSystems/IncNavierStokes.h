@@ -250,6 +250,23 @@ namespace Nektar
             return m_pressure;
         }
 
+        virtual void v_GetPressure(
+            const Array<OneD, const Array<OneD, NekDouble> > &physfield,
+                  Array<OneD, NekDouble>                     &pressure);
+
+        virtual void v_GetDensity(
+            const Array<OneD, const Array<OneD, NekDouble> > &physfield,
+                  Array<OneD, NekDouble>                     &density);
+
+        virtual bool v_HasConstantDensity()
+        {
+            return true;
+        }
+
+        virtual void v_GetVelocity(
+            const Array<OneD, const Array<OneD, NekDouble> > &physfield,
+                  Array<OneD, Array<OneD, NekDouble> >       &velocity);
+
         virtual void v_TransCoeffToPhys(void)
         {
             ASSERTL0(false,"This method is not defined in this class");

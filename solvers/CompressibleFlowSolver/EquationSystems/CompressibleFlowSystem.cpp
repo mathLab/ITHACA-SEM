@@ -1041,4 +1041,38 @@ namespace Nektar
             }
         }
     }
+
+    /**
+     *
+     */
+    void CompressibleFlowSystem::v_GetPressure(
+        const Array<OneD, const Array<OneD, NekDouble> > &physfield,
+              Array<OneD, NekDouble>                     &pressure)
+    {
+        m_varConv->GetPressure(physfield, pressure);
+    }
+
+    /**
+     *
+     */
+    void CompressibleFlowSystem::v_GetDensity(
+        const Array<OneD, const Array<OneD, NekDouble> > &physfield,
+              Array<OneD, NekDouble>                     &density)
+    {
+        density = physfield[0];
+    }
+
+    /**
+     *
+     */
+    void CompressibleFlowSystem::v_GetVelocity(
+        const Array<OneD, const Array<OneD, NekDouble> > &physfield,
+              Array<OneD, Array<OneD, NekDouble> >       &velocity)
+    {
+        for(int i = 0; i < m_spacedim; ++i)
+        {
+            Vmath::Vdiv(GetTotPoints(), physfield[i+1], 1,
+                        physfield[0], 1, velocity[i], 1);
+        }
+    }
 }

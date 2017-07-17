@@ -918,6 +918,38 @@ namespace Nektar
         return CFL;
     }
 
+    /**
+     *
+     */
+    void IncNavierStokes::v_GetPressure(
+        const Array<OneD, const Array<OneD, NekDouble> > &physfield,
+              Array<OneD, NekDouble>                     &pressure)
+    {
+        pressure = physfield[m_nConvectiveFields];
+    }
+
+    /**
+     *
+     */
+    void IncNavierStokes::v_GetDensity(
+        const Array<OneD, const Array<OneD, NekDouble> > &physfield,
+              Array<OneD, NekDouble>                     &density)
+    {
+        Vmath::Fill(GetTotPoints(), 1.0, density, 1);
+    }
+
+    /**
+     *
+     */
+    void IncNavierStokes::v_GetVelocity(
+        const Array<OneD, const Array<OneD, NekDouble> > &physfield,
+              Array<OneD, Array<OneD, NekDouble> >       &velocity)
+    {
+        for(int i = 0; i < m_spacedim; ++i)
+        {
+            velocity[i] = physfield[i];
+        }
+    }
 
     /**
      * Perform the extrapolation.

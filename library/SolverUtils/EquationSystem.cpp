@@ -1759,7 +1759,7 @@ namespace Nektar
                 variables[i] = m_boundaryConditions->GetVariable(i);
             }
 
-            v_ExtraFldOutput(fieldcoeffs, variables);
+            ExtraFldOutput(fieldcoeffs, variables);
 
             WriteFld(outname, m_fields[0], fieldcoeffs, variables);
         }

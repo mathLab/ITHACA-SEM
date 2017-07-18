@@ -1069,11 +1069,6 @@ namespace Nektar
         const Array<OneD, const Array<OneD, NekDouble> > &physfield,
               Array<OneD, Array<OneD, NekDouble> >       &velocity)
     {
-        int nPts  = physfield[0].num_elements();
-        for(int i = 0; i < m_spacedim; ++i)
-        {
-            Vmath::Vdiv(nPts, physfield[i+1], 1,
-                        physfield[0], 1, velocity[i], 1);
-        }
+        m_varConv->GetVelocityVector(physfield, velocity);
     }
 }

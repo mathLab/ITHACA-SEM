@@ -254,7 +254,7 @@ void FilterFieldConvert::v_FillVariablesName(
     }
 
     // Need to create a dummy coeffs vector to get extra variables names...
-    vector<Array<OneD, NekDouble> > coeffs(pFields.num_elements());
+    vector<Array<OneD, NekDouble> > coeffs(nfield);
     for (int n = 0; n < nfield; ++n)
     {
         coeffs[n] = pFields[n]->GetCoeffs();
@@ -276,10 +276,11 @@ void FilterFieldConvert::v_Update(
     }
 
     // Append extra fields
-    vector<Array<OneD, NekDouble> > coeffs;
-    for(int n = 0; n < pFields.num_elements(); ++n)
+    int nfield = pFields.num_elements();
+    vector<Array<OneD, NekDouble> > coeffs(nfield);
+    for (int n = 0; n < nfield; ++n)
     {
-        coeffs.push_back(pFields[n]->GetCoeffs());
+        coeffs[n] = pFields[n]->GetCoeffs();
     }
     vector<std::string> variables = m_variables;
     auto equ = m_equ.lock();

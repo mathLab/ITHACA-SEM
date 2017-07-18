@@ -39,6 +39,7 @@ using namespace std;
 
 #include <LibUtilities/BasicUtils/PtsField.h>
 #include <LibUtilities/BasicUtils/PtsIO.h>
+#include <LibUtilities/BasicUtils/CsvIO.h>
 
 #include <tinyxml.h>
 
@@ -53,7 +54,11 @@ ModuleKey InputPts::m_className[5] = {
     GetModuleFactory().RegisterCreatorFunction(
         ModuleKey(eInputModule, "pts"), InputPts::create, "Reads Pts file."),
     GetModuleFactory().RegisterCreatorFunction(
-        ModuleKey(eInputModule, "pts.gz"), InputPts::create, "Reads Pts file.")
+        ModuleKey(eInputModule, "pts.gz"), InputPts::create, "Reads Pts file."),
+    GetModuleFactory().RegisterCreatorFunction(
+        ModuleKey(eInputModule, "csv"), InputPts::create, "Reads csv file."),
+    GetModuleFactory().RegisterCreatorFunction(
+        ModuleKey(eInputModule, "csv.gz"), InputPts::create, "Reads csv file."),
 };
 
 /**
@@ -63,6 +68,7 @@ ModuleKey InputPts::m_className[5] = {
 InputPts::InputPts(FieldSharedPtr f) : InputModule(f)
 {
     m_allowedFiles.insert("pts");
+    m_allowedFiles.insert("csv");
 }
 
 /**
@@ -79,10 +85,23 @@ void InputPts::Process(po::variables_map &vm)
 {
     string inFile = m_config["infile"].as<string>();
 
-    LibUtilities::PtsIOSharedPtr ptsIO =
-        MemoryManager<LibUtilities::PtsIO>::AllocateSharedPtr(m_f->m_comm);
-
-    ptsIO->Import(inFile, m_f->m_fieldPts);
+    // Determine appropriate field input
+    if (m_f->m_inputfiles.count("pts") != 0)
+    {
+        LibUtilities::CsvIOSharedPtr csvIO =
+            MemoryManager<LibUtilities::CsvIO>::AllocateSharedPtr(m_f->m_comm);
+        csvIO->Import(inFile, m_f->m_fieldPts);
+    }
+    else if (m_f->m_inputfiles.count("csv") != 0)
+    {
+        LibUtilities::PtsIOSharedPtr ptsIO =
+            MemoryManager<LibUtilities::PtsIO>::AllocateSharedPtr(m_f->m_comm);
+        ptsIO->Import(inFile, m_f->m_fieldPts);
+    }
+    else
+    {
+        ASSERTL0(false, "unknown input file type");
+    }
 
     // save field names
     for (int j = 0; j < m_f->m_fieldPts->GetNFields(); ++j)

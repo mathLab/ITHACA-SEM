@@ -48,6 +48,7 @@
 #include <MultiRegions/ExpList.h>
 #include <SolverUtils/SolverUtilsDeclspec.h>
 #include <SolverUtils/Core/Misc.h>
+#include <SolverUtils/Core/SessionFunction.h>
 
 namespace Nektar
 {
@@ -67,11 +68,6 @@ class Interpolator;
         const LibUtilities::SessionReaderSharedPtr&
         > EquationSystemFactory;
         SOLVER_UTILS_EXPORT EquationSystemFactory& GetEquationSystemFactory();
-
-        struct loadedFldField {
-            std::vector<LibUtilities::FieldDefinitionsSharedPtr> fieldDef;
-            std::vector<std::vector<NekDouble> > fieldData;
-        } ;
 
         /// A base class for describing how to solve specific equations.
         class EquationSystem : public boost::enable_shared_from_this<EquationSystem>
@@ -143,43 +139,12 @@ class Interpolator;
             
             /// Set parameter m_lambda
             SOLVER_UTILS_EXPORT inline void SetLambda(NekDouble lambda);
-            
-            /// Evaluates a function as specified in the session file.
-            SOLVER_UTILS_EXPORT void EvaluateFunction(
-                Array<OneD, Array<OneD, NekDouble> >& pArray,
-                std::string pFunctionName,
-                const NekDouble pTime = 0.0,
-                const int domain = 0);
-            
-            /// Populate given fields with the function from session.
-            SOLVER_UTILS_EXPORT void EvaluateFunction(
-                std::vector<std::string> pFieldNames,
-                Array<OneD, Array<OneD, NekDouble> > &pFields,
-                const std::string& pName,
-                const NekDouble& pTime = 0.0,
-                const int domain = 0);
-            
-            /// Populate given fields with the function from session.
-            SOLVER_UTILS_EXPORT void EvaluateFunction(
-                std::vector<std::string> pFieldNames,
-                Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
-                const std::string& pName,
-                const NekDouble& pTime = 0.0,
-                const int domain = 0);
-            
-            // Populate an array with a function variable from session.
-            SOLVER_UTILS_EXPORT void EvaluateFunction(
-                std::string pFieldName,
-                Array<OneD, NekDouble>& pArray,
-                const std::string& pFunctionName,
-                const NekDouble& pTime = 0.0,
-                const int domain = 0);
-            
-            // Describe a function.
-            SOLVER_UTILS_EXPORT std::string DescribeFunction(
-                std::string pFieldName,
-                const std::string &pFunctionName,
-                const int domain);
+
+            /// Get a SessionFunction by name
+            SOLVER_UTILS_EXPORT SessionFunctionSharedPtr GetFunction(
+                std::string name,
+                const MultiRegions::ExpListSharedPtr &field = MultiRegions::NullExpListSharedPtr,
+                bool cache = false);
             
             /// Perform initialisation of the base flow.
             SOLVER_UTILS_EXPORT void InitialiseBaseFlow(
@@ -458,14 +423,10 @@ class Interpolator;
             LibUtilities::CommSharedPtr                 m_comm;
             /// The session reader
             LibUtilities::SessionReaderSharedPtr        m_session;
+            /// Map of known SessionFunctions
+            std::map<std::string, SolverUtils::SessionFunctionSharedPtr> m_sessionFunctions;
             /// Field input/output
             LibUtilities::FieldIOSharedPtr              m_fld;
-            /// Map of interpolator objects
-            std::map<std::string, FieldUtils::Interpolator > m_interpolators;
-            /// pts fields we already read from disk: {funcFilename: (filename, ptsfield)}
-            std::map<std::string, std::pair<std::string, LibUtilities::PtsFieldSharedPtr> > m_loadedPtsFields;
-            // fld fiels already loaded from disk: {funcFilename: (filename, loadedFldField)}
-            std::map<std::string, std::pair<std::string, loadedFldField> > m_loadedFldFields;
             /// Array holding all dependent variables.
             Array<OneD, MultiRegions::ExpListSharedPtr> m_fields;
             /// Base fields.
@@ -605,34 +566,6 @@ class Interpolator;
                 unsigned int field,
                 Array<OneD, NekDouble> &outfield,
                 const NekDouble time);
-
-            // Populate an array with a function variable from session.
-            SOLVER_UTILS_EXPORT void EvaluateFunctionExp(
-                std::string pFieldName,
-                Array<OneD, NekDouble>& pArray,
-                const std::string& pFunctionName,
-                const NekDouble& pTime = 0.0,
-                const int domain = 0);
-
-            // Populate an array with a function variable from session.
-            SOLVER_UTILS_EXPORT void EvaluateFunctionFld(
-                std::string pFieldName,
-                Array<OneD, NekDouble>& pArray,
-                const std::string& pFunctionName,
-                const NekDouble& pTime = 0.0,
-                const int domain = 0);
-
-            SOLVER_UTILS_EXPORT void EvaluateFunctionPts(
-                std::string pFieldName,
-                Array<OneD, NekDouble>& pArray,
-                const std::string& pFunctionName,
-                const NekDouble& pTime = 0.0,
-                const int domain = 0);
-
-            SOLVER_UTILS_EXPORT void LoadPts(
-                std::string funcFilename,
-                std::string filename,
-                Nektar::LibUtilities::PtsFieldSharedPtr &outPts);
             
             //Initialise m_base in order to store the base flow from a file 
             SOLVER_UTILS_EXPORT void SetUpBaseFields(SpatialDomains::MeshGraphSharedPtr &mesh);

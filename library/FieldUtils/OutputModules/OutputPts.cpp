@@ -6,7 +6,7 @@
 //
 //  The MIT License
 //
-//  Copyright (c) 2016 Kilian Lackhove
+//  Copyright (c) 2017 Kilian Lackhove
 //  Copyright (c) 2006 Division of Applied Mathematics, Brown University (USA),
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
@@ -40,14 +40,21 @@ using namespace std;
 
 #include "OutputPts.h"
 #include <LibUtilities/BasicUtils/FileSystem.h>
+#include <LibUtilities/BasicUtils/PtsIO.h>
+#include <LibUtilities/BasicUtils/CsvIO.h>
 
 namespace Nektar
 {
 namespace FieldUtils
 {
 
-ModuleKey OutputPts::m_className = GetModuleFactory().RegisterCreatorFunction(
-    ModuleKey(eOutputModule, "pts"), OutputPts::create, "Writes a pts file.");
+ModuleKey OutputPts::m_className[5] = {
+    GetModuleFactory().RegisterCreatorFunction(
+        ModuleKey(eOutputModule, "pts"), OutputPts::create, "Writes a pts file."),
+    GetModuleFactory().RegisterCreatorFunction(
+        ModuleKey(eOutputModule, "csv"), OutputPts::create, "Writes a csv file."),
+};
+
 
 OutputPts::OutputPts(FieldSharedPtr f) : OutputFileBase(f)
 {
@@ -62,8 +69,16 @@ void OutputPts::OutputFromPts(po::variables_map &vm)
     // Extract the output filename and extension
     string filename = m_config["outfile"].as<string>();
 
-    LibUtilities::PtsIO ptsIO(m_f->m_comm);
-    ptsIO.Write(filename, m_f->m_fieldPts);
+    if (boost::filesystem::path(filename).extension() == ".csv")
+    {
+        LibUtilities::CsvIO csvIO(m_f->m_comm);
+        csvIO.Write(filename, m_f->m_fieldPts);
+    }
+    else
+    {
+        LibUtilities::PtsIO ptsIO(m_f->m_comm);
+        ptsIO.Write(filename, m_f->m_fieldPts);
+    }
 }
 
 void OutputPts::OutputFromExp(po::variables_map &vm)
@@ -126,3 +141,4 @@ fs::path OutputPts::GetFullOutName(std::string &filename,
 
 }
 }
+

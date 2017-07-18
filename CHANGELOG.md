@@ -10,6 +10,9 @@ v5.0.0
 - Fix ThridpartyCCM options (!802)
 - Fix Windows CRLF tokens in GEO reader and improve comment handling (!805)
 - Use chrono in Timer (!807)
+- Fix caching of FUNCTION tags that read from file and provide the same
+  functionality in FUNCTIONs defined for forcings (!759)
+- Added native support for csv files in addititon to pts (!760)
 
 **NekMesh**:
 - Add feature to read basic 2D geo files as CAD (!731)
@@ -24,6 +27,7 @@ v5.0.0
 
 **FieldConvert**:
 - Add input module for Semtex field files (!777)
+- Fixed interppoints module (!760)
 - Move StreamFunction utility to a FieldConvert module (!809)
 
 **Documentation**:

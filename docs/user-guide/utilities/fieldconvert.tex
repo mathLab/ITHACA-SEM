@@ -503,10 +503,14 @@ To interpolate discrete point data to a field, use the interppointdatatofld modu
 \begin{lstlisting}[style=BashInputStyle]
 FieldConvert -m interppointdatatofld:frompts=file1.pts file1.xml file1.fld
 \end{lstlisting}
+or alternatively for csv data:
+ \begin{lstlisting}[style=BashInputStyle]
+FieldConvert -m interppointdatatofld:frompts=file1.csv file1.xml file1.fld
+\end{lstlisting}
 %
-This command will interpolate the data from \inltt{file1.pts} to the mesh
+This command will interpolate the data from \inltt{file1.pts} (\inltt{file1.csv}) to the mesh
 and expansions defined in \inltt{file1.xml} and output the field to \inltt{file1.fld}.
-The file \inltt{file.pts} is of the form:
+The file \inltt{file.pts} must be of the form:
 %
 \begin{lstlisting}[style=XMLStyle]
 <?xml version="1.0" encoding="utf-8" ?>
@@ -526,6 +530,15 @@ Each line defines a point, while the  first column contains its $x$-coordinate,
 the second one contains the $a$-values, the third the $b$-values and so on.
 In case of $n$-dimensional data, the $n$ coordinates are specified in the first $n$
 columns accordingly.
+%
+An equivalant csv file is:
+\begin{lstlisting}[style=BashInputStyle]
+# x, a, b, c
+1.0000,-1.0000,1.0000,-0.7778
+2.0000,-0.9798,0.9798,-0.7980
+3.0000,-0.9596,0.9596,-0.8182
+4.0000,-0.9394,0.9394,-0.8384
+\end{lstlisting}
 %
 In order to interpolate 1D data to a $n$D field, specify the matching coordinate in
 the output field using the \inltt{interpcoord} argument:
@@ -569,6 +582,15 @@ The format of the file \inltt{file2.pts} is of the same form as for the
   </POINTS>
 </NEKTAR>
 \end{lstlisting}
+Similar to the \textit{interppointdatatofld} module, the \inltt{.pts} file can
+be interchanged with a \inltt{.csv} file:
+\begin{lstlisting}[style=BashInputStyle]
+# x, y
+0.0,0.0
+0.5,0.0
+1.0,0.0
+\end{lstlisting}
+
 There are three optional arguments \inltt{clamptolowervalue},
 \inltt{clamptouppervalue} and \inltt{defaultvalue} the first two clamp the
 interpolation between these two values and the third defines the default
@@ -760,7 +782,8 @@ point, the first, second, and third columns contains the
 $x,y,z$-coordinate and subsequent columns contain the field values, in
 this case the $p$-value So in the general case of $n$-dimensional
 data, the $n$ coordinates are specified in the first $n$ columns
-accordingly followed by the field data.
+accordingly followed by the field data. Alternatively, the \inltt{file.pts}
+can be interchanged with a csv file.
 
 The default argument is to use the equispaced (but potentially
 collapsed) coordinates which can  be obtained from the command.

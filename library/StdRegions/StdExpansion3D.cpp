@@ -145,12 +145,12 @@ namespace Nektar
             Array<OneD, NekDouble> eta = Array<OneD, NekDouble>(3);
             Array<OneD, DNekMatSharedPtr>  I(3);
 
-            WARNINGL2(coords[0] >= -1,"coord[0] < -1");
-            WARNINGL2(coords[0] <=  1,"coord[0] >  1");
-            WARNINGL2(coords[1] >= -1,"coord[1] < -1");
-            WARNINGL2(coords[1] <=  1,"coord[1] >  1");
-            WARNINGL2(coords[2] >= -1,"coord[2] < -1");
-            WARNINGL2(coords[2] <=  1,"coord[2] >  1");
+            WARNINGL2(coords[0] >= -1 - NekConstants::kNekZeroTol,"coord[0] < -1");
+            WARNINGL2(coords[0] <=  1 + NekConstants::kNekZeroTol,"coord[0] >  1");
+            WARNINGL2(coords[1] >= -1 - NekConstants::kNekZeroTol,"coord[1] < -1");
+            WARNINGL2(coords[1] <=  1 + NekConstants::kNekZeroTol,"coord[1] >  1");
+            WARNINGL2(coords[2] >= -1 - NekConstants::kNekZeroTol,"coord[2] < -1");
+            WARNINGL2(coords[2] <=  1 + NekConstants::kNekZeroTol,"coord[2] >  1");
 
             // Obtain local collapsed corodinate from 
             // cartesian coordinate. 

@@ -37,8 +37,42 @@
 #define NEKMESHUTILS_CADSYSTEM_OCC
 
 /// This is a list of OpenCascade headers required for use with nektar
+#include <STEPCAFControl_Reader.hxx>
+#include <Storage.hxx>
+#include <TDocStd_Document.hxx>
+#include <XCAFDoc_DocumentTool.hxx>
+#include <XCAFDoc_ShapeTool.hxx>
+#include <TDF_LabelSequence.hxx>
+#include <XCAFDoc_LayerTool.hxx>
+#include <TDataStd_Name.hxx>
+#include <TCollection_ExtendedString.hxx>
+#include <XSControl_WorkSession.hxx>
+#include <Interface_InterfaceModel.hxx>
+#include <XSControl_TransferReader.hxx>
+#include <Transfer_TransientProcess.hxx>
+#include <StepRepr_RepresentationItem.hxx>
+#include <TCollection_HAsciiString.hxx>
+#include <Transfer_Binder.hxx>
+#include <TransferBRep.hxx>
+#include <BRepBuilderAPI_Sewing.hxx>
+#include <ShapeAnalysis_Wire.hxx>
+#include <BRepBuilderAPI_NurbsConvert.hxx>
+#include <TopTools_DataMapOfShapeShape.hxx>
+#include <TopTools_ListIteratorOfListOfShape.hxx>
+#include <ShapeFix_Wireframe.hxx>
+#include <ShapeBuild_ReShape.hxx>
+#include <BRepBndLib.hxx>
+#include <BRepMesh_IncrementalMesh.hxx>
+#include <TopExp_Explorer.hxx>
+#include <StlMesh_Mesh.hxx>
+#include <StlMesh_MeshExplorer.hxx>
+#include <StlTransfer.hxx>
+#include <BRepExtrema_DistShapeShape.hxx>
+#include <BRepTopAdaptor_FClass2d.hxx>
+#include <BRepBuilderAPI_MakeVertex.hxx>
 
 #include <STEPControl_Reader.hxx>
+#include <STEPControl_Writer.hxx> 
 #include <TColStd_HSequenceOfTransient.hxx>
 #include <TopoDS.hxx>
 #include <TopExp.hxx>

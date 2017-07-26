@@ -66,9 +66,7 @@ public:
         m_type = CADType::eVert;
     }
 
-    virtual ~CADVert()
-    {
-    }
+    ~CADVert(){};
 
     /**
      * @brief Get x,y,z location of the vertex
@@ -117,6 +115,8 @@ public:
             return -1;
         }
     }
+    
+    virtual NekDouble DistanceTo(Array<OneD, NekDouble> l) = 0;
 
 protected:
     /// mesh convert object of vert

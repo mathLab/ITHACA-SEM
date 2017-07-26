@@ -186,6 +186,14 @@ public:
 
         return search->second;
     }
+    
+    CADVertSharedPtr GetVert(int i)
+    {
+        std::map<int, CADVertSharedPtr>::iterator search = m_verts.find(i);
+        ASSERTL0(search != m_verts.end(), "vert does not exist");
+
+        return search->second;
+    }
 
     /**
      * @brief Gets map of all vertices
@@ -202,7 +210,9 @@ public:
     {
         return m_verts.size();
     }
-
+    
+    std::string GetSurfaceName(int i);
+    
     NEKMESHUTILS_EXPORT Array<OneD, NekDouble> GetPeriodicTranslationVector(
                 int first, int second);
 

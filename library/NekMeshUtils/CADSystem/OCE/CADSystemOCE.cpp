@@ -40,9 +40,6 @@
 #include <NekMeshUtils/CADSystem/OCE/CADSystemOCE.h>
 #include <NekMeshUtils/CADSystem/OCE/CADVertOCE.h>
 
-#include <boost/algorithm/string.hpp>
-#include <boost/filesystem.hpp>
-
 using namespace std;
 
 namespace Nektar
@@ -52,32 +49,56 @@ namespace NekMeshUtils
 
 std::string CADSystemOCE::key = GetEngineFactory().RegisterCreatorFunction(
     "oce", CADSystemOCE::create, "Uses OCE as cad engine");
+    
+void filterModShape(TopTools_DataMapOfShapeShape &modShape, TopoDS_Shape &S)
+{
+    bool repeat = true;
+    while (repeat)
+    {
+        repeat = false;
+        if (modShape.IsBound(S))
+        {
+            repeat = true;
+            S = modShape.Find(S);
+        }
+    }
+}
 
 bool CADSystemOCE::LoadCAD()
 {
+    Handle(XSControl_WorkSession) WS;
+    Handle(Interface_InterfaceModel) Model;
+    Handle(XSControl_TransferReader) TR;
+    Handle(Transfer_TransientProcess) TP;
+    Handle(XCAFDoc_ShapeTool) STool;
+    
     if (m_naca.size() == 0)
     {
         // not a naca profile behave normally
-        // could be a geo
-        string ext = boost::filesystem::extension(m_name);
-
-        if (boost::iequals(ext, ".geo"))
+        // Takes step file and makes OpenCascade shape
+        STEPCAFControl_Reader readerCAF;
+        readerCAF.SetNameMode(true);
+        readerCAF.SetLayerMode(true);
+        readerCAF.SetColorMode(true);
+        
+        Handle(TDocStd_Document) document = new TDocStd_Document(Storage::Version());
+        readerCAF.ReadFile(m_name.c_str());
+        readerCAF.Transfer(document);
+        
+        STEPControl_Reader reader = readerCAF.Reader();
+        
+        WS = reader.WS();
+        Model = WS->Model();
+        TR = WS->TransferReader();
+        TP = TR->TransientProcess();
+        XCAFDoc_DocumentTool::ShapeTool( document->Main() );
+        
+        reader.NbRootsForTransfer();
+        reader.TransferRoots();
+        shape = reader.OneShape();
+        if (shape.IsNull())
         {
-            shape = BuildGeo(m_name);
-        }
-        else
-        {
-            // Takes step file and makes OpenCascade shape
-            STEPControl_Reader reader;
-            reader = STEPControl_Reader();
-            reader.ReadFile(m_name.c_str());
-            reader.NbRootsForTransfer();
-            reader.TransferRoots();
-            shape = reader.OneShape();
-            if (shape.IsNull())
-            {
-                return false;
-            }
+            return false;
         }
     }
     else
@@ -86,7 +107,49 @@ bool CADSystemOCE::LoadCAD()
     }
 
     TopExp_Explorer explr;
+    
+    TopTools_DataMapOfShapeShape modShape;
+    
+    BRepBuilderAPI_Sewing sew(1e-1);
+    
+    for (explr.Init(shape, TopAbs_FACE); explr.More(); explr.Next())
+    {
+        sew.Add(explr.Current());
+    }
+    
+    sew.Perform();
+    
+    for (explr.Init(shape, TopAbs_FACE); explr.More(); explr.Next())
+    {
+        if (sew.IsModified(explr.Current()))
+        {
+            modShape.Bind(explr.Current(), sew.Modified(explr.Current()));
+        }
+    }
+    
+    shape = sew.SewedShape();  
 
+    int shell = 0;
+    for (explr.Init(shape, TopAbs_SHELL); explr.More(); explr.Next())
+    {
+        shell++;
+    }
+    
+    ASSERTL0(shell == 1, "Was not able to form a topological water tight shell");
+    
+    /*BRepBuilderAPI_NurbsConvert bsc;
+    bsc.Perform(shape);
+    for (explr.Init(shape, TopAbs_FACE); explr.More(); explr.Next())
+    {
+        TopoDS_Shape mod = bsc.ModifiedShape(explr.Current());
+        if (mod.IsNotEqual(explr.Current()))
+        {
+            modShape.Bind(explr.Current(), mod);
+        }
+    }
+    
+    shape = bsc.Shape();*/
+    
     // build map of verticies
     for (explr.Init(shape, TopAbs_VERTEX); explr.More(); explr.Next())
     {
@@ -97,7 +160,7 @@ bool CADSystemOCE::LoadCAD()
         }
         int i = mapOfVerts.Add(v);
         AddVert(i, v);
-    }
+    }   
 
     // For each face of the geometry, get the local edges which bound it. If
     // they are valid (their type != 7), then add them to an edge map. This
@@ -109,8 +172,8 @@ bool CADSystemOCE::LoadCAD()
         {
             continue;
         }
-        BRepAdaptor_Curve curve = BRepAdaptor_Curve(TopoDS::Edge(e));
-        if (curve.GetType() != 7)
+
+        if(!BRep_Tool::Degenerated(TopoDS::Edge(e)))
         {
             int i = mapOfEdges.Add(e);
             AddCurve(i, e);
@@ -125,6 +188,51 @@ bool CADSystemOCE::LoadCAD()
 
         AddSurf(i, f);
     }
+    
+    // attemps to extract patch names from STEP file
+    
+    Standard_Integer nb = Model->NbEntities();
+    for (Standard_Integer i = 1; i <= nb; i++)
+    {
+        if ( ! Model->Value(i)->DynamicType()->SubType("StepRepr_RepresentationItem")) continue;
+
+        Handle(StepRepr_RepresentationItem) enti = Handle(StepRepr_RepresentationItem)::DownCast( Model->Value(i));
+        Handle(TCollection_HAsciiString) name = enti->Name();
+
+        if (name->IsEmpty()) continue;
+
+        Handle(Transfer_Binder) binder = TP->Find( Model->Value(i));
+        if ( binder.IsNull() || ! binder->HasResult() ) continue;
+
+        TopoDS_Shape S = TransferBRep::ShapeResult ( TP, binder );
+
+        if ( S.IsNull() ) continue;
+
+        if ( S.ShapeType() ==  TopAbs_FACE )
+        {
+            string s(name->ToCString());
+            
+            if (mapOfFaces.Contains(S))
+            {
+                int id = mapOfFaces.FindIndex(S);
+
+                m_surfs[id]->SetName(s);
+            }
+            else
+            {                
+                filterModShape(modShape, S);
+                if (mapOfFaces.Contains(S))
+                {
+                    int id = mapOfFaces.FindIndex(S);
+                    m_surfs[id]->SetName(s);
+                }
+                else
+                {
+                    ASSERTL0(false, "Name error");
+                }
+            }            
+        }        
+    } 
 
     // attempts to identify properties of the vertex on the degen edge
     for (int i = 1; i <= mapOfFaces.Extent(); i++)
@@ -153,14 +261,24 @@ bool CADSystemOCE::LoadCAD()
     }
 
     // This checks that all edges are bound by two surfaces, sanity check.
+    bool failed = false;
     if (!m_2d)
     {
         map<int, CADCurveSharedPtr>::iterator it;
         for (it = m_curves.begin(); it != m_curves.end(); it++)
         {
-            ASSERTL0(it->second->GetAdjSurf().size() == 2,
-                     "curve is not joined to 2 surfaces");
+            if(it->second->GetAdjSurf().size() !=  2)
+            {
+                cout << "topology error " <<  it->second->GetAdjSurf().size() <<  " : ";
+                vector<CADVertSharedPtr> vs = it->second->GetVertex();
+                Array<OneD,  NekDouble> loc = vs[0]->GetLoc();
+                cout << loc[0] << " " << loc[1] << " " << loc[2] <<  " : ";
+                loc = vs[1]->GetLoc();
+                cout << loc[0] << " " << loc[1] << " " << loc[2] <<  endl;
+                failed = true;
+            }
         }
+        ASSERTL0(!failed, "topolgy errors");
     }
 
     return true;
@@ -401,158 +519,6 @@ TopoDS_Shape CADSystemOCE::BuildNACA(string naca)
     ShapeFix_Face sf(face.Face());
     sf.FixOrientation();
 
-    return sf.Face();
-}
-
-TopoDS_Shape CADSystemOCE::BuildGeo(string geo)
-{
-    ifstream f;
-    f.open(geo.c_str());
-
-    map<int, string> points;
-    map<int, string> lines;
-    map<int, string> splines;
-    map<int, string> loops;
-    map<int, string> surfs;
-
-    string fline;
-    string flinetmp;
-
-    while (!f.eof())
-    {
-        getline(f, fline);
-
-        boost::erase_all(fline, "\r");
-
-        vector<string> tmp1, tmp2;
-        boost::split(tmp1, fline, boost::is_any_of("//"));
-        fline = tmp1[0];
-
-        if (!boost::contains(fline, ";"))
-        {
-            flinetmp += fline;
-            continue;
-        }
-
-        fline = flinetmp + fline;
-        flinetmp.clear();
-
-        boost::split(tmp1, fline, boost::is_any_of("="));
-
-        boost::split(tmp2, tmp1[0], boost::is_any_of("("));
-
-        string type = tmp2[0];
-        boost::erase_all(tmp2[1], ")");
-        boost::erase_all(tmp2[1], " ");
-        int id = boost::lexical_cast<int>(tmp2[1]);
-
-        boost::erase_all(tmp1[1], " ");
-        boost::erase_all(tmp1[1], "{");
-        boost::erase_all(tmp1[1], "}");
-        boost::erase_all(tmp1[1], ";");
-
-        string var = tmp1[1];
-
-        if (boost::iequals(type, "Point"))
-        {
-            points[id] = var;
-        }
-        else if (boost::iequals(type, "Line"))
-        {
-            lines[id] = var;
-        }
-        else if (boost::iequals(type, "Spline"))
-        {
-            splines[id] = var;
-        }
-        else if (boost::iequals(type, "Line Loop"))
-        {
-            // line loops sometimes have negative entries for gmsh
-            // orientaton purposes
-            // we dont care so remove it
-            boost::erase_all(var, "-");
-            loops[id] = var;
-        }
-        else if (boost::iequals(type, "Plane Surface"))
-        {
-            surfs[id] = var;
-        }
-        else
-        {
-            cout << "not sure " << type << endl;
-        }
-    }
-
-    map<int, string>::iterator it;
-
-    // build points
-    map<int, gp_Pnt> cPoints;
-    for (it = points.begin(); it != points.end(); it++)
-    {
-        vector<NekDouble> data;
-        ParseUtils::GenerateUnOrderedVector(it->second.c_str(), data);
-
-        cPoints[it->first] =
-            gp_Pnt(data[0] * 1000.0, data[1] * 1000.0, data[2] * 1000.0);
-    }
-
-    // build edges
-    map<int, TopoDS_Edge> cEdges;
-    for (it = lines.begin(); it != lines.end(); it++)
-    {
-        vector<unsigned int> data;
-        ParseUtils::GenerateUnOrderedVector(it->second.c_str(), data);
-        BRepBuilderAPI_MakeEdge em(cPoints[data[0]], cPoints[data[1]]);
-        cEdges[it->first] = em.Edge();
-    }
-    for (it = splines.begin(); it != splines.end(); it++)
-    {
-        vector<unsigned int> data;
-        ParseUtils::GenerateUnOrderedVector(it->second.c_str(), data);
-
-        TColgp_Array1OfPnt pointArray(0, data.size() - 1);
-
-        for (int i = 0; i < data.size(); i++)
-        {
-            pointArray.SetValue(i, cPoints[data[i]]);
-        }
-        GeomAPI_PointsToBSpline spline(pointArray);
-        Handle(Geom_BSplineCurve) curve = spline.Curve();
-
-        BRepBuilderAPI_MakeEdge em(curve);
-        cEdges[it->first] = em.Edge();
-    }
-
-    // build wires
-    map<int, TopoDS_Wire> cWires;
-    for (it = loops.begin(); it != loops.end(); it++)
-    {
-        vector<unsigned int> data;
-        ParseUtils::GenerateUnOrderedVector(it->second.c_str(), data);
-        BRepBuilderAPI_MakeWire wm;
-        for (int i = 0; i < data.size(); i++)
-        {
-            wm.Add(cEdges[data[i]]);
-        }
-        cWires[it->first] = wm.Wire();
-    }
-
-    // make surface, at this point assuming its 2D (therefore only 1)
-    // also going to assume that the first loop in the list is the outer domain
-    ASSERTL0(surfs.size() == 1, "more than 1 surf");
-    it = surfs.begin();
-    vector<unsigned int> data;
-    ParseUtils::GenerateUnOrderedVector(it->second.c_str(), data);
-    BRepBuilderAPI_MakeFace face(cWires[data[0]], true);
-    for (int i = 1; i < data.size(); i++)
-    {
-        face.Add(cWires[data[i]]);
-    }
-
-    ASSERTL0(face.Error() == BRepBuilderAPI_FaceDone, "build geo failed");
-
-    ShapeFix_Face sf(face.Face());
-    sf.FixOrientation();
 
     return sf.Face();
 }

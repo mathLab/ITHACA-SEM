@@ -66,7 +66,7 @@ public:
         m_orientation = CADOrientation::eForwards;
     }
 
-    virtual ~CADSurf()
+    ~CADSurf()
     {
     }
 
@@ -145,13 +145,17 @@ public:
      * @brief takes a point from anywhere find the nearest surface point and its
      * uv
      */
-    virtual void ProjectTo(Array<OneD, NekDouble> &tp,
+    virtual NekDouble ProjectTo(Array<OneD, NekDouble> &tp,
                            Array<OneD, NekDouble> &uv) = 0;
+                           
+    virtual Array<OneD, NekDouble> BoundingBox() = 0;
 
     /**
      * @brief returns curvature at point uv
      */
     virtual NekDouble Curvature(Array<OneD, NekDouble> uv) = 0;
+    
+    virtual bool IsPlanar() = 0;
 
     /**
      * @brief query reversed normal
@@ -160,6 +164,16 @@ public:
     {
         return m_orientation;
     }
+    
+    void SetName(std::string i)
+    {
+        m_name = i;
+    }
+    
+    std::string GetName()
+    {
+        return m_name;
+    }
 
 protected:
     /// List of bounding edges in loops with orientation.
@@ -167,6 +181,8 @@ protected:
 
     /// Function which tests the the value of uv used is within the surface
     virtual void Test(Array<OneD, NekDouble> uv) = 0;
+    
+    std::string m_name;
 };
 
 typedef boost::shared_ptr<CADSurf> CADSurfSharedPtr;

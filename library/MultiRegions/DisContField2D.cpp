@@ -1516,6 +1516,7 @@ namespace Nektar
                 m_locTraceToTraceMap->FwdLocTracesFromField(inarray,tracevals);
                 m_locTraceToTraceMap->
                             InterpLocEdgesToTrace(0,tracevals,outarray);
+                m_traceMap->UniversalTraceAssemble(outarray);
             }
             else
             {

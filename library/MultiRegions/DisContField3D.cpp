@@ -1816,11 +1816,17 @@ using namespace boost::assign;
             const Array<OneD, const NekDouble> &inarray,
                   Array<OneD,       NekDouble> &outarray)
         {
+
             Vmath::Zero(outarray.num_elements(), outarray, 1);
 
             Array<OneD, NekDouble> facevals(m_locTraceToTraceMap->GetNFwdLocTracePts());
             m_locTraceToTraceMap->FwdLocTracesFromField(inarray,facevals);
             m_locTraceToTraceMap->InterpLocFacesToTrace(0,facevals,outarray);
+
+            // gather entries along parallel partitions which have
+            // only filled in Fwd part on their own partition
+            m_traceMap->UniversalTraceAssemble(outarray);
+
         }
         
         /**

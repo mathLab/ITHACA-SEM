@@ -406,6 +406,7 @@ vector<IsoSharedPtr> ProcessIsoContour::ExtractContour(
 
     vector<Array<OneD, int> > ptsConn;
     m_f->m_fieldPts->GetConnectivity(ptsConn);
+    
     for(int zone = 0; zone < ptsConn.size(); ++zone)
     {
         IsoSharedPtr iso;
@@ -529,13 +530,20 @@ vector<IsoSharedPtr> ProcessIsoContour::ExtractContour(
                 }
             }
         }
+        
+        if(n == 0)
+        {   
+            continue;
+        }
+        
         iso->SetNTris(n);
 
         // condense the information in this elemental extraction.
         iso->Condense();
+        
         returnval.push_back(iso);
     }
-
+    
     return returnval;
 }
 

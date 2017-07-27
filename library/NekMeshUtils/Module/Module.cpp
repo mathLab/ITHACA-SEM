@@ -855,7 +855,14 @@ void Module::RegisterConfig(string key, string val)
     }
     else
     {
-        it->second.value = val;
+        if(val.size() == 0)
+        {
+            it->second.value = it->second.defValue;
+        }
+        else 
+        {
+            it->second.value = val;
+        }
     }
 }
 

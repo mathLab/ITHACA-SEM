@@ -86,7 +86,7 @@ class MemoryManager
     class DeallocateSharedPtr
     {
     public:
-        explicit DeallocateSharedPtr(const CustomDeallocator& d) :
+        explicit DeallocateSharedPtr(CustomDeallocator& d) :
             m_dealloc(d)
         {
         }

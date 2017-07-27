@@ -117,7 +117,7 @@ namespace Nektar
             
             private:
                 template<typename CreateType>
-                static void DoInitialization(ObjectType* data, unsigned int itemsToCreate, const CreateType& f)
+                static void DoInitialization(ObjectType* data, unsigned int itemsToCreate, CreateType& f)
                 {
                     unsigned int nextObjectToCreate = 0;
                     try

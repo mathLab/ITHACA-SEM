@@ -300,49 +300,43 @@ namespace Nektar
                   const NekVector<DataType>& rhs);
 
     template<typename DataType>
-    NekVector<DataType>
-    LIB_UTILITIES_EXPORT operator*(const NekVector<DataType> &lhs,
-                                   const NekDouble &rhs)
+    NekVector<DataType> operator*(
+        const NekVector<DataType> &lhs, const NekDouble &rhs)
     {
         return Multiply(lhs, rhs);
     }
 
     template<typename DataType>
-    NekVector<DataType>
-    LIB_UTILITIES_EXPORT operator*(const NekDouble &lhs,
-                                   const NekVector<DataType>& rhs)
+    NekVector<DataType> operator*(
+        const NekDouble &lhs, const NekVector<DataType>& rhs)
     {
         return Multiply(lhs, rhs);
     }
 
     template<typename DataType>
-    NekVector<DataType>
-    LIB_UTILITIES_EXPORT operator*(const NekVector<DataType> &lhs,
-                                   const NekVector<DataType> &rhs)
+    NekVector<DataType> operator*(
+        const NekVector<DataType> &lhs, const NekVector<DataType> &rhs)
     {
         return Multiply(lhs, rhs);
     }
 
     template<typename DataType>
-    NekVector<DataType>
-    LIB_UTILITIES_EXPORT operator/(const NekVector<DataType> &lhs,
-                                   const NekDouble &rhs)
+    NekVector<DataType> operator/(
+        const NekVector<DataType> &lhs, const NekDouble &rhs)
     {
         return Divide(lhs, rhs);
     }
 
     template<typename DataType>
-    NekVector<DataType>
-    LIB_UTILITIES_EXPORT operator+(const NekVector<DataType> &lhs,
-                                   const NekVector<DataType> &rhs)
+    NekVector<DataType> operator+(
+        const NekVector<DataType> &lhs, const NekVector<DataType> &rhs)
     {
         return Add(lhs, rhs);
     }
 
     template<typename DataType>
-    NekVector<DataType>
-    LIB_UTILITIES_EXPORT operator-(const NekVector<DataType> &lhs,
-                                   const NekVector<DataType> &rhs)
+    NekVector<DataType> operator-(
+        const NekVector<DataType> &lhs, const NekVector<DataType> &rhs)
     {
         return Subtract(lhs, rhs);
     }

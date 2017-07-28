@@ -39,7 +39,6 @@
 
 #include <type_traits>
 #include <memory>
-#include <functional>
 
 #include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
@@ -94,9 +93,9 @@ namespace Nektar
             /// \param itemsToCreate The size of data.
             static void Initialize(ObjectType* data, unsigned int itemsToCreate)
             {
-                DoInitialization(data, itemsToCreate, 
-                                 std::bind(&ArrayInitializationPolicy<ObjectType>::DefaultConstructionWithPlacementNew,
-                                           std::placeholders::_1));
+                DoInitialization(
+                    data, itemsToCreate,
+                    [](ObjectType *element) { new (element) ObjectType; });
             }
             
             /// \brief Initalize each element in the array with ObjectType's copy constructor.
@@ -105,19 +104,21 @@ namespace Nektar
             /// \param initValue The inital value each element in data will have.
             static void Initialize(ObjectType* data, unsigned int itemsToCreate, const ObjectType& initValue)
             {
-                DoInitialization(data, itemsToCreate, 
-                                 std::bind(&ArrayInitializationPolicy<ObjectType>::CopyConstructionWithPlacementNew, std::placeholders::_1, std::ref(initValue)));
+                DoInitialization(
+                    data, itemsToCreate,
+                    [&initValue](ObjectType *element) { new (element) ObjectType(initValue); });
             }
 
             static void Initialize(ObjectType* data, unsigned int itemsToCreate, const ObjectType* initValue)
             {
-                DoInitialization(data, itemsToCreate, 
-                                 std::bind(&ArrayInitializationPolicy<ObjectType>::CopyConstructionFromArray, std::placeholders::_1, std::ref(initValue)));
+                DoInitialization(
+                    data, itemsToCreate,
+                    [&initValue](ObjectType *element) { new (element) ObjectType(*initValue); initValue++; });
             }
             
             private:
                 template<typename CreateType>
-                static void DoInitialization(ObjectType* data, unsigned int itemsToCreate, CreateType& f)
+                static void DoInitialization(ObjectType* data, unsigned int itemsToCreate, const CreateType &f)
                 {
                     unsigned int nextObjectToCreate = 0;
                     try
@@ -138,22 +139,6 @@ namespace Nektar
                         }
                         throw;
                     }
-                }
-                
-                static void DefaultConstructionWithPlacementNew(ObjectType* element)
-                {
-                    new (element) ObjectType;
-                }
-                
-                static void CopyConstructionWithPlacementNew(ObjectType* element, const ObjectType& initValue)
-                {
-                    new (element) ObjectType(initValue);
-                }
-
-                static void CopyConstructionFromArray(ObjectType* element, const ObjectType*& rhs)
-                {
-                    new (element) ObjectType(*rhs);
-                    rhs += 1;
                 }
         };
     
@@ -186,13 +171,6 @@ namespace Nektar
             }
     };
     
-    template<typename DataType>
-    void DeleteStorage(DataType* data, unsigned int num)
-    {
-        ArrayDestructionPolicy<DataType>::Destroy(data, num);
-        MemoryManager<DataType>::RawDeallocate(data, num);
-    }
-    
     template<typename Dim, typename DataType, typename ExtentListType>
     std::shared_ptr<boost::multi_array_ref<DataType, Dim::Value> > 
     CreateStorage(const ExtentListType& extent)
@@ -202,8 +180,11 @@ namespace Nektar
             std::multiplies<unsigned int>());
         DataType* storage = MemoryManager<DataType>::RawAllocate(size);
         return MemoryManager<ArrayType>::AllocateSharedPtrD(
-                std::bind(DeleteStorage<DataType>, storage, size),
-                storage, extent);
+            [storage, size](DataType *ptr) {
+                ArrayDestructionPolicy<DataType>::Destroy(storage, size);
+                MemoryManager<DataType>::RawDeallocate(storage, size);
+            },
+            storage, extent);
     }
     
     template<typename DataType>

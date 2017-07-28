@@ -40,7 +40,6 @@
 
 #include <memory>
 #include <type_traits>
-#include <functional>
 
 #include <LibUtilities/Memory/ThreadSpecificPool.hpp>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
@@ -82,34 +81,6 @@ namespace Nektar
 template<typename DataType>
 class MemoryManager
 {
-    template<typename ObjectType, typename CustomDeallocator>
-    class DeallocateSharedPtr
-    {
-    public:
-        explicit DeallocateSharedPtr(const CustomDeallocator& d) :
-            m_dealloc(d)
-        {
-        }
-
-        void operator()(ObjectType*& m)
-        {
-            m_dealloc();
-            MemoryManager<ObjectType>::Deallocate(m);
-        }
-
-    private:
-        CustomDeallocator m_dealloc;
-
-    };
-
-    class DefaultCustomDeallocator
-    {
-    public:
-        void operator()() const
-        {
-        }
-    };
-
 public:
     /// @brief Deallocate a pointer allocated by
     /// MemoryManager::Allocate.
@@ -188,7 +159,7 @@ public:
     template<typename... Args>
     static std::shared_ptr<DataType> AllocateSharedPtr(const Args &...args)
     {
-        return AllocateSharedPtrD(DefaultCustomDeallocator(), args...);
+        return AllocateSharedPtrD([](DataType *ptr){}, args...);
     }
 
     template<typename DeallocatorType, typename... Args>
@@ -197,7 +168,10 @@ public:
     {
         DataType* data = Allocate(args...);
         return std::shared_ptr<DataType>(
-            data, DeallocateSharedPtr<DataType, DeallocatorType>(d));
+            data, [&d](DataType *ptr){
+                d(ptr);
+                MemoryManager<DataType>::Deallocate(ptr);
+            });
     }
 
     /// \brief Allocates a chunk of raw, uninitialized memory, capable of

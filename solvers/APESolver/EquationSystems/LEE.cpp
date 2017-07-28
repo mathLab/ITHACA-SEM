@@ -322,6 +322,17 @@ void LEE::v_RiemannInvariantBC(int bcRegion,
                          &RVn[0], 1);
         }
 
+        // Calculate v - (v.n) n
+        Array<OneD, Array<OneD, NekDouble> > RVp(m_spacedim);
+        for (int i = 0; i < m_spacedim; ++i)
+        {
+            RVp[i] = Array<OneD, NekDouble>(nBCEdgePts, 0.0);
+            Vmath::Vsub(nBCEdgePts,
+                        &Fwd[_iu + i][id2], 1,
+                        &RVn[0], 1,
+                        &RVp[i][0], 1);
+        }
+
         // Calculate (v0.n)
         Array<OneD, NekDouble> RVn0(nBCEdgePts, 0.0);
         for (int i = 0; i < m_spacedim; ++i)
@@ -337,56 +348,65 @@ void LEE::v_RiemannInvariantBC(int bcRegion,
         {
             NekDouble c = sqrt(m_gamma * BfFwd[0][id2 + i] / BfFwd[1][id2 + i]);
 
-            NekDouble h0, h1, h2;
-
-            //TODO: handle the vorticity mode
+            NekDouble h1, h4, h5;
 
             if (RVn0[i] > 0)
             {
                 // rho - p / c^2
-                h0 = Fwd[_irho][id2 + i] - Fwd[_ip][id2 + i] / (c * c);
-            }
-            else
-            {
-                h0 = 0.0;
-            }
-
-            if (RVn0[i] - c > 0)
-            {
-                // ru / 2 - p / (2*c)
-                h1 = RVn[i] / 2 - Fwd[_ip][id2 + i] / (2 * c);
+                h1 = Fwd[_irho][id2 + i] - Fwd[_ip][id2 + i] / (c * c);
             }
             else
             {
                 h1 = 0.0;
             }
 
-            if (RVn0[i] + c > 0)
+            if (RVn0[i] > 0)
             {
-                // ru / 2 + p / (2*c)
-                h2 = RVn[i] / 2 + Fwd[_ip][id2 + i] / (2 * c);
+                // keep vorticity mode
             }
             else
             {
-                h2 = 0.0;
+                // set wall parallel velocities to zero, i.e. set h2 and h3 to
+                // zero
+                for (int j = 0; j < m_spacedim; ++j)
+                {
+                    RVp[j][i] = 0.0;
+                }
+            }
+
+            if (RVn0[i] - c > 0)
+            {
+                // ru / 2 - p / (2*c)
+                h4 = RVn[i] / 2 - Fwd[_ip][id2 + i] / (2 * c);
+            }
+            else
+            {
+                h4 = 0.0;
+            }
+
+            if (RVn0[i] + c > 0)
+            {
+                // ru / 2 + p / (2*c)
+                h5 = RVn[i] / 2 + Fwd[_ip][id2 + i] / (2 * c);
+            }
+            else
+            {
+                h5 = 0.0;
             }
 
             // compute conservative variables
-            // p = c0*(h2-h1)
-            // rho = h0 + (h2-h1)/c0
-            // ru = h1+h2
-            Fwd[_ip][id2 + i]  = c * (h2 - h1);
-//             Fwd[_irho][id2 + i]  = h0 + (h2 - h1) / c;
-            NekDouble RVnNew = h1 + h2;
-
-            Fwd[_irho][id2 + i] = m_gamma * Fwd[_ip][id2 + i] / pow(c, 2);
+            // p = c0*(h5-h4)
+            // rho = h1 + (h5-h4)/c0
+            // ru = h4+h5
+            Fwd[_ip][id2 + i]   = c * (h5 - h4);
+            Fwd[_irho][id2 + i] = h1 + (h5 - h4) / c;
+            NekDouble RVnNew    = h4 + h5;
 
             // adjust velocity pert. according to new value
             for (int j = 0; j < m_spacedim; ++j)
             {
                 Fwd[_iu + j][id2 + i] =
-                    Fwd[_iu + j][id2 + i] +
-                    (RVnNew - RVn[i]) * m_traceNormals[j][id2 + i];
+                    RVp[j][i] + RVnNew * m_traceNormals[j][id2 + i];
             }
         }
 

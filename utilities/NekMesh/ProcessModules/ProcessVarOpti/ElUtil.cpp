@@ -36,6 +36,7 @@
 #include "ElUtil.h"
 #include "ProcessVarOpti.h"
 
+#include <mutex>
 #include <LibUtilities/Foundations/ManagerAccess.h>
 
 using namespace std;

@@ -41,8 +41,6 @@
 #include "ProcessVarOpti.h"
 #include <NekMeshUtils/MeshElements/Element.h>
 
-#include <boost/thread/mutex.hpp>
-
 #include <StdRegions/StdPrismExp.h>
 #include <StdRegions/StdQuadExp.h>
 #include <StdRegions/StdTetExp.h>

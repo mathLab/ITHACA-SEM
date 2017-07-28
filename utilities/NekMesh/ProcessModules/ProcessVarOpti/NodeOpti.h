@@ -37,6 +37,7 @@
 #define UTILITIES_NEKMESH_NODEOPTI
 
 #include <ostream>
+#include <mutex>
 
 #include <LibUtilities/BasicUtils/HashUtils.hpp>
 #include <LibUtilities/BasicUtils/Thread.h>

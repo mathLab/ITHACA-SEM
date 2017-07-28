@@ -33,11 +33,11 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <NekMeshUtils/MeshElements/Edge.h>
+#include <mutex>
 
+#include <NekMeshUtils/MeshElements/Edge.h>
 #include <NekMeshUtils/CADSystem/CADCurve.h>
 #include <NekMeshUtils/CADSystem/CADSurf.h>
-
 #include <LibUtilities/Foundations/ManagerAccess.h>
 
 namespace Nektar

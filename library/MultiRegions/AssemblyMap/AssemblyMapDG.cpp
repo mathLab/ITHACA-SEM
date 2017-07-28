@@ -479,27 +479,6 @@ namespace Nektar
 
             CalculateBndSystemBandWidth();
 
-            if ((m_solnType == eDirectMultiLevelStaticCond ||
-                 m_solnType == eIterativeMultiLevelStaticCond ||
-                 m_solnType == eXxtMultiLevelStaticCond ||
-                 m_solnType == ePETScMultiLevelStaticCond)
-                && nGraphVerts)
-            {
-                if (m_staticCondLevel < (bottomUpGraph->GetNlevels()-1))
-                {
-                    Array<OneD, int> vwgts_perm(nGraphVerts);
-
-                    for(int i = 0; i < nGraphVerts; i++)
-                    {
-                        vwgts_perm[i] = vwgts[perm[i]];
-                    }
-
-                    bottomUpGraph->ExpandGraphWithVertexWeights(vwgts_perm);
-                    m_nextLevelLocalToGlobalMap = MemoryManager<AssemblyMap>::
-                        AllocateSharedPtr(this, bottomUpGraph);
-                }
-            }
-
             cnt = 0;
             m_bndCondTraceToGlobalTraceMap = Array<OneD, int>(nbndexp);
             for(i = 0; i < bndCondExp.num_elements(); ++i)
@@ -518,6 +497,27 @@ namespace Nektar
             ExpListSharedPtr tr = std::dynamic_pointer_cast<ExpList>(trace);
             SetUpUniversalDGMap   (locExp);
             SetUpUniversalTraceMap(locExp, tr, periodicTrace);
+
+			if ((m_solnType == eDirectMultiLevelStaticCond ||
+				m_solnType == eIterativeMultiLevelStaticCond ||
+				m_solnType == eXxtMultiLevelStaticCond ||
+				m_solnType == ePETScMultiLevelStaticCond)
+				&& nGraphVerts)
+			{
+				if (m_staticCondLevel < (bottomUpGraph->GetNlevels() - 1))
+				{
+					Array<OneD, int> vwgts_perm(nGraphVerts);
+
+					for (int i = 0; i < nGraphVerts; i++)
+					{
+						vwgts_perm[i] = vwgts[perm[i]];
+					}
+
+					bottomUpGraph->ExpandGraphWithVertexWeights(vwgts_perm);
+					m_nextLevelLocalToGlobalMap = MemoryManager<AssemblyMap>::
+						AllocateSharedPtr(this, bottomUpGraph);
+				}
+			}
 
             m_hash = hash_range(m_localToGlobalBndMap.begin(),
                                 m_localToGlobalBndMap.end());

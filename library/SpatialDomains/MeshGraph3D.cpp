@@ -357,7 +357,7 @@ namespace Nektar
                             };
 
                             QuadGeomSharedPtr quadgeom;
-                            if (it == m_curvedEdges.end())
+                            if (it == m_curvedFaces.end())
                             {
                                 quadgeom =
                                     MemoryManager<QuadGeom>::AllocateSharedPtr(
@@ -480,7 +480,7 @@ namespace Nektar
                             
                             QuadGeomSharedPtr quadgeom;
                             
-                            if (it == m_curvedEdges.end())
+                            if (it == m_curvedFaces.end())
                             {
                                 quadgeom = MemoryManager<QuadGeom>::AllocateSharedPtr(indx, edges, edgeorient);
                             }

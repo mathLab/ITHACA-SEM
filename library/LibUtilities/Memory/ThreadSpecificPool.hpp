@@ -34,12 +34,12 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
+#ifndef NEKTAR_LIB_UTILITES_THREAD_SPECIFIC_POOL_HPP
+#define NEKTAR_LIB_UTILITES_THREAD_SPECIFIC_POOL_HPP
 
-#ifndef NEKATAR_LIB_UTILITES_THREAD_SPECIFIC_POOL_HPP
-#define NEKATAR_LIB_UTILITES_THREAD_SPECIFIC_POOL_HPP
-
+#include <boost/thread/tss.hpp>
 #include <boost/pool/pool.hpp>
-#include <mutex>
+#include <boost/thread/mutex.hpp>
 #include <memory>
 #include <map>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
@@ -98,7 +98,7 @@ namespace Nektar
                 /// \throw std::bad_alloc if memory is exhausted.
                 void* Allocate()
                 {
-                    std::unique_lock<std::mutex> l(m_mutex);
+                    boost::mutex::scoped_lock l(m_mutex);
                     void* result = m_pool->malloc();
 
 #if defined(NEKTAR_DEBUG) || defined(NEKTAR_FULLDEBUG)
@@ -114,7 +114,7 @@ namespace Nektar
                 /// from this pool.  Doing this will result in undefined behavior.
                 void Deallocate(const void* p)
                 {
-                    std::unique_lock<std::mutex> l(m_mutex);
+                    boost::mutex::scoped_lock l(m_mutex);
 #if defined(NEKTAR_DEBUG) || defined(NEKTAR_FULLDEBUG)
                     // The idea here is to fill the returned memory with some known
                     // pattern, then detect that pattern on the allocate.  If the 
@@ -133,7 +133,7 @@ namespace Nektar
                 //boost::thread_specific_ptr<boost::pool<> > m_pool;
                 boost::pool<>* m_pool;
                 size_t m_blockSize;
-                std::mutex m_mutex;
+                boost::mutex m_mutex;
         };
     }
 

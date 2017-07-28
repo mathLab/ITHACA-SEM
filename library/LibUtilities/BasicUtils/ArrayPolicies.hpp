@@ -33,7 +33,6 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-
 #ifndef NEKTAR_LIB_UTILITIES_BASIC_UTILS_ARRAY_POLICIES_HPP
 #define NEKTAR_LIB_UTILITIES_BASIC_UTILS_ARRAY_POLICIES_HPP
 
@@ -106,14 +105,14 @@ namespace Nektar
             {
                 DoInitialization(
                     data, itemsToCreate,
-                    [&initValue](ObjectType *element) { new (element) ObjectType(initValue); });
+                    [&](ObjectType *element) { new (element) ObjectType(initValue); });
             }
 
             static void Initialize(ObjectType* data, unsigned int itemsToCreate, const ObjectType* initValue)
             {
                 DoInitialization(
                     data, itemsToCreate,
-                    [&initValue](ObjectType *element) { new (element) ObjectType(*initValue); initValue++; });
+                    [&](ObjectType *element) { new (element) ObjectType(*initValue); initValue++; });
             }
             
             private:
@@ -170,7 +169,7 @@ namespace Nektar
                 }
             }
     };
-    
+
     template<typename Dim, typename DataType, typename ExtentListType>
     std::shared_ptr<boost::multi_array_ref<DataType, Dim::Value> > 
     CreateStorage(const ExtentListType& extent)
@@ -180,7 +179,7 @@ namespace Nektar
             std::multiplies<unsigned int>());
         DataType* storage = MemoryManager<DataType>::RawAllocate(size);
         return MemoryManager<ArrayType>::AllocateSharedPtrD(
-            [storage, size](DataType *ptr) {
+            [=](boost::multi_array_ref<DataType, Dim::Value> *ptr) {
                 ArrayDestructionPolicy<DataType>::Destroy(storage, size);
                 MemoryManager<DataType>::RawDeallocate(storage, size);
             },

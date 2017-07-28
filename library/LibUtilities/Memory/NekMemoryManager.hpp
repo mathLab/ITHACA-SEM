@@ -168,7 +168,7 @@ public:
     {
         DataType* data = Allocate(args...);
         return std::shared_ptr<DataType>(
-            data, [&d](DataType *ptr){
+            data, [=](DataType *ptr){
                 d(ptr);
                 MemoryManager<DataType>::Deallocate(ptr);
             });

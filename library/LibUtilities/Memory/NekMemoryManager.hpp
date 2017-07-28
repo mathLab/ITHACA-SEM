@@ -91,7 +91,7 @@ class MemoryManager
         {
         }
 
-        void operator()(ObjectType*& m) const
+        void operator()(ObjectType*& m)
         {
             m_dealloc();
             MemoryManager<ObjectType>::Deallocate(m);

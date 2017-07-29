@@ -531,17 +531,15 @@ vector<IsoSharedPtr> ProcessIsoContour::ExtractContour(
             }
         }
         
-        if(n == 0)
+        if(n)
         {   
-            continue;
-        }
-        
-        iso->SetNTris(n);
+            iso->SetNTris(n);
 
-        // condense the information in this elemental extraction.
-        iso->Condense();
+            // condense the information in this elemental extraction.
+            iso->Condense();
         
-        returnval.push_back(iso);
+            returnval.push_back(iso);
+        }
     }
     
     return returnval;

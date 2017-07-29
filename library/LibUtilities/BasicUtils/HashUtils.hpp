@@ -29,7 +29,8 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Session reader
+// Description: Hash utilities for C++11 STL maps to support combined hashes
+//              and enumerations.
 //
 ///////////////////////////////////////////////////////////////////////////////
 

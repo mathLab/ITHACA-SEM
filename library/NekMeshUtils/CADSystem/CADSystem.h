@@ -95,7 +95,7 @@ public:
         m_2d = false;
     }
 
-    ~CADSystem()
+    virtual ~CADSystem()
     {
     }
 
@@ -170,8 +170,8 @@ public:
      */
     CADCurveSharedPtr GetCurve(int i)
     {
-        std::map<int, CADCurveSharedPtr>::iterator search = m_curves.find(i);
-        ASSERTL0(search != m_curves.end(), "curve does not exist");
+        auto search = m_curves.find(i);
+        ASSERTL1(search != m_curves.end(), "curve does not exist");
 
         return search->second;
     }
@@ -181,16 +181,16 @@ public:
      */
     CADSurfSharedPtr GetSurf(int i)
     {
-        std::map<int, CADSurfSharedPtr>::iterator search = m_surfs.find(i);
-        ASSERTL0(search != m_surfs.end(), "surface does not exist");
+        auto search = m_surfs.find(i);
+        ASSERTL1(search != m_surfs.end(), "surface does not exist");
 
         return search->second;
     }
     
     CADVertSharedPtr GetVert(int i)
     {
-        std::map<int, CADVertSharedPtr>::iterator search = m_verts.find(i);
-        ASSERTL0(search != m_verts.end(), "vert does not exist");
+        auto search = m_verts.find(i);
+        ASSERTL1(search != m_verts.end(), "vert does not exist");
 
         return search->second;
     }

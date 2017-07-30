@@ -28,8 +28,8 @@ IF (THIRDPARTY_BUILD_TINYXML)
     EXTERNALPROJECT_ADD(
         tinyxml-2.6.2
         PREFIX ${TPSRC}
-	URL http://ae-nektar.ae.ic.ac.uk/~mt4313/tinyxml_2_6_2_fix.tar.gz
-        URL_MD5 21457ca66cbf515bee4d37cdab03f189
+        URL ${TPURL}/tinyxml_2_6_2-1.tar.bz2
+        URL_MD5 6dee12297219626f4e0d4b713f364bce
         STAMP_DIR ${TPBUILD}/stamp
         DOWNLOAD_DIR ${TPSRC}
         SOURCE_DIR ${TPSRC}/tinyxml-2.6.2

@@ -41,6 +41,7 @@ v4.4.2
 **Library**
 - Fix ability to set default implementation in Collections and added an option 
   to set eNoCollections in FieldConvert as default (!789)
+- Fix performance issue with ExtractPhysToBndElmt (!796)
 
 **Utilities**
 - Fix vtkToFld missing dependency which prevented compiling with VTK 7.1 (!808)

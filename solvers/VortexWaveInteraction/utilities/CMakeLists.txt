@@ -1,32 +1,8 @@
-
-SET(ExtractCriticalLayerSource
-       ./ExtractCriticalLayerFunctions.cpp
-       ./ExtractCriticalLayer.cpp
-       )
-
-
-SET(MoveMeshToCriticalLayerSource
-       ./ExtractCriticalLayerFunctions.cpp
-       ./MoveMeshToCriticalLayer.cpp
-       )
-
-
-SET(ExpandMeshByRotationSource
-       ./ExpandMeshByRotation.cpp
-       )
-
-SET(MeshMoveSource
-       ./MeshMove.cpp
-       )
-ADD_SOLVER_EXECUTABLE(ExtractCriticalLayer solvers 
-		     ${ExtractCriticalLayerSource})
-
-ADD_SOLVER_EXECUTABLE(MoveMeshToCriticalLayer solvers 
-		     ${MoveMeshToCriticalLayerSource})
-
-ADD_SOLVER_EXECUTABLE(ExpandMeshByRotation solvers 
-		     ${ExpandMeshByRotationSource})
-
-ADD_SOLVER_EXECUTABLE(MeshMove solvers
-		     ${MeshMoveSource})
-                        
+ADD_SOLVER_UTILITY(ExtractCriticalLayer VortexWaveInteraction
+    SOURCES ExtractCriticalLayerFunctions.cpp ExtractCriticalLayer.cpp)
+ADD_SOLVER_UTILITY(MoveMeshToCriticalLayer VortexWaveInteraction
+    SOURCES ExtractCriticalLayerFunctions.cpp MoveMeshToCriticalLayer.cpp)
+ADD_SOLVER_UTILITY(ExpandMeshByRotation VortexWaveInteraction
+    SOURCES ExpandMeshByRotation.cpp)
+ADD_SOLVER_UTILITY(MeshMove VortexWaveInteraction
+    SOURCES MeshMove.cpp)

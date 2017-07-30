@@ -66,6 +66,23 @@ public:
     {
         return "ProcessVorticity";
     }
+
+    virtual std::string GetModuleDescription()
+    {
+        return "Calculating vorticity";
+    }
+
+    virtual ModulePriority GetModulePriority()
+    {
+        return eModifyExp;
+    }
+
+protected:
+    void GetVelocity( Array<OneD, Array<OneD, NekDouble> > &vel, int strip = 0);
+
+private:
+    int     m_spacedim;
+
 };
 }
 }

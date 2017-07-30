@@ -95,7 +95,8 @@ namespace Nektar
          */
         ExpList1D::ExpList1D(const ExpList1D &In,
                              const std::vector<unsigned int> &eIDs,
-                             const bool DeclareCoeffPhysArrays):
+                             const bool DeclareCoeffPhysArrays,
+                             const Collections::ImplementationType ImpType):
             ExpList(In, eIDs, DeclareCoeffPhysArrays)
         {
             SetExpType(e1D);
@@ -109,7 +110,7 @@ namespace Nektar
             SetCoeffPhysOffsets();
 
             ReadGlobalOptimizationParameters();
-            CreateCollections();
+            CreateCollections(ImpType);
         }
 
 
@@ -130,7 +131,8 @@ namespace Nektar
          */
         ExpList1D::ExpList1D(const LibUtilities::SessionReaderSharedPtr &pSession,
                              const LibUtilities::BasisKey &Ba,
-                             const SpatialDomains::MeshGraphSharedPtr &graph1D):
+                             const SpatialDomains::MeshGraphSharedPtr &graph1D,
+                             const Collections::ImplementationType ImpType):
             ExpList(pSession,graph1D)
         {
             SetExpType(e1D);
@@ -174,7 +176,7 @@ namespace Nektar
             m_phys   = Array<OneD, NekDouble>(m_npoints);
 
             ReadGlobalOptimizationParameters();
-            CreateCollections();
+            CreateCollections(ImpType);
         }
 
 
@@ -200,7 +202,8 @@ namespace Nektar
          */
         ExpList1D::ExpList1D(const LibUtilities::SessionReaderSharedPtr &pSession,
                 const SpatialDomains::MeshGraphSharedPtr &graph1D,
-                const bool DeclareCoeffPhysArrays):
+                             const bool DeclareCoeffPhysArrays,
+                             const Collections::ImplementationType ImpType):
             ExpList(pSession,graph1D)
         {
             SetExpType(e1D);
@@ -255,7 +258,7 @@ namespace Nektar
             }
 
             ReadGlobalOptimizationParameters();
-            CreateCollections();
+            CreateCollections(ImpType);
         }
 
 
@@ -286,7 +289,8 @@ namespace Nektar
                              const SpatialDomains::CompositeMap &domain,
                              const bool DeclareCoeffPhysArrays,
                              const std::string var,
-                             bool SetToOneSpaceDimension):
+                             bool SetToOneSpaceDimension,
+                             const Collections::ImplementationType ImpType):
             ExpList(pSession,graph1D)
         {
             int j,id=0;
@@ -336,14 +340,12 @@ namespace Nektar
                         {
                             ASSERTL0(false,"Failed to find basis key");
                         }
-
                     }
                     else
                     {
                         ASSERTL0(false,"Failed to dynamic cast geometry to SegGeom");
                     }
-                    
-                    
+
                     // Assign next ID
                     seg->SetElmtId(id++);
 
@@ -368,7 +370,7 @@ namespace Nektar
             }
 
             ReadGlobalOptimizationParameters();
-            CreateCollections();
+            CreateCollections(ImpType);
         }
 
 
@@ -389,7 +391,8 @@ namespace Nektar
                              const SpatialDomains::CompositeMap &domain,
                              const SpatialDomains::MeshGraphSharedPtr &graph2D,
                              const bool DeclareCoeffPhysArrays,
-                             const std::string variable):
+                             const std::string variable,
+                             const Collections::ImplementationType ImpType):
             ExpList(pSession,graph2D)
         {
             SetExpType(e1D);
@@ -447,7 +450,7 @@ namespace Nektar
                 m_phys   = Array<OneD, NekDouble>(m_npoints);
             }
 
-            CreateCollections();
+            CreateCollections(ImpType);
         }
 
         /**
@@ -474,7 +477,8 @@ namespace Nektar
             const SpatialDomains::MeshGraphSharedPtr &graph2D,
             const PeriodicMap &periodicEdges,
             const bool DeclareCoeffPhysArrays,
-            const std::string variable):
+            const std::string variable,
+            const Collections::ImplementationType ImpType):
             ExpList(pSession,graph2D)
         {
             int i, j, id, elmtid = 0;
@@ -693,7 +697,7 @@ namespace Nektar
                 m_phys   = Array<OneD, NekDouble>(m_npoints);
             }
 
-            CreateCollections();
+            CreateCollections(ImpType);
         }
 
         /**

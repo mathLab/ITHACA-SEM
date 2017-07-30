@@ -1,7 +1,4 @@
-
-SET(TARGET_NAME LinearAlgebraUnitTests)
-
-SET(Sources
+SET(LinearAlgebraUnitTestsSources
     main.cpp   
     TestBandedMatrixOperations.cpp
     TestBandedMatrixStoragePolicy.cpp
@@ -23,14 +20,7 @@ SET(Sources
     ../../util.cpp
 )
 
-SET(Headers
-    TestCombinationRunner.h
-    ../../util.h
-)
-
 ADD_DEFINITIONS(-DENABLE_NEKTAR_EXCEPTIONS)
-
-ADD_NEKTAR_EXECUTABLE(${TARGET_NAME} unit-test Sources Headers)
-TARGET_LINK_LIBRARIES(${TARGET_NAME} LibUtilities)
-
-#ADD_TEST(NAME LinearAlgebra COMMAND ${TARGET_NAME} --detect_memory_leaks=0)
+ADD_NEKTAR_EXECUTABLE(LinearAlgebraUnitTests
+    COMPONENT unit-test DEPENDS LibUtilities SOURCES ${LinearAlgebraUnitTestsSources})
+ADD_TEST(NAME LinearAlgebraUnitTests COMMAND LinearAlgebraUnitTests --detect_memory_leaks=0)

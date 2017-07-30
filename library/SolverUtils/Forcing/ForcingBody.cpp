@@ -129,8 +129,7 @@ namespace SolverUtils
             std::string  s_FieldStr   = m_session->GetVariable(i);
             ASSERTL0(m_session->DefinesFunction(m_funcName, s_FieldStr),
                      "Variable '" + s_FieldStr + "' not defined.");
-            EvaluateFunction(pFields, m_session, s_FieldStr,
-                             m_Forcing[i], m_funcName, time);
+            GetFunction(pFields, m_session, m_funcName, true)->Evaluate(s_FieldStr, m_Forcing[i], time);
         }
 
         // If singleMode or halfMode, transform the forcing term to be in

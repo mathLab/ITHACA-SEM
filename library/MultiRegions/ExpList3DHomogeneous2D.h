@@ -64,32 +64,43 @@ namespace Nektar
             /// Default constructor.
             MULTI_REGIONS_EXPORT ExpList3DHomogeneous2D();
 
-            MULTI_REGIONS_EXPORT ExpList3DHomogeneous2D(const LibUtilities::SessionReaderSharedPtr &pSession,
-                                                        const LibUtilities::BasisKey &HomoBasis_y,
-														const LibUtilities::BasisKey &HomoBasis_z,
-														const NekDouble lhom_y,
-														const NekDouble lhom_z,
-														const bool useFFT,
-														const bool dealiasing);
+            MULTI_REGIONS_EXPORT ExpList3DHomogeneous2D(
+                    const LibUtilities::SessionReaderSharedPtr &pSession,
+                    const LibUtilities::BasisKey &HomoBasis_y,
+                    const LibUtilities::BasisKey &HomoBasis_z,
+                    const NekDouble lhom_y,
+                    const NekDouble lhom_z,
+                    const bool useFFT,
+                    const bool dealiasing,
+                    const Collections::ImplementationType ImpType
+                    = Collections::eNoImpType);
 
             /// Sets up a list of local expansions based on an input mesh.
-            MULTI_REGIONS_EXPORT ExpList3DHomogeneous2D(const LibUtilities::SessionReaderSharedPtr &pSession,
-                                                        const LibUtilities::BasisKey &HomoBasis_y,
-														const LibUtilities::BasisKey &HomoBasis_z,
-														const NekDouble lhom_y,
-														const NekDouble lhom_z,
-														const bool useFFT,
-														const bool dealiasing,
-														const SpatialDomains::MeshGraphSharedPtr &graph1D);
-
+            MULTI_REGIONS_EXPORT ExpList3DHomogeneous2D(
+                    const LibUtilities::SessionReaderSharedPtr &pSession,
+                    const LibUtilities::BasisKey &HomoBasis_y,
+                    const LibUtilities::BasisKey &HomoBasis_z,
+                    const NekDouble lhom_y,
+                    const NekDouble lhom_z,
+                    const bool useFFT,
+                    const bool dealiasing,
+                    const SpatialDomains::MeshGraphSharedPtr &graph1D,
+                    const Collections::ImplementationType ImpType
+                    = Collections::eNoImpType);
+                    
+            
             /// Copy constructor.
-            MULTI_REGIONS_EXPORT ExpList3DHomogeneous2D(const ExpList3DHomogeneous2D &In,
-                                   const bool DeclareLinesSetCoeffPhys = true);
+            MULTI_REGIONS_EXPORT ExpList3DHomogeneous2D(
+                                  const ExpList3DHomogeneous2D &In,
+                                  const bool DeclareLinesSetCoeffPhys = true);
             
             /// 
-            MULTI_REGIONS_EXPORT ExpList3DHomogeneous2D(const ExpList3DHomogeneous2D &In,
-                                    const std::vector<unsigned int> &eIDs,
-                                    const bool DeclareLinesSetCoeffPhys = true);
+            MULTI_REGIONS_EXPORT ExpList3DHomogeneous2D(
+                                  const ExpList3DHomogeneous2D &In,
+                                  const std::vector<unsigned int> &eIDs,
+                                  const bool DeclareLinesSetCoeffPhys = true,
+                                  const Collections::ImplementationType ImpType
+                                  = Collections::eNoImpType);
 
             /// Destructor.
             MULTI_REGIONS_EXPORT virtual ~ExpList3DHomogeneous2D();

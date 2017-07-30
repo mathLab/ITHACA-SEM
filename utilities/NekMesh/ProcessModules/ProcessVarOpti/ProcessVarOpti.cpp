@@ -299,7 +299,7 @@ void ProcessVarOpti::Process()
     Thread::ThreadManagerSharedPtr tm =
         tms.CreateInstance(Thread::ThreadMaster::SessionJob, nThreads);
 
-    Timer t;
+    LibUtilities::Timer t;
     t.Start();
 
     ofstream resFile;

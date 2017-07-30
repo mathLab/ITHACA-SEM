@@ -67,6 +67,17 @@ public:
     {
         return "ProcessGrad";
     }
+
+    virtual std::string GetModuleDescription()
+    {
+        return "Calculating gradients";
+    }
+
+    virtual ModulePriority GetModulePriority()
+    {
+        return eModifyExp;
+    }
+
 };
 }
 }

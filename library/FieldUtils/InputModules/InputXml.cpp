@@ -43,9 +43,6 @@ using namespace std;
 #include "InputXml.h"
 using namespace Nektar;
 
-static std::string npts = LibUtilities::SessionReader::RegisterCmdLineArgument(
-    "NumberOfPoints", "n", "Define number of points to dump output");
-
 namespace Nektar
 {
 namespace FieldUtils
@@ -66,9 +63,6 @@ InputXml::InputXml(FieldSharedPtr f) : InputModule(f)
 {
     m_allowedFiles.insert("xml");
     m_allowedFiles.insert("xml.gz");
-    m_allowedFiles.insert("fld"); // these files could be allowed with xml files
-    m_allowedFiles.insert("chk");
-    m_allowedFiles.insert("rst");
 }
 
 /**
@@ -83,48 +77,20 @@ InputXml::~InputXml()
  */
 void InputXml::Process(po::variables_map &vm)
 {
-    Timer timerpart;
-
-    // check for multiple calls to inputXml due to split xml
-    // files. If so just return
-    int expsize = m_f->m_exp.size();
-    m_f->m_comm->AllReduce(expsize, LibUtilities::ReduceMax);
-
-    if (expsize != 0)
-    {
-        return;
-    }
-
+    LibUtilities::Timer timerpart;
     if (m_f->m_verbose)
     {
         if (m_f->m_comm->TreatAsRankZero())
         {
-            cout << "Processing input xml file" << endl;
             timerpart.Start();
         }
     }
 
-    // check to see if fld file defined so can use in
-    // expansion defintion if required
-    string fldending;
-    bool fldfilegiven = true;
-
-    // Determine appropriate field input
-    if (m_f->m_inputfiles.count("fld") != 0)
+    // check for multiple calls to inputXml due to split xml
+    // files. If so just return
+    if (m_f->m_graph)
     {
-        fldending = "fld";
-    }
-    else if (m_f->m_inputfiles.count("chk") != 0)
-    {
-        fldending = "chk";
-    }
-    else if (m_f->m_inputfiles.count("rst") != 0)
-    {
-        fldending = "rst";
-    }
-    else
-    {
-        fldfilegiven = false;
+        return;
     }
 
     string xml_ending    = "xml";
@@ -286,130 +252,6 @@ void InputXml::Process(po::variables_map &vm)
             cout << "\t InputXml mesh graph setup  CPU Time: " << setw(8)
                  << left << ss.str() << endl;
             timerpart.Start();
-        }
-    }
-
-    // currently load all field (possibly could read data from
-    // expansion list but it is re-arranged in expansion)
-    const SpatialDomains::ExpansionMap &expansions =
-        m_f->m_graph->GetExpansions();
-
-    // if Range has been speficied it is possible to have a
-    // partition which is empty so ccheck this and return if
-    // no elements present.
-    if (!expansions.size())
-    {
-        return;
-    }
-
-    m_f->m_exp.resize(1);
-
-    // load fielddef header if fld file is defined. This gives
-    // precedence to Homogeneous definition in fld file
-    int NumHomogeneousDir = 0;
-    if (fldfilegiven)
-    {
-        // use original expansion to identify which elements are in
-        // this partition/subrange
-
-        Array<OneD, int> ElementGIDs(expansions.size());
-        SpatialDomains::ExpansionMap::const_iterator expIt;
-
-        int i = 0;
-        for (expIt = expansions.begin(); expIt != expansions.end(); ++expIt)
-        {
-            ElementGIDs[i++] = expIt->second->m_geomShPtr->GetGlobalID();
-        }
-
-        m_f->m_fielddef.clear();
-        m_f->m_data.clear();
-
-        m_f->FieldIOForFile(m_f->m_inputfiles[fldending][0])->Import(
-            m_f->m_inputfiles[fldending][0], m_f->m_fielddef, m_f->m_data,
-            m_f->m_fieldMetaDataMap, ElementGIDs);
-        NumHomogeneousDir = m_f->m_fielddef[0]->m_numHomogeneousDir;
-
-        //----------------------------------------------
-        // Set up Expansion information to use mode order from field
-        m_f->m_graph->SetExpansions(m_f->m_fielddef);
-    }
-    else
-    {
-        if (m_f->m_session->DefinesSolverInfo("HOMOGENEOUS"))
-        {
-            std::string HomoStr = m_f->m_session->GetSolverInfo("HOMOGENEOUS");
-
-            if ((HomoStr == "HOMOGENEOUS1D") || (HomoStr == "Homogeneous1D") ||
-                (HomoStr == "1D") || (HomoStr == "Homo1D"))
-            {
-                NumHomogeneousDir = 1;
-            }
-            if ((HomoStr == "HOMOGENEOUS2D") || (HomoStr == "Homogeneous2D") ||
-                (HomoStr == "2D") || (HomoStr == "Homo2D"))
-            {
-                NumHomogeneousDir = 2;
-            }
-        }
-    }
-
-    // reset expansion defintion to use equispaced points if required.
-    if (m_requireEquiSpaced)
-    {
-        int nPointsNew = 0;
-
-        if (vm.count("output-points"))
-        {
-            nPointsNew = vm["output-points"].as<int>();
-        }
-
-        m_f->m_graph->SetExpansionsToEvenlySpacedPoints(nPointsNew);
-    }
-    else
-    {
-        if (vm.count("output-points"))
-        {
-            int nPointsNew = vm["output-points"].as<int>();
-            m_f->m_graph->SetExpansionsToPointOrder(nPointsNew);
-        }
-    }
-
-    if (m_f->m_verbose)
-    {
-        if (m_f->m_comm->TreatAsRankZero())
-        {
-            timerpart.Stop();
-            NekDouble cpuTime = timerpart.TimePerTest(1);
-
-            stringstream ss;
-            ss << cpuTime << "s";
-            cout << "\t InputXml setexpansion CPU Time: " << setw(8) << left
-                 << ss.str() << endl;
-            timerpart.Start();
-        }
-    }
-
-    // Override number of planes with value from cmd line
-    if (NumHomogeneousDir == 1 && vm.count("output-points-hom-z"))
-    {
-        int expdim = m_f->m_graph->GetMeshDimension();
-        m_f->m_fielddef[0]->m_numModes[expdim] =
-            vm["output-points-hom-z"].as<int>();
-    }
-
-    m_f->m_exp[0] = m_f->SetUpFirstExpList(NumHomogeneousDir, fldfilegiven);
-
-    if (m_f->m_verbose)
-    {
-        if (m_f->m_comm->TreatAsRankZero())
-        {
-            timerpart.Stop();
-            NekDouble cpuTime = timerpart.TimePerTest(1);
-
-            stringstream ss1;
-
-            ss1 << cpuTime << "s";
-            cout << "\t InputXml set first exp CPU Time: " << setw(8) << left
-                 << ss1.str() << endl;
         }
     }
 }

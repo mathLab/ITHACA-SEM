@@ -43,6 +43,7 @@
 #include "ProcessIsoContour.h"
 
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
+#include <LibUtilities/BasicUtils/Timer.h>
 #include <LibUtilities/BasicUtils/ParseUtils.hpp>
 #include <LibUtilities/BasicUtils/Progressbar.hpp>
 #include <boost/math/special_functions/fpclassify.hpp>
@@ -67,7 +68,7 @@ ModuleKey ProcessIsoContour::className =
                         "smoothing");
 
 ProcessIsoContour::ProcessIsoContour(FieldSharedPtr f) :
-    ProcessEquiSpacedOutput(f)
+    ProcessModule(f)
 {
 
     m_config["fieldstr"]           = ConfigOption(false, "NotSet",
@@ -115,38 +116,35 @@ ProcessIsoContour::~ProcessIsoContour(void)
 
 void ProcessIsoContour::Process(po::variables_map &vm)
 {
-    Timer timer;
-    int rank = m_f->m_comm->GetRank();
-
-    if(m_f->m_verbose)
-    {
-        if(rank == 0)
-        {
-            cout << "Process Contour extraction..." << endl;
-            timer.Start();
-        }
-    }
+    bool verbose = (m_f->m_verbose && m_f->m_comm->TreatAsRankZero());
 
     vector<IsoSharedPtr> iso;
 
-    if(m_f->m_fieldPts.get()) // assume we have read .dat file to directly input dat file.
+    ASSERTL0(m_f->m_fieldPts.get(),
+            "Should have m_fieldPts for IsoContour.");
+
+    if(m_f->m_fieldPts->GetPtsType() == LibUtilities::ePtsTriBlock)
     {
-        if(rank == 0)
+        // assume we have read .dat file to directly input dat file.
+        if(verbose)
         {
-            cout << "Process read iso from Field Pts" << endl;
+            cout << "\t Process read iso from Field Pts" << endl;
         }
 
         SetupIsoFromFieldPts(iso);
     }
-    else // extract isocontour from field
+    else if(m_f->m_fieldPts->GetPtsType() == LibUtilities::ePtsTetBlock)
     {
-        if(m_f->m_exp.size() == 0)
+        if(m_config["fieldstr"].m_beenSet)
+        {
+            string fieldName = m_config["fieldname"].as<string>();
+            m_f->m_variables.push_back(fieldName);
+        }
+
+        if(m_f->m_fieldPts->GetNpoints() == 0)
         {
             return;
         }
-
-        // extract all fields to equi-spaced
-        SetupEquiSpacedField();
 
         int     fieldid;
         NekDouble value;
@@ -193,7 +191,10 @@ void ProcessIsoContour::Process(po::variables_map &vm)
         value   = m_config["fieldvalue"].as<NekDouble>();
 
         iso = ExtractContour(fieldid,value);
-
+    }
+    else
+    {
+        ASSERTL0(false, "PtsType not supported for isocontour.");
     }
 
     // Process isocontour
@@ -201,14 +202,14 @@ void ProcessIsoContour::Process(po::variables_map &vm)
     bool globalcondense = m_config["globalcondense"].m_beenSet;
     if(globalcondense)
     {
-        if(rank == 0)
+        if(verbose)
         {
-            cout << "Process global condense ..." << endl;
+            cout << "\t Process global condense ..." << endl;
         }
         int nfields = m_f->m_fieldPts->GetNFields() + m_f->m_fieldPts->GetDim();
         IsoSharedPtr g_iso = MemoryManager<Iso>::AllocateSharedPtr(nfields-3);
 
-        g_iso->GlobalCondense(iso,m_f->m_verbose);
+        g_iso->GlobalCondense(iso,verbose);
 
 
         iso.clear();
@@ -217,15 +218,12 @@ void ProcessIsoContour::Process(po::variables_map &vm)
 
     if(smoothing)
     {
-        Timer timersm;
+        LibUtilities::Timer timersm;
 
-        if(m_f->m_verbose)
+        if(verbose)
         {
-            if(rank == 0)
-            {
-                cout << "Process Contour smoothing ..." << endl;
-                timersm.Start();
-            }
+            cout << "\t Process Contour smoothing ..." << endl;
+            timersm.Start();
         }
 
         int  niter = m_config["smoothiter"].as<int>();
@@ -236,19 +234,16 @@ void ProcessIsoContour::Process(po::variables_map &vm)
             iso[i]->Smooth(niter,lambda,-mu);
         }
 
-        if(m_f->m_verbose)
+        if(verbose)
         {
-            if(rank == 0)
-            {
-                timersm.Stop();
-                NekDouble cpuTime = timersm.TimePerTest(1);
+            timersm.Stop();
+            NekDouble cpuTime = timersm.TimePerTest(1);
 
-                stringstream ss;
-                ss << cpuTime << "s";
-                cout << "Process smooth CPU Time: " << setw(8) << left
-                     << ss.str() << endl;
-                cpuTime = 0.0;
-            }
+            stringstream ss;
+            ss << cpuTime << "s";
+            cout << "\t Process smooth CPU Time: " << setw(8) << left
+                 << ss.str() << endl;
+            cpuTime = 0.0;
         }
     }
 
@@ -257,16 +252,16 @@ void ProcessIsoContour::Process(po::variables_map &vm)
     {
         vector<IsoSharedPtr> new_iso;
 
-        if(rank == 0)
+        if(verbose)
         {
-            cout << "Identifying separate regions [." << flush ;
+            cout << "\t Identifying separate regions [." << flush ;
         }
         for(int i =0 ; i < iso.size(); ++i)
         {
             iso[i]->SeparateRegions(new_iso,mincontour,m_f->m_verbose);
         }
 
-        if(rank == 0)
+        if(verbose)
         {
             cout << "]" << endl <<  flush ;
         }
@@ -276,22 +271,6 @@ void ProcessIsoContour::Process(po::variables_map &vm)
     }
 
     ResetFieldPts(iso);
-
-
-    if(m_f->m_verbose)
-    {
-        if(rank == 0)
-        {
-            timer.Stop();
-            NekDouble cpuTime = timer.TimePerTest(1);
-
-            stringstream ss;
-            ss << cpuTime << "s";
-            cout << "Process Isocontour CPU Time: " << setw(8) << left
-                 << ss.str() << endl;
-            cpuTime = 0.0;
-        }
-    }
 }
 
 
@@ -853,14 +832,14 @@ void Iso::GlobalCondense(vector<IsoSharedPtr> &iso, bool verbose)
 
     if(verbose)
     {
-        cout << "Process building tree ..." << endl;
+        cout << "\t Process building tree ..." << endl;
     }
 
     //Build tree
     bgi::rtree<PointPair, bgi::rstar<16> > rtree;
     rtree.insert(inPoints.begin(), inPoints.end());
 
-    //Find neipghbours
+    //Find neighbours
     int      unique_index = 0;
     int      prog=0;
     for(i = 0; i < m_nvert; ++i)
@@ -881,7 +860,6 @@ void Iso::GlobalCondense(vector<IsoSharedPtr> &iso, bool verbose)
         }
         else
         {
-
             // find nearest 10 points within the distance box
             std::vector<PointPair> result;
             rtree.query(bgi::nearest(queryPoint, 10), std::back_inserter(result));

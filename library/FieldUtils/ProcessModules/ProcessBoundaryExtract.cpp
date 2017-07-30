@@ -57,9 +57,7 @@ ProcessBoundaryExtract::ProcessBoundaryExtract(FieldSharedPtr f)
     : ProcessModule(f)
 {
     // set up dafault values.
-    m_config["bnd"] = ConfigOption(false, "All", "Boundary to be extracted");
-    m_config["fldtoboundary"] =
-        ConfigOption(true, "NotSet", "Extract fld values to boundary");
+    m_config["bnd"] = ConfigOption(false, "All", "Boundary to be processed");
     m_config["addnormals"] =
         ConfigOption(true, "NotSet", "Add normals to output");
 
@@ -74,45 +72,12 @@ ProcessBoundaryExtract::~ProcessBoundaryExtract()
 
 void ProcessBoundaryExtract::Process(po::variables_map &vm)
 {
-    if (m_f->m_verbose)
-    {
-        if (m_f->m_comm->TreatAsRankZero())
-        {
-            cout << "ProcessBoundaryExtract: Setting up boundary extraction..."
-                 << endl;
-        }
-    }
-
-    m_f->m_fldToBnd   = m_config["fldtoboundary"].m_beenSet;
     m_f->m_addNormals = m_config["addnormals"].m_beenSet;
-
-    // check for correct input files
-    if ((m_f->m_inputfiles.count("xml") == 0) &&
-        (m_f->m_inputfiles.count("xml.gz") == 0))
-    {
-        cout << "An xml or xml.gz input file must be specified for the "
-                "boundary extraction module"
-             << endl;
-        exit(3);
-    }
-
-    if (m_f->m_fldToBnd)
-    {
-        if ((m_f->m_inputfiles.count("fld") == 0) &&
-            (m_f->m_inputfiles.count("chk") == 0) &&
-            (m_f->m_inputfiles.count("rst") == 0))
-        {
-            cout << "A fld or chk or rst input file must be specified for "
-                 << "the boundary extraction module with fldtoboundary option."
-                 << endl;
-
-            exit(3);
-        }
-    }
 
     // Set up Field options to output boundary fld
     string bvalues = m_config["bnd"].as<string>();
 
+    vector<unsigned int> bndRegions;
     if (boost::iequals(bvalues, "All"))
     {
         int numBndExp = 0;
@@ -128,25 +93,43 @@ void ProcessBoundaryExtract::Process(po::variables_map &vm)
             numBndExp = max(numBndExp, breg_it->first);
         }
         // assuming all boundary regions are consecutive number if
-        // regions is one more tham maximum id
+        // regions is one more than maximum id
         numBndExp++;
 
         // not all partitions in parallel touch all boundaries so
         // find maximum number of boundaries
-        m_f->m_session->GetComm()->AllReduce(numBndExp,
-                                             LibUtilities::ReduceMax);
+        m_f->m_comm->AllReduce(numBndExp, LibUtilities::ReduceMax);
 
         // THis presumes boundary regions are numbered consecutively
         for (int i = 0; i < numBndExp; ++i)
         {
-            m_f->m_bndRegionsToWrite.push_back(i);
+            bndRegions.push_back(i);
         }
     }
     else
     {
         ASSERTL0(ParseUtils::GenerateOrderedVector(bvalues.c_str(),
-                                                   m_f->m_bndRegionsToWrite),
+                                                   bndRegions),
                  "Failed to interpret bnd values string");
+    }
+
+    if(m_f->m_bndRegionsToWrite.size())
+    {
+        // This was already called. Just check if the bnd option is the same
+        ASSERTL0(m_f->m_bndRegionsToWrite == bndRegions,
+                "Incompatible bnd parameters.");
+    }
+    else
+    {
+        m_f->m_bndRegionsToWrite = bndRegions;
+
+        if (m_f->m_exp[0]->GetNumElmts() != 0)
+        {
+            for (int i = 0; i < m_f->m_exp.size(); ++i)
+            {
+                m_f->m_exp[i]->FillBndCondFromField();
+            }
+        }
     }
 }
 }

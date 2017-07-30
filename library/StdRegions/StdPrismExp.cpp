@@ -1074,6 +1074,8 @@ namespace Nektar
                 nummodesA = m_base[1]->GetNumModes();
                 nummodesB = m_base[2]->GetNumModes();
                 break;
+            default:
+                ASSERTL0(false,"fid must be between 0 and 4");
             }
 
             bool CheckForZeroedModes = false;

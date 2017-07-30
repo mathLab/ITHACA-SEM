@@ -64,7 +64,7 @@ namespace Nektar
         {
             SymbolFunctor symbolFunctor(&symbol);
             ValueFunctor valueFunctor(&value);
-            
+
             return parse(str,
                 // Begin grammar
                 (
@@ -93,7 +93,7 @@ namespace Nektar
 
                 space_p).full;
         }
-		
+
         static bool GenerateOrderedVector(const char *const str, std::vector<unsigned int> &vec)
         {
             // Functors used to parse the sequence.
@@ -114,7 +114,7 @@ namespace Nektar
         {
             // Functors used to parse the sequence.
             fctor4 functor4(&vec);
-            
+
             return parse(str,
                          //  Begin grammar
                          (
@@ -124,12 +124,12 @@ namespace Nektar
                          //  End grammar
                          space_p).full;
         }
-		
+
         static bool GenerateUnOrderedVector(const char *const str, std::vector<NekDouble> &vec)
         {
             // Functors used to parse the sequence.
             fctor5 functor5(&vec);
-            
+
             return parse(str,
                          //  Begin grammar
                          (
@@ -139,7 +139,22 @@ namespace Nektar
                          //  End grammar
                          space_p).full;
         }
-        
+
+        static bool GenerateUnOrderedVector(const char *const str, std::vector<unsigned int> &vec)
+        {
+            // Functors used to parse the sequence.
+            fctor6 functor6(&vec);
+
+            return parse(str,
+                         //  Begin grammar
+                         (
+                          uint_p[functor6] >> *(',' >> uint_p[functor6])
+                          )
+                         ,
+                         //  End grammar
+                         space_p).full;
+        }
+
         static bool GenerateOrderedStringVector(const char *const str, std::vector<std::string> &vec)
         {
             // Functors used to parse the sequence.
@@ -226,7 +241,7 @@ namespace Nektar
                 m_value(value)
             {
             }
-            
+
             void operator()(NekDouble val) const
             {
                 *m_value = val;
@@ -245,7 +260,7 @@ namespace Nektar
 
             void operator()(unsigned int n) const
             {
-#ifdef NOTREQUIRED //SJS: I do not think we need this check 
+#ifdef NOTREQUIRED //SJS: I do not think we need this check
                 if (!m_vector->empty())
                 {
                     unsigned int prevElem = m_vector->back();
@@ -304,7 +319,7 @@ namespace Nektar
             std::vector<std::string> *m_vector;
         };
 
-        // Probably should template fctor1 if that is possible? 
+        // Probably should template fctor1 if that is possible?
         struct fctor4
         {
             fctor4(std::vector<NekDouble> *vec):
@@ -333,22 +348,39 @@ namespace Nektar
             std::vector<NekDouble> *m_vector;
             fctor4();
         };
-		
+
 		struct fctor5
         {
             fctor5(std::vector<NekDouble> *vec):
 			m_vector(vec)
             {
             }
-			
+
             void operator()(NekDouble n) const
             {
 				m_vector->push_back(n);
             }
-			
+
         private:
             std::vector<NekDouble> *m_vector;
             fctor5();
+        };
+
+        struct fctor6
+        {
+            fctor6(std::vector<unsigned int> *vec):
+			m_vector(vec)
+            {
+            }
+
+            void operator()(unsigned int n) const
+            {
+				m_vector->push_back(n);
+            }
+
+        private:
+            std::vector<unsigned int> *m_vector;
+            fctor6();
         };
 
     };

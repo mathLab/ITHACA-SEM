@@ -84,11 +84,16 @@ CollectionOptimisation::CollectionOptimisation(
     {
         for (it2 = elTypes.begin(); it2 != elTypes.end(); ++it2)
         {
-            defaultsPhysDeriv [ElmtOrder(it2->second, -1)] = eNoCollection;
+            // For 1<=N<=5 use StdMat otherwise IterPerExp or given default type
             for (int i = 1; i < 5; ++i)
             {
                 defaults[ElmtOrder(it2->second, i)] = eStdMat;
             }
+
+            // For 1<=N<=3 use SumFac otherwise NoCollection. Note that
+            // default is not currently overwritten by given default
+            // type
+            defaultsPhysDeriv [ElmtOrder(it2->second, -1)] = eNoCollection;
             for (int i = 1; i < 3; ++i)
             {
                 defaultsPhysDeriv[ElmtOrder(it2->second, i)] = eSumFac;
@@ -157,6 +162,7 @@ CollectionOptimisation::CollectionOptimisation(
                     ASSERTL0(i != Collections::SIZE_ImplementationType,
                          "Unknown default collection scheme: "+collinfo);
 
+                    defaults.clear();
                     // Override default types
                     for (it2 = elTypes.begin(); it2 != elTypes.end(); ++it2)
                     {
@@ -341,7 +347,7 @@ OperatorImpMap CollectionOptimisation::SetWithTimings(
     Array<OneD, NekDouble> outarray2(maxsize);
     Array<OneD, NekDouble> outarray3(maxsize);
 
-    Timer t;
+    LibUtilities::Timer t;
 
     if(verbose)
     {

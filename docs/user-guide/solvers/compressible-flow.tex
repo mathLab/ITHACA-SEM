@@ -221,7 +221,7 @@ to screen;
 \item \inltt{TInf} farfield temperature (i.e. $T_{\infty}$). Default value = 288.15 $K$;
 \item \inltt{Twall} temperature at the wall when isothermal boundary 
 conditions are employed (i.e. $T_{w}$). Default value = 300.15$K$;
-\item \inltt{uint} farfield $X$-component of the velocity (i.e. $u_{\infty}$). Default value = 0.1 $m/s$;
+\item \inltt{uInf} farfield $X$-component of the velocity (i.e. $u_{\infty}$). Default value = 0.1 $m/s$;
 \item \inltt{vInf} farfield $Y$-component of the velocity (i.e. $v_{\infty}$). Default value = 0.0 $m/s$;
 \item \inltt{wInf} farfield $Z$-component of the velocity (i.e. $w_{\infty}$). Default value = 0.0 $m/s$;
 \item \inltt{mu} dynamic viscosity (i.e. $\mu_{\infty}$). Default value = 1.78e-05 $Pa s$;
@@ -437,6 +437,7 @@ Compressible flow is characterised by abrupt changes in density within the flow 
 \begin{equation}\label{eq:sensor}
 S_e=\frac{||\rho^p_e-\rho^{p-1}_e||_{L_2}}{||\rho_e^p||_{L_2}}
 \end{equation}
+by default the comparison is made with the $p-1$ solution, but this can be changed by setting the parameter \inltt{SensorOffset}.
 An artificial diffusion term is introduced locally to the Euler equations to deal with flow discontinuity and the consequential numerical oscillations. Two models are implemented, a non-smooth and a smooth artificial viscosity model. 
 \subsubsection{Non-smooth artificial viscosity model}
 For the non-smooth artificial viscosity model the added artificial viscosity is constant in each element and discontinuous between the elements. The Euler system is augmented by an added laplacian term on right hand side of equation \ref{eq:euler}. The diffusivity of the system is controlled by a variable viscosity coefficient $\epsilon$. The value of $\epsilon$ is dependent on $\epsilon_0$, which is the maximum viscosity that is dependent on the polynomial order ($p$), the mesh size ($h$) and the maximum wave speed and the local sensor value. Based on pre-defined sensor threshold values, the variable viscosity is set accordingly
@@ -512,4 +513,53 @@ The polynomial order in each element can be adjusted based on the sensor value t
 \end{equation}
 For now, the threshold values $s_e$, $s_{ds}$, $s_{sm}$ and $s_{fl}$ are determined empirically by looking at the sensor distribution in the domain. Once these values are set, two .txt files are outputted, one that has the composites called VariablePComposites.txt and one with the expansions called VariablePExpansions.txt. These values have to copied into a new .xml file to create the adapted mesh.
 
+\subsection{Quasi-1D nozzle flow}
+A quasi-1D inviscid flow (flow with area variation) can be obtained using the
+\inltt{Quasi1D} forcing in a 1D solution of the Euler equations:
+\begin{lstlisting}[style=XMLStyle]
+<FORCING>
+    <FORCE TYPE="Quasi1D">
+        <AREAFCN> Area </AREAFCN>
+    </FORCE>
+</FORCING>
+\end{lstlisting}
+in this case a function named \inltt{Area} must be specified in the \inltt{CONDITIONS} section of the session file.
+
+In this case, it is possible to prescribe the inflow conditions in terms of stagnation properties (density and pressure)
+by using the following boundary condition
+\begin{lstlisting}[style=XmlStyle]
+<BOUNDARYCONDITIONS>
+    <REGION REF="0">
+        <D VAR="rho"  USERDEFINEDTYPE="StagnationInflow" VALUE="rhoStag" />
+        <D VAR="rhou" USERDEFINEDTYPE="StagnationInflow" VALUE="0" />
+        <D VAR="E"    USERDEFINEDTYPE="StagnationInflow" VALUE="pStag/(Gamma-1)" />
+    </REGION>
+</BOUNDARYCONDITIONS>
+\end{lstlisting}
+
+\subsection{Axi-symmetric flow}
+An axi-symmetric inviscid flow (with symmetry axis on x=0) can be obtained using
+the \inltt{AxiSymmetric} forcing in a 2D solution of the Euler equations:
+\begin{lstlisting}[style=XMLStyle]
+<FORCING>
+    <FORCE TYPE="AxiSymmetric">
+    </FORCE>
+</FORCING>
+\end{lstlisting}
+The \inltt{StagnationInflow} boundary condition can also be used in this case.
+
+Also, by defining the geometry with \inltt{<GEOMETRY DIM="2" SPACE="3">} (i.e. a two-dimensional
+mesh in three-dimensional space) and adding the \inltt{rhow} variable, we obtain an axi-symmetric
+flow with swirl, in which case the \inltt{StagnationInflow} boundary condition allows prescribing \inltt{rhow}:
+\begin{lstlisting}[style=XmlStyle]
+<BOUNDARYCONDITIONS>
+    <REGION REF="0">
+        <D VAR="rho"  USERDEFINEDTYPE="StagnationInflow" VALUE="rhoStag" />
+        <D VAR="rhou" USERDEFINEDTYPE="StagnationInflow" VALUE="0" />
+        <D VAR="rhov" USERDEFINEDTYPE="StagnationInflow" VALUE="0" />
+        <D VAR="rhow" USERDEFINEDTYPE="StagnationInflow" VALUE="x" />
+        <D VAR="E"    USERDEFINEDTYPE="StagnationInflow" VALUE="pStag/(Gamma-1)" />
+</REGION>
+</BOUNDARYCONDITIONS>
+\end{lstlisting}
 

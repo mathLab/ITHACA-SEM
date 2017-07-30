@@ -68,6 +68,16 @@ public:
         return "ProcessC0Projection";
     }
 
+    virtual std::string GetModuleDescription()
+    {
+        return "Projecting field into C0 space";
+    }
+
+    virtual ModulePriority GetModulePriority()
+    {
+        return eModifyExp;
+    }
+
 private:
 };
 }

@@ -61,7 +61,9 @@ namespace Nektar
                 const LibUtilities::SessionReaderSharedPtr &pSession,
                 const SpatialDomains::MeshGraphSharedPtr   &graph3D,
                 const std::string                          &variable,
-                const bool                                  SetUpJustDG = true);
+                const bool                                  SetUpJustDG = true,
+                const Collections::ImplementationType ImpType
+                = Collections::eNoImpType);
 
             MULTI_REGIONS_EXPORT DisContField3D(
                 const DisContField3D                       &In,

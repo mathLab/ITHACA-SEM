@@ -63,8 +63,9 @@ namespace Nektar
         
         ExpList3D::ExpList3D(const ExpList3D &In,
                 const std::vector<unsigned int> &eIDs,
-                const bool DeclareCoeffPhysArrays)
-                : ExpList(In, eIDs, DeclareCoeffPhysArrays)
+                const bool DeclareCoeffPhysArrays,
+                const Collections::ImplementationType ImpType):
+            ExpList(In, eIDs, DeclareCoeffPhysArrays)
         {
             SetExpType(e3D);
             
@@ -83,7 +84,7 @@ namespace Nektar
              }
 
             ReadGlobalOptimizationParameters();
-            CreateCollections();
+            CreateCollections(ImpType);
         }
 
         ExpList3D::~ExpList3D()
@@ -99,7 +100,8 @@ namespace Nektar
                              const LibUtilities::BasisKey &HBb,
                              const LibUtilities::BasisKey &HBc,
                              const SpatialDomains::MeshGraphSharedPtr &graph3D,
-                             const LibUtilities::PointsType TetNb):
+                             const LibUtilities::PointsType TetNb,
+                             const Collections::ImplementationType ImpType):
             ExpList(pSession,graph3D)
         {
             SetExpType(e3D);
@@ -183,7 +185,7 @@ namespace Nektar
             m_phys   = Array<OneD, NekDouble>(m_npoints);
 
             ReadGlobalOptimizationParameters();
-            CreateCollections();
+            CreateCollections(ImpType);
         }
 
         /**
@@ -200,7 +202,8 @@ namespace Nektar
          */
         ExpList3D::ExpList3D(const LibUtilities::SessionReaderSharedPtr &pSession,
                              const SpatialDomains::MeshGraphSharedPtr &graph3D,
-                             const std::string  &variable) :
+                             const std::string  &variable,
+                             const Collections::ImplementationType ImpType):
             ExpList(pSession,graph3D)
         {
             SetExpType(e3D);
@@ -315,7 +318,7 @@ namespace Nektar
             m_phys   = Array<OneD, NekDouble>(m_npoints);
 
             ReadGlobalOptimizationParameters();
-            CreateCollections();
+            CreateCollections(ImpType);
         }
 
         /**
@@ -332,7 +335,8 @@ namespace Nektar
          *                   information about the domain and the
          *                   spectral/hp element expansion.
          */
-        ExpList3D::ExpList3D(const SpatialDomains::ExpansionMap &expansions):
+        ExpList3D::ExpList3D(const SpatialDomains::ExpansionMap &expansions,
+                             const Collections::ImplementationType ImpType):
             ExpList()
         {
             SetExpType(e3D);
@@ -447,7 +451,7 @@ namespace Nektar
             m_coeffs = Array<OneD, NekDouble>(m_ncoeffs);
             m_phys   = Array<OneD, NekDouble>(m_npoints);
 
-            CreateCollections();
+            CreateCollections(ImpType);
         }
 
         void ExpList3D::v_ReadGlobalOptimizationParameters()

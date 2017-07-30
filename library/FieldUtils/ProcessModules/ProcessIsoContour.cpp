@@ -877,7 +877,7 @@ void Iso::GlobalCondense(vector<IsoSharedPtr> &iso, bool verbose)
             for(id1 = 0; id1 < result.size(); ++id1)
             {
                 NekDouble dist = bg::distance(queryPoint, result[id1].first);
-                if(dist*dist<SQ_PNT_TOL) // same point
+                if(dist*dist < NekConstants::kNekZeroTol) // same point
                 {
                     id2 = result[id1].second;
                     samept.insert(id2);
@@ -959,14 +959,14 @@ void Iso::GlobalCondense(vector<IsoSharedPtr> &iso, bool verbose)
 bool operator == (const IsoVertex& x, const IsoVertex& y)
 {
     return ((x.m_x-y.m_x)*(x.m_x-y.m_x) + (x.m_y-y.m_y)*(x.m_y-y.m_y) +
-            (x.m_z-y.m_z)*(x.m_z-y.m_z) < SQ_PNT_TOL)? true:false;
+            (x.m_z-y.m_z)*(x.m_z-y.m_z) < NekConstants::kNekZeroTol)? true:false;
 }
 
 // define != if point is outside 1e-8
 bool operator != (const IsoVertex& x, const IsoVertex& y)
 {
     return ((x.m_x-y.m_x)*(x.m_x-y.m_x) + (x.m_y-y.m_y)*(x.m_y-y.m_y) +
-            (x.m_z-y.m_z)*(x.m_z-y.m_z) < SQ_PNT_TOL)? 0:1;
+            (x.m_z-y.m_z)*(x.m_z-y.m_z) < NekConstants::kNekZeroTol)? 0:1;
 }
 
 void Iso::Smooth(int n_iter, NekDouble lambda, NekDouble mu)

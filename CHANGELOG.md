@@ -29,6 +29,7 @@ v5.0.0
 **FieldConvert**:
 - Add input module for Semtex field files (!777)
 - Fixed interppoints module (!760)
+- Move StreamFunction utility to a FieldConvert module (!809)
 
 **Documentation**:
 - Added the developer-guide repository as a submodule (!751)
@@ -41,6 +42,7 @@ v4.4.2
 **Library**
 - Fix ability to set default implementation in Collections and added an option 
   to set eNoCollections in FieldConvert as default (!789)
+- Fix performance issue with ExtractPhysToBndElmt (!796)
 
 **Utilities**
 - Fix vtkToFld missing dependency which prevented compiling with VTK 7.1 (!808)

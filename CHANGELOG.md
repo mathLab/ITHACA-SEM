@@ -41,6 +41,8 @@ v4.4.2
 **Library**
 - Fix ability to set default implementation in Collections and added an option 
   to set eNoCollections in FieldConvert as default (!789)
+- Fix performance issue in ProcessIsoContour in relation to memory consumption
+  (!821)
 - Fix performance issue with ExtractPhysToBndElmt (!796)
 
 **Utilities**

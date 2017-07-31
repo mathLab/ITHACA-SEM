@@ -98,7 +98,7 @@ Array<OneD, NekDouble> CADSurfOCE::BoundingBox()
     
     brmsh.SetShape(m_shape);
     brmsh.SetDeflection(0.005);
-    brmsh.SetMinSize(1e-5);
+    //brmsh.SetMinSize(1e-5);
     
     brmsh.Perform();
     

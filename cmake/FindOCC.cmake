@@ -35,7 +35,7 @@ endif()
 
 find_package(OCE 0.15 QUIET)
 if(OCE_FOUND)
-  message(STATUS "-- OpenCASCADE Community Edition has been found.")
+  message(STATUS "OpenCASCADE Community Edition has been found.")
   set(OCC_INCLUDE_DIR ${OCE_INCLUDE_DIRS})
 else(OCE_FOUND) #look for OpenCASCADE
 

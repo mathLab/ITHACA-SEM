@@ -49,7 +49,7 @@ namespace NekMeshUtils
 
 std::string CADSystemOCE::key = GetEngineFactory().RegisterCreatorFunction(
     "oce", CADSystemOCE::create, "Uses OCE as cad engine");
-    
+
 void filterModShape(TopTools_DataMapOfShapeShape &modShape, TopoDS_Shape &S)
 {
     bool repeat = true;
@@ -59,7 +59,7 @@ void filterModShape(TopTools_DataMapOfShapeShape &modShape, TopoDS_Shape &S)
         if (modShape.IsBound(S))
         {
             repeat = true;
-            S = modShape.Find(S);
+            S      = modShape.Find(S);
         }
     }
 }
@@ -71,7 +71,7 @@ bool CADSystemOCE::LoadCAD()
     Handle(XSControl_TransferReader) TR;
     Handle(Transfer_TransientProcess) TP;
     Handle(XCAFDoc_ShapeTool) STool;
-    
+
     if (m_naca.size() == 0)
     {
         // not a naca profile behave normally
@@ -80,19 +80,20 @@ bool CADSystemOCE::LoadCAD()
         readerCAF.SetNameMode(true);
         readerCAF.SetLayerMode(true);
         readerCAF.SetColorMode(true);
-        
-        Handle(TDocStd_Document) document = new TDocStd_Document(Storage::Version());
+
+        Handle(TDocStd_Document) document =
+            new TDocStd_Document(Storage::Version());
         readerCAF.ReadFile(m_name.c_str());
         readerCAF.Transfer(document);
-        
+
         STEPControl_Reader reader = readerCAF.Reader();
-        
-        WS = reader.WS();
+
+        WS    = reader.WS();
         Model = WS->Model();
-        TR = WS->TransferReader();
-        TP = TR->TransientProcess();
-        XCAFDoc_DocumentTool::ShapeTool( document->Main() );
-        
+        TR    = WS->TransferReader();
+        TP    = TR->TransientProcess();
+        XCAFDoc_DocumentTool::ShapeTool(document->Main());
+
         reader.NbRootsForTransfer();
         reader.TransferRoots();
         shape = reader.OneShape();
@@ -107,18 +108,18 @@ bool CADSystemOCE::LoadCAD()
     }
 
     TopExp_Explorer explr;
-    
+
     TopTools_DataMapOfShapeShape modShape;
-    
+
     BRepBuilderAPI_Sewing sew(1e-1);
-    
+
     for (explr.Init(shape, TopAbs_FACE); explr.More(); explr.Next())
     {
         sew.Add(explr.Current());
     }
-    
+
     sew.Perform();
-    
+
     for (explr.Init(shape, TopAbs_FACE); explr.More(); explr.Next())
     {
         if (sew.IsModified(explr.Current()))
@@ -126,30 +127,18 @@ bool CADSystemOCE::LoadCAD()
             modShape.Bind(explr.Current(), sew.Modified(explr.Current()));
         }
     }
-    
-    shape = sew.SewedShape();  
+
+    shape = sew.SewedShape();
 
     int shell = 0;
     for (explr.Init(shape, TopAbs_SHELL); explr.More(); explr.Next())
     {
         shell++;
     }
-    
-    ASSERTL0(shell == 1, "Was not able to form a topological water tight shell");
-    
-    /*BRepBuilderAPI_NurbsConvert bsc;
-    bsc.Perform(shape);
-    for (explr.Init(shape, TopAbs_FACE); explr.More(); explr.Next())
-    {
-        TopoDS_Shape mod = bsc.ModifiedShape(explr.Current());
-        if (mod.IsNotEqual(explr.Current()))
-        {
-            modShape.Bind(explr.Current(), mod);
-        }
-    }
-    
-    shape = bsc.Shape();*/
-    
+
+    ASSERTL0(shell == 1,
+             "Was not able to form a topological water tight shell");
+
     // build map of verticies
     for (explr.Init(shape, TopAbs_VERTEX); explr.More(); explr.Next())
     {
@@ -160,7 +149,7 @@ bool CADSystemOCE::LoadCAD()
         }
         int i = mapOfVerts.Add(v);
         AddVert(i, v);
-    }   
+    }
 
     // For each face of the geometry, get the local edges which bound it. If
     // they are valid (their type != 7), then add them to an edge map. This
@@ -173,7 +162,7 @@ bool CADSystemOCE::LoadCAD()
             continue;
         }
 
-        if(!BRep_Tool::Degenerated(TopoDS::Edge(e)))
+        if (!BRep_Tool::Degenerated(TopoDS::Edge(e)))
         {
             int i = mapOfEdges.Add(e);
             AddCurve(i, e);
@@ -188,30 +177,36 @@ bool CADSystemOCE::LoadCAD()
 
         AddSurf(i, f);
     }
-    
-    // attemps to extract patch names from STEP file
-    
-    Standard_Integer nb = Model->NbEntities();
-    for (Standard_Integer i = 1; i <= nb; i++)
-    {
-        if ( ! Model->Value(i)->DynamicType()->SubType("StepRepr_RepresentationItem")) continue;
 
-        Handle(StepRepr_RepresentationItem) enti = Handle(StepRepr_RepresentationItem)::DownCast( Model->Value(i));
+    // attemps to extract patch names from STEP file
+
+    int nb = Model->NbEntities();
+    for (int i = 1; i <= nb; i++)
+    {
+        if (!Model->Value(i)->DynamicType()->SubType(
+                "StepRepr_RepresentationItem"))
+            continue;
+
+        Handle(StepRepr_RepresentationItem) enti =
+            Handle(StepRepr_RepresentationItem)::DownCast(Model->Value(i));
         Handle(TCollection_HAsciiString) name = enti->Name();
 
-        if (name->IsEmpty()) continue;
+        if (name->IsEmpty())
+            continue;
 
-        Handle(Transfer_Binder) binder = TP->Find( Model->Value(i));
-        if ( binder.IsNull() || ! binder->HasResult() ) continue;
+        Handle(Transfer_Binder) binder = TP->Find(Model->Value(i));
+        if (binder.IsNull() || !binder->HasResult())
+            continue;
 
-        TopoDS_Shape S = TransferBRep::ShapeResult ( TP, binder );
+        TopoDS_Shape S = TransferBRep::ShapeResult(TP, binder);
 
-        if ( S.IsNull() ) continue;
+        if (S.IsNull())
+            continue;
 
-        if ( S.ShapeType() ==  TopAbs_FACE )
+        if (S.ShapeType() == TopAbs_FACE)
         {
             string s(name->ToCString());
-            
+
             if (mapOfFaces.Contains(S))
             {
                 int id = mapOfFaces.FindIndex(S);
@@ -219,7 +214,7 @@ bool CADSystemOCE::LoadCAD()
                 m_surfs[id]->SetName(s);
             }
             else
-            {                
+            {
                 filterModShape(modShape, S);
                 if (mapOfFaces.Contains(S))
                 {
@@ -230,9 +225,9 @@ bool CADSystemOCE::LoadCAD()
                 {
                     ASSERTL0(false, "Name error");
                 }
-            }            
-        }        
-    } 
+            }
+        }
+    }
 
     // attempts to identify properties of the vertex on the degen edge
     for (int i = 1; i <= mapOfFaces.Extent(); i++)
@@ -261,24 +256,13 @@ bool CADSystemOCE::LoadCAD()
     }
 
     // This checks that all edges are bound by two surfaces, sanity check.
-    bool failed = false;
     if (!m_2d)
     {
-        map<int, CADCurveSharedPtr>::iterator it;
-        for (it = m_curves.begin(); it != m_curves.end(); it++)
+        for (auto &i : m_curves)
         {
-            if(it->second->GetAdjSurf().size() !=  2)
-            {
-                cout << "topology error " <<  it->second->GetAdjSurf().size() <<  " : ";
-                vector<CADVertSharedPtr> vs = it->second->GetVertex();
-                Array<OneD,  NekDouble> loc = vs[0]->GetLoc();
-                cout << loc[0] << " " << loc[1] << " " << loc[2] <<  " : ";
-                loc = vs[1]->GetLoc();
-                cout << loc[0] << " " << loc[1] << " " << loc[2] <<  endl;
-                failed = true;
-            }
+            ASSERTL0(i.second->GetAdjSurf().size() == 2,
+                     "topolgy error found, surface not closed");
         }
-        ASSERTL0(!failed, "topolgy errors");
     }
 
     return true;
@@ -518,7 +502,6 @@ TopoDS_Shape CADSystemOCE::BuildNACA(string naca)
 
     ShapeFix_Face sf(face.Face());
     sf.FixOrientation();
-
 
     return sf.Face();
 }

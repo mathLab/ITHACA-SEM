@@ -112,6 +112,8 @@ if(OCC_FOUND)
     TKSTEPAttr
     TKHLR
     TKFeat
+    TKXCAF
+    TKXDESTEP
   )
   if(OCC_VERSION_STRING VERSION_LESS 6.7)
     MESSAGE(SEND_ERROR "OCC version too low")

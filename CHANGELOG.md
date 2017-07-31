@@ -24,6 +24,7 @@ v5.0.0
 - Fix issue with reading CCM files due to definition of default arrays 
   rather than a vector (!797)
 - Fix inverted triangles and small memory issue in surface meshing (!798)
+- Update for the CAD system, more advance self-healing and analysis (!822)
 
 **FieldConvert**:
 - Add input module for Semtex field files (!777)

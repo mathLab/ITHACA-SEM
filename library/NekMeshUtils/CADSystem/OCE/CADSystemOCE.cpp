@@ -111,33 +111,36 @@ bool CADSystemOCE::LoadCAD()
 
     TopTools_DataMapOfShapeShape modShape;
 
-    BRepBuilderAPI_Sewing sew(1e-1);
-
-    for (explr.Init(shape, TopAbs_FACE); explr.More(); explr.Next())
+    if(!m_2d)
     {
-        sew.Add(explr.Current());
-    }
+        BRepBuilderAPI_Sewing sew(1e-1);
 
-    sew.Perform();
-
-    for (explr.Init(shape, TopAbs_FACE); explr.More(); explr.Next())
-    {
-        if (sew.IsModified(explr.Current()))
+        for (explr.Init(shape, TopAbs_FACE); explr.More(); explr.Next())
         {
-            modShape.Bind(explr.Current(), sew.Modified(explr.Current()));
+            sew.Add(explr.Current());
         }
-    }
 
-    shape = sew.SewedShape();
+        sew.Perform();
 
-    int shell = 0;
-    for (explr.Init(shape, TopAbs_SHELL); explr.More(); explr.Next())
-    {
-        shell++;
-    }
+        for (explr.Init(shape, TopAbs_FACE); explr.More(); explr.Next())
+        {
+            if (sew.IsModified(explr.Current()))
+            {
+                modShape.Bind(explr.Current(), sew.Modified(explr.Current()));
+            }
+        }
 
-    ASSERTL0(shell == 1,
+        shape = sew.SewedShape();
+
+        int shell = 0;
+        for (explr.Init(shape, TopAbs_SHELL); explr.More(); explr.Next())
+        {
+            shell++;
+        }
+
+        ASSERTL0(shell == 1,
              "Was not able to form a topological water tight shell");
+    }
 
     // build map of verticies
     for (explr.Init(shape, TopAbs_VERTEX); explr.More(); explr.Next())
@@ -179,51 +182,53 @@ bool CADSystemOCE::LoadCAD()
     }
 
     // attemps to extract patch names from STEP file
-
-    int nb = Model->NbEntities();
-    for (int i = 1; i <= nb; i++)
+    if(m_naca.size() == 0)
     {
-        if (!Model->Value(i)->DynamicType()->SubType(
-                "StepRepr_RepresentationItem"))
-            continue;
-
-        Handle(StepRepr_RepresentationItem) enti =
-            Handle(StepRepr_RepresentationItem)::DownCast(Model->Value(i));
-        Handle(TCollection_HAsciiString) name = enti->Name();
-
-        if (name->IsEmpty())
-            continue;
-
-        Handle(Transfer_Binder) binder = TP->Find(Model->Value(i));
-        if (binder.IsNull() || !binder->HasResult())
-            continue;
-
-        TopoDS_Shape S = TransferBRep::ShapeResult(TP, binder);
-
-        if (S.IsNull())
-            continue;
-
-        if (S.ShapeType() == TopAbs_FACE)
+        int nb = Model->NbEntities();
+        for (int i = 1; i <= nb; i++)
         {
-            string s(name->ToCString());
+            if (!Model->Value(i)->DynamicType()->SubType(
+                    "StepRepr_RepresentationItem"))
+                continue;
 
-            if (mapOfFaces.Contains(S))
-            {
-                int id = mapOfFaces.FindIndex(S);
+            Handle(StepRepr_RepresentationItem) enti =
+                Handle(StepRepr_RepresentationItem)::DownCast(Model->Value(i));
+            Handle(TCollection_HAsciiString) name = enti->Name();
 
-                m_surfs[id]->SetName(s);
-            }
-            else
+            if (name->IsEmpty())
+                continue;
+
+            Handle(Transfer_Binder) binder = TP->Find(Model->Value(i));
+            if (binder.IsNull() || !binder->HasResult())
+                continue;
+
+            TopoDS_Shape S = TransferBRep::ShapeResult(TP, binder);
+
+            if (S.IsNull())
+                continue;
+
+            if (S.ShapeType() == TopAbs_FACE)
             {
-                filterModShape(modShape, S);
+                string s(name->ToCString());
+
                 if (mapOfFaces.Contains(S))
                 {
                     int id = mapOfFaces.FindIndex(S);
+
                     m_surfs[id]->SetName(s);
                 }
                 else
                 {
-                    ASSERTL0(false, "Name error");
+                    filterModShape(modShape, S);
+                    if (mapOfFaces.Contains(S))
+                    {
+                        int id = mapOfFaces.FindIndex(S);
+                        m_surfs[id]->SetName(s);
+                    }
+                    else
+                    {
+                        ASSERTL0(false, "Name error");
+                    }
                 }
             }
         }

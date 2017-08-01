@@ -248,6 +248,11 @@ public:
             return it->second;
         }
     }
+    /// Is this element connected to a boundary 
+    NEKMESHUTILS_EXPORT bool HasBoundaryLinks()
+    {
+        return m_boundaryLinks.size() > 0;
+    }
     /// Set the list of tags associated with this element.
     NEKMESHUTILS_EXPORT void SetTagList(const std::vector<int> &tags)
     {

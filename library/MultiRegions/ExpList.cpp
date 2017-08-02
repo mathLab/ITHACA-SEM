@@ -2892,7 +2892,6 @@ namespace Nektar
                             Array<OneD, NekDouble> &bndElmt)
         {
             int n, cnt, nq;
-            Array<OneD, NekDouble> tmp1, tmp2;
             
             Array<OneD, int> ElmtID,EdgeID;
             GetBoundaryToElmtMap(ElmtID,EdgeID);
@@ -2920,8 +2919,8 @@ namespace Nektar
             {
                 nq = GetExp(ElmtID[cnt+n])->GetTotPoints();
                 offsetPhys = GetPhys_Offset(ElmtID[cnt+n]);
-                Vmath::Vcopy(nq, tmp1 = phys    + offsetPhys, 1,
-                                 tmp2 = bndElmt + offsetElmt, 1);
+                Vmath::Vcopy(nq, &phys[offsetPhys],    1,
+                                 &bndElmt[offsetElmt], 1);
                 offsetElmt += nq;
             }
         }

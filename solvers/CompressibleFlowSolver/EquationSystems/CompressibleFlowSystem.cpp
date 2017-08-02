@@ -1000,9 +1000,18 @@ namespace Nektar
                 tmp[i] = m_fields[i]->GetPhys();
             }
 
+            Array<OneD, Array<OneD, NekDouble> > velocity(m_spacedim);
+            Array<OneD, Array<OneD, NekDouble> > velFwd  (m_spacedim);
+            for (int i = 0; i < m_spacedim; ++i)
+            {
+                velocity[i] = Array<OneD, NekDouble> (nPhys);
+                velFwd[i]   = Array<OneD, NekDouble> (nCoeffs);
+            }
+
             Array<OneD, NekDouble> pressure(nPhys), soundspeed(nPhys), mach(nPhys);
             Array<OneD, NekDouble> sensor(nPhys), SensorKappa(nPhys);
 
+            m_varConv->GetVelocityVector(tmp, velocity);
             m_varConv->GetPressure  (tmp, pressure);
             m_varConv->GetSoundSpeed(tmp, pressure, soundspeed);
             m_varConv->GetMach      (tmp, soundspeed, mach);
@@ -1014,6 +1023,14 @@ namespace Nektar
 
             Array<OneD, NekDouble> pFwd(nCoeffs), sFwd(nCoeffs), mFwd(nCoeffs);
             Array<OneD, NekDouble> sensFwd(nCoeffs);
+
+            string velNames[3] = {"u", "v", "w"};
+            for (int i = 0; i < m_spacedim; ++i)
+            {
+                m_fields[0]->FwdTrans_IterPerExp(velocity[i], velFwd[i]);
+                variables.push_back(velNames[i]);
+                fieldcoeffs.push_back(velFwd[i]);
+            }
 
             m_fields[0]->FwdTrans_IterPerExp(pressure,   pFwd);
             m_fields[0]->FwdTrans_IterPerExp(soundspeed, sFwd);

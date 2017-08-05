@@ -167,7 +167,8 @@ possibly also Reynolds stresses) into single file;
 \item \inltt{innerproduct}: take the inner product between one or a series of fields with another field (or series of fields).
 \item \inltt{interpfield}: Interpolates one field to another, requires fromxml, fromfld to be defined;
 \item \inltt{interppointdatatofld}: Interpolates given discrete data using a finite difference approximation to a fld file given an xml file;
-\item \inltt{interppoints}: Interpolates a set of points to another, requires fromfld and fromxml to be defined, a line or plane of points can be defined;
+\item \inltt{interppoints}: Interpolates a field to a set of points. Requires fromfld, fromxml to be defined, and a topts, line, plane or block of target points;
+\item \inltt{interpptstopts}: Interpolates a set of points to another, requires fromfld and fromxml to be defined, a line or plane of points can be defined;
 \item \inltt{isocontour}: Extract an isocontour of ``fieldid'' variable and at value ``fieldvalue''. Optionally ``fieldstr'' can be specified for a string defiition or ``smooth'' for smoothing;
 \item \inltt{jacobianenergy}: Shows high frequency energy of Jacobian;
 \item \inltt{qualitymetric}: Evaluate a quality metric of the underlying mesh to show mesh quality;

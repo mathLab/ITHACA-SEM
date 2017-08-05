@@ -412,6 +412,9 @@ TopoDS_Shape CADSystemOCE::BuildGeo(string geo)
     map<int, string> points;
     map<int, string> lines;
     map<int, string> splines;
+    map<int, string> bsplines;
+    map<int, string> circles;
+    map<int, string> ellipses;
     map<int, string> loops;
     map<int, string> surfs;
 
@@ -464,6 +467,18 @@ TopoDS_Shape CADSystemOCE::BuildGeo(string geo)
         else if (boost::iequals(type, "Spline"))
         {
             splines[id] = var;
+        }
+        else if (boost::iequals(type, "BSpline"))
+        {
+            bsplines[id] = var;
+        }
+        else if (boost::iequals(type, "Circle"))
+        {
+            circles[id] = var;
+        }
+        else if (boost::iequals(type, "Ellipse"))
+        {
+            ellipses[id] = var;
         }
         else if (boost::iequals(type, "Line Loop"))
         {
@@ -520,6 +535,109 @@ TopoDS_Shape CADSystemOCE::BuildGeo(string geo)
         Handle(Geom_BSplineCurve) curve = spline.Curve();
 
         BRepBuilderAPI_MakeEdge em(curve);
+        cEdges[it->first] = em.Edge();
+    }
+    for (it = bsplines.begin(); it != bsplines.end(); it++)
+    {
+        vector<unsigned int> data;
+        ParseUtils::GenerateUnOrderedVector(it->second.c_str(), data);
+
+        TColgp_Array1OfPnt pointArray(0, data.size() - 1);
+
+        for (int i = 0; i < data.size(); i++)
+        {
+            pointArray.SetValue(i, cPoints[data[i]]);
+        }
+        Handle(Geom_BezierCurve) curve = new Geom_BezierCurve(pointArray);
+
+        BRepBuilderAPI_MakeEdge em(curve);
+        cEdges[it->first] = em.Edge();
+    }
+    for (it = circles.begin(); it != circles.end(); it++)
+    {
+        vector<unsigned int> data;
+        ParseUtils::GenerateUnOrderedVector(it->second.c_str(), data);
+
+        ASSERTL0(data.size() == 3, "Wrong definition of circle arc");
+        gp_Pnt start  = cPoints[data[0]];
+        gp_Pnt centre = cPoints[data[1]];
+        gp_Pnt end    = cPoints[data[2]];
+
+        NekDouble r1 = start.Distance(centre);
+        NekDouble r2 = end.Distance(centre);
+        ASSERTL0(fabs(r1 - r2) < 1e-7, "Non-matching radii");
+
+        gp_Circ c;
+        c.SetLocation(centre);
+        c.SetRadius(r1);
+        Handle(Geom_Circle) gc = new Geom_Circle(c);
+
+        ShapeAnalysis_Curve sac;
+        NekDouble p1, p2;
+        sac.Project(gc, start, 1e-8, start, p1);
+        sac.Project(gc, end, 1e-8, end, p2);
+
+        // Make sure the arc is always of length less than pi
+        if ((p1 > p2) ^ (fabs(p2 - p1) > M_PI))
+        {
+            swap(p1, p2);
+        }
+
+        Handle(Geom_TrimmedCurve) tc = new Geom_TrimmedCurve(gc, p1, p2, false);
+
+        BRepBuilderAPI_MakeEdge em(tc);
+        em.Build();
+        cEdges[it->first] = em.Edge();
+    }
+    for (it = ellipses.begin(); it != ellipses.end(); it++)
+    {
+        vector<unsigned int> data;
+        ParseUtils::GenerateUnOrderedVector(it->second.c_str(), data);
+
+        ASSERTL0(data.size() == 4, "Wrong definition of ellipse arc");
+        gp_Pnt start  = cPoints[data[0]];
+        gp_Pnt centre = cPoints[data[1]];
+        // data[2] useless??
+        gp_Pnt end = cPoints[data[3]];
+
+        NekDouble major = start.Distance(centre);
+
+        gp_Vec v1(centre, start);
+        gp_Vec v2(centre, end);
+
+        gp_Vec vx(1.0, 0.0, 0.0);
+        NekDouble angle = v1.Angle(vx);
+        // Check for negative rotation
+        if (v1.Y() < 0)
+        {
+            angle *= -1;
+        }
+
+        v2.Rotate(gp_Ax1(), angle);
+        NekDouble minor = fabs(v2.Y() / sqrt(1.0 - v2.X() * v2.X() / (major * major)));
+
+        gp_Elips e;
+        e.SetLocation(centre);
+        e.SetMajorRadius(major);
+        e.SetMinorRadius(minor);
+        e.Rotate(e.Axis(), angle);
+        Handle(Geom_Ellipse) ge = new Geom_Ellipse(e);
+
+        ShapeAnalysis_Curve sac;
+        NekDouble p1, p2;
+        sac.Project(ge, start, 1e-8, start, p1);
+        sac.Project(ge, end, 1e-8, end, p2);
+
+        // Make sure the arc is always of length less than pi
+        if (fabs(p2 - p1) > M_PI)
+        {
+            swap(p1, p2);
+        }
+
+        Handle(Geom_TrimmedCurve) tc = new Geom_TrimmedCurve(ge, p1, p2, true);
+
+        BRepBuilderAPI_MakeEdge em(tc);
+        em.Build();
         cEdges[it->first] = em.Edge();
     }
 

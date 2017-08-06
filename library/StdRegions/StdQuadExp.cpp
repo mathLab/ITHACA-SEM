@@ -1554,66 +1554,67 @@ namespace Nektar
             StdQuadExp OrthoExp(Ba,Bb);
 
             //SVV parameters loaded from the .xml case file
-            NekDouble  SvvDiffCoeff  = mkey.GetConstFactor(eFactorSVVDiffCoeff);
             Array<OneD, NekDouble> orthocoeffs(OrthoExp.GetNcoeffs());
 
-            if(mkey.HasVarCoeff(eVarCoeffLaplacian)) // Rodrigo's svv mapping
+            // project onto modal  space.
+            OrthoExp.FwdTrans(array,orthocoeffs);
+            
+            if(mkey.ConstFactorExists(eFactorSVVPowerKerDiffCoeff)) // Rodrigo's power kernel
             {
-                Array<OneD, NekDouble> sqrt_varcoeff(qa*qb);
-                Array<OneD, NekDouble> tmp(qa*qb);
-
-                Vmath::Vsqrt(qa * qb,
-                             mkey.GetVarCoeff(eVarCoeffLaplacian), 1,
-                             sqrt_varcoeff,                        1);
-
-                //Vmath::Fill(qa*qb,Vmath::Vmax(qa*qb,sqrt_varcoeff,1),
-                //sqrt_varcoeff,1);
-
-                // multiply by sqrt(Variable Coefficient) containing h v /p
-                Vmath::Vmul(qa*qb,sqrt_varcoeff,1,array,1,tmp,1);
-
-                // project onto modal  space.
-                OrthoExp.FwdTrans(tmp,orthocoeffs);
-
+                NekDouble cutoff = mkey.GetConstFactor(eFactorSVVCutoffRatio); 
+                NekDouble  SvvDiffCoeff  =
+                    mkey.GetConstFactor(eFactorSVVPowerKerDiffCoeff)*
+                    mkey.GetConstFactor(eFactorSVVDiffCoeff);
+                
                 for(int j = 0; j < nmodes_a; ++j)
                 {
                     for(int k = 0; k < nmodes_b; ++k)
                     {
                         // linear space but makes high modes very negative
-                        orthocoeffs[j*nmodes_b+k] *=
-                            (1.0+SvvDiffCoeff*
-                             pow(j/(nmodes_a-1)+k/(nmodes_b-1),0.5*nmodes));
-                        // bilinear blend
-                        //orthocoeffs[j*nmodes_b+k] *=
-                        //(1.0 + SvvDiffCoeff
-                        //      *pow(j/(NekDouble)(nmodes_a-1.0),0.5*nmodes)
-                        //      *pow(k/(NekDouble)(nmodes_b-1.0),0.5*nmodes));
+                        NekDouble fac = std::max(
+                                    pow((1.0*j)/(nmodes_a-1),cutoff*nmodes_a),
+                                    pow((1.0*k)/(nmodes_b-1),cutoff*nmodes_b));
+
+                        orthocoeffs[j*nmodes_b+k] *= SvvDiffCoeff * fac;
                     }
                 }
-
-                // backward transform to physical space
-                OrthoExp.BwdTrans(orthocoeffs,tmp);
-
-                // multiply by sqrt(Variable Coefficient) containing h v /p
-                // - split to keep symmetry
-                Vmath::Vmul(qa*qb,sqrt_varcoeff,1,tmp,1,array,1);
+            }
+            else if(mkey.ConstFactorExists(eFactorSVVDGKerDiffCoeff)) // Rodrigo/mansoor's DG kernel
+            {
+                NekDouble cutoff = mkey.GetConstFactor(eFactorSVVCutoffRatio); 
+                NekDouble  SvvDiffCoeff  =
+                    mkey.GetConstFactor(eFactorSVVDGKerDiffCoeff)*
+                    mkey.GetConstFactor(eFactorSVVDiffCoeff);
+                int max_ab = max(nmodes_a-SVVDGFiltermodesmin,
+                                 nmodes_b-SVVDGFiltermodesmin);
+                max_ab = max(max_ab,0);
+                max_ab = min(max_ab,SVVDGFiltermodesmax-SVVDGFiltermodesmin);
+                
+                for(int j = 0; j < nmodes_a; ++j)
+                {
+                    for(int k = 0; k < nmodes_b; ++k)
+                    {
+                        int maxjk = max(j,k);
+                        maxjk = min(maxjk,SVVDGFiltermodesmax-1);
+                        
+                        orthocoeffs[j*nmodes_b+k] *= SvvDiffCoeff * SVVDGFilter[max_ab][maxjk];
+                    }
+                }
             }
             else
             {
-                //for the "old" implementation
+                NekDouble  SvvDiffCoeff = mkey.GetConstFactor(eFactorSVVDiffCoeff);
+                //Exponential Kernel implementation
                 int cutoff = (int) (mkey.GetConstFactor(eFactorSVVCutoffRatio)*
                                                         min(nmodes_a,nmodes_b));
 
-                // project onto modal  space.
-                OrthoExp.FwdTrans(array,orthocoeffs);
-
                 //counters for scanning through orthocoeffs array
-                int j, k, cnt = 0;
+                int cnt = 0;
 
                 //------"New" Version August 22nd '13--------------------
-                for(j = 0; j < nmodes_a; ++j)
+                for(int j = 0; j < nmodes_a; ++j)
                 {
-                    for(k = 0; k < nmodes_b; ++k)
+                    for(int k = 0; k < nmodes_b; ++k)
                     {
                         if(j + k >= cutoff)//to filter out only the "high-modes"
                         {
@@ -1629,10 +1630,10 @@ namespace Nektar
                         cnt++;
                     }
                 }
-
-                // backward transform to physical space
-                OrthoExp.BwdTrans(orthocoeffs,array);
             }
+
+            // backward transform to physical space
+            OrthoExp.BwdTrans(orthocoeffs,array);
         }
 
         void StdQuadExp::v_ExponentialFilter(

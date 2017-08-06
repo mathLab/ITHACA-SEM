@@ -43,6 +43,10 @@ namespace Nektar
 {
     namespace MultiRegions
     {
+
+        typedef std::map<StdRegions::ConstFactorType, Array<OneD, NekDouble> > VarFactorsMap;
+        static VarFactorsMap NullVarFactorsMap;
+
         /// Describe a linear system.
         class GlobalLinSysKey : public GlobalMatrixKey
         {
@@ -51,7 +55,8 @@ namespace Nektar
                             const AssemblyMapSharedPtr &locToGloMap
                                         = NullAssemblyMapSharedPtr,
                             const StdRegions::ConstFactorMap &factors = StdRegions::NullConstFactorMap,
-                            const StdRegions::VarCoeffMap &varCoeffs = StdRegions::NullVarCoeffMap);
+                            const StdRegions::VarCoeffMap &varCoeffs = StdRegions::NullVarCoeffMap,
+                            const VarFactorsMap &varFactos = NullVarFactorsMap);
 
             /// Copy constructor.
             MULTI_REGIONS_EXPORT GlobalLinSysKey(const GlobalLinSysKey &key);
@@ -64,12 +69,20 @@ namespace Nektar
             /// Return the associated solution type.
             inline GlobalSysSolnType  GetGlobalSysSolnType() const;
 
+            MULTI_REGIONS_EXPORT int GetNVarFactors() const;
+
+            MULTI_REGIONS_EXPORT const Array<OneD, const NekDouble> & GetVarFactors(const StdRegions::ConstFactorType& coeff) const;
+            MULTI_REGIONS_EXPORT const VarFactorsMap & GetVarFactors() const;
+
         protected:
             /// Store the solution type associated with the linear system. This
             /// may be none, full matrix, static condensation or multi-level
             /// static condensation.
             GlobalSysSolnType        m_solnType;
             
+            VarFactorsMap            m_varFactors;
+
+            std::vector<std::size_t> m_varFactors_hashes; 
         private:
         
         };
@@ -83,6 +96,22 @@ namespace Nektar
             return m_solnType; 
         }
 
+
+        inline int GlobalLinSysKey::GetNVarFactors() const
+        {
+            return m_varFactors.size();
+        }
+
+        inline const Array<OneD, const NekDouble> & GlobalLinSysKey::GetVarFactors(const StdRegions::ConstFactorType &factor) const
+        {
+            VarFactorsMap::const_iterator found = m_varFactors.find(factor);
+            return (*found).second;
+        }
+
+        inline const VarFactorsMap & GlobalLinSysKey::GetVarFactors() const
+        {
+            return m_varFactors;
+        }
     }
 }
 

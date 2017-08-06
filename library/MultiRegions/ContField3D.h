@@ -184,6 +184,7 @@ namespace Nektar
                     const FlagList &flags,
                     const StdRegions::ConstFactorMap &factors,
                     const StdRegions::VarCoeffMap &varcoeff,
+                    const MultiRegions::VarFactorsMap &varfactors,
                     const Array<OneD, const NekDouble> &dirForcing,
                     const bool PhysSpaceForcing);
             virtual void v_GeneralMatrixOp(

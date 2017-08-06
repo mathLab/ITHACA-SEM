@@ -269,6 +269,7 @@ namespace Nektar
             const FlagList &flags,
             const StdRegions::ConstFactorMap &factors,
             const StdRegions::VarCoeffMap &varcoeff,
+            const MultiRegions::VarFactorsMap &varfactors,
             const Array<OneD, const NekDouble> &dirForcing,
             const bool PhysSpaceForcing)
         {
@@ -306,7 +307,8 @@ namespace Nektar
                     m_planes[n]->HelmSolve(
                         wfce,
                         e_out = outarray + cnt1,
-                        flags, new_factors, varcoeff, dirForcing,
+                        flags, new_factors, varcoeff, varfactors,
+                        dirForcing,
                         PhysSpaceForcing);
                 }
 

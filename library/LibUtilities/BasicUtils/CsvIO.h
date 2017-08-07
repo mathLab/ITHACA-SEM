@@ -1,11 +1,12 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File Projection.cpp
+// File CsvIO.h
 //
 // For more information, please see: http://www.nektar.info
 //
 // The MIT License
 //
+// Copyright (c) 2017 Kilian Lackhove
 // Copyright (c) 2006 Division of Applied Mathematics, Brown University (USA),
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
@@ -29,57 +30,61 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Projection solve routines
+// Description: Csv IO
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <ADRSolver/EquationSystems/Projection.h>
+#ifndef NEKTAR_LIB_UTILITIES_BASIC_UTILS_CSVIO_H
+#define NEKTAR_LIB_UTILITIES_BASIC_UTILS_CSVIO_H
 
-using namespace std;
+#include <string>
+#include <vector>
+
+#include <boost/shared_ptr.hpp>
+
+
+#include <LibUtilities/Communication/Comm.h>
+
+#include <LibUtilities/BasicUtils/ErrorUtil.hpp>
+#include <LibUtilities/BasicUtils/SharedArray.hpp>
+#include <LibUtilities/BasicUtils/ParseUtils.hpp>
+#include <LibUtilities/BasicUtils/PtsField.h>
+#include <LibUtilities/BasicUtils/PtsIO.h>
 
 namespace Nektar
 {
-string Projection::className =
-    GetEquationSystemFactory().RegisterCreatorFunction("Projection",
-                                                       Projection::create);
-Projection::Projection(const LibUtilities::SessionReaderSharedPtr &pSession)
-    : EquationSystem(pSession)
+namespace LibUtilities
 {
-}
+using namespace std;
 
-void Projection::v_InitObject()
+
+class CsvIO : public PtsIO
 {
-    EquationSystem::v_InitObject();
+public:
+    LIB_UTILITIES_EXPORT CsvIO(LibUtilities::CommSharedPtr pComm,
+                               bool sharedFilesystem = false);
 
-    GetFunction("Forcing")->Evaluate(m_session->GetVariables(), m_fields);
-}
-
-Projection::~Projection()
-{
-}
-
-void Projection::v_DoSolve()
-{
-    for (int i = 0; i < m_fields.num_elements(); ++i)
+    LIB_UTILITIES_EXPORT virtual ~CsvIO()
     {
-        // Zero field so initial conditions are zero
-        Vmath::Zero(m_fields[i]->GetNcoeffs(), m_fields[i]->UpdateCoeffs(), 1);
-        m_fields[i]->FwdTrans(m_fields[i]->GetPhys(),
-                              m_fields[i]->UpdateCoeffs());
-        m_fields[i]->SetPhysState(false);
     }
-}
 
-void Projection::v_GenerateSummary(SolverUtils::SummaryList &s)
-{
-    EquationSystem::SessionSummary(s);
-    for (int i = 0; i < m_fields.num_elements(); ++i)
+    LIB_UTILITIES_EXPORT void Write(const string &outFile,
+                                    const PtsFieldSharedPtr &ptsField,
+                                    const bool backup = false);
+
+
+
+protected:
+    LIB_UTILITIES_EXPORT virtual void v_ImportFieldData(const string inFile,
+                                              PtsFieldSharedPtr &ptsField);
+
+    LIB_UTILITIES_EXPORT virtual std::string GetFileEnding() const
     {
-        stringstream name;
-        name << "Forcing func [" << i << "]";
-        SolverUtils::AddSummaryItem(
-            s, name.str(),
-            m_session->GetFunction("Forcing", i)->GetExpression());
-    }
+        return "csv";
+    };
+};
+
+typedef boost::shared_ptr<CsvIO> CsvIOSharedPtr;
 }
 }
+#endif

@@ -80,10 +80,14 @@ public:
                                     const PtsFieldSharedPtr &ptsField,
                                     const bool backup = false);
 
-    LIB_UTILITIES_EXPORT void ImportFieldData(TiXmlDocument docInput,
+    LIB_UTILITIES_EXPORT void ImportFieldData(const string inFile,
                                               PtsFieldSharedPtr &ptsField);
 
 protected:
+
+    LIB_UTILITIES_EXPORT virtual void v_ImportFieldData(const string inFile,
+                                              PtsFieldSharedPtr &ptsField);
+
     LIB_UTILITIES_EXPORT void SetUpFieldMetaData(const std::string outname);
 
     LIB_UTILITIES_EXPORT virtual std::string GetFileEnding() const

@@ -61,7 +61,7 @@ namespace Nektar
         vel.push_back("Vz");
         vel.resize(m_spacedim);
 
-        EvaluateFunction(vel, m_velocity, "AdvectionVelocity");
+        GetFunction( "AdvectionVelocity")->Evaluate(vel,  m_velocity);
     }
 	
 	void EigenValuesAdvection::v_DoInitialise()

@@ -8,6 +8,11 @@ v5.0.0
   expansion in pyramids (!750)
 - Significant overhaul of CMake infrastructure (!770, !804)
 - Fix ThridpartyCCM options (!802)
+- Fix Windows CRLF tokens in GEO reader and improve comment handling (!805)
+- Use chrono in Timer (!807)
+- Fix caching of FUNCTION tags that read from file and provide the same
+  functionality in FUNCTIONs defined for forcings (!759)
+- Added native support for csv files in addititon to pts (!760)
 
 **NekMesh**:
 - Add feature to read basic 2D geo files as CAD (!731)
@@ -23,6 +28,8 @@ v5.0.0
 
 **FieldConvert**:
 - Add input module for Semtex field files (!777)
+- Fixed interppoints module (!760)
+- Move StreamFunction utility to a FieldConvert module (!809)
 
 **Documentation**:
 - Added the developer-guide repository as a submodule (!751)
@@ -35,6 +42,12 @@ v4.4.2
 **Library**
 - Fix ability to set default implementation in Collections and added an option 
   to set eNoCollections in FieldConvert as default (!789)
+- Fix performance issue in ProcessIsoContour in relation to memory consumption
+  (!821)
+- Fix performance issue with ExtractPhysToBndElmt (!796)
+
+**Utilities**
+- Fix vtkToFld missing dependency which prevented compiling with VTK 7.1 (!808)
 
 v4.4.1
 ------

@@ -80,8 +80,8 @@ void ForcingQuasi1D::v_InitObject(
     std::string  sFieldStr   = m_session->GetVariable(0);
     ASSERTL0(m_session->DefinesFunction(funcName, sFieldStr),
              "Variable '" + sFieldStr + "' not defined.");
-    EvaluateFunction(pFields, m_session, sFieldStr,
-                     m_geomFactor, funcName, 0.0);
+    GetFunction(pFields, m_session, funcName, true)
+        ->Evaluate(sFieldStr, m_geomFactor, 0.0);
     pFields[0]->PhysDeriv(MultiRegions::DirCartesianMap[0], m_geomFactor, tmp);
     Vmath::Vdiv(pFields[0]->GetTotPoints(), tmp, 1,
                                             m_geomFactor, 1,

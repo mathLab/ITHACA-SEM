@@ -33,6 +33,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <FieldUtils/Interpolator.h>
 #include <SolverUtils/Forcing/Forcing.h>
 
 using namespace std;

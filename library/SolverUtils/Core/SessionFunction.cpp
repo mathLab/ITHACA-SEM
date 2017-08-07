@@ -34,6 +34,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
+#include <FieldUtils/Interpolator.h>
 #include <SolverUtils/Core/SessionFunction.h>
 
 #include <LibUtilities/BasicUtils/VmathArray.hpp>

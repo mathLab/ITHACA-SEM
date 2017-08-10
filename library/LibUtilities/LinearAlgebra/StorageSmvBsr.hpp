@@ -104,8 +104,8 @@ namespace Nektar
                 const_iterator& operator++();
                 const IterType& operator*();
                 const IterType* operator->();
-                const bool operator==(const const_iterator& rhs);
-                const bool operator!=(const const_iterator& rhs);
+                bool operator==(const const_iterator& rhs);
+                bool operator!=(const const_iterator& rhs);
 
                 // one way conversion: iterator -> const_iterator
                 // operator const_iterator<T const, Tag>() const;
@@ -138,13 +138,13 @@ namespace Nektar
 
         LIB_UTILITIES_EXPORT ~StorageSmvBsr();
 
-        LIB_UTILITIES_EXPORT const IndexType GetRows() const;
-        LIB_UTILITIES_EXPORT const IndexType GetColumns() const;
-        LIB_UTILITIES_EXPORT const IndexType GetNumNonZeroEntries() const;
-        LIB_UTILITIES_EXPORT const IndexType GetNumStoredDoubles() const;
-        LIB_UTILITIES_EXPORT const IndexType GetBlkSize() const;
-        LIB_UTILITIES_EXPORT const DataType  GetFillInRatio() const;
-        LIB_UTILITIES_EXPORT const size_t GetMemoryUsage(IndexType nnz, IndexType nRows) const;
+        LIB_UTILITIES_EXPORT IndexType GetRows() const;
+        LIB_UTILITIES_EXPORT IndexType GetColumns() const;
+        LIB_UTILITIES_EXPORT IndexType GetNumNonZeroEntries() const;
+        LIB_UTILITIES_EXPORT IndexType GetNumStoredDoubles() const;
+        LIB_UTILITIES_EXPORT IndexType GetBlkSize() const;
+        LIB_UTILITIES_EXPORT DataType  GetFillInRatio() const;
+        LIB_UTILITIES_EXPORT size_t GetMemoryUsage(IndexType nnz, IndexType nRows) const;
 
         LIB_UTILITIES_EXPORT const_iterator begin() const;
         LIB_UTILITIES_EXPORT const_iterator end() const;

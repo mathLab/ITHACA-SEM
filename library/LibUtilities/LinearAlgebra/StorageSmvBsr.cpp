@@ -178,13 +178,13 @@ namespace Nektar
     }
 
     template<typename DataType>
-    const bool StorageSmvBsr<DataType>::const_iterator::operator==(const const_iterator& rhs)
+    bool StorageSmvBsr<DataType>::const_iterator::operator==(const const_iterator& rhs)
     {
         return m_iter.nnzindex == rhs.m_iter.nnzindex;
     }
 
     template<typename DataType>
-    const bool StorageSmvBsr<DataType>::const_iterator::operator!=(const const_iterator& rhs)
+    bool StorageSmvBsr<DataType>::const_iterator::operator!=(const const_iterator& rhs)
     {
         return !(m_iter.nnzindex == rhs.m_iter.nnzindex);
     }
@@ -266,45 +266,45 @@ namespace Nektar
 
 
     template<typename DataType>
-    const IndexType StorageSmvBsr<DataType>::GetRows() const
+    IndexType StorageSmvBsr<DataType>::GetRows() const
     {
         return m_blkRows*m_blkDim;
     }
 
     template<typename DataType>
-    const IndexType StorageSmvBsr<DataType>::GetColumns() const
+    IndexType StorageSmvBsr<DataType>::GetColumns() const
     {
         return m_blkCols*m_blkDim;
     }
 
     template<typename DataType>
-    const IndexType StorageSmvBsr<DataType>::GetNumNonZeroEntries() const
+    IndexType StorageSmvBsr<DataType>::GetNumNonZeroEntries() const
     {
         return m_nnz;
     }
 
     template<typename DataType>
-    const IndexType StorageSmvBsr<DataType>::GetBlkSize() const
+    IndexType StorageSmvBsr<DataType>::GetBlkSize() const
     {
         return m_blkDim;
     }
 
 
     template<typename DataType>
-    const IndexType StorageSmvBsr<DataType>::GetNumStoredDoubles() const
+    IndexType StorageSmvBsr<DataType>::GetNumStoredDoubles() const
     {
         return m_bnnz*m_blkDim*m_blkDim;
     }
 
     template<typename DataType>
-    const DataType StorageSmvBsr<DataType>::GetFillInRatio() const
+    DataType StorageSmvBsr<DataType>::GetFillInRatio() const
     {
         return (DataType)(m_bnnz*m_blkDim*m_blkDim)/(DataType)m_nnz;
     }
 
 
     template<typename DataType>
-    const size_t StorageSmvBsr<DataType>::GetMemoryUsage(IndexType nnz, IndexType nRows) const
+    size_t StorageSmvBsr<DataType>::GetMemoryUsage(IndexType nnz, IndexType nRows) const
     {
         return sizeof(DataType) *m_val.capacity()   +
                sizeof(IndexType)*m_indx.capacity() +

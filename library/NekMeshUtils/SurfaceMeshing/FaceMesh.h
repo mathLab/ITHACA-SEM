@@ -78,6 +78,11 @@ public:
      */
     bool ValidateCurves();
 
+    /**
+     * @brief validate the curve meshes considering the loops
+     */
+    void ValidateLoops();
+
 private:
 
     /**

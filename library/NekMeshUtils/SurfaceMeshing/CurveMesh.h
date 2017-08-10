@@ -82,7 +82,12 @@ public:
     /**
      * @brief execute meshing
      */
-    void Mesh();
+    void Mesh(bool forceThree = false);
+
+    /**
+     * @brief Delete old mesh and mesh with forceThree on
+     */
+    void ReMesh();
 
     /**
      * @brief get id of first node

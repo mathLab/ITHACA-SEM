@@ -66,8 +66,8 @@ namespace Nektar
                           const Array<OneD,const NekDouble> &in,
                                 Array<OneD,      NekDouble> &out);
 
-            MULTI_REGIONS_EXPORT const unsigned long GetMulCallsCounter() const;
-            MULTI_REGIONS_EXPORT const unsigned int  GetNumNonZeroEntries() const;
+            MULTI_REGIONS_EXPORT unsigned long GetMulCallsCounter() const;
+            MULTI_REGIONS_EXPORT unsigned int  GetNumNonZeroEntries() const;
 
         private:
             /// Pointer to a double-precision Nektar++ sparse matrix.

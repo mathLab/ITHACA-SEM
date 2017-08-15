@@ -60,8 +60,6 @@ ModuleKey ProcessEquiSpacedOutput::className =
 ProcessEquiSpacedOutput::ProcessEquiSpacedOutput(FieldSharedPtr f)
     : ProcessModule(f)
 {
-    f->m_setUpEquiSpacedFields = true;
-
     m_config["tetonly"] =
         ConfigOption(true, "NotSet", "Only process tetrahedral elements");
 
@@ -75,22 +73,25 @@ ProcessEquiSpacedOutput::~ProcessEquiSpacedOutput()
 
 void ProcessEquiSpacedOutput::Process(po::variables_map &vm)
 {
-    SetupEquiSpacedField();
-}
-
-void ProcessEquiSpacedOutput::SetupEquiSpacedField(void)
-{
-    if (m_f->m_verbose)
-    {
-        if (m_f->m_comm->TreatAsRankZero())
-        {
-            cout << "Interpolating fields to equispaced..." << endl;
-        }
-    }
     int nel = m_f->m_exp[0]->GetExpSize();
     if (!nel)
     {
-        m_f->m_fieldPts = LibUtilities::NullPtsField;
+        // Create empty PtsField
+        int nfields = m_f->m_variables.size();
+        int coordim = 3;
+
+        Array<OneD, Array<OneD, NekDouble> > pts(nfields + coordim);
+        for (int i = 0; i < nfields + coordim; ++i)
+        {
+            pts[i] = Array<OneD, NekDouble>(0);
+        }
+        vector<Array<OneD, int> > ptsConn;
+
+        m_f->m_fieldPts =
+            MemoryManager<LibUtilities::PtsField>::AllocateSharedPtr(
+                coordim, m_f->m_variables, pts);
+        m_f->m_fieldPts->SetPtsType(LibUtilities::ePtsTetBlock);
+        m_f->m_fieldPts->SetConnectivity(ptsConn);
         return;
     }
 
@@ -101,38 +102,15 @@ void ProcessEquiSpacedOutput::SetupEquiSpacedField(void)
 
     // Check if we have a homogeneous expansion
     bool homogeneous1D = false;
-    if (m_f->m_fielddef.size())
+    if (m_f->m_numHomogeneousDir == 1)
     {
-        if (m_f->m_fielddef[0]->m_numHomogeneousDir == 1)
-        {
-            coordim++;
-            shapedim++;
-            homogeneous1D = true;
-        }
-        else if (m_f->m_fielddef[0]->m_numHomogeneousDir == 2)
-        {
-            ASSERTL0(false, "Homegeneous2D case not supported");
-        }
+        coordim++;
+        shapedim++;
+        homogeneous1D = true;
     }
-    else
+    else if (m_f->m_numHomogeneousDir == 2)
     {
-        if (m_f->m_session->DefinesSolverInfo("HOMOGENEOUS"))
-        {
-            std::string HomoStr = m_f->m_session->GetSolverInfo("HOMOGENEOUS");
-
-            if ((HomoStr == "HOMOGENEOUS1D") || (HomoStr == "Homogeneous1D") ||
-                (HomoStr == "1D") || (HomoStr == "Homo1D"))
-            {
-                coordim++;
-                shapedim++;
-                homogeneous1D = true;
-            }
-            if ((HomoStr == "HOMOGENEOUS2D") || (HomoStr == "Homogeneous2D") ||
-                (HomoStr == "2D") || (HomoStr == "Homo2D"))
-            {
-                ASSERTL0(false, "Homegeneous2D case not supported");
-            }
-        }
+        ASSERTL0(false, "Homegeneous2D case not supported");
     }
 
     // set up the number of points in each element
@@ -150,7 +128,6 @@ void ProcessEquiSpacedOutput::SetupEquiSpacedField(void)
     LocalRegions::ExpansionSharedPtr e;
 
     // prepare PtsField
-    vector<std::string> fieldNames;
     vector<int> ppe;
     vector<Array<OneD, int> > ptsConn;
     int nfields;
@@ -347,14 +324,7 @@ void ProcessEquiSpacedOutput::SetupEquiSpacedField(void)
         cnt += newpoints;
     }
 
-    if (m_f->m_fielddef.size())
-    {
-        nfields = m_f->m_exp.size();
-    }
-    else // just the mesh points
-    {
-        nfields = 0;
-    }
+    nfields = m_f->m_variables.size();
 
     Array<OneD, Array<OneD, NekDouble> > pts(nfields + coordim);
 
@@ -376,14 +346,6 @@ void ProcessEquiSpacedOutput::SetupEquiSpacedField(void)
 
     m_f->m_exp[0]->GetCoords(coords[0], coords[1], coords[2]);
 
-    int nq1 = m_f->m_exp[0]->GetTotPoints();
-
-    Array<OneD, NekDouble> x1(nq1);
-    Array<OneD, NekDouble> y1(nq1);
-    Array<OneD, NekDouble> z1(nq1);
-
-    m_f->m_exp[0]->GetCoords(x1, y1, z1);
-
     Array<OneD, NekDouble> tmp;
 
     for (int n = 0; n < coordim; ++n)
@@ -399,45 +361,36 @@ void ProcessEquiSpacedOutput::SetupEquiSpacedField(void)
         }
     }
 
-    if (m_f->m_fielddef.size())
+    for (int n = 0; n < m_f->m_variables.size(); ++n)
     {
-        ASSERTL0(m_f->m_fielddef[0]->m_fields.size() == m_f->m_exp.size(),
-                 "More expansion defined than fields");
+        cnt      = 0;
+        int cnt1 = 0;
 
-        for (int n = 0; n < m_f->m_exp.size(); ++n)
+        if (m_config["modalenergy"].m_beenSet)
         {
-            cnt      = 0;
-            int cnt1 = 0;
-
-            if (m_config["modalenergy"].m_beenSet)
+            Array<OneD, const NekDouble> phys = m_f->m_exp[n]->GetPhys();
+            for (int i = 0; i < nel; ++i)
             {
-                Array<OneD, const NekDouble> phys = m_f->m_exp[n]->GetPhys();
-                for (int i = 0; i < nel; ++i)
-                {
-                    GenOrthoModes(i, phys + cnt, tmp = pts[coordim + n] + cnt1);
-                    cnt1 += ppe[i];
-                    cnt += m_f->m_exp[0]->GetExp(i)->GetTotPoints();
-                }
+                GenOrthoModes(i, phys + cnt, tmp = pts[coordim + n] + cnt1);
+                cnt1 += ppe[i];
+                cnt += m_f->m_exp[0]->GetExp(i)->GetTotPoints();
             }
-            else
+        }
+        else
+        {
+            Array<OneD, const NekDouble> phys = m_f->m_exp[n]->GetPhys();
+            for (int i = 0; i < nel; ++i)
             {
-                Array<OneD, const NekDouble> phys = m_f->m_exp[n]->GetPhys();
-                for (int i = 0; i < nel; ++i)
-                {
-                    m_f->m_exp[0]->GetExp(i)->PhysInterpToSimplexEquiSpaced(
-                        phys + cnt, tmp = pts[coordim + n] + cnt1);
-                    cnt1 += ppe[i];
-                    cnt += m_f->m_exp[0]->GetExp(i)->GetTotPoints();
-                }
+                m_f->m_exp[0]->GetExp(i)->PhysInterpToSimplexEquiSpaced(
+                    phys + cnt, tmp = pts[coordim + n] + cnt1);
+                cnt1 += ppe[i];
+                cnt += m_f->m_exp[0]->GetExp(i)->GetTotPoints();
             }
-
-            // Set up Variable string.
-            fieldNames.push_back(m_f->m_fielddef[0]->m_fields[n]);
         }
     }
 
     m_f->m_fieldPts = MemoryManager<LibUtilities::PtsField>::AllocateSharedPtr(
-        coordim, fieldNames, pts);
+        coordim, m_f->m_variables, pts);
     if (shapedim == 1)
     {
         m_f->m_fieldPts->SetPtsType(LibUtilities::ePtsSegBlock);
@@ -456,6 +409,9 @@ void ProcessEquiSpacedOutput::SetupEquiSpacedField(void)
     {
         SetHomogeneousConnectivity();
     }
+
+    // Clear m_exp
+    m_f->m_exp = vector<MultiRegions::ExpListSharedPtr>();
 }
 
 void ProcessEquiSpacedOutput::SetHomogeneousConnectivity(void)
@@ -656,14 +612,14 @@ void ProcessEquiSpacedOutput::SetHomogeneousConnectivity(void)
                     }
 
                     // Interior numbering
-                    int mode = np+1;
+                    edge2 = 0;
                     for (int n = 1; n < np-1; n++)
                     {
+                        edge2 += np+1-n;
                         for (int m = 1; m < np-n-1; m++)
                         {
-                            vId[cnt1+mode] = 4*nel + maxN*4*nel + cnt2;
+                            vId[cnt1+edge2+m] = 4*nel + maxN*4*nel + cnt2;
                             cnt2++;
-                            mode++;
                         }
                     }
                     cnt1+= newpoints;

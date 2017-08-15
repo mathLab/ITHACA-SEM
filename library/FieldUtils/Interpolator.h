@@ -38,14 +38,14 @@
 #define FIELDUTILS_INTERPOLATOR_H
 
 #include <vector>
+#include <iostream>
 
-#include <boost/function.hpp>
-#include <boost/shared_ptr.hpp>
-
-#include <boost/geometry.hpp>
 #include <boost/geometry/geometries/box.hpp>
 #include <boost/geometry/geometries/point.hpp>
 #include <boost/geometry/index/rtree.hpp>
+
+#include <boost/function.hpp>
+#include <boost/shared_ptr.hpp>
 
 #include <MultiRegions/ExpList.h>
 
@@ -55,9 +55,6 @@
 #include <LibUtilities/BasicUtils/VmathArray.hpp>
 
 #include "FieldUtilsDeclspec.h"
-
-namespace bg  = boost::geometry;
-namespace bgi = boost::geometry::index;
 
 namespace Nektar
 {
@@ -150,7 +147,7 @@ public:
     /// Returns the output field
     FIELD_UTILS_EXPORT LibUtilities::PtsFieldSharedPtr GetOutField() const;
 
-    /// Print statics of the interpolation weights
+    /// Returns if the weights have already been computed
     FIELD_UTILS_EXPORT void PrintStatistics();
 
     /// sets a callback funtion which gets called every time the interpolation
@@ -182,9 +179,9 @@ private:
 
     /// dimension of this interpolator. Hardcoded to 3
     static const int m_dim = 3;
-    typedef bg::model::point<NekDouble, m_dim, bg::cs::cartesian> BPoint;
+    typedef boost::geometry::model::point<NekDouble, m_dim, boost::geometry::cs::cartesian> BPoint;
     typedef std::pair<BPoint, unsigned int> PtsPointPair;
-    typedef bgi::rtree<PtsPointPair, bgi::rstar<16> > PtsRtree;
+    typedef boost::geometry::index::rtree<PtsPointPair, boost::geometry::index::rstar<16> > PtsRtree;
 
     /// input field
     LibUtilities::PtsFieldSharedPtr m_ptsInField;
@@ -203,10 +200,10 @@ private:
     boost::shared_ptr<PtsRtree> m_rtree;
     /// Interpolation weights for each neighbour.
     /// Structure: m_weights[physPtIdx][neighbourIdx]
-    Array<OneD, Array<OneD, float> > m_weights;
+    Array<TwoD, float> m_weights;
     /// Indices of the relevant neighbours for each physical point.
     /// Structure: m_neighInds[ptIdx][neighbourIdx]
-    Array<OneD, Array<OneD, unsigned int> > m_neighInds;
+    Array<TwoD, unsigned int> m_neighInds;
     /// Filter width used for some interpolation algorithms
     NekDouble m_filtWidth;
     /// Max number of interpolation points
@@ -225,7 +222,7 @@ private:
 
     FIELD_UTILS_EXPORT void CalcW_NNeighbour(const PtsPoint &searchPt);
 
-    FIELD_UTILS_EXPORT void CalcW_Shepard(const PtsPoint &searchPt);
+    FIELD_UTILS_EXPORT void CalcW_Shepard(const PtsPoint &searchPt, int numPts);
 
     FIELD_UTILS_EXPORT void CalcW_Quadratic(const PtsPoint &searchPt,
                                             int coordId);

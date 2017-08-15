@@ -757,6 +757,7 @@ INPUT                  = @CMAKE_SOURCE_DIR@/docs/doxygen/ \
                          @CMAKE_SOURCE_DIR@/library/LibUtilities/ \
                          @CMAKE_SOURCE_DIR@/library/StdRegions/ \
                          @CMAKE_SOURCE_DIR@/library/SpatialDomains/ \
+                         @CMAKE_SOURCE_DIR@/library/Collections/ \
                          @CMAKE_SOURCE_DIR@/library/LocalRegions/ \
                          @CMAKE_SOURCE_DIR@/library/MultiRegions/ \
                          @CMAKE_SOURCE_DIR@/library/GlobalMapping/ \

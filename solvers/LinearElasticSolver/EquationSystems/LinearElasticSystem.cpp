@@ -197,7 +197,7 @@ void LinearElasticSystem::v_InitObject()
     // really working yet.
     for (n = 0; n < nEl; ++n)
     {
-        exp = m_fields[0]->GetExp(m_fields[0]->GetOffset_Elmt_Id(n));
+        exp = m_fields[0]->GetExp(n);
         sizeBnd[n] = nVel * exp->NumBndryCoeffs();
         sizeInt[n] = nVel * exp->GetNcoeffs() - sizeBnd[n];
         exp->GetBoundaryMap(m_bmap[n]);
@@ -260,7 +260,7 @@ void LinearElasticSystem::BuildMatrixSystem()
     {
         for (n = 0; n < nEl; ++n)
         {
-            exp = m_fields[0]->GetExp(m_fields[0]->GetOffset_Elmt_Id(n));
+            exp = m_fields[0]->GetExp(n);
             const int nPhys = exp->GetTotPoints();
             Array<OneD, NekDouble> aArr(nPhys, lambda + 2*mu);
             Array<OneD, NekDouble> bArr(nPhys, mu);
@@ -302,7 +302,7 @@ void LinearElasticSystem::BuildMatrixSystem()
     {
         for (n = 0; n < nEl; ++n)
         {
-            exp = m_fields[0]->GetExp(m_fields[0]->GetOffset_Elmt_Id(n));
+            exp = m_fields[0]->GetExp(n);
             const int nPhys = exp->GetTotPoints();
             Array<OneD, NekDouble> aArr(nPhys, lambda + 2*mu);
             Array<OneD, NekDouble> bArr(nPhys, mu);
@@ -453,7 +453,7 @@ void LinearElasticSystem::v_DoSolve()
 
     // Evaluate the forcing function from the XML file.
     Array<OneD, Array<OneD, NekDouble> > forcing(nVel);
-    EvaluateFunction(forcing, "Forcing");
+    GetFunction("Forcing")->Evaluate(forcing);
 
     // Add temperature term
     string tempEval;

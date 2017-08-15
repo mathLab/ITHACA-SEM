@@ -33,8 +33,6 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <loki/Singleton.h>
-
 #include <NekMeshUtils/MeshElements/Element.h>
 
 using namespace std;
@@ -46,9 +44,8 @@ namespace NekMeshUtils
 
 ElementFactory &GetElementFactory()
 {
-    typedef Loki::SingletonHolder<ElementFactory, Loki::CreateUsingNew,
-                                  Loki::NoDestroy> Type;
-    return Type::Instance();
+    static ElementFactory instance;
+    return instance;
 }
 
 Element::Element(ElmtConfig pConf, unsigned int pNumNodes,

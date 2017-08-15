@@ -1,5 +1,6 @@
 SET(SOLVER_UTILS_SOURCES
   Core/Misc.cpp
+  Core/SessionFunction.cpp
   AdvectionSystem.cpp
   Advection/Advection.cpp
   Advection/Advection3DHomogeneous1D.cpp
@@ -44,6 +45,7 @@ SET(SOLVER_UTILS_SOURCES
 
 SET(SOLVER_UTILS_HEADERS
   Core/Misc.h
+  Core/SessionFunction.h
   AdvectionSystem.h
   Advection/Advection.h
   Advection/AdvectionFR.h
@@ -97,7 +99,9 @@ ENDIF (NEKTAR_USE_ARPACK)
 
 ADD_DEFINITIONS(-DSOLVER_UTILS_EXPORTS)
 
-ADD_NEKTAR_LIBRARY(SolverUtils lib ${NEKTAR_LIBRARY_TYPE} ${SOLVER_UTILS_SOURCES} ${SOLVER_UTILS_HEADERS})
-TARGET_LINK_LIBRARIES(SolverUtils FieldUtils)
-
-INSTALL(DIRECTORY ./ DESTINATION ${NEKTAR_INCLUDE_DIR}/SolverUtils COMPONENT dev FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp")
+ADD_NEKTAR_LIBRARY(SolverUtils
+    SOURCES ${SOLVER_UTILS_SOURCES}
+    HEADERS ${SOLVER_UTILS_HEADERS}
+    DEPENDS FieldUtils
+    SUMMARY "Nektar++ SolverUtils library"
+    DESCRIPTION "This library provides support classes and routines for constructing complete spectral/hp element solvers.")

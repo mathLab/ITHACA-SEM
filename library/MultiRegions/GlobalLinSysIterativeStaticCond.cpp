@@ -35,7 +35,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <MultiRegions/GlobalLinSysIterativeStaticCond.h>
-#include <LibUtilities/BasicUtils/Timer.h>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/LinearAlgebra/StorageSmvBsr.hpp>
 #include <LibUtilities/LinearAlgebra/SparseDiagBlkMatrix.hpp>
@@ -186,8 +185,7 @@ namespace Nektar
                         StdRegions::eHybridDGHelmBndLam)
                 {
                     DNekScalMatSharedPtr mat = m_S1Blk->GetBlock(n, n);
-                    DNekScalMatSharedPtr t = m_precon->TransformedSchurCompl(
-                        m_expList.lock()->GetOffset_Elmt_Id(n), mat);
+                    DNekScalMatSharedPtr t = m_precon->TransformedSchurCompl(n, mat);
                     m_schurCompl->SetBlock(n, n, t);
                 }
             }
@@ -374,8 +372,7 @@ namespace Nektar
                                 }
                             }
                             ptr += blockSize;
-                            GlobalLinSys::v_DropStaticCondBlock(
-                                m_expList.lock()->GetOffset_Elmt_Id(n));
+                            GlobalLinSys::v_DropStaticCondBlock(n);
                         }
                         else
                         {
@@ -449,8 +446,7 @@ namespace Nektar
                                 loc_lda*loc_lda, loc_mat->GetRawPtr());
                             }
 
-                            GlobalLinSys::v_DropStaticCondBlock(
-                                m_expList.lock()->GetOffset_Elmt_Id(n));
+                            GlobalLinSys::v_DropStaticCondBlock(n);
                         }
 
                         sparseStorage[part] =

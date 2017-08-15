@@ -93,6 +93,7 @@ public:
     CADSystem(std::string name) : m_name(name)
     {
         m_2d = false;
+        m_cfiMesh = false;
     }
 
     ~CADSystem()
@@ -120,6 +121,11 @@ public:
     void SetNACA(std::string i)
     {
         m_naca = i;
+    }
+
+    void SetCFIMesh()
+    {
+        m_cfiMesh = true;
     }
 
     /**
@@ -227,7 +233,7 @@ protected:
     /// Map of vertices
     std::map<int, CADVertSharedPtr> m_verts;
 
-    bool m_2d;
+    bool m_2d, m_cfiMesh;
     std::string m_naca;
 };
 

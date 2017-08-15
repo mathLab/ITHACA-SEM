@@ -91,7 +91,7 @@ void FieldIOXml::v_Write(const std::string &outFile,
                          const bool backup)
 {
     double tm0 = 0.0, tm1 = 0.0;
-    if (m_comm->GetRank() == 0)
+    if (m_comm->TreatAsRankZero())
     {
         tm0 = m_comm->Wtime();
     }
@@ -358,7 +358,7 @@ void FieldIOXml::v_Write(const std::string &outFile,
     m_comm->Block();
 
     // all data has been written
-    if (m_comm->GetRank() == 0)
+    if (m_comm->TreatAsRankZero())
     {
         tm1 = m_comm->Wtime();
         cout << " (" << tm1 - tm0 << "s, XML)" << endl;

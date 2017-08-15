@@ -2,7 +2,7 @@
 <test>
     <description> Process 3D vtu output </description>
     <executable>FieldConvert</executable>
-    <parameters> chan3D.xml chan3D.fld chan3D.vtu</parameters>
+    <parameters> -f chan3D.xml chan3D.fld chan3D.vtu</parameters>
     <files>
         <file description="Session File">chan3D.xml</file>
 	<file description="Session File">chan3D.fld</file>

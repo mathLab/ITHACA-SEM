@@ -62,7 +62,7 @@ public:
         m_type = CADType::eCurve;
     }
 
-    ~CADCurve()
+    virtual ~CADCurve()
     {
     }
 

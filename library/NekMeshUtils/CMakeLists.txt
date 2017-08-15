@@ -40,7 +40,7 @@ IF(NEKTAR_USE_MESHGEN)
         CADSystem/OCE/CADVertOCE.cpp
         CADSystem/OCE/CADCurveOCE.cpp
         CADSystem/OCE/CADSurfOCE.cpp
-        2DGenerator/2DGenerator.cpp
+#        2DGenerator/2DGenerator.cpp
     )
 ENDIF()
 
@@ -95,7 +95,7 @@ IF(NEKTAR_USE_MESHGEN)
         Optimisation/BGFS-B.h
         Optimisation/OptimiseObj.h
         Triangle/Triangle.h
-        2DGenerator/2DGenerator.h
+#        2DGenerator/2DGenerator.h
     )
 ENDIF()
 
@@ -118,9 +118,12 @@ ENDIF()
 
 ADD_DEFINITIONS(-DNEKMESHUTILS_EXPORTS)
 
-ADD_NEKTAR_LIBRARY(NekMeshUtils lib ${NEKTAR_LIBRARY_TYPE}
-    ${NEKMESHUTILS_SOURCES} ${NEKMESHUTILS_HEADERS})
-TARGET_LINK_LIBRARIES(NekMeshUtils LINK_PUBLIC SpatialDomains)
+ADD_NEKTAR_LIBRARY(NekMeshUtils
+    SOURCES ${NEKMESHUTILS_SOURCES}
+    HEADERS ${NEKMESHUTILS_HEADERS}
+    DEPENDS SpatialDomains
+    SUMMARY "Nektar++ NekMeshUtils library"
+    DESCRIPTION "This library provides mesh generation and routines for the NekMesh executable.")
 
 IF(NEKTAR_USE_MESHGEN)
     TARGET_LINK_LIBRARIES(NekMeshUtils LINK_PRIVATE ${TETGEN_LIBRARY})

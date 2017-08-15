@@ -81,18 +81,25 @@ bool CADSystemCFI::LoadCAD()
 
     model = cfiHandel.openModelFile(m_name.c_str());
 
-    // make an assumption there are not multiple bodies in the solid
-    if (model->getEntityTotal(cfi::TYPE_BODY, cfi::SUBTYPE_ALL) > 1)
+    if( model->getEntityTotal(cfi::TYPE_BODY, cfi::SUBTYPE_ALL) != 1)
     {
-        cout << "NekMesh cannot deal with multiple CAD bodies"
-             << "it is going to assume the body you want is called W1" << endl;
-
-        body = static_cast<cfi::Body *>(model->getEntity("W1"));
+        if(m_cfiMesh)
+        {
+            cout << "Will extract mesh and have multibodies" << endl;
+        }
+        else
+        {
+            cout << "Has multibodies and instructions to mesh, this is not possible" << endl;
+            abort();
+        }
     }
 
-    if (model->getEntityTotal(cfi::TYPE_BODY, cfi::SUBTYPE_ALL) == 1)
+    vector<cfi::Entity* > * bds = model->getEntityList(cfi::TYPE_BODY, cfi::SUBTYPE_ALL);
+
+    for(auto &i : *bds)
     {
-        body = model->getBodyEntity(1);
+        cfi::Body* b = static_cast<cfi::Body *>(i);
+        bodies.push_back(b);
     }
 
     // cfi doesnt mind stupid units so this scales everything back to meters
@@ -111,36 +118,57 @@ bool CADSystemCFI::LoadCAD()
     // it really should use strings but doesnt currently
     map<string, cfi::Point *> mapOfVerts;
     map<string, cfi::Line *> mapOfEdges;
+    map<string, cfi::Face *> mapOfFaces;
 
     // nothing is unique in cfi, there can list of verts that arnt used
     // or are listed twice. This block gets all the real unique vertices in the
     // cad by cascading down from the faces
     // also builds a list on unique edges in the process
-    vector<cfi::Oriented<cfi::TopoEntity *> > *faceList = body->getChildList();
 
-    vector<cfi::Oriented<cfi::TopoEntity *> >::iterator it, it2, it3;
-    for (it = faceList->begin(); it != faceList->end(); it++)
+    for(int i = 0; i < bodies.size(); i++)
     {
-        cfi::Oriented<cfi::TopoEntity *> orientatedFace = *it;
-        cfi::Face *face = static_cast<cfi::Face *>(orientatedFace.entity);
+        vector<cfi::Oriented<cfi::TopoEntity *> > *faceList = bodies[i]->getChildList();
 
-        vector<cfi::Oriented<cfi::TopoEntity *> > *edgeList =
-            face->getChildList();
-        for (it2 = edgeList->begin(); it2 != edgeList->end(); it2++)
+        vector<cfi::Oriented<cfi::TopoEntity *> >::iterator it, it2, it3;
+        for (it = faceList->begin(); it != faceList->end(); it++)
         {
-            cfi::Oriented<cfi::TopoEntity *> orientatedEdge = *it2;
-            cfi::Line *edge = static_cast<cfi::Line *>(orientatedEdge.entity);
-            mapOfEdges[edge->getName()] = edge;
+            cfi::Oriented<cfi::TopoEntity *> orientatedFace = *it;
+            cfi::Face *face = static_cast<cfi::Face *>(orientatedFace.entity);
 
-            vector<cfi::Oriented<cfi::TopoEntity *> > *vertList =
-                edge->getChildList();
-            for (it3 = vertList->begin(); it3 != vertList->end(); it3++)
+            try
             {
-                cfi::Oriented<cfi::TopoEntity *> orientatedVert = *it3;
-                cfi::Point *vert =
-                    static_cast<cfi::Point *>(orientatedVert.entity);
-                mapOfVerts[vert->getName()] = vert;
-                mapVertToListEdge[vert->getName()].push_back(edge->getName());
+                boost::optional<cfi::Oriented<cfi::Surface *> > surf = face->getTopoEmbedding();
+            }
+            catch(std::exception& e)
+            {
+                //dont want this face
+                continue;
+            }
+
+            auto it = mapOfFaces.find(face->getName());
+            if(it == mapOfFaces.end())
+            {
+                vector<cfi::Oriented<cfi::TopoEntity *> > *edgeList =
+                    face->getChildList();
+                for (it2 = edgeList->begin(); it2 != edgeList->end(); it2++)
+                {
+                    cfi::Oriented<cfi::TopoEntity *> orientatedEdge = *it2;
+                    cfi::Line *edge = static_cast<cfi::Line *>(orientatedEdge.entity);
+                    mapOfEdges[edge->getName()] = edge;
+
+                    vector<cfi::Oriented<cfi::TopoEntity *> > *vertList =
+                        edge->getChildList();
+                    for (it3 = vertList->begin(); it3 != vertList->end(); it3++)
+                    {
+                        cfi::Oriented<cfi::TopoEntity *> orientatedVert = *it3;
+                        cfi::Point *vert =
+                            static_cast<cfi::Point *>(orientatedVert.entity);
+                        mapOfVerts[vert->getName()] = vert;
+                        mapVertToListEdge[vert->getName()].push_back(edge->getName());
+                    }
+                }
+
+                mapOfFaces[face->getName()] = face;
             }
         }
     }
@@ -164,20 +192,19 @@ bool CADSystemCFI::LoadCAD()
     }
 
     // build surfaces
+    map<string, cfi::Face *>::iterator fit;
     i = 1;
-    for (it = faceList->begin(); it != faceList->end(); it++, i++)
+    for (fit = mapOfFaces.begin(); fit != mapOfFaces.end(); fit++, i++)
     {
-        cfi::Oriented<cfi::TopoEntity *> orientatedFace = *it;
-        cfi::Face *face = static_cast<cfi::Face *>(orientatedFace.entity);
-        nameToFaceId[face->getName()] = i;
+        nameToFaceId[fit->second->getName()] = i;
 
-        AddSurf(i, face);
+        AddSurf(i, fit->second);
     }
 
     // TODO identify Degenerated faces and setdegen on vertices accordinaly
 
     // This checks that all edges are bound by two surfaces, sanity check.
-    if (!m_2d)
+    if (!m_2d && !m_cfiMesh)
     {
         map<int, CADCurveSharedPtr>::iterator it;
         for (it = m_curves.begin(); it != m_curves.end(); it++)
@@ -186,7 +213,7 @@ bool CADSystemCFI::LoadCAD()
                      "curve is not joined to 2 surfaces");
         }
     }
-
+    
     return true;
 }
 

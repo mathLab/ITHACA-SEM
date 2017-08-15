@@ -55,15 +55,20 @@ namespace Nektar
         {
         }
 
-        ExpListHomogeneous1D::ExpListHomogeneous1D(const LibUtilities::SessionReaderSharedPtr
-                &pSession,const LibUtilities::BasisKey &HomoBasis, const NekDouble lhom, const bool useFFT, const bool dealiasing):
+        ExpListHomogeneous1D::ExpListHomogeneous1D(
+                   const LibUtilities::SessionReaderSharedPtr
+                   &pSession,const LibUtilities::BasisKey &HomoBasis,
+                   const NekDouble lhom,
+                   const bool useFFT,
+                   const bool dealiasing):
             ExpList(pSession),
             m_useFFT(useFFT),
             m_lhom(lhom),
             m_homogeneous1DBlockMat(MemoryManager<Homo1DBlockMatrixMap>::AllocateSharedPtr()),
             m_dealiasing(dealiasing)
         {
-            ASSERTL2(HomoBasis != LibUtilities::NullBasisKey,"Homogeneous Basis is a null basis");
+            ASSERTL2(HomoBasis != LibUtilities::NullBasisKey,
+                     "Homogeneous Basis is a null basis");
             
             m_homogeneousBasis = LibUtilities::BasisManager()[HomoBasis];
 
@@ -87,7 +92,8 @@ namespace Nektar
             }
 
             m_transposition = MemoryManager<LibUtilities::Transposition>
-                                ::AllocateSharedPtr(HomoBasis, m_comm, m_StripZcomm);
+                                ::AllocateSharedPtr(HomoBasis, m_comm,
+                                                    m_StripZcomm);
 
             m_planes = Array<OneD,ExpListSharedPtr>(
                                 m_homogeneousBasis->GetNumPoints() /
@@ -1038,7 +1044,15 @@ namespace Nektar
                     }
                     
                     int eid = it->second;
-                        
+                    bool sameBasis = true;
+                    for (int j = 0; j < fielddef->m_basis.size()-1; ++j)
+                    {
+                        if (fielddef->m_basis[j] != (*m_exp)[eid]->GetBasisType(j))
+                        {
+                            sameBasis = false;
+                            break;
+                        }
+                    }
                     
                     for(n = 0; n < nzmodes; ++n, offset += datalen)
                     {
@@ -1052,7 +1066,7 @@ namespace Nektar
                         } 
                         
                         planes_offset = it->second;
-                        if(datalen == (*m_exp)[eid]->GetNcoeffs())
+                        if(datalen == (*m_exp)[eid]->GetNcoeffs() && sameBasis)
                         {
                             Vmath::Vcopy(datalen,&fielddata[offset],1,&coeffs[m_coeff_offset[eid]+planes_offset*ncoeffs_per_plane],1);
                         }
@@ -1430,6 +1444,11 @@ namespace Nektar
         NekDouble ExpListHomogeneous1D::v_GetHomoLen(void)
         {
             return m_lhom;
+        }
+
+        void ExpListHomogeneous1D::v_SetHomoLen(const NekDouble lhom)
+        {
+            m_lhom = lhom;
         }
 
         Array<OneD, const unsigned int> ExpListHomogeneous1D::v_GetZIDs(void)

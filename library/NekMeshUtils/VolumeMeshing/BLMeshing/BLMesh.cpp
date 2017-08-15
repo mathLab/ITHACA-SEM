@@ -32,6 +32,12 @@
 //  Description: tet meshing methods
 //
 ////////////////////////////////////////////////////////////////////////////////
+
+#include <boost/geometry.hpp>
+#include <boost/geometry/geometries/box.hpp>
+#include <boost/geometry/geometries/point.hpp>
+#include <boost/geometry/index/rtree.hpp>
+
 #include <LibUtilities/BasicUtils/Progressbar.hpp>
 
 #include <NekMeshUtils/CADSystem/CADSurf.h>
@@ -41,11 +47,6 @@
 #include <LibUtilities/Foundations/NodalUtil.h>
 
 #include <algorithm>
-
-#include <boost/geometry.hpp>
-#include <boost/geometry/geometries/box.hpp>
-#include <boost/geometry/geometries/point.hpp>
-#include <boost/geometry/index/rtree.hpp>
 
 namespace bg  = boost::geometry;
 namespace bgi = boost::geometry::index;

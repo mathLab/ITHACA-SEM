@@ -56,6 +56,8 @@ ProcessLoadCAD::ProcessLoadCAD(MeshSharedPtr m) : ProcessModule(m)
         ConfigOption(false, "", "Generate prisms on these surfs");
     m_config["2D"] =
         ConfigOption(true, "", "allow 2d loading");
+    m_config["CFIMesh"] =
+        ConfigOption(true, "", "specifies that the CAD can be multibody");
     m_config["NACA"] =
         ConfigOption(false, "", "naca domain");
 }
@@ -92,6 +94,11 @@ void ProcessLoadCAD::Process()
     if(m_config["NACA"].beenSet)
     {
         m_mesh->m_cad->SetNACA(m_config["NACA"].as<string>());
+    }
+
+    if(m_config["CFIMesh"].beenSet)
+    {
+        m_mesh->m_cad->SetCFIMesh();
     }
 
     ASSERTL0(m_mesh->m_cad->LoadCAD(), "Failed to load CAD");

@@ -20,7 +20,7 @@ int main(int argc, char *argv[])
     NekDouble  lambda;
     vector<string> vFilenames;
     //defining timing variables
-    Timer timer;
+    LibUtilities::Timer timer;
     NekDouble exeTime, fullTime, ppTime = 0.0;
 
     if(argc < 6)//< is added to be able to submit "verbose" option

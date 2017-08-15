@@ -94,7 +94,7 @@ private:
     void AddSurf(int i, cfi::Face *in);
     cfi::Cfi cfiHandel;
     cfi::Model *model;
-    cfi::Body *body;
+    std::vector<cfi::Body* >bodies;
     std::map<std::string, int> nameToVertId;
     std::map<std::string, int> nameToCurveId;
     std::map<std::string, int> nameToFaceId;

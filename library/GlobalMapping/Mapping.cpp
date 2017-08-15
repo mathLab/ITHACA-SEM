@@ -48,10 +48,8 @@ bool             Mapping::m_isDefined  = false;
 
 MappingFactory& GetMappingFactory()
 {
-    typedef Loki::SingletonHolder<MappingFactory,
-                                  Loki::CreateUsingNew,
-                                  Loki::NoDestroy > Type;
-    return Type::Instance();
+    static MappingFactory instance;
+    return instance;
 }
 
 Mapping::Mapping(const LibUtilities::SessionReaderSharedPtr& pSession,

@@ -49,11 +49,8 @@ namespace Nektar
 
     ExtrapolateFactory& GetExtrapolateFactory()
     {
-        typedef Loki::SingletonHolder<ExtrapolateFactory,
-                                      Loki::CreateUsingNew,
-                                      Loki::NoDestroy,
-                                      Loki::SingleThreaded > Type;
-        return Type::Instance();
+        static ExtrapolateFactory instance;
+        return instance;
     }
 
     Extrapolate::Extrapolate(

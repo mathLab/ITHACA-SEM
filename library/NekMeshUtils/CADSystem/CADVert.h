@@ -74,7 +74,9 @@ public:
         m_type = CADType::eVert;
     }
 
-    ~CADVert(){};
+    virtual ~CADVert()
+    {
+    }
 
     /**
      * @brief Get x,y,z location of the vertex

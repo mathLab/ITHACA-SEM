@@ -710,6 +710,26 @@ namespace Nektar
                     }
                     break;
                 }
+                case LibUtilities::eGLL_Lagrange:
+                {
+                    LibUtilities::PointsKey
+                        p0(nummodes[0], LibUtilities::eGaussLobattoLegendre);
+                    LibUtilities::PointsKey
+                        p1(nummodes[1], LibUtilities::eGaussLobattoLegendre);
+                    LibUtilities::PointsKey
+                        p2(nummodes[2], LibUtilities::eGaussLobattoLegendre);
+                    LibUtilities::PointsKey t0(
+                        m_base[0]->GetNumModes(),
+                        LibUtilities::eGaussLobattoLegendre);
+                    LibUtilities::PointsKey t1(
+                        m_base[1]->GetNumModes(),
+                        LibUtilities::eGaussLobattoLegendre);
+                    LibUtilities::PointsKey t2(
+                        m_base[2]->GetNumModes(),
+                        LibUtilities::eGaussLobattoLegendre);
+                    LibUtilities::Interp3D(p0, p1, p2, data, t0, t1, t2, coeffs);
+                }
+                    break;
             default:
                 ASSERTL0(false, "basis is either not set up or not "
                                 "hierarchicial");

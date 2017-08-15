@@ -36,7 +36,6 @@
 
 #define NEKTAR_MAX_MEMORY_MANAGER_CONSTRUCTOR_ARGS 4
 
-#include <UnitTests/Memory/TestNekMemoryManager.h>
 #include <UnitTests/CountedObject.h>
 
 #include <LibUtilities/Memory/NekMemoryManager.hpp>

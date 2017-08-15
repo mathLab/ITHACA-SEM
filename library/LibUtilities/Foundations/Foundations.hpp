@@ -53,6 +53,8 @@ namespace Nektar
             "Modified_A",
             "Modified_B",
             "Modified_C",
+            "OrthoPyr_C",
+            "ModifiedPyr_C",
             "Fourier",
             "GLL_Lagrange",
             "Gauss_Lagrange",
@@ -99,9 +101,10 @@ namespace Nektar
             "NodalPrismElec",
             "NodalTriSPI",
             "NodalTetSPI",
-            "NodalPrismSPI"
+            "NodalPrismSPI",
+            "NodalQuadElec",
+            "NodalHexElec"
         };
-
     } // end of namespace
 } // end of namespace
 

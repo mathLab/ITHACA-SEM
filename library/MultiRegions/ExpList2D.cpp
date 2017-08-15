@@ -99,7 +99,8 @@ namespace Nektar
         ExpList2D::ExpList2D(
             const ExpList2D &In, 
             const std::vector<unsigned int> &eIDs,
-            const bool DeclareCoeffPhysArrays):
+            const bool DeclareCoeffPhysArrays,
+            const Collections::ImplementationType ImpType):
             ExpList(In,eIDs,DeclareCoeffPhysArrays)
         {
             SetExpType(e2D);
@@ -113,7 +114,7 @@ namespace Nektar
             SetCoeffPhysOffsets();
 
             ReadGlobalOptimizationParameters();
-            CreateCollections();
+            CreateCollections(ImpType);
         }
 
 
@@ -133,7 +134,8 @@ namespace Nektar
                 const LibUtilities::SessionReaderSharedPtr &pSession,
                 const SpatialDomains::MeshGraphSharedPtr &graph2D,
                 const bool DeclareCoeffPhysArrays,
-                const std::string &var):
+                const std::string &var,
+                const Collections::ImplementationType ImpType):
             ExpList(pSession,graph2D)
         {
             SetExpType(e2D);
@@ -237,7 +239,7 @@ namespace Nektar
              }
 
             ReadGlobalOptimizationParameters();
-            CreateCollections();
+            CreateCollections(ImpType);
          }
 
 
@@ -258,7 +260,9 @@ namespace Nektar
         ExpList2D::ExpList2D(
             const LibUtilities::SessionReaderSharedPtr &pSession,
             const SpatialDomains::ExpansionMap &expansions,
-            const bool DeclareCoeffPhysArrays):ExpList(pSession)
+            const bool DeclareCoeffPhysArrays,
+            const Collections::ImplementationType ImpType):
+            ExpList(pSession)
         {
             SetExpType(e2D);
 
@@ -352,7 +356,7 @@ namespace Nektar
              }
 
             ReadGlobalOptimizationParameters();
-            CreateCollections();
+            CreateCollections(ImpType);
         }
 
 
@@ -388,7 +392,9 @@ namespace Nektar
             const LibUtilities::BasisKey &QuadBa,
             const LibUtilities::BasisKey &QuadBb,
             const SpatialDomains::MeshGraphSharedPtr &graph2D,
-            const LibUtilities::PointsType TriNb):ExpList(pSession, graph2D)
+            const LibUtilities::PointsType TriNb,
+            const Collections::ImplementationType ImpType):
+            ExpList(pSession, graph2D)
         {
             SetExpType(e2D);
 
@@ -465,7 +471,7 @@ namespace Nektar
             m_phys   = Array<OneD, NekDouble>(m_npoints);
 
             ReadGlobalOptimizationParameters();
-            CreateCollections();
+            CreateCollections(ImpType);
         }
 
         /**
@@ -492,7 +498,8 @@ namespace Nektar
             const SpatialDomains::MeshGraphSharedPtr &graph3D,
             const PeriodicMap &periodicFaces,
             const bool DeclareCoeffPhysArrays, 
-            const std::string variable):
+            const std::string variable,
+            const Collections::ImplementationType ImpType):            
             ExpList(pSession, graph3D)
         {
             SetExpType(e2D);
@@ -786,7 +793,7 @@ namespace Nektar
                 m_phys   = Array<OneD, NekDouble>(m_npoints);
             }
 
-            CreateCollections();
+            CreateCollections(ImpType);
         }
 
          /**
@@ -800,11 +807,13 @@ namespace Nektar
           * @param   graph3D     A mesh, containing information about the domain
           *                      and the spectral/hp element expansions.
           */
-         ExpList2D::ExpList2D(   
+        ExpList2D::ExpList2D(   
             const LibUtilities::SessionReaderSharedPtr &pSession,
             const SpatialDomains::CompositeMap &domain,
             const SpatialDomains::MeshGraphSharedPtr &graph3D,
-            const std::string variable):ExpList(pSession, graph3D)
+            const std::string variable,
+            const Collections::ImplementationType ImpType):
+            ExpList(pSession, graph3D)
          {
 
              SetExpType(e2D);
@@ -919,7 +928,7 @@ namespace Nektar
             m_phys   = Array<OneD, NekDouble>(m_npoints);
 
             ReadGlobalOptimizationParameters(); 
-            CreateCollections();
+            CreateCollections(ImpType);
         }
         
         /**
@@ -1107,54 +1116,6 @@ namespace Nektar
                 }
             }
         }
-
-        /**
-         * Each expansion (local element) is processed in turn to
-         * determine the number of coefficients and physical data
-         * points it contributes to the domain. Three arrays,
-         * #m_coeff_offset, #m_phys_offset and #m_offset_elmt_id, are
-         * initialised and updated to store the data offsets of each
-         * element in the #m_coeffs and #m_phys arrays, and the
-         * element id that each consecutive block is associated
-         * respectively.
-         */
-        void ExpList2D::SetCoeffPhysOffsets()
-        {
-            int i;
-
-            // Set up offset information and array sizes
-            m_coeff_offset   = Array<OneD,int>(m_exp->size());
-            m_phys_offset    = Array<OneD,int>(m_exp->size());
-            m_offset_elmt_id = Array<OneD,int>(m_exp->size());
-
-            m_ncoeffs = m_npoints = 0;
-
-            int cnt = 0;
-            for(i = 0; i < m_exp->size(); ++i)
-            {
-                if((*m_exp)[i]->DetShapeType() == LibUtilities::eTriangle)
-                {
-                    m_coeff_offset[i]   = m_ncoeffs;
-                    m_phys_offset [i]   = m_npoints;
-                    m_offset_elmt_id[cnt++] = i;
-                    m_ncoeffs += (*m_exp)[i]->GetNcoeffs();
-                    m_npoints += (*m_exp)[i]->GetTotPoints();
-                }
-            }
-
-            for(i = 0; i < m_exp->size(); ++i)
-            {
-                if((*m_exp)[i]->DetShapeType() == LibUtilities::eQuadrilateral)
-                {
-                    m_coeff_offset[i]   = m_ncoeffs;
-                    m_phys_offset [i]   = m_npoints;
-                    m_offset_elmt_id[cnt++] = i;
-                    m_ncoeffs += (*m_exp)[i]->GetNcoeffs();
-                    m_npoints += (*m_exp)[i]->GetTotPoints();
-                }
-            }
-        }
-
 
         /**
          *

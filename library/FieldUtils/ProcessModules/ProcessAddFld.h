@@ -68,7 +68,19 @@ public:
         return "ProcessAddFld";
     }
 
+    virtual std::string GetModuleDescription()
+    {
+        return "Adding new fld to input fld";
+    }
+
+    virtual ModulePriority GetModulePriority()
+    {
+        return m_priority;
+    }
+
 private:
+    ModulePriority  m_priority;
+
 };
 }
 }

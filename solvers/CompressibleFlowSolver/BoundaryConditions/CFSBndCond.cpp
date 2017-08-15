@@ -41,11 +41,8 @@ namespace Nektar
 {
 CFSBndCondFactory& GetCFSBndCondFactory()
 {
-    typedef Loki::SingletonHolder<CFSBndCondFactory,
-                                  Loki::CreateUsingNew,
-                                  Loki::NoDestroy,
-                                  Loki::SingleThreaded> Type;
-    return Type::Instance();
+    static CFSBndCondFactory instance;
+    return instance;
 }
 
 CFSBndCond::CFSBndCond(const LibUtilities::SessionReaderSharedPtr& pSession,

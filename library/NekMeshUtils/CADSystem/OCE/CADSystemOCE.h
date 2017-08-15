@@ -59,7 +59,9 @@ public:
      * @brief Default constructor.
      */
     CADSystemOCE(std::string name) : CADSystem(name) {}
-    ~CADSystemOCE(){};
+    virtual ~CADSystemOCE()
+    {
+    }
 
     bool LoadCAD();
 
@@ -75,6 +77,7 @@ private:
     void AddSurf(int i, TopoDS_Shape in);
 
     TopoDS_Shape BuildNACA(std::string naca);
+    TopoDS_Shape BuildGeo(std::string geo);
     /// OCC master object
     TopoDS_Shape shape;
     TopTools_IndexedMapOfShape mapOfVerts, mapOfEdges, mapOfFaces;

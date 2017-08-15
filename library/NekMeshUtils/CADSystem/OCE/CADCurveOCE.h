@@ -59,7 +59,7 @@ public:
     {
     }
 
-    ~CADCurveOCE()
+    virtual ~CADCurveOCE()
     {
     }
 

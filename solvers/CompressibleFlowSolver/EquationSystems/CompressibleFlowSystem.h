@@ -82,6 +82,15 @@ namespace Nektar
         NekDouble                           m_Cp;
         NekDouble                           m_Prandtl;
 
+        // Parameters for exponential filtering
+        NekDouble                           m_filterAlpha;
+        NekDouble                           m_filterExponent;
+        NekDouble                           m_filterCutoff;
+        bool                                m_useFiltering;
+
+        // Parameters for local time-stepping
+        bool                                m_useLocalTimeStep;
+
         // Auxiliary object to convert variables
         VariableConverterSharedPtr          m_varConv;
 
@@ -147,6 +156,10 @@ namespace Nektar
         void GetStdVelocity(
             const Array<OneD, const Array<OneD, NekDouble> > &inarray,
                   Array<OneD,                   NekDouble>   &stdV);
+
+        void GetElmtTimeStep(
+            const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+                  Array<OneD, NekDouble> &tstep);
 
         virtual bool v_PostIntegrate(int step);
         bool CalcSteadyState(bool output);

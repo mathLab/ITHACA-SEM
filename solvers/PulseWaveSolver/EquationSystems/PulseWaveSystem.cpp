@@ -220,10 +220,10 @@ namespace Nektar
             m_fields[0] = m_vessels[2*omega];
             
             m_beta[omega] = Array<OneD, NekDouble>(nq);
-            EvaluateFunction("beta", m_beta[omega], "MaterialProperties", m_time, omega);
+            GetFunction("MaterialProperties")->Evaluate("beta",  m_beta[omega], m_time, omega);
 
             m_A_0[omega] = Array<OneD, NekDouble>(nq); 
-            EvaluateFunction("A_0", m_A_0[omega], "A_0", m_time, omega);
+            GetFunction("A_0")->Evaluate("A_0",  m_A_0[omega], m_time, omega);
 
             int nqTrace = GetTraceTotPoints();
 
@@ -489,7 +489,7 @@ namespace Nektar
         // Time loop
         for(n = 0; n < m_steps; ++n)
         {				
-            Timer timer;
+            LibUtilities::Timer timer;
             timer.Start();
             fields = m_intScheme->TimeIntegrate(n,m_timestep,m_intSoln,m_ode);
             //cout<<"integration: "<<fields[0][fields[0].num_elements()-1]<<endl;                
@@ -1187,8 +1187,7 @@ namespace Nektar
                     
                     LibUtilities::EquationSharedPtr vEqu
                         = m_session->GetFunction("ExactSolution",field,omega);
-                    EvaluateFunction(m_session->GetVariable(field),exactsoln,"ExactSolution",
-                                     m_time);
+                    GetFunction("ExactSolution")->Evaluate(m_session->GetVariable(field), exactsoln, m_time);
                     
                     L2error_dom = m_vessels[vesselid]->L2(
                                         m_vessels[vesselid]->GetPhys(),
@@ -1266,8 +1265,7 @@ namespace Nektar
                 {
                     Array<OneD, NekDouble> exactsoln(m_vessels[vesselid]->GetNpoints());
                     
-                    EvaluateFunction(m_session->GetVariable(field),exactsoln,"ExactSolution",
-                                     m_time);
+                    GetFunction("ExactSolution")->Evaluate(m_session->GetVariable(field), exactsoln, m_time);
                     
                     LinferrorDom = m_vessels[vesselid]->Linf(
                                         m_vessels[vesselid]->GetPhys(),

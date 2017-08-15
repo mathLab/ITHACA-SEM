@@ -134,7 +134,7 @@ cfi::Entity *CFIMesh::FigureOutCADParent(cfi::NodeDefinition node,
                 for (int j = 0; j < ss.size(); j++)
                 {
                     NekDouble dis = ss[j].first->DistanceTo(xyz);
-                    if (dis < 1e-4)
+                    if (dis < 1e-5)
                     {
                         sfs.push_back(ss[j].first->GetName());
                     }
@@ -179,7 +179,7 @@ cfi::Entity *CFIMesh::FigureOutCADParent(cfi::NodeDefinition node,
                     {
                         CADSurfSharedPtr s = m_mesh->m_cad->GetSurf(f->second);
                         NekDouble dis      = s->DistanceTo(xyz);
-                        if (dis < 1e-4)
+                        if (dis < 1e-5)
                         {
                             sfs.push_back(f->first);
                         }
@@ -222,7 +222,7 @@ cfi::Entity *CFIMesh::FigureOutCADParent(cfi::NodeDefinition node,
                     {
                         CADVertSharedPtr v = m_mesh->m_cad->GetVert(f->second);
                         NekDouble dis      = v->DistanceTo(xyz);
-                        if (dis < 1e-4)
+                        if (dis < 1e-5)
                         {
                             vts.push_back(f->first);
                         }
@@ -237,7 +237,7 @@ cfi::Entity *CFIMesh::FigureOutCADParent(cfi::NodeDefinition node,
                     {
                         CADSurfSharedPtr s = m_mesh->m_cad->GetSurf(f->second);
                         NekDouble dis = s->DistanceTo(xyz);
-                        if (dis < 1e-4)
+                        if (dis < 1e-5)
                         {
                             sfs_possible.push_back(s->GetName());
                         }
@@ -248,7 +248,7 @@ cfi::Entity *CFIMesh::FigureOutCADParent(cfi::NodeDefinition node,
                     {
                         CADCurveSharedPtr c = m_mesh->m_cad->GetCurve(f->second);
                         NekDouble dis = c->DistanceTo(xyz);
-                        if (dis < 1e-4)
+                        if (dis < 1e-5)
                         {
                             cvs_possible.push_back(c->GetName());
                         }
@@ -276,7 +276,7 @@ cfi::Entity *CFIMesh::FigureOutCADParent(cfi::NodeDefinition node,
                     for (int k = 0; k < ss.size(); k++)
                     {
                         NekDouble dis = ss[k].first->DistanceTo(xyz);
-                        if (dis < 1e-4)
+                        if (dis < 1e-5)
                         {
                             sfs.insert(ss[k].first->GetName());
                         }
@@ -378,8 +378,9 @@ void CFIMesh::Process()
     file << "x y z value" << endl;
 
     // filter all mesh nodes into a indexed map and project to CAD
+    int k = 0;
     for (vector<cfi::NodeDefinition>::iterator it = cfinodes->begin();
-         it != cfinodes->end(); it++)
+         it != cfinodes->end(); it++, k++)
     {
         Array<OneD, NekDouble> xyz(3);
         cfi::Position ps = (*it).node->getXYZ();
@@ -389,7 +390,7 @@ void CFIMesh::Process()
         int id           = (*it).node->number;
 
         NodeSharedPtr n =
-            boost::shared_ptr<Node>(new Node(id, xyz[0], xyz[1], xyz[2]));
+            boost::shared_ptr<Node>(new Node(k, xyz[0], xyz[1], xyz[2]));
         nodes.insert(pair<int, NodeSharedPtr>(id, n));
 
         // point built now add cad if needed
@@ -441,6 +442,16 @@ void CFIMesh::Process()
 
     //exit(-1);
 
+    int nodeId = 0;
+    set<int> doneNodes;
+
+    ////
+    //Really important fact. Nodes must be renumbered as they are read by the elements
+    //such that vertical edges on the prism are sequential
+    //In doing so we ensure the orienation will work
+    //we dont want to renumber nodes that have already been numbered, hence the set
+    //the set will be tacked by the cfiID as that is a constant
+
     int prefix = m_mesh->m_cad->GetNumSurf() > 100 ? 1000 : 100;
 
     vector<cfi::ElementDefinition>::iterator it;
@@ -451,19 +462,44 @@ void CFIMesh::Process()
     int nm[6] = {3, 2, 5, 0, 1, 4};
     for (it = prisms->begin(); it != prisms->end(); it++)
     {
+        vector<pair<int, int> > pripair;
+        //setup default
+        pripair.push_back(make_pair(0,3));
+        pripair.push_back(make_pair(1,2));
+        pripair.push_back(make_pair(4,5));
+
         vector<NodeSharedPtr> n(6);
+        vector<int> cfiID(6);
         vector<cfi::Node *> ns = (*it).nodes;
 
         for (int j = 0; j < ns.size(); j++)
         {
             n[nm[j]] = nodes[ns[j]->number];
+            cfiID[nm[j]] = ns[j]->number;
+        }
+
+        for(int j = 0; j < 3; j++)
+        {
+            set<int>::iterator f1 = doneNodes.find(cfiID[pripair[j].first]);
+            set<int>::iterator f2 = doneNodes.find(cfiID[pripair[j].second]);
+            if(f1 == doneNodes.end())
+            {
+                n[pripair[j].first]->m_id = nodeId++;
+                doneNodes.insert(cfiID[pripair[j].first]);
+            }
+            if(f2 == doneNodes.end())
+            {
+                n[pripair[j].second]->m_id = nodeId++;
+                doneNodes.insert(cfiID[pripair[j].second]);
+            }
         }
 
         vector<int> tags;
         tags.push_back(prefix + 1);
         ElmtConfig conf(LibUtilities::ePrism, 1, false, false);
+
         ElementSharedPtr E = GetElementFactory().CreateInstance(
-            LibUtilities::ePrism, conf, n, tags);
+                LibUtilities::ePrism, conf, n, tags);
 
         m_mesh->m_element[3].push_back(E);
     }
@@ -474,11 +510,25 @@ void CFIMesh::Process()
     for (it = hexs->begin(); it != hexs->end(); it++)
     {
         vector<NodeSharedPtr> n;
+        vector<int> cfiID;
         vector<cfi::Node *> ns = (*it).nodes;
 
         for (int j = 0; j < ns.size(); j++)
         {
             n.push_back(nodes[ns[j]->number]);
+            cfiID.push_back(ns[j]->number);
+        }
+
+        //dont care about the ordering of the hexes just need to give the new
+        //nodes a number
+        for(int j = 0; j < 8; j ++)
+        {
+            set<int>::iterator f = doneNodes.find(cfiID[j]);
+            if(f == doneNodes.end())
+            {
+                n[j]->m_id = nodeId++;
+                doneNodes.insert(cfiID[j]);
+            }
         }
 
         vector<int> tags;
@@ -496,11 +546,25 @@ void CFIMesh::Process()
     for (it = tets->begin(); it != tets->end(); it++)
     {
         vector<NodeSharedPtr> n;
+        vector<int> cfiID;
         vector<cfi::Node *> ns = (*it).nodes;
 
         for (int j = 0; j < ns.size(); j++)
         {
             n.push_back(nodes[ns[j]->number]);
+            cfiID.push_back(ns[j]->number);
+        }
+
+        //again dont actually care for the tets
+        //the important ones are the prism interface and they have already been done
+        for(int j = 0; j < 4; j ++)
+        {
+            set<int>::iterator f = doneNodes.find(cfiID[j]);
+            if(f == doneNodes.end())
+            {
+                n[j]->m_id = nodeId++;
+                doneNodes.insert(cfiID[j]);
+            }
         }
 
         vector<int> tags;
@@ -518,6 +582,10 @@ void CFIMesh::Process()
     ProcessElements();
     ProcessComposites();
 
+    //cout << nodeId << endl;
+
+    //return;
+
     vector<cfi::ElementDefinition> *tris =
         m_model->getElements(cfi::SUBTYPE_TR3, 3);
     cout << "tris " << tris->size() << endl;
@@ -533,7 +601,7 @@ void CFIMesh::Process()
 
         vector<int> tags;
         tags.push_back(0); // dummy for tempory
-        ElmtConfig conf(LibUtilities::eTriangle, 1, false, false);
+        ElmtConfig conf(LibUtilities::eTriangle, 1, false, false, false);
         ElementSharedPtr E = GetElementFactory().CreateInstance(
             LibUtilities::eTriangle, conf, n, tags);
 
@@ -582,7 +650,7 @@ void CFIMesh::Process()
             }
 
             // this might work
-            ASSERTL0(sfs.size() == 1, "weirdness");
+            ASSERTL0(sfs.size() == 1, "weirdness " + boost::lexical_cast<string>(sfs.size()));
 
             int error = 0;
             // check each of the nodes know their on this surface
@@ -598,17 +666,11 @@ void CFIMesh::Process()
 
             if(error !=0)
             {
-                cout << "sfs " << sfs[0] << endl;
-                for (int j = 0; j < n.size(); j++)
-                {
-                    vector<int> ids = n[j]->GetCADSurfsIds();
-                    cout << "node " << j << endl;
-                    for(int k = 0; k < ids.size(); k++)
-                    {
-                        cout << ids[k] << endl;
-                    }
-                }
-                cout << endl;
+                cout << "unable to make triangle high-order because of node on " << sfs[0] << endl;
+            }
+            else
+            {
+                E->m_parentCAD = m_mesh->m_cad->GetSurf(sfs[0]);
             }
 
             //if(!error)
@@ -616,7 +678,6 @@ void CFIMesh::Process()
             //    continue;
             //}
 
-            E->m_parentCAD = m_mesh->m_cad->GetSurf(sfs[0]);
             tags.clear();
             tags.push_back(sfs[0]);
             E->SetTagList(tags);
@@ -639,7 +700,7 @@ void CFIMesh::Process()
 
         vector<int> tags;
         tags.push_back(0); // dummy for tempory
-        ElmtConfig conf(LibUtilities::eQuadrilateral, 1, false, false);
+        ElmtConfig conf(LibUtilities::eQuadrilateral, 1, false, false, false);
         ElementSharedPtr E = GetElementFactory().CreateInstance(
             LibUtilities::eQuadrilateral, conf, n, tags);
 
@@ -682,11 +743,18 @@ void CFIMesh::Process()
             }
 
             // this might work
-            ASSERTL0(sfs.size() == 1, "weirdness");
-
-            E->m_parentCAD = m_mesh->m_cad->GetSurf(sfs[0]);
             tags.clear();
-            tags.push_back(sfs[0] + prefix * 2);
+            if(sfs.size() == 1)
+            {
+                E->m_parentCAD = m_mesh->m_cad->GetSurf(sfs[0]);
+                tags.push_back(sfs[0] + prefix * 2);
+            }
+            else
+            {
+                cout << "cannot make quad high-order " << endl;
+                tags.push_back(5000);
+            }
+
             E->SetTagList(tags);
             m_mesh->m_element[2].push_back(E);
         }

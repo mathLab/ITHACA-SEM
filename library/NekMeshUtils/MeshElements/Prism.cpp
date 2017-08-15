@@ -523,6 +523,33 @@ void Prism::OrientPrism()
 {
     int lid[6], gid[6];
 
+
+    //check conssitency of the triangular faces
+
+    int lowest1 = numeric_limits<int>::max(),  lowest3 = numeric_limits<int>::max();
+    int lowest1i, lowest3i;
+    for(int i = 0; i < 3; i++)
+    {
+        if(m_vertex[m_faceIds[1][i]]->m_id < lowest1)
+        {
+            lowest1 = m_vertex[m_faceIds[1][i]]->m_id;
+            lowest1i = i;
+        }
+
+        if(m_vertex[m_faceIds[3][i]]->m_id < lowest3)
+        {
+            lowest3 = m_vertex[m_faceIds[3][i]]->m_id;
+            lowest3i = i;
+        }
+    }
+
+    if(lowest1i != lowest3i)
+    {
+        cout << lowest1i << " " << lowest3i << endl;
+    }
+
+    //ASSERTL0(lowest1i == lowest3i, "triangular faces are inconsistent");
+
     // Re-order vertices.
     for (int i = 0; i < 6; ++i)
     {

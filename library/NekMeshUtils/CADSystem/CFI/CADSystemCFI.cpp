@@ -87,7 +87,7 @@ bool CADSystemCFI::LoadCAD()
         cout << "NekMesh cannot deal with multiple CAD bodies"
              << "it is going to assume the body you want is called W1" << endl;
 
-        body = static_cast<cfi::Body *>(model->getEntity("W3"));
+        body = static_cast<cfi::Body *>(model->getEntity("W1"));
     }
 
     if (model->getEntityTotal(cfi::TYPE_BODY, cfi::SUBTYPE_ALL) == 1)

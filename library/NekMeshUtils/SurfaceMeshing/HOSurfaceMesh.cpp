@@ -118,6 +118,12 @@ void HOSurfaceMesh::Process()
                 i, m_mesh->m_element[2].size(), "\t\tSurface elements");
         }
 
+        if(!m_mesh->m_element[2][i]->m_parentCAD)
+        {
+            //no parent cad
+            continue;
+        }
+
         CADObjectSharedPtr o = m_mesh->m_element[2][i]->m_parentCAD;
         CADSurfSharedPtr s = boost::dynamic_pointer_cast<CADSurf>(o);
         int surf = s->GetId();
@@ -336,18 +342,18 @@ void HOSurfaceMesh::Process()
                         {
                             if (k % 2 == 0)
                             {
-                                Norm += J(k, 0) * J(k, 0) / (bnds[1] - bnds[0]) /
-                                        (bnds[1] - bnds[0]);
+                                Norm += J(k, 0) * J(k, 0); // (bnds[1] - bnds[0]) /
+                                        //(bnds[1] - bnds[0]);
                             }
                             else
                             {
-                                Norm += J(k, 0) * J(k, 0) / (bnds[3] - bnds[2]) /
-                                        (bnds[3] - bnds[2]);
+                                Norm += J(k, 0) * J(k, 0); // (bnds[3] - bnds[2]) /
+                                        //(bnds[3] - bnds[2]);
                             }
                         }
                         Norm = sqrt(Norm);
 
-                        if (Norm < 1E-8)
+                        if (Norm < 2E-2)
                         {
                             repeat = false;
                             break;
@@ -355,7 +361,7 @@ void HOSurfaceMesh::Process()
 
                         if (itct > 1000)
                         {
-                            cout << "failed to optimise on edge" << endl;
+                            cout << "failed to optimise on edge " << Norm << endl;
                             for (int k = 0; k < nq; k++)
                             {
                                 Array<OneD, NekDouble> uv(2);

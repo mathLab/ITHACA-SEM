@@ -387,11 +387,11 @@ void CurveMesh::PeriodicOverwrite(CurveMeshSharedPtr from)
 
         for (int j = 0; j < surfs.size(); j++)
         {
-            nn->SetCADSurf(surfs[j].first->GetId(), surfs[j].first,
+            nn->SetCADSurf(surfs[j].first,
                            surfs[j].first->locuv(nn->GetLoc()));
         }
 
-        nn->SetCADCurve(m_id, m_cadcurve, m_cadcurve->loct(nn->GetLoc()));
+        nn->SetCADCurve(m_cadcurve, m_cadcurve->loct(nn->GetLoc()));
 
         m_meshpoints.push_back(nn);
     }

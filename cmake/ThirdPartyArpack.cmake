@@ -12,18 +12,18 @@ OPTION(NEKTAR_USE_ARPACK
 SET(BUILD_ARPACK OFF)
 
 IF (NEKTAR_USE_ARPACK)
-    FIND_LIBRARY(ARPACK_LIBRARY NAMES "arpack.1" "arpack" PATHS /opt/local/lib)
+#    FIND_LIBRARY(ARPACK_LIBRARY NAMES "arpack.1" "arpack" PATHS /opt/local/lib)
 
-    IF (ARPACK_LIBRARY)
-        MESSAGE(STATUS "Found Arpack: ${ARPACK_LIBRARY}")
-        MARK_AS_ADVANCED(ARPACK_LIBRARY)
-    ELSE()
+#    IF (ARPACK_LIBRARY)
+#        MESSAGE(STATUS "Found Arpack: ${ARPACK_LIBRARY}")
+#        MARK_AS_ADVANCED(ARPACK_LIBRARY)
+#    ELSE()
     	IF(CMAKE_Fortran_COMPILER)
     		SET(BUILD_ARPACK ON)
     	ELSE()
         	MESSAGE(FATAL_ERROR "Could not find or build Arpack")
         ENDIF()
-    ENDIF()
+#    ENDIF()
 ENDIF()
 
 OPTION(THIRDPARTY_BUILD_ARPACK "Build arpack libraries from ThirdParty."
@@ -35,7 +35,7 @@ IF(THIRDPARTY_BUILD_ARPACK)
 	EXTERNALPROJECT_ADD(
         arpack-ng-1.0
         PREFIX ${TPSRC}
-        URL http://ae-nektar.ae.ic.ac.uk/~mt4313/arpack-ng.tar.gz
+        URL ${TPURL}/arpack-ng.tar.gz
         URL_MD5 "26cb30275d24eb79c207ed403e794736"
         STAMP_DIR ${TPBUILD}/stamp
         DOWNLOAD_DIR ${TPSRC}

@@ -112,6 +112,12 @@ bool CADSystemCFI::LoadCAD()
         cout << "Model is in inches, scaling accordingly" << endl;
         m_scal = 0.0254;
     }
+    else if(model->getUnits() == cfi::UNIT_MILLIMETERS ||
+            model->getUnits() == cfi::UNIT_MILLIMETRES)
+    {
+        cout << "Model is in mm, scaling accordingly" << endl;
+        m_scal = 1e-3;
+    }
 
     // CFI does everything by string identifers
     // currently nekmesh cad system uses integer ids.
@@ -213,7 +219,7 @@ bool CADSystemCFI::LoadCAD()
                      "curve is not joined to 2 surfaces");
         }
     }
-    
+
     return true;
 }
 

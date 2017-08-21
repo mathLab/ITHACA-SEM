@@ -158,9 +158,6 @@ void CFIMesh::Process()
         }
     }
 
-    int nodeId = 0;
-    set<int> doneNodes;
-
     ////
     //Really important fact. Nodes must be renumbered as they are read by the elements
     //such that vertical edges on the prism are sequential
@@ -168,46 +165,79 @@ void CFIMesh::Process()
     //we dont want to renumber nodes that have already been numbered, hence the set
     //the set will be tacked by the cfiID as that is a constant
 
+    map<int, set<LibUtilities::ShapeType> > cfiIdToTypes;
+
+    vector<cfi::ElementDefinition> *prisms =
+        m_model->getElements(cfi::SUBTYPE_PE6, 6);
+    for(auto &it : *prisms)
+    {
+        vector<cfi::Node *> ns = it.nodes;
+        for(int i = 0; i < ns.size(); i++)
+        {
+            cfiIdToTypes[ns[i]->number].insert(LibUtilities::ePrism);
+        }
+    }
+    vector<cfi::ElementDefinition> *hexs =
+        m_model->getElements(cfi::SUBTYPE_HE8, 8);
+    for(auto &it : *hexs)
+    {
+        vector<cfi::Node *> ns = it.nodes;
+        for(int i = 0; i < ns.size(); i++)
+        {
+            cfiIdToTypes[ns[i]->number].insert(LibUtilities::eHexahedron);
+        }
+    }
+    vector<cfi::ElementDefinition> *tets =
+        m_model->getElements(cfi::SUBTYPE_TE4, 4);
+    for(auto &it : *tets)
+    {
+        vector<cfi::Node *> ns = it.nodes;
+        for(int i = 0; i < ns.size(); i++)
+        {
+            cfiIdToTypes[ns[i]->number].insert(LibUtilities::eTetrahedron);
+        }
+    }
+
+    ASSERTL0(nodes.size() == cfiIdToTypes.size(), "not all nodes marked");
+
+    int id = 0;
+
+    for(int i = 3; i > 0; i--)
+    {
+        for(auto &it : cfiIdToTypes)
+        {
+            if(it.second.size() == i)
+            {
+                NodeSharedPtr n  = nodes[it.first];
+                if(id  <= 230)
+                {
+                    file << n->m_x << " " << n->m_y << " " << n->m_z << " " << id << endl;
+                }
+
+                nodes[it.first]->m_id = id++;
+            }
+        }
+    }
+
+
+    ASSERTL0(id == nodes.size(), "not all nodes numbered");
+
+
     int prefix = m_mesh->m_cad->GetNumSurf() > 100 ? 1000 : 100;
 
     vector<cfi::ElementDefinition>::iterator it;
 
-    /*vector<cfi::ElementDefinition> *prisms =
-        m_model->getElements(cfi::SUBTYPE_PE6, 6);
     cout << "prisms " << prisms->size() << endl;
     int nm[6] = {3, 2, 5, 0, 1, 4};
     for (it = prisms->begin(); it != prisms->end(); it++)
     {
-        vector<pair<int, int> > pripair;
-        //setup default
-        pripair.push_back(make_pair(0,3));
-        pripair.push_back(make_pair(1,2));
-        pripair.push_back(make_pair(4,5));
-
         vector<NodeSharedPtr> n(6);
-        vector<int> cfiID(6);
+
         vector<cfi::Node *> ns = (*it).nodes;
 
         for (int j = 0; j < ns.size(); j++)
         {
             n[nm[j]] = nodes[ns[j]->number];
-            cfiID[nm[j]] = ns[j]->number;
-        }
-
-        for(int j = 0; j < 3; j++)
-        {
-            set<int>::iterator f1 = doneNodes.find(cfiID[pripair[j].first]);
-            set<int>::iterator f2 = doneNodes.find(cfiID[pripair[j].second]);
-            if(f1 == doneNodes.end())
-            {
-                n[pripair[j].first]->m_id = nodeId++;
-                doneNodes.insert(cfiID[pripair[j].first]);
-            }
-            if(f2 == doneNodes.end())
-            {
-                n[pripair[j].second]->m_id = nodeId++;
-                doneNodes.insert(cfiID[pripair[j].second]);
-            }
         }
 
         vector<int> tags;
@@ -220,67 +250,15 @@ void CFIMesh::Process()
         m_mesh->m_element[3].push_back(E);
     }
 
-    vector<cfi::ElementDefinition> *hexs =
-        m_model->getElements(cfi::SUBTYPE_HE8, 8);
-    cout << "hexes " << hexs->size() << endl;
-    for (it = hexs->begin(); it != hexs->end(); it++)
-    {
-        vector<NodeSharedPtr> n;
-        vector<int> cfiID;
-        vector<cfi::Node *> ns = (*it).nodes;
-
-        for (int j = 0; j < ns.size(); j++)
-        {
-            n.push_back(nodes[ns[j]->number]);
-            cfiID.push_back(ns[j]->number);
-        }
-
-        //dont care about the ordering of the hexes just need to give the new
-        //nodes a number
-        for(int j = 0; j < 8; j ++)
-        {
-            set<int>::iterator f = doneNodes.find(cfiID[j]);
-            if(f == doneNodes.end())
-            {
-                n[j]->m_id = nodeId++;
-                doneNodes.insert(cfiID[j]);
-            }
-        }
-
-        vector<int> tags;
-        tags.push_back(prefix + 2);
-        ElmtConfig conf(LibUtilities::eHexahedron, 1, false, false);
-        ElementSharedPtr E = GetElementFactory().CreateInstance(
-            LibUtilities::eHexahedron, conf, n, tags);
-
-        m_mesh->m_element[3].push_back(E);
-    }
-
-    vector<cfi::ElementDefinition> *tets =
-        m_model->getElements(cfi::SUBTYPE_TE4, 4);
     cout << "tets " << tets->size() << endl;
     for (it = tets->begin(); it != tets->end(); it++)
     {
         vector<NodeSharedPtr> n;
-        vector<int> cfiID;
         vector<cfi::Node *> ns = (*it).nodes;
 
         for (int j = 0; j < ns.size(); j++)
         {
             n.push_back(nodes[ns[j]->number]);
-            cfiID.push_back(ns[j]->number);
-        }
-
-        //again dont actually care for the tets
-        //the important ones are the prism interface and they have already been done
-        for(int j = 0; j < 4; j ++)
-        {
-            set<int>::iterator f = doneNodes.find(cfiID[j]);
-            if(f == doneNodes.end())
-            {
-                n[j]->m_id = nodeId++;
-                doneNodes.insert(cfiID[j]);
-            }
         }
 
         vector<int> tags;
@@ -292,15 +270,33 @@ void CFIMesh::Process()
         m_mesh->m_element[3].push_back(E);
     }
 
+    cout << "hexes " << hexs->size() << endl;
+    for (it = hexs->begin(); it != hexs->end(); it++)
+    {
+        vector<NodeSharedPtr> n;
+        vector<cfi::Node *> ns = (*it).nodes;
+
+        for (int j = 0; j < ns.size(); j++)
+        {
+            n.push_back(nodes[ns[j]->number]);
+        }
+
+        vector<int> tags;
+        tags.push_back(prefix + 2);
+        ElmtConfig conf(LibUtilities::eHexahedron, 1, false, false);
+        ElementSharedPtr E = GetElementFactory().CreateInstance(
+            LibUtilities::eHexahedron, conf, n, tags);
+
+        m_mesh->m_element[3].push_back(E);
+    }
+
     ProcessVertices();
     ProcessEdges();
     ProcessFaces();
     ProcessElements();
-    ProcessComposites();*/
+    ProcessComposites();
 
-    //cout << nodeId << endl;
-
-    //return;
+    return;
 
     vector<cfi::ElementDefinition> *tris =
         m_model->getElements(cfi::SUBTYPE_TR3, 3);

@@ -227,7 +227,7 @@ namespace Nektar
                     {
                         RobinBCInfoSharedPtr rBC;
                         Array<OneD, NekDouble> tmp;
-                        StdRegions::StdExpansionSharedPtr vExp = expList->GetExp(nel);
+                        LocalRegions::ExpansionSharedPtr vExp = expList->GetExp(nel);
 
                         // add local matrix contribution
                         for(rBC = m_robinBCInfo.find(nel)->second;rBC; rBC = rBC->next)

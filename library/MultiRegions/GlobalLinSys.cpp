@@ -318,7 +318,7 @@ namespace Nektar
             DNekScalBlkMatSharedPtr loc_mat;
             DNekScalMatSharedPtr    tmp_mat;
 
-            StdRegions::StdExpansionSharedPtr vExp = expList->GetExp(n);
+            LocalRegions::ExpansionSharedPtr vExp = expList->GetExp( n );
 
             // need to be initialised with zero size for non variable
             // coefficient case
@@ -394,7 +394,7 @@ namespace Nektar
         {
             boost::shared_ptr<MultiRegions::ExpList> expList = m_expList.lock();
 
-            StdRegions::StdExpansionSharedPtr vExp = expList->GetExp(n);
+            LocalRegions::ExpansionSharedPtr vExp = expList->GetExp( n );
 
             // need to be initialised with zero size for non variable
             // coefficient case

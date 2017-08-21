@@ -88,8 +88,10 @@ namespace Nektar
 
                 LOCAL_REGIONS_EXPORT void Reset();
 
-                LOCAL_REGIONS_EXPORT virtual const
-                    SpatialDomains::GeomFactorsSharedPtr& v_GetMetricInfo() const;
+//              LOCAL_REGIONS_EXPORT virtual const
+//                  SpatialDomains::GeomFactorsSharedPtr& v_GetMetricInfo() const;
+                LOCAL_REGIONS_EXPORT const
+                    SpatialDomains::GeomFactorsSharedPtr& GetMetricInfo() const;
 
                 LOCAL_REGIONS_EXPORT DNekMatSharedPtr BuildTransformationMatrix(
                     const DNekScalMatSharedPtr &r_bnd, 

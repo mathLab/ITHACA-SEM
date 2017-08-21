@@ -1531,13 +1531,6 @@ namespace Nektar
                 NEKERROR(ErrorUtil::efatal, "Method does not exist for this shape or library");
             }
 
-            const  boost::shared_ptr<SpatialDomains::GeomFactors>& StdExpansion::v_GetMetricInfo() const
-            {
-                NEKERROR(ErrorUtil::efatal, "This function is only valid for LocalRegions");
-                return SpatialDomains::NullGeomFactorsSharedPtr;
-
-            }
-
             void StdExpansion::v_BwdTrans_SumFac(const Array<OneD, const NekDouble>& inarray,
                                            Array<OneD, NekDouble> &outarray)
             {

@@ -102,7 +102,7 @@ namespace Nektar
              boost::shared_ptr<MultiRegions::ExpList> expList = 
                  ((m_linsys.lock())->GetLocMat()).lock();
 
-             StdRegions::StdExpansionSharedPtr locExpansion;
+             LocalRegions::ExpansionSharedPtr locExpansion;
 
              int i,j,n,cnt,gid1,gid2;
              NekDouble sign1,sign2,value;

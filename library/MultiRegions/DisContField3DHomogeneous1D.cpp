@@ -435,16 +435,15 @@ namespace Nektar
             result->SetWaveSpace(GetWaveSpace());
         }    
 
-        void DisContField3DHomogeneous1D::GetBCValues(
-                  Array<OneD, NekDouble> &BndVals,
-            const Array<OneD, NekDouble> &TotField,
-            int                           BndID)
+        void DisContField3DHomogeneous1D::GetBCValues(       Array<OneD, NekDouble> & BndVals,
+                                                       const Array<OneD, NekDouble> & TotField,
+                                                             int                      BndID )
         {
-            StdRegions::StdExpansionSharedPtr elmt;
-            StdRegions::StdExpansion1DSharedPtr temp_BC_exp;
+            LocalRegions::ExpansionSharedPtr   elmt;
+            LocalRegions::Expansion1DSharedPtr temp_BC_exp;
 
             Array<OneD, const NekDouble> tmp_Tot;
-            Array<OneD, NekDouble> tmp_BC;
+            Array<OneD, NekDouble>       tmp_BC;
 
             int cnt = 0;
             int pos = 0;
@@ -468,10 +467,8 @@ namespace Nektar
                                 GetExp(i+k*exp_size_per_plane)->GetTotPoints();
                             offset      = GetPhys_Offset(elmtID);
                             elmt        = GetExp(elmtID);
-                            temp_BC_exp = boost::dynamic_pointer_cast<
-                                StdRegions::StdExpansion1D>(
-                                    m_bndCondExpansions[n]->GetExp(
-                                        i+k*exp_size_per_plane));
+                            temp_BC_exp = boost::dynamic_pointer_cast<LocalRegions::Expansion1D>(
+                                    m_bndCondExpansions[n]->GetExp( i + k * exp_size_per_plane ) );
 
                             elmt->GetEdgePhysVals(boundaryID, temp_BC_exp,
                                                   tmp_Tot = TotField + offset,
@@ -490,8 +487,8 @@ namespace Nektar
             Array<OneD, NekDouble>       &outarray,
             int                           BndID)
         {
-            StdRegions::StdExpansionSharedPtr elmt;
-            StdRegions::StdExpansion1DSharedPtr temp_BC_exp;
+            LocalRegions::ExpansionSharedPtr   elmt;
+            LocalRegions::Expansion1DSharedPtr temp_BC_exp;
 
             Array<OneD, NekDouble> tmp_V1;
             Array<OneD, NekDouble> tmp_V2;
@@ -519,10 +516,8 @@ namespace Nektar
                                 GetCoeff_Offset(i+k*exp_size_per_plane);
 
                             elmt = GetExp(elmtID);
-                            temp_BC_exp = boost::dynamic_pointer_cast<
-                                StdRegions::StdExpansion1D>(
-                                    m_bndCondExpansions[n]->GetExp(
-                                        i+k*exp_size_per_plane));
+                            temp_BC_exp = boost::dynamic_pointer_cast<LocalRegions::Expansion1D>(
+                                    m_bndCondExpansions[n]->GetExp( i + k * exp_size_per_plane ) );
 
                             temp_BC_exp->NormVectorIProductWRTBase(
                                 tmp_V1 = V1 + Phys_offset,
@@ -581,43 +576,42 @@ namespace Nektar
         
         /**
          */
-        void DisContField3DHomogeneous1D::v_GetBoundaryNormals(int i,
-                        Array<OneD, Array<OneD, NekDouble> > &normals)
+        void DisContField3DHomogeneous1D::v_GetBoundaryNormals( int                                    i,
+                                                                Array<OneD, Array<OneD, NekDouble> > & normals )
         {
-            int j, n, cnt, nq;
-            int expdim = GetCoordim(0);
-            int coordim = 3;
-            Array<OneD, NekDouble> tmp;
-            StdRegions::StdExpansionSharedPtr elmt;
+            int                              expdim = GetCoordim(0);
+            int                              coordim = 3;
+            Array<OneD, NekDouble>           tmp;
+            LocalRegions::ExpansionSharedPtr elmt;
             
             Array<OneD, int> ElmtID,EdgeID;
             GetBoundaryToElmtMap(ElmtID,EdgeID);
             
             // Initialise result
             normals = Array<OneD, Array<OneD, NekDouble> > (coordim);
-            for (j = 0; j < coordim; ++j)
+            for (int j = 0; j < coordim; ++j)
             {
-                normals[j] = Array<OneD, NekDouble> ( 
-                                GetBndCondExpansions()[i]->GetTotPoints(), 0.0);
+                normals[j] = Array<OneD, NekDouble> ( GetBndCondExpansions()[i]->GetTotPoints(), 0.0 );
             }
             
             // Skip other boundary regions
-            for (cnt = n = 0; n < i; ++n)
+            int cnt = 0;
+            for( int n = 0; n < i; ++n )
             {
                 cnt += GetBndCondExpansions()[n]->GetExpSize();
             }
             
             int offset;
-            for (n = 0; n < GetBndCondExpansions()[i]->GetExpSize(); ++n)
+            for( int n = 0; n < GetBndCondExpansions()[i]->GetExpSize(); ++n )
             {
                 offset = GetBndCondExpansions()[i]->GetPhys_Offset(n);
-                nq = GetBndCondExpansions()[i]->GetExp(n)->GetTotPoints();
+                int nq = GetBndCondExpansions()[i]->GetExp(n)->GetTotPoints();
                 
                 elmt   = GetExp(ElmtID[cnt+n]);
                 const Array<OneD, const Array<OneD, NekDouble> > normalsElmt
                             = elmt->GetSurfaceNormal(EdgeID[cnt+n]);
                 // Copy to result
-                for (j = 0; j < expdim; ++j)
+                for (int j = 0; j < expdim; ++j)
                 {
                     Vmath::Vcopy(nq, normalsElmt[j], 1,
                                      tmp = normals[j] + offset, 1);

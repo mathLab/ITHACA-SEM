@@ -539,7 +539,7 @@ namespace Nektar
                 
                 for(int i = 0; i < m_planes[n]->GetExpSize(); ++i)
                 {
-                    StdRegions::StdExpansionSharedPtr exp = m_planes[n]->GetExp(i);
+                    LocalRegions::ExpansionSharedPtr exp = m_planes[n]->GetExp( i );
                     Array<OneD, NekDouble> phys(exp->GetTotPoints());
                     exp->BwdTrans(m_planes[n]->GetCoeffs()+m_planes[n]->GetCoeff_Offset(i),
                                   phys);

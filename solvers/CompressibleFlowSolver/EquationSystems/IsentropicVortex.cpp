@@ -46,7 +46,8 @@ namespace Nektar
     
     IsentropicVortex::IsentropicVortex(
         const LibUtilities::SessionReaderSharedPtr& pSession)
-    : EulerCFE(pSession)
+    : UnsteadySystem(pSession),
+      EulerCFE(pSession)
     {
     }
 

@@ -44,7 +44,8 @@ namespace Nektar
 {
     CompressibleFlowSystem::CompressibleFlowSystem(
         const LibUtilities::SessionReaderSharedPtr& pSession)
-        : UnsteadySystem(pSession)
+        : UnsteadySystem(pSession),
+          AdvectionSystem(pSession)
     {
     }
 
@@ -228,17 +229,17 @@ namespace Nektar
         string advName, riemName;
         m_session->LoadSolverInfo("AdvectionType", advName, "WeakDG");
 
-        m_advection = SolverUtils::GetAdvectionFactory()
+        m_advObject = SolverUtils::GetAdvectionFactory()
                                     .CreateInstance(advName, advName);
 
         if (m_specHP_dealiasing)
         {
-            m_advection->SetFluxVector(&CompressibleFlowSystem::
+            m_advObject->SetFluxVector(&CompressibleFlowSystem::
                                        GetFluxVectorDeAlias, this);
         }
         else
         {
-            m_advection->SetFluxVector  (&CompressibleFlowSystem::
+            m_advObject->SetFluxVector  (&CompressibleFlowSystem::
                                           GetFluxVector, this);
         }
 
@@ -258,8 +259,8 @@ namespace Nektar
             "N",       &CompressibleFlowSystem::GetNormals, this);
 
         // Concluding initialisation of advection / diffusion operators
-        m_advection->SetRiemannSolver   (riemannSolver);
-        m_advection->InitObject         (m_session, m_fields);
+        m_advObject->SetRiemannSolver   (riemannSolver);
+        m_advObject->InitObject         (m_session, m_fields);
     }
 
     /**
@@ -395,7 +396,7 @@ namespace Nektar
         int nvariables = inarray.num_elements();
         Array<OneD, Array<OneD, NekDouble> > advVel(m_spacedim);
 
-        m_advection->Advect(nvariables, m_fields, advVel, inarray,
+        m_advObject->Advect(nvariables, m_fields, advVel, inarray,
                             outarray, time, pFwd, pBwd);
     }
 

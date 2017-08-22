@@ -40,6 +40,7 @@
 #include <CompressibleFlowSolver/Misc/VariableConverter.h>
 #include <CompressibleFlowSolver/BoundaryConditions/CFSBndCond.h>
 #include <SolverUtils/UnsteadySystem.h>
+#include <SolverUtils/AdvectionSystem.h>
 #include <SolverUtils/RiemannSolvers/RiemannSolver.h>
 #include <SolverUtils/AdvectionSystem.h>
 #include <SolverUtils/Diffusion/Diffusion.h>
@@ -50,7 +51,7 @@ namespace Nektar
     /**
      *
      */
-    class CompressibleFlowSystem: public SolverUtils::UnsteadySystem
+    class CompressibleFlowSystem: public SolverUtils::AdvectionSystem
     {
     public:
 
@@ -67,7 +68,6 @@ namespace Nektar
             const Array<OneD,int> &ExpOrder);
 
     protected:
-        SolverUtils::AdvectionSharedPtr     m_advection;
         SolverUtils::DiffusionSharedPtr     m_diffusion;
         ArtificialDiffusionSharedPtr        m_artificialDiffusion;
         Array<OneD, Array<OneD, NekDouble> >m_vecLocs;

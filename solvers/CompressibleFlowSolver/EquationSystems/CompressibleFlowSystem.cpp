@@ -34,9 +34,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <CompressibleFlowSolver/EquationSystems/CompressibleFlowSystem.h>
-#include <LocalRegions/TriExp.h>
-#include <MultiRegions/ExpList.h>
-
 
 using namespace std;
 
@@ -613,24 +610,13 @@ namespace Nektar
         stdVelocity = v_GetMaxStdVelocity();
 
         // Factors to compute the time-step limit
-        NekDouble minLength = 0.0;
         NekDouble alpha     = MaxTimeStepEstimator();
         NekDouble cLambda   = 0.2; // Spencer book-317
 
         // Loop over elements to compute the time-step limit for each element
         for(n = 0; n < nElements; ++n)
         {
-            int npoints = m_fields[0]->GetExp(n)->GetTotPoints();
-            Array<OneD, NekDouble> one2D(npoints, 1.0);
-            NekDouble Area = m_fields[0]->GetExp(n)->Integral(one2D);
-
-            minLength = sqrt(Area);
-            if (m_fields[0]->GetExp(n)->as<LocalRegions::TriExp>())
-            {
-                minLength *= 2.0;
-            }
-
-            tstep[n] = m_cflSafetyFactor * alpha * minLength
+            tstep[n] = m_cflSafetyFactor * alpha
                      / (stdVelocity[n] * cLambda
                         * (ExpOrder[n] - 1) * (ExpOrder[n] - 1));
         }
@@ -737,13 +723,24 @@ namespace Nektar
             offset  = m_fields[0]->GetPhys_Offset(el);
             int nq = m_fields[0]->GetExp(el)->GetTotPoints();
 
-            // Possible bug: not multiply by jacobian??
             const SpatialDomains::GeomFactorsSharedPtr metricInfo =
                 m_fields[0]->GetExp(el)->GetGeom()->GetMetricInfo();
             const Array<TwoD, const NekDouble> &gmat =
                 m_fields[0]->GetExp(el)->GetGeom()->GetMetricInfo()
                                                   ->GetDerivFactors(ptsKeys);
 
+            // Add sound speed in all directions
+            //    (this might overestimate the eigenvalue)
+            for (int i = 0; i < nq; ++i)
+            {
+                for (int j = 0; j < expdim; ++j)
+                {
+                    int sign = velocity[j][offset + i] > 0 ? 1 : -1;
+                    velocity[j][offset + i] += sign * soundspeed[offset + i];
+                }
+            }
+
+            // Convert to standard element
             if(metricInfo->GetGtype() == SpatialDomains::eDeformed)
             {
                 // d xi/ dx = gmat = 1/J * d x/d xi
@@ -786,7 +783,7 @@ namespace Nektar
                     pntVelocity += stdVelocity[j][offset + i] *
                                    stdVelocity[j][offset + i];
                 }
-                pntVelocity = sqrt(pntVelocity) + soundspeed[offset + i];
+                pntVelocity = sqrt(pntVelocity);
                 if (pntVelocity > stdV[el])
                 {
                     stdV[el] = pntVelocity;

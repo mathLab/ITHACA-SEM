@@ -97,17 +97,8 @@ namespace Nektar
         // User defined boundary conditions
         std::vector<CFSBndCondSharedPtr>    m_bndConds;
 
-        // L2 error file
-        std::ofstream m_errFile;
-
-        // Tolerance to which steady state should be evaluated at
-        NekDouble m_steadyStateTol;
-
         // Forcing term
         std::vector<SolverUtils::ForcingSharedPtr> m_forcing;
-
-        // Storage for L2 norm error
-        Array<OneD, Array<OneD, NekDouble> > m_un;
 
         CompressibleFlowSystem(
             const LibUtilities::SessionReaderSharedPtr& pSession);
@@ -147,8 +138,6 @@ namespace Nektar
             const Array<OneD, Array<OneD, NekDouble> >         &physfield,
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &flux);
 
-        void InitializeSteadyState();
-
         void SetBoundaryConditions(
             Array<OneD, Array<OneD, NekDouble> >             &physarray,
             NekDouble                                         time);
@@ -160,9 +149,6 @@ namespace Nektar
         void GetElmtTimeStep(
             const Array<OneD, const Array<OneD, NekDouble> > &inarray,
                   Array<OneD, NekDouble> &tstep);
-
-        virtual bool v_PostIntegrate(int step);
-        bool CalcSteadyState(bool output);
 
         virtual NekDouble v_GetTimeStep(
             const Array<OneD, const Array<OneD, NekDouble> > &inarray);

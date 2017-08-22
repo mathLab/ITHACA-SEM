@@ -90,6 +90,8 @@ namespace Nektar
                                        m_explicitReaction, true);
 
             m_session->LoadParameter("CheckNanSteps", m_nanSteps, 1);
+            // Steady state tolerance
+            m_session->LoadParameter("SteadyStateTol", m_steadyStateTol, 0.0);
 
             // For steady problems, we do not initialise the time integration
             if (m_session->DefinesSolverInfo("TIMEINTEGRATIONMETHOD"))
@@ -334,6 +336,20 @@ namespace Nektar
                     break;
                 }
 
+                // Check for steady-state
+                if (m_steadyStateTol > 0.0)
+                {
+                    if (CheckSteadyState(step))
+                    {
+                        if (m_comm->GetRank() == 0)
+                        {
+                            cout << "Reached Steady State to tolerance "
+                                 << m_steadyStateTol << endl;
+                        }
+                        break;
+                    }
+                }
+
                 // search for NaN and quit if found
                 if (m_nanSteps && !((step+1) % m_nanSteps) )
                 {
@@ -461,6 +477,7 @@ namespace Nektar
             CheckForRestartTime(m_time, m_nchk);
             SetBoundaryConditions(m_time);
             SetInitialConditions(m_time);
+            InitializeSteadyState();
         }
         
         /**
@@ -987,6 +1004,112 @@ namespace Nektar
 
             // set up map with eVarCoffLaplacian key
             varCoeffMap[StdRegions::eVarCoeffLaplacian] = varcoeff;
+        }
+
+        void UnsteadySystem::InitializeSteadyState()
+        {
+            if (m_steadyStateTol > 0.0)
+            {
+                const int nPoints = m_fields[0]->GetTotPoints();
+                m_un = Array<OneD, Array<OneD, NekDouble> > (
+                            m_fields.num_elements());
+
+                for (int i = 0; i < m_fields.num_elements(); ++i)
+                {
+                    m_un[i] = Array<OneD, NekDouble>(nPoints);
+                    Vmath::Vcopy(nPoints, m_fields[i]->GetPhys(), 1,
+                                          m_un[i], 1);
+                }
+
+                if (m_comm->GetRank() == 0)
+                {
+                    std::string fName = m_session->GetSessionName() +
+                        std::string(".res");
+                    m_errFile.open(fName.c_str());
+                    m_errFile << "# "
+                              << setw(15) << left << "Time";
+
+                    for (int i = 0; i < m_fields.num_elements(); ++i)
+                    {
+                        m_errFile << setw(22) << m_session->GetVariables()[i];
+                    }
+                }
+            }
+        }
+
+        /**
+        * @brief Calculate whether the system has reached a steady state by
+        * observing residuals to a user-defined tolerance.
+        */
+        bool UnsteadySystem::CheckSteadyState(int step)
+        {
+            const int nPoints = GetTotPoints();
+            const int nFields = m_fields.num_elements();
+
+            // Holds L2 errors.
+            Array<OneD, NekDouble> L2       (nFields);
+            Array<OneD, NekDouble> residual (nFields);
+            Array<OneD, NekDouble> reference(nFields);
+
+            for (int i = 0; i < nFields; ++i)
+            {
+                Array<OneD, NekDouble> tmp(nPoints);
+
+                Vmath::Vsub(nPoints, m_fields[i]->GetPhys(), 1,
+                                     m_un[i], 1, tmp, 1);
+                Vmath::Vmul(nPoints, tmp, 1, tmp, 1, tmp, 1);
+                residual[i] = Vmath::Vsum(nPoints, tmp, 1);
+
+                Vmath::Vmul(nPoints, m_un[i], 1, m_un[i], 1, tmp, 1);
+                reference[i] = Vmath::Vsum(nPoints, tmp, 1);
+            }
+
+            m_comm->AllReduce(residual , LibUtilities::ReduceSum);
+            m_comm->AllReduce(reference, LibUtilities::ReduceSum);
+
+            // L2 error
+            for (int i = 0; i < nFields; ++i)
+            {
+                reference[i] = (reference[i] == 0) ? 1 : reference[i];
+                L2[i] = sqrt(residual[i] / reference[i]);
+            }
+
+            if (m_comm->GetRank() == 0 && (step % m_infosteps == 0))
+            {
+                // Output time
+                m_errFile << setprecision(8) << setw(17)
+                          << scientific << m_time;
+
+                // Output residuals
+                for (int i = 0; i < nFields; ++i)
+                {
+                    m_errFile << setprecision(11) << setw(22) << scientific
+                              << L2[i];
+                }
+
+                m_errFile << endl;
+            }
+
+            // Calculate maximum L2 error
+            NekDouble maxL2 = Vmath::Vmax(nFields, L2, 1);
+
+            if (m_session->DefinesCmdLineArgument("verbose") &&
+                m_comm->GetRank() == 0 && (step % m_infosteps == 0))
+            {
+                cout << "-- Maximum L^2 residual: " << maxL2 << endl;
+            }
+
+            if (maxL2 <= m_steadyStateTol)
+            {
+                return true;
+            }
+
+            for (int i = 0; i < m_fields.num_elements(); ++i)
+            {
+                Vmath::Vcopy(nPoints, m_fields[i]->GetPhys(), 1, m_un[i], 1);
+            }
+
+            return false;
         }
     }
 }

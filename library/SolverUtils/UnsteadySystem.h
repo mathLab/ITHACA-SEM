@@ -81,6 +81,13 @@ namespace Nektar
             /// forward transformed state.
             bool                                            m_homoInitialFwd;
 
+            /// Tolerance to which steady state should be evaluated at
+            NekDouble                                       m_steadyStateTol;
+            /// Storage for previous solution for steady-state check
+            Array<OneD, Array<OneD, NekDouble> >            m_un;
+            // Steady-state residual file
+            std::ofstream                                   m_errFile;
+
             std::vector<int>                                m_intVariables;
 
             std::vector<FilterSharedPtr>                    m_filters;
@@ -168,6 +175,10 @@ namespace Nektar
                 Array<OneD,       NekDouble> &penaltyflux,
                 NekDouble C11,
                 NekDouble time=0.0);
+
+            void InitializeSteadyState();
+
+            bool CheckSteadyState(int step);
         };
         
     }

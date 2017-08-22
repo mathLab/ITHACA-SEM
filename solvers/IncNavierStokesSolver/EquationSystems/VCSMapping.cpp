@@ -80,7 +80,7 @@ namespace Nektar
             m_advObject); 
         m_extrapolation->SubSteppingTimeIntegration(
                             m_intScheme->GetIntegrationMethod(), m_intScheme);
-        m_extrapolation->GenerateHOPBCMap(m_session);        
+        m_extrapolation->GenerateHOPBCMap(m_session);
 
        // Storage to extrapolate pressure forcing
         int physTot = m_fields[0]->GetTotPoints();

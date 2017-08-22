@@ -188,14 +188,13 @@ namespace Nektar
         }
         else
         {
-            m_session->LoadParameter ("Pr",
-                                        m_Prandtl, 0.72);
+            m_session->LoadParameter ("Pr", m_Prandtl, 0.72);
             m_thermalConductivity = m_Cp * m_mu / m_Prandtl;
         }
 
         // Shock capture
         m_session->LoadSolverInfo("ShockCaptureType",
-                                  m_shockCaptureType,    "Off");
+                                  m_shockCaptureType, "Off");
 
         // Load parameters for exponential filtering
         m_session->MatchSolverInfo("ExponentialFiltering","True",
@@ -363,8 +362,8 @@ namespace Nektar
                     Vmath::Vcopy(npoints, inarray[i], 1, outarray[i], 1);
                     if(m_useFiltering)
                     {
-                        m_fields[i]->ExponentialFilter(outarray[i], m_filterAlpha,
-                                              m_filterExponent, m_filterCutoff);
+                        m_fields[i]->ExponentialFilter(outarray[i],
+                            m_filterAlpha, m_filterExponent, m_filterCutoff);
                     }
                 }
                 SetBoundaryConditions(outarray, time);
@@ -865,7 +864,8 @@ namespace Nektar
                 tmp[i] = m_fields[i]->GetPhys();
             }
 
-            Array<OneD, NekDouble> pressure(nPhys), soundspeed(nPhys), mach(nPhys);
+            Array<OneD, NekDouble> pressure(nPhys);
+            Array<OneD, NekDouble> soundspeed(nPhys), mach(nPhys);
             Array<OneD, NekDouble> sensor(nPhys), SensorKappa(nPhys);
 
             m_varConv->GetPressure  (tmp, pressure);

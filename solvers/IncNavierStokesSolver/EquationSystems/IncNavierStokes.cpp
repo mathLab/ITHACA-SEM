@@ -837,7 +837,8 @@ namespace Nektar
     /**
     * Add an additional forcing term programmatically.
     */
-    void IncNavierStokes::AddForcing(const SolverUtils::ForcingSharedPtr& pForce)
+    void IncNavierStokes::AddForcing(
+        const SolverUtils::ForcingSharedPtr& pForce)
     {
         m_forcing.push_back(pForce);
     }
@@ -851,7 +852,6 @@ namespace Nektar
         int n_element = m_fields[0]->GetExpSize();
 
         const Array<OneD, int> ExpOrder = GetNumExpModesPerExp();
-        Array<OneD, int> ExpOrderList (n_element, ExpOrder);
 
         const NekDouble cLambda = 0.2; // Spencer book pag. 317
 

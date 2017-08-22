@@ -92,6 +92,9 @@ namespace Nektar
             m_session->LoadParameter("CheckNanSteps", m_nanSteps, 1);
             // Steady state tolerance
             m_session->LoadParameter("SteadyStateTol", m_steadyStateTol, 0.0);
+            // Frequency for checking steady state
+            m_session->LoadParameter("SteadyStateSteps",
+                                          m_steadyStateSteps, 1);
 
             // For steady problems, we do not initialise the time integration
             if (m_session->DefinesSolverInfo("TIMEINTEGRATIONMETHOD"))
@@ -211,8 +214,7 @@ namespace Nektar
 
             // Set up wrapper to fields data storage.
             Array<OneD, Array<OneD, NekDouble> > fields(nvariables);
-            Array<OneD, Array<OneD, NekDouble> > tmp   (nvariables);
-            
+
             // Order storage to list time-integrated fields first.
             for(i = 0; i < nvariables; ++i)
             {
@@ -337,7 +339,7 @@ namespace Nektar
                 }
 
                 // Check for steady-state
-                if (m_steadyStateTol > 0.0)
+                if (m_steadyStateTol > 0.0 && (!((step+1)%m_steadyStateSteps)) )
                 {
                     if (CheckSteadyState(step))
                     {
@@ -465,7 +467,7 @@ namespace Nektar
             // Print for 1D problems
             if(m_spacedim == 1)
             {
-                v_AppendOutput1D(fields);   
+                v_AppendOutput1D(fields);
             }
         }
         

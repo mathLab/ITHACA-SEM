@@ -83,6 +83,8 @@ namespace Nektar
 
             /// Tolerance to which steady state should be evaluated at
             NekDouble                                       m_steadyStateTol;
+            /// Check for steady state at step interval
+            int                                             m_steadyStateSteps;
             /// Storage for previous solution for steady-state check
             Array<OneD, Array<OneD, NekDouble> >            m_un;
             // Steady-state residual file

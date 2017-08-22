@@ -192,10 +192,6 @@ namespace Nektar
         int         m_energysteps;
         /// dump cfl estimate
         int         m_cflsteps;
-        /// Check for steady state at step interval
-        int         m_steadyStateSteps;
-        /// Tolerance to which steady state should be evaluated at
-        NekDouble   m_steadyStateTol;
 
         /// equation type;
         EquationType  m_equationType;

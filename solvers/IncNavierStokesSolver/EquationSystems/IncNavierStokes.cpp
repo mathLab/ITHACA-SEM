@@ -71,8 +71,7 @@ namespace Nektar
         const LibUtilities::SessionReaderSharedPtr& pSession):
         UnsteadySystem(pSession),
         AdvectionSystem(pSession),
-        m_SmoothAdvection(false),
-        m_steadyStateSteps(0)
+        m_SmoothAdvection(false)
     {
     }
 
@@ -131,10 +130,6 @@ namespace Nektar
             {
                 m_session->LoadParameter("IO_InfoSteps", m_infosteps, 0);
                 m_session->LoadParameter("IO_CFLSteps", m_cflsteps, 0);
-                m_session->LoadParameter("SteadyStateSteps",
-                                          m_steadyStateSteps, 0);
-                m_session->LoadParameter("SteadyStateTol",
-                                          m_steadyStateTol, 1e-6);
             }
             break;
         case eNoEquationType:
@@ -847,38 +842,6 @@ namespace Nektar
         m_forcing.push_back(pForce);
     }
 
-
-    /**
-     * Decide if at a steady state if the discrerte L2 sum of the
-     * coefficients is the same as the previous step to within the
-     * tolerance m_steadyStateTol;
-     */
-    bool IncNavierStokes::CalcSteadyState(void)
-    {
-        static NekDouble previousL2 = 0.0;
-        bool returnval = false;
-
-        NekDouble L2 = 0.0;
-
-        // calculate L2 discrete summation
-        int ncoeffs = m_fields[0]->GetNcoeffs();
-
-        for(int i = 0; i < m_fields.num_elements(); ++i)
-        {
-            L2 += Vmath::Dot(ncoeffs,m_fields[i]->GetCoeffs(),1,
-                    m_fields[i]->GetCoeffs(),1);
-        }
-
-        if(fabs(L2-previousL2) < ncoeffs*m_steadyStateTol)
-        {
-            returnval = true;
-        }
-
-        previousL2 = L2;
-
-        return returnval;
-    }
-
     /**
      *
      */
@@ -972,7 +935,7 @@ namespace Nektar
 
 
     /**
-     * Estimate CFL and perform steady-state check
+     * Estimate CFL
      */
     bool IncNavierStokes::v_PostIntegrate(int step)
     {
@@ -987,17 +950,6 @@ namespace Nektar
                      << elmtid << ")" << endl;
             }
         }
-
-        if(m_steadyStateSteps && step && (!((step+1)%m_steadyStateSteps)))
-        {
-            if(CalcSteadyState() == true)
-            {
-                cout << "Reached Steady State to tolerance "
-                     << m_steadyStateTol << endl;
-                return true;
-            }
-        }
-
         return false;
     }
 } //end of namespace

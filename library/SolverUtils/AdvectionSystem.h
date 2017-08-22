@@ -59,9 +59,27 @@ public:
         return m_advObject;
     }
 
+    Array<OneD, NekDouble>  GetElmtCFLVals(void);
+    NekDouble               GetCFLEstimate(int &elmtid);
+
 protected:
     /// Advection term
     SolverUtils::AdvectionSharedPtr m_advObject;
+
+    virtual bool v_PostIntegrate(int step);
+
+    virtual Array<OneD, NekDouble> v_GetMaxStdVelocity()
+    {
+        ASSERTL0(false,
+            "v_GetMaxStdVelocity is not implemented by the base class.");
+        Array<OneD, NekDouble> dummy(1);
+        return dummy;
+    }
+
+private:
+    /// dump cfl estimate
+    int         m_cflsteps;
+
 };
 
 /// Shared pointer to an AdvectionSystem class

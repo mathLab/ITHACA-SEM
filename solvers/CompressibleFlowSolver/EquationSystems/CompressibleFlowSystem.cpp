@@ -54,7 +54,7 @@ namespace Nektar
      */
     void CompressibleFlowSystem::v_InitObject()
     {
-        UnsteadySystem::v_InitObject();
+        AdvectionSystem::v_InitObject();
 
         m_varConv = MemoryManager<VariableConverter>::AllocateSharedPtr(
                     m_session, m_spacedim);
@@ -610,7 +610,7 @@ namespace Nektar
         Array<OneD, NekDouble> stdVelocity(nElements);
 
         // Get standard velocity to compute the time-step limit
-        GetStdVelocity(inarray, stdVelocity);
+        stdVelocity = v_GetMaxStdVelocity();
 
         // Factors to compute the time-step limit
         NekDouble minLength = 0.0;
@@ -696,19 +696,23 @@ namespace Nektar
     /**
      * @brief Compute the advection velocity in the standard space
      * for each element of the expansion.
-     *
-     * @param inarray    Momentum field.
-     * @param stdV       Standard velocity field.
      */
-    void CompressibleFlowSystem::GetStdVelocity(
-        const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-              Array<OneD,                   NekDouble>   &stdV)
+    Array<OneD, NekDouble> CompressibleFlowSystem::v_GetMaxStdVelocity()
     {
         int nTotQuadPoints = GetTotPoints();
         int n_element      = m_fields[0]->GetExpSize();
         int expdim         = m_fields[0]->GetGraph()->GetMeshDimension();
+        int nfields        = m_fields.num_elements();
         int offset;
         Array<OneD, NekDouble> tmp;
+
+        Array<OneD, Array<OneD, NekDouble> > physfields(nfields);
+        for (int i = 0; i < nfields; ++i)
+        {
+            physfields[i] = m_fields[i]->GetPhys();
+        }
+
+        Array<OneD, NekDouble> stdV(n_element, 0.0);
 
         // Getting the velocity vector on the 2D normal space
         Array<OneD, Array<OneD, NekDouble> > velocity   (m_spacedim);
@@ -717,18 +721,15 @@ namespace Nektar
         Array<OneD, NekDouble>               soundspeed (nTotQuadPoints);
         LibUtilities::PointsKeyVector        ptsKeys;
 
-        // Zero output array
-        Vmath::Zero(stdV.num_elements(), stdV, 1);
-
         for (int i = 0; i < m_spacedim; ++i)
         {
             velocity   [i] = Array<OneD, NekDouble>(nTotQuadPoints);
             stdVelocity[i] = Array<OneD, NekDouble>(nTotQuadPoints, 0.0);
         }
 
-        m_varConv->GetVelocityVector(inarray, velocity);
-        m_varConv->GetPressure      (inarray, velocity, pressure);
-        m_varConv->GetSoundSpeed    (inarray, pressure, soundspeed);
+        m_varConv->GetVelocityVector(physfields, velocity);
+        m_varConv->GetPressure      (physfields, velocity, pressure);
+        m_varConv->GetSoundSpeed    (physfields, pressure, soundspeed);
 
         for(int el = 0; el < n_element; ++el)
         {
@@ -792,6 +793,8 @@ namespace Nektar
                 }
             }
         }
+
+        return stdV;
     }
 
     /**

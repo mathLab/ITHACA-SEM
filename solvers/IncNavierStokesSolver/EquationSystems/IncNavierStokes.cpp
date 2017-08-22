@@ -124,13 +124,8 @@ namespace Nektar
         case eSteadyOseen:
         case eSteadyNavierStokes:
         case eSteadyLinearisedNS:
-            break;
         case eUnsteadyNavierStokes:
         case eUnsteadyStokes:
-            {
-                m_session->LoadParameter("IO_InfoSteps", m_infosteps, 0);
-                m_session->LoadParameter("IO_CFLSteps", m_cflsteps, 0);
-            }
             break;
         case eNoEquationType:
         default:
@@ -846,17 +841,12 @@ namespace Nektar
     /**
      *
      */
-    Array<OneD, NekDouble> IncNavierStokes::GetElmtCFLVals(void)
+    Array<OneD, NekDouble> IncNavierStokes::v_GetMaxStdVelocity(void)
     {
-        int n_vel     = m_velocity.num_elements();
-        int n_element = m_fields[0]->GetExpSize();
+        int nvel  = m_velocity.num_elements();
+        int nelmt = m_fields[0]->GetExpSize();
 
-        const Array<OneD, int> ExpOrder = GetNumExpModesPerExp();
-
-        const NekDouble cLambda = 0.2; // Spencer book pag. 317
-
-        Array<OneD, NekDouble> cfl        (n_element, 0.0);
-        Array<OneD, NekDouble> stdVelocity(n_element, 0.0);
+        Array<OneD, NekDouble> stdVelocity(nelmt, 0.0);
         Array<OneD, Array<OneD, NekDouble> > velfields;
 
         if(m_HomogeneousType == eHomogeneous1D) // just do check on 2D info
@@ -870,9 +860,9 @@ namespace Nektar
         }
         else
         {
-            velfields = Array<OneD, Array<OneD, NekDouble> >(n_vel);
+            velfields = Array<OneD, Array<OneD, NekDouble> >(nvel);
 
-            for(int i = 0; i < n_vel; ++i)
+            for(int i = 0; i < nvel; ++i)
             {
                 velfields[i] = m_fields[m_velocity[i]]->UpdatePhys();
             }
@@ -880,47 +870,8 @@ namespace Nektar
 
         stdVelocity = m_extrapolation->GetMaxStdVelocity(velfields);
 
-        for(int el = 0; el < n_element; ++el)
-        {
-            cfl[el] =  m_timestep*(stdVelocity[el] * cLambda *
-                                   (ExpOrder[el]-1) * (ExpOrder[el]-1));
-        }
-
-        return cfl;
+        return stdVelocity;
     }
-
-    /**
-     *
-     */
-    NekDouble IncNavierStokes::GetCFLEstimate(int &elmtid)
-    {
-        int n_element = m_fields[0]->GetExpSize();
-
-        Array<OneD, NekDouble> cfl = GetElmtCFLVals();
-
-        elmtid = Vmath::Imax(n_element,cfl,1);
-        NekDouble CFL,CFL_loc;
-
-        CFL = CFL_loc = cfl[elmtid];
-        m_comm->AllReduce(CFL,LibUtilities::ReduceMax);
-
-        // unshuffle elmt id if data is not stored in consecutive order.
-        elmtid = m_fields[0]->GetExp(elmtid)->GetGeom()->GetGlobalID();
-        if(CFL != CFL_loc)
-        {
-            elmtid = -1;
-        }
-
-        m_comm->AllReduce(elmtid,LibUtilities::ReduceMax);
-
-        // express element id with respect to plane
-        if(m_HomogeneousType == eHomogeneous1D)
-        {
-            elmtid = elmtid%m_fields[0]->GetPlane(0)->GetExpSize();
-        }
-        return CFL;
-    }
-
 
     /**
      * Perform the extrapolation.
@@ -933,24 +884,5 @@ namespace Nektar
         return false;
     }
 
-
-    /**
-     * Estimate CFL
-     */
-    bool IncNavierStokes::v_PostIntegrate(int step)
-    {
-        if(m_cflsteps && !((step+1)%m_cflsteps))
-        {
-            int elmtid;
-            NekDouble cfl = GetCFLEstimate(elmtid);
-
-            if(m_comm->GetRank() == 0)
-            {
-                cout << "CFL (zero plane): "<< cfl << " (in elmt "
-                     << elmtid << ")" << endl;
-            }
-        }
-        return false;
-    }
 } //end of namespace
 

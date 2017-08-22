@@ -142,10 +142,6 @@ namespace Nektar
             Array<OneD, Array<OneD, NekDouble> >             &physarray,
             NekDouble                                         time);
 
-        void GetStdVelocity(
-            const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-                  Array<OneD,                   NekDouble>   &stdV);
-
         void GetElmtTimeStep(
             const Array<OneD, const Array<OneD, NekDouble> > &inarray,
                   Array<OneD, NekDouble> &tstep);
@@ -184,6 +180,8 @@ namespace Nektar
         {
             // Do nothing by default
         }
+
+        virtual Array<OneD, NekDouble> v_GetMaxStdVelocity();
     };
 }
 #endif

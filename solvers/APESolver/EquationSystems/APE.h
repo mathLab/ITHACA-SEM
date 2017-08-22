@@ -67,9 +67,6 @@ class APE : public UnsteadySystem
         /// Destructor
         virtual ~APE();
 
-        NekDouble GetCFLEstimate();
-
-
     protected:
 
         SolverUtils::AdvectionSharedPtr                 m_advection;
@@ -104,9 +101,7 @@ class APE : public UnsteadySystem
 
         virtual bool v_PreIntegrate(int step);
 
-        virtual bool v_PostIntegrate(int step);
-
-        void GetStdVelocity(Array< OneD, NekDouble >& stdV);
+        virtual Array<OneD, NekDouble> v_GetMaxStdVelocity();
 
         virtual void v_ExtraFldOutput(std::vector<Array<OneD, NekDouble> > &fieldcoeffs,
                                       std::vector<std::string>             &variables);

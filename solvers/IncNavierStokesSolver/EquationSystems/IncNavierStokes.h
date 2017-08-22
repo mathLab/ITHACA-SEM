@@ -155,11 +155,6 @@ namespace Nektar
             return  m_velocity; 
         }
 
-        
-        Array<OneD, NekDouble> GetElmtCFLVals(void);
-        
-        NekDouble GetCFLEstimate(int &elmtid);
-
         void AddForcing(const SolverUtils::ForcingSharedPtr& pForce);
 
     protected:
@@ -190,8 +185,6 @@ namespace Nektar
         NekDouble   m_kinvis;
         /// dump energy to file at steps time
         int         m_energysteps;
-        /// dump cfl estimate
-        int         m_cflsteps;
 
         /// equation type;
         EquationType  m_equationType;
@@ -234,9 +227,6 @@ namespace Nektar
 
         /// Set Up Womersley details
         void SetUpWomersley(const int bndid, std::string womstr);
-        
-        /// evaluate steady state
-        bool CalcSteadyState(void);
 
         /// Womersley parameters if required 
         std::map<int,WomersleyParamsSharedPtr> m_womersleyParams;
@@ -258,8 +248,9 @@ namespace Nektar
 
         virtual int v_GetForceDimension()=0;
 
+        virtual Array<OneD, NekDouble> v_GetMaxStdVelocity();
+
         virtual bool v_PreIntegrate(int step);
-        virtual bool v_PostIntegrate(int step);
 
     private:
 

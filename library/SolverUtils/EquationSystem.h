@@ -181,47 +181,7 @@ class Interpolator;
             /// points return [L2 Linf]
             SOLVER_UTILS_EXPORT Array<OneD,NekDouble> ErrorExtraPoints(
                 unsigned int field);
-            
-            /// Compute the inner product \f$ (\nabla \phi \cdot F) \f$.
-            SOLVER_UTILS_EXPORT void WeakAdvectionGreensDivergenceForm(
-                const Array<OneD, Array<OneD, NekDouble> > &F,
-                Array<OneD,             NekDouble>   &outarray);
-            
-            /// Compute the inner product \f$ (\phi, \nabla \cdot F) \f$.
-            SOLVER_UTILS_EXPORT void WeakAdvectionDivergenceForm(
-                const Array<OneD, Array<OneD, NekDouble> > &F,
-                Array<OneD,             NekDouble>   &outarray);
-            
-            /// Compute the inner product \f$ (\phi, V\cdot \nabla u) \f$.
-            SOLVER_UTILS_EXPORT void WeakAdvectionNonConservativeForm(
-                const Array<OneD, Array<OneD, NekDouble> > &V,
-                const Array<OneD,       const NekDouble>   &u,
-                Array<OneD,             NekDouble>   &outarray,
-                bool UseContCoeffs = false);
-            
-            /// Compute the non-conservative advection \f$ (V \cdot \nabla u)
-            /// \f$.
-            SOLVER_UTILS_EXPORT void AdvectionNonConservativeForm(
-                const Array<OneD, Array<OneD, NekDouble> > &V,
-                const Array<OneD, const NekDouble> &u,
-                Array<OneD,       NekDouble> &outarray,
-                Array<OneD,       NekDouble> &wk = NullNekDouble1DArray);
-            
-            /// Calculate the weak discontinuous Galerkin advection.
-            SOLVER_UTILS_EXPORT void WeakDGAdvection(
-                const Array<OneD, Array<OneD, NekDouble> >& InField,
-                Array<OneD, Array<OneD, NekDouble> >& OutField,
-                bool NumericalFluxIncludesNormal = true,
-                bool InFieldIsInPhysSpace = false,
-                int nvariables = 0);
-            
-            /// Calculate weak DG Diffusion in the LDG form.
-            SOLVER_UTILS_EXPORT void WeakDGDiffusion(
-                const Array<OneD, Array<OneD, NekDouble> >& InField,
-                Array<OneD, Array<OneD, NekDouble> >& OutField,
-                bool NumericalFluxIncludesNormal = true,
-                bool InFieldIsInPhysSpace = false);
-            
+
             /// Write checkpoint file of #m_fields.
             SOLVER_UTILS_EXPORT void Checkpoint_Output(const int n);
             

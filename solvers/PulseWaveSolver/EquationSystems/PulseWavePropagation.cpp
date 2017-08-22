@@ -123,9 +123,8 @@ namespace Nektar
      *  Computes the right hand side of (1). The RHS is everything
      *  except the term that contains the time derivative
      *  \f$\frac{\partial \mathbf{U}}{\partial t}\f$. In case of a
-     *  Discontinuous Galerkin projection, the routine WeakDGAdvection
-     *  will be called which then calls v_GetFluxVector and
-     *  v_NumericalFlux implemented in the PulseWavePropagation class.
+     *  Discontinuous Galerkin projection, m_advObject->Advect
+     *  will be called 
      *
      */
     void PulseWavePropagation::DoOdeRhs(const Array<OneD, const  Array<OneD, NekDouble> >&inarray,

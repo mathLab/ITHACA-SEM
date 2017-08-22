@@ -34,6 +34,9 @@ v5.0.0
 **Documentation**:
 - Added the developer-guide repository as a submodule (!751)
 
+** Misc **
+- Remove StdExpansion use from MultiRegion (use Expansions instead). (!831)
+
 v4.4.2
 ------
 **NekMesh**:

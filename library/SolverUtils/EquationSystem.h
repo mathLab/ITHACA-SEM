@@ -391,8 +391,6 @@ class Interpolator;
             Array<OneD, MultiRegions::ExpListSharedPtr> m_fields;
             /// Base fields.
             Array<OneD, MultiRegions::ExpListSharedPtr> m_base;
-            /// Array holding all dependent variables.
-            Array<OneD, MultiRegions::ExpListSharedPtr> m_derivedfields;
             /// Pointer to boundary conditions object.
             SpatialDomains::BoundaryConditionsSharedPtr m_boundaryConditions;
             /// Pointer to graph defining mesh.
@@ -443,10 +441,6 @@ class Interpolator;
             enum MultiRegions::ProjectionType           m_projectionType;
             /// Array holding trace normals for DG simulations in the forwards direction.
             Array<OneD, Array<OneD, NekDouble> >        m_traceNormals;
-            /// 1 x nvariable x nq
-            Array<OneD, Array<OneD, Array<OneD,NekDouble> > > m_gradtan;
-            /// 2 x m_spacedim x nq
-            Array<OneD, Array<OneD, Array<OneD,NekDouble> > > m_tanbasis;
             /// Flag to indicate if the fields should be checked for singularity.
             Array<OneD, bool>                           m_checkIfSystemSingular;
             /// Map to identify relevant solver info to dump in output fields

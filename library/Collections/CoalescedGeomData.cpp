@@ -75,8 +75,8 @@ const Array<OneD, const NekDouble> &CoalescedGeomData::GetJac(
         int cnt = 0;
         for(int i = 0; i < nElmts; ++i)
         {
-          const StdRegions::StdExpansion * sep = &(*pCollExp[i]);
-          const LocalRegions::Expansion  * lep = dynamic_cast<const LocalRegions::Expansion*>( sep );
+            const StdRegions::StdExpansion * sep = &(*pCollExp[i]);
+            const LocalRegions::Expansion  * lep = dynamic_cast<const LocalRegions::Expansion*>( sep );
           
             const Array<OneD, const NekDouble> jac = lep->GetMetricInfo()->GetJac( ptsKeys );
 
@@ -122,8 +122,8 @@ const Array<OneD, const NekDouble> &CoalescedGeomData::GetJacWithStdWeights(
         int cnt = 0;
         for(int i = 0; i < nElmts; ++i)
         {
-          const StdRegions::StdExpansion * sep = &(*pCollExp[i]);
-          const LocalRegions::Expansion  * lep = dynamic_cast<const LocalRegions::Expansion*>( sep );
+            const StdRegions::StdExpansion * sep = &(*pCollExp[i]);
+            const LocalRegions::Expansion  * lep = dynamic_cast<const LocalRegions::Expansion*>( sep );
 
             const Array<OneD, const NekDouble> jac = lep->GetMetricInfo()->GetJac(ptsKeys);
 
@@ -173,8 +173,8 @@ const Array<TwoD, const NekDouble> &CoalescedGeomData::GetDerivFactors(
         int cnt = 0;
         for(int i = 0; i < nElmts; ++i)
         {
-          const StdRegions::StdExpansion * sep = &(*pCollExp[i]);
-          const LocalRegions::Expansion  * lep = dynamic_cast<const LocalRegions::Expansion*>( sep );
+            const StdRegions::StdExpansion * sep = &(*pCollExp[i]);
+            const LocalRegions::Expansion  * lep = dynamic_cast<const LocalRegions::Expansion*>( sep );
 
             const Array<TwoD, const NekDouble> Dfac = lep->GetMetricInfo()->GetDerivFactors( ptsKeys );
 

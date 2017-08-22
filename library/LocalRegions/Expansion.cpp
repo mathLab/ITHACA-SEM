@@ -172,7 +172,6 @@ namespace Nektar
             m_metricinfo = m_geom->GetGeomFactors();
         }
 
-//        const SpatialDomains::GeomFactorsSharedPtr& Expansion::v_GetMetricInfo() const
         const SpatialDomains::GeomFactorsSharedPtr& Expansion::GetMetricInfo() const
         {
             return m_metricinfo;

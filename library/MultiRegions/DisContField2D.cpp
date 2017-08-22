@@ -1308,7 +1308,7 @@ namespace Nektar
                       traceEl->GetRightAdjacentElementEdge() != -1 )
             {
                 // Non-boundary edge (2 connected elements).
-              fwd = ( traceEl->GetLeftAdjacentElementExp().get() == (*m_exp)[n].get() );
+                fwd = ( traceEl->GetLeftAdjacentElementExp().get() == (*m_exp)[n].get() );
             }
             else
             {
@@ -1866,7 +1866,6 @@ namespace Nektar
         {
             int i,j,n,cnt,cnt1,nbndry;
             int nexp = GetExpSize();
-            LocalRegions::ExpansionSharedPtr BndExp;
 
             Array<OneD,NekDouble> f(m_ncoeffs);
             DNekVec F(m_ncoeffs,f,eWrapper);

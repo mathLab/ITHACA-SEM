@@ -54,10 +54,10 @@ namespace Nektar
             /// Calculate the larger time-step mantaining the problem stable.
             SOLVER_UTILS_EXPORT NekDouble GetTimeStep(
                 const Array<OneD, const Array<OneD, NekDouble> > &inarray);
-		
+
             /// CFL safety factor (comprise between 0 to 1).
             NekDouble m_cflSafetyFactor;
-		                        
+
         protected:
             /// Number of time steps between outputting status information.
             int                                             m_infosteps;
@@ -144,7 +144,6 @@ namespace Nektar
 
             SOLVER_UTILS_EXPORT virtual bool v_PreIntegrate(int step);
             SOLVER_UTILS_EXPORT virtual bool v_PostIntegrate(int step);
-            SOLVER_UTILS_EXPORT virtual bool v_SteadyStateCheck(int step);
 
             SOLVER_UTILS_EXPORT virtual bool v_RequireFwdTrans()
             {

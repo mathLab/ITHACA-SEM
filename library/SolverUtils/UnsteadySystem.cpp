@@ -962,11 +962,6 @@ namespace Nektar
             return false;
         }
 
-        bool UnsteadySystem::v_SteadyStateCheck(int step)
-        {
-            return false;
-        }
-
         void UnsteadySystem::SVVVarDiffCoeff(
             const Array<OneD, Array<OneD, NekDouble> >  vel,
                   StdRegions::VarCoeffMap              &varCoeffMap)

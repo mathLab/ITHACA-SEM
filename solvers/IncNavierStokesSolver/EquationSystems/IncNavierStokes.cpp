@@ -67,7 +67,8 @@ namespace Nektar
      * \param
      * \param
      */
-    IncNavierStokes::IncNavierStokes(const LibUtilities::SessionReaderSharedPtr& pSession):
+    IncNavierStokes::IncNavierStokes(
+        const LibUtilities::SessionReaderSharedPtr& pSession):
         UnsteadySystem(pSession),
         AdvectionSystem(pSession),
         m_SmoothAdvection(false),
@@ -105,14 +106,16 @@ namespace Nektar
         for(i = 0; i < (int) eEquationTypeSize; ++i)
         {
             bool match;
-            m_session->MatchSolverInfo("EQTYPE",kEquationTypeStr[i],match,false);
+            m_session->MatchSolverInfo("EQTYPE",
+                            kEquationTypeStr[i],match,false);
             if(match)
             {
                 m_equationType = (EquationType)i;
                 break;
             }
         }
-        ASSERTL0(i != eEquationTypeSize,"EQTYPE not found in SOLVERINFO section");
+        ASSERTL0(i != eEquationTypeSize,
+                "EQTYPE not found in SOLVERINFO section");
 
         // This probably should to into specific implementations
         // Equation specific Setups
@@ -128,8 +131,10 @@ namespace Nektar
             {
                 m_session->LoadParameter("IO_InfoSteps", m_infosteps, 0);
                 m_session->LoadParameter("IO_CFLSteps", m_cflsteps, 0);
-                m_session->LoadParameter("SteadyStateSteps", m_steadyStateSteps, 0);
-                m_session->LoadParameter("SteadyStateTol", m_steadyStateTol, 1e-6);
+                m_session->LoadParameter("SteadyStateSteps",
+                                          m_steadyStateSteps, 0);
+                m_session->LoadParameter("SteadyStateTol",
+                                          m_steadyStateTol, 1e-6);
             }
             break;
         case eNoEquationType:
@@ -159,14 +164,16 @@ namespace Nektar
         }
 
         // Check if advection type overridden
-        if (m_session->DefinesTag("AdvectiveType") && m_equationType != eUnsteadyStokes &&
+        if (m_session->DefinesTag("AdvectiveType") &&
+            m_equationType != eUnsteadyStokes &&
             m_equationType != eSteadyLinearisedNS)
         {
             vConvectiveType = m_session->GetTag("AdvectiveType");
         }
 
         // Initialise advection
-        m_advObject = SolverUtils::GetAdvectionFactory().CreateInstance(vConvectiveType, vConvectiveType);
+        m_advObject = SolverUtils::GetAdvectionFactory().CreateInstance(
+                        vConvectiveType, vConvectiveType);
         m_advObject->InitObject( m_session, m_fields);
 
         // Forcing terms
@@ -177,7 +184,8 @@ namespace Nektar
         // up m_field to boundary condition maps;
         m_fieldsBCToElmtID  = Array<OneD, Array<OneD, int> >(numfields);
         m_fieldsBCToTraceID = Array<OneD, Array<OneD, int> >(numfields);
-        m_fieldsRadiationFactor  = Array<OneD, Array<OneD, NekDouble> > (numfields);
+        m_fieldsRadiationFactor  = 
+                Array<OneD, Array<OneD, NekDouble> > (numfields);
 
         for (i = 0; i < m_fields.num_elements(); ++i)
         {
@@ -193,24 +201,29 @@ namespace Nektar
             {
                 if(boost::iequals(BndConds[n]->GetUserDefined(),"Radiation"))
                 {
-                    ASSERTL0(BndConds[n]->GetBoundaryConditionType() == SpatialDomains::eRobin,
-                             "Radiation boundary condition must be of type Robin <R>");
+                    ASSERTL0(BndConds[n]->GetBoundaryConditionType() ==
+                        SpatialDomains::eRobin,
+                        "Radiation boundary condition must be of type Robin <R>");
 
                     if(Set == false)
                     {
-                        m_fields[i]->GetBoundaryToElmtMap(m_fieldsBCToElmtID[i],m_fieldsBCToTraceID[i]);
+                        m_fields[i]->GetBoundaryToElmtMap(
+                            m_fieldsBCToElmtID[i],m_fieldsBCToTraceID[i]);
                         Set = true;
                     }
                     radpts += BndExp[n]->GetTotPoints();
                 }
-                if(boost::iequals(BndConds[n]->GetUserDefined(),"ZeroNormalComponent"))
+                if(boost::iequals(BndConds[n]->GetUserDefined(),
+                        "ZeroNormalComponent"))
                 {
-                    ASSERTL0(BndConds[n]->GetBoundaryConditionType() == SpatialDomains::eDirichlet,
-                             "Zero Normal Component boundary condition option must be of type Dirichlet <D>");
+                    ASSERTL0(BndConds[n]->GetBoundaryConditionType() ==
+                            SpatialDomains::eDirichlet,
+                            "Zero Normal Component boundary condition option must be of type Dirichlet <D>");
 
                     if(Set == false)
                     {
-                        m_fields[i]->GetBoundaryToElmtMap(m_fieldsBCToElmtID[i],m_fieldsBCToTraceID[i]);
+                        m_fields[i]->GetBoundaryToElmtMap(
+                            m_fieldsBCToElmtID[i],m_fieldsBCToTraceID[i]);
                         Set = true;
                     }
                 }
@@ -305,22 +318,26 @@ namespace Nektar
      *
      */
     void IncNavierStokes::v_GetFluxVector(const int i,
-                                          Array<OneD, Array<OneD, NekDouble> > &physfield,
-                                            Array<OneD, Array<OneD, NekDouble> > &flux)
+                Array<OneD, Array<OneD, NekDouble> > &physfield,
+                Array<OneD, Array<OneD, NekDouble> > &flux)
     {
-        ASSERTL1(flux.num_elements() == m_velocity.num_elements(),"Dimension of flux array and velocity array do not match");
+        ASSERTL1(flux.num_elements() ==
+                 m_velocity.num_elements(),
+                 "Dimension of flux array and velocity array do not match");
 
         for(int j = 0; j < flux.num_elements(); ++j)
         {
-            Vmath::Vmul(GetNpoints(), physfield[i], 1, m_fields[m_velocity[j]]->GetPhys(), 1, flux[j], 1);
+            Vmath::Vmul(GetNpoints(), physfield[i], 1,
+                        m_fields[m_velocity[j]]->GetPhys(), 1, flux[j], 1);
         }
     }
 
     /**
-     * Calcualate numerical fluxes
+     * Calculate numerical fluxes
      */
-    void IncNavierStokes::v_NumericalFlux(Array<OneD, Array<OneD, NekDouble> > &physfield,
-                                          Array<OneD, Array<OneD, NekDouble> > &numflux)
+    void IncNavierStokes::v_NumericalFlux(
+                Array<OneD, Array<OneD, NekDouble> > &physfield,
+                Array<OneD, Array<OneD, NekDouble> > &numflux)
     {
         /// Counter variable
         int i;
@@ -340,11 +357,14 @@ namespace Nektar
         /// Normal velocity array
         Array<OneD, NekDouble> Vn (nTracePts, 0.0);
 
-        // Extract velocity field along the trace space and multiply by trace normals
+        // Extract velocity field along the trace space and
+        //    multiply by trace normals
         for(i = 0; i < nDimensions; ++i)
         {
-            m_fields[0]->ExtractTracePhys(m_fields[m_velocity[i]]->GetPhys(), Fwd);
-            Vmath::Vvtvp(nTracePts, m_traceNormals[i], 1, Fwd, 1, Vn, 1, Vn, 1);
+            m_fields[0]->ExtractTracePhys(
+                            m_fields[m_velocity[i]]->GetPhys(), Fwd);
+            Vmath::Vvtvp(nTracePts, m_traceNormals[i], 1,
+                            Fwd, 1, Vn, 1, Vn, 1);
         }
 
         /// Compute the numerical fluxes at the trace points
@@ -365,8 +385,9 @@ namespace Nektar
     /**
      * Evaluation -N(V) for all fields except pressure using m_velocity
      */
-    void IncNavierStokes::EvaluateAdvectionTerms(const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-                                                 Array<OneD, Array<OneD, NekDouble> > &outarray)
+    void IncNavierStokes::EvaluateAdvectionTerms(
+                const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+                Array<OneD, Array<OneD, NekDouble> > &outarray)
     {
         int i;
         int VelDim     = m_velocity.num_elements();
@@ -399,7 +420,9 @@ namespace Nektar
                     varName = m_session->GetVariable(i);
                     m_fields[i]->EvaluateBoundaryConditions(time, varName);
                 }
-                else if(boost::istarts_with(m_fields[i]->GetBndConditions()[n]->GetUserDefined(),"Womersley"))
+                else if(boost::istarts_with(
+                          m_fields[i]->GetBndConditions()[n]->GetUserDefined(),
+                          "Womersley"))
                 {
                     SetWomersleyBoundary(i,n);
                 }
@@ -437,7 +460,9 @@ namespace Nektar
         {
             std::string type = BndConds[n]->GetUserDefined();
 
-            if((BndConds[n]->GetBoundaryConditionType() == SpatialDomains::eRobin)&&(boost::iequals(type,"Radiation")))
+            if((BndConds[n]->GetBoundaryConditionType() ==
+                    SpatialDomains::eRobin) &&
+                (boost::iequals(type,"Radiation")))
             {
                 for(i = 0; i < BndExp[n]->GetExpSize(); ++i,cnt++)
                 {
@@ -456,9 +481,11 @@ namespace Nektar
                     elmt->GetTracePhysVals(boundary,Bc,U,ubc);
 
                     Vmath::Vmul(nq,&m_fieldsRadiationFactor[fieldid][cnt1 +
-                                BndExp[n]->GetPhys_Offset(i)],1,&ubc[0],1,&ubc[0],1);
+                                BndExp[n]->GetPhys_Offset(i)],1,
+                                &ubc[0],1,&ubc[0],1);
 
-                    Bvals = BndExp[n]->UpdateCoeffs()+BndExp[n]->GetCoeff_Offset(i);
+                    Bvals = BndExp[n]->UpdateCoeffs()+BndExp[n]->
+                                GetCoeff_Offset(i);
 
                     Bc->IProductWRTBase(ubc,Bvals);
                 }
@@ -510,7 +537,10 @@ namespace Nektar
 
         for(cnt = n = 0; n < BndConds[0].num_elements(); ++n)
         {
-            if((BndConds[0][n]->GetBoundaryConditionType() == SpatialDomains::eDirichlet)&& (boost::iequals(BndConds[0][n]->GetUserDefined(),"ZeroNormalComponent")))
+            if((BndConds[0][n]->GetBoundaryConditionType() ==
+                    SpatialDomains::eDirichlet) &&
+                (boost::iequals(BndConds[0][n]->GetUserDefined(),
+                    "ZeroNormalComponent")))
             {
                 for(i = 0; i < BndExp[0][n]->GetExpSize(); ++i,cnt++)
                 {
@@ -561,7 +591,8 @@ namespace Nektar
      */
     void IncNavierStokes::SetWomersleyBoundary(const int fldid, const int bndid)
     {
-        ASSERTL1(m_womersleyParams.count(bndid) == 1, "Womersley parameters for this boundary have not been set up");
+        ASSERTL1(m_womersleyParams.count(bndid) == 1,
+                "Womersley parameters for this boundary have not been set up");
 
         WomersleyParamsSharedPtr WomParam = m_womersleyParams[bndid];
         std::complex<NekDouble> za, zar, zJ0, zJ0r, zq, zvel, zJ0rJ0;
@@ -627,7 +658,8 @@ namespace Nektar
                          (y[j]-x0[1])*(y[j]-x0[1]) +
                          (z[j]-x0[2])*(z[j]-x0[2]))/R;
 
-                wbc[j] = WomParam->m_wom_vel_r[0]*(1. - r*r); // Compute Poiseulle Flow
+                // Compute Poiseulle Flow
+                wbc[j] = WomParam->m_wom_vel_r[0]*(1. - r*r);
 
                 for (k=1; k<M; k++)
                 {
@@ -695,13 +727,15 @@ namespace Nektar
             std::string propstr;
             propstr = params->Attribute("PROPERTY");
 
-            ASSERTL0(!propstr.empty(),"Failed to read PROPERTY value Womersley BC Parameter");
+            ASSERTL0(!propstr.empty(),
+                    "Failed to read PROPERTY value Womersley BC Parameter");
 
 
             std::string valstr;
             valstr = params->Attribute("VALUE");
 
-            ASSERTL0(!valstr.empty(),"Failed to read VALUE value Womersley BC Parameter");
+            ASSERTL0(!valstr.empty(),
+                    "Failed to read VALUE value Womersley BC Parameter");
 
             std::transform(propstr.begin(),propstr.end(),propstr.begin(),
                            ::toupper);
@@ -764,7 +798,8 @@ namespace Nektar
             TiXmlAttribute *fvalAttr = fval->FirstAttribute();
             std::string attrName(fvalAttr->Name());
 
-            ASSERTL0(attrName == "ID", (std::string("Unknown attribute name: ") + attrName).c_str());
+            ASSERTL0(attrName == "ID",
+                (std::string("Unknown attribute name: ") + attrName).c_str());
 
             err = fvalAttr->QueryIntValue(&indx);
             ASSERTL0(err == TIXML_SUCCESS, "Unable to read attribute ID.");
@@ -773,8 +808,12 @@ namespace Nektar
             vector<NekDouble> coeffvals;
             bool parseGood = ParseUtils::GenerateUnOrderedVector(coeffStr.c_str(),
                                                                coeffvals);
-            ASSERTL0(parseGood,(std::string("Problem reading value of fourier coefficient, ID=") + boost::lexical_cast<string>(indx)).c_str());
-            ASSERTL1(coeffvals.size() == 2,(std::string("Have not read two entries of Fourier coefficicent from ID="+ boost::lexical_cast<string>(indx)).c_str()));
+            ASSERTL0(parseGood,
+                    (std::string("Problem reading value of fourier coefficient, ID=") +
+                    boost::lexical_cast<string>(indx)).c_str());
+            ASSERTL1(coeffvals.size() == 2,
+                    (std::string("Have not read two entries of Fourier coefficicent from ID="+
+                    boost::lexical_cast<string>(indx)).c_str()));
             m_womersleyParams[bndid]->m_wom_vel_r.push_back(coeffvals[0]);
             m_womersleyParams[bndid]->m_wom_vel_i.push_back(coeffvals[1]);
 
@@ -826,7 +865,8 @@ namespace Nektar
 
         for(int i = 0; i < m_fields.num_elements(); ++i)
         {
-            L2 += Vmath::Dot(ncoeffs,m_fields[i]->GetCoeffs(),1,m_fields[i]->GetCoeffs(),1);
+            L2 += Vmath::Dot(ncoeffs,m_fields[i]->GetCoeffs(),1,
+                    m_fields[i]->GetCoeffs(),1);
         }
 
         if(fabs(L2-previousL2) < ncoeffs*m_steadyStateTol)

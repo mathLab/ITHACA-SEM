@@ -602,24 +602,25 @@ namespace Nektar
     {
         int n;
         int nElements = m_fields[0]->GetExpSize();
-        const Array<OneD, int> ExpOrder = GetNumExpModesPerExp();
 
-        Array<OneD, NekDouble> stdVelocity(nElements);
+        // Change value of m_timestep (in case it is set to zero)
+        NekDouble tmp = m_timestep;
+        m_timestep    = 1.0;
 
-        // Get standard velocity to compute the time-step limit
-        stdVelocity = v_GetMaxStdVelocity();
+        Array<OneD, NekDouble> cfl(nElements);
+        cfl = GetElmtCFLVals();
 
         // Factors to compute the time-step limit
         NekDouble alpha     = MaxTimeStepEstimator();
-        NekDouble cLambda   = 0.2; // Spencer book-317
 
         // Loop over elements to compute the time-step limit for each element
         for(n = 0; n < nElements; ++n)
         {
-            tstep[n] = m_cflSafetyFactor * alpha
-                     / (stdVelocity[n] * cLambda
-                        * (ExpOrder[n] - 1) * (ExpOrder[n] - 1));
+            tstep[n] = m_cflSafetyFactor * alpha / cfl[n];
         }
+
+        // Restore value of m_timestep
+        m_timestep = tmp;
     }
 
     /**

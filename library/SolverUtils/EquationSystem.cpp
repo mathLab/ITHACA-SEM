@@ -652,7 +652,7 @@ namespace Nektar
 
             // Set Default Parameter
             m_session->LoadParameter("Time",          m_time,       0.0);
-            m_session->LoadParameter("TimeStep",      m_timestep,   0.01);
+            m_session->LoadParameter("TimeStep",      m_timestep,   0.0);
             m_session->LoadParameter("NumSteps",      m_steps,      0);
             m_session->LoadParameter("IO_CheckSteps", m_checksteps, 0);
             m_session->LoadParameter("IO_CheckTime",  m_checktime,  0.0);

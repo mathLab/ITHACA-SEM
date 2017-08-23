@@ -240,10 +240,14 @@ namespace Nektar
                 ASSERTL0(m_fintime == 0.0 || m_steps == 0,
                          "Final condition not unique: "
                          "fintime > 0.0 and Nsteps > 0");
-                
                 // Check timestep condition
                 ASSERTL0(m_timestep == 0.0, 
                          "Timestep not unique: timestep > 0.0 & CFL > 0.0");
+            }
+            else
+            {
+                ASSERTL0(m_timestep != 0.0,
+                         "Need to set either TimeStep or CFL");
             }
 
             // Check uniqueness of checkpoint output

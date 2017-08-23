@@ -98,8 +98,9 @@ class Interpolator;
             SOLVER_UTILS_EXPORT inline void Output();
             
             /// Linf error computation
-            SOLVER_UTILS_EXPORT inline NekDouble LinfError(unsigned int field, const Array<OneD,NekDouble> &exactsoln = NullNekDouble1DArray);
-            
+            SOLVER_UTILS_EXPORT inline NekDouble LinfError(unsigned int field,
+                const Array<OneD,NekDouble> &exactsoln = NullNekDouble1DArray);
+
             /// Get Session name
             SOLVER_UTILS_EXPORT std::string GetSessionName()
             {
@@ -145,11 +146,7 @@ class Interpolator;
                 std::string name,
                 const MultiRegions::ExpListSharedPtr &field = MultiRegions::NullExpListSharedPtr,
                 bool cache = false);
-            
-            /// Perform initialisation of the base flow.
-            SOLVER_UTILS_EXPORT void InitialiseBaseFlow(
-                Array<OneD, Array<OneD, NekDouble> > &base);
-            
+
             /// Initialise the data in the dependent fields.
             SOLVER_UTILS_EXPORT inline void SetInitialConditions(
                 NekDouble initialtime = 0.0,
@@ -212,9 +209,9 @@ class Interpolator;
             
             /// Input field data from the given file to multiple domains
             SOLVER_UTILS_EXPORT void ImportFldToMultiDomains(
-                                      const std::string &infile, 
-                                      Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
-                                      const int ndomains);
+                const std::string &infile, 
+                Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
+                const int ndomains);
             
             /// Output a field.
             /// Input field data into array from the given file.
@@ -279,10 +276,10 @@ class Interpolator;
             SOLVER_UTILS_EXPORT inline NekDouble GetTimeStep();
             
             SOLVER_UTILS_EXPORT inline void CopyFromPhysField(const int i,
-                                                              Array<OneD, NekDouble> &output);
+                    Array<OneD, NekDouble> &output);
             
             SOLVER_UTILS_EXPORT inline void CopyToPhysField(const int i,
-                                                            Array<OneD, NekDouble> &output);
+                    Array<OneD, NekDouble> &output);
             
             SOLVER_UTILS_EXPORT inline void SetSteps(const int steps);
             
@@ -346,8 +343,6 @@ class Interpolator;
             LibUtilities::FieldIOSharedPtr              m_fld;
             /// Array holding all dependent variables.
             Array<OneD, MultiRegions::ExpListSharedPtr> m_fields;
-            /// Base fields.
-            Array<OneD, MultiRegions::ExpListSharedPtr> m_base;
             /// Pointer to boundary conditions object.
             SpatialDomains::BoundaryConditionsSharedPtr m_boundaryConditions;
             /// Pointer to graph defining mesh.
@@ -414,9 +409,7 @@ class Interpolator;
                 eHomogeneous3D,
                 eNotHomogeneous
             };
-            
-            
-            
+
             enum HomogeneousType m_HomogeneousType;
             
             NekDouble m_LhomX;  ///< physical length in X direction (if homogeneous)
@@ -428,8 +421,7 @@ class Interpolator;
             int m_npointsZ;     ///< number of points in Z direction (if homogeneous)
             
             int m_HomoDirec;    ///< number of homogenous directions
-            
-            
+
             /// Initialises EquationSystem class members.
             SOLVER_UTILS_EXPORT EquationSystem( const LibUtilities::SessionReaderSharedPtr& pSession);
             
@@ -477,15 +469,7 @@ class Interpolator;
                 unsigned int field,
                 Array<OneD, NekDouble> &outfield,
                 const NekDouble time);
-            
-            //Initialise m_base in order to store the base flow from a file 
-            SOLVER_UTILS_EXPORT void SetUpBaseFields(SpatialDomains::MeshGraphSharedPtr &mesh);
-            
-            // Fill m_base with the values stored in a fld file
-            SOLVER_UTILS_EXPORT void ImportFldBase(
-                std::string pInfile, 
-                SpatialDomains::MeshGraphSharedPtr pGraph);
-            
+
             // Ouptut field information
             SOLVER_UTILS_EXPORT virtual void v_Output(void);
             

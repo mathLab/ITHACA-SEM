@@ -229,13 +229,7 @@ class Interpolator;
                 const std::string &infile, 
                 MultiRegions::ExpListSharedPtr &pField, 
                 std::string &pFieldName);
-            
-            /// Builds map of which element holds each history point.
-            SOLVER_UTILS_EXPORT void ScanForHistoryPoints();
-            
-            /// Probe each history point and write to file.
-            SOLVER_UTILS_EXPORT void WriteHistoryData (std::ostream &out);
-            
+
             /// Write out a session summary.
             SOLVER_UTILS_EXPORT void SessionSummary   (SummaryList& vSummary);
             
@@ -279,9 +273,7 @@ class Interpolator;
             SOLVER_UTILS_EXPORT inline int GetTotPoints(int n);
             
             SOLVER_UTILS_EXPORT inline int GetNpoints();
-            
-            SOLVER_UTILS_EXPORT inline int GetNumElmVelocity();
-            
+
             SOLVER_UTILS_EXPORT inline int GetSteps();
             
             SOLVER_UTILS_EXPORT inline NekDouble GetTimeStep();
@@ -732,12 +724,7 @@ class Interpolator;
         {
             return m_fields[0]->GetNpoints();
         }
-        
-        inline int EquationSystem::GetNumElmVelocity(void)
-        {
-            return (m_fields.num_elements() - 1);
-        }
-        
+
         inline int EquationSystem::GetSteps(void)
         {
             return m_steps;

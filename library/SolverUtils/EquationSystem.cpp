@@ -1696,68 +1696,6 @@ namespace Nektar
             return Array<OneD, bool>(m_session->GetVariables().size(), false);
         }
 
-        void EquationSystem::v_GetFluxVector(
-            const int i, Array<OneD,
-            Array<OneD, NekDouble> > &physfield,
-            Array<OneD, Array<OneD, NekDouble> > &flux)
-        {
-            ASSERTL0(false, "v_GetFluxVector: This function is not valid "
-                     "for the Base class");
-        }
-
-        void EquationSystem::v_GetFluxVector(
-            const int i, const int j,
-            Array<OneD, Array<OneD, NekDouble> > &physfield,
-            Array<OneD, Array<OneD, NekDouble> > &flux)
-        {
-            ASSERTL0(false, "v_GetqFluxVector: This function is not valid "
-                     "for the Base class");
-        }
-
-        void EquationSystem::v_GetFluxVector(
-            const int i, Array<OneD,
-            Array<OneD, NekDouble> > &physfield,
-            Array<OneD, Array<OneD, NekDouble> > &fluxX,
-            Array<OneD, Array<OneD, NekDouble> > &fluxY)
-        {
-            ASSERTL0(false, "v_GetFluxVector: This function is not valid "
-                     "for the Base class");
-        }
-
-        void EquationSystem::v_NumericalFlux(
-            Array<OneD, Array<OneD, NekDouble> > &physfield,
-            Array<OneD, Array<OneD, NekDouble> > &numflux)
-        {
-            ASSERTL0(false, "v_NumericalFlux: This function is not valid "
-                     "for the Base class");
-        }
-
-        void EquationSystem::v_NumericalFlux(
-            Array<OneD, Array<OneD, NekDouble> > &physfield,
-            Array<OneD, Array<OneD, NekDouble> > &numfluxX,
-            Array<OneD, Array<OneD, NekDouble> > &numfluxY )
-        {
-            ASSERTL0(false, "v_NumericalFlux: This function is not valid "
-                     "for the Base class");
-        }
-
-        void EquationSystem::v_NumFluxforScalar(
-            const Array<OneD, Array<OneD, NekDouble> >         &ufield,
-            Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &uflux)
-        {
-            ASSERTL0(false, "v_NumFluxforScalar: This function is not valid "
-                     "for the Base class");
-        }
-
-        void EquationSystem::v_NumFluxforVector(
-            const Array<OneD, Array<OneD, NekDouble> >   &ufield,
-            Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &qfield,
-            Array<OneD, Array<OneD, NekDouble > >              &qflux)
-        {
-            ASSERTL0(false, "v_NumFluxforVector: This function is not valid "
-                     "for the Base class");
-        }
-
         MultiRegions::ExpListSharedPtr EquationSystem::v_GetPressure()
         {
             ASSERTL0(false, "This function is not valid for the Base class");

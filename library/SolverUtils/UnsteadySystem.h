@@ -117,28 +117,6 @@ namespace Nektar
             SOLVER_UTILS_EXPORT virtual void v_AppendOutput1D(
                 Array<OneD, Array<OneD, NekDouble> > &solution1D);
 
-            ///
-            SOLVER_UTILS_EXPORT virtual void v_NumericalFlux(
-                Array<OneD, Array<OneD, NekDouble> > &physfield,
-                Array<OneD, Array<OneD, NekDouble> > &numflux);
-
-            ///
-            SOLVER_UTILS_EXPORT virtual void v_NumericalFlux(
-                Array<OneD, Array<OneD, NekDouble> > &physfield,
-                Array<OneD, Array<OneD, NekDouble> > &numfluxX,
-                Array<OneD, Array<OneD, NekDouble> > &numfluxY );
-
-            ///
-            SOLVER_UTILS_EXPORT virtual void v_NumFluxforScalar(
-                const Array<OneD, Array<OneD, NekDouble> >   &ufield,
-                Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &uflux);
-
-            ///
-            SOLVER_UTILS_EXPORT virtual void v_NumFluxforVector(
-                const Array<OneD, Array<OneD, NekDouble> >   &ufield,
-                Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &qfield,
-                Array<OneD, Array<OneD, NekDouble> > &qflux);
-		            
             SOLVER_UTILS_EXPORT virtual NekDouble v_GetTimeStep(
                 const Array<OneD, const Array<OneD, NekDouble> > &inarray);
 
@@ -161,21 +139,6 @@ namespace Nektar
         
 
         private:
-            ///
-            void WeakPenaltyforScalar(
-                const int var,
-                const Array<OneD, const NekDouble> &physfield,
-                      Array<OneD,       NekDouble> &penaltyflux,
-                      NekDouble time=0.0);
-
-            ///
-            void WeakPenaltyforVector(
-                const int var,
-                const int dir,
-                const Array<OneD, const NekDouble> &physfield,
-                Array<OneD,       NekDouble> &penaltyflux,
-                NekDouble C11,
-                NekDouble time=0.0);
 
             void InitializeSteadyState();
 

@@ -135,16 +135,6 @@ namespace Nektar
 
         virtual void v_InitObject();
 
-
-        virtual void v_GetFluxVector(
-                const int i,
-                Array<OneD, Array<OneD, NekDouble> > &physfield,
-                Array<OneD, Array<OneD, NekDouble> > &flux);
-
-        virtual void v_NumericalFlux(
-                Array<OneD, Array<OneD, NekDouble> > &physfield,
-                Array<OneD, Array<OneD, NekDouble> > &numflux);
-
         int GetNConvectiveFields(void)
         {
             return m_nConvectiveFields;  

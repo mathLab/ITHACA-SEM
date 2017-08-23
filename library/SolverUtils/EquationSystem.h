@@ -297,42 +297,7 @@ class Interpolator;
             SOLVER_UTILS_EXPORT void ZeroPhysFields();
             
             SOLVER_UTILS_EXPORT void FwdTransFields();
-            
-            SOLVER_UTILS_EXPORT inline void GetFluxVector(
-                const int i,
-                Array<OneD, Array<OneD, NekDouble> >&physfield,
-                Array<OneD, Array<OneD, NekDouble> >&flux);
-            
-            SOLVER_UTILS_EXPORT inline void GetFluxVector(
-                const int i,
-                Array<OneD, Array<OneD, NekDouble> >&physfield,
-                Array<OneD, Array<OneD, NekDouble> >&fluxX,
-                Array<OneD, Array<OneD, NekDouble> > &fluxY);
-            
-            SOLVER_UTILS_EXPORT inline void GetFluxVector(
-                const int i, 
-                const int j,
-                Array<OneD, Array<OneD, NekDouble> > &physfield,
-                Array<OneD, Array<OneD, NekDouble> > &flux);
-            
-            SOLVER_UTILS_EXPORT inline void NumericalFlux(
-                Array<OneD, Array<OneD, NekDouble> > &physfield,
-                Array<OneD, Array<OneD, NekDouble> > &numflux);
-            
-            SOLVER_UTILS_EXPORT inline void NumericalFlux(
-                Array<OneD, Array<OneD, NekDouble> > &physfield,
-                Array<OneD, Array<OneD, NekDouble> > &numfluxX,
-                Array<OneD, Array<OneD, NekDouble> > &numfluxY);
-            
-            SOLVER_UTILS_EXPORT inline void NumFluxforScalar(
-                const Array<OneD, Array<OneD, NekDouble> >         &ufield,
-                Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &uflux);
-            
-            SOLVER_UTILS_EXPORT inline void NumFluxforVector(
-                const Array<OneD, Array<OneD, NekDouble> >         &ufield,
-                Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &qfield,
-                Array<OneD, Array<OneD, NekDouble> >               &qflux);
-            
+
             SOLVER_UTILS_EXPORT inline void SetModifiedBasis(
                 const bool modbasis);
             
@@ -542,39 +507,6 @@ class Interpolator;
         private:
             
             SOLVER_UTILS_EXPORT virtual Array<OneD, bool> v_GetSystemSingularChecks();
-            SOLVER_UTILS_EXPORT virtual void v_GetFluxVector(
-                const int i, Array<OneD,
-                Array<OneD, NekDouble> >&physfield,
-                Array<OneD, Array<OneD, NekDouble> >&flux);
-            
-            SOLVER_UTILS_EXPORT virtual void v_GetFluxVector(
-                const int i, const int j,
-                Array<OneD, Array<OneD, NekDouble> >&physfield,
-                Array<OneD, Array<OneD, NekDouble> >&flux);
-            
-            SOLVER_UTILS_EXPORT virtual void v_GetFluxVector(
-                const int i, Array<OneD,
-                Array<OneD, NekDouble> >&physfield,
-                Array<OneD, Array<OneD, NekDouble> >&fluxX,
-                Array<OneD, Array<OneD, NekDouble> > &fluxY);
-            
-            SOLVER_UTILS_EXPORT virtual void v_NumericalFlux(
-                Array<OneD, Array<OneD, NekDouble> > &physfield,
-                Array<OneD, Array<OneD, NekDouble> > &numflux);
-            
-            SOLVER_UTILS_EXPORT virtual void v_NumericalFlux(
-                Array<OneD, Array<OneD, NekDouble> > &physfield,
-                Array<OneD, Array<OneD, NekDouble> > &numfluxX,
-                Array<OneD, Array<OneD, NekDouble> > &numfluxY);
-            
-            SOLVER_UTILS_EXPORT virtual void v_NumFluxforScalar(
-                const Array<OneD, Array<OneD, NekDouble> >         &ufield,
-                Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &uflux);
-            
-            SOLVER_UTILS_EXPORT virtual void v_NumFluxforVector(
-                const Array<OneD, Array<OneD, NekDouble> >         &ufield,
-                Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &qfield,
-                Array<OneD, Array<OneD, NekDouble > >              &qflux);
 
             SOLVER_UTILS_EXPORT void PrintProgressbar(const int position,
                                                       const int goal) const
@@ -831,56 +763,6 @@ class Interpolator;
                                                     Array<OneD, NekDouble> &output)
         {
             Vmath::Vcopy(output.num_elements(), output, 1, m_fields[i]->UpdatePhys(), 1 );
-        }
-        
-        inline void EquationSystem::GetFluxVector(const int i,
-                                                  Array<OneD, Array<OneD, NekDouble> >&physfield,
-                                                  Array<OneD, Array<OneD, NekDouble> >&flux)
-        {
-            v_GetFluxVector(i,physfield, flux);
-        }
-        
-        inline void EquationSystem::GetFluxVector(const int i,
-                                                  Array<OneD, Array<OneD, NekDouble> >&physfield,
-                                                  Array<OneD, Array<OneD, NekDouble> >&fluxX,
-                                                  Array<OneD, Array<OneD, NekDouble> > &fluxY)
-        {
-            v_GetFluxVector(i,physfield, fluxX, fluxY);
-        }
-        
-        inline void EquationSystem::GetFluxVector(const int i, const int j,
-                                                  Array<OneD, Array<OneD, NekDouble> > &physfield,
-                                                  Array<OneD, Array<OneD, NekDouble> > &flux)
-        {
-            v_GetFluxVector(i,j,physfield,flux);
-        }
-        
-        inline void EquationSystem::NumericalFlux(Array<OneD, Array<OneD, NekDouble> > &physfield,
-                                                  Array<OneD, Array<OneD, NekDouble> > &numflux)
-        {
-            v_NumericalFlux(physfield, numflux);
-        }
-        
-        inline void EquationSystem::NumericalFlux(Array<OneD, Array<OneD, NekDouble> > &physfield,
-                                                  Array<OneD, Array<OneD, NekDouble> > &numfluxX,
-                                                  Array<OneD, Array<OneD, NekDouble> > &numfluxY)
-        {
-            v_NumericalFlux(physfield, numfluxX, numfluxY);
-        }
-        
-        inline void EquationSystem::NumFluxforScalar(
-            const Array<OneD, Array<OneD, NekDouble> >   &ufield,
-            Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &uflux)
-        {
-            v_NumFluxforScalar(ufield, uflux);
-        }
-        
-        inline void EquationSystem::NumFluxforVector(            
-            const Array<OneD, Array<OneD, NekDouble> >               &ufield,
-                  Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &qfield,
-                  Array<OneD, Array<OneD, NekDouble> >               &qflux)
-        {
-            v_NumFluxforVector(ufield, qfield, qflux);
         }
     }
 }

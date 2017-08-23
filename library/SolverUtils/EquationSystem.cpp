@@ -106,7 +106,8 @@ namespace Nektar
                 string sessionname = "SessionName";
                 sessionname += boost::lexical_cast<std::string>(i);
                 m_fieldMetaDataMap[sessionname] = filenames[i];
-                m_fieldMetaDataMap["ChkFileNum"] = boost::lexical_cast<std::string>(0);
+                m_fieldMetaDataMap["ChkFileNum"] =
+                        boost::lexical_cast<std::string>(0);
             }
             
         }
@@ -452,7 +453,7 @@ namespace Nektar
                                             m_session, m_graph, 
                                             m_session->GetVariable(i),
                                             DeclareCoeffPhysArrays, 
-                                            m_checkIfSystemSingular[i]);                                    
+                                            m_checkIfSystemSingular[i]);
                                 }
                             }
 
@@ -703,7 +704,8 @@ namespace Nektar
             }
             else
             {
-                return SessionFunctionSharedPtr(new SessionFunction(m_session, vField, name, cache));
+                return SessionFunctionSharedPtr(
+                        new SessionFunction(m_session,vField, name, cache));
             }
         }
         
@@ -747,16 +749,19 @@ namespace Nektar
 
                 if (exactsoln.num_elements())
                 {
-                    L2error = m_fields[field]->L2(m_fields[field]->GetPhys(), exactsoln);
+                    L2error = m_fields[field]->L2(
+                            m_fields[field]->GetPhys(), exactsoln);
                 }
                 else if (m_session->DefinesFunction("ExactSolution"))
                 {
                     Array<OneD, NekDouble>
                         exactsoln(m_fields[field]->GetNpoints());
 
-                    GetFunction("ExactSolution")->Evaluate(m_session->GetVariable(field), exactsoln, m_time);
+                    GetFunction("ExactSolution")->Evaluate(
+                            m_session->GetVariable(field), exactsoln, m_time);
 
-                    L2error = m_fields[field]->L2(m_fields[field]->GetPhys(), exactsoln);
+                    L2error = m_fields[field]->L2(
+                            m_fields[field]->GetPhys(), exactsoln);
                 }
                 else
                 {
@@ -805,20 +810,24 @@ namespace Nektar
 
                 if (exactsoln.num_elements())
                 {
-                    Linferror = m_fields[field]->Linf(m_fields[field]->GetPhys(), exactsoln);
+                    Linferror = m_fields[field]->Linf(
+                            m_fields[field]->GetPhys(), exactsoln);
                 }
                 else if (m_session->DefinesFunction("ExactSolution"))
                 {
                     Array<OneD, NekDouble>
                         exactsoln(m_fields[field]->GetNpoints());
 
-                    GetFunction("ExactSolution")->Evaluate(m_session->GetVariable(field), exactsoln, m_time);
+                    GetFunction("ExactSolution")->Evaluate(
+                            m_session->GetVariable(field), exactsoln, m_time);
 
-                    Linferror = m_fields[field]->Linf(m_fields[field]->GetPhys(), exactsoln);
+                    Linferror = m_fields[field]->Linf(
+                            m_fields[field]->GetPhys(), exactsoln);
                 }
                 else
                 {
-                    Linferror = m_fields[field]->Linf(m_fields[field]->GetPhys());
+                    Linferror = m_fields[field]->Linf(
+                            m_fields[field]->GetPhys());
                 }
             }
             else
@@ -920,7 +929,8 @@ namespace Nektar
         
             if (m_session->DefinesFunction("InitialConditions"))
             {
-                GetFunction("InitialConditions")->Evaluate(m_session->GetVariables(), m_fields, m_time, domain);
+                GetFunction("InitialConditions")->Evaluate(
+                        m_session->GetVariables(), m_fields, m_time, domain);
                 
                 if (m_session->GetComm()->GetRank() == 0)
                 {
@@ -969,7 +979,8 @@ namespace Nektar
             Vmath::Zero(outfield.num_elements(), outfield, 1);
             if (m_session->DefinesFunction("ExactSolution"))
             {
-                GetFunction("ExactSolution")->Evaluate(m_session->GetVariable(field), outfield, time);
+                GetFunction("ExactSolution")->Evaluate(
+                        m_session->GetVariable(field), outfield, time);
             }
         }
 
@@ -1025,8 +1036,8 @@ namespace Nektar
         
 
         /**
-         * Write the field data to file. The file is named according to the session
-         * name with the extension .fld appended.
+         * Write the field data to file. The file is named according to the 
+         * session name with the extension .fld appended.
          */
         void EquationSystem::v_Output(void)
         {
@@ -1162,13 +1173,15 @@ namespace Nektar
             // Update time in field info if required
             if(m_fieldMetaDataMap.find("Time") != m_fieldMetaDataMap.end())
             {
-                m_fieldMetaDataMap["Time"] = boost::lexical_cast<std::string>(m_time);
+                m_fieldMetaDataMap["Time"] =
+                        boost::lexical_cast<std::string>(m_time);
             }
 
             // Update step in field info if required
             if(m_fieldMetaDataMap.find("ChkFileNum") != m_fieldMetaDataMap.end())
             {
-                m_fieldMetaDataMap["ChkFileNum"] = boost::lexical_cast<std::string>(m_nchk);
+                m_fieldMetaDataMap["ChkFileNum"] =
+                        boost::lexical_cast<std::string>(m_nchk);
             }
             
             // If necessary, add mapping information to metadata
@@ -1230,12 +1243,13 @@ namespace Nektar
          * also perform a \a BwdTrans to ensure data is in both the physical and
          * coefficient storage.
          * @param   infile  Filename to read.
-         * If optionan \a ndomains is specified it assumes we loop over nodmains for each nvariables. 
+         * If optionan \a ndomains is specified it assumes we loop over nodmains
+         * for each nvariables. 
          */
         void EquationSystem::ImportFldToMultiDomains(
-                                                     const std::string &infile, 
-                                                     Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
-                                                     const int ndomains)
+                    const std::string &infile,
+                    Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
+                    const int ndomains)
         {
             std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef;
             std::vector<std::vector<NekDouble> > FieldData;
@@ -1244,14 +1258,16 @@ namespace Nektar
             
             int nvariables = GetNvariables();
 
-            ASSERTL0(ndomains*nvariables == pFields.num_elements(),"Number of fields does not match the number of variables and domains");
-            
+            ASSERTL0(ndomains*nvariables == pFields.num_elements(),
+                "Number of fields does not match the number of variables and domains");
+
             // Copy FieldData into m_fields
             for(int j = 0; j < ndomains; ++j)
             {
                 for(int i = 0; i < nvariables; ++i)
                 {
-                    Vmath::Zero(pFields[j*nvariables+i]->GetNcoeffs(),pFields[j*nvariables+i]->UpdateCoeffs(),1);
+                    Vmath::Zero(pFields[j*nvariables+i]->GetNcoeffs(),
+                            pFields[j*nvariables+i]->UpdateCoeffs(),1);
                     
                     for(int n = 0; n < FieldDef.size(); ++n)
                     {
@@ -1260,12 +1276,14 @@ namespace Nektar
                                  + std::string(" data and that defined in "
                                                "m_boundaryconditions differs"));
                         
-                        pFields[j*nvariables+i]->ExtractDataToCoeffs(FieldDef[n], FieldData[n],
-                                                                     FieldDef[n]->m_fields[i],
-                                                                     pFields[j*nvariables+i]->UpdateCoeffs());
+                        pFields[j*nvariables+i]->ExtractDataToCoeffs(
+                                FieldDef[n], FieldData[n],
+                                FieldDef[n]->m_fields[i],
+                                pFields[j*nvariables+i]->UpdateCoeffs());
                     }
-                    pFields[j*nvariables+i]->BwdTrans(pFields[j*nvariables+i]->GetCoeffs(),
-                                                      pFields[j*nvariables+i]->UpdatePhys());
+                    pFields[j*nvariables+i]->BwdTrans(
+                                pFields[j*nvariables+i]->GetCoeffs(),
+                                pFields[j*nvariables+i]->UpdatePhys());
                 }
             }
         }
@@ -1312,9 +1330,9 @@ namespace Nektar
         /**
          * Import field from infile and load into the array \a coeffs. 
          *
-         * @param infile Filename to read.
+         * @param infile   Filename to read.
          * @param fieldStr an array of string identifying fields to be imported
-         * @param coeffs and array of array of coefficients to store imported data
+         * @param coeffs   array of array of coefficients to store imported data
          */
         void EquationSystem::ImportFld(
             const std::string &infile, 
@@ -1350,10 +1368,12 @@ namespace Nektar
          */
         void EquationSystem::SessionSummary(SummaryList& s)
         {
-            AddSummaryItem(s, "EquationType", m_session->GetSolverInfo("EQTYPE"));
+            AddSummaryItem(s, "EquationType",
+                            m_session->GetSolverInfo("EQTYPE"));
             AddSummaryItem(s, "Session Name", m_sessionName);
             AddSummaryItem(s, "Spatial Dim.", m_spacedim);
-            AddSummaryItem(s, "Max SEM Exp. Order", m_fields[0]->EvalBasisNumModesMax());
+            AddSummaryItem(s, "Max SEM Exp. Order",
+                            m_fields[0]->EvalBasisNumModesMax());
 
             if (m_session->GetComm()->GetSize() > 1)
             {
@@ -1421,7 +1441,7 @@ namespace Nektar
             else if (m_projectionType == MultiRegions::eMixed_CG_Discontinuous)
             {
                 AddSummaryItem(s, "Projection Type",
-                                  "Mixed Continuous Galerkin and Discontinuous");
+                                "Mixed Continuous Galerkin and Discontinuous");
             }
             
             if (m_session->DefinesSolverInfo("DiffusionType"))

@@ -164,14 +164,6 @@ namespace Nektar
                 cnt1 += m_vessels[i*m_nVariables+n]->GetTotPoints();                
             }
         }
-        
-        // Set Default Parameter
-        m_session->LoadParameter("Time",     m_time, 0.0);
-        m_session->LoadParameter("TimeStep", m_timestep, 0.01);
-        m_session->LoadParameter("NumSteps", m_steps, 0);
-        m_session->LoadParameter("IO_CheckSteps", m_checksteps, m_steps);
-        m_session->LoadParameter("FinTime", m_fintime, 0);
-        m_session->LoadParameter("NumQuadPointsError", m_NumQuadPointsError, 0);
 		
         m_fields[0] = m_vessels[0];
         m_fields[1] = m_vessels[1];
@@ -190,8 +182,7 @@ namespace Nektar
                 break;
             }
         }
-        // Load solver- specific parameters
-        m_session->LoadParameter("IO_InfoSteps", m_infosteps, 0);
+
         // Load blood density
         m_session->LoadParameter("rho", m_rho, 0.5);
         // Load external pressure

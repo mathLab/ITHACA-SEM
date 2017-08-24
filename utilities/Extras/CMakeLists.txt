@@ -1,5 +1,4 @@
 ADD_UTILITIES_EXECUTABLE(CheckXmlFile COMPONENT utilities-extra SOURCES CheckXmlFile.cpp)
-ADD_UTILITIES_EXECUTABLE(StreamFunction2D COMPONENT utilities-extra SOURCES StreamFunction2D.cpp)
 
 IF (NEKTAR_USE_VTK)
     ADD_UTILITIES_EXECUTABLE(VtkToFld COMPONENT utilities-extra SOURCES VtkToFld.cpp)
@@ -10,7 +9,7 @@ IF (NEKTAR_USE_VTK)
         TARGET_LINK_LIBRARIES(VtkStripsToPolys LINK_PUBLIC vtkCommon vtkIO vtkGraphics)
     ELSE ()
         TARGET_LINK_LIBRARIES(VtkToFld LINK_PUBLIC vtkCommonCore vtkIOLegacy
-                                                   vtkFiltersGeometry)
+                                              vtkFiltersGeometry vtkFiltersCore)
         TARGET_LINK_LIBRARIES(VtkStripsToPolys LINK_PUBLIC vtkCommonCore vtkIOLegacy)
     ENDIF ()
     

@@ -24,10 +24,12 @@ v5.0.0
 - Fix issue with reading CCM files due to definition of default arrays 
   rather than a vector (!797)
 - Fix inverted triangles and small memory issue in surface meshing (!798)
+- Additional curve types in GEO reader: BSpline, Circle, Ellipse (!800)
 
 **FieldConvert**:
 - Add input module for Semtex field files (!777)
 - Fixed interppoints module (!760)
+- Move StreamFunction utility to a FieldConvert module (!809)
 - Allow explicitly setting bool options of FieldConvert modules as false (!811)
 
 **Documentation**:
@@ -41,6 +43,12 @@ v4.4.2
 **Library**
 - Fix ability to set default implementation in Collections and added an option 
   to set eNoCollections in FieldConvert as default (!789)
+- Fix performance issue in ProcessIsoContour in relation to memory consumption
+  (!821)
+- Fix performance issue with ExtractPhysToBndElmt (!796)
+
+**Utilities**
+- Fix vtkToFld missing dependency which prevented compiling with VTK 7.1 (!808)
 
 v4.4.1
 ------

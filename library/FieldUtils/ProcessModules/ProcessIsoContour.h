@@ -44,8 +44,6 @@ namespace Nektar
 namespace FieldUtils
 {
 
-const NekDouble SQ_PNT_TOL=1e-16;
-
 class Iso
 {
     public:
@@ -160,13 +158,13 @@ class Iso
             m_condensed = false;
             m_nvert     = 0;
             m_fields.resize(nfields);
-            // set up initial vectors to be 10000 long
-            m_x.resize(10000);
-            m_y.resize(10000);
-            m_z.resize(10000);
+            // set up initial vectors to be 1000 long
+            m_x.resize(1000);
+            m_y.resize(1000);
+            m_z.resize(1000);
             for(int i = 0; i < m_fields.size(); ++i)
             {
-                m_fields[i].resize(10000);
+                m_fields[i].resize(1000);
             }
         };
 

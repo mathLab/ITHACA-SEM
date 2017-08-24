@@ -82,4 +82,11 @@
 #include <STEPControl_Writer.hxx>
 #include <gp_Ax1.hxx>
 
+#include <Geom_BSplineCurve.hxx>
+#include <Geom_BezierCurve.hxx>
+#include <Geom_Circle.hxx>
+#include <Geom_Ellipse.hxx>
+#include <gp_Circ.hxx>
+#include <gp_Elips.hxx>
+
 #endif

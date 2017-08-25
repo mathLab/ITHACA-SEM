@@ -36,6 +36,7 @@
 #ifndef NEKTAR_SOLVERUTILS_EQUATIONSYSTEM_H
 #define NEKTAR_SOLVERUTILS_EQUATIONSYSTEM_H
 
+#include <SolverUtils/Core/SessionFunction.h>
 #include <LibUtilities/Communication/Comm.h>
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
@@ -48,7 +49,6 @@
 #include <MultiRegions/ExpList.h>
 #include <SolverUtils/SolverUtilsDeclspec.h>
 #include <SolverUtils/Core/Misc.h>
-#include <SolverUtils/Core/SessionFunction.h>
 
 namespace Nektar
 {

@@ -1,0 +1,8 @@
+658c658
+< 		int tagIndex = (int) tag->length();
+---
+> 		size_t tagIndex = tag->length();
+961c961
+< 			int tagIndex = (int) tag->length();
+---
+> 			size_t tagIndex = tag->length();

@@ -45,6 +45,8 @@ v4.4.2
 - Fix performance issue in ProcessIsoContour in relation to memory consumption
   (!821)
 - Fix performance issue with ExtractPhysToBndElmt (!796)
+- Fix evaluation of points (e.g. HistoryPoints, Interpolation to pts) close to
+  the interface of two elements (!836)
 
 **Utilities**
 - Fix vtkToFld missing dependency which prevented compiling with VTK 7.1 (!808)

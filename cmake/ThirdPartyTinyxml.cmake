@@ -28,8 +28,8 @@ IF (THIRDPARTY_BUILD_TINYXML)
     EXTERNALPROJECT_ADD(
         tinyxml-2.6.2
         PREFIX ${TPSRC}
-        URL ${TPURL}/tinyxml_2_6_2.tar.bz2
-        URL_MD5 240beaeb45f63b154c9801eef7561eac
+        URL ${TPURL}/tinyxml_2_6_2-1.tar.bz2
+        URL_MD5 21457ca66cbf515bee4d37cdab03f189
         STAMP_DIR ${TPBUILD}/stamp
         DOWNLOAD_DIR ${TPSRC}
         SOURCE_DIR ${TPSRC}/tinyxml-2.6.2
@@ -44,15 +44,6 @@ IF (THIRDPARTY_BUILD_TINYXML)
             -DCMAKE_CXX_FLAGS:STRING=-DTIXML_USE_STL
             ${TPSRC}/tinyxml-2.6.2
         )
-
-    ExternalProject_Add_Step(tinyxml-2.6.2 patch-script
-      COMMAND patch tinyxmlparser.cpp -i ${CMAKE_SOURCE_DIR}/cmake/scripts/tinyxml.patch
-      COMMENT "patching"
-      DEPENDEES mkdir update patch download
-      DEPENDERS configure
-      WORKING_DIRECTORY ${TPSRC}/tinyxml-2.6.2
-      )
-
 
     THIRDPARTY_LIBRARY(TINYXML_LIBRARY STATIC tinyxml
         DESCRIPTION "TinyXML library")

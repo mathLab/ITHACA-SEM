@@ -13,15 +13,16 @@ v5.0.0
 - Fix caching of FUNCTION tags that read from file and provide the same
   functionality in FUNCTIONs defined for forcings (!759)
 - Added native support for csv files in addititon to pts (!760)
+- Add patch to tinyxml to fix size_t vs int bug (!820)
 
 **NekMesh**:
 - Add feature to read basic 2D geo files as CAD (!731)
 - Add periodic boundary condition meshing in 2D (!733)
 - Adjust boundary layer thickness in corners in 2D (!739)
 - Add non-O BL meshing in 2D (!757)
-- Add ability to compile CCIO library but tar file is not yet openly 
+- Add ability to compile CCIO library but tar file is not yet openly
   available whist we seek permission from Simens (!799)
-- Fix issue with reading CCM files due to definition of default arrays 
+- Fix issue with reading CCM files due to definition of default arrays
   rather than a vector (!797)
 - Fix inverted triangles and small memory issue in surface meshing (!798)
 
@@ -38,7 +39,7 @@ v4.4.2
 - Fix uninitialised memory bug in Nek5000 input module (!801)
 
 **Library**
-- Fix ability to set default implementation in Collections and added an option 
+- Fix ability to set default implementation in Collections and added an option
   to set eNoCollections in FieldConvert as default (!789)
 
 **Utilities**
@@ -47,7 +48,7 @@ v4.4.2
 v4.4.1
 ------
 **Library**
-- Remove m_offset_elmt_id and GetOffsetElmtId which fixed problems in 2D when 
+- Remove m_offset_elmt_id and GetOffsetElmtId which fixed problems in 2D when
   quad elements are listed before tri elements (!758)
 - Remove the duplicate output of errorutil (!756)
 - Fix BLAS CMake dependencies (!763)

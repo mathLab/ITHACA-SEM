@@ -13,6 +13,7 @@ v5.0.0
 - Fix caching of FUNCTION tags that read from file and provide the same
   functionality in FUNCTIONs defined for forcings (!759)
 - Added native support for csv files in addititon to pts (!760)
+- Dont add doxygen documentation to the all target (!834)
 
 **NekMesh**:
 - Add feature to read basic 2D geo files as CAD (!731)

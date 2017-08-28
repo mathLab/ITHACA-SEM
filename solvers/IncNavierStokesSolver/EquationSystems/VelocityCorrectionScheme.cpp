@@ -233,6 +233,18 @@ namespace Nektar
                                        "ExpKernel", m_useHomo1DSpecVanVisc, false);
             }
         }
+        else
+        {
+            bool testForFalse;
+            // Case where Homo1D is turned off but has been turned on
+            // impliictly by SpectralVanishingViscosity solver info
+            m_session->MatchSolverInfo("SpectralVanishingViscosityHomo1D",
+                                "False", testForFalse, false);
+            if(testForFalse)
+            {
+                m_useHomo1DSpecVanVisc = false;
+            }            
+        }
 
         m_session->LoadParameter("SVVCutoffRatio",m_sVVCutoffRatio,0.75);
         m_session->LoadParameter("SVVCutoffRatioHomo1D",m_sVVCutoffRatioHomo1D,m_sVVCutoffRatio);

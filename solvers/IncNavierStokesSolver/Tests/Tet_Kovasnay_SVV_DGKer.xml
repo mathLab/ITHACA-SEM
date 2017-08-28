@@ -31,7 +31,7 @@
           <I PROPERTY="Projection"            VALUE="Continuous" />  
           <I PROPERTY="TimeIntegrationMethod" VALUE="IMEXOrder2" />
           <I PROPERTY="SpectralVanishingViscosity" VALUE="DGKernel" />
-          <I PROPERTY="SpectralHPDealiasingy"                 VALUE="True" />
+          <I PROPERTY="SpectralHPDealiasing"   VALUE="True" />
         </SOLVERINFO>
         <PARAMETERS>
           <P> TimeStep      = 0.005        </P>

@@ -708,6 +708,8 @@ namespace Nektar
                     {
                         m_errFile << setw(22) << m_session->GetVariables()[i];
                     }
+
+                    m_errFile << endl;
                 }
             }
         }

@@ -34,22 +34,6 @@ v5.0.0
 **Documentation**:
 - Added the developer-guide repository as a submodule (!751)
 
-v4.4.2
-------
-**NekMesh**:
-- Fix uninitialised memory bug in Nek5000 input module (!801)
-
-**Library**
-- Fix ability to set default implementation in Collections and added an option 
-  to set eNoCollections in FieldConvert as default (!789)
-- Fix performance issue in ProcessIsoContour in relation to memory consumption
-  (!821)
-- Fix performance issue with ExtractPhysToBndElmt (!796)
-- Fix available classes being listed multiple times (!817)
-
-**Utilities**
-- Fix vtkToFld missing dependency which prevented compiling with VTK 7.1 (!808)
-
 v4.4.1
 ------
 **Library**
@@ -67,6 +51,12 @@ v4.4.1
 - Fix deadlock with HDF5 input (!786)
 - Fix missing entriess in LibUtilities::kPointsTypeStr (!792)
 - Fix compiler warnings with CommDataType (!793)
+- Fix ability to set default implementation in Collections and added an option 
+  to set eNoCollections in FieldConvert as default (!789)
+- Fix performance issue in ProcessIsoContour in relation to memory consumption
+  (!821)
+- Fix performance issue with ExtractPhysToBndElmt (!796)
+- Fix available classes being listed multiple times (!817)
 
 **FieldConvert:**
 - Fix issue with field ordering in the interppointdatatofld module (!754)
@@ -82,9 +72,13 @@ v4.4.1
 - Fix issue with older rea input files (!765)
 - Fix memory leak in variational optimiser, add small optimisations (!785)
 - Check the dimensionality of the CAD system before running the 2D generator (!780)
+- Fix uninitialised memory bug in Nek5000 input module (!801)
 
 **IncNavierStokesSolver**
 - Fix an initialisation issue when using an additional advective field (!779)
+
+**Utilities**
+- Fix vtkToFld missing dependency which prevented compiling with VTK 7.1 (!808)
 
 **Packaging**
 - Added missing package for FieldUtils library (!755)

@@ -122,13 +122,14 @@ void CsvIO::v_ImportFieldData(const std::string inFile, PtsFieldSharedPtr& ptsFi
     boost::erase_first(line, "#");
 
     vector<string> fieldNames;
-    bool valid = ParseUtils::GenerateOrderedStringVector(line.c_str(), fieldNames);
-    ASSERTL0(valid, "Unable to process list of fields" + line);
+    bool valid = ParseUtils::GenerateOrderedStringVector(
+        line.c_str(), fieldNames);
+    ASSERTL0(valid, "Unable to process list of fields from line: " + line);
 
     int dim = 0;
-    for (vector<string>::iterator it = fieldNames.begin(); it != fieldNames.end(); ++it)
+    for (auto &it : fieldNames)
     {
-        if (*it == "x" || *it == "y" || *it == "z")
+        if (it == "x" || it == "y" || it == "z")
         {
             dim++;
         }
@@ -145,13 +146,16 @@ void CsvIO::v_ImportFieldData(const std::string inFile, PtsFieldSharedPtr& ptsFi
     {
         tok.assign(line);
 
-        ASSERTL0(distance(tok.begin(), tok.end()) == totvars, "wrong number of columns: " + line);
+        ASSERTL0(distance(tok.begin(), tok.end()) == totvars,
+                 "wrong number of columns in line: " + line);
 
-        for (Tokenizer::iterator it = tok.begin(); it != tok.end(); ++it)
+        for (auto &it : tok)
         {
             try
             {
-                ptsSerial.push_back(boost::lexical_cast<NekDouble>(boost::trim_copy(string(*it))));
+                ptsSerial.push_back(
+                    boost::lexical_cast<NekDouble>(
+                        boost::trim_copy(string(it))));
             }
             catch(const boost::bad_lexical_cast &)
             {

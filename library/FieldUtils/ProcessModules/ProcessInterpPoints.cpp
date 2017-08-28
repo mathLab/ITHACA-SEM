@@ -37,10 +37,9 @@
 #include <string>
 using namespace std;
 
+#include <FieldUtils/Interpolator.h>
 #include <boost/geometry.hpp>
 #include "ProcessInterpPoints.h"
-
-#include <FieldUtils/Interpolator.h>
 
 #include <LibUtilities/BasicUtils/ParseUtils.hpp>
 #include <LibUtilities/BasicUtils/Progressbar.hpp>
@@ -119,9 +118,9 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
     int coordim = m_f->m_fieldPts->GetDim();
     int npts    = m_f->m_fieldPts->GetNpoints();
     std::vector<std::string> fieldNames = m_f->m_fieldPts->GetFieldNames();
-    for (auto it = fieldNames.begin(); it != fieldNames.end(); ++it)
+    for (auto &it : fieldNames)
     {
-        m_f->m_fieldPts->RemoveField(*it);
+        m_f->m_fieldPts->RemoveField(it);
     }
 
     Array<OneD, Array<OneD, NekDouble> > pts;

@@ -137,7 +137,7 @@ void APE::v_InitObject()
     {
         m_bf[i] = Array<OneD, NekDouble>(GetTotPoints());
     }
-    EvaluateFunction(m_bfNames, m_bf, "Baseflow", m_time);
+    GetFunction("Baseflow", m_bfField, true)->Evaluate(m_bfNames, m_bf, m_time);
 
     m_forcing = SolverUtils::Forcing::Load(m_session, m_fields, m_spacedim + 1);
 
@@ -301,7 +301,7 @@ void APE::GetFluxVector(
  */
 bool APE::v_PreIntegrate(int step)
 {
-    EvaluateFunction(m_bfNames, m_bf, "Baseflow", m_time);
+    GetFunction("Baseflow", m_bfField, true)->Evaluate(m_bfNames, m_bf, m_time);
 
     Array<OneD, NekDouble> tmpC(GetNcoeffs());
     for (auto &x : m_forcing)

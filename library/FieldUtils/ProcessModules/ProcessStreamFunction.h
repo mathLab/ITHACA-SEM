@@ -1,12 +1,12 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: OutputPts.h
+//  File: ProcessStreamFunction.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
 //  The MIT License
 //
-//  Copyright (c) 2016 Division of Applied Mathematics, Brown University (USA),
+//  Copyright (c) 2006 Division of Applied Mathematics, Brown University (USA),
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
@@ -29,55 +29,53 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Pts output module
+//  Description: Computes stream-function for 2D field.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef FIELDUTILS_OUTPUTPTS
-#define FIELDUTILS_OUTPUTPTS
+#ifndef FIELDUTILS_PROCESSSTREAMFUNCTION
+#define FIELDUTILS_PROCESSSTREAMFUNCTION
 
-#include "OutputFileBase.h"
-#include <tinyxml.h>
+#include "../Module.h"
 
 namespace Nektar
 {
 namespace FieldUtils
 {
-
-/// Converter from fld to pts.
-class OutputPts : public OutputFileBase
+/**
+ * @brief This processing module calculates the stream function of a 2D field
+ * and adds it as an extra-field to the output file.
+ */
+class ProcessStreamFunction : public ProcessModule
 {
 public:
     /// Creates an instance of this class
-    static std::shared_ptr<Module> create(FieldSharedPtr f)
+    static boost::shared_ptr<Module> create(FieldSharedPtr f)
     {
-        return MemoryManager<OutputPts>::AllocateSharedPtr(f);
+        return MemoryManager<ProcessStreamFunction>::AllocateSharedPtr(f);
     }
-    static ModuleKey m_className[];
+    static ModuleKey className;
 
-    OutputPts(FieldSharedPtr f);
-    virtual ~OutputPts();
+    ProcessStreamFunction(FieldSharedPtr f);
+    virtual ~ProcessStreamFunction();
+
+    /// Write mesh to output file.
+    virtual void Process(po::variables_map &vm);
 
     virtual std::string GetModuleName()
     {
-        return "OutputPts";
+        return "ProcessStreamFunction";
     }
 
-protected:
-    /// Write from pts to output file.
-    virtual void OutputFromPts(po::variables_map &vm);
+    virtual std::string GetModuleDescription()
+    {
+        return "Calculating stream-function";
+    }
 
-    /// Write from m_exp to output file.
-    virtual void OutputFromExp(po::variables_map &vm);
-
-    /// Write from data to output file.
-    virtual void OutputFromData(po::variables_map &vm);
-
-    virtual fs::path GetPath(std::string &filename,
-                                    po::variables_map &vm);
-
-    virtual fs::path GetFullOutName(std::string &filename,
-                                    po::variables_map &vm);
+    virtual ModulePriority GetModulePriority()
+    {
+        return eModifyExp;
+    }
 
 };
 }

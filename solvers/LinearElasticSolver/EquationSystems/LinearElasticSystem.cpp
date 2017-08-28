@@ -453,7 +453,7 @@ void LinearElasticSystem::v_DoSolve()
 
     // Evaluate the forcing function from the XML file.
     Array<OneD, Array<OneD, NekDouble> > forcing(nVel);
-    EvaluateFunction(forcing, "Forcing");
+    GetFunction("Forcing")->Evaluate(forcing);
 
     // Add temperature term
     string tempEval;

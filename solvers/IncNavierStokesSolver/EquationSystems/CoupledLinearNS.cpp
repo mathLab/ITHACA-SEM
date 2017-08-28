@@ -1258,7 +1258,7 @@ namespace Nektar
                 {
                     fieldStr.push_back(m_boundaryConditions->GetVariable(m_velocity[i]));
                 }
-                EvaluateFunction(fieldStr,AdvField,"AdvectionVelocity");
+                GetFunction("AdvectionVelocity")->Evaluate(fieldStr, AdvField);
                 
                 SetUpCoupledMatrix(0.0,AdvField,false);
             }
@@ -1290,7 +1290,7 @@ namespace Nektar
                     {
                         fieldStr.push_back(m_boundaryConditions->GetVariable(m_velocity[i]));
                     }
-                    EvaluateFunction(fieldStr, Restart, "Restart");
+                    GetFunction( "Restart")->Evaluate(fieldStr,  Restart);
                     
                     for(int i = 0; i < m_velocity.num_elements(); ++i)
                     {
@@ -1338,7 +1338,7 @@ namespace Nektar
                 {
                     fieldStr.push_back(m_boundaryConditions->GetVariable(m_velocity[i]));
                 }
-                EvaluateFunction(fieldStr,AdvField,"AdvectionVelocity");
+                GetFunction("AdvectionVelocity")->Evaluate(fieldStr, AdvField);
                 
                 SetUpCoupledMatrix(m_lambda,AdvField,true);
             }
@@ -1546,7 +1546,7 @@ namespace Nektar
             {
                 fieldStr.push_back(m_boundaryConditions->GetVariable(m_velocity[i]));
             }
-            EvaluateFunction(fieldStr, m_ForcingTerm, "ForcingTerm");
+            GetFunction( "ForcingTerm")->Evaluate(fieldStr,  m_ForcingTerm);
             for(int i = 0; i < m_velocity.num_elements(); ++i)
             {
                 m_fields[m_velocity[i]]->FwdTrans_IterPerExp(m_ForcingTerm[i], m_ForcingTerm_Coeffs[i]);

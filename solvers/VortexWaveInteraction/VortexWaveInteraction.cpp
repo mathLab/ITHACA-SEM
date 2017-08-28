@@ -393,7 +393,7 @@ namespace Nektar
                     std::vector<std::string> vFieldNames = m_sessionRoll->GetVariables();
                     vFieldNames.erase(vFieldNames.end()-1);
 
-                    m_solverRoll->EvaluateFunction(vFieldNames, m_vwiForcingObj->UpdateForces(), "BodyForce");
+                    m_solverRoll->GetFunction("BodyForce")->Evaluate(vFieldNames, m_vwiForcingObj->UpdateForces());
 
                     // Scale forcing
                     for(int i = 0; i < m_vwiForcingObj->UpdateForces().num_elements(); ++i)

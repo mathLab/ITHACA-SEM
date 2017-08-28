@@ -11,6 +11,7 @@ SET(BasicUtilsHeaders
     ./BasicUtils/Concepts.hpp
     ./BasicUtils/ConsistentObjectAccess.hpp
     ./BasicUtils/CompressData.h
+    ./BasicUtils/CsvIO.h
     ./BasicUtils/Equation.h
     ./BasicUtils/FieldIO.h
     ./BasicUtils/FieldIOXml.h
@@ -37,12 +38,14 @@ SET(BasicUtilsHeaders
     ./BasicUtils/Vmath.hpp
     ./BasicUtils/VmathArray.hpp
     ./BasicUtils/Metis.hpp
+    ./BasicUtils/VtkUtil.hpp
     ./BasicUtils/XmlUtil.h
 )
 
 SET(BasicUtilsSources
     ./BasicUtils/ArrayEqualityComparison.cpp
     ./BasicUtils/CompressData.cpp
+    ./BasicUtils/CsvIO.cpp
     ./BasicUtils/Equation.cpp
     ./BasicUtils/FieldIO.cpp
     ./BasicUtils/FieldIOXml.cpp
@@ -203,7 +206,6 @@ SET(LinearAlgebraHeaders
     ./LinearAlgebra/DgemmOverride.hpp
     ./LinearAlgebra/DgemvOverride.hpp
     ./LinearAlgebra/ExplicitInstantiation.h
-    ./LinearAlgebra/IsDgemmTraits.hpp
     ./LinearAlgebra/Lapack.hpp
     ./LinearAlgebra/MatrixBase.hpp
     ./LinearAlgebra/MatrixFuncs.h
@@ -212,27 +214,19 @@ SET(LinearAlgebraHeaders
     ./LinearAlgebra/MatrixSize.hpp
     ./LinearAlgebra/MatrixStorageType.h
     ./LinearAlgebra/MatrixType.h
-    ./LinearAlgebra/MatrixVectorMultiplication.hpp
     ./LinearAlgebra/NekLinAlgAlgorithms.hpp
     ./LinearAlgebra/NekLinSys.hpp
     ./LinearAlgebra/NekMatrixFwd.hpp
     ./LinearAlgebra/NekMatrix.hpp
-    ./LinearAlgebra/NekMatrixMetadata.hpp
     ./LinearAlgebra/NekPoint.hpp
     ./LinearAlgebra/NekTypeDefs.hpp
     ./LinearAlgebra/NekVectorCommon.hpp
-    ./LinearAlgebra/NekVectorConstantSized.hpp
     ./LinearAlgebra/NekVectorFwd.hpp
     ./LinearAlgebra/NekVector.hpp
-    ./LinearAlgebra/NekVectorMetadata.hpp
-    ./LinearAlgebra/NekVectorTypeTraits.hpp
-    ./LinearAlgebra/NekVectorVariableSized.hpp
     ./LinearAlgebra/PointerWrapper.h
     ./LinearAlgebra/ScaledMatrix.hpp
-    ./LinearAlgebra/Space.h
     ./LinearAlgebra/StandardMatrix.hpp
     ./LinearAlgebra/TransF77.hpp
-
     ./LinearAlgebra/StorageSmvBsr.hpp
     ./LinearAlgebra/NistSparseDescriptors.hpp
     ./LinearAlgebra/SparseDiagBlkMatrix.hpp
@@ -240,10 +234,6 @@ SET(LinearAlgebraHeaders
     ./LinearAlgebra/SparseMatrixFwd.hpp
     ./LinearAlgebra/SparseUtils.hpp
 )
-
-IF(NEKTAR_USING_SMV)
-    SET(LinearAlgebraHeaders ${LinearAlgebraHeaders} ./LinearAlgebra/LibSMV.hpp)
-ENDIF(NEKTAR_USING_SMV)
 
 SET(LinearAlgebraSources
     ./LinearAlgebra/blas.cpp
@@ -260,10 +250,6 @@ SET(LinearAlgebraSources
     ./LinearAlgebra/SparseDiagBlkMatrix.cpp
     ./LinearAlgebra/SparseMatrix.cpp
 )
-
-IF(NEKTAR_USING_SMV)
-    SET(LinearAlgebraSources ${LinearAlgebraSources} ./LinearAlgebra/LibSMV.cpp)
-ENDIF(NEKTAR_USING_SMV)
 
 SET(MemoryHeaders
     ./Memory/ThreadSpecificPool.hpp
@@ -388,10 +374,13 @@ SET(LibUtilitySources
 
 ADD_DEFINITIONS(-DLIB_UTILITIES_EXPORTS)
 
-ADD_NEKTAR_LIBRARY(LibUtilities lib ${NEKTAR_LIBRARY_TYPE} ${LibUtilitySources} ${LibUtilityHeaders})
+ADD_NEKTAR_LIBRARY(LibUtilities
+    SOURCES ${LibUtilitySources}
+    HEADERS ${LibUtilityHeaders}
+    SUMMARY "Nektar++ LibUtilities library"
+    DESCRIPTION "This library provides core routines including linear algebra and integration with ThirdParty libraries.")
 
 ADD_DEPENDENCIES(LibUtilities modmetis-5.1.0 boost tinyxml-2.6.2 zlib-1.2.7)
-
 
 ### Libraries needed specifically by LibUtilities ###
 ### Static libraries do not need to be linked by
@@ -447,47 +436,46 @@ IF( NEKTAR_USE_MPI )
         SET_TARGET_PROPERTIES(LibUtilities
             PROPERTIES COMPILE_FLAGS "${THE_COMPILE_FLAGS} ${MPI_CXX_COMPILE_FLAGS}")
     ENDIF()
+
     ADD_DEPENDENCIES(LibUtilities gsmpi-1.2.1)
+
+    IF (THIRDPARTY_BUILD_MPI)
+        ADD_DEPENDENCIES(LibUtilities openmpi-1.10.3)
+    ENDIF()
 ENDIF( NEKTAR_USE_MPI )
 
 # Lapack and Blas
-IF( NEKTAR_USE_BLAS_LAPACK )
-    IF( NEKTAR_USE_MKL AND MKL_FOUND )
-        TARGET_LINK_LIBRARIES(LibUtilities LINK_PUBLIC ${MKL} )
-        SET_TARGET_PROPERTIES(LibUtilities
-            PROPERTIES COMPILE_FLAGS "${THE_COMPILE_FLAGS} -DMKL_ILP64")
-    ENDIF( NEKTAR_USE_MKL AND MKL_FOUND )
+IF( NEKTAR_USE_MKL AND MKL_FOUND )
+    TARGET_LINK_LIBRARIES(LibUtilities LINK_PUBLIC ${MKL} )
+    SET_TARGET_PROPERTIES(LibUtilities
+        PROPERTIES COMPILE_FLAGS "${THE_COMPILE_FLAGS} -DMKL_ILP64")
+ENDIF( NEKTAR_USE_MKL AND MKL_FOUND )
 
-    IF( NEKTAR_USE_ACML AND ACML_FOUND )
-        TARGET_LINK_LIBRARIES(LibUtilities LINK_PUBLIC ${ACML_TARGET_LINK_LIBRARIES}  )
-    ENDIF( NEKTAR_USE_ACML AND ACML_FOUND )
+IF( NEKTAR_USE_ACML AND ACML_FOUND )
+    TARGET_LINK_LIBRARIES(LibUtilities LINK_PUBLIC ${ACML_TARGET_LINK_LIBRARIES}  )
+ENDIF( NEKTAR_USE_ACML AND ACML_FOUND )
 
-    IF( NEKTAR_USE_ACCELERATE_FRAMEWORK )
-        TARGET_LINK_LIBRARIES(LibUtilities LINK_PUBLIC ${ACCELERATE_FRAMEWORK_LINK_FLAGS})
-    ENDIF ( NEKTAR_USE_ACCELERATE_FRAMEWORK )
+IF( NEKTAR_USE_ACCELERATE_FRAMEWORK )
+    TARGET_LINK_LIBRARIES(LibUtilities LINK_PUBLIC ${ACCELERATE_FRAMEWORK_LINK_FLAGS})
+ENDIF ( NEKTAR_USE_ACCELERATE_FRAMEWORK )
 
-    IF( NEKTAR_USE_WIN32_LAPACK )
-        TARGET_LINK_LIBRARIES(LibUtilities LINK_PUBLIC ${WIN32_LAPACK} ${WIN32_BLAS})
-        INSTALL(FILES ${WIN32_LAPACK_DLL} ${WIN32_BLAS_DLL}
-                DESTINATION ${NEKTAR_BIN_DIR})
-    ENDIF( NEKTAR_USE_WIN32_LAPACK )
+IF( NEKTAR_USE_WIN32_LAPACK )
+    TARGET_LINK_LIBRARIES(LibUtilities LINK_PUBLIC ${WIN32_LAPACK} ${WIN32_BLAS})
+    INSTALL(FILES ${WIN32_LAPACK_DLL} ${WIN32_BLAS_DLL}
+            DESTINATION ${NEKTAR_BIN_DIR})
+ENDIF( NEKTAR_USE_WIN32_LAPACK )
 
-    IF( NEKTAR_USE_OPENBLAS AND OPENBLAS_FOUND )
-        TARGET_LINK_LIBRARIES(LibUtilities LINK_PUBLIC ${OPENBLAS})
-    ENDIF( NEKTAR_USE_OPENBLAS AND OPENBLAS_FOUND )
+IF( NEKTAR_USE_OPENBLAS AND OPENBLAS_FOUND )
+    TARGET_LINK_LIBRARIES(LibUtilities LINK_PUBLIC ${OPENBLAS})
+ENDIF( NEKTAR_USE_OPENBLAS AND OPENBLAS_FOUND )
 
-    IF( NEKTAR_USE_SMV AND SMV_FOUND )
-        TARGET_LINK_LIBRARIES(LibUtilities LINK_PUBLIC ${SMV_LIBRARY})
-    ENDIF( NEKTAR_USE_SMV AND SMV_FOUND )
+IF( NEKTAR_USE_SYSTEM_BLAS_LAPACK )
+    TARGET_LINK_LIBRARIES(LibUtilities LINK_PUBLIC ${NATIVE_LAPACK} ${NATIVE_BLAS})
+ENDIF( NEKTAR_USE_SYSTEM_BLAS_LAPACK )
 
-    IF( NEKTAR_USE_SYSTEM_BLAS_LAPACK )
-        TARGET_LINK_LIBRARIES(LibUtilities LINK_PUBLIC ${NATIVE_LAPACK} ${NATIVE_BLAS})
-    ENDIF( NEKTAR_USE_SYSTEM_BLAS_LAPACK )
-
-    IF(THIRDPARTY_BUILD_BLAS_LAPACK)
-        ADD_DEPENDENCIES(LibUtilities lapack-3.7.0)
-    ENDIF()
-ENDIF( NEKTAR_USE_BLAS_LAPACK )
+IF(THIRDPARTY_BUILD_BLAS_LAPACK)
+    ADD_DEPENDENCIES(LibUtilities lapack-3.7.0)
+ENDIF()
 
 IF( NEKTAR_USE_PETSC )
     TARGET_LINK_LIBRARIES(LibUtilities LINK_PRIVATE ${PETSC_LIBRARIES})
@@ -501,5 +489,10 @@ IF( NEKTAR_USE_HDF5 )
     ADD_DEPENDENCIES(LibUtilities hdf5-1.8.16)
 ENDIF( NEKTAR_USE_HDF5 )
 
-INSTALL(FILES ${ExpressionTemplates} DESTINATION ${NEKTAR_INCLUDE_DIR}/ExpressionTemplates COMPONENT dev)
-INSTALL(DIRECTORY ./ DESTINATION ${NEKTAR_INCLUDE_DIR}/LibUtilities COMPONENT dev FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp")
+INSTALL(FILES ${ExpressionTemplates}
+    DESTINATION ${NEKTAR_INCLUDE_DIR}/ExpressionTemplates
+    COMPONENT dev)
+INSTALL(DIRECTORY ./
+    DESTINATION ${NEKTAR_INCLUDE_DIR}/LibUtilities
+    COMPONENT dev
+    FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp")

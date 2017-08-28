@@ -89,9 +89,9 @@ Array<OneD, NekDouble> CADSurfOCE::locuv(Array<OneD, NekDouble> p)
     uvr[0]      = p2.X();
     uvr[1]      = p2.Y();
 
-    gp_Pnt p3 = m_sas->Value(p2);
-    WARNINGL2(p3.Distance(loc) < 1e-3, "large locuv distance " +
-                boost::lexical_cast<string>(p3.Distance(loc)/1000.0) + " " +
+    WARNINGL2(m_sas->Value(p2).Distance(loc) < 1e-3, "large locuv distance " +
+                boost::lexical_cast<string>(
+                    m_sas->Value(p2).Distance(loc)/1000.0) + " " +
                 boost::lexical_cast<string>(m_id));
 
     // if the uv returned is slightly off the surface

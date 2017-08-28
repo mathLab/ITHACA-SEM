@@ -58,7 +58,9 @@ namespace Nektar
             /// Constructor copying only elements defined in eIds.
             MULTI_REGIONS_EXPORT ExpList3D(  const ExpList3D &In,
                 const std::vector<unsigned int> &eIDs,
-                const bool DeclareCoeffPhysArrays = true);
+                const bool DeclareCoeffPhysArrays = true,
+                const Collections::ImplementationType ImpType
+                        = Collections::eNoImpType);
 
             MULTI_REGIONS_EXPORT ExpList3D(  
                         const LibUtilities::SessionReaderSharedPtr &pSession,
@@ -70,16 +72,21 @@ namespace Nektar
                         const LibUtilities::BasisKey &HBc,
                         const SpatialDomains::MeshGraphSharedPtr &graph3D,
                         const LibUtilities::PointsType TetNb
-                                            = LibUtilities::SIZE_PointsType);
+                        = LibUtilities::SIZE_PointsType,
+                        const Collections::ImplementationType ImpType
+                        = Collections::eNoImpType);
 
             /// Sets up a list of local expansions based on an input mesh.
             MULTI_REGIONS_EXPORT ExpList3D(
                         const LibUtilities::SessionReaderSharedPtr &pSession,
                         const SpatialDomains::MeshGraphSharedPtr &graph3D,
-                        const std::string  &variable = "DefaultVar");
+                        const std::string  &variable = "DefaultVar",
+                        const Collections::ImplementationType ImpType
+                        = Collections::eNoImpType);
 
             /// Sets up a list of local expansions based on an expansion vector
-            MULTI_REGIONS_EXPORT  ExpList3D(const SpatialDomains::ExpansionMap &expansions);
+            MULTI_REGIONS_EXPORT  ExpList3D(const SpatialDomains::ExpansionMap &expansions,   const Collections::ImplementationType ImpType
+                        = Collections::eNoImpType);
 
             /// Destructor.
             MULTI_REGIONS_EXPORT virtual ~ExpList3D();

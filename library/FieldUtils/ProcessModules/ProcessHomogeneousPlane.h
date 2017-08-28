@@ -65,8 +65,19 @@ public:
 
     virtual std::string GetModuleName()
     {
-        return "ProcessScalGrad";
+        return "ProcessHomogeneousPlane";
     }
+
+    virtual std::string GetModuleDescription()
+    {
+        return "Extracting plane";
+    }
+
+    virtual ModulePriority GetModulePriority()
+    {
+        return eModifyExp;
+    }
+
 };
 }
 }

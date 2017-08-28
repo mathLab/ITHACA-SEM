@@ -37,7 +37,6 @@
 #define NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_NEK_VECTOR_FWD_HPP
 
 
-#include <LibUtilities/LinearAlgebra/Space.h>
 #include <boost/type_traits.hpp>
 
 

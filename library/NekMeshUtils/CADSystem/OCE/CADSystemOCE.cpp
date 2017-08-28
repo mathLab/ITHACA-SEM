@@ -40,6 +40,9 @@
 #include <NekMeshUtils/CADSystem/OCE/CADSystemOCE.h>
 #include <NekMeshUtils/CADSystem/OCE/CADVertOCE.h>
 
+#include <boost/algorithm/string.hpp>
+#include <boost/filesystem.hpp>
+
 using namespace std;
 
 namespace Nektar
@@ -55,16 +58,26 @@ bool CADSystemOCE::LoadCAD()
     if (m_naca.size() == 0)
     {
         // not a naca profile behave normally
-        // Takes step file and makes OpenCascade shape
-        STEPControl_Reader reader;
-        reader = STEPControl_Reader();
-        reader.ReadFile(m_name.c_str());
-        reader.NbRootsForTransfer();
-        reader.TransferRoots();
-        shape = reader.OneShape();
-        if (shape.IsNull())
+        // could be a geo
+        string ext = boost::filesystem::extension(m_name);
+
+        if (boost::iequals(ext, ".geo"))
         {
-            return false;
+            shape = BuildGeo(m_name);
+        }
+        else
+        {
+            // Takes step file and makes OpenCascade shape
+            STEPControl_Reader reader;
+            reader = STEPControl_Reader();
+            reader.ReadFile(m_name.c_str());
+            reader.NbRootsForTransfer();
+            reader.TransferRoots();
+            shape = reader.OneShape();
+            if (shape.IsNull())
+            {
+                return false;
+            }
         }
     }
     else
@@ -388,6 +401,276 @@ TopoDS_Shape CADSystemOCE::BuildNACA(string naca)
     ShapeFix_Face sf(face.Face());
     sf.FixOrientation();
 
+    return sf.Face();
+}
+
+TopoDS_Shape CADSystemOCE::BuildGeo(string geo)
+{
+    ifstream f;
+    f.open(geo.c_str());
+
+    map<int, string> points;
+    map<int, string> lines;
+    map<int, string> splines;
+    map<int, string> bsplines;
+    map<int, string> circles;
+    map<int, string> ellipses;
+    map<int, string> loops;
+    map<int, string> surfs;
+
+    string fline;
+    string flinetmp;
+
+    while (!f.eof())
+    {
+        getline(f, fline);
+
+        boost::erase_all(fline, "\r");
+
+        vector<string> tmp1, tmp2;
+        boost::split(tmp1, fline, boost::is_any_of("//"));
+        fline = tmp1[0];
+
+        if (!boost::contains(fline, ";"))
+        {
+            flinetmp += fline;
+            continue;
+        }
+
+        fline = flinetmp + fline;
+        flinetmp.clear();
+
+        boost::split(tmp1, fline, boost::is_any_of("="));
+
+        boost::split(tmp2, tmp1[0], boost::is_any_of("("));
+
+        string type = tmp2[0];
+        boost::erase_all(tmp2[1], ")");
+        boost::erase_all(tmp2[1], " ");
+        int id = boost::lexical_cast<int>(tmp2[1]);
+
+        boost::erase_all(tmp1[1], " ");
+        boost::erase_all(tmp1[1], "{");
+        boost::erase_all(tmp1[1], "}");
+        boost::erase_all(tmp1[1], ";");
+
+        string var = tmp1[1];
+
+        if (boost::iequals(type, "Point"))
+        {
+            points[id] = var;
+        }
+        else if (boost::iequals(type, "Line"))
+        {
+            lines[id] = var;
+        }
+        else if (boost::iequals(type, "Spline"))
+        {
+            splines[id] = var;
+        }
+        else if (boost::iequals(type, "BSpline"))
+        {
+            bsplines[id] = var;
+        }
+        else if (boost::iequals(type, "Circle"))
+        {
+            circles[id] = var;
+        }
+        else if (boost::iequals(type, "Ellipse"))
+        {
+            ellipses[id] = var;
+        }
+        else if (boost::iequals(type, "Line Loop"))
+        {
+            // line loops sometimes have negative entries for gmsh
+            // orientaton purposes
+            // we dont care so remove it
+            boost::erase_all(var, "-");
+            loops[id] = var;
+        }
+        else if (boost::iequals(type, "Plane Surface"))
+        {
+            surfs[id] = var;
+        }
+        else
+        {
+            cout << "not sure " << type << endl;
+        }
+    }
+
+    map<int, string>::iterator it;
+
+    // build points
+    map<int, gp_Pnt> cPoints;
+    for (it = points.begin(); it != points.end(); it++)
+    {
+        vector<NekDouble> data;
+        ParseUtils::GenerateUnOrderedVector(it->second.c_str(), data);
+
+        cPoints[it->first] =
+            gp_Pnt(data[0] * 1000.0, data[1] * 1000.0, data[2] * 1000.0);
+    }
+
+    // build edges
+    map<int, TopoDS_Edge> cEdges;
+    for (it = lines.begin(); it != lines.end(); it++)
+    {
+        vector<unsigned int> data;
+        ParseUtils::GenerateUnOrderedVector(it->second.c_str(), data);
+        BRepBuilderAPI_MakeEdge em(cPoints[data[0]], cPoints[data[1]]);
+        cEdges[it->first] = em.Edge();
+    }
+    for (it = splines.begin(); it != splines.end(); it++)
+    {
+        vector<unsigned int> data;
+        ParseUtils::GenerateUnOrderedVector(it->second.c_str(), data);
+
+        TColgp_Array1OfPnt pointArray(0, data.size() - 1);
+
+        for (int i = 0; i < data.size(); i++)
+        {
+            pointArray.SetValue(i, cPoints[data[i]]);
+        }
+        GeomAPI_PointsToBSpline spline(pointArray);
+        Handle(Geom_BSplineCurve) curve = spline.Curve();
+
+        BRepBuilderAPI_MakeEdge em(curve);
+        cEdges[it->first] = em.Edge();
+    }
+    for (it = bsplines.begin(); it != bsplines.end(); it++)
+    {
+        vector<unsigned int> data;
+        ParseUtils::GenerateUnOrderedVector(it->second.c_str(), data);
+
+        TColgp_Array1OfPnt pointArray(0, data.size() - 1);
+
+        for (int i = 0; i < data.size(); i++)
+        {
+            pointArray.SetValue(i, cPoints[data[i]]);
+        }
+        Handle(Geom_BezierCurve) curve = new Geom_BezierCurve(pointArray);
+
+        BRepBuilderAPI_MakeEdge em(curve);
+        cEdges[it->first] = em.Edge();
+    }
+    for (it = circles.begin(); it != circles.end(); it++)
+    {
+        vector<unsigned int> data;
+        ParseUtils::GenerateUnOrderedVector(it->second.c_str(), data);
+
+        ASSERTL0(data.size() == 3, "Wrong definition of circle arc");
+        gp_Pnt start  = cPoints[data[0]];
+        gp_Pnt centre = cPoints[data[1]];
+        gp_Pnt end    = cPoints[data[2]];
+
+        NekDouble r1 = start.Distance(centre);
+        NekDouble r2 = end.Distance(centre);
+        ASSERTL0(fabs(r1 - r2) < 1e-7, "Non-matching radii");
+
+        gp_Circ c;
+        c.SetLocation(centre);
+        c.SetRadius(r1);
+        Handle(Geom_Circle) gc = new Geom_Circle(c);
+
+        ShapeAnalysis_Curve sac;
+        NekDouble p1, p2;
+        sac.Project(gc, start, 1e-8, start, p1);
+        sac.Project(gc, end, 1e-8, end, p2);
+
+        // Make sure the arc is always of length less than pi
+        if ((p1 > p2) ^ (fabs(p2 - p1) > M_PI))
+        {
+            swap(p1, p2);
+        }
+
+        Handle(Geom_TrimmedCurve) tc = new Geom_TrimmedCurve(gc, p1, p2, false);
+
+        BRepBuilderAPI_MakeEdge em(tc);
+        em.Build();
+        cEdges[it->first] = em.Edge();
+    }
+    for (it = ellipses.begin(); it != ellipses.end(); it++)
+    {
+        vector<unsigned int> data;
+        ParseUtils::GenerateUnOrderedVector(it->second.c_str(), data);
+
+        ASSERTL0(data.size() == 4, "Wrong definition of ellipse arc");
+        gp_Pnt start  = cPoints[data[0]];
+        gp_Pnt centre = cPoints[data[1]];
+        // data[2] useless??
+        gp_Pnt end = cPoints[data[3]];
+
+        NekDouble major = start.Distance(centre);
+
+        gp_Vec v1(centre, start);
+        gp_Vec v2(centre, end);
+
+        gp_Vec vx(1.0, 0.0, 0.0);
+        NekDouble angle = v1.Angle(vx);
+        // Check for negative rotation
+        if (v1.Y() < 0)
+        {
+            angle *= -1;
+        }
+
+        v2.Rotate(gp_Ax1(), angle);
+        NekDouble minor = fabs(v2.Y() / sqrt(1.0 - v2.X() * v2.X() / (major * major)));
+
+        gp_Elips e;
+        e.SetLocation(centre);
+        e.SetMajorRadius(major);
+        e.SetMinorRadius(minor);
+        e.Rotate(e.Axis(), angle);
+        Handle(Geom_Ellipse) ge = new Geom_Ellipse(e);
+
+        ShapeAnalysis_Curve sac;
+        NekDouble p1, p2;
+        sac.Project(ge, start, 1e-8, start, p1);
+        sac.Project(ge, end, 1e-8, end, p2);
+
+        // Make sure the arc is always of length less than pi
+        if (fabs(p2 - p1) > M_PI)
+        {
+            swap(p1, p2);
+        }
+
+        Handle(Geom_TrimmedCurve) tc = new Geom_TrimmedCurve(ge, p1, p2, true);
+
+        BRepBuilderAPI_MakeEdge em(tc);
+        em.Build();
+        cEdges[it->first] = em.Edge();
+    }
+
+    // build wires
+    map<int, TopoDS_Wire> cWires;
+    for (it = loops.begin(); it != loops.end(); it++)
+    {
+        vector<unsigned int> data;
+        ParseUtils::GenerateUnOrderedVector(it->second.c_str(), data);
+        BRepBuilderAPI_MakeWire wm;
+        for (int i = 0; i < data.size(); i++)
+        {
+            wm.Add(cEdges[data[i]]);
+        }
+        cWires[it->first] = wm.Wire();
+    }
+
+    // make surface, at this point assuming its 2D (therefore only 1)
+    // also going to assume that the first loop in the list is the outer domain
+    ASSERTL0(surfs.size() == 1, "more than 1 surf");
+    it = surfs.begin();
+    vector<unsigned int> data;
+    ParseUtils::GenerateUnOrderedVector(it->second.c_str(), data);
+    BRepBuilderAPI_MakeFace face(cWires[data[0]], true);
+    for (int i = 1; i < data.size(); i++)
+    {
+        face.Add(cWires[data[i]]);
+    }
+
+    ASSERTL0(face.Error() == BRepBuilderAPI_FaceDone, "build geo failed");
+
+    ShapeFix_Face sf(face.Face());
+    sf.FixOrientation();
 
     return sf.Face();
 }

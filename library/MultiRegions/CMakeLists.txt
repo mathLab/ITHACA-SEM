@@ -130,9 +130,12 @@ ENDIF(NEKTAR_USE_PETSC)
 
 ADD_DEFINITIONS(-DMULTI_REGIONS_EXPORTS)
 
-ADD_NEKTAR_LIBRARY(MultiRegions lib ${NEKTAR_LIBRARY_TYPE} ${MULTI_REGIONS_SOURCES} ${MULTI_REGIONS_HEADERS} ${ASSEMBLY_MAP_HEADERS})
-
-TARGET_LINK_LIBRARIES(MultiRegions LINK_PUBLIC Collections)
+ADD_NEKTAR_LIBRARY(MultiRegions
+    SOURCES ${MULTI_REGIONS_SOURCES}
+    HEADERS ${MULTI_REGIONS_HEADERS}
+    DEPENDS Collections
+    SUMMARY "Nektar++ MultiRegions library"
+    DESCRIPTION "This library provides global expansions on multi-element domains.")
 
 # MultiRegions uses additional routines from Metis
 TARGET_LINK_LIBRARIES(MultiRegions LINK_PRIVATE ${METIS_LIB})

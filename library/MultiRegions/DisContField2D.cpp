@@ -101,8 +101,10 @@ namespace Nektar
             const SpatialDomains::MeshGraphSharedPtr   &graph2D,
             const std::string                          &variable,
             const bool                                  SetUpJustDG,
-            const bool                                  DeclareCoeffPhysArrays)
-            : ExpList2D(pSession, graph2D, DeclareCoeffPhysArrays, variable),
+            const bool                                  DeclareCoeffPhysArrays,
+            const Collections::ImplementationType       ImpType)
+            : ExpList2D(pSession, graph2D, DeclareCoeffPhysArrays, variable,
+                        ImpType),
               m_bndCondExpansions(),
               m_bndConditions(),
               m_trace(NullExpListSharedPtr),
@@ -193,8 +195,8 @@ namespace Nektar
             const SpatialDomains::MeshGraphSharedPtr &graph2D,
             const std::string                        &variable,
             const bool                                SetUpJustDG,
-            const bool                                DeclareCoeffPhysArrays)
-            : ExpList2D(In,DeclareCoeffPhysArrays),
+            const bool                                DeclareCoeffPhysArrays):
+            ExpList2D(In,DeclareCoeffPhysArrays),
               m_trace(NullExpListSharedPtr)
         {
             // Set up boundary conditions for this variable.

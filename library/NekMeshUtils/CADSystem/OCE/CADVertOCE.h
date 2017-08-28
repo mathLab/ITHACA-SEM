@@ -62,7 +62,7 @@ public:
     {
     }
 
-    ~CADVertOCE()
+    virtual ~CADVertOCE()
     {
     }
 

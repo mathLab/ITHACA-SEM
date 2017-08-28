@@ -61,12 +61,10 @@ IF (NEKTAR_USE_HDF5)
                 ${TPSRC}/hdf5-1.8.16
             )
 
-        SET(HDF5_LIBRARIES hdf5-shared CACHE FILEPATH
-            "HDF5 libraries" FORCE)
+        THIRDPARTY_LIBRARY(HDF5_LIBRARIES SHARED hdf5-shared
+            DESCRIPTION "HDF5 library")
         SET(HDF5_INCLUDE_DIRS ${TPDIST}/include CACHE FILEPATH
             "HDF5 include directory" FORCE)
-
-        LINK_DIRECTORIES(${TPDIST}/lib)
 
         MESSAGE(STATUS "Build HDF5: ${HDF5_LIBRARIES}")
 

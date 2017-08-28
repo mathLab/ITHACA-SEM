@@ -33,7 +33,6 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <loki/Singleton.h>
 #include <LibUtilities/Foundations/GaussPoints.h>
 #include <LibUtilities/Foundations/FourierPoints.h>
 #include <LibUtilities/Foundations/FourierSingleModePoints.h>
@@ -109,12 +108,14 @@ namespace Nektar
 
         PointsManagerT &PointsManager(void)
         {
-            return Loki::SingletonHolder<PointsManagerT>::Instance();
+            static PointsManagerT instance;
+            return instance;
         }
 
         BasisManagerT &BasisManager(void)
         {
-            return Loki::SingletonHolder<BasisManagerT>::Instance();
+            static BasisManagerT instance;
+            return instance;
         }
 
     } // end of namespace LibUtilities

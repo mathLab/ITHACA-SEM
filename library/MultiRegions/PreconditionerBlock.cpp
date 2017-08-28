@@ -120,7 +120,7 @@ namespace Nektar
             DNekScalBlkMatSharedPtr loc_mat;
             DNekScalMatSharedPtr    bnd_mat;
 
-            int nel, i, j, k, n, cnt, gId;
+            int i, j, k, n, cnt, gId;
             int meshVertId, meshEdgeId, meshFaceId;
 
             const int nExp = expList->GetExpSize();

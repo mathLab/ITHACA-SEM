@@ -90,6 +90,12 @@ CommMpi::CommMpi(MPI_Comm pComm) : Comm()
  */
 CommMpi::~CommMpi()
 {
+    int flag;
+    MPI_Finalized(&flag);
+    if (!flag && m_comm != MPI_COMM_WORLD)
+    {
+        MPI_Comm_free(&m_comm);
+    }
 }
 
 /**

@@ -56,6 +56,7 @@ v4.4.1
 - Fix performance issue in ProcessIsoContour in relation to memory consumption
   (!821)
 - Fix performance issue with ExtractPhysToBndElmt (!796)
+- Fix available classes being listed multiple times (!817)
 
 **FieldConvert:**
 - Fix issue with field ordering in the interppointdatatofld module (!754)

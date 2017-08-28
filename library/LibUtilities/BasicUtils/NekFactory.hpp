@@ -234,20 +234,15 @@ public:
         TMapFactoryIterator it;
         for (it = getMapFactory()->begin(); it != getMapFactory()->end(); ++it)
         {
-            pOut << std::endl << "Available classes: " << std::endl;
-            TMapFactoryIterator it;
-            for (it = getMapFactory()->begin(); it != getMapFactory()->end(); ++it)
+            pOut << "  " << it->first;
+            if (it->second.m_desc != "")
             {
-                pOut << "  " << it->first;
-                if (it->second.m_desc != "")
-                {
-                    pOut << ":" << std::endl << "    "
-                         << it->second.m_desc << std::endl;
-                }
-                else
-                {
-                    pOut << std::endl;
-                }
+                pOut << ":" << std::endl << "    "
+                     << it->second.m_desc << std::endl;
+            }
+            else
+            {
+                pOut << std::endl;
             }
         }
     }

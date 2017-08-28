@@ -498,26 +498,26 @@ namespace Nektar
             SetUpUniversalDGMap   (locExp);
             SetUpUniversalTraceMap(locExp, tr, periodicTrace);
 
-			if ((m_solnType == eDirectMultiLevelStaticCond ||
-				m_solnType == eIterativeMultiLevelStaticCond ||
-				m_solnType == eXxtMultiLevelStaticCond ||
-				m_solnType == ePETScMultiLevelStaticCond)
-				&& nGraphVerts)
-			{
-				if (m_staticCondLevel < (bottomUpGraph->GetNlevels() - 1))
-				{
-					Array<OneD, int> vwgts_perm(nGraphVerts);
+            if ((m_solnType == eDirectMultiLevelStaticCond ||
+                 m_solnType == eIterativeMultiLevelStaticCond ||
+                 m_solnType == eXxtMultiLevelStaticCond ||
+                 m_solnType == ePETScMultiLevelStaticCond)
+                && nGraphVerts)
+            {
+                if (m_staticCondLevel < (bottomUpGraph->GetNlevels() - 1))
+                {
+                    Array<OneD, int> vwgts_perm(nGraphVerts);
 
-					for (int i = 0; i < nGraphVerts; i++)
-					{
-						vwgts_perm[i] = vwgts[perm[i]];
-					}
+                    for (int i = 0; i < nGraphVerts; i++)
+                    {
+                        vwgts_perm[i] = vwgts[perm[i]];
+                    }
 
-					bottomUpGraph->ExpandGraphWithVertexWeights(vwgts_perm);
-					m_nextLevelLocalToGlobalMap = MemoryManager<AssemblyMap>::
-						AllocateSharedPtr(this, bottomUpGraph);
-				}
-			}
+                    bottomUpGraph->ExpandGraphWithVertexWeights(vwgts_perm);
+                    m_nextLevelLocalToGlobalMap = MemoryManager<AssemblyMap>::
+                        AllocateSharedPtr(this, bottomUpGraph);
+                }
+            }
 
             m_hash = hash_range(m_localToGlobalBndMap.begin(),
                                 m_localToGlobalBndMap.end());

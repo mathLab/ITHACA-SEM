@@ -13,6 +13,7 @@ v5.0.0
 - Fix caching of FUNCTION tags that read from file and provide the same
   functionality in FUNCTIONs defined for forcings (!759)
 - Added native support for csv files in addititon to pts (!760)
+- Utilize LAPACK_DIR env variable to find the native blas/lapack install (!827)
 
 **NekMesh**:
 - Add feature to read basic 2D geo files as CAD (!731)

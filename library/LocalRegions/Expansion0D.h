@@ -47,10 +47,8 @@ namespace Nektar
     namespace LocalRegions 
     {
         class Expansion0D;
-        typedef boost::shared_ptr<Expansion0D>      Expansion0DSharedPtr;
+        typedef std::shared_ptr<Expansion0D>      Expansion0DSharedPtr;
         typedef std::vector< Expansion0DSharedPtr > Expansion0DVector;
-        typedef std::vector< Expansion0DSharedPtr >::iterator
-            Expansion0DVectorIter;
 
         class Expansion0D: virtual public Expansion,
             virtual public StdRegions::StdExpansion0D
@@ -133,7 +131,7 @@ namespace Nektar
         inline SpatialDomains::Geometry0DSharedPtr
             Expansion0D::GetGeom0D() const
         {
-            return boost::dynamic_pointer_cast<SpatialDomains::
+            return std::dynamic_pointer_cast<SpatialDomains::
                 Geometry0D>(m_geom);
 			
         }

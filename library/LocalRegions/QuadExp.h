@@ -293,10 +293,8 @@ namespace Nektar
 
         };
 
-        // type defines for use of QuadExp in a boost vector
-        typedef boost::shared_ptr<QuadExp> QuadExpSharedPtr;
+        typedef std::shared_ptr<QuadExp> QuadExpSharedPtr;
         typedef std::vector< QuadExpSharedPtr > QuadExpVector;
-        typedef std::vector< QuadExpSharedPtr >::iterator QuadExpVectorIter;
     }
 }
 

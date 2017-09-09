@@ -149,7 +149,7 @@ private:
     }
 };
 
-typedef boost::shared_ptr<SessionFunction> SessionFunctionSharedPtr;
+typedef std::shared_ptr<SessionFunction> SessionFunctionSharedPtr;
 static SessionFunctionSharedPtr NullSessionFunction;
 }
 }

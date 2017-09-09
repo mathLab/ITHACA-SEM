@@ -53,16 +53,15 @@ namespace Nektar
         };
 
         class PreconditionerLinear;
-        typedef boost::shared_ptr<PreconditionerLinear>  PreconditionerLinearSharedPtr;
+        typedef std::shared_ptr<PreconditionerLinear>  PreconditionerLinearSharedPtr;
 
         class PreconditionerLinear: public Preconditioner
 	{
         public:
             /// Creates an instance of this class
             static PreconditionerSharedPtr create(
-                        const boost::shared_ptr<GlobalLinSys> &plinsys,
-                        const boost::shared_ptr<AssemblyMap>
-                                                               &pLocToGloMap)
+                        const std::shared_ptr<GlobalLinSys> &plinsys,
+                        const std::shared_ptr<AssemblyMap> &pLocToGloMap)
             {
 	        PreconditionerSharedPtr p = MemoryManager<PreconditionerLinear>::AllocateSharedPtr(plinsys,pLocToGloMap);
 	        p->InitObject();
@@ -73,7 +72,7 @@ namespace Nektar
             static std::string className1;
 
             MULTI_REGIONS_EXPORT PreconditionerLinear(
-                         const boost::shared_ptr<GlobalLinSys> &plinsys,
+                         const std::shared_ptr<GlobalLinSys> &plinsys,
 	                 const AssemblyMapSharedPtr &pLocToGloMap);
 
             MULTI_REGIONS_EXPORT
@@ -81,7 +80,7 @@ namespace Nektar
             
 	protected:
             GlobalLinSysSharedPtr                       m_vertLinsys;
-            boost::shared_ptr<AssemblyMap>              m_vertLocToGloMap;
+            std::shared_ptr<AssemblyMap>                m_vertLocToGloMap;
 
 	private:
             static std::string                       solveType;

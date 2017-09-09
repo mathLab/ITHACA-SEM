@@ -94,7 +94,7 @@ void ProcessCombineAvg::Process(po::variables_map &vm)
     }
 
     string fromfld           = m_config["fromfld"].as<string>();
-    FieldSharedPtr fromField = boost::shared_ptr<Field>(new Field());
+    FieldSharedPtr fromField = std::shared_ptr<Field>(new Field());
     LibUtilities::FieldMetaDataMap fromFieldMetaDataMap;
 
     // Set up ElementGIDs in case of parallel processing

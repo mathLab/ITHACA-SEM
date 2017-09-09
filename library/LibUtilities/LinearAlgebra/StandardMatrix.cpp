@@ -386,14 +386,14 @@ namespace Nektar
     PointerWrapper NekMatrix<DataType, StandardMatrixTag>::GetWrapperType() const { return m_wrapperType; }
 
     template<typename DataType>
-    boost::tuples::tuple<unsigned int, unsigned int>
+    std::tuple<unsigned int, unsigned int>
     NekMatrix<DataType, StandardMatrixTag>::Advance(unsigned int curRow, unsigned int curColumn) const
     {
         return Advance(curRow, curColumn, this->GetTransposeFlag());
     }
 
     template<typename DataType>
-    boost::tuples::tuple<unsigned int, unsigned int>
+    std::tuple<unsigned int, unsigned int>
     NekMatrix<DataType, StandardMatrixTag>::Advance(unsigned int curRow, unsigned int curColumn, char transpose) const
     {
         unsigned int numRows = this->GetTransposedRows(transpose);
@@ -442,7 +442,7 @@ namespace Nektar
             default:
                 NEKERROR(ErrorUtil::efatal, "Unhandled matrix type");
         }
-        return boost::tuples::tuple<unsigned int, unsigned int>(curRow, curColumn);
+        return std::tuple<unsigned int, unsigned int>(curRow, curColumn);
     }
 
     template<typename DataType>
@@ -452,9 +452,9 @@ namespace Nektar
     }
     
     template<typename DataType>
-    boost::shared_ptr<NekMatrix<DataType, StandardMatrixTag> > NekMatrix<DataType, StandardMatrixTag>::CreateWrapper(const boost::shared_ptr<NekMatrix<DataType, StandardMatrixTag> >& rhs)
+    std::shared_ptr<NekMatrix<DataType, StandardMatrixTag> > NekMatrix<DataType, StandardMatrixTag>::CreateWrapper(const std::shared_ptr<NekMatrix<DataType, StandardMatrixTag> >& rhs)
     {
-        return boost::shared_ptr<NekMatrix<DataType, StandardMatrixTag> >(new NekMatrix<DataType, StandardMatrixTag>(*rhs, eWrapper));
+        return std::shared_ptr<NekMatrix<DataType, StandardMatrixTag> >(new NekMatrix<DataType, StandardMatrixTag>(*rhs, eWrapper));
     }
 
     template<typename DataType>
@@ -779,15 +779,13 @@ namespace Nektar
         std::swap(m_tempSpace, this->GetData());
     }
 
-    #ifndef NEKTAR_USE_EXPRESSION_TEMPLATES
     template<typename DataType>
     NekMatrix<DataType, StandardMatrixTag> NekMatrix<DataType, StandardMatrixTag>::operator-() const 
-    { 
+    {
         NekMatrix<DataType, StandardMatrixTag> result(*this);
         NegateInPlace(result);
         return result;
     }
-    #endif
 
     template<typename DataType>
     NekMatrix<DataType, StandardMatrixTag>& NekMatrix<DataType, StandardMatrixTag>::operator*=(const DataType& s)
@@ -828,156 +826,6 @@ namespace Nektar
     }
 
     template LIB_UTILITIES_EXPORT void NegateInPlace(NekMatrix<double, StandardMatrixTag>& v);
-
-//    template<typename DataType>
-//    template<typename T, typename MatrixType>
-//    NekMatrix<DataType>::iterator_impl<T, MatrixType>::iterator_impl(typename NekMatrix<DataType>::template iterator_impl<T, MatrixType>::pointer d, typename NekMatrix<DataType>::template iterator_impl<T, MatrixType>::pointer e, bool isEnd) :
-//        m_data(d),
-//        m_end(e),
-//        m_curRow(std::numeric_limits<unsigned int>::max()),
-//        m_curColumn(std::numeric_limits<unsigned int>::max()),
-//        m_matrix(NULL),
-//        m_curIndex(std::numeric_limits<unsigned int>::max()),
-//        m_transpose('N')
-//    {
-//        if( isEnd )
-//        {
-//            m_data = m_end;
-//        }
-//    }
-
-//    template<typename DataType>
-//    template<typename T, typename MatrixType>
-//    NekMatrix<DataType>::iterator_impl<T, MatrixType>::iterator_impl(MatrixType* m, char transpose, bool isEnd) :
-//        m_data(NULL),
-//        m_end(NULL),
-//        m_curRow(0),
-//        m_curColumn(0),
-//        m_matrix(m),
-//        m_curIndex(0),
-//        m_transpose(transpose)
-//    {
-//        if( isEnd )
-//        {
-//            m_curRow = std::numeric_limits<unsigned int>::max();
-//            m_curColumn = std::numeric_limits<unsigned int>::max();
-//            m_curIndex = std::numeric_limits<unsigned int>::max();
-//        }
-//    }
-
-//    template<typename DataType>
-//    template<typename T, typename MatrixType>
-//    NekMatrix<DataType>::iterator_impl<T, MatrixType>::iterator_impl(const typename NekMatrix<DataType>::template iterator_impl<T, MatrixType>& rhs) :
-//        m_data(rhs.m_data),
-//        m_end(rhs.m_end),
-//        m_curRow(rhs.m_curRow),
-//        m_curColumn(rhs.m_curColumn),
-//        m_matrix(rhs.m_matrix),
-//        m_curIndex(rhs.m_curIndex),
-//        m_transpose(rhs.m_transpose)
-//    {
-//    }
-
-//    template<typename DataType>
-//    template<typename T, typename MatrixType>
-//    typename NekMatrix<DataType>::template iterator_impl<T, MatrixType>&
-//    NekMatrix<DataType>::iterator_impl<T, MatrixType>::operator=(const typename NekMatrix<DataType>::template iterator_impl<T, MatrixType>& rhs)
-//    {
-//        m_data = rhs.m_data;
-//        m_end = rhs.m_end;
-//        m_curRow = rhs.m_curRow;
-//        m_curColumn = rhs.m_curColumn;
-//        m_matrix = rhs.m_matrix;
-//        m_curIndex = rhs.m_curIndex;
-//        m_transpose = rhs.m_transpose;
-//        return *this;
-//    }
-
-//    template<typename DataType>
-//    template<typename T, typename MatrixType>
-//    typename NekMatrix<DataType>::template iterator_impl<T, MatrixType>::reference NekMatrix<DataType>::iterator_impl<T, MatrixType>::operator*()
-//    {
-//        if( m_data )
-//        {
-//            ASSERTL1(m_data < m_end, "Attempt to dereference matrix iterator after its end.");
-//            return *m_data;
-//        }
-//        else
-//        {
-//            return m_matrix->GetPtr()[m_curIndex];
-//        }
-//    }
-
-//    template<typename DataType>
-//    template<typename T, typename MatrixType>
-//    typename NekMatrix<DataType>::template iterator_impl<T, MatrixType>::const_reference NekMatrix<DataType>::iterator_impl<T, MatrixType>::operator*() const
-//    {
-//        if( m_data )
-//        {
-//            ASSERTL1(m_data < m_end, "Attempt to dereference matrix iterator after its end.");
-//            return *m_data;
-//        }
-//        else
-//        {
-//            return m_matrix->GetPtr()[m_curIndex];
-//        }
-//    }
-
-//    template<typename DataType>
-//    template<typename T, typename MatrixType>
-//    typename NekMatrix<DataType>::template iterator_impl<T, MatrixType>& NekMatrix<DataType>::iterator_impl<T, MatrixType>::operator++()
-//    {
-//        if( m_data )
-//        {
-//            ++m_data;
-//        }
-//        else
-//        {
-//            boost::tie(m_curRow, m_curColumn) =
-//                m_matrix->Advance(m_curRow, m_curColumn, m_transpose);
-//            if( m_curRow == std::numeric_limits<unsigned int>::max() )
-//            {
-//                m_curIndex = m_curRow;
-//            }
-//            else
-//            {
-//                m_curIndex = m_matrix->CalculateIndex(m_curRow, m_curColumn, m_transpose);
-//            }
-//        }
-//        return *this;
-//    }
-
-//    template<typename DataType>
-//    template<typename T, typename MatrixType>
-//    typename NekMatrix<DataType>::template iterator_impl<T, MatrixType> NekMatrix<DataType>::iterator_impl<T, MatrixType>::operator++(int)
-//    {
-//        iterator_impl<T, MatrixType> result = *this;
-//        ++(*this);
-//        return result;
-//    }
-
-//    template<typename DataType>
-//    template<typename T, typename MatrixType>
-//    bool NekMatrix<DataType>::iterator_impl<T, MatrixType>::operator==(const typename NekMatrix<DataType>::template iterator_impl<T, MatrixType>& rhs)
-//    {
-//        return m_data == rhs.m_data &&
-//               m_end == rhs.m_end &&
-//               m_curRow == rhs.m_curRow &&
-//               m_curColumn == rhs.m_curColumn &&
-//               m_matrix == rhs.m_matrix &&
-//               m_curIndex == rhs.m_curIndex &&
-//               m_transpose == rhs.m_transpose;
-//    }
-
-//    template<typename DataType>
-//    template<typename T, typename MatrixType>
-//    bool NekMatrix<DataType>::iterator_impl<T, MatrixType>::operator!=(const typename NekMatrix<DataType>::template iterator_impl<T, MatrixType>& rhs)
-//    {
-//        return !(*this == rhs);
-//    }
-
-//    template LIB_UTILITIES_EXPORT class NekMatrix<NekDouble, StandardMatrixTag>::iterator_impl<const NekDouble, const NekMatrix<NekDouble, StandardMatrixTag> >;
-//    template LIB_UTILITIES_EXPORT class NekMatrix<NekDouble, StandardMatrixTag>::iterator_impl<NekDouble, NekMatrix<NekDouble, StandardMatrixTag> >;
 
 }
 

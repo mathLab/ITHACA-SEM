@@ -37,7 +37,7 @@
 #ifndef NEKTAR_LIB_UTILITIES_BASICUTILS_RAW_TYPE_HPP
 #define NEKTAR_LIB_UTILITIES_BASICUTILS_RAW_TYPE_HPP
 
-#include <boost/shared_ptr.hpp>
+#include <memory>
 
 namespace Nektar
 {
@@ -102,56 +102,56 @@ namespace Nektar
     struct RawType<const volatile T* const volatile> { typedef T type; };
     
     template<typename T>
-    struct RawType<boost::shared_ptr<T> > { typedef T type; };
+    struct RawType<std::shared_ptr<T> > { typedef T type; };
 
     template<typename T>
-    struct RawType<const boost::shared_ptr<T> > { typedef T type; };
+    struct RawType<const std::shared_ptr<T> > { typedef T type; };
 
     template<typename T>
-    struct RawType<volatile boost::shared_ptr<T> > { typedef T type; };
+    struct RawType<volatile std::shared_ptr<T> > { typedef T type; };
 
     template<typename T>
-    struct RawType<const volatile boost::shared_ptr<T> > { typedef T type; };
+    struct RawType<const volatile std::shared_ptr<T> > { typedef T type; };
     
     
     template<typename T>
-    struct RawType<boost::shared_ptr<const T> > { typedef T type; };
+    struct RawType<std::shared_ptr<const T> > { typedef T type; };
 
     template<typename T>
-    struct RawType<const boost::shared_ptr<const T> > { typedef T type; };
+    struct RawType<const std::shared_ptr<const T> > { typedef T type; };
 
     template<typename T>
-    struct RawType<volatile boost::shared_ptr<const T> > { typedef T type; };
+    struct RawType<volatile std::shared_ptr<const T> > { typedef T type; };
 
     template<typename T>
-    struct RawType<const volatile boost::shared_ptr<const T> > { typedef T type; };
+    struct RawType<const volatile std::shared_ptr<const T> > { typedef T type; };
     
     
     
     template<typename T>
-    struct RawType<boost::shared_ptr<volatile T> > { typedef T type; };
+    struct RawType<std::shared_ptr<volatile T> > { typedef T type; };
 
     template<typename T>
-    struct RawType<const boost::shared_ptr<volatile T> > { typedef T type; };
+    struct RawType<const std::shared_ptr<volatile T> > { typedef T type; };
 
     template<typename T>
-    struct RawType<volatile boost::shared_ptr<volatile T> > { typedef T type; };
+    struct RawType<volatile std::shared_ptr<volatile T> > { typedef T type; };
 
     template<typename T>
-    struct RawType<const volatile boost::shared_ptr<volatile T> > { typedef T type; };
+    struct RawType<const volatile std::shared_ptr<volatile T> > { typedef T type; };
     
     
     template<typename T>
-    struct RawType<boost::shared_ptr<const volatile T> > { typedef T type; };
+    struct RawType<std::shared_ptr<const volatile T> > { typedef T type; };
 
     template<typename T>
-    struct RawType<const boost::shared_ptr<const volatile T> > { typedef T type; };
+    struct RawType<const std::shared_ptr<const volatile T> > { typedef T type; };
 
     template<typename T>
-    struct RawType<volatile boost::shared_ptr<const volatile T> > { typedef T type; };
+    struct RawType<volatile std::shared_ptr<const volatile T> > { typedef T type; };
 
     template<typename T>
-    struct RawType<const volatile boost::shared_ptr<const volatile T> > { typedef T type; };
+    struct RawType<const volatile std::shared_ptr<const volatile T> > { typedef T type; };
     
 }
 

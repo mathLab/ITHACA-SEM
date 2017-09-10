@@ -48,7 +48,7 @@ std::string FilterEnergy::className = SolverUtils::GetFilterFactory().
 
 FilterEnergy::FilterEnergy(
     const LibUtilities::SessionReaderSharedPtr &pSession,
-    const boost::weak_ptr<EquationSystem>      &pEquation,
+    const std::weak_ptr<EquationSystem>      &pEquation,
     const ParamMap &pParams)
     : Filter        (pSession, pEquation),
       m_index       (-1),

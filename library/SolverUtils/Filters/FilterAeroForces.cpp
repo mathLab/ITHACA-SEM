@@ -59,7 +59,7 @@ std::string FilterAeroForces::className =
  */
 FilterAeroForces::FilterAeroForces(
     const LibUtilities::SessionReaderSharedPtr &pSession,
-    const boost::weak_ptr<EquationSystem>      &pEquation,
+    const std::weak_ptr<EquationSystem>      &pEquation,
     const ParamMap &pParams) :
     Filter(pSession, pEquation)
 {

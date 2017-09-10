@@ -46,14 +46,12 @@ std::string FilterMovingAverage::className =
 
 FilterMovingAverage::FilterMovingAverage(
     const LibUtilities::SessionReaderSharedPtr &pSession,
-    const boost::weak_ptr<EquationSystem>      &pEquation,
+    const std::weak_ptr<EquationSystem>      &pEquation,
     const ParamMap &pParams)
     : FilterFieldConvert(pSession, pEquation, pParams)
 {
-    ParamMap::const_iterator it;
-
     // Load sampling frequency
-    it = pParams.find("SampleFrequency");
+    auto  it = pParams.find("SampleFrequency");
     if (it == pParams.end())
     {
         m_sampleFrequency = 1;
@@ -65,7 +63,7 @@ FilterMovingAverage::FilterMovingAverage(
     }
 
     // Load filter parameter
-    auto it = pParams.find("alpha");
+    it = pParams.find("alpha");
     if (it == pParams.end())
     {
         it = pParams.find("tau");

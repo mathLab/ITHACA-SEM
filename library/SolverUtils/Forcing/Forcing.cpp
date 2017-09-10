@@ -50,7 +50,7 @@ namespace Nektar
 
         Forcing::Forcing(
             const LibUtilities::SessionReaderSharedPtr &pSession,
-            const boost::weak_ptr<EquationSystem>      &pEquation)
+            const std::weak_ptr<EquationSystem>      &pEquation)
                 : m_session(pSession), m_equ(pEquation)
         {
 
@@ -85,7 +85,7 @@ namespace Nektar
          */
         vector<ForcingSharedPtr> Forcing::Load(
                     const LibUtilities::SessionReaderSharedPtr &pSession,
-                    const boost::weak_ptr<EquationSystem>      &pEquation,
+                    const std::weak_ptr<EquationSystem>      &pEquation,
                     const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields,
                     const unsigned int& pNumForcingFields)
         {

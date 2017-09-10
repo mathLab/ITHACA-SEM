@@ -66,14 +66,12 @@ std::string FilterReynoldsStresses::className =
  */
 FilterReynoldsStresses::FilterReynoldsStresses(
     const LibUtilities::SessionReaderSharedPtr         &pSession,
-    const boost::weak_ptr<SolverUtils::EquationSystem> &pEquation,
+    const std::weak_ptr<SolverUtils::EquationSystem> &pEquation,
     const std::map<std::string, std::string> &pParams)
     : FilterFieldConvert(pSession, pEquation, pParams)
 {
-    ParamMap::const_iterator it;
-
     // Load sampling frequency
-    it = pParams.find("SampleFrequency");
+    auto it = pParams.find("SampleFrequency");
     if (it == pParams.end())
     {
         m_sampleFrequency = 1;
@@ -85,7 +83,7 @@ FilterReynoldsStresses::FilterReynoldsStresses(
     }
 
     // Check if should use moving average
-    auto it = pParams.find("MovingAverage");
+    it = pParams.find("MovingAverage");
     if (it == pParams.end())
     {
         m_movAvg = false;

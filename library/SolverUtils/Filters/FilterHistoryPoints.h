@@ -51,7 +51,7 @@ class FilterHistoryPoints : public Filter
         /// Creates an instance of this class
         static FilterSharedPtr create(
             const LibUtilities::SessionReaderSharedPtr &pSession,
-            const boost::weak_ptr<EquationSystem>      &pEquation,
+            const std::weak_ptr<EquationSystem>      &pEquation,
             const std::map<std::string, std::string>   &pParams)
         {
             FilterSharedPtr p = MemoryManager<FilterHistoryPoints>
@@ -64,7 +64,7 @@ class FilterHistoryPoints : public Filter
 
         SOLVER_UTILS_EXPORT FilterHistoryPoints(
             const LibUtilities::SessionReaderSharedPtr &pSession,
-            const boost::weak_ptr<EquationSystem>      &pEquation,
+            const std::weak_ptr<EquationSystem>      &pEquation,
             const ParamMap                             &pParams);
         SOLVER_UTILS_EXPORT ~FilterHistoryPoints();
 

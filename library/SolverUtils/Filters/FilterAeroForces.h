@@ -52,7 +52,7 @@ public:
     /// Creates an instance of this class
     static FilterSharedPtr create(
         const LibUtilities::SessionReaderSharedPtr &pSession,
-        const boost::weak_ptr<EquationSystem>      &pEquation,
+        const std::weak_ptr<EquationSystem>      &pEquation,
         const std::map<std::string, std::string>   &pParams)
     {
         FilterSharedPtr p = MemoryManager<FilterAeroForces>::
@@ -65,7 +65,7 @@ public:
 
     SOLVER_UTILS_EXPORT FilterAeroForces(
         const LibUtilities::SessionReaderSharedPtr &pSession,
-        const boost::weak_ptr<EquationSystem>      &pEquation,
+        const std::weak_ptr<EquationSystem>      &pEquation,
         const std::map<std::string, std::string>   &pParams);
 
     SOLVER_UTILS_EXPORT virtual ~FilterAeroForces();

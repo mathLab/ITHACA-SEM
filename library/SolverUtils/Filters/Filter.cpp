@@ -47,7 +47,7 @@ FilterFactory& GetFilterFactory()
 
 
 Filter::Filter(const LibUtilities::SessionReaderSharedPtr &pSession,
-               const boost::weak_ptr<EquationSystem>      &pEquation) :
+               const std::weak_ptr<EquationSystem>      &pEquation) :
     m_session(pSession),
     m_equ(pEquation)
 {

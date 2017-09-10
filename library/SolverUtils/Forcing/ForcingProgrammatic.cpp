@@ -47,7 +47,7 @@ namespace SolverUtils
 
     ForcingProgrammatic::ForcingProgrammatic(
             const LibUtilities::SessionReaderSharedPtr &pSession,
-            const boost::weak_ptr<EquationSystem>      &pEquation)
+            const std::weak_ptr<EquationSystem>      &pEquation)
         : Forcing(pSession, pEquation)
     {
     }

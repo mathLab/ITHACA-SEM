@@ -56,7 +56,7 @@ class ForcingMovingBody : public SolverUtils::Forcing
         /// Creates an instance of this class
         static SolverUtils::ForcingSharedPtr create(
                 const LibUtilities::SessionReaderSharedPtr         &pSession,
-                const boost::weak_ptr<SolverUtils::EquationSystem> &pEquation,
+                const std::weak_ptr<SolverUtils::EquationSystem> &pEquation,
                 const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields,
                 const unsigned int& pNumForcingFields,
                 const TiXmlElement* pForce)
@@ -90,7 +90,7 @@ class ForcingMovingBody : public SolverUtils::Forcing
 
         ForcingMovingBody(
                 const LibUtilities::SessionReaderSharedPtr         &pSession,
-                const boost::weak_ptr<SolverUtils::EquationSystem> &pEquation);
+                const std::weak_ptr<SolverUtils::EquationSystem> &pEquation);
 
         void CheckIsFromFile(const TiXmlElement* pForce);
 

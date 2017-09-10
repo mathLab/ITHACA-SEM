@@ -51,7 +51,7 @@ public:
     /// Creates an instance of this class
     static FilterSharedPtr create(
         const LibUtilities::SessionReaderSharedPtr &pSession,
-        const boost::weak_ptr<EquationSystem>      &pEquation,
+        const std::weak_ptr<EquationSystem>      &pEquation,
         const ParamMap &pParams)
     {
         FilterSharedPtr p =
@@ -65,7 +65,7 @@ public:
 
     SOLVER_UTILS_EXPORT FilterThresholdMin(
         const LibUtilities::SessionReaderSharedPtr &pSession,
-        const boost::weak_ptr<EquationSystem>      &pEquation,
+        const std::weak_ptr<EquationSystem>      &pEquation,
         const ParamMap &pParams);
     SOLVER_UTILS_EXPORT virtual ~FilterThresholdMin();
 

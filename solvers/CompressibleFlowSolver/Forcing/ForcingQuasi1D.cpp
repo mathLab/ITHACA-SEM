@@ -46,7 +46,7 @@ std::string ForcingQuasi1D::className = SolverUtils::GetForcingFactory().
 
 ForcingQuasi1D::ForcingQuasi1D(
         const LibUtilities::SessionReaderSharedPtr         &pSession,
-        const boost::weak_ptr<SolverUtils::EquationSystem> &pEquation)
+        const std::weak_ptr<SolverUtils::EquationSystem> &pEquation)
     : Forcing(pSession, pEquation)
 {
 }

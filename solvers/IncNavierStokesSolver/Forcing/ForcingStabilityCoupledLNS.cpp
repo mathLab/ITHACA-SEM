@@ -46,7 +46,7 @@ std::string ForcingStabilityCoupledLNS::className = SolverUtils::GetForcingFacto
 
 ForcingStabilityCoupledLNS::ForcingStabilityCoupledLNS(
                 const LibUtilities::SessionReaderSharedPtr         &pSession,
-                const boost::weak_ptr<SolverUtils::EquationSystem> &pEquation)
+                const std::weak_ptr<SolverUtils::EquationSystem> &pEquation)
     : Forcing(pSession, pEquation)
 {
 }

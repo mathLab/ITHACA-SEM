@@ -45,7 +45,7 @@ std::string FilterAverageFields::className =
 
 FilterAverageFields::FilterAverageFields(
     const LibUtilities::SessionReaderSharedPtr &pSession,
-    const boost::weak_ptr<EquationSystem>      &pEquation,
+    const std::weak_ptr<EquationSystem>      &pEquation,
     const ParamMap &pParams)
     : FilterFieldConvert(pSession, pEquation, pParams)
 {

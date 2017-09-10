@@ -51,7 +51,7 @@ class ForcingQuasi1D : public SolverUtils::Forcing
         /// Creates an instance of this class
         static SolverUtils::ForcingSharedPtr create(
                 const LibUtilities::SessionReaderSharedPtr         &pSession,
-                const boost::weak_ptr<SolverUtils::EquationSystem> &pEquation,
+                const std::weak_ptr<SolverUtils::EquationSystem> &pEquation,
                 const Array<OneD, MultiRegions::ExpListSharedPtr>  &pFields,
                 const unsigned int& pNumForcingFields,
                 const TiXmlElement* pForce)
@@ -82,7 +82,7 @@ class ForcingQuasi1D : public SolverUtils::Forcing
 
         ForcingQuasi1D(
             const LibUtilities::SessionReaderSharedPtr         &pSession,
-            const boost::weak_ptr<SolverUtils::EquationSystem> &pEquation);
+            const std::weak_ptr<SolverUtils::EquationSystem> &pEquation);
 
         Array<OneD, NekDouble>               m_geomFactor;
         VariableConverterSharedPtr           m_varConv;

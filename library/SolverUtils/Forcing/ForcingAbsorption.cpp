@@ -49,7 +49,7 @@ namespace SolverUtils
 
     ForcingAbsorption::ForcingAbsorption(
             const LibUtilities::SessionReaderSharedPtr &pSession,
-            const boost::weak_ptr<EquationSystem>      &pEquation)
+            const std::weak_ptr<EquationSystem>      &pEquation)
             : Forcing(pSession, pEquation),
               m_hasRefFlow(false),	
               m_hasRefFlowTime(false)

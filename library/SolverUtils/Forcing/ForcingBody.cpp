@@ -54,7 +54,7 @@ namespace SolverUtils
 
     ForcingBody::ForcingBody(
             const LibUtilities::SessionReaderSharedPtr &pSession,
-            const boost::weak_ptr<EquationSystem>      &pEquation)
+            const std::weak_ptr<EquationSystem>      &pEquation)
         : Forcing(pSession, pEquation),
           m_hasTimeFcnScaling(false)
     {

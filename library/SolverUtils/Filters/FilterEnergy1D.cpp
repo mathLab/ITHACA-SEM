@@ -53,7 +53,7 @@ std::string FilterEnergy1D::className = GetFilterFactory().
  */
 FilterEnergy1D::FilterEnergy1D(
     const LibUtilities::SessionReaderSharedPtr &pSession,
-    const boost::weak_ptr<EquationSystem>      &pEquation,
+    const std::weak_ptr<EquationSystem>      &pEquation,
     const ParamMap &pParams) :
     Filter(pSession, pEquation),
     m_index(0)

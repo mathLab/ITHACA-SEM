@@ -58,7 +58,7 @@ typedef std::shared_ptr<Filter> FilterSharedPtr;
 typedef LibUtilities::NekFactory<
     std::string, Filter,
     const LibUtilities::SessionReaderSharedPtr&,
-    const boost::weak_ptr<EquationSystem>&,
+    const std::weak_ptr<EquationSystem>&,
     const std::map<std::string, std::string>&
     > FilterFactory;
 SOLVER_UTILS_EXPORT FilterFactory& GetFilterFactory();
@@ -69,7 +69,7 @@ public:
     typedef std::map<std::string, std::string> ParamMap;
     SOLVER_UTILS_EXPORT Filter(
             const LibUtilities::SessionReaderSharedPtr &pSession,
-            const boost::weak_ptr<EquationSystem>      &pEquation);
+            const std::weak_ptr<EquationSystem>      &pEquation);
     SOLVER_UTILS_EXPORT virtual ~Filter();
 
     SOLVER_UTILS_EXPORT inline void Initialise(
@@ -85,7 +85,7 @@ public:
 
 protected:
     LibUtilities::SessionReaderSharedPtr  m_session;
-    const boost::weak_ptr<EquationSystem> m_equ;
+    const std::weak_ptr<EquationSystem> m_equ;
 
     virtual void v_Initialise(
             const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,

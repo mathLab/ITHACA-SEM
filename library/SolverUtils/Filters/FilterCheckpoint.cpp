@@ -45,7 +45,7 @@ std::string FilterCheckpoint::className =
 
 FilterCheckpoint::FilterCheckpoint(
     const LibUtilities::SessionReaderSharedPtr &pSession,
-    const boost::weak_ptr<EquationSystem>      &pEquation,
+    const std::weak_ptr<EquationSystem>      &pEquation,
     const ParamMap &pParams) :
     Filter(pSession, pEquation)
 {

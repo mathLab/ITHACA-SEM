@@ -54,7 +54,7 @@ std::string FilterMovingBody::className = SolverUtils::GetFilterFactory().
  */
 FilterMovingBody::FilterMovingBody(
         const LibUtilities::SessionReaderSharedPtr         &pSession,
-        const boost::weak_ptr<SolverUtils::EquationSystem> &pEquation,
+        const std::weak_ptr<SolverUtils::EquationSystem> &pEquation,
         const ParamMap &pParams)
     : Filter(pSession, pEquation)
 {

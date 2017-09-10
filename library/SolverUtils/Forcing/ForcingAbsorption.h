@@ -56,7 +56,7 @@ namespace SolverUtils
             /// Creates an instance of this class
             SOLVER_UTILS_EXPORT static ForcingSharedPtr create(
                     const LibUtilities::SessionReaderSharedPtr &pSession,
-                    const boost::weak_ptr<EquationSystem>      &pEquation,
+                    const std::weak_ptr<EquationSystem>      &pEquation,
                     const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields,
                     const unsigned int& pNumForcingFields,
                     const TiXmlElement* pForce)
@@ -91,7 +91,7 @@ namespace SolverUtils
         private:
             ForcingAbsorption(
                 const LibUtilities::SessionReaderSharedPtr &pSession,
-                const boost::weak_ptr<EquationSystem>      &pEquation);
+                const std::weak_ptr<EquationSystem>      &pEquation);
             virtual ~ForcingAbsorption(void){};
 
     };

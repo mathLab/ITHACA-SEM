@@ -43,7 +43,7 @@ std::string FilterCheckpointCellModel::className =
 
 FilterCheckpointCellModel::FilterCheckpointCellModel(
     const LibUtilities::SessionReaderSharedPtr         &pSession,
-    const boost::weak_ptr<SolverUtils::EquationSystem> &pEquation,
+    const std::weak_ptr<SolverUtils::EquationSystem> &pEquation,
     const ParamMap &pParams) :
     Filter(pSession, pEquation)
 {

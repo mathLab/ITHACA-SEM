@@ -58,7 +58,7 @@ namespace SolverUtils
     /// Declaration of the forcing factory
     typedef LibUtilities::NekFactory<std::string, Forcing,
             const LibUtilities::SessionReaderSharedPtr&,
-            const boost::weak_ptr<EquationSystem>&,
+            const std::weak_ptr<EquationSystem>&,
             const Array<OneD, MultiRegions::ExpListSharedPtr>&,
             const unsigned int&,
             const TiXmlElement*> ForcingFactory;
@@ -90,7 +90,7 @@ namespace SolverUtils
 
             SOLVER_UTILS_EXPORT static std::vector<ForcingSharedPtr> Load(
                         const LibUtilities::SessionReaderSharedPtr &pSession,
-                        const boost::weak_ptr<EquationSystem>      &pEquation,
+                        const std::weak_ptr<EquationSystem>      &pEquation,
                         const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields,
                         const unsigned int& pNumForcingFields = 0);
 
@@ -103,7 +103,7 @@ namespace SolverUtils
             /// Session reader
             LibUtilities::SessionReaderSharedPtr m_session;
             /// Weak pointer to equation system using this forcing
-            const boost::weak_ptr<EquationSystem> m_equ;
+            const std::weak_ptr<EquationSystem> m_equ;
             /// Evaluated forcing function
             Array<OneD, Array<OneD, NekDouble> > m_Forcing;
             /// Number of variables
@@ -114,7 +114,7 @@ namespace SolverUtils
             /// Constructor
             SOLVER_UTILS_EXPORT Forcing(
                 const LibUtilities::SessionReaderSharedPtr &pSession,
-                const boost::weak_ptr<EquationSystem>      &pEquation);
+                const std::weak_ptr<EquationSystem>      &pEquation);
 
             SOLVER_UTILS_EXPORT virtual void v_InitObject(
                 const Array<OneD, MultiRegions::ExpListSharedPtr>&       pFields,

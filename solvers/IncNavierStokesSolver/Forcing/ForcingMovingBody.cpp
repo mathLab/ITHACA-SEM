@@ -48,7 +48,7 @@ std::string ForcingMovingBody::className = SolverUtils::GetForcingFactory().
 
 ForcingMovingBody::ForcingMovingBody(
                 const LibUtilities::SessionReaderSharedPtr         &pSession,
-                const boost::weak_ptr<SolverUtils::EquationSystem> &pEquation)
+                const std::weak_ptr<SolverUtils::EquationSystem> &pEquation)
     : Forcing(pSession, pEquation)
 {
 }

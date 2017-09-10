@@ -85,7 +85,7 @@ FilterReynoldsStresses::FilterReynoldsStresses(
     }
 
     // Check if should use moving average
-    it = pParams.find("MovingAverage");
+    auto it = pParams.find("MovingAverage");
     if (it == pParams.end())
     {
         m_movAvg = false;

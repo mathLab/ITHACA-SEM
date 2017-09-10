@@ -256,11 +256,10 @@ namespace Nektar
         }
         
         // Add forcing terms
-        std::vector<SolverUtils::ForcingSharedPtr>::const_iterator x;
-        for (x = m_forcing.begin(); x != m_forcing.end(); ++x)
+        for (auto &x : m_forcing)
         {
             // set up non-linear terms
-            (*x)->Apply(m_fields, inarray, outarray, time);
+            x->Apply(m_fields, inarray, outarray, time);
         }
     }
     

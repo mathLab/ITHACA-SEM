@@ -55,11 +55,10 @@ FilterEnergy::FilterEnergy(
       m_homogeneous (false),
       m_planes      ()
 {
-    ParamMap::const_iterator it;
     std::string outName;
 
     // OutputFile
-    it = pParams.find("OutputFile");
+    auto it = pParams.find("OutputFile");
     if (it == pParams.end())
     {
         outName = m_session->GetSessionName();

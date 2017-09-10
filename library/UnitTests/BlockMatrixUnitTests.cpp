@@ -53,7 +53,7 @@ namespace Nektar
             {
                 typedef NekMatrix<NekMatrix<NekDouble>, BlockMatrixTag> BlockMatrixType;
                 BlockMatrixType m1(3, 2, 2, 2);
-                boost::shared_ptr<ConstMatrix<NekDouble> > m2(new BlockMatrixType(2, 3, 2, 2));
+                std::shared_ptr<ConstMatrix<NekDouble> > m2(new BlockMatrixType(2, 3, 2, 2));
                 
                 BOOST_CHECK_EQUAL(m1.GetRows(), 6u);
                 BOOST_CHECK_EQUAL(m1.GetColumns(), 4u);
@@ -72,7 +72,7 @@ namespace Nektar
             {
                 typedef NekMatrix<NekMatrix<NekDouble>, BlockMatrixTag> BlockMatrixType;
                 BlockMatrixType m1(3, 2, 2, 2);
-                boost::shared_ptr<ConstMatrix<NekDouble> > m2(new BlockMatrixType(3, 2, 2, 2));
+                std::shared_ptr<ConstMatrix<NekDouble> > m2(new BlockMatrixType(3, 2, 2, 2));
                 
                 double vals1[] = {1.0, 3.0, 2.0, 4.0};
                 double vals2[] = {5.0, 7.0, 6.0, 8.0};
@@ -81,12 +81,12 @@ namespace Nektar
                 double vals5[] = {17.0, 19.0, 18.0, 20.0};
                 double vals6[] = {21.0, 23.0, 22.0, 24.0};
                 
-                boost::shared_ptr<NekMatrix<NekDouble> > sub1(new NekMatrix<NekDouble>(2, 2, vals1));
-                boost::shared_ptr<NekMatrix<NekDouble> > sub2(new NekMatrix<NekDouble>(2, 2, vals2));
-                boost::shared_ptr<NekMatrix<NekDouble> > sub3(new NekMatrix<NekDouble>(2, 2, vals3));
-                boost::shared_ptr<NekMatrix<NekDouble> > sub4(new NekMatrix<NekDouble>(2, 2, vals4));
-                boost::shared_ptr<NekMatrix<NekDouble> > sub5(new NekMatrix<NekDouble>(2, 2, vals5));
-                boost::shared_ptr<NekMatrix<NekDouble> > sub6(new NekMatrix<NekDouble>(2, 2, vals6));
+                std::shared_ptr<NekMatrix<NekDouble> > sub1(new NekMatrix<NekDouble>(2, 2, vals1));
+                std::shared_ptr<NekMatrix<NekDouble> > sub2(new NekMatrix<NekDouble>(2, 2, vals2));
+                std::shared_ptr<NekMatrix<NekDouble> > sub3(new NekMatrix<NekDouble>(2, 2, vals3));
+                std::shared_ptr<NekMatrix<NekDouble> > sub4(new NekMatrix<NekDouble>(2, 2, vals4));
+                std::shared_ptr<NekMatrix<NekDouble> > sub5(new NekMatrix<NekDouble>(2, 2, vals5));
+                std::shared_ptr<NekMatrix<NekDouble> > sub6(new NekMatrix<NekDouble>(2, 2, vals6));
                 
                 m1.SetBlock(0,0, sub1);
                 m1.SetBlock(0,1, sub2);
@@ -95,7 +95,7 @@ namespace Nektar
                 m1.SetBlock(2,0, sub5);
                 m1.SetBlock(2,1, sub6);
                 
-                boost::shared_ptr<BlockMatrixType> m2_cast = boost::dynamic_pointer_cast<BlockMatrixType>(m2);
+                std::shared_ptr<BlockMatrixType> m2_cast = std::dynamic_pointer_cast<BlockMatrixType>(m2);
                 
                 m2_cast->SetBlock(0,0, sub1);
                 m2_cast->SetBlock(0,1, sub2);
@@ -162,7 +162,7 @@ namespace Nektar
                 unsigned int rowSizes[] = {2, 2, 2};
                 unsigned int columnSizes[] = {2, 2};
                 BlockMatrixType m1(3, 2, rowSizes, columnSizes);
-                boost::shared_ptr<ConstMatrix<NekDouble> > m2(new BlockMatrixType(3, 2, rowSizes, columnSizes));
+                std::shared_ptr<ConstMatrix<NekDouble> > m2(new BlockMatrixType(3, 2, rowSizes, columnSizes));
                 
                 double vals1[] = {1.0, 3.0, 2.0, 4.0};
                 double vals2[] = {5.0, 7.0, 6.0, 8.0};
@@ -171,12 +171,12 @@ namespace Nektar
                 double vals5[] = {17.0, 19.0, 18.0, 20.0};
                 double vals6[] = {21.0, 23.0, 22.0, 24.0};
                 
-                boost::shared_ptr<NekMatrix<NekDouble> > sub1(new NekMatrix<NekDouble>(2, 2, vals1));
-                boost::shared_ptr<NekMatrix<NekDouble> > sub2(new NekMatrix<NekDouble>(2, 2, vals2));
-                boost::shared_ptr<NekMatrix<NekDouble> > sub3(new NekMatrix<NekDouble>(2, 2, vals3));
-                boost::shared_ptr<NekMatrix<NekDouble> > sub4(new NekMatrix<NekDouble>(2, 2, vals4));
-                boost::shared_ptr<NekMatrix<NekDouble> > sub5(new NekMatrix<NekDouble>(2, 2, vals5));
-                boost::shared_ptr<NekMatrix<NekDouble> > sub6(new NekMatrix<NekDouble>(2, 2, vals6));
+                std::shared_ptr<NekMatrix<NekDouble> > sub1(new NekMatrix<NekDouble>(2, 2, vals1));
+                std::shared_ptr<NekMatrix<NekDouble> > sub2(new NekMatrix<NekDouble>(2, 2, vals2));
+                std::shared_ptr<NekMatrix<NekDouble> > sub3(new NekMatrix<NekDouble>(2, 2, vals3));
+                std::shared_ptr<NekMatrix<NekDouble> > sub4(new NekMatrix<NekDouble>(2, 2, vals4));
+                std::shared_ptr<NekMatrix<NekDouble> > sub5(new NekMatrix<NekDouble>(2, 2, vals5));
+                std::shared_ptr<NekMatrix<NekDouble> > sub6(new NekMatrix<NekDouble>(2, 2, vals6));
                 
                 m1.SetBlock(0,0, sub1);
                 m1.SetBlock(0,1, sub2);
@@ -185,7 +185,7 @@ namespace Nektar
                 m1.SetBlock(2,0, sub5);
                 m1.SetBlock(2,1, sub6);
                 
-                boost::shared_ptr<BlockMatrixType> m2_cast = boost::dynamic_pointer_cast<BlockMatrixType>(m2);
+                std::shared_ptr<BlockMatrixType> m2_cast = std::dynamic_pointer_cast<BlockMatrixType>(m2);
                 
                 m2_cast->SetBlock(0,0, sub1);
                 m2_cast->SetBlock(0,1, sub2);
@@ -255,7 +255,7 @@ namespace Nektar
                 Array<OneD, unsigned int> columnSizes(2, columnSizesBuf);
                 
                 BlockMatrixType m1(3, 2, rowSizes, columnSizes);
-                boost::shared_ptr<ConstMatrix<NekDouble> > m2(new BlockMatrixType(3, 2, rowSizes, columnSizes));
+                std::shared_ptr<ConstMatrix<NekDouble> > m2(new BlockMatrixType(3, 2, rowSizes, columnSizes));
                 
                 double vals1[] = {1.0, 3.0, 2.0, 4.0};
                 double vals2[] = {5.0, 7.0, 6.0, 8.0};
@@ -264,12 +264,12 @@ namespace Nektar
                 double vals5[] = {17.0, 19.0, 18.0, 20.0};
                 double vals6[] = {21.0, 23.0, 22.0, 24.0};
                 
-                boost::shared_ptr<NekMatrix<NekDouble> > sub1(new NekMatrix<NekDouble>(2, 2, vals1));
-                boost::shared_ptr<NekMatrix<NekDouble> > sub2(new NekMatrix<NekDouble>(2, 2, vals2));
-                boost::shared_ptr<NekMatrix<NekDouble> > sub3(new NekMatrix<NekDouble>(2, 2, vals3));
-                boost::shared_ptr<NekMatrix<NekDouble> > sub4(new NekMatrix<NekDouble>(2, 2, vals4));
-                boost::shared_ptr<NekMatrix<NekDouble> > sub5(new NekMatrix<NekDouble>(2, 2, vals5));
-                boost::shared_ptr<NekMatrix<NekDouble> > sub6(new NekMatrix<NekDouble>(2, 2, vals6));
+                std::shared_ptr<NekMatrix<NekDouble> > sub1(new NekMatrix<NekDouble>(2, 2, vals1));
+                std::shared_ptr<NekMatrix<NekDouble> > sub2(new NekMatrix<NekDouble>(2, 2, vals2));
+                std::shared_ptr<NekMatrix<NekDouble> > sub3(new NekMatrix<NekDouble>(2, 2, vals3));
+                std::shared_ptr<NekMatrix<NekDouble> > sub4(new NekMatrix<NekDouble>(2, 2, vals4));
+                std::shared_ptr<NekMatrix<NekDouble> > sub5(new NekMatrix<NekDouble>(2, 2, vals5));
+                std::shared_ptr<NekMatrix<NekDouble> > sub6(new NekMatrix<NekDouble>(2, 2, vals6));
                 
                 m1.SetBlock(0,0, sub1);
                 m1.SetBlock(0,1, sub2);
@@ -278,7 +278,7 @@ namespace Nektar
                 m1.SetBlock(2,0, sub5);
                 m1.SetBlock(2,1, sub6);
                 
-                boost::shared_ptr<BlockMatrixType> m2_cast = boost::dynamic_pointer_cast<BlockMatrixType>(m2);
+                std::shared_ptr<BlockMatrixType> m2_cast = std::dynamic_pointer_cast<BlockMatrixType>(m2);
                 
                 m2_cast->SetBlock(0,0, sub1);
                 m2_cast->SetBlock(0,1, sub2);
@@ -347,7 +347,7 @@ namespace Nektar
             unsigned int rowSizes[] = {2, 0, 2, 0, 0, 2};
             unsigned int columnSizes[] = {2, 2};
             BlockMatrixType m1(6, 2, rowSizes, columnSizes);
-            boost::shared_ptr<ConstMatrix<NekDouble> > m2(new BlockMatrixType(6, 2, rowSizes, columnSizes));
+            std::shared_ptr<ConstMatrix<NekDouble> > m2(new BlockMatrixType(6, 2, rowSizes, columnSizes));
             
             double vals1[] = {1.0, 3.0, 2.0, 4.0};
             double vals2[] = {5.0, 7.0, 6.0, 8.0};
@@ -356,12 +356,12 @@ namespace Nektar
             double vals5[] = {17.0, 19.0, 18.0, 20.0};
             double vals6[] = {21.0, 23.0, 22.0, 24.0};
             
-            boost::shared_ptr<NekMatrix<NekDouble> > sub1(new NekMatrix<NekDouble>(2, 2, vals1));
-            boost::shared_ptr<NekMatrix<NekDouble> > sub2(new NekMatrix<NekDouble>(2, 2, vals2));
-            boost::shared_ptr<NekMatrix<NekDouble> > sub3(new NekMatrix<NekDouble>(2, 2, vals3));
-            boost::shared_ptr<NekMatrix<NekDouble> > sub4(new NekMatrix<NekDouble>(2, 2, vals4));
-            boost::shared_ptr<NekMatrix<NekDouble> > sub5(new NekMatrix<NekDouble>(2, 2, vals5));
-            boost::shared_ptr<NekMatrix<NekDouble> > sub6(new NekMatrix<NekDouble>(2, 2, vals6));
+            std::shared_ptr<NekMatrix<NekDouble> > sub1(new NekMatrix<NekDouble>(2, 2, vals1));
+            std::shared_ptr<NekMatrix<NekDouble> > sub2(new NekMatrix<NekDouble>(2, 2, vals2));
+            std::shared_ptr<NekMatrix<NekDouble> > sub3(new NekMatrix<NekDouble>(2, 2, vals3));
+            std::shared_ptr<NekMatrix<NekDouble> > sub4(new NekMatrix<NekDouble>(2, 2, vals4));
+            std::shared_ptr<NekMatrix<NekDouble> > sub5(new NekMatrix<NekDouble>(2, 2, vals5));
+            std::shared_ptr<NekMatrix<NekDouble> > sub6(new NekMatrix<NekDouble>(2, 2, vals6));
             
             m1.SetBlock(0,0, sub1);
             m1.SetBlock(0,1, sub2);
@@ -370,7 +370,7 @@ namespace Nektar
             m1.SetBlock(5,0, sub5);
             m1.SetBlock(5,1, sub6);
             
-            boost::shared_ptr<BlockMatrixType> m2_cast = boost::dynamic_pointer_cast<BlockMatrixType>(m2);
+            std::shared_ptr<BlockMatrixType> m2_cast = std::dynamic_pointer_cast<BlockMatrixType>(m2);
             
             m2_cast->SetBlock(0,0, sub1);
             m2_cast->SetBlock(0,1, sub2);
@@ -444,14 +444,14 @@ namespace Nektar
             double vals5[] = {17.0, 19.0, 18.0, 20.0};
             double vals6[] = {21.0, 23.0, 22.0, 24.0};
             
-            boost::shared_ptr<NekMatrix<NekDouble> > sub1(new NekMatrix<NekDouble>(2, 2, vals1));
-            boost::shared_ptr<NekMatrix<NekDouble> > sub2(new NekMatrix<NekDouble>(2, 2, vals2));
-            boost::shared_ptr<NekMatrix<NekDouble> > sub3(new NekMatrix<NekDouble>(2, 2, vals3));
-            boost::shared_ptr<NekMatrix<NekDouble> > sub4(new NekMatrix<NekDouble>(2, 2, vals4));
-            boost::shared_ptr<NekMatrix<NekDouble> > sub5(new NekMatrix<NekDouble>(2, 2, vals5));
-            boost::shared_ptr<NekMatrix<NekDouble> > sub6(new NekMatrix<NekDouble>(2, 2, vals6));
+            std::shared_ptr<NekMatrix<NekDouble> > sub1(new NekMatrix<NekDouble>(2, 2, vals1));
+            std::shared_ptr<NekMatrix<NekDouble> > sub2(new NekMatrix<NekDouble>(2, 2, vals2));
+            std::shared_ptr<NekMatrix<NekDouble> > sub3(new NekMatrix<NekDouble>(2, 2, vals3));
+            std::shared_ptr<NekMatrix<NekDouble> > sub4(new NekMatrix<NekDouble>(2, 2, vals4));
+            std::shared_ptr<NekMatrix<NekDouble> > sub5(new NekMatrix<NekDouble>(2, 2, vals5));
+            std::shared_ptr<NekMatrix<NekDouble> > sub6(new NekMatrix<NekDouble>(2, 2, vals6));
             
-            boost::shared_ptr<NekMatrix<NekDouble> > empty(new NekMatrix<NekDouble>(0, 0));
+            std::shared_ptr<NekMatrix<NekDouble> > empty(new NekMatrix<NekDouble>(0, 0));
             m1.SetBlock(0,0, empty);
             m1.SetBlock(0,1, empty);
             m1.SetBlock(0,2, empty);

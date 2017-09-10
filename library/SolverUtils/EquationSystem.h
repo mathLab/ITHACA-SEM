@@ -36,6 +36,7 @@
 #ifndef NEKTAR_SOLVERUTILS_EQUATIONSYSTEM_H
 #define NEKTAR_SOLVERUTILS_EQUATIONSYSTEM_H
 
+#include <SolverUtils/Core/SessionFunction.h>
 #include <LibUtilities/Communication/Comm.h>
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
@@ -48,7 +49,6 @@
 #include <MultiRegions/ExpList.h>
 #include <SolverUtils/SolverUtilsDeclspec.h>
 #include <SolverUtils/Core/Misc.h>
-#include <SolverUtils/Core/SessionFunction.h>
 
 namespace Nektar
 {
@@ -60,7 +60,7 @@ class Interpolator;
         class EquationSystem;
         
         /// A shared pointer to an EquationSystem object
-        typedef boost::shared_ptr<EquationSystem> EquationSystemSharedPtr;
+        typedef std::shared_ptr<EquationSystem> EquationSystemSharedPtr;
         /// Datatype of the NekFactory used to instantiate classes derived from
         /// the EquationSystem class.
         typedef LibUtilities::NekFactory<
@@ -70,7 +70,7 @@ class Interpolator;
         SOLVER_UTILS_EXPORT EquationSystemFactory& GetEquationSystemFactory();
 
         /// A base class for describing how to solve specific equations.
-        class EquationSystem : public boost::enable_shared_from_this<EquationSystem>
+        class EquationSystem : public std::enable_shared_from_this<EquationSystem>
         {
         public:
             /// Destructor
@@ -107,16 +107,9 @@ class Interpolator;
             }
 
             template<class T>
-            boost::shared_ptr<T> as()
+            std::shared_ptr<T> as()
             {
-#if defined __INTEL_COMPILER && BOOST_VERSION > 105200
-                typedef typename boost::shared_ptr<T>::element_type E;
-                E * p = dynamic_cast< E* >( shared_from_this().get() );
-                ASSERTL1(p, "Cannot perform cast");
-                return boost::shared_ptr<T>( shared_from_this(), p );
-#else
-                return boost::dynamic_pointer_cast<T>( shared_from_this() );
-#endif
+                return std::dynamic_pointer_cast<T>( shared_from_this() );
             }
 
             /// Reset Session name
@@ -396,10 +389,6 @@ class Interpolator;
             
             SOLVER_UTILS_EXPORT inline void SetModifiedBasis(
                 const bool modbasis);
-            
-            /// Perform a case-insensitive string comparison.
-            SOLVER_UTILS_EXPORT int NoCaseStringCompare(
-                const std::string & s1, const std::string& s2) ;
 
             SOLVER_UTILS_EXPORT int GetCheckpointNumber()
             {
@@ -542,12 +531,6 @@ class Interpolator;
             
             /// Initialises EquationSystem class members.
             SOLVER_UTILS_EXPORT EquationSystem( const LibUtilities::SessionReaderSharedPtr& pSession);
-            
-            // Here for consistency purposes with old version
-            int nocase_cmp(const std::string & s1, const std::string& s2)
-            {
-                return NoCaseStringCompare(s1,s2);
-            }
             
             SOLVER_UTILS_EXPORT virtual void v_InitObject();
             
@@ -821,12 +804,11 @@ class Interpolator;
                 v_GenerateSummary(vSummary);
 
                 out << "=======================================================================" << std::endl;
-                SummaryList::const_iterator x;
-                for (x = vSummary.begin(); x != vSummary.end(); ++x)
+                for (auto &x : vSummary)
                 {
                     out << "\t";
                     out.width(20);
-                    out << x->first << ": " << x->second << std::endl;
+                    out << x.first << ": " << x.second << std::endl;
                 }
                 out << "=======================================================================" << std::endl;
             }

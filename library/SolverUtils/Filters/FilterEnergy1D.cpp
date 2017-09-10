@@ -61,11 +61,10 @@ FilterEnergy1D::FilterEnergy1D(
     ASSERTL0(pSession->GetComm()->GetSize() == 1,
              "The 1D energy filter currently only works in serial.");
 
-    ParamMap::const_iterator it;
     std::string outName;
 
     // OutputFile
-    it = pParams.find("OutputFile");
+    auto it = pParams.find("OutputFile");
     if (it == pParams.end())
     {
         outName = m_session->GetSessionName();

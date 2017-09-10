@@ -45,7 +45,7 @@ namespace Nektar
     class Protocol;
 
     /// A shared pointer to an EquationSystem object
-    typedef boost::shared_ptr<Protocol> ProtocolSharedPtr;
+    typedef std::shared_ptr<Protocol> ProtocolSharedPtr;
 
     /// Datatype of the NekFactory used to instantiate classes derived from
     /// the EquationSystem class.

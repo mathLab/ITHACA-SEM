@@ -96,7 +96,6 @@ void ProcessNumModes::Process(po::variables_map &vm)
         outfield[i] = Array<OneD, NekDouble>(npoints);
     }
 
-    vector<MultiRegions::ExpListSharedPtr>::iterator it;
     MultiRegions::ExpListSharedPtr Exp;
 
     int nExp, nq, offset;
@@ -123,7 +122,8 @@ void ProcessNumModes::Process(po::variables_map &vm)
             Vmath::Vcopy(npoints, outfield[i], 1, Exp->UpdatePhys(), 1);
             Exp->FwdTrans_IterPerExp(outfield[i], Exp->UpdateCoeffs());
 
-            it = m_f->m_exp.begin() + s * (nfields + addfields) + nfields + i;
+            auto it =
+                m_f->m_exp.begin() + s * (nfields + addfields) + nfields + i;
             m_f->m_exp.insert(it, Exp);
         }
     }

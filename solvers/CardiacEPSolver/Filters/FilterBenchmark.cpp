@@ -64,10 +64,8 @@ FilterBenchmark::FilterBenchmark(
         const ParamMap &pParams)
     : Filter(pSession, pEquation)
 {
-    ParamMap::const_iterator it;
-
     // ThresholdValue
-    it = pParams.find("ThresholdValue");
+    auto it = pParams.find("ThresholdValue");
     ASSERTL0(it != pParams.end(), "Missing parameter 'ThresholdValue'.");
     LibUtilities::Equation equ1(m_session, it->second);
     m_thresholdValue = floor(equ1.Evaluate());

@@ -426,7 +426,7 @@ void Generator2D::MakeBL(int faceid)
 
         n[0]             = n[0] * t + it->first->m_x;
         n[1]             = n[1] * t + it->first->m_y;
-        NodeSharedPtr nn = boost::shared_ptr<Node>(
+        NodeSharedPtr nn = std::shared_ptr<Node>(
             new Node(m_mesh->m_numNodes++, n[0], n[1], 0.0));
         CADSurfSharedPtr s = m_mesh->m_cad->GetSurf(faceid);
         Array<OneD, NekDouble> uv = s->locuv(n);

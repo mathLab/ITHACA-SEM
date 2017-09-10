@@ -150,8 +150,8 @@ void ProcessPerAlign::Process()
         ASSERTL0(false,"expected three components or letter for direction");
     }
 
-    CompositeMap::iterator it1 = m_mesh->m_composite.find(surf1);
-    CompositeMap::iterator it2 = m_mesh->m_composite.find(surf2);
+    auto it1 = m_mesh->m_composite.find(surf1);
+    auto it2 = m_mesh->m_composite.find(surf2);
 
     if (it1 == m_mesh->m_composite.end())
     {
@@ -185,7 +185,6 @@ void ProcessPerAlign::Process()
 
     // Loop over elements, calculate centroids of elements in c2.
     map<int, Node> centroidMap;
-    map<int, Node>::iterator it;
     for (int i = 0; i < c2->m_items.size(); ++i)
     {
         Node centroid;
@@ -197,7 +196,7 @@ void ProcessPerAlign::Process()
         centroidMap[i] = centroid;
     }
 
-    boost::unordered_set<int> elmtDone;
+    std::unordered_set<int> elmtDone;
     map<int, int> elmtPairs;
     map<int, int> vertCheck;
 
@@ -210,14 +209,15 @@ void ProcessPerAlign::Process()
         }
         centroid /= (NekDouble)c1->m_items[i]->GetVertexCount();
 
-        for (it = centroidMap.begin(); it != centroidMap.end(); ++it)
+        bool found = false;
+        for (auto &it : centroidMap)
         {
-            if (elmtDone.count(it->first) > 0)
+            if (elmtDone.count(it.first) > 0)
             {
                 continue;
             }
 
-            Node dx = it->second - centroid;
+            Node dx = it.second - centroid;
             if (fabs(fabs(dx.m_x * vec[0] + dx.m_y * vec[1] + dx.m_z * vec[2]) /
                          sqrt(dx.abs2()) -
                      1.0) < 1e-8)
@@ -228,16 +228,16 @@ void ProcessPerAlign::Process()
                 if (c1->m_items[i]->GetConf().m_e == LibUtilities::eSegment)
                 {
                     id1 = c1->m_items[i]->GetEdgeLink()->m_id;
-                    id2 = c2->m_items[it->first]->GetEdgeLink()->m_id;
+                    id2 = c2->m_items[it.first]->GetEdgeLink()->m_id;
                 }
                 else
                 {
                     id1 = c1->m_items[i]->GetFaceLink()->m_id;
-                    id2 = c2->m_items[it->first]->GetFaceLink()->m_id;
+                    id2 = c2->m_items[it.first]->GetFaceLink()->m_id;
                 }
 
-                elmtDone.insert(it->first);
-                elmtPairs[i] = it->first;
+                elmtDone.insert(it.first);
+                elmtPairs[i] = it.first;
 
                 // Identify periodic vertices
                 int nVerts = c1->m_items[i]->GetVertexCount();
@@ -253,7 +253,7 @@ void ProcessPerAlign::Process()
 
                         for (l = 0; l < nVerts; ++l)
                         {
-                            NodeSharedPtr n2 = c2->m_items[it->first]
+                            NodeSharedPtr n2 = c2->m_items[it.first]
                                                    ->GetFaceLink()
                                                    ->m_vertexList[l];
 
@@ -299,15 +299,16 @@ void ProcessPerAlign::Process()
                 if (c2->m_items[i]->GetConf().m_e != LibUtilities::eSegment)
                 {
                     perFaces[id1] = make_pair(
-                        c2->m_items[it->first]->GetFaceLink(), perVerts);
+                        c2->m_items[it.first]->GetFaceLink(), perVerts);
                     perFaces[id2] =
                         make_pair(c1->m_items[i]->GetFaceLink(), perVertsInv);
                 }
+                found = true;
                 break;
             }
         }
 
-        if (it == centroidMap.end())
+        if (!found)
         {
             cerr << "WARNING: Could not find matching edge for surface "
                  << "element " << c1->m_items[i]->GetId() << ". "
@@ -318,8 +319,6 @@ void ProcessPerAlign::Process()
 
     // Reorder vectors.
     vector<ElementSharedPtr> tmp = c2->m_items;
-
-    map<int, int>::iterator mIt;
 
     for (int i = 0; i < tmp.size(); ++i)
     {

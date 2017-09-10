@@ -64,7 +64,7 @@ namespace Nektar
 
         typedef SparseStorageType                    StorageType;
         typedef typename SparseStorageType::DataType DataType;
-        typedef boost::shared_ptr<SparseStorageType> SparseStorageSharedPtr;
+        typedef std::shared_ptr<SparseStorageType>   SparseStorageSharedPtr;
         typedef Array<OneD, DataType>                DataVectorType;
         typedef Array<OneD, const DataType>          ConstDataVectorType;
 

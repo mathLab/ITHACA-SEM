@@ -51,10 +51,8 @@ FilterFieldConvert::FilterFieldConvert(
     const ParamMap &pParams)
     : Filter(pSession, pEquation)
 {
-    ParamMap::const_iterator it;
-
     // OutputFile
-    it = pParams.find("OutputFile");
+    auto it = pParams.find("OutputFile");
     if (it == pParams.end())
     {
         std::stringstream outname;
@@ -120,7 +118,7 @@ FilterFieldConvert::FilterFieldConvert(
     //
     // FieldConvert modules
     //
-    m_f = boost::shared_ptr<Field>(new Field());
+    m_f = std::shared_ptr<Field>(new Field());
     vector<string>          modcmds;
     // Process modules
     std::stringstream moduleStream;

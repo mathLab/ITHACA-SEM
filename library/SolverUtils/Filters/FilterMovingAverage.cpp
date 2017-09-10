@@ -65,7 +65,7 @@ FilterMovingAverage::FilterMovingAverage(
     }
 
     // Load filter parameter
-    it = pParams.find("alpha");
+    auto it = pParams.find("alpha");
     if (it == pParams.end())
     {
         it = pParams.find("tau");

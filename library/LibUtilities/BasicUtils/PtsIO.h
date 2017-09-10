@@ -39,8 +39,7 @@
 
 #include <string>
 #include <vector>
-
-#include <boost/shared_ptr.hpp>
+#include <memory>
 
 #include <tinyxml.h>
 
@@ -96,7 +95,7 @@ protected:
     };
 };
 
-typedef boost::shared_ptr<PtsIO> PtsIOSharedPtr;
+typedef std::shared_ptr<PtsIO> PtsIOSharedPtr;
 }
 }
 #endif

@@ -56,10 +56,8 @@ FilterModalEnergy::FilterModalEnergy(
     const ParamMap &pParams) :
     Filter(pSession, pEquation)
 {
-    ParamMap::const_iterator it;
-
     // OutputFile
-    it = pParams.find("OutputFile");
+    auto it = pParams.find("OutputFile");
     if (it == pParams.end())
     {
         m_outputFile = m_session->GetSessionName();

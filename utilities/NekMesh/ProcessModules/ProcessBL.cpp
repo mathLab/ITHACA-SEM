@@ -191,8 +191,7 @@ void ProcessBL::BoundaryLayer2D()
     // are generated along that edge when a prism is split, and is used
     // to avoid generation of duplicate vertices. It is stored as an
     // unordered map for speed.
-    boost::unordered_map<int, vector<NodeSharedPtr> > edgeMap;
-    boost::unordered_map<int, vector<NodeSharedPtr> >::iterator eIt;
+    std::unordered_map<int, vector<NodeSharedPtr> > edgeMap;
 
     string surf = m_config["surf"].as<string>();
     if (surf.size() > 0)
@@ -289,7 +288,7 @@ void ProcessBL::BoundaryLayer2D()
 
         // Get elemental geometry object.
         SpatialDomains::QuadGeomSharedPtr geom =
-            boost::dynamic_pointer_cast<SpatialDomains::QuadGeom>(
+            std::dynamic_pointer_cast<SpatialDomains::QuadGeom>(
                 el[i]->GetGeom(m_mesh->m_spaceDim));
 
         // Determine whether to use reverse points.
@@ -355,7 +354,7 @@ void ProcessBL::BoundaryLayer2D()
 
             // Determine whether we have already generated vertices
             // along this edge.
-            eIt = edgeMap.find(edgeId);
+            auto eIt = edgeMap.find(edgeId);
 
             if (eIt == edgeMap.end())
             {
@@ -442,7 +441,7 @@ void ProcessBL::BoundaryLayer2D()
             else
             {
                 // Check orientation
-                if (eIt->second[0] ==   el[i]->GetVertex(locEdge))
+                if (eIt->second[0] == el[i]->GetVertex(locEdge))
                 {
                     // Same orientation: copy nodes
                     edgeNodes[j] = eIt->second;
@@ -542,11 +541,10 @@ void ProcessBL::BoundaryLayer2D()
 
             // Change the elements on the boundary
             // to match the layers
-            map<int,int>::iterator it;
-            for (it = bLink.begin(); it != bLink.end(); ++it)
+            for (auto &it : bLink)
             {
-                int eid = it->first;
-                int bl  = it->second;
+                int eid = it.first;
+                int bl  = it.second;
 
                 if (j == 0)
                 {
@@ -627,8 +625,7 @@ void ProcessBL::BoundaryLayer3D()
 
     // Map which takes element ID to face on surface. This enables
     // splitting to occur in either y-direction of the prism.
-    boost::unordered_map<int, int> splitEls;
-    boost::unordered_map<int, int>::iterator sIt;
+    std::unordered_map<int, int> splitEls;
 
     // Set up maps which takes an edge (in nektar++ ordering) and return
     // their offset and stride in the 3d array of collapsed quadrature
@@ -726,8 +723,7 @@ void ProcessBL::BoundaryLayer3D()
     // are generated along that edge when a prism is split, and is used
     // to avoid generation of duplicate vertices. It is stored as an
     // unordered map for speed.
-    boost::unordered_map<int, vector<NodeSharedPtr> > edgeMap;
-    boost::unordered_map<int, vector<NodeSharedPtr> >::iterator eIt;
+    std::unordered_map<int, vector<NodeSharedPtr> > edgeMap;
 
     string surf = m_config["surf"].as<string>();
     if (surf.size() > 0)
@@ -833,14 +829,13 @@ void ProcessBL::BoundaryLayer3D()
     for (int i = 0; i < el.size(); ++i)
     {
         const int elId = el[i]->GetId();
-        sIt = splitEls.find(elId);
-        if (sIt == splitEls.end())
+        if (splitEls.find(elId) == splitEls.end())
         {
             continue;
         }
 
         // Get elemental geometry object and put into map.
-        geomMap[elId] = boost::dynamic_pointer_cast<SpatialDomains::Geometry3D>(
+        geomMap[elId] = std::dynamic_pointer_cast<SpatialDomains::Geometry3D>(
             el[i]->GetGeom(m_mesh->m_spaceDim));
     }
 
@@ -848,7 +843,7 @@ void ProcessBL::BoundaryLayer3D()
     for (int i = 0; i < el.size(); ++i)
     {
         const int elId = el[i]->GetId();
-        sIt            = splitEls.find(elId);
+        auto sIt       = splitEls.find(elId);
 
         if (sIt == splitEls.end())
         {
@@ -917,7 +912,7 @@ void ProcessBL::BoundaryLayer3D()
 
             // Create local region.
             SpatialDomains::PrismGeomSharedPtr g =
-                boost::dynamic_pointer_cast<SpatialDomains::PrismGeom>(geom);
+                std::dynamic_pointer_cast<SpatialDomains::PrismGeom>(geom);
             q = MemoryManager<LocalRegions::PrismExp>::AllocateSharedPtr(
                 B0, B1, B2, g);
         }
@@ -932,7 +927,7 @@ void ProcessBL::BoundaryLayer3D()
 
             // Create local region.
             SpatialDomains::HexGeomSharedPtr g =
-                boost::dynamic_pointer_cast<SpatialDomains::HexGeom>(geom);
+                std::dynamic_pointer_cast<SpatialDomains::HexGeom>(geom);
             q = MemoryManager<LocalRegions::HexExp>::AllocateSharedPtr(
                 B0, B0, B1, g);
         }
@@ -954,7 +949,7 @@ void ProcessBL::BoundaryLayer3D()
 
             // Determine whether we have already generated vertices
             // along this edge.
-            eIt = edgeMap.find(edgeId);
+            auto eIt = edgeMap.find(edgeId);
 
             if (eIt == edgeMap.end())
             {
@@ -1061,11 +1056,10 @@ void ProcessBL::BoundaryLayer3D()
 
             // Change the surface elements to match the layers of
             // elements on the boundary of the domain.
-            map<int, int>::iterator it;
-            for (it = bLink.begin(); it != bLink.end(); ++it)
+            for (auto &it : bLink)
             {
-                int fid = it->first;
-                int bl  = it->second;
+                int fid = it.first;
+                int bl  = it.second;
 
                 vector<NodeSharedPtr> qNodeList(4);
                 for (int k = 0; k < 4; ++k)

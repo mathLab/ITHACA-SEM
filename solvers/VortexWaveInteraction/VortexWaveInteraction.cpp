@@ -209,7 +209,7 @@ namespace Nektar
             std::string IterationTypeStr = m_sessionVWI->GetSolverInfo("VWIIterationType");
             for(int i = 0; i < (int) eVWIIterationTypeSize; ++i)
             {
-                if(m_solverRoll->NoCaseStringCompare(VWIIterationTypeMap[i],IterationTypeStr) == 0 )
+                if(boost::iequals(VWIIterationTypeMap[i],IterationTypeStr))
                 {
                     m_VWIIterationType = (VWIIterationType)i; 
                     break;
@@ -388,7 +388,7 @@ namespace Nektar
                 if(init)
                 {
                     m_solverRoll->DoInitialise();
-                    m_vwiForcingObj = boost::dynamic_pointer_cast<SolverUtils::ForcingProgrammatic>(GetForcingFactory().CreateInstance("Programmatic", m_sessionRoll, m_solverRoll, m_solverRoll->UpdateFields(), m_solverRoll->UpdateFields().num_elements() - 1, 0));
+                    m_vwiForcingObj = std::dynamic_pointer_cast<SolverUtils::ForcingProgrammatic>(GetForcingFactory().CreateInstance("Programmatic", m_sessionRoll, m_solverRoll, m_solverRoll->UpdateFields(), m_solverRoll->UpdateFields().num_elements() - 1, 0));
 
                     std::vector<std::string> vFieldNames = m_sessionRoll->GetVariables();
                     vFieldNames.erase(vFieldNames.end()-1);
@@ -2012,7 +2012,7 @@ cout<<"cr="<<cr_str<<endl;
           MultiRegions::ExpList1DSharedPtr Ilayer;  
           Ilayer = MemoryManager<MultiRegions::ExpList1D>::
                           AllocateSharedPtr(  
-                          *boost::static_pointer_cast<MultiRegions::ExpList1D>(Iexp[reg]));
+                          *std::static_pointer_cast<MultiRegions::ExpList1D>(Iexp[reg]));
           int nq = Ilayer->GetTotPoints();
           if( cnt==0)
           {

@@ -59,10 +59,8 @@ FilterHistoryPoints::FilterHistoryPoints(
     const ParamMap &pParams) :
     Filter(pSession, pEquation)
 {
-    ParamMap::const_iterator it;
-
     // OutputFile
-    it = pParams.find("OutputFile");
+    auto it = pParams.find("OutputFile");
     if (it == pParams.end())
     {
         m_outputFile = m_session->GetSessionName();
@@ -440,8 +438,6 @@ void FilterHistoryPoints::v_Update(const Array<OneD, const MultiRegions::ExpList
     int numFields = pFields.num_elements();
     LibUtilities::CommSharedPtr vComm = pFields[0]->GetComm();
     Array<OneD, NekDouble> data(numPoints*numFields, 0.0);
-    std::list<std::pair<SpatialDomains::PointGeomSharedPtr, Array<OneD, NekDouble> > >::iterator x;
-
     Array<OneD, NekDouble> physvals;
     Array<OneD, NekDouble> locCoord;
     int expId;
@@ -451,11 +447,11 @@ void FilterHistoryPoints::v_Update(const Array<OneD, const MultiRegions::ExpList
     {
         if(m_isHomogeneous1D)
         {
-            for (k = 0, x = m_historyList.begin(); x != m_historyList.end();
-                 ++x, ++k)
+            k = 0;
+            for (auto &x : m_historyList)
             {
-                locCoord = (*x).second;
-                expId    = (*x).first->GetVid();
+                locCoord = x.second;
+                expId    = x.first->GetVid();
                 NekDouble value;
                 int plane = m_planeIDs[m_historyLocalPointMap[k]];
 
@@ -498,7 +494,7 @@ void FilterHistoryPoints::v_Update(const Array<OneD, const MultiRegions::ExpList
 
                     // Create new 3DH1D expansion with one element per plane
                     MultiRegions::ExpList3DHomogeneous1DSharedPtr tmp =
-                            boost::dynamic_pointer_cast<MultiRegions::
+                            std::dynamic_pointer_cast<MultiRegions::
                             ExpList3DHomogeneous1D>(pFields[j]);
                     ASSERTL0(tmp,"Failed to type cast expansion");
 
@@ -544,14 +540,17 @@ void FilterHistoryPoints::v_Update(const Array<OneD, const MultiRegions::ExpList
                 {
                     data[m_historyLocalPointMap[k]*numFields+j] = value;
                 }
+
+                ++k;
             }
         }
         else
         {
-            for (k = 0, x = m_historyList.begin(); x != m_historyList.end(); ++x, ++k)
+            k = 0;
+            for (auto &x : m_historyList)
             {
-                locCoord = (*x).second;
-                expId    = (*x).first->GetVid();
+                locCoord = x.second;
+                expId    = x.first->GetVid();
 
                 physvals = pFields[j]->UpdatePhys() + pFields[j]->GetPhys_Offset(expId);
 
@@ -563,6 +562,7 @@ void FilterHistoryPoints::v_Update(const Array<OneD, const MultiRegions::ExpList
 
                 // interpolate point
                 data[m_historyLocalPointMap[k]*numFields+j] = pFields[j]->GetExp(expId)->StdPhysEvaluate(locCoord,physvals);
+                ++k;
             }
         }
     }

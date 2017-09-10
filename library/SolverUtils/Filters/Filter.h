@@ -51,7 +51,7 @@ class Filter;
 class EquationSystem;
 
 /// A shared pointer to a Driver object
-typedef boost::shared_ptr<Filter> FilterSharedPtr;
+typedef std::shared_ptr<Filter> FilterSharedPtr;
 
 /// Datatype of the NekFactory used to instantiate classes derived from
 /// the Driver class.

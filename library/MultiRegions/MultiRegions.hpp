@@ -175,10 +175,10 @@ namespace Nektar
 
             int m_robinID; /// id of which edge/face is robin condition
             Array< OneD, const NekDouble > m_robinPrimitiveCoeffs;
-            boost::shared_ptr<RobinBCInfo> next;
+            std::shared_ptr<RobinBCInfo> next;
         };
 
-        typedef boost::shared_ptr<RobinBCInfo> RobinBCInfoSharedPtr;
+        typedef std::shared_ptr<RobinBCInfo> RobinBCInfoSharedPtr;
 
         typedef struct _PeriodicEntity
         {

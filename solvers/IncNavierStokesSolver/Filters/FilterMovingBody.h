@@ -44,7 +44,7 @@ namespace Nektar
 {
 class FilterMovingBody;
 
-typedef boost::shared_ptr<FilterMovingBody>  FilterMovingBodySharedPtr;
+typedef std::shared_ptr<FilterMovingBody>    FilterMovingBodySharedPtr;
 typedef std::map<std::string, std::string>   FilterParams;
 typedef std::pair<std::string, FilterParams> FilterMap;
 

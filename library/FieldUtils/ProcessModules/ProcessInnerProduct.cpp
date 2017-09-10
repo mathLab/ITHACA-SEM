@@ -80,7 +80,7 @@ void ProcessInnerProduct::Process(po::variables_map &vm)
     }
 
     string fromfld           = m_config["fromfld"].as<string>();
-    FieldSharedPtr fromField = boost::shared_ptr<Field>(new Field());
+    FieldSharedPtr fromField = std::shared_ptr<Field>(new Field());
 
     ASSERTL0(m_config["fromfld"].as<string>() != "NotSet",
              "The config parameter "
@@ -171,7 +171,7 @@ void ProcessInnerProduct::Process(po::variables_map &vm)
         Array<OneD, FieldSharedPtr> allFromField(fromfiles.size());
         for (int i = 0; i < fromfiles.size(); ++i)
         {
-            allFromField[i] = boost::shared_ptr<Field>(new Field());
+            allFromField[i] = std::shared_ptr<Field>(new Field());
 
             m_f->FieldIOForFile(fromfiles[i])->Import(
                 fromfiles[i], allFromField[i]->m_fielddef,

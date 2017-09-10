@@ -38,6 +38,7 @@
 
 #include <map>
 #include <string>
+#include <memory>
 
 #include <LibUtilities/Communication/Comm.h>
 #include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
@@ -45,7 +46,6 @@
 #include <LibUtilities/Interpreter/AnalyticExpressionEvaluator.hpp>
 
 #include <boost/algorithm/string.hpp>
-#include <boost/enable_shared_from_this.hpp>
 #include <boost/program_options/variables_map.hpp>
 
 class TiXmlElement;
@@ -98,7 +98,7 @@ namespace Nektar
         };
 
         class Equation;
-        typedef boost::shared_ptr<Equation> EquationSharedPtr;
+        typedef std::shared_ptr<Equation> EquationSharedPtr;
 
         typedef std::map<int, std::vector<unsigned int> > CompositeOrdering;
         typedef std::map<int, std::vector<unsigned int> > BndRegionOrdering;
@@ -117,11 +117,10 @@ namespace Nektar
             FunctionMap;
 
         class SessionReader;
-        typedef boost::shared_ptr<SessionReader> SessionReaderSharedPtr;
+        typedef std::shared_ptr<SessionReader> SessionReaderSharedPtr;
 
         /// Reads and parses information from a Nektar++ XML session file.
-        class SessionReader :
-            public boost::enable_shared_from_this<SessionReader>
+        class SessionReader : public std::enable_shared_from_this<SessionReader>
         {
         public:
             /// Support creation through MemoryManager.
@@ -565,13 +564,12 @@ namespace Nektar
                      "Solver info '" + pName + "' not defined.");
 
             std::string vValue = GetSolverInfo(vName);
-            EnumMapList::iterator x;
-            ASSERTL0((x = GetSolverInfoEnums().find(vName)) !=
-                          GetSolverInfoEnums().end(),
+            auto x = GetSolverInfoEnums().find(vName);
+            ASSERTL0(x != GetSolverInfoEnums().end(),
                      "Enum for SolverInfo property '" + pName + "' not found.");
 
-            EnumMap::iterator y;
-            ASSERTL0((y = x->second.find(vValue)) != x->second.end(),
+            auto y = x->second.find(vValue);
+            ASSERTL0(y != x->second.end(),
                      "Value of SolverInfo property '" + pName +
                      "' is invalid.");
 
@@ -590,13 +588,12 @@ namespace Nektar
         {
             std::string vName  = boost::to_upper_copy(pName);
 
-            EnumMapList::iterator x;
-            ASSERTL0((x = GetSolverInfoEnums().find(vName)) !=
-                          GetSolverInfoEnums().end(),
+            auto x = GetSolverInfoEnums().find(vName);
+            ASSERTL0(x != GetSolverInfoEnums().end(),
                      "Enum for property '" + pName + "' not found.");
 
-            EnumMap::iterator y;
-            ASSERTL0((y = x->second.find(pValue)) != x->second.end(),
+            auto y = x->second.find(pValue);
+            ASSERTL0(y != x->second.end(),
                      "Value of property '" + pValue + "' is invalid.");
             return T(y->second);
         }
@@ -632,13 +629,14 @@ namespace Nektar
             std::string pEnum, std::string pString, int pEnumValue)
         {
             std::string vEnum = boost::to_upper_copy(pEnum);
-            EnumMapList::iterator x;
-            if ((x = GetSolverInfoEnums().find(vEnum)) ==
-                     GetSolverInfoEnums().end())
+            auto x = GetSolverInfoEnums().find(vEnum);
+
+            if (x == GetSolverInfoEnums().end())
             {
                 GetSolverInfoEnums()[vEnum] = EnumMap();
                 x = GetSolverInfoEnums().find(vEnum);
             }
+
             x->second[pString] = pEnumValue;
             return pString;
         }

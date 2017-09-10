@@ -36,6 +36,7 @@
 #ifndef NEKMESHUTILS_MESHELEMENTS_FACE
 #define NEKMESHUTILS_MESHELEMENTS_FACE
 
+#include <LibUtilities/BasicUtils/HashUtils.hpp>
 #include <SpatialDomains/TriGeom.h>
 #include <SpatialDomains/QuadGeom.h>
 
@@ -49,7 +50,7 @@ namespace NekMeshUtils
 {
 
 class Element;
-typedef boost::shared_ptr<Element> ElementSharedPtr;
+typedef std::shared_ptr<Element> ElementSharedPtr;
 
 /**
  * @brief Represents a face comprised of three or more edges.
@@ -150,7 +151,7 @@ public:
     CADObjectSharedPtr m_parentCAD;
 };
 
-typedef boost::shared_ptr<Face> FaceSharedPtr;
+typedef std::shared_ptr<Face> FaceSharedPtr;
 
 NEKMESHUTILS_EXPORT bool operator==(FaceSharedPtr const &p1,
                                     FaceSharedPtr const &p2);
@@ -171,12 +172,12 @@ struct FaceHash : std::unary_function<FaceSharedPtr, std::size_t>
         }
 
         std::sort(ids.begin(), ids.end());
-        boost::hash_range(seed, ids.begin(), ids.end());
+        hash_range(seed, ids.begin(), ids.end());
 
         return seed;
     }
 };
-typedef boost::unordered_set<FaceSharedPtr, FaceHash> FaceSet;
+typedef std::unordered_set<FaceSharedPtr, FaceHash> FaceSet;
 
 }
 }

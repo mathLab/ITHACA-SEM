@@ -37,10 +37,9 @@
 #include <string>
 using namespace std;
 
+#include <FieldUtils/Interpolator.h>
 #include <boost/geometry.hpp>
 #include "ProcessInterpPoints.h"
-
-#include <FieldUtils/Interpolator.h>
 
 #include <LibUtilities/BasicUtils/ParseUtils.hpp>
 #include <LibUtilities/BasicUtils/Progressbar.hpp>
@@ -106,7 +105,7 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
 {
     CreateFieldPts(vm);
 
-    FieldSharedPtr fromField = boost::shared_ptr<Field>(new Field());
+    FieldSharedPtr fromField = std::shared_ptr<Field>(new Field());
     std::vector<std::string> files;
     ParseUtils::GenerateOrderedStringVector(
         m_config["fromxml"].as<string>().c_str(), files);
@@ -119,9 +118,9 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
     int coordim = m_f->m_fieldPts->GetDim();
     int npts    = m_f->m_fieldPts->GetNpoints();
     std::vector<std::string> fieldNames = m_f->m_fieldPts->GetFieldNames();
-    for (auto it = fieldNames.begin(); it != fieldNames.end(); ++it)
+    for (auto &it : fieldNames)
     {
-        m_f->m_fieldPts->RemoveField(*it);
+        m_f->m_fieldPts->RemoveField(it);
     }
 
     Array<OneD, Array<OneD, NekDouble> > pts;
@@ -162,11 +161,11 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
     const SpatialDomains::ExpansionMap &expansions =
         fromField->m_graph->GetExpansions();
     Array<OneD, int> ElementGIDs(expansions.size());
-    SpatialDomains::ExpansionMap::const_iterator expIt;
+
     int i = 0;
-    for (expIt = expansions.begin(); expIt != expansions.end(); ++expIt)
+    for (auto &expIt : expansions)
     {
-        ElementGIDs[i++] = expIt->second->m_geomShPtr->GetGlobalID();
+        ElementGIDs[i++] = expIt.second->m_geomShPtr->GetGlobalID();
     }
     // check to see that we do have some elmement in teh domain since
     // possibly all points could be outside of the domain

@@ -238,7 +238,7 @@ private:
     std::string m_refinement;
     std::vector<linesource> m_lsources;
 };
-typedef boost::shared_ptr<Octree> OctreeSharedPtr;
+typedef std::shared_ptr<Octree> OctreeSharedPtr;
 
 }
 }

@@ -276,7 +276,7 @@ void Octant::Subdivide(OctantSharedPtr p, int &numoct)
             }
         }
 
-        children[i] = boost::shared_ptr<Octant>(new Octant(numoct++, p, dir));
+        children[i] = std::shared_ptr<Octant>(new Octant(numoct++, p, dir));
     }
 
     SetChildren(children);

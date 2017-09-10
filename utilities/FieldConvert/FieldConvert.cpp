@@ -166,7 +166,7 @@ int main(int argc, char* argv[])
             t = eProcessModule;
         }
 
-        FieldSharedPtr f = boost::shared_ptr<Field>(new Field());
+        FieldSharedPtr f = std::shared_ptr<Field>(new Field());
         ModuleSharedPtr mod = GetModuleFactory().CreateInstance(
             ModuleKey(t, tmp1[1]), f);
         cerr << "Options for module " << tmp1[1] << ":" << endl;
@@ -207,11 +207,12 @@ int main(int argc, char* argv[])
      * where the only required argument is 'modname', specifing the
      * name of the module to load.
      */
-    FieldSharedPtr f = boost::shared_ptr<Field>(new Field());
+    FieldSharedPtr f = std::shared_ptr<Field>(new Field());
     int nParts = 1;
     int MPInprocs = 1;
     int MPIrank   = 0;
     LibUtilities::CommSharedPtr MPIComm;
+
     if (LibUtilities::GetCommFactory().ModuleExists("ParallelMPI"))
     {
         // get hold of parallel communicator first
@@ -231,7 +232,7 @@ int main(int argc, char* argv[])
         }
         else
         {
-            f->m_comm = MPIComm; 
+            f->m_comm = MPIComm;
         }
     }
     else
@@ -352,7 +353,7 @@ int main(int argc, char* argv[])
 
         if (i < nInput)
         {
-            inputModule = boost::dynamic_pointer_cast<InputModule>(mod);
+            inputModule = std::dynamic_pointer_cast<InputModule>(mod);
             inputModule->AddFile(module.second, tmp1[0]);
         }
 
@@ -444,7 +445,7 @@ int main(int argc, char* argv[])
             
             int rank = p;
             f->ClearField();
-            partComm = boost::shared_ptr<FieldConvertComm>(
+            partComm = std::shared_ptr<FieldConvertComm>(
                              new FieldConvertComm(argc, argv, nParts,rank));
         }
         

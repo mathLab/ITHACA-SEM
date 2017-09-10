@@ -210,7 +210,7 @@ namespace Nektar
         {
         public:
             /// Returns a new instance of a Basis with given BasisKey.
-            static boost::shared_ptr<Basis> Create(const BasisKey &bkey);
+            static std::shared_ptr<Basis> Create(const BasisKey &bkey);
 
             /// Destructor.
             virtual ~Basis()
@@ -275,19 +275,19 @@ namespace Nektar
                 m_points->GetZW(z,w);
             }
 
-            inline const  boost::shared_ptr<NekMatrix<NekDouble> > & GetD(
+            inline const std::shared_ptr<NekMatrix<NekDouble> > & GetD(
                               Direction dir = xDir) const
             {
                 return m_points->GetD(dir);
             }
 
-            const boost::shared_ptr<NekMatrix<NekDouble> > GetI(
+            const std::shared_ptr<NekMatrix<NekDouble> > GetI(
                                 const Array<OneD, const NekDouble>& x)
             {
                 return m_points->GetI(x);
             }
 
-            const boost::shared_ptr<NekMatrix<NekDouble> > GetI(
+            const std::shared_ptr<NekMatrix<NekDouble> > GetI(
                                 const BasisKey &bkey)
             {
                 ASSERTL0(bkey.GetPointsKey().GetPointsDim()==1,
@@ -346,7 +346,7 @@ namespace Nektar
                          "Default Constructor for Basis should not be called");
             }
 
-            boost::shared_ptr< NekMatrix<NekDouble> > CalculateInterpMatrix(
+            std::shared_ptr< NekMatrix<NekDouble> > CalculateInterpMatrix(
                                 const BasisKey &tbasis0);
 
             /// Generate appropriate basis and their derivatives.

@@ -64,17 +64,15 @@ namespace Nektar
         /// matrices.
         typedef std::map< Homogeneous2DMatType, DNekBlkMatSharedPtr> Homo2DBlockMatrixMap;
         /// A shared pointer to a BlockMatrixMap.
-        typedef boost::shared_ptr<Homo2DBlockMatrixMap> Homo2DBlockMatrixMapShPtr;
+        typedef std::shared_ptr<Homo2DBlockMatrixMap> Homo2DBlockMatrixMapShPtr;
 
         // Forward declaration for typedefs
         class ExpListHomogeneous2D;
 
         /// Shared pointer to an ExpList3DHomogeneous2D object.
-        typedef boost::shared_ptr<ExpListHomogeneous2D>   ExpListHomogeneous2DSharedPtr;
+        typedef std::shared_ptr<ExpListHomogeneous2D>   ExpListHomogeneous2DSharedPtr;
         /// Vector of pointers to ExpList3DHomogeneous2D objects.
         typedef std::vector< ExpListHomogeneous2DSharedPtr > ExpListHomogeneous2DVector;
-        /// Iterator for the vector of ExpList3DHomogeneous2D pointers.
-        typedef std::vector< ExpListHomogeneous2DSharedPtr >::iterator ExpListHomogeneous2DVectorIter;
 
         /// Abstraction of a two-dimensional multi-elemental expansion which
         /// is merely a collection of local expansions.
@@ -261,9 +259,3 @@ namespace Nektar
 } //end of namespace
 
 #endif//EXPLISTHOMO2D_H
-
-/**
-* $Log: v $
-*
-**/
-

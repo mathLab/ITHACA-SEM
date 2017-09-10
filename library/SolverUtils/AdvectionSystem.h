@@ -83,7 +83,7 @@ private:
 };
 
 /// Shared pointer to an AdvectionSystem class
-typedef boost::shared_ptr<AdvectionSystem> AdvectionSystemSharedPtr;
+typedef std::shared_ptr<AdvectionSystem> AdvectionSystemSharedPtr;
 
 }
 }

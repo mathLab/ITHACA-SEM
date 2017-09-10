@@ -285,13 +285,13 @@ namespace Nektar
 
         AnalyticExpressionEvaluator::~AnalyticExpressionEvaluator(void)
         {
-            for (std::vector<ExecutionStack>::iterator it_es = m_executionStack.begin(); it_es != m_executionStack.end(); ++it_es)
+            for (auto &it_es : m_executionStack)
             {
-                for (std::vector<EvaluationStep*>::iterator it = (*it_es).begin(); it != (*it_es).end(); ++it)
+                for (auto &it : it_es)
                 {
-                    delete *it;
+                    delete it;
                 }
-                (*it_es).clear();
+                it_es.clear();
             }
             m_executionStack.clear();
         }

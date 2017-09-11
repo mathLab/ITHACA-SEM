@@ -85,7 +85,6 @@ class APE : public AdvectionSystem
         Array<OneD, Array<OneD, NekDouble> >            m_bfFwdBwd;
         Array<OneD, Array<OneD, NekDouble> >            m_vecLocs;
         /// Isentropic coefficient, Ratio of specific heats (APE)
-        NekDouble                                       m_gamma;
         Array<OneD, Array<OneD, NekDouble> >            m_bf;
         std::vector<std::string>                        m_bfNames;
         /// dump cfl estimate

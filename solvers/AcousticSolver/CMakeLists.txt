@@ -10,13 +10,14 @@ IF( NEKTAR_SOLVER_ACOUSTIC )
     SET(AcousticSolverSource 
        ./AcousticSolver.cpp
        ./EquationSystems/APE.cpp
-       ./EquationSystems/LEE.cpp
+#        ./EquationSystems/LEE.cpp
        ./RiemannSolvers/AcousticSolver.cpp
-       ./RiemannSolvers/LEESolver.cpp
+#        ./RiemannSolvers/LEESolver.cpp
        ./RiemannSolvers/APEUpwindSolver.cpp
        ./RiemannSolvers/APELaxFriedrichsSolver.cpp
-       ./RiemannSolvers/LEEUpwindSolver.cpp
-       ./RiemannSolvers/LEELaxFriedrichsSolver.cpp)
+#        ./RiemannSolvers/LEEUpwindSolver.cpp
+#        ./RiemannSolvers/LEELaxFriedrichsSolver.cpp
+)
 
     ADD_SOLVER_EXECUTABLE(AcousticSolver SOURCES ${AcousticSolverSource})
 

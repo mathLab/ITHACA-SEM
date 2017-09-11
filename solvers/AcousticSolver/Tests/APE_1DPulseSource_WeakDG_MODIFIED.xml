@@ -42,7 +42,7 @@
       <I PROPERTY="EQType" VALUE="APE"/> <!-- Acoustic perturbation equations -->
       <I PROPERTY="Projection" VALUE="DisContinuous"/>
       <I PROPERTY="TimeIntegrationMethod" VALUE="ClassicalRungeKutta4"/>
-      <I PROPERTY="UpwindType" VALUE="Upwind"/>
+      <I PROPERTY="UpwindType" VALUE="LaxFriedrichs"/>
     </SOLVERINFO>
     <PARAMETERS>
       <P> TimeStep       = 0.00001           </P>
@@ -71,11 +71,12 @@
     </BOUNDARYCONDITIONS>
     <FUNCTION NAME="Baseflow"> <!-- Incompressible base flow -->
       <E VAR="u0" VALUE="0"/>
-      <E VAR="p0" VALUE="Pinfinity"/>
+      <E VAR="c0sq" VALUE="1.4 * Pinfinity / Rho0"/>
       <E VAR="rho0" VALUE="Rho0"/>
     </FUNCTION>
     <FUNCTION NAME="Source">
       <E VAR="p" VALUE="pmax*omega0*cos(omega0*t)*exp(-32*x^2)"/>
+      <E VAR="u" VALUE="0"/>
     </FUNCTION>
     <FUNCTION NAME="ExactSolution"> <!-- Not really the exact solution -->
       <E VAR="p" VALUE="0"/>

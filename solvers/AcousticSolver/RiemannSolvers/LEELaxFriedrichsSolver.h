@@ -59,11 +59,11 @@ class LEELaxFriedrichsSolver : public LEESolver
         LEELaxFriedrichsSolver(const LibUtilities::SessionReaderSharedPtr& pSession);
 
         virtual void v_PointSolve(
-            NekDouble  pL,  NekDouble  rhoL,  NekDouble  ruL, NekDouble  rvL, NekDouble  rwL,
-            NekDouble  pR,  NekDouble  rhoR,  NekDouble  ruR, NekDouble  rvR, NekDouble  rwR,
-            NekDouble  p0L, NekDouble  rho0L, NekDouble  u0L, NekDouble  v0L, NekDouble  w0L,
-            NekDouble  p0R, NekDouble  rho0R, NekDouble  u0R, NekDouble  v0R, NekDouble  w0R,
-            NekDouble &pF,  NekDouble &rhoF,  NekDouble &ruF, NekDouble &rvF, NekDouble &rwF);
+            NekDouble  pL,    NekDouble  rhoL,  NekDouble  ruL, NekDouble  rvL, NekDouble  rwL,
+            NekDouble  pR,    NekDouble  rhoR,  NekDouble  ruR, NekDouble  rvR, NekDouble  rwR,
+            NekDouble  c0sqL, NekDouble  rho0L, NekDouble  u0L, NekDouble  v0L, NekDouble  w0L,
+            NekDouble  c0sqR, NekDouble  rho0R, NekDouble  u0R, NekDouble  v0R, NekDouble  w0R,
+            NekDouble &pF,    NekDouble &rhoF,  NekDouble &ruF, NekDouble &rvF, NekDouble &rwF);
 };
 
 }

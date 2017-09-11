@@ -55,6 +55,9 @@ APEUpwindSolver::APEUpwindSolver(const LibUtilities::SessionReaderSharedPtr& pSe
 /**
  * @brief Upwind Riemann solver
  *
+ * The fluxes are straight out of sympy, so lets just hope the compiler
+ * optimizes them for us.
+ *
  * @param pL     Perturbation pressure left state
  * @param rhoL   Perturbation density left state
  * @param pR     Perturbation pressure right state
@@ -65,11 +68,16 @@ APEUpwindSolver::APEUpwindSolver(const LibUtilities::SessionReaderSharedPtr& pSe
  * @param vR     y perturbation velocity component right state
  * @param wL     z perturbation velocity component left state
  * @param wR     z perturbation velocity component right state
- * @param p0     Base pressure
- * @param rho0   Base density
- * @param u0     Base x velocity component
- * @param v0     Base y velocity component
- * @param w0     Base z velocity component
+ * @param c0sqL  Base pressure left state
+ * @param c0sqR  Base pressure right state
+ * @param rho0L  Base density left state
+ * @param rho0R  Base density right state
+ * @param u0L    Base x velocity component left state
+ * @param u0R    Base x velocity component right state
+ * @param v0L    Base y velocity component left state
+ * @param v0R    Base y velocity component right state
+ * @param w0L    Base z velocity component left state
+ * @param w0R    Base z velocity component right state
  * @param pF     Computed Riemann flux for perturbation pressure
  * @param rhoF   Computed Riemann flux for perturbation density
  * @param uF     Computed Riemann flux for x perturbation velocity component
@@ -77,59 +85,89 @@ APEUpwindSolver::APEUpwindSolver(const LibUtilities::SessionReaderSharedPtr& pSe
  * @param wF     Computed Riemann flux for z perturbation velocity component
  */
 void APEUpwindSolver::v_PointSolve(
-    NekDouble  pL,  NekDouble  rhoL,  NekDouble  uL,  NekDouble  vL,  NekDouble  wL,
-    NekDouble  pR,  NekDouble  rhoR,  NekDouble  uR,  NekDouble  vR,  NekDouble  wR,
-    NekDouble  p0L, NekDouble  rho0L, NekDouble  u0L, NekDouble  v0L, NekDouble  w0L,
-    NekDouble  p0R, NekDouble  rho0R, NekDouble  u0R, NekDouble  v0R, NekDouble  w0R,
-    NekDouble &pF,  NekDouble &rhoF,  NekDouble &uF,  NekDouble &vF,  NekDouble &wF)
+    NekDouble  pL,    NekDouble  rhoL,  NekDouble  uL,  NekDouble  vL,  NekDouble  wL,
+    NekDouble  pR,    NekDouble  rhoR,  NekDouble  uR,  NekDouble  vR,  NekDouble  wR,
+    NekDouble  c0sqL, NekDouble  rho0L, NekDouble  u0L, NekDouble  v0L, NekDouble  w0L,
+    NekDouble  c0sqR, NekDouble  rho0R, NekDouble  u0R, NekDouble  v0R, NekDouble  w0R,
+    NekDouble &pF,    NekDouble &rhoF,  NekDouble &uF,  NekDouble &vF,  NekDouble &wF)
 {
     // fetch params
-    ASSERTL1(CheckParams("Gamma"), "Gamma not defined.");
-    const NekDouble &gamma = m_params["Gamma"]();
 
     // Speed of sound
-    NekDouble cL = sqrt(gamma * p0L / rho0L);
-    NekDouble cR = sqrt(gamma * p0R / rho0R);
+    NekDouble c0L = sqrt(c0sqL);
+    NekDouble c0R = sqrt(c0sqR);
+    NekDouble c0M = (c0L + c0R) / 2.0;
 
-    Array<OneD, NekDouble> characteristic(4);
-    Array<OneD, NekDouble> W(2);
-    Array<OneD, NekDouble> lambda(2);
+    NekDouble u0M = (u0L + u0R) / 2.0;
 
-    // compute the wave speeds
-    lambda[0] = (u0L + u0R) / 2 + (cL + cR) / 2;
-    lambda[1] = (u0L + u0R) / 2 - (cL + cR) / 2;
-
-    // calculate the caracteristic variables
-    // left characteristics
-    characteristic[0] = pL / 2 + uL * cL * rho0L / 2;
-    characteristic[1] = pL / 2 - uL * cL * rho0L / 2;
-    // right characteristics
-    characteristic[2] = pR / 2 + uR * cR * rho0R / 2;
-    characteristic[3] = pR / 2 - uR * cR * rho0R / 2;
-
-    // take left or right value of characteristic variable
-    for (int j = 0; j < 2; j++)
-    {
-        if (lambda[j] >= 0)
-        {
-            W[j] = characteristic[j];
-        }
-        else
-        {
-            W[j] = characteristic[j + 2];
-        }
-    }
-
-    // calculate conservative variables from characteristics
-    NekDouble p = W[0] + W[1];
-    NekDouble u = (W[0] - W[1]) / (cL * rho0L); // TODO
-
-    // assemble the fluxes
-    pF = gamma * p0L * u + u0L * p; // TODO
-    uF =
-        p / rho0L + u0L * u + v0L * (vL + vR) / 2 + w0L * (wL + wR) / 2; // TODO
+    pF = 0.0;
+    uF = 0.0;
     vF = 0.0;
     wF = 0.0;
+
+    // lambda_3
+    if (u0M - c0M > 0)
+    {
+        pF = pF + 0.5 * (c0L - u0L) *
+                      (-rho0L * v0L * vL * (c0L * u0L + c0sqL) -
+                       rho0L * w0L * wL * (c0L * u0L + c0sqL) +
+                       (c0sqL - pow(u0L, 2)) * (rho0L * c0L * uL - pL)) /
+                      (c0sqL - pow(u0L, 2));
+
+        uF = uF +
+             0.5 * (c0L - u0L) *
+                 (rho0L * c0L * (c0L * u0L + c0sqL) * (v0L * vL + w0L * wL) -
+                  rho0L * c0sqL * uL * (c0sqL - pow(u0L, 2)) +
+                  c0L * pL * (c0sqL - pow(u0L, 2))) /
+                 (rho0L * c0sqL * (c0sqL - pow(u0L, 2)));
+    }
+    else
+    {
+        pF = pF + 0.5 * (c0R - u0R) *
+                      (-rho0R * v0R * vR * (c0R * u0R + c0sqR) -
+                       rho0R * w0R * wR * (c0R * u0R + c0sqR) +
+                       (c0sqR - pow(u0R, 2)) * (rho0R * c0R * uR - pR)) /
+                      (c0sqR - pow(u0R, 2));
+
+        uF = uF +
+             0.5 * (c0R - u0R) *
+                 (rho0R * c0R * (c0R * u0R + c0sqR) * (v0R * vR + w0R * wR) -
+                  rho0R * c0sqR * uR * (c0sqR - pow(u0R, 2)) +
+                  c0R * pR * (c0sqR - pow(u0R, 2))) /
+                 (rho0R * c0sqR * (c0sqR - pow(u0R, 2)));
+    }
+
+    // lambda_4
+    if (u0M + c0M > 0)
+    {
+        pF = pF + 0.5 * (c0L + u0L) *
+                      (-rho0L * v0L * vL * (c0L * u0L - c0sqL) -
+                       rho0L * w0L * wL * (c0L * u0L - c0sqL) +
+                       (c0sqL - pow(u0L, 2)) * (rho0L * c0L * uL + pL)) /
+                      (c0sqL - pow(u0L, 2));
+
+        uF = uF +
+             0.5 * (c0L + u0L) *
+                 (-rho0L * c0L * (c0L * u0L - c0sqL) * (v0L * vL + w0L * wL) +
+                  rho0L * c0sqL * uL * (c0sqL - pow(u0L, 2)) +
+                  c0L * pL * (c0sqL - pow(u0L, 2))) /
+                 (rho0L * c0sqL * (c0sqL - pow(u0L, 2)));
+    }
+    else
+    {
+        pF = pF + 0.5 * (c0R + u0R) *
+                      (-rho0R * v0R * vR * (c0R * u0R - c0sqR) -
+                       rho0R * w0R * wR * (c0R * u0R - c0sqR) +
+                       (c0sqR - pow(u0R, 2)) * (rho0R * c0R * uR + pR)) /
+                      (c0sqR - pow(u0R, 2));
+
+        uF = uF +
+             0.5 * (c0R + u0R) *
+                 (-rho0R * c0R * (c0R * u0R - c0sqR) * (v0R * vR + w0R * wR) +
+                  rho0R * c0sqR * uR * (c0sqR - pow(u0R, 2)) +
+                  c0R * pR * (c0sqR - pow(u0R, 2))) /
+                 (rho0R * c0sqR * (c0sqR - pow(u0R, 2)));
+    }
 }
 
 }

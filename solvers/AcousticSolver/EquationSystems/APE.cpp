@@ -82,10 +82,9 @@ void APE::v_InitObject()
              "Only Projection=DisContinuous supported by the APE class.");
 
     // Load isentropic coefficient, Ratio of specific heats
-    m_session->LoadParameter("Gamma", m_gamma, 1.4);
     m_session->LoadParameter("IO_CFLSteps", m_cflsteps, 0);
 
-    m_bfNames.push_back("p0");
+    m_bfNames.push_back("c0sq");
     m_bfNames.push_back("rho0");
     m_bfNames.push_back("u0");
     m_bfNames.push_back("v0");
@@ -95,7 +94,7 @@ void APE::v_InitObject()
     m_bfNames.resize(m_spacedim + 2);
 
     // Initialize basefield
-    m_bf = Array<OneD, Array<OneD, NekDouble> >(m_spacedim + 2);
+    m_bf = Array<OneD, Array<OneD, NekDouble> >(m_bfNames.size());
     for (int i = 0; i < m_bf.num_elements(); ++i)
     {
         m_bf[i] = Array<OneD, NekDouble>(GetTotPoints());
@@ -140,7 +139,6 @@ void APE::v_InitObject()
     m_riemannSolver->SetVector("N",         &APE::GetNormals,   this);
     m_riemannSolver->SetVector("basefieldFwdBwd", &APE::GetBasefieldFwdBwd, this);
     m_riemannSolver->SetAuxVec("vecLocs",   &APE::GetVecLocs,   this);
-    m_riemannSolver->SetParam("Gamma",      &APE::GetGamma,     this);
 
     // Set up advection operator
     string advName;
@@ -191,13 +189,13 @@ void APE::GetFluxVector(
     ASSERTL1(flux[0].num_elements() == m_spacedim,
                  "Dimension of flux array and velocity array do not match");
 
-    // F_{adv,p',j} = \gamma p_0 u'_j + p' \bar{u}_j
+    // F_{adv,p',j} = \bar{rho}  \bar{c^2} u'_j + p' \bar{u}_j
     for (int j = 0; j < m_spacedim; ++j)
     {
         Vmath::Zero(nq, flux[0][j], 1);
 
-        // construct \gamma p_0 u'_j term
-        Vmath::Smul(nq, m_gamma, m_bf[0], 1, tmp1, 1);
+        // construct \bar{rho}  \bar{c^2} u'_j
+        Vmath::Vmul(nq, m_bf[0], 1, m_bf[1], 1, tmp1, 1);
         Vmath::Vmul(nq, tmp1, 1, physfield[j+1], 1, tmp1, 1);
 
         // construct p' \bar{u}_j term
@@ -478,30 +476,16 @@ void APE::v_RiemannInvariantBC(int bcRegion,
 
         for (int i = 0; i < nBCEdgePts; ++i)
         {
-            NekDouble c = sqrt(m_gamma * BfFwd[0][id2 + i] / BfFwd[1][id2 + i]);
+            NekDouble c = sqrt(BfFwd[0][id2 + i]);
 
-            NekDouble l0 = Vn0[i] + c;
-            NekDouble l1 = Vn0[i] - c;
-
-            NekDouble h0, h1;
+            // LODI
+            NekDouble h1, h2;
 
             // outgoing
-            if (l0 > 0)
+            if (Vn0[i] - c > 0)
             {
-                // p/2 + u*c*rho0/2
-                h0 = Fwd[_ip][id2 + i] / 2 + Vn[i] * c * BfFwd[1][id2 + i] / 2;
-            }
-            // incoming
-            else
-            {
-                h0 = 0.0;
-            }
-
-            // outgoing
-            if (l1 > 0)
-            {
-                // p/2 - u*c*rho0/2
-                h1 = Fwd[_ip][id2 + i] / 2 - Vn[i] * c * BfFwd[1][id2 + i] / 2;
+                // u/2 - p/(2*rho0*sqr(c0sq))
+                h1 = Vn[i]/2 - Fwd[_ip][id2 + i] / (2 * BfFwd[1][id2 + i] * c);
             }
             // incoming
             else
@@ -509,11 +493,23 @@ void APE::v_RiemannInvariantBC(int bcRegion,
                 h1 = 0.0;
             }
 
+            // outgoing
+            if (Vn0[i] + c > 0)
+            {
+                // u/2 + p/(2*rho0*sqr(c0sq))
+                h2 = Vn[i]/2 + Fwd[_ip][id2 + i] / (2 * BfFwd[1][id2 + i] * c);
+            }
+            // incoming
+            else
+            {
+                h2 = 0.0;
+            }
+
             // compute primitive variables
-            // p = h0 + h1
-            // u = ( h0 - h1) / (c*rho0)
-            Fwd[_ip][id2 + i] = h0 + h1;
-            NekDouble VnNew = (h0 - h1) / (c * BfFwd[1][id2 + i]);
+            // p = rho0*sqr(c0sq) * (h2 - h1)
+            Fwd[_ip][id2 + i] = BfFwd[1][id2 + i] * c * (h2 - h1);
+            // u = h1 + h2
+            NekDouble VnNew = h1 + h2;
 
             // adjust velocity pert. according to new value
             for (int j = 0; j < m_spacedim; ++j)
@@ -602,13 +598,13 @@ void APE::v_WhiteNoiseBC(int bcRegion,
         {
             for (int i = 0; i < nBCEdgePts; ++i)
             {
+                //TODO
                 // density perturbation
                 tmp[_irho][i] = m_whiteNoiseBC_p / (BfFwd[0][id2 + i] / BfFwd[1][id2 + i]);
 
                 // velocity perturbation
-
                 NekDouble ru = m_whiteNoiseBC_p /
-                            sqrt(m_gamma * BfFwd[0][id2 + i] / BfFwd[1][id2 + i]);
+                            sqrt(1.4 * BfFwd[0][id2 + i] / BfFwd[1][id2 + i]);
                 for (int j = 0; j < m_spacedim; ++j)
                 {
                     tmp[_iu + j][i] = -1.0 * ru * m_traceNormals[j][id2 + i];
@@ -620,8 +616,7 @@ void APE::v_WhiteNoiseBC(int bcRegion,
             for (int i = 0; i < nBCEdgePts; ++i)
             {
                 // velocity perturbation
-                NekDouble u = m_whiteNoiseBC_p /
-                            sqrt(m_gamma * BfFwd[0][id2 + i] * BfFwd[1][id2 + i]);
+                NekDouble u = m_whiteNoiseBC_p / (sqrt(BfFwd[0][id2 + i]) * BfFwd[1][id2 + i]);
 
                 for (int j = 0; j < m_spacedim; ++j)
                 {
@@ -683,7 +678,7 @@ Array<OneD, NekDouble> APE::v_GetMaxStdVelocity(void)
             {
                 // The total advection velocity is v+c, so we need to scale c by
                 // adding it before we do the transformation.
-                NekDouble c = sqrt(m_gamma * m_bf[0][cnt+j] / m_bf[1][cnt+j]);
+                NekDouble c = sqrt(m_bf[0][cnt+j]);
                 velocity[i][j] = m_bf[i+2][cnt+j] + c;
             }
         }
@@ -834,15 +829,6 @@ void APE::CopyBoundaryTrace(const Array<OneD, NekDouble> &Fwd,
 
         cnt += m_fields[0]->GetBndCondExpansions()[bcRegion]->GetExpSize();
     }
-}
-
-
-/**
- * @brief Get the heat capacity ratio.
- */
-NekDouble APE::GetGamma()
-{
-    return m_gamma;
 }
 
 

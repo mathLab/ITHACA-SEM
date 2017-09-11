@@ -67,11 +67,16 @@ LEEUpwindSolver::LEEUpwindSolver(const LibUtilities::SessionReaderSharedPtr& pSe
  * @param rvR     y perturbation velocity component right state
  * @param rwL    z perturbation velocity component left state
  * @param rwR    z perturbation velocity component right state
- * @param p0     Base pressure
- * @param rho0   Base density
- * @param u0     Base x velocity component
- * @param v0     Base y velocity component
- * @param w0     Base z velocity component
+ * @param c0sqL  Base pressure left state
+ * @param c0sqR  Base pressure right state
+ * @param rho0L  Base density left state
+ * @param rho0R  Base density right state
+ * @param u0L    Base x velocity component left state
+ * @param u0R    Base x velocity component right state
+ * @param v0L    Base y velocity component left state
+ * @param v0R    Base y velocity component right state
+ * @param w0L    Base z velocity component left state
+ * @param w0R    Base z velocity component right state
  * @param pF     Computed Riemann flux for perturbation pressure
  * @param rhoF   Computed Riemann flux for perturbation density
  * @param ruF    Computed Riemann flux for x perturbation velocity component
@@ -79,11 +84,11 @@ LEEUpwindSolver::LEEUpwindSolver(const LibUtilities::SessionReaderSharedPtr& pSe
  * @param rwF    Computed Riemann flux for z perturbation velocity component
  */
 void LEEUpwindSolver::v_PointSolve(
-    NekDouble  pL,  NekDouble  rhoL,  NekDouble  ruL, NekDouble  rvL, NekDouble  rwL,
-    NekDouble  pR,  NekDouble  rhoR,  NekDouble  ruR, NekDouble  rvR, NekDouble  rwR,
-    NekDouble  p0L, NekDouble  rho0L, NekDouble  u0L, NekDouble  v0L, NekDouble  w0L,
-    NekDouble  p0R, NekDouble  rho0R, NekDouble  u0R, NekDouble  v0R, NekDouble  w0R,
-    NekDouble &pF,  NekDouble &rhoF,  NekDouble &ruF, NekDouble &rvF, NekDouble &rwF)
+    NekDouble  pL,    NekDouble  rhoL,  NekDouble  ruL, NekDouble  rvL, NekDouble  rwL,
+    NekDouble  pR,    NekDouble  rhoR,  NekDouble  ruR, NekDouble  rvR, NekDouble  rwR,
+    NekDouble  c0sqL, NekDouble  rho0L, NekDouble  u0L, NekDouble  v0L, NekDouble  w0L,
+    NekDouble  c0sqR, NekDouble  rho0R, NekDouble  u0R, NekDouble  v0R, NekDouble  w0R,
+    NekDouble &pF,    NekDouble &rhoF,  NekDouble &ruF, NekDouble &rvF, NekDouble &rwF)
 {
     ASSERTL1(CheckParams("Gamma"), "Gamma not defined.");
     const NekDouble &gamma = m_params["Gamma"]();

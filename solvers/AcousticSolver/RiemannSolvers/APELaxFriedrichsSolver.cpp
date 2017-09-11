@@ -69,11 +69,16 @@ APELaxFriedrichsSolver::APELaxFriedrichsSolver(const LibUtilities::SessionReader
  * @param vR     y perturbation velocity component right state
  * @param wL     z perturbation velocity component left state
  * @param wR     z perturbation velocity component right state
- * @param p0     Base pressure
- * @param rho0   Base density
- * @param u0     Base x velocity component
- * @param v0     Base y velocity component
- * @param w0     Base z velocity component
+ * @param c0sqL  Base pressure left state
+ * @param c0sqR  Base pressure right state
+ * @param rho0L  Base density left state
+ * @param rho0R  Base density right state
+ * @param u0L    Base x velocity component left state
+ * @param u0R    Base x velocity component right state
+ * @param v0L    Base y velocity component left state
+ * @param v0R    Base y velocity component right state
+ * @param w0L    Base z velocity component left state
+ * @param w0R    Base z velocity component right state
  * @param pF     Computed Riemann flux for perturbation pressure
  * @param rhoF   Computed Riemann flux for perturbation density
  * @param uF     Computed Riemann flux for x perturbation velocity component
@@ -81,18 +86,15 @@ APELaxFriedrichsSolver::APELaxFriedrichsSolver(const LibUtilities::SessionReader
  * @param wF     Computed Riemann flux for z perturbation velocity component
  */
 void APELaxFriedrichsSolver::v_PointSolve(
-    NekDouble  pL,  NekDouble  rhoL,  NekDouble  uL,  NekDouble  vL,  NekDouble  wL,
-    NekDouble  pR,  NekDouble  rhoR,  NekDouble  uR,  NekDouble  vR,  NekDouble  wR,
-    NekDouble  p0L, NekDouble  rho0L, NekDouble  u0L, NekDouble  v0L, NekDouble  w0L,
-    NekDouble  p0R, NekDouble  rho0R, NekDouble  u0R, NekDouble  v0R, NekDouble  w0R,
-    NekDouble &pF,  NekDouble &rhoF,  NekDouble &uF,  NekDouble &vF,  NekDouble &wF)
+    NekDouble  pL,    NekDouble  rhoL,  NekDouble  uL,  NekDouble  vL,  NekDouble  wL,
+    NekDouble  pR,    NekDouble  rhoR,  NekDouble  uR,  NekDouble  vR,  NekDouble  wR,
+    NekDouble  c0sqL, NekDouble  rho0L, NekDouble  u0L, NekDouble  v0L, NekDouble  w0L,
+    NekDouble  c0sqR, NekDouble  rho0R, NekDouble  u0R, NekDouble  v0R, NekDouble  w0R,
+    NekDouble &pF,    NekDouble &rhoF,  NekDouble &uF,  NekDouble &vF,  NekDouble &wF)
 {
-    ASSERTL1(CheckParams("Gamma"), "Gamma not defined.");
-    const NekDouble &gamma = m_params["Gamma"]();
-
     // Speed of sound
-    NekDouble cL = sqrt(gamma * p0L / rho0L);
-    NekDouble cR = sqrt(gamma * p0R / rho0R);
+    NekDouble cL = sqrt(c0sqL);
+    NekDouble cR = sqrt(c0sqR);
 
     // max absolute eigenvalue of the jacobian of F_n1
     NekDouble a_1_max = 0;
@@ -101,12 +103,12 @@ void APELaxFriedrichsSolver::v_PointSolve(
     a_1_max = std::max(a_1_max, std::abs(u0L + cL));
     a_1_max = std::max(a_1_max, std::abs(u0R + cR));
 
-    NekDouble pFL = gamma * p0L * uL + pL * u0L;
+    NekDouble pFL = rho0L * c0sqL * uL + pL * u0L;
     NekDouble uFL = pL / rho0L + u0L * uL + v0L * vL + w0L * wL;
     NekDouble vFL = 0;
     NekDouble wFL = 0;
 
-    NekDouble pFR = gamma * p0R * uR + pR * u0R;
+    NekDouble pFR = rho0R * c0sqR * uR + pR * u0R;
     NekDouble uFR = pR / rho0R + u0R * uR + v0R * vR + w0R * wR;
     NekDouble vFR = 0;
     NekDouble wFR = 0;

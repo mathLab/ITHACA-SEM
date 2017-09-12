@@ -564,8 +564,11 @@ void Interpolator::PrintStatistics()
     }
 
     cout << "Number of points: " << m_neighInds.num_elements() << endl;
-    cout << "mean Number of Neighbours per point: "
-         << meanN / m_neighInds.num_elements() << endl;
+    if (m_neighInds.num_elements() > 0)
+    {
+        cout << "mean Number of Neighbours per point: "
+             << meanN / m_neighInds.num_elements() << endl;
+    }
 }
 
 /**

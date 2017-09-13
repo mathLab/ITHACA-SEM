@@ -43,17 +43,11 @@
 
 #include <boost/version.hpp>
 #include <LibUtilities/LibUtilitiesDeclspec.h>
-#if( BOOST_VERSION / 100 % 1000 >= 36 )
+
 #include <boost/spirit/include/classic_core.hpp>
 #include <boost/spirit/include/classic_push_back_actor.hpp>
 
 using namespace boost::spirit::classic;
-#else
-#include <boost/spirit/core.hpp>
-#include <boost/spirit/actor/push_back_actor.hpp>
-
-using namespace boost::spirit;
-#endif
 
 namespace Nektar
 {

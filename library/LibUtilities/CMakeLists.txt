@@ -7,7 +7,6 @@ SET(BasicConstHeaders
 
 SET(BasicUtilsHeaders
     ./BasicUtils/ArrayPolicies.hpp
-    ./BasicUtils/BoostUtil.hpp
     ./BasicUtils/ConsistentObjectAccess.hpp
     ./BasicUtils/CompressData.h
     ./BasicUtils/CsvIO.h

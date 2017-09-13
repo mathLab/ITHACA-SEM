@@ -398,9 +398,9 @@ namespace Nektar
             // In the following calls to Solve, VectorType must be a NekVector.
             // Anything else won't compile.        
             template<typename VectorType>
-            typename RawType<VectorType>::type Solve(const VectorType& b)
+            RawType_t<VectorType> Solve(const VectorType& b)
             {
-                typename RawType<VectorType>::type x(ConsistentObjectAccess<VectorType>::const_reference(b).GetRows());
+                RawType_t<VectorType> x(ConsistentObjectAccess<VectorType>::const_reference(b).GetRows());
                 LinearSystemSolver::Solve(ConsistentObjectAccess<VectorType>::const_reference(b), x, m_matrixType,
                     m_ipivot, n, A, m_transposeFlag, m_numberOfSubDiagonals, m_numberOfSuperDiagonals);
                 return x;
@@ -416,9 +416,9 @@ namespace Nektar
 
             // Transpose variant of solve
             template<typename VectorType>
-            typename RawType<VectorType>::type SolveTranspose(const VectorType& b)
+            RawType_t<VectorType> SolveTranspose(const VectorType& b)
             {
-                typename RawType<VectorType>::type x(ConsistentObjectAccess<VectorType>::const_reference(b).GetRows());
+                RawType_t<VectorType> x(ConsistentObjectAccess<VectorType>::const_reference(b).GetRows());
                 LinearSystemSolver::SolveTranspose(ConsistentObjectAccess<VectorType>::const_reference(b), x, m_matrixType,
                     m_ipivot, n, A, m_transposeFlag, m_numberOfSubDiagonals, m_numberOfSuperDiagonals);
                 return x;

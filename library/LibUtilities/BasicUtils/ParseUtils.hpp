@@ -54,7 +54,8 @@ namespace Nektar
     class ParseUtils
     {
     public:
-        static bool ParseRealAssignment(const char *const str, std::string &symbol, NekDouble &value)
+        static bool ParseRealAssignment(const char *const str,
+                std::string &symbol, NekDouble &value)
         {
             SymbolFunctor symbolFunctor(&symbol);
             ValueFunctor valueFunctor(&value);
@@ -62,7 +63,8 @@ namespace Nektar
             return parse(str,
                 // Begin grammar
                 (
-                 lexeme_d[alpha_p >> *alnum_p][symbolFunctor] >> "=" >> real_p[valueFunctor]
+                 lexeme_d[alpha_p >> *alnum_p][symbolFunctor]
+                                  >> "=" >> real_p[valueFunctor]
                 )
                 ,
                 // End grammar
@@ -70,7 +72,8 @@ namespace Nektar
                 space_p).full;
         }
 
-        static bool GenerateSeqVector(const char *const str, std::vector<unsigned int> &vec)
+        static bool GenerateSeqVector(const char *const str,
+                std::vector<unsigned int> &vec)
         {
             // Functors used to parse the sequence.
             fctor1 functor1(&vec);
@@ -88,7 +91,8 @@ namespace Nektar
                 space_p).full;
         }
 
-        static bool GenerateOrderedVector(const char *const str, std::vector<unsigned int> &vec)
+        static bool GenerateOrderedVector(const char *const str,
+                std::vector<unsigned int> &vec)
         {
             // Functors used to parse the sequence.
             fctor1 functor1(&vec);
@@ -104,7 +108,8 @@ namespace Nektar
                 space_p).full;
         }
 
-        static bool GenerateOrderedVector(const char *const str, std::vector<NekDouble> &vec)
+        static bool GenerateOrderedVector(const char *const str,
+                std::vector<NekDouble> &vec)
         {
             // Functors used to parse the sequence.
             fctor4 functor4(&vec);
@@ -119,7 +124,8 @@ namespace Nektar
                          space_p).full;
         }
 
-        static bool GenerateUnOrderedVector(const char *const str, std::vector<NekDouble> &vec)
+        static bool GenerateUnOrderedVector(const char *const str,
+                std::vector<NekDouble> &vec)
         {
             // Functors used to parse the sequence.
             fctor5 functor5(&vec);
@@ -134,7 +140,8 @@ namespace Nektar
                          space_p).full;
         }
 
-        static bool GenerateUnOrderedVector(const char *const str, std::vector<unsigned int> &vec)
+        static bool GenerateUnOrderedVector(const char *const str,
+                std::vector<unsigned int> &vec)
         {
             // Functors used to parse the sequence.
             fctor6 functor6(&vec);
@@ -149,7 +156,8 @@ namespace Nektar
                          space_p).full;
         }
 
-        static bool GenerateOrderedStringVector(const char *const str, std::vector<std::string> &vec)
+        static bool GenerateOrderedStringVector(const char *const str,
+                std::vector<std::string> &vec)
         {
             // Functors used to parse the sequence.
             fctor3 functor3(&vec);
@@ -157,7 +165,8 @@ namespace Nektar
             return parse(str,
                 //  Begin grammar
                 (
-                (+(print_p - ','))[functor3] >> *(',' >> (+(print_p - ','))[functor3])
+                (+(print_p - ','))[functor3] >>
+                        *(',' >> (+(print_p - ','))[functor3])
                 )
                 ,
                 //  End grammar
@@ -165,7 +174,8 @@ namespace Nektar
                 space_p).full;
         }
 
-        static std::string GenerateSeqString(const std::vector<unsigned int> &elmtids)
+        static std::string GenerateSeqString(
+                const std::vector<unsigned int> &elmtids)
         {
             std::stringstream idStringStream;
             bool setdash = true;

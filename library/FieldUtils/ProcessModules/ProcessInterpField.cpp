@@ -82,7 +82,7 @@ ProcessInterpField::~ProcessInterpField()
 
 void ProcessInterpField::Process(po::variables_map &vm)
 {
-    FieldSharedPtr fromField = boost::shared_ptr<Field>(new Field());
+    FieldSharedPtr fromField = std::shared_ptr<Field>(new Field());
 
     std::vector<std::string> files;
 
@@ -148,12 +148,11 @@ void ProcessInterpField::Process(po::variables_map &vm)
     }
 
     Array<OneD, int> ElementGIDs(expansions.size());
-    SpatialDomains::ExpansionMap::const_iterator expIt;
 
     int i = 0;
-    for (expIt = expansions.begin(); expIt != expansions.end(); ++expIt)
+    for (auto &expIt : expansions)
     {
-        ElementGIDs[i++] = expIt->second->m_geomShPtr->GetGlobalID();
+        ElementGIDs[i++] = expIt.second->m_geomShPtr->GetGlobalID();
     }
 
     string fromfld = m_config["fromfld"].as<string>();

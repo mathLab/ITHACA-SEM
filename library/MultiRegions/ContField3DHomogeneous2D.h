@@ -100,7 +100,7 @@ namespace Nektar
 
         };
 
-        typedef boost::shared_ptr<ContField3DHomogeneous2D>  
+        typedef std::shared_ptr<ContField3DHomogeneous2D>  
             ContField3DHomogeneous2DSharedPtr;
 
     } //end of namespace

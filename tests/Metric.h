@@ -75,7 +75,7 @@ namespace Nektar
     };
 
     /// A shared pointer to an EquationSystem object
-    typedef boost::shared_ptr<Metric> MetricSharedPtr;
+    typedef std::shared_ptr<Metric> MetricSharedPtr;
     
     /// Datatype of the NekFactory used to instantiate classes derived from the
     /// Advection class.

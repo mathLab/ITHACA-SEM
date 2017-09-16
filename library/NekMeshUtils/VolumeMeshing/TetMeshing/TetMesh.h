@@ -36,8 +36,6 @@
 #ifndef NEKTAR_MESHUTILS_TETMESHING_TETMESH_H
 #define NEKTAR_MESHUTILS_TETMESHING_TETMESH_H
 
-#include <boost/shared_ptr.hpp>
-
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 
@@ -86,7 +84,7 @@ private:
 
 };
 
-typedef boost::shared_ptr<TetMesh> TetMeshSharedPtr;
+typedef std::shared_ptr<TetMesh> TetMeshSharedPtr;
 
 }
 }

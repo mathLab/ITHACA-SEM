@@ -53,7 +53,7 @@ namespace LibUtilities {
     LIB_UTILITIES_EXPORT TimeIntegrationWrapperFactory
         &GetTimeIntegrationWrapperFactory();
 
-    typedef boost::shared_ptr<TimeIntegrationWrapper>
+    typedef std::shared_ptr<TimeIntegrationWrapper>
     TimeIntegrationWrapperSharedPtr;
 
     class TimeIntegrationWrapper

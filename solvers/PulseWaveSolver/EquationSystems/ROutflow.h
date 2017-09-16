@@ -45,7 +45,7 @@ namespace Nektar
     class ROutflow;
 
     /// Pointer to a PulseWaveOutflow object.
-    typedef boost::shared_ptr<ROutflow> ROutflowSharedPtr;
+    typedef std::shared_ptr<ROutflow> ROutflowSharedPtr;
     
     /// A global linear system.
     class ROutflow : public PulseWaveBoundary

@@ -8,7 +8,6 @@ SET(BasicConstHeaders
 SET(BasicUtilsHeaders
     ./BasicUtils/ArrayPolicies.hpp
     ./BasicUtils/BoostUtil.hpp
-    ./BasicUtils/Concepts.hpp
     ./BasicUtils/ConsistentObjectAccess.hpp
     ./BasicUtils/CompressData.h
     ./BasicUtils/CsvIO.h
@@ -17,6 +16,7 @@ SET(BasicUtilsHeaders
     ./BasicUtils/FieldIOXml.h
     ./BasicUtils/FileSystem.h
     ./BasicUtils/ErrorUtil.hpp
+    ./BasicUtils/HashUtils.hpp
     ./BasicUtils/MeshEntities.hpp
     ./BasicUtils/MeshPartition.h
     ./BasicUtils/MeshPartitionMetis.h
@@ -200,18 +200,13 @@ SET(LinearAlgebraHeaders
     ./LinearAlgebra/Arpack.hpp
     ./LinearAlgebra/BlasArray.hpp
     ./LinearAlgebra/Blas.hpp
-    ./LinearAlgebra/BlasOverrideUtil.hpp
     ./LinearAlgebra/BlockMatrix.hpp
     ./LinearAlgebra/CanGetRawPtr.hpp
-    ./LinearAlgebra/DgemmOverride.hpp
-    ./LinearAlgebra/DgemvOverride.hpp
     ./LinearAlgebra/ExplicitInstantiation.h
     ./LinearAlgebra/Lapack.hpp
     ./LinearAlgebra/MatrixBase.hpp
     ./LinearAlgebra/MatrixFuncs.h
-    ./LinearAlgebra/MatrixOperationsDeclarations.hpp
     ./LinearAlgebra/MatrixOperations.hpp
-    ./LinearAlgebra/MatrixSize.hpp
     ./LinearAlgebra/MatrixStorageType.h
     ./LinearAlgebra/MatrixType.h
     ./LinearAlgebra/NekLinAlgAlgorithms.hpp
@@ -220,7 +215,6 @@ SET(LinearAlgebraHeaders
     ./LinearAlgebra/NekMatrix.hpp
     ./LinearAlgebra/NekPoint.hpp
     ./LinearAlgebra/NekTypeDefs.hpp
-    ./LinearAlgebra/NekVectorCommon.hpp
     ./LinearAlgebra/NekVectorFwd.hpp
     ./LinearAlgebra/NekVector.hpp
     ./LinearAlgebra/PointerWrapper.h
@@ -278,26 +272,6 @@ SET(TimeIntegrationSources
         ./TimeIntegration/TimeIntegrationWrapper.cpp
 )
 
-SET(ExpressionTemplates
-    ../ExpressionTemplates/AssociativeTraits.hpp
-    ../ExpressionTemplates/AssociativeTransform.hpp
-    ../ExpressionTemplates/BackwardInverseTransform.hpp
-    ../ExpressionTemplates/CommutativeTraits.hpp
-    ../ExpressionTemplates/CommutativeTransform.hpp
-    ../ExpressionTemplates/CreateFromTree.hpp
-    ../ExpressionTemplates/ExpressionEvaluator.hpp
-    ../ExpressionTemplates/ExpressionTemplates.hpp
-    ../ExpressionTemplates/ForwardInverseTransform.hpp
-    ../ExpressionTemplates/InverseOperatorTypeTraits.hpp
-    ../ExpressionTemplates/InvertNode.hpp
-    ../ExpressionTemplates/Node.hpp
-    ../ExpressionTemplates/Operators.hpp
-    ../ExpressionTemplates/PerformCommutativeTransformIfNeeded.hpp
-    ../ExpressionTemplates/PushDownUnaryNodes.hpp
-    ../ExpressionTemplates/RemoveAllUnecessaryTemporaries.hpp
-    ../ExpressionTemplates/SortAssociativeCommutativeClusters.hpp
-)
-
 SET(BaseHeaders
     LibUtilitiesDeclspec.h
 )
@@ -305,7 +279,6 @@ SET(BaseHeaders
 SOURCE_GROUP("Basic Const" FILES ${BasicConstHeaders})
 SOURCE_GROUP("Basic Utils Headers" FILES ${BasicUtilsHeaders})
 SOURCE_GROUP("Basic Utils Sources" FILES ${BasicUtilsSources})
-SOURCE_GROUP("Expression Templates" FILES ${ExpressionTemplates})
 SOURCE_GROUP("Foundation Headers" FILES ${FoundationHeaders})
 SOURCE_GROUP("Foundation Sources" FILES ${FoundationSources})
 SOURCE_GROUP("Linear Algebra Headers" FILES ${LinearAlgebraHeaders})
@@ -336,7 +309,6 @@ SOURCE_GROUP("Base" FILES ${BaseHeaders})
 SET(LibUtilityHeaders
     ${MemoryHeaders}
     ${BasicUtilsHeaders}
-    ${ExpressionTemplates}
     ${PolyLibHeaders}
     ${CommunicationHeaders}
     ${FoundationHeaders}
@@ -411,12 +383,9 @@ ENDIF( NEKTAR_USE_ARPACK )
 TARGET_LINK_LIBRARIES(LibUtilities LINK_PUBLIC
     ${Boost_THREAD_LIBRARY}
     ${Boost_IOSTREAMS_LIBRARY}
-    ${Boost_DATE_TIME_LIBRARY}
     ${Boost_PROGRAM_OPTIONS_LIBRARY}
     ${Boost_FILESYSTEM_LIBRARY}
     ${Boost_SYSTEM_LIBRARY}
-    ${Boost_TIMER_LIBRARY}
-    ${Boost_CHRONO_LIBRARY}
     debug ${ZLIB_LIBRARY_DEBUG} optimized ${ZLIB_LIBRARY_RELEASE}
 )
 
@@ -489,9 +458,6 @@ IF( NEKTAR_USE_HDF5 )
     ADD_DEPENDENCIES(LibUtilities hdf5-1.8.16)
 ENDIF( NEKTAR_USE_HDF5 )
 
-INSTALL(FILES ${ExpressionTemplates}
-    DESTINATION ${NEKTAR_INCLUDE_DIR}/ExpressionTemplates
-    COMPONENT dev)
 INSTALL(DIRECTORY ./
     DESTINATION ${NEKTAR_INCLUDE_DIR}/LibUtilities
     COMPONENT dev

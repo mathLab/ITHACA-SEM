@@ -287,7 +287,7 @@ namespace Nektar
 
         };
 
-        typedef boost::shared_ptr<ContField2D>      ContField2DSharedPtr;
+        typedef std::shared_ptr<ContField2D>      ContField2DSharedPtr;
 
         /**
          * This operation is evaluated as:
@@ -469,7 +469,7 @@ namespace Nektar
                      "To use method must have a AssemblyMap "
                      "attached to key");
 
-            GlobalMatrixMap::iterator matrixIter = m_globalMat->find(gkey);
+            auto matrixIter = m_globalMat->find(gkey);
 
             if(matrixIter == m_globalMat->end())
             {

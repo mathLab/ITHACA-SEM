@@ -190,7 +190,7 @@ namespace Nektar
         
     };
 
-    typedef boost::shared_ptr<VelocityCorrectionScheme>
+    typedef std::shared_ptr<VelocityCorrectionScheme>
                 VelocityCorrectionSchemeSharedPtr;
 
 } //end of namespace

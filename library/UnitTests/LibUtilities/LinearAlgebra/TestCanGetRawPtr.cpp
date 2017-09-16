@@ -44,14 +44,16 @@
 #include <boost/test/unit_test.hpp>
 
 #include <boost/test/auto_unit_test.hpp>
-#include <boost/mpl/assert.hpp>
 
 namespace Nektar
 {
     BOOST_AUTO_TEST_CASE(TestCanGetRawPtr)
     {
-        BOOST_MPL_ASSERT(( CanGetRawPtr<NekMatrix<double> > ));
-        BOOST_MPL_ASSERT(( CanGetRawPtr<NekMatrix<NekMatrix<double>, ScaledMatrixTag> > ));
-        BOOST_MPL_ASSERT(( boost::mpl::not_<CanGetRawPtr<NekMatrix<NekMatrix<double>, BlockMatrixTag> > > ));
+        static_assert(CanGetRawPtr<NekMatrix<double> >::value,
+                      "Should be true");
+        static_assert(CanGetRawPtr<NekMatrix<NekMatrix<double>, ScaledMatrixTag> >::value,
+                      "Should be true");
+        static_assert(!CanGetRawPtr<NekMatrix<NekMatrix<double>, BlockMatrixTag> >::value,
+                      "Should be false");
     }
 }

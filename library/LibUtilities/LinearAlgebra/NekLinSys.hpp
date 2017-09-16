@@ -46,9 +46,7 @@
 #include <LibUtilities/LinearAlgebra/NekLinSys.hpp>
 #include <iostream>
 
-#include <boost/shared_ptr.hpp> 
-#include <boost/utility/enable_if.hpp>
-#include <boost/type_traits.hpp>
+#include <type_traits>
 
 #ifdef max
 #undef max
@@ -61,10 +59,10 @@
 namespace Nektar
 {
     template<typename DataType>
-    struct IsSharedPointer : public boost::false_type {};
+    struct IsSharedPointer : public std::false_type {};
 
     template<typename DataType>
-    struct IsSharedPointer<boost::shared_ptr<DataType> > : public boost::true_type {};
+    struct IsSharedPointer<std::shared_ptr<DataType> > : public std::true_type {};
 
     // The solving of the linear system is located in this class instead of in the LinearSystem 
     // class because XCode gcc 4.2 didn't compile it correctly when it was moved to the 
@@ -330,7 +328,7 @@ namespace Nektar
     {
         public:
             template<typename MatrixType>
-            explicit LinearSystem(const boost::shared_ptr<MatrixType> &theA, PointerWrapper wrapperType = eCopy) :
+            explicit LinearSystem(const std::shared_ptr<MatrixType> &theA, PointerWrapper wrapperType = eCopy) :
                 n(theA->GetRows()),
                 A(theA->GetPtr(), eVECTOR_WRAPPER),
                 m_ipivot(),

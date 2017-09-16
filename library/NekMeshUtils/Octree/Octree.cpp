@@ -201,7 +201,7 @@ NekDouble Octree::GetMinDelta()
 
 void Octree::WriteOctree(string nm)
 {
-    MeshSharedPtr oct = boost::shared_ptr<Mesh>(new Mesh());
+    MeshSharedPtr oct = std::shared_ptr<Mesh>(new Mesh());
     oct->m_expDim     = 3;
     oct->m_spaceDim   = 3;
     oct->m_nummode    = 2;
@@ -215,37 +215,37 @@ void Octree::WriteOctree(string nm)
 
         vector<NodeSharedPtr> ns(8);
 
-        ns[0] = boost::shared_ptr<Node>(new Node(0, m_octants[i]->FX(eBack),
-                                                 m_octants[i]->FX(eDown),
-                                                 m_octants[i]->FX(eRight)));
+        ns[0] = std::shared_ptr<Node>(new Node(0, m_octants[i]->FX(eBack),
+                                               m_octants[i]->FX(eDown),
+                                               m_octants[i]->FX(eRight)));
 
-        ns[1] = boost::shared_ptr<Node>(new Node(0, m_octants[i]->FX(eForward),
-                                                 m_octants[i]->FX(eDown),
-                                                 m_octants[i]->FX(eRight)));
+        ns[1] = std::shared_ptr<Node>(new Node(0, m_octants[i]->FX(eForward),
+                                               m_octants[i]->FX(eDown),
+                                               m_octants[i]->FX(eRight)));
 
-        ns[2] = boost::shared_ptr<Node>(new Node(0, m_octants[i]->FX(eForward),
-                                                 m_octants[i]->FX(eUp),
-                                                 m_octants[i]->FX(eRight)));
+        ns[2] = std::shared_ptr<Node>(new Node(0, m_octants[i]->FX(eForward),
+                                               m_octants[i]->FX(eUp),
+                                               m_octants[i]->FX(eRight)));
 
-        ns[3] = boost::shared_ptr<Node>(new Node(0, m_octants[i]->FX(eBack),
-                                                 m_octants[i]->FX(eUp),
-                                                 m_octants[i]->FX(eRight)));
+        ns[3] = std::shared_ptr<Node>(new Node(0, m_octants[i]->FX(eBack),
+                                               m_octants[i]->FX(eUp),
+                                               m_octants[i]->FX(eRight)));
 
-        ns[4] = boost::shared_ptr<Node>(new Node(0, m_octants[i]->FX(eBack),
-                                                 m_octants[i]->FX(eDown),
-                                                 m_octants[i]->FX(eLeft)));
+        ns[4] = std::shared_ptr<Node>(new Node(0, m_octants[i]->FX(eBack),
+                                               m_octants[i]->FX(eDown),
+                                               m_octants[i]->FX(eLeft)));
 
-        ns[5] = boost::shared_ptr<Node>(new Node(0, m_octants[i]->FX(eForward),
-                                                 m_octants[i]->FX(eDown),
-                                                 m_octants[i]->FX(eLeft)));
+        ns[5] = std::shared_ptr<Node>(new Node(0, m_octants[i]->FX(eForward),
+                                               m_octants[i]->FX(eDown),
+                                               m_octants[i]->FX(eLeft)));
 
-        ns[6] = boost::shared_ptr<Node>(new Node(0, m_octants[i]->FX(eForward),
-                                                 m_octants[i]->FX(eUp),
-                                                 m_octants[i]->FX(eLeft)));
+        ns[6] = std::shared_ptr<Node>(new Node(0, m_octants[i]->FX(eForward),
+                                               m_octants[i]->FX(eUp),
+                                               m_octants[i]->FX(eLeft)));
 
-        ns[7] = boost::shared_ptr<Node>(new Node(0, m_octants[i]->FX(eBack),
-                                                 m_octants[i]->FX(eUp),
-                                                 m_octants[i]->FX(eLeft)));
+        ns[7] = std::shared_ptr<Node>(new Node(0, m_octants[i]->FX(eBack),
+                                               m_octants[i]->FX(eUp),
+                                               m_octants[i]->FX(eLeft)));
 
         vector<int> tags;
         tags.push_back(0);
@@ -1056,7 +1056,7 @@ void Octree::CompileSourcePointList()
                     if(m_SPList[i]->GetType() == ePBoundary)
                     {
                         BPointSharedPtr bp =
-                            boost::dynamic_pointer_cast<BPoint>
+                            std::dynamic_pointer_cast<BPoint>
                                                             (m_SPList[i]);
 
                         m_SPList[i] = bp->ChangeType();

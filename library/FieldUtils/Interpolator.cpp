@@ -852,28 +852,25 @@ void Interpolator::SetupTree()
     m_rtree->insert(inPoints.begin(), inPoints.end());
 
     // remove duplicates from tree
-    for (std::vector<PtsPointPair>::iterator it = inPoints.begin();
-         it != inPoints.end(); ++it)
+    for (auto &it : inPoints)
     {
         std::vector<PtsPointPair> result;
 
         // find nearest 2 points (2 because one of these might be the one we
         // are
         // checking)
-        m_rtree->query(bgi::nearest((*it).first, 2),
+        m_rtree->query(bgi::nearest(it.first, 2),
                        std::back_inserter(result));
 
         // in case any of these 2 points is too close, remove the current
         // point
         // from the tree
-        for (std::vector<PtsPointPair>::iterator it2 = result.begin();
-             it2 != result.end(); ++it2)
+        for (auto &it2 : result)
         {
-            if ((*it).second != (*it2).second &&
-                bg::distance((*it).first, (*it2).first) <=
-                    NekConstants::kNekZeroTol)
+            if (it.second != it2.second &&
+                bg::distance(it.first, it2.first) <= NekConstants::kNekZeroTol)
             {
-                m_rtree->remove(*it);
+                m_rtree->remove(it);
                 break;
             }
         }

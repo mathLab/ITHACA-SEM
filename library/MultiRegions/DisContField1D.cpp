@@ -134,7 +134,7 @@ namespace Nektar
             }
             
             SpatialDomains::MeshGraph1DSharedPtr graph1D = 
-                boost::dynamic_pointer_cast<SpatialDomains::MeshGraph1D>(
+                std::dynamic_pointer_cast<SpatialDomains::MeshGraph1D>(
                     m_graph);
 
             m_globalBndMat = MemoryManager<GlobalLinSysMap>::AllocateSharedPtr();
@@ -146,7 +146,7 @@ namespace Nektar
                     *m_exp,graph1D,
                     m_periodicVerts);
 
-            m_trace = boost::dynamic_pointer_cast<ExpList>(trace);
+            m_trace = std::dynamic_pointer_cast<ExpList>(trace);
 
             m_traceMap = MemoryManager<AssemblyMapDG>::
                 AllocateSharedPtr(m_session, graph1D, trace, *this,
@@ -250,14 +250,13 @@ namespace Nektar
             }
 
 
-            boost::unordered_map<int,pair<int,int> > perVertToExpMap;
-            boost::unordered_map<int,pair<int,int> >::iterator it2;
+            std::unordered_map<int,pair<int,int> > perVertToExpMap;
             for (n = 0; n < m_exp->size(); ++n)
             {
                 for (int v = 0; v < (*m_exp)[n]->GetNverts(); ++v)
                 {
-                    PeriodicMap::iterator it = m_periodicVerts.find(
-                                         (*m_exp)[n]->GetGeom()->GetVid(v));
+                    auto it = m_periodicVerts.find(
+                        (*m_exp)[n]->GetGeom()->GetVid(v));
 
                     if (it != m_periodicVerts.end())
                     {
@@ -275,12 +274,12 @@ namespace Nektar
                     int vertGeomId = (*m_exp)[n]->GetGeom()->GetVid(v);
 
                     // Check to see if this face is periodic.
-                    PeriodicMap::iterator it = m_periodicVerts.find(vertGeomId);
+                    auto it = m_periodicVerts.find(vertGeomId);
 
                     if (it != m_periodicVerts.end())
                     {
                         const PeriodicEntity &ent = it->second[0];
-                        it2 = perVertToExpMap.find(ent.id);
+                        auto it2 = perVertToExpMap.find(ent.id);
 
                         if (it2 == perVertToExpMap.end())
                         {
@@ -311,26 +310,23 @@ namespace Nektar
 
         bool DisContField1D::IsLeftAdjacentVertex(const int n, const int e)
         {
-            set<int>::iterator it;
             LocalRegions::Expansion0DSharedPtr traceEl = 
                 m_traceMap->GetElmtToTrace()[n][e]->as<LocalRegions::Expansion0D>();
 
-            
             bool fwd = true;
             if (traceEl->GetLeftAdjacentElementVertex () == -1 ||
                 traceEl->GetRightAdjacentElementVertex() == -1)
             {
                 // Boundary edge (1 connected element). Do nothing in
                 // serial.
-                it = m_boundaryVerts.find(traceEl->GetElmtId());
+                auto it = m_boundaryVerts.find(traceEl->GetElmtId());
                 
                 // If the edge does not have a boundary condition set on
                 // it, then assume it is a partition edge or periodic.
                 if (it == m_boundaryVerts.end())
                 {
                     int traceGeomId = traceEl->GetGeom0D()->GetGlobalID();
-                    PeriodicMap::iterator pIt = m_periodicVerts.find(
-                        traceGeomId);
+                    auto pIt = m_periodicVerts.find(traceGeomId);
 
                     if (pIt != m_periodicVerts.end() && !pIt->second[0].isLocal)
                     {
@@ -373,10 +369,7 @@ namespace Nektar
             
             returnval = MemoryManager<SpatialDomains::BoundaryConditions>::AllocateSharedPtr();
             
-            SpatialDomains::BoundaryRegion::iterator bregionIt;
             map<int,int> GeometryToRegionsMap;
-
-            SpatialDomains::BoundaryRegionCollection::const_iterator it;
 
             const SpatialDomains::BoundaryRegionCollection &bregions
                 = Allbcs.GetBoundaryRegions();
@@ -384,26 +377,23 @@ namespace Nektar
                 = Allbcs.GetBoundaryConditions();
 
             // Set up a map of all boundary regions
-            for(it = bregions.begin(); it != bregions.end(); ++it)
+            for(auto &it : bregions)
             {
-                SpatialDomains::BoundaryRegion::iterator bregionIt;
-                for (bregionIt  = it->second->begin();
-                     bregionIt != it->second->end(); bregionIt++)
+                for (auto &bregionIt : *it.second)
                 {
                     // can assume that all regions only contain one point in 1D
                     // Really do not need loop above
-                    int id = (*(bregionIt->second))[0]->GetGlobalID();
-                    GeometryToRegionsMap[id] = it->first;
+                    int id = (*(bregionIt.second))[0]->GetGlobalID();
+                    GeometryToRegionsMap[id] = it.first;
                 }
             }
 
-            SpatialDomains::CompositeMapConstIter domIt; 
             map<int,SpatialDomains::GeometrySharedPtr> EndOfDomain;
 
             // Now find out which points in domain have only one vertex
-            for(domIt = domain.begin(); domIt != domain.end(); ++domIt)
+            for(auto &domIt : domain)
             {
-                SpatialDomains::Composite geomvector = domIt->second; 
+                SpatialDomains::Composite geomvector = domIt.second; 
                 for(int i = 0; i < geomvector->size(); ++i)
                 {
                     for(int j = 0; j < 2; ++j)
@@ -421,24 +411,32 @@ namespace Nektar
                 }
             }
             ASSERTL1(EndOfDomain.size() == 2,"Did not find two ends of domain");
-             
-            map<int,SpatialDomains::GeometrySharedPtr>::iterator regIt;
-	    int numNewBc = 1;
-            for(regIt = EndOfDomain.begin(); regIt != EndOfDomain.end(); ++regIt)
-            {
-                if(GeometryToRegionsMap.count(regIt->first) != 0) // Set up boundary condition up
-                {
-                    map<int,int>::iterator iter = GeometryToRegionsMap.find(regIt->first);
-                    ASSERTL1(iter != GeometryToRegionsMap.end(),"Failied to find GeometryToRegionMap");
-                    int regionId = iter->second;
-                    SpatialDomains::BoundaryRegionCollection::const_iterator bregionsIter = bregions.find(regionId);
-                    ASSERTL1(bregionsIter != bregions.end(),"Failed to find boundary region");
-                    SpatialDomains::BoundaryRegionShPtr breg = bregionsIter->second;
-                    returnval->AddBoundaryRegions   (regionId,breg);
 
-                    SpatialDomains::BoundaryConditionCollection::const_iterator bconditionsIter = bconditions.find(regionId);
-                    ASSERTL1(bconditionsIter != bconditions.end(),"Failed to find boundary collection");
-                    SpatialDomains::BoundaryConditionMapShPtr bcond = bconditionsIter->second;
+            int numNewBc = 1;
+            for(auto &regIt : EndOfDomain)
+            {
+                if(GeometryToRegionsMap.count(regIt.first) != 0)
+                {
+                    // Set up boundary condition up
+                    auto iter = GeometryToRegionsMap.find(regIt.first);
+                    ASSERTL1(iter != GeometryToRegionsMap.end(),
+                             "Failied to find GeometryToRegionMap");
+
+                    int regionId = iter->second;
+                    auto bregionsIter = bregions.find(regionId);
+                    ASSERTL1(bregionsIter != bregions.end(),
+                             "Failed to find boundary region");
+
+                    SpatialDomains::BoundaryRegionShPtr breg =
+                        bregionsIter->second;
+                    returnval->AddBoundaryRegions(regionId, breg);
+
+                    auto bconditionsIter = bconditions.find(regionId);
+                    ASSERTL1(bconditionsIter != bconditions.end(),
+                             "Failed to find boundary collection");
+
+                    SpatialDomains::BoundaryConditionMapShPtr bcond =
+                        bconditionsIter->second;
                     returnval->AddBoundaryConditions(regionId,bcond);
                 }
                 else // Set up an undefined region. 
@@ -447,8 +445,8 @@ namespace Nektar
                     
                     // Set up Composite (GemetryVector) to contain vertex and put into bRegion 
                     SpatialDomains::Composite gvec(MemoryManager<SpatialDomains::GeometryVector>::AllocateSharedPtr());
-                    gvec->push_back(regIt->second);
-                    (*breg)[regIt->first] = gvec;
+                    gvec->push_back(regIt.second);
+                    (*breg)[regIt.first] = gvec;
 
                     returnval->AddBoundaryRegions(bregions.size()+numNewBc,breg);
 
@@ -556,24 +554,21 @@ namespace Nektar
                                                 = bcs.GetBoundaryRegions();
             const SpatialDomains::BoundaryConditionCollection &bconditions
                                                 = bcs.GetBoundaryConditions();
-            SpatialDomains::BoundaryRegionCollection::const_iterator it;
 
             // count the number of non-periodic boundary points
-            for (it = bregions.begin(); it != bregions.end(); ++it)
+            for (auto &it : bregions)
             {
                 const SpatialDomains::BoundaryConditionShPtr boundaryCondition =
-                    GetBoundaryCondition(bconditions, it->first, variable);
+                    GetBoundaryCondition(bconditions, it.first, variable);
                 if (boundaryCondition->GetBoundaryConditionType() !=
                     SpatialDomains::ePeriodic )
                 {
-                    SpatialDomains::BoundaryRegion::iterator bregionIt;
-                    for (bregionIt  = it->second->begin();
-                         bregionIt != it->second->end(); bregionIt++)
+                    for (auto &bregionIt : *it.second)
                     {
-                        cnt += bregionIt->second->size();
+                        cnt += bregionIt.second->size();
                     }
                 }
-            }			
+            }
 
             m_bndCondExpansions
                     = Array<OneD,MultiRegions::ExpListSharedPtr>(cnt);
@@ -605,10 +600,8 @@ namespace Nektar
                     = bcs.GetBoundaryConditions();
 
             SpatialDomains::MeshGraph1DSharedPtr graph1D
-                = boost::dynamic_pointer_cast<
+                = std::dynamic_pointer_cast<
                     SpatialDomains::MeshGraph1D>(m_graph);
-            SpatialDomains::BoundaryRegionCollection::const_iterator it;
-
             LibUtilities::CommSharedPtr vComm =
                 m_session->GetComm()->GetRowComm();
 
@@ -620,9 +613,9 @@ namespace Nektar
 
             // Construct list of all periodic Region and their global vertex on
             // this process.
-            for (it = bregions.begin(); it != bregions.end(); ++it)
+            for (auto &it : bregions)
             {
-                locBCond = GetBoundaryCondition(bconditions, it->first, variable);
+                locBCond = GetBoundaryCondition(bconditions, it.first, variable);
                 
                 if (locBCond->GetBoundaryConditionType()
                         != SpatialDomains::ePeriodic)
@@ -630,12 +623,11 @@ namespace Nektar
                     continue;
                 }
                                 
-                int id = (*(it->second->begin()->second))[0]->GetGlobalID();
+                int id = (*(it.second->begin()->second))[0]->GetGlobalID();
 
-                BregionToVertMap[it->first] = id;
+                BregionToVertMap[it.first] = id;
             }
 
-            map<int,int>::iterator iit;
             set<int> islocal;
 
             int n = vComm->GetSize();
@@ -656,12 +648,13 @@ namespace Nektar
 
             Array<OneD, int> bregmap(totRegions, 0);
             Array<OneD, int> bregid (totRegions, 0);
-            for(i = regOffset[p], iit = BregionToVertMap.begin();
-                iit != BregionToVertMap.end(); ++iit, ++i)
+
+            i = regOffset[p];
+            for (auto &iit : BregionToVertMap)
             {
-                bregid [i] = iit->first;
-                bregmap[i] = iit->second;
-                islocal.insert(iit->first);
+                bregid [i  ] = iit.first;
+                bregmap[i++] = iit.second;
+                islocal.insert(iit.first);
             }
 
             vComm->AllReduce(bregmap, LibUtilities::ReduceSum);
@@ -673,9 +666,9 @@ namespace Nektar
             }
 
             // Construct list of all periodic pairs local to this process.
-            for (it = bregions.begin(); it != bregions.end(); ++it)
+            for (auto &it : bregions)
             {
-                locBCond = GetBoundaryCondition(bconditions, it->first, variable);
+                locBCond = GetBoundaryCondition(bconditions, it.first, variable);
                 
                 if (locBCond->GetBoundaryConditionType()
                         != SpatialDomains::ePeriodic)
@@ -684,8 +677,8 @@ namespace Nektar
                 }
 
                 // Identify periodic boundary region IDs.
-                region1ID = it->first;
-                region2ID = boost::static_pointer_cast<
+                region1ID = it.first;
+                region2ID = std::static_pointer_cast<
                     SpatialDomains::PeriodicBoundaryCondition>(
                         locBCond)->m_connectedBoundaryRegion;
 
@@ -732,29 +725,26 @@ namespace Nektar
                 = bcs.GetBoundaryRegions();
             const SpatialDomains::BoundaryConditionCollection &bconditions
                 = bcs.GetBoundaryConditions();
-            SpatialDomains::BoundaryRegionCollection::const_iterator it;
-            
+
             MultiRegions::ExpList0DSharedPtr         locPointExp;
             SpatialDomains::BoundaryConditionShPtr   locBCond;
             SpatialDomains::PointGeomSharedPtr vert;
 
             cnt = 0;
-            for (it = bregions.begin(); it != bregions.end(); ++it)
+            for (auto &it : bregions)
             {
-                locBCond = GetBoundaryCondition(bconditions, it->first, variable);
+                locBCond = GetBoundaryCondition(bconditions, it.first, variable);
 
                 if (locBCond->GetBoundaryConditionType() !=
                     SpatialDomains::ePeriodic)
                 {
-                    SpatialDomains::BoundaryRegion::iterator bregionIt;
-                    for (bregionIt  = it->second->begin();
-                         bregionIt != it->second->end(); bregionIt++)
+                    for (auto &bregionIt : *it.second)
                     {
-                        for (k = 0; k < bregionIt->second->size(); k++)
+                        for (k = 0; k < bregionIt.second->size(); k++)
                         {
-                            if((vert = boost::dynamic_pointer_cast
+                            if((vert = std::dynamic_pointer_cast
                                     <SpatialDomains::PointGeom>(
-                                        (*bregionIt->second)[k])))
+                                        (*bregionIt.second)[k])))
                             {
                                 locPointExp
                                     = MemoryManager<MultiRegions::ExpList0D>
@@ -792,7 +782,7 @@ namespace Nektar
                      "solution type");
 
             GlobalLinSysSharedPtr glo_matrix;
-            GlobalLinSysMap::iterator matrixIter = m_globalBndMat->find(mkey);
+            auto matrixIter = m_globalBndMat->find(mkey);
 
             if (matrixIter == m_globalBndMat->end())
             {
@@ -1356,7 +1346,7 @@ namespace Nektar
                         SpatialDomains::eDirichlet)
                     {
                         m_bndCondExpansions[i]->SetCoeff(0,
-                            (boost::static_pointer_cast<SpatialDomains
+                            (std::static_pointer_cast<SpatialDomains
                              ::DirichletBoundaryCondition>(m_bndConditions[i])
                              ->m_dirichletCondition).Evaluate(x0[0],x1[0],x2[0],time));
                         m_bndCondExpansions[i]->SetPhys(0,m_bndCondExpansions[i]->GetCoeff(0));
@@ -1365,7 +1355,7 @@ namespace Nektar
                             == SpatialDomains::eNeumann)
                     {
                         m_bndCondExpansions[i]->SetCoeff(0,
-                            (boost::static_pointer_cast<SpatialDomains
+                            (std::static_pointer_cast<SpatialDomains
                              ::NeumannBoundaryCondition>(m_bndConditions[i])
                              ->m_neumannCondition).Evaluate(x0[0],x1[0],x2[0],time));
                     }
@@ -1373,7 +1363,7 @@ namespace Nektar
                             == SpatialDomains::eRobin)
                     {
                         m_bndCondExpansions[i]->SetCoeff(0,
-                            (boost::static_pointer_cast<SpatialDomains
+                            (std::static_pointer_cast<SpatialDomains
                              ::RobinBoundaryCondition>(m_bndConditions[i])
                              ->m_robinFunction).Evaluate(x0[0],x1[0],x2[0],time));
                         
@@ -1446,7 +1436,7 @@ namespace Nektar
         }
         
         void DisContField1D::v_GetBndElmtExpansion(int i,
-                            boost::shared_ptr<ExpList> &result,
+                            std::shared_ptr<ExpList> &result,
                             const bool DeclareCoeffPhysArrays)
         {
             int n, cnt, nq;
@@ -1543,7 +1533,7 @@ namespace Nektar
                     
                     m_bndCondExpansions[i]->GetCoords(x0, x1, x2);
 
-                    coeffphys[0]  = (boost::static_pointer_cast<SpatialDomains
+                    coeffphys[0]  = (std::static_pointer_cast<SpatialDomains
                          ::RobinBoundaryCondition>(m_bndConditions[i])
                          ->m_robinPrimitiveCoeff).Evaluate(x0[0],x1[0],x2[0],0.0);
                         

@@ -159,11 +159,10 @@ namespace Nektar
             os << "Solution Type: " 
                << GlobalSysSolnTypeMap[rhs.GetGlobalSysSolnType()] << endl;
             os << "Number of constants: " << rhs.GetNConstFactors() << endl;
-            StdRegions::ConstFactorMap::const_iterator x;
-            for (x = rhs.GetConstFactors().begin(); x != rhs.GetConstFactors().end(); ++x)
+            for (auto &x : rhs.GetConstFactors())
             {
-                os << "  Constant " << StdRegions::ConstFactorTypeMap[x->first]
-                   << ": " << x->second << endl;
+                os << "  Constant " << StdRegions::ConstFactorTypeMap[x.first]
+                   << ": " << x.second << endl;
             }
             os << "Number of variable coefficients: " 
                << rhs.GetNVarCoeffs() << endl;

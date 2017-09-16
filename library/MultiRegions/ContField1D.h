@@ -236,7 +236,7 @@ namespace Nektar
             virtual void v_ClearGlobalLinSysManager(void);
 
         };
-        typedef boost::shared_ptr<ContField1D>      ContField1DSharedPtr;
+        typedef std::shared_ptr<ContField1D>      ContField1DSharedPtr;
 
         // Inline implementations follow
 

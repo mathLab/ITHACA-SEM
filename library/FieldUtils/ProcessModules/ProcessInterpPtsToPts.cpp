@@ -37,8 +37,6 @@
 #include <string>
 using namespace std;
 
-#include "ProcessInterpPtsToPts.h"
-
 #include <FieldUtils/Interpolator.h>
 #include <LibUtilities/BasicUtils/ParseUtils.hpp>
 #include <LibUtilities/BasicUtils/Progressbar.hpp>
@@ -47,6 +45,8 @@ using namespace std;
 #include <LibUtilities/BasicUtils/CsvIO.h>
 #include <boost/lexical_cast.hpp>
 #include <boost/math/special_functions/fpclassify.hpp>
+
+#include "ProcessInterpPtsToPts.h"
 
 namespace Nektar
 {

@@ -100,15 +100,16 @@ void ProcessOptiExtract::Process()
             }
         }
 
-        boost::unordered_set<int> inmesh;
-        pair<boost::unordered_set<int>::iterator, bool> t;
+        std::unordered_set<int> inmesh;
         vector<ElementSharedPtr> totest;
 
         for (int i = 0; i < invalid.size(); i++)
         {
-            t = inmesh.insert(invalid[i]->GetId());
+            auto t = inmesh.insert(invalid[i]->GetId());
             if (t.second)
+            {
                 m_mesh->m_element[m_mesh->m_expDim].push_back(invalid[i]);
+            }
 
             vector<FaceSharedPtr> f = invalid[i]->GetFaceList();
             for (int j = 0; j < f.size(); j++)
@@ -116,7 +117,9 @@ void ProcessOptiExtract::Process()
                 for (int k = 0; k < f[j]->m_elLink.size(); k++)
                 {
                     if (f[j]->m_elLink[k].first->GetId() == invalid[i]->GetId())
+                    {
                         continue;
+                    }
 
                     t = inmesh.insert(f[j]->m_elLink[k].first->GetId());
                     if (t.second)
@@ -141,9 +144,11 @@ void ProcessOptiExtract::Process()
                     for (int l = 0; l < f[k]->m_elLink.size(); l++)
                     {
                         if (f[k]->m_elLink[l].first->GetId() == tmp[j]->GetId())
+                        {
                             continue;
+                        }
 
-                        t = inmesh.insert(f[k]->m_elLink[l].first->GetId());
+                        auto t = inmesh.insert(f[k]->m_elLink[l].first->GetId());
                         if (t.second)
                         {
                             m_mesh->m_element[m_mesh->m_expDim].push_back(
@@ -163,7 +168,9 @@ void ProcessOptiExtract::Process()
         el = m_mesh->m_element[m_mesh->m_expDim];
 
         if (m_mesh->m_verbose)
+        {
             cout << el.size() << " elements in blobs" << endl;
+        }
 
         m_mesh->m_faceSet.clear();
 
@@ -172,8 +179,7 @@ void ProcessOptiExtract::Process()
         {
             for (int j = 0; j < el[i]->GetFaceCount(); ++j)
             {
-                pair<FaceSet::iterator, bool> testIns;
-                testIns = m_mesh->m_faceSet.insert(el[i]->GetFace(j));
+                auto testIns = m_mesh->m_faceSet.insert(el[i]->GetFace(j));
 
                 if (testIns.second)
                 {
@@ -198,9 +204,9 @@ void ProcessOptiExtract::Process()
             vector<FaceSharedPtr> f = el[i]->GetFaceList();
             for (int j = 0; j < f.size(); j++)
             {
-                if (f[j]->m_elLink.size() ==
-                    1) // boundary element make new composite
+                if (f[j]->m_elLink.size() == 1)
                 {
+                    // boundary element make new composite
                     ElmtConfig conf(LibUtilities::eTriangle, 1, false, false);
 
                     vector<int> tags;
@@ -220,8 +226,7 @@ void ProcessOptiExtract::Process()
         {
             for (int j = 0; j < el[i]->GetVertexCount(); ++j)
             {
-                pair<NodeSet::iterator, bool> testIns =
-                    m_mesh->m_vertexSet.insert(el[i]->GetVertex(j));
+                auto testIns = m_mesh->m_vertexSet.insert(el[i]->GetVertex(j));
 
                 if (!testIns.second)
                 {
@@ -229,13 +234,13 @@ void ProcessOptiExtract::Process()
                 }
             }
         }
+
         for (int i = 0; i < el.size(); ++i)
         {
             for (int j = 0; j < el[i]->GetEdgeCount(); ++j)
             {
-                pair<EdgeSet::iterator, bool> testIns;
                 EdgeSharedPtr ed = el[i]->GetEdge(j);
-                testIns          = m_mesh->m_edgeSet.insert(ed);
+                auto testIns     = m_mesh->m_edgeSet.insert(ed);
 
                 if (testIns.second)
                 {
@@ -271,8 +276,7 @@ void ProcessOptiExtract::Process()
         {
             for (int j = 0; j < el[i]->GetFaceCount(); ++j)
             {
-                pair<FaceSet::iterator, bool> testIns;
-                testIns = m_mesh->m_faceSet.insert(el[i]->GetFace(j));
+                auto testIns = m_mesh->m_faceSet.insert(el[i]->GetFace(j));
 
                 if (testIns.second)
                 {
@@ -297,7 +301,7 @@ void ProcessOptiExtract::Process()
     {
         // insert other mesh
         cout << ins << endl;
-        MeshSharedPtr inp_mesh = boost::shared_ptr<Mesh>(new Mesh());
+        MeshSharedPtr inp_mesh = std::shared_ptr<Mesh>(new Mesh());
         ModuleSharedPtr mod = GetModuleFactory().CreateInstance(
             ModuleKey(eInputModule, "xml"), inp_mesh);
         mod->RegisterConfig("infile", ins);
@@ -307,51 +311,41 @@ void ProcessOptiExtract::Process()
         // be updated using more simple means.
         map<int, NodeSharedPtr> nmap;
 
-        NodeSet::iterator nit;
-        for (nit = inp_mesh->m_vertexSet.begin();
-             nit != inp_mesh->m_vertexSet.end();
-             nit++)
+        for (auto &node : inp_mesh->m_vertexSet)
         {
-            nmap[(*nit)->m_id] = *nit;
+            nmap[node->m_id] = node;
         }
         // for all the nodes in the main mesh see if they are in nmap, if so
         // update the node
-        for (nit = m_mesh->m_vertexSet.begin();
-             nit != m_mesh->m_vertexSet.end();
-             nit++)
+        for (auto &node : m_mesh->m_vertexSet)
         {
-            if (nmap.count((*nit)->m_id) == 1)
+            if (nmap.count(node->m_id) == 1)
             {
-                map<int, NodeSharedPtr>::iterator s;
-                s               = nmap.find((*nit)->m_id);
+                auto s          = nmap.find(node->m_id);
                 NodeSharedPtr n = s->second;
-                (*nit)->m_x = n->m_x;
-                (*nit)->m_y = n->m_y;
-                (*nit)->m_z = n->m_z;
+                node->m_x = n->m_x;
+                node->m_y = n->m_y;
+                node->m_z = n->m_z;
             }
         }
-        EdgeSet::iterator eit;
-        for (eit = inp_mesh->m_edgeSet.begin();
-             eit != inp_mesh->m_edgeSet.end();
-             eit++)
+
+        for (auto &eit : inp_mesh->m_edgeSet)
         {
-            EdgeSet::iterator et = m_mesh->m_edgeSet.find(*eit);
+            auto et = m_mesh->m_edgeSet.find(eit);
             if (et != m_mesh->m_edgeSet.end())
             {
-                (*et)->m_edgeNodes = (*eit)->m_edgeNodes;
-                (*et)->m_curveType = (*eit)->m_curveType;
+                (*et)->m_edgeNodes = eit->m_edgeNodes;
+                (*et)->m_curveType = eit->m_curveType;
             }
         }
-        FaceSet::iterator fit;
-        for (fit = inp_mesh->m_faceSet.begin();
-             fit != inp_mesh->m_faceSet.end();
-             fit++)
+
+        for (auto &fit : inp_mesh->m_faceSet)
         {
-            FaceSet::iterator ft = m_mesh->m_faceSet.find(*fit);
+            auto ft = m_mesh->m_faceSet.find(fit);
             if (ft != m_mesh->m_faceSet.end())
             {
-                (*ft)->m_faceNodes = (*fit)->m_faceNodes;
-                (*ft)->m_curveType = (*fit)->m_curveType;
+                (*ft)->m_faceNodes = fit->m_faceNodes;
+                (*ft)->m_curveType = fit->m_curveType;
             }
         }
     }

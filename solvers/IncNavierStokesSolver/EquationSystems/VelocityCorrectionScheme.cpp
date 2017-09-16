@@ -473,10 +473,9 @@ namespace Nektar
         }
 
         // Add forcing terms
-        std::vector<SolverUtils::ForcingSharedPtr>::const_iterator x;
-        for (x = m_forcing.begin(); x != m_forcing.end(); ++x)
+        for (auto &x : m_forcing)
         {
-            (*x)->Apply(m_fields, inarray, outarray, time);
+            x->Apply(m_fields, inarray, outarray, time);
         }
 
         // Calculate High-Order pressure boundary conditions

@@ -204,7 +204,7 @@ namespace Nektar
                 Array<OneD, int> &ElmtID,
                 Array<OneD, int> &FaceID);
             virtual void v_GetBndElmtExpansion(int i,
-                            boost::shared_ptr<ExpList> &result,
+                            std::shared_ptr<ExpList> &result,
                             const bool DeclareCoeffPhysArrays);
             virtual void v_Reset();
 
@@ -271,7 +271,7 @@ namespace Nektar
             virtual std::map<int, RobinBCInfoSharedPtr> v_GetRobinBCInfo();
         };
 
-        typedef boost::shared_ptr<DisContField3D> DisContField3DSharedPtr;
+        typedef std::shared_ptr<DisContField3D> DisContField3DSharedPtr;
     } //end of namespace
 } //end of namespace
 

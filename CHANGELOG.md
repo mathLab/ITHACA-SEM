@@ -31,6 +31,8 @@ v5.0.0
 - Add input module for Semtex field files (!777)
 - Fixed interppoints module (!760)
 - Move StreamFunction utility to a FieldConvert module (!809)
+- Allow using expansion from session file with new `--useSessionExpansion`
+  command line option (!842)
 
 **Documentation**:
 - Added the developer-guide repository as a submodule (!751)

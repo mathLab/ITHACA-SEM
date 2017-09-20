@@ -53,6 +53,21 @@ public:
     LIB_UTILITIES_EXPORT template <typename T>
     static bool GenerateVector(const std::string &str, std::vector<T> &out);
 
+    /**
+     * @brief Generate a compressed comma-separated string representation of a
+     * vector of unsigned integers.
+     *
+     * This utility routine takes entries of @p v and returns a string
+     * sequence. For example,
+     *
+     *     std::vector<unsigned int> vec = {1,2,3,4,6,7,8,5,2,3};
+     *     std::string output = ParseUtils::GenerateVector(vec);
+     *
+     * will produce an `output` string containing `1-4,6-8,5,2,3`.
+     *
+     * @param v  Vector of unsigned integers.
+     * @return   Compressed comma separated string.
+     */
     template <typename T>
     static std::string GenerateSeqString(const std::vector<T> &v)
     {

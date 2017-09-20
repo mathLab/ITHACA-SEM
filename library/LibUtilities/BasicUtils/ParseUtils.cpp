@@ -35,7 +35,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include <sstream>
-#include <boost/spirit/include/qi.hpp>
+#include <boost/spirit/include/qi_core.hpp>
+#include <boost/spirit/include/qi_auto.hpp>
 #include <LibUtilities/BasicUtils/ParseUtils.h>
 
 namespace qi = boost::spirit::qi;
@@ -45,61 +46,102 @@ namespace Nektar
 {
 
 /**
- * Helper class for boost::spirit. This pushes back values onto a
+ * @brief Helper functor for boost::spirit. This pushes back values onto a
  * std::vector.
+ *
+ * @see ParseUtils::GenerateSeqVector
  */
 template<typename T>
 struct PushBackFunctor
 {
-    PushBackFunctor(std::vector<T> &in) : vec(in) {}
+    PushBackFunctor(std::vector<T> &in) : m_vec(in) {}
 
     void operator()(T num) const
     {
-        vec.push_back(num);
+        m_vec.push_back(num);
     }
 private:
-    std::vector<T> &vec;
+    std::vector<T> &m_vec;
 };
 
 /**
- * Helper class for boost::spirit. This pushes back a range of values onto a
- * std::vector. Valid only for integer types.
+ * @brief Helper functor for boost::spirit. This pushes back a range of values
+ * onto a std::vector. Valid only for integer types.
+ *
+ * @see ParseUtils::GenerateSeqVector
  */
 template<typename T>
 struct SeqFunctor
 {
-    SeqFunctor(std::vector<T> &in) : vec(in) {}
+    SeqFunctor(std::vector<T> &in) : m_vec(in) {}
 
+    /**
+     * @brief Pushes back values onto #m_vec between the range supplied by @p
+     * num.
+     */
     void operator()(fusion::vector<T, T> num) const
     {
         static_assert(std::is_integral<T>::value, "Integer type required.");
         for (int i = fusion::at_c<0>(num); i <= fusion::at_c<1>(num); ++i)
         {
-            vec.push_back(i);
+            m_vec.push_back(i);
         }
     }
 private:
-    std::vector<T> &vec;
+    std::vector<T> &m_vec;
 };
 
+/**
+ * @brief Takes a comma-separated compressed string and converts it to entries
+ * in a vector.
+ *
+ * This routine is the inverse of ParseUtils::GenerateSeqString. For example,
+ *
+ *     std::string input = "1-4,6-8,5,2,3";
+ *     std::vector<unsigned int> output;
+ *     ParseUtils::GenerateSeqString(input, output);
+ *
+ * produces an `output` vector with the entries `{1,2,3,4,6,7,8,5,2,3}`.
+ *
+ * @param str  Input CSV string of unsigned integers.
+ * @param out  Output vector.
+ *
+ * @see ParseUtils::GenerateSeqString
+ */
 bool ParseUtils::GenerateSeqVector(
     const std::string &str, std::vector<unsigned int> &out)
 {
     PushBackFunctor<unsigned int> f1(out);
     SeqFunctor<unsigned int> f2(out);
 
-    return qi::phrase_parse(
-        str.begin(),
+    auto it = str.begin();
+    bool success = qi::phrase_parse(
+        it,
         str.end(),
         ((qi::uint_ >> '-' >> qi::uint_)[f2] | qi::uint_[f1]) % ',',
         qi::ascii::space);
+
+    return success && it == str.end();
 }
 
+/**
+ * @brief Takes a comma-separated string and converts it to entries in a vector.
+ *
+ * This routine splits up a comma-separated string and returns a vector with the
+ * entries. Template specialisations should be defined in this file (and not in
+ * the header file) as the use of boost::spirit::qi makes compilation times
+ * quite slow.
+ *
+ * @param str  Input CSV string.
+ * @param out  Output vector.
+ */
 template <typename T>
 bool ParseUtils::GenerateVector(const std::string &str, std::vector<T> &out)
 {
-    return qi::phrase_parse(
-        str.begin(), str.end(), qi::auto_ % ',', qi::ascii::space, out);
+    auto it = str.begin();
+    bool success = qi::phrase_parse(
+        it, str.end(), qi::auto_ % ',', qi::ascii::space, out);
+    return success && it == str.end();
 }
 
 template bool ParseUtils::GenerateVector<int>(
@@ -113,12 +155,20 @@ template bool ParseUtils::GenerateVector<double>(
 template bool ParseUtils::GenerateVector<float>(
     const std::string &str, std::vector<float> &out);
 
+/**
+ * @brief Specialised version of ParseUtils::GenerateVector for std::string.
+ *
+ * This routine specialises for the std::string data type as this type is not
+ * supported by boost::spirit::qi::auto_.
+ */
 template <>
 bool ParseUtils::GenerateVector(const std::string &str,
                                 std::vector<std::string> &out)
 {
-    return qi::phrase_parse(
-        str.begin(), str.end(), *~qi::char_(",") % ',', qi::ascii::space, out);
+    auto it = str.begin();
+    bool success = qi::phrase_parse(
+        it, str.end(), *~qi::char_(",") % ',', qi::ascii::space, out);
+    return success && it == str.end();
 }
 
 }

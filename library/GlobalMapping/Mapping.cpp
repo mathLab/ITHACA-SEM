@@ -1170,24 +1170,27 @@ void Mapping::v_UpdateBCs( const NekDouble time)
         {
             BndConds   = m_fields[i]->GetBndConditions();
             BndExp     = m_fields[i]->GetBndCondExpansions();
-
-            m_fields[i]->ExtractPhysToBnd(n,
-                    values[i], BndExp[n]->UpdatePhys());
-
-            // Apply MovingBody correction
-            if (  (i<nvel) &&
-                  BndConds[n]->GetUserDefined() ==
-                  "MovingBody" )
+            if( BndConds[n]->GetUserDefined() =="" ||
+                BndConds[n]->GetUserDefined() =="MovingBody")
             {
-                // Get coordinate velocity on boundary
-                Array<OneD, NekDouble> coordVelBnd(BndExp[n]->GetTotPoints());
-                m_fields[i]->ExtractPhysToBnd(n, coordVel[i], coordVelBnd);
+                m_fields[i]->ExtractPhysToBnd(n,
+                        values[i], BndExp[n]->UpdatePhys());
 
-                // Apply correction
-                Vmath::Vadd(BndExp[n]->GetTotPoints(),
-                                    coordVelBnd, 1,
-                                    BndExp[n]->UpdatePhys(), 1,
-                                    BndExp[n]->UpdatePhys(), 1);
+                // Apply MovingBody correction
+                if (  (i<nvel) &&
+                      BndConds[n]->GetUserDefined() ==
+                      "MovingBody" )
+                {
+                    // Get coordinate velocity on boundary
+                    Array<OneD, NekDouble> coordVelBnd(BndExp[n]->GetTotPoints());
+                    m_fields[i]->ExtractPhysToBnd(n, coordVel[i], coordVelBnd);
+
+                    // Apply correction
+                    Vmath::Vadd(BndExp[n]->GetTotPoints(),
+                                        coordVelBnd, 1,
+                                        BndExp[n]->UpdatePhys(), 1,
+                                        BndExp[n]->UpdatePhys(), 1);
+                }
             }
         }
     }
@@ -1203,12 +1206,16 @@ void Mapping::v_UpdateBCs( const NekDouble time)
             if ( BndConds[n]->GetBoundaryConditionType() == 
                     SpatialDomains::eDirichlet)
             {
-                BndExp[n]->FwdTrans_BndConstrained(BndExp[n]->GetPhys(),
-                                            BndExp[n]->UpdateCoeffs());
-                if (m_fields[i]->GetExpType() == MultiRegions::e3DH1D)
+                if( BndConds[n]->GetUserDefined() =="" ||
+                    BndConds[n]->GetUserDefined() =="MovingBody")
                 {
-                    BndExp[n]->HomogeneousFwdTrans(BndExp[n]->GetCoeffs(),
-                                            BndExp[n]->UpdateCoeffs());
+                    BndExp[n]->FwdTrans_BndConstrained(BndExp[n]->GetPhys(),
+                                                BndExp[n]->UpdateCoeffs());
+                    if (m_fields[i]->GetExpType() == MultiRegions::e3DH1D)
+                    {
+                        BndExp[n]->HomogeneousFwdTrans(BndExp[n]->GetCoeffs(),
+                                                BndExp[n]->UpdateCoeffs());
+                    }
                 }
             }
         }

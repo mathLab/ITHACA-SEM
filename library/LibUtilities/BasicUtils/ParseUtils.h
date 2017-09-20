@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: ProcessScaleInFld.cpp
+//  File:  ParseUtils.hpp
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,52 +29,69 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Scale input fld
+//  Description:  This file contains various parsing utilities, primarily used
+//                by SpatialDomains to process input files.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <iostream>
-#include <string>
-using namespace std;
+#ifndef NEKTAR_LIBUTILITIES_PARSEUTILS_H
+#define NEKTAR_LIBUTILITIES_PARSEUTILS_H
 
-#include "ProcessScaleInFld.h"
-
-#include <LibUtilities/BasicUtils/SharedArray.hpp>
+#include <sstream>
+#include <vector>
+#include <LibUtilities/LibUtilitiesDeclspec.h>
 
 namespace Nektar
 {
-namespace FieldUtils
+
+class ParseUtils
 {
+public:
+    LIB_UTILITIES_EXPORT static bool GenerateSeqVector(
+        const std::string &str, std::vector<unsigned int> &out);
 
-ModuleKey ProcessScaleInFld::className =
-    GetModuleFactory().RegisterCreatorFunction(
-        ModuleKey(eProcessModule, "scaleinputfld"),
-        ProcessScaleInFld::create,
-        "rescale input field by a constant factor.");
+    LIB_UTILITIES_EXPORT template <typename T>
+    static bool GenerateVector(const std::string &str, std::vector<T> &out);
 
-ProcessScaleInFld::ProcessScaleInFld(FieldSharedPtr f) : ProcessModule(f)
-{
-    m_config["scale"] = ConfigOption(false, "NotSet", "scale factor");
-    ASSERTL0(m_config["scale"].as<string>().compare("NotSet") != 0,
-             "scaleinputfld: Need to specify a scale factor");
-}
-
-ProcessScaleInFld::~ProcessScaleInFld()
-{
-}
-
-void ProcessScaleInFld::Process(po::variables_map &vm)
-{
-    string scalestr = m_config["scale"].as<string>();
-    NekDouble scale = boost::lexical_cast<NekDouble>(scalestr);
-
-    for (int i = 0; i < m_f->m_data.size(); ++i)
+    template <typename T>
+    static std::string GenerateSeqString(const std::vector<T> &v)
     {
-        int datalen = m_f->m_data[i].size();
+        static_assert(std::is_integral<T>::value && std::is_unsigned<T>::value,
+                      "Unsigned integer type required.");
 
-        Vmath::Smul(datalen, scale, &(m_f->m_data[i][0]), 1,
-                    &(m_f->m_data[i][0]), 1);
+        std::ostringstream ss;
+        auto first = v[0], last = v[0];
+
+        if (v.size() == 0)
+        {
+            return "";
+        }
+
+        ss << v[0];
+
+        for (auto &i : v)
+        {
+            if (i != last + 1 && i != last)
+            {
+                if (last != first)
+                {
+                    ss << '-' << last;
+                }
+                ss << ',' << i;
+                first = i;
+            }
+            last = i;
+        }
+
+        if (last != first)
+        {
+            ss << '-' << last;
+        }
+
+        return ss.str();
     }
+};
+
 }
-}
-}
+
+#endif //NEKTAR_LIBUTILITIES_PARSEUTILS_HPP

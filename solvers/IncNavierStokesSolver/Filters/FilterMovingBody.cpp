@@ -34,6 +34,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
+#include <LibUtilities/BasicUtils/ParseUtils.h>
 #include <iomanip>
 #include <LocalRegions/Expansion1D.h>
 #include <LocalRegions/Expansion2D.h>
@@ -137,7 +138,7 @@ void FilterMovingBody::v_Initialise(
     std::string IndString = m_BoundaryString.substr(FirstInd,
                                                     LastInd - FirstInd + 1);
 
-    bool parseGood = ParseUtils::GenerateSeqVector(IndString.c_str(),
+    bool parseGood = ParseUtils::GenerateSeqVector(IndString,
                                                    m_boundaryRegionsIdList);
 
     ASSERTL0(parseGood && !m_boundaryRegionsIdList.empty(),

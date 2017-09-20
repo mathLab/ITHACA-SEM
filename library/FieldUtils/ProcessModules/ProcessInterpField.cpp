@@ -40,7 +40,7 @@ using namespace std;
 #include "ProcessInterpField.h"
 
 #include <FieldUtils/Interpolator.h>
-#include <LibUtilities/BasicUtils/ParseUtils.hpp>
+#include <LibUtilities/BasicUtils/ParseUtils.h>
 #include <LibUtilities/BasicUtils/Progressbar.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <boost/math/special_functions/fpclassify.hpp>
@@ -87,8 +87,7 @@ void ProcessInterpField::Process(po::variables_map &vm)
     std::vector<std::string> files;
 
     // set up session file for from field
-    ParseUtils::GenerateOrderedStringVector(
-        m_config["fromxml"].as<string>().c_str(), files);
+    ParseUtils::GenerateVector(m_config["fromxml"].as<string>(), files);
     fromField->m_session =
         LibUtilities::SessionReader::CreateInstance(0, 0, files);
 

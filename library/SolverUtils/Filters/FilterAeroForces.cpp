@@ -43,6 +43,7 @@
 #include <MultiRegions/ExpList3D.h>    
 #include <MultiRegions/ExpList3DHomogeneous1D.h>
 #include <SolverUtils/Filters/FilterAeroForces.h>
+#include <LibUtilities/BasicUtils/ParseUtils.h>
 
 using namespace std;
 
@@ -215,8 +216,8 @@ void FilterAeroForces::v_Initialise(
 
     std::string IndString =
             m_BoundaryString.substr(FirstInd, LastInd - FirstInd + 1);
-    bool parseGood = ParseUtils::GenerateSeqVector(IndString.c_str(),
-                                               m_boundaryRegionsIdList);
+    bool parseGood = ParseUtils::GenerateSeqVector(IndString,
+                                                   m_boundaryRegionsIdList);
     ASSERTL0(parseGood && !m_boundaryRegionsIdList.empty(),
              (std::string("Unable to read boundary regions index "
               "range for FilterAeroForces: ") + IndString).c_str());

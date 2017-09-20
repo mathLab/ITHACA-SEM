@@ -39,7 +39,6 @@ using namespace std;
 
 #include "ProcessQualityMetric.h"
 
-#include <LibUtilities/BasicUtils/ParseUtils.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/Foundations/Interp.h>
 #include <StdRegions/StdPrismExp.h>

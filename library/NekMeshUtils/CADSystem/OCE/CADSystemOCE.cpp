@@ -32,7 +32,8 @@
 //  Description: cad object methods.
 //
 ////////////////////////////////////////////////////////////////////////////////
-#include <LibUtilities/BasicUtils/ParseUtils.hpp>
+
+#include <LibUtilities/BasicUtils/ParseUtils.h>
 
 #include <NekMeshUtils/CADSystem/CADSurf.h>
 #include <NekMeshUtils/CADSystem/OCE/CADCurveOCE.h>
@@ -285,7 +286,7 @@ TopoDS_Shape CADSystemOCE::BuildNACA(string naca)
 {
     ASSERTL0(naca.length() == 4, "not a 4 digit code");
     vector<NekDouble> data;
-    ParseUtils::GenerateUnOrderedVector(m_naca.c_str(), data);
+    ParseUtils::GenerateVector(m_naca, data);
     ASSERTL0(data.size() == 5, "not a vaild domain");
 
     int n       = boost::lexical_cast<int>(naca);
@@ -505,7 +506,7 @@ TopoDS_Shape CADSystemOCE::BuildGeo(string geo)
     for (it = points.begin(); it != points.end(); it++)
     {
         vector<NekDouble> data;
-        ParseUtils::GenerateUnOrderedVector(it->second.c_str(), data);
+        ParseUtils::GenerateVector(it->second, data);
 
         cPoints[it->first] =
             gp_Pnt(data[0] * 1000.0, data[1] * 1000.0, data[2] * 1000.0);
@@ -516,14 +517,14 @@ TopoDS_Shape CADSystemOCE::BuildGeo(string geo)
     for (it = lines.begin(); it != lines.end(); it++)
     {
         vector<unsigned int> data;
-        ParseUtils::GenerateUnOrderedVector(it->second.c_str(), data);
+        ParseUtils::GenerateVector(it->second, data);
         BRepBuilderAPI_MakeEdge em(cPoints[data[0]], cPoints[data[1]]);
         cEdges[it->first] = em.Edge();
     }
     for (it = splines.begin(); it != splines.end(); it++)
     {
         vector<unsigned int> data;
-        ParseUtils::GenerateUnOrderedVector(it->second.c_str(), data);
+        ParseUtils::GenerateVector(it->second, data);
 
         TColgp_Array1OfPnt pointArray(0, data.size() - 1);
 
@@ -540,7 +541,7 @@ TopoDS_Shape CADSystemOCE::BuildGeo(string geo)
     for (it = bsplines.begin(); it != bsplines.end(); it++)
     {
         vector<unsigned int> data;
-        ParseUtils::GenerateUnOrderedVector(it->second.c_str(), data);
+        ParseUtils::GenerateVector(it->second, data);
 
         TColgp_Array1OfPnt pointArray(0, data.size() - 1);
 
@@ -556,7 +557,7 @@ TopoDS_Shape CADSystemOCE::BuildGeo(string geo)
     for (it = circles.begin(); it != circles.end(); it++)
     {
         vector<unsigned int> data;
-        ParseUtils::GenerateUnOrderedVector(it->second.c_str(), data);
+        ParseUtils::GenerateVector(it->second, data);
 
         ASSERTL0(data.size() == 3, "Wrong definition of circle arc");
         gp_Pnt start  = cPoints[data[0]];
@@ -592,7 +593,7 @@ TopoDS_Shape CADSystemOCE::BuildGeo(string geo)
     for (it = ellipses.begin(); it != ellipses.end(); it++)
     {
         vector<unsigned int> data;
-        ParseUtils::GenerateUnOrderedVector(it->second.c_str(), data);
+        ParseUtils::GenerateVector(it->second, data);
 
         ASSERTL0(data.size() == 4, "Wrong definition of ellipse arc");
         gp_Pnt start  = cPoints[data[0]];
@@ -646,7 +647,7 @@ TopoDS_Shape CADSystemOCE::BuildGeo(string geo)
     for (it = loops.begin(); it != loops.end(); it++)
     {
         vector<unsigned int> data;
-        ParseUtils::GenerateUnOrderedVector(it->second.c_str(), data);
+        ParseUtils::GenerateVector(it->second, data);
         BRepBuilderAPI_MakeWire wm;
         for (int i = 0; i < data.size(); i++)
         {
@@ -660,7 +661,7 @@ TopoDS_Shape CADSystemOCE::BuildGeo(string geo)
     ASSERTL0(surfs.size() == 1, "more than 1 surf");
     it = surfs.begin();
     vector<unsigned int> data;
-    ParseUtils::GenerateUnOrderedVector(it->second.c_str(), data);
+    ParseUtils::GenerateVector(it->second), data);
     BRepBuilderAPI_MakeFace face(cWires[data[0]], true);
     for (int i = 1; i < data.size(); i++)
     {

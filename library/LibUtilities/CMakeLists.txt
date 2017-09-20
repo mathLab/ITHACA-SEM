@@ -23,7 +23,7 @@ SET(BasicUtilsHeaders
     ./BasicUtils/NekFactory.hpp
     ./BasicUtils/NekPtr.hpp
     ./BasicUtils/OperatorGenerators.hpp
-    ./BasicUtils/ParseUtils.hpp
+    ./BasicUtils/ParseUtils.h
     ./BasicUtils/Progressbar.hpp
     ./BasicUtils/PtsField.h
     ./BasicUtils/PtsIO.h
@@ -50,6 +50,7 @@ SET(BasicUtilsSources
     ./BasicUtils/FileSystem.cpp
     ./BasicUtils/MeshPartition.cpp
     ./BasicUtils/MeshPartitionMetis.cpp
+    ./BasicUtils/ParseUtils.cpp
     ./BasicUtils/PtsField.cpp
     ./BasicUtils/PtsIO.cpp
     ./BasicUtils/SessionReader.cpp

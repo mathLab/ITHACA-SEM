@@ -14,6 +14,7 @@ v5.0.0
   functionality in FUNCTIONs defined for forcings (!759)
 - Added native support for csv files in addititon to pts (!760 !835)
 - Utilize LAPACK_DIR env variable to find the native blas/lapack install (!827)
+- Simplify RawType typedefs (!840)
 
 **NekMesh**:
 - Add feature to read basic 2D geo files as CAD (!731)

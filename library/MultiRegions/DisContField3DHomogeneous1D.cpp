@@ -251,9 +251,7 @@ namespace Nektar
             for (n = 0; n < m_bndCondExpansions.num_elements(); ++n)
             {
                 if (time == 0.0 ||
-                    m_bndConditions[n]->IsTimeDependent() ||
-	            boost::iequals(m_bndConditions[n]->GetUserDefined(),
-                                   "MovingBody"))
+                    m_bndConditions[n]->IsTimeDependent() )
                 {
                     m_bndCondExpansions[n]->HomogeneousFwdTrans(
                         m_bndCondExpansions[n]->GetCoeffs(),

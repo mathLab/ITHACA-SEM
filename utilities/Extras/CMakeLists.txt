@@ -8,12 +8,12 @@ IF (NEKTAR_USE_VTK)
         TARGET_LINK_LIBRARIES(VtkToFld LINK_PUBLIC vtkCommon vtkIO vtkGraphics)
         TARGET_LINK_LIBRARIES(VtkStripsToPolys LINK_PUBLIC vtkCommon vtkIO vtkGraphics)
     ELSEIF(VTK_MAJOR_VERSION GREATER 6)
-        TARGET_LINK_LIBRARIES(VtkToFld LINK_PUBLIC vtkFiltersCore vtkFiltersParallelDIY2 vtkCommonCore vtkIOLegacy
+        TARGET_LINK_LIBRARIES(VtkToFld LINK_PUBLIC vtkFiltersCore vtkCommonCore vtkIOLegacy
                                                vtkFiltersGeometry)
         TARGET_LINK_LIBRARIES(VtkStripsToPolys LINK_PUBLIC vtkCommonCore vtkIOLegacy)
     ELSE ()
         TARGET_LINK_LIBRARIES(VtkToFld LINK_PUBLIC vtkCommonCore vtkIOLegacy
-                                              vtkFiltersGeometry vtkFiltersCore)
+                                                   vtkFiltersGeometry)
         TARGET_LINK_LIBRARIES(VtkStripsToPolys LINK_PUBLIC vtkCommonCore vtkIOLegacy)
     ENDIF ()
 

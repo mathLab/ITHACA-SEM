@@ -70,7 +70,7 @@ namespace Nektar
         Array<OneD, int> ToArray(const std::set<int>& set)
         {
             Array<OneD, int> ans(set.size());
-            std::set<int>::const_iterator it = set.begin(), end = set.end();
+            auto it = set.begin(), end = set.end();
             for (int i = 0; it != end; ++it, ++i)
             {
                 ans[i] = *it;
@@ -93,8 +93,7 @@ namespace Nektar
         {
             // Turn the keys of boundaryRegions into set.
             std::set<int> ids;
-            BoundaryRegionCollection::const_iterator it =
-                    boundaryRegions.begin(), end = boundaryRegions.end();
+            auto it = boundaryRegions.begin(), end = boundaryRegions.end();
             int i = 0;
             for (; it != end; ++it, ++i)
                 ids.insert(it->first);
@@ -178,12 +177,9 @@ namespace Nektar
 
             std::set<int> allids = ShareAllBoundaryIDs(m_boundaryRegions, comm);
 
-            std::set<int>::const_iterator it = allids.begin(), end =
-                    allids.end();
-            for (; it != end; ++it)
+            for (auto &it : allids)
             {
-                BoundaryRegionCollection::iterator reg_it =
-                        m_boundaryRegions.find(*it);
+                auto reg_it = m_boundaryRegions.find(it);
                 int this_rank_participates = (reg_it != m_boundaryRegions.end());
                 LibUtilities::CommSharedPtr comm_region = comm->CommCreateIf(
                         this_rank_participates);
@@ -378,14 +374,12 @@ namespace Nektar
                         if (attrData.empty())
                         {
                             // All variables are Neumann and are set to zero.
-                            for (std::vector<std::string>::iterator varIter =
-                                    vars.begin(); varIter != vars.end();
-                                    ++varIter)
+                            for (auto &varIter : vars)
                             {
                                 BoundaryConditionShPtr neumannCondition(
                                         MemoryManager<NeumannBoundaryCondition>::AllocateSharedPtr(
                                                 m_session, "00.0"));
-                                (*boundaryConditions)[*varIter] =
+                                (*boundaryConditions)[varIter] =
                                         neumannCondition;
                             }
                         }
@@ -480,14 +474,12 @@ namespace Nektar
                         if (attrData.empty())
                         {
                             // All variables are Dirichlet and are set to zero.
-                            for (std::vector<std::string>::iterator varIter =
-                                    vars.begin(); varIter != vars.end();
-                                    ++varIter)
+                            for (auto &varIter : vars)
                             {
                                 BoundaryConditionShPtr dirichletCondition(
                                         MemoryManager<DirichletBoundaryCondition>::AllocateSharedPtr(
                                                 m_session, "0"));
-                                (*boundaryConditions)[*varIter] =
+                                (*boundaryConditions)[varIter] =
                                         dirichletCondition;
                             }
                         }
@@ -584,14 +576,12 @@ namespace Nektar
                         if (attrData.empty())
                         {
                             // All variables are Robin and are set to zero.
-                            for (std::vector<std::string>::iterator varIter =
-                                    vars.begin(); varIter != vars.end();
-                                    ++varIter)
+                            for (auto &varIter : vars)
                             {
                                 BoundaryConditionShPtr robinCondition(
                                         MemoryManager<RobinBoundaryCondition>::AllocateSharedPtr(
                                                 m_session, "0", "0"));
-                                (*boundaryConditions)[*varIter] =
+                                (*boundaryConditions)[varIter] =
                                         robinCondition;
                             }
                         }
@@ -729,11 +719,9 @@ namespace Nektar
                                         MemoryManager<PeriodicBoundaryCondition>::AllocateSharedPtr(
                                                 periodicBndRegionIndex[0]));
 
-                                for (std::vector<std::string>::iterator varIter =
-                                        vars.begin(); varIter != vars.end();
-                                        ++varIter)
+                                for (auto &varIter : vars)
                                 {
-                                    (*boundaryConditions)[*varIter] =
+                                    (*boundaryConditions)[varIter] =
                                             periodicCondition;
                                 }
                             }

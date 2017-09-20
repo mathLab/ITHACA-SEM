@@ -49,17 +49,15 @@ namespace Nektar
     namespace SpatialDomains
     {
         class HexGeom;
-        typedef boost::shared_ptr<HexGeom> HexGeomSharedPtr;
+        typedef std::shared_ptr<HexGeom> HexGeomSharedPtr;
     }
 
     namespace LocalRegions 
     {
         class HexExp;
 
-        // type defines for use of HexExp in a boost vector
-        typedef boost::shared_ptr<HexExp> HexExpSharedPtr;
+        typedef std::shared_ptr<HexExp> HexExpSharedPtr;
         typedef std::vector< HexExpSharedPtr > HexExpVector;
-        typedef std::vector< HexExpSharedPtr >::iterator HexExpVectorIter;
  
         class HexExp: virtual public StdRegions::StdHexExp, virtual public Expansion3D
         {

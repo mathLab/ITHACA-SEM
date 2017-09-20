@@ -45,7 +45,7 @@ namespace Nektar
     class TerminalOutflow;
 
     /// Pointer to a PulseWaveOutflow object.
-    typedef boost::shared_ptr<TerminalOutflow> TerminalOutflowSharedPtr;
+    typedef std::shared_ptr<TerminalOutflow> TerminalOutflowSharedPtr;
     
     /// A global linear system.
     class TerminalOutflow : public PulseWaveBoundary

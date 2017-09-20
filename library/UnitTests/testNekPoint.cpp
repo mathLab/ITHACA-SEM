@@ -33,7 +33,6 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <UnitTests/testNekPoint.h>
 #include <UnitTests/util.h>
 #include <LibUtilities/LinearAlgebra/NekPoint.hpp>
 #include <boost/test/auto_unit_test.hpp>

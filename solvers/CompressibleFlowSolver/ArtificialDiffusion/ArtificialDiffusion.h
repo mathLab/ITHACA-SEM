@@ -51,7 +51,7 @@ namespace Nektar
 class ArtificialDiffusion;
 
 /// A shared pointer to a artificial diffusion object
-typedef boost::shared_ptr<ArtificialDiffusion> ArtificialDiffusionSharedPtr;
+typedef std::shared_ptr<ArtificialDiffusion> ArtificialDiffusionSharedPtr;
 
 /// Declaration of the artificial diffusion factory
 typedef LibUtilities::NekFactory<std::string, ArtificialDiffusion,

@@ -124,7 +124,7 @@ namespace Nektar
         Array<OneD, Array<OneD, Array<OneD, NekCDouble> > > m_zvel;
 
     };
-    typedef boost::shared_ptr<WomersleyParams> WomersleyParamsSharedPtr;
+    typedef std::shared_ptr<WomersleyParams> WomersleyParamsSharedPtr;
 
     /**
      * \brief This class is the base class for Navier Stokes problems
@@ -272,7 +272,7 @@ namespace Nektar
 
     };
 
-    typedef boost::shared_ptr<IncNavierStokes> IncNavierStokesSharedPtr;
+    typedef std::shared_ptr<IncNavierStokes> IncNavierStokesSharedPtr;
 
 } //end of namespace
 

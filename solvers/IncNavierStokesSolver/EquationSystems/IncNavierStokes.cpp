@@ -233,7 +233,7 @@ namespace Nektar
                     BndExp[n]->GetCoords(x0,x1,x2);
 
                     LibUtilities::Equation coeff =
-                        boost::static_pointer_cast<
+                        std::static_pointer_cast<
                     SpatialDomains::RobinBoundaryCondition
                         >(BndConds[n])->m_robinPrimitiveCoeff;
 

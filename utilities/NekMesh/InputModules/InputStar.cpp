@@ -222,7 +222,6 @@ void InputStar::ResetNodes(vector<NodeSharedPtr> &Vnodes,
     vector<vector<int> > FaceToPrisms(FaceNodes.size());
     vector<vector<int> > PrismToFaces(ElementFaces.num_elements());
     map<int, int> Prisms;
-    map<int, int>::iterator PrismIt;
 
     // generate map of prism-faces to prisms and prism to
     // triangular-faces as well as ids of each prism.
@@ -260,11 +259,10 @@ void InputStar::ResetNodes(vector<NodeSharedPtr> &Vnodes,
     // For every prism find the list of prismatic elements
     // that represent an aligned block of cells. Then renumber
     // these blocks consecutativiesly
-    for (PrismIt = Prisms.begin(); PrismIt != Prisms.end(); ++PrismIt)
+    for (auto &PrismIt : Prisms)
     {
-        int elmtid = PrismIt->first;
+        int elmtid = PrismIt.first;
         map<int, int> facelist;
-        map<int, int>::iterator faceIt;
 
         if (PrismDone[elmtid])
         {
@@ -277,9 +275,9 @@ void InputStar::ResetNodes(vector<NodeSharedPtr> &Vnodes,
                 elmtid, facelist, FaceToPrisms, PrismToFaces, PrismDone);
 
             // loop over faces and number vertices of associated prisms.
-            for (faceIt = facelist.begin(); faceIt != facelist.end(); faceIt++)
+            for (auto &faceIt : facelist)
             {
-                int faceid = faceIt->second;
+                int faceid = faceIt.second;
 
                 for (i = 0; i < FaceToPrisms[faceid].size(); ++i)
                 {
@@ -969,7 +967,7 @@ void InputStar::ReadNodes(std::vector<NodeSharedPtr> &Nodes)
 
     for (int i = 0; i < nVertices; ++i)
     {
-        Nodes.push_back(boost::shared_ptr<Node>(
+        Nodes.push_back(std::shared_ptr<Node>(
             new Node(i, verts[3 * i], verts[3 * i + 1], verts[3 * i + 2])));
     }
 }

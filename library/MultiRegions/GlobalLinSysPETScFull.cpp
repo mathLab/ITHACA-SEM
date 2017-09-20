@@ -62,8 +62,8 @@ namespace Nektar
         /// Constructor for full direct matrix solve.
         GlobalLinSysPETScFull::GlobalLinSysPETScFull(
             const GlobalLinSysKey                &pLinSysKey,
-            const boost::weak_ptr<ExpList>       &pExp,
-            const boost::shared_ptr<AssemblyMap> &pLocToGloMap)
+            const std::weak_ptr<ExpList>         &pExp,
+            const std::shared_ptr<AssemblyMap>   &pLocToGloMap)
             : GlobalLinSys     (pLinSysKey, pExp, pLocToGloMap),
               GlobalLinSysPETSc(pLinSysKey, pExp, pLocToGloMap)
         {
@@ -193,7 +193,7 @@ namespace Nektar
             const Array<OneD, const NekDouble> &input,
                   Array<OneD,       NekDouble> &output)
         {
-            boost::shared_ptr<MultiRegions::ExpList> expList = m_expList.lock();
+            std::shared_ptr<MultiRegions::ExpList> expList = m_expList.lock();
 
             // Perform matrix-vector operation A*d_i
             expList->GeneralMatrixOp(

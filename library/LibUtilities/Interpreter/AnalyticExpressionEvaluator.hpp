@@ -48,7 +48,6 @@
 #include <boost/math/special_functions/bessel.hpp>
 
 #define BOOST_SPIRIT_THREADSAFE
-#if( BOOST_VERSION / 100 % 1000 >= 36 )
 #include <boost/spirit/include/classic_core.hpp>
 #include <boost/spirit/include/classic_ast.hpp>
 #include <boost/spirit/include/classic_symbols.hpp>
@@ -56,15 +55,6 @@
 #include <boost/spirit/include/classic_push_back_actor.hpp>
 
 namespace boost_spirit = boost::spirit::classic;
-#else
-#include <boost/spirit/core.hpp>
-#include <boost/spirit/tree/ast.hpp>
-#include <boost/spirit/symbols/symbols.hpp>
-#include <boost/spirit/actor/assign_actor.hpp>
-#include <boost/spirit/actor/push_back_actor.hpp>
-
-namespace boost_spirit = boost::spirit;
-#endif
 
 #include <string>
 #include <vector>

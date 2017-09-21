@@ -41,7 +41,6 @@
 #include <vector>
 #include <sstream>
 
-#include <boost/version.hpp>
 #include <LibUtilities/LibUtilitiesDeclspec.h>
 
 #include <boost/spirit/include/classic_core.hpp>

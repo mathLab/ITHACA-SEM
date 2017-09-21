@@ -48,7 +48,6 @@
 #include <boost/preprocessor/comparison/greater.hpp>
 #include <boost/preprocessor/array/pop_front.hpp>
 #include <boost/preprocessor/array/push_back.hpp>
-#include <boost/version.hpp>
 
 #include <LibUtilities/LinearAlgebra/NekTypeDefs.hpp>
 

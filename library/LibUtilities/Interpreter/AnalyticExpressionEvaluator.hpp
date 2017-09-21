@@ -40,7 +40,6 @@
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/BasicUtils/Timer.h>
 
-#include <boost/version.hpp>
 #include <boost/random/mersenne_twister.hpp>  // for mt19937
 #include <boost/random/variate_generator.hpp>  // for variate_generator
 #include <boost/random/normal_distribution.hpp>

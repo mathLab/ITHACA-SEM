@@ -287,16 +287,16 @@ namespace Nektar
             }
         }
 
-        boost::shared_ptr<Points<NekDouble> > GaussPoints::Create(const PointsKey &pkey)
+        std::shared_ptr<Points<NekDouble> > GaussPoints::Create(const PointsKey &pkey)
         {
-            boost::shared_ptr< Points<NekDouble> > returnval(MemoryManager< GaussPoints >::AllocateSharedPtr(pkey));
+            std::shared_ptr< Points<NekDouble> > returnval(MemoryManager< GaussPoints >::AllocateSharedPtr(pkey));
 
             returnval->Initialize();
 
             return returnval;
         }
 
-        boost::shared_ptr< NekMatrix<NekDouble> > GaussPoints::CreateMatrix(const PointsKey &pkey)
+        std::shared_ptr< NekMatrix<NekDouble> > GaussPoints::CreateMatrix(const PointsKey &pkey)
         {
             int numpoints = pkey.GetNumPoints();
             Array<OneD, const NekDouble> xpoints;
@@ -308,14 +308,14 @@ namespace Nektar
         }
 
 
-        const boost::shared_ptr<NekMatrix<NekDouble> > GaussPoints::GetI(const PointsKey &pkey)
+        const std::shared_ptr<NekMatrix<NekDouble> > GaussPoints::GetI(const PointsKey &pkey)
         {
             ASSERTL0(pkey.GetPointsDim()==1, "Gauss Points can only interp to other 1d point distributions");
 
             return m_InterpManager[pkey];
         }
 
-        const boost::shared_ptr<NekMatrix<NekDouble> > GaussPoints::GetI(const Array<OneD, const NekDouble>& x)
+        const std::shared_ptr<NekMatrix<NekDouble> > GaussPoints::GetI(const Array<OneD, const NekDouble>& x)
         {
             int numpoints = 1;
 
@@ -323,7 +323,7 @@ namespace Nektar
             return GetI(numpoints, x);
         }
 
-        const boost::shared_ptr<NekMatrix<NekDouble> > GaussPoints::GetI(unsigned int numpoints, const Array<OneD, const NekDouble>& x)
+        const std::shared_ptr<NekMatrix<NekDouble> > GaussPoints::GetI(unsigned int numpoints, const Array<OneD, const NekDouble>& x)
         {
             Array<OneD, NekDouble> interp(GetNumPoints()*numpoints);
 
@@ -331,7 +331,7 @@ namespace Nektar
 
             NekDouble* t = interp.data();
             unsigned int np = GetNumPoints();
-            boost::shared_ptr< NekMatrix<NekDouble> > returnval(MemoryManager<NekMatrix<NekDouble> >::AllocateSharedPtr(numpoints,np,t));
+            std::shared_ptr< NekMatrix<NekDouble> > returnval(MemoryManager<NekMatrix<NekDouble> >::AllocateSharedPtr(numpoints,np,t));
 
             return returnval;
         }
@@ -393,20 +393,20 @@ namespace Nektar
             return y;
         }
         
-        const boost::shared_ptr<NekMatrix<NekDouble> > GaussPoints::GetGalerkinProjection(const PointsKey &pkey)
+        const std::shared_ptr<NekMatrix<NekDouble> > GaussPoints::GetGalerkinProjection(const PointsKey &pkey)
         {
             return m_GalerkinProjectionManager[pkey];
         }
 
-        boost::shared_ptr< NekMatrix<NekDouble> > GaussPoints::CreateGPMatrix(const PointsKey &pkey)
+        std::shared_ptr< NekMatrix<NekDouble> > GaussPoints::CreateGPMatrix(const PointsKey &pkey)
         {
-            boost::shared_ptr< NekMatrix<NekDouble> > returnval = CalculateGalerkinProjectionMatrix(pkey);
+            std::shared_ptr< NekMatrix<NekDouble> > returnval = CalculateGalerkinProjectionMatrix(pkey);
 
             // Delegate to function below
             return  returnval;
         }
 
-        boost::shared_ptr<NekMatrix<NekDouble> > GaussPoints::CalculateGalerkinProjectionMatrix(const PointsKey &pkey)
+        std::shared_ptr<NekMatrix<NekDouble> > GaussPoints::CalculateGalerkinProjectionMatrix(const PointsKey &pkey)
         {
             int numpointsfrom = pkey.GetNumPoints();
             int numpointsto   = GetNumPoints();
@@ -415,7 +415,7 @@ namespace Nektar
             
             weightsfrom = PointsManager()[pkey]->GetW();
                                     
-            boost::shared_ptr< NekMatrix<NekDouble> > Interp = GetI(pkey);
+            std::shared_ptr< NekMatrix<NekDouble> > Interp = GetI(pkey);
 
             Array<OneD, NekDouble> GalProj(numpointsfrom*numpointsto);
             
@@ -431,7 +431,7 @@ namespace Nektar
 
             
             NekDouble* t = GalProj.data();
-            boost::shared_ptr< NekMatrix<NekDouble> > returnval(MemoryManager<NekMatrix<NekDouble> >::AllocateSharedPtr(numpointsto,numpointsfrom,t));
+            std::shared_ptr< NekMatrix<NekDouble> > returnval(MemoryManager<NekMatrix<NekDouble> >::AllocateSharedPtr(numpointsto,numpointsfrom,t));
 
             return returnval;
         }

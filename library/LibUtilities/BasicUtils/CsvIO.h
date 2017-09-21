@@ -39,12 +39,9 @@
 
 #include <string>
 #include <vector>
-
-#include <boost/shared_ptr.hpp>
-
+#include <memory>
 
 #include <LibUtilities/Communication/Comm.h>
-
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/BasicUtils/ParseUtils.hpp>
@@ -55,8 +52,6 @@ namespace Nektar
 {
 namespace LibUtilities
 {
-using namespace std;
-
 
 class CsvIO : public PtsIO
 {
@@ -68,15 +63,16 @@ public:
     {
     }
 
-    LIB_UTILITIES_EXPORT void Write(const string &outFile,
+    LIB_UTILITIES_EXPORT void Write(const std::string &outFile,
                                     const PtsFieldSharedPtr &ptsField,
                                     const bool backup = false);
 
 
 
 protected:
-    LIB_UTILITIES_EXPORT virtual void v_ImportFieldData(const string inFile,
-                                              PtsFieldSharedPtr &ptsField);
+    LIB_UTILITIES_EXPORT virtual void v_ImportFieldData(
+        const std::string inFile,
+        PtsFieldSharedPtr &ptsField);
 
     LIB_UTILITIES_EXPORT virtual std::string GetFileEnding() const
     {
@@ -84,7 +80,7 @@ protected:
     };
 };
 
-typedef boost::shared_ptr<CsvIO> CsvIOSharedPtr;
+typedef std::shared_ptr<CsvIO> CsvIOSharedPtr;
 }
 }
 #endif

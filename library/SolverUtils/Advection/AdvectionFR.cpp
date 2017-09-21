@@ -1027,7 +1027,9 @@ namespace Nektar
             int nSolutionPts    = fields[0]->GetTotPoints();
             
             
-            vector<bool> negatedFluxNormal = (boost::static_pointer_cast<MultiRegions::DisContField1D>(fields[0]))->GetNegatedFluxNormal();
+            vector<bool> negatedFluxNormal =
+                std::static_pointer_cast<MultiRegions::DisContField1D>(
+                    fields[0])->GetNegatedFluxNormal();
 
             // Arrays to store the derivatives of the correction flux
             Array<OneD, NekDouble> DCL(nSolutionPts/nElements, 0.0); 

@@ -45,7 +45,6 @@
 
 #include <boost/assign/list_of.hpp>
 #include <boost/multi_array.hpp>
-#include <boost/shared_ptr.hpp>
 
 namespace Nektar
 {
@@ -267,8 +266,6 @@ namespace Nektar
         protected:
             unsigned int m_size;
             unsigned int m_capacity;
-            //boost::shared_ptr<DataType> m_data;
-            //NekPtr<DataType> m_data;
             DataType* m_data;
             unsigned int* m_count;
             unsigned int m_offset;
@@ -288,8 +285,6 @@ namespace Nektar
         //                unsigned int m_elements;
         //            };
         //
-        // boost::shared_ptr<DataType>
-        // NekPtr<DataType>
         void
             CreateStorage(unsigned int size)
             {
@@ -297,10 +292,6 @@ namespace Nektar
                 m_data = storage;
                 m_count = (unsigned int*)storage;
                 *m_count = 1;
-                //return NekPtr<DataType>(storage, size);
-                //return boost::shared_ptr<DataType>(storage,
-                        //boost::bind(DeleteStorage<DataType>, storage, size) );
-                //        DestroyArray(size), MemoryManager<DataType>() );
             }
 
             template<typename T>
@@ -387,7 +378,7 @@ namespace Nektar
             size_type GetColumns() const { return m_data->shape()[1]; }
 
         protected:
-            boost::shared_ptr<ArrayType> m_data;
+            std::shared_ptr<ArrayType> m_data;
 
         private:
 
@@ -451,7 +442,7 @@ namespace Nektar
             size_type num_elements() const { return m_data->num_elements(); }
 
         protected:
-            boost::shared_ptr<ArrayType> m_data;
+            std::shared_ptr<ArrayType> m_data;
 
         private:
 

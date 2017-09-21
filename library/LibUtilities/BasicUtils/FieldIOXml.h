@@ -105,7 +105,7 @@ private:
     /// Boolean dictating whether document needs to be freed or not.
     bool m_needsFree;
 };
-typedef boost::shared_ptr<XmlDataSource> XmlDataSourceSharedPtr;
+typedef std::shared_ptr<XmlDataSource> XmlDataSourceSharedPtr;
 
 /**
  * @class Simple class for writing XML hierarchical data using TinyXML.
@@ -136,7 +136,7 @@ private:
     /// Internal TinyXML document storage.
     TiXmlElement *m_El;
 };
-typedef boost::shared_ptr<XmlTagWriter> XmlTagWriterSharedPtr;
+typedef std::shared_ptr<XmlTagWriter> XmlTagWriterSharedPtr;
 
 /**
  * @class Class for operating on XML FLD files.

@@ -86,7 +86,7 @@ namespace Nektar
 	 */
         
         PreconditionerLinear::PreconditionerLinear(
-            const boost::shared_ptr<GlobalLinSys> &plinsys,
+            const std::shared_ptr<GlobalLinSys> &plinsys,
             const AssemblyMapSharedPtr &pLocToGloMap)
             : Preconditioner(plinsys, pLocToGloMap)
         {
@@ -103,7 +103,7 @@ namespace Nektar
                      "This type of preconditioning is not implemented "
                      "for this solver");
 
-            boost::shared_ptr<MultiRegions::ExpList>
+            std::shared_ptr<MultiRegions::ExpList>
                 expList=((m_linsys.lock())->GetLocMat()).lock();
 
             LinearPreconSolver solveType =

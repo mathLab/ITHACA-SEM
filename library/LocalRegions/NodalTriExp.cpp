@@ -52,11 +52,11 @@ namespace Nektar
             Expansion     (geom),
             Expansion2D   (geom),
             m_matrixManager(
-                    boost::bind(&NodalTriExp::CreateMatrix, this, _1),
-                    std::string("NodalTriExpMatrix")),
+                std::bind(&NodalTriExp::CreateMatrix, this, std::placeholders::_1),
+                std::string("NodalTriExpMatrix")),
             m_staticCondMatrixManager(
-                    boost::bind(&NodalTriExp::CreateStaticCondMatrix, this, _1),
-                    std::string("NodalTriExpStaticCondMatrix"))
+                std::bind(&NodalTriExp::CreateStaticCondMatrix, this, std::placeholders::_1),
+                std::string("NodalTriExpStaticCondMatrix"))
         {
         }
         

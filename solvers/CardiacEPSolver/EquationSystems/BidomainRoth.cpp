@@ -295,16 +295,16 @@ void BidomainRoth::v_InitObject()
     // CheckpointCellModel filters loaded.
     int k = 0;
     const LibUtilities::FilterMap& f = m_session->GetFilters();
-    LibUtilities::FilterMap::const_iterator x;
-    for (x = f.begin(); x != f.end(); ++x, ++k)
+    for (auto &x : f)
     {
-        if (x->first == "CheckpointCellModel")
+        if (x.first == "CheckpointCellModel")
         {
-            boost::shared_ptr<FilterCheckpointCellModel> c
-                = boost::dynamic_pointer_cast<FilterCheckpointCellModel>(
+            std::shared_ptr<FilterCheckpointCellModel> c
+                = std::dynamic_pointer_cast<FilterCheckpointCellModel>(
                                                             m_filters[k]);
             c->SetCellModel(m_cell);
         }
+        ++k;
     }
 
     // Load stimuli

@@ -105,8 +105,6 @@ namespace Nektar
             TiXmlElement* mesh = docHandle.FirstChildElement("NEKTAR").FirstChildElement("GEOMETRY").Element();
             TiXmlElement* field = NULL;
 
-            CurveMap::iterator it;
-
             /// Look for elements in ELEMENT block.
             field = mesh->FirstChildElement("EDGE");
 
@@ -147,7 +145,7 @@ namespace Nektar
                     };
                     SegGeomSharedPtr edge;
 
-                    it = m_curvedEdges.find(indx);
+                    auto it = m_curvedEdges.find(indx);
                     if (it == m_curvedEdges.end())
                     {
                         edge = MemoryManager<SegGeom>::AllocateSharedPtr(
@@ -209,7 +207,7 @@ namespace Nektar
                             {
                                 PointGeomSharedPtr vertices[2] = {GetVertex(vertex1), GetVertex(vertex2)};
                                 SegGeomSharedPtr edge;
-                                it = m_curvedEdges.find(indx);
+                                auto it = m_curvedEdges.find(indx);
                                 
                                 if (it == m_curvedEdges.end())
                                 {
@@ -251,7 +249,6 @@ namespace Nektar
             /// They might be in compressed format and so then need upacking. 
 
             TiXmlElement *element = field->FirstChildElement();
-            CurveMap::iterator it;
 
             while (element)
             {
@@ -295,7 +292,7 @@ namespace Nektar
                             indx = faceData[i].id;
 
                             /// See if this face has curves.
-                            it = m_curvedFaces.find(indx);
+                            auto it = m_curvedFaces.find(indx);
 
                             /// Create a TriGeom to hold the new definition.
                             SegGeomSharedPtr edges[TriGeom::kNedges] =
@@ -341,7 +338,7 @@ namespace Nektar
                             indx = faceData[i].id;
 
                             /// See if this face has curves.
-                            it = m_curvedFaces.find(indx);
+                            auto it = m_curvedFaces.find(indx);
 
                             /// Create a QuadGeom to hold the new definition.
                             SegGeomSharedPtr edges[QuadGeom::kNedges] = {
@@ -360,7 +357,7 @@ namespace Nektar
                             };
 
                             QuadGeomSharedPtr quadgeom;
-                            if (it == m_curvedEdges.end())
+                            if (it == m_curvedFaces.end())
                             {
                                 quadgeom =
                                     MemoryManager<QuadGeom>::AllocateSharedPtr(
@@ -386,7 +383,7 @@ namespace Nektar
                     ASSERTL0(err == TIXML_SUCCESS, "Unable to read face attribute ID.");
                     
                     /// See if this face has curves.
-                    it = m_curvedFaces.find(indx);
+                    auto it = m_curvedFaces.find(indx);
                     
                     /// Read text element description.
                     TiXmlNode* elementChild = element->FirstChild();
@@ -483,7 +480,7 @@ namespace Nektar
                             
                             QuadGeomSharedPtr quadgeom;
                             
-                            if (it == m_curvedEdges.end())
+                            if (it == m_curvedFaces.end())
                             {
                                 quadgeom = MemoryManager<QuadGeom>::AllocateSharedPtr(indx, edges, edgeorient);
                             }
@@ -570,7 +567,7 @@ namespace Nektar
                                 Geometry2DSharedPtr face =
                                     GetGeometry2D(data[i].f[j]);
                                 tfaces[j] =
-                                    boost::static_pointer_cast<TriGeom>(face);
+                                    std::static_pointer_cast<TriGeom>(face);
                             }
 
                             TetGeomSharedPtr tetgeom(MemoryManager<TetGeom>
@@ -610,14 +607,14 @@ namespace Nektar
                                 else if (face->GetShapeType() ==
                                             LibUtilities::eTriangle)
                                 {
-                                    faces[j] = boost
+                                    faces[j] = std
                                         ::static_pointer_cast<TriGeom>(face);
                                     Ntfaces++;
                                 }
                                 else if (face->GetShapeType() ==
                                             LibUtilities::eQuadrilateral)
                                 {
-                                    faces[j] = boost
+                                    faces[j] = std
                                         ::static_pointer_cast<QuadGeom>(face);
                                     Nqfaces++;
                                 }
@@ -663,14 +660,14 @@ namespace Nektar
                                 else if (face->GetShapeType() ==
                                                 LibUtilities::eTriangle)
                                 {
-                                    faces[j] = boost
+                                    faces[j] = std
                                         ::static_pointer_cast<TriGeom>(face);
                                     Ntfaces++;
                                 }
                                 else if (face->GetShapeType() ==
                                                 LibUtilities::eQuadrilateral)
                                 {
-                                    faces[j] = boost
+                                    faces[j] = std
                                         ::static_pointer_cast<QuadGeom>(face);
                                     Nqfaces++;
                                 }
@@ -702,7 +699,7 @@ namespace Nektar
                             {
                                 Geometry2DSharedPtr face =
                                         GetGeometry2D(data[i].f[j]);
-                                faces[j] = boost
+                                faces[j] = std
                                         ::static_pointer_cast<QuadGeom>(face);
                             }
 
@@ -770,7 +767,7 @@ namespace Nektar
                                 else if (face->GetShapeType() == LibUtilities::eTriangle)
                                 {
                                     ASSERTL0(Ntfaces < kNtfaces, errorstring.str().c_str());
-                                    tfaces[Ntfaces++] = boost::static_pointer_cast<TriGeom>(face);
+                                    tfaces[Ntfaces++] = std::static_pointer_cast<TriGeom>(face);
                                 }
                                 else if (face->GetShapeType() == LibUtilities::eQuadrilateral)
                                 {
@@ -827,13 +824,13 @@ namespace Nektar
                                 else if (face->GetShapeType() == LibUtilities::eTriangle)
                                 {
                                     ASSERTL0(Ntfaces < kNtfaces, errorstring.str().c_str());
-                                    faces[Nfaces++] = boost::static_pointer_cast<TriGeom>(face);
+                                    faces[Nfaces++] = std::static_pointer_cast<TriGeom>(face);
                                     Ntfaces++;
                                 }
                                 else if (face->GetShapeType() == LibUtilities::eQuadrilateral)
                                 {
                                     ASSERTL0(Nqfaces < kNqfaces, errorstring.str().c_str());
-                                    faces[Nfaces++] = boost::static_pointer_cast<QuadGeom>(face);
+                                    faces[Nfaces++] = std::static_pointer_cast<QuadGeom>(face);
                                     Nqfaces++;
                                 }
                             }
@@ -890,13 +887,13 @@ namespace Nektar
                                 else if (face->GetShapeType() == LibUtilities::eTriangle)
                                 {
                                     ASSERTL0(Ntfaces < kNtfaces, errorstring.str().c_str());
-                                    faces[Nfaces++] = boost::static_pointer_cast<TriGeom>(face);
+                                    faces[Nfaces++] = std::static_pointer_cast<TriGeom>(face);
                                     Ntfaces++;
                                 }
                                 else if (face->GetShapeType() == LibUtilities::eQuadrilateral)
                                 {
                                     ASSERTL0(Nqfaces < kNqfaces, errorstring.str().c_str());
-                                    faces[Nfaces++] = boost::static_pointer_cast<QuadGeom>(face);
+                                    faces[Nfaces++] = std::static_pointer_cast<QuadGeom>(face);
                                     Nqfaces++;
                                 }
                             }
@@ -950,12 +947,12 @@ namespace Nektar
                                 else if (face->GetShapeType() == LibUtilities::eTriangle)
                                 {
                                     ASSERTL0(Ntfaces < kNtfaces, errorstring.str().c_str());
-                                    //tfaces[Ntfaces++] = boost::static_pointer_cast<TriGeom>(face);
+                                    //tfaces[Ntfaces++] = std::static_pointer_cast<TriGeom>(face);
                                 }
                                 else if (face->GetShapeType() == LibUtilities::eQuadrilateral)
                                 {
                                     ASSERTL0(Nqfaces < kNqfaces, errorstring.str().c_str());
-                                    qfaces[Nqfaces++] = boost::static_pointer_cast<QuadGeom>(face);
+                                    qfaces[Nqfaces++] = std::static_pointer_cast<QuadGeom>(face);
                                 }
                             }
                             
@@ -1079,8 +1076,7 @@ namespace Nektar
 
         SegGeomSharedPtr MeshGraph3D::GetSegGeom(int eID)
         {
-            SegGeomSharedPtr returnval;
-            SegGeomMap::iterator x = m_segGeoms.find(eID);
+            auto x = m_segGeoms.find(eID);
             ASSERTL0(x != m_segGeoms.end(), "Segment "
                      + boost::lexical_cast<string>(eID) + " not found.");
             return x->second;
@@ -1088,14 +1084,11 @@ namespace Nektar
 
         Geometry2DSharedPtr MeshGraph3D::GetGeometry2D(int gID)
         {
-            TriGeomMapIter it1;
-            QuadGeomMapIter it2;
-            
-            it1 = m_triGeoms.find(gID);
+            auto it1 = m_triGeoms.find(gID);
             if (it1 != m_triGeoms.end())
                 return it1->second;
             
-            it2 = m_quadGeoms.find(gID);
+            auto it2 = m_quadGeoms.find(gID);
             if (it2 != m_quadGeoms.end())
                 return it2->second;
             
@@ -1129,7 +1122,6 @@ namespace Nektar
                 std::string indxStr = token.substr(indxBeg, indxEnd - indxBeg + 1);
 
                 std::vector<unsigned int> seqVector;
-                std::vector<unsigned int>::iterator seqIter;
 
                 bool err = ParseUtils::GenerateSeqVector(indxStr.c_str(), seqVector);
 
@@ -1157,45 +1149,45 @@ namespace Nektar
                 switch(type)
                 {
                 case 'V':   // Vertex
-                    for (seqIter = seqVector.begin(); seqIter != seqVector.end(); ++seqIter)
+                    for (auto &seqIter : seqVector)
                     {
-                        if (m_vertSet.find(*seqIter) == m_vertSet.end())
+                        if (m_vertSet.find(seqIter) == m_vertSet.end())
                         {
                             char errStr[16] = "";
-                            ::sprintf(errStr, "%d", *seqIter);
+                            ::sprintf(errStr, "%d", seqIter);
                             NEKERROR(ErrorUtil::ewarning, (std::string("Unknown vertex index: ") + errStr).c_str());
                         }
                         else
                         {
-                            composite->push_back(m_vertSet[*seqIter]);
+                            composite->push_back(m_vertSet[seqIter]);
                         }
                     }
                     break;
 
                 case 'E':   // Edge
-                    for (seqIter = seqVector.begin(); seqIter != seqVector.end(); ++seqIter)
+                    for (auto &seqIter : seqVector)
                     {
-                        if (m_segGeoms.find(*seqIter) == m_segGeoms.end())
+                        if (m_segGeoms.find(seqIter) == m_segGeoms.end())
                         {
                             char errStr[16] = "";
-                            ::sprintf(errStr, "%d", *seqIter);
+                            ::sprintf(errStr, "%d", seqIter);
                             NEKERROR(ErrorUtil::ewarning, (std::string("Unknown edge index: ") + errStr).c_str());
                         }
                         else
                         {
-                            composite->push_back(m_segGeoms[*seqIter]);
+                            composite->push_back(m_segGeoms[seqIter]);
                         }
                     }
                     break;
 
                 case 'F':   // Face
-                    for (seqIter = seqVector.begin(); seqIter != seqVector.end(); ++seqIter)
+                    for (auto &seqIter : seqVector)
                     {
-                        Geometry2DSharedPtr face = GetGeometry2D(*seqIter);
+                        Geometry2DSharedPtr face = GetGeometry2D(seqIter);
                         if (face == Geometry2DSharedPtr())
                         {
                             char errStr[16] = "";
-                            ::sprintf(errStr, "%d", *seqIter);
+                            ::sprintf(errStr, "%d", seqIter);
                             NEKERROR(ErrorUtil::ewarning, (std::string("Unknown face index: ") + errStr).c_str());
                         }
                         else
@@ -1209,38 +1201,38 @@ namespace Nektar
                     break;
 
                 case 'T':   // Triangle
-                    for (seqIter = seqVector.begin(); seqIter != seqVector.end(); ++seqIter)
+                    for (auto &seqIter : seqVector)
                     {
-                        if (m_triGeoms.find(*seqIter) == m_triGeoms.end())
+                        if (m_triGeoms.find(seqIter) == m_triGeoms.end())
                         {
                             char errStr[16] = "";
-                            ::sprintf(errStr, "%d", *seqIter);
+                            ::sprintf(errStr, "%d", seqIter);
                             NEKERROR(ErrorUtil::ewarning, (std::string("Unknown triangle index: ") + errStr).c_str());
                         }
                         else
                         {
-                            if(CheckRange(*m_triGeoms[*seqIter]))
+                            if(CheckRange(*m_triGeoms[seqIter]))
                             {
-                                composite->push_back(m_triGeoms[*seqIter]);
+                                composite->push_back(m_triGeoms[seqIter]);
                             }
                         }
                     }
                     break;
 
                 case 'Q':   // Quad
-                    for (seqIter = seqVector.begin(); seqIter != seqVector.end(); ++seqIter)
+                    for (auto &seqIter : seqVector)
                     {
-                        if (m_quadGeoms.find(*seqIter) == m_quadGeoms.end())
+                        if (m_quadGeoms.find(seqIter) == m_quadGeoms.end())
                         {
                             char errStr[16] = "";
-                            ::sprintf(errStr, "%d", *seqIter);
+                            ::sprintf(errStr, "%d", seqIter);
                             NEKERROR(ErrorUtil::ewarning, (std::string("Unknown quad index: ") + errStr).c_str());
                         }
                         else
                         {
-                            if(CheckRange(*m_quadGeoms[*seqIter]))
+                            if(CheckRange(*m_quadGeoms[seqIter]))
                             {
-                                composite->push_back(m_quadGeoms[*seqIter]);
+                                composite->push_back(m_quadGeoms[seqIter]);
                             }
                         }
                     }
@@ -1248,19 +1240,19 @@ namespace Nektar
 
                 // Tetrahedron
                 case 'A':
-                    for (seqIter = seqVector.begin(); seqIter != seqVector.end(); ++seqIter)
+                    for (auto &seqIter : seqVector)
                     {
-                        if (m_tetGeoms.find(*seqIter) == m_tetGeoms.end())
+                        if (m_tetGeoms.find(seqIter) == m_tetGeoms.end())
                         {
                             char errStr[16] = "";
-                            ::sprintf(errStr, "%d", *seqIter);
+                            ::sprintf(errStr, "%d", seqIter);
                             NEKERROR(ErrorUtil::ewarning, (std::string("Unknown tet index: ") + errStr).c_str());
                         }
                         else
                         {
-                            if(CheckRange(*m_tetGeoms[*seqIter]))
+                            if(CheckRange(*m_tetGeoms[seqIter]))
                             {
-                                composite->push_back(m_tetGeoms[*seqIter]);
+                                composite->push_back(m_tetGeoms[seqIter]);
                             }
                         }
                     }
@@ -1268,19 +1260,19 @@ namespace Nektar
 
                 // Pyramid
                 case 'P':
-                    for (seqIter = seqVector.begin(); seqIter != seqVector.end(); ++seqIter)
+                    for (auto &seqIter : seqVector)
                     {
-                        if (m_pyrGeoms.find(*seqIter) == m_pyrGeoms.end())
+                        if (m_pyrGeoms.find(seqIter) == m_pyrGeoms.end())
                         {
                             char errStr[16] = "";
-                            ::sprintf(errStr, "%d", *seqIter);
+                            ::sprintf(errStr, "%d", seqIter);
                             NEKERROR(ErrorUtil::ewarning, (std::string("Unknown pyramid index: ") + errStr).c_str());
                         }
                         else
                         {
-                            if(CheckRange(*m_pyrGeoms[*seqIter]))
+                            if(CheckRange(*m_pyrGeoms[seqIter]))
                             {
-                                composite->push_back(m_pyrGeoms[*seqIter]);
+                                composite->push_back(m_pyrGeoms[seqIter]);
                             }
                         }
                     }
@@ -1288,19 +1280,19 @@ namespace Nektar
 
                 // Prism
                 case 'R':
-                    for (seqIter = seqVector.begin(); seqIter != seqVector.end(); ++seqIter)
+                    for (auto &seqIter : seqVector)
                     {
-                        if (m_prismGeoms.find(*seqIter) == m_prismGeoms.end())
+                        if (m_prismGeoms.find(seqIter) == m_prismGeoms.end())
                         {
                             char errStr[16] = "";
-                            ::sprintf(errStr, "%d", *seqIter);
+                            ::sprintf(errStr, "%d", seqIter);
                             NEKERROR(ErrorUtil::ewarning, (std::string("Unknown prism index: ") + errStr).c_str());
                         }
                         else
                         {
-                            if(CheckRange(*m_prismGeoms[*seqIter]))
+                            if(CheckRange(*m_prismGeoms[seqIter]))
                             {
-                                composite->push_back(m_prismGeoms[*seqIter]);
+                                composite->push_back(m_prismGeoms[seqIter]);
                             }
                         }
                     }
@@ -1308,19 +1300,19 @@ namespace Nektar
 
                 // Hex
                 case 'H':
-                    for (seqIter = seqVector.begin(); seqIter != seqVector.end(); ++seqIter)
+                    for (auto &seqIter : seqVector)
                     {
-                        if (m_hexGeoms.find(*seqIter) == m_hexGeoms.end())
+                        if (m_hexGeoms.find(seqIter) == m_hexGeoms.end())
                         {
                             char errStr[16] = "";
-                            ::sprintf(errStr, "%d", *seqIter);
+                            ::sprintf(errStr, "%d", seqIter);
                             NEKERROR(ErrorUtil::ewarning, (std::string("Unknown hex index: ") + errStr).c_str());
                         }
                         else
                         {
-                            if(CheckRange(*m_hexGeoms[*seqIter]))
+                            if(CheckRange(*m_hexGeoms[seqIter]))
                             {
-                                composite->push_back(m_hexGeoms[*seqIter]);
+                                composite->push_back(m_hexGeoms[seqIter]);
                             }
                         }
                     }
@@ -1341,11 +1333,8 @@ namespace Nektar
 
         ElementFaceVectorSharedPtr MeshGraph3D::GetElementsFromFace(Geometry2DSharedPtr face)
         {
-            boost::unordered_map<int, ElementFaceVectorSharedPtr>::iterator it = 
-                m_faceToElMap.find(face->GetGlobalID());
-
+            auto it = m_faceToElMap.find(face->GetGlobalID());
             ASSERTL0(it != m_faceToElMap.end(), "Unable to find corresponding face!");
-            
             return it->second;
         }
 
@@ -1380,7 +1369,7 @@ namespace Nektar
 
             // Retrieve the geometry object of the element as a Geometry3D.
             Geometry3DSharedPtr geom3d =
-                    boost::dynamic_pointer_cast<SpatialDomains::Geometry3D>(
+                    std::dynamic_pointer_cast<SpatialDomains::Geometry3D>(
                             expansion->m_geomShPtr);
 
             // Use the geometry of the element to calculate the coordinate
@@ -1423,19 +1412,18 @@ namespace Nektar
             for (int i = 0; i < kNfaces; ++i)
             {
                 int                  faceId = element->GetFace(i)->GetGlobalID();
-                ElementFaceSharedPtr elementFace = 
+                ElementFaceSharedPtr elementFace =
                     MemoryManager<ElementFace>::AllocateSharedPtr();
                 
                 elementFace->m_Element  = element;
                 elementFace->m_FaceIndx = i;
                 
                 // Search map to see if face already exists.
-                boost::unordered_map<int, ElementFaceVectorSharedPtr>::iterator it = 
-                    m_faceToElMap.find(faceId);
-                
+                auto it = m_faceToElMap.find(faceId);
+
                 if (it == m_faceToElMap.end())
                 {
-                    ElementFaceVectorSharedPtr tmp = 
+                    ElementFaceVectorSharedPtr tmp =
                         MemoryManager<ElementFaceVector>::AllocateSharedPtr();
                     tmp->push_back(elementFace);
                     m_faceToElMap[faceId] = tmp;

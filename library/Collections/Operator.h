@@ -47,7 +47,7 @@
     friend class MemoryManager<cname>;                          \
     static OperatorSharedPtr create(                            \
         std::vector<StdRegions::StdExpansionSharedPtr> pCollExp,\
-        boost::shared_ptr<CoalescedGeomData> GeomData)          \
+        std::shared_ptr<CoalescedGeomData> GeomData)            \
     {                                                           \
         return MemoryManager<cname>                             \
             ::AllocateSharedPtr(pCollExp, GeomData);            \
@@ -59,7 +59,7 @@ namespace Collections
 {
 
 class CoalescedGeomData;
-typedef boost::shared_ptr<CoalescedGeomData>   CoalescedGeomDataSharedPtr;
+typedef std::shared_ptr<CoalescedGeomData>   CoalescedGeomDataSharedPtr;
 
 enum OperatorType
 {
@@ -111,7 +111,7 @@ class Operator
         /// Constructor
         Operator(
                 std::vector<StdRegions::StdExpansionSharedPtr> pCollExp,
-                boost::shared_ptr<CoalescedGeomData> GeomData)
+                std::shared_ptr<CoalescedGeomData> GeomData)
             : m_stdExp(pCollExp[0]->GetStdExp()),
               m_numElmt(pCollExp.size()),
               m_wspSize(0)
@@ -149,10 +149,10 @@ class Operator
 };
 
 /// Shared pointer to an Operator object
-typedef boost::shared_ptr<Operator> OperatorSharedPtr;
+typedef std::shared_ptr<Operator> OperatorSharedPtr;
 
 /// Key for describing an Operator
-typedef boost::tuple<
+typedef std::tuple<
     LibUtilities::ShapeType,
     OperatorType,
     ImplementationType,

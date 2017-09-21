@@ -12,8 +12,10 @@ v5.0.0
 - Use chrono in Timer (!807)
 - Fix caching of FUNCTION tags that read from file and provide the same
   functionality in FUNCTIONs defined for forcings (!759)
-- Added native support for csv files in addititon to pts (!760)
 - Add ARPACK thirdparty build capabilities (!828)
+- Added native support for csv files in addititon to pts (!760 !835)
+- Utilize LAPACK_DIR env variable to find the native blas/lapack install (!827)
+- Simplify RawType typedefs (!840)
 
 **NekMesh**:
 - Add feature to read basic 2D geo files as CAD (!731)
@@ -25,6 +27,7 @@ v5.0.0
 - Fix issue with reading CCM files due to definition of default arrays
   rather than a vector (!797)
 - Fix inverted triangles and small memory issue in surface meshing (!798)
+- Additional curve types in GEO reader: BSpline, Circle, Ellipse (!800)
 
 **FieldConvert**:
 - Add input module for Semtex field files (!777)
@@ -34,6 +37,7 @@ v5.0.0
 **Documentation**:
 - Added the developer-guide repository as a submodule (!751)
 
+<<<<<<< CHANGELOG.md
 v4.4.2
 ------
 **NekMesh**:
@@ -49,6 +53,8 @@ v4.4.2
 **Utilities**
 - Fix vtkToFld missing dependency which prevented compiling with VTK 7.1 (!808)
 
+=======
+>>>>>>> CHANGELOG.md
 v4.4.1
 ------
 **Library**
@@ -66,6 +72,12 @@ v4.4.1
 - Fix deadlock with HDF5 input (!786)
 - Fix missing entriess in LibUtilities::kPointsTypeStr (!792)
 - Fix compiler warnings with CommDataType (!793)
+- Fix ability to set default implementation in Collections and added an option 
+  to set eNoCollections in FieldConvert as default (!789)
+- Fix performance issue in ProcessIsoContour in relation to memory consumption
+  (!821)
+- Fix performance issue with ExtractPhysToBndElmt (!796)
+- Fix available classes being listed multiple times (!817)
 
 **FieldConvert:**
 - Fix issue with field ordering in the interppointdatatofld module (!754)
@@ -81,9 +93,13 @@ v4.4.1
 - Fix issue with older rea input files (!765)
 - Fix memory leak in variational optimiser, add small optimisations (!785)
 - Check the dimensionality of the CAD system before running the 2D generator (!780)
+- Fix uninitialised memory bug in Nek5000 input module (!801)
 
 **IncNavierStokesSolver**
 - Fix an initialisation issue when using an additional advective field (!779)
+
+**Utilities**
+- Fix vtkToFld missing dependency which prevented compiling with VTK 7.1 (!808)
 
 **Packaging**
 - Added missing package for FieldUtils library (!755)

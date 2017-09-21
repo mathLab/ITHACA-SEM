@@ -40,7 +40,6 @@
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/LinearAlgebra/NekVectorFwd.hpp>
 #include <LibUtilities/LinearAlgebra/NekMatrixFwd.hpp>
-#include <LibUtilities/BasicUtils/NekPtr.hpp>
 #include <LibUtilities/BasicConst/NektarUnivConsts.hpp>
 
 #include <boost/assign/list_of.hpp>

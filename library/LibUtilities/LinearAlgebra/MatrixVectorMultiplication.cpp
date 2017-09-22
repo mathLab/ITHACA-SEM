@@ -39,7 +39,6 @@
 #include <LibUtilities/LinearAlgebra/NekTypeDefs.hpp>
 
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
-#include <LibUtilities/BasicUtils/RawType.hpp>
 
 #include <LibUtilities/LinearAlgebra/Blas.hpp>
 #include <LibUtilities/LinearAlgebra/CanGetRawPtr.hpp>

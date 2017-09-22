@@ -638,7 +638,6 @@ namespace Nektar
                         if(fStr) // extract other fields.
                         {
                             std::string fieldStr = fStr;
-                            std::cout << "PARSING " << fieldStr << std::endl;
                             bool  valid = ParseUtils::GenerateVector(fieldStr,fieldStrings);
                             std::cout << "GOT: " << fieldStrings.size() << endl;
                             ASSERTL0(valid,"Unable to correctly parse the field string in ExpansionTypes.");

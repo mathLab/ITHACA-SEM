@@ -335,10 +335,21 @@ int main(int argc, char* argv[])
             }
             else
             {
-                module.second = tmp1[1];
-                tmp1.push_back(string(i < nInput ? "infile=" : "outfile=")
-                               +tmp1[0]);
-                offset++;
+                if(tmp1.back()!="out")
+                {
+                    module.second = tmp1[1];
+                    tmp1.push_back(string(i < nInput ? "infile=" : "outfile=")
+                                   + tmp1[0]);
+                    offset++;
+                }
+                else //Here I try to have an additional output module
+                {
+                    module.first = eOutputModule;
+                    module.second = tmp1[1];
+                    tmp1.push_back(string("outfile=")
+                                   + tmp1[0]);
+                    offset++;
+                }
             }
         }
         else
@@ -351,7 +362,7 @@ int main(int argc, char* argv[])
         mod = GetModuleFactory().CreateInstance(module, f);
         modules.push_back(mod);
 
-        if (i < nInput)
+        if (i < nInput && module.first != eOutputModule)
         {
             inputModule = std::dynamic_pointer_cast<InputModule>(mod);
             inputModule->AddFile(module.second, tmp1[0]);

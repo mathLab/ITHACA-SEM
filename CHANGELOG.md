@@ -16,6 +16,9 @@ v5.0.0
 - Utilize LAPACK_DIR env variable to find the native blas/lapack install (!827)
 - Move steady state check and CFL output from solvers to SolverUtils (!832)
 - Remove DG advection implementation from EquationSystem (!832)
+- Simplify RawType typedefs (!840)
+- Remove unused files from BasicUtils (!841)
+- Remove checks for old boost versions which are no longer supported (!841)
 
 **NekMesh**:
 - Add feature to read basic 2D geo files as CAD (!731)

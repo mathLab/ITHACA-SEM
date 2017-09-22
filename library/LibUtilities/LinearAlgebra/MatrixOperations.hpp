@@ -178,8 +178,8 @@ void MultiplyEqual(
     NekMatrix<double, StandardMatrixTag> &result,
     const NekMatrix<RhsInnerType, RhsMatrixType> &rhs,
     typename std::enable_if<
-        std::is_same<typename RawType<typename NekMatrix<
-                         RhsInnerType, RhsMatrixType>::NumberType>::type,
+        std::is_same<RawType_t<typename NekMatrix<
+                         RhsInnerType, RhsMatrixType>::NumberType>,
                      double>::value &&
         CanGetRawPtr<NekMatrix<RhsInnerType, RhsMatrixType>>::value>::type *t =
         0)
@@ -215,8 +215,8 @@ void MultiplyEqual(
     NekMatrix<DataType, StandardMatrixTag> &result,
     const NekMatrix<RhsInnerType, RhsMatrixType> &rhs,
     typename std::enable_if<
-        !std::is_same<typename RawType<typename NekMatrix<
-                          RhsInnerType, RhsMatrixType>::NumberType>::type,
+        !std::is_same<RawType_t<typename NekMatrix<
+                          RhsInnerType, RhsMatrixType>::NumberType>,
                       double>::value ||
         !CanGetRawPtr<NekMatrix<RhsInnerType, RhsMatrixType>>::value>::type *t =
         0)

@@ -7,7 +7,6 @@ SET(BasicConstHeaders
 
 SET(BasicUtilsHeaders
     ./BasicUtils/ArrayPolicies.hpp
-    ./BasicUtils/BoostUtil.hpp
     ./BasicUtils/ConsistentObjectAccess.hpp
     ./BasicUtils/CompressData.h
     ./BasicUtils/CsvIO.h
@@ -22,7 +21,6 @@ SET(BasicUtilsHeaders
     ./BasicUtils/MeshPartitionMetis.h
     ./BasicUtils/NekManager.hpp
     ./BasicUtils/NekFactory.hpp
-    ./BasicUtils/NekPtr.hpp
     ./BasicUtils/OperatorGenerators.hpp
     ./BasicUtils/ParseUtils.hpp
     ./BasicUtils/Progressbar.hpp
@@ -39,7 +37,6 @@ SET(BasicUtilsHeaders
     ./BasicUtils/VmathArray.hpp
     ./BasicUtils/Metis.hpp
     ./BasicUtils/VtkUtil.hpp
-    ./BasicUtils/XmlUtil.h
 )
 
 SET(BasicUtilsSources
@@ -59,7 +56,6 @@ SET(BasicUtilsSources
     ./BasicUtils/ThreadBoost.cpp
     ./BasicUtils/Timer.cpp
     ./BasicUtils/Vmath.cpp
-    ./BasicUtils/XmlUtil.cpp
 )
 
 # HDF5

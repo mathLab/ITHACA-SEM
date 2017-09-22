@@ -15,6 +15,9 @@ v5.0.0
 - Added native support for csv files in addititon to pts (!760 !835)
 - Utilize LAPACK_DIR env variable to find the native blas/lapack install (!827)
 - Extend AeroForces filter to compressible flows (!815)
+- Simplify RawType typedefs (!840)
+- Remove unused files from BasicUtils (!841)
+- Remove checks for old boost versions which are no longer supported (!841)
 
 **NekMesh**:
 - Add feature to read basic 2D geo files as CAD (!731)

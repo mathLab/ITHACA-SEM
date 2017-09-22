@@ -77,6 +77,7 @@ v4.4.1
 
 **IncNavierStokesSolver**
 - Fix an initialisation issue when using an additional advective field (!779)
+- Fix MovingBody boundary condition (!845)
 
 **Utilities**
 - Fix vtkToFld missing dependency which prevented compiling with VTK 7.1 (!808)

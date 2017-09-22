@@ -50,7 +50,7 @@ public:
     LIB_UTILITIES_EXPORT static bool GenerateSeqVector(
         const std::string &str, std::vector<unsigned int> &out);
 
-    LIB_UTILITIES_EXPORT template <typename T>
+    template <typename T>
     static bool GenerateVector(const std::string &str, std::vector<T> &out);
 
     /**

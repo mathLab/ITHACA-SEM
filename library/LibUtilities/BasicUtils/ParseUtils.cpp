@@ -144,15 +144,15 @@ bool ParseUtils::GenerateVector(const std::string &str, std::vector<T> &out)
     return success && it == str.end();
 }
 
-template bool ParseUtils::GenerateVector<int>(
+template LIB_UTILITIES_EXPORT bool ParseUtils::GenerateVector<int>(
     const std::string &str, std::vector<int> &out);
-template bool ParseUtils::GenerateVector<long>(
+template LIB_UTILITIES_EXPORT bool ParseUtils::GenerateVector<long>(
     const std::string &str, std::vector<long> &out);
-template bool ParseUtils::GenerateVector<unsigned int>(
+template LIB_UTILITIES_EXPORT bool ParseUtils::GenerateVector<unsigned int>(
     const std::string &str, std::vector<unsigned int> &out);
-template bool ParseUtils::GenerateVector<double>(
+template LIB_UTILITIES_EXPORT bool ParseUtils::GenerateVector<double>(
     const std::string &str, std::vector<double> &out);
-template bool ParseUtils::GenerateVector<float>(
+template LIB_UTILITIES_EXPORT bool ParseUtils::GenerateVector<float>(
     const std::string &str, std::vector<float> &out);
 
 /**
@@ -161,7 +161,7 @@ template bool ParseUtils::GenerateVector<float>(
  * This routine specialises for the std::string data type as this type is not
  * supported by boost::spirit::qi::auto_.
  */
-template <>
+template <> LIB_UTILITIES_EXPORT
 bool ParseUtils::GenerateVector(const std::string &str,
                                 std::vector<std::string> &out)
 {

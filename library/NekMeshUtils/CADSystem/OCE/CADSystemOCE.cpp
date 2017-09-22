@@ -661,7 +661,7 @@ TopoDS_Shape CADSystemOCE::BuildGeo(string geo)
     ASSERTL0(surfs.size() == 1, "more than 1 surf");
     it = surfs.begin();
     vector<unsigned int> data;
-    ParseUtils::GenerateVector(it->second), data);
+    ParseUtils::GenerateVector(it->second, data);
     BRepBuilderAPI_MakeFace face(cWires[data[0]], true);
     for (int i = 1; i < data.size(); i++)
     {

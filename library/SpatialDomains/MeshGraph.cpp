@@ -639,7 +639,6 @@ namespace Nektar
                         {
                             std::string fieldStr = fStr;
                             bool  valid = ParseUtils::GenerateVector(fieldStr,fieldStrings);
-                            std::cout << "GOT: " << fieldStrings.size() << endl;
                             ASSERTL0(valid,"Unable to correctly parse the field string in ExpansionTypes.");
                         }
 
@@ -756,7 +755,6 @@ namespace Nektar
                             // interpret the basis type string.
                             std::vector<std::string> basisStrings;
                             std::vector<LibUtilities::BasisType> basis;
-                            std::cout << "PARSING2 " << basisTypeStr << std::endl;
                             bool valid = ParseUtils::GenerateVector(basisTypeStr, basisStrings);
                             ASSERTL0(valid, "Unable to correctly parse the basis types.");
                             for (vector<std::string>::size_type i = 0; i < basisStrings.size(); i++)
@@ -778,7 +776,6 @@ namespace Nektar
 
                             std::string numModesStr = nModesStr;
                             std::vector<unsigned int> numModes;
-                            std::cout << "PARSING3 " << numModesStr << std::endl;
                             valid = ParseUtils::GenerateVector(numModesStr, numModes);
                             ASSERTL0(valid, "Unable to correctly parse the number of modes.");
                             ASSERTL0(numModes.size() == basis.size(),"information for num modes does not match the number of basis");
@@ -789,7 +786,6 @@ namespace Nektar
                             // interpret the points type string.
                             std::vector<std::string> pointsStrings;
                             std::vector<LibUtilities::PointsType> points;
-                            std::cout << "PARSING4 " << pointsTypeStr << std::endl;
                             valid = ParseUtils::GenerateVector(pointsTypeStr, pointsStrings);
                             ASSERTL0(valid, "Unable to correctly parse the points types.");
                             for (vector<std::string>::size_type i = 0; i < pointsStrings.size(); i++)
@@ -811,7 +807,6 @@ namespace Nektar
                             ASSERTL0(nPointsStr,"NUMPOINTS was not defined in EXPANSION section of input");
                             std::string numPointsStr = nPointsStr;
                             std::vector<unsigned int> numPoints;
-                            std::cout << "PARSING5 " << numPointsStr << std::endl;
                             valid = ParseUtils::GenerateVector(numPointsStr, numPoints);
                             ASSERTL0(valid, "Unable to correctly parse the number of points.");
                             ASSERTL0(numPoints.size() == numPoints.size(),"information for num points does not match the number of basis");
@@ -863,7 +858,6 @@ namespace Nektar
                         if(fStr) // extract other fields.
                         {
                             std::string fieldStr = fStr;
-                            std::cout << "PARSING6 " << fieldStr << std::endl;
                             bool  valid = ParseUtils::GenerateVector(fieldStr,fieldStrings);
                             ASSERTL0(valid,"Unable to correctly parse the field string in ExpansionTypes.");
                         }

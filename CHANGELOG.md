@@ -533,6 +533,7 @@ v4.0.1
 
 **FieldConvert:**
 - Support equi-spaced output for simplex elements to reduce storage (!421)
+- Enable output to multiple files (!844)
 
 **IncNavierStokesSolver:**
 - Unify advection classes with those in `SolverUtils` (!403, !408)

@@ -32,6 +32,7 @@ v5.0.0
 - Add input module for Semtex field files (!777)
 - Fixed interppoints module (!760)
 - Move StreamFunction utility to a FieldConvert module (!809)
+- Enable output to multiple files (!844)
 
 **Documentation**:
 - Added the developer-guide repository as a submodule (!751)
@@ -533,7 +534,6 @@ v4.0.1
 
 **FieldConvert:**
 - Support equi-spaced output for simplex elements to reduce storage (!421)
-- Enable output to multiple files (!844)
 
 **IncNavierStokesSolver:**
 - Unify advection classes with those in `SolverUtils` (!403, !408)

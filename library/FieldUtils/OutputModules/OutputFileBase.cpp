@@ -219,6 +219,8 @@ void OutputFileBase::Process(po::variables_map &vm)
                     }
                 }
             }
+            // Restore m_exp
+            exp.swap(m_f->m_exp);
         }
         else
         {

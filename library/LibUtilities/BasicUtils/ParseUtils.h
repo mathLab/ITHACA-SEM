@@ -74,13 +74,13 @@ public:
         static_assert(std::is_integral<T>::value && std::is_unsigned<T>::value,
                       "Unsigned integer type required.");
 
-        std::ostringstream ss;
-        auto first = v[0], last = v[0];
-
         if (v.size() == 0)
         {
             return "";
         }
+
+        std::ostringstream ss;
+        auto first = v[0], last = v[0];
 
         ss << v[0];
 

@@ -17,6 +17,7 @@ v5.0.0
 - Simplify RawType typedefs (!840)
 - Remove unused files from BasicUtils (!841)
 - Remove checks for old boost versions which are no longer supported (!841)
+- Refactor ParseUtils to be more consistent (!843)
 
 **NekMesh**:
 - Add feature to read basic 2D geo files as CAD (!731)

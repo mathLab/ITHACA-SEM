@@ -33,7 +33,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <LibUtilities/BasicUtils/ParseUtils.hpp>
+#include <LibUtilities/BasicUtils/ParseUtils.h>
 #include <NekMeshUtils/MeshElements/Element.h>
 #include "ProcessExtractSurf.h"
 
@@ -71,7 +71,7 @@ void ProcessExtractSurf::Process()
 
     // Obtain vector of surface IDs from string.
     vector<unsigned int> surfs;
-    ASSERTL0(ParseUtils::GenerateSeqVector(surf.c_str(), surfs),
+    ASSERTL0(ParseUtils::GenerateSeqVector(surf, surfs),
              "Failed to interp surf string. Have you specified this string?");
     sort(surfs.begin(), surfs.end());
 

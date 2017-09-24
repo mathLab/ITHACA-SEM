@@ -34,7 +34,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <Collections/CollectionOptimisation.h>
-#include <LibUtilities/BasicUtils/ParseUtils.hpp>
+#include <LibUtilities/BasicUtils/ParseUtils.h>
 
 using namespace std;
 
@@ -230,7 +230,7 @@ CollectionOptimisation::CollectionOptimisation(
                     else
                     {
                         vector<unsigned int> orders;
-                        ParseUtils::GenerateSeqVector(order.c_str(), orders);
+                        ParseUtils::GenerateSeqVector(order, orders);
 
                         for (int i = 0; i < orders.size(); ++i)
                         {

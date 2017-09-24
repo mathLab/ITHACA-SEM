@@ -37,7 +37,7 @@
 
 #include <NekMeshUtils/2DGenerator/2DGenerator.h>
 
-#include <LibUtilities/BasicUtils/ParseUtils.hpp>
+#include <LibUtilities/BasicUtils/ParseUtils.h>
 #include <LibUtilities/BasicUtils/Progressbar.hpp>
 
 #include <boost/algorithm/string.hpp>
@@ -84,7 +84,7 @@ void Generator2D::Process()
     m_mesh->m_numNodes = m_mesh->m_cad->GetNumVerts();
     m_thickness_ID =
         m_thickness.DefineFunction("x y z", m_config["blthick"].as<string>());
-    ParseUtils::GenerateSeqVector(m_config["blcurves"].as<string>().c_str(),
+    ParseUtils::GenerateSeqVector(m_config["blcurves"].as<string>(),
                                   m_blCurves);
 
     // find the ends of the BL curves

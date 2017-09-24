@@ -39,7 +39,6 @@ using namespace std;
 
 #include "ProcessWSS.h"
 
-#include <LibUtilities/BasicUtils/ParseUtils.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <MultiRegions/ExpList.h>
 

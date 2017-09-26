@@ -66,9 +66,9 @@ protected:
     /// Advection term
     SolverUtils::AdvectionSharedPtr m_advObject;
 
-    virtual bool v_PostIntegrate(int step);
+    SOLVER_UTILS_EXPORT virtual bool v_PostIntegrate(int step);
 
-    virtual Array<OneD, NekDouble> v_GetMaxStdVelocity()
+    SOLVER_UTILS_EXPORT virtual Array<OneD, NekDouble> v_GetMaxStdVelocity()
     {
         ASSERTL0(false,
             "v_GetMaxStdVelocity is not implemented by the base class.");

@@ -702,14 +702,16 @@ namespace Nektar
         // Getting the velocity vector on the 2D normal space
         Array<OneD, Array<OneD, NekDouble> > velocity   (m_spacedim);
         Array<OneD, Array<OneD, NekDouble> > stdVelocity(m_spacedim);
+        Array<OneD, Array<OneD, NekDouble> > stdSoundSpeed(m_spacedim);
         Array<OneD, NekDouble>               pressure   (nTotQuadPoints);
         Array<OneD, NekDouble>               soundspeed (nTotQuadPoints);
         LibUtilities::PointsKeyVector        ptsKeys;
 
         for (int i = 0; i < m_spacedim; ++i)
         {
-            velocity   [i] = Array<OneD, NekDouble>(nTotQuadPoints);
-            stdVelocity[i] = Array<OneD, NekDouble>(nTotQuadPoints, 0.0);
+            velocity   [i]   = Array<OneD, NekDouble>(nTotQuadPoints);
+            stdVelocity[i]   = Array<OneD, NekDouble>(nTotQuadPoints, 0.0);
+            stdSoundSpeed[i] = Array<OneD, NekDouble>(nTotQuadPoints, 0.0);
         }
 
         m_varConv->GetVelocityVector(physfields, velocity);
@@ -728,18 +730,9 @@ namespace Nektar
                 m_fields[0]->GetExp(el)->GetGeom()->GetMetricInfo()
                                                   ->GetDerivFactors(ptsKeys);
 
-            // Add sound speed in all directions
-            //    (this might overestimate the eigenvalue)
-            for (int i = 0; i < nq; ++i)
-            {
-                for (int j = 0; j < expdim; ++j)
-                {
-                    int sign = velocity[j][offset + i] > 0 ? 1 : -1;
-                    velocity[j][offset + i] += sign * soundspeed[offset + i];
-                }
-            }
-
             // Convert to standard element
+            //    consider soundspeed in all directions
+            //    (this might overestimate the cfl)
             if(metricInfo->GetGtype() == SpatialDomains::eDeformed)
             {
                 // d xi/ dx = gmat = 1/J * d x/d xi
@@ -748,12 +741,19 @@ namespace Nektar
                     Vmath::Vmul(nq, gmat[i], 1,
                                     velocity[0] + offset, 1,
                                     tmp = stdVelocity[i] + offset, 1);
+                    Vmath::Vmul(nq, gmat[i], 1,
+                                    soundspeed + offset, 1,
+                                    tmp = stdSoundSpeed[i] + offset, 1);
                     for (int j = 1; j < expdim; ++j)
                     {
                         Vmath::Vvtvp(nq, gmat[expdim*j+i], 1,
                                          velocity[j] + offset, 1,
                                          stdVelocity[i] + offset, 1,
                                          tmp = stdVelocity[i] + offset, 1);
+                        Vmath::Vvtvp(nq, gmat[expdim*j+i], 1,
+                                         soundspeed + offset, 1,
+                                         stdSoundSpeed[i] + offset, 1,
+                                         tmp = stdSoundSpeed[i] + offset, 1);
                     }
                 }
             }
@@ -764,23 +764,33 @@ namespace Nektar
                     Vmath::Smul(nq, gmat[i][0],
                                     velocity[0] + offset, 1,
                                     tmp = stdVelocity[i] + offset, 1);
+                    Vmath::Smul(nq, gmat[i][0],
+                                    soundspeed + offset, 1,
+                                    tmp = stdSoundSpeed[i] + offset, 1);
                     for (int j = 1; j < expdim; ++j)
                     {
                         Vmath::Svtvp(nq, gmat[expdim*j+i][0],
                                          velocity[j] + offset, 1,
                                          stdVelocity[i] + offset, 1,
                                          tmp = stdVelocity[i] + offset, 1);
+                        Vmath::Svtvp(nq, gmat[expdim*j+i][0],
+                                         soundspeed + offset, 1,
+                                         stdSoundSpeed[i] + offset, 1,
+                                         tmp = stdSoundSpeed[i] + offset, 1);
                     }
                 }
             }
 
+            NekDouble vel;
             for (int i = 0; i < nq; ++i)
             {
                 NekDouble pntVelocity = 0.0;
                 for (int j = 0; j < expdim; ++j)
                 {
-                    pntVelocity += stdVelocity[j][offset + i] *
-                                   stdVelocity[j][offset + i];
+                    // Add sound speed
+                    vel = std::abs(stdVelocity[j][offset + i]) +
+                          std::abs(stdSoundSpeed[j][offset + i]);
+                    pntVelocity += vel * vel;
                 }
                 pntVelocity = sqrt(pntVelocity);
                 if (pntVelocity > stdV[el])

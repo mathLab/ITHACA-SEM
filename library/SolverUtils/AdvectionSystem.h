@@ -54,13 +54,13 @@ public:
     SOLVER_UTILS_EXPORT virtual void v_InitObject();
 
     /// Returns the advection object held by this instance.
-    AdvectionSharedPtr GetAdvObject()
+    SOLVER_UTILS_EXPORT AdvectionSharedPtr GetAdvObject()
     {
         return m_advObject;
     }
 
-    Array<OneD, NekDouble>  GetElmtCFLVals(void);
-    NekDouble               GetCFLEstimate(int &elmtid);
+    SOLVER_UTILS_EXPORT Array<OneD, NekDouble>  GetElmtCFLVals(void);
+    SOLVER_UTILS_EXPORT NekDouble               GetCFLEstimate(int &elmtid);
 
 protected:
     /// Advection term

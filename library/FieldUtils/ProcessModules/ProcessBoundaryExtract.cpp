@@ -39,7 +39,7 @@ using namespace std;
 
 #include "ProcessBoundaryExtract.h"
 
-#include <LibUtilities/BasicUtils/ParseUtils.hpp>
+#include <LibUtilities/BasicUtils/ParseUtils.h>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 
 namespace Nektar
@@ -107,8 +107,7 @@ void ProcessBoundaryExtract::Process(po::variables_map &vm)
     }
     else
     {
-        ASSERTL0(ParseUtils::GenerateOrderedVector(bvalues.c_str(),
-                                                   bndRegions),
+        ASSERTL0(ParseUtils::GenerateVector(bvalues, bndRegions),
                  "Failed to interpret bnd values string");
     }
 

@@ -47,7 +47,7 @@
 
 #include <tinyxml.h>
 
-#include <LibUtilities/BasicUtils/ParseUtils.hpp>
+#include <LibUtilities/BasicUtils/ParseUtils.h>
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <LibUtilities/BasicUtils/ShapeType.hpp>
 #include <LibUtilities/BasicUtils/FileSystem.h>
@@ -211,7 +211,7 @@ namespace Nektar
                     const char *nModesStr = expansion->Attribute("NUMMODES");
                     ASSERTL0(nModesStr,"NUMMODES was not defined in EXPANSION section of input");
                     std::string numModesStr = nModesStr;
-                    bool valid = ParseUtils::GenerateOrderedVector(numModesStr.c_str(), nummodes);
+                    bool valid = ParseUtils::GenerateVector(numModesStr, nummodes);
                     ASSERTL0(valid, "Unable to correctly parse the number of modes.");
 
                     if (nummodes.size() == 1)
@@ -228,7 +228,7 @@ namespace Nektar
                     if(fStr)
                     {
                         std::string fieldStr = fStr;
-                        bool  valid = ParseUtils::GenerateOrderedStringVector(fieldStr.c_str(),fieldName);
+                        bool  valid = ParseUtils::GenerateVector(fieldStr,fieldName);
                         ASSERTL0(valid,"Unable to correctly parse the field string in ExpansionTypes.");
 
                         for (int i = 0; i < fieldName.size(); ++i)
@@ -262,7 +262,7 @@ namespace Nektar
                     int beg = compositeStr.find_first_of("[");
                     int end = compositeStr.find_first_of("]");
                     std::string compositeListStr = compositeStr.substr(beg+1,end-beg-1);
-                    bool parseGood = ParseUtils::GenerateSeqVector(compositeListStr.c_str(), composite);
+                    bool parseGood = ParseUtils::GenerateSeqVector(compositeListStr, composite);
                     ASSERTL0(parseGood && !composite.empty(),
                         (std::string("Unable to read composite index range: ") + compositeListStr).c_str());
 
@@ -1003,7 +1003,7 @@ namespace Nektar
                 vSeqStr = vSeqStr.substr(indxBeg, indxEnd - indxBeg + 1);
 
                 std::vector<unsigned int> vSeq;
-                ParseUtils::GenerateSeqVector(vSeqStr.c_str(), vSeq);
+                ParseUtils::GenerateSeqVector(vSeqStr, vSeq);
 
                 for (int i = 0; i < vSeq.size(); ++i)
                 {
@@ -1020,7 +1020,7 @@ namespace Nektar
             std::string::size_type indxBeg = vSeqStr.find_first_of('[') + 1;
             std::string::size_type indxEnd = vSeqStr.find_last_of(']') - 1;
             vSeqStr = vSeqStr.substr(indxBeg, indxEnd - indxBeg + 1);
-            ParseUtils::GenerateSeqVector(vSeqStr.c_str(), m_domain);
+            ParseUtils::GenerateSeqVector(vSeqStr, m_domain);
         }
 
         void MeshPartition::PrintPartInfo(std::ostream &out)
@@ -2190,7 +2190,7 @@ namespace Nektar
                         std::string::size_type indxEnd = vSeqStr.find_last_of(']') - 1;
                         vSeqStr = vSeqStr.substr(indxBeg, indxEnd - indxBeg + 1);
                         std::vector<unsigned int> vSeq;
-                        ParseUtils::GenerateSeqVector(vSeqStr.c_str(), vSeq);
+                        ParseUtils::GenerateSeqVector(vSeqStr, vSeq);
 
                         idxList.clear();
 

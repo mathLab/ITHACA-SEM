@@ -39,7 +39,7 @@ using namespace std;
 
 #include "ProcessInnerProduct.h"
 
-#include <LibUtilities/BasicUtils/ParseUtils.hpp>
+#include <LibUtilities/BasicUtils/ParseUtils.h>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 
 namespace Nektar
@@ -112,7 +112,7 @@ void ProcessInnerProduct::Process(po::variables_map &vm)
     }
     else
     {
-        ASSERTL0(ParseUtils::GenerateSeqVector(fields.c_str(), processFields),
+        ASSERTL0(ParseUtils::GenerateVector(fields, processFields),
                  "Failed to interpret field string in module innerproduct");
     }
 
@@ -123,7 +123,7 @@ void ProcessInnerProduct::Process(po::variables_map &vm)
     else
     {
         ASSERTL0(
-            ParseUtils::GenerateSeqVector(multifldidsstr.c_str(), multiFldIds),
+            ParseUtils::GenerateSeqVector(multifldidsstr, multiFldIds),
             "Failed to interpret multifldids string in module innerproduct");
         int end        = fromfld.find_first_of('.', 0);
         string endstr  = fromfld.substr(end, fromfld.size());

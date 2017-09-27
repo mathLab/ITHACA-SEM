@@ -33,7 +33,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <LibUtilities/BasicUtils/ParseUtils.hpp>
+#include <LibUtilities/BasicUtils/ParseUtils.h>
 #include <NekMeshUtils/MeshElements/Element.h>
 #include "ProcessDetectSurf.h"
 
@@ -86,7 +86,7 @@ void ProcessDetectSurf::Process()
     vector<unsigned int> surfs;
     if (surf != "-1")
     {
-        ParseUtils::GenerateSeqVector(surf.c_str(), surfs);
+        ParseUtils::GenerateSeqVector(surf, surfs);
         sort(surfs.begin(), surfs.end());
     }
 

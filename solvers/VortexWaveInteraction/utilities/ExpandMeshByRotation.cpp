@@ -35,7 +35,7 @@
 
 
 #include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
-#include <LibUtilities/BasicUtils/ParseUtils.hpp>
+#include <LibUtilities/BasicUtils/ParseUtils.h>
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <SpatialDomains/MeshGraph.h>
 #include <cstdio>
@@ -525,7 +525,7 @@ void  ExpandComposites(TiXmlElement * mesh, map<int,int> newEdges, int nOrigElmt
             std::string indxStr = compositeElementStr.substr(indxBeg, indxEnd - indxBeg + 1);
             std::vector<unsigned int> seqVector;
             
-            bool err = ParseUtils::GenerateSeqVector(indxStr.c_str(), seqVector);
+            bool err = ParseUtils::GenerateSeqVector(indxStr, seqVector);
             
             ASSERTL0(err, (std::string("Error reading composite elements: ") + indxStr).c_str());
             

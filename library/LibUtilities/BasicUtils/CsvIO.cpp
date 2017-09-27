@@ -48,6 +48,7 @@
 #endif
 
 #include "ErrorUtil.hpp"
+#include <LibUtilities/BasicUtils/ParseUtils.h>
 #include <LibUtilities/BasicUtils/FileSystem.h>
 
 using namespace std;
@@ -122,8 +123,7 @@ void CsvIO::v_ImportFieldData(const std::string inFile, PtsFieldSharedPtr& ptsFi
     boost::erase_first(line, "#");
 
     vector<string> fieldNames;
-    bool valid = ParseUtils::GenerateOrderedStringVector(
-        line.c_str(), fieldNames);
+    bool valid = ParseUtils::GenerateVector(line, fieldNames);
     ASSERTL0(valid, "Unable to process list of fields from line: " + line);
 
     int dim = 0;

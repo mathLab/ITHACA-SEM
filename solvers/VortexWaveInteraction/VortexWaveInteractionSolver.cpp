@@ -38,7 +38,7 @@
 using namespace std;
 using namespace Nektar;
 
-#if defined(_MSC_VER) && BOOST_VERSION > 104700
+#if defined(_MSC_VER)
 #include <windows.h>
 #undef MoveFile
 #endif

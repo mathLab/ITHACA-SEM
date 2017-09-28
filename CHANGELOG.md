@@ -37,28 +37,11 @@ v5.0.0
 - Fixed interppoints module (!760)
 - Move StreamFunction utility to a FieldConvert module (!809)
 - Enable output to multiple files (!844)
+- Allow using xml file without expansion tag in FieldConvert (!849)
 
 **Documentation**:
 - Added the developer-guide repository as a submodule (!751)
 
-<<<<<<< CHANGELOG.md
-v4.4.2
-------
-**NekMesh**:
-- Fix uninitialised memory bug in Nek5000 input module (!801)
-
-**Library**
-- Fix ability to set default implementation in Collections and added an option
-  to set eNoCollections in FieldConvert as default (!789)
-- Fix performance issue in ProcessIsoContour in relation to memory consumption
-  (!821)
-- Fix performance issue with ExtractPhysToBndElmt (!796)
-
-**Utilities**
-- Fix vtkToFld missing dependency which prevented compiling with VTK 7.1 (!808)
-
-=======
->>>>>>> CHANGELOG.md
 v4.4.1
 ------
 **Library**

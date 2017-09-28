@@ -1257,6 +1257,7 @@ namespace Nektar
                         vGraphEdges[eId] = vcnt;
                     }
                 }
+                ++vcnt;
             }
         }
 

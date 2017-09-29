@@ -43,6 +43,7 @@
 #include <StdRegions/StdPyrExp.h>
 #include <StdRegions/StdHexExp.h>
 #include <GlobalMapping/Mapping.h>
+#include <LibUtilities/BasicUtils/ParseUtils.h>
 
 using namespace std;
 

@@ -39,7 +39,6 @@ using namespace std;
 
 #include "ProcessNumModes.h"
 
-#include <LibUtilities/BasicUtils/ParseUtils.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <StdRegions/StdQuadExp.h>
 

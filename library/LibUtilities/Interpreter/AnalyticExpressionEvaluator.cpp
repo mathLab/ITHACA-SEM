@@ -42,11 +42,7 @@
 #include <boost/algorithm/string/trim.hpp>
 #include <boost/random/detail/seed.hpp>
 
-#if( BOOST_VERSION / 100 % 1000 >= 36 )
 using namespace boost::spirit::classic;
-#else
-using namespace boost::spirit;
-#endif
 
 // trying to avoid incompatibility between standart <algorithm> header and
 // windows.h header which defines max and min macros.

@@ -40,7 +40,6 @@ using namespace std;
 
 #include "ProcessMultiShear.h"
 
-#include <LibUtilities/BasicUtils/ParseUtils.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <MultiRegions/ExpList.h>
 

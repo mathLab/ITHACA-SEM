@@ -33,10 +33,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <LibUtilities/BasicUtils/ParseUtils.hpp>
 #include <LibUtilities/BasicUtils/SessionReader.h>
-
-
 #include <NekMeshUtils/CADSystem/CADCurve.h>
 
 #include <boost/thread.hpp>

@@ -40,7 +40,6 @@ using namespace std;
 #include "ProcessDisplacement.h"
 
 #include <LibUtilities/BasicUtils/HashUtils.hpp>
-#include <LibUtilities/BasicUtils/ParseUtils.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LocalRegions/SegExp.h>
 #include <LocalRegions/TriExp.h>

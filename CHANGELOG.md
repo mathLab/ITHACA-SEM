@@ -31,6 +31,7 @@ v5.0.0
   rather than a vector (!797)
 - Fix inverted triangles and small memory issue in surface meshing (!798)
 - Additional curve types in GEO reader: BSpline, Circle, Ellipse (!800)
+- Fix default command line argument value (!823)
 
 **FieldConvert**:
 - Add input module for Semtex field files (!777)
@@ -41,7 +42,6 @@ v5.0.0
 **Documentation**:
 - Added the developer-guide repository as a submodule (!751)
 
-<<<<<<< CHANGELOG.md
 v4.4.2
 ------
 **NekMesh**:
@@ -57,8 +57,6 @@ v4.4.2
 **Utilities**
 - Fix vtkToFld missing dependency which prevented compiling with VTK 7.1 (!808)
 
-=======
->>>>>>> CHANGELOG.md
 v4.4.1
 ------
 **Library**

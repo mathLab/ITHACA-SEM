@@ -82,6 +82,7 @@ v4.4.1
   (!821)
 - Fix performance issue with ExtractPhysToBndElmt (!796)
 - Fix available classes being listed multiple times (!817)
+- Fix DriverAdaptive with second order IMEX (!850)
 
 **FieldConvert:**
 - Fix issue with field ordering in the interppointdatatofld module (!754)

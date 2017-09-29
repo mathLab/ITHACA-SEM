@@ -97,7 +97,7 @@ namespace GlobalMapping {
                 exp->GetCoords(coord[0], coord[1]);
 
                 SpatialDomains::Geometry2DSharedPtr geom =
-                    boost::dynamic_pointer_cast<SpatialDomains::Geometry2D>(
+                    std::dynamic_pointer_cast<SpatialDomains::Geometry2D>(
                         exp->GetGeom());
 
                 for (j = 0; j < exp->GetNedges(); ++j)
@@ -178,7 +178,7 @@ namespace GlobalMapping {
                 exp->GetCoords(coord[0], coord[1], coord[2]);
 
                 SpatialDomains::Geometry3DSharedPtr geom =
-                    boost::dynamic_pointer_cast<SpatialDomains::Geometry3D>(
+                    std::dynamic_pointer_cast<SpatialDomains::Geometry3D>(
                         exp->GetGeom());
 
                 for (j = 0; j < exp->GetNfaces(); ++j)

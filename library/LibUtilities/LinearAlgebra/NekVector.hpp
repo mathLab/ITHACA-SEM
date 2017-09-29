@@ -36,7 +36,6 @@
 #ifndef NEKTAR_LIB_UTILITIES_NEK_VECTOR_HPP
 #define NEKTAR_LIB_UTILITIES_NEK_VECTOR_HPP
 
-#include <ExpressionTemplates/ExpressionTemplates.hpp>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 
@@ -45,20 +44,15 @@
 #include <LibUtilities/LinearAlgebra/NekVectorFwd.hpp>
 #include <LibUtilities/LinearAlgebra/PointerWrapper.h>
 
-#include <LibUtilities/LinearAlgebra/MatrixSize.hpp>
-
 #include <LibUtilities/BasicUtils/OperatorGenerators.hpp>
 
 #include <functional>
 #include <algorithm>
 #include <math.h>
 
+#include <type_traits>
 #include <boost/call_traits.hpp>
-#include <boost/type_traits.hpp>
 #include <boost/shared_array.hpp>
-#include <boost/typeof/typeof.hpp>
-
-#include  BOOST_TYPEOF_INCREMENT_REGISTRATION_GROUP()
 
 namespace Nektar
 {
@@ -89,42 +83,6 @@ namespace Nektar
             LIB_UTILITIES_EXPORT NekVector(unsigned int size, Array<OneD, DataType>& ptr, PointerWrapper h = eCopy);
 
             LIB_UTILITIES_EXPORT NekVector(unsigned int size, const Array<OneD, const DataType>& ptr, PointerWrapper h = eCopy);
-
-            #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
-                template<typename L, typename Op, typename R>
-                NekVector(const expt::Node<L, Op, R>& rhs) :
-                    m_size(MatrixSize<expt::Node<L, Op, R>, typename expt::Node<L, Op, R>::Indices, 0>::template GetRequiredSize(rhs.GetData()).template get<0>()),
-                    m_data(m_size),
-                    m_wrapperType(eCopy)
-                {
-                    expt::ExpressionEvaluator::EvaluateWithoutAliasingCheck(rhs, *this);
-                }
-
-                template<typename L, typename Op, typename R>
-                NekVector<DataType>& operator=(const expt::Node<L, Op, R>& rhs)
-                {
-                    boost::tuple<unsigned int, unsigned int, unsigned int> sizes =
-                            MatrixSize<expt::Node<L, Op, R>, typename expt::Node<L, Op, R>::Indices, 0>::GetRequiredSize(rhs.GetData());
-                    unsigned int newRows = sizes.get<0>();
-
-                    this->SetSize(newRows);
-                    if( this->GetWrapperType() == eCopy )
-                    {
-                        if( this->GetData().num_elements() < newRows )
-                        {
-                            this->SetData(Array<OneD, DataType>(newRows));
-                        }
-                    }
-                    else
-                    {
-                        ASSERTL0(this->GetData().num_elements() >= newRows,
-                                 "Attempting to store too many elements in a wrapped vector.");
-                    }
-
-                    expt::ExpressionEvaluator::Evaluate(rhs, *this);
-                    return *this;
-                }
-            #endif //NEKTAR_USE_EXPRESSION_TEMPLATES
 
             LIB_UTILITIES_EXPORT ~NekVector();
 
@@ -197,15 +155,7 @@ namespace Nektar
 
             LIB_UTILITIES_EXPORT typename boost::call_traits<DataType>::const_reference z() const;
 
-            #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
-            expt::Node<expt::Node<NekVector<DataType> >, expt::NegateOp, void > operator-() const
-            {
-                expt::Node<NekVector<DataType> > leafNode(*this);
-                return expt::Node<expt::Node<NekVector<DataType> >, expt::NegateOp, void >(leafNode);
-            }
-            #else
             LIB_UTILITIES_EXPORT NekVector<DataType> operator-() const;
-            #endif
 
             LIB_UTILITIES_EXPORT DataType Magnitude() const;
             LIB_UTILITIES_EXPORT DataType Dot(const NekVector<DataType>& rhs) const;
@@ -238,8 +188,6 @@ namespace Nektar
             Array<OneD, DataType> m_data;
             PointerWrapper m_wrapperType;
     };
-
-    BOOST_TYPEOF_REGISTER_TEMPLATE(NekVector, 1);
 
     template<typename DataType>
     LIB_UTILITIES_EXPORT void Add(NekVector<DataType>& result,
@@ -351,14 +299,47 @@ namespace Nektar
     LIB_UTILITIES_EXPORT Multiply(const DataType& lhs,
                   const NekVector<DataType>& rhs);
 
-    GENERATE_MULTIPLICATION_OPERATOR(NekVector, 1, NekDouble, 0);
-    GENERATE_MULTIPLICATION_OPERATOR(NekDouble, 0, NekVector, 1);
-    GENERATE_MULTIPLICATION_OPERATOR(NekVector, 1, NekVector, 1);
-    
-    GENERATE_DIVISION_OPERATOR(NekVector, 1, NekDouble, 0);
-    GENERATE_ADDITION_OPERATOR(NekVector, 1, NekVector, 1);
-    GENERATE_SUBTRACTION_OPERATOR(NekVector, 1, NekVector, 1);
+    template<typename DataType>
+    NekVector<DataType> operator*(
+        const NekVector<DataType> &lhs, const NekDouble &rhs)
+    {
+        return Multiply(lhs, rhs);
+    }
 
+    template<typename DataType>
+    NekVector<DataType> operator*(
+        const NekDouble &lhs, const NekVector<DataType>& rhs)
+    {
+        return Multiply(lhs, rhs);
+    }
+
+    template<typename DataType>
+    NekVector<DataType> operator*(
+        const NekVector<DataType> &lhs, const NekVector<DataType> &rhs)
+    {
+        return Multiply(lhs, rhs);
+    }
+
+    template<typename DataType>
+    NekVector<DataType> operator/(
+        const NekVector<DataType> &lhs, const NekDouble &rhs)
+    {
+        return Divide(lhs, rhs);
+    }
+
+    template<typename DataType>
+    NekVector<DataType> operator+(
+        const NekVector<DataType> &lhs, const NekVector<DataType> &rhs)
+    {
+        return Add(lhs, rhs);
+    }
+
+    template<typename DataType>
+    NekVector<DataType> operator-(
+        const NekVector<DataType> &lhs, const NekVector<DataType> &rhs)
+    {
+        return Subtract(lhs, rhs);
+    }
 
     template<typename DataType>
     LIB_UTILITIES_EXPORT std::ostream& operator<<(std::ostream& os, const NekVector<DataType>& rhs);
@@ -414,255 +395,6 @@ namespace Nektar
     LIB_UTILITIES_EXPORT std::string AsString(const NekVector<DataType>& v);
 
 }
-
-#ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
-namespace expt
-{
-    template<typename DataType, typename L, typename Op, typename R>
-    DataType Dot(const Nektar::NekVector<DataType>& lhs,
-                 const expt::Node<L, Op, R>& expr)
-    {
-        // Evalaute the expression first, expression templates don't chain past
-        // this point since the return value is a scalar.
-        typename expt::Node<L, Op, R>::ResultType rhs = expt::ExpressionEvaluator::Evaluate(expr);
-        return Dot(lhs, rhs);
-    }
-
-    template<typename DataType>
-    struct IsAlias<Nektar::NekVector<DataType>, Nektar::NekVector<DataType> >
-    {
-        static bool Apply(const Nektar::NekVector<DataType>& lhs, const Nektar::NekVector<DataType>& rhs)
-        {
-            return lhs.GetPtr().Overlaps(rhs.GetPtr());
-        }
-    };
-
-    template<typename DataType, typename NodeType, typename Indices, unsigned int StartIndex>
-    struct CreateFromTree<Nektar::NekVector<DataType>, NodeType, Indices, StartIndex>
-    {
-        template<typename ArgVectorType>
-        static Nektar::NekVector<DataType> Apply(const ArgVectorType& tree)
-        {
-            boost::tuple<unsigned int, unsigned int, unsigned int> sizes =
-                Nektar::MatrixSize<NodeType, Indices, StartIndex>::GetRequiredSize(tree);
-
-            unsigned int rows = sizes.get<0>();
-            return Nektar::NekVector<DataType>(rows);
-        }
-    };
-
-    // Override default expression handling for addition/subtraction of vectors.
-    // Optimal execution is obtained by loop unrolling.
-
-    template<typename NodeType, typename enabled = void>
-    struct NodeCanUnroll : public boost::false_type {};
-
-    template<typename Type>
-    struct NodeCanUnroll<expt::Node<Type, void, void>,
-        typename boost::enable_if
-        <
-            Nektar::IsVector<typename expt::Node<Type, void, void>::ResultType>
-        >::type > : public boost::true_type
-    {
-    };
-        
-    template<typename LhsType, typename OpType, typename RhsType>
-    struct NodeCanUnroll<expt::Node<LhsType, OpType, RhsType>,
-        typename boost::enable_if
-        <
-            boost::mpl::and_
-            <
-                Nektar::IsVector<typename LhsType::ResultType>,
-                Nektar::IsVector<typename RhsType::ResultType>,
-                NodeCanUnroll<LhsType>,
-                NodeCanUnroll<RhsType>,
-                //boost::mpl::or_
-                //<
-                    boost::is_same<OpType, expt::AddOp>
-                //    boost::is_same<OpType, expt::SubtractOp>
-                //>
-        > >::type >: public boost::true_type
-    {
-    };
-
-    template<typename NodeType, typename IndicesType, unsigned int index>
-    struct Accumulate;
-
-    template<typename LhsType, typename IndicesType, unsigned int index>
-    struct Accumulate<expt::Node<LhsType, void, void>, IndicesType, index>
-    {
-        static const unsigned int MappedIndex = boost::mpl::at_c<IndicesType, index>::type::value;
-
-        template<typename ResultType, typename ArgumentVectorType>
-        static void Execute(ResultType& accumulator, const ArgumentVectorType& args, unsigned int i)
-        {
-            accumulator = boost::fusion::at_c<MappedIndex>(args)[i];
-        }
-    };
-
-    template<typename LhsType, typename Op, typename RhsType, typename IndicesType, unsigned int index>
-    struct Accumulate<expt::Node<LhsType, Op, RhsType>, IndicesType, index>
-    {
-        static const int rhsNodeIndex = index + LhsType::TotalCount;
-
-        template<typename ResultType, typename ArgumentVectorType>
-        static void Execute(ResultType& accumulator, const ArgumentVectorType& args, unsigned int i)
-        {
-            Accumulate<LhsType, IndicesType, index>::Execute(accumulator, args, i);
-            ResultType rhs;
-            Accumulate<RhsType, IndicesType, rhsNodeIndex>::Execute(rhs, args, i);
-            Op::OpEqual(accumulator, rhs);
-        }
-    };
-
-
-
-    template<typename IndicesType, unsigned int startIndex, unsigned int endIndex, typename enabled=void>
-    struct Unroll;
-
-    #ifndef NEKTAR_NEKVECTOR_MAX_UNROLL_ARGS
-    #define NEKTAR_NEKVECTOR_MAX_UNROLL_ARGS 10
-    #endif
-
-    #define NEKTAR_NEKVECTOR_UNROLL_GENERATE_INDEX(z, n, IndexName) \
-        static const unsigned int BOOST_PP_CAT(IndexName, n) = boost::mpl::at_c<IndicesType, startIndex+n>::type::value;
-
-    #define NEKTAR_NEKVECTOR_UNROLL_GENERATE_VARIABLE(z, n, VariableName) \
-        BOOST_AUTO(BOOST_PP_CAT(VariableName, n), boost::fusion::at_c<BOOST_PP_CAT(index, n)>(args).GetRawPtr());
-
-    #define NEKTAR_NEKVECTOR_UNROLL_GENERATE_VARIABLE_NAME_IN_ADDITION_SEQUENCE(z, n, VariableName) \
-        + BOOST_PP_CAT(VariableName, n)[i]
-
-    #define NEKTAR_NEKVECTOR_UNROLL_IMPL(z, n, ClassName) \
-    template<typename IndicesType, unsigned int startIndex, unsigned int endIndex> \
-    struct ClassName<IndicesType, startIndex, endIndex, \
-        typename boost::enable_if_c \
-        < \
-            endIndex-startIndex == BOOST_PP_CAT(n, u) \
-        >::type> \
-    { \
-        BOOST_PP_REPEAT_FROM_TO(0, n, NEKTAR_NEKVECTOR_UNROLL_GENERATE_INDEX, index)\
-        \
-        template<typename AccumulatorType, typename ArgumentVectorType> \
-        static inline void Execute(AccumulatorType& accumulator, const ArgumentVectorType& args) \
-        { \
-            BOOST_AUTO(a, accumulator.GetRawPtr()); \
-            BOOST_PP_REPEAT_FROM_TO(0, n, NEKTAR_NEKVECTOR_UNROLL_GENERATE_VARIABLE, t) \
-            \
-            const unsigned int r = accumulator.GetRows(); \
-            for(unsigned int i = 0; i < r; ++i) \
-            { \
-                a[i] = t0[i] \
-                BOOST_PP_REPEAT_FROM_TO(1, n, NEKTAR_NEKVECTOR_UNROLL_GENERATE_VARIABLE_NAME_IN_ADDITION_SEQUENCE, t); \
-            } \
-        } \
-    };
-
-    BOOST_PP_REPEAT_FROM_TO(2, NEKTAR_NEKVECTOR_MAX_UNROLL_ARGS, NEKTAR_NEKVECTOR_UNROLL_IMPL, Unroll);
-
-    //template<typename IndicesType, unsigned int startIndex, unsigned int endIndex>
-    //struct Unroll<IndicesType, startIndex, endIndex,
-    //    typename boost::enable_if_c
-    //    <
-    //        endIndex-startIndex == 2u
-    //    >::type>
-    //{
-    //    static const unsigned int index0 = boost::mpl::at_c<IndicesType, startIndex>::type::value;
-    //    static const unsigned int index1 = boost::mpl::at_c<IndicesType, startIndex+1>::type::value;
-    //    ;
-    //    template<typename AccumulatorType, typename ArgumentVectorType>
-    //    static inline void Execute(AccumulatorType& accumulator, const ArgumentVectorType& args)
-    //    {
-    //        BOOST_AUTO(a, accumulator.GetRawPtr());
-    //        BOOST_AUTO(t0, boost::fusion::at_c<index0>(args).GetRawPtr());
-    //        BOOST_AUTO(t1, boost::fusion::at_c<index1>(args).GetRawPtr());
-
-    //        const unsigned int r = accumulator.GetRows();
-    //        for(unsigned int i = 0; i < r; ++i)
-    //        {
-    //            accumulator[i] = t0[i] + t1[i];
-    //        }
-    //    }
-    //};
-
-    //template<typename IndicesType, unsigned int startIndex, unsigned int endIndex>
-    //struct Unroll<IndicesType, startIndex, endIndex,
-    //    typename boost::enable_if_c
-    //    <
-    //        endIndex-startIndex == 3u
-    //    >::type>
-    //{
-    //    static const unsigned int index0 = boost::mpl::at_c<IndicesType, startIndex>::type::value;
-    //    static const unsigned int index1 = boost::mpl::at_c<IndicesType, startIndex+1>::type::value;
-    //    static const unsigned int index2 = boost::mpl::at_c<IndicesType, startIndex+2>::type::value;
-
-    //    template<typename AccumulatorType, typename ArgumentVectorType>
-    //    static inline void Execute(AccumulatorType& accumulator, const ArgumentVectorType& args)
-    //    {
-    //        BOOST_AUTO(a, accumulator.GetRawPtr());
-    //        BOOST_AUTO(t0, boost::fusion::at_c<index0>(args).GetRawPtr());
-    //        BOOST_AUTO(t1, boost::fusion::at_c<index1>(args).GetRawPtr());
-    //        BOOST_AUTO(t2, boost::fusion::at_c<index2>(args).GetRawPtr());
-
-    //        const unsigned int r = accumulator.GetRows();
-    //        for(unsigned int i = 0; i < r; ++i)
-    //        {
-    //            accumulator[i] = t0[i] + t1[i] + t2[i];
-    //        }
-    //    }
-    //};
-
-    //template<typename IndicesType, unsigned int startIndex, unsigned int endIndex>
-    //struct Unroll<IndicesType, startIndex, endIndex,
-    //    typename boost::enable_if_c
-    //    <
-    //        endIndex-startIndex == 4u
-    //    >::type>
-    //{
-    //    static const unsigned int index0 = boost::mpl::at_c<IndicesType, startIndex>::type::value;
-    //    static const unsigned int index1 = boost::mpl::at_c<IndicesType, startIndex+1>::type::value;
-    //    static const unsigned int index2 = boost::mpl::at_c<IndicesType, startIndex+2>::type::value;
-    //    static const unsigned int index3 = boost::mpl::at_c<IndicesType, startIndex+3>::type::value;
-
-    //    template<typename AccumulatorType, typename ArgumentVectorType>
-    //    static inline void Execute(AccumulatorType& accumulator, const ArgumentVectorType& args)
-    //    {
-    //        BOOST_AUTO(a, accumulator.GetRawPtr());
-    //        BOOST_AUTO(t0, boost::fusion::at_c<index0>(args).GetRawPtr());
-    //        BOOST_AUTO(t1, boost::fusion::at_c<index1>(args).GetRawPtr());
-    //        BOOST_AUTO(t2, boost::fusion::at_c<index2>(args).GetRawPtr());
-    //        BOOST_AUTO(t3, boost::fusion::at_c<index3>(args).GetRawPtr());
-
-    //        const unsigned int r = accumulator.GetRows();
-    //        for(unsigned int i = 0; i < r; ++i)
-    //        {
-    //            accumulator[i] = t0[i] + t1[i] + t2[i] + t3[i];
-    //        }
-    //    }
-    //};
-
-        // Conditions
-        // Lhs and Rhs must result in a vector.
-        // Op must be Plus or Minus
-        // Must apply recursively.
-    template<typename LhsType, typename Op, typename RhsType, typename IndicesType, unsigned int index>
-    struct BinaryBinaryEvaluateNodeOverride<LhsType, Op, RhsType, IndicesType, index,
-        typename boost::enable_if
-        <
-            NodeCanUnroll<expt::Node<LhsType, Op, RhsType> >
-        >::type> : public boost::true_type 
-    {
-        static const int endIndex = index + LhsType::TotalCount + RhsType::TotalCount;
-
-        template<typename ResultType, typename ArgumentVectorType>
-        static inline void Evaluate(ResultType& accumulator, const ArgumentVectorType& args)
-        {
-            Unroll<IndicesType, index, endIndex>::Execute(accumulator, args);
-        }
-    };
-}
-#endif //NEKTAR_USE_EXPRESSION_TEMPLATES
-
 
 #endif // NEKTAR_LIB_UTILITIES_NEK_VECTOR_HPP
 

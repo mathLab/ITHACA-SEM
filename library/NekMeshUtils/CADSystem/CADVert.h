@@ -36,8 +36,6 @@
 #ifndef NEKMESHUTILS_CADSYSTEM_CADVERT
 #define NEKMESHUTILS_CADSYSTEM_CADVERT
 
-#include <boost/shared_ptr.hpp>
-
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 
@@ -127,7 +125,7 @@ protected:
     int degensurf;
 };
 
-typedef boost::shared_ptr<CADVert> CADVertSharedPtr;
+typedef std::shared_ptr<CADVert> CADVertSharedPtr;
 
 typedef LibUtilities::NekFactory<std::string, CADVert> CADVertFactory;
 

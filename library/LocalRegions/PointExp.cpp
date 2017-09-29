@@ -65,7 +65,7 @@ namespace Nektar
             ASSERTL1(GetCoordim() < 3 || coords_2.num_elements() > 0,
                      "Coords_2 is of insufficient size.");
 
-            SpatialDomains::PointGeomSharedPtr v = boost::dynamic_pointer_cast<SpatialDomains::PointGeom>(m_geom);
+            SpatialDomains::PointGeomSharedPtr v = std::dynamic_pointer_cast<SpatialDomains::PointGeom>(m_geom);
             NekDouble tmp;
             switch(GetCoordim())
             {

@@ -100,12 +100,3 @@ namespace Nektar
 	
     }//end namespace
 }//end namespace
-
-/**
- * $Log: StdExpansion0D.cpp,v $
- * Revision 1.1  2011/11/16 09:14:57  croth
- * 
- * created class
- *
- **/
-

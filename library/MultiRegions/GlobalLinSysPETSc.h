@@ -62,8 +62,8 @@ namespace Nektar
             /// Constructor for full direct matrix solve.
             MULTI_REGIONS_EXPORT GlobalLinSysPETSc(
                 const GlobalLinSysKey                &pKey,
-                const boost::weak_ptr<ExpList>       &pExp,
-                const boost::shared_ptr<AssemblyMap> &pLocToGloMap);
+                const std::weak_ptr<ExpList>         &pExp,
+                const std::shared_ptr<AssemblyMap>   &pLocToGloMap);
 
             MULTI_REGIONS_EXPORT virtual ~GlobalLinSysPETSc();
 

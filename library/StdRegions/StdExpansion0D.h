@@ -93,20 +93,9 @@ namespace Nektar
 
         };
 
-        typedef boost::shared_ptr<StdExpansion0D> StdExpansion0DSharedPtr;
+        typedef std::shared_ptr<StdExpansion0D> StdExpansion0DSharedPtr;
 
     } //end of namespace
 } //end of namespace
 
 #endif //STDEXP0D_H
-
-/**
-* $Log: StdExpansion1D.h,v $
-* Revision 1.1  2011/11/16 13:37:03  croth
-* created class 
-* 
-*
-**/
-
-
-

@@ -124,7 +124,7 @@ int main(int argc, char* argv[])
             t = eProcessModule;
         }
 
-        MeshSharedPtr m = boost::shared_ptr<Mesh>(new Mesh());
+        MeshSharedPtr m = std::shared_ptr<Mesh>(new Mesh());
         ModuleSharedPtr mod = GetModuleFactory().CreateInstance(
             ModuleKey(t, tmp1[1]), m);
         cerr << "Options for module " << tmp1[1] << ":" << endl;
@@ -157,7 +157,7 @@ int main(int argc, char* argv[])
      * module to load.
      */
 
-    MeshSharedPtr mesh = boost::shared_ptr<Mesh>(new Mesh());
+    MeshSharedPtr mesh = std::shared_ptr<Mesh>(new Mesh());
     vector<ModuleSharedPtr> modules;
     vector<string>          modcmds;
 

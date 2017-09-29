@@ -38,17 +38,12 @@
 #ifndef NEKTAR_LIB_UTILITIES_NEK_MEMORY_MANAGER_H
 #define NEKTAR_LIB_UTILITIES_NEK_MEMORY_MANAGER_H
 
+#include <memory>
+#include <type_traits>
+
 #include <LibUtilities/Memory/ThreadSpecificPool.hpp>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
-
-#include <boost/mpl/contains.hpp>
-#include <boost/mpl/list_c.hpp>
-#include <boost/shared_ptr.hpp>
-#include <boost/utility/enable_if.hpp>
-#include <boost/mpl/integral_c.hpp>
-#include <boost/bind.hpp>
-#include <boost/type_traits.hpp>
 
 #include <vector>
 
@@ -75,45 +70,17 @@ namespace Nektar
 /// violation of this rule occurs when giving memory allocated from the
 /// manager to a shared pointer.
 /// @code
-/// boost::shared_ptr<Obj> f(MemoryManager<Obj>::Allocate());
+/// std::shared_ptr<Obj> f(MemoryManager<Obj>::Allocate());
 /// @endcode
 /// Shared pointers call delete when they go out of scope, so this line of
 /// code will cause problems.  Instead, you should call the
 /// AllocateSharedPtr method:
 /// @code
-/// boost::shared_ptr<Obj> f = MemoryManager<Obj>::AllocateSharedPtr();
+/// std::shared_ptr<Obj> f = MemoryManager<Obj>::AllocateSharedPtr();
 /// @endcode
 template<typename DataType>
 class MemoryManager
 {
-    template<typename ObjectType, typename CustomDeallocator>
-    class DeallocateSharedPtr
-    {
-    public:
-        explicit DeallocateSharedPtr(const CustomDeallocator& d) :
-            m_dealloc(d)
-        {
-        }
-
-        void operator()(ObjectType*& m) const
-        {
-            m_dealloc();
-            MemoryManager<ObjectType>::Deallocate(m);
-        }
-
-    private:
-        CustomDeallocator m_dealloc;
-
-    };
-
-    class DefaultCustomDeallocator
-    {
-    public:
-        void operator()() const
-        {
-        }
-    };
-
 public:
     /// @brief Deallocate a pointer allocated by
     /// MemoryManager::Allocate.
@@ -190,18 +157,21 @@ public:
     /// pool. When the reference count to this object reaches 0, the
     /// shared pointer will automatically return the memory.
     template<typename... Args>
-    static boost::shared_ptr<DataType> AllocateSharedPtr(const Args &...args)
+    static std::shared_ptr<DataType> AllocateSharedPtr(const Args &...args)
     {
-        return AllocateSharedPtrD(DefaultCustomDeallocator(), args...);
+        return AllocateSharedPtrD([](DataType *ptr){}, args...);
     }
 
     template<typename DeallocatorType, typename... Args>
-    static boost::shared_ptr<DataType> AllocateSharedPtrD(
+    static std::shared_ptr<DataType> AllocateSharedPtrD(
         const DeallocatorType& d, const Args &...args)
     {
         DataType* data = Allocate(args...);
-        return boost::shared_ptr<DataType>(
-            data, DeallocateSharedPtr<DataType, DeallocatorType>(d));
+        return std::shared_ptr<DataType>(
+            data, [=](DataType *ptr){
+                d(ptr);
+                MemoryManager<DataType>::Deallocate(ptr);
+            });
     }
 
     /// \brief Allocates a chunk of raw, uninitialized memory, capable of

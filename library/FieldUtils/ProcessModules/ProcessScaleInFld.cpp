@@ -39,7 +39,6 @@ using namespace std;
 
 #include "ProcessScaleInFld.h"
 
-#include <LibUtilities/BasicUtils/ParseUtils.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 
 namespace Nektar

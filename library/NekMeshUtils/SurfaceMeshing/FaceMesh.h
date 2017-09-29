@@ -158,7 +158,7 @@ private:
     int m_compId;
 };
 
-typedef boost::shared_ptr<FaceMesh> FaceMeshSharedPtr;
+typedef std::shared_ptr<FaceMesh> FaceMeshSharedPtr;
 }
 }
 

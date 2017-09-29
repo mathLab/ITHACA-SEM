@@ -82,8 +82,8 @@ namespace Nektar
          */
         GlobalLinSysDirectStaticCond::GlobalLinSysDirectStaticCond(
                      const GlobalLinSysKey          &pKey,
-                     const boost::weak_ptr<ExpList> &pExpList,
-                     const boost::shared_ptr<AssemblyMap>
+                     const std::weak_ptr<ExpList> &pExpList,
+                     const std::shared_ptr<AssemblyMap>
                      &pLocToGloMap)
             : GlobalLinSys          (pKey, pExpList, pLocToGloMap),
               GlobalLinSysDirect    (pKey, pExpList, pLocToGloMap),
@@ -104,12 +104,12 @@ namespace Nektar
          */
         GlobalLinSysDirectStaticCond::GlobalLinSysDirectStaticCond(
                      const GlobalLinSysKey                &pKey,
-                     const boost::weak_ptr<ExpList>       &pExpList,
+                     const std::weak_ptr<ExpList>         &pExpList,
                      const DNekScalBlkMatSharedPtr         pSchurCompl,
                      const DNekScalBlkMatSharedPtr         pBinvD,
                      const DNekScalBlkMatSharedPtr         pC,
                      const DNekScalBlkMatSharedPtr         pInvD,
-                     const boost::shared_ptr<AssemblyMap> &pLocToGloMap)
+                     const std::shared_ptr<AssemblyMap>   &pLocToGloMap)
             : GlobalLinSys          (pKey, pExpList, pLocToGloMap),
               GlobalLinSysDirect    (pKey, pExpList, pLocToGloMap),
               GlobalLinSysStaticCond(pKey, pExpList, pLocToGloMap)
@@ -283,12 +283,12 @@ namespace Nektar
 
         GlobalLinSysStaticCondSharedPtr GlobalLinSysDirectStaticCond::v_Recurse(
             const GlobalLinSysKey                &mkey,
-            const boost::weak_ptr<ExpList>       &pExpList,
+            const std::weak_ptr<ExpList>         &pExpList,
             const DNekScalBlkMatSharedPtr         pSchurCompl,
             const DNekScalBlkMatSharedPtr         pBinvD,
             const DNekScalBlkMatSharedPtr         pC,
             const DNekScalBlkMatSharedPtr         pInvD,
-            const boost::shared_ptr<AssemblyMap> &l2gMap)
+            const std::shared_ptr<AssemblyMap>   &l2gMap)
         {
             GlobalLinSysDirectStaticCondSharedPtr sys = MemoryManager<
                 GlobalLinSysDirectStaticCond>::AllocateSharedPtr(

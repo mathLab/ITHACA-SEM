@@ -36,10 +36,8 @@
 #ifndef NEKTAR_LIB_UTILITIES_BASIC_UTILS_H5_H
 #define NEKTAR_LIB_UTILITIES_BASIC_UTILS_H5_H
 
-#include <boost/enable_shared_from_this.hpp>
-#include <boost/functional/hash.hpp>
-#include <boost/shared_ptr.hpp>
 #include <exception>
+#include <memory>
 #include <hdf5.h>
 #include <string>
 #include <vector>
@@ -83,28 +81,28 @@ class Error : public std::exception
 
 // Forward declare
 class Object;
-typedef boost::shared_ptr<Object> ObjectSharedPtr;
+typedef std::shared_ptr<Object> ObjectSharedPtr;
 class DataType;
-typedef boost::shared_ptr<DataType> DataTypeSharedPtr;
+typedef std::shared_ptr<DataType> DataTypeSharedPtr;
 class DataSpace;
-typedef boost::shared_ptr<DataSpace> DataSpaceSharedPtr;
+typedef std::shared_ptr<DataSpace> DataSpaceSharedPtr;
 class CanHaveAttributes;
-typedef boost::shared_ptr<CanHaveAttributes> CanHaveAttributesSharedPtr;
+typedef std::shared_ptr<CanHaveAttributes> CanHaveAttributesSharedPtr;
 class Attribute;
-typedef boost::shared_ptr<Attribute> AttributeSharedPtr;
+typedef std::shared_ptr<Attribute> AttributeSharedPtr;
 class CanHaveGroupsDataSets;
-typedef boost::shared_ptr<CanHaveGroupsDataSets> CanHaveGroupsDataSetsSharedPtr;
+typedef std::shared_ptr<CanHaveGroupsDataSets> CanHaveGroupsDataSetsSharedPtr;
 class Group;
-typedef boost::shared_ptr<Group> GroupSharedPtr;
+typedef std::shared_ptr<Group> GroupSharedPtr;
 class File;
-typedef boost::shared_ptr<File> FileSharedPtr;
+typedef std::shared_ptr<File> FileSharedPtr;
 class DataSet;
-typedef boost::shared_ptr<DataSet> DataSetSharedPtr;
+typedef std::shared_ptr<DataSet> DataSetSharedPtr;
 class PList;
-typedef boost::shared_ptr<PList> PListSharedPtr;
+typedef std::shared_ptr<PList> PListSharedPtr;
 
 /// HDF5 base class
-class Object : public boost::enable_shared_from_this<Object>
+class Object : public std::enable_shared_from_this<Object>
 {
 public:
     virtual void Close() = 0;

@@ -72,7 +72,7 @@ namespace Nektar
         {
             if(DeclareLinesSetCoeffPhys)
             {
-                DisContField1DSharedPtr zero_line = boost::dynamic_pointer_cast<DisContField1D> (In.m_lines[0]);
+                DisContField1DSharedPtr zero_line = std::dynamic_pointer_cast<DisContField1D> (In.m_lines[0]);
                 
                 for(int n = 0; n < m_lines.num_elements(); ++n)
                 {
@@ -273,7 +273,7 @@ namespace Nektar
             EvaluateBoundaryConditions(time, varName);
         }
 		
-		const Array<OneD,const boost::shared_ptr<ExpList> > &DisContField3DHomogeneous2D::v_GetBndCondExpansions(void)
+		const Array<OneD,const std::shared_ptr<ExpList> > &DisContField3DHomogeneous2D::v_GetBndCondExpansions(void)
 		{
 			return GetBndCondExpansions();
 		}
@@ -283,7 +283,7 @@ namespace Nektar
 			return GetBndConditions();
 		}
 		
-		boost::shared_ptr<ExpList> &DisContField3DHomogeneous2D::v_UpdateBndCondExpansion(int i)
+		std::shared_ptr<ExpList> &DisContField3DHomogeneous2D::v_UpdateBndCondExpansion(int i)
 		{
 			return UpdateBndCondExpansion(i);
 		}
@@ -336,7 +336,7 @@ namespace Nektar
         }
 
         void DisContField3DHomogeneous2D::v_GetBndElmtExpansion(int i,
-                            boost::shared_ptr<ExpList> &result,
+                            std::shared_ptr<ExpList> &result,
                             const bool DeclareCoeffPhysArrays)
         {
             int n, cnt, nq;

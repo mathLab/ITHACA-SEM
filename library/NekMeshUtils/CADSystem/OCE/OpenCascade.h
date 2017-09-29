@@ -106,4 +106,11 @@
 #include <gp_Pnt2d.hxx>
 #include <gp_Trsf.hxx>
 
+#include <Geom_BSplineCurve.hxx>
+#include <Geom_BezierCurve.hxx>
+#include <Geom_Circle.hxx>
+#include <Geom_Ellipse.hxx>
+#include <gp_Circ.hxx>
+#include <gp_Elips.hxx>
+
 #endif

@@ -122,7 +122,7 @@ void InputVtk::Process()
         }
 
         m_mesh->m_node.push_back(
-            boost::shared_ptr<Node>(new Node(i, p[0], p[1], p[2])));
+            std::shared_ptr<Node>(new Node(i, p[0], p[1], p[2])));
     }
 
     for (int c = 0; c < numCellTypes; ++c)

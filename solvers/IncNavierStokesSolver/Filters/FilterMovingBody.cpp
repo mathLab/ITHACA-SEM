@@ -34,6 +34,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
+#include <LibUtilities/BasicUtils/ParseUtils.h>
 #include <iomanip>
 #include <LocalRegions/Expansion1D.h>
 #include <LocalRegions/Expansion2D.h>
@@ -58,10 +59,8 @@ FilterMovingBody::FilterMovingBody(
     : Filter(pSession),
       m_session(pSession)
 {
-    ParamMap::const_iterator it;
-
     // OutputFile
-    it = pParams.find("OutputFile");
+    auto it = pParams.find("OutputFile");
     if (it == pParams.end())
     {
         m_outputFile_fce = pSession->GetSessionName();
@@ -139,7 +138,7 @@ void FilterMovingBody::v_Initialise(
     std::string IndString = m_BoundaryString.substr(FirstInd,
                                                     LastInd - FirstInd + 1);
 
-    bool parseGood = ParseUtils::GenerateSeqVector(IndString.c_str(),
+    bool parseGood = ParseUtils::GenerateSeqVector(IndString,
                                                    m_boundaryRegionsIdList);
 
     ASSERTL0(parseGood && !m_boundaryRegionsIdList.empty(),
@@ -147,8 +146,6 @@ void FilterMovingBody::v_Initialise(
               "range for FilterAeroForces: ") + IndString).c_str());
 
     // determine what boundary regions need to be considered
-    int cnt;
-
     unsigned int numBoundaryRegions
                     = pFields[0]->GetBndConditions().num_elements();
 
@@ -160,17 +157,16 @@ void FilterMovingBody::v_Initialise(
     const SpatialDomains::BoundaryRegionCollection &bregions
                     = bcs.GetBoundaryRegions();
 
-    SpatialDomains::BoundaryRegionCollection::const_iterator it;
-
-    for (cnt = 0, it = bregions.begin(); it != bregions.end();
-            ++it, cnt++)
+    int cnt = 0;
+    for (auto &it : bregions)
     {
         if ( std::find(m_boundaryRegionsIdList.begin(),
-                       m_boundaryRegionsIdList.end(), it->first) !=
+                       m_boundaryRegionsIdList.end(), it.first) !=
                 m_boundaryRegionsIdList.end() )
         {
             m_boundaryRegionIsInList[cnt] = 1;
         }
+        ++cnt;
     }
 
     LibUtilities::CommSharedPtr vComm = pFields[0]->GetComm();

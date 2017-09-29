@@ -64,7 +64,7 @@ namespace Nektar
 	 */
         
         PreconditionerLowEnergy::PreconditionerLowEnergy(
-            const boost::shared_ptr<GlobalLinSys> &plinsys,
+            const std::shared_ptr<GlobalLinSys> &plinsys,
             const AssemblyMapSharedPtr &pLocToGloMap)
             : Preconditioner(plinsys, pLocToGloMap),
               m_linsys(plinsys),
@@ -78,7 +78,7 @@ namespace Nektar
             ASSERTL0(solvertype == eIterativeStaticCond ||
                      solvertype == ePETScStaticCond, "Solver type not valid");
 
-            boost::shared_ptr<MultiRegions::ExpList> 
+            std::shared_ptr<MultiRegions::ExpList> 
                 expList=((m_linsys.lock())->GetLocMat()).lock();
             
             StdRegions::StdExpansionSharedPtr locExpansion;
@@ -120,7 +120,7 @@ namespace Nektar
 	 */
        void PreconditionerLowEnergy::v_BuildPreconditioner()
         {
-            boost::shared_ptr<MultiRegions::ExpList> 
+            std::shared_ptr<MultiRegions::ExpList> 
                 expList=((m_linsys.lock())->GetLocMat()).lock();
             LocalRegions::ExpansionSharedPtr locExpansion;
             GlobalLinSysKey m_linSysKey=(m_linsys.lock())->GetKey();
@@ -229,7 +229,7 @@ namespace Nektar
                 cnt = 0;
                 for(j = 0; j < bndCondExp[i]->GetNumElmts(); j++)
                 {
-                    bndCondFaceExp = boost::dynamic_pointer_cast<
+                    bndCondFaceExp = std::dynamic_pointer_cast<
                     StdRegions::StdExpansion2D>(bndCondExp[i]->GetExp(j));
                     if (bndConditions[i]->GetBoundaryConditionType() == 
                         SpatialDomains::eDirichlet)
@@ -289,10 +289,9 @@ namespace Nektar
             // DOF and set up unique ordering. 
 
             // First do periodic edges 
-            PeriodicMap::const_iterator pIt;
-            for (pIt = periodicEdges.begin(); pIt != periodicEdges.end(); ++pIt)
+            for (auto &pIt : periodicEdges)
             {
-                meshEdgeId = pIt->first;
+                meshEdgeId = pIt.first;
 
                 if(edgeDirMap.count(meshEdgeId)==0)
                 {
@@ -302,14 +301,14 @@ namespace Nektar
                         bool SetUpNewEdge = true;
                         
                         
-                        for (i = 0; i < pIt->second.size(); ++i)
+                        for (i = 0; i < pIt.second.size(); ++i)
                         {
-                            if (!pIt->second[i].isLocal)
+                            if (!pIt.second[i].isLocal)
                             {
                                 continue;
                             }
                             
-                            int meshEdgeId2 = pIt->second[i].id;
+                            int meshEdgeId2 = pIt.second[i].id;
                             
                             if(edgeDirMap.count(meshEdgeId2)==0)
                             {
@@ -384,9 +383,9 @@ namespace Nektar
             // Loop over all the elements in the domain and compute max face
             // DOF. Reduce across all processes to get universal maximum.
             // - Periodic faces
-            for (pIt = periodicFaces.begin(); pIt != periodicFaces.end(); ++pIt)
+            for (auto &pIt : periodicFaces)
             {
-                meshFaceId = pIt->first;
+                meshFaceId = pIt.first;
                 
                 if(faceDirMap.count(meshFaceId)==0)
                 {
@@ -396,9 +395,9 @@ namespace Nektar
                     {
                         bool SetUpNewFace = true;
                         
-                        if(pIt->second[0].isLocal)
+                        if(pIt.second[0].isLocal)
                         {
-                            int meshFaceId2 = pIt->second[0].id;
+                            int meshFaceId2 = pIt.second[0].id;
                             
                             if(faceDirMap.count(meshFaceId2)==0)
                             {
@@ -507,7 +506,7 @@ namespace Nektar
                         
                         // Determine a universal map offset 
                         int uniOffset = meshEdgeId;                            
-                        pIt = periodicEdges.find(meshEdgeId);
+                        auto pIt = periodicEdges.find(meshEdgeId);
                         if (pIt != periodicEdges.end())
                         {
                             for (int l = 0; l < pIt->second.size(); ++l)
@@ -546,7 +545,7 @@ namespace Nektar
                         // Determine a universal map offset 
                         int uniOffset = meshFaceId;                            
                         // use minimum face edge when periodic 
-                        pIt = periodicFaces.find(meshFaceId);
+                        auto pIt = periodicFaces.find(meshFaceId);
                         if (pIt != periodicFaces.end())
                         {
                             uniOffset = min(uniOffset, pIt->second[0].id);
@@ -662,7 +661,7 @@ namespace Nektar
 
                                 meshVertId = locExpansion->as<LocalRegions::Expansion3D>()->GetGeom3D()->GetVid(v);
                             
-                                pIt = periodicVerts.find(meshVertId);
+                                auto pIt = periodicVerts.find(meshVertId);
                                 if (pIt != periodicVerts.end())
                                 {
                                     for (k = 0; k < pIt->second.size(); ++k)
@@ -731,7 +730,7 @@ namespace Nektar
                         Array<OneD, unsigned int> facemodearray;
                         StdRegions::Orientation faceOrient = locExpansion->GetForient(fid);
                         
-                        pIt = periodicFaces.find(meshFaceId);
+                        auto pIt = periodicFaces.find(meshFaceId);
                         if (pIt != periodicFaces.end())
                         {
                             if(meshFaceId == min(meshFaceId, pIt->second[0].id))
@@ -917,7 +916,7 @@ namespace Nektar
         */
        void PreconditionerLowEnergy::SetupBlockTransformationMatrix()
        {
-           boost::shared_ptr<MultiRegions::ExpList> 
+           std::shared_ptr<MultiRegions::ExpList> 
                expList=((m_linsys.lock())->GetLocMat()).lock();
            StdRegions::StdExpansionSharedPtr locExpansion;
 
@@ -1221,9 +1220,9 @@ namespace Nektar
         DNekScalMatSharedPtr PreconditionerLowEnergy::
         v_TransformedSchurCompl(
             int offset, 
-            const boost::shared_ptr<DNekScalMat > &loc_mat)
+            const std::shared_ptr<DNekScalMat > &loc_mat)
 	{
-            boost::shared_ptr<MultiRegions::ExpList> 
+            std::shared_ptr<MultiRegions::ExpList> 
                 expList=((m_linsys.lock())->GetLocMat()).lock();
          
             StdRegions::StdExpansionSharedPtr locExpansion;                
@@ -1344,7 +1343,7 @@ namespace Nektar
                 {-1,1,0}, {0,-1,sqrt(double(3))}, {0,1,sqrt(double(3))},
             };
             
-            //boost::shared_ptr<SpatialDomains::PointGeom> verts[6];
+            //std::shared_ptr<SpatialDomains::PointGeom> verts[6];
             SpatialDomains::PointGeomSharedPtr verts[6];
             for(int i=0; i < nVerts; ++i)
             {
@@ -1436,7 +1435,7 @@ namespace Nektar
                 {0,2/sqrt(double(3)),-1/sqrt(double(6))},
                 {0,0,3/sqrt(double(6))}};
             
-            boost::shared_ptr<SpatialDomains::PointGeom> verts[4];
+            std::shared_ptr<SpatialDomains::PointGeom> verts[4];
 	    for(i=0; i < nVerts; ++i)
 	    {
 	        verts[i] =  
@@ -1459,7 +1458,7 @@ namespace Nektar
             SpatialDomains::SegGeomSharedPtr edges[nEdges];
             for(i=0; i < nEdges; ++i)
             {
-                boost::shared_ptr<SpatialDomains::PointGeom>
+                std::shared_ptr<SpatialDomains::PointGeom>
                     vertsArray[2];
                 for(j=0; j<2; ++j)
                 {
@@ -1605,7 +1604,7 @@ namespace Nektar
         void PreconditionerLowEnergy::SetUpReferenceElements()
         {
             int cnt,i,j;
-            boost::shared_ptr<MultiRegions::ExpList> 
+            std::shared_ptr<MultiRegions::ExpList> 
                 expList=((m_linsys.lock())->GetLocMat()).lock();
             GlobalLinSysKey m_linSysKey=(m_linsys.lock())->GetKey();
             StdRegions::VarCoeffMap vVarCoeffMap;
@@ -1693,12 +1692,10 @@ namespace Nektar
             // retrieve variable coefficient
             if(m_linSysKey.GetNVarCoeffs() > 0)
             {
-                StdRegions::VarCoeffMap::const_iterator x;
                 cnt = expList->GetPhys_Offset(0);
-                for (x = m_linSysKey.GetVarCoeffs().begin(); 
-                     x != m_linSysKey.GetVarCoeffs().end(); ++x)
+                for (auto &x : m_linSysKey.GetVarCoeffs())
                 {
-                    vVarCoeffMap[x->first] = x->second + cnt;
+                    vVarCoeffMap[x.first] = x.second + cnt;
                 }
             }
 

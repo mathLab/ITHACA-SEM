@@ -40,9 +40,6 @@
 #include <boost/test/unit_test.hpp>
 #include <iostream>
 
-#include <ExpressionTemplates/Node.hpp>
-#include <ExpressionTemplates/ExpressionEvaluator.hpp>
-
 namespace Nektar
 {
     
@@ -81,25 +78,6 @@ namespace Nektar
                 ++numberCopied;
             }
 
-            #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
-            template<typename L, typename Op, typename R>
-            CountedObject(const expt::Node<L, Op, R>& rhs) :
-                value(0)
-            {
-                ++numberOfExpressionConstructions;
-                expt::ExpressionEvaluator::Evaluate(rhs, *this);
-            }
-
-            template<typename L, typename Op, typename R>
-            CountedObject<DerivedType> operator=(const expt::Node<L, Op, R>& rhs)
-            {
-                ++numberOfExpressionAssignments;
-                value = 0;
-                expt::ExpressionEvaluator::Evaluate(rhs, *this);
-                return *this;
-            }
-            #endif
-            
             virtual ~CountedObject()
             {
                 ++numberDestroyed;
@@ -214,25 +192,3 @@ namespace Nektar
 }
 
 #endif //NEKTAR_UNIT_TESTS_COUNTED_OBJECT_H
-
-/**
-    $Log: CountedObject.h,v $
-    Revision 1.6  2008/01/20 04:07:46  bnelson
-    *** empty log message ***
-
-    Revision 1.5  2007/09/12 03:59:41  bnelson
-    *** empty log message ***
-
-    Revision 1.4  2007/05/16 02:47:29  bnelson
-    Fixed a non-explicit constructor.
-
-    Revision 1.3  2007/01/29 01:37:16  bnelson
-    *** empty log message ***
-
-    Revision 1.2  2006/11/12 17:59:47  bnelson
-    *** empty log message ***
-
-    Revision 1.1  2006/11/11 01:32:52  bnelson
-    *** empty log message ***
-
-**/

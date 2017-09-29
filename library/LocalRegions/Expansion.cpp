@@ -114,7 +114,7 @@ namespace Nektar
 
         void Expansion::AddEdgeNormBoundaryInt(
             const int                           edge,
-            const boost::shared_ptr<Expansion> &EdgeExp,
+            const std::shared_ptr<Expansion>   &EdgeExp,
             const Array<OneD, const NekDouble> &Fx,
             const Array<OneD, const NekDouble> &Fy,
                   Array<OneD,       NekDouble> &outarray)
@@ -124,7 +124,7 @@ namespace Nektar
 
         void Expansion::AddEdgeNormBoundaryInt(
             const int                           edge,
-            const boost::shared_ptr<Expansion> &EdgeExp,
+            const std::shared_ptr<Expansion>   &EdgeExp,
             const Array<OneD, const NekDouble> &Fn,
                   Array<OneD,       NekDouble> &outarray)
         {
@@ -133,7 +133,7 @@ namespace Nektar
 
         void Expansion::AddFaceNormBoundaryInt(
             const int                           face,
-            const boost::shared_ptr<Expansion> &FaceExp,
+            const std::shared_ptr<Expansion>   &FaceExp,
             const Array<OneD, const NekDouble> &Fn,
                   Array<OneD,       NekDouble> &outarray)
         {
@@ -329,7 +329,7 @@ namespace Nektar
 
         void Expansion::v_AddEdgeNormBoundaryInt(
             const int                           edge,
-            const boost::shared_ptr<Expansion> &EdgeExp,
+            const std::shared_ptr<Expansion>   &EdgeExp,
             const Array<OneD, const NekDouble> &Fx,
             const Array<OneD, const NekDouble> &Fy,
                   Array<OneD,       NekDouble> &outarray)
@@ -339,7 +339,7 @@ namespace Nektar
 
         void Expansion::v_AddEdgeNormBoundaryInt(
             const int                           edge,
-            const boost::shared_ptr<Expansion> &EdgeExp,
+            const std::shared_ptr<Expansion>   &EdgeExp,
             const Array<OneD, const NekDouble> &Fn,
                   Array<OneD,       NekDouble> &outarray)
         {
@@ -348,7 +348,7 @@ namespace Nektar
 
         void Expansion::v_AddFaceNormBoundaryInt(
             const int                           face,
-            const boost::shared_ptr<Expansion> &FaceExp,
+            const std::shared_ptr<Expansion>   &FaceExp,
             const Array<OneD, const NekDouble> &Fn,
                   Array<OneD,       NekDouble> &outarray)
         {

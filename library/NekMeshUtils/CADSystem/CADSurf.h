@@ -46,7 +46,7 @@ namespace NekMeshUtils
 {
 
 class CADCurve;
-typedef boost::shared_ptr<CADCurve> CADCurveSharedPtr;
+typedef std::shared_ptr<CADCurve> CADCurveSharedPtr;
 
 /**
  * @brief base class for a cad surface
@@ -185,7 +185,7 @@ protected:
     std::string m_name;
 };
 
-typedef boost::shared_ptr<CADSurf> CADSurfSharedPtr;
+typedef std::shared_ptr<CADSurf> CADSurfSharedPtr;
 
 typedef LibUtilities::NekFactory<std::string, CADSurf> CADSurfFactory;
 

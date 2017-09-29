@@ -50,10 +50,8 @@ FilterFieldConvert::FilterFieldConvert(
     const ParamMap &pParams)
     : Filter(pSession)
 {
-    ParamMap::const_iterator it;
-
     // OutputFile
-    it = pParams.find("OutputFile");
+    auto it = pParams.find("OutputFile");
     if (it == pParams.end())
     {
         std::stringstream outname;
@@ -127,7 +125,7 @@ FilterFieldConvert::FilterFieldConvert(
     //
     // FieldConvert modules
     //
-    m_f = boost::shared_ptr<Field>(new Field());
+    m_f = std::shared_ptr<Field>(new Field());
     vector<string>          modcmds;
     // Process modules
     std::stringstream moduleStream;
@@ -485,14 +483,14 @@ void FilterFieldConvert::CreateFields(
     m_f->m_fieldMetaDataMap = m_fieldMetaData;
     m_f->m_fieldPts = LibUtilities::NullPtsField;
     // Create m_f->m_exp
-    int NumHomogeneousDir = 0;
+    m_f->m_numHomogeneousDir = 0;
     if (pFields[0]->GetExpType() == MultiRegions::e3DH1D)
     {
-        NumHomogeneousDir = 1;
+        m_f->m_numHomogeneousDir = 1;
     }
     else if (pFields[0]->GetExpType() == MultiRegions::e3DH2D)
     {
-        NumHomogeneousDir = 2;
+        m_f->m_numHomogeneousDir = 2;
     }
 
     m_f->m_exp.resize(m_variables.size());
@@ -504,7 +502,7 @@ void FilterFieldConvert::CreateFields(
         nfield = (n < pFields.num_elements())? n: 0;
         
         m_f->m_exp[n] = m_f->AppendExpList(
-                            NumHomogeneousDir, m_variables[0]);
+                            m_f->m_numHomogeneousDir, m_variables[0]);
         m_f->m_exp[n]->SetWaveSpace(false);
 
         ASSERTL1(pFields[nfield]->GetNcoeffs() == m_outFields[n].num_elements(),

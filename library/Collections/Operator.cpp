@@ -44,36 +44,36 @@ namespace Collections {
  */
 bool operator< (OperatorKey const &p1, OperatorKey const &p2)
 {
-    if (boost::get<0>(p1) < boost::get<0>(p2))
+    if (std::get<0>(p1) < std::get<0>(p2))
     {
         return true;
     }
-    if (boost::get<0>(p1) > boost::get<0>(p2))
+    if (std::get<0>(p1) > std::get<0>(p2))
     {
         return false;
     }
-    if (boost::get<1>(p1) < boost::get<1>(p2))
+    if (std::get<1>(p1) < std::get<1>(p2))
     {
         return true;
     }
-    if (boost::get<1>(p1) > boost::get<1>(p2))
+    if (std::get<1>(p1) > std::get<1>(p2))
     {
         return false;
     }
-    if (boost::get<2>(p1) < boost::get<2>(p2))
+    if (std::get<2>(p1) < std::get<2>(p2))
     {
         return true;
     }
-    if (boost::get<2>(p1) > boost::get<2>(p2))
+    if (std::get<2>(p1) > std::get<2>(p2))
     {
         return false;
     }
 
-    if (boost::get<3>(p1) < boost::get<3>(p2))
+    if (std::get<3>(p1) < std::get<3>(p2))
     {
         return true;
     }
-    if (boost::get<3>(p1) > boost::get<3>(p2))
+    if (std::get<3>(p1) > std::get<3>(p2))
     {
         return false;
     }
@@ -87,10 +87,10 @@ bool operator< (OperatorKey const &p1, OperatorKey const &p2)
  */
 std::ostream &operator<<(std::ostream &os, OperatorKey const &p)
 {
-    os << LibUtilities::ShapeTypeMap[boost::get<0>(p)] << ", "
-       << OperatorTypeMap           [boost::get<1>(p)] << ", "
-       << ImplementationTypeMap     [boost::get<2>(p)] << ", "
-       << (boost::get<3>(p) ? "Nodal" : "Modal");
+    os << LibUtilities::ShapeTypeMap[std::get<0>(p)] << ", "
+       << OperatorTypeMap           [std::get<1>(p)] << ", "
+       << ImplementationTypeMap     [std::get<2>(p)] << ", "
+       << (std::get<3>(p) ? "Nodal" : "Modal");
     return os;
 }
 

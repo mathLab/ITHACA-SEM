@@ -2436,5 +2436,69 @@ namespace Nektar
             // backward transform to physical space
             OrthoExp.BwdTrans(orthocoeffs,array);
         }
+
+        void StdHexExp::v_ExponentialFilter(
+                                          Array<OneD, NekDouble> &array,
+                                    const NekDouble        alpha,
+                                    const NekDouble        exponent,
+                                    const NekDouble        cutoff)
+        {
+            // Generate an orthogonal expansion
+            int qa      = m_base[0]->GetNumPoints();
+            int qb      = m_base[1]->GetNumPoints();
+            int qc      = m_base[2]->GetNumPoints();
+            int nmodesA = m_base[0]->GetNumModes();
+            int nmodesB = m_base[1]->GetNumModes();
+            int nmodesC = m_base[2]->GetNumModes();
+            int P  = nmodesA - 1;
+            int Q  = nmodesB - 1;
+            int R  = nmodesC - 1;
+
+            // Declare orthogonal basis.
+            LibUtilities::PointsKey pa(qa,m_base[0]->GetPointsType());
+            LibUtilities::PointsKey pb(qb,m_base[1]->GetPointsType());
+            LibUtilities::PointsKey pc(qc,m_base[2]->GetPointsType());
+
+            LibUtilities::BasisKey Ba(LibUtilities::eOrtho_A, nmodesA, pa);
+            LibUtilities::BasisKey Bb(LibUtilities::eOrtho_A, nmodesB, pb);
+            LibUtilities::BasisKey Bc(LibUtilities::eOrtho_A, nmodesC, pc);
+            StdHexExp OrthoExp(Ba,Bb,Bc);
+
+            // Cutoff
+            int Pcut = cutoff*P;
+            int Qcut = cutoff*Q;
+            int Rcut = cutoff*R;
+
+            // Project onto orthogonal space.
+            Array<OneD, NekDouble> orthocoeffs(OrthoExp.GetNcoeffs());
+            OrthoExp.FwdTrans(array,orthocoeffs);
+
+            //
+            NekDouble fac, fac1, fac2, fac3;
+            int index = 0;
+            for(int i = 0; i < nmodesA; ++i)
+            {
+                for(int j = 0; j < nmodesB; ++j)
+                {
+                    for(int k = 0; k < nmodesC; ++k, ++index)
+                    {
+                        //to filter out only the "high-modes"
+                        if(i > Pcut || j > Qcut || k > Rcut)
+                        {
+                            fac1 = (NekDouble) (i - Pcut)/( (NekDouble)(P - Pcut) );
+                            fac2 = (NekDouble) (j - Qcut)/( (NekDouble)(Q - Qcut) );
+                            fac3 = (NekDouble) (k - Rcut)/( (NekDouble)(R - Rcut) );
+                            fac  = max( max(fac1, fac2), fac3);
+                            fac  = pow(fac, exponent);
+                            orthocoeffs[index] *= exp(-alpha*fac);
+                        }
+                    }
+                }
+            }
+
+            // backward transform to physical space
+            OrthoExp.BwdTrans(orthocoeffs,array);
+        }
+
     }
 }

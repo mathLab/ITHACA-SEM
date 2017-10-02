@@ -79,12 +79,17 @@
 #include <fstream>
 #include <iostream>
 #include <iomanip>
+
+#include <boost/program_options.hpp>
+#include <boost/algorithm/string.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/TimeIntegration/TimeIntegrationScheme.h>
 
 using namespace std;
 using namespace Nektar;
 using namespace Nektar::LibUtilities;
+
+namespace po = boost::program_options;
 
 // We first implement a class that represents 
 // the 1D finite difference solver
@@ -173,8 +178,65 @@ private:
 
 int main(int argc, char *argv[])
 {  
+    po::options_description desc("Available options");
+    desc.add_options()
+        ("help, h",         "Produce this help message.")
+        ("Npoints, np",     po::value<int>(),
+                            "the number of grid points to be used.")
+        ("Ntimesteps, nt",  po::value<int>(),
+                            "the number of timesteps to be used.")
+        ("NTimeIntegrationMethod, nm",  po::value<int>(),
+                            "TimeIntegrationMethod is a number in the range [1,5]."
+                            "and defines the time-integration method to be used, i.e"
+                            "- 1: 1st order multi-step IMEX scheme (Euler Backwards/Euler Forwards)"
+                            "- 2: 2nd order multi-step IMEX scheme" 
+                            "- 3: 3rd order multi-step IMEX scheme" 
+                            "- 4: 2nd order multi-stage DIRK IMEX scheme" 
+                            "- 5: 3nd order multi-stage DIRK IMEX scheme"
+                            "- 6: 2nd order IMEX Gear (Extrapolated Gear/SBDF-2)")
+        ("L2error,i",     "Evaluate the value of a exact solution and "
+                           "return l2 error.");
+
+    po::variables_map vm;
+    try
+    {
+        po::store(po::command_line_parser(argc, argv).
+                  options(desc).run(), vm);
+        po::notify(vm);
+    }
+    catch (const std::exception& e)
+    {
+        cerr << e.what() << endl;
+        cerr << desc;
+        return 1;
+    }
+
+    if (!vm.count("Npoints") || !vm.count("Ntimesteps") || !vm.count("NTimeIntegrationMethod"))
+    {
+        cerr << "Usage: Project1D Npoints Ntimesteps TimeIntegrationMethod," << endl;
+        cerr << "Where  - Npoints is the number of grid points to be used" << endl;      
+        cerr << "         for the finite difference discretisation" << endl; 
+        cerr << "       - Ntimesteps is the number of timesteps to be used" << endl;
+        cerr << "         for the time-integration method" << endl;    
+        cerr << "       - TimeIntegrationMethod is a number in the range [1,8]" << endl;    
+        cerr << "         and defines the time-integration method to be used, i.e." << endl; 
+        cerr << "           - 1: 1st order multi-step IMEX scheme (Euler Backwards/Euler Forwards)" << endl;   
+        cerr << "           - 2: 2nd order multi-step IMEX scheme" << endl;   
+        cerr << "           - 3: 3rd order multi-step IMEX scheme" << endl; 
+        cerr << "           - 4: 2nd order multi-stage DIRK IMEX scheme" << endl;    
+        cerr << "           - 5: 3nd order multi-stage DIRK IMEX scheme" << endl;    
+        cerr << "           - 6: 2nd order IMEX Gear (Extrapolated Gear/SBDF-2)" << endl;
+        cerr << "           - 7: 2nd order Crank-Nicolson/Adams-Bashforth (CNAB)" << endl;
+        cerr << "           - 8: 2nd order Modified Crank-Nicolson/Adams-Bashforth (MCNAB)" << endl;
+        return 1;
+    }
+
+    int nPoints = vm["Npoints"].as<int>();
+    int nTimesteps = vm["Ntimesteps"].as<int>();
+    int nMethod = vm["NTimeIntegrationMethod"].as<int>();
+
     // Check if the number of arguments given to the executable is correct
-    if(argc != 4)
+    /*if(argc != 4)
     {
         cerr << "Usage: Project1D Npoints Ntimesteps TimeIntegrationMethod" << endl;        
         cerr << "Where  - Npoints is the number of grid points to be used" << endl;      
@@ -188,12 +250,13 @@ int main(int argc, char *argv[])
         cerr << "           - 3: 3rd order multi-step IMEX scheme" << endl; 
         cerr << "           - 4: 2nd order multi-stage DIRK IMEX scheme" << endl;    
         cerr << "           - 5: 3nd order multi-stage DIRK IMEX scheme" << endl;    
+        cerr << "           - 6: 2nd order IMEX Gear (Extrapolated Gear/SBDF-2)" << endl;
         exit(1);
-    }
+    }*/
 
     // Read the discretisation parameters
-    int nPoints    = atoi(argv[1]);
-    int nTimesteps = atoi(argv[2]);
+    //int nPoints    = atoi(argv[1]);
+    //int nTimesteps = atoi(argv[2]);
 
     // Open a file for writing the solution
     ofstream outfile;
@@ -231,7 +294,7 @@ int main(int argc, char *argv[])
     //     starting up the system
     Array<OneD, TimeIntegrationMethod> method;
     int nSteps = 1;
-    switch (atoi(argv[3]))
+    switch (nMethod)//(atoi(argv[3]))
     {
     case 1 :
         {
@@ -271,15 +334,47 @@ int main(int argc, char *argv[])
             method[0] = eIMEXdirk_3_4_3;
         } 
         break;
+    case 6 :
+        {
+            nSteps = 2;
+            method = Array<OneD, TimeIntegrationMethod>(nSteps);
+            method[0] = eIMEXdirk_2_2_2;
+            method[1] = eIMEXGear;
+
+        } 
+        break;
+    case 7 :
+        {
+            nSteps = 3;
+            method = Array<OneD, TimeIntegrationMethod>(nSteps);
+            method[0] = eIMEXdirk_3_4_3;
+            method[1] = eIMEXdirk_3_4_3;
+            method[2] = eCNAB;
+
+        } 
+        break;
+    case 8 :
+        {
+            nSteps = 3;
+            method = Array<OneD, TimeIntegrationMethod>(nSteps);
+            method[0] = eIMEXdirk_3_4_3;
+            method[1] = eIMEXdirk_3_4_3;
+            method[2] = eMCNAB;
+
+        } 
+        break;
     default : 
         {      
             cerr << "The third argument defines the time-integration method to be used" << endl;    
-            cerr << "and should be a number in the range [1,5], i.e." << endl; 
+            cerr << "and should be a number in the range [1,6], i.e." << endl; 
             cerr << "  - 1: 1st order multi-step IMEX scheme (Euler Backwards/Euler Forwards)" << endl;   
             cerr << "  - 2: 2nd order multi-step IMEX scheme" << endl;   
             cerr << "  - 3: 3rd order multi-step IMEX scheme" << endl; 
             cerr << "  - 4: 2nd order multi-stage DIRK IMEX scheme" << endl;    
             cerr << "  - 5: 3rd order multi-stage DIRK IMEX scheme" << endl;  
+            cerr << "  - 6: 2nd order IMEX Gear (Extrapolated Gear/SBDF-2)" << endl;  
+            cerr << "  - 7: 2nd order Crank-Nicolson/Adams-Bashforth (CNAB)" << endl;
+            cerr << "  - 8: 2nd order Modified Crank-Nicolson/Adams-Bashforth (MCNAB)" << endl;
             exit(1); 
         }
     }
@@ -327,7 +422,8 @@ int main(int argc, char *argv[])
     }  
     
     // Calculate the error and dump to screen
-    cout << "The L2 error is " << scientific << setw (19) << setprecision(10)  <<  solver->EvaluateL2Error(fidifsol,exactsol) << endl;
+    //cout << "The L2 error is " << scientific << setw (19) << setprecision(10)  <<  solver->EvaluateL2Error(fidifsol,exactsol) << endl;
+    cout << "L 2 error :" <<  solver->EvaluateL2Error(fidifsol,exactsol) << endl;
 
     // Some more writing out the results
     solver->GenerateGnuplotScript();

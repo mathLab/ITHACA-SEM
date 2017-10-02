@@ -193,10 +193,7 @@ int main(int argc, char *argv[])
                             "- 3: 3rd order multi-step IMEX scheme" 
                             "- 4: 2nd order multi-stage DIRK IMEX scheme" 
                             "- 5: 3nd order multi-stage DIRK IMEX scheme"
-                            "- 6: 2nd order IMEX Gear (Extrapolated Gear/SBDF-2)")
-        ("L2error,i",     "Evaluate the value of a exact solution and "
-                           "return l2 error.");
-
+                            "- 6: 2nd order IMEX Gear (Extrapolated Gear/SBDF-2)");
     po::variables_map vm;
     try
     {
@@ -213,7 +210,7 @@ int main(int argc, char *argv[])
 
     if (!vm.count("Npoints") || !vm.count("Ntimesteps") || !vm.count("NTimeIntegrationMethod"))
     {
-        cerr << "Usage: Project1D Npoints Ntimesteps TimeIntegrationMethod," << endl;
+        cerr << "Usage: Project1D --Npoints nPoints --Ntimesteps nTimesteps --TimeIntegrationMethod nMethod" << endl;
         cerr << "Where  - Npoints is the number of grid points to be used" << endl;      
         cerr << "         for the finite difference discretisation" << endl; 
         cerr << "       - Ntimesteps is the number of timesteps to be used" << endl;

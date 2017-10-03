@@ -50,7 +50,7 @@ class ProcessConcatenateFld : public ProcessModule
 {
 public:
     /// Creates an instance of this class
-    static boost::shared_ptr<Module> create(FieldSharedPtr f)
+    static std::shared_ptr<Module> create(FieldSharedPtr f)
     {
         return MemoryManager<ProcessConcatenateFld>::AllocateSharedPtr(f);
     }
@@ -65,6 +65,17 @@ public:
     {
         return "ProcessConcatenateFld";
     }
+
+    virtual std::string GetModuleDescription()
+    {
+        return "Concatenating field file";
+    }
+
+    virtual ModulePriority GetModulePriority()
+    {
+        return eModifyFieldData;
+    }
+
 };
 }
 }

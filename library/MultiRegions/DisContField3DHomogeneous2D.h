@@ -49,24 +49,30 @@ namespace Nektar
         public:
             MULTI_REGIONS_EXPORT DisContField3DHomogeneous2D();
 
-            MULTI_REGIONS_EXPORT DisContField3DHomogeneous2D(const LibUtilities::SessionReaderSharedPtr &pSession,
-                                                             const LibUtilities::BasisKey &HomoBasis_y,
-															 const LibUtilities::BasisKey &HomoBasis_z,
-															 const NekDouble lhom_y,
-															 const NekDouble lhom_z,
-															 const bool useFFT,
-															 const bool dealiasing);
+            MULTI_REGIONS_EXPORT DisContField3DHomogeneous2D(
+                      const LibUtilities::SessionReaderSharedPtr &pSession,
+                      const LibUtilities::BasisKey &HomoBasis_y,
+                      const LibUtilities::BasisKey &HomoBasis_z,
+                      const NekDouble lhom_y,
+                      const NekDouble lhom_z,
+                      const bool useFFT,
+                      const bool dealiasing,
+                      const Collections::ImplementationType ImpType
+                      = Collections::eNoImpType);
 
-            MULTI_REGIONS_EXPORT DisContField3DHomogeneous2D(const LibUtilities::SessionReaderSharedPtr &pSession,
-                                                             const LibUtilities::BasisKey &HomoBasis_y,
-															 const LibUtilities::BasisKey &HomoBasis_z,
-															 const NekDouble lhom_y,
-															 const NekDouble lhom_z,
-															 const bool useFFT,
-															 const bool dealiasing,
-															 const SpatialDomains::MeshGraphSharedPtr &graph1D,
-															 const std::string &variable);
-
+            MULTI_REGIONS_EXPORT DisContField3DHomogeneous2D(
+                      const LibUtilities::SessionReaderSharedPtr &pSession,
+                      const LibUtilities::BasisKey &HomoBasis_y,
+                      const LibUtilities::BasisKey &HomoBasis_z,
+                      const NekDouble lhom_y,
+                      const NekDouble lhom_z,
+                      const bool useFFT,
+                      const bool dealiasing,
+                      const SpatialDomains::MeshGraphSharedPtr &graph1D,
+                      const std::string &variable,
+                      const Collections::ImplementationType ImpType
+                      = Collections::eNoImpType);
+            
             /// Copy constructor.
             MULTI_REGIONS_EXPORT DisContField3DHomogeneous2D(const DisContField3DHomogeneous2D &In,
 															 const bool DeclareLinesSetCoeffPhys = true);
@@ -89,7 +95,7 @@ namespace Nektar
 			
 			inline const Array<OneD,const SpatialDomains::BoundaryConditionShPtr> &GetBndConditions();
 			
-			inline boost::shared_ptr<ExpList> &UpdateBndCondExpansion(int i);
+			inline std::shared_ptr<ExpList> &UpdateBndCondExpansion(int i);
 			
 			inline Array<OneD, SpatialDomains::BoundaryConditionShPtr>& UpdateBndConditions();
 			
@@ -98,7 +104,7 @@ namespace Nektar
             MULTI_REGIONS_EXPORT void GetBoundaryToElmtMap(Array<OneD, int> &ElmtID,Array<OneD,int> &EdgeID);
             
             virtual void v_GetBndElmtExpansion(int i,
-                            boost::shared_ptr<ExpList> &result,
+                            std::shared_ptr<ExpList> &result,
                             const bool DeclareCoeffPhysArrays);
 			
 			/// Storage space for the boundary to element and boundary to trace map.
@@ -143,16 +149,16 @@ namespace Nektar
                 const NekDouble   x2_in   = NekConstants::kNekUnsetDouble,
                 const NekDouble   x3_in   = NekConstants::kNekUnsetDouble);
 			
-			virtual const Array<OneD,const boost::shared_ptr<ExpList> > &v_GetBndCondExpansions(void);
+			virtual const Array<OneD,const std::shared_ptr<ExpList> > &v_GetBndCondExpansions(void);
 			
 			virtual const Array<OneD,const SpatialDomains::BoundaryConditionShPtr> &v_GetBndConditions();
 			
-            virtual boost::shared_ptr<ExpList> &v_UpdateBndCondExpansion(int i);
+            virtual std::shared_ptr<ExpList> &v_UpdateBndCondExpansion(int i);
 			
 			virtual Array<OneD, SpatialDomains::BoundaryConditionShPtr>& v_UpdateBndConditions();
         };
 
-        typedef boost::shared_ptr<DisContField3DHomogeneous2D>  
+        typedef std::shared_ptr<DisContField3DHomogeneous2D>  
             DisContField3DHomogeneous2DSharedPtr;
 		
 		inline const Array<OneD,const MultiRegions::ExpListSharedPtr> &DisContField3DHomogeneous2D::GetBndCondExpansions()

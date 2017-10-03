@@ -81,8 +81,7 @@ namespace SolverUtils
                      "Variable '" + s_FieldStr + "' not defined.");
             m_Absorption[i]  = Array<OneD, NekDouble> (npts, 0.0);
             m_Forcing[i] = Array<OneD, NekDouble> (npts, 0.0);
-            EvaluateFunction(pFields, m_session, s_FieldStr,
-                             m_Absorption[i], funcName);
+            GetFunction(pFields, m_session, funcName)->Evaluate(s_FieldStr, m_Absorption[i]);
         }
 
         funcNameElmt = pForce->FirstChildElement("REFFLOW");
@@ -99,8 +98,7 @@ namespace SolverUtils
                 ASSERTL0(m_session->DefinesFunction(funcName, s_FieldStr),
                          "Variable '" + s_FieldStr + "' not defined.");
                 m_Refflow[i] = Array<OneD, NekDouble> (npts, 0.0);
-                EvaluateFunction(pFields, m_session, s_FieldStr,
-                                 m_Refflow[i], funcName);
+                GetFunction(pFields, m_session, funcName)->Evaluate(s_FieldStr, m_Refflow[i]);
             }
             m_hasRefFlow = true;
         }

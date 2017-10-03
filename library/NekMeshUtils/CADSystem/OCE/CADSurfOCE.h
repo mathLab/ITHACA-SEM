@@ -59,11 +59,11 @@ public:
     {
     }
 
-    ~CADSurfOCE()
+    virtual ~CADSurfOCE()
     {
     }
 
-    void Initialise(int i, TopoDS_Shape in, std::vector<EdgeLoop> ein);
+    void Initialise(int i, TopoDS_Shape in);
 
     virtual Array<OneD, NekDouble> GetBounds();
     virtual Array<OneD, NekDouble> N    (Array<OneD, NekDouble> uv);
@@ -83,9 +83,13 @@ private:
     BRepAdaptor_Surface m_occSurface;
     /// Alternate OpenCascade object for surface. Used by reverse lookup.
     Handle(Geom_Surface) m_s;
+    /// parametric bounds
+    Array<OneD, NekDouble> m_bounds;
+    /// locuv object (stored because it gets faster with stored information)
+    ShapeAnalysis_Surface *m_sas;
 };
 
-typedef boost::shared_ptr<CADSurf> CADSurfSharedPtr;
+typedef std::shared_ptr<CADSurf> CADSurfSharedPtr;
 
 }
 }

@@ -72,7 +72,7 @@ enum OctantLocation
 };
 
 class Octant; // have to forward declare the class for the sharedptr
-typedef boost::shared_ptr<Octant> OctantSharedPtr;
+typedef std::shared_ptr<Octant> OctantSharedPtr;
 
 /**
  * @brief this class contains the infomration and methods for individal octants
@@ -249,6 +249,7 @@ public:
                 return m_loc[2] - m_hd;
                 break;
         }
+        return 0.0;
     }
 
     /**

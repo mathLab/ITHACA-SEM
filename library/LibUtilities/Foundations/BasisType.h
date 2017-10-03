@@ -49,6 +49,8 @@ namespace Nektar
             eModified_A,		//!< Principle Modified Functions \f$ \phi^a_p(z_i) \f$
             eModified_B,		//!< Principle Modified Functions \f$ \phi^b_{pq}(z_i) \f$
             eModified_C,		//!< Principle Modified Functions \f$ \phi^c_{pqr}(z_i) \f$
+            eOrthoPyr_C,		//!< Principle Orthogonal Functions \f$\widetilde{\psi}^c_{pqr}(z_i) for Pyramids\f$
+            eModifiedPyr_C,		//!< Principle Modified Functions \f$ \phi^c_{pqr}(z_i) for Pyramids\f$
             eFourier,			//!< Fourier Expansion \f$ \exp(i p\pi  z_i)\f$
             eGLL_Lagrange,		//!< Lagrange for SEM basis \f$ h_p(z_i) \f$
             eGauss_Lagrange,	//!< Lagrange Polynomials using the Gauss points \f$ h_p(z_i) \f$

@@ -45,7 +45,6 @@
 #include <vector>
 
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
-#include <LibUtilities/BasicUtils/Timer.h>
 #include <LibUtilities/Communication/CommSerial.h>
 #include <StdRegions/StdNodalTriExp.h>
 
@@ -59,8 +58,6 @@ namespace Nektar
 {
 namespace FieldUtils
 {
-using namespace std;
-
 /**
  * Denotes different types of mesh converter modules: so far only
  * input, output and process modules are defined.
@@ -75,6 +72,54 @@ enum ModuleType
 
 const char *const ModuleTypeMap[] = {"Input", "Process", "Output"};
 
+enum ModulePriority
+{
+    eCreateGraph,
+    eCreateFieldData,
+    eModifyFieldData,
+    eCreateExp,
+    eFillExp,
+    eModifyExp,
+    eBndExtraction,
+    eCreatePts,
+    eConvertExpToPts,
+    eModifyPts,
+    eOutput,
+    SIZE_ModulePriority
+};
+
+/**
+ * @brief Swap endian ordering of the input variable.
+ */
+template <typename T>
+void swap_endian(T &u)
+{
+    union
+    {
+        T u;
+        unsigned char u8[sizeof(T)];
+    } source, dest;
+
+    source.u = u;
+
+    for (size_t k = 0; k < sizeof(T); k++)
+    {
+        dest.u8[k] = source.u8[sizeof(T) - k - 1];
+    }
+
+    u = dest.u;
+}
+
+template <typename T>
+void swap_endian(vector<T> &u)
+{
+    size_t vecSize = u.size();
+    for (int i = 0; i < vecSize; ++i)
+    {
+        swap_endian(u[i]);
+    }
+}
+
 /**
  * @brief Represents a command-line configuration option.
  */
@@ -87,7 +132,7 @@ struct ConfigOption
      * @param defValue  Default value of the option.
      * @param desc      Description of the option.
      */
-    ConfigOption(bool isBool, string defValue, string desc)
+    ConfigOption(bool isBool, std::string defValue, std::string desc)
         : m_isBool(isBool), m_beenSet(false), m_value(), m_defValue(defValue),
           m_desc(desc)
     {
@@ -121,11 +166,11 @@ struct ConfigOption
     /// line. If false, the default value will be put into #value.
     bool m_beenSet;
     /// The value of the configuration option.
-    string m_value;
+    std::string m_value;
     /// Default value of the configuration option.
-    string m_defValue;
+    std::string m_defValue;
     /// Description of the configuration option.
-    string m_desc;
+    std::string m_desc;
 };
 
 /**
@@ -137,26 +182,23 @@ class Module
 {
 public:
     FIELD_UTILS_EXPORT Module(FieldSharedPtr p_f)
-        : m_f(p_f), m_requireEquiSpaced(false)
+        : m_f(p_f)
     {
     }
     virtual void Process(po::variables_map &vm) = 0;
 
     virtual std::string GetModuleName() = 0;
 
-    FIELD_UTILS_EXPORT void RegisterConfig(string key, string value);
+    virtual std::string GetModuleDescription()
+    {
+        return " ";
+    }
+
+    virtual ModulePriority GetModulePriority() = 0;
+
+    FIELD_UTILS_EXPORT void RegisterConfig(std::string key, std::string value);
     FIELD_UTILS_EXPORT void PrintConfig();
     FIELD_UTILS_EXPORT void SetDefaults();
-
-    FIELD_UTILS_EXPORT bool GetRequireEquiSpaced(void)
-    {
-        return m_requireEquiSpaced;
-    }
-
-    FIELD_UTILS_EXPORT void SetRequireEquiSpaced(bool pVal)
-    {
-        m_requireEquiSpaced = pVal;
-    }
 
     FIELD_UTILS_EXPORT void EvaluateTriFieldAtEquiSpacedPts(
         LocalRegions::ExpansionSharedPtr &exp,
@@ -169,8 +211,7 @@ protected:
     /// Field object
     FieldSharedPtr m_f;
     /// List of configuration values.
-    map<string, ConfigOption> m_config;
-    bool m_requireEquiSpaced;
+    std::map<std::string, ConfigOption> m_config;;
 };
 
 /**
@@ -186,15 +227,16 @@ class InputModule : public Module
 {
 public:
     InputModule(FieldSharedPtr p_m);
-    FIELD_UTILS_EXPORT void AddFile(string fileType, string fileName);
+    FIELD_UTILS_EXPORT void AddFile(std::string fileType, std::string fileName);
+    FIELD_UTILS_EXPORT static std::string GuessFormat(std::string fileName);
 
 protected:
     /// Print summary of elements.
     void PrintSummary();
-    set<string> m_allowedFiles;
+    std::set<std::string> m_allowedFiles;
 };
 
-typedef boost::shared_ptr<InputModule> InputModuleSharedPtr;
+typedef std::shared_ptr<InputModule> InputModuleSharedPtr;
 
 /**
  * @brief Abstract base class for processing modules.
@@ -223,13 +265,13 @@ public:
 
 protected:
     /// Output stream
-    ofstream m_fldFile;
+    std::ofstream m_fldFile;
 };
 
-typedef pair<ModuleType, string> ModuleKey;
-FIELD_UTILS_EXPORT ostream &operator<<(ostream &os, const ModuleKey &rhs);
+typedef pair<ModuleType, std::string> ModuleKey;
+FIELD_UTILS_EXPORT std::ostream &operator<<(ostream &os, const ModuleKey &rhs);
 
-typedef boost::shared_ptr<Module> ModuleSharedPtr;
+typedef std::shared_ptr<Module> ModuleSharedPtr;
 typedef LibUtilities::NekFactory<ModuleKey, Module, FieldSharedPtr>
     ModuleFactory;
 
@@ -243,13 +285,13 @@ public:
     {
         m_size = size;
         m_rank = rank;
-        m_type = "FieldConvert parallel";
+       m_type = "FieldConvert parallel";
     }
     FieldConvertComm(int size, int rank) : CommSerial(0, NULL)
     {
         m_size = size;
         m_rank = rank;
-        m_type = "FieldConvert parallel";
+       m_type = "FieldConvert parallel";
     }
     virtual ~FieldConvertComm()
     {
@@ -257,10 +299,10 @@ public:
     void v_SplitComm(int pRows, int pColumns)
     {
         // Compute row and column in grid.
-        m_commRow = boost::shared_ptr<FieldConvertComm>(
+        m_commRow = std::shared_ptr<FieldConvertComm>(
             new FieldConvertComm(pColumns, m_rank));
         m_commColumn =
-            boost::shared_ptr<FieldConvertComm>(new FieldConvertComm(pRows, 0));
+            std::shared_ptr<FieldConvertComm>(new FieldConvertComm(pRows, 0));
     }
 
 protected:

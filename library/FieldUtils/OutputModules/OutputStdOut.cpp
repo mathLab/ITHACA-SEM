@@ -62,13 +62,7 @@ OutputStdOut::~OutputStdOut()
 
 void OutputStdOut::Process(po::variables_map &vm)
 {
-    // Extract the output filename and extension
-    string filename = m_config["outfile"].as<string>();
-
-    if (m_f->m_verbose)
-    {
-        cout << "OutputStdOut: Output written to StdOut" << endl;
-    }
 }
+
 }
 }

@@ -87,7 +87,7 @@ class OptiObj
         };
 
 };
-typedef boost::shared_ptr<OptiObj> OptiObjSharedPtr;
+typedef std::shared_ptr<OptiObj> OptiObjSharedPtr;
 
 }
 }

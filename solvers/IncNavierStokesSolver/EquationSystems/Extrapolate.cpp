@@ -49,11 +49,8 @@ namespace Nektar
 
     ExtrapolateFactory& GetExtrapolateFactory()
     {
-        typedef Loki::SingletonHolder<ExtrapolateFactory,
-                                      Loki::CreateUsingNew,
-                                      Loki::NoDestroy,
-                                      Loki::SingleThreaded > Type;
-        return Type::Instance();
+        static ExtrapolateFactory instance;
+        return instance;
     }
 
     Extrapolate::Extrapolate(
@@ -794,7 +791,7 @@ namespace Nektar
                     }
                     
                     LibUtilities::Equation coeff = 
-                        boost::static_pointer_cast<
+                        std::static_pointer_cast<
                             SpatialDomains::RobinBoundaryCondition
                         >(m_PBndConds[n])->m_robinPrimitiveCoeff;
                     
@@ -807,7 +804,7 @@ namespace Nektar
                             UBndConds = m_fields[m_velocity[i]]->GetBndConditions();
                         
                         LibUtilities::Equation coeff1 = 
-                            boost::static_pointer_cast<
+                            std::static_pointer_cast<
                                 SpatialDomains::RobinBoundaryCondition
                             >(UBndConds[n])->m_robinPrimitiveCoeff;
 
@@ -852,7 +849,7 @@ namespace Nektar
                                                          [m_pressureCalls-1]);
                     
                     SpatialDomains::RobinBCShPtr rcond = 
-                        boost::dynamic_pointer_cast<
+                        std::dynamic_pointer_cast<
                             SpatialDomains::RobinBoundaryCondition >(UBndConds[n]);
                     
                     SpatialDomains::BoundaryConditionShPtr bcond =

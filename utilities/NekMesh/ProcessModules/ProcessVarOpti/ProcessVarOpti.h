@@ -56,7 +56,7 @@ struct DerivUtil
     int pts;
     int ptsStd;
 };
-typedef boost::shared_ptr<DerivUtil> DerivUtilSharedPtr;
+typedef std::shared_ptr<DerivUtil> DerivUtilSharedPtr;
 
 enum optiType
 {
@@ -78,13 +78,13 @@ struct Residual
     int alphaI;
 };
 
-typedef boost::shared_ptr<Residual> ResidualSharedPtr;
+typedef std::shared_ptr<Residual> ResidualSharedPtr;
 
 class ProcessVarOpti : public ProcessModule
 {
 public:
     /// Creates an instance of this class
-    static boost::shared_ptr<Module> create(MeshSharedPtr m)
+    static std::shared_ptr<Module> create(MeshSharedPtr m)
     {
         return MemoryManager<ProcessVarOpti>::AllocateSharedPtr(m);
     }
@@ -104,9 +104,13 @@ private:
     void GetElementMap(
         int o, std::map<LibUtilities::ShapeType, DerivUtilSharedPtr> derMap);
     std::vector<ElUtilSharedPtr> GetLockedElements(NekDouble thres);
+    std::vector<std::vector<NodeSharedPtr> > CreateColoursets(
+        std::vector<NodeSharedPtr> remain);
     std::vector<std::vector<NodeSharedPtr> > GetColouredNodes(
         std::vector<ElUtilSharedPtr> elLock);
 
+    void RemoveLinearCurvature();
+    
     NodeElMap m_nodeElMap;
     std::vector<ElUtilSharedPtr> m_dataSet;
 

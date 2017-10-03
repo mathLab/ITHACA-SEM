@@ -29,8 +29,8 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: 0-based sparse BSR storage class with own unrolled and
-//              LibSMV multiply kernels.
+// Description: 0-based sparse BSR storage class with own unrolled multiply
+//              kernels.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -45,18 +45,12 @@
 #include <LibUtilities/LinearAlgebra/MatrixStorageType.h>
 #include <LibUtilities/LinearAlgebra/SparseMatrixFwd.hpp>
 
-#include <boost/call_traits.hpp>
-
-
 namespace Nektar
 {
     /*
      *  Zero-based BSR (Block Sparse Row) storage class with its sparse
-     *  multiply kernels built upon dense multiply kernels provided by
-     *  LibSMV library. It also includes its own unrolled multiply kernels
-     *  up to 4x4 matrices, provided 'just in case' LibSMV library
-     *  is not available. When matrix is larger than either one
-     *  supported by LibSMV library or 4x4 (whichever is greater), the
+     *  multiply kernels built upon its own dense unrolled multiply kernels
+     *  up to 4x4 matrices. When matrix is larger than or 4x4, the
      *  multiply kernel calls dense dgemv from BLAS.
      *
      *  The BSR sparse format assumes sparse matrix is a CSR collection of
@@ -152,8 +146,8 @@ namespace Nektar
         LIB_UTILITIES_EXPORT const_iterator begin() const;
         LIB_UTILITIES_EXPORT const_iterator end() const;
 
-        LIB_UTILITIES_EXPORT const typename boost::call_traits<DataType>::const_reference
-                GetValue(IndexType row, IndexType column) const;
+        LIB_UTILITIES_EXPORT const DataType &GetValue(
+            IndexType row, IndexType column) const;
 
         LIB_UTILITIES_EXPORT void Multiply(const DataType* in,
                             DataType* out);
@@ -193,13 +187,6 @@ namespace Nektar
         void Multiply_generic(const int mb, const int kb, const double* val,
                     const int* bindx, const int* bpntrb, const int* bpntre,
                     const double* b, double* c);
-
-#ifdef NEKTAR_USING_SMV
-        void Multiply_libsmv(const int mb, const int kb, const double* val,
-                    const int* bindx, const int* bpntrb, const int* bpntre,
-                    const double* b, double* c);
-#endif
-
 
         // interface to lowest level LibSMV multiply kernels
         MultiplyKernel   m_mvKernel;

@@ -49,6 +49,27 @@ IF (NEKTAR_USE_PETSC)
             # we use a MUMPS build in ordering here, in the future it might make
             # sense to hook it up with metis/scotch since this MIGHT be faster
             SET(PETSC_MUMPS --download-scalapack --download-mumps)
+            SET(PETSC_DEPS "")
+
+            IF( NEKTAR_USE_BLAS_LAPACK )
+                IF( NEKTAR_USE_MKL AND MKL_FOUND )
+                    SET(PETSC_MUMPS ${PETSC_MUMPS} --with-blas-lapack-dir=${MKL_LIB_DIR})
+                ELSEIF( NEKTAR_USE_WIN32_LAPACK )
+                    SET(PETSC_MUMPS ${PETSC_MUMPS} --with-blas-lapack-dir=${LAPACK_DIR})
+                ELSEIF( NEKTAR_USE_SYSTEM_BLAS_LAPACK )
+                    SET(PETSC_MUMPS ${PETSC_MUMPS} --with-blas-lapack-dir=${NATIVE_LAPACK_LIB_DIR})
+                    IF(THIRDPARTY_BUILD_BLAS_LAPACK)
+                        SET(PETSC_DEPS ${PETSC_DEPS} lapack-3.7.0)
+                    ENDIF()
+                ELSE()
+                    MESSAGE(STATUS "No suitable blas/lapack found, downloading")
+                    SET(PETSC_MUMPS ${PETSC_MUMPS} --download-fblaslapack)
+                ENDIF()
+            ELSE()
+                MESSAGE(STATUS "No suitable blas/lapack found, downloading")
+                SET(PETSC_MUMPS ${PETSC_MUMPS} --download-fblaslapack)
+            ENDIF()
+
         ELSE()
             MESSAGE(WARNING "No Fortran support. Building PETSc without MUMPS support")
             SET(PETSC_Fortran_COMPILER "0")
@@ -56,6 +77,7 @@ IF (NEKTAR_USE_PETSC)
 
         EXTERNALPROJECT_ADD(
             petsc-3.7.2
+            DEPENDS ${PETSC_DEPS}
             PREFIX ${TPSRC}
             STAMP_DIR ${TPBUILD}/stamp
             DOWNLOAD_DIR ${TPSRC}
@@ -84,13 +106,11 @@ IF (NEKTAR_USE_PETSC)
                 ${PETSC_NO_MPI}
             BUILD_COMMAND MAKEFLAGS= make)
 
-        SET(PETSC_LIBRARIES petsc CACHE FILEPATH
-            "PETSc library" FORCE)
+        THIRDPARTY_LIBRARY(PETSC_LIBRARIES SHARED petsc
+            DESCRIPTION "PETSc library")
         SET(PETSC_INCLUDES ${TPDIST}/include CACHE FILEPATH
             "PETSc includes" FORCE)
-
-        LINK_DIRECTORIES(${TPDIST}/lib)
-        MESSAGE(STATUS "Build PETSc: ${TPDIST}/${LIB_DIR}/lib${PETSC_LIBRARIES}.so")
+        MESSAGE(STATUS "Build PETSc: ${PETSC_LIBRARIES}")
         SET(PETSC_CONFIG_INCLUDE_DIR ${TPINC})
     ELSE (THIRDPARTY_BUILD_PETSC)
         INCLUDE(FindPETSc)
@@ -105,9 +125,9 @@ IF (NEKTAR_USE_PETSC)
     ENDIF (THIRDPARTY_BUILD_PETSC)
 
     ADD_DEFINITIONS(-DNEKTAR_USING_PETSC)
-    INCLUDE_DIRECTORIES(SYSTEM ${PETSC_INCLUDES})
+    INCLUDE_DIRECTORIES(${PETSC_INCLUDES})
     IF (NOT NEKTAR_USE_MPI)
-        INCLUDE_DIRECTORIES(SYSTEM ${PETSC_INCLUDES}/petsc/mpiuni)
+        INCLUDE_DIRECTORIES(${PETSC_INCLUDES}/petsc/mpiuni)
     ENDIF (NOT NEKTAR_USE_MPI)
 
     MARK_AS_ADVANCED(PETSC_CURRENT PETSC_DIR PETSC_LIBRARIES PETSC_INCLUDES)

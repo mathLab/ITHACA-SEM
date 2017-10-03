@@ -58,6 +58,8 @@ inline OctantFace GetReverseFace(OctantFace f)
         case eRight:
             return eLeft;
     }
+
+    return eUp;
 }
 
 Octant::Octant(int i, OctantSharedPtr p, Array<OneD, OctantFace> dir)
@@ -274,7 +276,7 @@ void Octant::Subdivide(OctantSharedPtr p, int &numoct)
             }
         }
 
-        children[i] = boost::shared_ptr<Octant>(new Octant(numoct++, p, dir));
+        children[i] = std::shared_ptr<Octant>(new Octant(numoct++, p, dir));
     }
 
     SetChildren(children);
@@ -496,14 +498,9 @@ void Octant::RemoveNeigbour(int id, OctantFace f)
 {
     vector<OctantSharedPtr> tmp = m_neigbours[f];
     m_neigbours[f].clear();
-    bool found = false;
     for (int i = 0; i < tmp.size(); i++)
     {
-        if (tmp[i]->GetId() == id)
-        {
-            found = true;
-        }
-        else
+        if (tmp[i]->GetId() != id)
         {
             m_neigbours[f].push_back(tmp[i]);
         }

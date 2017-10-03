@@ -77,7 +77,7 @@ namespace Nektar
         vel.push_back("Vz");
         vel.resize(m_spacedim);
         
-        EvaluateFunction(vel, m_velocity, "AdvectionVelocity");
+        GetFunction( "AdvectionVelocity")->Evaluate(vel,  m_velocity);
         
         m_session->MatchSolverInfo(
             "SpectralVanishingViscosity", "True", m_useSpecVanVisc, false);

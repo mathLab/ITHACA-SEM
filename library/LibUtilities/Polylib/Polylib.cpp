@@ -9,6 +9,11 @@
 
 #include <float.h>
 
+#include <complex>
+
+#include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
+
+
 /// Maximum number of iterations in polynomial defalation routine Jacobz
 
 #define STOP  30 
@@ -2977,9 +2982,44 @@ namespace Polylib {
 
 		}
 
-		
-
+    		
 	}
+
+    /**
+
+	\brief 
+
+    Calcualte the bessel function of the first kind with complex double input y.
+    Taken from Numerical Recipies in C 
+    
+    Returns a complex double
+    */
+
+
+    std::complex<Nektar::NekDouble> ImagBesselComp(int n,std::complex<Nektar::NekDouble> y)
+    {
+    	std::complex<Nektar::NekDouble> z (1.0,0.0);
+    	std::complex<Nektar::NekDouble> zbes (1.0,0.0);
+    	std::complex<Nektar::NekDouble> zarg;
+        Nektar::NekDouble tol = 1e-15;
+    	int maxit = 10000;
+    	int i = 1;
+
+	    zarg = -0.25*y*y;
+        
+	    while (abs(z) > tol && i <= maxit){
+		    z = z*(1.0/i/(i+n)*zarg);
+	    	if  (abs(z) <= tol) break;
+	    	zbes = zbes + z;
+	    	i++;
+    	}
+        zarg = 0.5*y;
+        for (i=1;i<=n;i++){
+            zbes = zbes*zarg;
+        }
+        return zbes;
+
+    }
 
 
 

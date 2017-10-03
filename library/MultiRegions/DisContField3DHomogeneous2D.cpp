@@ -50,14 +50,16 @@ namespace Nektar
         {
         }
 
-        DisContField3DHomogeneous2D::DisContField3DHomogeneous2D(const LibUtilities::SessionReaderSharedPtr &pSession,
-                                                                 const LibUtilities::BasisKey &HomoBasis_y,
-																 const LibUtilities::BasisKey &HomoBasis_z,
-                                                                 const NekDouble lhom_y,
-																 const NekDouble lhom_z,
-																 const bool useFFT,
-																 const bool dealiasing):
-            ExpList3DHomogeneous2D(pSession,HomoBasis_y,HomoBasis_z,lhom_y,lhom_z,useFFT,dealiasing),
+        DisContField3DHomogeneous2D::DisContField3DHomogeneous2D(
+                    const LibUtilities::SessionReaderSharedPtr &pSession,
+                    const LibUtilities::BasisKey &HomoBasis_y,
+                    const LibUtilities::BasisKey &HomoBasis_z,
+                    const NekDouble lhom_y,
+                    const NekDouble lhom_z,
+                    const bool useFFT,
+                    const bool dealiasing,
+                    const Collections::ImplementationType ImpType):
+            ExpList3DHomogeneous2D(pSession,HomoBasis_y,HomoBasis_z,lhom_y,lhom_z,useFFT,dealiasing,ImpType),
             m_bndCondExpansions(),
             m_bndConditions()
         {
@@ -70,7 +72,7 @@ namespace Nektar
         {
             if(DeclareLinesSetCoeffPhys)
             {
-                DisContField1DSharedPtr zero_line = boost::dynamic_pointer_cast<DisContField1D> (In.m_lines[0]);
+                DisContField1DSharedPtr zero_line = std::dynamic_pointer_cast<DisContField1D> (In.m_lines[0]);
                 
                 for(int n = 0; n < m_lines.num_elements(); ++n)
                 {
@@ -81,16 +83,18 @@ namespace Nektar
             }
         }
 
-        DisContField3DHomogeneous2D::DisContField3DHomogeneous2D(const LibUtilities::SessionReaderSharedPtr &pSession,
-                                                                 const LibUtilities::BasisKey &HomoBasis_y,
-																 const LibUtilities::BasisKey &HomoBasis_z,
-																 const NekDouble lhom_y,
-																 const NekDouble lhom_z,
-																 const bool useFFT,
-																 const bool dealiasing,
-																 const SpatialDomains::MeshGraphSharedPtr &graph1D,
-																 const std::string &variable):
-            ExpList3DHomogeneous2D(pSession,HomoBasis_y,HomoBasis_z,lhom_y,lhom_z,useFFT,dealiasing),
+        DisContField3DHomogeneous2D::DisContField3DHomogeneous2D(
+                         const LibUtilities::SessionReaderSharedPtr &pSession,
+                         const LibUtilities::BasisKey &HomoBasis_y,
+                         const LibUtilities::BasisKey &HomoBasis_z,
+                         const NekDouble lhom_y,
+                         const NekDouble lhom_z,
+                         const bool useFFT,
+                         const bool dealiasing,
+                         const SpatialDomains::MeshGraphSharedPtr &graph1D,
+                         const std::string &variable,
+                         const Collections::ImplementationType ImpType):
+            ExpList3DHomogeneous2D(pSession,HomoBasis_y,HomoBasis_z,lhom_y,lhom_z,useFFT,dealiasing,ImpType),
             m_bndCondExpansions(),
             m_bndConditions()
         {
@@ -99,7 +103,7 @@ namespace Nektar
             SpatialDomains::BoundaryConditions bcs(pSession, graph1D);
 
             //  
-            m_lines[0] = line_zero = MemoryManager<DisContField1D>::AllocateSharedPtr(pSession,graph1D,variable);
+            m_lines[0] = line_zero = MemoryManager<DisContField1D>::AllocateSharedPtr(pSession,graph1D,variable,ImpType);
 
             m_exp = MemoryManager<LocalRegions::ExpansionVector>::AllocateSharedPtr();
             nel = m_lines[0]->GetExpSize();
@@ -108,13 +112,13 @@ namespace Nektar
             {
                 (*m_exp).push_back(m_lines[0]->GetExp(i));
             }
-			
-			int nylines = m_homogeneousBasis_y->GetNumPoints();
-			int nzlines = m_homogeneousBasis_z->GetNumPoints();
-
+            
+            int nylines = m_homogeneousBasis_y->GetNumPoints();
+            int nzlines = m_homogeneousBasis_z->GetNumPoints();
+            
             for(n = 1; n < nylines*nzlines; ++n)
             {
-                m_lines[n] = MemoryManager<DisContField1D>::AllocateSharedPtr(pSession,graph1D,variable);
+                m_lines[n] = MemoryManager<DisContField1D>::AllocateSharedPtr(pSession,graph1D,variable,ImpType);
                 for(i = 0; i < nel; ++i)
                 {
                     (*m_exp).push_back((*m_exp)[i]);
@@ -269,7 +273,7 @@ namespace Nektar
             EvaluateBoundaryConditions(time, varName);
         }
 		
-		const Array<OneD,const boost::shared_ptr<ExpList> > &DisContField3DHomogeneous2D::v_GetBndCondExpansions(void)
+		const Array<OneD,const std::shared_ptr<ExpList> > &DisContField3DHomogeneous2D::v_GetBndCondExpansions(void)
 		{
 			return GetBndCondExpansions();
 		}
@@ -279,7 +283,7 @@ namespace Nektar
 			return GetBndConditions();
 		}
 		
-		boost::shared_ptr<ExpList> &DisContField3DHomogeneous2D::v_UpdateBndCondExpansion(int i)
+		std::shared_ptr<ExpList> &DisContField3DHomogeneous2D::v_UpdateBndCondExpansion(int i)
 		{
 			return UpdateBndCondExpansion(i);
 		}
@@ -332,7 +336,7 @@ namespace Nektar
         }
 
         void DisContField3DHomogeneous2D::v_GetBndElmtExpansion(int i,
-                            boost::shared_ptr<ExpList> &result,
+                            std::shared_ptr<ExpList> &result,
                             const bool DeclareCoeffPhysArrays)
         {
             int n, cnt, nq;

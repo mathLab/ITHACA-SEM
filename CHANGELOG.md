@@ -1,6 +1,113 @@
 Changelog
 =========
 
+v5.0.0
+------
+**Library**
+- Added in sum factorisation version for pyramid expansions and orthogonal
+  expansion in pyramids (!750)
+- Significant overhaul of CMake infrastructure (!770, !804)
+- Fix ThridpartyCCM options (!802)
+- Fix Windows CRLF tokens in GEO reader and improve comment handling (!805)
+- Use chrono in Timer (!807)
+- Fix caching of FUNCTION tags that read from file and provide the same
+  functionality in FUNCTIONs defined for forcings (!759)
+- Add ARPACK thirdparty build capabilities (!828)
+- Added native support for csv files in addititon to pts (!760 !835)
+- Utilize LAPACK_DIR env variable to find the native blas/lapack install (!827)
+- Simplify RawType typedefs (!840)
+- Remove unused files from BasicUtils (!841)
+- Remove checks for old boost versions which are no longer supported (!841)
+- Refactor ParseUtils to be more consistent (!843)
+
+**NekMesh**:
+- Add feature to read basic 2D geo files as CAD (!731)
+- Add periodic boundary condition meshing in 2D (!733)
+- Adjust boundary layer thickness in corners in 2D (!739)
+- Add non-O BL meshing in 2D (!757)
+- Add ability to compile CCIO library but tar file is not yet openly
+  available whist we seek permission from Simens (!799)
+- Fix issue with reading CCM files due to definition of default arrays
+  rather than a vector (!797)
+- Fix inverted triangles and small memory issue in surface meshing (!798)
+- Additional curve types in GEO reader: BSpline, Circle, Ellipse (!800)
+
+**FieldConvert**:
+- Add input module for Semtex field files (!777)
+- Fixed interppoints module (!760)
+- Move StreamFunction utility to a FieldConvert module (!809)
+- Enable output to multiple files (!844)
+
+**Documentation**:
+- Added the developer-guide repository as a submodule (!751)
+
+<<<<<<< CHANGELOG.md
+v4.4.2
+------
+**NekMesh**:
+- Fix uninitialised memory bug in Nek5000 input module (!801)
+
+**Library**
+- Fix ability to set default implementation in Collections and added an option
+  to set eNoCollections in FieldConvert as default (!789)
+- Fix performance issue in ProcessIsoContour in relation to memory consumption
+  (!821)
+- Fix performance issue with ExtractPhysToBndElmt (!796)
+
+**Utilities**
+- Fix vtkToFld missing dependency which prevented compiling with VTK 7.1 (!808)
+
+=======
+>>>>>>> CHANGELOG.md
+v4.4.1
+------
+**Library**
+- Remove m_offset_elmt_id and GetOffsetElmtId which fixed problems in 2D when
+  quad elements are listed before tri elements (!758)
+- Remove the duplicate output of errorutil (!756)
+- Fix BLAS CMake dependencies (!763)
+- Fix interpolation issue with Lagrange basis functions (!768)
+- Fix issue with average fields not working with different polynomial order
+  fields (!776)
+- Fix rounding of integer parameters (!774)
+- Fix Hdf5 output in FilterFieldConvert (!781)
+- Fixed extreme memory consumption of Interpolator when interpolating from pts
+  to fld or between different meshes (!783)
+- Fix deadlock with HDF5 input (!786)
+- Fix missing entriess in LibUtilities::kPointsTypeStr (!792)
+- Fix compiler warnings with CommDataType (!793)
+- Fix ability to set default implementation in Collections and added an option 
+  to set eNoCollections in FieldConvert as default (!789)
+- Fix performance issue in ProcessIsoContour in relation to memory consumption
+  (!821)
+- Fix performance issue with ExtractPhysToBndElmt (!796)
+- Fix available classes being listed multiple times (!817)
+
+**FieldConvert:**
+- Fix issue with field ordering in the interppointdatatofld module (!754)
+- Fix issue with FieldConvert when range flag used (!761)
+- Fix issue when using output-points combined with noequispaced (!775)
+- Fix equispacedoutput for 3DH1D with triangles (!787)
+
+**NekMesh**:
+- Fix memory consumption issue with Gmsh output (!747, !762)
+- Rework meshing control so that if possible viewable meshes will be dumped
+  when some part of the system fails (!756)
+- Add manifold meshing option (!756)
+- Fix issue with older rea input files (!765)
+- Fix memory leak in variational optimiser, add small optimisations (!785)
+- Check the dimensionality of the CAD system before running the 2D generator (!780)
+- Fix uninitialised memory bug in Nek5000 input module (!801)
+
+**IncNavierStokesSolver**
+- Fix an initialisation issue when using an additional advective field (!779)
+
+**Utilities**
+- Fix vtkToFld missing dependency which prevented compiling with VTK 7.1 (!808)
+
+**Packaging**
+- Added missing package for FieldUtils library (!755)
+
 v4.4.0
 ------
 **Library**:
@@ -34,9 +141,15 @@ v4.4.0
 - Enabled MUMPS support in PETSc if a Fortran compiler was found and added 3D
   support to the Helmholtz smoother used e.g. in FieldConverts C0Projection
   module (!714)
+- Fix bug in `Vmath::FillWhiteNoise` which caused `ForcingNoise` to have
+  a repeated pattern (!718)
 - Fix bug in the calculation of the RHS magnitude in CG solver (!721)
+- Fix bug in MPI detection for recent CMake on OS X (!725)
 - Fix bug in CMake Homebrew and MacPorts detection for OS X (!729)
 - Fix bug in FieldUtils when using half mode expansions (!734)
+- Do not read the same fld/pts files again for every variable (!670)
+- Fix bug in CMake PETSc detection for Ubuntu 16.04/Debian 9 (!735)
+- Fix warnings with Intel compiler (!742)
 
 **ADRSolver:**
 - Add a projection equation system for C^0 projections (!675)
@@ -53,12 +166,17 @@ v4.4.0
 - Fix linearised advection for full 3D cases (!708)
 - Added a weak pressure formulation following Guermond & Shen (!713)
 - Added a convective like outflow boundary condition from Dong (!713)
+- Added the ability to specifiy Womersley boundary conditions for pulsatile flow (!472)
+
+**CardiacEPSolver:**
+- Added a Python translator utility to generate cell models from CellML (!723)
 
 **FieldConvert:**
 - Allow equi-spaced output for 1D and 2DH1D fields (!613)
 - Update quality metric to include scaled Jacobian output (!695)
 - Allow multiple XML files to be specified in InterpField module (!705)
 - Fix issues with isocontour module (!719)
+- Fix issue with interpolator routine (!746)
 
 **NekMesh:**
 - Modify curve module to allow for spline input (!628)
@@ -85,6 +203,18 @@ v4.4.0
   (!712)
 - 2D to 3D mesh extrusion module (!715)
 - Add new two-dimensional mesher from NACA code or step file (!720)
+- Add basic gmsh cad (.geo) reader to the meshing system (!731)
+- Fix inverted boundary layer in 2D (!736)
+- More sensible element sizing with boundary layers in 2D (!736)
+- Change variable names in mcf file to make more sense (!736)
+- Fix issues in varopti module so that in can be compiled without meshgen on
+  (!736)
+- Replace LAPACK Eigenvalue calculation with handwritten function in
+  varopti (!738)
+- Improved node-colouring algorithm for better load-balancing
+  in varopti (!738)
+- Simplified calculation of the energy functional in varopti for improved
+  performance (!738)
 
 **FieldConvert:**
 - Move all modules to a new library, FieldUtils, to support post-processing
@@ -92,6 +222,9 @@ v4.4.0
 - Add module to stretch homogeneous direction (!609)
 - Add module to add composite ID of elements as a field (!674)
 - Add reader for Nek5000 field files (!680)
+
+**Tester:**
+- Fix output not displayed on segfault or system error (!745)
 
 v4.3.5
 ------
@@ -120,6 +253,12 @@ v4.3.4
 
 **IncNavierStokesSolver:**
 - Fix 2nd order time-integration for VCSMapping (!687)
+
+v4.3.4
+------
+**Library:**
+- Fix performance issue with `v_ExtractDataToCoeffs` for post-processing of large
+  simulations (!672)
 
 v4.3.3
 ------

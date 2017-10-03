@@ -51,8 +51,8 @@ namespace Nektar
         public:
             MULTI_REGIONS_EXPORT GlobalLinSysDirect(
                 const GlobalLinSysKey &pKey,
-                const boost::weak_ptr<ExpList> &pExp,
-                const boost::shared_ptr<AssemblyMap> &pLocToGloMap);
+                const std::weak_ptr<ExpList> &pExp,
+                const std::shared_ptr<AssemblyMap> &pLocToGloMap);
                 
                 MULTI_REGIONS_EXPORT virtual ~GlobalLinSysDirect();
 

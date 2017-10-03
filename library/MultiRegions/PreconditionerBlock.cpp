@@ -65,7 +65,7 @@ namespace Nektar
         */
 
         PreconditionerBlock::PreconditionerBlock(
-            const boost::shared_ptr<GlobalLinSys> &plinsys,
+            const std::shared_ptr<GlobalLinSys> &plinsys,
             const AssemblyMapSharedPtr &pLocToGloMap)
             : Preconditioner(plinsys, pLocToGloMap),
               m_linsys(plinsys),
@@ -120,14 +120,13 @@ namespace Nektar
             DNekScalBlkMatSharedPtr loc_mat;
             DNekScalMatSharedPtr    bnd_mat;
 
-            int nel, i, j, k, n, cnt, gId;
+            int i, j, k, n, cnt, gId;
             int meshVertId, meshEdgeId, meshFaceId;
 
             const int nExp = expList->GetExpSize();
             const int nDirBnd = m_locToGloMap->GetNumGlobalDirBndCoeffs();
 
             // Grab periodic geometry information.
-            PeriodicMap::iterator pIt;
             PeriodicMap periodicVerts, periodicEdges, periodicFaces;
             expList->GetPeriodicEntities(
                 periodicVerts, periodicEdges, periodicFaces);
@@ -155,15 +154,11 @@ namespace Nektar
             //                     elements of dimension i.
             Array<OneD, int> maxVertIds(6, -1);
 
-            // Iterator for idMats members.
-            map<int, vector<NekDouble> >::iterator gIt;
-
             // Figure out mapping from each elemental contribution to offset in
             // (vert,edge,face) triples.
             for (cnt = n = 0; n < nExp; ++n)
             {
-                nel = expList->GetOffset_Elmt_Id(n);
-                exp = expList->GetExp(nel);
+                exp = expList->GetExp(n);
 
                 // Grab reference to local Schur complement matrix.
                 DNekScalMatSharedPtr schurMat =
@@ -193,7 +188,7 @@ namespace Nektar
 
                     // See if we have processed this vertex from another
                     // element.
-                    gIt = idMats[0].find(gId);
+                    auto gIt = idMats[0].find(gId);
 
                     if (gIt == idMats[0].end())
                     {
@@ -211,7 +206,7 @@ namespace Nektar
                     // then we change meshVertId to be the minimum of all the
                     // other periodic vertices, so that we don't end up
                     // duplicating the matrix in our final block matrix.
-                    pIt = periodicVerts.find(meshVertId);
+                    auto pIt = periodicVerts.find(meshVertId);
                     if (pIt != periodicVerts.end())
                     {
                         for (j = 0; j < pIt->second.size(); ++j)
@@ -240,7 +235,7 @@ namespace Nektar
 
                     // Check if this edge is periodic. We may need to flip
                     // orientation if it is.
-                    pIt = periodicEdges.find(meshEdgeId);
+                    auto pIt = periodicEdges.find(meshEdgeId);
                     if (pIt != periodicEdges.end())
                     {
                         pair<int, StdRegions::Orientation> idOrient =
@@ -299,7 +294,7 @@ namespace Nektar
                     gidDofs[1][gId] = nEdgeCoeffs;
 
                     // Assemble this edge matrix with another one, if it exists.
-                    gIt = idMats[1].find(gId);
+                    auto gIt = idMats[1].find(gId);
                     if (gIt == idMats[1].end())
                     {
                         idMats[1][gId] = tmpStore;
@@ -330,7 +325,7 @@ namespace Nektar
 
                     // Check if this face is periodic. We may need to flip
                     // orientation if it is.
-                    pIt = periodicFaces.find(meshFaceId);
+                    auto pIt = periodicFaces.find(meshFaceId);
                     if (pIt != periodicFaces.end())
                     {
                         meshFaceId = min(meshFaceId, pIt->second[0].id);
@@ -379,7 +374,7 @@ namespace Nektar
                     gidDofs[2][gId] = nFaceCoeffs;
 
                     // Assemble this face matrix with another one, if it exists.
-                    gIt = idMats[2].find(gId);
+                    auto gIt = idMats[2].find(gId);
                     if (gIt == idMats[2].end())
                     {
                         idMats[2][gId] = tmpStore;
@@ -417,27 +412,27 @@ namespace Nektar
                 // Note that iterating over the map uses the property that keys
                 // are accessed in order of ascending order, putting everything
                 // in the right order for the global system.
-                for (gIt = idMats[i].begin(); gIt != idMats[i].end(); ++gIt)
+                for (auto &gIt : idMats[i])
                 {
                     // Copy matrix into storage.
                     storageBuf.insert(storageBuf.end(),
-                                      gIt->second.begin(), gIt->second.end());
+                                      gIt.second.begin(), gIt.second.end());
 
                     // Get mesh ID from global ID number.
-                    ASSERTL1(gidMeshIds[i].count(gIt->first) > 0,
+                    ASSERTL1(gidMeshIds[i].count(gIt.first) > 0,
                              "Unable to find global ID " +
-                             boost::lexical_cast<string>(gIt->first) +
+                             boost::lexical_cast<string>(gIt.first) +
                              " inside map");
-                    meshVertId = gidMeshIds[i][gIt->first];
+                    meshVertId = gidMeshIds[i][gIt.first];
 
-                    for (j = 0; j < gIt->second.size(); ++j)
+                    for (j = 0; j < gIt.second.size(); ++j)
                     {
                         globalToUniversal.push_back(
                             cnt + meshVertId*maxDofs*maxDofs + j);
                     }
 
                     // Free up the temporary storage.
-                    gIt->second.clear();
+                    gIt.second.clear();
                 }
 
                 cnt += (maxVertIds[2*i]+1)*maxDofs*maxDofs;
@@ -470,14 +465,14 @@ namespace Nektar
             cnt = 1;
             for (i = 1; i < 3; ++i)
             {
-                for (gIt = idMats[i].begin(); gIt != idMats[i].end(); ++gIt)
+                for (auto &gIt : idMats[i])
                 {
-                    ASSERTL1(gidDofs[i].count(gIt->first) > 0,
+                    ASSERTL1(gidDofs[i].count(gIt.first) > 0,
                              "Unable to find number of degrees of freedom for "
                              "global ID " + boost::lexical_cast<string>(
-                                 gIt->first));
+                                 gIt.first));
 
-                    n_blks[cnt++] = gidDofs[i][gIt->first];
+                    n_blks[cnt++] = gidDofs[i][gIt.first];
                 }
             }
 
@@ -492,7 +487,8 @@ namespace Nektar
 
             // Fill the vertex matrix with the inverse of each vertex value.
             cnt = 0;
-            for (gIt = idMats[0].begin(); gIt != idMats[0].end(); ++gIt, ++cnt)
+            for (auto gIt = idMats[0].begin(); gIt != idMats[0].end();
+                 ++gIt, ++cnt)
             {
                 (*vertMat)(cnt, cnt) = 1.0/storageData[cnt];
             }
@@ -505,10 +501,9 @@ namespace Nektar
             int cnt2 = 1;
             for (i = 1; i < 3; ++i)
             {
-                for (gIt = idMats[i].begin(); gIt != idMats[i].end();
-                     ++gIt, ++cnt2)
+                for (auto &gIt : idMats[i])
                 {
-                    int nDofs = gidDofs[i][gIt->first];
+                    int nDofs = gidDofs[i][gIt.first];
 
                     DNekMatSharedPtr tmp = MemoryManager<DNekMat>
                         ::AllocateSharedPtr(nDofs, nDofs);
@@ -525,6 +520,7 @@ namespace Nektar
 
                     tmp->Invert();
                     m_blkMat->SetBlock(cnt2, cnt2, tmp);
+                    ++cnt2;
                 }
             }
         }
@@ -544,14 +540,14 @@ namespace Nektar
          */
         void PreconditionerBlock::BlockPreconditionerHDG()
         {
-            boost::shared_ptr<MultiRegions::ExpList>
+            std::shared_ptr<MultiRegions::ExpList>
                 expList = ((m_linsys.lock())->GetLocMat()).lock();
-            boost::shared_ptr<MultiRegions::ExpList> trace = expList->GetTrace();
+            std::shared_ptr<MultiRegions::ExpList> trace = expList->GetTrace();
             LocalRegions::ExpansionSharedPtr locExpansion;
             DNekScalBlkMatSharedPtr loc_mat;
             DNekScalMatSharedPtr    bnd_mat;
 
-            AssemblyMapDGSharedPtr asmMap = boost::dynamic_pointer_cast<
+            AssemblyMapDGSharedPtr asmMap = std::dynamic_pointer_cast<
                 AssemblyMapDG>(m_locToGloMap);
 
             int i, j, k, n, cnt, cnt2;
@@ -601,7 +597,7 @@ namespace Nektar
             // Assemble block matrices for each trace element.
             for (cnt = n = 0; n < expList->GetExpSize(); ++n)
             {
-                int elmt = expList->GetOffset_Elmt_Id(n);
+                int elmt = n;
                 locExpansion = expList->GetExp(elmt);
 
                 Array<OneD, LocalRegions::ExpansionSharedPtr> &elmtToTraceMap =

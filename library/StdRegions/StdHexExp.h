@@ -287,7 +287,7 @@ namespace Nektar
 
         };
 
-        typedef boost::shared_ptr<StdHexExp> StdHexExpSharedPtr;
+        typedef std::shared_ptr<StdHexExp> StdHexExpSharedPtr;
 
     }
 }

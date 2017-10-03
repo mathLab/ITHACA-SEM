@@ -59,11 +59,11 @@ public:
     {
     }
 
-    ~CADCurveOCE()
+    virtual ~CADCurveOCE()
     {
     }
 
-    virtual Array<OneD, NekDouble> Bounds();
+    virtual Array<OneD, NekDouble> GetBounds();
     virtual NekDouble Length(NekDouble ti, NekDouble tf);
     virtual Array<OneD, NekDouble> P(NekDouble t);
     virtual Array<OneD, NekDouble> D2(NekDouble t);
@@ -71,6 +71,8 @@ public:
     virtual Array<OneD, NekDouble> GetMinMax();
     virtual NekDouble loct(Array<OneD, NekDouble> xyz);
     virtual NekDouble Curvature(NekDouble t);
+    virtual Array<OneD, NekDouble> NormalWRT(NekDouble t, int surf);
+    virtual Array<OneD, NekDouble> N(NekDouble t);
 
     void Initialise(int i, TopoDS_Shape in)
     {
@@ -88,7 +90,7 @@ public:
         BRepGProp::LinearProperties(m_occEdge, System);
         m_length = System.Mass();
 
-        Array<OneD, NekDouble> b = Bounds();
+        Array<OneD, NekDouble> b = GetBounds();
         m_c = BRep_Tool::Curve(TopoDS::Edge(cp), b[0], b[1]);
 
         m_id   = i;

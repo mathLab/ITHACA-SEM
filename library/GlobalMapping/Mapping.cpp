@@ -48,10 +48,8 @@ bool             Mapping::m_isDefined  = false;
 
 MappingFactory& GetMappingFactory()
 {
-    typedef Loki::SingletonHolder<MappingFactory,
-                                  Loki::CreateUsingNew,
-                                  Loki::NoDestroy > Type;
-    return Type::Instance();
+    static MappingFactory instance;
+    return instance;
 }
 
 Mapping::Mapping(const LibUtilities::SessionReaderSharedPtr& pSession,
@@ -1150,7 +1148,7 @@ void Mapping::v_UpdateBCs( const NekDouble time)
 
                 // Get boundary condition 
                 LibUtilities::Equation condition =
-                    boost::static_pointer_cast<
+                    std::static_pointer_cast<
                         SpatialDomains::DirichletBoundaryCondition>
                             (BndConds[n])->
                                 m_dirichletCondition;
@@ -1196,7 +1194,7 @@ void Mapping::v_UpdateBCs( const NekDouble time)
                         m_fields[i]->GetBoundaryToElmtMap(BCtoElmtID,
                                                           BCtoTraceID);
                         /// Casting the bnd exp to the specific case
-                        Bc =  boost::dynamic_pointer_cast<
+                        Bc =  std::dynamic_pointer_cast<
                                 StdRegions::StdExpansion> 
                                 (BndExp[n]->GetExp(j));
                         // Get element expansion

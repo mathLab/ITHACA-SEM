@@ -36,12 +36,12 @@
 #ifndef NekMeshUtils_CADSYSTEM_CADSYSTEM
 #define NekMeshUtils_CADSYSTEM_CADSYSTEM
 
-#include <boost/shared_ptr.hpp>
-
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
+
+#include <NekMeshUtils/NekMeshUtilsDeclspec.h>
 
 #include "CADObject.h"
 
@@ -52,23 +52,13 @@ namespace NekMeshUtils
 
 //forward declorators
 class CADVert;
-typedef boost::shared_ptr<CADVert> CADVertSharedPtr;
+typedef std::shared_ptr<CADVert> CADVertSharedPtr;
 class CADCurve;
-typedef boost::shared_ptr<CADCurve> CADCurveSharedPtr;
+typedef std::shared_ptr<CADCurve> CADCurveSharedPtr;
 class CADSurf;
-typedef boost::shared_ptr<CADSurf> CADSurfSharedPtr;
+typedef std::shared_ptr<CADSurf> CADSurfSharedPtr;
 
-/**
- * @brief struct which descibes a collection of cad edges which are a
- *        loop on the cad surface
- */
-struct EdgeLoop
-{
-    std::vector<CADCurveSharedPtr> edges;
-    std::vector<int> edgeo; //0 is forward 1 is backward
-    Array<OneD, NekDouble> center;
-    NekDouble area;
-};
+
 
 /**
  * @brief Base class for CAD interface system.
@@ -80,6 +70,20 @@ class CADSystem
 {
 public:
     friend class MemoryManager<CADSystem>;
+
+    /**
+     * @brief struct which descibes a collection of cad edges which are a
+     *        loop on the cad surface
+     */
+    struct EdgeLoop
+    {
+        std::vector<CADCurveSharedPtr> edges;
+        std::vector<CADOrientation::Orientation> edgeo;
+        Array<OneD, NekDouble> center;
+        NekDouble area;
+    };
+
+    typedef std::shared_ptr<EdgeLoop> EdgeLoopSharedPtr;
 
     /**
      * @brief Default constructor.
@@ -197,6 +201,9 @@ public:
         return m_verts.size();
     }
 
+    NEKMESHUTILS_EXPORT Array<OneD, NekDouble> GetPeriodicTranslationVector(
+                int first, int second);
+
 protected:
     /// Name of cad file
     std::string m_name;
@@ -211,7 +218,7 @@ protected:
     std::string m_naca;
 };
 
-typedef boost::shared_ptr<CADSystem> CADSystemSharedPtr;
+typedef std::shared_ptr<CADSystem> CADSystemSharedPtr;
 typedef LibUtilities::NekFactory<std::string, CADSystem, std::string>
     EngineFactory;
 

@@ -38,11 +38,10 @@
 #define FIELDUTILS_INTERPOLATOR_H
 
 #include <vector>
+#include <iostream>
+#include <functional>
+#include <memory>
 
-#include <boost/function.hpp>
-#include <boost/shared_ptr.hpp>
-
-#include <boost/geometry.hpp>
 #include <boost/geometry/geometries/box.hpp>
 #include <boost/geometry/geometries/point.hpp>
 #include <boost/geometry/index/rtree.hpp>
@@ -55,9 +54,6 @@
 #include <LibUtilities/BasicUtils/VmathArray.hpp>
 
 #include "FieldUtilsDeclspec.h"
-
-namespace bg  = boost::geometry;
-namespace bgi = boost::geometry::index;
 
 namespace Nektar
 {
@@ -150,7 +146,7 @@ public:
     /// Returns the output field
     FIELD_UTILS_EXPORT LibUtilities::PtsFieldSharedPtr GetOutField() const;
 
-    /// Print statics of the interpolation weights
+    /// Returns if the weights have already been computed
     FIELD_UTILS_EXPORT void PrintStatistics();
 
     /// sets a callback funtion which gets called every time the interpolation
@@ -158,7 +154,8 @@ public:
     template <typename FuncPointerT, typename ObjectPointerT>
     void SetProgressCallback(FuncPointerT func, ObjectPointerT obj)
     {
-        m_progressCallback = boost::bind(func, obj, _1, _2);
+        m_progressCallback = std::bind(
+            func, obj, std::placeholders::_1, std::placeholders::_2);
     }
 
 private:
@@ -182,9 +179,9 @@ private:
 
     /// dimension of this interpolator. Hardcoded to 3
     static const int m_dim = 3;
-    typedef bg::model::point<NekDouble, m_dim, bg::cs::cartesian> BPoint;
+    typedef boost::geometry::model::point<NekDouble, m_dim, boost::geometry::cs::cartesian> BPoint;
     typedef std::pair<BPoint, unsigned int> PtsPointPair;
-    typedef bgi::rtree<PtsPointPair, bgi::rstar<16> > PtsRtree;
+    typedef boost::geometry::index::rtree<PtsPointPair, boost::geometry::index::rstar<16> > PtsRtree;
 
     /// input field
     LibUtilities::PtsFieldSharedPtr m_ptsInField;
@@ -200,13 +197,13 @@ private:
     /// A tree structure to speed up the neighbour search.
     /// Note that we fill it with an iterator, so instead of rstar, the
     /// packing algorithm is used.
-    boost::shared_ptr<PtsRtree> m_rtree;
+    std::shared_ptr<PtsRtree> m_rtree;
     /// Interpolation weights for each neighbour.
     /// Structure: m_weights[physPtIdx][neighbourIdx]
-    Array<OneD, Array<OneD, float> > m_weights;
+    Array<TwoD, float> m_weights;
     /// Indices of the relevant neighbours for each physical point.
     /// Structure: m_neighInds[ptIdx][neighbourIdx]
-    Array<OneD, Array<OneD, unsigned int> > m_neighInds;
+    Array<TwoD, unsigned int> m_neighInds;
     /// Filter width used for some interpolation algorithms
     NekDouble m_filtWidth;
     /// Max number of interpolation points
@@ -214,7 +211,7 @@ private:
     /// coordinate id along which the interpolation should be performed
     short int m_coordId;
 
-    boost::function<void(const int position, const int goal)>
+    std::function<void(const int position, const int goal)>
         m_progressCallback;
 
     FIELD_UTILS_EXPORT void CalcW_Gauss(const PtsPoint &searchPt,
@@ -225,7 +222,7 @@ private:
 
     FIELD_UTILS_EXPORT void CalcW_NNeighbour(const PtsPoint &searchPt);
 
-    FIELD_UTILS_EXPORT void CalcW_Shepard(const PtsPoint &searchPt);
+    FIELD_UTILS_EXPORT void CalcW_Shepard(const PtsPoint &searchPt, int numPts);
 
     FIELD_UTILS_EXPORT void CalcW_Quadratic(const PtsPoint &searchPt,
                                             int coordId);
@@ -242,7 +239,7 @@ private:
                                             const unsigned int numPts = 1);
 };
 
-typedef boost::shared_ptr<Interpolator> InterpolatorSharedPtr;
+typedef std::shared_ptr<Interpolator> InterpolatorSharedPtr;
 static InterpolatorSharedPtr NullInterpolator;
 }
 }

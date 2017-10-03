@@ -63,8 +63,9 @@ namespace Nektar
         
         ExpList3D::ExpList3D(const ExpList3D &In,
                 const std::vector<unsigned int> &eIDs,
-                const bool DeclareCoeffPhysArrays)
-                : ExpList(In, eIDs, DeclareCoeffPhysArrays)
+                const bool DeclareCoeffPhysArrays,
+                const Collections::ImplementationType ImpType):
+            ExpList(In, eIDs, DeclareCoeffPhysArrays)
         {
             SetExpType(e3D);
             
@@ -73,10 +74,17 @@ namespace Nektar
             m_globalOptParam = MemoryManager<NekOptimize::GlobalOptParam>
                 ::AllocateSharedPtr(nel);
 
-            SetCoeffPhys();
+            SetCoeffPhysOffsets();
+
+            if (DeclareCoeffPhysArrays)
+            {
+                // Set up m_coeffs, m_phys.
+                m_coeffs = Array<OneD, NekDouble>(m_ncoeffs);
+                m_phys   = Array<OneD, NekDouble>(m_npoints);
+             }
 
             ReadGlobalOptimizationParameters();
-            CreateCollections();
+            CreateCollections(ImpType);
         }
 
         ExpList3D::~ExpList3D()
@@ -92,7 +100,8 @@ namespace Nektar
                              const LibUtilities::BasisKey &HBb,
                              const LibUtilities::BasisKey &HBc,
                              const SpatialDomains::MeshGraphSharedPtr &graph3D,
-                             const LibUtilities::PointsType TetNb):
+                             const LibUtilities::PointsType TetNb,
+                             const Collections::ImplementationType ImpType):
             ExpList(pSession,graph3D)
         {
             SetExpType(e3D);
@@ -104,15 +113,14 @@ namespace Nektar
 
             const SpatialDomains::ExpansionMap &expansions = graph3D->GetExpansions();
 
-            SpatialDomains::ExpansionMap::const_iterator expIt;
-            for (expIt = expansions.begin(); expIt != expansions.end(); ++expIt)
+            for (auto &expIt : expansions)
             {
                 SpatialDomains::TetGeomSharedPtr TetGeom;
                 SpatialDomains::HexGeomSharedPtr HexGeom;
                 SpatialDomains::PrismGeomSharedPtr PrismGeom;
                 SpatialDomains::PyrGeomSharedPtr PyrGeom;
 
-                if((TetGeom = boost::dynamic_pointer_cast<SpatialDomains::TetGeom>(expIt->second->m_geomShPtr)))
+                if((TetGeom = std::dynamic_pointer_cast<SpatialDomains::TetGeom>(expIt.second->m_geomShPtr)))
                 {
                     if(TetNb < LibUtilities::SIZE_PointsType)
                     {
@@ -130,7 +138,7 @@ namespace Nektar
                     m_npoints += TBa.GetNumPoints()*TBb.GetNumPoints()*TBc.GetNumPoints();
                 }
 /*
-                else if((PrismGeom = boost::dynamic_pointer_cast<SpatialDomains::PrismGeom>(expansions[i]->m_geomShPtr)))
+                else if((PrismGeom = std::dynamic_pointer_cast<SpatialDomains::PrismGeom>(expansions[i]->m_geomShPtr)))
                 {
                       prism = MemoryManager<LocalRegions::PrismExp>::AllocateSharedPtr(Ba,Bb,Bc,PrismGeom);
                       (*m_exp).push_back(prism);
@@ -139,7 +147,7 @@ namespace Nektar
                       m_npoints +=  Ba.GetNumPoints()*Bb.GetNumPoints()*Bc.GetNumPoints();
 
                 }
-                else if((PyrGeom = boost::dynamic_pointer_cast<SpatialDomains::PyrGeom>(expansions[i]->m_geomShPtr)))
+                else if((PyrGeom = std::dynamic_pointer_cast<SpatialDomains::PyrGeom>(expansions[i]->m_geomShPtr)))
                 {
                      pyramid = MemoryManager<LocalRegions::PyrExp>::AllocateSharedPtr(Ba,Bb,Bc,PyrGeom);
                      (*m_exp).push_back(pyramid);
@@ -149,7 +157,7 @@ namespace Nektar
 
                 }
 */
-                else if((HexGeom = boost::dynamic_pointer_cast<SpatialDomains::HexGeom>(expIt->second->m_geomShPtr)))
+                else if((HexGeom = std::dynamic_pointer_cast<SpatialDomains::HexGeom>(expIt.second->m_geomShPtr)))
                 {
                     hex = MemoryManager<LocalRegions::HexExp>::AllocateSharedPtr(HBa,HBb,HBc, HexGeom);
                     (*m_exp).push_back(hex);
@@ -169,10 +177,14 @@ namespace Nektar
             m_globalOptParam = MemoryManager<NekOptimize::GlobalOptParam>
                 ::AllocateSharedPtr(nel);
 
-            SetCoeffPhys();
+            SetCoeffPhysOffsets();
+
+            // Set up m_coeffs, m_phys.
+            m_coeffs = Array<OneD, NekDouble>(m_ncoeffs);
+            m_phys   = Array<OneD, NekDouble>(m_npoints);
 
             ReadGlobalOptimizationParameters();
-            CreateCollections();
+            CreateCollections(ImpType);
         }
 
         /**
@@ -189,7 +201,8 @@ namespace Nektar
          */
         ExpList3D::ExpList3D(const LibUtilities::SessionReaderSharedPtr &pSession,
                              const SpatialDomains::MeshGraphSharedPtr &graph3D,
-                             const std::string  &variable) :
+                             const std::string  &variable,
+                             const Collections::ImplementationType ImpType):
             ExpList(pSession,graph3D)
         {
             SetExpType(e3D);
@@ -203,23 +216,22 @@ namespace Nektar
             const SpatialDomains::ExpansionMap &expansions
                                         = graph3D->GetExpansions(variable);
 
-            SpatialDomains::ExpansionMap::const_iterator expIt;
-            for (expIt = expansions.begin(); expIt != expansions.end(); ++expIt)
+            for (auto &expIt : expansions)
             {
                 SpatialDomains::TetGeomSharedPtr   TetGeom;
                 SpatialDomains::HexGeomSharedPtr   HexGeom;
                 SpatialDomains::PrismGeomSharedPtr PrismGeom;
                 SpatialDomains::PyrGeomSharedPtr   PyrGeom;
 
-                if((TetGeom = boost::dynamic_pointer_cast<
-                        SpatialDomains::TetGeom>(expIt->second->m_geomShPtr)))
+                if((TetGeom = std::dynamic_pointer_cast<
+                        SpatialDomains::TetGeom>(expIt.second->m_geomShPtr)))
                 {
                     LibUtilities::BasisKey TetBa
-                                        = expIt->second->m_basisKeyVector[0];
+                                        = expIt.second->m_basisKeyVector[0];
                     LibUtilities::BasisKey TetBb
-                                        = expIt->second->m_basisKeyVector[1];
+                                        = expIt.second->m_basisKeyVector[1];
                     LibUtilities::BasisKey TetBc
-                                        = expIt->second->m_basisKeyVector[2];
+                                        = expIt.second->m_basisKeyVector[2];
 
                     if(TetBa.GetBasisType() == LibUtilities::eGLL_Lagrange ||
                        TetBa.GetBasisType() == LibUtilities::eGauss_Lagrange)
@@ -236,15 +248,15 @@ namespace Nektar
                         (*m_exp).push_back(tet);
                     }
                 }
-                else if((PrismGeom = boost::dynamic_pointer_cast<SpatialDomains
-                             ::PrismGeom>(expIt->second->m_geomShPtr)))
+                else if((PrismGeom = std::dynamic_pointer_cast<SpatialDomains
+                             ::PrismGeom>(expIt.second->m_geomShPtr)))
                 {
                     LibUtilities::BasisKey PrismBa
-                                        = expIt->second->m_basisKeyVector[0];
+                                        = expIt.second->m_basisKeyVector[0];
                     LibUtilities::BasisKey PrismBb
-                                        = expIt->second->m_basisKeyVector[1];
+                                        = expIt.second->m_basisKeyVector[1];
                     LibUtilities::BasisKey PrismBc
-                                        = expIt->second->m_basisKeyVector[2];
+                                        = expIt.second->m_basisKeyVector[2];
 
                     prism = MemoryManager<LocalRegions::PrismExp>
                                         ::AllocateSharedPtr(PrismBa,PrismBb,
@@ -252,15 +264,15 @@ namespace Nektar
                     prism->SetElmtId(elmtid++);
                     (*m_exp).push_back(prism);
                 }
-                else if((PyrGeom = boost::dynamic_pointer_cast<
-                         SpatialDomains::PyrGeom>(expIt->second->m_geomShPtr)))
+                else if((PyrGeom = std::dynamic_pointer_cast<
+                         SpatialDomains::PyrGeom>(expIt.second->m_geomShPtr)))
                 {
                     LibUtilities::BasisKey PyrBa
-                                        = expIt->second->m_basisKeyVector[0];
+                                        = expIt.second->m_basisKeyVector[0];
                     LibUtilities::BasisKey PyrBb
-                                        = expIt->second->m_basisKeyVector[1];
+                                        = expIt.second->m_basisKeyVector[1];
                     LibUtilities::BasisKey PyrBc
-                                        = expIt->second->m_basisKeyVector[2];
+                                        = expIt.second->m_basisKeyVector[2];
 
                     pyramid = MemoryManager<LocalRegions::PyrExp>
                                         ::AllocateSharedPtr(PyrBa,PyrBb,PyrBc,
@@ -268,15 +280,15 @@ namespace Nektar
                     pyramid->SetElmtId(elmtid++);
                     (*m_exp).push_back(pyramid);
                 }
-                else if((HexGeom = boost::dynamic_pointer_cast<
-                         SpatialDomains::HexGeom>(expIt->second->m_geomShPtr)))
+                else if((HexGeom = std::dynamic_pointer_cast<
+                         SpatialDomains::HexGeom>(expIt.second->m_geomShPtr)))
                 {
                     LibUtilities::BasisKey HexBa
-                                        = expIt->second->m_basisKeyVector[0];
+                                        = expIt.second->m_basisKeyVector[0];
                     LibUtilities::BasisKey HexBb
-                                        = expIt->second->m_basisKeyVector[1];
+                                        = expIt.second->m_basisKeyVector[1];
                     LibUtilities::BasisKey HexBc
-                                        = expIt->second->m_basisKeyVector[2];
+                                        = expIt.second->m_basisKeyVector[2];
 
                     hex = MemoryManager<LocalRegions::HexExp>
                                         ::AllocateSharedPtr(HexBa,HexBb,HexBc,
@@ -297,9 +309,14 @@ namespace Nektar
             m_globalOptParam = MemoryManager<NekOptimize::GlobalOptParam>
                 ::AllocateSharedPtr(nel);
 
-            SetCoeffPhys();
+            SetCoeffPhysOffsets();
+
+            // Set up m_coeffs, m_phys.
+            m_coeffs = Array<OneD, NekDouble>(m_ncoeffs);
+            m_phys   = Array<OneD, NekDouble>(m_npoints);
+
             ReadGlobalOptimizationParameters();
-            CreateCollections();
+            CreateCollections(ImpType);
         }
 
         /**
@@ -316,7 +333,8 @@ namespace Nektar
          *                   information about the domain and the
          *                   spectral/hp element expansion.
          */
-        ExpList3D::ExpList3D(const SpatialDomains::ExpansionMap &expansions):
+        ExpList3D::ExpList3D(const SpatialDomains::ExpansionMap &expansions,
+                             const Collections::ImplementationType ImpType):
             ExpList()
         {
             SetExpType(e3D);
@@ -335,11 +353,11 @@ namespace Nektar
                 SpatialDomains::PrismGeomSharedPtr PrismGeom;
                 SpatialDomains::PyrGeomSharedPtr PyrGeom;
 
-                SpatialDomains::ExpansionMap::const_iterator expmap = expansions.find(i);
+                auto expmap = expansions.find(i);
                 ASSERTL1(expmap != expansions.end(), "Unable to find expansion.");
                 const SpatialDomains::ExpansionShPtr exp = expmap->second;
 
-                if((TetGeom = boost::dynamic_pointer_cast<
+                if((TetGeom = std::dynamic_pointer_cast<
                         SpatialDomains::TetGeom>(exp->m_geomShPtr)))
                 {
                     LibUtilities::BasisKey TetBa
@@ -364,7 +382,7 @@ namespace Nektar
                         (*m_exp).push_back(tet);
                     }
                 }
-                else if((PrismGeom = boost::dynamic_pointer_cast<
+                else if((PrismGeom = std::dynamic_pointer_cast<
                          SpatialDomains::PrismGeom>(exp->m_geomShPtr)))
                 {
                     LibUtilities::BasisKey PrismBa
@@ -380,7 +398,7 @@ namespace Nektar
                     prism->SetElmtId(elmtid++);
                     (*m_exp).push_back(prism);
                 }
-                else if((PyrGeom = boost::dynamic_pointer_cast<
+                else if((PyrGeom = std::dynamic_pointer_cast<
                          SpatialDomains::PyrGeom>(exp->m_geomShPtr)))
                 {
                     LibUtilities::BasisKey PyrBa
@@ -396,7 +414,7 @@ namespace Nektar
                     pyramid->SetElmtId(elmtid++);
                     (*m_exp).push_back(pyramid);
                 }
-                else if((HexGeom = boost::dynamic_pointer_cast<
+                else if((HexGeom = std::dynamic_pointer_cast<
                          SpatialDomains::HexGeom>(exp->m_geomShPtr)))
                 {
                     LibUtilities::BasisKey HexBa
@@ -425,44 +443,13 @@ namespace Nektar
             m_globalOptParam = MemoryManager<NekOptimize::GlobalOptParam>
                 ::AllocateSharedPtr(nel);
 
-            SetCoeffPhys();
-            CreateCollections();
-        }
+            SetCoeffPhysOffsets();
 
-        /**
-         * Set up the storage for the concatenated list of
-         * coefficients and physical evaluations at the quadrature
-         * points. Each expansion (local element) is processed in turn
-         * to determine the number of coefficients and physical data
-         * points it contributes to the domain. Three arrays,
-         * #m_coeff_offset, #m_phys_offset and #m_offset_elmt_id, are
-         * also initialised and updated to store the data offsets of
-         * each element in the #m_coeffs and #m_phys arrays, and the
-         * element id that each consecutive block is associated
-         * respectively.
-         */
-        void ExpList3D::SetCoeffPhys()
-        {
-            int i;
-
-            // Set up offset information and array sizes
-            m_coeff_offset   = Array<OneD,int>(m_exp->size());
-            m_phys_offset    = Array<OneD,int>(m_exp->size());
-            m_offset_elmt_id = Array<OneD,int>(m_exp->size());
-
-            m_ncoeffs = m_npoints = 0;
-
-            for(i = 0; i < m_exp->size(); ++i)
-            {
-                m_coeff_offset[i]   = m_ncoeffs;
-                m_phys_offset [i]   = m_npoints;
-                m_offset_elmt_id[i] = i;
-                m_ncoeffs += (*m_exp)[i]->GetNcoeffs();
-                m_npoints += (*m_exp)[i]->GetTotPoints();
-            }
-
+            // Set up m_coeffs, m_phys.
             m_coeffs = Array<OneD, NekDouble>(m_ncoeffs);
             m_phys   = Array<OneD, NekDouble>(m_npoints);
+
+            CreateCollections(ImpType);
         }
 
         void ExpList3D::v_ReadGlobalOptimizationParameters()

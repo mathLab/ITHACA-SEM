@@ -51,7 +51,7 @@ class ProcessPrintFldNorms : public ProcessModule
 {
 public:
     /// Creates an instance of this class
-    static boost::shared_ptr<Module> create(FieldSharedPtr f)
+    static std::shared_ptr<Module> create(FieldSharedPtr f)
     {
         return MemoryManager<ProcessPrintFldNorms>::AllocateSharedPtr(f);
     }
@@ -66,6 +66,17 @@ public:
     {
         return "ProcessPrintFldNorms";
     }
+
+    virtual std::string GetModuleDescription()
+    {
+        return "Printing norms";
+    }
+
+    virtual ModulePriority GetModulePriority()
+    {
+        return eModifyExp;
+    }
+
 };
 }
 }

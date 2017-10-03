@@ -52,7 +52,7 @@ class ProcessPointDataToFld : public ProcessModule
 {
 public:
     /// Creates an instance of this class
-    static boost::shared_ptr<Module> create(FieldSharedPtr f)
+    static std::shared_ptr<Module> create(FieldSharedPtr f)
     {
         return MemoryManager<ProcessPointDataToFld>::AllocateSharedPtr(f);
     }
@@ -67,6 +67,16 @@ public:
     virtual std::string GetModuleName()
     {
         return "ProcessPointDataToFld";
+    }
+
+    virtual std::string GetModuleDescription()
+    {
+        return "Projecting data to expansion";
+    }
+
+    virtual ModulePriority GetModulePriority()
+    {
+        return eFillExp;
     }
 
 private:

@@ -36,7 +36,7 @@
 #ifndef FIELDUTILS_PROCESSWSS
 #define FIELDUTILS_PROCESSWSS
 
-#include "../Module.h"
+#include "ProcessBoundaryExtract.h"
 
 namespace Nektar
 {
@@ -47,11 +47,11 @@ namespace FieldUtils
  * @brief This processing module calculates the wall shear stress and adds it
  * as an extra-field to the output file, and writes it to a surface output file.
  */
-class ProcessWSS : public ProcessModule
+class ProcessWSS : public ProcessBoundaryExtract
 {
 public:
     /// Creates an instance of this class
-    static boost::shared_ptr<Module> create(FieldSharedPtr f)
+    static std::shared_ptr<Module> create(FieldSharedPtr f)
     {
         return MemoryManager<ProcessWSS>::AllocateSharedPtr(f);
     }
@@ -67,6 +67,12 @@ public:
     {
         return "ProcessWSS";
     }
+
+    virtual std::string GetModuleDescription()
+    {
+        return "Calculating wall shear stress";
+    }
+
 };
 }
 }

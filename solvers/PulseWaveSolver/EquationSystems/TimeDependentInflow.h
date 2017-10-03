@@ -45,7 +45,7 @@ namespace Nektar
     class TimeDependentInflow;
 
     /// Pointer to a PulseWaveOutflow object.
-    typedef boost::shared_ptr<TimeDependentInflow> TimeDependentInflowSharedPtr;
+    typedef std::shared_ptr<TimeDependentInflow> TimeDependentInflowSharedPtr;
     
     /// A global linear system.
     class TimeDependentInflow : public PulseWaveBoundary

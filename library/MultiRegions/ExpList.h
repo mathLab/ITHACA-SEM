@@ -48,7 +48,6 @@
 #include <MultiRegions/GlobalMatrixKey.h>
 #include <MultiRegions/GlobalOptimizationParameters.h>
 #include <MultiRegions/AssemblyMap/AssemblyMap.h>
-#include <boost/enable_shared_from_this.hpp>
 #include <tinyxml.h>
 
 namespace Nektar
@@ -94,11 +93,11 @@ namespace Nektar
         /// matrices.
         typedef std::map<GlobalMatrixKey,DNekScalBlkMatSharedPtr> BlockMatrixMap;
         /// A shared pointer to a BlockMatrixMap.
-        typedef boost::shared_ptr<BlockMatrixMap> BlockMatrixMapShPtr;
+        typedef std::shared_ptr<BlockMatrixMap> BlockMatrixMapShPtr;
                    
 
         /// Base class for all multi-elemental spectral/hp expansions.
-        class ExpList: public boost::enable_shared_from_this<ExpList>
+        class ExpList: public std::enable_shared_from_this<ExpList>
         {
         public:
             /// The default constructor.
@@ -253,6 +252,12 @@ namespace Nektar
                 const NekDouble> &inarray,
                       Array<OneD,       NekDouble> &outarray,
                       CoeffState coeffstate = eLocal);
+
+            MULTI_REGIONS_EXPORT void   ExponentialFilter(
+                Array<OneD, NekDouble> &array,
+                const NekDouble        alpha,
+                const NekDouble        exponent,
+                const NekDouble        cutoff);
 
             /// This function elementally mulplies the coefficient space of
             /// Sin my the elemental inverse of the mass matrix.
@@ -475,11 +480,11 @@ namespace Nektar
             /**
              * This operation is evaluated as:
              * \f{tabbing}
-             * \hspace{1cm}  \= Do \= $e=$  $1, N_{\mathrm{el}}$ \      \
-             * \> \> Do \= $i=$  $0,N_m^e-1$ \                          \
+             * \hspace{1cm}  \= Do \= $e=$  $1, N_{\mathrm{el}}$ \\
+             * \> \> Do \= $i=$  $0,N_m^e-1$ \\
              * \> \> \> $\boldsymbol{\hat{u}}^{e}[i] = \mbox{sign}[e][i] \cdot
-             * \boldsymbol{\hat{u}}_g[\mbox{map}[e][i]]$ \      \
-             * \> \> continue \                                 \
+             * \boldsymbol{\hat{u}}_g[\mbox{map}[e][i]]$ \\
+             * \> \> continue \\
              * \> continue
              * \f}
              * where \a map\f$[e][i]\f$ is the mapping array and \a
@@ -579,6 +584,13 @@ namespace Nektar
             {
                 return v_GetHomoLen();
             }
+
+            /// This function sets the Width of homogeneous direction
+            /// associaed with the homogeneous expansion.
+            void SetHomoLen(const NekDouble lhom)
+            {
+                return v_SetHomoLen(lhom);
+            }
             
             /// This function returns a vector containing the wave
             /// numbers in y-direction associated
@@ -626,7 +638,7 @@ namespace Nektar
             }
 
             /// This function returns the vector of elements in the expansion.
-            inline const boost::shared_ptr<LocalRegions::ExpansionVector>
+            inline const std::shared_ptr<LocalRegions::ExpansionVector>
                     GetExp() const;
 
             /// This function returns (a shared pointer to) the local elemental
@@ -665,10 +677,6 @@ namespace Nektar
             /// correspoinding to element n.
             inline int GetPhys_Offset(int n) const;
 
-            /// Get the element id associated with the n th
-            /// consecutive block of data in  #m_phys and #m_coeffs
-            inline int GetOffset_Elmt_Id(int n) const;
-
             /// This function returns (a reference to) the array
             /// \f$\boldsymbol{\hat{u}}_l\f$ (implemented as #m_coeffs)
             /// containing all local expansion coefficients.
@@ -704,10 +712,10 @@ namespace Nektar
                 Array<OneD, Array<OneD, NekDouble> > &Q);
 
             // functions associated with DisContField
-            inline const Array<OneD, const  boost::shared_ptr<ExpList> >
+            inline const Array<OneD, const  std::shared_ptr<ExpList> >
                 &GetBndCondExpansions();
             
-            inline boost::shared_ptr<ExpList> &UpdateBndCondExpansion(int i);
+            inline std::shared_ptr<ExpList> &UpdateBndCondExpansion(int i);
             
             inline void Upwind(
                 const Array<OneD, const Array<OneD,       NekDouble> > &Vec,
@@ -725,9 +733,9 @@ namespace Nektar
              * Return a reference to the trace space associated with this
              * expansion list.
              */
-            inline boost::shared_ptr<ExpList> &GetTrace();
+            inline std::shared_ptr<ExpList> &GetTrace();
             
-            inline boost::shared_ptr<AssemblyMapDG> &GetTraceMap(void);
+            inline std::shared_ptr<AssemblyMapDG> &GetTraceMap(void);
             
             inline const Array<OneD, const int> &GetTraceBndMap(void);
 
@@ -797,7 +805,7 @@ namespace Nektar
                                              Array<OneD,int> &EdgeID);
             
             inline void GetBndElmtExpansion(int i,
-                            boost::shared_ptr<ExpList> &result,
+                            std::shared_ptr<ExpList> &result,
                             const bool DeclareCoeffPhysArrays = true);
             
             inline void ExtractElmtToBndPhys(int i,
@@ -901,7 +909,7 @@ namespace Nektar
              * case
              */ 
             MULTI_REGIONS_EXPORT  void ExtractCoeffsToCoeffs(
-                const boost::shared_ptr<ExpList> &fromExpList,
+                const std::shared_ptr<ExpList> &fromExpList,
                 const Array<OneD, const NekDouble> &fromCoeffs,
                       Array<OneD, NekDouble> &toCoeffs);
             
@@ -915,19 +923,19 @@ namespace Nektar
             
 
             /// Returns a shared pointer to the current object.
-            boost::shared_ptr<ExpList> GetSharedThisPtr()
+            std::shared_ptr<ExpList> GetSharedThisPtr()
             {
                 return shared_from_this();
             }
 
             /// Returns the session object
-            boost::shared_ptr<LibUtilities::SessionReader> GetSession() const
+            std::shared_ptr<LibUtilities::SessionReader> GetSession() const
             {
                 return m_session;
             }
 
             /// Returns the comm object
-            boost::shared_ptr<LibUtilities::Comm> GetComm()
+            std::shared_ptr<LibUtilities::Comm> GetComm()
             {
                 return m_comm;
             }
@@ -943,7 +951,7 @@ namespace Nektar
                 return v_GetHomogeneousBasis();
             }
 
-            boost::shared_ptr<ExpList> &GetPlane(int n)
+            std::shared_ptr<ExpList> &GetPlane(int n)
             {
                 return v_GetPlane(n);
             }
@@ -958,9 +966,13 @@ namespace Nektar
             MULTI_REGIONS_EXPORT void ClearGlobalLinSysManager(void);
 
         protected:
-            boost::shared_ptr<DNekMat> GenGlobalMatrixFull(
+            /// Definition of the total number of degrees of freedom and
+            /// quadrature points and offsets to access data
+            void SetCoeffPhysOffsets();
+
+            std::shared_ptr<DNekMat> GenGlobalMatrixFull(
                 const GlobalLinSysKey &mkey,
-                const boost::shared_ptr<AssemblyMapCG> &locToGloMap);
+                const std::shared_ptr<AssemblyMapCG> &locToGloMap);
 
             /// Communicator
             LibUtilities::CommSharedPtr m_comm;
@@ -1033,7 +1045,7 @@ namespace Nektar
              * where most of the routines for the derived classes are defined
              * in the #ExpList base class.
              */
-            boost::shared_ptr<LocalRegions::ExpansionVector> m_exp;
+            std::shared_ptr<LocalRegions::ExpansionVector> m_exp;
 
             Collections::CollectionVector m_collections;
 
@@ -1049,14 +1061,6 @@ namespace Nektar
             /// Offset of elemental data into the array #m_phys
             Array<OneD, int>  m_phys_offset;
 
-            /// Array containing the element id #m_offset_elmt_id[n]
-            /// that the n^th consecutive block of data in #m_coeffs
-            /// and #m_phys is associated, i.e. for an array of
-            /// constant expansion size and single shape elements
-            /// m_phys[n*m_npoints] is the data related to
-            /// m_exp[m_offset_elmt_id[n]];
-            Array<OneD, int>  m_offset_elmt_id;
-
             NekOptimize::GlobalOptParamSharedPtr m_globalOptParam;
 
             BlockMatrixMapShPtr  m_blockMat;
@@ -1067,7 +1071,7 @@ namespace Nektar
             bool m_WaveSpace;
 
             /// Mapping from geometry ID of element to index inside #m_exp
-            boost::unordered_map<int, int> m_elmtToExpId;
+            std::unordered_map<int, int> m_elmtToExpId;
 
             /// This function assembles the block diagonal matrix of local
             /// matrices of the type \a mtype.
@@ -1083,13 +1087,13 @@ namespace Nektar
                       Array<OneD,      NekDouble> &outarray);
 
             /// Generates a global matrix from the given key and map.
-            boost::shared_ptr<GlobalMatrix>  GenGlobalMatrix(
+            std::shared_ptr<GlobalMatrix>  GenGlobalMatrix(
                 const GlobalMatrixKey &mkey,
-                const boost::shared_ptr<AssemblyMapCG> &locToGloMap);
+                const std::shared_ptr<AssemblyMapCG> &locToGloMap);
 
 
             void GlobalEigenSystem(
-                const boost::shared_ptr<DNekMat> &Gmat,
+                const std::shared_ptr<DNekMat> &Gmat,
                 Array<OneD, NekDouble> &EigValsReal,
                 Array<OneD, NekDouble> &EigValsImag,
                 Array<OneD, NekDouble> &EigVecs
@@ -1098,13 +1102,13 @@ namespace Nektar
 
             /// This operation constructs the global linear system of type \a
             /// mkey.
-            boost::shared_ptr<GlobalLinSys>  GenGlobalLinSys(
+            std::shared_ptr<GlobalLinSys>  GenGlobalLinSys(
                 const GlobalLinSysKey &mkey,
-                const boost::shared_ptr<AssemblyMapCG> &locToGloMap);
+                const std::shared_ptr<AssemblyMapCG> &locToGloMap);
 
             /// Generate a GlobalLinSys from information provided by the key
             /// "mkey" and the mapping provided in LocToGloBaseMap.
-            boost::shared_ptr<GlobalLinSys> GenGlobalBndLinSys(
+            std::shared_ptr<GlobalLinSys> GenGlobalBndLinSys(
                 const GlobalLinSysKey     &mkey,
                 const AssemblyMapSharedPtr &locToGloMap);
 
@@ -1120,10 +1124,10 @@ namespace Nektar
                 return (*m_exp).size();
             }
 
-            virtual const Array<OneD,const boost::shared_ptr<ExpList> >
+            virtual const Array<OneD,const std::shared_ptr<ExpList> >
                 &v_GetBndCondExpansions(void);
 
-            virtual boost::shared_ptr<ExpList> &v_UpdateBndCondExpansion(int i);
+            virtual std::shared_ptr<ExpList> &v_UpdateBndCondExpansion(int i);
             
             virtual void v_Upwind(
                 const Array<OneD, const Array<OneD,       NekDouble> > &Vec,
@@ -1137,9 +1141,9 @@ namespace Nektar
                 const Array<OneD, const NekDouble> &Bwd,
                       Array<OneD,       NekDouble> &Upwind);
 
-            virtual boost::shared_ptr<ExpList> &v_GetTrace();
+            virtual std::shared_ptr<ExpList> &v_GetTrace();
             
-            virtual boost::shared_ptr<AssemblyMapDG> &v_GetTraceMap();
+            virtual std::shared_ptr<AssemblyMapDG> &v_GetTraceMap();
 
             virtual const Array<OneD, const int> &v_GetTraceBndMap();
 
@@ -1339,7 +1343,7 @@ namespace Nektar
                                                 Array<OneD,int> &EdgeID);
             
             virtual void v_GetBndElmtExpansion(int i,
-                            boost::shared_ptr<ExpList> &result,
+                            std::shared_ptr<ExpList> &result,
                             const bool DeclareCoeffPhysArrays);
             
             virtual void v_ExtractElmtToBndPhys(int i,
@@ -1379,7 +1383,7 @@ namespace Nektar
                 std::vector<NekDouble> &fielddata, std::string &field,
                 Array<OneD, NekDouble> &coeffs);
 
-            virtual void v_ExtractCoeffsToCoeffs(const boost::shared_ptr<ExpList> &fromExpList, const Array<OneD, const NekDouble> &fromCoeffs, Array<OneD, NekDouble> &toCoeffs);
+            virtual void v_ExtractCoeffsToCoeffs(const std::shared_ptr<ExpList> &fromExpList, const Array<OneD, const NekDouble> &fromCoeffs, Array<OneD, NekDouble> &toCoeffs);
 
             virtual void v_WriteTecplotHeader(std::ostream &outfile,
                                               std::string var = "");
@@ -1409,6 +1413,7 @@ namespace Nektar
             virtual Array<OneD, const NekDouble> v_HomogeneousEnergy(void);
             virtual LibUtilities::TranspositionSharedPtr v_GetTransposition(void);
             virtual NekDouble v_GetHomoLen(void);
+            virtual void      v_SetHomoLen(const NekDouble lhom);
             virtual Array<OneD, const unsigned int> v_GetZIDs(void);
             virtual Array<OneD, const unsigned int> v_GetYIDs(void);
             
@@ -1427,7 +1432,7 @@ namespace Nektar
             void ExtractFileBCs(const std::string                &fileName,
                                 LibUtilities::CommSharedPtr       comm,
                                 const std::string                &varName,
-                                const boost::shared_ptr<ExpList>  locExpList);
+                                const std::shared_ptr<ExpList>  locExpList);
             
             // Utility function for a common case of retrieving a
             // BoundaryCondition from a boundary condition collection.
@@ -1474,12 +1479,12 @@ namespace Nektar
             }
 
 
-            virtual boost::shared_ptr<ExpList> &v_GetPlane(int n);
+            virtual std::shared_ptr<ExpList> &v_GetPlane(int n);
         };
 
 
         /// Shared pointer to an ExpList object.
-        typedef boost::shared_ptr<ExpList>      ExpListSharedPtr;
+        typedef std::shared_ptr<ExpList>      ExpListSharedPtr;
         /// An empty ExpList object.
         static ExpList NullExpList;
         static ExpListSharedPtr NullExpListSharedPtr;
@@ -2071,7 +2076,7 @@ namespace Nektar
         /**
          * @return  (A const shared pointer to) the local expansion vector #m_exp
          */
-        inline const boost::shared_ptr<LocalRegions::ExpansionVector>
+        inline const std::shared_ptr<LocalRegions::ExpansionVector>
             ExpList::GetExp(void) const
         {
             return m_exp;
@@ -2092,14 +2097,6 @@ namespace Nektar
         inline int ExpList::GetPhys_Offset(int n) const
         {
             return m_phys_offset[n];
-        }
-
-        /**
-         *
-         */
-        inline int ExpList::GetOffset_Elmt_Id(int n) const
-        {
-            return m_offset_elmt_id[n];
         }
 
         /**
@@ -2127,13 +2124,13 @@ namespace Nektar
 
 
         // functions associated with DisContField
-        inline const Array<OneD, const  boost::shared_ptr<ExpList> >
+        inline const Array<OneD, const  std::shared_ptr<ExpList> >
             &ExpList::GetBndCondExpansions()
         {
             return v_GetBndCondExpansions();
         }
         
-        inline boost::shared_ptr<ExpList>  &ExpList::UpdateBndCondExpansion(int i)
+        inline std::shared_ptr<ExpList>  &ExpList::UpdateBndCondExpansion(int i)
         {
             return v_UpdateBndCondExpansion(i);
         }
@@ -2156,12 +2153,12 @@ namespace Nektar
             v_Upwind(Vn, Fwd, Bwd, Upwind);
         }
 
-        inline boost::shared_ptr<ExpList> &ExpList::GetTrace()
+        inline std::shared_ptr<ExpList> &ExpList::GetTrace()
         {
             return v_GetTrace();
         }
 
-        inline boost::shared_ptr<AssemblyMapDG> &ExpList::GetTraceMap()
+        inline std::shared_ptr<AssemblyMapDG> &ExpList::GetTraceMap()
         {
             return v_GetTraceMap();
         }
@@ -2306,7 +2303,7 @@ namespace Nektar
         }
         
         inline void ExpList::GetBndElmtExpansion(int i,
-                            boost::shared_ptr<ExpList> &result,
+                            std::shared_ptr<ExpList> &result,
                             const bool DeclareCoeffPhysArrays)
         {
             v_GetBndElmtExpansion(i, result, DeclareCoeffPhysArrays);

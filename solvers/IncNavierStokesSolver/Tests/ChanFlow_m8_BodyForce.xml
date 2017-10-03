@@ -21,6 +21,7 @@
             <P> NumSteps      = 1000       </P>
             <P> IO_CheckSteps = 1000       </P>
             <P> IO_InfoSteps  = 1000       </P>
+            <P> IterativeSolverTolerance  = 1e-10       </P>
             <P> Kinvis        = 1         </P>
         </PARAMETERS>
 

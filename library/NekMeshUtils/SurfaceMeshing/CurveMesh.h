@@ -36,13 +36,12 @@
 #ifndef NEKTAR_MESHUTILS_SURFACEMESHING_CURVEMESH_H
 #define NEKTAR_MESHUTILS_SURFACEMESHING_CURVEMESH_H
 
-#include <boost/shared_ptr.hpp>
-
-#include <NekMeshUtils/MeshElements/Mesh.h>
-#include <NekMeshUtils/CADSystem/CADVert.h>
 #include <NekMeshUtils/CADSystem/CADCurve.h>
+#include <NekMeshUtils/CADSystem/CADVert.h>
+#include <NekMeshUtils/MeshElements/Mesh.h>
 
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
+#include <LibUtilities/Interpreter/AnalyticExpressionEvaluator.hpp>
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 
 /**
@@ -53,6 +52,10 @@ namespace Nektar
 namespace NekMeshUtils
 {
 
+//forward
+class CurveMesh;
+typedef std::shared_ptr<CurveMesh> CurveMeshSharedPtr;
+
 class CurveMesh
 {
 public:
@@ -61,17 +64,15 @@ public:
     /**
      * @brief default constructor
      */
-    CurveMesh(int id, MeshSharedPtr m)
+    CurveMesh(int id, MeshSharedPtr m, std::string expr = "0.0")
         : m_id(id), m_mesh(m)
     {
+        m_blID = m_bl.DefineFunction("x y z", expr);
         m_cadcurve = m_mesh->m_cad->GetCurve(m_id);
     }
 
-    /**
-     * @brief alternative constructor with mesh points already created
-     */
-    CurveMesh(int id, MeshSharedPtr m, std::vector<NodeSharedPtr> n)
-        : m_id(id), m_mesh(m), m_meshpoints(n)
+    CurveMesh(int id, MeshSharedPtr m, std::vector<NodeSharedPtr> ns)
+        : m_id(id), m_mesh(m), m_meshpoints(ns)
     {
         m_cadcurve = m_mesh->m_cad->GetCurve(m_id);
     }
@@ -126,6 +127,18 @@ public:
         return m_curvelength;
     }
 
+    void PeriodicOverwrite(CurveMeshSharedPtr from);
+
+    int GetId()
+    {
+        return m_id;
+    }
+
+    void SetOffset(unsigned i, NekDouble offset)
+    {
+        m_endoffset[i] = offset;
+    }
+
 private:
     /**
      * @brief get node spacing sampling function
@@ -176,9 +189,12 @@ private:
     MeshSharedPtr m_mesh;
     /// ids of the mesh nodes
     std::vector<NodeSharedPtr> m_meshpoints;
+    LibUtilities::AnalyticExpressionEvaluator m_bl;
+    int m_blID;
+    /// offset of second point at each end
+    std::map<unsigned, NekDouble> m_endoffset;
 };
 
-typedef boost::shared_ptr<CurveMesh> CurveMeshSharedPtr;
 }
 }
 

@@ -36,13 +36,13 @@
 #ifndef NEKTAR_LIB_MULTIREGIONS_PRECONDITIONER_H
 #define NEKTAR_LIB_MULTIREGIONS_PRECONDITIONER_H
 
-#include <MultiRegions/GlobalLinSys.h>
-#include <MultiRegions/MultiRegionsDeclspec.h>
-#include <StdRegions/StdExpansion.h>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
-#include <LibUtilities/LinearAlgebra/NekTypeDefs.hpp>
 #include <LibUtilities/Communication/Comm.h>
 #include <LibUtilities/Communication/GsLib.hpp>
+#include <LibUtilities/LinearAlgebra/NekTypeDefs.hpp>
+#include <MultiRegions/GlobalLinSys.h>
+#include <MultiRegions/MultiRegionsDeclspec.h>
+
 #include <memory>
 
 namespace Nektar

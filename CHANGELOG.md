@@ -15,6 +15,7 @@ v5.0.0
 - Add ARPACK thirdparty build capabilities (!828)
 - Added native support for csv files in addititon to pts (!760 !835)
 - Utilize LAPACK_DIR env variable to find the native blas/lapack install (!827)
+- Remove StdExpansion use from MultiRegion (use Expansions instead). (!831)
 - Simplify RawType typedefs (!840)
 - Remove unused files from BasicUtils (!841)
 - Remove checks for old boost versions which are no longer supported (!841)
@@ -41,24 +42,6 @@ v5.0.0
 **Documentation**:
 - Added the developer-guide repository as a submodule (!751)
 
-<<<<<<< CHANGELOG.md
-v4.4.2
-------
-**NekMesh**:
-- Fix uninitialised memory bug in Nek5000 input module (!801)
-
-**Library**
-- Fix ability to set default implementation in Collections and added an option
-  to set eNoCollections in FieldConvert as default (!789)
-- Fix performance issue in ProcessIsoContour in relation to memory consumption
-  (!821)
-- Fix performance issue with ExtractPhysToBndElmt (!796)
-
-**Utilities**
-- Fix vtkToFld missing dependency which prevented compiling with VTK 7.1 (!808)
-
-=======
->>>>>>> CHANGELOG.md
 v4.4.1
 ------
 **Library**

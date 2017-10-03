@@ -75,7 +75,9 @@ namespace Nektar
             const int nHomDofs = pNumRows - pNumDir;
 
             DNekVec Vin (nHomDofs, pInput  + pNumDir);
-            DNekVec Vout(nHomDofs, pOutput + pNumDir, eWrapper);
+
+            Array<OneD, NekDouble> tmp = pOutput + pNumDir;
+            DNekVec Vout(nHomDofs, tmp, eWrapper);
 
             m_linSys->Solve(Vin, Vout);
         }

@@ -19,6 +19,8 @@ v5.0.0
 - Remove unused files from BasicUtils (!841)
 - Remove checks for old boost versions which are no longer supported (!841)
 - Refactor ParseUtils to be more consistent (!843)
+- Fixed typo in eIMEXGear part (!854)
+- Added regression tests for IMEXOrder1, IMEXOrder2, IMEXOrder3, MCNAB, IMEXGear, CNAB, 2nd order IMEX-DIRK, 3rd order IMEX-DIRK (!854)
 
 **NekMesh**:
 - Add feature to read basic 2D geo files as CAD (!731)

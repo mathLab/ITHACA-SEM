@@ -248,12 +248,12 @@ namespace Nektar
             LibUtilities::Timer     timer;
             bool      doCheckTime   = false;
             int       step          = m_initialStep;
+            int       stepCounter   = 0;
             NekDouble intTime       = 0.0;
             NekDouble lastCheckTime = 0.0;
             NekDouble cpuTime       = 0.0;
             NekDouble elapsed       = 0.0;
 
-            int stepCounter = 0;
             while (step   < m_steps ||
                    m_time < m_fintime - NekConstants::kNekZeroTol)
             {
@@ -284,7 +284,7 @@ namespace Nektar
                 }
 
                 fields = m_intScheme->TimeIntegrate(
-                    stepCounter++, m_timestep, m_intSoln, m_ode);
+                    stepCounter, m_timestep, m_intSoln, m_ode);
                 timer.Stop();
 
                 m_time  += m_timestep;
@@ -396,6 +396,7 @@ namespace Nektar
 
                 // Step advance
                 ++step;
+                ++stepCounter;
             }
             
             // Print out summary statistics

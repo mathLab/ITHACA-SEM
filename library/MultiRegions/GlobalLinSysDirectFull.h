@@ -54,8 +54,8 @@ namespace Nektar
 
             /// Creates an instance of this class
             static GlobalLinSysSharedPtr create(const GlobalLinSysKey &pLinSysKey,
-                    const boost::weak_ptr<ExpList> &pExpList,
-                    const boost::shared_ptr<AssemblyMap>
+                    const std::weak_ptr<ExpList> &pExpList,
+                    const std::shared_ptr<AssemblyMap>
                                                            &pLocToGloMap)
             {
                 return MemoryManager<GlobalLinSysDirectFull>::AllocateSharedPtr(pLinSysKey, pExpList, pLocToGloMap);
@@ -66,8 +66,8 @@ namespace Nektar
 
             /// Constructor for full direct matrix solve.
             MULTI_REGIONS_EXPORT GlobalLinSysDirectFull(const GlobalLinSysKey &pLinSysKey,
-                         const boost::weak_ptr<ExpList> &pExpList,
-                         const boost::shared_ptr<AssemblyMap>
+                         const std::weak_ptr<ExpList> &pExpList,
+                         const std::shared_ptr<AssemblyMap>
                                                                 &pLocToGloMap);
 
             MULTI_REGIONS_EXPORT virtual ~GlobalLinSysDirectFull();
@@ -81,8 +81,8 @@ namespace Nektar
                         const Array<OneD, const NekDouble> &dirForcing
                                                         = NullNekDouble1DArray);
 
-            void AssembleFullMatrix(const boost::shared_ptr<AssemblyMap>& locToGloMap);
-            //void AssembleFullMatrixDG(const boost::shared_ptr<AssemblyMapDG>& locToGloMap);
+            void AssembleFullMatrix(const std::shared_ptr<AssemblyMap>& locToGloMap);
+            //void AssembleFullMatrixDG(const std::shared_ptr<AssemblyMapDG>& locToGloMap);
         };
     }
 }

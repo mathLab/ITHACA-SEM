@@ -73,7 +73,7 @@ void OutputInfo::Process(po::variables_map &vm)
              "Need to specify nparts for info output");
     int nparts = m_config["nparts"].as<int>();
 
-    LibUtilities::CommSharedPtr vComm = boost::shared_ptr<FieldConvertComm>(
+    LibUtilities::CommSharedPtr vComm = std::shared_ptr<FieldConvertComm>(
         new FieldConvertComm(0, NULL, nparts, 0));
     vComm->SplitComm(1, nparts);
 
@@ -95,7 +95,7 @@ void OutputInfo::Process(po::variables_map &vm)
     }
 
     LibUtilities::SessionReaderSharedPtr vSession =
-        boost::shared_ptr<LibUtilities::SessionReader>(
+        std::shared_ptr<LibUtilities::SessionReader>(
             new LibUtilities::SessionReader(0, 0, files, vComm));
     vSession->SetUpXmlDoc();
 
@@ -144,8 +144,8 @@ void OutputInfo::Process(po::variables_map &vm)
 
     // Write the output file
     LibUtilities::CommSharedPtr c = m_f->m_comm;
-    boost::shared_ptr<LibUtilities::FieldIOXml> fldXml =
-        boost::static_pointer_cast<LibUtilities::FieldIOXml>(
+    std::shared_ptr<LibUtilities::FieldIOXml> fldXml =
+        std::static_pointer_cast<LibUtilities::FieldIOXml>(
             LibUtilities::GetFieldIOFactory().CreateInstance("Xml", c, true));
     fldXml->WriteMultiFldFileIDs(filename, filenames, ElementIDs);
 }

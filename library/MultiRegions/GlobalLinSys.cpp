@@ -187,8 +187,8 @@ namespace Nektar
          * @param   locToGloMap Local to global mapping.
          */
         GlobalLinSys::GlobalLinSys(const GlobalLinSysKey &pKey,
-                const boost::weak_ptr<ExpList> &pExpList,
-                const boost::shared_ptr<AssemblyMap>
+                const std::weak_ptr<ExpList> &pExpList,
+                const std::shared_ptr<AssemblyMap>
                                    &pLocToGloMap):
             m_linSysKey(pKey),
             m_expList(pExpList),
@@ -242,12 +242,12 @@ namespace Nektar
          */
         DNekScalMatSharedPtr GlobalLinSys::v_GetBlock(unsigned int n)
         {
-            boost::shared_ptr<MultiRegions::ExpList> expList = m_expList.lock();
+            std::shared_ptr<MultiRegions::ExpList> expList = m_expList.lock();
             int cnt = 0;
             DNekScalMatSharedPtr loc_mat;
 
             LocalRegions::ExpansionSharedPtr vExp = 
-                boost::dynamic_pointer_cast<LocalRegions::Expansion>(
+                std::dynamic_pointer_cast<LocalRegions::Expansion>(
                     expList->GetExp(n));
 
             // need to be initialised with zero size for non variable
@@ -257,13 +257,11 @@ namespace Nektar
             // retrieve variable coefficients
             if(m_linSysKey.GetNVarCoeffs() > 0)
             {
-                StdRegions::VarCoeffMap::const_iterator x;
                 cnt = expList->GetPhys_Offset(n);
-                
-                for (x = m_linSysKey.GetVarCoeffs().begin(); 
-                     x != m_linSysKey.GetVarCoeffs().end(); ++x)
+
+                for (auto &x : m_linSysKey.GetVarCoeffs())
                 {
-                    vVarCoeffMap[x->first] = x->second + cnt;
+                    vVarCoeffMap[x.first] = x.second + cnt;
                 }
             }
 
@@ -313,7 +311,7 @@ namespace Nektar
         DNekScalBlkMatSharedPtr GlobalLinSys::v_GetStaticCondBlock(
             unsigned int n)
         {
-            boost::shared_ptr<MultiRegions::ExpList> expList = m_expList.lock();
+            std::shared_ptr<MultiRegions::ExpList> expList = m_expList.lock();
             int cnt = 0;
             DNekScalBlkMatSharedPtr loc_mat;
             DNekScalMatSharedPtr    tmp_mat;
@@ -327,12 +325,10 @@ namespace Nektar
             // retrieve variable coefficients
             if(m_linSysKey.GetNVarCoeffs() > 0)
             {
-                StdRegions::VarCoeffMap::const_iterator x;
                 cnt = expList->GetPhys_Offset(n);
-                for (x  = m_linSysKey.GetVarCoeffs().begin(); 
-                     x != m_linSysKey.GetVarCoeffs().end  (); ++x)
+                for (auto &x : m_linSysKey.GetVarCoeffs())
                 {
-                    vVarCoeffMap[x->first] = x->second + cnt;
+                    vVarCoeffMap[x.first] = x.second + cnt;
                 }
             }
 
@@ -392,7 +388,7 @@ namespace Nektar
          */
         void GlobalLinSys::v_DropStaticCondBlock(unsigned int n)
         {
-            boost::shared_ptr<MultiRegions::ExpList> expList = m_expList.lock();
+            std::shared_ptr<MultiRegions::ExpList> expList = m_expList.lock();
 
             LocalRegions::ExpansionSharedPtr vExp = expList->GetExp( n );
 
@@ -403,12 +399,10 @@ namespace Nektar
             // retrieve variable coefficients
             if(m_linSysKey.GetNVarCoeffs() > 0)
             {
-                StdRegions::VarCoeffMap::const_iterator x;
                 int cnt = expList->GetPhys_Offset(n);
-                for (x  = m_linSysKey.GetVarCoeffs().begin(); 
-                     x != m_linSysKey.GetVarCoeffs().end  (); ++x)
+                for (auto &x : m_linSysKey.GetVarCoeffs())
                 {
-                    vVarCoeffMap[x->first] = x->second + cnt;
+                    vVarCoeffMap[x.first] = x.second + cnt;
                 }
             }
 
@@ -427,7 +421,7 @@ namespace Nektar
 	}
 
         void GlobalLinSys::v_Initialise(
-            const boost::shared_ptr<AssemblyMap>& pLocToGloMap)
+            const std::shared_ptr<AssemblyMap>& pLocToGloMap)
         {
             NEKERROR(ErrorUtil::efatal, "Method does not exist" );
 	}

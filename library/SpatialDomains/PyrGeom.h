@@ -81,11 +81,9 @@ namespace Nektar
             void SetUpXmap();
         };
 
-        typedef boost::shared_ptr<PyrGeom> PyrGeomSharedPtr;
+        typedef std::shared_ptr<PyrGeom> PyrGeomSharedPtr;
         typedef std::vector<PyrGeomSharedPtr> PyrGeomVector;
-        typedef std::vector<PyrGeomSharedPtr>::iterator PyrGeomVectorIter;
         typedef std::map<int, PyrGeomSharedPtr> PyrGeomMap;
-        typedef std::map<int, PyrGeomSharedPtr>::iterator PyrGeomMapIter;
     }; //end of namespace
 }; //end of namespace
 

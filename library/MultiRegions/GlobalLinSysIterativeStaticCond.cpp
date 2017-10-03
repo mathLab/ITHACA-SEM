@@ -109,8 +109,8 @@ namespace Nektar
          */
         GlobalLinSysIterativeStaticCond::GlobalLinSysIterativeStaticCond(
             const GlobalLinSysKey                &pKey,
-            const boost::weak_ptr<ExpList>       &pExpList,
-            const boost::shared_ptr<AssemblyMap> &pLocToGloMap)
+            const std::weak_ptr<ExpList>         &pExpList,
+            const std::shared_ptr<AssemblyMap>   &pLocToGloMap)
             : GlobalLinSys          (pKey, pExpList, pLocToGloMap),
               GlobalLinSysIterative (pKey, pExpList, pLocToGloMap),
               GlobalLinSysStaticCond(pKey, pExpList, pLocToGloMap)
@@ -131,12 +131,12 @@ namespace Nektar
          */
         GlobalLinSysIterativeStaticCond::GlobalLinSysIterativeStaticCond(
             const GlobalLinSysKey                &pKey,
-            const boost::weak_ptr<ExpList>       &pExpList,
+            const std::weak_ptr<ExpList>         &pExpList,
             const DNekScalBlkMatSharedPtr         pSchurCompl,
             const DNekScalBlkMatSharedPtr         pBinvD,
             const DNekScalBlkMatSharedPtr         pC,
             const DNekScalBlkMatSharedPtr         pInvD,
-            const boost::shared_ptr<AssemblyMap> &pLocToGloMap,
+            const std::shared_ptr<AssemblyMap>   &pLocToGloMap,
             const PreconditionerSharedPtr         pPrecon)
             : GlobalLinSys          (pKey, pExpList, pLocToGloMap),
               GlobalLinSysIterative (pKey, pExpList, pLocToGloMap),
@@ -565,12 +565,12 @@ namespace Nektar
 
         GlobalLinSysStaticCondSharedPtr GlobalLinSysIterativeStaticCond::v_Recurse(
             const GlobalLinSysKey                &mkey,
-            const boost::weak_ptr<ExpList>       &pExpList,
+            const std::weak_ptr<ExpList>         &pExpList,
             const DNekScalBlkMatSharedPtr         pSchurCompl,
             const DNekScalBlkMatSharedPtr         pBinvD,
             const DNekScalBlkMatSharedPtr         pC,
             const DNekScalBlkMatSharedPtr         pInvD,
-            const boost::shared_ptr<AssemblyMap> &l2gMap)
+            const std::shared_ptr<AssemblyMap>   &l2gMap)
         {
             GlobalLinSysIterativeStaticCondSharedPtr sys = MemoryManager<
                 GlobalLinSysIterativeStaticCond>::AllocateSharedPtr(

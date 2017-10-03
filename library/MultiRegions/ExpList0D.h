@@ -54,11 +54,9 @@ namespace Nektar
         class ExpList0D;
 
         /// Shared pointer to an ExpList0D object.
-        typedef boost::shared_ptr<ExpList0D>      ExpList0DSharedPtr;
+        typedef std::shared_ptr<ExpList0D>      ExpList0DSharedPtr;
         /// Vector of pointers to ExpList0D objects.
         typedef std::vector<ExpList0DSharedPtr>   ExpList0DVector;
-        /// Iterator for the vector of ExpList0D pointers.
-        typedef std::vector<ExpList0DSharedPtr>::iterator ExpList0DVectorIter;
 
         /// This class is the abstraction of a collection of
         /// zero-dimensional expansions which is merely a collection of points/values.

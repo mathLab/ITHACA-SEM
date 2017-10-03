@@ -45,9 +45,6 @@
 #include <LibUtilities/LinearAlgebra/MatrixStorageType.h>
 #include <LibUtilities/LinearAlgebra/SparseMatrixFwd.hpp>
 
-#include <boost/call_traits.hpp>
-
-
 namespace Nektar
 {
     /*
@@ -149,8 +146,8 @@ namespace Nektar
         LIB_UTILITIES_EXPORT const_iterator begin() const;
         LIB_UTILITIES_EXPORT const_iterator end() const;
 
-        LIB_UTILITIES_EXPORT const typename boost::call_traits<DataType>::const_reference
-                GetValue(IndexType row, IndexType column) const;
+        LIB_UTILITIES_EXPORT const DataType &GetValue(
+            IndexType row, IndexType column) const;
 
         LIB_UTILITIES_EXPORT void Multiply(const DataType* in,
                             DataType* out);

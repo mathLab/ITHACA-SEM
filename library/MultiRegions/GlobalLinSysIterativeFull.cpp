@@ -70,8 +70,8 @@ namespace Nektar
          */
         GlobalLinSysIterativeFull::GlobalLinSysIterativeFull(
                     const GlobalLinSysKey &pKey,
-                    const boost::weak_ptr<ExpList> &pExp,
-                    const boost::shared_ptr<AssemblyMap> &pLocToGloMap)
+                    const std::weak_ptr<ExpList> &pExp,
+                    const std::shared_ptr<AssemblyMap> &pLocToGloMap)
             : GlobalLinSys         (pKey, pExp, pLocToGloMap),
               GlobalLinSysIterative(pKey, pExp, pLocToGloMap)
         {
@@ -114,14 +114,14 @@ namespace Nektar
                     const AssemblyMapSharedPtr &pLocToGloMap,
                     const Array<OneD, const NekDouble>  &pDirForcing)
         {
-            boost::shared_ptr<MultiRegions::ExpList> expList = m_expList.lock();
+            std::shared_ptr<MultiRegions::ExpList> expList = m_expList.lock();
             bool vCG;
-            if ((m_locToGloMap = boost::dynamic_pointer_cast<AssemblyMapCG>(
+            if ((m_locToGloMap = std::dynamic_pointer_cast<AssemblyMapCG>(
                      pLocToGloMap)))
             {
                 vCG = true;
             }
-            else if ((m_locToGloMap = boost::dynamic_pointer_cast<
+            else if ((m_locToGloMap = std::dynamic_pointer_cast<
                           AssemblyMapDG>(pLocToGloMap)))
             {
                 vCG = false;
@@ -191,7 +191,7 @@ namespace Nektar
                 const Array<OneD, NekDouble>& pInput,
                       Array<OneD, NekDouble>& pOutput)
         {
-            boost::shared_ptr<MultiRegions::ExpList> expList = m_expList.lock();
+            std::shared_ptr<MultiRegions::ExpList> expList = m_expList.lock();
             // Perform matrix-vector operation A*d_i
             expList->GeneralMatrixOp(m_linSysKey,
                                      pInput, pOutput, eGlobal);

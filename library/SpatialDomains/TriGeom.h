@@ -53,14 +53,12 @@ namespace Nektar
         class  SegGeom;
         struct Curve;
 
-        typedef boost::shared_ptr<Curve> CurveSharedPtr;
-        typedef boost::shared_ptr<SegGeom> SegGeomSharedPtr;
-        typedef boost::shared_ptr<TriGeom> TriGeomSharedPtr;
+        typedef std::shared_ptr<Curve> CurveSharedPtr;
+        typedef std::shared_ptr<SegGeom> SegGeomSharedPtr;
+        typedef std::shared_ptr<TriGeom> TriGeomSharedPtr;
         typedef std::vector< SegGeomSharedPtr > SegGeomVector;
         typedef std::vector< TriGeomSharedPtr > TriGeomVector;
-        typedef std::vector< TriGeomSharedPtr >::iterator TriGeomVectorIter;
         typedef std::map<int, TriGeomSharedPtr> TriGeomMap;
-        typedef std::map<int, TriGeomSharedPtr>::iterator TriGeomMapIter;
 
         class TriGeom: public Geometry2D
         {

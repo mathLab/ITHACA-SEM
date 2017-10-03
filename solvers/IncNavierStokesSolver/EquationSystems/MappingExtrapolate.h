@@ -47,7 +47,7 @@ namespace Nektar
 
 class MappingExtrapolate;
 
-typedef boost::shared_ptr<MappingExtrapolate> MappingExtrapolateSharedPtr;
+typedef std::shared_ptr<MappingExtrapolate> MappingExtrapolateSharedPtr;
 
 class MappingExtrapolate : public StandardExtrapolate
 {

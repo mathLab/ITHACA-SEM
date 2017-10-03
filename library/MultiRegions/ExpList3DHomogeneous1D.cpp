@@ -142,7 +142,7 @@ namespace Nektar
             if(DeclarePlanesSetCoeffPhys)
             {
                 bool False = false;
-                ExpList2DSharedPtr zero_plane = boost::dynamic_pointer_cast<ExpList2D> (In.m_planes[0]);
+                ExpList2DSharedPtr zero_plane = std::dynamic_pointer_cast<ExpList2D> (In.m_planes[0]);
 
                 for(int n = 0; n < m_planes.num_elements(); ++n)
                 {
@@ -178,7 +178,7 @@ namespace Nektar
                 }
                 
                 ExpList2DSharedPtr zero_plane_old =
-                        boost::dynamic_pointer_cast<ExpList2D> (In.m_planes[0]);
+                        std::dynamic_pointer_cast<ExpList2D> (In.m_planes[0]);
                 
                 ExpList2DSharedPtr zero_plane = 
                     MemoryManager<ExpList2D>::AllocateSharedPtr(*(zero_plane_old), eIDsPlane, ImpType);

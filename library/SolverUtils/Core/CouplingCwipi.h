@@ -176,8 +176,6 @@ private:
     void DumpRawFields(const NekDouble time,
                        Array<OneD, Array<OneD, NekDouble> > rVals);
 
-    void OverrrideFields(Array<OneD, Array<OneD, NekDouble> > &rVals);
-
     void ExtrapolateFields(Array<OneD, Array<OneD, NekDouble> > &rVals,
                            Array<OneD, int> &notLoc);
 

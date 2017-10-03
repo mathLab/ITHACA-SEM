@@ -19,7 +19,6 @@ v5.0.0
 - Remove unused files from BasicUtils (!841)
 - Remove checks for old boost versions which are no longer supported (!841)
 - Refactor ParseUtils to be more consistent (!843)
-- Fix overwriting and backup of chk/fld files on slow file systes (!741)
 
 **NekMesh**:
 - Add feature to read basic 2D geo files as CAD (!731)
@@ -83,6 +82,7 @@ v4.4.1
   (!821)
 - Fix performance issue with ExtractPhysToBndElmt (!796)
 - Fix available classes being listed multiple times (!817)
+- Fix overwriting and backup of chk/fld files on slow file systes (!741)
 
 **FieldConvert:**
 - Fix issue with field ordering in the interppointdatatofld module (!754)

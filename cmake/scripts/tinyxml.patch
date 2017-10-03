@@ -1,5 +1,5 @@
---- tinyxml_old/tinyxmlparser.cpp	2017-10-03 16:05:35.999295200 +0100
-+++ tinyxml/tinyxmlparser.cpp	2017-10-03 16:05:58.556565300 +0100
+--- tinyxmlparser.cpp	2017-10-03 16:05:35.999295200 +0100
++++ tinyxmlparser.cpp	2017-10-03 16:05:58.556565300 +0100
 @@ -655,7 +655,7 @@
  
  	while ( in->good() )

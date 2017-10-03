@@ -19,6 +19,7 @@ v5.0.0
 - Remove unused files from BasicUtils (!841)
 - Remove checks for old boost versions which are no longer supported (!841)
 - Refactor ParseUtils to be more consistent (!843)
+- Fix overwriting and backup of chk/fld files on slow file systes (!741)
 
 **NekMesh**:
 - Add feature to read basic 2D geo files as CAD (!731)

@@ -37,7 +37,6 @@
 #ifndef NEKTAR_SOLVERUTILS_SESSIONFUNCTION_H
 #define NEKTAR_SOLVERUTILS_SESSIONFUNCTION_H
 
-#include <FieldUtils/Interpolator.h>
 #include <LibUtilities/BasicUtils/FieldIO.h>
 #include <LibUtilities/BasicUtils/FileSystem.h>
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
@@ -51,6 +50,11 @@
 
 namespace Nektar
 {
+namespace FieldUtils
+{
+class Interpolator;
+}
+
 namespace SolverUtils
 {
 
@@ -145,7 +149,7 @@ private:
     }
 };
 
-typedef boost::shared_ptr<SessionFunction> SessionFunctionSharedPtr;
+typedef std::shared_ptr<SessionFunction> SessionFunctionSharedPtr;
 static SessionFunctionSharedPtr NullSessionFunction;
 }
 }

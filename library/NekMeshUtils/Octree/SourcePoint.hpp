@@ -121,7 +121,7 @@ protected:
     Array<OneD, NekDouble> m_loc;
 };
 
-typedef boost::shared_ptr<SPBase> SPBaseSharedPtr;
+typedef std::shared_ptr<SPBase> SPBaseSharedPtr;
 
 /**
  * @brief class for a curvature based samlping Point
@@ -174,7 +174,7 @@ private:
     /// delta parameter
     NekDouble m_delta;
 };
-typedef boost::shared_ptr<CPoint> CPointSharedPtr;
+typedef std::shared_ptr<CPoint> CPointSharedPtr;
 
 /**
  * @brief class for a planar boundary based samlping Point
@@ -229,7 +229,7 @@ private:
     Array<OneD, NekDouble> m_uv;
     NekDouble m_ti;
 };
-typedef boost::shared_ptr<BPoint> BPointSharedPtr;
+typedef std::shared_ptr<BPoint> BPointSharedPtr;
 
 /**
  * @brief class for a general source point 
@@ -271,7 +271,7 @@ public:
 private:
     NekDouble m_delta;
 };
-typedef boost::shared_ptr<SrcPoint> SrcPointSharedPtr;
+typedef std::shared_ptr<SrcPoint> SrcPointSharedPtr;
 
 }
 }

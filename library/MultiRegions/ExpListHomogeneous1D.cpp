@@ -736,7 +736,7 @@ namespace Nektar
 
         DNekBlkMatSharedPtr ExpListHomogeneous1D::GetHomogeneous1DBlockMatrix(Homogeneous1DMatType mattype, CoeffState coeffstate) const
         {
-            Homo1DBlockMatrixMap::iterator matrixIter = m_homogeneous1DBlockMat->find(mattype);
+            auto matrixIter = m_homogeneous1DBlockMat->find(mattype);
             
             if(matrixIter == m_homogeneous1DBlockMat->end())
             {
@@ -989,7 +989,6 @@ namespace Nektar
                 int modes_offset = 0;
                 int planes_offset = 0;
                 Array<OneD, NekDouble> coeff_tmp;
-                boost::unordered_map<int,int>::iterator it;
                 
                 // Build map of plane IDs lying on this processor and determine
                 // mapping from element ids to location in expansion list.
@@ -1031,7 +1030,7 @@ namespace Nektar
                                                                         fielddef->m_numModes,
                                                                         modes_offset);
 
-                    it = m_elmtToExpId.find(fielddef->m_elementIDs[i]);
+                    auto it = m_elmtToExpId.find(fielddef->m_elementIDs[i]);
                     
                     // ensure element is on this partition for parallel case. 
                     if(it == m_elmtToExpId.end())
@@ -1082,7 +1081,7 @@ namespace Nektar
         
         //Extract the data in fielddata into the m_coeff list
         void ExpListHomogeneous1D::v_ExtractCoeffsToCoeffs(
-                                                           const boost::shared_ptr<ExpList> &fromExpList,const  Array<OneD, const NekDouble> &fromCoeffs, Array<OneD, NekDouble> &toCoeffs)
+                                                           const std::shared_ptr<ExpList> &fromExpList,const  Array<OneD, const NekDouble> &fromCoeffs, Array<OneD, NekDouble> &toCoeffs)
         {
             int i;
             int fromNcoeffs_per_plane = fromExpList->GetPlane(0)->GetNcoeffs();
@@ -1457,10 +1456,3 @@ namespace Nektar
         }
     } //end of namespace
 } //end of namespace
-
-
-/**
-* $Log: v $
-*
-**/
-

@@ -140,7 +140,7 @@ void InputSwan::Process()
         double y = pts[1 * NB_Points + i];
         double z = pts[2 * NB_Points + i];
         m_mesh->m_node.push_back(
-            boost::shared_ptr<Node>(new Node(vid, x, y, z)));
+            std::shared_ptr<Node>(new Node(vid, x, y, z)));
         vid++;
     }
 

@@ -35,7 +35,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 #include <SpatialDomains/Geometry2D.h>
 #include <SpatialDomains/SegGeom.h>
-#include <boost/shared_ptr.hpp>
 
 #include <iomanip>
 

@@ -33,9 +33,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include "LibUtilitiesUnitTestsPrecompiledHeader.h"
 #include <LibUtilities/LinearAlgebra/NekMatrix.hpp>
-#include <LibUtilities/BasicUtils/BoostUtil.hpp>
 #include <boost/test/auto_unit_test.hpp>
 #include <boost/test/test_case_template.hpp>
 #include <boost/test/floating_point_comparison.hpp>
@@ -164,9 +162,9 @@ namespace Nektar
                                   11, 16, 20,
                                   12, 17, 21};
 
-                boost::shared_ptr<NekMatrix<double> > lhsInnerMatrix(                              
+                std::shared_ptr<NekMatrix<double> > lhsInnerMatrix(                              
                     new NekMatrix<double>(3, 3, buf1));
-                boost::shared_ptr<NekMatrix<double> > rhsInnerMatrix(                              
+                std::shared_ptr<NekMatrix<double> > rhsInnerMatrix(                              
                     new NekMatrix<double>(3, 3, buf2));
 
                 NekMatrix<NekMatrix<double>, ScaledMatrixTag> lhs(2.0, lhsInnerMatrix);
@@ -205,7 +203,7 @@ namespace Nektar
                  double buf2[] = { 10, 11, 12};
  
                                   
-                 boost::shared_ptr<NekMatrix<double> > innerMatrix(
+                 std::shared_ptr<NekMatrix<double> > innerMatrix(
                      new NekMatrix<double>(3, 3, buf1));
                  NekMatrix<NekMatrix<double>, ScaledMatrixTag> lhs(2.0, innerMatrix);
                  NekVector<double> rhs(3, buf2); 
@@ -229,7 +227,7 @@ namespace Nektar
                                   3, 6, 9, 12};
                  double buf2[] = { 10, 11, 12};
  
-                 boost::shared_ptr<NekMatrix<double> > innerMatrix(
+                 std::shared_ptr<NekMatrix<double> > innerMatrix(
                      new NekMatrix<double>(4, 3, buf1));
                  NekMatrix<NekMatrix<double>, ScaledMatrixTag> lhs(3.0, innerMatrix);
                  NekVector<double> rhs(3, buf2); 

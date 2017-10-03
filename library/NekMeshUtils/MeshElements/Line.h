@@ -54,7 +54,7 @@ public:
                                    std::vector<NodeSharedPtr> pNodeList,
                                    std::vector<int> pTagList)
     {
-        return boost::shared_ptr<Element>(new Line(pConf, pNodeList, pTagList));
+        return std::shared_ptr<Element>(new Line(pConf, pNodeList, pTagList));
     }
     /// Element type
     static LibUtilities::ShapeType m_type;

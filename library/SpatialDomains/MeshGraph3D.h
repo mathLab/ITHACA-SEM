@@ -39,7 +39,7 @@
 #include <SpatialDomains/MeshGraph.h>
 #include <SpatialDomains/TriGeom.h>
 #include <SpatialDomains/SpatialDomainsDeclspec.h>
-#include <boost/unordered_map.hpp>
+#include <unordered_map>
 
 namespace Nektar
 {
@@ -217,67 +217,13 @@ namespace Nektar
 
         private:
             void PopulateFaceToElMap(Geometry3DSharedPtr element, int kNfaces);
-            boost::unordered_map<int, ElementFaceVectorSharedPtr> m_faceToElMap;
+            std::unordered_map<int, ElementFaceVectorSharedPtr> m_faceToElMap;
 
         };
 
-        typedef boost::shared_ptr<MeshGraph3D> MeshGraph3DSharedPtr;
+        typedef std::shared_ptr<MeshGraph3D> MeshGraph3DSharedPtr;
 
     }; // end of namespace
 }; // end of namespace
 
 #endif //NEKTAR_SPATIALDOMAINS_MESHGRAPH3D_H
-
-//
-// $Log: MeshGraph3D.h,v $
-// Revision 1.12  2008/09/23 18:19:56  pvos
-// Updates for working ProjectContField3D demo
-//
-// Revision 1.11  2008/08/26 02:23:09  ehan
-// Added GetElementFromFace()
-//
-// Revision 1.10  2008/06/30 19:34:37  ehan
-// Fixed infinity recursive-loop error.
-//
-// Revision 1.9  2008/06/11 21:34:42  delisi
-// Removed TriFaceComponent, QuadFaceComponent, and EdgeComponent.
-//
-// Revision 1.8  2008/06/11 16:10:12  delisi
-// Added the 3D reader.
-//
-// Revision 1.7  2008/06/09 21:33:04  jfrazier
-// Moved segment vector to base MeshGraph class since it is used by all derived types.
-//
-// Revision 1.6  2008/05/30 00:33:48  delisi
-// Renamed StdRegions::ShapeType to StdRegions::ExpansionType.
-//
-// Revision 1.5  2008/05/29 19:07:39  delisi
-// Removed the Write(..) methods, so it is only in the base MeshGraph class. Also, added a line to set the global ID of the geometry object for every element read in.
-//
-// Revision 1.4  2008/02/03 05:05:16  jfrazier
-// Initial checkin of 3D components.
-//
-// Revision 1.3  2007/07/20 02:15:09  bnelson
-// Replaced boost::shared_ptr with Nektar::ptr
-//
-// Revision 1.2  2006/07/02 17:16:17  sherwin
-//
-// Modifications to make MultiRegions work for a connected domain in 2D (Tris)
-//
-// Revision 1.1  2006/05/04 18:59:02  kirby
-// *** empty log message ***
-//
-// Revision 1.6  2006/03/25 00:58:29  jfrazier
-// Many changes dealing with fundamental structure and reading/writing.
-//
-// Revision 1.5  2006/03/12 07:42:03  sherwin
-//
-// Updated member names and StdRegions call. Still has not been compiled
-//
-// Revision 1.4  2006/03/04 20:26:05  bnelson
-// Added comments after #endif.
-//
-// Revision 1.3  2006/02/19 01:37:34  jfrazier
-// Initial attempt at bringing into conformance with the coding standard.  Still more work to be done.  Has not been compiled.
-//
-//

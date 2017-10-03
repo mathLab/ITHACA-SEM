@@ -34,7 +34,10 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include <LibUtilities/BasicUtils/FieldIOHdf5.h>
-#include <boost/unordered_set.hpp>
+#include <LibUtilities/BasicUtils/ParseUtils.h>
+
+#include <unordered_set>
+#include <functional>
 
 namespace berrc = boost::system::errc;
 
@@ -414,7 +417,7 @@ void FieldIOHdf5::v_Write(const std::string &outFile,
             cnts[ORDER_CNT_IDX] += fielddefs[f]->m_numModes.size();
         }
 
-        boost::hash<std::string> string_hasher;
+        std::hash<std::string> string_hasher;
         std::stringstream fieldNameStream;
         uint64_t fieldDefHash = string_hasher(hashStream.str());
 
@@ -583,10 +586,9 @@ void FieldIOHdf5::v_Write(const std::string &outFile,
     }
 
     // Having constructed the map, go ahead and write the attributes out.
-    map<int, std::vector<uint64_t> >::iterator sIt;
-    for (sIt = writingProcs.begin(); sIt != writingProcs.end(); sIt++)
+    for (auto &sIt : writingProcs)
     {
-        int rank = sIt->first;
+        int rank = sIt.first;
 
         // Write out this rank's groups.
         if (m_comm->GetRank() == rank)
@@ -603,18 +605,18 @@ void FieldIOHdf5::v_Write(const std::string &outFile,
 
             // Write a HDF5 group for each field
             hashToProc.clear();
-            for (int i = 0; i < sIt->second.size(); ++i)
+            for (int i = 0; i < sIt.second.size(); ++i)
             {
                 for (int f = 0; f < nFields; ++f)
                 {
-                    if (sIt->second[i] !=
+                    if (sIt.second[i] !=
                         all_hashes[m_comm->GetRank() * nMaxFields + f] ||
-                        hashToProc.find(sIt->second[i]) != hashToProc.end())
+                        hashToProc.find(sIt.second[i]) != hashToProc.end())
                     {
                         continue;
                     }
 
-                    hashToProc.insert(sIt->second[i]);
+                    hashToProc.insert(sIt.second[i]);
 
                     // Just in case we've already written this
                     H5::GroupSharedPtr field_group =
@@ -883,7 +885,7 @@ void FieldIOHdf5::v_Import(const std::string &infilename,
 
     // Open the root group of the hdf5 file
     H5DataSourceSharedPtr h5 =
-        boost::static_pointer_cast<H5DataSource>(dataSource);
+        std::static_pointer_cast<H5DataSource>(dataSource);
     ASSERTL1(h5, prfx.str() + "cannot open HDF5 file.");
     H5::GroupSharedPtr root = h5->Get()->OpenGroup("NEKTAR");
     ASSERTL1(root, prfx.str() + "cannot open root group.");
@@ -934,7 +936,7 @@ void FieldIOHdf5::v_Import(const std::string &infilename,
 
     ids_dset->Read(ids, ids_fspace, readPL);
 
-    boost::unordered_set<uint64_t> toread;
+    std::unordered_set<uint64_t> toread;
     if (ElementIDs != NullInt1DArray)
     {
         for (uint64_t i = 0; i < ElementIDs.num_elements(); ++i)
@@ -1012,23 +1014,20 @@ void FieldIOHdf5::v_Import(const std::string &infilename,
         running.homs  += decomps[cnt + HOMS_DCMP_IDX];
     }
 
-    map<uint64_t, set<uint64_t> >::iterator gIt;
-    for (gIt = groupsToDecomps.begin(); gIt != groupsToDecomps.end(); ++gIt)
+    for (auto &gIt : groupsToDecomps)
     {
-        set<uint64_t>::iterator sIt;
-
         // Select region from dataset for this decomposition.
-        for (sIt = gIt->second.begin(); sIt != gIt->second.end(); ++sIt)
+        for (auto &sIt : gIt.second)
         {
             std::stringstream fieldNameStream;
-            fieldNameStream << gIt->first;
+            fieldNameStream << gIt.first;
 
             FieldDefinitionsSharedPtr fielddef =
                 MemoryManager<FieldDefinitions>::AllocateSharedPtr();
-            ImportFieldDef(readPLInd, root, decomps, *sIt, decompsToOffsets[*sIt],
+            ImportFieldDef(readPLInd, root, decomps, sIt, decompsToOffsets[sIt],
                            fieldNameStream.str(), fielddef);
 
-            fielddef->m_elementIDs = groupsToElmts[*sIt];
+            fielddef->m_elementIDs = groupsToElmts[sIt];
             fielddefs.push_back(fielddef);
 
             if (fielddata != NullVectorNekDoubleVector)
@@ -1036,7 +1035,7 @@ void FieldIOHdf5::v_Import(const std::string &infilename,
                 std::vector<NekDouble> decompFieldData;
                 ImportFieldData(
                     readPLInd, data_dset, data_fspace,
-                    decompsToOffsets[*sIt].data, decomps, *sIt, fielddef,
+                    decompsToOffsets[sIt].data, decomps, sIt, fielddef,
                     decompFieldData);
                 fielddata.push_back(decompFieldData);
             }
@@ -1128,11 +1127,9 @@ void FieldIOHdf5::ImportFieldDef(
         {
             field->GetAttribute(attrName, def->m_basis);
             // check the basis is in range
-            std::vector<BasisType>::const_iterator bIt  = def->m_basis.begin();
-            std::vector<BasisType>::const_iterator bEnd = def->m_basis.end();
-            for (; bIt != bEnd; ++bIt)
+            for (auto &bIt : def->m_basis)
             {
-                BasisType bt = *bIt;
+                BasisType bt = bIt;
                 ASSERTL0(bt >= 0 && bt < SIZE_BasisType,
                          prfx.str() +
                          "unable to correctly parse the basis types.");
@@ -1150,8 +1147,8 @@ void FieldIOHdf5::ImportFieldDef(
             if (strstr(numModesPerDir.c_str(), "UNIORDER:"))
             {
                 def->m_uniOrder = true;
-                bool valid = ParseUtils::GenerateOrderedVector(
-                    numModesPerDir.c_str() + 9, def->m_numModes);
+                bool valid = ParseUtils::GenerateVector(
+                    numModesPerDir.substr(9), def->m_numModes);
                 ASSERTL0(valid,
                          prfx.str() +
                          "unable to correctly parse the number of modes.");
@@ -1164,8 +1161,8 @@ void FieldIOHdf5::ImportFieldDef(
             def->m_pointsDef = true;
 
             std::vector<std::string> pointsStrings;
-            bool valid = ParseUtils::GenerateOrderedStringVector(
-                pointsString.c_str(), pointsStrings);
+            bool valid = ParseUtils::GenerateVector(
+                pointsString, pointsStrings);
             ASSERTL0(valid,
                      prfx.str() +
                      "unable to correctly parse the points types.");
@@ -1199,8 +1196,8 @@ void FieldIOHdf5::ImportFieldDef(
             field->GetAttribute(attrName, numPointsPerDir);
             def->m_numPointsDef = true;
 
-            bool valid = ParseUtils::GenerateOrderedVector(
-                numPointsPerDir.c_str(), def->m_numPoints);
+            bool valid = ParseUtils::GenerateVector(
+                numPointsPerDir, def->m_numPoints);
             ASSERTL0(valid,
                      prfx.str() +
                      "unable to correctly parse the number of points.");
@@ -1314,7 +1311,7 @@ void FieldIOHdf5::ImportHDF5FieldMetaData(DataSourceSharedPtr dataSource,
                                           FieldMetaDataMap &fieldmetadatamap)
 {
     H5DataSourceSharedPtr hdf =
-        boost::static_pointer_cast<H5DataSource>(dataSource);
+        std::static_pointer_cast<H5DataSource>(dataSource);
 
     H5::GroupSharedPtr master = hdf->Get()->OpenGroup("NEKTAR");
     // New metadata format only in HDF

@@ -97,9 +97,9 @@ void NodalTetSPI::CalculateDerivMatrix()
 {
 }
 
-boost::shared_ptr<PointsBaseType> NodalTetSPI::Create(const PointsKey &key)
+std::shared_ptr<PointsBaseType> NodalTetSPI::Create(const PointsKey &key)
 {
-    boost::shared_ptr<PointsBaseType> returnval(
+    std::shared_ptr<PointsBaseType> returnval(
         MemoryManager<NodalTetSPI>::AllocateSharedPtr(key));
     returnval->Initialize();
     return returnval;

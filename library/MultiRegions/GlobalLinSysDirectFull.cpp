@@ -80,9 +80,8 @@ namespace Nektar
         /// Constructor for full direct matrix solve.
         GlobalLinSysDirectFull::GlobalLinSysDirectFull(
                     const GlobalLinSysKey &pLinSysKey,
-                    const boost::weak_ptr<ExpList> &pExp,
-                    const boost::shared_ptr<AssemblyMap>
-                                                            &pLocToGloMap)
+                    const std::weak_ptr<ExpList> &pExp,
+                    const std::shared_ptr<AssemblyMap> &pLocToGloMap)
             : GlobalLinSys(pLinSysKey, pExp, pLocToGloMap),
               GlobalLinSysDirect(pLinSysKey, pExp, pLocToGloMap)
         {

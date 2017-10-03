@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: Concepts.hpp
+//  File: ProcessStreamFunction.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,34 +29,56 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Defines concepts for the boost concept checking library.
+//  Description: Computes stream-function for 2D field.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_LIB_UTILITIES_CONCEPTS_HPP
-#define NEKTAR_LIB_UTILITIES_CONCEPTS_HPP
+#ifndef FIELDUTILS_PROCESSSTREAMFUNCTION
+#define FIELDUTILS_PROCESSSTREAMFUNCTION
+
+#include "../Module.h"
 
 namespace Nektar
 {
-    template<typename DataType>
-    class AssignableConcept
+namespace FieldUtils
+{
+/**
+ * @brief This processing module calculates the stream function of a 2D field
+ * and adds it as an extra-field to the output file.
+ */
+class ProcessStreamFunction : public ProcessModule
+{
+public:
+    /// Creates an instance of this class
+    static std::shared_ptr<Module> create(FieldSharedPtr f)
     {
-        public:
-            void constraints()
-            {
-                DataType* lhs = NULL;
-                DataType* rhs = NULL;
-                *lhs = *rhs;
-                const_constraints(*rhs);
-            }
+        return MemoryManager<ProcessStreamFunction>::AllocateSharedPtr(f);
+    }
+    static ModuleKey className;
 
-            void const_constraints(const DataType& rhs)
-            {
-                DataType* lhs = NULL;
-                (*lhs) = rhs;
-            }
-    };
+    ProcessStreamFunction(FieldSharedPtr f);
+    virtual ~ProcessStreamFunction();
+
+    /// Write mesh to output file.
+    virtual void Process(po::variables_map &vm);
+
+    virtual std::string GetModuleName()
+    {
+        return "ProcessStreamFunction";
+    }
+
+    virtual std::string GetModuleDescription()
+    {
+        return "Calculating stream-function";
+    }
+
+    virtual ModulePriority GetModulePriority()
+    {
+        return eModifyExp;
+    }
+
+};
+}
 }
 
 #endif
-

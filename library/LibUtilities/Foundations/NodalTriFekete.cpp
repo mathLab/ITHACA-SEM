@@ -153,7 +153,7 @@ namespace Nektar
              xi[0] = xia;
              xi[1] = yia;
 
-             boost::shared_ptr<NekMatrix<NekDouble> > mat =
+             std::shared_ptr<NekMatrix<NekDouble> > mat =
                  m_util->GetInterpolationMatrix(xi);
              Vmath::Vcopy(mat->GetRows() * mat->GetColumns(), mat->GetRawPtr(),
                           1, &interp[0], 1);
@@ -170,9 +170,9 @@ namespace Nektar
             m_derivmatrix[1] = m_util->GetDerivMatrix(1);
         }
 
-        boost::shared_ptr<PointsBaseType> NodalTriFekete::Create(const PointsKey &key)
+        std::shared_ptr<PointsBaseType> NodalTriFekete::Create(const PointsKey &key)
         {
-            boost::shared_ptr<PointsBaseType> returnval(MemoryManager<NodalTriFekete>::AllocateSharedPtr(key));
+            std::shared_ptr<PointsBaseType> returnval(MemoryManager<NodalTriFekete>::AllocateSharedPtr(key));
             returnval->Initialize();
             return returnval;
         }

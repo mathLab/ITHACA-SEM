@@ -87,34 +87,14 @@ namespace Nektar
     }
 
 
-    boost::tuples::tuple<unsigned int, unsigned int> 
+    std::tuple<unsigned int, unsigned int> 
     BandedMatrixFuncs::Advance(const unsigned int totalRows, const unsigned int totalColumns,
             const unsigned int curRow, const unsigned int curColumn)
     {
         unsigned int nextRow = curRow;
         unsigned int nextColumn = curColumn;
 
-        //if( transpose == 'N' )
-        //{
-        //    if( (column <= row && (row - column) <= data.GetNumberOfSubDiagonals(totalRows)) ||
-        //    (column > row && (column - row) <= data.GetNumberOfSuperDiagonals(totalRows)) )
-        //    {
-        //        unsigned int arrayColumns = totalColumns;
-
-        //        unsigned int elementRow = data.GetNumberOfSuperDiagonals(totalRows)+row-column;
-        //        unsigned int elementColumn = column;
-
-        //        return elementRow + elementColumn*CalculateNumberOfRows(totalRows, data);
-        //    }
-        //    else
-        //    {
-        //        return boost::optional<unsigned int>();
-        //    }
-        //}
-        //else
-        //{
-        //}
-        return boost::tuples::tuple<unsigned int, unsigned int>(nextRow, nextColumn);
+        return std::tuple<unsigned int, unsigned int>(nextRow, nextColumn);
     }
 
   
@@ -129,7 +109,7 @@ namespace Nektar
     }
 
     
-    boost::tuples::tuple<unsigned int, unsigned int> 
+    std::tuple<unsigned int, unsigned int> 
     FullMatrixFuncs::Advance(const unsigned int totalRows, const unsigned int totalColumns,
             const unsigned int curRow, const unsigned int curColumn)
     {
@@ -153,7 +133,7 @@ namespace Nektar
             nextColumn = std::numeric_limits<unsigned int>::max();
         }
 
-        return boost::tuples::tuple<unsigned int, unsigned int>(nextRow, nextColumn);
+        return std::tuple<unsigned int, unsigned int>(nextRow, nextColumn);
     }
         
         
@@ -175,7 +155,7 @@ namespace Nektar
         }
     }
 
-    boost::tuples::tuple<unsigned int, unsigned int> 
+    std::tuple<unsigned int, unsigned int> 
     UpperTriangularMatrixFuncs::Advance(const unsigned int totalRows, const unsigned int totalColumns,
             const unsigned int curRow, const unsigned int curColumn)
     {
@@ -214,7 +194,7 @@ namespace Nektar
             nextColumn = std::numeric_limits<unsigned int>::max();
         }
 
-        return boost::tuples::tuple<unsigned int, unsigned int>(nextRow, nextColumn);
+        return std::tuple<unsigned int, unsigned int>(nextRow, nextColumn);
     }
 
                  
@@ -230,7 +210,7 @@ namespace Nektar
         }
     }
 
-    boost::tuples::tuple<unsigned int, unsigned int> 
+    std::tuple<unsigned int, unsigned int> 
     LowerTriangularMatrixFuncs::Advance(const unsigned int totalRows, const unsigned int totalColumns,
             const unsigned int curRow, const unsigned int curColumn,
             char transpose)
@@ -276,7 +256,7 @@ namespace Nektar
             nextColumn = std::numeric_limits<unsigned int>::max();
         }
 
-        return boost::tuples::tuple<unsigned int, unsigned int>(nextRow, nextColumn);
+        return std::tuple<unsigned int, unsigned int>(nextRow, nextColumn);
     }
     
 
@@ -292,7 +272,7 @@ namespace Nektar
         }
     }
 
-    boost::tuples::tuple<unsigned int, unsigned int> 
+    std::tuple<unsigned int, unsigned int> 
     SymmetricMatrixFuncs::Advance(const unsigned int totalRows, const unsigned int totalColumns,
             const unsigned int curRow, const unsigned int curColumn)
     {
@@ -326,10 +306,10 @@ namespace Nektar
             nextColumn = std::numeric_limits<unsigned int>::max();
         }
 
-        return boost::tuples::tuple<unsigned int, unsigned int>(nextRow, nextColumn);
+        return std::tuple<unsigned int, unsigned int>(nextRow, nextColumn);
     }
 
-    boost::tuples::tuple<unsigned int, unsigned int> 
+    std::tuple<unsigned int, unsigned int> 
     DiagonalMatrixFuncs::Advance(const unsigned int totalRows, const unsigned int totalColumns,
             const unsigned int curRow, const unsigned int curColumn)
     {
@@ -350,7 +330,7 @@ namespace Nektar
             nextColumn = std::numeric_limits<unsigned int>::max();
         }
 
-        return boost::tuples::tuple<unsigned int, unsigned int>(nextRow, nextColumn);
+        return std::tuple<unsigned int, unsigned int>(nextRow, nextColumn);
     }
     
     unsigned int DiagonalMatrixFuncs::GetRequiredStorageSize(unsigned int rows, unsigned int columns)

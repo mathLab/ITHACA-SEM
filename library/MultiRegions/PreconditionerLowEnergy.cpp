@@ -1006,8 +1006,8 @@ namespace Nektar
             int nLocBndDofs        = m_locToGloMap->GetNumLocalBndCoeffs();
 
             //Non-dirichlet boundary dofs
-            Array<OneD, NekDouble> tmp = pInOut + offset;
-            NekVector<NekDouble> F_HomBnd(nGlobHomBndDofs, tmp, eWrapper);
+            Array<OneD, NekDouble> tmpOffset = pInOut + offset;
+            NekVector<NekDouble> F_HomBnd(nGlobHomBndDofs, tmpOffset, eWrapper);
 
             //Block transformation matrix
             DNekScalBlkMat &R = *m_RBlk;

@@ -81,7 +81,7 @@ namespace Nektar
             std::shared_ptr<MultiRegions::ExpList> 
                 expList=((m_linsys.lock())->GetLocMat()).lock();
             
-            StdRegions::StdExpansionSharedPtr locExpansion;
+            LocalRegions::ExpansionSharedPtr locExpansion;
 
             locExpansion = expList->GetExp(0);
             
@@ -208,7 +208,7 @@ namespace Nektar
             Array<OneD, int> faceglobaloffset(nNonDirFaceIDs,0);
 
             const Array<OneD, const ExpListSharedPtr>& bndCondExp = expList->GetBndCondExpansions();
-            StdRegions::StdExpansion2DSharedPtr bndCondFaceExp;
+            LocalRegions::Expansion2DSharedPtr bndCondFaceExp;
             const Array<OneD, const SpatialDomains::BoundaryConditionShPtr>& bndConditions = expList->GetBndConditions();
 
             int meshVertId;
@@ -230,7 +230,7 @@ namespace Nektar
                 for(j = 0; j < bndCondExp[i]->GetNumElmts(); j++)
                 {
                     bndCondFaceExp = std::dynamic_pointer_cast<
-                    StdRegions::StdExpansion2D>(bndCondExp[i]->GetExp(j));
+                    LocalRegions::Expansion2D>(bndCondExp[i]->GetExp(j));
                     if (bndConditions[i]->GetBoundaryConditionType() == 
                         SpatialDomains::eDirichlet)
                     {
@@ -918,7 +918,7 @@ namespace Nektar
        {
            std::shared_ptr<MultiRegions::ExpList> 
                expList=((m_linsys.lock())->GetLocMat()).lock();
-           StdRegions::StdExpansionSharedPtr locExpansion;
+           LocalRegions::ExpansionSharedPtr locExpansion;
 
            int n, nel;
  
@@ -1225,7 +1225,7 @@ namespace Nektar
             std::shared_ptr<MultiRegions::ExpList> 
                 expList=((m_linsys.lock())->GetLocMat()).lock();
          
-            StdRegions::StdExpansionSharedPtr locExpansion;                
+            LocalRegions::ExpansionSharedPtr locExpansion;                
             locExpansion = expList->GetExp(offset);
             unsigned int nbnd=locExpansion->NumBndryCoeffs();
 
@@ -1608,7 +1608,7 @@ namespace Nektar
                 expList=((m_linsys.lock())->GetLocMat()).lock();
             GlobalLinSysKey m_linSysKey=(m_linsys.lock())->GetKey();
             StdRegions::VarCoeffMap vVarCoeffMap;
-            StdRegions::StdExpansionSharedPtr locExpansion;
+            LocalRegions::ExpansionSharedPtr locExpansion;
             locExpansion = expList->GetExp(0);
 
             DNekScalBlkMatSharedPtr RtetBlk, RprismBlk;

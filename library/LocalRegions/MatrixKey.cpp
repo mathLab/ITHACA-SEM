@@ -33,7 +33,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-
+#include <LocalRegions/Expansion.h>
 #include <LocalRegions/MatrixKey.h>
 
 namespace Nektar
@@ -47,7 +47,7 @@ namespace Nektar
                   const StdRegions::VarCoeffMap &varCoeffMap,
                   LibUtilities::PointsType nodalType) :
             StdMatrixKey(matrixType, shapeType, stdExpansion, factorMap, varCoeffMap, nodalType),
-            m_metricinfo(stdExpansion.GetMetricInfo())
+            m_metricinfo( ( dynamic_cast<const Expansion&>( stdExpansion ) ).GetMetricInfo() )
         {
         }
 

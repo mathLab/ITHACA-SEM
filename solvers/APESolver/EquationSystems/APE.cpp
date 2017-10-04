@@ -667,7 +667,7 @@ void APE::WhiteNoiseBC(int bcRegion,
         "WhiteNoise BCs must be Dirichlet type BCs");
 
     LibUtilities::Equation cond =
-        boost::static_pointer_cast<SpatialDomains::DirichletBoundaryCondition>(
+        std::static_pointer_cast<SpatialDomains::DirichletBoundaryCondition>(
             m_fields[0]->GetBndConditions()[bcRegion])
             ->m_dirichletCondition;
     NekDouble sigma = cond.Evaluate();

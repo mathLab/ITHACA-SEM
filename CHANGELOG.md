@@ -65,6 +65,7 @@ v4.4.1
   (!821)
 - Fix performance issue with ExtractPhysToBndElmt (!796)
 - Fix available classes being listed multiple times (!817)
+- Fix overwriting and backup of chk/fld files on slow file systes (!741)
 
 **FieldConvert:**
 - Fix issue with field ordering in the interppointdatatofld module (!754)

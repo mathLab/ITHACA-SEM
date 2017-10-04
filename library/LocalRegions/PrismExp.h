@@ -218,10 +218,8 @@ namespace Nektar
                       Array<OneD,       NekDouble> &wsp);
         };
 
-        // type defines for use of PrismExp in a boost vector
-        typedef boost::shared_ptr<PrismExp> PrismExpSharedPtr;
+        typedef std::shared_ptr<PrismExp> PrismExpSharedPtr;
         typedef std::vector<PrismExpSharedPtr> PrismExpVector;
-        typedef std::vector<PrismExpSharedPtr>::iterator PrismExpVectorIter;
     } //end of namespace
 } //end of namespace
 

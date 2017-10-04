@@ -44,7 +44,7 @@
 namespace Nektar
 {
     class PulseWavePressureArea;
-    typedef boost::shared_ptr<PulseWavePressureArea>  PulseWavePressureAreaSharedPtr;
+    typedef std::shared_ptr<PulseWavePressureArea>  PulseWavePressureAreaSharedPtr;
     
     static PulseWavePressureAreaSharedPtr NullPulseWavePressureAreaSharedPtr;
 

@@ -47,8 +47,8 @@ namespace Nektar
         class GlobalMatrix
         {
         public:
-            typedef NekSparseMatrix<StorageSmvBsr<NekDouble> >      DNekSmvBsrMat;
-            typedef boost::shared_ptr<DNekSmvBsrMat>                DNekSmvBsrMatSharedPtr;
+            typedef NekSparseMatrix<StorageSmvBsr<NekDouble> > DNekSmvBsrMat;
+            typedef std::shared_ptr<DNekSmvBsrMat> DNekSmvBsrMatSharedPtr;
 
             /// Construct a new matrix.
             MULTI_REGIONS_EXPORT GlobalMatrix(
@@ -86,11 +86,11 @@ namespace Nektar
         };
 
         /// Shared pointer to a GlobalMatrix object.
-        typedef boost::shared_ptr<GlobalMatrix> GlobalMatrixSharedPtr;
+        typedef std::shared_ptr<GlobalMatrix> GlobalMatrixSharedPtr;
         /// Mapping from global matrix keys to global matrices.
         typedef std::map<GlobalMatrixKey,GlobalMatrixSharedPtr> GlobalMatrixMap;
         /// Shared pointer to a global matrix map.
-        typedef boost::shared_ptr<GlobalMatrixMap> GlobalMatrixMapShPtr;
+        typedef std::shared_ptr<GlobalMatrixMap> GlobalMatrixMapShPtr;
 
     } //end of namespace
 } //end of namespace

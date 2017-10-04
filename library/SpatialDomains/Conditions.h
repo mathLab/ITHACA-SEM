@@ -43,7 +43,6 @@
 #include <LibUtilities/BasicUtils/Equation.h>
 #include <SpatialDomains/MeshGraph.h>
 
-
 namespace Nektar
 {
     struct OneD;
@@ -212,17 +211,17 @@ namespace Nektar
 
 
         typedef std::map<int, Composite> BoundaryRegion;
-        typedef boost::shared_ptr<BoundaryRegion> BoundaryRegionShPtr;
-        typedef boost::shared_ptr<const BoundaryRegion> ConstBoundaryRegionShPtr;
+        typedef std::shared_ptr<BoundaryRegion> BoundaryRegionShPtr;
+        typedef std::shared_ptr<const BoundaryRegion> ConstBoundaryRegionShPtr;
         typedef std::map<int, BoundaryRegionShPtr> BoundaryRegionCollection;
 
-        typedef boost::shared_ptr<BoundaryConditionBase> BoundaryConditionShPtr;
-        typedef boost::shared_ptr<DirichletBoundaryCondition> DirichletBCShPtr;
-        typedef boost::shared_ptr<NeumannBoundaryCondition>   NeumannBCShPtr;
-        typedef boost::shared_ptr<RobinBoundaryCondition>     RobinBCShPtr;
+        typedef std::shared_ptr<BoundaryConditionBase> BoundaryConditionShPtr;
+        typedef std::shared_ptr<DirichletBoundaryCondition> DirichletBCShPtr;
+        typedef std::shared_ptr<NeumannBoundaryCondition>   NeumannBCShPtr;
+        typedef std::shared_ptr<RobinBoundaryCondition>     RobinBCShPtr;
 
         typedef std::map<std::string,BoundaryConditionShPtr>  BoundaryConditionMap;
-        typedef boost::shared_ptr<BoundaryConditionMap>  BoundaryConditionMapShPtr;
+        typedef std::shared_ptr<BoundaryConditionMap>  BoundaryConditionMapShPtr;
         typedef std::map<int, BoundaryConditionMapShPtr> BoundaryConditionCollection;
 
         const static Array<OneD, BoundaryConditionShPtr> NullBoundaryConditionShPtrArray;
@@ -280,7 +279,7 @@ namespace Nektar
             void CreateBoundaryComms();
         };
 
-        typedef boost::shared_ptr<BoundaryConditions> 
+        typedef std::shared_ptr<BoundaryConditions> 
             BoundaryConditionsSharedPtr;
     }
 }

@@ -45,7 +45,7 @@ namespace Nektar
     class UndefinedInOutflow;
 
     /// Pointer to a PulseWaveOutflow object.
-    typedef boost::shared_ptr<UndefinedInOutflow> UndefinedInOutflowSharedPtr;
+    typedef std::shared_ptr<UndefinedInOutflow> UndefinedInOutflowSharedPtr;
     
     /// A global linear system.
     class UndefinedInOutflow : public PulseWaveBoundary

@@ -354,7 +354,7 @@ class CellMLToNektarTranslator(translators.CellMLTranslator):
         # Write out the modifier member variables. 
         if self.use_modifiers:
             for var in self.modifier_vars:
-                self.writeln_hpp('boost::shared_ptr<AbstractModifier> mp_' + var.oxmeta_name + '_modifier', self.STMT_END)    
+                self.writeln_hpp('std::shared_ptr<AbstractModifier> mp_' + var.oxmeta_name + '_modifier', self.STMT_END)    
         
         # Methods associated with oxmeta annotated variables
         # Don't use LT & modifiers for the const methods
@@ -409,11 +409,11 @@ class CellMLToNektarTranslator(translators.CellMLTranslator):
         self.has_default_stimulus = True
         nodeset = self.calculate_extended_dependencies(filter(None, vars.values()))
 
-        self.output_method_start('UseCellMLDefaultStimulus', [], 'boost::shared_ptr<RegularStimulus>', 'public')
+        self.output_method_start('UseCellMLDefaultStimulus', [], 'std::shared_ptr<RegularStimulus>', 'public')
         self.open_block()
         self.output_comment('Use the default stimulus specified by CellML metadata')
         self.output_equations(nodeset)
-        self.writeln('boost::shared_ptr<RegularStimulus> p_cellml_stim(new RegularStimulus(')
+        self.writeln('std::shared_ptr<RegularStimulus> p_cellml_stim(new RegularStimulus(')
         self.writeln('        -fabs(', self.code_name(vars['amplitude']), '),')
         self.writeln('        ', self.code_name(vars['duration']), ',')
         self.writeln('        ', self.code_name(vars['period']), ',')
@@ -485,11 +485,11 @@ class CellMLToNektarTranslator(translators.CellMLTranslator):
         
         if self.use_backward_euler or self.options.rush_larsen or self.options.grl1 or self.options.grl2:
             # Keep the same signature as forward cell models, but note that the solver isn't used
-            solver1 = 'boost::shared_ptr<AbstractIvpOdeSolver> /* unused; should be empty */'
+            solver1 = 'std::shared_ptr<AbstractIvpOdeSolver> /* unused; should be empty */'
             solver2 = ''
             #solver1 = solver2 = ''
         else: #this currently outputs the boilerplate stuff
-            solver1 = 'boost::shared_ptrALPHA<AbstractIvpOdeSolver> pSolverBRAVO'
+            solver1 = 'std::shared_ptrALPHA<AbstractIvpOdeSolver> pSolverBRAVO'
             solver2 = '"' + self.class_name + '"'
 
         if self.use_lookup_tables and self.separate_lut_class:
@@ -508,7 +508,7 @@ class CellMLToNektarTranslator(translators.CellMLTranslator):
         # Constructor
         self.set_access('public')
 
-        self.output_constructor([solver1, 'boost::shared_ptr<AbstractStimulusFunction> pIntracellularStimulus'],
+        self.output_constructor([solver1, 'std::shared_ptr<AbstractStimulusFunction> pIntracellularStimulus'],
                                 [solver2, self.class_name + '::create','"Description of the model?"'])
         # Destructor
         #self.output_method_start(''+self.class_name, [], '')
@@ -2221,8 +2221,8 @@ class CellMLToNektarTranslator(translators.CellMLTranslator):
         #                      ' * t, const unsigned int fileVersion)',
         #                      indent_offset=1)
         #     self.open_block(subsidiary=True)
-        #     self.writeln_hpp('const boost::shared_ptr<AbstractIvpOdeSolver> p_solver = t->GetSolver();')
-        #     self.writeln_hpp('const boost::shared_ptr<AbstractStimulusFunction> p_stimulus = t->GetStimulusFunction();')
+        #     self.writeln_hpp('const std::shared_ptr<AbstractIvpOdeSolver> p_solver = t->GetSolver();')
+        #     self.writeln_hpp('const std::shared_ptr<AbstractStimulusFunction> p_stimulus = t->GetStimulusFunction();')
         #     self.writeln_hpp('ar << p_solver;')
         #     self.writeln_hpp('ar << p_stimulus;')
         #     self.close_block(subsidiary=True)
@@ -2233,8 +2233,8 @@ class CellMLToNektarTranslator(translators.CellMLTranslator):
         #                      ' * t, const unsigned int fileVersion)',
         #                      indent_offset=1)
         #     self.open_block(subsidiary=True)
-        #     self.writeln_hpp('boost::shared_ptr<AbstractIvpOdeSolver> p_solver;')
-        #     self.writeln_hpp('boost::shared_ptr<AbstractStimulusFunction> p_stimulus;')
+        #     self.writeln_hpp('std::shared_ptr<AbstractIvpOdeSolver> p_solver;')
+        #     self.writeln_hpp('std::shared_ptr<AbstractStimulusFunction> p_stimulus;')
         #     self.writeln_hpp('ar >> p_solver;')
         #     self.writeln_hpp('ar >> p_stimulus;')
         #     self.writeln_hpp('::new(t)', self.class_name, '(p_solver, p_stimulus);')
@@ -2246,8 +2246,8 @@ class CellMLToNektarTranslator(translators.CellMLTranslator):
         #     self.writeln('extern "C"')
         #     self.open_block()
         #     self.writeln('AbstractCardiacCellInterface* MakeCardiacCell(')
-        #     self.writeln('boost::shared_ptr<AbstractIvpOdeSolver> pSolver,', indent_offset=2)
-        #     self.writeln('boost::shared_ptr<AbstractStimulusFunction> pStimulus)', indent_offset=2)
+        #     self.writeln('std::shared_ptr<AbstractIvpOdeSolver> pSolver,', indent_offset=2)
+        #     self.writeln('std::shared_ptr<AbstractStimulusFunction> pStimulus)', indent_offset=2)
         #     self.open_block()
         #     self.writeln('return new ', self.class_name, '(pSolver, pStimulus);')
         #     self.close_block()

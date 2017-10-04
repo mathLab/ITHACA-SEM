@@ -167,14 +167,6 @@ namespace Nektar
             NekSparseDiagBlkMatrix<SparseStorageType>::operator()
                          (IndexType glob_row, IndexType glob_column) const
     {
-/*
-        ASSERTL1(row < GetRows(), std::string("Row ") + boost::lexical_cast<std::string>(glob_row) + 
-                 std::string(" requested in a matrix with a maximum of ") + boost::lexical_cast<std::string>(GetRows()) +
-                 std::string(" rows"));
-        ASSERTL1(column < GetColumns(), std::string("Column ") + boost::lexical_cast<std::string>(glob_column) + 
-                 std::string(" requested in a matrix with a maximum of ") + boost::lexical_cast<std::string>(GetColumns()) +
-                 std::string(" columns"));
-*/
         IndexType i = 0;
         static DataType defaultReturnValue = 0;
 

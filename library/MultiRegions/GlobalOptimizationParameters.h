@@ -122,7 +122,7 @@ namespace Nektar
         };
 
         /// Pointer to a GlobalOptParam object.
-        typedef  boost::shared_ptr<GlobalOptParam> GlobalOptParamSharedPtr;
+        typedef  std::shared_ptr<GlobalOptParam> GlobalOptParamSharedPtr;
         
         /// Pointer to an empty GlobalOptParam object.
         static   GlobalOptParamSharedPtr NullGlobalOptParamSharedPtr;

@@ -45,7 +45,6 @@
 #include <LibUtilities/LinearAlgebra/StorageSmvBsr.hpp>
 #include <LibUtilities/LinearAlgebra/NistSparseDescriptors.hpp>
 
-#include <boost/preprocessor/iteration/local.hpp>
 #include <boost/lexical_cast.hpp>
 
 namespace Nektar
@@ -315,7 +314,7 @@ namespace Nektar
 
 
     template<typename DataType>
-    const typename boost::call_traits<DataType>::const_reference StorageSmvBsr<DataType>::GetValue(IndexType grow, IndexType gcolumn) const
+    const DataType &StorageSmvBsr<DataType>::GetValue(IndexType grow, IndexType gcolumn) const
     {
         IndexType  brow = grow    / m_blkDim;
         IndexType  bcol = gcolumn / m_blkDim;

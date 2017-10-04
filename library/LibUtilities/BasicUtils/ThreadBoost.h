@@ -86,7 +86,7 @@ class ThreadManagerBoost: public ThreadManager
         /// Called by the factory method.
         static ThreadManagerSharedPtr Create(unsigned int numT)
         {
-            return boost::shared_ptr<ThreadManager>(
+            return std::shared_ptr<ThreadManager>(
                 new ThreadManagerBoost(numT));
         }
 

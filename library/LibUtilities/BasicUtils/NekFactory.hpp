@@ -36,16 +36,13 @@
 #ifndef NEKTAR_LIBUTILITIES_BASICUTILS_NEKFACTORY
 #define NEKTAR_LIBUTILITIES_BASICUTILS_NEKFACTORY
 
-// Primary definition and generator for specialised object factories.
-#include <boost/thread/shared_mutex.hpp>
-#include <boost/thread/locks.hpp>
-
-#include <boost/shared_ptr.hpp>
-
 #include <iostream>
 #include <map>
 #include <string>
+#include <memory>
 
+#include <boost/thread/shared_mutex.hpp>
+#include <boost/thread/locks.hpp>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 
 namespace Nektar
@@ -106,7 +103,7 @@ public:
     /// Comparison predicator of key
     typedef std::less<tKey> tPredicator;
     /// Shared pointer to an object of baseclass type.
-    typedef boost::shared_ptr<tBase> tBaseSharedPtr;
+    typedef std::shared_ptr<tBase> tBaseSharedPtr;
     /// CreatorFunction type which takes parameter and returns base class shared
     /// pointer.
     typedef tBaseSharedPtr (*CreatorFunction) (tParam...);
@@ -128,8 +125,6 @@ public:
 
     /// Factory map between key and module data.
     typedef std::map<tKey, ModuleEntry, tPredicator> TMapFactory;
-    /// Iterator for factory map
-    typedef typename TMapFactory::iterator TMapFactoryIterator;
 
 public:
     NekFactory() : m_mutex() {}
@@ -148,7 +143,7 @@ public:
         ReadLock vReadLock(m_mutex);
 
         // Now try and find the key in the map.
-        TMapFactoryIterator it = getMapFactory()->find(idKey);
+        auto it = getMapFactory()->find(idKey);
 
         // If successful, check the CreatorFunction is defined and
         // create a new instance of the class.
@@ -213,7 +208,7 @@ public:
         ReadLock vReadLock(m_mutex);
 
         // Now try and find the key in the map.
-        TMapFactoryIterator it = getMapFactory()->find(idKey);
+        auto it = getMapFactory()->find(idKey);
 
         if (it != getMapFactory()->end())
         {
@@ -231,23 +226,17 @@ public:
         ReadLock vReadLock(m_mutex);
 
         pOut << std::endl << "Available classes: " << std::endl;
-        TMapFactoryIterator it;
-        for (it = getMapFactory()->begin(); it != getMapFactory()->end(); ++it)
+        for (auto &it : *getMapFactory())
         {
-            pOut << std::endl << "Available classes: " << std::endl;
-            TMapFactoryIterator it;
-            for (it = getMapFactory()->begin(); it != getMapFactory()->end(); ++it)
+            pOut << "  " << it.first;
+            if (it.second.m_desc != "")
             {
-                pOut << "  " << it->first;
-                if (it->second.m_desc != "")
-                {
-                    pOut << ":" << std::endl << "    "
-                         << it->second.m_desc << std::endl;
-                }
-                else
-                {
-                    pOut << std::endl;
-                }
+                pOut << ":" << std::endl << "    "
+                     << it.second.m_desc << std::endl;
+            }
+            else
+            {
+                pOut << std::endl;
             }
         }
     }
@@ -260,12 +249,11 @@ public:
     {
         ReadLock vReadLock(m_mutex);
 
-        TMapFactoryIterator it;
-        for (it = getMapFactory()->begin(); it != getMapFactory()->end(); ++it)
+        for (auto &it : *getMapFactory())
         {
-            if (it->second.m_desc == pDesc)
+            if (it.second.m_desc == pDesc)
             {
-                return it->first;
+                return it.first;
             }
         }
         std::string errstr = "Module '"
@@ -283,7 +271,7 @@ public:
         ReadLock vReadLock(m_mutex);
 
         // Now try and find the key in the map.
-        TMapFactoryIterator it = getMapFactory()->find(idKey);
+        auto it = getMapFactory()->find(idKey);
 
         std::stringstream errstr;
         errstr << "No such module: " << idKey << std::endl;

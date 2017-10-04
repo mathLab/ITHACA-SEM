@@ -159,7 +159,7 @@ void InputPly::ReadPly(io::filtering_istream &mshFile, NekDouble scale)
                 z *= scale;
 
                 m_mesh->m_node.push_back(
-                    boost::shared_ptr<Node>(new Node(i, x, y, z)));
+                    std::shared_ptr<Node>(new Node(i, x, y, z)));
 
                 // Read vertex normals.
                 if (propMap.count("nx") > 0)

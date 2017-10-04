@@ -69,10 +69,8 @@ FilterReynoldsStresses::FilterReynoldsStresses(
     const std::map<std::string, std::string> &pParams)
     : FilterFieldConvert(pSession, pParams)
 {
-    ParamMap::const_iterator it;
-
     // Check if should use moving average
-    it = pParams.find("MovingAverage");
+    auto it = pParams.find("MovingAverage");
     if (it == pParams.end())
     {
         m_movAvg = false;

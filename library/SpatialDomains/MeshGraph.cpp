@@ -606,7 +606,6 @@ namespace Nektar
 
             // Find the Expansions tag
             TiXmlElement *expansionTypes = master->FirstChildElement("EXPANSIONS");
-            ASSERTL0(expansionTypes, "Unable to find EXPANSIONS tag in file.");
 
             if(expansionTypes)
             {

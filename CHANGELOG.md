@@ -38,6 +38,7 @@ v5.0.0
 - Fixed interppoints module (!760)
 - Move StreamFunction utility to a FieldConvert module (!809)
 - Enable output to multiple files (!844)
+- Allow using xml file without expansion tag in FieldConvert (!849)
 
 **Documentation**:
 - Added the developer-guide repository as a submodule (!751)

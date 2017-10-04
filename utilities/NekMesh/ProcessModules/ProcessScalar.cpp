@@ -33,7 +33,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <LibUtilities/BasicUtils/ParseUtils.hpp>
+#include <LibUtilities/BasicUtils/ParseUtils.h>
 #include <LibUtilities/Interpreter/AnalyticExpressionEvaluator.hpp>
 #include <NekMeshUtils/MeshElements/Element.h>
 
@@ -72,7 +72,7 @@ void ProcessScalar::Process()
 
     // Obtain vector of surface IDs from string.
     vector<unsigned int> surfs;
-    ParseUtils::GenerateSeqVector(surf.c_str(), surfs);
+    ParseUtils::GenerateSeqVector(surf, surfs);
     sort(surfs.begin(), surfs.end());
 
     // If we're running in verbose mode print out a list of surfaces.

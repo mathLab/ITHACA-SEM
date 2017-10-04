@@ -39,7 +39,7 @@ namespace Nektar
 {
     template<typename DataType, typename InnerMatrixType>
     NekMatrix<NekMatrix< DataType, InnerMatrixType>, ScaledMatrixTag>::NekMatrix() :
-        NekMatrix<NekMatrix< DataType, InnerMatrixType>, ScaledMatrixTag>::BaseType(0,0,m_matrix->GetStorageType()),
+        NekMatrix<NekMatrix< DataType, InnerMatrixType>, ScaledMatrixTag>::BaseType(0,0,eFULL),
         m_matrix(new typename NekMatrix<NekMatrix< DataType, InnerMatrixType>, ScaledMatrixTag>::InnerType()),
         m_scale(0)
     {
@@ -47,7 +47,7 @@ namespace Nektar
 
     template<typename DataType, typename InnerMatrixType>
     NekMatrix<NekMatrix< DataType, InnerMatrixType>, ScaledMatrixTag>::NekMatrix(typename boost::call_traits<NumberType>::const_reference scale,
-              boost::shared_ptr<const InnerType> m) :
+              std::shared_ptr<const InnerType> m) :
         NekMatrix<NekMatrix< DataType, InnerMatrixType>, ScaledMatrixTag>::BaseType(m->GetRows(), m->GetColumns(),m->GetStorageType()),
         m_matrix(m),
         m_scale(scale)
@@ -103,7 +103,7 @@ namespace Nektar
     NekMatrix<NekMatrix< DataType, InnerMatrixType>, ScaledMatrixTag>::GetRawPtr() const { return m_matrix->GetRawPtr(); }
 
     template<typename DataType, typename InnerMatrixType>
-    boost::shared_ptr<const typename NekMatrix<NekMatrix< DataType, InnerMatrixType>, ScaledMatrixTag>::InnerType>
+    std::shared_ptr<const typename NekMatrix<NekMatrix< DataType, InnerMatrixType>, ScaledMatrixTag>::InnerType>
     NekMatrix<NekMatrix< DataType, InnerMatrixType>, ScaledMatrixTag>::GetOwnedMatrix() const
     {
         return m_matrix;
@@ -131,10 +131,10 @@ namespace Nektar
     }
 
     template<typename DataType, typename InnerMatrixType>
-    boost::shared_ptr<NekMatrix<NekMatrix< DataType, InnerMatrixType>, ScaledMatrixTag> >
-    NekMatrix<NekMatrix< DataType, InnerMatrixType>, ScaledMatrixTag>::CreateWrapper(const boost::shared_ptr<NekMatrix<NekMatrix< DataType, InnerMatrixType>, ScaledMatrixTag> >& rhs)
+    std::shared_ptr<NekMatrix<NekMatrix< DataType, InnerMatrixType>, ScaledMatrixTag> >
+    NekMatrix<NekMatrix< DataType, InnerMatrixType>, ScaledMatrixTag>::CreateWrapper(const std::shared_ptr<NekMatrix<NekMatrix< DataType, InnerMatrixType>, ScaledMatrixTag> >& rhs)
     {
-        return boost::shared_ptr<ThisType>(new ThisType(*rhs));
+        return std::shared_ptr<ThisType>(new ThisType(*rhs));
     }
 
 

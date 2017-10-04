@@ -126,7 +126,7 @@ private:
     int m_checksteps;
     int NumVar_SFD;
 
-    Timer     timer;
+    LibUtilities::Timer     timer;
     NekDouble cpuTime;
     NekDouble totalTime;
     NekDouble elapsed;

@@ -34,7 +34,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <Metric.h>
-#include <loki/Singleton.h>
 #include <boost/algorithm/string.hpp>
 
 using namespace std;
@@ -43,10 +42,8 @@ namespace Nektar
 {
     MetricFactory& GetMetricFactory()
     {
-        typedef Loki::SingletonHolder<MetricFactory,
-                                      Loki::CreateUsingNew,
-                                      Loki::NoDestroy > Type;
-        return Type::Instance();
+        static MetricFactory instance;
+        return instance;
     }
     
     /**

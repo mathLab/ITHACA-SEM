@@ -68,11 +68,11 @@ namespace Nektar
             Expansion     (geom),
             Expansion3D   (geom),
             m_matrixManager(
-                    boost::bind(&HexExp::CreateMatrix, this, _1),
-                    std::string("HexExpMatrix")),
+                std::bind(&HexExp::CreateMatrix, this, std::placeholders::_1),
+                std::string("HexExpMatrix")),
             m_staticCondMatrixManager(
-                    boost::bind(&HexExp::CreateStaticCondMatrix, this, _1),
-                    std::string("HexExpStaticCondMatrix"))
+                std::bind(&HexExp::CreateStaticCondMatrix, this, std::placeholders::_1),
+                std::string("HexExpStaticCondMatrix"))
         {
         }
 

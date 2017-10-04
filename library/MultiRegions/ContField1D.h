@@ -64,7 +64,9 @@ namespace Nektar
             MULTI_REGIONS_EXPORT ContField1D(
                         const LibUtilities::SessionReaderSharedPtr &pSession,
                         const SpatialDomains::MeshGraphSharedPtr &graph1D,
-                        const std::string &variable  = "DefaultVar");
+                        const std::string &variable  = "DefaultVar",
+                        const Collections::ImplementationType ImpType
+                                  = Collections::eNoImpType);
 
             /// Copy constructor.
             MULTI_REGIONS_EXPORT ContField1D(const ContField1D &In);
@@ -233,7 +235,7 @@ namespace Nektar
             virtual void v_ClearGlobalLinSysManager(void);
 
         };
-        typedef boost::shared_ptr<ContField1D>      ContField1DSharedPtr;
+        typedef std::shared_ptr<ContField1D>      ContField1DSharedPtr;
 
         // Inline implementations follow
 

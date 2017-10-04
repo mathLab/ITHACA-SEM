@@ -109,7 +109,7 @@ namespace Nektar
             STD_REGIONS_EXPORT const NormalVector & v_GetVertexNormal(const int vertex) const;
         };
 
-        typedef boost::shared_ptr<StdExpansion1D> StdExpansion1DSharedPtr;
+        typedef std::shared_ptr<StdExpansion1D> StdExpansion1DSharedPtr;
 
     } //end of namespace
 } //end of namespace

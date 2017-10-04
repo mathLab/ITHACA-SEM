@@ -36,7 +36,7 @@
 #ifndef NEKTAR_MESHUTILS_EXTLIBINTERFACE_TRIANGLEINTERFACE_H
 #define NEKTAR_MESHUTILS_EXTLIBINTERFACE_TRIANGLEINTERFACE_H
 
-#include <boost/shared_ptr.hpp>
+#include <memory>
 
 #include <NekMeshUtils/MeshElements/Node.h>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
@@ -113,7 +113,7 @@ private:
     DelaunayTriangle dt;
 };
 
-typedef boost::shared_ptr<TriangleInterface> TriangleInterfaceSharedPtr;
+typedef std::shared_ptr<TriangleInterface> TriangleInterfaceSharedPtr;
 }
 }
 

@@ -20,7 +20,7 @@ int main(int argc, char *argv[])
     NekDouble  lambda;
     vector<string> vFilenames;
     //defining timing variables
-    Timer timer;
+    LibUtilities::Timer timer;
     NekDouble exeTime, fullTime, ppTime = 0.0;
 
     if(argc < 6)//< is added to be able to submit "verbose" option
@@ -427,12 +427,7 @@ int main(int argc, char *argv[])
 std::string PortablePath(const boost::filesystem::path& path)
 {
     boost::filesystem::path temp = path;
-#if BOOST_VERSION > 104200
     temp.make_preferred();
     return temp.string();
-#else
-    return temp.file_string();
-#endif
-
 }
 

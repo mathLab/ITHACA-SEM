@@ -34,17 +34,15 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include <boost/asio/ip/host_name.hpp>
-#include <boost/date_time/posix_time/posix_time.hpp>
-#include <boost/date_time/posix_time/posix_time_io.hpp>
-#include <boost/make_shared.hpp>
 #include <boost/format.hpp>
 
 #include <LibUtilities/BasicConst/GitRevision.h>
 #include <LibUtilities/BasicUtils/FieldIO.h>
 #include <LibUtilities/BasicUtils/FileSystem.h>
 
-#include <loki/Singleton.h>
-
+#include <chrono>
+#include <ctime>
+#include <iomanip>
 #include <fstream>
 #include <set>
 
@@ -57,7 +55,6 @@
 #endif
 
 namespace berrc = boost::system::errc;
-namespace ptime = boost::posix_time;
 namespace ip    = boost::asio::ip;
 
 namespace Nektar
@@ -73,10 +70,8 @@ std::string fldCmdFormat = SessionReader::RegisterCmdLineArgument(
  */
 FieldIOFactory &GetFieldIOFactory()
 {
-    typedef Loki::
-        SingletonHolder<FieldIOFactory, Loki::CreateUsingNew, Loki::NoDestroy,
-                        Loki::ClassLevelLockable> Type;
-    return Type::Instance();
+    static FieldIOFactory instance;
+    return instance;
 }
 
 /// Enumerator for auto-detection of FieldIO types.
@@ -102,10 +97,10 @@ const std::string FieldIO::GetFileType(const std::string &filename,
                                        CommSharedPtr comm)
 {
     FieldIOType ioType = eXML;
-    int size = comm->GetSize();
-    int rank = comm->GetRank();
+    int size  = comm->GetSize();
+    bool root = comm->TreatAsRankZero();
 
-    if (size == 1 || rank == 0)
+    if (size == 1 || root)
     {
         std::string datafilename;
 
@@ -340,11 +335,12 @@ void FieldIO::AddInfoTag(TagWriterSharedPtr root,
     ProvenanceMap["NektarVersion"] = string(NEKTAR_VERSION);
 
     // Date/time stamp
-    ptime::time_facet *facet = new ptime::time_facet("%d-%b-%Y %H:%M:%S");
-    std::stringstream wss;
-    wss.imbue(locale(wss.getloc(), facet));
-    wss << ptime::second_clock::local_time();
-    ProvenanceMap["Timestamp"] = wss.str();
+    auto now = std::chrono::system_clock::now();
+    auto now_t = std::chrono::system_clock::to_time_t(now);
+    auto now_tm = *std::localtime(&now_t);
+    char buffer[128];
+    strftime(buffer, sizeof(buffer), "%d-%b-%Y %H:%M:%S", &now_tm);
+    ProvenanceMap["Timestamp"] = buffer;
 
     // Hostname
     boost::system::error_code ec;
@@ -360,24 +356,19 @@ void FieldIO::AddInfoTag(TagWriterSharedPtr root,
 
     TagWriterSharedPtr infoTag = root->AddChild("Metadata");
 
-    FieldMetaDataMap::const_iterator infoit;
-
     TagWriterSharedPtr provTag = infoTag->AddChild("Provenance");
-    for (infoit = ProvenanceMap.begin(); infoit != ProvenanceMap.end();
-         ++infoit)
+    for (auto &infoit : ProvenanceMap)
     {
-        provTag->SetAttr(infoit->first, infoit->second);
+        provTag->SetAttr(infoit.first, infoit.second);
     }
 
     //---------------------------------------------
     // write field info section
     if (fieldmetadatamap != NullFieldMetaDataMap)
     {
-        for (infoit = fieldmetadatamap.begin();
-             infoit != fieldmetadatamap.end();
-             ++infoit)
+        for (auto &infoit : fieldmetadatamap)
         {
-            infoTag->SetAttr(infoit->first, infoit->second);
+            infoTag->SetAttr(infoit.first, infoit.second);
         }
     }
 }
@@ -402,14 +393,14 @@ std::string FieldIO::SetUpOutput(const std::string outname, bool perRank, bool b
     ASSERTL0(!outname.empty(), "Empty path given to SetUpOutput()");
 
     int nprocs = m_comm->GetSize();
-    int rank   = m_comm->GetRank();
+    bool root  = m_comm->TreatAsRankZero();
 
     // Path to output: will be directory if parallel, normal file if
     // serial.
     fs::path specPath(outname), fulloutname;
 
     // in case we are rank 0 or not on a shared filesystem, check if the specPath already exists
-    if (backup && (rank == 0 || !m_sharedFilesystem) && fs::exists(specPath))
+    if (backup && (root || !m_sharedFilesystem) && fs::exists(specPath))
     {
         // rename. foo/bar_123.chk -> foo/bar_123.bak0.chk and in case
         // foo/bar_123.bak0.chk already exists, foo/bar_123.chk -> foo/bar_123.bak1.chk
@@ -476,7 +467,7 @@ std::string FieldIO::SetUpOutput(const std::string outname, bool perRank, bool b
         m_comm->Block();
 
         // Now get rank 0 processor to tidy everything else up.
-        if (rank == 0 || !m_sharedFilesystem)
+        if (root || !m_sharedFilesystem)
         {
             try
             {
@@ -492,7 +483,7 @@ std::string FieldIO::SetUpOutput(const std::string outname, bool perRank, bool b
         m_comm->Block();
     }
 
-    if (rank == 0)
+    if (root)
     {
         cout << "Writing: " << specPath;
     }
@@ -508,7 +499,7 @@ std::string FieldIO::SetUpOutput(const std::string outname, bool perRank, bool b
     {
         try
         {
-            if (rank == 0 || !m_sharedFilesystem)
+            if (root || !m_sharedFilesystem)
             {
                 fs::create_directory(specPath);
             }

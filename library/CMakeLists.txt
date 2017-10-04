@@ -1,31 +1,28 @@
-SET(LibrarySubDirs FieldUtils GlobalMapping LibUtilities LocalRegions
-    Collections MultiRegions SpatialDomains StdRegions)
-SET(UnitTestSubDirs UnitTests)
-SET(DemoSubDirs     Demos)
-SET(TimingsSubDirs  Timings)
-SET(SolverUtilsSubDirs SolverUtils)
-SET(NekMeshUtilsSubDirs NekMeshUtils)
-
-SUBDIRS(${LibrarySubDirs})
-
+# Main library sub-directories, required by all of Nektar++.
+SUBDIRS(GlobalMapping LibUtilities LocalRegions Collections MultiRegions 
+        SpatialDomains StdRegions)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/library)
 
-IF( NEKTAR_BUILD_UNIT_TESTS )
-    SUBDIRS(${UnitTestSubDirs})
-ENDIF( NEKTAR_BUILD_UNIT_TESTS )
+IF (NEKTAR_BUILD_UNIT_TESTS)
+    SUBDIRS(UnitTests)
+ENDIF()
 
-IF( NEKTAR_BUILD_DEMOS )
-    SUBDIRS(${DemoSubDirs})
-ENDIF( NEKTAR_BUILD_DEMOS )
+IF (NEKTAR_BUILD_DEMOS)
+    SUBDIRS(Demos)
+ENDIF()
 
-IF( NEKTAR_BUILD_TIMINGS )
-    SUBDIRS(${TimingsSubDirs})
-ENDIF( NEKTAR_BUILD_TIMINGS )
+IF (NEKTAR_BUILD_TIMINGS)
+    SUBDIRS(Timings)
+ENDIF()
 
-IF( NEKTAR_BUILD_SOLVERS )
-    SUBDIRS(${SolverUtilsSubDirs})
-ENDIF( NEKTAR_BUILD_SOLVERS )
+IF (NEKTAR_BUILD_SOLVERS)
+    SUBDIRS(SolverUtils)
+ENDIF()
 
-IF( NEKTAR_BUILD_UTILITIES )
-    SUBDIRS(${NekMeshUtilsSubDirs})
-ENDIF( NEKTAR_BUILD_UTILITIES )
+IF (NEKTAR_UTILITY_NEKMESH)
+    SUBDIRS(NekMeshUtils)
+ENDIF()
+
+IF (NEKTAR_UTILITY_FIELDCONVERT OR NEKTAR_UTILITY_NEKMESH OR NEKTAR_BUILD_SOLVERS)
+    SUBDIRS(FieldUtils)
+ENDIF()

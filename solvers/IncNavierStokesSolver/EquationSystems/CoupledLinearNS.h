@@ -41,7 +41,6 @@
 #include <MultiRegions/GlobalLinSys.h>
 #include <MultiRegions/ExpList3DHomogeneous1D.h>
 #include <MultiRegions/ExpList2D.h>
-#include <boost/shared_ptr.hpp>
 #include <LibUtilities/LinearAlgebra/NekTypeDefs.hpp>
 //#include <MultiRegions/GlobalLinSysDirectStaticCond.h>
 
@@ -223,9 +222,3 @@ namespace Nektar
 } //end of namespace
 
 #endif //COUPLEDSTOKESSCHEME_H
-
-/**
- * $Log:$
- *
- **/
-

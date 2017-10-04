@@ -63,7 +63,6 @@ void TriangleInterface::Mesh(bool Quality)
     dt.in.numberofpoints          = numPoints;
     dt.in.numberofpointattributes = 0;
     dt.in.pointlist               = new double[dt.in.numberofpoints * 2];
-    dt.in.pointmarkerlist         = new int [dt.in.numberofpoints];
 
     int pointc = 0;
 

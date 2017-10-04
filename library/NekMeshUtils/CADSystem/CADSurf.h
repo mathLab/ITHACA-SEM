@@ -46,7 +46,7 @@ namespace NekMeshUtils
 {
 
 class CADCurve;
-typedef boost::shared_ptr<CADCurve> CADCurveSharedPtr;
+typedef std::shared_ptr<CADCurve> CADCurveSharedPtr;
 
 /**
  * @brief base class for a cad surface
@@ -66,7 +66,7 @@ public:
         m_orientation = CADOrientation::eForwards;
     }
 
-    ~CADSurf()
+    virtual ~CADSurf()
     {
     }
 
@@ -169,7 +169,7 @@ protected:
     virtual void Test(Array<OneD, NekDouble> uv) = 0;
 };
 
-typedef boost::shared_ptr<CADSurf> CADSurfSharedPtr;
+typedef std::shared_ptr<CADSurf> CADSurfSharedPtr;
 
 typedef LibUtilities::NekFactory<std::string, CADSurf> CADSurfFactory;
 

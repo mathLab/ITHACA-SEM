@@ -36,12 +36,11 @@
 #ifndef NEKTAR_SPATIALDOMAINS_POINTGEOM_H
 #define NEKTAR_SPATIALDOMAINS_POINTGEOM_H
 
-
 #include <StdRegions/StdRegions.hpp>
 #include <SpatialDomains/Geometry0D.h>
 #include <SpatialDomains/MeshComponents.h>
 #include <SpatialDomains/SpatialDomainsDeclspec.h>
-#include <boost/enable_shared_from_this.hpp>
+#include <memory>
 
 namespace Nektar
 {
@@ -51,14 +50,13 @@ namespace Nektar
         class SegGeom;
 
         // shorthand for boost pointer
-        typedef boost::shared_ptr<PointGeom> PointGeomSharedPtr;
+        typedef std::shared_ptr<PointGeom> PointGeomSharedPtr;
         typedef std::vector< PointGeomSharedPtr > PointGeomVector;
-        typedef std::vector< PointGeomSharedPtr >::iterator PointGeomVectorIter;
         typedef std::map<int, PointGeomSharedPtr> PointGeomMap;
         typedef std::set< PointGeomSharedPtr >  PointGeomSet;
 
         class PointGeom: public Geometry0D, public NekPoint<NekDouble>,
-                         public boost::enable_shared_from_this<PointGeom>
+                         public std::enable_shared_from_this<PointGeom>
         {
             public:
                 SPATIAL_DOMAINS_EXPORT PointGeom();

@@ -36,7 +36,7 @@
 #ifndef FIELDUTILS_PROCESSSCALGRAD
 #define FIELDUTILS_PROCESSSCALGRAD
 
-#include "../Module.h"
+#include "ProcessBoundaryExtract.h"
 
 namespace Nektar
 {
@@ -47,11 +47,11 @@ namespace FieldUtils
  * @brief This processing module calculates the scalar gradient field and
  * writes it to a surface output file.
  */
-class ProcessScalGrad : public ProcessModule
+class ProcessScalGrad : public ProcessBoundaryExtract
 {
 public:
     /// Creates an instance of this class
-    static boost::shared_ptr<Module> create(FieldSharedPtr f)
+    static std::shared_ptr<Module> create(FieldSharedPtr f)
     {
         return MemoryManager<ProcessScalGrad>::AllocateSharedPtr(f);
     }
@@ -67,6 +67,12 @@ public:
     {
         return "ProcessScalGrad";
     }
+
+    virtual std::string GetModuleDescription()
+    {
+        return "Calculating scalar gradient";
+    }
+
 };
 }
 }

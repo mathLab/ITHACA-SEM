@@ -65,7 +65,7 @@ public:
 private:
 };
 
-typedef boost::shared_ptr<InputPly> InputPlySharedPtr;
+typedef std::shared_ptr<InputPly> InputPlySharedPtr;
 }
 }
 

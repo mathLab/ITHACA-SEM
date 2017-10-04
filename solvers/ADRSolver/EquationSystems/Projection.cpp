@@ -51,7 +51,7 @@ void Projection::v_InitObject()
 {
     EquationSystem::v_InitObject();
 
-    EvaluateFunction(m_session->GetVariables(), m_fields, "Forcing");
+    GetFunction("Forcing")->Evaluate(m_session->GetVariables(), m_fields);
 }
 
 Projection::~Projection()

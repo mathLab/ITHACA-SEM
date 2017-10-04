@@ -34,15 +34,13 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-
-#ifndef NEKATAR_LIB_UTILITES_THREAD_SPECIFIC_POOL_HPP
-#define NEKATAR_LIB_UTILITES_THREAD_SPECIFIC_POOL_HPP
+#ifndef NEKTAR_LIB_UTILITES_THREAD_SPECIFIC_POOL_HPP
+#define NEKTAR_LIB_UTILITES_THREAD_SPECIFIC_POOL_HPP
 
 #include <boost/thread/tss.hpp>
 #include <boost/pool/pool.hpp>
 #include <boost/thread/mutex.hpp>
-
-#include <loki/Singleton.h>
+#include <memory>
 #include <map>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/LibUtilitiesDeclspec.h>
@@ -142,7 +140,7 @@ namespace Nektar
     class MemPool
     {
         public:
-            typedef std::map<size_t, boost::shared_ptr<detail::ThreadSpecificPool> > PoolMapType;
+            typedef std::map<size_t, std::shared_ptr<detail::ThreadSpecificPool> > PoolMapType;
             
         public:
             MemPool() :
@@ -156,14 +154,14 @@ namespace Nektar
                 // bytes, then a request for 10 bytes will return a 32 byte chunk of memory from the 32 byte pool.
                 
                 typedef PoolMapType::value_type PairType;
-                m_pools.insert(PairType(8, boost::shared_ptr<detail::ThreadSpecificPool>(new detail::ThreadSpecificPool(8))));
-                m_pools.insert(PairType(16, boost::shared_ptr<detail::ThreadSpecificPool>(new detail::ThreadSpecificPool(16))));
-                m_pools.insert(PairType(32, boost::shared_ptr<detail::ThreadSpecificPool>(new detail::ThreadSpecificPool(32))));
-                m_pools.insert(PairType(64, boost::shared_ptr<detail::ThreadSpecificPool>(new detail::ThreadSpecificPool(64))));
-                m_pools.insert(PairType(128, boost::shared_ptr<detail::ThreadSpecificPool>(new detail::ThreadSpecificPool(128))));
-                m_pools.insert(PairType(256, boost::shared_ptr<detail::ThreadSpecificPool>(new detail::ThreadSpecificPool(256))));
-                m_pools.insert(PairType(512, boost::shared_ptr<detail::ThreadSpecificPool>(new detail::ThreadSpecificPool(512))));
-                m_pools.insert(PairType(1024, boost::shared_ptr<detail::ThreadSpecificPool>(new detail::ThreadSpecificPool(1024))));
+                m_pools.insert(PairType(8, std::shared_ptr<detail::ThreadSpecificPool>(new detail::ThreadSpecificPool(8))));
+                m_pools.insert(PairType(16, std::shared_ptr<detail::ThreadSpecificPool>(new detail::ThreadSpecificPool(16))));
+                m_pools.insert(PairType(32, std::shared_ptr<detail::ThreadSpecificPool>(new detail::ThreadSpecificPool(32))));
+                m_pools.insert(PairType(64, std::shared_ptr<detail::ThreadSpecificPool>(new detail::ThreadSpecificPool(64))));
+                m_pools.insert(PairType(128, std::shared_ptr<detail::ThreadSpecificPool>(new detail::ThreadSpecificPool(128))));
+                m_pools.insert(PairType(256, std::shared_ptr<detail::ThreadSpecificPool>(new detail::ThreadSpecificPool(256))));
+                m_pools.insert(PairType(512, std::shared_ptr<detail::ThreadSpecificPool>(new detail::ThreadSpecificPool(512))));
+                m_pools.insert(PairType(1024, std::shared_ptr<detail::ThreadSpecificPool>(new detail::ThreadSpecificPool(1024))));
             }
             
             ~MemPool()
@@ -226,7 +224,7 @@ namespace Nektar
             
         private:
             detail::ThreadSpecificPool m_fourBytePool;
-            std::map<size_t, boost::shared_ptr<detail::ThreadSpecificPool> > m_pools;
+            std::map<size_t, std::shared_ptr<detail::ThreadSpecificPool> > m_pools;
             size_t m_upperBound;
     };
 

@@ -50,13 +50,9 @@ ModuleKey ProcessSurfDistance::className =
         ProcessSurfDistance::create,
         "Computes height of element connected to a surface.");
 
-ProcessSurfDistance::ProcessSurfDistance(FieldSharedPtr f) : ProcessModule(f)
+ProcessSurfDistance::ProcessSurfDistance(FieldSharedPtr f)
+    : ProcessBoundaryExtract(f)
 {
-    m_config["bnd"] =
-        ConfigOption(false, "-1", "Boundary region to calculate height");
-    f->m_writeBndFld                 = true;
-    f->m_declareExpansionAsContField = true;
-    m_f->m_fldToBnd                  = false;
 }
 
 ProcessSurfDistance::~ProcessSurfDistance()
@@ -65,14 +61,9 @@ ProcessSurfDistance::~ProcessSurfDistance()
 
 void ProcessSurfDistance::Process(po::variables_map &vm)
 {
-    if (m_f->m_verbose)
-    {
-        if (m_f->m_comm->TreatAsRankZero())
-        {
-            cout << "ProcessSurfDistance: Calculating distance to surface..."
-                 << endl;
-        }
-    }
+    ProcessBoundaryExtract::Process(vm);
+    ASSERTL0( !boost::iequals(m_config["bnd"].as<string>(), "All"),
+        "ProcessSurfDistance needs bnd parameter with a single id.");
 
     int i, j, k, cnt;
     int surf   = m_config["bnd"].as<int>();
@@ -80,33 +71,38 @@ void ProcessSurfDistance::Process(po::variables_map &vm)
 
     ASSERTL0(surf >= 0, "Invalid surface " + boost::lexical_cast<string>(surf));
 
-    // Add this boundary region to the list that we will output.
-    m_f->m_bndRegionsToWrite.push_back(surf);
+    int nfields           = m_f->m_variables.size();
+    m_f->m_variables.push_back("dist");
 
-    // Remove existing fields.
-    m_f->m_exp.resize(1);
-
-    // Grab boundary expansions.
-    Array<OneD, MultiRegions::ExpListSharedPtr> BndExp =
-        m_f->m_exp[0]->GetBndCondExpansions();
-
-    // Get map that takes us from boundary element to element.
-    Array<OneD, int> BoundarytoElmtID, BoundarytoTraceID;
-    m_f->m_exp[0]->GetBoundaryToElmtMap(BoundarytoElmtID, BoundarytoTraceID);
-
-    if (m_f->m_fielddef.size() == 0)
+    if (m_f->m_exp[0]->GetNumElmts() == 0)
     {
-        m_f->m_fielddef = m_f->m_exp[0]->GetFieldDefinitions();
-        m_f->m_fielddef[0]->m_fields.push_back("dist");
+        return;
+    }
+
+    int NumHomogeneousDir = m_f->m_numHomogeneousDir;
+    MultiRegions::ExpListSharedPtr exp;
+    if (nfields)
+    {
+        m_f->m_exp.resize(nfields + 1);
+        exp = m_f->AppendExpList(NumHomogeneousDir);
+
+        m_f->m_exp[nfields] = exp;
     }
     else
     {
-        // Override field variable
-        m_f->m_fielddef[0]->m_fields[0] = "dist";
+        exp = m_f->m_exp[0];
     }
 
-    ASSERTL0(!(m_f->m_fielddef[0]->m_numHomogeneousDir),
-             "Homogeneous expansions not supported");
+    // Grab boundary expansions.
+    Array<OneD, MultiRegions::ExpListSharedPtr> BndExp =
+        exp->GetBndCondExpansions();
+
+    // Get map that takes us from boundary element to element.
+    Array<OneD, int> BoundarytoElmtID, BoundarytoTraceID;
+    exp->GetBoundaryToElmtMap(BoundarytoElmtID, BoundarytoTraceID);
+
+    ASSERTL0(!(m_f->m_numHomogeneousDir),
+            "Homogeneous expansions not supported");
 
     for (i = cnt = 0; i < BndExp.num_elements(); ++i)
     {
@@ -125,7 +121,7 @@ void ProcessSurfDistance::Process(po::variables_map &vm)
             // Get boundary and element expansions.
             LocalRegions::ExpansionSharedPtr bndElmt = BndExp[i]->GetExp(j);
             LocalRegions::ExpansionSharedPtr elmt =
-                m_f->m_exp[0]->GetExp(elmtNum);
+                exp->GetExp(elmtNum);
 
             // Determine which face is opposite to the surface
             switch (elmt->DetShapeType())
@@ -239,7 +235,8 @@ void ProcessSurfDistance::Process(po::variables_map &vm)
             Vmath::Vsqrt(nqBnd, dist, 1, dist, 1);
         }
 
-        BndExp[i]->FwdTrans(BndExp[i]->GetPhys(), BndExp[i]->UpdateCoeffs());
+        BndExp[i]->FwdTrans_IterPerExp(BndExp[i]->GetPhys(),
+                                       BndExp[i]->UpdateCoeffs());
     }
 }
 }

@@ -64,8 +64,8 @@ namespace Nektar
          */
         GlobalLinSysPETSc::GlobalLinSysPETSc(
             const GlobalLinSysKey                &pKey,
-            const boost::weak_ptr<ExpList>       &pExp,
-            const boost::shared_ptr<AssemblyMap> &pLocToGloMap)
+            const std::weak_ptr<ExpList>         &pExp,
+            const std::shared_ptr<AssemblyMap>   &pLocToGloMap)
             : GlobalLinSys(pKey, pExp, pLocToGloMap)
         {
             // Determine whether to use standard sparse matrix approach or
@@ -87,7 +87,7 @@ namespace Nektar
                 if (commType.find("MPI") != std::string::npos)
                 {
                     LibUtilities::CommMpiSharedPtr comm =
-                        boost::static_pointer_cast<LibUtilities::CommMpi>(
+                        std::static_pointer_cast<LibUtilities::CommMpi>(
                             m_expList.lock()->GetSession()->GetComm());
                     PETSC_COMM_WORLD = comm->GetComm();
                 }

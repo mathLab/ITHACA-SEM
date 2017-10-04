@@ -34,7 +34,6 @@
 
 #include <LibUtilities/LibUtilitiesDeclspec.h>
 #include <string>
-#include <boost/version.hpp>
 #include <boost/filesystem.hpp>
 
 namespace fs = boost::filesystem;

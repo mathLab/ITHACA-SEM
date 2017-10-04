@@ -59,13 +59,13 @@ namespace Nektar
         class MultiLevelBisectedGraph;
         class PatchMap;
 
-        typedef boost::shared_ptr<BottomUpSubStructuredGraph> 
+        typedef std::shared_ptr<BottomUpSubStructuredGraph> 
             BottomUpSubStructuredGraphSharedPtr;
-        typedef boost::shared_ptr<SubGraph>
+        typedef std::shared_ptr<SubGraph>
             SubGraphSharedPtr;
-        typedef boost::shared_ptr<MultiLevelBisectedGraph>
+        typedef std::shared_ptr<MultiLevelBisectedGraph>
             MultiLevelBisectedGraphSharedPtr;
-        typedef boost::shared_ptr<PatchMap>
+        typedef std::shared_ptr<PatchMap>
             PatchMapSharedPtr;
 
         class PatchMap

@@ -37,7 +37,7 @@
 
 #include <NekMeshUtils/2DGenerator/2DGenerator.h>
 
-#include <LibUtilities/BasicUtils/ParseUtils.hpp>
+#include <LibUtilities/BasicUtils/ParseUtils.h>
 #include <LibUtilities/BasicUtils/Progressbar.hpp>
 
 #include <boost/algorithm/string.hpp>
@@ -72,6 +72,10 @@ Generator2D::~Generator2D()
 
 void Generator2D::Process()
 {
+    // Check that cad is 2D
+    Array<OneD, NekDouble> bndBox = m_mesh->m_cad->GetBoundingBox();
+    ASSERTL0(fabs(bndBox[5] - bndBox[4]) < 1.0e-7, "CAD isn't 2D");
+    
     if (m_mesh->m_verbose)
     {
         cout << endl << "2D meshing" << endl;
@@ -80,8 +84,14 @@ void Generator2D::Process()
     m_mesh->m_numNodes = m_mesh->m_cad->GetNumVerts();
     m_thickness_ID =
         m_thickness.DefineFunction("x y z", m_config["blthick"].as<string>());
-    ParseUtils::GenerateSeqVector(m_config["blcurves"].as<string>().c_str(),
+    ParseUtils::GenerateSeqVector(m_config["blcurves"].as<string>(),
                                   m_blCurves);
+
+    // find the ends of the BL curves
+    if (m_config["blcurves"].beenSet)
+    {
+        FindBLEnds();
+    }
 
     // linear mesh all curves
     for (int i = 1; i <= m_mesh->m_cad->GetNumCurve(); i++)
@@ -97,6 +107,34 @@ void Generator2D::Process()
         {
             m_curvemeshes[i] =
                 MemoryManager<CurveMesh>::AllocateSharedPtr(i, m_mesh);
+
+            // Fheck if this curve is at an end of the BL
+            // If so, define an offset for the second node, corresponding to the
+            // BL thickness
+            if (m_blends.count(i))
+            {
+                vector<CADVertSharedPtr> vertices =
+                    m_mesh->m_cad->GetCurve(i)->GetVertex();
+                Array<OneD, NekDouble> loc;
+                NekDouble t;
+
+                // offset needed at first node (or both)
+                if (m_blends[i] == 0 || m_blends[i] == 2)
+                {
+                    loc = vertices[0]->GetLoc();
+                    t   = m_thickness.Evaluate(m_thickness_ID, loc[0], loc[1],
+                                             loc[2], 0.0);
+                    m_curvemeshes[i]->SetOffset(0, t);
+                }
+                // offset needed at second node (or both)
+                if (m_blends[i] == 1 || m_blends[i] == 2)
+                {
+                    loc = vertices[1]->GetLoc();
+                    t   = m_thickness.Evaluate(m_thickness_ID, loc[0], loc[1],
+                                             loc[2], 0.0);
+                    m_curvemeshes[i]->SetOffset(1, t);
+                }
+            }
         }
         else
         {
@@ -124,6 +162,30 @@ void Generator2D::Process()
         for (int i = 1; i <= m_mesh->m_cad->GetNumSurf(); i++)
         {
             MakeBL(i);
+        }
+
+        // If the BL doesn't form closed loops, we need to remove the outside
+        // nodes from the curve meshes
+        for (map<unsigned, unsigned>::iterator ic = m_blends.begin();
+             ic != m_blends.end(); ++ic)
+        {
+            vector<NodeSharedPtr> nodes =
+                m_curvemeshes[ic->first]->GetMeshPoints();
+
+            if (ic->second == 0 || ic->second == 2)
+            {
+                nodes.erase(nodes.begin());
+            }
+            if (ic->second == 1 || ic->second == 2)
+            {
+                nodes.erase(nodes.end() - 1);
+            }
+
+            // Rebuild the curvemesh without the first node, the last node or
+            // both
+            m_curvemeshes[ic->first] =
+                MemoryManager<CurveMesh>::AllocateSharedPtr(ic->first, m_mesh,
+                                                            nodes);
         }
     }
 
@@ -175,6 +237,67 @@ void Generator2D::Process()
     Report();
 }
 
+void Generator2D::FindBLEnds()
+{
+    // Set of CAD vertices
+    // Vertices of each curve are added to the set if not found and removed from
+    // the set if found
+    // This leaves us with a set of vertices that are at the end of BL open
+    // loops
+    set<CADVertSharedPtr> cadverts;
+
+    for (int it = 0; it < m_blCurves.size(); ++it)
+    {
+        vector<CADVertSharedPtr> vertices =
+            m_mesh->m_cad->GetCurve(m_blCurves[it])->GetVertex();
+
+        for (int iv = 0; iv < vertices.size(); ++iv)
+        {
+            set<CADVertSharedPtr>::iterator is = cadverts.find(vertices[iv]);
+
+            if (is != cadverts.end())
+            {
+                cadverts.erase(is);
+            }
+            else
+            {
+                cadverts.insert(vertices[iv]);
+            }
+        }
+    }
+
+    // Build m_blends based on the previously constructed set of vertices
+    // m_blends is a map of curve number (the curves right outside the BL open
+    // loops) to the offset node number: 0, 1 or 2 (for both)
+    for (int i = 1; i <= m_mesh->m_cad->GetNumCurve(); ++i)
+    {
+        if (find(m_blCurves.begin(), m_blCurves.end(), i) != m_blCurves.end())
+        {
+            continue;
+        }
+
+        vector<CADVertSharedPtr> vertices =
+            m_mesh->m_cad->GetCurve(i)->GetVertex();
+
+        for (int j = 0; j < 2; ++j)
+        {
+            if (!cadverts.count(vertices[j]))
+            {
+                continue;
+            }
+
+            if (m_blends.count(i))
+            {
+                m_blends[i] = 2;
+            }
+            else
+            {
+                m_blends[i] = j;
+            }
+        }
+    }
+}
+
 void Generator2D::MakeBLPrep()
 {
     if (m_mesh->m_verbose)
@@ -184,10 +307,10 @@ void Generator2D::MakeBLPrep()
 
     // identify the nodes which will become the boundary layer.
 
-    for (vector<unsigned>::iterator it = m_blCurves.begin();
-         it != m_blCurves.end(); ++it)
+    for (int it = 0; it < m_blCurves.size(); ++it)
     {
-        vector<EdgeSharedPtr> localedges = m_curvemeshes[*it]->GetMeshEdges();
+        vector<EdgeSharedPtr> localedges =
+            m_curvemeshes[m_blCurves[it]]->GetMeshEdges();
         for (int i = 0; i < localedges.size(); i++)
         {
             m_nodesToEdge[localedges[i]->m_n1].push_back(localedges[i]);
@@ -200,12 +323,12 @@ void Generator2D::MakeBL(int faceid)
 {
     map<int, Array<OneD, NekDouble> > edgeNormals;
     int eid = 0;
-    for (vector<unsigned>::iterator it = m_blCurves.begin();
-         it != m_blCurves.end(); ++it)
+    for (int it = 0; it < m_blCurves.size(); ++it)
     {
         CADOrientation::Orientation edgeo =
-            m_mesh->m_cad->GetCurve(*it)->GetOrienationWRT(faceid);
-        vector<EdgeSharedPtr> es = m_curvemeshes[*it]->GetMeshEdges();
+            m_mesh->m_cad->GetCurve(m_blCurves[it])->GetOrienationWRT(faceid);
+        vector<EdgeSharedPtr> es =
+            m_curvemeshes[m_blCurves[it]]->GetMeshEdges();
         // on each !!!EDGE!!! calculate a normal
         // always to the left unless edgeo is 1
         // normal must be done in the parametric space (and then projected back)
@@ -255,9 +378,32 @@ void Generator2D::MakeBL(int faceid)
     map<NodeSharedPtr, vector<EdgeSharedPtr> >::iterator it;
     for (it = m_nodesToEdge.begin(); it != m_nodesToEdge.end(); it++)
     {
+        ASSERTL0(it->second.size() == 1 || it->second.size() == 2,
+                 "weirdness, most likely bl_surfs are incorrect");
+
+        // If node at the end of the BL open loop, the "normal node" isn't
+        // constructed by computing a normal but found on the adjacent curve
+        if (it->second.size() == 1)
+        {
+            vector<pair<int, CADCurveSharedPtr> > curves =
+                it->first->GetCADCurves();
+
+            vector<EdgeSharedPtr> edges =
+                m_curvemeshes[curves[0].first]->GetMeshEdges();
+            vector<EdgeSharedPtr>::iterator ie =
+                find(edges.begin(), edges.end(), it->second[0]);
+            int rightCurve =
+                (ie == edges.end()) ? curves[0].first : curves[1].first;
+
+            vector<NodeSharedPtr> nodes =
+                m_curvemeshes[rightCurve]->GetMeshPoints();
+            nodeNormals[it->first] =
+                (nodes[0] == it->first) ? nodes[1] : nodes[nodes.size() - 2];
+
+            continue;
+        }
+
         Array<OneD, NekDouble> n(3, 0.0);
-        ASSERTL0(it->second.size() == 2,
-                 "wierdness, most likely bl_surfs are incorrect");
         Array<OneD, NekDouble> n1 = edgeNormals[it->second[0]->m_id];
         Array<OneD, NekDouble> n2 = edgeNormals[it->second[1]->m_id];
         n[0]          = (n1[0] + n2[0]) / 2.0;
@@ -280,7 +426,7 @@ void Generator2D::MakeBL(int faceid)
 
         n[0]             = n[0] * t + it->first->m_x;
         n[1]             = n[1] * t + it->first->m_y;
-        NodeSharedPtr nn = boost::shared_ptr<Node>(
+        NodeSharedPtr nn = std::shared_ptr<Node>(
             new Node(m_mesh->m_numNodes++, n[0], n[1], 0.0));
         CADSurfSharedPtr s = m_mesh->m_cad->GetSurf(faceid);
         Array<OneD, NekDouble> uv = s->locuv(n);
@@ -288,19 +434,20 @@ void Generator2D::MakeBL(int faceid)
         nodeNormals[it->first] = nn;
     }
 
-    for (vector<unsigned>::iterator it = m_blCurves.begin();
-         it != m_blCurves.end(); ++it)
+    for (int it = 0; it < m_blCurves.size(); ++it)
     {
         CADOrientation::Orientation edgeo =
-            m_mesh->m_cad->GetCurve(*it)->GetOrienationWRT(faceid);
-        vector<NodeSharedPtr> ns = m_curvemeshes[*it]->GetMeshPoints();
+            m_mesh->m_cad->GetCurve(m_blCurves[it])->GetOrienationWRT(faceid);
+        vector<NodeSharedPtr> ns =
+            m_curvemeshes[m_blCurves[it]]->GetMeshPoints();
         vector<NodeSharedPtr> newNs;
         for (int i = 0; i < ns.size(); i++)
         {
             newNs.push_back(nodeNormals[ns[i]]);
         }
-        m_curvemeshes[*it] =
-            MemoryManager<CurveMesh>::AllocateSharedPtr(*it, m_mesh, newNs);
+        m_curvemeshes[m_blCurves[it]] =
+            MemoryManager<CurveMesh>::AllocateSharedPtr(m_blCurves[it], m_mesh,
+                                                        newNs);
         if (edgeo == CADOrientation::eBackwards)
         {
             reverse(ns.begin(), ns.end());
@@ -346,10 +493,10 @@ void Generator2D::PeriodicPrep()
 
     boost::split(lines, s, boost::is_any_of(":"));
 
-    for (vector<string>::iterator il = lines.begin(); il != lines.end(); ++il)
+    for (int il = 0; il < lines.size(); ++il)
     {
         vector<string> tmp;
-        boost::split(tmp, *il, boost::is_any_of(","));
+        boost::split(tmp, lines[il], boost::is_any_of(","));
 
         ASSERTL0(tmp.size() == 2, "periodic pairs ill-defined");
 

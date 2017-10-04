@@ -152,7 +152,7 @@ namespace Nektar
         
     };
 
-    typedef boost::shared_ptr<VCSMapping>
+    typedef std::shared_ptr<VCSMapping>
                 VCSMappingSharedPtr;
 
 } //end of namespace

@@ -51,7 +51,7 @@ class ProcessScaleInFld : public ProcessModule
 {
 public:
     /// Creates an instance of this class
-    static boost::shared_ptr<Module> create(FieldSharedPtr f)
+    static std::shared_ptr<Module> create(FieldSharedPtr f)
     {
         return MemoryManager<ProcessScaleInFld>::AllocateSharedPtr(f);
     }
@@ -66,6 +66,16 @@ public:
     virtual std::string GetModuleName()
     {
         return "ProcessScaleInFld";
+    }
+
+    virtual std::string GetModuleDescription()
+    {
+        return "Rescaling input fld";
+    }
+
+    virtual ModulePriority GetModulePriority()
+    {
+        return eModifyFieldData;
     }
 
 private:

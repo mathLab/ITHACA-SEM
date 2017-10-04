@@ -48,7 +48,7 @@ class InputSwan : public NekMeshUtils::InputModule
 {
 public:
     /// Creates an instance of this class
-    static boost::shared_ptr<Module> create(NekMeshUtils::MeshSharedPtr m)
+    static std::shared_ptr<Module> create(NekMeshUtils::MeshSharedPtr m)
     {
         return MemoryManager<InputSwan>::AllocateSharedPtr(m);
     }

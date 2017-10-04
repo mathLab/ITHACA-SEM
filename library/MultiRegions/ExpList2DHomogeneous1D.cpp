@@ -94,7 +94,8 @@ namespace Nektar
             const NekDouble lhom,
             const bool useFFT,
             const bool dealiasing,
-            const SpatialDomains::MeshGraphSharedPtr &graph1D):
+            const SpatialDomains::MeshGraphSharedPtr &graph1D,
+            const Collections::ImplementationType ImpType):
             ExpListHomogeneous1D(pSession,HomoBasis,lhom,useFFT,dealiasing)
         {
             int n, j, nel;
@@ -102,7 +103,7 @@ namespace Nektar
 
             // note that nzplanes can be larger than nzmodes
             m_planes[0] = plane_zero = MemoryManager<ExpList1D>::
-                AllocateSharedPtr(m_session, graph1D, false);
+                AllocateSharedPtr(m_session, graph1D, false, ImpType);
 
             m_exp = MemoryManager<LocalRegions::ExpansionVector>::AllocateSharedPtr();
 
@@ -140,7 +141,7 @@ namespace Nektar
             ExpListHomogeneous1D(In)
         {
             ExpList1DSharedPtr zero_plane =
-                boost::dynamic_pointer_cast<ExpList1D> (In.m_planes[0]);
+                std::dynamic_pointer_cast<ExpList1D> (In.m_planes[0]);
 
             for (int n = 0; n < m_planes.num_elements(); ++n)
             {

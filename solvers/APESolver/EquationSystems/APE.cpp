@@ -140,7 +140,7 @@ void APE::v_InitObject()
     {
         m_bf[i] = Array<OneD, NekDouble>(GetTotPoints());
     }
-    EvaluateFunction(m_bfNames, m_bf, "Baseflow", m_time);
+    GetFunction("Baseflow", m_bfField, true)->Evaluate(m_bfNames, m_bf, m_time);
 
     m_forcing = SolverUtils::Forcing::Load(m_session, m_fields, m_spacedim + 1);
 
@@ -307,19 +307,18 @@ void APE::GetFluxVector(
  */
 bool APE::v_PreIntegrate(int step)
 {
-    EvaluateFunction(m_bfNames, m_bf, "Baseflow", m_time);
+    GetFunction("Baseflow", m_bfField, true)->Evaluate(m_bfNames, m_bf, m_time);
 
     Array<OneD, NekDouble> tmpC(GetNcoeffs());
-    std::vector<SolverUtils::ForcingSharedPtr>::const_iterator x;
-    for (x = m_forcing.begin(); x != m_forcing.end(); ++x)
+    for (auto &x : m_forcing)
     {
-        for (int i = 0; i < (*x)->GetForces().num_elements(); ++i)
+        for (int i = 0; i < x->GetForces().num_elements(); ++i)
         {
-            m_bfField->IProductWRTBase((*x)->GetForces()[i], tmpC);
+            m_bfField->IProductWRTBase(x->GetForces()[i], tmpC);
             m_bfField->MultiplyByElmtInvMass(tmpC, tmpC);
             m_bfField->LocalToGlobal(tmpC, tmpC);
             m_bfField->GlobalToLocal(tmpC, tmpC);
-            m_bfField->BwdTrans(tmpC, (*x)->UpdateForces()[i]);
+            m_bfField->BwdTrans(tmpC, x->UpdateForces()[i]);
         }
     }
 
@@ -375,10 +374,9 @@ void APE::DoOdeRhs(const Array<OneD, const Array<OneD, NekDouble> >&inarray,
         Vmath::Neg(nq, outarray[i], 1);
     }
 
-    std::vector<SolverUtils::ForcingSharedPtr>::const_iterator x;
-    for (x = m_forcing.begin(); x != m_forcing.end(); ++x)
+    for (auto &x : m_forcing)
     {
-        (*x)->Apply(m_fields, outarray, outarray, m_time);
+        x->Apply(m_fields, outarray, outarray, m_time);
     }
 }
 
@@ -844,14 +842,13 @@ void APE::v_ExtraFldOutput(
     }
 
     int f = 0;
-    std::vector<SolverUtils::ForcingSharedPtr>::const_iterator x;
-    for (x = m_forcing.begin(); x != m_forcing.end(); ++x)
+    for (auto &x : m_forcing)
     {
-        for (int i = 0; i < (*x)->GetForces().num_elements(); ++i)
+        for (int i = 0; i < x->GetForces().num_elements(); ++i)
         {
             Array<OneD, NekDouble> tmpC(GetNcoeffs());
 
-            m_bfField->IProductWRTBase((*x)->GetForces()[i], tmpC);
+            m_bfField->IProductWRTBase(x->GetForces()[i], tmpC);
             m_bfField->MultiplyByElmtInvMass(tmpC, tmpC);
             m_bfField->LocalToGlobal(tmpC, tmpC);
             m_bfField->GlobalToLocal(tmpC, tmpC);

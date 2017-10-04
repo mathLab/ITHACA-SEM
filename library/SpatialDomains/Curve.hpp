@@ -37,7 +37,7 @@
 #define NEKTAR_SPATIALDOMAINS_CURVE_H
 
 #include <SpatialDomains/PointGeom.h>
-#include <boost/unordered_map.hpp>
+#include <unordered_map>
 
 namespace Nektar
 {
@@ -59,8 +59,8 @@ namespace Nektar
             std::vector<PointGeomSharedPtr> m_points;
         };
 
-        typedef boost::shared_ptr<Curve> CurveSharedPtr;
-        typedef boost::unordered_map<int, CurveSharedPtr> CurveMap;
+        typedef std::shared_ptr<Curve> CurveSharedPtr;
+        typedef std::unordered_map<int, CurveSharedPtr> CurveMap;
     }
 }
 

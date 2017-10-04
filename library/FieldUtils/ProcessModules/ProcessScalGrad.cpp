@@ -39,7 +39,6 @@ using namespace std;
 
 #include "ProcessScalGrad.h"
 
-#include <LibUtilities/BasicUtils/ParseUtils.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <MultiRegions/ExpList.h>
 
@@ -54,12 +53,8 @@ ModuleKey ProcessScalGrad::className =
         ProcessScalGrad::create,
         "Computes scalar gradient field.");
 
-ProcessScalGrad::ProcessScalGrad(FieldSharedPtr f) : ProcessModule(f)
+ProcessScalGrad::ProcessScalGrad(FieldSharedPtr f) : ProcessBoundaryExtract(f)
 {
-    m_config["bnd"]  = ConfigOption(false, "All", "Boundary to be extracted");
-    f->m_writeBndFld = true;
-    f->m_declareExpansionAsContField = true;
-    m_f->m_fldToBnd                  = false;
 }
 
 ProcessScalGrad::~ProcessScalGrad()
@@ -68,46 +63,31 @@ ProcessScalGrad::~ProcessScalGrad()
 
 void ProcessScalGrad::Process(po::variables_map &vm)
 {
-    if (m_f->m_verbose)
-    {
-        if (m_f->m_comm->TreatAsRankZero())
-        {
-            cout << "ProcessScalGrad: Calculating scalar gradient..." << endl;
-        }
-    }
+    ProcessBoundaryExtract::Process(vm);
 
     int i, j, k;
 
-    // Set up Field options to output boundary fld
-    string bvalues = m_config["bnd"].as<string>();
-
-    if (bvalues.compare("All") == 0)
-    {
-        Array<OneD, const MultiRegions::ExpListSharedPtr> BndExp =
-            m_f->m_exp[0]->GetBndCondExpansions();
-
-        for (i = 0; i < BndExp.num_elements(); ++i)
-        {
-            m_f->m_bndRegionsToWrite.push_back(i);
-        }
-    }
-    else
-    {
-        ASSERTL0(ParseUtils::GenerateOrderedVector(bvalues.c_str(),
-                                                   m_f->m_bndRegionsToWrite),
-                 "Failed to interpret range string");
-    }
-
     int spacedim = m_f->m_graph->GetSpaceDimension();
-    if ((m_f->m_fielddef[0]->m_numHomogeneousDir) == 1 ||
-        (m_f->m_fielddef[0]->m_numHomogeneousDir) == 2)
+    if ((m_f->m_numHomogeneousDir) == 1 || (m_f->m_numHomogeneousDir) == 2)
     {
         spacedim = 3;
     }
 
-    int nfields = m_f->m_fielddef[0]->m_fields.size();
-    // ASSERTL0(nfields == 1,"Implicit assumption that input is in ADR format of
-    // (u)");
+    int nfields = m_f->m_variables.size();
+
+    string var;
+    for (i = 0; i < nfields; i++)
+    {
+        var = m_f->m_variables[i];
+        stringstream filename;
+        filename << var << "_scalar_gradient";
+        filename >> var;
+        m_f->m_variables[i] = var;
+    }
+    if (m_f->m_exp[0]->GetNumElmts() == 0)
+    {
+        return;
+    }
 
     if (spacedim == 1)
     {
@@ -118,7 +98,6 @@ void ProcessScalGrad::Process(po::variables_map &vm)
     int ngrad = spacedim;
     int n, cnt, elmtid, nq, offset, boundary, nfq;
     int npoints = m_f->m_exp[0]->GetNpoints();
-    string var;
     Array<OneD, NekDouble> scalar;
     Array<OneD, Array<OneD, NekDouble> > grad(ngrad), fgrad(ngrad),
         outfield(nfields);
@@ -132,12 +111,6 @@ void ProcessScalGrad::Process(po::variables_map &vm)
 
     for (i = 0; i < nfields; i++)
     {
-        var = m_f->m_fielddef[0]->m_fields[i];
-        stringstream filename;
-        filename << var << "_scalar_gradient";
-        filename >> var;
-        m_f->m_fielddef[0]->m_fields[i] = var;
-
         BndExp[i]   = m_f->m_exp[i]->GetBndCondExpansions();
         outfield[i] = Array<OneD, NekDouble>(npoints);
     }
@@ -182,7 +155,7 @@ void ProcessScalGrad::Process(po::variables_map &vm)
                         }
 
                         // Get face 2D expansion from element expansion
-                        bc = boost::dynamic_pointer_cast<
+                        bc = std::dynamic_pointer_cast<
                             StdRegions::StdExpansion2D>(
                             BndExp[0][n]->GetExp(i));
                         nfq = bc->GetTotPoints();

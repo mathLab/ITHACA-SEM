@@ -51,7 +51,7 @@ class ProcessAddFld : public ProcessModule
 {
 public:
     /// Creates an instance of this class
-    static boost::shared_ptr<Module> create(FieldSharedPtr f)
+    static std::shared_ptr<Module> create(FieldSharedPtr f)
     {
         return MemoryManager<ProcessAddFld>::AllocateSharedPtr(f);
     }
@@ -68,7 +68,19 @@ public:
         return "ProcessAddFld";
     }
 
+    virtual std::string GetModuleDescription()
+    {
+        return "Adding new fld to input fld";
+    }
+
+    virtual ModulePriority GetModulePriority()
+    {
+        return m_priority;
+    }
+
 private:
+    ModulePriority  m_priority;
+
 };
 }
 }

@@ -38,14 +38,13 @@
 
 #include <queue>
 #include <vector>
+#include <memory>
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/locks.hpp>
 #include <boost/thread/condition_variable.hpp>
 #include <boost/thread/thread.hpp>
-#include <boost/enable_shared_from_this.hpp>
 
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
-#include <loki/Singleton.h>
 
 namespace Nektar
 {
@@ -72,7 +71,7 @@ enum SchedType
 
 
 class ThreadManager;
-typedef boost::shared_ptr<ThreadManager> ThreadManagerSharedPtr;
+typedef std::shared_ptr<ThreadManager> ThreadManagerSharedPtr;
 typedef LibUtilities::NekFactory<std::string, ThreadManager, unsigned int>
     ThreadManagerFactory;
 LIB_UTILITIES_EXPORT ThreadManagerFactory& GetThreadManagerFactory();
@@ -164,7 +163,7 @@ class ThreadJob
  * true if the thread is a worker.
  *
  */
-class ThreadManager : public boost::enable_shared_from_this<ThreadManager>
+class ThreadManager : public std::enable_shared_from_this<ThreadManager>
 {
     public:
         /// Destructor.

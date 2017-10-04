@@ -41,6 +41,7 @@
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <MultiRegions/ExpList.h>
+#include <SolverUtils/Core/SessionFunction.h>
 #include <SolverUtils/SolverUtilsDeclspec.h>
 
 namespace Nektar
@@ -51,7 +52,7 @@ namespace SolverUtils
     class Forcing;
 
     /// A shared pointer to an EquationSystem object
-    SOLVER_UTILS_EXPORT typedef boost::shared_ptr<Forcing> ForcingSharedPtr;
+    SOLVER_UTILS_EXPORT typedef std::shared_ptr<Forcing> ForcingSharedPtr;
 
     /// Declaration of the forcing factory
     typedef LibUtilities::NekFactory<std::string, Forcing,
@@ -102,6 +103,8 @@ namespace SolverUtils
             Array<OneD, Array<OneD, NekDouble> > m_Forcing;
             /// Number of variables
             int m_NumVariable;
+            /// Map of known SessionFunctions
+            std::map<std::string, SolverUtils::SessionFunctionSharedPtr> m_sessionFunctions;
 
             /// Constructor
             SOLVER_UTILS_EXPORT Forcing(
@@ -118,13 +121,12 @@ namespace SolverUtils
                 Array<OneD, Array<OneD, NekDouble> >        &outarray,
                 const NekDouble &time)=0;
 
-            SOLVER_UTILS_EXPORT void EvaluateFunction(
-                    Array<OneD, MultiRegions::ExpListSharedPtr> pFields,
-                    LibUtilities::SessionReaderSharedPtr        pSession,
-                    std::string                                 pFieldName, 
-                    Array<OneD, NekDouble>&                     pArray,
-                    const std::string& pFunctionName,
-                    NekDouble pTime = NekDouble(0));
+                /// Get a SessionFunction by name
+            SOLVER_UTILS_EXPORT SessionFunctionSharedPtr GetFunction(
+                const Array<OneD, MultiRegions::ExpListSharedPtr>  &pFields,
+                const LibUtilities::SessionReaderSharedPtr         &pSession,
+                std::string                                         pName,
+                bool                                                pCache = false);
 
             SOLVER_UTILS_EXPORT void EvaluateTimeFunction(
                     LibUtilities::SessionReaderSharedPtr        pSession,

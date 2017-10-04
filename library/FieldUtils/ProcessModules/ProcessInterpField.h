@@ -50,7 +50,7 @@ class ProcessInterpField : public ProcessModule
 {
 public:
     /// Creates an instance of this class
-    static boost::shared_ptr<Module> create(FieldSharedPtr f)
+    static std::shared_ptr<Module> create(FieldSharedPtr f)
     {
         return MemoryManager<ProcessInterpField>::AllocateSharedPtr(f);
     }
@@ -69,8 +69,16 @@ public:
         return "ProcessInterpField";
     }
 
-private:
-    FieldSharedPtr m_fromField;
+    virtual std::string GetModuleDescription()
+    {
+        return "Interpolating field";
+    }
+
+    virtual ModulePriority GetModulePriority()
+    {
+        return eFillExp;
+    }
+
 };
 }
 }

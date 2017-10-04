@@ -79,7 +79,7 @@ private:
     Array<OneD, NekDouble> z;
     Array<OneD, NekDouble> all;
 };
-typedef boost::shared_ptr<OptiEdge> OptiEdgeSharedPtr;
+typedef std::shared_ptr<OptiEdge> OptiEdgeSharedPtr;
 
 }
 }

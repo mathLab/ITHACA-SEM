@@ -59,7 +59,7 @@ public:
     {
     }
 
-    ~CADSurfOCE()
+    virtual ~CADSurfOCE()
     {
     }
 
@@ -89,7 +89,7 @@ private:
     ShapeAnalysis_Surface *m_sas;
 };
 
-typedef boost::shared_ptr<CADSurf> CADSurfSharedPtr;
+typedef std::shared_ptr<CADSurf> CADSurfSharedPtr;
 
 }
 }

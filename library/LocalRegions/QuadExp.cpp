@@ -55,11 +55,11 @@ namespace Nektar
              Expansion     (geom),
              Expansion2D   (geom),
              m_matrixManager(
-                    boost::bind(&QuadExp::CreateMatrix, this, _1),
-                    std::string("QuadExpMatrix")),
+                 std::bind(&QuadExp::CreateMatrix, this, std::placeholders::_1),
+                 std::string("QuadExpMatrix")),
              m_staticCondMatrixManager(
-                    boost::bind(&QuadExp::CreateStaticCondMatrix, this, _1),
-                    std::string("QuadExpStaticCondMatrix"))
+                 std::bind(&QuadExp::CreateStaticCondMatrix, this, std::placeholders::_1),
+                 std::string("QuadExpStaticCondMatrix"))
         {
         }
 
@@ -1563,15 +1563,17 @@ namespace Nektar
                     break;
                 case LibUtilities::eGLL_Lagrange:
                 {
-                    // Assume that input is also Gll_Lagrange but no way to check;
                     LibUtilities::PointsKey
                         p0(nummodes[0], LibUtilities::eGaussLobattoLegendre);
                     LibUtilities::PointsKey
                         p1(nummodes[1], LibUtilities::eGaussLobattoLegendre);
-                    LibUtilities::Interp2D(p0, p1, data,
-                                           m_base[0]->GetPointsKey(),
-                                           m_base[1]->GetPointsKey(),
-                                           coeffs);
+                    LibUtilities::PointsKey t0(
+                        m_base[0]->GetNumModes(),
+                        LibUtilities::eGaussLobattoLegendre);
+                    LibUtilities::PointsKey t1(
+                        m_base[1]->GetNumModes(),
+                        LibUtilities::eGaussLobattoLegendre);
+                    LibUtilities::Interp2D(p0, p1, data, t0, t1, coeffs);
                 }
                     break;
                 case LibUtilities::eGauss_Lagrange:
@@ -1581,10 +1583,13 @@ namespace Nektar
                         p0(nummodes[0],LibUtilities::eGaussGaussLegendre);
                     LibUtilities::PointsKey
                         p1(nummodes[1],LibUtilities::eGaussGaussLegendre);
-                    LibUtilities::Interp2D(p0, p1, data,
-                                           m_base[0]->GetPointsKey(),
-                                           m_base[1]->GetPointsKey(),
-                                           coeffs);
+                    LibUtilities::PointsKey t0(
+                        m_base[0]->GetNumModes(),
+                        LibUtilities::eGaussGaussLegendre);
+                    LibUtilities::PointsKey t1(
+                        m_base[1]->GetNumModes(),
+                        LibUtilities::eGaussGaussLegendre);
+                    LibUtilities::Interp2D(p0, p1, data, t0, t1, coeffs);
                 }
                     break;
                 default:

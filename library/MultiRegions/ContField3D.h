@@ -58,7 +58,9 @@ namespace Nektar
                         const LibUtilities::SessionReaderSharedPtr &pSession,
                         const SpatialDomains::MeshGraphSharedPtr &graph3D,
                         const std::string &variable  = "DefaultVar",
-                        const bool CheckIfSingularSystem = false);
+                        const bool CheckIfSingularSystem = false,
+                        const Collections::ImplementationType ImpType
+                        = Collections::eNoImpType);
 
             /// Construct a global continuous field with solution type based on
             /// another field but using a separate input mesh and boundary
@@ -203,7 +205,7 @@ namespace Nektar
             virtual void v_ClearGlobalLinSysManager(void);
 
         };
-        typedef boost::shared_ptr<ContField3D>      ContField3DSharedPtr;
+        typedef std::shared_ptr<ContField3D>      ContField3DSharedPtr;
 
         inline const Array<OneD,const MultiRegions::ExpListSharedPtr>
                 &ContField3D::GetBndCondExp()

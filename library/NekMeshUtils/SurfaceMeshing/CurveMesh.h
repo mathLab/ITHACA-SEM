@@ -36,8 +36,6 @@
 #ifndef NEKTAR_MESHUTILS_SURFACEMESHING_CURVEMESH_H
 #define NEKTAR_MESHUTILS_SURFACEMESHING_CURVEMESH_H
 
-#include <boost/shared_ptr.hpp>
-
 #include <NekMeshUtils/CADSystem/CADCurve.h>
 #include <NekMeshUtils/CADSystem/CADVert.h>
 #include <NekMeshUtils/MeshElements/Mesh.h>
@@ -56,7 +54,7 @@ namespace NekMeshUtils
 
 //forward
 class CurveMesh;
-typedef boost::shared_ptr<CurveMesh> CurveMeshSharedPtr;
+typedef std::shared_ptr<CurveMesh> CurveMeshSharedPtr;
 
 class CurveMesh
 {
@@ -136,6 +134,11 @@ public:
         return m_id;
     }
 
+    void SetOffset(unsigned i, NekDouble offset)
+    {
+        m_endoffset[i] = offset;
+    }
+
 private:
     /**
      * @brief get node spacing sampling function
@@ -188,6 +191,8 @@ private:
     std::vector<NodeSharedPtr> m_meshpoints;
     LibUtilities::AnalyticExpressionEvaluator m_bl;
     int m_blID;
+    /// offset of second point at each end
+    std::map<unsigned, NekDouble> m_endoffset;
 };
 
 }

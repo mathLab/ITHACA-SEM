@@ -53,13 +53,12 @@ namespace Nektar
         class SegGeom;
 
         // shorthand for boost pointer
-        typedef boost::shared_ptr<PointGeom> PointGeomSharedPtr;
-        typedef boost::shared_ptr<Geometry0D> Geometry0DSharedPtr;
-        typedef boost::shared_ptr<Geometry1D> Geometry1DSharedPtr;
-        typedef boost::shared_ptr<Geometry2D> Geometry2DSharedPtr;
-        typedef boost::shared_ptr<SegGeom>    SegGeomSharedPtr;
+        typedef std::shared_ptr<PointGeom> PointGeomSharedPtr;
+        typedef std::shared_ptr<Geometry0D> Geometry0DSharedPtr;
+        typedef std::shared_ptr<Geometry1D> Geometry1DSharedPtr;
+        typedef std::shared_ptr<Geometry2D> Geometry2DSharedPtr;
+        typedef std::shared_ptr<SegGeom>    SegGeomSharedPtr;
         typedef std::vector< Geometry2DSharedPtr > Geometry2DVector;
-        typedef std::vector< Geometry2DSharedPtr >::iterator Geometry2DVectorIter;
 
         /// 2D geometry information
         class Geometry2D: public Geometry

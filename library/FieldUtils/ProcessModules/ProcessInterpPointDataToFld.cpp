@@ -38,13 +38,19 @@
 
 using namespace std;
 
+#include <boost/geometry.hpp>
 #include "ProcessInterpPointDataToFld.h"
 
 #include <FieldUtils/Interpolator.h>
-#include <LibUtilities/BasicUtils/ParseUtils.hpp>
 #include <LibUtilities/BasicUtils/PtsField.h>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
+#include <LibUtilities/BasicUtils/PtsIO.h>
+#include <LibUtilities/BasicUtils/CsvIO.h>
 #include <boost/math/special_functions/fpclassify.hpp>
+
+namespace bg  = boost::geometry;
+namespace bgi = boost::geometry::index;
+
 namespace Nektar
 {
 namespace FieldUtils
@@ -60,6 +66,8 @@ ModuleKey ProcessInterpPointDataToFld::className =
 ProcessInterpPointDataToFld::ProcessInterpPointDataToFld(FieldSharedPtr f)
     : ProcessModule(f)
 {
+    m_config["frompts"] = ConfigOption(
+        false, "NotSet", "Pts file from which to interpolate field");
 
     m_config["interpcoord"] =
         ConfigOption(false, "-1", "coordinate id to use for interpolation");
@@ -71,30 +79,43 @@ ProcessInterpPointDataToFld::~ProcessInterpPointDataToFld()
 
 void ProcessInterpPointDataToFld::Process(po::variables_map &vm)
 {
-    if (m_f->m_verbose)
+    int i, j;
+    LibUtilities::PtsFieldSharedPtr fieldPts;
+    // Load pts file
+    ASSERTL0( m_config["frompts"].as<string>().compare("NotSet") != 0,
+            "ProcessInterpPointDataToFld requires frompts parameter");
+    string inFile = m_config["frompts"].as<string>().c_str();
+
+    if (boost::filesystem::path(inFile).extension() == ".pts")
     {
-        if (m_f->m_comm->TreatAsRankZero())
-        {
-            cout
-                << "ProcessInterpPointDataToFld: interpolating data to field..."
-                << endl;
-        }
+        LibUtilities::PtsIOSharedPtr ptsIO =
+            MemoryManager<LibUtilities::PtsIO>::AllocateSharedPtr(m_f->m_comm);
+
+        ptsIO->Import(inFile, fieldPts);
+    }
+    else if (boost::filesystem::path(inFile).extension() == ".csv")
+    {
+        LibUtilities::CsvIOSharedPtr csvIO =
+            MemoryManager<LibUtilities::CsvIO>::AllocateSharedPtr(m_f->m_comm);
+
+        csvIO->Import(inFile, fieldPts);
+    }
+    else
+    {
+        ASSERTL0(false, "unknown frompts file type");
     }
 
-    int i, j;
-
-    // Check for command line point specification if no .pts file specified
-    ASSERTL0(m_f->m_fieldPts != LibUtilities::NullPtsField,
-             "No input points found");
-
-    int nFields = m_f->m_fieldPts->GetNFields();
+    int nFields = fieldPts->GetNFields();
     ASSERTL0(nFields > 0, "No field values provided in input");
 
-    // assume one field is already defined from input file.
+    // Define new expansions.
+    ASSERTL0(m_f->m_numHomogeneousDir == 0,
+        "ProcessInterpPointDataToFld does not support homogeneous expansion");
+
     m_f->m_exp.resize(nFields);
     for (i = 1; i < nFields; ++i)
     {
-        m_f->m_exp[i] = m_f->AppendExpList(0);
+        m_f->m_exp[i] = m_f->AppendExpList(m_f->m_numHomogeneousDir);
     }
 
     int totpoints = m_f->m_exp[0]->GetTotPoints();
@@ -108,18 +129,18 @@ void ProcessInterpPointDataToFld::Process(po::variables_map &vm)
         MemoryManager<LibUtilities::PtsField>::AllocateSharedPtr(3, intFields);
 
     int coord_id = m_config["interpcoord"].as<int>();
-    ASSERTL0(coord_id <= m_f->m_fieldPts->GetDim() - 1,
+    ASSERTL0(coord_id <= fieldPts->GetDim() - 1,
              "interpcoord is bigger than the Pts files dimension");
 
     Interpolator interp(eNoMethod, coord_id);
 
-    if (m_f->m_comm->GetRank() == 0)
+    if (m_f->m_verbose && m_f->m_comm->TreatAsRankZero())
     {
         interp.SetProgressCallback(
             &ProcessInterpPointDataToFld::PrintProgressbar, this);
     }
-    interp.Interpolate(m_f->m_fieldPts, outPts);
-    if (m_f->m_comm->GetRank() == 0)
+    interp.Interpolate(fieldPts, outPts);
+    if (m_f->m_verbose && m_f->m_comm->TreatAsRankZero())
     {
         cout << endl;
     }
@@ -139,23 +160,11 @@ void ProcessInterpPointDataToFld::Process(po::variables_map &vm)
                                            m_f->m_exp[i]->UpdateCoeffs());
     }
 
-    // set up output fld file.
-    std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef =
-        m_f->m_exp[0]->GetFieldDefinitions();
-    std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
-
-    for (j = 0; j < nFields; ++j)
+    // save field names
+    for (int j = 0; j < fieldPts->GetNFields(); ++j)
     {
-        for (i = 0; i < FieldDef.size(); ++i)
-        {
-            FieldDef[i]->m_fields.push_back(m_f->m_fieldPts->GetFieldName(j));
-
-            m_f->m_exp[j]->AppendFieldData(FieldDef[i], FieldData[i]);
-        }
+        m_f->m_variables.push_back(fieldPts->GetFieldName(j));
     }
-
-    m_f->m_fielddef = FieldDef;
-    m_f->m_data     = FieldData;
 }
 }
 }

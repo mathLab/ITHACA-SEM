@@ -66,6 +66,16 @@ public:
         return "InputNek5000";
     }
 
+    virtual std::string GetModuleDescription()
+    {
+        return "Processing Nek5000 field file";
+    }
+
+    virtual ModulePriority GetModulePriority()
+    {
+        return eCreateFieldData;
+    }
+
 private:
 };
 }

@@ -51,7 +51,7 @@ class ProcessAddCompositeID : public ProcessModule
 {
 public:
     /// Creates an instance of this class
-    static boost::shared_ptr<Module> create(FieldSharedPtr f)
+    static std::shared_ptr<Module> create(FieldSharedPtr f)
     {
         return MemoryManager<ProcessAddCompositeID>::AllocateSharedPtr(f);
     }
@@ -66,6 +66,16 @@ public:
     virtual std::string GetModuleName()
     {
         return "ProcessAddCompositeID";
+    }
+
+    virtual std::string GetModuleDescription()
+    {
+        return "Adding composite ID as a new field";
+    }
+
+    virtual ModulePriority GetModulePriority()
+    {
+        return eModifyExp;
     }
 
 private:

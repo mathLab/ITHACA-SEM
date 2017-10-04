@@ -37,7 +37,7 @@
 #include <SolverUtils/Forcing/ForcingAbsorption.h>
 
 #include <LibUtilities/BasicUtils/Equation.h>
-#include <LibUtilities/BasicUtils/ParseUtils.hpp>
+#include <LibUtilities/BasicUtils/ParseUtils.h>
 
 using namespace std;
 
@@ -87,8 +87,7 @@ namespace SolverUtils
                 ASSERTL0(m_session->DefinesFunction(funcName, s_FieldStr),
                          "Variable '" + s_FieldStr + "' not defined.");
                 m_Refflow[i] = Array<OneD, NekDouble> (npts, 0.0);
-                EvaluateFunction(pFields, m_session, s_FieldStr,
-                                 m_Refflow[i], funcName);
+                GetFunction(pFields, m_session, funcName)->Evaluate(s_FieldStr, m_Refflow[i]);
             }
             m_hasRefFlow = true;
         }
@@ -125,7 +124,7 @@ namespace SolverUtils
         funcNameElmt = pForce->FirstChildElement("BOUNDARYREGIONS");
         if (funcNameElmt)
         {
-            ASSERTL0(ParseUtils::GenerateOrderedVector(funcNameElmt->GetText(),
+            ASSERTL0(ParseUtils::GenerateVector(funcNameElmt->GetText(),
                                                     m_bRegions),
                     "Unable to process list of BOUNDARYREGIONS in Absorption "
                     "Forcing: " +
@@ -221,8 +220,7 @@ namespace SolverUtils
             for (int i = 0; i < m_NumVariable; ++i)
             {
                 std::string s_FieldStr = m_session->GetVariable(i);
-                EvaluateFunction(
-                    pFields, m_session, s_FieldStr, m_Absorption[i], funcName);
+                GetFunction(pFields, m_session, funcName)->Evaluate(s_FieldStr, m_Absorption[i]);
             }
         }
     }

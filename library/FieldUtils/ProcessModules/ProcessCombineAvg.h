@@ -52,7 +52,7 @@ class ProcessCombineAvg : public ProcessModule
 {
 public:
     /// Creates an instance of this class
-    static boost::shared_ptr<Module> create(FieldSharedPtr f)
+    static std::shared_ptr<Module> create(FieldSharedPtr f)
     {
         return MemoryManager<ProcessCombineAvg>::AllocateSharedPtr(f);
     }
@@ -67,6 +67,16 @@ public:
     virtual std::string GetModuleName()
     {
         return "ProcessCombineAvg";
+    }
+
+    virtual std::string GetModuleDescription()
+    {
+        return "Combining new fld into input avg fld";
+    }
+
+    virtual ModulePriority GetModulePriority()
+    {
+        return eModifyExp;
     }
 
 private:

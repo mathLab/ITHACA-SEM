@@ -2,6 +2,10 @@ CMAKE_DEPENDENT_OPTION(NEKTAR_SOLVER_SHALLOW_WATER
     "Build the Shallow Water solver." ON
     "NEKTAR_BUILD_SOLVERS" OFF)
 
+IF (NOT NEKTAR_BUILD_SOLVERS)
+    SET(NEKTAR_SOLVER_SHALLOW_WATER OFF CACHE INTERNAL "")
+ENDIF()
+
 IF( NEKTAR_SOLVER_SHALLOW_WATER )
     SET(ShallowWaterSolverSource 
        ./ShallowWaterSolver.cpp
@@ -20,8 +24,7 @@ IF( NEKTAR_SOLVER_SHALLOW_WATER )
        ./RiemannSolvers/HLLCSolver.cpp	
 	)
 
-    ADD_SOLVER_EXECUTABLE(ShallowWaterSolver solvers 
-			${ShallowWaterSolverSource})
+    ADD_SOLVER_EXECUTABLE(ShallowWaterSolver SOURCES ${ShallowWaterSolverSource})
 
     ADD_NEKTAR_TEST(LinearSWE_StandingWave_WallBC_CG_P4)
     ADD_NEKTAR_TEST(LinearSWE_StandingWave_WallBC_CG_P8)

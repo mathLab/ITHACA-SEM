@@ -1,3 +1,4 @@
+#include <LibUtilities/BasicUtils/VtkUtil.hpp>
 #include <vtkPolyDataReader.h>
 #include <vtkPolyData.h>
 #include <vtkPointData.h>
@@ -6,13 +7,13 @@
 #include <vtkCellDataToPointData.h>
 #include <vtkContourFilter.h>
 
-#include <boost/unordered_set.hpp>
 #include <boost/program_options.hpp>
 namespace po = boost::program_options;
 
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <LibUtilities/BasicUtils/FieldIO.h>
 #include <LibUtilities/Communication/Comm.h>
+#include <LibUtilities/BasicUtils/HashUtils.hpp>
 #include <SpatialDomains/MeshGraph2D.h>
 #include <MultiRegions/ExpList2D.h>
 #include <LocalRegions/Expansion2D.h>
@@ -48,7 +49,7 @@ struct Vertex
         return (x == v.x && y == v.y && z == v.z);
     }
 };
-typedef boost::shared_ptr<Vertex> VertexSharedPtr;
+typedef std::shared_ptr<Vertex> VertexSharedPtr;
 
 /// Define comparison operator for the vertex struct
 bool operator==(const VertexSharedPtr& v1, const VertexSharedPtr& v2)
@@ -64,16 +65,12 @@ struct VertexHash : std::unary_function<VertexSharedPtr, std::size_t>
 {
     std::size_t operator()(VertexSharedPtr const& p) const
     {
-        std::size_t seed = 0;
-        boost::hash_combine(seed, p -> x);
-        boost::hash_combine(seed, p -> y);
-        boost::hash_combine(seed, p -> z);
-        return seed;
+        return hash_combine(p->x, p->y, p->z);
     }
 };
 
 /// Define a set of Vertices with associated hash function
-typedef boost::unordered_set<VertexSharedPtr, VertexHash> VertexSet;
+typedef std::unordered_set<VertexSharedPtr, VertexHash> VertexSet;
 
 
 /**
@@ -236,7 +233,7 @@ int main(int argc, char* argv[])
         {
             vtkPoints->GetPoint(i,p);
             val = vtkPData->GetScalars(name.c_str())->GetTuple1(i);
-            boost::shared_ptr<Vertex> v(new Vertex(p[0],p[1],p[2],val,factor));
+            std::shared_ptr<Vertex> v(new Vertex(p[0],p[1],p[2],val,factor));
             points.insert(v);
         }
 
@@ -256,7 +253,7 @@ int main(int argc, char* argv[])
                 vert->GetCoords(x,y,z);
 
                 // Look up the vertex in the VertexSet
-                boost::shared_ptr<Vertex> v(new Vertex(x,y,z,0.0,factor));
+                std::shared_ptr<Vertex> v(new Vertex(x,y,z,0.0,factor));
                 vIter = points.find(v);
 
                 // If not found, maybe the tolerance should be reduced?

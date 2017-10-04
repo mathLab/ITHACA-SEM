@@ -37,6 +37,7 @@
 #include <string>
 using namespace std;
 
+#include <LibUtilities/BasicUtils/ParseUtils.h>
 #include <LibUtilities/BasicUtils/PtsField.h>
 #include <LibUtilities/BasicUtils/PtsIO.h>
 
@@ -53,7 +54,7 @@ ModuleKey InputDat::m_className[1] = {
     GetModuleFactory().RegisterCreatorFunction(
         ModuleKey(eInputModule, "dat"),
         InputDat::create,
-        "Reads Tecplot dat file for FE block triangular format."),
+        "Reads Tecplot dat file for FE block triangular format.")
 };
 
 /**
@@ -77,18 +78,8 @@ InputDat::~InputDat()
  */
 void InputDat::Process(po::variables_map &vm)
 {
-
-    if (m_f->m_verbose)
-    {
-        if (m_f->m_comm->TreatAsRankZero())
-        {
-            cout << "Processing input dat file" << endl;
-        }
-    }
-
-    string line, word, tag;
+    string line;
     std::ifstream datFile;
-    stringstream s;
 
     // Open the file stream.
     string fname = m_f->m_inputfiles["dat"][0];
@@ -101,7 +92,7 @@ void InputDat::Process(po::variables_map &vm)
     }
 
     // read variables
-    // currently assum there are x y and z coordinates
+    // currently assume there are x y and z coordinates
     int dim = 3;
     vector<string> fieldNames;
     while (!datFile.eof())
@@ -116,8 +107,8 @@ void InputDat::Process(po::variables_map &vm)
 
             // note this expects a comma separated list but
             // does not work for white space separated lists!
-            bool valid = ParseUtils::GenerateOrderedStringVector(
-                line.substr(pos).c_str(), fieldNames);
+            bool valid = ParseUtils::GenerateVector(
+                line.substr(pos), fieldNames);
             ASSERTL0(valid, "Unable to process list of field variable in "
                             " VARIABLES list:  " +
                                 line.substr(pos));
@@ -153,6 +144,9 @@ void InputDat::Process(po::variables_map &vm)
         dim, fieldNames, pts);
     m_f->m_fieldPts->SetPtsType(LibUtilities::ePtsTriBlock);
     m_f->m_fieldPts->SetConnectivity(ptsConn);
+
+    // save field names
+    m_f->m_variables = fieldNames;
 }
 
 /**

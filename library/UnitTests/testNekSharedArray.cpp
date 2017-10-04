@@ -39,7 +39,6 @@
 #include <UnitTests/util.h>
 
 #include <LibUtilities/LinearAlgebra/NekVector.hpp>
-#include <LibUtilities/LinearAlgebra/NekVectorVariableSized.hpp>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 
 #include <boost/test/auto_unit_test.hpp>
@@ -763,9 +762,9 @@ namespace Nektar
     
         BOOST_AUTO_TEST_CASE(TestSharedPtr)
         {
-            boost::shared_ptr<double> a(new double[10]);
-            boost::shared_ptr<const double> b(a);
-            boost::shared_ptr<const double> c;
+            std::shared_ptr<double> a(new double[10]);
+            std::shared_ptr<const double> b(a);
+            std::shared_ptr<const double> c;
             c = a;
             
         }

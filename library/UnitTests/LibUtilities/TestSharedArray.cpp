@@ -33,7 +33,6 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include "LibUtilitiesUnitTestsPrecompiledHeader.h"
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 
 #include <boost/test/auto_unit_test.hpp>

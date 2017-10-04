@@ -50,12 +50,10 @@ namespace Nektar
     {
         class  QuadGeom;
         struct Curve;
-        typedef boost::shared_ptr<Curve> CurveSharedPtr;
-        typedef boost::shared_ptr<QuadGeom> QuadGeomSharedPtr;
+        typedef std::shared_ptr<Curve> CurveSharedPtr;
+        typedef std::shared_ptr<QuadGeom> QuadGeomSharedPtr;
         typedef std::vector< QuadGeomSharedPtr > QuadGeomVector;
-        typedef std::vector< QuadGeomSharedPtr >::iterator QuadGeomVectorIter;
         typedef std::map<int, QuadGeomSharedPtr> QuadGeomMap;
-        typedef std::map<int, QuadGeomSharedPtr>::iterator QuadGeomMapIter;
 
         class QuadGeom: public Geometry2D
         {

@@ -1102,8 +1102,8 @@ namespace Nektar
             //Block transposed transformation matrix
             DNekScalBlkMat &RT = *m_RTBlk;
 
-            Array<OneD, NekDouble> tmp = pInOut + nDirBndDofs;
-            NekVector<NekDouble> V_GlobHomBnd(nGlobHomBndDofs, tmp, eWrapper);
+            Array<OneD, NekDouble> tmpOffset = pInOut + nDirBndDofs;
+            NekVector<NekDouble> V_GlobHomBnd(nGlobHomBndDofs, tmpOffset, eWrapper);
 
             Array<OneD, NekDouble> pLocal(nLocBndDofs, 0.0);
             NekVector<NekDouble> V_LocBnd(nLocBndDofs,pLocal,eWrapper);

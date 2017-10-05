@@ -60,8 +60,8 @@ namespace Nektar
         /// Constructor for full direct matrix solve.
         GlobalLinSysXxtFull::GlobalLinSysXxtFull(
                     const GlobalLinSysKey &pLinSysKey,
-                    const boost::weak_ptr<ExpList> &pExp,
-                    const boost::shared_ptr<AssemblyMap>
+                    const std::weak_ptr<ExpList> &pExp,
+                    const std::shared_ptr<AssemblyMap>
                                                             &pLocToGloMap)
             : GlobalLinSys   (pLinSysKey, pExp, pLocToGloMap),
               GlobalLinSysXxt(pLinSysKey, pExp, pLocToGloMap)
@@ -151,7 +151,7 @@ namespace Nektar
          * @param   locToGloMap Local to global mapping information.
          */
         void GlobalLinSysXxtFull::CreateMap(
-                    const boost::shared_ptr<AssemblyMap> &pLocToGloMap)
+                    const std::shared_ptr<AssemblyMap> &pLocToGloMap)
         {
             const Array<OneD, const int> &vMap
                                     = pLocToGloMap->GetLocalToGlobalMap();
@@ -186,7 +186,7 @@ namespace Nektar
          * @param   locToGloMap Local to global mapping information.
          */
         void GlobalLinSysXxtFull::AssembleMatrixArrays(
-                        const boost::shared_ptr<AssemblyMap> &pLocToGloMap)
+                        const std::shared_ptr<AssemblyMap> &pLocToGloMap)
         {
             ExpListSharedPtr vExp = m_expList.lock();
             unsigned int nElmt = vExp->GetNumElmts();

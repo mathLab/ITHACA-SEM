@@ -212,7 +212,7 @@ namespace Nektar
 
 		};
 
-		typedef boost::shared_ptr<Kernel>      KernelSharedPtr;
+		typedef std::shared_ptr<Kernel>      KernelSharedPtr;
 
 	}//end of namespace
 }// end of namespace

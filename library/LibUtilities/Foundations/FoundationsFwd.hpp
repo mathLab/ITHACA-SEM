@@ -36,10 +36,9 @@
 #ifndef FOUNDATIONS_FWD_H
 #define FOUNDATIONS_FWD_H
 
-#include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
 #include <vector>
-#include <boost/smart_ptr/shared_ptr.hpp>
-//#include <LibUtilities/BasicUtils/BasicUtilsFwd.hpp> // for NekManager
+#include <memory>
+#include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
 #include <LibUtilities/BasicUtils/NekManager.hpp>
 
 namespace Nektar
@@ -73,16 +72,11 @@ namespace Nektar
 
         /// Name for a vector of BasisKeys.
         typedef std::vector< BasisKey > BasisKeyVector;
-        /// Name for an iterator over a BasisKeyVector.
-        typedef std::vector< BasisKey >::iterator BasisKeyVectorIter;
-
-
-        typedef boost::shared_ptr<Basis> BasisSharedPtr;
+        typedef std::shared_ptr<Basis> BasisSharedPtr;
         typedef std::vector< BasisSharedPtr > BasisVector;
-        typedef std::vector< BasisSharedPtr >::iterator BasisVectorIter;
 
         typedef Points<NekDouble> PointsBaseType;
-        typedef boost::shared_ptr<Points<NekDouble> > PointsSharedPtr;
+        typedef std::shared_ptr<Points<NekDouble> > PointsSharedPtr;
         typedef int GraphVertexID;
 
     } // end of namespace

@@ -53,7 +53,7 @@ namespace Nektar
     typedef std::vector<std::pair<std::string, std::string> > SummaryList;
 
     /// A shared pointer to an EquationSystem object
-    typedef boost::shared_ptr<CellModel> CellModelSharedPtr;
+    typedef std::shared_ptr<CellModel> CellModelSharedPtr;
     /// Datatype of the NekFactory used to instantiate classes derived from
     /// the EquationSystem class.
     typedef LibUtilities::NekFactory< std::string, CellModel,

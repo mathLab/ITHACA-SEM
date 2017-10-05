@@ -255,7 +255,7 @@ namespace Nektar
             STD_REGIONS_EXPORT int GetMode(int I, int J, int K);
         };
 
-        typedef boost::shared_ptr<StdPrismExp> StdPrismExpSharedPtr;
+        typedef std::shared_ptr<StdPrismExp> StdPrismExpSharedPtr;
 
     } //end of namespace
 } //end of namespace

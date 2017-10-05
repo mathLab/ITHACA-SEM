@@ -46,15 +46,15 @@ namespace Nektar
     namespace MultiRegions
     {
         class PreconditionerLinearWithDiag;
-        typedef boost::shared_ptr<PreconditionerLinearWithDiag>  PreconditionerLinearWithDiagSharedPtr;
+        typedef std::shared_ptr<PreconditionerLinearWithDiag>  PreconditionerLinearWithDiagSharedPtr;
 
         class PreconditionerLinearWithDiag: public Preconditioner
 	{
         public:
             /// Creates an instance of this class
             static PreconditionerSharedPtr create(
-                        const boost::shared_ptr<GlobalLinSys> &plinsys,
-                        const boost::shared_ptr<AssemblyMap>
+                        const std::shared_ptr<GlobalLinSys> &plinsys,
+                        const std::shared_ptr<AssemblyMap>
                         &pLocToGloMap)
             {
 	        PreconditionerSharedPtr p = MemoryManager<PreconditionerLinearWithDiag>::AllocateSharedPtr(plinsys,pLocToGloMap);
@@ -66,14 +66,14 @@ namespace Nektar
             static std::string className;
 
             MULTI_REGIONS_EXPORT PreconditionerLinearWithDiag(
-                         const boost::shared_ptr<GlobalLinSys> &plinsys,
+                         const std::shared_ptr<GlobalLinSys> &plinsys,
 	                 const AssemblyMapSharedPtr &pLocToGloMap);
 
             MULTI_REGIONS_EXPORT
             virtual ~PreconditionerLinearWithDiag() {}
 
 	protected:
-            //const boost::weak_ptr<GlobalLinSys>         m_linsys;
+            //const std::weak_ptr<GlobalLinSys>         m_linsys;
 
             PreconditionerSharedPtr m_linSpacePrecon;
             PreconditionerSharedPtr m_diagonalPrecon;

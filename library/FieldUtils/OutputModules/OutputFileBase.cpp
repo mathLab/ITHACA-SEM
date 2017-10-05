@@ -140,13 +140,11 @@ void OutputFileBase::Process(po::variables_map &vm)
                                                    exp[0]->GetGraph());
             const SpatialDomains::BoundaryRegionCollection bregions =
                 bcs.GetBoundaryRegions();
-            SpatialDomains::BoundaryRegionCollection::const_iterator breg_it;
             map<int, int> BndRegionMap;
             int cnt = 0;
-            for (breg_it = bregions.begin(); breg_it != bregions.end();
-                 ++breg_it, ++cnt)
+            for (auto &breg_it : bregions)
             {
-                BndRegionMap[breg_it->first] = cnt;
+                BndRegionMap[breg_it.first] = cnt++;
             }
 
             // find ending of output file and insert _b1, _b2
@@ -221,6 +219,8 @@ void OutputFileBase::Process(po::variables_map &vm)
                     }
                 }
             }
+            // Restore m_exp
+            exp.swap(m_f->m_exp);
         }
         else
         {

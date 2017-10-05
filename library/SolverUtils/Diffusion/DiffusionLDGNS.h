@@ -126,7 +126,7 @@ namespace Nektar
             }
         };
 
-        typedef boost::shared_ptr<DiffusionLDGNS> DiffusionLDGNSSharedPtr;
+        typedef std::shared_ptr<DiffusionLDGNS> DiffusionLDGNSSharedPtr;
     }
 }
 

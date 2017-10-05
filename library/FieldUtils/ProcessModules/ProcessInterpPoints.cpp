@@ -37,12 +37,11 @@
 #include <string>
 using namespace std;
 
+#include <FieldUtils/Interpolator.h>
 #include <boost/geometry.hpp>
 #include "ProcessInterpPoints.h"
 
-#include <FieldUtils/Interpolator.h>
-
-#include <LibUtilities/BasicUtils/ParseUtils.hpp>
+#include <LibUtilities/BasicUtils/ParseUtils.h>
 #include <LibUtilities/BasicUtils/Progressbar.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/BasicUtils/PtsIO.h>
@@ -106,10 +105,9 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
 {
     CreateFieldPts(vm);
 
-    FieldSharedPtr fromField = boost::shared_ptr<Field>(new Field());
+    FieldSharedPtr fromField = std::shared_ptr<Field>(new Field());
     std::vector<std::string> files;
-    ParseUtils::GenerateOrderedStringVector(
-        m_config["fromxml"].as<string>().c_str(), files);
+    ParseUtils::GenerateVector(m_config["fromxml"].as<string>(), files);
     // set up session file for from field
     fromField->m_session =
         LibUtilities::SessionReader::CreateInstance(0, 0, files);
@@ -119,9 +117,9 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
     int coordim = m_f->m_fieldPts->GetDim();
     int npts    = m_f->m_fieldPts->GetNpoints();
     std::vector<std::string> fieldNames = m_f->m_fieldPts->GetFieldNames();
-    for (auto it = fieldNames.begin(); it != fieldNames.end(); ++it)
+    for (auto &it : fieldNames)
     {
-        m_f->m_fieldPts->RemoveField(*it);
+        m_f->m_fieldPts->RemoveField(it);
     }
 
     Array<OneD, Array<OneD, NekDouble> > pts;
@@ -162,11 +160,11 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
     const SpatialDomains::ExpansionMap &expansions =
         fromField->m_graph->GetExpansions();
     Array<OneD, int> ElementGIDs(expansions.size());
-    SpatialDomains::ExpansionMap::const_iterator expIt;
+
     int i = 0;
-    for (expIt = expansions.begin(); expIt != expansions.end(); ++expIt)
+    for (auto &expIt : expansions)
     {
-        ElementGIDs[i++] = expIt->second->m_geomShPtr->GetGlobalID();
+        ElementGIDs[i++] = expIt.second->m_geomShPtr->GetGlobalID();
     }
     // check to see that we do have some elmement in teh domain since
     // possibly all points could be outside of the domain
@@ -253,8 +251,8 @@ void ProcessInterpPoints::CreateFieldPts(po::variables_map &vm)
     else if (m_config["line"].as<string>().compare("NotSet") != 0)
     {
         vector<NekDouble> values;
-        ASSERTL0(ParseUtils::GenerateUnOrderedVector(
-                     m_config["line"].as<string>().c_str(), values),
+        ASSERTL0(ParseUtils::GenerateVector(
+                     m_config["line"].as<string>(), values),
                  "Failed to interpret line string");
 
         ASSERTL0(values.size() > 2,
@@ -308,8 +306,8 @@ void ProcessInterpPoints::CreateFieldPts(po::variables_map &vm)
     else if (m_config["plane"].as<string>().compare("NotSet") != 0)
     {
         vector<NekDouble> values;
-        ASSERTL0(ParseUtils::GenerateUnOrderedVector(
-                     m_config["plane"].as<string>().c_str(), values),
+        ASSERTL0(ParseUtils::GenerateVector(
+                     m_config["plane"].as<string>(), values),
                  "Failed to interpret plane string");
 
         ASSERTL0(values.size() > 9,
@@ -379,8 +377,8 @@ void ProcessInterpPoints::CreateFieldPts(po::variables_map &vm)
     else if (m_config["box"].as<string>().compare("NotSet") != 0)
     {
         vector<NekDouble> values;
-        ASSERTL0(ParseUtils::GenerateUnOrderedVector(
-                     m_config["box"].as<string>().c_str(), values),
+        ASSERTL0(ParseUtils::GenerateVector(
+                     m_config["box"].as<string>(), values),
                  "Failed to interpret box string");
 
         ASSERTL0(values.size() == 9,
@@ -500,9 +498,8 @@ void ProcessInterpPoints::calcCp0()
     vector<int> velid;
 
     vector<NekDouble> values;
-    ASSERTL0(ParseUtils::GenerateUnOrderedVector(
-                    m_config["cp"].as<string>().c_str(),values),
-                "Failed to interpret cp string");
+    ASSERTL0(ParseUtils::GenerateVector(m_config["cp"].as<string>(), values),
+             "Failed to interpret cp string");
 
     ASSERTL0(values.size() == 2,
                 "cp string should contain 2 values "

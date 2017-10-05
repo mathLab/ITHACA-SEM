@@ -174,13 +174,13 @@ namespace Nektar
             m_mulCallsCounter++;
         }
 
-        const unsigned long GlobalMatrix::GetMulCallsCounter() const 
+        unsigned long GlobalMatrix::GetMulCallsCounter() const 
         {
             if (m_smvbsrmatrix)  return m_smvbsrmatrix->GetMulCallsCounter();
             return -1;
         }
 
-        const unsigned int GlobalMatrix::GetNumNonZeroEntries() const
+        unsigned int GlobalMatrix::GetNumNonZeroEntries() const
         {
             if (m_smvbsrmatrix)  return m_smvbsrmatrix->GetNumNonZeroEntries();
             return -1;

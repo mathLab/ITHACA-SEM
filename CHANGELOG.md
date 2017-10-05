@@ -69,6 +69,10 @@ v4.4.1
 - Fix available classes being listed multiple times (!817)
 - Fix overwriting and backup of chk/fld files on slow file systes (!741)
 
+**Documentation**:
+- Fix sign of the viscous term in the velocity correction scheme equations in
+  the user guide (!856)
+
 **FieldConvert:**
 - Fix issue with field ordering in the interppointdatatofld module (!754)
 - Fix issue with FieldConvert when range flag used (!761)

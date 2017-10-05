@@ -1076,7 +1076,7 @@ namespace Nektar
                         if( fabs(A[m][i][j]) > NekConstants::kNekZeroTol )
                         {
                             vertype[m] = eImplicit;
-                            ASSERTL1(false,"Fully Impplicit schemes cannnot be handled by the TimeIntegrationScheme class");
+                            ASSERTL1(false,"Fully Implicit schemes cannnot be handled by the TimeIntegrationScheme class");
                         }
                     }
                 }

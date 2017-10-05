@@ -21,6 +21,8 @@ v5.0.0
 - Remove unused files from BasicUtils (!841)
 - Remove checks for old boost versions which are no longer supported (!841)
 - Refactor ParseUtils to be more consistent (!843)
+- Added support for using the distance to a specific region (e.g. outlet) in the
+  function definitions for the Absorption Forcing (!769)
 
 **NekMesh**:
 - Add feature to read basic 2D geo files as CAD (!731)

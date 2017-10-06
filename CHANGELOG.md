@@ -81,6 +81,10 @@ v4.4.1
 **Utilities**
 - Fix vtkToFld missing dependency which prevented compiling with VTK 7.1 (!808)
 
+**Documentation**
+- Added missing details on artificial viscosity and dealising to compressible
+  flow solver user guide (!846)
+
 **Packaging**
 - Added missing package for FieldUtils library (!755)
 

@@ -53,8 +53,6 @@
 #ifndef NEKTAR_MESHUTILS_TRIANGLE_DT_H
 #define NEKTAR_MESHUTILS_TRIANGLE_DT_H
 
-#include <boost/shared_ptr.hpp>
-
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 

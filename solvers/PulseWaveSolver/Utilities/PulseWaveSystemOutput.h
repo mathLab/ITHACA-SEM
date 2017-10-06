@@ -74,7 +74,7 @@ namespace Nektar
         
     };
         
-    typedef boost::shared_ptr<PulseWaveSystemOutput> PulseWaveSystemOutputSharedPtr;
+    typedef std::shared_ptr<PulseWaveSystemOutput> PulseWaveSystemOutputSharedPtr;
 }
 
 #endif

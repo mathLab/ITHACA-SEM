@@ -39,7 +39,7 @@ using namespace std;
 
 #include "ProcessInnerProduct.h"
 
-#include <LibUtilities/BasicUtils/ParseUtils.hpp>
+#include <LibUtilities/BasicUtils/ParseUtils.h>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 
 namespace Nektar
@@ -80,7 +80,7 @@ void ProcessInnerProduct::Process(po::variables_map &vm)
     }
 
     string fromfld           = m_config["fromfld"].as<string>();
-    FieldSharedPtr fromField = boost::shared_ptr<Field>(new Field());
+    FieldSharedPtr fromField = std::shared_ptr<Field>(new Field());
 
     ASSERTL0(m_config["fromfld"].as<string>() != "NotSet",
              "The config parameter "
@@ -112,7 +112,7 @@ void ProcessInnerProduct::Process(po::variables_map &vm)
     }
     else
     {
-        ASSERTL0(ParseUtils::GenerateSeqVector(fields.c_str(), processFields),
+        ASSERTL0(ParseUtils::GenerateVector(fields, processFields),
                  "Failed to interpret field string in module innerproduct");
     }
 
@@ -123,7 +123,7 @@ void ProcessInnerProduct::Process(po::variables_map &vm)
     else
     {
         ASSERTL0(
-            ParseUtils::GenerateSeqVector(multifldidsstr.c_str(), multiFldIds),
+            ParseUtils::GenerateSeqVector(multifldidsstr, multiFldIds),
             "Failed to interpret multifldids string in module innerproduct");
         int end        = fromfld.find_first_of('.', 0);
         string endstr  = fromfld.substr(end, fromfld.size());
@@ -171,7 +171,7 @@ void ProcessInnerProduct::Process(po::variables_map &vm)
         Array<OneD, FieldSharedPtr> allFromField(fromfiles.size());
         for (int i = 0; i < fromfiles.size(); ++i)
         {
-            allFromField[i] = boost::shared_ptr<Field>(new Field());
+            allFromField[i] = std::shared_ptr<Field>(new Field());
 
             m_f->FieldIOForFile(fromfiles[i])->Import(
                 fromfiles[i], allFromField[i]->m_fielddef,

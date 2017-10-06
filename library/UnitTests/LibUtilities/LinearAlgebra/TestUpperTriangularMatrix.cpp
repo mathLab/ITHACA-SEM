@@ -1,5 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
+// File: TestUpperTriangularMatrix.cpp
+//
 // For more information, please see: http://www.nektar.info
 //
 // The MIT License
@@ -27,61 +29,68 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
+// Description: 
+//
 ///////////////////////////////////////////////////////////////////////////////
+
+#include <LibUtilities/LinearAlgebra/NekMatrix.hpp>
 
 #include <boost/test/auto_unit_test.hpp>
 #include <boost/test/test_case_template.hpp>
 #include <boost/test/floating_point_comparison.hpp>
 #include <boost/test/unit_test.hpp>
 
-#include <ExpressionTemplates/ExpressionTemplates.hpp>
-#include <LibUtilities/LinearAlgebra/NekVector.hpp>
-#include <LibUtilities/LinearAlgebra/NekMatrix.hpp>
-
-using namespace expt;
+#include <boost/test/auto_unit_test.hpp>
 
 namespace Nektar
 {
-    namespace UnitTests
+    namespace UpperTriangularMatrixUnitTests
     {
-        BOOST_AUTO_TEST_CASE(TestConstant)
+        typedef UpperTriangularMatrixFuncs Policy;
+
+        BOOST_AUTO_TEST_CASE(TestMatrixVectorMultiply)
         {
-            typedef Node<NekVector<double> > LeafNode;
-            typedef PushDownUnaryNodes<LeafNode>::Type ResultType;
-            BOOST_MPL_ASSERT(( boost::is_same<ResultType, LeafNode> ));
+            {
+                double matrix_buf[] = {1, 2,
+                                          3};
+                NekMatrix<double> matrix(2,2,matrix_buf,eUPPER_TRIANGULAR);
+
+                double vector_buf[] = {10, 11};
+                NekVector<double> vector(2, vector_buf);
+
+                NekVector<double> result = matrix*vector;
+
+                double expected_buf[] = {32, 33};
+                NekVector<double> expected_result(2, expected_buf);
+
+                BOOST_CHECK_EQUAL(expected_result, result);
+            }
         }
 
-        BOOST_AUTO_TEST_CASE(TestOneLevelUnary)
+        BOOST_AUTO_TEST_CASE(Test3x3MatrixVectorMultiply)
         {
-            typedef Node<NekVector<double> > LeafNode;
-            typedef Node<LeafNode, NegateOp> NegateNode;
-            typedef Node<LeafNode, InvertOp> InvertNode;
+            {
+                //double matrix_buf[] = {1, 2, 3,
+                //                          4, 5,
+                //                             6};
+                double matrix_buf[] = {1,
+                                       2, 4,
+                                       3, 5, 6};
+                NekMatrix<double> matrix(3,3,matrix_buf,eUPPER_TRIANGULAR);
 
-            typedef PushDownUnaryNodes<NegateNode>::Type NegateResult;
-            typedef PushDownUnaryNodes<InvertNode>::Type InvertResult;
+                double vector_buf[] = {10, 11, 12};
+                NekVector<double> vector(3, vector_buf);
 
-            BOOST_MPL_ASSERT(( boost::is_same<NegateNode, NegateResult> ));
-            BOOST_MPL_ASSERT(( boost::is_same<InvertNode, InvertResult> ));
+                NekVector<double> result = matrix*vector;
 
-        }
+                double expected_buf[] = {68, 104, 72};
+                NekVector<double> expected_result(3, expected_buf);
 
-        BOOST_AUTO_TEST_CASE(TestTwoLevelUnary)
-        {
-            typedef Node<NekVector<double> > LeafNode;
-            typedef Node<LeafNode, AddOp, LeafNode> AddNode;
-            typedef Node<LeafNode, MultiplyOp, LeafNode> MultiplyNode;
-            typedef Node<AddNode, NegateOp> Test1Type;
-            typedef Node<MultiplyNode, NegateOp> Test2Type;
-
-            typedef PushDownUnaryNodes<Test1Type>::Type Test1Result;
-
-            typedef Node<Node<LeafNode, NegateOp>, SubtractOp, LeafNode> ExpectedTest1Result;
-            BOOST_MPL_ASSERT(( boost::is_same<Test1Result, ExpectedTest1Result> ));
-
-            typedef PushDownUnaryNodes<Test2Type>::Type Test2Result;
-            typedef Node<MultiplyNode, NegateOp> ExpectedTest2Result;
-            BOOST_MPL_ASSERT(( boost::is_same<Test2Result, ExpectedTest2Result> ));
+                BOOST_CHECK_EQUAL(expected_result, result);
+            }
 
         }
     }
 }
+
+

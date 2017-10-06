@@ -39,7 +39,6 @@ using namespace std;
 
 #include "ProcessScalGrad.h"
 
-#include <LibUtilities/BasicUtils/ParseUtils.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <MultiRegions/ExpList.h>
 
@@ -156,7 +155,7 @@ void ProcessScalGrad::Process(po::variables_map &vm)
                         }
 
                         // Get face 2D expansion from element expansion
-                        bc = boost::dynamic_pointer_cast<
+                        bc = std::dynamic_pointer_cast<
                             StdRegions::StdExpansion2D>(
                             BndExp[0][n]->GetExp(i));
                         nfq = bc->GetTotPoints();
@@ -164,12 +163,12 @@ void ProcessScalGrad::Process(po::variables_map &vm)
                         // identify boundary of element looking at.
                         boundary = BoundarytoTraceID[cnt];
 
-                        // Get face normals
-                        const SpatialDomains::GeomFactorsSharedPtr
-                            m_metricinfo = bc->GetMetricInfo();
+                        const LocalRegions::Expansion * lep = dynamic_cast<const LocalRegions::Expansion*>( &( *bc ) );
 
-                        const Array<OneD, const Array<OneD, NekDouble> >
-                            normals = elmt->GetFaceNormal(boundary);
+                        // Get face normals
+                        const SpatialDomains::GeomFactorsSharedPtr m_metricinfo = lep->GetMetricInfo();
+
+                        const Array<OneD, const Array<OneD, NekDouble> > normals = elmt->GetFaceNormal(boundary);
 
                         // initialise arrays
                         for (j = 0; j < ngrad; ++j)

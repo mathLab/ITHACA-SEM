@@ -48,8 +48,6 @@ Collection::Collection(
         vector<StdRegions::StdExpansionSharedPtr>    pCollExp,
         OperatorImpMap                              &impTypes)
 {
-    OperatorImpMap::iterator it;
-
     // Initialise geometry data.
     m_geomData = MemoryManager<CoalescedGeomData>::AllocateSharedPtr();
 
@@ -59,7 +57,8 @@ Collection::Collection(
         OperatorType opType = (OperatorType)i;
         ImplementationType impType;
 
-        if ((it = impTypes.find(opType)) != impTypes.end())
+        auto it = impTypes.find(opType);
+        if (it != impTypes.end())
         {
             impType = it->second;
             OperatorKey opKey(pCollExp[0]->DetShapeType(), opType, impType,

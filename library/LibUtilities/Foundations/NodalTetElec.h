@@ -36,12 +36,12 @@
 #ifndef NODALTETELEC_H
 #define NODALTETELEC_H
 
+#include <memory>
 #include <LibUtilities/Foundations/NodalUtil.h>
 #include <LibUtilities/Foundations/FoundationsFwd.hpp>
 #include <LibUtilities/Foundations/Points.h>
 #include <LibUtilities/LinearAlgebra/NekMatrixFwd.hpp>
 #include <LibUtilities/Foundations/ManagerAccess.h>
-#include <boost/shared_ptr.hpp>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 
 namespace Nektar
@@ -56,7 +56,7 @@ namespace Nektar
             {
             }
 
-            LIB_UTILITIES_EXPORT static boost::shared_ptr<PointsBaseType> 
+            LIB_UTILITIES_EXPORT static std::shared_ptr<PointsBaseType> 
                 Create(const PointsKey &key);
 
             const MatrixSharedPtrType GetI(const PointsKey &pkey)
@@ -91,7 +91,7 @@ namespace Nektar
             }
 
         private:
-            boost::shared_ptr<NodalUtilTetrahedron> m_util;
+            std::shared_ptr<NodalUtilTetrahedron> m_util;
 
             NodalTetElec():PointsBaseType(NullPointsKey)
             {

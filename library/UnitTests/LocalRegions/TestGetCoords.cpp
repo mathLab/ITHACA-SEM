@@ -182,8 +182,8 @@ namespace Nektar
             Array<OneD, NekDouble> c1 = Array<OneD, NekDouble>(hexExp->GetTotPoints());
             Array<OneD, NekDouble> c2 = Array<OneD, NekDouble>(hexExp->GetTotPoints());
             hexExp->GetCoords(c0, c1, c2);
-            boost::shared_ptr<StdRegions::StdHexExp> stdHex =
-                boost::dynamic_pointer_cast<StdRegions::StdHexExp>(hexExp);
+            std::shared_ptr<StdRegions::StdHexExp> stdHex =
+                std::dynamic_pointer_cast<StdRegions::StdHexExp>(hexExp);
             stdHex->GetCoords(c0, c1, c2);
             double epsilon = 1.0e-8;
             BOOST_CHECK_CLOSE(c0[0], -1.0, epsilon);

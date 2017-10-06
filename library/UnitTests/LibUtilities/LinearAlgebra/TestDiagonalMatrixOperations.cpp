@@ -70,7 +70,7 @@ namespace Nektar
             double m_buf[] = {1, 2, 3};
             double v_buf[] = {4, 5, 6};
             
-            boost::shared_ptr<NekMatrix<double> > inner(
+            std::shared_ptr<NekMatrix<double> > inner(
                 new NekMatrix<double>(3, 3, m_buf, eDIAGONAL));
             NekMatrix<NekMatrix<double>, ScaledMatrixTag> 
                 m(5.0, inner);

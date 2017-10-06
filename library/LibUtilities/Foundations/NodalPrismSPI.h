@@ -36,12 +36,12 @@
 #ifndef NODALPRISMSPI_H
 #define NODALPRISMSPI_H
 
+#include <memory>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/Foundations/FoundationsFwd.hpp>
 #include <LibUtilities/Foundations/ManagerAccess.h>
 #include <LibUtilities/LibUtilitiesDeclspec.h>
 #include <LibUtilities/LinearAlgebra/NekMatrix.hpp>
-#include <boost/shared_ptr.hpp>
 
 namespace Nektar
 {
@@ -55,7 +55,7 @@ public:
     {
     }
 
-    LIB_UTILITIES_EXPORT static boost::shared_ptr<PointsBaseType> Create(
+    LIB_UTILITIES_EXPORT static std::shared_ptr<PointsBaseType> Create(
         const PointsKey &key);
 
     NodalPrismSPI(const PointsKey &key) : PointsBaseType(key)

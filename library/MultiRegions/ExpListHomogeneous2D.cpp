@@ -529,7 +529,7 @@ namespace Nektar
         
         DNekBlkMatSharedPtr ExpListHomogeneous2D::GetHomogeneous2DBlockMatrix(Homogeneous2DMatType mattype,  CoeffState coeffstate) const
         {
-            Homo2DBlockMatrixMap::iterator matrixIter = m_homogeneous2DBlockMat->find(mattype);
+            auto matrixIter = m_homogeneous2DBlockMat->find(mattype);
 
             if(matrixIter == m_homogeneous2DBlockMat->end())
             {
@@ -1047,10 +1047,3 @@ namespace Nektar
         }
     } //end of namespace
 } //end of namespace
-
-
-/**
-* $Log: v $
-*
-**/
-

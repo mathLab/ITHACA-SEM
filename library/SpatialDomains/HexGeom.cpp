@@ -402,7 +402,7 @@ namespace Nektar
                     {
                         if( (m_faces[0])->GetEid(i) == (m_faces[f])->GetEid(j) )
                         {
-                            edge = boost::dynamic_pointer_cast<SegGeom>((m_faces[0])->GetEdge(i));
+                            edge = std::dynamic_pointer_cast<SegGeom>((m_faces[0])->GetEdge(i));
                             m_edges.push_back(edge);
                             check++;
                         }
@@ -433,7 +433,7 @@ namespace Nektar
                 {
                     if( (m_faces[1])->GetEid(i) == (m_faces[4])->GetEid(j) )
                     {
-                        edge = boost::dynamic_pointer_cast<SegGeom>((m_faces[1])->GetEdge(i));
+                        edge = std::dynamic_pointer_cast<SegGeom>((m_faces[1])->GetEdge(i));
                         m_edges.push_back(edge);
                         check++;
                     }
@@ -462,7 +462,7 @@ namespace Nektar
                     {
                         if( (m_faces[f])->GetEid(i) == (m_faces[f+1])->GetEid(j) )
                         {
-                            edge = boost::dynamic_pointer_cast<SegGeom>((m_faces[f])->GetEdge(i));
+                            edge = std::dynamic_pointer_cast<SegGeom>((m_faces[f])->GetEdge(i));
                             m_edges.push_back(edge);
                             check++;
                         }
@@ -495,7 +495,7 @@ namespace Nektar
                     {
                         if( (m_faces[5])->GetEid(i) == (m_faces[f])->GetEid(j) )
                         {
-                            edge = boost::dynamic_pointer_cast<SegGeom>((m_faces[5])->GetEdge(i));
+                            edge = std::dynamic_pointer_cast<SegGeom>((m_faces[5])->GetEdge(i));
                             m_edges.push_back(edge);
                             check++;
                         }

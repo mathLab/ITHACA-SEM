@@ -36,6 +36,7 @@
 #ifndef NEKMESHUTILS_MESHELEMENTS_EDGE
 #define NEKMESHUTILS_MESHELEMENTS_EDGE
 
+#include <LibUtilities/BasicUtils/HashUtils.hpp>
 #include <SpatialDomains/SegGeom.h>
 
 #include <NekMeshUtils/NekMeshUtilsDeclspec.h>
@@ -47,7 +48,7 @@ namespace NekMeshUtils
 {
 
 class Element;
-typedef boost::shared_ptr<Element> ElementSharedPtr;
+typedef std::shared_ptr<Element> ElementSharedPtr;
 
 /**
  * @brief Represents an edge which joins two points.
@@ -133,7 +134,7 @@ private:
     SpatialDomains::SegGeomSharedPtr m_geom;
 };
 /// Shared pointer to an edge.
-typedef boost::shared_ptr<Edge> EdgeSharedPtr;
+typedef std::shared_ptr<Edge> EdgeSharedPtr;
 
 NEKMESHUTILS_EXPORT bool operator==(EdgeSharedPtr const &p1,
                                     EdgeSharedPtr const &p2);
@@ -151,15 +152,12 @@ struct EdgeHash : std::unary_function<EdgeSharedPtr, std::size_t>
 {
     std::size_t operator()(EdgeSharedPtr const &p) const
     {
-        std::size_t seed = 0;
-        unsigned int id1 = p->m_n1->m_id;
-        unsigned int id2 = p->m_n2->m_id;
-        boost::hash_combine(seed, id1 < id2 ? id1 : id2);
-        boost::hash_combine(seed, id2 < id1 ? id1 : id2);
-        return seed;
+        const unsigned int id1 = p->m_n1->m_id;
+        const unsigned int id2 = p->m_n2->m_id;
+        return id1 < id2 ? hash_combine(id1, id2) : hash_combine(id2, id1);
     }
 };
-typedef boost::unordered_set<EdgeSharedPtr, EdgeHash> EdgeSet;
+typedef std::unordered_set<EdgeSharedPtr, EdgeHash> EdgeSet;
 }
 }
 

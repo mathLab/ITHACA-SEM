@@ -39,8 +39,7 @@
 #include <StdRegions/StdRegions.hpp>
 #include <StdRegions/StdRegionsDeclspec.h>
 #include <ostream>
-#include <boost/shared_ptr.hpp>
-
+#include <memory>
 
 namespace Nektar
 {
@@ -122,8 +121,8 @@ namespace Nektar
 
         STD_REGIONS_EXPORT std::ostream& operator<<(std::ostream& os, const IndexMapKey& rhs);
 
-        typedef  boost::shared_ptr<IndexMapKey> IndexMapKeySharedPtr;
-        typedef  boost::shared_ptr<IndexMapValues> IndexMapValuesSharedPtr;
+        typedef  std::shared_ptr<IndexMapKey> IndexMapKeySharedPtr;
+        typedef  std::shared_ptr<IndexMapValues> IndexMapValuesSharedPtr;
     } // end of namespace
 } // end of namespace
 

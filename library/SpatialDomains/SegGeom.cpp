@@ -132,10 +132,9 @@ namespace Nektar
             m_eid     = in.m_eid;
             m_globalID = in.m_globalID;
 
-            std::list<CompToElmt>::const_iterator def;
-            for(def = in.m_elmtMap.begin(); def != in.m_elmtMap.end(); def++)
+            for(auto &def : in.m_elmtMap)
             {
-                m_elmtMap.push_back(*def);
+                m_elmtMap.push_back(def);
             }
             m_xmap = in.m_xmap;
             SetUpCoeffs(m_xmap->GetNcoeffs());
@@ -259,10 +258,9 @@ namespace Nektar
 
         bool SegGeom::v_IsElmtConnected(int gvo_id, int locid) const
         {
-            std::list<CompToElmt>::const_iterator def;
             CompToElmt ee(gvo_id,locid);
 
-            def = find(m_elmtMap.begin(),m_elmtMap.end(),ee);
+            auto def = find(m_elmtMap.begin(),m_elmtMap.end(),ee);
 
             // Found the element connectivity object in the list
             if(def != m_elmtMap.end())
@@ -405,7 +403,7 @@ namespace Nektar
                               CurveMap &curvedFaces)
         {
             Geometry::v_Reset(curvedEdges, curvedFaces);
-            CurveMap::iterator it = curvedEdges.find(m_globalID);
+            auto it = curvedEdges.find(m_globalID);
 
             if (it != curvedEdges.end())
             {

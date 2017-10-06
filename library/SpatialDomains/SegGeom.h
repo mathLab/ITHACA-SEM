@@ -48,11 +48,9 @@ namespace Nektar
     namespace SpatialDomains
     {
         class SegGeom;
-        typedef boost::shared_ptr<SegGeom> SegGeomSharedPtr;
+        typedef std::shared_ptr<SegGeom> SegGeomSharedPtr;
         typedef std::vector< SegGeomSharedPtr > SegGeomVector;
-        typedef std::vector< SegGeomSharedPtr >::iterator SegGeomVectorIter;
         typedef std::map<int, SegGeomSharedPtr> SegGeomMap;
-
 
         class SegGeom: public Geometry1D
         {

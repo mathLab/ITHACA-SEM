@@ -41,6 +41,7 @@ v5.0.0
 - Fixed interppoints module (!760)
 - Move StreamFunction utility to a FieldConvert module (!809)
 - Extend wss module to compressible flows (!810)
+- Allow explicitly setting bool options of FieldConvert modules as false (!811)
 - Enable output to multiple files (!844)
 - Allow using xml file without expansion tag in FieldConvert (!849)
 
@@ -91,12 +92,20 @@ v4.4.1
 
 **IncNavierStokesSolver**
 - Fix an initialisation issue when using an additional advective field (!779)
+- Fix MovingBody boundary condition (!852)
 
 **Utilities**
 - Fix vtkToFld missing dependency which prevented compiling with VTK 7.1 (!808)
 
+**Documentation**
+- Added missing details on artificial viscosity and dealising to compressible
+  flow solver user guide (!846)
+
 **Packaging**
 - Added missing package for FieldUtils library (!755)
+
+**ADRSolver:**
+- Fix UnsteadyAdvectionDiffusion with DG (!855)
 
 v4.4.0
 ------

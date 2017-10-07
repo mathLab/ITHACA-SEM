@@ -1075,18 +1075,8 @@ void Mapping::v_UpdateBCs( const NekDouble time)
     int nbnds    = m_fields[0]->GetBndConditions().num_elements();
 
     // Declare variables
-    Array<OneD, int> BCtoElmtID;
-    Array<OneD, int> BCtoTraceID;
     Array<OneD, const SpatialDomains::BoundaryConditionShPtr> BndConds;
     Array<OneD, MultiRegions::ExpListSharedPtr>  BndExp;
-    StdRegions::StdExpansionSharedPtr elmt;
-    StdRegions::StdExpansionSharedPtr Bc;
-
-    Array<OneD, NekDouble>  ElmtVal(physTot, 0.0);
-    Array<OneD, NekDouble>  BndVal(physTot, 0.0);
-    Array<OneD, NekDouble>  coordVelElmt(physTot, 0.0);
-    Array<OneD, NekDouble>  coordVelBnd(physTot, 0.0);
-    Array<OneD, NekDouble>  Vals(physTot, 0.0);
 
     Array<OneD, bool>  isDirichlet(nfields);
 
@@ -1180,66 +1170,26 @@ void Mapping::v_UpdateBCs( const NekDouble time)
         {
             BndConds   = m_fields[i]->GetBndConditions();
             BndExp     = m_fields[i]->GetBndCondExpansions();
-
-            // Loop boundary conditions again to get correct
-            //    values for cnt
-            int cnt = 0;
-            for(int m = 0 ; m < nbnds; ++m)
+            if( BndConds[n]->GetUserDefined() =="" ||
+                BndConds[n]->GetUserDefined() =="MovingBody")
             {
-                int exp_size = BndExp[m]->GetExpSize();
-                if (m==n && isDirichlet[i])
+                m_fields[i]->ExtractPhysToBnd(n,
+                        values[i], BndExp[n]->UpdatePhys());
+
+                // Apply MovingBody correction
+                if (  (i<nvel) &&
+                      BndConds[n]->GetUserDefined() ==
+                      "MovingBody" )
                 {
-                    for (int j = 0; j < exp_size; ++j, cnt++)
-                    {
-                        m_fields[i]->GetBoundaryToElmtMap(BCtoElmtID,
-                                                          BCtoTraceID);
-                        /// Casting the bnd exp to the specific case
-                        Bc =  std::dynamic_pointer_cast<
-                                StdRegions::StdExpansion> 
-                                (BndExp[n]->GetExp(j));
-                        // Get element expansion
-                        elmt = m_fields[i]->GetExp(BCtoElmtID[cnt]);
-                        // Get values on the element
-                        ElmtVal  = values[i] + 
-                                   m_fields[i]->GetPhys_Offset(
-                                                    BCtoElmtID[cnt]);
-                        // Get values on boundary
-                        elmt->GetTracePhysVals(BCtoTraceID[cnt], 
-                                                   Bc, ElmtVal, BndVal);
+                    // Get coordinate velocity on boundary
+                    Array<OneD, NekDouble> coordVelBnd(BndExp[n]->GetTotPoints());
+                    m_fields[i]->ExtractPhysToBnd(n, coordVel[i], coordVelBnd);
 
-                        // Pointer to value that should be updated
-                        Vals = BndExp[n]->UpdatePhys()
-                                    + BndExp[n]->GetPhys_Offset(j);
-
-                        // Copy result
-                        Vmath::Vcopy(Bc->GetTotPoints(), 
-                                                BndVal, 1, Vals, 1);
-
-                        // Apply MovingBody correction
-                        if (  (i<nvel) && 
-                              BndConds[n]->GetUserDefined() == 
-                              "MovingBody" )
-                        {
-                            // get coordVel in the element
-                            coordVelElmt  = coordVel[i] + 
-                                            m_fields[i]->GetPhys_Offset(
-                                                BCtoElmtID[cnt]);
-
-                            // Get values on boundary
-                            elmt->GetTracePhysVals(
-                                        BCtoTraceID[cnt], Bc,
-                                        coordVelElmt, coordVelBnd);
-
-                            // Apply correction
-                            Vmath::Vadd(Bc->GetTotPoints(), 
-                                                coordVelBnd, 1, 
-                                                Vals, 1, Vals, 1);
-                        }
-                    }
-                }
-                else // setting if m!=n
-                {
-                    cnt += exp_size;
+                    // Apply correction
+                    Vmath::Vadd(BndExp[n]->GetTotPoints(),
+                                        coordVelBnd, 1,
+                                        BndExp[n]->UpdatePhys(), 1,
+                                        BndExp[n]->UpdatePhys(), 1);
                 }
             }
         }
@@ -1256,12 +1206,16 @@ void Mapping::v_UpdateBCs( const NekDouble time)
             if ( BndConds[n]->GetBoundaryConditionType() == 
                     SpatialDomains::eDirichlet)
             {
-                BndExp[n]->FwdTrans_BndConstrained(BndExp[n]->GetPhys(),
-                                            BndExp[n]->UpdateCoeffs());
-                if (m_fields[i]->GetExpType() == MultiRegions::e3DH1D)
+                if( BndConds[n]->GetUserDefined() =="" ||
+                    BndConds[n]->GetUserDefined() =="MovingBody")
                 {
-                    BndExp[n]->HomogeneousFwdTrans(BndExp[n]->GetCoeffs(),
-                                            BndExp[n]->UpdateCoeffs());
+                    BndExp[n]->FwdTrans_BndConstrained(BndExp[n]->GetPhys(),
+                                                BndExp[n]->UpdateCoeffs());
+                    if (m_fields[i]->GetExpType() == MultiRegions::e3DH1D)
+                    {
+                        BndExp[n]->HomogeneousFwdTrans(BndExp[n]->GetCoeffs(),
+                                                BndExp[n]->UpdateCoeffs());
+                    }
                 }
             }
         }

@@ -102,6 +102,9 @@ v4.4.1
 **Packaging**
 - Added missing package for FieldUtils library (!755)
 
+**ADRSolver:**
+- Fix UnsteadyAdvectionDiffusion with DG (!855)
+
 v4.4.0
 ------
 **Library**:

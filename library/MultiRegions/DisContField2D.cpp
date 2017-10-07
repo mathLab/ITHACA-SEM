@@ -2350,22 +2350,6 @@ namespace Nektar
                         ASSERTL0(false, "This type of BC not implemented yet");
                     }
                 }
-                else if (boost::iequals(m_bndConditions[i]->GetUserDefined(),
-                                        "MovingBody"))
-                {
-                    locExpList = m_bndCondExpansions[i];
-                    if (m_bndConditions[i]->GetBoundaryConditionType()
-                            == SpatialDomains::eDirichlet)
-                    {
-                        locExpList->FwdTrans_IterPerExp(
-                                    locExpList->GetPhys(),
-                                    locExpList->UpdateCoeffs());
-                    }
-                    else
-                    {
-                        ASSERTL0(false, "This type of BC not implemented yet");
-                    }
-                }
             }
         }
     } // end of namespace

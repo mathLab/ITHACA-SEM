@@ -35,12 +35,13 @@
 
 #include <iostream>
 #include <string>
-using namespace std;
 
 #include "ProcessWSS.h"
 
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <MultiRegions/ExpList.h>
+
+using namespace std;
 
 namespace Nektar
 {
@@ -64,17 +65,12 @@ void ProcessWSS::Process(po::variables_map &vm)
 {
     ProcessBoundaryExtract::Process(vm);
 
-    NekDouble kinvis = m_f->m_session->GetParameter("Kinvis");
-
     int i, j;
     int nfields = m_f->m_variables.size();
-    int spacedim = m_f->m_graph->GetSpaceDimension();
-    if ((m_f->m_numHomogeneousDir) == 1 || (m_f->m_numHomogeneousDir) == 2)
-    {
-        spacedim += m_f->m_numHomogeneousDir;
-    }
+    int expdim  = m_f->m_graph->GetSpaceDimension();
+    m_spacedim  = expdim + m_f->m_numHomogeneousDir;
 
-    if (spacedim == 2)
+    if (m_spacedim == 2)
     {
         m_f->m_variables.push_back("Shear_x");
         m_f->m_variables.push_back("Shear_y");
@@ -87,42 +83,41 @@ void ProcessWSS::Process(po::variables_map &vm)
         m_f->m_variables.push_back("Shear_z");
         m_f->m_variables.push_back("Shear_mag");
     }
+
     if (m_f->m_exp[0]->GetNumElmts() == 0)
     {
         return;
     }
 
-    ASSERTL0(m_f->m_variables[0] == "u",
-             "Implicit assumption that input is in incompressible format of "
-             "(u,v,p) or (u,v,w,p)");
-
-    if (spacedim == 1)
+    if (m_spacedim == 1)
     {
         ASSERTL0(false, "Error: wss for a 1D problem cannot "
                         "be computed");
     }
 
-    int newfields = spacedim + 1;
-    int nshear    = spacedim + 1;
-    int nstress   = spacedim * spacedim;
-    int ngrad     = spacedim * spacedim;
+    // Load viscosity coefficients
+    NekDouble kinvis, lambda;
+    GetViscosity( kinvis, lambda);
 
-    Array<OneD, Array<OneD, NekDouble> > velocity(nfields), grad(ngrad),
-        fgrad(ngrad);
+    // Declare arrays
+    int nshear    = m_spacedim + 1;
+    int nstress   = m_spacedim * m_spacedim;
+    int ngrad     = m_spacedim * m_spacedim;
+
+    Array<OneD, Array<OneD, NekDouble> > velocity(nfields);
+    Array<OneD, Array<OneD, NekDouble> > grad(ngrad);
     Array<OneD, Array<OneD, NekDouble> > stress(nstress), fstress(nstress);
     Array<OneD, Array<OneD, NekDouble> > fshear(nshear);
 
-    Array<OneD, MultiRegions::ExpListSharedPtr> BndExp(newfields);
-    Array<OneD, MultiRegions::ExpListSharedPtr> BndElmtExp(spacedim);
+    Array<OneD, MultiRegions::ExpListSharedPtr> BndExp(nshear);
+    Array<OneD, MultiRegions::ExpListSharedPtr> BndElmtExp(nfields);
 
-    m_f->m_exp.resize(nfields + newfields);
-    for (i = 0; i < newfields; ++i)
+    // Resize m_exp
+    m_f->m_exp.resize(nfields + nshear);
+    for (i = 0; i < nshear; ++i)
     {
-        m_f->m_exp[nfields + i] =
-            m_f->AppendExpList(m_f->m_numHomogeneousDir);
+        m_f->m_exp[nfields + i] = m_f->AppendExpList(m_f->m_numHomogeneousDir);
     }
-
-
 
     // Create map of boundary ids for partitioned domains
     SpatialDomains::BoundaryConditions bcs(m_f->m_session,
@@ -135,6 +130,7 @@ void ProcessWSS::Process(po::variables_map &vm)
     {
         BndRegionMap[breg_it.first] = cnt++;
     }
+
     // Loop over boundaries to Write
     for (int b = 0; b < m_f->m_bndRegionsToWrite.size(); ++b)
     {
@@ -143,12 +139,12 @@ void ProcessWSS::Process(po::variables_map &vm)
             int bnd = BndRegionMap[m_f->m_bndRegionsToWrite[b]];
             // Get expansion list for boundary and for elements containing this
             // bnd
-            for (i = 0; i < newfields; i++)
+            for (i = 0; i < nshear; i++)
             {
                 BndExp[i] =
                     m_f->m_exp[nfields + i]->UpdateBndCondExpansion(bnd);
             }
-            for (i = 0; i < spacedim; i++)
+            for (i = 0; i < nfields; i++)
             {
                 m_f->m_exp[i]->GetBndElmtExpansion(bnd, BndElmtExp[i]);
             }
@@ -171,15 +167,12 @@ void ProcessWSS::Process(po::variables_map &vm)
                 stress[i] = Array<OneD, NekDouble>(nqe);
             }
 
+            Array<OneD, NekDouble> div(nqe, 0.0);
+
             // initialise arrays in the boundary
             for (i = 0; i < nstress; ++i)
             {
                 fstress[i] = Array<OneD, NekDouble>(nqb);
-            }
-
-            for (i = 0; i < ngrad; ++i)
-            {
-                fgrad[i] = Array<OneD, NekDouble>(nqb);
             }
 
             for (i = 0; i < nshear; ++i)
@@ -188,39 +181,58 @@ void ProcessWSS::Process(po::variables_map &vm)
             }
 
             // Extract Velocities
-            for (i = 0; i < spacedim; ++i)
-            {
-                velocity[i] = BndElmtExp[i]->GetPhys();
-            }
+            GetVelocity( BndElmtExp, velocity);
 
-            // Compute gradients (velocity correction scheme method)
-            for (i = 0; i < spacedim; ++i)
+            // Compute gradients
+            for (i = 0; i < m_spacedim; ++i)
             {
-                if (spacedim == 2)
+                if (m_spacedim == 2)
                 {
                     BndElmtExp[i]->PhysDeriv(velocity[i],
-                                             grad[i * spacedim + 0],
-                                             grad[i * spacedim + 1]);
+                                             grad[i * m_spacedim + 0],
+                                             grad[i * m_spacedim + 1]);
                 }
                 else
                 {
-                    BndElmtExp[i]->PhysDeriv(
-                        velocity[i], grad[i * spacedim + 0],
-                        grad[i * spacedim + 1], grad[i * spacedim + 2]);
+                    BndElmtExp[i]->PhysDeriv(velocity[i],
+                                             grad[i * m_spacedim + 0],
+                                             grad[i * m_spacedim + 1],
+                                             grad[i * m_spacedim + 2]);
                 }
+                // Add contribution to div(u)
+                Vmath::Vadd(nqe, grad[i * m_spacedim + i], 1, div, 1, div, 1);
             }
 
-            // Compute stress component terms  tau_ij = mu*(u_i,j + u_j,i)
-            for (i = 0; i < spacedim; ++i)
-            {
-                for (j = 0; j < spacedim; ++j)
-                {
-                    Vmath::Vadd(nqe, grad[i * spacedim + j], 1,
-                                grad[j * spacedim + i], 1,
-                                stress[i * spacedim + j], 1);
+            // Velocity divergence scaled by lambda * mu
+            Vmath::Smul(nqe, lambda*kinvis, div, 1, div, 1);
 
-                    Vmath::Smul(nqe, kinvis, stress[i * spacedim + j], 1,
-                                stress[i * spacedim + j], 1);
+            // Compute stress component terms
+            //    tau_ij = mu*(u_i,j + u_j,i) + mu*lambda*delta_ij*div(u)
+            for (i = 0; i < m_spacedim; ++i)
+            {
+                for (j = i; j < m_spacedim; ++j)
+                {
+                    Vmath::Vadd(nqe, grad[i * m_spacedim + j], 1,
+                                     grad[j * m_spacedim + i], 1,
+                                     stress[i * m_spacedim + j], 1);
+
+                    Vmath::Smul(nqe, kinvis,
+                                     stress[i * m_spacedim + j], 1,
+                                     stress[i * m_spacedim + j], 1);
+
+                    if (i == j)
+                    {
+                        // Add divergence term to diagonal
+                        Vmath::Vadd(nqe, stress[i * m_spacedim + j], 1,
+                                         div, 1,
+                                         stress[i * m_spacedim + j], 1);
+                    }
+                    else
+                    {
+                        // Copy to make symmetric
+                        Vmath::Vcopy(nqe, stress[i * m_spacedim + j], 1,
+                                          stress[j * m_spacedim + i], 1);
+                    }
                 }
             }
 
@@ -234,32 +246,33 @@ void ProcessWSS::Process(po::variables_map &vm)
             Array<OneD, Array<OneD, NekDouble> > normals;
             m_f->m_exp[0]->GetBoundaryNormals(bnd, normals);
             // Reverse normals, to get correct orientation for the body
-            for (i = 0; i < spacedim; ++i)
+            for (i = 0; i < m_spacedim; ++i)
             {
                 Vmath::Neg(nqb, normals[i], 1);
             }
 
             // calculate wss, and update coeffs in the boundary expansion
             // S = tau_ij * n_j
-            for (i = 0; i < spacedim; ++i)
+            for (i = 0; i < m_spacedim; ++i)
             {
-                for (j = 0; j < spacedim; ++j)
+                for (j = 0; j < m_spacedim; ++j)
                 {
-                    Vmath::Vvtvp(nqb, normals[j], 1, fstress[i * spacedim + j],
-                                 1, fshear[i], 1, fshear[i], 1);
+                    Vmath::Vvtvp(nqb, normals[j], 1,
+                                      fstress[i * m_spacedim + j], 1,
+                                      fshear[i], 1, fshear[i], 1);
                 }
             }
 
             // T = S - (S.n)n
-            for (i = 0; i < spacedim; ++i)
+            for (i = 0; i < m_spacedim; ++i)
             {
                 Vmath::Vvtvp(nqb, normals[i], 1, fshear[i], 1,
                              fshear[nshear - 1], 1, fshear[nshear - 1], 1);
             }
-            Vmath::Smul(nqb, -1.0, fshear[nshear - 1], 1, fshear[nshear - 1],
-                        1);
+            Vmath::Smul(nqb, -1.0, fshear[nshear - 1], 1,
+                                   fshear[nshear - 1], 1);
 
-            for (i = 0; i < spacedim; i++)
+            for (i = 0; i < m_spacedim; i++)
             {
                 Vmath::Vvtvp(nqb, normals[i], 1, fshear[nshear - 1], 1,
                              fshear[i], 1, fshear[i], 1);
@@ -269,7 +282,7 @@ void ProcessWSS::Process(po::variables_map &vm)
 
             // Tw
             Vmath::Zero(nqb, fshear[nshear - 1], 1);
-            for (i = 0; i < spacedim; ++i)
+            for (i = 0; i < m_spacedim; ++i)
             {
                 Vmath::Vvtvp(nqb, fshear[i], 1, fshear[i], 1,
                              fshear[nshear - 1], 1, fshear[nshear - 1], 1);
@@ -280,5 +293,64 @@ void ProcessWSS::Process(po::variables_map &vm)
         }
     }
 }
+
+void ProcessWSS::GetViscosity(NekDouble &kinvis, NekDouble &lambda)
+{
+    if(boost::iequals(m_f->m_variables[0], "u"))
+    {
+        // IncNavierStokesSolver
+        kinvis = m_f->m_session->GetParameter("Kinvis");
+        lambda = 0;
+    }
+    else if(boost::iequals(m_f->m_variables[0], "rho") &&
+            boost::iequals(m_f->m_variables[1], "rhou"))
+    {
+        // CompressibleFlowSolver
+        m_f->m_session->LoadParameter ("mu",     kinvis, 1.78e-05);
+        m_f->m_session->LoadParameter ("lambda", lambda, -2.0/3.0);
+    }
+    else
+    {
+        // Unknown
+        ASSERTL0(false, "Invalid variables for WSS");
+    }
+}
+
+void ProcessWSS::GetVelocity(
+        const Array<OneD, MultiRegions::ExpListSharedPtr> exp,
+              Array<OneD, Array<OneD, NekDouble> > &vel)
+{
+    int npoints = exp[0]->GetNpoints();
+    if(boost::iequals(m_f->m_variables[0], "u"))
+    {
+        // IncNavierStokesSolver
+        for (int i = 0; i < m_spacedim; ++i)
+        {
+            vel[i] = Array<OneD, NekDouble>(npoints);
+            Vmath::Vcopy(npoints,
+                         exp[i]->GetPhys(), 1,
+                         vel[i], 1);
+        }
+    }
+    else if(boost::iequals(m_f->m_variables[0], "rho") &&
+            boost::iequals(m_f->m_variables[1], "rhou"))
+    {
+        // CompressibleFlowSolver
+        for (int i = 0; i < m_spacedim; ++i)
+        {
+            vel[i] = Array<OneD, NekDouble>(npoints);
+            Vmath::Vdiv(npoints,
+                         exp[i + 1]->GetPhys(), 1,
+                         exp[0]->GetPhys(), 1,
+                         vel[i], 1);
+        }
+    }
+    else
+    {
+        // Unknown
+        ASSERTL0(false, "Could not identify velocity for WSS");
+    }
+}
+
 }
 }

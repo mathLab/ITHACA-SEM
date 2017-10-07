@@ -40,6 +40,7 @@ v5.0.0
 - Add input module for Semtex field files (!777)
 - Fixed interppoints module (!760)
 - Move StreamFunction utility to a FieldConvert module (!809)
+- Extend wss module to compressible flows (!810)
 - Allow explicitly setting bool options of FieldConvert modules as false (!811)
 - Enable output to multiple files (!844)
 - Allow using xml file without expansion tag in FieldConvert (!849)

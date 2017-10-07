@@ -232,29 +232,6 @@ int main(int argc, char *argv[])
     int nTimesteps = vm["Ntimesteps"].as<int>();
     int nMethod = vm["NTimeIntegrationMethod"].as<int>();
 
-    // Check if the number of arguments given to the executable is correct
-    /*if(argc != 4)
-    {
-        cerr << "Usage: Project1D Npoints Ntimesteps TimeIntegrationMethod" << endl;        
-        cerr << "Where  - Npoints is the number of grid points to be used" << endl;      
-        cerr << "         for the finite difference discretisation" << endl; 
-        cerr << "       - Ntimesteps is the number of timesteps to be used" << endl;
-        cerr << "         for the time-integration method" << endl;    
-        cerr << "       - TimeIntegrationMethod is a number in the range [1,5]" << endl;    
-        cerr << "         and defines the time-integration method to be used, i.e." << endl; 
-        cerr << "           - 1: 1st order multi-step IMEX scheme (Euler Backwards/Euler Forwards)" << endl;   
-        cerr << "           - 2: 2nd order multi-step IMEX scheme" << endl;   
-        cerr << "           - 3: 3rd order multi-step IMEX scheme" << endl; 
-        cerr << "           - 4: 2nd order multi-stage DIRK IMEX scheme" << endl;    
-        cerr << "           - 5: 3nd order multi-stage DIRK IMEX scheme" << endl;    
-        cerr << "           - 6: 2nd order IMEX Gear (Extrapolated Gear/SBDF-2)" << endl;
-        exit(1);
-    }*/
-
-    // Read the discretisation parameters
-    //int nPoints    = atoi(argv[1]);
-    //int nTimesteps = atoi(argv[2]);
-
     // Open a file for writing the solution
     ofstream outfile;
     outfile.open("OneDfinDiffAdvDiffSolverOutput.dat");
@@ -291,7 +268,7 @@ int main(int argc, char *argv[])
     //     starting up the system
     Array<OneD, TimeIntegrationMethod> method;
     int nSteps = 1;
-    switch (nMethod)//(atoi(argv[3]))
+    switch (nMethod)
     {
     case 1 :
         {
@@ -419,7 +396,6 @@ int main(int argc, char *argv[])
     }  
     
     // Calculate the error and dump to screen
-    //cout << "The L2 error is " << scientific << setw (19) << setprecision(10)  <<  solver->EvaluateL2Error(fidifsol,exactsol) << endl;
     cout << "L 2 error :" <<  solver->EvaluateL2Error(fidifsol,exactsol) << endl;
 
     // Some more writing out the results

@@ -97,11 +97,13 @@ void ProcessJacobianEnergy::Process(po::variables_map &vm)
         // copy Jacobian into field
         StdRegions::StdExpansionSharedPtr Elmt = exp->GetExp(i);
 
+        const StdRegions::StdExpansion * sep = &( *Elmt );
+        const LocalRegions::Expansion  * lep = dynamic_cast<const LocalRegions::Expansion*>( lep );
+
         int nquad       = Elmt->GetTotPoints();
         int coeffoffset = exp->GetCoeff_Offset(i);
-        Array<OneD, const NekDouble> Jac =
-            Elmt->GetMetricInfo()->GetJac(Elmt->GetPointsKeys());
-        if (Elmt->GetMetricInfo()->GetGtype() == SpatialDomains::eRegular)
+        Array<OneD, const NekDouble> Jac = lep->GetMetricInfo()->GetJac( Elmt->GetPointsKeys() );
+        if ( lep->GetMetricInfo()->GetGtype() == SpatialDomains::eRegular )
         {
             Vmath::Fill(nquad, Jac[0], phys, 1);
         }
@@ -110,7 +112,7 @@ void ProcessJacobianEnergy::Process(po::variables_map &vm)
             Vmath::Vcopy(nquad, Jac, 1, phys, 1);
         }
 
-        if (Elmt->GetMetricInfo()->GetGtype() == SpatialDomains::eDeformed)
+        if( lep->GetMetricInfo()->GetGtype() == SpatialDomains::eDeformed )
         {
             NekDouble jacmax = Vmath::Vmax(nquad, Jac, 1);
             NekDouble jacmin = Vmath::Vmin(nquad, Jac, 1);

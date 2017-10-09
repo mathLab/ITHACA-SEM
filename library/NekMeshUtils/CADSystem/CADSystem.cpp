@@ -101,5 +101,12 @@ Array<OneD, NekDouble> CADSystem::GetPeriodicTranslationVector(int first,
 
     return ret;
 }
+
+std::string CADSystem::GetSurfaceName(int i)
+{
+    return m_surfs[i]->GetName();
+}
+    
+
 }
 }

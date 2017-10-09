@@ -12,13 +12,17 @@ v5.0.0
 - Use chrono in Timer (!807)
 - Fix caching of FUNCTION tags that read from file and provide the same
   functionality in FUNCTIONs defined for forcings (!759)
+- Add patch to tinyxml to fix size_t vs int bug (!820)
 - Add ARPACK thirdparty build capabilities (!828)
 - Added native support for csv files in addititon to pts (!760 !835)
 - Utilize LAPACK_DIR env variable to find the native blas/lapack install (!827)
+- Remove StdExpansion use from MultiRegion (use Expansions instead). (!831)
 - Simplify RawType typedefs (!840)
 - Remove unused files from BasicUtils (!841)
 - Remove checks for old boost versions which are no longer supported (!841)
 - Refactor ParseUtils to be more consistent (!843)
+- Added support for using the distance to a specific region (e.g. outlet) in the
+  function definitions for the Absorption Forcing (!769)
 
 **NekMesh**:
 - Add feature to read basic 2D geo files as CAD (!731)
@@ -30,6 +34,7 @@ v5.0.0
 - Fix issue with reading CCM files due to definition of default arrays
   rather than a vector (!797)
 - Fix inverted triangles and small memory issue in surface meshing (!798)
+- Update for the CAD system, more advance self-healing and analysis (!822)
 - Additional curve types in GEO reader: BSpline, Circle, Ellipse (!800)
 - Fix default command line argument value (!823)
 
@@ -37,25 +42,13 @@ v5.0.0
 - Add input module for Semtex field files (!777)
 - Fixed interppoints module (!760)
 - Move StreamFunction utility to a FieldConvert module (!809)
+- Extend wss module to compressible flows (!810)
+- Allow explicitly setting bool options of FieldConvert modules as false (!811)
 - Enable output to multiple files (!844)
+- Allow using xml file without expansion tag in FieldConvert (!849)
 
 **Documentation**:
 - Added the developer-guide repository as a submodule (!751)
-
-v4.4.2
-------
-**NekMesh**:
-- Fix uninitialised memory bug in Nek5000 input module (!801)
-
-**Library**
-- Fix ability to set default implementation in Collections and added an option
-  to set eNoCollections in FieldConvert as default (!789)
-- Fix performance issue in ProcessIsoContour in relation to memory consumption
-  (!821)
-- Fix performance issue with ExtractPhysToBndElmt (!796)
-
-**Utilities**
-- Fix vtkToFld missing dependency which prevented compiling with VTK 7.1 (!808)
 
 v4.4.1
 ------
@@ -80,6 +73,8 @@ v4.4.1
   (!821)
 - Fix performance issue with ExtractPhysToBndElmt (!796)
 - Fix available classes being listed multiple times (!817)
+- Fix Intel compiler warnings (!837)
+- Fix overwriting and backup of chk/fld files on slow file systes (!741)
 
 **FieldConvert:**
 - Fix issue with field ordering in the interppointdatatofld module (!754)
@@ -99,12 +94,20 @@ v4.4.1
 
 **IncNavierStokesSolver**
 - Fix an initialisation issue when using an additional advective field (!779)
+- Fix MovingBody boundary condition (!852)
 
 **Utilities**
 - Fix vtkToFld missing dependency which prevented compiling with VTK 7.1 (!808)
 
+**Documentation**
+- Added missing details on artificial viscosity and dealising to compressible
+  flow solver user guide (!846)
+
 **Packaging**
 - Added missing package for FieldUtils library (!755)
+
+**ADRSolver:**
+- Fix UnsteadyAdvectionDiffusion with DG (!855)
 
 v4.4.0
 ------

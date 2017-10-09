@@ -75,6 +75,9 @@ v4.4.1
 - Fix available classes being listed multiple times (!817)
 - Fix Intel compiler warnings (!837)
 - Fix overwriting and backup of chk/fld files on slow file systes (!741)
+- Fixed typo in eIMEXGear part (!854)
+- Added regression tests for IMEXOrder1, IMEXOrder2, IMEXOrder3, MCNAB, 
+  IMEXGear, CNAB, 2nd order IMEX-DIRK, 3rd order IMEX-DIRK (!854)
 
 **FieldConvert:**
 - Fix issue with field ordering in the interppointdatatofld module (!754)

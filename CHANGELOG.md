@@ -36,6 +36,7 @@ v5.0.0
 - Fix inverted triangles and small memory issue in surface meshing (!798)
 - Update for the CAD system, more advance self-healing and analysis (!822)
 - Additional curve types in GEO reader: BSpline, Circle, Ellipse (!800)
+- Fix default command line argument value (!823)
 
 **FieldConvert**:
 - Add input module for Semtex field files (!777)

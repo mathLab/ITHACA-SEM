@@ -1290,17 +1290,15 @@ namespace Nektar
                     }
                 }
             }
-            else if (traceEl->GetLeftAdjacentElementEdge () != -1 &&
-                     traceEl->GetRightAdjacentElementEdge() != -1)
+            else if ( traceEl->GetLeftAdjacentElementEdge () != -1 &&
+                      traceEl->GetRightAdjacentElementEdge() != -1 )
             {
                 // Non-boundary edge (2 connected elements).
-                fwd = dynamic_cast<Nektar::StdRegions::StdExpansion*>
-                    (traceEl->GetLeftAdjacentElementExp().get()) ==
-                    (*m_exp)[n].get();
+                fwd = ( traceEl->GetLeftAdjacentElementExp().get() == (*m_exp)[n].get() );
             }
             else
             {
-                ASSERTL2(false, "Unconnected trace element!");
+                ASSERTL2( false, "Unconnected trace element!" );
             }
             
             return fwd;
@@ -1852,7 +1850,6 @@ namespace Nektar
         {
             int i,j,n,cnt,cnt1,nbndry;
             int nexp = GetExpSize();
-            StdRegions::StdExpansionSharedPtr BndExp;
 
             Array<OneD,NekDouble> f(m_ncoeffs);
             DNekVec F(m_ncoeffs,f,eWrapper);
@@ -2348,22 +2345,6 @@ namespace Nektar
                             locExpList->GetPhys(),
                             locExpList->UpdateCoeffs());
                     }    
-                    else
-                    {
-                        ASSERTL0(false, "This type of BC not implemented yet");
-                    }
-                }
-                else if (boost::iequals(m_bndConditions[i]->GetUserDefined(),
-                                        "MovingBody"))
-                {
-                    locExpList = m_bndCondExpansions[i];
-                    if (m_bndConditions[i]->GetBoundaryConditionType()
-                            == SpatialDomains::eDirichlet)
-                    {
-                        locExpList->FwdTrans_IterPerExp(
-                                    locExpList->GetPhys(),
-                                    locExpList->UpdateCoeffs());
-                    }
                     else
                     {
                         ASSERTL0(false, "This type of BC not implemented yet");

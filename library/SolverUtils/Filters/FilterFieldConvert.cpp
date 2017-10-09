@@ -433,7 +433,7 @@ void FilterFieldConvert::CreateModules( vector<string> &modcmds)
 
             if (tmp2.size() == 1)
             {
-                mod->RegisterConfig(tmp2[0], "1");
+                mod->RegisterConfig(tmp2[0]);
             }
             else if (tmp2.size() == 2)
             {
@@ -467,6 +467,7 @@ void FilterFieldConvert::CreateModules( vector<string> &modcmds)
         module.second = string("equispacedoutput");
         mod = GetModuleFactory().CreateInstance(module, m_f);
         m_modules.insert(m_modules.end()-1, mod);
+        mod->SetDefaults();
     }
 
     // Check if modules provided are compatible

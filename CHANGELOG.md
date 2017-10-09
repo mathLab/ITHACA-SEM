@@ -21,6 +21,8 @@ v5.0.0
 - Remove unused files from BasicUtils (!841)
 - Remove checks for old boost versions which are no longer supported (!841)
 - Refactor ParseUtils to be more consistent (!843)
+- Added support for using the distance to a specific region (e.g. outlet) in the
+  function definitions for the Absorption Forcing (!769)
 
 **NekMesh**:
 - Add feature to read basic 2D geo files as CAD (!731)
@@ -32,12 +34,16 @@ v5.0.0
 - Fix issue with reading CCM files due to definition of default arrays
   rather than a vector (!797)
 - Fix inverted triangles and small memory issue in surface meshing (!798)
+- Update for the CAD system, more advance self-healing and analysis (!822)
 - Additional curve types in GEO reader: BSpline, Circle, Ellipse (!800)
+- Fix default command line argument value (!823)
 
 **FieldConvert**:
 - Add input module for Semtex field files (!777)
 - Fixed interppoints module (!760)
 - Move StreamFunction utility to a FieldConvert module (!809)
+- Extend wss module to compressible flows (!810)
+- Allow explicitly setting bool options of FieldConvert modules as false (!811)
 - Enable output to multiple files (!844)
 - Allow using xml file without expansion tag in FieldConvert (!849)
 
@@ -67,8 +73,12 @@ v4.4.1
   (!821)
 - Fix performance issue with ExtractPhysToBndElmt (!796)
 - Fix available classes being listed multiple times (!817)
+- Fix Intel compiler warnings (!837)
 - Fix overwriting and backup of chk/fld files on slow file systes (!741)
 - Fix DriverAdaptive with second order IMEX (!850)
+- Fixed typo in eIMEXGear part (!854)
+- Added regression tests for IMEXOrder1, IMEXOrder2, IMEXOrder3, MCNAB, 
+  IMEXGear, CNAB, 2nd order IMEX-DIRK, 3rd order IMEX-DIRK (!854)
 
 **FieldConvert:**
 - Fix issue with field ordering in the interppointdatatofld module (!754)
@@ -88,12 +98,20 @@ v4.4.1
 
 **IncNavierStokesSolver**
 - Fix an initialisation issue when using an additional advective field (!779)
+- Fix MovingBody boundary condition (!852)
 
 **Utilities**
 - Fix vtkToFld missing dependency which prevented compiling with VTK 7.1 (!808)
 
+**Documentation**
+- Added missing details on artificial viscosity and dealising to compressible
+  flow solver user guide (!846)
+
 **Packaging**
 - Added missing package for FieldUtils library (!755)
+
+**ADRSolver:**
+- Fix UnsteadyAdvectionDiffusion with DG (!855)
 
 v4.4.0
 ------

@@ -74,7 +74,7 @@ namespace Nektar
 	 */
 
         Preconditioner::Preconditioner(
-            const boost::shared_ptr<GlobalLinSys> &plinsys,
+            const std::shared_ptr<GlobalLinSys> &plinsys,
             const AssemblyMapSharedPtr &pLocToGloMap)
             : m_linsys(plinsys),
               m_preconType(pLocToGloMap->GetPreconType()),
@@ -175,7 +175,7 @@ namespace Nektar
          * \f$\mathbf{R}^{T}\f$
          */
         DNekScalMatSharedPtr Preconditioner::v_TransformedSchurCompl(
-            int offset, const boost::shared_ptr<DNekScalMat> &loc_mat)
+            int offset, const std::shared_ptr<DNekScalMat> &loc_mat)
 	{
 	    return loc_mat;
 	}

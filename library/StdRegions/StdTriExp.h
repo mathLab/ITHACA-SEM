@@ -264,7 +264,7 @@ namespace Nektar
                       Array<OneD, int>             &conn,
                       bool                          standard = true);
         };
-        typedef boost::shared_ptr<StdTriExp> StdTriExpSharedPtr;
+        typedef std::shared_ptr<StdTriExp> StdTriExpSharedPtr;
     } //end of namespace
 } //end of namespace
 #endif //STDTRIEXP_H

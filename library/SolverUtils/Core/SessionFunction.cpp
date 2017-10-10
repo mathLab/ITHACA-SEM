@@ -40,7 +40,6 @@
 #include <LibUtilities/BasicUtils/VmathArray.hpp>
 
 #include <boost/format.hpp>
-#include <boost/function.hpp>
 
 using namespace std;
 
@@ -179,9 +178,8 @@ void SessionFunction::Evaluate(std::string pFieldName,
         std::string filename =
             m_session->GetFunctionFilename(m_name, pFieldName, domain);
 
-        if (boost::filesystem::path(filename).extension() == ".pts"
-            || boost::filesystem::path(filename).extension() == ".csv"
-        )
+        if (boost::filesystem::path(filename).extension() == ".pts" ||
+            boost::filesystem::path(filename).extension() == ".csv")
         {
             EvaluatePts(pFieldName, pArray, pTime, domain);
         }

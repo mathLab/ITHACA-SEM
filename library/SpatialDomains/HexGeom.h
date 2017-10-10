@@ -107,11 +107,9 @@ namespace Nektar
 	    static const unsigned int EdgeFaceConnectivity  [12][2];
         };
 
-        typedef boost::shared_ptr<HexGeom> HexGeomSharedPtr;
+        typedef std::shared_ptr<HexGeom> HexGeomSharedPtr;
         typedef std::vector<HexGeomSharedPtr> HexGeomVector;
-        typedef std::vector<HexGeomSharedPtr>::iterator HexGeomVectorIter;
         typedef std::map<int, HexGeomSharedPtr> HexGeomMap;
-        typedef std::map<int, HexGeomSharedPtr>::iterator HexGeomMapIter;
     }; //end of namespace
 }; //end of namespace
 

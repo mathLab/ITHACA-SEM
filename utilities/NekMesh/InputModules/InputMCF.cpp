@@ -33,10 +33,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <LibUtilities/BasicUtils/ParseUtils.hpp>
 #include <LibUtilities/BasicUtils/SessionReader.h>
-
-
 #include <NekMeshUtils/CADSystem/CADCurve.h>
 
 #include <boost/thread.hpp>
@@ -170,9 +167,7 @@ void InputMCF::ParseFile(string nm)
         }
     }
 
-    map<string,string>::iterator it;
-
-    it = information.find("CADFile");
+    auto it = information.find("CADFile");
     ASSERTL0(it != information.end(), "no cadfile defined");
     m_cadfile = it->second;
 
@@ -263,8 +258,7 @@ void InputMCF::ParseFile(string nm)
         m_nacadomain = ss.str();
     }
 
-    set<string>::iterator sit;
-    sit         = boolparameters.find("SurfaceOptimiser");
+    auto sit    = boolparameters.find("SurfaceOptimiser");
     m_surfopti  = sit != boolparameters.end();
     sit         = boolparameters.find("WriteOctree");
     m_woct      = sit != boolparameters.end();
@@ -523,14 +517,13 @@ void InputMCF::Process()
         vector<string> lines;
         boost::split(lines, m_periodic, boost::is_any_of(":"));
 
-        for (vector<string>::iterator il = lines.begin(); il != lines.end();
-             ++il)
+        for (auto &il : lines)
         {
             module = GetModuleFactory().CreateInstance(
                 ModuleKey(eProcessModule, "peralign"), m_mesh);
 
             vector<string> tmp(2);
-            boost::split(tmp, *il, boost::is_any_of(","));
+            boost::split(tmp, il, boost::is_any_of(","));
             module->RegisterConfig("surf1", tmp[0]);
         }
 

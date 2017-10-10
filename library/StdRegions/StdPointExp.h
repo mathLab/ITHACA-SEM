@@ -128,7 +128,7 @@ namespace Nektar
         };
 
         // type defines for use of PointExp in a boost vector
-        typedef boost::shared_ptr<StdPointExp> StdPointExpSharedPtr;
+        typedef std::shared_ptr<StdPointExp> StdPointExpSharedPtr;
     } //end of namespace
 } //end of namespace
 

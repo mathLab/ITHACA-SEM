@@ -1093,7 +1093,7 @@ namespace Polylib {
 
 
 
-            for (i = 0; i < np; i++)
+            for (i = 0; i < np; i++) {
 
                 for (j = 0; j < np; j++){
 
@@ -1119,7 +1119,9 @@ namespace Polylib {
 
                 }
 
-                free(pd);
+            }
+
+            free(pd);
 
         }
 
@@ -1193,7 +1195,7 @@ namespace Polylib {
 
 
 
-            for (i = 0; i < np; i++)
+            for (i = 0; i < np; i++) {
 
                 for (j = 0; j < np; j++){
 
@@ -1219,7 +1221,9 @@ namespace Polylib {
 
                 }
 
-                free(pd);
+            }
+
+            free(pd);
 
         }
 
@@ -1295,7 +1299,7 @@ namespace Polylib {
 
 
 
-            for (i = 0; i < np; i++)
+            for (i = 0; i < np; i++) {
 
                 for (j = 0; j < np; j++){
 
@@ -1323,7 +1327,9 @@ namespace Polylib {
 
                 }
 
-                free(pd);
+            }
+
+            free(pd);
 
         }
 

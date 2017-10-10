@@ -45,7 +45,7 @@ namespace Nektar
     {
 
         class StdSegExp;
-        typedef boost::shared_ptr<StdSegExp> StdSegExpSharedPtr;
+        typedef std::shared_ptr<StdSegExp> StdSegExpSharedPtr;
 
         /// Class representing a segment element in reference space
 

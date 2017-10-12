@@ -350,6 +350,20 @@ void InputMCF::Process()
         {
             module->RegisterConfig("blcurves", m_blsurfs);
             module->RegisterConfig("blthick", m_blthick);
+
+            if (m_adjust)
+            {
+                module->RegisterConfig("bltadjust", m_adjustment);
+
+                if (m_adjustall)
+                {
+                    module->RegisterConfig("adjustblteverywhere", "");
+                }
+            }
+        }
+        if (m_periodic.size())
+        {
+            module->RegisterConfig("periodic", m_periodic);
         }
 
         try

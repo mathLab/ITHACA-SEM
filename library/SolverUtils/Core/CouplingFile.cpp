@@ -37,6 +37,8 @@
 #include <LibUtilities/BasicUtils/PtsField.h>
 #include <LibUtilities/BasicUtils/PtsIO.h>
 
+#include <boost/format.hpp>
+
 namespace Nektar
 {
 namespace SolverUtils

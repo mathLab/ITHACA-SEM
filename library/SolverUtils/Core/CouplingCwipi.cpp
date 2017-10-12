@@ -46,6 +46,7 @@
 #include <MultiRegions/ContField3D.h>
 
 #include <boost/functional/hash.hpp>
+#include <boost/format.hpp>
 
 #define OUTPUT_FREQ 0
 

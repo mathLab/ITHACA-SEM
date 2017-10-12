@@ -539,6 +539,7 @@ void InputMCF::Process()
             vector<string> tmp(2);
             boost::split(tmp, il, boost::is_any_of(","));
             module->RegisterConfig("surf1", tmp[0]);
+            module->RegisterConfig("surf2", tmp[1]);
         }
 
         module->SetDefaults();

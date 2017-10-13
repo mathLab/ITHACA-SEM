@@ -73,7 +73,10 @@ ProcessPerAlign::ProcessPerAlign(MeshSharedPtr m) : ProcessModule(m)
         ConfigOption(false, "-1", "Tag identifying first surface.");
     m_config["dir"] = ConfigOption(
         false, "", "Direction in which to align (either x, y, or z; "
-                   "or vector with components separated by a comma)");
+        "or vector with components separated by a comma)"
+        "If rot is specified this is interpreted as axis direction");
+    m_config["rot"] = ConfigOption(
+        false, "", "Rotation to align compositesin radians, i.e. PI/20");
     m_config["orient"] =
         ConfigOption(true, "0", "Attempt to reorient tets and prisms");
 }
@@ -90,6 +93,7 @@ void ProcessPerAlign::Process()
     int surf1   = m_config["surf1"].as<int>();
     int surf2   = m_config["surf2"].as<int>();
     string dir  = m_config["dir"].as<string>();
+    string rot  = m_config["rot"].as<string>();
     bool orient = m_config["orient"].as<bool>();
 
     if (surf1 == -1)
@@ -109,9 +113,22 @@ void ProcessPerAlign::Process()
     vector<string> tmp1;
     boost::split(tmp1, dir, boost::is_any_of(","));
 
-    NekDouble vec[3];
+    vector<string> tmp2;
+    boost::split(tmp2, rot, boost::is_any_of(","));
+    bool rotalign = false;
 
-    if (tmp1.size() == 1)
+    NekDouble vec[3],rotangle;
+
+    if (tmp2.size() == 1)
+    {
+        rotalign = true;
+        // need to update this with interpreter 
+        rotangle   = boost::lexical_cast<NekDouble>(tmp2[0]);
+
+        ASSERTL0(tmp1.size() == 1,"rot must also be accompanied with a dir=\"x\","
+                 "dir=\"y\" or dir=\"z\" option to specify axes of rotation");
+    }
+    else if (tmp1.size() == 1)
     {
         //if the direction is not specified and its a 2D mesh and there is CAD
         //it can figure out the dir on its own
@@ -193,6 +210,31 @@ void ProcessPerAlign::Process()
             centroid += *(c2->m_items[i]->GetVertex(j));
         }
         centroid /= (NekDouble)c2->m_items[i]->GetVertexCount();
+
+
+        if(rotalign) // rotate centroid 
+        {
+            if(dir == "x")
+            {
+                NekDouble angle = -1*rotangle;
+                NekDouble yrot = cos(angle)*centroid.m_x -
+                    sin(angle)*centroid.m_z;
+                NekDouble zrot = sin(angle)*centroid.m_y +
+                    cos(angle)*centroid.m_z;
+
+                centroid.m_y = yrot;
+                centroid.m_z = zrot; 
+            }
+            else if (dir == "y")
+            {
+                ASSERTL0(false,"Set up y axis rotation");
+            }
+            else if (dir == "z")
+            {
+                ASSERTL0(false,"Set up z axis rotation");
+            }
+        }
+
         centroidMap[i] = centroid;
     }
 
@@ -218,9 +260,18 @@ void ProcessPerAlign::Process()
             }
 
             Node dx = it.second - centroid;
-            if (fabs(fabs(dx.m_x * vec[0] + dx.m_y * vec[1] + dx.m_z * vec[2]) /
-                         sqrt(dx.abs2()) -
-                     1.0) < 1e-8)
+            bool match;
+            if(rotalign)
+            {
+                match = (sqrt(dx.abs2())< 1e-8);
+            }
+            else
+            {
+                match = (fabs(fabs(dx.m_x * vec[0] + dx.m_y * vec[1] + dx.m_z * vec[2]) /
+                                 sqrt(dx.abs2()) - 1.0) < 1e-8);
+            }
+
+            if(match)
             {
                 // Found match
                 int id1, id2;

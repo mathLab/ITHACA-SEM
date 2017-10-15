@@ -58,6 +58,9 @@ public:
 
     /// Write mesh to output file.
     virtual void Process();
+
+private:
+    void RotateNode(string &dir, NekDouble rotangle, NekMeshUtils::Node &node);
 };
 }
 }

@@ -45,6 +45,7 @@
 #include "ProcessPerAlign.h"
 
 #include <boost/algorithm/string.hpp>
+#include <LibUtilities/Interpreter/AnalyticExpressionEvaluator.hpp>
 
 using namespace std;
 using namespace Nektar::NekMeshUtils;
@@ -73,12 +74,14 @@ ProcessPerAlign::ProcessPerAlign(MeshSharedPtr m) : ProcessModule(m)
         ConfigOption(false, "-1", "Tag identifying first surface.");
     m_config["dir"] = ConfigOption(
         false, "", "Direction in which to align (either x, y, or z; "
-        "or vector with components separated by a comma)"
-        "If rot is specified this is interpreted as axis direction");
+        "or vector with components separated by a comma). "
+        "If rot is specified this is interpreted as the axis or rotation");
     m_config["rot"] = ConfigOption(
-        false, "", "Rotation to align compositesin radians, i.e. PI/20");
+        false, "", "Rotation to align composites in radians, i.e. PI/20");
     m_config["orient"] =
         ConfigOption(true, "0", "Attempt to reorient tets and prisms");
+    m_config["tol"] =
+        ConfigOption(false, "1e-8", "Tolerance to which to check planes are the same after rotation/translation");
 }
 
 /**
@@ -95,7 +98,8 @@ void ProcessPerAlign::Process()
     string dir  = m_config["dir"].as<string>();
     string rot  = m_config["rot"].as<string>();
     bool orient = m_config["orient"].as<bool>();
-
+    string tolerance = m_config["tol"].as<string>();
+    
     if (surf1 == -1)
     {
         cerr << "WARNING: surf1 must be set to a positive integer. "
@@ -122,8 +126,10 @@ void ProcessPerAlign::Process()
     if (tmp2.size() == 1)
     {
         rotalign = true;
-        // need to update this with interpreter 
-        rotangle   = boost::lexical_cast<NekDouble>(tmp2[0]);
+        // Evaluate expression since may be give as function of PI
+        LibUtilities::AnalyticExpressionEvaluator strEval;
+        int ExprId = strEval.DefineFunction(" ", tmp2[0]);
+        rotangle = strEval.Evaluate(ExprId);
 
         ASSERTL0(tmp1.size() == 1,"rot must also be accompanied with a dir=\"x\","
                  "dir=\"y\" or dir=\"z\" option to specify axes of rotation");
@@ -214,25 +220,7 @@ void ProcessPerAlign::Process()
 
         if(rotalign) // rotate centroid 
         {
-            if(dir == "x")
-            {
-                NekDouble angle = -1*rotangle;
-                NekDouble yrot = cos(angle)*centroid.m_x -
-                    sin(angle)*centroid.m_z;
-                NekDouble zrot = sin(angle)*centroid.m_y +
-                    cos(angle)*centroid.m_z;
-
-                centroid.m_y = yrot;
-                centroid.m_z = zrot; 
-            }
-            else if (dir == "y")
-            {
-                ASSERTL0(false,"Set up y axis rotation");
-            }
-            else if (dir == "z")
-            {
-                ASSERTL0(false,"Set up z axis rotation");
-            }
+            RotateNode(dir,rotangle,centroid);
         }
 
         centroidMap[i] = centroid;
@@ -252,6 +240,7 @@ void ProcessPerAlign::Process()
         centroid /= (NekDouble)c1->m_items[i]->GetVertexCount();
 
         bool found = false;
+        NekDouble tol = boost::lexical_cast<NekDouble>(tolerance);
         for (auto &it : centroidMap)
         {
             if (elmtDone.count(it.first) > 0)
@@ -263,12 +252,13 @@ void ProcessPerAlign::Process()
             bool match;
             if(rotalign)
             {
-                match = (sqrt(dx.abs2())< 1e-8);
+                match = (sqrt(dx.abs2())< tol);
             }
             else
             {
-                match = (fabs(fabs(dx.m_x * vec[0] + dx.m_y * vec[1] + dx.m_z * vec[2]) /
-                                 sqrt(dx.abs2()) - 1.0) < 1e-8);
+                match = (fabs(fabs(dx.m_x * vec[0] + dx.m_y * vec[1] +
+                                   dx.m_z * vec[2]) /
+                              sqrt(dx.abs2()) - 1.0) < tol);
             }
 
             if(match)
@@ -301,6 +291,7 @@ void ProcessPerAlign::Process()
                         NodeSharedPtr n1 =
                             c1->m_items[i]->GetFaceLink()->m_vertexList[k];
                         int l;
+                        NekDouble mindn = 1000; 
 
                         for (l = 0; l < nVerts; ++l)
                         {
@@ -308,12 +299,30 @@ void ProcessPerAlign::Process()
                                                    ->GetFaceLink()
                                                    ->m_vertexList[l];
 
-                            Node dn = *n2 - *n1;
-                            if (fabs(fabs(dn.m_x * vec[0] + dn.m_y * vec[1] +
-                                          dn.m_z * vec[2]) /
-                                         sqrt(dn.abs2()) -
-                                     1.0) < 1e-8)
+                            if(rotalign) // rotate n2 
                             {
+                                RotateNode(dir,rotangle,*n2);
+                                Node dn = *n2 - *n1;
+                                NekDouble dnabs = sqrt(dn.abs2());
+                                match = (dnabs< tol);
+                                mindn  = (dnabs < mindn)? dnabs:mindn; 
+                            }
+                            else
+                            {
+                                Node dn = *n2 - *n1;
+                                
+                                NekDouble dnabs = fabs(fabs(dn.m_x * vec[0] +
+                                                       dn.m_y * vec[1] +
+                                                       dn.m_z * vec[2]) /
+                                                       sqrt(dn.abs2()) - 1.0); 
+                                match = (dnabs < tol); 
+                                mindn  = (dnabs < mindn)? dnabs:mindn;                                 
+                            }
+
+                            if(match)
+                            {
+                                //cout << "Matched node " << k << " with node "
+                                //<< l << endl;
                                 perVerts[k]    = l;
                                 perVertsInv[l] = k;
 
@@ -333,7 +342,7 @@ void ProcessPerAlign::Process()
                             }
                         }
                         ASSERTL1(l < nVerts,
-                                 "Could not identify periodic vertices.");
+                                 "Could not identify periodic vertices, nearest distance was " + boost::lexical_cast<string>(mindn));
                     }
 
                     int tot1 = 0, tot2 = 0;
@@ -379,6 +388,28 @@ void ProcessPerAlign::Process()
     if (orient)
     {
         ReorderPrisms(perFaces);
+    }
+}
+
+void ProcessPerAlign::RotateNode(string &dir, NekDouble rotangle,
+                                 NekMeshUtils::Node &node)
+{
+    if(dir == "x")
+    {
+        NekDouble angle = -1*rotangle;
+        NekDouble yrot = cos(angle)*node.m_y - sin(angle)*node.m_z;
+        NekDouble zrot = sin(angle)*node.m_y + cos(angle)*node.m_z;
+                                    
+        node.m_y = yrot;
+        node.m_z = zrot; 
+    }
+    else if (dir == "y")
+    {
+        ASSERTL0(false,"Set up y axis rotation");
+                                }
+    else if (dir == "z")
+    {
+        ASSERTL0(false,"Set up z axis rotation");
     }
 }
 }

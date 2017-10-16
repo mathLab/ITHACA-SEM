@@ -301,8 +301,9 @@ void ProcessPerAlign::Process()
 
                             if(rotalign) // rotate n2 
                             {
-                                RotateNode(dir,rotangle,*n2);
-                                Node dn = *n2 - *n1;
+                                Node n2tmp = *n2; 
+                                RotateNode(dir,rotangle,n2tmp);
+                                Node dn = n2tmp - *n1;
                                 NekDouble dnabs = sqrt(dn.abs2());
                                 match = (dnabs< tol);
                                 mindn  = (dnabs < mindn)? dnabs:mindn; 
@@ -321,8 +322,6 @@ void ProcessPerAlign::Process()
 
                             if(match)
                             {
-                                //cout << "Matched node " << k << " with node "
-                                //<< l << endl;
                                 perVerts[k]    = l;
                                 perVertsInv[l] = k;
 

@@ -277,7 +277,7 @@ public:
     {
         ASSERTL0(false,
                  "This function should be implemented at a shape level.");
-        return boost::shared_ptr<SpatialDomains::Geometry>();
+        return std::shared_ptr<SpatialDomains::Geometry>();
     }
 
     /**
@@ -408,7 +408,7 @@ protected:
     SpatialDomains::GeometrySharedPtr m_geom;
 };
 
-typedef boost::shared_ptr<Element> ElementSharedPtr;
+typedef std::shared_ptr<Element> ElementSharedPtr;
 /// Container for elements; key is expansion dimension, value is
 /// vector of elements of that dimension.
 typedef std::map<unsigned int, std::vector<ElementSharedPtr> > ElementMap;
@@ -427,7 +427,7 @@ NEKMESHUTILS_EXPORT bool operator==(ElementSharedPtr const &e1,
 /// Define element ordering based on ID.
 struct element_id_less_than
 {
-    typedef boost::shared_ptr<Element> pT;
+    typedef std::shared_ptr<Element> pT;
     bool operator()(const pT a, const pT b) const
     {
         // check for 0

@@ -200,7 +200,7 @@ namespace StdRegions
             }
     };
 
-    typedef boost::shared_ptr<StdExpansion2D> StdExpansion2DSharedPtr;
+    typedef std::shared_ptr<StdExpansion2D> StdExpansion2DSharedPtr;
 
 } //end of namespace
 } //end of namespace

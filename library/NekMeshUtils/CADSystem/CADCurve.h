@@ -193,7 +193,7 @@ protected:
     std::vector<CADVertSharedPtr> m_mainVerts;
 };
 
-typedef boost::shared_ptr<CADCurve> CADCurveSharedPtr;
+typedef std::shared_ptr<CADCurve> CADCurveSharedPtr;
 
 typedef LibUtilities::NekFactory<std::string, CADCurve> CADCurveFactory;
 

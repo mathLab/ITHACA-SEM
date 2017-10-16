@@ -36,7 +36,7 @@
 #ifndef MULTIREGIONS_LOCTRACETOTRACEMAP_H
 #define MULTIREGIONS_LOCTRACETOTRACEMAP_H
 
-#include <boost/tuple/tuple.hpp>
+#include <tuple>
 
 #include <LibUtilities/Foundations/Points.h>
 #include <LibUtilities/LinearAlgebra/NekTypeDefs.hpp>
@@ -48,13 +48,13 @@ namespace Nektar
 namespace LocalRegions
 {
 class Expansion;
-typedef boost::shared_ptr<Expansion> ExpansionSharedPtr;
+typedef std::shared_ptr<Expansion> ExpansionSharedPtr;
 }
 
 namespace MultiRegions
 {
 class ExpList;
-typedef boost::shared_ptr<ExpList> ExpListSharedPtr;
+typedef std::shared_ptr<ExpList> ExpListSharedPtr;
 
 enum InterpLocTraceToTrace
 {
@@ -76,46 +76,46 @@ enum InterpLocTraceToTrace
  * distributions, the latter the target trace distributions. In the 2D case,
  * unused trace directions are set to LibUtilities::eNoPointsType.
  */
-typedef boost::tuple<LibUtilities::PointsKey,
-                     LibUtilities::PointsKey,
-                     LibUtilities::PointsKey,
-                     LibUtilities::PointsKey> TraceInterpPoints;
+typedef std::tuple<LibUtilities::PointsKey,
+                   LibUtilities::PointsKey,
+                   LibUtilities::PointsKey,
+                   LibUtilities::PointsKey> TraceInterpPoints;
 
 struct cmpop
 {
     bool operator()(TraceInterpPoints const &a,
                     TraceInterpPoints const &b) const
     {
-        if (a.get<0>() < b.get<0>())
+        if (std::get<0>(a) < std::get<0>(b))
         {
             return true;
         }
 
-        if (b.get<0>() < a.get<0>())
+        if (std::get<0>(b) < std::get<0>(a))
         {
             return false;
         }
 
-        if (a.get<1>() < b.get<1>())
+        if (std::get<1>(a) < std::get<1>(b))
         {
             return true;
         }
-        if (b.get<1>() < a.get<1>())
+        if (std::get<1>(b) < std::get<1>(a))
         {
             return false;
         }
 
-        if (a.get<2>() < b.get<2>())
+        if (std::get<2>(a) < std::get<2>(b))
         {
             return true;
         }
 
-        if (b.get<2>() < a.get<2>())
+        if (std::get<2>(b) < std::get<2>(a))
         {
             return false;
         }
 
-        if (a.get<3>() < b.get<3>())
+        if (std::get<3>(a) < std::get<3>(b))
         {
             return true;
         }
@@ -270,7 +270,7 @@ private:
     Array<OneD, Array<OneD, int> > m_traceCoeffsToElmtSign;
 };
 
-typedef boost::shared_ptr<LocTraceToTraceMap> LocTraceToTraceMapSharedPtr;
+typedef std::shared_ptr<LocTraceToTraceMap> LocTraceToTraceMapSharedPtr;
 
 }
 }

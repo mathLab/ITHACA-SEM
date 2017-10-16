@@ -54,7 +54,7 @@ namespace Nektar
             
             bool False = false;
             ContField2DSharedPtr zero_plane =
-                    boost::dynamic_pointer_cast<ContField2D> (In.m_planes[0]);
+                    std::dynamic_pointer_cast<ContField2D> (In.m_planes[0]);
             
             for(int n = 0; n < m_planes.num_elements(); ++n)
             {
@@ -72,7 +72,7 @@ namespace Nektar
             DisContField3DHomogeneous1D (In, false)
         {
             ContField2DSharedPtr zero_plane_old =
-                    boost::dynamic_pointer_cast<ContField2D> (In.m_planes[0]);
+                    std::dynamic_pointer_cast<ContField2D> (In.m_planes[0]);
 
             ContField2DSharedPtr zero_plane =
                         MemoryManager<ContField2D>::

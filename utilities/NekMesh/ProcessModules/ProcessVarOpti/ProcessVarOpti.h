@@ -56,7 +56,7 @@ struct DerivUtil
     int pts;
     int ptsStd;
 };
-typedef boost::shared_ptr<DerivUtil> DerivUtilSharedPtr;
+typedef std::shared_ptr<DerivUtil> DerivUtilSharedPtr;
 
 enum optiType
 {
@@ -78,13 +78,13 @@ struct Residual
     int alphaI;
 };
 
-typedef boost::shared_ptr<Residual> ResidualSharedPtr;
+typedef std::shared_ptr<Residual> ResidualSharedPtr;
 
 class ProcessVarOpti : public ProcessModule
 {
 public:
     /// Creates an instance of this class
-    static boost::shared_ptr<Module> create(MeshSharedPtr m)
+    static std::shared_ptr<Module> create(MeshSharedPtr m)
     {
         return MemoryManager<ProcessVarOpti>::AllocateSharedPtr(m);
     }

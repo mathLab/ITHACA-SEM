@@ -64,7 +64,7 @@ int main(int argc, char *argv[])
         EquationSystemSharedPtr EqSys = drv->GetEqu()[0];
         
         PulseWaveSystemSharedPtr PulseWave;
-        if(!(PulseWave = boost::dynamic_pointer_cast
+        if(!(PulseWave = std::dynamic_pointer_cast
              <PulseWaveSystem>(EqSys)))
         {
             ASSERTL0(false,"Failed to dynamically cast to PulseWaveSystemOutput");

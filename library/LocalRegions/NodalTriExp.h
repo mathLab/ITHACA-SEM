@@ -377,10 +377,8 @@ namespace Nektar
             void v_ComputeEdgeNormal(const int edge);
         };
     
-        // type defines for use of TriExp in a boost vector
-        typedef boost::shared_ptr<NodalTriExp> NodalTriExpSharedPtr;
+        typedef std::shared_ptr<NodalTriExp> NodalTriExpSharedPtr;
         typedef std::vector< NodalTriExpSharedPtr > NodalTriExpVector;
-        typedef std::vector< NodalTriExpSharedPtr >::iterator NodalTriExpVectorIter;
     
     } //end of namespace
 } //end of namespace

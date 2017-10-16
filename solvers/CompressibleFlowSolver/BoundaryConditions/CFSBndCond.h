@@ -49,7 +49,7 @@ namespace Nektar
 class CFSBndCond;
 
 /// A shared pointer to a boundary condition object
-typedef boost::shared_ptr<CFSBndCond> CFSBndCondSharedPtr;
+typedef std::shared_ptr<CFSBndCond> CFSBndCondSharedPtr;
 
 /// Declaration of the boundary condition factory
 typedef LibUtilities::NekFactory<std::string, CFSBndCond,

@@ -146,7 +146,7 @@ namespace Nektar
                 const StdMatrixKey &mkey);
         };
         
-        typedef boost::shared_ptr<StdNodalPrismExp> StdNodalPrismExpSharedPtr;
+        typedef std::shared_ptr<StdNodalPrismExp> StdNodalPrismExpSharedPtr;
     } //end of namespace
 } //end of namespace
 #endif //STDNODALTETEXP_H

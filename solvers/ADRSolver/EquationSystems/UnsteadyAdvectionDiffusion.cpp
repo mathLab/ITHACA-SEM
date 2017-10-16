@@ -271,8 +271,9 @@ namespace Nektar
 
             for (int i = 0; i < nVariables; ++i)
             {
-                Vmath::Vadd(nSolutionPts, &outarray[i][0], 1, 
-                            &outarrayDiff[i][0], 1, &outarray[i][0], 1);
+                Vmath::Svtvp(nSolutionPts, m_epsilon, &outarrayDiff[i][0], 1,
+                             &outarray[i][0], 1,
+                             &outarray[i][0], 1);
             }
         }
         

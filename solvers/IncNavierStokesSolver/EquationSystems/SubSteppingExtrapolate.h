@@ -53,7 +53,7 @@ namespace Nektar
     
     class SubSteppingExtrapolate;
     
-    typedef boost::shared_ptr<SubSteppingExtrapolate> SubSteppingExtrapolateSharedPtr;
+    typedef std::shared_ptr<SubSteppingExtrapolate> SubSteppingExtrapolateSharedPtr;
     
     class SubSteppingExtrapolate : public Extrapolate
     {

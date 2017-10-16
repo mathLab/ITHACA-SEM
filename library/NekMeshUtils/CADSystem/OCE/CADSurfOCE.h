@@ -95,7 +95,7 @@ private:
     BRepTopAdaptor_FClass2d *m_2Dclass;
 };
 
-typedef boost::shared_ptr<CADSurf> CADSurfSharedPtr;
+typedef std::shared_ptr<CADSurf> CADSurfSharedPtr;
 
 }
 }

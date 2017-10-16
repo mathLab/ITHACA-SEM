@@ -36,8 +36,6 @@
 #ifndef NekMeshUtils_CADSYSTEM_CADSYSTEM
 #define NekMeshUtils_CADSYSTEM_CADSYSTEM
 
-#include <boost/shared_ptr.hpp>
-
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 
@@ -54,11 +52,11 @@ namespace NekMeshUtils
 
 //forward declorators
 class CADVert;
-typedef boost::shared_ptr<CADVert> CADVertSharedPtr;
+typedef std::shared_ptr<CADVert> CADVertSharedPtr;
 class CADCurve;
-typedef boost::shared_ptr<CADCurve> CADCurveSharedPtr;
+typedef std::shared_ptr<CADCurve> CADCurveSharedPtr;
 class CADSurf;
-typedef boost::shared_ptr<CADSurf> CADSurfSharedPtr;
+typedef std::shared_ptr<CADSurf> CADSurfSharedPtr;
 
 
 
@@ -85,7 +83,7 @@ public:
         NekDouble area;
     };
 
-    typedef boost::shared_ptr<EdgeLoop> EdgeLoopSharedPtr;
+    typedef std::shared_ptr<EdgeLoop> EdgeLoopSharedPtr;
 
     /**
      * @brief Default constructor.
@@ -230,7 +228,7 @@ protected:
     std::string m_naca;
 };
 
-typedef boost::shared_ptr<CADSystem> CADSystemSharedPtr;
+typedef std::shared_ptr<CADSystem> CADSystemSharedPtr;
 typedef LibUtilities::NekFactory<std::string, CADSystem, std::string>
     EngineFactory;
 

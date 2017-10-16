@@ -36,7 +36,7 @@
 
 #include <SpatialDomains/MeshGraph1D.h>
 #include <LibUtilities/BasicUtils/CompressData.h>
-#include <LibUtilities/BasicUtils/ParseUtils.hpp>
+#include <LibUtilities/BasicUtils/ParseUtils.h>
 #include <tinyxml.h>
 
 using namespace std;
@@ -113,7 +113,6 @@ namespace Nektar
             /// ? being the element type.
 
             TiXmlElement *segment = field->FirstChildElement("S");
-            CurveMap::iterator it;
 
             while (segment)
             {
@@ -150,7 +149,7 @@ namespace Nektar
                         indx = data[i].id;
 
                         /// See if this face has curves.
-                        it = m_curvedEdges.find(indx);
+                        auto it = m_curvedEdges.find(indx);
 
                         PointGeomSharedPtr vertices[2] = {
                                 GetVertex(data[i].v0), GetVertex(data[i].v1)};
@@ -203,7 +202,7 @@ namespace Nektar
                         
                         PointGeomSharedPtr vertices[2] = {GetVertex(vertex1), GetVertex(vertex2)};
                         SegGeomSharedPtr seg;
-                        it = m_curvedEdges.find(indx);
+                        auto it = m_curvedEdges.find(indx);
                         
                         if (it == m_curvedEdges.end())
                         {
@@ -347,7 +346,7 @@ namespace Nektar
                 typedef vector<unsigned int> SeqVectorType;
                 SeqVectorType seqVector;
 
-                if (!ParseUtils::GenerateSeqVector(indxStr.c_str(), seqVector))
+                if (!ParseUtils::GenerateSeqVector(indxStr, seqVector))
                 {
                     NEKERROR(ErrorUtil::efatal, (std::string("Ill-formed sequence definition: ") + indxStr).c_str());
                 }
@@ -365,33 +364,33 @@ namespace Nektar
                 switch(type)
                 {
                 case 'V':   // Vertex
-                    for (SeqVectorType::iterator iter=seqVector.begin(); iter!=seqVector.end(); ++iter)
+                    for (auto &iter : seqVector)
                     {
-                        if (m_vertSet.find(*iter) == m_vertSet.end())
+                        if (m_vertSet.find(iter) == m_vertSet.end())
                         {
                             char errStr[16] = "";
-                            ::sprintf(errStr, "%d", *iter);
+                            ::sprintf(errStr, "%d", iter);
                             NEKERROR(ErrorUtil::ewarning, (std::string("Unknown vertex index: ") + errStr).c_str());
                         }
                         else
                         {
-                            composite->push_back(m_vertSet[*iter]);
+                            composite->push_back(m_vertSet[iter]);
                         }
                     }
                     break;
 
                 case 'S':   // Segment
-                    for (SeqVectorType::iterator iter=seqVector.begin(); iter!=seqVector.end(); ++iter)
+                    for (auto &iter : seqVector)
                     {
-                        if (m_segGeoms.find(*iter) == m_segGeoms.end())
+                        if (m_segGeoms.find(iter) == m_segGeoms.end())
                         {
                             char errStr[16] = "";
-                            ::sprintf(errStr, "%d", *iter);
+                            ::sprintf(errStr, "%d", iter);
                             NEKERROR(ErrorUtil::ewarning, (std::string("Unknown segment index: ") + errStr).c_str());
                         }
                         else
                         {
-                            composite->push_back(m_segGeoms[*iter]);
+                            composite->push_back(m_segGeoms[iter]);
                         }
                     }
                     break;

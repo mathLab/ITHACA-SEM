@@ -38,9 +38,7 @@
 #define NEKTAR_LIB_UTILITIES_BASIC_UTILS_PTSFIELD_H
 
 #include <vector>
-
-#include <boost/shared_ptr.hpp>
-#include <boost/function.hpp>
+#include <memory>
 
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
@@ -115,6 +113,8 @@ public:
     LIB_UTILITIES_EXPORT void AddField(const Array<OneD, NekDouble> &pts,
                                        const std::string fieldName);
 
+    LIB_UTILITIES_EXPORT void RemoveField(const std::string fieldName);
+
     LIB_UTILITIES_EXPORT void AddPoints(const Array< OneD, const Array< OneD, NekDouble > > &pts);
 
     LIB_UTILITIES_EXPORT int GetNpoints() const;
@@ -175,7 +175,7 @@ private:
     std::vector<NekDouble> m_boxSize;
 };
 
-typedef boost::shared_ptr<PtsField> PtsFieldSharedPtr;
+typedef std::shared_ptr<PtsField> PtsFieldSharedPtr;
 static PtsFieldSharedPtr NullPtsField;
 }
 }

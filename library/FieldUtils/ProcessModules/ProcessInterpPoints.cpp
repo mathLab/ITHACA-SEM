@@ -37,14 +37,15 @@
 #include <string>
 using namespace std;
 
+#include <FieldUtils/Interpolator.h>
 #include <boost/geometry.hpp>
 #include "ProcessInterpPoints.h"
 
-#include <FieldUtils/Interpolator.h>
-
-#include <LibUtilities/BasicUtils/ParseUtils.hpp>
+#include <LibUtilities/BasicUtils/ParseUtils.h>
 #include <LibUtilities/BasicUtils/Progressbar.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
+#include <LibUtilities/BasicUtils/PtsIO.h>
+#include <LibUtilities/BasicUtils/CsvIO.h>
 #include <boost/lexical_cast.hpp>
 #include <boost/math/special_functions/fpclassify.hpp>
 
@@ -104,10 +105,9 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
 {
     CreateFieldPts(vm);
 
-    FieldSharedPtr fromField = boost::shared_ptr<Field>(new Field());
+    FieldSharedPtr fromField = std::shared_ptr<Field>(new Field());
     std::vector<std::string> files;
-    ParseUtils::GenerateOrderedStringVector(
-        m_config["fromxml"].as<string>().c_str(), files);
+    ParseUtils::GenerateVector(m_config["fromxml"].as<string>(), files);
     // set up session file for from field
     fromField->m_session =
         LibUtilities::SessionReader::CreateInstance(0, 0, files);
@@ -116,8 +116,15 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
         MemoryManager<SpatialDomains::DomainRange>::AllocateSharedPtr();
     int coordim = m_f->m_fieldPts->GetDim();
     int npts    = m_f->m_fieldPts->GetNpoints();
+    std::vector<std::string> fieldNames = m_f->m_fieldPts->GetFieldNames();
+    for (auto &it : fieldNames)
+    {
+        m_f->m_fieldPts->RemoveField(it);
+    }
+
     Array<OneD, Array<OneD, NekDouble> > pts;
     m_f->m_fieldPts->GetPts(pts);
+
     rng->m_checkShape = false;
     rng->m_zmin       = -1;
     rng->m_zmax       =  1;
@@ -153,11 +160,11 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
     const SpatialDomains::ExpansionMap &expansions =
         fromField->m_graph->GetExpansions();
     Array<OneD, int> ElementGIDs(expansions.size());
-    SpatialDomains::ExpansionMap::const_iterator expIt;
+
     int i = 0;
-    for (expIt = expansions.begin(); expIt != expansions.end(); ++expIt)
+    for (auto &expIt : expansions)
     {
-        ElementGIDs[i++] = expIt->second->m_geomShPtr->GetGlobalID();
+        ElementGIDs[i++] = expIt.second->m_geomShPtr->GetGlobalID();
     }
     // check to see that we do have some elmement in teh domain since
     // possibly all points could be outside of the domain
@@ -216,20 +223,36 @@ void ProcessInterpPoints::CreateFieldPts(po::variables_map &vm)
     int rank   = m_f->m_comm->GetRank();
     int nprocs = m_f->m_comm->GetSize();
     // Check for command line point specification
+
     if (m_config["topts"].as<string>().compare("NotSet") != 0)
     {
         string inFile = m_config["topts"].as<string>();
 
-        LibUtilities::PtsIOSharedPtr ptsIO =
-            MemoryManager<LibUtilities::PtsIO>::AllocateSharedPtr(m_f->m_comm);
+        if (boost::filesystem::path(inFile).extension() == ".pts")
+        {
+            LibUtilities::PtsIOSharedPtr ptsIO =
+                MemoryManager<LibUtilities::PtsIO>::AllocateSharedPtr(m_f->m_comm);
 
-        ptsIO->Import(inFile, m_f->m_fieldPts);
+            ptsIO->Import(inFile, m_f->m_fieldPts);
+        }
+        else if (boost::filesystem::path(inFile).extension() == ".csv")
+        {
+            LibUtilities::CsvIOSharedPtr csvIO =
+                MemoryManager<LibUtilities::CsvIO>::AllocateSharedPtr(m_f->m_comm);
+
+            csvIO->Import(inFile, m_f->m_fieldPts);
+        }
+        else
+        {
+            ASSERTL0(false, "unknown topts file type");
+        }
+
     }
     else if (m_config["line"].as<string>().compare("NotSet") != 0)
     {
         vector<NekDouble> values;
-        ASSERTL0(ParseUtils::GenerateUnOrderedVector(
-                     m_config["line"].as<string>().c_str(), values),
+        ASSERTL0(ParseUtils::GenerateVector(
+                     m_config["line"].as<string>(), values),
                  "Failed to interpret line string");
 
         ASSERTL0(values.size() > 2,
@@ -283,8 +306,8 @@ void ProcessInterpPoints::CreateFieldPts(po::variables_map &vm)
     else if (m_config["plane"].as<string>().compare("NotSet") != 0)
     {
         vector<NekDouble> values;
-        ASSERTL0(ParseUtils::GenerateUnOrderedVector(
-                     m_config["plane"].as<string>().c_str(), values),
+        ASSERTL0(ParseUtils::GenerateVector(
+                     m_config["plane"].as<string>(), values),
                  "Failed to interpret plane string");
 
         ASSERTL0(values.size() > 9,
@@ -354,8 +377,8 @@ void ProcessInterpPoints::CreateFieldPts(po::variables_map &vm)
     else if (m_config["box"].as<string>().compare("NotSet") != 0)
     {
         vector<NekDouble> values;
-        ASSERTL0(ParseUtils::GenerateUnOrderedVector(
-                     m_config["box"].as<string>().c_str(), values),
+        ASSERTL0(ParseUtils::GenerateVector(
+                     m_config["box"].as<string>(), values),
                  "Failed to interpret box string");
 
         ASSERTL0(values.size() == 9,
@@ -432,7 +455,7 @@ void ProcessInterpPoints::InterpolateFieldToPts(
     NekDouble clamp_up,
     NekDouble def_value)
 {
-    ASSERTL0(pts->GetNFields() >= field0.size(), "ptField has too few fields");
+    ASSERTL0(pts->GetNFields() == field0.size(), "ptField has too few fields");
 
     int nfields = field0.size();
 
@@ -475,9 +498,8 @@ void ProcessInterpPoints::calcCp0()
     vector<int> velid;
 
     vector<NekDouble> values;
-    ASSERTL0(ParseUtils::GenerateUnOrderedVector(
-                    m_config["cp"].as<string>().c_str(),values),
-                "Failed to interpret cp string");
+    ASSERTL0(ParseUtils::GenerateVector(m_config["cp"].as<string>(), values),
+             "Failed to interpret cp string");
 
     ASSERTL0(values.size() == 2,
                 "cp string should contain 2 values "

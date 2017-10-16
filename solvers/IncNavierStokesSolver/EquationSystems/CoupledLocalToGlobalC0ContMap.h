@@ -62,7 +62,7 @@ namespace Nektar
             Array<OneD, int> &AddMeanPressureToEdgeId);
     };
 
-    typedef boost::shared_ptr<CoupledLocalToGlobalC0ContMap> CoupledLocalToGlobalC0ContMapSharedPtr;
+    typedef std::shared_ptr<CoupledLocalToGlobalC0ContMap> CoupledLocalToGlobalC0ContMapSharedPtr;
 }
 
 #endif

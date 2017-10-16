@@ -37,14 +37,16 @@
 #include <string>
 using namespace std;
 
-#include "ProcessInterpPtsToPts.h"
-
 #include <FieldUtils/Interpolator.h>
-#include <LibUtilities/BasicUtils/ParseUtils.hpp>
+#include <LibUtilities/BasicUtils/ParseUtils.h>
 #include <LibUtilities/BasicUtils/Progressbar.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
+#include <LibUtilities/BasicUtils/PtsIO.h>
+#include <LibUtilities/BasicUtils/CsvIO.h>
 #include <boost/lexical_cast.hpp>
 #include <boost/math/special_functions/fpclassify.hpp>
+
+#include "ProcessInterpPtsToPts.h"
 
 namespace Nektar
 {
@@ -133,16 +135,30 @@ void ProcessInterpPtsToPts::CreateFieldPts(po::variables_map &vm)
     {
         string inFile = m_config["topts"].as<string>();
 
-        LibUtilities::PtsIOSharedPtr ptsIO =
-            MemoryManager<LibUtilities::PtsIO>::AllocateSharedPtr(m_f->m_comm);
+        if (boost::filesystem::path(inFile).extension() == ".pts")
+        {
+            LibUtilities::PtsIOSharedPtr ptsIO =
+                MemoryManager<LibUtilities::PtsIO>::AllocateSharedPtr(m_f->m_comm);
 
-        ptsIO->Import(inFile, m_f->m_fieldPts);
+            ptsIO->Import(inFile, m_f->m_fieldPts);
+        }
+        else if (boost::filesystem::path(inFile).extension() == ".csv")
+        {
+            LibUtilities::CsvIOSharedPtr csvIO =
+                MemoryManager<LibUtilities::CsvIO>::AllocateSharedPtr(m_f->m_comm);
+
+            csvIO->Import(inFile, m_f->m_fieldPts);
+        }
+        else
+        {
+            ASSERTL0(false, "unknown topts file type");
+        }
     }
     else if (m_config["line"].as<string>().compare("NotSet") != 0)
     {
         vector<NekDouble> values;
-        ASSERTL0(ParseUtils::GenerateUnOrderedVector(
-                     m_config["line"].as<string>().c_str(), values),
+        ASSERTL0(ParseUtils::GenerateVector(
+                     m_config["line"].as<string>(), values),
                  "Failed to interpret line string");
 
         ASSERTL0(values.size() > 2,
@@ -196,8 +212,8 @@ void ProcessInterpPtsToPts::CreateFieldPts(po::variables_map &vm)
     else if (m_config["plane"].as<string>().compare("NotSet") != 0)
     {
         vector<NekDouble> values;
-        ASSERTL0(ParseUtils::GenerateUnOrderedVector(
-                     m_config["plane"].as<string>().c_str(), values),
+        ASSERTL0(ParseUtils::GenerateVector(
+                     m_config["plane"].as<string>(), values),
                  "Failed to interpret plane string");
 
         ASSERTL0(values.size() > 9,
@@ -267,8 +283,8 @@ void ProcessInterpPtsToPts::CreateFieldPts(po::variables_map &vm)
     else if (m_config["box"].as<string>().compare("NotSet") != 0)
     {
         vector<NekDouble> values;
-        ASSERTL0(ParseUtils::GenerateUnOrderedVector(
-                     m_config["box"].as<string>().c_str(), values),
+        ASSERTL0(ParseUtils::GenerateVector(
+                     m_config["box"].as<string>(), values),
                  "Failed to interpret box string");
 
         ASSERTL0(values.size() == 9,
@@ -389,8 +405,8 @@ void ProcessInterpPtsToPts::calcCp0()
     vector<int> velid;
 
     vector<NekDouble> values;
-    ASSERTL0(ParseUtils::GenerateUnOrderedVector(
-                    m_config["cp"].as<string>().c_str(),values),
+    ASSERTL0(ParseUtils::GenerateVector(
+                    m_config["cp"].as<string>(),values),
                 "Failed to interpret cp string");
 
     ASSERTL0(values.size() == 2,

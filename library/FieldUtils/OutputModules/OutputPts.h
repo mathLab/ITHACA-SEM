@@ -49,11 +49,11 @@ class OutputPts : public OutputFileBase
 {
 public:
     /// Creates an instance of this class
-    static boost::shared_ptr<Module> create(FieldSharedPtr f)
+    static std::shared_ptr<Module> create(FieldSharedPtr f)
     {
         return MemoryManager<OutputPts>::AllocateSharedPtr(f);
     }
-    static ModuleKey m_className;
+    static ModuleKey m_className[];
 
     OutputPts(FieldSharedPtr f);
     virtual ~OutputPts();

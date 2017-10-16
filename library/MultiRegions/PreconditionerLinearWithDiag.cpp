@@ -63,7 +63,7 @@ namespace Nektar
 	 */
         
         PreconditionerLinearWithDiag::PreconditionerLinearWithDiag(
-            const boost::shared_ptr<GlobalLinSys> &plinsys,
+            const std::shared_ptr<GlobalLinSys> &plinsys,
             const AssemblyMapSharedPtr &pLocToGloMap)
             : Preconditioner(plinsys, pLocToGloMap)
         {

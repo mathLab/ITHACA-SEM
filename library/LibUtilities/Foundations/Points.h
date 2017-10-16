@@ -247,7 +247,7 @@ namespace Nektar
         {
         public:
             typedef DataT DataType;
-            typedef boost::shared_ptr<NekMatrix<DataType> > MatrixSharedPtrType;
+            typedef std::shared_ptr<NekMatrix<DataType> > MatrixSharedPtrType;
 
             virtual ~Points()
             {
@@ -326,28 +326,28 @@ namespace Nektar
             virtual const MatrixSharedPtrType GetI(const PointsKey &pkey)
             {
                 ASSERTL0(false, "Method not implemented ");
-                boost::shared_ptr<NekMatrix<NekDouble> > returnval(MemoryManager<NekMatrix<NekDouble> >::AllocateSharedPtr());
+                std::shared_ptr<NekMatrix<NekDouble> > returnval(MemoryManager<NekMatrix<NekDouble> >::AllocateSharedPtr());
                 return returnval;
             }
 
             virtual const MatrixSharedPtrType GetI(const Array<OneD, const DataType>& x)
             {
                 ASSERTL0(false, "Method not implemented");
-                boost::shared_ptr<NekMatrix<NekDouble> > returnval(MemoryManager<NekMatrix<NekDouble> >::AllocateSharedPtr());
+                std::shared_ptr<NekMatrix<NekDouble> > returnval(MemoryManager<NekMatrix<NekDouble> >::AllocateSharedPtr());
                 return returnval;
             }
 
             virtual const MatrixSharedPtrType GetI(unsigned int numpoints, const Array<OneD, const DataType>& x)
             {
                 ASSERTL0(false, "Method not implemented");
-                boost::shared_ptr<NekMatrix<NekDouble> > returnval(MemoryManager<NekMatrix<NekDouble> >::AllocateSharedPtr());
+                std::shared_ptr<NekMatrix<NekDouble> > returnval(MemoryManager<NekMatrix<NekDouble> >::AllocateSharedPtr());
                 return returnval;
             }
 
             virtual const MatrixSharedPtrType GetI(const Array<OneD, const DataType>& x, const Array<OneD, const DataType>& y)
             {
                 ASSERTL0(false, "Method not implemented");
-                boost::shared_ptr<NekMatrix<NekDouble> > returnval(MemoryManager<NekMatrix<NekDouble> >::AllocateSharedPtr());
+                std::shared_ptr<NekMatrix<NekDouble> > returnval(MemoryManager<NekMatrix<NekDouble> >::AllocateSharedPtr());
                 return returnval;
             }
 
@@ -355,14 +355,14 @@ namespace Nektar
                                                    const Array<OneD, const DataType>& z)
             {
                 ASSERTL0(false, "Method not implemented");
-                boost::shared_ptr<NekMatrix<NekDouble> > returnval(MemoryManager<NekMatrix<NekDouble> >::AllocateSharedPtr());
+                std::shared_ptr<NekMatrix<NekDouble> > returnval(MemoryManager<NekMatrix<NekDouble> >::AllocateSharedPtr());
                 return returnval;
             }
 
             virtual const MatrixSharedPtrType GetGalerkinProjection(const PointsKey &pkey)
             {
                 ASSERTL0(false, "Method not implemented ");
-                boost::shared_ptr<NekMatrix<NekDouble> > returnval(MemoryManager<NekMatrix<NekDouble> >::AllocateSharedPtr());
+                std::shared_ptr<NekMatrix<NekDouble> > returnval(MemoryManager<NekMatrix<NekDouble> >::AllocateSharedPtr());
                 return returnval;
             }
 

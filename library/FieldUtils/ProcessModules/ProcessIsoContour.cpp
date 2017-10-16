@@ -44,7 +44,6 @@
 
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/BasicUtils/Timer.h>
-#include <LibUtilities/BasicUtils/ParseUtils.hpp>
 #include <LibUtilities/BasicUtils/Progressbar.hpp>
 #include <boost/math/special_functions/fpclassify.hpp>
 
@@ -83,11 +82,11 @@ ProcessIsoContour::ProcessIsoContour(FieldSharedPtr f) :
     m_config["fieldvalue"]         = ConfigOption(false, "NotSet",
                                         "field value to extract");
 
-    m_config["globalcondense"]     = ConfigOption(true, "NotSet",
+    m_config["globalcondense"]     = ConfigOption(true, "0",
                                         "Globally condense contour to unique "
                                         "values");
 
-    m_config["smooth"]             = ConfigOption(true, "NotSet",
+    m_config["smooth"]             = ConfigOption(true, "0",
                                         "Smooth isocontour (might require "
                                                   "globalcondense)");
 
@@ -198,8 +197,8 @@ void ProcessIsoContour::Process(po::variables_map &vm)
     }
 
     // Process isocontour
-    bool smoothing      = m_config["smooth"].m_beenSet;
-    bool globalcondense = m_config["globalcondense"].m_beenSet;
+    bool smoothing      = m_config["smooth"].as<bool>();
+    bool globalcondense = m_config["globalcondense"].as<bool>();
     if(globalcondense)
     {
         if(verbose)
@@ -406,6 +405,7 @@ vector<IsoSharedPtr> ProcessIsoContour::ExtractContour(
 
     vector<Array<OneD, int> > ptsConn;
     m_f->m_fieldPts->GetConnectivity(ptsConn);
+    
     for(int zone = 0; zone < ptsConn.size(); ++zone)
     {
         IsoSharedPtr iso;
@@ -529,13 +529,18 @@ vector<IsoSharedPtr> ProcessIsoContour::ExtractContour(
                 }
             }
         }
-        iso->SetNTris(n);
+        
+        if(n)
+        {   
+            iso->SetNTris(n);
 
-        // condense the information in this elemental extraction.
-        iso->Condense();
-        returnval.push_back(iso);
+            // condense the information in this elemental extraction.
+            iso->Condense();
+        
+            returnval.push_back(iso);
+        }
     }
-
+    
     return returnval;
 }
 
@@ -667,7 +672,6 @@ void Iso::Condense(void)
     register int i,j,cnt;
     IsoVertex v;
     vector<IsoVertex> vert;
-    vector<IsoVertex>::iterator pt;
 
     if(!m_ntris) return;
 
@@ -703,7 +707,7 @@ void Iso::Condense(void)
             v.m_y = m_y[3*i+j];
             v.m_z = m_z[3*i+j];
 
-            pt = find(vert.begin(),vert.end(),v);
+            auto pt = find(vert.begin(),vert.end(),v);
             if(pt != vert.end())
             {
                 m_vid[3*i+j] = pt[0].m_id;
@@ -866,12 +870,11 @@ void Iso::GlobalCondense(vector<IsoSharedPtr> &iso, bool verbose)
 
             //see if any values have unique value  already
             set<int> samept;
-            set<int>::iterator it;
             int new_index = -1;
             for(id1 = 0; id1 < result.size(); ++id1)
             {
                 NekDouble dist = bg::distance(queryPoint, result[id1].first);
-                if(dist*dist<SQ_PNT_TOL) // same point
+                if(dist*dist < NekConstants::kNekZeroTol) // same point
                 {
                     id2 = result[id1].second;
                     samept.insert(id2);
@@ -890,9 +893,9 @@ void Iso::GlobalCondense(vector<IsoSharedPtr> &iso, bool verbose)
 
             // reset all same values to new_index
             global_to_unique_map[i] = new_index;
-            for(it = samept.begin(); it != samept.end(); ++it)
+            for(auto &it : samept)
             {
-                global_to_unique_map[*it] = new_index;
+                global_to_unique_map[it] = new_index;
             }
         }
     }
@@ -953,14 +956,14 @@ void Iso::GlobalCondense(vector<IsoSharedPtr> &iso, bool verbose)
 bool operator == (const IsoVertex& x, const IsoVertex& y)
 {
     return ((x.m_x-y.m_x)*(x.m_x-y.m_x) + (x.m_y-y.m_y)*(x.m_y-y.m_y) +
-            (x.m_z-y.m_z)*(x.m_z-y.m_z) < SQ_PNT_TOL)? true:false;
+            (x.m_z-y.m_z)*(x.m_z-y.m_z) < NekConstants::kNekZeroTol)? true:false;
 }
 
 // define != if point is outside 1e-8
 bool operator != (const IsoVertex& x, const IsoVertex& y)
 {
     return ((x.m_x-y.m_x)*(x.m_x-y.m_x) + (x.m_y-y.m_y)*(x.m_y-y.m_y) +
-            (x.m_z-y.m_z)*(x.m_z-y.m_z) < SQ_PNT_TOL)? 0:1;
+            (x.m_z-y.m_z)*(x.m_z-y.m_z) < NekConstants::kNekZeroTol)? 0:1;
 }
 
 void Iso::Smooth(int n_iter, NekDouble lambda, NekDouble mu)
@@ -971,8 +974,6 @@ void Iso::Smooth(int n_iter, NekDouble lambda, NekDouble mu)
     Array<OneD, NekDouble>  xtemp, ytemp, ztemp;
     vector< vector<int> > adj,vertcon;
     vector< vector<NekDouble > >  wght;
-    vector<int>::iterator iad;
-    vector<int>::iterator ipt;
 
     // determine elements around each vertex
     vertcon.resize(m_nvert);
@@ -991,17 +992,17 @@ void Iso::Smooth(int n_iter, NekDouble lambda, NekDouble mu)
     for(i =0; i < m_nvert; ++i)
     {
         // loop over surrounding elements
-        for(ipt = vertcon[i].begin(); ipt != vertcon[i].end(); ++ipt)
+        for(auto &ipt : vertcon[i])
         {
             for(j = 0; j < 3; ++j)
             {
                 // make sure not adding own vertex
-                if(m_vid[3*(*ipt)+j] != i)
+                if(m_vid[3*ipt+j] != i)
                 {
                     // check to see if vertex has already been added
                     for(k = 0; k < adj[i].size(); ++k)
                     {
-                        if(adj[i][k] == m_vid[3*(*ipt)+j])
+                        if(adj[i][k] == m_vid[3*ipt+j])
                         {
                             break;
                         }
@@ -1009,7 +1010,7 @@ void Iso::Smooth(int n_iter, NekDouble lambda, NekDouble mu)
 
                     if(k == adj[i].size())
                     {
-                        adj[i].push_back(m_vid[3*(*ipt)+j]);
+                        adj[i].push_back(m_vid[3*ipt+j]);
                     }
                 }
             }
@@ -1073,9 +1074,7 @@ void Iso::SeparateRegions(vector<IsoSharedPtr> &sep_iso, int minsize, bool verbo
 {
     int i,j,k,id;
     Array<OneD, vector<int> >vertcon(m_nvert);
-    vector<int>::iterator ipt;
     list<int> tocheck;
-    list<int>::iterator cid;
 
     Array<OneD, bool> viddone(m_nvert,false);
 
@@ -1107,11 +1106,11 @@ void Iso::SeparateRegions(vector<IsoSharedPtr> &sep_iso, int minsize, bool verbo
             vidregion[k] = ++nregions;
 
             // find all elmts around this.. vertex  that need to be checked
-            for(ipt = vertcon[k].begin(); ipt != vertcon[k].end(); ++ipt)
+            for(auto &ipt : vertcon[k])
             {
                 for(i = 0; i < 3; ++i)
                 {
-                    if(vidregion[id = m_vid[3*(ipt[0])+i]] == -1)
+                    if(vidregion[id = m_vid[3*ipt+i]] == -1)
                     {
                         tocheck.push_back(id);
                         vidregion[id] = nregions;
@@ -1123,16 +1122,16 @@ void Iso::SeparateRegions(vector<IsoSharedPtr> &sep_iso, int minsize, bool verbo
             // check all other neighbouring vertices
             while(tocheck.size())
             {
-                cid = tocheck.begin();
+                auto cid = tocheck.begin();
                 while(cid != tocheck.end())
                 {
                     if(!viddone[*cid])
                     {
-                        for(ipt = vertcon[*cid].begin(); ipt != vertcon[*cid].end(); ++ipt)
+                        for(auto &ipt : vertcon[*cid])
                         {
                             for(i = 0; i < 3; ++i)
                             {
-                                if(vidregion[id = m_vid[3*(ipt[0])+i]] == -1)
+                                if(vidregion[id = m_vid[3*ipt+i]] == -1)
                                 {
                                     tocheck.push_back(id);
                                     vidregion[id] = nregions;

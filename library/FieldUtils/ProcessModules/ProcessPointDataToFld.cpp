@@ -40,9 +40,9 @@ using namespace std;
 
 #include "ProcessPointDataToFld.h"
 
-#include <LibUtilities/BasicUtils/ParseUtils.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <boost/math/special_functions/fpclassify.hpp>
+
 namespace Nektar
 {
 namespace FieldUtils

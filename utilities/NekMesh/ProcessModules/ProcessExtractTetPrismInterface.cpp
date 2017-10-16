@@ -98,32 +98,30 @@ void ProcessExtractTetPrismInterface::Process()
     ASSERTL0(m_mesh->m_element[m_mesh->m_expDim].size() > 0,
              "Mesh does not contain any prismatic elements!");
 
-    FaceSet::iterator fIt;
-
     // Extract boundary region already associated with prisms
     // (i.e. outer wall of the computational domain)
-    for (fIt = m_mesh->m_faceSet.begin(); fIt != m_mesh->m_faceSet.end(); fIt++)
+    for (auto &face : m_mesh->m_faceSet)
     {
-        if ((*fIt)->m_elLink.size() == 1)
+        if (face->m_elLink.size() == 1)
         {
-            ElementSharedPtr el = (*fIt)->m_elLink[0].first;
+            ElementSharedPtr el = face->m_elLink[0].first;
 
             if (el->GetConf().m_e != LibUtilities::eTetrahedron)
             {
                 m_mesh->m_element[m_mesh->m_expDim - 1].push_back(
-                    bndEl[el->GetBoundaryLink((*fIt)->m_elLink[0].second)]);
+                    bndEl[el->GetBoundaryLink(face->m_elLink[0].second)]);
             }
         }
     }
 
     // Now extract prismatic faces that are not connected to any other
     // elements, which denotes the prism/tet boundary.
-    for (fIt = m_mesh->m_faceSet.begin(); fIt != m_mesh->m_faceSet.end(); fIt++)
+    for (auto &face : m_mesh->m_faceSet)
     {
-        if ((*fIt)->m_elLink.size() != 1)
+        if (face->m_elLink.size() != 1)
         {
-            ElementSharedPtr el1 = (*fIt)->m_elLink[0].first;
-            ElementSharedPtr el2 = (*fIt)->m_elLink[1].first;
+            ElementSharedPtr el1 = face->m_elLink[0].first;
+            ElementSharedPtr el2 = face->m_elLink[1].first;
 
             if ((el1->GetConf().m_e == LibUtilities::ePrism &&
                  el2->GetConf().m_e == LibUtilities::eTetrahedron) ||
@@ -135,7 +133,7 @@ void ProcessExtractTetPrismInterface::Process()
                 vector<int> tags(1);
                 tags[0] = m_mesh->m_composite.size();
 
-                nodeList = (*fIt)->m_vertexList;
+                nodeList = face->m_vertexList;
                 ElmtConfig conf(
                     LibUtilities::eTriangle, 1, false, false, false);
                 ElementSharedPtr tri = GetElementFactory().CreateInstance(

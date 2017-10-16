@@ -36,12 +36,13 @@
 #ifndef NODALTRIFEKETE_H
 #define NODALTRIFEKETE_H
 
+#include <iostream>
+#include <memory>
+
 #include <LibUtilities/Foundations/FoundationsFwd.hpp>
 #include <LibUtilities/Foundations/Points.h>
 #include <LibUtilities/Foundations/NodalUtil.h>
 #include <LibUtilities/Foundations/ManagerAccess.h>
-#include <iostream>
-#include <boost/shared_ptr.hpp>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/LibUtilitiesDeclspec.h>
@@ -62,7 +63,7 @@ namespace Nektar
             {
             }
 
-            LIB_UTILITIES_EXPORT static boost::shared_ptr<PointsBaseType>
+            LIB_UTILITIES_EXPORT static std::shared_ptr<PointsBaseType>
                 Create(const PointsKey &key);
 
             const MatrixSharedPtrType GetI(const PointsKey &pkey)
@@ -91,7 +92,7 @@ namespace Nektar
             }
 
         private:
-            boost::shared_ptr<NodalUtilTriangle> m_util;
+            std::shared_ptr<NodalUtilTriangle> m_util;
 
             NodalTriFekete():PointsBaseType(NullPointsKey)
             {

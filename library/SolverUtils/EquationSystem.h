@@ -36,6 +36,7 @@
 #ifndef NEKTAR_SOLVERUTILS_EQUATIONSYSTEM_H
 #define NEKTAR_SOLVERUTILS_EQUATIONSYSTEM_H
 
+#include <SolverUtils/Core/SessionFunction.h>
 #include <LibUtilities/Communication/Comm.h>
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
@@ -59,7 +60,7 @@ class Interpolator;
         class EquationSystem;
         
         /// A shared pointer to an EquationSystem object
-        typedef boost::shared_ptr<EquationSystem> EquationSystemSharedPtr;
+        typedef std::shared_ptr<EquationSystem> EquationSystemSharedPtr;
         /// Datatype of the NekFactory used to instantiate classes derived from
         /// the EquationSystem class.
         typedef LibUtilities::NekFactory<
@@ -68,13 +69,8 @@ class Interpolator;
         > EquationSystemFactory;
         SOLVER_UTILS_EXPORT EquationSystemFactory& GetEquationSystemFactory();
 
-        struct loadedFldField {
-            std::vector<LibUtilities::FieldDefinitionsSharedPtr> fieldDef;
-            std::vector<std::vector<NekDouble> > fieldData;
-        } ;
-
         /// A base class for describing how to solve specific equations.
-        class EquationSystem : public boost::enable_shared_from_this<EquationSystem>
+        class EquationSystem : public std::enable_shared_from_this<EquationSystem>
         {
         public:
             /// Destructor
@@ -111,16 +107,9 @@ class Interpolator;
             }
 
             template<class T>
-            boost::shared_ptr<T> as()
+            std::shared_ptr<T> as()
             {
-#if defined __INTEL_COMPILER && BOOST_VERSION > 105200
-                typedef typename boost::shared_ptr<T>::element_type E;
-                E * p = dynamic_cast< E* >( shared_from_this().get() );
-                ASSERTL1(p, "Cannot perform cast");
-                return boost::shared_ptr<T>( shared_from_this(), p );
-#else
-                return boost::dynamic_pointer_cast<T>( shared_from_this() );
-#endif
+                return std::dynamic_pointer_cast<T>( shared_from_this() );
             }
 
             /// Reset Session name
@@ -143,43 +132,12 @@ class Interpolator;
             
             /// Set parameter m_lambda
             SOLVER_UTILS_EXPORT inline void SetLambda(NekDouble lambda);
-            
-            /// Evaluates a function as specified in the session file.
-            SOLVER_UTILS_EXPORT void EvaluateFunction(
-                Array<OneD, Array<OneD, NekDouble> >& pArray,
-                std::string pFunctionName,
-                const NekDouble pTime = 0.0,
-                const int domain = 0);
-            
-            /// Populate given fields with the function from session.
-            SOLVER_UTILS_EXPORT void EvaluateFunction(
-                std::vector<std::string> pFieldNames,
-                Array<OneD, Array<OneD, NekDouble> > &pFields,
-                const std::string& pName,
-                const NekDouble& pTime = 0.0,
-                const int domain = 0);
-            
-            /// Populate given fields with the function from session.
-            SOLVER_UTILS_EXPORT void EvaluateFunction(
-                std::vector<std::string> pFieldNames,
-                Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
-                const std::string& pName,
-                const NekDouble& pTime = 0.0,
-                const int domain = 0);
-            
-            // Populate an array with a function variable from session.
-            SOLVER_UTILS_EXPORT void EvaluateFunction(
-                std::string pFieldName,
-                Array<OneD, NekDouble>& pArray,
-                const std::string& pFunctionName,
-                const NekDouble& pTime = 0.0,
-                const int domain = 0);
-            
-            // Describe a function.
-            SOLVER_UTILS_EXPORT std::string DescribeFunction(
-                std::string pFieldName,
-                const std::string &pFunctionName,
-                const int domain);
+
+            /// Get a SessionFunction by name
+            SOLVER_UTILS_EXPORT SessionFunctionSharedPtr GetFunction(
+                std::string name,
+                const MultiRegions::ExpListSharedPtr &field = MultiRegions::NullExpListSharedPtr,
+                bool cache = false);
             
             /// Perform initialisation of the base flow.
             SOLVER_UTILS_EXPORT void InitialiseBaseFlow(
@@ -410,10 +368,6 @@ class Interpolator;
             
             SOLVER_UTILS_EXPORT inline void SetModifiedBasis(
                 const bool modbasis);
-            
-            /// Perform a case-insensitive string comparison.
-            SOLVER_UTILS_EXPORT int NoCaseStringCompare(
-                const std::string & s1, const std::string& s2) ;
 
             SOLVER_UTILS_EXPORT int GetCheckpointNumber()
             {
@@ -458,14 +412,10 @@ class Interpolator;
             LibUtilities::CommSharedPtr                 m_comm;
             /// The session reader
             LibUtilities::SessionReaderSharedPtr        m_session;
+            /// Map of known SessionFunctions
+            std::map<std::string, SolverUtils::SessionFunctionSharedPtr> m_sessionFunctions;
             /// Field input/output
             LibUtilities::FieldIOSharedPtr              m_fld;
-            /// Map of interpolator objects
-            std::map<std::string, FieldUtils::Interpolator > m_interpolators;
-            /// pts fields we already read from disk: {funcFilename: (filename, ptsfield)}
-            std::map<std::string, std::pair<std::string, LibUtilities::PtsFieldSharedPtr> > m_loadedPtsFields;
-            // fld fiels already loaded from disk: {funcFilename: (filename, loadedFldField)}
-            std::map<std::string, std::pair<std::string, loadedFldField> > m_loadedFldFields;
             /// Array holding all dependent variables.
             Array<OneD, MultiRegions::ExpListSharedPtr> m_fields;
             /// Base fields.
@@ -561,12 +511,6 @@ class Interpolator;
             /// Initialises EquationSystem class members.
             SOLVER_UTILS_EXPORT EquationSystem( const LibUtilities::SessionReaderSharedPtr& pSession);
             
-            // Here for consistency purposes with old version
-            int nocase_cmp(const std::string & s1, const std::string& s2)
-            {
-                return NoCaseStringCompare(s1,s2);
-            }
-            
             SOLVER_UTILS_EXPORT virtual void v_InitObject();
             
             /// Virtual function for initialisation implementation.
@@ -605,34 +549,6 @@ class Interpolator;
                 unsigned int field,
                 Array<OneD, NekDouble> &outfield,
                 const NekDouble time);
-
-            // Populate an array with a function variable from session.
-            SOLVER_UTILS_EXPORT void EvaluateFunctionExp(
-                std::string pFieldName,
-                Array<OneD, NekDouble>& pArray,
-                const std::string& pFunctionName,
-                const NekDouble& pTime = 0.0,
-                const int domain = 0);
-
-            // Populate an array with a function variable from session.
-            SOLVER_UTILS_EXPORT void EvaluateFunctionFld(
-                std::string pFieldName,
-                Array<OneD, NekDouble>& pArray,
-                const std::string& pFunctionName,
-                const NekDouble& pTime = 0.0,
-                const int domain = 0);
-
-            SOLVER_UTILS_EXPORT void EvaluateFunctionPts(
-                std::string pFieldName,
-                Array<OneD, NekDouble>& pArray,
-                const std::string& pFunctionName,
-                const NekDouble& pTime = 0.0,
-                const int domain = 0);
-
-            SOLVER_UTILS_EXPORT void LoadPts(
-                std::string funcFilename,
-                std::string filename,
-                Nektar::LibUtilities::PtsFieldSharedPtr &outPts);
             
             //Initialise m_base in order to store the base flow from a file 
             SOLVER_UTILS_EXPORT void SetUpBaseFields(SpatialDomains::MeshGraphSharedPtr &mesh);
@@ -801,12 +717,11 @@ class Interpolator;
                 v_GenerateSummary(vSummary);
 
                 out << "=======================================================================" << std::endl;
-                SummaryList::const_iterator x;
-                for (x = vSummary.begin(); x != vSummary.end(); ++x)
+                for (auto &x : vSummary)
                 {
                     out << "\t";
                     out.width(20);
-                    out << x->first << ": " << x->second << std::endl;
+                    out << x.first << ": " << x.second << std::endl;
                 }
                 out << "=======================================================================" << std::endl;
             }

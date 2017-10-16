@@ -65,7 +65,7 @@ namespace Nektar
 
         typedef SparseStorageType                    StorageType;
         typedef typename SparseStorageType::DataType DataType;
-        typedef boost::shared_ptr<SparseStorageType> SparseStorageSharedPtr;
+        typedef std::shared_ptr<SparseStorageType>   SparseStorageSharedPtr;
         typedef Array<OneD, DataType>                DataVectorType;
         typedef Array<OneD, const DataType>          ConstDataVectorType;
         typedef Array<OneD, SparseStorageSharedPtr>  SparseStorageSharedPtrVector;
@@ -75,16 +75,16 @@ namespace Nektar
         LIB_UTILITIES_EXPORT NekSparseDiagBlkMatrix(const NekSparseDiagBlkMatrix& src);
         LIB_UTILITIES_EXPORT ~NekSparseDiagBlkMatrix();
 
-        LIB_UTILITIES_EXPORT const IndexType GetRows() const;
-        LIB_UTILITIES_EXPORT const IndexType GetColumns() const;
-        LIB_UTILITIES_EXPORT const IndexType GetNumNonZeroEntries();
-        LIB_UTILITIES_EXPORT const DataType  GetFillInRatio() const;
+        LIB_UTILITIES_EXPORT IndexType GetRows() const;
+        LIB_UTILITIES_EXPORT IndexType GetColumns() const;
+        LIB_UTILITIES_EXPORT IndexType GetNumNonZeroEntries();
+        LIB_UTILITIES_EXPORT DataType  GetFillInRatio() const;
 
-        LIB_UTILITIES_EXPORT const IndexType GetRows(int i) const;
-        LIB_UTILITIES_EXPORT const IndexType GetColumns(int i) const;
-        LIB_UTILITIES_EXPORT const IndexType GetNumberOfMatrixBlocks() const;
-        LIB_UTILITIES_EXPORT const IndexType GetNumNonZeroEntries(int i) const;
-        LIB_UTILITIES_EXPORT const DataType  GetFillInRatio(int i) const;
+        LIB_UTILITIES_EXPORT IndexType GetRows(int i) const;
+        LIB_UTILITIES_EXPORT IndexType GetColumns(int i) const;
+        LIB_UTILITIES_EXPORT IndexType GetNumberOfMatrixBlocks() const;
+        LIB_UTILITIES_EXPORT IndexType GetNumNonZeroEntries(int i) const;
+        LIB_UTILITIES_EXPORT DataType  GetFillInRatio(int i) const;
 
 
         LIB_UTILITIES_EXPORT typename boost::call_traits<DataType>::const_reference
@@ -103,14 +103,14 @@ namespace Nektar
                                 DataType* in,
                                 DataType* out);
 
-        LIB_UTILITIES_EXPORT const size_t GetMemoryFootprint();
-        LIB_UTILITIES_EXPORT const size_t GetMemoryFootprint(IndexType i) const;
+        LIB_UTILITIES_EXPORT size_t GetMemoryFootprint();
+        LIB_UTILITIES_EXPORT size_t GetMemoryFootprint(IndexType i) const;
 
-        LIB_UTILITIES_EXPORT const unsigned long GetMulCallsCounter() const;
-        LIB_UTILITIES_EXPORT const DataType   GetAvgRowDensity();
-        LIB_UTILITIES_EXPORT const DataType   GetAvgRowDensity(IndexType i) const;
-        LIB_UTILITIES_EXPORT const IndexType  GetBandwidth();
-        LIB_UTILITIES_EXPORT const IndexType  GetBandwidth(IndexType i);
+        LIB_UTILITIES_EXPORT unsigned long GetMulCallsCounter() const;
+        LIB_UTILITIES_EXPORT DataType   GetAvgRowDensity();
+        LIB_UTILITIES_EXPORT DataType   GetAvgRowDensity(IndexType i) const;
+        LIB_UTILITIES_EXPORT IndexType  GetBandwidth();
+        LIB_UTILITIES_EXPORT IndexType  GetBandwidth(IndexType i);
         LIB_UTILITIES_EXPORT COOMatTypeSharedPtr GetCooStorage();
         LIB_UTILITIES_EXPORT COOMatTypeSharedPtr GetCooStorage(IndexType i);
 

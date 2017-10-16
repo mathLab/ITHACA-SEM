@@ -118,7 +118,7 @@ public:
 };
 
 /// Shared pointer to a composite.
-typedef boost::shared_ptr<Composite> CompositeSharedPtr;
+typedef std::shared_ptr<Composite> CompositeSharedPtr;
 /// Container of composites; key is the composite id, value is the
 /// composite.
 typedef std::map<unsigned int, CompositeSharedPtr> CompositeMap;

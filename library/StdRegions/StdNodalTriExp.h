@@ -190,7 +190,7 @@ namespace Nektar
                 const StdMatrixKey &mkey);
         };
         
-        typedef boost::shared_ptr<StdNodalTriExp> StdNodalTriExpSharedPtr;
+        typedef std::shared_ptr<StdNodalTriExp> StdNodalTriExpSharedPtr;
     } //end of namespace
 } //end of namespace
 

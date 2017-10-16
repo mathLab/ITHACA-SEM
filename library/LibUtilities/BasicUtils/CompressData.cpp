@@ -38,7 +38,16 @@
 #include <LibUtilities/BasicUtils/MeshEntities.hpp>
 #include <LibUtilities/BasicConst/GitRevision.h>
 
+#include <boost/archive/iterators/base64_from_binary.hpp>
+#include <boost/archive/iterators/binary_from_base64.hpp>
+#include <boost/archive/iterators/transform_width.hpp>
+#include <boost/iostreams/copy.hpp>
+#include <boost/iostreams/filter/zlib.hpp>
+#include <boost/iostreams/filtering_stream.hpp>
+#include <boost/assign/list_of.hpp>
+
 #include <set>
+#include <cstdint>
 
 #ifdef NEKTAR_USE_MPI
 #include <mpi.h>
@@ -61,8 +70,8 @@ namespace LibUtilities
     {
         union
         {
-            boost::uint32_t value;
-            boost::uint8_t  data[sizeof(boost::uint32_t)];
+            std::uint32_t value;
+            std::uint8_t  data[sizeof(std::uint32_t)];
         } number;
 
         number.data[0] = 0x00;

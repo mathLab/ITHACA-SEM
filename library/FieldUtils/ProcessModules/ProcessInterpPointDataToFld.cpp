@@ -42,9 +42,10 @@ using namespace std;
 #include "ProcessInterpPointDataToFld.h"
 
 #include <FieldUtils/Interpolator.h>
-#include <LibUtilities/BasicUtils/ParseUtils.hpp>
 #include <LibUtilities/BasicUtils/PtsField.h>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
+#include <LibUtilities/BasicUtils/PtsIO.h>
+#include <LibUtilities/BasicUtils/CsvIO.h>
 #include <boost/math/special_functions/fpclassify.hpp>
 
 namespace bg  = boost::geometry;
@@ -84,11 +85,25 @@ void ProcessInterpPointDataToFld::Process(po::variables_map &vm)
     ASSERTL0( m_config["frompts"].as<string>().compare("NotSet") != 0,
             "ProcessInterpPointDataToFld requires frompts parameter");
     string inFile = m_config["frompts"].as<string>().c_str();
-    LibUtilities::CommSharedPtr  c     =
-            LibUtilities::GetCommFactory().CreateInstance("Serial", 0, 0);
-    LibUtilities::PtsIOSharedPtr ptsIO =
-            MemoryManager<LibUtilities::PtsIO>::AllocateSharedPtr(c);
-    ptsIO->Import(inFile, fieldPts);
+
+    if (boost::filesystem::path(inFile).extension() == ".pts")
+    {
+        LibUtilities::PtsIOSharedPtr ptsIO =
+            MemoryManager<LibUtilities::PtsIO>::AllocateSharedPtr(m_f->m_comm);
+
+        ptsIO->Import(inFile, fieldPts);
+    }
+    else if (boost::filesystem::path(inFile).extension() == ".csv")
+    {
+        LibUtilities::CsvIOSharedPtr csvIO =
+            MemoryManager<LibUtilities::CsvIO>::AllocateSharedPtr(m_f->m_comm);
+
+        csvIO->Import(inFile, fieldPts);
+    }
+    else
+    {
+        ASSERTL0(false, "unknown frompts file type");
+    }
 
     int nFields = fieldPts->GetNFields();
     ASSERTL0(nFields > 0, "No field values provided in input");

@@ -50,12 +50,12 @@ using namespace NekMeshUtils;
 struct DerivUtil;
 struct Residual;
 
-typedef boost::shared_ptr<DerivUtil> DerivUtilSharedPtr;
-typedef boost::shared_ptr<Residual> ResidualSharedPtr;
+typedef std::shared_ptr<DerivUtil> DerivUtilSharedPtr;
+typedef std::shared_ptr<Residual> ResidualSharedPtr;
 
 class ElUtilJob;
 
-class ElUtil : public boost::enable_shared_from_this<ElUtil>
+class ElUtil : public std::enable_shared_from_this<ElUtil>
 {
 public:
     ElUtil(ElementSharedPtr e, DerivUtilSharedPtr d,
@@ -111,7 +111,7 @@ private:
     DerivUtilSharedPtr m_derivUtil;
     ResidualSharedPtr m_res;
 };
-typedef boost::shared_ptr<ElUtil> ElUtilSharedPtr;
+typedef std::shared_ptr<ElUtil> ElUtilSharedPtr;
 
 class ElUtilJob : public Thread::ThreadJob
 {

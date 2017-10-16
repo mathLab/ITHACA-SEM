@@ -36,8 +36,6 @@
 #ifndef NEKTAR_MESHUTILS_BLMESHING_BLMESH_H
 #define NEKTAR_MESHUTILS_BLMESHING_BLMESH_H
 
-#include <boost/shared_ptr.hpp>
-
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 #include <NekMeshUtils/MeshElements/Mesh.h>
 
@@ -102,7 +100,7 @@ public:
             pNode->m_z = oNode->m_z + t * N[2];
         }
     };
-    typedef boost::shared_ptr<blInfo> blInfoSharedPtr;
+    typedef std::shared_ptr<blInfo> blInfoSharedPtr;
 
 private:
     void Setup();
@@ -138,7 +136,7 @@ private:
     NekMatrix<NekDouble> m_deriv[3];
 };
 
-typedef boost::shared_ptr<BLMesh> BLMeshSharedPtr;
+typedef std::shared_ptr<BLMesh> BLMeshSharedPtr;
 }
 }
 

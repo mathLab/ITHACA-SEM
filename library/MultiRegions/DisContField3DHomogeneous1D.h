@@ -130,7 +130,7 @@ namespace Nektar
             inline const Array<OneD,const SpatialDomains::
                 BoundaryConditionShPtr> &GetBndConditions();
 
-            inline boost::shared_ptr<ExpList> &UpdateBndCondExpansion(int i);
+            inline std::shared_ptr<ExpList> &UpdateBndCondExpansion(int i);
 
             inline Array<OneD, SpatialDomains::BoundaryConditionShPtr>&
                 UpdateBndConditions();
@@ -142,7 +142,7 @@ namespace Nektar
                 Array<OneD,int> &EdgeID);
             
             virtual void v_GetBndElmtExpansion(int i,
-                            boost::shared_ptr<ExpList> &result,
+                            std::shared_ptr<ExpList> &result,
                             const bool DeclareCoeffPhysArrays);
 
             /// This funtion extract form a vector containing a full
@@ -287,7 +287,7 @@ namespace Nektar
                 const NekDouble   x2_in   = NekConstants::kNekUnsetDouble,
                 const NekDouble   x3_in   = NekConstants::kNekUnsetDouble);
 
-            virtual boost::shared_ptr<ExpList> &v_UpdateBndCondExpansion(int i);
+            virtual std::shared_ptr<ExpList> &v_UpdateBndCondExpansion(int i);
 
             virtual Array<OneD, SpatialDomains::BoundaryConditionShPtr>
                 &v_UpdateBndConditions();
@@ -298,7 +298,7 @@ namespace Nektar
             }
         };
 
-        typedef boost::shared_ptr<DisContField3DHomogeneous1D>
+        typedef std::shared_ptr<DisContField3DHomogeneous1D>
             DisContField3DHomogeneous1DSharedPtr;
 
         inline const Array<OneD,const MultiRegions::ExpListSharedPtr>

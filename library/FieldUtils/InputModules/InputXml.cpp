@@ -38,6 +38,7 @@
 #include <string>
 using namespace std;
 
+#include <LibUtilities/BasicUtils/ParseUtils.h>
 #include <LibUtilities/BasicUtils/Timer.h>
 
 #include "InputXml.h"
@@ -115,8 +116,7 @@ void InputXml::Process(po::variables_map &vm)
     if (vm.count("range"))
     {
         vector<NekDouble> values;
-        ASSERTL0(ParseUtils::GenerateUnOrderedVector(
-                     vm["range"].as<string>().c_str(), values),
+        ASSERTL0(ParseUtils::GenerateVector(vm["range"].as<string>(), values),
                  "Failed to interpret range string");
 
         ASSERTL0(values.size() > 1, "Do not have minimum values of xmin,xmax");

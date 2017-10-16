@@ -2220,7 +2220,7 @@ void GenerateMapEidsv1v2(MultiRegions::ExpListSharedPtr field,
                  Array<OneD, int> &V1, Array<OneD, int> &V2)
 {
 
-      const boost::shared_ptr<LocalRegions::ExpansionVector> exp2D = field->GetExp();
+      const std::shared_ptr<LocalRegions::ExpansionVector> exp2D = field->GetExp();
       int nel        = exp2D->size();
       LocalRegions::QuadExpSharedPtr locQuadExp;
       LocalRegions::TriExpSharedPtr  locTriExp;
@@ -3633,7 +3633,7 @@ void CheckSingularQuads( MultiRegions::ExpListSharedPtr Exp,
                  Array<OneD, int> V1, Array<OneD, int> V2,
 	         Array<OneD, NekDouble>& xnew,Array<OneD, NekDouble>& ynew)
 {
-      const boost::shared_ptr<LocalRegions::ExpansionVector> exp2D = Exp->GetExp();
+      const std::shared_ptr<LocalRegions::ExpansionVector> exp2D = Exp->GetExp();
       int nel        = exp2D->size();
       LocalRegions::QuadExpSharedPtr locQuadExp;
       LocalRegions::TriExpSharedPtr  locTriExp;

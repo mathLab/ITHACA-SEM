@@ -45,7 +45,7 @@ namespace Nektar
     class LymphaticPressureArea;
 
     /// Pointer to a PulseWaveOutflow object.
-    typedef boost::shared_ptr<LymphaticPressureArea> LymphaticPressureAreaSharedPtr;
+    typedef std::shared_ptr<LymphaticPressureArea> LymphaticPressureAreaSharedPtr;
     
     /// A global linear system.
     class LymphaticPressureArea : public PulseWavePressureArea

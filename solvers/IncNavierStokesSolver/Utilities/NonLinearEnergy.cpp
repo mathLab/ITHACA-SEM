@@ -51,8 +51,8 @@ int main(int argc, char *argv[])
             NonLinear[i] = Array<OneD, NekDouble> (nphys);
         }
 
-        boost::shared_ptr<NavierStokesAdvection> A
-            = boost::dynamic_pointer_cast<NavierStokesAdvection>(IncNav->GetAdvObject());
+        std::shared_ptr<NavierStokesAdvection> A
+            = std::dynamic_pointer_cast<NavierStokesAdvection>(IncNav->GetAdvObject());
 
         if (!A)
         {

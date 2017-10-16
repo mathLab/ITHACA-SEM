@@ -36,13 +36,12 @@
 #ifndef SPATIALDOMDEF_H
 #define SPATIALDOMDEF_H
 
-#include<boost/shared_ptr.hpp>
+#include <memory>
 
 namespace Nektar
 {
     namespace SpatialDomains
     {
-        
         class Geometry;
         class EdgeComponent;
         class SegGeom;
@@ -52,11 +51,11 @@ namespace Nektar
         class Geometry3D;
         class GeomFactors;
 
-        static boost::shared_ptr<GeomFactors> NullGeomFactorsSharedPtr; 
-        static boost::shared_ptr<Geometry>    NullGeometrySharedPtr;
-        static boost::shared_ptr<Geometry1D>  NullGeometry1DSharedPtr;
-        static boost::shared_ptr<Geometry2D>  NullGeometry2DSharedPtr;
-        static boost::shared_ptr<Geometry3D>  NullGeometry3DSharedPtr;
+        static std::shared_ptr<GeomFactors> NullGeomFactorsSharedPtr;
+        static std::shared_ptr<Geometry>    NullGeometrySharedPtr;
+        static std::shared_ptr<Geometry1D>  NullGeometry1DSharedPtr;
+        static std::shared_ptr<Geometry2D>  NullGeometry2DSharedPtr;
+        static std::shared_ptr<Geometry3D>  NullGeometry3DSharedPtr;
     } // end of namespace
 } // end of namespace
 

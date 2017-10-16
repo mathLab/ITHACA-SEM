@@ -56,7 +56,7 @@ namespace Nektar
 		class NekFFTW;
 		
 		// A shared pointer to the NekFFTW object
-		typedef boost::shared_ptr<NekFFTW>  NekFFTWSharedPtr;
+		typedef std::shared_ptr<NekFFTW>  NekFFTWSharedPtr;
 		
 		class NekFFTW: public NektarFFT
 		{

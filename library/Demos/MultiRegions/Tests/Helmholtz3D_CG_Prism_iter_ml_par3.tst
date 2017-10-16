@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8" ?>
 <test>
     <description>Helmholtz 3D CG, prisms, Neumann BCs, iterative ML, Par(3)</description>
     <executable>Helmholtz3D</executable>

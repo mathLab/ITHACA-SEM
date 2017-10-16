@@ -36,8 +36,6 @@
 #ifndef NekMeshUtils_CADSYSTEM_CADSYSTEM
 #define NekMeshUtils_CADSYSTEM_CADSYSTEM
 
-#include <boost/shared_ptr.hpp>
-
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 
@@ -54,11 +52,11 @@ namespace NekMeshUtils
 
 //forward declorators
 class CADVert;
-typedef boost::shared_ptr<CADVert> CADVertSharedPtr;
+typedef std::shared_ptr<CADVert> CADVertSharedPtr;
 class CADCurve;
-typedef boost::shared_ptr<CADCurve> CADCurveSharedPtr;
+typedef std::shared_ptr<CADCurve> CADCurveSharedPtr;
 class CADSurf;
-typedef boost::shared_ptr<CADSurf> CADSurfSharedPtr;
+typedef std::shared_ptr<CADSurf> CADSurfSharedPtr;
 
 
 
@@ -85,7 +83,7 @@ public:
         NekDouble area;
     };
 
-    typedef boost::shared_ptr<EdgeLoop> EdgeLoopSharedPtr;
+    typedef std::shared_ptr<EdgeLoop> EdgeLoopSharedPtr;
 
     /**
      * @brief Default constructor.
@@ -95,7 +93,7 @@ public:
         m_2d = false;
     }
 
-    ~CADSystem()
+    virtual ~CADSystem()
     {
     }
 
@@ -170,8 +168,8 @@ public:
      */
     CADCurveSharedPtr GetCurve(int i)
     {
-        std::map<int, CADCurveSharedPtr>::iterator search = m_curves.find(i);
-        ASSERTL0(search != m_curves.end(), "curve does not exist");
+        auto search = m_curves.find(i);
+        ASSERTL1(search != m_curves.end(), "curve does not exist");
 
         return search->second;
     }
@@ -181,8 +179,16 @@ public:
      */
     CADSurfSharedPtr GetSurf(int i)
     {
-        std::map<int, CADSurfSharedPtr>::iterator search = m_surfs.find(i);
-        ASSERTL0(search != m_surfs.end(), "surface does not exist");
+        auto search = m_surfs.find(i);
+        ASSERTL1(search != m_surfs.end(), "surface does not exist");
+
+        return search->second;
+    }
+    
+    CADVertSharedPtr GetVert(int i)
+    {
+        auto search = m_verts.find(i);
+        ASSERTL1(search != m_verts.end(), "vert does not exist");
 
         return search->second;
     }
@@ -202,7 +208,9 @@ public:
     {
         return m_verts.size();
     }
-
+    
+    std::string GetSurfaceName(int i);
+    
     NEKMESHUTILS_EXPORT Array<OneD, NekDouble> GetPeriodicTranslationVector(
                 int first, int second);
 
@@ -220,7 +228,7 @@ protected:
     std::string m_naca;
 };
 
-typedef boost::shared_ptr<CADSystem> CADSystemSharedPtr;
+typedef std::shared_ptr<CADSystem> CADSystemSharedPtr;
 typedef LibUtilities::NekFactory<std::string, CADSystem, std::string>
     EngineFactory;
 

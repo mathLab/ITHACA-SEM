@@ -160,7 +160,8 @@ namespace NekMeshUtils
         NEKMESHUTILS_EXPORT Module(MeshSharedPtr p_m) : m_mesh(p_m) {}
         NEKMESHUTILS_EXPORT virtual void Process() = 0;
 
-        NEKMESHUTILS_EXPORT void RegisterConfig(std::string key, std::string value);
+        NEKMESHUTILS_EXPORT void RegisterConfig(std::string key, 
+                                                std::string value = std::string());
         NEKMESHUTILS_EXPORT void PrintConfig();
         NEKMESHUTILS_EXPORT void SetDefaults();
         NEKMESHUTILS_EXPORT MeshSharedPtr GetMesh()
@@ -255,7 +256,7 @@ namespace NekMeshUtils
     typedef std::pair<ModuleType,std::string> ModuleKey;
     NEKMESHUTILS_EXPORT std::ostream& operator<<(std::ostream& os, const ModuleKey& rhs);
 
-    typedef boost::shared_ptr<Module> ModuleSharedPtr;
+    typedef std::shared_ptr<Module> ModuleSharedPtr;
     typedef LibUtilities::NekFactory< ModuleKey, Module, MeshSharedPtr > ModuleFactory;
 
     NEKMESHUTILS_EXPORT ModuleFactory& GetModuleFactory();

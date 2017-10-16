@@ -48,7 +48,7 @@ namespace Nektar
 {
     namespace SpatialDomains
     {
-        typedef boost::shared_ptr<QuadGeom> SharedQuadGeomPtr;
+        typedef std::shared_ptr<QuadGeom> SharedQuadGeomPtr;
         typedef std::vector< SharedQuadGeomPtr >      QuadGeomVector;
 
         class MeshGraph2D:
@@ -235,7 +235,7 @@ namespace Nektar
 
         };
 
-        typedef boost::shared_ptr<MeshGraph2D> MeshGraph2DSharedPtr;
+        typedef std::shared_ptr<MeshGraph2D> MeshGraph2DSharedPtr;
 
     };
 };

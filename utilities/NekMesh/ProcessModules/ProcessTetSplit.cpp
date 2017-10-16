@@ -33,8 +33,6 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <boost/unordered_map.hpp>
-
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/Foundations/ManagerAccess.h>
 #include <StdRegions/StdNodalPrismExp.h>
@@ -80,7 +78,6 @@ void ProcessTetSplit::Process()
     // diagonal edges along quadrilateral faces which will be used to
     // add high-order information to the split tetrahedra.
     map<ipair, ipair> edgeMap;
-    map<ipair, ipair>::iterator it;
 
     int nq  = m_config["nq"].as<int>();
     int ne  = nq - 2;            // Edge interior
@@ -231,7 +228,7 @@ void ProcessTetSplit::Process()
         // Create local prismatic region so that co-ordinates of the
         // mapped element can be read from.
         SpatialDomains::PrismGeomSharedPtr geomLayer =
-            boost::dynamic_pointer_cast<SpatialDomains::PrismGeom>(
+            std::dynamic_pointer_cast<SpatialDomains::PrismGeom>(
                 el[i]->GetGeom(m_mesh->m_spaceDim));
         LibUtilities::BasisKey B0(
             LibUtilities::eOrtho_A,
@@ -308,7 +305,7 @@ void ProcessTetSplit::Process()
                     [indir[minId][prismTet[j + offset][tetEdges[k][1]]]];
 
                 // Find offset/stride
-                it = edgeMap.find(pair<int, int>(n1, n2));
+                auto it = edgeMap.find(pair<int, int>(n1, n2));
                 if (it == edgeMap.end())
                 {
                     it = edgeMap.find(pair<int, int>(n2, n1));
@@ -479,8 +476,7 @@ void ProcessTetSplit::Process()
     vector<ElementSharedPtr> tmp;
     for (int i = 0; i < m_mesh->m_element[m_mesh->m_expDim - 1].size(); ++i)
     {
-        set<int>::iterator it = toRemove.find(i);
-        if (it == toRemove.end())
+        if (toRemove.find(i) == toRemove.end())
         {
             tmp.push_back(m_mesh->m_element[m_mesh->m_expDim - 1][i]);
         }

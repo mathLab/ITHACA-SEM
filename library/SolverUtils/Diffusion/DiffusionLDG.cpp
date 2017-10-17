@@ -84,36 +84,25 @@ namespace Nektar
             int nCoeffs   = fields[0]->GetNcoeffs();
             int nTracePts = fields[0]->GetTrace()->GetTotPoints();
             
-            Array<OneD, NekDouble>  qcoeffs(nCoeffs);
-
-            Array<OneD, Array<OneD, NekDouble> > fluxvector(nDim);
+            Array<OneD, NekDouble>  tmp(nCoeffs);
 
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > > flux  (nDim);
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > > qfield(nDim);
-            Array<OneD, Array<OneD, Array<OneD, NekDouble> > > qfieldStd(nDim);
 
             for (j = 0; j < nDim; ++j)
             {
                 qfield[j] = 
                     Array<OneD, Array<OneD, NekDouble> >(nConvectiveFields);
-                qfieldStd[j] = 
-                Array<OneD, Array<OneD, NekDouble> >(nConvectiveFields);
                 flux[j]   = 
                     Array<OneD, Array<OneD, NekDouble> >(nConvectiveFields);
                 
                 for (i = 0; i < nConvectiveFields; ++i)
                 {
                     qfield[j][i] = Array<OneD, NekDouble>(nPts, 0.0);
-                    qfieldStd[j][i] = Array<OneD, NekDouble>(nPts, 0.0);
                     flux[j][i]   = Array<OneD, NekDouble>(nTracePts, 0.0);
                 }
             }
-            
-            for (k = 0; k < nDim; ++k)
-            {
-                fluxvector[k] = Array<OneD, NekDouble>(nPts, 0.0);
-            }
-                        
+
             // Compute q_{\eta} and q_{\xi}
             // Obtain numerical fluxes
 
@@ -123,12 +112,12 @@ namespace Nektar
             {
                 for (i = 0; i < nConvectiveFields; ++i)
                 {
-                    fields[i]->IProductWRTDerivBase(j, inarray[i], qcoeffs);
-                    Vmath::Neg                      (nCoeffs, qcoeffs, 1);
-                    fields[i]->AddTraceIntegral     (flux[j][i], qcoeffs);
+                    fields[i]->IProductWRTDerivBase(j, inarray[i], tmp);
+                    Vmath::Neg                      (nCoeffs, tmp, 1);
+                    fields[i]->AddTraceIntegral     (flux[j][i], tmp);
                     fields[i]->SetPhysState         (false);
-                    fields[i]->MultiplyByElmtInvMass(qcoeffs, qcoeffs);
-                    fields[i]->BwdTrans             (qcoeffs, qfield[j][i]);
+                    fields[i]->MultiplyByElmtInvMass(tmp, tmp);
+                    fields[i]->BwdTrans             (tmp, qfield[j][i]);
                 }
             }
             // Compute u from q_{\eta} and q_{\xi}
@@ -198,7 +187,6 @@ namespace Nektar
                 }
             }
 
-            Array<OneD, NekDouble>  tmp = Array<OneD, NekDouble>(nCoeffs, 0.0);
             Array<OneD, Array<OneD, NekDouble> > qdbase(nDim);
 
             for (i = 0; i < nConvectiveFields; ++i)

@@ -47,6 +47,9 @@ v5.0.0
 - Enable output to multiple files (!844)
 - Allow using xml file without expansion tag in FieldConvert (!849)
 
+**CompressibleFlowSolver**
+- Add 3D regression tests (!567)
+
 **Documentation**:
 - Added the developer-guide repository as a submodule (!751)
 
@@ -73,7 +76,7 @@ v4.4.1
 - Fix deadlock with HDF5 input (!786)
 - Fix missing entriess in LibUtilities::kPointsTypeStr (!792)
 - Fix compiler warnings with CommDataType (!793)
-- Fix ability to set default implementation in Collections and added an option 
+- Fix ability to set default implementation in Collections and added an option
   to set eNoCollections in FieldConvert as default (!789)
 - Fix performance issue in ProcessIsoContour in relation to memory consumption
   (!821)
@@ -83,7 +86,7 @@ v4.4.1
 - Fix overwriting and backup of chk/fld files on slow file systes (!741)
 - Fix DriverAdaptive with second order IMEX (!850)
 - Fixed typo in eIMEXGear part (!854)
-- Added regression tests for IMEXOrder1, IMEXOrder2, IMEXOrder3, MCNAB, 
+- Added regression tests for IMEXOrder1, IMEXOrder2, IMEXOrder3, MCNAB,
   IMEXGear, CNAB, 2nd order IMEX-DIRK, 3rd order IMEX-DIRK (!854)
 - Fix bug due to subtractive cancellation in polylib routines (!778)
 

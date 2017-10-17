@@ -61,7 +61,7 @@ class ProcessProjectCAD : public NekMeshUtils::ProcessModule
 {
 public:
     /// Creates an instance of this class
-    static boost::shared_ptr<Module> create(NekMeshUtils::MeshSharedPtr m)
+    static std::shared_ptr<Module> create(NekMeshUtils::MeshSharedPtr m)
     {
         return MemoryManager<ProcessProjectCAD>::AllocateSharedPtr(m);
     }
@@ -72,13 +72,13 @@ public:
 
     /// Write mesh to output file.
     virtual void Process();
-    
+
 private:
-    
-    bool findAndProject(bgi::rtree<boxI, bgi::quadratic<16> > &rtree, 
+
+    bool findAndProject(bgi::rtree<boxI, bgi::quadratic<16> > &rtree,
                                            Array<OneD, NekDouble> in,
                                            int &surf);
-    
+
     bool IsNotValid(std::vector<NekMeshUtils::ElementSharedPtr> &els);
 };
 }

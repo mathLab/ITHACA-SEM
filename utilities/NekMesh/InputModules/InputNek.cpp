@@ -90,7 +90,7 @@ void InputNek::Process()
     map<LibUtilities::ShapeType, int> domainComposite;
     map<LibUtilities::ShapeType, vector<vector<NodeSharedPtr> > > elNodes;
     map<LibUtilities::ShapeType, vector<int> > elIds;
-    boost::unordered_map<int, int> elMap;
+    std::unordered_map<int, int> elMap;
     vector<LibUtilities::ShapeType> elmOrder;
 
     bool scalar = m_config["scalar"].as<bool>();
@@ -272,7 +272,7 @@ void InputNek::Process()
         vector<NodeSharedPtr> nodeList;
         for (k = 0; k < nNodes; ++k)
         {
-            NodeSharedPtr n = boost::shared_ptr<Node>(new Node(
+            NodeSharedPtr n = std::shared_ptr<Node>(new Node(
                 nodeCounter++, vertex[0][k], vertex[1][k], vertex[2][k]));
             nodeList.push_back(n);
         }
@@ -292,8 +292,7 @@ void InputNek::Process()
         for (j = 0; j < tmp.size(); ++j)
         {
             vector<int> tags;
-            map<LibUtilities::ShapeType, int>::iterator compIt =
-                domainComposite.find(elType);
+            auto compIt = domainComposite.find(elType);
             if (compIt == domainComposite.end())
             {
                 tags.push_back(nComposite);
@@ -311,8 +310,7 @@ void InputNek::Process()
 
             for (k = 0; k < nodeList.size(); ++k)
             {
-                pair<NodeSet::iterator, bool> testIns =
-                    m_mesh->m_vertexSet.insert(nodeList[k]);
+                auto testIns = m_mesh->m_vertexSet.insert(nodeList[k]);
 
                 if (!testIns.second)
                 {
@@ -397,8 +395,6 @@ void InputNek::Process()
 
         int nCurvedSides;
         int faceId, elId;
-        map<string, pair<NekCurve, string> >::iterator it;
-        HOSurfSet::iterator hoIt;
 
         s.clear();
         s.str(line);
@@ -420,8 +416,8 @@ void InputNek::Process()
 
             if (el->GetConf().m_e == LibUtilities::ePrism && faceId % 2 == 0)
             {
-                boost::shared_ptr<Prism> p =
-                    boost::dynamic_pointer_cast<Prism>(el);
+                std::shared_ptr<Prism> p =
+                    std::dynamic_pointer_cast<Prism>(el);
                 if (p->m_orientation == 1)
                 {
                     faceId = (faceId + 2) % 6;
@@ -433,12 +429,12 @@ void InputNek::Process()
             }
             else if (el->GetConf().m_e == LibUtilities::eTetrahedron)
             {
-                boost::shared_ptr<Tetrahedron> t =
-                    boost::dynamic_pointer_cast<Tetrahedron>(el);
+                std::shared_ptr<Tetrahedron> t =
+                    std::dynamic_pointer_cast<Tetrahedron>(el);
                 faceId = t->m_orientationMap[faceId];
             }
 
-            it = curveTags.find(word);
+            auto it = curveTags.find(word);
             if (it == curveTags.end())
             {
                 cerr << "Unrecognised curve tag " << word << " in curved lines"
@@ -457,7 +453,7 @@ void InputNek::Process()
                     faceId % 2 == 1)
                 {
                     offset =
-                        boost::dynamic_pointer_cast<Prism>(el)->m_orientation;
+                        std::dynamic_pointer_cast<Prism>(el)->m_orientation;
                 }
 
                 // Read x/y/z coordinates.
@@ -488,8 +484,7 @@ void InputNek::Process()
                 for (j = 0; j < tmp.size(); ++j)
                 {
                     int id = tmp[(j + offset) % tmp.size()]->m_id;
-                    boost::unordered_map<int, Node>::iterator vIt =
-                        m_mesh->m_vertexNormals.find(id);
+                    auto vIt = m_mesh->m_vertexNormals.find(id);
 
                     if (vIt == m_mesh->m_vertexNormals.end())
                     {
@@ -515,8 +510,8 @@ void InputNek::Process()
                 // vertex ids accordingly.
                 if (el->GetConf().m_e == LibUtilities::eTetrahedron)
                 {
-                    boost::shared_ptr<Tetrahedron> tet =
-                        boost::static_pointer_cast<Tetrahedron>(el);
+                    std::shared_ptr<Tetrahedron> tet =
+                        std::static_pointer_cast<Tetrahedron>(el);
                     vector<int> tmpVertId = vertId;
 
                     for (j = 0; j < 3; ++j)
@@ -539,8 +534,8 @@ void InputNek::Process()
                 }
                 else if (el->GetConf().m_e == LibUtilities::ePrism)
                 {
-                    boost::shared_ptr<Prism> pr =
-                        boost::static_pointer_cast<Prism>(el);
+                    std::shared_ptr<Prism> pr =
+                        std::static_pointer_cast<Prism>(el);
                     if (pr->m_orientation == 1)
                     {
                         swap(vertId[2], vertId[1]);
@@ -554,9 +549,9 @@ void InputNek::Process()
                 }
 
                 HOSurfSharedPtr hs =
-                    boost::shared_ptr<HOSurf>(new HOSurf(vertId));
+                    std::shared_ptr<HOSurf>(new HOSurf(vertId));
                 // Find vertex combination in hoData.
-                hoIt = hoData[word].find(hs);
+                auto hoIt = hoData[word].find(hs);
 
                 if (hoIt == hoData[word].end())
                 {
@@ -781,10 +776,9 @@ void InputNek::Process()
         // Now attempt to find this boundary condition inside
         // m_mesh->condition. This is currently a linear search and should
         // probably be made faster!
-        ConditionMap::iterator it;
         bool found = false;
-        for (it = m_mesh->m_condition.begin(); it != m_mesh->m_condition.end();
-             ++it)
+        auto it = m_mesh->m_condition.begin();
+        for (; it != m_mesh->m_condition.end(); ++it)
         {
             if (c == it->second)
             {
@@ -806,8 +800,8 @@ void InputNek::Process()
             // change.
             if (elm->GetConf().m_e == LibUtilities::ePrism && faceId % 2 == 0)
             {
-                boost::shared_ptr<Prism> p =
-                    boost::dynamic_pointer_cast<Prism>(elm);
+                std::shared_ptr<Prism> p =
+                    std::dynamic_pointer_cast<Prism>(elm);
                 if (p->m_orientation == 1)
                 {
                     faceId = (faceId + 2) % 6;
@@ -819,8 +813,8 @@ void InputNek::Process()
             }
             else if (elm->GetConf().m_e == LibUtilities::eTetrahedron)
             {
-                boost::shared_ptr<Tetrahedron> t =
-                    boost::dynamic_pointer_cast<Tetrahedron>(elm);
+                std::shared_ptr<Tetrahedron> t =
+                    std::dynamic_pointer_cast<Tetrahedron>(elm);
                 faceId = t->m_orientationMap[faceId];
             }
 
@@ -893,9 +887,7 @@ void InputNek::Process()
         else
         {
             // Otherwise find existing composite inside surfaceCompMap.
-            map<int, vector<pair<int, LibUtilities::ShapeType> > >::iterator
-                it2;
-            it2 = surfaceCompMap.find(it->first);
+            auto it2 = surfaceCompMap.find(it->first);
 
             found = false;
             if (it2 == surfaceCompMap.end())
@@ -958,17 +950,16 @@ void InputNek::Process()
  */
 void InputNek::LoadHOSurfaces()
 {
-    map<string, pair<NekCurve, string> >::iterator it;
     int nodeId = m_mesh->GetNumEntities();
 
-    for (it = curveTags.begin(); it != curveTags.end(); ++it)
+    for (auto &it : curveTags)
     {
         ifstream hsf;
-        string line, fileName = it->second.second;
+        string line, fileName = it.second.second;
         size_t pos;
         int N, Nface, dot;
 
-        if (it->second.first != eFile)
+        if (it.second.first != eFile)
         {
             continue;
         }
@@ -1109,7 +1100,7 @@ void InputNek::LoadHOSurfaces()
                 abort();
             }
 
-            hoData[it->first].insert(
+            hoData[it.first].insert(
                 HOSurfSharedPtr(new HOSurf(nodeIds, faceMap[i])));
         }
 

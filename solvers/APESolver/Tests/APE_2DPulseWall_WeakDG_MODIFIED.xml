@@ -337,9 +337,9 @@
     </BOUNDARYREGIONS>
     <BOUNDARYCONDITIONS>
       <REGION REF="0">
-        <D VAR="p" VALUE="0"/>
-        <D VAR="u" VALUE="0"/>
-        <D VAR="v" VALUE="0"/>
+        <D VAR="p" USERDEFINEDTYPE="RiemannInvariantBC" VALUE="0" />
+        <D VAR="u" USERDEFINEDTYPE="RiemannInvariantBC" VALUE="0" />
+        <D VAR="v" USERDEFINEDTYPE="RiemannInvariantBC" VALUE="0" />
       </REGION>
       <REGION REF="1">
         <D VAR="p" USERDEFINEDTYPE="Wall" VALUE="0" />
@@ -358,10 +358,27 @@
       <E VAR="u" VALUE="0"/>
       <E VAR="v" VALUE="0"/>
     </FUNCTION>
+    <FUNCTION NAME="ExactSolution"> <!-- Not really the exact solution -->
+      <E VAR="p" VALUE="0"/>
+      <E VAR="u" VALUE="0"/>
+      <E VAR="v" VALUE="0"/>
+    </FUNCTION>
     <FUNCTION NAME="InitialConditions">
       <E VAR="p" VALUE="100*exp(-32*(x^2+y^2))"/> <!-- Gaussian pulse located at the origin -->
       <E VAR="u" VALUE="0"/>
       <E VAR="v" VALUE="0"/>
     </FUNCTION>
+    <!-- 0.4 m thick sponge layer around the RiemannInvariantBC BCs -->
+    <FUNCTION NAME="SpongeCoefficient">
+        <E VAR="p" EVARS="r" VALUE="-5000 * exp(-0.5 * (3*r / 0.4)^2)" />
+        <E VAR="u" EVARS="r" VALUE="-5000 * exp(-0.5 * (3*r / 0.4)^2)" />
+        <E VAR="v" EVARS="r" VALUE="-5000 * exp(-0.5 * (3*r / 0.4)^2)" />
+    </FUNCTION>
   </CONDITIONS>
+  <FORCING>
+    <FORCE TYPE="Absorption">
+        <COEFF> SpongeCoefficient </COEFF>
+        <BOUNDARYREGIONS> 0 </BOUNDARYREGIONS>
+    </FORCE>
+  </FORCING>
 </NEKTAR>

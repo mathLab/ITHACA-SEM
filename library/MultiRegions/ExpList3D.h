@@ -109,12 +109,9 @@ namespace Nektar
         };
 
         /// Shared pointer to an ExpList3D object.
-        typedef boost::shared_ptr<ExpList3D>      ExpList3DSharedPtr;
+        typedef std::shared_ptr<ExpList3D>      ExpList3DSharedPtr;
         /// Vector of pointers to ExpList3D objects.
         typedef std::vector<ExpList3DSharedPtr>   ExpList3DVector;
-        /// Iterator over an ExpList3DVector.
-        typedef std::vector<ExpList3DSharedPtr>::iterator ExpList3DVectorIter;
-
     } //end of namespace
 } //end of namespace
 

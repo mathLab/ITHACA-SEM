@@ -663,11 +663,11 @@ namespace Nektar
             return result;
         }
         
-        boost::shared_ptr<AssemblyMap> AssemblyMap::v_LinearSpaceMap(
+        std::shared_ptr<AssemblyMap> AssemblyMap::v_LinearSpaceMap(
             const ExpList &locexp, GlobalSysSolnType solnType)
         {
             ASSERTL0(false, "Not defined for this sub class");
-            static boost::shared_ptr<AssemblyMap> result;
+            static std::shared_ptr<AssemblyMap> result;
             return result;
         }
 
@@ -829,7 +829,7 @@ namespace Nektar
             return v_GetExtraDirEdges();
         }
 
-        boost::shared_ptr<AssemblyMap> AssemblyMap::LinearSpaceMap(const ExpList &locexp, GlobalSysSolnType solnType)
+        std::shared_ptr<AssemblyMap> AssemblyMap::LinearSpaceMap(const ExpList &locexp, GlobalSysSolnType solnType)
         {
             return v_LinearSpaceMap(locexp, solnType);
         }

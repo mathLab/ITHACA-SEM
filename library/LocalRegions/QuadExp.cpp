@@ -55,11 +55,11 @@ namespace Nektar
              Expansion     (geom),
              Expansion2D   (geom),
              m_matrixManager(
-                    boost::bind(&QuadExp::CreateMatrix, this, _1),
-                    std::string("QuadExpMatrix")),
+                 std::bind(&QuadExp::CreateMatrix, this, std::placeholders::_1),
+                 std::string("QuadExpMatrix")),
              m_staticCondMatrixManager(
-                    boost::bind(&QuadExp::CreateStaticCondMatrix, this, _1),
-                    std::string("QuadExpStaticCondMatrix"))
+                 std::bind(&QuadExp::CreateStaticCondMatrix, this, std::placeholders::_1),
+                 std::string("QuadExpStaticCondMatrix"))
         {
         }
 

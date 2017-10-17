@@ -30,7 +30,42 @@
 
 namespace Polylib {
 
+	/// The following function is used to circumvent/reduce "Subtractive Cancellation"
+	/// The expression 1/dz  is replaced by optinvsub(.,.)
+	/// Added on 26 April 2017
 
+	double optdiff(double xl, double xr)
+        {
+		double m_xln, m_xrn;
+                int    m_expn;
+                int    m_digits = static_cast<int>(fabs(floor(log10(DBL_EPSILON)))-1);
+
+                if (fabs(xl-xr)<1.e-4){
+
+                        m_expn = static_cast<int>(floor(log10(fabs(xl-xr))));
+                        m_xln  = xl*powl(10.0L,-m_expn)-floor(xl*powl(10.0L,-m_expn)); // substract the digits overlap part
+                        m_xrn  = xr*powl(10.0L,-m_expn)-floor(xl*powl(10.0L,-m_expn)); // substract the common digits overlap part
+                        m_xln  = round(m_xln*powl(10.0L,m_digits+m_expn));             // git rid of rubbish
+                        m_xrn  = round(m_xrn*powl(10.0L,m_digits+m_expn));
+
+                        return powl(10.0L,-m_digits)*(m_xln-m_xrn);
+                }else{
+                        return (xl-xr);
+                }
+        }
+
+	double laginterp(double z, int j, const double *zj, int np)
+	{
+        	double temp = 1.0;
+        	for (int i=0; i<np; i++)
+        	{	
+                	if (j != i)
+                	{
+                        	temp *=optdiff(z,zj[i])/(zj[j]-zj[i]);
+                	}
+        	}
+        	return temp;
+	}
 
     /// Define whether to use polynomial deflation (1)  or tridiagonal solver (0).
 
@@ -1058,7 +1093,7 @@ namespace Polylib {
 
 
 
-            for (i = 0; i < np; i++)
+            for (i = 0; i < np; i++) {
 
                 for (j = 0; j < np; j++){
 
@@ -1084,7 +1119,9 @@ namespace Polylib {
 
                 }
 
-                free(pd);
+            }
+
+            free(pd);
 
         }
 
@@ -1158,7 +1195,7 @@ namespace Polylib {
 
 
 
-            for (i = 0; i < np; i++)
+            for (i = 0; i < np; i++) {
 
                 for (j = 0; j < np; j++){
 
@@ -1184,7 +1221,9 @@ namespace Polylib {
 
                 }
 
-                free(pd);
+            }
+
+            free(pd);
 
         }
 
@@ -1260,7 +1299,7 @@ namespace Polylib {
 
 
 
-            for (i = 0; i < np; i++)
+            for (i = 0; i < np; i++) {
 
                 for (j = 0; j < np; j++){
 
@@ -1288,7 +1327,9 @@ namespace Polylib {
 
                 }
 
-                free(pd);
+            }
+
+            free(pd);
 
         }
 
@@ -1348,29 +1389,15 @@ namespace Polylib {
 
     {
 
-
-
-        double zi, dz, p, pd, h;
-
-
+	double zi, dz;
 
         zi  = *(zgj+i);
 
-        dz  = z - zi;
+        dz  = z-zi;
 
-        if (fabs(dz) < EPS) return 1.0;
+	if (fabs(dz) < EPS) return 1.0;
 
-
-
-        jacobd (1, &zi, &pd , np, alpha, beta);
-
-        jacobfd(1, &z , &p, NULL , np, alpha, beta);
-
-        h = p/(pd*dz);
-
-
-
-        return h;
+	return laginterp(z, i, zgj, np);
 
     }
 
@@ -1425,34 +1452,15 @@ namespace Polylib {
     {
 
 
-
-        double zi, dz, p, pd, h;
-
-
+	double zi, dz;
 
         zi  = *(zgrj+i);
 
-        dz  = z - zi;
+        dz  = z-zi;
 
         if (fabs(dz) < EPS) return 1.0;
 
-
-
-        jacobfd (1, &zi, &p , NULL, np-1, alpha, beta + 1);
-
-        // need to use this routine in caes zi = -1 or 1
-
-        jacobd  (1, &zi, &pd, np-1, alpha, beta + 1);
-
-        h = (1.0 + zi)*pd + p;
-
-        jacobfd (1, &z, &p, NULL,  np-1, alpha, beta + 1);
-
-        h = (1.0 + z )*p/(h*dz);
-
-
-
-        return h;
+	return laginterp(z, i, zgrj, np);
 
     }
 
@@ -1509,34 +1517,15 @@ namespace Polylib {
     {
 
 
-
-        double zi, dz, p, pd, h;
-
-
+	double zi, dz;
 
         zi  = *(zgrj+i);
 
-        dz  = z - zi;
+        dz  = z-zi;
 
         if (fabs(dz) < EPS) return 1.0;
 
-
-
-        jacobfd (1, &zi, &p , NULL, np-1, alpha+1, beta );
-
-        // need to use this routine in caes z = -1 or 1
-
-        jacobd  (1, &zi, &pd, np-1, alpha+1, beta );
-
-        h = (1.0 - zi)*pd - p;
-
-        jacobfd (1, &z, &p, NULL,  np-1, alpha+1, beta);
-
-        h = (1.0 - z )*p/(h*dz);
-
-
-
-        return h;
+	return laginterp(z, i, zgrj, np);
 
     }
 
@@ -1592,35 +1581,15 @@ namespace Polylib {
 
     {
 
-        double one = 1., two = 2.;
-
-        double zi, dz, p, pd, h;
-
-
+        double zi, dz;
 
         zi  = *(zglj+i);
 
-        dz  = z - zi;
+        dz  = z-zi;
 
         if (fabs(dz) < EPS) return 1.0;
-
-
-
-        jacobfd(1, &zi, &p , NULL, np-2, alpha + one, beta + one);
-
-        // need to use this routine in caes z = -1 or 1
-
-        jacobd (1, &zi, &pd, np-2, alpha + one, beta + one);
-
-        h = (one - zi*zi)*pd - two*zi*p;
-
-        jacobfd(1, &z, &p, NULL, np-2, alpha + one, beta + one);
-
-        h = (one - z*z)*p/(h*dz);
-
-
-
-        return h;
+	
+	return laginterp(z, i, zglj, np);
 
     }
 

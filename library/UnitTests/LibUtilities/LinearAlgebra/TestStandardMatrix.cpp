@@ -43,6 +43,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include <boost/test/auto_unit_test.hpp>
+#include <functional>
 #include <UnitTests/LibUtilities/LinearAlgebra/TestCombinationRunner.h>
 
 namespace Nektar
@@ -144,12 +145,12 @@ namespace Nektar
                                   39.0, 42.0, 45.0, 48.0};
 
             NekMatrix<double> lhs1(4, 4, lhs_buf);
-            boost::shared_ptr<NekMatrix<NekMatrix<double>, ScaledMatrixTag> > lhs2;
-            boost::shared_ptr<NekMatrix<NekMatrix<double>, BlockMatrixTag> > lhs3;
+            std::shared_ptr<NekMatrix<NekMatrix<double>, ScaledMatrixTag> > lhs2;
+            std::shared_ptr<NekMatrix<NekMatrix<double>, BlockMatrixTag> > lhs3;
 
             NekMatrix<double> rhs1(4, 4, rhs_buf);
-            boost::shared_ptr<NekMatrix<NekMatrix<double>, ScaledMatrixTag> > rhs2;
-            boost::shared_ptr<NekMatrix<NekMatrix<double>, BlockMatrixTag> > rhs3;
+            std::shared_ptr<NekMatrix<NekMatrix<double>, ScaledMatrixTag> > rhs2;
+            std::shared_ptr<NekMatrix<NekMatrix<double>, BlockMatrixTag> > rhs3;
 
             GenerateMatrices(lhs1, 2.0, 2, 2, lhs2, lhs3);
             GenerateMatrices(rhs1, 3.0, 2, 2, rhs2, rhs3);
@@ -159,8 +160,8 @@ namespace Nektar
                                    45, 50, 55, 60,
                                    65, 70, 75, 80};
             NekMatrix<double> result(4, 4, result_buf);
-            
-            RunAllTestCombinations(lhs1, *lhs2, *lhs3, rhs1, *rhs2, *rhs3, result, DoAddition());
+
+            RunAllAddCombinations(lhs1, *lhs2, *lhs3, rhs1, *rhs2, *rhs3, result);
 
             NekMatrix<double> rhs_transposed = Transpose(rhs1);
             NekMatrix<double> result_with_one_operand_transposed = lhs1 + rhs_transposed;
@@ -186,12 +187,12 @@ namespace Nektar
                                   39.0, 42.0, 45.0, 48.0};
 
             NekMatrix<double> lhs1(4, 4, lhs_buf);
-            boost::shared_ptr<NekMatrix<NekMatrix<double>, ScaledMatrixTag> > lhs2;
-            boost::shared_ptr<NekMatrix<NekMatrix<double>, BlockMatrixTag> > lhs3;
+            std::shared_ptr<NekMatrix<NekMatrix<double>, ScaledMatrixTag> > lhs2;
+            std::shared_ptr<NekMatrix<NekMatrix<double>, BlockMatrixTag> > lhs3;
 
             NekMatrix<double> rhs1(4, 4, rhs_buf);
-            boost::shared_ptr<NekMatrix<NekMatrix<double>, ScaledMatrixTag> > rhs2;
-            boost::shared_ptr<NekMatrix<NekMatrix<double>, BlockMatrixTag> > rhs3;
+            std::shared_ptr<NekMatrix<NekMatrix<double>, ScaledMatrixTag> > rhs2;
+            std::shared_ptr<NekMatrix<NekMatrix<double>, BlockMatrixTag> > rhs3;
 
             GenerateMatrices(lhs1, 2.0, 2, 2, lhs2, lhs3);
             GenerateMatrices(rhs1, 3.0, 2, 2, rhs2, rhs3);
@@ -202,7 +203,7 @@ namespace Nektar
                                    -13, -14, -15, -16};
             NekMatrix<double> result(4, 4, result_buf);
             
-            RunAllTestCombinations(lhs1, *lhs2, *lhs3, rhs1, *rhs2, *rhs3, result, DoSubtraction());
+            RunAllSubCombinations(lhs1, *lhs2, *lhs3, rhs1, *rhs2, *rhs3, result);
         }
 
         BOOST_AUTO_TEST_CASE(TestThreeAdditions)

@@ -45,7 +45,7 @@ namespace Nektar
     class ArterialPressureArea;
 
     /// Pointer to a PulseWaveOutflow object.
-    typedef boost::shared_ptr<ArterialPressureArea> ArterialPressureAreaSharedPtr;
+    typedef std::shared_ptr<ArterialPressureArea> ArterialPressureAreaSharedPtr;
     
     /// A global linear system.
     class ArterialPressureArea : public PulseWavePressureArea

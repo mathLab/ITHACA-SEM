@@ -49,7 +49,7 @@ namespace Nektar
     {
         class MeshPartition;
         class SessionReader;
-        typedef boost::shared_ptr<SessionReader> SessionReaderSharedPtr;
+        typedef std::shared_ptr<SessionReader> SessionReaderSharedPtr;
         typedef std::map<int, std::vector<unsigned int> > CompositeOrdering;
         typedef std::map<int, std::vector<unsigned int> > BndRegionOrdering;
 
@@ -165,15 +165,6 @@ namespace Nektar
             typedef boost::graph_traits<
                         BoostGraph
                     >::edge_descriptor BoostEdge;
-            typedef boost::graph_traits<
-                        BoostGraph
-                    >::edge_iterator BoostEdgeIterator;
-            typedef boost::graph_traits<
-                        BoostGraph
-                    >::vertex_iterator BoostVertexIterator;
-            typedef boost::graph_traits<
-                        BoostGraph
-                    >::adjacency_iterator BoostAdjacencyIterator;
 
             typedef std::vector<unsigned int>       NumModes;
             typedef std::map<std::string, NumModes> NummodesPerField;
@@ -243,7 +234,7 @@ namespace Nektar
             int CalculateEdgeWeight(char elmtType, int na, int nb, int nc);
         };
 
-        typedef boost::shared_ptr<MeshPartition> MeshPartitionSharedPtr;
+        typedef std::shared_ptr<MeshPartition> MeshPartitionSharedPtr;
     }
 }
 

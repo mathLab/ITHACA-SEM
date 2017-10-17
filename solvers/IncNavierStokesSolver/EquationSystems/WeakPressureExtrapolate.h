@@ -53,7 +53,7 @@ namespace Nektar
     
     class WeakPressureExtrapolate;
     
-    typedef boost::shared_ptr<WeakPressureExtrapolate> WeakPressureExtrapolateSharedPtr;
+    typedef std::shared_ptr<WeakPressureExtrapolate> WeakPressureExtrapolateSharedPtr;
     
     class WeakPressureExtrapolate : public StandardExtrapolate
     {

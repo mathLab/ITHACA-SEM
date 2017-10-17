@@ -24,19 +24,28 @@ if(NOT DEFINED OCE_DIR)
   # Check for OSX needs to come first because UNIX evaluates to true on OSX
   if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
     if(DEFINED MACPORTS_PREFIX)
-      find_package(OCE 0.15 QUIET HINTS ${MACPORTS_PREFIX}/Library/Frameworks)
+      find_package(OCE 0.17 QUIET HINTS ${MACPORTS_PREFIX}/Library/Frameworks)
     elseif(DEFINED HOMEBREW_PREFIX)
-      find_package(OCE 0.15 QUIET HINTS ${HOMEBREW_PREFIX}/Cellar/oce/*)
+      find_package(OCE 0.17 QUIET HINTS ${HOMEBREW_PREFIX}/Cellar/oce/*)
     endif()
   elseif(UNIX)
     set(OCE_DIR "/usr/local/share/cmake/")
   endif()
 endif()
 
-find_package(OCE 0.15 QUIET)
+find_package(OCE 0.17 QUIET)
 if(OCE_FOUND)
-  message(STATUS "-- OpenCASCADE Community Edition has been found.")
-  set(OCC_INCLUDE_DIR ${OCE_INCLUDE_DIRS})
+  message(STATUS "OpenCASCADE Community Edition has been found.")
+
+  #check that the OCE package has CAF modules
+  FIND_LIBRARY(OCC_CAF_LIBRARY TKXCAF ${OCE_INCLUDE_DIRS}/../../lib )
+
+  if(OCC_CAF_LIBRARY)
+    set(OCC_INCLUDE_DIR ${OCE_INCLUDE_DIRS})
+  else()
+    message(STATUS "-- OCE does not have CAF libraries, will build from source.")
+  endif()
+
 else(OCE_FOUND) #look for OpenCASCADE
 
     FIND_PATH(OCC_INCLUDE_DIR Standard_Version.hxx
@@ -45,7 +54,6 @@ else(OCE_FOUND) #look for OpenCASCADE
       /usr/local/opt/opencascade/include
       /opt/opencascade/include
       /opt/opencascade/inc
-      /opt/local/include/oce
     )
     FIND_LIBRARY(OCC_LIBRARY TKernel
       /usr/lib
@@ -56,6 +64,7 @@ else(OCE_FOUND) #look for OpenCASCADE
     )
 
   if(OCC_LIBRARY)
+    message(STATUS "OpenCASCADE has been found.")
     GET_FILENAME_COMPONENT(OCC_LIBRARY_DIR ${OCC_LIBRARY} PATH)
     IF(NOT OCC_INCLUDE_DIR)
       FIND_PATH(OCC_INCLUDE_DIR Standard_Version.hxx
@@ -112,9 +121,11 @@ if(OCC_FOUND)
     TKSTEPAttr
     TKHLR
     TKFeat
+    TKXCAF
+    TKXDESTEP
   )
-  if(OCC_VERSION_STRING VERSION_LESS 6.7)
+  if(OCC_VERSION_STRING VERSION_LESS 6.8)
     MESSAGE(SEND_ERROR "OCC version too low")
-  endif(OCC_VERSION_STRING VERSION_LESS 6.7)
+  endif(OCC_VERSION_STRING VERSION_LESS 6.8)
   message(STATUS "-- Found OCE/OpenCASCADE with OCC version: ${OCC_VERSION_STRING}")
 endif(OCC_FOUND)

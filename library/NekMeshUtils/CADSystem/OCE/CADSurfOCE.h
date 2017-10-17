@@ -59,7 +59,7 @@ public:
     {
     }
 
-    virtual ~CADSurfOCE()
+    ~CADSurfOCE()
     {
     }
 
@@ -72,9 +72,11 @@ public:
     virtual Array<OneD, NekDouble> P    (Array<OneD, NekDouble> uv);
     virtual Array<OneD, NekDouble> locuv(Array<OneD, NekDouble> p);
     virtual NekDouble DistanceTo(Array<OneD, NekDouble> p);
-    virtual void ProjectTo(Array<OneD, NekDouble> &tp,
+    virtual NekDouble ProjectTo(Array<OneD, NekDouble> &tp,
                            Array<OneD, NekDouble> &uv);
     virtual NekDouble Curvature(Array<OneD, NekDouble> uv);
+    virtual Array<OneD, NekDouble> BoundingBox();
+    virtual bool IsPlanar();
 
 private:
     /// Function which tests the the value of uv used is within the surface
@@ -87,9 +89,13 @@ private:
     Array<OneD, NekDouble> m_bounds;
     /// locuv object (stored because it gets faster with stored information)
     ShapeAnalysis_Surface *m_sas;
+    /// original shape
+    TopoDS_Shape m_shape;
+    ///
+    BRepTopAdaptor_FClass2d *m_2Dclass;
 };
 
-typedef boost::shared_ptr<CADSurf> CADSurfSharedPtr;
+typedef std::shared_ptr<CADSurf> CADSurfSharedPtr;
 
 }
 }

@@ -36,6 +36,7 @@
 #ifndef NEKMESHUTILS_MESHELEMENTS_NODE
 #define NEKMESHUTILS_MESHELEMENTS_NODE
 
+#include <LibUtilities/BasicUtils/HashUtils.hpp>
 #include <NekMeshUtils/NekMeshUtilsDeclspec.h>
 
 #include <iomanip>
@@ -48,7 +49,7 @@ namespace Nektar
 namespace NekMeshUtils
 {
 class Node;
-typedef boost::shared_ptr<Node> NodeSharedPtr;
+typedef std::shared_ptr<Node> NodeSharedPtr;
 
 /**
  * @brief Represents a point in the domain.
@@ -148,7 +149,7 @@ public:
 
     NEKMESHUTILS_EXPORT NodeSharedPtr copy()
     {
-        return boost::shared_ptr<Node>(new Node(m_id, m_x, m_y, m_z));
+        return std::shared_ptr<Node>(new Node(m_id, m_x, m_y, m_z));
     }
 
     NEKMESHUTILS_EXPORT NekDouble abs2() const
@@ -431,14 +432,10 @@ struct NodeHash : std::unary_function<NodeSharedPtr, std::size_t>
 {
     std::size_t operator()(NodeSharedPtr const &p) const
     {
-        std::size_t seed = 0;
-        boost::hash_combine(seed, p->m_x);
-        boost::hash_combine(seed, p->m_y);
-        boost::hash_combine(seed, p->m_z);
-        return seed;
+        return hash_combine(p->m_x, p->m_y, p->m_z);
     }
 };
-typedef boost::unordered_set<NodeSharedPtr, NodeHash> NodeSet;
+typedef std::unordered_set<NodeSharedPtr, NodeHash> NodeSet;
 }
 }
 

@@ -316,8 +316,7 @@ namespace Nektar
         
         const NormalVector & StdExpansion3D::v_GetFaceNormal(const int face) const
         {
-            std::map<int, NormalVector>::const_iterator x;
-            x = m_faceNormals.find(face);
+            auto x = m_faceNormals.find(face);
             ASSERTL0 (x != m_faceNormals.end(),
                       "face normal not computed.");
             return x->second;

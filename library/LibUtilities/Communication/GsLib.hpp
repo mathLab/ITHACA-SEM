@@ -173,7 +173,7 @@ static inline gs_data *Init(const Nektar::Array<OneD, long> pId,
         return 0;
     }
     LibUtilities::CommMpiSharedPtr vCommMpi =
-        boost::dynamic_pointer_cast<LibUtilities::CommMpi>(pComm);
+        std::dynamic_pointer_cast<LibUtilities::CommMpi>(pComm);
     ASSERTL1(vCommMpi, "Failed to cast MPI Comm object.");
     comm vComm;
     MPI_Comm_dup(vCommMpi->GetComm(), &vComm.c);
@@ -206,7 +206,7 @@ static inline void Unique(const Nektar::Array<OneD, long> pId,
         return;
     }
     LibUtilities::CommMpiSharedPtr vCommMpi =
-        boost::dynamic_pointer_cast<LibUtilities::CommMpi>(pComm);
+        std::dynamic_pointer_cast<LibUtilities::CommMpi>(pComm);
     ASSERTL1(vCommMpi, "Failed to cast MPI Comm object.");
     comm vComm;
     vComm.c  = vCommMpi->GetComm();

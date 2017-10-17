@@ -39,7 +39,6 @@ using namespace std;
 
 #include "ProcessQualityMetric.h"
 
-#include <LibUtilities/BasicUtils/ParseUtils.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/Foundations/Interp.h>
 #include <StdRegions/StdPrismExp.h>
@@ -62,7 +61,7 @@ ModuleKey ProcessQualityMetric::className =
 ProcessQualityMetric::ProcessQualityMetric(FieldSharedPtr f) : ProcessModule(f)
 {
     m_config["scaled"] =
-        ConfigOption(true, "", "use scaled jacobian instead");
+        ConfigOption(true, "0", "use scaled jacobian instead");
 }
 
 ProcessQualityMetric::~ProcessQualityMetric()
@@ -102,7 +101,7 @@ void ProcessQualityMetric::Process(po::variables_map &vm)
         // copy Jacobian into field
         LocalRegions::ExpansionSharedPtr Elmt = exp->GetExp(i);
         int offset = exp->GetPhys_Offset(i);
-        Array<OneD, NekDouble> q = GetQ(Elmt,m_config["scaled"].m_beenSet);
+        Array<OneD, NekDouble> q = GetQ(Elmt,m_config["scaled"].as<bool>());
         Array<OneD, NekDouble> out = phys + offset;
 
         ASSERTL0(q.num_elements() == Elmt->GetTotPoints(),

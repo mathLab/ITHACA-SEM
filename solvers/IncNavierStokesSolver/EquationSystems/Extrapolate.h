@@ -58,7 +58,7 @@ namespace Nektar
     
     // Forward declaration
     class Extrapolate;
-    typedef boost::shared_ptr<Extrapolate> ExtrapolateSharedPtr;
+    typedef std::shared_ptr<Extrapolate> ExtrapolateSharedPtr;
     typedef LibUtilities::NekFactory< std::string, Extrapolate,
         const LibUtilities::SessionReaderSharedPtr& ,
         Array<OneD, MultiRegions::ExpListSharedPtr>& ,
@@ -67,7 +67,7 @@ namespace Nektar
         const SolverUtils::AdvectionSharedPtr& > ExtrapolateFactory;
 
     struct HighOrderOutflow;
-    typedef boost::shared_ptr<HighOrderOutflow> HighOrderOutflowSharedPtr;
+    typedef std::shared_ptr<HighOrderOutflow> HighOrderOutflowSharedPtr;
 
 
     ExtrapolateFactory& GetExtrapolateFactory();

@@ -200,6 +200,29 @@ namespace Nektar
 
         typedef std::map<int, std::vector<PeriodicEntity> > PeriodicMap;
         static PeriodicMap NullPeriodicMap;
+
+        typedef struct _RotPerioidInfo
+        {
+            _RotPeriodicInfo(
+                                 const string    dir;
+                                 const Nekdouble angle,
+                                 const NekDouble tol) :
+                m_dir(dir), m_angle(angle), m_tol(tol) {}
+
+            _RotPeriodicInfo() {}
+            
+            /// Axis of rotation.
+            string m_dir;
+            /// Angle of rotation in radians
+            NekDouble angle;
+            /// Tolerance to rotation is considered identical
+            NekDouble tol;
+        } RotPeriodicInfo;
+
+        typedef std::shared_ptr<RotPeriodicInfo> RotPeriodicInfoSharedPtr;
+
+        static RotPeriodicInfoSharedPtr NullRotatedPeriodicInfoShPtr;
+        
     }// end of namespace
 }// end of namespace
 

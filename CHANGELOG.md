@@ -48,6 +48,9 @@ v5.0.0
 - Enable output to multiple files (!844)
 - Allow using xml file without expansion tag in FieldConvert (!849)
 
+**CompressibleFlowSolver**
+- Add 3D regression tests (!567)
+
 **Documentation**:
 - Added the developer-guide repository as a submodule (!751)
 

@@ -50,6 +50,12 @@ v5.0.0
 **Documentation**:
 - Added the developer-guide repository as a submodule (!751)
 
+v4.4.2
+------
+**Library**
+- Fix evaluation of points (e.g. HistoryPoints, Interpolation to pts) close to
+  the interface of two elements (!836)
+
 v4.4.1
 ------
 **Library**
@@ -73,8 +79,6 @@ v4.4.1
   (!821)
 - Fix performance issue with ExtractPhysToBndElmt (!796)
 - Fix available classes being listed multiple times (!817)
-- Fix evaluation of points (e.g. HistoryPoints, Interpolation to pts) close to
-  the interface of two elements (!836)
 - Fix Intel compiler warnings (!837)
 - Fix overwriting and backup of chk/fld files on slow file systes (!741)
 - Fix DriverAdaptive with second order IMEX (!850)

@@ -60,6 +60,10 @@ v4.4.2
 - Fix evaluation of points (e.g. HistoryPoints, Interpolation to pts) close to
   the interface of two elements (!836)
 
+**NekMesh**
+- Fix missing periodic boundary meshing and boundary layer mesh adjustment
+  configurations in 2D (!859)
+
 v4.4.1
 ------
 **Library**

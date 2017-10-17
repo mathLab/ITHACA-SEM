@@ -352,6 +352,15 @@ void Interpolator::Interpolate(
         int elmtid = m_expInField[0]->GetExpIndex(Scoords, Lcoords,
                                                   NekConstants::kGeomFactorsTol);
 
+        // we use kGeomFactorsTol as tolerance, while StdPhysEvaluate has
+        // kNekZeroTol hardcoded, so we need to limit Lcoords to not produce
+        // a ton of warnings
+        for(int j = 0; j < nInDim; ++j)
+        {
+            Lcoords[j] = std::max(Lcoords[j], -1.0);
+            Lcoords[j] = std::min(Lcoords[j], 1.0);
+        }
+
         if (elmtid >= 0)
         {
             int offset = m_expInField[0]->GetPhys_Offset(elmtid);

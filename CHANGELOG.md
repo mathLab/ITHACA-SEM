@@ -50,6 +50,12 @@ v5.0.0
 **Documentation**:
 - Added the developer-guide repository as a submodule (!751)
 
+v4.4.2
+------
+**Library**
+- Fix evaluation of points (e.g. HistoryPoints, Interpolation to pts) close to
+  the interface of two elements (!836)
+
 v4.4.1
 ------
 **Library**

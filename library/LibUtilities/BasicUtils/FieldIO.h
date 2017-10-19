@@ -38,7 +38,6 @@
 
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <LibUtilities/Communication/Comm.h>
-#include <LibUtilities/BasicUtils/ParseUtils.hpp>
 #include <LibUtilities/BasicUtils/ShapeType.hpp>
 #include <LibUtilities/Foundations/Basis.h>
 #include <LibUtilities/Foundations/Points.h>

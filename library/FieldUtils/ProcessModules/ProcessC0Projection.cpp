@@ -39,7 +39,7 @@ using namespace std;
 
 #include "ProcessC0Projection.h"
 
-#include <LibUtilities/BasicUtils/ParseUtils.hpp>
+#include <LibUtilities/BasicUtils/ParseUtils.h>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 
 namespace Nektar
@@ -155,7 +155,7 @@ void ProcessC0Projection::Process(po::variables_map &vm)
     else
     {
         ASSERTL0(
-            ParseUtils::GenerateOrderedVector(fields.c_str(), processFields),
+            ParseUtils::GenerateVector(fields, processFields),
             "Failed to interpret field string in C0Projection");
     }
 

@@ -22,7 +22,7 @@ SET(BasicUtilsHeaders
     ./BasicUtils/NekManager.hpp
     ./BasicUtils/NekFactory.hpp
     ./BasicUtils/OperatorGenerators.hpp
-    ./BasicUtils/ParseUtils.hpp
+    ./BasicUtils/ParseUtils.h
     ./BasicUtils/Progressbar.hpp
     ./BasicUtils/PtsField.h
     ./BasicUtils/PtsIO.h
@@ -49,6 +49,7 @@ SET(BasicUtilsSources
     ./BasicUtils/FileSystem.cpp
     ./BasicUtils/MeshPartition.cpp
     ./BasicUtils/MeshPartitionMetis.cpp
+    ./BasicUtils/ParseUtils.cpp
     ./BasicUtils/PtsField.cpp
     ./BasicUtils/PtsIO.cpp
     ./BasicUtils/SessionReader.cpp
@@ -373,6 +374,7 @@ ENDIF( NEKTAR_USE_FFTW )
 # ARPACK
 IF( NEKTAR_USE_ARPACK )
     TARGET_LINK_LIBRARIES(LibUtilities LINK_PUBLIC ${ARPACK_LIBRARY})
+    ADD_DEPENDENCIES(LibUtilities arpack-ng-1.0)
 ENDIF( NEKTAR_USE_ARPACK )
 
 # Boost

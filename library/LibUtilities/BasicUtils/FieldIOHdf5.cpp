@@ -34,6 +34,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include <LibUtilities/BasicUtils/FieldIOHdf5.h>
+#include <LibUtilities/BasicUtils/ParseUtils.h>
+
 #include <unordered_set>
 #include <functional>
 
@@ -520,7 +522,7 @@ void FieldIOHdf5::v_Write(const std::string &outFile,
             H5::DataSpaceSharedPtr homz_space = H5::DataSpace::OneD(nTotHomZ);
             H5::DataSetSharedPtr homz_dset =
                 root->CreateDataSet("HOMOGENEOUSZIDS", homz_type, homz_space);
-            ASSERTL1(data_dset,
+            ASSERTL1(homz_dset,
                      prfx.str() + "cannot create HOMOGENEOUSZIDS dataset.");
         }
 
@@ -828,6 +830,27 @@ void FieldIOHdf5::v_Write(const std::string &outFile,
         ids_dset->Write(
             fielddefs[nFields - 1]->m_elementIDs, ids_fspace, writePL);
         data_dset->Write(fielddata[nFields - 1], data_fspace, writePL);
+
+        if (order_dset)
+        {
+            order_dset->Write(numModesPerDirVar[nFields - 1],
+                              order_fspace, writePL);
+        }
+
+        if (homy_dset)
+        {
+            homy_dset->Write(homoYIDs[nFields - 1], homy_fspace, writePL);
+        }
+
+        if (homz_dset)
+        {
+            homz_dset->Write(homoZIDs[nFields - 1], homz_fspace, writePL);
+        }
+
+        if (homs_dset)
+        {
+            homs_dset->Write(homoSIDs[nFields - 1], homs_fspace, writePL);
+        }
     }
 
     m_comm->Block();
@@ -1145,8 +1168,8 @@ void FieldIOHdf5::ImportFieldDef(
             if (strstr(numModesPerDir.c_str(), "UNIORDER:"))
             {
                 def->m_uniOrder = true;
-                bool valid = ParseUtils::GenerateOrderedVector(
-                    numModesPerDir.c_str() + 9, def->m_numModes);
+                bool valid = ParseUtils::GenerateVector(
+                    numModesPerDir.substr(9), def->m_numModes);
                 ASSERTL0(valid,
                          prfx.str() +
                          "unable to correctly parse the number of modes.");
@@ -1159,8 +1182,8 @@ void FieldIOHdf5::ImportFieldDef(
             def->m_pointsDef = true;
 
             std::vector<std::string> pointsStrings;
-            bool valid = ParseUtils::GenerateOrderedStringVector(
-                pointsString.c_str(), pointsStrings);
+            bool valid = ParseUtils::GenerateVector(
+                pointsString, pointsStrings);
             ASSERTL0(valid,
                      prfx.str() +
                      "unable to correctly parse the points types.");
@@ -1194,8 +1217,8 @@ void FieldIOHdf5::ImportFieldDef(
             field->GetAttribute(attrName, numPointsPerDir);
             def->m_numPointsDef = true;
 
-            bool valid = ParseUtils::GenerateOrderedVector(
-                numPointsPerDir.c_str(), def->m_numPoints);
+            bool valid = ParseUtils::GenerateVector(
+                numPointsPerDir, def->m_numPoints);
             ASSERTL0(valid,
                      prfx.str() +
                      "unable to correctly parse the number of points.");

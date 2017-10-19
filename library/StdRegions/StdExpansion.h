@@ -1188,11 +1188,6 @@ namespace Nektar
                 v_LocCoordToLocCollapsed(xi,eta);
             }
 
-            const std::shared_ptr<SpatialDomains::GeomFactors>& GetMetricInfo(void) const
-            {
-                return v_GetMetricInfo();
-            }
-
             /// \brief Get the element id of this expansion when used
             /// in a list by returning value of #m_elmt_id
             STD_REGIONS_EXPORT virtual int v_GetElmtId();
@@ -1779,8 +1774,6 @@ namespace Nektar
             STD_REGIONS_EXPORT virtual void v_MultiplyByStdQuadratureMetric(
                     const Array<OneD, const NekDouble> &inarray,
                     Array<OneD, NekDouble> &outarray);
-
-            STD_REGIONS_EXPORT virtual const  std::shared_ptr<SpatialDomains::GeomFactors>& v_GetMetricInfo() const;
 
             STD_REGIONS_EXPORT virtual void v_BwdTrans_SumFac(const Array<OneD, const NekDouble>& inarray,
                                            Array<OneD, NekDouble> &outarray);

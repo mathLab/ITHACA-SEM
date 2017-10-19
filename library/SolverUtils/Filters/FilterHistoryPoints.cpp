@@ -229,12 +229,18 @@ void FilterHistoryPoints::v_Initialise(
         if (m_isHomogeneous1D)
         {
             idList[i] = pFields[0]->GetPlane(0)->GetExpIndex(gloCoord,locCoords,
-                                        NekConstants::kNekZeroTol);
+                                        NekConstants::kGeomFactorsTol);
         }
         else
         {
             idList[i] = pFields[0]->GetExpIndex(gloCoord,locCoords,
-                                        NekConstants::kNekZeroTol);
+                                        NekConstants::kGeomFactorsTol);
+        }
+
+        for(int j = 0; j < 3; ++j)
+        {
+            locCoords[j] = std::max(locCoords[j], -1.0);
+            locCoords[j] = std::min(locCoords[j], 1.0);
         }
 
         // Save Local coordinates for later

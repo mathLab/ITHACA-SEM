@@ -40,7 +40,6 @@ using namespace std;
 #include "ProcessDisplacement.h"
 
 #include <LibUtilities/BasicUtils/HashUtils.hpp>
-#include <LibUtilities/BasicUtils/ParseUtils.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LocalRegions/SegExp.h>
 #include <LocalRegions/TriExp.h>
@@ -109,7 +108,7 @@ ProcessDisplacement::ProcessDisplacement(FieldSharedPtr f)
         ConfigOption(false, "", "Name of file containing high order boundary");
 
     m_config["usevertexids"] = ConfigOption(
-        false, "0", "Use vertex IDs instead of face IDs for matching");
+        true, "0", "Use vertex IDs instead of face IDs for matching");
 }
 
 ProcessDisplacement::~ProcessDisplacement()
@@ -130,7 +129,7 @@ void ProcessDisplacement::Process(po::variables_map &vm)
         return;
     }
 
-    bool useVertexIds = m_config["usevertexids"].m_beenSet;
+    bool useVertexIds = m_config["usevertexids"].as<bool>();
 
     vector<string> files;
     files.push_back(toFile);

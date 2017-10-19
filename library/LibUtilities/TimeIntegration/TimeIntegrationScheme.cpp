@@ -742,7 +742,7 @@ namespace Nektar
 
                     m_A[0] = Array<TwoD,NekDouble>(m_numstages,m_numstages,twothirdth);
                     m_B[0] = Array<TwoD,NekDouble>(m_numsteps ,m_numstages,0.0);
-                    m_A[1] = Array<TwoD,NekDouble>(m_numstages,m_numstages,twothirdth);
+                    m_A[1] = Array<TwoD,NekDouble>(m_numstages,m_numstages,0.0);
                     m_B[1] = Array<TwoD,NekDouble>(m_numsteps ,m_numstages,0.0);
                     m_U    = Array<TwoD,NekDouble>(m_numstages,m_numsteps,twothirdth);
                     m_V    = Array<TwoD,NekDouble>(m_numsteps ,m_numsteps, 0.0);
@@ -1076,7 +1076,7 @@ namespace Nektar
                         if( fabs(A[m][i][j]) > NekConstants::kNekZeroTol )
                         {
                             vertype[m] = eImplicit;
-                            ASSERTL1(false,"Fully Impplicit schemes cannnot be handled by the TimeIntegrationScheme class");
+                            ASSERTL1(false,"Fully Implicit schemes cannnot be handled by the TimeIntegrationScheme class");
                         }
                     }
                 }

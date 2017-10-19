@@ -24,6 +24,7 @@ v5.0.0
 - Added support for using the distance to a specific region (e.g. outlet) in the
   function definitions for the Absorption Forcing (!769)
 - Improve performance of DisContField2D::v_ExtractTracePhys (!824)
+- Fix small bug in Jacobian Energy (!857)
 
 **NekMesh**:
 - Add feature to read basic 2D geo files as CAD (!731)

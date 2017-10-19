@@ -23,6 +23,7 @@ v5.0.0
 - Refactor ParseUtils to be more consistent (!843)
 - Added support for using the distance to a specific region (e.g. outlet) in the
   function definitions for the Absorption Forcing (!769)
+- Improve performance of DisContField2D::v_ExtractTracePhys (!824)
 
 **NekMesh**:
 - Add feature to read basic 2D geo files as CAD (!731)
@@ -34,17 +35,39 @@ v5.0.0
 - Fix issue with reading CCM files due to definition of default arrays
   rather than a vector (!797)
 - Fix inverted triangles and small memory issue in surface meshing (!798)
+- Update for the CAD system, more advance self-healing and analysis (!822)
 - Additional curve types in GEO reader: BSpline, Circle, Ellipse (!800)
+- Fix default command line argument value (!823)
 
 **FieldConvert**:
 - Add input module for Semtex field files (!777)
 - Fixed interppoints module (!760)
 - Move StreamFunction utility to a FieldConvert module (!809)
+- Extend wss module to compressible flows (!810)
+- Allow explicitly setting bool options of FieldConvert modules as false (!811)
 - Enable output to multiple files (!844)
 - Allow using xml file without expansion tag in FieldConvert (!849)
 
+**CompressibleFlowSolver**
+- Add 3D regression tests (!567)
+
 **Documentation**:
 - Added the developer-guide repository as a submodule (!751)
+
+v4.4.2
+------
+**Library**
+- Fix evaluation of points (e.g. HistoryPoints, Interpolation to pts) close to
+  the interface of two elements (!836)
+- Fix deadlock in Hdf5 with homogeneous expansions (!858)
+
+**NekMesh**
+- Fix missing periodic boundary meshing and boundary layer mesh adjustment
+  configurations in 2D (!859)
+
+**Documentation**:
+- Fix sign of the viscous term in the velocity correction scheme equations in
+  the user guide (!856)
 
 v4.4.1
 ------
@@ -63,7 +86,7 @@ v4.4.1
 - Fix deadlock with HDF5 input (!786)
 - Fix missing entriess in LibUtilities::kPointsTypeStr (!792)
 - Fix compiler warnings with CommDataType (!793)
-- Fix ability to set default implementation in Collections and added an option 
+- Fix ability to set default implementation in Collections and added an option
   to set eNoCollections in FieldConvert as default (!789)
 - Fix performance issue in ProcessIsoContour in relation to memory consumption
   (!821)
@@ -71,6 +94,11 @@ v4.4.1
 - Fix available classes being listed multiple times (!817)
 - Fix Intel compiler warnings (!837)
 - Fix overwriting and backup of chk/fld files on slow file systes (!741)
+- Fix DriverAdaptive with second order IMEX (!850)
+- Fixed typo in eIMEXGear part (!854)
+- Added regression tests for IMEXOrder1, IMEXOrder2, IMEXOrder3, MCNAB,
+  IMEXGear, CNAB, 2nd order IMEX-DIRK, 3rd order IMEX-DIRK (!854)
+- Fix bug due to subtractive cancellation in polylib routines (!778)
 
 **FieldConvert:**
 - Fix issue with field ordering in the interppointdatatofld module (!754)
@@ -90,12 +118,20 @@ v4.4.1
 
 **IncNavierStokesSolver**
 - Fix an initialisation issue when using an additional advective field (!779)
+- Fix MovingBody boundary condition (!852)
 
 **Utilities**
 - Fix vtkToFld missing dependency which prevented compiling with VTK 7.1 (!808)
 
+**Documentation**
+- Added missing details on artificial viscosity and dealising to compressible
+  flow solver user guide (!846)
+
 **Packaging**
 - Added missing package for FieldUtils library (!755)
+
+**ADRSolver:**
+- Fix UnsteadyAdvectionDiffusion with DG (!855)
 
 v4.4.0
 ------

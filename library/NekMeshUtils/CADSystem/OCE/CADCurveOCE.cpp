@@ -81,19 +81,29 @@ NekDouble CADCurveOCE::Length(NekDouble ti, NekDouble tf)
 NekDouble CADCurveOCE::loct(Array<OneD, NekDouble> xyz)
 {
     NekDouble t = 0.0;
-    Array<OneD, NekDouble> b = GetBounds();
 
     gp_Pnt loc(xyz[0]*1000.0, xyz[1]*1000.0, xyz[2]*1000.0);
 
     ShapeAnalysis_Curve sac;
     gp_Pnt p;
     sac.Project(m_c,loc,1e-8 ,p,t);
+    
+    WARNINGL2(p.Distance(loc) < 1e-3, "large locuv distance " +
+        boost::lexical_cast<string>(p.Distance(loc)/1000.0));
 
-    if(p.Distance(loc) > 1e-5)
-    {
-        cerr << "large loct distance" << endl;
-    }
     return t;
+}
+
+NekDouble CADCurveOCE::DistanceTo(Array<OneD, NekDouble> xyz)
+{
+    NekDouble t = 0.0;
+    gp_Pnt loc(xyz[0]*1000.0, xyz[1]*1000.0, xyz[2]*1000.0);
+    
+    ShapeAnalysis_Curve sac;
+    gp_Pnt p;
+    sac.Project(m_c,loc,1e-8 ,p,t);
+    
+    return p.Distance(loc)/1000.0;
 }
 
 Array<OneD, NekDouble> CADCurveOCE::P(NekDouble t)

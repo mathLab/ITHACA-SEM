@@ -204,12 +204,12 @@ namespace Nektar
             {
                 if(locCoord[i] <-(1+tol))
                 {
-                    locCoord[i] = -(1+tol);
+                    locCoord[i] = -1;
                 }
 
                 if(locCoord[i] > (1+tol))
                 {
-                    locCoord[i] = 1+tol;
+                    locCoord[i] = 1;
                 }
             }
 

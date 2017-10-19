@@ -98,7 +98,7 @@ void ProcessJacobianEnergy::Process(po::variables_map &vm)
         StdRegions::StdExpansionSharedPtr Elmt = exp->GetExp(i);
 
         const StdRegions::StdExpansion * sep = &( *Elmt );
-        const LocalRegions::Expansion  * lep = dynamic_cast<const LocalRegions::Expansion*>( lep );
+        const LocalRegions::Expansion  * lep = dynamic_cast<const LocalRegions::Expansion*>( sep );
 
         int nquad       = Elmt->GetTotPoints();
         int coeffoffset = exp->GetCoeff_Offset(i);

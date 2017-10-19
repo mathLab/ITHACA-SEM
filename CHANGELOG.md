@@ -65,6 +65,10 @@ v4.4.2
 - Fix missing periodic boundary meshing and boundary layer mesh adjustment
   configurations in 2D (!859)
 
+**Documentation**:
+- Fix sign of the viscous term in the velocity correction scheme equations in
+  the user guide (!856)
+
 v4.4.1
 ------
 **Library**
@@ -95,10 +99,6 @@ v4.4.1
 - Added regression tests for IMEXOrder1, IMEXOrder2, IMEXOrder3, MCNAB,
   IMEXGear, CNAB, 2nd order IMEX-DIRK, 3rd order IMEX-DIRK (!854)
 - Fix bug due to subtractive cancellation in polylib routines (!778)
-
-**Documentation**:
-- Fix sign of the viscous term in the velocity correction scheme equations in
-  the user guide (!856)
 
 **FieldConvert:**
 - Fix issue with field ordering in the interppointdatatofld module (!754)

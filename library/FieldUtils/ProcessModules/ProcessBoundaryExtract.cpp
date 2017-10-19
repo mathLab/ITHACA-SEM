@@ -59,7 +59,7 @@ ProcessBoundaryExtract::ProcessBoundaryExtract(FieldSharedPtr f)
     // set up dafault values.
     m_config["bnd"] = ConfigOption(false, "All", "Boundary to be processed");
     m_config["addnormals"] =
-        ConfigOption(true, "NotSet", "Add normals to output");
+        ConfigOption(true, "0", "Add normals to output");
 
     f->m_writeBndFld                 = true;
     f->m_declareExpansionAsContField = true;
@@ -72,7 +72,7 @@ ProcessBoundaryExtract::~ProcessBoundaryExtract()
 
 void ProcessBoundaryExtract::Process(po::variables_map &vm)
 {
-    m_f->m_addNormals = m_config["addnormals"].m_beenSet;
+    m_f->m_addNormals = m_config["addnormals"].as<bool>();
 
     // Set up Field options to output boundary fld
     string bvalues = m_config["bnd"].as<string>();

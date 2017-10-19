@@ -2380,6 +2380,13 @@ namespace Nektar
                         domainStr = variable->Attribute("DOMAIN");
                     }
 
+                    // If no domain string put to 0
+                    std::string evarsStr = "x y z t";
+                    if (variable->Attribute("EVARS"))
+                    {
+                        evarsStr = evarsStr + std::string(" ") + variable->Attribute("EVARS");
+                    }
+
                     // Parse list of variables
                     std::vector<std::string> varSplit;
                     std::vector<unsigned int> domainList;
@@ -2405,7 +2412,7 @@ namespace Nektar
 
                         // set expression
                         funcDef.m_expression = MemoryManager<Equation>
-                            ::AllocateSharedPtr(GetSharedThisPtr(),fcnStr);
+                            ::AllocateSharedPtr(GetSharedThisPtr(), fcnStr, evarsStr);
                     }
 
                     // Files are denoted by F

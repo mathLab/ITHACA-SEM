@@ -187,7 +187,14 @@ namespace Nektar
         void MeshPartition::ReadExpansions(const LibUtilities::SessionReaderSharedPtr& pSession)
         {
             // Find the Expansions tag
-            TiXmlElement *expansionTypes = pSession->GetElement("Nektar/Expansions");
+            TiXmlElement *master = pSession->GetElement("Nektar");
+            TiXmlElement *expansionTypes =
+                        master->FirstChildElement("EXPANSIONS");
+
+            if(!expansionTypes)
+            {
+                return;
+            }
 
             // Find the Expansion type
             TiXmlElement *expansion = expansionTypes->FirstChildElement();
@@ -1257,6 +1264,7 @@ namespace Nektar
                         vGraphEdges[eId] = vcnt;
                     }
                 }
+                ++vcnt;
             }
         }
 

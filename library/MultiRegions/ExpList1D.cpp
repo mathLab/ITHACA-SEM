@@ -722,7 +722,7 @@ namespace Nektar
             int i,j,r;
 
             // get the local element expansion of the elmId element
-            StdRegions::StdExpansionSharedPtr elmExp = GetExp(elmId);
+            LocalRegions::ExpansionSharedPtr elmExp = GetExp( elmId );
 
             // Get the quadrature points and weights required for integration
             int quad_npoints = elmExp->GetTotPoints();

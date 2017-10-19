@@ -308,7 +308,7 @@ namespace Nektar
                 }
             }
 
-            v_GetLocCoords(gloCoord, locCoord);
+            resid = v_GetLocCoords(gloCoord, locCoord);
 
             if (locCoord[0] >= -(1+tol) && locCoord[0] <= 1+tol
                 && locCoord[1] >= -(1+tol) && locCoord[1] <= 1+tol
@@ -325,12 +325,12 @@ namespace Nektar
             {
                 if(locCoord[i] <-(1+tol))
                 {
-                    locCoord[i] = -(1+tol);
+                    locCoord[i] = -1;
                 }
 
                 if(locCoord[i] > (1+tol))
                 {
-                    locCoord[i] = 1+tol;
+                    locCoord[i] = 1;
                 }
             }
 

@@ -34,7 +34,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <LibUtilities/BasicUtils/ParseUtils.hpp>
+#include <LibUtilities/BasicUtils/ParseUtils.h>
 #include <SpatialDomains/Conditions.h>
 #include <tinyxml.h>
 
@@ -704,7 +704,7 @@ namespace Nektar
 
                                 vector<unsigned int> periodicBndRegionIndex;
                                 bool parseGood = ParseUtils::GenerateSeqVector(
-                                        periodicBndRegionIndexStr.c_str(),
+                                        periodicBndRegionIndexStr,
                                         periodicBndRegionIndex);
 
                                 ASSERTL0(
@@ -763,7 +763,7 @@ namespace Nektar
 
                                 vector<unsigned int> periodicBndRegionIndex;
                                 bool parseGood = ParseUtils::GenerateSeqVector(
-                                        periodicBndRegionIndexStr.c_str(),
+                                        periodicBndRegionIndexStr,
                                         periodicBndRegionIndex);
 
                                 ASSERTL0(parseGood &&

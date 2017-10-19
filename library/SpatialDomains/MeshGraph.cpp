@@ -36,7 +36,7 @@
 
 #include <SpatialDomains/MeshGraph.h>
 #include <LibUtilities/BasicUtils/CompressData.h>
-#include <LibUtilities/BasicUtils/ParseUtils.hpp>
+#include <LibUtilities/BasicUtils/ParseUtils.h>
 #include <LibUtilities/BasicUtils/Equation.h>
 #include <LibUtilities/BasicUtils/FieldIOXml.h>
 #include <StdRegions/StdTriExp.h>
@@ -606,7 +606,6 @@ namespace Nektar
 
             // Find the Expansions tag
             TiXmlElement *expansionTypes = master->FirstChildElement("EXPANSIONS");
-            ASSERTL0(expansionTypes, "Unable to find EXPANSIONS tag in file.");
 
             if(expansionTypes)
             {
@@ -638,7 +637,7 @@ namespace Nektar
                         if(fStr) // extract other fields.
                         {
                             std::string fieldStr = fStr;
-                            bool  valid = ParseUtils::GenerateOrderedStringVector(fieldStr.c_str(),fieldStrings);
+                            bool  valid = ParseUtils::GenerateVector(fieldStr,fieldStrings);
                             ASSERTL0(valid,"Unable to correctly parse the field string in ExpansionTypes.");
                         }
 
@@ -755,7 +754,7 @@ namespace Nektar
                             // interpret the basis type string.
                             std::vector<std::string> basisStrings;
                             std::vector<LibUtilities::BasisType> basis;
-                            bool valid = ParseUtils::GenerateOrderedStringVector(basisTypeStr.c_str(), basisStrings);
+                            bool valid = ParseUtils::GenerateVector(basisTypeStr, basisStrings);
                             ASSERTL0(valid, "Unable to correctly parse the basis types.");
                             for (vector<std::string>::size_type i = 0; i < basisStrings.size(); i++)
                             {
@@ -776,7 +775,7 @@ namespace Nektar
 
                             std::string numModesStr = nModesStr;
                             std::vector<unsigned int> numModes;
-                            valid = ParseUtils::GenerateOrderedVector(numModesStr.c_str(), numModes);
+                            valid = ParseUtils::GenerateVector(numModesStr, numModes);
                             ASSERTL0(valid, "Unable to correctly parse the number of modes.");
                             ASSERTL0(numModes.size() == basis.size(),"information for num modes does not match the number of basis");
 
@@ -786,7 +785,7 @@ namespace Nektar
                             // interpret the points type string.
                             std::vector<std::string> pointsStrings;
                             std::vector<LibUtilities::PointsType> points;
-                            valid = ParseUtils::GenerateOrderedStringVector(pointsTypeStr.c_str(), pointsStrings);
+                            valid = ParseUtils::GenerateVector(pointsTypeStr, pointsStrings);
                             ASSERTL0(valid, "Unable to correctly parse the points types.");
                             for (vector<std::string>::size_type i = 0; i < pointsStrings.size(); i++)
                             {
@@ -807,7 +806,7 @@ namespace Nektar
                             ASSERTL0(nPointsStr,"NUMPOINTS was not defined in EXPANSION section of input");
                             std::string numPointsStr = nPointsStr;
                             std::vector<unsigned int> numPoints;
-                            valid = ParseUtils::GenerateOrderedVector(numPointsStr.c_str(), numPoints);
+                            valid = ParseUtils::GenerateVector(numPointsStr, numPoints);
                             ASSERTL0(valid, "Unable to correctly parse the number of points.");
                             ASSERTL0(numPoints.size() == numPoints.size(),"information for num points does not match the number of basis");
 
@@ -858,7 +857,7 @@ namespace Nektar
                         if(fStr) // extract other fields.
                         {
                             std::string fieldStr = fStr;
-                            bool  valid = ParseUtils::GenerateOrderedStringVector(fieldStr.c_str(),fieldStrings);
+                            bool  valid = ParseUtils::GenerateVector(fieldStr,fieldStrings);
                             ASSERTL0(valid,"Unable to correctly parse the field string in ExpansionTypes.");
                         }
 
@@ -2262,7 +2261,7 @@ namespace Nektar
             // Parse the composites into a list.
             typedef vector<unsigned int> SeqVector;
             SeqVector seqVector;
-            bool parseGood = ParseUtils::GenerateSeqVector(compositeStr.c_str(), seqVector);
+            bool parseGood = ParseUtils::GenerateSeqVector(compositeStr, seqVector);
 
             ASSERTL0(parseGood && !seqVector.empty(), (std::string("Unable to read composite index range: ") + compositeStr).c_str());
 

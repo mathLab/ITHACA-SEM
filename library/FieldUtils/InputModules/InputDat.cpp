@@ -37,6 +37,7 @@
 #include <string>
 using namespace std;
 
+#include <LibUtilities/BasicUtils/ParseUtils.h>
 #include <LibUtilities/BasicUtils/PtsField.h>
 #include <LibUtilities/BasicUtils/PtsIO.h>
 
@@ -106,8 +107,8 @@ void InputDat::Process(po::variables_map &vm)
 
             // note this expects a comma separated list but
             // does not work for white space separated lists!
-            bool valid = ParseUtils::GenerateOrderedStringVector(
-                line.substr(pos).c_str(), fieldNames);
+            bool valid = ParseUtils::GenerateVector(
+                line.substr(pos), fieldNames);
             ASSERTL0(valid, "Unable to process list of field variable in "
                             " VARIABLES list:  " +
                                 line.substr(pos));

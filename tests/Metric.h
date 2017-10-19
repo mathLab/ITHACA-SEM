@@ -40,7 +40,6 @@
 #include <string>
 
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
-#include <boost/version.hpp>
 #include <boost/filesystem.hpp>
 
 namespace fs = boost::filesystem;

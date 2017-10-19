@@ -39,7 +39,6 @@ using namespace std;
 
 #include "ProcessHomogeneousPlane.h"
 
-#include <LibUtilities/BasicUtils/ParseUtils.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 
 namespace Nektar
@@ -59,7 +58,7 @@ ProcessHomogeneousPlane::ProcessHomogeneousPlane(FieldSharedPtr f)
 {
     m_config["planeid"] = ConfigOption(false, "NotSet", "plane id to extract");
     m_config["wavespace"] =
-        ConfigOption(true, "NotSet", "Extract plane in Fourier space");
+        ConfigOption(true, "0", "Extract plane in Fourier space");
 }
 
 ProcessHomogeneousPlane::~ProcessHomogeneousPlane()
@@ -109,7 +108,7 @@ void ProcessHomogeneousPlane::Process(po::variables_map &vm)
                 int n         = s * nfields + i;
                 m_f->m_exp[n] = m_f->m_exp[n]->GetPlane(plane);
 
-                if (m_config["wavespace"].m_beenSet)
+                if (m_config["wavespace"].as<bool>())
                 {
                     m_f->m_exp[n]->BwdTrans(m_f->m_exp[n]->GetCoeffs(),
                                             m_f->m_exp[n]->UpdatePhys());

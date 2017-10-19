@@ -65,6 +65,10 @@ v4.4.2
 - Fix missing periodic boundary meshing and boundary layer mesh adjustment
   configurations in 2D (!859)
 
+**Documentation**:
+- Fix sign of the viscous term in the velocity correction scheme equations in
+  the user guide (!856)
+
 v4.4.1
 ------
 **Library**

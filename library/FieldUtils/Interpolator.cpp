@@ -350,7 +350,16 @@ void Interpolator::Interpolate(
 
         // Obtain Element and LocalCoordinate to interpolate
         int elmtid = m_expInField[0]->GetExpIndex(Scoords, Lcoords,
-                                                  NekConstants::kNekZeroTol);
+                                                  NekConstants::kGeomFactorsTol);
+
+        // we use kGeomFactorsTol as tolerance, while StdPhysEvaluate has
+        // kNekZeroTol hardcoded, so we need to limit Lcoords to not produce
+        // a ton of warnings
+        for(int j = 0; j < nInDim; ++j)
+        {
+            Lcoords[j] = std::max(Lcoords[j], -1.0);
+            Lcoords[j] = std::min(Lcoords[j], 1.0);
+        }
 
         if (elmtid >= 0)
         {
@@ -431,7 +440,16 @@ void Interpolator::Interpolate(
 
         // Obtain Element and LocalCoordinate to interpolate
         int elmtid = m_expInField[0]->GetExpIndex(coords, Lcoords,
-                                                  NekConstants::kNekZeroTol);
+                                                  NekConstants::kGeomFactorsTol);
+
+        // we use kGeomFactorsTol as tolerance, while StdPhysEvaluate has
+        // kNekZeroTol hardcoded, so we need to limit Lcoords to not produce
+        // a ton of warnings
+        for(int j = 0; j < nInDim; ++j)
+        {
+            Lcoords[j] = std::max(Lcoords[j], -1.0);
+            Lcoords[j] = std::min(Lcoords[j], 1.0);
+        }
 
         if (elmtid >= 0)
         {

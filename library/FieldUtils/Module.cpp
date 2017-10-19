@@ -109,7 +109,7 @@ void Module::RegisterConfig(string key, string val)
 
     it->second.m_beenSet = true;
 
-    if (it->second.m_isBool)
+    if (it->second.m_isBool && val=="")
     {
         it->second.m_value = "1";
     }

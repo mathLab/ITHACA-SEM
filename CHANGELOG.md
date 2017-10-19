@@ -59,6 +59,7 @@ v4.4.2
 **Library**
 - Fix evaluation of points (e.g. HistoryPoints, Interpolation to pts) close to
   the interface of two elements (!836)
+- Fix deadlock in Hdf5 with homogeneous expansions (!858)
 
 **NekMesh**
 - Fix missing periodic boundary meshing and boundary layer mesh adjustment

@@ -138,12 +138,6 @@ void ProcessCreateExp::Process(po::variables_map &vm)
             return;
         }
 
-        if (expFromFld)
-        {
-            // Set up Expansion information to use mode order from field
-            m_f->m_graph->SetExpansions(m_f->m_fielddef);
-        }
-
         // Adjust number of quadrature points
         if (vm.count("output-points"))
         {

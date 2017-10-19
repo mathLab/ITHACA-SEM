@@ -34,7 +34,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <LibUtilities/LinearAlgebra/NekMatrix.hpp>
-#include <LibUtilities/BasicUtils/BoostUtil.hpp>
 #include <boost/test/auto_unit_test.hpp>
 #include <boost/test/test_case_template.hpp>
 #include <boost/test/floating_point_comparison.hpp>

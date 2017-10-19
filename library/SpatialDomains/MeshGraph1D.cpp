@@ -36,7 +36,7 @@
 
 #include <SpatialDomains/MeshGraph1D.h>
 #include <LibUtilities/BasicUtils/CompressData.h>
-#include <LibUtilities/BasicUtils/ParseUtils.hpp>
+#include <LibUtilities/BasicUtils/ParseUtils.h>
 #include <tinyxml.h>
 
 using namespace std;
@@ -346,7 +346,7 @@ namespace Nektar
                 typedef vector<unsigned int> SeqVectorType;
                 SeqVectorType seqVector;
 
-                if (!ParseUtils::GenerateSeqVector(indxStr.c_str(), seqVector))
+                if (!ParseUtils::GenerateSeqVector(indxStr, seqVector))
                 {
                     NEKERROR(ErrorUtil::efatal, (std::string("Ill-formed sequence definition: ") + indxStr).c_str());
                 }

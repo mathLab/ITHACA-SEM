@@ -53,7 +53,7 @@
 #include <sstream>
 
 #include <tinyxml.h>
-#include <LibUtilities/BasicUtils/ParseUtils.hpp>
+#include <LibUtilities/BasicUtils/ParseUtils.h>
 
 using namespace std;
 
@@ -259,6 +259,9 @@ namespace Nektar
                     // Read in fourier coeffs and precompute coefficients
                     SetUpWomersley(i, n,
                                    m_fields[i]->GetBndConditions()[n]->GetUserDefined());
+
+                    m_fields[i]->GetBoundaryToElmtMap(m_fieldsBCToElmtID[i],m_fieldsBCToTraceID[i]);
+
                 }
             }
         }
@@ -663,14 +666,13 @@ namespace Nektar
         ASSERTL0(Wparams.count("RADIUS") == 1,
           "Failed to find Radius parameter in Womersley boundary conditions");
         std::vector<NekDouble> rad;
-        parseGood = ParseUtils::GenerateUnOrderedVector(
-                                         Wparams["RADIUS"].c_str(),rad);
+        ParseUtils::GenerateVector(Wparams["RADIUS"].c_str(),rad);
         m_womersleyParams[fldid][bndid]->m_radius = rad[0];
 
         ASSERTL0(Wparams.count("PERIOD") == 1,
           "Failed to find period parameter in Womersley boundary conditions");
         std::vector<NekDouble> period;
-        parseGood = ParseUtils::GenerateUnOrderedVector(
+        parseGood = ParseUtils::GenerateVector(
                                          Wparams["PERIOD"].c_str(),period);
         m_womersleyParams[fldid][bndid]->m_period = period[0];
 
@@ -678,7 +680,7 @@ namespace Nektar
         ASSERTL0(Wparams.count("AXISNORMAL") == 1,
           "Failed to find axisnormal parameter in Womersley boundary conditions");
         std::vector<NekDouble> anorm;
-        parseGood = ParseUtils::GenerateUnOrderedVector(
+        parseGood = ParseUtils::GenerateVector(
                                          Wparams["AXISNORMAL"].c_str(),anorm);
         m_womersleyParams[fldid][bndid]->m_axisnormal[0] = anorm[0];
         m_womersleyParams[fldid][bndid]->m_axisnormal[1] = anorm[1];
@@ -688,7 +690,7 @@ namespace Nektar
         ASSERTL0(Wparams.count("AXISPOINT") == 1,
           "Failed to find axispoint parameter in Womersley boundary conditions");
         std::vector<NekDouble> apt;
-        parseGood = ParseUtils::GenerateUnOrderedVector(
+        parseGood = ParseUtils::GenerateVector(
                                          Wparams["AXISPOINT"].c_str(),apt);
         m_womersleyParams[fldid][bndid]->m_axispoint[0] = apt[0];
         m_womersleyParams[fldid][bndid]->m_axispoint[1] = apt[1];
@@ -719,7 +721,7 @@ namespace Nektar
 
             std::string coeffStr = fval->FirstChild()->ToText()->ValueStr();
             vector<NekDouble> coeffvals;
-            parseGood = ParseUtils::GenerateUnOrderedVector(coeffStr.c_str(),
+            parseGood = ParseUtils::GenerateVector(coeffStr.c_str(),
                                                                coeffvals);
             ASSERTL0(parseGood,(std::string("Problem reading value of fourier coefficient, ID=") + boost::lexical_cast<string>(indx)).c_str());
             ASSERTL1(coeffvals.size() == 2,(std::string("Have not read two entries of Fourier coefficicent from ID="+ boost::lexical_cast<string>(indx)).c_str()));

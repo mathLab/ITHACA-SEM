@@ -54,7 +54,7 @@ using namespace std;
 #include <LibUtilities/BasicUtils/Equation.h>
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 #include <LibUtilities/BasicUtils/MeshPartition.h>
-#include <LibUtilities/BasicUtils/ParseUtils.hpp>
+#include <LibUtilities/BasicUtils/ParseUtils.h>
 #include <LibUtilities/BasicUtils/FileSystem.h>
 
 #include <boost/program_options.hpp>
@@ -2086,8 +2086,7 @@ namespace Nektar
 
                 // generate a list of variables.
                 std::vector<std::string> varStrings;
-                bool valid = ParseUtils::GenerateOrderedStringVector(
-                                                VarList.c_str(),varStrings);
+                bool valid = ParseUtils::GenerateVector(VarList, varStrings);
 
                 ASSERTL0(valid,"Unable to process list of variable in XML "
                                "element \n\t'" + tagcontent.str() + "'");
@@ -2368,8 +2367,7 @@ namespace Nektar
 
                     // Parse list of variables
                     std::vector<std::string> variableList;
-                    ParseUtils::GenerateOrderedStringVector(variableStr.c_str(),
-                                                            variableList);
+                    ParseUtils::GenerateVector(variableStr, variableList);
 
                     // If no domain string put to 0
                     std::string domainStr;
@@ -2382,10 +2380,17 @@ namespace Nektar
                         domainStr = variable->Attribute("DOMAIN");
                     }
 
+                    // If no domain string put to 0
+                    std::string evarsStr = "x y z t";
+                    if (variable->Attribute("EVARS"))
+                    {
+                        evarsStr = evarsStr + std::string(" ") + variable->Attribute("EVARS");
+                    }
+
                     // Parse list of variables
                     std::vector<std::string> varSplit;
                     std::vector<unsigned int> domainList;
-                    ParseUtils::GenerateSeqVector(domainStr.c_str(), domainList);
+                    ParseUtils::GenerateSeqVector(domainStr, domainList);
 
                     // Expressions are denoted by E
                     if (conditionType == "E")
@@ -2407,7 +2412,7 @@ namespace Nektar
 
                         // set expression
                         funcDef.m_expression = MemoryManager<Equation>
-                            ::AllocateSharedPtr(GetSharedThisPtr(),fcnStr);
+                            ::AllocateSharedPtr(GetSharedThisPtr(), fcnStr, evarsStr);
                     }
 
                     // Files are denoted by F

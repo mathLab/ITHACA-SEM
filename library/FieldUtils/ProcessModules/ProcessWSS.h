@@ -73,6 +73,15 @@ public:
         return "Calculating wall shear stress";
     }
 
+protected:
+    void GetViscosity(NekDouble &kinvis, NekDouble &lambda);
+
+    void GetVelocity(const Array<OneD, MultiRegions::ExpListSharedPtr> exp,
+                     Array<OneD, Array<OneD, NekDouble> > &vel);
+
+private:
+    int m_spacedim;
+
 };
 }
 }

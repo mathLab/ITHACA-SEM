@@ -41,7 +41,7 @@
 #include <SpatialDomains/MeshGraph.h>
 #include <MultiRegions/ExpList.h>
 #include <MultiRegions/ExpList2D.h>
-#include <LibUtilities/BasicUtils/ParseUtils.hpp>
+#include <LibUtilities/BasicUtils/ParseUtils.h>
 
 using namespace std;
 using namespace Nektar;
@@ -512,7 +512,7 @@ void  TurnOffEdges(TiXmlElement *doc,
             std::string indxStr = compositeElementStr.substr(indxBeg, indxEnd - indxBeg + 1);
             std::vector<unsigned int> seqVector;
             
-            bool err = ParseUtils::GenerateSeqVector(indxStr.c_str(), seqVector);
+            bool err = ParseUtils::GenerateSeqVector(indxStr, seqVector);
             
             ASSERTL0(err, (std::string("Error reading composite elements: ") + indxStr).c_str());
             

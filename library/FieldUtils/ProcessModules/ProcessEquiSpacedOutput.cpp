@@ -38,7 +38,6 @@ using namespace std;
 
 #include "ProcessEquiSpacedOutput.h"
 
-#include <LibUtilities/BasicUtils/ParseUtils.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/Foundations/Interp.h>
 #include <StdRegions/StdQuadExp.h>
@@ -61,10 +60,10 @@ ProcessEquiSpacedOutput::ProcessEquiSpacedOutput(FieldSharedPtr f)
     : ProcessModule(f)
 {
     m_config["tetonly"] =
-        ConfigOption(true, "NotSet", "Only process tetrahedral elements");
+        ConfigOption(true, "0", "Only process tetrahedral elements");
 
     m_config["modalenergy"] =
-        ConfigOption(true, "NotSet", "Write output as modal energy");
+        ConfigOption(true, "0", "Write output as modal energy");
 }
 
 ProcessEquiSpacedOutput::~ProcessEquiSpacedOutput()
@@ -200,7 +199,7 @@ void ProcessEquiSpacedOutput::Process(po::variables_map &vm)
     for (int i = 0; i < nel; ++i)
     {
         e = m_f->m_exp[0]->GetExp(i);
-        if (m_config["tetonly"].m_beenSet)
+        if (m_config["tetonly"].as<bool>())
         {
             if (m_f->m_exp[0]->GetExp(i)->DetShapeType() !=
                 LibUtilities::eTetrahedron)
@@ -366,7 +365,7 @@ void ProcessEquiSpacedOutput::Process(po::variables_map &vm)
         cnt      = 0;
         int cnt1 = 0;
 
-        if (m_config["modalenergy"].m_beenSet)
+        if (m_config["modalenergy"].as<bool>())
         {
             Array<OneD, const NekDouble> phys = m_f->m_exp[n]->GetPhys();
             for (int i = 0; i < nel; ++i)

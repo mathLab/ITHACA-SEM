@@ -39,7 +39,6 @@ using namespace std;
 
 #include "ProcessCombineAvg.h"
 
-#include <LibUtilities/BasicUtils/ParseUtils.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 
 namespace Nektar

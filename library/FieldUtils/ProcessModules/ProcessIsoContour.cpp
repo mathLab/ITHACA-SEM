@@ -44,7 +44,6 @@
 
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/BasicUtils/Timer.h>
-#include <LibUtilities/BasicUtils/ParseUtils.hpp>
 #include <LibUtilities/BasicUtils/Progressbar.hpp>
 #include <boost/math/special_functions/fpclassify.hpp>
 
@@ -83,11 +82,11 @@ ProcessIsoContour::ProcessIsoContour(FieldSharedPtr f) :
     m_config["fieldvalue"]         = ConfigOption(false, "NotSet",
                                         "field value to extract");
 
-    m_config["globalcondense"]     = ConfigOption(true, "NotSet",
+    m_config["globalcondense"]     = ConfigOption(true, "0",
                                         "Globally condense contour to unique "
                                         "values");
 
-    m_config["smooth"]             = ConfigOption(true, "NotSet",
+    m_config["smooth"]             = ConfigOption(true, "0",
                                         "Smooth isocontour (might require "
                                                   "globalcondense)");
 
@@ -198,8 +197,8 @@ void ProcessIsoContour::Process(po::variables_map &vm)
     }
 
     // Process isocontour
-    bool smoothing      = m_config["smooth"].m_beenSet;
-    bool globalcondense = m_config["globalcondense"].m_beenSet;
+    bool smoothing      = m_config["smooth"].as<bool>();
+    bool globalcondense = m_config["globalcondense"].as<bool>();
     if(globalcondense)
     {
         if(verbose)

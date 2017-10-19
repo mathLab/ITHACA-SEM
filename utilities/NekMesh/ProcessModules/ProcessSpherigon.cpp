@@ -38,7 +38,7 @@
 #include <boost/geometry/geometries/box.hpp>
 #include <boost/geometry/index/rtree.hpp>
 
-#include <LibUtilities/BasicUtils/ParseUtils.hpp>
+#include <LibUtilities/BasicUtils/ParseUtils.h>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/BasicUtils/Progressbar.hpp>
 
@@ -391,7 +391,7 @@ void ProcessSpherigon::Process()
         if (surfTag != "")
         {
             vector<unsigned int> surfs;
-            ParseUtils::GenerateSeqVector(surfTag.c_str(), surfs);
+            ParseUtils::GenerateSeqVector(surfTag, surfs);
             sort(surfs.begin(), surfs.end());
 
             m_mesh->m_spherigonSurfs.clear();
@@ -594,9 +594,8 @@ void ProcessSpherigon::Process()
     if (normalnoise.compare("NotSpecified") != 0)
     {
         vector<NekDouble> values;
-        ASSERTL0(
-            ParseUtils::GenerateUnOrderedVector(normalnoise.c_str(), values),
-            "Failed to interpret normal noise string");
+        ASSERTL0(ParseUtils::GenerateVector(normalnoise, values),
+                 "Failed to interpret normal noise string");
 
         int nvalues   = values.size() / 2;
         NekDouble amp = values[0];

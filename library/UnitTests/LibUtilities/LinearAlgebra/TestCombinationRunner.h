@@ -36,14 +36,14 @@
 #ifndef NEKTAR_UNIT_TESTS_LIB_UTILITIES_LINEAR_ALGEBRA_TEST_COMBINATION_RUNNER_H
 #define NEKTAR_UNIT_TESTS_LIB_UTILITIES_LINEAR_ALGEBRA_TEST_COMBINATION_RUNNER_H
 
-#include <LibUtilities/BasicUtils/BoostUtil.hpp>
-
 #include <boost/test/auto_unit_test.hpp>
 #include <boost/test/test_case_template.hpp>
 #include <boost/test/floating_point_comparison.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include <boost/test/auto_unit_test.hpp>
+
+#include <memory>
 
 namespace Nektar
 {
@@ -106,11 +106,11 @@ namespace Nektar
         std::shared_ptr<NekMatrix<NumberType, StandardMatrixTag> > inner(
             new NekMatrix<NumberType, StandardMatrixTag>(m1.GetRows(), m1.GetColumns(), inner_values, s, m1.GetNumberOfSubDiagonals(), 
             m1.GetNumberOfSuperDiagonals())); 
-        m2 = MakePtr(new NekMatrix<NekMatrix<NumberType, StandardMatrixTag>, ScaledMatrixTag>(scale, inner));
+        m2 = std::make_shared<NekMatrix<NekMatrix<NumberType, StandardMatrixTag>, ScaledMatrixTag>>(scale, inner);
 
         unsigned int numberOfRows = m1.GetRows()/blockRows;
         unsigned int numberOfColumns = m1.GetColumns()/blockColumns;
-        m3 = MakePtr(new NekMatrix<NekMatrix<NumberType>, BlockMatrixTag>(blockRows, blockColumns, numberOfRows, numberOfColumns));
+        m3 = std::make_shared<NekMatrix<NekMatrix<NumberType>, BlockMatrixTag>>(blockRows, blockColumns, numberOfRows, numberOfColumns);
 
         for(unsigned int blockRow = 0; blockRow < blockRows; ++blockRow)
         {

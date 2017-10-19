@@ -38,7 +38,7 @@
 #include <NekMeshUtils/CADSystem/CADSurf.h>
 #include <NekMeshUtils/Module/Module.h>
 
-#include <LibUtilities/BasicUtils/ParseUtils.hpp>
+#include <LibUtilities/BasicUtils/ParseUtils.h>
 #include <LibUtilities/BasicUtils/Progressbar.hpp>
 
 #include <boost/algorithm/string.hpp>
@@ -1031,7 +1031,7 @@ void Octree::CompileSourcePointList()
         for (int i = 0; i < lines.size(); i++)
         {
             vector<NekDouble> data;
-            ParseUtils::GenerateUnOrderedVector(lines[i].c_str(), data);
+            ParseUtils::GenerateVector(lines[i], data);
 
             Array<OneD, NekDouble> x1(3), x2(3);
 

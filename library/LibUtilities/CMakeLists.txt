@@ -7,7 +7,6 @@ SET(BasicConstHeaders
 
 SET(BasicUtilsHeaders
     ./BasicUtils/ArrayPolicies.hpp
-    ./BasicUtils/BoostUtil.hpp
     ./BasicUtils/ConsistentObjectAccess.hpp
     ./BasicUtils/CompressData.h
     ./BasicUtils/CsvIO.h
@@ -22,9 +21,8 @@ SET(BasicUtilsHeaders
     ./BasicUtils/MeshPartitionMetis.h
     ./BasicUtils/NekManager.hpp
     ./BasicUtils/NekFactory.hpp
-    ./BasicUtils/NekPtr.hpp
     ./BasicUtils/OperatorGenerators.hpp
-    ./BasicUtils/ParseUtils.hpp
+    ./BasicUtils/ParseUtils.h
     ./BasicUtils/Progressbar.hpp
     ./BasicUtils/PtsField.h
     ./BasicUtils/PtsIO.h
@@ -39,7 +37,6 @@ SET(BasicUtilsHeaders
     ./BasicUtils/VmathArray.hpp
     ./BasicUtils/Metis.hpp
     ./BasicUtils/VtkUtil.hpp
-    ./BasicUtils/XmlUtil.h
 )
 
 SET(BasicUtilsSources
@@ -52,6 +49,7 @@ SET(BasicUtilsSources
     ./BasicUtils/FileSystem.cpp
     ./BasicUtils/MeshPartition.cpp
     ./BasicUtils/MeshPartitionMetis.cpp
+    ./BasicUtils/ParseUtils.cpp
     ./BasicUtils/PtsField.cpp
     ./BasicUtils/PtsIO.cpp
     ./BasicUtils/SessionReader.cpp
@@ -59,7 +57,6 @@ SET(BasicUtilsSources
     ./BasicUtils/ThreadBoost.cpp
     ./BasicUtils/Timer.cpp
     ./BasicUtils/Vmath.cpp
-    ./BasicUtils/XmlUtil.cpp
 )
 
 # HDF5
@@ -377,6 +374,7 @@ ENDIF( NEKTAR_USE_FFTW )
 # ARPACK
 IF( NEKTAR_USE_ARPACK )
     TARGET_LINK_LIBRARIES(LibUtilities LINK_PUBLIC ${ARPACK_LIBRARY})
+    ADD_DEPENDENCIES(LibUtilities arpack-ng-1.0)
 ENDIF( NEKTAR_USE_ARPACK )
 
 # Boost

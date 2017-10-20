@@ -99,11 +99,15 @@ namespace Nektar
                 SPATIAL_DOMAINS_EXPORT static StdRegions::Orientation
                     GetFaceOrientation(
                         const TriGeom               &face1,
-                        const TriGeom               &face2);
+                        const TriGeom               &face2,
+                        bool doRot = false, int dir = 0, NekDouble angle = 0.0,
+                        NekDouble tol = 1e-8);
                 SPATIAL_DOMAINS_EXPORT static StdRegions::Orientation
                     GetFaceOrientation(
                         const PointGeomVector &face1,
-                        const PointGeomVector &face2);
+                        const PointGeomVector &face2,
+                        bool doRot = false, int dir = 0, NekDouble angle = 0.0,
+                        NekDouble tol = 1e-8);
 
             protected:
                 PointGeomVector         m_verts;

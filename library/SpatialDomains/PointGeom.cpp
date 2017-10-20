@@ -178,6 +178,35 @@ namespace Nektar
             m_coordim = 3;
         }
 
+        // _output = rotation of(this.a) by angle 'angle' around axis dir
+        void PointGeom::rotate(PointGeom& a, int dir, NekDouble angle)
+        {
+            switch(dir)
+            {
+            case 0:
+                {
+                    NekDouble yrot = cos(angle)*a.y() - sin(angle)*a.z();
+                    NekDouble zrot = sin(angle)*a.y() + cos(angle)*a.z();
+                    
+                    (*this)(0) = a.x();
+                    (*this)(1) = yrot;
+                    (*this)(2) = zrot;
+                }
+                break;
+            case 1:
+                {
+                    ASSERTL0(false,"Set up y axis rotation");
+                }
+                break;
+            case 2:
+                {
+                    ASSERTL0(false,"Set up z axis rotation");
+                }
+                break;
+            }
+        }
+
+
         // _output = this.a
         NekDouble PointGeom::dist(PointGeom& a)
         {

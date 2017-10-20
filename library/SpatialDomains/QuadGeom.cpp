@@ -252,9 +252,11 @@ namespace Nektar
 
         StdRegions::Orientation QuadGeom::GetFaceOrientation(
             const QuadGeom &face1,
-            const QuadGeom &face2)
+            const QuadGeom &face2,
+            bool doRot, int dir, NekDouble angle, NekDouble tol)
         {
-            return GetFaceOrientation(face1.m_verts, face2.m_verts);
+            return GetFaceOrientation(face1.m_verts, face2.m_verts,
+                                      doRot, dir, angle, tol);
         }
 
         /**
@@ -263,42 +265,65 @@ namespace Nektar
          */
         StdRegions::Orientation QuadGeom::GetFaceOrientation(
             const PointGeomVector &face1,
-            const PointGeomVector &face2)
+            const PointGeomVector &face2,
+            bool doRot, int dir, NekDouble angle, NekDouble tol)
         {
             int i, j, vmap[4] = {-1,-1,-1,-1};
-            NekDouble x, y, z, x1, y1, z1, cx = 0.0, cy = 0.0, cz = 0.0;
 
-            // For periodic faces, we calculate the vector between the centre
-            // points of the two faces. (For connected faces this will be
-            // zero). We can then use this to determine alignment later in the
-            // algorithm.
-            for (i = 0; i < 4; ++i)
+            if(doRot)
             {
-                cx += (*face2[i])(0) - (*face1[i])(0);
-                cy += (*face2[i])(1) - (*face1[i])(1);
-                cz += (*face2[i])(2) - (*face1[i])(2);
-            }
-            cx /= 4;
-            cy /= 4;
-            cz /= 4;
-
-            // Now construct a mapping which takes us from the vertices of one
-            // face to the other. That is, vertex j of face2 corresponds to
-            // vertex vmap[j] of face1.
-            for (i = 0; i < 4; ++i)
-            {
-                x = (*face1[i])(0);
-                y = (*face1[i])(1);
-                z = (*face1[i])(2);
-                for (j = 0; j < 4; ++j)
+                PointGeom rotPt;
+                
+                for (i = 0; i < 4; ++i)
                 {
-                    x1 = (*face2[j])(0)-cx;
-                    y1 = (*face2[j])(1)-cy;
-                    z1 = (*face2[j])(2)-cz;
-                    if (sqrt((x1-x)*(x1-x)+(y1-y)*(y1-y)+(z1-z)*(z1-z)) < 1e-8)
+                    rotPt.rotate((*face1[i]), dir, angle);
+                    for (j = 0; j < 4; ++j)
                     {
-                        vmap[j] = i;
-                        break;
+                        if (rotPt.dist(*face2[j]) < tol)
+                        {
+                            vmap[j] = i;
+                            break;
+                        }
+                    }
+                }
+            }
+            else
+            {
+                NekDouble x, y, z, x1, y1, z1, cx = 0.0, cy = 0.0, cz = 0.0;
+
+                // For periodic faces, we calculate the vector between
+                // the centre points of the two faces. (For connected
+                // faces this will be zero). We can then use this to
+                // determine alignment later in the algorithm.
+                for (i = 0; i < 4; ++i)
+                {
+                    cx += (*face2[i])(0) - (*face1[i])(0);
+                    cy += (*face2[i])(1) - (*face1[i])(1);
+                    cz += (*face2[i])(2) - (*face1[i])(2);
+                }
+                cx /= 4;
+                cy /= 4;
+                cz /= 4;
+                
+                // Now construct a mapping which takes us from the
+                // vertices of one face to the other. That is, vertex
+                // j of face2 corresponds to vertex vmap[j] of face1.
+                for (i = 0; i < 4; ++i)
+                {
+                    x = (*face1[i])(0);
+                    y = (*face1[i])(1);
+                    z = (*face1[i])(2);
+                    for (j = 0; j < 4; ++j)
+                    {
+                        x1 = (*face2[j])(0)-cx;
+                        y1 = (*face2[j])(1)-cy;
+                        z1 = (*face2[j])(2)-cz;
+                        if (sqrt((x1-x)*(x1-x)+(y1-y)*(y1-y)+(z1-z)*(z1-z))
+                            < 1e-8)
+                        {
+                            vmap[j] = i;
+                            break;
+                        }
                     }
                 }
             }

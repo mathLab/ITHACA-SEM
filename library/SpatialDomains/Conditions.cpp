@@ -683,41 +683,61 @@ namespace Nektar
 
                             if (attr)
                             {
-                                attrName = attr->Name();
-
-                                ASSERTL0(attrName == "VALUE",
-                                        (std::string("Unknown attribute: ")
-                                                + attrName).c_str());
-
-                                attrData = attr->Value();
-                                ASSERTL0(!attrData.empty(),
-                                        "VALUE attribute must have associated value.");
-
-                                int beg = attrData.find_first_of("[");
-                                int end = attrData.find_first_of("]");
-                                std::string periodicBndRegionIndexStr =
-                                        attrData.substr(beg + 1, end - beg - 1);
-                                ASSERTL0(beg < end,
-                                        (std::string(
-                                                "Error reading periodic boundary region definition for boundary region: ")
-                                                + boundaryRegionIDStrm.str()).c_str());
-
+                                std::string userDefined;
                                 vector<unsigned int> periodicBndRegionIndex;
-                                bool parseGood = ParseUtils::GenerateSeqVector(
-                                        periodicBndRegionIndexStr,
-                                        periodicBndRegionIndex);
 
-                                ASSERTL0(
-                                        parseGood
-                                                && (periodicBndRegionIndex.size()
-                                                        == 1),
-                                        (std::string(
-                                                "Unable to read periodic boundary condition for boundary region: ")
-                                                + boundaryRegionIDStrm.str()).c_str());
+                                userDefined = "NoUserDefined";
+                                
+                                while(attr){
 
+                                    attrName = attr->Name();
+                                    
+                                    if (attrName == "USERDEFINEDTYPE")
+                                    {
+                                        // Do stuff for the user defined attribute
+                                        attrData = attr->Value();
+                                        ASSERTL0(!attrData.empty(),"USERDEFINEDTYPE "
+                                                 "attribute must have associated value.");
+                                        
+                                        m_session->SubstituteExpressions(attrData);
+                                        
+                                        userDefined = attrData;
+                                    }
+                                    else if (attrName == "VALUE")
+                                    {
+                                        
+                                        ASSERTL0(attrName == "VALUE",
+                                                 (std::string("Unknown attribute: ")
+                                                  + attrName).c_str());
+                                        
+                                        attrData = attr->Value();
+                                        ASSERTL0(!attrData.empty(),
+                                                 "VALUE attribute must have associated value.");
+                                        
+                                        int beg = attrData.find_first_of("[");
+                                        int end = attrData.find_first_of("]");
+                                        std::string periodicBndRegionIndexStr =
+                                            attrData.substr(beg + 1, end - beg - 1);
+                                        ASSERTL0(beg < end,
+                                                 (std::string("Error reading periodic boundary "
+                                                   "region definition for boundary region: ")
+                                                  + boundaryRegionIDStrm.str()).c_str());
+                                        
+                                        bool parseGood = ParseUtils::GenerateSeqVector(
+                                                                periodicBndRegionIndexStr,
+                                                                periodicBndRegionIndex);
+                                        
+                                        ASSERTL0(parseGood
+                                                 && (periodicBndRegionIndex.size() == 1),                                                 (std::string("Unable to read periodic boundary "
+                                                                                                                                                       "condition for boundary region: ")
+                                                                                                                                           + boundaryRegionIDStrm.str()).c_str());
+                                        
+                                    }
+                                    attr = attr->Next();
+                                }
                                 BoundaryConditionShPtr periodicCondition(
-                                        MemoryManager<PeriodicBoundaryCondition>::AllocateSharedPtr(
-                                                periodicBndRegionIndex[0]));
+                                 MemoryManager<PeriodicBoundaryCondition>::AllocateSharedPtr(
+                                               periodicBndRegionIndex[0], userDefined));
 
                                 for (auto &varIter : vars)
                                 {

@@ -1263,7 +1263,7 @@ using namespace boost::assign;
                     StdRegions::Orientation o;
                     bool rotbnd = false;
                     int  dir;
-                    NekDouble angle;
+                    NekDouble angle,sign;
                     NekDouble tol = 1e-8;
 
                     // check to see if perioid boundary is rotated
@@ -1274,7 +1274,8 @@ using namespace boost::assign;
                         angle = rotComp[compID[pIt.first]].m_angle;
                         tol   = rotComp[compID[pIt.first]].m_tol;
                     }
-                                        // Record periodic faces.
+
+                    // Record periodic faces.
                     for (i = 0; i < 2; ++i)
                     {
                         if (!local[i])
@@ -1285,18 +1286,21 @@ using namespace boost::assign;
                         // Reference to the other face.
                         int other = (i+1) % 2;
 
+                        // angle is set up for i = 0 to i = 1
+                        sign = (i == 0)? 1.0:-1.0;
+                        
                         // Calculate relative face orientation.
                         if (tmpVec[0].size() == 3)
                         {
                             o = SpatialDomains::TriGeom::GetFaceOrientation(
                                    tmpVec[i], tmpVec[other],
-                                   rotbnd, dir, angle, tol);
+                                   rotbnd, dir, sign*angle, tol);
                         }
                         else
                         {
                             o = SpatialDomains::QuadGeom::GetFaceOrientation(
                                    tmpVec[i], tmpVec[other],
-                                   rotbnd,dir,angle,tol);
+                                   rotbnd,dir,sign*angle,tol);
                         }
 
                         // Record face ID, orientation and whether other face is
@@ -1313,16 +1317,21 @@ using namespace boost::assign;
                     {
                         int other = (i+1) % 2;
 
+                        // angle is set up for i = 0 to i = 1
+                        sign = (i == 0)? 1.0:-1.0;
+
                         // Calculate relative face orientation.
                         if (tmpVec[0].size() == 3)
                         {
                             o = SpatialDomains::TriGeom::GetFaceOrientation(
-                                   tmpVec[i], tmpVec[other], rotbnd, dir, angle, tol);
+                                   tmpVec[i], tmpVec[other], rotbnd, dir,
+                                   sign*angle, tol);
                         }
                         else
                         {
                             o = SpatialDomains::QuadGeom::GetFaceOrientation(
-                                   tmpVec[i], tmpVec[other], rotbnd, dir, angle, tol);
+                                   tmpVec[i], tmpVec[other], rotbnd, dir,
+                                   sign*angle, tol);
                         }
 
                         if (nFaceVerts == 3)
@@ -1395,15 +1404,20 @@ using namespace boost::assign;
                     {
                         int other = (i+1) % 2;
 
+                        // angle is set up for i = 0 to i = 1
+                        sign = (i == 0)? 1.0:-1.0;
+
                         if (tmpVec[0].size() == 3)
                         {
                             o = SpatialDomains::TriGeom::GetFaceOrientation(
-                                   tmpVec[i], tmpVec[other], rotbnd, dir, angle, tol);
+                                   tmpVec[i], tmpVec[other], rotbnd, dir,
+                                   sign*angle, tol);
                         }
                         else
                         {
                             o = SpatialDomains::QuadGeom::GetFaceOrientation(
-                                   tmpVec[i], tmpVec[other], rotbnd, dir, angle, tol);
+                                   tmpVec[i], tmpVec[other], rotbnd, dir,
+                                   sign*angle, tol);
                         }
 
                         vector<int> per1 = edgeMap[ids[i]];
@@ -1749,7 +1763,7 @@ using namespace boost::assign;
                         else
                         {
                             r.rotate(v[1],dir,angle);
-                            if(r.dist(v[1]) < tol)
+                            if(r.dist(w[0]) < tol)
                             {
                                 vMap[0] = 1;
                             }

@@ -942,9 +942,7 @@ using namespace boost::assign;
 
                     rotComp[compid[i]] = rinfo; 
                 }
-                
             }
-            
 
             // First exchange the number of faces on each process.
             facecounts[p] = locFaces.size();
@@ -1165,8 +1163,8 @@ using namespace boost::assign;
 
             map<int,int> allCompPairs;
             
-            // Collect composite ides of each face for use if rotation is required
-            map<int,int> compID;
+            // Collect composite ides of each periodic face for use if rotation is required
+            map<int,int> fIdToCompId;
 
             // Finally we have enough information to populate the periodic
             // vertex, edge and face maps. Begin by looping over all pairs of
@@ -1226,8 +1224,8 @@ using namespace boost::assign;
                     compPairs[eId1] = eId2;
                     
                     // store  a map of face ids to composite ids
-                    compID[eId1] = id1;
-                    compID[eId2] = id2;
+                    fIdToCompId[eId1] = id1;
+                    fIdToCompId[eId2] = id2;
                 }
 
                 // Now that we have all pairs of periodic faces, loop over the
@@ -1267,12 +1265,12 @@ using namespace boost::assign;
                     NekDouble tol = 1e-8;
 
                     // check to see if perioid boundary is rotated
-                    if(rotComp.count(compID[pIt.first]))
+                    if(rotComp.count(fIdToCompId[pIt.first]))
                     {
                         rotbnd = true;
-                        dir   = rotComp[compID[pIt.first]].m_dir;
-                        angle = rotComp[compID[pIt.first]].m_angle;
-                        tol   = rotComp[compID[pIt.first]].m_tol;
+                        dir   = rotComp[fIdToCompId[pIt.first]].m_dir;
+                        angle = rotComp[fIdToCompId[pIt.first]].m_angle;
+                        tol   = rotComp[fIdToCompId[pIt.first]].m_tol;
                     }
 
                     // Record periodic faces.
@@ -1481,9 +1479,9 @@ using namespace boost::assign;
             }
 
 
-            ASSERTL1(allCompPairs.size() == compID.size(),
+            ASSERTL1(allCompPairs.size() == fIdToCompId.size(),
                      "At this point the size of allCompPairs "
-                     "should have been the same as compID");
+                     "should have been the same as fIdToCompId");
 
             Array<OneD, int> first (totPairSizes, 0);
             Array<OneD, int> second(totPairSizes, 0);
@@ -1495,7 +1493,7 @@ using namespace boost::assign;
                 first [cnt  ] = pIt.first;
                 second[cnt++] = pIt.second;
             }
-
+            
             vComm->AllReduce(first,  LibUtilities::ReduceSum);
             vComm->AllReduce(second, LibUtilities::ReduceSum);
 
@@ -1506,13 +1504,15 @@ using namespace boost::assign;
                 allCompPairs[first[cnt]] = second[cnt];
             }
 
-
             // make global list of faces to composite ids if rotComp is non-zero
+            Vmath::Zero(totPairSizes,first,1);
+            Vmath::Zero(totPairSizes,second,1);
+            
             if(rotComp.size())
             {
                 cnt = pairOffsets[p];
                 
-                for (auto &pIt : compID)
+                for (auto &pIt : fIdToCompId)
                 {
                     first [cnt  ] = pIt.first;
                     second[cnt++] = pIt.second;
@@ -1521,11 +1521,11 @@ using namespace boost::assign;
                 vComm->AllReduce(first,  LibUtilities::ReduceSum);
                 vComm->AllReduce(second, LibUtilities::ReduceSum);
                 
-                compID.clear();
+                fIdToCompId.clear();
                 
                 for(cnt = 0; cnt < totPairSizes; ++cnt)
                 {
-                    compID[first[cnt]] = second[cnt];
+                    fIdToCompId[first[cnt]] = second[cnt];
                 }
             }
 
@@ -1551,12 +1551,15 @@ using namespace boost::assign;
                 int perFaceId = allCompPairs[faceId];
 
                 // check to see if periodic boundary is rotated
-                if(rotComp.count(compID[faceId]))
+                ASSERTL1(fIdToCompId.count(faceId) > 0,"Face " +
+                         boost::lexical_cast<string>(faceId) +
+                         " not found in fIdtoCompId map");
+                if(rotComp.count(fIdToCompId[faceId]))
                 {
                     rotbnd = true;
-                    dir   = rotComp[compID[faceId]].m_dir;
-                    angle = rotComp[compID[faceId]].m_angle;
-                    tol   = rotComp[compID[faceId]].m_tol;
+                    dir   = rotComp[fIdToCompId[faceId]].m_dir;
+                    angle = rotComp[fIdToCompId[faceId]].m_angle;
+                    tol   = rotComp[fIdToCompId[faceId]].m_tol;
                 }
 
                 for (j = 0; j < faceVerts[i]; ++j, ++cnt)
@@ -1565,7 +1568,7 @@ using namespace boost::assign;
 
                     auto perId = periodicVerts.find(vId);
 
-                       if (perId == periodicVerts.end())
+                    if (perId == periodicVerts.end())
                     {
                         
                         // This vertex is not included in the
@@ -1602,7 +1605,7 @@ using namespace boost::assign;
                     // this map is required at very end to determine rotation of edges. 
                     if(rotbnd)
                     {
-                        eIdToCompId[eId] = compID[faceId];
+                        eIdToCompId[eId] = fIdToCompId[faceId];
                     }
                     
                     if (perId == periodicEdges.end())
@@ -1633,10 +1636,11 @@ using namespace boost::assign;
                         periodicEdges[eId].push_back(ent);
                         
 
-                        // this map is required at very end to determine rotation of edges. 
+                        // this map is required at very end to
+                        // determine rotation of edges.
                         if(rotbnd)
                         {
-                            eIdToCompId[perEdgeId] = compID[perFaceId];
+                            eIdToCompId[perEdgeId] = fIdToCompId[perFaceId];
                         }
                     }
                 }
@@ -1735,7 +1739,7 @@ using namespace boost::assign;
                     angle = rotComp[eIdToCompId[perIt.first]].m_angle;
                     tol   = rotComp[eIdToCompId[perIt.first]].m_tol;
                 }
-                
+
                 // Loop over each edge, and construct a vector that takes us
                 // from one vertex to another. Use this to figure out which
                 // vertex maps to which.
@@ -1769,7 +1773,7 @@ using namespace boost::assign;
                             }
                             else
                             {
-                                ASSERTL0(false,"Unable to align rotationally periodic vertices");
+                                ASSERTL0(false,"Unable to align rotationally periodic edge vertex");
                             }
                         }
                     }
@@ -1801,11 +1805,11 @@ using namespace boost::assign;
                     
                         // Sanity check the map.
                         ASSERTL0(vMap[0] >= 0 && vMap[1] >= 0,
-                                 "Unable to align periodic vertices.");
+                                 "Unable to align periodic edge vertex.");
                         ASSERTL0((vMap[0] == 0 || vMap[0] == 1) &&
                                  (vMap[1] == 0 || vMap[1] == 1) &&
                                  (vMap[0] != vMap[1]),
-                                 "Unable to align periodic vertices.");
+                                 "Unable to align periodic edge vertex.");
                     }
                     
                     // If 0 -> 0 then edges are aligned already; otherwise

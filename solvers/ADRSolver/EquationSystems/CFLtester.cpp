@@ -139,13 +139,12 @@ namespace Nektar
               Array<OneD,        Array<OneD, NekDouble> >&outarray,
         const NekDouble time)
     {
-        int j;
         int nvariables = inarray.num_elements();
         int npoints = GetNpoints();
 
         m_advObject->Advect(nvariables, m_fields, m_velocity, inarray,
                             outarray, time);
-        for(j = 0; j < nvariables; ++j)
+        for(int j = 0; j < nvariables; ++j)
         {
             Vmath::Neg(npoints,outarray[j],1);
         }
@@ -156,7 +155,6 @@ namespace Nektar
               Array<OneD,       Array<OneD, NekDouble> >&outarray,
     const NekDouble time)
     {
-        int j;
         int nvariables = inarray.num_elements();
         SetBoundaryConditions(time);
 
@@ -167,7 +165,7 @@ namespace Nektar
                 // Just copy over array
                 int npoints = GetNpoints();
 
-                for(j = 0; j < nvariables; ++j)
+                for(int j = 0; j < nvariables; ++j)
                 {
                     Vmath::Vcopy(npoints,inarray[j],1,outarray[j],1);
                 }
@@ -178,7 +176,7 @@ namespace Nektar
             {
                 Array<OneD, NekDouble> coeffs(m_fields[0]->GetNcoeffs());
 
-                for(j = 0; j < nvariables; ++j)
+                for(int j = 0; j < nvariables; ++j)
                 {
                     m_fields[j]->FwdTrans(inarray[j],coeffs);
                     m_fields[j]->BwdTrans_IterPerExp(coeffs,outarray[j]);
@@ -197,7 +195,6 @@ namespace Nektar
     Array<OneD, NekDouble> &CFLtester::GetNormalVelocity()
     {
         // Number of trace (interface) points
-        int i;
         int nTracePts = GetTraceNpoints();
 
         // Auxiliary variable to compute the normal velocity
@@ -206,7 +203,7 @@ namespace Nektar
         // Reset the normal velocity
         Vmath::Zero(nTracePts, m_traceVn, 1);
 
-        for (i = 0; i < m_velocity.num_elements(); ++i)
+        for (int i = 0; i < m_velocity.num_elements(); ++i)
         {
             m_fields[0]->ExtractTracePhys(m_velocity[i], tmp);
 
@@ -227,12 +224,11 @@ namespace Nektar
         ASSERTL1(flux[0].num_elements() == m_velocity.num_elements(),
                  "Dimension of flux array and velocity array do not match");
 
-        int i , j;
         int nq = physfield[0].num_elements();
 
-        for (i = 0; i < flux.num_elements(); ++i)
+        for (int i = 0; i < flux.num_elements(); ++i)
         {
-            for (j = 0; j < flux[0].num_elements(); ++j)
+            for (int j = 0; j < flux[0].num_elements(); ++j)
             {
                 Vmath::Vmul(nq, physfield[i], 1, m_velocity[j], 1,
                             flux[i][j], 1);

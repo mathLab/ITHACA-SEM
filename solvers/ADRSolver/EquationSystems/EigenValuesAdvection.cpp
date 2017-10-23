@@ -121,7 +121,6 @@ namespace Nektar
     Array<OneD, NekDouble> &EigenValuesAdvection::GetNormalVelocity()
     {
         // Number of trace (interface) points
-        int i;
         int nTracePts = GetTraceNpoints();
 
         // Auxiliary variable to compute the normal velocity
@@ -130,7 +129,7 @@ namespace Nektar
         // Reset the normal velocity
         Vmath::Zero(nTracePts, m_traceVn, 1);
 
-        for (i = 0; i < m_velocity.num_elements(); ++i)
+        for (int i = 0; i < m_velocity.num_elements(); ++i)
         {
             m_fields[0]->ExtractTracePhys(m_velocity[i], tmp);
 
@@ -157,7 +156,7 @@ namespace Nektar
     void EigenValuesAdvection::v_DoSolve()
     {
         int nvariables = 1;
-        int i,dofs = GetNcoeffs();
+        int dofs = GetNcoeffs();
 		//bool UseContCoeffs = false;
 		
 		Array<OneD, Array<OneD, NekDouble> > inarray(nvariables);
@@ -218,7 +217,7 @@ namespace Nektar
         case MultiRegions::eGalerkin:
         case MultiRegions::eMixed_CG_Discontinuous:
             {
-                for(i = 0; i < nvariables; ++i)
+                for(int i = 0; i < nvariables; ++i)
                 {
                     //m_fields[i]->MultiplyByInvMassMatrix(WeakAdv[i],WeakAdv[i]);
                     //Projection
@@ -295,12 +294,11 @@ namespace Nektar
         ASSERTL1(flux[0].num_elements() == m_velocity.num_elements(),
                  "Dimension of flux array and velocity array do not match");
 
-        int i , j;
         int nq = physfield[0].num_elements();
 
-        for (i = 0; i < flux.num_elements(); ++i)
+        for (int i = 0; i < flux.num_elements(); ++i)
         {
-            for (j = 0; j < flux[0].num_elements(); ++j)
+            for (int j = 0; j < flux[0].num_elements(); ++j)
             {
                 Vmath::Vmul(nq, physfield[i], 1, m_velocity[j], 1,
                             flux[i][j], 1);

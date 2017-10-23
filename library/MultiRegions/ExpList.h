@@ -1350,17 +1350,17 @@ namespace Nektar
                             std::shared_ptr<ExpList> &result,
                             const bool DeclareCoeffPhysArrays);
             
-            virtual void v_ExtractElmtToBndPhys(int i,
-                            Array<OneD, NekDouble> &elmt,
-                            Array<OneD, NekDouble> &boundary);
+            virtual void v_ExtractElmtToBndPhys( const int                      i,
+                                                 const Array<OneD, NekDouble> & elmt,
+                                                       Array<OneD, NekDouble> & boundary );
 
-            virtual void v_ExtractPhysToBndElmt(int i,
-                            const Array<OneD, const NekDouble> &phys,
-                            Array<OneD, NekDouble> &bndElmt);
+            virtual void v_ExtractPhysToBndElmt( const int                            i,
+                                                 const Array<OneD, const NekDouble> & phys,
+                                                       Array<OneD, NekDouble>       & bndElmt );
 
-            virtual void v_ExtractPhysToBnd(int i,
-                            const Array<OneD, const NekDouble> &phys,
-                            Array<OneD, NekDouble> &bnd);
+            virtual void v_ExtractPhysToBnd( const int                            i,
+                                             const Array<OneD, const NekDouble> & phys,
+                                                   Array<OneD, NekDouble>       & bnd );
 
             virtual void v_GetBoundaryNormals(int i,
                             Array<OneD, Array<OneD, NekDouble> > &normals);

@@ -86,7 +86,7 @@ namespace Nektar
             /// Check for steady state at step interval
             int                                             m_steadyStateSteps;
             /// Storage for previous solution for steady-state check
-            Array<OneD, Array<OneD, NekDouble> >            m_un;
+            Array<OneD, Array<OneD, NekDouble> >            m_previousSolution;
             // Steady-state residual file
             std::ofstream                                   m_errFile;
 

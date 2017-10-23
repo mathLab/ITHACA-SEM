@@ -674,14 +674,14 @@ namespace Nektar
             if (m_steadyStateTol > 0.0)
             {
                 const int nPoints = m_fields[0]->GetTotPoints();
-                m_un = Array<OneD, Array<OneD, NekDouble> > (
+                m_previousSolution = Array<OneD, Array<OneD, NekDouble> > (
                             m_fields.num_elements());
 
                 for (int i = 0; i < m_fields.num_elements(); ++i)
                 {
-                    m_un[i] = Array<OneD, NekDouble>(nPoints);
+                    m_previousSolution[i] = Array<OneD, NekDouble>(nPoints);
                     Vmath::Vcopy(nPoints, m_fields[i]->GetPhys(), 1,
-                                          m_un[i], 1);
+                                          m_previousSolution[i], 1);
                 }
 
                 if (m_comm->GetRank() == 0)
@@ -721,11 +721,12 @@ namespace Nektar
                 Array<OneD, NekDouble> tmp(nPoints);
 
                 Vmath::Vsub(nPoints, m_fields[i]->GetPhys(), 1,
-                                     m_un[i], 1, tmp, 1);
+                                     m_previousSolution[i], 1, tmp, 1);
                 Vmath::Vmul(nPoints, tmp, 1, tmp, 1, tmp, 1);
                 residual[i] = Vmath::Vsum(nPoints, tmp, 1);
 
-                Vmath::Vmul(nPoints, m_un[i], 1, m_un[i], 1, tmp, 1);
+                Vmath::Vmul(nPoints, m_previousSolution[i], 1,
+                                     m_previousSolution[i], 1, tmp, 1);
                 reference[i] = Vmath::Vsum(nPoints, tmp, 1);
             }
 
@@ -771,7 +772,8 @@ namespace Nektar
 
             for (int i = 0; i < m_fields.num_elements(); ++i)
             {
-                Vmath::Vcopy(nPoints, m_fields[i]->GetPhys(), 1, m_un[i], 1);
+                Vmath::Vcopy(nPoints, m_fields[i]->GetPhys(), 1,
+                                      m_previousSolution[i], 1);
             }
 
             return false;

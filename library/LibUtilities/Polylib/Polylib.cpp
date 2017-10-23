@@ -529,9 +529,13 @@ namespace Polylib {
 
 		}
 
-		
-
-
+		delete[] a;
+		delete[] b;
+		for (i = 0; i < kpoints; i++)
+		{
+                    delete[] zmatrix[i];
+		}
+		delete[] zmatrix;
 
 	}
 
@@ -722,9 +726,17 @@ namespace Polylib {
 		}
 
 		
-
-
-
+		delete[] a;
+		delete[] b;
+		delete[] a0;
+		delete[] b0;
+		delete[] z1;
+		delete[] w1;
+                for(i = 0; i < 2*np-1; i++)
+                {
+                    delete[] zmatrix[i];
+                }
+		delete[] zmatrix;
 	}
 
 
@@ -943,6 +955,20 @@ namespace Polylib {
 
 		}
 
+		delete[] a;
+		delete[] b;
+		delete[] a0;
+		delete[] b0;
+		delete[] a1;
+		delete[] b1;
+		delete[] z1;
+		delete[] w1;
+                for(i = 0; i < 2*np-3; i++)
+
+		{
+                    delete[] zmatrix[i];
+                }
+		delete[] zmatrix;
 	}
 
 	
@@ -2399,7 +2425,7 @@ namespace Polylib {
 
             TriQL(n, a, b,z);
 
-
+            delete[] z;
 
             return;
 
@@ -2932,7 +2958,7 @@ namespace Polylib {
 		if(n == 1)
 
 		{
-
+			delete[] r;
 			return;
 
 		}
@@ -2951,6 +2977,7 @@ namespace Polylib {
 
 		}
 
+                delete[] r;
     		
 	}
 

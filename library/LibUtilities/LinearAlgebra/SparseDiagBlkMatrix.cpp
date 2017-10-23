@@ -87,39 +87,39 @@ namespace Nektar
     }
 
     template<typename SparseStorageType>
-    const IndexType NekSparseDiagBlkMatrix<SparseStorageType>::GetRows() const
+    IndexType NekSparseDiagBlkMatrix<SparseStorageType>::GetRows() const
     {
         return m_rows;
     }
 
     template<typename SparseStorageType>
-    const IndexType NekSparseDiagBlkMatrix<SparseStorageType>::GetColumns() const
+    IndexType NekSparseDiagBlkMatrix<SparseStorageType>::GetColumns() const
     {
         return m_cols;
     }
 
     /// number of rows at i-th submatrix
     template<typename SparseStorageType>
-    const IndexType NekSparseDiagBlkMatrix<SparseStorageType>::GetRows(int i) const
+    IndexType NekSparseDiagBlkMatrix<SparseStorageType>::GetRows(int i) const
     {
         return m_submatrix[i]->GetRows();
     }
 
     /// number of columns at i-th submatrix
     template<typename SparseStorageType>
-    const IndexType NekSparseDiagBlkMatrix<SparseStorageType>::GetColumns(int i) const
+    IndexType NekSparseDiagBlkMatrix<SparseStorageType>::GetColumns(int i) const
     {
         return m_submatrix[i]->GetColumns();
     }
 
     template<typename SparseStorageType>
-    const IndexType NekSparseDiagBlkMatrix<SparseStorageType>::GetNumberOfMatrixBlocks() const
+    IndexType NekSparseDiagBlkMatrix<SparseStorageType>::GetNumberOfMatrixBlocks() const
     {
         return m_submatrix.num_elements();
     }
 
     template<typename SparseStorageType>
-    const IndexType NekSparseDiagBlkMatrix<SparseStorageType>::GetNumNonZeroEntries()
+    IndexType NekSparseDiagBlkMatrix<SparseStorageType>::GetNumNonZeroEntries()
     {
         IndexType nnz = 0;
         for (int i = 0; i < m_submatrix.num_elements(); i++)
@@ -131,19 +131,19 @@ namespace Nektar
 
     // nnz of i-th CSR matrix
     template<typename SparseStorageType>
-    const IndexType NekSparseDiagBlkMatrix<SparseStorageType>::GetNumNonZeroEntries(int i) const
+    IndexType NekSparseDiagBlkMatrix<SparseStorageType>::GetNumNonZeroEntries(int i) const
     {
         return m_submatrix[i]->GetNumNonZeroEntries();
     }
 
     template<typename SparseStorageType>
-    const typename NekSparseDiagBlkMatrix<SparseStorageType>::DataType NekSparseDiagBlkMatrix<SparseStorageType>::GetFillInRatio(int i) const
+    typename NekSparseDiagBlkMatrix<SparseStorageType>::DataType NekSparseDiagBlkMatrix<SparseStorageType>::GetFillInRatio(int i) const
     {
         return m_submatrix[i]->GetFillInRatio();
     }
 
     template<typename SparseStorageType>
-    const typename NekSparseDiagBlkMatrix<SparseStorageType>::DataType NekSparseDiagBlkMatrix<SparseStorageType>::GetFillInRatio() const
+    typename NekSparseDiagBlkMatrix<SparseStorageType>::DataType NekSparseDiagBlkMatrix<SparseStorageType>::GetFillInRatio() const
     {
         IndexType stored = 0;
         IndexType nnz = 0;
@@ -221,7 +221,7 @@ namespace Nektar
     }
 
     template<typename SparseStorageType>
-    const size_t NekSparseDiagBlkMatrix<SparseStorageType>::GetMemoryFootprint()
+    size_t NekSparseDiagBlkMatrix<SparseStorageType>::GetMemoryFootprint()
     {
         size_t bytes =
                        sizeof(IndexType)*2 +      // sizes
@@ -241,7 +241,7 @@ namespace Nektar
     }
 
     template<typename SparseStorageType>
-    const size_t NekSparseDiagBlkMatrix<SparseStorageType>::GetMemoryFootprint(IndexType i) const
+    size_t NekSparseDiagBlkMatrix<SparseStorageType>::GetMemoryFootprint(IndexType i) const
     {
         return m_submatrix[i]->GetMemoryUsage(
                         m_submatrix[i]->GetNumNonZeroEntries(),
@@ -250,13 +250,13 @@ namespace Nektar
     }
 
     template<typename SparseStorageType>
-    const unsigned long NekSparseDiagBlkMatrix<SparseStorageType>::GetMulCallsCounter() const
+    unsigned long NekSparseDiagBlkMatrix<SparseStorageType>::GetMulCallsCounter() const
     {
         return m_mulCallsCounter;
     }
 
     template<typename SparseStorageType>
-    const typename SparseStorageType::DataType  NekSparseDiagBlkMatrix<SparseStorageType>::GetAvgRowDensity()
+    typename SparseStorageType::DataType  NekSparseDiagBlkMatrix<SparseStorageType>::GetAvgRowDensity()
     {
         DataType avgRowDensity = 0.0;
         for (int i = 0; i < m_submatrix.num_elements(); i++)
@@ -268,14 +268,14 @@ namespace Nektar
     }
 
     template<typename SparseStorageType>
-    const typename SparseStorageType::DataType  NekSparseDiagBlkMatrix<SparseStorageType>::GetAvgRowDensity(IndexType  i) const
+    typename SparseStorageType::DataType  NekSparseDiagBlkMatrix<SparseStorageType>::GetAvgRowDensity(IndexType  i) const
     {
         return (DataType) m_submatrix[i]->GetNumNonZeroEntries() /
                (DataType) m_submatrix[i]->GetRows();
     }
 
     template<typename SparseStorageType>
-    const IndexType NekSparseDiagBlkMatrix<SparseStorageType>::GetBandwidth()
+    IndexType NekSparseDiagBlkMatrix<SparseStorageType>::GetBandwidth()
     {
         IndexType bandwidth = 0;
         for (int i = 0; i < m_submatrix.num_elements(); i++)
@@ -291,7 +291,7 @@ namespace Nektar
     }
 
     template<typename SparseStorageType>
-    const IndexType NekSparseDiagBlkMatrix<SparseStorageType>::GetBandwidth(IndexType  i)
+    IndexType NekSparseDiagBlkMatrix<SparseStorageType>::GetBandwidth(IndexType  i)
     {
         IndexType bandwidth = 0;
         typename SparseStorageType::const_iterator entry = m_submatrix[i]->begin();

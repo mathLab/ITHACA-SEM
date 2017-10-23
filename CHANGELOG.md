@@ -51,6 +51,10 @@ v5.0.0
 - Enable output to multiple files (!844)
 - Allow using xml file without expansion tag in FieldConvert (!849)
 
+**IncNavierStokesSolver**
+- Replace steady-state check based on difference of norms by check based on
+  norm of the difference, to be consistent with the compressible solver (!832)
+
 **CompressibleFlowSolver**
 - Add 3D regression tests (!567)
 

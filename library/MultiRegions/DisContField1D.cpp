@@ -344,9 +344,7 @@ namespace Nektar
                      traceEl->GetRightAdjacentElementVertex() != -1)
             {
                 // Non-boundary edge (2 connected elements).
-                fwd = dynamic_cast<Nektar::StdRegions::StdExpansion*>
-                    (traceEl->GetLeftAdjacentElementExp().get()) ==
-                    (*m_exp)[n].get();
+                fwd = (traceEl->GetLeftAdjacentElementExp().get()) == (*m_exp)[n].get();
             }
             else
             {

@@ -63,7 +63,7 @@ ProcessInnerProduct::ProcessInnerProduct(FieldSharedPtr f) : ProcessModule(f)
         false, "NotSet", "Take inner product of multiple field fields with "
                          "ids given in string. i.e. file_0.chk file_1.chk ...");
     m_config["allfromflds"] =
-        ConfigOption(true, "NotSet", "Take inner product between all fromflds, "
+        ConfigOption(true, "0", "Take inner product between all fromflds, "
                                      "requires multifldids to be set");
 }
 
@@ -101,7 +101,7 @@ void ProcessInnerProduct::Process(po::variables_map &vm)
     string multifldidsstr = m_config["multifldids"].as<string>();
     vector<unsigned int> multiFldIds;
     vector<string> fromfiles;
-    bool allfromflds = m_config["allfromflds"].m_beenSet;
+    bool allfromflds = m_config["allfromflds"].as<bool>();
 
     if (fields.compare("All") == 0)
     {

@@ -162,6 +162,8 @@ public:
      * @brief locates a point in the parametric space
      */
     virtual NekDouble loct(Array<OneD, NekDouble> xyz) = 0;
+    
+    virtual NekDouble DistanceTo(Array<OneD, NekDouble> xyz) = 0;
 
     CADOrientation::Orientation GetOrienationWRT(int surf)
     {

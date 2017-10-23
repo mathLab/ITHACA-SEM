@@ -1290,17 +1290,15 @@ namespace Nektar
                     }
                 }
             }
-            else if (traceEl->GetLeftAdjacentElementEdge () != -1 &&
-                     traceEl->GetRightAdjacentElementEdge() != -1)
+            else if ( traceEl->GetLeftAdjacentElementEdge () != -1 &&
+                      traceEl->GetRightAdjacentElementEdge() != -1 )
             {
                 // Non-boundary edge (2 connected elements).
-                fwd = dynamic_cast<Nektar::StdRegions::StdExpansion*>
-                    (traceEl->GetLeftAdjacentElementExp().get()) ==
-                    (*m_exp)[n].get();
+                fwd = ( traceEl->GetLeftAdjacentElementExp().get() == (*m_exp)[n].get() );
             }
             else
             {
-                ASSERTL2(false, "Unconnected trace element!");
+                ASSERTL2( false, "Unconnected trace element!" );
             }
             
             return fwd;
@@ -1490,28 +1488,43 @@ namespace Nektar
             const Array<OneD, const NekDouble> &inarray, 
                   Array<OneD,       NekDouble> &outarray)
         {
-            // Loop over elemente and collect forward expansion
-            int nexp = GetExpSize();
-            int n, e, offset, phys_offset;
-            Array<OneD,NekDouble> e_tmp;
-            Array<OneD, Array<OneD, LocalRegions::ExpansionSharedPtr> >
-                &elmtToTrace = m_traceMap->GetElmtToTrace();
-
-            ASSERTL1(outarray.num_elements() >= m_trace->GetNpoints(),
-                     "input array is of insufficient length");
-
-            // use m_trace tmp space in element to fill values
-            for(n  = 0; n < nexp; ++n)
+            LibUtilities::BasisSharedPtr basis = (*m_exp)[0]->GetBasis(0);
+            if (basis->GetBasisType() != LibUtilities::eGauss_Lagrange)
             {
-                phys_offset = GetPhys_Offset(n);
-                
-                for(e = 0; e < (*m_exp)[n]->GetNedges(); ++e)
+                Vmath::Zero(outarray.num_elements(), outarray, 1);
+
+                Array<OneD, NekDouble> tracevals(
+                                    m_locTraceToTraceMap->GetNFwdLocTracePts());
+                m_locTraceToTraceMap->FwdLocTracesFromField(inarray,tracevals);
+                m_locTraceToTraceMap->
+                            InterpLocEdgesToTrace(0,tracevals,outarray);
+                m_traceMap->UniversalTraceAssemble(outarray);
+            }
+            else
+            {
+                // Loop over elemente and collect forward expansion
+                int nexp = GetExpSize();
+                int n, e, offset, phys_offset;
+                Array<OneD,NekDouble> e_tmp;
+                Array<OneD, Array<OneD, LocalRegions::ExpansionSharedPtr> >
+                    &elmtToTrace = m_traceMap->GetElmtToTrace();
+
+                ASSERTL1(outarray.num_elements() >= m_trace->GetNpoints(),
+                         "input array is of insufficient length");
+
+                // use m_trace tmp space in element to fill values
+                for(n  = 0; n < nexp; ++n)
                 {
-                    offset = m_trace->GetPhys_Offset(
-                        elmtToTrace[n][e]->GetElmtId());
-                    (*m_exp)[n]->GetEdgePhysVals(e,  elmtToTrace[n][e],
-                                                 inarray + phys_offset,
-                                                 e_tmp = outarray + offset);
+                    phys_offset = GetPhys_Offset(n);
+
+                    for(e = 0; e < (*m_exp)[n]->GetNedges(); ++e)
+                    {
+                        offset = m_trace->GetPhys_Offset(
+                            elmtToTrace[n][e]->GetElmtId());
+                        (*m_exp)[n]->GetEdgePhysVals(e,  elmtToTrace[n][e],
+                                                     inarray + phys_offset,
+                                                     e_tmp = outarray + offset);
+                    }
                 }
             }
         }
@@ -1852,7 +1865,6 @@ namespace Nektar
         {
             int i,j,n,cnt,cnt1,nbndry;
             int nexp = GetExpSize();
-            StdRegions::StdExpansionSharedPtr BndExp;
 
             Array<OneD,NekDouble> f(m_ncoeffs);
             DNekVec F(m_ncoeffs,f,eWrapper);
@@ -2348,22 +2360,6 @@ namespace Nektar
                             locExpList->GetPhys(),
                             locExpList->UpdateCoeffs());
                     }    
-                    else
-                    {
-                        ASSERTL0(false, "This type of BC not implemented yet");
-                    }
-                }
-                else if (boost::iequals(m_bndConditions[i]->GetUserDefined(),
-                                        "MovingBody"))
-                {
-                    locExpList = m_bndCondExpansions[i];
-                    if (m_bndConditions[i]->GetBoundaryConditionType()
-                            == SpatialDomains::eDirichlet)
-                    {
-                        locExpList->FwdTrans_IterPerExp(
-                                    locExpList->GetPhys(),
-                                    locExpList->UpdateCoeffs());
-                    }
                     else
                     {
                         ASSERTL0(false, "This type of BC not implemented yet");

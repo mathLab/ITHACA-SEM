@@ -219,14 +219,15 @@ void IterativeElasticSystem::WriteGeometry(const int i)
     {
         s << "_xml";
 
-        if(!fs::is_directory(s.str()))
+        string ss = s.str();
+        if(!fs::is_directory(ss))
         {
-            fs::create_directory(s.str());
+            fs::create_directory(ss);
         }
 
         boost::format pad("P%1$07d.xml");
         pad % m_session->GetComm()->GetRank();
-        filename = fs::path(s.str()) / fs::path(pad.str());
+        filename = fs::path(ss) / fs::path(pad.str());
     }
     else
     {

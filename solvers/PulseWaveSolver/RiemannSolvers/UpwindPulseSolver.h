@@ -42,32 +42,28 @@ using namespace Nektar::SolverUtils;
 
 namespace Nektar
 {
-    class UpwindPulseSolver : public RiemannSolver
+class UpwindPulseSolver : public RiemannSolver
+{
+public:
+    static RiemannSolverSharedPtr create()
     {
-    public:
-        static RiemannSolverSharedPtr create()
-        {
-            return RiemannSolverSharedPtr(new UpwindPulseSolver());
-        }
-        
-        static std::string solverName;
+        return RiemannSolverSharedPtr(new UpwindPulseSolver());
+    }
 
-    protected:
+    static std::string solverName;
 
-        UpwindPulseSolver();
-        
-        virtual void v_Solve(
-            const int                                         nDim,
-            const Array<OneD, const Array<OneD, NekDouble> > &Fwd,
-            const Array<OneD, const Array<OneD, NekDouble> > &Bwd,
-                  Array<OneD,       Array<OneD, NekDouble> > &flux);
+protected:
+    UpwindPulseSolver();
 
-        void RiemannSolverUpwind(NekDouble AL,NekDouble uL,
-                                 NekDouble AR,NekDouble uR,
-                                 NekDouble &Aflux, NekDouble &uflux,
-                                 NekDouble A_0, NekDouble beta,
-                                 NekDouble n);
-    };
+    virtual void v_Solve(const int nDim,
+                         const Array<OneD, const Array<OneD, NekDouble>> &Fwd,
+                         const Array<OneD, const Array<OneD, NekDouble>> &Bwd,
+                         Array<OneD, Array<OneD, NekDouble>> &flux);
+
+    void RiemannSolverUpwind(NekDouble AL, NekDouble uL, NekDouble AR,
+                             NekDouble uR, NekDouble &Aflux, NekDouble &uflux,
+                             NekDouble A_0, NekDouble beta, NekDouble n);
+};
 }
 
 #endif

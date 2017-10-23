@@ -57,7 +57,8 @@ string APE::className = GetEquationSystemFactory().RegisterCreatorFunction(
 
 APE::APE(
         const LibUtilities::SessionReaderSharedPtr& pSession)
-    : UnsteadySystem(pSession)
+    : UnsteadySystem(pSession),
+      AdvectionSystem(pSession)
 {
 }
 
@@ -67,7 +68,7 @@ APE::APE(
  */
 void APE::v_InitObject()
 {
-    UnsteadySystem::v_InitObject();
+    AdvectionSystem::v_InitObject();
 
     // TODO: We have a bug somewhere in the 1D boundary conditions. Therefore 1D
     // problems are currently disabled. This should get fixed in the future.
@@ -292,7 +293,7 @@ bool APE::v_PreIntegrate(int step)
         m_bfField->BwdTrans(tmpC, m_bf[i]);
     }
 
-    return UnsteadySystem::v_PreIntegrate(step);
+    return AdvectionSystem::v_PreIntegrate(step);
 }
 
 /**

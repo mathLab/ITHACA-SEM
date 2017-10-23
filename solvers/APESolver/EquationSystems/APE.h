@@ -38,6 +38,7 @@
 #define NEKTAR_SOLVERS_APESOLVER_EQUATIONSYSTEMS_APE_H
 
 #include <SolverUtils/UnsteadySystem.h>
+#include <SolverUtils/AdvectionSystem.h>
 #include <SolverUtils/Advection/Advection.h>
 #include <SolverUtils/Forcing/Forcing.h>
 #include <SolverUtils/RiemannSolvers/RiemannSolver.h>
@@ -47,7 +48,7 @@ using namespace Nektar::SolverUtils;
 namespace Nektar
 {     
 
-class APE : public UnsteadySystem
+class APE : public AdvectionSystem
 {
     public:
 

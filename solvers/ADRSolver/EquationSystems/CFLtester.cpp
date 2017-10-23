@@ -54,7 +54,7 @@ namespace Nektar
 
     void CFLtester::v_InitObject()
     {
-        UnsteadySystem::v_InitObject();
+        AdvectionSystem::v_InitObject();
 
         m_velocity = Array<OneD, Array<OneD, NekDouble> >(m_spacedim);
         std::vector<std::string> vel;
@@ -242,7 +242,7 @@ namespace Nektar
 
     void CFLtester::v_GenerateSummary(SummaryList& s)
     {
-        UnsteadySystem::v_GenerateSummary(s);
+        AdvectionSystem::v_GenerateSummary(s);
     }
 	
     

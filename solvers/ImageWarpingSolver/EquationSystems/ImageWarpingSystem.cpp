@@ -55,7 +55,7 @@ namespace Nektar
 
     void ImageWarpingSystem::v_InitObject()
     {
-        UnsteadySystem::v_InitObject();
+        AdvectionSystem::v_InitObject();
 
         // Define Velocity fields
         m_velocity = Array<OneD, Array<OneD, NekDouble> >(m_spacedim);
@@ -277,6 +277,6 @@ namespace Nektar
 
     void ImageWarpingSystem::v_GenerateSummary(SolverUtils::SummaryList& s)
     {
-        UnsteadySystem::v_GenerateSummary(s);
+        AdvectionSystem::v_GenerateSummary(s);
     }
 }

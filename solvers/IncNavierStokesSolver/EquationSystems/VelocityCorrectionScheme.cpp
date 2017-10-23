@@ -200,7 +200,7 @@ namespace Nektar
      */
     void VelocityCorrectionScheme::v_GenerateSummary(SolverUtils::SummaryList& s)
     {
-        UnsteadySystem::v_GenerateSummary(s);
+        AdvectionSystem::v_GenerateSummary(s);
         SolverUtils::AddSummaryItem(s,
                 "Splitting Scheme", "Velocity correction (strong press. form)");
 
@@ -242,8 +242,7 @@ namespace Nektar
      */
     void VelocityCorrectionScheme::v_DoInitialise(void)
     {
-
-        UnsteadySystem::v_DoInitialise();
+        AdvectionSystem::v_DoInitialise();
 
         // Set up Field Meta Data for output files
         m_fieldMetaDataMap["Kinvis"]   =

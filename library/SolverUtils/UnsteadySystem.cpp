@@ -41,6 +41,8 @@
 #include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
 #include <SolverUtils/UnsteadySystem.h>
 
+#include <boost/format.hpp>
+
 using namespace std;
 
 namespace Nektar
@@ -689,12 +691,11 @@ namespace Nektar
                     std::string fName = m_session->GetSessionName() +
                         std::string(".res");
                     m_errFile.open(fName.c_str());
-                    m_errFile << "# "
-                              << setw(15) << left << "Time";
+                    m_errFile << setw(26) << left << "# Time";
 
                     for (int i = 0; i < m_fields.num_elements(); ++i)
                     {
-                        m_errFile << setw(22) << m_session->GetVariables()[i];
+                        m_errFile << setw(26) << m_session->GetVariables()[i];
                     }
 
                     m_errFile << endl;
@@ -740,17 +741,15 @@ namespace Nektar
                 L2[i] = sqrt(residual[i] / reference[i]);
             }
 
-            if (m_comm->GetRank() == 0 && (step % m_infosteps == 0))
+            if (m_comm->GetRank() == 0 && ((step+1) % m_infosteps == 0))
             {
                 // Output time
-                m_errFile << setprecision(8) << setw(17)
-                          << scientific << m_time;
+                m_errFile << boost::format("%25.19e") % m_time;
 
                 // Output residuals
                 for (int i = 0; i < nFields; ++i)
                 {
-                    m_errFile << setprecision(11) << setw(22) << scientific
-                              << L2[i];
+                    m_errFile << " " << boost::format("%25.19e") % L2[i];
                 }
 
                 m_errFile << endl;

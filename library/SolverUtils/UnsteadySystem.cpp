@@ -107,6 +107,23 @@ namespace Nektar
                 m_session->LoadParameter("IO_InfoSteps", m_infosteps, 0);
                 m_session->LoadParameter("CFL", m_cflSafetyFactor, 0.0);
 
+                // Ensure that there is no conflict of parameters
+                if(m_cflSafetyFactor > 0.0)
+                {
+                    // Check final condition
+                    ASSERTL0(m_fintime == 0.0 || m_steps == 0,
+                             "Final condition not unique: "
+                             "fintime > 0.0 and Nsteps > 0");
+                    // Check timestep condition
+                    ASSERTL0(m_timestep == 0.0,
+                             "Timestep not unique: timestep > 0.0 & CFL > 0.0");
+                }
+                else
+                {
+                    ASSERTL0(m_timestep != 0.0,
+                             "Need to set either TimeStep or CFL");
+                }
+
                 // Set up time to be dumped in field information
                 m_fieldMetaDataMap["Time"] =
                         boost::lexical_cast<std::string>(m_time);
@@ -228,30 +245,6 @@ namespace Nektar
             {
                 x->Initialise(m_fields, m_time);
             }
-
-            // Ensure that there is no conflict of parameters
-            if(m_cflSafetyFactor > 0.0)
-            {
-                // Check final condition
-                ASSERTL0(m_fintime == 0.0 || m_steps == 0,
-                         "Final condition not unique: "
-                         "fintime > 0.0 and Nsteps > 0");
-                // Check timestep condition
-                ASSERTL0(m_timestep == 0.0, 
-                         "Timestep not unique: timestep > 0.0 & CFL > 0.0");
-            }
-            else
-            {
-                ASSERTL0(m_timestep != 0.0,
-                         "Need to set either TimeStep or CFL");
-            }
-
-            // Check uniqueness of checkpoint output
-            ASSERTL0((m_checktime == 0.0 && m_checksteps == 0) ||
-                     (m_checktime >  0.0 && m_checksteps == 0) || 
-                     (m_checktime == 0.0 && m_checksteps >  0),
-                     "Only one of IO_CheckTime and IO_CheckSteps "
-                     "should be set!");
 
             LibUtilities::Timer     timer;
             bool      doCheckTime   = false;

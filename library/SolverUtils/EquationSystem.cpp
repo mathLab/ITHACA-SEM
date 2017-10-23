@@ -659,6 +659,13 @@ namespace Nektar
             m_session->LoadParameter("NumQuadPointsError",
                                      m_NumQuadPointsError, 0);
 
+            // Check uniqueness of checkpoint output
+            ASSERTL0((m_checktime == 0.0 && m_checksteps == 0) ||
+                     (m_checktime >  0.0 && m_checksteps == 0) ||
+                     (m_checktime == 0.0 && m_checksteps >  0),
+                     "Only one of IO_CheckTime and IO_CheckSteps "
+                     "should be set!");
+
             m_nchk = 0;
 
             // Zero all physical fields initially

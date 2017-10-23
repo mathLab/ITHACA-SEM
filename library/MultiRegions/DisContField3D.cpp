@@ -1582,9 +1582,9 @@ using namespace boost::assign;
                         int nFaceVerts = tmpVec[0].size();
                         StdRegions::Orientation o = nFaceVerts == 3 ? 
                             SpatialDomains::TriGeom::GetFaceOrientation(
-                                  tmpVec[i], tmpVec[1], rotbnd, dir, angle, tol):
+                                  tmpVec[0], tmpVec[1], rotbnd, dir, angle, tol):
                             SpatialDomains::QuadGeom::GetFaceOrientation(
-                                   tmpVec[i], tmpVec[1], rotbnd, dir, angle, tol);
+                                   tmpVec[0], tmpVec[1], rotbnd, dir, angle, tol);
                             
                         // Use vmap to determine which vertex of the other face
                         // should be periodic with this one.

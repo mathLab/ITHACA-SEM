@@ -41,9 +41,9 @@
 
 #include <iomanip>
 
-#include <NekMeshUtils/CADSystem/CADSystem.h>
 #include <NekMeshUtils/CADSystem/CADCurve.h>
 #include <NekMeshUtils/CADSystem/CADSurf.h>
+#include <NekMeshUtils/CADSystem/CADSystem.h>
 #include <SpatialDomains/PointGeom.h>
 
 namespace Nektar
@@ -350,9 +350,9 @@ public:
     NekDouble m_z;
 
     /// list of cadcurves the node lies on
-    std::map<int, std::pair<CADCurveSharedPtr, NekDouble> > CADCurveList;
+    std::map<int, std::pair<CADCurveSharedPtr, NekDouble>> CADCurveList;
     /// list of cadsurfs the node lies on
-    std::map<int, std::pair<CADSurfSharedPtr, Array<OneD, NekDouble> > >
+    std::map<int, std::pair<CADSurfSharedPtr, Array<OneD, NekDouble>>>
         CADSurfList;
 
 private:

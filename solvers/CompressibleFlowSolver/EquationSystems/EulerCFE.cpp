@@ -53,7 +53,8 @@ namespace Nektar
 
     EulerCFE::EulerCFE(
         const LibUtilities::SessionReaderSharedPtr& pSession)
-    : CompressibleFlowSystem(pSession)
+    : UnsteadySystem(pSession),
+      CompressibleFlowSystem(pSession)
     {
     }
 

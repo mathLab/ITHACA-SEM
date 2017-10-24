@@ -71,6 +71,7 @@ v4.4.1
 - Fix available classes being listed multiple times (!817)
 - Fix Intel compiler warnings (!837)
 - Fix overwriting and backup of chk/fld files on slow file systes (!741)
+- Fix a few memory leaks in polylib (!863)
 
 **FieldConvert:**
 - Fix issue with field ordering in the interppointdatatofld module (!754)

@@ -117,7 +117,6 @@ public:
      */
     std::string GetName()
     {
-        WARNINGL1(m_name.size() > 0, "CAD object does not have a name");
         return m_name;
     }
 

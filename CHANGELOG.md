@@ -57,6 +57,10 @@ v5.0.0
 
 **CompressibleFlowSolver**
 - Add 3D regression tests (!567)
+- Introduce forcing for quasi-1D Euler simulations (!771)
+- Allow performing axi-symmetric Euler simulations (!771)
+- Add ability to use an exponential filtering for stabilization with
+  seg, quad and hex elements (!771, !862)
 
 **Documentation**:
 - Added the developer-guide repository as a submodule (!751)

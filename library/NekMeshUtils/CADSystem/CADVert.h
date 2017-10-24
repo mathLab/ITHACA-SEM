@@ -107,6 +107,9 @@ public:
         }
     }
 
+    /**
+     * @brief Calcuate the distance to a vertex from a point l(x,y,z)
+     */
     virtual NekDouble DistanceTo(Array<OneD, NekDouble> l) = 0;
 
     void AddAdjCurve(CADCurveSharedPtr c)
@@ -114,6 +117,9 @@ public:
         curves.push_back(c);
     }
 
+    /**
+     * @brief Get list of CAD curves which are bound by this vertex
+     */
     std::vector<CADCurveSharedPtr> GetAdjCurves()
     {
         return curves;

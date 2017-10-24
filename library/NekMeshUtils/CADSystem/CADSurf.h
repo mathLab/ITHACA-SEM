@@ -70,6 +70,9 @@ public:
     {
     }
 
+    /**
+     * @brief Static function which orientates the edge loop on a surface
+     */
     static void OrientateEdges(
         CADSurfSharedPtr surf, std::vector<CADSystem::EdgeLoopSharedPtr> &ein);
 
@@ -81,6 +84,9 @@ public:
         return m_edges;
     }
 
+    /**
+     * @brief Set the edge loop
+     */
     void SetEdges(std::vector<CADSystem::EdgeLoopSharedPtr> ein)
     {
         m_edges = ein;
@@ -134,6 +140,9 @@ public:
      */
     virtual NekDouble locuv(Array<OneD, NekDouble> p, Array<OneD, NekDouble> &uv) = 0;
 
+    /**
+     * @brief Returns the bounding box of the surface
+     */
     virtual Array<OneD, NekDouble> BoundingBox() = 0;
 
     /**
@@ -141,6 +150,9 @@ public:
      */
     virtual NekDouble Curvature(Array<OneD, NekDouble> uv) = 0;
 
+    /**
+     * @brief Is the surface defined by a planar surface (i.e not nurbs and is flat)
+     */
     virtual bool IsPlanar() = 0;
 
     /**
@@ -151,24 +163,12 @@ public:
         return m_orientation;
     }
 
-    void SetName(std::string i)
-    {
-        m_name = i;
-    }
-
-    std::string GetName()
-    {
-        return m_name;
-    }
-
 protected:
     /// List of bounding edges in loops with orientation.
     std::vector<CADSystem::EdgeLoopSharedPtr> m_edges;
 
     /// Function which tests the the value of uv used is within the surface
     virtual void Test(Array<OneD, NekDouble> uv) = 0;
-
-    std::string m_name;
 };
 
 typedef std::shared_ptr<CADSurf> CADSurfSharedPtr;

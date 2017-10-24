@@ -97,6 +97,9 @@ public:
      */
     virtual Array<OneD, NekDouble> D2(NekDouble t) = 0;
 
+    /**
+     * @brief Calculates the radius of curvature of the curve at point t
+     */
     virtual NekDouble Curvature(NekDouble t) = 0;
 
     /**
@@ -126,10 +129,11 @@ public:
     }
 
     /*
-     * @brief returns the ids of neigbouring surfaces
+     * @brief returns the ids of surfaces bound by this curve as well as their
+     *        Orientation with respect to the loop of curves
      */
     std::vector<std::pair<CADSurfSharedPtr, CADOrientation::Orientation> >
-    GetAdjSurf()
+        GetAdjSurf()
     {
         return m_adjSurfs;
     }
@@ -166,6 +170,10 @@ public:
     virtual NekDouble loct(Array<OneD, NekDouble> xyz,
                            NekDouble &t) = 0;
 
+    /**
+     * @brief Returns the orientation of the curve with respect to a given
+     * surface by id surf
+     */
     CADOrientation::Orientation GetOrienationWRT(int surf)
     {
         for (int i = 0; i < m_adjSurfs.size(); i++)
@@ -180,7 +188,16 @@ public:
         return CADOrientation::eUnknown;
     }
 
+    /**
+     * @brief Returns the normal to the curve which is orientate with respect
+     * to the surface surf
+     */
     virtual Array<OneD, NekDouble> NormalWRT(NekDouble t, int surf) = 0;
+
+    /**
+     * @brief Returns the normal to a curve, it will always point in the concave
+     * direction
+     */
     virtual Array<OneD, NekDouble> N(NekDouble t) = 0;
 
 protected:

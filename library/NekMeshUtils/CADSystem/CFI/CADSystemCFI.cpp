@@ -79,6 +79,10 @@ bool CADSystemCFI::LoadCAD()
         cout << "unknown" << endl;
     }
 
+    cout << "Version " << cfiHandel.info.version << endl
+         << "fixno " << cfiHandel.info.fixno << endl
+         << "ubid " << cfiHandel.info.ubid << endl;
+
     model = cfiHandel.openModelFile(m_name.c_str());
 
     if( model->getEntityTotal(cfi::TYPE_BODY, cfi::SUBTYPE_ALL) != 1)

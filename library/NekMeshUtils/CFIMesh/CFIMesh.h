@@ -52,7 +52,7 @@ class CFIMesh : public ProcessModule
 {
 public:
     /// Creates an instance of this class
-    static boost::shared_ptr<Module> create(MeshSharedPtr m)
+    static std::shared_ptr<Module> create(MeshSharedPtr m)
     {
         return MemoryManager<CFIMesh>::AllocateSharedPtr(m);
     }
@@ -64,8 +64,6 @@ public:
     virtual void Process();
 
 private:
-    cfi::Entity *FigureOutCADParent(cfi::NodeDefinition node,
-                                            Array<OneD, NekDouble> xyz);
 
     CADSystemCFISharedPtr m_cad;
     cfi::Model *m_model;

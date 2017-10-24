@@ -64,7 +64,7 @@ public:
     bool LoadCAD();
 
     Array<OneD, NekDouble> GetBoundingBox();
-    
+
     TopoDS_Shape GetShape()
     {
         return shape;
@@ -86,7 +86,7 @@ private:
     TopTools_IndexedMapOfShape mapOfVerts, mapOfEdges, mapOfFaces;
 };
 
-typedef boost::shared_ptr<CADSystemOCE> CADSystemOCESharedPtr;
+typedef std::shared_ptr<CADSystemOCE> CADSystemOCESharedPtr;
 
 
 }

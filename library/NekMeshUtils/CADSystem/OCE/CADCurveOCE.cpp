@@ -78,31 +78,16 @@ NekDouble CADCurveOCE::Length(NekDouble ti, NekDouble tf)
     return System.Mass() / 1000.0;
 }
 
-NekDouble CADCurveOCE::loct(Array<OneD, NekDouble> xyz)
+NekDouble CADCurveOCE::loct(Array<OneD, NekDouble> xyz, NekDouble &t)
 {
-    NekDouble t = 0.0;
+    t = 0.0;
 
     gp_Pnt loc(xyz[0]*1000.0, xyz[1]*1000.0, xyz[2]*1000.0);
 
     ShapeAnalysis_Curve sac;
     gp_Pnt p;
     sac.Project(m_c,loc,1e-8 ,p,t);
-    
-    WARNINGL2(p.Distance(loc) < 1e-3, "large locuv distance " +
-        boost::lexical_cast<string>(p.Distance(loc)/1000.0));
 
-    return t;
-}
-
-NekDouble CADCurveOCE::DistanceTo(Array<OneD, NekDouble> xyz)
-{
-    NekDouble t = 0.0;
-    gp_Pnt loc(xyz[0]*1000.0, xyz[1]*1000.0, xyz[2]*1000.0);
-    
-    ShapeAnalysis_Curve sac;
-    gp_Pnt p;
-    sac.Project(m_c,loc,1e-8 ,p,t);
-    
     return p.Distance(loc)/1000.0;
 }
 
@@ -145,7 +130,8 @@ Array<OneD, NekDouble> CADCurveOCE::NormalWRT(NekDouble t, int surf)
     ASSERTL0(m_adjSurfs.size() == 1, "This will only work in 2D for one surface at the moment");
     surface = m_adjSurfs[0];
 
-    Array<OneD, NekDouble> uv = surface.first->locuv(p);
+    Array<OneD, NekDouble> uv;
+    surface.first->locuv(p, uv);
     Array<OneD, NekDouble> d1 = surface.first->D1(uv);
 
     NekDouble t1 = t - 1e-8;
@@ -156,8 +142,10 @@ Array<OneD, NekDouble> CADCurveOCE::NormalWRT(NekDouble t, int surf)
         swap(t1, t2);
     }
 
-    Array<OneD, NekDouble> uv1 = surface.first->locuv(P(t1));
-    Array<OneD, NekDouble> uv2 = surface.first->locuv(P(t2));
+    Array<OneD, NekDouble> uv1;
+    surface.first->locuv(P(t1), uv1);
+    Array<OneD, NekDouble> uv2;
+    surface.first->locuv(P(t2), uv2);
 
     NekDouble du = uv2[1] - uv1[1];
     NekDouble dv = -1.0*(uv2[0] - uv1[0]);

@@ -40,7 +40,7 @@ IF(NEKTAR_USE_MESHGEN)
         CADSystem/OCE/CADVertOCE.cpp
         CADSystem/OCE/CADCurveOCE.cpp
         CADSystem/OCE/CADSurfOCE.cpp
-#        2DGenerator/2DGenerator.cpp
+        2DGenerator/2DGenerator.cpp
     )
 ENDIF()
 

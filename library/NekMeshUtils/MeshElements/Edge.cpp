@@ -151,7 +151,8 @@ void Edge::MakeOrder(int order, SpatialDomains::GeometrySharedPtr geom,
                 loc[0]      = m_edgeNodes[i]->m_x;
                 loc[1]      = m_edgeNodes[i]->m_y;
                 loc[2]      = m_edgeNodes[i]->m_z;
-                NekDouble t = c->loct(loc);
+                NekDouble t;
+                c->loct(loc, t);
                 m_edgeNodes[i]->SetCADCurve(c, t);
                 loc                 = c->P(t);
                 m_edgeNodes[i]->m_x = loc[0];
@@ -163,7 +164,7 @@ void Edge::MakeOrder(int order, SpatialDomains::GeometrySharedPtr geom,
                 for (int j = 0; j < s.size(); j++)
                 {
                     Array<OneD, NekDouble> uv(2);
-                    s[j].first->ProjectTo(loc, uv);
+                    s[j].first->locuv(loc, uv);
                     m_edgeNodes[i]->SetCADSurf(s[j].first, uv);
                 }
             }
@@ -179,7 +180,7 @@ void Edge::MakeOrder(int order, SpatialDomains::GeometrySharedPtr geom,
                 loc[1] = m_edgeNodes[i]->m_y;
                 loc[2] = m_edgeNodes[i]->m_z;
                 Array<OneD, NekDouble> uv(2);
-                s->ProjectTo(loc, uv);
+                s->locuv(loc, uv);
                 loc                 = s->P(uv);
                 m_edgeNodes[i]->m_x = loc[0];
                 m_edgeNodes[i]->m_y = loc[1];

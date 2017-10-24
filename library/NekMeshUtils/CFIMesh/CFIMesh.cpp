@@ -56,8 +56,6 @@ CFIMesh::~CFIMesh()
 {
 }
 
-ofstream file;
-
 void CFIMesh::Process()
 {
     if (m_mesh->m_verbose)
@@ -68,7 +66,7 @@ void CFIMesh::Process()
     m_mesh->m_expDim   = 3;
     m_mesh->m_spaceDim = 3;
 
-    m_cad           = boost::dynamic_pointer_cast<CADSystemCFI>(m_mesh->m_cad);
+    m_cad           = std::dynamic_pointer_cast<CADSystemCFI>(m_mesh->m_cad);
     m_nameToCurveId = m_cad->GetCFICurveId();
     m_nameToFaceId  = m_cad->GetCFIFaceId();
     m_nameToVertId  = m_cad->GetCFIVertId();
@@ -78,48 +76,44 @@ void CFIMesh::Process()
     map<int, NodeSharedPtr> nodes;
     vector<cfi::NodeDefinition> *cfinodes = m_model->getFenodes();
 
-    cout << "Nodes " << cfinodes->size() << endl;
-
-    file.open("pts.3D");
-    file << "x y z value" << endl;
+    if (m_mesh->m_verbose)
+    {
+        cout << "Nodes " << cfinodes->size() << endl;
+    }
 
     // filter all mesh nodes into a indexed map and project to CAD
-    int k = 0;
-    for (vector<cfi::NodeDefinition>::iterator it = cfinodes->begin();
-         it != cfinodes->end(); it++, k++)
+    for (auto &it : *cfinodes)
     {
         Array<OneD, NekDouble> xyz(3);
-        cfi::Position ps = (*it).node->getXYZ();
+        cfi::Position ps = it.node->getXYZ();
         xyz[0]           = ps.x * scal;
         xyz[1]           = ps.y * scal;
         xyz[2]           = ps.z * scal;
-        int id           = (*it).node->number;
+        int id           = it.node->number;
 
         NodeSharedPtr n =
-            boost::shared_ptr<Node>(new Node(k, xyz[0], xyz[1], xyz[2]));
+            std::shared_ptr<Node>(new Node(id, xyz[0], xyz[1], xyz[2]));
         nodes.insert(pair<int, NodeSharedPtr>(id, n));
 
         // point built now add cad if needed
-
-        cfi::MeshableEntity *p = (*it).parent;
+        cfi::MeshableEntity *p = it.parent;
 
         if (p->type == cfi::TYPE_LINE)
         {
             auto f = m_nameToCurveId.find(p->getName());
-            if(f != m_nameToCurveId.end())
+            if (f != m_nameToCurveId.end())
             {
                 CADCurveSharedPtr c = m_mesh->m_cad->GetCurve(f->second);
-
-                NekDouble t = c->loct(xyz);
-
+                NekDouble t;
+                c->loct(xyz, t);
                 n->SetCADCurve(c, t);
 
-                vector<pair<CADSurfSharedPtr, CADOrientation::Orientation> >
-                    ss = c->GetAdjSurf();
+                vector<pair<CADSurfSharedPtr, CADOrientation::Orientation>> ss =
+                    c->GetAdjSurf();
                 for (int j = 0; j < ss.size(); j++)
                 {
                     Array<OneD, NekDouble> uv(2);
-                    uv = ss[j].first->locuv(xyz);
+                    ss[j].first->locuv(xyz, uv);
                     n->SetCADSurf(ss[j].first, uv);
                 }
             }
@@ -127,31 +121,33 @@ void CFIMesh::Process()
         else if (p->type == cfi::TYPE_FACE)
         {
             auto f = m_nameToFaceId.find(p->getName());
-            if(f != m_nameToFaceId.end())
+            if (f != m_nameToFaceId.end())
             {
                 CADSurfSharedPtr s = m_mesh->m_cad->GetSurf(f->second);
-
                 Array<OneD, NekDouble> uv(2);
-                uv = s->locuv(xyz);
-
+                s->locuv(xyz, uv);
                 n->SetCADSurf(s, uv);
             }
         }
         else if (p->type == cfi::TYPE_POINT)
         {
             auto f = m_nameToVertId.find(p->getName());
-            if(f != m_nameToVertId.end())
+            if (f != m_nameToVertId.end())
             {
-                CADVertSharedPtr v           = m_mesh->m_cad->GetVert(f->second);
+                CADVertSharedPtr v = m_mesh->m_cad->GetVert(f->second);
                 vector<CADCurveSharedPtr> cs = v->GetAdjCurves();
                 for (int i = 0; i < cs.size(); i++)
                 {
-                    n->SetCADCurve(cs[i], cs[i]->loct(xyz));
-                    vector<pair<CADSurfSharedPtr, CADOrientation::Orientation> >
+                    NekDouble t;
+                    cs[i]->loct(xyz, t);
+                    n->SetCADCurve(cs[i], t);
+                    vector<pair<CADSurfSharedPtr, CADOrientation::Orientation>>
                         ss = cs[i]->GetAdjSurf();
                     for (int j = 0; j < ss.size(); j++)
                     {
-                        n->SetCADSurf(ss[j].first, ss[j].first->locuv(xyz));
+                        Array<OneD, NekDouble> uv;
+                        ss[j].first->locuv(xyz, uv);
+                        n->SetCADSurf(ss[j].first, uv);
                     }
                 }
             }
@@ -159,40 +155,42 @@ void CFIMesh::Process()
     }
 
     ////
-    //Really important fact. Nodes must be renumbered as they are read by the elements
-    //such that vertical edges on the prism are sequential
-    //In doing so we ensure the orienation will work
-    //we dont want to renumber nodes that have already been numbered, hence the set
-    //the set will be tacked by the cfiID as that is a constant
+    // Really important fact. Nodes must be renumbered as they are read by the
+    // elements
+    // such that vertical edges on the prism are sequential
+    // In doing so we ensure the orienation will work
+    // we dont want to renumber nodes that have already been numbered, hence the
+    // set
+    // the set will be tacked by the cfiID as that is a constant
 
-    map<int, set<LibUtilities::ShapeType> > cfiIdToTypes;
+    map<int, set<LibUtilities::ShapeType>> cfiIdToTypes;
 
     vector<cfi::ElementDefinition> *prisms =
         m_model->getElements(cfi::SUBTYPE_PE6, 6);
-    for(auto &it : *prisms)
+    for (auto &it : *prisms)
     {
         vector<cfi::Node *> ns = it.nodes;
-        for(int i = 0; i < ns.size(); i++)
+        for (int i = 0; i < ns.size(); i++)
         {
             cfiIdToTypes[ns[i]->number].insert(LibUtilities::ePrism);
         }
     }
     vector<cfi::ElementDefinition> *hexs =
         m_model->getElements(cfi::SUBTYPE_HE8, 8);
-    for(auto &it : *hexs)
+    for (auto &it : *hexs)
     {
         vector<cfi::Node *> ns = it.nodes;
-        for(int i = 0; i < ns.size(); i++)
+        for (int i = 0; i < ns.size(); i++)
         {
             cfiIdToTypes[ns[i]->number].insert(LibUtilities::eHexahedron);
         }
     }
     vector<cfi::ElementDefinition> *tets =
         m_model->getElements(cfi::SUBTYPE_TE4, 4);
-    for(auto &it : *tets)
+    for (auto &it : *tets)
     {
         vector<cfi::Node *> ns = it.nodes;
-        for(int i = 0; i < ns.size(); i++)
+        for (int i = 0; i < ns.size(); i++)
         {
             cfiIdToTypes[ns[i]->number].insert(LibUtilities::eTetrahedron);
         }
@@ -202,35 +200,32 @@ void CFIMesh::Process()
 
     int id = 0;
 
-    for(int i = 1; i <= 3; i++)
+    for (int i = 1; i <= 3; i++)
     {
-        for(auto &it : cfiIdToTypes)
+        for (auto &it : cfiIdToTypes)
         {
-            if(it.second.size() == i)
+            if (it.second.size() == i)
             {
-                //NodeSharedPtr n  = nodes[it.first];
-                //file << n->m_x << " " << n->m_y << " " << n->m_z << " " << id << endl;
-
                 nodes[it.first]->m_id = id++;
             }
         }
     }
 
-
     ASSERTL0(id == nodes.size(), "not all nodes numbered");
-
 
     int prefix = m_mesh->m_cad->GetNumSurf() > 100 ? 1000 : 100;
 
-    vector<cfi::ElementDefinition>::iterator it;
+    if(m_mesh->m_verbose)
+    {
+        cout << "prisms " << prisms->size() << endl;
+    }
 
-    cout << "prisms " << prisms->size() << endl;
     int nm[6] = {3, 2, 5, 0, 1, 4};
-    for (it = prisms->begin(); it != prisms->end(); it++)
+    for (auto &it : * prisms)
     {
         vector<NodeSharedPtr> n(6);
 
-        vector<cfi::Node *> ns = (*it).nodes;
+        vector<cfi::Node *> ns = it.nodes;
 
         for (int j = 0; j < ns.size(); j++)
         {
@@ -242,16 +237,20 @@ void CFIMesh::Process()
         ElmtConfig conf(LibUtilities::ePrism, 1, false, false);
 
         ElementSharedPtr E = GetElementFactory().CreateInstance(
-                LibUtilities::ePrism, conf, n, tags);
+            LibUtilities::ePrism, conf, n, tags);
 
         m_mesh->m_element[3].push_back(E);
     }
 
-    cout << "tets " << tets->size() << endl;
-    for (it = tets->begin(); it != tets->end(); it++)
+    if(m_mesh->m_verbose)
+    {
+        cout << "tets " << tets->size() << endl;
+    }
+
+    for (auto &it : *tets)
     {
         vector<NodeSharedPtr> n;
-        vector<cfi::Node *> ns = (*it).nodes;
+        vector<cfi::Node *> ns = it.nodes;
 
         for (int j = 0; j < ns.size(); j++)
         {
@@ -267,11 +266,15 @@ void CFIMesh::Process()
         m_mesh->m_element[3].push_back(E);
     }
 
-    cout << "hexes " << hexs->size() << endl;
-    for (it = hexs->begin(); it != hexs->end(); it++)
+    if(m_mesh->m_verbose)
+    {
+        cout << "hexes " << hexs->size() << endl;
+    }
+
+    for (auto &it : *hexs)
     {
         vector<NodeSharedPtr> n;
-        vector<cfi::Node *> ns = (*it).nodes;
+        vector<cfi::Node *> ns = it.nodes;
 
         for (int j = 0; j < ns.size(); j++)
         {
@@ -295,16 +298,20 @@ void CFIMesh::Process()
 
     vector<cfi::ElementDefinition> *tris =
         m_model->getElements(cfi::SUBTYPE_TR3, 3);
-    cout << "tris " << tris->size() << endl;
-    for (it = tris->begin(); it != tris->end(); it++)
+    if(m_mesh->m_verbose)
     {
-        cfi::MeshableEntity *p = (*it).parent;
-        auto f = m_nameToFaceId.find(p->getName());
+        cout << "tris " << tris->size() << endl;
+    }
 
-        if(f != m_nameToFaceId.end())
+    for (auto &it : *tris)
+    {
+        cfi::MeshableEntity *p = it.parent;
+        auto f                 = m_nameToFaceId.find(p->getName());
+
+        if (f != m_nameToFaceId.end())
         {
             vector<NodeSharedPtr> n;
-            vector<cfi::Node *> ns = (*it).nodes;
+            vector<cfi::Node *> ns = it.nodes;
 
             for (int j = 0; j < ns.size(); j++)
             {
@@ -337,16 +344,20 @@ void CFIMesh::Process()
 
     vector<cfi::ElementDefinition> *quads =
         m_model->getElements(cfi::SUBTYPE_QU4, 4);
-    cout << "quads " << quads->size() << endl;
-    for (it = quads->begin(); it != quads->end(); it++)
+    if(m_mesh->m_verbose)
     {
-        cfi::MeshableEntity *p = (*it).parent;
-        auto f = m_nameToFaceId.find(p->getName());
+        cout << "quads " << quads->size() << endl;
+    }
 
-        if(f != m_nameToFaceId.end())
+    for (auto &it : *quads)
+    {
+        cfi::MeshableEntity *p = it.parent;
+        auto f                 = m_nameToFaceId.find(p->getName());
+
+        if (f != m_nameToFaceId.end())
         {
             vector<NodeSharedPtr> n;
-            vector<cfi::Node *> ns = (*it).nodes;
+            vector<cfi::Node *> ns = it.nodes;
 
             for (int j = 0; j < ns.size(); j++)
             {
@@ -355,7 +366,8 @@ void CFIMesh::Process()
 
             vector<int> tags;
             tags.push_back(f->second);
-            ElmtConfig conf(LibUtilities::eQuadrilateral, 1, false, false, false);
+            ElmtConfig conf(LibUtilities::eQuadrilateral, 1, false, false,
+                            false);
             ElementSharedPtr E = GetElementFactory().CreateInstance(
                 LibUtilities::eQuadrilateral, conf, n, tags);
 
@@ -399,24 +411,28 @@ void CFIMesh::Process()
 
     vector<cfi::ElementDefinition> *beams =
         m_model->getElements(cfi::SUBTYPE_BE2, 2);
-    cout << "beams " << beams->size() << endl;
-    int i = 0;
-    for (it = beams->begin(); it != beams->end(); it++, i++)
+    if(m_mesh->m_verbose)
     {
-        cfi::MeshableEntity *p = (*it).parent;
-        auto f = m_nameToCurveId.find(p->getName());
+        cout << "beams " << beams->size() << endl;
+    }
 
-        if(f != m_nameToCurveId.end())
+    for (auto &it : *beams)
+    {
+        cfi::MeshableEntity *p = it.parent;
+        auto f                 = m_nameToCurveId.find(p->getName());
+
+        if (f != m_nameToCurveId.end())
         {
             vector<NodeSharedPtr> n;
-            vector<cfi::Node *> ns = (*it).nodes;
+            vector<cfi::Node *> ns = it.nodes;
 
             for (int j = 0; j < ns.size(); j++)
             {
                 n.push_back(nodes[ns[j]->number]);
             }
 
-            // going to create a edge from the cfi element and find its counterpart
+            // going to create a edge from the cfi element and find its
+            // counterpart
             // in the m_mesh edgeset
 
             EdgeSharedPtr ec = EdgeSharedPtr(new Edge(n[0], n[1]));
@@ -432,7 +448,6 @@ void CFIMesh::Process()
             me->m_parentCAD = m_mesh->m_cad->GetCurve(f->second);
         }
     }
-
 }
 }
 }

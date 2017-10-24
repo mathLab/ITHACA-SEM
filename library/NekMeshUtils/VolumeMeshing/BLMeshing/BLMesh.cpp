@@ -170,7 +170,7 @@ map<NodeSharedPtr, NodeSharedPtr> BLMesh::GetSymNodes()
         CADSurfSharedPtr s = m_mesh->m_cad->GetSurf(bit->second->symsurf);
         Array<OneD, NekDouble> loc = bit->second->pNode->GetLoc();
         Array<OneD, NekDouble> uv(2);
-        uv = s->locuv(loc);
+        s->locuv(loc, uv);
         bit->second->pNode->SetCADSurf(s, uv);
         ret[bit->first] = bit->second->pNode;
     }
@@ -1076,7 +1076,7 @@ void BLMesh::Setup()
 
         Array<OneD, NekDouble> uv(2);
         Array<OneD, NekDouble> loc = bit->second->pNode->GetLoc();
-        m_mesh->m_cad->GetSurf(bit->second->symsurf)->ProjectTo(loc, uv);
+        m_mesh->m_cad->GetSurf(bit->second->symsurf)->locuv(loc, uv);
 
         Array<OneD, NekDouble> nl =
             m_mesh->m_cad->GetSurf(bit->second->symsurf)->P(uv);

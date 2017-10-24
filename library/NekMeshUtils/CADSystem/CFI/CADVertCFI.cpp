@@ -56,7 +56,7 @@ void CADVertCFI::Initialise(int i, cfi::Point* in, NekDouble s)
 
     cfi::Position pos = m_cfipoint->getGeometry();
 
-    m_node = boost::shared_ptr<Node>(
+    m_node = std::shared_ptr<Node>(
         new Node(i - 1, pos.x*m_scal, pos.y*m_scal, pos.z*m_scal));
     degen = false;
 }

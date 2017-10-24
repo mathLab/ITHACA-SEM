@@ -269,7 +269,7 @@ void Face::MakeOrder(int                                order,
             loc[1] = m_faceNodes[i]->m_y;
             loc[2] = m_faceNodes[i]->m_z;
             Array<OneD, NekDouble> uv(2);
-            s->ProjectTo(loc,uv);
+            s->locuv(loc,uv);
             loc = s->P(uv);
             m_faceNodes[i]->m_x = loc[0];
             m_faceNodes[i]->m_y = loc[1];

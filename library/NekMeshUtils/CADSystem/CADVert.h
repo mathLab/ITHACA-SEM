@@ -49,11 +49,11 @@ namespace NekMeshUtils
 
 //forward decleration
 class Node;
-typedef boost::shared_ptr<Node> NodeSharedPtr;
+typedef std::shared_ptr<Node> NodeSharedPtr;
 class CADSurf;
-typedef boost::shared_ptr<CADSurf> CADSurfSharedPtr;
+typedef std::shared_ptr<CADSurf> CADSurfSharedPtr;
 class CADCurve;
-typedef boost::shared_ptr<CADCurve> CADCurveSharedPtr;
+typedef std::shared_ptr<CADCurve> CADCurveSharedPtr;
 
 /**
  * @brief base class for CAD verticies.
@@ -106,10 +106,8 @@ public:
             return -1;
         }
     }
-    
-    virtual NekDouble DistanceTo(Array<OneD, NekDouble> l) = 0;
 
-    NekDouble DistanceTo(Array<OneD, NekDouble> xyz);
+    virtual NekDouble DistanceTo(Array<OneD, NekDouble> l) = 0;
 
     void AddAdjCurve(CADCurveSharedPtr c)
     {

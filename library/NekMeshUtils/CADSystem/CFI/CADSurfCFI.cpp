@@ -65,7 +65,7 @@ Array<OneD, NekDouble> CADSurfCFI::GetBounds()
     return b;
 }
 
-Array<OneD, NekDouble> CADSurfCFI::locuv(Array<OneD, NekDouble> p)
+NekDouble CADSurfCFI::locuv(Array<OneD, NekDouble> p, Array<OneD, NekDouble> &uv)
 {
     cfi::Position px;
     px.x = p[0] / m_scal;
@@ -74,36 +74,6 @@ Array<OneD, NekDouble> CADSurfCFI::locuv(Array<OneD, NekDouble> p)
 
     boost::optional<cfi::UVPosition> r = m_cfiSurface->calcUVFromXYZ(px);
 
-    Array<OneD, NekDouble> uv(2);
-    uv[0] = r.value().u;
-    uv[1] = r.value().v;
-
-    Array<OneD, NekDouble> p2 = P(uv);
-
-    NekDouble dist =
-        sqrt((p[0] - p2[0]) * (p[0] - p2[0]) + (p[1] - p2[1]) * (p[1] - p2[1]) +
-             (p[2] - p2[2]) * (p[2] - p2[2]));
-    return uv;
-}
-
-NekDouble CADSurfCFI::Curvature(Array<OneD, NekDouble> uv)
-{
-    cfi::UVPosition uvp(uv[0], uv[1]);
-    cfi::MaxMinCurvaturePair mxp = m_cfiSurface->calcCurvAtUV(uvp);
-
-    return mxp.maxCurv.curvature * m_scal;
-}
-
-NekDouble CADSurfCFI::DistanceTo(Array<OneD, NekDouble> p)
-{
-    cfi::Position px;
-    px.x = p[0] / m_scal;
-    px.y = p[1] / m_scal;
-    px.z = p[2] / m_scal;
-
-    boost::optional<cfi::UVPosition> r = m_cfiSurface->calcUVFromXYZ(px);
-
-    Array<OneD, NekDouble> uv(2);
     uv[0] = r.value().u;
     uv[1] = r.value().v;
 
@@ -116,18 +86,12 @@ NekDouble CADSurfCFI::DistanceTo(Array<OneD, NekDouble> p)
     return dist * m_scal;
 }
 
-void CADSurfCFI::ProjectTo(Array<OneD, NekDouble> &tp,
-                           Array<OneD, NekDouble> &uv)
+NekDouble CADSurfCFI::Curvature(Array<OneD, NekDouble> uv)
 {
-    cfi::Position px;
-    px.x = tp[0] / m_scal;
-    px.y = tp[1] / m_scal;
-    px.z = tp[2] / m_scal;
+    cfi::UVPosition uvp(uv[0], uv[1]);
+    cfi::MaxMinCurvaturePair mxp = m_cfiSurface->calcCurvAtUV(uvp);
 
-    boost::optional<cfi::UVPosition> r = m_cfiSurface->calcUVFromXYZ(px);
-
-    uv[0] = r.value().u;
-    uv[1] = r.value().v;
+    return mxp.maxCurv.curvature * m_scal;
 }
 
 Array<OneD, NekDouble> CADSurfCFI::P(Array<OneD, NekDouble> uv)

@@ -70,7 +70,8 @@ void CADSurf::OrientateEdges(CADSurfSharedPtr surf,
                 {
                     NekDouble t = bnds[0] + dt * k;
                     Array<OneD, NekDouble> l  = ein[i]->edges[j]->P(t);
-                    Array<OneD, NekDouble> uv = surf->locuv(l);
+                    Array<OneD, NekDouble> uv(2);
+                    surf->locuv(l, uv);
                     loop.push_back(uv);
                 }
             }
@@ -80,7 +81,8 @@ void CADSurf::OrientateEdges(CADSurfSharedPtr surf,
                 {
                     NekDouble t = bnds[0] + dt * k;
                     Array<OneD, NekDouble> l  = ein[i]->edges[j]->P(t);
-                    Array<OneD, NekDouble> uv = surf->locuv(l);
+                    Array<OneD, NekDouble> uv(2);
+                    surf->locuv(l, uv);
                     loop.push_back(uv);
                 }
             }

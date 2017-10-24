@@ -81,7 +81,7 @@ NekDouble CADCurveCFI::tAtArcLength(NekDouble s)
     return t - dt;
 }
 
-NekDouble CADCurveCFI::loct(Array<OneD, NekDouble> xyz)
+NekDouble CADCurveCFI::loct(Array<OneD, NekDouble> xyz, NekDouble &t)
 {
     cfi::Position p;
     p.x = xyz[0] / m_scal;
@@ -91,18 +91,7 @@ NekDouble CADCurveCFI::loct(Array<OneD, NekDouble> xyz)
     boost::optional<cfi::Projected<double> > pj =
         m_cfiEdge->calcTFromXYZ(p, -1);
 
-    return pj.value().parameters;
-}
-
-NekDouble CADCurveCFI::DistanceTo(Array<OneD, NekDouble> xyz)
-{
-    cfi::Position p;
-    p.x = xyz[0] / m_scal;
-    p.y = xyz[1] / m_scal;
-    p.z = xyz[2] / m_scal;
-
-    boost::optional<cfi::Projected<double> > pj =
-        m_cfiEdge->calcTFromXYZ(p, -1);
+    t = pj.value().parameters;
 
     return pj.value().distance * m_scal;
 }

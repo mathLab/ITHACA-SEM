@@ -74,13 +74,21 @@ public:
 
     Array<OneD, NekDouble> P(Array<OneD, NekDouble> uv);
 
-    Array<OneD, NekDouble> locuv(Array<OneD, NekDouble> p);
-
-    NekDouble DistanceTo(Array<OneD, NekDouble> p);
-
-    void ProjectTo(Array<OneD, NekDouble> &tp, Array<OneD, NekDouble> &uv);
+    NekDouble locuv(Array<OneD, NekDouble> p, Array<OneD, NekDouble> &uv);
 
     NekDouble Curvature(Array<OneD, NekDouble> uv);
+
+    Array<OneD, NekDouble> BoundingBox()
+    {
+        ASSERTL0(false, "Not implemented in CFI");
+        return Array<OneD, NekDouble>();
+    }
+
+    bool IsPlanar()
+    {
+        ASSERTL0(false, "Not implemented in CFI");
+        return false;
+    }
 
 private:
     /// Function which tests the the value of uv used is within the surface

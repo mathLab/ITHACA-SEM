@@ -67,6 +67,11 @@ public:
 
     void Initialise(int i, cfi::Point* in, NekDouble s);
 
+    NekDouble DistanceTo(Array<OneD, NekDouble> l)
+    {
+        ASSERTL0(false, "Not implemented in CFI");
+        return 0;
+    }
 
 private:
     /// cfi object

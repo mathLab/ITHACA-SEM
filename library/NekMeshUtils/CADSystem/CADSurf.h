@@ -127,34 +127,20 @@ public:
 
     /**
      * @brief Performs a reverse look up to find u,v and x,y,z.
+     * if xyz is off the surface it will return the closest point
      *
      * @param p Array of xyz location
      * @return The parametric location of xyz on this surface
      */
-    virtual Array<OneD, NekDouble> locuv(Array<OneD, NekDouble> p) = 0;
+    virtual NekDouble locuv(Array<OneD, NekDouble> p, Array<OneD, NekDouble> &uv) = 0;
 
-    /**
-     * @brief does unconstrained locuv to project point from anywhere
-     * and calculate the distance between the orthonormal projection to the
-     * surface
-     * and the point
-     */
-    virtual NekDouble DistanceTo(Array<OneD, NekDouble> p) = 0;
-
-    /**
-     * @brief takes a point from anywhere find the nearest surface point and its
-     * uv
-     */
-    virtual NekDouble ProjectTo(Array<OneD, NekDouble> &tp,
-                           Array<OneD, NekDouble> &uv) = 0;
-                           
     virtual Array<OneD, NekDouble> BoundingBox() = 0;
 
     /**
      * @brief returns curvature at point uv
      */
     virtual NekDouble Curvature(Array<OneD, NekDouble> uv) = 0;
-    
+
     virtual bool IsPlanar() = 0;
 
     /**
@@ -164,12 +150,12 @@ public:
     {
         return m_orientation;
     }
-    
+
     void SetName(std::string i)
     {
         m_name = i;
     }
-    
+
     std::string GetName()
     {
         return m_name;
@@ -181,7 +167,7 @@ protected:
 
     /// Function which tests the the value of uv used is within the surface
     virtual void Test(Array<OneD, NekDouble> uv) = 0;
-    
+
     std::string m_name;
 };
 

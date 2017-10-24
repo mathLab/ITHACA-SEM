@@ -271,7 +271,8 @@ void HOSurfaceMesh::Process()
                     nn->SetCADCurve(c, ti[k]);
                     for(int m = 0; m < s.size(); m++)
                     {
-                        Array<OneD, NekDouble> uv = s[m].first->locuv(loc);
+                        Array<OneD, NekDouble> uv;
+                        s[m].first->locuv(loc, uv);
                         nn->SetCADSurf(s[m].first, uv);
                     }
 
@@ -447,7 +448,7 @@ void HOSurfaceMesh::Process()
                 loc[2] = xmap->PhysEvaluate(xp, zc);
 
                 Array<OneD, NekDouble> uv(2);
-                s->ProjectTo(loc,uv);
+                s->locuv(loc,uv);
                 uvi.push_back(uv);
 
             }
@@ -484,7 +485,7 @@ void HOSurfaceMesh::Process()
                     loc[2] = xmap->PhysEvaluate(xp, zc);
 
                     Array<OneD, NekDouble> uv(2);
-                    s->ProjectTo(loc,uv);
+                    s->locuv(loc,uv);
                     uvi.push_back(uv);
 
                 }

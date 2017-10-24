@@ -160,11 +160,11 @@ public:
     }
 
     /*
-     * @brief locates a point in the parametric space
+     * @brief locates a point in the parametric space. returns the
+     * distance to the point and passes t by reference and updates it
      */
-    virtual NekDouble loct(Array<OneD, NekDouble> xyz) = 0;
-    
-    virtual NekDouble DistanceTo(Array<OneD, NekDouble> xyz) = 0;
+    virtual NekDouble loct(Array<OneD, NekDouble> xyz,
+                           NekDouble &t) = 0;
 
     CADOrientation::Orientation GetOrienationWRT(int surf)
     {
@@ -182,7 +182,6 @@ public:
 
     virtual Array<OneD, NekDouble> NormalWRT(NekDouble t, int surf) = 0;
     virtual Array<OneD, NekDouble> N(NekDouble t) = 0;
-    virtual NekDouble DistanceTo(Array<OneD, NekDouble> xyz) = 0;
 
 protected:
     /// Length of edge

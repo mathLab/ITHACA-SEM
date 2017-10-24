@@ -172,17 +172,6 @@ public:
     /**
      * @brief Gets a curve from the map.
      */
-    CADVertSharedPtr GetVert(int i)
-    {
-        std::map<int, CADVertSharedPtr>::iterator search = m_verts.find(i);
-        ASSERTL0(search != m_verts.end(), "vert does not exist");
-
-        return search->second;
-    }
-
-    /**
-     * @brief Gets a curve from the map.
-     */
     CADCurveSharedPtr GetCurve(int i)
     {
         auto search = m_curves.find(i);
@@ -201,7 +190,10 @@ public:
 
         return search->second;
     }
-    
+
+    /**
+     * @brief Gets a vert from the map.
+     */
     CADVertSharedPtr GetVert(int i)
     {
         auto search = m_verts.find(i);
@@ -225,9 +217,9 @@ public:
     {
         return m_verts.size();
     }
-    
+
     std::string GetSurfaceName(int i);
-    
+
     NEKMESHUTILS_EXPORT Array<OneD, NekDouble> GetPeriodicTranslationVector(
                 int first, int second);
 

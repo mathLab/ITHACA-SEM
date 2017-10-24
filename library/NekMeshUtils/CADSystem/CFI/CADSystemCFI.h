@@ -102,7 +102,7 @@ private:
     NekDouble m_scal;
 };
 
-typedef boost::shared_ptr<CADSystemCFI> CADSystemCFISharedPtr;
+typedef std::shared_ptr<CADSystemCFI> CADSystemCFISharedPtr;
 }
 }
 

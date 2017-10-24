@@ -70,10 +70,7 @@ public:
     virtual Array<OneD, NekDouble> D1   (Array<OneD, NekDouble> uv);
     virtual Array<OneD, NekDouble> D2   (Array<OneD, NekDouble> uv);
     virtual Array<OneD, NekDouble> P    (Array<OneD, NekDouble> uv);
-    virtual Array<OneD, NekDouble> locuv(Array<OneD, NekDouble> p);
-    virtual NekDouble DistanceTo(Array<OneD, NekDouble> p);
-    virtual NekDouble ProjectTo(Array<OneD, NekDouble> &tp,
-                           Array<OneD, NekDouble> &uv);
+    virtual NekDouble locuv(Array<OneD, NekDouble> p, Array<OneD, NekDouble> &uv);
     virtual NekDouble Curvature(Array<OneD, NekDouble> uv);
     virtual Array<OneD, NekDouble> BoundingBox();
     virtual bool IsPlanar();

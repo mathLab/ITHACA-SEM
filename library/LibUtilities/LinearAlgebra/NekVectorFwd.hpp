@@ -36,10 +36,7 @@
 #ifndef NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_NEK_VECTOR_FWD_HPP
 #define NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_NEK_VECTOR_FWD_HPP
 
-
-#include <LibUtilities/LinearAlgebra/Space.h>
-#include <boost/type_traits.hpp>
-
+#include <type_traits>
 
 namespace Nektar
 {
@@ -49,10 +46,10 @@ namespace Nektar
     
     
     template<typename T>
-    struct IsVector : public boost::false_type {};
+    struct IsVector : public std::false_type {};
     
     template<typename DataType>
-    struct IsVector<NekVector<DataType> > : public boost::true_type {}; 
+    struct IsVector<NekVector<DataType> > : public std::true_type {}; 
 }
 
 #endif //NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_NEK_VECTOR_FWD_HPP

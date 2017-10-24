@@ -105,6 +105,7 @@ Quadrilateral::Quadrilateral(ElmtConfig pConf,
         if (sum > 0.0)
         {
             reverse(m_edge.begin(), m_edge.end());
+            swap(m_vertex[1], m_vertex[3]);
         }
     }
 
@@ -195,7 +196,7 @@ void Quadrilateral::MakeOrder(int                                order,
                 x[k] = xmap->PhysEvaluate(xp, phys[k]);
             }
 
-            m_volumeNodes[cnt] = boost::shared_ptr<Node>(
+            m_volumeNodes[cnt] = std::shared_ptr<Node>(
                 new Node(id++, x[0], x[1], x[2]));
         }
     }

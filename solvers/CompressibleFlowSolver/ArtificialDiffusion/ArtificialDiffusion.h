@@ -51,7 +51,7 @@ namespace Nektar
 class ArtificialDiffusion;
 
 /// A shared pointer to a artificial diffusion object
-typedef boost::shared_ptr<ArtificialDiffusion> ArtificialDiffusionSharedPtr;
+typedef std::shared_ptr<ArtificialDiffusion> ArtificialDiffusionSharedPtr;
 
 /// Declaration of the artificial diffusion factory
 typedef LibUtilities::NekFactory<std::string, ArtificialDiffusion,
@@ -91,18 +91,9 @@ class ArtificialDiffusion
         /// LDG Diffusion operator
         SolverUtils::DiffusionSharedPtr             m_diffusion;
 
-        /// Parameters
-        NekDouble       m_FacL;
-        NekDouble       m_FacH;
-        NekDouble       m_hFactor;
-        NekDouble       m_C1;
-        NekDouble       m_C2;
-        NekDouble       m_mu0;
-        NekDouble       m_Skappa;
-        NekDouble       m_Kappa;
-
         /// Constructor
-        ArtificialDiffusion(const LibUtilities::SessionReaderSharedPtr& pSession,
+        ArtificialDiffusion(
+                const LibUtilities::SessionReaderSharedPtr& pSession,
                 const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields,
                 const int spacedim);
 

@@ -200,7 +200,7 @@ namespace Nektar
             }
         };
         
-        typedef boost::shared_ptr<DiffusionLFRNS> DiffusionLFRNSSharedPtr;
+        typedef std::shared_ptr<DiffusionLFRNS> DiffusionLFRNSSharedPtr;
     }
 }
 

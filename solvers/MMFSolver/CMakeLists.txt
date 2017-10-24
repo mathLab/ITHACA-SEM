@@ -3,13 +3,9 @@ CMAKE_DEPENDENT_OPTION(NEKTAR_SOLVER_MMF
     "NEKTAR_BUILD_SOLVERS" OFF)
 
 IF( NEKTAR_SOLVER_MMF )
-    SET(MMFSolverSource 
-       ./MMFSolver.cpp 
-       ./EquationSystems/MMFMaxwell.cpp)		
+    ADD_SOLVER_EXECUTABLE(MMFSolver SOURCES
+       ./MMFSolver.cpp
+       ./EquationSystems/MMFMaxwell.cpp)
 
-    ADD_SOLVER_EXECUTABLE(MMFSolver solvers 
-        ${MMFSolverSource})
-
-ADD_NEKTAR_TEST        (TestMaxwellSphere)
-
+    ADD_NEKTAR_TEST        (TestMaxwellSphere)
 ENDIF( NEKTAR_SOLVER_MMF )

@@ -2,7 +2,7 @@
 <test>
     <description> Process 3D tecplot output </description>
     <executable>FieldConvert</executable>
-    <parameters> -e chan3D.xml chan3D.fld chan3D.dat</parameters>
+    <parameters> -f -e chan3D.xml chan3D.fld chan3D.dat</parameters>
     <files>
         <file description="Session File">chan3D.xml</file>
 	<file description="Session File">chan3D.fld</file>

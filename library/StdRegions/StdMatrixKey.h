@@ -132,7 +132,7 @@ namespace Nektar
 
             inline NekDouble GetConstFactor(const ConstFactorType& factor) const
             {
-                ConstFactorMap::const_iterator x = m_factors.find(factor);
+                auto x = m_factors.find(factor);
                 ASSERTL1(x != m_factors.end(),
                         "Constant factor not defined: "
                         + std::string(StdRegions::ConstFactorTypeMap[factor]));
@@ -141,13 +141,7 @@ namespace Nektar
 
             inline  bool ConstFactorExists(const ConstFactorType& factor) const
             {
-                ConstFactorMap::const_iterator x = m_factors.find(factor);
-                if(x != m_factors.end())
-                {
-                    return true;
-                }
-                
-                return false;
+                return m_factors.find(factor) != m_factors.end();
             }
 
             inline const ConstFactorMap& GetConstFactors() const
@@ -162,7 +156,7 @@ namespace Nektar
 
             inline const Array<OneD, const NekDouble> &GetVarCoeff(const StdRegions::VarCoeffType & coeff) const
             {
-                VarCoeffMap::const_iterator x = m_varcoeffs.find(coeff);
+                auto x = m_varcoeffs.find(coeff);
                 ASSERTL1(x != m_varcoeffs.end(),
                         "Variable coefficient not defined: "
                         + std::string(StdRegions::VarCoeffTypeMap[coeff]));
@@ -205,7 +199,7 @@ namespace Nektar
 
         STD_REGIONS_EXPORT std::ostream& operator<<(std::ostream& os, const StdMatrixKey& rhs);
 
-        typedef  boost::shared_ptr<StdMatrixKey> StdMatrixKeySharedPtr;
+        typedef  std::shared_ptr<StdMatrixKey> StdMatrixKeySharedPtr;
 
     } // end of namespace
 } // end of namespace

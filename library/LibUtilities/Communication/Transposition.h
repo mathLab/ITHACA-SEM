@@ -163,7 +163,7 @@ private:
     Array<OneD, int> m_OffsetMap;
 };
 
-typedef boost::shared_ptr<Transposition> TranspositionSharedPtr;
+typedef std::shared_ptr<Transposition> TranspositionSharedPtr;
 }
 }
 #endif

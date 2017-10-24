@@ -75,7 +75,7 @@ MMFSystem::~MMFSystem()
 	int i;
 	for(i = 0; i < (int) SIZE_SurfaceType; ++i)
 	  {
-	    if(NoCaseStringCompare(SurfaceTypeMap[i],SurfaceTypeStr) == 0)
+	    if(boost::iequals(SurfaceTypeMap[i],SurfaceTypeStr))
 	      {
 		m_surfaceType = (SurfaceType)i;
 		break;

@@ -22,9 +22,34 @@ IF(NEKTAR_USE_MESHGEN)
     IF (THIRDPARTY_BUILD_OCE)
         INCLUDE(ExternalProject)
 
-        SET(OCC_LIBRARIES_TMP PTKernel TKernel TKMath TKBRep TKIGES TKSTEP TKSTEPAttr
-            TKSTEP209 TKSTEPBase TKShapeSchema TKGeomBase TKGeomAlgo TKG3d TKG2d
-            TKXSBase TKPShape TKTopAlgo TKShHealing)
+        SET(OCC_LIBRARIES_TMP 
+            TKFillet
+            TKMesh
+            TKernel
+            TKG2d
+            TKG3d
+            TKMath
+            TKIGES
+            TKSTL
+            TKShHealing
+            TKXSBase
+            TKBool
+            TKBO
+            TKBRep
+            TKTopAlgo
+            TKGeomAlgo
+            TKGeomBase
+            TKOffset
+            TKPrim
+            TKSTEP
+            TKSTEPBase
+            TKSTEPAttr
+            TKHLR
+            TKFeat
+            TKXCAF
+            TKXDESTEP
+        )
+        
         FOREACH(OCC_LIB ${OCC_LIBRARIES_TMP})
             LIST(APPEND OCC_LIBRARIES ${TPDIST}/lib/${CMAKE_SHARED_LIBRARY_PREFIX}${OCC_LIB}${CMAKE_SHARED_LIBRARY_SUFFIX})
         ENDFOREACH()
@@ -51,8 +76,6 @@ IF(NEKTAR_USE_MESHGEN)
                 -DOCE_INSTALL_PREFIX:PATH=${TPDIST}
                 -DOCE_TESTING=OFF
                 -DOCE_VISUALISATION=OFF
-                -DOCE_DISABLE_X11=ON
-                -DOCE_OCAF=OFF
                 ${TPSRC}/oce-0.17
             )
 
@@ -65,10 +88,10 @@ IF(NEKTAR_USE_MESHGEN)
 
         MESSAGE(STATUS "Build OpenCascade community edition: ${TPDIST}/lib")
         LINK_DIRECTORIES(${TPDIST}/lib)
-        INCLUDE_DIRECTORIES(SYSTEM ${TPDIST}/include/oce)
+        INCLUDE_DIRECTORIES(${TPDIST}/include/oce)
     ELSE()
         ADD_CUSTOM_TARGET(oce-0.17 ALL)
         SET(OPENCASCADE_CONFIG_INCLUDE_DIR ${OCC_INCLUDE_DIR})
-        INCLUDE_DIRECTORIES(SYSTEM ${OCC_INCLUDE_DIR})
+        INCLUDE_DIRECTORIES(${OCC_INCLUDE_DIR})
     ENDIF()
 ENDIF()

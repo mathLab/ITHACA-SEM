@@ -80,9 +80,8 @@ namespace Nektar
         /// Constructor for full direct matrix solve.
         GlobalLinSysDirectFull::GlobalLinSysDirectFull(
                     const GlobalLinSysKey &pLinSysKey,
-                    const boost::weak_ptr<ExpList> &pExp,
-                    const boost::shared_ptr<AssemblyMap>
-                                                            &pLocToGloMap)
+                    const std::weak_ptr<ExpList> &pExp,
+                    const std::shared_ptr<AssemblyMap> &pLocToGloMap)
             : GlobalLinSys(pLinSysKey, pExp, pLocToGloMap),
               GlobalLinSysDirect(pLinSysKey, pExp, pLocToGloMap)
         {
@@ -219,7 +218,7 @@ namespace Nektar
             int loc_lda;
             for(n = cnt = 0; n < m_expList.lock()->GetNumElmts(); ++n)
             {
-                loc_mat = GetBlock(m_expList.lock()->GetOffset_Elmt_Id(n));
+                loc_mat = GetBlock(n);
                 loc_lda = loc_mat->GetRows();
 
                 for(i = 0; i < loc_lda; ++i)

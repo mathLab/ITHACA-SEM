@@ -2,7 +2,7 @@
 <test>
     <description> Convert a field into a equi-spaced tecplot file</description>
     <executable>FieldConvert</executable>
-    <parameters>-m equispacedoutput -e chan3D.xml chan3D.fld equispacedoutput.dat</parameters>
+    <parameters> -f -m equispacedoutput -e chan3D.xml chan3D.fld equispacedoutput.dat</parameters>
     <files>
         <file description="Session File">chan3D.xml</file>
         <file description="Session File">chan3D.fld</file>

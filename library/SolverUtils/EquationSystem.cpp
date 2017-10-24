@@ -33,7 +33,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-
+#include <FieldUtils/Interpolator.h>
 #include <SolverUtils/EquationSystem.h>
 
 #include <LocalRegions/MatrixKey.h>
@@ -55,7 +55,6 @@
 #include <GlobalMapping/Mapping.h>
 
 #include <boost/format.hpp>
-# include <boost/function.hpp>
 
 #include <iostream>
 #include <string>
@@ -82,11 +81,8 @@ namespace Nektar
          */
         EquationSystemFactory& GetEquationSystemFactory()
         {
-            typedef Loki::SingletonHolder<EquationSystemFactory,
-                                          Loki::CreateUsingNew,
-                                          Loki::NoDestroy,
-                                          Loki::ClassLevelLockable> Type;
-            return Type::Instance();
+            static EquationSystemFactory instance;
+            return instance;
         }
 
         /**
@@ -679,313 +675,35 @@ namespace Nektar
                 DNekScalBlkMat, LocalRegions::MatrixKey::opLess>::ClearManager();
         }
 
-        /**
-         * Evaluates a physical function at each quadrature point in the domain.
-         *
-         * @param   pArray          The array into which to write the values.
-         * @param   pEqn            The equation to evaluate.
-         */
-        void EquationSystem::EvaluateFunction(
-            Array<OneD, Array<OneD, NekDouble> >& pArray,
-            std::string pFunctionName,
-            const NekDouble pTime,
-            const int domain)
+        SessionFunctionSharedPtr EquationSystem::GetFunction(
+            std::string name,
+            const MultiRegions::ExpListSharedPtr &field,
+            bool cache)
         {
-            ASSERTL0(m_session->DefinesFunction(pFunctionName),
-                     "Function '" + pFunctionName + "' does not exist.");
-
-            std::vector<std::string> vFieldNames = m_session->GetVariables();
-
-            for(int i = 0 ; i < vFieldNames.size(); i++)
+            MultiRegions::ExpListSharedPtr vField = field;
+            if (!field)
             {
-                EvaluateFunction(vFieldNames[i], pArray[i], pFunctionName,
-                                 pTime, domain);
-            }
-        }
-
-        /**
-         * Populates a forcing function for each of the dependent variables 
-         * using the expression provided by the BoundaryConditions object.
-         * @param   force           Array of fields to assign forcing.
-         */
-        void EquationSystem::EvaluateFunction(
-            std::vector<std::string> pFieldNames,
-            Array<OneD, Array<OneD, NekDouble> > &pFields,
-            const std::string& pFunctionName,
-            const NekDouble& pTime,
-            const int domain)
-        {
-            ASSERTL1(pFieldNames.size() == pFields.num_elements(),
-                     "Function '" + pFunctionName
-                     + "' variable list size mismatch with array storage.");
-            ASSERTL0(m_session->DefinesFunction(pFunctionName),
-                     "Function '" + pFunctionName + "' does not exist.");
-
-            for(int i = 0; i < pFieldNames.size(); i++)
-            {
-                EvaluateFunction(pFieldNames[i], pFields[i], pFunctionName, pTime, domain);
-            }
-        }
-
-        /**
-         * Populates a function for each of the dependent variables using
-         * the expression or filenames provided by the SessionReader object.
-         * @param   force           Array of fields to assign forcing.
-         */
-        void EquationSystem::EvaluateFunction(
-            std::vector<std::string> pFieldNames,
-            Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
-            const std::string& pFunctionName,
-            const NekDouble& pTime,
-            const int domain)
-        {
-            ASSERTL0(m_session->DefinesFunction(pFunctionName),
-                     "Function '" + pFunctionName + "' does not exist.");
-            ASSERTL0(pFieldNames.size() == pFields.num_elements(),
-                     "Field list / name list size mismatch.");
-
-            for(int i = 0; i < pFieldNames.size(); i++)
-            {
-                EvaluateFunction(pFieldNames[i], pFields[i]->UpdatePhys(),
-                                 pFunctionName, pTime, domain);
-                pFields[i]->FwdTrans_IterPerExp(pFields[i]->GetPhys(),
-                                                pFields[i]->UpdateCoeffs());
+                vField = m_fields[0];
             }
 
-        }
-
-
-        void EquationSystem::EvaluateFunction(
-            std::string pFieldName,
-            Array<OneD, NekDouble>& pArray,
-            const std::string& pFunctionName,
-            const NekDouble& pTime,
-            const int domain)
-        {
-            ASSERTL0(m_session->DefinesFunction(pFunctionName),
-                     "Function '" + pFunctionName + "' does not exist.");
-
-            unsigned int nq = m_fields[0]->GetNpoints();
-            if (pArray.num_elements() < nq)
+            if (cache)
             {
-                pArray = Array<OneD, NekDouble>(nq);
-            }
-
-            LibUtilities::FunctionType vType;
-            vType = m_session->GetFunctionType(pFunctionName, pFieldName,domain);
-            if (vType == LibUtilities::eFunctionTypeExpression)
-            {
-                Array<OneD,NekDouble> x0(nq);
-                Array<OneD,NekDouble> x1(nq);
-                Array<OneD,NekDouble> x2(nq);
-                
-                // Get the coordinates (assuming all fields have the same
-                // discretisation)
-                m_fields[0]->GetCoords(x0,x1,x2);
-                LibUtilities::EquationSharedPtr ffunc
-                    = m_session->GetFunction(pFunctionName, pFieldName,domain);
-
-                ffunc->Evaluate(x0,x1,x2,pTime,pArray);
-            }
-            else if (vType == LibUtilities::eFunctionTypeFile ||
-                     vType == LibUtilities::eFunctionTypeTransientFile)
-            {
-                // check if we already read this pFunctionName + pFieldName
-                // combination and stop processing if we are dealing with
-                // a non-timedependent file
-                std::string loadedKey = pFunctionName + pFieldName;
-                if (m_loadedFields.count(loadedKey) != 0 && vType == LibUtilities::eFunctionTypeFile)
+                if ((m_sessionFunctions.find(name) == m_sessionFunctions.end())
+                    || (m_sessionFunctions[name]->GetSession() != m_session)
+                    || (m_sessionFunctions[name]->GetExpansion() != vField)
+                )
                 {
-                    return;
-                }
-                m_loadedFields.insert(loadedKey);
-
-                std::string filename = m_session->GetFunctionFilename(
-                    pFunctionName, pFieldName, domain);
-                std::string fileVar = m_session->GetFunctionFilenameVariable(
-                    pFunctionName, pFieldName, domain);
-
-                if (fileVar.length() == 0)
-                {
-                    fileVar = pFieldName;
+                    m_sessionFunctions[name] =
+                        MemoryManager<SessionFunction>::AllocateSharedPtr(
+                            m_session, vField, name, cache);
                 }
 
-                std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef;
-                std::vector<std::vector<NekDouble> > FieldData;
-                Array<OneD, NekDouble> vCoeffs(m_fields[0]->GetNcoeffs());
-                Vmath::Zero(vCoeffs.num_elements(),vCoeffs,1);
-
-                int numexp = m_fields[0]->GetExpSize();
-                Array<OneD,int> ElementGIDs(numexp);
-
-                // Define list of global element ids
-                for(int i = 0; i < numexp; ++i)
-                {
-                    ElementGIDs[i] = m_fields[0]->GetExp(i)->GetGeom()->GetGlobalID();
-                }
-
-                //  In case of eFunctionTypeTransientFile, generate filename from
-                //  format string
-                if (vType == LibUtilities::eFunctionTypeTransientFile)
-                {
-                    try
-                    {
-#if (defined _WIN32 && _MSC_VER < 1900)
-                        // We need this to make sure boost::format has always
-                        // two digits in the exponents of Scientific notation.
-                        unsigned int old_exponent_format;
-                        old_exponent_format = _set_output_format(_TWO_DIGIT_EXPONENT);
-                        filename = boost::str(boost::format(filename) % m_time);
-                        _set_output_format(old_exponent_format);
-#else
-                        filename = boost::str(boost::format(filename) % m_time);
-#endif
-                    }
-                    catch (...)
-                    {
-                        ASSERTL0(false, "Invalid Filename in function \""
-                                + pFunctionName + "\", variable \"" + fileVar + "\"")
-                    }
-                }
-
-                if (boost::filesystem::path(filename).extension() !=  ".pts")
-                {
-                    LibUtilities::FieldIOSharedPtr pts_fld =
-                        LibUtilities::FieldIO::CreateForFile(m_session, filename);
-                    pts_fld->Import(filename, FieldDef, FieldData,
-                                    LibUtilities::NullFieldMetaDataMap,
-                                    ElementGIDs);
-
-                    int idx = -1;
-
-                    // Loop over all the expansions
-                    for (int i = 0; i < FieldDef.size(); ++i)
-                    {
-                        // Find the index of the required field in the
-                        // expansion segment
-                        for (int j = 0; j < FieldDef[i]->m_fields.size(); ++j)
-                        {
-                            if (FieldDef[i]->m_fields[j] == fileVar)
-                            {
-                                idx = j;
-                            }
-                        }
-
-                        if (idx >= 0)
-                        {
-                            m_fields[0]->ExtractDataToCoeffs(
-                                FieldDef[i], FieldData[i],
-                                FieldDef[i]->m_fields[idx], vCoeffs);
-                        }
-                        else
-                        {
-                            cout << "Field " + fileVar + " not found." << endl;
-                        }
-                    }
-
-                    m_fields[0]->BwdTrans_IterPerExp(vCoeffs, pArray);
-                }
-                else
-                {
-                    LibUtilities::PtsFieldSharedPtr ptsField;
-                    LibUtilities::PtsIO ptsIO(m_session->GetComm());
-                    ptsIO.Import(filename, ptsField);
-
-                    Array<OneD, Array<OneD, NekDouble> > pts(ptsField->GetDim() + ptsField->GetNFields());
-                    for (int i = 0; i < ptsField->GetDim() + ptsField->GetNFields(); ++i)
-                    {
-                        pts[i] = Array<OneD,  NekDouble>(nq);
-                    }
-                    if (ptsField->GetDim() == 1)
-                    {
-                        m_fields[0]->GetCoords(pts[0]);
-                    }
-                    else if (ptsField->GetDim() == 2)
-                    {
-                        m_fields[0]->GetCoords(pts[0], pts[1]);
-                    }
-                    else if (ptsField->GetDim() == 3)
-                    {
-                        m_fields[0]->GetCoords(pts[0], pts[1], pts[2]);
-                    }
-                    LibUtilities::PtsFieldSharedPtr outPts =
-                            MemoryManager<LibUtilities::PtsField>::
-                            AllocateSharedPtr(ptsField->GetDim(), ptsField->GetFieldNames(), pts);
-
-                    //  check if we already computed this funcKey combination
-                    std::string interpKey = m_session->GetFunctionFilename(pFunctionName, pFieldName, domain);
-                    map<std::string, FieldUtils::Interpolator >::iterator it
-                        = m_interpolators.find(interpKey);
-                    if (it == m_interpolators.end())
-                    {
-                        m_interpolators[interpKey] = FieldUtils::Interpolator(
-                                Nektar::FieldUtils::eShepard);
-                        if (m_comm->GetRank() == 0)
-                        {
-                            m_interpolators[interpKey].SetProgressCallback(
-                                    &EquationSystem::PrintProgressbar, this);
-                        }
-                        m_interpolators[interpKey].CalcWeights(ptsField, outPts);
-                        if (m_comm->GetRank() == 0)
-                        {
-                            cout << endl;
-                            if(GetSession()->DefinesCmdLineArgument("verbose"))
-                            {
-                                m_interpolators[interpKey].PrintStatistics();
-                            }
-                        }
-                    }
-                    m_interpolators[interpKey].Interpolate(ptsField, outPts);
-
-                    int fieldInd;
-                    vector<string> fieldNames = ptsField->GetFieldNames();
-                    for (fieldInd = 0; fieldInd < fieldNames.size(); ++fieldInd)
-                    {
-                        if (ptsField->GetFieldName(fieldInd) ==  pFieldName)
-                        {
-                            break;
-                        }
-                    }
-                    ASSERTL0(fieldInd != fieldNames.size(),  "field not found");
-
-                    pArray = pts[ptsField->GetDim() + fieldInd];
-                }
+                return m_sessionFunctions[name];
             }
-        }
-
-
-        /**
-         * @brief Provide a description of a function for a given field name.
-         *
-         * @param pFieldName     Field name.
-         * @param pFunctionName  Function name.
-         */
-        std::string EquationSystem::DescribeFunction(
-            std::string pFieldName,
-            const std::string &pFunctionName,
-            const int domain)
-        {
-            ASSERTL0(m_session->DefinesFunction(pFunctionName),
-                     "Function '" + pFunctionName + "' does not exist.");
-            
-            std::string retVal;
-            LibUtilities::FunctionType vType;
-            
-            vType = m_session->GetFunctionType(pFunctionName, pFieldName);
-            if (vType == LibUtilities::eFunctionTypeExpression)
+            else
             {
-                LibUtilities::EquationSharedPtr ffunc
-                    = m_session->GetFunction(pFunctionName, pFieldName,domain);
-                retVal = ffunc->GetExpression();
+                return SessionFunctionSharedPtr(new SessionFunction(m_session, vField, name, cache));
             }
-            else if (vType == LibUtilities::eFunctionTypeFile)
-            {
-                std::string filename
-                    = m_session->GetFunctionFilename(pFunctionName, pFieldName,domain);
-                retVal = "from file " + filename;
-            }
-            
-            return retVal;
         }
         
         /**
@@ -1035,8 +753,7 @@ namespace Nektar
                     Array<OneD, NekDouble>
                         exactsoln(m_fields[field]->GetNpoints());
 
-                    EvaluateFunction(m_session->GetVariable(field), exactsoln, 
-                                     "ExactSolution", m_time);
+                    GetFunction("ExactSolution")->Evaluate(m_session->GetVariable(field), exactsoln, m_time);
 
                     L2error = m_fields[field]->L2(m_fields[field]->GetPhys(), exactsoln);
                 }
@@ -1094,8 +811,7 @@ namespace Nektar
                     Array<OneD, NekDouble>
                         exactsoln(m_fields[field]->GetNpoints());
 
-                    EvaluateFunction(m_session->GetVariable(field), exactsoln,
-                                     "ExactSolution", m_time);
+                    GetFunction("ExactSolution")->Evaluate(m_session->GetVariable(field), exactsoln, m_time);
 
                     Linferror = m_fields[field]->Linf(m_fields[field]->GetPhys(), exactsoln);
                 }
@@ -1203,8 +919,7 @@ namespace Nektar
         
             if (m_session->DefinesFunction("InitialConditions"))
             {
-                EvaluateFunction(m_session->GetVariables(), m_fields, 
-                                 "InitialConditions", m_time, domain);
+                GetFunction("InitialConditions")->Evaluate(m_session->GetVariables(), m_fields, m_time, domain);
                 
                 if (m_session->GetComm()->GetRank() == 0)
                 {
@@ -1213,7 +928,7 @@ namespace Nektar
                     {
                         std::string varName = m_session->GetVariable(i);
                         cout << "  - Field " << varName << ": "
-                             << DescribeFunction(varName, "InitialConditions",domain)
+                             << GetFunction("InitialConditions")->Describe(varName, domain)
                              << endl;
                     }
                 }
@@ -1253,8 +968,7 @@ namespace Nektar
             Vmath::Zero(outfield.num_elements(), outfield, 1);
             if (m_session->DefinesFunction("ExactSolution"))
             {
-                EvaluateFunction(m_session->GetVariable(field), outfield, 
-                                 "ExactSolution", time);
+                GetFunction("ExactSolution")->Evaluate(m_session->GetVariable(field), outfield, time);
             }
         }
 
@@ -1278,7 +992,7 @@ namespace Nektar
             vel.push_back("Vz");
             vel.resize(m_spacedim);
             SetUpBaseFields(m_graph);
-            EvaluateFunction(vel, base, "BaseFlow");
+            GetFunction("BaseFlow")->Evaluate(vel, base);
         }    	    
     
         void EquationSystem::SetUpBaseFields(
@@ -2352,48 +2066,6 @@ namespace Nektar
                 AddSummaryItem(s, "Diffusion Type", GetDiffusionFactory().
                                GetClassDescription(DiffusionType));
             }
-        }
-
-        /**
-         * Performs a case-insensitive string comparison (from web).
-         * @param   s1      First string to compare.
-         * @param   s2      Second string to compare.
-         * @returns         0 if the strings match.
-         */
-        int EquationSystem::NoCaseStringCompare(
-            const string & s1,
-            const string& s2)
-        {
-            //if (s1.size() < s2.size()) return -1;
-            //if (s1.size() > s2.size()) return 1;
-
-            string::const_iterator it1=s1.begin();
-            string::const_iterator it2=s2.begin();
-
-            // Stop when either string's end has been reached
-            while ( (it1!=s1.end()) && (it2!=s2.end()) )
-            {
-                if(::toupper(*it1) != ::toupper(*it2)) //letters differ?
-                {
-                    // Return -1 to indicate smaller than, 1 otherwise
-                    return (::toupper(*it1)  < ::toupper(*it2)) ? -1 : 1;
-                }
-
-                // Proceed to the next character in each string
-                ++it1;
-                ++it2;
-            }
-
-            size_t size1=s1.size();
-            size_t size2=s2.size();// cache lengths
-
-            // Return -1, 0 or 1 according to strings' lengths
-            if (size1==size2)
-            {
-                return 0;
-            }
-
-            return (size1 < size2) ? -1 : 1;
         }
 
         Array<OneD, bool> EquationSystem::v_GetSystemSingularChecks()

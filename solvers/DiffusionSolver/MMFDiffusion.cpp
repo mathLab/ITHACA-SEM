@@ -102,7 +102,7 @@ namespace Nektar
 	  int i;
 	  for(i = 0; i < (int) SIZE_TestType; ++i)
             {
-	      if(NoCaseStringCompare(TestTypeMap[i],TestTypeStr) == 0)
+	      if(boost::iequals(TestTypeMap[i],TestTypeStr))
                 {
 		  m_TestType = (TestType)i;
 		  break;
@@ -119,7 +119,7 @@ namespace Nektar
             std::string InitWaveTypeStr = m_session->GetSolverInfo("INITWAVETYPE");
             for(int i = 0; i < (int) SIZE_TestType; ++i)
             {
-                if(NoCaseStringCompare(InitWaveTypeMap[i],InitWaveTypeStr) == 0)
+                if(boost::iequals(InitWaveTypeMap[i],InitWaveTypeStr))
                 {
                     m_InitWaveType = (InitWaveType)i;
                     break;

@@ -35,6 +35,7 @@
 
 #include <LibUtilities/BasicUtils/FieldIOXml.h>
 #include <LibUtilities/BasicUtils/CompressData.h>
+#include <LibUtilities/BasicUtils/ParseUtils.h>
 
 #include <boost/format.hpp>
 
@@ -91,7 +92,7 @@ void FieldIOXml::v_Write(const std::string &outFile,
                          const bool backup)
 {
     double tm0 = 0.0, tm1 = 0.0;
-    if (m_comm->GetRank() == 0)
+    if (m_comm->TreatAsRankZero())
     {
         tm0 = m_comm->Wtime();
     }
@@ -358,7 +359,7 @@ void FieldIOXml::v_Write(const std::string &outFile,
     m_comm->Block();
 
     // all data has been written
-    if (m_comm->GetRank() == 0)
+    if (m_comm->TreatAsRankZero())
     {
         tm1 = m_comm->Wtime();
         cout << " (" << tm1 - tm0 << "s, XML)" << endl;
@@ -479,7 +480,7 @@ void FieldIOXml::ImportMultiFldFileIDs(
         std::string elementIDsStr(elementIDs);
 
         std::vector<unsigned int> idvec;
-        ParseUtils::GenerateSeqVector(elementIDsStr.c_str(), idvec);
+        ParseUtils::GenerateSeqVector(elementIDsStr, idvec);
 
         elementList.push_back(idvec);
 
@@ -606,7 +607,7 @@ DataSourceSharedPtr FieldIOXml::v_ImportFieldMetaData(
     const std::string &filename, FieldMetaDataMap &fieldmetadatamap)
 {
     DataSourceSharedPtr doc    = XmlDataSource::create(filename);
-    XmlDataSourceSharedPtr xml = boost::static_pointer_cast<XmlDataSource>(doc);
+    XmlDataSourceSharedPtr xml = std::static_pointer_cast<XmlDataSource>(doc);
     TiXmlElement *metadata     = 0;
     TiXmlElement *master       = 0; // Master tag within which all data is
                                     // contained.
@@ -765,7 +766,7 @@ void FieldIOXml::ImportFieldDefs(
     bool expChild)
 {
     XmlDataSourceSharedPtr xml =
-        boost::static_pointer_cast<XmlDataSource>(dataSource);
+        std::static_pointer_cast<XmlDataSource>(dataSource);
     TiXmlElement *master =
         NULL; // Master tag within which all data is contained.
 
@@ -911,7 +912,7 @@ void FieldIOXml::ImportFieldDefs(
             std::vector<unsigned int> elementIds;
             {
                 bool valid =
-                    ParseUtils::GenerateSeqVector(idString.c_str(), elementIds);
+                    ParseUtils::GenerateSeqVector(idString, elementIds);
                 ASSERTL0(valid, "Unable to correctly parse the element ids.");
             }
 
@@ -936,8 +937,7 @@ void FieldIOXml::ImportFieldDefs(
             // Get the basis
             std::vector<std::string> basisStrings;
             std::vector<BasisType> basis;
-            valid = ParseUtils::GenerateOrderedStringVector(basisString.c_str(),
-                                                            basisStrings);
+            valid = ParseUtils::GenerateVector(basisString, basisStrings);
             ASSERTL0(valid, "Unable to correctly parse the basis types.");
             for (std::vector<std::string>::size_type i = 0;
                  i < basisStrings.size();
@@ -964,8 +964,8 @@ void FieldIOXml::ImportFieldDefs(
             std::vector<NekDouble> homoLengths;
             if (numHomoDir)
             {
-                valid = ParseUtils::GenerateUnOrderedVector(
-                    homoLengthsString.c_str(), homoLengths);
+                valid = ParseUtils::GenerateVector(homoLengthsString,
+                                                   homoLengths);
                 ASSERTL0(valid, "Unable to correctly parse the number of "
                                 "homogeneous lengths.");
             }
@@ -974,8 +974,7 @@ void FieldIOXml::ImportFieldDefs(
             std::vector<unsigned int> homoSIDs;
             if (strips)
             {
-                valid = ParseUtils::GenerateSeqVector(homoSIDsString.c_str(),
-                                                      homoSIDs);
+                valid = ParseUtils::GenerateVector(homoSIDsString, homoSIDs);
                 ASSERTL0(valid,
                          "Unable to correctly parse homogeneous strips IDs.");
             }
@@ -986,7 +985,7 @@ void FieldIOXml::ImportFieldDefs(
 
             if (numHomoDir == 1)
             {
-                valid = ParseUtils::GenerateSeqVector(homoZIDsString.c_str(),
+                valid = ParseUtils::GenerateSeqVector(homoZIDsString,
                                                       homoZIDs);
                 ASSERTL0(valid,
                          "Unable to correctly parse homogeneous planes IDs.");
@@ -994,11 +993,11 @@ void FieldIOXml::ImportFieldDefs(
 
             if (numHomoDir == 2)
             {
-                valid = ParseUtils::GenerateSeqVector(homoZIDsString.c_str(),
+                valid = ParseUtils::GenerateSeqVector(homoZIDsString,
                                                       homoZIDs);
                 ASSERTL0(valid, "Unable to correctly parse homogeneous lines "
                                 "IDs in z-direction.");
-                valid = ParseUtils::GenerateSeqVector(homoYIDsString.c_str(),
+                valid = ParseUtils::GenerateSeqVector(homoYIDsString,
                                                       homoYIDs);
                 ASSERTL0(valid, "Unable to correctly parse homogeneous lines "
                                 "IDs in y-direction.");
@@ -1010,8 +1009,7 @@ void FieldIOXml::ImportFieldDefs(
             if (pointDef)
             {
                 std::vector<std::string> pointsStrings;
-                valid = ParseUtils::GenerateOrderedStringVector(
-                    pointsString.c_str(), pointsStrings);
+                valid = ParseUtils::GenerateVector(pointsString, pointsStrings);
                 ASSERTL0(valid, "Unable to correctly parse the points types.");
                 for (std::vector<std::string>::size_type i = 0;
                      i < pointsStrings.size();
@@ -1045,24 +1043,22 @@ void FieldIOXml::ImportFieldDefs(
                 UniOrder = true;
             }
 
-            valid = ParseUtils::GenerateOrderedVector(
-                numModesString.c_str() + 9, numModes);
+            valid = ParseUtils::GenerateVector(
+                numModesString.substr(9), numModes);
             ASSERTL0(valid, "Unable to correctly parse the number of modes.");
 
             // Get numPoints
             std::vector<unsigned int> numPoints;
             if (numPointDef)
             {
-                valid = ParseUtils::GenerateOrderedVector(
-                    numPointsString.c_str(), numPoints);
+                valid = ParseUtils::GenerateVector(numPointsString, numPoints);
                 ASSERTL0(valid,
                          "Unable to correctly parse the number of points.");
             }
 
             // Get fields names
             std::vector<std::string> Fields;
-            valid = ParseUtils::GenerateOrderedStringVector(
-                fieldsString.c_str(), Fields);
+            valid = ParseUtils::GenerateVector(fieldsString, Fields);
             ASSERTL0(valid, "Unable to correctly parse the number of fields.");
 
             FieldDefinitionsSharedPtr fielddef =
@@ -1105,7 +1101,7 @@ void FieldIOXml::ImportFieldData(
 {
     int cntdumps = 0;
     XmlDataSourceSharedPtr xml =
-        boost::static_pointer_cast<XmlDataSource>(dataSource);
+        std::static_pointer_cast<XmlDataSource>(dataSource);
 
     TiXmlElement *master =
         NULL; // Master tag within which all data is contained.

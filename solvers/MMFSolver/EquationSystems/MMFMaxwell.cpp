@@ -137,7 +137,7 @@ namespace Nektar
 	  std::string TestMaxwellTypeStr = m_session->GetSolverInfo("TESTMAXWELLTYPE");
 	  for(int i = 0; i < (int) SolverUtils::SIZE_TestMaxwellType; ++i)
             {
-	      if(NoCaseStringCompare(SolverUtils::TestMaxwellTypeMap[i],TestMaxwellTypeStr) == 0)
+	      if(boost::iequals(SolverUtils::TestMaxwellTypeMap[i],TestMaxwellTypeStr))
                 {
 		  m_TestMaxwellType = (SolverUtils::TestMaxwellType)i;
 		  break;
@@ -156,7 +156,7 @@ namespace Nektar
             std::string PolTypeStr = m_session->GetSolverInfo("POLTYPE");
             for(int i = 0; i < (int) SolverUtils::SIZE_PolType; ++i)
             {
-	      if(NoCaseStringCompare(SolverUtils::PolTypeMap[i],PolTypeStr) == 0)
+	      if(boost::iequals(SolverUtils::PolTypeMap[i],PolTypeStr))
                 {
                     m_PolType = (SolverUtils::PolType)i;
                     break;
@@ -174,7 +174,7 @@ namespace Nektar
             std::string IncTypeStr = m_session->GetSolverInfo("INCTYPE");
             for(int i = 0; i < (int) SolverUtils::SIZE_IncType; ++i)
             {
-	      if(NoCaseStringCompare(SolverUtils::IncTypeMap[i],IncTypeStr) == 0)
+	      if(boost::iequals(SolverUtils::IncTypeMap[i],IncTypeStr))
                 {
                     m_IncType = (SolverUtils::IncType)i;
                     break;
@@ -192,7 +192,7 @@ namespace Nektar
             std::string CloakTypeStr = m_session->GetSolverInfo("CLOAKTYPE");
             for(int i = 0; i < (int) SIZE_CloakType; ++i)
             {
-	      if(NoCaseStringCompare(CloakTypeMap[i],CloakTypeStr) == 0)
+	      if(boost::iequals(CloakTypeMap[i],CloakTypeStr))
                 {
                     m_CloakType = (CloakType)i;
                     break;
@@ -210,7 +210,7 @@ namespace Nektar
             std::string SourceTypeStr = m_session->GetSolverInfo("SOURCETYPE");
             for(int i = 0; i < (int) SIZE_SourceType; ++i)
             {
-	      if(NoCaseStringCompare(SourceTypeMap[i],SourceTypeStr) == 0)
+	      if(boost::iequals(SourceTypeMap[i],SourceTypeStr))
                 {
                     m_SourceType = (SourceType)i;
                     break;
@@ -483,7 +483,7 @@ namespace Nektar
     Array<OneD, NekDouble> TimeSeries(Ntot);
     Array<OneD, NekDouble> Energy(Ntot);
     
-    Timer     timer;
+    LibUtilities::Timer     timer;
     bool      doCheckTime   = false;
     int       step          = 0;
     NekDouble intTime       = 0.0;

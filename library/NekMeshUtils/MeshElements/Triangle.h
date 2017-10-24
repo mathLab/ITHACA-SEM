@@ -56,7 +56,7 @@ public:
                                    std::vector<NodeSharedPtr> pNodeList,
                                    std::vector<int> pTagList)
     {
-        return boost::shared_ptr<Element>(
+        return std::shared_ptr<Element>(
             new Triangle(pConf, pNodeList, pTagList));
     }
     /// Element type
@@ -85,6 +85,7 @@ public:
         bool                               justConfig = false);
 
     NEKMESHUTILS_EXPORT static unsigned int GetNumNodes(ElmtConfig pConf);
+    NEKMESHUTILS_EXPORT Array<OneD, NekDouble> Normal(bool inward = false);
 };
 
 }

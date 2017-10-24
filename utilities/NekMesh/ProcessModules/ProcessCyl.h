@@ -47,7 +47,7 @@ class ProcessCyl : public ProcessCurvedEdges
 {
 public:
     /// Creates an instance of this class
-    static boost::shared_ptr<Module> create(NekMeshUtils::MeshSharedPtr m)
+    static std::shared_ptr<Module> create(NekMeshUtils::MeshSharedPtr m)
     {
         return MemoryManager<ProcessCyl>::AllocateSharedPtr(m);
     }

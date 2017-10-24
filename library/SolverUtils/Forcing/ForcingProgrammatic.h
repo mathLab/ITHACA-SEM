@@ -52,7 +52,7 @@ namespace SolverUtils
     class ForcingProgrammatic;
 
     /// A shared pointer to an EquationSystem object
-    SOLVER_UTILS_EXPORT typedef boost::shared_ptr<ForcingProgrammatic> ForcingProgrammaticSharedPtr;
+    SOLVER_UTILS_EXPORT typedef std::shared_ptr<ForcingProgrammatic> ForcingProgrammaticSharedPtr;
 
     class ForcingProgrammatic : public Forcing
     {

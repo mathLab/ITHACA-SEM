@@ -36,7 +36,7 @@
 #ifndef FIELDUTILS_PROCESSSURFDISTANCE
 #define FIELDUTILS_PROCESSSURFDISTANCE
 
-#include "../Module.h"
+#include "ProcessBoundaryExtract.h"
 
 namespace Nektar
 {
@@ -47,11 +47,11 @@ namespace FieldUtils
  * @brief This processing module calculates the height of an element connected
  * to a surface and adds it as an extra-field to the output file.
  */
-class ProcessSurfDistance : public ProcessModule
+class ProcessSurfDistance : public ProcessBoundaryExtract
 {
 public:
     /// Creates an instance of this class
-    static boost::shared_ptr<Module> create(FieldSharedPtr f)
+    static std::shared_ptr<Module> create(FieldSharedPtr f)
     {
         return MemoryManager<ProcessSurfDistance>::AllocateSharedPtr(f);
     }
@@ -67,6 +67,12 @@ public:
     {
         return "ProcessSurfDistance";
     }
+
+    virtual std::string GetModuleDescription()
+    {
+        return "Calculating distance to surface";
+    }
+
 };
 }
 }

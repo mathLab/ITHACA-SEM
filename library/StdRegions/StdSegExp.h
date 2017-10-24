@@ -45,7 +45,7 @@ namespace Nektar
     {
 
         class StdSegExp;
-        typedef boost::shared_ptr<StdSegExp> StdSegExpSharedPtr;
+        typedef std::shared_ptr<StdSegExp> StdSegExpSharedPtr;
 
         /// Class representing a segment element in reference space
 
@@ -163,6 +163,16 @@ namespace Nektar
                     const Array<OneD, const NekDouble> &inarray,
                     Array<OneD,NekDouble> &outarray,
                     const StdMatrixKey &mkey);
+
+            STD_REGIONS_EXPORT virtual void v_SVVLaplacianFilter(
+                    Array<OneD, NekDouble> &array,
+                    const StdMatrixKey &mkey);
+
+            STD_REGIONS_EXPORT virtual void v_ExponentialFilter(
+                          Array<OneD, NekDouble> &array,
+                    const NekDouble        alpha,
+                    const NekDouble        exponent,
+                    const NekDouble        cutoff);
 
             STD_REGIONS_EXPORT virtual void v_MultiplyByStdQuadratureMetric(
                     const Array<OneD, const NekDouble> &inarray,

@@ -49,10 +49,8 @@ FilterMovingAverage::FilterMovingAverage(
     const ParamMap &pParams)
     : FilterFieldConvert(pSession, pParams)
 {
-    ParamMap::const_iterator it;
-
     // Load filter parameter
-    it = pParams.find("alpha");
+    auto it = pParams.find("alpha");
     if (it == pParams.end())
     {
         it = pParams.find("tau");

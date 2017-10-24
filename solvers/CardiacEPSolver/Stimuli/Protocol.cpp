@@ -39,10 +39,8 @@ namespace Nektar
 {
     ProtocolFactory& GetProtocolFactory()
     {
-        typedef Loki::SingletonHolder<ProtocolFactory,
-        Loki::CreateUsingNew,
-        Loki::NoDestroy > Type;
-        return Type::Instance();
+        static ProtocolFactory instance;
+        return instance;
     }
 
     /**

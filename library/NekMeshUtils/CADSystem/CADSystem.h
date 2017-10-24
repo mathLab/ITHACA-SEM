@@ -36,12 +36,12 @@
 #ifndef NekMeshUtils_CADSYSTEM_CADSYSTEM
 #define NekMeshUtils_CADSYSTEM_CADSYSTEM
 
-#include <boost/shared_ptr.hpp>
-
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
+
+#include <NekMeshUtils/NekMeshUtilsDeclspec.h>
 
 #include "CADObject.h"
 
@@ -52,23 +52,13 @@ namespace NekMeshUtils
 
 //forward declorators
 class CADVert;
-typedef boost::shared_ptr<CADVert> CADVertSharedPtr;
+typedef std::shared_ptr<CADVert> CADVertSharedPtr;
 class CADCurve;
-typedef boost::shared_ptr<CADCurve> CADCurveSharedPtr;
+typedef std::shared_ptr<CADCurve> CADCurveSharedPtr;
 class CADSurf;
-typedef boost::shared_ptr<CADSurf> CADSurfSharedPtr;
+typedef std::shared_ptr<CADSurf> CADSurfSharedPtr;
 
-/**
- * @brief struct which descibes a collection of cad edges which are a
- *        loop on the cad surface
- */
-struct EdgeLoop
-{
-    std::vector<CADCurveSharedPtr> edges;
-    std::vector<int> edgeo; //0 is forward 1 is backward
-    Array<OneD, NekDouble> center;
-    NekDouble area;
-};
+
 
 /**
  * @brief Base class for CAD interface system.
@@ -82,6 +72,20 @@ public:
     friend class MemoryManager<CADSystem>;
 
     /**
+     * @brief struct which descibes a collection of cad edges which are a
+     *        loop on the cad surface
+     */
+    struct EdgeLoop
+    {
+        std::vector<CADCurveSharedPtr> edges;
+        std::vector<CADOrientation::Orientation> edgeo;
+        Array<OneD, NekDouble> center;
+        NekDouble area;
+    };
+
+    typedef std::shared_ptr<EdgeLoop> EdgeLoopSharedPtr;
+
+    /**
      * @brief Default constructor.
      */
     CADSystem(std::string name) : m_name(name)
@@ -89,7 +93,7 @@ public:
         m_2d = false;
     }
 
-    ~CADSystem()
+    virtual ~CADSystem()
     {
     }
 
@@ -164,8 +168,8 @@ public:
      */
     CADCurveSharedPtr GetCurve(int i)
     {
-        std::map<int, CADCurveSharedPtr>::iterator search = m_curves.find(i);
-        ASSERTL0(search != m_curves.end(), "curve does not exist");
+        auto search = m_curves.find(i);
+        ASSERTL1(search != m_curves.end(), "curve does not exist");
 
         return search->second;
     }
@@ -175,8 +179,16 @@ public:
      */
     CADSurfSharedPtr GetSurf(int i)
     {
-        std::map<int, CADSurfSharedPtr>::iterator search = m_surfs.find(i);
-        ASSERTL0(search != m_surfs.end(), "surface does not exist");
+        auto search = m_surfs.find(i);
+        ASSERTL1(search != m_surfs.end(), "surface does not exist");
+
+        return search->second;
+    }
+    
+    CADVertSharedPtr GetVert(int i)
+    {
+        auto search = m_verts.find(i);
+        ASSERTL1(search != m_verts.end(), "vert does not exist");
 
         return search->second;
     }
@@ -196,6 +208,11 @@ public:
     {
         return m_verts.size();
     }
+    
+    std::string GetSurfaceName(int i);
+    
+    NEKMESHUTILS_EXPORT Array<OneD, NekDouble> GetPeriodicTranslationVector(
+                int first, int second);
 
 protected:
     /// Name of cad file
@@ -211,7 +228,7 @@ protected:
     std::string m_naca;
 };
 
-typedef boost::shared_ptr<CADSystem> CADSystemSharedPtr;
+typedef std::shared_ptr<CADSystem> CADSystemSharedPtr;
 typedef LibUtilities::NekFactory<std::string, CADSystem, std::string>
     EngineFactory;
 

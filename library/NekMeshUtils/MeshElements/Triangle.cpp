@@ -105,6 +105,7 @@ Triangle::Triangle(ElmtConfig pConf,
     {
         if (sum > 0.0)
         {
+            swap(m_vertex[1], m_vertex[2]);
             reverse(m_edge.begin(), m_edge.end());
         }
     }
@@ -257,7 +258,7 @@ void Triangle::MakeOrder(int                                order,
             x[j] = xmap->PhysEvaluate(xp, phys[j]);
         }
 
-        m_volumeNodes[cnt] = boost::shared_ptr<Node>(
+        m_volumeNodes[cnt] = std::shared_ptr<Node>(
             new Node(id++, x[0], x[1], x[2]));
     }
 
@@ -265,5 +266,45 @@ void Triangle::MakeOrder(int                                order,
     m_conf.m_faceNodes   = true;
     m_conf.m_volumeNodes = false;
 }
+
+Array<OneD, NekDouble> Triangle::Normal(bool inward)
+{
+    Array<OneD, NekDouble> ret(3,0.0);
+
+    ret[0] = (m_vertex[1]->m_y - m_vertex[0]->m_y) * (m_vertex[2]->m_z - m_vertex[0]->m_z) -
+             (m_vertex[1]->m_z - m_vertex[0]->m_z) * (m_vertex[2]->m_y - m_vertex[0]->m_y);
+    ret[1] = (m_vertex[1]->m_z - m_vertex[0]->m_z) * (m_vertex[2]->m_x - m_vertex[0]->m_x) -
+             (m_vertex[1]->m_x - m_vertex[0]->m_x) * (m_vertex[2]->m_z - m_vertex[0]->m_z);
+    ret[2] = (m_vertex[1]->m_x - m_vertex[0]->m_x) * (m_vertex[2]->m_y - m_vertex[0]->m_y) -
+             (m_vertex[1]->m_y - m_vertex[0]->m_y) * (m_vertex[2]->m_x - m_vertex[0]->m_x);
+
+    NekDouble mt = ret[0] * ret[0] + ret[1] * ret[1] + ret[2] * ret[2];
+    mt           = sqrt(mt);
+
+    ret[0] /= mt;
+    ret[1] /= mt;
+    ret[2] /= mt;
+
+    if(m_parentCAD)
+    {
+        //has cad so can orientate based on that
+        if(m_parentCAD->Orientation() == CADOrientation::eBackwards)
+        {
+            ret[0] *= -1.0;
+            ret[1] *= -1.0;
+            ret[2] *= -1.0;
+        }
+
+        //by default normals point outwards so if we want inward for BLs
+        if(inward)
+        {
+            ret[0] *= -1.0;
+            ret[1] *= -1.0;
+            ret[2] *= -1.0;
+        }
+    }
+    return ret;
+}
+
 }
 }

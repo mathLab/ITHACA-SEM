@@ -1418,9 +1418,7 @@ namespace Nektar
                      "Not set up for non boundary-interior expansions");
             ASSERTL1(inoutmat->GetRows() == inoutmat->GetColumns(),
                      "Assuming that input matrix was square");
-            ASSERTL1(GetBasisType(0) == LibUtilities::eModified_A,
-                     "Method set up only for modified modal bases curretly");
-            
+
             int i,j;
             int id1,id2;
             Expansion2DSharedPtr faceExp = m_faceExp[face].lock();

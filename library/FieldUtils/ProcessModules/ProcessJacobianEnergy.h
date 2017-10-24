@@ -48,7 +48,7 @@ class ProcessJacobianEnergy : public ProcessModule
 {
 public:
     /// Creates an instance of this class
-    static boost::shared_ptr<Module> create(FieldSharedPtr f)
+    static std::shared_ptr<Module> create(FieldSharedPtr f)
     {
         return MemoryManager<ProcessJacobianEnergy>::AllocateSharedPtr(f);
     }
@@ -63,6 +63,16 @@ public:
     virtual std::string GetModuleName()
     {
         return "ProcessJacobianEnergy";
+    }
+
+    virtual std::string GetModuleDescription()
+    {
+        return "Processing Jacobian";
+    }
+
+    virtual ModulePriority GetModulePriority()
+    {
+        return eModifyExp;
     }
 
 private:

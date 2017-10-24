@@ -36,6 +36,7 @@
 #include "ElUtil.h"
 #include "ProcessVarOpti.h"
 
+#include <mutex>
 #include <LibUtilities/Foundations/ManagerAccess.h>
 
 using namespace std;
@@ -45,7 +46,7 @@ namespace Nektar
 namespace Utilities
 {
 
-boost::mutex mtx2;
+std::mutex mtx2;
 
 ElUtil::ElUtil(ElementSharedPtr e, DerivUtilSharedPtr d, ResidualSharedPtr r,
                int n, int o)

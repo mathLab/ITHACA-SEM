@@ -39,7 +39,6 @@
 #include <LocalRegions/Expansion.h>
 #include <LocalRegions/LocalRegionsDeclspec.h>
 #include <StdRegions/StdExpansion1D.h>
-#include <boost/weak_ptr.hpp>
 #include <SpatialDomains/Geometry1D.h>
 
 namespace Nektar
@@ -47,16 +46,13 @@ namespace Nektar
     namespace LocalRegions 
     {
         class Expansion2D;
-        typedef boost::shared_ptr<Expansion2D>  Expansion2DSharedPtr;
-        typedef boost::weak_ptr<Expansion2D>    Expansion2DWeakPtr;
+        typedef std::shared_ptr<Expansion2D>  Expansion2DSharedPtr;
+        typedef std::weak_ptr<Expansion2D>    Expansion2DWeakPtr;
         
         class Expansion1D;
-        typedef boost::shared_ptr<Expansion1D>  Expansion1DSharedPtr;
-        typedef boost::weak_ptr<Expansion1D>    Expansion1DWeakPtr;
+        typedef std::shared_ptr<Expansion1D>  Expansion1DSharedPtr;
+        typedef std::weak_ptr<Expansion1D>    Expansion1DWeakPtr;
         typedef std::vector< Expansion1DSharedPtr > Expansion1DVector;
-        typedef std::vector< Expansion1DSharedPtr >::iterator
-            Expansion1DVectorIter;
-
 
         class Expansion1D: virtual public Expansion,
             virtual public StdRegions::StdExpansion1D
@@ -98,6 +94,8 @@ namespace Nektar
                 inline SpatialDomains::Geometry1DSharedPtr GetGeom1D() const;
 
             protected:
+                std::map<int, bool>                     m_negatedNormals;
+
                 virtual DNekMatSharedPtr v_GenMatrix(
                     const StdRegions::StdMatrixKey      &mkey);
 
@@ -110,6 +108,10 @@ namespace Nektar
                     const int                            vert,
                     const Array<OneD, const NekDouble > &primCoeffs,
                           Array<OneD, NekDouble>        &coeffs);
+
+                virtual void v_NegateVertexNormal (const int vertex);
+
+                virtual bool v_VertexNormalNegated(const int vertex);
 			
             private:
                 Expansion2DWeakPtr m_elementLeft;
@@ -168,7 +170,7 @@ namespace Nektar
         inline SpatialDomains::Geometry1DSharedPtr Expansion1D
             ::GetGeom1D() const
         {
-            return boost::dynamic_pointer_cast<SpatialDomains
+            return std::dynamic_pointer_cast<SpatialDomains
                 ::Geometry1D>(m_geom);
         }
     } //end of namespace

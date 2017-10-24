@@ -36,8 +36,6 @@
 #ifndef NEKMESHUTILS_CADSYSTEM_CADOBJ
 #define NEKMESHUTILS_CADSYSTEM_CADOBJ
 
-#include <boost/shared_ptr.hpp>
-
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 
 namespace Nektar
@@ -55,6 +53,16 @@ enum cadType
 };
 }
 
+namespace CADOrientation
+{
+enum Orientation
+{
+    eUnknown,
+    eForwards,
+    eBackwards
+};
+}
+
 class CADObject
 {
 public:
@@ -67,7 +75,9 @@ public:
     {
     }
 
-    virtual ~CADObject(){}
+    virtual ~CADObject()
+    {
+    }
 
     /**
      * @brief Return ID of the vertex
@@ -82,14 +92,22 @@ public:
         return m_type;
     }
 
+    virtual CADOrientation::Orientation Orientation()
+    {
+        ASSERTL0(false,"must be implemented at the cad object level");
+        return CADOrientation::eUnknown;
+    }
+
 protected:
     /// ID of the vert.
     int m_id;
     /// type of the cad object
     CADType::cadType m_type;
+    /// orientation of the CADObject
+    CADOrientation::Orientation m_orientation;
 };
 
-typedef boost::shared_ptr<CADObject> CADObjectSharedPtr;
+typedef std::shared_ptr<CADObject> CADObjectSharedPtr;
 }
 }
 

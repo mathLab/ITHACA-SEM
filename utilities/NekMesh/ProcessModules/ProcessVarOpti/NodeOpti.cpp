@@ -58,12 +58,11 @@ NodeOptiFactory &GetNodeOptiFactory()
 void NodeOpti::CalcMinJac()
 {
     m_minJac = numeric_limits<double>::max();
-    map<LibUtilities::ShapeType, vector<ElUtilSharedPtr> >::iterator typeIt;
-    for (typeIt = m_data.begin(); typeIt != m_data.end(); typeIt++)
+    for (auto &typeIt : m_data)
     {
-        for (int i = 0; i < typeIt->second.size(); i++)
+        for (int i = 0; i < typeIt.second.size(); i++)
         {
-            m_minJac = min(m_minJac, typeIt->second[i]->GetMinJac());
+            m_minJac = min(m_minJac, typeIt.second[i]->GetMinJac());
         }
     }
 }

@@ -48,7 +48,7 @@ class OutputStdOut : public OutputModule
 {
 public:
     /// Creates an instance of this class
-    static boost::shared_ptr<Module> create(FieldSharedPtr f)
+    static std::shared_ptr<Module> create(FieldSharedPtr f)
     {
         return MemoryManager<OutputStdOut>::AllocateSharedPtr(f);
     }
@@ -64,6 +64,17 @@ public:
     {
         return "OutputStdOut";
     }
+
+    virtual std::string GetModuleDescription()
+    {
+        return "Output written to StdOut";
+    }
+
+    virtual ModulePriority GetModulePriority()
+    {
+        return eOutput;
+    }
+
 };
 }
 }

@@ -306,11 +306,8 @@ namespace Nektar
             TriExp();
         };
 
-        // type defines for use of TriExp in a boost vector
-        typedef boost::shared_ptr<TriExp> TriExpSharedPtr;
+        typedef std::shared_ptr<TriExp> TriExpSharedPtr;
         typedef std::vector< TriExpSharedPtr > TriExpVector;
-        typedef std::vector< TriExpSharedPtr >::iterator TriExpVectorIter;
-
     }
 }
 

@@ -126,7 +126,7 @@ void TetMesh::Mesh()
     tetgen->GetNewPoints(ctbefore, newp);
     for (int i = 0; i < newp.size(); i++)
     {
-        NodeSharedPtr n = boost::shared_ptr<Node>(
+        NodeSharedPtr n = std::shared_ptr<Node>(
             new Node(ctbefore + i, newp[i][0], newp[i][1], newp[i][2]));
         IdToNode[ctbefore + i] = n;
     }
@@ -145,7 +145,7 @@ void TetMesh::Mesh()
         n.push_back(IdToNode[m_tetconnect[i][3]]);
         ElmtConfig conf(LibUtilities::eTetrahedron, 1, false, false);
         vector<int> tags;
-        tags.push_back(m_mesh->m_cad->GetNumSurf() < 100 ? 100 : 1000);
+        tags.push_back(m_id);
         ElementSharedPtr E = GetElementFactory().CreateInstance(
             LibUtilities::eTetrahedron, conf, n, tags);
 

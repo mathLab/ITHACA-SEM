@@ -41,7 +41,6 @@ using namespace std;
 
 #include "ProcessAddCompositeID.h"
 
-#include <LibUtilities/BasicUtils/ParseUtils.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 
 namespace Nektar
@@ -66,26 +65,21 @@ ProcessAddCompositeID::~ProcessAddCompositeID()
 
 void ProcessAddCompositeID::Process(po::variables_map &vm)
 {
-    if (m_f->m_verbose)
+    int nfields           = m_f->m_variables.size();
+    m_f->m_variables.push_back("compositeID");
+    // Skip in case of empty partition
+    if (m_f->m_exp[0]->GetNumElmts() == 0)
     {
-        if (m_f->m_comm->GetRank() == 0)
-        {
-            cout << "ProcessAddCompositeID: Adding composite ID as a new field"
-                 << endl;
-        }
+        return;
     }
 
-    int nfields           = 0;
-    int NumHomogeneousDir = 0;
+    int NumHomogeneousDir = m_f->m_numHomogeneousDir;
     MultiRegions::ExpListSharedPtr exp;
 
-    if (m_f->m_fielddef.size())
+    if (nfields)
     {
-        nfields           = m_f->m_fielddef[0]->m_fields.size();
-        NumHomogeneousDir = m_f->m_fielddef[0]->m_numHomogeneousDir;
-
         m_f->m_exp.resize(nfields + 1);
-        exp = m_f->AppendExpList(NumHomogeneousDir, "Composite ID");
+        exp = m_f->AppendExpList(NumHomogeneousDir);
 
         m_f->m_exp[nfields] = exp;
     }
@@ -98,62 +92,37 @@ void ProcessAddCompositeID::Process(po::variables_map &vm)
     const SpatialDomains::CompositeMap CompositeMap =
         m_f->m_graph->GetComposites();
 
-    SpatialDomains::CompositeMapConstIter it;
-    NekDouble compid;
+    int compid = -1;
 
     // loop over elements
     for (int n = 0; n < exp->GetNumElmts(); ++n)
     {
         LocalRegions::ExpansionSharedPtr elmt = exp->GetExp(n);
 
-        // loop over composite list and search for geomtry pointer in list
-        for (it = CompositeMap.begin(); it != CompositeMap.end(); ++it)
+        // loop over composite list and search for geometry pointer in list
+        for (auto &it : CompositeMap)
         {
-            if (find(it->second->begin(), it->second->end(), elmt->GetGeom()) !=
-                it->second->end())
+            if (find(it.second->begin(), it.second->end(), elmt->GetGeom()) !=
+                it.second->end())
             {
-                compid = it->first;
+                compid = it.first;
                 break;
             }
         }
 
-        WARNINGL0(it != CompositeMap.end(),
+        WARNINGL0(compid != -1,
                   "Failed to find composite ID for element: " +
                       boost::lexical_cast<string>(n));
 
         // Fill element with the value of the index
         int npts = elmt->GetTotPoints();
         Array<OneD, NekDouble> tmp;
-        Vmath::Fill(npts, compid,
+        Vmath::Fill(npts, (NekDouble)compid,
                     tmp = exp->UpdatePhys() + exp->GetPhys_Offset(n), 1);
     }
 
     // forward transform
     exp->FwdTrans_IterPerExp(exp->GetPhys(), exp->UpdateCoeffs());
-
-    std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef =
-        m_f->m_exp[0]->GetFieldDefinitions();
-    std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
-
-    // copy in previous fields if they exist.
-    for (int i = 0; i < nfields; ++i)
-    {
-        for (int j = 0; j < FieldDef.size(); ++j)
-        {
-            FieldDef[j]->m_fields.push_back(m_f->m_fielddef[0]->m_fields[i]);
-            m_f->m_exp[i]->AppendFieldData(FieldDef[j], FieldData[j]);
-        }
-    }
-
-    // append composite id field
-    for (int j = 0; j < FieldDef.size(); ++j)
-    {
-        FieldDef[j]->m_fields.push_back("compositeID");
-        m_f->m_exp[nfields]->AppendFieldData(FieldDef[j], FieldData[j]);
-    }
-
-    m_f->m_fielddef = FieldDef;
-    m_f->m_data     = FieldData;
 }
 }
 }

@@ -145,12 +145,12 @@ namespace Nektar
             Array<OneD, NekDouble> eta = Array<OneD, NekDouble>(3);
             Array<OneD, DNekMatSharedPtr>  I(3);
 
-            WARNINGL2(coords[0] >= -1,"coord[0] < -1");
-            WARNINGL2(coords[0] <=  1,"coord[0] >  1");
-            WARNINGL2(coords[1] >= -1,"coord[1] < -1");
-            WARNINGL2(coords[1] <=  1,"coord[1] >  1");
-            WARNINGL2(coords[2] >= -1,"coord[2] < -1");
-            WARNINGL2(coords[2] <=  1,"coord[2] >  1");
+            WARNINGL2(coords[0] >= -1 - NekConstants::kNekZeroTol,"coord[0] < -1");
+            WARNINGL2(coords[0] <=  1 + NekConstants::kNekZeroTol,"coord[0] >  1");
+            WARNINGL2(coords[1] >= -1 - NekConstants::kNekZeroTol,"coord[1] < -1");
+            WARNINGL2(coords[1] <=  1 + NekConstants::kNekZeroTol,"coord[1] >  1");
+            WARNINGL2(coords[2] >= -1 - NekConstants::kNekZeroTol,"coord[2] < -1");
+            WARNINGL2(coords[2] <=  1 + NekConstants::kNekZeroTol,"coord[2] >  1");
 
             // Obtain local collapsed corodinate from 
             // cartesian coordinate. 
@@ -316,8 +316,7 @@ namespace Nektar
         
         const NormalVector & StdExpansion3D::v_GetFaceNormal(const int face) const
         {
-            std::map<int, NormalVector>::const_iterator x;
-            x = m_faceNormals.find(face);
+            auto x = m_faceNormals.find(face);
             ASSERTL0 (x != m_faceNormals.end(),
                       "face normal not computed.");
             return x->second;
@@ -422,6 +421,7 @@ namespace Nektar
                 }
                 case LibUtilities::eModified_B:
                 case LibUtilities::eModified_C:
+                case LibUtilities::eModifiedPyr_C:
                 {
                     switch (facedir)
                     {
@@ -484,6 +484,7 @@ namespace Nektar
                 case LibUtilities::eOrtho_A:
                 case LibUtilities::eOrtho_B:
                 case LibUtilities::eOrtho_C:
+                case LibUtilities::eOrthoPyr_C:
                 {
                     switch (facedir)
                     {

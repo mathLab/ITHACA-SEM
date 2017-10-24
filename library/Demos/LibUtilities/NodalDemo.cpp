@@ -227,11 +227,11 @@ int main(int argc, char *argv[])
             }
         }
 
-        char *vars[3] = { "u", "v", "w" };
+        string vars = "uvw";
 
         for (int i = 0; i < dim; ++i)
         {
-            boost::shared_ptr<NekMatrix<NekDouble> > deriv =
+            std::shared_ptr<NekMatrix<NekDouble> > deriv =
                 util->GetDerivMatrix(i);
             output = *deriv * input;
             NekVector<NekDouble> tmp = output - exact[i];
@@ -276,7 +276,7 @@ int main(int argc, char *argv[])
                 exp(r[i]) * exp(s[i]) * exp(t[i]);
         }
 
-        boost::shared_ptr<NekMatrix<NekDouble> > interp =
+        std::shared_ptr<NekMatrix<NekDouble> > interp =
             util->GetInterpolationMatrix(tmp);
 
         NekVector<NekDouble> output = *interp * input;

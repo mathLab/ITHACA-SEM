@@ -64,19 +64,28 @@ public:
     bool LoadCAD();
 
     Array<OneD, NekDouble> GetBoundingBox();
+    
+    TopoDS_Shape GetShape()
+    {
+        return shape;
+    }
 
 private:
     /// Function to add curve to CADSystem::m_verts.
     void AddVert(int i, TopoDS_Shape in);
     /// Function to add curve to CADSystem::m_curves.
-    void AddCurve(int i, TopoDS_Shape in, int fv, int lv);
+    void AddCurve(int i, TopoDS_Shape in);
     /// Function to add surface to CADSystem::m_surfs.
-    void AddSurf(int i, TopoDS_Shape in, std::vector<EdgeLoop> ein);
+    void AddSurf(int i, TopoDS_Shape in);
 
     TopoDS_Shape BuildNACA(std::string naca);
+    TopoDS_Shape BuildGeo(std::string geo);
     /// OCC master object
     TopoDS_Shape shape;
+    TopTools_IndexedMapOfShape mapOfVerts, mapOfEdges, mapOfFaces;
 };
+
+typedef boost::shared_ptr<CADSystemOCE> CADSystemOCESharedPtr;
 
 
 }

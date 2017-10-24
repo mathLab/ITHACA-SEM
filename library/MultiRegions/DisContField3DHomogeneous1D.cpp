@@ -56,8 +56,8 @@ namespace Nektar
             const LibUtilities::BasisKey               &HomoBasis,
             const NekDouble                             lhom,
             const bool                                  useFFT,
-            const bool                                  dealiasing)
-            : ExpList3DHomogeneous1D(pSession,HomoBasis,lhom,useFFT,dealiasing),
+            const bool                                  dealiasing):
+            ExpList3DHomogeneous1D(pSession,HomoBasis,lhom,useFFT,dealiasing),
               m_bndCondExpansions(),
               m_bndConditions()
         {
@@ -73,7 +73,7 @@ namespace Nektar
             if (DeclarePlanesSetCoeffPhys)
             {
                 DisContField2DSharedPtr zero_plane =
-                    boost::dynamic_pointer_cast<DisContField2D> (In.m_planes[0]);
+                    std::dynamic_pointer_cast<DisContField2D> (In.m_planes[0]);
 
                 for(int n = 0; n < m_planes.num_elements(); ++n)
                 {
@@ -93,9 +93,10 @@ namespace Nektar
             const bool                                  useFFT,
             const bool                                  dealiasing,
             const SpatialDomains::MeshGraphSharedPtr   &graph2D,
-            const std::string                          &variable)
-            : ExpList3DHomogeneous1D(pSession, HomoBasis, lhom, useFFT,
-                                     dealiasing),
+            const std::string                          &variable,
+            const Collections::ImplementationType       ImpType):
+            ExpList3DHomogeneous1D(pSession, HomoBasis, lhom, useFFT,
+                                   dealiasing),
               m_bndCondExpansions(),
               m_bndConditions()
         {
@@ -105,7 +106,8 @@ namespace Nektar
 
             // note that nzplanes can be larger than nzmodes
             m_planes[0] = plane_zero = MemoryManager<DisContField2D>::
-                AllocateSharedPtr(pSession, graph2D, variable, true, false);
+                AllocateSharedPtr(pSession, graph2D, variable, true, false,
+                                  ImpType);
 
             m_exp = MemoryManager<LocalRegions::ExpansionVector>
                 ::AllocateSharedPtr();
@@ -136,7 +138,8 @@ namespace Nektar
             }
 
             m_trace = MemoryManager<ExpList2DHomogeneous1D>::AllocateSharedPtr(
-                pSession, HomoBasis, lhom, useFFT, dealiasing, trace);
+                               pSession, HomoBasis, lhom, useFFT,
+                               dealiasing, trace);
 
             // Setup default optimisation information
             nel = GetExpSize();
@@ -176,14 +179,13 @@ namespace Nektar
                 bcs.GetBoundaryRegions();
             const SpatialDomains::BoundaryConditionCollection &bconditions =
                 bcs.GetBoundaryConditions();
-            SpatialDomains::BoundaryRegionCollection::const_iterator it;
 
             // count the number of non-periodic boundary regions
             int cnt = 0;
-            for (it = bregions.begin(); it != bregions.end(); ++it)
+            for (auto &it : bregions)
             {
                 SpatialDomains::BoundaryConditionShPtr boundaryCondition =
-                    GetBoundaryCondition(bconditions, it->first, variable);
+                    GetBoundaryCondition(bconditions, it.first, variable);
                 if (boundaryCondition->GetBoundaryConditionType()
                         != SpatialDomains::ePeriodic)
                 {
@@ -200,10 +202,10 @@ namespace Nektar
                 PlanesBndCondExp(nplanes);
 
             cnt = 0;
-            for (it = bregions.begin(); it != bregions.end(); ++it)
+            for (auto &it : bregions)
             {
                 SpatialDomains::BoundaryConditionShPtr boundaryCondition =
-                    GetBoundaryCondition(bconditions, it->first, variable);
+                    GetBoundaryCondition(bconditions, it.first, variable);
                 if(boundaryCondition->GetBoundaryConditionType() !=
                    SpatialDomains::ePeriodic)
                 {
@@ -249,9 +251,7 @@ namespace Nektar
             for (n = 0; n < m_bndCondExpansions.num_elements(); ++n)
             {
                 if (time == 0.0 ||
-                    m_bndConditions[n]->IsTimeDependent() ||
-	            boost::iequals(m_bndConditions[n]->GetUserDefined(),
-                                   "MovingBody"))
+                    m_bndConditions[n]->IsTimeDependent() )
                 {
                     m_bndCondExpansions[n]->HomogeneousFwdTrans(
                         m_bndCondExpansions[n]->GetCoeffs(),
@@ -321,7 +321,7 @@ namespace Nektar
             EvaluateBoundaryConditions(time, varName);
         }
 
-        boost::shared_ptr<ExpList> &DisContField3DHomogeneous1D::
+        std::shared_ptr<ExpList> &DisContField3DHomogeneous1D::
             v_UpdateBndCondExpansion(int i)
         {
             return UpdateBndCondExpansion(i);
@@ -381,7 +381,7 @@ namespace Nektar
         }
         
         void DisContField3DHomogeneous1D::v_GetBndElmtExpansion(int i,
-                            boost::shared_ptr<ExpList> &result,
+                            std::shared_ptr<ExpList> &result,
                             const bool DeclareCoeffPhysArrays)
         {
             int n, cnt, nq;
@@ -432,16 +432,15 @@ namespace Nektar
             result->SetWaveSpace(GetWaveSpace());
         }    
 
-        void DisContField3DHomogeneous1D::GetBCValues(
-                  Array<OneD, NekDouble> &BndVals,
-            const Array<OneD, NekDouble> &TotField,
-            int                           BndID)
+        void DisContField3DHomogeneous1D::GetBCValues(       Array<OneD, NekDouble> & BndVals,
+                                                       const Array<OneD, NekDouble> & TotField,
+                                                             int                      BndID )
         {
-            StdRegions::StdExpansionSharedPtr elmt;
-            StdRegions::StdExpansion1DSharedPtr temp_BC_exp;
+            LocalRegions::ExpansionSharedPtr   elmt;
+            LocalRegions::Expansion1DSharedPtr temp_BC_exp;
 
             Array<OneD, const NekDouble> tmp_Tot;
-            Array<OneD, NekDouble> tmp_BC;
+            Array<OneD, NekDouble>       tmp_BC;
 
             int cnt = 0;
             int pos = 0;
@@ -465,10 +464,11 @@ namespace Nektar
                                 GetExp(i+k*exp_size_per_plane)->GetTotPoints();
                             offset      = GetPhys_Offset(elmtID);
                             elmt        = GetExp(elmtID);
-                            temp_BC_exp = boost::dynamic_pointer_cast<
-                                StdRegions::StdExpansion1D>(
+                            temp_BC_exp = std::dynamic_pointer_cast<
+                                LocalRegions::Expansion1D>(
                                     m_bndCondExpansions[n]->GetExp(
-                                        i+k*exp_size_per_plane));
+                                        i + k * exp_size_per_plane )
+                                );
 
                             elmt->GetEdgePhysVals(boundaryID, temp_BC_exp,
                                                   tmp_Tot = TotField + offset,
@@ -487,8 +487,8 @@ namespace Nektar
             Array<OneD, NekDouble>       &outarray,
             int                           BndID)
         {
-            StdRegions::StdExpansionSharedPtr elmt;
-            StdRegions::StdExpansion1DSharedPtr temp_BC_exp;
+            LocalRegions::ExpansionSharedPtr   elmt;
+            LocalRegions::Expansion1DSharedPtr temp_BC_exp;
 
             Array<OneD, NekDouble> tmp_V1;
             Array<OneD, NekDouble> tmp_V2;
@@ -516,10 +516,11 @@ namespace Nektar
                                 GetCoeff_Offset(i+k*exp_size_per_plane);
 
                             elmt = GetExp(elmtID);
-                            temp_BC_exp = boost::dynamic_pointer_cast<
-                                StdRegions::StdExpansion1D>(
+                            temp_BC_exp = std::dynamic_pointer_cast<
+                                LocalRegions::Expansion1D>(
                                     m_bndCondExpansions[n]->GetExp(
-                                        i+k*exp_size_per_plane));
+                                        i + k * exp_size_per_plane )
+                                );
 
                             temp_BC_exp->NormVectorIProductWRTBase(
                                 tmp_V1 = V1 + Phys_offset,
@@ -578,43 +579,42 @@ namespace Nektar
         
         /**
          */
-        void DisContField3DHomogeneous1D::v_GetBoundaryNormals(int i,
-                        Array<OneD, Array<OneD, NekDouble> > &normals)
+        void DisContField3DHomogeneous1D::v_GetBoundaryNormals( int                                    i,
+                                                                Array<OneD, Array<OneD, NekDouble> > & normals )
         {
-            int j, n, cnt, nq;
-            int expdim = GetCoordim(0);
-            int coordim = 3;
-            Array<OneD, NekDouble> tmp;
-            StdRegions::StdExpansionSharedPtr elmt;
+            int                              expdim = GetCoordim(0);
+            int                              coordim = 3;
+            Array<OneD, NekDouble>           tmp;
+            LocalRegions::ExpansionSharedPtr elmt;
             
             Array<OneD, int> ElmtID,EdgeID;
             GetBoundaryToElmtMap(ElmtID,EdgeID);
             
             // Initialise result
             normals = Array<OneD, Array<OneD, NekDouble> > (coordim);
-            for (j = 0; j < coordim; ++j)
+            for (int j = 0; j < coordim; ++j)
             {
-                normals[j] = Array<OneD, NekDouble> ( 
-                                GetBndCondExpansions()[i]->GetTotPoints(), 0.0);
+                normals[j] = Array<OneD, NekDouble> ( GetBndCondExpansions()[i]->GetTotPoints(), 0.0 );
             }
             
             // Skip other boundary regions
-            for (cnt = n = 0; n < i; ++n)
+            int cnt = 0;
+            for( int n = 0; n < i; ++n )
             {
                 cnt += GetBndCondExpansions()[n]->GetExpSize();
             }
             
             int offset;
-            for (n = 0; n < GetBndCondExpansions()[i]->GetExpSize(); ++n)
+            for( int n = 0; n < GetBndCondExpansions()[i]->GetExpSize(); ++n )
             {
                 offset = GetBndCondExpansions()[i]->GetPhys_Offset(n);
-                nq = GetBndCondExpansions()[i]->GetExp(n)->GetTotPoints();
+                int nq = GetBndCondExpansions()[i]->GetExp(n)->GetTotPoints();
                 
                 elmt   = GetExp(ElmtID[cnt+n]);
                 const Array<OneD, const Array<OneD, NekDouble> > normalsElmt
                             = elmt->GetSurfaceNormal(EdgeID[cnt+n]);
                 // Copy to result
-                for (j = 0; j < expdim; ++j)
+                for (int j = 0; j < expdim; ++j)
                 {
                     Vmath::Vcopy(nq, normalsElmt[j], 1,
                                      tmp = normals[j] + offset, 1);

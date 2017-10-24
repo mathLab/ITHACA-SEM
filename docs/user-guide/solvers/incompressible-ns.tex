@@ -66,7 +66,7 @@ zero. If we now integrate the 1st, 2nd and last term in equation
 (\ref{eqn.weakp}) by parts we can obtain the weak pressure equation
 \begin{align}
   \int_{\Omega} \nabla q \cdot \nabla p^{n+1}  &=  \int_{\Omega} q\, \nabla \cdot \left ( \frac{\partial \mathbf{u}}{\partial t}^{n+1}  + \mathbf{N}(\mathbf{u})^{n+1} \right )  \nonumber \\
-  &-  \int_{\partial \Omega} q  \left ( \frac{\partial \mathbf{u}}{\partial t}^{n+1}  + \mathbf{N}(\mathbf{u})^{n+1} - \nu \nabla \times \nabla \times \mathbf{u}^{n+1} \right ) \cdot \mathbf{n}
+  &-  \int_{\partial \Omega} q  \left ( \frac{\partial \mathbf{u}}{\partial t}^{n+1}  + \mathbf{N}(\mathbf{u})^{n+1} + \nu \nabla \times \nabla \times \mathbf{u}^{n+1} \right ) \cdot \mathbf{n}
  \label{eqn.weakp1}
 \end{align}
 where $\partial \Omega$ is the boundary of the domain and we have used
@@ -98,7 +98,7 @@ which to decouple the system we impose that $\nabla \cdot
   \int_{\Omega} \nabla q \cdot \nabla p^{n+1}  &=
   \int_{\Omega} q \, \nabla \cdot \left (-\frac{\hat{\mathbf{u}}}{\Delta t}
         + \mathbf{N}(\mathbf{u})^{*,n+1} \right ) \nonumber \\
-  &- \int_{\partial \Omega} q  \left ( \frac{\partial \mathbf{u}}{\partial t}^{n+1}  + \mathbf{N}(\mathbf{u})^{*.n+1} - \nu (\nabla \times \nabla  \times \mathbf{u})^{*,n+1} \right ) \cdot \mathbf{n}
+  &- \int_{\partial \Omega} q  \left ( \frac{\partial \mathbf{u}}{\partial t}^{n+1}  + \mathbf{N}(\mathbf{u})^{*.n+1} + \nu (\nabla \times \nabla  \times \mathbf{u})^{*,n+1} \right ) \cdot \mathbf{n}
  \label{eqn.weakpfinal}
   \end{align}
   We note this can be recast into an equivalent strong form of the
@@ -109,7 +109,7 @@ which to decouple the system we impose that $\nabla \cdot
  \end{equation}
 with consistent Neumann boundary conditions prescribed as
 \begin{equation}
-  \frac{\partial p}{\partial n}^{n+1}= - \Bigl[ \frac{\partial \mathbf{u}}{\partial t}^{n+1} - \nu (\nabla \times \nabla \times   \mathbf{u})^{*,n+1} + \mathbf{N}^{*,n+1}\Bigr]\cdot \mathbf{n}
+  \frac{\partial p}{\partial n}^{n+1}= - \Bigl[ \frac{\partial \mathbf{u}}{\partial t}^{n+1} + \nu (\nabla \times \nabla \times   \mathbf{u})^{*,n+1} + \mathbf{N}^{*,n+1}\Bigr]\cdot \mathbf{n}
   \label{eqn.pressurebcs}
 \end{equation}
 
@@ -830,7 +830,6 @@ the advection term using the pressure inverse mass matrix. It can be used just i
 <I PROPERTY="SmoothAdvection" VALUE="True"/>
 \end{lstlisting}
 
-
 \item \inltt{SpectralVanishingViscosity}: activates a stabilization technique
 which increases the viscosity on the modes with the highest frequencies.
 \begin{lstlisting}[style=XMLStyle]
@@ -839,7 +838,34 @@ which increases the viscosity on the modes with the highest frequencies.
 
 In a Quasi-3D simulation, this will affect both the Fourier and the spectral/hp expansions.
 To activate them independently, use \inltt{SpectralVanishingViscositySpectralHP} 
-and \inltt{SpectralVanishingViscosityHomo1D}.
+and \inltt{SpectralVanishingViscosityHomo1D}. \\
+
+There are three spectral vanishing viscosity kernels available:
+
+\begin{center}
+\footnotesize
+\begin{tabular}{lcc}
+\toprule
+{SVV Kernel} & {\texttt{SpectralVanishingViscosity}} \\
+\midrule
+Exponential Kernel & \texttt{True} \\
+Power Kernel & \texttt{PowerKernel} \\
+DG Kernel & \texttt{DGKernel} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+The Exponential kernel is based on the work of Maday et al. \cite{yvsiouei93},
+its extension to 2D can be found in \cite{rosh06}. A diffusion coefficient can
+be specified which defines the base magnitude of the viscosity; this parameter
+is scaled by $h/p$. SVV viscosity is activated for expansion modes greater than
+the product of the cut-off ratio and the expansion order. The Power kernel is a
+smooth function with no cut-off frequency; it focusses on a narrower band of
+higher expansion modes as the polynomial order increases. The cut-off ratio
+parameter for the Power kernel corresponds to the power ratio, see Moura et al.
+\cite{rospjo16}. The DG-Kernel is an attempt to match the dissipation of CG-SVV
+to DG schemes of lower expansion orders. This kernel does not require any parameters
+although the diffusion coefficient can still be modified.   
 
 \item \inltt{DEALIASING}: activates the 3/2 padding rule on the advection term
 of a Quasi-3D simulation.
@@ -856,7 +882,6 @@ stabilize the simulation. This method is based on the work of Kirby and Sherwin 
 
 \end{itemize}
 
-
 \subsection{Parameters}
 The following parameters can be specified in the \inltt{PARAMETERS} section of
 the session file:
@@ -869,8 +894,85 @@ the session file:
 \item \inltt{MinSubSteps}: perform a minimum number of substeps in sub-stepping algorithm (default is 1)
 \item \inltt{MaxSubSteps}: perform a maxmimum  number of substeps in sub-stepping algorithm otherwise exit (default is 100)
 \item \inltt{SVVCutoffRatio}: sets the ratio of Fourier frequency not affected by the SVV technique (default value = 0.75, i.e. the first 75\% of frequency are not damped)
-\item \inltt{SVVDiffCoeff}: sets the SVV diffusion coefficient (default value = 0.1)
+\item \inltt{SVVDiffCoeff}: sets the SVV diffusion coefficient (default value = 0.1 (Exponential and Power kernel), 1 (DG-Kernel))
 \end{itemize}
+
+\subsection{Womersley Boundary Condition}
+
+It is possible to define the time-dependent Womersley velocity profile
+for pulsatile flow in a pipe. The modulation of the velocity profile
+is based on the desired peak or centerline velocity which can be
+represented by a Fourier expansion $U_{max}=A(\omega_n)e^{i\omega_n
+  t}$ where $A$ are the Fourier modes and $\omega $ the frequency. The
+womersely solution is then defined as:
+
+$$ w(r,t) = A_0(1-(r/R)^2) + \sum_{n=1}^N
+\tilde{A_n}[1-\frac{J_0(i^{3/2}\alpha_n r/R)}{J_0(i^{3/2}
+    \alpha)}]e^{i\omega_n t} $$
+
+where the womersley number $\alpha$ is defined:
+$$ \alpha_n = R\sqrt{\frac{2\pi n}{T\nu}}$$
+
+and $\tilde{A_n}$ ($n=1:N$)are the Fourier coefficients scaled in the
+following way:
+
+$$ \tilde{A_n} = 2A_n/[1 - \frac{1}{J_0(i^{3/2}\alpha)}] $$
+
+The Womersley velocity profile is implemented in the following way:
+
+\begin{lstlisting}[style=XMLStyle]
+<REGION REF="0">
+                <D VAR="u" USERDEFINEDTYPE="Womersley:WomParams.xml" VALUE="0" />
+                <D VAR="v" USERDEFINEDTYPE="Womersley:WomParams.xml" VALUE="0" />
+                <D VAR="w" USERDEFINEDTYPE="Womersley:WomParams.xml" VALUE="0" />
+                <N VAR="p" USERDEFINEDTYPE="H" VALUE="0" />
+</REGION>
+\end{lstlisting}
+
+A file containing the Fourier coefficients, $\tilde{A}$, must be in
+the directory where the solver is called from. The name of the file is
+defined by the string given in the attribute \inltt{USERDEFINEDTYPE}
+after the ``:'' and contains the real and imaginary coefficients. This
+file has the format
+\begin{lstlisting}[style=XMLStyle]
+<NEKTAR>
+  <WOMERSLEYBC>
+    <WOMPARAMS>
+      <W PROPERTY="Radius" VALUE="0.5" />
+      <W PROPERTY="Period" VALUE="1.0" />
+      <W PROPERTY="axisnormal" VALUE="0.0,0.0,1.0" />
+      <W PROPERTY="axispoint" VALUE="0.0,0.0,0.0" />
+    </WOMPARAMS>
+
+    <FOURIERCOEFFS>
+      <F ID="0"> 0.600393641193,    0.0               </F>
+      <F ID="1"> -0.277707172935,   0.0767582715413   </F>
+      <F ID="2"> -0.0229953131146,  0.0760936232478   </F>
+      <F ID="3"> 0.00858135174058,  0.017089888642    </F>
+      <F ID="4"> 0.0140332527651,   0.0171575122496   </F>
+      <F ID="5"> 0.0156970122129,   -0.00547357750345 </F>
+      <F ID="6"> 0.00473626554238,  -0.00498786519876 </F>
+      <F ID="7"> 0.00204434981523,  -0.00614566561937 </F>
+      <F ID="8"> -0.000274697215201, 0.000153571881197 </F>
+      <F ID="9"> -0.000148037910774, 2.68919619581e-05 </F>
+    </FOURIERCOEFFS>
+  </WOMERSLEYBC>
+</NEKTAR>
+\end{lstlisting}
+
+Each value of $\tilde{A}$ is provided in the \inltt{FOURIERCOEFFS}
+section and provided as separate entries containing the real and
+imaginary components, i.e. the mean component provided above is
+$0.600393641193,0.0$.
+
+Similarly in the \inltt{WOMPARAMS} section the key parameters of the boundary condition are also provided as:
+\begin{itemize}
+\item \inltt{RADIUS} is the radius of the boundary.
+\item \inltt{PERIOD} is the cycle time period,
+\item \inltt{AXISNORMAL} defines the normal direction to the boundary,
+\item \inltt{AXISPOINT}  defines a coordinate in the boundary centre,
+\end{itemize}
+
 
 \subsection{Forcing}
 \subsubsection{MovingBody}

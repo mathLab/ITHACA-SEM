@@ -92,7 +92,7 @@ namespace Nektar
       Gs::string TestTypeStr = m_session->GetSolverInfo("TESTTYPE");
       for(int i = 0; i < (int) SIZE_TestType; ++i)
 	{
-	  if(NoCaseStringCompare(TestTypeMap[i],TestTypeStr) == 0)
+	  if(boost::iequals(TestTypeMap[i],TestTypeStr))
 	    {
 	      m_TestType = (TestType)i;
 	      break;
@@ -288,7 +288,7 @@ namespace Nektar
 	     "Only one of IO_CheckTime and IO_CheckSteps "
 	     "should be set!");
     
-    Timer     timer;
+    LibUtilities::Timer     timer;
     bool      doCheckTime   = false;
     int       step          = 0;
     NekDouble intTime       = 0.0;
@@ -1610,7 +1610,7 @@ namespace Nektar
       {
       case eTestPlane:
 	{
-	  EvaluateFunction("f",m_coriolis,"Coriolis");
+        GetFunction("Coriolis")->Evaluate("f", m_coriolis);
 	}
 	break;
 	

@@ -39,38 +39,38 @@
 
 #include <StdRegions/StdExpansion3D.h>
 #include <StdRegions/StdRegionsDeclspec.h>
-#include <boost/tuple/tuple.hpp>
+#include <tuple>
 
 namespace Nektar
 {
     namespace StdRegions
     {
-        typedef boost::tuple<
+        typedef std::tuple<
             unsigned int, unsigned int, unsigned int, unsigned int> Mode;
 
         struct cmpop
         {
             bool operator()(Mode const &a, Mode const &b) const
             {
-                if (a.get<0>() < b.get<0>())
+                if (std::get<0>(a) < std::get<0>(b))
                 {
                     return true;
                 }
-                if (a.get<0>() > b.get<0>())
+                if (std::get<0>(a) > std::get<0>(b))
                 {
                     return false;
                 }
-    
-                if (a.get<1>() < b.get<1>())
+
+                if (std::get<1>(a) < std::get<1>(b))
                 {
                     return true;
                 }
-                if (a.get<1>() > b.get<1>())
+                if (std::get<1>(a) > std::get<1>(b))
                 {
                     return false;
                 }
-    
-                if (a.get<2>() < b.get<2>())
+
+                if (std::get<2>(a) < std::get<2>(b))
                 {
                     return true;
                 }
@@ -97,8 +97,6 @@ namespace Nektar
             STD_REGIONS_EXPORT StdPyrExp(const StdPyrExp &T);
 
             STD_REGIONS_EXPORT ~StdPyrExp();
-
-            STD_REGIONS_EXPORT int GetTetMode(int I, int J, int K);
 
         protected:
             //---------------------------------------
@@ -253,14 +251,23 @@ namespace Nektar
             STD_REGIONS_EXPORT virtual DNekMatSharedPtr v_CreateStdMatrix(
                 const StdMatrixKey &mkey);
 
+            STD_REGIONS_EXPORT virtual void v_SVVLaplacianFilter(Array<OneD, NekDouble> &array,
+                                                                    const StdMatrixKey &mkey);
+
+            //---------------------------------------
+            // Method for applying sensors
+            //---------------------------------------
+            STD_REGIONS_EXPORT virtual void v_ReduceOrderCoeffs(
+                int                                 numMin,
+                const Array<OneD, const NekDouble> &inarray,
+                      Array<OneD,       NekDouble> &outarray);
         private:
             //---------------------------------------
             // Private helper functions
             //---------------------------------------
-            std::map<Mode, unsigned int, cmpop> m_map;
-            std::map<int, std::map<int, std::map<int, std::pair<int, int> > > > m_idxMap;
+            STD_REGIONS_EXPORT int GetMode(int I, int J, int K);
         };    
-        typedef boost::shared_ptr<StdPyrExp> StdPyrExpSharedPtr;
+        typedef std::shared_ptr<StdPyrExp> StdPyrExpSharedPtr;
     } //end of namespace
 } //end of namespace
 

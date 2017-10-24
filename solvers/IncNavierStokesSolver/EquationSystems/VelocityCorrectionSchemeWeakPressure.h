@@ -95,7 +95,7 @@ namespace Nektar
         
     };
 
-    typedef boost::shared_ptr<VCSWeakPressure>
+    typedef std::shared_ptr<VCSWeakPressure>
                 VCSWeakPressureSharedPtr;
 
 } //end of namespace

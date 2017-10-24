@@ -67,6 +67,12 @@ public:
     }
 
     void Initialise(int i, TopoDS_Shape in);
+    
+    NekDouble DistanceTo(Array<OneD, NekDouble> l)
+    {
+        gp_Pnt lp(l[0],l[1],l[2]);
+        return m_occVert.Distance(lp);
+    }
 
 private:
     /// OpenCascade object of the curve.

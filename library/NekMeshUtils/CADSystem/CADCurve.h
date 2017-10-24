@@ -62,7 +62,7 @@ public:
         m_type = CADType::eCurve;
     }
 
-    ~CADCurve()
+    virtual ~CADCurve()
     {
     }
 
@@ -71,7 +71,7 @@ public:
      *
      * @return Array of two entries, min and max parametric coordinate.
      */
-    virtual Array<OneD, NekDouble> Bounds() = 0;
+    virtual Array<OneD, NekDouble> GetBounds() = 0;
 
     /**
      * @brief Calculates the arclength between the two paremetric points \p ti
@@ -120,15 +120,15 @@ public:
     /**
      * @brief set the ids of the surfaces either side of the curve
      */
-    void SetAdjSurf(std::vector<CADSurfSharedPtr> i)
+    void SetAdjSurf(std::pair<CADSurfSharedPtr, CADOrientation::Orientation> i)
     {
-        m_adjSurfs = i;
+        m_adjSurfs.push_back(i);
     }
 
     /*
      * @brief returns the ids of neigbouring surfaces
      */
-    std::vector<CADSurfSharedPtr> GetAdjSurf()
+    std::vector<std::pair<CADSurfSharedPtr, CADOrientation::Orientation> > GetAdjSurf()
     {
         return m_adjSurfs;
     }
@@ -162,18 +162,38 @@ public:
      * @brief locates a point in the parametric space
      */
     virtual NekDouble loct(Array<OneD, NekDouble> xyz) = 0;
+    
+    virtual NekDouble DistanceTo(Array<OneD, NekDouble> xyz) = 0;
+
+    CADOrientation::Orientation GetOrienationWRT(int surf)
+    {
+        for(int i = 0; i < m_adjSurfs.size(); i++)
+        {
+            if(m_adjSurfs[i].first->GetId() == surf)
+            {
+                return m_adjSurfs[i].second;
+            }
+        }
+
+        ASSERTL0(false,"surf not in adjecency list");
+        return CADOrientation::eUnknown;
+    }
+
+    virtual Array<OneD, NekDouble> NormalWRT(NekDouble t, int surf)=0;
+    virtual Array<OneD, NekDouble> N(NekDouble t)=0;
+
 
 protected:
 
     /// Length of edge
     NekDouble m_length;
     /// List of surfaces which this curve belongs to.
-    std::vector<CADSurfSharedPtr> m_adjSurfs;
+    std::vector<std::pair<CADSurfSharedPtr, CADOrientation::Orientation> > m_adjSurfs;
     /// list of end vertices
     std::vector<CADVertSharedPtr> m_mainVerts;
 };
 
-typedef boost::shared_ptr<CADCurve> CADCurveSharedPtr;
+typedef std::shared_ptr<CADCurve> CADCurveSharedPtr;
 
 typedef LibUtilities::NekFactory<std::string, CADCurve> CADCurveFactory;
 

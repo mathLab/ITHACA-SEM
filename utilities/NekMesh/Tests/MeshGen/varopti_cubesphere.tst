@@ -11,7 +11,7 @@
             <regex>Worst at end: (-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)</regex>
             <matches>
                 <match>
-                    <field id="0" tolerance="5e-2">7.563667e-01</field>
+                    <field id="0" tolerance="5e-2">7.042539e-01</field>
                 </match>
             </matches>
         </metric>

@@ -37,6 +37,7 @@
 #include <iomanip>
 #include <boost/algorithm/string.hpp>
 
+#include <LibUtilities/BasicUtils/Timer.h>
 #include <ADRSolver/EquationSystems/MMFAdvection.h>
 
 namespace Nektar
@@ -77,7 +78,7 @@ namespace Nektar
       Gs::string TestTypeStr = m_session->GetSolverInfo("TESTTYPE");
       for(int i = 0; i < (int) SIZE_TestType; ++i)
 	{
-	  if(NoCaseStringCompare(TestTypeMap[i],TestTypeStr) == 0)
+	  if(boost::iequals(TestTypeMap[i],TestTypeStr))
 	    {
 	      m_TestType = (TestType)i;
 	      break;
@@ -124,7 +125,7 @@ namespace Nektar
 	case SolverUtils::ePlane:
 	case SolverUtils::eCube:
 	  {
-	    EvaluateFunction(vel, m_velocity, "AdvectionVelocity");
+        GetFunction( "AdvectionVelocity")->Evaluate(vel,  m_velocity);
 	  }
 	  break;
 	  
@@ -220,7 +221,7 @@ namespace Nektar
 	     "Only one of IO_CheckTime and IO_CheckSteps "
 	     "should be set!");
     
-    Timer     timer;
+    LibUtilities::Timer     timer;
     bool      doCheckTime   = false;
     int       step          = 0;
     NekDouble intTime       = 0.0;

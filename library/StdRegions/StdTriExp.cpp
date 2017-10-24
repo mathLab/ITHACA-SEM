@@ -517,7 +517,7 @@ namespace Nektar
             int i;
             int mode;
             int nquad0  = m_base[0]->GetNumPoints();
-            int nquad1  = m_base[1]->GetNumPoints();   
+            int nquad1  = m_base[1]->GetNumPoints();
             int nmodes0 = m_base[0]->GetNumModes();
             int nmodes1 = m_base[1]->GetNumModes();
 
@@ -915,7 +915,7 @@ namespace Nektar
                      "Mapping not defined for this type of basis");
 
             int i;
-            int numModes;
+            int numModes=0;
             int order0 = m_base[0]->GetNumModes();
             int order1 = m_base[1]->GetNumModes();
 
@@ -928,6 +928,8 @@ namespace Nektar
             case 2:
                 numModes = order1;
                 break;
+            default:
+                ASSERTL0(false,"eid must be between 0 and 2");
             }
 
             bool checkForZeroedModes = false;
@@ -1403,7 +1405,7 @@ namespace Nektar
             Array<OneD, NekDouble> orthocoeffs(OrthoExp.GetNcoeffs());
 
 
-            if(mkey.HasVarCoeff(eVarCoeffLaplacian)) // Rodrigo's svv mapping 
+            if(mkey.HasVarCoeff(eVarCoeffLaplacian)) // Rodrigo's svv mapping
             {
                 Array<OneD, NekDouble> sqrt_varcoeff(qa*qb);
                 Array<OneD, NekDouble> tmp(qa*qb);

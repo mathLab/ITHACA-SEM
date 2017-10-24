@@ -47,14 +47,13 @@ namespace Nektar
     {
 
         class Expansion2D;
-        typedef boost::shared_ptr<Expansion2D> Expansion2DSharedPtr;
-        typedef boost::weak_ptr<Expansion2D> Expansion2DWeakPtr;
+        typedef std::shared_ptr<Expansion2D> Expansion2DSharedPtr;
+        typedef std::weak_ptr<Expansion2D> Expansion2DWeakPtr;
 
         class Expansion3D;
-        typedef boost::shared_ptr<Expansion3D> Expansion3DSharedPtr;
-        typedef boost::weak_ptr<Expansion3D> Expansion3DWeakPtr;
+        typedef std::shared_ptr<Expansion3D> Expansion3DSharedPtr;
+        typedef std::weak_ptr<Expansion3D> Expansion3DWeakPtr;
         typedef std::vector< Expansion3DSharedPtr > Expansion3DVector;
-        typedef std::vector< Expansion3DSharedPtr >::iterator Expansion3DVectorIter;
 
         class Expansion3D: virtual public Expansion, 
                            virtual public StdRegions::StdExpansion3D
@@ -198,7 +197,7 @@ namespace Nektar
         
         inline SpatialDomains::Geometry3DSharedPtr Expansion3D::GetGeom3D() const
         {
-            return boost::dynamic_pointer_cast<SpatialDomains::Geometry3D>(m_geom);
+            return std::dynamic_pointer_cast<SpatialDomains::Geometry3D>(m_geom);
         }
     } //end of namespace
 } //end of namespace

@@ -35,7 +35,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <MultiRegions/GlobalLinSysIterativeStaticCond.h>
-#include <LibUtilities/BasicUtils/Timer.h>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/LinearAlgebra/StorageSmvBsr.hpp>
 #include <LibUtilities/LinearAlgebra/SparseDiagBlkMatrix.hpp>
@@ -110,8 +109,8 @@ namespace Nektar
          */
         GlobalLinSysIterativeStaticCond::GlobalLinSysIterativeStaticCond(
             const GlobalLinSysKey                &pKey,
-            const boost::weak_ptr<ExpList>       &pExpList,
-            const boost::shared_ptr<AssemblyMap> &pLocToGloMap)
+            const std::weak_ptr<ExpList>         &pExpList,
+            const std::shared_ptr<AssemblyMap>   &pLocToGloMap)
             : GlobalLinSys          (pKey, pExpList, pLocToGloMap),
               GlobalLinSysIterative (pKey, pExpList, pLocToGloMap),
               GlobalLinSysStaticCond(pKey, pExpList, pLocToGloMap)
@@ -132,12 +131,12 @@ namespace Nektar
          */
         GlobalLinSysIterativeStaticCond::GlobalLinSysIterativeStaticCond(
             const GlobalLinSysKey                &pKey,
-            const boost::weak_ptr<ExpList>       &pExpList,
+            const std::weak_ptr<ExpList>         &pExpList,
             const DNekScalBlkMatSharedPtr         pSchurCompl,
             const DNekScalBlkMatSharedPtr         pBinvD,
             const DNekScalBlkMatSharedPtr         pC,
             const DNekScalBlkMatSharedPtr         pInvD,
-            const boost::shared_ptr<AssemblyMap> &pLocToGloMap,
+            const std::shared_ptr<AssemblyMap>   &pLocToGloMap,
             const PreconditionerSharedPtr         pPrecon)
             : GlobalLinSys          (pKey, pExpList, pLocToGloMap),
               GlobalLinSysIterative (pKey, pExpList, pLocToGloMap),
@@ -186,8 +185,7 @@ namespace Nektar
                         StdRegions::eHybridDGHelmBndLam)
                 {
                     DNekScalMatSharedPtr mat = m_S1Blk->GetBlock(n, n);
-                    DNekScalMatSharedPtr t = m_precon->TransformedSchurCompl(
-                        m_expList.lock()->GetOffset_Elmt_Id(n), mat);
+                    DNekScalMatSharedPtr t = m_precon->TransformedSchurCompl(n, mat);
                     m_schurCompl->SetBlock(n, n, t);
                 }
             }
@@ -374,8 +372,7 @@ namespace Nektar
                                 }
                             }
                             ptr += blockSize;
-                            GlobalLinSys::v_DropStaticCondBlock(
-                                m_expList.lock()->GetOffset_Elmt_Id(n));
+                            GlobalLinSys::v_DropStaticCondBlock(n);
                         }
                         else
                         {
@@ -449,8 +446,7 @@ namespace Nektar
                                 loc_lda*loc_lda, loc_mat->GetRawPtr());
                             }
 
-                            GlobalLinSys::v_DropStaticCondBlock(
-                                m_expList.lock()->GetOffset_Elmt_Id(n));
+                            GlobalLinSys::v_DropStaticCondBlock(n);
                         }
 
                         sparseStorage[part] =
@@ -569,12 +565,12 @@ namespace Nektar
 
         GlobalLinSysStaticCondSharedPtr GlobalLinSysIterativeStaticCond::v_Recurse(
             const GlobalLinSysKey                &mkey,
-            const boost::weak_ptr<ExpList>       &pExpList,
+            const std::weak_ptr<ExpList>         &pExpList,
             const DNekScalBlkMatSharedPtr         pSchurCompl,
             const DNekScalBlkMatSharedPtr         pBinvD,
             const DNekScalBlkMatSharedPtr         pC,
             const DNekScalBlkMatSharedPtr         pInvD,
-            const boost::shared_ptr<AssemblyMap> &l2gMap)
+            const std::shared_ptr<AssemblyMap>   &l2gMap)
         {
             GlobalLinSysIterativeStaticCondSharedPtr sys = MemoryManager<
                 GlobalLinSysIterativeStaticCond>::AllocateSharedPtr(

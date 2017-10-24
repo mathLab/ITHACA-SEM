@@ -234,7 +234,7 @@ public:
 
     void SetCADCurve(CADCurveSharedPtr c, NekDouble t)
     {
-        CADCurveList.insert(make_pair(s->GetId(), make_pair(c, t)));
+        CADCurveList.insert(make_pair(c->GetId(), make_pair(c, t)));
     }
 
     void SetCADSurf(CADSurfSharedPtr s, Array<OneD, NekDouble> uv)
@@ -245,7 +245,7 @@ public:
     NekDouble GetCADCurveInfo(int i)
     {
         auto search = CADCurveList.find(i);
-        ASSERTL0(search == CADCurveList.end(), "node not on this curve");
+        ASSERTL0(search != CADCurveList.end(), "node not on this curve");
 
         return search->second.second;
     }
@@ -253,7 +253,7 @@ public:
     Array<OneD, NekDouble> GetCADSurfInfo(int i)
     {
         auto search = CADSurfList.find(i);
-        ASSERTL0(search->first == CADSurfList.end(), "surface not found");
+        ASSERTL0(search != CADSurfList.end(), "surface not found");
 
         return search->second.second;
     }
@@ -273,7 +273,7 @@ public:
         std::vector<CADSurfSharedPtr> lst;
         for (auto &s : CADSurfList)
         {
-            lst.push_back(s->second.first);
+            lst.push_back(s.second.first);
         }
         return lst;
     }

@@ -50,15 +50,13 @@ namespace Nektar
 namespace NekMeshUtils
 {
 
-//forward declorators
+// forward declorators
 class CADVert;
 typedef std::shared_ptr<CADVert> CADVertSharedPtr;
 class CADCurve;
 typedef std::shared_ptr<CADCurve> CADCurveSharedPtr;
 class CADSurf;
 typedef std::shared_ptr<CADSurf> CADSurfSharedPtr;
-
-
 
 /**
  * @brief Base class for CAD interface system.
@@ -90,7 +88,7 @@ public:
      */
     CADSystem(std::string name) : m_name(name)
     {
-        m_2d = false;
+        m_2d      = false;
         m_cfiMesh = false;
         m_verbose = false;
     }
@@ -100,7 +98,7 @@ public:
     }
 
     /**
-     * @brief Return the name of the CAD system.
+     * @brief Return the name of the CAD file.
      */
     std::string GetName()
     {
@@ -214,10 +212,13 @@ public:
         return m_verts.size();
     }
 
-    std::string GetSurfaceName(int i);
-
+    /**
+     * @brief Return the vector of translation from one curve to another to
+     * allow
+     *        for periodic mesh generation in 2D.
+     */
     NEKMESHUTILS_EXPORT Array<OneD, NekDouble> GetPeriodicTranslationVector(
-                int first, int second);
+        int first, int second);
 
 protected:
     /// Name of cad file
@@ -230,8 +231,11 @@ protected:
     std::map<int, CADVertSharedPtr> m_verts;
     /// Verbosity
     bool m_verbose;
-
-    bool m_2d, m_cfiMesh;
+    /// 2D cad flag
+    bool m_2d;
+    /// Will the CAD be used with a CFI mesh flag
+    bool m_cfiMesh;
+    /// string of 4 digit NACA code to be created
     std::string m_naca;
 
     /**
@@ -241,8 +245,10 @@ protected:
     {
         std::cout << std::endl << "CAD report:" << std::endl;
         std::cout << "\tCAD has: " << m_verts.size() << " verts." << std::endl;
-        std::cout << "\tCAD has: " << m_curves.size() << " curves." << std::endl;
-        std::cout << "\tCAD has: " << m_surfs.size() << " surfaces." << std::endl;
+        std::cout << "\tCAD has: " << m_curves.size() << " curves."
+                  << std::endl;
+        std::cout << "\tCAD has: " << m_surfs.size() << " surfaces."
+                  << std::endl;
     }
 };
 
@@ -250,8 +256,7 @@ typedef std::shared_ptr<CADSystem> CADSystemSharedPtr;
 typedef LibUtilities::NekFactory<std::string, CADSystem, std::string>
     EngineFactory;
 
-EngineFactory& GetEngineFactory();
-
+EngineFactory &GetEngineFactory();
 }
 }
 

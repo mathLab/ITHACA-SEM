@@ -53,56 +53,68 @@ bool CADSystemCFI::LoadCAD()
     // it is possible to get CFI to lock on to a open gui session
     // not sure it ever will with this code
     cfiHandel.startServer();
-    cout << "cfi loaded in mode: ";
-    if (cfiHandel.info.mode == cfi::MODE_STANDALONE)
+    if (m_verbose)
     {
-        cout << "standalone" << endl;
-    }
-    else if (cfiHandel.info.mode == cfi::MODE_CLIENT)
-    {
-        cout << "client" << endl;
-    }
-    else if (cfiHandel.info.mode == cfi::MODE_SERVER)
-    {
-        cout << "server" << endl;
-    }
-    else if (cfiHandel.info.mode == cfi::MODE_BOTH)
-    {
-        cout << "both" << endl;
-    }
-    else if (cfiHandel.info.mode == cfi::MODE_PLUGIN)
-    {
-        cout << "plugin" << endl;
-    }
-    else
-    {
-        cout << "unknown" << endl;
-    }
-
-    cout << "Version " << cfiHandel.info.version << endl
-         << "fixno " << cfiHandel.info.fixno << endl
-         << "ubid " << cfiHandel.info.ubid << endl;
-
-    model = cfiHandel.openModelFile(m_name.c_str());
-
-    if( model->getEntityTotal(cfi::TYPE_BODY, cfi::SUBTYPE_ALL) != 1)
-    {
-        if(m_cfiMesh)
+        cout << "cfi loaded in mode: ";
+        if (cfiHandel.info.mode == cfi::MODE_STANDALONE)
         {
-            cout << "Will extract mesh and have multibodies" << endl;
+            cout << "standalone" << endl;
+        }
+        else if (cfiHandel.info.mode == cfi::MODE_CLIENT)
+        {
+            cout << "client" << endl;
+        }
+        else if (cfiHandel.info.mode == cfi::MODE_SERVER)
+        {
+            cout << "server" << endl;
+        }
+        else if (cfiHandel.info.mode == cfi::MODE_BOTH)
+        {
+            cout << "both" << endl;
+        }
+        else if (cfiHandel.info.mode == cfi::MODE_PLUGIN)
+        {
+            cout << "plugin" << endl;
         }
         else
         {
-            cout << "Has multibodies and instructions to mesh, this is not possible" << endl;
+            cout << "unknown" << endl;
+        }
+
+        cout << "\tVersion " << cfiHandel.info.version << endl
+             << "\tfixno " << cfiHandel.info.fixno << endl
+             << "\tubid " << cfiHandel.info.ubid << endl;
+    }
+
+    model = cfiHandel.openModelFile(m_name.c_str());
+
+    if (model->getEntityTotal(cfi::TYPE_BODY, cfi::SUBTYPE_ALL) != 1)
+    {
+        if (m_cfiMesh)
+        {
+            if (m_verbose)
+            {
+                cout << "\tWill extract mesh and have multibodies" << endl;
+            }
+        }
+        else
+        {
+            if (m_verbose)
+            {
+                cout << "\tHas multibodies and instructions to mesh, this is not "
+                        "possible"
+                     << endl;
+            }
             abort();
         }
     }
 
-    vector<cfi::Entity* > * bds = model->getEntityList(cfi::TYPE_BODY, cfi::SUBTYPE_ALL);
+    vector<cfi::Entity *> *bds =
+        model->getEntityList(cfi::TYPE_BODY, cfi::SUBTYPE_ALL);
 
-    for(auto &i : *bds)
+    for (auto &i : *bds)
     {
-        cfi::Body* b = static_cast<cfi::Body *>(i);
+        cfi::Body *b = static_cast<cfi::Body *>(i);
         bodies.push_back(b);
     }
 
@@ -113,13 +125,19 @@ bool CADSystemCFI::LoadCAD()
     m_scal = 1.0;
     if (model->getUnits() == cfi::UNIT_INCHES)
     {
-        cout << "Model is in inches, scaling accordingly" << endl;
+        if(m_verbose)
+        {
+            cout << "\tModel is in inches, scaling accordingly" << endl;
+        }
         m_scal = 0.0254;
     }
-    else if(model->getUnits() == cfi::UNIT_MILLIMETERS ||
-            model->getUnits() == cfi::UNIT_MILLIMETRES)
+    else if (model->getUnits() == cfi::UNIT_MILLIMETERS ||
+             model->getUnits() == cfi::UNIT_MILLIMETRES)
     {
-        cout << "Model is in mm, scaling accordingly" << endl;
+        if(m_verbose)
+        {
+            cout << "\tModel is in mm, scaling accordingly" << endl;
+        }
         m_scal = 1e-3;
     }
 
@@ -135,11 +153,12 @@ bool CADSystemCFI::LoadCAD()
     // cad by cascading down from the faces
     // also builds a list on unique edges in the process
 
-    for(int i = 0; i < bodies.size(); i++)
+    for (int i = 0; i < bodies.size(); i++)
     {
-        vector<cfi::Oriented<cfi::TopoEntity *> > *faceList = bodies[i]->getChildList();
+        vector<cfi::Oriented<cfi::TopoEntity *>> *faceList =
+            bodies[i]->getChildList();
 
-        vector<cfi::Oriented<cfi::TopoEntity *> >::iterator it, it2, it3;
+        vector<cfi::Oriented<cfi::TopoEntity *>>::iterator it, it2, it3;
         for (it = faceList->begin(); it != faceList->end(); it++)
         {
             cfi::Oriented<cfi::TopoEntity *> orientatedFace = *it;
@@ -147,26 +166,28 @@ bool CADSystemCFI::LoadCAD()
 
             try
             {
-                boost::optional<cfi::Oriented<cfi::Surface *> > surf = face->getTopoEmbedding();
+                boost::optional<cfi::Oriented<cfi::Surface *>> surf =
+                    face->getTopoEmbedding();
             }
-            catch(std::exception& e)
+            catch (std::exception &e)
             {
-                //dont want this face
+                // dont want this face
                 continue;
             }
 
             auto it = mapOfFaces.find(face->getName());
-            if(it == mapOfFaces.end())
+            if (it == mapOfFaces.end())
             {
-                vector<cfi::Oriented<cfi::TopoEntity *> > *edgeList =
+                vector<cfi::Oriented<cfi::TopoEntity *>> *edgeList =
                     face->getChildList();
                 for (it2 = edgeList->begin(); it2 != edgeList->end(); it2++)
                 {
                     cfi::Oriented<cfi::TopoEntity *> orientatedEdge = *it2;
-                    cfi::Line *edge = static_cast<cfi::Line *>(orientatedEdge.entity);
+                    cfi::Line *edge =
+                        static_cast<cfi::Line *>(orientatedEdge.entity);
                     mapOfEdges[edge->getName()] = edge;
 
-                    vector<cfi::Oriented<cfi::TopoEntity *> > *vertList =
+                    vector<cfi::Oriented<cfi::TopoEntity *>> *vertList =
                         edge->getChildList();
                     for (it3 = vertList->begin(); it3 != vertList->end(); it3++)
                     {
@@ -174,7 +195,8 @@ bool CADSystemCFI::LoadCAD()
                         cfi::Point *vert =
                             static_cast<cfi::Point *>(orientatedVert.entity);
                         mapOfVerts[vert->getName()] = vert;
-                        mapVertToListEdge[vert->getName()].push_back(edge->getName());
+                        mapVertToListEdge[vert->getName()].push_back(
+                            edge->getName());
                     }
                 }
 
@@ -224,6 +246,11 @@ bool CADSystemCFI::LoadCAD()
         }
     }
 
+    if (m_verbose)
+    {
+        Report();
+    }
+
     return true;
 }
 
@@ -242,17 +269,17 @@ void CADSystemCFI::AddCurve(int i, cfi::Line *in)
     CADCurveSharedPtr newCurve = GetCADCurveFactory().CreateInstance(key);
     static_pointer_cast<CADCurveCFI>(newCurve)->Initialise(i, in, m_scal);
 
-    vector<cfi::Oriented<cfi::TopoEntity *> > *vertList = in->getChildList();
+    vector<cfi::Oriented<cfi::TopoEntity *>> *vertList = in->getChildList();
 
     ASSERTL0(vertList->size() == 2, "should be two ends");
 
-    vector<cfi::Oriented<cfi::TopoEntity *> >::iterator it;
+    vector<cfi::Oriented<cfi::TopoEntity *>>::iterator it;
     vector<NekDouble> t;
     for (it = vertList->begin(); it != vertList->end(); it++)
     {
         cfi::Oriented<cfi::TopoEntity *> orientatedVert = *it;
         cfi::Point *vert = static_cast<cfi::Point *>(orientatedVert.entity);
-        boost::optional<cfi::Projected<double> > pj =
+        boost::optional<cfi::Projected<double>> pj =
             in->calcTFromXYZ(vert->getGeometry(), -1);
         t.push_back(pj.value().parameters);
     }
@@ -275,7 +302,7 @@ void CADSystemCFI::AddSurf(int i, cfi::Face *in)
     CADSurfSharedPtr newSurf = GetCADSurfFactory().CreateInstance(key);
     static_pointer_cast<CADSurfCFI>(newSurf)->Initialise(i, in, m_scal);
 
-    vector<cfi::Oriented<cfi::TopoEntity *> > *edgeList = in->getChildList();
+    vector<cfi::Oriented<cfi::TopoEntity *>> *edgeList = in->getChildList();
 
     vector<EdgeLoopSharedPtr> edgeloops;
     int done = 0;
@@ -283,7 +310,7 @@ void CADSystemCFI::AddSurf(int i, cfi::Face *in)
     {
         EdgeLoopSharedPtr edgeloop = EdgeLoopSharedPtr(new EdgeLoop);
         string firstVert;
-        vector<cfi::Oriented<cfi::TopoEntity *> > *vertList =
+        vector<cfi::Oriented<cfi::TopoEntity *>> *vertList =
             edgeList->at(done).entity->getChildList();
         if (edgeList->at(done).orientation == cfi::ORIENT_POSITIVE)
         {

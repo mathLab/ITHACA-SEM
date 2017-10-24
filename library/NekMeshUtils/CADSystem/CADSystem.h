@@ -92,6 +92,7 @@ public:
     {
         m_2d = false;
         m_cfiMesh = false;
+        m_verbose = false;
     }
 
     virtual ~CADSystem()
@@ -126,22 +127,17 @@ public:
         m_cfiMesh = true;
     }
 
+    void SetVerbose()
+    {
+        m_verbose = true;
+    }
+
     /**
      * @brief Initialises CAD and makes surface, curve and vertex maps.
      *
      * @return true if completed successfully
      */
     virtual bool LoadCAD() = 0;
-
-    /**
-     * @brief Reports basic properties to screen.
-     */
-    void Report()
-    {
-        std::cout << std::endl << "CAD report:" << std::endl;
-        std::cout << "\tCAD has: " << m_curves.size() << " curves." << std::endl;
-        std::cout << "\tCAD has: " << m_surfs.size() << " surfaces." << std::endl;
-    }
 
     /**
      * @brief Returns bounding box of the domain.
@@ -232,9 +228,22 @@ protected:
     std::map<int, CADSurfSharedPtr> m_surfs;
     /// Map of vertices
     std::map<int, CADVertSharedPtr> m_verts;
+    /// Verbosity
+    bool m_verbose;
 
     bool m_2d, m_cfiMesh;
     std::string m_naca;
+
+    /**
+     * @brief Reports basic properties to screen.
+     */
+    void Report()
+    {
+        std::cout << std::endl << "CAD report:" << std::endl;
+        std::cout << "\tCAD has: " << m_verts.size() << " verts." << std::endl;
+        std::cout << "\tCAD has: " << m_curves.size() << " curves." << std::endl;
+        std::cout << "\tCAD has: " << m_surfs.size() << " surfaces." << std::endl;
+    }
 };
 
 typedef std::shared_ptr<CADSystem> CADSystemSharedPtr;

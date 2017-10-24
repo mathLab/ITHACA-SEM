@@ -311,7 +311,10 @@ void InputMCF::Process()
     module = GetModuleFactory().CreateInstance(
         ModuleKey(eProcessModule, "loadcad"), m_mesh);
     module->RegisterConfig("filename", m_cadfile);
-
+    if(m_mesh->m_verbose)
+    {
+        module->RegisterConfig("verbose", "");
+    }
     if (m_2D)
     {
         module->RegisterConfig("2D", "");

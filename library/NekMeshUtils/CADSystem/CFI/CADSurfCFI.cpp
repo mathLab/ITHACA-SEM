@@ -67,6 +67,7 @@ Array<OneD, NekDouble> CADSurfCFI::GetBounds()
 
 NekDouble CADSurfCFI::locuv(Array<OneD, NekDouble> p, Array<OneD, NekDouble> &uv)
 {
+    uv = Array<OneD, NekDouble>(2);
     cfi::Position px;
     px.x = p[0] / m_scal;
     px.y = p[1] / m_scal;

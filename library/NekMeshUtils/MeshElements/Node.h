@@ -240,8 +240,7 @@ public:
 
     void SetCADSurf(CADSurfSharedPtr s, Array<OneD, NekDouble> uv)
     {
-        CADSurfList[s->GetId()] =
-            std::pair<CADSurfSharedPtr, Array<OneD, NekDouble> >(s, uv);
+        CADSurfList.insert(make_pair(s->GetId(), make_pair(s, uv)));
     }
 
     NekDouble GetCADCurveInfo(int i)

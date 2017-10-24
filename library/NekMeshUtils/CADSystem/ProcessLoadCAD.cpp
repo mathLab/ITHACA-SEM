@@ -60,6 +60,8 @@ ProcessLoadCAD::ProcessLoadCAD(MeshSharedPtr m) : ProcessModule(m)
         ConfigOption(true, "", "specifies that the CAD can be multibody");
     m_config["NACA"] =
         ConfigOption(false, "", "naca domain");
+    m_config["verbose"] =
+        ConfigOption(true, "", "verbose output from cadsystem");
 }
 
 ProcessLoadCAD::~ProcessLoadCAD()
@@ -101,12 +103,12 @@ void ProcessLoadCAD::Process()
         m_mesh->m_cad->SetCFIMesh();
     }
 
-    ASSERTL0(m_mesh->m_cad->LoadCAD(), "Failed to load CAD");
-
-    if (m_mesh->m_verbose)
+    if(m_config["verbose"].beenSet)
     {
-        m_mesh->m_cad->Report();
+        m_mesh->m_cad->SetVerbose();
     }
+
+    ASSERTL0(m_mesh->m_cad->LoadCAD(), "Failed to load CAD");
 }
 }
 }

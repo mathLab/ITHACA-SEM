@@ -587,6 +587,8 @@ namespace Nektar
                 {
                     velbc[i] = Array<OneD, NekDouble> 
                         (VelBndExp[i][n]->GetTotPoints(), 0.0);
+                    VelBndExp[i][n]->SetWaveSpace(
+                            m_fields[m_velocity[i]]->GetWaveSpace());
                     VelBndExp[i][n]->BwdTrans(VelBndExp[i][n]->GetCoeffs(),
                                               velbc[i]);
                 }

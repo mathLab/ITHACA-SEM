@@ -350,6 +350,20 @@ void InputMCF::Process()
         {
             module->RegisterConfig("blcurves", m_blsurfs);
             module->RegisterConfig("blthick", m_blthick);
+
+            if (m_adjust)
+            {
+                module->RegisterConfig("bltadjust", m_adjustment);
+
+                if (m_adjustall)
+                {
+                    module->RegisterConfig("adjustblteverywhere", "");
+                }
+            }
+        }
+        if (m_periodic.size())
+        {
+            module->RegisterConfig("periodic", m_periodic);
         }
 
         try
@@ -525,6 +539,7 @@ void InputMCF::Process()
             vector<string> tmp(2);
             boost::split(tmp, il, boost::is_any_of(","));
             module->RegisterConfig("surf1", tmp[0]);
+            module->RegisterConfig("surf2", tmp[1]);
         }
 
         module->SetDefaults();

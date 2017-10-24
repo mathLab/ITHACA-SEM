@@ -39,6 +39,8 @@
 #include <PulseWaveSolver/EquationSystems/PulseWaveSystem.h>
 #include <PulseWaveSolver/EquationSystems/PulseWaveBoundary.h>
 #include <PulseWaveSolver/EquationSystems/PulseWavePressureArea.h>
+#include <SolverUtils/Advection/Advection.h>
+#include <SolverUtils/RiemannSolvers/RiemannSolver.h>
 
 using namespace Nektar::SolverUtils;
 
@@ -62,7 +64,12 @@ namespace Nektar
         
         virtual ~PulseWavePropagation();
 	
-		
+        // Functions for Riemann solver
+        Array<OneD, NekDouble> &GetA0();
+        Array<OneD, NekDouble> &GetBeta();
+        Array<OneD, NekDouble> &GetN();
+        NekDouble               GetRho();
+        NekDouble               GetPext();
     protected:
         PulseWavePropagation(const LibUtilities::SessionReaderSharedPtr& pSession);
 
@@ -78,20 +85,15 @@ namespace Nektar
                                             Array<OneD, Array<OneD, NekDouble> >&outarray, 
                                             const NekDouble time);
         virtual void v_InitObject();
-        
-        virtual void v_GetFluxVector(const int i, Array<OneD, Array<OneD, NekDouble> > &physfield, 
-                                     Array<OneD, Array<OneD, NekDouble> > &flux);
-        
+
         /// DG Pulse Wave Propagation routines:
-        /// Numerical Flux at interelemental boundaries
-        virtual void v_NumericalFlux(Array<OneD, Array<OneD, NekDouble> > &physfield, 
-                                     Array<OneD, Array<OneD, NekDouble> > &numflux);
-        
-        /// Upwinding Riemann solver for interelemental boundaries
-        void RiemannSolverUpwind(NekDouble AL,NekDouble uL,NekDouble AR,NekDouble uR, NekDouble &Aflux, 
-                                 NekDouble &uflux, NekDouble A_0, NekDouble beta,
-                                 NekDouble n);
-        
+        void GetFluxVector(
+            const Array<OneD, Array<OneD, NekDouble> >               &physfield,
+                  Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &flux);
+
+        SolverUtils::RiemannSolverSharedPtr     m_riemannSolver;
+        SolverUtils::AdvectionSharedPtr         m_advObject;
+
         Array<OneD, PulseWaveBoundarySharedPtr> m_Boundary;
 
         PulseWavePressureAreaSharedPtr m_pressureArea;

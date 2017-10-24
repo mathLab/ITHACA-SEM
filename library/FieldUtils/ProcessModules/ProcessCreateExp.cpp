@@ -193,13 +193,12 @@ void ProcessCreateExp::Process(po::variables_map &vm)
 
             m_f->m_session->LoadParameter("Strip_Z", nstrips, 1);
 
-            vector<string> vars;
+            vector<string> vars = m_f->m_session->GetVariables();
             if (vm.count("useSessionVariables"))
             {
-                m_f->m_variables = m_f->m_session->GetVariables();
+                m_f->m_variables = vars;
             }
             nfields = m_f->m_variables.size();
-            vars    = m_f->m_variables;
 
             m_f->m_exp.resize(nfields * nstrips);
 

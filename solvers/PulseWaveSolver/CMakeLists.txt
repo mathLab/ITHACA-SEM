@@ -34,6 +34,7 @@ IF( NEKTAR_SOLVER_PULSEWAVE )
         EquationSystems/LymphaticPressureArea.cpp
         EquationSystems/ArterialPressureArea.h
         EquationSystems/ArterialPressureArea.cpp
+        RiemannSolvers/UpwindPulseSolver.cpp
         )
 
     SUBDIRS(Utilities)

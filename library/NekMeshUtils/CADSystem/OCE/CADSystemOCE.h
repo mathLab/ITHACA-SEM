@@ -59,13 +59,16 @@ public:
      * @brief Default constructor.
      */
     CADSystemOCE(std::string name) : CADSystem(name) {}
-    virtual ~CADSystemOCE()
-    {
-    }
+    ~CADSystemOCE(){};
 
     bool LoadCAD();
 
     Array<OneD, NekDouble> GetBoundingBox();
+    
+    TopoDS_Shape GetShape()
+    {
+        return shape;
+    }
 
 
 private:
@@ -82,6 +85,8 @@ private:
     TopoDS_Shape shape;
     TopTools_IndexedMapOfShape mapOfVerts, mapOfEdges, mapOfFaces;
 };
+
+typedef boost::shared_ptr<CADSystemOCE> CADSystemOCESharedPtr;
 
 
 }

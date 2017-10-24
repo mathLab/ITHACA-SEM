@@ -36,8 +36,6 @@
 #ifndef NEKMESHUTILS_CADSYSTEM_CADVERT
 #define NEKMESHUTILS_CADSYSTEM_CADVERT
 
-#include <boost/shared_ptr.hpp>
-
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
@@ -74,9 +72,7 @@ public:
         m_type = CADType::eVert;
     }
 
-    virtual ~CADVert()
-    {
-    }
+    virtual ~CADVert(){};
 
     /**
      * @brief Get x,y,z location of the vertex
@@ -110,6 +106,8 @@ public:
             return -1;
         }
     }
+    
+    virtual NekDouble DistanceTo(Array<OneD, NekDouble> l) = 0;
 
     NekDouble DistanceTo(Array<OneD, NekDouble> xyz);
 
@@ -134,7 +132,7 @@ protected:
     std::vector<CADCurveSharedPtr> curves;
 };
 
-typedef boost::shared_ptr<CADVert> CADVertSharedPtr;
+typedef std::shared_ptr<CADVert> CADVertSharedPtr;
 
 typedef LibUtilities::NekFactory<std::string, CADVert> CADVertFactory;
 

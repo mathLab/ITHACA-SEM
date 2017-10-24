@@ -32,14 +32,13 @@
 //  Description: cad object methods.
 //
 ////////////////////////////////////////////////////////////////////////////////
+#include "CADSurf.h"
+#include "CADCurve.h"
 
 #include <boost/geometry.hpp>
 #include <boost/geometry/algorithms/assign.hpp>
 #include <boost/geometry/geometries/point_xy.hpp>
 #include <boost/geometry/geometries/polygon.hpp>
-
-#include "CADSurf.h"
-#include "CADCurve.h"
 
 namespace bg = boost::geometry;
 typedef bg::model::d2::point_xy<double> point_xy;

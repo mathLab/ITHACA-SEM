@@ -54,18 +54,36 @@ public:
     SOLVER_UTILS_EXPORT virtual void v_InitObject();
 
     /// Returns the advection object held by this instance.
-    AdvectionSharedPtr GetAdvObject()
+    SOLVER_UTILS_EXPORT AdvectionSharedPtr GetAdvObject()
     {
         return m_advObject;
     }
 
+    SOLVER_UTILS_EXPORT Array<OneD, NekDouble>  GetElmtCFLVals(void);
+    SOLVER_UTILS_EXPORT NekDouble               GetCFLEstimate(int &elmtid);
+
 protected:
     /// Advection term
     SolverUtils::AdvectionSharedPtr m_advObject;
+
+    SOLVER_UTILS_EXPORT virtual bool v_PostIntegrate(int step);
+
+    SOLVER_UTILS_EXPORT virtual Array<OneD, NekDouble> v_GetMaxStdVelocity()
+    {
+        ASSERTL0(false,
+            "v_GetMaxStdVelocity is not implemented by the base class.");
+        Array<OneD, NekDouble> dummy(1);
+        return dummy;
+    }
+
+private:
+    /// dump cfl estimate
+    int         m_cflsteps;
+
 };
 
 /// Shared pointer to an AdvectionSystem class
-typedef boost::shared_ptr<AdvectionSystem> AdvectionSystemSharedPtr;
+typedef std::shared_ptr<AdvectionSystem> AdvectionSystemSharedPtr;
 
 }
 }

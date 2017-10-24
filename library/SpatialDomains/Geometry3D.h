@@ -50,21 +50,18 @@ namespace Nektar
         class Geometry2D;
         class Geometry3D;
         class CompToElmt;
-        typedef boost::shared_ptr<Geometry3D> Geometry3DSharedPtr;
-        typedef boost::shared_ptr<Geometry2D> Geometry2DSharedPtr;
+        typedef std::shared_ptr<Geometry3D> Geometry3DSharedPtr;
+        typedef std::shared_ptr<Geometry2D> Geometry2DSharedPtr;
         typedef std::vector<Geometry3DSharedPtr> Geometry3DVector;
         typedef std::vector<Geometry2DSharedPtr> Geometry2DVector;
-        typedef std::vector<Geometry3DSharedPtr>::iterator Geometry3DVectorIter;
 
         class PointGeom;
-        typedef boost::shared_ptr<PointGeom> PointGeomSharedPtr;
+        typedef std::shared_ptr<PointGeom> PointGeomSharedPtr;
         typedef std::vector<PointGeomSharedPtr> PointGeomVector;
 
         class SegGeom;
-        typedef boost::shared_ptr<SegGeom>    SegGeomSharedPtr;
+        typedef std::shared_ptr<SegGeom>    SegGeomSharedPtr;
         typedef std::vector<SegGeomSharedPtr> SegGeomVector;
-
-
 
         /// 3D geometry information
         class Geometry3D : public Geometry

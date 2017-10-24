@@ -54,7 +54,7 @@ class Generator2D : public ProcessModule
 {
 public:
     /// Creates an instance of this class
-    static boost::shared_ptr<Module> create(MeshSharedPtr m)
+    static std::shared_ptr<Module> create(MeshSharedPtr m)
     {
         return MemoryManager<Generator2D>::AllocateSharedPtr(m);
     }

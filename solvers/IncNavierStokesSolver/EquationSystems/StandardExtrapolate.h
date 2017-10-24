@@ -53,7 +53,7 @@ namespace Nektar
     
     class StandardExtrapolate;
     
-    typedef boost::shared_ptr<StandardExtrapolate> StandardExtrapolateSharedPtr;
+    typedef std::shared_ptr<StandardExtrapolate> StandardExtrapolateSharedPtr;
     
     class StandardExtrapolate : public Extrapolate
     {

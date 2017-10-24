@@ -45,6 +45,7 @@
 #include <mpi.h>
 #endif
 
+#include <LibUtilities/BasicUtils/ParseUtils.h>
 #include <LibUtilities/BasicUtils/FileSystem.h>
 
 using namespace std;
@@ -239,7 +240,7 @@ void PtsIO::v_ImportFieldData(const string inFile, PtsFieldSharedPtr &ptsField)
     if (!fields.empty())
     {
         bool valid =
-            ParseUtils::GenerateOrderedStringVector(fields.c_str(), fieldNames);
+            ParseUtils::GenerateVector(fields, fieldNames);
         ASSERTL0(
             valid,
             "Unable to process list of field variable in  FIELDS attribute:  " +

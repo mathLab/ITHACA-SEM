@@ -56,7 +56,7 @@ namespace Nektar
 		class NektarFFT;
 		
 		// A shared pointer to the NektarFFT object
-		typedef boost::shared_ptr<NektarFFT>  NektarFFTSharedPtr;
+		typedef std::shared_ptr<NektarFFT>  NektarFFTSharedPtr;
 		
 		/// Datatype of the NekFactory used to instantiate classes derived from
 		/// the NektarFFT class.

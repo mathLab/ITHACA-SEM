@@ -200,7 +200,7 @@ void Face::MakeOrder(int                                order,
                 x[j] = xmap->PhysEvaluate(xp, phys[j]);
             }
 
-            m_faceNodes[cnt] = boost::shared_ptr<Node>(
+            m_faceNodes[cnt] = std::shared_ptr<Node>(
                 new Node(id++, x[0], x[1], x[2]));
         }
         m_curveType = pType;
@@ -247,7 +247,7 @@ void Face::MakeOrder(int                                order,
                     x[k] = xmap->PhysEvaluate(xp, phys[k]);
                 }
 
-                m_faceNodes[cnt] = boost::shared_ptr<Node>(
+                m_faceNodes[cnt] = std::shared_ptr<Node>(
                     new Node(id++, x[0], x[1], x[2]));
             }
         }
@@ -261,7 +261,7 @@ void Face::MakeOrder(int                                order,
 
     if(m_parentCAD)
     {
-        CADSurfSharedPtr s = boost::dynamic_pointer_cast<CADSurf>(m_parentCAD);
+        CADSurfSharedPtr s = std::dynamic_pointer_cast<CADSurf>(m_parentCAD);
         for(int i = 0; i < m_faceNodes.size(); i++)
         {
             Array<OneD, NekDouble> loc(3);

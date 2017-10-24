@@ -36,8 +36,6 @@
 #ifndef NEKMESHUTILS_CADSYSTEM_CADOBJ
 #define NEKMESHUTILS_CADSYSTEM_CADOBJ
 
-#include <boost/shared_ptr.hpp>
-
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 
 namespace Nektar
@@ -122,7 +120,7 @@ protected:
     std::string m_name;
 };
 
-typedef boost::shared_ptr<CADObject> CADObjectSharedPtr;
+typedef std::shared_ptr<CADObject> CADObjectSharedPtr;
 }
 }
 

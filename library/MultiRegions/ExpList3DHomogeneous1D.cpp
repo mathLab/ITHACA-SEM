@@ -142,7 +142,7 @@ namespace Nektar
             if(DeclarePlanesSetCoeffPhys)
             {
                 bool False = false;
-                ExpList2DSharedPtr zero_plane = boost::dynamic_pointer_cast<ExpList2D> (In.m_planes[0]);
+                ExpList2DSharedPtr zero_plane = std::dynamic_pointer_cast<ExpList2D> (In.m_planes[0]);
 
                 for(int n = 0; n < m_planes.num_elements(); ++n)
                 {
@@ -178,7 +178,7 @@ namespace Nektar
                 }
                 
                 ExpList2DSharedPtr zero_plane_old =
-                        boost::dynamic_pointer_cast<ExpList2D> (In.m_planes[0]);
+                        std::dynamic_pointer_cast<ExpList2D> (In.m_planes[0]);
                 
                 ExpList2DSharedPtr zero_plane = 
                     MemoryManager<ExpList2D>::AllocateSharedPtr(*(zero_plane_old), eIDsPlane, ImpType);
@@ -539,7 +539,7 @@ namespace Nektar
                 
                 for(int i = 0; i < m_planes[n]->GetExpSize(); ++i)
                 {
-                    StdRegions::StdExpansionSharedPtr exp = m_planes[n]->GetExp(i);
+                    LocalRegions::ExpansionSharedPtr exp = m_planes[n]->GetExp( i );
                     Array<OneD, NekDouble> phys(exp->GetTotPoints());
                     exp->BwdTrans(m_planes[n]->GetCoeffs()+m_planes[n]->GetCoeff_Offset(i),
                                   phys);

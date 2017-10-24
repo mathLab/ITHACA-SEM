@@ -33,11 +33,11 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <NekMeshUtils/MeshElements/Edge.h>
+#include <mutex>
 
+#include <NekMeshUtils/MeshElements/Edge.h>
 #include <NekMeshUtils/CADSystem/CADCurve.h>
 #include <NekMeshUtils/CADSystem/CADSurf.h>
-
 #include <LibUtilities/Foundations/ManagerAccess.h>
 
 namespace Nektar
@@ -69,8 +69,8 @@ string Edge::GetXmlCurveString()
 
 SpatialDomains::SegGeomSharedPtr Edge::GetGeom(int coordDim)
 {
-    static boost::mutex io_mutex;
-    boost::mutex::scoped_lock lock(io_mutex);
+    static std::mutex io_mutex;
+    std::unique_lock<std::mutex> lock(io_mutex);
 
     // Create edge vertices.
     SpatialDomains::PointGeomSharedPtr p[2];
@@ -134,7 +134,7 @@ void Edge::MakeOrder(int order, SpatialDomains::GeometrySharedPtr geom,
         }
 
         m_edgeNodes[i - 1] =
-            boost::shared_ptr<Node>(new Node(id++, x[0], x[1], x[2]));
+            std::shared_ptr<Node>(new Node(id++, x[0], x[1], x[2]));
     }
 
     m_curveType = edgeType;
@@ -144,7 +144,7 @@ void Edge::MakeOrder(int order, SpatialDomains::GeometrySharedPtr geom,
         if (m_parentCAD->GetType() == CADType::eCurve)
         {
             CADCurveSharedPtr c =
-                boost::dynamic_pointer_cast<CADCurve>(m_parentCAD);
+                std::dynamic_pointer_cast<CADCurve>(m_parentCAD);
             for (int i = 0; i < m_edgeNodes.size(); i++)
             {
                 Array<OneD, NekDouble> loc(3);
@@ -171,7 +171,7 @@ void Edge::MakeOrder(int order, SpatialDomains::GeometrySharedPtr geom,
         else
         {
             CADSurfSharedPtr s =
-                boost::dynamic_pointer_cast<CADSurf>(m_parentCAD);
+                std::dynamic_pointer_cast<CADSurf>(m_parentCAD);
             for (int i = 0; i < m_edgeNodes.size(); i++)
             {
                 Array<OneD, NekDouble> loc(3);

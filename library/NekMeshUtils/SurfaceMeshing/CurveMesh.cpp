@@ -165,7 +165,7 @@ void CurveMesh::Mesh()
     {
         t                = m_cadcurve->tAtArcLength(meshsvalue[i]);
         loc              = m_cadcurve->P(t);
-        NodeSharedPtr n2 = boost::shared_ptr<Node>(
+        NodeSharedPtr n2 = std::shared_ptr<Node>(
             new Node(m_mesh->m_numNodes++, loc[0], loc[1], loc[2]));
         n2->SetCADCurve(m_cadcurve, t);
         for (int j = 0; j < s.size(); j++)
@@ -200,7 +200,7 @@ void CurveMesh::Mesh()
     // make edges and add them to the edgeset for the face mesher to use
     for (int i = 0; i < m_meshpoints.size() - 1; i++)
     {
-        EdgeSharedPtr e = boost::shared_ptr<Edge>(
+        EdgeSharedPtr e = std::shared_ptr<Edge>(
             new Edge(m_meshpoints[i], m_meshpoints[i + 1]));
         e->m_parentCAD = m_cadcurve;
         m_mesh->m_edgeSet.insert(e);
@@ -430,7 +430,7 @@ void CurveMesh::PeriodicOverwrite(CurveMeshSharedPtr from)
     // make edges and add them to the edgeset for the face mesher to use
     for (int i = 0; i < m_meshpoints.size() - 1; i++)
     {
-        EdgeSharedPtr e = boost::shared_ptr<Edge>(
+        EdgeSharedPtr e = std::shared_ptr<Edge>(
             new Edge(m_meshpoints[i], m_meshpoints[i + 1]));
         e->m_parentCAD = m_cadcurve;
         m_mesh->m_edgeSet.insert(e);

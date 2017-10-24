@@ -111,8 +111,8 @@ void Mesh::MakeOrder(int order, LibUtilities::PointsType distType)
     EdgeSet::iterator eit;
     FaceSet::iterator fit;
 
-    boost::unordered_map<int, EdgeSharedPtr> edgeCopies;
-    boost::unordered_map<int, FaceSharedPtr> faceCopies;
+    std::unordered_map<int, EdgeSharedPtr> edgeCopies;
+    std::unordered_map<int, FaceSharedPtr> faceCopies;
 
     // Decide on distribution of points to use for each shape type based on the
     // input we've been supplied.
@@ -186,7 +186,7 @@ void Mesh::MakeOrder(int order, LibUtilities::PointsType distType)
         (*fit)->m_faceNodes.clear();
     }
 
-    boost::unordered_set<int> processedEdges, processedFaces, processedVolumes;
+    std::unordered_set<int> processedEdges, processedFaces, processedVolumes;
 
     // note if CAD previously existed on the face or edge, the new points need
     // to be projected onto the CAD entity.

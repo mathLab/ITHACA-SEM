@@ -94,9 +94,9 @@ void NodalPrismSPI::CalculateDerivMatrix()
 {
 }
 
-boost::shared_ptr<PointsBaseType> NodalPrismSPI::Create(const PointsKey &key)
+std::shared_ptr<PointsBaseType> NodalPrismSPI::Create(const PointsKey &key)
 {
-    boost::shared_ptr<PointsBaseType> returnval(
+    std::shared_ptr<PointsBaseType> returnval(
         MemoryManager<NodalPrismSPI>::AllocateSharedPtr(key));
     returnval->Initialize();
     return returnval;

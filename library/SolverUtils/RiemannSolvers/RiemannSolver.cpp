@@ -331,10 +331,7 @@ namespace Nektar
          */
         bool RiemannSolver::CheckScalars(std::string name)
         {
-            std::map<std::string, RSScalarFuncType>::iterator it = 
-                m_scalars.find(name);
-            
-            return it != m_scalars.end();
+            return m_scalars.find(name) != m_scalars.end();
         }
 
         /**
@@ -344,10 +341,7 @@ namespace Nektar
          */
         bool RiemannSolver::CheckVectors(std::string name)
         {
-            std::map<std::string, RSVecFuncType>::iterator it = 
-                m_vectors.find(name);
-            
-            return it != m_vectors.end();
+            return m_vectors.find(name) != m_vectors.end();
         }
 
         /**
@@ -357,10 +351,7 @@ namespace Nektar
          */
         bool RiemannSolver::CheckParams(std::string name)
         {
-            std::map<std::string, RSParamFuncType>::iterator it = 
-                m_params.find(name);
-            
-            return it != m_params.end();
+            return m_params.find(name) != m_params.end();
         }
 
         /**
@@ -370,10 +361,7 @@ namespace Nektar
          */
         bool RiemannSolver::CheckAuxScal(std::string name)
         {
-            std::map<std::string, RSScalarFuncType>::iterator it =
-                m_auxScal.find(name);
-
-            return it != m_auxScal.end();
+            return m_auxScal.find(name) != m_auxScal.end();
         }
 
         /**
@@ -383,10 +371,7 @@ namespace Nektar
          */
         bool RiemannSolver::CheckAuxVec(std::string name)
         {
-            std::map<std::string, RSVecFuncType>::iterator it =
-                m_auxVec.find(name);
-
-            return it != m_auxVec.end();
+            return m_auxVec.find(name) != m_auxVec.end();
         }
 
         /**

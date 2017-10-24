@@ -441,7 +441,7 @@ NekDouble BLMesh::Proximity(NodeSharedPtr n, ElementSharedPtr el)
         }
     }
 
-    NodeSharedPtr point = boost::shared_ptr<Node>(
+    NodeSharedPtr point = std::shared_ptr<Node>(
         new Node(0, B[0] + s * E0[0] + t * E1[0], B[1] + s * E0[1] + t * E1[1],
                  B[2] + s * E0[2] + t * E1[2]));
 
@@ -989,7 +989,7 @@ void BLMesh::Setup()
         if (inter.size() > 0)
         {
             // initialise a new bl boudnary node
-            blInfoSharedPtr bln = boost::shared_ptr<blInfo>(new blInfo);
+            blInfoSharedPtr bln = std::shared_ptr<blInfo>(new blInfo);
             bln->oNode          = (*it);
             bln->stopped        = false;
 
@@ -1058,7 +1058,7 @@ void BLMesh::Setup()
             loc[k] += bit->second->N[k] * m_layerT[0];
         }
 
-        bit->second->pNode = boost::shared_ptr<Node>(
+        bit->second->pNode = std::shared_ptr<Node>(
             new Node(m_mesh->m_numNodes++, loc[0], loc[1], loc[2]));
         bit->second->bl = 0;
     }

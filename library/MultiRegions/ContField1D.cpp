@@ -87,8 +87,8 @@ namespace Nektar
             DisContField1D(),
             m_locToGloMap(),
             m_globalLinSysManager(
-                    boost::bind(&ContField1D::GenGlobalLinSys, this, _1),
-                    std::string("GlobalLinSys"))
+                std::bind(&ContField1D::GenGlobalLinSys, this, std::placeholders::_1),
+                std::string("GlobalLinSys"))
         {
         }
 
@@ -122,8 +122,8 @@ namespace Nektar
             DisContField1D(pSession,graph1D,variable,false,ImpType),
             m_locToGloMap(),
             m_globalLinSysManager(
-                    boost::bind(&ContField1D::GenGlobalLinSys, this, _1),
-                    std::string("GlobalLinSys"))
+                std::bind(&ContField1D::GenGlobalLinSys, this, std::placeholders::_1),
+                std::string("GlobalLinSys"))
         {
             SpatialDomains::BoundaryConditions bcs(pSession, graph1D);
 
@@ -146,8 +146,8 @@ namespace Nektar
             DisContField1D(In),
             m_locToGloMap(In.m_locToGloMap),
             m_globalLinSysManager(
-                    boost::bind(&ContField1D::GenGlobalLinSys, this, _1),
-                    std::string("GlobalLinSys"))
+                std::bind(&ContField1D::GenGlobalLinSys, this, std::placeholders::_1),
+                std::string("GlobalLinSys"))
         {
         }
 
@@ -160,8 +160,8 @@ namespace Nektar
             DisContField1D(In),
             m_locToGloMap(),
             m_globalLinSysManager(
-                    boost::bind(&ContField1D::GenGlobalLinSys, this, _1),
-                    std::string("GlobalLinSys"))
+                std::bind(&ContField1D::GenGlobalLinSys, this, std::placeholders::_1),
+                std::string("GlobalLinSys"))
         {
             m_locToGloMap = MemoryManager<AssemblyMapCG>
                 ::AllocateSharedPtr(pSession, m_ncoeffs, In);

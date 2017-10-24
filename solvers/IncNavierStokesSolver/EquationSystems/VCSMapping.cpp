@@ -80,7 +80,7 @@ namespace Nektar
             m_advObject); 
         m_extrapolation->SubSteppingTimeIntegration(
                             m_intScheme->GetIntegrationMethod(), m_intScheme);
-        m_extrapolation->GenerateHOPBCMap(m_session);        
+        m_extrapolation->GenerateHOPBCMap(m_session);
 
        // Storage to extrapolate pressure forcing
         int physTot = m_fields[0]->GetTotPoints();
@@ -204,10 +204,9 @@ namespace Nektar
         }
 
         // Add forcing terms
-        std::vector<SolverUtils::ForcingSharedPtr>::const_iterator x;
-        for (x = m_forcing.begin(); x != m_forcing.end(); ++x)
+        for (auto &x : m_forcing)
         {
-            (*x)->Apply(m_fields, inarray, outarray, time);
+            x->Apply(m_fields, inarray, outarray, time);
         }
         
         // Add mapping terms

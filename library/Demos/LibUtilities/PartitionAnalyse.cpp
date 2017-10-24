@@ -60,8 +60,8 @@ public:
     virtual ~FauxComm() {}
     void v_SplitComm(int pRows, int pColumns)
     {
-        m_commRow    = boost::shared_ptr<FauxComm>(new FauxComm(pColumns));
-        m_commColumn = boost::shared_ptr<FauxComm>(new FauxComm(pRows));
+        m_commRow    = std::shared_ptr<FauxComm>(new FauxComm(pColumns));
+        m_commColumn = std::shared_ptr<FauxComm>(new FauxComm(pRows));
     }
 };
 
@@ -77,7 +77,7 @@ int main(int argc, char *argv[])
     int nParts = atoi(argv[1]);
     vector<string> filenames(argv + 2, argv + argc);
     
-    CommSharedPtr vComm = boost::shared_ptr<FauxComm>(
+    CommSharedPtr vComm = std::shared_ptr<FauxComm>(
         new FauxComm(argc, argv, nParts));
 
     char **new_argv = new char*[argc];

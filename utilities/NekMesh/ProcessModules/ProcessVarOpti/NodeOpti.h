@@ -37,7 +37,9 @@
 #define UTILITIES_NEKMESH_NODEOPTI
 
 #include <ostream>
+#include <mutex>
 
+#include <LibUtilities/BasicUtils/HashUtils.hpp>
 #include <LibUtilities/BasicUtils/Thread.h>
 
 #include "ProcessVarOpti.h"
@@ -70,20 +72,19 @@ public:
 
         // Set up storage for GetFunctional to avoid reallocation on each call.
         size_t storageCount = 0;
-        std::map<LibUtilities::ShapeType, std::vector<ElUtilSharedPtr> >
-            ::iterator typeIt;
+
         // Count total storage needed.
-        for (typeIt = m_data.begin(); typeIt != m_data.end(); typeIt++)
+        for (auto &typeIt : m_data)
         {
-            const int pts    = m_derivUtils[typeIt->first]->pts;
-            const int nElmt  = typeIt->second.size();
+            const int pts    = m_derivUtils[typeIt.first]->pts;
+            const int nElmt  = typeIt.second.size();
 
             storageCount = std::max(storageCount,
-                                    dim * m_derivUtils[typeIt->first]->ptsStd *
-                                    typeIt->second.size());
+                                    dim * m_derivUtils[typeIt.first]->ptsStd *
+                                    typeIt.second.size());
 
             m_derivs.insert(std::make_pair(
-                                typeIt->first,
+                                typeIt.first,
                                 DerivArray(boost::extents[dim][nElmt][dim][pts])));
         }
 
@@ -104,11 +105,11 @@ public:
 
 protected:
     NodeSharedPtr m_node;
-    boost::mutex mtx;
+    std::mutex mtx;
     std::map<LibUtilities::ShapeType, std::vector<ElUtilSharedPtr> > m_data;
     Array<OneD, NekDouble> m_grad;
     std::vector<NekDouble> m_tmpStore;
-    boost::unordered_map<LibUtilities::ShapeType, DerivArray> m_derivs;
+    std::unordered_map<LibUtilities::ShapeType, DerivArray, EnumHash> m_derivs;
 
 
     template <int DIM> int IsIndefinite();
@@ -132,7 +133,7 @@ protected:
     }
 };
 
-typedef boost::shared_ptr<NodeOpti> NodeOptiSharedPtr;
+typedef std::shared_ptr<NodeOpti> NodeOptiSharedPtr;
 typedef LibUtilities::NekFactory<
     int, NodeOpti, NodeSharedPtr, std::vector<ElUtilSharedPtr>,
     ResidualSharedPtr, std::map<LibUtilities::ShapeType, DerivUtilSharedPtr>,

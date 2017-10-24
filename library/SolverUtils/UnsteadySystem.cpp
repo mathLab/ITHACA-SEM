@@ -41,6 +41,8 @@
 #include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
 #include <SolverUtils/UnsteadySystem.h>
 
+#include <boost/format.hpp>
+
 using namespace std;
 
 namespace Nektar
@@ -90,6 +92,11 @@ namespace Nektar
                                        m_explicitReaction, true);
 
             m_session->LoadParameter("CheckNanSteps", m_nanSteps, 1);
+            // Steady state tolerance
+            m_session->LoadParameter("SteadyStateTol", m_steadyStateTol, 0.0);
+            // Frequency for checking steady state
+            m_session->LoadParameter("SteadyStateSteps",
+                                          m_steadyStateSteps, 1);
 
             // For steady problems, we do not initialise the time integration
             if (m_session->DefinesSolverInfo("TIMEINTEGRATIONMETHOD"))
@@ -102,6 +109,23 @@ namespace Nektar
                 m_session->LoadParameter("IO_InfoSteps", m_infosteps, 0);
                 m_session->LoadParameter("CFL", m_cflSafetyFactor, 0.0);
 
+                // Ensure that there is no conflict of parameters
+                if(m_cflSafetyFactor > 0.0)
+                {
+                    // Check final condition
+                    ASSERTL0(m_fintime == 0.0 || m_steps == 0,
+                             "Final condition not unique: "
+                             "fintime > 0.0 and Nsteps > 0");
+                    // Check timestep condition
+                    ASSERTL0(m_timestep == 0.0,
+                             "Timestep not unique: timestep > 0.0 & CFL > 0.0");
+                }
+                else
+                {
+                    ASSERTL0(m_timestep != 0.0,
+                             "Need to set either TimeStep or CFL");
+                }
+
                 // Set up time to be dumped in field information
                 m_fieldMetaDataMap["Time"] =
                         boost::lexical_cast<std::string>(m_time);
@@ -111,14 +135,11 @@ namespace Nektar
             m_homoInitialFwd = true;
 
             // Set up filters
-            LibUtilities::FilterMap::const_iterator x;
-            LibUtilities::FilterMap f = m_session->GetFilters();
-            for (x = f.begin(); x != f.end(); ++x)
+            for (auto &x : m_session->GetFilters())
             {
-                m_filters.push_back(GetFilterFactory().CreateInstance(
-                                                                x->first, 
-                                                                m_session, 
-                                                                x->second));
+                m_filters.push_back(
+                    GetFilterFactory().CreateInstance(
+                        x.first, m_session, x.second));
             }
         }
         
@@ -209,8 +230,7 @@ namespace Nektar
 
             // Set up wrapper to fields data storage.
             Array<OneD, Array<OneD, NekDouble> > fields(nvariables);
-            Array<OneD, Array<OneD, NekDouble> > tmp   (nvariables);
-            
+
             // Order storage to list time-integrated fields first.
             for(i = 0; i < nvariables; ++i)
             {
@@ -223,35 +243,15 @@ namespace Nektar
                 m_timestep, fields, m_time, m_ode);
 
             // Initialise filters
-            std::vector<FilterSharedPtr>::iterator x;
-            for (x = m_filters.begin(); x != m_filters.end(); ++x)
+            for (auto &x : m_filters)
             {
-                (*x)->Initialise(m_fields, m_time);
+                x->Initialise(m_fields, m_time);
             }
-
-            // Ensure that there is no conflict of parameters
-            if(m_cflSafetyFactor > 0.0)
-            {
-                // Check final condition
-                ASSERTL0(m_fintime == 0.0 || m_steps == 0,
-                         "Final condition not unique: "
-                         "fintime > 0.0 and Nsteps > 0");
-                
-                // Check timestep condition
-                ASSERTL0(m_timestep == 0.0, 
-                         "Timestep not unique: timestep > 0.0 & CFL > 0.0");
-            }
-
-            // Check uniqueness of checkpoint output
-            ASSERTL0((m_checktime == 0.0 && m_checksteps == 0) ||
-                     (m_checktime >  0.0 && m_checksteps == 0) || 
-                     (m_checktime == 0.0 && m_checksteps >  0),
-                     "Only one of IO_CheckTime and IO_CheckSteps "
-                     "should be set!");
 
             LibUtilities::Timer     timer;
             bool      doCheckTime   = false;
             int       step          = m_initialStep;
+            int       stepCounter   = 0;
             NekDouble intTime       = 0.0;
             NekDouble lastCheckTime = 0.0;
             NekDouble cpuTime       = 0.0;
@@ -287,7 +287,7 @@ namespace Nektar
                 }
 
                 fields = m_intScheme->TimeIntegrate(
-                    step, m_timestep, m_intSoln, m_ode);
+                    stepCounter, m_timestep, m_intSoln, m_ode);
                 timer.Stop();
 
                 m_time  += m_timestep;
@@ -334,6 +334,20 @@ namespace Nektar
                     break;
                 }
 
+                // Check for steady-state
+                if (m_steadyStateTol > 0.0 && (!((step+1)%m_steadyStateSteps)) )
+                {
+                    if (CheckSteadyState(step))
+                    {
+                        if (m_comm->GetRank() == 0)
+                        {
+                            cout << "Reached Steady State to tolerance "
+                                 << m_steadyStateTol << endl;
+                        }
+                        break;
+                    }
+                }
+
                 // search for NaN and quit if found
                 if (m_nanSteps && !((step+1) % m_nanSteps) )
                 {
@@ -352,10 +366,9 @@ namespace Nektar
                                 "NaN found during time integration.");
                 }
                 // Update filters
-                std::vector<FilterSharedPtr>::iterator x;
-                for (x = m_filters.begin(); x != m_filters.end(); ++x)
+                for (auto &x : m_filters)
                 {
-                    (*x)->Update(m_fields, m_time);
+                    x->Update(m_fields, m_time);
                 }
 
                 // Write out checkpoint files
@@ -400,6 +413,7 @@ namespace Nektar
 
                 // Step advance
                 ++step;
+                ++stepCounter;
             }
             
             // Print out summary statistics
@@ -441,15 +455,15 @@ namespace Nektar
             }
 
             // Finalise filters
-            for (x = m_filters.begin(); x != m_filters.end(); ++x)
+            for (auto &x : m_filters)
             {
-                (*x)->Finalise(m_fields, m_time);
+                x->Finalise(m_fields, m_time);
             }
             
             // Print for 1D problems
             if(m_spacedim == 1)
             {
-                v_AppendOutput1D(fields);   
+                v_AppendOutput1D(fields);
             }
         }
         
@@ -461,6 +475,7 @@ namespace Nektar
             CheckForRestartTime(m_time, m_nchk);
             SetBoundaryConditions(m_time);
             SetInitialConditions(m_time);
+            InitializeSteadyState();
         }
         
         /**
@@ -522,181 +537,6 @@ namespace Nektar
             outfile.close();
         }
 
-        void UnsteadySystem::v_NumericalFlux(
-            Array<OneD, Array<OneD, NekDouble> > &physfield,
-            Array<OneD, Array<OneD, NekDouble> > &numflux)
-        {
-            ASSERTL0(false, 
-                     "This function is not implemented for this equation.");
-        }
-
-        void UnsteadySystem::v_NumericalFlux(
-            Array<OneD, Array<OneD, NekDouble> > &physfield,
-            Array<OneD, Array<OneD, NekDouble> > &numfluxX,
-            Array<OneD, Array<OneD, NekDouble> > &numfluxY )
-        {
-            ASSERTL0(false, 
-                     "This function is not implemented for this equation.");
-        }
-
-        void UnsteadySystem::v_NumFluxforScalar(
-            const Array<OneD, Array<OneD, NekDouble> >               &ufield,
-                  Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &uflux)
-        {
-            int i, j;
-            int nTraceNumPoints = GetTraceNpoints();
-            int nvariables      = m_fields.num_elements();
-            int nqvar           = uflux.num_elements();
-
-            Array<OneD, NekDouble > Fwd     (nTraceNumPoints);
-            Array<OneD, NekDouble > Bwd     (nTraceNumPoints);
-            Array<OneD, NekDouble > Vn      (nTraceNumPoints, 0.0);
-            Array<OneD, NekDouble > fluxtemp(nTraceNumPoints, 0.0);
-
-            // Get the sign of (v \cdot n), v = an arbitrary vector
-
-            // Evaulate upwind flux:
-            // uflux = \hat{u} \phi \cdot u = u^{(+,-)} n
-            for (j = 0; j < nqvar; ++j)
-            {
-                for (i = 0; i < nvariables ; ++i)
-                {
-                    // Compute Fwd and Bwd value of ufield of i direction
-                    m_fields[i]->GetFwdBwdTracePhys(ufield[i], Fwd, Bwd);
-
-                    // if Vn >= 0, flux = uFwd, i.e.,
-                    // edge::eForward, if V*n>=0 <=> V*n_F>=0, pick uflux = uFwd
-                    // edge::eBackward, if V*n>=0 <=> V*n_B<0, pick uflux = uFwd
-
-                    // else if Vn < 0, flux = uBwd, i.e.,
-                    // edge::eForward, if V*n<0 <=> V*n_F<0, pick uflux = uBwd
-                    // edge::eBackward, if V*n<0 <=> V*n_B>=0, pick uflux = uBwd
-
-                    m_fields[i]->GetTrace()->Upwind(m_traceNormals[j], 
-                                                    Fwd, Bwd, fluxtemp);
-
-                    // Imposing weak boundary condition with flux
-                    // if Vn >= 0, uflux = uBwd at Neumann, i.e.,
-                    // edge::eForward, if V*n>=0 <=> V*n_F>=0, pick uflux = uBwd
-                    // edge::eBackward, if V*n>=0 <=> V*n_B<0, pick uflux = uBwd
-
-                    // if Vn >= 0, uflux = uFwd at Neumann, i.e.,
-                    // edge::eForward, if V*n<0 <=> V*n_F<0, pick uflux = uFwd
-                    // edge::eBackward, if V*n<0 <=> V*n_B>=0, pick uflux = uFwd
-
-                    if(m_fields[0]->GetBndCondExpansions().num_elements())
-                    {
-                        WeakPenaltyforScalar(i, ufield[i], fluxtemp);
-                    }
-
-                    // if Vn >= 0, flux = uFwd*(tan_{\xi}^- \cdot \vec{n}), 
-                    // i.e,
-                    // edge::eForward, uFwd \(\tan_{\xi}^Fwd \cdot \vec{n})
-                    // edge::eBackward, uFwd \(\tan_{\xi}^Bwd \cdot \vec{n})
-
-                    // else if Vn < 0, flux = uBwd*(tan_{\xi}^- \cdot \vec{n}), 
-                    // i.e,
-                    // edge::eForward, uBwd \(\tan_{\xi}^Fwd \cdot \vec{n})
-                    // edge::eBackward, uBwd \(\tan_{\xi}^Bwd \cdot \vec{n})
-
-                    Vmath::Vmul(nTraceNumPoints, 
-                                m_traceNormals[j], 1, 
-                                fluxtemp, 1, 
-                                uflux[j][i], 1);
-                }
-            }
-        }
-
-        
-        
-        void UnsteadySystem::v_NumFluxforVector(
-            const Array<OneD, Array<OneD, NekDouble> >               &ufield,
-                  Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &qfield,
-                  Array<OneD, Array<OneD, NekDouble> >               &qflux)
-        {
-            int nTraceNumPoints = GetTraceNpoints();
-            int nvariables = m_fields.num_elements();
-            int nqvar = qfield.num_elements();
-
-            NekDouble C11 = 1.0;
-            Array<OneD, NekDouble > Fwd(nTraceNumPoints);
-            Array<OneD, NekDouble > Bwd(nTraceNumPoints);
-            Array<OneD, NekDouble > Vn (nTraceNumPoints, 0.0);
-
-            Array<OneD, NekDouble > qFwd     (nTraceNumPoints);
-            Array<OneD, NekDouble > qBwd     (nTraceNumPoints);
-            Array<OneD, NekDouble > qfluxtemp(nTraceNumPoints, 0.0);
-
-            Array<OneD, NekDouble > uterm(nTraceNumPoints);
-
-            // Evaulate upwind flux:
-            // qflux = \hat{q} \cdot u = q \cdot n - C_(11)*(u^+ - u^-)
-            for (int i = 0; i < nvariables; ++i)
-            {
-                qflux[i] = Array<OneD, NekDouble> (nTraceNumPoints, 0.0);
-                for (int j = 0; j < nqvar; ++j)
-                {
-                    //  Compute Fwd and Bwd value of ufield of jth direction
-                    m_fields[i]->GetFwdBwdTracePhys(qfield[j][i],qFwd,qBwd);
-
-                    // if Vn >= 0, flux = uFwd, i.e.,
-                    // edge::eForward, if V*n>=0 <=> V*n_F>=0, pick 
-                    // qflux = qBwd = q+
-                    // edge::eBackward, if V*n>=0 <=> V*n_B<0, pick 
-                    // qflux = qBwd = q-
-
-                    // else if Vn < 0, flux = uBwd, i.e.,
-                    // edge::eForward, if V*n<0 <=> V*n_F<0, pick 
-                    // qflux = qFwd = q-
-                    // edge::eBackward, if V*n<0 <=> V*n_B>=0, pick 
-                    // qflux = qFwd = q+
-
-                    m_fields[i]->GetTrace()->Upwind(m_traceNormals[j], 
-                                                    qBwd, qFwd, 
-                                                    qfluxtemp);
-                    
-                    Vmath::Vmul(nTraceNumPoints, 
-                                m_traceNormals[j], 1, 
-                                qfluxtemp, 1, 
-                                qfluxtemp, 1);
-
-                    // Generate Stability term = - C11 ( u- - u+ )
-                    m_fields[i]->GetFwdBwdTracePhys(ufield[i], Fwd, Bwd);
-                    
-                    Vmath::Vsub(nTraceNumPoints, 
-                                Fwd, 1, Bwd, 1, 
-                                uterm, 1);
-                    
-                    Vmath::Smul(nTraceNumPoints, 
-                                -1.0 * C11, uterm, 1, 
-                                uterm, 1);
-
-                    // Flux = {Fwd, Bwd} * (nx, ny, nz) + uterm * (nx, ny)
-                    Vmath::Vadd(nTraceNumPoints, 
-                                uterm, 1, 
-                                qfluxtemp, 1, 
-                                qfluxtemp, 1);
-
-                    // Imposing weak boundary condition with flux
-                    if (m_fields[0]->GetBndCondExpansions().num_elements())
-                    {
-                        WeakPenaltyforVector(i, j, 
-                                             qfield[j][i], 
-                                             qfluxtemp, 
-                                             C11);
-                    }
-
-                    // q_hat \cdot n = (q_xi \cdot n_xi) or (q_eta \cdot n_eta)
-                    // n_xi = n_x * tan_xi_x + n_y * tan_xi_y + n_z * tan_xi_z
-                    // n_xi = n_x * tan_eta_x + n_y * tan_eta_y + n_z*tan_eta_z
-                    Vmath::Vadd(nTraceNumPoints, 
-                                qfluxtemp, 1, 
-                                qflux[i], 1, 
-                                qflux[i], 1);
-                }
-            }
-        }
-
         void UnsteadySystem::CheckForRestartTime(NekDouble &time, int &nchk)
         {
             if (m_session->DefinesFunction("InitialConditions"))
@@ -732,9 +572,7 @@ namespace Nektar
                         if (m_fieldMetaDataMap !=
                                 LibUtilities::NullFieldMetaDataMap)
                         {
-                            LibUtilities::FieldMetaDataMap::iterator iter; 
-                            
-                            iter = m_fieldMetaDataMap.find("Time");
+                            auto iter = m_fieldMetaDataMap.find("Time");
                             if (iter != m_fieldMetaDataMap.end())
                             {
                                 time = boost::lexical_cast<NekDouble>(
@@ -750,157 +588,6 @@ namespace Nektar
                         }
                         
                         break;
-                    }
-                }
-            }
-        }
-        
-        void UnsteadySystem::WeakPenaltyforScalar(
-            const int var,
-            const Array<OneD, const NekDouble> &physfield,
-                  Array<OneD,       NekDouble> &penaltyflux,
-            NekDouble time)
-        {
-            int i, e, npoints, id1, id2;
-            
-            // Number of boundary regions
-            int nbnd = m_fields[var]->GetBndCondExpansions().num_elements();
-            int Nfps, numBDEdge;
-            int nTraceNumPoints = GetTraceNpoints();
-            int cnt = 0;
-
-            Array<OneD, NekDouble > uplus(nTraceNumPoints);
-
-            m_fields[var]->ExtractTracePhys(physfield, uplus);
-            for (i = 0; i < nbnd; ++i)
-            {
-                // Number of boundary expansion related to that region
-                numBDEdge = m_fields[var]->
-                    GetBndCondExpansions()[i]->GetExpSize();
-                
-                // Evaluate boundary values g_D or g_N from input files
-                LibUtilities::EquationSharedPtr ifunc = 
-                    m_session->GetFunction("InitialConditions", 0);
-                
-                npoints = m_fields[var]->
-                    GetBndCondExpansions()[i]->GetNpoints();
-                
-                Array<OneD,NekDouble> BDphysics(npoints);
-                Array<OneD,NekDouble> x0(npoints,0.0);
-                Array<OneD,NekDouble> x1(npoints,0.0);
-                Array<OneD,NekDouble> x2(npoints,0.0);
-
-                m_fields[var]->GetBndCondExpansions()[i]->GetCoords(x0,x1,x2);
-                ifunc->Evaluate(x0,x1,x2,time,BDphysics);
-
-                // Weakly impose boundary conditions by modifying flux values
-                for (e = 0; e < numBDEdge ; ++e)
-                {
-                    // Number of points on the expansion
-                    Nfps = m_fields[var]->
-                        GetBndCondExpansions()[i]->GetExp(e)->GetNumPoints(0);
-                    
-                    id1 = m_fields[var]->
-                        GetBndCondExpansions()[i]->GetPhys_Offset(e);
-                    
-                    id2 = m_fields[0]->GetTrace()->
-                        GetPhys_Offset(m_fields[0]->GetTraceMap()->
-                                        GetBndCondTraceToGlobalTraceMap(cnt++));
-
-                    // For Dirichlet boundary condition: uflux = g_D
-                    if (m_fields[var]->GetBndConditions()[i]->
-                    GetBoundaryConditionType() == SpatialDomains::eDirichlet)
-                    {
-                        Vmath::Vcopy(Nfps, 
-                                     &BDphysics[id1], 1, 
-                                     &penaltyflux[id2], 1);
-                    }
-                    // For Neumann boundary condition: uflux = u+
-                    else if ((m_fields[var]->GetBndConditions()[i])->
-                    GetBoundaryConditionType() == SpatialDomains::eNeumann)
-                    {
-                        Vmath::Vcopy(Nfps, 
-                                     &uplus[id2], 1, 
-                                     &penaltyflux[id2], 1);
-                    }
-                }
-            }
-        }
-
-        /**
-         * Diffusion: Imposing weak boundary condition for q with flux
-         *  uflux = g_D  on Dirichlet boundary condition
-         *  uflux = u_Fwd  on Neumann boundary condition
-         */
-        void UnsteadySystem::WeakPenaltyforVector(
-            const int var,
-            const int dir,
-            const Array<OneD, const NekDouble> &physfield,
-            Array<OneD, NekDouble> &penaltyflux,
-            NekDouble C11,
-            NekDouble time)
-        {
-            int i, e, npoints, id1, id2;
-            int nbnd = m_fields[var]->GetBndCondExpansions().num_elements();
-            int numBDEdge, Nfps;
-            int nTraceNumPoints = GetTraceNpoints();
-            Array<OneD, NekDouble > uterm(nTraceNumPoints);
-            Array<OneD, NekDouble > qtemp(nTraceNumPoints);
-            int cnt = 0;
-
-            m_fields[var]->ExtractTracePhys(physfield,qtemp);
-
-            for (i = 0; i < nbnd; ++i)
-            {
-                numBDEdge = m_fields[var]->
-                    GetBndCondExpansions()[i]->GetExpSize();
-                
-                // Evaluate boundary values g_D or g_N from input files
-                LibUtilities::EquationSharedPtr ifunc = 
-                    m_session->GetFunction("InitialConditions", 0);
-                
-                npoints = m_fields[var]->
-                    GetBndCondExpansions()[i]->GetNpoints();
-
-                Array<OneD,NekDouble> BDphysics(npoints);
-                Array<OneD,NekDouble> x0(npoints,0.0);
-                Array<OneD,NekDouble> x1(npoints,0.0);
-                Array<OneD,NekDouble> x2(npoints,0.0);
-
-                m_fields[var]->GetBndCondExpansions()[i]->GetCoords(x0,x1,x2);
-                ifunc->Evaluate(x0,x1,x2,time,BDphysics);
-
-                // Weakly impose boundary conditions by modifying flux values
-                for (e = 0; e < numBDEdge ; ++e)
-                {
-                    Nfps = m_fields[var]->
-                        GetBndCondExpansions()[i]->GetExp(e)->GetNumPoints(0);
-
-                    id1 = m_fields[var]->
-                        GetBndCondExpansions()[i]->GetPhys_Offset(e);
-                    
-                    id2 = m_fields[0]->GetTrace()->
-                        GetPhys_Offset(m_fields[0]->GetTraceMap()->
-                                       GetBndCondTraceToGlobalTraceMap(cnt++));
-
-                    // For Dirichlet boundary condition: 
-                    //qflux = q+ - C_11 (u+ -    g_D) (nx, ny)
-                    if(m_fields[var]->GetBndConditions()[i]->
-                    GetBoundaryConditionType() == SpatialDomains::eDirichlet)
-                    {
-                        Vmath::Vmul(Nfps, 
-                                    &m_traceNormals[dir][id2], 1, 
-                                    &qtemp[id2], 1, 
-                                    &penaltyflux[id2], 1);
-                    }
-                    // For Neumann boundary condition: qflux = g_N
-                    else if((m_fields[var]->GetBndConditions()[i])->
-                    GetBoundaryConditionType() == SpatialDomains::eNeumann)
-                    {
-                        Vmath::Vmul(Nfps,
-                                    &m_traceNormals[dir][id2], 1, 
-                                    &BDphysics[id1], 1, 
-                                    &penaltyflux[id2], 1);
                     }
                 }
             }
@@ -939,11 +626,6 @@ namespace Nektar
         }
 
         bool UnsteadySystem::v_PostIntegrate(int step)
-        {
-            return false;
-        }
-
-        bool UnsteadySystem::v_SteadyStateCheck(int step)
         {
             return false;
         }
@@ -987,6 +669,113 @@ namespace Nektar
 
             // set up map with eVarCoffLaplacian key
             varCoeffMap[StdRegions::eVarCoeffLaplacian] = varcoeff;
+        }
+
+        void UnsteadySystem::InitializeSteadyState()
+        {
+            if (m_steadyStateTol > 0.0)
+            {
+                const int nPoints = m_fields[0]->GetTotPoints();
+                m_previousSolution = Array<OneD, Array<OneD, NekDouble> > (
+                            m_fields.num_elements());
+
+                for (int i = 0; i < m_fields.num_elements(); ++i)
+                {
+                    m_previousSolution[i] = Array<OneD, NekDouble>(nPoints);
+                    Vmath::Vcopy(nPoints, m_fields[i]->GetPhys(), 1,
+                                          m_previousSolution[i], 1);
+                }
+
+                if (m_comm->GetRank() == 0)
+                {
+                    std::string fName = m_session->GetSessionName() +
+                        std::string(".res");
+                    m_errFile.open(fName.c_str());
+                    m_errFile << setw(26) << left << "# Time";
+
+                    for (int i = 0; i < m_fields.num_elements(); ++i)
+                    {
+                        m_errFile << setw(26) << m_session->GetVariables()[i];
+                    }
+
+                    m_errFile << endl;
+                }
+            }
+        }
+
+        /**
+        * @brief Calculate whether the system has reached a steady state by
+        * observing residuals to a user-defined tolerance.
+        */
+        bool UnsteadySystem::CheckSteadyState(int step)
+        {
+            const int nPoints = GetTotPoints();
+            const int nFields = m_fields.num_elements();
+
+            // Holds L2 errors.
+            Array<OneD, NekDouble> L2       (nFields);
+            Array<OneD, NekDouble> residual (nFields);
+            Array<OneD, NekDouble> reference(nFields);
+
+            for (int i = 0; i < nFields; ++i)
+            {
+                Array<OneD, NekDouble> tmp(nPoints);
+
+                Vmath::Vsub(nPoints, m_fields[i]->GetPhys(), 1,
+                                     m_previousSolution[i], 1, tmp, 1);
+                Vmath::Vmul(nPoints, tmp, 1, tmp, 1, tmp, 1);
+                residual[i] = Vmath::Vsum(nPoints, tmp, 1);
+
+                Vmath::Vmul(nPoints, m_previousSolution[i], 1,
+                                     m_previousSolution[i], 1, tmp, 1);
+                reference[i] = Vmath::Vsum(nPoints, tmp, 1);
+            }
+
+            m_comm->AllReduce(residual , LibUtilities::ReduceSum);
+            m_comm->AllReduce(reference, LibUtilities::ReduceSum);
+
+            // L2 error
+            for (int i = 0; i < nFields; ++i)
+            {
+                reference[i] = (reference[i] == 0) ? 1 : reference[i];
+                L2[i] = sqrt(residual[i] / reference[i]);
+            }
+
+            if (m_comm->GetRank() == 0 && ((step+1) % m_infosteps == 0))
+            {
+                // Output time
+                m_errFile << boost::format("%25.19e") % m_time;
+
+                // Output residuals
+                for (int i = 0; i < nFields; ++i)
+                {
+                    m_errFile << " " << boost::format("%25.19e") % L2[i];
+                }
+
+                m_errFile << endl;
+            }
+
+            // Calculate maximum L2 error
+            NekDouble maxL2 = Vmath::Vmax(nFields, L2, 1);
+
+            if (m_session->DefinesCmdLineArgument("verbose") &&
+                m_comm->GetRank() == 0 && (step % m_infosteps == 0))
+            {
+                cout << "-- Maximum L^2 residual: " << maxL2 << endl;
+            }
+
+            if (maxL2 <= m_steadyStateTol)
+            {
+                return true;
+            }
+
+            for (int i = 0; i < m_fields.num_elements(); ++i)
+            {
+                Vmath::Vcopy(nPoints, m_fields[i]->GetPhys(), 1,
+                                      m_previousSolution[i], 1);
+            }
+
+            return false;
         }
     }
 }

@@ -33,7 +33,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <LibUtilities/BasicUtils/ParseUtils.hpp>
+#include <LibUtilities/BasicUtils/ParseUtils.h>
 
 #include "VolumeMesh.h"
 #include <NekMeshUtils/CADSystem/CADCurve.h>
@@ -77,7 +77,7 @@ void VolumeMesh::Process()
     if (m_config["blsurfs"].beenSet)
     {
         makeBL = true;
-        ParseUtils::GenerateSeqVector(m_config["blsurfs"].as<string>().c_str(),
+        ParseUtils::GenerateSeqVector(m_config["blsurfs"].as<string>(),
                                       blSurfs);
     }
     else

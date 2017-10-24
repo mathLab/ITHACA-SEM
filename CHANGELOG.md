@@ -17,6 +17,8 @@ v5.0.0
 - Added native support for csv files in addititon to pts (!760 !835)
 - Utilize LAPACK_DIR env variable to find the native blas/lapack install (!827)
 - Remove StdExpansion use from MultiRegion (use Expansions instead). (!831)
+- Move steady state check and CFL output from solvers to SolverUtils (!832)
+- Remove DG advection implementation from EquationSystem (!832)
 - Simplify RawType typedefs (!840)
 - Remove unused files from BasicUtils (!841)
 - Remove checks for old boost versions which are no longer supported (!841)
@@ -48,6 +50,10 @@ v5.0.0
 - Allow explicitly setting bool options of FieldConvert modules as false (!811)
 - Enable output to multiple files (!844)
 - Allow using xml file without expansion tag in FieldConvert (!849)
+
+**IncNavierStokesSolver**
+- Replace steady-state check based on difference of norms by check based on
+  norm of the difference, to be consistent with the compressible solver (!832)
 
 **CompressibleFlowSolver**
 - Add 3D regression tests (!567)

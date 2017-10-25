@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File NavierStokesCFE.h
+// File NavierStokesCFEAxisym.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -33,10 +33,10 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_SOLVERS_COMPRESSIBLEFLOWSOLVER_EQUATIONSYSTEMS_NAVIERSTOKESCFE_H
-#define NEKTAR_SOLVERS_COMPRESSIBLEFLOWSOLVER_EQUATIONSYSTEMS_NAVIERSTOKESCFE_H
+#ifndef NEKTAR_SOLVERS_COMPRESSIBLEFLOWSOLVER_EQUATIONSYSTEMS_NSCFEAXISYM_H
+#define NEKTAR_SOLVERS_COMPRESSIBLEFLOWSOLVER_EQUATIONSYSTEMS_NSCFEAXISYM_H
 
-#include <CompressibleFlowSolver/EquationSystems/CompressibleFlowSystem.h>
+#include <CompressibleFlowSolver/EquationSystems/NavierStokesCFE.h>
 
 namespace Nektar
 {
@@ -44,35 +44,37 @@ namespace Nektar
    *
    *
    **/
-  class NavierStokesCFE : public CompressibleFlowSystem
+  class NavierStokesCFEAxisym : public NavierStokesCFE
   {
   public:
-      friend class MemoryManager<NavierStokesCFE>;
+      friend class MemoryManager<NavierStokesCFEAxisym>;
 
     // Creates an instance of this class
     static SolverUtils::EquationSystemSharedPtr create(
             const LibUtilities::SessionReaderSharedPtr& pSession)
     {
       SolverUtils::EquationSystemSharedPtr p =
-            MemoryManager<NavierStokesCFE>::AllocateSharedPtr(pSession);
+            MemoryManager<NavierStokesCFEAxisym>::AllocateSharedPtr(pSession);
       p->InitObject();
       return p;
     }
     // Name of class
     static std::string className;
 
-    virtual ~NavierStokesCFE();
+    virtual ~NavierStokesCFEAxisym();
 
   protected:
-    NavierStokesCFE(const LibUtilities::SessionReaderSharedPtr& pSession);
+    Array<OneD, Array<OneD, NekDouble> > m_viscousForcing;
+
+    NavierStokesCFEAxisym(const LibUtilities::SessionReaderSharedPtr& pSession);
 
     virtual void v_InitObject();
 
     virtual void v_DoDiffusion(
         const Array<OneD, const Array<OneD, NekDouble> > &inarray,
               Array<OneD,       Array<OneD, NekDouble> > &outarray,
-            const Array<OneD, Array<OneD, NekDouble> >   &pFwd,
-            const Array<OneD, Array<OneD, NekDouble> >   &pBwd);
+        const Array<OneD, Array<OneD, NekDouble> >   &pFwd,
+        const Array<OneD, Array<OneD, NekDouble> >   &pBwd);
 
     virtual void v_GetViscousFluxVector(
         const Array<OneD, Array<OneD, NekDouble> >         &physfield,
@@ -81,7 +83,10 @@ namespace Nektar
     virtual void v_GetViscousFluxVectorDeAlias(
         const Array<OneD, Array<OneD, NekDouble> >         &physfield,
         Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &derivatives,
-        Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &viscousTensor);
+        Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &viscousTensor)
+    {
+        ASSERTL0(false, "Dealiased flux not implemented for axisymmetric case");
+    }
   };
 }
 #endif

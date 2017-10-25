@@ -72,13 +72,13 @@ namespace Nektar
         if (m_specHP_dealiasing)
         {
             m_diffusion->SetFluxVectorNS(
-                &NavierStokesCFE::GetViscousFluxVectorDeAlias,
+                &NavierStokesCFE::v_GetViscousFluxVectorDeAlias,
                 this);
         }
         else
         {
             m_diffusion->SetFluxVectorNS(&NavierStokesCFE::
-                                          GetViscousFluxVector, this);
+                                          v_GetViscousFluxVector, this);
         }
 
         // Concluding initialisation of diffusion operator
@@ -163,7 +163,7 @@ namespace Nektar
      * @brief Return the flux vector for the LDG diffusion problem.
      * \todo Complete the viscous flux vector
      */
-    void NavierStokesCFE::GetViscousFluxVector(
+    void NavierStokesCFE::v_GetViscousFluxVector(
         const Array<OneD, Array<OneD, NekDouble> >               &physfield,
               Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &derivativesO1,
               Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &viscousTensor)
@@ -264,7 +264,7 @@ namespace Nektar
      * @brief Return the flux vector for the LDG diffusion problem.
      * \todo Complete the viscous flux vector
      */
-    void NavierStokesCFE::GetViscousFluxVectorDeAlias(
+    void NavierStokesCFE::v_GetViscousFluxVectorDeAlias(
         const Array<OneD, Array<OneD, NekDouble> >               &physfield,
               Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &derivativesO1,
               Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &viscousTensor)

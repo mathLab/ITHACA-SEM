@@ -37,7 +37,6 @@
 #define NEKMESHUTILS_CADSYSTEM_CADVERT
 
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
-#include <LibUtilities/Memory/NekMemoryManager.hpp>
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
 
 #include <NekMeshUtils/CADSystem/CADObject.h>

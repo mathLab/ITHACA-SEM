@@ -36,14 +36,21 @@
 #ifndef NEKMESHUTILS_CADSYSTEM_CADCURVE
 #define NEKMESHUTILS_CADSYSTEM_CADCURVE
 
+#include <LibUtilities/BasicUtils/SharedArray.hpp>
+#include <LibUtilities/BasicUtils/NekFactory.hpp>
+
 #include <NekMeshUtils/CADSystem/CADObject.h>
-#include <NekMeshUtils/CADSystem/CADSurf.h>
-#include <NekMeshUtils/CADSystem/CADVert.h>
 
 namespace Nektar
 {
 namespace NekMeshUtils
 {
+
+// forward declarations
+class CADVert;
+typedef std::shared_ptr<CADVert> CADVertSharedPtr;
+class CADSurf;
+typedef std::shared_ptr<CADSurf> CADSurfSharedPtr;
 
 /**
  * @brief base class for CAD curves.
@@ -174,19 +181,7 @@ public:
      * @brief Returns the orientation of the curve with respect to a given
      * surface by id surf
      */
-    CADOrientation::Orientation GetOrienationWRT(int surf)
-    {
-        for (int i = 0; i < m_adjSurfs.size(); i++)
-        {
-            if (m_adjSurfs[i].first->GetId() == surf)
-            {
-                return m_adjSurfs[i].second;
-            }
-        }
-
-        ASSERTL0(false, "surf not in adjecency list");
-        return CADOrientation::eUnknown;
-    }
+    CADOrientation::Orientation GetOrienationWRT(int surf);
 
     /**
      * @brief Returns the normal to the curve which is orientate with respect

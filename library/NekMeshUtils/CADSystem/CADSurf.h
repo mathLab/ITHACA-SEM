@@ -36,9 +36,10 @@
 #ifndef NekMeshUtils_CADSYSTEM_CADSURF
 #define NekMeshUtils_CADSYSTEM_CADSURF
 
+#include <LibUtilities/BasicUtils/SharedArray.hpp>
+#include <LibUtilities/BasicUtils/NekFactory.hpp>
+
 #include <NekMeshUtils/CADSystem/CADObject.h>
-#include <NekMeshUtils/CADSystem/CADSystem.h>
-#include <NekMeshUtils/CADSystem/CADVert.h>
 
 namespace Nektar
 {
@@ -47,6 +48,22 @@ namespace NekMeshUtils
 
 class CADCurve;
 typedef std::shared_ptr<CADCurve> CADCurveSharedPtr;
+class CADSurf;
+typedef std::shared_ptr<CADSurf> CADSurfSharedPtr;
+
+/**
+ * @brief struct which descibes a collection of cad edges which are a
+ *        loop on the cad surface
+ */
+struct EdgeLoop
+{
+    std::vector<CADCurveSharedPtr> edges;
+    std::vector<CADOrientation::Orientation> edgeo;
+    Array<OneD, NekDouble> center;
+    NekDouble area;
+};
+
+typedef std::shared_ptr<EdgeLoop> EdgeLoopSharedPtr;
 
 /**
  * @brief base class for a cad surface
@@ -74,12 +91,12 @@ public:
      * @brief Static function which orientates the edge loop on a surface
      */
     static void OrientateEdges(
-        CADSurfSharedPtr surf, std::vector<CADSystem::EdgeLoopSharedPtr> &ein);
+        CADSurfSharedPtr surf, std::vector<EdgeLoopSharedPtr> &ein);
 
     /**
      * @brief Get the loop structures which bound the cad surface
      */
-    std::vector<CADSystem::EdgeLoopSharedPtr> GetEdges()
+    std::vector<EdgeLoopSharedPtr> GetEdges()
     {
         return m_edges;
     }
@@ -87,7 +104,7 @@ public:
     /**
      * @brief Set the edge loop
      */
-    void SetEdges(std::vector<CADSystem::EdgeLoopSharedPtr> ein)
+    void SetEdges(std::vector<EdgeLoopSharedPtr> ein)
     {
         m_edges = ein;
     }
@@ -165,7 +182,7 @@ public:
 
 protected:
     /// List of bounding edges in loops with orientation.
-    std::vector<CADSystem::EdgeLoopSharedPtr> m_edges;
+    std::vector<EdgeLoopSharedPtr> m_edges;
 
     /// Function which tests the the value of uv used is within the surface
     virtual void Test(Array<OneD, NekDouble> uv) = 0;

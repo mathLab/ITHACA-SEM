@@ -33,7 +33,6 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 #include "CADVert.h"
-#include "CADSurf.h"
 #include <NekMeshUtils/MeshElements/Node.h>
 
 using namespace std;

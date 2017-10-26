@@ -70,20 +70,6 @@ public:
     friend class MemoryManager<CADSystem>;
 
     /**
-     * @brief struct which descibes a collection of cad edges which are a
-     *        loop on the cad surface
-     */
-    struct EdgeLoop
-    {
-        std::vector<CADCurveSharedPtr> edges;
-        std::vector<CADOrientation::Orientation> edgeo;
-        Array<OneD, NekDouble> center;
-        NekDouble area;
-    };
-
-    typedef std::shared_ptr<EdgeLoop> EdgeLoopSharedPtr;
-
-    /**
      * @brief Default constructor.
      */
     CADSystem(std::string name) : m_name(name)

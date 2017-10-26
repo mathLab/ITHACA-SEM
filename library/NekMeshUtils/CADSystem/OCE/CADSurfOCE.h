@@ -70,7 +70,7 @@ public:
     virtual Array<OneD, NekDouble> D1   (Array<OneD, NekDouble> uv);
     virtual Array<OneD, NekDouble> D2   (Array<OneD, NekDouble> uv);
     virtual Array<OneD, NekDouble> P    (Array<OneD, NekDouble> uv);
-    virtual NekDouble locuv(Array<OneD, NekDouble> p, Array<OneD, NekDouble> &uv);
+    virtual NekDouble locuv(Array<OneD, NekDouble> p, Array<OneD, NekDouble> uv);
     virtual NekDouble Curvature(Array<OneD, NekDouble> uv);
     virtual Array<OneD, NekDouble> BoundingBox();
     virtual bool IsPlanar();
@@ -79,8 +79,6 @@ private:
     /// Function which tests the the value of uv used is within the surface
     void Test(Array<OneD, NekDouble> uv);
     /// OpenCascade object for surface.
-    BRepAdaptor_Surface m_occSurface;
-    /// Alternate OpenCascade object for surface. Used by reverse lookup.
     Handle(Geom_Surface) m_s;
     /// parametric bounds
     Array<OneD, NekDouble> m_bounds;

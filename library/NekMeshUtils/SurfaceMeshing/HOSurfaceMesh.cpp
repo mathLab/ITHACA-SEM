@@ -33,18 +33,18 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <list>
 #include <algorithm>
+#include <list>
 
-#include <NekMeshUtils/SurfaceMeshing/HOSurfaceMesh.h>
-#include <NekMeshUtils/Optimisation/BGFS-B.h>
-#include <NekMeshUtils/SurfaceMeshing/OptimiseFunctions.h>
 #include <NekMeshUtils/CADSystem/CADCurve.h>
 #include <NekMeshUtils/CADSystem/CADSurf.h>
+#include <NekMeshUtils/Optimisation/BGFS-B.h>
+#include <NekMeshUtils/SurfaceMeshing/HOSurfaceMesh.h>
+#include <NekMeshUtils/SurfaceMeshing/OptimiseFunctions.h>
 
 #include <LibUtilities/BasicUtils/Progressbar.hpp>
-#include <LocalRegions/MatrixKey.h>
 #include <LibUtilities/Foundations/ManagerAccess.h>
+#include <LocalRegions/MatrixKey.h>
 
 using namespace std;
 namespace Nektar
@@ -53,8 +53,7 @@ namespace NekMeshUtils
 {
 
 ModuleKey HOSurfaceMesh::className = GetModuleFactory().RegisterCreatorFunction(
-    ModuleKey(eProcessModule, "hosurface"),
-    HOSurfaceMesh::create,
+    ModuleKey(eProcessModule, "hosurface"), HOSurfaceMesh::create,
     "Generates a high-order surface mesh based on CAD");
 
 HOSurfaceMesh::HOSurfaceMesh(MeshSharedPtr m) : ProcessModule(m)
@@ -87,11 +86,11 @@ void HOSurfaceMesh::Process()
 
     int np = nq * (nq + 1) / 2;
 
-    int ni = (nq-2)*(nq-3) / 2;
+    int ni = (nq - 2) * (nq - 3) / 2;
 
     int npq = nq * nq;
 
-    int niq = npq - 4 - 4*(nq-2);
+    int niq = npq - 4 - 4 * (nq - 2);
 
     LibUtilities::PointsManager()[pkey]->GetPoints(u, v);
 
@@ -103,10 +102,10 @@ void HOSurfaceMesh::Process()
     EdgeSet surfaceEdges;
     EdgeSet completedEdges;
 
-    for(int i = 0; i < m_mesh->m_element[2].size(); i++)
+    for (int i = 0; i < m_mesh->m_element[2].size(); i++)
     {
         vector<EdgeSharedPtr> es = m_mesh->m_element[2][i]->GetEdgeList();
-        for(int j = 0; j < es.size(); j++)
+        for (int j = 0; j < es.size(); j++)
             surfaceEdges.insert(es[j]);
     }
 
@@ -114,28 +113,28 @@ void HOSurfaceMesh::Process()
     {
         if (m_mesh->m_verbose)
         {
-            LibUtilities::PrintProgressbar(
-                i, m_mesh->m_element[2].size(), "\t\tSurface elements");
+            LibUtilities::PrintProgressbar(i, m_mesh->m_element[2].size(),
+                                           "\t\tSurface elements");
         }
 
-        if(!m_mesh->m_element[2][i]->m_parentCAD)
+        if (!m_mesh->m_element[2][i]->m_parentCAD)
         {
-            //no parent cad
+            // no parent cad
             continue;
         }
 
         CADObjectSharedPtr o = m_mesh->m_element[2][i]->m_parentCAD;
-        CADSurfSharedPtr s = std::dynamic_pointer_cast<CADSurf>(o);
-        int surf = s->GetId();
+        CADSurfSharedPtr s   = std::dynamic_pointer_cast<CADSurf>(o);
+        int surf             = s->GetId();
 
         FaceSharedPtr f = m_mesh->m_element[2][i]->GetFaceLink();
 
-        if(!f)
+        if (!f)
         {
-            f = std::shared_ptr<Face>(new Face(m_mesh->m_element[2][i]->GetVertexList(),
-                                                 vector<NodeSharedPtr>(),
-                                                 m_mesh->m_element[2][i]->GetEdgeList(),
-                                                 LibUtilities::ePolyEvenlySpaced));
+            f = std::shared_ptr<Face>(new Face(
+                m_mesh->m_element[2][i]->GetVertexList(),
+                vector<NodeSharedPtr>(), m_mesh->m_element[2][i]->GetEdgeList(),
+                LibUtilities::ePolyEvenlySpaced));
         }
 
         f->m_parentCAD = s;
@@ -161,9 +160,10 @@ void HOSurfaceMesh::Process()
             // need to link them together and copy the cad information to be
             // able to identify how to make it high-order
             EdgeSet::iterator it = surfaceEdges.find(e);
-            ASSERTL0(it != surfaceEdges.end(),"could not find edge in surface");
+            ASSERTL0(it != surfaceEdges.end(),
+                     "could not find edge in surface");
 
-            if((*it)->m_parentCAD)
+            if ((*it)->m_parentCAD)
             {
                 e->m_parentCAD = (*it)->m_parentCAD;
             }
@@ -176,10 +176,11 @@ void HOSurfaceMesh::Process()
 
             if (e->m_parentCAD->GetType() == CADType::eCurve)
             {
-                int cid             = e->m_parentCAD->GetId();
-                CADCurveSharedPtr c = std::dynamic_pointer_cast<CADCurve>(e->m_parentCAD);
-                NekDouble tb        = e->m_n1->GetCADCurveInfo(cid);
-                NekDouble te        = e->m_n2->GetCADCurveInfo(cid);
+                int cid = e->m_parentCAD->GetId();
+                CADCurveSharedPtr c =
+                    std::dynamic_pointer_cast<CADCurve>(e->m_parentCAD);
+                NekDouble tb = e->m_n1->GetCADCurveInfo(cid);
+                NekDouble te = e->m_n2->GetCADCurveInfo(cid);
 
                 // distrobute points along curve as inital guess
                 Array<OneD, NekDouble> ti(m_mesh->m_nummode);
@@ -189,7 +190,7 @@ void HOSurfaceMesh::Process()
                         tb * (1.0 - gll[k]) / 2.0 + te * (1.0 + gll[k]) / 2.0;
                 }
 
-                if(qOpti)
+                if (qOpti)
                 {
                     Array<OneD, NekDouble> xi(nq - 2);
                     for (int k = 1; k < nq - 1; k++)
@@ -200,14 +201,13 @@ void HOSurfaceMesh::Process()
                     OptiEdgeSharedPtr opti =
                         MemoryManager<OptiEdge>::AllocateSharedPtr(ti, gll, c);
 
-                    DNekMat B(
-                        nq - 2, nq - 2, 0.0); // approximate hessian (I to start)
+                    DNekMat B(nq - 2, nq - 2,
+                              0.0); // approximate hessian (I to start)
                     for (int k = 0; k < nq - 2; k++)
                     {
                         B(k, k) = 1.0;
                     }
-                    DNekMat H(nq - 2,
-                              nq - 2,
+                    DNekMat H(nq - 2, nq - 2,
                               0.0); // approximate inverse hessian (I to start)
                     for (int k = 0; k < nq - 2; k++)
                     {
@@ -219,7 +219,7 @@ void HOSurfaceMesh::Process()
                     Array<OneD, NekDouble> bnds = c->GetBounds();
 
                     bool repeat = true;
-                    int itct = 0;
+                    int itct    = 0;
                     while (repeat)
                     {
                         NekDouble Norm = 0;
@@ -249,10 +249,10 @@ void HOSurfaceMesh::Process()
 
                         if (!BGFSUpdate(opti, J, B, H))
                         {
-                            if(m_mesh->m_verbose)
+                            if (m_mesh->m_verbose)
                             {
                                 cout << "BFGS reported no update, curve on "
-                                    << c->GetId() << endl;
+                                     << c->GetId() << endl;
                             }
                             break;
                         }
@@ -260,7 +260,8 @@ void HOSurfaceMesh::Process()
                     // need to pull the solution out of opti
                     ti = opti->GetSolution();
                 }
-                vector<pair<CADSurfSharedPtr, CADOrientation::Orientation> > s = c->GetAdjSurf();
+                vector<pair<CADSurfSharedPtr, CADOrientation::Orientation>> s =
+                    c->GetAdjSurf();
 
                 for (int k = 1; k < m_mesh->m_nummode - 1; k++)
                 {
@@ -269,7 +270,7 @@ void HOSurfaceMesh::Process()
                         new Node(0, loc[0], loc[1], loc[2]));
 
                     nn->SetCADCurve(c, ti[k]);
-                    for(int m = 0; m < s.size(); m++)
+                    for (int m = 0; m < s.size(); m++)
                     {
                         Array<OneD, NekDouble> uv;
                         s[m].first->locuv(loc, uv);
@@ -283,10 +284,16 @@ void HOSurfaceMesh::Process()
             {
                 // edge is on surface and needs 2d optimisation
                 Array<OneD, NekDouble> uvb, uve;
-                uvb = e->m_n1->GetCADSurfInfo(surf);
-                uve = e->m_n2->GetCADSurfInfo(surf);
+                uvb            = e->m_n1->GetCADSurfInfo(surf);
+                uve            = e->m_n2->GetCADSurfInfo(surf);
+
+                Array<OneD, NekDouble> l1 = e->m_n1->GetLoc();
+                Array<OneD, NekDouble> l2 = e->m_n2->GetLoc();
+
                 e->m_parentCAD = s;
-                Array<OneD, Array<OneD, NekDouble> > uvi(nq);
+                Array<OneD, Array<OneD, NekDouble>> uvi(nq);
+                Array<OneD, Array<OneD, NekDouble>> loci(nq);
+
                 for (int k = 0; k < nq; k++)
                 {
                     Array<OneD, NekDouble> uv(2);
@@ -295,10 +302,27 @@ void HOSurfaceMesh::Process()
                     uv[1] = uvb[1] * (1.0 - gll[k]) / 2.0 +
                             uve[1] * (1.0 + gll[k]) / 2.0;
                     uvi[k] = uv;
+
+                    Array<OneD, NekDouble> loc(3);
+                    loc[0] = l1[0] * (1.0 - gll[k]) / 2.0 +
+                             l2[0] * (1.0 + gll[k]) / 2.0;
+                    loc[1] = l1[1] * (1.0 - gll[k]) / 2.0 +
+                             l2[1] * (1.0 + gll[k]) / 2.0;
+                    loc[2] = l1[2] * (1.0 - gll[k]) / 2.0 +
+                             l2[2] * (1.0 + gll[k]) / 2.0;
+                    loci[k] = loc;
+
+                    Array<OneD, NekDouble> uvNew;
+                    s->locuv(loc,uvNew);
+                    cout << uv[0] << " " << uvNew[0] << endl;
+                    cout << uv[1] << " " << uvNew[1] << endl;
+                    cout << endl;
                 }
 
-                if(qOpti)
+                if (qOpti)
                 {
+                    cout << "hello" << endl;
+
                     Array<OneD, NekDouble> bnds = s->GetBounds();
                     Array<OneD, NekDouble> all(2 * nq);
                     for (int k = 0; k < nq; k++)
@@ -317,15 +341,13 @@ void HOSurfaceMesh::Process()
                     OptiEdgeSharedPtr opti =
                         MemoryManager<OptiEdge>::AllocateSharedPtr(all, gll, s);
 
-                    DNekMat B(2 * (nq - 2),
-                              2 * (nq - 2),
+                    DNekMat B(2 * (nq - 2), 2 * (nq - 2),
                               0.0); // approximate hessian (I to start)
                     for (int k = 0; k < 2 * (nq - 2); k++)
                     {
                         B(k, k) = 1.0;
                     }
-                    DNekMat H(2 * (nq - 2),
-                              2 * (nq - 2),
+                    DNekMat H(2 * (nq - 2), 2 * (nq - 2),
                               0.0); // approximate inverse hessian (I to start)
                     for (int k = 0; k < 2 * (nq - 2); k++)
                     {
@@ -343,13 +365,15 @@ void HOSurfaceMesh::Process()
                         {
                             if (k % 2 == 0)
                             {
-                                Norm += J(k, 0) * J(k, 0); // (bnds[1] - bnds[0]) /
-                                        //(bnds[1] - bnds[0]);
+                                Norm +=
+                                    J(k, 0) * J(k, 0); // (bnds[1] - bnds[0]) /
+                                                       //(bnds[1] - bnds[0]);
                             }
                             else
                             {
-                                Norm += J(k, 0) * J(k, 0); // (bnds[3] - bnds[2]) /
-                                        //(bnds[3] - bnds[2]);
+                                Norm +=
+                                    J(k, 0) * J(k, 0); // (bnds[3] - bnds[2]) /
+                                                       //(bnds[3] - bnds[2]);
                             }
                         }
                         Norm = sqrt(Norm);
@@ -362,7 +386,8 @@ void HOSurfaceMesh::Process()
 
                         if (itct > 1000)
                         {
-                            cout << "failed to optimise on edge " << Norm << endl;
+                            cout << "failed to optimise on edge " << Norm
+                                 << endl;
                             for (int k = 0; k < nq; k++)
                             {
                                 Array<OneD, NekDouble> uv(2);
@@ -378,10 +403,10 @@ void HOSurfaceMesh::Process()
 
                         if (!BGFSUpdate(opti, J, B, H))
                         {
-                            if(m_mesh->m_verbose)
+                            if (m_mesh->m_verbose)
                             {
-                                cout << "BFGS reported no update, edge on " << surf
-                                    << endl;
+                                cout << "BFGS reported no update, edge on "
+                                     << surf << endl;
                             }
                             // exit(-1);
                             break;
@@ -400,12 +425,16 @@ void HOSurfaceMesh::Process()
 
                 for (int k = 1; k < nq - 1; k++)
                 {
-                    Array<OneD, NekDouble> loc;
-                    loc              = s->P(uvi[k]);
+                    Array<OneD, NekDouble> loc = s->P(uvi[k]);
                     NodeSharedPtr nn = std::shared_ptr<Node>(
                         new Node(0, loc[0], loc[1], loc[2]));
                     nn->SetCADSurf(s, uvi[k]);
                     honodes[k - 1] = nn;
+
+                    //NekDouble d = sqrt( (loc[0]-loci[k][0]) * (loc[0]-loci[k][0]) +
+                    //              (loc[1]-loci[k][1]) * (loc[1]-loci[k][1]) +
+                    //              (loc[2]-loci[k][2]) * (loc[2]-loci[k][2]) );
+                    //cout << d << endl;
                 }
             }
 
@@ -414,8 +443,8 @@ void HOSurfaceMesh::Process()
             completedEdges.insert(e);
         }
 
-        //just add the face interior nodes through interp and project
-        vector<NodeSharedPtr> vertices = f->m_vertexList;
+        // just add the face interior nodes through interp and project
+        /*vector<NodeSharedPtr> vertices = f->m_vertexList;
 
         SpatialDomains::GeometrySharedPtr geom = f->GetGeom(3);
         geom->FillGeom();
@@ -504,7 +533,7 @@ void HOSurfaceMesh::Process()
 
             f->m_faceNodes = honodes;
             f->m_curveType = LibUtilities::eGaussLobattoLegendre;
-        }
+        }*/
     }
 
     if (m_mesh->m_verbose)

@@ -155,7 +155,7 @@ public:
      * @param p Array of xyz location
      * @return The parametric location of xyz on this surface
      */
-    virtual NekDouble locuv(Array<OneD, NekDouble> p, Array<OneD, NekDouble> &uv) = 0;
+    virtual NekDouble locuv(Array<OneD, NekDouble> p, Array<OneD, NekDouble> uv) = 0;
 
     /**
      * @brief Returns the bounding box of the surface

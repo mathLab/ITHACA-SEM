@@ -50,11 +50,11 @@ std::string CADVertOCE::key = GetCADVertFactory().RegisterCreatorFunction(
 
 void CADVertOCE::Initialise(int i, TopoDS_Shape in)
 {
-    gp_Trsf transform;
+    /*gp_Trsf transform;
     gp_Pnt ori(0.0, 0.0, 0.0);
     transform.SetScale(ori, 1.0 / 1000.0);
     TopLoc_Location mv(transform);
-    in.Move(mv);
+    in.Move(mv);*/
 
     m_id      = i;
     m_occVert = BRep_Tool::Pnt(TopoDS::Vertex(in));

@@ -127,7 +127,7 @@ public:
      * @brief Get the x,y,z at parametric point u,v.
      *
      * @param uv Array of u and v parametric coords.
-     * @return Array of xyz location.
+     * @return Array of x,y,z location.
      */
     virtual Array<OneD, NekDouble> P(Array<OneD, NekDouble> uv) = 0;
 

@@ -16,6 +16,7 @@ SET(NEKMESHUTILS_SOURCES
     CADSystem/CADSystem.cpp
     CADSystem/CADSurf.cpp
     CADSystem/CADVert.cpp
+    CADSystem/CADCurve.cpp
     CADSystem/ProcessLoadCAD.cpp
     )
 

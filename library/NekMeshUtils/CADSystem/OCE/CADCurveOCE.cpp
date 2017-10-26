@@ -123,46 +123,6 @@ Array<OneD, NekDouble> CADCurveOCE::D2(NekDouble t)
     return out;
 }
 
-Array<OneD, NekDouble> CADCurveOCE::NormalWRT(NekDouble t, int surf)
-{
-    Array<OneD, NekDouble> p = P(t);
-    pair<CADSurfSharedPtr, CADOrientation::Orientation> surface;
-    ASSERTL0(m_adjSurfs.size() == 1, "This will only work in 2D for one surface at the moment");
-    surface = m_adjSurfs[0];
-
-    Array<OneD, NekDouble> uv;
-    surface.first->locuv(p, uv);
-    Array<OneD, NekDouble> d1 = surface.first->D1(uv);
-
-    NekDouble t1 = t - 1e-8;
-    NekDouble t2 = t + 1e-8;
-
-    if(surface.second == CADOrientation::eBackwards)
-    {
-        swap(t1, t2);
-    }
-
-    Array<OneD, NekDouble> uv1;
-    surface.first->locuv(P(t1), uv1);
-    Array<OneD, NekDouble> uv2;
-    surface.first->locuv(P(t2), uv2);
-
-    NekDouble du = uv2[1] - uv1[1];
-    NekDouble dv = -1.0*(uv2[0] - uv1[0]);
-
-    Array<OneD, NekDouble> N(3,0.0);
-    N[0] = (d1[3] * du + d1[6] * dv) / 2.0;
-    N[1] = (d1[4] * du + d1[7] * dv) / 2.0;
-    N[2] = (d1[5] * du + d1[8] * dv) / 2.0;
-
-    NekDouble mag = sqrt(N[0]*N[0] + N[1]*N[1] + N[2]*N[2]);
-    N[0] /= mag;
-    N[1] /= mag;
-    N[2] /= mag;
-
-    return N;
-}
-
 Array<OneD, NekDouble> CADCurveOCE::N(NekDouble t)
 {
     GeomLProp_CLProps d(m_c,2,1e-8);

@@ -71,7 +71,6 @@ public:
     virtual Array<OneD, NekDouble> GetMinMax();
     virtual NekDouble loct(Array<OneD, NekDouble> xyz, NekDouble &t);
     virtual NekDouble Curvature(NekDouble t);
-    virtual Array<OneD, NekDouble> NormalWRT(NekDouble t, int surf);
     virtual Array<OneD, NekDouble> N(NekDouble t);
 
     void Initialise(int i, TopoDS_Shape in)

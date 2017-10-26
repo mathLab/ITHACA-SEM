@@ -67,17 +67,12 @@ public:
     virtual Array<OneD, NekDouble> D2(NekDouble t);
     virtual NekDouble Curvature(NekDouble t)
     {
-        ASSERTL0(false, "not implemented in CFI engine");
+        ASSERTL0(false, "Function: Curvature not implemented in CFI engine");
         return 0;
-    }
-    virtual Array<OneD, NekDouble> NormalWRT(NekDouble t, int surf)
-    {
-        ASSERTL0(false, "not implemented in CFI engine");
-        return Array<OneD, NekDouble>();
     }
     virtual Array<OneD, NekDouble> N(NekDouble t)
     {
-        ASSERTL0(false, "not implemented in CFI engine");
+        ASSERTL0(false, "Function: N not implemented in CFI engine");
         return Array<OneD, NekDouble>();
     }
     virtual NekDouble tAtArcLength(NekDouble s);

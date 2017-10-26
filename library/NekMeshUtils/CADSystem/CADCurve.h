@@ -192,7 +192,7 @@ public:
      * @brief Returns the normal to the curve which is orientate with respect
      * to the surface surf
      */
-    virtual Array<OneD, NekDouble> NormalWRT(NekDouble t, int surf) = 0;
+    Array<OneD, NekDouble> NormalWRT(NekDouble t, int surf);
 
     /**
      * @brief Returns the normal to a curve, it will always point in the concave

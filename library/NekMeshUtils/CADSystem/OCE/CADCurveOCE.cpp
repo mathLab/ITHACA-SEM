@@ -179,12 +179,12 @@ Array<OneD, NekDouble> CADCurveOCE::GetMinMax()
         BRep_Tool::Pnt(TopExp::FirstVertex(m_occEdge, Standard_True));
     gp_Pnt end = BRep_Tool::Pnt(TopExp::LastVertex(m_occEdge, Standard_True));
 
-    locs[0] = start.X();
-    locs[1] = start.Y();
-    locs[2] = start.Z();
-    locs[3] = end.X();
-    locs[4] = end.Y();
-    locs[5] = end.Z();
+    locs[0] = start.X()/1000.0;
+    locs[1] = start.Y()/1000.0;
+    locs[2] = start.Z()/1000.0;
+    locs[3] = end.X()/1000.0;
+    locs[4] = end.Y()/1000.0;
+    locs[5] = end.Z()/1000.0;
 
     return locs;
 }

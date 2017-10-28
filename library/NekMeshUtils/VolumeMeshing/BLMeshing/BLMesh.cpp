@@ -169,8 +169,7 @@ map<NodeSharedPtr, NodeSharedPtr> BLMesh::GetSymNodes()
         }
         CADSurfSharedPtr s = m_mesh->m_cad->GetSurf(bit->second->symsurf);
         Array<OneD, NekDouble> loc = bit->second->pNode->GetLoc();
-        Array<OneD, NekDouble> uv(2);
-        s->locuv(loc, uv);
+        Array<OneD, NekDouble> uv  = s->locuv(loc);
         bit->second->pNode->SetCADSurf(s, uv);
         ret[bit->first] = bit->second->pNode;
     }
@@ -209,7 +208,7 @@ void BLMesh::GrowLayers()
     // if a boundary layer should be close to that from another surface, it
     // should stop
 
-    map<int, vector<ElementSharedPtr> > psElements;
+    map<int, vector<ElementSharedPtr>> psElements;
     for (int i = 0; i < m_mesh->m_element[2].size(); i++)
     {
         ElementSharedPtr el = m_mesh->m_element[2][i];
@@ -230,8 +229,8 @@ void BLMesh::GrowLayers()
             m_psuedoSurface[i]);
     }
 
-    bgi::rtree<boxI, bgi::quadratic<16> > TopTree;
-    map<int, bgi::rtree<boxI, bgi::quadratic<16> > > SubTrees;
+    bgi::rtree<boxI, bgi::quadratic<16>> TopTree;
+    map<int, bgi::rtree<boxI, bgi::quadratic<16>>> SubTrees;
 
     // ofstream file;
     // file.open("pts.3D");
@@ -242,7 +241,7 @@ void BLMesh::GrowLayers()
         NekDouble delta = (m_layerT[l] - m_layerT[l - 1]);
         TopTree.clear();
         SubTrees.clear();
-        map<int, vector<ElementSharedPtr> >::iterator it;
+        map<int, vector<ElementSharedPtr>>::iterator it;
         for (it = psElements.begin(); it != psElements.end(); it++)
         {
             TopTree.insert(make_pair(GetBox(it->second, m_bl), it->first));
@@ -368,9 +367,9 @@ NekDouble BLMesh::Proximity(NodeSharedPtr n, ElementSharedPtr el)
     E0[1] = ns[1]->m_y - ns[0]->m_y;
     E0[2] = ns[1]->m_z - ns[0]->m_z;
     Array<OneD, NekDouble> E1(3);
-    E1[0] = ns[2]->m_x - ns[0]->m_x;
-    E1[1] = ns[2]->m_y - ns[0]->m_y;
-    E1[2] = ns[2]->m_z - ns[0]->m_z;
+    E1[0]                    = ns[2]->m_x - ns[0]->m_x;
+    E1[1]                    = ns[2]->m_y - ns[0]->m_y;
+    E1[2]                    = ns[2]->m_z - ns[0]->m_z;
     Array<OneD, NekDouble> P = n->GetLoc();
 
     NekDouble a = Dot(E0, E0);
@@ -753,8 +752,8 @@ bool BLMesh::IsPrismValid(ElementSharedPtr el)
 void BLMesh::BuildElements()
 {
     // make prisms
-    map<CADOrientation::Orientation, vector<int> > baseTri;
-    map<CADOrientation::Orientation, vector<int> > topTri;
+    map<CADOrientation::Orientation, vector<int>> baseTri;
+    map<CADOrientation::Orientation, vector<int>> topTri;
 
     vector<int> tmp;
     // back-base
@@ -844,7 +843,7 @@ NekDouble BLMesh::Visability(vector<ElementSharedPtr> tris,
 Array<OneD, NekDouble> BLMesh::GetNormal(vector<ElementSharedPtr> tris)
 {
     // compile list of normals
-    vector<Array<OneD, NekDouble> > N;
+    vector<Array<OneD, NekDouble>> N;
     for (int i = 0; i < tris.size(); i++)
     {
         N.push_back(tris[i]->Normal(true));
@@ -954,7 +953,7 @@ void BLMesh::Setup()
         m_layerT[i] = m_layerT[i - 1] + a * pow(m_prog, i) * m_bl;
     }
 
-    if(m_mesh->m_verbose)
+    if (m_mesh->m_verbose)
     {
         cout << "First layer height " << m_layerT[0] << endl;
     }
@@ -1074,9 +1073,9 @@ void BLMesh::Setup()
             continue;
         }
 
-        Array<OneD, NekDouble> uv(2);
         Array<OneD, NekDouble> loc = bit->second->pNode->GetLoc();
-        m_mesh->m_cad->GetSurf(bit->second->symsurf)->locuv(loc, uv);
+        Array<OneD, NekDouble> uv =
+            m_mesh->m_cad->GetSurf(bit->second->symsurf)->locuv(loc);
 
         Array<OneD, NekDouble> nl =
             m_mesh->m_cad->GetSurf(bit->second->symsurf)->P(uv);
@@ -1191,5 +1190,5 @@ void BLMesh::Setup()
     m_deriv[1] = *nodalPrism.GetVandermondeForDeriv(1) * VandermondeI;
     m_deriv[2] = *nodalPrism.GetVandermondeForDeriv(2) * VandermondeI;
 }
-}
-}
+} // namespace NekMeshUtils
+} // namespace Nektar

@@ -36,8 +36,8 @@
 #ifndef NekMeshUtils_CADSYSTEM_CADSURF
 #define NekMeshUtils_CADSYSTEM_CADSURF
 
-#include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
+#include <LibUtilities/BasicUtils/SharedArray.hpp>
 
 #include <NekMeshUtils/CADSystem/CADObject.h>
 
@@ -90,8 +90,8 @@ public:
     /**
      * @brief Static function which orientates the edge loop on a surface
      */
-    static void OrientateEdges(
-        CADSurfSharedPtr surf, std::vector<EdgeLoopSharedPtr> &ein);
+    static void OrientateEdges(CADSurfSharedPtr surf,
+                               std::vector<EdgeLoopSharedPtr> &ein);
 
     /**
      * @brief Get the loop structures which bound the cad surface
@@ -155,7 +155,16 @@ public:
      * @param p Array of xyz location
      * @return The parametric location of xyz on this surface
      */
-    virtual NekDouble locuv(Array<OneD, NekDouble> p, Array<OneD, NekDouble> uv) = 0;
+    virtual Array<OneD, NekDouble> locuv(Array<OneD, NekDouble> p,
+                                         NekDouble &dist) = 0;
+
+    /**
+     * @brief overload function of locuv ommiting the dist parameter
+     * in this case if the projection is greater than a certain distance
+     * it will produce a warning. To do large distance projection use the other
+     * locuv method
+     */
+    Array<OneD, NekDouble> locuv(Array<OneD, NekDouble> p);
 
     /**
      * @brief Returns the bounding box of the surface
@@ -168,7 +177,8 @@ public:
     virtual NekDouble Curvature(Array<OneD, NekDouble> uv) = 0;
 
     /**
-     * @brief Is the surface defined by a planar surface (i.e not nurbs and is flat)
+     * @brief Is the surface defined by a planar surface (i.e not nurbs and is
+     * flat)
      */
     virtual bool IsPlanar() = 0;
 
@@ -193,7 +203,7 @@ typedef std::shared_ptr<CADSurf> CADSurfSharedPtr;
 typedef LibUtilities::NekFactory<std::string, CADSurf> CADSurfFactory;
 
 CADSurfFactory &GetCADSurfFactory();
-}
-}
+} // namespace NekMeshUtils
+} // namespace Nektar
 
 #endif

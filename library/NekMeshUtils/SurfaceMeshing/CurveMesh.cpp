@@ -156,8 +156,7 @@ void CurveMesh::Mesh()
             continue;
         }
 
-        Array<OneD, NekDouble> uv;
-        s[j].first->locuv(loc, uv);
+        Array<OneD, NekDouble> uv = s[j].first->locuv(loc);
         n->SetCADSurf(s[j].first, uv);
     }
     m_meshpoints.push_back(n);
@@ -171,8 +170,7 @@ void CurveMesh::Mesh()
         n2->SetCADCurve(m_cadcurve, t);
         for (int j = 0; j < s.size(); j++)
         {
-            Array<OneD, NekDouble> uv;
-            s[j].first->locuv(loc, uv);
+            Array<OneD, NekDouble> uv = s[j].first->locuv(loc);
             n2->SetCADSurf(s[j].first, uv);
         }
         m_meshpoints.push_back(n2);
@@ -191,8 +189,7 @@ void CurveMesh::Mesh()
             continue;
         }
 
-        Array<OneD, NekDouble> uv;
-        s[j].first->locuv(loc, uv);
+        Array<OneD, NekDouble> uv = s[j].first->locuv(loc);
         n->SetCADSurf(s[j].first, uv);
     }
     m_meshpoints.push_back(n);
@@ -409,8 +406,7 @@ void CurveMesh::PeriodicOverwrite(CurveMeshSharedPtr from)
 
         for (int j = 0; j < surfs.size(); j++)
         {
-            Array<OneD, NekDouble> uv;
-            surfs[j].first->locuv(nn->GetLoc(), uv);
+            Array<OneD, NekDouble> uv = surfs[j].first->locuv(nn->GetLoc());
             nn->SetCADSurf(surfs[j].first, uv);
         }
 

@@ -51,7 +51,7 @@ void CADCurveOCE::Initialise(int i, TopoDS_Shape in)
 
     GProp_GProps System;
     BRepGProp::LinearProperties(m_occEdge, System);
-    m_length = System.Mass() / 1.0;
+    m_length = System.Mass() / 1000.0;
 
     m_b = Array<OneD, NekDouble>(2);
     m_c = BRep_Tool::Curve(TopoDS::Edge(in), m_b[0], m_b[1]);
@@ -75,7 +75,7 @@ NekDouble CADCurveOCE::tAtArcLength(NekDouble s)
         t += dt;
         m_c->D1(t, P2, drdt2);
 
-        len += (drdt1.Magnitude() + drdt2.Magnitude()) / 2.0 * dt / 1.0;
+        len += (drdt1.Magnitude() + drdt2.Magnitude()) / 2.0 * dt / 1000.0;
     }
 
     return t - dt;
@@ -87,20 +87,20 @@ NekDouble CADCurveOCE::Length(NekDouble ti, NekDouble tf)
     TopoDS_Edge NewEdge         = BRepBuilderAPI_MakeEdge(NewCurve);
     GProp_GProps System;
     BRepGProp::LinearProperties(NewEdge, System);
-    return System.Mass() / 1.0;
+    return System.Mass() / 1000.0;
 }
 
 NekDouble CADCurveOCE::loct(Array<OneD, NekDouble> xyz, NekDouble &t)
 {
     t = 0.0;
 
-    gp_Pnt loc(xyz[0] * 1.0, xyz[1] * 1.0, xyz[2] * 1.0);
+    gp_Pnt loc(xyz[0] * 1000.0, xyz[1] * 1000.0, xyz[2] * 1000.0);
 
     ShapeAnalysis_Curve sac;
     gp_Pnt p;
-    sac.Project(m_c, loc, 1e-8, p, t);
+    sac.Project(m_c, loc, Precision::Confusion(), p, t);
 
-    return p.Distance(loc) / 1.0;
+    return p.Distance(loc) / 1000.0;
 }
 
 Array<OneD, NekDouble> CADCurveOCE::P(NekDouble t)
@@ -108,9 +108,9 @@ Array<OneD, NekDouble> CADCurveOCE::P(NekDouble t)
     Array<OneD, NekDouble> location(3);
     gp_Pnt loc = m_c->Value(t);
 
-    location[0] = loc.X()/1.0;
-    location[1] = loc.Y()/1.0;
-    location[2] = loc.Z()/1.0;
+    location[0] = loc.X()/1000.0;
+    location[1] = loc.Y()/1000.0;
+    location[2] = loc.Z()/1000.0;
 
     return location;
 }
@@ -122,22 +122,22 @@ Array<OneD, NekDouble> CADCurveOCE::D2(NekDouble t)
     gp_Vec d1, d2;
     m_c->D2(t, loc, d1, d2);
 
-    out[0] = loc.X()/1.0;
-    out[1] = loc.Y()/1.0;
-    out[2] = loc.Z()/1.0;
-    out[3] = d1.X()/1.0;
-    out[4] = d1.Y()/1.0;
-    out[5] = d1.Z()/1.0;
-    out[6] = d2.X()/1.0;
-    out[7] = d2.Y()/1.0;
-    out[8] = d2.Z()/1.0;
+    out[0] = loc.X()/1000.0;
+    out[1] = loc.Y()/1000.0;
+    out[2] = loc.Z()/1000.0;
+    out[3] = d1.X()/1000.0;
+    out[4] = d1.Y()/1000.0;
+    out[5] = d1.Z()/1000.0;
+    out[6] = d2.X()/1000.0;
+    out[7] = d2.Y()/1000.0;
+    out[8] = d2.Z()/1000.0;
 
     return out;
 }
 
 Array<OneD, NekDouble> CADCurveOCE::N(NekDouble t)
 {
-    GeomLProp_CLProps d(m_c, 2, 1e-8);
+    GeomLProp_CLProps d(m_c, 2, Precision::Confusion());
     d.SetParameter(t + 1e-8);
 
     gp_Vec d2 = d.D2();
@@ -160,10 +160,10 @@ Array<OneD, NekDouble> CADCurveOCE::N(NekDouble t)
 
 NekDouble CADCurveOCE::Curvature(NekDouble t)
 {
-    GeomLProp_CLProps d(m_c, 2, 1e-8);
+    GeomLProp_CLProps d(m_c, 2, Precision::Confusion());
     d.SetParameter(t);
 
-    return d.Curvature() * 1.0;
+    return d.Curvature() * 1000.0;
 }
 
 Array<OneD, NekDouble> CADCurveOCE::GetBounds()

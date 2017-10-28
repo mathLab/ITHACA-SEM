@@ -234,11 +234,23 @@ public:
 
     void SetCADCurve(CADCurveSharedPtr c, NekDouble t)
     {
+        auto it = CADCurveList.find(c->GetId());
+        if(it != CADCurveList.end())
+        {
+            //already in list so remove it
+            CADCurveList.erase(it);
+        }
         CADCurveList.insert(make_pair(c->GetId(), make_pair(c, t)));
     }
 
     void SetCADSurf(CADSurfSharedPtr s, Array<OneD, NekDouble> uv)
     {
+        auto it = CADSurfList.find(s->GetId());
+        if(it != CADSurfList.end())
+        {
+            //already in list so remove it
+            CADSurfList.erase(it);
+        }
         CADSurfList.insert(make_pair(s->GetId(), make_pair(s, uv)));
     }
 
@@ -294,7 +306,7 @@ public:
         m_y                 = l[1];
         m_z                 = l[2];
         CADSurfSharedPtr su = CADSurfList[s].first;
-        CADSurfList.insert(make_pair(s, make_pair(su, uv)));
+        SetCADSurf(su, uv);
     }
 
     void Move(Array<OneD, NekDouble> l, int c, NekDouble t)
@@ -303,7 +315,7 @@ public:
         m_y                  = l[1];
         m_z                  = l[2];
         CADCurveSharedPtr cu = CADCurveList[c].first;
-        CADCurveList.insert(make_pair(c, make_pair(cu, t)));
+        SetCADCurve(cu, t);
     }
 
     NekDouble Angle(Array<OneD, NekDouble> locA, Array<OneD, NekDouble> locB,

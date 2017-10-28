@@ -50,6 +50,16 @@ namespace Nektar
 namespace NekMeshUtils
 {
 
+Array<OneD, NekDouble> CADSurf::locuv(Array<OneD, NekDouble> p)
+{
+    NekDouble dist;
+    Array<OneD, NekDouble> uv = locuv(p,dist);
+
+    WARNINGL1(dist < 1e-3, "large locuv distance");
+
+    return uv;
+}
+
 void CADSurf::OrientateEdges(CADSurfSharedPtr surf,
                              vector<EdgeLoopSharedPtr> &ein)
 {
@@ -70,8 +80,7 @@ void CADSurf::OrientateEdges(CADSurfSharedPtr surf,
                 {
                     NekDouble t = bnds[0] + dt * k;
                     Array<OneD, NekDouble> l = ein[i]->edges[j]->P(t);
-                    Array<OneD, NekDouble> uv(2);
-                    surf->locuv(l, uv);
+                    Array<OneD, NekDouble> uv = surf->locuv(l);
                     loop.push_back(uv);
                 }
             }
@@ -81,8 +90,7 @@ void CADSurf::OrientateEdges(CADSurfSharedPtr surf,
                 {
                     NekDouble t = bnds[0] + dt * k;
                     Array<OneD, NekDouble> l = ein[i]->edges[j]->P(t);
-                    Array<OneD, NekDouble> uv(2);
-                    surf->locuv(l, uv);
+                    Array<OneD, NekDouble> uv = surf->locuv(l);
                     loop.push_back(uv);
                 }
             }

@@ -272,8 +272,7 @@ void HOSurfaceMesh::Process()
                     nn->SetCADCurve(c, ti[k]);
                     for (int m = 0; m < s.size(); m++)
                     {
-                        Array<OneD, NekDouble> uv;
-                        s[m].first->locuv(loc, uv);
+                        Array<OneD, NekDouble> uv = s[m].first->locuv(loc);
                         nn->SetCADSurf(s[m].first, uv);
                     }
 
@@ -292,7 +291,6 @@ void HOSurfaceMesh::Process()
 
                 e->m_parentCAD = s;
                 Array<OneD, Array<OneD, NekDouble>> uvi(nq);
-                Array<OneD, Array<OneD, NekDouble>> loci(nq);
 
                 for (int k = 0; k < nq; k++)
                 {
@@ -302,27 +300,10 @@ void HOSurfaceMesh::Process()
                     uv[1] = uvb[1] * (1.0 - gll[k]) / 2.0 +
                             uve[1] * (1.0 + gll[k]) / 2.0;
                     uvi[k] = uv;
-
-                    Array<OneD, NekDouble> loc(3);
-                    loc[0] = l1[0] * (1.0 - gll[k]) / 2.0 +
-                             l2[0] * (1.0 + gll[k]) / 2.0;
-                    loc[1] = l1[1] * (1.0 - gll[k]) / 2.0 +
-                             l2[1] * (1.0 + gll[k]) / 2.0;
-                    loc[2] = l1[2] * (1.0 - gll[k]) / 2.0 +
-                             l2[2] * (1.0 + gll[k]) / 2.0;
-                    loci[k] = loc;
-
-                    Array<OneD, NekDouble> uvNew;
-                    s->locuv(loc,uvNew);
-                    cout << uv[0] << " " << uvNew[0] << endl;
-                    cout << uv[1] << " " << uvNew[1] << endl;
-                    cout << endl;
                 }
 
                 if (qOpti)
                 {
-                    cout << "hello" << endl;
-
                     Array<OneD, NekDouble> bnds = s->GetBounds();
                     Array<OneD, NekDouble> all(2 * nq);
                     for (int k = 0; k < nq; k++)
@@ -430,11 +411,6 @@ void HOSurfaceMesh::Process()
                         new Node(0, loc[0], loc[1], loc[2]));
                     nn->SetCADSurf(s, uvi[k]);
                     honodes[k - 1] = nn;
-
-                    //NekDouble d = sqrt( (loc[0]-loci[k][0]) * (loc[0]-loci[k][0]) +
-                    //              (loc[1]-loci[k][1]) * (loc[1]-loci[k][1]) +
-                    //              (loc[2]-loci[k][2]) * (loc[2]-loci[k][2]) );
-                    //cout << d << endl;
                 }
             }
 

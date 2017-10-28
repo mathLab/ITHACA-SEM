@@ -47,7 +47,6 @@ namespace NekMeshUtils
 class CADSurfOCE : public CADSurf
 {
 public:
-
     static CADSurfSharedPtr create()
     {
         return MemoryManager<CADSurfOCE>::AllocateSharedPtr();
@@ -66,11 +65,12 @@ public:
     void Initialise(int i, TopoDS_Shape in);
 
     virtual Array<OneD, NekDouble> GetBounds();
-    virtual Array<OneD, NekDouble> N    (Array<OneD, NekDouble> uv);
-    virtual Array<OneD, NekDouble> D1   (Array<OneD, NekDouble> uv);
-    virtual Array<OneD, NekDouble> D2   (Array<OneD, NekDouble> uv);
-    virtual Array<OneD, NekDouble> P    (Array<OneD, NekDouble> uv);
-    virtual NekDouble locuv(Array<OneD, NekDouble> p, Array<OneD, NekDouble> uv);
+    virtual Array<OneD, NekDouble> N(Array<OneD, NekDouble> uv);
+    virtual Array<OneD, NekDouble> D1(Array<OneD, NekDouble> uv);
+    virtual Array<OneD, NekDouble> D2(Array<OneD, NekDouble> uv);
+    virtual Array<OneD, NekDouble> P(Array<OneD, NekDouble> uv);
+    virtual Array<OneD, NekDouble> locuv(Array<OneD, NekDouble> p,
+                                         NekDouble &dist);
     virtual NekDouble Curvature(Array<OneD, NekDouble> uv);
     virtual Array<OneD, NekDouble> BoundingBox();
     virtual bool IsPlanar();
@@ -90,7 +90,7 @@ private:
     BRepTopAdaptor_FClass2d *m_2Dclass;
 };
 
-}
-}
+} // namespace NekMeshUtils
+} // namespace Nektar
 
 #endif

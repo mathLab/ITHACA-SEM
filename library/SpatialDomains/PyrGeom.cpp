@@ -486,11 +486,41 @@ namespace Nektar
                 // Compute the length of edges on a base-face
                 if (f > 0)
                 {
-                    for(i = 0; i < m_coordim; i++)
-                    {
-                        elementAaxis[i] = (*m_verts[ faceVerts[f][1] ])[i] - (*m_verts[ faceVerts[f][0] ])[i];
-                        elementBaxis[i] = (*m_verts[ faceVerts[f][2] ])[i] - (*m_verts[ faceVerts[f][0] ])[i];
-                    }
+                    if (baseVertex == m_verts[faceVerts[f][0]]->GetVid())
+                   {
+                       for (i = 0; i < m_coordim; i++)
+                       {
+                           elementAaxis[i] = (*m_verts[faceVerts[f][1]])[i] -
+                                             (*m_verts[faceVerts[f][0]])[i];
+                           elementBaxis[i] = (*m_verts[faceVerts[f][2]])[i] -
+                                             (*m_verts[faceVerts[f][0]])[i];
+                       }
+                   }
+                   else if (baseVertex == m_verts[faceVerts[f][1]]->GetVid())
+                   {
+                       for (i = 0; i < m_coordim; i++)
+                       {
+                           elementAaxis[i] = (*m_verts[faceVerts[f][1]])[i] -
+                                             (*m_verts[faceVerts[f][0]])[i];
+                           elementBaxis[i] = (*m_verts[faceVerts[f][2]])[i] -
+                                             (*m_verts[faceVerts[f][1]])[i];
+                       }
+                   }
+                   else if (baseVertex == m_verts[faceVerts[f][2]]->GetVid())
+                   {
+                       for (i = 0; i < m_coordim; i++)
+                       {
+                           elementAaxis[i] = (*m_verts[faceVerts[f][1]])[i] -
+                                             (*m_verts[faceVerts[f][2]])[i];
+                           elementBaxis[i] = (*m_verts[faceVerts[f][2]])[i] -
+                                             (*m_verts[faceVerts[f][0]])[i];
+                       }
+                   }
+                   else
+                   {
+                       ASSERTL0(false, "Could not find matching vertex for the face");
+                   }
+
                 }
                 else
                 {
@@ -581,12 +611,9 @@ namespace Nektar
                     norm = fabs(dotproduct2) / elementBaxis_length / faceBaxis_length;
 
                     // check that both these axis are indeed parallel
-//                    ASSERTL1(fabs(norm - 1.0) <
-//                             NekConstants::kNekZeroTol,
-//                             "These vectors should be parallel");
-                    //This assert is commented out because tests fail, it has been for years
-                    //there is a bug further up the code as this should not fail
-                    //unsure what it is (MT 2017)
+                    ASSERTL1(fabs(norm - 1.0) <
+                             NekConstants::kNekZeroTol,
+                             "These vectors should be parallel");
 
                     // if the inner product is negative, both B-axis point
                     // in reverse direction

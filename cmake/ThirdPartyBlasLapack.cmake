@@ -7,15 +7,15 @@
 ########################################################################
 
 
-INCLUDE(FindNativeBlasLapack)
+INCLUDE(FindBlasLapack)
 
-IF(NATIVE_BLAS_LAPACK_FOUND)
+IF(LAPACK_FOUND)
     SET(BUILD_BLAS_LAPACK OFF)
 ELSE()
-    IF(CMAKE_Fortran_COMPILER)
+    IF(CMAKE_Fortran_COMPILER AND NATIVE_BLAS_LAPACK_FIND_REQUIRED)
         SET(BUILD_BLAS_LAPACK ON)
     ELSE()
-        MESSAGE(SEND_ERROR "No blas installation or fortran compiler found")
+        MESSAGE(SEND_ERROR "No blas/lapack installation found and cannot self build")
     ENDIF()
 ENDIF()
 
@@ -46,14 +46,7 @@ IF(THIRDPARTY_BUILD_BLAS_LAPACK)
             ${TPSRC}/lapack-3.7.0
         )
 
-    SET(NATIVE_BLAS blas CACHE FILEPATH "BLAS library" FORCE)
-    SET(NATIVE_LAPACK lapack CACHE FILEPATH "LAPACK library" FORCE)
-    SET(NATIVE_BLAS_LIB_DIR ${TPDIST}/lib CACHE FILEPATH "BLAS library dir" FORCE)
-    SET(NATIVE_LAPACK_LIB_DIR ${TPDIST}/lib CACHE FILEPATH "LAPACK library dir" FORCE)
-    MARK_AS_ADVANCED(NATIVE_BLAS)
-    MARK_AS_ADVANCED(NATIVE_LAPACK)
-    MARK_AS_ADVANCED(NATIVE_BLAS_LIB_DIR)
-    MARK_AS_ADVANCED(NATIVE_LAPACK_LIB_DIR)
+    SET(BLAS_LAPACK ${NATIVE_BLAS} ${NATIVE_LAPACK})
 
     LINK_DIRECTORIES(${TPDIST}/lib)
     INCLUDE_DIRECTORIES(${TPDIST}/include)

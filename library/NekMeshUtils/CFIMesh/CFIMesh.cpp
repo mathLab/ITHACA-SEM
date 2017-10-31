@@ -113,8 +113,7 @@ void CFIMesh::Process()
                     c->GetAdjSurf();
                 for (int j = 0; j < ss.size(); j++)
                 {
-                    Array<OneD, NekDouble> uv(2);
-                    ss[j].first->locuv(xyz, uv);
+                    Array<OneD, NekDouble> uv = ss[j].first->locuv(xyz);
                     n->SetCADSurf(ss[j].first, uv);
                 }
             }
@@ -125,8 +124,7 @@ void CFIMesh::Process()
             if (f != m_nameToFaceId.end())
             {
                 CADSurfSharedPtr s = m_mesh->m_cad->GetSurf(f->second);
-                Array<OneD, NekDouble> uv(2);
-                s->locuv(xyz, uv);
+                Array<OneD, NekDouble> uv = s->locuv(xyz);
                 n->SetCADSurf(s, uv);
             }
         }
@@ -146,8 +144,7 @@ void CFIMesh::Process()
                         ss = cs[i]->GetAdjSurf();
                     for (int j = 0; j < ss.size(); j++)
                     {
-                        Array<OneD, NekDouble> uv;
-                        ss[j].first->locuv(xyz, uv);
+                        Array<OneD, NekDouble> uv = ss[j].first->locuv(xyz);
                         n->SetCADSurf(ss[j].first, uv);
                     }
                 }

@@ -74,7 +74,7 @@ public:
 
     Array<OneD, NekDouble> P(Array<OneD, NekDouble> uv);
 
-    NekDouble locuv(Array<OneD, NekDouble> p, Array<OneD, NekDouble> &uv);
+    Array<OneD, NekDouble> locuv(Array<OneD, NekDouble> p,  NekDouble &dist);
 
     NekDouble Curvature(Array<OneD, NekDouble> uv);
 

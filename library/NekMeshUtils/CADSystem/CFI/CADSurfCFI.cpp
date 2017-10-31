@@ -65,9 +65,10 @@ Array<OneD, NekDouble> CADSurfCFI::GetBounds()
     return b;
 }
 
-NekDouble CADSurfCFI::locuv(Array<OneD, NekDouble> p, Array<OneD, NekDouble> &uv)
+Array<OneD, NekDouble> CADSurfCFI::locuv(Array<OneD, NekDouble> p,
+                                         NekDouble &dist)
 {
-    uv = Array<OneD, NekDouble>(2);
+    Array<OneD, NekDouble> uv(2);
     cfi::Position px;
     px.x = p[0] / m_scal;
     px.y = p[1] / m_scal;
@@ -80,11 +81,11 @@ NekDouble CADSurfCFI::locuv(Array<OneD, NekDouble> p, Array<OneD, NekDouble> &uv
 
     Array<OneD, NekDouble> p2 = P(uv);
 
-    NekDouble dist =
+    dist =
         sqrt((p[0] - p2[0]) * (p[0] - p2[0]) + (p[1] - p2[1]) * (p[1] - p2[1]) +
-             (p[2] - p2[2]) * (p[2] - p2[2]));
+             (p[2] - p2[2]) * (p[2] - p2[2])) * m_scal;
 
-    return dist * m_scal;
+    return uv;
 }
 
 NekDouble CADSurfCFI::Curvature(Array<OneD, NekDouble> uv)

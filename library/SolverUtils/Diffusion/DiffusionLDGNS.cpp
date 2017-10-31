@@ -341,30 +341,69 @@ namespace Nektar
                         GetPhys_Offset(fields[0]->GetTraceMap()->
                                        GetBndCondTraceToGlobalTraceMap(cnt++));
 
-                        // Reinforcing bcs for velocity in case of Wall bcs
                         if (boost::iequals(fields[i]->GetBndConditions()[j]->
                             GetUserDefined(),"WallViscous") ||
                             boost::iequals(fields[i]->GetBndConditions()[j]->
                             GetUserDefined(),"WallAdiabatic"))
                         {
+                            // Reinforcing bcs for velocity in case of Wall bcs
                             Vmath::Zero(nBndEdgePts, 
                                         &scalarVariables[i][id2], 1);
-                            
                         }
+                        else if (
+                            boost::iequals(fields[i]->GetBndConditions()[j]->
+                            GetUserDefined(),"Wall") ||
+                            boost::iequals(fields[i]->GetBndConditions()[j]->
+                            GetUserDefined(),"Symmetry"))
+                        {
+                            // Symmetry bc: normal velocity is zero
+                            //    get all velocities at once because we need u.n
+                            if (i==0)
+                            {
+                                //    tmp1 = -(u.n)
+                                Vmath::Zero(nBndEdgePts, tmp1, 1);
+                                for (int k = 0; k < nScalars-1; ++k)
+                                {
+                                    Vmath::Vdiv(nBndEdgePts,
+                                      &(fields[k+1]->GetBndCondExpansions()[j]->
+                                          UpdatePhys())[id1], 1,
+                                      &(fields[0]->GetBndCondExpansions()[j]->
+                                          UpdatePhys())[id1], 1,
+                                      &scalarVariables[k][id2], 1);
+                                    Vmath::Vvtvp(nBndEdgePts,
+                                            &m_traceNormals[k][id2], 1,
+                                            &scalarVariables[k][id2], 1,
+                                            &tmp1[0], 1,
+                                            &tmp1[0], 1);
+                                }
+                                Vmath::Smul(nBndEdgePts, -1.0,
+                                            &tmp1[0], 1,
+                                            &tmp1[0], 1);
 
-                        // Imposing velocity bcs if not Wall
+                                //    u_i - (u.n)n_i
+                                for (int k = 0; k < nScalars-1; ++k)
+                                {
+                                    Vmath::Vvtvp(nBndEdgePts,
+                                            &tmp1[0], 1,
+                                            &m_traceNormals[k][id2], 1,
+                                            &scalarVariables[k][id2], 1,
+                                            &scalarVariables[k][id2], 1);
+                                }
+                            }
+                        }
                         else if (fields[i]->GetBndConditions()[j]->
                                  GetBoundaryConditionType() == 
                                  SpatialDomains::eDirichlet)
                         {
-                        Vmath::Vdiv(nBndEdgePts,
+                            // Imposing velocity bcs if not Wall
+                            Vmath::Vdiv(nBndEdgePts,
                                     &(fields[i+1]->GetBndCondExpansions()[j]->
                                       UpdatePhys())[id1], 1,
                                     &(fields[0]->GetBndCondExpansions()[j]->
                                       UpdatePhys())[id1], 1,
                                     &scalarVariables[i][id2], 1);
                         }
-                        
+
                         // For Dirichlet boundary condition: uflux = u_bcs
                         if (fields[i]->GetBndConditions()[j]->
                             GetBoundaryConditionType() == 

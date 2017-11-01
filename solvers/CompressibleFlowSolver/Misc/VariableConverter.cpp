@@ -352,6 +352,15 @@ namespace Nektar
             int nElmtCoeffs      = field->GetExp(e)->GetNcoeffs();
             int numCutOff        = numModesElement - offset;
 
+            if (numModesElement <= offset)
+            {
+                Vmath::Fill(nElmtPoints, 0.0,
+                        tmp = Sensor + physOffset, 1);
+                Vmath::Fill(nElmtPoints, 0.0,
+                        tmp = SensorKappa + physOffset, 1);
+                continue;
+            }
+
             // create vector to save the solution points per element at P = p;
             Array<OneD, NekDouble> elmtPhys (nElmtPoints, solution+physOffset);
             // Compute coefficients
@@ -390,11 +399,7 @@ namespace Nektar
             Vmath::Fill(nElmtPoints, elmtSensor, tmp = Sensor + physOffset, 1);
 
             NekDouble elmtSensorKappa;
-            if (numModesElement <= offset)
-            {
-                elmtSensorKappa = 0;
-            }
-            else if (elmtSensor < (m_Skappa-m_Kappa))
+            if (elmtSensor < (m_Skappa-m_Kappa))
             {
                 elmtSensorKappa = 0;
             }

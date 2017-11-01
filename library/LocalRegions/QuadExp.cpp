@@ -301,6 +301,12 @@ namespace Nektar
 
                 fill(outarray.get(), outarray.get()+m_ncoeffs, 0.0 );
 
+                if(nmodes[0] == 1 && nmodes[1] == 1)
+                {
+                    outarray[0] = inarray[0];
+                    return;
+                }
+
                 Array<OneD, NekDouble> physEdge[4];
                 Array<OneD, NekDouble> coeffEdge[4];
                 StdRegions::Orientation orient[4];

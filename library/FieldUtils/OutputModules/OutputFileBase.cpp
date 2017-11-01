@@ -315,6 +315,7 @@ void OutputFileBase::ConvertExpToEquispaced(po::variables_map &vm)
     {
         nPointsNew = vm["output-points"].as<int>();
     }
+    nPointsNew = max(nPointsNew, 2);
     m_f->m_graph->SetExpansionsToEvenlySpacedPoints(nPointsNew);
 
     // Save original expansion

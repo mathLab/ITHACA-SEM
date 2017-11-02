@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File AdvectionSystem.h
+// File: UpwindPulseSolver.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,63 +29,41 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Advection system
+// Description: Upwind pulse Riemann solver.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_SOLVERUTILS_ADVECTIONSYSTEM_H
-#define NEKTAR_SOLVERUTILS_ADVECTIONSYSTEM_H
+#ifndef NEKTAR_SOLVERS_PULSEWAVESOLVER_RIEMANNSOLVER_UPWINDPULSE
+#define NEKTAR_SOLVERS_PULSEWAVESOLVER_RIEMANNSOLVER_UPWINDPULSE
 
-#include <SolverUtils/UnsteadySystem.h>
-#include <SolverUtils/Advection/Advection.h>
+#include <SolverUtils/RiemannSolvers/RiemannSolver.h>
 
-namespace Nektar {
-namespace SolverUtils {
+using namespace Nektar::SolverUtils;
 
-/// A base class for PDEs which include an advection component
-class AdvectionSystem: virtual public UnsteadySystem
+namespace Nektar
+{
+class UpwindPulseSolver : public RiemannSolver
 {
 public:
-    SOLVER_UTILS_EXPORT AdvectionSystem(
-            const LibUtilities::SessionReaderSharedPtr &pSession);
-
-    SOLVER_UTILS_EXPORT virtual ~AdvectionSystem();
-
-    SOLVER_UTILS_EXPORT virtual void v_InitObject();
-
-    /// Returns the advection object held by this instance.
-    SOLVER_UTILS_EXPORT AdvectionSharedPtr GetAdvObject()
+    static RiemannSolverSharedPtr create()
     {
-        return m_advObject;
+        return RiemannSolverSharedPtr(new UpwindPulseSolver());
     }
 
-    SOLVER_UTILS_EXPORT Array<OneD, NekDouble>  GetElmtCFLVals(void);
-    SOLVER_UTILS_EXPORT NekDouble               GetCFLEstimate(int &elmtid);
+    static std::string solverName;
 
 protected:
-    /// Advection term
-    SolverUtils::AdvectionSharedPtr m_advObject;
+    UpwindPulseSolver();
 
-    SOLVER_UTILS_EXPORT virtual bool v_PostIntegrate(int step);
+    virtual void v_Solve(const int nDim,
+                         const Array<OneD, const Array<OneD, NekDouble>> &Fwd,
+                         const Array<OneD, const Array<OneD, NekDouble>> &Bwd,
+                         Array<OneD, Array<OneD, NekDouble>> &flux);
 
-    SOLVER_UTILS_EXPORT virtual Array<OneD, NekDouble> v_GetMaxStdVelocity()
-    {
-        ASSERTL0(false,
-            "v_GetMaxStdVelocity is not implemented by the base class.");
-        Array<OneD, NekDouble> dummy(1);
-        return dummy;
-    }
-
-private:
-    /// dump cfl estimate
-    int         m_cflsteps;
-
+    void RiemannSolverUpwind(NekDouble AL, NekDouble uL, NekDouble AR,
+                             NekDouble uR, NekDouble &Aflux, NekDouble &uflux,
+                             NekDouble A_0, NekDouble beta, NekDouble n);
 };
-
-/// Shared pointer to an AdvectionSystem class
-typedef std::shared_ptr<AdvectionSystem> AdvectionSystemSharedPtr;
-
-}
 }
 
 #endif

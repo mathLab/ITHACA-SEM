@@ -17,6 +17,8 @@ v5.0.0
 - Added native support for csv files in addititon to pts (!760 !835)
 - Utilize LAPACK_DIR env variable to find the native blas/lapack install (!827)
 - Remove StdExpansion use from MultiRegion (use Expansions instead). (!831)
+- Move steady state check and CFL output from solvers to SolverUtils (!832)
+- Remove DG advection implementation from EquationSystem (!832)
 - Simplify RawType typedefs (!840)
 - Remove unused files from BasicUtils (!841)
 - Remove checks for old boost versions which are no longer supported (!841)
@@ -24,6 +26,7 @@ v5.0.0
 - Added support for using the distance to a specific region (e.g. outlet) in the
   function definitions for the Absorption Forcing (!769)
 - Improve performance of DisContField2D::v_ExtractTracePhys (!824)
+- Fix small bug in Jacobian Energy (!857)
 
 **NekMesh**:
 - Add feature to read basic 2D geo files as CAD (!731)
@@ -48,8 +51,16 @@ v5.0.0
 - Enable output to multiple files (!844)
 - Allow using xml file without expansion tag in FieldConvert (!849)
 
+**IncNavierStokesSolver**
+- Replace steady-state check based on difference of norms by check based on
+  norm of the difference, to be consistent with the compressible solver (!832)
+
 **CompressibleFlowSolver**
 - Add 3D regression tests (!567)
+- Introduce forcing for quasi-1D Euler simulations (!771)
+- Allow performing axi-symmetric Euler simulations (!771)
+- Add ability to use an exponential filtering for stabilization with
+  seg, quad and hex elements (!771, !862)
 
 **Documentation**:
 - Added the developer-guide repository as a submodule (!751)
@@ -59,6 +70,15 @@ v4.4.2
 **Library**
 - Fix evaluation of points (e.g. HistoryPoints, Interpolation to pts) close to
   the interface of two elements (!836)
+- Fix deadlock in Hdf5 with homogeneous expansions (!858)
+
+**NekMesh**
+- Fix missing periodic boundary meshing and boundary layer mesh adjustment
+  configurations in 2D (!859)
+
+**Documentation**:
+- Fix sign of the viscous term in the velocity correction scheme equations in
+  the user guide (!856)
 
 v4.4.1
 ------

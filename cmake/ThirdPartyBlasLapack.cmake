@@ -46,16 +46,16 @@ IF(THIRDPARTY_BUILD_BLAS_LAPACK)
             ${TPSRC}/lapack-3.7.0
         )
 
-    SET(BLAS_LAPACK ${NATIVE_BLAS} ${NATIVE_LAPACK})
+    SET(BLAS_LAPACK blas lapack)
 
     LINK_DIRECTORIES(${TPDIST}/lib)
     INCLUDE_DIRECTORIES(${TPDIST}/include)
 
     IF (WIN32)
-        MESSAGE(STATUS "Build blas: ${TPDIST}/${LIB_DIR}/${NATIVE_BLAS}.dll")
-        MESSAGE(STATUS "Build lapack: ${TPDIST}/${LIB_DIR}/${NATIVE_LAPACK}.dll")
+        MESSAGE(STATUS "Build blas: ${TPDIST}/${LIB_DIR}/libblas.dll")
+        MESSAGE(STATUS "Build lapack: ${TPDIST}/${LIB_DIR}/liblapack.dll")
     ELSE ()
-        MESSAGE(STATUS "Build blas: ${TPDIST}/${LIB_DIR}/lib${NATIVE_BLAS}.a")
-        MESSAGE(STATUS "Build lapack: ${TPDIST}/${LIB_DIR}/${NATIVE_LAPACK}.a")
+        MESSAGE(STATUS "Build blas: ${TPDIST}/${LIB_DIR}/libblas.a")
+        MESSAGE(STATUS "Build lapack: ${TPDIST}/${LIB_DIR}/liblapack.a")
     ENDIF()
 ENDIF()

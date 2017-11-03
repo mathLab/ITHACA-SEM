@@ -938,6 +938,13 @@ namespace Nektar
                 GetFunction("InitialConditions")->Evaluate(
                         m_session->GetVariables(), m_fields, m_time, domain);
                 
+                for (int i = 0; i < m_fields.num_elements(); i++)
+                {
+                    // Perform BwdTrans to make sure IC is in solution space
+                    m_fields[i]->BwdTrans(m_fields[i]->GetCoeffs(),
+                                          m_fields[i]->UpdatePhys());
+                }
+
                 if (m_session->GetComm()->GetRank() == 0)
                 {
                     

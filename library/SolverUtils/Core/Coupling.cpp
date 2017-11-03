@@ -113,10 +113,18 @@ void Coupling::v_Init()
 
     // mangle config into variables. This is ugly
     ParseUtils::GenerateVector(m_config["RECEIVEVARIABLES"], m_recvFieldNames);
+    if(m_recvFieldNames[0] == "")
+    {
+        m_recvFieldNames.clear();
+    }
     m_nRecvVars = m_recvFieldNames.size();
 
     ParseUtils::GenerateVector(m_config["SENDVARIABLES"],
                                m_sendFieldNames);
+    if(m_sendFieldNames[0] == "")
+    {
+        m_sendFieldNames.clear();
+    }
     m_nSendVars = m_sendFieldNames.size();
 
     m_recvSteps = boost::lexical_cast<int>(m_config["RECEIVESTEPS"]);

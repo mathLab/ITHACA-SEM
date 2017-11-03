@@ -390,6 +390,7 @@ namespace Nektar
                                 "NaN found during time integration.");
                 }
                 // Update filters
+                GetAllFields(m_fieldMetaDataMap, coeffs, phys, expansions);
                 for (auto &x : m_filters)
                 {
                     x->Update(m_fieldMetaDataMap, coeffs, expansions, m_time);

@@ -33,7 +33,7 @@
 
 #include "CouplingCwipi.h"
 
-#include <LibUtilities/BasicUtils/ParseUtils.hpp>
+#include <LibUtilities/BasicUtils/ParseUtils.h>
 #include <LibUtilities/BasicUtils/PtsField.h>
 #include <LibUtilities/BasicUtils/CsvIO.h>
 #include <LibUtilities/BasicUtils/Timer.h>
@@ -383,8 +383,7 @@ void CouplingCwipi::EvaluateFields(
                      boost::lexical_cast<string>(distCoords[i][1]) + ", " +
                      boost::lexical_cast<string>(distCoords[i][2]) + ")");
 
-        int offset =
-            m_evalField->GetPhys_Offset(m_evalField->GetOffset_Elmt_Id(elmtid));
+        int offset = m_evalField->GetPhys_Offset(elmtid);
 
         for (int f = 0; f < m_nSendVars; ++f)
         {
@@ -534,9 +533,7 @@ void CouplingCwipi::AddElementsToMesh(T geom,
     int kNverts = T::mapped_type::element_type::kNverts;
 
     // iterate over all elements
-    typename T::iterator it;
-
-    for (it = geom.begin(); it != geom.end(); it++)
+    for (auto it = geom.begin(); it != geom.end(); it++)
     {
         //  iterate over the elements vertices
         for (int j = 0; j < kNverts; ++j)
@@ -621,7 +618,7 @@ void CouplingCwipi::v_Send(
 
         string tmp = fieldMetaDataMap["Variables"] + fieldMetaDataMap["AuxVariables"];
         vector<string> vars;
-        ParseUtils::GenerateOrderedStringVector(tmp.c_str(), vars);
+        ParseUtils::GenerateVector(tmp, vars);
         vector<int> sendVarsToVars = GenerateVariableMapping(vars, m_sendFieldNames);
         m_sendField = Array<OneD, Array<OneD, NekDouble> > (m_nSendVars);
         for (int i = 0; i < sendVarsToVars.size(); ++i)
@@ -636,7 +633,7 @@ void CouplingCwipi::v_Send(
                  << endl;
         }
 
-        Timer timer1;
+        LibUtilities::Timer timer1;
         timer1.Start();
 
         char sendFN[10];
@@ -669,7 +666,7 @@ void CouplingCwipi::SendComplete()
         return;
     }
 
-    Timer timer1;
+    LibUtilities::Timer timer1;
     timer1.Start();
     cwipi_wait_issend(m_couplingName.c_str(), m_sendHandle);
     timer1.Stop();
@@ -692,7 +689,7 @@ void CouplingCwipi::ReceiveStart()
         return;
     }
 
-    Timer timer1;
+    LibUtilities::Timer timer1;
     timer1.Start();
     // workaround a bug in cwipi: receiving_field_name should be const char* but
     // is char*
@@ -730,7 +727,7 @@ void CouplingCwipi::v_Receive(const int step,
     Array<OneD, Array<OneD, NekDouble> > recvFields(m_nRecvVars);
     string tmp = fieldMetaDataMap["Variables"] + fieldMetaDataMap["AuxVariables"];
     vector<string> vars;
-    ParseUtils::GenerateOrderedStringVector(tmp.c_str(), vars);
+    ParseUtils::GenerateVector(tmp, vars);
     vector<int> recvVarsToVars = GenerateVariableMapping(vars, m_recvFieldNames);
     ASSERTL1(m_nRecvVars == recvVarsToVars.size(), "field size mismatch");
     for (int i = 0; i < recvVarsToVars.size(); ++i)
@@ -798,7 +795,7 @@ void CouplingCwipi::ReceiveCwipi(const int step,
             cout << "waiting for receive at i = " << step << ", t = " << time << endl;
         }
 
-        Timer timer1, timer2, timer3;
+        LibUtilities::Timer timer1, timer2, timer3;
         timer1.Start();
 
         Array<OneD, NekDouble> tmpC(m_recvField->GetNcoeffs());
@@ -939,7 +936,7 @@ void CouplingCwipi::ReceiveCwipi(const int step,
 void CouplingCwipi::ExtrapolateFields(
     Array<OneD, Array<OneD, NekDouble> > &rVals, Array<OneD, int> &notLoc)
 {
-    Timer timer1, timer2;
+    LibUtilities::Timer timer1, timer2;
     timer1.Start();
 
     int totvars = 3 + m_nRecvVars;
@@ -1065,7 +1062,7 @@ void CouplingCwipi::ExtrapolateFields(
 void CouplingCwipi::DumpRawFields(const NekDouble time,
                                   Array<OneD, Array<OneD, NekDouble> > rVals)
 {
-    Timer timer1;
+    LibUtilities::Timer timer1;
     timer1.Start();
 
 #ifdef _WIN32

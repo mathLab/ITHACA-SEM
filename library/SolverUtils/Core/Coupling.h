@@ -44,7 +44,7 @@ namespace SolverUtils
 
 class Coupling;
 
-typedef boost::shared_ptr<Coupling> CouplingSharedPointer;
+typedef std::shared_ptr<Coupling> CouplingSharedPointer;
 
 /// Declaration of the Coupling factory
 typedef LibUtilities::NekFactory<std::string,

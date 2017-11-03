@@ -31,6 +31,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <LibUtilities/BasicUtils/ParseUtils.h>
 #include <SolverUtils/Filters/LegacyFilter.h>
 
 namespace Nektar
@@ -60,8 +61,8 @@ void LegacyFilter::SolvedVarsOnly(
     {
         std::vector<std::string> variables;
         LibUtilities::FieldMetaDataMap tmp = fieldMetaDataMap;
-        ParseUtils::GenerateOrderedStringVector(tmp["Variables"].c_str(),
-                                                variables);
+        ParseUtils::GenerateVector(tmp["Variables"],
+                                   variables);
 
         sFields = Array<OneD, MultiRegions::ExpListSharedPtr>(variables.size());
         for (int i = 0; i < variables.size(); ++i)

@@ -47,7 +47,7 @@ namespace SolverUtils
 
 class CouplingCwipi;
 
-typedef boost::shared_ptr<CouplingCwipi> CouplingCwipiSharedPointer;
+typedef std::shared_ptr<CouplingCwipi> CouplingCwipiSharedPointer;
 
 
 class CouplingCwipi : public Coupling

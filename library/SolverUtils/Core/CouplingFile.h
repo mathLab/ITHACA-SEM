@@ -44,7 +44,7 @@ namespace SolverUtils
 
 class CouplingFile;
 
-typedef boost::shared_ptr<CouplingFile> CouplingFileSharedPointer;
+typedef std::shared_ptr<CouplingFile> CouplingFileSharedPointer;
 
 class CouplingFile : public Coupling
 {

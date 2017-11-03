@@ -33,6 +33,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <LibUtilities/BasicUtils/ParseUtils.h>
 #include <SolverUtils/Filters/FilterCheckpoint.h>
 #include <GlobalMapping/Mapping.h>
 
@@ -109,7 +110,7 @@ void FilterCheckpoint::v_Update(
     std::vector<std::string> variables;
     LibUtilities::FieldMetaDataMap tmp = fieldMetaDataMap;
     std::string allVars = tmp["Variables"] + tmp["AuxVariables"];
-    ParseUtils::GenerateOrderedStringVector(allVars.c_str(), variables);
+    ParseUtils::GenerateVector(allVars, variables);
 
     std::string outname =  m_outputFile +  "_" +
         boost::lexical_cast<std::string>(m_outputIndex) + ".chk";

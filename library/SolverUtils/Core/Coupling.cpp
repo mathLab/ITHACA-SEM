@@ -33,6 +33,8 @@
 
 #include "Coupling.h"
 
+#include <LibUtilities/BasicUtils/ParseUtils.h>
+
 namespace Nektar
 {
 namespace SolverUtils
@@ -42,12 +44,8 @@ using namespace std;
 
 CouplingFactory &GetCouplingFactory()
 {
-    typedef Loki::SingletonHolder<CouplingFactory,
-                                  Loki::CreateUsingNew,
-                                  Loki::NoDestroy,
-                                  Loki::SingleThreaded>
-        Type;
-    return Type::Instance();
+    static CouplingFactory instance;
+    return instance;
 }
 
 Coupling::Coupling(MultiRegions::ExpListSharedPtr field)
@@ -114,12 +112,11 @@ void Coupling::v_Init()
     }
 
     // mangle config into variables. This is ugly
-    ParseUtils::GenerateOrderedStringVector(
-        m_config["RECEIVEVARIABLES"].c_str(), m_recvFieldNames);
+    ParseUtils::GenerateVector(m_config["RECEIVEVARIABLES"], m_recvFieldNames);
     m_nRecvVars = m_recvFieldNames.size();
 
-    ParseUtils::GenerateOrderedStringVector(m_config["SENDVARIABLES"].c_str(),
-                                            m_sendFieldNames);
+    ParseUtils::GenerateVector(m_config["SENDVARIABLES"],
+                               m_sendFieldNames);
     m_nSendVars = m_sendFieldNames.size();
 
     m_recvSteps = boost::lexical_cast<int>(m_config["RECEIVESTEPS"]);

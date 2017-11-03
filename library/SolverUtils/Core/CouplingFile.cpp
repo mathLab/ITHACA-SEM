@@ -33,6 +33,7 @@
 
 #include "CouplingFile.h"
 
+#include <LibUtilities/BasicUtils/ParseUtils.h>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/BasicUtils/PtsField.h>
 #include <LibUtilities/BasicUtils/PtsIO.h>
@@ -99,7 +100,7 @@ void CouplingFile::v_Send(
     string tmp =
         fieldMetaDataMap["Variables"] + fieldMetaDataMap["AuxVariables"];
     vector<string> vars;
-    ParseUtils::GenerateOrderedStringVector(tmp.c_str(), vars);
+    ParseUtils::GenerateVector(tmp, vars);
     vector<int> sendVarsToVars =
         GenerateVariableMapping(vars, m_sendFieldNames);
 
@@ -161,7 +162,7 @@ void CouplingFile::v_Receive(const int step,
     string tmp =
         fieldMetaDataMap["Variables"] + fieldMetaDataMap["AuxVariables"];
     vector<string> vars;
-    ParseUtils::GenerateOrderedStringVector(tmp.c_str(), vars);
+    ParseUtils::GenerateVector(tmp, vars);
     vector<int> recvVarsToVars =
         GenerateVariableMapping(vars, m_recvFieldNames);
     ASSERTL1(m_nRecvVars == recvVarsToVars.size(), "field size mismatch");

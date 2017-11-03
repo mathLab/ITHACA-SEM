@@ -9,7 +9,7 @@ IF( NEKTAR_SOLVER_DUMMY )
        ./DummySolver.cpp
        ./EquationSystems/Dummy.cpp)
 
-    ADD_SOLVER_EXECUTABLE(DummySolver solvers ${DummySolverSource})
+    ADD_SOLVER_EXECUTABLE(DummySolver SOURCES ${DummySolverSource})
 
     ADD_NEKTAR_TEST(Dummy_3DCubeCwipi)
 

@@ -37,6 +37,7 @@
 #include <SolverUtils/EquationSystem.h>
 
 #include <LocalRegions/MatrixKey.h>
+#include <LibUtilities/BasicUtils/ParseUtils.h>
 #include <LibUtilities/BasicUtils/Equation.h>
 #include <MultiRegions/ContField1D.h>
 #include <MultiRegions/ContField2D.h>
@@ -1136,7 +1137,7 @@ namespace Nektar
 
             std::vector<std::string> variables;
             std::string allVars = m_fieldMetaDataMap["Variables"] + m_fieldMetaDataMap["AuxVariables"];
-            ParseUtils::GenerateOrderedStringVector(allVars.c_str(), variables);
+            ParseUtils::GenerateVector(allVars, variables);
 
             std::vector<Array<OneD, NekDouble> > fieldcoeffs(
                 pFields.num_elements());

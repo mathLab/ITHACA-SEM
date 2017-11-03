@@ -35,6 +35,7 @@
 
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 #include <iomanip>
+#include <LibUtilities/BasicUtils/ParseUtils.h>
 #include <SolverUtils/Filters/FilterHistoryPoints.h>
 #include <MultiRegions/ExpList3DHomogeneous1D.h>
 
@@ -390,7 +391,7 @@ void FilterHistoryPoints::v_Initialise(
         std::vector<std::string> variables;
         LibUtilities::FieldMetaDataMap tmp = fieldMetaDataMap;
         std::string allVars = tmp["Variables"] + tmp["AuxVariables"];
-        ParseUtils::GenerateOrderedStringVector(allVars.c_str(), variables);
+        ParseUtils::GenerateVector(allVars, variables);
 
         for (i = 0; i < variables.size(); ++i)
         {
@@ -449,7 +450,7 @@ void FilterHistoryPoints::v_Update(
     std::vector<std::string> variables;
     LibUtilities::FieldMetaDataMap tmp = fieldMetaDataMap;
     std::string allVars = tmp["Variables"] + tmp["AuxVariables"];
-    ParseUtils::GenerateOrderedStringVector(allVars.c_str(), variables);
+    ParseUtils::GenerateVector(allVars, variables);
 
     int j         = 0;
     int k         = 0;

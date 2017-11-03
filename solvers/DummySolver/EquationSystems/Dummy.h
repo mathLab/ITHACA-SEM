@@ -6,7 +6,7 @@
 //
 // The MIT License
 //
-// Copyright (c) 2016 Kilian Lackhove
+// Copyright (c) 2017 Kilian Lackhove
 // Copyright (c) 2006 Division of Applied Mathematics, Brown University (USA),
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).

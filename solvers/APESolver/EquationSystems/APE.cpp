@@ -6,7 +6,7 @@
 //
 // The MIT License
 //
-// Copyright (c) 2015 Kilian Lackhove
+// Copyright (c) 2017 Kilian Lackhove
 // Copyright (c) 2006 Division of Applied Mathematics, Brown University (USA),
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
@@ -571,7 +571,7 @@ void APE::v_AuxFields(
     {
         for (int i = 0; i < x->GetForces().num_elements(); ++i)
         {
-            fieldphys.push_back((*x)->GetForces()[i]);
+            fieldphys.push_back(x->GetForces()[i]);
 
             Array<OneD, NekDouble> tmpC(GetNcoeffs());
 

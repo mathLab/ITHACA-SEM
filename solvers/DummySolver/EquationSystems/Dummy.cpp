@@ -6,7 +6,7 @@
 //
 // The MIT License
 //
-// Copyright (c) 2016 Kilian Lackhove
+// Copyright (c) 2017 Kilian Lackhove
 // Copyright (c) 2006 Division of Applied Mathematics, Brown University (USA),
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
@@ -89,7 +89,7 @@ bool Dummy::v_PostIntegrate(int step)
 {
     if (m_coupling->GetSendFieldNames().size() > 0)
     {
-        Timer timer1;
+        LibUtilities::Timer timer1;
         timer1.Start();
 
         auto sV = m_session->GetVariables();

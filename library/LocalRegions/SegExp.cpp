@@ -870,22 +870,28 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
                 {
                     // Assume that input is also Gll_Lagrange
                     // but no way to check;
-                    LibUtilities::PointsKey p0(
+                    LibUtilities::PointsKey f0(
                         nummodes[mode_offset],
                         LibUtilities::eGaussLobattoLegendre);
+                    LibUtilities::PointsKey t0(
+                        m_base[0]->GetNumModes(),
+                        LibUtilities::eGaussLobattoLegendre);
                     LibUtilities::Interp1D(
-                        p0,data, m_base[0]->GetPointsKey(), coeffs);
+                        f0,data, t0, coeffs);
                 }
                     break;
                 case LibUtilities::eGauss_Lagrange:
                 {
                     // Assume that input is also Gauss_Lagrange
                     // but no way to check;
-                    LibUtilities::PointsKey p0(
+                    LibUtilities::PointsKey f0(
                         nummodes[mode_offset],
                         LibUtilities::eGaussGaussLegendre);
+                    LibUtilities::PointsKey t0(
+                        m_base[0]->GetNumModes(),
+                        LibUtilities::eGaussLobattoLegendre);
                     LibUtilities::Interp1D(
-                        p0,data, m_base[0]->GetPointsKey(), coeffs);
+                        f0,data, t0, coeffs);
                 }
                     break;
                 default:

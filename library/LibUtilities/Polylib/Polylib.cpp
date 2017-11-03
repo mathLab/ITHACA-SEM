@@ -1265,7 +1265,7 @@ namespace Polylib {
 
 
 
-        if (np <= 0){
+        if (np <= 1){
 
             D[0] = 0.0;
 

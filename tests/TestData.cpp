@@ -82,6 +82,11 @@ namespace Nektar
         return m_parameters;
     }
 
+    const std::string& TestData::GetCommand() const
+    {
+        return m_command;
+    }
+
     const unsigned int& TestData::GetNProcesses() const
     {
         return m_processes;
@@ -164,6 +169,16 @@ namespace Nektar
         if (tmp->GetText())
         {
             m_parameters = string(tmp->GetText());
+        }
+
+        tmp = testElement->FirstChildElement("command");
+        if (tmp)
+        {
+            m_command = string(tmp->GetText());
+        }
+        else
+        {
+            m_command = "";
         }
 
         // Find parallel processes tah.

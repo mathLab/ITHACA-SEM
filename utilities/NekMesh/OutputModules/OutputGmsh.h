@@ -37,6 +37,7 @@
 #define UTILITIES_NEKMESH_OUTPUTGMSH
 
 #include <NekMeshUtils/Module/Module.h>
+#include <LibUtilities/BasicUtils/HashUtils.hpp>
 
 namespace Nektar
 {
@@ -49,12 +50,8 @@ struct ElmtConfigHash : std::unary_function<NekMeshUtils::ElmtConfig, std::size_
 {
     std::size_t operator()(NekMeshUtils::ElmtConfig const& el) const
     {
-        std::size_t seed = 0;
-        boost::hash_combine(seed, (int)el.m_e        );
-        boost::hash_combine(seed,      el.m_faceNodes  );
-        boost::hash_combine(seed,      el.m_volumeNodes);
-        boost::hash_combine(seed,      el.m_order      );
-        return seed;
+        return hash_combine(
+            (int)el.m_e, el.m_faceNodes, el.m_volumeNodes, el.m_order);
     }
 };
 
@@ -71,7 +68,7 @@ class OutputGmsh : public NekMeshUtils::OutputModule
 {
 public:
     /// Creates an instance of this class
-    static boost::shared_ptr<Module> create(NekMeshUtils::MeshSharedPtr m) {
+    static std::shared_ptr<Module> create(NekMeshUtils::MeshSharedPtr m) {
         return MemoryManager<OutputGmsh>::AllocateSharedPtr(m);
     }
     static NekMeshUtils::ModuleKey className;
@@ -83,7 +80,7 @@ public:
     virtual void Process();
 
 private:
-    boost::unordered_map<NekMeshUtils::ElmtConfig, unsigned int, ElmtConfigHash> elmMap;
+    std::unordered_map<NekMeshUtils::ElmtConfig, unsigned int, ElmtConfigHash> elmMap;
 };
 
 }

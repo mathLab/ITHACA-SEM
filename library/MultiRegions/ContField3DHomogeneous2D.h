@@ -49,18 +49,22 @@ namespace Nektar
         public:
             MULTI_REGIONS_EXPORT ContField3DHomogeneous2D();
 
-            MULTI_REGIONS_EXPORT ContField3DHomogeneous2D(const LibUtilities::SessionReaderSharedPtr &pSession,
-                                                          const LibUtilities::BasisKey &HomoBasis_y,
-														  const LibUtilities::BasisKey &HomoBasis_z,
-														  const NekDouble lhom_y,
-														  const NekDouble lhom_z,
-														  const bool useFFT,
-														  const bool dealiasing,
-														  const SpatialDomains::MeshGraphSharedPtr &graph1D,
-														  const std::string &variable);
+            MULTI_REGIONS_EXPORT ContField3DHomogeneous2D(
+                         const LibUtilities::SessionReaderSharedPtr &pSession,
+                         const LibUtilities::BasisKey &HomoBasis_y,
+                         const LibUtilities::BasisKey &HomoBasis_z,
+                         const NekDouble lhom_y,
+                         const NekDouble lhom_z,
+                         const bool useFFT,
+                         const bool dealiasing,
+                         const SpatialDomains::MeshGraphSharedPtr &graph1D,
+                         const std::string &variable,
+                         const Collections::ImplementationType ImpType
+                         = Collections::eNoImpType);
             
             /// Copy constructor.
-            MULTI_REGIONS_EXPORT ContField3DHomogeneous2D(const ContField3DHomogeneous2D &In);
+            MULTI_REGIONS_EXPORT ContField3DHomogeneous2D(
+                                 const ContField3DHomogeneous2D &In);
 
             /// Destructor.
             MULTI_REGIONS_EXPORT virtual ~ContField3DHomogeneous2D();
@@ -95,7 +99,7 @@ namespace Nektar
 
         };
 
-        typedef boost::shared_ptr<ContField3DHomogeneous2D>  
+        typedef std::shared_ptr<ContField3DHomogeneous2D>  
             ContField3DHomogeneous2DSharedPtr;
 
     } //end of namespace

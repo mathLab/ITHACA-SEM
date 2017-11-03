@@ -54,10 +54,10 @@ namespace Nektar
             /// Calculate the larger time-step mantaining the problem stable.
             SOLVER_UTILS_EXPORT NekDouble GetTimeStep(
                 const Array<OneD, const Array<OneD, NekDouble> > &inarray);
-		
+
             /// CFL safety factor (comprise between 0 to 1).
             NekDouble m_cflSafetyFactor;
-		                        
+
         protected:
             /// Number of time steps between outputting status information.
             int                                             m_infosteps;
@@ -80,6 +80,15 @@ namespace Nektar
             /// Flag to determine if simulation should start in homogeneous
             /// forward transformed state.
             bool                                            m_homoInitialFwd;
+
+            /// Tolerance to which steady state should be evaluated at
+            NekDouble                                       m_steadyStateTol;
+            /// Check for steady state at step interval
+            int                                             m_steadyStateSteps;
+            /// Storage for previous solution for steady-state check
+            Array<OneD, Array<OneD, NekDouble> >            m_previousSolution;
+            // Steady-state residual file
+            std::ofstream                                   m_errFile;
 
             std::vector<int>                                m_intVariables;
 
@@ -110,34 +119,11 @@ namespace Nektar
             SOLVER_UTILS_EXPORT virtual void v_AppendOutput1D(
                 Array<OneD, Array<OneD, NekDouble> > &solution1D);
 
-            ///
-            SOLVER_UTILS_EXPORT virtual void v_NumericalFlux(
-                Array<OneD, Array<OneD, NekDouble> > &physfield,
-                Array<OneD, Array<OneD, NekDouble> > &numflux);
-
-            ///
-            SOLVER_UTILS_EXPORT virtual void v_NumericalFlux(
-                Array<OneD, Array<OneD, NekDouble> > &physfield,
-                Array<OneD, Array<OneD, NekDouble> > &numfluxX,
-                Array<OneD, Array<OneD, NekDouble> > &numfluxY );
-
-            ///
-            SOLVER_UTILS_EXPORT virtual void v_NumFluxforScalar(
-                const Array<OneD, Array<OneD, NekDouble> >   &ufield,
-                Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &uflux);
-
-            ///
-            SOLVER_UTILS_EXPORT virtual void v_NumFluxforVector(
-                const Array<OneD, Array<OneD, NekDouble> >   &ufield,
-                Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &qfield,
-                Array<OneD, Array<OneD, NekDouble> > &qflux);
-		            
             SOLVER_UTILS_EXPORT virtual NekDouble v_GetTimeStep(
                 const Array<OneD, const Array<OneD, NekDouble> > &inarray);
 
             SOLVER_UTILS_EXPORT virtual bool v_PreIntegrate(int step);
             SOLVER_UTILS_EXPORT virtual bool v_PostIntegrate(int step);
-            SOLVER_UTILS_EXPORT virtual bool v_SteadyStateCheck(int step);
 
             SOLVER_UTILS_EXPORT virtual bool v_RequireFwdTrans()
             {
@@ -155,21 +141,10 @@ namespace Nektar
         
 
         private:
-            ///
-            void WeakPenaltyforScalar(
-                const int var,
-                const Array<OneD, const NekDouble> &physfield,
-                      Array<OneD,       NekDouble> &penaltyflux,
-                      NekDouble time=0.0);
 
-            ///
-            void WeakPenaltyforVector(
-                const int var,
-                const int dir,
-                const Array<OneD, const NekDouble> &physfield,
-                Array<OneD,       NekDouble> &penaltyflux,
-                NekDouble C11,
-                NekDouble time=0.0);
+            void InitializeSteadyState();
+
+            bool CheckSteadyState(int step);
         };
         
     }

@@ -71,11 +71,44 @@ void CADSurfOCE::Initialise(int i, TopoDS_Shape in)
                         m_bounds[3]);
     m_sas = new ShapeAnalysis_Surface(m_s);
     m_sas->SetDomain(m_bounds[0], m_bounds[1], m_bounds[2], m_bounds[3]);
+    
+    m_shape = in;
+    
+    m_2Dclass = new BRepTopAdaptor_FClass2d(TopoDS::Face(m_shape), 1e-4);
 }
 
 Array<OneD, NekDouble> CADSurfOCE::GetBounds()
 {
     return m_bounds;
+}
+
+bool CADSurfOCE::IsPlanar()
+{
+    if(m_occSurface.GetType() == GeomAbs_Plane)
+    {
+        return true;
+    }
+    
+    return false;
+}
+
+Array<OneD, NekDouble> CADSurfOCE::BoundingBox()
+{
+    BRepMesh_IncrementalMesh brmsh;
+    
+    brmsh.SetShape(m_shape);
+    brmsh.SetDeflection(0.005);
+    
+    brmsh.Perform();
+    
+    Bnd_Box B;
+    BRepBndLib::Add(m_shape, B);
+    NekDouble e = sqrt(B.SquareExtent()) * 0.01;
+    e = min(e, 5e-3);
+    B.Enlarge(e);
+    Array<OneD, NekDouble> ret(6);
+    B.Get(ret[0],ret[1],ret[2],ret[3],ret[4],ret[5]);
+    return ret;
 }
 
 Array<OneD, NekDouble> CADSurfOCE::locuv(Array<OneD, NekDouble> p)
@@ -172,18 +205,47 @@ NekDouble CADSurfOCE::DistanceTo(Array<OneD, NekDouble> p)
     gp_Pnt loc(p[0] * 1000.0, p[1] * 1000.0, p[2] * 1000.0);
 
     gp_Pnt2d p2 = m_sas->ValueOfUV(loc, Precision::Confusion());
+    
+    TopAbs_State s = m_2Dclass->Perform(p2);
+
+    if(s == TopAbs_OUT)
+    {
+        BRepBuilderAPI_MakeVertex v(gp_Pnt(p[0],p[1],p[2]));
+        BRepExtrema_DistShapeShape dss(BRepTools::OuterWire(TopoDS::Face(m_shape)), v.Shape());
+        dss.Perform();
+        return dss.Value();
+        //return numeric_limits<double>::max();
+    }   
 
     gp_Pnt p3 = m_sas->Value(p2);
 
-    return p3.Distance(loc);
+    return p3.Distance(loc) / 1000.0;
 }
 
-void CADSurfOCE::ProjectTo(Array<OneD, NekDouble> &tp,
+NekDouble CADSurfOCE::ProjectTo(Array<OneD, NekDouble> &tp,
                            Array<OneD, NekDouble> &uv)
 {
     gp_Pnt loc(tp[0] * 1000.0, tp[1] * 1000.0, tp[2] * 1000.0);
 
     gp_Pnt2d p2 = m_sas->ValueOfUV(loc, Precision::Confusion());
+    
+    TopAbs_State s = m_2Dclass->Perform(p2);
+    
+    if(s == TopAbs_OUT)
+    {
+        BRepBuilderAPI_MakeVertex v(gp_Pnt(tp[0],tp[1],tp[2]));
+        BRepExtrema_DistShapeShape dss(BRepTools::OuterWire(TopoDS::Face(m_shape)), v.Shape());
+        dss.Perform();
+        gp_Pnt np = dss.PointOnShape1(1);
+        tp[0] = np.X();
+        tp[1] = np.Y();
+        tp[2] = np.Z();
+        gp_Pnt loc2(tp[0] * 1000.0, tp[1] * 1000.0, tp[2] * 1000.0);
+        gp_Pnt2d p22 = m_sas->ValueOfUV(loc2, Precision::Confusion());
+        uv[0] = p22.X();
+        uv[1] = p22.Y();
+        return dss.Value();
+    }
 
     gp_Pnt p3 = m_sas->Value(p2);
 
@@ -193,6 +255,8 @@ void CADSurfOCE::ProjectTo(Array<OneD, NekDouble> &tp,
 
     uv[0] = p2.X();
     uv[1] = p2.Y();
+    
+    return p3.Distance(loc) / 1000.0;
 }
 
 Array<OneD, NekDouble> CADSurfOCE::P(Array<OneD, NekDouble> uv)

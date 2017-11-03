@@ -56,10 +56,8 @@ FilterHistoryPoints::FilterHistoryPoints(
     const ParamMap &pParams) :
     Filter(pSession)
 {
-    ParamMap::const_iterator it;
-
     // OutputFile
-    it = pParams.find("OutputFile");
+    auto it = pParams.find("OutputFile");
     if (it == pParams.end())
     {
         m_outputFile = m_session->GetSessionName();
@@ -84,7 +82,7 @@ FilterHistoryPoints::FilterHistoryPoints(
     else
     {
         LibUtilities::Equation equ(m_session, it->second);
-        m_outputFrequency = floor(equ.Evaluate());
+        m_outputFrequency = round(equ.Evaluate());
     }
 
     // OutputPlane
@@ -99,7 +97,7 @@ FilterHistoryPoints::FilterHistoryPoints(
         else
         {
             LibUtilities::Equation equ(m_session, it->second);
-            m_outputPlane = floor(equ.Evaluate());
+            m_outputPlane = round(equ.Evaluate());
         }
 
         it = pParams.find("WaveSpace");
@@ -230,12 +228,18 @@ void FilterHistoryPoints::v_Initialise(
         if (m_isHomogeneous1D)
         {
             idList[i] = pFields[0]->GetPlane(0)->GetExpIndex(gloCoord,locCoords,
-                                        NekConstants::kNekZeroTol);
+                                        NekConstants::kGeomFactorsTol);
         }
         else
         {
             idList[i] = pFields[0]->GetExpIndex(gloCoord,locCoords,
-                                        NekConstants::kNekZeroTol);
+                                        NekConstants::kGeomFactorsTol);
+        }
+
+        for(int j = 0; j < 3; ++j)
+        {
+            locCoords[j] = std::max(locCoords[j], -1.0);
+            locCoords[j] = std::min(locCoords[j], 1.0);
         }
 
         // Save Local coordinates for later
@@ -453,8 +457,6 @@ void FilterHistoryPoints::v_Update(
     int numFields = variables.size();
     LibUtilities::CommSharedPtr vComm = pFields[0]->GetComm();
     Array<OneD, NekDouble> data(numPoints*numFields, 0.0);
-    std::list<std::pair<SpatialDomains::PointGeomSharedPtr, Array<OneD, NekDouble> > >::iterator x;
-
     Array<OneD, NekDouble> physvals;
     Array<OneD, NekDouble> locCoord;
     int expId;
@@ -464,11 +466,11 @@ void FilterHistoryPoints::v_Update(
     {
         if(m_isHomogeneous1D)
         {
-            for (k = 0, x = m_historyList.begin(); x != m_historyList.end();
-                 ++x, ++k)
+            k = 0;
+            for (auto &x : m_historyList)
             {
-                locCoord = (*x).second;
-                expId    = (*x).first->GetVid();
+                locCoord = x.second;
+                expId    = x.first->GetVid();
                 NekDouble value;
                 int plane = m_planeIDs[m_historyLocalPointMap[k]];
 
@@ -508,7 +510,7 @@ void FilterHistoryPoints::v_Update(
 
                     // Create new 3DH1D expansion with one element per plane
                     MultiRegions::ExpList3DHomogeneous1DSharedPtr tmp =
-                            boost::dynamic_pointer_cast<MultiRegions::
+                            std::dynamic_pointer_cast<MultiRegions::
                             ExpList3DHomogeneous1D>(pFields[j]);
                     ASSERTL0(tmp,"Failed to type cast expansion");
 
@@ -554,20 +556,24 @@ void FilterHistoryPoints::v_Update(
                 {
                     data[m_historyLocalPointMap[k]*numFields+j] = value;
                 }
+
+                ++k;
             }
         }
         else
         {
-            for (k = 0, x = m_historyList.begin(); x != m_historyList.end(); ++x, ++k)
+            k = 0;
+            for (auto &x : m_historyList)
             {
-                locCoord = (*x).second;
-                expId    = (*x).first->GetVid();
+                locCoord = x.second;
+                expId    = x.first->GetVid();
 
                 physvals = Array<OneD, NekDouble>(pFields[j]->GetTotPoints(), 0.0);
                 pFields[j]->GetExp(expId)->BwdTrans(coeffs[j] + pFields[j]->GetCoeff_Offset(expId),physvals);
 
                 // interpolate point
                 data[m_historyLocalPointMap[k]*numFields+j] = pFields[j]->GetExp(expId)->StdPhysEvaluate(locCoord,physvals);
+                ++k;
             }
         }
     }

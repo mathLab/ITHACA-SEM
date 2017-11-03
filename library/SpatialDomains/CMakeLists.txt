@@ -13,7 +13,6 @@ MeshGraph.cpp
 MeshGraph1D.cpp
 MeshGraph2D.cpp
 MeshGraph3D.cpp
-pchSpatialDomains.cpp
 PrismGeom.cpp
 PyrGeom.cpp
 QuadGeom.cpp
@@ -39,7 +38,6 @@ MeshGraph1D.h
 MeshGraph2D.h
 MeshGraph3D.h
 MeshGraph.h
-pchSpatialDomains.h
 PrismGeom.h
 PyrGeom.h
 QuadGeom.h
@@ -53,8 +51,12 @@ SpatialDomains.hpp
 
 ADD_DEFINITIONS(-DSPATIAL_DOMAINS_EXPORTS)
 
-ADD_NEKTAR_LIBRARY(SpatialDomains lib ${NEKTAR_LIBRARY_TYPE} ${SPATIAL_DOMAINS_SOURCES} ${SPATIAL_DOMAINS_HEADERS})
+ADD_NEKTAR_LIBRARY(SpatialDomains
+    SOURCES ${SPATIAL_DOMAINS_SOURCES}
+    HEADERS ${SPATIAL_DOMAINS_HEADERS}
+    DEPENDS StdRegions
+    SUMMARY "Nektar++ SpatialDomains library"
+    DESCRIPTION "This library provides the mappings between reference regions and physical regions in the domain.")
 
-TARGET_LINK_LIBRARIES(SpatialDomains StdRegions LibUtilities)
-
-INSTALL(DIRECTORY ./ DESTINATION ${NEKTAR_INCLUDE_DIR}/SpatialDomains COMPONENT dev FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp")
+INSTALL(DIRECTORY ./ DESTINATION ${NEKTAR_INCLUDE_DIR}/SpatialDomains
+    COMPONENT dev FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp")

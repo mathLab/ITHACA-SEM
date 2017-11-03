@@ -54,7 +54,7 @@ ProcessJac::ProcessJac(MeshSharedPtr m) : ProcessModule(m)
     m_config["extract"] =
         ConfigOption(false, "0.0", "Extract non-valid elements from mesh.");
     m_config["list"] = ConfigOption(
-        false, "0", "Print list of elements having negative Jacobian.");
+        true, "0", "Print list of elements having negative Jacobian.");
 }
 
 ProcessJac::~ProcessJac()

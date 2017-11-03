@@ -50,7 +50,7 @@ class ProcessBoundaryExtract : public ProcessModule
 {
 public:
     /// Creates an instance of this class
-    static boost::shared_ptr<Module> create(FieldSharedPtr f)
+    static std::shared_ptr<Module> create(FieldSharedPtr f)
     {
         return MemoryManager<ProcessBoundaryExtract>::AllocateSharedPtr(f);
     }
@@ -65,6 +65,17 @@ public:
     {
         return "ProcessBoundaryExtract";
     }
+
+    virtual std::string GetModuleDescription()
+    {
+        return "Setting up boundary extraction";
+    }
+
+    virtual ModulePriority GetModulePriority()
+    {
+        return eBndExtraction;
+    }
+
 };
 }
 }

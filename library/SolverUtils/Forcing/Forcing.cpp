@@ -33,6 +33,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <FieldUtils/Interpolator.h>
 #include <SolverUtils/Forcing/Forcing.h>
 
 using namespace std;
@@ -43,11 +44,8 @@ namespace Nektar
     {
         ForcingFactory& GetForcingFactory()
         {
-            typedef Loki::SingletonHolder<ForcingFactory,
-                                          Loki::CreateUsingNew,
-                                          Loki::NoDestroy,
-                                          Loki::SingleThreaded> Type;
-            return Type::Instance();
+            static ForcingFactory instance;
+            return instance;
         }
 
         Forcing::Forcing(const LibUtilities::SessionReaderSharedPtr& pSession)

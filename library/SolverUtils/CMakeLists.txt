@@ -112,9 +112,10 @@ ENDIF (NEKTAR_USE_CWIPI)
 
 ADD_DEFINITIONS(-DSOLVER_UTILS_EXPORTS)
 
-ADD_NEKTAR_LIBRARY(SolverUtils lib ${NEKTAR_LIBRARY_TYPE} ${SOLVER_UTILS_SOURCES} ${SOLVER_UTILS_HEADERS})
+ADD_NEKTAR_LIBRARY(SolverUtils
+    SOURCES ${SOLVER_UTILS_SOURCES}
+    HEADERS ${SOLVER_UTILS_HEADERS}
+    DEPENDS FieldUtils
+    SUMMARY "Nektar++ SolverUtils library"
+    DESCRIPTION "This library provides support classes and routines for constructing complete spectral/hp element solvers.")
 
-TARGET_LINK_LIBRARIES(SolverUtils FieldUtils)
-TARGET_LINK_LIBRARIES(SolverUtils MultiRegions)
-
-INSTALL(DIRECTORY ./ DESTINATION ${NEKTAR_INCLUDE_DIR}/SolverUtils COMPONENT dev FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp")

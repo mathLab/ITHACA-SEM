@@ -33,6 +33,8 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
+#include <FieldUtils/Interpolator.h>
+
 #include <LocalRegions/SegExp.h>
 #include <LocalRegions/QuadExp.h>
 #include <LocalRegions/TriExp.h>
@@ -40,8 +42,6 @@
 
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/BasicUtils/PtsIO.h>
-
-#include <FieldUtils/Interpolator.h>
 
 #include <NekMeshUtils/MeshElements/Element.h>
 

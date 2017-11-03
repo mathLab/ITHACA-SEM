@@ -41,11 +41,8 @@ namespace Nektar
     {
         DiffusionFactory& GetDiffusionFactory()
         {
-            typedef Loki::SingletonHolder<DiffusionFactory,
-            Loki::CreateUsingNew,
-            Loki::NoDestroy,
-            Loki::SingleThreaded> Type;
-            return Type::Instance();
+            static DiffusionFactory instance;
+            return instance;
         }
         
         void Diffusion::InitObject(

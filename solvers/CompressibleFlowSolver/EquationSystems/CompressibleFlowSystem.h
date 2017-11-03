@@ -40,6 +40,7 @@
 #include <CompressibleFlowSolver/Misc/VariableConverter.h>
 #include <CompressibleFlowSolver/BoundaryConditions/CFSBndCond.h>
 #include <SolverUtils/UnsteadySystem.h>
+#include <SolverUtils/AdvectionSystem.h>
 #include <SolverUtils/RiemannSolvers/RiemannSolver.h>
 #include <SolverUtils/AdvectionSystem.h>
 #include <SolverUtils/Diffusion/Diffusion.h>
@@ -50,7 +51,7 @@ namespace Nektar
     /**
      *
      */
-    class CompressibleFlowSystem: public SolverUtils::UnsteadySystem
+    class CompressibleFlowSystem: public SolverUtils::AdvectionSystem
     {
     public:
 
@@ -67,7 +68,6 @@ namespace Nektar
             const Array<OneD,int> &ExpOrder);
 
     protected:
-        SolverUtils::AdvectionSharedPtr     m_advection;
         SolverUtils::DiffusionSharedPtr     m_diffusion;
         ArtificialDiffusionSharedPtr        m_artificialDiffusion;
         Array<OneD, Array<OneD, NekDouble> >m_vecLocs;
@@ -82,23 +82,23 @@ namespace Nektar
         NekDouble                           m_Cp;
         NekDouble                           m_Prandtl;
 
+        // Parameters for exponential filtering
+        NekDouble                           m_filterAlpha;
+        NekDouble                           m_filterExponent;
+        NekDouble                           m_filterCutoff;
+        bool                                m_useFiltering;
+
+        // Parameters for local time-stepping
+        bool                                m_useLocalTimeStep;
+
         // Auxiliary object to convert variables
         VariableConverterSharedPtr          m_varConv;
 
         // User defined boundary conditions
         std::vector<CFSBndCondSharedPtr>    m_bndConds;
 
-        // L2 error file
-        std::ofstream m_errFile;
-
-        // Tolerance to which steady state should be evaluated at
-        NekDouble m_steadyStateTol;
-
         // Forcing term
         std::vector<SolverUtils::ForcingSharedPtr> m_forcing;
-
-        // Storage for L2 norm error
-        Array<OneD, Array<OneD, NekDouble> > m_un;
 
         CompressibleFlowSystem(
             const LibUtilities::SessionReaderSharedPtr& pSession);
@@ -138,18 +138,13 @@ namespace Nektar
             const Array<OneD, Array<OneD, NekDouble> >         &physfield,
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &flux);
 
-        void InitializeSteadyState();
-
         void SetBoundaryConditions(
             Array<OneD, Array<OneD, NekDouble> >             &physarray,
             NekDouble                                         time);
 
-        void GetStdVelocity(
+        void GetElmtTimeStep(
             const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-                  Array<OneD,                   NekDouble>   &stdV);
-
-        virtual bool v_PostIntegrate(int step);
-        bool CalcSteadyState(bool output);
+                  Array<OneD, NekDouble> &tstep);
 
         virtual NekDouble v_GetTimeStep(
             const Array<OneD, const Array<OneD, NekDouble> > &inarray);
@@ -186,6 +181,8 @@ namespace Nektar
         {
             // Do nothing by default
         }
+
+        virtual Array<OneD, NekDouble> v_GetMaxStdVelocity();
     };
 }
 #endif

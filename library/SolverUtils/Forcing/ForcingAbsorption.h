@@ -88,7 +88,7 @@ namespace SolverUtils
             Array<OneD, Array<OneD, NekDouble> >    m_Refflow;
             std::string                             m_funcNameTime;
             std::vector<unsigned int>               m_bRegions;
-            boost::shared_ptr<BRTree>               m_rtree;
+            std::shared_ptr<BRTree>               m_rtree;
   
             SOLVER_UTILS_EXPORT virtual void v_InitObject(
                     const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields,

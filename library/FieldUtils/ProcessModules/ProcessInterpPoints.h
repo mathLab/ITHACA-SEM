@@ -52,7 +52,7 @@ class ProcessInterpPoints : public ProcessModule
 {
 public:
     /// Creates an instance of this class
-    static boost::shared_ptr<Module> create(FieldSharedPtr f)
+    static std::shared_ptr<Module> create(FieldSharedPtr f)
     {
         return MemoryManager<ProcessInterpPoints>::AllocateSharedPtr(f);
     }
@@ -71,7 +71,19 @@ public:
         return "ProcessInterpPoints";
     }
 
+    virtual std::string GetModuleDescription()
+    {
+        return "Interpolating to points";
+    }
+
+    virtual ModulePriority GetModulePriority()
+    {
+        return eCreatePts;
+    }
+
 private:
+    void CreateFieldPts(po::variables_map &vm);
+
     void InterpolateFieldToPts(vector<MultiRegions::ExpListSharedPtr> &field0,
                                LibUtilities::PtsFieldSharedPtr &pts,
                                NekDouble clamp_low,

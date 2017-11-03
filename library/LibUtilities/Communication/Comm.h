@@ -36,14 +36,13 @@
 #define NEKTAR_LIB_UTILITIES_COMM_H
 
 #include <vector>
+#include <memory>
+#include <type_traits>
 
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
 #include <LibUtilities/LibUtilitiesDeclspec.h>
-#include <boost/enable_shared_from_this.hpp>
-#include <boost/static_assert.hpp>
 
 #include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
-// namespace Nektar { template <typename Dim, typename DataType> class Array; }
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/Communication/CommDataType.h>
 
@@ -55,7 +54,7 @@ namespace LibUtilities
 class Comm;
 
 /// Pointer to a Communicator object.
-typedef boost::shared_ptr<Comm> CommSharedPtr;
+typedef std::shared_ptr<Comm> CommSharedPtr;
 
 /// Datatype of the NekFactory used to instantiate classes derived from
 /// the EquationSystem class.
@@ -72,7 +71,7 @@ enum ReduceOperator
 };
 
 /// Base communications class
-class Comm : public boost::enable_shared_from_this<Comm>
+class Comm : public std::enable_shared_from_this<Comm>
 {
 public:
     LIB_UTILITIES_EXPORT Comm(int narg, char *arg[]);
@@ -293,7 +292,7 @@ template <class T> void Comm::AllReduce(T &pData, enum ReduceOperator pOp)
 
 template <class T> void Comm::AlltoAll(T &pSendData, T &pRecvData)
 {
-    BOOST_STATIC_ASSERT_MSG(
+    static_assert(
         CommDataTypeTraits<T>::IsVector,
         "AlltoAll only valid with Array or vector arguments.");
     int sendSize = CommDataTypeTraits<T>::GetCount(pSendData);
@@ -414,7 +413,7 @@ void Comm::Exscan(T &pData, const enum ReduceOperator pOp, T &ans)
  */
 template <class T> T Comm::Gather(const int rootProc, T &val)
 {
-    BOOST_STATIC_ASSERT_MSG(
+    static_assert(
         CommDataTypeTraits<T>::IsVector,
         "Gather only valid with Array or vector arguments.");
     bool amRoot  = (GetRank() == rootProc);
@@ -434,7 +433,7 @@ template <class T> T Comm::Gather(const int rootProc, T &val)
  */
 template <class T> T Comm::Scatter(const int rootProc, T &pData)
 {
-    BOOST_STATIC_ASSERT_MSG(
+    static_assert(
         CommDataTypeTraits<T>::IsVector,
         "Scatter only valid with Array or vector arguments.");
 

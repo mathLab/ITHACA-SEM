@@ -128,7 +128,7 @@ private:
         const NekDouble &time);
 };
 
-typedef boost::shared_ptr<FilterAeroForces>  FilterAeroForcesSharedPtr;
+typedef std::shared_ptr<FilterAeroForces>  FilterAeroForcesSharedPtr;
 }
 }
 

@@ -37,7 +37,7 @@
 #include <SolverUtils/Forcing/ForcingAbsorption.h>
 
 #include <LibUtilities/BasicUtils/Equation.h>
-#include <LibUtilities/BasicUtils/ParseUtils.hpp>
+#include <LibUtilities/BasicUtils/ParseUtils.h>
 
 using namespace std;
 
@@ -124,7 +124,7 @@ namespace SolverUtils
         funcNameElmt = pForce->FirstChildElement("BOUNDARYREGIONS");
         if (funcNameElmt)
         {
-            ASSERTL0(ParseUtils::GenerateOrderedVector(funcNameElmt->GetText(),
+            ASSERTL0(ParseUtils::GenerateVector(funcNameElmt->GetText(),
                                                     m_bRegions),
                     "Unable to process list of BOUNDARYREGIONS in Absorption "
                     "Forcing: " +

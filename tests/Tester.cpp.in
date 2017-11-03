@@ -55,12 +55,8 @@ namespace po = boost::program_options;
 std::string PortablePath(const boost::filesystem::path& path)
 {
     boost::filesystem::path temp = path;
-#if BOOST_VERSION > 104200
     temp.make_preferred();
     return temp.string();
-#else
-    return temp.file_string();
-#endif
 }
 
 int main(int argc, char *argv[])
@@ -132,11 +128,7 @@ int main(int argc, char *argv[])
         specPath = fs::current_path();
     }
 
-#if BOOST_VERSION > 104200
     string specFileStem = specFile.stem().string();
-#else
-    string specFileStem = specFile.stem();
-#endif
 
     // Temporary directory to create and in which to conduct test
     const fs::path tmpDir = fs::current_path()
@@ -218,7 +210,7 @@ int main(int argc, char *argv[])
             command += "@MPIEXEC@ @MPIEXEC_NUMPROC_FLAG@ "
                     + boost::lexical_cast<string>(file.GetNProcesses())
                     + " ";
-            if ("@NEKTAR_TEST_USE_HOSTFILE@" == "ON")
+            if (std::string("@NEKTAR_TEST_USE_HOSTFILE@") == "ON")
             {
                 command += " -hostfile hostfile ";
                 system("echo 'localhost slots=12' > hostfile");

@@ -830,10 +830,6 @@ namespace Nektar
                 boost::setS, boost::vecS, boost::undirectedS> BoostGraph;
             typedef boost::graph_traits<BoostGraph>::vertex_descriptor
                 BoostVertex;
-            typedef boost::graph_traits<BoostGraph>::vertex_iterator
-                BoostVertexIterator;
-            typedef boost::graph_traits<BoostGraph>::adjacency_iterator
-                BoostAdjacencyIterator;
         }
 
         void CuthillMckeeReordering(const BoostGraph& graph,
@@ -911,8 +907,6 @@ namespace Nektar
                 int i, cnt;
                 int nPartition    = partVerts.size();
                 int nNonPartition = nGraphVerts - partVerts.size();
-                BoostVertexIterator    vertit, vertit_end;
-                BoostAdjacencyIterator adjvertit, adjvertit_end;
                 Array<OneD, int> xadj(nNonPartition+1,0);
                 Array<OneD, int> adjncy(2*nGraphEdges);
                 Array<OneD, int> initial_perm(nGraphVerts);
@@ -920,8 +914,6 @@ namespace Nektar
                 Array<OneD, int> perm_tmp (nNonPartition);
                 Array<OneD, int> iperm_tmp(nNonPartition);
 
-                std::set<int>::iterator it;
-                
                 // First reorder vertices so that partition nodes are at the
                 // end. This allows METIS to partition the interior nodes.
                 for (i = cnt = 0; i < nGraphVerts; ++i)
@@ -945,19 +937,18 @@ namespace Nektar
                 // Apply this reordering to the graph.
                 boost::property_map<BoostGraph, boost::vertex_index_t>::type 
                     index = get(boost::vertex_index, graph);
-                
-                for (boost::tie(vertit, vertit_end) = boost::vertices(graph); 
-                     vertit != vertit_end; ++vertit) 
+
+                auto verts = boost::vertices(graph);
+                for (auto vertit = verts.first; vertit != verts.second; ++vertit)
                 {
                     if (partVerts.count(index[*vertit]) > 0)
                     {
                         continue;
                     }
-                    
-                    for (boost::tie(adjvertit, adjvertit_end) = 
-                             boost::adjacent_vertices(*vertit,graph);
-                         adjvertit != adjvertit_end;
-                         ++adjvertit) 
+
+                    auto adjverts = boost::adjacent_vertices(*vertit,graph);
+                    for (auto adjvertit = adjverts.first;
+                         adjvertit != adjverts.second; ++adjvertit)
                     {
                         if (partVerts.count(index[*adjvertit]) > 0)
                         {
@@ -1011,9 +1002,10 @@ namespace Nektar
                         perm[iperm[i]] = i;
                     }
                 }
-                
-                for (i = nNonPartition, it = partVerts.begin(); 
-                     it != partVerts.end(); ++it, ++i)
+
+                auto it = partVerts.begin();
+                auto it2 = partVerts.end();
+                for (i = nNonPartition; it != it2; ++it, ++i)
                 {
                     perm [i]   = *it;
                     iperm[*it] = i;

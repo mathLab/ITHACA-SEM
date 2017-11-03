@@ -42,11 +42,8 @@ namespace Nektar
 {
 ArtificialDiffusionFactory& GetArtificialDiffusionFactory()
 {
-    typedef Loki::SingletonHolder<ArtificialDiffusionFactory,
-                                  Loki::CreateUsingNew,
-                                  Loki::NoDestroy,
-                                  Loki::SingleThreaded> Type;
-    return Type::Instance();
+    static ArtificialDiffusionFactory instance;
+    return instance;
 }
 
 ArtificialDiffusion::ArtificialDiffusion(
@@ -54,17 +51,8 @@ ArtificialDiffusion::ArtificialDiffusion(
                 const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields,
                 const int spacedim)
         : m_session(pSession),
-        m_fields(pFields)
+          m_fields(pFields)
 {
-    m_session->LoadParameter ("FL",            m_FacL,          0.0);
-    m_session->LoadParameter ("FH",            m_FacH,          0.0);
-    m_session->LoadParameter ("hFactor",       m_hFactor,       1.0);
-    m_session->LoadParameter ("C1",            m_C1,            3.0);
-    m_session->LoadParameter ("C2",            m_C2,            5.0);
-    m_session->LoadParameter ("mu0",           m_mu0,           1.0);
-    m_session->LoadParameter ("Skappa",        m_Skappa,        -2.048);
-    m_session->LoadParameter ("Kappa",         m_Kappa,         0.0);
-
     // Create auxiliary object to convert variables
     m_varConv = MemoryManager<VariableConverter>::AllocateSharedPtr(
                 m_session, spacedim);

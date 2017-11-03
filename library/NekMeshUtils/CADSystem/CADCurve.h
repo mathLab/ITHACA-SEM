@@ -62,7 +62,7 @@ public:
         m_type = CADType::eCurve;
     }
 
-    ~CADCurve()
+    virtual ~CADCurve()
     {
     }
 
@@ -162,6 +162,8 @@ public:
      * @brief locates a point in the parametric space
      */
     virtual NekDouble loct(Array<OneD, NekDouble> xyz) = 0;
+    
+    virtual NekDouble DistanceTo(Array<OneD, NekDouble> xyz) = 0;
 
     CADOrientation::Orientation GetOrienationWRT(int surf)
     {
@@ -191,7 +193,7 @@ protected:
     std::vector<CADVertSharedPtr> m_mainVerts;
 };
 
-typedef boost::shared_ptr<CADCurve> CADCurveSharedPtr;
+typedef std::shared_ptr<CADCurve> CADCurveSharedPtr;
 
 typedef LibUtilities::NekFactory<std::string, CADCurve> CADCurveFactory;
 

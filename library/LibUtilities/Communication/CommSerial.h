@@ -49,7 +49,7 @@ namespace LibUtilities
 class CommSerial;
 
 /// Pointer to a Communicator object.
-typedef boost::shared_ptr<CommSerial> CommSerialSharedPtr;
+typedef std::shared_ptr<CommSerial> CommSerialSharedPtr;
 
 /// A global linear system.
 class CommSerial : public Comm

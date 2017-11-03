@@ -136,12 +136,10 @@ namespace Nektar
         m_session->LoadParameter("SVVCutoffRatio",m_sVVCutoffRatio,0.75);
         m_session->LoadParameter("SVVDiffCoeff",  m_sVVDiffCoeff,  0.1);
 
-        m_session->MatchSolverInfo("SPECTRALHPDEALIASING","True",
-                                   m_specHP_dealiasing,false);
-
         if(m_HomogeneousType == eHomogeneous1D)
         {
-            ASSERTL0(m_nConvectiveFields > 2,"Expect to have three velocity fields with homogenous expansion");
+            ASSERTL0(m_nConvectiveFields > 2,
+                "Expect to have three velocity fields with homogenous expansion");
 
             if(m_useHomo1DSpecVanVisc)
             {
@@ -174,16 +172,20 @@ namespace Nektar
             
         }
 
-        m_session->MatchSolverInfo("SmoothAdvection", "True", m_SmoothAdvection, false);
+        m_session->MatchSolverInfo("SmoothAdvection", "True",
+                                    m_SmoothAdvection, false);
 
         // set explicit time-intregration class operators
-        m_ode.DefineOdeRhs(&VelocityCorrectionScheme::EvaluateAdvection_SetPressureBCs, this);
+        m_ode.DefineOdeRhs(
+            &VelocityCorrectionScheme::EvaluateAdvection_SetPressureBCs, this);
 
-        m_extrapolation->SubSteppingTimeIntegration(m_intScheme->GetIntegrationMethod(), m_intScheme);
+        m_extrapolation->SubSteppingTimeIntegration(
+            m_intScheme->GetIntegrationMethod(), m_intScheme);
         m_extrapolation->GenerateHOPBCMap(m_session);
         
         // set implicit time-intregration class operators
-        m_ode.DefineImplicitSolve(&VelocityCorrectionScheme::SolveUnsteadyStokesSystem,this);
+        m_ode.DefineImplicitSolve(
+            &VelocityCorrectionScheme::SolveUnsteadyStokesSystem,this);
     }
     
     /**
@@ -198,8 +200,9 @@ namespace Nektar
      */
     void VelocityCorrectionScheme::v_GenerateSummary(SolverUtils::SummaryList& s)
     {
-        UnsteadySystem::v_GenerateSummary(s);
-        SolverUtils::AddSummaryItem(s, "Splitting Scheme", "Velocity correction (strong press. form)");
+        AdvectionSystem::v_GenerateSummary(s);
+        SolverUtils::AddSummaryItem(s,
+                "Splitting Scheme", "Velocity correction (strong press. form)");
 
         if (m_extrapolation->GetSubStepIntegrationMethod() !=
             LibUtilities::eNoTimeIntegrationMethod)
@@ -239,15 +242,16 @@ namespace Nektar
      */
     void VelocityCorrectionScheme::v_DoInitialise(void)
     {
-
-        UnsteadySystem::v_DoInitialise();
+        AdvectionSystem::v_DoInitialise();
 
         // Set up Field Meta Data for output files
-        m_fieldMetaDataMap["Kinvis"]   = boost::lexical_cast<std::string>(m_kinvis);
-        m_fieldMetaDataMap["TimeStep"] = boost::lexical_cast<std::string>(m_timestep);
+        m_fieldMetaDataMap["Kinvis"]   =
+                boost::lexical_cast<std::string>(m_kinvis);
+        m_fieldMetaDataMap["TimeStep"] =
+                boost::lexical_cast<std::string>(m_timestep);
 
         // set boundary conditions here so that any normal component
-        // correction are imposed before they are imposed on intiial
+        // correction are imposed before they are imposed on initial
         // field below
         SetBoundaryConditions(m_time);
 
@@ -288,7 +292,8 @@ namespace Nektar
         for (int k=0 ; k < nfields; ++k)
         {
             //Forward Transformation in physical space for time evolution
-            m_fields[k]->FwdTrans_IterPerExp(m_fields[k]->GetPhys(),m_fields[k]->UpdateCoeffs());
+            m_fields[k]->FwdTrans_IterPerExp(m_fields[k]->GetPhys(),
+                                             m_fields[k]->UpdateCoeffs());
         }
     }
     
@@ -331,10 +336,9 @@ namespace Nektar
         }
 
         // Add forcing terms
-        std::vector<SolverUtils::ForcingSharedPtr>::const_iterator x;
-        for (x = m_forcing.begin(); x != m_forcing.end(); ++x)
+        for (auto &x : m_forcing)
         {
-            (*x)->Apply(m_fields, inarray, outarray, time);
+            x->Apply(m_fields, inarray, outarray, time);
         }
 
         // Calculate High-Order pressure boundary conditions
@@ -407,14 +411,24 @@ namespace Nektar
         int nvel = m_velocity.num_elements();
         if(nvel == 2)
         {
-            m_pressure->PhysDeriv(m_pressure->GetPhys(), Forcing[0], Forcing[1]);
+            m_pressure->PhysDeriv(m_pressure->GetPhys(),
+                                  Forcing[m_velocity[0]],
+                                  Forcing[m_velocity[1]]);
         }
         else
         {
-            m_pressure->PhysDeriv(m_pressure->GetPhys(), Forcing[0], 
-                                  Forcing[1], Forcing[2]);
+            m_pressure->PhysDeriv(m_pressure->GetPhys(),
+                                  Forcing[m_velocity[0]], 
+                                  Forcing[m_velocity[1]],
+                                  Forcing[m_velocity[2]]);
         }
 
+        // zero convective fields. 
+        for(int i = nvel; i < m_nConvectiveFields; ++i)
+        {
+            Vmath::Zero(phystot,Forcing[i],1);
+        }
+        
         // Subtract inarray/(aii_dt) and divide by kinvis. Kinvis will
         // need to be updated for the convected fields.
         for(int i = 0; i < m_nConvectiveFields; ++i)

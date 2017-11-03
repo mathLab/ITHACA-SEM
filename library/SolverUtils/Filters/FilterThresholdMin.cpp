@@ -55,10 +55,8 @@ FilterThresholdMin::FilterThresholdMin(
         const ParamMap &pParams)
     : LegacyFilter(pSession)
 {
-    ParamMap::const_iterator it;
-
     // ThresholdValue
-    it = pParams.find("ThresholdValue");
+    auto it = pParams.find("ThresholdValue");
     ASSERTL0(it != pParams.end(), "Missing parameter 'ThresholdValue'.");
     LibUtilities::Equation equ1(m_session, it->second);
     m_thresholdValue = equ1.Evaluate();
@@ -93,9 +91,8 @@ FilterThresholdMin::FilterThresholdMin(
     {
         std::string var = it->second.c_str();
         std::vector<string> varlist = pSession->GetVariables();
-        std::vector<string>::const_iterator x;
-        ASSERTL0((x=std::find(varlist.begin(), varlist.end(), var))
-                        != varlist.end(),
+        auto x = std::find(varlist.begin(), varlist.end(), var);
+        ASSERTL0(x != varlist.end(),
                  "Specified variable " + var +
                  " in ThresholdMin filter is not available.");
         m_thresholdVar = x - varlist.begin();

@@ -51,7 +51,7 @@ class ProcessInnerProduct : public ProcessModule
 {
 public:
     /// Creates an instance of this class
-    static boost::shared_ptr<Module> create(FieldSharedPtr f)
+    static std::shared_ptr<Module> create(FieldSharedPtr f)
     {
         return MemoryManager<ProcessInnerProduct>::AllocateSharedPtr(f);
     }
@@ -66,6 +66,16 @@ public:
     virtual std::string GetModuleName()
     {
         return "ProcessInnerProduct";
+    }
+
+    virtual std::string GetModuleDescription()
+    {
+        return "Evaluating inner product";
+    }
+
+    virtual ModulePriority GetModulePriority()
+    {
+        return eModifyExp;
     }
 
 private:

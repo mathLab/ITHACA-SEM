@@ -1,7 +1,5 @@
-SET(FieldConvertSources FieldConvert.cpp)
-
-ADD_UTILITIES_EXECUTABLE(FieldConvert util ${FieldConvertSources})
-TARGET_LINK_LIBRARIES(FieldConvert FieldUtils)
+ADD_UTILITIES_EXECUTABLE(FieldConvert
+    COMPONENT fieldconvert DEPENDS FieldUtils SOURCES FieldConvert.cpp)
 
 #ADD_NEKTAR_TEST(chan3D_tec)  # This test is covered in bfs_tec
 #ADD_NEKTAR_TEST(chan3D_vtu)  # This does not currently work -- hash metric
@@ -17,24 +15,26 @@ ADD_NEKTAR_TEST(bfs_tec_rng)
 ADD_NEKTAR_TEST(bfs_vort)
 ADD_NEKTAR_TEST(bfs_vort_rng)
 ADD_NEKTAR_TEST(pointdatatofld)
+ADD_NEKTAR_TEST(chan3D_csv)
 ADD_NEKTAR_TEST(chan3D_pts)
 ADD_NEKTAR_TEST(chan3DH1D_meanmode)
 ADD_NEKTAR_TEST(chan3DH1D_plane)
 ADD_NEKTAR_TEST(chan3DH1D_stretch)
 ADD_NEKTAR_TEST(chan3D_probe)
 ADD_NEKTAR_TEST(cube_prismhex)
+# ADD_NEKTAR_TEST(outflow_pointdatatofld) # need to redefine outflow.pts since GetOffsetElmtId
 ADD_NEKTAR_TEST(cube_prismhex_range)
-ADD_NEKTAR_TEST(outflow_pointdatatofld)
 ADD_NEKTAR_TEST(chan3D_equispacedoutput)
 ADD_NEKTAR_TEST(chan3D_isocontour)
 ADD_NEKTAR_TEST(interpfield)
 ADD_NEKTAR_TEST(naca0012_bnd_equispacedoutput)
 ADD_NEKTAR_TEST(smallmesh_isocontour)
+ADD_NEKTAR_TEST(kovas2)
 ADD_NEKTAR_TEST(chan3D_interppointdatatofld)
 
 IF (NEKTAR_USE_MPI)
     ADD_NEKTAR_TEST(chan3D_tec_par)
-    #ADD_NEKTAR_TEST(chan3D_vtu_par)
+    #ADD_NEKTAR_TEST(chan3D_vtu_par)a
     ADD_NEKTAR_TEST(chan3D_interppointsplane_par)
     ADD_NEKTAR_TEST(chan3D_interppointsbox_par)
     ADD_NEKTAR_TEST(chan3D_vort_par)

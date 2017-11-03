@@ -33,6 +33,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <LibUtilities/BasicUtils/HashUtils.hpp>
 #include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
 #include <MultiRegions/ExpList.h>
 #include <LocalRegions/SegExp.h>
@@ -178,7 +179,7 @@ namespace Nektar
             int nbndry = 0;
             for(i = 0; i < nel; ++i) // count number of elements in array
             {
-                eid     = locExp.GetOffset_Elmt_Id(i);
+                eid     = i;
                 nbndry += expList[eid]->NumDGBndryCoeffs();
                 m_numLocalIntCoeffsPerPatch[i] = 0;
                 m_numLocalBndCoeffsPerPatch[i] =
@@ -230,7 +231,7 @@ namespace Nektar
             // Set up boost Graph
             for(i = 0; i < nel; ++i)
             {
-                eid = locExp.GetOffset_Elmt_Id(i);
+                eid = i;
 
                 for(j = 0; j < expList[eid]->GetNtrace(); ++j)
                 {
@@ -319,8 +320,7 @@ namespace Nektar
             cnt = 0;
             for(i = 0; i < nel; ++i)
             {
-                // order list according to m_offset_elmt_id details in expList
-                eid = locExp.GetOffset_Elmt_Id(i);
+                eid = i;
                 exp = expList[eid];
 
                 for(j = 0; j < exp->GetNtrace(); ++j)
@@ -479,27 +479,6 @@ namespace Nektar
 
             CalculateBndSystemBandWidth();
 
-            if ((m_solnType == eDirectMultiLevelStaticCond ||
-                 m_solnType == eIterativeMultiLevelStaticCond ||
-                 m_solnType == eXxtMultiLevelStaticCond ||
-                 m_solnType == ePETScMultiLevelStaticCond)
-                && nGraphVerts)
-            {
-                if (m_staticCondLevel < (bottomUpGraph->GetNlevels()-1))
-                {
-                    Array<OneD, int> vwgts_perm(nGraphVerts);
-
-                    for(int i = 0; i < nGraphVerts; i++)
-                    {
-                        vwgts_perm[i] = vwgts[perm[i]];
-                    }
-
-                    bottomUpGraph->ExpandGraphWithVertexWeights(vwgts_perm);
-                    m_nextLevelLocalToGlobalMap = MemoryManager<AssemblyMap>::
-                        AllocateSharedPtr(this, bottomUpGraph);
-                }
-            }
-
             cnt = 0;
             m_bndCondTraceToGlobalTraceMap = Array<OneD, int>(nbndexp);
             for(i = 0; i < bndCondExp.num_elements(); ++i)
@@ -515,12 +494,33 @@ namespace Nektar
             }
 
             // Now set up mapping from global coefficients to universal.
-            ExpListSharedPtr tr = boost::dynamic_pointer_cast<ExpList>(trace);
+            ExpListSharedPtr tr = std::dynamic_pointer_cast<ExpList>(trace);
             SetUpUniversalDGMap   (locExp);
             SetUpUniversalTraceMap(locExp, tr, periodicTrace);
 
-            m_hash = boost::hash_range(m_localToGlobalBndMap.begin(),
-                                       m_localToGlobalBndMap.end());
+            if ((m_solnType == eDirectMultiLevelStaticCond ||
+                 m_solnType == eIterativeMultiLevelStaticCond ||
+                 m_solnType == eXxtMultiLevelStaticCond ||
+                 m_solnType == ePETScMultiLevelStaticCond)
+                && nGraphVerts)
+            {
+                if (m_staticCondLevel < (bottomUpGraph->GetNlevels() - 1))
+                {
+                    Array<OneD, int> vwgts_perm(nGraphVerts);
+
+                    for (int i = 0; i < nGraphVerts; i++)
+                    {
+                        vwgts_perm[i] = vwgts[perm[i]];
+                    }
+
+                    bottomUpGraph->ExpandGraphWithVertexWeights(vwgts_perm);
+                    m_nextLevelLocalToGlobalMap = MemoryManager<AssemblyMap>::
+                        AllocateSharedPtr(this, bottomUpGraph);
+                }
+            }
+
+            m_hash = hash_range(m_localToGlobalBndMap.begin(),
+                                m_localToGlobalBndMap.end());
         }
 
         /**
@@ -585,9 +585,7 @@ namespace Nektar
             cnt = 0;
             for(i = 0; i < locExpVector.size(); ++i)
             {
-                // Order list according to m_offset_elmt_id details in Exp
-                // so that triangules are listed first and then quads
-                eid = locExp.GetOffset_Elmt_Id(i);
+                eid = i;
                 locExpansion = locExpVector[eid];
                 nDim = locExpansion->GetShapeDimension();
 
@@ -761,7 +759,7 @@ namespace Nektar
 
                     // Check to see if this vert is periodic. If it is, then we
                     // need use the unique eid of the two points
-                    PeriodicMap::const_iterator it = perMap.find(eid);
+                    auto it = perMap.find(eid);
                     if (perMap.count(eid) > 0)
                     {
                         PeriodicEntity ent = it->second[0];
@@ -786,7 +784,7 @@ namespace Nektar
                     // need to reverse the trace order of one edge only in the
                     // universal map so that the data are reversed w.r.t each
                     // other. We do this by using the minimum of the two IDs.
-                    PeriodicMap::const_iterator it = perMap.find(eid);
+                    auto it = perMap.find(eid);
                     bool realign = false;
                     if (perMap.count(eid) > 0)
                     {

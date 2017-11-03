@@ -61,7 +61,7 @@ namespace Nektar
 	 */
 
          PreconditionerDiagonal::PreconditionerDiagonal(
-                         const boost::shared_ptr<GlobalLinSys> &plinsys,
+                         const std::shared_ptr<GlobalLinSys> &plinsys,
 	                 const AssemblyMapSharedPtr &pLocToGloMap)
            : Preconditioner(plinsys, pLocToGloMap),
              m_preconType(pLocToGloMap->GetPreconType())
@@ -99,10 +99,10 @@ namespace Nektar
          */
          void PreconditionerDiagonal::DiagonalPreconditionerSum()
          {
-             boost::shared_ptr<MultiRegions::ExpList> expList = 
+             std::shared_ptr<MultiRegions::ExpList> expList = 
                  ((m_linsys.lock())->GetLocMat()).lock();
 
-             StdRegions::StdExpansionSharedPtr locExpansion;
+             LocalRegions::ExpansionSharedPtr locExpansion;
 
              int i,j,n,cnt,gid1,gid2;
              NekDouble sign1,sign2,value;
@@ -118,7 +118,7 @@ namespace Nektar
              int nElmt = expList->GetNumElmts();
              for(n = cnt = 0; n < nElmt; ++n)
              {
-                 loc_mat = (m_linsys.lock())->GetBlock(expList->GetOffset_Elmt_Id(n));
+                 loc_mat = (m_linsys.lock())->GetBlock(n);
                  loc_row = loc_mat->GetRows();
 
                  for(i = 0; i < loc_row; ++i)
@@ -213,7 +213,7 @@ namespace Nektar
 	 * gradient matrix solver.
 	 */
          PreconditionerNull::PreconditionerNull(
-                         const boost::shared_ptr<GlobalLinSys> &plinsys,
+                         const std::shared_ptr<GlobalLinSys> &plinsys,
 	                 const AssemblyMapSharedPtr &pLocToGloMap)
            : Preconditioner(plinsys, pLocToGloMap),
              m_preconType(pLocToGloMap->GetPreconType())

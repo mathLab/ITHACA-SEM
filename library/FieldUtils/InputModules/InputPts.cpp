@@ -83,61 +83,31 @@ InputPts::~InputPts()
  */
 void InputPts::Process(po::variables_map &vm)
 {
-    if (m_f->m_verbose)
-    {
-        if (m_f->m_comm->TreatAsRankZero())
-        {
-            cout << "Processing input pts file" << endl;
-        }
-    }
+    string inFile = m_config["infile"].as<string>();
 
-    string ptsending;
     // Determine appropriate field input
     if (m_f->m_inputfiles.count("pts") != 0)
     {
-        ptsending = "pts";
+        LibUtilities::CsvIOSharedPtr csvIO =
+            MemoryManager<LibUtilities::CsvIO>::AllocateSharedPtr(m_f->m_comm);
+        csvIO->Import(inFile, m_f->m_fieldPts);
     }
     else if (m_f->m_inputfiles.count("csv") != 0)
     {
-        ptsending = "csv";
+        LibUtilities::PtsIOSharedPtr ptsIO =
+            MemoryManager<LibUtilities::PtsIO>::AllocateSharedPtr(m_f->m_comm);
+        ptsIO->Import(inFile, m_f->m_fieldPts);
     }
     else
     {
-        ASSERTL0(false, "no input file found");
+        ASSERTL0(false, "unknown input file type");
     }
 
-
-    string inFile = (m_f->m_inputfiles[ptsending][0]).c_str();
-
-    if (m_f->m_session)
+    // save field names
+    for (int j = 0; j < m_f->m_fieldPts->GetNFields(); ++j)
     {
-        if (!ptsending.compare("pts"))
-        {
-            m_f->m_ptsIO = MemoryManager<LibUtilities::PtsIO>::AllocateSharedPtr(
-            m_f->m_session->GetComm());
-        }
-        else
-        {
-            m_f->m_ptsIO = MemoryManager<LibUtilities::CsvIO>::AllocateSharedPtr(
-            m_f->m_session->GetComm());
-        }
+        m_f->m_variables.push_back(m_f->m_fieldPts->GetFieldName(j));
     }
-    else // serial communicator
-    {
-        LibUtilities::CommSharedPtr c =
-            LibUtilities::GetCommFactory().CreateInstance("Serial", 0, 0);
-        if (!ptsending.compare("pts"))
-        {
-            m_f->m_ptsIO = MemoryManager<LibUtilities::PtsIO>::AllocateSharedPtr(c);
-        }
-        else
-        {
-            m_f->m_ptsIO = MemoryManager<LibUtilities::CsvIO>::AllocateSharedPtr(c);
-        }
-
-    }
-
-    m_f->m_ptsIO->Import(inFile, m_f->m_fieldPts);
 }
 }
 }

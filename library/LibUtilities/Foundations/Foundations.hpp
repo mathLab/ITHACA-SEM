@@ -101,9 +101,10 @@ namespace Nektar
             "NodalPrismElec",
             "NodalTriSPI",
             "NodalTetSPI",
-            "NodalPrismSPI"
+            "NodalPrismSPI",
+            "NodalQuadElec",
+            "NodalHexElec"
         };
-
     } // end of namespace
 } // end of namespace
 

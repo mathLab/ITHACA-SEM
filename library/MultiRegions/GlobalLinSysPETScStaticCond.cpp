@@ -88,8 +88,8 @@ namespace Nektar
          */
         GlobalLinSysPETScStaticCond::GlobalLinSysPETScStaticCond(
                      const GlobalLinSysKey                &pKey,
-                     const boost::weak_ptr<ExpList>       &pExpList,
-                     const boost::shared_ptr<AssemblyMap> &pLocToGloMap)
+                     const std::weak_ptr<ExpList>         &pExpList,
+                     const std::shared_ptr<AssemblyMap>   &pLocToGloMap)
             : GlobalLinSys          (pKey, pExpList, pLocToGloMap),
               GlobalLinSysPETSc     (pKey, pExpList, pLocToGloMap),
               GlobalLinSysStaticCond(pKey, pExpList, pLocToGloMap)
@@ -109,12 +109,12 @@ namespace Nektar
          */
         GlobalLinSysPETScStaticCond::GlobalLinSysPETScStaticCond(
                      const GlobalLinSysKey                &pKey,
-                     const boost::weak_ptr<ExpList>       &pExpList,
+                     const std::weak_ptr<ExpList>         &pExpList,
                      const DNekScalBlkMatSharedPtr         pSchurCompl,
                      const DNekScalBlkMatSharedPtr         pBinvD,
                      const DNekScalBlkMatSharedPtr         pC,
                      const DNekScalBlkMatSharedPtr         pInvD,
-                     const boost::shared_ptr<AssemblyMap> &pLocToGloMap,
+                     const std::shared_ptr<AssemblyMap>   &pLocToGloMap,
                      const PreconditionerSharedPtr         pPrecon)
             : GlobalLinSys          (pKey, pExpList, pLocToGloMap),
               GlobalLinSysPETSc     (pKey, pExpList, pLocToGloMap),
@@ -169,8 +169,7 @@ namespace Nektar
                         StdRegions::eHybridDGHelmBndLam)
                 {
                     DNekScalMatSharedPtr mat = m_S1Blk->GetBlock(n, n);
-                    DNekScalMatSharedPtr t = m_precon->TransformedSchurCompl(
-                        m_expList.lock()->GetOffset_Elmt_Id(n), mat);
+                    DNekScalMatSharedPtr t = m_precon->TransformedSchurCompl(n, mat);
                     m_schurCompl->SetBlock(n, n, t);
                 }
             }
@@ -343,12 +342,12 @@ namespace Nektar
 
         GlobalLinSysStaticCondSharedPtr GlobalLinSysPETScStaticCond::v_Recurse(
             const GlobalLinSysKey                &mkey,
-            const boost::weak_ptr<ExpList>       &pExpList,
+            const std::weak_ptr<ExpList>         &pExpList,
             const DNekScalBlkMatSharedPtr         pSchurCompl,
             const DNekScalBlkMatSharedPtr         pBinvD,
             const DNekScalBlkMatSharedPtr         pC,
             const DNekScalBlkMatSharedPtr         pInvD,
-            const boost::shared_ptr<AssemblyMap> &l2gMap)
+            const std::shared_ptr<AssemblyMap>   &l2gMap)
         {
             GlobalLinSysPETScStaticCondSharedPtr sys = MemoryManager<
                 GlobalLinSysPETScStaticCond>::AllocateSharedPtr(

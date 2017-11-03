@@ -51,7 +51,7 @@ class ProcessMultiShear : public ProcessModule
 {
 public:
     /// Creates an instance of this class
-    static boost::shared_ptr<Module> create(FieldSharedPtr f)
+    static std::shared_ptr<Module> create(FieldSharedPtr f)
     {
         return MemoryManager<ProcessMultiShear>::AllocateSharedPtr(f);
     }
@@ -67,6 +67,17 @@ public:
     {
         return "ProcessMultiShear";
     }
+
+    virtual std::string GetModuleDescription()
+    {
+        return "Calculating shear stress metrics";
+    }
+
+    virtual ModulePriority GetModulePriority()
+    {
+        return eModifyExp;
+    }
+
 };
 }
 }

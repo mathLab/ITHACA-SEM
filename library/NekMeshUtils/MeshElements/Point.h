@@ -54,7 +54,7 @@ public:
                                    std::vector<NodeSharedPtr> pNodeList,
                                    std::vector<int> pTagList)
     {
-        return boost::shared_ptr<Element>(
+        return std::shared_ptr<Element>(
             new Point(pConf, pNodeList, pTagList));
     }
     /// Element type

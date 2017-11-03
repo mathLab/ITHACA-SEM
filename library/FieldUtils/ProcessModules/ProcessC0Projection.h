@@ -51,7 +51,7 @@ class ProcessC0Projection : public ProcessModule
 {
 public:
     /// Creates an instance of this class
-    static boost::shared_ptr<Module> create(FieldSharedPtr f)
+    static std::shared_ptr<Module> create(FieldSharedPtr f)
     {
         return MemoryManager<ProcessC0Projection>::AllocateSharedPtr(f);
     }
@@ -66,6 +66,16 @@ public:
     virtual std::string GetModuleName()
     {
         return "ProcessC0Projection";
+    }
+
+    virtual std::string GetModuleDescription()
+    {
+        return "Projecting field into C0 space";
+    }
+
+    virtual ModulePriority GetModulePriority()
+    {
+        return eModifyExp;
     }
 
 private:

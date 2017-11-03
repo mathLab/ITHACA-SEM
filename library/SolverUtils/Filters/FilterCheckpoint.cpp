@@ -49,10 +49,8 @@ FilterCheckpoint::FilterCheckpoint(
     const ParamMap &pParams) :
     Filter(pSession)
 {
-    ParamMap::const_iterator it;
-
     // OutputFile
-    it = pParams.find("OutputFile");
+    auto it = pParams.find("OutputFile");
     if (it == pParams.end())
     {
         m_outputFile = m_session->GetSessionName();
@@ -67,7 +65,7 @@ FilterCheckpoint::FilterCheckpoint(
     it = pParams.find("OutputFrequency");
     ASSERTL0(it != pParams.end(), "Missing parameter 'OutputFrequency'.");
     LibUtilities::Equation equ(m_session, it->second);
-    m_outputFrequency = floor(equ.Evaluate());
+    m_outputFrequency = round(equ.Evaluate());
 
     m_fld = LibUtilities::FieldIO::CreateDefault(pSession);
 }

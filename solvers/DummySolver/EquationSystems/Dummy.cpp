@@ -59,25 +59,20 @@ void Dummy::v_InitObject()
 {
     UnsteadySystem::v_InitObject();
 
+    m_nanSteps = 0;
+
+    auto sV = m_session->GetVariables();
+    for (auto const &sendVar : m_coupling->GetSendFieldNames())
+    {
+        int i = distance(sV.begin(), find(sV.begin(), sV.end(), sendVar));
+        m_intVariables.push_back(i);
+    }
+
     m_ode.DefineOdeRhs(&Dummy::DoOdeRhs, this);
     m_ode.DefineProjection(&Dummy::DoOdeProjection, this);
 
     ASSERTL0(m_session->DefinesCmdLineArgument("cwipi"),
              "This EquationSystem requires the --cwipi command line switch");
-
-    m_recFields = Array<OneD, Array<OneD, NekDouble> >(
-        m_coupling->GetRecvFieldNames().size());
-    for (int i = 0; i < m_recFields.num_elements(); ++i)
-    {
-        m_recFields[i] = Array<OneD, NekDouble>(GetTotPoints(), 0.0);
-    }
-
-    m_sendFields = Array<OneD, Array<OneD, NekDouble> >(
-        m_coupling->GetSendFieldNames().size());
-    for (int i = 0; i < m_sendFields.num_elements(); ++i)
-    {
-        m_sendFields[i] = Array<OneD, NekDouble>(GetTotPoints(), 0.0);
-    }
 }
 
 /**
@@ -87,17 +82,25 @@ Dummy::~Dummy()
 {
 }
 
-
 /**
- * @brief v_PreIntegrate
+ * @brief v_PostIntegrate
  */
-bool Dummy::v_PreIntegrate(int step)
+bool Dummy::v_PostIntegrate(int step)
 {
-    if (m_sendFields.num_elements() > 0)
+    if (m_coupling->GetSendFieldNames().size() > 0)
     {
         Timer timer1;
         timer1.Start();
-        GetFunction("SendFields", m_fields[0])->Evaluate(m_coupling->GetSendFieldNames(), m_sendFields, m_time);
+
+        auto sV = m_session->GetVariables();
+        for (auto const &sendVar : m_coupling->GetSendFieldNames())
+        {
+            int i = distance(sV.begin(), find(sV.begin(), sV.end(), sendVar));
+            cout << "sendVar = " << sendVar << ", i = " << i << endl;
+            GetFunction("SendFields", m_fields[i])
+                ->Evaluate(sendVar, m_fields[i]->UpdatePhys(), m_time);
+        }
+
         timer1.Stop();
         if (m_session->DefinesCmdLineArgument("verbose"))
         {
@@ -105,9 +108,16 @@ bool Dummy::v_PreIntegrate(int step)
         }
     }
 
-    return UnsteadySystem::v_PreIntegrate(step);
-}
+    for (int i = 0; i < m_session->GetVariables().size(); ++i)
+    {
 
+        m_fields[i]->FwdTrans_IterPerExp(m_fields[i]->UpdatePhys(),
+                                         m_fields[i]->UpdateCoeffs());
+        m_fields[i]->SetPhysState(false);
+    }
+
+    return UnsteadySystem::v_PostIntegrate(step);
+}
 
 /**
  * @brief Compute the right-hand side.
@@ -116,7 +126,13 @@ void Dummy::DoOdeRhs(const Array<OneD, const Array<OneD, NekDouble> > &inarray,
                      Array<OneD, Array<OneD, NekDouble> > &outarray,
                      const NekDouble time)
 {
-    // do nothing
+    int nVariables = inarray.num_elements();
+    int nq         = GetTotPoints();
+
+    for (int i = 0; i < nVariables; ++i)
+    {
+        Vmath::Zero(nq, outarray[i], 1);
+    }
 }
 
 /**
@@ -128,39 +144,13 @@ void Dummy::DoOdeProjection(
     Array<OneD, Array<OneD, NekDouble> > &outarray,
     const NekDouble time)
 {
-    // do nothing
-}
+    int nvariables = inarray.num_elements();
+    int nq         = m_fields[0]->GetNpoints();
 
-
-void Dummy::v_AuxFields(std::vector<Array<OneD, NekDouble> > &fieldcoeffs,
-                      std::vector<Array<OneD, NekDouble> > &fieldphys,
-                      std::vector<MultiRegions::ExpListSharedPtr> &expansions,
-                      std::vector<std::string> &variables)
-{
-    for (int i = 0; i < m_recFields.num_elements(); i++)
+    // deep copy
+    for (int i = 0; i < nvariables; ++i)
     {
-        fieldphys.push_back(m_recFields[i]);
-
-        Array<OneD, NekDouble> tmpC(GetNcoeffs());
-        m_fields[0]->FwdTrans(m_recFields[i], tmpC);
-        fieldcoeffs.push_back(tmpC);
-
-        variables.push_back(m_coupling->GetRecvFieldNames()[i]);
-
-        expansions.push_back(m_fields[0]);
-    }
-
-    for (int i = 0; i < m_sendFields.num_elements(); i++)
-    {
-        fieldphys.push_back(m_sendFields[i]);
-
-        Array<OneD, NekDouble> tmpC(GetNcoeffs());
-        m_fields[0]->FwdTrans(m_sendFields[i], tmpC);
-        fieldcoeffs.push_back(tmpC);
-
-        variables.push_back(m_coupling->GetSendFieldNames()[i]);
-
-        expansions.push_back(m_fields[0]);
+        Vmath::Vcopy(nq, inarray[i], 1, outarray[i], 1);
     }
 }
 

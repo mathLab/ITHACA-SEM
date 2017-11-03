@@ -81,22 +81,13 @@ protected:
         Array<OneD, Array<OneD, NekDouble> > &outarray,
         const NekDouble time);
 
-    virtual bool v_PreIntegrate(int step);
-
-    virtual void v_AuxFields(
-        std::vector<Array<OneD, NekDouble> > &fieldcoeffs,
-        std::vector<Array<OneD, NekDouble> > &fieldphys,
-        std::vector<MultiRegions::ExpListSharedPtr> &expansions,
-        std::vector<std::string> &variables);
+    virtual bool v_PostIntegrate(int step);
 
     virtual bool v_RequireFwdTrans()
     {
         return false;
     }
 
-private:
-    Array<OneD, Array<OneD, NekDouble> > m_recFields;
-    Array<OneD, Array<OneD, NekDouble> > m_sendFields;
 };
 }
 

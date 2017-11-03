@@ -96,6 +96,7 @@ CommCwipi::~CommCwipi()
 void CommCwipi::v_Finalise()
 {
     cwipi_finalize();
+    CommMpi::v_Finalise();
 }
 
 

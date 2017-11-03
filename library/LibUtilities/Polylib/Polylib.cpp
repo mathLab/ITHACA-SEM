@@ -359,6 +359,18 @@ namespace Polylib {
 
         }
 
+        else if( np == 2 ){
+
+            z[0] = -1.0;
+
+            z[1] =  1.0;
+
+            w[0] =  1.0;
+
+            w[1] =  1.0;
+
+        }
+
         else{
 
             register int i;

@@ -203,7 +203,10 @@ void CouplingCwipi::v_Init()
         SetupSend();
     }
 
-    ReceiveStart();
+    if (m_nRecvVars > 0 and m_recvSteps > 0)
+    {
+        ReceiveStart();
+    }
 }
 
 CouplingCwipi::~CouplingCwipi()

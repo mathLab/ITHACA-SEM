@@ -1210,7 +1210,18 @@ namespace Nektar
             const SpatialDomains::GeomFactorsSharedPtr & geomFactors =
             GetGeom()->GetMetricInfo();
             SpatialDomains::GeomType type = geomFactors->GetGtype();
+
             LibUtilities::PointsKeyVector ptsKeys = GetPointsKeys();
+            for(i = 0; i < ptsKeys.size(); ++i)
+            {
+                // Need at least 2 points for computing normals
+                if (ptsKeys[i].GetNumPoints() == 1)
+                {
+                    LibUtilities::PointsKey pKey(2, ptsKeys[i].GetPointsType());
+                    ptsKeys[i] = pKey;
+                }
+            }
+
             const Array<TwoD, const NekDouble> & df = geomFactors->GetDerivFactors(ptsKeys);
             const Array<OneD, const NekDouble> & jac  = geomFactors->GetJac(ptsKeys);
             int nqe;

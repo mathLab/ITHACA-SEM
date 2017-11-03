@@ -11,4 +11,6 @@ IF( NEKTAR_SOLVER_DUMMY )
 
     ADD_SOLVER_EXECUTABLE(DummySolver solvers ${DummySolverSource})
 
+    ADD_NEKTAR_TEST(Dummy_3DCubeCwipi)
+
 ENDIF( NEKTAR_SOLVER_DUMMY )

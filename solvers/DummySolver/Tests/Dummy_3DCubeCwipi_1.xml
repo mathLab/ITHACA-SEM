@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<NEKTAR>
+    <EXPANSIONS>
+        <E COMPOSITE="C[10]" NUMMODES="4" TYPE="MODIFIED" FIELDS="cS,dS,cR,dR" />
+    </EXPANSIONS>
+    <COUPLING NAME="coupling1" TYPE="Cwipi">
+        <I PROPERTY="RemoteName" VALUE="Dummy0" />
+        <I PROPERTY="ReceiveSteps" VALUE="3" />
+        <I PROPERTY="ReceiveVariables" VALUE="cR,dR" />
+        <I PROPERTY="Oversample" VALUE="0" />
+        <I PROPERTY="FilterWidth" VALUE="5E-3" />
+        <I PROPERTY="NotLocMethod" VALUE="keep" />
+        <I PROPERTY="SendSteps" VALUE="3" />
+        <I PROPERTY="SendVariables" VALUE="cS,dS" />
+        <I PROPERTY="SendMethod" VALUE="SHEPARD" />
+    </COUPLING>
+    <CONDITIONS>
+        <SOLVERINFO>
+            <I PROPERTY="EQType"                VALUE="Dummy"                 />
+            <I PROPERTY="Projection"            VALUE="DisContinuous"       />
+            <I PROPERTY="TimeIntegrationMethod" VALUE="ForwardEuler"/>
+        </SOLVERINFO>
+            <GLOBALSYSSOLNINFO>
+            <V VAR="DefaultVar">
+                <I PROPERTY="GlobalSysSoln"   VALUE="PETScStaticCond" />
+            </V>
+            </GLOBALSYSSOLNINFO>
+        <PARAMETERS>
+            <P> TimeStep      = 1E-6                </P>
+            <P> ExSteps       = 3E-6 /  TimeStep    </P>
+            <P> NumSteps      = ExSteps * 10        </P>
+            <P> FinTime       = TimeStep*NumSteps   </P>
+            <P> IO_CheckSteps = ExSteps * 1         </P>
+            <P> IO_InfoSteps  = 1                   </P>
+        </PARAMETERS>
+        <VARIABLES>
+            <V ID="0"> cS </V>
+            <V ID="1"> dS </V>
+            <V ID="2"> cR </V>
+            <V ID="3"> dR </V>
+        </VARIABLES>
+        <FUNCTION NAME="SendFields">
+            <E VAR="cS" VALUE="x*y*z*t"/>
+            <E VAR="dS" VALUE="-x*y*z*t"/>
+        </FUNCTION>
+    </CONDITIONS>
+</NEKTAR>
+
+

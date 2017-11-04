@@ -189,6 +189,19 @@ void APE::v_InitObject()
     {
         ASSERTL0(false, "Implicit APE not set up.");
     }
+
+    if (m_session->DefinesElement("Nektar/Coupling"))
+    {
+        TiXmlElement* vCoupling = m_session->GetElement("Nektar/Coupling");
+
+        ASSERTL0(vCoupling->Attribute("TYPE"),
+                 "Missing TYPE attribute in Coupling");
+        string vType = vCoupling->Attribute("TYPE");
+        ASSERTL0(!vType.empty(),
+                 "TYPE attribute must be non-empty in Coupling");
+
+        m_coupling = GetCouplingFactory().CreateInstance(vType, m_fields[0]);
+    }
 }
 
 
@@ -271,6 +284,7 @@ bool APE::v_PreIntegrate(int step)
     GetFunction("Baseflow", m_bfField, true)->Evaluate(m_bfNames, m_bf, m_time);
 
     Array<OneD, NekDouble> tmpC(GetNcoeffs());
+    int numForceFields = 0;
     for (auto &x : m_forcing)
     {
         for (int i = 0; i < x->GetForces().num_elements(); ++i)
@@ -280,6 +294,8 @@ bool APE::v_PreIntegrate(int step)
             m_bfField->LocalToGlobal(tmpC, tmpC);
             m_bfField->GlobalToLocal(tmpC, tmpC);
             m_bfField->BwdTrans(tmpC, x->UpdateForces()[i]);
+
+            numForceFields++;
         }
     }
 
@@ -293,8 +309,51 @@ bool APE::v_PreIntegrate(int step)
         m_bfField->BwdTrans(tmpC, m_bf[i]);
     }
 
+    if (m_coupling)
+    {
+        vector<string> varNames;
+        Array<OneD, Array<OneD, NekDouble> > phys(m_fields.num_elements() + m_bfNames.size() + numForceFields);
+        for (int i = 0; i < m_fields.num_elements(); ++i)
+        {
+            varNames.push_back(m_session->GetVariable(i));
+            phys[i]   = m_fields[i]->UpdatePhys();
+        }
+        for (int i = 0; i < m_bfNames.size(); ++i)
+        {
+            varNames.push_back(m_bfNames[i]);
+            phys[m_fields.num_elements() + i] = m_bf[i];
+        }
+
+        int f = 0;
+        for (auto &x : m_forcing)
+        {
+            for (int i = 0; i < x->GetForces().num_elements(); ++i)
+            {
+                phys[m_fields.num_elements() + m_bfNames.size() + f] = x->GetForces()[i];
+                f++;
+                varNames.push_back("F_" + boost::lexical_cast<string>(f) +
+                                    "_" + m_session->GetVariable(i));
+            }
+        }
+
+        m_coupling->Send(step, m_time, phys, varNames);
+        m_coupling->Receive(step, m_time, phys, varNames);
+    }
+
     return AdvectionSystem::v_PreIntegrate(step);
 }
+
+
+void APE::v_Output()
+{
+    if (m_coupling)
+    {
+        m_coupling->Finalize();
+    }
+
+    AdvectionSystem::v_Output();
+}
+
 
 /**
  * @brief Compute the right-hand side.

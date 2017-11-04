@@ -134,19 +134,6 @@ namespace Nektar
             // By default attempt to forward transform initial condition.
             m_homoInitialFwd = true;
 
-            if (m_session->DefinesElement("Nektar/Coupling"))
-            {
-                TiXmlElement* vCoupling = m_session->GetElement("Nektar/Coupling");
-
-                ASSERTL0(vCoupling->Attribute("TYPE"),
-                         "Missing TYPE attribute in Coupling");
-                string vType = vCoupling->Attribute("TYPE");
-                ASSERTL0(!vType.empty(),
-                         "TYPE attribute must be non-empty in Coupling");
-
-                m_coupling = GetCouplingFactory().CreateInstance(vType, m_fields[0]);
-            }
-
             // Set up filters
             for (auto &x : m_session->GetFilters())
             {
@@ -297,20 +284,6 @@ namespace Nektar
                 if (v_PreIntegrate(step))
                 {
                     break;
-                }
-
-                if (m_coupling)
-                {
-                    vector<string> varNames;
-                    Array<OneD, Array<OneD, NekDouble> > phys(m_fields.num_elements());
-                    for (int i = 0; i < m_fields.num_elements(); ++i)
-                    {
-                        varNames.push_back(m_session->GetVariable(i));
-                        phys[i]   = m_fields[i]->UpdatePhys();
-                    }
-
-                    m_coupling->Send(step, m_time, phys, varNames);
-                    m_coupling->Receive(step, m_time, phys, varNames);
                 }
 
                 fields = m_intScheme->TimeIntegrate(
@@ -485,11 +458,6 @@ namespace Nektar
             for (auto &x : m_filters)
             {
                 x->Finalise(m_fields, m_time);
-            }
-
-            if (m_coupling)
-            {
-                m_coupling->Finalize();
             }
             
             // Print for 1D problems

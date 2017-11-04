@@ -39,7 +39,6 @@
 #include <LibUtilities/TimeIntegration/TimeIntegrationWrapper.h>
 #include <SolverUtils/EquationSystem.h>
 #include <SolverUtils/Filters/Filter.h>
-#include <SolverUtils/Core/Coupling.h>
 
 namespace Nektar
 {
@@ -94,8 +93,6 @@ namespace Nektar
             std::vector<int>                                m_intVariables;
 
             std::vector<FilterSharedPtr>                    m_filters;
-            /// Interface for external solvers
-            SolverUtils::CouplingSharedPointer              m_coupling;
 
             /// Initialises UnsteadySystem class members.
             SOLVER_UTILS_EXPORT UnsteadySystem(

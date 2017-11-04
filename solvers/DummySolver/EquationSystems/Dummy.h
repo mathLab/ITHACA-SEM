@@ -38,6 +38,7 @@
 #define NEKTAR_SOLVERS_DummySOLVER_EQUATIONSYSTEMS_DUMMY_H
 
 #include <SolverUtils/UnsteadySystem.h>
+#include <SolverUtils/Core/Coupling.h>
 
 
 using namespace Nektar::SolverUtils;
@@ -67,6 +68,8 @@ public:
 
 protected:
 
+    SolverUtils::CouplingSharedPointer              m_coupling;
+
     /// Initialises UnsteadySystem class members.
     Dummy(const LibUtilities::SessionReaderSharedPtr &pSession);
 
@@ -81,7 +84,11 @@ protected:
         Array<OneD, Array<OneD, NekDouble> > &outarray,
         const NekDouble time);
 
+    virtual bool v_PreIntegrate(int step);
+
     virtual bool v_PostIntegrate(int step);
+
+    virtual void v_Output();
 
     virtual bool v_RequireFwdTrans()
     {

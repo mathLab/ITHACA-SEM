@@ -61,16 +61,21 @@ void Dummy::v_InitObject()
 
     m_nanSteps = 0;
 
-
-
     m_ode.DefineOdeRhs(&Dummy::DoOdeRhs, this);
     m_ode.DefineProjection(&Dummy::DoOdeProjection, this);
 
-    ASSERTL0(m_session->DefinesCmdLineArgument("cwipi"),
-             "This EquationSystem requires the --cwipi command line switch");
-
-    if (m_coupling)
+    if (m_session->DefinesElement("Nektar/Coupling"))
     {
+        TiXmlElement* vCoupling = m_session->GetElement("Nektar/Coupling");
+
+        ASSERTL0(vCoupling->Attribute("TYPE"),
+                 "Missing TYPE attribute in Coupling");
+        string vType = vCoupling->Attribute("TYPE");
+        ASSERTL0(!vType.empty(),
+                 "TYPE attribute must be non-empty in Coupling");
+
+        m_coupling = GetCouplingFactory().CreateInstance(vType, m_fields[0]);
+
         auto sV = m_session->GetVariables();
         for (auto const &sendVar : m_coupling->GetSendFieldNames())
         {
@@ -87,12 +92,36 @@ Dummy::~Dummy()
 {
 }
 
+
+/**
+ * @brief v_PreIntegrate
+ */
+bool Dummy::v_PreIntegrate(int step)
+{
+    if (m_coupling)
+    {
+        vector<string> varNames;
+        Array<OneD, Array<OneD, NekDouble> > phys(m_fields.num_elements());
+        for (int i = 0; i < m_fields.num_elements(); ++i)
+        {
+            varNames.push_back(m_session->GetVariable(i));
+            phys[i]   = m_fields[i]->UpdatePhys();
+        }
+
+        m_coupling->Send(step, m_time, phys, varNames);
+        m_coupling->Receive(step, m_time, phys, varNames);
+    }
+
+    return UnsteadySystem::v_PreIntegrate(step);
+}
+
+
 /**
  * @brief v_PostIntegrate
  */
 bool Dummy::v_PostIntegrate(int step)
 {
-    if (m_coupling->GetSendFieldNames().size() > 0)
+    if (m_coupling && m_coupling->GetSendFieldNames().size() > 0)
     {
         LibUtilities::Timer timer1;
         timer1.Start();
@@ -123,6 +152,17 @@ bool Dummy::v_PostIntegrate(int step)
 
     return UnsteadySystem::v_PostIntegrate(step);
 }
+
+void Dummy::v_Output()
+{
+    if (m_coupling)
+    {
+        m_coupling->Finalize();
+    }
+
+    UnsteadySystem::v_Output();
+}
+
 
 /**
  * @brief Compute the right-hand side.

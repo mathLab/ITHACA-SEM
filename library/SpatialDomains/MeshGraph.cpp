@@ -3067,7 +3067,7 @@ namespace Nektar
                         {
                             npts = bkeyold.GetNumModes();
                         }
-
+                        npts = max(npts, 2);
 
                         const LibUtilities::PointsKey pkey(npts,LibUtilities::ePolyEvenlySpaced);
                         LibUtilities::BasisKey bkeynew(bkeyold.GetBasisType(),bkeyold.GetNumModes(), pkey);

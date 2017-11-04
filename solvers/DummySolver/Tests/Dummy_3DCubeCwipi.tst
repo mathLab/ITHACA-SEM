@@ -11,17 +11,28 @@
         <file description="PETSc config file">.petscrc</file>
     </files>
     <metrics>
-        <metric type="L2" id="1">
-            <value variable="aS" tolerance="1E-5">0.00011547</value>
-            <value variable="bS" tolerance="1E-5">0.00011547</value>
-            <value variable="aR" tolerance="1E-6">1.03161e-05</value>
-            <value variable="bR" tolerance="1E-6">1.03161e-05</value>
+        <metric type="regex" id="0">
+            <regex>^L 2 error\s*\(variable\s*\w0\w\)\s*:\s*([+-]?\d.+\d|-?\d|[+-]?nan|[+-]?inf).*</regex>
+            <matches>
+                <match>
+                    <field variable="u0S" tolerance="1E-5">0.00011547</field>
+                    <field variable="v0S" tolerance="1E-5">0.00011547</field>
+                    <field variable="u0R" tolerance="1E-6">1.03161e-05</field>
+                    <field variable="v0R" tolerance="1E-6">1.03161e-05</field>
+                </match>
+            </matches>
         </metric>
-        <metric type="L2" id="2">
-            <value variable="cS" tolerance="1E-6">1.1547e-05</value>
-            <value variable="dS" tolerance="1E-6">1.1547e-05</value>
-            <value variable="cR" tolerance="1E-5">0.000103161</value>
-            <value variable="dR" tolerance="1E-5">0.000103161</value>
+        <metric type="regex" id="1">
+            <regex>^L 2 error\s*\(variable\s*\w1\w\)\s*:\s*([+-]?\d.+\d|-?\d|[+-]?nan|[+-]?inf).*</regex>
+            <matches>
+                <match>
+                    <field variable="u1S" tolerance="1E-6">1.1547e-05</field>
+                    <field variable="v1S" tolerance="1E-6">1.1547e-05</field>
+                    <field variable="u1R" tolerance="1E-5">0.000103161</field>
+                    <field variable="v1R" tolerance="1E-5">0.000103161</field>
+                </match>
+            </matches>
         </metric>
     </metrics>
 </test>
+

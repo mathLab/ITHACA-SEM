@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <NEKTAR>
     <EXPANSIONS>
-        <E COMPOSITE="C[10]" NUMMODES="4" TYPE="MODIFIED" FIELDS="aS,bS,aR,bR" />
+        <E COMPOSITE="C[10]" NUMMODES="4" TYPE="MODIFIED" FIELDS="u0S,v0S,u0R,v0R" />
     </EXPANSIONS>
     <COUPLING NAME="coupling1" TYPE="Cwipi">
         <I PROPERTY="RemoteName" VALUE="Dummy1" />
         <I PROPERTY="ReceiveSteps" VALUE="1" />
-        <I PROPERTY="ReceiveVariables" VALUE="aR,bR" />
+        <I PROPERTY="ReceiveVariables" VALUE="u0R,v0R" />
         <I PROPERTY="Oversample" VALUE="5" />
         <I PROPERTY="FilterWidth" VALUE="10E-3" />
         <I PROPERTY="NotLocMethod" VALUE="Extrapolate" />
         <I PROPERTY="SendSteps" VALUE="1" />
-        <I PROPERTY="SendVariables" VALUE="aS,bS" />
+        <I PROPERTY="SendVariables" VALUE="u0S,v0S" />
         <I PROPERTY="SendMethod" VALUE="NEARESTNEIGHBOUR" />
     </COUPLING>
     <CONDITIONS>
@@ -33,14 +33,14 @@
             <P> IO_InfoSteps  = 1                   </P>
         </PARAMETERS>
         <VARIABLES>
-            <V ID="0"> aS </V>
-            <V ID="1"> bS </V>
-            <V ID="2"> aR </V>
-            <V ID="3"> bR </V>
+            <V ID="0"> u0S </V>
+            <V ID="1"> v0S </V>
+            <V ID="2"> u0R </V>
+            <V ID="3"> v0R </V>
         </VARIABLES>
         <FUNCTION NAME="SendFields">
-            <E VAR="aS" VALUE="10*x*y*z*t"/>
-            <E VAR="bS" VALUE="-10*x*y*z*t"/>
+            <E VAR="u0S" VALUE="10*x*y*z*t"/>
+            <E VAR="v0S" VALUE="-10*x*y*z*t"/>
         </FUNCTION>
     </CONDITIONS>
 </NEKTAR>

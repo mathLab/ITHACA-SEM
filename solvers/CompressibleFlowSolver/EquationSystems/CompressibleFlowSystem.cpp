@@ -53,6 +53,13 @@ namespace Nektar
     {
         AdvectionSystem::v_InitObject();
 
+        for (int i = 0; i < m_fields.num_elements(); i++)
+        {
+            // Use BwdTrans to make sure initial condition is in solution space
+            m_fields[i]->BwdTrans(m_fields[i]->GetCoeffs(),
+                                  m_fields[i]->UpdatePhys());
+        }
+
         m_varConv = MemoryManager<VariableConverter>::AllocateSharedPtr(
                     m_session, m_spacedim);
 

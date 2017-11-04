@@ -61,6 +61,7 @@ v5.0.0
 - Allow performing axi-symmetric Euler simulations (!771)
 - Add ability to use an exponential filtering for stabilization with
   seg, quad and hex elements (!771, !862)
+- Fix compressible solver with NUMMODES=1 (!868)
 
 **Documentation**:
 - Added the developer-guide repository as a submodule (!751)

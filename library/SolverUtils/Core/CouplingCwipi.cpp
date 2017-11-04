@@ -603,7 +603,7 @@ void CouplingCwipi::v_Send(
     const int step,
     const NekDouble time,
     const Array<OneD, const Array<OneD, NekDouble> > &field,
-    LibUtilities::FieldMetaDataMap &fieldMetaDataMap)
+    vector<string> &varNames)
 {
     if (m_nSendVars < 1 or m_sendSteps < 1)
     {
@@ -616,10 +616,7 @@ void CouplingCwipi::v_Send(
 
         m_lastSend = step;
 
-        string tmp = fieldMetaDataMap["Variables"] + fieldMetaDataMap["AuxVariables"];
-        vector<string> vars;
-        ParseUtils::GenerateVector(tmp, vars);
-        vector<int> sendVarsToVars = GenerateVariableMapping(vars, m_sendFieldNames);
+        vector<int> sendVarsToVars = GenerateVariableMapping(varNames, m_sendFieldNames);
         m_sendField = Array<OneD, Array<OneD, NekDouble> > (m_nSendVars);
         for (int i = 0; i < sendVarsToVars.size(); ++i)
         {
@@ -717,7 +714,7 @@ void CouplingCwipi::ReceiveStart()
 void CouplingCwipi::v_Receive(const int step,
                                   const NekDouble time,
                                   Array<OneD, Array<OneD, NekDouble> > &field,
-                                  LibUtilities::FieldMetaDataMap &fieldMetaDataMap)
+                                  vector<string> &varNames)
 {
     if (m_nRecvVars < 1 or m_recvSteps < 1)
     {
@@ -725,10 +722,7 @@ void CouplingCwipi::v_Receive(const int step,
     }
 
     Array<OneD, Array<OneD, NekDouble> > recvFields(m_nRecvVars);
-    string tmp = fieldMetaDataMap["Variables"] + fieldMetaDataMap["AuxVariables"];
-    vector<string> vars;
-    ParseUtils::GenerateVector(tmp, vars);
-    vector<int> recvVarsToVars = GenerateVariableMapping(vars, m_recvFieldNames);
+    vector<int> recvVarsToVars = GenerateVariableMapping(varNames, m_recvFieldNames);
     ASSERTL1(m_nRecvVars == recvVarsToVars.size(), "field size mismatch");
     for (int i = 0; i < recvVarsToVars.size(); ++i)
     {

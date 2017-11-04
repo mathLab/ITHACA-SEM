@@ -39,6 +39,7 @@
 #include <LibUtilities/TimeIntegration/TimeIntegrationWrapper.h>
 #include <SolverUtils/EquationSystem.h>
 #include <SolverUtils/Filters/Filter.h>
+#include <SolverUtils/Core/Coupling.h>
 
 namespace Nektar
 {

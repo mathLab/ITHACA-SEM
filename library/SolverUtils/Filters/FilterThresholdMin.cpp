@@ -53,7 +53,7 @@ std::string FilterThresholdMin::className =
 FilterThresholdMin::FilterThresholdMin(
         const LibUtilities::SessionReaderSharedPtr &pSession,
         const ParamMap &pParams)
-    : LegacyFilter(pSession)
+    : Filter(pSession)
 {
     // ThresholdValue
     auto it = pParams.find("ThresholdValue");

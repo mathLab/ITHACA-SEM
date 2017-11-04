@@ -44,7 +44,7 @@ std::string FilterCheckpointCellModel::className =
 FilterCheckpointCellModel::FilterCheckpointCellModel(
     const LibUtilities::SessionReaderSharedPtr &pSession,
     const ParamMap &pParams) :
-    LegacyFilter(pSession)
+    Filter(pSession)
 {
     // OutputFile
     auto it = pParams.find("OutputFile");

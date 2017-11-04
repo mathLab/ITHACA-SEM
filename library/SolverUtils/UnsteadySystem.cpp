@@ -256,14 +256,9 @@ namespace Nektar
                 m_timestep, fields, m_time, m_ode);
 
             // Initialise filters
-            Array<OneD, Array<OneD, NekDouble> > coeffs;
-            Array<OneD, Array<OneD, NekDouble> > phys;
-            Array<OneD, MultiRegions::ExpListSharedPtr> expansions;
-            GetAllFields(m_fieldMetaDataMap, coeffs, phys, expansions);
-
             for (auto &x : m_filters)
             {
-                x->Initialise(m_fieldMetaDataMap, coeffs, expansions, m_time);
+                x->Initialise(m_fields, m_time);
             }
 
             LibUtilities::Timer     timer;
@@ -306,8 +301,16 @@ namespace Nektar
 
                 if (m_coupling)
                 {
-                    m_coupling->Send(step, m_time, phys, m_fieldMetaDataMap);
-                    m_coupling->Receive(step, m_time, phys, m_fieldMetaDataMap);
+                    vector<string> varNames;
+                    Array<OneD, Array<OneD, NekDouble> > phys(m_fields.num_elements());
+                    for (int i = 0; i < m_fields.num_elements(); ++i)
+                    {
+                        varNames.push_back(m_session->GetVariable(i));
+                        phys[i]   = m_fields[i]->UpdatePhys();
+                    }
+
+                    m_coupling->Send(step, m_time, phys, varNames);
+                    m_coupling->Receive(step, m_time, phys, varNames);
                 }
 
                 fields = m_intScheme->TimeIntegrate(
@@ -390,10 +393,9 @@ namespace Nektar
                                 "NaN found during time integration.");
                 }
                 // Update filters
-                GetAllFields(m_fieldMetaDataMap, coeffs, phys, expansions);
                 for (auto &x : m_filters)
                 {
-                    x->Update(m_fieldMetaDataMap, coeffs, expansions, m_time);
+                    x->Update(m_fields, m_time);
                 }
 
                 // Write out checkpoint files
@@ -480,14 +482,9 @@ namespace Nektar
             }
 
             // Finalise filters
-            for (int i = 0; i < m_session->GetVariables().size(); ++i)
-            {
-                coeffs[i] = m_fields[i]->GetCoeffs();
-                expansions[i] = m_fields[i];
-            }
             for (auto &x : m_filters)
             {
-                x->Finalise(m_fieldMetaDataMap, coeffs, expansions, m_time);
+                x->Finalise(m_fields, m_time);
             }
 
             if (m_coupling)
@@ -627,8 +624,7 @@ namespace Nektar
                 }
             }
         }
-
-
+	
         /**
          * @brief Return the timestep to be used for the next step in the
          * time-marching loop.

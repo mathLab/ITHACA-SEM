@@ -36,14 +36,14 @@
 #ifndef NEKTAR_SOLVERUTILS_FILTERS_FILTERTHRESHOLDMIN_H
 #define NEKTAR_SOLVERUTILS_FILTERS_FILTERTHRESHOLDMIN_H
 
-#include <SolverUtils/Filters/LegacyFilter.h>
+#include <SolverUtils/Filters/Filter.h>
 
 namespace Nektar
 {
 namespace SolverUtils
 {
 
-class FilterThresholdMin : public LegacyFilter
+class FilterThresholdMin : public Filter
 {
 public:
     friend class MemoryManager<FilterThresholdMin>;

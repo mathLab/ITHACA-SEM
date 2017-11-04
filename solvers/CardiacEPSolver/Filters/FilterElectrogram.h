@@ -37,12 +37,12 @@
 #define NEKTAR_SOLVERUTILS_FILTERS_FILTERELECTROGRAM_H
 
 #include <CardiacEPSolver/CellModels/CellModel.h>
-#include <SolverUtils/Filters/LegacyFilter.h>
+#include <SolverUtils/Filters/Filter.h>
 
 namespace Nektar
 {
 
-class FilterElectrogram : public SolverUtils::LegacyFilter
+class FilterElectrogram : public SolverUtils::Filter
 {
 public:
     friend class MemoryManager<FilterElectrogram>;

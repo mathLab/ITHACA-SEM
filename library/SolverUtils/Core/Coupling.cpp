@@ -137,7 +137,7 @@ void Coupling::v_Init()
         CouplingConfigMap::iterator x;
         for (x = m_config.begin(); x != m_config.end(); ++x)
         {
-            cout << "\t" << x->first << " = " << x->second << endl;
+            cout << "\t" << x->first << " = '" << x->second << "'" << endl;
         }
     }
 }

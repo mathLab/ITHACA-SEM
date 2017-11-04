@@ -56,7 +56,7 @@ std::string FilterMovingBody::className = SolverUtils::GetFilterFactory().
 FilterMovingBody::FilterMovingBody(
         const LibUtilities::SessionReaderSharedPtr &pSession,
         const ParamMap &pParams)
-    : LegacyFilter(pSession),
+    : Filter(pSession),
       m_session(pSession)
 {
     // OutputFile

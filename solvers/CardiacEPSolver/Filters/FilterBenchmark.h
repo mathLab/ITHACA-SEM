@@ -36,13 +36,13 @@
 #ifndef NEKTAR_SOLVERUTILS_FILTERS_FILTERBENCHMARK_H
 #define NEKTAR_SOLVERUTILS_FILTERS_FILTERBENCHMARK_H
 
-#include <SolverUtils/Filters/LegacyFilter.h>
+#include <SolverUtils/Filters/Filter.h>
 
 namespace Nektar
 {
 
 /// Records activation and repolarisation times
-class FilterBenchmark : public SolverUtils::LegacyFilter
+class FilterBenchmark : public SolverUtils::Filter
 {
 public:
     friend class MemoryManager<FilterBenchmark>;

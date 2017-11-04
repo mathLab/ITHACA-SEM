@@ -37,7 +37,6 @@
 #include <SolverUtils/EquationSystem.h>
 
 #include <LocalRegions/MatrixKey.h>
-#include <LibUtilities/BasicUtils/ParseUtils.h>
 #include <LibUtilities/BasicUtils/Equation.h>
 #include <MultiRegions/ContField1D.h>
 #include <MultiRegions/ContField2D.h>
@@ -109,17 +108,7 @@ namespace Nektar
                 m_fieldMetaDataMap["ChkFileNum"] =
                         boost::lexical_cast<std::string>(0);
             }
-            m_fieldMetaDataMap["ChkFileNum"] = boost::lexical_cast<std::string>(0);
-            std::ostringstream varNames;
-            std::vector<std::string> vars = m_session->GetVariables();
-            for (std::vector<std::string>::iterator it = vars.begin(); it < vars.end(); ++it)
-            {
-                varNames << *it << ",";
-            }
-            m_fieldMetaDataMap["Variables"] = varNames.str();
-            m_fieldMetaDataMap["NumVariables"] = boost::lexical_cast<std::string>(m_session->GetVariables().size());
-            m_fieldMetaDataMap["AuxVariables"] = "";
-            m_fieldMetaDataMap["NumAuxVariables"] = "0";
+            
         }
         
         /**
@@ -1130,33 +1119,30 @@ namespace Nektar
          */
         void EquationSystem::WriteFld(const std::string &outname)
         {
-            Array<OneD, Array<OneD, NekDouble> > coeffs;
-            Array<OneD, Array<OneD, NekDouble> > phys;
-            Array<OneD, MultiRegions::ExpListSharedPtr> pFields;
-            GetAllFields(m_fieldMetaDataMap, coeffs, phys, pFields);
-
-            std::vector<std::string> variables;
-            std::string allVars = m_fieldMetaDataMap["Variables"] + m_fieldMetaDataMap["AuxVariables"];
-            ParseUtils::GenerateVector(allVars, variables);
-
             std::vector<Array<OneD, NekDouble> > fieldcoeffs(
-                pFields.num_elements());
-            for (int i = 0; i < pFields.num_elements(); ++i)
+                m_fields.num_elements());
+            std::vector<std::string> variables(m_fields.num_elements());
+
+            for (int i = 0; i < m_fields.num_elements(); ++i)
             {
-                if (pFields[i]->GetNcoeffs() == pFields[0]->GetNcoeffs())
+                if (m_fields[i]->GetNcoeffs() == m_fields[0]->GetNcoeffs())
                 {
-                    fieldcoeffs[i] = coeffs[i];
+                    fieldcoeffs[i] = m_fields[i]->UpdateCoeffs();
                 }
                 else
                 {
-                    fieldcoeffs[i] = Array<OneD,NekDouble>(pFields[0]->GetNcoeffs());
-                    pFields[0]->ExtractCoeffsToCoeffs(pFields[i],
-                                                      coeffs[i],
-                                                      fieldcoeffs[i]);
+                    fieldcoeffs[i] = Array<OneD,NekDouble>(m_fields[0]->
+                                                           GetNcoeffs());
+                    m_fields[0]->ExtractCoeffsToCoeffs(m_fields[i],
+                                                       m_fields[i]->GetCoeffs(),
+                                                       fieldcoeffs[i]);
                 }
+                variables[i] = m_boundaryConditions->GetVariable(i);
             }
 
-            WriteFld(outname, pFields[0], fieldcoeffs, variables);
+            v_ExtraFldOutput(fieldcoeffs, variables);
+
+            WriteFld(outname, m_fields[0], fieldcoeffs, variables);
         }
 
 
@@ -1485,49 +1471,10 @@ namespace Nektar
             return null;
         }
 
-        void EquationSystem::v_AuxFields(
+        void EquationSystem::v_ExtraFldOutput(
             std::vector<Array<OneD, NekDouble> > &fieldcoeffs,
-            std::vector<Array<OneD, NekDouble> > &fieldphys,
-            std::vector<MultiRegions::ExpListSharedPtr>        &expansions,
             std::vector<std::string>             &variables)
         {
-        }
-
-
-        void EquationSystem::GetAllFields(
-            LibUtilities::FieldMetaDataMap &fieldMetaDataMap,
-            Array<OneD, Array<OneD, NekDouble> > &coeffs,
-            Array<OneD, Array<OneD, NekDouble> > &phys,
-            Array<OneD, MultiRegions::ExpListSharedPtr> &expansions)
-        {
-            std::vector<Array<OneD, NekDouble> > auxCoeffs;
-            std::vector<Array<OneD, NekDouble> > auxPhys;
-            std::vector<MultiRegions::ExpListSharedPtr> auxExpansions;
-            std::vector<std::string> auxVars;
-            v_AuxFields(auxCoeffs, auxPhys, auxExpansions, auxVars);
-
-            coeffs = Array<OneD, Array<OneD, NekDouble> >(m_fields.num_elements() + auxCoeffs.size());
-            phys = Array<OneD, Array<OneD, NekDouble> >(m_fields.num_elements() + auxPhys.size());
-            expansions = Array<OneD, MultiRegions::ExpListSharedPtr> (m_fields.num_elements() + auxExpansions.size());
-            for (int i = 0; i < m_session->GetVariables().size(); ++i)
-            {
-                coeffs[i] = m_fields[i]->UpdateCoeffs();
-                phys[i]   = m_fields[i]->UpdatePhys();
-                expansions[i] = m_fields[i];
-            }
-            for (int i = 0; i < auxVars.size(); ++i)
-            {
-                coeffs[m_session->GetVariables().size() + i] = auxCoeffs[i];
-                phys[m_session->GetVariables().size() + i]   = auxPhys[i];
-                expansions[m_session->GetVariables().size() + i] = auxExpansions[i];
-            }
-
-            std::ostringstream varNames;
-            for (std::vector<std::string>::iterator it = auxVars.begin(); it < auxVars.end(); ++it)
-            {
-                varNames << *it << ",";
-            }
-            fieldMetaDataMap["AuxVariables"] = varNames.str();
         }
 
     }

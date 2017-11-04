@@ -104,11 +104,8 @@ class APE : public AdvectionSystem
 
         virtual Array<OneD, NekDouble> v_GetMaxStdVelocity();
 
-        virtual void v_AuxFields(
-                std::vector<Array<OneD, NekDouble> > &fieldcoeffs,
-                std::vector<Array<OneD, NekDouble> > &fieldphys,
-                std::vector<MultiRegions::ExpListSharedPtr> &expansions,
-                std::vector<std::string> &variables);
+        virtual void v_ExtraFldOutput(std::vector<Array<OneD, NekDouble> > &fieldcoeffs,
+                                      std::vector<std::string>             &variables);
 
         const Array<OneD, const Array<OneD, NekDouble> > &GetNormals();
 

@@ -71,12 +71,12 @@ protected:
     virtual void v_Send(const int step,
                         const NekDouble time,
                         const Array<OneD, const Array<OneD, NekDouble> > &field,
-                        LibUtilities::FieldMetaDataMap &fieldMetaDataMap);
+                        vector<string> &varNames);
 
     virtual void v_Receive(const int step,
                            const NekDouble time,
                            Array<OneD, Array<OneD, NekDouble> > &field,
-                           LibUtilities::FieldMetaDataMap &fieldMetaDataMap);
+                           vector<string> &varNames);
 
 private:
     int m_lastSend;

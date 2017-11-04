@@ -91,17 +91,17 @@ public:
     inline void Send(const int step,
                      const NekDouble time,
                      const Array<OneD, const Array<OneD, NekDouble> > &field,
-                     LibUtilities::FieldMetaDataMap &fieldMetaDataMap)
+                     vector<string> &varNames)
     {
-        v_Send(step, time, field, fieldMetaDataMap);
+        v_Send(step, time, field, varNames);
     };
 
     inline void Receive(const int step,
                         const NekDouble time,
                         Array<OneD, Array<OneD, NekDouble> > &field,
-                        LibUtilities::FieldMetaDataMap &fieldMetaDataMap)
+                        vector<string> &varNames)
     {
-        v_Receive(step, time, field, fieldMetaDataMap);
+        v_Receive(step, time, field, varNames);
     };
 
 protected:
@@ -126,13 +126,13 @@ protected:
     virtual void v_Send(const int step,
                         const NekDouble time,
                         const Array<OneD, const Array<OneD, NekDouble> > &field,
-                        LibUtilities::FieldMetaDataMap &fieldMetaDataMap) = 0;
+                        vector<string> &varNames) = 0;
 
     virtual void v_Receive(
         const int step,
         const NekDouble time,
         Array<OneD, Array<OneD, NekDouble> > &field,
-        LibUtilities::FieldMetaDataMap &fieldMetaDataMap) = 0;
+        vector<string> &varNames) = 0;
 
     virtual void v_Finalize()
     {

@@ -54,7 +54,7 @@ std::string FilterEnergy1D::className = GetFilterFactory().
 FilterEnergy1D::FilterEnergy1D(
     const LibUtilities::SessionReaderSharedPtr &pSession,
     const ParamMap &pParams) :
-    LegacyFilter(pSession),
+    Filter(pSession),
     m_index(0)
 {
     ASSERTL0(pSession->GetComm()->GetSize() == 1,

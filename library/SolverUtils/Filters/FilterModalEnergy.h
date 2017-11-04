@@ -36,7 +36,7 @@
 #ifndef NEKTAR_SOLVERUTILS_FILTERS_FILTERMODALENERGY_H
 #define NEKTAR_SOLVERUTILS_FILTERS_FILTERMODALENERGY_H
 
-#include <SolverUtils/Filters/LegacyFilter.h>
+#include <SolverUtils/Filters/Filter.h>
 #include <LibUtilities/BasicUtils/Equation.h>
 #include <MultiRegions/ContField1D.h>
 #include <MultiRegions/ContField2D.h>
@@ -54,7 +54,7 @@ namespace Nektar
 {
 namespace SolverUtils
 {
-class FilterModalEnergy : public LegacyFilter
+class FilterModalEnergy : public Filter
 {
 public:
     friend class MemoryManager<FilterModalEnergy>;

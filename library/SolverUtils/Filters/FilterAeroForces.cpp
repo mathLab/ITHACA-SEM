@@ -61,7 +61,7 @@ std::string FilterAeroForces::className =
 FilterAeroForces::FilterAeroForces(
     const LibUtilities::SessionReaderSharedPtr &pSession,
     const ParamMap &pParams) :
-    LegacyFilter(pSession)
+    Filter(pSession)
 {
     // OutputFile
     auto it = pParams.find("OutputFile");

@@ -35,7 +35,6 @@
 
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 #include <iomanip>
-#include <LibUtilities/BasicUtils/ParseUtils.h>
 #include <SolverUtils/Filters/FilterHistoryPoints.h>
 #include <MultiRegions/ExpList3DHomogeneous1D.h>
 
@@ -135,10 +134,8 @@ FilterHistoryPoints::~FilterHistoryPoints()
  *
  */
 void FilterHistoryPoints::v_Initialise(
-        const LibUtilities::FieldMetaDataMap &fieldMetaDataMap,
-        const Array<OneD, const Array<OneD, NekDouble > > &coeffs,
-        const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
-        const NekDouble &time)
+    const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
+    const NekDouble &time)
 {
     ASSERTL0(!m_historyPointStream.fail(),
              "No history points in stream.");
@@ -388,14 +385,9 @@ void FilterHistoryPoints::v_Initialise(
         }
         m_outputStream << "# History data for variables (:";
 
-        std::vector<std::string> variables;
-        LibUtilities::FieldMetaDataMap tmp = fieldMetaDataMap;
-        std::string allVars = tmp["Variables"] + tmp["AuxVariables"];
-        ParseUtils::GenerateVector(allVars, variables);
-
-        for (i = 0; i < variables.size(); ++i)
+        for (i = 0; i < pFields.num_elements(); ++i)
         {
-            m_outputStream << variables[i] <<",";
+            m_outputStream << m_session->GetVariable(i) <<",";
         }
 
         if(m_isHomogeneous1D)
@@ -428,18 +420,14 @@ void FilterHistoryPoints::v_Initialise(
             }
         }
     }
-    v_Update(fieldMetaDataMap, coeffs, pFields, time);
+    v_Update(pFields, time);
 }
 
 
 /**
  *
  */
-void FilterHistoryPoints::v_Update(
-        const LibUtilities::FieldMetaDataMap &fieldMetaDataMap,
-        const Array<OneD, const Array<OneD, NekDouble > > &coeffs,
-        const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
-        const NekDouble &time)
+void FilterHistoryPoints::v_Update(const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, const NekDouble &time)
 {
     // Only output every m_outputFrequency.
     if ((m_index++) % m_outputFrequency)
@@ -447,15 +435,10 @@ void FilterHistoryPoints::v_Update(
         return;
     }
 
-    std::vector<std::string> variables;
-    LibUtilities::FieldMetaDataMap tmp = fieldMetaDataMap;
-    std::string allVars = tmp["Variables"] + tmp["AuxVariables"];
-    ParseUtils::GenerateVector(allVars, variables);
-
     int j         = 0;
     int k         = 0;
     int numPoints = m_historyPoints.size();
-    int numFields = variables.size();
+    int numFields = pFields.num_elements();
     LibUtilities::CommSharedPtr vComm = pFields[0]->GetComm();
     Array<OneD, NekDouble> data(numPoints*numFields, 0.0);
     Array<OneD, NekDouble> physvals;
@@ -484,6 +467,9 @@ void FilterHistoryPoints::v_Update(
                 {
                     if (plane != -1)
                     {
+                        physvals = pFields[j]->GetPlane(plane)->
+                                   UpdatePhys() + pFields[j]->GetPhys_Offset(expId);
+
                         // transform elemental data if required.
                         if(pFields[j]->GetPhysState() == false)
                         {
@@ -569,8 +555,13 @@ void FilterHistoryPoints::v_Update(
                 locCoord = x.second;
                 expId    = x.first->GetVid();
 
-                physvals = Array<OneD, NekDouble>(pFields[j]->GetTotPoints(), 0.0);
-                pFields[j]->GetExp(expId)->BwdTrans(coeffs[j] + pFields[j]->GetCoeff_Offset(expId),physvals);
+                physvals = pFields[j]->UpdatePhys() + pFields[j]->GetPhys_Offset(expId);
+
+                // transform elemental data if required.
+                if(pFields[j]->GetPhysState() == false)
+                {
+                    pFields[j]->GetExp(expId)->BwdTrans(pFields[j]->GetCoeffs() + pFields[j]->GetCoeff_Offset(expId),physvals);
+                }
 
                 // interpolate point
                 data[m_historyLocalPointMap[k]*numFields+j] = pFields[j]->GetExp(expId)->StdPhysEvaluate(locCoord,physvals);
@@ -604,13 +595,8 @@ void FilterHistoryPoints::v_Update(
 /**
  *
  */
-void FilterHistoryPoints::v_Finalise(
-        const LibUtilities::FieldMetaDataMap &fieldMetaDataMap,
-        const Array<OneD, const Array<OneD, NekDouble > > &coeffs,
-        const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
-        const NekDouble &time)
+void FilterHistoryPoints::v_Finalise(const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, const NekDouble &time)
 {
-
     if (pFields[0]->GetComm()->GetRank() == 0)
     {
         m_outputStream.close();

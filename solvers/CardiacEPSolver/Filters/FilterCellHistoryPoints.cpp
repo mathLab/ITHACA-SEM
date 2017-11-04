@@ -70,10 +70,8 @@ FilterCellHistoryPoints::~FilterCellHistoryPoints()
  *
  */
 void FilterCellHistoryPoints::v_Update(
-            const LibUtilities::FieldMetaDataMap &fieldMetaDataMap,
-            const Array<OneD, const Array<OneD, NekDouble > > &coeffs,
-            const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
-            const NekDouble &time)
+        const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
+        const NekDouble &time)
 {
     // Only output every m_outputFrequency.
     if ((m_index++) % m_outputFrequency)

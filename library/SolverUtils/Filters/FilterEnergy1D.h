@@ -36,7 +36,7 @@
 #ifndef NEKTAR_SOLVERUTILS_FILTERS_FILTERENERGY1D_H
 #define NEKTAR_SOLVERUTILS_FILTERS_FILTERENERGY1D_H
 
-#include <SolverUtils/Filters/LegacyFilter.h>
+#include <SolverUtils/Filters/Filter.h>
 
 namespace Nektar
 {
@@ -50,7 +50,7 @@ namespace SolverUtils
  * can be used to, for example, detect high-order oscillations in the
  * solution field.
  */
-class FilterEnergy1D : public LegacyFilter
+class FilterEnergy1D : public Filter
 {
 public:
     friend class MemoryManager<FilterEnergy1D>;

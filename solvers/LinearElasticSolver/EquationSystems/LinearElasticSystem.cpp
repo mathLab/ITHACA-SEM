@@ -908,10 +908,9 @@ DNekMatSharedPtr LinearElasticSystem::BuildLaplacianIJMatrix(
     return ret;
 }
 
-void LinearElasticSystem::v_AuxFields(
-        std::vector<Array<OneD, NekDouble> > &fieldcoeffs,
-        std::vector<MultiRegions::ExpListSharedPtr> &expansions,
-        std::vector<std::string> &variables)
+void LinearElasticSystem::v_ExtraFldOutput(
+    std::vector<Array<OneD, NekDouble> > &fieldcoeffs,
+    std::vector<std::string>             &variables)
 {
     const int nVel    = m_fields[0]->GetCoordim(0);
     const int nCoeffs = m_fields[0]->GetNcoeffs();
@@ -926,7 +925,6 @@ void LinearElasticSystem::v_AuxFields(
         Array<OneD, NekDouble> tFwd(nCoeffs);
         m_fields[i]->FwdTrans(m_temperature[i], tFwd);
         fieldcoeffs.push_back(tFwd);
-        expansions.push_back(m_fields[i]);
         variables.push_back(
             "ThermStressDiv" + boost::lexical_cast<std::string>(i));
     }
@@ -943,7 +941,6 @@ void LinearElasticSystem::v_AuxFields(
             Array<OneD, NekDouble> tFwd(nCoeffs);
             m_fields[i]->FwdTrans(m_stress[i][j], tFwd);
             fieldcoeffs.push_back(tFwd);
-            expansions.push_back(m_fields[i]);
             variables.push_back(
                 "ThermStress"
                 + boost::lexical_cast<std::string>(i)

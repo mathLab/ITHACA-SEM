@@ -49,8 +49,6 @@
 #include <MultiRegions/ExpList.h>
 #include <SolverUtils/SolverUtilsDeclspec.h>
 #include <SolverUtils/Core/Misc.h>
-#include <SolverUtils/Core/SessionFunction.h>
-#include <SolverUtils/Core/Coupling.h>
 
 namespace Nektar
 {
@@ -388,7 +386,6 @@ class Interpolator;
             Array<OneD, bool>                           m_checkIfSystemSingular;
             /// Map to identify relevant solver info to dump in output fields
             LibUtilities::FieldMetaDataMap              m_fieldMetaDataMap;
-            /// External tool connector
 
             /// Number of Quadrature points used to work out the error
             int  m_NumQuadPointsError;
@@ -462,22 +459,9 @@ class Interpolator;
             // Get pressure field if available
             SOLVER_UTILS_EXPORT virtual MultiRegions::ExpListSharedPtr v_GetPressure(void); 
 
-            SOLVER_UTILS_EXPORT virtual void v_AuxFields(
+            SOLVER_UTILS_EXPORT virtual void v_ExtraFldOutput(
                 std::vector<Array<OneD, NekDouble> > &fieldcoeffs,
-                std::vector<Array<OneD, NekDouble> > &fieldphys,
-                std::vector<MultiRegions::ExpListSharedPtr>        &expansions,
                 std::vector<std::string>             &variables);
-
-            SOLVER_UTILS_EXPORT void GetAllFields(
-                LibUtilities::FieldMetaDataMap &fieldMetaDataMap,
-                Array<OneD, Array<OneD, NekDouble> > &coeffs,
-                Array<OneD, Array<OneD, NekDouble> > &phys,
-                Array<OneD, MultiRegions::ExpListSharedPtr> &expansions);
-
-            SOLVER_UTILS_EXPORT void SendFields(int step);
-
-            SOLVER_UTILS_EXPORT void ReceiveFields(int step);
-
             
         private:
             

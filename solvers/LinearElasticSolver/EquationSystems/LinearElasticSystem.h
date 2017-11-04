@@ -111,10 +111,9 @@ protected:
     virtual void v_InitObject();
     virtual void v_GenerateSummary(SolverUtils::SummaryList& s);
     virtual void v_DoSolve();
-    virtual void v_AuxFields(
+    virtual void v_ExtraFldOutput(
         std::vector<Array<OneD, NekDouble> > &fieldcoeffs,
-        std::vector<MultiRegions::ExpListSharedPtr> &expansions,
-        std::vector<std::string> &variables);
+        std::vector<std::string>             &variables);
 };
 
 }

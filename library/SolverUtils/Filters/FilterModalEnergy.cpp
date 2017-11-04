@@ -53,7 +53,7 @@ std::string FilterModalEnergy::className = GetFilterFactory().
 FilterModalEnergy::FilterModalEnergy(
     const LibUtilities::SessionReaderSharedPtr &pSession,
     const ParamMap &pParams) :
-    LegacyFilter(pSession)
+    Filter(pSession)
 {
     // OutputFile
     auto it = pParams.find("OutputFile");

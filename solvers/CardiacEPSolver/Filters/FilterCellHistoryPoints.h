@@ -72,8 +72,6 @@ class FilterCellHistoryPoints : public SolverUtils::FilterHistoryPoints
 
     protected:
         virtual void v_Update(
-            const LibUtilities::FieldMetaDataMap &fieldMetaDataMap,
-            const Array<OneD, const Array<OneD, NekDouble > > &coeffs,
             const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
             const NekDouble &time);
 

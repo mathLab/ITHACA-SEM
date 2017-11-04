@@ -37,12 +37,12 @@
 #define NEKTAR_SOLVERUTILS_FILTERS_FILTERCHECKPOINTCELLMODEL_H
 
 #include <CardiacEPSolver/CellModels/CellModel.h>
-#include <SolverUtils/Filters/LegacyFilter.h>
+#include <SolverUtils/Filters/Filter.h>
 
 namespace Nektar
 {
 
-class FilterCheckpointCellModel : public SolverUtils::LegacyFilter
+class FilterCheckpointCellModel : public SolverUtils::Filter
 {
 public:
     friend class MemoryManager<FilterCheckpointCellModel>;

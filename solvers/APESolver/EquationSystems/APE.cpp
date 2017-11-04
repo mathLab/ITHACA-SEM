@@ -542,16 +542,12 @@ Array<OneD, NekDouble> APE::v_GetMaxStdVelocity(void)
 }
 
 
-void APE::v_AuxFields(
-        std::vector<Array<OneD, NekDouble> > &fieldcoeffs,
-        std::vector<Array<OneD, NekDouble> > &fieldphys,
-        std::vector<MultiRegions::ExpListSharedPtr> &expansions,
-        std::vector<std::string> &variables)
+void APE::v_ExtraFldOutput(
+    std::vector<Array<OneD, NekDouble> > &fieldcoeffs,
+    std::vector<std::string>             &variables)
 {
     for (int i = 0; i < m_spacedim + 2; i++)
     {
-        fieldphys.push_back(m_bf[i]);
-
         Array<OneD, NekDouble> tmpC(GetNcoeffs());
 
         // ensure the field is C0-continuous
@@ -559,11 +555,9 @@ void APE::v_AuxFields(
         m_bfField->MultiplyByElmtInvMass(tmpC, tmpC);
         m_bfField->LocalToGlobal(tmpC, tmpC);
         m_bfField->GlobalToLocal(tmpC, tmpC);
-        fieldcoeffs.push_back(tmpC);
 
         variables.push_back(m_bfNames[i]);
-
-        expansions.push_back(m_bfField);
+        fieldcoeffs.push_back(tmpC);
     }
 
     int f = 0;
@@ -571,8 +565,6 @@ void APE::v_AuxFields(
     {
         for (int i = 0; i < x->GetForces().num_elements(); ++i)
         {
-            fieldphys.push_back(x->GetForces()[i]);
-
             Array<OneD, NekDouble> tmpC(GetNcoeffs());
 
             m_bfField->IProductWRTBase(x->GetForces()[i], tmpC);
@@ -580,16 +572,12 @@ void APE::v_AuxFields(
             m_bfField->LocalToGlobal(tmpC, tmpC);
             m_bfField->GlobalToLocal(tmpC, tmpC);
 
-            fieldcoeffs.push_back(tmpC);
-
             variables.push_back("F_" + boost::lexical_cast<string>(f) +
                                 "_" + m_session->GetVariable(i));
-
-            expansions.push_back(m_bfField);
+            fieldcoeffs.push_back(tmpC);
         }
         f++;
     }
-
 }
 
 

@@ -61,18 +61,23 @@ void Dummy::v_InitObject()
 
     m_nanSteps = 0;
 
-    auto sV = m_session->GetVariables();
-    for (auto const &sendVar : m_coupling->GetSendFieldNames())
-    {
-        int i = distance(sV.begin(), find(sV.begin(), sV.end(), sendVar));
-        m_intVariables.push_back(i);
-    }
+
 
     m_ode.DefineOdeRhs(&Dummy::DoOdeRhs, this);
     m_ode.DefineProjection(&Dummy::DoOdeProjection, this);
 
     ASSERTL0(m_session->DefinesCmdLineArgument("cwipi"),
              "This EquationSystem requires the --cwipi command line switch");
+
+    if (m_coupling)
+    {
+        auto sV = m_session->GetVariables();
+        for (auto const &sendVar : m_coupling->GetSendFieldNames())
+        {
+            int i = distance(sV.begin(), find(sV.begin(), sV.end(), sendVar));
+            m_intVariables.push_back(i);
+        }
+    }
 }
 
 /**

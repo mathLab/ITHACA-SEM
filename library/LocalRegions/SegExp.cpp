@@ -889,7 +889,7 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
                         LibUtilities::eGaussGaussLegendre);
                     LibUtilities::PointsKey t0(
                         m_base[0]->GetNumModes(),
-                        LibUtilities::eGaussLobattoLegendre);
+                        LibUtilities::eGaussGaussLegendre);
                     LibUtilities::Interp1D(
                         f0,data, t0, coeffs);
                 }

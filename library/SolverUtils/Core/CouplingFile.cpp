@@ -66,7 +66,7 @@ void CouplingFile::v_Init()
 {
     Coupling::v_Init();
 
-    if (m_nSendVars > 0 and m_sendSteps > 0)
+    if (m_nRecvVars > 0 and m_recvSteps > 0)
     {
         m_inputFunction = MemoryManager<SessionFunction>::AllocateSharedPtr(
             m_evalField->GetSession(), m_evalField, m_config["RECEIVEFUNCTION"], true);
@@ -158,15 +158,6 @@ void CouplingFile::v_Receive(const int step,
                 << endl;
     }
 
-    Array<OneD, Array<OneD, NekDouble> > recvFields(m_nRecvVars);
-    vector<int> recvVarsToVars =
-        GenerateVariableMapping(varNames, m_recvFieldNames);
-    ASSERTL1(m_nRecvVars == recvVarsToVars.size(), "field size mismatch");
-    for (int i = 0; i < recvVarsToVars.size(); ++i)
-    {
-        recvFields[i] = field[recvVarsToVars[i]];
-    }
-
     string filename = m_evalField->GetSession()->GetFunctionFilename(m_config["RECEIVEFUNCTION"], m_recvFieldNames[0]);
 
 #ifdef _WIN32
@@ -188,7 +179,16 @@ void CouplingFile::v_Receive(const int step,
         m_evalField->GetComm()->AllReduce(exists, LibUtilities::ReduceMin);
     }
 
+    Array<OneD, Array<OneD, NekDouble> > recvFields(m_nRecvVars);
     m_inputFunction->Evaluate(m_recvFieldNames, recvFields, time);
+
+    vector<int> recvVarsToVars =
+        GenerateVariableMapping(varNames, m_recvFieldNames);
+    ASSERTL1(m_nRecvVars == recvVarsToVars.size(), "field size mismatch");
+    for (int i = 0; i < recvVarsToVars.size(); ++i)
+    {
+        Vmath::Vcopy(recvFields[i].num_elements(), recvFields[i], 1, field[recvVarsToVars[i]], 1);
+    }
 }
 
 }

@@ -105,7 +105,7 @@ void CouplingFile::v_Send(
     // two digits in the exponents of Scientific notation.
     unsigned int old_exponent_format;
     old_exponent_format = _set_output_format(_TWO_DIGIT_EXPONENT);
-    filename = boost::str(boost::format(m_config["SENDFILENAME"]) % m_time);
+    std::string filename = boost::str(boost::format(m_config["SENDFILENAME"]) % m_time);
     _set_output_format(old_exponent_format);
 #else
     std::string filename =
@@ -128,7 +128,11 @@ void CouplingFile::v_Send(
     LibUtilities::PtsFieldSharedPtr sPts =
         MemoryManager<LibUtilities::PtsField>::AllocateSharedPtr(
             3, m_sendFieldNames, pts);
-    ptsIO.Write(filename, sPts);
+    // we first write to a temp file and rename this to make sure the
+    // receiver doesnt try to read it before we finished writing
+    string tmpFn = filename + ".tmp";
+    ptsIO.Write(tmpFn, sPts);
+    fs::rename(tmpFn, filename);
 }
 
 void CouplingFile::v_Receive(const int step,
@@ -161,6 +165,27 @@ void CouplingFile::v_Receive(const int step,
     for (int i = 0; i < recvVarsToVars.size(); ++i)
     {
         recvFields[i] = field[recvVarsToVars[i]];
+    }
+
+    string filename = m_evalField->GetSession()->GetFunctionFilename(m_config["RECEIVEFUNCTION"], m_recvFieldNames[0]);
+
+#ifdef _WIN32
+    // We need this to make sure boost::format has always
+    // two digits in the exponents of Scientific notation.
+    unsigned int old_exponent_format;
+    old_exponent_format = _set_output_format(_TWO_DIGIT_EXPONENT);
+    filename = boost::str(boost::format(filename) % m_time);
+    _set_output_format(old_exponent_format);
+#else
+    filename =
+        boost::str(boost::format(filename) % time);
+#endif
+
+    int exists = 0;
+    while (! exists)
+    {
+        exists = fs::exists(filename);
+        m_evalField->GetComm()->AllReduce(exists, LibUtilities::ReduceMin);
     }
 
     m_inputFunction->Evaluate(m_recvFieldNames, recvFields, time);

@@ -53,7 +53,7 @@ public:
     static std::string className;
 
     /// Creates an instance of this class
-    static CouplingSharedPointer create(MultiRegions::ExpListSharedPtr field)
+    SOLVER_UTILS_EXPORT static CouplingSharedPointer create(MultiRegions::ExpListSharedPtr field)
     {
         CouplingSharedPointer p =
             MemoryManager<CouplingFile>::AllocateSharedPtr(field);
@@ -61,19 +61,19 @@ public:
         return p;
     }
 
-    CouplingFile(MultiRegions::ExpListSharedPtr field);
+    SOLVER_UTILS_EXPORT CouplingFile(MultiRegions::ExpListSharedPtr field);
 
-    ~CouplingFile();
+    SOLVER_UTILS_EXPORT virtual ~CouplingFile();
 
 protected:
-    virtual void v_Init();
+    SOLVER_UTILS_EXPORT virtual void v_Init();
 
-    virtual void v_Send(const int step,
+    SOLVER_UTILS_EXPORT virtual void v_Send(const int step,
                         const NekDouble time,
                         const Array<OneD, const Array<OneD, NekDouble> > &field,
                         vector<string> &varNames);
 
-    virtual void v_Receive(const int step,
+    SOLVER_UTILS_EXPORT virtual void v_Receive(const int step,
                            const NekDouble time,
                            Array<OneD, Array<OneD, NekDouble> > &field,
                            vector<string> &varNames);

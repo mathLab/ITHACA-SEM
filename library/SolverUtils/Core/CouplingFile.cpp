@@ -66,7 +66,7 @@ void CouplingFile::v_Init()
 {
     Coupling::v_Init();
 
-    if (m_nRecvVars > 0 and m_recvSteps > 0)
+    if (m_nRecvVars > 0 && m_recvSteps > 0)
     {
         m_inputFunction = MemoryManager<SessionFunction>::AllocateSharedPtr(
             m_evalField->GetSession(), m_evalField, m_config["RECEIVEFUNCTION"], true);

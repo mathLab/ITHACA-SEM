@@ -36,6 +36,7 @@
 
 #include <FieldUtils/Interpolator.h>
 #include <MultiRegions/ExpList.h>
+#include <SolverUtils/SolverUtilsDeclspec.h>
 
 namespace Nektar
 {
@@ -61,34 +62,34 @@ class Coupling
 public:
     typedef std::map<std::string, std::string> CouplingConfigMap;
 
-    virtual ~Coupling(){};
+    SOLVER_UTILS_EXPORT virtual ~Coupling(){};
 
-    inline void Init()
+    SOLVER_UTILS_EXPORT inline void Init()
     {
         v_Init();
     };
 
-    inline const std::map<std::string, std::string> GetConfig()
+    SOLVER_UTILS_EXPORT inline const std::map<std::string, std::string> GetConfig()
     {
         return m_config;
     }
 
-    inline std::vector<std::string> GetSendFieldNames()
+    SOLVER_UTILS_EXPORT inline std::vector<std::string> GetSendFieldNames()
     {
         return m_sendFieldNames;
     }
 
-    inline std::vector<std::string> GetRecvFieldNames()
+    SOLVER_UTILS_EXPORT inline std::vector<std::string> GetRecvFieldNames()
     {
         return m_recvFieldNames;
     }
 
-    inline void Finalize()
+    SOLVER_UTILS_EXPORT inline void Finalize()
     {
         v_Finalize();
     };
 
-    inline void Send(const int step,
+    SOLVER_UTILS_EXPORT inline void Send(const int step,
                      const NekDouble time,
                      const Array<OneD, const Array<OneD, NekDouble> > &field,
                      vector<string> &varNames)
@@ -96,7 +97,7 @@ public:
         v_Send(step, time, field, varNames);
     };
 
-    inline void Receive(const int step,
+    SOLVER_UTILS_EXPORT inline void Receive(const int step,
                         const NekDouble time,
                         Array<OneD, Array<OneD, NekDouble> > &field,
                         vector<string> &varNames)
@@ -119,26 +120,26 @@ protected:
     std::vector<std::string> m_recvFieldNames;
     int m_recvSteps;
 
-    Coupling(MultiRegions::ExpListSharedPtr field);
+    SOLVER_UTILS_EXPORT Coupling(MultiRegions::ExpListSharedPtr field);
 
-    virtual void v_Init();
+    SOLVER_UTILS_EXPORT virtual void v_Init();
 
-    virtual void v_Send(const int step,
+    SOLVER_UTILS_EXPORT virtual void v_Send(const int step,
                         const NekDouble time,
                         const Array<OneD, const Array<OneD, NekDouble> > &field,
                         vector<string> &varNames) = 0;
 
-    virtual void v_Receive(
+    SOLVER_UTILS_EXPORT virtual void v_Receive(
         const int step,
         const NekDouble time,
         Array<OneD, Array<OneD, NekDouble> > &field,
         vector<string> &varNames) = 0;
 
-    virtual void v_Finalize()
+    SOLVER_UTILS_EXPORT virtual void v_Finalize()
     {
     };
 
-    std::vector<int> GenerateVariableMapping(std::vector<std::string> &vars, std::vector<std::string> &transVars);
+    SOLVER_UTILS_EXPORT std::vector<int> GenerateVariableMapping(std::vector<std::string> &vars, std::vector<std::string> &transVars);
 
 };
 }

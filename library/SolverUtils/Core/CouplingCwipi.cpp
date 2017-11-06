@@ -186,7 +186,7 @@ void CouplingCwipi::v_Init()
 
     AnnounceMesh();
 
-    if (m_nRecvVars > 0 and m_recvSteps > 0)
+    if (m_nRecvVars > 0 && m_recvSteps > 0)
     {
         SetupReceive();
     }
@@ -198,12 +198,12 @@ void CouplingCwipi::v_Init()
     }
     cwipi_locate(m_couplingName.c_str());
 
-    if (m_nSendVars > 0 and m_sendSteps > 0)
+    if (m_nSendVars > 0 && m_sendSteps > 0)
     {
         SetupSend();
     }
 
-    if (m_nRecvVars > 0 and m_recvSteps > 0)
+    if (m_nRecvVars > 0 && m_recvSteps > 0)
     {
         ReceiveStart();
     }
@@ -357,7 +357,7 @@ void CouplingCwipi::EvaluateFields(
         // Obtain Element and LocalCoordinate to interpolate
         int elmtid    = -1;
         NekDouble tol = NekConstants::kNekZeroTol;
-        while (elmtid < 0 and tol <= 1E3 * NekConstants::kNekZeroTol)
+        while (elmtid < 0 && tol <= 1E3 * NekConstants::kNekZeroTol)
         {
             elmtid = m_evalField->GetExpIndex(distCoords[i], Lcoords, tol);
             tol *= 2;
@@ -580,7 +580,7 @@ void CouplingCwipi::SendCallback(
         boost::to_upper_copy(m_config["SENDMETHOD"]) == "SHEPARD"
     )
     {
-        if (not m_sendInterpolator)
+        if (! m_sendInterpolator)
         {
             SetupSendInterpolation();
         }
@@ -1025,7 +1025,7 @@ void CouplingCwipi::ExtrapolateFields(
 
         // perform a nearest neighbour interpolation from locatedVals to the not
         // located rVals
-        if (not m_extrapInterpolator)
+        if (! m_extrapInterpolator)
         {
             m_extrapInterpolator =
                 MemoryManager<FieldUtils::Interpolator>::AllocateSharedPtr(

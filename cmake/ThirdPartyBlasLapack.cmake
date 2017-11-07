@@ -40,16 +40,17 @@ ELSE()
     INCLUDE(FindBlasLapack)
 
     IF(LAPACK_FOUND)
+        MESSAGE(STATUS "Found BLAS and LAPACK: ${BLAS_LAPACK}")
         SET(BUILD_BLAS_LAPACK OFF)
     ELSE()
         IF(CMAKE_Fortran_COMPILER)
             SET(BUILD_BLAS_LAPACK ON)
         ELSE()
-            MESSAGE(SEND_ERROR "No blas/lapack installation found and cannot self build")
+            MESSAGE(SEND_ERROR "No BLAS/LAPACK installation found and cannot self build")
         ENDIF()
     ENDIF()
 
-    OPTION(THIRDPARTY_BUILD_BLAS_LAPACK "Build blas and lapack libraries from ThirdParty."
+    OPTION(THIRDPARTY_BUILD_BLAS_LAPACK "Build BLAS and LAPACK libraries from ThirdParty."
         ${BUILD_BLAS_LAPACK})
 
     IF(THIRDPARTY_BUILD_BLAS_LAPACK)
@@ -76,14 +77,7 @@ ELSE()
             ${TPSRC}/lapack-3.7.0
             )
 
-        THIRDPARTY_LIBRARY(BLAS_LIB STATIC blas DESCRIPTION "blas")
-        THIRDPARTY_LIBRARY(LAPACK_LIB STATIC lapack DESCRIPTION "lapack")
-        SET(BLAS_LAPACK ${BLAS_LIB} ${LAPACK_LIB})
-
-        IF (WIN32)
-            MESSAGE(STATUS "Build blas/lapack: ${BLAS_LAPACK}")
-        ELSE ()
-            MESSAGE(STATUS "Build blas/lapack: ${BLAS_LAPACK}")
-        ENDIF()
+        THIRDPARTY_LIBRARY(BLAS_LAPACK SHARED blas lapack DESCRIPTION "BLAS and LAPACK libraries")
+        MESSAGE(STATUS "Build BLAS/LAPACK: ${BLAS_LAPACK}")
     ENDIF()
 ENDIF()

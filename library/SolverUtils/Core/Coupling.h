@@ -45,16 +45,16 @@ namespace SolverUtils
 
 class Coupling;
 
-typedef std::shared_ptr<Coupling> CouplingSharedPointer;
+SOLVER_UTILS_EXPORT typedef std::shared_ptr<Coupling> CouplingSharedPointer;
 
 /// Declaration of the Coupling factory
-typedef LibUtilities::NekFactory<std::string,
+SOLVER_UTILS_EXPORT typedef LibUtilities::NekFactory<std::string,
                                  Coupling,
                                  MultiRegions::ExpListSharedPtr>
     CouplingFactory;
 
 /// Declaration of the Coupling factory singleton
-CouplingFactory &GetCouplingFactory();
+SOLVER_UTILS_EXPORT CouplingFactory &GetCouplingFactory();
 
 class Coupling
 {

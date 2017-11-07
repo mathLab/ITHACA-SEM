@@ -79,7 +79,7 @@ void CouplingFile::v_Send(
     const Array<OneD, const Array<OneD, NekDouble> > &field,
     vector<string> &varNames)
 {
-    if (m_nSendVars < 1 or m_sendSteps < 1)
+    if (m_nSendVars < 1 || m_sendSteps < 1)
     {
         return;
     }
@@ -105,7 +105,7 @@ void CouplingFile::v_Send(
     // two digits in the exponents of Scientific notation.
     unsigned int old_exponent_format;
     old_exponent_format = _set_output_format(_TWO_DIGIT_EXPONENT);
-    std::string filename = boost::str(boost::format(m_config["SENDFILENAME"]) % m_time);
+    std::string filename = boost::str(boost::format(m_config["SENDFILENAME"]) % time);
     _set_output_format(old_exponent_format);
 #else
     std::string filename =
@@ -140,7 +140,7 @@ void CouplingFile::v_Receive(const int step,
                              Array<OneD, Array<OneD, NekDouble> > &field,
                              vector<string> &varNames)
 {
-    if (m_nRecvVars < 1 or m_recvSteps < 1)
+    if (m_nRecvVars < 1 || m_recvSteps < 1)
     {
         return;
     }
@@ -165,7 +165,7 @@ void CouplingFile::v_Receive(const int step,
     // two digits in the exponents of Scientific notation.
     unsigned int old_exponent_format;
     old_exponent_format = _set_output_format(_TWO_DIGIT_EXPONENT);
-    filename = boost::str(boost::format(filename) % m_time);
+    filename = boost::str(boost::format(filename) % time);
     _set_output_format(old_exponent_format);
 #else
     filename =

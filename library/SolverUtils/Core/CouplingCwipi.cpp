@@ -605,7 +605,7 @@ void CouplingCwipi::v_Send(
     const Array<OneD, const Array<OneD, NekDouble> > &field,
     vector<string> &varNames)
 {
-    if (m_nSendVars < 1 or m_sendSteps < 1)
+    if (m_nSendVars < 1 || m_sendSteps < 1)
     {
         return;
     }
@@ -716,7 +716,7 @@ void CouplingCwipi::v_Receive(const int step,
                                   Array<OneD, Array<OneD, NekDouble> > &field,
                                   vector<string> &varNames)
 {
-    if (m_nRecvVars < 1 or m_recvSteps < 1)
+    if (m_nRecvVars < 1 || m_recvSteps < 1)
     {
         return;
     }
@@ -774,7 +774,7 @@ void CouplingCwipi::ReceiveCwipi(const int step,
 {
     ASSERTL1(m_nRecvVars == field.num_elements(), "field size mismatch");
 
-    if (m_nRecvVars < 1 or m_recvSteps < 1)
+    if (m_nRecvVars < 1 || m_recvSteps < 1)
     {
         return;
     }

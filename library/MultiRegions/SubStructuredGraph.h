@@ -154,8 +154,6 @@ namespace Nektar
         {
         public:
             MULTI_REGIONS_EXPORT MultiLevelBisectedGraph(
-                const Array<OneD, const int> sepTree);
-            MULTI_REGIONS_EXPORT MultiLevelBisectedGraph(
                 MultiLevelBisectedGraphSharedPtr oldLevel,
                 const int                        nPartition);
             MULTI_REGIONS_EXPORT MultiLevelBisectedGraph(
@@ -188,6 +186,16 @@ namespace Nektar
                 m_rightDaughterGraph = graph;
             }
 
+            inline MultiLevelBisectedGraphSharedPtr GetLeftDaughterGraph()
+            {
+                return m_leftDaughterGraph;
+            }
+
+            inline MultiLevelBisectedGraphSharedPtr GetRightDaughterGraph()
+            {
+                return m_rightDaughterGraph;
+            }
+
         protected:
             SubGraphSharedPtr                m_BndDofs;
             MultiLevelBisectedGraphSharedPtr m_leftDaughterGraph;
@@ -199,10 +207,8 @@ namespace Nektar
         {
         public:
             MULTI_REGIONS_EXPORT BottomUpSubStructuredGraph(
-                const Array<OneD, const int> septree,
-                const int                    nPartition);
-            MULTI_REGIONS_EXPORT BottomUpSubStructuredGraph(
-                const MultiLevelBisectedGraphSharedPtr& graph,
+                MultiLevelBisectedGraphSharedPtr graph,
+                int nPartition = 0,
                 bool globaloffset = false);
             MULTI_REGIONS_EXPORT BottomUpSubStructuredGraph(
                 const int nVerts);

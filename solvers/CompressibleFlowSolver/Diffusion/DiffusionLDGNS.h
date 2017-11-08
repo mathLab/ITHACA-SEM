@@ -37,6 +37,7 @@
 #define NEKTAR_SOLVERS_COMPRESSIBLEFLOWSOLVER_DIFFUSIONLDGNS
 
 #include <SolverUtils/Diffusion/Diffusion.h>
+#include <CompressibleFlowSolver/Misc/EquationOfState.h>
 
 using namespace Nektar::SolverUtils;
 
@@ -58,9 +59,9 @@ namespace Nektar
         Array<OneD, Array<OneD, NekDouble> > m_traceVel;
         Array<OneD, Array<OneD, NekDouble> > m_traceNormals;
         LibUtilities::SessionReaderSharedPtr m_session;
-        NekDouble                            m_gamma;
-        NekDouble                            m_gasConstant;
         NekDouble                            m_Twall;
+        /// Equation of system for computing temperature
+        EquationOfStateSharedPtr             m_eos;
 
         Array<OneD, Array<OneD, Array<OneD, NekDouble> > > m_viscTensor;
 

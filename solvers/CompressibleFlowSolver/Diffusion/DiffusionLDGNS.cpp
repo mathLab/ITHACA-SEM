@@ -53,9 +53,7 @@ namespace Nektar
         Array<OneD, MultiRegions::ExpListSharedPtr> pFields)
     {
         m_session = pSession;
-        m_session->LoadParameter ("Gamma",         m_gamma, 1.4);
-        m_session->LoadParameter ("GasConstant",   m_gasConstant, 287.058);
-        m_session->LoadParameter ("Twall",         m_Twall, 300.15);
+        m_session->LoadParameter ("Twall", m_Twall, 300.15);
 
         // Setting up the normals
         int i;
@@ -78,6 +76,13 @@ namespace Nektar
             m_traceNormals[i] = Array<OneD, NekDouble> (nTracePts);
         }
         pFields[0]->GetTrace()->GetNormals(m_traceNormals);
+
+        // Create equation of state object
+        std::string eosType;
+        m_session->LoadSolverInfo("EquationOfState",
+                                  eosType, "IdealGas");
+        m_eos = GetEquationOfStateFactory()
+                                .CreateInstance(eosType, m_session);
     }
 
     /**
@@ -428,26 +433,19 @@ namespace Nektar
                          GetBoundaryConditionType() == 
                          SpatialDomains::eDirichlet)
                 {
-                    // Divide E by rho
-                    Vmath::Vdiv(nBndEdgePts,
-                                &(fields[nScalars]->
+                    // Use equation of state to evaluate temperature
+                    NekDouble rho, e;
+                    for(int n = 0; n < nBndEdgePts; ++n)
+                    {
+                        rho = fields[0]->
                                   GetBndCondExpansions()[j]->
-                                  GetPhys())[id1], 1, 
-                                &(fields[0]->
+                                  GetPhys()[id1+n];
+                        e   = fields[nScalars]->
                                   GetBndCondExpansions()[j]->
-                                  GetPhys())[id1], 1,
-                                &scalarVariables[nScalars-1][id2], 1);
-
-                    // Subtract kinetic energy to E/rho
-                    Vmath::Vsub(nBndEdgePts, 
-                                &scalarVariables[nScalars-1][id2], 1,
-                                &tmp2[id2], 1,
-                                &scalarVariables[nScalars-1][id2], 1);
-
-                    // Multiply by constant factor (gamma-1)/R 
-                    Vmath::Smul(nBndEdgePts, (m_gamma - 1)/m_gasConstant,
-                                &scalarVariables[nScalars-1][id2], 1,
-                                &scalarVariables[nScalars-1][id2], 1);
+                                  GetPhys()[id1 +n] / rho - tmp2[id2+n];
+                        scalarVariables[nScalars-1][id2+n] =
+                                m_eos->GetTemperature(rho, e);
+                    }
                 }
 
                 // For Dirichlet boundary condition: uflux = u_bcs

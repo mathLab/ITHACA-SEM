@@ -45,12 +45,20 @@
 #include <boost/graph/cuthill_mckee_ordering.hpp>
 #include <boost/graph/properties.hpp>
 #include <boost/graph/bandwidth.hpp>
+#include <boost/algorithm/string/replace.hpp>
 
 #include <scotch.h>
 
 using std::max;
 using std::cout;
 using std::endl;
+
+#define SCOTCH_CALL(scotchFunc, args)                                   \
+    {                                                                   \
+        ASSERTL0(scotchFunc args == 0,                                  \
+                 std::string("Error in Scotch calling function ")       \
+                 + std::string(#scotchFunc));                           \
+    }
 
 namespace Nektar
 {
@@ -777,7 +785,7 @@ namespace Nektar
 
             // We will now use Scotch to reorder the graph.  For the purpose of
             // multi-level static condensation, we will use a Scotch routine
-            // that partitions the graph recursively using a multi-level
+            // that partitions the graph recursively using a multi-level nested
             // bisection algorithm.  The name of this routine is
             // SCOTCH_graphOrder and it was originally designed to reorder the
             // DOFs in a matrix in order to minimise the fill-in when applying a
@@ -789,7 +797,7 @@ namespace Nektar
             if(nGraphEdges)
             {
                 // Step 1: Convert boost graph to a graph in adjncy-list format
-                // as required by Scotch
+                // as required by Scotch.
                 int acnt = 0, vcnt = 0, i, cnt;
                 int nPartition    = partVerts.size();
                 int nNonPartition = nGraphVerts - partVerts.size();
@@ -801,10 +809,9 @@ namespace Nektar
                 Array<OneD, int> perm_tmp (nNonPartition);
                 Array<OneD, int> iperm_tmp(nNonPartition);
 
-                std::set<int>::iterator it;
-
                 // First reorder vertices so that partition nodes are at the
-                // end. This allows Scotch to partition the interior nodes.
+                // end. This allows Scotch to partition the interior nodes from
+                // values starting at zero.
                 for (i = cnt = 0; i < nGraphVerts; ++i)
                 {
                     if (partVerts.count(i) == 0)
@@ -827,6 +834,8 @@ namespace Nektar
                 boost::property_map<BoostGraph, boost::vertex_index_t>::type
                     index = get(boost::vertex_index, graph);
 
+                // Now construct the adjaceny list using
+                // boost::adjacent_vertices.
                 auto verts = boost::vertices(graph);
                 for (auto vertit = verts.first; vertit != verts.second; ++vertit)
                 {
@@ -848,25 +857,58 @@ namespace Nektar
                     xadj[++vcnt] = acnt;
                 }
 
-                // Step 2: use Scotch to reorder the dofs.
-                int ierr;
+                // Step 2: use Scotch to reorder the dofs. This next block of
+                // code passes the graph to Scotch and performs the nested
+                // dissection to obtain a separator tree, that we can then
+                // reorder.
+
+                // This horrible looking string defines the Scotch graph
+                // reordering strategy, which essentially does a nested
+                // dissection + compression. We take this almost directly from
+                // the SCOTCH_stratGraphOrderBuild function (defined in
+                // library_graph_order.c), but in this version we can replace
+                // the subdivision strategy to allow us to control the number of
+                // vertices used to determine whether to perform another
+                // dissection using the mdswitch parameter. The below is
+                // essentially equivalent to calling SCOTCH_stratGraphOrderBuild
+                // with the flags SCOTCH_STRATLEAFSIMPLE and
+                // SCOTCH_STRATSEPASIMPLE to make sure leaf nodes do not have
+                // any reordering applied to them.
+                std::string strat_str =
+                    "c{rat=0.7,cpr=n{sep=/(<TSTS>)?m{rat=0.7,vert=100,low="
+                    "h{pass=10},asc=b{width=3,bnd=f{bal=<BBAL>},"
+                    "org=(|h{pass=10})f{bal=<BBAL>}}}<SEPA>;,"
+                    "ole=<OLEA>,ose=<OSEP>},unc=n{sep=/(<TSTS>)?m{rat=0.7,"
+                    "vert=100,low=h{pass=10},asc=b{width=3,bnd=f{bal=<BBAL>},"
+                    "org=(|h{pass=10})f{bal=<BBAL>}}}<SEPA>;"
+                    ",ole=<OLEA>,ose=<OSEP>}}";
+
+                // Replace flags in the string with appropriate values.
+                boost::replace_all(
+                    strat_str, "<SEPA>", "|m{rat=0.7,vert=100,low=h{pass=10},"
+                    "asc=b{width=3,bnd=f{bal=<BBAL>},"
+                    "org=(|h{pass=10})f{bal=<BBAL>}}}");
+                boost::replace_all(strat_str, "<OSEP>", "s");
+                boost::replace_all(strat_str, "<OLEA>", "s");
+                boost::replace_all(strat_str, "<BBAL>", "0.1");
+                boost::replace_all(
+                    strat_str, "<TSTS>",
+                    "vert>"+boost::lexical_cast<std::string>(mdswitch));
+
                 SCOTCH_Graph scGraph;
                 SCOTCH_Strat strat;
-                ierr = SCOTCH_graphBuild(
-                    &scGraph, 0, nNonPartition, &xadj[0], &xadj[1], NULL, NULL,
-                    xadj[nNonPartition], &adjncy[0], NULL);
-                ierr = SCOTCH_stratInit(&strat);
-                ierr = SCOTCH_stratGraphOrder(
-                    &strat, "n{sep=/(vert>10)?m{rat=0.7,vert=10,low=h{pass=10},"
-                    "asc=b{width=3,bnd=f{bal=0.1},org=(|h{pass=10})"
-                    "f{bal=0.1}}};,ole=s,ose=s}");
+                SCOTCH_CALL(SCOTCH_graphBuild,
+                            (&scGraph, 0, nNonPartition, &xadj[0], &xadj[1],
+                             NULL, NULL, xadj[nNonPartition], &adjncy[0], NULL));
+                SCOTCH_CALL(SCOTCH_stratInit, (&strat));
+                SCOTCH_CALL(SCOTCH_stratGraphOrder, (&strat, strat_str.c_str()));
 
                 Array<OneD, int> treetab(nNonPartition);
                 Array<OneD, int> rangtab(nNonPartition + 1);
                 int cblknbr = 0;
-                ierr = SCOTCH_graphOrder(
-                    &scGraph, &strat, &iperm_tmp[0], &perm_tmp[0], &cblknbr,
-                    &rangtab[0], &treetab[0]);
+                SCOTCH_CALL(SCOTCH_graphOrder,
+                            (&scGraph, &strat, &iperm_tmp[0], &perm_tmp[0], &cblknbr,
+                             &rangtab[0], &treetab[0]));
 
                 // Setup root block, which lies at the end of the blocks
                 // described in treetab[].
@@ -909,6 +951,11 @@ namespace Nektar
                         tmp->SetRightDaughterGraph(tmp->GetLeftDaughterGraph());
                         tmp->SetLeftDaughterGraph(graphs[i]);
                     }
+                    else
+                    {
+                        ASSERTL0(false, "Error in constructing Scotch graph for"
+                                        " multi-level static condensation");
+                    }
                 }
 
                 // Change permutations from Scotch to account for initial
@@ -936,6 +983,11 @@ namespace Nektar
                              "Perm error " + boost::lexical_cast<std::string>(i));
                 }
 
+                ASSERTL0(graphs.back()->GetTotDofs() == nNonPartition,
+                         "Error in constructing Scotch graph for multi-level"
+                         " static condensation.");
+
+                // Step 3: Set up the bottom-up graph from the top-down graph.
                 substructgraph = MemoryManager<BottomUpSubStructuredGraph>::
                     AllocateSharedPtr(graphs[graphs.size()-1], nPartition, true);
 

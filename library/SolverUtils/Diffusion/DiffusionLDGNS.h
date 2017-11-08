@@ -61,12 +61,7 @@ namespace Nektar
             NekDouble                            m_gamma;
             NekDouble                            m_gasConstant;
             NekDouble                            m_Twall;
-            std::string                          m_ViscosityType;
-            NekDouble                            m_mu;
-            NekDouble                            m_thermalConductivity;
-            NekDouble                            m_rhoInf;
-            NekDouble                            m_pInf;
-            
+
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > > m_viscTensor;
             
             Array<OneD, Array<OneD, NekDouble> > m_homoDerivs;

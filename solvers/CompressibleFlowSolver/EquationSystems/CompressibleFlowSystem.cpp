@@ -134,60 +134,8 @@ namespace Nektar
      */
     void CompressibleFlowSystem::InitialiseParameters()
     {
-        NekDouble velInf, gasConstant;
-
         // Get gamma parameter from session file.
         m_session->LoadParameter("Gamma", m_gamma, 1.4);
-
-        // Get gas constant from session file and compute Cp
-        m_session->LoadParameter ("GasConstant",   gasConstant,   287.058);
-        m_Cp      = m_gamma / (m_gamma - 1.0) * gasConstant;
-
-        // Get pInf parameter from session file.
-        m_session->LoadParameter("pInf", m_pInf, 101325);
-
-        // Get rhoInf parameter from session file.
-        m_session->LoadParameter("rhoInf", m_rhoInf, 1.225);
-
-        // Get uInf parameter from session file.
-        m_session->LoadParameter("uInf", velInf, 0.1);
-
-        m_UInf = velInf*velInf;
-
-        // Get vInf parameter from session file.
-        if (m_spacedim == 2 || m_spacedim == 3)
-        {
-            m_session->LoadParameter("vInf", velInf, 0.0);
-            m_UInf += velInf*velInf;
-        }
-
-        // Get wInf parameter from session file.
-        if (m_spacedim == 3)
-        {
-            m_session->LoadParameter("wInf", velInf, 0.0);
-            m_UInf += velInf*velInf;
-        }
-        m_UInf = sqrt(m_UInf);
-
-        // Viscosity
-        m_session->LoadSolverInfo("ViscosityType", m_ViscosityType, "Constant");
-        m_session->LoadParameter ("mu",            m_mu,            1.78e-05);
-
-        // Thermal conductivity or Prandtl
-        if( m_session->DefinesParameter("thermalConductivity"))
-        {
-            ASSERTL0( !m_session->DefinesParameter("Pr"),
-                 "Cannot define both Pr and thermalConductivity.");
-
-            m_session->LoadParameter ("thermalConductivity",
-                                        m_thermalConductivity);
-            m_Prandtl = m_Cp * m_mu / m_thermalConductivity;
-        }
-        else
-        {
-            m_session->LoadParameter ("Pr", m_Prandtl, 0.72);
-            m_thermalConductivity = m_Cp * m_mu / m_Prandtl;
-        }
 
         // Shock capture
         m_session->LoadSolverInfo("ShockCaptureType",

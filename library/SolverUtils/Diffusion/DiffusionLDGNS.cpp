@@ -58,13 +58,6 @@ namespace Nektar
             m_session->LoadParameter ("Gamma",         m_gamma, 1.4);
             m_session->LoadParameter ("GasConstant",   m_gasConstant, 287.058);
             m_session->LoadParameter ("Twall",         m_Twall, 300.15);
-            m_session->LoadSolverInfo("ViscosityType", m_ViscosityType, 
-                                      "Constant");
-            m_session->LoadParameter ("mu",            m_mu, 1.78e-05);
-            m_session->LoadParameter ("thermalConductivity",
-                                      m_thermalConductivity, 0.0257);
-            m_session->LoadParameter ("rhoInf",        m_rhoInf, 1.225);
-            m_session->LoadParameter ("pInf",          m_pInf, 101325);
             
             // Setting up the normals
             int i;

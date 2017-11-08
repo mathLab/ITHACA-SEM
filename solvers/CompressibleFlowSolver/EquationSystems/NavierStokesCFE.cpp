@@ -63,6 +63,31 @@ namespace Nektar
     {
         CompressibleFlowSystem::v_InitObject();
 
+        // Get gas constant from session file and compute Cp
+        NekDouble gasConstant;
+        m_session->LoadParameter ("GasConstant",   gasConstant,   287.058);
+        m_Cp      = m_gamma / (m_gamma - 1.0) * gasConstant;
+
+        // Viscosity
+        m_session->LoadSolverInfo("ViscosityType", m_ViscosityType, "Constant");
+        m_session->LoadParameter ("mu",            m_mu,            1.78e-05);
+
+        // Thermal conductivity or Prandtl
+        if( m_session->DefinesParameter("thermalConductivity"))
+        {
+            ASSERTL0( !m_session->DefinesParameter("Pr"),
+                 "Cannot define both Pr and thermalConductivity.");
+
+            m_session->LoadParameter ("thermalConductivity",
+                                        m_thermalConductivity);
+            m_Prandtl = m_Cp * m_mu / m_thermalConductivity;
+        }
+        else
+        {
+            m_session->LoadParameter ("Pr", m_Prandtl, 0.72);
+            m_thermalConductivity = m_Cp * m_mu / m_Prandtl;
+        }
+
         string diffName;
         m_session->LoadSolverInfo("DiffusionType", diffName, "LDGNS");
 

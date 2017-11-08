@@ -34,6 +34,8 @@ IF( NEKTAR_SOLVER_COMPRESSIBLE_FLOW )
        ./Filters/FilterEnergy.cpp
        ./Forcing/ForcingAxiSymmetric.cpp
        ./Forcing/ForcingQuasi1D.cpp
+       ./Misc/EquationOfState.cpp
+       ./Misc/IdealGasEoS.cpp
        ./Misc/VariableConverter.cpp
        ./RiemannSolvers/AverageSolver.cpp
        ./RiemannSolvers/AUSM0Solver.cpp

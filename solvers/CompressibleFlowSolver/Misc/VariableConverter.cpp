@@ -48,6 +48,13 @@ namespace Nektar
         : m_session(pSession),
             m_spacedim(spaceDim)
     {
+        // Create equation of state object
+        std::string eosType;
+        m_session->LoadSolverInfo("EquationOfState",
+                                  eosType, "IdealGas");
+        m_eos = GetEquationOfStateFactory()
+                                .CreateInstance(eosType, m_session);
+
         m_session->LoadParameter ("Gamma", m_gamma, 1.4);
         m_session->LoadParameter ("pInf", m_pInf, 101325);
         m_session->LoadParameter ("rhoInf", m_rhoInf, 1.225);

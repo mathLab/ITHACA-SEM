@@ -38,6 +38,7 @@
 #define NEKTAR_SOLVERS_COMPRESSIBLEFLOWSOLVER_MISC_VARCONVERT_H
 
 #include <SolverUtils/UnsteadySystem.h>
+#include "EquationOfState.h"
 
 namespace Nektar
 {
@@ -98,6 +99,7 @@ namespace Nektar
 
     protected:
         LibUtilities::SessionReaderSharedPtr m_session;
+        EquationOfStateSharedPtr             m_eos;
         int                                  m_spacedim;
         NekDouble                            m_gamma;
         NekDouble                            m_pInf;

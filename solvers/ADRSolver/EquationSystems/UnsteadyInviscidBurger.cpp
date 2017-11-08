@@ -89,7 +89,7 @@ namespace Nektar
                 m_advObject->SetFluxVector   (&UnsteadyInviscidBurger::GetFluxVector, this);
                 
                 m_session->LoadSolverInfo("UpwindType", riemName, "Upwind");
-                m_riemannSolver = SolverUtils::GetRiemannSolverFactory().CreateInstance(riemName);
+                m_riemannSolver = SolverUtils::GetRiemannSolverFactory().CreateInstance(riemName, m_session);
                 m_riemannSolver->SetScalar("Vn", &UnsteadyInviscidBurger::GetNormalVelocity, this);
                 
                 m_advObject->SetRiemannSolver(m_riemannSolver);

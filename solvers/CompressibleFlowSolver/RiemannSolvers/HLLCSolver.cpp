@@ -41,7 +41,8 @@ namespace Nektar
         SolverUtils::GetRiemannSolverFactory().RegisterCreatorFunction(
             "HLLC", HLLCSolver::create, "HLLC Riemann solver");
     
-    HLLCSolver::HLLCSolver() : CompressibleSolver()
+    HLLCSolver::HLLCSolver(const LibUtilities::SessionReaderSharedPtr& pSession)
+        : CompressibleSolver(pSession)
     {
         
     }

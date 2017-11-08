@@ -47,7 +47,8 @@ namespace Nektar
     protected:
         bool m_pointSolve;
         
-        CompressibleSolver();
+        CompressibleSolver(
+                const LibUtilities::SessionReaderSharedPtr& pSession);
         
         virtual void v_Solve(
             const int                                         nDim,

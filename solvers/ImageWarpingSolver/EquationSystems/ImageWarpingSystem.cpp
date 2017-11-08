@@ -97,7 +97,7 @@ namespace Nektar
         m_session->LoadSolverInfo(
             "UpwindType", riemName, "Upwind");
         m_riemannSolver = SolverUtils::
-            GetRiemannSolverFactory().CreateInstance(riemName);
+            GetRiemannSolverFactory().CreateInstance(riemName, m_session);
         m_riemannSolver->SetScalar(
             "Vn", &ImageWarpingSystem::GetNormalVelocity, this);
 

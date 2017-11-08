@@ -43,7 +43,8 @@ namespace Nektar
             HLLSolver::create,
             "HLL Riemann solver");
 
-    HLLSolver::HLLSolver() : CompressibleSolver()
+    HLLSolver::HLLSolver(const LibUtilities::SessionReaderSharedPtr& pSession)
+        : CompressibleSolver(pSession)
     {
 
     }

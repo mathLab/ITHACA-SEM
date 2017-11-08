@@ -107,7 +107,7 @@ namespace Nektar
                                            GetFluxVectorAdv, this);
                 m_session->LoadSolverInfo("UpwindType", riemName, "Upwind");
                 m_riemannSolver = SolverUtils::GetRiemannSolverFactory().
-                    CreateInstance(riemName);
+                    CreateInstance(riemName, m_session);
                 m_riemannSolver->SetScalar("Vn", &UnsteadyAdvectionDiffusion::
                                            GetNormalVelocity, this);
                 m_advObject->SetRiemannSolver(m_riemannSolver);
@@ -146,7 +146,7 @@ namespace Nektar
                     string riemName;
                     m_session->LoadSolverInfo("UpwindType", riemName, "Upwind");
                     m_riemannSolver = SolverUtils::GetRiemannSolverFactory().
-                        CreateInstance(riemName);
+                        CreateInstance(riemName, m_session);
                     m_riemannSolver->SetScalar("Vn",
                                                &UnsteadyAdvectionDiffusion::
                                                GetNormalVelocity, this);

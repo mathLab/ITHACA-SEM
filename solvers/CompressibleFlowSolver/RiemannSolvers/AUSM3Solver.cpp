@@ -43,7 +43,9 @@ namespace Nektar
             AUSM3Solver::create,
             "AUSM3 Riemann solver");
 
-    AUSM3Solver::AUSM3Solver() : CompressibleSolver()
+    AUSM3Solver::AUSM3Solver(
+        const LibUtilities::SessionReaderSharedPtr& pSession)
+        : CompressibleSolver(pSession)
     {
 
     }

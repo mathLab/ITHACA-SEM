@@ -103,7 +103,7 @@ namespace Nektar
 	  // Setting up Riemann solver for advection operator
 	  m_session->LoadSolverInfo("UpwindType", riemName, "Average");
 	  m_riemannSolver = SolverUtils::GetRiemannSolverFactory()
-	    .CreateInstance(riemName);
+	    .CreateInstance(riemName, m_session);
                 
 	  // Setting up upwind solver for diffusion operator
 	  // m_riemannSolverLDG = SolverUtils::GetRiemannSolverFactory()

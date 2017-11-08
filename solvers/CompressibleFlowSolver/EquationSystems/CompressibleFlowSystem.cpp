@@ -192,7 +192,7 @@ namespace Nektar
 
         SolverUtils::RiemannSolverSharedPtr riemannSolver;
         riemannSolver = SolverUtils::GetRiemannSolverFactory()
-                                    .CreateInstance(riemName);
+                                    .CreateInstance(riemName, m_session);
 
         // Setting up parameters for advection operator Riemann solver
         riemannSolver->SetParam (

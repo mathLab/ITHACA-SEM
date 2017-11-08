@@ -45,7 +45,9 @@ namespace Nektar
             AverageSolver::create,
             "Average Riemann solver");
 
-    AverageSolver::AverageSolver() : CompressibleSolver()
+    AverageSolver::AverageSolver(
+        const LibUtilities::SessionReaderSharedPtr& pSession)
+        : CompressibleSolver(pSession)
     {
         m_pointSolve = false;
     }

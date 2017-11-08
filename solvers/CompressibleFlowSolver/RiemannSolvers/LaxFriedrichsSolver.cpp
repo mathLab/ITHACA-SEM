@@ -43,7 +43,9 @@ namespace Nektar
 			LaxFriedrichsSolver::create,
             "Lax-Friedrichs Riemann solver");
 
-    LaxFriedrichsSolver::LaxFriedrichsSolver() : CompressibleSolver()
+    LaxFriedrichsSolver::LaxFriedrichsSolver(
+        const LibUtilities::SessionReaderSharedPtr& pSession)
+        : CompressibleSolver(pSession)
     {
         
     }

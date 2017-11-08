@@ -102,7 +102,7 @@ namespace Nektar
                                            GetFluxVectorAdv, this);
                 m_session->LoadSolverInfo("UpwindType", riemName, "Upwind");
                 m_riemannSolver = SolverUtils::GetRiemannSolverFactory().
-                    CreateInstance(riemName);
+                    CreateInstance(riemName, m_session);
                 m_advObject->SetRiemannSolver(m_riemannSolver);
                 m_advObject->InitObject      (m_session, m_fields);
                 

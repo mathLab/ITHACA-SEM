@@ -83,11 +83,6 @@ namespace Nektar
             const Array<OneD, const Array<OneD, NekDouble> > &physfield,
                   Array<OneD,                   NekDouble>   &pressure,
                   Array<OneD,                   NekDouble>   &enthalpy);
-        void GetEntropy(
-            const Array<OneD, const Array<OneD, NekDouble> > &physfield,
-            const Array<OneD, const             NekDouble>   &pressure,
-            const Array<OneD, const             NekDouble>   &temperature,
-                  Array<OneD,                   NekDouble>   &entropy);
         void GetDynamicViscosity(
             const Array<OneD, const NekDouble> &temperature,
                   Array<OneD,       NekDouble> &mu);

@@ -281,26 +281,6 @@ namespace Nektar
         }
     }
 
-    /**
-     * @brief Calculate entropy.
-     */
-    void VariableConverter::GetEntropy(
-        const Array<OneD, const Array<OneD, NekDouble> > &physfield,
-        const Array<OneD, const NekDouble>               &pressure,
-        const Array<OneD, const NekDouble>               &temperature,
-              Array<OneD,       NekDouble>               &entropy)
-    {
-        const int nPts = physfield[0].num_elements();
-        const NekDouble temp_inf = m_pInf/(m_rhoInf*m_gasConstant);;
-
-        for (int i = 0; i < nPts; ++i)
-        {
-            entropy[i] = m_gamma / (m_gamma - 1.0) * m_gasConstant *
-                            log(temperature[i]/temp_inf) - m_gasConstant *
-                            log(pressure[i] / m_pInf);
-        }
-    }
-
     void VariableConverter::GetAbsoluteVelocity(
         const Array<OneD, const Array<OneD, NekDouble> > &inarray,
               Array<OneD,                   NekDouble>   &Vtot)

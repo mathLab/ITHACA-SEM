@@ -106,11 +106,9 @@ void StagnationInflowBC::v_Apply(
     }
 
     // Get Mach from Fwd
-    Array<OneD, NekDouble > pressure  (nTracePts);
     Array<OneD, NekDouble > soundSpeed(nTracePts);
-    Array<OneD, NekDouble > Mach      (nTracePts);
-    m_varConv->GetPressure(Fwd, pressure);
-    m_varConv->GetSoundSpeed(Fwd, pressure, soundSpeed);
+    Array<OneD, NekDouble > Mach      (nTracePts);;
+    m_varConv->GetSoundSpeed(Fwd, soundSpeed);
     m_varConv->GetMach(Fwd, soundSpeed, Mach);
 
     // Auxiliary variables

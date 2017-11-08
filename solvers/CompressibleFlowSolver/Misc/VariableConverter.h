@@ -58,37 +58,25 @@ namespace Nektar
 
         ~VariableConverter();
 
+        // Variable manipulations valid for all fluids
+        void GetInternalEnergy(
+            const Array<OneD, const Array<OneD, NekDouble> > &physfield,
+                  Array<OneD,                   NekDouble>   &energy);
+        void GetEnthalpy(
+            const Array<OneD, const Array<OneD, NekDouble> > &physfield,
+                  Array<OneD,                   NekDouble>   &enthalpy);
         void GetVelocityVector(
             const Array<OneD,       Array<OneD, NekDouble> > &physfield,
                   Array<OneD,       Array<OneD, NekDouble> > &velocity);
-        void GetSoundSpeed(
-            const Array<OneD,       Array<OneD, NekDouble> > &physfield,
-                  Array<OneD,                   NekDouble>   &pressure,
-                  Array<OneD,                   NekDouble>   &soundspeed);
         void GetMach(
                   Array<OneD,       Array<OneD, NekDouble> > &physfield,
                   Array<OneD,                   NekDouble>   &soundspeed,
                   Array<OneD,                   NekDouble>   &mach);
-        void GetTemperature(
-            const Array<OneD, const Array<OneD, NekDouble> > &physfield,
-                  Array<OneD,                   NekDouble>   &pressure,
-                  Array<OneD,                   NekDouble>   &temperature);
-        void GetPressure(
-            const Array<OneD, const Array<OneD, NekDouble> > &physfield,
-                  Array<OneD,                   NekDouble>   &pressure);
-        void GetPressure(
-            const Array<OneD, const Array<OneD, NekDouble> > &physfield,
-            const Array<OneD, const Array<OneD, NekDouble> > &velocity,
-                  Array<OneD,                   NekDouble>   &pressure);
-        void GetEnthalpy(
-            const Array<OneD, const Array<OneD, NekDouble> > &physfield,
-                  Array<OneD,                   NekDouble>   &pressure,
-                  Array<OneD,                   NekDouble>   &enthalpy);
         void GetDynamicViscosity(
             const Array<OneD, const NekDouble> &temperature,
                   Array<OneD,       NekDouble> &mu);
         void GetAbsoluteVelocity(
-            const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+            const Array<OneD, const Array<OneD, NekDouble> > &physfield,
                   Array<OneD,                   NekDouble>   &Vtot);
         void GetSensor(
             const MultiRegions::ExpListSharedPtr             &field,
@@ -97,16 +85,25 @@ namespace Nektar
                   Array<OneD,                   NekDouble>   &SensorKappa,
                   int                                         offset = 1);
 
+        // Transformations depending on the equation of state
+        void GetTemperature(
+            const Array<OneD, const Array<OneD, NekDouble> > &physfield,
+                  Array<OneD,                   NekDouble>   &temperature);
+        void GetPressure(
+            const Array<OneD, const Array<OneD, NekDouble> > &physfield,
+                  Array<OneD,                   NekDouble>   &pressure);
+        void GetSoundSpeed(
+            const Array<OneD,       Array<OneD, NekDouble> > &physfield,
+                  Array<OneD,                   NekDouble>   &soundspeed);
+
     protected:
         LibUtilities::SessionReaderSharedPtr m_session;
         EquationOfStateSharedPtr             m_eos;
         int                                  m_spacedim;
-        NekDouble                            m_gamma;
         NekDouble                            m_pInf;
         NekDouble                            m_rhoInf;
         NekDouble                            m_gasConstant;
         NekDouble                            m_mu;
-        NekDouble                            m_thermalConductivity;
         NekDouble                            m_Skappa;
         NekDouble                            m_Kappa;
         NekDouble                            m_mu0;

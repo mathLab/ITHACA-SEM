@@ -105,7 +105,7 @@ void PressureInflowFileBC::v_Apply(
     Array<OneD, NekDouble > soundSpeed(nTracePts);
 
     m_varConv->GetPressure(Fwd, pressure);
-    m_varConv->GetSoundSpeed(Fwd, pressure, soundSpeed);
+    m_varConv->GetSoundSpeed(Fwd, soundSpeed);
 
     // Get Mach
     Array<OneD, NekDouble > Mach(nTracePts, 0.0);

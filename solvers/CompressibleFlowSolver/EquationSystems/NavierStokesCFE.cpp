@@ -144,8 +144,7 @@ namespace Nektar
         m_varConv->GetPressure(inarray, inarrayDiff[0]);
 
         // Extract temperature
-        m_varConv->GetTemperature(inarray, inarrayDiff[0],
-                inarrayDiff[nvariables-2]);
+        m_varConv->GetTemperature(inarray, inarrayDiff[nvariables-2]);
 
         // Extract velocities
         m_varConv->GetVelocityVector(inarray, inarrayDiff);
@@ -162,10 +161,8 @@ namespace Nektar
             m_varConv->GetPressure(pFwd,    inFwd[0]);
             m_varConv->GetPressure(pBwd,    inBwd[0]);
 
-            m_varConv->GetTemperature(pFwd,    inFwd[0],
-                inFwd[nvariables-2]);
-            m_varConv->GetTemperature(pBwd,    inBwd[0],
-                inBwd[nvariables-2]);
+            m_varConv->GetTemperature(pFwd, inFwd[nvariables-2]);
+            m_varConv->GetTemperature(pBwd, inBwd[nvariables-2]);
 
             m_varConv->GetVelocityVector(pFwd, inFwd);
             m_varConv->GetVelocityVector(pBwd, inBwd);

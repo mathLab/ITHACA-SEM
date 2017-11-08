@@ -409,7 +409,7 @@ namespace Nektar
         }
 
         m_varConv->GetVelocityVector(physfield, velocity);
-        m_varConv->GetPressure(physfield, velocity, pressure);
+        m_varConv->GetPressure(physfield, pressure);
 
         // Flux vector for the velocity fields
         for (i = 0; i < m_spacedim; ++i)
@@ -495,7 +495,7 @@ namespace Nektar
         }
 
         m_varConv->GetVelocityVector(physfield_interp, velocity);
-        m_varConv->GetPressure      (physfield_interp, velocity, pressure);
+        m_varConv->GetPressure      (physfield_interp, pressure);
 
         // Evaluation of flux vector for the velocity fields
         for (i = 0; i < m_spacedim; ++i)
@@ -651,7 +651,6 @@ namespace Nektar
         Array<OneD, Array<OneD, NekDouble> > velocity   (m_spacedim);
         Array<OneD, Array<OneD, NekDouble> > stdVelocity(m_spacedim);
         Array<OneD, Array<OneD, NekDouble> > stdSoundSpeed(m_spacedim);
-        Array<OneD, NekDouble>               pressure   (nTotQuadPoints);
         Array<OneD, NekDouble>               soundspeed (nTotQuadPoints);
         LibUtilities::PointsKeyVector        ptsKeys;
 
@@ -663,8 +662,7 @@ namespace Nektar
         }
 
         m_varConv->GetVelocityVector(physfields, velocity);
-        m_varConv->GetPressure      (physfields, velocity, pressure);
-        m_varConv->GetSoundSpeed    (physfields, pressure, soundspeed);
+        m_varConv->GetSoundSpeed    (physfields, soundspeed);
 
         for(int el = 0; el < n_element; ++el)
         {
@@ -826,7 +824,7 @@ namespace Nektar
             Array<OneD, NekDouble> sensor(nPhys), SensorKappa(nPhys);
 
             m_varConv->GetPressure  (tmp, pressure);
-            m_varConv->GetSoundSpeed(tmp, pressure, soundspeed);
+            m_varConv->GetSoundSpeed(tmp, soundspeed);
             m_varConv->GetMach      (tmp, soundspeed, mach);
 
             int sensorOffset;

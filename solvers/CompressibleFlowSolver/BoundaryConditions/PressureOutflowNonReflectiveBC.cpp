@@ -88,11 +88,8 @@ void PressureOutflowNonReflectiveBC::v_Apply(
     m_varConv->GetAbsoluteVelocity(Fwd, absVel);
 
     // Get speed of sound
-    Array<OneD, NekDouble > pressure  (nTracePts);
     Array<OneD, NekDouble > soundSpeed(nTracePts);
-
-    m_varConv->GetPressure(Fwd, pressure);
-    m_varConv->GetSoundSpeed(Fwd, pressure, soundSpeed);
+    m_varConv->GetSoundSpeed(Fwd, soundSpeed);
 
     // Get Mach
     Array<OneD, NekDouble > Mach(nTracePts, 0.0);

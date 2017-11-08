@@ -129,6 +129,9 @@ void OutputNekpp::Process()
     WriteXmlExpansions(root);
     WriteXmlConditions(root);
 
+    //add metadata
+    root->LinkEndChild(m_mesh->m_infotag);
+
     // Extract the output filename and extension
     string filename = m_config["outfile"].as<string>();
 

@@ -79,6 +79,10 @@ void InputMCF::ParseFile(string nm)
              "no parameters tag");
 
     TiXmlElement *mcf = pSession->GetElement("NEKTAR/MESHING");
+    TiXmlNode *clone = mcf->Clone();
+
+    //save meshing tag to end of file
+    m_mesh->m_infotag->LinkEndChild(clone);
 
     TiXmlElement *info = mcf->FirstChildElement("INFORMATION");
     TiXmlElement *I    = info->FirstChildElement("I");

@@ -796,8 +796,10 @@ namespace Nektar
             // routines.
             if(nGraphEdges)
             {
+                //
                 // Step 1: Convert boost graph to a graph in adjncy-list format
                 // as required by Scotch.
+                //
                 int acnt = 0, vcnt = 0, i, cnt;
                 int nPartition    = partVerts.size();
                 int nNonPartition = nGraphVerts - partVerts.size();
@@ -809,9 +811,9 @@ namespace Nektar
                 Array<OneD, int> perm_tmp (nNonPartition);
                 Array<OneD, int> iperm_tmp(nNonPartition);
 
-                // First reorder vertices so that partition nodes are at the
-                // end. This allows Scotch to partition the interior nodes from
-                // values starting at zero.
+                // Perform an initial reordering of the vertices, so that
+                // partition nodes are at the end. This allows Scotch to
+                // partition the interior nodes from values starting at zero.
                 for (i = cnt = 0; i < nGraphVerts; ++i)
                 {
                     if (partVerts.count(i) == 0)
@@ -857,10 +859,16 @@ namespace Nektar
                     xadj[++vcnt] = acnt;
                 }
 
-                // Step 2: use Scotch to reorder the dofs. This next block of
-                // code passes the graph to Scotch and performs the nested
-                // dissection to obtain a separator tree, that we can then
-                // reorder.
+                //
+                // Step 2: pass the graph to Scotch and perform the nested
+                // dissection to obtain a separator tree.
+                //
+
+                // Pass the adjaceny graph into Scotch.
+                SCOTCH_Graph scGraph;
+                SCOTCH_CALL(SCOTCH_graphBuild,
+                            (&scGraph, 0, nNonPartition, &xadj[0], &xadj[1],
+                             NULL, NULL, xadj[nNonPartition], &adjncy[0], NULL));
 
                 // This horrible looking string defines the Scotch graph
                 // reordering strategy, which essentially does a nested
@@ -895,20 +903,39 @@ namespace Nektar
                     strat_str, "<TSTS>",
                     "vert>"+boost::lexical_cast<std::string>(mdswitch));
 
-                SCOTCH_Graph scGraph;
+                // Set up the re-ordering strategy.
                 SCOTCH_Strat strat;
-                SCOTCH_CALL(SCOTCH_graphBuild,
-                            (&scGraph, 0, nNonPartition, &xadj[0], &xadj[1],
-                             NULL, NULL, xadj[nNonPartition], &adjncy[0], NULL));
                 SCOTCH_CALL(SCOTCH_stratInit, (&strat));
                 SCOTCH_CALL(SCOTCH_stratGraphOrder, (&strat, strat_str.c_str()));
 
+                // As output, Scotch will give us the total number of 'blocks'
+                // (i.e. the separators and all of the leaves), the separator
+                // tree as a mapping of block to parent block, and the range of
+                // indices that is contained within each block. Reordering of
+                // the vertices goes from highest (at the top level) to smallest
+                // (at the bottom level). The precise ordering is given in the
+                // Scotch user guide.
+                //
+                // Note that we pass in iperm into the 'permtab' field of
+                // graphOrder and 'perm' into the 'peritab' field; this is
+                // because our definition of the permutation is the opposite of
+                // what's defined in Scotch (this is leftover from a previous
+                // implementation that used Metis).
                 Array<OneD, int> treetab(nNonPartition);
                 Array<OneD, int> rangtab(nNonPartition + 1);
                 int cblknbr = 0;
                 SCOTCH_CALL(SCOTCH_graphOrder,
-                            (&scGraph, &strat, &iperm_tmp[0], &perm_tmp[0], &cblknbr,
-                             &rangtab[0], &treetab[0]));
+                            (&scGraph, &strat, &iperm_tmp[0], &perm_tmp[0],
+                             &cblknbr, &rangtab[0], &treetab[0]));
+
+                // We're now done with Scotch: clean up the created structures.
+                SCOTCH_CALL(SCOTCH_graphOrderExit, (&scGraph));
+                SCOTCH_CALL(SCOTCH_stratExit, (&strat));
+
+                //
+                // Step 3: create a MultiLevelBisectedGraph by reading the
+                // separator tree we obtained from Scotch.
+                //
 
                 // Setup root block, which lies at the end of the blocks
                 // described in treetab[].
@@ -958,8 +985,8 @@ namespace Nektar
                     }
                 }
 
-                // Change permutations from Scotch to account for initial
-                // offset.
+                // Change permutations from Scotch to account for initial offset
+                // in case we had partition vertices.
                 for (i = 0; i < nGraphVerts; ++i)
                 {
                     if (partVerts.count(i) == 0)
@@ -979,15 +1006,18 @@ namespace Nektar
 
                 for (i = 0; i < nGraphVerts; ++i)
                 {
-                    ASSERTL1(perm[iperm[i]] == i,
-                             "Perm error " + boost::lexical_cast<std::string>(i));
+                    ASSERTL1(perm[iperm[i]] == i, "Perm error "
+                             + boost::lexical_cast<std::string>(i));
                 }
 
                 ASSERTL0(graphs.back()->GetTotDofs() == nNonPartition,
                          "Error in constructing Scotch graph for multi-level"
                          " static condensation.");
 
-                // Step 3: Set up the bottom-up graph from the top-down graph.
+                //
+                // Step 4: Set up the bottom-up graph from the top-down graph,
+                // and reorder the permutation from Scotch.
+                //
                 substructgraph = MemoryManager<BottomUpSubStructuredGraph>::
                     AllocateSharedPtr(graphs[graphs.size()-1], nPartition, true);
 

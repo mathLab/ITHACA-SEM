@@ -74,8 +74,6 @@ namespace Nektar
         double  rhoR, double  rhouR, double  rhovR, double  rhowR, double  ER,
         double &rhof, double &rhouf, double &rhovf, double &rhowf, double &Ef)
     {
-        static NekDouble gamma = m_params["gamma"]();
-        
         // Left and right velocities
         NekDouble uL = rhouL / rhoL;
         NekDouble vL = rhovL / rhoL;
@@ -84,31 +82,37 @@ namespace Nektar
         NekDouble vR = rhovR / rhoR;
         NekDouble wR = rhowR / rhoR;
 
-        // Left and right pressures
-        NekDouble pL = (gamma - 1.0) *
-            (EL - 0.5 * (rhouL * uL + rhovL * vL + rhowL * wL));
-        NekDouble pR = (gamma - 1.0) *
-            (ER - 0.5 * (rhouR * uR + rhovR * vR + rhowR * wR));
-        
-        // Left and right enthalpy
-        NekDouble hL = (EL + pL) / rhoL;
-        NekDouble hR = (ER + pR) / rhoR;
+        // Internal energy (per unit mass)
+        NekDouble eL =
+                (EL - 0.5 * (rhouL * uL + rhovL * vL + rhowL * wL)) / rhoL;
+        NekDouble eR =
+                (ER - 0.5 * (rhouR * uR + rhovR * vR + rhowR * wR)) / rhoR;
+        // Pressure
+        NekDouble pL = m_eos->GetPressure(rhoL, eL);
+        NekDouble pR = m_eos->GetPressure(rhoR, eR);
 
-        // Square root of rhoL and rhoR
+        // Left and right total enthalpy
+        NekDouble HL = (EL + pL) / rhoL;
+        NekDouble HR = (ER + pR) / rhoR;
+
+        // Square root of rhoL and rhoR.
         NekDouble srL  = sqrt(rhoL);
         NekDouble srR  = sqrt(rhoR);
         NekDouble srLR = srL + srR;
         
         // Roe average state
-        NekDouble uRoe = (srL * uL + srR * uR) / srLR;
-        NekDouble vRoe = (srL * vL + srR * vR) / srLR;
-        NekDouble wRoe = (srL * wL + srR * wR) / srLR;
-        NekDouble hRoe = (srL * hL + srR * hR) / srLR;
-        NekDouble URoe = (uRoe * uRoe + vRoe * vRoe + wRoe * wRoe);
-        NekDouble cRoe = sqrt((gamma - 1.0)*(hRoe - 0.5 * URoe));
-        
+        NekDouble uRoe   = (srL * uL + srR * uR) / srLR;
+        NekDouble vRoe   = (srL * vL + srR * vR) / srLR;
+        NekDouble wRoe   = (srL * wL + srR * wR) / srLR;
+        NekDouble URoe2  = uRoe*uRoe + vRoe*vRoe + wRoe*wRoe;
+        NekDouble HRoe   = (srL * HL + srR * HR) / srLR;
+        NekDouble cRoe   = GetRoeSoundSpeed(
+                                rhoL, pL, eL, HL, srL,
+                                rhoR, pR, eR, HR, srR,
+                                HRoe, URoe2, srLR);
+
 		// Maximum eigenvalue
-		URoe = fabs(uRoe) + cRoe;
+		NekDouble URoe = fabs(uRoe) + cRoe;
 		
 		// Lax-Friedrichs flux formula
         rhof  = 0.5*(rhouL + rhouR - URoe*(rhoR - rhoL));

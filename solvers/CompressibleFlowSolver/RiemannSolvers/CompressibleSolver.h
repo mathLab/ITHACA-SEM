@@ -37,6 +37,7 @@
 #define NEKTAR_SOLVERS_COMPRESSIBLEFLOWSOLVER_RIEMANNSOLVER_COMPRESSIBLESOLVER
 
 #include <SolverUtils/RiemannSolvers/RiemannSolver.h>
+#include <CompressibleFlowSolver/Misc/EquationOfState.h>
 
 using namespace Nektar::SolverUtils;
 
@@ -46,10 +47,12 @@ namespace Nektar
     {
     protected:
         bool m_pointSolve;
+        EquationOfStateSharedPtr m_eos;
+        bool m_idealGas;
         
         CompressibleSolver(
                 const LibUtilities::SessionReaderSharedPtr& pSession);
-        
+
         virtual void v_Solve(
             const int                                         nDim,
             const Array<OneD, const Array<OneD, NekDouble> > &Fwd,
@@ -79,6 +82,11 @@ namespace Nektar
         {
             ASSERTL0(false, "This function should be defined by subclasses.");
         }
+
+        NekDouble GetRoeSoundSpeed(
+            NekDouble rhoL, NekDouble pL, NekDouble eL, NekDouble HL, NekDouble srL,
+            NekDouble rhoR, NekDouble pR, NekDouble eR, NekDouble HR, NekDouble srR,
+            NekDouble HRoe, NekDouble URoe2, NekDouble srLR);
     };
 }
 

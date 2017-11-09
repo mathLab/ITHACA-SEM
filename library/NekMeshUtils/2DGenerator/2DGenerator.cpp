@@ -375,48 +375,47 @@ void Generator2D::MakeBL(int faceid)
     }
 
     map<NodeSharedPtr, NodeSharedPtr> nodeNormals;
-    map<NodeSharedPtr, vector<EdgeSharedPtr> >::iterator it;
-    for (it = m_nodesToEdge.begin(); it != m_nodesToEdge.end(); it++)
+    for (auto& it : m_nodesToEdge)
     {
-        ASSERTL0(it->second.size() == 1 || it->second.size() == 2,
+        ASSERTL0(it.second.size() == 1 || it.second.size() == 2,
                  "weirdness, most likely bl_surfs are incorrect");
 
         // If node at the end of the BL open loop, the "normal node" isn't
         // constructed by computing a normal but found on the adjacent curve
-        if (it->second.size() == 1)
+        if (it.second.size() == 1)
         {
             vector<pair<int, CADCurveSharedPtr> > curves =
-                it->first->GetCADCurves();
+                it.first->GetCADCurves();
 
             vector<EdgeSharedPtr> edges =
                 m_curvemeshes[curves[0].first]->GetMeshEdges();
             vector<EdgeSharedPtr>::iterator ie =
-                find(edges.begin(), edges.end(), it->second[0]);
+                find(edges.begin(), edges.end(), it.second[0]);
             int rightCurve =
                 (ie == edges.end()) ? curves[0].first : curves[1].first;
 
             vector<NodeSharedPtr> nodes =
                 m_curvemeshes[rightCurve]->GetMeshPoints();
-            nodeNormals[it->first] =
-                (nodes[0] == it->first) ? nodes[1] : nodes[nodes.size() - 2];
+            nodeNormals[it.first] =
+                (nodes[0] == it.first) ? nodes[1] : nodes[nodes.size() - 2];
 
             continue;
         }
 
         Array<OneD, NekDouble> n(3, 0.0);
-        Array<OneD, NekDouble> n1 = edgeNormals[it->second[0]->m_id];
-        Array<OneD, NekDouble> n2 = edgeNormals[it->second[1]->m_id];
+        Array<OneD, NekDouble> n1 = edgeNormals[it.second[0]->m_id];
+        Array<OneD, NekDouble> n2 = edgeNormals[it.second[1]->m_id];
         n[0]          = (n1[0] + n2[0]) / 2.0;
         n[1]          = (n1[1] + n2[1]) / 2.0;
         NekDouble mag = sqrt(n[0] * n[0] + n[1] * n[1]);
         n[0] /= mag;
         n[1] /= mag;
-        NekDouble t = m_thickness.Evaluate(m_thickness_ID, it->first->m_x,
-                                           it->first->m_y, 0.0, 0.0);
+        NekDouble t = m_thickness.Evaluate(m_thickness_ID, it.first->m_x,
+                                           it.first->m_y, 0.0, 0.0);
         // Adjust thickness according to angle between normals
         if (adjust)
         {
-            if (adjustEverywhere || it->first->GetNumCadCurve() > 1)
+            if (adjustEverywhere || it.first->GetNumCadCurve() > 1)
             {
                 NekDouble angle = acos(n1[0] * n2[0] + n1[1] * n2[1]);
                 angle           = (angle > M_PI) ? 2 * M_PI - angle : angle;
@@ -424,8 +423,8 @@ void Generator2D::MakeBL(int faceid)
             }
         }
 
-        n[0]             = n[0] * t + it->first->m_x;
-        n[1]             = n[1] * t + it->first->m_y;
+        n[0]             = n[0] * t + it.first->m_x;
+        n[1]             = n[1] * t + it.first->m_y;
         NodeSharedPtr nn = std::shared_ptr<Node>(
             new Node(m_mesh->m_numNodes++, n[0], n[1], 0.0));
         CADSurfSharedPtr s = m_mesh->m_cad->GetSurf(faceid);

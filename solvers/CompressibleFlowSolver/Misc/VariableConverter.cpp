@@ -376,4 +376,24 @@ namespace Nektar
         }
     }
 
+    /**
+     * @brief Compute e(rho,p) \f$ using the equation of state.
+     *
+     * @param rho          Input density
+     * @param pressure     Input pressure
+     * @param soundspeed   The resulting sound speed \f$ c \f$.
+     */
+    void VariableConverter::GetEFromRhoP(
+            const Array<OneD, NekDouble>                     &rho,
+            const Array<OneD, NekDouble>                     &pressure,
+                  Array<OneD,                   NekDouble>   &energy)
+    {
+        int nPts  = rho.num_elements();
+
+        for (int i = 0; i < nPts; ++i)
+        {
+            energy[i] = m_eos->GetEFromRhoP(rho[i], pressure[i]);
+        }
+    }
+
 }

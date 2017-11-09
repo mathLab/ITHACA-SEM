@@ -95,6 +95,10 @@ namespace Nektar
         void GetSoundSpeed(
             const Array<OneD,       Array<OneD, NekDouble> > &physfield,
                   Array<OneD,                   NekDouble>   &soundspeed);
+        void GetEFromRhoP(
+            const Array<OneD, NekDouble>                     &rho,
+            const Array<OneD, NekDouble>                     &pressure,
+                  Array<OneD,                   NekDouble>   &energy);
 
     protected:
         LibUtilities::SessionReaderSharedPtr m_session;

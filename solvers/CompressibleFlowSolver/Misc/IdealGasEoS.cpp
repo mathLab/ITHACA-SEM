@@ -82,4 +82,10 @@ NekDouble IdealGasEoS::v_GetDPDe_rho(
     return rho*(m_gamma-1);
 }
 
+NekDouble IdealGasEoS::v_GetEFromRhoP(
+            const NekDouble &rho, const NekDouble &p)
+{
+    return p / (rho * (m_gamma-1));
+}
+
 }

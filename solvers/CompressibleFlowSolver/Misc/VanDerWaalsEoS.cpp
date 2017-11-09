@@ -86,4 +86,10 @@ NekDouble VanDerWaalsEoS::v_GetDPDe_rho(
     return (m_gamma - 1) / (1.0/rho - m_b);
 }
 
+NekDouble VanDerWaalsEoS::v_GetEFromRhoP(
+            const NekDouble &rho, const NekDouble &p)
+{
+    return (p + m_a*rho*rho) * (1.0/rho - m_b) / (m_gamma - 1) - m_a * rho;
+}
+
 }

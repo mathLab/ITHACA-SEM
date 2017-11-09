@@ -57,7 +57,7 @@ EquationOfStateFactory& GetEquationOfStateFactory();
 /**
  * @class EquationOfState
  * @brief Encapsulates equations of state allowing us to obtain thermodynamic
- *        properties from relations of the form X(rho,e)
+ *        properties: most relations are in the form X(rho,e)
  */
 class EquationOfState
 {
@@ -84,6 +84,10 @@ class EquationOfState
         NekDouble GetDPDe_rho(
             const NekDouble &rho, const NekDouble &e);
 
+        /// Obrain the internal energy from rho and P
+        NekDouble GetEFromRhoP(
+            const NekDouble &rho, const NekDouble &p);
+
     protected:
         NekDouble  m_gamma;
         NekDouble  m_gasConstant;
@@ -105,6 +109,9 @@ class EquationOfState
 
         virtual NekDouble v_GetDPDe_rho(
             const NekDouble &rho, const NekDouble &e) = 0;
+
+        virtual NekDouble v_GetEFromRhoP(
+            const NekDouble &rho, const NekDouble &p) = 0;
 };
 }
 

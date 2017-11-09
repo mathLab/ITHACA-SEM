@@ -819,11 +819,12 @@ namespace Nektar
                 tmp[i] = m_fields[i]->GetPhys();
             }
 
-            Array<OneD, NekDouble> pressure(nPhys);
+            Array<OneD, NekDouble> pressure(nPhys), temperature(nPhys);
             Array<OneD, NekDouble> soundspeed(nPhys), mach(nPhys);
             Array<OneD, NekDouble> sensor(nPhys), SensorKappa(nPhys);
 
             m_varConv->GetPressure  (tmp, pressure);
+            m_varConv->GetTemperature(tmp, temperature);
             m_varConv->GetSoundSpeed(tmp, soundspeed);
             m_varConv->GetMach      (tmp, soundspeed, mach);
 
@@ -832,19 +833,23 @@ namespace Nektar
             m_varConv->GetSensor (m_fields[0], tmp, sensor, SensorKappa,
                                     sensorOffset);
 
-            Array<OneD, NekDouble> pFwd(nCoeffs), sFwd(nCoeffs), mFwd(nCoeffs);
+            Array<OneD, NekDouble> pFwd(nCoeffs), TFwd(nCoeffs);
+            Array<OneD, NekDouble> sFwd(nCoeffs), mFwd(nCoeffs);
             Array<OneD, NekDouble> sensFwd(nCoeffs);
 
             m_fields[0]->FwdTrans_IterPerExp(pressure,   pFwd);
+            m_fields[0]->FwdTrans_IterPerExp(temperature,TFwd);
             m_fields[0]->FwdTrans_IterPerExp(soundspeed, sFwd);
             m_fields[0]->FwdTrans_IterPerExp(mach,       mFwd);
             m_fields[0]->FwdTrans_IterPerExp(sensor,     sensFwd);
 
             variables.push_back  ("p");
+            variables.push_back  ("T");
             variables.push_back  ("a");
             variables.push_back  ("Mach");
             variables.push_back  ("Sensor");
             fieldcoeffs.push_back(pFwd);
+            fieldcoeffs.push_back(TFwd);
             fieldcoeffs.push_back(sFwd);
             fieldcoeffs.push_back(mFwd);
             fieldcoeffs.push_back(sensFwd);

@@ -80,6 +80,9 @@ class IdealGasEoS : public EquationOfState
         virtual NekDouble v_GetDPDe_rho(
             const NekDouble &rho, const NekDouble &e);
 
+        virtual NekDouble v_GetEFromRhoP(
+            const NekDouble &rho, const NekDouble &p);
+
     private:
         IdealGasEoS(const LibUtilities::SessionReaderSharedPtr& pSession);
         

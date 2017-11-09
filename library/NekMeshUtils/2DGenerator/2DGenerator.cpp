@@ -430,8 +430,106 @@ void Generator2D::MakeBL(int faceid)
         CADSurfSharedPtr s = m_mesh->m_cad->GetSurf(faceid);
         Array<OneD, NekDouble> uv = s->locuv(n);
         nn->SetCADSurf(faceid, s, uv);
-        nodeNormals[it->first] = nn;
+        nodeNormals[it.first] = nn;
     }
+
+    vector<EdgeSharedPtr> edges;
+    for (const auto &it : m_blCurves)
+    {
+        vector<EdgeSharedPtr> localEdges = m_curvemeshes[it]->GetMeshEdges();
+        edges.insert(edges.end(), localEdges.begin(), localEdges.end());
+    }
+
+    map<NodeSharedPtr, NodeSharedPtr> unitNormals;
+    map<NodeSharedPtr, NekDouble> dist;
+
+    do
+    {
+        unitNormals.clear();
+        dist.clear();
+
+        for (const auto &it : edges)
+        {
+            NodeSharedPtr p = it->m_n1;
+            NodeSharedPtr q = it->m_n2;
+
+            Node r = *nodeNormals[p] - *p;
+            Node s = *nodeNormals[q] - *q;
+
+            NekDouble d = r.curl(s).m_z;
+
+            if (d == 0)
+            {
+                continue;
+            }
+
+            NekDouble t = (*q - *p).curl(s).m_z / d;
+            NekDouble u = (*q - *p).curl(r).m_z / d;
+
+            if (0 <= t && t <= 1 && 0 <= u && u <= 1)
+            {
+                if (!unitNormals.count(p))
+                {
+                    dist[p]        = sqrt(r.abs2());
+                    unitNormals[p] = make_shared<Node>(r / dist[p]);
+                }
+
+                if (!unitNormals.count(q))
+                {
+                    dist[q]        = sqrt(s.abs2());
+                    unitNormals[q] = make_shared<Node>(s / dist[q]);
+                }
+            }
+        }
+
+        for (const auto &it : unitNormals)
+        {
+            EdgeSharedPtr e1 = m_nodesToEdge[it.first][0];
+            EdgeSharedPtr e2 = m_nodesToEdge[it.first][1];
+
+            NodeSharedPtr node1 = (e1->m_n1 != it.first) ? e1->m_n1 : e1->m_n2;
+            NodeSharedPtr node2 = (e2->m_n1 != it.first) ? e2->m_n1 : e2->m_n2;
+
+            NodeSharedPtr normal0 = it.second;
+
+            NodeSharedPtr normal1;
+            if (unitNormals.count(node1))
+            {
+                normal1 = unitNormals[node1];
+            }
+            else
+            {
+                Node tmp = *nodeNormals[node1] - *node1;
+                normal1  = make_shared<Node>(tmp / sqrt(tmp.abs2()));
+            }
+
+            NodeSharedPtr normal2;
+            if (unitNormals.count(node2))
+            {
+                normal2 = unitNormals[node2];
+            }
+            else
+            {
+                Node tmp = *nodeNormals[node2] - *node2;
+                normal2  = make_shared<Node>(tmp / sqrt(tmp.abs2()));
+            }
+
+            Node avg = *normal1 + *normal0 * 2.0 + *normal2;
+            avg /= sqrt(avg.abs2());
+
+            NodeSharedPtr nn = std::shared_ptr<Node>(
+                new Node(nodeNormals[it.first]->GetID(),
+                         it.first->m_x + avg.m_x * dist[it.first],
+                         it.first->m_y + avg.m_y * dist[it.first], 0.0));
+            CADSurfSharedPtr s =
+                nodeNormals[it.first]->GetCADSurfs().begin()->second;
+            Array<OneD, NekDouble> uv = s->locuv(nn->GetLoc());
+            nn->SetCADSurf(nodeNormals[it.first]->GetCADSurfs().begin()->first,
+                           s, uv);
+
+            nodeNormals[it.first] = nn;
+        }
+    } while (unitNormals.size());
 
     for (int it = 0; it < m_blCurves.size(); ++it)
     {

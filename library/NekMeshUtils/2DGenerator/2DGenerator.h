@@ -92,7 +92,7 @@ private:
     std::vector<EdgeSharedPtr> m_blEdges;
     LibUtilities::AnalyticExpressionEvaluator m_thickness;
     int m_thickness_ID;
-    std::map<NodeSharedPtr, std::vector<EdgeSharedPtr> > m_nodesToEdge;
+    std::map<NodeSharedPtr, std::vector<EdgeSharedPtr>> m_nodesToEdge;
 };
 }
 }

@@ -75,7 +75,7 @@ void Generator2D::Process()
     // Check that cad is 2D
     Array<OneD, NekDouble> bndBox = m_mesh->m_cad->GetBoundingBox();
     ASSERTL0(fabs(bndBox[5] - bndBox[4]) < 1.0e-7, "CAD isn't 2D");
-    
+
     if (m_mesh->m_verbose)
     {
         cout << endl << "2D meshing" << endl;
@@ -308,8 +308,7 @@ void Generator2D::MakeBLPrep()
 
     for (auto &it : m_blCurves)
     {
-        vector<EdgeSharedPtr> localedges =
-            m_curvemeshes[it]->GetMeshEdges();
+        vector<EdgeSharedPtr> localedges = m_curvemeshes[it]->GetMeshEdges();
         for (auto &ie : localedges)
         {
             m_blEdges.push_back(ie);
@@ -321,14 +320,13 @@ void Generator2D::MakeBLPrep()
 
 void Generator2D::MakeBL(int faceid)
 {
-    map<int, Array<OneD, NekDouble> > edgeNormals;
+    map<int, Array<OneD, NekDouble>> edgeNormals;
     int eid = 0;
     for (auto &it : m_blCurves)
     {
         CADOrientation::Orientation edgeo =
             m_mesh->m_cad->GetCurve(it)->GetOrienationWRT(faceid);
-        vector<EdgeSharedPtr> es =
-            m_curvemeshes[it]->GetMeshEdges();
+        vector<EdgeSharedPtr> es = m_curvemeshes[it]->GetMeshEdges();
         // on each !!!EDGE!!! calculate a normal
         // always to the left unless edgeo is 1
         // normal must be done in the parametric space (and then projected back)
@@ -375,7 +373,7 @@ void Generator2D::MakeBL(int faceid)
     }
 
     map<NodeSharedPtr, NodeSharedPtr> nodeNormals;
-    for (auto& it : m_nodesToEdge)
+    for (auto &it : m_nodesToEdge)
     {
         ASSERTL0(it.second.size() == 1 || it.second.size() == 2,
                  "weirdness, most likely bl_surfs are incorrect");
@@ -384,7 +382,7 @@ void Generator2D::MakeBL(int faceid)
         // constructed by computing a normal but found on the adjacent curve
         if (it.second.size() == 1)
         {
-            vector<pair<int, CADCurveSharedPtr> > curves =
+            vector<pair<int, CADCurveSharedPtr>> curves =
                 it.first->GetCADCurves();
 
             vector<EdgeSharedPtr> edges =
@@ -528,16 +526,14 @@ void Generator2D::MakeBL(int faceid)
     {
         CADOrientation::Orientation edgeo =
             m_mesh->m_cad->GetCurve(it)->GetOrienationWRT(faceid);
-        vector<NodeSharedPtr> ns =
-            m_curvemeshes[it]->GetMeshPoints();
+        vector<NodeSharedPtr> ns = m_curvemeshes[it]->GetMeshPoints();
         vector<NodeSharedPtr> newNs;
         for (auto &in : ns)
         {
             newNs.push_back(nodeNormals[in]);
         }
         m_curvemeshes[it] =
-            MemoryManager<CurveMesh>::AllocateSharedPtr(it, m_mesh,
-                                                        newNs);
+            MemoryManager<CurveMesh>::AllocateSharedPtr(it, m_mesh, newNs);
         if (edgeo == CADOrientation::eBackwards)
         {
             reverse(ns.begin(), ns.end());
@@ -617,8 +613,7 @@ void Generator2D::MakePeriodic()
         cout << "\t\tPeriodic boundary conditions" << endl;
         for (auto &it : m_periodicPairs)
         {
-            cout << "\t\t\tCurves " << it.first << " => " << it.second
-                 << endl;
+            cout << "\t\t\tCurves " << it.first << " => " << it.second << endl;
         }
         cout << endl;
     }

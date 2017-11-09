@@ -88,6 +88,8 @@ private:
     std::vector<unsigned int> m_blCurves;
     /// map of curves and Bl ends: 0, 1 or 2 (for both)
     std::map<unsigned, unsigned> m_blends;
+    /// list of BL edges
+    std::vector<EdgeSharedPtr> m_blEdges;
     LibUtilities::AnalyticExpressionEvaluator m_thickness;
     int m_thickness_ID;
     std::map<NodeSharedPtr, std::vector<EdgeSharedPtr> > m_nodesToEdge;

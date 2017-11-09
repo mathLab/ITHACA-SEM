@@ -305,7 +305,7 @@ void Generator2D::MakeBLPrep()
         cout << endl << "\tBoundary layer meshing:" << endl << endl;
     }
 
-    // identify the nodes which will become the boundary layer.
+    // identify the nodes and edges which will become the boundary layer.
 
     for (int it = 0; it < m_blCurves.size(); ++it)
     {
@@ -313,6 +313,7 @@ void Generator2D::MakeBLPrep()
             m_curvemeshes[m_blCurves[it]]->GetMeshEdges();
         for (int i = 0; i < localedges.size(); i++)
         {
+            m_blEdges.push_back(localedges[i]);
             m_nodesToEdge[localedges[i]->m_n1].push_back(localedges[i]);
             m_nodesToEdge[localedges[i]->m_n2].push_back(localedges[i]);
         }
@@ -433,13 +434,6 @@ void Generator2D::MakeBL(int faceid)
         nodeNormals[it.first] = nn;
     }
 
-    vector<EdgeSharedPtr> edges;
-    for (const auto &it : m_blCurves)
-    {
-        vector<EdgeSharedPtr> localEdges = m_curvemeshes[it]->GetMeshEdges();
-        edges.insert(edges.end(), localEdges.begin(), localEdges.end());
-    }
-
     map<NodeSharedPtr, NodeSharedPtr> unitNormals;
     map<NodeSharedPtr, NekDouble> dist;
 
@@ -448,7 +442,7 @@ void Generator2D::MakeBL(int faceid)
         unitNormals.clear();
         dist.clear();
 
-        for (const auto &it : edges)
+        for (const auto &it : m_blEdges)
         {
             NodeSharedPtr p = it->m_n1;
             NodeSharedPtr q = it->m_n2;

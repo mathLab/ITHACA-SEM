@@ -53,7 +53,7 @@ VanDerWaalsEoS::VanDerWaalsEoS(const LibUtilities::SessionReaderSharedPtr& pSess
     pSession->LoadParameter ("Pcrit", Pcrit);
 
     m_a = 27.0/64.0 * m_gasConstant * m_gasConstant * Tcrit * Tcrit / Pcrit;
-    m_b = 1.0/8.0 * Tcrit / Pcrit;
+    m_b = 1.0/8.0   * m_gasConstant * Tcrit / Pcrit;
 }
 
 NekDouble VanDerWaalsEoS::v_GetTemperature(

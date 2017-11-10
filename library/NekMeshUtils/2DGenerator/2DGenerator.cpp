@@ -431,7 +431,12 @@ void Generator2D::MakeBL(int faceid)
         nodeNormals[it.first] = nn;
     }
 
+    // Check for any intersecting boundary layer normals and smooth them if
+    // needed
+
+    // Nodes that need normal smoothing and their unit normal
     map<NodeSharedPtr, NodeSharedPtr> unitNormals;
+    // Nodes that need normal smoothing and their BL thickness
     map<NodeSharedPtr, NekDouble> dist;
 
     do
@@ -441,6 +446,8 @@ void Generator2D::MakeBL(int faceid)
 
         for (const auto &it : m_blEdges)
         {
+            // Line intersection based on
+            // https://stackoverflow.com/a/565282/7241595
             NodeSharedPtr p = it->m_n1;
             NodeSharedPtr q = it->m_n2;
 
@@ -459,12 +466,12 @@ void Generator2D::MakeBL(int faceid)
 
             if (0 <= t && t <= 1 && 0 <= u && u <= 1)
             {
+                // Add nodes to the list of normals to smooth
                 if (!unitNormals.count(p))
                 {
                     dist[p]        = sqrt(r.abs2());
                     unitNormals[p] = make_shared<Node>(r / dist[p]);
                 }
-
                 if (!unitNormals.count(q))
                 {
                     dist[q]        = sqrt(s.abs2());
@@ -473,8 +480,10 @@ void Generator2D::MakeBL(int faceid)
             }
         }
 
+        // Smooth each normal one by one
         for (const auto &it : unitNormals)
         {
+            // Get adjacent edges and nodes
             EdgeSharedPtr e1 = m_nodesToEdge[it.first][0];
             EdgeSharedPtr e2 = m_nodesToEdge[it.first][1];
 
@@ -483,6 +492,7 @@ void Generator2D::MakeBL(int faceid)
 
             NodeSharedPtr normal0 = it.second;
 
+            // Get or compute adjacent unit normals
             NodeSharedPtr normal1;
             if (unitNormals.count(node1))
             {
@@ -505,9 +515,12 @@ void Generator2D::MakeBL(int faceid)
                 normal2  = make_shared<Node>(tmp / sqrt(tmp.abs2()));
             }
 
+            // Smooth normal (equation could be adjusted but this seems to work
+            // without being too drastic)
             Node avg = *normal1 + *normal0 * 2.0 + *normal2;
             avg /= sqrt(avg.abs2());
 
+            // Create new BL node with smoothed normal
             NodeSharedPtr nn = std::shared_ptr<Node>(
                 new Node(nodeNormals[it.first]->GetID(),
                          it.first->m_x + avg.m_x * dist[it.first],

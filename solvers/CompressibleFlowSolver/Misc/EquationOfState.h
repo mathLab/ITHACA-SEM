@@ -76,6 +76,10 @@ class EquationOfState
         NekDouble GetSoundSpeed(
             const NekDouble &rho, const NekDouble &e);
 
+        /// Calculate the sound speed
+        NekDouble GetEntropy(
+            const NekDouble &rho, const NekDouble &e);
+
         /// Calculate the partial derivative of P(rho,e) with respect to rho
         NekDouble GetDPDrho_e(
             const NekDouble &rho, const NekDouble &e);
@@ -103,7 +107,10 @@ class EquationOfState
 
         virtual NekDouble v_GetSoundSpeed(
             const NekDouble &rho, const NekDouble &e);
-        
+
+        virtual NekDouble v_GetEntropy(
+            const NekDouble &rho, const NekDouble &e) = 0;
+
         virtual NekDouble v_GetDPDrho_e(
             const NekDouble &rho, const NekDouble &e) = 0;
 

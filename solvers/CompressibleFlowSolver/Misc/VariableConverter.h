@@ -93,8 +93,11 @@ namespace Nektar
             const Array<OneD, const Array<OneD, NekDouble> > &physfield,
                   Array<OneD,                   NekDouble>   &pressure);
         void GetSoundSpeed(
-            const Array<OneD,       Array<OneD, NekDouble> > &physfield,
+            const Array<OneD, const Array<OneD, NekDouble> > &physfield,
                   Array<OneD,                   NekDouble>   &soundspeed);
+        void GetEntropy(
+            const Array<OneD, const Array<OneD, NekDouble> > &physfield,
+                  Array<OneD,                   NekDouble>   &entropy);
         void GetEFromRhoP(
             const Array<OneD, NekDouble>                     &rho,
             const Array<OneD, NekDouble>                     &pressure,

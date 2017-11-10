@@ -73,6 +73,9 @@ class VanDerWaalsEoS : public EquationOfState
         virtual NekDouble v_GetPressure(
             const NekDouble &rho, const NekDouble &e);
 
+        virtual NekDouble v_GetEntropy(
+            const NekDouble &rho, const NekDouble &e);
+
         virtual NekDouble v_GetDPDrho_e(
             const NekDouble &rho, const NekDouble &e);
 

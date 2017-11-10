@@ -68,6 +68,16 @@ NekDouble VanDerWaalsEoS::v_GetPressure(
     return (e + m_a * rho) * (m_gamma - 1) / (1.0/rho - m_b) - m_a * rho * rho;
 }
 
+NekDouble VanDerWaalsEoS::v_GetEntropy(
+    const NekDouble &rho, const NekDouble &e)
+{
+    NekDouble T   = GetTemperature(rho,e);
+    NekDouble sIg =
+            m_gasConstant/(m_gamma-1) * log(T) - m_gasConstant * log(rho);
+
+    return sIg + m_gasConstant * log(1-m_b*rho);
+}
+
 NekDouble VanDerWaalsEoS::v_GetDPDrho_e(
     const NekDouble &rho, const NekDouble &e)
 {

@@ -70,6 +70,12 @@ NekDouble EquationOfState::GetSoundSpeed(
     return v_GetSoundSpeed(rho,e);
 }
 
+NekDouble EquationOfState::GetEntropy(
+            const NekDouble &rho, const NekDouble &e)
+{
+    return v_GetEntropy(rho,e);
+}
+
 NekDouble EquationOfState::GetDPDrho_e(
             const NekDouble &rho, const NekDouble &e)
 {

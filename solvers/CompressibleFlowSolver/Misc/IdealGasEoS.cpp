@@ -70,6 +70,13 @@ NekDouble IdealGasEoS::v_GetSoundSpeed(
     return sqrt(m_gamma * m_gasConstant * T);
 }
 
+NekDouble IdealGasEoS::v_GetEntropy(
+    const NekDouble &rho, const NekDouble &e)
+{
+    NekDouble T = GetTemperature(rho,e);
+    return m_gasConstant/(m_gamma-1) * log(T) - m_gasConstant * log(rho);
+}
+
 NekDouble IdealGasEoS::v_GetDPDrho_e(
     const NekDouble &rho, const NekDouble &e)
 {

@@ -73,7 +73,10 @@ class IdealGasEoS : public EquationOfState
 
         virtual NekDouble v_GetSoundSpeed(
             const NekDouble &rho, const NekDouble &e);
-        
+
+        virtual NekDouble v_GetEntropy(
+            const NekDouble &rho, const NekDouble &e);
+
         virtual NekDouble v_GetDPDrho_e(
             const NekDouble &rho, const NekDouble &e);
 

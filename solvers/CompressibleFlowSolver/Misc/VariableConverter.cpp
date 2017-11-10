@@ -362,8 +362,8 @@ namespace Nektar
      * @param soundspeed   The resulting sound speed \f$ c \f$.
      */
     void VariableConverter::GetSoundSpeed(
-        const Array<OneD, Array<OneD, NekDouble> > &physfield,
-              Array<OneD,             NekDouble  > &soundspeed)
+        const Array<OneD, const Array<OneD, NekDouble> > &physfield,
+              Array<OneD,                   NekDouble  > &soundspeed)
     {
         int nPts  = physfield[0].num_elements();
 
@@ -373,6 +373,27 @@ namespace Nektar
         for (int i = 0; i < nPts; ++i)
         {
             soundspeed[i] = m_eos->GetSoundSpeed(physfield[0][i], energy[i]);
+        }
+    }
+
+    /**
+     * @brief Compute the entropy \f$ using the equation of state.
+     *
+     * @param physfield    Input physical field
+     * @param soundspeed   The resulting sound speed \f$ c \f$.
+     */
+    void VariableConverter::GetEntropy(
+        const Array<OneD, const Array<OneD, NekDouble> > &physfield,
+              Array<OneD,                   NekDouble  > &entropy)
+    {
+        int nPts  = physfield[0].num_elements();
+
+        Array<OneD, NekDouble> energy (nPts);
+        GetInternalEnergy(physfield, energy);
+
+        for (int i = 0; i < nPts; ++i)
+        {
+            entropy[i] = m_eos->GetEntropy(physfield[0][i], energy[i]);
         }
     }
 

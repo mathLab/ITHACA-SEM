@@ -69,9 +69,6 @@ void PressureOutflowBC::v_Apply(
     const Array<OneD, const int> &traceBndMap
     = m_fields[0]->GetTraceBndMap();
 
-    NekDouble gammaMinusOne    = m_gamma - 1.0;
-    NekDouble gammaMinusOneInv = 1.0 / gammaMinusOne;
-
     // Computing the normal velocity for characteristics coming
     // from inside the computational domain
     Array<OneD, NekDouble > Vn (nTracePts, 0.0);
@@ -110,6 +107,12 @@ void PressureOutflowBC::v_Apply(
         GetPhys_Offset(e) ;
         id2 = m_fields[0]->GetTrace()->GetPhys_Offset(traceBndMap[m_offset+e]);
 
+        // Get internal energy
+        Array<OneD, NekDouble> pressure (npts, m_pInf);
+        Array<OneD, NekDouble> rho      (npts, Fwd[0]+id2);
+        Array<OneD, NekDouble> e(npts);
+        m_varConv->GetEFromRhoP(rho, pressure, e);
+
         // Loop on points of m_bcRegion 'e'
         for (i = 0; i < npts; i++)
         {
@@ -125,7 +128,7 @@ void PressureOutflowBC::v_Apply(
                     Ek += 0.5 * (Fwd[j][pnt] * Fwd[j][pnt]) / Fwd[0][pnt];
                 }
 
-                rhoeb = m_pInf * gammaMinusOneInv + Ek;
+                rhoeb = Fwd[0][pnt] * e[i] + Ek;
 
                 // Partial extrapolation for subsonic cases
                 for (j = 0; j < nVariables-1; ++j)

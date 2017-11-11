@@ -38,6 +38,7 @@ IF( NEKTAR_SOLVER_COMPRESSIBLE_FLOW )
        ./Misc/EquationOfState.cpp
        ./Misc/IdealGasEoS.cpp
        ./Misc/PengRobinsonEoS.cpp
+       ./Misc/RedlichKwongEoS.cpp
        ./Misc/VanDerWaalsEoS.cpp
        ./Misc/VariableConverter.cpp
        ./RiemannSolvers/AverageSolver.cpp

@@ -88,6 +88,18 @@ NekDouble EquationOfState::GetDPDe_rho(
     return v_GetDPDe_rho(rho,e);
 }
 
+NekDouble EquationOfState::GetEFromRhoP(
+            const NekDouble &rho, const NekDouble &p)
+{
+    return v_GetEFromRhoP(rho,p);
+}
+
+NekDouble EquationOfState::GetRhoFromPT(
+            const NekDouble &p, const NekDouble &T)
+{
+    return v_GetEFromRhoP(p,T);
+}
+
 // General implementation for v_GetSoundSpeed: c^2 = xi + kappa * h
 //    where xi = dpdrho - e/rho * dp/de    and  kappa = dp/de / rho
 NekDouble EquationOfState::v_GetSoundSpeed(
@@ -103,12 +115,6 @@ NekDouble EquationOfState::v_GetSoundSpeed(
     NekDouble kappa = dpde/rho;
 
     return sqrt( chi + kappa * enthalpy);
-}
-
-NekDouble EquationOfState::GetEFromRhoP(
-            const NekDouble &rho, const NekDouble &p)
-{
-    return v_GetEFromRhoP(rho,p);
 }
 
 }

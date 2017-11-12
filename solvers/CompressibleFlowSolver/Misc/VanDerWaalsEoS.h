@@ -85,6 +85,9 @@ class VanDerWaalsEoS : public EquationOfState
         virtual NekDouble v_GetEFromRhoP(
             const NekDouble &rho, const NekDouble &p);
 
+        virtual NekDouble v_GetRhoFromPT(
+            const NekDouble &rho, const NekDouble &p);
+
     private:
         VanDerWaalsEoS(const LibUtilities::SessionReaderSharedPtr& pSession);
         

@@ -102,4 +102,46 @@ NekDouble VanDerWaalsEoS::v_GetEFromRhoP(
     return (p + m_a*rho*rho) * (1.0/rho - m_b) / (m_gamma - 1) - m_a * rho;
 }
 
+NekDouble VanDerWaalsEoS::v_GetRhoFromPT(
+            const NekDouble &p, const NekDouble &T)
+{
+    // First solve for the compressibility factor Z using the cubic equation
+    //    Z^3 + k1 * Z^2 + k2 * Z + k3 = 0
+    //    for van der Waals:
+    //        k1 = -(B+1), k2 = A,  k3 = -AB
+    //    where A = aP/(RT)^2, B = bP/(RT)
+    NekDouble A = m_a * p / (m_gasConstant * m_gasConstant * T * T);
+    NekDouble B = m_b * p / (m_gasConstant * T);
+
+    NekDouble k1 = -(B+1);
+    NekDouble k2 = A;
+    NekDouble k3 = -A*B;
+
+    // Use ideal gas (Z=1) as starting guess for iteration
+    NekDouble Z = 1.0;
+    // Newton-Raphson iteration to find Z
+    NekDouble tol      = 1e-6;
+    NekDouble maxIter  = 100;
+    NekDouble residual = 1;
+    NekDouble f, df;
+    unsigned int cnt = 0;
+    while (abs(residual) > tol && cnt < maxIter)
+    {
+        f  = Z*Z*Z + k1 * Z*Z + k2 * Z + k3;
+        df = 3*Z*Z + 2 * k1 *Z + k2;
+        residual = f/df;
+        Z -= residual;
+        ++cnt;
+    }
+    if(cnt == maxIter)
+    {
+        cout << "Newton-Raphson in VanDerWaalsEoS::v_GetRhoFromPT did not "
+                "converge in " << maxIter << " iterations (residual = "
+             << residual <<")" << endl;
+    }
+
+    // Now calculate rho = p/(ZRT)
+    return p/(Z * m_gasConstant * T);
+}
+
 }

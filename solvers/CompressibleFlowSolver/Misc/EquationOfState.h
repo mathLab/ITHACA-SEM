@@ -92,6 +92,10 @@ class EquationOfState
         NekDouble GetEFromRhoP(
             const NekDouble &rho, const NekDouble &p);
 
+        /// Obrain the density from P and T
+        NekDouble GetRhoFromPT(
+            const NekDouble &p, const NekDouble &T);
+
     protected:
         NekDouble  m_gamma;
         NekDouble  m_gasConstant;
@@ -118,6 +122,9 @@ class EquationOfState
             const NekDouble &rho, const NekDouble &e) = 0;
 
         virtual NekDouble v_GetEFromRhoP(
+            const NekDouble &rho, const NekDouble &p) = 0;
+
+        virtual NekDouble v_GetRhoFromPT(
             const NekDouble &rho, const NekDouble &p) = 0;
 };
 }

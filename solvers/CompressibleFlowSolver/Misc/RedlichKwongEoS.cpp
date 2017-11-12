@@ -100,10 +100,9 @@ NekDouble RedlichKwongEoS::v_GetPressure(
     const NekDouble &rho, const NekDouble &e)
 {
     NekDouble T = GetTemperature (rho, e);
-    NekDouble sqrtTr = sqrt(T/m_Tc);
 
     NekDouble p = m_gasConstant*T/(1.0/rho - m_b) -
-                  m_a / sqrtTr / (1.0/(rho*rho) + m_b/rho);
+                  m_a * Alpha(T) / (1.0/(rho*rho) + m_b/rho);
 
     return p;
 }
@@ -112,14 +111,13 @@ NekDouble RedlichKwongEoS::v_GetEntropy(
     const NekDouble &rho, const NekDouble &e)
 {
     NekDouble T       = GetTemperature(rho,e);
-    NekDouble sqrtTr  = sqrt(T/m_Tc);
     NekDouble logTerm = LogTerm(rho);
     // Entropy for an ideal gas
     NekDouble sIg =
             m_gasConstant/(m_gamma-1) * log(T) - m_gasConstant * log(rho);
 
     NekDouble deltaS = m_gasConstant * log(1-m_b*rho);
-    deltaS -= m_a  * logTerm / (2*m_b*T*sqrtTr);
+    deltaS -= m_a * Alpha(T) * logTerm / (2*m_b*T);
 
     return sIg + deltaS;
 }
@@ -128,15 +126,15 @@ NekDouble RedlichKwongEoS::v_GetDPDrho_e(
     const NekDouble &rho, const NekDouble &e)
 {
     NekDouble T       = GetTemperature(rho,e);
-    NekDouble sqrtTr  = sqrt(T/m_Tc);
+    NekDouble alpha   = Alpha(T);
     NekDouble dPde    = GetDPDe_rho(rho,e);
 
     // Calculate dPdrho_T
     NekDouble dPdrho_T = m_gasConstant*T/ ( (1.0-m_b*rho)*(1.0-m_b*rho) ) -
-                m_a * rho * (m_b*rho + 2) / (sqrtTr * (1+m_b*rho)*(1+m_b*rho));
+                m_a * alpha * rho * (m_b*rho + 2) / ((1+m_b*rho)*(1+m_b*rho));
 
     // Calculate dedrho_T
-    NekDouble dedrho_T = -3*m_a / (2*sqrtTr * (1 + m_b*rho));
+    NekDouble dedrho_T = -3*m_a*alpha / (2 * (1 + m_b*rho));
 
     // The result is dPdrho_e = dPdrho_T - dPde_rho * dedrho_T
     return dPdrho_T - dPde * dedrho_T;
@@ -146,7 +144,7 @@ NekDouble RedlichKwongEoS::v_GetDPDe_rho(
     const NekDouble &rho, const NekDouble &e)
 {
     NekDouble T   = GetTemperature(rho,e);
-    NekDouble sqrtTr  = sqrt(T/m_Tc);
+    NekDouble alpha = Alpha(T);
     NekDouble logTerm = LogTerm(rho);
 
     // First calculate the denominator 1/rho^2 + 2*b/rho - b^2
@@ -155,11 +153,11 @@ NekDouble RedlichKwongEoS::v_GetDPDe_rho(
 
     // Compute cv = dedT_rho
     NekDouble cv   = m_gasConstant / (m_gamma - 1) +
-            3*m_a * logTerm / (4*m_b*T*sqrtTr);
+            3*m_a * alpha * logTerm / (4*m_b*T);
 
     // Now we obtain dPdT_rho
     NekDouble dPdT = m_gasConstant/(1.0/rho - m_b) +
-                     m_a  / (denom*2*T*sqrtTr);
+                     m_a * alpha  / (denom*2*T);
 
     // The result is dPde_rho = dPdT_rho / cv
     return dPdT / cv;
@@ -202,11 +200,56 @@ NekDouble RedlichKwongEoS::v_GetEFromRhoP(
     // Calculate T
     NekDouble T = sqrtT*sqrtT;
 
-    // sqrt(Tr)
-    NekDouble sqrtTr = sqrt(T/m_Tc);
     // Calculate internal energy
     return m_gasConstant*T/(m_gamma-1) -
-           3*m_a/(2*m_b*sqrtTr) * logTerm;
+           3*m_a * Alpha(T) /(2*m_b) * logTerm;
+}
+
+NekDouble RedlichKwongEoS::v_GetRhoFromPT(
+            const NekDouble &p, const NekDouble &T)
+{
+    // First solve for the compressibility factor Z using the cubic equation
+    //    Z^3 + k1 * Z^2 + k2 * Z + k3 = 0
+    //    for RedlichKwong:
+    //        k1 = -1.0, k2 = A - B - B^2,  k3 = -AB
+    //    where A = a*alpha(T)*P/(RT)^2, B = bP/(RT)
+    NekDouble A = m_a * Alpha(T) * p / (m_gasConstant * m_gasConstant * T * T);
+    NekDouble B = m_b * p / (m_gasConstant * T);
+
+    NekDouble k1 = -1.0;
+    NekDouble k2 = A - B - B*B;
+    NekDouble k3 = -A*B;
+
+    // Use ideal gas (Z=1) as starting guess for iteration
+    NekDouble Z = 1.0;
+    // Newton-Raphson iteration to find Z
+    NekDouble tol      = 1e-6;
+    NekDouble maxIter  = 100;
+    NekDouble residual = 1;
+    NekDouble f, df;
+    unsigned int cnt = 0;
+    while (abs(residual) > tol && cnt < maxIter)
+    {
+        f  = Z*Z*Z + k1 * Z*Z + k2 * Z + k3;
+        df = 3*Z*Z + 2 * k1 *Z + k2;
+        residual = f/df;
+        Z -= residual;
+        ++cnt;
+    }
+    if(cnt == maxIter)
+    {
+        cout << "Newton-Raphson in RedlichKwongEoS::v_GetRhoFromPT did not "
+                "converge in " << maxIter << " iterations (residual = "
+             << residual <<")" << endl;
+    }
+
+    // Now calculate rho = p/(ZRT)
+    return p/(Z * m_gasConstant * T);
+}
+
+NekDouble RedlichKwongEoS::Alpha(const NekDouble &T)
+{
+    return 1.0/sqrt(T/m_Tc);
 }
 
 NekDouble RedlichKwongEoS::LogTerm(const NekDouble &rho)

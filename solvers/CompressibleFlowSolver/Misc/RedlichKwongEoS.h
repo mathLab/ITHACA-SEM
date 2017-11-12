@@ -87,10 +87,16 @@ class RedlichKwongEoS : public EquationOfState
         virtual NekDouble v_GetEFromRhoP(
             const NekDouble &rho, const NekDouble &p);
 
+        virtual NekDouble v_GetRhoFromPT(
+            const NekDouble &rho, const NekDouble &p);
+
     private:
         RedlichKwongEoS(const LibUtilities::SessionReaderSharedPtr& pSession);
         
         virtual ~RedlichKwongEoS(void){};
+
+        // Alpha term of Redlich-Kwong EoS ( 1.0/sqrt(Tr))
+        NekDouble Alpha(const NekDouble &T);
 
         // Log term term of Peng-Robinson EoS
         NekDouble LogTerm(const NekDouble &rho);

@@ -97,7 +97,7 @@ NekDouble EquationOfState::GetEFromRhoP(
 NekDouble EquationOfState::GetRhoFromPT(
             const NekDouble &p, const NekDouble &T)
 {
-    return v_GetEFromRhoP(p,T);
+    return v_GetRhoFromPT(p,T);
 }
 
 // General implementation for v_GetSoundSpeed: c^2 = xi + kappa * h

@@ -102,6 +102,10 @@ namespace Nektar
             const Array<OneD, NekDouble>                     &rho,
             const Array<OneD, NekDouble>                     &pressure,
                   Array<OneD,                   NekDouble>   &energy);
+        void GetRhoFromPT(
+            const Array<OneD, NekDouble>                     &pressure,
+            const Array<OneD, NekDouble>                     &temperature,
+                  Array<OneD,                   NekDouble>   &rho);
 
     protected:
         LibUtilities::SessionReaderSharedPtr m_session;

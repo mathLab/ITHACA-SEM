@@ -402,7 +402,7 @@ namespace Nektar
      *
      * @param rho          Input density
      * @param pressure     Input pressure
-     * @param soundspeed   The resulting sound speed \f$ c \f$.
+     * @param energy       The resulting internal energy.
      */
     void VariableConverter::GetEFromRhoP(
             const Array<OneD, NekDouble>                     &rho,
@@ -414,6 +414,26 @@ namespace Nektar
         for (int i = 0; i < nPts; ++i)
         {
             energy[i] = m_eos->GetEFromRhoP(rho[i], pressure[i]);
+        }
+    }
+
+    /**
+     * @brief Compute rho(p,T) \f$ using the equation of state.
+     *
+     * @param pressure     Input pressure
+     * @param temperature  Input temperature
+     * @param rho          The resulting density
+     */
+    void VariableConverter::GetRhoFromPT(
+            const Array<OneD, NekDouble>                     &pressure,
+            const Array<OneD, NekDouble>                     &temperature,
+                  Array<OneD,                   NekDouble>   &rho)
+    {
+        int nPts  = pressure.num_elements();
+
+        for (int i = 0; i < nPts; ++i)
+        {
+            rho[i] = m_eos->GetRhoFromPT(pressure[i], temperature[i]);
         }
     }
 

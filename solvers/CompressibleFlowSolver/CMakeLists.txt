@@ -15,6 +15,7 @@ IF( NEKTAR_SOLVER_COMPRESSIBLE_FLOW )
        ./BoundaryConditions/ExtrapOrder0BC.cpp
        ./BoundaryConditions/IsentropicVortexBC.cpp
        ./BoundaryConditions/PressureInflowFileBC.cpp
+       ./BoundaryConditions/PressureMachTemperatureBC.cpp
        ./BoundaryConditions/PressureOutflowBC.cpp
        ./BoundaryConditions/PressureOutflowFileBC.cpp
        ./BoundaryConditions/PressureOutflowNonReflectiveBC.cpp

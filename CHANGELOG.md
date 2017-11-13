@@ -45,6 +45,8 @@ v5.0.0
 - Additional curve types in GEO reader: BSpline, Circle, Ellipse (!800)
 - Fix default command line argument value (!823)
 - Add projection meshing module which can curve linear meshes with CAD (!826)
+- XML meshes now write with provenance information, including information about
+  their source, for debugging purposes (!872)
 
 **FieldConvert**:
 - Add input module for Semtex field files (!777)

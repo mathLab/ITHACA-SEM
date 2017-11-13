@@ -48,8 +48,8 @@ class Iso
 {
     public:
         void  Condense(void);
-        void  GlobalCondense(vector<boost::shared_ptr<Iso> > &iso, bool verbose);
-        void  SeparateRegions(vector<boost::shared_ptr<Iso> > &iso, int minsize, bool verbose);
+        void  GlobalCondense(vector<std::shared_ptr<Iso> > &iso, bool verbose);
+        void  SeparateRegions(vector<std::shared_ptr<Iso> > &iso, int minsize, bool verbose);
 
         void  Smooth(int n_iter, NekDouble lambda, NekDouble mu);
 
@@ -184,7 +184,7 @@ class Iso
 
 };
 
-typedef boost::shared_ptr<Iso> IsoSharedPtr;
+typedef std::shared_ptr<Iso> IsoSharedPtr;
 
 class IsoVertex
 {
@@ -228,7 +228,7 @@ class ProcessIsoContour : public ProcessModule
 {
     public:
         /// Creates an instance of this class
-        static boost::shared_ptr<Module> create(FieldSharedPtr f)
+        static std::shared_ptr<Module> create(FieldSharedPtr f)
         {
             return MemoryManager<ProcessIsoContour>::AllocateSharedPtr(f);
         }

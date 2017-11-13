@@ -78,10 +78,9 @@ namespace Nektar
             m_coordim = T.m_coordim;
             m_globalID = T.m_globalID;
 
-            std::list<CompToElmt>::const_iterator def;
-            for(def = T.m_elmtMap.begin(); def != T.m_elmtMap.end(); def++)
+            for(auto &def : T.m_elmtMap)
             {
-                m_elmtMap.push_back(*def);
+                m_elmtMap.push_back(def);
             }
         }
 
@@ -104,11 +103,9 @@ namespace Nektar
 
         bool PointGeom::IsElmtConnected(int gvo_id, int locid) const
         {
-
-            std::list<CompToElmt>::const_iterator def;
             CompToElmt ee(gvo_id,locid);
 
-            def = find(m_elmtMap.begin(),m_elmtMap.end(),ee);
+            auto def = find(m_elmtMap.begin(),m_elmtMap.end(),ee);
 
             // Found the element connectivity object in the list
             if(def != m_elmtMap.end())

@@ -37,7 +37,7 @@
 #include <SpatialDomains/SegGeom.h>
 #include <SpatialDomains/TriGeom.h>
 #include <LibUtilities/BasicUtils/CompressData.h>
-#include <LibUtilities/BasicUtils/ParseUtils.hpp>
+#include <LibUtilities/BasicUtils/ParseUtils.h>
 #include <tinyxml.h>
 
 using namespace std;
@@ -103,7 +103,6 @@ namespace Nektar
             TiXmlHandle docHandle(&doc);
             TiXmlElement* mesh = docHandle.FirstChildElement("NEKTAR").FirstChildElement("GEOMETRY").Element();
             TiXmlElement* field = NULL;
-            CurveMap::iterator it;
 
             /// Look for elements in ELEMENT block.
             field = mesh->FirstChildElement("EDGE");
@@ -144,7 +143,7 @@ namespace Nektar
                         {GetVertex(edgeData[i].v0), GetVertex(edgeData[i].v1)};
                     SegGeomSharedPtr edge;
 
-                    it = m_curvedEdges.find(indx);
+                    auto it = m_curvedEdges.find(indx);
                     if (it == m_curvedEdges.end())
                     {
                         edge = MemoryManager<SegGeom>::AllocateSharedPtr(
@@ -207,7 +206,7 @@ namespace Nektar
                                 
                                 SegGeomSharedPtr edge;
                                 
-                                it = m_curvedEdges.find(indx);
+                                auto it = m_curvedEdges.find(indx);
                                 
                                 if(it == m_curvedEdges.end())
                                 {
@@ -247,7 +246,6 @@ namespace Nektar
             ASSERTL0(field, "Unable to find ELEMENT tag in file.");
 
             // Set up curve map for curved elements on an embedded manifold.
-            CurveMap::iterator it;
 
             /// All elements are of the form: "<? ID="#"> ... </?>", with
             /// ? being the element type.
@@ -295,7 +293,7 @@ namespace Nektar
                             indx = faceData[i].id;
 
                             /// See if this face has curves.
-                            it = m_curvedFaces.find(indx);
+                            auto it = m_curvedFaces.find(indx);
 
                             /// Create a TriGeom to hold the new definition.
                             SegGeomSharedPtr edges[TriGeom::kNedges] =
@@ -341,7 +339,7 @@ namespace Nektar
                             indx = faceData[i].id;
 
                             /// See if this face has curves.
-                            it = m_curvedFaces.find(indx);
+                            auto it = m_curvedFaces.find(indx);
 
                             /// Create a QuadGeom to hold the new definition.
                             SegGeomSharedPtr edges[QuadGeom::kNedges] =
@@ -359,7 +357,7 @@ namespace Nektar
                                 };
 
                             QuadGeomSharedPtr quadgeom;
-                            if (it == m_curvedEdges.end())
+                            if (it == m_curvedFaces.end())
                             {
                                 quadgeom =
                                     MemoryManager<QuadGeom>::AllocateSharedPtr(
@@ -384,7 +382,7 @@ namespace Nektar
                     int err = element->QueryIntAttribute("ID", &indx);
                     ASSERTL0(err == TIXML_SUCCESS, "Unable to read element attribute ID.");
                     
-                    it = m_curvedFaces.find(indx);
+                    auto it = m_curvedFaces.find(indx);
                 
                     /// Read text element description.
                     TiXmlNode* elementChild = element->FirstChild();
@@ -611,8 +609,7 @@ namespace Nektar
 
         SegGeomSharedPtr MeshGraph2D::GetSegGeom(int eID)
         {
-            SegGeomSharedPtr returnval;
-            SegGeomMap::iterator x = m_segGeoms.find(eID);
+            auto x = m_segGeoms.find(eID);
             ASSERTL0(x != m_segGeoms.end(), "Segment not found.");
             return x->second;
         };
@@ -644,9 +641,8 @@ namespace Nektar
 
                 std::string indxStr = token.substr(indxBeg, indxEnd - indxBeg + 1);
                 std::vector<unsigned int> seqVector;
-                std::vector<unsigned int>::iterator seqIter;
 
-                bool err = ParseUtils::GenerateSeqVector(indxStr.c_str(), seqVector);
+                bool err = ParseUtils::GenerateSeqVector(indxStr, seqVector);
 
                 ASSERTL0(err, (std::string("Error reading composite elements: ") + indxStr).c_str());
 
@@ -666,36 +662,36 @@ namespace Nektar
                 switch(type)
                 {
                 case 'E':   // Edge
-                    for (seqIter = seqVector.begin(); seqIter != seqVector.end(); ++seqIter)
+                    for (auto &seqIter : seqVector)
                     {
-                        if (m_segGeoms.find(*seqIter) == m_segGeoms.end())
+                        if (m_segGeoms.find(seqIter) == m_segGeoms.end())
                         {
                             char errStr[16] = "";
-                            ::sprintf(errStr, "%d", *seqIter);
+                            ::sprintf(errStr, "%d", seqIter);
                             NEKERROR(ErrorUtil::ewarning, (std::string("Unknown edge index: ") + errStr).c_str());
                         }
                         else
                         {
-                            composite->push_back(m_segGeoms[*seqIter]);
+                            composite->push_back(m_segGeoms[seqIter]);
                         }
                     }
                     break;
 
                 case 'T':   // Triangle
                     {
-                        for (seqIter = seqVector.begin(); seqIter != seqVector.end(); ++seqIter)
+                        for (auto &seqIter : seqVector)
                         {
-                            if (m_triGeoms.count(*seqIter) == 0 )
+                            if (m_triGeoms.count(seqIter) == 0 )
                             {
                                 char errStr[16] = "";
-                                ::sprintf(errStr, "%d", *seqIter);
+                                ::sprintf(errStr, "%d", seqIter);
                                 NEKERROR(ErrorUtil::ewarning, (std::string("Unknown triangle index: ") + errStr).c_str());
                             }
                             else
                             {
-                                if(CheckRange(*m_triGeoms[*seqIter]))
+                                if(CheckRange(*m_triGeoms[seqIter]))
                                 {
-                                    composite->push_back(m_triGeoms[*seqIter]);
+                                    composite->push_back(m_triGeoms[seqIter]);
                                 }
                             }
                         }
@@ -704,19 +700,19 @@ namespace Nektar
 
                 case 'Q':   // Quad
                     {
-                        for (seqIter = seqVector.begin(); seqIter != seqVector.end(); ++seqIter)
+                        for (auto &seqIter : seqVector)
                         {
-                            if (m_quadGeoms.count(*seqIter) == 0)
+                            if (m_quadGeoms.count(seqIter) == 0)
                             {
                                 char errStr[16] = "";
-                                ::sprintf(errStr, "%d", *seqIter);
+                                ::sprintf(errStr, "%d", seqIter);
                                 NEKERROR(ErrorUtil::ewarning, (std::string("Unknown quad index: ") + errStr +std::string(" in Composite section")).c_str());
                             }
                             else
                             {
-                                if(CheckRange(*m_quadGeoms[*seqIter]))
+                                if(CheckRange(*m_quadGeoms[seqIter]))
                                 {
-                                    composite->push_back(m_quadGeoms[*seqIter]);
+                                    composite->push_back(m_quadGeoms[seqIter]);
                                 }
                             }
                         }
@@ -724,17 +720,17 @@ namespace Nektar
                     break;
 
                 case 'V':   // Vertex
-                    for (seqIter = seqVector.begin(); seqIter != seqVector.end(); ++seqIter)
+                    for (auto &seqIter : seqVector)
                     {
-                        if (*seqIter >= m_vertSet.size())
+                        if (seqIter >= m_vertSet.size())
                         {
                             char errStr[16] = "";
-                            ::sprintf(errStr, "%d", *seqIter);
+                            ::sprintf(errStr, "%d", seqIter);
                             NEKERROR(ErrorUtil::ewarning, (std::string("Unknown vertex index: ") + errStr).c_str());
                         }
                         else
                         {
-                            composite->push_back(m_vertSet[*seqIter]);
+                            composite->push_back(m_vertSet[seqIter]);
                         }
                     }
                     break;
@@ -755,7 +751,7 @@ namespace Nektar
         {
             SegGeomSharedPtr Sedge;
 
-            if(!(Sedge = boost::dynamic_pointer_cast<SegGeom>(edge)))
+            if(!(Sedge = std::dynamic_pointer_cast<SegGeom>(edge)))
             {
                 ASSERTL0(false,"Dynamics cast failed");
 
@@ -773,21 +769,18 @@ namespace Nektar
 
             ElementEdgeVectorSharedPtr returnval = MemoryManager<ElementEdgeVector>::AllocateSharedPtr();
 
-            CompositeMapIter compIter;
             TriGeomSharedPtr triGeomShPtr;
             QuadGeomSharedPtr quadGeomShPtr;
 
-            GeometryVectorIter geomIter;
-
             for(int d = 0; d < m_domain.size(); ++d)
             {
-                for (compIter = m_domain[d].begin(); compIter != m_domain[d].end(); ++compIter)
+                for (auto &compIter : m_domain[d])
                 {
-                    for (geomIter = (compIter->second)->begin(); geomIter != (compIter->second)->end(); ++geomIter)
+                    for (auto &geomIter : *compIter.second)
                     {
-                        triGeomShPtr = boost::dynamic_pointer_cast<TriGeom>(*geomIter);
-                        quadGeomShPtr = boost::dynamic_pointer_cast<QuadGeom>(*geomIter);
-                        
+                        triGeomShPtr = std::dynamic_pointer_cast<TriGeom>(geomIter);
+                        quadGeomShPtr = std::dynamic_pointer_cast<QuadGeom>(geomIter);
+
                         if (triGeomShPtr || quadGeomShPtr)
                         {
                             int edgeNum;
@@ -972,157 +965,3 @@ namespace Nektar
         }
     }; //end of namespace
 }; //end of namespace
-
-//
-// $Log: MeshGraph2D.cpp,v $
-// Revision 1.41  2009/12/17 02:08:04  bnelson
-// Fixed visual studio compiler warning.
-//
-// Revision 1.40  2009/10/22 17:41:47  cbiotto
-// Update for variable order expansion
-//
-// Revision 1.39  2009/07/02 13:32:24  sehunchun
-// *** empty log message ***
-//
-// Revision 1.38  2009/07/02 11:39:44  sehunchun
-// Modification for 2D gemoetry embedded in 3D
-//
-// Revision 1.37  2009/05/01 13:23:21  pvos
-// Fixed various bugs
-//
-// Revision 1.36  2009/04/20 16:13:23  sherwin
-// Modified Import and Write functions and redefined how Expansion is used
-//
-// Revision 1.35  2009/01/21 16:59:03  pvos
-// Added additional geometric factors to improve efficiency
-//
-// Revision 1.34  2009/01/12 10:26:59  pvos
-// Added input tags for nodal expansions
-//
-// Revision 1.33  2008/09/12 11:26:19  pvos
-// Updates for mappings in 3D
-//
-// Revision 1.32  2008/09/09 14:21:44  sherwin
-// Updates for first working version of curved edges
-//
-// Revision 1.31  2008/08/14 22:11:03  sherwin
-// Mods for HDG update
-//
-// Revision 1.30  2008/07/29 22:23:36  sherwin
-// various mods for DG advection solver in Multiregions. Added virtual calls to Geometry, Geometry1D, 2D and 3D
-//
-// Revision 1.29  2008/05/29 19:07:39  delisi
-// Removed the Write(..) methods, so it is only in the base MeshGraph class. Also, added a line to set the global ID of the geometry object for every element read in.
-//
-// Revision 1.28  2008/05/28 21:42:18  jfrazier
-// Minor comment spelling change.
-//
-// Revision 1.27  2008/03/18 14:14:49  pvos
-// Update for nodal triangular helmholtz solver
-//
-// Revision 1.26  2008/03/11 17:02:24  jfrazier
-// Modified the GetElementsFromEdge to use the domain.
-//
-// Revision 1.25  2008/01/21 19:58:14  sherwin
-// Updated so that QuadGeom and TriGeom have SegGeoms instead of EdgeComponents
-//
-// Revision 1.24  2007/12/17 20:27:24  sherwin
-// Added normals to GeomFactors
-//
-// Revision 1.23  2007/12/14 17:39:18  jfrazier
-// Fixed composite reader to handle ranges and comma separated lists.
-//
-// Revision 1.22  2007/12/11 21:51:53  jfrazier
-// Updated 2d components so elements could be retrieved from edges.
-//
-// Revision 1.21  2007/12/04 03:02:26  jfrazier
-// Changed to stringstream.
-//
-// Revision 1.20  2007/09/20 22:25:06  jfrazier
-// Added expansion information to meshgraph class.
-//
-// Revision 1.19  2007/07/26 01:38:33  jfrazier
-// Cleanup of some attribute reading code.
-//
-// Revision 1.18  2007/07/24 16:52:09  jfrazier
-// Added domain code.
-//
-// Revision 1.17  2007/07/05 04:21:10  jfrazier
-// Changed id format and propagated from 1d to 2d.
-//
-// Revision 1.16  2007/06/10 02:27:11  jfrazier
-// Another checkin with an incremental completion of the boundary conditions reader
-//
-// Revision 1.15  2007/06/07 23:55:24  jfrazier
-// Intermediate revisions to add parsing for boundary conditions file.
-//
-// Revision 1.14  2007/05/28 21:48:42  sherwin
-// Update for 2D functionality
-//
-// Revision 1.13  2006/10/17 22:26:01  jfrazier
-// Added capability to specify ranges in composite definition.
-//
-// Revision 1.12  2006/10/17 18:42:54  jfrazier
-// Removed "NUMBER" attribute in items.
-//
-// Revision 1.11  2006/09/26 23:41:53  jfrazier
-// Updated to account for highest level NEKTAR tag and changed the geometry tag to GEOMETRY.
-//
-// Revision 1.10  2006/08/24 18:50:00  jfrazier
-// Completed error checking on permissable composite item combinations.
-//
-// Revision 1.9  2006/08/18 19:37:17  jfrazier
-// *** empty log message ***
-//
-// Revision 1.8  2006/08/17 22:55:00  jfrazier
-// Continued adding code to process composites in the mesh2d.
-//
-// Revision 1.7  2006/08/16 23:34:42  jfrazier
-// *** empty log message ***
-//
-// Revision 1.6  2006/06/02 18:48:40  sherwin
-// Modifications to make ProjectLoc2D run bit there are bus errors for order > 3
-//
-// Revision 1.5  2006/06/01 14:15:30  sherwin
-// Added typdef of boost wrappers and made GeoFac a boost shared pointer.
-//
-// Revision 1.4  2006/05/30 14:00:04  sherwin
-// Updates to make MultiRegions and its Demos work
-//
-// Revision 1.3  2006/05/23 19:56:33  jfrazier
-// These build and run, but the expansion pieces are commented out
-// because they would not run.
-//
-// Revision 1.2  2006/05/09 13:37:01  jfrazier
-// Removed duplicate definition of shared vertex pointer.
-//
-// Revision 1.1  2006/05/04 18:59:01  kirby
-// *** empty log message ***
-//
-// Revision 1.11  2006/04/11 23:18:11  jfrazier
-// Completed MeshGraph2D for tri's and quads.  Not thoroughly tested.
-//
-// Revision 1.10  2006/04/09 02:08:35  jfrazier
-// Added precompiled header.
-//
-// Revision 1.9  2006/04/04 23:12:37  jfrazier
-// More updates to readers.  Still work to do on MeshGraph2D to store tris and quads.
-//
-// Revision 1.8  2006/03/25 00:58:29  jfrazier
-// Many changes dealing with fundamental structure and reading/writing.
-//
-// Revision 1.7  2006/03/12 14:20:43  sherwin
-//
-// First compiling version of SpatialDomains and associated modifications
-//
-// Revision 1.6  2006/03/12 07:42:03  sherwin
-//
-// Updated member names and StdRegions call. Still has not been compiled
-//
-// Revision 1.5  2006/02/26 21:19:43  bnelson
-// Fixed a variety of compiler errors caused by updates to the coding standard.
-//
-// Revision 1.4  2006/02/19 01:37:34  jfrazier
-// Initial attempt at bringing into conformance with the coding standard.  Still more work to be done.  Has not been compiled.
-//
-//

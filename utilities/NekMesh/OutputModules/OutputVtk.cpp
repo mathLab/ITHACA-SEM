@@ -73,14 +73,11 @@ void OutputVtk::Process()
     vtkPoints *vtkPoints   = vtkPoints::New();
     vtkCellArray *vtkPolys = vtkCellArray::New();
 
-    std::set<NodeSharedPtr>::iterator it;
-
     std::set<NodeSharedPtr> tmp(m_mesh->m_vertexSet.begin(),
                                 m_mesh->m_vertexSet.end());
 
-    for (it = tmp.begin(); it != tmp.end(); ++it)
+    for (auto &n : tmp)
     {
-        NodeSharedPtr n = *it;
         vtkPoints->InsertPoint(n->m_id, n->m_x, n->m_y, n->m_z);
     }
 

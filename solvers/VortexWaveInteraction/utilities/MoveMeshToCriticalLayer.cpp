@@ -41,7 +41,7 @@
 #include <SpatialDomains/MeshGraph.h>
 #include <MultiRegions/ExpList.h>
 #include <MultiRegions/ExpList2D.h>
-#include <LibUtilities/BasicUtils/ParseUtils.hpp>
+#include <LibUtilities/BasicUtils/ParseUtils.h>
 
 using namespace std;
 using namespace Nektar;
@@ -236,8 +236,6 @@ void GetNewVertexLocation(TiXmlElement *doc,
     Array<OneD,MoveVerts> Verts(nverts);
     
     // loop mesh edges and fill in verts info
-    std::map<int,SpatialDomains::SegGeomSharedPtr>::iterator segIter;
-    
     SpatialDomains::PointGeomSharedPtr v0,v1;
     SpatialDomains::PointGeom dist;
 
@@ -246,13 +244,13 @@ void GetNewVertexLocation(TiXmlElement *doc,
     NekDouble x,y,x1,y1,z1,x2,y2,z2;
 
     // Setup intiial spring and verts
-    for(segIter = meshedges.begin(); segIter != meshedges.end(); ++segIter)
+    for(auto &segIter : meshedges)
     {
-        vid0 = (segIter->second)->GetVid(0);
-        vid1 = (segIter->second)->GetVid(1);
+        vid0 = (segIter.second)->GetVid(0);
+        vid1 = (segIter.second)->GetVid(1);
 
-        v0 = (segIter->second)->GetVertex(0);
-        v1 = (segIter->second)->GetVertex(1);
+        v0 = (segIter.second)->GetVertex(0);
+        v1 = (segIter.second)->GetVertex(1);
         
         kspring = 1.0/v0->dist(*v1); 
         
@@ -317,12 +315,11 @@ void GetNewVertexLocation(TiXmlElement *doc,
 
     // shift quads in critical layer to move more or less rigidly
     SpatialDomains::QuadGeomMap quadgeom = mesh->GetAllQuadGeoms();
-    std::map<int,SpatialDomains::QuadGeomSharedPtr>::iterator quadIter;
-    for(quadIter = quadgeom.begin(); quadIter != quadgeom.end(); ++quadIter)
+    for(auto &quadIter : quadgeom)
     {
         for(i = 0; i < 4; ++i)
         {
-            vid0 = (quadIter->second)->GetVid(i);
+            vid0 = (quadIter.second)->GetVid(i);
             
             switch(Verts[vid0].solve)
             {
@@ -514,9 +511,8 @@ void  TurnOffEdges(TiXmlElement *doc,
             
             std::string indxStr = compositeElementStr.substr(indxBeg, indxEnd - indxBeg + 1);
             std::vector<unsigned int> seqVector;
-            std::vector<unsigned int>::iterator seqIter;
             
-            bool err = ParseUtils::GenerateSeqVector(indxStr.c_str(), seqVector);
+            bool err = ParseUtils::GenerateSeqVector(indxStr, seqVector);
             
             ASSERTL0(err, (std::string("Error reading composite elements: ") + indxStr).c_str());
             

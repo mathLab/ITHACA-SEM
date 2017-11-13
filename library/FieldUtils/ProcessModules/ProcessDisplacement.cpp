@@ -39,17 +39,13 @@ using namespace std;
 
 #include "ProcessDisplacement.h"
 
-#include <LibUtilities/BasicUtils/ParseUtils.hpp>
+#include <LibUtilities/BasicUtils/HashUtils.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LocalRegions/SegExp.h>
 #include <LocalRegions/TriExp.h>
 #include <StdRegions/StdQuadExp.h>
 #include <StdRegions/StdSegExp.h>
 #include <StdRegions/StdTriExp.h>
-
-#include <boost/tuple/tuple.hpp>
-#include <boost/tuple/tuple_comparison.hpp>
-#include <boost/unordered_set.hpp>
 
 namespace Nektar
 {
@@ -76,7 +72,7 @@ struct TriFaceHash : std::unary_function<TriFaceIDs, std::size_t>
         ids[2] = p.c;
 
         std::sort(ids.begin(), ids.end());
-        return boost::hash_range(ids.begin(), ids.end());
+        return hash_combine(ids[0], ids[1], ids[2]);
     }
 };
 
@@ -97,7 +93,7 @@ bool operator==(TriFaceIDs const &p1, TriFaceIDs const &p2)
     return ids1[0] == ids2[0] && ids1[1] == ids2[1] && ids1[2] == ids2[2];
 }
 
-typedef boost::unordered_map<TriFaceIDs, int, TriFaceHash> TriFaceMap;
+typedef std::unordered_map<TriFaceIDs, int, TriFaceHash> TriFaceMap;
 
 ModuleKey ProcessDisplacement::className =
     GetModuleFactory().RegisterCreatorFunction(
@@ -112,7 +108,7 @@ ProcessDisplacement::ProcessDisplacement(FieldSharedPtr f)
         ConfigOption(false, "", "Name of file containing high order boundary");
 
     m_config["usevertexids"] = ConfigOption(
-        false, "0", "Use vertex IDs instead of face IDs for matching");
+        true, "0", "Use vertex IDs instead of face IDs for matching");
 }
 
 ProcessDisplacement::~ProcessDisplacement()
@@ -133,7 +129,7 @@ void ProcessDisplacement::Process(po::variables_map &vm)
         return;
     }
 
-    bool useVertexIds = m_config["usevertexids"].m_beenSet;
+    bool useVertexIds = m_config["usevertexids"].as<bool>();
 
     vector<string> files;
     files.push_back(toFile);
@@ -164,25 +160,24 @@ void ProcessDisplacement::Process(po::variables_map &vm)
         }
 
         const SpatialDomains::SegGeomMap &tmp = bndGraph->GetAllSegGeoms();
-        SpatialDomains::SegGeomMap::const_iterator sIt;
 
-        for (sIt = tmp.begin(); sIt != tmp.end(); ++sIt)
+        for (auto &sIt : tmp)
         {
-            map<int, int>::iterator mIt = bndCondIds.find(sIt->first);
+            auto mIt = bndCondIds.find(sIt.first);
 
             if (mIt == bndCondIds.end())
             {
-                cout << "Warning: couldn't find element " << sIt->first << endl;
+                cout << "Warning: couldn't find element " << sIt.first << endl;
                 continue;
             }
 
             int e = mIt->second;
 
             SpatialDomains::SegGeomSharedPtr from =
-                boost::dynamic_pointer_cast<SpatialDomains::SegGeom>(
+                std::dynamic_pointer_cast<SpatialDomains::SegGeom>(
                     bndCondExpU->GetExp(e)->GetGeom());
 
-            SpatialDomains::SegGeomSharedPtr to = sIt->second;
+            SpatialDomains::SegGeomSharedPtr to = sIt.second;
 
             // Create temporary SegExp
             LocalRegions::SegExpSharedPtr toSeg =
@@ -236,7 +231,7 @@ void ProcessDisplacement::Process(po::variables_map &vm)
             for (int i = 0; i < bndCondExpU->GetExpSize(); ++i)
             {
                 SpatialDomains::TriGeomSharedPtr from =
-                    boost::dynamic_pointer_cast<SpatialDomains::TriGeom>(
+                    std::dynamic_pointer_cast<SpatialDomains::TriGeom>(
                         bndCondExpU->GetExp(i)->GetGeom());
 
                 TriFaceIDs t(from->GetVid(0), from->GetVid(1), from->GetVid(2));
@@ -245,39 +240,36 @@ void ProcessDisplacement::Process(po::variables_map &vm)
         }
 
         const SpatialDomains::TriGeomMap &tmp = bndGraph->GetAllTriGeoms();
-        SpatialDomains::TriGeomMap::const_iterator sIt;
 
-        for (sIt = tmp.begin(); sIt != tmp.end(); ++sIt)
+        for (auto &sIt : tmp)
         {
-            TriFaceMap::iterator tIt;
             int e;
 
             if (useVertexIds)
             {
-                TriFaceIDs t(sIt->second->GetVid(0), sIt->second->GetVid(1),
-                             sIt->second->GetVid(2));
+                TriFaceIDs t(sIt.second->GetVid(0), sIt.second->GetVid(1),
+                             sIt.second->GetVid(2));
 
-                tIt = vertexFaceMap.find(t);
-                e   = tIt == vertexFaceMap.end() ? -1 : tIt->second;
+                auto tIt = vertexFaceMap.find(t);
+                e = tIt == vertexFaceMap.end() ? -1 : tIt->second;
             }
             else
             {
-                map<int, int>::iterator mIt;
-                mIt = bndCondIds.find(sIt->first);
-                e   = mIt == bndCondIds.end() ? -1 : mIt->second;
+                auto mIt = bndCondIds.find(sIt.first);
+                e = mIt == bndCondIds.end() ? -1 : mIt->second;
             }
 
             if (e == -1)
             {
-                cout << "Warning: couldn't find element " << sIt->first << endl;
+                cout << "Warning: couldn't find element " << sIt.first << endl;
                 continue;
             }
 
             SpatialDomains::TriGeomSharedPtr from =
-                boost::dynamic_pointer_cast<SpatialDomains::TriGeom>(
+                std::dynamic_pointer_cast<SpatialDomains::TriGeom>(
                     bndCondExpU->GetExp(e)->GetGeom());
 
-            SpatialDomains::TriGeomSharedPtr to = sIt->second;
+            SpatialDomains::TriGeomSharedPtr to = sIt.second;
 
             // Create temporary SegExp
             LocalRegions::TriExpSharedPtr toSeg =

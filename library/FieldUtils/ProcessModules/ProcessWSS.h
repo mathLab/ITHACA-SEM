@@ -51,7 +51,7 @@ class ProcessWSS : public ProcessBoundaryExtract
 {
 public:
     /// Creates an instance of this class
-    static boost::shared_ptr<Module> create(FieldSharedPtr f)
+    static std::shared_ptr<Module> create(FieldSharedPtr f)
     {
         return MemoryManager<ProcessWSS>::AllocateSharedPtr(f);
     }
@@ -72,6 +72,15 @@ public:
     {
         return "Calculating wall shear stress";
     }
+
+protected:
+    void GetViscosity(NekDouble &kinvis, NekDouble &lambda);
+
+    void GetVelocity(const Array<OneD, MultiRegions::ExpListSharedPtr> exp,
+                     Array<OneD, Array<OneD, NekDouble> > &vel);
+
+private:
+    int m_spacedim;
 
 };
 }

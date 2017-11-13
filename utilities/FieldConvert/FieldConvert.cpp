@@ -166,7 +166,7 @@ int main(int argc, char* argv[])
             t = eProcessModule;
         }
 
-        FieldSharedPtr f = boost::shared_ptr<Field>(new Field());
+        FieldSharedPtr f = std::shared_ptr<Field>(new Field());
         ModuleSharedPtr mod = GetModuleFactory().CreateInstance(
             ModuleKey(t, tmp1[1]), f);
         cerr << "Options for module " << tmp1[1] << ":" << endl;
@@ -207,11 +207,12 @@ int main(int argc, char* argv[])
      * where the only required argument is 'modname', specifing the
      * name of the module to load.
      */
-    FieldSharedPtr f = boost::shared_ptr<Field>(new Field());
+    FieldSharedPtr f = std::shared_ptr<Field>(new Field());
     int nParts = 1;
     int MPInprocs = 1;
     int MPIrank   = 0;
     LibUtilities::CommSharedPtr MPIComm;
+
     if (LibUtilities::GetCommFactory().ModuleExists("ParallelMPI"))
     {
         // get hold of parallel communicator first
@@ -231,7 +232,7 @@ int main(int argc, char* argv[])
         }
         else
         {
-            f->m_comm = MPIComm; 
+            f->m_comm = MPIComm;
         }
     }
     else
@@ -283,7 +284,13 @@ int main(int argc, char* argv[])
 
         if (i < nInput || i == modcmds.size() - 1)
         {
+            //assume all modules are input unless last, or specified to be :out
             module.first = (i < nInput ? eInputModule : eOutputModule);
+            if (tmp1.size() > 1 && tmp1.back()=="out")
+            {
+                module.first = eOutputModule;
+                tmp1.pop_back();
+            }
 
             // If no colon detected, automatically detect mesh type from
             // file extension. Otherwise override and use tmp1[1] as the
@@ -298,7 +305,7 @@ int main(int argc, char* argv[])
                 // with input files.
                 string guess;
 
-                if (i < nInput)
+                if (module.first == eInputModule)
                 {
                     guess = InputModule::GuessFormat(tmp1[0]);
                 }
@@ -328,15 +335,15 @@ int main(int argc, char* argv[])
                     }
 
                     module.second = ext;
-                    tmp1.push_back(string(i < nInput ? "infile=" :
+                    tmp1.push_back(string(module.first == eInputModule ? "infile=" :
                                           "outfile=")  +tmp1[0]);
                 }
             }
             else
             {
                 module.second = tmp1[1];
-                tmp1.push_back(string(i < nInput ? "infile=" : "outfile=")
-                               +tmp1[0]);
+                tmp1.push_back(string(module.first == eInputModule ? "infile=" : "outfile=")
+                               + tmp1[0]);
                 offset++;
             }
         }
@@ -350,9 +357,9 @@ int main(int argc, char* argv[])
         mod = GetModuleFactory().CreateInstance(module, f);
         modules.push_back(mod);
 
-        if (i < nInput)
+        if (module.first == eInputModule)
         {
-            inputModule = boost::dynamic_pointer_cast<InputModule>(mod);
+            inputModule = std::dynamic_pointer_cast<InputModule>(mod);
             inputModule->AddFile(module.second, tmp1[0]);
         }
 
@@ -364,7 +371,7 @@ int main(int argc, char* argv[])
 
             if (tmp2.size() == 1)
             {
-                mod->RegisterConfig(tmp2[0], "1");
+                mod->RegisterConfig(tmp2[0]);
             }
             else if (tmp2.size() == 2)
             {
@@ -387,6 +394,7 @@ int main(int argc, char* argv[])
     module.second = string("createExp");
     mod = GetModuleFactory().CreateInstance(module, f);
     modules.push_back(mod);
+    mod->SetDefaults();
 
     // Include equispacedoutput module if needed
     Array< OneD, int>  modulesCount(SIZE_ModulePriority,0);
@@ -402,6 +410,7 @@ int main(int argc, char* argv[])
         module.second = string("equispacedoutput");
         mod = GetModuleFactory().CreateInstance(module, f);
         modules.push_back(mod);
+        mod->SetDefaults();
     }
 
     // Check if modules provided are compatible
@@ -444,7 +453,7 @@ int main(int argc, char* argv[])
             
             int rank = p;
             f->ClearField();
-            partComm = boost::shared_ptr<FieldConvertComm>(
+            partComm = std::shared_ptr<FieldConvertComm>(
                              new FieldConvertComm(argc, argv, nParts,rank));
         }
         

@@ -60,7 +60,7 @@ public:
         const Array<OneD, MultiRegions::ExpListSharedPtr> &fields);
 };
 
-typedef boost::shared_ptr<CoupledAssemblyMap> CoupledAssemblyMapSharedPtr;
+typedef std::shared_ptr<CoupledAssemblyMap> CoupledAssemblyMapSharedPtr;
 
 }
 

@@ -47,9 +47,6 @@ std::string CADSurfOCE::key = GetCADSurfFactory().RegisterCreatorFunction(
 
 void CADSurfOCE::Initialise(int i, TopoDS_Shape in)
 {
-    // this bit of code changes the units of the cad from mm opencascade
-    // defualt to m
-
     m_s = BRep_Tool::Surface(TopoDS::Face(in));
 
     if (in.Orientation() == 1)
@@ -57,20 +54,17 @@ void CADSurfOCE::Initialise(int i, TopoDS_Shape in)
         m_orientation = CADOrientation::eBackwards;
     }
 
-    gp_Trsf transform;
-    gp_Pnt ori(0.0, 0.0, 0.0);
-    transform.SetScale(ori, 1.0 / 1000.0);
-    TopLoc_Location mv(transform);
-    in.Move(mv);
-
-    m_occSurface = BRepAdaptor_Surface(TopoDS::Face(in));
-    m_id         = i;
+    m_id = i;
 
     m_bounds = Array<OneD, NekDouble>(4);
     BRepTools::UVBounds(TopoDS::Face(in), m_bounds[0], m_bounds[1], m_bounds[2],
                         m_bounds[3]);
     m_sas = new ShapeAnalysis_Surface(m_s);
     m_sas->SetDomain(m_bounds[0], m_bounds[1], m_bounds[2], m_bounds[3]);
+
+    m_shape = in;
+
+    m_2Dclass = new BRepTopAdaptor_FClass2d(TopoDS::Face(m_shape), 1e-4);
 }
 
 Array<OneD, NekDouble> CADSurfOCE::GetBounds()
@@ -78,50 +72,62 @@ Array<OneD, NekDouble> CADSurfOCE::GetBounds()
     return m_bounds;
 }
 
-Array<OneD, NekDouble> CADSurfOCE::locuv(Array<OneD, NekDouble> p)
+bool CADSurfOCE::IsPlanar()
 {
-    // has to transfer back to mm
-    gp_Pnt loc(p[0] * 1000.0, p[1] * 1000.0, p[2] * 1000.0);
-
-    Array<OneD, NekDouble> uvr(2);
-
-    gp_Pnt2d p2 = m_sas->ValueOfUV(loc, Precision::Confusion());
-    uvr[0]      = p2.X();
-    uvr[1]      = p2.Y();
-
-    WARNINGL2(m_sas->Value(p2).Distance(loc) < 1e-3, "large locuv distance " +
-                boost::lexical_cast<string>(
-                    m_sas->Value(p2).Distance(loc)/1000.0) + " " +
-                boost::lexical_cast<string>(m_id));
-
-    // if the uv returned is slightly off the surface
-    //(which ShapeAnalysis_Surface can do sometimes)
-    if (uvr[0] < m_bounds[0] || uvr[0] > m_bounds[1] || uvr[1] < m_bounds[2] ||
-        uvr[1] > m_bounds[3])
+    if (m_sas->Adaptor3d()->GetType() == GeomAbs_Plane)
     {
-        if (uvr[0] < m_bounds[0])
-        {
-            uvr[0] = m_bounds[0];
-        }
-        else if (uvr[0] > m_bounds[1])
-        {
-            uvr[0] = m_bounds[1];
-        }
-        else if (uvr[1] < m_bounds[2])
-        {
-            uvr[1] = m_bounds[2];
-        }
-        else if (uvr[1] > m_bounds[3])
-        {
-            uvr[1] = m_bounds[3];
-        }
-        else
-        {
-            ASSERTL0(false, "Cannot correct locuv");
-        }
+        return true;
     }
 
-    return uvr;
+    return false;
+}
+
+Array<OneD, NekDouble> CADSurfOCE::BoundingBox()
+{
+    BRepMesh_IncrementalMesh brmsh;
+
+    brmsh.SetShape(m_shape);
+    brmsh.SetDeflection(0.005);
+
+    brmsh.Perform();
+
+    Bnd_Box B;
+    BRepBndLib::Add(m_shape, B);
+    NekDouble e = sqrt(B.SquareExtent()) * 0.01;
+    e           = min(e, 5e-3);
+    B.Enlarge(e);
+    Array<OneD, NekDouble> ret(6);
+    B.Get(ret[0], ret[1], ret[2], ret[3], ret[4], ret[5]);
+    return ret;
+}
+
+Array<OneD, NekDouble> CADSurfOCE::locuv(Array<OneD, NekDouble> p,
+                                         NekDouble &dist)
+{
+    gp_Pnt loc(p[0] * 1000.0, p[1] * 1000.0, p[2] * 1000.0);
+    Array<OneD, NekDouble> uv(2);
+
+    gp_Pnt2d p2 = m_sas->ValueOfUV(loc, Precision::Confusion());
+
+    TopAbs_State s = m_2Dclass->Perform(p2);
+
+    if (s == TopAbs_OUT)
+    {
+        BRepBuilderAPI_MakeVertex v(loc);
+        BRepExtrema_DistShapeShape dss(
+            BRepTools::OuterWire(TopoDS::Face(m_shape)), v.Shape());
+        dss.Perform();
+        gp_Pnt np = dss.PointOnShape1(1);
+        p2        = m_sas->ValueOfUV(np, Precision::Confusion());
+    }
+
+    uv[0]     = p2.X();
+    uv[1]     = p2.Y();
+    gp_Pnt p3 = m_sas->Value(p2);
+
+    dist = p3.Distance(loc) / 1000.0;
+
+    return uv;
 }
 
 NekDouble CADSurfOCE::Curvature(Array<OneD, NekDouble> uv)
@@ -130,69 +136,10 @@ NekDouble CADSurfOCE::Curvature(Array<OneD, NekDouble> uv)
     Test(uv);
 #endif
 
-    Array<OneD, NekDouble> n = N(uv);
+    GeomLProp_SLProps d(m_s, 2, Precision::Confusion());
+    d.SetParameters(uv[0], uv[1]);
 
-    // a zero normal occurs at a signularity, CurvaturePoint
-    // cannot be sampled here
-    if (n[0] == 0 && n[1] == 0 && n[2] == 0)
-    {
-        return 0.0;
-    }
-
-    Array<OneD, NekDouble> r = D2(uv);
-
-    // metric and curvature tensors
-    NekDouble E = r[3] * r[3] + r[4] * r[4] + r[5] * r[5];
-    NekDouble F = r[3] * r[6] + r[4] * r[7] + r[5] * r[8];
-    NekDouble G = r[6] * r[6] + r[7] * r[7] + r[8] * r[8];
-    NekDouble e = n[0] * r[9] + n[1] * r[10] + n[2] * r[11];
-    NekDouble f = n[0] * r[15] + n[1] * r[16] + n[2] * r[17];
-    NekDouble g = n[0] * r[12] + n[1] * r[13] + n[2] * r[14];
-
-    // if det is zero cannot invert matrix, R=0 so must skip
-    if (E * G - F * F < 1E-30)
-    {
-        return 0.0;
-    }
-
-    NekDouble K, H;
-
-    K = (e * g - f * f) / (E * G - F * F);
-    H = 0.5 * (e * G - 2 * f * F + g * E) / (E * G - F * F);
-
-    NekDouble kv[2];
-    kv[0] = abs(H + sqrt(H * H - K));
-    kv[1] = abs(H - sqrt(H * H - K));
-
-    return kv[0] > kv[1] ? kv[0] : kv[1];
-}
-
-NekDouble CADSurfOCE::DistanceTo(Array<OneD, NekDouble> p)
-{
-    gp_Pnt loc(p[0] * 1000.0, p[1] * 1000.0, p[2] * 1000.0);
-
-    gp_Pnt2d p2 = m_sas->ValueOfUV(loc, Precision::Confusion());
-
-    gp_Pnt p3 = m_sas->Value(p2);
-
-    return p3.Distance(loc);
-}
-
-void CADSurfOCE::ProjectTo(Array<OneD, NekDouble> &tp,
-                           Array<OneD, NekDouble> &uv)
-{
-    gp_Pnt loc(tp[0] * 1000.0, tp[1] * 1000.0, tp[2] * 1000.0);
-
-    gp_Pnt2d p2 = m_sas->ValueOfUV(loc, Precision::Confusion());
-
-    gp_Pnt p3 = m_sas->Value(p2);
-
-    tp[0] = p3.X() / 1000.0;
-    tp[1] = p3.Y() / 1000.0;
-    tp[2] = p3.Z() / 1000.0;
-
-    uv[0] = p2.X();
-    uv[1] = p2.Y();
+    return d.MaxCurvature() * 1000.0;
 }
 
 Array<OneD, NekDouble> CADSurfOCE::P(Array<OneD, NekDouble> uv)
@@ -201,12 +148,11 @@ Array<OneD, NekDouble> CADSurfOCE::P(Array<OneD, NekDouble> uv)
     Test(uv);
 #endif
 
+    gp_Pnt loc = m_s->Value(uv[0], uv[1]);
     Array<OneD, NekDouble> location(3);
-    gp_Pnt loc;
-    loc         = m_occSurface.Value(uv[0], uv[1]);
-    location[0] = loc.X();
-    location[1] = loc.Y();
-    location[2] = loc.Z();
+    location[0] = loc.X() / 1000.0;
+    location[1] = loc.Y() / 1000.0;
+    location[2] = loc.Z() / 1000.0;
     return location;
 }
 
@@ -216,26 +162,27 @@ Array<OneD, NekDouble> CADSurfOCE::N(Array<OneD, NekDouble> uv)
     Test(uv);
 #endif
 
-    BRepLProp_SLProps slp(m_occSurface, 2, 1e-8);
-    slp.SetParameters(uv[0], uv[1]);
-
-    if (!slp.IsNormalDefined())
-    {
-        return Array<OneD, NekDouble>(3, 0.0);
-    }
-
-    gp_Dir d = slp.Normal();
+    GeomLProp_SLProps d(m_s, 2, Precision::Confusion());
+    d.SetParameters(uv[0], uv[1]);
 
     Array<OneD, NekDouble> normal(3);
 
-    if (m_orientation == CADOrientation::eBackwards)
+    if (!d.IsNormalDefined())
     {
-        d.Reverse();
+        normal = Array<OneD, NekDouble>(3, 0.0);
+        return normal;
     }
 
-    normal[0] = d.X();
-    normal[1] = d.Y();
-    normal[2] = d.Z();
+    gp_Dir n = d.Normal();
+
+    if (m_orientation == CADOrientation::eBackwards)
+    {
+        n.Reverse();
+    }
+
+    normal[0] = n.X();
+    normal[1] = n.Y();
+    normal[2] = n.Z();
 
     return normal;
 }
@@ -249,17 +196,17 @@ Array<OneD, NekDouble> CADSurfOCE::D1(Array<OneD, NekDouble> uv)
     Array<OneD, NekDouble> r(9);
     gp_Pnt Loc;
     gp_Vec D1U, D1V;
-    m_occSurface.D1(uv[0], uv[1], Loc, D1U, D1V);
+    m_s->D1(uv[0], uv[1], Loc, D1U, D1V);
 
-    r[0] = Loc.X(); // x
-    r[1] = Loc.Y(); // y
-    r[2] = Loc.Z(); // z
-    r[3] = D1U.X(); // dx/du
-    r[4] = D1U.Y(); // dy/du
-    r[5] = D1U.Z(); // dz/du
-    r[6] = D1V.X(); // dx/dv
-    r[7] = D1V.Y(); // dy/dv
-    r[8] = D1V.Z(); // dz/dv
+    r[0] = Loc.X() / 1000.0; // x
+    r[1] = Loc.Y() / 1000.0; // y
+    r[2] = Loc.Z() / 1000.0; // z
+    r[3] = D1U.X() / 1000.0; // dx/du
+    r[4] = D1U.Y() / 1000.0; // dy/du
+    r[5] = D1U.Z() / 1000.0; // dz/du
+    r[6] = D1V.X() / 1000.0; // dx/dv
+    r[7] = D1V.Y() / 1000.0; // dy/dv
+    r[8] = D1V.Z() / 1000.0; // dz/dv
 
     return r;
 }
@@ -273,26 +220,26 @@ Array<OneD, NekDouble> CADSurfOCE::D2(Array<OneD, NekDouble> uv)
     Array<OneD, NekDouble> r(18);
     gp_Pnt Loc;
     gp_Vec D1U, D1V, D2U, D2V, D2UV;
-    m_occSurface.D2(uv[0], uv[1], Loc, D1U, D1V, D2U, D2V, D2UV);
+    m_s->D2(uv[0], uv[1], Loc, D1U, D1V, D2U, D2V, D2UV);
 
-    r[0]  = Loc.X();  // x
-    r[1]  = Loc.Y();  // y
-    r[2]  = Loc.Z();  // z
-    r[3]  = D1U.X();  // dx/dx
-    r[4]  = D1U.Y();  // dy/dy
-    r[5]  = D1U.Z();  // dz/dz
-    r[6]  = D1V.X();  // dx/dx
-    r[7]  = D1V.Y();  // dy/dy
-    r[8]  = D1V.Z();  // dz/dz
-    r[9]  = D2U.X();  // d2x/du2
-    r[10] = D2U.Y();  // d2y/du2
-    r[11] = D2U.Z();  // d2z/du2
-    r[12] = D2V.X();  // d2x/dv2
-    r[13] = D2V.Y();  // d2y/dv2
-    r[14] = D2V.Z();  // d2z/dv2
-    r[15] = D2UV.X(); // d2x/dudv
-    r[16] = D2UV.Y(); // d2y/dudv
-    r[17] = D2UV.Z(); // d2z/dudv
+    r[0]  = Loc.X() / 1000.0;  // x
+    r[1]  = Loc.Y() / 1000.0;  // y
+    r[2]  = Loc.Z() / 1000.0;  // z
+    r[3]  = D1U.X() / 1000.0;  // dx/dx
+    r[4]  = D1U.Y() / 1000.0;  // dy/dy
+    r[5]  = D1U.Z() / 1000.0;  // dz/dz
+    r[6]  = D1V.X() / 1000.0;  // dx/dx
+    r[7]  = D1V.Y() / 1000.0;  // dy/dy
+    r[8]  = D1V.Z() / 1000.0;  // dz/dz
+    r[9]  = D2U.X() / 1000.0;  // d2x/du2
+    r[10] = D2U.Y() / 1000.0;  // d2y/du2
+    r[11] = D2U.Z() / 1000.0;  // d2z/du2
+    r[12] = D2V.X() / 1000.0;  // d2x/dv2
+    r[13] = D2V.Y() / 1000.0;  // d2y/dv2
+    r[14] = D2V.Z() / 1000.0;  // d2z/dv2
+    r[15] = D2UV.X() / 1000.0; // d2x/dudv
+    r[16] = D2UV.Y() / 1000.0; // d2y/dudv
+    r[17] = D2UV.Z() / 1000.0; // d2z/dudv
 
     return r;
 }
@@ -345,5 +292,5 @@ void CADSurfOCE::Test(Array<OneD, NekDouble> uv)
     error << " On Surface: " << GetId();
     ASSERTL1(passed, "Warning: " + error.str());
 }
-}
-}
+} // namespace NekMeshUtils
+} // namespace Nektar

@@ -367,9 +367,9 @@ void FaceMesh::Smoothing()
                     ud[0] = uj[0] + lambda[0] * (ui[0] - uj[0]);
                     ud[1] = uj[1] + lambda[0] * (ui[1] - uj[1]);
                     Array<OneD, NekDouble> locd = m_cadsurf->P(ud);
-                    NodeSharedPtr dn = boost::shared_ptr<Node>(
+                    NodeSharedPtr dn = std::shared_ptr<Node>(
                         new Node(0, locd[0], locd[1], locd[2]));
-                    dn->SetCADSurf(m_id, m_cadsurf, ud);
+                    dn->SetCADSurf(m_cadsurf, ud);
 
                     nodesystem.push_back(dn);
                     lamp.push_back(lambda[0]);
@@ -725,10 +725,10 @@ void FaceMesh::DiagonalSwap()
 
                 // make the 4 other edges
                 EdgeSharedPtr CA, AD, DB, BC, CAt, ADt, DBt, BCt;
-                CAt = boost::shared_ptr<Edge>(new Edge(C, A));
-                ADt = boost::shared_ptr<Edge>(new Edge(A, D));
-                DBt = boost::shared_ptr<Edge>(new Edge(D, B));
-                BCt = boost::shared_ptr<Edge>(new Edge(B, C));
+                CAt = std::shared_ptr<Edge>(new Edge(C, A));
+                ADt = std::shared_ptr<Edge>(new Edge(A, D));
+                DBt = std::shared_ptr<Edge>(new Edge(D, B));
+                BCt = std::shared_ptr<Edge>(new Edge(B, C));
 
                 vector<EdgeSharedPtr> es = tri1->GetEdgeList();
                 for (int i = 0; i < 3; i++)
@@ -802,7 +802,7 @@ void FaceMesh::DiagonalSwap()
                     DB->m_elLink.push_back(links[i]);
                 }
 
-                EdgeSharedPtr newe = boost::shared_ptr<Edge>(new Edge(C, D));
+                EdgeSharedPtr newe = std::shared_ptr<Edge>(new Edge(C, D));
 
                 vector<NodeSharedPtr> t1, t2;
                 t1.push_back(B);
@@ -1131,7 +1131,7 @@ void FaceMesh::AddNewPoint(Array<OneD, NekDouble> uv)
     Array<OneD, NekDouble> np = m_cadsurf->P(uv);
     NekDouble npDelta = m_mesh->m_octree->Query(np);
 
-    NodeSharedPtr n = boost::shared_ptr<Node>(
+    NodeSharedPtr n = std::shared_ptr<Node>(
         new Node(m_mesh->m_numNodes++, np[0], np[1], np[2]));
 
     bool add = true;
@@ -1166,7 +1166,7 @@ void FaceMesh::AddNewPoint(Array<OneD, NekDouble> uv)
 
     if (add)
     {
-        n->SetCADSurf(m_id, m_cadsurf, uv);
+        n->SetCADSurf(m_cadsurf, uv);
         m_stienerpoints.push_back(n);
     }
 }

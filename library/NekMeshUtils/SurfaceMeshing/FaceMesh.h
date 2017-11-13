@@ -140,7 +140,7 @@ private:
     std::map<int, CurveMeshSharedPtr> m_curvemeshes;
     /// data structure containing the edges, their order and oreientation for
     /// the surface
-    std::vector<CADSystem::EdgeLoopSharedPtr> m_edgeloops;
+    std::vector<EdgeLoopSharedPtr> m_edgeloops;
     /// id of the surface mesh
     int m_id;
     /// list of boundary nodes in their order loops
@@ -163,7 +163,7 @@ private:
     int m_compId;
 };
 
-typedef boost::shared_ptr<FaceMesh> FaceMeshSharedPtr;
+typedef std::shared_ptr<FaceMesh> FaceMeshSharedPtr;
 }
 }
 

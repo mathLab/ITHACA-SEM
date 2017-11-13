@@ -46,7 +46,7 @@ namespace Nektar
     namespace MultiRegions
     {
         class PreconditionerBlock;
-        typedef boost::shared_ptr<PreconditionerBlock>
+        typedef std::shared_ptr<PreconditionerBlock>
             PreconditionerBlockSharedPtr;
 
         class PreconditionerBlock : public Preconditioner
@@ -54,9 +54,8 @@ namespace Nektar
         public:
             /// Creates an instance of this class
             static PreconditionerSharedPtr create(
-                        const boost::shared_ptr<GlobalLinSys> &plinsys,
-                        const boost::shared_ptr<AssemblyMap>
-                                                               &pLocToGloMap)
+                        const std::shared_ptr<GlobalLinSys> &plinsys,
+                        const std::shared_ptr<AssemblyMap> &pLocToGloMap)
             {
                 PreconditionerSharedPtr p = MemoryManager<PreconditionerBlock>
                     ::AllocateSharedPtr(plinsys,pLocToGloMap);
@@ -68,17 +67,17 @@ namespace Nektar
             static std::string className;
 
             MULTI_REGIONS_EXPORT PreconditionerBlock(
-                         const boost::shared_ptr<GlobalLinSys> &plinsys,
+                         const std::shared_ptr<GlobalLinSys> &plinsys,
                          const AssemblyMapSharedPtr &pLocToGloMap);
 
             MULTI_REGIONS_EXPORT
             virtual ~PreconditionerBlock() {}
 
         protected:
-            const boost::weak_ptr<GlobalLinSys>         m_linsys;
+            const std::weak_ptr<GlobalLinSys>           m_linsys;
             PreconditionerType                          m_preconType;
             DNekBlkMatSharedPtr                         m_blkMat;
-            boost::shared_ptr<AssemblyMap>              m_locToGloMap;
+            std::shared_ptr<AssemblyMap>                m_locToGloMap;
 
         private:
             void BlockPreconditionerCG(void);

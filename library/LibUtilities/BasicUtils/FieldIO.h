@@ -38,7 +38,6 @@
 
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <LibUtilities/Communication/Comm.h>
-#include <LibUtilities/BasicUtils/ParseUtils.hpp>
 #include <LibUtilities/BasicUtils/ShapeType.hpp>
 #include <LibUtilities/Foundations/Basis.h>
 #include <LibUtilities/Foundations/Points.h>
@@ -61,14 +60,14 @@ class TagWriter
 {
 public:
     /// Create a child node.
-    virtual boost::shared_ptr<TagWriter> AddChild(const std::string &name) = 0;
+    virtual std::shared_ptr<TagWriter> AddChild(const std::string &name) = 0;
     /// Set an attribute on the node.
     virtual void SetAttr(const std::string &key, const std::string &val) = 0;
 
 protected:
     virtual ~TagWriter() {}
 };
-typedef boost::shared_ptr<TagWriter> TagWriterSharedPtr;
+typedef std::shared_ptr<TagWriter> TagWriterSharedPtr;
 
 /**
  * @class A simple class encapsulating a data source. This allows us to pass
@@ -78,7 +77,7 @@ typedef boost::shared_ptr<TagWriter> TagWriterSharedPtr;
 class DataSource
 {
 };
-typedef boost::shared_ptr<DataSource> DataSourceSharedPtr;
+typedef std::shared_ptr<DataSource> DataSourceSharedPtr;
 
 /**
  * @brief Metadata that describes the storage properties of field output.
@@ -178,7 +177,7 @@ struct FieldDefinitions
     std::vector<std::string>              m_fields;
 };
 
-typedef boost::shared_ptr<FieldDefinitions> FieldDefinitionsSharedPtr;
+typedef std::shared_ptr<FieldDefinitions> FieldDefinitionsSharedPtr;
 
 LIB_UTILITIES_EXPORT void Write(
     const std::string &outFile,
@@ -221,7 +220,7 @@ LIB_UTILITIES_EXPORT FieldIOFactory &GetFieldIOFactory();
  * implement in order to implement the above functionality. Each subclass is
  * free to determine its own file structure and parallel behaviour.
  */
-class FieldIO : public boost::enable_shared_from_this<FieldIO>
+class FieldIO : public std::enable_shared_from_this<FieldIO>
 {
 public:
     LIB_UTILITIES_EXPORT FieldIO(
@@ -254,9 +253,9 @@ public:
         const std::string &filename, CommSharedPtr comm);
     LIB_UTILITIES_EXPORT virtual const std::string &GetClassName() const = 0;
 
-    LIB_UTILITIES_EXPORT static boost::shared_ptr<FieldIO> CreateDefault(
+    LIB_UTILITIES_EXPORT static std::shared_ptr<FieldIO> CreateDefault(
         const LibUtilities::SessionReaderSharedPtr session);
-    LIB_UTILITIES_EXPORT static boost::shared_ptr<FieldIO> CreateForFile(
+    LIB_UTILITIES_EXPORT static std::shared_ptr<FieldIO> CreateForFile(
         const LibUtilities::SessionReaderSharedPtr session,
         const std::string &filename);
 
@@ -306,7 +305,7 @@ protected:
         const std::string &filename, FieldMetaDataMap &fieldmetadatamap) = 0;
 };
 
-typedef boost::shared_ptr<FieldIO> FieldIOSharedPtr;
+typedef std::shared_ptr<FieldIO> FieldIOSharedPtr;
 
 /**
  * @brief Write out the field information to the file @p outFile.

@@ -48,13 +48,14 @@ namespace Nektar
 
     ImageWarpingSystem::ImageWarpingSystem(
             const LibUtilities::SessionReaderSharedPtr& pSession)
-        : UnsteadySystem(pSession)
+        : UnsteadySystem(pSession),
+          AdvectionSystem(pSession)
     {
     }
 
     void ImageWarpingSystem::v_InitObject()
     {
-        UnsteadySystem::v_InitObject();
+        AdvectionSystem::v_InitObject();
 
         // Define Velocity fields
         m_velocity = Array<OneD, Array<OneD, NekDouble> >(m_spacedim);
@@ -79,6 +80,30 @@ namespace Nektar
         m_intVariables.push_back(0);
         m_intVariables.push_back(1);
         
+        // Define the normal velocity fields
+        if (m_fields[0]->GetTrace())
+        {
+            m_traceVn = Array<OneD, NekDouble>(GetTraceNpoints());
+        }
+
+        string advName;
+        string riemName;
+        m_session->LoadSolverInfo(
+            "AdvectionType", advName, "WeakDG");
+        m_advObject = SolverUtils::
+            GetAdvectionFactory().CreateInstance(advName, advName);
+        m_advObject->SetFluxVector(
+            &ImageWarpingSystem::GetFluxVector, this);
+        m_session->LoadSolverInfo(
+            "UpwindType", riemName, "Upwind");
+        m_riemannSolver = SolverUtils::
+            GetRiemannSolverFactory().CreateInstance(riemName);
+        m_riemannSolver->SetScalar(
+            "Vn", &ImageWarpingSystem::GetNormalVelocity, this);
+
+        m_advObject->SetRiemannSolver(m_riemannSolver);
+        m_advObject->InitObject(m_session, m_fields);
+
         if (m_explicitAdvection)
         {
             m_ode.DefineOdeRhs     (&ImageWarpingSystem::DoOdeRhs,        this);
@@ -100,7 +125,6 @@ namespace Nektar
               Array<OneD,       Array<OneD,NekDouble> > &outarray,
         const NekDouble time)
     {
-        int i;
         int npoints = GetNpoints();
         int ncoeffs = inarray[0].num_elements();
         StdRegions::ConstFactorMap factors;
@@ -112,12 +136,11 @@ namespace Nektar
                  "CG not implemented yet.");
 
         // Set up storage arrays.
+        Array<OneD, NekDouble> tmp(npoints);
         Array<OneD, NekDouble> alloc(3*npoints);
         Array<OneD, NekDouble> dIdx1(alloc);
         Array<OneD, NekDouble> dIdx2(alloc+npoints);
         Array<OneD, NekDouble> dIdx3(alloc+2*npoints);
-        Array<OneD, NekDouble> tmp;
-        Array<OneD, Array<OneD, NekDouble> > WeakAdv(2);
 
         // Calculate grad I.
         m_fields[0]->PhysDeriv(inarray[0], dIdx1, dIdx2);
@@ -128,7 +151,7 @@ namespace Nektar
         
         // Multiply by phi, and perform Helmholtz solve to calculate the
         // advection velocity field.
-        for (i = 0; i < 2; ++i)
+        for (int i = 0; i < 2; ++i)
         {
             Vmath::Vmul(npoints, &alloc[i*npoints], 1, inarray[1].get(), 1, 
                         m_fields[i+2]->UpdatePhys().get(), 1);
@@ -141,14 +164,15 @@ namespace Nektar
                                     m_velocity[i]);
         }
         
-        // Set up arrays for weak advection output.
-        WeakAdv[0] = Array<OneD, NekDouble>(2*ncoeffs);
-        WeakAdv[1] = WeakAdv[0]+ncoeffs;
-        
         // Calculate the weak advection operator for I and phi - result is put
-        // in WeakAdv and is in coefficient space.
-        WeakDGAdvection(inarray, WeakAdv, true, true, 2);
-        
+        // in WeakAdv and is in physical space.
+        m_advObject->Advect(2, m_fields, m_velocity, inarray,
+                            outarray, 0.0);
+        for(int i = 0; i < 2; ++i)
+        {
+            Vmath::Neg(npoints, outarray[i], 1);
+        }
+
         // Calculate du/dx -> dIdx1, dv/dy -> dIdx2.
         m_fields[2]->PhysDeriv(m_velocity[0], dIdx1, dIdx3);
         m_fields[3]->PhysDeriv(m_velocity[1], dIdx3, dIdx2);
@@ -161,19 +185,11 @@ namespace Nektar
         // Take inner product to get to coefficient space.
         Array<OneD, NekDouble> tmp2(ncoeffs);
         m_fields[0]->IProductWRTBase(dIdx1, tmp2);
-        
-        // Add this to the weak advection for intensity field
-        // equation. 
-        Vmath::Vsub(npoints, WeakAdv[0], 1, tmp2, 1, WeakAdv[0], 1);
-         
-        // Multiply by elemental inverse mass matrix, backwards transform and
-        // negate (to put on RHS of ODE).
-        for(i = 0; i < 2; ++i)
-        {
-            m_fields[i]->MultiplyByElmtInvMass(WeakAdv[i], WeakAdv[i]);
-            m_fields[i]->BwdTrans(WeakAdv[i],outarray[i]);
-            Vmath::Neg(npoints,outarray[i],1);
-        }
+
+        // Multiply by elemental inverse mass matrix, backwards transform
+        m_fields[0]->MultiplyByElmtInvMass(tmp2, tmp2);
+        m_fields[0]->BwdTrans(tmp2,tmp);
+        Vmath::Vadd(npoints, outarray[0], 1, tmp, 1, outarray[0], 1);
     }
 
 
@@ -186,7 +202,6 @@ namespace Nektar
                                             Array<OneD,       Array<OneD, NekDouble> >&outarray,
                                             const NekDouble time)
     {
-        int i;
         int nvariables = inarray.num_elements();
         SetBoundaryConditions(time);
         
@@ -197,7 +212,7 @@ namespace Nektar
                 // Just copy over array
                 int npoints = GetNpoints();
 
-                for(i = 0; i < nvariables; ++i)
+                for(int i = 0; i < nvariables; ++i)
                 {
                     Vmath::Vcopy(npoints,inarray[i],1,outarray[i],1);
                 }
@@ -209,51 +224,55 @@ namespace Nektar
         }
     }
 
-
-    void ImageWarpingSystem::v_GetFluxVector(
-        const int i, 
-        Array<OneD, Array<OneD, NekDouble> > &physfield,
-        Array<OneD, Array<OneD, NekDouble> > &flux)
+    /**
+     * @brief Get the normal velocity
+     */
+    Array<OneD, NekDouble> &ImageWarpingSystem::GetNormalVelocity()
     {
-        for(int j = 0; j < flux.num_elements(); ++j)
+        // Number of trace (interface) points
+        int nTracePts = GetTraceNpoints();
+
+        // Auxiliary variable to compute the normal velocity
+        Array<OneD, NekDouble> tmp(nTracePts);
+
+        // Reset the normal velocity
+        Vmath::Zero(nTracePts, m_traceVn, 1);
+
+        for (int i = 0; i < m_velocity.num_elements(); ++i)
         {
-            Vmath::Vmul(GetNpoints(),physfield[i],1,
-                m_velocity[j],1,flux[j],1);
+            m_fields[0]->ExtractTracePhys(m_velocity[i], tmp);
+
+            Vmath::Vvtvp(nTracePts,
+                         m_traceNormals[i], 1,
+                         tmp,               1,
+                         m_traceVn,         1,
+                         m_traceVn,         1);
+        }
+
+        return m_traceVn;
+    }
+
+    void ImageWarpingSystem::GetFluxVector(
+        const Array<OneD, Array<OneD, NekDouble> >               &physfield,
+              Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &flux)
+    {
+        ASSERTL1(flux[0].num_elements() == m_velocity.num_elements(),
+                 "Dimension of flux array and velocity array do not match");
+
+        int nq = physfield[0].num_elements();
+
+        for (int i = 0; i < flux.num_elements(); ++i)
+        {
+            for (int j = 0; j < flux[0].num_elements(); ++j)
+            {
+                Vmath::Vmul(nq, physfield[i], 1, m_velocity[j], 1,
+                            flux[i][j], 1);
+            }
         }
     }
 
-    void ImageWarpingSystem::v_NumericalFlux(
-        Array<OneD, Array<OneD, NekDouble> > &physfield, 
-        Array<OneD, Array<OneD, NekDouble> > &numflux)
-    {
-        int i;
-
-        int nTraceNumPoints = GetTraceNpoints();
-        int nvel = m_spacedim; //m_velocity.num_elements();
-        
-        Array<OneD, NekDouble > Fwd(nTraceNumPoints);
-        Array<OneD, NekDouble > Bwd(nTraceNumPoints);
-        Array<OneD, NekDouble > Vn (nTraceNumPoints,0.0);		
-        
-        // Get Edge Velocity
-        for(i = 0; i < nvel; ++i)
-        {
-            m_fields[0]->ExtractTracePhys(m_velocity[i], Fwd);
-            Vmath::Vvtvp(nTraceNumPoints,m_traceNormals[i],1,Fwd,1,Vn,1,Vn,1);
-        }
-        
-        for(i = 0; i < numflux.num_elements(); ++i)
-        {
-            m_fields[i]->GetFwdBwdTracePhys(physfield[i],Fwd,Bwd);
-            // Evaulate upwinded m_fields[i]
-            m_fields[i]->GetTrace()->Upwind(Vn,Fwd,Bwd,numflux[i]);
-            // Calculate m_fields[i]*Vn
-            Vmath::Vmul(nTraceNumPoints,numflux[i],1,Vn,1,numflux[i],1);
-        }
-    }
-    
     void ImageWarpingSystem::v_GenerateSummary(SolverUtils::SummaryList& s)
     {
-        UnsteadySystem::v_GenerateSummary(s);
+        AdvectionSystem::v_GenerateSummary(s);
     }
 }

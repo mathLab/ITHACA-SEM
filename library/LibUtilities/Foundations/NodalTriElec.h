@@ -36,9 +36,10 @@
 #ifndef NODALTRIELEC_H
 #define NODALTRIELEC_H
 
+#include <memory>
+
 #include <LibUtilities/Foundations/FoundationsFwd.hpp>
 #include <LibUtilities/Foundations/NodalUtil.h>
-#include <boost/shared_ptr.hpp>
 #include <LibUtilities/Foundations/ManagerAccess.h>
 #include <LibUtilities/LinearAlgebra/NekMatrix.hpp>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
@@ -57,7 +58,7 @@ namespace Nektar
             {
             }
 
-            LIB_UTILITIES_EXPORT static boost::shared_ptr<PointsBaseType> 
+            LIB_UTILITIES_EXPORT static std::shared_ptr<PointsBaseType> 
                 Create(const PointsKey &key);
 
             const MatrixSharedPtrType GetI(const PointsKey &pkey)
@@ -89,7 +90,7 @@ namespace Nektar
             }
 
         private:
-            boost::shared_ptr<NodalUtilTriangle> m_util;
+            std::shared_ptr<NodalUtilTriangle> m_util;
 
             NodalTriElec():PointsBaseType(NullPointsKey)
             {

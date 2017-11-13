@@ -192,10 +192,9 @@ namespace Nektar
             m_fid = in.m_fid;
             m_globalID = m_fid;
             m_ownVerts = in.m_ownVerts;
-            std::list<CompToElmt>::const_iterator def;
-            for(def = in.m_elmtMap.begin(); def != in.m_elmtMap.end(); def++)
+            for(auto &def : in.m_elmtMap)
             {
-                m_elmtMap.push_back(*def);
+                m_elmtMap.push_back(def);
             }
 
             // From QuadGeom
@@ -372,10 +371,9 @@ namespace Nektar
          */
         bool QuadGeom::v_IsElmtConnected(int gvo_id, int locid) const
         {
-            std::list<CompToElmt>::const_iterator def;
             CompToElmt ee(gvo_id,locid);
 
-            def = find(m_elmtMap.begin(),m_elmtMap.end(),ee);
+            auto def = find(m_elmtMap.begin(),m_elmtMap.end(),ee);
 
             // Found the element connectivity object in the list
             if(def != m_elmtMap.end())
@@ -750,18 +748,16 @@ namespace Nektar
          */
         int QuadGeom::v_WhichEdge(SegGeomSharedPtr edge)
         {
-            int returnval = -1;
+            int returnval = -1, i = 0;
 
-            SegGeomVector::iterator edgeIter;
-            int i;
-
-            for (i=0,edgeIter = m_edges.begin(); edgeIter != m_edges.end(); ++edgeIter,++i)
+            for (auto &edgeIter : m_edges)
             {
-                if (*edgeIter == edge)
+                if (edgeIter == edge)
                 {
                     returnval = i;
                     break;
                 }
+                ++i;
             }
 
             return returnval;
@@ -825,7 +821,7 @@ namespace Nektar
                                CurveMap &curvedFaces)
         {
             Geometry::v_Reset(curvedEdges, curvedFaces);
-            CurveMap::iterator it = curvedFaces.find(m_globalID);
+            auto it = curvedFaces.find(m_globalID);
 
             if (it != curvedFaces.end())
             {

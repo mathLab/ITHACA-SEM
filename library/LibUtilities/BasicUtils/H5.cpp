@@ -34,7 +34,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include <LibUtilities/BasicUtils/H5.h>
-#include <boost/make_shared.hpp>
 
 #ifdef NEKTAR_USE_MPI
 #include <LibUtilities/Communication/CommMpi.h>
@@ -194,7 +193,7 @@ void PList::SetDxMpioIndependent()
 }
 void PList::SetMpio(CommSharedPtr comm)
 {
-    CommMpiSharedPtr mpi_comm = boost::dynamic_pointer_cast<CommMpi>(comm);
+    CommMpiSharedPtr mpi_comm = std::dynamic_pointer_cast<CommMpi>(comm);
     ASSERTL0(mpi_comm, "Can't convert communicator to MPI communicator.")
     // TODO: accept hints
     MPI_Info info = MPI_INFO_NULL;
@@ -267,7 +266,7 @@ CanHaveGroupsDataSets::LinkIterator CanHaveGroupsDataSets::begin()
 {
     // Have to use dynamic because of virtual inheritance
     CanHaveGroupsDataSetsSharedPtr thisSh =
-        boost::dynamic_pointer_cast<CanHaveGroupsDataSets>(shared_from_this());
+        std::dynamic_pointer_cast<CanHaveGroupsDataSets>(shared_from_this());
     return CanHaveGroupsDataSets::LinkIterator(thisSh);
 }
 
@@ -275,7 +274,7 @@ CanHaveGroupsDataSets::LinkIterator CanHaveGroupsDataSets::end()
 {
     // Have to use dynamic because of virtual inheritance
     CanHaveGroupsDataSetsSharedPtr thisSh =
-        boost::dynamic_pointer_cast<CanHaveGroupsDataSets>(shared_from_this());
+        std::dynamic_pointer_cast<CanHaveGroupsDataSets>(shared_from_this());
     return CanHaveGroupsDataSets::LinkIterator(thisSh, GetNumElements());
 }
 
@@ -339,14 +338,14 @@ CanHaveAttributes::AttrIterator CanHaveAttributes::attr_begin()
 {
     // Have to use dynamic because of virtual inheritance
     CanHaveAttributesSharedPtr thisSh =
-        boost::dynamic_pointer_cast<CanHaveAttributes>(shared_from_this());
+        std::dynamic_pointer_cast<CanHaveAttributes>(shared_from_this());
     return CanHaveAttributes::AttrIterator(thisSh);
 }
 CanHaveAttributes::AttrIterator CanHaveAttributes::attr_end()
 {
     // Have to use dynamic because of virtual inheritance
     CanHaveAttributesSharedPtr thisSh =
-        boost::dynamic_pointer_cast<CanHaveAttributes>(shared_from_this());
+        std::dynamic_pointer_cast<CanHaveAttributes>(shared_from_this());
     return CanHaveAttributes::AttrIterator(thisSh, GetNumAttr());
 }
 

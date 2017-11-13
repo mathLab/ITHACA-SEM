@@ -42,8 +42,8 @@ IF (NEKTAR_USE_PETSC)
             SET(PETSC_NO_MPI "--with-mpi=0")
         ENDIF (NEKTAR_USE_MPI)
 
-        IF(CMAKE_Fortran_COMPILER)
-            IF(NEKTAR_USE_MPI AND NOT MPI_Fortran_COMPILER)
+        IF(CMAKE_Fortran_COMPILER AND NEKTAR_USE_MPI)
+            IF(NOT MPI_Fortran_COMPILER)
                 MESSAGE(ERROR "MPI_Fortran_COMPILER not set")
             ENDIF()
             # we use a MUMPS build in ordering here, in the future it might make
@@ -71,7 +71,7 @@ IF (NEKTAR_USE_PETSC)
             ENDIF()
 
         ELSE()
-            MESSAGE(WARNING "No Fortran support. Building PETSc without MUMPS support")
+            MESSAGE(WARNING "No MPI and/or Fortran support. Building PETSc without MUMPS support")
             SET(PETSC_Fortran_COMPILER "0")
         ENDIF()
 

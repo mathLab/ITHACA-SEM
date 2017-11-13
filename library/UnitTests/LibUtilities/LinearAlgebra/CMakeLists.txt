@@ -17,6 +17,10 @@ SET(LinearAlgebraUnitTestsSources
     TestTriangularMatrixOperations.cpp
     TestUpperTriangularMatrixStoragePolicy.cpp
     TestStandardMatrix.cpp
+    TestLowerTriangularMatrix.cpp
+    TestNekMatrixMultiplication.cpp
+    TestNekMatrixOperations.cpp
+    TestUpperTriangularMatrix.cpp
     ../../util.cpp
 )
 

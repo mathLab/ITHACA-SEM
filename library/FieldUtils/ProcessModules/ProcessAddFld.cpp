@@ -39,7 +39,6 @@ using namespace std;
 
 #include "ProcessAddFld.h"
 
-#include <LibUtilities/BasicUtils/ParseUtils.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 
 namespace Nektar
@@ -101,12 +100,11 @@ void ProcessAddFld::Process(po::variables_map &vm)
         }
 
         Array<OneD, int> ElementGIDs(expansions.size());
-        SpatialDomains::ExpansionMap::const_iterator expIt;
 
         int i = 0;
-        for (expIt = expansions.begin(); expIt != expansions.end(); ++expIt)
+        for (auto &expIt : expansions)
         {
-            ElementGIDs[i++] = expIt->second->m_geomShPtr->GetGlobalID();
+            ElementGIDs[i++] = expIt.second->m_geomShPtr->GetGlobalID();
         }
         m_f->FieldIOForFile(fromfld)->Import(
             fromfld, fromFieldDef, fromFieldData,
@@ -173,10 +171,9 @@ void ProcessAddFld::Process(po::variables_map &vm)
             Vmath::Vcopy(ncoeffs, m_f->m_exp[j]->GetCoeffs(), 1, SaveFld, 1);
 
             // Check if new field has this variable
-            vector<string>::iterator it =
-                find (fromFieldDef[0]->m_fields.begin(),
-                      fromFieldDef[0]->m_fields.end(),
-                      m_f->m_variables[j]);
+            auto it = find (fromFieldDef[0]->m_fields.begin(),
+                            fromFieldDef[0]->m_fields.end(),
+                            m_f->m_variables[j]);
 
             ASSERTL0(it != fromFieldDef[0]->m_fields.end(),
               "Could not find field " + m_f->m_variables[j] + " in from field");

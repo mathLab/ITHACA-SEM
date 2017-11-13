@@ -63,6 +63,92 @@ AdvectionSystem::~AdvectionSystem()
 void AdvectionSystem::v_InitObject()
 {
     UnsteadySystem::v_InitObject();
+    m_session->LoadParameter("IO_CFLSteps", m_cflsteps, 0);
+}
+
+/**
+ *
+ */
+bool AdvectionSystem::v_PostIntegrate(int step)
+{
+    bool result = UnsteadySystem::v_PostIntegrate(step);
+
+    if(m_cflsteps && !((step+1)%m_cflsteps))
+    {
+        int elmtid;
+        NekDouble cfl = GetCFLEstimate(elmtid);
+
+        if(m_comm->GetRank() == 0)
+        {
+            if( m_HomogeneousType == eNotHomogeneous)
+            {
+                cout << "CFL: ";
+            }
+            else
+            {
+                cout << "CFL (zero plane): ";
+            }
+            cout << cfl << " (in elmt " << elmtid << ")" << endl;
+        }
+    }
+
+    return result;
+}
+
+/**
+ *
+ */
+Array<OneD, NekDouble>  AdvectionSystem::GetElmtCFLVals(void)
+{
+    int nelmt = m_fields[0]->GetExpSize();
+
+    const Array<OneD, int> expOrder = GetNumExpModesPerExp();
+
+    const NekDouble cLambda = 0.2; // Spencer book pag. 317
+
+    Array<OneD, NekDouble> stdVelocity(nelmt, 0.0);
+    stdVelocity = v_GetMaxStdVelocity();
+
+    Array<OneD, NekDouble> cfl(nelmt, 0.0);
+    for(int el = 0; el < nelmt; ++el)
+    {
+        cfl[el] =  m_timestep*(stdVelocity[el] * cLambda *
+                               (expOrder[el]-1) * (expOrder[el]-1));
+    }
+
+    return cfl;
+}
+
+/**
+ *
+ */
+NekDouble AdvectionSystem::GetCFLEstimate(int &elmtid)
+{
+    int n_element = m_fields[0]->GetExpSize();
+
+    Array<OneD, NekDouble> cfl = GetElmtCFLVals();
+
+    elmtid = Vmath::Imax(n_element,cfl,1);
+
+    NekDouble CFL,CFL_loc;
+    CFL = CFL_loc = cfl[elmtid];
+    m_comm->AllReduce(CFL,LibUtilities::ReduceMax);
+
+    // unshuffle elmt id if data is not stored in consecutive order.
+    elmtid = m_fields[0]->GetExp(elmtid)->GetGeom()->GetGlobalID();
+    if(CFL != CFL_loc)
+    {
+        elmtid = -1;
+    }
+
+    m_comm->AllReduce(elmtid,LibUtilities::ReduceMax);
+
+    // express element id with respect to plane
+    if(m_HomogeneousType == eHomogeneous1D)
+    {
+        elmtid = elmtid%m_fields[0]->GetPlane(0)->GetExpSize();
+    }
+    return CFL;
 }
 
 }

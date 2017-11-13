@@ -224,11 +224,8 @@ namespace Nektar
                       Array<OneD,       NekDouble> &wsp);
         };
 
-        // type defines for use of TetExp in a boost vector
-        typedef boost::shared_ptr<TetExp> TetExpSharedPtr;
+        typedef std::shared_ptr<TetExp> TetExpSharedPtr;
         typedef std::vector< TetExpSharedPtr > TetExpVector;
-        typedef std::vector< TetExpSharedPtr >::iterator TetExpVectorIter;
-
     } //end of namespace
 } //end of namespace
 

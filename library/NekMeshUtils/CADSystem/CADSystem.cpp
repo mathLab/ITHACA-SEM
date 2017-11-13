@@ -101,5 +101,6 @@ Array<OneD, NekDouble> CADSystem::GetPeriodicTranslationVector(int first,
 
     return ret;
 }
+
 }
 }

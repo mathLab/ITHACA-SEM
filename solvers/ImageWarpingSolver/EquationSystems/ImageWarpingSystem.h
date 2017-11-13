@@ -36,13 +36,14 @@
 #ifndef NEKTAR_SOLVERS_IMAGEWARPINGSOLVER_EQUATIONSYSTEMS_IMAGEWARPINGSYSTEM_H
 #define NEKTAR_SOLVERS_IMAGEWARPINGSOLVER_EQUATIONSYSTEMS_IMAGEWARPINGSYSTEM_H
 
-#include <SolverUtils/UnsteadySystem.h>
+#include <SolverUtils/AdvectionSystem.h>
+#include <SolverUtils/RiemannSolvers/RiemannSolver.h>
 
 using namespace Nektar::SolverUtils;
 
 namespace Nektar
 {
-    class ImageWarpingSystem : public UnsteadySystem
+    class ImageWarpingSystem : public AdvectionSystem
     {
     public:
         friend class MemoryManager<ImageWarpingSystem>;
@@ -60,7 +61,9 @@ namespace Nektar
         virtual ~ImageWarpingSystem();
 
     protected:
+        SolverUtils::RiemannSolverSharedPtr     m_riemannSolver;
         Array<OneD, Array<OneD, NekDouble> > m_velocity;
+        Array<OneD, NekDouble>               m_traceVn;
         NekDouble m_alpha;
 
         ImageWarpingSystem(
@@ -74,12 +77,15 @@ namespace Nektar
                           Array<OneD,  Array<OneD, NekDouble> > &outarray,
                           const NekDouble time);
 
+        /// Get the normal velocity
+        Array<OneD, NekDouble> &GetNormalVelocity();
+
         virtual void v_InitObject();
 
         // DG Advection routines
-        virtual void v_GetFluxVector(const int i, Array<OneD, Array<OneD, NekDouble> > &physfield, Array<OneD, Array<OneD, NekDouble> > &flux);
-
-        virtual void v_NumericalFlux(Array<OneD, Array<OneD, NekDouble> > &physfield, Array<OneD, Array<OneD, NekDouble> > &numflux);
+        void GetFluxVector(
+            const Array<OneD, Array<OneD, NekDouble> >               &physfield,
+                  Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &flux);
 
         // Print Summary
         virtual void v_GenerateSummary(SolverUtils::SummaryList& s);

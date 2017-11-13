@@ -140,7 +140,6 @@ void SurfaceMesh::Process()
 
     m_mesh->m_expDim++; //revert dim
 }
-
 void SurfaceMesh::Report()
 {
     if (m_mesh->m_verbose)

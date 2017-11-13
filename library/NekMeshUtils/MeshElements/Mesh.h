@@ -130,7 +130,6 @@ public:
     /// Octree system pointer, if there is no octree its empty
     OctreeSharedPtr                 m_octree;
 
-
     /// Returns the total number of elements in the mesh with
     /// dimension expDim.
     NEKMESHUTILS_EXPORT unsigned int GetNumElements();

@@ -80,22 +80,44 @@ public:
     }
 
     /**
-     * @brief Return ID of the vertex
+     * @brief Return ID of the CAD object
      */
     int GetId()
     {
         return m_id;
     }
 
+    /**
+     * @brief Get the type of the CAD object
+     */
     CADType::cadType GetType()
     {
         return m_type;
     }
 
+    /**
+     * @brief Get the Orientation of the CAD object
+     */
     virtual CADOrientation::Orientation Orientation()
     {
         ASSERTL0(false,"must be implemented at the cad object level");
         return CADOrientation::eUnknown;
+    }
+
+    /**
+     * @brief Give the CAD object a string name
+     */
+    void SetName(std::string i)
+    {
+        m_name = i;
+    }
+
+    /**
+     * @brief Get the name of a CAD object
+     */
+    std::string GetName()
+    {
+        return m_name;
     }
 
 protected:
@@ -105,6 +127,8 @@ protected:
     CADType::cadType m_type;
     /// orientation of the CADObject
     CADOrientation::Orientation m_orientation;
+    /// string name of the cad
+    std::string m_name;
 };
 
 typedef std::shared_ptr<CADObject> CADObjectSharedPtr;

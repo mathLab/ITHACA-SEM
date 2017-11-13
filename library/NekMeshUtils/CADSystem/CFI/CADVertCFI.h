@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: CADSystem.cpp
+//  File: CADCurveCFI.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,41 +29,57 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: cad object methods.
+//  Description: CAD object curve.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <NekMeshUtils/CADSystem/OCE/CADSystemOCE.h>
-#include <NekMeshUtils/CADSystem/OCE/CADVertOCE.h>
+#ifndef NEKMESHUTILS_CADSYSTEM_CFI_CADVERTCFI
+#define NEKMESHUTILS_CADSYSTEM_CFI_CADVERTCFI
 
+#include "../CADVert.h"
 #include <NekMeshUtils/MeshElements/Node.h>
-
-using namespace std;
 
 namespace Nektar
 {
 namespace NekMeshUtils
 {
 
-std::string CADVertOCE::key = GetCADVertFactory().RegisterCreatorFunction(
-    "oce", CADVertOCE::create, "CAD vert oce");
-
-void CADVertOCE::Initialise(int i, TopoDS_Shape in)
+class CADVertCFI : public CADVert
 {
-    /*gp_Trsf transform;
-    gp_Pnt ori(0.0, 0.0, 0.0);
-    transform.SetScale(ori, 1.0 / 1000.0);
-    TopLoc_Location mv(transform);
-    in.Move(mv);*/
+public:
 
-    m_id      = i;
-    m_occVert = BRep_Tool::Pnt(TopoDS::Vertex(in));
+    static CADVertSharedPtr create()
+    {
+        return MemoryManager<CADVertCFI>::AllocateSharedPtr();
+    }
 
-    m_node = std::shared_ptr<Node>(new Node(i - 1, m_occVert.X() / 1000.0,
-                                            m_occVert.Y() / 1000.0,
-                                            m_occVert.Z() / 1000.0));
-    degen  = false;
+    static std::string key;
+
+    /**
+     * @brief Default constructor.
+     */
+    CADVertCFI()
+    {
+
+    }
+
+    ~CADVertCFI(){};
+
+    void Initialise(int i, cfi::Point* in, NekDouble s);
+
+    NekDouble DistanceTo(Array<OneD, NekDouble> l)
+    {
+        ASSERTL0(false, "Not implemented in CFI");
+        return 0;
+    }
+
+private:
+    /// cfi object
+    cfi::Point* m_cfipoint;
+    NekDouble m_scal;
+};
+
+}
 }
 
-} // namespace NekMeshUtils
-} // namespace Nektar
+#endif

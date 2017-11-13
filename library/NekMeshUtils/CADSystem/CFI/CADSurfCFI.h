@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: CADSystem.cpp
+//  File: CADSurfCFI.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,41 +29,77 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: cad object methods.
+//  Description: CAD object surface.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <NekMeshUtils/CADSystem/OCE/CADSystemOCE.h>
-#include <NekMeshUtils/CADSystem/OCE/CADVertOCE.h>
+#ifndef NEKMESHUTILS_CADSYSTEM_CFI_CADSURFCFI
+#define NEKMESHUTILS_CADSYSTEM_CFI_CADSURFCFI
 
-#include <NekMeshUtils/MeshElements/Node.h>
-
-using namespace std;
+#include "../CADSurf.h"
+#include "CADSystemCFI.h"
 
 namespace Nektar
 {
 namespace NekMeshUtils
 {
 
-std::string CADVertOCE::key = GetCADVertFactory().RegisterCreatorFunction(
-    "oce", CADVertOCE::create, "CAD vert oce");
-
-void CADVertOCE::Initialise(int i, TopoDS_Shape in)
+class CADSurfCFI : public CADSurf
 {
-    /*gp_Trsf transform;
-    gp_Pnt ori(0.0, 0.0, 0.0);
-    transform.SetScale(ori, 1.0 / 1000.0);
-    TopLoc_Location mv(transform);
-    in.Move(mv);*/
+public:
+    static CADSurfSharedPtr create()
+    {
+        return MemoryManager<CADSurfCFI>::AllocateSharedPtr();
+    }
 
-    m_id      = i;
-    m_occVert = BRep_Tool::Pnt(TopoDS::Vertex(in));
+    static std::string key;
 
-    m_node = std::shared_ptr<Node>(new Node(i - 1, m_occVert.X() / 1000.0,
-                                            m_occVert.Y() / 1000.0,
-                                            m_occVert.Z() / 1000.0));
-    degen  = false;
+    CADSurfCFI(){};
+
+    ~CADSurfCFI(){};
+
+    void Initialise(int i, cfi::Face *in, NekDouble s);
+    void SetScaling(NekDouble i)
+    {
+        m_scal = i;
+    }
+
+    Array<OneD, NekDouble> GetBounds();
+
+    Array<OneD, NekDouble> N(Array<OneD, NekDouble> uv);
+
+    Array<OneD, NekDouble> D1(Array<OneD, NekDouble> uv);
+
+    Array<OneD, NekDouble> D2(Array<OneD, NekDouble> uv);
+
+    Array<OneD, NekDouble> P(Array<OneD, NekDouble> uv);
+
+    Array<OneD, NekDouble> locuv(Array<OneD, NekDouble> p,  NekDouble &dist);
+
+    NekDouble Curvature(Array<OneD, NekDouble> uv);
+
+    Array<OneD, NekDouble> BoundingBox()
+    {
+        ASSERTL0(false, "Not implemented in CFI");
+        return Array<OneD, NekDouble>();
+    }
+
+    bool IsPlanar()
+    {
+        ASSERTL0(false, "Not implemented in CFI");
+        return false;
+    }
+
+private:
+    /// Function which tests the the value of uv used is within the surface
+    void Test(Array<OneD, NekDouble> uv)
+    {
+    }
+    /// CFI object for surface.
+    cfi::Face *m_cfiSurface;
+    NekDouble m_scal;
+};
+}
 }
 
-} // namespace NekMeshUtils
-} // namespace Nektar
+#endif

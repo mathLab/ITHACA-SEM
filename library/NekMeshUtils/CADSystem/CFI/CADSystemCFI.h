@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: CADSystem.cpp
+//  File: CADSystemCFI.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -33,37 +33,77 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <NekMeshUtils/CADSystem/OCE/CADSystemOCE.h>
-#include <NekMeshUtils/CADSystem/OCE/CADVertOCE.h>
+#ifndef NekMeshUtils_CADSYSTEM_CFI_CADSYSTEMCFI
+#define NekMeshUtils_CADSYSTEM_CFI_CADSYSTEMCFI
 
-#include <NekMeshUtils/MeshElements/Node.h>
+#include "../CADSystem.h"
 
-using namespace std;
+#include "cadfixapi.hxx"
 
 namespace Nektar
 {
 namespace NekMeshUtils
 {
 
-std::string CADVertOCE::key = GetCADVertFactory().RegisterCreatorFunction(
-    "oce", CADVertOCE::create, "CAD vert oce");
-
-void CADVertOCE::Initialise(int i, TopoDS_Shape in)
+class CADSystemCFI : public CADSystem
 {
-    /*gp_Trsf transform;
-    gp_Pnt ori(0.0, 0.0, 0.0);
-    transform.SetScale(ori, 1.0 / 1000.0);
-    TopLoc_Location mv(transform);
-    in.Move(mv);*/
+public:
+    static CADSystemSharedPtr create(std::string name)
+    {
+        return MemoryManager<CADSystemCFI>::AllocateSharedPtr(name);
+    }
 
-    m_id      = i;
-    m_occVert = BRep_Tool::Pnt(TopoDS::Vertex(in));
+    static std::string key;
 
-    m_node = std::shared_ptr<Node>(new Node(i - 1, m_occVert.X() / 1000.0,
-                                            m_occVert.Y() / 1000.0,
-                                            m_occVert.Z() / 1000.0));
-    degen  = false;
+    /**
+     * @brief Default constructor.
+     */
+    CADSystemCFI(std::string name) : CADSystem(name)
+    {
+    }
+    ~CADSystemCFI(){};
+
+    bool LoadCAD();
+
+    Array<OneD, NekDouble> GetBoundingBox();
+
+    cfi::Model *GetCFIModel()
+    {
+        return model;
+    }
+    std::map<std::string, int> GetCFICurveId()
+    {
+        return nameToCurveId;
+    }
+    std::map<std::string, int> GetCFIFaceId()
+    {
+        return nameToFaceId;
+    }
+    std::map<std::string, int> GetCFIVertId()
+    {
+        return nameToVertId;
+    }
+    NekDouble GetScaling()
+    {
+        return m_scal;
+    }
+
+private:
+    void AddVert(int i, cfi::Point *in);
+    void AddCurve(int i, cfi::Line *in);
+    void AddSurf(int i, cfi::Face *in);
+    cfi::Cfi cfiHandel;
+    cfi::Model *model;
+    std::vector<cfi::Body* >bodies;
+    std::map<std::string, int> nameToVertId;
+    std::map<std::string, int> nameToCurveId;
+    std::map<std::string, int> nameToFaceId;
+    std::map<std::string, std::vector<std::string> > mapVertToListEdge;
+    NekDouble m_scal;
+};
+
+typedef std::shared_ptr<CADSystemCFI> CADSystemCFISharedPtr;
+}
 }
 
-} // namespace NekMeshUtils
-} // namespace Nektar
+#endif

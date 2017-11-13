@@ -177,15 +177,19 @@ void InputMCF::ParseFile(string nm)
 
     it = information.find("MeshType");
     ASSERTL0(it != information.end(), "no meshtype defined");
-    m_makeBL = it->second == "3DBndLayer";
-    m_2D     = it->second == "2D";
+
+    m_cfiMesh = it->second == "CFI";
+    m_makeBL  = it->second == "3DBndLayer";
+    m_2D      = it->second == "2D";
     m_manifold = it->second == "Manifold";
+
     if (it->second == "2DBndLayer")
     {
         m_makeBL = true;
         m_2D     = true;
     }
-    if (!m_makeBL && !m_2D && !m_manifold)
+
+    if (!m_makeBL && !m_2D && !m_manifold && !m_cfiMesh)
     {
         ASSERTL0(it->second == "3D", "unsure on MeshType")
     }
@@ -311,7 +315,10 @@ void InputMCF::Process()
     module = GetModuleFactory().CreateInstance(
         ModuleKey(eProcessModule, "loadcad"), m_mesh);
     module->RegisterConfig("filename", m_cadfile);
-
+    if(m_mesh->m_verbose)
+    {
+        module->RegisterConfig("verbose", "");
+    }
     if (m_2D)
     {
         module->RegisterConfig("2D", "");
@@ -321,26 +328,34 @@ void InputMCF::Process()
         module->RegisterConfig("NACA", m_nacadomain);
     }
 
-    module->SetDefaults();
-    module->Process();
-
-    ////**** OCTREE ****////
-    module = GetModuleFactory().CreateInstance(
-        ModuleKey(eProcessModule, "loadoctree"), m_mesh);
-    module->RegisterConfig("mindel", m_minDelta);
-    module->RegisterConfig("maxdel", m_maxDelta);
-    module->RegisterConfig("eps", m_eps);
-    if (m_refine)
+    if(m_cfiMesh)
     {
-        module->RegisterConfig("refinement", m_refinement);
-    }
-    if (m_woct)
-    {
-        module->RegisterConfig("writeoctree", "");
+        module->RegisterConfig("CFIMesh", "");
     }
 
     module->SetDefaults();
     module->Process();
+
+    if (!m_cfiMesh)
+    {
+        ////**** OCTREE ****////
+        module = GetModuleFactory().CreateInstance(
+            ModuleKey(eProcessModule, "loadoctree"), m_mesh);
+        module->RegisterConfig("mindel", m_minDelta);
+        module->RegisterConfig("maxdel", m_maxDelta);
+        module->RegisterConfig("eps", m_eps);
+        if (m_refine)
+        {
+            module->RegisterConfig("refinement", m_refinement);
+        }
+        if (m_woct)
+        {
+            module->RegisterConfig("writeoctree", "");
+        }
+
+        module->SetDefaults();
+        module->Process();
+    }
 
     ////**** LINEAR MESHING ****////
     if (m_2D)
@@ -385,48 +400,21 @@ void InputMCF::Process()
     }
     else
     {
-        ////**** SurfaceMesh ****////
-        module = GetModuleFactory().CreateInstance(
-            ModuleKey(eProcessModule, "surfacemesh"), m_mesh);
-
-        try
+        ////**** Possible Mesh Sources ****////
+        if (m_cfiMesh)
         {
+            ////**** CFI mesh ****////
+            module = GetModuleFactory().CreateInstance(
+                ModuleKey(eProcessModule, "cfimesh"), m_mesh);
+
             module->SetDefaults();
             module->Process();
         }
-        catch (runtime_error &e)
-        {
-            cout << "Surface meshing has failed with message:" << endl;
-            cout << e.what() << endl;
-            cout << "Any surfaces which were succsessfully meshed will be "
-                    "dumped as a manifold mesh"
-                 << endl;
-            m_mesh->m_expDim = 2;
-            ProcessVertices();
-            ProcessEdges();
-            ProcessFaces();
-            ProcessElements();
-            ProcessComposites();
-            return;
-        }
-
-        if(m_manifold)
-        {
-            //dont want to volume mesh
-            m_mesh->m_expDim = 2;
-        }
         else
         {
-            ////**** VolumeMesh ****////
+            ////**** SurfaceMesh ****////
             module = GetModuleFactory().CreateInstance(
-                ModuleKey(eProcessModule, "volumemesh"), m_mesh);
-            if (m_makeBL)
-            {
-                module->RegisterConfig("blsurfs", m_blsurfs);
-                module->RegisterConfig("blthick", m_blthick);
-                module->RegisterConfig("bllayers", m_bllayers);
-                module->RegisterConfig("blprog", m_blprog);
-            }
+                ModuleKey(eProcessModule, "surfacemesh"), m_mesh);
 
             try
             {
@@ -435,18 +423,58 @@ void InputMCF::Process()
             }
             catch (runtime_error &e)
             {
-                cout << "Volume meshing has failed with message:" << endl;
+                cout << "Surface meshing has failed with message:" << endl;
                 cout << e.what() << endl;
-                cout << "The linear surface mesh be dumped as a manifold mesh"
+                cout << "Any surfaces which were succsessfully meshed will be "
+                        "dumped as a manifold mesh"
                      << endl;
                 m_mesh->m_expDim = 2;
-                m_mesh->m_element[3].clear();
                 ProcessVertices();
                 ProcessEdges();
                 ProcessFaces();
                 ProcessElements();
                 ProcessComposites();
                 return;
+            }
+
+            if(m_manifold)
+            {
+                //dont want to volume mesh
+                m_mesh->m_expDim = 2;
+            }
+            else
+            {
+                ////**** VolumeMesh ****////
+                module = GetModuleFactory().CreateInstance(
+                    ModuleKey(eProcessModule, "volumemesh"), m_mesh);
+                if (m_makeBL)
+                {
+                    module->RegisterConfig("blsurfs", m_blsurfs);
+                    module->RegisterConfig("blthick", m_blthick);
+                    module->RegisterConfig("bllayers", m_bllayers);
+                    module->RegisterConfig("blprog", m_blprog);
+                }
+
+                try
+                {
+                    module->SetDefaults();
+                    module->Process();
+                }
+                catch (runtime_error &e)
+                {
+                    cout << "Volume meshing has failed with message:" << endl;
+                    cout << e.what() << endl;
+                    cout << "The linear surface mesh be dumped as a manifold mesh"
+                         << endl;
+                    m_mesh->m_expDim = 2;
+                    m_mesh->m_element[3].clear();
+                    ProcessVertices();
+                    ProcessEdges();
+                    ProcessFaces();
+                    ProcessElements();
+                    ProcessComposites();
+                    return;
+                }
             }
         }
     }
@@ -549,6 +577,21 @@ void InputMCF::Process()
         module->SetDefaults();
         module->Process();
     }
+
+    // apply surface labels
+    for(auto &it : m_mesh->m_composite)
+    {
+        ElementSharedPtr el = it.second->m_items[0];
+        if(el->m_parentCAD)
+        {
+            string name = el->m_parentCAD->GetName();
+            if(name.size() > 0)
+            {
+                m_mesh->m_faceLabels.insert(make_pair(el->GetTagList()[0],name));
+            }
+        }
+    }
+    ProcessComposites();
 }
 }
 }

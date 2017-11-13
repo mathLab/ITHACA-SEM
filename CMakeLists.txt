@@ -247,7 +247,7 @@ INCLUDE (ThirdPartyVTK)
 INCLUDE (ThirdPartyOCE)
 INCLUDE (ThirdPartyTetGen)
 INCLUDE (ThirdPartyCCM)
-INCLUDE (ThirdPartyCFI)
+INCLUDE (FindCFI)
 
 INCLUDE (Doxygen)
 

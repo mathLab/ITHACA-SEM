@@ -7,6 +7,36 @@
 ########################################################################
 
 IF(NEKTAR_USE_MESHGEN)
+    #required opencascade libraries
+    SET(OCC_LIB_LIST
+        TKFillet
+        TKMesh
+        TKernel
+        TKG2d
+        TKG3d
+        TKMath
+        TKIGES
+        TKSTL
+        TKShHealing
+        TKXSBase
+        TKBool
+        TKBO
+        TKBRep
+        TKTopAlgo
+        TKGeomAlgo
+        TKGeomBase
+        TKOffset
+        TKPrim
+        TKSTEP
+        TKSTEPBase
+        TKSTEPAttr
+        TKHLR
+        TKFeat
+        TKXCAF
+        TKLCAF
+        TKXDESTEP
+    )
+
     # Try to find installed version of OpenCascade
     INCLUDE(FindOCC)
 
@@ -21,35 +51,6 @@ IF(NEKTAR_USE_MESHGEN)
 
     IF (THIRDPARTY_BUILD_OCE)
         INCLUDE(ExternalProject)
-
-        SET(OCC_LIB_LIST
-            TKFillet
-            TKMesh
-            TKernel
-            TKG2d
-            TKG3d
-            TKMath
-            TKIGES
-            TKSTL
-            TKShHealing
-            TKXSBase
-            TKBool
-            TKBO
-            TKBRep
-            TKTopAlgo
-            TKGeomAlgo
-            TKGeomBase
-            TKOffset
-            TKPrim
-            TKSTEP
-            TKSTEPBase
-            TKSTEPAttr
-            TKHLR
-            TKFeat
-            TKXCAF
-            TKLCAF
-            TKXDESTEP
-        )
 
         IF(WIN32)
             MESSAGE(SEND_ERROR "Cannot currently use OpenCascade with Nektar++ on Windows")

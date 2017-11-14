@@ -84,12 +84,7 @@ bool CADSurfOCE::IsPlanar()
 
 Array<OneD, NekDouble> CADSurfOCE::BoundingBox()
 {
-    BRepMesh_IncrementalMesh brmsh;
-
-    brmsh.SetShape(m_shape);
-    brmsh.SetDeflection(0.005);
-
-    brmsh.Perform();
+    BRepMesh_IncrementalMesh brmsh(m_shape, 0.005);
 
     Bnd_Box B;
     BRepBndLib::Add(m_shape, B);

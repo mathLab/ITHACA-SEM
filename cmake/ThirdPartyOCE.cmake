@@ -22,7 +22,7 @@ IF(NEKTAR_USE_MESHGEN)
     IF (THIRDPARTY_BUILD_OCE)
         INCLUDE(ExternalProject)
 
-        SET(OCC_LIBRARIES_TMP 
+        SET(OCC_LIB_LIST
             TKFillet
             TKMesh
             TKernel
@@ -47,13 +47,9 @@ IF(NEKTAR_USE_MESHGEN)
             TKHLR
             TKFeat
             TKXCAF
+            TKLCAF
             TKXDESTEP
         )
-        
-        FOREACH(OCC_LIB ${OCC_LIBRARIES_TMP})
-            LIST(APPEND OCC_LIBRARIES ${TPDIST}/lib/${CMAKE_SHARED_LIBRARY_PREFIX}${OCC_LIB}${CMAKE_SHARED_LIBRARY_SUFFIX})
-        ENDFOREACH()
-        UNSET(OCC_LIBRARIES_TMP)
 
         IF(WIN32)
             MESSAGE(SEND_ERROR "Cannot currently use OpenCascade with Nektar++ on Windows")
@@ -86,12 +82,12 @@ IF(NEKTAR_USE_MESHGEN)
                 DEPENDEES install)
         ENDIF()
 
+        THIRDPARTY_LIBRARY(OCC_LIBRARIES SHARED ${OCC_LIB_LIST} DESCRIPTION "OpenCascade libs")
+        SET(OCC_INCLUDE_DIR ${TPDIST}/include/oce CACHE FILEPATH "OCC include" FORCE)
         MESSAGE(STATUS "Build OpenCascade community edition: ${TPDIST}/lib")
-        LINK_DIRECTORIES(${TPDIST}/lib)
-        INCLUDE_DIRECTORIES(${TPDIST}/include/oce)
     ELSE()
         ADD_CUSTOM_TARGET(oce-0.17 ALL)
-        SET(OPENCASCADE_CONFIG_INCLUDE_DIR ${OCC_INCLUDE_DIR})
-        INCLUDE_DIRECTORIES(${OCC_INCLUDE_DIR})
     ENDIF()
 ENDIF()
+
+INCLUDE_DIRECTORIES(${OCC_INCLUDE_DIR})

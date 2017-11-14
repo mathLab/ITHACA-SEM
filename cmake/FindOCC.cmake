@@ -19,85 +19,7 @@ if(NOT DEFINED OCE_DIR AND DEFINED TEST_ENV)
   set(OCE_DIR $ENV{OCE_DIR})
 endif()
 
-# First try to find OpenCASCADE Community Edition
-if(NOT DEFINED OCE_DIR)
-  # Check for OSX needs to come first because UNIX evaluates to true on OSX
-  if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
-    if(DEFINED MACPORTS_PREFIX)
-      find_package(OCE 0.17 QUIET HINTS ${MACPORTS_PREFIX}/Library/Frameworks)
-    elseif(DEFINED HOMEBREW_PREFIX)
-      find_package(OCE 0.17 QUIET HINTS ${HOMEBREW_PREFIX}/Cellar/oce/*)
-    endif()
-  elseif(UNIX)
-    set(OCE_DIR "/usr/local/share/cmake/")
-  endif()
-endif()
-
-find_package(OCE 0.17 QUIET)
-if(OCE_FOUND)
-  message(STATUS "OpenCASCADE Community Edition has been found.")
-
-  #check that the OCE package has CAF modules
-  FIND_LIBRARY(OCC_CAF_LIBRARY TKXCAF ${OCE_INCLUDE_DIRS}/../../lib )
-
-  if(OCC_CAF_LIBRARY)
-    set(OCC_INCLUDE_DIR ${OCE_INCLUDE_DIRS})
-  else()
-    message(STATUS "-- OCE does not have CAF libraries, will build from source.")
-  endif()
-
-else(OCE_FOUND) #look for OpenCASCADE
-
-    FIND_PATH(OCC_INCLUDE_DIR Standard_Version.hxx
-      /usr/include/opencascade
-      /usr/local/include/opencascade
-      /usr/local/opt/opencascade/include
-      /opt/opencascade/include
-      /opt/opencascade/inc
-    )
-    FIND_LIBRARY(OCC_LIBRARY TKernel
-      /usr/lib
-      /usr/local/lib
-      /usr/local/opt/opencascade/lib
-      /opt/opencascade/lib
-      opt/local/lib
-    )
-
-  if(OCC_LIBRARY)
-    message(STATUS "OpenCASCADE has been found.")
-    GET_FILENAME_COMPONENT(OCC_LIBRARY_DIR ${OCC_LIBRARY} PATH)
-    IF(NOT OCC_INCLUDE_DIR)
-      FIND_PATH(OCC_INCLUDE_DIR Standard_Version.hxx
-        ${OCC_LIBRARY_DIR}/../inc
-      )
-    ENDIF()
-  endif(OCC_LIBRARY)
-endif(OCE_FOUND)
-
-if(OCC_INCLUDE_DIR)
-  file(STRINGS ${OCC_INCLUDE_DIR}/Standard_Version.hxx OCC_MAJOR
-    REGEX "#define OCC_VERSION_MAJOR.*"
-  )
-  string(REGEX MATCH "[0-9]+" OCC_MAJOR ${OCC_MAJOR})
-  file(STRINGS ${OCC_INCLUDE_DIR}/Standard_Version.hxx OCC_MINOR
-    REGEX "#define OCC_VERSION_MINOR.*"
-  )
-  string(REGEX MATCH "[0-9]+" OCC_MINOR ${OCC_MINOR})
-  file(STRINGS ${OCC_INCLUDE_DIR}/Standard_Version.hxx OCC_MAINT
-    REGEX "#define OCC_VERSION_MAINTENANCE.*"
-  )
-  string(REGEX MATCH "[0-9]+" OCC_MAINT ${OCC_MAINT})
-
-  set(OCC_VERSION_STRING "${OCC_MAJOR}.${OCC_MINOR}.${OCC_MAINT}")
-endif(OCC_INCLUDE_DIR)
-
-# handle the QUIETLY and REQUIRED arguments and set OCC_FOUND to TRUE if
-# all listed variables are TRUE
-include(FindPackageHandleStandardArgs)
-FIND_PACKAGE_HANDLE_STANDARD_ARGS(OCC REQUIRED_VARS OCC_INCLUDE_DIR VERSION_VAR OCC_VERSION_STRING)
-
-if(OCC_FOUND)
-  set(OCC_LIBRARIES
+SET(OCE_FIND_COMPONENTS
     TKFillet
     TKMesh
     TKernel
@@ -122,8 +44,80 @@ if(OCC_FOUND)
     TKHLR
     TKFeat
     TKXCAF
+    TKLCAF
     TKXDESTEP
+)
+
+# First try to find OpenCASCADE Community Edition
+if(NOT DEFINED OCE_DIR)
+  # Check for OSX needs to come first because UNIX evaluates to true on OSX
+  if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+    if(DEFINED MACPORTS_PREFIX)
+      find_package(OCE 0.17 QUIET HINTS ${MACPORTS_PREFIX}/Library/Frameworks)
+    elseif(DEFINED HOMEBREW_PREFIX)
+      find_package(OCE 0.17 QUIET HINTS ${HOMEBREW_PREFIX}/Cellar/oce/*)
+    endif()
+  elseif(UNIX)
+    set(OCE_DIR "/usr/local/share/cmake/")
+    find_package(OCE 0.17 QUIET)
+  endif()
+endif()
+
+SET(OCC_FOUND FALSE)
+
+if(OCE_FOUND AND OCE_ALL_FOUND)
+  message(STATUS "OpenCASCADE Community Edition has been found with all required components.")
+  SET(OCC_INCLUDE_DIR ${OCE_INCLUDE_DIRS})
+  SET(OCC_FOUND TRUE)
+else(OCE_FOUND AND OCE_ALL_FOUND) #look for OpenCASCADE
+  message(STATUS "OpenCASCADE Community Edition could not be found or has missing components.")
+
+    FIND_PATH(OCC_INCLUDE_DIR Standard_Version.hxx
+      /usr/include/opencascade
+      /usr/local/include/opencascade
+      /usr/local/opt/opencascade/include
+      /opt/opencascade/include
+      /opt/opencascade/inc
+    )
+    FIND_LIBRARY(OCC_LIBRARY TKernel
+      /usr/lib
+      /usr/local/lib
+      /usr/local/opt/opencascade/lib
+      /opt/opencascade/lib
+      opt/local/lib
+    )
+
+  if(OCC_LIBRARY)
+    message(STATUS "OpenCASCADE has been found.")
+    SET(OCC_FOUND TRUE)
+    GET_FILENAME_COMPONENT(OCC_LIBRARY_DIR ${OCC_LIBRARY} PATH)
+    IF(NOT OCC_INCLUDE_DIR)
+      FIND_PATH(OCC_INCLUDE_DIR Standard_Version.hxx
+        ${OCC_LIBRARY_DIR}/../inc
+      )
+    ENDIF()
+  endif(OCC_LIBRARY)
+endif(OCE_FOUND AND OCE_ALL_FOUND)
+
+if(OCC_INCLUDE_DIR)
+  file(STRINGS ${OCC_INCLUDE_DIR}/Standard_Version.hxx OCC_MAJOR
+    REGEX "#define OCC_VERSION_MAJOR.*"
   )
+  string(REGEX MATCH "[0-9]+" OCC_MAJOR ${OCC_MAJOR})
+  file(STRINGS ${OCC_INCLUDE_DIR}/Standard_Version.hxx OCC_MINOR
+    REGEX "#define OCC_VERSION_MINOR.*"
+  )
+  string(REGEX MATCH "[0-9]+" OCC_MINOR ${OCC_MINOR})
+  file(STRINGS ${OCC_INCLUDE_DIR}/Standard_Version.hxx OCC_MAINT
+    REGEX "#define OCC_VERSION_MAINTENANCE.*"
+  )
+  string(REGEX MATCH "[0-9]+" OCC_MAINT ${OCC_MAINT})
+
+  set(OCC_VERSION_STRING "${OCC_MAJOR}.${OCC_MINOR}.${OCC_MAINT}")
+endif(OCC_INCLUDE_DIR)
+
+if(OCC_FOUND)
+  set(OCC_LIBRARIES ${OCE_FIND_COMPONENTS})
   if(OCC_VERSION_STRING VERSION_LESS 6.8)
     MESSAGE(SEND_ERROR "OCC version too low")
   endif(OCC_VERSION_STRING VERSION_LESS 6.8)

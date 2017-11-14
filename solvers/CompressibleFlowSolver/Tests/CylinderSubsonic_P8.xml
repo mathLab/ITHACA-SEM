@@ -732,7 +732,7 @@
             <P> rhoInf          = 1.225     </P>
             <P> uInf            = 0.1       </P>
             <P> vInf            = 0.0       </P>
-            <P> CFL             = 1.0       </P>
+            <P> CFL             = 0.2       </P>
         </PARAMETERS>
 
         <SOLVERINFO>

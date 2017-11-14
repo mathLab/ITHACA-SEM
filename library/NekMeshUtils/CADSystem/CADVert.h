@@ -37,15 +37,22 @@
 #define NEKMESHUTILS_CADSYSTEM_CADVERT
 
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
-#include <LibUtilities/Memory/NekMemoryManager.hpp>
+#include <LibUtilities/BasicUtils/NekFactory.hpp>
 
 #include <NekMeshUtils/CADSystem/CADObject.h>
-#include <NekMeshUtils/MeshElements/Node.h>
 
 namespace Nektar
 {
 namespace NekMeshUtils
 {
+
+//forward decleration
+class Node;
+typedef std::shared_ptr<Node> NodeSharedPtr;
+class CADSurf;
+typedef std::shared_ptr<CADSurf> CADSurfSharedPtr;
+class CADCurve;
+typedef std::shared_ptr<CADCurve> CADCurveSharedPtr;
 
 /**
  * @brief base class for CAD verticies.
@@ -64,21 +71,12 @@ public:
         m_type = CADType::eVert;
     }
 
-    virtual ~CADVert()
-    {
-    }
+    virtual ~CADVert(){};
 
     /**
      * @brief Get x,y,z location of the vertex
      */
-    Array<OneD, NekDouble> GetLoc()
-    {
-        Array<OneD, NekDouble> out(3);
-        out[0] = m_node->m_x;
-        out[1] = m_node->m_y;
-        out[2] = m_node->m_z;
-        return out;
-    }
+    Array<OneD, NekDouble> GetLoc();
 
     /**
      * @brief returns a node object of the cad vertex
@@ -91,15 +89,7 @@ public:
     /**
      * @brief if the vertex is degenerate manually set uv for that surface
      */
-    void SetDegen(int s, CADSurfSharedPtr su, NekDouble u, NekDouble v)
-    {
-        degen     = true;
-        degensurf = s;
-        Array<OneD, NekDouble> uv(2);
-        uv[0] = u;
-        uv[1] = v;
-        m_node->SetCADSurf(s, su, uv);
-    }
+    void SetDegen(int s, CADSurfSharedPtr su, NekDouble u, NekDouble v);
 
     /**
      * @brief query is degenerate
@@ -116,6 +106,24 @@ public:
         }
     }
 
+    /**
+     * @brief Calcuate the distance to a vertex from a point l(x,y,z)
+     */
+    virtual NekDouble DistanceTo(Array<OneD, NekDouble> l) = 0;
+
+    void AddAdjCurve(CADCurveSharedPtr c)
+    {
+        curves.push_back(c);
+    }
+
+    /**
+     * @brief Get list of CAD curves which are bound by this vertex
+     */
+    std::vector<CADCurveSharedPtr> GetAdjCurves()
+    {
+        return curves;
+    }
+
 protected:
     /// mesh convert object of vert
     NodeSharedPtr m_node;
@@ -123,6 +131,8 @@ protected:
     bool degen;
     /// degen surface
     int degensurf;
+    /// adjacent curves
+    std::vector<CADCurveSharedPtr> curves;
 };
 
 typedef std::shared_ptr<CADVert> CADVertSharedPtr;

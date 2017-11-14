@@ -46,7 +46,8 @@ namespace Nektar
     
     RinglebFlow::RinglebFlow(
         const LibUtilities::SessionReaderSharedPtr& pSession)
-    : EulerCFE(pSession)
+    : UnsteadySystem(pSession),
+      EulerCFE(pSession)
     {
     }
 

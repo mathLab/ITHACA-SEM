@@ -36,14 +36,21 @@
 #ifndef NEKMESHUTILS_CADSYSTEM_CADCURVE
 #define NEKMESHUTILS_CADSYSTEM_CADCURVE
 
+#include <LibUtilities/BasicUtils/SharedArray.hpp>
+#include <LibUtilities/BasicUtils/NekFactory.hpp>
+
 #include <NekMeshUtils/CADSystem/CADObject.h>
-#include <NekMeshUtils/CADSystem/CADVert.h>
-#include <NekMeshUtils/CADSystem/CADSurf.h>
 
 namespace Nektar
 {
 namespace NekMeshUtils
 {
+
+// forward declarations
+class CADVert;
+typedef std::shared_ptr<CADVert> CADVertSharedPtr;
+class CADSurf;
+typedef std::shared_ptr<CADSurf> CADSurfSharedPtr;
 
 /**
  * @brief base class for CAD curves.
@@ -97,6 +104,9 @@ public:
      */
     virtual Array<OneD, NekDouble> D2(NekDouble t) = 0;
 
+    /**
+     * @brief Calculates the radius of curvature of the curve at point t
+     */
     virtual NekDouble Curvature(NekDouble t) = 0;
 
     /**
@@ -126,9 +136,11 @@ public:
     }
 
     /*
-     * @brief returns the ids of neigbouring surfaces
+     * @brief returns the ids of surfaces bound by this curve as well as their
+     *        Orientation with respect to the loop of curves
      */
-    std::vector<std::pair<CADSurfSharedPtr, CADOrientation::Orientation> > GetAdjSurf()
+    std::vector<std::pair<CADSurfSharedPtr, CADOrientation::Orientation> >
+        GetAdjSurf()
     {
         return m_adjSurfs;
     }
@@ -159,34 +171,36 @@ public:
     }
 
     /*
-     * @brief locates a point in the parametric space
+     * @brief locates a point in the parametric space. returns the
+     * distance to the point and passes t by reference and updates it
      */
-    virtual NekDouble loct(Array<OneD, NekDouble> xyz) = 0;
+    virtual NekDouble loct(Array<OneD, NekDouble> xyz,
+                           NekDouble &t) = 0;
 
-    CADOrientation::Orientation GetOrienationWRT(int surf)
-    {
-        for(int i = 0; i < m_adjSurfs.size(); i++)
-        {
-            if(m_adjSurfs[i].first->GetId() == surf)
-            {
-                return m_adjSurfs[i].second;
-            }
-        }
+    /**
+     * @brief Returns the orientation of the curve with respect to a given
+     * surface by id surf
+     */
+    CADOrientation::Orientation GetOrienationWRT(int surf);
 
-        ASSERTL0(false,"surf not in adjecency list");
-        return CADOrientation::eUnknown;
-    }
+    /**
+     * @brief Returns the normal to the curve which is orientate with respect
+     * to the surface surf
+     */
+    Array<OneD, NekDouble> NormalWRT(NekDouble t, int surf);
 
-    virtual Array<OneD, NekDouble> NormalWRT(NekDouble t, int surf)=0;
-    virtual Array<OneD, NekDouble> N(NekDouble t)=0;
-
+    /**
+     * @brief Returns the normal to a curve, it will always point in the concave
+     * direction
+     */
+    virtual Array<OneD, NekDouble> N(NekDouble t) = 0;
 
 protected:
-
     /// Length of edge
     NekDouble m_length;
     /// List of surfaces which this curve belongs to.
-    std::vector<std::pair<CADSurfSharedPtr, CADOrientation::Orientation> > m_adjSurfs;
+    std::vector<std::pair<CADSurfSharedPtr, CADOrientation::Orientation> >
+        m_adjSurfs;
     /// list of end vertices
     std::vector<CADVertSharedPtr> m_mainVerts;
 };
@@ -195,8 +209,7 @@ typedef std::shared_ptr<CADCurve> CADCurveSharedPtr;
 
 typedef LibUtilities::NekFactory<std::string, CADCurve> CADCurveFactory;
 
-CADCurveFactory& GetCADCurveFactory();
-
+CADCurveFactory &GetCADCurveFactory();
 }
 }
 

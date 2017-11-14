@@ -38,49 +38,73 @@
 
 /// This is a list of OpenCascade headers required for use with nektar
 
-#include <STEPControl_Reader.hxx>
-#include <TColStd_HSequenceOfTransient.hxx>
-#include <TopoDS.hxx>
+/// IO classes
+#include <STEPCAFControl_Reader.hxx>
+#include <StepRepr_RepresentationItem.hxx>
+#include <TDocStd_Document.hxx>
+#include <XSControl_WorkSession.hxx>
+#include <XSControl_TransferReader.hxx>
+#include <XCAFDoc_DocumentTool.hxx>
+#include <Storage.hxx>
+
+/// STL classes
+#include <BRepMesh_IncrementalMesh.hxx>
+
+
+/// Shape Analysis / exploration classes
+#include <BRepTopAdaptor_FClass2d.hxx>
+#include <ShapeAnalysis_Surface.hxx>
+#include <BRepTools_WireExplorer.hxx>
 #include <TopExp.hxx>
-#include <TopoDS_Shape.hxx>
-#include <TopTools_IndexedMapOfShape.hxx>
-#include <BRepAdaptor_Curve.hxx>
-#include <BRepAdaptor_Surface.hxx>
-#include <GeomAPI_ProjectPointOnCurve.hxx>
-#include <GeomAbs_SurfaceType.hxx>
 #include <BRepTools.hxx>
 #include <BRep_Tool.hxx>
-#include <gp_Trsf.hxx>
-#include <TopLoc_Location.hxx>
-#include <BRepTools_WireExplorer.hxx>
+#include <TopExp_Explorer.hxx>
+#include <GeomAdaptor_HSurface.hxx>
+#include <BRepAdaptor_Curve.hxx>
 #include <GProp_GProps.hxx>
 #include <BRepGProp.hxx>
-#include <Geom_TrimmedCurve.hxx>
 #include <GeomLProp_CLProps.hxx>
-#include <BRepBuilderAPI_MakeEdge.hxx>
-#include <GCPnts_AbscissaPoint.hxx>
-#include <TopAbs_State.hxx>
-#include <BRepClass3d_SolidClassifier.hxx>
-#include <BRepBuilderAPI_MakeFace.hxx>
-#include <gp_Pnt2d.hxx>
-#include <BRepClass_FaceClassifier.hxx>
-#include <ShapeAnalysis_Wire.hxx>
-#include <TopoDS_Wire.hxx>
-#include <ShapeAnalysis_Surface.hxx>
+#include <GeomLProp_SLProps.hxx>
 #include <ShapeAnalysis_Curve.hxx>
-#include <BRepLProp_SLProps.hxx>
-#include <Standard_Macro.hxx>
-#include <ShapeFix_Face.hxx>
-#include <Precision.hxx>
+#include <BRepBndLib.hxx>
+#include <BRepExtrema_DistShapeShape.hxx>
 
-#include <GeomAPI_PointsToBSpline.hxx>
-#include <Geom_BSplineCurve.hxx>
-#include <TColgp_Array1OfPnt.hxx>
+/// Shape fixing classes
+#include <ShapeFix_Face.hxx>
+
+/// Shape Building classes
 #include <BRepBuilderAPI_MakeEdge.hxx>
 #include <BRepBuilderAPI_MakeWire.hxx>
 #include <BRepBuilderAPI_MakeFace.hxx>
-#include <STEPControl_Writer.hxx>
+#include <BRepBuilderAPI_MakeVertex.hxx>
+#include <Geom_BSplineCurve.hxx>
+#include <GeomAPI_PointsToBSpline.hxx>
+#include <BRepBuilderAPI_Sewing.hxx>
+#include <Geom_TrimmedCurve.hxx>
+
+/// Data structure classes
+#include <TopTools_IndexedMapOfShape.hxx>
+#include <TopTools_DataMapOfShapeShape.hxx>
+#include <TColgp_Array1OfPnt.hxx>
+#include <Transfer_Binder.hxx>
+#include <TransferBRep.hxx>
+#include <Transfer_TransientProcess.hxx>
+#include <Interface_InterfaceModel.hxx>
+#include <TCollection_HAsciiString.hxx>
+
+/// CORE SHAPE classes
+#include <TopoDS_Shape.hxx>
+#include <TopoDS_Shell.hxx>
+#include <TopoDS_Face.hxx>
+#include <TopoDS_Wire.hxx>
+#include <TopoDS_Edge.hxx>
+#include <TopoDS.hxx>
+
+/// GP clasases
+#include <gp_Pnt.hxx>
 #include <gp_Ax1.hxx>
+#include <gp_Pnt2d.hxx>
+#include <gp_Trsf.hxx>
 
 #include <Geom_BSplineCurve.hxx>
 #include <Geom_BezierCurve.hxx>

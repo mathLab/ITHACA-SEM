@@ -308,7 +308,7 @@ namespace Nektar
                 }
             }
 
-            v_GetLocCoords(gloCoord, locCoord);
+            resid = v_GetLocCoords(gloCoord, locCoord);
 
             if (locCoord[0] >= -(1+tol) && locCoord[0] <= 1+tol
                 && locCoord[1] >= -(1+tol) && locCoord[1] <= 1+tol
@@ -325,12 +325,12 @@ namespace Nektar
             {
                 if(locCoord[i] <-(1+tol))
                 {
-                    locCoord[i] = -(1+tol);
+                    locCoord[i] = -1;
                 }
 
                 if(locCoord[i] > (1+tol))
                 {
-                    locCoord[i] = 1+tol;
+                    locCoord[i] = 1;
                 }
             }
 
@@ -736,10 +736,12 @@ namespace Nektar
                     dotproduct1 += elementAaxis[i]*faceAaxis[i];
                 }
 
+                NekDouble norm = fabs(dotproduct1) / elementAaxis_length / faceAaxis_length;
+
                 orientation = 0;
                 // if the innerproduct is equal to the (absolute value of the ) products of the lengths
                 // of both vectors, then, the coordinate systems will NOT be transposed
-                if( fabs(elementAaxis_length*faceAaxis_length - fabs(dotproduct1)) < NekConstants::kNekZeroTol )
+                if( fabs(norm - 1.0) < NekConstants::kNekZeroTol )
                 {
                     // if the inner product is negative, both A-axis point
                     // in reverse direction
@@ -754,8 +756,10 @@ namespace Nektar
                         dotproduct2 += elementBaxis[i]*faceBaxis[i];
                     }
 
+                    norm = fabs(dotproduct2) / elementBaxis_length / faceBaxis_length;
+
                     // check that both these axis are indeed parallel
-                    ASSERTL1(fabs(elementBaxis_length*faceBaxis_length - fabs(dotproduct2)) <
+                    ASSERTL1(fabs(norm - 1.0) <
                              NekConstants::kNekZeroTol,
                              "These vectors should be parallel");
 
@@ -779,8 +783,10 @@ namespace Nektar
                         dotproduct1 += elementAaxis[i]*faceBaxis[i];
                     }
 
+                    norm = fabs(dotproduct1) / elementAaxis_length / faceBaxis_length;
+
                     // check that both these axis are indeed parallel
-                    ASSERTL1(fabs(elementAaxis_length*faceBaxis_length - fabs(dotproduct1)) <
+                    ASSERTL1(fabs(norm - 1.0) <
                              NekConstants::kNekZeroTol,
                              "These vectors should be parallel");
 
@@ -798,8 +804,10 @@ namespace Nektar
                         dotproduct2 += elementBaxis[i]*faceAaxis[i];
                     }
 
+                    norm = fabs(dotproduct2) / elementBaxis_length / faceAaxis_length;
+
                     // check that both these axis are indeed parallel
-                    ASSERTL1(fabs(elementBaxis_length*faceAaxis_length - fabs(dotproduct2)) <
+                    ASSERTL1(fabs(norm - 1.0) <
                              NekConstants::kNekZeroTol,
                              "These vectors should be parallel");
 

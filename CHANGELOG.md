@@ -30,6 +30,7 @@ v5.0.0
 - Adds CFI CAD engine back-end (!864)
 - Adds CFI Mesh IO support (!864)
 - Cleanup of CAD system data structures (!864)
+- Fix mac OSX on buildbots (!876)
 
 **NekMesh**:
 - Add feature to read basic 2D geo files as CAD (!731)

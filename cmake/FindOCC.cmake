@@ -72,13 +72,6 @@ if(OCE_FOUND AND OCE_ALL_FOUND)
 else(OCE_FOUND AND OCE_ALL_FOUND) #look for OpenCASCADE
   message(STATUS "OpenCASCADE Community Edition could not be found or has missing components.")
 
-    FIND_PATH(OCC_INCLUDE_DIR Standard_Version.hxx
-      /usr/include/opencascade
-      /usr/local/include/opencascade
-      /usr/local/opt/opencascade/include
-      /opt/opencascade/include
-      /opt/opencascade/inc
-    )
     FIND_LIBRARY(OCC_LIBRARY TKernel
       /usr/lib
       /usr/local/lib
@@ -88,38 +81,34 @@ else(OCE_FOUND AND OCE_ALL_FOUND) #look for OpenCASCADE
     )
 
   if(OCC_LIBRARY)
-    message(STATUS "OpenCASCADE has been found.")
-    SET(OCC_FOUND TRUE)
     GET_FILENAME_COMPONENT(OCC_LIBRARY_DIR ${OCC_LIBRARY} PATH)
-    IF(NOT OCC_INCLUDE_DIR)
-      FIND_PATH(OCC_INCLUDE_DIR Standard_Version.hxx
-        ${OCC_LIBRARY_DIR}/../inc
-      )
+    FIND_PATH(OCC_INCLUDE_DIR Standard_Version.hxx ${OCC_LIBRARY_DIR}/../inc)
+    IF(OCC_INCLUDE_DIR)
+        message(STATUS "OpenCASCADE has been found.")
+        SET(OCC_FOUND TRUE)
     ENDIF()
   endif(OCC_LIBRARY)
 endif(OCE_FOUND AND OCE_ALL_FOUND)
 
-if(OCC_INCLUDE_DIR)
-  file(STRINGS ${OCC_INCLUDE_DIR}/Standard_Version.hxx OCC_MAJOR
-    REGEX "#define OCC_VERSION_MAJOR.*"
-  )
-  string(REGEX MATCH "[0-9]+" OCC_MAJOR ${OCC_MAJOR})
-  file(STRINGS ${OCC_INCLUDE_DIR}/Standard_Version.hxx OCC_MINOR
-    REGEX "#define OCC_VERSION_MINOR.*"
-  )
-  string(REGEX MATCH "[0-9]+" OCC_MINOR ${OCC_MINOR})
-  file(STRINGS ${OCC_INCLUDE_DIR}/Standard_Version.hxx OCC_MAINT
-    REGEX "#define OCC_VERSION_MAINTENANCE.*"
-  )
-  string(REGEX MATCH "[0-9]+" OCC_MAINT ${OCC_MAINT})
-
-  set(OCC_VERSION_STRING "${OCC_MAJOR}.${OCC_MINOR}.${OCC_MAINT}")
-endif(OCC_INCLUDE_DIR)
-
 if(OCC_FOUND)
-  set(OCC_LIBRARIES ${OCE_FIND_COMPONENTS})
-  if(OCC_VERSION_STRING VERSION_LESS 6.8)
+    file(STRINGS ${OCC_INCLUDE_DIR}/Standard_Version.hxx OCC_MAJOR
+    REGEX "#define OCC_VERSION_MAJOR.*"
+    )
+    string(REGEX MATCH "[0-9]+" OCC_MAJOR ${OCC_MAJOR})
+    file(STRINGS ${OCC_INCLUDE_DIR}/Standard_Version.hxx OCC_MINOR
+    REGEX "#define OCC_VERSION_MINOR.*"
+    )
+    string(REGEX MATCH "[0-9]+" OCC_MINOR ${OCC_MINOR})
+    file(STRINGS ${OCC_INCLUDE_DIR}/Standard_Version.hxx OCC_MAINT
+    REGEX "#define OCC_VERSION_MAINTENANCE.*"
+    )
+    string(REGEX MATCH "[0-9]+" OCC_MAINT ${OCC_MAINT})
+
+    set(OCC_VERSION_STRING "${OCC_MAJOR}.${OCC_MINOR}.${OCC_MAINT}")
+
+    if(OCC_VERSION_STRING VERSION_LESS 6.8)
     MESSAGE(SEND_ERROR "OCC version too low")
-  endif(OCC_VERSION_STRING VERSION_LESS 6.8)
-  message(STATUS "-- Found OCE/OpenCASCADE with OCC version: ${OCC_VERSION_STRING}")
+    endif(OCC_VERSION_STRING VERSION_LESS 6.8)
+    message(STATUS "-- Found OCE/OpenCASCADE with OCC version: ${OCC_VERSION_STRING}")
+    set(OCC_LIBRARIES ${OCE_FIND_COMPONENTS})
 endif(OCC_FOUND)

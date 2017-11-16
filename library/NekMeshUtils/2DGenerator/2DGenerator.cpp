@@ -439,10 +439,14 @@ void Generator2D::MakeBL(int faceid)
     // Nodes that need normal smoothing and their BL thickness
     map<NodeSharedPtr, NekDouble> dist;
 
+    int count = 0;
+
     do
     {
         unitNormals.clear();
         dist.clear();
+
+        int level = count / 10;
 
         for (const auto &it : m_blEdges)
         {
@@ -456,6 +460,7 @@ void Generator2D::MakeBL(int faceid)
 
             NekDouble d = r.curl(s).m_z;
 
+            // Should probably use tolerance to check parallelism
             if (d == 0)
             {
                 continue;
@@ -464,18 +469,44 @@ void Generator2D::MakeBL(int faceid)
             NekDouble t = (*q - *p).curl(s).m_z / d;
             NekDouble u = (*q - *p).curl(r).m_z / d;
 
-            if (0 <= t && t <= 1 && 0 <= u && u <= 1)
+            // Check for more than intsersection. Just intersection would be
+            // between 0 and 1
+            if (-0.5 <= t && t <= 1.5 && -0.5 <= u && u <= 1.5)
             {
-                // Add nodes to the list of normals to smooth
-                if (!unitNormals.count(p))
+                NodeSharedPtr base1 = p;
+                NodeSharedPtr base2 = q;
+                EdgeSharedPtr edge1 = it;
+                EdgeSharedPtr edge2 = it;
+
+                for (int i = 0; i <= level; ++i)
                 {
-                    dist[p]        = sqrt(r.abs2());
-                    unitNormals[p] = make_shared<Node>(r / dist[p]);
+                    if (!unitNormals.count(base1))
+                    {
+                        Node normal = *nodeNormals[base1] - *base1;
+
+                        dist[base1] = sqrt(normal.abs2());
+                        unitNormals[base1] =
+                            make_shared<Node>(normal / dist[base1]);
                 }
-                if (!unitNormals.count(q))
+
+                    if (!unitNormals.count(base2))
                 {
-                    dist[q]        = sqrt(s.abs2());
-                    unitNormals[q] = make_shared<Node>(s / dist[q]);
+                        Node normal = *nodeNormals[base2] - *base2;
+
+                        dist[base2] = sqrt(normal.abs2());
+                        unitNormals[base2] =
+                            make_shared<Node>(normal / dist[base2]);
+                    }
+
+                    edge1 =
+                        m_nodesToEdge[base1]
+                                     [m_nodesToEdge[base1][0] != edge1 ? 0 : 1];
+                    base1 = edge1->m_n1 != base1 ? edge1->m_n1 : edge1->m_n2;
+
+                    edge2 =
+                        m_nodesToEdge[base2]
+                                     [m_nodesToEdge[base2][0] != edge2 ? 0 : 1];
+                    base2 = edge2->m_n1 != base2 ? edge2->m_n1 : edge2->m_n2;
                 }
             }
         }
@@ -533,7 +564,7 @@ void Generator2D::MakeBL(int faceid)
 
             nodeNormals[it.first] = nn;
         }
-    } while (unitNormals.size());
+    } while (unitNormals.size() && count++ < 50);
 
     for (auto &it : m_blCurves)
     {

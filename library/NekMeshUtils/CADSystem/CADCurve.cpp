@@ -32,11 +32,8 @@
 //  Description: cad object methods.
 //
 ////////////////////////////////////////////////////////////////////////////////
-
-#include <NekMeshUtils/CADSystem/OCE/CADSystemOCE.h>
-#include <NekMeshUtils/CADSystem/OCE/CADVertOCE.h>
-
-#include <NekMeshUtils/MeshElements/Node.h>
+#include "CADCurve.h"
+#include "CADSurf.h"
 
 using namespace std;
 
@@ -45,25 +42,56 @@ namespace Nektar
 namespace NekMeshUtils
 {
 
-std::string CADVertOCE::key = GetCADVertFactory().RegisterCreatorFunction(
-    "oce", CADVertOCE::create, "CAD vert oce");
-
-void CADVertOCE::Initialise(int i, TopoDS_Shape in)
+Array<OneD, NekDouble> CADCurve::NormalWRT(NekDouble t, int surf)
 {
-    /*gp_Trsf transform;
-    gp_Pnt ori(0.0, 0.0, 0.0);
-    transform.SetScale(ori, 1.0 / 1000.0);
-    TopLoc_Location mv(transform);
-    in.Move(mv);*/
+    Array<OneD, NekDouble> p = P(t);
+    pair<CADSurfSharedPtr, CADOrientation::Orientation> surface;
+    ASSERTL0(m_adjSurfs.size() == 1,
+             "This will only work in 2D for one surface at the moment");
+    surface = m_adjSurfs[0];
 
-    m_id      = i;
-    m_occVert = BRep_Tool::Pnt(TopoDS::Vertex(in));
+    Array<OneD, NekDouble> uv = surface.first->locuv(p);
+    Array<OneD, NekDouble> d1 = surface.first->D1(uv);
 
-    m_node = std::shared_ptr<Node>(new Node(i - 1, m_occVert.X() / 1000.0,
-                                            m_occVert.Y() / 1000.0,
-                                            m_occVert.Z() / 1000.0));
-    degen  = false;
+    NekDouble t1 = t - 1e-8;
+    NekDouble t2 = t + 1e-8;
+
+    if (surface.second == CADOrientation::eBackwards)
+    {
+        swap(t1, t2);
+    }
+
+    Array<OneD, NekDouble> uv1 = surface.first->locuv(P(t1));
+    Array<OneD, NekDouble> uv2 = surface.first->locuv(P(t2));
+
+    NekDouble du = uv2[1] - uv1[1];
+    NekDouble dv = -1.0 * (uv2[0] - uv1[0]);
+
+    Array<OneD, NekDouble> N(3, 0.0);
+    N[0] = (d1[3] * du + d1[6] * dv) / 2.0;
+    N[1] = (d1[4] * du + d1[7] * dv) / 2.0;
+    N[2] = (d1[5] * du + d1[8] * dv) / 2.0;
+
+    NekDouble mag = sqrt(N[0] * N[0] + N[1] * N[1] + N[2] * N[2]);
+    N[0] /= mag;
+    N[1] /= mag;
+    N[2] /= mag;
+
+    return N;
 }
 
-} // namespace NekMeshUtils
-} // namespace Nektar
+CADOrientation::Orientation CADCurve::GetOrienationWRT(int surf)
+{
+    for (int i = 0; i < m_adjSurfs.size(); i++)
+    {
+        if (m_adjSurfs[i].first->GetId() == surf)
+        {
+            return m_adjSurfs[i].second;
+        }
+    }
+
+    ASSERTL0(false, "surf not in adjecency list");
+    return CADOrientation::eUnknown;
+}
+}
+}

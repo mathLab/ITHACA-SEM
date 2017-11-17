@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: CADSystem.cpp
+//  File: CFIMesh.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,41 +29,49 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: cad object methods.
+//  Description: class which extracts an exisiting mesh from CFI source.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <NekMeshUtils/CADSystem/OCE/CADSystemOCE.h>
-#include <NekMeshUtils/CADSystem/OCE/CADVertOCE.h>
+#ifndef NEKMESHUTILS_CFIMESH_CFIMESH
+#define NEKMESHUTILS_CFIMESH_CFIMESH
 
-#include <NekMeshUtils/MeshElements/Node.h>
+#include <NekMeshUtils/Module/Module.h>
 
-using namespace std;
+#include <NekMeshUtils/CADSystem/CFI/CADSystemCFI.h>
 
 namespace Nektar
 {
 namespace NekMeshUtils
 {
 
-std::string CADVertOCE::key = GetCADVertFactory().RegisterCreatorFunction(
-    "oce", CADVertOCE::create, "CAD vert oce");
-
-void CADVertOCE::Initialise(int i, TopoDS_Shape in)
+/**
+ * @brief class containing all surface meshing routines methods and classes
+ */
+class CFIMesh : public ProcessModule
 {
-    /*gp_Trsf transform;
-    gp_Pnt ori(0.0, 0.0, 0.0);
-    transform.SetScale(ori, 1.0 / 1000.0);
-    TopLoc_Location mv(transform);
-    in.Move(mv);*/
+public:
+    /// Creates an instance of this class
+    static std::shared_ptr<Module> create(MeshSharedPtr m)
+    {
+        return MemoryManager<CFIMesh>::AllocateSharedPtr(m);
+    }
+    static ModuleKey className;
 
-    m_id      = i;
-    m_occVert = BRep_Tool::Pnt(TopoDS::Vertex(in));
+    CFIMesh(MeshSharedPtr m);
+    virtual ~CFIMesh();
 
-    m_node = std::shared_ptr<Node>(new Node(i - 1, m_occVert.X() / 1000.0,
-                                            m_occVert.Y() / 1000.0,
-                                            m_occVert.Z() / 1000.0));
-    degen  = false;
+    virtual void Process();
+
+private:
+
+    CADSystemCFISharedPtr m_cad;
+    cfi::Model *m_model;
+    std::map<std::string, int> m_nameToCurveId;
+    std::map<std::string, int> m_nameToFaceId;
+    std::map<std::string, int> m_nameToVertId;
+};
+}
 }
 
-} // namespace NekMeshUtils
-} // namespace Nektar
+#endif

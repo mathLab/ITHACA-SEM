@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: CADSystem.cpp
+//  File: CADVertCFI.cpp
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -33,8 +33,8 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <NekMeshUtils/CADSystem/OCE/CADSystemOCE.h>
-#include <NekMeshUtils/CADSystem/OCE/CADVertOCE.h>
+#include "CADSystemCFI.h"
+#include "CADVertCFI.h"
 
 #include <NekMeshUtils/MeshElements/Node.h>
 
@@ -45,25 +45,21 @@ namespace Nektar
 namespace NekMeshUtils
 {
 
-std::string CADVertOCE::key = GetCADVertFactory().RegisterCreatorFunction(
-    "oce", CADVertOCE::create, "CAD vert oce");
+std::string CADVertCFI::key = GetCADVertFactory().RegisterCreatorFunction(
+        "cfi", CADVertCFI::create, "CAD vert cfi");
 
-void CADVertOCE::Initialise(int i, TopoDS_Shape in)
+void CADVertCFI::Initialise(int i, cfi::Point* in, NekDouble s)
 {
-    /*gp_Trsf transform;
-    gp_Pnt ori(0.0, 0.0, 0.0);
-    transform.SetScale(ori, 1.0 / 1000.0);
-    TopLoc_Location mv(transform);
-    in.Move(mv);*/
-
     m_id      = i;
-    m_occVert = BRep_Tool::Pnt(TopoDS::Vertex(in));
+    m_cfipoint = in;
+    m_scal = s;
 
-    m_node = std::shared_ptr<Node>(new Node(i - 1, m_occVert.X() / 1000.0,
-                                            m_occVert.Y() / 1000.0,
-                                            m_occVert.Z() / 1000.0));
-    degen  = false;
+    cfi::Position pos = m_cfipoint->getGeometry();
+
+    m_node = std::shared_ptr<Node>(
+        new Node(i - 1, pos.x*m_scal, pos.y*m_scal, pos.z*m_scal));
+    degen = false;
 }
 
-} // namespace NekMeshUtils
-} // namespace Nektar
+}
+}

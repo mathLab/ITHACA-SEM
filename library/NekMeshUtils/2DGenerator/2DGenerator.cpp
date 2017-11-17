@@ -382,15 +382,14 @@ void Generator2D::MakeBL(int faceid)
         // constructed by computing a normal but found on the adjacent curve
         if (it.second.size() == 1)
         {
-            vector<pair<int, CADCurveSharedPtr>> curves =
-                it.first->GetCADCurves();
+            vector<CADCurveSharedPtr> curves = it.first->GetCADCurves();
 
             vector<EdgeSharedPtr> edges =
-                m_curvemeshes[curves[0].first]->GetMeshEdges();
+                m_curvemeshes[curves[0]->GetId()]->GetMeshEdges();
             vector<EdgeSharedPtr>::iterator ie =
                 find(edges.begin(), edges.end(), it.second[0]);
             int rightCurve =
-                (ie == edges.end()) ? curves[0].first : curves[1].first;
+                (ie == edges.end()) ? curves[0]->GetId() : curves[1]->GetId();
 
             vector<NodeSharedPtr> nodes =
                 m_curvemeshes[rightCurve]->GetMeshPoints();
@@ -427,7 +426,7 @@ void Generator2D::MakeBL(int faceid)
             new Node(m_mesh->m_numNodes++, n[0], n[1], 0.0));
         CADSurfSharedPtr s = m_mesh->m_cad->GetSurf(faceid);
         Array<OneD, NekDouble> uv = s->locuv(n);
-        nn->SetCADSurf(faceid, s, uv);
+        nn->SetCADSurf(s, uv);
         nodeNormals[it.first] = nn;
     }
 
@@ -501,10 +500,9 @@ void Generator2D::MakeBL(int faceid)
                          it.first->m_x + avg.m_x * dist[it.first],
                          it.first->m_y + avg.m_y * dist[it.first], 0.0));
             CADSurfSharedPtr s =
-                nodeNormals[it.first]->GetCADSurfs().begin()->second;
+                *nodeNormals[it.first]->GetCADSurfs().begin();
             Array<OneD, NekDouble> uv = s->locuv(nn->GetLoc());
-            nn->SetCADSurf(nodeNormals[it.first]->GetCADSurfs().begin()->first,
-                           s, uv);
+            nn->SetCADSurf(s, uv);
 
             nodeNormals[it.first] = nn;
         }

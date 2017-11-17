@@ -37,6 +37,9 @@
 #include <LibUtilities/Foundations/ManagerAccess.h>
 #include <NekMeshUtils/MeshElements/Mesh.h>
 
+#include <NekMeshUtils/CADSystem/CADCurve.h>
+#include <NekMeshUtils/CADSystem/CADSurf.h>
+
 using namespace std;
 
 namespace Nektar

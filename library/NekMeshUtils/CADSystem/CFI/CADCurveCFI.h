@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: CADSystem.cpp
+//  File: CADCurveCFI.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,41 +29,64 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: cad object methods.
+//  Description: CAD object curve.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <NekMeshUtils/CADSystem/OCE/CADSystemOCE.h>
-#include <NekMeshUtils/CADSystem/OCE/CADVertOCE.h>
+#ifndef NEKMESHUTILS_CADSYSTEM_CFI_CADCURVECFI
+#define NEKMESHUTILS_CADSYSTEM_CFI_CADCURVECFI
 
-#include <NekMeshUtils/MeshElements/Node.h>
-
-using namespace std;
+#include "../CADCurve.h"
+#include "CADSystemCFI.h"
 
 namespace Nektar
 {
 namespace NekMeshUtils
 {
-
-std::string CADVertOCE::key = GetCADVertFactory().RegisterCreatorFunction(
-    "oce", CADVertOCE::create, "CAD vert oce");
-
-void CADVertOCE::Initialise(int i, TopoDS_Shape in)
+class CADCurveCFI : public CADCurve
 {
-    /*gp_Trsf transform;
-    gp_Pnt ori(0.0, 0.0, 0.0);
-    transform.SetScale(ori, 1.0 / 1000.0);
-    TopLoc_Location mv(transform);
-    in.Move(mv);*/
+public:
+    static CADCurveSharedPtr create()
+    {
+        return MemoryManager<CADCurveCFI>::AllocateSharedPtr();
+    }
 
-    m_id      = i;
-    m_occVert = BRep_Tool::Pnt(TopoDS::Vertex(in));
+    static std::string key;
 
-    m_node = std::shared_ptr<Node>(new Node(i - 1, m_occVert.X() / 1000.0,
-                                            m_occVert.Y() / 1000.0,
-                                            m_occVert.Z() / 1000.0));
-    degen  = false;
+    CADCurveCFI()
+    {
+    }
+
+    ~CADCurveCFI()
+    {
+    }
+
+    virtual Array<OneD, NekDouble> GetBounds();
+    virtual NekDouble Length(NekDouble ti, NekDouble tf);
+    virtual Array<OneD, NekDouble> P(NekDouble t);
+    virtual Array<OneD, NekDouble> D2(NekDouble t);
+    virtual NekDouble Curvature(NekDouble t)
+    {
+        ASSERTL0(false, "Function: Curvature not implemented in CFI engine");
+        return 0;
+    }
+    virtual Array<OneD, NekDouble> N(NekDouble t)
+    {
+        ASSERTL0(false, "Function: N not implemented in CFI engine");
+        return Array<OneD, NekDouble>();
+    }
+    virtual NekDouble tAtArcLength(NekDouble s);
+    virtual Array<OneD, NekDouble> GetMinMax();
+    virtual NekDouble loct(Array<OneD, NekDouble> xyz, NekDouble &t);
+
+    void Initialise(int i, cfi::Line *in, NekDouble s);
+
+private:
+    /// cfi object
+    cfi::Line *m_cfiEdge;
+    NekDouble m_scal;
+};
+}
 }
 
-} // namespace NekMeshUtils
-} // namespace Nektar
+#endif

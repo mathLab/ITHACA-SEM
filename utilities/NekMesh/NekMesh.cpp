@@ -188,6 +188,13 @@ int main(int argc, char* argv[])
 
     mesh->m_infotag = new TiXmlElement("METADATA");
 
+    stringstream ss;
+    for(int i = 1; i < argc; i++)
+    {
+        ss << argv[i] << " ";
+    }
+    metadata["CommandString"] = ss.str();
+
     TiXmlElement *provTag = new TiXmlElement("PROVENANCE");
     for (auto &infoit : metadata)
     {

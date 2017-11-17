@@ -435,7 +435,7 @@ void Generator2D::MakeBL(int faceid)
     // needed
 
     // Nodes that need normal smoothing and their unit normal
-    map<NodeSharedPtr, NodeSharedPtr> unitNormals;
+    map<NodeSharedPtr, vector<NodeSharedPtr>> unitNormals;
     // Nodes that need normal smoothing and their BL thickness
     map<NodeSharedPtr, NekDouble> dist;
 
@@ -445,8 +445,6 @@ void Generator2D::MakeBL(int faceid)
     {
         unitNormals.clear();
         dist.clear();
-
-        int level = count / 10;
 
         for (const auto &it : m_blEdges)
         {
@@ -470,85 +468,31 @@ void Generator2D::MakeBL(int faceid)
             NekDouble u = (*q - *p).curl(r).m_z / d;
 
             // Check for more than intsersection. Just intersection would be
-            // between 0 and 1
+            // between 0 and 1. This also checks for half length in front and
+            // behind.
             if (-0.5 <= t && t <= 1.5 && -0.5 <= u && u <= 1.5)
             {
-                NodeSharedPtr base1 = p;
-                NodeSharedPtr base2 = q;
-                EdgeSharedPtr edge1 = it;
-                EdgeSharedPtr edge2 = it;
+                dist[p] = sqrt(r.abs2());
+                dist[q] = sqrt(s.abs2());
 
-                for (int i = 0; i <= level; ++i)
-                {
-                    if (!unitNormals.count(base1))
-                    {
-                        Node normal = *nodeNormals[base1] - *base1;
+                NodeSharedPtr sum =
+                    make_shared<Node>(r / dist[p] + s / dist[q]);
 
-                        dist[base1] = sqrt(normal.abs2());
-                        unitNormals[base1] =
-                            make_shared<Node>(normal / dist[base1]);
-                }
-
-                    if (!unitNormals.count(base2))
-                {
-                        Node normal = *nodeNormals[base2] - *base2;
-
-                        dist[base2] = sqrt(normal.abs2());
-                        unitNormals[base2] =
-                            make_shared<Node>(normal / dist[base2]);
-                    }
-
-                    edge1 =
-                        m_nodesToEdge[base1]
-                                     [m_nodesToEdge[base1][0] != edge1 ? 0 : 1];
-                    base1 = edge1->m_n1 != base1 ? edge1->m_n1 : edge1->m_n2;
-
-                    edge2 =
-                        m_nodesToEdge[base2]
-                                     [m_nodesToEdge[base2][0] != edge2 ? 0 : 1];
-                    base2 = edge2->m_n1 != base2 ? edge2->m_n1 : edge2->m_n2;
-                }
+                unitNormals[p].push_back(sum);
+                unitNormals[q].push_back(sum);
             }
         }
 
         // Smooth each normal one by one
         for (const auto &it : unitNormals)
         {
-            // Get adjacent edges and nodes
-            EdgeSharedPtr e1 = m_nodesToEdge[it.first][0];
-            EdgeSharedPtr e2 = m_nodesToEdge[it.first][1];
+            Node avg(0, 0.0, 0.0, 0.0);
 
-            NodeSharedPtr node1 = (e1->m_n1 != it.first) ? e1->m_n1 : e1->m_n2;
-            NodeSharedPtr node2 = (e2->m_n1 != it.first) ? e2->m_n1 : e2->m_n2;
-
-            NodeSharedPtr normal0 = it.second;
-
-            // Get or compute adjacent unit normals
-            NodeSharedPtr normal1;
-            if (unitNormals.count(node1))
+            for (const auto &i : it.second)
             {
-                normal1 = unitNormals[node1];
-            }
-            else
-            {
-                Node tmp = *nodeNormals[node1] - *node1;
-                normal1  = make_shared<Node>(tmp / sqrt(tmp.abs2()));
+                avg += *i;
             }
 
-            NodeSharedPtr normal2;
-            if (unitNormals.count(node2))
-            {
-                normal2 = unitNormals[node2];
-            }
-            else
-            {
-                Node tmp = *nodeNormals[node2] - *node2;
-                normal2  = make_shared<Node>(tmp / sqrt(tmp.abs2()));
-            }
-
-            // Smooth normal (equation could be adjusted but this seems to work
-            // without being too drastic)
-            Node avg = *normal1 + *normal0 * 2.0 + *normal2;
             avg /= sqrt(avg.abs2());
 
             // Create new BL node with smoothed normal
@@ -565,6 +509,20 @@ void Generator2D::MakeBL(int faceid)
             nodeNormals[it.first] = nn;
         }
     } while (unitNormals.size() && count++ < 50);
+
+    if (m_mesh->m_verbose)
+    {
+        if (count < 50)
+        {
+            cout << "\t\tNormals smoothed in " << count << " iterations."
+                 << endl;
+        }
+        else
+        {
+            cout << "\t\tNormals smoothed. Algorithm didn't converge after "
+                 << count << " iterations." << endl;
+        }
+    }
 
     for (auto &it : m_blCurves)
     {

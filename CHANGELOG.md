@@ -32,6 +32,7 @@ v5.0.0
 - Cleanup of CAD system data structures (!864)
 - Fix mac OSX on buildbots (!876)
 - Fix error from (!826) (!876)
+- Fix minor bug in ARPACK thirdparty build cmake (!874)
 
 **NekMesh**:
 - Add feature to read basic 2D geo files as CAD (!731)
@@ -78,7 +79,6 @@ v4.4.2
   the interface of two elements (!836)
 - Fix deadlock in Hdf5 with homogeneous expansions (!858)
 - Fix petsc compile without MPI (!873)
-- Fix minor bug in ARPACK thirdparty build cmake (!874)
 
 **NekMesh**
 - Fix missing periodic boundary meshing and boundary layer mesh adjustment

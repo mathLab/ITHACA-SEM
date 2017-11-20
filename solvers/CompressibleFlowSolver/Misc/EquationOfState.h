@@ -36,8 +36,8 @@
 #ifndef NEKTAR_SOLVERS_COMPRESSIBLEFLOWSOLVER_MISC_EQUATIONOFSTATE
 #define NEKTAR_SOLVERS_COMPRESSIBLEFLOWSOLVER_MISC_EQUATIONOFSTATE
 
-#include <LibUtilities/BasicUtils/SessionReader.h>
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
+#include <LibUtilities/BasicUtils/SessionReader.h>
 
 namespace Nektar
 {
@@ -49,10 +49,11 @@ typedef std::shared_ptr<EquationOfState> EquationOfStateSharedPtr;
 
 /// Declaration of the equation of state factory
 typedef LibUtilities::NekFactory<std::string, EquationOfState,
-        const LibUtilities::SessionReaderSharedPtr&> EquationOfStateFactory;
+                                 const LibUtilities::SessionReaderSharedPtr &>
+    EquationOfStateFactory;
 
 /// Declaration of the equation of state factory singleton
-EquationOfStateFactory& GetEquationOfStateFactory();
+EquationOfStateFactory &GetEquationOfStateFactory();
 
 /**
  * @class EquationOfState
@@ -61,71 +62,64 @@ EquationOfStateFactory& GetEquationOfStateFactory();
  */
 class EquationOfState
 {
-    public:
-        virtual ~EquationOfState() {}
+public:
+    virtual ~EquationOfState()
+    {
+    }
 
-        /// Calculate the temperature
-        NekDouble GetTemperature(
-            const NekDouble &rho, const NekDouble &e);
+    /// Calculate the temperature
+    NekDouble GetTemperature(const NekDouble &rho, const NekDouble &e);
 
-        /// Calculate the pressure
-        NekDouble GetPressure(
-            const NekDouble &rho, const NekDouble &e);
+    /// Calculate the pressure
+    NekDouble GetPressure(const NekDouble &rho, const NekDouble &e);
 
-        /// Calculate the sound speed
-        NekDouble GetSoundSpeed(
-            const NekDouble &rho, const NekDouble &e);
+    /// Calculate the sound speed
+    NekDouble GetSoundSpeed(const NekDouble &rho, const NekDouble &e);
 
-        /// Calculate the entropy
-        NekDouble GetEntropy(
-            const NekDouble &rho, const NekDouble &e);
+    /// Calculate the entropy
+    NekDouble GetEntropy(const NekDouble &rho, const NekDouble &e);
 
-        /// Calculate the partial derivative of P(rho,e) with respect to rho
-        NekDouble GetDPDrho_e(
-            const NekDouble &rho, const NekDouble &e);
+    /// Calculate the partial derivative of P(rho,e) with respect to rho
+    NekDouble GetDPDrho_e(const NekDouble &rho, const NekDouble &e);
 
-        /// Calculate the partial derivative of P(rho,e) with respect to e
-        NekDouble GetDPDe_rho(
-            const NekDouble &rho, const NekDouble &e);
+    /// Calculate the partial derivative of P(rho,e) with respect to e
+    NekDouble GetDPDe_rho(const NekDouble &rho, const NekDouble &e);
 
-        /// Obtain the internal energy from rho and P
-        NekDouble GetEFromRhoP(
-            const NekDouble &rho, const NekDouble &p);
+    /// Obtain the internal energy from rho and P
+    NekDouble GetEFromRhoP(const NekDouble &rho, const NekDouble &p);
 
-        /// Obtain the density from P and T
-        NekDouble GetRhoFromPT(
-            const NekDouble &p, const NekDouble &T);
+    /// Obtain the density from P and T
+    NekDouble GetRhoFromPT(const NekDouble &p, const NekDouble &T);
 
-    protected:
-        NekDouble  m_gamma;
-        NekDouble  m_gasConstant;
+protected:
+    NekDouble m_gamma;
+    NekDouble m_gasConstant;
 
-        /// Constructor
-        EquationOfState(const LibUtilities::SessionReaderSharedPtr& pSession);
+    /// Constructor
+    EquationOfState(const LibUtilities::SessionReaderSharedPtr &pSession);
 
-        virtual NekDouble v_GetTemperature(
-            const NekDouble &rho, const NekDouble &e) = 0;
+    virtual NekDouble v_GetTemperature(const NekDouble &rho,
+                                       const NekDouble &e) = 0;
 
-        virtual NekDouble v_GetPressure(
-            const NekDouble &rho, const NekDouble &e) = 0;
+    virtual NekDouble v_GetPressure(const NekDouble &rho,
+                                    const NekDouble &e) = 0;
 
-        virtual NekDouble v_GetSoundSpeed(
-            const NekDouble &rho, const NekDouble &e);
+    virtual NekDouble v_GetSoundSpeed(const NekDouble &rho, const NekDouble &e);
 
-        virtual NekDouble v_GetEntropy(
-            const NekDouble &rho, const NekDouble &e) = 0;
+    virtual NekDouble v_GetEntropy(const NekDouble &rho,
+                                   const NekDouble &e) = 0;
 
-        virtual NekDouble v_GetDPDrho_e(
-            const NekDouble &rho, const NekDouble &e) = 0;
+    virtual NekDouble v_GetDPDrho_e(const NekDouble &rho,
+                                    const NekDouble &e) = 0;
 
-        virtual NekDouble v_GetDPDe_rho(
-            const NekDouble &rho, const NekDouble &e) = 0;
+    virtual NekDouble v_GetDPDe_rho(const NekDouble &rho,
+                                    const NekDouble &e) = 0;
 
-        virtual NekDouble v_GetEFromRhoP(
-            const NekDouble &rho, const NekDouble &p) = 0;
+    virtual NekDouble v_GetEFromRhoP(const NekDouble &rho,
+                                     const NekDouble &p) = 0;
 
-        virtual NekDouble v_GetRhoFromPT(
-            const NekDouble &rho, const NekDouble &p) = 0;
+    virtual NekDouble v_GetRhoFromPT(const NekDouble &rho,
+                                     const NekDouble &p) = 0;
 };
 }
 

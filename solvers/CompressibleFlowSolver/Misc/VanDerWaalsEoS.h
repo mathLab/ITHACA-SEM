@@ -38,7 +38,6 @@
 
 #include "EquationOfState.h"
 
-
 namespace Nektar
 {
 
@@ -50,53 +49,45 @@ namespace Nektar
 */
 class VanDerWaalsEoS : public EquationOfState
 {
-    public:
+public:
+    friend class MemoryManager<VanDerWaalsEoS>;
 
-        friend class MemoryManager<VanDerWaalsEoS>;
+    /// Creates an instance of this class
+    static EquationOfStateSharedPtr create(
+        const LibUtilities::SessionReaderSharedPtr &pSession)
+    {
+        EquationOfStateSharedPtr p =
+            MemoryManager<VanDerWaalsEoS>::AllocateSharedPtr(pSession);
+        return p;
+    }
 
-        /// Creates an instance of this class
-        static EquationOfStateSharedPtr create(
-                const LibUtilities::SessionReaderSharedPtr& pSession)
-        {
-            EquationOfStateSharedPtr p = MemoryManager<VanDerWaalsEoS>::
-                                    AllocateSharedPtr(pSession);
-            return p;
-        }
+    /// Name of the class
+    static std::string className;
 
-        ///Name of the class
-        static std::string className;
+protected:
+    NekDouble m_a;
+    NekDouble m_b;
 
-    protected:
-        NekDouble m_a;
-        NekDouble m_b;
+    virtual NekDouble v_GetTemperature(const NekDouble &rho,
+                                       const NekDouble &e);
 
-        virtual NekDouble v_GetTemperature(
-            const NekDouble &rho, const NekDouble &e);
+    virtual NekDouble v_GetPressure(const NekDouble &rho, const NekDouble &e);
 
-        virtual NekDouble v_GetPressure(
-            const NekDouble &rho, const NekDouble &e);
+    virtual NekDouble v_GetEntropy(const NekDouble &rho, const NekDouble &e);
 
-        virtual NekDouble v_GetEntropy(
-            const NekDouble &rho, const NekDouble &e);
+    virtual NekDouble v_GetDPDrho_e(const NekDouble &rho, const NekDouble &e);
 
-        virtual NekDouble v_GetDPDrho_e(
-            const NekDouble &rho, const NekDouble &e);
+    virtual NekDouble v_GetDPDe_rho(const NekDouble &rho, const NekDouble &e);
 
-        virtual NekDouble v_GetDPDe_rho(
-            const NekDouble &rho, const NekDouble &e);
+    virtual NekDouble v_GetEFromRhoP(const NekDouble &rho, const NekDouble &p);
 
-        virtual NekDouble v_GetEFromRhoP(
-            const NekDouble &rho, const NekDouble &p);
+    virtual NekDouble v_GetRhoFromPT(const NekDouble &rho, const NekDouble &p);
 
-        virtual NekDouble v_GetRhoFromPT(
-            const NekDouble &rho, const NekDouble &p);
+private:
+    VanDerWaalsEoS(const LibUtilities::SessionReaderSharedPtr &pSession);
 
-    private:
-        VanDerWaalsEoS(const LibUtilities::SessionReaderSharedPtr& pSession);
-        
-        virtual ~VanDerWaalsEoS(void){};
+    virtual ~VanDerWaalsEoS(void){};
 };
-
 }
 
 #endif

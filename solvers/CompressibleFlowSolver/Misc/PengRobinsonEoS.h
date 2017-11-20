@@ -38,7 +38,6 @@
 
 #include "EquationOfState.h"
 
-
 namespace Nektar
 {
 
@@ -52,63 +51,55 @@ namespace Nektar
 */
 class PengRobinsonEoS : public EquationOfState
 {
-    public:
+public:
+    friend class MemoryManager<PengRobinsonEoS>;
 
-        friend class MemoryManager<PengRobinsonEoS>;
+    /// Creates an instance of this class
+    static EquationOfStateSharedPtr create(
+        const LibUtilities::SessionReaderSharedPtr &pSession)
+    {
+        EquationOfStateSharedPtr p =
+            MemoryManager<PengRobinsonEoS>::AllocateSharedPtr(pSession);
+        return p;
+    }
 
-        /// Creates an instance of this class
-        static EquationOfStateSharedPtr create(
-                const LibUtilities::SessionReaderSharedPtr& pSession)
-        {
-            EquationOfStateSharedPtr p = MemoryManager<PengRobinsonEoS>::
-                                    AllocateSharedPtr(pSession);
-            return p;
-        }
+    /// Name of the class
+    static std::string className;
 
-        ///Name of the class
-        static std::string className;
+protected:
+    NekDouble m_a;
+    NekDouble m_b;
+    NekDouble m_Tc;
+    NekDouble m_Pc;
+    NekDouble m_omega;
+    NekDouble m_fw;
 
-    protected:
-        NekDouble m_a;
-        NekDouble m_b;
-        NekDouble m_Tc;
-        NekDouble m_Pc;
-        NekDouble m_omega;
-        NekDouble m_fw;
+    virtual NekDouble v_GetTemperature(const NekDouble &rho,
+                                       const NekDouble &e);
 
-        virtual NekDouble v_GetTemperature(
-            const NekDouble &rho, const NekDouble &e);
+    virtual NekDouble v_GetPressure(const NekDouble &rho, const NekDouble &e);
 
-        virtual NekDouble v_GetPressure(
-            const NekDouble &rho, const NekDouble &e);
+    virtual NekDouble v_GetEntropy(const NekDouble &rho, const NekDouble &e);
 
-        virtual NekDouble v_GetEntropy(
-            const NekDouble &rho, const NekDouble &e);
+    virtual NekDouble v_GetDPDrho_e(const NekDouble &rho, const NekDouble &e);
 
-        virtual NekDouble v_GetDPDrho_e(
-            const NekDouble &rho, const NekDouble &e);
+    virtual NekDouble v_GetDPDe_rho(const NekDouble &rho, const NekDouble &e);
 
-        virtual NekDouble v_GetDPDe_rho(
-            const NekDouble &rho, const NekDouble &e);
+    virtual NekDouble v_GetEFromRhoP(const NekDouble &rho, const NekDouble &p);
 
-        virtual NekDouble v_GetEFromRhoP(
-            const NekDouble &rho, const NekDouble &p);
+    virtual NekDouble v_GetRhoFromPT(const NekDouble &rho, const NekDouble &p);
 
-        virtual NekDouble v_GetRhoFromPT(
-            const NekDouble &rho, const NekDouble &p);
+private:
+    PengRobinsonEoS(const LibUtilities::SessionReaderSharedPtr &pSession);
 
-    private:
-        PengRobinsonEoS(const LibUtilities::SessionReaderSharedPtr& pSession);
-        
-        virtual ~PengRobinsonEoS(void){};
+    virtual ~PengRobinsonEoS(void){};
 
-        // Alpha term of Peng-Robinson EoS
-        NekDouble Alpha(const NekDouble &T);
+    // Alpha term of Peng-Robinson EoS
+    NekDouble Alpha(const NekDouble &T);
 
-        // Log term term of Peng-Robinson EoS
-        NekDouble LogTerm(const NekDouble &rho);
+    // Log term term of Peng-Robinson EoS
+    NekDouble LogTerm(const NekDouble &rho);
 };
-
 }
 
 #endif

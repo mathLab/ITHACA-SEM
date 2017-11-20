@@ -32,10 +32,7 @@
 //  Description: cad object methods.
 //
 ////////////////////////////////////////////////////////////////////////////////
-
-#include <NekMeshUtils/CADSystem/OCE/CADSystemOCE.h>
-#include <NekMeshUtils/CADSystem/OCE/CADVertOCE.h>
-
+#include "CADVert.h"
 #include <NekMeshUtils/MeshElements/Node.h>
 
 using namespace std;
@@ -45,25 +42,31 @@ namespace Nektar
 namespace NekMeshUtils
 {
 
-std::string CADVertOCE::key = GetCADVertFactory().RegisterCreatorFunction(
-    "oce", CADVertOCE::create, "CAD vert oce");
-
-void CADVertOCE::Initialise(int i, TopoDS_Shape in)
+void CADVert::SetDegen(int s, CADSurfSharedPtr su, NekDouble u, NekDouble v)
 {
-    /*gp_Trsf transform;
-    gp_Pnt ori(0.0, 0.0, 0.0);
-    transform.SetScale(ori, 1.0 / 1000.0);
-    TopLoc_Location mv(transform);
-    in.Move(mv);*/
-
-    m_id      = i;
-    m_occVert = BRep_Tool::Pnt(TopoDS::Vertex(in));
-
-    m_node = std::shared_ptr<Node>(new Node(i - 1, m_occVert.X() / 1000.0,
-                                            m_occVert.Y() / 1000.0,
-                                            m_occVert.Z() / 1000.0));
-    degen  = false;
+    degen     = true;
+    degensurf = s;
+    Array<OneD, NekDouble> uv(2);
+    uv[0] = u;
+    uv[1] = v;
+    m_node->SetCADSurf(su, uv);
 }
 
-} // namespace NekMeshUtils
-} // namespace Nektar
+Array<OneD, NekDouble> CADVert::GetLoc()
+{
+    Array<OneD, NekDouble> out(3);
+    out[0] = m_node->m_x;
+    out[1] = m_node->m_y;
+    out[2] = m_node->m_z;
+    return out;
+}
+
+NekDouble CADVert::DistanceTo(Array<OneD, NekDouble> xyz)
+{
+    return sqrt((m_node->m_x - xyz[0])*(m_node->m_x - xyz[0]) +
+                (m_node->m_y - xyz[1])*(m_node->m_y - xyz[1]) +
+                (m_node->m_z - xyz[2])*(m_node->m_z - xyz[2]));
+}
+
+}
+}

@@ -89,10 +89,11 @@ bool ProcessProjectCAD::findAndProject(bgi::rtree<boxI, bgi::quadratic<16> > &rt
 
     int minsurf = 0;
     NekDouble minDist = numeric_limits<double>::max();
+    NekDouble dist;
 
     for (int j = 0; j < result.size(); j++)
     {
-        NekDouble dist = m_mesh->m_cad->GetSurf(result[j].second)->DistanceTo(in);
+        m_mesh->m_cad->GetSurf(result[j].second)->locuv(in, dist);
 
         if (dist < minDist)
         {
@@ -101,8 +102,7 @@ bool ProcessProjectCAD::findAndProject(bgi::rtree<boxI, bgi::quadratic<16> > &rt
         }
     }
 
-    Array<OneD, NekDouble> uv(2);
-    m_mesh->m_cad->GetSurf(minsurf)->ProjectTo(in, uv);
+    Array<OneD, NekDouble> uv = m_mesh->m_cad->GetSurf(minsurf)->locuv(in, dist);
 
     return true;
 }
@@ -335,9 +335,8 @@ void ProcessProjectCAD::Process()
 
         for (int j = 0; j < result.size(); j++)
         {
-            NekDouble dist = m_mesh->m_cad->
-                            GetSurf(result[j].second)->
-                                    DistanceTo((*i)->GetLoc());
+            NekDouble dist;
+            m_mesh->m_cad->GetSurf(result[j].second)->locuv((*i)->GetLoc(), dist);
             distList.push_back(dist);
             distId.push_back(result[j].second);
         }
@@ -392,9 +391,10 @@ void ProcessProjectCAD::Process()
 
                 shift = distList[j];
                 Array<OneD, NekDouble> uvt(2);
+                NekDouble dist = 0;
                 CADSurfSharedPtr s = m_mesh->m_cad->GetSurf(distId[j]);
                 Array<OneD, NekDouble> l = (*i)->GetLoc();
-                s->ProjectTo(l, uvt);
+                uvt = s->locuv(l, dist);
 
                 NekDouble tmpX = (*i)->m_x;
                 NekDouble tmpY = (*i)->m_y;
@@ -435,10 +435,11 @@ void ProcessProjectCAD::Process()
                 }
 
                 CADSurfSharedPtr s = m_mesh->m_cad->GetSurf(distId[j]);
-                Array<OneD, NekDouble> uv(2);
+                Array<OneD, NekDouble> uv;
+                NekDouble dist=0;
                 Array<OneD, NekDouble> loc = (*i)->GetLoc();
-                s->ProjectTo(loc, uv);
-                (*i)->SetCADSurf(distId[j], s, uv);
+                uv = s->locuv(loc, dist);
+                (*i)->SetCADSurf(s, uv);
             }
             maxNodeCor = max(maxNodeCor, shift);
         }
@@ -494,17 +495,17 @@ void ProcessProjectCAD::Process()
         {
             continue;
         }
-        vector<pair<int, CADSurfSharedPtr> > v1 = (*i)->m_n1->GetCADSurfs();
-        vector<pair<int, CADSurfSharedPtr> > v2 = (*i)->m_n2->GetCADSurfs();
+        vector<CADSurfSharedPtr> v1 = (*i)->m_n1->GetCADSurfs();
+        vector<CADSurfSharedPtr> v2 = (*i)->m_n2->GetCADSurfs();
 
         vector<int> vi1, vi2;
         for (int i = 0; i < v1.size();i++)
         {
-            vi1.push_back(v1[i].first);
+            vi1.push_back(v1[i]->GetId());
         }
         for (int i = 0; i < v2.size();i++)
         {
-            vi2.push_back(v2[i].first);
+            vi2.push_back(v2[i]->GetId());
         }
 
         sort(vi1.begin(), vi1.end());

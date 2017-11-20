@@ -44,7 +44,7 @@ namespace Nektar
 std::string PressureMachTemperatureBC::className = GetCFSBndCondFactory().
     RegisterCreatorFunction("PressureMachTemperature",
                             PressureMachTemperatureBC::create,
-                            "BC prescribed in terms of p,Ma and T.");
+                            "BC prescribed in terms of p, Ma and T.");
 
 PressureMachTemperatureBC::PressureMachTemperatureBC(
            const LibUtilities::SessionReaderSharedPtr& pSession,

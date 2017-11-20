@@ -43,7 +43,12 @@ namespace Nektar
 {
 
 /**
-* @brief Ideal gas equation of state.
+* @brief Peng-Robinson equation of state:
+ *       p = RT/(1/rho - b) - a*Alpha(T/Tc) / (1/rho^2 + 2*b/rho - b^2)
+ *       with a = 0.45724 * (R*Tc)^2 / Pc
+ *            b = 0.0778 * (R*Tc) / Pc
+ *            Alpha(T/Tc) = [1 + fw * (1 - sqrt(T/ Tc))]^2
+ *            fw = 0.37464 + 1.54226*omega - 0.2699*omega*omega
 */
 class PengRobinsonEoS : public EquationOfState
 {

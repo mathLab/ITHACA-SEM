@@ -43,7 +43,8 @@ namespace Nektar
 {
 
 /**
-* @brief Ideal gas equation of state.
+* @brief Ideal gas equation of state:
+ *       p = rho * R * T
 */
 class IdealGasEoS : public EquationOfState
 {

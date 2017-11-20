@@ -44,8 +44,11 @@ namespace Nektar
 {
 
 /**
- * @brief Extrapolation of order 0 for all the variables such that,
- * at the boundaries, a trivial Riemann problem is solved.
+ * @brief Boundary condition in terms of pressure, Mach number and temperature.
+ *        P should be defined in the "rho" entry, T in the "E" entry and the
+ *        Mach number in each direction in the corresponding momentum variable.
+ *        This state is converted to conserved variables and a Dirichlet
+ *        condition is applied.
  */
 class PressureMachTemperatureBC : public CFSBndCond
 {

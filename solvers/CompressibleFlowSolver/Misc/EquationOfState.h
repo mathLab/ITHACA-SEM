@@ -36,7 +36,7 @@
 #ifndef NEKTAR_SOLVERS_COMPRESSIBLEFLOWSOLVER_MISC_EQUATIONOFSTATE
 #define NEKTAR_SOLVERS_COMPRESSIBLEFLOWSOLVER_MISC_EQUATIONOFSTATE
 
-#include <SolverUtils/UnsteadySystem.h>
+#include <LibUtilities/BasicUtils/SessionReader.h>
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
 
 namespace Nektar
@@ -44,14 +44,14 @@ namespace Nektar
 //  Forward declaration
 class EquationOfState;
 
-/// A shared pointer to a boundary condition object
+/// A shared pointer to an equation of state object
 typedef std::shared_ptr<EquationOfState> EquationOfStateSharedPtr;
 
-/// Declaration of the boundary condition factory
+/// Declaration of the equation of state factory
 typedef LibUtilities::NekFactory<std::string, EquationOfState,
         const LibUtilities::SessionReaderSharedPtr&> EquationOfStateFactory;
 
-/// Declaration of the boundary condition factory singleton
+/// Declaration of the equation of state factory singleton
 EquationOfStateFactory& GetEquationOfStateFactory();
 
 /**
@@ -76,7 +76,7 @@ class EquationOfState
         NekDouble GetSoundSpeed(
             const NekDouble &rho, const NekDouble &e);
 
-        /// Calculate the sound speed
+        /// Calculate the entropy
         NekDouble GetEntropy(
             const NekDouble &rho, const NekDouble &e);
 
@@ -88,11 +88,11 @@ class EquationOfState
         NekDouble GetDPDe_rho(
             const NekDouble &rho, const NekDouble &e);
 
-        /// Obrain the internal energy from rho and P
+        /// Obtain the internal energy from rho and P
         NekDouble GetEFromRhoP(
             const NekDouble &rho, const NekDouble &p);
 
-        /// Obrain the density from P and T
+        /// Obtain the density from P and T
         NekDouble GetRhoFromPT(
             const NekDouble &p, const NekDouble &T);
 

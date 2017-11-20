@@ -43,7 +43,10 @@ namespace Nektar
 {
 
 /**
-* @brief Ideal gas equation of state.
+* @brief van der Waals equation of state:
+ *       p = RT/(1/rho - b) - a * rho^2
+ *       with a = 27/64 * (R*Tc)^2 / Pc
+ *            b = 1/8   * (R*Tc) / Pc
 */
 class VanDerWaalsEoS : public EquationOfState
 {

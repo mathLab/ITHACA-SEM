@@ -43,7 +43,10 @@ namespace Nektar
 {
 
 /**
-* @brief Ideal gas equation of state.
+* @brief Redlich-Kwong equation of state:
+ *       p = RT/(1/rho - b) - a/( sqrt(T / Tc) * (1/rho^2 + b/rho)
+ *       with a = 0.42748 * (R*Tc)^2 / Pc
+ *            b = 0.08664 * (R*Tc) / Pc
 */
 class RedlichKwongEoS : public EquationOfState
 {

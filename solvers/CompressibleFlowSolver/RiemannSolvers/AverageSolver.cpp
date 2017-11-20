@@ -76,8 +76,6 @@ namespace Nektar
         const Array<OneD, const Array<OneD, NekDouble> > &Bwd,
               Array<OneD,       Array<OneD, NekDouble> > &flux)
     {
-        static NekDouble gamma = m_params["gamma"]();
-        
         int expDim = Fwd.num_elements()-2;
         int i, j;
         
@@ -94,9 +92,13 @@ namespace Nektar
                 tmp1   += Ufwd[i]*Fwd[i+1][j];
                 tmp2   += Ubwd[i]*Bwd[i+1][j];
             }
-            
-            NekDouble Pfwd = (gamma - 1.0) * (Fwd[expDim+1][j] - 0.5 * tmp1);
-            NekDouble Pbwd = (gamma - 1.0) * (Bwd[expDim+1][j] - 0.5 * tmp2);
+
+            // Internal energy
+            NekDouble eFwd = (Fwd[expDim+1][j] - 0.5 * tmp1) / Fwd[0][j];
+            NekDouble eBwd = (Bwd[expDim+1][j] - 0.5 * tmp2) / Bwd[0][j];
+            // Pressure
+            NekDouble Pfwd = m_eos->GetPressure(Fwd[0][j], eFwd);
+            NekDouble Pbwd = m_eos->GetPressure(Bwd[0][j], eBwd);
             
             // Compute the average flux
             flux[0][j] = 0.5 * (Fwd[1][j] + Bwd[1][j]);

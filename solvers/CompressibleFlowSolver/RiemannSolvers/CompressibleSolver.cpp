@@ -159,7 +159,7 @@ namespace Nektar
             NekDouble kappaR  = dpdeR / rhoR;
 
             //
-            // Calculate interface speed of sound using proecdure from
+            // Calculate interface speed of sound using procedure from
             //    Vinokur, M.; Montagné, J.-L. "Generalized Flux-Vector
             //    Splitting and Roe Average for an Equilibrium Real Gas",
             //    JCP (1990).

@@ -50,16 +50,26 @@ namespace Nektar
 namespace NekMeshUtils
 {
 
+Array<OneD, NekDouble> CADSurf::locuv(Array<OneD, NekDouble> p)
+{
+    NekDouble dist;
+    Array<OneD, NekDouble> uv = locuv(p,dist);
+
+    WARNINGL1(dist < 1e-3, "large locuv distance");
+
+    return uv;
+}
+
 void CADSurf::OrientateEdges(CADSurfSharedPtr surf,
-                             vector<CADSystem::EdgeLoopSharedPtr> &ein)
+                             vector<EdgeLoopSharedPtr> &ein)
 {
     // this piece of code orientates the surface,
     // it used to be face mesh but its easier to have it here
     int np = 20;
-    vector<vector<Array<OneD, NekDouble> > > loopt;
+    vector<vector<Array<OneD, NekDouble>>> loopt;
     for (int i = 0; i < ein.size(); i++)
     {
-        vector<Array<OneD, NekDouble> > loop;
+        vector<Array<OneD, NekDouble>> loop;
         for (int j = 0; j < ein[i]->edges.size(); j++)
         {
             Array<OneD, NekDouble> bnds = ein[i]->edges[j]->GetBounds();
@@ -69,7 +79,7 @@ void CADSurf::OrientateEdges(CADSurfSharedPtr surf,
                 for (int k = 0; k < np - 1; k++)
                 {
                     NekDouble t = bnds[0] + dt * k;
-                    Array<OneD, NekDouble> l  = ein[i]->edges[j]->P(t);
+                    Array<OneD, NekDouble> l = ein[i]->edges[j]->P(t);
                     Array<OneD, NekDouble> uv = surf->locuv(l);
                     loop.push_back(uv);
                 }
@@ -79,7 +89,7 @@ void CADSurf::OrientateEdges(CADSurfSharedPtr surf,
                 for (int k = np - 1; k > 0; k--)
                 {
                     NekDouble t = bnds[0] + dt * k;
-                    Array<OneD, NekDouble> l  = ein[i]->edges[j]->P(t);
+                    Array<OneD, NekDouble> l = ein[i]->edges[j]->P(t);
                     Array<OneD, NekDouble> uv = surf->locuv(l);
                     loop.push_back(uv);
                 }
@@ -88,7 +98,7 @@ void CADSurf::OrientateEdges(CADSurfSharedPtr surf,
         loopt.push_back(loop);
     }
 
-    vector<bg::model::polygon<point_xy, false, true> > polygons;
+    vector<bg::model::polygon<point_xy, false, true>> polygons;
 
     for (int i = 0; i < loopt.size(); i++)
     {
@@ -107,7 +117,7 @@ void CADSurf::OrientateEdges(CADSurfSharedPtr surf,
 
         ein[i]->area = area;
 
-        point_xy cen;
+        point_xy cen(0.0, 0.0);
         bg::centroid(polygon, cen);
 
         ein[i]->center    = Array<OneD, NekDouble>(2);
@@ -161,7 +171,8 @@ void CADSurf::OrientateEdges(CADSurfSharedPtr surf,
 
             p = point_xy(P[0], P[1]);
 
-            ASSERTL0(boost::geometry::within(p, polygons[i]), "point is not side loop");
+            ASSERTL0(boost::geometry::within(p, polygons[i]),
+                     "point is not side loop");
         }
     }
 }

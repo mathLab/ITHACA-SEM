@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: CADSystem.cpp
+//  File: ProcessJac.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,41 +29,59 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: cad object methods.
+//  Description: Calculate jacobians of elements.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <NekMeshUtils/CADSystem/OCE/CADSystemOCE.h>
-#include <NekMeshUtils/CADSystem/OCE/CADVertOCE.h>
+#ifndef UTILITIES_NEKMESH_PROCESSPROJECTCAD
+#define UTILITIES_NEKMESH_PROCESSPROJECTCAD
 
-#include <NekMeshUtils/MeshElements/Node.h>
+#include <NekMeshUtils/Module/Module.h>
 
-using namespace std;
+#include <boost/geometry.hpp>
+#include <boost/geometry/geometries/point.hpp>
+#include <boost/geometry/geometries/box.hpp>
+
+#include <boost/geometry/index/rtree.hpp>
+
+namespace bg = boost::geometry;
+namespace bgi = boost::geometry::index;
+
+typedef bg::model::point<float, 3, bg::cs::cartesian> point;
+typedef bg::model::box<point> box;
+typedef std::pair<box, unsigned> boxI;
 
 namespace Nektar
 {
-namespace NekMeshUtils
+namespace Utilities
 {
 
-std::string CADVertOCE::key = GetCADVertFactory().RegisterCreatorFunction(
-    "oce", CADVertOCE::create, "CAD vert oce");
 
-void CADVertOCE::Initialise(int i, TopoDS_Shape in)
+class ProcessProjectCAD : public NekMeshUtils::ProcessModule
 {
-    /*gp_Trsf transform;
-    gp_Pnt ori(0.0, 0.0, 0.0);
-    transform.SetScale(ori, 1.0 / 1000.0);
-    TopLoc_Location mv(transform);
-    in.Move(mv);*/
+public:
+    /// Creates an instance of this class
+    static std::shared_ptr<Module> create(NekMeshUtils::MeshSharedPtr m)
+    {
+        return MemoryManager<ProcessProjectCAD>::AllocateSharedPtr(m);
+    }
+    static NekMeshUtils::ModuleKey className;
 
-    m_id      = i;
-    m_occVert = BRep_Tool::Pnt(TopoDS::Vertex(in));
+    ProcessProjectCAD(NekMeshUtils::MeshSharedPtr m);
+    virtual ~ProcessProjectCAD();
 
-    m_node = std::shared_ptr<Node>(new Node(i - 1, m_occVert.X() / 1000.0,
-                                            m_occVert.Y() / 1000.0,
-                                            m_occVert.Z() / 1000.0));
-    degen  = false;
+    /// Write mesh to output file.
+    virtual void Process();
+
+private:
+
+    bool findAndProject(bgi::rtree<boxI, bgi::quadratic<16> > &rtree,
+                                           Array<OneD, NekDouble> in,
+                                           int &surf);
+
+    bool IsNotValid(std::vector<NekMeshUtils::ElementSharedPtr> &els);
+};
+}
 }
 
-} // namespace NekMeshUtils
-} // namespace Nektar
+#endif

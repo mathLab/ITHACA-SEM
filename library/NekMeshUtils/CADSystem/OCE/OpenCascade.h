@@ -68,6 +68,7 @@
 #include <ShapeAnalysis_Curve.hxx>
 #include <BRepBndLib.hxx>
 #include <BRepExtrema_DistShapeShape.hxx>
+#include <GCPnts_AbscissaPoint.hxx>
 
 /// Shape fixing classes
 #include <ShapeFix_Face.hxx>

@@ -40,45 +40,44 @@
 
 namespace Nektar
 {
-    namespace FieldUtils
-    {
+namespace FieldUtils
+{
 
 /**
  * @brief This processing module calculates the Lambda 2 Criterion and adds it
  * as an extra-field to the output file.
  */
-        class ProcessL2Criterion : public ProcessModule
-        {
-        public:
-            /// Creates an instance of this class
-            static std::shared_ptr<Module> create(FieldSharedPtr f)
-            {
-                return MemoryManager<ProcessL2Criterion>::AllocateSharedPtr(f);
-            }
-            static ModuleKey className;
-
-            ProcessL2Criterion(FieldSharedPtr f);
-            virtual ~ProcessL2Criterion();
-
-            virtual void Process(po::variables_map &vm);
-
-            virtual std::string GetModuleName()
-            {
-                return "ProcessL2Criterion";
-            }
-
-            virtual std::string GetModuleDescription()
-            {
-                return "Calculating Lambda 2 Criterion";
-            }
-
-            virtual ModulePriority GetModulePriority()
-            {
-                return eModifyExp;
-            }
-
-        };
+class ProcessL2Criterion : public ProcessModule
+{
+public:
+    /// Creates an instance of this class
+    static std::shared_ptr<Module> create(FieldSharedPtr f)
+    {
+        return MemoryManager<ProcessL2Criterion>::AllocateSharedPtr(f);
     }
+    static ModuleKey className;
+
+    ProcessL2Criterion(FieldSharedPtr f);
+    virtual ~ProcessL2Criterion();
+
+    virtual void Process(po::variables_map &vm);
+
+    virtual std::string GetModuleName()
+    {
+        return "ProcessL2Criterion";
+    }
+
+    virtual std::string GetModuleDescription()
+    {
+        return "Calculating Lambda 2 Criterion";
+    }
+
+    virtual ModulePriority GetModulePriority()
+    {
+        return eModifyExp;
+    }
+};
+}
 }
 
 #endif

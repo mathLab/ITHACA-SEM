@@ -57,7 +57,8 @@ string APE::className = GetEquationSystemFactory().RegisterCreatorFunction(
 
 APE::APE(
         const LibUtilities::SessionReaderSharedPtr& pSession)
-    : UnsteadySystem(pSession)
+    : UnsteadySystem(pSession),
+      AdvectionSystem(pSession)
 {
 }
 
@@ -67,7 +68,7 @@ APE::APE(
  */
 void APE::v_InitObject()
 {
-    UnsteadySystem::v_InitObject();
+    AdvectionSystem::v_InitObject();
 
     // TODO: We have a bug somewhere in the 1D boundary conditions. Therefore 1D
     // problems are currently disabled. This should get fixed in the future.
@@ -78,8 +79,6 @@ void APE::v_InitObject()
 
     // Load isentropic coefficient, Ratio of specific heats
     m_session->LoadParameter("Gamma", m_gamma, 1.4);
-
-    m_session->LoadParameter("IO_CFLSteps", m_cflsteps, 0);
 
     // Define Baseflow and source term fields
     switch (m_spacedim)
@@ -201,38 +200,6 @@ APE::~APE()
     
 }
 
-
-NekDouble APE::GetCFLEstimate()
-{
-    int nElm = m_fields[0]->GetExpSize();
-    const Array<OneD, int> expOrder = GetNumExpModesPerExp();
-
-    Array<OneD, NekDouble> cfl(nElm, 0.0);
-    Array<OneD, NekDouble> stdVelocity(nElm, 0.0);
-
-    // Get standard velocity to compute the time-step limit
-    GetStdVelocity(stdVelocity);
-
-    // Factors to compute the time-step limit
-    NekDouble alpha   = MaxTimeStepEstimator();
-    NekDouble cLambda = 0.2; // Spencer book-317
-
-    // Loop over elements to compute the time-step limit for each element
-    for (int el = 0; el < nElm; ++el)
-    {
-        NekDouble lambdaMax = stdVelocity[el] * cLambda
-            * (expOrder[el] - 1) * (expOrder[el] - 1);
-        cfl[el] = m_timestep * lambdaMax / alpha;
-    }
-
-    // Get the minimum time-step limit and return the time-step
-    NekDouble maxCFL = Vmath::Vmax(nElm, cfl, 1);
-    m_comm->AllReduce(maxCFL, LibUtilities::ReduceMax);
-
-    return maxCFL;
-}
-
-
 /**
  * @brief Return the flux vector for the APE equations.
  *
@@ -297,7 +264,7 @@ void APE::GetFluxVector(
 
 
 /**
- * @brief v_PostIntegrate
+ * @brief v_PreIntegrate
  */
 bool APE::v_PreIntegrate(int step)
 {
@@ -326,27 +293,8 @@ bool APE::v_PreIntegrate(int step)
         m_bfField->BwdTrans(tmpC, m_bf[i]);
     }
 
-    return UnsteadySystem::v_PreIntegrate(step);
+    return AdvectionSystem::v_PreIntegrate(step);
 }
-
-
-/**
- * @brief v_PostIntegrate
- */
-bool APE::v_PostIntegrate(int step)
-{
-    if (m_cflsteps && !((step + 1) % m_cflsteps))
-    {
-        NekDouble cfl = GetCFLEstimate();
-        if (m_comm->GetRank() == 0)
-        {
-            cout << "CFL: " << cfl << endl;
-        }
-    }
-
-    return UnsteadySystem::v_PostIntegrate(step);
-}
-
 
 /**
  * @brief Compute the right-hand side.
@@ -503,20 +451,17 @@ void APE::WallBC(int bcRegion, int cnt,
  * @brief Compute the advection velocity in the standard space
  * for each element of the expansion.
  *
- * @param stdV       Standard velocity field.
+ * @return       Standard velocity field.
  */
-void APE::GetStdVelocity(Array<OneD, NekDouble> &stdV)
+Array<OneD, NekDouble> APE::v_GetMaxStdVelocity(void)
 {
     int nElm = m_fields[0]->GetExpSize();
 
-    ASSERTL1(stdV.num_elements() ==  nElm,  "stdV malformed");
+    Array<OneD, NekDouble> stdV(nElm, 0.0);
 
     Array<OneD, Array<OneD, NekDouble> > stdVelocity(m_spacedim);
     Array<OneD, Array<OneD, NekDouble> > velocity(m_spacedim+1);
     LibUtilities::PointsKeyVector ptsKeys;
-
-    // Zero output array
-    Vmath::Zero(stdV.num_elements(), stdV, 1);
 
     int cnt = 0;
 
@@ -592,6 +537,8 @@ void APE::GetStdVelocity(Array<OneD, NekDouble> &stdV)
 
         cnt += nq;
     }
+
+    return stdV;
 }
 
 

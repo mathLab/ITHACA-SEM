@@ -40,7 +40,6 @@ using namespace std;
 #include "ProcessL2Criterion.h"
 
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
-#define PI 3.141592653589793238462643383279502884197169399375105820974944592308
 
 namespace Nektar
 {
@@ -61,7 +60,15 @@ namespace Nektar
         {
         }
 
-        //Eigen values of a symmetric 3x3 matrix
+        /**
+         * @brief Calculates eigenvalues of a 3x3 Symmetric matrix.
+         *
+         * @param d1, d2, d3 - matrix diagonal entries at [0,0], [1,1] and [2,2]
+         * @param a - matrix value at [0,1] and [1,0]
+         * @param b - matrix value at [0,2] and [2,0]
+         * @param c - matrix value at [1,2] and [2,1]
+         * @param l1, l2, l3 the computed eigenvalues, ordered l3 >= l2 >= l1
+         */
         void MatSymEVals(NekDouble d1, NekDouble d2, NekDouble d3,
                          NekDouble a, NekDouble b, NekDouble c,
                          NekDouble& l1, NekDouble& l2, NekDouble& l3)
@@ -76,7 +83,6 @@ namespace Nektar
                     swap(l1, l2);
                 if (l2 > l3)
                     swap(l2, l3);
-                //cout << "Diagonal ";
             } else {
                 NekDouble q = (d1 + d2 + d3)/3.0;
                 p = (d1 - q) * (d1 - q) + (d2 - q) * (d2 - q) + (d3 - q) * (d3 - q) + 2.0 * p;
@@ -87,7 +93,7 @@ namespace Nektar
 
                 NekDouble phi = 0;
                 if (r <= -1)
-                    phi = PI / 3.0;
+                    phi = M_PI / 3.0;
                 else if (r >= 1)
                     phi = 0.0;
                 else
@@ -95,10 +101,10 @@ namespace Nektar
 
                 // the eigenvalues satisfy eig3 >= eig2 >= eig1
                 l3 = q + 2.0 * p * cos(phi);
-                l1 = q + 2.0 * p * cos(phi + (2.0 * PI / 3.0));
-                l2 = 3.0 * q - l1 - l3;   // since trace(A) = eig1 + eig2 + eig3
+                l1 = q + 2.0 * p * cos(phi + (2.0 * M_PI / 3.0));
+                // since trace(A) = eig1 + eig2 + eig3
+                l2 = 3.0 * q - l1 - l3;
             }
-            //cout << l1 << " " << l2 << " " << l3 << endl;
         }
 
         void ProcessL2Criterion::Process(po::variables_map &vm)
@@ -127,7 +133,7 @@ namespace Nektar
 
             // Will store the Lambdas
             NekDouble a00, a11, a22, a01, a02, a12;
-            NekDouble t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13, t14, t15;
+            NekDouble t1, t2, t3, t4, t5, t6, t7, t8, t10, t11, t13, t14, t15;
             //Array<OneD, NekDouble> outfield1 (npoints);
             NekDouble outfield1, outfield3;
             Array<OneD, NekDouble> outfield2 (npoints);
@@ -152,33 +158,47 @@ namespace Nektar
                             grad[i * spacedim + 1], grad[i * spacedim + 2]);
                 }
 
+                /*
+                 * For each node calculate the S^2+W^2 tensor
+                 * where S and W are the symmetric and the skew-symmetric
+                 * parts of the velocity gradient tensor D=grad(u),
+                 * S=0.5(D+transpose(D)) and W=0.5((D-transpose(D)))
+                 */
                 for(int j=0; j<npoints; ++j)
                 {
-                    t1 = grad[0 * spacedim + 1][j] + grad[1 * spacedim + 0][j];//u01 + u10;
-                    t2 = grad[0 * spacedim + 2][j] + grad[2 * spacedim + 0][j];//u02 + u20;
-                    t3 = grad[0 * spacedim + 1][j] - grad[1 * spacedim + 0][j];//u01 - u10;
-                    t4 = grad[0 * spacedim + 2][j] - grad[2 * spacedim + 0][j];//u02 - u20;
+                    //diff(u,y) + diff(v,x);
+                    t1 = grad[0 * spacedim + 1][j] + grad[1 * spacedim + 0][j];
+                    //diff(u,z) + diff(w,x);
+                    t2 = grad[0 * spacedim + 2][j] + grad[2 * spacedim + 0][j];
+                    //diff(u,y) - diff(v,x);
+                    t3 = grad[0 * spacedim + 1][j] - grad[1 * spacedim + 0][j];
+                    //diff(u,z) - diff(w,x);
+                    t4 = grad[0 * spacedim + 2][j] - grad[2 * spacedim + 0][j];
+
                     t5 = t2*t2;
                     t6 = t4*t4;
                     t7 = t3*t3;
                     t8 = t1*t1;
-                    t9 = 0.25;
-                    t10 = grad[2 * spacedim + 1][j] + grad[1 * spacedim + 2][j];//u21 + u12;
-                    t11 = grad[2 * spacedim + 1][j] - grad[1 * spacedim + 2][j];//u21 - u12;
-                    t12 = 0.5;
-                    t13 = t9 * (t10 * t2 + t11 * t4) + t12 * t1 * (grad[0 * spacedim + 0][j]+grad[1 * spacedim + 1][j]);//(u00 + u11);
-                    t14 = t12 * t2 * (grad[0 * spacedim + 0][j]+grad[2 * spacedim + 2][j]) + t9 * (t1 * t10 - t11 * t3);//(u00 + u22) + t9 * (t1 * t10 - t11 * t3);
+
+                    //diff(w,y) + diff(v,z);
+                    t10 = grad[2 * spacedim + 1][j] + grad[1 * spacedim + 2][j];
+                    //diff(w,y) - diff(v,z);
+                    t11 = grad[2 * spacedim + 1][j] - grad[1 * spacedim + 2][j];
+
+                    t13 = 0.25 * (t10 * t2 + t11 * t4) + 0.5 * t1 * (grad[0 * spacedim + 0][j]+grad[1 * spacedim + 1][j]);
+                    t14 = 0.5 * t2 * (grad[0 * spacedim + 0][j]+grad[2 * spacedim + 2][j]) + 0.25 * (t1 * t10 - t11 * t3);
                     t15 = t10*t10;
                     t11 = t11*t11;
-                    t1 = t12 * t10 * (grad[1 * spacedim + 1][j]+grad[2 * spacedim + 2][j]) - t9 * (-t1 * t2 + t3 * t4);
+                    t1 = 0.5 * t10 * (grad[1 * spacedim + 1][j]+grad[2 * spacedim + 2][j]) - 0.25 * (-t1 * t2 + t3 * t4);
 
-                    a00 = t9 * (t5 - t6 - t7 + t8) + grad[0 * spacedim + 0][j] * grad[0 * spacedim + 0][j];
+                    a00 = 0.25 * (t5 - t6 - t7 + t8) + grad[0 * spacedim + 0][j] * grad[0 * spacedim + 0][j];
                     a01 = t13;
                     a02 = t14;
-                    a11 = t9 * (-t7 + t8 + t15 - t11) + grad[1 * spacedim + 1][j] * grad[1 * spacedim + 1][j];
+                    a11 = 0.25 * (-t7 + t8 + t15 - t11) + grad[1 * spacedim + 1][j] * grad[1 * spacedim + 1][j];
                     a12 = t1;
-                    a22 = t9 * (t5 - t6 + t15 - t11) + grad[2 * spacedim + 2][j] * grad[2 * spacedim + 2][j];
+                    a22 = 0.25 * (t5 - t6 + t15 - t11) + grad[2 * spacedim + 2][j] * grad[2 * spacedim + 2][j];
 
+                    //Compute the eigenvalues of a symmetric 3x3 matrix
                     MatSymEVals(a00, a11, a22, a01, a02, a12,
                                 outfield1,  outfield2[j],  outfield3);
                 }

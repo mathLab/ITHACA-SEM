@@ -44,7 +44,7 @@ namespace Nektar
     {
 
 /**
- * @brief This processing module calculates the Q Criterion and adds it
+ * @brief This processing module calculates the Lambda 2 Criterion and adds it
  * as an extra-field to the output file.
  */
         class ProcessL2Criterion : public ProcessModule
@@ -60,7 +60,6 @@ namespace Nektar
             ProcessL2Criterion(FieldSharedPtr f);
             virtual ~ProcessL2Criterion();
 
-            /// Write mesh to output file.
             virtual void Process(po::variables_map &vm);
 
             virtual std::string GetModuleName()

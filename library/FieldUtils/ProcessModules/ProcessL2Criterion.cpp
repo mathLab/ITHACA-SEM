@@ -79,11 +79,17 @@ void MatSymEVals(NekDouble d1, NekDouble d2, NekDouble d3, NekDouble a,
         l2 = d2;
         l3 = d3;
         if (l1 > l3)
+        {
             swap(l1, l3);
+        }
         if (l1 > l2)
+        {
             swap(l1, l2);
+        }
         if (l2 > l3)
+        {
             swap(l2, l3);
+        }
     }
     else
     {
@@ -100,11 +106,17 @@ void MatSymEVals(NekDouble d1, NekDouble d2, NekDouble d3, NekDouble a,
 
         NekDouble phi = 0;
         if (r <= -1)
+        {
             phi = M_PI / 3.0;
+        }
         else if (r >= 1)
+        {
             phi = 0.0;
+        }
         else
+        {
             phi = acos(r) / 3.0;
+        }
 
         // the eigenvalues satisfy eig3 >= eig2 >= eig1
         l3 = q + 2.0 * p * cos(phi);
@@ -117,9 +129,7 @@ void MatSymEVals(NekDouble d1, NekDouble d2, NekDouble d3, NekDouble a,
 void ProcessL2Criterion::Process(po::variables_map &vm)
 {
     auto nfields = m_f->m_variables.size();
-    // m_f->m_variables.push_back("L1");
     m_f->m_variables.push_back("L2");
-    // m_f->m_variables.push_back("L3");
 
     // Skip in case of empty partition
     if (m_f->m_exp[0]->GetNumElmts() == 0)
@@ -142,10 +152,8 @@ void ProcessL2Criterion::Process(po::variables_map &vm)
     // Will store the Lambdas
     NekDouble a00, a11, a22, a01, a02, a12;
     NekDouble t1, t2, t3, t4, t5, t6, t7, t8, t10, t11, t13, t14, t15;
-    // Array<OneD, NekDouble> outfield1 (npoints);
     NekDouble outfield1, outfield3;
     Array<OneD, NekDouble> outfield2(npoints);
-    // Array<OneD, NekDouble> outfield3 (npoints);
 
     int nstrips;
     m_f->m_session->LoadParameter("Strip_Z", nstrips, 1);
@@ -225,18 +233,6 @@ void ProcessL2Criterion::Process(po::variables_map &vm)
         Exp->FwdTrans_IterPerExp(outfield2, Exp->UpdateCoeffs());
         auto it = m_f->m_exp.begin() + s * (nfields + 1) + nfields;
         m_f->m_exp.insert(it, Exp);
-
-        /*Exp = m_f->AppendExpList(m_f->m_numHomogeneousDir);
-        Vmath::Vcopy(npoints, outfield2, 1, Exp->UpdatePhys(), 1);
-        Exp->FwdTrans_IterPerExp(outfield2, Exp->UpdateCoeffs());
-        it = m_f->m_exp.begin() + s * (nfields + 2) + nfields;
-        m_f->m_exp.insert(it, Exp);
-
-        Exp = m_f->AppendExpList(m_f->m_numHomogeneousDir);
-        Vmath::Vcopy(npoints, outfield3, 1, Exp->UpdatePhys(), 1);
-        Exp->FwdTrans_IterPerExp(outfield3, Exp->UpdateCoeffs());
-        it = m_f->m_exp.begin() + s * (nfields + 3) + nfields;
-        m_f->m_exp.insert(it, Exp);*/
     }
 }
 }

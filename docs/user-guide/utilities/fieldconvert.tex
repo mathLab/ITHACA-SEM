@@ -155,6 +155,7 @@ Specifically, FieldConvert has these additional functionalities
 \begin{enumerate}
 \item \inltt{C0Projection}: Computes the C0 projection of a given output file;
 \item \inltt{QCriterion}: Computes the Q-Criterion for a given output file;
+\item \inltt{L2Criterion}: Computes the Lambda 2 Criterion for a given output file;
 \item \inltt{addcompositeid}: Adds the composite ID of an element as an additional field;
 \item \inltt{addFld}: Sum two .fld files;
 \item \inltt{combineAvg}: Combine two \nekpp binary output (.chk or .fld) field file containing averages of fields (and
@@ -244,6 +245,21 @@ FieldConvert -m QCriterion test.xml test.fld test-QCrit.fld
 \end{lstlisting}
 %
 where the file \inltt{test-QCrit.fld} can be processed in a similar
+way as described in section \ref{s:utilities:fieldconvert:sub:convert}
+to visualise the result either in Tecplot, Paraview or VisIt.
+%
+%
+%
+
+\subsection{Calculate $\lambda_2$: \textit{L2Criterion} module}
+To perform the $\lambda_2$ vortex detection calculation and obtain an output
+data containing the values of the $\lambda_2$ eigenvalue, the user can run
+%
+\begin{lstlisting}[style=BashInputStyle]
+  FieldConvert -m L2Criterion test.xml test.fld test-L2Crit.fld
+\end{lstlisting}
+%
+where the file \inltt{test-L2Crit.fld} can be processed in a similar
 way as described in section \ref{s:utilities:fieldconvert:sub:convert}
 to visualise the result either in Tecplot, Paraview or VisIt.
 %

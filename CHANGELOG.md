@@ -57,6 +57,7 @@ v5.0.0
 - Allow explicitly setting bool options of FieldConvert modules as false (!811)
 - Enable output to multiple files (!844)
 - Allow using xml file without expansion tag in FieldConvert (!849)
+- Add Lambda 2 vortex detection criteria (!882)
 
 **IncNavierStokesSolver**
 - Replace steady-state check based on difference of norms by check based on

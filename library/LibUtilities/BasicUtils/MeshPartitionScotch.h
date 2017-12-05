@@ -32,14 +32,15 @@
 // Description: Scotch partitioner interface
 //
 ///////////////////////////////////////////////////////////////////////////////
-#ifndef NEKTAR_LIB_UTILITIES_MESHPARTITIONMETIS_H
-#define NEKTAR_LIB_UTILITIES_MESHPARTITIONMETIS_H
+
+#ifndef NEKTAR_LIB_UTILITIES_MESHPARTITIONSCOTCH_H
+#define NEKTAR_LIB_UTILITIES_MESHPARTITIONSCOTCH_H
 
 #include "LibUtilities/Memory/NekMemoryManager.hpp"
 
 #include "MeshPartition.h"
 
-#include "scotch.h"
+#include <scotch.h>
 
 namespace Nektar
 {

@@ -1618,13 +1618,13 @@ namespace Nektar
                 return;
             }
 
-            // Default partitioner to use is Metis. Use Scotch as default
+            // Default partitioner to use is Scotch. Use Metis as default
             // if it is installed. Override default with command-line flags
             // if they are set.
-            string vPartitionerName = "Metis";
-            if (GetMeshPartitionFactory().ModuleExists("Scotch"))
+            string vPartitionerName = "Scotch";
+            if (GetMeshPartitionFactory().ModuleExists("Metis"))
             {
-                vPartitionerName = "Scotch";
+                vPartitionerName = "Metis";
             }
             if (DefinesCmdLineArgument("use-metis"))
             {

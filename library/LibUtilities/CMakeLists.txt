@@ -18,7 +18,6 @@ SET(BasicUtilsHeaders
     ./BasicUtils/HashUtils.hpp
     ./BasicUtils/MeshEntities.hpp
     ./BasicUtils/MeshPartition.h
-    ./BasicUtils/MeshPartitionMetis.h
     ./BasicUtils/NekManager.hpp
     ./BasicUtils/NekFactory.hpp
     ./BasicUtils/OperatorGenerators.hpp
@@ -35,7 +34,6 @@ SET(BasicUtilsHeaders
     ./BasicUtils/ThreadBoost.h
     ./BasicUtils/Vmath.hpp
     ./BasicUtils/VmathArray.hpp
-    ./BasicUtils/Metis.hpp
     ./BasicUtils/VtkUtil.hpp
 )
 
@@ -48,7 +46,6 @@ SET(BasicUtilsSources
     ./BasicUtils/FieldIOXml.cpp
     ./BasicUtils/FileSystem.cpp
     ./BasicUtils/MeshPartition.cpp
-    ./BasicUtils/MeshPartitionMetis.cpp
     ./BasicUtils/ParseUtils.cpp
     ./BasicUtils/PtsField.cpp
     ./BasicUtils/PtsIO.cpp
@@ -69,6 +66,7 @@ IF( NEKTAR_USE_HDF5 )
         ./BasicUtils/FieldIOHdf5.cpp)
 ENDIF( NEKTAR_USE_HDF5 )
 
+
 SET(CommunicationHeaders
     ./Communication/Comm.h
     ./Communication/CommSerial.h
@@ -84,6 +82,14 @@ SET(CommunicationSources
     ./Communication/CommSerial.cpp
     ./Communication/Transposition.cpp
 )
+
+IF(NEKTAR_USE_METIS)
+    SET(BasicUtilsHeaders ${BasicUtilsHeaders}
+        ./BasicUtils/MeshPartitionMetis.h
+        ./BasicUtils/Metis.hpp)
+    SET(BasicUtilsSources ${BasicUtilsSources}
+        ./BasicUtils/MeshPartitionMetis.cpp)
+ENDIF()
 
 IF(NEKTAR_USE_SCOTCH)
     SET(BasicUtilsHeaders ${BasicUtilsHeaders}
@@ -349,19 +355,22 @@ ADD_NEKTAR_LIBRARY(LibUtilities
     SUMMARY "Nektar++ LibUtilities library"
     DESCRIPTION "This library provides core routines including linear algebra and integration with ThirdParty libraries.")
 
-ADD_DEPENDENCIES(LibUtilities modmetis-5.1.0 boost tinyxml-2.6.2 zlib-1.2.7)
+ADD_DEPENDENCIES(LibUtilities boost tinyxml-2.6.2 zlib-1.2.7)
 
 ### Libraries needed specifically by LibUtilities ###
 ### Static libraries do not need to be linked by
 # Scotch
-IF( NEKTAR_USE_SCOTCH )
+IF (NEKTAR_USE_SCOTCH)
     TARGET_LINK_LIBRARIES(LibUtilities LINK_PUBLIC
         ${SCOTCH_LIBRARY} ${SCOTCHERR_LIBRARY})
-    ADD_DEPENDENCIES(LibUtilities scotch-6.0.0)
-ENDIF ()
+    ADD_DEPENDENCIES(LibUtilities scotch-6.0.4)
+ENDIF()
 
 # Metis
-TARGET_LINK_LIBRARIES(LibUtilities LINK_PRIVATE ${METIS_LIB})
+IF (NEKTAR_USE_METIS)
+    TARGET_LINK_LIBRARIES(LibUtilities LINK_PRIVATE ${METIS_LIB})
+    ADD_DEPENDENCIES(LibUtilities metis-5.1.0)
+ENDIF()
 
 # FFTW
 IF( NEKTAR_USE_FFTW )

@@ -929,8 +929,8 @@ namespace Nektar
                              &cblknbr, &rangtab[0], &treetab[0]));
 
                 // We're now done with Scotch: clean up the created structures.
-                SCOTCH_CALL(SCOTCH_graphOrderExit, (&scGraph));
-                SCOTCH_CALL(SCOTCH_stratExit, (&strat));
+                SCOTCH_graphExit(&scGraph);
+                SCOTCH_stratExit(&strat);
 
                 //
                 // Step 3: create a MultiLevelBisectedGraph by reading the

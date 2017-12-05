@@ -59,12 +59,12 @@
 #include <BRepTools.hxx>
 #include <BRep_Tool.hxx>
 #include <TopExp_Explorer.hxx>
-#include <BRepAdaptor_Surface.hxx>
+#include <GeomAdaptor_HSurface.hxx>
 #include <BRepAdaptor_Curve.hxx>
 #include <GProp_GProps.hxx>
 #include <BRepGProp.hxx>
 #include <GeomLProp_CLProps.hxx>
-#include <BRepLProp_SLProps.hxx>
+#include <GeomLProp_SLProps.hxx>
 #include <ShapeAnalysis_Curve.hxx>
 #include <BRepBndLib.hxx>
 #include <BRepExtrema_DistShapeShape.hxx>

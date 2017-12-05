@@ -28,6 +28,12 @@ v5.0.0
   function definitions for the Absorption Forcing (!769)
 - Improve performance of DisContField2D::v_ExtractTracePhys (!824)
 - Fix small bug in Jacobian Energy (!857)
+- Adds CFI CAD engine back-end (!864)
+- Adds CFI Mesh IO support (!864)
+- Cleanup of CAD system data structures (!864)
+- Fix mac OSX on buildbots (!876)
+- Fix error from (!826) (!876)
+- Fix minor bug in ARPACK thirdparty build cmake (!874)
 
 **NekMesh**:
 - Add feature to read basic 2D geo files as CAD (!731)
@@ -42,6 +48,7 @@ v5.0.0
 - Update for the CAD system, more advance self-healing and analysis (!822)
 - Additional curve types in GEO reader: BSpline, Circle, Ellipse (!800)
 - Fix default command line argument value (!823)
+- Add projection meshing module which can curve linear meshes with CAD (!826)
 
 **FieldConvert**:
 - Add input module for Semtex field files (!777)
@@ -51,6 +58,7 @@ v5.0.0
 - Allow explicitly setting bool options of FieldConvert modules as false (!811)
 - Enable output to multiple files (!844)
 - Allow using xml file without expansion tag in FieldConvert (!849)
+- Add Lambda 2 vortex detection criteria (!882)
 
 **IncNavierStokesSolver**
 - Replace steady-state check based on difference of norms by check based on
@@ -72,6 +80,7 @@ v4.4.2
 - Fix evaluation of points (e.g. HistoryPoints, Interpolation to pts) close to
   the interface of two elements (!836)
 - Fix deadlock in Hdf5 with homogeneous expansions (!858)
+- Fix petsc compile without MPI (!873)
 
 **NekMesh**
 - Fix missing periodic boundary meshing and boundary layer mesh adjustment

@@ -89,6 +89,9 @@ v4.4.2
 - Fix sign of the viscous term in the velocity correction scheme equations in
   the user guide (!856)
 
+**FieldConvert**
+- Allow passing input name with trailing separator (!879)
+
 v4.4.1
 ------
 **Library**

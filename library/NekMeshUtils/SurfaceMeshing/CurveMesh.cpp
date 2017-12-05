@@ -145,7 +145,7 @@ void CurveMesh::Mesh()
 
     NodeSharedPtr n = verts[0]->GetNode();
     t               = m_bounds[0];
-    n->SetCADCurve(m_id, m_cadcurve, t);
+    n->SetCADCurve(m_cadcurve, t);
     loc = n->GetLoc();
     for (int j = 0; j < s.size(); j++)
     {
@@ -157,7 +157,7 @@ void CurveMesh::Mesh()
         }
 
         Array<OneD, NekDouble> uv = s[j].first->locuv(loc);
-        n->SetCADSurf(s[j].first->GetId(), s[j].first, uv);
+        n->SetCADSurf(s[j].first, uv);
     }
     m_meshpoints.push_back(n);
 
@@ -167,18 +167,18 @@ void CurveMesh::Mesh()
         loc              = m_cadcurve->P(t);
         NodeSharedPtr n2 = std::shared_ptr<Node>(
             new Node(m_mesh->m_numNodes++, loc[0], loc[1], loc[2]));
-        n2->SetCADCurve(m_id, m_cadcurve, t);
+        n2->SetCADCurve(m_cadcurve, t);
         for (int j = 0; j < s.size(); j++)
         {
             Array<OneD, NekDouble> uv = s[j].first->locuv(loc);
-            n2->SetCADSurf(s[j].first->GetId(), s[j].first, uv);
+            n2->SetCADSurf(s[j].first, uv);
         }
         m_meshpoints.push_back(n2);
     }
 
     n = verts[1]->GetNode();
     t = m_bounds[1];
-    n->SetCADCurve(m_id, m_cadcurve, t);
+    n->SetCADCurve(m_cadcurve, t);
     loc = n->GetLoc();
     for (int j = 0; j < s.size(); j++)
     {
@@ -190,7 +190,7 @@ void CurveMesh::Mesh()
         }
 
         Array<OneD, NekDouble> uv = s[j].first->locuv(loc);
-        n->SetCADSurf(s[j].first->GetId(), s[j].first, uv);
+        n->SetCADSurf(s[j].first, uv);
     }
     m_meshpoints.push_back(n);
 
@@ -406,11 +406,13 @@ void CurveMesh::PeriodicOverwrite(CurveMeshSharedPtr from)
 
         for (int j = 0; j < surfs.size(); j++)
         {
-            nn->SetCADSurf(surfs[j].first->GetId(), surfs[j].first,
-                           surfs[j].first->locuv(nn->GetLoc()));
+            Array<OneD, NekDouble> uv = surfs[j].first->locuv(nn->GetLoc());
+            nn->SetCADSurf(surfs[j].first, uv);
         }
 
-        nn->SetCADCurve(m_id, m_cadcurve, m_cadcurve->loct(nn->GetLoc()));
+        NekDouble t;
+        m_cadcurve->loct(nn->GetLoc(), t);
+        nn->SetCADCurve(m_cadcurve, t);
 
         m_meshpoints.push_back(nn);
     }

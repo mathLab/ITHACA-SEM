@@ -38,6 +38,7 @@
 #define NEKTAR_SOLVERS_APESOLVER_EQUATIONSYSTEMS_APE_H
 
 #include <SolverUtils/UnsteadySystem.h>
+#include <SolverUtils/AdvectionSystem.h>
 #include <SolverUtils/Advection/Advection.h>
 #include <SolverUtils/Forcing/Forcing.h>
 #include <SolverUtils/RiemannSolvers/RiemannSolver.h>
@@ -47,7 +48,7 @@ using namespace Nektar::SolverUtils;
 namespace Nektar
 {     
 
-class APE : public UnsteadySystem
+class APE : public AdvectionSystem
 {
     public:
 
@@ -66,9 +67,6 @@ class APE : public UnsteadySystem
 
         /// Destructor
         virtual ~APE();
-
-        NekDouble GetCFLEstimate();
-
 
     protected:
 
@@ -104,9 +102,7 @@ class APE : public UnsteadySystem
 
         virtual bool v_PreIntegrate(int step);
 
-        virtual bool v_PostIntegrate(int step);
-
-        void GetStdVelocity(Array< OneD, NekDouble >& stdV);
+        virtual Array<OneD, NekDouble> v_GetMaxStdVelocity();
 
         virtual void v_ExtraFldOutput(std::vector<Array<OneD, NekDouble> > &fieldcoeffs,
                                       std::vector<std::string>             &variables);

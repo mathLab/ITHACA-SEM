@@ -58,9 +58,17 @@ namespace Nektar
     {
         EquationSystem::v_InitObject();
 
-        // Define Velocity fields     
-        m_velocity = Array<OneD, Array<OneD, NekDouble> >(m_spacedim); 
-        EquationSystem::InitialiseBaseFlow(m_velocity);
+        std::vector<std::string> vel;
+        vel.push_back("Vx");
+        vel.push_back("Vy");
+        vel.push_back("Vz");
+
+        // Resize the advection velocities vector to dimension of the problem
+        vel.resize(m_spacedim);
+
+        // Store in the global variable m_velocity the advection velocities
+        m_velocity = Array<OneD, Array<OneD, NekDouble> >(m_spacedim);
+        GetFunction( "BaseFlow")->Evaluate(vel,  m_velocity);
     }
        
     SteadyAdvectionDiffusion::~SteadyAdvectionDiffusion()

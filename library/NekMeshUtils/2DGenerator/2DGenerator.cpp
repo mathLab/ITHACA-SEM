@@ -75,7 +75,7 @@ void Generator2D::Process()
     // Check that cad is 2D
     Array<OneD, NekDouble> bndBox = m_mesh->m_cad->GetBoundingBox();
     ASSERTL0(fabs(bndBox[5] - bndBox[4]) < 1.0e-7, "CAD isn't 2D");
-    
+
     if (m_mesh->m_verbose)
     {
         cout << endl << "2D meshing" << endl;
@@ -385,15 +385,14 @@ void Generator2D::MakeBL(int faceid)
         // constructed by computing a normal but found on the adjacent curve
         if (it->second.size() == 1)
         {
-            vector<pair<int, CADCurveSharedPtr> > curves =
-                it->first->GetCADCurves();
+            vector<CADCurveSharedPtr> curves = it->first->GetCADCurves();
 
             vector<EdgeSharedPtr> edges =
-                m_curvemeshes[curves[0].first]->GetMeshEdges();
+                m_curvemeshes[curves[0]->GetId()]->GetMeshEdges();
             vector<EdgeSharedPtr>::iterator ie =
                 find(edges.begin(), edges.end(), it->second[0]);
             int rightCurve =
-                (ie == edges.end()) ? curves[0].first : curves[1].first;
+                (ie == edges.end()) ? curves[0]->GetId() : curves[1]->GetId();
 
             vector<NodeSharedPtr> nodes =
                 m_curvemeshes[rightCurve]->GetMeshPoints();
@@ -430,7 +429,7 @@ void Generator2D::MakeBL(int faceid)
             new Node(m_mesh->m_numNodes++, n[0], n[1], 0.0));
         CADSurfSharedPtr s = m_mesh->m_cad->GetSurf(faceid);
         Array<OneD, NekDouble> uv = s->locuv(n);
-        nn->SetCADSurf(faceid, s, uv);
+        nn->SetCADSurf(s, uv);
         nodeNormals[it->first] = nn;
     }
 

@@ -15,6 +15,8 @@ SET(NEKMESHUTILS_SOURCES
     MeshElements/Hexahedron.cpp
     CADSystem/CADSystem.cpp
     CADSystem/CADSurf.cpp
+    CADSystem/CADVert.cpp
+    CADSystem/CADCurve.cpp
     CADSystem/ProcessLoadCAD.cpp
     )
 
@@ -94,7 +96,24 @@ IF(NEKTAR_USE_MESHGEN)
         Optimisation/BGFS-B.h
         Optimisation/OptimiseObj.h
         Triangle/Triangle.h
-        2DGenerator/2DGenerator.h
+#        2DGenerator/2DGenerator.h
+    )
+ENDIF()
+
+IF(NEKTAR_USE_CFI)
+    SET(NEKMESHUTILS_HEADERS ${NEKMESHUTILS_HEADERS}
+        CADSystem/CFI/CADSystemCFI.h
+        CADSystem/CFI/CADVertCFI.h
+        CADSystem/CFI/CADCurveCFI.h
+        CADSystem/CFI/CADSurfCFI.h
+        CFIMesh/CFIMesh.h
+    )
+    SET(NEKMESHUTILS_SOURCES ${NEKMESHUTILS_SOURCES}
+        CADSystem/CFI/CADSystemCFI.cpp
+        CADSystem/CFI/CADVertCFI.cpp
+        CADSystem/CFI/CADCurveCFI.cpp
+        CADSystem/CFI/CADSurfCFI.cpp
+        CFIMesh/CFIMesh.cpp
     )
 ENDIF()
 
@@ -115,7 +134,7 @@ IF(NEKTAR_USE_MESHGEN)
 ENDIF()
 
 IF(NEKTAR_USE_CFI)
-    TARGET_LINK_LIBRARIES(NekMeshUtils LINK_PRIVATE ${CFI_LIBRARY})
+    TARGET_LINK_LIBRARIES(NekMeshUtils LINK_PRIVATE ${CFI_LIBRARIES})
 ENDIF()
 
 INSTALL(DIRECTORY ./

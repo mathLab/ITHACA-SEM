@@ -47,7 +47,7 @@
 
 #include <tinyxml.h>
 
-#include <LibUtilities/BasicUtils/ParseUtils.hpp>
+#include <LibUtilities/BasicUtils/ParseUtils.h>
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <LibUtilities/BasicUtils/ShapeType.hpp>
 #include <LibUtilities/BasicUtils/FileSystem.h>
@@ -172,11 +172,9 @@ namespace Nektar
 
         void MeshPartition::GetCompositeOrdering(CompositeOrdering &composites)
         {
-            std::map<int, MeshEntity>::iterator it;
-            for (it  = m_meshComposites.begin();
-                 it != m_meshComposites.end(); ++it)
+            for (auto &it : m_meshComposites)
             {
-                composites[it->first] = it->second.list;
+                composites[it.first] = it.second.list;
             }
         }
 
@@ -189,7 +187,14 @@ namespace Nektar
         void MeshPartition::ReadExpansions(const LibUtilities::SessionReaderSharedPtr& pSession)
         {
             // Find the Expansions tag
-            TiXmlElement *expansionTypes = pSession->GetElement("Nektar/Expansions");
+            TiXmlElement *master = pSession->GetElement("Nektar");
+            TiXmlElement *expansionTypes =
+                        master->FirstChildElement("EXPANSIONS");
+
+            if(!expansionTypes)
+            {
+                return;
+            }
 
             // Find the Expansion type
             TiXmlElement *expansion = expansionTypes->FirstChildElement();
@@ -213,7 +218,7 @@ namespace Nektar
                     const char *nModesStr = expansion->Attribute("NUMMODES");
                     ASSERTL0(nModesStr,"NUMMODES was not defined in EXPANSION section of input");
                     std::string numModesStr = nModesStr;
-                    bool valid = ParseUtils::GenerateOrderedVector(numModesStr.c_str(), nummodes);
+                    bool valid = ParseUtils::GenerateVector(numModesStr, nummodes);
                     ASSERTL0(valid, "Unable to correctly parse the number of modes.");
 
                     if (nummodes.size() == 1)
@@ -230,7 +235,7 @@ namespace Nektar
                     if(fStr)
                     {
                         std::string fieldStr = fStr;
-                        bool  valid = ParseUtils::GenerateOrderedStringVector(fieldStr.c_str(),fieldName);
+                        bool  valid = ParseUtils::GenerateVector(fieldStr,fieldName);
                         ASSERTL0(valid,"Unable to correctly parse the field string in ExpansionTypes.");
 
                         for (int i = 0; i < fieldName.size(); ++i)
@@ -264,7 +269,7 @@ namespace Nektar
                     int beg = compositeStr.find_first_of("[");
                     int end = compositeStr.find_first_of("]");
                     std::string compositeListStr = compositeStr.substr(beg+1,end-beg-1);
-                    bool parseGood = ParseUtils::GenerateSeqVector(compositeListStr.c_str(), composite);
+                    bool parseGood = ParseUtils::GenerateSeqVector(compositeListStr, composite);
                     ASSERTL0(parseGood && !composite.empty(),
                         (std::string("Unable to read composite index range: ") + compositeListStr).c_str());
 
@@ -1005,7 +1010,7 @@ namespace Nektar
                 vSeqStr = vSeqStr.substr(indxBeg, indxEnd - indxBeg + 1);
 
                 std::vector<unsigned int> vSeq;
-                ParseUtils::GenerateSeqVector(vSeqStr.c_str(), vSeq);
+                ParseUtils::GenerateSeqVector(vSeqStr, vSeq);
 
                 for (int i = 0; i < vSeq.size(); ++i)
                 {
@@ -1022,7 +1027,7 @@ namespace Nektar
             std::string::size_type indxBeg = vSeqStr.find_first_of('[') + 1;
             std::string::size_type indxEnd = vSeqStr.find_last_of(']') - 1;
             vSeqStr = vSeqStr.substr(indxBeg, indxEnd - indxBeg + 1);
-            ParseUtils::GenerateSeqVector(vSeqStr.c_str(), m_domain);
+            ParseUtils::GenerateSeqVector(vSeqStr, m_domain);
         }
 
         void MeshPartition::PrintPartInfo(std::ostream &out)
@@ -1035,7 +1040,6 @@ namespace Nektar
             out << "# No. partitions: " << nPart << std::endl;
             out << "# ID  nElmt  nLocDof  nBndDof" << std::endl;
 
-            BoostVertexIterator vertit, vertit_end;
             std::vector<int> partElmtCount(nPart, 0);
             std::vector<int> partLocCount (nPart, 0);
             std::vector<int> partBndCount (nPart, 0);
@@ -1043,32 +1047,31 @@ namespace Nektar
             std::map<int, int> elmtSizes;
             std::map<int, int> elmtBndSizes;
 
-            for (std::map<int, NummodesPerField>::iterator expIt =
-                    m_expansions.begin(); expIt != m_expansions.end(); ++expIt)
+            for (auto &expIt : m_expansions)
             {
-                int elid = expIt->first;
-                NummodesPerField npf = expIt->second;
+                int elid = expIt.first;
+                NummodesPerField npf = expIt.second;
 
-                for (NummodesPerField::iterator it = npf.begin(); it != npf.end(); ++it)
+                for (auto &it : npf)
                 {
-                    ASSERTL0(it->second.size() == m_dim,
+                    ASSERTL0(it.second.size() == m_dim,
                         " Number of directional" \
                         " modes in expansion spec for element id = " +
                         boost::lexical_cast<std::string>(elid) +
                         " and field " +
-                        boost::lexical_cast<std::string>(it->first) +
+                        boost::lexical_cast<std::string>(it.first) +
                         " does not correspond to mesh dimension");
 
-                    int na = it->second[0];
+                    int na = it.second[0];
                     int nb = 0;
                     int nc = 0;
                     if (m_dim >= 2)
                     {
-                        nb = it->second[1];
+                        nb = it.second[1];
                     }
                     if (m_dim == 3)
                     {
-                        nc = it->second[2];
+                        nc = it.second[2];
                     }
 
                     elmtSizes[elid]    = CalculateElementWeight(
@@ -1078,8 +1081,8 @@ namespace Nektar
                 }
             }
 
-            for (boost::tie(vertit, vertit_end) = boost::vertices(m_mesh);
-                 vertit != vertit_end; ++vertit)
+            auto verts = boost::vertices(m_mesh);
+            for (auto vertit = verts.first; vertit != verts.second; ++vertit)
             {
                 int partId = m_mesh[*vertit].partition;
                 partElmtCount[partId]++;
@@ -1177,53 +1180,51 @@ namespace Nektar
         void MeshPartition::WeightElements()
         {
             std::vector<unsigned int> weight(m_numFields, 1);
-            std::map<int, MeshEntity>::iterator eIt;
-            for (eIt = m_meshElements.begin(); eIt != m_meshElements.end(); ++eIt)
+            for (auto &eIt : m_meshElements)
             {
-                m_vertWeights[eIt->first] = weight;
-                m_vertBndWeights[eIt->first] = weight;
-                m_edgeWeights[eIt->first] = weight;
+                m_vertWeights[eIt.first] = weight;
+                m_vertBndWeights[eIt.first] = weight;
+                m_edgeWeights[eIt.first] = weight;
             }
 
-            for (std::map<int, NummodesPerField>::iterator expIt =
-                    m_expansions.begin(); expIt != m_expansions.end(); ++expIt)
+            for (auto &expIt : m_expansions)
             {
-                int elid = expIt->first;
-                NummodesPerField npf = expIt->second;
+                int elid = expIt.first;
+                NummodesPerField npf = expIt.second;
 
-                for (NummodesPerField::iterator it = npf.begin(); it != npf.end(); ++it)
+                for (auto &it : npf)
                 {
-                    ASSERTL0(it->second.size() == m_dim,
+                    ASSERTL0(it.second.size() == m_dim,
                         " Number of directional" \
                         " modes in expansion spec for element id = " +
                         boost::lexical_cast<std::string>(elid) +
                         " and field " +
-                        boost::lexical_cast<std::string>(it->first) +
+                        boost::lexical_cast<std::string>(it.first) +
                         " does not correspond to mesh dimension");
 
-                    int na = it->second[0];
+                    int na = it.second[0];
                     int nb = 0;
                     int nc = 0;
                     if (m_dim >= 2)
                     {
-                        nb = it->second[1];
+                        nb = it.second[1];
                     }
                     if (m_dim == 3)
                     {
-                        nc = it->second[2];
+                        nc = it.second[2];
                     }
 
-                    m_vertWeights[elid][m_fieldNameToId[it->first]] =
+                    m_vertWeights[elid][m_fieldNameToId[it.first]] =
                             CalculateElementWeight(m_shape[elid], false,
                                                    na, nb, nc);
-                    m_vertBndWeights[elid][m_fieldNameToId[it->first]] =
+                    m_vertBndWeights[elid][m_fieldNameToId[it.first]] =
                             CalculateElementWeight(m_shape[elid], true,
                                                    na, nb, nc);
-                    m_edgeWeights[elid][m_fieldNameToId[it->first]] =
+                    m_edgeWeights[elid][m_fieldNameToId[it.first]] =
                             CalculateEdgeWeight(m_shape[elid],
                                                    na, nb, nc);
                 }
-            } // for i
+            }
         }
 
         void MeshPartition::CreateGraph(BoostSubGraph& pGraph)
@@ -1231,27 +1232,25 @@ namespace Nektar
             // Maps edge/face to first mesh element id.
             // On locating second mesh element id, graph edge is created instead.
             std::map<int, int> vGraphEdges;
-            std::map<int, MeshEntity>::iterator eIt;
             int vcnt = 0;
 
-            for (eIt = m_meshElements.begin(); eIt != m_meshElements.end();
-                 ++eIt, ++vcnt)
+            for (auto &eIt : m_meshElements)
             {
                 BoostVertex v = boost::add_vertex(pGraph);
-                pGraph[v].id = eIt->first;
+                pGraph[v].id = eIt.first;
                 pGraph[v].partition = 0;
 
                 if (m_weightingRequired)
                 {
-                    pGraph[v].weight     = m_vertWeights[eIt->first];
-                    pGraph[v].bndWeight  = m_vertBndWeights[eIt->first];
-                    pGraph[v].edgeWeight = m_edgeWeights[eIt->first];
+                    pGraph[v].weight     = m_vertWeights[eIt.first];
+                    pGraph[v].bndWeight  = m_vertBndWeights[eIt.first];
+                    pGraph[v].edgeWeight = m_edgeWeights[eIt.first];
                 }
 
                 // Process element entries and add graph edges
-                for (unsigned j = 0; j < eIt->second.list.size(); ++j)
+                for (unsigned j = 0; j < eIt.second.list.size(); ++j)
                 {
-                    int eId = eIt->second.list[j];
+                    int eId = eIt.second.list[j];
 
                     // Look to see if we've examined this edge/face before
                     // If so, we've got both graph vertices so add edge
@@ -1265,6 +1264,7 @@ namespace Nektar
                         vGraphEdges[eId] = vcnt;
                     }
                 }
+                ++vcnt;
             }
         }
 
@@ -1300,8 +1300,6 @@ namespace Nektar
                 ncon = 2;
             }
             // Convert boost graph into CSR format
-            BoostVertexIterator    vertit, vertit_end;
-            BoostAdjacencyIterator adjvertit, adjvertit_end;
             Array<OneD, int> part(nGraphVerts,0);
 
             if (m_comm->GetRowComm()->TreatAsRankZero())
@@ -1315,13 +1313,12 @@ namespace Nektar
                 Array<OneD, int> vwgt(nWeight, 1);
                 Array<OneD, int> vsize(nGraphVerts, 1);
 
-                for ( boost::tie(vertit, vertit_end) = boost::vertices(pGraph);
-                      vertit != vertit_end;
-                      ++vertit)
+                auto verts = boost::vertices(pGraph);
+                for (auto vertit = verts.first; vertit != verts.second; ++vertit)
                 {
-                    for ( boost::tie(adjvertit, adjvertit_end) = boost::adjacent_vertices(*vertit,pGraph);
-                          adjvertit != adjvertit_end;
-                          ++adjvertit)
+                    auto adjVerts = boost::adjacent_vertices(*vertit,pGraph);
+                    for (auto adjvertit = adjVerts.first;
+                         adjvertit != adjVerts.second; ++adjvertit)
                     {
                         adjncy[acnt++] = *adjvertit;
                         if (m_weightingRequired)
@@ -1408,24 +1405,23 @@ namespace Nektar
 
             // Populate subgraph
             i = 0;
-            for ( boost::tie(vertit, vertit_end) = boost::vertices(pGraph);
-                  vertit != vertit_end;
-                  ++vertit, ++i)
+            auto verts = boost::vertices(pGraph);
+            for (auto vertit = verts.first; vertit != verts.second; vertit++)
             {
                 pGraph[*vertit].partition = part[i];
                 boost::add_vertex(i, pLocalPartition[part[i]]);
+                ++i;
             }
 
             // If the overlapping option is set (for post-processing purposes),
             // add vertices that correspond to the neighbouring elements.
             if (overlapping)
             {
-                for ( boost::tie(vertit, vertit_end) = boost::vertices(pGraph);
-                      vertit != vertit_end;
-                      ++vertit)
+                for (auto vertit = verts.first; vertit != verts.second; vertit++)
                 {
-                    for (boost::tie(adjvertit, adjvertit_end) = boost::adjacent_vertices(*vertit,pGraph);
-                         adjvertit != adjvertit_end; ++adjvertit)
+                    auto adjVerts = boost::adjacent_vertices(*vertit,pGraph);
+                    for (auto adjvertit = adjVerts.first;
+                         adjvertit != adjVerts.second; ++adjvertit)
                     {
                         if(part[*adjvertit] != part[*vertit])
                         {
@@ -1493,7 +1489,6 @@ namespace Nektar
             TiXmlElement *x;
             TiXmlText    *y;
 
-            BoostVertexIterator    vertit, vertit_end;
             int id;
 
             std::map<int, MeshEntity> vComposites;
@@ -1501,16 +1496,11 @@ namespace Nektar
             std::map<int, MeshEntity> vEdges;
             std::map<int, MeshEntity> vFaces;
             std::map<int, MeshVertex> vVertices;
-            std::map<int, MeshEntity>::iterator vIt;
-            std::map<int, MeshVertex>::iterator vVertIt;
-            std::map<std::string, std::string>::iterator vAttrIt;
-
             std::vector<unsigned int> idxList;
 
             // Populate lists of elements, edges and vertices required.
-            for (boost::tie(vertit, vertit_end) = boost::vertices(pGraph);
-                 vertit != vertit_end;
-                 ++vertit)
+            auto verts = boost::vertices(pGraph);
+            for (auto vertit = verts.first; vertit != verts.second; ++vertit)
             {
                 id = pGraph[*vertit].id;
                 vElements[id] = m_meshElements[pGraph[*vertit].id];
@@ -1522,11 +1512,11 @@ namespace Nektar
                 case 3:
                 {
                     // Compile list of faces
-                    for (vIt = vNext->begin(); vIt != vNext->end(); vIt++)
+                    for (auto &vIt : *vNext)
                     {
-                        for (unsigned int j = 0; j < vIt->second.list.size(); ++j)
+                        for (unsigned int j = 0; j < vIt.second.list.size(); ++j)
                         {
-                            id = vIt->second.list[j];
+                            id = vIt.second.list[j];
                             vFaces[id] = m_meshFaces[id];
                         }
                     }
@@ -1535,11 +1525,11 @@ namespace Nektar
                 case 2:
                 {
                     // Compile list of edges
-                    for (vIt = vNext->begin(); vIt != vNext->end(); vIt++)
+                    for (auto &vIt : *vNext)
                     {
-                        for (unsigned int j = 0; j < vIt->second.list.size(); ++j)
+                        for (unsigned int j = 0; j < vIt.second.list.size(); ++j)
                         {
-                            id = vIt->second.list[j];
+                            id = vIt.second.list[j];
                             vEdges[id] = m_meshEdges[id];
                         }
                     }
@@ -1548,15 +1538,15 @@ namespace Nektar
                 case 1:
                 {
                     // Compile list of vertices
-                    for (vIt = vNext->begin(); vIt != vNext->end(); vIt++)
+                    for (auto &vIt : *vNext)
                     {
-                        for (unsigned int j = 0; j < vIt->second.list.size(); ++j)
+                        for (unsigned int j = 0; j < vIt.second.list.size(); ++j)
                         {
-                            id = vIt->second.list[j];
+                            id = vIt.second.list[j];
                             vVertices[id] = m_meshVertices[id];
                         }
                         // Compile list of edges (for curved information)
-                        id = vIt->second.id;
+                        id = vIt.second.id;
                         vEdges[id] = m_meshEdges[id];
                     }
                 }
@@ -1566,14 +1556,13 @@ namespace Nektar
             if(m_isCompressed)
             {
                 std::vector<MeshVertex> vertInfo;
-                for (vVertIt = vVertices.begin();
-                     vVertIt != vVertices.end(); vVertIt++)
+                for (auto &vVertIt : vVertices)
                 {
                     MeshVertex v;
-                    v.id = vVertIt->first;
-                    v.x = vVertIt->second.x;
-                    v.y = vVertIt->second.y;
-                    v.z = vVertIt->second.z;
+                    v.id = vVertIt.first;
+                    v.x = vVertIt.second.x;
+                    v.y = vVertIt.second.y;
+                    v.z = vVertIt.second.z;
                     vertInfo.push_back(v);
                 }
                 std::string vertStr;
@@ -1586,15 +1575,15 @@ namespace Nektar
             }
             else
             {
-                for (vVertIt = vVertices.begin(); vVertIt != vVertices.end(); vVertIt++)
+                for (auto &vVertIt : vVertices)
                 {
                     x = new TiXmlElement("V");
-                    x->SetAttribute("ID", vVertIt->first);
+                    x->SetAttribute("ID", vVertIt.first);
                     std::stringstream vCoords;
                     vCoords.precision(12);
-                    vCoords << std::setw(15) << vVertIt->second.x << " "
-                            << std::setw(15) << vVertIt->second.y << " "
-                            << std::setw(15) << vVertIt->second.z << " ";
+                    vCoords << std::setw(15) << vVertIt.second.x << " "
+                            << std::setw(15) << vVertIt.second.y << " "
+                            << std::setw(15) << vVertIt.second.z << " ";
                     y = new TiXmlText(vCoords.str());
                     x->LinkEndChild(y);
                     vVertex->LinkEndChild(x);
@@ -1602,11 +1591,9 @@ namespace Nektar
             }
 
             // Apply transformation attributes to VERTEX section
-            for (vAttrIt  = m_vertexAttributes.begin();
-                 vAttrIt != m_vertexAttributes.end();
-                 ++ vAttrIt)
+            for (auto &vAttrIt : m_vertexAttributes)
             {
-                vVertex->SetAttribute(vAttrIt->first, vAttrIt->second);
+                vVertex->SetAttribute(vAttrIt.first, vAttrIt.second);
             }
 
             if (m_dim >= 2)
@@ -1614,12 +1601,12 @@ namespace Nektar
                 if(m_isCompressed)
                 {
                     std::vector<MeshEdge> edgeInfo;
-                    for (vIt = vEdges.begin(); vIt != vEdges.end(); vIt++)
+                    for (auto &vIt : vEdges)
                     {
                         MeshEdge e;
-                        e.id = vIt->first;
-                        e.v0 = vIt->second.list[0];
-                        e.v1 = vIt->second.list[1];
+                        e.id = vIt.first;
+                        e.v0 = vIt.second.list[0];
+                        e.v1 = vIt.second.list[1];
                         edgeInfo.push_back(e);
                     }
                     std::string edgeStr;
@@ -1632,13 +1619,13 @@ namespace Nektar
                 }
                 else
                 {
-                    for (vIt = vEdges.begin(); vIt != vEdges.end(); vIt++)
+                    for (auto &vIt : vEdges)
                     {
                         x = new TiXmlElement("E");
-                        x->SetAttribute("ID", vIt->first);
+                        x->SetAttribute("ID", vIt.first);
                         std::stringstream vVertices;
-                        vVertices << std::setw(10) << vIt->second.list[0]
-                                  << std::setw(10) << vIt->second.list[1]
+                        vVertices << std::setw(10) << vIt.second.list[0]
+                                  << std::setw(10) << vIt.second.list[1]
                                   << " ";
                         y = new TiXmlText(vVertices.str());
                         x->LinkEndChild(y);
@@ -1649,23 +1636,22 @@ namespace Nektar
 
             if (m_dim >= 3)
             {
-
                 if(m_isCompressed)
                 {
                     std::vector<MeshTri>  TriFaceInfo;
                     std::vector<MeshQuad> QuadFaceInfo;
 
-                    for (vIt = vFaces.begin(); vIt != vFaces.end(); vIt++)
+                    for (auto &vIt : vFaces)
                     {
-                        switch(vIt->second.list.size())
+                        switch(vIt.second.list.size())
                         {
                             case 3:
                             {
                                 MeshTri f;
-                                f.id = vIt->first;
+                                f.id = vIt.first;
                                 for(int i = 0; i < 3; ++i)
                                 {
-                                    f.e[i] = vIt->second.list[i];
+                                    f.e[i] = vIt.second.list[i];
                                 }
                                 TriFaceInfo.push_back(f);
                             }
@@ -1673,10 +1659,10 @@ namespace Nektar
                             case 4:
                             {
                                 MeshQuad f;
-                                f.id = vIt->first;
+                                f.id = vIt.first;
                                 for(int i = 0; i < 4; ++i)
                                 {
-                                    f.e[i] = vIt->second.list[i];
+                                    f.e[i] = vIt.second.list[i];
                                 }
                                 QuadFaceInfo.push_back(f);
                             }
@@ -1719,16 +1705,16 @@ namespace Nektar
                 }
                 else
                 {
-                    for (vIt = vFaces.begin(); vIt != vFaces.end(); vIt++)
+                    for (auto &vIt : vFaces)
                     {
                         std::string vType("F");
-                        vType[0] = vIt->second.type;
+                        vType[0] = vIt.second.type;
                         x = new TiXmlElement(vType);
-                        x->SetAttribute("ID", vIt->first);
+                        x->SetAttribute("ID", vIt.first);
                         std::stringstream vListStr;
-                        for (unsigned int i = 0; i < vIt->second.list.size(); ++i)
+                        for (unsigned int i = 0; i < vIt.second.list.size(); ++i)
                         {
-                            vListStr << std::setw(10) << vIt->second.list[i];
+                            vListStr << std::setw(10) << vIt.second.list[i];
                         }
                         vListStr << " ";
                         y = new TiXmlText(vListStr.str());
@@ -1750,26 +1736,26 @@ namespace Nektar
                 std::vector<MeshHex>   HexInfo;
 
                 //gather elemements in groups.
-                for (vIt = vElements.begin(); vIt != vElements.end(); vIt++)
+                for (auto &vIt : vElements)
                 {
-                    switch(vIt->second.type)
+                    switch(vIt.second.type)
                     {
                         case 'S':
                         {
                             MeshEdge e;
-                            e.id = vIt->first;
-                            e.v0 = vIt->second.list[0];
-                            e.v1 = vIt->second.list[1];
+                            e.id = vIt.first;
+                            e.v0 = vIt.second.list[0];
+                            e.v1 = vIt.second.list[1];
                             SegInfo.push_back(e);
                         }
                         break;
                         case 'T':
                         {
                             MeshTri f;
-                            f.id = vIt->first;
+                            f.id = vIt.first;
                             for(int i = 0; i < 3; ++i)
                             {
-                                f.e[i] = vIt->second.list[i];
+                                f.e[i] = vIt.second.list[i];
                             }
                             TriInfo.push_back(f);
                         }
@@ -1777,10 +1763,10 @@ namespace Nektar
                         case 'Q':
                         {
                             MeshQuad f;
-                            f.id = vIt->first;
+                            f.id = vIt.first;
                             for(int i = 0; i < 4; ++i)
                             {
-                                f.e[i] = vIt->second.list[i];
+                                f.e[i] = vIt.second.list[i];
                             }
                             QuadInfo.push_back(f);
                         }
@@ -1788,10 +1774,10 @@ namespace Nektar
                         case 'A':
                         {
                             MeshTet vol;
-                            vol.id = vIt->first;
+                            vol.id = vIt.first;
                             for(int i = 0; i < 4; ++i)
                             {
-                                vol.f[i] = vIt->second.list[i];
+                                vol.f[i] = vIt.second.list[i];
                             }
                             TetInfo.push_back(vol);
                         }
@@ -1799,10 +1785,10 @@ namespace Nektar
                         case 'P':
                         {
                             MeshPyr vol;
-                            vol.id = vIt->first;
+                            vol.id = vIt.first;
                             for(int i = 0; i < 5; ++i)
                             {
-                                vol.f[i] = vIt->second.list[i];
+                                vol.f[i] = vIt.second.list[i];
                             }
                             PyrInfo.push_back(vol);
                         }
@@ -1810,10 +1796,10 @@ namespace Nektar
                         case 'R':
                         {
                             MeshPrism vol;
-                            vol.id = vIt->first;
+                            vol.id = vIt.first;
                             for(int i = 0; i < 5; ++i)
                             {
-                                vol.f[i] = vIt->second.list[i];
+                                vol.f[i] = vIt.second.list[i];
                             }
                             PrismInfo.push_back(vol);
                         }
@@ -1821,10 +1807,10 @@ namespace Nektar
                         case 'H':
                         {
                             MeshHex vol;
-                            vol.id = vIt->first;
+                            vol.id = vIt.first;
                             for(int i = 0; i < 6; ++i)
                             {
-                                vol.f[i] = vIt->second.list[i];
+                                vol.f[i] = vIt.second.list[i];
                             }
                             HexInfo.push_back(vol);
                         }
@@ -1937,16 +1923,16 @@ namespace Nektar
             }
             else
             {
-                for (vIt = vElements.begin(); vIt != vElements.end(); vIt++)
+                for (auto &vIt : vElements)
                 {
                     std::string vType("T");
-                    vType[0] = vIt->second.type;
+                    vType[0] = vIt.second.type;
                     x = new TiXmlElement(vType.c_str());
-                    x->SetAttribute("ID", vIt->first);
+                    x->SetAttribute("ID", vIt.first);
                     std::stringstream vEdges;
-                    for (unsigned i = 0; i < vIt->second.list.size(); ++i)
+                    for (unsigned i = 0; i < vIt.second.list.size(); ++i)
                     {
-                        vEdges << std::setw(10) << vIt->second.list[i];
+                        vEdges << std::setw(10) << vIt.second.list[i];
                     }
                     vEdges << " ";
                     y = new TiXmlText(vEdges.str());
@@ -1967,11 +1953,9 @@ namespace Nektar
                 int newidx   = 0;
                 std::map<int,int> idxmap;
 
-                for (vItCurve  = m_meshCurved.begin();
-                     vItCurve != m_meshCurved.end();
-                     ++vItCurve)
+                for (auto &vItCurve : m_meshCurved)
                 {
-                    MeshCurved c = vItCurve->second;
+                    MeshCurved c = vItCurve.second;
 
                     bool IsEdge = boost::iequals(c.entitytype,"E");
                     bool IsFace = boost::iequals(c.entitytype,"F");
@@ -2082,11 +2066,9 @@ namespace Nektar
             }
             else
             {
-                for (vItCurve  = m_meshCurved.begin();
-                     vItCurve != m_meshCurved.end();
-                     ++vItCurve)
+                for (auto &vItCurve : m_meshCurved)
                 {
-                    MeshCurved c = vItCurve->second;
+                    MeshCurved c = vItCurve.second;
 
                     bool IsEdge = boost::iequals(c.entitytype,"E");
                     bool IsFace = boost::iequals(c.entitytype,"F");
@@ -2115,53 +2097,53 @@ namespace Nektar
 
             // Generate composites section comprising only those mesh entities
             // which belong to this partition.
-            for (vIt = m_meshComposites.begin(); vIt != m_meshComposites.end(); ++vIt)
+            for (auto &vIt : m_meshComposites)
             {
                 idxList.clear();
 
-                for (unsigned int j = 0; j < vIt->second.list.size(); ++j)
+                for (unsigned int j = 0; j < vIt.second.list.size(); ++j)
                 {
                     // Based on entity type, check if in this partition
-                    switch (vIt->second.type)
+                    switch (vIt.second.type)
                     {
                     case 'V':
-                        if (vVertices.find(vIt->second.list[j]) == vVertices.end())
+                        if (vVertices.find(vIt.second.list[j]) == vVertices.end())
                         {
                             continue;
                         }
                         break;
                     case 'E':
-                        if (vEdges.find(vIt->second.list[j]) == vEdges.end())
+                        if (vEdges.find(vIt.second.list[j]) == vEdges.end())
                         {
                             continue;
                         }
                         break;
                     case 'F':
-                        if (vFaces.find(vIt->second.list[j]) == vFaces.end())
+                        if (vFaces.find(vIt.second.list[j]) == vFaces.end())
                         {
                             continue;
                         }
                         break;
                     default:
-                        if (vElements.find(vIt->second.list[j]) == vElements.end())
+                        if (vElements.find(vIt.second.list[j]) == vElements.end())
                         {
                             continue;
                         }
                         break;
                     }
 
-                    idxList.push_back(vIt->second.list[j]);
+                    idxList.push_back(vIt.second.list[j]);
                 }
 
                 std::string vCompositeStr = ParseUtils::GenerateSeqString(idxList);
 
                 if (vCompositeStr.length() > 0)
                 {
-                    vComposites[vIt->first] = vIt->second;
+                    vComposites[vIt.first] = vIt.second;
                     x = new TiXmlElement("C");
-                    x->SetAttribute("ID", vIt->first);
+                    x->SetAttribute("ID", vIt.first);
                     vCompositeStr = "X[" + vCompositeStr + "]";
-                    vCompositeStr[0] = vIt->second.type;
+                    vCompositeStr[0] = vIt.second.type;
                     y = new TiXmlText(vCompositeStr.c_str());
                     x->LinkEndChild(y);
                     vComposite->LinkEndChild(x);
@@ -2216,7 +2198,7 @@ namespace Nektar
                         std::string::size_type indxEnd = vSeqStr.find_last_of(']') - 1;
                         vSeqStr = vSeqStr.substr(indxBeg, indxEnd - indxBeg + 1);
                         std::vector<unsigned int> vSeq;
-                        ParseUtils::GenerateSeqVector(vSeqStr.c_str(), vSeq);
+                        ParseUtils::GenerateSeqVector(vSeqStr, vSeq);
 
                         idxList.clear();
 
@@ -2261,8 +2243,9 @@ namespace Nektar
                     vItem = vBndConditions->FirstChildElement();
                     while (vItem)
                     {
-                        std::set<int>::iterator x;
-                        if ((x = vBndRegionIdList.find(atoi(vItem->Attribute("REF")))) != vBndRegionIdList.end())
+                        auto x = vBndRegionIdList.find(
+                            atoi(vItem->Attribute("REF")));
+                        if (x != vBndRegionIdList.end())
                         {
                             vItem->SetAttribute("REF", *x);
                             vItem = vItem->NextSiblingElement();
@@ -2294,16 +2277,14 @@ namespace Nektar
 
         void MeshPartition::GetElementIDs(const int procid, std::vector<unsigned int> &elmtid)
         {
-            BoostVertexIterator    vertit, vertit_end;
-
             ASSERTL0(procid < m_localPartition.size(),"procid is less than the number of partitions");
-            
+
             // Populate lists of elements, edges and vertices required.
-            for ( boost::tie(vertit, vertit_end) = boost::vertices(m_localPartition[procid]);
-                  vertit != vertit_end;
-                  ++vertit)
+            auto verts = boost::vertices(m_localPartition[procid]);
+            for (auto vertit = verts.first; vertit != verts.second; ++vertit)
             {
-                elmtid.push_back(m_meshElements[m_localPartition[procid][*vertit].id].id);
+                elmtid.push_back(
+                    m_meshElements[m_localPartition[procid][*vertit].id].id);
             }
         }
 

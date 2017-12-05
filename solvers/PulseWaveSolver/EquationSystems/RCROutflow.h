@@ -45,7 +45,7 @@ namespace Nektar
     class RCROutflow;
 
     /// Pointer to a PulseWaveOutflow object.
-    typedef boost::shared_ptr<RCROutflow> RCROutflowSharedPtr;
+    typedef std::shared_ptr<RCROutflow> RCROutflowSharedPtr;
     
     /// A global linear system.
     class RCROutflow : public PulseWaveBoundary

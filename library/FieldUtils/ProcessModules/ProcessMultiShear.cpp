@@ -40,7 +40,6 @@ using namespace std;
 
 #include "ProcessMultiShear.h"
 
-#include <LibUtilities/BasicUtils/ParseUtils.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <MultiRegions/ExpList.h>
 
@@ -84,7 +83,7 @@ void ProcessMultiShear::Process(po::variables_map &vm)
     string fromfld, basename, endname, nstartStr;
     stringstream filename;
     vector<string> infiles(nfld);
-    vector<boost::shared_ptr<Field> > fromField(nfld);
+    vector<std::shared_ptr<Field> > fromField(nfld);
 
     // Set up list of input fld files.
     fromfld  = m_config["fromfld"].as<string>();
@@ -108,7 +107,7 @@ void ProcessMultiShear::Process(po::variables_map &vm)
 
     for (i = 0; i < nfld; ++i)
     {
-        fromField[i]            = boost::shared_ptr<Field>(new Field());
+        fromField[i]            = std::shared_ptr<Field>(new Field());
         fromField[i]->m_session = m_f->m_session;
         fromField[i]->m_graph   = m_f->m_graph;
     }

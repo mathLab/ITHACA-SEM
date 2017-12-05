@@ -39,7 +39,6 @@ using namespace std;
 
 #include "ProcessQCriterion.h"
 
-#include <LibUtilities/BasicUtils/ParseUtils.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 
 namespace Nektar
@@ -100,7 +99,6 @@ void ProcessQCriterion::Process(po::variables_map &vm)
         grad[i] = Array<OneD, NekDouble>(npoints);
     }
 
-    vector<MultiRegions::ExpListSharedPtr>::iterator it;
     MultiRegions::ExpListSharedPtr Exp;
 
     for (s = 0; s < nstrips; ++s) // homogeneous strip varient
@@ -188,7 +186,7 @@ void ProcessQCriterion::Process(po::variables_map &vm)
         Vmath::Vcopy(npoints, outfield, 1, Exp->UpdatePhys(), 1);
         Exp->FwdTrans_IterPerExp(outfield, Exp->UpdateCoeffs());
 
-        it = m_f->m_exp.begin() + s * (nfields + 1) + nfields;
+        auto it = m_f->m_exp.begin() + s * (nfields + 1) + nfields;
         m_f->m_exp.insert(it, Exp);
     }
 }

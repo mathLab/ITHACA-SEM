@@ -164,14 +164,6 @@ namespace Nektar
                 cnt1 += m_vessels[i*m_nVariables+n]->GetTotPoints();                
             }
         }
-        
-        // Set Default Parameter
-        m_session->LoadParameter("Time",     m_time, 0.0);
-        m_session->LoadParameter("TimeStep", m_timestep, 0.01);
-        m_session->LoadParameter("NumSteps", m_steps, 0);
-        m_session->LoadParameter("IO_CheckSteps", m_checksteps, m_steps);
-        m_session->LoadParameter("FinTime", m_fintime, 0);
-        m_session->LoadParameter("NumQuadPointsError", m_NumQuadPointsError, 0);
 		
         m_fields[0] = m_vessels[0];
         m_fields[1] = m_vessels[1];
@@ -190,8 +182,7 @@ namespace Nektar
                 break;
             }
         }
-        // Load solver- specific parameters
-        m_session->LoadParameter("IO_InfoSteps", m_infosteps, 0);
+
         // Load blood density
         m_session->LoadParameter("rho", m_rho, 0.5);
         // Load external pressure
@@ -263,7 +254,6 @@ namespace Nektar
     void PulseWaveSystem::SetUpDomainInterfaces(void)
     {
         map<int,std::vector<InterfacePointShPtr> > VidToDomain;
-        map<int,std::vector<InterfacePointShPtr> >::iterator iter;
 
         // loop over domain and find out if we have any undefined
         // boundary conditions representing interfaces. If so make a
@@ -326,13 +316,13 @@ namespace Nektar
         }
 
         // loop over map and set up Interface information;
-        for(iter = VidToDomain.begin(); iter != VidToDomain.end(); ++iter)
+        for(auto &iter : VidToDomain)
         {
-            if(iter->second.size() == 2) // Vessel jump interface
+            if(iter.second.size() == 2) // Vessel jump interface
             {
-                m_vesselJcts.push_back(iter->second);
+                m_vesselJcts.push_back(iter.second);
             }
-            else if(iter->second.size() == 3) // Bifurcation or Merging junction. 
+            else if(iter.second.size() == 3) // Bifurcation or Merging junction. 
             {
                 int nbeg = 0;
                 int nend = 0;
@@ -343,7 +333,7 @@ namespace Nektar
                 // indicates a bifurcation
                 for(int i = 0; i < 3; ++i)
                 {
-                    if(iter->second[i]->m_elmtVert == 0)
+                    if(iter.second[i]->m_elmtVert == 0)
                     {
                         nbeg += 1;
                     }
@@ -357,26 +347,26 @@ namespace Nektar
                 if(nbeg == 2)
                 {
                     // ensure first InterfacePoint is parent 
-                    if(iter->second[0]->m_elmtVert == 1) //m_elmtVert: Vertex id in local element
+                    if(iter.second[0]->m_elmtVert == 1) //m_elmtVert: Vertex id in local element
                     {
-                        m_bifurcations.push_back(iter->second);
+                        m_bifurcations.push_back(iter.second);
                     }
                     else
                     {
                         //order points according to Riemann solver convention
                         InterfacePointShPtr I;
                         //find merging vessel 
-                        if(iter->second[1]->m_elmtVert == 1)
+                        if(iter.second[1]->m_elmtVert == 1)
                         {
-                            I = iter->second[0];
-                            iter->second[0] = iter->second[1];
-                            iter->second[1] = I;
+                            I = iter.second[0];
+                            iter.second[0] = iter.second[1];
+                            iter.second[1] = I;
                         }
-                        else if (iter->second[2]->m_elmtVert == 1)
+                        else if (iter.second[2]->m_elmtVert == 1)
                         {
-                            I = iter->second[0];
-                            iter->second[0] = iter->second[2];
-                            iter->second[2] = I;
+                            I = iter.second[0];
+                            iter.second[0] = iter.second[2];
+                            iter.second[2] = I;
                         }
                         NEKERROR(ErrorUtil::ewarning,"This routine has not been checked");
                     }                    
@@ -384,26 +374,26 @@ namespace Nektar
                 else
                 {
                     // ensure last InterfacePoint is merged vessel
-                    if(iter->second[0]->m_elmtVert == 0)
+                    if(iter.second[0]->m_elmtVert == 0)
                     {
-                        m_mergingJcts.push_back(iter->second);
+                        m_mergingJcts.push_back(iter.second);
                     }
                     else
                     {
                         //order points according to Riemann solver convention
                         InterfacePointShPtr I;
                         //find merging vessel 
-                        if(iter->second[1]->m_elmtVert == 0)
+                        if(iter.second[1]->m_elmtVert == 0)
                         {
-                            I = iter->second[0];
-                            iter->second[0] = iter->second[1];
-                            iter->second[1] = I;
+                            I = iter.second[0];
+                            iter.second[0] = iter.second[1];
+                            iter.second[1] = I;
                         }
-                        else if (iter->second[2]->m_elmtVert == 0)
+                        else if (iter.second[2]->m_elmtVert == 0)
                         {
-                            I = iter->second[0];
-                            iter->second[0] = iter->second[2];
-                            iter->second[2] = I;
+                            I = iter.second[0];
+                            iter.second[0] = iter.second[2];
+                            iter.second[2] = I;
                         }
                         NEKERROR(ErrorUtil::ewarning,"This routine has not been checked");
                     }

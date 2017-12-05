@@ -84,10 +84,8 @@ int main(int argc, char *argv[])
         Vmath::Smul(fielddata2[i].size(), scal2, &fielddata2[i][0], 1,
                                                  &fielddata2[i][0], 1);
 
-        std::vector<NekDouble>::iterator vec_iter;
-
         vector<NekDouble> newdata;
-        vec_iter = fielddata2[i].begin();
+        auto vec_iter = fielddata2[i].begin();
 
         for(k = 0; k < fielddef2[i]->m_fields.size(); ++k)
         {

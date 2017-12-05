@@ -55,7 +55,7 @@ class LinearisedAdvection: public SolverUtils::Advection
     /// matrices.
     typedef std::map< FloquetMatType, DNekBlkMatSharedPtr> FloquetBlockMatrixMap;
     /// A shared pointer to a BlockMatrixMap.
-    typedef boost::shared_ptr<FloquetBlockMatrixMap> FloquetBlockMatrixMapShPtr;
+    typedef std::shared_ptr<FloquetBlockMatrixMap> FloquetBlockMatrixMapShPtr;
 
 public:
     friend class MemoryManager<LinearisedAdvection>;

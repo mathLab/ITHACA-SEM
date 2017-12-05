@@ -93,29 +93,27 @@ void InputFld::Process(po::variables_map &vm)
     int oldSize = m_f->m_fielddef.size();
     if(m_f->m_graph)
     {
-        // currently load all field (possibly could read data from
-        //  expansion list but it is re-arranged in expansion)
+        // Determine IDs of elements in the domain
+        vector<int> IDs;
+        auto domain = m_f->m_graph->GetDomain();
+        for(int d = 0; d < domain.size(); ++d)
+        {
+            for (auto &compIter : domain[d])
+            {
+                for (auto &x : *compIter.second)
+                {
+                    IDs.push_back(x->GetGlobalID());
+                }
+            }
+        }
 
-        const SpatialDomains::ExpansionMap &expansions =
-            m_f->m_graph->GetExpansions();
-
-        // if Range has been specified it is possible to have a
-        // partition which is empty so check this and return if
-        // no elements present.
-
-        if (!expansions.size())
+        if (!IDs.size())
         {
             return;
         }
 
-        Array<OneD, int> ElementGIDs(expansions.size());
-        SpatialDomains::ExpansionMap::const_iterator expIt;
-
-        i = 0;
-        for (expIt = expansions.begin(); expIt != expansions.end(); ++expIt)
-        {
-            ElementGIDs[i++] = expIt->second->m_geomShPtr->GetGlobalID();
-        }
+        // Move to an array to match FieldIO interface
+        Array<OneD, int> ElementGIDs(IDs.size(), IDs.data());
 
         fld->Import(
             fileName, m_f->m_fielddef, m_f->m_data,
@@ -132,10 +130,9 @@ void InputFld::Process(po::variables_map &vm)
     for(i = 0; i < m_f->m_fielddef[oldSize]->m_fields.size(); ++i)
     {
         // check for multiple fld files
-        vector<string>::iterator it =
-            find (m_f->m_variables.begin(),
-                  m_f->m_variables.end(),
-                  m_f->m_fielddef[oldSize]->m_fields[i]);
+        auto it = find (m_f->m_variables.begin(),
+                        m_f->m_variables.end(),
+                        m_f->m_fielddef[oldSize]->m_fields[i]);
 
         if(it == m_f->m_variables.end())
         {

@@ -269,7 +269,7 @@ namespace Nektar
             STD_REGIONS_EXPORT int  GetMode(const int i, const int j, const int k);
         };
 
-        typedef boost::shared_ptr<StdTetExp> StdTetExpSharedPtr;
+        typedef std::shared_ptr<StdTetExp> StdTetExpSharedPtr;
     } //end of namespace
 } //end of namespace
 

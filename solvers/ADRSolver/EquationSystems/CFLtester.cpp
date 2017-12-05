@@ -47,13 +47,14 @@ namespace Nektar
 
     CFLtester::CFLtester(
             const LibUtilities::SessionReaderSharedPtr& pSession)
-        : UnsteadySystem(pSession)
+        : UnsteadySystem(pSession),
+          AdvectionSystem(pSession)
     {
     }
 
     void CFLtester::v_InitObject()
     {
-        UnsteadySystem::v_InitObject();
+        AdvectionSystem::v_InitObject();
 
         m_velocity = Array<OneD, Array<OneD, NekDouble> >(m_spacedim);
         std::vector<std::string> vel;
@@ -63,6 +64,60 @@ namespace Nektar
         vel.resize(m_spacedim);
 
         GetFunction( "AdvectionVelocity")->Evaluate(vel,  m_velocity);
+
+        // Type of advection class to be used
+        switch(m_projectionType)
+        {
+            // Discontinuous field
+            case MultiRegions::eDiscontinuous:
+            {
+                // Do not forwards transform initial condition
+                m_homoInitialFwd = false;
+                
+                // Define the normal velocity fields
+                if (m_fields[0]->GetTrace())
+                {
+                    m_traceVn = Array<OneD, NekDouble>(GetTraceNpoints());
+                }
+
+                string advName;
+                string riemName;
+                m_session->LoadSolverInfo(
+                    "AdvectionType", advName, "WeakDG");
+                m_advObject = SolverUtils::
+                    GetAdvectionFactory().CreateInstance(advName, advName);
+                m_advObject->SetFluxVector(
+                    &CFLtester::GetFluxVector, this);
+                m_session->LoadSolverInfo(
+                    "UpwindType", riemName, "Upwind");
+                m_riemannSolver = SolverUtils::
+                    GetRiemannSolverFactory().CreateInstance(riemName);
+                m_riemannSolver->SetScalar(
+                    "Vn", &CFLtester::GetNormalVelocity, this);
+
+                m_advObject->SetRiemannSolver(m_riemannSolver);
+                m_advObject->InitObject(m_session, m_fields);
+                break;
+            }
+            // Continuous field
+            case MultiRegions::eGalerkin:
+            case MultiRegions::eMixed_CG_Discontinuous:
+            {
+                string advName;
+                m_session->LoadSolverInfo(
+                    "AdvectionType", advName, "NonConservative");
+                m_advObject = SolverUtils::
+                    GetAdvectionFactory().CreateInstance(advName, advName);
+                m_advObject->SetFluxVector(
+                    &CFLtester::GetFluxVector, this);
+                break;
+            }
+            default:
+            {
+                ASSERTL0(false, "Unsupported projection type.");
+                break;
+            }
+        }
 
         if (m_explicitAdvection)
         {
@@ -84,47 +139,14 @@ namespace Nektar
               Array<OneD,        Array<OneD, NekDouble> >&outarray,
         const NekDouble time)
     {
-        int j;
         int nvariables = inarray.num_elements();
         int npoints = GetNpoints();
 
-        switch (m_projectionType)
+        m_advObject->Advect(nvariables, m_fields, m_velocity, inarray,
+                            outarray, time);
+        for(int j = 0; j < nvariables; ++j)
         {
-            case MultiRegions::eDiscontinuous:
-            {
-                int ncoeffs    = inarray[0].num_elements();
-                Array<OneD, Array<OneD, NekDouble> > WeakAdv(nvariables);
-
-                WeakAdv[0] = Array<OneD, NekDouble>(ncoeffs*nvariables);
-                for(j = 1; j < nvariables; ++j)
-                {
-                    WeakAdv[j] = WeakAdv[j-1] + ncoeffs;
-                }
-
-                WeakDGAdvection(inarray, WeakAdv, true, true);
-
-                for(j = 0; j < nvariables; ++j)
-                {
-                    m_fields[j]->MultiplyByElmtInvMass(WeakAdv[j], WeakAdv[j]);
-                    m_fields[j]->BwdTrans(WeakAdv[j],outarray[j]);
-                    Vmath::Neg(npoints,outarray[j],1);
-                }
-                break;
-            }
-            case MultiRegions::eGalerkin:
-            case MultiRegions::eMixed_CG_Discontinuous:
-            {
-                // Calculate -V\cdot Grad(u);
-                for(j = 0; j < nvariables; ++j)
-                {
-                    AdvectionNonConservativeForm(m_velocity, 
-                                                 inarray[j],
-                                                 outarray[j]);
-                    
-                    Vmath::Neg(npoints, outarray[j], 1);
-                }
-                break;
-            }
+            Vmath::Neg(npoints,outarray[j],1);
         }
     }
 
@@ -133,7 +155,6 @@ namespace Nektar
               Array<OneD,       Array<OneD, NekDouble> >&outarray,
     const NekDouble time)
     {
-        int j;
         int nvariables = inarray.num_elements();
         SetBoundaryConditions(time);
 
@@ -144,7 +165,7 @@ namespace Nektar
                 // Just copy over array
                 int npoints = GetNpoints();
 
-                for(j = 0; j < nvariables; ++j)
+                for(int j = 0; j < nvariables; ++j)
                 {
                     Vmath::Vcopy(npoints,inarray[j],1,outarray[j],1);
                 }
@@ -155,7 +176,7 @@ namespace Nektar
             {
                 Array<OneD, NekDouble> coeffs(m_fields[0]->GetNcoeffs());
 
-                for(j = 0; j < nvariables; ++j)
+                for(int j = 0; j < nvariables; ++j)
                 {
                     m_fields[j]->FwdTrans(inarray[j],coeffs);
                     m_fields[j]->BwdTrans_IterPerExp(coeffs,outarray[j]);
@@ -168,60 +189,56 @@ namespace Nektar
         }
     }
 
-
-    void CFLtester::v_GetFluxVector(
-        const int i, 
-        Array<OneD, Array<OneD, NekDouble> > &physfield,
-        Array<OneD, Array<OneD, NekDouble> > &flux)
+    /**
+     * @brief Get the normal velocity
+     */
+    Array<OneD, NekDouble> &CFLtester::GetNormalVelocity()
     {
-        ASSERTL1(flux.num_elements() == m_velocity.num_elements(),
+        // Number of trace (interface) points
+        int nTracePts = GetTraceNpoints();
+
+        // Auxiliary variable to compute the normal velocity
+        Array<OneD, NekDouble> tmp(nTracePts);
+
+        // Reset the normal velocity
+        Vmath::Zero(nTracePts, m_traceVn, 1);
+
+        for (int i = 0; i < m_velocity.num_elements(); ++i)
+        {
+            m_fields[0]->ExtractTracePhys(m_velocity[i], tmp);
+
+            Vmath::Vvtvp(nTracePts,
+                         m_traceNormals[i], 1,
+                         tmp,               1,
+                         m_traceVn,         1,
+                         m_traceVn,         1);
+        }
+
+        return m_traceVn;
+    }
+
+    void CFLtester::GetFluxVector(
+        const Array<OneD, Array<OneD, NekDouble> >               &physfield,
+              Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &flux)
+    {
+        ASSERTL1(flux[0].num_elements() == m_velocity.num_elements(),
                  "Dimension of flux array and velocity array do not match");
 
-        for (int j = 0; j < flux.num_elements(); ++j)
+        int nq = physfield[0].num_elements();
+
+        for (int i = 0; i < flux.num_elements(); ++i)
         {
-            Vmath::Vmul(GetNpoints(),
-                        physfield[i], 1,
-                        m_velocity[j], 1,
-                        flux[j], 1);
+            for (int j = 0; j < flux[0].num_elements(); ++j)
+            {
+                Vmath::Vmul(nq, physfield[i], 1, m_velocity[j], 1,
+                            flux[i][j], 1);
+            }
         }
     }
 
-    void CFLtester::v_NumericalFlux(
-        Array<OneD, Array<OneD, NekDouble> > &physfield, 
-        Array<OneD, Array<OneD, NekDouble> > &numflux)
-    {
-        int i;
-        int nTraceNumPoints = GetTraceNpoints();
-        int nvel = m_spacedim;
-
-        Array<OneD, NekDouble > Fwd(nTraceNumPoints);
-        Array<OneD, NekDouble > Bwd(nTraceNumPoints);
-        Array<OneD, NekDouble > Vn (nTraceNumPoints,0.0);
-
-        // Get Edge Velocity - Could be stored if time independent
-        for (i = 0; i < nvel; ++i)
-        {
-            m_fields[0]->ExtractTracePhys(m_velocity[i], Fwd);
-            Vmath::Vvtvp(nTraceNumPoints,
-                         m_traceNormals[i], 1,
-                         Fwd, 1, Vn, 1, Vn, 1);
-        }
-
-        for (i = 0; i < numflux.num_elements(); ++i)
-        {
-            m_fields[i]->GetFwdBwdTracePhys(physfield[i], Fwd, Bwd);
-            //evaulate upwinded m_fields[i]
-            m_fields[i]->GetTrace()->Upwind(Vn, Fwd, Bwd, numflux[i]);
-            // calculate m_fields[i]*Vn
-            Vmath::Vmul(nTraceNumPoints, numflux[i], 1, Vn, 1, numflux[i], 1);
-        }
-    }
-
-    
-    
     void CFLtester::v_GenerateSummary(SummaryList& s)
     {
-        UnsteadySystem::v_GenerateSummary(s);
+        AdvectionSystem::v_GenerateSummary(s);
     }
 	
     
@@ -247,13 +264,13 @@ namespace Nektar
 			int npoints = m_fields[0]->GetExp(el)->GetTotPoints();
 			Array<OneD, NekDouble> one2D(npoints, 1.0);
 			//NekDouble Area = m_fields[0]->GetExp(el)->Integral(one2D);
-			if(boost::dynamic_pointer_cast<LocalRegions::TriExp>(m_fields[0]->GetExp(el)))
+			if(std::dynamic_pointer_cast<LocalRegions::TriExp>(m_fields[0]->GetExp(el)))
 			{
 				//tstep[el] =  timeCFL/(stdVelocity[el]*cLambda*(ExpOrder[el]-1)*(ExpOrder[el]-1));
 				//tstep[el] =  timeCFL*minLengthStdTri/(stdVelocity[el]*cLambda*(ExpOrder[el]-1)*(ExpOrder[el]-1));
 				tstep[el] = CFL[el]/(stdVelocity[el]);
 			}
-			else if(boost::dynamic_pointer_cast<LocalRegions::QuadExp>(m_fields[0]->GetExp(el)))
+			else if(std::dynamic_pointer_cast<LocalRegions::QuadExp>(m_fields[0]->GetExp(el)))
 			{ 
 				//tstep[el] =  timeCFL/(stdVelocity[el]*cLambda*(ExpOrder[el]-1)*(ExpOrder[el]-1));
 				//tstep[el] =  timeCFL*minLengthStdQuad/(stdVelocity[el]*cLambda*(ExpOrder[el]-1)*(ExpOrder[el]-1));

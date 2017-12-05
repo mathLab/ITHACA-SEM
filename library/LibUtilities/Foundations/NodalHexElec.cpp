@@ -94,9 +94,9 @@ void NodalHexElec::CalculateDerivMatrix()
 {
 }
 
-boost::shared_ptr<PointsBaseType> NodalHexElec::Create(const PointsKey &key)
+std::shared_ptr<PointsBaseType> NodalHexElec::Create(const PointsKey &key)
 {
-    boost::shared_ptr<PointsBaseType> returnval(
+    std::shared_ptr<PointsBaseType> returnval(
         MemoryManager<NodalHexElec>::AllocateSharedPtr(key));
     returnval->Initialize();
     return returnval;

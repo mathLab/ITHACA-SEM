@@ -145,7 +145,7 @@ namespace Nektar
         {
             SetExpType(e2DH1D);
             ExpList1DSharedPtr zero_plane =
-                boost::dynamic_pointer_cast<ExpList1D> (In.m_planes[0]);
+                std::dynamic_pointer_cast<ExpList1D> (In.m_planes[0]);
 
             for (int n = 0; n < m_planes.num_elements(); ++n)
             {

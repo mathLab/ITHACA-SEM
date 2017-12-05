@@ -165,7 +165,7 @@ int main(int argc, char *argv[])
     PointsKey key(nPts, pointsType);
     
     PointsSharedPtr points = PointsManager()[key];
-    //boost::shared_ptr<Points<NekDouble> > points = PointsManager()[key];
+    //std::shared_ptr<Points<NekDouble> > points = PointsManager()[key];
     //const ptr<Points<NekDouble> > points = PointsManager()[key];
     
     
@@ -192,7 +192,7 @@ int main(int argc, char *argv[])
 
     // Generate a list of interpolating nodes
     int nNodes = 2*nPts; // Number of interpolating nodes
-    boost::shared_ptr<Points<NekDouble> > nodes = PointsManager()[PointsKey(nNodes, pointsType)];
+    std::shared_ptr<Points<NekDouble> > nodes = PointsManager()[PointsKey(nNodes, pointsType)];
     Array<OneD, const NekDouble> zNode = nodes->GetZ();
     
     // Get the interpolation matrix I

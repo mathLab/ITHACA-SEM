@@ -45,7 +45,7 @@ namespace Nektar
     class QInflow;
 
     /// Pointer to a PulseWaveOutflow object.
-    typedef boost::shared_ptr<QInflow> QInflowSharedPtr;
+    typedef std::shared_ptr<QInflow> QInflowSharedPtr;
     
     /// A global linear system.
     class QInflow : public PulseWaveBoundary

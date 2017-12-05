@@ -33,12 +33,12 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <NekMeshUtils/MeshElements/Edge.h>
-
-#include <NekMeshUtils/CADSystem/CADCurve.h>
-#include <NekMeshUtils/CADSystem/CADSurf.h>
+#include <mutex>
 
 #include <LibUtilities/Foundations/ManagerAccess.h>
+#include <NekMeshUtils/CADSystem/CADCurve.h>
+#include <NekMeshUtils/CADSystem/CADSurf.h>
+#include <NekMeshUtils/MeshElements/Edge.h>
 
 namespace Nektar
 {
@@ -69,8 +69,8 @@ string Edge::GetXmlCurveString()
 
 SpatialDomains::SegGeomSharedPtr Edge::GetGeom(int coordDim)
 {
-    static boost::mutex io_mutex;
-    boost::mutex::scoped_lock lock(io_mutex);
+    static std::mutex io_mutex;
+    std::unique_lock<std::mutex> lock(io_mutex);
 
     // Create edge vertices.
     SpatialDomains::PointGeomSharedPtr p[2];
@@ -115,7 +115,7 @@ void Edge::MakeOrder(int order, SpatialDomains::GeometrySharedPtr geom,
     LibUtilities::PointsKey edgeKey(nPoints, edgeType);
     LibUtilities::PointsManager()[edgeKey]->GetPoints(edgePoints);
 
-    Array<OneD, Array<OneD, NekDouble> > phys(coordDim);
+    Array<OneD, Array<OneD, NekDouble>> phys(coordDim);
 
     for (int i = 0; i < coordDim; ++i)
     {
@@ -134,7 +134,7 @@ void Edge::MakeOrder(int order, SpatialDomains::GeometrySharedPtr geom,
         }
 
         m_edgeNodes[i - 1] =
-            boost::shared_ptr<Node>(new Node(id++, x[0], x[1], x[2]));
+            std::shared_ptr<Node>(new Node(id++, x[0], x[1], x[2]));
     }
 
     m_curveType = edgeType;
@@ -144,52 +144,49 @@ void Edge::MakeOrder(int order, SpatialDomains::GeometrySharedPtr geom,
         if (m_parentCAD->GetType() == CADType::eCurve)
         {
             CADCurveSharedPtr c =
-                boost::dynamic_pointer_cast<CADCurve>(m_parentCAD);
-            for (int i = 0; i < m_edgeNodes.size(); i++)
-            {
-                Array<OneD, NekDouble> loc(3);
-                loc[0]      = m_edgeNodes[i]->m_x;
-                loc[1]      = m_edgeNodes[i]->m_y;
-                loc[2]      = m_edgeNodes[i]->m_z;
-                NekDouble t = c->loct(loc);
-                m_edgeNodes[i]->SetCADCurve(c->GetId(), c, t);
-                loc                 = c->P(t);
-                m_edgeNodes[i]->m_x = loc[0];
-                m_edgeNodes[i]->m_y = loc[1];
-                m_edgeNodes[i]->m_z = loc[2];
-
-                std::vector<
-                    std::pair<CADSurfSharedPtr, CADOrientation::Orientation> >
-                    s = c->GetAdjSurf();
-                for (int j = 0; j < s.size(); j++)
-                {
-                    Array<OneD, NekDouble> uv(2);
-                    s[j].first->ProjectTo(loc, uv);
-                    m_edgeNodes[i]->SetCADSurf(s[j].first->GetId(), s[j].first,
-                                               uv);
-                }
-            }
-        }
-        else
-        {
-            CADSurfSharedPtr s =
-                boost::dynamic_pointer_cast<CADSurf>(m_parentCAD);
+                std::dynamic_pointer_cast<CADCurve>(m_parentCAD);
             for (int i = 0; i < m_edgeNodes.size(); i++)
             {
                 Array<OneD, NekDouble> loc(3);
                 loc[0] = m_edgeNodes[i]->m_x;
                 loc[1] = m_edgeNodes[i]->m_y;
                 loc[2] = m_edgeNodes[i]->m_z;
-                Array<OneD, NekDouble> uv(2);
-                s->ProjectTo(loc, uv);
-                loc                 = s->P(uv);
+                NekDouble t;
+                c->loct(loc, t);
+                m_edgeNodes[i]->SetCADCurve(c, t);
+                loc                 = c->P(t);
                 m_edgeNodes[i]->m_x = loc[0];
                 m_edgeNodes[i]->m_y = loc[1];
                 m_edgeNodes[i]->m_z = loc[2];
-                m_edgeNodes[i]->SetCADSurf(s->GetId(), s, uv);
+
+                vector<pair<CADSurfSharedPtr, CADOrientation::Orientation>> s =
+                    c->GetAdjSurf();
+                for (int j = 0; j < s.size(); j++)
+                {
+                    Array<OneD, NekDouble> uv = s[j].first->locuv(loc);
+                    m_edgeNodes[i]->SetCADSurf(s[j].first, uv);
+                }
+            }
+        }
+        else
+        {
+            CADSurfSharedPtr s =
+                std::dynamic_pointer_cast<CADSurf>(m_parentCAD);
+            for (int i = 0; i < m_edgeNodes.size(); i++)
+            {
+                Array<OneD, NekDouble> loc(3);
+                loc[0]                    = m_edgeNodes[i]->m_x;
+                loc[1]                    = m_edgeNodes[i]->m_y;
+                loc[2]                    = m_edgeNodes[i]->m_z;
+                Array<OneD, NekDouble> uv = s->locuv(loc);
+                loc                       = s->P(uv);
+                m_edgeNodes[i]->m_x       = loc[0];
+                m_edgeNodes[i]->m_y       = loc[1];
+                m_edgeNodes[i]->m_z       = loc[2];
+                m_edgeNodes[i]->SetCADSurf(s, uv);
             }
         }
     }
 }
-}
-}
+} // namespace NekMeshUtils
+} // namespace Nektar

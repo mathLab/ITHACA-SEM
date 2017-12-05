@@ -48,9 +48,8 @@ namespace Nektar
         class Geometry1D;
 
         // shorthand for boost pointer
-        typedef boost::shared_ptr<Geometry1D> Geometry1DSharedPtr;
+        typedef std::shared_ptr<Geometry1D> Geometry1DSharedPtr;
         typedef std::vector< Geometry1DSharedPtr > Geometry1DVector;
-        typedef std::vector< Geometry1DSharedPtr >::iterator Geometry1DVectorIter;
 
         /// 1D geometry information
         class Geometry1D: public Geometry

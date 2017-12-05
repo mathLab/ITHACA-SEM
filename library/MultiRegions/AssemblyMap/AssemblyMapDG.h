@@ -47,7 +47,7 @@ namespace Nektar
     namespace MultiRegions
     {
         class AssemblyMapDG;
-        typedef boost::shared_ptr<AssemblyMapDG>  AssemblyMapDGSharedPtr;
+        typedef std::shared_ptr<AssemblyMapDG>  AssemblyMapDGSharedPtr;
 
         ///
         class AssemblyMapDG: public AssemblyMap

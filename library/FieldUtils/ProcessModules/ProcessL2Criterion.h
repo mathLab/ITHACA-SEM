@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: CADSystem.cpp
+//  File: ProcessL2Criterion.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,41 +29,55 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: cad object methods.
+//  Description: Computes Lambda 2 Criterion field.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <NekMeshUtils/CADSystem/OCE/CADSystemOCE.h>
-#include <NekMeshUtils/CADSystem/OCE/CADVertOCE.h>
+#ifndef FIELDUTILS_PROCESSL2CRITERION
+#define FIELDUTILS_PROCESSL2CRITERION
 
-#include <NekMeshUtils/MeshElements/Node.h>
-
-using namespace std;
+#include "../Module.h"
 
 namespace Nektar
 {
-namespace NekMeshUtils
+namespace FieldUtils
 {
 
-std::string CADVertOCE::key = GetCADVertFactory().RegisterCreatorFunction(
-    "oce", CADVertOCE::create, "CAD vert oce");
-
-void CADVertOCE::Initialise(int i, TopoDS_Shape in)
+/**
+ * @brief This processing module calculates the Lambda 2 Criterion and adds it
+ * as an extra-field to the output file.
+ */
+class ProcessL2Criterion : public ProcessModule
 {
-    /*gp_Trsf transform;
-    gp_Pnt ori(0.0, 0.0, 0.0);
-    transform.SetScale(ori, 1.0 / 1000.0);
-    TopLoc_Location mv(transform);
-    in.Move(mv);*/
+public:
+    /// Creates an instance of this class
+    static std::shared_ptr<Module> create(FieldSharedPtr f)
+    {
+        return MemoryManager<ProcessL2Criterion>::AllocateSharedPtr(f);
+    }
+    static ModuleKey className;
 
-    m_id      = i;
-    m_occVert = BRep_Tool::Pnt(TopoDS::Vertex(in));
+    ProcessL2Criterion(FieldSharedPtr f);
+    virtual ~ProcessL2Criterion();
 
-    m_node = std::shared_ptr<Node>(new Node(i - 1, m_occVert.X() / 1000.0,
-                                            m_occVert.Y() / 1000.0,
-                                            m_occVert.Z() / 1000.0));
-    degen  = false;
+    virtual void Process(po::variables_map &vm);
+
+    virtual std::string GetModuleName()
+    {
+        return "ProcessL2Criterion";
+    }
+
+    virtual std::string GetModuleDescription()
+    {
+        return "Calculating Lambda 2 Criterion";
+    }
+
+    virtual ModulePriority GetModulePriority()
+    {
+        return eModifyExp;
+    }
+};
+}
 }
 
-} // namespace NekMeshUtils
-} // namespace Nektar
+#endif

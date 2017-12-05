@@ -36,6 +36,9 @@
 #include "ProcessLoadCAD.h"
 #include <NekMeshUtils/CADSystem/CADSystem.h>
 
+#include <boost/filesystem.hpp>
+#include <boost/algorithm/string.hpp>
+
 using namespace std;
 namespace Nektar
 {
@@ -53,8 +56,12 @@ ProcessLoadCAD::ProcessLoadCAD(MeshSharedPtr m) : ProcessModule(m)
         ConfigOption(false, "", "Generate prisms on these surfs");
     m_config["2D"] =
         ConfigOption(true, "", "allow 2d loading");
+    m_config["CFIMesh"] =
+        ConfigOption(true, "", "specifies that the CAD can be multibody");
     m_config["NACA"] =
         ConfigOption(false, "", "naca domain");
+    m_config["verbose"] =
+        ConfigOption(true, "", "verbose output from cadsystem");
 }
 
 ProcessLoadCAD::~ProcessLoadCAD()
@@ -70,7 +77,16 @@ void ProcessLoadCAD::Process()
         cout << "Loading CAD for " << name << endl;
     }
 
-    m_mesh->m_cad = GetEngineFactory().CreateInstance("oce",name);
+    string ext = boost::filesystem::extension(name);
+
+    if(boost::iequals(ext,".fbm"))
+    {
+        m_mesh->m_cad = GetEngineFactory().CreateInstance("cfi",name);
+    }
+    else
+    {
+        m_mesh->m_cad = GetEngineFactory().CreateInstance("oce",name);
+    }
 
     if(m_config["2D"].beenSet)
     {
@@ -82,12 +98,17 @@ void ProcessLoadCAD::Process()
         m_mesh->m_cad->SetNACA(m_config["NACA"].as<string>());
     }
 
-    ASSERTL0(m_mesh->m_cad->LoadCAD(), "Failed to load CAD");
-
-    if (m_mesh->m_verbose)
+    if(m_config["CFIMesh"].beenSet)
     {
-        m_mesh->m_cad->Report();
+        m_mesh->m_cad->SetCFIMesh();
     }
+
+    if(m_config["verbose"].beenSet)
+    {
+        m_mesh->m_cad->SetVerbose();
+    }
+
+    ASSERTL0(m_mesh->m_cad->LoadCAD(), "Failed to load CAD");
 }
 }
 }

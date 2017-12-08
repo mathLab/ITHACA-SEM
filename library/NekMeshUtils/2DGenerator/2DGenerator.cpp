@@ -466,10 +466,10 @@ void Generator2D::MakeBL(int faceid)
             NekDouble t = (*q - *p).curl(s).m_z / d;
             NekDouble u = (*q - *p).curl(r).m_z / d;
 
-            // Check for more than intsersection. Just intersection would be
-            // between 0 and 1. This also checks for half length in front and
-            // behind.
-            if (-0.5 <= t && t <= 1.5 && -0.5 <= u && u <= 1.5)
+            // Check for intersection of the infinite continuation of one normal
+            // with the other. A tolerance of 0.5 times the length of the normal
+            // is used. Could maybe be decreased to a less aggressive value.
+            if (t <= 1.5 || u <= 1.5)
             {
                 dist[p] = sqrt(r.abs2());
                 dist[q] = sqrt(s.abs2());

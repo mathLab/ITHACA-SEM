@@ -19,6 +19,7 @@
         </PARAMETERS>
 
         <BOOLPARAMETERS>
+            <P VALUE="SmoothBndLayer" />
         </BOOLPARAMETERS>
 
     </MESHING>

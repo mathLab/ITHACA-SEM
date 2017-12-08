@@ -64,6 +64,8 @@ Generator2D::Generator2D(MeshSharedPtr m) : ProcessModule(m)
         ConfigOption(false, "2.0", "Boundary layer thickness adjustment");
     m_config["adjustblteverywhere"] =
         ConfigOption(true, "0", "Adjust thickness everywhere");
+    m_config["smoothbl"] =
+        ConfigOption(true, "0", "Adjust thickness everywhere");
 }
 
 Generator2D::~Generator2D()
@@ -365,6 +367,7 @@ void Generator2D::MakeBL(int faceid)
     bool adjust           = m_config["bltadjust"].beenSet;
     NekDouble divider     = m_config["bltadjust"].as<NekDouble>();
     bool adjustEverywhere = m_config["adjustblteverywhere"].beenSet;
+    bool smoothbl         = m_config["smoothbl"].beenSet;
 
     if (divider < 2.0)
     {
@@ -432,92 +435,94 @@ void Generator2D::MakeBL(int faceid)
 
     // Check for any intersecting boundary layer normals and smooth them if
     // needed
-
-    // Nodes that need normal smoothing and their unit normal
-    map<NodeSharedPtr, vector<NodeSharedPtr>> unitNormals;
-    // Nodes that need normal smoothing and their BL thickness
-    map<NodeSharedPtr, NekDouble> dist;
-
-    int count = 0;
-
-    do
+    if (smoothbl)
     {
-        unitNormals.clear();
-        dist.clear();
+        // Nodes that need normal smoothing and their unit normal
+        map<NodeSharedPtr, vector<NodeSharedPtr>> unitNormals;
+        // Nodes that need normal smoothing and their BL thickness
+        map<NodeSharedPtr, NekDouble> dist;
 
-        for (const auto &it : m_blEdges)
+        int count = 0;
+
+        do
         {
-            // Line intersection based on
-            // https://stackoverflow.com/a/565282/7241595
-            NodeSharedPtr p = it->m_n1;
-            NodeSharedPtr q = it->m_n2;
+            unitNormals.clear();
+            dist.clear();
 
-            Node r = *nodeNormals[p] - *p;
-            Node s = *nodeNormals[q] - *q;
-
-            NekDouble d = r.curl(s).m_z;
-
-            // Should probably use tolerance to check parallelism
-            if (d == 0)
+            for (const auto &it : m_blEdges)
             {
-                continue;
+                // Line intersection based on
+                // https://stackoverflow.com/a/565282/7241595
+                NodeSharedPtr p = it->m_n1;
+                NodeSharedPtr q = it->m_n2;
+
+                Node r = *nodeNormals[p] - *p;
+                Node s = *nodeNormals[q] - *q;
+
+                NekDouble d = r.curl(s).m_z;
+
+                // Should probably use tolerance to check parallelism
+                if (d == 0)
+                {
+                    continue;
+                }
+
+                NekDouble t = (*q - *p).curl(s).m_z / d;
+                NekDouble u = (*q - *p).curl(r).m_z / d;
+
+                // Check for intersection of the infinite continuation of one normal
+                // with the other. A tolerance of 0.5 times the length of the normal
+                // is used. Could maybe be decreased to a less aggressive value.
+                if (t <= 1.5 || u <= 1.5)
+                {
+                    dist[p] = sqrt(r.abs2());
+                    dist[q] = sqrt(s.abs2());
+
+                    NodeSharedPtr sum =
+                        make_shared<Node>(r / dist[p] + s / dist[q]);
+
+                    unitNormals[p].push_back(sum);
+                    unitNormals[q].push_back(sum);
+                }
             }
 
-            NekDouble t = (*q - *p).curl(s).m_z / d;
-            NekDouble u = (*q - *p).curl(r).m_z / d;
-
-            // Check for intersection of the infinite continuation of one normal
-            // with the other. A tolerance of 0.5 times the length of the normal
-            // is used. Could maybe be decreased to a less aggressive value.
-            if (t <= 1.5 || u <= 1.5)
+            // Smooth each normal one by one
+            for (const auto &it : unitNormals)
             {
-                dist[p] = sqrt(r.abs2());
-                dist[q] = sqrt(s.abs2());
+                Node avg(0, 0.0, 0.0, 0.0);
 
-                NodeSharedPtr sum =
-                    make_shared<Node>(r / dist[p] + s / dist[q]);
+                for (const auto &i : it.second)
+                {
+                    avg += *i;
+                }
 
-                unitNormals[p].push_back(sum);
-                unitNormals[q].push_back(sum);
+                avg /= sqrt(avg.abs2());
+
+                // Create new BL node with smoothed normal
+                NodeSharedPtr nn = std::shared_ptr<Node>(
+                    new Node(nodeNormals[it.first]->GetID(),
+                            it.first->m_x + avg.m_x * dist[it.first],
+                            it.first->m_y + avg.m_y * dist[it.first], 0.0));
+                CADSurfSharedPtr s = *nodeNormals[it.first]->GetCADSurfs().begin();
+                Array<OneD, NekDouble> uv = s->locuv(nn->GetLoc());
+                nn->SetCADSurf(s, uv);
+
+                nodeNormals[it.first] = nn;
             }
-        }
+        } while (unitNormals.size() && count++ < 50);
 
-        // Smooth each normal one by one
-        for (const auto &it : unitNormals)
+        if (m_mesh->m_verbose)
         {
-            Node avg(0, 0.0, 0.0, 0.0);
-
-            for (const auto &i : it.second)
+            if (count < 50)
             {
-                avg += *i;
+                cout << "\t\tNormals smoothed in " << count << " iterations."
+                    << endl;
             }
-
-            avg /= sqrt(avg.abs2());
-
-            // Create new BL node with smoothed normal
-            NodeSharedPtr nn = std::shared_ptr<Node>(
-                new Node(nodeNormals[it.first]->GetID(),
-                         it.first->m_x + avg.m_x * dist[it.first],
-                         it.first->m_y + avg.m_y * dist[it.first], 0.0));
-            CADSurfSharedPtr s = *nodeNormals[it.first]->GetCADSurfs().begin();
-            Array<OneD, NekDouble> uv = s->locuv(nn->GetLoc());
-            nn->SetCADSurf(s, uv);
-
-            nodeNormals[it.first] = nn;
-        }
-    } while (unitNormals.size() && count++ < 50);
-
-    if (m_mesh->m_verbose)
-    {
-        if (count < 50)
-        {
-            cout << "\t\tNormals smoothed in " << count << " iterations."
-                 << endl;
-        }
-        else
-        {
-            cout << "\t\tNormals smoothed. Algorithm didn't converge after "
-                 << count << " iterations." << endl;
+            else
+            {
+                cout << "\t\tNormals smoothed. Algorithm didn't converge after "
+                    << count << " iterations." << endl;
+            }
         }
     }
 

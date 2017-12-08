@@ -47,7 +47,8 @@ v5.0.0
 - Additional curve types in GEO reader: BSpline, Circle, Ellipse (!800)
 - Fix default command line argument value (!823)
 - Add projection meshing module which can curve linear meshes with CAD (!826)
-- Smooth BL normals in 2D when normals intersect (!877)
+- Smooth BL normals in 2D when normals intersect or cause invalid macro BL
+  elements (!877)
 
 **FieldConvert**:
 - Add input module for Semtex field files (!777)

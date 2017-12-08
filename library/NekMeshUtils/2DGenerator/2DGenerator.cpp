@@ -473,7 +473,7 @@ void Generator2D::MakeBL(int faceid)
                 // Check for intersection of the infinite continuation of one normal
                 // with the other. A tolerance of 0.5 times the length of the normal
                 // is used. Could maybe be decreased to a less aggressive value.
-                if (t <= 1.5 || u <= 1.5)
+                if ((-0.5 < t && t <= 1.5) || (-0.5 < u && u <= 1.5))
                 {
                     dist[p] = sqrt(r.abs2());
                     dist[q] = sqrt(s.abs2());

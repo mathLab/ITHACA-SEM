@@ -89,7 +89,7 @@ IF (THIRDPARTY_BUILD_BOOST)
             SET(TOOLSET msvc-14.0)
         ENDIF()
     ELSE()
-        SET(TOOLSET gcc)
+        SET(TOOLSET gcc-${CMAKE_CXX_COMPILER_VERSION})
     ENDIF()
 
     IF (NOT WIN32)
@@ -104,13 +104,14 @@ IF (THIRDPARTY_BUILD_BOOST)
             BINARY_DIR ${TPBUILD}/boost
             TMP_DIR ${TPBUILD}/boost-tmp
             INSTALL_DIR ${TPDIST}
-            CONFIGURE_COMMAND CC=${CMAKE_C_COMPILER} CXX=${CMAKE_CXX_COMPILER} ./bootstrap.sh --prefix=${TPDIST}
+            CONFIGURE_COMMAND ./bootstrap.sh
             BUILD_COMMAND NO_BZIP2=1 ./b2
                 variant=release
                 link=shared
                 include=${TPDIST}/include
                 linkflags="-L${TPDIST}/lib"
                 ${BOOST_FLAGS} ${BOOST_LIB_LIST}
+		--prefix=${TPDIST}
                 --layout=system toolset=${TOOLSET} install
             INSTALL_COMMAND ""
             )
@@ -154,6 +155,15 @@ IF (THIRDPARTY_BUILD_BOOST)
             DEPENDERS build
             DEPENDEES download)
     ENDIF (APPLE)
+
+    SET(cmd_string "using gcc : ${CMAKE_CXX_COMPILER_VERSION} : ${CMAKE_CXX_COMPILER} \\\;")
+
+    IF (UNIX)
+	EXTERNALPROJECT_ADD_STEP(boost conf-project-conf
+            COMMAND cmake -E echo "${cmd_string}" > ${TPBUILD}/boost/project-config.jam
+            DEPENDERS build
+            DEPENDEES configure)
+    ENDIF()
 
     # If building ThirdParty zlib, force zlib build before boost
     IF (THIRDPARTY_BUILD_ZLIB)

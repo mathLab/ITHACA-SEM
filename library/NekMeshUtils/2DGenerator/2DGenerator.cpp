@@ -189,7 +189,7 @@ void Generator2D::Process()
                                                             nodes);
         }
     }
-
+    
     if (m_mesh->m_verbose)
     {
         cout << endl << "\tFace meshing:" << endl << endl;
@@ -226,9 +226,6 @@ void Generator2D::Process()
             LibUtilities::eSegment, conf, ns, tags);
         m_mesh->m_element[1].push_back(E2);
     }
-
-    // m_mesh->m_expDim = 1;
-    // m_mesh->m_element[2].clear();
 
     ProcessVertices();
     ProcessEdges();

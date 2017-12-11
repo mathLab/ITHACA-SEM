@@ -50,6 +50,7 @@ v5.0.0
 - Add projection meshing module which can curve linear meshes with CAD (!826)
 - Revert triangle code to ThirdParty library (!883)
 - Fix coinciding nodes issue with very fine meshes (!883)
+- Fix 2D BL splitting where out-of-plane nodes would be created (!887)
 
 **FieldConvert**:
 - Add input module for Semtex field files (!777)

@@ -37,6 +37,8 @@
 
 #include <NekMeshUtils/2DGenerator/2DGenerator.h>
 
+#include <NekMeshUtils/Octree/Octree.h>
+
 #include <LibUtilities/BasicUtils/ParseUtils.h>
 #include <LibUtilities/BasicUtils/Progressbar.hpp>
 
@@ -519,6 +521,44 @@ void Generator2D::MakeBL(int faceid)
             {
                 cout << "\t\tNormals smoothed. Algorithm didn't converge after "
                     << count << " iterations." << endl;
+            }
+        }
+    }
+
+    vector<list<NodeSharedPtr>> nodesToMove;
+
+    for (const auto &ie : m_blEdges)
+    {
+        NodeSharedPtr n1 = nodeNormals[ie->m_n1];
+        NodeSharedPtr n2 = nodeNormals[ie->m_n2];
+
+        NekDouble targetD = m_mesh->m_octree->Query(((*n1 + *n2) / 2.0).GetLoc());
+        NekDouble realD = sqrt((*n1 - *n2).abs2());
+
+        if (realD < 0.5 * targetD)
+        {
+            for (auto &il : nodesToMove)
+            {
+                if (il.front() == n1)
+                {
+                    il.push_front(n2);
+                    break;
+                }
+                if (il.front() == n2)
+                {
+                    il.push_front(n1);
+                    break;
+                }
+                if (il.back() == n1)
+                {
+                    il.push_back(n2);
+                    break;
+                }
+                if (il.back() == n2)
+                {
+                    il.push_back(n1);
+                    break;
+                }
             }
         }
     }

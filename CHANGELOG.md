@@ -30,6 +30,9 @@ v5.0.0
 - Adds CFI CAD engine back-end (!864)
 - Adds CFI Mesh IO support (!864)
 - Cleanup of CAD system data structures (!864)
+- Fix mac OSX on buildbots (!876)
+- Fix error from (!826) (!876)
+- Fix minor bug in ARPACK thirdparty build cmake (!874)
 
 **NekMesh**:
 - Add feature to read basic 2D geo files as CAD (!731)
@@ -45,6 +48,8 @@ v5.0.0
 - Additional curve types in GEO reader: BSpline, Circle, Ellipse (!800)
 - Fix default command line argument value (!823)
 - Add projection meshing module which can curve linear meshes with CAD (!826)
+- Revert triangle code to ThirdParty library (!883)
+- Fix coinciding nodes issue with very fine meshes (!883)
 
 **FieldConvert**:
 - Add input module for Semtex field files (!777)
@@ -54,6 +59,7 @@ v5.0.0
 - Allow explicitly setting bool options of FieldConvert modules as false (!811)
 - Enable output to multiple files (!844)
 - Allow using xml file without expansion tag in FieldConvert (!849)
+- Add Lambda 2 vortex detection criteria (!882)
 
 **IncNavierStokesSolver**
 - Replace steady-state check based on difference of norms by check based on
@@ -84,6 +90,9 @@ v4.4.2
 **Documentation**:
 - Fix sign of the viscous term in the velocity correction scheme equations in
   the user guide (!856)
+
+**FieldConvert**
+- Allow passing input name with trailing separator (!879)
 
 v4.4.1
 ------

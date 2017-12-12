@@ -51,6 +51,7 @@ v5.0.0
 - Force 3-node loops to avoid degenerate 1-triangle faces (!875)
 - Revert triangle code to ThirdParty library (!883)
 - Fix coinciding nodes issue with very fine meshes (!883)
+- Fix automatic peralign call in 2D periodic meshing (!888)
 
 **FieldConvert**:
 - Add input module for Semtex field files (!777)

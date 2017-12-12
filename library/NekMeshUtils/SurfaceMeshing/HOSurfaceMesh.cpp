@@ -420,7 +420,7 @@ void HOSurfaceMesh::Process()
         }
 
         // just add the face interior nodes through interp and project
-        /*vector<NodeSharedPtr> vertices = f->m_vertexList;
+        vector<NodeSharedPtr> vertices = f->m_vertexList;
 
         SpatialDomains::GeometrySharedPtr geom = f->GetGeom(3);
         geom->FillGeom();
@@ -452,10 +452,8 @@ void HOSurfaceMesh::Process()
                 loc[1] = xmap->PhysEvaluate(xp, yc);
                 loc[2] = xmap->PhysEvaluate(xp, zc);
 
-                Array<OneD, NekDouble> uv(2);
-                s->locuv(loc,uv);
+                Array<OneD, NekDouble> uv = s->locuv(loc);
                 uvi.push_back(uv);
-
             }
 
             vector<NodeSharedPtr> honodes;
@@ -489,10 +487,8 @@ void HOSurfaceMesh::Process()
                     loc[1] = xmap->PhysEvaluate(xp, yc);
                     loc[2] = xmap->PhysEvaluate(xp, zc);
 
-                    Array<OneD, NekDouble> uv(2);
-                    s->locuv(loc,uv);
+                    Array<OneD, NekDouble> uv = s->locuv(loc);
                     uvi.push_back(uv);
-
                 }
             }
 
@@ -509,7 +505,7 @@ void HOSurfaceMesh::Process()
 
             f->m_faceNodes = honodes;
             f->m_curveType = LibUtilities::eGaussLobattoLegendre;
-        }*/
+        }
     }
 
     if (m_mesh->m_verbose)

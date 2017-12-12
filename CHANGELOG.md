@@ -50,6 +50,9 @@ v5.0.0
 - Add projection meshing module which can curve linear meshes with CAD (!826)
 - XML meshes now write with provenance information, including information about
   their source, for debugging purposes (!872)
+- Force 3-node loops to avoid degenerate 1-triangle faces (!875)
+- Revert triangle code to ThirdParty library (!883)
+- Fix coinciding nodes issue with very fine meshes (!883)
 
 **FieldConvert**:
 - Add input module for Semtex field files (!777)
@@ -59,6 +62,7 @@ v5.0.0
 - Allow explicitly setting bool options of FieldConvert modules as false (!811)
 - Enable output to multiple files (!844)
 - Allow using xml file without expansion tag in FieldConvert (!849)
+- Add Lambda 2 vortex detection criteria (!882)
 
 **IncNavierStokesSolver**
 - Replace steady-state check based on difference of norms by check based on
@@ -89,6 +93,9 @@ v4.4.2
 **Documentation**:
 - Fix sign of the viscous term in the velocity correction scheme equations in
   the user guide (!856)
+
+**FieldConvert**
+- Allow passing input name with trailing separator (!879)
 
 v4.4.1
 ------

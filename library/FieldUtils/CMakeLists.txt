@@ -35,6 +35,7 @@ SET(FieldUtilsHeaders
     ProcessModules/ProcessInterpPtsToPts.h
     ProcessModules/ProcessIsoContour.h
     ProcessModules/ProcessJacobianEnergy.h
+    ProcessModules/ProcessL2Criterion.h
     ProcessModules/ProcessMapping.h
     ProcessModules/ProcessNumModes.h
     ProcessModules/ProcessMeanMode.h
@@ -88,6 +89,7 @@ SET(FieldUtilsSources
     ProcessModules/ProcessInterpPtsToPts.cpp
     ProcessModules/ProcessIsoContour.cpp
     ProcessModules/ProcessJacobianEnergy.cpp
+    ProcessModules/ProcessL2Criterion.cpp
     ProcessModules/ProcessMapping.cpp
     ProcessModules/ProcessNumModes.cpp
     ProcessModules/ProcessMeanMode.cpp

@@ -525,40 +525,153 @@ void Generator2D::MakeBL(int faceid)
         }
     }
 
-    vector<list<NodeSharedPtr>> nodesToMove;
-
-    for (const auto &ie : m_blEdges)
+    if (true)
     {
-        NodeSharedPtr n1 = nodeNormals[ie->m_n1];
-        NodeSharedPtr n2 = nodeNormals[ie->m_n2];
+        vector<list<NodeSharedPtr>> nodesToMove;
 
-        NekDouble targetD = m_mesh->m_octree->Query(((*n1 + *n2) / 2.0).GetLoc());
-        NekDouble realD = sqrt((*n1 - *n2).abs2());
-
-        if (realD < 0.5 * targetD)
+        for (const auto &ie : m_blEdges)
         {
-            for (auto &il : nodesToMove)
+            NodeSharedPtr n1 = nodeNormals[ie->m_n1];
+            NodeSharedPtr n2 = nodeNormals[ie->m_n2];
+
+            NekDouble targetD = m_mesh->m_octree->Query(((*n1 + *n2) / 2.0).GetLoc());
+            NekDouble realD = sqrt((*n1 - *n2).abs2());
+
+            if (realD < 0.5 * targetD)
             {
-                if (il.front() == n1)
+                bool connected = false;
+                
+                for (auto &il : nodesToMove)
                 {
-                    il.push_front(n2);
-                    break;
+                    if (il.front() == n1)
+                    {
+                        il.push_front(n2);
+                        connected = true;
+                        break;
+                    }
+                    if (il.front() == n2)
+                    {
+                        il.push_front(n1);
+                        connected = true;
+                        break;
+                    }
+                    if (il.back() == n1)
+                    {
+                        il.push_back(n2);
+                        connected = true;
+                        break;
+                    }
+                    if (il.back() == n2)
+                    {
+                        il.push_back(n1);
+                        connected = true;
+                        break;
+                    }
                 }
-                if (il.front() == n2)
+
+                if (!connected)
                 {
-                    il.push_front(n1);
-                    break;
+                    list<NodeSharedPtr> newList;
+                    newList.push_back(n1);
+                    newList.push_back(n2);
+
+                    nodesToMove.push_back(newList);
                 }
-                if (il.back() == n1)
+            }
+        }
+
+        /*
+        int i = 1;
+        for (const auto &il : nodesToMove)
+        {
+            cout << i++ << endl;
+            for (const auto &in : il)
+            {
+                cout << in->m_x << "\t" << in->m_y << "\t" << in->m_z << endl;
+            }
+        }
+        cout << endl << endl;
+        */
+
+        for (int i1 = 0; i1 < nodesToMove.size(); ++i1)
+        {
+            NodeSharedPtr n11 = nodesToMove[i1].front();
+            NodeSharedPtr n12 = nodesToMove[i1].back();
+
+            for (int i2 = i1 + 1; i2 < nodesToMove.size(); ++i2)
+            {
+                NodeSharedPtr n21 = nodesToMove[i2].front();
+                NodeSharedPtr n22 = nodesToMove[i2].back();
+
+                if (n11 == n21 || n11 == n22 || n12 == n21 || n12 == n22)
                 {
-                    il.push_back(n2);
-                    break;
+                    if (n11 == n21 || n12 == n22)
+                    {
+                        nodesToMove[i2].reverse();
+                        n21 = nodesToMove[i2].front();
+                        n22 = nodesToMove[i2].back();
+                    }
+
+                    if (n11 == n22)
+                    {
+                        nodesToMove[i1].splice(nodesToMove[i1].begin(), nodesToMove[i2], nodesToMove[i2].begin(), --nodesToMove[i2].end());
+                    }
+                    else
+                    {
+                        nodesToMove[i1].splice(nodesToMove[i1].end(), nodesToMove[i2], ++nodesToMove[i2].begin(), nodesToMove[i2].end());
+                    }
+
+                    nodesToMove.erase(nodesToMove.begin() + i2);
+                    continue;
                 }
-                if (il.back() == n2)
-                {
-                    il.push_back(n1);
-                    break;
-                }
+            }
+        }
+
+        /*
+        i = 1;
+        for (const auto &il : nodesToMove)
+        {
+            cout << i++ << endl;
+            for (const auto &in : il)
+            {
+                cout << in->m_x << "\t" << in->m_y << "\t" << in->m_x << endl;
+            }
+        }
+        */
+
+        for (const auto &il : nodesToMove)
+        {
+            NodeSharedPtr ni = il.front();
+            NodeSharedPtr nf = il.back();
+
+            vector<NekDouble> deltas;
+            NekDouble total = 0.0;
+
+            for (auto in = il.begin(); in != --il.end(); )
+            {
+                NodeSharedPtr n1 = *(in++);
+                NodeSharedPtr n2 = *in;
+
+                deltas.push_back(m_mesh->m_octree->Query(((*n1 + *n2) / 2.0).GetLoc()));
+                total += deltas.back();
+            }
+
+            for (auto &id : deltas)
+            {
+                id /= total;
+            }
+
+            NekDouble runningTotal = 0.0;
+            int i = 0;
+
+            for (auto id = ++il.begin(); id != --il.end(); ++id)
+            {
+                runningTotal += deltas[i++];
+                Array<OneD, NekDouble> loc = (*ni * (1.0 - runningTotal) + *nf * runningTotal).GetLoc();
+
+                Array<OneD, NekDouble> uv = m_mesh->m_cad->GetSurf(faceid)->locuv(loc);
+
+                (*id)->Move(loc, faceid, uv);
             }
         }
     }

@@ -339,8 +339,8 @@ void ProcessBL::BoundaryLayer2D()
         }
 
         // Grab co-ordinates.
-        Array<OneD, NekDouble> x(nq*(nl+1));
-        Array<OneD, NekDouble> y(nq*(nl+1));
+        Array<OneD, NekDouble> x(nq*(nl+1), 0.0);
+        Array<OneD, NekDouble> y(nq*(nl+1), 0.0);
         Array<OneD, NekDouble> z(nq*(nl+1), 0.0);
         q->GetCoords(x,y,z);
 

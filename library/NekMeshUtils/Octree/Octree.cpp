@@ -836,14 +836,25 @@ int Octree::CountElemt()
 
 void Octree::CompileSourcePointList()
 {
-
+    int totalEnt = m_mesh->m_cad->GetNumSurf();
+    int preEnt = 0;
     if(m_mesh->m_cad->Is2D())
     {
+        totalEnt += m_mesh->m_cad->GetNumCurve();
+        preEnt += m_mesh->m_cad->GetNumCurve();
         for (int i = 1; i <= m_mesh->m_cad->GetNumCurve(); i++)
         {
+            if (m_mesh->m_verbose)
+            {
+                LibUtilities::PrintProgressbar(i, totalEnt,
+                                               "\tCompiling source points");
+            }
+
             CADCurveSharedPtr curve = m_mesh->m_cad->GetCurve(i);
             Array<OneD, NekDouble> bds = curve->GetBounds();
-            int samples  = 100;
+            //this works assuming the curves are not distorted
+            int samples  = ceil(curve->Length(bds[0],bds[1]) / m_minDelta) * 2;
+            samples = max(40, samples);
             NekDouble dt = (bds[1] - bds[0]) / (samples + 1);
             for (int j = 1; j < samples - 1; j++) // dont want first and last point
             {
@@ -891,7 +902,7 @@ void Octree::CompileSourcePointList()
     {
         if (m_mesh->m_verbose)
         {
-            LibUtilities::PrintProgressbar(i, m_mesh->m_cad->GetNumSurf(),
+            LibUtilities::PrintProgressbar(preEnt + i, totalEnt,
                                            "\tCompiling source points");
         }
 
@@ -959,8 +970,10 @@ void Octree::CompileSourcePointList()
 
         // these are the acutal number of sample points in each parametric
         // direction
-        int nu = ceil(DeltaU / m_minDelta) * 40 * 2;
-        int nv = ceil(DeltaV / m_minDelta) * 40 * 2;
+        int nu = ceil(DeltaU * 40 / m_minDelta) * 2;
+        int nv = ceil(DeltaV * 40 / m_minDelta) * 2;
+        nu = max(40, nu);
+        nv = max(40, nv);
 
         for (int j = 0; j < nu; j++)
         {

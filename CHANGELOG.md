@@ -48,6 +48,9 @@ v5.0.0
 - Additional curve types in GEO reader: BSpline, Circle, Ellipse (!800)
 - Fix default command line argument value (!823)
 - Add projection meshing module which can curve linear meshes with CAD (!826)
+- Force 3-node loops to avoid degenerate 1-triangle faces (!875)
+- Revert triangle code to ThirdParty library (!883)
+- Fix coinciding nodes issue with very fine meshes (!883)
 
 **FieldConvert**:
 - Add input module for Semtex field files (!777)
@@ -88,6 +91,9 @@ v4.4.2
 **Documentation**:
 - Fix sign of the viscous term in the velocity correction scheme equations in
   the user guide (!856)
+
+**FieldConvert**
+- Allow passing input name with trailing separator (!879)
 
 v4.4.1
 ------

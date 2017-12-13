@@ -245,8 +245,10 @@ INCLUDE (ThirdPartyArpack)
 INCLUDE (ThirdPartyMPI)
 INCLUDE (ThirdPartyVTK)
 INCLUDE (ThirdPartyOCE)
+INCLUDE (ThirdPartyTriangle)
 INCLUDE (ThirdPartyTetGen)
 INCLUDE (ThirdPartyCCM)
+INCLUDE (FindCFI)
 
 INCLUDE (Doxygen)
 

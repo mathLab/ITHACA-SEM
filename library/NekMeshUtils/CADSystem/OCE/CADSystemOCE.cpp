@@ -287,6 +287,11 @@ bool CADSystemOCE::LoadCAD()
         }
     }
 
+    if(m_verbose)
+    {
+        Report();
+    }
+
     return true;
 }
 

@@ -67,7 +67,8 @@ Generator2D::Generator2D(MeshSharedPtr m) : ProcessModule(m)
     m_config["adjustblteverywhere"] =
         ConfigOption(true, "0", "Adjust thickness everywhere");
     m_config["smoothbl"] =
-        ConfigOption(true, "0", "Adjust thickness everywhere");
+        ConfigOption(true, "0", "Smooth the BL normal directions to avoid "
+                                "(nearly) intersecting normals");
     m_config["spaceoutbl"] = ConfigOption(
         false, "0.5", "Threshold to space out BL according to Delta");
 }

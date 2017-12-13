@@ -65,7 +65,8 @@ Generator2D::Generator2D(MeshSharedPtr m) : ProcessModule(m)
     m_config["adjustblteverywhere"] =
         ConfigOption(true, "0", "Adjust thickness everywhere");
     m_config["smoothbl"] =
-        ConfigOption(true, "0", "Adjust thickness everywhere");
+        ConfigOption(true, "0", "Smooth the BL normal directions to avoid "
+                                "(nearly) intersecting normals");
 }
 
 Generator2D::~Generator2D()
@@ -189,7 +190,7 @@ void Generator2D::Process()
                                                             nodes);
         }
     }
-    
+
     if (m_mesh->m_verbose)
     {
         cout << endl << "\tFace meshing:" << endl << endl;
@@ -467,8 +468,10 @@ void Generator2D::MakeBL(int faceid)
                 NekDouble t = (*q - *p).curl(s).m_z / d;
                 NekDouble u = (*q - *p).curl(r).m_z / d;
 
-                // Check for intersection of the infinite continuation of one normal
-                // with the other. A tolerance of 0.5 times the length of the normal
+                // Check for intersection of the infinite continuation of one
+                // normal
+                // with the other. A tolerance of 0.5 times the length of the
+                // normal
                 // is used. Could maybe be decreased to a less aggressive value.
                 if ((-0.5 < t && t <= 1.5) || (-0.5 < u && u <= 1.5))
                 {
@@ -498,9 +501,10 @@ void Generator2D::MakeBL(int faceid)
                 // Create new BL node with smoothed normal
                 NodeSharedPtr nn = std::shared_ptr<Node>(
                     new Node(nodeNormals[it.first]->GetID(),
-                            it.first->m_x + avg.m_x * dist[it.first],
-                            it.first->m_y + avg.m_y * dist[it.first], 0.0));
-                CADSurfSharedPtr s = *nodeNormals[it.first]->GetCADSurfs().begin();
+                             it.first->m_x + avg.m_x * dist[it.first],
+                             it.first->m_y + avg.m_y * dist[it.first], 0.0));
+                CADSurfSharedPtr s =
+                    *nodeNormals[it.first]->GetCADSurfs().begin();
                 Array<OneD, NekDouble> uv = s->locuv(nn->GetLoc());
                 nn->SetCADSurf(s, uv);
 
@@ -513,12 +517,12 @@ void Generator2D::MakeBL(int faceid)
             if (count < 50)
             {
                 cout << "\t\tNormals smoothed in " << count << " iterations."
-                    << endl;
+                     << endl;
             }
             else
             {
                 cout << "\t\tNormals smoothed. Algorithm didn't converge after "
-                    << count << " iterations." << endl;
+                     << count << " iterations." << endl;
             }
         }
     }

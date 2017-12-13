@@ -174,9 +174,9 @@ void InputMCF::ParseFile(string nm)
     it = information.find("MeshType");
     ASSERTL0(it != information.end(), "no meshtype defined");
 
-    m_cfiMesh = it->second == "CFI";
-    m_makeBL  = it->second == "3DBndLayer";
-    m_2D      = it->second == "2D";
+    m_cfiMesh  = it->second == "CFI";
+    m_makeBL   = it->second == "3DBndLayer";
+    m_2D       = it->second == "2D";
     m_manifold = it->second == "Manifold";
 
     if (it->second == "2DBndLayer")
@@ -228,12 +228,23 @@ void InputMCF::ParseFile(string nm)
         it = parameters.find("BndLayerAdjustment");
         if (it != parameters.end())
         {
-            m_adjust = true;
+            m_adjust     = true;
             m_adjustment = it->second;
         }
         else
         {
             m_adjust = false;
+        }
+
+        it = parameters.find("SpaceOutBndLayer");
+        if (it != parameters.end())
+        {
+            m_spaceoutbl    = true;
+            m_spaceoutblthr = it->second;
+        }
+        else
+        {
+            m_spaceoutbl = false;
         }
     }
 
@@ -313,7 +324,7 @@ void InputMCF::Process()
     module = GetModuleFactory().CreateInstance(
         ModuleKey(eProcessModule, "loadcad"), m_mesh);
     module->RegisterConfig("filename", m_cadfile);
-    if(m_mesh->m_verbose)
+    if (m_mesh->m_verbose)
     {
         module->RegisterConfig("verbose", "");
     }
@@ -326,7 +337,7 @@ void InputMCF::Process()
         module->RegisterConfig("NACA", m_nacadomain);
     }
 
-    if(m_cfiMesh)
+    if (m_cfiMesh)
     {
         module->RegisterConfig("CFIMesh", "");
     }
@@ -359,7 +370,7 @@ void InputMCF::Process()
     if (m_2D)
     {
         ////**** 2DGenerator ****////
-        m_mesh->m_expDim = 2;
+        m_mesh->m_expDim   = 2;
         m_mesh->m_spaceDim = 2;
         module             = GetModuleFactory().CreateInstance(
             ModuleKey(eProcessModule, "2dgenerator"), m_mesh);
@@ -381,6 +392,11 @@ void InputMCF::Process()
             if (m_smoothbl)
             {
                 module->RegisterConfig("smoothbl", "");
+            }
+
+            if (m_spaceoutbl)
+            {
+                module->RegisterConfig("spaceoutbl", m_spaceoutblthr);
             }
         }
         if (m_periodic.size())
@@ -440,9 +456,9 @@ void InputMCF::Process()
                 return;
             }
 
-            if(m_manifold)
+            if (m_manifold)
             {
-                //dont want to volume mesh
+                // dont want to volume mesh
                 m_mesh->m_expDim = 2;
             }
             else
@@ -467,7 +483,8 @@ void InputMCF::Process()
                 {
                     cout << "Volume meshing has failed with message:" << endl;
                     cout << e.what() << endl;
-                    cout << "The linear surface mesh be dumped as a manifold mesh"
+                    cout << "The linear surface mesh be dumped as a manifold "
+                            "mesh"
                          << endl;
                     m_mesh->m_expDim = 2;
                     m_mesh->m_element[3].clear();
@@ -518,8 +535,7 @@ void InputMCF::Process()
             ModuleKey(eProcessModule, "varopti"), m_mesh);
         module->RegisterConfig("hyperelastic", "");
         module->RegisterConfig("maxiter", "10");
-        module->RegisterConfig("numthreads",
-                                    boost::lexical_cast<string>(np));
+        module->RegisterConfig("numthreads", boost::lexical_cast<string>(np));
 
         try
         {
@@ -542,8 +558,8 @@ void InputMCF::Process()
             ModuleKey(eProcessModule, "bl"), m_mesh);
         module->RegisterConfig("layers", m_bllayers);
         module->RegisterConfig("surf", m_blsurfs);
-        module->RegisterConfig(
-            "nq", boost::lexical_cast<string>(m_mesh->m_nummode));
+        module->RegisterConfig("nq",
+                               boost::lexical_cast<string>(m_mesh->m_nummode));
         module->RegisterConfig("r", m_blprog);
 
         try
@@ -582,15 +598,16 @@ void InputMCF::Process()
     }
 
     // apply surface labels
-    for(auto &it : m_mesh->m_composite)
+    for (auto &it : m_mesh->m_composite)
     {
         ElementSharedPtr el = it.second->m_items[0];
-        if(el->m_parentCAD)
+        if (el->m_parentCAD)
         {
             string name = el->m_parentCAD->GetName();
-            if(name.size() > 0)
+            if (name.size() > 0)
             {
-                m_mesh->m_faceLabels.insert(make_pair(el->GetTagList()[0],name));
+                m_mesh->m_faceLabels.insert(
+                    make_pair(el->GetTagList()[0], name));
             }
         }
     }

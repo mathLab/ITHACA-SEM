@@ -68,6 +68,8 @@ Generator2D::Generator2D(MeshSharedPtr m) : ProcessModule(m)
         ConfigOption(true, "0", "Adjust thickness everywhere");
     m_config["smoothbl"] =
         ConfigOption(true, "0", "Adjust thickness everywhere");
+    m_config["spaceoutbl"] = ConfigOption(
+        false, "0.5", "Threshold to space out BL according to Delta");
 }
 
 Generator2D::~Generator2D()
@@ -191,7 +193,7 @@ void Generator2D::Process()
                                                             nodes);
         }
     }
-    
+
     if (m_mesh->m_verbose)
     {
         cout << endl << "\tFace meshing:" << endl << endl;
@@ -367,6 +369,8 @@ void Generator2D::MakeBL(int faceid)
     NekDouble divider     = m_config["bltadjust"].as<NekDouble>();
     bool adjustEverywhere = m_config["adjustblteverywhere"].beenSet;
     bool smoothbl         = m_config["smoothbl"].beenSet;
+    bool spaceoutbl       = m_config["spaceoutbl"].beenSet;
+    NekDouble spaceoutthr = m_config["spaceoutbl"].as<NekDouble>();
 
     if (divider < 2.0)
     {
@@ -469,9 +473,10 @@ void Generator2D::MakeBL(int faceid)
                 NekDouble t = (*q - *p).curl(s).m_z / d;
                 NekDouble u = (*q - *p).curl(r).m_z / d;
 
-                // Check for intersection of the infinite continuation of one normal
-                // with the other. A tolerance of 0.5 times the length of the normal
-                // is used. Could maybe be decreased to a less aggressive value.
+                // Check for intersection of the infinite continuation of one
+                // normal with the other. A tolerance of 0.5 times the length of
+                // thenormalis used. Could maybe be decreased to a less
+                // aggressive value.
                 if ((-0.5 < t && t <= 1.5) || (-0.5 < u && u <= 1.5))
                 {
                     dist[p] = sqrt(r.abs2());
@@ -500,9 +505,10 @@ void Generator2D::MakeBL(int faceid)
                 // Create new BL node with smoothed normal
                 NodeSharedPtr nn = std::shared_ptr<Node>(
                     new Node(nodeNormals[it.first]->GetID(),
-                            it.first->m_x + avg.m_x * dist[it.first],
-                            it.first->m_y + avg.m_y * dist[it.first], 0.0));
-                CADSurfSharedPtr s = *nodeNormals[it.first]->GetCADSurfs().begin();
+                             it.first->m_x + avg.m_x * dist[it.first],
+                             it.first->m_y + avg.m_y * dist[it.first], 0.0));
+                CADSurfSharedPtr s =
+                    *nodeNormals[it.first]->GetCADSurfs().begin();
                 Array<OneD, NekDouble> uv = s->locuv(nn->GetLoc());
                 nn->SetCADSurf(s, uv);
 
@@ -515,165 +521,239 @@ void Generator2D::MakeBL(int faceid)
             if (count < 50)
             {
                 cout << "\t\tNormals smoothed in " << count << " iterations."
-                    << endl;
+                     << endl;
             }
             else
             {
                 cout << "\t\tNormals smoothed. Algorithm didn't converge after "
-                    << count << " iterations." << endl;
+                     << count << " iterations." << endl;
             }
         }
     }
 
-    if (true)
+    if (spaceoutbl)
     {
-        vector<list<NodeSharedPtr>> nodesToMove;
-
-        for (const auto &ie : m_blEdges)
+        if (0.0 > spaceoutthr || spaceoutthr < 1.0)
         {
-            NodeSharedPtr n1 = nodeNormals[ie->m_n1];
-            NodeSharedPtr n2 = nodeNormals[ie->m_n2];
+            WARNINGL1(false, "The boundary layer space out threshold should be "
+                             "between 0 and 1. It will now be adjusted to "
+                             "0.5.");
+            spaceoutthr = 0.5;
+        }
 
-            NekDouble targetD = m_mesh->m_octree->Query(((*n1 + *n2) / 2.0).GetLoc());
-            NekDouble realD = sqrt((*n1 - *n2).abs2());
+        vector<deque<NodeSharedPtr>> nodesToMove;
 
-            if (realD < 0.5 * targetD)
+        do
+        {
+            nodesToMove.clear();
+
+            for (const auto &ie : m_blEdges)
             {
-                bool connected = false;
-                
+                NodeSharedPtr n1 = nodeNormals[ie->m_n1];
+                NodeSharedPtr n2 = nodeNormals[ie->m_n2];
+
+                NekDouble targetD =
+                    m_mesh->m_octree->Query(((*n1 + *n2) / 2.0).GetLoc());
+                NekDouble realD = sqrt((*n1 - *n2).abs2());
+
+                if (realD < spaceoutthr * targetD)
+                {
+                    bool connected = false;
+
+                    for (auto &il : nodesToMove)
+                    {
+                        if (il.front() == n1)
+                        {
+                            il.push_front(n2);
+                            connected = true;
+                            break;
+                        }
+                        if (il.front() == n2)
+                        {
+                            il.push_front(n1);
+                            connected = true;
+                            break;
+                        }
+                        if (il.back() == n1)
+                        {
+                            il.push_back(n2);
+                            connected = true;
+                            break;
+                        }
+                        if (il.back() == n2)
+                        {
+                            il.push_back(n1);
+                            connected = true;
+                            break;
+                        }
+                    }
+
+                    if (!connected)
+                    {
+                        deque<NodeSharedPtr> newList;
+                        newList.push_back(n1);
+                        newList.push_back(n2);
+
+                        nodesToMove.push_back(newList);
+                    }
+                }
+            }
+
+            for (int i = 0;; ++i)
+            {
+                for (int i1 = 0; i1 < nodesToMove.size(); ++i1)
+                {
+                    NodeSharedPtr n11 = nodesToMove[i1].front();
+                    NodeSharedPtr n12 = nodesToMove[i1].back();
+
+                    for (int i2 = i1 + 1; i2 < nodesToMove.size(); ++i2)
+                    {
+                        NodeSharedPtr n21 = nodesToMove[i2].front();
+                        NodeSharedPtr n22 = nodesToMove[i2].back();
+
+                        if (n11 == n21 || n11 == n22 || n12 == n21 ||
+                            n12 == n22)
+                        {
+                            if (n11 == n21 || n12 == n22)
+                            {
+                                reverse(nodesToMove[i2].begin(),
+                                        nodesToMove[i2].end());
+                                n21 = nodesToMove[i2].front();
+                                n22 = nodesToMove[i2].back();
+                            }
+
+                            if (n11 == n22)
+                            {
+                                nodesToMove[i1].insert(nodesToMove[i1].begin(),
+                                                       nodesToMove[i2].begin(),
+                                                       nodesToMove[i2].end() -
+                                                           1);
+                            }
+                            else
+                            {
+                                nodesToMove[i1].insert(nodesToMove[i1].end(),
+                                                       nodesToMove[i2].begin() +
+                                                           1,
+                                                       nodesToMove[i2].end());
+                            }
+
+                            nodesToMove.erase(nodesToMove.begin() + i2);
+                            continue;
+                        }
+                    }
+                }
+
+                if (i >= 1)
+                {
+                    break;
+                }
+
+                set<EdgeSharedPtr> addedEdges;
+
                 for (auto &il : nodesToMove)
                 {
-                    if (il.front() == n1)
+                    NodeSharedPtr n11 = *(il.begin() + 0);
+                    NodeSharedPtr n12 = *(il.begin() + 1);
+
+                    NodeSharedPtr n13 = *(il.rbegin() + 1);
+                    NodeSharedPtr n14 = *(il.rbegin() + 0);
+
+                    for (const auto &ie : m_blEdges)
                     {
-                        il.push_front(n2);
-                        connected = true;
-                        break;
-                    }
-                    if (il.front() == n2)
-                    {
-                        il.push_front(n1);
-                        connected = true;
-                        break;
-                    }
-                    if (il.back() == n1)
-                    {
-                        il.push_back(n2);
-                        connected = true;
-                        break;
-                    }
-                    if (il.back() == n2)
-                    {
-                        il.push_back(n1);
-                        connected = true;
-                        break;
+                        if (addedEdges.count(ie))
+                        {
+                            continue;
+                        }
+
+                        NodeSharedPtr n21 = nodeNormals[ie->m_n1];
+                        NodeSharedPtr n22 = nodeNormals[ie->m_n2];
+
+                        NodeSharedPtr frontPush, backPush;
+
+                        if (n11)
+                        {
+                            if (n11 == n21 && n12 != n22)
+                            {
+                                frontPush = n22;
+                            }
+                            else if (n11 == n22 && n12 != n21)
+                            {
+                                frontPush = n21;
+                            }
+
+                            if (frontPush)
+                            {
+                                il.push_front(frontPush);
+                                n11.reset();
+                                addedEdges.insert(ie);
+                            }
+                        }
+                        if (n14 && !frontPush)
+                        {
+                            if (n14 == n21 && n13 != n22)
+                            {
+                                backPush = n22;
+                            }
+                            if (n14 == n22 && n13 != n21)
+                            {
+                                backPush = n21;
+                            }
+
+                            if (backPush)
+                            {
+                                il.push_back(backPush);
+                                n14.reset();
+                                addedEdges.insert(ie);
+                            }
+                        }
+
+                        if (!n11 && !n14)
+                        {
+                            break;
+                        }
                     }
                 }
+            }
 
-                if (!connected)
+            for (const auto &il : nodesToMove)
+            {
+                NodeSharedPtr ni = il.front();
+                NodeSharedPtr nf = il.back();
+
+                vector<NekDouble> deltas;
+                NekDouble total = 0.0;
+
+                for (int i = 0; i < il.size() - 1; ++i)
                 {
-                    list<NodeSharedPtr> newList;
-                    newList.push_back(n1);
-                    newList.push_back(n2);
+                    NodeSharedPtr n1 = il[i];
+                    NodeSharedPtr n2 = il[i + 1];
 
-                    nodesToMove.push_back(newList);
+                    deltas.push_back(
+                        m_mesh->m_octree->Query(((*n1 + *n2) / 2.0).GetLoc()));
+                    total += deltas.back();
                 }
-            }
-        }
 
-        /*
-        int i = 1;
-        for (const auto &il : nodesToMove)
-        {
-            cout << i++ << endl;
-            for (const auto &in : il)
-            {
-                cout << in->m_x << "\t" << in->m_y << "\t" << in->m_z << endl;
-            }
-        }
-        cout << endl << endl;
-        */
-
-        for (int i1 = 0; i1 < nodesToMove.size(); ++i1)
-        {
-            NodeSharedPtr n11 = nodesToMove[i1].front();
-            NodeSharedPtr n12 = nodesToMove[i1].back();
-
-            for (int i2 = i1 + 1; i2 < nodesToMove.size(); ++i2)
-            {
-                NodeSharedPtr n21 = nodesToMove[i2].front();
-                NodeSharedPtr n22 = nodesToMove[i2].back();
-
-                if (n11 == n21 || n11 == n22 || n12 == n21 || n12 == n22)
+                for (auto &id : deltas)
                 {
-                    if (n11 == n21 || n12 == n22)
-                    {
-                        nodesToMove[i2].reverse();
-                        n21 = nodesToMove[i2].front();
-                        n22 = nodesToMove[i2].back();
-                    }
+                    id /= total;
+                }
 
-                    if (n11 == n22)
-                    {
-                        nodesToMove[i1].splice(nodesToMove[i1].begin(), nodesToMove[i2], nodesToMove[i2].begin(), --nodesToMove[i2].end());
-                    }
-                    else
-                    {
-                        nodesToMove[i1].splice(nodesToMove[i1].end(), nodesToMove[i2], ++nodesToMove[i2].begin(), nodesToMove[i2].end());
-                    }
+                NekDouble runningTotal = 0.0;
 
-                    nodesToMove.erase(nodesToMove.begin() + i2);
-                    continue;
+                for (int i = 1; i < il.size() - 1; ++i)
+                {
+                    runningTotal += deltas[i - 1];
+                    Array<OneD, NekDouble> loc =
+                        (*ni * (1.0 - runningTotal) + *nf * runningTotal)
+                            .GetLoc();
+
+                    Array<OneD, NekDouble> uv =
+                        m_mesh->m_cad->GetSurf(faceid)->locuv(loc);
+
+                    il[i]->Move(loc, faceid, uv);
                 }
             }
-        }
-
-        /*
-        i = 1;
-        for (const auto &il : nodesToMove)
-        {
-            cout << i++ << endl;
-            for (const auto &in : il)
-            {
-                cout << in->m_x << "\t" << in->m_y << "\t" << in->m_x << endl;
-            }
-        }
-        */
-
-        for (const auto &il : nodesToMove)
-        {
-            NodeSharedPtr ni = il.front();
-            NodeSharedPtr nf = il.back();
-
-            vector<NekDouble> deltas;
-            NekDouble total = 0.0;
-
-            for (auto in = il.begin(); in != --il.end(); )
-            {
-                NodeSharedPtr n1 = *(in++);
-                NodeSharedPtr n2 = *in;
-
-                deltas.push_back(m_mesh->m_octree->Query(((*n1 + *n2) / 2.0).GetLoc()));
-                total += deltas.back();
-            }
-
-            for (auto &id : deltas)
-            {
-                id /= total;
-            }
-
-            NekDouble runningTotal = 0.0;
-            int i = 0;
-
-            for (auto id = ++il.begin(); id != --il.end(); ++id)
-            {
-                runningTotal += deltas[i++];
-                Array<OneD, NekDouble> loc = (*ni * (1.0 - runningTotal) + *nf * runningTotal).GetLoc();
-
-                Array<OneD, NekDouble> uv = m_mesh->m_cad->GetSurf(faceid)->locuv(loc);
-
-                (*id)->Move(loc, faceid, uv);
-            }
-        }
+        } while (nodesToMove.size());
     }
 
     for (auto &it : m_blCurves)

@@ -50,7 +50,7 @@ class ProcessAddFieldFromString : public ProcessModule
 {
 public:
     /// Creates an instance of this class
-    static boost::shared_ptr<Module> create(FieldSharedPtr f)
+    static std::shared_ptr<Module> create(FieldSharedPtr f)
     {
         return MemoryManager<ProcessAddFieldFromString>::AllocateSharedPtr(f);
     }
@@ -59,7 +59,6 @@ public:
     ProcessAddFieldFromString(FieldSharedPtr f);
     virtual ~ProcessAddFieldFromString();
 
-    /// Write mesh to output file.
     virtual void Process(po::variables_map &vm);
 
     virtual std::string GetModuleName()
@@ -67,10 +66,16 @@ public:
         return "ProcessAddFieldFromString";
     }
 
-protected:
-    ProcessAddFieldFromString(){};
+    virtual std::string GetModuleDescription()
+    {
+        return "Calculating new field";
+    }
 
-private:
+    virtual ModulePriority GetModulePriority()
+    {
+        return eModifyExp;
+    }
+
 };
 }
 }

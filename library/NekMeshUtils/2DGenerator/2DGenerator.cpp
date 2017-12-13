@@ -532,6 +532,7 @@ void Generator2D::MakeBL(int faceid)
         }
     }
 
+    // Space out the outter BL nodes to better fit the local required Delta
     if (spaceoutbl)
     {
         if (0.0 > spaceoutthr || spaceoutthr < 1.0)
@@ -542,12 +543,18 @@ void Generator2D::MakeBL(int faceid)
             spaceoutthr = 0.5;
         }
 
+        // List of connected nodes at need spacing out
         vector<deque<NodeSharedPtr>> nodesToMove;
 
+        int count = 0;
+
+        // This will supposedly spread the number of nodes to be moved until
+        // sufficient space is found
         do
         {
             nodesToMove.clear();
 
+            // Find which nodes need to be spaced out
             for (const auto &ie : m_blEdges)
             {
                 NodeSharedPtr n1 = nodeNormals[ie->m_n1];
@@ -557,6 +564,7 @@ void Generator2D::MakeBL(int faceid)
                     m_mesh->m_octree->Query(((*n1 + *n2) / 2.0).GetLoc());
                 NekDouble realD = sqrt((*n1 - *n2).abs2());
 
+                // Add nodes if condition fulfilled
                 if (realD < spaceoutthr * targetD)
                 {
                     bool connected = false;
@@ -589,6 +597,7 @@ void Generator2D::MakeBL(int faceid)
                         }
                     }
 
+                    // Create new set of connected nodes if necessary
                     if (!connected)
                     {
                         deque<NodeSharedPtr> newList;
@@ -602,6 +611,9 @@ void Generator2D::MakeBL(int faceid)
 
             for (int i = 0;; ++i)
             {
+                // Reconnect sets of connected nodes together if need be. Done
+                // once before ad once after expanding the set by one node to
+                // find extra space.
                 for (int i1 = 0; i1 < nodesToMove.size(); ++i1)
                 {
                     NodeSharedPtr n11 = nodesToMove[i1].front();
@@ -651,6 +663,8 @@ void Generator2D::MakeBL(int faceid)
 
                 set<EdgeSharedPtr> addedEdges;
 
+                // Expand each set of connected nodes by one node to allow for
+                // extra space
                 for (auto &il : nodesToMove)
                 {
                     NodeSharedPtr n11 = *(il.begin() + 0);
@@ -716,6 +730,9 @@ void Generator2D::MakeBL(int faceid)
                 }
             }
 
+            // Actual spacing out of the nodes. Done by simple linear
+            // interpolation between the 2 end nodes. Weights come from the
+            // required Delta or each edge.
             for (const auto &il : nodesToMove)
             {
                 NodeSharedPtr ni = il.front();
@@ -754,7 +771,21 @@ void Generator2D::MakeBL(int faceid)
                     il[i]->Move(loc, faceid, uv);
                 }
             }
-        } while (nodesToMove.size());
+        } while (nodesToMove.size() && count++ < 50);
+
+        if (m_mesh->m_verbose)
+        {
+            if (count < 50)
+            {
+                cout << "\t\tBL spaced out in " << count << " iterations."
+                     << endl;
+            }
+            else
+            {
+                cout << "\t\tBL spaced out. Algorithm didn't converge after "
+                     << count << " iterations." << endl;
+            }
+        }
     }
 
     for (auto &it : m_blCurves)

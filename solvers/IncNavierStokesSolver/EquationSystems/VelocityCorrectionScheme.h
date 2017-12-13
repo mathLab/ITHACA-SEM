@@ -182,10 +182,15 @@ namespace Nektar
         
         Array<OneD, Array< OneD, NekDouble> > m_F;
 
+        void SetUpSVV(void);
+        
         void SVVVarDiffCoeff(const NekDouble velmag, 
                              Array<OneD, NekDouble> &diffcoeff,
                              const Array<OneD, Array<OneD, NekDouble> >
                              &vel = NullNekDoubleArrayofArray);
+        void AppendSVVFactors(
+                              StdRegions::ConstFactorMap &factors,
+                              MultiRegions::VarFactorsMap &varFactorsMap);
     private:
         
     };

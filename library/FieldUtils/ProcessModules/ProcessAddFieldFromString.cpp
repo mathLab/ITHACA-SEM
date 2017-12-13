@@ -56,12 +56,11 @@ ModuleKey ProcessAddFieldFromString::className =
 ProcessAddFieldFromString::ProcessAddFieldFromString(FieldSharedPtr f)
     : ProcessModule(f)
 {
-    m_config["fieldstr"] =
-        ConfigOption(false, "NotSet",
-            "string of new field to be added (required)");
+    m_config["fieldstr"] = ConfigOption(
+        false, "NotSet", "string of new field to be added (required)");
     m_config["fieldname"] =
         ConfigOption(false, "newfield",
-            "name for new field, default is newfield (optional)");
+                     "name for new field, default is newfield (optional)");
 }
 
 ProcessAddFieldFromString::~ProcessAddFieldFromString(void)
@@ -90,15 +89,15 @@ void ProcessAddFieldFromString::Process(po::variables_map &vm)
     int nstrips;
     m_f->m_session->LoadParameter("Strip_Z", nstrips, 1);
     ASSERTL0(nstrips == 1,
-            "Routine is currently only setup for non-strip files");
+             "Routine is currently only setup for non-strip files");
 
     // Create new expansion
-    m_f->m_exp.resize(nfields+1);
+    m_f->m_exp.resize(nfields + 1);
     m_f->m_exp[nfields] = m_f->AppendExpList(m_f->m_numHomogeneousDir);
 
     // Variables for storing names and values for evaluating the function
     string varstr;
-    vector<Array<OneD, const NekDouble> > interpfields;
+    vector<Array<OneD, const NekDouble>> interpfields;
 
     // Add the coordinate values
     varstr += "x y z";
@@ -106,7 +105,7 @@ void ProcessAddFieldFromString::Process(po::variables_map &vm)
     Array<OneD, NekDouble> x(npoints, 0.0);
     Array<OneD, NekDouble> y(npoints, 0.0);
     Array<OneD, NekDouble> z(npoints, 0.0);
-    m_f->m_exp[0]->GetCoords(x,y,z);
+    m_f->m_exp[0]->GetCoords(x, y, z);
     interpfields.push_back(x);
     interpfields.push_back(y);
     interpfields.push_back(z);
@@ -128,9 +127,8 @@ void ProcessAddFieldFromString::Process(po::variables_map &vm)
     strEval.Evaluate(exprId, interpfields, m_f->m_exp[nfields]->UpdatePhys());
 
     // Update coeffs
-    m_f->m_exp[nfields]->FwdTrans_IterPerExp(m_f->m_exp[nfields]->GetPhys(),
-            m_f->m_exp[nfields]->UpdateCoeffs());
-
+    m_f->m_exp[nfields]->FwdTrans_IterPerExp(
+        m_f->m_exp[nfields]->GetPhys(), m_f->m_exp[nfields]->UpdateCoeffs());
 }
 }
 }

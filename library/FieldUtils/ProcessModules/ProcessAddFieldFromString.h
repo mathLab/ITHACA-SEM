@@ -75,7 +75,6 @@ public:
     {
         return eModifyExp;
     }
-
 };
 }
 }

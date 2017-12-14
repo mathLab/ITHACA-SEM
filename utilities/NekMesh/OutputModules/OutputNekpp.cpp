@@ -113,6 +113,11 @@ void OutputNekpp::Process()
     TiXmlElement *root = new TiXmlElement("NEKTAR");
     doc.LinkEndChild(root);
 
+    //add metadata
+    root->LinkEndChild(m_mesh->m_infotag);
+    WriteXmlExpansions(root);
+    WriteXmlConditions(root);
+
     // Begin <GEOMETRY> section
     TiXmlElement *geomTag = new TiXmlElement("GEOMETRY");
     geomTag->SetAttribute("DIM", m_mesh->m_expDim);
@@ -126,11 +131,6 @@ void OutputNekpp::Process()
     WriteXmlCurves(geomTag);
     WriteXmlComposites(geomTag);
     WriteXmlDomain(geomTag);
-    WriteXmlExpansions(root);
-    WriteXmlConditions(root);
-
-    //add metadata
-    root->LinkEndChild(m_mesh->m_infotag);
 
     // Extract the output filename and extension
     string filename = m_config["outfile"].as<string>();

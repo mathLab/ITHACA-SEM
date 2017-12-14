@@ -1585,19 +1585,20 @@ namespace Nektar
                 NekDouble  SvvDiffCoeff  =
                     mkey.GetConstFactor(eFactorSVVDGKerDiffCoeff)*
                     mkey.GetConstFactor(eFactorSVVDiffCoeff);
-                int max_ab = max(nmodes_a-SVVDGFiltermodesmin,
-                                 nmodes_b-SVVDGFiltermodesmin);
+                int max_ab = max(nmodes_a-kSVVDGFiltermodesmin,
+                                 nmodes_b-kSVVDGFiltermodesmin);
                 max_ab = max(max_ab,0);
-                max_ab = min(max_ab,SVVDGFiltermodesmax-SVVDGFiltermodesmin);
+                max_ab = min(max_ab,kSVVDGFiltermodesmax-kSVVDGFiltermodesmin);
                 
                 for(int j = 0; j < nmodes_a; ++j)
                 {
                     for(int k = 0; k < nmodes_b; ++k)
                     {
                         int maxjk = max(j,k);
-                        maxjk = min(maxjk,SVVDGFiltermodesmax-1);
+                        maxjk = min(maxjk,kSVVDGFiltermodesmax-1);
                         
-                        orthocoeffs[j*nmodes_b+k] *= SvvDiffCoeff * SVVDGFilter[max_ab][maxjk];
+                        orthocoeffs[j*nmodes_b+k] *= SvvDiffCoeff *
+                            kSVVDGFilter[max_ab][maxjk];
                     }
                 }
             }

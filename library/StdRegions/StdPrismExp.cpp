@@ -2058,12 +2058,12 @@ namespace Nektar
                     mkey.GetConstFactor(eFactorSVVDGKerDiffCoeff)*
                     mkey.GetConstFactor(eFactorSVVDiffCoeff);
 
-                int max_abc = max(nmodes_a-SVVDGFiltermodesmin,
-                                  nmodes_b-SVVDGFiltermodesmin);
-                max_abc = max(max_abc, nmodes_c-SVVDGFiltermodesmin);
+                int max_abc = max(nmodes_a-kSVVDGFiltermodesmin,
+                                  nmodes_b-kSVVDGFiltermodesmin);
+                max_abc = max(max_abc, nmodes_c-kSVVDGFiltermodesmin);
                 // clamp max_abc
                 max_abc = max(max_abc,0);
-                max_abc = min(max_abc,SVVDGFiltermodesmax-SVVDGFiltermodesmin);
+                max_abc = min(max_abc,kSVVDGFiltermodesmax-kSVVDGFiltermodesmin);
                 
                 for(int i = 0; i < nmodes_a; ++i)
                 {
@@ -2074,10 +2074,10 @@ namespace Nektar
                         for(int k = 0; k < nmodes_c-i; ++k)
                         {
                             int maxijk = max(maxij,k);
-                            maxijk = min(maxijk,SVVDGFiltermodesmax-1);
+                            maxijk = min(maxijk,kSVVDGFiltermodesmax-1);
                         
                             orthocoeffs[cnt] *= SvvDiffCoeff *
-                                SVVDGFilter[max_abc][maxijk];
+                                kSVVDGFilter[max_abc][maxijk];
                             cnt++;
                         }
                     }
@@ -2111,7 +2111,13 @@ namespace Nektar
                         {
                             if(j >= cutoff ||  i + k >= cutoff)
                             {
-                                orthocoeffs[cnt] *= (SvvDiffCoeff*exp(-(i+k-nmodes)*(i+k-nmodes)/((NekDouble)((i+k-cutoff+epsilon)*(i+k-cutoff+epsilon))))*exp(-(j-nmodes)*(j-nmodes)/((NekDouble)((j-cutoff+epsilon)*(j-cutoff+epsilon)))));
+                                orthocoeffs[cnt] *=
+                                    (SvvDiffCoeff*exp(-(i+k-nmodes)*(i+k-nmodes)/
+                                           ((NekDouble)((i+k-cutoff+epsilon)*
+                                                        (i+k-cutoff+epsilon))))*
+                                     exp(-(j-nmodes)*(j-nmodes)/
+                                         ((NekDouble)((j-cutoff+epsilon)*
+                                                      (j-cutoff+epsilon)))));
                             }
                             else
                             {

@@ -71,7 +71,8 @@ namespace Nektar
             for (VarFactorsMap::const_iterator x = varFactors.begin();
                  x != varFactors.end(); ++x)
             {
-                m_varFactors_hashes[i] = boost::hash_range(x->second.begin(), x->second.begin() + x->second.num_elements());
+                m_varFactors_hashes[i] = boost::hash_range(x->second.begin(),
+                              x->second.begin() + x->second.num_elements());
                 boost::hash_combine(m_varFactors_hashes[i], (int)x->first);
                 i++;
             }

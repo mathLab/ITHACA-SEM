@@ -241,6 +241,12 @@ void InputMCF::ParseFile(string nm)
         {
             m_spaceoutbl    = true;
             m_spaceoutblthr = it->second;
+
+            it = parameters.find("NoSpaceOutSurf");
+            if (it != parameters.end())
+            {
+                m_nospaceoutsurf = it->second;
+            }
         }
         else
         {
@@ -397,6 +403,7 @@ void InputMCF::Process()
             if (m_spaceoutbl)
             {
                 module->RegisterConfig("spaceoutbl", m_spaceoutblthr);
+                module->RegisterConfig("nospaceoutsurf", m_nospaceoutsurf);
             }
         }
         if (m_periodic.size())

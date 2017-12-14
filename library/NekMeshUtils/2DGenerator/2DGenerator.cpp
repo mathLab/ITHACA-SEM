@@ -71,6 +71,8 @@ Generator2D::Generator2D(MeshSharedPtr m) : ProcessModule(m)
                                 "(nearly) intersecting normals");
     m_config["spaceoutbl"] = ConfigOption(
         false, "0.5", "Threshold to space out BL according to Delta");
+    m_config["nospaceoutsurf"] =
+        ConfigOption(false, "", "Surfaces where spacing out shouldn't be used");
 }
 
 Generator2D::~Generator2D()
@@ -543,6 +545,10 @@ void Generator2D::MakeBL(int faceid)
             spaceoutthr = 0.5;
         }
 
+        vector<unsigned int> nospaceoutsurf;
+        ParseUtils::GenerateSeqVector(m_config["nospaceoutsurf"].as<string>(),
+                                      nospaceoutsurf);
+
         // List of connected nodes at need spacing out
         vector<deque<NodeSharedPtr>> nodesToMove;
 
@@ -557,6 +563,13 @@ void Generator2D::MakeBL(int faceid)
             // Find which nodes need to be spaced out
             for (const auto &ie : m_blEdges)
             {
+                auto it = find(nospaceoutsurf.begin(), nospaceoutsurf.end(),
+                               ie->m_parentCAD->GetId());
+                if (it != nospaceoutsurf.end())
+                {
+                    continue;
+                }
+
                 NodeSharedPtr n1 = nodeNormals[ie->m_n1];
                 NodeSharedPtr n2 = nodeNormals[ie->m_n2];
 
@@ -675,7 +688,10 @@ void Generator2D::MakeBL(int faceid)
 
                     for (const auto &ie : m_blEdges)
                     {
-                        if (addedEdges.count(ie))
+                        auto it =
+                            find(nospaceoutsurf.begin(), nospaceoutsurf.end(),
+                                 ie->m_parentCAD->GetId());
+                        if (addedEdges.count(ie) || it != nospaceoutsurf.end())
                         {
                             continue;
                         }

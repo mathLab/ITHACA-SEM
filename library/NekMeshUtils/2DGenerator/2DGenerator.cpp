@@ -375,7 +375,7 @@ void Generator2D::MakeBL(int faceid)
 
     if (divider < 2.0)
     {
-        WARNINGL1(false, "BndLayerAdjustment too low, corrected to 2.0");
+        WARNINGL0(false, "BndLayerAdjustment too low, corrected to 2.0");
         divider = 2.0;
     }
 
@@ -535,9 +535,9 @@ void Generator2D::MakeBL(int faceid)
     // Space out the outter BL nodes to better fit the local required Delta
     if (spaceoutbl)
     {
-        if (0.0 > spaceoutthr || spaceoutthr < 1.0)
+        if (spaceoutthr < 0.0 || spaceoutthr > 1.0)
         {
-            WARNINGL1(false, "The boundary layer space out threshold should be "
+            WARNINGL0(false, "The boundary layer space out threshold should be "
                              "between 0 and 1. It will now be adjusted to "
                              "0.5.");
             spaceoutthr = 0.5;

@@ -194,7 +194,7 @@ void CFIMesh::Process()
         }
     }
 
-    ASSERTL0(nodes.size() == cfiIdToTypes.size(), "not all nodes marked");
+    WARNINGL0(nodes.size() == cfiIdToTypes.size(), "not all nodes marked");
 
     int id = 0;
 
@@ -209,7 +209,7 @@ void CFIMesh::Process()
         }
     }
 
-    ASSERTL0(id == nodes.size(), "not all nodes numbered");
+    WARNINGL0(id == nodes.size(), "not all nodes numbered");
 
     int prefix = m_mesh->m_cad->GetNumSurf() > 100 ? 1000 : 100;
 

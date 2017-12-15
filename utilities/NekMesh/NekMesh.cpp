@@ -180,10 +180,11 @@ int main(int argc, char* argv[])
     metadata["Hostname"] = ip::host_name(ec);
     // Git information
     // If built from a distributed package, do not include this
-    if (Nektar::NekConstants::kGitSha1 != "GITDIR-NOTFOUND")
+    Nektar::LibUtilities::GitConsts gc = Nektar::LibUtilities::GitConsts();
+    if (gc.GetSha1() != "GITDIR-NOTFOUND")
     {
-        metadata["GitSHA1"]   = Nektar::NekConstants::kGitSha1;
-        metadata["GitBranch"] = Nektar::NekConstants::kGitBranch;
+        metadata["GitSHA1"]   = gc.GetSha1();
+        metadata["GitBranch"] = gc.GetBranch();
     }
 
     mesh->m_infotag = new TiXmlElement("METADATA");

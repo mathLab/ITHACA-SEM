@@ -53,6 +53,7 @@ v5.0.0
   elements (!877)
 - Revert triangle code to ThirdParty library (!883)
 - Fix coinciding nodes issue with very fine meshes (!883)
+- Add ability to space out 2D BL nodes to better fit local target Delta (!890)
 
 **FieldConvert**:
 - Add input module for Semtex field files (!777)

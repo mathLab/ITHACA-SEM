@@ -2,9 +2,9 @@
 <test>
     <description>Kovasznay Flow 3D homogeneous 1D, P=5, 20 Fourier modes (MVM), SVV Homogeneous 1D</description>
     <executable>IncNavierStokesSolver</executable>
-    <parameters>KovaFlow_3DH1D_P5_20modes_MVM_Homo1D.xml</parameters>
+    <parameters>KovaFlow_3DH1D_P5_20modes_MVM_SVVHomo1D.xml</parameters>
     <files>
-        <file description="Session File">KovaFlow_3DH1D_P5_20modes_MVM_Homo1D.xml</file>
+        <file description="Session File">KovaFlow_3DH1D_P5_20modes_MVM_SVVHomo1D.xml</file>
     </files>
     <metrics>
         <metric type="L2" id="1">

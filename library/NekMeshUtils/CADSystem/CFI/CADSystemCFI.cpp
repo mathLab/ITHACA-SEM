@@ -155,6 +155,12 @@ bool CADSystemCFI::LoadCAD()
 
     for (int i = 0; i < bodies.size(); i++)
     {
+        // check that it is not a group of bodies
+        if (bodies[i]->getTopoSubtype() == cfi::SUBTYPE_COMBINED)
+        {
+            continue;
+        }
+
         vector<cfi::Oriented<cfi::TopoEntity *>> *faceList =
             bodies[i]->getChildList();
 

@@ -64,6 +64,9 @@ Generator2D::Generator2D(MeshSharedPtr m) : ProcessModule(m)
         ConfigOption(false, "2.0", "Boundary layer thickness adjustment");
     m_config["adjustblteverywhere"] =
         ConfigOption(true, "0", "Adjust thickness everywhere");
+    m_config["smoothbl"] =
+        ConfigOption(true, "0", "Smooth the BL normal directions to avoid "
+                                "(nearly) intersecting normals");
 }
 
 Generator2D::~Generator2D()
@@ -166,29 +169,28 @@ void Generator2D::Process()
 
         // If the BL doesn't form closed loops, we need to remove the outside
         // nodes from the curve meshes
-        for (map<unsigned, unsigned>::iterator ic = m_blends.begin();
-             ic != m_blends.end(); ++ic)
+        for (auto &ic : m_blends)
         {
             vector<NodeSharedPtr> nodes =
-                m_curvemeshes[ic->first]->GetMeshPoints();
+                m_curvemeshes[ic.first]->GetMeshPoints();
 
-            if (ic->second == 0 || ic->second == 2)
+            if (ic.second == 0 || ic.second == 2)
             {
                 nodes.erase(nodes.begin());
             }
-            if (ic->second == 1 || ic->second == 2)
+            if (ic.second == 1 || ic.second == 2)
             {
                 nodes.erase(nodes.end() - 1);
             }
 
             // Rebuild the curvemesh without the first node, the last node or
             // both
-            m_curvemeshes[ic->first] =
-                MemoryManager<CurveMesh>::AllocateSharedPtr(ic->first, m_mesh,
+            m_curvemeshes[ic.first] =
+                MemoryManager<CurveMesh>::AllocateSharedPtr(ic.first, m_mesh,
                                                             nodes);
         }
     }
-    
+
     if (m_mesh->m_verbose)
     {
         cout << endl << "\tFace meshing:" << endl << endl;
@@ -210,17 +212,17 @@ void Generator2D::Process()
     ////////////////////////////////////
 
     EdgeSet::iterator it;
-    for (it = m_mesh->m_edgeSet.begin(); it != m_mesh->m_edgeSet.end(); it++)
+    for (auto &it : m_mesh->m_edgeSet)
     {
         vector<NodeSharedPtr> ns;
-        ns.push_back((*it)->m_n1);
-        ns.push_back((*it)->m_n2);
+        ns.push_back(it->m_n1);
+        ns.push_back(it->m_n2);
         // for each iterator create a LibUtilities::eSegement
         // push segment into m_mesh->m_element[1]
         // tag for the elements shoudl be the CAD number of the curves
         ElmtConfig conf(LibUtilities::eSegment, 1, false, false);
         vector<int> tags;
-        tags.push_back((*it)->m_parentCAD->GetId());
+        tags.push_back(it->m_parentCAD->GetId());
         ElementSharedPtr E2 = GetElementFactory().CreateInstance(
             LibUtilities::eSegment, conf, ns, tags);
         m_mesh->m_element[1].push_back(E2);
@@ -243,14 +245,14 @@ void Generator2D::FindBLEnds()
     // loops
     set<CADVertSharedPtr> cadverts;
 
-    for (int it = 0; it < m_blCurves.size(); ++it)
+    for (auto &it : m_blCurves)
     {
         vector<CADVertSharedPtr> vertices =
-            m_mesh->m_cad->GetCurve(m_blCurves[it])->GetVertex();
+            m_mesh->m_cad->GetCurve(it)->GetVertex();
 
-        for (int iv = 0; iv < vertices.size(); ++iv)
+        for (auto &iv : vertices)
         {
-            set<CADVertSharedPtr>::iterator is = cadverts.find(vertices[iv]);
+            set<CADVertSharedPtr>::iterator is = cadverts.find(iv);
 
             if (is != cadverts.end())
             {
@@ -258,7 +260,7 @@ void Generator2D::FindBLEnds()
             }
             else
             {
-                cadverts.insert(vertices[iv]);
+                cadverts.insert(iv);
             }
         }
     }
@@ -302,40 +304,39 @@ void Generator2D::MakeBLPrep()
         cout << endl << "\tBoundary layer meshing:" << endl << endl;
     }
 
-    // identify the nodes which will become the boundary layer.
+    // identify the nodes and edges which will become the boundary layer.
 
-    for (int it = 0; it < m_blCurves.size(); ++it)
+    for (auto &it : m_blCurves)
     {
-        vector<EdgeSharedPtr> localedges =
-            m_curvemeshes[m_blCurves[it]]->GetMeshEdges();
-        for (int i = 0; i < localedges.size(); i++)
+        vector<EdgeSharedPtr> localedges = m_curvemeshes[it]->GetMeshEdges();
+        for (auto &ie : localedges)
         {
-            m_nodesToEdge[localedges[i]->m_n1].push_back(localedges[i]);
-            m_nodesToEdge[localedges[i]->m_n2].push_back(localedges[i]);
+            m_blEdges.push_back(ie);
+            m_nodesToEdge[ie->m_n1].push_back(ie);
+            m_nodesToEdge[ie->m_n2].push_back(ie);
         }
     }
 }
 
 void Generator2D::MakeBL(int faceid)
 {
-    map<int, Array<OneD, NekDouble> > edgeNormals;
+    map<int, Array<OneD, NekDouble>> edgeNormals;
     int eid = 0;
-    for (int it = 0; it < m_blCurves.size(); ++it)
+    for (auto &it : m_blCurves)
     {
         CADOrientation::Orientation edgeo =
-            m_mesh->m_cad->GetCurve(m_blCurves[it])->GetOrienationWRT(faceid);
-        vector<EdgeSharedPtr> es =
-            m_curvemeshes[m_blCurves[it]]->GetMeshEdges();
+            m_mesh->m_cad->GetCurve(it)->GetOrienationWRT(faceid);
+        vector<EdgeSharedPtr> es = m_curvemeshes[it]->GetMeshEdges();
         // on each !!!EDGE!!! calculate a normal
         // always to the left unless edgeo is 1
         // normal must be done in the parametric space (and then projected back)
         // because of face orientation
-        for (int j = 0; j < es.size(); j++)
+        for (auto &ie : es)
         {
-            es[j]->m_id = eid++;
+            ie->m_id = eid++;
             Array<OneD, NekDouble> p1, p2;
-            p1 = es[j]->m_n1->GetCADSurfInfo(faceid);
-            p2 = es[j]->m_n2->GetCADSurfInfo(faceid);
+            p1 = ie->m_n1->GetCADSurfInfo(faceid);
+            p2 = ie->m_n2->GetCADSurfInfo(faceid);
             Array<OneD, NekDouble> n(2);
             n[0] = p1[1] - p2[1];
             n[1] = p2[0] - p1[0];
@@ -350,20 +351,21 @@ void Generator2D::MakeBL(int faceid)
             Array<OneD, NekDouble> np(2);
             np[0] = p1[0] + n[0];
             np[1] = p1[1] + n[1];
-            Array<OneD, NekDouble> loc  = es[j]->m_n1->GetLoc();
+            Array<OneD, NekDouble> loc  = ie->m_n1->GetLoc();
             Array<OneD, NekDouble> locp = m_mesh->m_cad->GetSurf(faceid)->P(np);
             n[0] = locp[0] - loc[0];
             n[1] = locp[1] - loc[1];
             mag  = sqrt(n[0] * n[0] + n[1] * n[1]);
             n[0] /= mag;
             n[1] /= mag;
-            edgeNormals[es[j]->m_id] = n;
+            edgeNormals[ie->m_id] = n;
         }
     }
 
     bool adjust           = m_config["bltadjust"].beenSet;
     NekDouble divider     = m_config["bltadjust"].as<NekDouble>();
     bool adjustEverywhere = m_config["adjustblteverywhere"].beenSet;
+    bool smoothbl         = m_config["smoothbl"].beenSet;
 
     if (divider < 2.0)
     {
@@ -372,47 +374,46 @@ void Generator2D::MakeBL(int faceid)
     }
 
     map<NodeSharedPtr, NodeSharedPtr> nodeNormals;
-    map<NodeSharedPtr, vector<EdgeSharedPtr> >::iterator it;
-    for (it = m_nodesToEdge.begin(); it != m_nodesToEdge.end(); it++)
+    for (auto &it : m_nodesToEdge)
     {
-        ASSERTL0(it->second.size() == 1 || it->second.size() == 2,
+        ASSERTL0(it.second.size() == 1 || it.second.size() == 2,
                  "weirdness, most likely bl_surfs are incorrect");
 
         // If node at the end of the BL open loop, the "normal node" isn't
         // constructed by computing a normal but found on the adjacent curve
-        if (it->second.size() == 1)
+        if (it.second.size() == 1)
         {
-            vector<CADCurveSharedPtr> curves = it->first->GetCADCurves();
+            vector<CADCurveSharedPtr> curves = it.first->GetCADCurves();
 
             vector<EdgeSharedPtr> edges =
                 m_curvemeshes[curves[0]->GetId()]->GetMeshEdges();
             vector<EdgeSharedPtr>::iterator ie =
-                find(edges.begin(), edges.end(), it->second[0]);
+                find(edges.begin(), edges.end(), it.second[0]);
             int rightCurve =
                 (ie == edges.end()) ? curves[0]->GetId() : curves[1]->GetId();
 
             vector<NodeSharedPtr> nodes =
                 m_curvemeshes[rightCurve]->GetMeshPoints();
-            nodeNormals[it->first] =
-                (nodes[0] == it->first) ? nodes[1] : nodes[nodes.size() - 2];
+            nodeNormals[it.first] =
+                (nodes[0] == it.first) ? nodes[1] : nodes[nodes.size() - 2];
 
             continue;
         }
 
         Array<OneD, NekDouble> n(3, 0.0);
-        Array<OneD, NekDouble> n1 = edgeNormals[it->second[0]->m_id];
-        Array<OneD, NekDouble> n2 = edgeNormals[it->second[1]->m_id];
+        Array<OneD, NekDouble> n1 = edgeNormals[it.second[0]->m_id];
+        Array<OneD, NekDouble> n2 = edgeNormals[it.second[1]->m_id];
         n[0]          = (n1[0] + n2[0]) / 2.0;
         n[1]          = (n1[1] + n2[1]) / 2.0;
         NekDouble mag = sqrt(n[0] * n[0] + n[1] * n[1]);
         n[0] /= mag;
         n[1] /= mag;
-        NekDouble t = m_thickness.Evaluate(m_thickness_ID, it->first->m_x,
-                                           it->first->m_y, 0.0, 0.0);
+        NekDouble t = m_thickness.Evaluate(m_thickness_ID, it.first->m_x,
+                                           it.first->m_y, 0.0, 0.0);
         // Adjust thickness according to angle between normals
         if (adjust)
         {
-            if (adjustEverywhere || it->first->GetNumCadCurve() > 1)
+            if (adjustEverywhere || it.first->GetNumCadCurve() > 1)
             {
                 NekDouble angle = acos(n1[0] * n2[0] + n1[1] * n2[1]);
                 angle           = (angle > M_PI) ? 2 * M_PI - angle : angle;
@@ -420,30 +421,124 @@ void Generator2D::MakeBL(int faceid)
             }
         }
 
-        n[0]             = n[0] * t + it->first->m_x;
-        n[1]             = n[1] * t + it->first->m_y;
+        n[0]             = n[0] * t + it.first->m_x;
+        n[1]             = n[1] * t + it.first->m_y;
         NodeSharedPtr nn = std::shared_ptr<Node>(
             new Node(m_mesh->m_numNodes++, n[0], n[1], 0.0));
         CADSurfSharedPtr s = m_mesh->m_cad->GetSurf(faceid);
         Array<OneD, NekDouble> uv = s->locuv(n);
         nn->SetCADSurf(s, uv);
-        nodeNormals[it->first] = nn;
+        nodeNormals[it.first] = nn;
     }
 
-    for (int it = 0; it < m_blCurves.size(); ++it)
+    // Check for any intersecting boundary layer normals and smooth them if
+    // needed
+    if (smoothbl)
+    {
+        // Nodes that need normal smoothing and their unit normal
+        map<NodeSharedPtr, vector<NodeSharedPtr>> unitNormals;
+        // Nodes that need normal smoothing and their BL thickness
+        map<NodeSharedPtr, NekDouble> dist;
+
+        int count = 0;
+
+        do
+        {
+            unitNormals.clear();
+            dist.clear();
+
+            for (const auto &it : m_blEdges)
+            {
+                // Line intersection based on
+                // https://stackoverflow.com/a/565282/7241595
+                NodeSharedPtr p = it->m_n1;
+                NodeSharedPtr q = it->m_n2;
+
+                Node r = *nodeNormals[p] - *p;
+                Node s = *nodeNormals[q] - *q;
+
+                NekDouble d = r.curl(s).m_z;
+
+                // Should probably use tolerance to check parallelism
+                if (d == 0)
+                {
+                    continue;
+                }
+
+                NekDouble t = (*q - *p).curl(s).m_z / d;
+                NekDouble u = (*q - *p).curl(r).m_z / d;
+
+                // Check for intersection of the infinite continuation of one
+                // normal
+                // with the other. A tolerance of 0.5 times the length of the
+                // normal
+                // is used. Could maybe be decreased to a less aggressive value.
+                if ((-0.5 < t && t <= 1.5) || (-0.5 < u && u <= 1.5))
+                {
+                    dist[p] = sqrt(r.abs2());
+                    dist[q] = sqrt(s.abs2());
+
+                    NodeSharedPtr sum =
+                        make_shared<Node>(r / dist[p] + s / dist[q]);
+
+                    unitNormals[p].push_back(sum);
+                    unitNormals[q].push_back(sum);
+                }
+            }
+
+            // Smooth each normal one by one
+            for (const auto &it : unitNormals)
+            {
+                Node avg(0, 0.0, 0.0, 0.0);
+
+                for (const auto &i : it.second)
+                {
+                    avg += *i;
+                }
+
+                avg /= sqrt(avg.abs2());
+
+                // Create new BL node with smoothed normal
+                NodeSharedPtr nn = std::shared_ptr<Node>(
+                    new Node(nodeNormals[it.first]->GetID(),
+                             it.first->m_x + avg.m_x * dist[it.first],
+                             it.first->m_y + avg.m_y * dist[it.first], 0.0));
+                CADSurfSharedPtr s =
+                    *nodeNormals[it.first]->GetCADSurfs().begin();
+                Array<OneD, NekDouble> uv = s->locuv(nn->GetLoc());
+                nn->SetCADSurf(s, uv);
+
+                nodeNormals[it.first] = nn;
+            }
+        } while (unitNormals.size() && count++ < 50);
+
+        if (m_mesh->m_verbose)
+        {
+            if (count < 50)
+            {
+                cout << "\t\tNormals smoothed in " << count << " iterations."
+                     << endl;
+            }
+            else
+            {
+                cout << "\t\tNormals smoothed. Algorithm didn't converge after "
+                     << count << " iterations." << endl;
+            }
+        }
+    }
+
+    for (auto &it : m_blCurves)
     {
         CADOrientation::Orientation edgeo =
-            m_mesh->m_cad->GetCurve(m_blCurves[it])->GetOrienationWRT(faceid);
-        vector<NodeSharedPtr> ns =
-            m_curvemeshes[m_blCurves[it]]->GetMeshPoints();
+            m_mesh->m_cad->GetCurve(it)->GetOrienationWRT(faceid);
+        vector<NodeSharedPtr> ns = m_curvemeshes[it]->GetMeshPoints();
         vector<NodeSharedPtr> newNs;
-        for (int i = 0; i < ns.size(); i++)
+        for (auto &in : ns)
         {
-            newNs.push_back(nodeNormals[ns[i]]);
+            newNs.push_back(nodeNormals[in]);
         }
-        m_curvemeshes[m_blCurves[it]] =
-            MemoryManager<CurveMesh>::AllocateSharedPtr(m_blCurves[it], m_mesh,
-                                                        newNs);
+        m_curvemeshes[it] =
+            MemoryManager<CurveMesh>::AllocateSharedPtr(it, m_mesh, newNs);
         if (edgeo == CADOrientation::eBackwards)
         {
             reverse(ns.begin(), ns.end());
@@ -489,10 +584,10 @@ void Generator2D::PeriodicPrep()
 
     boost::split(lines, s, boost::is_any_of(":"));
 
-    for (int il = 0; il < lines.size(); ++il)
+    for (auto &il : lines)
     {
         vector<string> tmp;
-        boost::split(tmp, lines[il], boost::is_any_of(","));
+        boost::split(tmp, il, boost::is_any_of(","));
 
         ASSERTL0(tmp.size() == 2, "periodic pairs ill-defined");
 
@@ -513,20 +608,17 @@ void Generator2D::MakePeriodic()
 {
     // Override slave curves
 
-    for (map<unsigned, unsigned>::iterator ip = m_periodicPairs.begin();
-         ip != m_periodicPairs.end(); ++ip)
+    for (auto &ip : m_periodicPairs)
     {
-        m_curvemeshes[ip->second]->PeriodicOverwrite(m_curvemeshes[ip->first]);
+        m_curvemeshes[ip.second]->PeriodicOverwrite(m_curvemeshes[ip.first]);
     }
 
     if (m_mesh->m_verbose)
     {
         cout << "\t\tPeriodic boundary conditions" << endl;
-        for (map<unsigned, unsigned>::iterator it = m_periodicPairs.begin();
-             it != m_periodicPairs.end(); ++it)
+        for (auto &it : m_periodicPairs)
         {
-            cout << "\t\t\tCurves " << it->first << " => " << it->second
-                 << endl;
+            cout << "\t\t\tCurves " << it.first << " => " << it.second << endl;
         }
         cout << endl;
     }

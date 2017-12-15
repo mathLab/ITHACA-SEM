@@ -270,6 +270,8 @@ void InputMCF::ParseFile(string nm)
     m_varopti   = sit != boolparameters.end();
     sit         = boolparameters.find("BndLayerAdjustEverywhere");
     m_adjustall = sit != boolparameters.end();
+    sit         = boolparameters.find("SmoothBndLayer");
+    m_smoothbl  = sit != boolparameters.end();
 
     m_refine = refinement.size() > 0;
     if (m_refine)
@@ -374,6 +376,11 @@ void InputMCF::Process()
                 {
                     module->RegisterConfig("adjustblteverywhere", "");
                 }
+            }
+
+            if (m_smoothbl)
+            {
+                module->RegisterConfig("smoothbl", "");
             }
         }
         if (m_periodic.size())

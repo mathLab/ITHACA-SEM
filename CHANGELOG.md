@@ -49,6 +49,8 @@ v5.0.0
 - Fix default command line argument value (!823)
 - Add projection meshing module which can curve linear meshes with CAD (!826)
 - Force 3-node loops to avoid degenerate 1-triangle faces (!875)
+- Smooth BL normals in 2D when normals intersect or cause invalid macro BL
+  elements (!877)
 - Revert triangle code to ThirdParty library (!883)
 - Fix coinciding nodes issue with very fine meshes (!883)
 

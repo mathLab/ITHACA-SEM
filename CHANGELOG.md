@@ -92,6 +92,7 @@ v4.4.2
 **NekMesh**
 - Fix missing periodic boundary meshing and boundary layer mesh adjustment
   configurations in 2D (!859)
+- Fix 2D BL splitting where out-of-plane nodes would be created (!887)
 
 **Documentation**:
 - Fix sign of the viscous term in the velocity correction scheme equations in

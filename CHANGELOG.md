@@ -69,6 +69,7 @@ v5.0.0
 **IncNavierStokesSolver**
 - Replace steady-state check based on difference of norms by check based on
   norm of the difference, to be consistent with the compressible solver (!832)
+- Updated SVV to allow for the DGKernel extension (!851) 
 
 **CompressibleFlowSolver**
 - Add 3D regression tests (!567)

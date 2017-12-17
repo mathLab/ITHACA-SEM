@@ -580,6 +580,7 @@ namespace Nektar
                                     const FlagList &flags,
                                     const StdRegions::ConstFactorMap &factors,
                                     const StdRegions::VarCoeffMap &varcoeff,
+                                    const MultiRegions::VarFactorsMap &varfactors,
                                     const Array<OneD, const NekDouble> &dirForcing,
                                     const bool PhysSpaceForcing)
       {
@@ -626,7 +627,7 @@ namespace Nektar
           Vmath::Vadd(contNcoeffs, wsp, 1, gamma, 1, wsp, 1);
           
           // Solve the system
-          GlobalLinSysKey key(StdRegions::eHelmholtz, m_locToGloMap, factors,varcoeff);
+          GlobalLinSysKey key(StdRegions::eHelmholtz, m_locToGloMap, factors,varcoeff,varfactors);
           
           if(flags.isSet(eUseGlobal))
           {

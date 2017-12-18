@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: InputCAD.h
+//  File: ProcessL2Criterion.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,45 +29,53 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Create mesh from CAD.
+//  Description: Computes Lambda 2 Criterion field.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef UTILITIES_NEKMESH_INPUTMCF
-#define UTILITIES_NEKMESH_INPUTMCF
+#ifndef FIELDUTILS_PROCESSL2CRITERION
+#define FIELDUTILS_PROCESSL2CRITERION
 
-#include <NekMeshUtils/Module/Module.h>
+#include "../Module.h"
 
 namespace Nektar
 {
-namespace Utilities
+namespace FieldUtils
 {
 
-class InputMCF : public NekMeshUtils::InputModule
+/**
+ * @brief This processing module calculates the Lambda 2 Criterion and adds it
+ * as an extra-field to the output file.
+ */
+class ProcessL2Criterion : public ProcessModule
 {
 public:
-    InputMCF(NekMeshUtils::MeshSharedPtr m);
-    virtual ~InputMCF();
-    virtual void Process();
-
     /// Creates an instance of this class
-    static NekMeshUtils::ModuleSharedPtr create(NekMeshUtils::MeshSharedPtr m)
+    static std::shared_ptr<Module> create(FieldSharedPtr f)
     {
-        return MemoryManager<InputMCF>::AllocateSharedPtr(m);
+        return MemoryManager<ProcessL2Criterion>::AllocateSharedPtr(f);
     }
-    /// %ModuleKey for class.
-    static NekMeshUtils::ModuleKey className;
+    static ModuleKey className;
 
-    void ParseFile(std::string nm);
+    ProcessL2Criterion(FieldSharedPtr f);
+    virtual ~ProcessL2Criterion();
 
-private:
-    std::string m_minDelta, m_maxDelta, m_eps, m_cadfile, m_order,
-                m_blsurfs, m_blthick, m_blprog, m_bllayers, m_refinement,
-                m_nacadomain, m_periodic, m_adjustment;
+    virtual void Process(po::variables_map &vm);
 
-    bool m_makeBL, m_surfopti, m_varopti, m_refine, m_woct, m_2D, m_splitBL,
-         m_naca, m_adjust, m_adjustall, m_smoothbl, m_manifold, m_cfiMesh;
+    virtual std::string GetModuleName()
+    {
+        return "ProcessL2Criterion";
+    }
 
+    virtual std::string GetModuleDescription()
+    {
+        return "Calculating Lambda 2 Criterion";
+    }
+
+    virtual ModulePriority GetModulePriority()
+    {
+        return eModifyExp;
+    }
 };
 }
 }

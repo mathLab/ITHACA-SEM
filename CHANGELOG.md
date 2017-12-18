@@ -48,6 +48,13 @@ v5.0.0
 - Additional curve types in GEO reader: BSpline, Circle, Ellipse (!800)
 - Fix default command line argument value (!823)
 - Add projection meshing module which can curve linear meshes with CAD (!826)
+- XML meshes now write with provenance information, including information about
+  their source, for debugging purposes (!872)
+- Force 3-node loops to avoid degenerate 1-triangle faces (!875)
+- Smooth BL normals in 2D when normals intersect or cause invalid macro BL
+  elements (!877)
+- Revert triangle code to ThirdParty library (!883)
+- Fix coinciding nodes issue with very fine meshes (!883)
 
 **FieldConvert**:
 - Add input module for Semtex field files (!777)
@@ -57,10 +64,12 @@ v5.0.0
 - Allow explicitly setting bool options of FieldConvert modules as false (!811)
 - Enable output to multiple files (!844)
 - Allow using xml file without expansion tag in FieldConvert (!849)
+- Add Lambda 2 vortex detection criteria (!882)
 
 **IncNavierStokesSolver**
 - Replace steady-state check based on difference of norms by check based on
   norm of the difference, to be consistent with the compressible solver (!832)
+- Updated SVV to allow for the DGKernel extension (!851) 
 
 **CompressibleFlowSolver**
 - Add 3D regression tests (!567)
@@ -83,10 +92,14 @@ v4.4.2
 **NekMesh**
 - Fix missing periodic boundary meshing and boundary layer mesh adjustment
   configurations in 2D (!859)
+- Fix 2D BL splitting where out-of-plane nodes would be created (!887)
 
 **Documentation**:
 - Fix sign of the viscous term in the velocity correction scheme equations in
   the user guide (!856)
+
+**FieldConvert**
+- Allow passing input name with trailing separator (!879)
 
 v4.4.1
 ------

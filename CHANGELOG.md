@@ -55,6 +55,7 @@ v5.0.0
   elements (!877)
 - Revert triangle code to ThirdParty library (!883)
 - Fix coinciding nodes issue with very fine meshes (!883)
+- Skip CFI groups of bodies and non-numbered nodes (!891)
 - Add ability to space out 2D BL nodes to better fit local target Delta (!890)
 
 **FieldConvert**:

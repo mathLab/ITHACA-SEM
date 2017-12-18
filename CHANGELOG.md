@@ -48,10 +48,15 @@ v5.0.0
 - Additional curve types in GEO reader: BSpline, Circle, Ellipse (!800)
 - Fix default command line argument value (!823)
 - Add projection meshing module which can curve linear meshes with CAD (!826)
+- XML meshes now write with provenance information, including information about
+  their source, for debugging purposes (!872)
 - Force 3-node loops to avoid degenerate 1-triangle faces (!875)
+- Smooth BL normals in 2D when normals intersect or cause invalid macro BL
+  elements (!877)
 - Revert triangle code to ThirdParty library (!883)
 - Fix coinciding nodes issue with very fine meshes (!883)
 - Skip CFI groups of bodies and non-numbered nodes (!891)
+- Add ability to space out 2D BL nodes to better fit local target Delta (!890)
 
 **FieldConvert**:
 - Add input module for Semtex field files (!777)
@@ -66,6 +71,7 @@ v5.0.0
 **IncNavierStokesSolver**
 - Replace steady-state check based on difference of norms by check based on
   norm of the difference, to be consistent with the compressible solver (!832)
+- Updated SVV to allow for the DGKernel extension (!851) 
 
 **CompressibleFlowSolver**
 - Add 3D regression tests (!567)
@@ -83,11 +89,13 @@ v4.4.2
 - Fix evaluation of points (e.g. HistoryPoints, Interpolation to pts) close to
   the interface of two elements (!836)
 - Fix deadlock in Hdf5 with homogeneous expansions (!858)
+- Fix a crash when Interpolator is called on an empty field (!869)
 - Fix petsc compile without MPI (!873)
 
 **NekMesh**
 - Fix missing periodic boundary meshing and boundary layer mesh adjustment
   configurations in 2D (!859)
+- Fix 2D BL splitting where out-of-plane nodes would be created (!887)
 
 **Documentation**:
 - Fix sign of the viscous term in the velocity correction scheme equations in

@@ -48,8 +48,7 @@ namespace FieldUtils
 
 ModuleKey ProcessAvgValue::className =
     GetModuleFactory().RegisterCreatorFunction(
-        ModuleKey(eProcessModule, "avgvalue"),
-        ProcessAvgValue::create,
+        ModuleKey(eProcessModule, "avgvalue"), ProcessAvgValue::create,
         "compute the average value of each field.");
 
 ProcessAvgValue::ProcessAvgValue(FieldSharedPtr f) : ProcessModule(f)
@@ -72,21 +71,20 @@ void ProcessAvgValue::Process(po::variables_map &vm)
 
     // Output volume
     string name[3] = {"length", "area", "volume"};
-    cout << "Domain " << name[spacedim-1] << " : " << scale << endl;
+    cout << "Domain " << name[spacedim - 1] << " : " << scale << endl;
 
     // Calculate integral and average of each field
-    for(int i = 0; i < nfields; ++i)
+    for (int i = 0; i < nfields; ++i)
     {
         NekDouble integral = m_f->m_exp[0]->Integral(m_f->m_exp[i]->GetPhys());
         if (m_f->m_comm->GetRank() == 0)
         {
             cout << "Integral (variable " << m_f->m_variables[i]
-                << ") : " << integral << endl;
+                 << ") : " << integral << endl;
             cout << "Average value (variable " << m_f->m_variables[i]
-                << ") : " << integral / scale << endl;
+                 << ") : " << integral / scale << endl;
         }
     }
 }
-
 }
 }

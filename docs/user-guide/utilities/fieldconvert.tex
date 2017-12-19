@@ -158,6 +158,7 @@ Specifically, FieldConvert has these additional functionalities
 \item \inltt{L2Criterion}: Computes the Lambda 2 Criterion for a given output file;
 \item \inltt{addcompositeid}: Adds the composite ID of an element as an additional field;
 \item \inltt{addFld}: Sum two .fld files;
+\item \inltt{avgvalue}: Evaluate average value of variables on the domain;
 \item \inltt{combineAvg}: Combine two \nekpp binary output (.chk or .fld) field file containing averages of fields (and
 possibly also Reynolds stresses) into single file;
 \item \inltt{concatenate}: Concatenate a \nekpp binary output (.chk or .fld) field file into single file (deprecated);
@@ -299,6 +300,21 @@ which contain the sum of the two .fld files.
 \inltt{file3.fld} can be processed in a similar way as described
 in section \ref{s:utilities:fieldconvert:sub:convert} to visualise
 the result either in Tecplot, Paraview or VisIt.
+%
+%
+%
+\subsection{Evaluate average value of variables on the domain: \textit{avgvalue} module}
+To evaluate average value of variables on the domain one can use the
+\inltt{avgvalue} module of FieldConvert
+%
+\begin{lstlisting}[style=BashInputStyle]
+FieldConvert -m avgvalue file1.xml file2.fld \
+out.stdout
+\end{lstlisting}
+%
+This module does not create an output file which is reinforced by the
+out.stdout option. The integral and average value for each field variable are
+then printed to the stdout.
 %
 %
 %

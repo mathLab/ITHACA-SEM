@@ -553,6 +553,22 @@ void InputMCF::Process()
         }
     }
 
+    // apply surface labels
+    for (auto &it : m_mesh->m_composite)
+    {
+        ElementSharedPtr el = it.second->m_items[0];
+        if (el->m_parentCAD)
+        {
+            string name = el->m_parentCAD->GetName();
+            if (name.size() > 0)
+            {
+                m_mesh->m_faceLabels.insert(
+                    make_pair(el->GetTagList()[0], name));
+            }
+        }
+    }
+    ProcessComposites();
+
     ////**** Peralign ****////
     if (m_2D && m_periodic.size())
     {
@@ -573,22 +589,6 @@ void InputMCF::Process()
             module->Process();
         }
     }
-
-    // apply surface labels
-    for (auto &it : m_mesh->m_composite)
-    {
-        ElementSharedPtr el = it.second->m_items[0];
-        if (el->m_parentCAD)
-        {
-            string name = el->m_parentCAD->GetName();
-            if (name.size() > 0)
-            {
-                m_mesh->m_faceLabels.insert(
-                    make_pair(el->GetTagList()[0], name));
-            }
-        }
-    }
-    ProcessComposites();
 }
 }
 }

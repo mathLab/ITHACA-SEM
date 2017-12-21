@@ -70,7 +70,7 @@ ProcessAddFieldFromString::~ProcessAddFieldFromString(void)
 void ProcessAddFieldFromString::Process(po::variables_map &vm)
 {
     // Check if required parameter fieldstr was provided
-    ASSERTL0(m_config["fieldstr"].m_beenSet, "fieldstrmust be specified");
+    ASSERTL0(m_config["fieldstr"].m_beenSet, "fieldstr must be specified");
 
     // Get number of fields (before adding new entry)
     int nfields = m_f->m_variables.size();

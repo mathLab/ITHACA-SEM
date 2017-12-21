@@ -57,6 +57,7 @@ v5.0.0
 - Fix coinciding nodes issue with very fine meshes (!883)
 - Skip CFI groups of bodies and non-numbered nodes (!891)
 - Add ability to space out 2D BL nodes to better fit local target Delta (!890)
+- Fix automatic peralign call in 2D periodic meshing (!888)
 
 **FieldConvert**:
 - Add input module for Semtex field files (!777)

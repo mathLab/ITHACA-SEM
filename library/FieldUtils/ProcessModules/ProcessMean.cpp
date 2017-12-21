@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: ProcessAvgValue.h
+//  File: ProcessMean.cpp
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,56 +29,62 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Compute the average value of each field.
+//  Description: Compute the mean of each field.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef FIELDUTILS_PROCESSAVGVALUE
-#define FIELDUTILS_PROCESSAVGVALUE
+#include <iostream>
+#include <string>
+using namespace std;
 
-#include "../Module.h"
+#include "ProcessMean.h"
+
+#include <LibUtilities/BasicUtils/SharedArray.hpp>
 
 namespace Nektar
 {
 namespace FieldUtils
 {
 
-/**
- * @brief This processing module computes the average value of each field.
- *
- */
-class ProcessAvgValue : public ProcessModule
+ModuleKey ProcessMean::className =
+    GetModuleFactory().RegisterCreatorFunction(
+        ModuleKey(eProcessModule, "mean"), ProcessMean::create,
+        "compute the mean of each field over the domain.");
+
+ProcessMean::ProcessMean(FieldSharedPtr f) : ProcessModule(f)
 {
-public:
-    /// Creates an instance of this class
-    static std::shared_ptr<Module> create(FieldSharedPtr f)
-    {
-        return MemoryManager<ProcessAvgValue>::AllocateSharedPtr(f);
-    }
-    static ModuleKey className;
-
-    ProcessAvgValue(FieldSharedPtr f);
-    virtual ~ProcessAvgValue();
-
-    /// Write mesh to output file.
-    virtual void Process(po::variables_map &vm);
-
-    virtual std::string GetModuleName()
-    {
-        return "ProcessAvgValue";
-    }
-
-    virtual std::string GetModuleDescription()
-    {
-        return "Evaluating average value";
-    }
-
-    virtual ModulePriority GetModulePriority()
-    {
-        return eModifyExp;
-    }
-};
-}
 }
 
-#endif
+ProcessMean::~ProcessMean()
+{
+}
+
+void ProcessMean::Process(po::variables_map &vm)
+{
+    int nfields  = m_f->m_variables.size();
+    int spacedim = m_f->m_graph->GetMeshDimension() + m_f->m_numHomogeneousDir;
+    int npoints  = m_f->m_exp[0]->GetNpoints();
+
+    // Calculate volume (or area)
+    Array<OneD, NekDouble> ones(npoints, 1.0);
+    NekDouble scale = m_f->m_exp[0]->Integral(ones);
+
+    // Output volume
+    string name[3] = {"length", "area", "volume"};
+    cout << "Domain " << name[spacedim - 1] << " : " << scale << endl;
+
+    // Calculate integral and mean of each field
+    for (int i = 0; i < nfields; ++i)
+    {
+        NekDouble integral = m_f->m_exp[0]->Integral(m_f->m_exp[i]->GetPhys());
+        if (m_f->m_comm->GetRank() == 0)
+        {
+            cout << "Integral (variable " << m_f->m_variables[i]
+                 << ") : " << integral << endl;
+            cout << "Mean (variable " << m_f->m_variables[i]
+                 << ") : " << integral / scale << endl;
+        }
+    }
+}
+}
+}

@@ -158,7 +158,6 @@ Specifically, FieldConvert has these additional functionalities
 \item \inltt{L2Criterion}: Computes the Lambda 2 Criterion for a given output file;
 \item \inltt{addcompositeid}: Adds the composite ID of an element as an additional field;
 \item \inltt{addFld}: Sum two .fld files;
-\item \inltt{avgvalue}: Evaluate average value of variables on the domain;
 \item \inltt{combineAvg}: Combine two \nekpp binary output (.chk or .fld) field file containing averages of fields (and
 possibly also Reynolds stresses) into single file;
 \item \inltt{concatenate}: Concatenate a \nekpp binary output (.chk or .fld) field file into single file (deprecated);
@@ -175,6 +174,7 @@ possibly also Reynolds stresses) into single file;
 \item \inltt{isocontour}: Extract an isocontour of ``fieldid'' variable and at value ``fieldvalue''. Optionally ``fieldstr'' can be specified for a string definition or ``smooth'' for smoothing;
 \item \inltt{jacobianenergy}: Shows high frequency energy of Jacobian;
 \item \inltt{qualitymetric}: Evaluate a quality metric of the underlying mesh to show mesh quality;
+\item \inltt{mean}: Evaluate the mean of variables on the domain;
 \item \inltt{meanmode}: Extract mean mode (plane zero) of 3DH1D expansions;
 \item \inltt{pointdatatofld}: Given discrete data at quadrature points
   project them onto an expansion basis and output fld file;
@@ -300,20 +300,6 @@ which contain the sum of the two .fld files.
 \inltt{file3.fld} can be processed in a similar way as described
 in section \ref{s:utilities:fieldconvert:sub:convert} to visualise
 the result either in Tecplot, Paraview or VisIt.
-%
-%
-%
-\subsection{Evaluate average value of variables on the domain: \textit{avgvalue} module}
-To evaluate average value of variables on the domain one can use the
-\inltt{avgvalue} module of FieldConvert
-%
-\begin{lstlisting}[style=BashInputStyle]
-FieldConvert -m avgvalue file1.xml file2.fld out.stdout
-\end{lstlisting}
-%
-This module does not create an output file which is reinforced by the
-out.stdout option. The integral and average value for each field variable are
-then printed to the stdout.
 %
 %
 %
@@ -799,7 +785,20 @@ Two quality metrics are implemented that produce scalar fields $Q$:
 %
 %
 %
-
+\subsection{Evaluate the mean of variables on the domain: \textit{mean} module}
+To evaluate the mean of variables on the domain one can use the
+\inltt{mean} module of FieldConvert
+%
+\begin{lstlisting}[style=BashInputStyle]
+FieldConvert -m mean file1.xml file2.fld out.stdout
+\end{lstlisting}
+%
+This module does not create an output file which is reinforced by the
+out.stdout option. The integral and mean for each field variable are
+then printed to the stdout.
+%
+%
+%
 \subsection{Extract mean mode of 3DH1D expansion: \textit{meanmode} module}
 
 To obtain a 2D expansion containing the mean mode (plane zero in Fourier space) of a

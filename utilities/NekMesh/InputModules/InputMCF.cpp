@@ -79,6 +79,10 @@ void InputMCF::ParseFile(string nm)
              "no parameters tag");
 
     TiXmlElement *mcf = pSession->GetElement("NEKTAR/MESHING");
+    TiXmlNode *clone = mcf->Clone();
+
+    //save meshing tag to end of file
+    m_mesh->m_infotag->LinkEndChild(clone);
 
     TiXmlElement *info = mcf->FirstChildElement("INFORMATION");
     TiXmlElement *I    = info->FirstChildElement("I");
@@ -235,6 +239,23 @@ void InputMCF::ParseFile(string nm)
         {
             m_adjust = false;
         }
+
+        it = parameters.find("SpaceOutBndLayer");
+        if (it != parameters.end())
+        {
+            m_spaceoutbl    = true;
+            m_spaceoutblthr = it->second;
+
+            it = parameters.find("NoSpaceOutSurf");
+            if (it != parameters.end())
+            {
+                m_nospaceoutsurf = it->second;
+            }
+        }
+        else
+        {
+            m_spaceoutbl = false;
+        }
     }
 
     m_naca = false;
@@ -270,6 +291,8 @@ void InputMCF::ParseFile(string nm)
     m_varopti   = sit != boolparameters.end();
     sit         = boolparameters.find("BndLayerAdjustEverywhere");
     m_adjustall = sit != boolparameters.end();
+    sit         = boolparameters.find("SmoothBndLayer");
+    m_smoothbl  = sit != boolparameters.end();
 
     m_refine = refinement.size() > 0;
     if (m_refine)
@@ -374,6 +397,17 @@ void InputMCF::Process()
                 {
                     module->RegisterConfig("adjustblteverywhere", "");
                 }
+            }
+
+            if (m_smoothbl)
+            {
+                module->RegisterConfig("smoothbl", "");
+            }
+
+            if (m_spaceoutbl)
+            {
+                module->RegisterConfig("spaceoutbl", m_spaceoutblthr);
+                module->RegisterConfig("nospaceoutsurf", m_nospaceoutsurf);
             }
         }
         if (m_periodic.size())

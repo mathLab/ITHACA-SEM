@@ -69,6 +69,7 @@ v5.0.0
 - Allow using xml file without expansion tag in FieldConvert (!849)
 - Add Lambda 2 vortex detection criteria (!882)
 - Add module for calculating new field from existing ones (!889)
+- Add module for evaluating the mean of variables on the domain (!894)
 
 **IncNavierStokesSolver**
 - Replace steady-state check based on difference of norms by check based on

@@ -39,6 +39,7 @@ SET(FieldUtilsHeaders
     ProcessModules/ProcessL2Criterion.h
     ProcessModules/ProcessMapping.h
     ProcessModules/ProcessNumModes.h
+    ProcessModules/ProcessMean.h
     ProcessModules/ProcessMeanMode.h
     ProcessModules/ProcessPointDataToFld.h
     ProcessModules/ProcessPrintFldNorms.h
@@ -94,6 +95,7 @@ SET(FieldUtilsSources
     ProcessModules/ProcessL2Criterion.cpp
     ProcessModules/ProcessMapping.cpp
     ProcessModules/ProcessNumModes.cpp
+    ProcessModules/ProcessMean.cpp
     ProcessModules/ProcessMeanMode.cpp
     ProcessModules/ProcessPointDataToFld.cpp
     ProcessModules/ProcessPrintFldNorms.cpp

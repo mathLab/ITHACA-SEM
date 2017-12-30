@@ -33,6 +33,7 @@ v5.0.0
 - Fix mac OSX on buildbots (!876)
 - Fix error from (!826) (!876)
 - Fix minor bug in ARPACK thirdparty build cmake (!874)
+- Added NekCDouble as complex double to core library type defs (!814)
 
 **NekMesh**:
 - Add feature to read basic 2D geo files as CAD (!731)

@@ -626,16 +626,14 @@ namespace Nektar
         ASSERTL0(Wparams.count("PERIOD") == 1,
           "Failed to find period parameter in Womersley boundary conditions");
         std::vector<NekDouble> period;
-        parseGood = ParseUtils::GenerateVector(
-                                         Wparams["PERIOD"],period);
+        parseGood = ParseUtils::GenerateVector(Wparams["PERIOD"],period);
         m_womersleyParams[fldid][bndid]->m_period = period[0];
 
 
         ASSERTL0(Wparams.count("AXISNORMAL") == 1,
           "Failed to find axisnormal parameter in Womersley boundary conditions");
         std::vector<NekDouble> anorm;
-        parseGood = ParseUtils::GenerateVector(
-                                         Wparams["AXISNORMAL"],anorm);
+        parseGood = ParseUtils::GenerateVector(Wparams["AXISNORMAL"],anorm);
         m_womersleyParams[fldid][bndid]->m_axisnormal[0] = anorm[0];
         m_womersleyParams[fldid][bndid]->m_axisnormal[1] = anorm[1];
         m_womersleyParams[fldid][bndid]->m_axisnormal[2] = anorm[2];
@@ -644,8 +642,7 @@ namespace Nektar
         ASSERTL0(Wparams.count("AXISPOINT") == 1,
           "Failed to find axispoint parameter in Womersley boundary conditions");
         std::vector<NekDouble> apt;
-        parseGood = ParseUtils::GenerateVector(
-                                         Wparams["AXISPOINT"],apt);
+        parseGood = ParseUtils::GenerateVector(Wparams["AXISPOINT"],apt);
         m_womersleyParams[fldid][bndid]->m_axispoint[0] = apt[0];
         m_womersleyParams[fldid][bndid]->m_axispoint[1] = apt[1];
         m_womersleyParams[fldid][bndid]->m_axispoint[2] = apt[2];
@@ -677,8 +674,7 @@ namespace Nektar
             std::string coeffStr = fval->FirstChild()->ToText()->ValueStr();
             vector<NekDouble> coeffvals;
 
-            parseGood = ParseUtils::GenerateVector(coeffStr.c_str(),
-                                                               coeffvals);
+            parseGood = ParseUtils::GenerateVector(coeffStr, coeffvals);
             ASSERTL0(parseGood,
                     (std::string("Problem reading value of fourier coefficient, ID=") +
                     boost::lexical_cast<string>(indx)).c_str());

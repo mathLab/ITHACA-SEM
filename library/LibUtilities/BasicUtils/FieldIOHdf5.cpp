@@ -522,7 +522,7 @@ void FieldIOHdf5::v_Write(const std::string &outFile,
             H5::DataSpaceSharedPtr homz_space = H5::DataSpace::OneD(nTotHomZ);
             H5::DataSetSharedPtr homz_dset =
                 root->CreateDataSet("HOMOGENEOUSZIDS", homz_type, homz_space);
-            ASSERTL1(data_dset,
+            ASSERTL1(homz_dset,
                      prfx.str() + "cannot create HOMOGENEOUSZIDS dataset.");
         }
 
@@ -830,6 +830,27 @@ void FieldIOHdf5::v_Write(const std::string &outFile,
         ids_dset->Write(
             fielddefs[nFields - 1]->m_elementIDs, ids_fspace, writePL);
         data_dset->Write(fielddata[nFields - 1], data_fspace, writePL);
+
+        if (order_dset)
+        {
+            order_dset->Write(numModesPerDirVar[nFields - 1],
+                              order_fspace, writePL);
+        }
+
+        if (homy_dset)
+        {
+            homy_dset->Write(homoYIDs[nFields - 1], homy_fspace, writePL);
+        }
+
+        if (homz_dset)
+        {
+            homz_dset->Write(homoZIDs[nFields - 1], homz_fspace, writePL);
+        }
+
+        if (homs_dset)
+        {
+            homs_dset->Write(homoSIDs[nFields - 1], homs_fspace, writePL);
+        }
     }
 
     m_comm->Block();

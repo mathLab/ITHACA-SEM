@@ -17,13 +17,22 @@ v5.0.0
 - Added native support for csv files in addititon to pts (!760 !835)
 - Utilize LAPACK_DIR env variable to find the native blas/lapack install (!827)
 - Remove StdExpansion use from MultiRegion (use Expansions instead). (!831)
+- Move steady state check and CFL output from solvers to SolverUtils (!832)
+- Remove DG advection implementation from EquationSystem (!832)
 - Simplify RawType typedefs (!840)
 - Remove unused files from BasicUtils (!841)
 - Remove checks for old boost versions which are no longer supported (!841)
-- Refactor ParseUtils to be more consistent (!843)
+- Refactor ParseUtils to be more consistent (!843, !896)
 - Added support for using the distance to a specific region (e.g. outlet) in the
   function definitions for the Absorption Forcing (!769)
 - Improve performance of DisContField2D::v_ExtractTracePhys (!824)
+- Fix small bug in Jacobian Energy (!857)
+- Adds CFI CAD engine back-end (!864)
+- Adds CFI Mesh IO support (!864)
+- Cleanup of CAD system data structures (!864)
+- Fix mac OSX on buildbots (!876)
+- Fix error from (!826) (!876)
+- Fix minor bug in ARPACK thirdparty build cmake (!874)
 
 **NekMesh**:
 - Add feature to read basic 2D geo files as CAD (!731)
@@ -38,6 +47,17 @@ v5.0.0
 - Update for the CAD system, more advance self-healing and analysis (!822)
 - Additional curve types in GEO reader: BSpline, Circle, Ellipse (!800)
 - Fix default command line argument value (!823)
+- Add projection meshing module which can curve linear meshes with CAD (!826)
+- XML meshes now write with provenance information, including information about
+  their source, for debugging purposes (!872)
+- Force 3-node loops to avoid degenerate 1-triangle faces (!875)
+- Smooth BL normals in 2D when normals intersect or cause invalid macro BL
+  elements (!877)
+- Revert triangle code to ThirdParty library (!883)
+- Fix coinciding nodes issue with very fine meshes (!883)
+- Skip CFI groups of bodies and non-numbered nodes (!891)
+- Add ability to space out 2D BL nodes to better fit local target Delta (!890)
+- Fix automatic peralign call in 2D periodic meshing (!888)
 
 **FieldConvert**:
 - Add input module for Semtex field files (!777)
@@ -47,9 +67,21 @@ v5.0.0
 - Allow explicitly setting bool options of FieldConvert modules as false (!811)
 - Enable output to multiple files (!844)
 - Allow using xml file without expansion tag in FieldConvert (!849)
+- Add Lambda 2 vortex detection criteria (!882)
+- Add module for calculating new field from existing ones (!889)
+- Add module for evaluating the mean of variables on the domain (!894)
+
+**IncNavierStokesSolver**
+- Replace steady-state check based on difference of norms by check based on
+  norm of the difference, to be consistent with the compressible solver (!832)
+- Updated SVV to allow for the DGKernel extension (!851) 
 
 **CompressibleFlowSolver**
 - Add 3D regression tests (!567)
+- Introduce forcing for quasi-1D Euler simulations (!771)
+- Allow performing axi-symmetric Euler simulations (!771)
+- Add ability to use an exponential filtering for stabilization with
+  seg, quad and hex elements (!771, !862)
 
 **Documentation**:
 - Added the developer-guide repository as a submodule (!751)
@@ -59,10 +91,21 @@ v4.4.2
 **Library**
 - Fix evaluation of points (e.g. HistoryPoints, Interpolation to pts) close to
   the interface of two elements (!836)
+- Fix deadlock in Hdf5 with homogeneous expansions (!858)
+- Fix a crash when Interpolator is called on an empty field (!869)
+- Fix petsc compile without MPI (!873)
 
 **NekMesh**
 - Fix missing periodic boundary meshing and boundary layer mesh adjustment
   configurations in 2D (!859)
+- Fix 2D BL splitting where out-of-plane nodes would be created (!887)
+
+**Documentation**:
+- Fix sign of the viscous term in the velocity correction scheme equations in
+  the user guide (!856)
+
+**FieldConvert**
+- Allow passing input name with trailing separator (!879)
 
 v4.4.1
 ------

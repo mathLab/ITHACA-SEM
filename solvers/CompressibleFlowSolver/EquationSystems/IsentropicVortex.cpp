@@ -46,7 +46,8 @@ namespace Nektar
     
     IsentropicVortex::IsentropicVortex(
         const LibUtilities::SessionReaderSharedPtr& pSession)
-    : EulerCFE(pSession)
+    : UnsteadySystem(pSession),
+      EulerCFE(pSession)
     {
     }
 
@@ -74,8 +75,6 @@ namespace Nektar
         bool        dumpInitialConditions,
         const int   domain)
     {
-        InitializeSteadyState();
-
         int nTotQuadPoints  = GetTotPoints();
         Array<OneD, NekDouble> x(nTotQuadPoints);
         Array<OneD, NekDouble> y(nTotQuadPoints);

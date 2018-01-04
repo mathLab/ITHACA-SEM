@@ -34,7 +34,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include "LibUtilities/BasicUtils/SharedArray.hpp"
-#include "LibUtilities/BasicUtils/SessionReader.h"
+#include "SpatialDomains/SessionReader.h"
 
 #include "MeshPartitionScotch.h"
 

@@ -775,7 +775,6 @@ namespace Nektar
                 m_base[1]->GetPointsType() !=
                 LibUtilities::eGaussGaussLegendre)
             {
-                // get points in Cartesian orientation
                 switch (edge)
                 {
                     case 0:
@@ -817,7 +816,7 @@ namespace Nektar
             }
             
             //Reverse data if necessary
-            if(GetCartesianEorient(edge) == StdRegions::eBackwards)
+            if(GetEorient(edge) == StdRegions::eBackwards)
             {
                 Vmath::Reverse(EdgeExp->GetNumPoints(0),&outarray[0], 1,
                                &outarray[0], 1);
@@ -925,7 +924,7 @@ namespace Nektar
                     outarray = Array<OneD, int>(nquad1);
                     for (int i = 0; i < nquad1; ++i)
                     {
-                        outarray[i] = i + i*(nquad0-1);
+                        outarray[i] = i*nquad0;
                     }
                     break;
                 default:
@@ -1001,36 +1000,28 @@ namespace Nektar
                         case 2:
                             
                             Vmath::Vcopy(nquad0,
-                                         &(df[1][0])+(nquad0*nquad1-1), -1,
+                                         &(df[1][0])+(nquad0*(nquad1-1)), 1,
                                          &(g1[0]), 1);
                             
                             Vmath::Vcopy(nquad0,
-                                         &(df[3][0])+(nquad0*nquad1-1), -1,
+                                         &(df[3][0])+(nquad0*(nquad1-1)), 1,
                                          &(g3[0]), 1);
                             
                             Vmath::Vcopy(nquad0,
-                                         &(jac[0])+(nquad0*nquad1-1), -1,
+                                         &(jac[0])+(nquad0*(nquad1-1)), 1,
                                          &(j[0]), 1);
                             
                             for (i = 0; i < nquad0; ++i)
                             {
-                                outarray[i] = j[i]*sqrt(g1[i]*g1[i]
-                                                                 + g3[i]*g3[i]);
+                                outarray[i] =
+                                    j[i]*sqrt(g1[i]*g1[i]+ g3[i]*g3[i]);
                             }
                             break;
                         case 3:
                             
-                            Vmath::Vcopy(nquad1,
-                                         &(df[0][0])+nquad0*(nquad1-1),
-                                         -nquad0,&(g0[0]), 1);
-                            
-                            Vmath::Vcopy(nquad1,
-                                         &(df[2][0])+nquad0*(nquad1-1),
-                                         -nquad0,&(g2[0]), 1);
-                            
-                            Vmath::Vcopy(nquad1,
-                                         &(jac[0])+nquad0*(nquad1-1), -nquad0,
-                                         &(j[0]), 1);
+                            Vmath::Vcopy(nquad1, &(df[0][0]), nquad0,&(g0[0]), 1);
+                            Vmath::Vcopy(nquad1, &(df[2][0]), nquad0,&(g2[0]), 1);
+                            Vmath::Vcopy(nquad1, &(jac[0]), nquad0, &(j[0]), 1);
                             
                             for (i = 0; i < nquad1; ++i)
                             {
@@ -1465,16 +1456,6 @@ namespace Nektar
                 {
                     Vmath::Vmul(nqe, normal[i], 1, work, 1, normal[i], 1);
                 }
-                
-                // Reverse direction so that points are in
-                // anticlockwise direction if edge >=2
-                if (edge >= 2)
-                {
-                    for (i = 0; i < GetCoordim(); ++i)
-                    {
-                        Vmath::Reverse(nqe, normal[i], 1, normal[i], 1);
-                    }
-                }
             }
             if (GetGeom()->GetEorient(edge) == StdRegions::eBackwards)
             {
@@ -1602,12 +1583,6 @@ namespace Nektar
         StdRegions::Orientation QuadExp::v_GetEorient(int edge)
         {
             return m_geom->GetEorient(edge);
-        }
-
-
-        StdRegions::Orientation QuadExp::v_GetCartesianEorient(int edge)
-        {
-            return GetGeom2D()->GetCartesianEorient(edge);
         }
 
 

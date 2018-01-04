@@ -769,16 +769,6 @@ namespace Nektar
                 return v_GetEorient(edge);
             }
 
-            StdRegions::Orientation GetPorient(int point)
-            {
-                return v_GetPorient(point);
-            }
-
-            StdRegions::Orientation GetCartesianEorient(int edge)
-            {
-                return v_GetCartesianEorient(edge);
-            }
-
             void SetCoeffsToOrientation(
                 Array<OneD, NekDouble> &coeffs,
                 StdRegions::Orientation dir)
@@ -1219,10 +1209,6 @@ namespace Nektar
             STD_REGIONS_EXPORT virtual StdRegions::Orientation v_GetForient(int face);
 
             STD_REGIONS_EXPORT virtual StdRegions::Orientation v_GetEorient(int edge);
-
-            STD_REGIONS_EXPORT virtual StdRegions::Orientation v_GetCartesianEorient(int edge);
-
-            STD_REGIONS_EXPORT virtual StdRegions::Orientation v_GetPorient(int point);
 
             /** \brief Function to evaluate the discrete \f$ L_\infty\f$
              *  error \f$ |\epsilon|_\infty = \max |u - u_{exact}|\f$ where \f$

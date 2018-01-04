@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: Geometry1D.h
+//  File:  Geometry.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,41 +29,62 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description:  1D geometry information
+//  Description:  This file contains the base class specification for the
+//                Geometry class.
 //
 //
 ////////////////////////////////////////////////////////////////////////////////
-#ifndef NEKTAR_SPATIALDOMAINS_GEOMETRY1D_H
-#define NEKTAR_SPATIALDOMAINS_GEOMETRY1D_H
+#ifndef NEKTAR_SPATIALDOMAINS_MGXMLCOM_H
+#define NEKTAR_SPATIALDOMAINS_MGXMLCOM_H
 
-#include <SpatialDomains/Geometry.h>
-#include <SpatialDomains/PointGeom.h>
-#include <SpatialDomains/SpatialDomainsDeclspec.h>
-#include <StdRegions/StdExpansion1D.h>
+#include "MeshGraphXml.h"
 
 namespace Nektar
 {
 namespace SpatialDomains
 {
 
-class Geometry1D;
-
-typedef std::shared_ptr<Geometry1D> Geometry1DSharedPtr;
-typedef std::vector<Geometry1DSharedPtr> Geometry1DVector;
-
-/// 1D geometry information
-class Geometry1D : public Geometry
+class MeshGraphXmlCompressed : public MeshGraphXml
 {
 public:
-    SPATIAL_DOMAINS_EXPORT Geometry1D();
-    SPATIAL_DOMAINS_EXPORT Geometry1D(const int coordim);
-    SPATIAL_DOMAINS_EXPORT virtual ~Geometry1D();
+    MeshGraphXmlCompressed()
+    {
+    }
 
-protected:
-    virtual int v_GetShapeDim() const;
+    virtual ~MeshGraphXmlCompressed()
+    {
+    }
+
+    static MeshGraphSharedPtr create()
+    {
+        return MemoryManager<MeshGraphXmlCompressed>::AllocateSharedPtr();
+    }
+
+    static std::string className;
+
+private:
+    void ReadVertices();
+    void ReadCurves();
+
+    void ReadEdges();
+    void ReadFaces();
+
+    void ReadElements1D();
+    void ReadElements2D();
+    void ReadElements3D();
+
+    void WriteVertices(TiXmlElement *geomTag, PointGeomMap &verts);
+    void WriteEdges(TiXmlElement *geomTag, SegGeomMap &edges);
+    void WriteTris(TiXmlElement *faceTag, TriGeomMap &tris);
+    void WriteQuads(TiXmlElement *faceTag, QuadGeomMap &quads);
+    void WriteHexs(TiXmlElement *elmtTag, HexGeomMap &hexs);
+    void WritePrisms(TiXmlElement *elmtTag, PrismGeomMap & pris);
+    void WritePyrs(TiXmlElement *elmtTag, PyrGeomMap & pyrs);
+    void WriteTets(TiXmlElement *elmtTag, TetGeomMap & tets);
+    void WriteCurves(TiXmlElement *geomTag, CurveMap &edges, CurveMap &faces);
 };
 
-}
-}
+} // end of namespace
+} // end of namespace
 
-#endif // NEKTAR_SPATIALDOMAINS_GEOMETRY1D_H
+#endif

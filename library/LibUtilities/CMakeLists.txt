@@ -16,9 +16,6 @@ SET(BasicUtilsHeaders
     ./BasicUtils/FileSystem.h
     ./BasicUtils/ErrorUtil.hpp
     ./BasicUtils/HashUtils.hpp
-    ./BasicUtils/MeshEntities.hpp
-    ./BasicUtils/MeshPartition.h
-    ./BasicUtils/MeshPartitionMetis.h
     ./BasicUtils/NekManager.hpp
     ./BasicUtils/NekFactory.hpp
     ./BasicUtils/OperatorGenerators.hpp
@@ -47,8 +44,6 @@ SET(BasicUtilsSources
     ./BasicUtils/FieldIO.cpp
     ./BasicUtils/FieldIOXml.cpp
     ./BasicUtils/FileSystem.cpp
-    ./BasicUtils/MeshPartition.cpp
-    ./BasicUtils/MeshPartitionMetis.cpp
     ./BasicUtils/ParseUtils.cpp
     ./BasicUtils/PtsField.cpp
     ./BasicUtils/PtsIO.cpp
@@ -84,13 +79,6 @@ SET(CommunicationSources
     ./Communication/CommSerial.cpp
     ./Communication/Transposition.cpp
 )
-
-IF(NEKTAR_USE_SCOTCH)
-    SET(BasicUtilsHeaders ${BasicUtilsHeaders}
-        ./BasicUtils/MeshPartitionScotch.h)
-    SET(BasicUtilsSources ${BasicUtilsSources}
-        ./BasicUtils/MeshPartitionScotch.cpp)
-ENDIF(NEKTAR_USE_SCOTCH)
 
 IF(NEKTAR_USE_MPI)
     SET(CommunicationHeaders ${CommunicationHeaders}

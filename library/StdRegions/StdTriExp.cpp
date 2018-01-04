@@ -1005,7 +1005,7 @@ namespace Nektar
                         maparray[i] = i;
                     }
 
-                    if(edgeOrient==eForwards)
+                    if(edgeOrient==eBackwards)
                     {
                         swap( maparray[0] , maparray[1] );
 
@@ -1167,7 +1167,7 @@ namespace Nektar
                         maparray[i] = 2+i;
                     }
 
-                    if(edgeOrient==eForwards)
+                    if(edgeOrient==eBackwards)
                     {
                         for(i = 1; i < nEdgeIntCoeffs; i+=2)
                         {

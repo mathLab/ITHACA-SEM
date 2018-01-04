@@ -127,8 +127,7 @@ MeshGraphSharedPtr MeshGraph::Read(
     // Every process then creates a mesh. Partitioning logic takes place inside
     // the PartitionMesh function so that we can support different options for
     // XML and HDF5.
-    //MeshGraphSharedPtr mesh = GetMeshGraphFactory().CreateInstance(geomType);
-    MeshGraphSharedPtr mesh = GetMeshGraphFactory().CreateInstance("Xml");
+    MeshGraphSharedPtr mesh = GetMeshGraphFactory().CreateInstance(geomType);
     mesh->PartitionMesh(session);
 
     // Finally, read the geometry information.

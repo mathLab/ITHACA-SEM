@@ -291,7 +291,7 @@ namespace Nektar
                 delete m_xmlDoc;
             }
 
-            m_xmlDoc = MergeDoc(filenames);
+            m_xmlDoc = MergeDoc(m_filenames);
 
             // Parse the XML data in #m_xmlDoc
             ParseDocument();

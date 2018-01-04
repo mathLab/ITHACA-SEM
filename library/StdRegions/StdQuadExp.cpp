@@ -1128,7 +1128,7 @@ namespace Nektar
                     {
                         for(i = 0; i < nEdgeIntCoeffs; i++)
                         {
-                            maparray[i] = nummodes0*(nummodes1-1) + i;
+                            maparray[i] = nummodes0*(nummodes1-1) + i + 1;
                         }
                     }
                     break;
@@ -1136,7 +1136,7 @@ namespace Nektar
                     {
                         for(i = 0; i < nEdgeIntCoeffs; i++)
                         {
-                            maparray[i] = nummodes0 * i;
+                            maparray[i] = nummodes0 * (i+1);
                         }
                     }
                     break;

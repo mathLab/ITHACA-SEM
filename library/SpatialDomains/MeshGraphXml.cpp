@@ -168,6 +168,8 @@ void MeshGraphXml::PartitionMesh(
                     // Read 'lite' geometry information
                     ReadGeometry(NullDomainRangeShPtr, false);
 
+                    std::cout << "Read " << m_hexGeoms.size() << " elements" << std::endl;
+
                     // Create mesh partitioner.
                     MeshPartitionSharedPtr partitioner =
                         GetMeshPartitionFactory().CreateInstance(
@@ -326,8 +328,7 @@ void MeshGraphXml::ReadGeometry(
     m_expansionMapShPtrMap.clear();
     m_geomInfo.clear();
     m_faceToElMap.clear();
-    
-    
+
     m_domainRange = rng;
     m_xmlGeom     = m_session->GetElement("NEKTAR/GEOMETRY");
 

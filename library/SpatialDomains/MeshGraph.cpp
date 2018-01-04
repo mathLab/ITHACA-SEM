@@ -107,7 +107,7 @@ MeshGraphSharedPtr MeshGraph::Read(
 
         // Convert to a vector of chars so that we can broadcast.
         std::vector<char> v(geomType.c_str(),
-                            geomType.c_str() + geomType.length() + 1);
+                            geomType.c_str() + geomType.length());
 
         size_t length = v.size();
         comm->Bcast(length, 0);
@@ -127,6 +127,7 @@ MeshGraphSharedPtr MeshGraph::Read(
     // Every process then creates a mesh. Partitioning logic takes place inside
     // the PartitionMesh function so that we can support different options for
     // XML and HDF5.
+    std::cout << comm->GetRank() << std::endl;
     MeshGraphSharedPtr mesh = GetMeshGraphFactory().CreateInstance(geomType);
     mesh->PartitionMesh(session);
 

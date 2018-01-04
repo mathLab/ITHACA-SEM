@@ -314,7 +314,7 @@ namespace Nektar
                 for (i = 0; i < npoints[0]; i++)
                 {
                     physEdge[0][i] = inarray[i];
-                    physEdge[2][i] = inarray[npoints[0]*npoints[1]-1-i];
+                    physEdge[2][i] = inarray[npoints[0]*(npoints[1]-1)+i];
                 }
 
                 for (i = 0; i < npoints[1]; i++)
@@ -322,7 +322,7 @@ namespace Nektar
                     physEdge[1][i] =
                         inarray[npoints[0]-1+i*npoints[0]];
                     physEdge[3][i] =
-                        inarray[(npoints[1]-1)*npoints[0]-i*npoints[0]];
+                        inarray[i*npoints[0]];
                 }
 
                 for (i = 0; i < 4; i++)

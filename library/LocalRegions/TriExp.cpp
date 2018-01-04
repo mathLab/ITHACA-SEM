@@ -320,7 +320,7 @@ namespace Nektar
             NekDouble sign;
             // define an orientation to get EdgeToElmtMapping from Cartesian data 
             StdRegions::Orientation orient[3] = {StdRegions::eForwards,StdRegions::eForwards,
-                                                 StdRegions::eBackwards};
+                                                 StdRegions::eForwards};
 
             for(i = 0; i < 3; i++)
             {

@@ -40,7 +40,7 @@ using namespace std;
 #include "OutputInfo.h"
 
 #include <LibUtilities/BasicUtils/FieldIOXml.h>
-#include <LibUtilities/BasicUtils/MeshPartition.h>
+#include <SpatialDomains/MeshPartition.h>
 #include <boost/format.hpp>
 
 namespace Nektar
@@ -97,13 +97,13 @@ void OutputInfo::Process(po::variables_map &vm)
     LibUtilities::SessionReaderSharedPtr vSession =
         std::shared_ptr<LibUtilities::SessionReader>(
             new LibUtilities::SessionReader(0, 0, files, vComm));
-    vSession->SetUpXmlDoc();
+    vSession->InitSession();
 
     // Default partitioner to use is Metis. Use Scotch as default
     // if it is installed. Override default with command-line flags
     // if they are set.
     string vPartitionerName = "Metis";
-    if (LibUtilities::GetMeshPartitionFactory().ModuleExists("Scotch"))
+    if (SpatialDomains::GetMeshPartitionFactory().ModuleExists("Scotch"))
     {
         vPartitionerName = "Scotch";
     }
@@ -116,9 +116,13 @@ void OutputInfo::Process(po::variables_map &vm)
         vPartitionerName = "Scotch";
     }
 
-    LibUtilities::MeshPartitionSharedPtr vMeshPartition =
-        LibUtilities::GetMeshPartitionFactory().CreateInstance(vPartitionerName,
-                                                               vSession);
+    // Construct MeshGraph to read geometry.
+    SpatialDomains::MeshGraphSharedPtr mesh =
+        GetMeshGraphFactory().CreateInstance(vSession->GetGeometryType());
+
+    SpatialDomains::MeshPartitionSharedPtr vMeshPartition =
+        SpatialDomains::GetMeshPartitionFactory().CreateInstance(
+            vPartitionerName, vSession);
 
     vMeshPartition->PartitionMesh(nparts, true);
 

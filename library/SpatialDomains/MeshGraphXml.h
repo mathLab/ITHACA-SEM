@@ -68,12 +68,12 @@ public:
 
     static std::string className;
 
-protected:
     virtual void ReadGeometry(DomainRangeShPtr rng,
                               bool             fillGraph);
     virtual void PartitionMesh(
         LibUtilities::SessionReaderSharedPtr session);
 
+protected:
     // some of these functions are going to be virtual because they will be
     // inherited by the XmlCompressed version
 

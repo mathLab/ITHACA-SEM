@@ -118,11 +118,13 @@ void OutputInfo::Process(po::variables_map &vm)
 
     // Construct MeshGraph to read geometry.
     SpatialDomains::MeshGraphSharedPtr mesh =
-        GetMeshGraphFactory().CreateInstance(vSession->GetGeometryType());
+        SpatialDomains::GetMeshGraphFactory().CreateInstance(
+            vSession->GetGeometryType());
 
     SpatialDomains::MeshPartitionSharedPtr vMeshPartition =
         SpatialDomains::GetMeshPartitionFactory().CreateInstance(
-            vPartitionerName, vSession);
+            vPartitionerName, vSession, mesh);
+    mesh->ReadGeometry(SpatialDomains::NullDomainRangeShPtr, false);
 
     vMeshPartition->PartitionMesh(nparts, true);
 

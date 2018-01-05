@@ -404,13 +404,14 @@ public:
         return m_bndRegOrder;
     }
 
-protected:
     /*an inital read which loads a very light weight data structure*/
     virtual void ReadGeometry(
         DomainRangeShPtr rng,
         bool             fillGraph) = 0;
     virtual void PartitionMesh(
         LibUtilities::SessionReaderSharedPtr session) = 0;
+
+protected:
 
     void PopulateFaceToElMap(Geometry3DSharedPtr element, int kNfaces);
     ExpansionMapShPtr SetUpExpansionMap();

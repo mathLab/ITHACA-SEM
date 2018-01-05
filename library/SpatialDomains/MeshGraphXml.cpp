@@ -168,8 +168,6 @@ void MeshGraphXml::PartitionMesh(
                     // Read 'lite' geometry information
                     ReadGeometry(NullDomainRangeShPtr, false);
 
-                    std::cout << "Read " << m_hexGeoms.size() << " elements" << std::endl;
-
                     // Create mesh partitioner.
                     MeshPartitionSharedPtr partitioner =
                         GetMeshPartitionFactory().CreateInstance(

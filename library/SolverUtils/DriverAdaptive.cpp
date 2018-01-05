@@ -61,8 +61,9 @@ string DriverAdaptive::driverLookupId =
  *
  */
 DriverAdaptive::DriverAdaptive(
-    const LibUtilities::SessionReaderSharedPtr pSession)
-    : Driver(pSession)
+    const LibUtilities::SessionReaderSharedPtr pSession,
+    const SpatialDomains::MeshGraphSharedPtr pGraph)
+    : Driver(pSession, pGraph)
 {
 }
 

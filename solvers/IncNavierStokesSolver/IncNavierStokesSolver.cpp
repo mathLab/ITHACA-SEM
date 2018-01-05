@@ -50,10 +50,12 @@ int main(int argc, char *argv[])
     {
         // Create session reader.
         session = LibUtilities::SessionReader::CreateInstance(argc, argv);
+
+        graph = SpatialDomains::MeshGraph::Read(session);
         
         // Create driver
         session->LoadSolverInfo("Driver", vDriverModule, "Standard");
-        drv = GetDriverFactory().CreateInstance(vDriverModule, session);
+        drv = GetDriverFactory().CreateInstance(vDriverModule, session, graph);
 
         // Execute driver
         drv->Execute();

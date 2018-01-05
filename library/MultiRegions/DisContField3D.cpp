@@ -1003,9 +1003,19 @@ using namespace std;
                     // If the edge is reversed with respect to the face, then
                     // swap the edges so that we have the original ordering of
                     // the edge in the 3D element. This is necessary to properly
-                    // determine edge orientation.
-                    if ((StdRegions::Orientation)edgeOrt[cnt]
-                            == StdRegions::eBackwards)
+                    // determine edge orientation. Note that the logic relies on
+                    // the fact that all edge forward directions are CCW
+                    // orientated: we use a tensor product ordering for 2D
+                    // elements so need to reverse this for edge IDs 2 and 3.
+                    StdRegions::Orientation edgeOrient =
+                        static_cast<StdRegions::Orientation>(edgeOrt[cnt]);
+                    if (j > 1)
+                    {
+                        edgeOrient = edgeOrient == StdRegions::eForwards ?
+                            StdRegions::eBackwards : StdRegions::eForwards;
+                    }
+
+                    if (edgeOrient == StdRegions::eBackwards)
                     {
                         swap(testIns.first->second.first,
                              testIns.first->second.second);

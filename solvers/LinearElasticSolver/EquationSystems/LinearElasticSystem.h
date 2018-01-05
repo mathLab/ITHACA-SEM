@@ -55,10 +55,11 @@ public:
 
     /// Creates an instance of this class
     static EquationSystemSharedPtr create(
-        const LibUtilities::SessionReaderSharedPtr& pSession)
+        const LibUtilities::SessionReaderSharedPtr& pSession,
+        const SpatialDomains::MeshGraphSharedPtr &pGraph)
     {
         EquationSystemSharedPtr p = MemoryManager<
-            LinearElasticSystem>::AllocateSharedPtr(pSession);
+            LinearElasticSystem>::AllocateSharedPtr(pSession, pGraph);
         p->InitObject();
         return p;
     }
@@ -81,7 +82,8 @@ public:
 
 protected:
     LinearElasticSystem(
-        const LibUtilities::SessionReaderSharedPtr& pSession);
+        const LibUtilities::SessionReaderSharedPtr& pSession,
+        const SpatialDomains::MeshGraphSharedPtr &pGraph);
 
     /// Poisson ratio.
     NekDouble m_nu;

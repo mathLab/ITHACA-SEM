@@ -55,6 +55,9 @@ int main(int argc, char *argv[])
         // Create session reader.
         session = LibUtilities::SessionReader::CreateInstance(argc, argv);
 
+        // Read the geometry and the expansion information
+        graph = SpatialDomains::MeshGraph::Read(session);
+
         // Create Field I/O object.
         fld     = LibUtilities::FieldIO::CreateDefault(session);
 
@@ -64,9 +67,6 @@ int main(int argc, char *argv[])
         unsigned int nSteps      = session->GetParameter("NumSteps");
         NekDouble    delta_t     = session->GetParameter("TimeStep");
         NekDouble    epsilon     = session->GetParameter("epsilon" );
-
-        // Read the geometry and the expansion information
-        graph = SpatialDomains::MeshGraph::Read(session);
 
         // Create field
         field = MemoryManager<MultiRegions::ContField2D>

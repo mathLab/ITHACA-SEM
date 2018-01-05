@@ -57,9 +57,10 @@ namespace Nektar
      * \param
      */
     VelocityCorrectionScheme::VelocityCorrectionScheme(
-            const LibUtilities::SessionReaderSharedPtr& pSession)
-        : UnsteadySystem(pSession),
-          IncNavierStokes(pSession),
+        const LibUtilities::SessionReaderSharedPtr& pSession,
+        const SpatialDomains::MeshGraphSharedPtr &pGraph)
+        : UnsteadySystem(pSession, pGraph),
+          IncNavierStokes(pSession, pGraph),
           m_varCoeffLap(StdRegions::NullVarCoeffMap)
     {
         

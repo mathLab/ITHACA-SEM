@@ -36,6 +36,8 @@
 #ifndef NEKMESHUTILS_MESHELEMENTS_MESH
 #define NEKMESHUTILS_MESHELEMENTS_MESH
 
+#include <set>
+
 #include <NekMeshUtils/NekMeshUtilsDeclspec.h>
 #include <NekMeshUtils/MeshElements/Element.h>
 #include <NekMeshUtils/MeshElements/Composite.h>

@@ -71,6 +71,7 @@ void InputMCF::ParseFile(string nm)
     filename.push_back(nm);
     LibUtilities::SessionReaderSharedPtr pSession =
         LibUtilities::SessionReader::CreateInstance(0, NULL, filename);
+    pSession->InitSession();
 
     ASSERTL0(pSession->DefinesElement("NEKTAR/MESHING"), "no meshing tag");
     ASSERTL0(pSession->DefinesElement("NEKTAR/MESHING/INFORMATION"),

@@ -68,12 +68,14 @@ public:
         return MemoryManager<MeshGraphHDF5>::AllocateSharedPtr();
     }
 
-    static MeshFileType className;
+    static std::string className;
 
 protected:
-    void ReadGeometry(const SessionReaderSharedPtr &pSession,
-                      DomainRangeShPtr &rng = NullDomainRangeShPtr,
-                      bool fillGraph        = true);
+    virtual void ReadGeometry(
+        DomainRangeShPtr rng,
+        bool             fillGraph);
+    virtual void PartitionMesh(
+        LibUtilities::SessionReaderSharedPtr session);
 
 private:
 

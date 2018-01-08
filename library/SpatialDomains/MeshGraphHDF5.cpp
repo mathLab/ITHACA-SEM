@@ -37,7 +37,6 @@
 #include "MeshGraphHDF5.h"
 
 #include <LibUtilities/BasicUtils/ParseUtils.h>
-#include <SpatialDomains/Equation.h>
 #include <SpatialDomains/MeshEntities.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
@@ -51,18 +50,17 @@ namespace Nektar
 namespace SpatialDomains
 {
 
-MeshFileType MeshGraphHDF5::className =
+std::string MeshGraphHDF5::className =
     GetMeshGraphFactory().RegisterCreatorFunction(
-        eHDF5Mesh, MeshGraphHDF5::create, "IO with HDF5 geometry");
+        "HDF5", MeshGraphHDF5::create, "IO with HDF5 geometry");
 
-void MeshGraphHDF5::ReadGeometry(const SessionReaderSharedPtr &pSession,
-                                 DomainRangeShPtr &rng, bool fillGraph)
+void MeshGraphHDF5::ReadGeometry(
+    DomainRangeShPtr rng,
+    bool fillGraph)
 {
-    m_session = pSession;
-
     int err;
     //we use the xml geom to find information about the HDF5 file
-    m_xmlGeom            = pSession->GetElement("NEKTAR/GEOMETRY");
+    m_xmlGeom            = m_session->GetElement("NEKTAR/GEOMETRY");
     TiXmlAttribute *attr = m_xmlGeom->FirstAttribute();
     m_meshPartitioned    = false;
     m_meshDimension      = 3;
@@ -133,6 +131,11 @@ void MeshGraphHDF5::ReadGeometry(const SessionReaderSharedPtr &pSession,
     ReadElements();
     ReadComposites();
     ReadDomain();
+}
+
+void MeshGraphHDF5::PartitionMesh(LibUtilities::SessionReaderSharedPtr session)
+{
+    // Don't do anything yet!
 }
 
 void MeshGraphHDF5::ReadVertices()

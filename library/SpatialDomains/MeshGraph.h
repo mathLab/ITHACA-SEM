@@ -389,14 +389,16 @@ public:
         return Geometry2DSharedPtr();
     };
 
-    LibUtilities::BasisKey GetEdgeBasisKey(
+    SPATIAL_DOMAINS_EXPORT LibUtilities::BasisKey GetEdgeBasisKey(
         SegGeomSharedPtr edge, const std::string variable = "DefaultVar");
 
-    GeometryLinkSharedPtr GetElementsFromEdge(Geometry1DSharedPtr edge);
+    SPATIAL_DOMAINS_EXPORT GeometryLinkSharedPtr GetElementsFromEdge(
+        Geometry1DSharedPtr edge);
 
-    GeometryLinkSharedPtr GetElementsFromFace(Geometry2DSharedPtr face);
+    SPATIAL_DOMAINS_EXPORT GeometryLinkSharedPtr GetElementsFromFace(
+        Geometry2DSharedPtr face);
 
-    LibUtilities::BasisKey GetFaceBasisKey(
+    SPATIAL_DOMAINS_EXPORT LibUtilities::BasisKey GetFaceBasisKey(
         Geometry2DSharedPtr face, const int facedir,
         const std::string variable = "DefaultVar");
 
@@ -411,10 +413,10 @@ public:
     }
 
     /*an inital read which loads a very light weight data structure*/
-    virtual void ReadGeometry(
+    SPATIAL_DOMAINS_EXPORT virtual void ReadGeometry(
         DomainRangeShPtr rng,
         bool             fillGraph) = 0;
-    virtual void PartitionMesh(
+    SPATIAL_DOMAINS_EXPORT virtual void PartitionMesh(
         LibUtilities::SessionReaderSharedPtr session) = 0;
 
 protected:

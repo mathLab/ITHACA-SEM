@@ -71,9 +71,10 @@ public:
 
     static std::string className;
 
-    virtual void ReadGeometry(DomainRangeShPtr rng,
-                              bool             fillGraph);
-    virtual void PartitionMesh(
+    SPATIAL_DOMAINS_EXPORT virtual void ReadGeometry(
+        DomainRangeShPtr rng,
+        bool             fillGraph);
+    SPATIAL_DOMAINS_EXPORT virtual void PartitionMesh(
         LibUtilities::SessionReaderSharedPtr session);
 
 protected:

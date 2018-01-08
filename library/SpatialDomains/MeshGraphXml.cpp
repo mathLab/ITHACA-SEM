@@ -303,6 +303,13 @@ void MeshGraphXml::PartitionMesh(
                 LibUtilities::PortablePath(fullpath) };
             m_session->InitSession(filenames);
         }
+        else if (!isRoot)
+        {
+            // No partitioning, non-root processors need to read the session
+            // file -- handles case where --npz is the same as number of
+            // processors.
+            m_session->InitSession();
+        }
     }
 }
 

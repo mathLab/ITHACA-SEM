@@ -55,7 +55,9 @@ public:
     {
     }
 
-    void WriteGeometry(std::string &outfilename, bool defaultExp = false);
+    void WriteGeometry(std::string &outfilename,
+                       bool defaultExp = false,
+                       const LibUtilities::FieldMetaDataMap &metadata);
 
     void WriteGeometry(std::string outname,
                        std::vector<std::set<unsigned int>> elements,

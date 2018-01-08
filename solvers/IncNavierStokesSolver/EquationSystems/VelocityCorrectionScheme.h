@@ -120,6 +120,13 @@ namespace Nektar
         NekDouble m_sVVCutoffRatio;
         /// Diffusion coefficient of SVV modes
         NekDouble m_sVVDiffCoeff;
+        NekDouble m_sVVCutoffRatioHomo1D;
+        /// Diffusion coefficient of SVV modes in homogeneous 1D Direction
+        NekDouble m_sVVDiffCoeffHomo1D;
+        /// Array of coefficient if power kernel is used in SVV
+        Array<OneD, NekDouble> m_svvVarDiffCoeff;
+        /// Identifier for Power Kernel otherwise DG kernel
+        bool m_IsSVVPowerKernel;
         /// Diffusion coefficients (will be kinvis for velocities)
         Array<OneD, NekDouble> m_diffCoeff;
 
@@ -179,6 +186,15 @@ namespace Nektar
         
         Array<OneD, Array< OneD, NekDouble> > m_F;
 
+        void SetUpSVV(void);
+        
+        void SVVVarDiffCoeff(const NekDouble velmag, 
+                             Array<OneD, NekDouble> &diffcoeff,
+                             const Array<OneD, Array<OneD, NekDouble> >
+                             &vel = NullNekDoubleArrayofArray);
+        void AppendSVVFactors(
+                              StdRegions::ConstFactorMap &factors,
+                              MultiRegions::VarFactorsMap &varFactorsMap);
     private:
         
     };

@@ -194,7 +194,7 @@ void CFIMesh::Process()
         }
     }
 
-    ASSERTL0(nodes.size() == cfiIdToTypes.size(), "not all nodes marked");
+    WARNINGL0(nodes.size() == cfiIdToTypes.size(), "not all nodes marked");
 
     int id = 0;
 
@@ -209,17 +209,17 @@ void CFIMesh::Process()
         }
     }
 
-    ASSERTL0(id == nodes.size(), "not all nodes numbered");
+    WARNINGL0(id == nodes.size(), "not all nodes numbered");
 
     int prefix = m_mesh->m_cad->GetNumSurf() > 100 ? 1000 : 100;
 
-    if(m_mesh->m_verbose)
+    if (m_mesh->m_verbose)
     {
         cout << "prisms " << prisms->size() << endl;
     }
 
     int nm[6] = {3, 2, 5, 0, 1, 4};
-    for (auto &it : * prisms)
+    for (auto &it : *prisms)
     {
         vector<NodeSharedPtr> n(6);
 
@@ -240,7 +240,7 @@ void CFIMesh::Process()
         m_mesh->m_element[3].push_back(E);
     }
 
-    if(m_mesh->m_verbose)
+    if (m_mesh->m_verbose)
     {
         cout << "tets " << tets->size() << endl;
     }
@@ -264,7 +264,7 @@ void CFIMesh::Process()
         m_mesh->m_element[3].push_back(E);
     }
 
-    if(m_mesh->m_verbose)
+    if (m_mesh->m_verbose)
     {
         cout << "hexes " << hexs->size() << endl;
     }
@@ -296,7 +296,7 @@ void CFIMesh::Process()
 
     vector<cfi::ElementDefinition> *tris =
         m_model->getElements(cfi::SUBTYPE_TR3, 3);
-    if(m_mesh->m_verbose)
+    if (m_mesh->m_verbose)
     {
         cout << "tris " << tris->size() << endl;
     }
@@ -342,7 +342,7 @@ void CFIMesh::Process()
 
     vector<cfi::ElementDefinition> *quads =
         m_model->getElements(cfi::SUBTYPE_QU4, 4);
-    if(m_mesh->m_verbose)
+    if (m_mesh->m_verbose)
     {
         cout << "quads " << quads->size() << endl;
     }
@@ -409,7 +409,7 @@ void CFIMesh::Process()
 
     vector<cfi::ElementDefinition> *beams =
         m_model->getElements(cfi::SUBTYPE_BE2, 2);
-    if(m_mesh->m_verbose)
+    if (m_mesh->m_verbose)
     {
         cout << "beams " << beams->size() << endl;
     }

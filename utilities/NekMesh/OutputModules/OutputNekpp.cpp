@@ -114,9 +114,30 @@ void OutputNekpp::Process()
     string file = m_config["outfile"].as<string>();
     string ext = boost::filesystem::extension(file);
 
+<<<<<<< HEAD
     // Default to compressed XML output.
     std::string type = "XmlCompressed";
 
+=======
+    //add metadata
+    root->LinkEndChild(m_mesh->m_infotag);
+    WriteXmlExpansions(root);
+    WriteXmlConditions(root);
+
+    // Begin <GEOMETRY> section
+    TiXmlElement *geomTag = new TiXmlElement("GEOMETRY");
+    geomTag->SetAttribute("DIM", m_mesh->m_expDim);
+    geomTag->SetAttribute("SPACE", m_mesh->m_spaceDim);
+    root->LinkEndChild(geomTag);
+
+    WriteXmlNodes(geomTag);
+    WriteXmlEdges(geomTag);
+    WriteXmlFaces(geomTag);
+    WriteXmlElements(geomTag);
+    WriteXmlCurves(geomTag);
+    WriteXmlComposites(geomTag);
+    WriteXmlDomain(geomTag);
+>>>>>>> upstream/master
 
     // Extract the output filename and extension
     string filename = m_config["outfile"].as<string>();

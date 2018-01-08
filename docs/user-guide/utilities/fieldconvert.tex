@@ -157,6 +157,7 @@ Specifically, FieldConvert has these additional functionalities
 \item \inltt{QCriterion}: Computes the Q-Criterion for a given output file;
 \item \inltt{L2Criterion}: Computes the Lambda 2 Criterion for a given output file;
 \item \inltt{addcompositeid}: Adds the composite ID of an element as an additional field;
+\item \inltt{addfieldfromstring}: Adds a new field from an expression involving the existing fields;
 \item \inltt{addFld}: Sum two .fld files;
 \item \inltt{combineAvg}: Combine two \nekpp binary output (.chk or .fld) field file containing averages of fields (and
 possibly also Reynolds stresses) into single file;
@@ -174,6 +175,7 @@ possibly also Reynolds stresses) into single file;
 \item \inltt{isocontour}: Extract an isocontour of ``fieldid'' variable and at value ``fieldvalue''. Optionally ``fieldstr'' can be specified for a string definition or ``smooth'' for smoothing;
 \item \inltt{jacobianenergy}: Shows high frequency energy of Jacobian;
 \item \inltt{qualitymetric}: Evaluate a quality metric of the underlying mesh to show mesh quality;
+\item \inltt{mean}: Evaluate the mean of variables on the domain;
 \item \inltt{meanmode}: Extract mean mode (plane zero) of 3DH1D expansions;
 \item \inltt{pointdatatofld}: Given discrete data at quadrature points
   project them onto an expansion basis and output fld file;
@@ -281,7 +283,28 @@ variable that contains the composite ID. To assist in boundary identification,
 the input file \inlsh{mesh.xml} should be a surface XML file that can be
 obtained through the \nm \inltt{extract} module (see section
 \ref{s:utilities:nekmesh:extract}).
-
+%
+%
+%
+\subsection{Add new field: \textit{addfieldfromstring} module}
+To create a new field using an expression involving the existing fields, one can
+use the \inltt{addfieldfromstring} module of FieldConvert
+%
+\begin{lstlisting}[style=BashInputStyle]
+  FieldConvert -m addfieldfromstring:fieldstr="x+y+u":fieldname="result" \
+  file1.xml file2.fld file3.fld
+\end{lstlisting}
+%
+In this case \inltt{fieldstr} is a required parameter describing a function of
+the coordinates and the existing variables, and \inltt{fieldname} is an optional
+parameter defining the name of the new field (the default is newfield).
+\inltt{file3.fld} is the output containing both the original and the new fields,
+and can be processed in a similar way as described
+in section \ref{s:utilities:fieldconvert:sub:convert} to visualise
+the result either in Tecplot, Paraview or VisIt.
+%
+%
+%
 \subsection{Sum two .fld files: \textit{addFld} module}
 To sum two .fld files one can use the \inltt{addFld} module of FieldConvert
 %
@@ -784,7 +807,20 @@ Two quality metrics are implemented that produce scalar fields $Q$:
 %
 %
 %
-
+\subsection{Evaluate the mean of variables on the domain: \textit{mean} module}
+To evaluate the mean of variables on the domain one can use the
+\inltt{mean} module of FieldConvert
+%
+\begin{lstlisting}[style=BashInputStyle]
+FieldConvert -m mean file1.xml file2.fld out.stdout
+\end{lstlisting}
+%
+This module does not create an output file which is reinforced by the
+out.stdout option. The integral and mean for each field variable are
+then printed to the stdout.
+%
+%
+%
 \subsection{Extract mean mode of 3DH1D expansion: \textit{meanmode} module}
 
 To obtain a 2D expansion containing the mean mode (plane zero in Fourier space) of a

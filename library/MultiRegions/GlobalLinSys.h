@@ -139,6 +139,8 @@ namespace Nektar
             PreconditionerSharedPtr CreatePrecon(AssemblyMapSharedPtr asmMap);
 
         private:
+            LocalRegions::MatrixKey GetBlockMatrixKey(unsigned int n);
+            
             /// Solve a linear system based on mapping.
             virtual void v_Solve(
                 const Array<OneD, const NekDouble> &in,

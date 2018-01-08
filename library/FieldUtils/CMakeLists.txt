@@ -17,6 +17,7 @@ SET(FieldUtilsHeaders
     OutputModules/OutputPts.h
     OutputModules/OutputXml.h
     ProcessModules/ProcessAddCompositeID.h
+    ProcessModules/ProcessAddFieldFromString.h
     ProcessModules/ProcessAddFld.h
     ProcessModules/ProcessBoundaryExtract.h
     ProcessModules/ProcessCombineAvg.h
@@ -38,6 +39,7 @@ SET(FieldUtilsHeaders
     ProcessModules/ProcessL2Criterion.h
     ProcessModules/ProcessMapping.h
     ProcessModules/ProcessNumModes.h
+    ProcessModules/ProcessMean.h
     ProcessModules/ProcessMeanMode.h
     ProcessModules/ProcessPointDataToFld.h
     ProcessModules/ProcessPrintFldNorms.h
@@ -71,6 +73,7 @@ SET(FieldUtilsSources
     OutputModules/OutputPts.cpp
     OutputModules/OutputXml.cpp
     ProcessModules/ProcessAddCompositeID.cpp
+    ProcessModules/ProcessAddFieldFromString.cpp
     ProcessModules/ProcessAddFld.cpp
     ProcessModules/ProcessBoundaryExtract.cpp
     ProcessModules/ProcessCombineAvg.cpp
@@ -92,6 +95,7 @@ SET(FieldUtilsSources
     ProcessModules/ProcessL2Criterion.cpp
     ProcessModules/ProcessMapping.cpp
     ProcessModules/ProcessNumModes.cpp
+    ProcessModules/ProcessMean.cpp
     ProcessModules/ProcessMeanMode.cpp
     ProcessModules/ProcessPointDataToFld.cpp
     ProcessModules/ProcessPrintFldNorms.cpp

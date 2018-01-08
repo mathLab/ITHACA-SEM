@@ -34,6 +34,8 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <IncNavierStokesSolver/EquationSystems/VelocityCorrectionScheme.h>
+#include <LocalRegions/Expansion2D.h>
+#include <LocalRegions/Expansion3D.h>
 #include <LibUtilities/BasicUtils/Timer.h>
 #include <SolverUtils/Core/Misc.h>
 
@@ -123,55 +125,7 @@ namespace Nektar
             m_intVariables.push_back(n);
         }
         
-        // Load parameters for Spectral Vanishing Viscosity
-        m_session->MatchSolverInfo("SpectralVanishingViscosity","True",
-                                   m_useSpecVanVisc, false);
-        m_useHomo1DSpecVanVisc = m_useSpecVanVisc;
-        if(m_useSpecVanVisc == false)
-        {
-            m_session->MatchSolverInfo("SpectralVanishingViscositySpectralHP",
-                                "True", m_useSpecVanVisc, false);
-            m_session->MatchSolverInfo("SpectralVanishingViscosityHomo1D",
-                                "True", m_useHomo1DSpecVanVisc, false);
-        }
-        m_session->LoadParameter("SVVCutoffRatio",m_sVVCutoffRatio,0.75);
-        m_session->LoadParameter("SVVDiffCoeff",  m_sVVDiffCoeff,  0.1);
-
-        if(m_HomogeneousType == eHomogeneous1D)
-        {
-            ASSERTL0(m_nConvectiveFields > 2,
-                "Expect to have three velocity fields with homogenous expansion");
-
-            if(m_useHomo1DSpecVanVisc)
-            {
-                Array<OneD, unsigned int> planes;
-                planes = m_fields[0]->GetZIDs();
-
-                int num_planes = planes.num_elements();
-                Array<OneD, NekDouble> SVV(num_planes,0.0);
-                NekDouble fac;
-                int kmodes = m_fields[0]->GetHomogeneousBasis()->GetNumModes();
-                int pstart;
-
-                pstart = m_sVVCutoffRatio*kmodes;
-                
-                for(n = 0; n < num_planes; ++n)
-                {
-                    if(planes[n] > pstart)
-                    {
-                        fac = (NekDouble)((planes[n] - kmodes)*(planes[n] - kmodes))/
-                            ((NekDouble)((planes[n] - pstart)*(planes[n] - pstart)));
-                        SVV[n] = m_sVVDiffCoeff*exp(-fac)/m_kinvis;
-                    }
-                }
-
-                for(int i = 0; i < m_velocity.num_elements(); ++i)
-                {
-                    m_fields[m_velocity[i]]->SetHomo1DSpecVanVisc(SVV);
-                }
-            }
-            
-        }
+        SetUpSVV();
 
         m_session->MatchSolverInfo("SmoothAdvection", "True",
                                     m_SmoothAdvection, false);
@@ -223,19 +177,51 @@ namespace Nektar
             SolverUtils::AddSummaryItem(s, "Dealiasing", dealias);
         }
 
+
         string smoothing = m_useSpecVanVisc ? "spectral/hp" : "";
-        if (m_useHomo1DSpecVanVisc && (m_HomogeneousType == eHomogeneous1D))
-        {
-            smoothing += (smoothing == "" ? "" : " + ") + string("Homogeneous1D");
-        }
         if (smoothing != "")
         {
-            SolverUtils::AddSummaryItem(
-                s, "Smoothing", "SVV (" + smoothing + " SVV (cut-off = "
-                + boost::lexical_cast<string>(m_sVVCutoffRatio)
-                + ", diff coeff = "
-                + boost::lexical_cast<string>(m_sVVDiffCoeff)+")");
+            if(m_svvVarDiffCoeff == NullNekDouble1DArray)
+            {
+                SolverUtils::AddSummaryItem(
+                   s, "Smoothing-SpecHP", "SVV (" + smoothing +
+                   " Exp Kernel(cut-off = "
+                   + boost::lexical_cast<string>(m_sVVCutoffRatio)
+                   + ", diff coeff = "
+                   + boost::lexical_cast<string>(m_sVVDiffCoeff)+"))");
+            }
+            else
+            {
+                if(m_IsSVVPowerKernel)
+                {
+                    SolverUtils::AddSummaryItem(
+                       s, "Smoothing-SpecHP", "SVV (" + smoothing +
+                       " Power Kernel (Power ratio ="
+                       + boost::lexical_cast<string>(m_sVVCutoffRatio)
+                       + ", diff coeff = "
+                       + boost::lexical_cast<string>(m_sVVDiffCoeff)+"*Uh/p))");
+                }
+                else
+                {
+                    SolverUtils::AddSummaryItem(
+                       s, "Smoothing-SpecHP", "SVV (" + smoothing +
+                       " DG Kernel (diff coeff = "
+                       + boost::lexical_cast<string>(m_sVVDiffCoeff)+"*Uh/p))");
+
+                }
+            }
+            
         }
+
+        if (m_useHomo1DSpecVanVisc && (m_HomogeneousType == eHomogeneous1D))
+        {
+            SolverUtils::AddSummaryItem(
+                  s, "Smoothing-Homo1D", "SVV (Homogeneous1D - Exp Kernel(cut-off = "
+                  + boost::lexical_cast<string>(m_sVVCutoffRatioHomo1D)
+                  + ", diff coeff = "
+                  + boost::lexical_cast<string>(m_sVVDiffCoeffHomo1D)+"))");
+        }
+
     }
 
     /**
@@ -467,22 +453,307 @@ namespace Nektar
         const NekDouble aii_Dt)
     {
         StdRegions::ConstFactorMap factors;
+        StdRegions::VarCoeffMap varCoeffMap = StdRegions::NullVarCoeffMap;
+        MultiRegions::VarFactorsMap varFactorsMap =
+            MultiRegions::NullVarFactorsMap;
 
-        if(m_useSpecVanVisc)
-        {
-            factors[StdRegions::eFactorSVVCutoffRatio] = m_sVVCutoffRatio;
-            factors[StdRegions::eFactorSVVDiffCoeff]   = m_sVVDiffCoeff/m_kinvis;
-        }
-
+        AppendSVVFactors(factors,varFactorsMap);
+        
         // Solve Helmholtz system and put in Physical space
         for(int i = 0; i < m_nConvectiveFields; ++i)
         {
             // Setup coefficients for equation
             factors[StdRegions::eFactorLambda] = 1.0/aii_Dt/m_diffCoeff[i];
             m_fields[i]->HelmSolve(Forcing[i], m_fields[i]->UpdateCoeffs(),
-                                   NullFlagList, factors);
+                                   NullFlagList,  factors, varCoeffMap,
+                                   varFactorsMap);
             m_fields[i]->BwdTrans(m_fields[i]->GetCoeffs(),outarray[i]);
         }
     }
-    
+
+    void  VelocityCorrectionScheme::SetUpSVV(void)
+    {
+        
+        m_session->MatchSolverInfo("SpectralVanishingViscosity",
+                                   "PowerKernel", m_useSpecVanVisc, false);
+        
+        if(m_useSpecVanVisc)
+        {
+            m_useHomo1DSpecVanVisc = true;
+        }
+        else
+        {
+            m_session->MatchSolverInfo("SpectralVanishingViscositySpectralHP",
+                                       "PowerKernel", m_useSpecVanVisc, false);
+        }
+
+        if(m_useSpecVanVisc)
+        {
+            m_IsSVVPowerKernel = true;
+        }
+        else
+        {
+            m_session->MatchSolverInfo("SpectralVanishingViscosity","DGKernel",
+                                       m_useSpecVanVisc, false);
+            if(m_useSpecVanVisc)
+            {
+                m_useHomo1DSpecVanVisc = true;
+            }
+            else
+            {
+                m_session->MatchSolverInfo("SpectralVanishingViscositySpectralHP",
+                                           "DGKernel", m_useSpecVanVisc, false);
+            }
+            
+            if(m_useSpecVanVisc)
+            {
+                m_IsSVVPowerKernel = false;
+            }
+        }
+
+        //set up varcoeff kernel if PowerKernel or DG is specified
+        if(m_useSpecVanVisc)
+        {
+            Array<OneD, Array<OneD, NekDouble> > SVVVelFields = NullNekDoubleArrayofArray;
+            if(m_session->DefinesFunction("SVVVelocityMagnitude"))
+            {
+                if (m_comm->GetRank() == 0)
+                {
+                    cout << "Seting up SVV velocity from "
+                        "SVVVelocityMagnitude section in session file" << endl;
+                }
+                int nvel = m_velocity.num_elements();
+                int phystot = m_fields[0]->GetTotPoints();
+                SVVVelFields = Array<OneD, Array<OneD, NekDouble> >(nvel);
+                vector<string> vars;
+                for(int i = 0; i < nvel; ++i)
+                {
+                    SVVVelFields[i] = Array<OneD, NekDouble>(phystot);
+                    vars.push_back(m_session->GetVariable(m_velocity[i]));
+                }
+                    
+                // Load up files into  m_fields;
+                GetFunction("SVVVelocityMagnitude")
+                    ->Evaluate(vars,SVVVelFields);
+            }
+
+            m_svvVarDiffCoeff = Array<OneD, NekDouble>(m_fields[0]->GetNumElmts());
+            SVVVarDiffCoeff(1.0,m_svvVarDiffCoeff,SVVVelFields);
+            m_session->LoadParameter("SVVDiffCoeff",  m_sVVDiffCoeff,  1.0);
+        }
+        else
+        {
+            m_svvVarDiffCoeff = NullNekDouble1DArray;
+            m_session->LoadParameter("SVVDiffCoeff",  m_sVVDiffCoeff,  0.1);
+        }
+
+        // Load parameters for Spectral Vanishing Viscosity
+        if(m_useSpecVanVisc == false)
+        {
+            m_session->MatchSolverInfo("SpectralVanishingViscosity","True",
+                                       m_useSpecVanVisc, false);
+            if(m_useSpecVanVisc == false)
+            {
+                m_session->MatchSolverInfo("SpectralVanishingViscosity","ExpKernel",
+                                           m_useSpecVanVisc, false);
+            }
+            m_useHomo1DSpecVanVisc = m_useSpecVanVisc;
+
+            if(m_useSpecVanVisc == false)
+            {
+                m_session->MatchSolverInfo("SpectralVanishingViscositySpectralHP","True",
+                                           m_useSpecVanVisc, false);
+                if(m_useSpecVanVisc == false)
+                {
+                    m_session->MatchSolverInfo("SpectralVanishingViscositySpectralHP","ExpKernel",
+                                               m_useSpecVanVisc, false);
+                }
+            }
+        }
+
+
+        // Case of only Homo1D kernel
+        if(m_useSpecVanVisc == false)
+        {
+            m_session->MatchSolverInfo("SpectralVanishingViscosityHomo1D",
+                                "True", m_useHomo1DSpecVanVisc, false);
+            if(m_useHomo1DSpecVanVisc == false)
+            {
+                m_session->MatchSolverInfo("SpectralVanishingViscosityHomo1D",
+                                       "ExpKernel", m_useHomo1DSpecVanVisc, false);
+            }
+        }
+        else
+        {
+            bool testForFalse;
+            // Case where Homo1D is turned off but has been turned on
+            // impliictly by SpectralVanishingViscosity solver info
+            m_session->MatchSolverInfo("SpectralVanishingViscosityHomo1D",
+                                "False", testForFalse, false);
+            if(testForFalse)
+            {
+                m_useHomo1DSpecVanVisc = false;
+            }            
+        }
+
+        m_session->LoadParameter("SVVCutoffRatio",m_sVVCutoffRatio,0.75);
+        m_session->LoadParameter("SVVCutoffRatioHomo1D",m_sVVCutoffRatioHomo1D,m_sVVCutoffRatio);
+        m_session->LoadParameter("SVVDiffCoeffHomo1D",  m_sVVDiffCoeffHomo1D,  m_sVVDiffCoeff);
+
+        if(m_HomogeneousType == eHomogeneous1D)
+        {
+            ASSERTL0(m_nConvectiveFields > 2,
+                "Expect to have three velocity fields with homogenous expansion");
+
+            if(m_useHomo1DSpecVanVisc)
+            {
+                Array<OneD, unsigned int> planes;
+                planes = m_fields[0]->GetZIDs();
+
+                int num_planes = planes.num_elements();
+                Array<OneD, NekDouble> SVV(num_planes,0.0);
+                NekDouble fac;
+                int kmodes = m_fields[0]->GetHomogeneousBasis()->GetNumModes();
+                int pstart;
+
+                pstart = m_sVVCutoffRatioHomo1D*kmodes;
+                
+                for(int n = 0; n < num_planes; ++n)
+                {
+                    if(planes[n] > pstart)
+                    {
+                        fac = (NekDouble)((planes[n] - kmodes)*(planes[n] - kmodes))/
+                            ((NekDouble)((planes[n] - pstart)*(planes[n] - pstart)));
+                        SVV[n] = m_sVVDiffCoeffHomo1D*exp(-fac)/m_kinvis;
+                    }
+                }
+
+                for(int i = 0; i < m_velocity.num_elements(); ++i)
+                {
+                    m_fields[m_velocity[i]]->SetHomo1DSpecVanVisc(SVV);
+                }
+            }
+        }
+
+    }
+
+    void VelocityCorrectionScheme::SVVVarDiffCoeff(
+                     const NekDouble velmag, 
+                     Array<OneD, NekDouble> &diffcoeff,
+                     const  Array<OneD, Array<OneD, NekDouble> >  &vel)
+    {
+        int phystot = m_fields[0]->GetTotPoints();
+        int nel = m_fields[0]->GetNumElmts();
+        int nvel,cnt; 
+        
+        Array<OneD, NekDouble> tmp;
+        
+        Vmath::Fill(nel,velmag,diffcoeff,1);
+        
+        if(vel != NullNekDoubleArrayofArray)
+        {
+            Array<OneD, NekDouble> Velmag(phystot);
+            nvel = vel.num_elements();
+            // calculate magnitude of v
+            Vmath::Vmul(phystot,vel[0],1,vel[0],1,Velmag,1);
+            for(int n = 1; n < nvel; ++n)
+            {
+                Vmath::Vvtvp(phystot,vel[n],1,vel[n],1,Velmag,1,
+                             Velmag,1);
+            }
+            Vmath::Vsqrt(phystot,Velmag,1,Velmag,1);
+                
+
+            cnt = 0;
+            Array<OneD, NekDouble> tmp;
+            // calculate mean value of vel mag. 
+            for(int i = 0; i < nel; ++i)
+            {
+                int nq = m_fields[0]->GetExp(i)->GetTotPoints();
+                tmp = Velmag + cnt;
+                diffcoeff[i] = m_fields[0]->GetExp(i)->Integral(tmp);
+                Vmath::Fill(nq,1.0,tmp,1);
+                NekDouble area = m_fields[0]->GetExp(i)->Integral(tmp);
+                diffcoeff[i] = diffcoeff[i]/area;
+                cnt += nq;
+            }
+        }
+        else
+        {
+            nvel = m_expdim;
+        }
+        
+        if(m_expdim == 3)
+        {
+            LocalRegions::Expansion3DSharedPtr exp3D;
+            for (int e = 0; e < nel; e++)
+            {
+                exp3D = m_fields[0]->GetExp(e)->as<LocalRegions::Expansion3D>();
+                NekDouble h = 0; 
+                for(int i = 0; i < exp3D->GetNedges(); ++i)
+                {
+                    
+                    h = max(h, exp3D->GetGeom3D()->GetEdge(i)->GetVertex(0)->dist(
+                             *(exp3D->GetGeom3D()->GetEdge(i)->GetVertex(1))));
+                }
+
+                NekDouble p;
+                for(int i = 0; i < 3; ++i)
+                {
+                    p = max(p,exp3D->GetBasisNumModes(i)-1.0);
+                }
+                
+                diffcoeff[e] *= h/p; 
+            }
+        }
+        else
+        {
+            LocalRegions::Expansion2DSharedPtr exp2D;
+            for (int e = 0; e < nel; e++)
+            {
+                exp2D = m_fields[0]->GetExp(e)->as<LocalRegions::Expansion2D>();
+                NekDouble h = 0;
+                for(int i = 0; i < exp2D->GetNedges(); ++i)
+                {
+                    
+                   h = max(h, exp2D->GetGeom2D()->GetEdge(i)->GetVertex(0)->dist(
+                             *(exp2D->GetGeom2D()->GetEdge(i)->GetVertex(1))));
+                }
+
+                NekDouble p;
+                for(int i = 0; i < 2; ++i)
+                {
+                    p = max(p,exp2D->GetBasisNumModes(i)-1.0);
+                }
+                
+                diffcoeff[e] *= h/p; 
+            }
+        }
+    }
+
+    void VelocityCorrectionScheme::AppendSVVFactors(
+                                 StdRegions::ConstFactorMap &factors,
+                                 MultiRegions::VarFactorsMap &varFactorsMap)
+    {
+        
+        if(m_useSpecVanVisc)
+        {
+            factors[StdRegions::eFactorSVVCutoffRatio] = m_sVVCutoffRatio;
+            factors[StdRegions::eFactorSVVDiffCoeff]   = m_sVVDiffCoeff/m_kinvis;
+            if(m_svvVarDiffCoeff != NullNekDouble1DArray)
+            {
+                if(m_IsSVVPowerKernel)
+                {
+                    varFactorsMap[StdRegions::eFactorSVVPowerKerDiffCoeff] =
+                        m_svvVarDiffCoeff;
+                }
+                else
+                {
+                    varFactorsMap[StdRegions::eFactorSVVDGKerDiffCoeff] =
+                        m_svvVarDiffCoeff;
+                }
+            }
+        }
+
+    }
 } //end of namespace

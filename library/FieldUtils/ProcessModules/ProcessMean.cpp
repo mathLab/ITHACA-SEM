@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: InputCAD.h
+//  File: ProcessMean.cpp
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,47 +29,62 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Create mesh from CAD.
+//  Description: Compute the mean of each field.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef UTILITIES_NEKMESH_INPUTMCF
-#define UTILITIES_NEKMESH_INPUTMCF
+#include <iostream>
+#include <string>
+using namespace std;
 
-#include <NekMeshUtils/Module/Module.h>
+#include "ProcessMean.h"
+
+#include <LibUtilities/BasicUtils/SharedArray.hpp>
 
 namespace Nektar
 {
-namespace Utilities
+namespace FieldUtils
 {
 
-class InputMCF : public NekMeshUtils::InputModule
-{
-public:
-    InputMCF(NekMeshUtils::MeshSharedPtr m);
-    virtual ~InputMCF();
-    virtual void Process();
+ModuleKey ProcessMean::className =
+    GetModuleFactory().RegisterCreatorFunction(
+        ModuleKey(eProcessModule, "mean"), ProcessMean::create,
+        "compute the mean of each field over the domain.");
 
-    /// Creates an instance of this class
-    static NekMeshUtils::ModuleSharedPtr create(NekMeshUtils::MeshSharedPtr m)
+ProcessMean::ProcessMean(FieldSharedPtr f) : ProcessModule(f)
+{
+}
+
+ProcessMean::~ProcessMean()
+{
+}
+
+void ProcessMean::Process(po::variables_map &vm)
+{
+    int nfields  = m_f->m_variables.size();
+    int spacedim = m_f->m_graph->GetMeshDimension() + m_f->m_numHomogeneousDir;
+    int npoints  = m_f->m_exp[0]->GetNpoints();
+
+    // Calculate volume (or area)
+    Array<OneD, NekDouble> ones(npoints, 1.0);
+    NekDouble scale = m_f->m_exp[0]->Integral(ones);
+
+    // Output volume
+    string name[3] = {"length", "area", "volume"};
+    cout << "Domain " << name[spacedim - 1] << " : " << scale << endl;
+
+    // Calculate integral and mean of each field
+    for (int i = 0; i < nfields; ++i)
     {
-        return MemoryManager<InputMCF>::AllocateSharedPtr(m);
+        NekDouble integral = m_f->m_exp[0]->Integral(m_f->m_exp[i]->GetPhys());
+        if (m_f->m_comm->GetRank() == 0)
+        {
+            cout << "Integral (variable " << m_f->m_variables[i]
+                 << ") : " << integral << endl;
+            cout << "Mean (variable " << m_f->m_variables[i]
+                 << ") : " << integral / scale << endl;
+        }
     }
-    /// %ModuleKey for class.
-    static NekMeshUtils::ModuleKey className;
-
-    void ParseFile(std::string nm);
-
-private:
-    std::string m_minDelta, m_maxDelta, m_eps, m_cadfile, m_order, m_blsurfs,
-        m_blthick, m_blprog, m_bllayers, m_refinement, m_nacadomain, m_periodic,
-        m_adjustment, m_spaceoutblthr, m_nospaceoutsurf;
-
-    bool m_makeBL, m_surfopti, m_varopti, m_refine, m_woct, m_2D, m_splitBL,
-        m_naca, m_adjust, m_adjustall, m_smoothbl, m_manifold, m_cfiMesh,
-        m_spaceoutbl;
-};
 }
 }
-
-#endif
+}

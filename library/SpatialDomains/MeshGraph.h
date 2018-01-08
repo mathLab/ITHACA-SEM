@@ -155,6 +155,8 @@ typedef std::map<std::string, std::string> GeomInfoMap;
 typedef std::shared_ptr<std::vector<std::pair<GeometrySharedPtr, int>>>
     GeometryLinkSharedPtr;
 
+typedef std::map<std::string, std::string> MeshMetaDataMap;
+
 class MeshGraph;
 typedef std::shared_ptr<MeshGraph> MeshGraphSharedPtr;
 
@@ -171,11 +173,15 @@ public:
         DomainRangeShPtr                           rng       = NullDomainRangeShPtr,
         bool                                       fillGraph = true);
 
-    virtual void WriteGeometry(std::string &outfilename,
-                               bool defaultExp = false) = 0;
-    virtual void WriteGeometry(std::string outname,
-                               std::vector<std::set<unsigned int>> elements,
-                               std::vector<unsigned int> partitions) = 0;
+    virtual void WriteGeometry(
+        std::string &outfilename,
+        bool defaultExp = false,
+        const LibUtilities::FieldMetaDataMap &metadata
+                                     = LibUtilities::NullFieldMetaDataMap) = 0;
+    virtual void WriteGeometry(
+        std::string outname,
+        std::vector<std::set<unsigned int>> elements,
+        std::vector<unsigned int> partitions) = 0;
 
     void Empty(int dim, int space)
     {

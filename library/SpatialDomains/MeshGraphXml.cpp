@@ -2731,36 +2731,26 @@ void MeshGraphXml::WriteDefaultExpansion(TiXmlElement *root)
  * @brief Write out an XML file containing the GEOMETRY block
  * representing this MeshGraph instance inside a NEKTAR tag.
  */
-void MeshGraphXml::WriteGeometry(std::string &outfilename, bool defaultExp)
+void MeshGraphXml::WriteGeometry(
+    std::string                         &outfilename,
+    bool                                 defaultExp,
+    const LibUtilties::FieldMetaDataMap &metadata)
 {
     // Create empty TinyXML document.
     TiXmlDocument doc;
     TiXmlDeclaration *decl = new TiXmlDeclaration("1.0", "utf-8", "");
     doc.LinkEndChild(decl);
 
-    TiXmlElement *root = doc.FirstChildElement("NEKTAR");
-    TiXmlElement *geomTag;
+    TiXmlElement *root = new TiXmlElement("NEKTAR");
+    doc.LinkEndChild(root);
+    TiXmlElement *geomTag = new TiXmlElement("GEOMETRY");
+    root->LinkEndChild(geomTag);
 
-    // Try to find existing NEKTAR tag.
-    if (!root)
-    {
-        root = new TiXmlElement("NEKTAR");
-        doc.LinkEndChild(root);
-
-        geomTag = new TiXmlElement("GEOMETRY");
-        root->LinkEndChild(geomTag);
-    }
-    else
-    {
-        // Try to find existing GEOMETRY tag.
-        geomTag = root->FirstChildElement("GEOMETRY");
-
-        if (!geomTag)
-        {
-            geomTag = new TiXmlElement("GEOMETRY");
-            root->LinkEndChild(geomTag);
-        }
-    }
+    // Add provenance information using FieldIO library.
+    LibUtilities::FieldIO::AddInfoTag(
+        LibUtilities::XmlTagWriterSharedPtr(
+            new LibUtilities::XmlTagWriter(root)),
+        metadata);
 
     // Update attributes with dimensions.
     geomTag->SetAttribute("DIM", m_meshDimension);

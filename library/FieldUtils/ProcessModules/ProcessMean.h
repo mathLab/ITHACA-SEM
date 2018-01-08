@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: SurfaceMeshing.h
+//  File: ProcessMean.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,73 +29,54 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: class containing all surfacemeshing routines and classes.
+//  Description: Compute the mean of each field.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKMESHUTILS_2D_2D
-#define NEKMESHUTILS_2D_2D
+#ifndef FIELDUTILS_PROCESSMEAN
+#define FIELDUTILS_PROCESSMEAN
 
-#include <NekMeshUtils/Module/Module.h>
-#include <NekMeshUtils/SurfaceMeshing/CurveMesh.h>
-#include <NekMeshUtils/SurfaceMeshing/FaceMesh.h>
-
-#include <LibUtilities/Interpreter/AnalyticExpressionEvaluator.hpp>
+#include "../Module.h"
 
 namespace Nektar
 {
-namespace NekMeshUtils
+namespace FieldUtils
 {
 
 /**
- * @brief class containing all surface meshing routines methods and classes
+ * @brief This processing module computes the mean of each field.
+ *
  */
-class Generator2D : public ProcessModule
+class ProcessMean : public ProcessModule
 {
 public:
     /// Creates an instance of this class
-    static std::shared_ptr<Module> create(MeshSharedPtr m)
+    static std::shared_ptr<Module> create(FieldSharedPtr f)
     {
-        return MemoryManager<Generator2D>::AllocateSharedPtr(m);
+        return MemoryManager<ProcessMean>::AllocateSharedPtr(f);
     }
     static ModuleKey className;
 
-    Generator2D(MeshSharedPtr m);
+    ProcessMean(FieldSharedPtr f);
+    virtual ~ProcessMean();
 
-    virtual ~Generator2D();
+    /// Write mesh to output file.
+    virtual void Process(po::variables_map &vm);
 
-    virtual void Process();
+    virtual std::string GetModuleName()
+    {
+        return "ProcessMean";
+    }
 
-private:
-    void FindBLEnds();
+    virtual std::string GetModuleDescription()
+    {
+        return "Evaluating mean";
+    }
 
-    void MakeBLPrep();
-
-    void PeriodicPrep();
-
-    void MakePeriodic();
-
-    void MakeBL(int faceid);
-
-    void Report();
-    /// map of individual surface meshes from parametric surfaces
-    std::map<int, FaceMeshSharedPtr> m_facemeshes;
-    /// map of individual curve meshes of the curves in the domain
-    std::map<int, CurveMeshSharedPtr> m_curvemeshes;
-    /// map of periodic curve pairs
-    std::map<unsigned, unsigned> m_periodicPairs;
-    /// list of curves needing a BL
-    std::vector<unsigned int> m_blCurves;
-    /// map of curves and Bl ends: 0, 1 or 2 (for both)
-    std::map<unsigned, unsigned> m_blends;
-    /// list of BL edges
-    std::vector<EdgeSharedPtr> m_blEdges;
-    /// BL thickness expression
-    LibUtilities::AnalyticExpressionEvaluator m_thickness;
-    /// BL thickness expression ID
-    int m_thickness_ID;
-    /// map of BL curve nodes to adjacent edges
-    std::map<NodeSharedPtr, std::vector<EdgeSharedPtr>> m_nodesToEdge;
+    virtual ModulePriority GetModulePriority()
+    {
+        return eModifyExp;
+    }
 };
 }
 }

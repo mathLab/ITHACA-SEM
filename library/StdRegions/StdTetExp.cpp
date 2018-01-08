@@ -2114,43 +2114,108 @@ namespace Nektar
             Array<OneD, NekDouble> orthocoeffs(OrthoExp.GetNcoeffs());
             int i,j,k,cnt = 0;
 
-            //SVV filter paramaters (how much added diffusion relative to physical one
-            // and fraction of modes from which you start applying this added diffusion)
-            //
-            NekDouble  SvvDiffCoeff = mkey.GetConstFactor(StdRegions::eFactorSVVDiffCoeff);
-            NekDouble  SVVCutOff = mkey.GetConstFactor(StdRegions::eFactorSVVCutoffRatio);
-
-
-            //Defining the cut of mode
-            int cutoff_a = (int) (SVVCutOff*nmodes_a);
-            int cutoff_b = (int) (SVVCutOff*nmodes_b);
-            int cutoff_c = (int) (SVVCutOff*nmodes_c);
-            int nmodes = min(min(nmodes_a,nmodes_b),nmodes_c);
-            NekDouble cutoff = min(min(cutoff_a,cutoff_b),cutoff_c);
-            NekDouble epsilon = 1;
-
             // project onto physical space.
             OrthoExp.FwdTrans(array,orthocoeffs);
 
-            //------"New" Version August 22nd '13--------------------
-            for(i = 0; i < nmodes_a; ++i)
+            if(mkey.ConstFactorExists(eFactorSVVPowerKerDiffCoeff)) 
             {
-                for(j = 0; j < nmodes_b-i; ++j)
+                // Rodrigo's power kernel                
+                NekDouble cutoff = mkey.GetConstFactor(eFactorSVVCutoffRatio); 
+                NekDouble  SvvDiffCoeff  =
+                    mkey.GetConstFactor(eFactorSVVPowerKerDiffCoeff)*
+                    mkey.GetConstFactor(eFactorSVVDiffCoeff);
+                
+                for(int i = 0; i < nmodes_a; ++i)
                 {
-                    for(k = 0; k < nmodes_c-i-j; ++k)
+                    for(int j = 0; j < nmodes_b-j; ++j)
                     {
-                        if(i + j + k >= cutoff)
+                        NekDouble fac1 = std::max(
+                                   pow((1.0*i)/(nmodes_a-1),cutoff*nmodes_a),
+                                   pow((1.0*j)/(nmodes_b-1),cutoff*nmodes_b));
+
+                        for(int k = 0; k < nmodes_c-i-j; ++k)
                         {
-                            orthocoeffs[cnt] *= ((SvvDiffCoeff)*exp(-(i+j+k-nmodes)*(i+j+k-nmodes)/((NekDouble)((i+j+k-cutoff+epsilon)*(i+j+k-cutoff+epsilon)))));
+                            NekDouble fac = std::max(fac1,
+                                   pow((1.0*k)/(nmodes_c-1),cutoff*nmodes_c));
+                            
+                            orthocoeffs[cnt] *= SvvDiffCoeff * fac;
+                            cnt++;
                         }
-                        else
-                        {
-                            orthocoeffs[cnt] *= 0.0;
-                        }
-                        cnt++;
                     }
                 }
             }
+            else if(mkey.ConstFactorExists(eFactorSVVDGKerDiffCoeff))  // Rodrigo/Mansoor's DG Kernel
+            {
+                NekDouble cutoff = mkey.GetConstFactor(eFactorSVVCutoffRatio); 
+                NekDouble  SvvDiffCoeff  =
+                    mkey.GetConstFactor(eFactorSVVDGKerDiffCoeff)*
+                    mkey.GetConstFactor(eFactorSVVDiffCoeff);
+
+                int max_abc = max(nmodes_a-kSVVDGFiltermodesmin,
+                                  nmodes_b-kSVVDGFiltermodesmin);
+                max_abc = max(max_abc, nmodes_c-kSVVDGFiltermodesmin);
+                // clamp max_abc
+                max_abc = max(max_abc,0);
+                max_abc = min(max_abc,kSVVDGFiltermodesmax-kSVVDGFiltermodesmin);
+                
+                for(int i = 0; i < nmodes_a; ++i)
+                {
+                    for(int j = 0; j < nmodes_b-j; ++j)
+                    {
+                        int maxij = max(i,j);
+
+                        for(int k = 0; k < nmodes_c-i-j; ++k)
+                        {
+                            int maxijk = max(maxij,k);
+                            maxijk = min(maxijk,kSVVDGFiltermodesmax-1);
+                        
+                            orthocoeffs[cnt] *= SvvDiffCoeff *
+                                kSVVDGFilter[max_abc][maxijk];
+                            cnt++;
+                        }
+                    }
+                }
+            }
+            else
+            {
+
+                //SVV filter paramaters (how much added diffusion
+                //relative to physical one and fraction of modes from
+                //which you start applying this added diffusion)
+                
+                NekDouble  SvvDiffCoeff = mkey.GetConstFactor(StdRegions::eFactorSVVDiffCoeff);
+                NekDouble  SVVCutOff = mkey.GetConstFactor(StdRegions::eFactorSVVCutoffRatio);
+                
+                //Defining the cut of mode
+                int cutoff_a = (int) (SVVCutOff*nmodes_a);
+                int cutoff_b = (int) (SVVCutOff*nmodes_b);
+                int cutoff_c = (int) (SVVCutOff*nmodes_c);
+                int nmodes = min(min(nmodes_a,nmodes_b),nmodes_c);
+                NekDouble cutoff = min(min(cutoff_a,cutoff_b),cutoff_c);
+                NekDouble epsilon = 1;
+                
+
+                //------"New" Version August 22nd '13--------------------
+                for(i = 0; i < nmodes_a; ++i)
+                {
+                    for(j = 0; j < nmodes_b-i; ++j)
+                    {
+                        for(k = 0; k < nmodes_c-i-j; ++k)
+                        {
+                            if(i + j + k >= cutoff)
+                            {
+                                orthocoeffs[cnt] *= ((SvvDiffCoeff)*exp(-(i+j+k-nmodes)*(i+j+k-nmodes)/((NekDouble)((i+j+k-cutoff+epsilon)*(i+j+k-cutoff+epsilon)))));
+                            }
+                            else
+                            {
+                                orthocoeffs[cnt] *= 0.0;
+                            }
+                            cnt++;
+                        }
+                    }
+                }
+            }
+            
             // backward transform to physical space
             OrthoExp.BwdTrans(orthocoeffs,array);
         }

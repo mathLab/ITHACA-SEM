@@ -168,17 +168,18 @@ public:
     {
     }
 
-    static MeshGraphSharedPtr Read(
+    SPATIAL_DOMAINS_EXPORT static MeshGraphSharedPtr Read(
         const LibUtilities::SessionReaderSharedPtr pSession,
         DomainRangeShPtr                           rng       = NullDomainRangeShPtr,
         bool                                       fillGraph = true);
 
-    virtual void WriteGeometry(
+    SPATIAL_DOMAINS_EXPORT virtual void WriteGeometry(
         std::string &outfilename,
         bool defaultExp = false,
         const LibUtilities::FieldMetaDataMap &metadata
                                      = LibUtilities::NullFieldMetaDataMap) = 0;
-    virtual void WriteGeometry(
+
+    SPATIAL_DOMAINS_EXPORT virtual void WriteGeometry(
         std::string outname,
         std::vector<std::set<unsigned int>> elements,
         std::vector<unsigned int> partitions) = 0;
@@ -190,14 +191,14 @@ public:
     }
 
     /*transfers the minial data structure to full meshgraph*/
-    void FillGraph();
+    SPATIAL_DOMAINS_EXPORT void FillGraph();
 
     ////////////////////
     ////////////////////
 
     SPATIAL_DOMAINS_EXPORT virtual ~MeshGraph();
 
-    void ReadExpansions();
+    SPATIAL_DOMAINS_EXPORT void ReadExpansions();
 
     /* ---- Helper functions ---- */
     /// Dimension of the mesh (can be a 1D curve in 3D space).
@@ -221,10 +222,10 @@ public:
         NekDouble zmax = NekConstants::kNekUnsetDouble);
 
     /// Check if goemetry is in range definition if activated
-    bool CheckRange(Geometry2D &geom);
+    SPATIAL_DOMAINS_EXPORT bool CheckRange(Geometry2D &geom);
 
     /// Check if goemetry is in range definition if activated
-    bool CheckRange(Geometry3D &geom);
+    SPATIAL_DOMAINS_EXPORT bool CheckRange(Geometry3D &geom);
 
     /* ---- Composites and Domain ---- */
     CompositeSharedPtr GetComposite(int whichComposite)

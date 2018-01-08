@@ -73,9 +73,9 @@ MeshPartitionFactory &GetMeshPartitionFactory()
 
 MeshPartition::MeshPartition(const LibUtilities::SessionReaderSharedPtr session,
                              const MeshGraphSharedPtr m)
-    : m_numFields(0), m_fieldNameToId(), m_session(session),
-      m_comm(session->GetComm()), m_meshgraph(m), m_weightingRequired(false),
-      m_weightBnd(false), m_weightDofs(false), m_dim(m->GetMeshDimension())
+    :  m_dim(m->GetMeshDimension()), m_numFields(0), m_session(session),
+       m_meshgraph(m), m_fieldNameToId(), m_comm(session->GetComm()),
+       m_weightingRequired(false), m_weightBnd(false), m_weightDofs(false)
 {
     // leave the meshpartition method of reading expansions and conditions
     ReadConditions();

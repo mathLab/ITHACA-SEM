@@ -33,14 +33,11 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include "LibUtilities/BasicUtils/SharedArray.hpp"
-#include "SpatialDomains/SessionReader.h"
-
-#include "MeshPartitionScotch.h"
+#include <SpatialDomains/MeshPartitionScotch.h>
 
 namespace Nektar
 {
-namespace LibUtilities
+namespace SpatialDomains
 {
 
     std::string MeshPartitionScotch::className
@@ -50,12 +47,14 @@ namespace LibUtilities
             "Partitioning using the Scotch library.");
 
     std::string MeshPartitionScotch::cmdSwitch
-        = SessionReader::RegisterCmdLineFlag("use-scotch","","Use Scotch for mesh partitioning.");
+        = LibUtilities::SessionReader::RegisterCmdLineFlag(
+            "use-scotch","","Use Scotch for mesh partitioning.");
 
-    MeshPartitionScotch::MeshPartitionScotch(const SessionReaderSharedPtr& pSession)
-        : MeshPartition(pSession)
+    MeshPartitionScotch::MeshPartitionScotch(
+        const LibUtilities::SessionReaderSharedPtr session,
+        const MeshGraphSharedPtr meshGraph)
+        : MeshPartition(session, meshGraph)
     {
-
     }
 
     MeshPartitionScotch::~MeshPartitionScotch()

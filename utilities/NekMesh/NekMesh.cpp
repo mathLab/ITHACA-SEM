@@ -165,6 +165,11 @@ int main(int argc, char* argv[])
     MeshSharedPtr mesh = std::shared_ptr<Mesh>(new Mesh());
 
     // Add provenance information to mesh.
+    stringstream ss;
+    for(int i = 1; i < argc; i++)
+    {
+        ss << argv[i] << " ";
+    }
     mesh->m_metadata["NekMeshCommandLine"] = ss.str();
 
     vector<ModuleSharedPtr> modules;

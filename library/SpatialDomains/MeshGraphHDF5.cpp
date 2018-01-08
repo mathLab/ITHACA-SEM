@@ -1204,7 +1204,10 @@ void MeshGraphHDF5::WriteDomain(vector<CompositeMap> &domain)
     dst->WriteVectorString(doms, tp);
 }
 
-void MeshGraphHDF5::WriteGeometry(std::string &outfilename, bool defaultExp)
+void MeshGraphHDF5::WriteGeometry(
+    std::string                          &outfilename,
+    bool                                  defaultExp,
+    const LibUtilities::FieldMetaDataMap &metadata)
 {
     vector<string> tmp;
     boost::split(tmp, outfilename, boost::is_any_of("."));

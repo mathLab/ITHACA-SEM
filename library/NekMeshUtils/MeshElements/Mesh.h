@@ -38,6 +38,8 @@
 
 #include <set>
 
+#include <LibUtilities/BasicUtils/FieldIO.h>
+
 #include <NekMeshUtils/NekMeshUtilsDeclspec.h>
 #include <NekMeshUtils/MeshElements/Element.h>
 #include <NekMeshUtils/MeshElements/Composite.h>
@@ -132,7 +134,7 @@ public:
     /// Octree system pointer, if there is no octree its empty
     OctreeSharedPtr                 m_octree;
     /// Metadata map for storing any mesh generation parameters
-    MeshMetaDataMap                 m_metadata;
+    LibUtilities::FieldMetaDataMap  m_metadata;
 
     /// Returns the total number of elements in the mesh with
     /// dimension expDim.

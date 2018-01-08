@@ -39,6 +39,7 @@
 
 #include <LibUtilities/BasicUtils/ParseUtils.h>
 #include <LibUtilities/BasicUtils/FileSystem.h>
+#include <LibUtilities/BasicUtils/FieldIOXml.h>
 
 #include <boost/format.hpp>
 
@@ -2732,9 +2733,9 @@ void MeshGraphXml::WriteDefaultExpansion(TiXmlElement *root)
  * representing this MeshGraph instance inside a NEKTAR tag.
  */
 void MeshGraphXml::WriteGeometry(
-    std::string                         &outfilename,
-    bool                                 defaultExp,
-    const LibUtilties::FieldMetaDataMap &metadata)
+    std::string                          &outfilename,
+    bool                                  defaultExp,
+    const LibUtilities::FieldMetaDataMap &metadata)
 {
     // Create empty TinyXML document.
     TiXmlDocument doc;

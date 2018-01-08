@@ -82,11 +82,9 @@ void InputMCF::ParseFile(string nm)
     TiXmlElement *mcf = pSession->GetElement("NEKTAR/MESHING");
 
     // Save MESHING tag as provenance information.
-    TiXmlPrinter printer;
-    printer->Print(mcf);
     std::stringstream ss;
-    ss << printer.CStr();
-    m_mesh->m_metadata["NekMeshMCF"] = ss.str();
+    ss << *mcf;
+    m_mesh->m_metadata["XML_NekMeshMCF"] = ss.str();
 
     TiXmlElement *info = mcf->FirstChildElement("INFORMATION");
     TiXmlElement *I    = info->FirstChildElement("I");

@@ -38,6 +38,7 @@
 
 #include <LibUtilities/Communication/Comm.h>
 #include <LibUtilities/BasicUtils/SessionReader.h>
+#include <SpatialDomains/SpatialDomainsDeclspec.h>
 #include <SpatialDomains/MeshEntities.hpp>
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/subgraph.hpp>

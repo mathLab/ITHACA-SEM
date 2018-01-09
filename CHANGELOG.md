@@ -27,6 +27,7 @@ v5.0.0
   function definitions for the Absorption Forcing (!769)
 - Improve performance of DisContField2D::v_ExtractTracePhys (!824)
 - Fix small bug in Jacobian Energy (!857)
+- fix variable name overriding in file functions (!870)
 - Adds CFI CAD engine back-end (!864)
 - Adds CFI Mesh IO support (!864)
 - Cleanup of CAD system data structures (!864)

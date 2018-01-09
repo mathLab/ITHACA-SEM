@@ -83,6 +83,10 @@ v5.0.0
 - Add ability to use an exponential filtering for stabilization with
   seg, quad and hex elements (!771, !862)
 
+**APESolver:**
+- Added two new boundary conditions to the APE system: RiemannInvariantBC
+  and WhiteNoise (!782)
+
 **Documentation**:
 - Added the developer-guide repository as a submodule (!751)
 

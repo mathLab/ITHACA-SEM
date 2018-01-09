@@ -51,8 +51,54 @@ Currently, only \inltt{APEUpwind} supported.
 \subsection{Functions}
 \begin{itemize}
 \item \inltt{BaseFlow} Baseflow $(\overline{u}_i, \overline{p}, \overline{\rho})$ defined by the variables \inltt{u0,v0,w0,p0,rho0}
-\item \inltt{Source} Source term $\overline{c}^2 q_c$
 \item \inltt{InitialConditions}
+\end{itemize}
+
+
+\subsection{Boundary Conditions}
+
+In addition to plain Dirichlet and Neumann boundary conditions, the APESolver features a wall boundray condition, a non-reflecting boundary and a white noise boundary condition.
+\begin{itemize}
+\item Rigid (Slip-) Wall Boundary Condition 
+\begin{lstlisting}[style=XmlStyle]
+<BOUNDARYCONDITIONS>
+<REGION REF="0">
+    <D VAR="p" USERDEFINEDTYPE="Wall" VALUE="0" />
+    <D VAR="u" USERDEFINEDTYPE="Wall" VALUE="0" />
+    <D VAR="v" USERDEFINEDTYPE="Wall" VALUE="0" />
+    <D VAR="w" USERDEFINEDTYPE="Wall" VALUE="0" />
+</REGION>
+</BOUNDARYCONDITIONS>
+\end{lstlisting}
+This BC imposes zero wall-normal perturbation velocity in a way that is more robust than using a Dirichlet boundary condition directly.
+
+\item Non-Reflecting Boundary Condition
+\begin{lstlisting}[style=XmlStyle]
+<BOUNDARYCONDITIONS>
+<REGION REF="0">
+    <D VAR="p" USERDEFINEDTYPE="RiemannInvariantBC"/>
+    <D VAR="u" USERDEFINEDTYPE="RiemannInvariantBC"/>
+    <D VAR="v" USERDEFINEDTYPE="RiemannInvariantBC"/>
+    <D VAR="w" USERDEFINEDTYPE="RiemannInvariantBC"/>
+</REGION>
+</BOUNDARYCONDITIONS>
+\end{lstlisting}
+The Riemann-Invariant BC approximates a non-reflecting (r.g. Farfield)  boundary condition by setting incoming invariants to zero.
+
+\item White Noise Boundary Condition
+\begin{lstlisting}[style=XmlStyle]
+<BOUNDARYCONDITIONS>
+<REGION REF="0">
+    <D VAR="p" USERDEFINEDTYPE="Wall" VALUE="10" />
+    <D VAR="u" USERDEFINEDTYPE="Wall" VALUE="10" />
+    <D VAR="v" USERDEFINEDTYPE="Wall" VALUE="10" />
+    <D VAR="w" USERDEFINEDTYPE="Wall" VALUE="10" />
+</REGION>
+</BOUNDARYCONDITIONS>
+\end{lstlisting}
+The white noise BC imposes a stochastic, uniform pressure at the boundary. The implementation uses a Mersenne-Twister pseudo random number generator to generate white Gaussian noise.
+The standard deviation $\sigma$ of the pressure  is specified by the \inltt{VALUE} attribute.
+
 \end{itemize}
 
 
@@ -106,10 +152,6 @@ eventual source terms using the following functions:
     <E VAR="v0"   VALUE="0" />
     <E VAR="p0"   VALUE="Pinfinity" />
     <E VAR="rho0" VALUE="Rho0" />
-</FUNCTION>
-
-<FUNCTION NAME="Source"> 
-    <E VAR="S"  VALUE="0" />
 </FUNCTION>
 
 <!-- Gaussian pulse located at the origin -->

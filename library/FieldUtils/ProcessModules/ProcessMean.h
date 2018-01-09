@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: InputCAD.h
+//  File: ProcessMean.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,45 +29,54 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Create mesh from CAD.
+//  Description: Compute the mean of each field.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef UTILITIES_NEKMESH_INPUTMCF
-#define UTILITIES_NEKMESH_INPUTMCF
+#ifndef FIELDUTILS_PROCESSMEAN
+#define FIELDUTILS_PROCESSMEAN
 
-#include <NekMeshUtils/Module/Module.h>
+#include "../Module.h"
 
 namespace Nektar
 {
-namespace Utilities
+namespace FieldUtils
 {
 
-class InputMCF : public NekMeshUtils::InputModule
+/**
+ * @brief This processing module computes the mean of each field.
+ *
+ */
+class ProcessMean : public ProcessModule
 {
 public:
-    InputMCF(NekMeshUtils::MeshSharedPtr m);
-    virtual ~InputMCF();
-    virtual void Process();
-
     /// Creates an instance of this class
-    static NekMeshUtils::ModuleSharedPtr create(NekMeshUtils::MeshSharedPtr m)
+    static std::shared_ptr<Module> create(FieldSharedPtr f)
     {
-        return MemoryManager<InputMCF>::AllocateSharedPtr(m);
+        return MemoryManager<ProcessMean>::AllocateSharedPtr(f);
     }
-    /// %ModuleKey for class.
-    static NekMeshUtils::ModuleKey className;
+    static ModuleKey className;
 
-    void ParseFile(std::string nm);
+    ProcessMean(FieldSharedPtr f);
+    virtual ~ProcessMean();
 
-private:
-    std::string m_minDelta, m_maxDelta, m_eps, m_cadfile, m_order, m_blsurfs,
-        m_blthick, m_blprog, m_bllayers, m_refinement, m_nacadomain, m_periodic,
-        m_adjustment, m_spaceoutblthr, m_nospaceoutsurf;
+    /// Write mesh to output file.
+    virtual void Process(po::variables_map &vm);
 
-    bool m_makeBL, m_surfopti, m_varopti, m_refine, m_woct, m_2D, m_splitBL,
-        m_naca, m_adjust, m_adjustall, m_smoothbl, m_manifold, m_cfiMesh,
-        m_spaceoutbl;
+    virtual std::string GetModuleName()
+    {
+        return "ProcessMean";
+    }
+
+    virtual std::string GetModuleDescription()
+    {
+        return "Evaluating mean";
+    }
+
+    virtual ModulePriority GetModulePriority()
+    {
+        return eModifyExp;
+    }
 };
 }
 }

@@ -600,8 +600,11 @@ void Interpolator::PrintStatistics()
     }
 
     cout << "Number of points: " << m_neighInds.GetRows() << endl;
-    cout << "mean Number of Neighbours per point: "
-         << meanN / m_neighInds.GetRows() << endl;
+    if (m_neighInds.GetRows() > 0)
+    {
+        cout << "mean Number of Neighbours per point: "
+             << meanN / m_neighInds.GetRows() << endl;
+    }
 }
 
 /**

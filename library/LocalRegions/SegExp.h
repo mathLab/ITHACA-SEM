@@ -266,12 +266,8 @@ namespace Nektar
 
         };
 
-        // type defines for use of SegExp in a boost vector
-        typedef boost::shared_ptr<SegExp>      SegExpSharedPtr;
+        typedef std::shared_ptr<SegExp>      SegExpSharedPtr;
         typedef std::vector< SegExpSharedPtr > SegExpVector;
-        typedef std::vector< SegExpSharedPtr >::iterator SegExpVectorIter;
-
-
     } //end of namespace
 } //end of namespace
 

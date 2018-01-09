@@ -99,7 +99,8 @@ namespace Nektar
         ExpList2D::ExpList2D(
             const ExpList2D &In, 
             const std::vector<unsigned int> &eIDs,
-            const bool DeclareCoeffPhysArrays):
+            const bool DeclareCoeffPhysArrays,
+            const Collections::ImplementationType ImpType):
             ExpList(In,eIDs,DeclareCoeffPhysArrays)
         {
             SetExpType(e2D);
@@ -113,7 +114,7 @@ namespace Nektar
             SetCoeffPhysOffsets();
 
             ReadGlobalOptimizationParameters();
-            CreateCollections();
+            CreateCollections(ImpType);
         }
 
 
@@ -133,7 +134,8 @@ namespace Nektar
                 const LibUtilities::SessionReaderSharedPtr &pSession,
                 const SpatialDomains::MeshGraphSharedPtr &graph2D,
                 const bool DeclareCoeffPhysArrays,
-                const std::string &var):
+                const std::string &var,
+                const Collections::ImplementationType ImpType):
             ExpList(pSession,graph2D)
         {
             SetExpType(e2D);
@@ -148,19 +150,18 @@ namespace Nektar
             const SpatialDomains::ExpansionMap &expansions
                                         = graph2D->GetExpansions(var);
 
-            SpatialDomains::ExpansionMap::const_iterator expIt;
-            for (expIt = expansions.begin(); expIt != expansions.end(); ++expIt)
+            for (auto &expIt : expansions)
             {
                 SpatialDomains::TriGeomSharedPtr  TriangleGeom;
                 SpatialDomains::QuadGeomSharedPtr QuadrilateralGeom;
 
-                if ((TriangleGeom = boost::dynamic_pointer_cast<SpatialDomains
-                        ::TriGeom>(expIt->second->m_geomShPtr)))
+                if ((TriangleGeom = std::dynamic_pointer_cast<SpatialDomains
+                        ::TriGeom>(expIt.second->m_geomShPtr)))
                 {
                     LibUtilities::BasisKey TriBa
-                                        = expIt->second->m_basisKeyVector[0];
+                                        = expIt.second->m_basisKeyVector[0];
                     LibUtilities::BasisKey TriBb
-                                        = expIt->second->m_basisKeyVector[1];
+                                        = expIt.second->m_basisKeyVector[1];
 
                     // This is not elegantly implemented needs re-thinking.
                     if (TriBa.GetBasisType() == LibUtilities::eGLL_Lagrange)
@@ -189,13 +190,13 @@ namespace Nektar
                                     -TriBa.GetNumModes());
                     m_npoints += TriBa.GetNumPoints()*TriBb.GetNumPoints();
                 }
-                else if ((QuadrilateralGeom = boost::dynamic_pointer_cast<
-                         SpatialDomains::QuadGeom>(expIt->second->m_geomShPtr)))
+                else if ((QuadrilateralGeom = std::dynamic_pointer_cast<
+                         SpatialDomains::QuadGeom>(expIt.second->m_geomShPtr)))
                 {
                     LibUtilities::BasisKey QuadBa
-                                        = expIt->second->m_basisKeyVector[0];
+                                        = expIt.second->m_basisKeyVector[0];
                     LibUtilities::BasisKey QuadBb
-                                        = expIt->second->m_basisKeyVector[1];
+                                        = expIt.second->m_basisKeyVector[1];
 
                     quad = MemoryManager<LocalRegions::QuadExp>
                         ::AllocateSharedPtr(QuadBa,QuadBb,
@@ -237,7 +238,7 @@ namespace Nektar
              }
 
             ReadGlobalOptimizationParameters();
-            CreateCollections();
+            CreateCollections(ImpType);
          }
 
 
@@ -258,7 +259,9 @@ namespace Nektar
         ExpList2D::ExpList2D(
             const LibUtilities::SessionReaderSharedPtr &pSession,
             const SpatialDomains::ExpansionMap &expansions,
-            const bool DeclareCoeffPhysArrays):ExpList(pSession)
+            const bool DeclareCoeffPhysArrays,
+            const Collections::ImplementationType ImpType):
+            ExpList(pSession)
         {
             SetExpType(e2D);
 
@@ -269,19 +272,18 @@ namespace Nektar
             LocalRegions::QuadExpSharedPtr     quad;
             SpatialDomains::Composite          comp;
 
-            SpatialDomains::ExpansionMapConstIter expIt;
-            for (expIt = expansions.begin(); expIt != expansions.end(); ++expIt)
+            for (auto &expIt : expansions)
             {
                 SpatialDomains::TriGeomSharedPtr  TriangleGeom;
                 SpatialDomains::QuadGeomSharedPtr QuadrilateralGeom;
 
-                if ((TriangleGeom = boost::dynamic_pointer_cast<SpatialDomains
-                        ::TriGeom>(expIt->second->m_geomShPtr)))
+                if ((TriangleGeom = std::dynamic_pointer_cast<SpatialDomains
+                        ::TriGeom>(expIt.second->m_geomShPtr)))
                 {
                     LibUtilities::BasisKey TriBa
-                                        = expIt->second->m_basisKeyVector[0];
+                                        = expIt.second->m_basisKeyVector[0];
                     LibUtilities::BasisKey TriBb
-                                        = expIt->second->m_basisKeyVector[1];
+                                        = expIt.second->m_basisKeyVector[1];
 
                     // This is not elegantly implemented needs re-thinking.
                     if (TriBa.GetBasisType() == LibUtilities::eGLL_Lagrange)
@@ -310,13 +312,13 @@ namespace Nektar
                                     -TriBa.GetNumModes());
                     m_npoints += TriBa.GetNumPoints()*TriBb.GetNumPoints();
                 }
-                else if ((QuadrilateralGeom = boost::dynamic_pointer_cast<
-                         SpatialDomains::QuadGeom>(expIt->second->m_geomShPtr)))
+                else if ((QuadrilateralGeom = std::dynamic_pointer_cast<
+                         SpatialDomains::QuadGeom>(expIt.second->m_geomShPtr)))
                 {
                     LibUtilities::BasisKey QuadBa
-                        = expIt->second->m_basisKeyVector[0];
+                        = expIt.second->m_basisKeyVector[0];
                     LibUtilities::BasisKey QuadBb
-                        = expIt->second->m_basisKeyVector[1];
+                        = expIt.second->m_basisKeyVector[1];
 
                     quad = MemoryManager<LocalRegions::QuadExp>
                         ::AllocateSharedPtr(QuadBa,QuadBb,
@@ -352,7 +354,7 @@ namespace Nektar
              }
 
             ReadGlobalOptimizationParameters();
-            CreateCollections();
+            CreateCollections(ImpType);
         }
 
 
@@ -388,7 +390,9 @@ namespace Nektar
             const LibUtilities::BasisKey &QuadBa,
             const LibUtilities::BasisKey &QuadBb,
             const SpatialDomains::MeshGraphSharedPtr &graph2D,
-            const LibUtilities::PointsType TriNb):ExpList(pSession, graph2D)
+            const LibUtilities::PointsType TriNb,
+            const Collections::ImplementationType ImpType):
+            ExpList(pSession, graph2D)
         {
             SetExpType(e2D);
 
@@ -405,14 +409,13 @@ namespace Nektar
 
             m_physState = false;
 
-            SpatialDomains::ExpansionMap::const_iterator expIt;
-            for (expIt = expansions.begin(); expIt != expansions.end(); ++expIt)
+            for (auto &expIt : expansions)
             {
                 SpatialDomains::TriGeomSharedPtr TriangleGeom;
                 SpatialDomains::QuadGeomSharedPtr QuadrilateralGeom;
 
-                if ((TriangleGeom = boost::dynamic_pointer_cast<SpatialDomains::
-                        TriGeom>(expIt->second->m_geomShPtr)))
+                if ((TriangleGeom = std::dynamic_pointer_cast<SpatialDomains::
+                        TriGeom>(expIt.second->m_geomShPtr)))
                 {
                     if (TriNb < LibUtilities::SIZE_PointsType)
                     {
@@ -435,8 +438,8 @@ namespace Nektar
                                                  TriBa.GetNumModes());
                     m_npoints += TriBa.GetNumPoints()*TriBb.GetNumPoints();
                 }
-                else if ((QuadrilateralGeom = boost::dynamic_pointer_cast<
-                         SpatialDomains::QuadGeom>(expIt->second->m_geomShPtr)))
+                else if ((QuadrilateralGeom = std::dynamic_pointer_cast<
+                         SpatialDomains::QuadGeom>(expIt.second->m_geomShPtr)))
                 {
                     quad = MemoryManager<LocalRegions::QuadExp>::
                         AllocateSharedPtr(QuadBa, QuadBb, QuadrilateralGeom);
@@ -465,7 +468,7 @@ namespace Nektar
             m_phys   = Array<OneD, NekDouble>(m_npoints);
 
             ReadGlobalOptimizationParameters();
-            CreateCollections();
+            CreateCollections(ImpType);
         }
 
         /**
@@ -492,7 +495,8 @@ namespace Nektar
             const SpatialDomains::MeshGraphSharedPtr &graph3D,
             const PeriodicMap &periodicFaces,
             const bool DeclareCoeffPhysArrays, 
-            const std::string variable):
+            const std::string variable,
+            const Collections::ImplementationType ImpType):            
             ExpList(pSession, graph3D)
         {
             SetExpType(e2D);
@@ -526,7 +530,7 @@ namespace Nektar
                         FaceGeom = exp2D->GetGeom2D();
 
                         //if face is a quad
-                        if((FaceQuadGeom = boost::dynamic_pointer_cast<
+                        if((FaceQuadGeom = std::dynamic_pointer_cast<
                             SpatialDomains::QuadGeom>(FaceGeom)))
                         {
                             FaceQuadExp = MemoryManager<LocalRegions::QuadExp>
@@ -536,7 +540,7 @@ namespace Nektar
                             (*m_exp).push_back(FaceQuadExp);
                         }
                         //if face is a triangle
-                        else if((FaceTriGeom = boost::dynamic_pointer_cast<
+                        else if((FaceTriGeom = std::dynamic_pointer_cast<
                                  SpatialDomains::TriGeom>(FaceGeom)))
                         {
                             FaceTriExp = MemoryManager<LocalRegions::TriExp>
@@ -556,9 +560,6 @@ namespace Nektar
             map<int, pair<SpatialDomains::Geometry2DSharedPtr,
                           pair<LibUtilities::BasisKey,
                                LibUtilities::BasisKey> > > faceOrders;
-            map<int, pair<SpatialDomains::Geometry2DSharedPtr,
-                          pair<LibUtilities::BasisKey,
-                               LibUtilities::BasisKey> > >::iterator it;
 
             for(i = 0; i < locexp.size(); ++i)
             {
@@ -572,7 +573,7 @@ namespace Nektar
                     {
                         continue;
                     }
-                    it = faceOrders.find(id);
+                    auto it = faceOrders.find(id);
 
                     if (it == faceOrders.end())
                     {
@@ -695,7 +696,7 @@ namespace Nektar
 
                 for (i = 0; i < totFaceCnt; ++i)
                 {
-                    it = faceOrders.find(FacesTotID[i]);
+                    auto it = faceOrders.find(FacesTotID[i]);
 
                     if (it == faceOrders.end())
                     {
@@ -744,26 +745,26 @@ namespace Nektar
                 }
             }
 
-            for (it = faceOrders.begin(); it != faceOrders.end(); ++it)
+            for (auto &it : faceOrders)
             {
-                FaceGeom = it->second.first;
+                FaceGeom = it.second.first;
 
-                if ((FaceQuadGeom = boost::dynamic_pointer_cast<
+                if ((FaceQuadGeom = std::dynamic_pointer_cast<
                      SpatialDomains::QuadGeom>(FaceGeom)))
                 {
                     FaceQuadExp = MemoryManager<LocalRegions::QuadExp>
-                        ::AllocateSharedPtr(it->second.second.first,
-                                            it->second.second.second,
+                        ::AllocateSharedPtr(it.second.second.first,
+                                            it.second.second.second,
                                             FaceQuadGeom);
                     FaceQuadExp->SetElmtId(elmtid++);
                     (*m_exp).push_back(FaceQuadExp);
                 }
-                else if ((FaceTriGeom = boost::dynamic_pointer_cast<
+                else if ((FaceTriGeom = std::dynamic_pointer_cast<
                           SpatialDomains::TriGeom>(FaceGeom)))
                 {
                     FaceTriExp = MemoryManager<LocalRegions::TriExp>
-                        ::AllocateSharedPtr(it->second.second.first,
-                                            it->second.second.second,
+                        ::AllocateSharedPtr(it.second.second.first,
+                                            it.second.second.second,
                                             FaceTriGeom);
                     FaceTriExp->SetElmtId(elmtid++);
                     (*m_exp).push_back(FaceTriExp);
@@ -786,7 +787,7 @@ namespace Nektar
                 m_phys   = Array<OneD, NekDouble>(m_npoints);
             }
 
-            CreateCollections();
+            CreateCollections(ImpType);
         }
 
          /**
@@ -800,16 +801,18 @@ namespace Nektar
           * @param   graph3D     A mesh, containing information about the domain
           *                      and the spectral/hp element expansions.
           */
-         ExpList2D::ExpList2D(   
+        ExpList2D::ExpList2D(   
             const LibUtilities::SessionReaderSharedPtr &pSession,
             const SpatialDomains::CompositeMap &domain,
             const SpatialDomains::MeshGraphSharedPtr &graph3D,
-            const std::string variable):ExpList(pSession, graph3D)
+            const std::string variable,
+            const Collections::ImplementationType ImpType):
+            ExpList(pSession, graph3D)
          {
 
              SetExpType(e2D);
 
-             ASSERTL0(boost::dynamic_pointer_cast<
+             ASSERTL0(std::dynamic_pointer_cast<
                       SpatialDomains::MeshGraph3D>(graph3D),
                      "Expected a MeshGraph3D object.");
 
@@ -825,25 +828,24 @@ namespace Nektar
              LibUtilities::PointsType TriNb;
              LocalRegions::QuadExpSharedPtr quad;
 
-             SpatialDomains::CompositeMap::const_iterator compIt;
-             for (compIt = domain.begin(); compIt != domain.end(); ++compIt)
+             for (auto &compIt : domain)
              {
-                 nel += (compIt->second)->size();
+                 nel += compIt.second->size();
              }
 
-             for (compIt = domain.begin(); compIt != domain.end(); ++compIt)
+             for (auto &compIt : domain)
              {
-                 for (j = 0; j < compIt->second->size(); ++j)
+                 for (j = 0; j < compIt.second->size(); ++j)
                  {
-                     if ((TriangleGeom = boost::dynamic_pointer_cast<
-                             SpatialDomains::TriGeom>((*compIt->second)[j])))
+                     if ((TriangleGeom = std::dynamic_pointer_cast<
+                             SpatialDomains::TriGeom>((*compIt.second)[j])))
                      {
                          LibUtilities::BasisKey TriBa
-                             = boost::dynamic_pointer_cast<
+                             = std::dynamic_pointer_cast<
                                 SpatialDomains::MeshGraph3D>(graph3D)->
                                     GetFaceBasisKey(TriangleGeom, 0, variable);
                          LibUtilities::BasisKey TriBb
-                             = boost::dynamic_pointer_cast<
+                             = std::dynamic_pointer_cast<
                                 SpatialDomains::MeshGraph3D>(graph3D)->
                                     GetFaceBasisKey(TriangleGeom,1,variable);
 
@@ -875,16 +877,16 @@ namespace Nektar
                                  -TriBa.GetNumModes());
                          m_npoints += TriBa.GetNumPoints()*TriBb.GetNumPoints();
                      }
-                     else if ((QuadrilateralGeom = boost::dynamic_pointer_cast<
-                              SpatialDomains::QuadGeom>((*compIt->second)[j])))
+                     else if ((QuadrilateralGeom = std::dynamic_pointer_cast<
+                              SpatialDomains::QuadGeom>((*compIt.second)[j])))
                      {
                          LibUtilities::BasisKey QuadBa
-                             = boost::dynamic_pointer_cast<
+                             = std::dynamic_pointer_cast<
                                 SpatialDomains::MeshGraph3D>(graph3D)->
                                     GetFaceBasisKey(QuadrilateralGeom, 0, 
                                                     variable);
                          LibUtilities::BasisKey QuadBb
-                             = boost::dynamic_pointer_cast<
+                             = std::dynamic_pointer_cast<
                                 SpatialDomains::MeshGraph3D>(graph3D)->
                                     GetFaceBasisKey(QuadrilateralGeom, 1, 
                                                     variable);
@@ -919,7 +921,7 @@ namespace Nektar
             m_phys   = Array<OneD, NekDouble>(m_npoints);
 
             ReadGlobalOptimizationParameters(); 
-            CreateCollections();
+            CreateCollections(ImpType);
         }
         
         /**

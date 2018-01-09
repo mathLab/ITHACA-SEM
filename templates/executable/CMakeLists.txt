@@ -14,8 +14,7 @@ PROJECT(${ProjectName})
 # won't need to modify this.
 SET(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR} ${CMAKE_MODULE_PATH})
 
-# Finds Nektar++.  This may introduce other dependencies, such
-# as Boost and Loki.
+# Finds Nektar++.  This may introduce other dependencies, such as Boost.
 FIND_PACKAGE(Nektar++ REQUIRED)
 ADD_DEFINITIONS(${NEKTAR++_DEFINITIONS})
 INCLUDE_DIRECTORIES(${NEKTAR++_INCLUDE_DIRS} ${NEKTAR++_TP_INCLUDE_DIRS})

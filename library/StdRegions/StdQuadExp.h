@@ -51,7 +51,7 @@ namespace Nektar
         class StdQuadExp: virtual public StdExpansion2D
         {
 
-        typedef boost::shared_ptr<StdExpansion1D> StdExpansion1DSharedPtr;
+        typedef std::shared_ptr<StdExpansion1D> StdExpansion1DSharedPtr;
 
         public:
             STD_REGIONS_EXPORT StdQuadExp();
@@ -240,6 +240,11 @@ namespace Nektar
             STD_REGIONS_EXPORT virtual void v_SVVLaplacianFilter(
                     Array<OneD, NekDouble> &array,
                     const StdMatrixKey &mkey);
+            STD_REGIONS_EXPORT virtual void v_ExponentialFilter(
+                          Array<OneD, NekDouble> &array,
+                    const NekDouble        alpha,
+                    const NekDouble        exponent,
+                    const NekDouble        cutoff);
             STD_REGIONS_EXPORT virtual void v_ReduceOrderCoeffs(
                     int numMin,
                     const Array<OneD, const NekDouble> &inarray,
@@ -259,7 +264,7 @@ namespace Nektar
                     Array<OneD, int> &conn,
                     bool standard = true);
         };
-        typedef boost::shared_ptr<StdQuadExp> StdQuadExpSharedPtr;
+        typedef std::shared_ptr<StdQuadExp> StdQuadExpSharedPtr;
 
     } //end of namespace
 } //end of namespace

@@ -51,7 +51,7 @@ class ProcessHomogeneousPlane : public ProcessModule
 {
 public:
     /// Creates an instance of this class
-    static boost::shared_ptr<Module> create(FieldSharedPtr f)
+    static std::shared_ptr<Module> create(FieldSharedPtr f)
     {
         return MemoryManager<ProcessHomogeneousPlane>::AllocateSharedPtr(f);
     }
@@ -65,8 +65,19 @@ public:
 
     virtual std::string GetModuleName()
     {
-        return "ProcessScalGrad";
+        return "ProcessHomogeneousPlane";
     }
+
+    virtual std::string GetModuleDescription()
+    {
+        return "Extracting plane";
+    }
+
+    virtual ModulePriority GetModulePriority()
+    {
+        return eModifyExp;
+    }
+
 };
 }
 }

@@ -221,7 +221,7 @@ namespace Nektar
              xi[1] = yia;
              xi[2] = zia;
 
-             boost::shared_ptr<NekMatrix<NekDouble> > mat =
+             std::shared_ptr<NekMatrix<NekDouble> > mat =
                  m_util->GetInterpolationMatrix(xi);
              Vmath::Vcopy(mat->GetRows() * mat->GetColumns(), mat->GetRawPtr(),
                           1, &interp[0], 1);
@@ -237,9 +237,9 @@ namespace Nektar
             m_derivmatrix[2] = m_util->GetDerivMatrix(2);
         }
 
-        boost::shared_ptr<PointsBaseType> NodalTetElec::Create(const PointsKey &key)
+        std::shared_ptr<PointsBaseType> NodalTetElec::Create(const PointsKey &key)
         {
-            boost::shared_ptr<PointsBaseType> returnval(MemoryManager<NodalTetElec>::AllocateSharedPtr(key));
+            std::shared_ptr<PointsBaseType> returnval(MemoryManager<NodalTetElec>::AllocateSharedPtr(key));
             returnval->Initialize();
             return returnval;
         }

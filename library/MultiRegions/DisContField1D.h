@@ -64,7 +64,9 @@ namespace Nektar
                 const LibUtilities::SessionReaderSharedPtr& pSession,
                 const SpatialDomains::MeshGraphSharedPtr &graph1D,
                 const std::string &variable,
-                const bool SetUpJustDG  = true);
+                const bool SetUpJustDG  = true,
+                const Collections::ImplementationType ImpType
+                = Collections::eNoImpType);
             
             /// Constructor for a DisContField1D from a List of subdomains
             /// New Constructor for arterial network 
@@ -74,7 +76,9 @@ namespace Nektar
                 const SpatialDomains::CompositeMap& domain,
                 const SpatialDomains::BoundaryConditions &Allbcs, 
                 const std::string &variable,
-                bool SetToOneSpaceDimensions = false);
+                bool SetToOneSpaceDimensions = false,
+                const Collections::ImplementationType ImpType
+                = Collections::eNoImpType);
 
             /// Constructs a 1D discontinuous field based on an existing field.
             MULTI_REGIONS_EXPORT DisContField1D(const DisContField1D &In);
@@ -241,7 +245,7 @@ namespace Nektar
             virtual void v_GetBoundaryToElmtMap(
                 Array<OneD,int> &ElmtID, Array<OneD,int> &VertID);
             virtual void v_GetBndElmtExpansion(int i,
-                            boost::shared_ptr<ExpList> &result,
+                            std::shared_ptr<ExpList> &result,
                             const bool DeclareCoeffPhysArrays);
             virtual void v_Reset();
 
@@ -259,6 +263,7 @@ namespace Nektar
                     const FlagList &flags,
                     const StdRegions::ConstFactorMap &factors,
                     const StdRegions::VarCoeffMap &varcoeff,
+                    const MultiRegions::VarFactorsMap &varfactors,
                     const Array<OneD, const NekDouble> &dirForcing,
                     const bool PhysSpaceForcing);
 
@@ -274,7 +279,7 @@ namespace Nektar
                                                                      const std::string &variable);
         };
 
-        typedef boost::shared_ptr<DisContField1D>   DisContField1DSharedPtr;
+        typedef std::shared_ptr<DisContField1D>   DisContField1DSharedPtr;
     } //end of namespace
 } //end of namespace
 

@@ -61,10 +61,10 @@ namespace Nektar
             Expansion     (geom),
             Expansion3D   (geom),
             m_matrixManager(
-                    boost::bind(&PyrExp::CreateMatrix, this, _1),
+                    std::bind(&PyrExp::CreateMatrix, this, std::placeholders::_1),
                     std::string("PyrExpMatrix")),
             m_staticCondMatrixManager(
-                    boost::bind(&PyrExp::CreateStaticCondMatrix, this, _1),
+                    std::bind(&PyrExp::CreateStaticCondMatrix, this, std::placeholders::_1),
                     std::string("PyrExpStaticCondMatrix"))
         {
         }

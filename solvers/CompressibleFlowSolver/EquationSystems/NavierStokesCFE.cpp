@@ -46,7 +46,8 @@ namespace Nektar
 
     NavierStokesCFE::NavierStokesCFE(
             const LibUtilities::SessionReaderSharedPtr& pSession)
-        : CompressibleFlowSystem(pSession)
+        : UnsteadySystem(pSession),
+          CompressibleFlowSystem(pSession)
     {
     }
 

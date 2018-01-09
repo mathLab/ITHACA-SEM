@@ -39,28 +39,17 @@
 #include "../Module.h"
 #include "ProcessEquiSpacedOutput.h"
 
-#include <boost/geometry.hpp>
-#include <boost/geometry/geometries/point.hpp>
-#include <boost/geometry/geometries/box.hpp>
-#include <boost/geometry/index/rtree.hpp>
-
-namespace bg  = boost::geometry;
-namespace bgi = boost::geometry::index;
-
-
 namespace Nektar
 {
 namespace FieldUtils
 {
 
-const NekDouble SQ_PNT_TOL=1e-16;
-
 class Iso
 {
     public:
         void  Condense(void);
-        void  GlobalCondense(vector<boost::shared_ptr<Iso> > &iso, bool verbose);
-        void  SeparateRegions(vector<boost::shared_ptr<Iso> > &iso, int minsize, bool verbose);
+        void  GlobalCondense(vector<std::shared_ptr<Iso> > &iso, bool verbose);
+        void  SeparateRegions(vector<std::shared_ptr<Iso> > &iso, int minsize, bool verbose);
 
         void  Smooth(int n_iter, NekDouble lambda, NekDouble mu);
 
@@ -169,13 +158,13 @@ class Iso
             m_condensed = false;
             m_nvert     = 0;
             m_fields.resize(nfields);
-            // set up initial vectors to be 10000 long
-            m_x.resize(10000);
-            m_y.resize(10000);
-            m_z.resize(10000);
+            // set up initial vectors to be 1000 long
+            m_x.resize(1000);
+            m_y.resize(1000);
+            m_z.resize(1000);
             for(int i = 0; i < m_fields.size(); ++i)
             {
-                m_fields[i].resize(10000);
+                m_fields[i].resize(1000);
             }
         };
 
@@ -195,7 +184,7 @@ class Iso
 
 };
 
-typedef boost::shared_ptr<Iso> IsoSharedPtr;
+typedef std::shared_ptr<Iso> IsoSharedPtr;
 
 class IsoVertex
 {
@@ -235,11 +224,11 @@ class IsoVertex
 /**
  * @brief This processing module extracts an isocontour
  */
-class ProcessIsoContour : public ProcessEquiSpacedOutput
+class ProcessIsoContour : public ProcessModule
 {
     public:
         /// Creates an instance of this class
-        static boost::shared_ptr<Module> create(FieldSharedPtr f)
+        static std::shared_ptr<Module> create(FieldSharedPtr f)
         {
             return MemoryManager<ProcessIsoContour>::AllocateSharedPtr(f);
         }
@@ -250,6 +239,21 @@ class ProcessIsoContour : public ProcessEquiSpacedOutput
 
         /// Write mesh to output file.
         virtual void Process(po::variables_map &vm);
+
+        virtual std::string GetModuleName()
+        {
+            return "ProcessIsoContour";
+        }
+
+        virtual std::string GetModuleDescription()
+        {
+            return "Extracting contour";
+        }
+
+        virtual ModulePriority GetModulePriority()
+        {
+            return eModifyPts;
+        }
 
     protected:
         ProcessIsoContour(){};

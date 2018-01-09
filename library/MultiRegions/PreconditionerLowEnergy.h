@@ -49,16 +49,15 @@ namespace Nektar
     namespace MultiRegions
     {
         class PreconditionerLowEnergy;
-        typedef boost::shared_ptr<PreconditionerLowEnergy>  PreconditionerLowEnergySharedPtr;
+        typedef std::shared_ptr<PreconditionerLowEnergy>  PreconditionerLowEnergySharedPtr;
 
         class PreconditionerLowEnergy: public Preconditioner
 	{
         public:
             /// Creates an instance of this class
             static PreconditionerSharedPtr create(
-                const boost::shared_ptr<GlobalLinSys> &plinsys,
-                const boost::shared_ptr<AssemblyMap>
-                &pLocToGloMap)
+                const std::shared_ptr<GlobalLinSys> &plinsys,
+                const std::shared_ptr<AssemblyMap> &pLocToGloMap)
             {
 	        PreconditionerSharedPtr p = MemoryManager<PreconditionerLowEnergy>::AllocateSharedPtr(plinsys,pLocToGloMap);
 	        p->InitObject();
@@ -69,7 +68,7 @@ namespace Nektar
             static std::string className;
 
             MULTI_REGIONS_EXPORT PreconditionerLowEnergy(
-                const boost::shared_ptr<GlobalLinSys> &plinsys,
+                const std::shared_ptr<GlobalLinSys> &plinsys,
                 const AssemblyMapSharedPtr &pLocToGloMap);
 
             MULTI_REGIONS_EXPORT
@@ -77,8 +76,8 @@ namespace Nektar
 
 	protected:
 
-            const boost::weak_ptr<GlobalLinSys> m_linsys;
-            boost::shared_ptr<AssemblyMap> m_locToGloMap;
+            const std::weak_ptr<GlobalLinSys> m_linsys;
+            std::shared_ptr<AssemblyMap> m_locToGloMap;
 
 	    DNekBlkMatSharedPtr m_BlkMat;
             DNekBlkMatSharedPtr m_RBlk;
@@ -168,7 +167,7 @@ namespace Nektar
             
             virtual DNekScalMatSharedPtr
                 v_TransformedSchurCompl(int n, int offset, 
-                                        const boost::shared_ptr<DNekScalMat > &loc_mat);
+                             const std::shared_ptr<DNekScalMat > &loc_mat);
         };
     }
 }

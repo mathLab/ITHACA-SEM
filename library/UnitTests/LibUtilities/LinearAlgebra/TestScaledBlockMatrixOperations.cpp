@@ -65,22 +65,22 @@ namespace Nektar
             double m4_buf[] = {14.0/2.0, 19.0/2.0,
                                15.0/2.0, 20.0/2.0};
 
-            boost::shared_ptr<InnerType> in_m1(new InnerType(2, 3, m1_buf));
-            boost::shared_ptr<InnerType> in_m2(new InnerType(2, 2, m2_buf));
-            boost::shared_ptr<InnerType> in_m3(new InnerType(2, 3, m3_buf));
-            boost::shared_ptr<InnerType> in_m4(new InnerType(2, 2, m4_buf));
+            std::shared_ptr<InnerType> in_m1(new InnerType(2, 3, m1_buf));
+            std::shared_ptr<InnerType> in_m2(new InnerType(2, 2, m2_buf));
+            std::shared_ptr<InnerType> in_m3(new InnerType(2, 3, m3_buf));
+            std::shared_ptr<InnerType> in_m4(new InnerType(2, 2, m4_buf));
 
-            boost::shared_ptr<ScaleType> m1(new ScaleType(2.0, in_m1));
-            boost::shared_ptr<ScaleType> m2(new ScaleType(2.0, in_m2));
-            boost::shared_ptr<ScaleType> m3(new ScaleType(2.0, in_m3));
-            boost::shared_ptr<ScaleType> m4(new ScaleType(2.0, in_m4));
+            std::shared_ptr<ScaleType> m1(new ScaleType(2.0, in_m1));
+            std::shared_ptr<ScaleType> m2(new ScaleType(2.0, in_m2));
+            std::shared_ptr<ScaleType> m3(new ScaleType(2.0, in_m3));
+            std::shared_ptr<ScaleType> m4(new ScaleType(2.0, in_m4));
             
             unsigned int rowCounts[] = {2, 2};
             unsigned int colCounts[] = {3, 2};
             
             typedef NekMatrix<ScaleType, BlockMatrixTag> BlockType;
 
-            boost::shared_ptr<BlockType> b(new BlockType(2, 2, rowCounts, colCounts));
+            std::shared_ptr<BlockType> b(new BlockType(2, 2, rowCounts, colCounts));
             b->SetBlock(0, 0, m1);
             b->SetBlock(0, 1, m2);
             b->SetBlock(1, 0, m3);
@@ -143,21 +143,21 @@ namespace Nektar
                                  5, 1, 1};
 
 
-            boost::shared_ptr<InnerType> m00(new InnerType(2, 2, m_00_buf));
-            boost::shared_ptr<InnerType> m01(new InnerType(2, 3, m_01_buf));
-            boost::shared_ptr<InnerType> m02(new InnerType(2, 4, m_02_buf));
+            std::shared_ptr<InnerType> m00(new InnerType(2, 2, m_00_buf));
+            std::shared_ptr<InnerType> m01(new InnerType(2, 3, m_01_buf));
+            std::shared_ptr<InnerType> m02(new InnerType(2, 4, m_02_buf));
 
-            boost::shared_ptr<InnerType> m10(new InnerType(3, 2, m_10_buf));
-            boost::shared_ptr<InnerType> m11(new InnerType(3, 3, m_11_buf));
-            boost::shared_ptr<InnerType> m12(new InnerType(3, 4, m_12_buf));
+            std::shared_ptr<InnerType> m10(new InnerType(3, 2, m_10_buf));
+            std::shared_ptr<InnerType> m11(new InnerType(3, 3, m_11_buf));
+            std::shared_ptr<InnerType> m12(new InnerType(3, 4, m_12_buf));
 
-            boost::shared_ptr<InnerType> m20(new InnerType(4, 2, m_20_buf));
-            boost::shared_ptr<InnerType> m21(new InnerType(4, 3, m_21_buf));
-            boost::shared_ptr<InnerType> m22(new InnerType(4, 4, m_22_buf));
+            std::shared_ptr<InnerType> m20(new InnerType(4, 2, m_20_buf));
+            std::shared_ptr<InnerType> m21(new InnerType(4, 3, m_21_buf));
+            std::shared_ptr<InnerType> m22(new InnerType(4, 4, m_22_buf));
 
-            boost::shared_ptr<InnerType> m30(new InnerType(3, 2, m_30_buf));
-            boost::shared_ptr<InnerType> m31(new InnerType(3, 3, m_31_buf));
-            boost::shared_ptr<InnerType> m32(new InnerType(3, 4, m_32_buf));
+            std::shared_ptr<InnerType> m30(new InnerType(3, 2, m_30_buf));
+            std::shared_ptr<InnerType> m31(new InnerType(3, 3, m_31_buf));
+            std::shared_ptr<InnerType> m32(new InnerType(3, 4, m_32_buf));
 
             unsigned int rowCounts[] = {2, 3, 4, 3};
             unsigned int colCounts[] = {2, 3, 4};

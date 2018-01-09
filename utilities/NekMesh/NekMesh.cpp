@@ -34,8 +34,12 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include <string>
+#include <chrono>
 #include <boost/algorithm/string.hpp>
+#include <LibUtilities/BasicConst/GitRevision.h>
 #include <boost/program_options.hpp>
+#include <boost/asio/ip/host_name.hpp>
+#include <boost/format.hpp>
 
 #include <NekMeshUtils/Module/Module.h>
 
@@ -43,6 +47,7 @@ using namespace std;
 using namespace Nektar::NekMeshUtils;
 
 namespace po = boost::program_options;
+namespace ip    = boost::asio::ip;
 
 int main(int argc, char* argv[])
 {
@@ -124,7 +129,7 @@ int main(int argc, char* argv[])
             t = eProcessModule;
         }
 
-        MeshSharedPtr m = boost::shared_ptr<Mesh>(new Mesh());
+        MeshSharedPtr m = std::shared_ptr<Mesh>(new Mesh());
         ModuleSharedPtr mod = GetModuleFactory().CreateInstance(
             ModuleKey(t, tmp1[1]), m);
         cerr << "Options for module " << tmp1[1] << ":" << endl;
@@ -157,7 +162,50 @@ int main(int argc, char* argv[])
      * module to load.
      */
 
-    MeshSharedPtr mesh = boost::shared_ptr<Mesh>(new Mesh());
+    MeshSharedPtr mesh = std::shared_ptr<Mesh>(new Mesh());
+
+    // add provenance information to mesh
+    map<string, string> metadata;
+    // Nektar++ release version from VERSION file
+    metadata["NektarVersion"] = string(NEKTAR_VERSION);
+    // Date/time stamp
+    auto now = std::chrono::system_clock::now();
+    auto now_t = std::chrono::system_clock::to_time_t(now);
+    auto now_tm = *std::localtime(&now_t);
+    char buffer[128];
+    strftime(buffer, sizeof(buffer), "%d-%b-%Y %H:%M:%S", &now_tm);
+    metadata["Timestamp"] = buffer;
+    // Hostname
+    boost::system::error_code ec;
+    metadata["Hostname"] = ip::host_name(ec);
+    // Git information
+    // If built from a distributed package, do not include this
+    Nektar::LibUtilities::GitConsts gc = Nektar::LibUtilities::GitConsts();
+    if (gc.GetSha1() != "GITDIR-NOTFOUND")
+    {
+        metadata["GitSHA1"]   = gc.GetSha1();
+        metadata["GitBranch"] = gc.GetBranch();
+    }
+
+    mesh->m_infotag = new TiXmlElement("METADATA");
+
+    stringstream ss;
+    for(int i = 1; i < argc; i++)
+    {
+        ss << argv[i] << " ";
+    }
+    metadata["CommandString"] = ss.str();
+
+    TiXmlElement *provTag = new TiXmlElement("PROVENANCE");
+    for (auto &infoit : metadata)
+    {
+        TiXmlElement *e = new TiXmlElement(infoit.first);
+        e->LinkEndChild(new TiXmlText(infoit.second));
+        provTag->LinkEndChild(e);
+    }
+    mesh->m_infotag->LinkEndChild(provTag);
+
+
     vector<ModuleSharedPtr> modules;
     vector<string>          modcmds;
 
@@ -235,7 +283,7 @@ int main(int argc, char* argv[])
 
             if (tmp2.size() == 1)
             {
-                mod->RegisterConfig(tmp2[0], "1");
+                mod->RegisterConfig(tmp2[0]);
             }
             else if (tmp2.size() == 2)
             {

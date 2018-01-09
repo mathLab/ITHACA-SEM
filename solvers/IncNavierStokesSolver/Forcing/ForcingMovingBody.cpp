@@ -155,10 +155,8 @@ void ForcingMovingBody::v_Apply(
             }
             else
             {
-                EvaluateFunction(pFields, m_session, m_motion[0], m_zta[j],
-                                 m_funcName[j], time);
-                EvaluateFunction(pFields, m_session, m_motion[1], m_eta[j],
-                                 m_funcName[j], time);
+                GetFunction(pFields, m_session, m_funcName[j], true)->Evaluate(m_motion[0], m_zta[j], time);
+                GetFunction(pFields, m_session, m_funcName[j], true)->Evaluate(m_motion[1], m_eta[j], time);
                 cnt = cnt + 2;
             }
         }

@@ -40,37 +40,36 @@
 #include <SpatialDomains/GeomFactors.h>
 #include <LibUtilities/BasicUtils/ShapeType.hpp>
 
-#include <boost/unordered_set.hpp>
-#include <boost/unordered_map.hpp>
-#include <boost/functional/hash.hpp>
-#include <boost/shared_ptr.hpp>
+#include <unordered_set>
+#include <unordered_map>
+#include <memory>
 #include <SpatialDomains/SpatialDomainsDeclspec.h>
+#include <LibUtilities/BasicUtils/HashUtils.hpp>
 
 namespace Nektar
 {
     namespace SpatialDomains
     {
         class Geometry; // Forward declaration for typedef.
-        typedef boost::shared_ptr<Geometry> GeometrySharedPtr;
+        typedef std::shared_ptr<Geometry> GeometrySharedPtr;
         typedef std::vector< GeometrySharedPtr > GeometryVector;
-        typedef boost::unordered_set< GeometrySharedPtr > GeometrySet;
-        typedef boost::shared_ptr <GeometryVector> GeometryVectorSharedPtr;
-        typedef std::vector< GeometrySharedPtr >::iterator GeometryVectorIter;
+        typedef std::unordered_set< GeometrySharedPtr > GeometrySet;
+        typedef std::shared_ptr <GeometryVector> GeometryVectorSharedPtr;
 
         class PointGeom;
-        typedef boost::shared_ptr< PointGeom >  PointGeomSharedPtr;
+        typedef std::shared_ptr< PointGeom >  PointGeomSharedPtr;
 
         struct Curve;
-        typedef boost::shared_ptr<Curve> CurveSharedPtr;
-        typedef boost::unordered_map<int, CurveSharedPtr> CurveMap;
+        typedef std::shared_ptr<Curve> CurveSharedPtr;
+        typedef std::unordered_map<int, CurveSharedPtr> CurveMap;
 
         /// \brief Less than operator to sort Geometry objects by global id when sorting 
         /// STL containers.
-        SPATIAL_DOMAINS_EXPORT  bool SortByGlobalId(const boost::shared_ptr<Geometry>& lhs, 
-            const boost::shared_ptr<Geometry>& rhs);
+        SPATIAL_DOMAINS_EXPORT  bool SortByGlobalId(const std::shared_ptr<Geometry>& lhs, 
+            const std::shared_ptr<Geometry>& rhs);
 
-        SPATIAL_DOMAINS_EXPORT  bool GlobalIdEquality(const boost::shared_ptr<Geometry>& lhs, 
-            const boost::shared_ptr<Geometry>& rhs);
+        SPATIAL_DOMAINS_EXPORT  bool GlobalIdEquality(const std::shared_ptr<Geometry>& lhs, 
+            const std::shared_ptr<Geometry>& rhs);
 
         /// Base class for shape geometry information
         class Geometry
@@ -257,13 +256,13 @@ namespace Nektar
                 size_t seed  = 0;
                 int nVert = p->GetNumVerts();
                 std::vector<unsigned int> ids(nVert);
-                
+
                 for (i = 0; i < nVert; ++i)
                 {
                     ids[i] = p->GetVid(i);
                 }
                 std::sort(ids.begin(), ids.end());
-                boost::hash_range(seed, ids.begin(), ids.end());
+                hash_range(seed, ids.begin(), ids.end());
 
                 return seed;
             }

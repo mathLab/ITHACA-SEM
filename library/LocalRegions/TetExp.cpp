@@ -74,11 +74,11 @@ namespace Nektar
             Expansion     (geom),
             Expansion3D   (geom),
             m_matrixManager(
-                 boost::bind(&TetExp::CreateMatrix, this, _1),
-                 std::string("TetExpMatrix")),
+                std::bind(&TetExp::CreateMatrix, this, std::placeholders::_1),
+                std::string("TetExpMatrix")),
             m_staticCondMatrixManager(
-                 boost::bind(&TetExp::CreateStaticCondMatrix, this, _1),
-                 std::string("TetExpStaticCondMatrix"))
+                std::bind(&TetExp::CreateStaticCondMatrix, this, std::placeholders::_1),
+                std::string("TetExpStaticCondMatrix"))
         {
         }
 

@@ -66,7 +66,9 @@ namespace Nektar
                         const SpatialDomains::MeshGraphSharedPtr &graph2D,
                         const std::string &variable  = "DefaultVar",
                         const bool DeclareCoeffPhysArrays = true,
-                        const bool CheckIfSingularSystem = false);
+                        const bool CheckIfSingularSystem = false,
+                        const Collections::ImplementationType ImpType
+                                             = Collections::eNoImpType);
 
             /// Construct a global continuous field with solution type based on
             /// another field but using a separate input mesh and boundary
@@ -245,6 +247,7 @@ namespace Nektar
                     const FlagList &flags,
                     const StdRegions::ConstFactorMap &factors,
                     const StdRegions::VarCoeffMap &varcoeff,
+                    const MultiRegions::VarFactorsMap &varfactors,
                     const Array<OneD, const NekDouble> &dirForcing,
                     const bool PhysSpaceForcing);
 
@@ -284,7 +287,7 @@ namespace Nektar
 
         };
 
-        typedef boost::shared_ptr<ContField2D>      ContField2DSharedPtr;
+        typedef std::shared_ptr<ContField2D>      ContField2DSharedPtr;
 
         /**
          * This operation is evaluated as:
@@ -466,7 +469,7 @@ namespace Nektar
                      "To use method must have a AssemblyMap "
                      "attached to key");
 
-            GlobalMatrixMap::iterator matrixIter = m_globalMat->find(gkey);
+            auto matrixIter = m_globalMat->find(gkey);
 
             if(matrixIter == m_globalMat->end())
             {

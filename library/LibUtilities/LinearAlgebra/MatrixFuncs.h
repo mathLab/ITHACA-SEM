@@ -38,9 +38,9 @@
 #ifndef NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_MATRIX_FUNCS_H
 #define NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_MATRIX_FUNCS_H
 
-#include <boost/lexical_cast.hpp>
-#include <boost/tuple/tuple.hpp>
 #include <limits>
+#include <tuple>
+#include <boost/lexical_cast.hpp>
 #include <LibUtilities/LinearAlgebra/Lapack.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/LibUtilitiesDeclspec.h>
@@ -66,7 +66,7 @@ namespace Nektar
                                                             unsigned int sub, unsigned int super);
 
 
-        static boost::tuples::tuple<unsigned int, unsigned int>
+        static std::tuple<unsigned int, unsigned int>
         Advance(const unsigned int totalRows, const unsigned int totalColumns,
                 const unsigned int curRow, const unsigned int curColumn);
     };
@@ -78,7 +78,7 @@ namespace Nektar
         static unsigned int CalculateIndex(unsigned int totalRows, unsigned int totalColumns, unsigned int curRow, unsigned int curColumn);
 
 
-        static boost::tuples::tuple<unsigned int, unsigned int>
+        static std::tuple<unsigned int, unsigned int>
         Advance(const unsigned int totalRows, const unsigned int totalColumns,
                 const unsigned int curRow, const unsigned int curColumn);
 
@@ -87,7 +87,6 @@ namespace Nektar
                            Array<OneD, DataType>& data,
                            const char transpose)
         {
-#ifdef NEKTAR_USING_BLAS
                 ASSERTL0(rows==columns, "Only square matrices can be inverted.");
                 ASSERTL0(transpose=='N', "Only untransposed matrices may be inverted.");
 
@@ -123,11 +122,6 @@ namespace Nektar
                     std::string message = "ERROR: Element u_" + boost::lexical_cast<std::string>(info) +   boost::lexical_cast<std::string>(info) + " is 0 from dgetri";
                     ASSERTL0(false, message.c_str());
                 }
-
-            #else
-                // error Full matrix inversion not supported without blas.
-                BOOST_STATIC_ASSERT(sizeof(DataType) == 0);
-            #endif
         }
 
         static void EigenSolve(unsigned int n,
@@ -178,7 +172,7 @@ namespace Nektar
     {
         static unsigned int CalculateIndex(unsigned int curRow, unsigned int curColumn);
 
-        static boost::tuples::tuple<unsigned int, unsigned int>
+        static std::tuple<unsigned int, unsigned int>
         Advance(const unsigned int totalRows, const unsigned int totalColumns,
                 const unsigned int curRow, const unsigned int curColumn);
     };
@@ -188,7 +182,7 @@ namespace Nektar
     {
         static unsigned int CalculateIndex(unsigned int totalColumns, unsigned int curRow, unsigned int curColumn);
 
-        static boost::tuples::tuple<unsigned int, unsigned int>
+        static std::tuple<unsigned int, unsigned int>
         Advance(const unsigned int totalRows, const unsigned int totalColumns,
                 const unsigned int curRow, const unsigned int curColumn,
                 char transpose = 'N');
@@ -206,7 +200,6 @@ namespace Nektar
         static void Invert(unsigned int rows, unsigned int columns,
                            Array<OneD, DataType>& data)
         {
-#ifdef NEKTAR_USING_BLAS
             ASSERTL0(rows==columns, "Only square matrices can be inverted.");
 
             int n = columns;
@@ -240,21 +233,16 @@ namespace Nektar
                 std::string message = "ERROR: Element u_" + boost::lexical_cast<std::string>(info) +   boost::lexical_cast<std::string>(info) + " is 0 from dsptri";
                 ASSERTL0(false, message.c_str());
             }
-
-#else
-            // error Full matrix inversion not supported without blas.
-            BOOST_STATIC_ASSERT(sizeof(DataType) == 0);
-#endif
         }
 
-        static boost::tuples::tuple<unsigned int, unsigned int>
+        static std::tuple<unsigned int, unsigned int>
         Advance(const unsigned int totalRows, const unsigned int totalColumns,
                 const unsigned int curRow, const unsigned int curColumn);
     };
 
     struct LIB_UTILITIES_EXPORT DiagonalMatrixFuncs
     {
-        static boost::tuples::tuple<unsigned int, unsigned int>
+        static std::tuple<unsigned int, unsigned int>
         Advance(const unsigned int totalRows, const unsigned int totalColumns,
                 const unsigned int curRow, const unsigned int curColumn);
 

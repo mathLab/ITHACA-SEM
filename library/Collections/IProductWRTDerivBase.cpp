@@ -33,7 +33,6 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <loki/Singleton.h>
 #include <Collections/Operator.h>
 #include <Collections/Collection.h>
 #include <Collections/IProduct.h>
@@ -148,7 +147,7 @@ class IProductWRTDerivBase_StdMat : public Operator
         {
             LibUtilities::PointsKeyVector PtsKey = m_stdExp->GetPointsKeys();
             m_dim = PtsKey.size();
-            m_coordim = m_stdExp->GetCoordim();
+            m_coordim = pCollExp[0]->GetCoordim();
 
             int nqtot  = m_stdExp->GetTotPoints();
             int nmodes = m_stdExp->GetNcoeffs();

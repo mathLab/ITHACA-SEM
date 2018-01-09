@@ -48,7 +48,7 @@ namespace Nektar
         class ExpList;
         class GlobalLinSysPETScStaticCond;
 
-        typedef boost::shared_ptr<GlobalLinSysPETScStaticCond>
+        typedef std::shared_ptr<GlobalLinSysPETScStaticCond>
                                         GlobalLinSysPETScStaticCondSharedPtr;
 
         /// A global linear system.
@@ -59,8 +59,8 @@ namespace Nektar
             /// Creates an instance of this class
             static GlobalLinSysSharedPtr create(
                 const GlobalLinSysKey &pLinSysKey,
-                const boost::weak_ptr<ExpList> &pExpList,
-                const boost::shared_ptr<AssemblyMap> &pLocToGloMap)
+                const std::weak_ptr<ExpList> &pExpList,
+                const std::shared_ptr<AssemblyMap> &pLocToGloMap)
             {
                 GlobalLinSysSharedPtr p = MemoryManager<
                     GlobalLinSysPETScStaticCond>::AllocateSharedPtr(
@@ -76,18 +76,18 @@ namespace Nektar
             /// Constructor for full direct matrix solve.
             MULTI_REGIONS_EXPORT GlobalLinSysPETScStaticCond(
                 const GlobalLinSysKey                &mkey,
-                const boost::weak_ptr<ExpList>       &pExpList,
-                const boost::shared_ptr<AssemblyMap> &locToGloMap);
+                const std::weak_ptr<ExpList>         &pExpList,
+                const std::shared_ptr<AssemblyMap>   &locToGloMap);
 
             /// Constructor for full direct matrix solve.
             MULTI_REGIONS_EXPORT GlobalLinSysPETScStaticCond(
                 const GlobalLinSysKey                &mkey,
-                const boost::weak_ptr<ExpList>       &pExpList,
+                const std::weak_ptr<ExpList>         &pExpList,
                 const DNekScalBlkMatSharedPtr         pSchurCompl,
                 const DNekScalBlkMatSharedPtr         pBinvD,
                 const DNekScalBlkMatSharedPtr         pC,
                 const DNekScalBlkMatSharedPtr         pInvD,
-                const boost::shared_ptr<AssemblyMap> &locToGloMap,
+                const std::shared_ptr<AssemblyMap>   &locToGloMap,
                 const PreconditionerSharedPtr         pPrecon =
                                                      PreconditionerSharedPtr());
 
@@ -100,7 +100,7 @@ namespace Nektar
 
             /// Assemble the Schur complement matrix.
             virtual void v_AssembleSchurComplement(
-                boost::shared_ptr<AssemblyMap> locToGloMap);
+                std::shared_ptr<AssemblyMap> locToGloMap);
             virtual void v_DoMatrixMultiply(
                 const Array<OneD, const NekDouble> &input,
                       Array<OneD,       NekDouble> &output);
@@ -116,12 +116,12 @@ namespace Nektar
 
             virtual GlobalLinSysStaticCondSharedPtr v_Recurse(
                 const GlobalLinSysKey                &mkey,
-                const boost::weak_ptr<ExpList>       &pExpList,
+                const std::weak_ptr<ExpList>         &pExpList,
                 const DNekScalBlkMatSharedPtr         pSchurCompl,
                 const DNekScalBlkMatSharedPtr         pBinvD,
                 const DNekScalBlkMatSharedPtr         pC,
                 const DNekScalBlkMatSharedPtr         pInvD,
-                const boost::shared_ptr<AssemblyMap> &locToGloMap);
+                const std::shared_ptr<AssemblyMap>   &locToGloMap);
 
         };
     }

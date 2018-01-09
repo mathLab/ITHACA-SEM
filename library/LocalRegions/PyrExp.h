@@ -185,10 +185,8 @@ namespace Nektar
                       Array<OneD,       NekDouble> &wsp);
         };
 
-        // type defines for use of PyrExp in a boost vector
-        typedef boost::shared_ptr<PyrExp> PyrExpSharedPtr;
+        typedef std::shared_ptr<PyrExp> PyrExpSharedPtr;
         typedef std::vector<PyrExpSharedPtr> PyrExpVector;
-        typedef std::vector<PyrExpSharedPtr>::iterator PyrExpVectorIter;
     } //end of namespace
 } //end of namespace
 

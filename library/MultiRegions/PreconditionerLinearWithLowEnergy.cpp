@@ -63,7 +63,7 @@ namespace Nektar
 	 */
         
         PreconditionerLinearWithLowEnergy::PreconditionerLinearWithLowEnergy(
-            const boost::shared_ptr<GlobalLinSys> &plinsys,
+            const std::shared_ptr<GlobalLinSys> &plinsys,
             const AssemblyMapSharedPtr &pLocToGloMap)
             : Preconditioner(plinsys, pLocToGloMap)
         {
@@ -100,7 +100,7 @@ namespace Nektar
 
         DNekScalMatSharedPtr PreconditionerLinearWithLowEnergy::
         v_TransformedSchurCompl(int n, int offset,
-                                const boost::shared_ptr<DNekScalMat > &loc_mat)
+                                const std::shared_ptr<DNekScalMat > &loc_mat)
 	{
             DNekScalMatSharedPtr returnval;
             returnval=m_lowEnergyPrecon->TransformedSchurCompl(n,offset, loc_mat);

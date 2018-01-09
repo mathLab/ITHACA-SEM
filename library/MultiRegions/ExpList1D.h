@@ -50,11 +50,9 @@ namespace Nektar
         class ExpList1D;
 
         /// Shared pointer to an ExpList1D object.
-        typedef boost::shared_ptr<ExpList1D>      ExpList1DSharedPtr;
+        typedef std::shared_ptr<ExpList1D>      ExpList1DSharedPtr;
         /// Vector of pointers to ExpList1D objects.
         typedef std::vector<ExpList1DSharedPtr>   ExpList1DVector;
-        /// Iterator for the vector of ExpList1D pointers.
-        typedef std::vector<ExpList1DSharedPtr>::iterator ExpList1DVectorIter;
 
         /// This class is the abstraction of a one-dimensional multi-elemental
         /// expansions which is merely a collection of local expansions.
@@ -68,24 +66,31 @@ namespace Nektar
             MULTI_REGIONS_EXPORT ExpList1D(
                 const ExpList1D &In,
                 const bool DeclareCoeffPhysArrays = true);
+                
             
             /// Constructor copying only elements defined in eIds.
             MULTI_REGIONS_EXPORT ExpList1D(  const ExpList1D &In,
                 const std::vector<unsigned int> &eIDs,
-                const bool DeclareCoeffPhysArrays = true);
+                const bool DeclareCoeffPhysArrays = true,
+                const Collections::ImplementationType ImpType
+                                             = Collections::eNoImpType);
 
             /// Construct an ExpList1D from a given graph.
             MULTI_REGIONS_EXPORT ExpList1D(
                 const LibUtilities::SessionReaderSharedPtr &pSession,
                 const LibUtilities::BasisKey &Ba,
-                const SpatialDomains::MeshGraphSharedPtr &graph1D);
+                const SpatialDomains::MeshGraphSharedPtr &graph1D,
+                const Collections::ImplementationType ImpType
+                                             = Collections::eNoImpType);
 
             /// This constructor sets up a list of local expansions based on an
             /// input graph1D.
             MULTI_REGIONS_EXPORT ExpList1D(
                 const LibUtilities::SessionReaderSharedPtr &pSession,
                 const SpatialDomains::MeshGraphSharedPtr &graph1D,
-                const bool DeclareCoeffPhysArrays = true);
+                const bool DeclareCoeffPhysArrays = true,
+                const Collections::ImplementationType ImpType
+                                             = Collections::eNoImpType);
 
 
             /// This constructor sets up a list of local expansions based on an
@@ -96,7 +101,10 @@ namespace Nektar
                       const SpatialDomains::CompositeMap &domain,
                       const bool DeclareCoeffPhysArrays = true,
                       const std::string var = "DefaultVar",
-                      bool SetToOneSpaceDimension = false);
+                      bool SetToOneSpaceDimension = false,
+                      const Collections::ImplementationType ImpType
+                                             = Collections::eNoImpType);
+
 
 
             /// Specialised constructor for Neumann boundary conditions in
@@ -106,7 +114,9 @@ namespace Nektar
                 const SpatialDomains::CompositeMap &domain,
                 const SpatialDomains::MeshGraphSharedPtr &graph2D,
                 const bool DeclareCoeffPhysArrays = true,
-                const std::string variable = "DefaultVar");
+                const std::string variable = "DefaultVar",
+                const Collections::ImplementationType ImpType
+                                             = Collections::eNoImpType);  
 			
 			
             MULTI_REGIONS_EXPORT ExpList1D(
@@ -114,8 +124,10 @@ namespace Nektar
                 const SpatialDomains::CompositeMap &domain,
                 const SpatialDomains::MeshGraphSharedPtr &graph1D,
                 int i,
-                const bool DeclareCoeffPhysArrays = true);
-            
+                const bool DeclareCoeffPhysArrays = true,
+                const Collections::ImplementationType ImpType
+                                             = Collections::eNoImpType);  
+           
             /// Specialised constructor for trace expansions.
             MULTI_REGIONS_EXPORT ExpList1D(
                 const LibUtilities::SessionReaderSharedPtr &pSession,
@@ -126,7 +138,10 @@ namespace Nektar
                 const SpatialDomains::MeshGraphSharedPtr &graph2D,
                 const PeriodicMap &periodicEdges,
                 const bool DeclareCoeffPhysArrays = true,
-                const std::string variable = "DefaultVar");
+                const std::string variable = "DefaultVar",
+                const Collections::ImplementationType ImpType
+                                             = Collections::eNoImpType);
+                
 
             /// Destructor.
             MULTI_REGIONS_EXPORT virtual ~ExpList1D();

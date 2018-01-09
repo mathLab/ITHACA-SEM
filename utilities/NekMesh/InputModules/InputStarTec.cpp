@@ -221,7 +221,7 @@ void InputTec::ReadZone(int &nComposite)
     for (i = 0; i < nnodes; ++i)
     {
         Nodes.push_back(
-            boost::shared_ptr<Node>(
+            std::shared_ptr<Node>(
                 new Node(i, nodeLocs[i], nodeLocs[i+nnodes],
                          nodeLocs[i+2*nnodes])));
     }
@@ -394,7 +394,7 @@ void InputTec::ReadZone(int &nComposite)
         // identify
         for (i = 0; i < Nodes.size(); ++i)
         {
-            NodeSet::iterator it = m_mesh->m_vertexSet.find(Nodes[i]);
+            auto it = m_mesh->m_vertexSet.find(Nodes[i]);
 
             if (it == m_mesh->m_vertexSet.end())
             {
@@ -436,7 +436,6 @@ void InputTec::ResetNodes(vector<NodeSharedPtr> &Vnodes,
     vector<vector<int> > FaceToPrisms(FaceNodes.size());
     vector<vector<int> > PrismToFaces(ElementFaces.num_elements());
     map<int, int> Prisms;
-    map<int, int>::iterator PrismIt;
 
     // generate map of prism-faces to prisms and prism to
     // triangular-faces as well as ids of each prism.
@@ -474,11 +473,10 @@ void InputTec::ResetNodes(vector<NodeSharedPtr> &Vnodes,
     // For every prism find the list of prismatic elements
     // that represent an aligned block of cells. Then renumber
     // these blocks consecutativiesly
-    for (PrismIt = Prisms.begin(); PrismIt != Prisms.end(); ++PrismIt)
+    for (auto &PrismIt : Prisms)
     {
-        int elmtid = PrismIt->first;
+        int elmtid = PrismIt.first;
         map<int, int> facelist;
-        map<int, int>::iterator faceIt;
 
         if (PrismDone[elmtid])
         {
@@ -491,9 +489,9 @@ void InputTec::ResetNodes(vector<NodeSharedPtr> &Vnodes,
                 elmtid, facelist, FaceToPrisms, PrismToFaces, PrismDone);
 
             // loop over faces and number vertices of associated prisms.
-            for (faceIt = facelist.begin(); faceIt != facelist.end(); faceIt++)
+            for (auto &faceIt : facelist)
             {
-                int faceid = faceIt->second;
+                int faceid = faceIt.second;
 
                 for (i = 0; i < FaceToPrisms[faceid].size(); ++i)
                 {

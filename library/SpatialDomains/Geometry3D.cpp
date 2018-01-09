@@ -77,6 +77,14 @@ namespace SpatialDomains
     }
 
     /**
+    * @brief Return edge i in this element.
+    */
+    const Geometry1DSharedPtr Geometry3D::GetEdge(int i) const
+    {
+        return v_GetEdge(i);
+    }
+
+    /**
     * @brief Return face i in this element.
     */
     Geometry2DSharedPtr Geometry3D::GetFace(int i)
@@ -457,21 +465,19 @@ namespace SpatialDomains
     */
     int Geometry3D::v_WhichEdge(SegGeomSharedPtr edge)
     {
-      int returnval = -1;
+        int returnval = -1, i = 0;
 
-      SegGeomVector::iterator edgeIter;
-      int i;
+        for (auto &edgeIter : m_edges)
+        {
+            if (edgeIter == edge)
+            {
+                returnval = i;
+                break;
+            }
+            ++i;
+        }
 
-      for (i=0,edgeIter = m_edges.begin(); edgeIter != m_edges.end(); ++edgeIter,++i)
-      {
-          if (*edgeIter == edge)
-          {
-              returnval = i;
-              break;
-          }
-      }
-
-      return returnval;
+        return returnval;
     }
 
     /**
@@ -482,17 +488,17 @@ namespace SpatialDomains
     */
     int Geometry3D::v_WhichFace(Geometry2DSharedPtr face)
     {
-      int i = 0;
+        int i = 0;
 
-      Geometry2DVector::iterator f;
-      for (i = 0, f = m_faces.begin(); f != m_faces.end(); ++f,++i)
-      {
-          if (*f == face)
-          {
-              break;
-          }
-      }
-      return i;
+        for (auto &f : m_faces)
+        {
+            if (f == face)
+            {
+                break;
+            }
+            ++i;
+        }
+        return i;
     }
 
     //---------------------------------------
@@ -512,11 +518,8 @@ namespace SpatialDomains
 
     bool Geometry3D::v_IsElmtConnected(int gvo_id, int locid) const
     {
-      std::list<CompToElmt>::const_iterator def;
       CompToElmt ee(gvo_id,locid);
-
-      def = find(m_elmtmap.begin(),m_elmtmap.end(),ee);
-
+      auto def = find(m_elmtmap.begin(),m_elmtmap.end(),ee);
       // Found the element connectivity object in the list
       return (def != m_elmtmap.end());
     }

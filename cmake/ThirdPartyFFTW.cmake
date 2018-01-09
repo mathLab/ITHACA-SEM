@@ -10,13 +10,14 @@ OPTION(NEKTAR_USE_FFTW
     "Use FFTW routines for performing the Fast Fourier Transform." OFF)
 
 IF (NEKTAR_USE_FFTW)
-    # Set some common FFTW search paths.
+    # Set some common FFTW search paths for the library.
     SET(FFTW_SEARCH_PATHS $ENV{LD_LIBRARY_PATH} $ENV{FFTW_HOME}/lib)
     FIND_LIBRARY(FFTW_LIBRARY NAMES fftw3 fftw3f PATHS ${FFTW_SEARCH_PATHS})
 
-    IF (FFTW_LIBRARY)
-        GET_FILENAME_COMPONENT(FFTW_PATH ${FFTW_LIBRARY} PATH)
-        SET(FFTW_INCLUDE_DIR ${FFTW_PATH}/../include CACHE FILEPATH "FFTW include directory.")
+    FIND_PATH(FFTW_INCLUDE_DIR NAMES fftw3.h CACHE FILEPATH 
+        "FFTW include directory.")
+
+    IF (FFTW_LIBRARY AND FFTW_INCLUDE_DIR)
         SET(BUILD_FFTW OFF)
     ELSE()
         SET(BUILD_FFTW ON)
@@ -55,9 +56,17 @@ IF (NEKTAR_USE_FFTW)
         MESSAGE(STATUS "Found FFTW: ${FFTW_LIBRARY}")
         SET(FFTW_CONFIG_INCLUDE_DIR ${FFTW_INCLUDE_DIR})
     ENDIF()
+
+    # Test if FFTW path is a system path. Only add to include path if not an
+    # implicitly defined CXX include path (due to GCC 6.x now providing its own
+    # version of some C header files and -isystem reorders include paths).
+    GET_FILENAME_COMPONENT(X "${CMAKE_CXX_IMPLICIT_INCLUDE_DIRECTORIES}"  ABSOLUTE)
+    GET_FILENAME_COMPONENT(Y ${FFTW_INCLUDE_DIR} ABSOLUTE)
+
+    IF (NOT Y MATCHES ".*${X}.*")
+        INCLUDE_DIRECTORIES(SYSTEM ${FFTW_INCLUDE_DIR})
+    ENDIF()
+
+    MARK_AS_ADVANCED(FFTW_LIBRARY)
+    MARK_AS_ADVANCED(FFTW_INCLUDE_DIR)
 ENDIF( NEKTAR_USE_FFTW )
-
-INCLUDE_DIRECTORIES(SYSTEM ${FFTW_INCLUDE_DIR})
-
-MARK_AS_ADVANCED(FFTW_LIBRARY)
-MARK_AS_ADVANCED(FFTW_INCLUDE_DIR)

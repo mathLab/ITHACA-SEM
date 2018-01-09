@@ -65,6 +65,12 @@ public:
 
     Array<OneD, NekDouble> GetBoundingBox();
 
+    TopoDS_Shape GetShape()
+    {
+        return shape;
+    }
+
+
 private:
     /// Function to add curve to CADSystem::m_verts.
     void AddVert(int i, TopoDS_Shape in);
@@ -74,10 +80,13 @@ private:
     void AddSurf(int i, TopoDS_Shape in);
 
     TopoDS_Shape BuildNACA(std::string naca);
+    TopoDS_Shape BuildGeo(std::string geo);
     /// OCC master object
     TopoDS_Shape shape;
     TopTools_IndexedMapOfShape mapOfVerts, mapOfEdges, mapOfFaces;
 };
+
+typedef std::shared_ptr<CADSystemOCE> CADSystemOCESharedPtr;
 
 
 }

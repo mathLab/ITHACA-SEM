@@ -51,7 +51,7 @@ class ProcessGrad : public ProcessModule
 {
 public:
     /// Creates an instance of this class
-    static boost::shared_ptr<Module> create(FieldSharedPtr f)
+    static std::shared_ptr<Module> create(FieldSharedPtr f)
     {
         return MemoryManager<ProcessGrad>::AllocateSharedPtr(f);
     }
@@ -67,6 +67,17 @@ public:
     {
         return "ProcessGrad";
     }
+
+    virtual std::string GetModuleDescription()
+    {
+        return "Calculating gradients";
+    }
+
+    virtual ModulePriority GetModulePriority()
+    {
+        return eModifyExp;
+    }
+
 };
 }
 }

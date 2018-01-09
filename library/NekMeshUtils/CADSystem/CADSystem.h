@@ -50,15 +50,13 @@ namespace Nektar
 namespace NekMeshUtils
 {
 
-//forward declorators
+// forward declorators
 class CADVert;
 typedef std::shared_ptr<CADVert> CADVertSharedPtr;
 class CADCurve;
 typedef std::shared_ptr<CADCurve> CADCurveSharedPtr;
 class CADSurf;
 typedef std::shared_ptr<CADSurf> CADSurfSharedPtr;
-
-
 
 /**
  * @brief Base class for CAD interface system.
@@ -72,25 +70,13 @@ public:
     friend class MemoryManager<CADSystem>;
 
     /**
-     * @brief struct which descibes a collection of cad edges which are a
-     *        loop on the cad surface
-     */
-    struct EdgeLoop
-    {
-        std::vector<CADCurveSharedPtr> edges;
-        std::vector<CADOrientation::Orientation> edgeo;
-        Array<OneD, NekDouble> center;
-        NekDouble area;
-    };
-
-    typedef std::shared_ptr<EdgeLoop> EdgeLoopSharedPtr;
-
-    /**
      * @brief Default constructor.
      */
     CADSystem(std::string name) : m_name(name)
     {
-        m_2d = false;
+        m_2d      = false;
+        m_cfiMesh = false;
+        m_verbose = false;
     }
 
     virtual ~CADSystem()
@@ -98,7 +84,7 @@ public:
     }
 
     /**
-     * @brief Return the name of the CAD system.
+     * @brief Return the name of the CAD file.
      */
     std::string GetName()
     {
@@ -120,22 +106,22 @@ public:
         m_naca = i;
     }
 
+    void SetCFIMesh()
+    {
+        m_cfiMesh = true;
+    }
+
+    void SetVerbose()
+    {
+        m_verbose = true;
+    }
+
     /**
      * @brief Initialises CAD and makes surface, curve and vertex maps.
      *
      * @return true if completed successfully
      */
     virtual bool LoadCAD() = 0;
-
-    /**
-     * @brief Reports basic properties to screen.
-     */
-    void Report()
-    {
-        std::cout << std::endl << "CAD report:" << std::endl;
-        std::cout << "\tCAD has: " << m_curves.size() << " curves." << std::endl;
-        std::cout << "\tCAD has: " << m_surfs.size() << " surfaces." << std::endl;
-    }
 
     /**
      * @brief Returns bounding box of the domain.
@@ -184,7 +170,10 @@ public:
 
         return search->second;
     }
-    
+
+    /**
+     * @brief Gets a vert from the map.
+     */
     CADVertSharedPtr GetVert(int i)
     {
         auto search = m_verts.find(i);
@@ -208,11 +197,14 @@ public:
     {
         return m_verts.size();
     }
-    
-    std::string GetSurfaceName(int i);
-    
+
+    /**
+     * @brief Return the vector of translation from one curve to another to
+     * allow
+     *        for periodic mesh generation in 2D.
+     */
     NEKMESHUTILS_EXPORT Array<OneD, NekDouble> GetPeriodicTranslationVector(
-                int first, int second);
+        int first, int second);
 
 protected:
     /// Name of cad file
@@ -223,17 +215,34 @@ protected:
     std::map<int, CADSurfSharedPtr> m_surfs;
     /// Map of vertices
     std::map<int, CADVertSharedPtr> m_verts;
-
+    /// Verbosity
+    bool m_verbose;
+    /// 2D cad flag
     bool m_2d;
+    /// Will the CAD be used with a CFI mesh flag
+    bool m_cfiMesh;
+    /// string of 4 digit NACA code to be created
     std::string m_naca;
+
+    /**
+     * @brief Reports basic properties to screen.
+     */
+    void Report()
+    {
+        std::cout << std::endl << "CAD report:" << std::endl;
+        std::cout << "\tCAD has: " << m_verts.size() << " verts." << std::endl;
+        std::cout << "\tCAD has: " << m_curves.size() << " curves."
+                  << std::endl;
+        std::cout << "\tCAD has: " << m_surfs.size() << " surfaces."
+                  << std::endl;
+    }
 };
 
 typedef std::shared_ptr<CADSystem> CADSystemSharedPtr;
 typedef LibUtilities::NekFactory<std::string, CADSystem, std::string>
     EngineFactory;
 
-EngineFactory& GetEngineFactory();
-
+EngineFactory &GetEngineFactory();
 }
 }
 

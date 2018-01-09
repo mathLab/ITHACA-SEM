@@ -65,7 +65,8 @@ namespace Nektar
 {
 namespace SpatialDomains
 {
-MeshPartitionFactory &GetMeshPartitionFactory()
+
+SPATIAL_DOMAINS_EXPORT MeshPartitionFactory &GetMeshPartitionFactory()
 {
     static MeshPartitionFactory instance;
     return instance;

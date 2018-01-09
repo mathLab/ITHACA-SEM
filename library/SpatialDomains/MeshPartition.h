@@ -61,7 +61,7 @@ typedef LibUtilities::NekFactory<std::string, MeshPartition,
                                  const MeshGraphSharedPtr>
     MeshPartitionFactory;
 
-MeshPartitionFactory &GetMeshPartitionFactory();
+SPATIAL_DOMAINS_EXPORT MeshPartitionFactory &GetMeshPartitionFactory();
 
 class MeshPartition
 {
@@ -71,16 +71,20 @@ public:
                   const MeshGraphSharedPtr meshGraph);
     virtual ~MeshPartition();
 
-    void PartitionMesh(int nParts, bool shared = false,
-                       bool overlapping = false);
-    void WriteLocalPartition();
-    void WriteAllPartitions();
+    SPATIAL_DOMAINS_EXPORT void PartitionMesh(
+        int  nParts,
+        bool shared      = false,
+        bool overlapping = false);
+    SPATIAL_DOMAINS_EXPORT void WriteLocalPartition();
+    SPATIAL_DOMAINS_EXPORT void WriteAllPartitions();
 
-    void PrintPartInfo(std::ostream &out);
-    CompositeOrdering GetCompositeOrdering();
-    BndRegionOrdering GetBndRegionOrdering();
+    SPATIAL_DOMAINS_EXPORT void PrintPartInfo(std::ostream &out);
+    SPATIAL_DOMAINS_EXPORT CompositeOrdering GetCompositeOrdering();
+    SPATIAL_DOMAINS_EXPORT BndRegionOrdering GetBndRegionOrdering();
 
-    void GetElementIDs(const int procid, std::vector<unsigned int> &tmp);
+    SPATIAL_DOMAINS_EXPORT void GetElementIDs(
+        const int                  procid,
+        std::vector<unsigned int> &tmp);
 
 private:
     struct MeshEntity

@@ -98,6 +98,7 @@ v4.4.2
 - Fix evaluation of points (e.g. HistoryPoints, Interpolation to pts) close to
   the interface of two elements (!836)
 - Fix deadlock in Hdf5 with homogeneous expansions (!858)
+- Fix a few memory leaks in polylib (!863)
 - Fix a crash when Interpolator is called on an empty field (!869)
 - Fix petsc compile without MPI (!873)
 - Fix uninitialised coefficients in DirectFull solver (!898)
@@ -144,6 +145,7 @@ v4.4.1
 - Added regression tests for IMEXOrder1, IMEXOrder2, IMEXOrder3, MCNAB,
   IMEXGear, CNAB, 2nd order IMEX-DIRK, 3rd order IMEX-DIRK (!854)
 - Fix bug due to subtractive cancellation in polylib routines (!778)
+
 
 **FieldConvert:**
 - Fix issue with field ordering in the interppointdatatofld module (!754)

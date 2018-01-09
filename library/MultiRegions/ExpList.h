@@ -77,11 +77,12 @@ namespace Nektar
             e0D,
             e1D,
             e2D,
+            e2DH1D,
             e3DH1D,
             e3DH2D,
             e3D,
             eNoType
-        };       
+        };
         
         MultiRegions::Direction const DirCartesianMap[] =
         {

@@ -36,6 +36,8 @@
 #ifndef NEKMESHUTILS_MESHELEMENTS_MESH
 #define NEKMESHUTILS_MESHELEMENTS_MESH
 
+#include <tinyxml.h>
+
 #include <NekMeshUtils/NekMeshUtilsDeclspec.h>
 #include <NekMeshUtils/MeshElements/Element.h>
 #include <NekMeshUtils/MeshElements/Composite.h>
@@ -129,7 +131,8 @@ public:
     CADSystemSharedPtr              m_cad;
     /// Octree system pointer, if there is no octree its empty
     OctreeSharedPtr                 m_octree;
-
+    /// XML info tag for provenance information
+    TiXmlElement                    *m_infotag;
 
     /// Returns the total number of elements in the mesh with
     /// dimension expDim.

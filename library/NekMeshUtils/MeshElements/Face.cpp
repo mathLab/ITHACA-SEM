@@ -268,13 +268,12 @@ void Face::MakeOrder(int                                order,
             loc[0] = m_faceNodes[i]->m_x;
             loc[1] = m_faceNodes[i]->m_y;
             loc[2] = m_faceNodes[i]->m_z;
-            Array<OneD, NekDouble> uv(2);
-            s->ProjectTo(loc,uv);
+            Array<OneD, NekDouble> uv = s->locuv(loc);
             loc = s->P(uv);
             m_faceNodes[i]->m_x = loc[0];
             m_faceNodes[i]->m_y = loc[1];
             m_faceNodes[i]->m_z = loc[2];
-            m_faceNodes[i]->SetCADSurf(s->GetId(),s,uv);
+            m_faceNodes[i]->SetCADSurf(s,uv);
         }
     }
 }

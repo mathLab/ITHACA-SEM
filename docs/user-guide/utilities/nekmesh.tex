@@ -671,6 +671,21 @@ but the basic usage is:
 where type can be \texttt{hyperelastic}, \texttt{linearelastic},
 \texttt{winslow} or \texttt{roca}.
 
+\subsection{Mesh projection}
+This module can take any linear mesh, providing that it is a close
+representation of the CAD and project the boundary of the mesh onto the CAD.
+This will curve the surface of the mesh. The method has a number of failsafes
+ensuring that even bad CAD or poor linear meshes should be able to be curved to
+some degree. If the method encounters an issue, such as the linear mesh being a
+large distance from the CAD, it will simply leave that element straight sided. A
+well made CAD model and accurate linear mesh should be curved with little issue.
+
+The module needs to be informed of the CAD file to project the mesh to and the
+order at which to curve the surface:
+\begin{lstlisting}[style=BashInputStyle]
+  NekMesh -m projectcad:file=cadfile.step:order=x inital.xml optimised.xml
+\end{lstlisting}
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 

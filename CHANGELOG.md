@@ -67,6 +67,7 @@ v4.4.2
 - Fix evaluation of points (e.g. HistoryPoints, Interpolation to pts) close to
   the interface of two elements (!836)
 - Fix deadlock in Hdf5 with homogeneous expansions (!858)
+- Fix a few memory leaks in polylib (!863)
 
 **NekMesh**
 - Fix missing periodic boundary meshing and boundary layer mesh adjustment
@@ -106,7 +107,6 @@ v4.4.1
 - Added regression tests for IMEXOrder1, IMEXOrder2, IMEXOrder3, MCNAB,
   IMEXGear, CNAB, 2nd order IMEX-DIRK, 3rd order IMEX-DIRK (!854)
 - Fix bug due to subtractive cancellation in polylib routines (!778)
-- Fix a few memory leaks in polylib (!863)
 
 
 **FieldConvert:**

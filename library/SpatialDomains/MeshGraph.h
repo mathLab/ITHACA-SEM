@@ -464,7 +464,7 @@ protected:
 typedef std::shared_ptr<MeshGraph> MeshGraphSharedPtr;
 typedef LibUtilities::NekFactory<std::string, MeshGraph> MeshGraphFactory;
 
-MeshGraphFactory &GetMeshGraphFactory();
+SPATIAL_DOMAINS_EXPORT MeshGraphFactory &GetMeshGraphFactory();
 
 /**
  *

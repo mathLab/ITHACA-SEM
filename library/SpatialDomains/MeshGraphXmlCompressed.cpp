@@ -788,7 +788,7 @@ void MeshGraphXmlCompressed::ReadElements2D()
                     GetSegGeom(faceData[i].e[2]), GetSegGeom(faceData[i].e[3])};
 
                 QuadGeomSharedPtr quadgeom;
-                if (it == m_curvedEdges.end())
+                if (it == m_curvedFaces.end())
                 {
                     quadgeom =
                         MemoryManager<QuadGeom>::AllocateSharedPtr(indx, edges);

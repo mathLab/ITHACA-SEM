@@ -228,15 +228,6 @@ int main(int argc, char *argv[])
             Exp->GetFieldDefinitions();
         std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
 
-        std::ofstream outfile("blah.vtk");
-        Exp->WriteVtkHeader(outfile);
-        for (i = 0; i < Exp->GetExpSize(); ++i)
-        {
-            Exp->WriteVtkPieceHeader(outfile, i);
-            Exp->WriteVtkPieceFooter(outfile, i);
-        }
-        Exp->WriteVtkFooter(outfile);
-
         Exp->GlobalToLocal(Exp->GetCoeffs(),Exp->UpdateCoeffs());
         for(i = 0; i < FieldDef.size(); ++i)
         {

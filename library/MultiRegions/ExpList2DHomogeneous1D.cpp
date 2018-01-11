@@ -47,6 +47,7 @@ namespace Nektar
         ExpList2DHomogeneous1D::ExpList2DHomogeneous1D():
             ExpListHomogeneous1D()
         {
+            SetExpType(e2DH1D);
         }
 
         // Constructor for ExpList2DHomogeneous1D to act as a Explist2D field
@@ -59,6 +60,7 @@ namespace Nektar
             const Array<OneD, ExpListSharedPtr>        &planes)
             : ExpListHomogeneous1D(pSession,HomoBasis,lhom,useFFT,dealiasing)
         {
+            SetExpType(e2DH1D);
             int i, n, cnt, nel;
 
             ASSERTL1(m_planes.num_elements() == planes.num_elements(),
@@ -98,6 +100,7 @@ namespace Nektar
             const Collections::ImplementationType ImpType):
             ExpListHomogeneous1D(pSession,HomoBasis,lhom,useFFT,dealiasing)
         {
+            SetExpType(e2DH1D);
             int n, j, nel;
             ExpList1DSharedPtr plane_zero;
 
@@ -140,6 +143,7 @@ namespace Nektar
             const ExpList2DHomogeneous1D &In):
             ExpListHomogeneous1D(In)
         {
+            SetExpType(e2DH1D);
             ExpList1DSharedPtr zero_plane =
                 std::dynamic_pointer_cast<ExpList1D> (In.m_planes[0]);
 

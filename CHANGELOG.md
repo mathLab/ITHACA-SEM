@@ -80,6 +80,7 @@ v4.4.2
   the interface of two elements (!836)
 - Fix deadlock in Hdf5 with homogeneous expansions (!858)
 - Fix petsc compile without MPI (!873)
+- Fix deadlock in DiffusionLDG (!885)
 
 **NekMesh**
 - Fix missing periodic boundary meshing and boundary layer mesh adjustment

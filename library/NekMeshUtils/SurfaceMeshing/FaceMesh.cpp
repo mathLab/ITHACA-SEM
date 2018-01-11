@@ -124,6 +124,25 @@ bool FaceMesh::ValidateCurves()
     return error;
 }
 
+void FaceMesh::ValidateLoops()
+{
+    OrientateCurves();
+
+    for (int i = 0; i < orderedLoops.size(); i++)
+    {
+        int numPoints = orderedLoops[i].size();
+        if(numPoints == 2)
+        {
+            //force a remesh of the curves
+            for(int j = 0; j < m_edgeloops[i]->edges.size(); j++)
+            {
+                int cid = m_edgeloops[i]->edges[j]->GetId();
+                m_curvemeshes[cid]->ReMesh();
+            }
+        }
+    }
+}
+
 void FaceMesh::Mesh()
 {
     Stretching();
@@ -151,7 +170,7 @@ void FaceMesh::Mesh()
         }
     }
 
-    ASSERTL0(numPoints > 2, ss.str());
+    ASSERTL0(numPoints > 2, "number of verts in face is less than 3");
 
     // create interface to triangle thirdparty library
     TriangleInterfaceSharedPtr pplanemesh =

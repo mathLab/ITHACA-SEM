@@ -128,6 +128,7 @@ namespace Nektar
                 }
                 else
                 {
+		    Vmath::Zero(nGlobDofs-nDirDofs, &pOutput[nDirDofs], 1);
                     // Calculate Dirichlet forcing and subtract it from the rhs
                     m_expList.lock()->GeneralMatrixOp(
                         m_linSysKey, pOutput, tmp, eGlobal);

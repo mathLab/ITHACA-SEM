@@ -141,6 +141,7 @@ namespace Nektar
         m_pressure->HelmSolve(Forcing, m_pressure->UpdateCoeffs(),
                               NullFlagList,
                               factors, StdRegions::NullVarCoeffMap,
+                              MultiRegions::NullVarFactorsMap,
                               NullNekDouble1DArray, false);
 
         // Add presure to outflow bc if using convective like BCs

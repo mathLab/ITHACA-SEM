@@ -76,7 +76,7 @@ v5.0.0
 **IncNavierStokesSolver**
 - Replace steady-state check based on difference of norms by check based on
   norm of the difference, to be consistent with the compressible solver (!832)
-- Updated SVV to allow for the DGKernel extension (!851) 
+- Updated SVV to allow for the DGKernel extension (!851)
 
 **CompressibleFlowSolver**
 - Add 3D regression tests (!567)
@@ -101,6 +101,7 @@ v4.4.2
 - Fix a few memory leaks in polylib (!863)
 - Fix a crash when Interpolator is called on an empty field (!869)
 - Fix petsc compile without MPI (!873)
+- Fix calculation of BLPoints (!892)
 - Fix deadlock in DiffusionLDG (!885)
 - Fix uninitialised coefficients in DirectFull solver (!898)
 

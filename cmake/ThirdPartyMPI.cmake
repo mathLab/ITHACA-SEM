@@ -59,6 +59,7 @@ IF( NEKTAR_USE_MPI )
             BINARY_DIR ${TPBUILD}/gsmpi-1.2.1
             TMP_DIR ${TPBUILD}/gsmpi-1.2.1-tmp
             INSTALL_DIR ${TPDIST}
+            BUILD_BYPRODUCTS ${TPDIST}/lib/libgsmpi.a ${TPDIST}/lib/libxxt.a
             CONFIGURE_COMMAND
                 ${CMAKE_COMMAND}
                 -G ${CMAKE_GENERATOR}

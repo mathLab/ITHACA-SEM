@@ -47,11 +47,12 @@
 #include <boost/graph/bandwidth.hpp>
 #include <boost/algorithm/string/replace.hpp>
 
-#include <scotch.h>
-
 using std::max;
 using std::cout;
 using std::endl;
+
+#ifdef NEKTAR_USE_SCOTCH
+#include <scotch.h>
 
 #define SCOTCH_CALL(scotchFunc, args)                                   \
     {                                                                   \
@@ -59,6 +60,7 @@ using std::endl;
                  std::string("Error in Scotch calling function ")       \
                  + std::string(#scotchFunc));                           \
     }
+#endif
 
 namespace Nektar
 {
@@ -776,6 +778,10 @@ namespace Nektar
             std::set<int>                        partVerts,
             int                                  mdswitch)
         {
+#ifndef NEKTAR_USE_SCOTCH
+            ASSERTL0(false, "Multi-level static condensation requires Nektar++"
+                            " to be built with SCOTCH.");
+#else
             int nGraphVerts = boost::num_vertices(graph);
             int nGraphEdges = boost::num_edges   (graph);
 
@@ -874,14 +880,14 @@ namespace Nektar
                 // reordering strategy, which essentially does a nested
                 // dissection + compression. We take this almost directly from
                 // the SCOTCH_stratGraphOrderBuild function (defined in
-                // library_graph_order.c), but in this version we can replace
-                // the subdivision strategy to allow us to control the number of
-                // vertices used to determine whether to perform another
-                // dissection using the mdswitch parameter. The below is
-                // essentially equivalent to calling SCOTCH_stratGraphOrderBuild
-                // with the flags SCOTCH_STRATLEAFSIMPLE and
-                // SCOTCH_STRATSEPASIMPLE to make sure leaf nodes do not have
-                // any reordering applied to them.
+                // library_graph_order.c), but by specifying the string
+                // manually, we can replace the subdivision strategy to allow us
+                // to control the number of vertices used to determine whether
+                // to perform another dissection using the mdswitch
+                // parameter. The below is essentially equivalent to calling
+                // SCOTCH_stratGraphOrderBuild with the flags
+                // SCOTCH_STRATLEAFSIMPLE and SCOTCH_STRATSEPASIMPLE to make
+                // sure leaf nodes do not have any reordering applied to them.
                 std::string strat_str =
                     "c{rat=0.7,cpr=n{sep=/(<TSTS>)?m{rat=0.7,vert=100,low="
                     "h{pass=10},asc=b{width=3,bnd=f{bal=<BBAL>},"
@@ -912,9 +918,9 @@ namespace Nektar
                 // (i.e. the separators and all of the leaves), the separator
                 // tree as a mapping of block to parent block, and the range of
                 // indices that is contained within each block. Reordering of
-                // the vertices goes from highest (at the top level) to smallest
-                // (at the bottom level). The precise ordering is given in the
-                // Scotch user guide.
+                // the vertices goes from largest index (at the top level) to
+                // smallest (at the bottom level). The precise ordering is given
+                // in the Scotch user guide.
                 //
                 // Note that we pass in iperm into the 'permtab' field of
                 // graphOrder and 'perm' into the 'peritab' field; this is
@@ -949,8 +955,7 @@ namespace Nektar
                 {
                     // Set up this block.
                     graphs[i] = MemoryManager<MultiLevelBisectedGraph>
-                        ::AllocateSharedPtr(
-                            rangtab[i+1] - rangtab[i]);
+                        ::AllocateSharedPtr(rangtab[i+1] - rangtab[i]);
 
                     // If we're the root block (treetab[i] == -1) we don't need
                     // to do anything, go onto the next block.
@@ -965,7 +970,9 @@ namespace Nektar
                     // _first_ in the iperm/perm arrays returned from Scotch,
                     // but if there is both a left and right daughter, we'll
                     // come across the right daughter first because the
-                    // separators are being traversed backwards.
+                    // separators are being traversed backwards. In this case we
+                    // therefore need to set the left daughter graph to be the
+                    // right daughter and re-set the left daughter.
                     MultiLevelBisectedGraphSharedPtr tmp = graphs[treetab[i]];
                     int nDaughter = tmp->GetNdaughterGraphs();
 
@@ -996,8 +1003,7 @@ namespace Nektar
                     }
                 }
 
-                auto it = partVerts.begin();
-                auto it2 = partVerts.end();
+                auto it = partVerts.begin(), it2 = partVerts.end();
                 for (i = nNonPartition; it != it2; ++it, ++i)
                 {
                     perm [i]   = *it;
@@ -1010,6 +1016,9 @@ namespace Nektar
                              + boost::lexical_cast<std::string>(i));
                 }
 
+                // Check that our degree of freedom count in the constructed
+                // graph is the same as the number of degrees of freedom that we
+                // were given in the function input.
                 ASSERTL0(graphs.back()->GetTotDofs() == nNonPartition,
                          "Error in constructing Scotch graph for multi-level"
                          " static condensation.");
@@ -1049,6 +1058,7 @@ namespace Nektar
                 substructgraph = MemoryManager<BottomUpSubStructuredGraph>::
                     AllocateSharedPtr(nGraphVerts);
             }
+#endif
         }
 
         void NoReordering(const BoostGraph& graph,

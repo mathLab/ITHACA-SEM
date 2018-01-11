@@ -56,8 +56,6 @@ ENABLE_TESTING()
 
 # Use the CMake 2.4 policy for CMake 2.6
 IF(COMMAND cmake_policy)
-    CMAKE_POLICY(SET CMP0003 OLD)
-
     # Silence warnings when using generator expressions in
     # TARGET_LINK_LIBRARIES.
     IF(POLICY CMP0022)

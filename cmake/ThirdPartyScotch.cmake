@@ -27,6 +27,8 @@ IF (NEKTAR_USE_SCOTCH)
         "Build Scotch library from ThirdParty" ${BUILD_SCOTCH}
         "NEKTAR_USE_SCOTCH" OFF)
 
+    ADD_DEFINITIONS(-DNEKTAR_USE_SCOTCH)
+
     IF (THIRDPARTY_BUILD_SCOTCH)
         UNSET(FLEX CACHE)
         FIND_PROGRAM(FLEX flex)

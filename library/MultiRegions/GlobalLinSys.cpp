@@ -85,9 +85,15 @@ namespace Nektar
                 MultiRegions::ePETScMultiLevelStaticCond)
         };
 
+#ifdef NEKTAR_USE_SCOTCH
         std::string GlobalLinSys::def = LibUtilities::SessionReader::
             RegisterDefaultSolverInfo("GlobalSysSoln",
                                       "DirectMultiLevelStaticCond");
+#else
+        std::string GlobalLinSys::def = LibUtilities::SessionReader::
+            RegisterDefaultSolverInfo("GlobalSysSoln",
+                                      "DirectStaticCond");
+#endif
 
         /**
          * @class GlobalLinSys

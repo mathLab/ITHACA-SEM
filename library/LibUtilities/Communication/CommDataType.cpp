@@ -57,6 +57,8 @@ int CommDataTypeGetSize(CommDataType dt)
 #else
     switch (dt)
     {
+        case MPI_CHAR:
+            return sizeof(char);
         case MPI_INT:
             return sizeof(int);
         case MPI_UNSIGNED:
@@ -80,6 +82,12 @@ int CommDataTypeGetSize(CommDataType dt)
     }
     return sizeof(int);
 #endif
+}
+
+template<> CommDataType &CommDataTypeTraits<char>::GetDataType()
+{
+    static CommDataType type = MPI_CHAR;
+    return type;
 }
 
 template<> CommDataType &CommDataTypeTraits<int>::GetDataType()

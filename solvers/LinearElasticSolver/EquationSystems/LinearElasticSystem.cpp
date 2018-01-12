@@ -127,8 +127,9 @@ inline DNekMat MappingIdealToRef(SpatialDomains::GeometrySharedPtr geom)
  * @brief Default constructor.
  */
 LinearElasticSystem::LinearElasticSystem(
-    const LibUtilities::SessionReaderSharedPtr& pSession)
-    : EquationSystem(pSession)
+    const LibUtilities::SessionReaderSharedPtr& pSession,
+    const SpatialDomains::MeshGraphSharedPtr &pGraph)
+    : EquationSystem(pSession, pGraph)
 {
 }
 

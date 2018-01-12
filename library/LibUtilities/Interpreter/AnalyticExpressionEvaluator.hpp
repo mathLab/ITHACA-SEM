@@ -84,6 +84,9 @@ namespace Nektar
             return theta;
         }
 
+        class AnalyticExpressionEvaluator;
+        typedef std::shared_ptr<AnalyticExpressionEvaluator> ExpressionEvaluatorShPtr;
+
         ///  This class defines evaluator of analytic (symbolic)
         ///  mathematical expressions. Expressions are allowed to
         ///  depend on a number of spatial-time variables and

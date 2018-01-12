@@ -59,9 +59,10 @@ string APE::className = GetEquationSystemFactory().RegisterCreatorFunction(
 
 
 APE::APE(
-        const LibUtilities::SessionReaderSharedPtr& pSession)
-    : UnsteadySystem(pSession),
-      AdvectionSystem(pSession)
+    const LibUtilities::SessionReaderSharedPtr& pSession,
+    const SpatialDomains::MeshGraphSharedPtr& pGraph)
+    : UnsteadySystem(pSession, pGraph),
+      AdvectionSystem(pSession, pGraph)
 {
 }
 

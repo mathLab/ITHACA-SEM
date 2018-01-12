@@ -128,7 +128,8 @@ namespace Nektar
         std::vector<std::vector<InterfacePointShPtr> >  m_mergingJcts;
     
         /// Initialises PulseWaveSystem class members.
-        PulseWaveSystem(const LibUtilities::SessionReaderSharedPtr& m_session);
+        PulseWaveSystem(const LibUtilities::SessionReaderSharedPtr& pSession,
+                        const SpatialDomains::MeshGraphSharedPtr& pGraph);
         
         virtual void v_InitObject();
 	

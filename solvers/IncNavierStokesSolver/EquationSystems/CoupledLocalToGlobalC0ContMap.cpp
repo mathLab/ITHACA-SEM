@@ -144,7 +144,7 @@ namespace Nektar
                     {
                         IsDirEdgeDof[bndCondExp[j]->GetExp(k)
                                      ->as<LocalRegions::Expansion1D>()
-                                     ->GetGeom1D()->GetEid()] += 1;
+                                     ->GetGeom1D()->GetGlobalID()] += 1;
                     }
 
 
@@ -212,7 +212,7 @@ namespace Nektar
                 {
                     id = bndCondExp[i]->GetExp(0)
                                 ->as<LocalRegions::Expansion1D>()->GetGeom1D()
-                                ->GetEid();
+                                ->GetGlobalID();
                     break;
                 }
             }
@@ -476,7 +476,7 @@ namespace Nektar
                             // edges with mixed id;
                             id = bndCondExp[i]->GetExp(k)
                                               ->as<LocalRegions::Expansion1D>()
-                                              ->GetGeom1D()->GetEid();
+                                              ->GetGeom1D()->GetGlobalID();
                             for(n = 0; n < nz_loc; ++n)
                             {
                                 graphVertOffset[ReorderedGraphVertId[1][id]*nvel*nz_loc+j*nz_loc +n] *= -1;
@@ -690,7 +690,7 @@ namespace Nektar
                             m_bndCondCoeffsToGlobalCoeffsMap[cnt+bndSegExp->GetVertexMap(k)] = graphVertOffset[ReorderedGraphVertId[0][meshVertId]*nvel*nz_loc+nv*nz_loc+n];
                         }
 
-                        meshEdgeId = (bndSegExp->GetGeom1D())->GetEid();
+                        meshEdgeId = (bndSegExp->GetGeom1D())->GetGlobalID();
                         bndEdgeCnt = 0;
                         nEdgeCoeffs = bndSegExp->GetNcoeffs();
                         for(k = 0; k < nEdgeCoeffs; k++)

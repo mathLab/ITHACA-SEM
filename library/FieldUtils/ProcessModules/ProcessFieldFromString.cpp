@@ -80,6 +80,24 @@ void ProcessFieldFromString::Process(po::variables_map &vm)
     // Set up new field name
     string fieldName = m_config["fieldname"].as<string>();
 
+    int fieldID;
+    bool addField;
+    // check if field exists
+    auto it =
+        std::find(m_f->m_variables.begin(), m_f->m_variables.end(), fieldName);
+    if (it != m_f->m_variables.end())
+    {
+        addField = false;
+        fieldID = std::distance(m_f->m_variables.begin(), it);
+    }
+    else
+    {
+        // Create new expansion
+        addField = true;
+        fieldID  = nfields;
+        m_f->m_variables.push_back(fieldName);
+    }
+
     // Skip in case of empty partition
     if (m_f->m_exp[0]->GetNumElmts() == 0)
     {
@@ -92,24 +110,10 @@ void ProcessFieldFromString::Process(po::variables_map &vm)
     ASSERTL0(nstrips == 1,
              "Routine is currently only setup for non-strip files");
 
-    int fieldID;
-    // check if field exists
-    auto it =
-        std::find(m_f->m_variables.begin(), m_f->m_variables.end(), fieldName);
-    if (it != m_f->m_variables.end())
+    if (addField)
     {
-        // modify existing field
-        fieldID = std::distance(m_f->m_variables.begin(), it);
-    }
-    else
-    {
-        // create new field
-        m_f->m_variables.push_back(fieldName);
-
-        // Create new expansion
         m_f->m_exp.resize(nfields + 1);
-        fieldID             = nfields;
-        m_f->m_exp[fieldID] = m_f->AppendExpList(m_f->m_numHomogeneousDir);
+        m_f->m_exp[nfields] = m_f->AppendExpList(m_f->m_numHomogeneousDir);
     }
 
     // Variables for storing names and values for evaluating the function

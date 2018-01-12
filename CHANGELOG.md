@@ -27,6 +27,7 @@ v5.0.0
   function definitions for the Absorption Forcing (!769)
 - Improve performance of DisContField2D::v_ExtractTracePhys (!824)
 - Fix small bug in Jacobian Energy (!857)
+- fix variable name overriding in file functions (!870)
 - Adds CFI CAD engine back-end (!864)
 - Adds CFI Mesh IO support (!864)
 - Cleanup of CAD system data structures (!864)
@@ -62,6 +63,7 @@ v5.0.0
 **FieldConvert**:
 - Add input module for Semtex field files (!777)
 - Fixed interppoints module (!760)
+- Fix OutputTecplot in 2DH1D (!818)
 - Move StreamFunction utility to a FieldConvert module (!809)
 - Extend wss module to compressible flows (!810)
 - Allow explicitly setting bool options of FieldConvert modules as false (!811)
@@ -74,7 +76,7 @@ v5.0.0
 **IncNavierStokesSolver**
 - Replace steady-state check based on difference of norms by check based on
   norm of the difference, to be consistent with the compressible solver (!832)
-- Updated SVV to allow for the DGKernel extension (!851) 
+- Updated SVV to allow for the DGKernel extension (!851)
 
 **CompressibleFlowSolver**
 - Add 3D regression tests (!567)
@@ -82,6 +84,10 @@ v5.0.0
 - Allow performing axi-symmetric Euler simulations (!771)
 - Add ability to use an exponential filtering for stabilization with
   seg, quad and hex elements (!771, !862)
+
+**APESolver:**
+- Added two new boundary conditions to the APE system: RiemannInvariantBC
+  and WhiteNoise (!782)
 
 **Documentation**:
 - Added the developer-guide repository as a submodule (!751)
@@ -92,8 +98,11 @@ v4.4.2
 - Fix evaluation of points (e.g. HistoryPoints, Interpolation to pts) close to
   the interface of two elements (!836)
 - Fix deadlock in Hdf5 with homogeneous expansions (!858)
+- Fix a few memory leaks in polylib (!863)
 - Fix a crash when Interpolator is called on an empty field (!869)
 - Fix petsc compile without MPI (!873)
+- Fix calculation of BLPoints (!892)
+- Fix deadlock in DiffusionLDG (!885)
 - Fix uninitialised coefficients in DirectFull solver (!898)
 
 **NekMesh**
@@ -138,6 +147,7 @@ v4.4.1
 - Added regression tests for IMEXOrder1, IMEXOrder2, IMEXOrder3, MCNAB,
   IMEXGear, CNAB, 2nd order IMEX-DIRK, 3rd order IMEX-DIRK (!854)
 - Fix bug due to subtractive cancellation in polylib routines (!778)
+
 
 **FieldConvert:**
 - Fix issue with field ordering in the interppointdatatofld module (!754)

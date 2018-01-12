@@ -1581,7 +1581,6 @@ namespace Nektar
             }
             else if(mkey.ConstFactorExists(eFactorSVVDGKerDiffCoeff)) // Rodrigo/mansoor's DG kernel
             {
-                NekDouble cutoff = mkey.GetConstFactor(eFactorSVVCutoffRatio); 
                 NekDouble  SvvDiffCoeff  =
                     mkey.GetConstFactor(eFactorSVVDGKerDiffCoeff)*
                     mkey.GetConstFactor(eFactorSVVDiffCoeff);

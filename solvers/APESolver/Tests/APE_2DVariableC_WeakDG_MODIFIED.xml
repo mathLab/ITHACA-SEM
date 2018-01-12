@@ -119,9 +119,9 @@
         <D VAR="v" VALUE="0" />
       </REGION>
       <REGION REF="1"> <!-- Problem homogeneous in y-direction -->
-        <N VAR="p" VALUE="0" />
-        <N VAR="u" VALUE="0" />
-        <N VAR="v" VALUE="0" />
+        <D VAR="p" USERDEFINEDTYPE="RiemannInvariantBC"/>
+        <D VAR="u" USERDEFINEDTYPE="RiemannInvariantBC"/>
+        <D VAR="v" USERDEFINEDTYPE="RiemannInvariantBC"/>
       </REGION>
     </BOUNDARYCONDITIONS>
     <FUNCTION NAME="Baseflow"> <!-- Incompressible base flow -->

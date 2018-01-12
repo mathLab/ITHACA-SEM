@@ -1390,7 +1390,6 @@ namespace Nektar
             int qb = m_base[1]->GetNumPoints();
             int nmodes_a = m_base[0]->GetNumModes();
             int nmodes_b = m_base[1]->GetNumModes();
-            int nmodes = min(nmodes_a,nmodes_b);
 
             // Declare orthogonal basis.
             LibUtilities::PointsKey pa(qa,m_base[0]->GetPointsType());
@@ -1427,7 +1426,6 @@ namespace Nektar
             }
             else if(mkey.ConstFactorExists(eFactorSVVDGKerDiffCoeff)) // Rodrigo/mansoor's DG kernel
             {
-                NekDouble cutoff = mkey.GetConstFactor(eFactorSVVCutoffRatio); 
                 NekDouble  SvvDiffCoeff  =
                     mkey.GetConstFactor(eFactorSVVDGKerDiffCoeff)*
                     mkey.GetConstFactor(eFactorSVVDiffCoeff);

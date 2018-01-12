@@ -239,11 +239,10 @@ void OutputTecplot::OutputFromExp(po::variables_map &vm)
 
     // Calculate coordinate dimension
     int nBases = m_f->m_exp[0]->GetExp(0)->GetNumBases();
-    MultiRegions::ExpansionType HomoExpType = m_f->m_exp[0]->GetExpType();
 
     m_coordim = m_f->m_exp[0]->GetExp(0)->GetCoordim();
 
-    if (HomoExpType == MultiRegions::e3DH1D)
+    if (m_f->m_numHomogeneousDir > 0)
     {
         int nPlanes = m_f->m_exp[0]->GetZIDs().num_elements();
         if (nPlanes == 1) // halfMode case
@@ -252,16 +251,11 @@ void OutputTecplot::OutputFromExp(po::variables_map &vm)
         }
         else
         {
-            nBases += 1;
-            m_coordim += 1;
+            nBases += m_f->m_numHomogeneousDir;
+            m_coordim += m_f->m_numHomogeneousDir;
             NekDouble tmp = m_numBlocks * (nPlanes - 1);
             m_numBlocks   = (int)tmp;
         }
-    }
-    else if (HomoExpType == MultiRegions::e3DH2D)
-    {
-        nBases += 2;
-        m_coordim += 2;
     }
 
     m_zoneType = (TecplotZoneType)(2*(nBases-1) + 1);
@@ -935,18 +929,45 @@ void OutputTecplot::CalculateConnectivity()
 
         if (nbase == 1)
         {
-            int cnt2 = 0;
-            int np0  = m_f->m_exp[0]->GetExp(i)->GetNumPoints(0);
+            int cnt2    = 0;
+            int np0     = m_f->m_exp[0]->GetExp(i)->GetNumPoints(0);
+            int nPlanes = 1;
 
-            Array<OneD, int> conn(2 * (np0 - 1));
-
-            for (k = 1; k < np0; ++k)
+            if (m_f->m_exp[0]->GetExpType() == MultiRegions::e2DH1D)
             {
-                conn[cnt2++] = cnt + k;
-                conn[cnt2++] = cnt + k - 1;
+                nPlanes = m_f->m_exp[0]->GetZIDs().num_elements();
+
+                if (nPlanes > 1)
+                {
+                    int totPoints = m_f->m_exp[0]->GetPlane(0)->GetTotPoints();
+
+                    Array<OneD, int> conn(4 * (np0 - 1) * (nPlanes - 1));
+                    for (int n = 1; n < nPlanes; ++n)
+                    {
+                        for (k = 1; k < np0; ++k)
+                        {
+                            conn[cnt2++] = cnt + (n - 1) * totPoints + k;
+                            conn[cnt2++] = cnt + (n - 1) * totPoints + k - 1;
+                            conn[cnt2++] = cnt +  n      * totPoints + k - 1;
+                            conn[cnt2++] = cnt +  n      * totPoints + k;
+                        }
+                    }
+                    m_conn[i] = conn;
+                }
             }
 
-            m_conn[i] = conn;
+            if (nPlanes == 1)
+            {
+                Array<OneD, int> conn(2 * (np0 - 1));
+
+                for (k = 1; k < np0; ++k)
+                {
+                    conn[cnt2++] = cnt + k;
+                    conn[cnt2++] = cnt + k - 1;
+                }
+
+                m_conn[i] = conn;
+            }
         }
         else if (nbase == 2)
         {

@@ -194,7 +194,8 @@ namespace Nektar
         int m_intSteps;
 
         /// Constructor.
-        IncNavierStokes(const LibUtilities::SessionReaderSharedPtr& pSession);
+        IncNavierStokes(const LibUtilities::SessionReaderSharedPtr& pSession,
+                        const SpatialDomains::MeshGraphSharedPtr &pGraph);
 
         EquationType GetEquationType(void)
         {

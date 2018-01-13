@@ -2,7 +2,7 @@
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <LibUtilities/Communication/Comm.h>
 #include <MultiRegions/ExpList1D.h>
-#include <SpatialDomains/MeshGraph1D.h>
+#include <SpatialDomains/MeshGraph.h>
 
 using namespace std;
 using namespace Nektar;
@@ -25,7 +25,7 @@ int main(int argc, char *argv[])
     Array<OneD, NekDouble> xc0,xc1,xc2; 
 
     // read in mesh
-    SpatialDomains::MeshGraphSharedPtr graph1D = MemoryManager<SpatialDomains::MeshGraph1D>::AllocateSharedPtr(vSession);
+    SpatialDomains::MeshGraphSharedPtr graph1D = SpatialDomains::MeshGraph::Read(vSession);
 
     // Define Expansion
     const SpatialDomains::ExpansionMap &expansions = graph1D->GetExpansions();

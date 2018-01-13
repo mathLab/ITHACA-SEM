@@ -58,9 +58,11 @@ class APE : public AdvectionSystem
 
         /// Creates an instance of this class
         static EquationSystemSharedPtr create(
-                const LibUtilities::SessionReaderSharedPtr& pSession)
+            const LibUtilities::SessionReaderSharedPtr& pSession,
+            const SpatialDomains::MeshGraphSharedPtr& pGraph)
         {
-            EquationSystemSharedPtr p = MemoryManager<APE>::AllocateSharedPtr(pSession);
+            EquationSystemSharedPtr p = MemoryManager<APE>
+                ::AllocateSharedPtr(pSession, pGraph);
             p->InitObject();
             return p;
         }
@@ -86,7 +88,8 @@ class APE : public AdvectionSystem
         int                                             m_cflsteps;
 
         /// Initialises UnsteadySystem class members.
-        APE(const LibUtilities::SessionReaderSharedPtr& pSession);
+        APE(const LibUtilities::SessionReaderSharedPtr& pSession,
+            const SpatialDomains::MeshGraphSharedPtr& pGraph);
 
         virtual void v_InitObject();
 

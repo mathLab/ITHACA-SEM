@@ -84,10 +84,15 @@ namespace Nektar
     public:
         friend class MemoryManager<CFLtester>;
 
-        static EquationSystemSharedPtr create(const LibUtilities::SessionReaderSharedPtr& pSession) {
-              EquationSystemSharedPtr p = MemoryManager<CFLtester>::AllocateSharedPtr(pSession);
-              p->InitObject();
-              return p;}
+        static EquationSystemSharedPtr create(
+            const LibUtilities::SessionReaderSharedPtr& pSession,
+            const SpatialDomains::MeshGraphSharedPtr& pGraph)
+        {
+            EquationSystemSharedPtr p = MemoryManager<CFLtester>
+                ::AllocateSharedPtr(pSession, pGraph);
+            p->InitObject();
+            return p;
+        }
 
         static std::string className;
 
@@ -98,7 +103,8 @@ namespace Nektar
         Array<OneD, Array<OneD, NekDouble> > m_velocity;
         Array<OneD, NekDouble>               m_traceVn;
 
-        CFLtester(const LibUtilities::SessionReaderSharedPtr& pSession);
+        CFLtester(const LibUtilities::SessionReaderSharedPtr& pSession,
+                  const SpatialDomains::MeshGraphSharedPtr& pGraph);
 
         void DoOdeRhs(const Array<OneD,  const  Array<OneD, NekDouble> > &inarray,
                       Array<OneD,  Array<OneD, NekDouble> > &outarray,

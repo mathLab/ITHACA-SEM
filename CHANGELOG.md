@@ -35,6 +35,7 @@ v5.0.0
 - Fix error from (!826) (!876)
 - Fix minor bug in ARPACK thirdparty build cmake (!874)
 - Added NekCDouble as complex double to core library type defs (!814)
+- Switch MeshGraph to use factory pattern and add HDF5 geometry support (!900)
 
 **NekMesh**:
 - Add feature to read basic 2D geo files as CAD (!731)
@@ -103,6 +104,8 @@ v4.4.2
 - Fix a few memory leaks in polylib (!863)
 - Fix a crash when Interpolator is called on an empty field (!869)
 - Fix petsc compile without MPI (!873)
+- Fix calculation of BLPoints (!892)
+- Fix deadlock in DiffusionLDG (!885)
 - Fix uninitialised coefficients in DirectFull solver (!898)
 
 **NekMesh**

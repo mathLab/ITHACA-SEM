@@ -323,7 +323,7 @@ void LocTraceToTraceMap::Setup2D(
             nedgepts  = exp2d->GetEdgeNumPoints(e);
             nedgepts1 = edge->GetTotPoints();
 
-            StdRegions::Orientation orient = exp2d->GetCartesianEorient(e);
+            StdRegions::Orientation orient = exp2d->GetEorient(e);
 
             // Account for eBackwards orientation
             exp2d->ReOrientEdgePhysMap(elmtToTrace[n][e]->GetNverts(),

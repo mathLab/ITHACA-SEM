@@ -63,13 +63,13 @@ namespace Nektar
             {
             }
 
-            LIB_UTILITIES_EXPORT Equation(const SessionReaderSharedPtr& session,
+            LIB_UTILITIES_EXPORT Equation(ExpressionEvaluatorShPtr evaluator,
                                           const std::string& expr = "",
                                           const std::string& vlist = ""):
               m_vlist     (vlist),
               m_expr      (expr),
               m_expr_id   (-1),
-              m_evaluator (session->GetExpressionEvaluator())
+              m_evaluator (evaluator)
             {
                 boost::algorithm::trim(m_expr);
                 boost::algorithm::trim(m_vlist);
@@ -83,7 +83,7 @@ namespace Nektar
                 {
                     if (!m_expr.empty())
                     {
-                        m_expr_id = m_evaluator.DefineFunction(m_vlist, m_expr);
+                        m_expr_id = m_evaluator->DefineFunction(m_vlist, m_expr);
                     }
                 }
                 catch (const std::runtime_error& e)
@@ -115,7 +115,7 @@ namespace Nektar
                 {
                     if (m_expr_id != -1)
                     {
-                        return m_evaluator.Evaluate(m_expr_id);
+                        return m_evaluator->Evaluate(m_expr_id);
                     }
                 }
                 catch (const std::runtime_error& e)
@@ -137,7 +137,7 @@ namespace Nektar
                 {
                     if (m_expr_id != -1)
                     {
-                        return m_evaluator.Evaluate(m_expr_id, x,y,z,t);
+                        return m_evaluator->Evaluate(m_expr_id, x,y,z,t);
                     }
                 }
                 catch (const std::runtime_error& e)
@@ -198,7 +198,7 @@ namespace Nektar
                 {
                     if (m_expr_id != -1)
                     {
-                        m_evaluator.Evaluate(m_expr_id, points, result);
+                        m_evaluator->Evaluate(m_expr_id, points, result);
                     }
                 }
                 catch (const std::runtime_error& e)
@@ -217,12 +217,12 @@ namespace Nektar
 
             LIB_UTILITIES_EXPORT void SetParameter(const std::string& name, NekDouble value)
             {
-                m_evaluator.SetParameter(name, value);
+                m_evaluator->SetParameter(name, value);
             }
 
             LIB_UTILITIES_EXPORT void SetConstants(const std::map<std::string, NekDouble> &constants)
             {
-                m_evaluator.AddConstants(constants);
+                m_evaluator->AddConstants(constants);
             }
 
             LIB_UTILITIES_EXPORT std::string GetExpression(void) const
@@ -239,14 +239,14 @@ namespace Nektar
             /// points (it does not include parse/pre-processing time).
             LIB_UTILITIES_EXPORT NekDouble GetTime() const
             {
-                return m_evaluator.GetTime();
+                return m_evaluator->GetTime();
             }
 
         private:
             std::string  m_vlist;
             std::string  m_expr;
             int          m_expr_id;
-            AnalyticExpressionEvaluator&  m_evaluator;
+            ExpressionEvaluatorShPtr m_evaluator;
         };
     }
 }

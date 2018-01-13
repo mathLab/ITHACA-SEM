@@ -20,9 +20,6 @@ int main(int argc, char *argv[])
     scal1  = boost::lexical_cast<double>(argv[argc-5]);
     scal2  = boost::lexical_cast<double>(argv[argc-4]);
 
-    //default meshgraph
-    SpatialDomains::MeshGraph graph;
-
     //----------------------------------------------
     // Import fieldfile1.
     string fieldfile1(argv[argc-3]);

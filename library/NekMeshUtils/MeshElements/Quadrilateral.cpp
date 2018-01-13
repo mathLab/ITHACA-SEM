@@ -205,24 +205,17 @@ void Quadrilateral::MakeOrder(int                                order,
 SpatialDomains::GeometrySharedPtr Quadrilateral::GetGeom(int coordDim)
 {
     SpatialDomains::SegGeomSharedPtr edges[4];
-    SpatialDomains::PointGeomSharedPtr verts[4];
     SpatialDomains::QuadGeomSharedPtr ret;
 
     for (int i = 0; i < 4; ++i)
     {
         edges[i] = m_edge[i]->GetGeom(coordDim);
-        verts[i] = m_vertex[i]->GetGeom(coordDim);
     }
 
-    StdRegions::Orientation edgeorient[4] = {
-        SpatialDomains::SegGeom::GetEdgeOrientation(*edges[0], *edges[1]),
-        SpatialDomains::SegGeom::GetEdgeOrientation(*edges[1], *edges[2]),
-        SpatialDomains::SegGeom::GetEdgeOrientation(*edges[2], *edges[3]),
-        SpatialDomains::SegGeom::GetEdgeOrientation(*edges[3], *edges[0])};
-
     ret = MemoryManager<SpatialDomains::QuadGeom>::AllocateSharedPtr(
-        m_id, verts, edges, edgeorient);
+        m_id, edges);
 
+    ret->Setup();
     return ret;
 }
 

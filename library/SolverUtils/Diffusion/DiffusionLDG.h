@@ -83,6 +83,7 @@ namespace Nektar
                 const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
                 const int                                          var,
                 const Array<OneD, const NekDouble>                &ufield,
+                const Array<OneD, const NekDouble>                &uplus,
                       Array<OneD,       NekDouble>                &penaltyflux);
             
             virtual void v_NumFluxforVector(
@@ -96,6 +97,7 @@ namespace Nektar
                 const int                                          var,
                 const int                                          dir,
                 const Array<OneD, const NekDouble>                &qfield,
+                const Array<OneD, const NekDouble>                &qtemp,
                       Array<OneD,       NekDouble>                &penaltyflux,
                 NekDouble                                          C11);
         }; 

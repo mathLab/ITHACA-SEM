@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-//  File: ProcessAddFieldFromString.h
+//  File: ProcessFieldFromString.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -33,8 +33,8 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef FIELDUTILS_PROCESSADDNEWFIELDFROMSTR
-#define FIELDUTILS_PROCESSADDNEWFIELDFROMSTR
+#ifndef FIELDUTILS_PROCESSFIELDFROMSTR
+#define FIELDUTILS_PROCESSFIELDFROMSTR
 
 #include "../Module.h"
 
@@ -46,24 +46,24 @@ namespace FieldUtils
 /**
  * @brief This processing module adds a new field from a string definition
  */
-class ProcessAddFieldFromString : public ProcessModule
+class ProcessFieldFromString : public ProcessModule
 {
 public:
     /// Creates an instance of this class
     static std::shared_ptr<Module> create(FieldSharedPtr f)
     {
-        return MemoryManager<ProcessAddFieldFromString>::AllocateSharedPtr(f);
+        return MemoryManager<ProcessFieldFromString>::AllocateSharedPtr(f);
     }
     static ModuleKey className;
 
-    ProcessAddFieldFromString(FieldSharedPtr f);
-    virtual ~ProcessAddFieldFromString();
+    ProcessFieldFromString(FieldSharedPtr f);
+    virtual ~ProcessFieldFromString();
 
     virtual void Process(po::variables_map &vm);
 
     virtual std::string GetModuleName()
     {
-        return "ProcessAddFieldFromString";
+        return "ProcessFieldFromString";
     }
 
     virtual std::string GetModuleDescription()

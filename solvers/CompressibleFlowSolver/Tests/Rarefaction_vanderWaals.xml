@@ -13,8 +13,8 @@
                  doi:10.1088/1742-6596/821/1/012013 -->
 
             <!-- Simulation parameters -->
-            <P> CFL            = 0.1            </P>
-            <P> NumSteps       = 10         </P>
+            <P> TimeStep       = 5e-6           </P>
+            <P> NumSteps       = 5              </P>
             <P> IO_InfoSteps   = 10            </P>
             <P> IO_CheckSteps  = 0              </P>
             <P> SteadyStateTol = 1e-8           </P>

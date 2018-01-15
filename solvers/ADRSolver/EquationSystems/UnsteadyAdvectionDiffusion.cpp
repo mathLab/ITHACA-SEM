@@ -47,9 +47,10 @@ namespace Nektar
                 UnsteadyAdvectionDiffusion::create);
     
     UnsteadyAdvectionDiffusion::UnsteadyAdvectionDiffusion(
-            const LibUtilities::SessionReaderSharedPtr& pSession)
-        : UnsteadySystem(pSession),
-          AdvectionSystem(pSession)
+        const LibUtilities::SessionReaderSharedPtr& pSession,
+        const SpatialDomains::MeshGraphSharedPtr& pGraph)
+        : UnsteadySystem(pSession, pGraph),
+          AdvectionSystem(pSession, pGraph)
     {
         m_planeNumber = 0;
     }

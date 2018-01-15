@@ -58,13 +58,15 @@ FilterThresholdMin::FilterThresholdMin(
     // ThresholdValue
     auto it = pParams.find("ThresholdValue");
     ASSERTL0(it != pParams.end(), "Missing parameter 'ThresholdValue'.");
-    LibUtilities::Equation equ1(m_session, it->second);
+    LibUtilities::Equation equ1(
+        m_session->GetExpressionEvaluator(), it->second);
     m_thresholdValue = equ1.Evaluate();
 
     // InitialValue
     it = pParams.find("InitialValue");
     ASSERTL0(it != pParams.end(), "Missing parameter 'InitialValue'.");
-    LibUtilities::Equation equ2(m_session, it->second);
+    LibUtilities::Equation equ2(
+        m_session->GetExpressionEvaluator(), it->second);
     m_initialValue = equ2.Evaluate();
 
     // StartTime
@@ -72,7 +74,8 @@ FilterThresholdMin::FilterThresholdMin(
     m_startTime = 0.0;
     if (it != pParams.end())
     {
-        LibUtilities::Equation equ(m_session, it->second);
+        LibUtilities::Equation equ(
+            m_session->GetExpressionEvaluator(), it->second);
         m_startTime = equ.Evaluate();
     }
 

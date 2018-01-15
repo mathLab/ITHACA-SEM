@@ -96,7 +96,8 @@ namespace Nektar
 
             /// Initialises UnsteadySystem class members.
             SOLVER_UTILS_EXPORT UnsteadySystem(
-                const LibUtilities::SessionReaderSharedPtr& pSession);
+                const LibUtilities::SessionReaderSharedPtr& pSession,
+                const SpatialDomains::MeshGraphSharedPtr& pGraph);
 
             /// Init object for UnsteadySystem class.
             SOLVER_UTILS_EXPORT virtual void v_InitObject();

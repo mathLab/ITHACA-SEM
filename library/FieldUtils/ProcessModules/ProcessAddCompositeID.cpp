@@ -102,8 +102,9 @@ void ProcessAddCompositeID::Process(po::variables_map &vm)
         // loop over composite list and search for geometry pointer in list
         for (auto &it : CompositeMap)
         {
-            if (find(it.second->begin(), it.second->end(), elmt->GetGeom()) !=
-                it.second->end())
+            if (find(it.second->m_geomVec.begin(),
+                     it.second->m_geomVec.end(), elmt->GetGeom()) !=
+                it.second->m_geomVec.end())
             {
                 compid = it.first;
                 break;

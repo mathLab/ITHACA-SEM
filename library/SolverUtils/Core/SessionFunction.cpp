@@ -499,7 +499,7 @@ void SessionFunction::EvaluatePts(string pFieldName,
     vector<string> fieldNames = outPts->GetFieldNames();
     for (fieldInd = 0; fieldInd < fieldNames.size(); ++fieldInd)
     {
-        if (outPts->GetFieldName(fieldInd) == pFieldName)
+        if (outPts->GetFieldName(fieldInd) == fileVar)
         {
             break;
         }

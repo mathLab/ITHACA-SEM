@@ -116,16 +116,16 @@ void TriangleInterface::Mesh(bool Quality)
     string cmd;
     if (Quality)
     {
-        cmd = "pqY";
+        cmd = "pqzQY";
     }
     else if (!Quality)
     {
-        cmd = "pY";
+        cmd = "pzQY";
     }
     char *cstr = new char[cmd.length() + 1];
     strcpy(cstr, cmd.c_str());
 
-    dt.triangulate(cstr);
+    dt.Run(cstr);
 }
 
 void TriangleInterface::SetUp()

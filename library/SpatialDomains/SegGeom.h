@@ -45,138 +45,71 @@
 
 namespace Nektar
 {
-    namespace SpatialDomains
+
+namespace SpatialDomains
+{
+class SegGeom;
+typedef std::shared_ptr<SegGeom> SegGeomSharedPtr;
+typedef std::map<int, SegGeomSharedPtr> SegGeomMap;
+
+class SegGeom : public Geometry1D
+{
+public:
+    SPATIAL_DOMAINS_EXPORT SegGeom();
+    SPATIAL_DOMAINS_EXPORT SegGeom(
+        int id,
+        const int coordim,
+        const PointGeomSharedPtr vertex[],
+        const CurveSharedPtr curve = CurveSharedPtr());
+
+    SPATIAL_DOMAINS_EXPORT SegGeom(const SegGeom &in);
+
+    SPATIAL_DOMAINS_EXPORT SegGeomSharedPtr GenerateOneSpaceDimGeom(void);
+
+    SPATIAL_DOMAINS_EXPORT ~SegGeom();
+
+    SPATIAL_DOMAINS_EXPORT static StdRegions::Orientation GetEdgeOrientation(
+        const SegGeom &edge1, const SegGeom &edge2);
+
+    inline SPATIAL_DOMAINS_EXPORT CurveSharedPtr GetCurve()
     {
-        class SegGeom;
-        typedef std::shared_ptr<SegGeom> SegGeomSharedPtr;
-        typedef std::vector< SegGeomSharedPtr > SegGeomVector;
-        typedef std::map<int, SegGeomSharedPtr> SegGeomMap;
+        return m_curve;
+    }
 
-        class SegGeom: public Geometry1D
-        {
-            public:
-                SPATIAL_DOMAINS_EXPORT SegGeom();
+    SPATIAL_DOMAINS_EXPORT static const int kNverts = 2;
+    SPATIAL_DOMAINS_EXPORT static const int kNedges = 1;
 
-                SPATIAL_DOMAINS_EXPORT SegGeom(int id, const int coordim);
+protected:
+    SpatialDomains::PointGeomSharedPtr m_verts[kNverts];
+    StdRegions::Orientation m_porient[kNverts];
 
-                SPATIAL_DOMAINS_EXPORT SegGeom(
-                        int id,
-                        const int coordim,
-                        const PointGeomSharedPtr vertex[]);
+    virtual PointGeomSharedPtr v_GetVertex(const int i) const;
+    virtual LibUtilities::ShapeType v_GetShapeType() const;
+    virtual NekDouble v_GetLocCoords(
+        const Array<OneD, const NekDouble> &coords,
+        Array<OneD, NekDouble> &Lcoords);
+    virtual void v_GenGeomFactors();
+    virtual void v_FillGeom();
+    virtual void v_Reset(CurveMap &curvedEdges, CurveMap &curvedFaces);
+    virtual void v_Setup();
 
-                SPATIAL_DOMAINS_EXPORT SegGeom(
-                        int id,
-                        const int coordim,
-                        const PointGeomSharedPtr vertex[],
-                        const CurveSharedPtr &curve);
+    virtual NekDouble v_GetCoord(
+        const int i, const Array<OneD, const NekDouble> &Lcoord);
+    virtual int v_GetNumVerts() const;
+    virtual int v_GetNumEdges() const;
+    virtual bool v_ContainsPoint(
+        const Array<OneD, const NekDouble> &gloCoord,
+        Array<OneD, NekDouble> &locCoord,
+        NekDouble tol,
+        NekDouble &resid);
 
-                SPATIAL_DOMAINS_EXPORT SegGeom(
-                        const int id,
-                        const PointGeomSharedPtr& vert1,
-                        const PointGeomSharedPtr& vert2);
+private:
+    /// Boolean indicating whether object owns the data
+    CurveSharedPtr m_curve;
 
-                SPATIAL_DOMAINS_EXPORT SegGeom(const SegGeom &in);
+    void SetUpXmap();
+};
+}; // end of namespace
+}; // end of namespace
 
-                SPATIAL_DOMAINS_EXPORT SegGeomSharedPtr GenerateOneSpaceDimGeom(void);
-
-                SPATIAL_DOMAINS_EXPORT ~SegGeom();
-
-                SPATIAL_DOMAINS_EXPORT NekDouble GetCoord(
-                        const int i,
-                        const Array<OneD, const NekDouble> &Lcoord);
-
-                SPATIAL_DOMAINS_EXPORT static StdRegions::Orientation
-                        GetEdgeOrientation(const SegGeom& edge1,
-                                           const SegGeom& edge2);
-
-                SPATIAL_DOMAINS_EXPORT StdRegions::StdExpansion1DSharedPtr
-                        operator[](const int i) const;
-
-
-                SPATIAL_DOMAINS_EXPORT static const int           kNverts = 2;
-                SPATIAL_DOMAINS_EXPORT static const int           kNedges = 1;
-
-            protected:
-                int                                               m_eid;
-                std::list<CompToElmt>                             m_elmtMap;
-                SpatialDomains::PointGeomSharedPtr                m_verts[kNverts];
-                StdRegions::Orientation                           m_porient[kNverts];
-
-
-                SPATIAL_DOMAINS_EXPORT virtual int v_GetShapeDim() const;
-
-                SPATIAL_DOMAINS_EXPORT virtual int v_GetVid(int i) const;
-
-                SPATIAL_DOMAINS_EXPORT virtual PointGeomSharedPtr
-                        v_GetVertex(const int i) const;
-
-                SPATIAL_DOMAINS_EXPORT virtual int v_GetEid() const;
-
-                SPATIAL_DOMAINS_EXPORT virtual const LibUtilities::BasisSharedPtr
-                        v_GetBasis(const int i);
-
-                SPATIAL_DOMAINS_EXPORT virtual
-                        StdRegions::StdExpansionSharedPtr v_GetXmap() const;
-
-                SPATIAL_DOMAINS_EXPORT virtual void v_SetOwnData();
-
-                SPATIAL_DOMAINS_EXPORT virtual void
-                        v_AddElmtConnected(int gvo_id, int locid);
-
-                SPATIAL_DOMAINS_EXPORT virtual int v_NumElmtConnected() const;
-
-                SPATIAL_DOMAINS_EXPORT virtual bool
-                        v_IsElmtConnected(int gvoId, int locId) const;
-
-                SPATIAL_DOMAINS_EXPORT virtual LibUtilities::ShapeType
-                        v_DetShapeType() const;
-
-                SPATIAL_DOMAINS_EXPORT virtual NekDouble v_GetLocCoords(
-                        const Array<OneD, const NekDouble>& coords,
-                        Array<OneD,NekDouble>& Lcoords);
-
-                SPATIAL_DOMAINS_EXPORT virtual void v_GenGeomFactors();
-
-                SPATIAL_DOMAINS_EXPORT virtual StdRegions::Orientation
-                        v_GetPorient(const int i) const;
-
-                SPATIAL_DOMAINS_EXPORT virtual void v_FillGeom ();
-
-                SPATIAL_DOMAINS_EXPORT virtual void v_Reset(
-                    CurveMap &curvedEdges,
-                    CurveMap &curvedFaces);
-
-                SPATIAL_DOMAINS_EXPORT virtual NekDouble v_GetCoord(
-                        const int i,
-                        const Array<OneD,const NekDouble> &Lcoord);
-
-                SPATIAL_DOMAINS_EXPORT virtual int  v_GetNumVerts() const;
-
-                SPATIAL_DOMAINS_EXPORT virtual int  v_GetNumEdges() const;
-
-                SPATIAL_DOMAINS_EXPORT virtual bool v_ContainsPoint(
-                        const Array<OneD, const NekDouble>& gloCoord,
-                        NekDouble tol = 0.0);
-
-                SPATIAL_DOMAINS_EXPORT virtual bool v_ContainsPoint(
-                        const Array<OneD, const NekDouble> &gloCoord,
-                              Array<OneD, NekDouble>       &locCoord,
-                              NekDouble                     tol);
-
-                SPATIAL_DOMAINS_EXPORT virtual bool v_ContainsPoint(
-                        const Array<OneD, const NekDouble> &gloCoord,
-                        Array<OneD, NekDouble>             &locCoord,
-                        NekDouble                           tol,
-                        NekDouble                          &resid);
-            private:
-                /// Boolean indicating whether object owns the data
-                bool                            m_ownData;
-                CurveSharedPtr                  m_curve;
-
-                void SetUpXmap();
-        };
-    }; //end of namespace
-}; //end of namespace
-
-#endif //NEKTAR_SPATIALDOMAINS_SEGGEOM_H
-
+#endif // NEKTAR_SPATIALDOMAINS_SEGGEOM_H

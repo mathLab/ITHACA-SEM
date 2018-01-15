@@ -45,9 +45,10 @@ namespace Nektar
         "Euler equations for the isentropic vortex test case.");
     
     IsentropicVortex::IsentropicVortex(
-        const LibUtilities::SessionReaderSharedPtr& pSession)
-    : UnsteadySystem(pSession),
-      EulerCFE(pSession)
+        const LibUtilities::SessionReaderSharedPtr& pSession,
+        const SpatialDomains::MeshGraphSharedPtr& pGraph)
+        : UnsteadySystem(pSession, pGraph),
+          EulerCFE(pSession, pGraph)
     {
     }
 

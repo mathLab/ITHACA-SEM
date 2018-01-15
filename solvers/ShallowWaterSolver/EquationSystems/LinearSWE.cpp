@@ -50,8 +50,9 @@ namespace Nektar
           "Linear shallow water equation in primitive variables.");
   
   LinearSWE::LinearSWE(
-          const LibUtilities::SessionReaderSharedPtr& pSession)
-    : ShallowWaterSystem(pSession)
+      const LibUtilities::SessionReaderSharedPtr& pSession,
+      const SpatialDomains::MeshGraphSharedPtr& pGraph)
+      : ShallowWaterSystem(pSession, pGraph)
   {
   }
 

@@ -32,18 +32,18 @@
 // Description: Scotch partitioner interface
 //
 ///////////////////////////////////////////////////////////////////////////////
-#ifndef NEKTAR_LIB_UTILITIES_MESHPARTITIONMETIS_H
-#define NEKTAR_LIB_UTILITIES_MESHPARTITIONMETIS_H
 
-#include "LibUtilities/Memory/NekMemoryManager.hpp"
+#ifndef NEKTAR_SPATIALDOMAINS_MESHPARTITIONSCOTCH_H
+#define NEKTAR_SPATIALDOMAINS_MESHPARTITIONSCOTCH_H
 
-#include "MeshPartition.h"
+#include <LibUtilities/Memory/NekMemoryManager.hpp>
+#include <SpatialDomains/MeshPartition.h>
 
-#include "scotch.h"
+#include <scotch.h>
 
 namespace Nektar
 {
-namespace LibUtilities
+namespace SpatialDomains
 {
 
     class MeshPartitionScotch : public MeshPartition
@@ -51,17 +51,20 @@ namespace LibUtilities
         public:
             /// Creates an instance of this class
             static MeshPartitionSharedPtr create(
-                    const SessionReaderSharedPtr& pSession)
+                const LibUtilities::SessionReaderSharedPtr session,
+                const MeshGraphSharedPtr meshGraph)
             {
                 return MemoryManager<MeshPartitionScotch>
-                                                ::AllocateSharedPtr(pSession);
+                    ::AllocateSharedPtr(session, meshGraph);
             }
 
             /// Name of class
             static std::string className;
             static std::string cmdSwitch;
 
-            MeshPartitionScotch(const SessionReaderSharedPtr& pSession);
+            MeshPartitionScotch(
+                const LibUtilities::SessionReaderSharedPtr session,
+                const MeshGraphSharedPtr meshGraph);
             virtual ~MeshPartitionScotch();
 
         private:

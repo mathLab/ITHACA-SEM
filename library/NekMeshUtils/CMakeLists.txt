@@ -36,7 +36,6 @@ IF(NEKTAR_USE_MESHGEN)
         VolumeMeshing/TetMeshing/TetMesh.cpp
         VolumeMeshing/BLMeshing/BLMesh.cpp
         Optimisation/BGFS-B.cpp
-        Triangle/Triangle.cpp
         CADSystem/OCE/CADSystemOCE.cpp
         CADSystem/OCE/CADVertOCE.cpp
         CADSystem/OCE/CADCurveOCE.cpp
@@ -95,7 +94,6 @@ IF(NEKTAR_USE_MESHGEN)
         CADSystem/OCE/CADSurfOCE.h
         Optimisation/BGFS-B.h
         Optimisation/OptimiseObj.h
-        Triangle/Triangle.h
 #        2DGenerator/2DGenerator.h
     )
 ENDIF()
@@ -128,13 +126,14 @@ ADD_NEKTAR_LIBRARY(NekMeshUtils
 
 IF(NEKTAR_USE_MESHGEN)
     TARGET_LINK_LIBRARIES(NekMeshUtils LINK_PRIVATE ${TETGEN_LIBRARY})
+    TARGET_LINK_LIBRARIES(NekMeshUtils LINK_PRIVATE ${TRIANGLE_LIBRARY})
     TARGET_LINK_LIBRARIES(NekMeshUtils LINK_PRIVATE ${OCC_LIBRARIES})
 
-    ADD_DEPENDENCIES(NekMeshUtils oce-0.17 tetgen-1.5)
-ENDIF()
+    ADD_DEPENDENCIES(NekMeshUtils oce-0.17 tetgen-1.5 triangle-1.6)
 
-IF(NEKTAR_USE_CFI)
-    TARGET_LINK_LIBRARIES(NekMeshUtils LINK_PRIVATE ${CFI_LIBRARIES})
+    IF(NEKTAR_USE_CFI)
+        TARGET_LINK_LIBRARIES(NekMeshUtils LINK_PRIVATE ${CFI_LIBRARIES})
+    ENDIF()
 ENDIF()
 
 INSTALL(DIRECTORY ./

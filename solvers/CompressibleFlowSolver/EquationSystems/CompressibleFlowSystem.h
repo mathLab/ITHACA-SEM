@@ -93,7 +93,8 @@ namespace Nektar
         std::vector<SolverUtils::ForcingSharedPtr> m_forcing;
 
         CompressibleFlowSystem(
-            const LibUtilities::SessionReaderSharedPtr& pSession);
+            const LibUtilities::SessionReaderSharedPtr& pSession,
+            const SpatialDomains::MeshGraphSharedPtr& pGraph);
 
         virtual void v_InitObject();
 

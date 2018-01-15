@@ -50,8 +50,9 @@ namespace Nektar
           "Nonlinear shallow water equation in conservative variables.");
   
   NonlinearSWE::NonlinearSWE(
-          const LibUtilities::SessionReaderSharedPtr& pSession)
-    : ShallowWaterSystem(pSession)
+      const LibUtilities::SessionReaderSharedPtr& pSession,
+      const SpatialDomains::MeshGraphSharedPtr& pGraph)
+      : ShallowWaterSystem(pSession, pGraph)
   {
   }
 

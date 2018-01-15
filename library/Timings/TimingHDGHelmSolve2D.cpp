@@ -3,7 +3,7 @@
 #include <iomanip>
 
 #include <boost/filesystem/path.hpp>
-#include <SpatialDomains/MeshGraph2D.h>
+#include <SpatialDomains/MeshGraph.h>
 #include <MultiRegions/DisContField2D.h>
 
 using namespace std;
@@ -198,7 +198,7 @@ int main(int argc, char *argv[])
 
     //----------------------------------------------
     // Read in mesh from input file
-    SpatialDomains::MeshGraphSharedPtr graph2D = MemoryManager<SpatialDomains::MeshGraph2D>::AllocateSharedPtr(vSession);
+    SpatialDomains::MeshGraphSharedPtr graph2D = SpatialDomains::MeshGraph::Read(vSession);;
     //----------------------------------------------
 
     //----------------------------------------------

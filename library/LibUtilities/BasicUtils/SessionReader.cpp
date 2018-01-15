@@ -53,7 +53,6 @@ using namespace std;
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/BasicUtils/Equation.h>
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
-#include <LibUtilities/BasicUtils/MeshPartition.h>
 #include <LibUtilities/BasicUtils/ParseUtils.h>
 #include <LibUtilities/BasicUtils/FileSystem.h>
 
@@ -203,6 +202,13 @@ namespace Nektar
                 GetSolverInfoDefaults()["GLOBALSYSSOLN"] =
                     "IterativeStaticCond";
             }
+
+            m_exprEvaluator = MemoryManager<AnalyticExpressionEvaluator>
+                ::AllocateSharedPtr();
+            m_exprEvaluator->SetRandomSeed((m_comm->GetRank() + 1) * time(NULL));
+
+            // Split up the communicator
+            PartitionComm();
         }
 
 
@@ -231,12 +237,6 @@ namespace Nektar
             else
             {
                 m_comm = pComm;
-
-                if (m_comm->GetSize() > 1)
-                {
-                    GetSolverInfoDefaults()["GLOBALSYSSOLN"] =
-                        "IterativeStaticCond";
-                }
             }
 
             TestSharedFilesystem();
@@ -248,6 +248,13 @@ namespace Nektar
                 GetSolverInfoDefaults()["GLOBALSYSSOLN"] =
                     "IterativeStaticCond";
             }
+
+            m_exprEvaluator = MemoryManager<AnalyticExpressionEvaluator>
+                ::AllocateSharedPtr();
+            m_exprEvaluator->SetRandomSeed((m_comm->GetRank() + 1) * time(NULL));
+
+            // Split up the communicator
+            PartitionComm();
         }
 
 
@@ -256,7 +263,10 @@ namespace Nektar
          */
         SessionReader::~SessionReader()
         {
-            delete m_xmlDoc;
+            if (m_xmlDoc)
+            {
+                delete m_xmlDoc;
+            }
         }
 
 
@@ -266,15 +276,22 @@ namespace Nektar
          * resulting process-specific XML file (containing the process's
          * geometry partition) is then reloaded and parsed.
          */
-        void SessionReader::InitSession()
+        void SessionReader::InitSession(
+            const std::vector<std::string> &filenames)
         {
-            m_exprEvaluator.SetRandomSeed((m_comm->GetRank() + 1) * time(NULL));
+            // Re-load filenames for session if required.
+            if (filenames.size() > 0)
+            {
+                m_filenames = filenames;
+            }
 
-            // Split up the communicator
-            PartitionComm();
+            // Merge document if required.
+            if (m_xmlDoc)
+            {
+                delete m_xmlDoc;
+            }
 
-            // Partition mesh
-            PartitionMesh();
+            m_xmlDoc = MergeDoc(m_filenames);
 
             // Parse the XML data in #m_xmlDoc
             ParseDocument();
@@ -310,7 +327,6 @@ namespace Nektar
                 }
             }
         }
-
 
         void SessionReader::TestSharedFilesystem()
         {
@@ -940,7 +956,39 @@ namespace Nektar
             return iter1->second;
         }
 
-        /**
+        std::string SessionReader::GetGeometryType() const
+        {
+            TiXmlElement *xmlGeom = m_xmlDoc->FirstChildElement("NEKTAR")
+                ->FirstChildElement("GEOMETRY");
+            TiXmlAttribute *attr  = xmlGeom->FirstAttribute();
+            while (attr)
+            {
+                std::string attrName(attr->Name());
+                if (attrName == "HDF5FILE")
+                {
+                    // there is a file pointer, therefore is HDF5
+                    return "HDF5";
+                }
+                // Get the next attribute.
+                attr = attr->Next();
+            }
+
+            // Check the VERTEX block. If this is compressed, assume the file is
+            // compressed, otherwise assume uncompressed.
+            TiXmlElement *element = xmlGeom->FirstChildElement("VERTEX");
+            string IsCompressed;
+            element->QueryStringAttribute("COMPRESSED", &IsCompressed);
+
+            if (IsCompressed.size() > 0)
+            {
+                return "XmlCompressed";
+            }
+
+            // no file pointer or compressed, just standard xml
+            return "Xml";
+        }
+
+       /**
          *
          */
         bool SessionReader::DefinesGeometricInfo(const std::string &pName) const
@@ -1317,15 +1365,6 @@ namespace Nektar
         /**
          *
          */
-        AnalyticExpressionEvaluator& SessionReader::GetExpressionEvaluator()
-        {
-            return m_exprEvaluator;
-        }
-
-
-        /**
-         *
-         */
         bool SessionReader::DefinesTag(const std::string &pName) const
         {
             std::string vName = boost::to_upper_copy(pName);
@@ -1386,16 +1425,6 @@ namespace Nektar
             {
                 boost::replace_all(pExpr, exprIter.first, exprIter.second);
             }
-        }
-
-        CompositeOrdering SessionReader::GetCompositeOrdering() const
-        {
-            return m_compOrder;
-        }
-
-        BndRegionOrdering SessionReader::GetBndRegionOrdering() const
-        {
-            return m_bndRegOrder;
         }
 
         /**
@@ -1566,278 +1595,6 @@ namespace Nektar
             }
         }
 
-
-        /**
-         *
-         */
-        void SessionReader::PartitionMesh()
-        {
-            ASSERTL0(m_comm.get(), "Communication not initialised.");
-
-            // Get row of comm, or the whole comm if not split
-            CommSharedPtr vCommMesh = m_comm->GetRowComm();
-            const bool isRoot = m_comm->TreatAsRankZero();
-
-            // Delete any existing loaded mesh
-            if (m_xmlDoc)
-            {
-                delete m_xmlDoc;
-            }
-
-            // Load file for root process only (since this is always needed)
-            // and determine if the provided geometry has already been
-            // partitioned. This will be the case if the user provides the
-            // directory of mesh partitions as an input. Partitioned geometries
-            // have the attribute
-            //    PARTITION=X
-            // where X is the number of the partition (and should match the
-            // process rank). The result is shared with all other processes.
-            int isPartitioned = 0;
-            if (isRoot)
-            {
-                m_xmlDoc = MergeDoc(m_filenames);
-                if (DefinesElement("Nektar/Geometry"))
-                {
-                    if (GetElement("Nektar/Geometry")->Attribute("PARTITION"))
-                    {
-                        cout << "Using pre-partitioned mesh." << endl;
-                        isPartitioned = 1;
-                    }
-                }
-            }
-            GetComm()->Bcast(isPartitioned, 0);
-
-            // If the mesh is already partitioned, we are done. Remaining
-            // processes must load their partitions.
-            if (isPartitioned)
-            {
-                if (!isRoot)
-                {
-                    m_xmlDoc = MergeDoc(m_filenames);
-                }
-                return;
-            }
-
-            // Default partitioner to use is Metis. Use Scotch as default
-            // if it is installed. Override default with command-line flags
-            // if they are set.
-            string vPartitionerName = "Metis";
-            if (GetMeshPartitionFactory().ModuleExists("Scotch"))
-            {
-                vPartitionerName = "Scotch";
-            }
-            if (DefinesCmdLineArgument("use-metis"))
-            {
-                vPartitionerName = "Metis";
-            }
-            if (DefinesCmdLineArgument("use-scotch"))
-            {
-                vPartitionerName = "Scotch";
-            }
-
-            // Mesh has not been partitioned so do partitioning if required.
-            // Note in the serial case nothing is done as we have already loaded
-            // the mesh.
-            if (DefinesCmdLineArgument("part-only")||
-                DefinesCmdLineArgument("part-only-overlapping"))
-            {
-                // Perform partitioning of the mesh only. For this we insist
-                // the code is run in serial (parallel execution is pointless).
-                ASSERTL0(GetComm()->GetSize() == 1,
-                        "The 'part-only' option should be used in serial.");
-
-                // Number of partitions is specified by the parameter.
-                int nParts; 
-                SessionReaderSharedPtr vSession     = GetSharedThisPtr();
-                MeshPartitionSharedPtr vPartitioner =
-                        GetMeshPartitionFactory().CreateInstance(
-                                            vPartitionerName, vSession);
-                if(DefinesCmdLineArgument("part-only"))
-                {
-                    nParts = GetCmdLineArgument<int>("part-only");
-                    vPartitioner->PartitionMesh(nParts, true);
-                }
-                else  
-                {
-                    nParts = GetCmdLineArgument<int>("part-only-overlapping");
-                    vPartitioner->PartitionMesh(nParts, true, true);
-                }
-                vPartitioner->WriteAllPartitions(vSession);
-                vPartitioner->GetCompositeOrdering(m_compOrder);
-                vPartitioner->GetBndRegionOrdering(m_bndRegOrder);
-
-                if (isRoot && DefinesCmdLineArgument("part-info"))
-                {
-                    vPartitioner->PrintPartInfo(std::cout);
-                }
-
-                Finalise();
-                exit(0);
-            }
-            else if (vCommMesh->GetSize() > 1)
-            {
-                SessionReaderSharedPtr vSession     = GetSharedThisPtr();
-                int nParts = vCommMesh->GetSize();
-                if (m_sharedFilesystem)
-                {
-                    CommSharedPtr vComm = GetComm();
-                    vector<unsigned int> keys, vals;
-                    int i;
-
-                    if (isRoot)
-                    {
-                        m_xmlDoc = MergeDoc(m_filenames);
-
-                        MeshPartitionSharedPtr vPartitioner =
-                                GetMeshPartitionFactory().CreateInstance(
-                                                    vPartitionerName, vSession);
-                        vPartitioner->PartitionMesh(nParts, true);
-                        vPartitioner->WriteAllPartitions(vSession);
-                        vPartitioner->GetCompositeOrdering(m_compOrder);
-                        vPartitioner->GetBndRegionOrdering(m_bndRegOrder);
-
-                        // Communicate orderings to the other processors.
-
-                        // First send sizes of the orderings and boundary
-                        // regions to allocate storage on the remote end.
-                        keys.resize(2);
-                        keys[0] = m_compOrder.size();
-                        keys[1] = m_bndRegOrder.size();
-                        vComm->Bcast(keys, 0);
-
-                        // Construct the keys and sizes of values for composite
-                        // ordering
-                        keys.resize(m_compOrder.size());
-                        vals.resize(m_compOrder.size());
-
-                        i = 0;
-                        for (auto &cIt : m_compOrder)
-                        {
-                            keys[i  ] = cIt.first;
-                            vals[i++] = cIt.second.size();
-                        }
-
-                        // Send across data.
-                        vComm->Bcast(keys, 0);
-                        vComm->Bcast(vals, 0);
-                        for (auto &cIt : m_compOrder)
-                        {
-                            vComm->Bcast(cIt.second, 0);
-                        }
-
-                        // Construct the keys and sizes of values for composite
-                        // ordering
-                        keys.resize(m_bndRegOrder.size());
-                        vals.resize(m_bndRegOrder.size());
-
-                        i = 0;
-                        for (auto &bIt : m_bndRegOrder)
-                        {
-                            keys[i  ] = bIt.first;
-                            vals[i++] = bIt.second.size();
-                        }
-
-                        // Send across data.
-                        vComm->Bcast(keys, 0);
-                        vComm->Bcast(vals, 0);
-                        for (auto &bIt : m_bndRegOrder)
-                        {
-                            vComm->Bcast(bIt.second, 0);
-                        }
-
-                        if (DefinesCmdLineArgument("part-info"))
-                        {
-                            vPartitioner->PrintPartInfo(std::cout);
-                        }
-                    }
-                    else
-                    {
-                        keys.resize(2);
-                        vComm->Bcast(keys, 0);
-
-                        int cmpSize = keys[0];
-                        int bndSize = keys[1];
-
-                        keys.resize(cmpSize);
-                        vals.resize(cmpSize);
-                        vComm->Bcast(keys, 0);
-                        vComm->Bcast(vals, 0);
-
-                        for (int i = 0; i < keys.size(); ++i)
-                        {
-                            vector<unsigned int> tmp(vals[i]);
-                            vComm->Bcast(tmp, 0);
-                            m_compOrder[keys[i]] = tmp;
-                        }
-
-                        keys.resize(bndSize);
-                        vals.resize(bndSize);
-                        vComm->Bcast(keys, 0);
-                        vComm->Bcast(vals, 0);
-
-                        for (int i = 0; i < keys.size(); ++i)
-                        {
-                            vector<unsigned int> tmp(vals[i]);
-                            vComm->Bcast(tmp, 0);
-                            m_bndRegOrder[keys[i]] = tmp;
-                        }
-                    }
-                }
-                else
-                {
-                    // Need to load mesh on non-root processes.
-                    if (!isRoot)
-                    {
-                        m_xmlDoc = MergeDoc(m_filenames);
-                    }
-
-                    // Partitioner now operates in parallel
-                    // Each process receives partitioning over interconnect
-                    // and writes its own session file to the working directory.
-                    MeshPartitionSharedPtr vPartitioner =
-                                GetMeshPartitionFactory().CreateInstance(
-                                                    vPartitionerName, vSession);
-                    vPartitioner->PartitionMesh(nParts, false);
-                    vPartitioner->WriteLocalPartition(vSession);
-                    vPartitioner->GetCompositeOrdering(m_compOrder);
-                    vPartitioner->GetBndRegionOrdering(m_bndRegOrder);
-
-                    if (DefinesCmdLineArgument("part-info") && isRoot)
-                    {
-                        vPartitioner->PrintPartInfo(std::cout);
-                    }
-                }
-                m_comm->Block();
-
-                std::string  dirname = GetSessionName() + "_xml";
-                fs::path    pdirname(dirname);
-                boost::format pad("P%1$07d.xml");
-                pad % m_comm->GetRowComm()->GetRank();
-                fs::path    pFilename(pad.str());
-                fs::path fullpath = pdirname / pFilename;
-
-                std::string vFilename = PortablePath(fullpath);
-
-                if (m_xmlDoc)
-                {
-                    delete m_xmlDoc;
-                }
-                m_xmlDoc = new TiXmlDocument(vFilename);
-
-                ASSERTL0(m_xmlDoc, "Failed to create XML document object.");
-
-                bool loadOkay = m_xmlDoc->LoadFile(vFilename);
-                ASSERTL0(loadOkay, "Unable to load file: " + vFilename       +
-                         ". Check XML standards compliance. Error on line: " +
-                         boost::lexical_cast<std::string>(m_xmlDoc->Row()));
-            }
-            else
-            {
-                m_xmlDoc = MergeDoc(m_filenames);
-            }
-        }
-
-
         /**
          * Splits the processes into a cartesian grid and creates communicators
          * for each row and column of the grid. The grid is defined by the
@@ -1951,7 +1708,7 @@ namespace Nektar
                             try
                             {
                                 LibUtilities::Equation expession(
-                                    GetSharedThisPtr(), rhs);
+                                    m_exprEvaluator, rhs);
                                 value = expession.Evaluate();
                             }
                             catch (const std::runtime_error &)
@@ -1961,7 +1718,7 @@ namespace Nektar
                                          " '" + rhs + "' in XML element: \n\t'"
                                          + tagcontent.str() + "'");
                             }
-                            m_exprEvaluator.SetParameter(lhs, value);
+                            m_exprEvaluator->SetParameter(lhs, value);
                             caseSensitiveParameters[lhs] = value;
                             boost::to_upper(lhs);
                             m_parameters[lhs] = value;
@@ -2412,7 +2169,7 @@ namespace Nektar
 
                         // set expression
                         funcDef.m_expression = MemoryManager<Equation>
-                            ::AllocateSharedPtr(GetSharedThisPtr(), fcnStr, evarsStr);
+                            ::AllocateSharedPtr(m_exprEvaluator, fcnStr, evarsStr);
                     }
 
                     // Files are denoted by F

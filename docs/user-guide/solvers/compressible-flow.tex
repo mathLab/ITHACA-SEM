@@ -243,6 +243,7 @@ Under this section it is possible to set the solver information.
   <I PROPERTY="UpwindType"            VALUE="ExactToro"           />
   <I PROPERTY="ProblemType"           VALUE="General"             />
   <I PROPERTY="ViscosityType"         VALUE="Constant"            />
+  <I PROPERTY="EquationOfState"       VALUE="IdealGas"            />
 </SOLVERINFO>
 \end{lstlisting}
 \begin{itemize}
@@ -302,6 +303,15 @@ we want to use for the advection operator:
 \begin{itemize}
 \item \inltt{Constant} (Constant viscosity);
 \item \inltt{Variable} (Variable viscosity through the Sutherland's law.);
+\end{itemize}
+\item \inltt{EquationOfState} allows selecting an equation of state for
+accounting for non-ideal gas behaviour:
+\begin{itemize}
+\item \inltt{IdealGas} (default option);
+\item \inltt{VanDerWaals} (requires additional parameters \inltt{Tcrit} and \inltt{Pcrit});
+\item \inltt{RedlichKwong} (requires additional parameters \inltt{Tcrit} and \inltt{Pcrit});
+\item \inltt{PengRobinson} (requires additional parameters \inltt{Tcrit}, \inltt{Pcrit} and
+\inltt{AcentricFactor});
 \end{itemize}
 \end{itemize}
 

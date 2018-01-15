@@ -84,7 +84,8 @@ FilterHistoryPoints::FilterHistoryPoints(
     }
     else
     {
-        LibUtilities::Equation equ(m_session, it->second);
+        LibUtilities::Equation equ(
+            m_session->GetExpressionEvaluator(), it->second);
         m_outputFrequency = round(equ.Evaluate());
     }
 
@@ -99,7 +100,8 @@ FilterHistoryPoints::FilterHistoryPoints(
         }
         else
         {
-            LibUtilities::Equation equ(m_session, it->second);
+            LibUtilities::Equation equ(
+                m_session->GetExpressionEvaluator(), it->second);
             m_outputPlane = round(equ.Evaluate());
         }
 
@@ -280,7 +282,7 @@ void FilterHistoryPoints::v_Initialise(
         if (dist_loc[i] == dist[i])
         {
             // Set element id to Vid of m_history point for later use
-            m_historyPoints[i]->SetVid(idList[i]);
+            m_historyPoints[i]->SetGlobalID(idList[i]);
         }
         else
         {
@@ -457,7 +459,7 @@ void FilterHistoryPoints::v_Update(const Array<OneD, const MultiRegions::ExpList
             for (auto &x : m_historyList)
             {
                 locCoord = x.second;
-                expId    = x.first->GetVid();
+                expId    = x.first->GetGlobalID();
                 NekDouble value;
                 int plane = m_planeIDs[m_historyLocalPointMap[k]];
 
@@ -556,7 +558,7 @@ void FilterHistoryPoints::v_Update(const Array<OneD, const MultiRegions::ExpList
             for (auto &x : m_historyList)
             {
                 locCoord = x.second;
-                expId    = x.first->GetVid();
+                expId    = x.first->GetGlobalID();
 
                 physvals = pFields[j]->UpdatePhys() + pFields[j]->GetPhys_Offset(expId);
 

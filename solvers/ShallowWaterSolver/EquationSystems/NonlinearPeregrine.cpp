@@ -52,8 +52,9 @@ string NonlinearPeregrine::className =
                 "Nonlinear Peregrine equations in conservative variables.");
 
 NonlinearPeregrine::NonlinearPeregrine(
-        const LibUtilities::SessionReaderSharedPtr& pSession)
-    : ShallowWaterSystem(pSession), m_factors()
+    const LibUtilities::SessionReaderSharedPtr& pSession,
+    const SpatialDomains::MeshGraphSharedPtr& pGraph)
+    : ShallowWaterSystem(pSession, pGraph), m_factors()
 {
     m_factors[StdRegions::eFactorLambda] = 0.0;
     m_factors[StdRegions::eFactorTau] = 1000000.0;

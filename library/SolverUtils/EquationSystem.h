@@ -64,8 +64,10 @@ class Interpolator;
         /// Datatype of the NekFactory used to instantiate classes derived from
         /// the EquationSystem class.
         typedef LibUtilities::NekFactory<
-        std::string, EquationSystem,
-        const LibUtilities::SessionReaderSharedPtr&
+            std::string,
+            EquationSystem,
+            const LibUtilities::SessionReaderSharedPtr&,
+            const SpatialDomains::MeshGraphSharedPtr&
         > EquationSystemFactory;
         SOLVER_UTILS_EXPORT EquationSystemFactory& GetEquationSystemFactory();
 
@@ -433,7 +435,9 @@ class Interpolator;
             int m_HomoDirec;    ///< number of homogenous directions
 
             /// Initialises EquationSystem class members.
-            SOLVER_UTILS_EXPORT EquationSystem( const LibUtilities::SessionReaderSharedPtr& pSession);
+            SOLVER_UTILS_EXPORT EquationSystem(
+                const LibUtilities::SessionReaderSharedPtr& pSession,
+                const SpatialDomains::MeshGraphSharedPtr& pGraph);
             
             SOLVER_UTILS_EXPORT virtual void v_InitObject();
             

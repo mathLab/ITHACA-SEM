@@ -167,7 +167,7 @@ bool ParseUtils::GenerateVector(const std::string &str,
 {
     auto it = str.begin();
     bool success = qi::phrase_parse(
-        it, str.end(), *~qi::char_(",") % ',', qi::ascii::space, out);
+        it, str.end(), +~qi::char_(",") % ',', qi::ascii::space, out);
     return success && it == str.end();
 }
 

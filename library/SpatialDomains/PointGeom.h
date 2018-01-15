@@ -38,89 +38,75 @@
 
 #include <StdRegions/StdRegions.hpp>
 #include <SpatialDomains/Geometry0D.h>
-#include <SpatialDomains/MeshComponents.h>
 #include <SpatialDomains/SpatialDomainsDeclspec.h>
 #include <memory>
 
 namespace Nektar
 {
-    namespace SpatialDomains
+
+namespace SpatialDomains
+{
+
+class PointGeom;
+class SegGeom;
+
+// shorthand for boost pointer
+typedef std::shared_ptr<PointGeom> PointGeomSharedPtr;
+typedef std::map<int, PointGeomSharedPtr> PointGeomMap;
+
+class PointGeom : public Geometry0D,
+                  public NekPoint<NekDouble>,
+                  public std::enable_shared_from_this<PointGeom>
+{
+public:
+    SPATIAL_DOMAINS_EXPORT PointGeom();
+    SPATIAL_DOMAINS_EXPORT PointGeom(const int coordim,
+                                     const int vid,
+                                     NekDouble x,
+                                     NekDouble y,
+                                     NekDouble z);
+    SPATIAL_DOMAINS_EXPORT PointGeom(const PointGeom &T);
+
+    SPATIAL_DOMAINS_EXPORT ~PointGeom();
+
+    SPATIAL_DOMAINS_EXPORT int GetVid()
     {
-        class PointGeom;
-        class SegGeom;
+        return m_globalID;
+    }
 
-        // shorthand for boost pointer
-        typedef std::shared_ptr<PointGeom> PointGeomSharedPtr;
-        typedef std::vector< PointGeomSharedPtr > PointGeomVector;
-        typedef std::map<int, PointGeomSharedPtr> PointGeomMap;
-        typedef std::set< PointGeomSharedPtr >  PointGeomSet;
+    SPATIAL_DOMAINS_EXPORT void GetCoords(NekDouble &x,
+                                          NekDouble &y,
+                                          NekDouble &z);
+    SPATIAL_DOMAINS_EXPORT void GetCoords(Array<OneD, NekDouble> &coords);
+    SPATIAL_DOMAINS_EXPORT void UpdatePosition(NekDouble x,
+                                               NekDouble y,
+                                               NekDouble z);
 
-        class PointGeom: public Geometry0D, public NekPoint<NekDouble>,
-                         public std::enable_shared_from_this<PointGeom>
-        {
-            public:
-                SPATIAL_DOMAINS_EXPORT PointGeom();
-                SPATIAL_DOMAINS_EXPORT PointGeom(const int coordim, const int vid,
-                    NekDouble x, NekDouble y, NekDouble z);
-                SPATIAL_DOMAINS_EXPORT PointGeom(const PointGeom &T);
+    SPATIAL_DOMAINS_EXPORT void Mult(PointGeom &a, PointGeom &b);
+    SPATIAL_DOMAINS_EXPORT void Add(PointGeom &a, PointGeom &b);
+    SPATIAL_DOMAINS_EXPORT void Sub(PointGeom &a, PointGeom &b);
+    SPATIAL_DOMAINS_EXPORT NekDouble dist(PointGeom &a);
+    SPATIAL_DOMAINS_EXPORT NekDouble dot(PointGeom &a);
 
-                SPATIAL_DOMAINS_EXPORT ~PointGeom();
+    SPATIAL_DOMAINS_EXPORT friend bool operator==(const PointGeom &x,
+                                                  const PointGeom &y);
+    SPATIAL_DOMAINS_EXPORT friend bool operator==(const PointGeom &x,
+                                                  const PointGeom *y);
+    SPATIAL_DOMAINS_EXPORT friend bool operator==(const PointGeom *x,
+                                                  const PointGeom &y);
+    SPATIAL_DOMAINS_EXPORT friend bool operator!=(const PointGeom &x,
+                                                  const PointGeom &y);
+    SPATIAL_DOMAINS_EXPORT friend bool operator!=(const PointGeom &x,
+                                                  const PointGeom *y);
+    SPATIAL_DOMAINS_EXPORT friend bool operator!=(const PointGeom *x,
+                                                  const PointGeom &y);
 
-                SPATIAL_DOMAINS_EXPORT void AddElmtConnected(int gvo_id, int locid);
-                SPATIAL_DOMAINS_EXPORT int  NumElmtConnected() const;
-                SPATIAL_DOMAINS_EXPORT bool IsElmtConnected(int gvo_id, int locid) const;
-                SPATIAL_DOMAINS_EXPORT void GetCoords(NekDouble &x, NekDouble &y, NekDouble &z);
-                SPATIAL_DOMAINS_EXPORT void GetCoords(Array<OneD,NekDouble> &coords);
-                SPATIAL_DOMAINS_EXPORT void UpdatePosition(NekDouble x, NekDouble y, NekDouble z);
+protected:
+    virtual void v_GenGeomFactors();
+    virtual PointGeomSharedPtr v_GetVertex(int i) const;
+};
 
-                inline int GetVid() const
-                {
-                    return m_vid;
-                }
+}
+}
 
-                inline void SetVid(const int vid)
-                {
-                    m_vid = vid;
-                }
-
-                // Math routines
-                SPATIAL_DOMAINS_EXPORT void   Mult (PointGeom& a, PointGeom& b);
-                SPATIAL_DOMAINS_EXPORT void   Add  (PointGeom& a, PointGeom& b);
-                SPATIAL_DOMAINS_EXPORT void   Sub  (PointGeom& a, PointGeom& b);
-                SPATIAL_DOMAINS_EXPORT NekDouble dist  (PointGeom& a);
-                SPATIAL_DOMAINS_EXPORT NekDouble dot   (PointGeom& a);
-
-                SPATIAL_DOMAINS_EXPORT friend bool operator == (const PointGeom &x, const PointGeom &y);
-                SPATIAL_DOMAINS_EXPORT friend bool operator == (const PointGeom &x, const PointGeom *y);
-                SPATIAL_DOMAINS_EXPORT friend bool operator == (const PointGeom *x, const PointGeom &y);
-                SPATIAL_DOMAINS_EXPORT friend bool operator != (const PointGeom &x, const PointGeom &y);
-                SPATIAL_DOMAINS_EXPORT friend bool operator != (const PointGeom &x, const PointGeom *y);
-                SPATIAL_DOMAINS_EXPORT friend bool operator != (const PointGeom *x, const PointGeom &y);
-
-                SPATIAL_DOMAINS_EXPORT static StdRegions::Orientation
-                            GetPointOrientation(const SegGeom& edge1,
-                                                const SegGeom& edge2);
-
-            protected:
-                int m_vid;
-                std::list<CompToElmt> m_elmtMap;
-
-                virtual void v_GenGeomFactors();
-                virtual int v_GetVid(int id) const;
-
-                virtual PointGeomSharedPtr v_GetVertex(int i) const;
-
-            private:
-                virtual NekDouble v_GetCoord(
-                            const int i,
-                            const Array<OneD,const NekDouble>& Lcoord);
-                virtual NekDouble v_GetLocCoords(
-                            const Array<OneD,const NekDouble>& coords,
-                            Array<OneD,NekDouble>& Lcoords);
-        };
-
-
-    }; //end of namespace
-}; //end of namespace
-
-#endif //NEKTAR_SPATIALDOMAINS_POINTGEOM_H
+#endif // NEKTAR_SPATIALDOMAINS_POINTGEOM_H

@@ -67,8 +67,9 @@ namespace Nektar
          * @param   pSession        Session object to read parameters from.
          */
         UnsteadySystem::UnsteadySystem(
-            const LibUtilities::SessionReaderSharedPtr& pSession)
-            : EquationSystem(pSession),
+            const LibUtilities::SessionReaderSharedPtr& pSession,
+            const SpatialDomains::MeshGraphSharedPtr& pGraph)
+            : EquationSystem(pSession, pGraph),
               m_infosteps(10)
 
         {

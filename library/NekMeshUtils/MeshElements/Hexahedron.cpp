@@ -170,8 +170,10 @@ SpatialDomains::GeometrySharedPtr Hexahedron::GetGeom(int coordDim)
             m_face[i]->GetGeom(coordDim));
     }
 
-    ret = MemoryManager<SpatialDomains::HexGeom>::AllocateSharedPtr(faces);
+    ret = MemoryManager<SpatialDomains::HexGeom>::AllocateSharedPtr(
+        m_id, faces);
 
+    ret->Setup();
     return ret;
 }
 

@@ -89,7 +89,8 @@ FilterAeroForces::FilterAeroForces(
     }
     else
     {
-        LibUtilities::Equation equ(m_session, it->second);
+        LibUtilities::Equation equ(
+            m_session->GetExpressionEvaluator(), it->second);
         m_outputFrequency = round(equ.Evaluate());
     }
     
@@ -101,7 +102,8 @@ FilterAeroForces::FilterAeroForces(
     }
     else
     {
-        LibUtilities::Equation equ(m_session, it->second);
+        LibUtilities::Equation equ(
+            m_session->GetExpressionEvaluator(), it->second);
         m_startTime = equ.Evaluate();
     }
 
@@ -170,7 +172,8 @@ FilterAeroForces::FilterAeroForces(
                 directionStream >> directionString;
                 if (!directionString.empty())
                 {
-                    LibUtilities::Equation equ(m_session, directionString);
+                    LibUtilities::Equation equ(
+                        m_session->GetExpressionEvaluator(), directionString);
                     m_directions[i][j] = equ.Evaluate();
                     norm += m_directions[i][j]*m_directions[i][j];
                 }

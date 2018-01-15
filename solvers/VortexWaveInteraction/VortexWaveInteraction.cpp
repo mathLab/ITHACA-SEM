@@ -64,6 +64,7 @@ namespace Nektar
         // Create Incompressible NavierStokesSolver session reader.
         m_sessionVWI = LibUtilities::SessionReader::CreateInstance(argc, argv, 
                                                                    VWIFilenames);
+        m_sessionVWI->InitSession();
         
         m_sessionVWI->LoadParameter("AlphaStep",              m_alphaStep,0.05);
         m_sessionVWI->LoadParameter("OuterIterationStoreSize",storesize,10);
@@ -153,8 +154,9 @@ namespace Nektar
         // Create Incompressible NavierStokesSolver session reader.
         m_sessionRoll = LibUtilities::SessionReader::CreateInstance(argc, argv, IncNSFilenames, 
                                                                     m_sessionVWI->GetComm());
+        m_graphRoll = SpatialDomains::MeshGraph::Read(m_sessionRoll);
         std::string vEquation = m_sessionRoll->GetSolverInfo("SolverType");
-        m_solverRoll = GetEquationSystemFactory().CreateInstance(vEquation, m_sessionRoll);
+        m_solverRoll = GetEquationSystemFactory().CreateInstance(vEquation, m_sessionRoll, m_graphRoll);
         m_solverRoll->PrintSummary(cout);
 
 
@@ -186,6 +188,7 @@ namespace Nektar
         
         // Create AdvDiffusion session reader.
         m_sessionStreak = LibUtilities::SessionReader::CreateInstance(argc, argv, AdvDiffFilenames, m_sessionVWI->GetComm());
+        m_graphStreak = SpatialDomains::MeshGraph::Read(m_sessionStreak);
 
         // Initialise LinNS solver 
         std::string LinNSCondFile(argv[argc-1]); 
@@ -196,6 +199,7 @@ namespace Nektar
         
         // Create Linearised NS stability session reader.
         m_sessionWave = LibUtilities::SessionReader::CreateInstance(argc, argv, LinNSFilenames, m_sessionVWI->GetComm());
+        m_graphWave = SpatialDomains::MeshGraph::Read(m_sessionWave);
 
         // Set the initial beta value in stability to be equal to VWI file
         std::string LZstr("LZ");
@@ -356,7 +360,7 @@ namespace Nektar
         if(m_sessionRoll->DefinesSolverInfo("INTERFACE"))
         {
             string vEquation = m_sessionRoll->GetSolverInfo("solvertype");
-            EquationSystemSharedPtr solverRoll = GetEquationSystemFactory().CreateInstance(vEquation,m_sessionRoll);
+            EquationSystemSharedPtr solverRoll = GetEquationSystemFactory().CreateInstance(vEquation,m_sessionRoll,m_graphRoll);
             // The forcing terms are inserted as N bcs
             // Execute Roll 
             cout << "Executing Roll solver" << endl;
@@ -377,7 +381,7 @@ namespace Nektar
             if(m_moveMeshToCriticalLayer)
             {
                 string vEquation = m_sessionRoll->GetSolverInfo("solvertype");
-                EquationSystemSharedPtr solverRoll = GetEquationSystemFactory().CreateInstance(vEquation,m_sessionRoll);
+                EquationSystemSharedPtr solverRoll = GetEquationSystemFactory().CreateInstance(vEquation,m_sessionRoll,m_graphRoll);
             }
             else
             {
@@ -463,14 +467,14 @@ namespace Nektar
         std::string vDriverModule;
         m_sessionStreak->LoadSolverInfo("Driver", vDriverModule, "Standard");
         
-        DriverSharedPtr solverStreak = GetDriverFactory().CreateInstance(vDriverModule, m_sessionStreak); 
+        DriverSharedPtr solverStreak = GetDriverFactory().CreateInstance(vDriverModule, m_sessionStreak, m_graphStreak); 
         solverStreak->Execute();
 
         m_streakField = solverStreak->GetEqu()[0]->UpdateFields();
 #else        
         // Setup and execute Advection Diffusion solver 
         string vEquation = m_sessionStreak->GetSolverInfo("EqType");
-        EquationSystemSharedPtr solverStreak = GetEquationSystemFactory().CreateInstance(vEquation,m_sessionStreak);
+        EquationSystemSharedPtr solverStreak = GetEquationSystemFactory().CreateInstance(vEquation,m_sessionStreak, m_graphStreak);
 
         cout << "Executing Streak Solver" << endl;
         solverStreak->DoInitialise();
@@ -508,7 +512,7 @@ namespace Nektar
         std::string vDriverModule;
         m_sessionWave->LoadSolverInfo("Driver", vDriverModule, "ModifiedArnoldi");
         cout << "Setting up linearised NS sovler" << endl;
-        DriverSharedPtr solverWave = GetDriverFactory().CreateInstance(vDriverModule, m_sessionWave);  
+        DriverSharedPtr solverWave = GetDriverFactory().CreateInstance(vDriverModule, m_sessionWave, m_graphWave);  
 
         /// Do linearised NavierStokes Session  with Modified Arnoldi
         cout << "Executing wave solution " << endl;
@@ -2025,13 +2029,6 @@ cout<<"cr="<<cr_str<<endl;
           }
 
           // Read in mesh from input file
-
-          /// ====================================================
-          /// \todo Please update to use MeshGraph::Read(vSession)
-          /// ====================================================
-          SpatialDomains::MeshGraphSharedPtr graphShPt = 
-                                     SpatialDomains::MeshGraph::Read(m_sessionName+".xml");
-
 
           std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef_u;
           std::vector<std::vector<NekDouble> > FieldData_u;

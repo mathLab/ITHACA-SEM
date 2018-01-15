@@ -48,9 +48,10 @@ namespace Nektar
                 UnsteadyViscousBurgers::create);
     
     UnsteadyViscousBurgers::UnsteadyViscousBurgers(
-            const LibUtilities::SessionReaderSharedPtr& pSession)
-        : UnsteadySystem(pSession),
-          AdvectionSystem(pSession),
+        const LibUtilities::SessionReaderSharedPtr& pSession,
+        const SpatialDomains::MeshGraphSharedPtr& pGraph)
+        : UnsteadySystem(pSession, pGraph),
+          AdvectionSystem(pSession, pGraph),
           m_varCoeffLap(StdRegions::NullVarCoeffMap)
     {
         m_planeNumber = 0;

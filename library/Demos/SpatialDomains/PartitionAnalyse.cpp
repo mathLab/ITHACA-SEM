@@ -34,14 +34,15 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <LibUtilities/BasicUtils/SessionReader.h>
-#include <LibUtilities/BasicUtils/MeshPartition.h>
 #include <LibUtilities/Communication/CommSerial.h>
+#include <SpatialDomains/MeshPartition.h>
 
 #include <iostream>
 
 using namespace std;
 using namespace Nektar;
 using namespace Nektar::LibUtilities;
+using namespace Nektar::SpatialDomains;
 
 class FauxComm : public CommSerial
 {

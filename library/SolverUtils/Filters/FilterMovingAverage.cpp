@@ -58,7 +58,8 @@ FilterMovingAverage::FilterMovingAverage(
     }
     else
     {
-        LibUtilities::Equation equ(m_session, it->second);
+        LibUtilities::Equation equ(
+            m_session->GetExpressionEvaluator(), it->second);
         m_sampleFrequency = round(equ.Evaluate());
     }
 

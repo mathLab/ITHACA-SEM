@@ -37,17 +37,15 @@
 #include <MultiRegions/DisContField3D.h>
 #include <LocalRegions/Expansion3D.h>
 #include <LocalRegions/Expansion2D.h>
-#include <SpatialDomains/MeshGraph3D.h>
+#include <SpatialDomains/MeshGraph.h>
 #include <LocalRegions/HexExp.h>
 #include <LocalRegions/TetExp.h>
 #include <LocalRegions/PrismExp.h>
 #include <LibUtilities/Foundations/Interp.h>
 #include <LibUtilities/Foundations/ManagerAccess.h>
-#include <boost/assign/std/vector.hpp>
 #include <tuple>
 
 using namespace std;
-using namespace boost::assign;
 
  namespace Nektar
  {
@@ -314,10 +312,6 @@ using namespace boost::assign;
 
              ExpList2DSharedPtr trace;
 
-             SpatialDomains::MeshGraph3DSharedPtr graph3D = 
-                 std::dynamic_pointer_cast<SpatialDomains::MeshGraph3D>(
-                     m_graph);
-
              // Set up matrix map
              m_globalBndMat = MemoryManager<GlobalLinSysMap>::
                  AllocateSharedPtr();
@@ -326,12 +320,12 @@ using namespace boost::assign;
              bool UseGenSegExp = true;
              trace = MemoryManager<ExpList2D>::AllocateSharedPtr(
                  m_session, m_bndCondExpansions, m_bndConditions,
-                 *m_exp,graph3D, m_periodicFaces, UseGenSegExp);
+                 *m_exp, m_graph, m_periodicFaces, UseGenSegExp);
 
              m_trace    = trace;
 
              m_traceMap = MemoryManager<AssemblyMapDG>::AllocateSharedPtr(
-                 m_session,graph3D,trace,*this,m_bndCondExpansions,
+                 m_session, m_graph, trace, *this, m_bndCondExpansions,
                  m_bndConditions, m_periodicFaces,variable);
 
              if (m_session->DefinesCmdLineArgument("verbose"))
@@ -676,17 +670,14 @@ using namespace boost::assign;
                 = bcs.GetBoundaryRegions();
             const SpatialDomains::BoundaryConditionCollection &bconditions
                 = bcs.GetBoundaryConditions();
-            SpatialDomains::MeshGraph3DSharedPtr graph3D
-                = std::dynamic_pointer_cast<
-                    SpatialDomains::MeshGraph3D>(m_graph);
 
-            LibUtilities::CommSharedPtr     vComm       =
+            LibUtilities::CommSharedPtr       vComm       =
                 m_session->GetComm()->GetRowComm();
-            LibUtilities::CompositeOrdering compOrder   =
-                m_session->GetCompositeOrdering();
-            LibUtilities::BndRegionOrdering bndRegOrder =
-                m_session->GetBndRegionOrdering();
-            SpatialDomains::CompositeMap    compMap     =
+            SpatialDomains::CompositeOrdering compOrder   =
+                m_graph->GetCompositeOrdering();
+            SpatialDomains::BndRegionOrdering bndRegOrder =
+                m_graph->GetBndRegionOrdering();
+            SpatialDomains::CompositeMap      compMap     =
                 m_graph->GetComposites();
 
             // perComps: Stores a unique collection of pairs of periodic
@@ -771,29 +762,29 @@ using namespace boost::assign;
                     cId2 = bndRegOrder.find(region2ID)->second[0];
                 }
 
-                SpatialDomains::Composite c = it.second->begin()->second;
+                SpatialDomains::CompositeSharedPtr c = it.second->begin()->second;
                 vector<unsigned int> tmpOrder;
                 
                 // From the composite, we now construct the allVerts, allEdges
                 // and allCoord map so that they can be transferred across
                 // processors. We also populate the locFaces set to store a
                 // record of all faces local to this process.
-                for (i = 0; i < c->size(); ++i)
+                for (i = 0; i < c->m_geomVec.size(); ++i)
                 {
                     SpatialDomains::Geometry2DSharedPtr faceGeom =
                         std::dynamic_pointer_cast<
-                            SpatialDomains::Geometry2D>((*c)[i]);
+                            SpatialDomains::Geometry2D>(c->m_geomVec[i]);
                     ASSERTL1(faceGeom, "Unable to cast to shared ptr");
 
                     // Get geometry ID of this face and store in locFaces.
-                    int faceId = (*c)[i]->GetGlobalID();
+                    int faceId = c->m_geomVec[i]->GetGlobalID();
                     locFaces.insert(faceId);
 
                     // In serial, mesh partitioning will not have occurred so
                     // need to fill composite ordering map manually.
                     if (vComm->GetSize() == 1)
                     {
-                        tmpOrder.push_back((*c)[i]->GetGlobalID());
+                        tmpOrder.push_back(c->m_geomVec[i]->GetGlobalID());
                     }
 
                     // Loop over vertices and edges of the face to populate
@@ -1012,9 +1003,19 @@ using namespace boost::assign;
                     // If the edge is reversed with respect to the face, then
                     // swap the edges so that we have the original ordering of
                     // the edge in the 3D element. This is necessary to properly
-                    // determine edge orientation.
-                    if ((StdRegions::Orientation)edgeOrt[cnt]
-                            == StdRegions::eBackwards)
+                    // determine edge orientation. Note that the logic relies on
+                    // the fact that all edge forward directions are CCW
+                    // orientated: we use a tensor product ordering for 2D
+                    // elements so need to reverse this for edge IDs 2 and 3.
+                    StdRegions::Orientation edgeOrient =
+                        static_cast<StdRegions::Orientation>(edgeOrt[cnt]);
+                    if (j > 1)
+                    {
+                        edgeOrient = edgeOrient == StdRegions::eForwards ?
+                            StdRegions::eBackwards : StdRegions::eForwards;
+                    }
+
+                    if (edgeOrient == StdRegions::eBackwards)
                     {
                         swap(testIns.first->second.first,
                              testIns.first->second.second);
@@ -1045,32 +1046,32 @@ using namespace boost::assign;
             map<int, map<StdRegions::Orientation, vector<int> > > emap;
 
             map<StdRegions::Orientation, vector<int> > quadVertMap;
-            quadVertMap[StdRegions::eDir1FwdDir1_Dir2FwdDir2] += 0,1,2,3;
-            quadVertMap[StdRegions::eDir1FwdDir1_Dir2BwdDir2] += 3,2,1,0;
-            quadVertMap[StdRegions::eDir1BwdDir1_Dir2FwdDir2] += 1,0,3,2;
-            quadVertMap[StdRegions::eDir1BwdDir1_Dir2BwdDir2] += 2,3,0,1;
-            quadVertMap[StdRegions::eDir1FwdDir2_Dir2FwdDir1] += 0,3,2,1;
-            quadVertMap[StdRegions::eDir1FwdDir2_Dir2BwdDir1] += 1,2,3,0;
-            quadVertMap[StdRegions::eDir1BwdDir2_Dir2FwdDir1] += 3,0,1,2;
-            quadVertMap[StdRegions::eDir1BwdDir2_Dir2BwdDir1] += 2,1,0,3;
+            quadVertMap[StdRegions::eDir1FwdDir1_Dir2FwdDir2] = {0,1,2,3};
+            quadVertMap[StdRegions::eDir1FwdDir1_Dir2BwdDir2] = {3,2,1,0};
+            quadVertMap[StdRegions::eDir1BwdDir1_Dir2FwdDir2] = {1,0,3,2};
+            quadVertMap[StdRegions::eDir1BwdDir1_Dir2BwdDir2] = {2,3,0,1};
+            quadVertMap[StdRegions::eDir1FwdDir2_Dir2FwdDir1] = {0,3,2,1};
+            quadVertMap[StdRegions::eDir1FwdDir2_Dir2BwdDir1] = {1,2,3,0};
+            quadVertMap[StdRegions::eDir1BwdDir2_Dir2FwdDir1] = {3,0,1,2};
+            quadVertMap[StdRegions::eDir1BwdDir2_Dir2BwdDir1] = {2,1,0,3};
 
             map<StdRegions::Orientation, vector<int> > quadEdgeMap;
-            quadEdgeMap[StdRegions::eDir1FwdDir1_Dir2FwdDir2] += 0,1,2,3;
-            quadEdgeMap[StdRegions::eDir1FwdDir1_Dir2BwdDir2] += 2,1,0,3;
-            quadEdgeMap[StdRegions::eDir1BwdDir1_Dir2FwdDir2] += 0,3,2,1;
-            quadEdgeMap[StdRegions::eDir1BwdDir1_Dir2BwdDir2] += 2,3,0,1;
-            quadEdgeMap[StdRegions::eDir1FwdDir2_Dir2FwdDir1] += 3,2,1,0;
-            quadEdgeMap[StdRegions::eDir1FwdDir2_Dir2BwdDir1] += 1,2,3,0;
-            quadEdgeMap[StdRegions::eDir1BwdDir2_Dir2FwdDir1] += 3,0,1,2;
-            quadEdgeMap[StdRegions::eDir1BwdDir2_Dir2BwdDir1] += 1,0,3,2;
+            quadEdgeMap[StdRegions::eDir1FwdDir1_Dir2FwdDir2] = {0,1,2,3};
+            quadEdgeMap[StdRegions::eDir1FwdDir1_Dir2BwdDir2] = {2,1,0,3};
+            quadEdgeMap[StdRegions::eDir1BwdDir1_Dir2FwdDir2] = {0,3,2,1};
+            quadEdgeMap[StdRegions::eDir1BwdDir1_Dir2BwdDir2] = {2,3,0,1};
+            quadEdgeMap[StdRegions::eDir1FwdDir2_Dir2FwdDir1] = {3,2,1,0};
+            quadEdgeMap[StdRegions::eDir1FwdDir2_Dir2BwdDir1] = {1,2,3,0};
+            quadEdgeMap[StdRegions::eDir1BwdDir2_Dir2FwdDir1] = {3,0,1,2};
+            quadEdgeMap[StdRegions::eDir1BwdDir2_Dir2BwdDir1] = {1,0,3,2};
 
             map<StdRegions::Orientation, vector<int> > triVertMap;
-            triVertMap[StdRegions::eDir1FwdDir1_Dir2FwdDir2] += 0,1,2;
-            triVertMap[StdRegions::eDir1BwdDir1_Dir2FwdDir2] += 1,0,2;
+            triVertMap[StdRegions::eDir1FwdDir1_Dir2FwdDir2] = {0,1,2};
+            triVertMap[StdRegions::eDir1BwdDir1_Dir2FwdDir2] = {1,0,2};
 
             map<StdRegions::Orientation, vector<int> > triEdgeMap;
-            triEdgeMap[StdRegions::eDir1FwdDir1_Dir2FwdDir2] += 0,1,2;
-            triEdgeMap[StdRegions::eDir1BwdDir1_Dir2FwdDir2] += 0,2,1;
+            triEdgeMap[StdRegions::eDir1FwdDir1_Dir2FwdDir2] = {0,1,2};
+            triEdgeMap[StdRegions::eDir1BwdDir1_Dir2FwdDir2] = {0,2,1};
 
             vmap[3] = triVertMap;
             vmap[4] = quadVertMap;
@@ -1084,7 +1085,7 @@ using namespace boost::assign;
             // periodic composites to determine pairs of periodic faces.
             for (auto &cIt : perComps)
             {
-                SpatialDomains::Composite c[2];
+                SpatialDomains::CompositeSharedPtr c[2];
                 const int   id1  = cIt.first;
                 const int   id2  = cIt.second;
                 std::string id1s = boost::lexical_cast<string>(id1);
@@ -1887,10 +1888,6 @@ using namespace boost::assign;
                 int cnt;
                 int nbcs = 0;
 
-                SpatialDomains::MeshGraph3DSharedPtr graph3D = 
-                    std::dynamic_pointer_cast<SpatialDomains::MeshGraph3D>(
-                        m_graph);
-
                 // Populate global ID map (takes global geometry ID to local
                 // expansion list ID).
                 LocalRegions::Expansion3DSharedPtr exp3d;
@@ -1917,13 +1914,12 @@ using namespace boost::assign;
                     {
                         exp2d = m_bndCondExpansions[n]->GetExp(i)->
                                             as<LocalRegions::Expansion2D>();
-                        // Use face to element map from MeshGraph3D.
-                        SpatialDomains::ElementFaceVectorSharedPtr tmp = 
-                            graph3D->GetElementsFromFace(exp2d->GetGeom2D());
 
-                        m_BCtoElmMap[cnt] = globalIdMap[(*tmp)[0]->
-                                                  m_Element->GetGlobalID()];
-                        m_BCtoFaceMap[cnt] = (*tmp)[0]->m_FaceIndx;
+                        SpatialDomains::GeometryLinkSharedPtr tmp =
+                            m_graph->GetElementsFromFace(exp2d->GetGeom2D());
+                        m_BCtoElmMap[cnt] = globalIdMap[
+                            tmp->at(0).first->GetGlobalID()];
+                        m_BCtoFaceMap[cnt] = tmp->at(0).second;
                     }
                 }
             }
@@ -2003,6 +1999,7 @@ using namespace boost::assign;
                 const FlagList &flags,
                 const StdRegions::ConstFactorMap &factors,
                 const StdRegions::VarCoeffMap &varcoeff,
+                const MultiRegions::VarFactorsMap &varfactors,
                 const Array<OneD, const NekDouble> &dirForcing,
                 const bool PhysSpaceForcing)
         {

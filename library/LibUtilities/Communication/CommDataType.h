@@ -58,6 +58,7 @@ namespace LibUtilities
 {
 enum CommDataType
 {
+    MPI_CHAR,
     MPI_INT,
     MPI_UNSIGNED,
     MPI_LONG,

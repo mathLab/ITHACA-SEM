@@ -47,8 +47,11 @@ namespace Nektar
 
         /// Creates an instance of this class
         static EquationSystemSharedPtr create(
-                const LibUtilities::SessionReaderSharedPtr& pSession) {
-            EquationSystemSharedPtr p = MemoryManager<Poisson>::AllocateSharedPtr(pSession);
+            const LibUtilities::SessionReaderSharedPtr& pSession,
+            const SpatialDomains::MeshGraphSharedPtr& pGraph)
+        {
+            EquationSystemSharedPtr p = MemoryManager<Poisson>
+                ::AllocateSharedPtr(pSession, pGraph);
             p->InitObject();
             return p;
         }
@@ -59,7 +62,8 @@ namespace Nektar
         virtual ~Poisson();
 
     protected:
-        Poisson(const LibUtilities::SessionReaderSharedPtr& pSession);
+        Poisson(const LibUtilities::SessionReaderSharedPtr& pSession,
+                const SpatialDomains::MeshGraphSharedPtr& pGraph);
 
         virtual void v_InitObject();
 

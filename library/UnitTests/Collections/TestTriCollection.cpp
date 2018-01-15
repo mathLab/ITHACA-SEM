@@ -26,7 +26,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: 
+// Description:
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -45,7 +45,7 @@ namespace Nektar
 {
     namespace TriCollectionTests
     {
-        SpatialDomains::SegGeomSharedPtr CreateSegGeom(unsigned int id, 
+        SpatialDomains::SegGeomSharedPtr CreateSegGeom(unsigned int id,
                                                        SpatialDomains::PointGeomSharedPtr v0,
                                                        SpatialDomains::PointGeomSharedPtr v1)
         {
@@ -53,7 +53,7 @@ namespace Nektar
             SpatialDomains::SegGeomSharedPtr result(new SpatialDomains::SegGeom(id, 2, vertices));
             return result;
         }
-        
+
         SpatialDomains::TriGeomSharedPtr CreateTri(SpatialDomains::PointGeomSharedPtr   v0,
                                                      SpatialDomains::PointGeomSharedPtr v1,
                                                      SpatialDomains::PointGeomSharedPtr v2)
@@ -61,31 +61,24 @@ namespace Nektar
             Nektar::SpatialDomains::SegGeomSharedPtr e0 = CreateSegGeom(0, v0, v1);
             Nektar::SpatialDomains::SegGeomSharedPtr e1 = CreateSegGeom(1, v1, v2);
             Nektar::SpatialDomains::SegGeomSharedPtr e2 = CreateSegGeom(2, v2, v0);
-            
+
             Nektar::SpatialDomains::SegGeomSharedPtr edges[Nektar::SpatialDomains::TriGeom::kNedges] =
                 {
                     e0, e1, e2
                 };
-            
-            Nektar::StdRegions::Orientation edgeorient[Nektar::SpatialDomains::TriGeom::kNedges] =
-                {
-                    Nektar::SpatialDomains::SegGeom::GetEdgeOrientation(*edges[0], *edges[1]),
-                    Nektar::SpatialDomains::SegGeom::GetEdgeOrientation(*edges[1], *edges[2]),
-                    Nektar::SpatialDomains::SegGeom::GetEdgeOrientation(*edges[2], *edges[0]),
-                };
-            
-            SpatialDomains::TriGeomSharedPtr triGeom(new SpatialDomains::TriGeom(0,edges,edgeorient));
+
+            SpatialDomains::TriGeomSharedPtr triGeom(new SpatialDomains::TriGeom(0,edges));
             return triGeom;
         }
-        
+
         BOOST_AUTO_TEST_CASE(TestTriBwdTrans_StdMat_UniformP)
         {
             SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(2u, 0u, -1.0, -1.0, 0.0));
             SpatialDomains::PointGeomSharedPtr v1(new SpatialDomains::PointGeom(2u, 1u,  1.0, -1.0, 0.0));
             SpatialDomains::PointGeomSharedPtr v2(new SpatialDomains::PointGeom(2u, 2u, -1.0,  1.0, 0.0));
-            
+
             SpatialDomains::TriGeomSharedPtr triGeom = CreateTri(v0, v1, v2);
-            
+
             Nektar::LibUtilities::PointsType triPointsTypeDir1 = Nektar::LibUtilities::eGaussLobattoLegendre;
             const Nektar::LibUtilities::PointsKey triPointsKeyDir1(5, triPointsTypeDir1);
             Nektar::LibUtilities::BasisType       basisTypeDir1 = Nektar::LibUtilities::eModified_A;
@@ -95,15 +88,15 @@ namespace Nektar
             const Nektar::LibUtilities::PointsKey triPointsKeyDir2(5, triPointsTypeDir2);
             Nektar::LibUtilities::BasisType       basisTypeDir2 = Nektar::LibUtilities::eModified_B;
             const Nektar::LibUtilities::BasisKey  basisKeyDir2(basisTypeDir2,4,triPointsKeyDir2);
-            
-            Nektar::LocalRegions::TriExpSharedPtr Exp = 
+
+            Nektar::LocalRegions::TriExpSharedPtr Exp =
                 MemoryManager<Nektar::LocalRegions::TriExp>::AllocateSharedPtr(basisKeyDir1,
                 basisKeyDir2, triGeom);
 
             std::vector<StdRegions::StdExpansionSharedPtr> CollExp;
             CollExp.push_back(Exp);
-            
-            
+
+
             LibUtilities::SessionReaderSharedPtr dummySession;
             Collections::CollectionOptimisation colOpt(dummySession, Collections::eStdMat);
             Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(Exp);
@@ -113,7 +106,7 @@ namespace Nektar
             Array<OneD, NekDouble> coeffs(Exp->GetNcoeffs(), 1.0), tmp;
             Array<OneD, NekDouble> phys1(Exp->GetTotPoints());
             Array<OneD, NekDouble> phys2(Exp->GetTotPoints());
-            
+
 
             Exp->BwdTrans(coeffs, phys1);
             c.ApplyOperator(Collections::eBwdTrans, coeffs, phys2);
@@ -124,15 +117,15 @@ namespace Nektar
                 BOOST_CHECK_CLOSE(phys1[i],phys2[i], epsilon);
             }
         }
-        
+
         BOOST_AUTO_TEST_CASE(TestTriBwdTrans_StdMat_VariableP)
         {
             SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(2u, 0u, -1.0, -1.0, 0.0));
             SpatialDomains::PointGeomSharedPtr v1(new SpatialDomains::PointGeom(2u, 1u,  1.0, -1.0, 0.0));
             SpatialDomains::PointGeomSharedPtr v2(new SpatialDomains::PointGeom(2u, 2u, -1.0,  1.0, 0.0));
-            
+
             SpatialDomains::TriGeomSharedPtr triGeom = CreateTri(v0, v1, v2);
-            
+
             Nektar::LibUtilities::PointsType triPointsTypeDir1 = Nektar::LibUtilities::eGaussLobattoLegendre;
             const Nektar::LibUtilities::PointsKey triPointsKeyDir1(5, triPointsTypeDir1);
             Nektar::LibUtilities::BasisType       basisTypeDir1 = Nektar::LibUtilities::eModified_A;
@@ -143,14 +136,14 @@ namespace Nektar
             Nektar::LibUtilities::BasisType       basisTypeDir2 = Nektar::LibUtilities::eModified_B;
             const Nektar::LibUtilities::BasisKey  basisKeyDir2(basisTypeDir2,6,triPointsKeyDir2);
 
-            Nektar::LocalRegions::TriExpSharedPtr Exp = 
+            Nektar::LocalRegions::TriExpSharedPtr Exp =
                 MemoryManager<Nektar::LocalRegions::TriExp>::AllocateSharedPtr(basisKeyDir1,
                 basisKeyDir2, triGeom);
 
             std::vector<StdRegions::StdExpansionSharedPtr> CollExp;
             CollExp.push_back(Exp);
 
-            
+
             LibUtilities::SessionReaderSharedPtr dummySession;
             Collections::CollectionOptimisation colOpt(dummySession, Collections::eStdMat);
             Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(Exp);
@@ -170,17 +163,17 @@ namespace Nektar
                 BOOST_CHECK_CLOSE(phys1[i],phys2[i], epsilon);
             }
         }
- 
 
-        
+
+
         BOOST_AUTO_TEST_CASE(TestTriBwdTrans_StdMat_VariableP_MultiElmt)
         {
             SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(2u, 0u, -1.0, -1.0, 0.0));
             SpatialDomains::PointGeomSharedPtr v1(new SpatialDomains::PointGeom(2u, 1u,  1.0, -1.0, 0.0));
             SpatialDomains::PointGeomSharedPtr v2(new SpatialDomains::PointGeom(2u, 2u, -1.0,  1.0, 0.0));
-            
+
             SpatialDomains::TriGeomSharedPtr triGeom = CreateTri(v0, v1, v2);
-            
+
             Nektar::LibUtilities::PointsType triPointsTypeDir1 = Nektar::LibUtilities::eGaussLobattoLegendre;
             const Nektar::LibUtilities::PointsKey triPointsKeyDir1(5, triPointsTypeDir1);
             Nektar::LibUtilities::BasisType       basisTypeDir1 = Nektar::LibUtilities::eModified_A;
@@ -190,20 +183,20 @@ namespace Nektar
             const Nektar::LibUtilities::PointsKey triPointsKeyDir2(7, triPointsTypeDir2);
             Nektar::LibUtilities::BasisType       basisTypeDir2 = Nektar::LibUtilities::eModified_B;
             const Nektar::LibUtilities::BasisKey  basisKeyDir2(basisTypeDir2,6,triPointsKeyDir2);
-            
-            Nektar::LocalRegions::TriExpSharedPtr Exp = 
+
+            Nektar::LocalRegions::TriExpSharedPtr Exp =
                 MemoryManager<Nektar::LocalRegions::TriExp>::AllocateSharedPtr(basisKeyDir1,
                 basisKeyDir2, triGeom);
 
             int nelmts = 10;
-            
+
             std::vector<StdRegions::StdExpansionSharedPtr> CollExp;
             for(int i = 0; i < nelmts; ++i)
             {
                 CollExp.push_back(Exp);
             }
 
-            
+
             LibUtilities::SessionReaderSharedPtr dummySession;
             Collections::CollectionOptimisation colOpt(dummySession, Collections::eStdMat);
             Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(Exp);
@@ -213,7 +206,7 @@ namespace Nektar
             Array<OneD, NekDouble> coeffs(nelmts*Exp->GetNcoeffs(), 1.0), tmp;
             Array<OneD, NekDouble> phys1(nelmts*Exp->GetTotPoints());
             Array<OneD, NekDouble> phys2(nelmts*Exp->GetTotPoints());
-            
+
             for(int i = 0; i < nelmts; ++i)
             {
                 Exp->BwdTrans(coeffs + i*Exp->GetNcoeffs(), tmp = phys1+i*Exp->GetTotPoints());
@@ -227,16 +220,16 @@ namespace Nektar
                 BOOST_CHECK_CLOSE(phys1[i],phys2[i], epsilon);
             }
         }
- 
+
 
         BOOST_AUTO_TEST_CASE(TestTriBwdTrans_IterPerExp_UniformP)
         {
             SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(2u, 0u, -1.0, -1.0, 0.0));
             SpatialDomains::PointGeomSharedPtr v1(new SpatialDomains::PointGeom(2u, 1u,  1.0, -1.0, 0.0));
             SpatialDomains::PointGeomSharedPtr v2(new SpatialDomains::PointGeom(2u, 2u, -1.0,  1.0, 0.0));
-            
+
             SpatialDomains::TriGeomSharedPtr triGeom = CreateTri(v0, v1, v2);
-            
+
             Nektar::LibUtilities::PointsType triPointsTypeDir1 = Nektar::LibUtilities::eGaussLobattoLegendre;
             const Nektar::LibUtilities::PointsKey triPointsKeyDir1(5, triPointsTypeDir1);
             Nektar::LibUtilities::BasisType       basisTypeDir1 = Nektar::LibUtilities::eModified_A;
@@ -246,14 +239,14 @@ namespace Nektar
             const Nektar::LibUtilities::PointsKey triPointsKeyDir2(5, triPointsTypeDir2);
             Nektar::LibUtilities::BasisType       basisTypeDir2 = Nektar::LibUtilities::eModified_B;
             const Nektar::LibUtilities::BasisKey  basisKeyDir2(basisTypeDir2,4,triPointsKeyDir2);
-            
-            Nektar::LocalRegions::TriExpSharedPtr Exp = 
+
+            Nektar::LocalRegions::TriExpSharedPtr Exp =
                 MemoryManager<Nektar::LocalRegions::TriExp>::AllocateSharedPtr(basisKeyDir1,
                 basisKeyDir2, triGeom);
 
             std::vector<StdRegions::StdExpansionSharedPtr> CollExp;
             CollExp.push_back(Exp);
-            
+
             LibUtilities::SessionReaderSharedPtr dummySession;
             Collections::CollectionOptimisation colOpt(dummySession, Collections::eIterPerExp);
             Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(Exp);
@@ -263,7 +256,7 @@ namespace Nektar
             Array<OneD, NekDouble> coeffs(Exp->GetNcoeffs(), 1.0), tmp;
             Array<OneD, NekDouble> phys1(Exp->GetTotPoints());
             Array<OneD, NekDouble> phys2(Exp->GetTotPoints());
-            
+
 
             Exp->BwdTrans(coeffs, phys1);
             c.ApplyOperator(Collections::eBwdTrans, coeffs, phys2);
@@ -274,16 +267,16 @@ namespace Nektar
                 BOOST_CHECK_CLOSE(phys1[i],phys2[i], epsilon);
             }
         }
-        
+
         BOOST_AUTO_TEST_CASE(TestTriBwdTrans_IterPerExp_VariableP)
         {
             SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(2u, 0u, -1.0, -1.0, 0.0));
             SpatialDomains::PointGeomSharedPtr v1(new SpatialDomains::PointGeom(2u, 1u,  1.0, -1.0, 0.0));
             SpatialDomains::PointGeomSharedPtr v2(new SpatialDomains::PointGeom(2u, 2u, -1.0,  1.0, 0.0));
-            
+
             SpatialDomains::TriGeomSharedPtr triGeom = CreateTri(v0, v1, v2);
-            
-            
+
+
             Nektar::LibUtilities::PointsType triPointsTypeDir1 = Nektar::LibUtilities::eGaussLobattoLegendre;
             const Nektar::LibUtilities::PointsKey triPointsKeyDir1(5, triPointsTypeDir1);
             Nektar::LibUtilities::BasisType       basisTypeDir1 = Nektar::LibUtilities::eModified_A;
@@ -293,8 +286,8 @@ namespace Nektar
             const Nektar::LibUtilities::PointsKey triPointsKeyDir2(7, triPointsTypeDir2);
             Nektar::LibUtilities::BasisType       basisTypeDir2 = Nektar::LibUtilities::eModified_B;
             const Nektar::LibUtilities::BasisKey  basisKeyDir2(basisTypeDir2,6,triPointsKeyDir2);
-            
-            Nektar::LocalRegions::TriExpSharedPtr Exp = 
+
+            Nektar::LocalRegions::TriExpSharedPtr Exp =
                 MemoryManager<Nektar::LocalRegions::TriExp>::AllocateSharedPtr(basisKeyDir1,
                 basisKeyDir2, triGeom);
 
@@ -310,7 +303,7 @@ namespace Nektar
             Array<OneD, NekDouble> coeffs(Exp->GetNcoeffs(), 1.0), tmp;
             Array<OneD, NekDouble> phys1(Exp->GetTotPoints());
             Array<OneD, NekDouble> phys2(Exp->GetTotPoints());
-            
+
 
             Exp->BwdTrans(coeffs, phys1);
             c.ApplyOperator(Collections::eBwdTrans, coeffs, phys2);
@@ -321,15 +314,15 @@ namespace Nektar
                 BOOST_CHECK_CLOSE(phys1[i],phys2[i], epsilon);
             }
         }
-        
+
         BOOST_AUTO_TEST_CASE(TestTriBwdTrans_SumFac_UniformP)
         {
             SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(2u, 0u, -1.0, -1.0, 0.0));
             SpatialDomains::PointGeomSharedPtr v1(new SpatialDomains::PointGeom(2u, 1u,  1.0, -1.0, 0.0));
             SpatialDomains::PointGeomSharedPtr v2(new SpatialDomains::PointGeom(2u, 2u, -1.0,  1.0, 0.0));
-            
+
             SpatialDomains::TriGeomSharedPtr triGeom = CreateTri(v0, v1, v2);
-            
+
             Nektar::LibUtilities::PointsType triPointsTypeDir1 = Nektar::LibUtilities::eGaussLobattoLegendre;
             const Nektar::LibUtilities::PointsKey triPointsKeyDir1(5, triPointsTypeDir1);
             Nektar::LibUtilities::BasisType       basisTypeDir1 = Nektar::LibUtilities::eModified_A;
@@ -339,8 +332,8 @@ namespace Nektar
             const Nektar::LibUtilities::PointsKey triPointsKeyDir2(5, triPointsTypeDir2);
             Nektar::LibUtilities::BasisType       basisTypeDir2 = Nektar::LibUtilities::eModified_B;
             const Nektar::LibUtilities::BasisKey  basisKeyDir2(basisTypeDir2,4,triPointsKeyDir2);
-            
-            Nektar::LocalRegions::TriExpSharedPtr Exp = 
+
+            Nektar::LocalRegions::TriExpSharedPtr Exp =
                 MemoryManager<Nektar::LocalRegions::TriExp>::AllocateSharedPtr(basisKeyDir1,
                 basisKeyDir2, triGeom);
 
@@ -351,7 +344,7 @@ namespace Nektar
             {
                 CollExp.push_back(Exp);
             }
-            
+
             LibUtilities::SessionReaderSharedPtr dummySession;
             Collections::CollectionOptimisation colOpt(dummySession, Collections::eSumFac);
             Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(Exp);
@@ -361,7 +354,7 @@ namespace Nektar
             Array<OneD, NekDouble> coeffs(nelmts*Exp->GetNcoeffs(), 1.0), tmp;
             Array<OneD, NekDouble> phys1(nelmts*Exp->GetTotPoints());
             Array<OneD, NekDouble> phys2(nelmts*Exp->GetTotPoints());
-            
+
             for(int i = 0; i < nelmts; ++i)
             {
                 Exp->BwdTrans(coeffs + i*Exp->GetNcoeffs(), tmp = phys1+i*Exp->GetTotPoints());
@@ -380,9 +373,9 @@ namespace Nektar
             SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(2u, 0u, -1.0, -1.0, 0.0));
             SpatialDomains::PointGeomSharedPtr v1(new SpatialDomains::PointGeom(2u, 1u,  1.0, -1.0, 0.0));
             SpatialDomains::PointGeomSharedPtr v2(new SpatialDomains::PointGeom(2u, 2u, -1.0,  1.0, 0.0));
-            
+
             SpatialDomains::TriGeomSharedPtr triGeom = CreateTri(v0, v1, v2);
-            
+
             Nektar::LibUtilities::PointsType triPointsTypeDir1 = Nektar::LibUtilities::eGaussLobattoLegendre;
             const Nektar::LibUtilities::PointsKey triPointsKeyDir1(5, triPointsTypeDir1);
             Nektar::LibUtilities::BasisType       basisTypeDir1 = Nektar::LibUtilities::eModified_A;
@@ -392,19 +385,19 @@ namespace Nektar
             const Nektar::LibUtilities::PointsKey triPointsKeyDir2(5, triPointsTypeDir2);
             Nektar::LibUtilities::BasisType       basisTypeDir2 = Nektar::LibUtilities::eModified_B;
             const Nektar::LibUtilities::BasisKey  basisKeyDir2(basisTypeDir2,4,triPointsKeyDir2);
-            
-            Nektar::LocalRegions::TriExpSharedPtr Exp = 
+
+            Nektar::LocalRegions::TriExpSharedPtr Exp =
                 MemoryManager<Nektar::LocalRegions::TriExp>::AllocateSharedPtr(basisKeyDir1,
                 basisKeyDir2, triGeom);
 
             std::vector<StdRegions::StdExpansionSharedPtr> CollExp;
-            
+
             int nelmts = 10;
             for(int i = 0; i < nelmts; ++i)
             {
                 CollExp.push_back(Exp);
             }
-            
+
             LibUtilities::SessionReaderSharedPtr dummySession;
             Collections::CollectionOptimisation colOpt(dummySession, Collections::eSumFac);
             Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(Exp);
@@ -414,7 +407,7 @@ namespace Nektar
             Array<OneD, NekDouble> coeffs(nelmts*Exp->GetNcoeffs(), 1.0), tmp;
             Array<OneD, NekDouble> phys1(nelmts*Exp->GetTotPoints());
             Array<OneD, NekDouble> phys2(nelmts*Exp->GetTotPoints());
-            
+
             for(int i = 0; i < nelmts; ++i)
             {
                 Exp->BwdTrans(coeffs + i*Exp->GetNcoeffs(), tmp = phys1+i*Exp->GetTotPoints());
@@ -434,10 +427,10 @@ namespace Nektar
             SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(2u, 0u, -1.0, -1.0, 0.0));
             SpatialDomains::PointGeomSharedPtr v1(new SpatialDomains::PointGeom(2u, 1u,  1.0, -1.0, 0.0));
             SpatialDomains::PointGeomSharedPtr v2(new SpatialDomains::PointGeom(2u, 2u, -1.0,  1.0, 0.0));
-            
+
             SpatialDomains::TriGeomSharedPtr triGeom = CreateTri(v0, v1, v2);
-            
-            
+
+
             Nektar::LibUtilities::PointsType triPointsTypeDir1 = Nektar::LibUtilities::eGaussLobattoLegendre;
             const Nektar::LibUtilities::PointsKey triPointsKeyDir1(5, triPointsTypeDir1);
             Nektar::LibUtilities::BasisType       basisTypeDir1 = Nektar::LibUtilities::eModified_A;
@@ -447,19 +440,19 @@ namespace Nektar
             const Nektar::LibUtilities::PointsKey triPointsKeyDir2(7, triPointsTypeDir2);
             Nektar::LibUtilities::BasisType       basisTypeDir2 = Nektar::LibUtilities::eModified_B;
             const Nektar::LibUtilities::BasisKey  basisKeyDir2(basisTypeDir2,6,triPointsKeyDir2);
-            
-            Nektar::LocalRegions::TriExpSharedPtr Exp = 
+
+            Nektar::LocalRegions::TriExpSharedPtr Exp =
                 MemoryManager<Nektar::LocalRegions::TriExp>::AllocateSharedPtr(basisKeyDir1,
                 basisKeyDir2, triGeom);
 
             int nelmts = 1;
-            
+
             std::vector<StdRegions::StdExpansionSharedPtr> CollExp;
             for(int i = 0; i < nelmts; ++i)
             {
                 CollExp.push_back(Exp);
             }
-            
+
             LibUtilities::SessionReaderSharedPtr dummySession;
             Collections::CollectionOptimisation colOpt(dummySession, Collections::eSumFac);
             Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(Exp);
@@ -469,7 +462,7 @@ namespace Nektar
             Array<OneD, NekDouble> coeffs(nelmts*Exp->GetNcoeffs(), 1.0), tmp;
             Array<OneD, NekDouble> phys1(nelmts*Exp->GetTotPoints());
             Array<OneD, NekDouble> phys2(nelmts*Exp->GetTotPoints());
-            
+
             for(int i = 0; i < nelmts; ++i)
             {
                 Exp->BwdTrans(coeffs + i*Exp->GetNcoeffs(), tmp = phys1+i*Exp->GetTotPoints());
@@ -488,9 +481,9 @@ namespace Nektar
             SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(2u, 0u, -1.0, -1.0, 0.0));
             SpatialDomains::PointGeomSharedPtr v1(new SpatialDomains::PointGeom(2u, 1u,  1.0, -1.0, 0.0));
             SpatialDomains::PointGeomSharedPtr v2(new SpatialDomains::PointGeom(2u, 2u, -1.0,  1.0, 0.0));
-            
+
             SpatialDomains::TriGeomSharedPtr triGeom = CreateTri(v0, v1, v2);
-            
+
             Nektar::LibUtilities::PointsType triPointsTypeDir1 = Nektar::LibUtilities::eGaussLobattoLegendre;
             const Nektar::LibUtilities::PointsKey triPointsKeyDir1(5, triPointsTypeDir1);
             Nektar::LibUtilities::BasisType       basisTypeDir1 = Nektar::LibUtilities::eModified_A;
@@ -500,19 +493,19 @@ namespace Nektar
             const Nektar::LibUtilities::PointsKey triPointsKeyDir2(7, triPointsTypeDir2);
             Nektar::LibUtilities::BasisType       basisTypeDir2 = Nektar::LibUtilities::eModified_B;
             const Nektar::LibUtilities::BasisKey  basisKeyDir2(basisTypeDir2,6,triPointsKeyDir2);
-            
-            Nektar::LocalRegions::TriExpSharedPtr Exp = 
+
+            Nektar::LocalRegions::TriExpSharedPtr Exp =
                 MemoryManager<Nektar::LocalRegions::TriExp>::AllocateSharedPtr(basisKeyDir1,
                 basisKeyDir2, triGeom);
 
             int nelmts = 10;
-            
+
             std::vector<StdRegions::StdExpansionSharedPtr> CollExp;
             for(int i = 0; i < nelmts; ++i)
             {
                 CollExp.push_back(Exp);
             }
-            
+
             LibUtilities::SessionReaderSharedPtr dummySession;
             Collections::CollectionOptimisation colOpt(dummySession, Collections::eSumFac);
             Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(Exp);
@@ -521,7 +514,7 @@ namespace Nektar
             Array<OneD, NekDouble> coeffs(nelmts*Exp->GetNcoeffs(), 1.0), tmp;
             Array<OneD, NekDouble> phys1(nelmts*Exp->GetTotPoints());
             Array<OneD, NekDouble> phys2(nelmts*Exp->GetTotPoints());
-            
+
             for(int i = 0; i < nelmts; ++i)
             {
                 Exp->BwdTrans(coeffs + i*Exp->GetNcoeffs(), tmp = phys1+i*Exp->GetTotPoints());
@@ -541,9 +534,9 @@ namespace Nektar
             SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(2u, 0u, -1.0, -1.0, 0.0));
             SpatialDomains::PointGeomSharedPtr v1(new SpatialDomains::PointGeom(2u, 1u,  1.0, -1.0, 0.0));
             SpatialDomains::PointGeomSharedPtr v2(new SpatialDomains::PointGeom(2u, 2u, -1.0,  1.0, 0.0));
-            
+
             SpatialDomains::TriGeomSharedPtr triGeom = CreateTri(v0, v1, v2);
-            
+
             Nektar::LibUtilities::PointsType triPointsTypeDir1 = Nektar::LibUtilities::eGaussLobattoLegendre;
             const Nektar::LibUtilities::PointsKey triPointsKeyDir1(5, triPointsTypeDir1);
             Nektar::LibUtilities::BasisType       basisTypeDir1 = Nektar::LibUtilities::eModified_A;
@@ -553,15 +546,15 @@ namespace Nektar
             const Nektar::LibUtilities::PointsKey triPointsKeyDir2(5, triPointsTypeDir2);
             Nektar::LibUtilities::BasisType       basisTypeDir2 = Nektar::LibUtilities::eModified_B;
             const Nektar::LibUtilities::BasisKey  basisKeyDir2(basisTypeDir2,4,triPointsKeyDir2);
-            
-            Nektar::LocalRegions::TriExpSharedPtr Exp = 
+
+            Nektar::LocalRegions::TriExpSharedPtr Exp =
                 MemoryManager<Nektar::LocalRegions::TriExp>::AllocateSharedPtr(basisKeyDir1,
                 basisKeyDir2, triGeom);
 
             std::vector<StdRegions::StdExpansionSharedPtr> CollExp;
             CollExp.push_back(Exp);
 
-            
+
             LibUtilities::SessionReaderSharedPtr dummySession;
             Collections::CollectionOptimisation colOpt(dummySession, Collections::eStdMat);
             Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(Exp);
@@ -574,9 +567,9 @@ namespace Nektar
             Array<OneD, NekDouble> coeffs2(Exp->GetNcoeffs());
 
             Array<OneD, NekDouble> xc(nq), yc(nq);
-            
+
             Exp->GetCoords(xc, yc);
-        
+
             for (int i = 0; i < nq; ++i)
             {
                 phys[i] = sin(xc[i])*cos(yc[i]);
@@ -597,9 +590,9 @@ namespace Nektar
             SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(2u, 0u, -1.0, -1.0, 0.0));
             SpatialDomains::PointGeomSharedPtr v1(new SpatialDomains::PointGeom(2u, 1u,  1.0, -1.0, 0.0));
             SpatialDomains::PointGeomSharedPtr v2(new SpatialDomains::PointGeom(2u, 2u, -1.0,  1.0, 0.0));
-            
+
             SpatialDomains::TriGeomSharedPtr triGeom = CreateTri(v0, v1, v2);
-            
+
             Nektar::LibUtilities::PointsType triPointsTypeDir1 = Nektar::LibUtilities::eGaussLobattoLegendre;
             const Nektar::LibUtilities::PointsKey triPointsKeyDir1(5, triPointsTypeDir1);
             Nektar::LibUtilities::BasisType       basisTypeDir1 = Nektar::LibUtilities::eModified_A;
@@ -610,14 +603,14 @@ namespace Nektar
             Nektar::LibUtilities::BasisType       basisTypeDir2 = Nektar::LibUtilities::eModified_B;
             const Nektar::LibUtilities::BasisKey  basisKeyDir2(basisTypeDir2,6,triPointsKeyDir2);
 
-            Nektar::LocalRegions::TriExpSharedPtr Exp = 
+            Nektar::LocalRegions::TriExpSharedPtr Exp =
                 MemoryManager<Nektar::LocalRegions::TriExp>::AllocateSharedPtr(basisKeyDir1,
                 basisKeyDir2, triGeom);
 
             std::vector<StdRegions::StdExpansionSharedPtr> CollExp;
             CollExp.push_back(Exp);
-            
-            
+
+
             LibUtilities::SessionReaderSharedPtr dummySession;
             Collections::CollectionOptimisation colOpt(dummySession, Collections::eStdMat);
             Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(Exp);
@@ -630,9 +623,9 @@ namespace Nektar
             Array<OneD, NekDouble> coeffs2(Exp->GetNcoeffs());
 
             Array<OneD, NekDouble> xc(nq), yc(nq);
-            
+
             Exp->GetCoords(xc, yc);
-        
+
             for (int i = 0; i < nq; ++i)
             {
                 phys[i] = sin(xc[i])*cos(yc[i]);
@@ -646,16 +639,16 @@ namespace Nektar
             {
                 BOOST_CHECK_CLOSE(coeffs1[i],coeffs2[i], epsilon);
             }
-        }        
+        }
 
         BOOST_AUTO_TEST_CASE(TestTriIProductWRTBase_StdMat_VariableP_MultiElmt)
         {
             SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(2u, 0u, -1.0, -1.0, 0.0));
             SpatialDomains::PointGeomSharedPtr v1(new SpatialDomains::PointGeom(2u, 1u,  1.0, -1.0, 0.0));
             SpatialDomains::PointGeomSharedPtr v2(new SpatialDomains::PointGeom(2u, 2u, -1.0,  1.0, 0.0));
-            
+
             SpatialDomains::TriGeomSharedPtr triGeom = CreateTri(v0, v1, v2);
-            
+
             Nektar::LibUtilities::PointsType triPointsTypeDir1 = Nektar::LibUtilities::eGaussLobattoLegendre;
             const Nektar::LibUtilities::PointsKey triPointsKeyDir1(5, triPointsTypeDir1);
             Nektar::LibUtilities::BasisType       basisTypeDir1 = Nektar::LibUtilities::eModified_A;
@@ -665,21 +658,21 @@ namespace Nektar
             const Nektar::LibUtilities::PointsKey triPointsKeyDir2(7, triPointsTypeDir2);
             Nektar::LibUtilities::BasisType       basisTypeDir2 = Nektar::LibUtilities::eModified_B;
             const Nektar::LibUtilities::BasisKey  basisKeyDir2(basisTypeDir2,6,triPointsKeyDir2);
-            
-            Nektar::LocalRegions::TriExpSharedPtr Exp = 
+
+            Nektar::LocalRegions::TriExpSharedPtr Exp =
                 MemoryManager<Nektar::LocalRegions::TriExp>::AllocateSharedPtr(basisKeyDir1,
                 basisKeyDir2, triGeom);
 
             int nelmts = 10;
-            
+
             std::vector<StdRegions::StdExpansionSharedPtr> CollExp;
             for(int i = 0; i < nelmts; ++i)
             {
                 CollExp.push_back(Exp);
             }
-            
-            
-            
+
+
+
             LibUtilities::SessionReaderSharedPtr dummySession;
             Collections::CollectionOptimisation colOpt(dummySession, Collections::eStdMat);
             Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(Exp);
@@ -692,9 +685,9 @@ namespace Nektar
             Array<OneD, NekDouble> coeffs2(nelmts*Exp->GetNcoeffs());
 
             Array<OneD, NekDouble> xc(nq), yc(nq);
-            
+
             Exp->GetCoords(xc, yc);
-        
+
             for (int i = 0; i < nq; ++i)
             {
                 phys[i] = sin(xc[i])*cos(yc[i]);
@@ -714,16 +707,16 @@ namespace Nektar
             {
                 BOOST_CHECK_CLOSE(coeffs1[i],coeffs2[i], epsilon);
             }
-        }        
+        }
 
         BOOST_AUTO_TEST_CASE(TestTriIProductWRTBase_SumFac_UniformP)
         {
             SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(2u, 0u, -1.0, -1.0, 0.0));
             SpatialDomains::PointGeomSharedPtr v1(new SpatialDomains::PointGeom(2u, 1u,  1.0, -1.0, 0.0));
             SpatialDomains::PointGeomSharedPtr v2(new SpatialDomains::PointGeom(2u, 2u, -1.0,  1.0, 0.0));
-            
+
             SpatialDomains::TriGeomSharedPtr triGeom = CreateTri(v0, v1, v2);
-            
+
             Nektar::LibUtilities::PointsType triPointsTypeDir1 = Nektar::LibUtilities::eGaussLobattoLegendre;
             const Nektar::LibUtilities::PointsKey triPointsKeyDir1(5, triPointsTypeDir1);
             Nektar::LibUtilities::BasisType       basisTypeDir1 = Nektar::LibUtilities::eModified_A;
@@ -733,8 +726,8 @@ namespace Nektar
             const Nektar::LibUtilities::PointsKey triPointsKeyDir2(5, triPointsTypeDir2);
             Nektar::LibUtilities::BasisType       basisTypeDir2 = Nektar::LibUtilities::eModified_B;
             const Nektar::LibUtilities::BasisKey  basisKeyDir2(basisTypeDir2,4,triPointsKeyDir2);
-            
-            Nektar::LocalRegions::TriExpSharedPtr Exp = 
+
+            Nektar::LocalRegions::TriExpSharedPtr Exp =
                 MemoryManager<Nektar::LocalRegions::TriExp>::AllocateSharedPtr(basisKeyDir1,
                 basisKeyDir2, triGeom);
 
@@ -752,9 +745,9 @@ namespace Nektar
             Array<OneD, NekDouble> coeffs2(Exp->GetNcoeffs());
 
             Array<OneD, NekDouble> xc(nq), yc(nq);
-            
+
             Exp->GetCoords(xc, yc);
-        
+
             for (int i = 0; i < nq; ++i)
             {
                 phys[i] = sin(xc[i])*cos(yc[i]);
@@ -776,9 +769,9 @@ namespace Nektar
             SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(2u, 0u, -1.0, -1.0, 0.0));
             SpatialDomains::PointGeomSharedPtr v1(new SpatialDomains::PointGeom(2u, 1u,  1.0, -1.0, 0.0));
             SpatialDomains::PointGeomSharedPtr v2(new SpatialDomains::PointGeom(2u, 2u, -1.0,  1.0, 0.0));
-            
+
             SpatialDomains::TriGeomSharedPtr triGeom = CreateTri(v0, v1, v2);
-            
+
             Nektar::LibUtilities::PointsType triPointsTypeDir1 = Nektar::LibUtilities::eGaussLobattoLegendre;
             const Nektar::LibUtilities::PointsKey triPointsKeyDir1(5, triPointsTypeDir1);
             Nektar::LibUtilities::BasisType       basisTypeDir1 = Nektar::LibUtilities::eModified_A;
@@ -788,8 +781,8 @@ namespace Nektar
             const Nektar::LibUtilities::PointsKey triPointsKeyDir2(7, triPointsTypeDir2);
             Nektar::LibUtilities::BasisType       basisTypeDir2 = Nektar::LibUtilities::eModified_B;
             const Nektar::LibUtilities::BasisKey  basisKeyDir2(basisTypeDir2,6,triPointsKeyDir2);
-            
-            Nektar::LocalRegions::TriExpSharedPtr Exp = 
+
+            Nektar::LocalRegions::TriExpSharedPtr Exp =
                 MemoryManager<Nektar::LocalRegions::TriExp>::AllocateSharedPtr(basisKeyDir1,
                 basisKeyDir2, triGeom);
 
@@ -807,9 +800,9 @@ namespace Nektar
             Array<OneD, NekDouble> coeffs2(Exp->GetNcoeffs());
 
             Array<OneD, NekDouble> xc(nq), yc(nq);
-            
+
             Exp->GetCoords(xc, yc);
-        
+
             for (int i = 0; i < nq; ++i)
             {
                 phys[i] = sin(xc[i])*cos(yc[i]);
@@ -831,9 +824,9 @@ namespace Nektar
             SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(2u, 0u, -1.0, -1.0, 0.0));
             SpatialDomains::PointGeomSharedPtr v1(new SpatialDomains::PointGeom(2u, 1u,  1.0, -1.0, 0.0));
             SpatialDomains::PointGeomSharedPtr v2(new SpatialDomains::PointGeom(2u, 2u, -1.0,  1.0, 0.0));
-            
+
             SpatialDomains::TriGeomSharedPtr triGeom = CreateTri(v0, v1, v2);
-            
+
             Nektar::LibUtilities::PointsType triPointsTypeDir1 = Nektar::LibUtilities::eGaussLobattoLegendre;
             const Nektar::LibUtilities::PointsKey triPointsKeyDir1(5, triPointsTypeDir1);
             Nektar::LibUtilities::BasisType       basisTypeDir1 = Nektar::LibUtilities::eModified_A;
@@ -843,20 +836,20 @@ namespace Nektar
             const Nektar::LibUtilities::PointsKey triPointsKeyDir2(7, triPointsTypeDir2);
             Nektar::LibUtilities::BasisType       basisTypeDir2 = Nektar::LibUtilities::eModified_B;
             const Nektar::LibUtilities::BasisKey  basisKeyDir2(basisTypeDir2,6,triPointsKeyDir2);
-            
-            Nektar::LocalRegions::TriExpSharedPtr Exp = 
+
+            Nektar::LocalRegions::TriExpSharedPtr Exp =
                 MemoryManager<Nektar::LocalRegions::TriExp>::AllocateSharedPtr(basisKeyDir1,
                 basisKeyDir2, triGeom);
 
             int nelmts = 10;
-            
+
             std::vector<StdRegions::StdExpansionSharedPtr> CollExp;
             for(int i = 0; i < nelmts; ++i)
             {
                 CollExp.push_back(Exp);
             }
-            
-            
+
+
             LibUtilities::SessionReaderSharedPtr dummySession;
             Collections::CollectionOptimisation colOpt(dummySession, Collections::eSumFac);
             Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(Exp);
@@ -868,9 +861,9 @@ namespace Nektar
             Array<OneD, NekDouble> coeffs2(nelmts*Exp->GetNcoeffs());
 
             Array<OneD, NekDouble> xc(nq), yc(nq);
-            
+
             Exp->GetCoords(xc, yc);
-        
+
             for (int i = 0; i < nq; ++i)
             {
                 phys[i] = sin(xc[i])*cos(yc[i]);
@@ -890,16 +883,16 @@ namespace Nektar
             {
                 BOOST_CHECK_CLOSE(coeffs1[i],coeffs2[i], epsilon);
             }
-        }        
+        }
 
         BOOST_AUTO_TEST_CASE(TestTriPhysDeriv_IterPerExp_UniformP)
         {
             SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(2u, 0u, -1.5, -1.5, 0.0));
             SpatialDomains::PointGeomSharedPtr v1(new SpatialDomains::PointGeom(2u, 1u,  1.0, -1.0, 0.0));
             SpatialDomains::PointGeomSharedPtr v2(new SpatialDomains::PointGeom(2u, 2u, -1.0,  1.0, 0.0));
-            
+
             SpatialDomains::TriGeomSharedPtr triGeom = CreateTri(v0, v1, v2);
-            
+
             Nektar::LibUtilities::PointsType triPointsTypeDir1 = Nektar::LibUtilities::eGaussLobattoLegendre;
             const Nektar::LibUtilities::PointsKey triPointsKeyDir1(5, triPointsTypeDir1);
             Nektar::LibUtilities::BasisType       basisTypeDir1 = Nektar::LibUtilities::eModified_A;
@@ -909,14 +902,14 @@ namespace Nektar
             const Nektar::LibUtilities::PointsKey triPointsKeyDir2(5, triPointsTypeDir2);
             Nektar::LibUtilities::BasisType       basisTypeDir2 = Nektar::LibUtilities::eModified_B;
             const Nektar::LibUtilities::BasisKey  basisKeyDir2(basisTypeDir2,4,triPointsKeyDir2);
-            
-            Nektar::LocalRegions::TriExpSharedPtr Exp = 
+
+            Nektar::LocalRegions::TriExpSharedPtr Exp =
                 MemoryManager<Nektar::LocalRegions::TriExp>::AllocateSharedPtr(basisKeyDir1,
                 basisKeyDir2, triGeom);
 
             std::vector<StdRegions::StdExpansionSharedPtr> CollExp;
             CollExp.push_back(Exp);
-            
+
             LibUtilities::SessionReaderSharedPtr dummySession;
             Collections::CollectionOptimisation colOpt(dummySession, Collections::eIterPerExp);
             Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(Exp);
@@ -928,9 +921,9 @@ namespace Nektar
             Array<OneD, NekDouble> phys(nq),tmp,tmp1;
             Array<OneD, NekDouble> diff1(2*nq);
             Array<OneD, NekDouble> diff2(2*nq);
-            
+
             Exp->GetCoords(xc, yc);
-        
+
             for (int i = 0; i < nq; ++i)
             {
                 phys[i] = sin(xc[i])*cos(yc[i]);
@@ -952,9 +945,9 @@ namespace Nektar
             SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(2u, 0u, -1.5, -1.5, 0.0));
             SpatialDomains::PointGeomSharedPtr v1(new SpatialDomains::PointGeom(2u, 1u,  1.0, -1.0, 0.0));
             SpatialDomains::PointGeomSharedPtr v2(new SpatialDomains::PointGeom(2u, 2u, -1.0,  1.0, 0.0));
-            
+
             SpatialDomains::TriGeomSharedPtr triGeom = CreateTri(v0, v1, v2);
-            
+
             Nektar::LibUtilities::PointsType triPointsTypeDir1 = Nektar::LibUtilities::eGaussLobattoLegendre;
             const Nektar::LibUtilities::PointsKey triPointsKeyDir1(5, triPointsTypeDir1);
             Nektar::LibUtilities::BasisType       basisTypeDir1 = Nektar::LibUtilities::eModified_A;
@@ -964,14 +957,14 @@ namespace Nektar
             const Nektar::LibUtilities::PointsKey triPointsKeyDir2(5, triPointsTypeDir2);
             Nektar::LibUtilities::BasisType       basisTypeDir2 = Nektar::LibUtilities::eModified_B;
             const Nektar::LibUtilities::BasisKey  basisKeyDir2(basisTypeDir2,4,triPointsKeyDir2);
-            
-            Nektar::LocalRegions::TriExpSharedPtr Exp = 
+
+            Nektar::LocalRegions::TriExpSharedPtr Exp =
                 MemoryManager<Nektar::LocalRegions::TriExp>::AllocateSharedPtr(basisKeyDir1,
                 basisKeyDir2, triGeom);
 
             std::vector<StdRegions::StdExpansionSharedPtr> CollExp;
             CollExp.push_back(Exp);
-            
+
             LibUtilities::SessionReaderSharedPtr dummySession;
             Collections::CollectionOptimisation colOpt(dummySession, Collections::eIterPerExp);
             Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(Exp);
@@ -983,9 +976,9 @@ namespace Nektar
             Array<OneD, NekDouble> phys(nq),tmp,tmp1;
             Array<OneD, NekDouble> diff1(2*nq);
             Array<OneD, NekDouble> diff2(2*nq);
-            
+
             Exp->GetCoords(xc, yc);
-        
+
             for (int i = 0; i < nq; ++i)
             {
                 phys[i] = sin(xc[i])*cos(yc[i]);
@@ -1006,9 +999,9 @@ namespace Nektar
             SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(2u, 0u, -1.5, -1.5, 0.0));
             SpatialDomains::PointGeomSharedPtr v1(new SpatialDomains::PointGeom(2u, 1u,  1.0, -1.0, 0.0));
             SpatialDomains::PointGeomSharedPtr v2(new SpatialDomains::PointGeom(2u, 2u, -1.0,  1.0, 0.0));
-            
+
             SpatialDomains::TriGeomSharedPtr triGeom = CreateTri(v0, v1, v2);
-            
+
             Nektar::LibUtilities::PointsType triPointsTypeDir1 = Nektar::LibUtilities::eGaussLobattoLegendre;
             const Nektar::LibUtilities::PointsKey triPointsKeyDir1(5, triPointsTypeDir1);
             Nektar::LibUtilities::BasisType       basisTypeDir1 = Nektar::LibUtilities::eModified_A;
@@ -1019,18 +1012,18 @@ namespace Nektar
             Nektar::LibUtilities::BasisType       basisTypeDir2 = Nektar::LibUtilities::eModified_B;
             const Nektar::LibUtilities::BasisKey  basisKeyDir2(basisTypeDir2,6,triPointsKeyDir2);
 
-            Nektar::LocalRegions::TriExpSharedPtr Exp = 
+            Nektar::LocalRegions::TriExpSharedPtr Exp =
                 MemoryManager<Nektar::LocalRegions::TriExp>::AllocateSharedPtr(basisKeyDir1,
                 basisKeyDir2, triGeom);
 
             int nelmts = 10;
-            
+
             std::vector<StdRegions::StdExpansionSharedPtr> CollExp;
             for(int i = 0; i < nelmts; ++i)
             {
                 CollExp.push_back(Exp);
             }
-            
+
             LibUtilities::SessionReaderSharedPtr dummySession;
             Collections::CollectionOptimisation colOpt(dummySession, Collections::eIterPerExp);
             Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(Exp);
@@ -1042,9 +1035,9 @@ namespace Nektar
             Array<OneD, NekDouble> phys(nelmts*nq),tmp,tmp1;
             Array<OneD, NekDouble> diff1(2*nelmts*nq);
             Array<OneD, NekDouble> diff2(2*nelmts*nq);
-            
+
             Exp->GetCoords(xc, yc);
-        
+
             for (int i = 0; i < nq; ++i)
             {
                 phys[i] = sin(xc[i])*cos(yc[i]);
@@ -1074,9 +1067,9 @@ namespace Nektar
             SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(2u, 0u, -1.5, -1.5, 0.0));
             SpatialDomains::PointGeomSharedPtr v1(new SpatialDomains::PointGeom(2u, 1u,  1.0, -1.0, 0.0));
             SpatialDomains::PointGeomSharedPtr v2(new SpatialDomains::PointGeom(2u, 2u, -1.0,  1.0, 0.0));
-            
+
             SpatialDomains::TriGeomSharedPtr triGeom = CreateTri(v0, v1, v2);
-            
+
             Nektar::LibUtilities::PointsType triPointsTypeDir1 = Nektar::LibUtilities::eGaussLobattoLegendre;
             const Nektar::LibUtilities::PointsKey triPointsKeyDir1(5, triPointsTypeDir1);
             Nektar::LibUtilities::BasisType       basisTypeDir1 = Nektar::LibUtilities::eModified_A;
@@ -1086,29 +1079,29 @@ namespace Nektar
             const Nektar::LibUtilities::PointsKey triPointsKeyDir2(5, triPointsTypeDir2);
             Nektar::LibUtilities::BasisType       basisTypeDir2 = Nektar::LibUtilities::eModified_B;
             const Nektar::LibUtilities::BasisKey  basisKeyDir2(basisTypeDir2,4,triPointsKeyDir2);
-            
-            Nektar::LocalRegions::TriExpSharedPtr Exp = 
+
+            Nektar::LocalRegions::TriExpSharedPtr Exp =
                 MemoryManager<Nektar::LocalRegions::TriExp>::AllocateSharedPtr(basisKeyDir1,
                 basisKeyDir2, triGeom);
 
             std::vector<StdRegions::StdExpansionSharedPtr> CollExp;
             CollExp.push_back(Exp);
-            
-            
+
+
             LibUtilities::SessionReaderSharedPtr dummySession;
             Collections::CollectionOptimisation colOpt(dummySession, Collections::eStdMat);
             Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(Exp);
             Collections::Collection     c(CollExp, impTypes);
 
-            
+
             const int nq = Exp->GetTotPoints();
             Array<OneD, NekDouble> xc(nq), yc(nq);
             Array<OneD, NekDouble> phys(nq),tmp,tmp1;
             Array<OneD, NekDouble> diff1(2*nq);
             Array<OneD, NekDouble> diff2(2*nq);
-            
+
             Exp->GetCoords(xc, yc);
-        
+
             for (int i = 0; i < nq; ++i)
             {
                 phys[i] = sin(xc[i])*cos(yc[i]);
@@ -1130,9 +1123,9 @@ namespace Nektar
             SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(2u, 0u, -1.5, -1.5, 0.0));
             SpatialDomains::PointGeomSharedPtr v1(new SpatialDomains::PointGeom(2u, 1u,  1.0, -1.0, 0.0));
             SpatialDomains::PointGeomSharedPtr v2(new SpatialDomains::PointGeom(2u, 2u, -1.0,  1.0, 0.0));
-            
+
             SpatialDomains::TriGeomSharedPtr triGeom = CreateTri(v0, v1, v2);
-            
+
             Nektar::LibUtilities::PointsType triPointsTypeDir1 = Nektar::LibUtilities::eGaussLobattoLegendre;
             const Nektar::LibUtilities::PointsKey triPointsKeyDir1(5, triPointsTypeDir1);
             Nektar::LibUtilities::BasisType       basisTypeDir1 = Nektar::LibUtilities::eModified_A;
@@ -1142,20 +1135,20 @@ namespace Nektar
             const Nektar::LibUtilities::PointsKey triPointsKeyDir2(7, triPointsTypeDir2);
             Nektar::LibUtilities::BasisType       basisTypeDir2 = Nektar::LibUtilities::eModified_B;
             const Nektar::LibUtilities::BasisKey  basisKeyDir2(basisTypeDir2,6,triPointsKeyDir2);
-            
-            Nektar::LocalRegions::TriExpSharedPtr Exp = 
+
+            Nektar::LocalRegions::TriExpSharedPtr Exp =
                 MemoryManager<Nektar::LocalRegions::TriExp>::AllocateSharedPtr(basisKeyDir1,
                 basisKeyDir2, triGeom);
 
             int nelmts = 10;
-            
+
             std::vector<StdRegions::StdExpansionSharedPtr> CollExp;
             for(int i = 0; i < nelmts; ++i)
             {
                 CollExp.push_back(Exp);
             }
-            
-            
+
+
             LibUtilities::SessionReaderSharedPtr dummySession;
             Collections::CollectionOptimisation colOpt(dummySession, Collections::eStdMat);
             Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(Exp);
@@ -1167,9 +1160,9 @@ namespace Nektar
             Array<OneD, NekDouble> phys(nelmts*nq),tmp,tmp1;
             Array<OneD, NekDouble> diff1(2*nelmts*nq);
             Array<OneD, NekDouble> diff2(2*nelmts*nq);
-            
+
             Exp->GetCoords(xc, yc);
-        
+
             for (int i = 0; i < nq; ++i)
             {
                 phys[i] = sin(xc[i])*cos(yc[i]);
@@ -1199,9 +1192,9 @@ namespace Nektar
             SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(2u, 0u, -1.5, -1.5, 0.0));
             SpatialDomains::PointGeomSharedPtr v1(new SpatialDomains::PointGeom(2u, 1u,  1.0, -1.0, 0.0));
             SpatialDomains::PointGeomSharedPtr v2(new SpatialDomains::PointGeom(2u, 2u, -1.0,  1.0, 0.0));
-            
+
             SpatialDomains::TriGeomSharedPtr triGeom = CreateTri(v0, v1, v2);
-            
+
             Nektar::LibUtilities::PointsType triPointsTypeDir1 = Nektar::LibUtilities::eGaussLobattoLegendre;
             const Nektar::LibUtilities::PointsKey triPointsKeyDir1(5, triPointsTypeDir1);
             Nektar::LibUtilities::BasisType       basisTypeDir1 = Nektar::LibUtilities::eModified_A;
@@ -1211,27 +1204,27 @@ namespace Nektar
             const Nektar::LibUtilities::PointsKey triPointsKeyDir2(5, triPointsTypeDir2);
             Nektar::LibUtilities::BasisType       basisTypeDir2 = Nektar::LibUtilities::eModified_B;
             const Nektar::LibUtilities::BasisKey  basisKeyDir2(basisTypeDir2,4,triPointsKeyDir2);
-            
-            Nektar::LocalRegions::TriExpSharedPtr Exp = 
+
+            Nektar::LocalRegions::TriExpSharedPtr Exp =
                 MemoryManager<Nektar::LocalRegions::TriExp>::AllocateSharedPtr(basisKeyDir1,
                 basisKeyDir2, triGeom);
 
             std::vector<StdRegions::StdExpansionSharedPtr> CollExp;
             CollExp.push_back(Exp);
-            
+
             LibUtilities::SessionReaderSharedPtr dummySession;
             Collections::CollectionOptimisation colOpt(dummySession, Collections::eSumFac);
             Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(Exp);
             Collections::Collection     c(CollExp, impTypes);
-            
+
             const int nq = Exp->GetTotPoints();
             Array<OneD, NekDouble> xc(nq), yc(nq);
             Array<OneD, NekDouble> phys(nq),tmp,tmp1;
             Array<OneD, NekDouble> diff1(2*nq);
             Array<OneD, NekDouble> diff2(2*nq);
-            
+
             Exp->GetCoords(xc, yc);
-        
+
             for (int i = 0; i < nq; ++i)
             {
                 phys[i] = sin(xc[i])*cos(yc[i]);
@@ -1252,9 +1245,9 @@ namespace Nektar
             SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(2u, 0u, -1.5, -1.5, 0.0));
             SpatialDomains::PointGeomSharedPtr v1(new SpatialDomains::PointGeom(2u, 1u,  1.0, -1.0, 0.0));
             SpatialDomains::PointGeomSharedPtr v2(new SpatialDomains::PointGeom(2u, 2u, -1.0,  1.0, 0.0));
-            
+
             SpatialDomains::TriGeomSharedPtr triGeom = CreateTri(v0, v1, v2);
-            
+
             Nektar::LibUtilities::PointsType triPointsTypeDir1 = Nektar::LibUtilities::eGaussLobattoLegendre;
             const Nektar::LibUtilities::PointsKey triPointsKeyDir1(5, triPointsTypeDir1);
             Nektar::LibUtilities::BasisType       basisTypeDir1 = Nektar::LibUtilities::eModified_A;
@@ -1264,19 +1257,19 @@ namespace Nektar
             const Nektar::LibUtilities::PointsKey triPointsKeyDir2(7, triPointsTypeDir2);
             Nektar::LibUtilities::BasisType       basisTypeDir2 = Nektar::LibUtilities::eModified_B;
             const Nektar::LibUtilities::BasisKey  basisKeyDir2(basisTypeDir2,6,triPointsKeyDir2);
-            
-            Nektar::LocalRegions::TriExpSharedPtr Exp = 
+
+            Nektar::LocalRegions::TriExpSharedPtr Exp =
                 MemoryManager<Nektar::LocalRegions::TriExp>::AllocateSharedPtr(basisKeyDir1,
                 basisKeyDir2, triGeom);
 
             int nelmts = 10;
-            
+
             std::vector<StdRegions::StdExpansionSharedPtr> CollExp;
             for(int i = 0; i < nelmts; ++i)
             {
                 CollExp.push_back(Exp);
             }
-            
+
             LibUtilities::SessionReaderSharedPtr dummySession;
             Collections::CollectionOptimisation colOpt(dummySession, Collections::eSumFac);
             Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(Exp);
@@ -1287,9 +1280,9 @@ namespace Nektar
             Array<OneD, NekDouble> phys(nelmts*nq),tmp,tmp1;
             Array<OneD, NekDouble> diff1(2*nelmts*nq);
             Array<OneD, NekDouble> diff2(2*nelmts*nq);
-            
+
             Exp->GetCoords(xc, yc);
-        
+
             for (int i = 0; i < nq; ++i)
             {
                 phys[i] = sin(xc[i])*cos(yc[i]);
@@ -1318,9 +1311,9 @@ namespace Nektar
             SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(2u, 0u, -1.5, -1.5, 0.0));
             SpatialDomains::PointGeomSharedPtr v1(new SpatialDomains::PointGeom(2u, 1u,  1.0, -1.0, 0.0));
             SpatialDomains::PointGeomSharedPtr v2(new SpatialDomains::PointGeom(2u, 2u, -1.0,  1.0, 0.0));
-            
+
             SpatialDomains::TriGeomSharedPtr triGeom = CreateTri(v0, v1, v2);
-            
+
             Nektar::LibUtilities::PointsType triPointsTypeDir1 = Nektar::LibUtilities::eGaussLobattoLegendre;
             const Nektar::LibUtilities::PointsKey triPointsKeyDir1(5, triPointsTypeDir1);
             Nektar::LibUtilities::BasisType       basisTypeDir1 = Nektar::LibUtilities::eModified_A;
@@ -1330,14 +1323,14 @@ namespace Nektar
             const Nektar::LibUtilities::PointsKey triPointsKeyDir2(5, triPointsTypeDir2);
             Nektar::LibUtilities::BasisType       basisTypeDir2 = Nektar::LibUtilities::eModified_B;
             const Nektar::LibUtilities::BasisKey  basisKeyDir2(basisTypeDir2,4,triPointsKeyDir2);
-            
-            Nektar::LocalRegions::TriExpSharedPtr Exp = 
+
+            Nektar::LocalRegions::TriExpSharedPtr Exp =
                 MemoryManager<Nektar::LocalRegions::TriExp>::AllocateSharedPtr(basisKeyDir1,
                 basisKeyDir2, triGeom);
 
             std::vector<StdRegions::StdExpansionSharedPtr> CollExp;
             CollExp.push_back(Exp);
-            
+
             LibUtilities::SessionReaderSharedPtr dummySession;
             Collections::CollectionOptimisation colOpt(dummySession, Collections::eIterPerExp);
             Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(Exp);
@@ -1352,9 +1345,9 @@ namespace Nektar
             Array<OneD, NekDouble> coeffs2(nm);
 
             Array<OneD, NekDouble> xc(nq), yc(nq);
-            
+
             Exp->GetCoords(xc, yc);
-        
+
             for (int i = 0; i < nq; ++i)
             {
                 phys1[i] = sin(xc[i])*cos(yc[i]);
@@ -1365,7 +1358,7 @@ namespace Nektar
             Exp->IProductWRTDerivBase(0, phys1, coeffs1);
             Exp->IProductWRTDerivBase(1, phys2, coeffs2);
             Vmath::Vadd(nm,coeffs1,1,coeffs2,1,coeffs1,1);
-            
+
             c.ApplyOperator(Collections::eIProductWRTDerivBase, phys1,
                             phys2, coeffs2);
 
@@ -1383,9 +1376,9 @@ namespace Nektar
             SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(2u, 0u, -1.5, -1.5, 0.0));
             SpatialDomains::PointGeomSharedPtr v1(new SpatialDomains::PointGeom(2u, 1u,  1.0, -1.0, 0.0));
             SpatialDomains::PointGeomSharedPtr v2(new SpatialDomains::PointGeom(2u, 2u, -1.0,  1.0, 0.0));
-            
+
             SpatialDomains::TriGeomSharedPtr triGeom = CreateTri(v0, v1, v2);
-            
+
             Nektar::LibUtilities::PointsType triPointsTypeDir1 = Nektar::LibUtilities::eGaussLobattoLegendre;
             const Nektar::LibUtilities::PointsKey triPointsKeyDir1(5, triPointsTypeDir1);
             Nektar::LibUtilities::BasisType       basisTypeDir1 = Nektar::LibUtilities::eModified_A;
@@ -1395,19 +1388,19 @@ namespace Nektar
             const Nektar::LibUtilities::PointsKey triPointsKeyDir2(7, triPointsTypeDir2);
             Nektar::LibUtilities::BasisType       basisTypeDir2 = Nektar::LibUtilities::eModified_B;
             const Nektar::LibUtilities::BasisKey  basisKeyDir2(basisTypeDir2,6,triPointsKeyDir2);
-            
-            Nektar::LocalRegions::TriExpSharedPtr Exp = 
+
+            Nektar::LocalRegions::TriExpSharedPtr Exp =
                 MemoryManager<Nektar::LocalRegions::TriExp>::AllocateSharedPtr(basisKeyDir1,
                 basisKeyDir2, triGeom);
 
             int nelmts = 10;
-            
+
             std::vector<StdRegions::StdExpansionSharedPtr> CollExp;
             for(int i = 0; i < nelmts; ++i)
             {
                 CollExp.push_back(Exp);
             }
-            
+
             LibUtilities::SessionReaderSharedPtr dummySession;
             Collections::CollectionOptimisation colOpt(dummySession, Collections::eIterPerExp);
             Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(Exp);
@@ -1421,9 +1414,9 @@ namespace Nektar
             Array<OneD, NekDouble> phys2(nelmts*nq);
             Array<OneD, NekDouble> coeffs1(nelmts*nm);
             Array<OneD, NekDouble> coeffs2(nelmts*nm);
-            
+
             Exp->GetCoords(xc, yc);
-        
+
             for (int i = 0; i < nq; ++i)
             {
                 phys1[i] = sin(xc[i])*cos(yc[i]);
@@ -1438,9 +1431,9 @@ namespace Nektar
             for(int i = 0; i < nelmts; ++i)
             {
                 // Standard routines
-                Exp->IProductWRTDerivBase(0, phys1 + i*nq, 
+                Exp->IProductWRTDerivBase(0, phys1 + i*nq,
                                           tmp  = coeffs1 + i*nm);
-                Exp->IProductWRTDerivBase(1, phys2 + i*nq, 
+                Exp->IProductWRTDerivBase(1, phys2 + i*nq,
                                           tmp1 = coeffs2 + i*nm);
                 Vmath::Vadd(nm,coeffs1 +i*nm ,1,coeffs2 + i*nm ,1,
                             tmp = coeffs1 + i*nm,1);
@@ -1463,9 +1456,9 @@ namespace Nektar
             SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(2u, 0u, -1.5, -1.5, 0.0));
             SpatialDomains::PointGeomSharedPtr v1(new SpatialDomains::PointGeom(2u, 1u,  1.0, -1.0, 0.0));
             SpatialDomains::PointGeomSharedPtr v2(new SpatialDomains::PointGeom(2u, 2u, -1.0,  1.0, 0.0));
-            
+
             SpatialDomains::TriGeomSharedPtr triGeom = CreateTri(v0, v1, v2);
-            
+
             Nektar::LibUtilities::PointsType triPointsTypeDir1 = Nektar::LibUtilities::eGaussLobattoLegendre;
             const Nektar::LibUtilities::PointsKey triPointsKeyDir1(5, triPointsTypeDir1);
             Nektar::LibUtilities::BasisType       basisTypeDir1 = Nektar::LibUtilities::eModified_A;
@@ -1475,15 +1468,15 @@ namespace Nektar
             const Nektar::LibUtilities::PointsKey triPointsKeyDir2(5, triPointsTypeDir2);
             Nektar::LibUtilities::BasisType       basisTypeDir2 = Nektar::LibUtilities::eModified_B;
             const Nektar::LibUtilities::BasisKey  basisKeyDir2(basisTypeDir2,4,triPointsKeyDir2);
-            
-            Nektar::LocalRegions::TriExpSharedPtr Exp = 
+
+            Nektar::LocalRegions::TriExpSharedPtr Exp =
                 MemoryManager<Nektar::LocalRegions::TriExp>::AllocateSharedPtr(basisKeyDir1,
                 basisKeyDir2, triGeom);
 
             std::vector<StdRegions::StdExpansionSharedPtr> CollExp;
             CollExp.push_back(Exp);
-            
-            
+
+
             LibUtilities::SessionReaderSharedPtr dummySession;
             Collections::CollectionOptimisation colOpt(dummySession, Collections::eStdMat);
             Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(Exp);
@@ -1498,9 +1491,9 @@ namespace Nektar
             Array<OneD, NekDouble> coeffs2(nm);
 
             Array<OneD, NekDouble> xc(nq), yc(nq);
-            
+
             Exp->GetCoords(xc, yc);
-        
+
             for (int i = 0; i < nq; ++i)
             {
                 phys1[i] = sin(xc[i])*cos(yc[i]);
@@ -1511,7 +1504,7 @@ namespace Nektar
             Exp->IProductWRTDerivBase(0, phys1, coeffs1);
             Exp->IProductWRTDerivBase(1, phys2, coeffs2);
             Vmath::Vadd(nm,coeffs1,1,coeffs2,1,coeffs1,1);
-            
+
             c.ApplyOperator(Collections::eIProductWRTDerivBase, phys1,
                             phys2, coeffs2);
 
@@ -1529,9 +1522,9 @@ namespace Nektar
             SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(2u, 0u, -1.5, -1.5, 0.0));
             SpatialDomains::PointGeomSharedPtr v1(new SpatialDomains::PointGeom(2u, 1u,  1.0, -1.0, 0.0));
             SpatialDomains::PointGeomSharedPtr v2(new SpatialDomains::PointGeom(2u, 2u, -1.0,  1.0, 0.0));
-            
+
             SpatialDomains::TriGeomSharedPtr triGeom = CreateTri(v0, v1, v2);
-            
+
             Nektar::LibUtilities::PointsType triPointsTypeDir1 = Nektar::LibUtilities::eGaussLobattoLegendre;
             const Nektar::LibUtilities::PointsKey triPointsKeyDir1(5, triPointsTypeDir1);
             Nektar::LibUtilities::BasisType       basisTypeDir1 = Nektar::LibUtilities::eModified_A;
@@ -1541,20 +1534,20 @@ namespace Nektar
             const Nektar::LibUtilities::PointsKey triPointsKeyDir2(7, triPointsTypeDir2);
             Nektar::LibUtilities::BasisType       basisTypeDir2 = Nektar::LibUtilities::eModified_B;
             const Nektar::LibUtilities::BasisKey  basisKeyDir2(basisTypeDir2,6,triPointsKeyDir2);
-            
-            Nektar::LocalRegions::TriExpSharedPtr Exp = 
+
+            Nektar::LocalRegions::TriExpSharedPtr Exp =
                 MemoryManager<Nektar::LocalRegions::TriExp>::AllocateSharedPtr(basisKeyDir1,
                 basisKeyDir2, triGeom);
 
             int nelmts = 10;
-            
+
             std::vector<StdRegions::StdExpansionSharedPtr> CollExp;
             for(int i = 0; i < nelmts; ++i)
             {
                 CollExp.push_back(Exp);
             }
-            
-            
+
+
             LibUtilities::SessionReaderSharedPtr dummySession;
             Collections::CollectionOptimisation colOpt(dummySession, Collections::eStdMat);
             Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(Exp);
@@ -1568,9 +1561,9 @@ namespace Nektar
             Array<OneD, NekDouble> phys2(nelmts*nq);
             Array<OneD, NekDouble> coeffs1(nelmts*nm);
             Array<OneD, NekDouble> coeffs2(nelmts*nm);
-            
+
             Exp->GetCoords(xc, yc);
-        
+
             for (int i = 0; i < nq; ++i)
             {
                 phys1[i] = sin(xc[i])*cos(yc[i]);
@@ -1585,9 +1578,9 @@ namespace Nektar
             for(int i = 0; i < nelmts; ++i)
             {
                 // Standard routines
-                Exp->IProductWRTDerivBase(0, phys1 + i*nq, 
+                Exp->IProductWRTDerivBase(0, phys1 + i*nq,
                                           tmp  = coeffs1 + i*nm);
-                Exp->IProductWRTDerivBase(1, phys2 + i*nq, 
+                Exp->IProductWRTDerivBase(1, phys2 + i*nq,
                                           tmp1 = coeffs2 + i*nm);
                 Vmath::Vadd(nm,coeffs1 +i*nm ,1,coeffs2 + i*nm ,1,
                             tmp = coeffs1 + i*nm,1);
@@ -1610,9 +1603,9 @@ namespace Nektar
             SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(2u, 0u, -1.5, -1.5, 0.0));
             SpatialDomains::PointGeomSharedPtr v1(new SpatialDomains::PointGeom(2u, 1u,  1.0, -1.0, 0.0));
             SpatialDomains::PointGeomSharedPtr v2(new SpatialDomains::PointGeom(2u, 2u, -1.0,  1.0, 0.0));
-            
+
             SpatialDomains::TriGeomSharedPtr triGeom = CreateTri(v0, v1, v2);
-            
+
             Nektar::LibUtilities::PointsType triPointsTypeDir1 = Nektar::LibUtilities::eGaussLobattoLegendre;
             const Nektar::LibUtilities::PointsKey triPointsKeyDir1(5, triPointsTypeDir1);
             Nektar::LibUtilities::BasisType       basisTypeDir1 = Nektar::LibUtilities::eModified_A;
@@ -1622,14 +1615,14 @@ namespace Nektar
             const Nektar::LibUtilities::PointsKey triPointsKeyDir2(5, triPointsTypeDir2);
             Nektar::LibUtilities::BasisType       basisTypeDir2 = Nektar::LibUtilities::eModified_B;
             const Nektar::LibUtilities::BasisKey  basisKeyDir2(basisTypeDir2,4,triPointsKeyDir2);
-            
-            Nektar::LocalRegions::TriExpSharedPtr Exp = 
+
+            Nektar::LocalRegions::TriExpSharedPtr Exp =
                 MemoryManager<Nektar::LocalRegions::TriExp>::AllocateSharedPtr(basisKeyDir1,
                 basisKeyDir2, triGeom);
 
             std::vector<StdRegions::StdExpansionSharedPtr> CollExp;
             CollExp.push_back(Exp);
-            
+
             LibUtilities::SessionReaderSharedPtr dummySession;
             Collections::CollectionOptimisation colOpt(dummySession, Collections::eSumFac);
             Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(Exp);
@@ -1643,9 +1636,9 @@ namespace Nektar
             Array<OneD, NekDouble> coeffs2(nm);
 
             Array<OneD, NekDouble> xc(nq), yc(nq);
-            
+
             Exp->GetCoords(xc, yc);
-        
+
             for (int i = 0; i < nq; ++i)
             {
                 phys1[i] = sin(xc[i])*cos(yc[i]);
@@ -1656,8 +1649,8 @@ namespace Nektar
             Exp->IProductWRTDerivBase(0, phys1, coeffs1);
             Exp->IProductWRTDerivBase(1, phys2, coeffs2);
             Vmath::Vadd(nm,coeffs1,1,coeffs2,1,coeffs1,1);
-            
-            c.ApplyOperator(Collections::eIProductWRTDerivBase, 
+
+            c.ApplyOperator(Collections::eIProductWRTDerivBase,
                             phys1, phys2, coeffs2);
 
             double epsilon = 1.0e-8;
@@ -1674,9 +1667,9 @@ namespace Nektar
             SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(2u, 0u, -1.5, -1.5, 0.0));
             SpatialDomains::PointGeomSharedPtr v1(new SpatialDomains::PointGeom(2u, 1u,  1.0, -1.0, 0.0));
             SpatialDomains::PointGeomSharedPtr v2(new SpatialDomains::PointGeom(2u, 2u, -1.0,  1.0, 0.0));
-            
+
             SpatialDomains::TriGeomSharedPtr triGeom = CreateTri(v0, v1, v2);
-            
+
             Nektar::LibUtilities::PointsType triPointsTypeDir1 = Nektar::LibUtilities::eGaussLobattoLegendre;
             const Nektar::LibUtilities::PointsKey triPointsKeyDir1(5, triPointsTypeDir1);
             Nektar::LibUtilities::BasisType       basisTypeDir1 = Nektar::LibUtilities::eModified_A;
@@ -1686,19 +1679,19 @@ namespace Nektar
             const Nektar::LibUtilities::PointsKey triPointsKeyDir2(7, triPointsTypeDir2);
             Nektar::LibUtilities::BasisType       basisTypeDir2 = Nektar::LibUtilities::eModified_B;
             const Nektar::LibUtilities::BasisKey  basisKeyDir2(basisTypeDir2,6,triPointsKeyDir2);
-            
-            Nektar::LocalRegions::TriExpSharedPtr Exp = 
+
+            Nektar::LocalRegions::TriExpSharedPtr Exp =
                 MemoryManager<Nektar::LocalRegions::TriExp>::AllocateSharedPtr(basisKeyDir1,
                 basisKeyDir2, triGeom);
 
             int nelmts = 10;
-            
+
             std::vector<StdRegions::StdExpansionSharedPtr> CollExp;
             for(int i = 0; i < nelmts; ++i)
             {
                 CollExp.push_back(Exp);
             }
-            
+
             LibUtilities::SessionReaderSharedPtr dummySession;
             Collections::CollectionOptimisation colOpt(dummySession, Collections::eSumFac);
             Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(Exp);
@@ -1711,9 +1704,9 @@ namespace Nektar
             Array<OneD, NekDouble> phys2(nelmts*nq);
             Array<OneD, NekDouble> coeffs1(nelmts*nm);
             Array<OneD, NekDouble> coeffs2(nelmts*nm);
-            
+
             Exp->GetCoords(xc, yc);
-        
+
             for (int i = 0; i < nq; ++i)
             {
                 phys1[i] = sin(xc[i])*cos(yc[i]);
@@ -1728,9 +1721,9 @@ namespace Nektar
             for(int i = 0; i < nelmts; ++i)
             {
                 // Standard routines
-                Exp->IProductWRTDerivBase(0, phys1 + i*nq, 
+                Exp->IProductWRTDerivBase(0, phys1 + i*nq,
                                           tmp  = coeffs1 + i*nm);
-                Exp->IProductWRTDerivBase(1, phys2 + i*nq, 
+                Exp->IProductWRTDerivBase(1, phys2 + i*nq,
                                           tmp1 = coeffs2 + i*nm);
                 Vmath::Vadd(nm,coeffs1 +i*nm ,1,coeffs2 + i*nm ,1,
                             tmp = coeffs1 + i*nm,1);

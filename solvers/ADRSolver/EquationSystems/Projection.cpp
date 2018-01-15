@@ -42,8 +42,10 @@ namespace Nektar
 string Projection::className =
     GetEquationSystemFactory().RegisterCreatorFunction("Projection",
                                                        Projection::create);
-Projection::Projection(const LibUtilities::SessionReaderSharedPtr &pSession)
-    : EquationSystem(pSession)
+
+Projection::Projection(const LibUtilities::SessionReaderSharedPtr &pSession,
+                       const SpatialDomains::MeshGraphSharedPtr& pGraph)
+    : EquationSystem(pSession, pGraph)
 {
 }
 

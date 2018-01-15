@@ -50,8 +50,11 @@ namespace Nektar
 
         /// Creates an instance of this class
         static EquationSystemSharedPtr create(
-                const LibUtilities::SessionReaderSharedPtr& pSession) {
-            EquationSystemSharedPtr p = MemoryManager<ImageWarpingSystem>::AllocateSharedPtr(pSession);
+            const LibUtilities::SessionReaderSharedPtr& pSession,
+            const SpatialDomains::MeshGraphSharedPtr &pGraph)
+        {
+            EquationSystemSharedPtr p = MemoryManager<ImageWarpingSystem>
+                ::AllocateSharedPtr(pSession, pGraph);
             p->InitObject();
             return p;
         }
@@ -67,7 +70,8 @@ namespace Nektar
         NekDouble m_alpha;
 
         ImageWarpingSystem(
-                const LibUtilities::SessionReaderSharedPtr& pSession);
+            const LibUtilities::SessionReaderSharedPtr& pSession,
+            const SpatialDomains::MeshGraphSharedPtr &pGraph);
 
         void DoOdeRhs(const Array<OneD,  const  Array<OneD, NekDouble> > &inarray,
                       Array<OneD,  Array<OneD, NekDouble> > &outarray,

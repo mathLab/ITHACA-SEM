@@ -48,9 +48,11 @@ namespace Nektar
 
         /// Creates an instance of this class.
         static SolverUtils::EquationSystemSharedPtr create(
-            const LibUtilities::SessionReaderSharedPtr& pSession)
+            const LibUtilities::SessionReaderSharedPtr& pSession,
+            const SpatialDomains::MeshGraphSharedPtr& pGraph)
         {
-            SolverUtils::EquationSystemSharedPtr p = MemoryManager<IsentropicVortex>::AllocateSharedPtr(pSession);
+            SolverUtils::EquationSystemSharedPtr p = MemoryManager<
+                IsentropicVortex>::AllocateSharedPtr(pSession, pGraph);
             p->InitObject();
             return p;
         }
@@ -61,7 +63,8 @@ namespace Nektar
 
     protected:
 
-        IsentropicVortex(const LibUtilities::SessionReaderSharedPtr& pSession);
+        IsentropicVortex(const LibUtilities::SessionReaderSharedPtr& pSession,
+                         const SpatialDomains::MeshGraphSharedPtr& pGraph);
 
         /// Print a summary of time stepping parameters.
         virtual void v_GenerateSummary(SolverUtils::SummaryList& s);

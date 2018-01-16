@@ -86,6 +86,7 @@ v5.0.0
 - Allow performing axi-symmetric Euler simulations (!771)
 - Add ability to use an exponential filtering for stabilization with
   seg, quad and hex elements (!771, !862)
+- Introduce equations of state to account for real gas effects (!880)
 
 **APESolver:**
 - Added two new boundary conditions to the APE system: RiemannInvariantBC

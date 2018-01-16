@@ -89,8 +89,7 @@ void SmoothShockCapture::v_DoArtificialDiffusion(
     Array <OneD, NekDouble > u_abs  (npoints, 0.0);
     Array <OneD, NekDouble > tmp   (npoints, 0.0);
 
-    m_varConv->GetPressure(inarray, tmp);
-    m_varConv->GetSoundSpeed(inarray, tmp, a_vel);
+    m_varConv->GetSoundSpeed(inarray, a_vel);
     m_varConv->GetAbsoluteVelocity(inarray, u_abs);
 
     Vmath::Vadd(npoints, a_vel, 1, u_abs, 1, tmp, 1);
@@ -170,7 +169,6 @@ void SmoothShockCapture::GetForcingTerm(
     Array<OneD,  NekDouble>  SensorKappa(nPts, 0.0);
     Array <OneD, NekDouble > Lambda(nPts, 0.0);
     Array <OneD, NekDouble > soundspeed(nPts, 0.0);
-    Array <OneD, NekDouble > pressure(nPts, 0.0);
     Array <OneD, NekDouble > absVelocity(nPts, 0.0);
 
     NekDouble tau, pOrder;
@@ -178,8 +176,7 @@ void SmoothShockCapture::GetForcingTerm(
     Array<OneD,int> pOrderElmt = m_fields[0]->EvalBasisNumModesMaxPerExp();
 
     // Thermodynamic related quantities
-    m_varConv->GetPressure(inarray, pressure);
-    m_varConv->GetSoundSpeed(inarray, pressure, soundspeed);
+    m_varConv->GetSoundSpeed(inarray, soundspeed);
     m_varConv->GetAbsoluteVelocity(inarray, absVelocity);
     m_varConv->GetSensor(m_fields[0], inarray, Sensor, SensorKappa, m_offset);
 

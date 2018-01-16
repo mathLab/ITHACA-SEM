@@ -65,6 +65,12 @@ namespace Nektar
     virtual ~NavierStokesCFE();
 
   protected:
+    std::string                         m_ViscosityType;
+    NekDouble                           m_mu;
+    NekDouble                           m_thermalConductivity;
+    NekDouble                           m_Cp;
+    NekDouble                           m_Prandtl;
+
     NavierStokesCFE(const LibUtilities::SessionReaderSharedPtr& pSession,
                     const SpatialDomains::MeshGraphSharedPtr& pGraph);
 

@@ -48,7 +48,8 @@ namespace Nektar
 class APESolver : public RiemannSolver
 {
     protected:
-        APESolver();
+        APESolver(
+                const LibUtilities::SessionReaderSharedPtr& pSession);
 
         virtual void v_Solve(
             const int                                         nDim,

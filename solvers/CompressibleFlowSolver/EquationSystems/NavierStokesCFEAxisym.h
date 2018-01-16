@@ -51,10 +51,12 @@ namespace Nektar
 
     // Creates an instance of this class
     static SolverUtils::EquationSystemSharedPtr create(
-            const LibUtilities::SessionReaderSharedPtr& pSession)
+        const LibUtilities::SessionReaderSharedPtr& pSession,
+        const SpatialDomains::MeshGraphSharedPtr& pGraph)
     {
       SolverUtils::EquationSystemSharedPtr p =
-            MemoryManager<NavierStokesCFEAxisym>::AllocateSharedPtr(pSession);
+            MemoryManager<NavierStokesCFEAxisym>
+                ::AllocateSharedPtr(pSession, pGraph);
       p->InitObject();
       return p;
     }
@@ -66,7 +68,9 @@ namespace Nektar
   protected:
     Array<OneD, Array<OneD, NekDouble> > m_viscousForcing;
 
-    NavierStokesCFEAxisym(const LibUtilities::SessionReaderSharedPtr& pSession);
+    NavierStokesCFEAxisym(
+        const LibUtilities::SessionReaderSharedPtr& pSession,
+        const SpatialDomains::MeshGraphSharedPtr& pGraph);
 
     virtual void v_InitObject();
 

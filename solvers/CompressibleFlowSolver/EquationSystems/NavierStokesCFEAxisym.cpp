@@ -45,9 +45,10 @@ namespace Nektar
             "Axisymmetric NavierStokes equations in conservative variables.");
 
     NavierStokesCFEAxisym::NavierStokesCFEAxisym(
-            const LibUtilities::SessionReaderSharedPtr& pSession)
-        : UnsteadySystem(pSession),
-          NavierStokesCFE(pSession)
+        const LibUtilities::SessionReaderSharedPtr& pSession,
+        const SpatialDomains::MeshGraphSharedPtr& pGraph)
+        : UnsteadySystem(pSession, pGraph),
+          NavierStokesCFE(pSession, pGraph)
     {
     }
 

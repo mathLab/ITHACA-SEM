@@ -72,15 +72,7 @@ namespace Nektar
         ArtificialDiffusionSharedPtr        m_artificialDiffusion;
         Array<OneD, Array<OneD, NekDouble> >m_vecLocs;
         NekDouble                           m_gamma;
-        NekDouble                           m_pInf;
-        NekDouble                           m_rhoInf;
-        NekDouble                           m_UInf;
-        std::string                         m_ViscosityType;
         std::string                         m_shockCaptureType;
-        NekDouble                           m_mu;
-        NekDouble                           m_thermalConductivity;
-        NekDouble                           m_Cp;
-        NekDouble                           m_Prandtl;
 
         // Parameters for exponential filtering
         NekDouble                           m_filterAlpha;

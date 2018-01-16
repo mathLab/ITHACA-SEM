@@ -108,7 +108,7 @@ namespace Nektar
 	      ASSERTL0(false,"LinearHLL only valid for constant depth"); 
 	    }
 	  m_riemannSolver = SolverUtils::GetRiemannSolverFactory()
-	    .CreateInstance(riemName);
+	    .CreateInstance(riemName, m_session);
          
        	  // Setting up upwind solver for diffusion operator
 	  // m_riemannSolverLDG = SolverUtils::GetRiemannSolverFactory()

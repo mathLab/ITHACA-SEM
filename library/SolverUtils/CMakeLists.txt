@@ -10,7 +10,6 @@ SET(SOLVER_UTILS_SOURCES
   Diffusion/Diffusion.cpp
   Diffusion/Diffusion3DHomogeneous1D.cpp
   Diffusion/DiffusionLDG.cpp
-  Diffusion/DiffusionLDGNS.cpp
   Diffusion/DiffusionLFR.cpp
   Diffusion/DiffusionLFRNS.cpp
   Driver.cpp
@@ -55,7 +54,6 @@ SET(SOLVER_UTILS_HEADERS
   Diffusion/Diffusion.h
   Diffusion/Diffusion3DHomogeneous1D.h
   Diffusion/DiffusionLDG.h
-  Diffusion/DiffusionLDGNS.h
   Diffusion/DiffusionLFR.h
   Diffusion/DiffusionLFRNS.h
   Driver.h

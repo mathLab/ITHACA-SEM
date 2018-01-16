@@ -35,7 +35,8 @@ v5.0.0
 - Fix mac OSX on buildbots (!876)
 - Fix error from (!826) (!876)
 - Fix minor bug in ARPACK thirdparty build cmake (!874)
-- Switch MeshGraph to use factory pattern and add HDF5 geometry support (!900)
+- Switch MeshGraph to use factory pattern and add HDF5 geometry support (!900,
+  !904)
 
 **NekMesh**:
 - Add feature to read basic 2D geo files as CAD (!731)
@@ -86,6 +87,7 @@ v5.0.0
 - Allow performing axi-symmetric Euler simulations (!771)
 - Add ability to use an exponential filtering for stabilization with
   seg, quad and hex elements (!771, !862)
+- Introduce equations of state to account for real gas effects (!880)
 
 **APESolver:**
 - Added two new boundary conditions to the APE system: RiemannInvariantBC

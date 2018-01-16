@@ -874,7 +874,6 @@ void HexGeom::v_Setup()
 {
     if(!m_setupState)
     {
-        std::cout << "CALLED SETUP " << m_globalID << std::endl;
         for (int i = 0; i < 6; ++i)
         {
             m_faces[i]->Setup();

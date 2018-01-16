@@ -217,7 +217,7 @@ std::string SessionFunction::Describe(std::string pFieldName, const int domain)
         retVal = ffunc->GetExpression();
     }
     else if (vType == LibUtilities::eFunctionTypeFile ||
-             LibUtilities::eFunctionTypeTransientFile)
+             vType == LibUtilities::eFunctionTypeTransientFile)
     {
         std::string filename =
             m_session->GetFunctionFilename(m_name, pFieldName, domain);

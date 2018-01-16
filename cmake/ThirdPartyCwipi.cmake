@@ -68,6 +68,7 @@ IF (NEKTAR_USE_CWIPI)
                 --prefix=${TPDIST}
                 --libdir=${TPDIST}/lib
                 --quiet
+            BUILD_COMMAND make -j 1
         )
 
         SET(CWIPI_LIBRARY cwipi CACHE FILEPATH

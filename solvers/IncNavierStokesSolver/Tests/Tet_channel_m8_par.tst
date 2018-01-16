@@ -2,7 +2,7 @@
 <test>
     <description>3D channel flow, Tet elements, HDF5 output par(3), P=8</description>
     <executable>IncNavierStokesSolver</executable>
-    <parameters>--use-metis Tet_channel_m8_par.xml</parameters>
+    <parameters>--use-scotch Tet_channel_m8_par.xml</parameters>
     <processes>2</processes>
     <files>
         <file description="Session File">Tet_channel_m8_par.xml</file>

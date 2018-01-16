@@ -61,7 +61,7 @@
 
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 #include <MultiRegions/ContField2D.h>
-#include <SpatialDomains/MeshGraph2D.h>
+#include <SpatialDomains/MeshGraph.h>
 
 #include <SolverUtils/SolverUtilsDeclspec.h>
 
@@ -107,6 +107,8 @@ int main(int argc, char *argv[])
 
     LibUtilities::SessionReaderSharedPtr vSession
         = LibUtilities::SessionReader::CreateInstance(3, argv);
+    SpatialDomains::MeshGraphSharedPtr graphShPt =
+        SpatialDomains::MeshGraph::Read(vSession);
 
     std::string                         m_ViscosityType;
 
@@ -166,13 +168,6 @@ int main(int argc, char *argv[])
     vSession->LoadParameter ("Twall",         m_Twall,         300.15);
     vSession->LoadSolverInfo("ViscosityType", m_ViscosityType, "Constant");
     vSession->LoadParameter ("mu",            m_mu,            1.78e-05);
-
-    //--------------------------------------------------------------------------
-    // Read in mesh from input file
-    string meshfile(argv[1]);
-    SpatialDomains::MeshGraphSharedPtr graphShPt =
-        SpatialDomains::MeshGraph::Read(vSession);
-    //--------------------------------------------------------------------------
 
     //--------------------------------------------------------------------------
     // Import field file

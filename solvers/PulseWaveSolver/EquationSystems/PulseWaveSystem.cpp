@@ -62,8 +62,10 @@ namespace Nektar
      *
      *  @param   m_Session        Session object to read parameters from.
      */
-    PulseWaveSystem::PulseWaveSystem(const LibUtilities::SessionReaderSharedPtr& m_session)
-        : UnsteadySystem(m_session)
+    PulseWaveSystem::PulseWaveSystem(
+        const LibUtilities::SessionReaderSharedPtr& pSession,
+        const SpatialDomains::MeshGraphSharedPtr& pGraph)
+        : UnsteadySystem(pSession, pGraph)
     {
     }
     

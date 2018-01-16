@@ -44,8 +44,9 @@ namespace Nektar
     string EigenValuesAdvection::className = GetEquationSystemFactory().RegisterCreatorFunction("EigenValuesAdvection", EigenValuesAdvection::create, "Eigenvalues of the weak advection operator.");
 
     EigenValuesAdvection::EigenValuesAdvection(
-            const LibUtilities::SessionReaderSharedPtr& pSession)
-        : EquationSystem(pSession)
+        const LibUtilities::SessionReaderSharedPtr& pSession,
+        const SpatialDomains::MeshGraphSharedPtr& pGraph)
+        : EquationSystem(pSession, pGraph)
     {
     }
 
@@ -86,7 +87,8 @@ namespace Nektar
                 m_session->LoadSolverInfo(
                     "UpwindType", riemName, "Upwind");
                 m_riemannSolver = SolverUtils::
-                    GetRiemannSolverFactory().CreateInstance(riemName);
+                    GetRiemannSolverFactory().CreateInstance(
+                        riemName, m_session);
                 m_riemannSolver->SetScalar(
                     "Vn", &EigenValuesAdvection::GetNormalVelocity, this);
 

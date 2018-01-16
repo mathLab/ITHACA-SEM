@@ -45,9 +45,10 @@ namespace Nektar
             "NavierStokes equations in conservative variables.");
 
     NavierStokesCFE::NavierStokesCFE(
-            const LibUtilities::SessionReaderSharedPtr& pSession)
-        : UnsteadySystem(pSession),
-          CompressibleFlowSystem(pSession)
+        const LibUtilities::SessionReaderSharedPtr& pSession,
+        const SpatialDomains::MeshGraphSharedPtr& pGraph)
+        : UnsteadySystem(pSession, pGraph),
+          CompressibleFlowSystem(pSession, pGraph)
     {
     }
 
@@ -62,6 +63,31 @@ namespace Nektar
     void NavierStokesCFE::v_InitObject()
     {
         CompressibleFlowSystem::v_InitObject();
+
+        // Get gas constant from session file and compute Cp
+        NekDouble gasConstant;
+        m_session->LoadParameter ("GasConstant",   gasConstant,   287.058);
+        m_Cp      = m_gamma / (m_gamma - 1.0) * gasConstant;
+
+        // Viscosity
+        m_session->LoadSolverInfo("ViscosityType", m_ViscosityType, "Constant");
+        m_session->LoadParameter ("mu",            m_mu,            1.78e-05);
+
+        // Thermal conductivity or Prandtl
+        if( m_session->DefinesParameter("thermalConductivity"))
+        {
+            ASSERTL0( !m_session->DefinesParameter("Pr"),
+                 "Cannot define both Pr and thermalConductivity.");
+
+            m_session->LoadParameter ("thermalConductivity",
+                                        m_thermalConductivity);
+            m_Prandtl = m_Cp * m_mu / m_thermalConductivity;
+        }
+        else
+        {
+            m_session->LoadParameter ("Pr", m_Prandtl, 0.72);
+            m_thermalConductivity = m_Cp * m_mu / m_Prandtl;
+        }
 
         string diffName;
         m_session->LoadSolverInfo("DiffusionType", diffName, "LDGNS");
@@ -119,8 +145,7 @@ namespace Nektar
         m_varConv->GetPressure(inarray, inarrayDiff[0]);
 
         // Extract temperature
-        m_varConv->GetTemperature(inarray, inarrayDiff[0],
-                inarrayDiff[nvariables-2]);
+        m_varConv->GetTemperature(inarray, inarrayDiff[nvariables-2]);
 
         // Extract velocities
         m_varConv->GetVelocityVector(inarray, inarrayDiff);
@@ -137,10 +162,8 @@ namespace Nektar
             m_varConv->GetPressure(pFwd,    inFwd[0]);
             m_varConv->GetPressure(pBwd,    inBwd[0]);
 
-            m_varConv->GetTemperature(pFwd,    inFwd[0],
-                inFwd[nvariables-2]);
-            m_varConv->GetTemperature(pBwd,    inBwd[0],
-                inBwd[nvariables-2]);
+            m_varConv->GetTemperature(pFwd, inFwd[nvariables-2]);
+            m_varConv->GetTemperature(pBwd, inBwd[nvariables-2]);
 
             m_varConv->GetVelocityVector(pFwd, inFwd);
             m_varConv->GetVelocityVector(pBwd, inBwd);

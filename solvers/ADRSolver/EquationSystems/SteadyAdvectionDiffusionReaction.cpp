@@ -43,8 +43,9 @@ namespace Nektar
 
 
     SteadyAdvectionDiffusionReaction::SteadyAdvectionDiffusionReaction(
-            const LibUtilities::SessionReaderSharedPtr& pSession)
-        : SteadyAdvectionDiffusion(pSession)
+        const LibUtilities::SessionReaderSharedPtr& pSession,
+        const SpatialDomains::MeshGraphSharedPtr& pGraph)
+        : SteadyAdvectionDiffusion(pSession, pGraph)
     {
     }
 

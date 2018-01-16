@@ -54,8 +54,9 @@ string DriverSteadyState::driverLookupId
  *
  */
 DriverSteadyState::DriverSteadyState(
-        const LibUtilities::SessionReaderSharedPtr pSession)
-    : DriverModifiedArnoldi(pSession)
+    const LibUtilities::SessionReaderSharedPtr pSession,
+    const SpatialDomains::MeshGraphSharedPtr pGraph)
+    : DriverModifiedArnoldi(pSession, pGraph)
 {
 }
 

@@ -61,24 +61,9 @@ void CADCurveOCE::Initialise(int i, TopoDS_Shape in)
 
 NekDouble CADCurveOCE::tAtArcLength(NekDouble s)
 {
-    NekDouble dt = (m_b[1] - m_b[0]) / (1000);
-    NekDouble t  = m_b[0];
-
-    NekDouble len = 0.0;
-
-    while (len <= s)
-    {
-        gp_Pnt P1, P2;
-        gp_Vec drdt1, drdt2;
-
-        m_c->D1(t, P1, drdt1);
-        t += dt;
-        m_c->D1(t, P2, drdt2);
-
-        len += (drdt1.Magnitude() + drdt2.Magnitude()) / 2.0 * dt / 1000.0;
-    }
-
-    return t - dt;
+    GeomAdaptor_Curve c(m_c);
+    GCPnts_AbscissaPoint ap(c, s*1000.0, m_b[0]);
+    return ap.Parameter();
 }
 
 NekDouble CADCurveOCE::Length(NekDouble ti, NekDouble tf)

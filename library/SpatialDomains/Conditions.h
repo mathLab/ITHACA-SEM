@@ -119,7 +119,7 @@ namespace Nektar
                 const std::string& filename=std::string(""),
                 const LibUtilities::CommSharedPtr comm=LibUtilities::CommSharedPtr()):
                     BoundaryConditionBase(eDirichlet, userDefined),
-                    m_dirichletCondition(pSession, eqn),
+                    m_dirichletCondition(pSession->GetExpressionEvaluator(), eqn),
                     m_expr(eqn),
                     m_filename(filename),
                     m_comm(comm)
@@ -141,7 +141,7 @@ namespace Nektar
                 const std::string& filename=std::string(""),
                 const LibUtilities::CommSharedPtr comm=LibUtilities::CommSharedPtr()):
                     BoundaryConditionBase(eNeumann, userDefined),
-                    m_neumannCondition(pSession, eqn),
+                    m_neumannCondition(pSession->GetExpressionEvaluator(), eqn),
                     m_filename(filename),
                     m_comm(comm)
             {
@@ -162,8 +162,8 @@ namespace Nektar
                 const std::string& filename=std::string(""),
                 const LibUtilities::CommSharedPtr comm=LibUtilities::CommSharedPtr()):
                     BoundaryConditionBase(eRobin, userDefined),
-                    m_robinFunction(pSession, a),
-                    m_robinPrimitiveCoeff(pSession, b),
+                    m_robinFunction(pSession->GetExpressionEvaluator(), a),
+                    m_robinPrimitiveCoeff(pSession->GetExpressionEvaluator(), b),
                     m_filename(filename),
                     m_comm(comm)
             {
@@ -198,7 +198,7 @@ namespace Nektar
                     const std::string& filename=std::string(""),
                     const LibUtilities::CommSharedPtr comm=LibUtilities::CommSharedPtr()):
             BoundaryConditionBase(eNotDefined, userDefined),
-                m_notDefinedCondition(pSession, eqn),
+                m_notDefinedCondition(pSession->GetExpressionEvaluator(), eqn),
                 m_filename(filename),
                 m_comm(comm)
                 {
@@ -210,7 +210,7 @@ namespace Nektar
         };
 
 
-        typedef std::map<int, Composite> BoundaryRegion;
+        typedef std::map<int, CompositeSharedPtr> BoundaryRegion;
         typedef std::shared_ptr<BoundaryRegion> BoundaryRegionShPtr;
         typedef std::shared_ptr<const BoundaryRegion> ConstBoundaryRegionShPtr;
         typedef std::map<int, BoundaryRegionShPtr> BoundaryRegionCollection;

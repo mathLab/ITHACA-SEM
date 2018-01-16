@@ -43,7 +43,8 @@ namespace Nektar
             HLLCSolver::create,
             "HLLC Riemann solver");
 
-    HLLCSolver::HLLCSolver() : NonlinearSWESolver()
+    HLLCSolver::HLLCSolver(const LibUtilities::SessionReaderSharedPtr& pSession)
+        : NonlinearSWESolver(pSession)
     {
 
     }

@@ -39,7 +39,7 @@
 #include <LibUtilities/Foundations/PointsType.h>
 namespace Nektar
 {
-    namespace LibUtilities
+    namespace SpatialDomains
     {
         // Note: the following structs are defined using 64 bit ints so
         // that the structs are memory aligned in both 64 bit and 32

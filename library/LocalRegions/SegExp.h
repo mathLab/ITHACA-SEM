@@ -194,8 +194,6 @@ namespace Nektar
             LOCAL_REGIONS_EXPORT virtual void v_ComputeVertexNormal(
                  const int vertex);
 
-            LOCAL_REGIONS_EXPORT virtual StdRegions::Orientation v_GetPorient(int point);
-
             LOCAL_REGIONS_EXPORT virtual SpatialDomains::GeomType  v_MetricInfoType();
 
             LOCAL_REGIONS_EXPORT virtual void v_ExtractDataToCoeffs(

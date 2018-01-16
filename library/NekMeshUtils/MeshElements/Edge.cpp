@@ -102,6 +102,8 @@ SpatialDomains::SegGeomSharedPtr Edge::GetGeom(int coordDim)
             m_id, coordDim, p);
     }
 
+    ret->Setup();
+
     return ret;
 }
 

@@ -1385,10 +1385,10 @@
       </BOUNDARYREGIONS>
     <BOUNDARYCONDITIONS>
       <REGION REF="0">
-        <D VAR="p" VALUE="0"/>
-        <D VAR="u" VALUE="0"/>
-        <D VAR="v" VALUE="0"/>
-        <D VAR="w" VALUE="0"/>
+        <D VAR="p" USERDEFINEDTYPE="RiemannInvariantBC"/>
+        <D VAR="u" USERDEFINEDTYPE="RiemannInvariantBC"/>
+        <D VAR="v" USERDEFINEDTYPE="RiemannInvariantBC"/>
+        <D VAR="w" USERDEFINEDTYPE="RiemannInvariantBC"/>
       </REGION>
     </BOUNDARYCONDITIONS>
     <FUNCTION NAME="Baseflow"> <!-- Incompressible base flow -->

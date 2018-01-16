@@ -2054,6 +2054,7 @@ LibUtilities::BasisKeyVector MeshGraph::DefineBasisKeyFromExpansionType(
         {
             switch (shape)
             {
+                case LibUtilities::eSegment:
                 {
                     const LibUtilities::PointsKey pkey(
                         nummodes, LibUtilities::eFourierSingleModeSpaced);

@@ -188,6 +188,10 @@ void SessionFunction::Evaluate(std::string pFieldName,
             EvaluateFld(pFieldName, pArray, pTime, domain);
         }
     }
+    else
+    {
+        ASSERTL0(false, "unknown eFunctionType");
+    }
 
     if (m_toCache)
     {
@@ -222,6 +226,10 @@ std::string SessionFunction::Describe(std::string pFieldName, const int domain)
         std::string filename =
             m_session->GetFunctionFilename(m_name, pFieldName, domain);
         retVal = "from file " + filename;
+    }
+    else
+    {
+        ASSERTL0(false, "unknown eFunctionType");
     }
 
     return retVal;

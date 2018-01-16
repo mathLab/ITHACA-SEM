@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <test>
-    <description>Helmholtz 3D HDG, hexes, mixed BCs, par(2), Scotch</description>
+    <description>Helmholtz 3D HDG, hexes, mixed BCs, par(2), METIS</description>
     <executable>HDGHelmholtz3D</executable>
-    <parameters>--use-scotch Helmholtz3D_Hex_AllBCs_P6.xml</parameters>
+    <parameters>--use-metis Helmholtz3D_Hex_AllBCs_P6.xml</parameters>
     <processes>2</processes>
     <files>
         <file description="Session File">Helmholtz3D_Hex_AllBCs_P6.xml</file>

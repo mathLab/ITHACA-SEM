@@ -11,7 +11,6 @@ MeshGraph.cpp
 MeshGraphXml.cpp
 MeshGraphXmlCompressed.cpp
 MeshPartition.cpp
-MeshPartitionMetis.cpp
 PrismGeom.cpp
 PyrGeom.cpp
 QuadGeom.cpp
@@ -36,7 +35,6 @@ MeshGraph.h
 MeshGraphXml.h
 MeshGraphXmlCompressed.h
 MeshPartition.h
-MeshPartitionMetis.h
 PrismGeom.h
 PyrGeom.h
 QuadGeom.h
@@ -80,9 +78,9 @@ ENDIF()
 TARGET_LINK_LIBRARIES(SpatialDomains LINK_PRIVATE ${METIS_LIB})
 
 IF( NEKTAR_USE_SCOTCH )
-    TARGET_LINK_LIBRARIES(SpatialDomains LINK_PRIVATE
+    TARGET_LINK_LIBRARIES(SpatialDomains LINK_PUBLIC
         ${SCOTCH_LIBRARY} ${SCOTCHERR_LIBRARY})
-    ADD_DEPENDENCIES(SpatialDomains scotch-6.0.0)
+    ADD_DEPENDENCIES(SpatialDomains scotch-6.0.4)
 ENDIF ()
 
 INSTALL(DIRECTORY ./ DESTINATION ${NEKTAR_INCLUDE_DIR}/SpatialDomains

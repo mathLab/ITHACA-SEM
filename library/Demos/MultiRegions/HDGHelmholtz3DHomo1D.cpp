@@ -6,7 +6,7 @@
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <LibUtilities/Communication/Comm.h>
 #include <MultiRegions/DisContField3DHomogeneous1D.h>
-#include <SpatialDomains/MeshGraph2D.h>
+#include <SpatialDomains/MeshGraph.h>
 
 //#define TIMING
 #ifdef TIMING
@@ -48,7 +48,7 @@ int main(int argc, char *argv[])
 
     //----------------------------------------------
     // Read in mesh from input file
-    SpatialDomains::MeshGraphSharedPtr graph2D = MemoryManager<SpatialDomains::MeshGraph2D>::AllocateSharedPtr(vSession);
+    SpatialDomains::MeshGraphSharedPtr graph2D = SpatialDomains::MeshGraph::Read(vSession);
     //----------------------------------------------
 
     //----------------------------------------------

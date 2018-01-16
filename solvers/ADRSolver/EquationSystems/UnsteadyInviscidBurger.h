@@ -49,10 +49,12 @@ namespace Nektar
 
         /// Creates an instance of this class
         static SolverUtils::EquationSystemSharedPtr create(
-                const LibUtilities::SessionReaderSharedPtr& pSession) {
+            const LibUtilities::SessionReaderSharedPtr& pSession,
+            const SpatialDomains::MeshGraphSharedPtr& pGraph)
+        {
             SolverUtils::EquationSystemSharedPtr p
                 = MemoryManager<UnsteadyInviscidBurger>
-                                            ::AllocateSharedPtr(pSession);
+                ::AllocateSharedPtr(pSession, pGraph);
             p->InitObject();
             return p;
         }
@@ -67,7 +69,9 @@ namespace Nektar
         Array<OneD, NekDouble>                  m_traceVn;
         
         /// Session reader
-        UnsteadyInviscidBurger(const LibUtilities::SessionReaderSharedPtr& pSession);
+        UnsteadyInviscidBurger(
+            const LibUtilities::SessionReaderSharedPtr& pSession,
+            const SpatialDomains::MeshGraphSharedPtr& pGraph);
 
         /// Evaluate the flux at each solution point
         void GetFluxVector(

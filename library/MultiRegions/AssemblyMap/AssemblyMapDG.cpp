@@ -611,7 +611,7 @@ namespace Nektar
                         LocalRegions::SegExpSharedPtr locSegExp =
                             m_elmtToTrace[eid][j]->as<LocalRegions::SegExp>();
 
-                        id  = locSegExp->GetGeom1D()->GetEid();
+                        id  = locSegExp->GetGeom()->GetGlobalID();
                         order_e = locExpansion->GetEdgeNcoeffs(j);
 
                         map<int,int> orientMap;
@@ -656,7 +656,7 @@ namespace Nektar
                                 m_elmtToTrace[eid][j]
                                            ->as<LocalRegions::Expansion2D>();
 
-                        id  = locFaceExp->GetGeom2D()->GetFid();
+                        id  = locFaceExp->GetGeom()->GetGlobalID();
                         order_e = locExpansion->GetFaceNcoeffs(j);
 
                         map<int,int> orientMap;

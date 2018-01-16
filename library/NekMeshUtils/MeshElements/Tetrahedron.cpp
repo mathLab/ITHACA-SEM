@@ -239,7 +239,9 @@ SpatialDomains::GeometrySharedPtr Tetrahedron::GetGeom(int coordDim)
             m_face[i]->GetGeom(coordDim));
     }
 
-    ret = MemoryManager<SpatialDomains::TetGeom>::AllocateSharedPtr(tfaces);
+    ret = MemoryManager<SpatialDomains::TetGeom>::AllocateSharedPtr(
+        m_id, tfaces);
+    ret->Setup();
 
     return ret;
 }
@@ -532,10 +534,12 @@ void Tetrahedron::OrientTet()
     ny /= nmag;
     nz /= nmag;
 
+    NekDouble area = 0.5 * nmag;
+
     // distance of top vertex from base
     NekDouble dist = cx * nx + cy * ny + cz * nz;
 
-    if (fabs(dist) <= 1e-4)
+    if (fabs(dist) / area <= 1e-4 )
     {
         cerr << "Warning: degenerate tetrahedron, 3rd vertex is = " << dist
              << " from face" << endl;
@@ -554,10 +558,12 @@ void Tetrahedron::OrientTet()
     ny /= nmag;
     nz /= nmag;
 
+    area = 0.5 * nmag;
+
     // distance of top vertex from base
     dist = bx * nx + by * ny + bz * nz;
 
-    if (fabs(dist) <= 1e-4)
+    if (fabs(dist) / area <= 1e-4)
     {
         cerr << "Warning: degenerate tetrahedron, 2nd vertex is = " << dist
              << " from face" << endl;
@@ -571,10 +577,12 @@ void Tetrahedron::OrientTet()
     ny /= nmag;
     nz /= nmag;
 
+    area = 0.5 * nmag;
+
     // distance of top vertex from base
     dist = ax * nx + ay * ny + az * nz;
 
-    if (fabs(dist) <= 1e-4)
+    if (fabs(dist) / area <= 1e-4)
     {
         cerr << "Warning: degenerate tetrahedron, 1st vertex is = " << dist
              << " from face" << endl;

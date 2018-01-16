@@ -46,10 +46,12 @@ namespace Nektar
 
         /// Creates an instance of this class
         static SolverUtils::EquationSystemSharedPtr create(
-                const LibUtilities::SessionReaderSharedPtr& pSession) {
+            const LibUtilities::SessionReaderSharedPtr& pSession,
+            const SpatialDomains::MeshGraphSharedPtr &pGraph)
+        {
             SolverUtils::EquationSystemSharedPtr p =
-                                MemoryManager<VCSWeakPressure>::
-                                            AllocateSharedPtr(pSession);
+                MemoryManager<VCSWeakPressure>::AllocateSharedPtr(
+                    pSession, pGraph);
             p->InitObject();
             return p;
         }
@@ -59,7 +61,8 @@ namespace Nektar
 
 
         /// Constructor.
-        VCSWeakPressure(const LibUtilities::SessionReaderSharedPtr& pSession);
+        VCSWeakPressure(const LibUtilities::SessionReaderSharedPtr& pSession,
+                        const SpatialDomains::MeshGraphSharedPtr &pGraph);
 
         virtual ~VCSWeakPressure();
 

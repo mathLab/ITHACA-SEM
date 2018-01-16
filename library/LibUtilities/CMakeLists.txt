@@ -16,8 +16,6 @@ SET(BasicUtilsHeaders
     ./BasicUtils/FileSystem.h
     ./BasicUtils/ErrorUtil.hpp
     ./BasicUtils/HashUtils.hpp
-    ./BasicUtils/MeshEntities.hpp
-    ./BasicUtils/MeshPartition.h
     ./BasicUtils/NekManager.hpp
     ./BasicUtils/NekFactory.hpp
     ./BasicUtils/OperatorGenerators.hpp
@@ -45,7 +43,6 @@ SET(BasicUtilsSources
     ./BasicUtils/FieldIO.cpp
     ./BasicUtils/FieldIOXml.cpp
     ./BasicUtils/FileSystem.cpp
-    ./BasicUtils/MeshPartition.cpp
     ./BasicUtils/ParseUtils.cpp
     ./BasicUtils/PtsField.cpp
     ./BasicUtils/PtsIO.cpp
@@ -82,21 +79,6 @@ SET(CommunicationSources
     ./Communication/CommSerial.cpp
     ./Communication/Transposition.cpp
 )
-
-IF(NEKTAR_USE_METIS)
-    SET(BasicUtilsHeaders ${BasicUtilsHeaders}
-        ./BasicUtils/MeshPartitionMetis.h
-        ./BasicUtils/Metis.hpp)
-    SET(BasicUtilsSources ${BasicUtilsSources}
-        ./BasicUtils/MeshPartitionMetis.cpp)
-ENDIF()
-
-IF(NEKTAR_USE_SCOTCH)
-    SET(BasicUtilsHeaders ${BasicUtilsHeaders}
-        ./BasicUtils/MeshPartitionScotch.h)
-    SET(BasicUtilsSources ${BasicUtilsSources}
-        ./BasicUtils/MeshPartitionScotch.cpp)
-ENDIF(NEKTAR_USE_SCOTCH)
 
 IF(NEKTAR_USE_MPI)
     SET(CommunicationHeaders ${CommunicationHeaders}
@@ -358,19 +340,6 @@ ADD_NEKTAR_LIBRARY(LibUtilities
 ADD_DEPENDENCIES(LibUtilities boost tinyxml-2.6.2 zlib-1.2.7)
 
 ### Libraries needed specifically by LibUtilities ###
-### Static libraries do not need to be linked by
-# Scotch
-IF (NEKTAR_USE_SCOTCH)
-    TARGET_LINK_LIBRARIES(LibUtilities LINK_PUBLIC
-        ${SCOTCH_LIBRARY} ${SCOTCHERR_LIBRARY})
-    ADD_DEPENDENCIES(LibUtilities scotch-6.0.4)
-ENDIF()
-
-# Metis
-IF (NEKTAR_USE_METIS)
-    TARGET_LINK_LIBRARIES(LibUtilities LINK_PRIVATE ${METIS_LIBRARY})
-    ADD_DEPENDENCIES(LibUtilities metis-5.1.0)
-ENDIF()
 
 # FFTW
 IF( NEKTAR_USE_FFTW )
@@ -461,7 +430,7 @@ ENDIF( NEKTAR_USE_PETSC )
 
 # HDF5
 IF( NEKTAR_USE_HDF5 )
-    TARGET_LINK_LIBRARIES(LibUtilities LINK_PRIVATE ${HDF5_LIBRARIES})
+    TARGET_LINK_LIBRARIES(LibUtilities LINK_PUBLIC ${HDF5_LIBRARIES})
     ADD_DEPENDENCIES(LibUtilities hdf5-1.8.16)
 ENDIF( NEKTAR_USE_HDF5 )
 

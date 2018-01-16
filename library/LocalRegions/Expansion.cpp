@@ -37,8 +37,6 @@
 #include <LocalRegions/Expansion.h>
 #include <LocalRegions/MatrixKey.h>
 
-#include <SpatialDomains/MeshComponents.h>
-
 using namespace std;
 
 namespace Nektar
@@ -240,7 +238,7 @@ namespace Nektar
 
             for (int i = 0; i < expDim; ++i)
             {
-                CBasis[i] = m_geom->GetBasis(i);
+                CBasis[i] = m_geom->GetXmap()->GetBasis(i);
                 nqGeom   *= CBasis[i]->GetNumPoints();
                 doCopy    = doCopy && m_base[i]->GetBasisKey().SamePoints(
                                                       CBasis[i]->GetBasisKey());

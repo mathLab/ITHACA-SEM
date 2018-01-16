@@ -36,284 +36,306 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include <SpatialDomains/Geometry.h>
+#include <SpatialDomains/Geometry1D.h>
+#include <SpatialDomains/Geometry2D.h>
 
 namespace Nektar
 {
-    namespace SpatialDomains
-    {
+namespace SpatialDomains
+{
 
-        // static class property
-        GeomFactorsVector Geometry::m_regGeomFactorsManager;
+// static class property
+GeomFactorsVector Geometry::m_regGeomFactorsManager;
 
-        Geometry::Geometry():
-            m_coordim(0),
-            m_geomFactorsState(eNotFilled),
-            m_state(eNotFilled),
-            m_shapeType(LibUtilities::eNoShapeType),
-            m_globalID(-1)
-        {
-        }
+/**
+ * @brief Default constructor.
+ */
+Geometry::Geometry()
+    : m_coordim(0), m_geomFactorsState(eNotFilled), m_state(eNotFilled), m_setupState(false),
+      m_shapeType(LibUtilities::eNoShapeType), m_globalID(-1)
+{
+}
 
-        Geometry::Geometry(const int coordim):
-            m_coordim(coordim),
-            m_geomFactorsState(eNotFilled),
-            m_state(eNotFilled),
-            m_shapeType(LibUtilities::eNoShapeType),
-            m_globalID(-1)
-        {
-        }
+/**
+ * @brief Constructor when supplied a coordinate dimension.
+ */
+Geometry::Geometry(const int coordim)
+    : m_coordim(coordim), m_geomFactorsState(eNotFilled), m_state(eNotFilled), m_setupState(false),
+      m_shapeType(LibUtilities::eNoShapeType), m_globalID(-1)
+{
+}
 
-        Geometry::~Geometry()
-        {
-        }
+/**
+ * @brief Default destructor.
+ */
+Geometry::~Geometry()
+{
+}
 
-        GeomFactorsSharedPtr Geometry::ValidateRegGeomFactor(
-                GeomFactorsSharedPtr geomFactor)
-        {
-            GeomFactorsSharedPtr returnval = geomFactor;
+/**
+ * @brief Check to see if a geometric factor has already been created that
+ * contains the same regular information.
+ *
+ * The principle behind this is that many regular (i.e. constant Jacobian)
+ * elements have identicial geometric factors. Memory may therefore be reduced
+ * by storing only the unique factors.
+ *
+ * @param geomFactor  The GeomFactor to check.
+ *
+ * @return Either the cached GeomFactor or @p geomFactor.
+ *
+ * @todo Currently this method is disabled since the lookup is very expensive.
+ */
+GeomFactorsSharedPtr Geometry::ValidateRegGeomFactor(
+    GeomFactorsSharedPtr geomFactor)
+{
+    GeomFactorsSharedPtr returnval = geomFactor;
 
 /// \todo should this '#if 0' statement be removed?
 #if 0
-            bool found = false;
-            if (geomFactor->GetGtype() == eRegular)
+    bool found = false;
+    if (geomFactor->GetGtype() == eRegular)
+    {
+        for (GeomFactorsVectorIter iter = m_regGeomFactorsManager.begin();
+             iter != m_regGeomFactorsManager.end();
+             ++iter)
+        {
+            if (**iter == *geomFactor)
             {
-                for (GeomFactorsVectorIter iter = m_regGeomFactorsManager.begin();
-                    iter != m_regGeomFactorsManager.end();
-                    ++iter)
-                {
-                    if (**iter == *geomFactor)
-                    {
-                        returnval = *iter;
-                        found = true;
-                        break;
-                    }
-                }
-
-                if (!found)
-                {
-                    m_regGeomFactorsManager.push_back(geomFactor);
-                    returnval = geomFactor;
-                }
+                returnval = *iter;
+                found = true;
+                break;
             }
+        }
+
+        if (!found)
+        {
+            m_regGeomFactorsManager.push_back(geomFactor);
+            returnval = geomFactor;
+        }
+    }
 #endif
-            return returnval;
-        }
+    return returnval;
+}
 
-        bool SortByGlobalId(const std::shared_ptr<Geometry>& lhs, 
-            const std::shared_ptr<Geometry>& rhs)
-        {
-            return lhs->GetGlobalID() < rhs->GetGlobalID();
-        }
+bool SortByGlobalId(const boost::shared_ptr<Geometry> &lhs,
+                    const boost::shared_ptr<Geometry> &rhs)
+{
+    return lhs->GetGlobalID() < rhs->GetGlobalID();
+}
 
-        bool GlobalIdEquality(const std::shared_ptr<Geometry>& lhs, 
-            const std::shared_ptr<Geometry>& rhs)
-        {
-            return lhs->GetGlobalID() == rhs->GetGlobalID();
-        }
+bool GlobalIdEquality(const boost::shared_ptr<Geometry> &lhs,
+                      const boost::shared_ptr<Geometry> &rhs)
+{
+    return lhs->GetGlobalID() == rhs->GetGlobalID();
+}
 
-        void Geometry::v_AddElmtConnected(int gvo_id, int locid)
-        {
-            NEKERROR(ErrorUtil::efatal,
-                     "This function is only valid for shape type geometries");
-        }
+/**
+ * @brief Get the ID of vertex @p i of this object.
+ */
+int Geometry::GetVid(int i) const
+{
+    return GetVertex(i)->GetGlobalID();
+}
 
-        int Geometry::v_NumElmtConnected() const
-        {
-            NEKERROR(ErrorUtil::efatal,
-                     "This function is only valid for shape type geometries");
-            return 0;
-        }
+/**
+ * @brief Get the ID of edge @p i of this object.
+ */
+int Geometry::GetEid(int i) const
+{
+    return GetEdge(i)->GetGlobalID();
+}
 
-        bool Geometry::v_IsElmtConnected(int gvo_id, int locid) const
-        {
-            NEKERROR(ErrorUtil::efatal,
-                     "This function is only valid for shape type geometries");
-            return false;
-        }
+/**
+ * @brief Get the ID of face @p i of this object.
+ */
+int Geometry::GetFid(int i) const
+{
+    return GetFace(i)->GetGlobalID();
+}
 
-        int Geometry::v_GetVid(int i) const
-        {
-            NEKERROR(ErrorUtil::efatal,
-                     "This function is only valid for shape type geometries");
-            return 0;
-        }
+/**
+ * @copydoc Geometry::GetEdge()
+ */
+Geometry1DSharedPtr Geometry::v_GetEdge(int i) const
+{
+    NEKERROR(ErrorUtil::efatal,
+             "This function is only valid for shape type geometries");
+    return Geometry1DSharedPtr();
+}
 
-        int Geometry::v_GetEid(int i) const
-        {
-            NEKERROR(ErrorUtil::efatal,
-                     "This function is only valid for shape type geometries");
-            return 0;
-        }
+/**
+ * @copydoc Geometry::GetFace()
+ */
+Geometry2DSharedPtr Geometry::v_GetFace(int i) const
+{
+    NEKERROR(ErrorUtil::efatal,
+             "This function is only valid for shape type geometries");
+    return Geometry2DSharedPtr();
+}
 
-        int Geometry::v_GetFid(int i) const
-        {
-            NEKERROR(ErrorUtil::efatal,
-                     "This function is only valid for expansion type geometries");
-            return 0;
-        }
+/**
+ * @copydoc Geometry::GetNumVerts()
+ */
+int Geometry::v_GetNumVerts() const
+{
+    NEKERROR(ErrorUtil::efatal,
+             "This function is only valid for shape type geometries");
+    return 0;
+}
 
-        int Geometry::v_GetNumVerts() const
-        {
-            NEKERROR(ErrorUtil::efatal,
-                "This function is only valid for shape type geometries");
-            return 0;
-        }
+/**
+ * @copydoc Geometry::GetEorient()
+ */
+StdRegions::Orientation Geometry::v_GetEorient(const int i) const
+{
+    NEKERROR(ErrorUtil::efatal,
+             "This function is not valid for this geometry.");
+    return StdRegions::eForwards;
+}
 
-        StdRegions::Orientation Geometry::v_GetEorient(const int i) const
-        {
-            NEKERROR(ErrorUtil::efatal,
-                "This function is not valid for this geometry.");
-            return StdRegions::eForwards;
-        }
+/**
+ * @copydoc Geometry::GetForient()
+ */
+StdRegions::Orientation Geometry::v_GetForient(const int i) const
+{
+    NEKERROR(ErrorUtil::efatal,
+             "This function is not valid for this geometry.");
+    return StdRegions::eFwd;
+}
 
-        StdRegions::Orientation Geometry::v_GetPorient(const int i) const
-        {
-            NEKERROR(ErrorUtil::efatal,
-                "This function is not valid for this geometry.");
-                    return StdRegions::eFwd;
-        }
+/**
+ * @copydoc Geometry::GetNumEdges()
+ */
+int Geometry::v_GetNumEdges() const
+{
+    NEKERROR(ErrorUtil::efatal,
+             "This function is only valid for shape type geometries");
+    return 0;
+}
 
-        StdRegions::Orientation Geometry::v_GetForient(const int i) const
-        {
-            NEKERROR(ErrorUtil::efatal,
-                "This function is not valid for this geometry.");
-                    return StdRegions::eFwd;
-        }
+/**
+ * @copydoc Geometry::GetNumFaces()
+ */
+int Geometry::v_GetNumFaces() const
+{
+    NEKERROR(ErrorUtil::efatal,
+             "This function is only valid for shape type geometries");
+    return 0;
+}
 
-        int Geometry::v_GetNumEdges() const
-        {
-            NEKERROR(ErrorUtil::efatal,
-                "This function is only valid for shape type geometries");
-            return 0;
-        }
+/**
+ * @copydoc Geometry::GetShapeDim()
+ */
+int Geometry::v_GetShapeDim() const
+{
+    NEKERROR(ErrorUtil::efatal,
+             "This function is only valid for shape type geometries");
+    return 0;
+}
 
-        int Geometry::v_GetNumFaces() const
-        {
-            NEKERROR(ErrorUtil::efatal,
-                     "This function is only valid for shape type geometries");
-            return 0;
-        }
+/**
+ * @copydoc Geometry::GetXmap()
+ */
+StdRegions::StdExpansionSharedPtr Geometry::v_GetXmap() const
+{
+    return m_xmap;
+}
 
-        int Geometry::v_GetShapeDim() const
-        {
-            NEKERROR(ErrorUtil::efatal,
-                     "This function is only valid for shape type geometries");
-            return 0;
-        }
+/**
+ * @copydoc Geometry::ContainsPoint(
+ *     const Array<OneD, const NekDouble> &, Array<OneD, NekDouble> &,
+ *     NekDouble, NekDouble&)
+ */
+bool Geometry::v_ContainsPoint(const Array<OneD, const NekDouble> &gloCoord,
+                               Array<OneD, NekDouble> &locCoord,
+                               NekDouble tol,
+                               NekDouble &resid)
+{
+    NEKERROR(ErrorUtil::efatal,
+             "This function has not been defined for this geometry");
+    return false;
+}
 
-        StdRegions::StdExpansionSharedPtr Geometry::v_GetXmap() const
-        {
-            return m_xmap;
-        }
+/**
+ * @copydoc Geometry::GetVertexEdgeMap()
+ */
+int Geometry::v_GetVertexEdgeMap(const int i, const int j) const
+{
+    NEKERROR(ErrorUtil::efatal,
+             "This function has not been defined for this geometry");
+    return 0;
+}
 
-        bool Geometry::v_ContainsPoint(
-                const Array<OneD, const NekDouble>& gloCoord,
-                      NekDouble tol)
-        {
-            NEKERROR(ErrorUtil::efatal,
-                     "This function has not been defined for this geometry");
-            return false;
-        }
+/**
+ * @copydoc Geometry::GetVertexFaceMap()
+ */
+int Geometry::v_GetVertexFaceMap(const int i, const int j) const
+{
+    NEKERROR(ErrorUtil::efatal,
+             "This function has not been defined for this geometry");
+    return 0;
+}
 
-        bool Geometry::v_ContainsPoint(
-                const Array<OneD, const NekDouble>& gloCoord,
-                Array<OneD, NekDouble>& locCoord,
-                NekDouble tol)
-        {
-            NEKERROR(ErrorUtil::efatal,
-                     "This function has not been defined for this geometry");
-            return false;
-        }
+/**
+ * @copydoc Geometry::GetEdgeFaceMap()
+ */
+int Geometry::v_GetEdgeFaceMap(const int i, const int j) const
+{
+    NEKERROR(ErrorUtil::efatal,
+             "This function has not been defined for this geometry");
+    return 0;
+}
 
-        bool Geometry::v_ContainsPoint(
-                const Array<OneD, const NekDouble>& gloCoord,
-                Array<OneD, NekDouble>& locCoord,
-                NekDouble tol,
-                NekDouble &resid)
-        {
-            NEKERROR(ErrorUtil::efatal,
-                     "This function has not been defined for this geometry");
-            return false;
-        }
+/**
+ * @copydoc Geometry::GetCoord()
+ */
+NekDouble Geometry::v_GetCoord(const int i,
+                               const Array<OneD, const NekDouble> &Lcoord)
+{
+    NEKERROR(ErrorUtil::efatal,
+             "This function is only valid for expansion type geometries");
+    return 0.0;
+}
 
-        int Geometry::v_GetVertexEdgeMap(const int i, const int j) const
-        {
-            NEKERROR(ErrorUtil::efatal,
-                     "This function has not been defined for this geometry");
-            return 0;
-        }
+/**
+ * @copydoc Geometry::GetLocCoords()
+ */
+NekDouble Geometry::v_GetLocCoords(const Array<OneD, const NekDouble> &coords,
+                                   Array<OneD, NekDouble> &Lcoords)
+{
+    NEKERROR(ErrorUtil::efatal,
+             "This function is only valid for expansion type geometries");
+    return 0.0;
+}
 
-        int Geometry::v_GetVertexFaceMap(const int i, const int j) const
-        {
-            NEKERROR(ErrorUtil::efatal,
-                     "This function has not been defined for this geometry");
-            return 0;
-        }
+/**
+ * @copydoc Geometry::FillGeom()
+ */
+void Geometry::v_FillGeom()
+{
+    NEKERROR(ErrorUtil::efatal,
+             "This function is only valid for expansion type geometries");
+}
 
-        int Geometry::v_GetEdgeFaceMap(const int i, const int j) const
-        {
-            NEKERROR(ErrorUtil::efatal,
-                     "This function has not been defined for this geometry");
-            return 0;
-        }
+/**
+ * @copydoc Geometry::Reset()
+ */
+void Geometry::v_Reset(CurveMap &curvedEdges, CurveMap &curvedFaces)
+{
+    // Reset state
+    m_state = eNotFilled;
+    m_geomFactorsState = eNotFilled;
 
-        NekDouble Geometry::v_GetCoord(
-                    const int i,
-                    const Array<OneD,const NekDouble>& Lcoord)
-        {
-            NEKERROR(ErrorUtil::efatal,
-                     "This function is only valid for expansion type geometries");
-            return 0.0;
-        }
+    // Junk geometric factors
+    m_geomFactors = GeomFactorsSharedPtr();
+}
 
-        NekDouble Geometry::v_GetLocCoords(
-                const Array<OneD,const NekDouble> &coords,
-                      Array<OneD,NekDouble> &Lcoords)
-        {
-            NEKERROR(ErrorUtil::efatal,
-                     "This function is only valid for expansion type geometries");
-            return 0.0;
-        }
+void Geometry::v_Setup()
+{
+    NEKERROR(ErrorUtil::efatal,
+             "This function is only valid for expansion type geometries");
+}
 
-        void Geometry::v_FillGeom()
-        {
-            NEKERROR(ErrorUtil::efatal,
-                     "This function is only valid for expansion type geometries");
-        }
-
-        void Geometry::v_SetOwnData()
-        {
-            NEKERROR(ErrorUtil::efatal,
-                     "This function is only valid for expansion type geometries");
-        }
-
-        const LibUtilities::BasisSharedPtr Geometry::v_GetBasis(const int i)
-        {
-            NEKERROR(ErrorUtil::efatal,
-                     "This function is only valid for shape type geometries");
-            LibUtilities::BasisSharedPtr returnval;
-            return returnval;
-        }
-
-        int Geometry::v_GetCoordim() const
-        {
-            return m_coordim;
-        }
-
-        /**
-         * @brief Reset this geometry object: unset the current state and remove
-         * allocated GeomFactors.
-         */
-        void Geometry::v_Reset(CurveMap &curvedEdges,
-                               CurveMap &curvedFaces)
-        {
-            // Reset state
-            m_state            = eNotFilled;
-            m_geomFactorsState = eNotFilled;
-
-            // Junk geometric factors
-            m_geomFactors = GeomFactorsSharedPtr();
-        }
-    }; //end of namespace
-}; //end of namespace
-
+}
+}

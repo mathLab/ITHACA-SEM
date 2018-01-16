@@ -67,8 +67,9 @@ namespace Nektar
          * @param   pSession        Session object to read parameters from.
          */
         UnsteadySystem::UnsteadySystem(
-            const LibUtilities::SessionReaderSharedPtr& pSession)
-            : EquationSystem(pSession),
+            const LibUtilities::SessionReaderSharedPtr& pSession,
+            const SpatialDomains::MeshGraphSharedPtr& pGraph)
+            : EquationSystem(pSession, pGraph),
               m_infosteps(10)
 
         {
@@ -759,7 +760,7 @@ namespace Nektar
             NekDouble maxL2 = Vmath::Vmax(nFields, L2, 1);
 
             if (m_session->DefinesCmdLineArgument("verbose") &&
-                m_comm->GetRank() == 0 && (step % m_infosteps == 0))
+                m_comm->GetRank() == 0 && ((step+1) % m_infosteps == 0))
             {
                 cout << "-- Maximum L^2 residual: " << maxL2 << endl;
             }

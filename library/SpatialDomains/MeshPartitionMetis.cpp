@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File MeshPartitionMetis.h
+// File MeshPartitionMetis.cpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -32,51 +32,45 @@
 // Description: Metis partitioner interface
 //
 ///////////////////////////////////////////////////////////////////////////////
-#ifndef NEKTAR_LIB_UTILITIES_MESHPARTITIONMETIS_H
-#define NEKTAR_LIB_UTILITIES_MESHPARTITIONMETIS_H
 
-#include "LibUtilities/Memory/NekMemoryManager.hpp"
-
-#include "MeshPartition.h"
+#include <SpatialDomains/MeshPartitionMetis.h>
+#include <LibUtilities/BasicUtils/Metis.hpp>
 
 namespace Nektar
 {
-namespace LibUtilities
+namespace SpatialDomains
 {
 
-    class MeshPartitionMetis : public MeshPartition
-    {
-        public:
-            /// Creates an instance of this class
-            static MeshPartitionSharedPtr create(const SessionReaderSharedPtr& pSession)
-            {
-                return MemoryManager<MeshPartitionMetis>::AllocateSharedPtr(pSession);
-            }
+std::string MeshPartitionMetis::className =
+    GetMeshPartitionFactory().RegisterCreatorFunction(
+        "Metis", MeshPartitionMetis::create,
+        "Partitioning using the METIS library.");
 
-            /// Name of class
-            static std::string className;
-            static std::string cmdSwitch;
+std::string MeshPartitionMetis::cmdSwitch =
+    LibUtilities::SessionReader::RegisterCmdLineFlag(
+        "use-metis", "", "Use METIS for mesh partitioning.");
 
-            MeshPartitionMetis(const SessionReaderSharedPtr& pSession);
-            virtual ~MeshPartitionMetis();
-
-        private:
-            virtual void PartitionGraphImpl(
-                    int&                              nVerts,
-                    int&                              nVertConds,
-                    Nektar::Array<Nektar::OneD, int>& xadj,
-                    Nektar::Array<Nektar::OneD, int>& adjcy,
-                    Nektar::Array<Nektar::OneD, int>& vertWgt,
-                    Nektar::Array<Nektar::OneD, int>& vertSize,
-                    Nektar::Array<Nektar::OneD, int>& edgeWgt,
-                    int&                              nparts,
-                    int&                              volume,
-                    Nektar::Array<Nektar::OneD, int>& part);
-
-
-    };
-
-}
+MeshPartitionMetis::MeshPartitionMetis(
+    const LibUtilities::SessionReaderSharedPtr session,
+    const MeshGraphSharedPtr meshGraph)
+    : MeshPartition(session, meshGraph)
+{
 }
 
-#endif
+MeshPartitionMetis::~MeshPartitionMetis()
+{
+}
+
+void MeshPartitionMetis::PartitionGraphImpl(
+    int &nVerts, int &nVertConds, Nektar::Array<Nektar::OneD, int> &xadj,
+    Nektar::Array<Nektar::OneD, int> &adjcy,
+    Nektar::Array<Nektar::OneD, int> &vertWgt,
+    Nektar::Array<Nektar::OneD, int> &vertSize,
+    Nektar::Array<Nektar::OneD, int> &edgeWgt, int &nparts, int &volume,
+    Nektar::Array<Nektar::OneD, int> &part)
+{
+    Metis::PartGraphVKway(nVerts, nVertConds, xadj, adjcy, vertWgt, vertSize,
+                          edgeWgt, nparts, volume, part);
+}
+}
+}

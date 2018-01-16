@@ -52,9 +52,10 @@ namespace Nektar
         "artificial diffusion (deprecated).");
 
     EulerCFE::EulerCFE(
-        const LibUtilities::SessionReaderSharedPtr& pSession)
-    : UnsteadySystem(pSession),
-      CompressibleFlowSystem(pSession)
+        const LibUtilities::SessionReaderSharedPtr& pSession,
+        const SpatialDomains::MeshGraphSharedPtr& pGraph)
+        : UnsteadySystem(pSession, pGraph),
+          CompressibleFlowSystem(pSession, pGraph)
     {
     }
 

@@ -44,8 +44,9 @@ namespace Nektar
     string EigenValuesAdvection::className = GetEquationSystemFactory().RegisterCreatorFunction("EigenValuesAdvection", EigenValuesAdvection::create, "Eigenvalues of the weak advection operator.");
 
     EigenValuesAdvection::EigenValuesAdvection(
-            const LibUtilities::SessionReaderSharedPtr& pSession)
-        : EquationSystem(pSession)
+        const LibUtilities::SessionReaderSharedPtr& pSession,
+        const SpatialDomains::MeshGraphSharedPtr& pGraph)
+        : EquationSystem(pSession, pGraph)
     {
     }
 

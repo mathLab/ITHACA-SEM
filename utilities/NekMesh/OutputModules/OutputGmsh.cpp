@@ -155,16 +155,19 @@ void OutputGmsh::Process()
     }
 
     // Create ordered set of nodes - not required but looks nicer.
-    std::set<NodeSharedPtr> tmp(m_mesh->m_vertexSet.begin(),
-                                m_mesh->m_vertexSet.end());
+    map<int, NodeSharedPtr> tmp;
+    for (const auto &it : m_mesh->m_vertexSet)
+    {
+        tmp[it->GetID() + 1] = it;
+    }
 
     // Write out nodes section.
     m_mshFile << "$Nodes" << endl << m_mesh->m_vertexSet.size() << endl;
 
     for (auto &it : tmp)
     {
-        m_mshFile << it->m_id+1 << " " << scientific << setprecision(10)
-                  << it->m_x << " " << it->m_y << " " << it->m_z
+        m_mshFile << it.first << " " << scientific << setprecision(10)
+                  << it.second->m_x << " " << it.second->m_y << " " << it.second->m_z
                   << endl;
     }
 

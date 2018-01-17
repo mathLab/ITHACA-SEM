@@ -202,7 +202,7 @@ SharedMatrix NodalUtil::GetDerivMatrix(int dir)
 SharedMatrix NodalUtil::GetInterpolationMatrix(
     Array<OneD, Array<OneD, NekDouble> > &xi)
 {
-    boost::shared_ptr<NodalUtil> subUtil = v_CreateUtil(xi);
+    std::shared_ptr<NodalUtil> subUtil = v_CreateUtil(xi);
     SharedMatrix matS = GetVandermonde();
     SharedMatrix matT = subUtil->GetVandermonde();
     SharedMatrix D = MemoryManager<NekMatrix<NekDouble> >::AllocateSharedPtr(
@@ -406,7 +406,7 @@ NekVector<NekDouble> NodalUtilTriangle::v_OrthoBasisDeriv(
  *   to an ordering \f$ 0 \leq m(ijk) \leq (P+1)(P+2)(P+3)/6 \f$ that defines
  *   the monomials \f$ \xi_1^i \xi_2^j \xi_3^k \f$ that span the tetrahedral
  *   space. This is then used to calculate which \f$ (i,j,k) \f$ triple
- *   (represented as a boost tuple) corresponding to a column of the Vandermonde
+ *   (represented as a tuple) corresponding to a column of the Vandermonde
  *   matrix when calculating the orthogonal polynomials.
  *
  * @param degree  Polynomial order of this nodal tetrahedron
@@ -496,9 +496,9 @@ NekVector<NekDouble> NodalUtilTetrahedron::v_OrthoBasis(const int mode)
 {
     std::vector<NekDouble> jacA(m_numPoints), jacB(m_numPoints);
     std::vector<NekDouble> jacC(m_numPoints);
-    Mode modes = m_ordering[mode];
 
-    const int I = modes.get<0>(), J = modes.get<1>(), K = modes.get<2>();
+    int I, J, K;
+    std::tie(I, J, K) = m_ordering[mode];
 
     // Calculate Jacobi polynomials
     Polylib::jacobfd(
@@ -541,9 +541,9 @@ NekVector<NekDouble> NodalUtilTetrahedron::v_OrthoBasisDeriv(
     std::vector<NekDouble> jacC(m_numPoints);
     std::vector<NekDouble> jacDerivA(m_numPoints), jacDerivB(m_numPoints);
     std::vector<NekDouble> jacDerivC(m_numPoints);
-    Mode modes = m_ordering[mode];
 
-    const int I = modes.get<0>(), J = modes.get<1>(), K = modes.get<2>();
+    int I, J, K;
+    std::tie(I, J, K) = m_ordering[mode];
 
     // Calculate Jacobi polynomials
     Polylib::jacobfd(
@@ -640,9 +640,9 @@ NekVector<NekDouble> NodalUtilTetrahedron::v_OrthoBasisDeriv(
  *   \f$ I = \{ (i,j,k)\ |\ 0\leq i,j,k \leq P, i+k \leq P \}\f$ to an ordering
  *   \f$ 0 \leq m(ijk) \leq (P+1)(P+1)(P+2)/2 \f$ that defines the monomials \f$
  *   \xi_1^i \xi_2^j \xi_3^k \f$ that span the prismatic space. This is then
- *   used to calculate which \f$ (i,j,k) \f$ triple (represented as a boost
- *   tuple) corresponding to a column of the Vandermonde matrix when calculating
- *   the orthogonal polynomials.
+ *   used to calculate which \f$ (i,j,k) \f$ triple (represented as a tuple)
+ *   corresponding to a column of the Vandermonde matrix when calculating the
+ *   orthogonal polynomials.
  *
  * @param degree  Polynomial order of this nodal tetrahedron
  * @param r       \f$ \xi_1 \f$-coordinates of nodal points in the standard
@@ -719,9 +719,9 @@ NekVector<NekDouble> NodalUtilPrism::v_OrthoBasis(const int mode)
 {
     std::vector<NekDouble> jacA(m_numPoints), jacB(m_numPoints);
     std::vector<NekDouble> jacC(m_numPoints);
-    Mode modes = m_ordering[mode];
 
-    const int I = modes.get<0>(), J = modes.get<1>(), K = modes.get<2>();
+    int I, J, K;
+    std::tie(I, J, K) = m_ordering[mode];
 
     // Calculate Jacobi polynomials
     Polylib::jacobfd(
@@ -764,9 +764,9 @@ NekVector<NekDouble> NodalUtilPrism::v_OrthoBasisDeriv(
     std::vector<NekDouble> jacC(m_numPoints);
     std::vector<NekDouble> jacDerivA(m_numPoints), jacDerivB(m_numPoints);
     std::vector<NekDouble> jacDerivC(m_numPoints);
-    Mode modes = m_ordering[mode];
 
-    const int I = modes.get<0>(), J = modes.get<1>(), K = modes.get<2>();
+    int I, J, K;
+    std::tie(I, J, K) = m_ordering[mode];
 
     // Calculate Jacobi polynomials
     Polylib::jacobfd(
@@ -995,9 +995,9 @@ NekVector<NekDouble> NodalUtilHex::v_OrthoBasis(const int mode)
 {
     std::vector<NekDouble> jacobi_i(m_numPoints), jacobi_j(m_numPoints);
     std::vector<NekDouble> jacobi_k(m_numPoints);
-    Mode modes = m_ordering[mode];
 
-    const int I = modes.get<0>(), J = modes.get<1>(), K = modes.get<2>();
+    int I, J, K;
+    std::tie(I, J, K) = m_ordering[mode];
 
     // Calculate Jacobi polynomials
     Polylib::jacobfd(
@@ -1024,9 +1024,9 @@ NekVector<NekDouble> NodalUtilHex::v_OrthoBasisDeriv(
     std::vector<NekDouble> jacobi_k(m_numPoints);
     std::vector<NekDouble> jacobi_di(m_numPoints), jacobi_dj(m_numPoints);
     std::vector<NekDouble> jacobi_dk(m_numPoints);
-    Mode modes = m_ordering[mode];
 
-    const int I = modes.get<0>(), J = modes.get<1>(), K = modes.get<2>();
+    int I, J, K;
+    std::tie(I, J, K) = m_ordering[mode];
 
     // Calculate Jacobi polynomials and their derivatives. Note that we use both
     // jacobfd and jacobd since jacobfd is only valid for derivatives in the

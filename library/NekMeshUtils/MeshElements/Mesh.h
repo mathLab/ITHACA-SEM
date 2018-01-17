@@ -36,6 +36,10 @@
 #ifndef NEKMESHUTILS_MESHELEMENTS_MESH
 #define NEKMESHUTILS_MESHELEMENTS_MESH
 
+#include <set>
+
+#include <LibUtilities/BasicUtils/FieldIO.h>
+
 #include <NekMeshUtils/NekMeshUtilsDeclspec.h>
 #include <NekMeshUtils/MeshElements/Element.h>
 #include <NekMeshUtils/MeshElements/Composite.h>
@@ -46,7 +50,7 @@ namespace NekMeshUtils
 {
 
 class Octree;
-typedef boost::shared_ptr<Octree> OctreeSharedPtr;
+typedef std::shared_ptr<Octree> OctreeSharedPtr;
 
 /**
  * Enumeration of condition types (Dirichlet, Neumann, etc).
@@ -79,7 +83,7 @@ struct Condition
     std::vector<int> m_composite;
 };
 
-typedef boost::shared_ptr<Condition> ConditionSharedPtr;
+typedef std::shared_ptr<Condition> ConditionSharedPtr;
 typedef std::map<int, ConditionSharedPtr> ConditionMap;
 
 NEKMESHUTILS_EXPORT bool operator==(ConditionSharedPtr const &c1,
@@ -119,7 +123,7 @@ public:
     /// List of fields names.
     std::vector<std::string>        m_fields;
     /// Map of vertex normals.
-    boost::unordered_map<int, Node> m_vertexNormals;
+    std::unordered_map<int, Node>   m_vertexNormals;
     /// Set of all pairs of element ID and edge/face number on which to
     /// apply spherigon surface smoothing.
     std::set<std::pair<int, int> >  m_spherigonSurfs;
@@ -129,7 +133,8 @@ public:
     CADSystemSharedPtr              m_cad;
     /// Octree system pointer, if there is no octree its empty
     OctreeSharedPtr                 m_octree;
-
+    /// Metadata map for storing any mesh generation parameters
+    LibUtilities::FieldMetaDataMap  m_metadata;
 
     /// Returns the total number of elements in the mesh with
     /// dimension expDim.
@@ -144,7 +149,7 @@ public:
                                        LibUtilities::PointsType distType);
 };
 /// Shared pointer to a mesh.
-typedef boost::shared_ptr<Mesh> MeshSharedPtr;
+typedef std::shared_ptr<Mesh> MeshSharedPtr;
 }
 }
 

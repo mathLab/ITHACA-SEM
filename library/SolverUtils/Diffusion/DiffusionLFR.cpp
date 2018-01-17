@@ -1482,7 +1482,9 @@ namespace Nektar
             int nElements    = fields[0]->GetExpSize();            
             int nSolutionPts = fields[0]->GetTotPoints();
             
-            vector<bool> negatedFluxNormal = (boost::static_pointer_cast<MultiRegions::DisContField1D>(fields[0]))->GetNegatedFluxNormal();
+            vector<bool> negatedFluxNormal =
+                std::static_pointer_cast<MultiRegions::DisContField1D>(
+                    fields[0])->GetNegatedFluxNormal();
 
             // Arrays to store the derivatives of the correction flux
             Array<OneD, NekDouble> DCL(nSolutionPts/nElements, 0.0); 
@@ -1740,7 +1742,7 @@ namespace Nektar
                                 
                                 for (j = 0; j < nquad1; ++j)
                                 {
-                                    cnt = (nquad0 - 1) + j*nquad0 - i;
+                                    cnt = j*nquad0 + i;
                                     divCFluxE2[cnt] = fluxJumps[i] * m_dGR_xi2[n][j];
                                 }
                             }
@@ -1752,7 +1754,7 @@ namespace Nektar
                                 //fluxJumps[i] = -(m_Q2D_e3[n][i]) * fluxJumps[i];
                                 for (j = 0; j < nquad0; ++j)
                                 {
-                                    cnt = (nquad0*nquad1 - nquad0) + j - i*nquad0;
+                                    cnt = j + i*nquad0;
                                     divCFluxE3[cnt] = fluxJumps[i] * m_dGL_xi1[n][j];  
                                 }
                             }
@@ -1938,7 +1940,7 @@ namespace Nektar
                                 
                                 for (j = 0; j < nquad1; ++j)
                                 {
-                                    cnt = (nquad0 - 1) + j*nquad0 - i;
+                                    cnt = j*nquad0 + i;
                                     divCFluxE2[cnt] = fluxJumps[i] * m_dGR_xi2[n][j];
                                 }
                             }
@@ -1950,7 +1952,7 @@ namespace Nektar
                                 fluxJumps[i] = -(m_Q2D_e3[n][i]) * fluxJumps[i];
                                 for (j = 0; j < nquad0; ++j)
                                 {
-                                    cnt = (nquad0*nquad1 - nquad0) + j - i*nquad0;
+                                    cnt = j + i*nquad0;
                                     divCFluxE3[cnt] = fluxJumps[i] * m_dGL_xi1[n][j];   
                                 }
                             }
@@ -2239,7 +2241,7 @@ namespace Nektar
                             {
                                 for (j = 0; j < nquad1; ++j)
                                 {
-                                    cnt = (nquad0 - 1) + j*nquad0 - i;
+                                    cnt = j*nquad0 + i;
                                     divCFluxE2[cnt] =
                                     fluxJumps[i] * m_dGR_xi2[n][j];
                                 }
@@ -2305,8 +2307,7 @@ namespace Nektar
                             {
                                 for (j = 0; j < nquad0; ++j)
                                 {
-                                    cnt = (nquad0*nquad1 - nquad0) + j
-                                    - i*nquad0;
+                                    cnt = j + i*nquad0;
                                     divCFluxE3[cnt] =
                                     -fluxJumps[i] * m_dGL_xi1[n][j];
                                 }

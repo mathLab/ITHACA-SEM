@@ -72,7 +72,7 @@ class CoalescedGeomData
         std::map<GeomData,Array<TwoD, NekDouble> > m_twoDGeomData;
 };
 
-typedef boost::shared_ptr<CoalescedGeomData>   CoalescedGeomDataSharedPtr;
+typedef std::shared_ptr<CoalescedGeomData>   CoalescedGeomDataSharedPtr;
 
 static CoalescedGeomDataSharedPtr GeomDataNull;
 

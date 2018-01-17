@@ -40,7 +40,6 @@
 #include <LibUtilities/BasicUtils/VmathArray.hpp>
 
 #include <boost/format.hpp>
-#include <boost/function.hpp>
 
 using namespace std;
 
@@ -179,9 +178,8 @@ void SessionFunction::Evaluate(std::string pFieldName,
         std::string filename =
             m_session->GetFunctionFilename(m_name, pFieldName, domain);
 
-        if (boost::filesystem::path(filename).extension() == ".pts"
-            || boost::filesystem::path(filename).extension() == ".csv"
-        )
+        if (boost::filesystem::path(filename).extension() == ".pts" ||
+            boost::filesystem::path(filename).extension() == ".csv")
         {
             EvaluatePts(pFieldName, pArray, pTime, domain);
         }
@@ -189,6 +187,10 @@ void SessionFunction::Evaluate(std::string pFieldName,
         {
             EvaluateFld(pFieldName, pArray, pTime, domain);
         }
+    }
+    else
+    {
+        ASSERTL0(false, "unknown eFunctionType");
     }
 
     if (m_toCache)
@@ -219,11 +221,15 @@ std::string SessionFunction::Describe(std::string pFieldName, const int domain)
         retVal = ffunc->GetExpression();
     }
     else if (vType == LibUtilities::eFunctionTypeFile ||
-             LibUtilities::eFunctionTypeTransientFile)
+             vType == LibUtilities::eFunctionTypeTransientFile)
     {
         std::string filename =
             m_session->GetFunctionFilename(m_name, pFieldName, domain);
         retVal = "from file " + filename;
+    }
+    else
+    {
+        ASSERTL0(false, "unknown eFunctionType");
     }
 
     return retVal;
@@ -501,7 +507,7 @@ void SessionFunction::EvaluatePts(string pFieldName,
     vector<string> fieldNames = outPts->GetFieldNames();
     for (fieldInd = 0; fieldInd < fieldNames.size(); ++fieldInd)
     {
-        if (outPts->GetFieldName(fieldInd) == pFieldName)
+        if (outPts->GetFieldName(fieldInd) == fileVar)
         {
             break;
         }

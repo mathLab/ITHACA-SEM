@@ -50,8 +50,9 @@ namespace Nektar
           "Nonlinear shallow water equation in conservative variables.");
   
   NonlinearSWE::NonlinearSWE(
-          const LibUtilities::SessionReaderSharedPtr& pSession)
-    : ShallowWaterSystem(pSession)
+      const LibUtilities::SessionReaderSharedPtr& pSession,
+      const SpatialDomains::MeshGraphSharedPtr& pGraph)
+      : ShallowWaterSystem(pSession, pGraph)
   {
   }
 
@@ -103,7 +104,7 @@ namespace Nektar
 	  // Setting up Riemann solver for advection operator
 	  m_session->LoadSolverInfo("UpwindType", riemName, "Average");
 	  m_riemannSolver = SolverUtils::GetRiemannSolverFactory()
-	    .CreateInstance(riemName);
+	    .CreateInstance(riemName, m_session);
                 
 	  // Setting up upwind solver for diffusion operator
 	  // m_riemannSolverLDG = SolverUtils::GetRiemannSolverFactory()

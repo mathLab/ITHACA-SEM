@@ -51,7 +51,7 @@ namespace Nektar
         // Forward declarations
         class AssemblyMap;
         class ExpList;
-        typedef boost::shared_ptr<AssemblyMap>  AssemblyMapSharedPtr;
+        typedef std::shared_ptr<AssemblyMap>  AssemblyMapSharedPtr;
         static AssemblyMapSharedPtr NullAssemblyMapSharedPtr;
 
         /// Base class for constructing local to global mapping of degrees of
@@ -259,7 +259,7 @@ namespace Nektar
             MULTI_REGIONS_EXPORT const Array<OneD, const int>& 
                 GetExtraDirEdges();
 
-            MULTI_REGIONS_EXPORT boost::shared_ptr<AssemblyMap> LinearSpaceMap(const ExpList &locexp, GlobalSysSolnType solnType);
+            MULTI_REGIONS_EXPORT std::shared_ptr<AssemblyMap> LinearSpaceMap(const ExpList &locexp, GlobalSysSolnType solnType);
 
             /// Returns the bandwidth of the boundary system.
             MULTI_REGIONS_EXPORT int GetBndSystemBandWidth() const;
@@ -481,7 +481,7 @@ namespace Nektar
                 v_GetExtraDirEdges();
             
             /// Generate a linear space mapping from existing mapping 
-            virtual boost::shared_ptr<AssemblyMap> v_LinearSpaceMap(
+            virtual std::shared_ptr<AssemblyMap> v_LinearSpaceMap(
                 const ExpList &locexp, GlobalSysSolnType solnType);
         };
 

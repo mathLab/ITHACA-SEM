@@ -92,6 +92,7 @@ namespace Nektar
                     const FlagList &flags,
                     const StdRegions::ConstFactorMap &factors,
                     const StdRegions::VarCoeffMap &varcoeff,
+                    const MultiRegions::VarFactorsMap &varfactors,
                     const Array<OneD, const NekDouble> &dirForcing,
                     const bool PhysSpaceForcing);
 
@@ -99,7 +100,7 @@ namespace Nektar
 
         };
 
-        typedef boost::shared_ptr<ContField3DHomogeneous2D>  
+        typedef std::shared_ptr<ContField3DHomogeneous2D>  
             ContField3DHomogeneous2DSharedPtr;
 
     } //end of namespace

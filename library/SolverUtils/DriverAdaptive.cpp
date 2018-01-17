@@ -43,6 +43,7 @@
 #include <StdRegions/StdPyrExp.h>
 #include <StdRegions/StdHexExp.h>
 #include <GlobalMapping/Mapping.h>
+#include <LibUtilities/BasicUtils/ParseUtils.h>
 
 using namespace std;
 
@@ -60,8 +61,9 @@ string DriverAdaptive::driverLookupId =
  *
  */
 DriverAdaptive::DriverAdaptive(
-    const LibUtilities::SessionReaderSharedPtr pSession)
-    : Driver(pSession)
+    const LibUtilities::SessionReaderSharedPtr pSession,
+    const SpatialDomains::MeshGraphSharedPtr pGraph)
+    : Driver(pSession, pGraph)
 {
 }
 
@@ -346,8 +348,9 @@ void DriverAdaptive::v_Execute(ostream &out)
             }
         }
 
-        // Write new expansion section to the session reader
+        // Write new expansion section to the session reader and re-read graph.
         ReplaceExpansion(fields, deltaP);
+        m_graph->ReadExpansions();
 
         // Reset GlobalLinSys Manager to avoid using too much memory
         //

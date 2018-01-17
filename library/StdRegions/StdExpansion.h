@@ -39,6 +39,7 @@
 
 #include <fstream>
 #include <vector>
+#include <memory>
 
 #include <StdRegions/StdRegions.hpp>
 #include <StdRegions/StdRegionsDeclspec.h>
@@ -46,9 +47,7 @@
 #include <StdRegions/StdMatrixKey.h>
 #include <StdRegions/IndexMapKey.h>
 #include <LibUtilities/LinearAlgebra/NekTypeDefs.hpp>
-#include <boost/enable_shared_from_this.hpp>
 namespace Nektar { namespace LocalRegions { class MatrixKey; class Expansion; } }
-
 
 namespace Nektar
 {
@@ -66,7 +65,7 @@ namespace Nektar
          *  contains the definition of common data and common routine to all
          *  elements
          */
-        class StdExpansion : public boost::enable_shared_from_this<StdExpansion>
+        class StdExpansion : public std::enable_shared_from_this<StdExpansion>
         {
         public:
 
@@ -472,13 +471,13 @@ namespace Nektar
                 return v_DetShapeType();
             }
             
-            boost::shared_ptr<StdExpansion> GetStdExp(void) const
+            std::shared_ptr<StdExpansion> GetStdExp(void) const
             {
                 return v_GetStdExp();
             }
 
 
-            boost::shared_ptr<StdExpansion> GetLinStdExp(void) const
+            std::shared_ptr<StdExpansion> GetLinStdExp(void) const
             {
                 return v_GetLinStdExp();
             }
@@ -770,16 +769,6 @@ namespace Nektar
                 return v_GetEorient(edge);
             }
 
-            StdRegions::Orientation GetPorient(int point)
-            {
-                return v_GetPorient(point);
-            }
-
-            StdRegions::Orientation GetCartesianEorient(int edge)
-            {
-                return v_GetCartesianEorient(edge);
-            }
-
             void SetCoeffsToOrientation(
                 Array<OneD, NekDouble> &coeffs,
                 StdRegions::Orientation dir)
@@ -881,14 +870,14 @@ namespace Nektar
             }
 
             void GetEdgePhysVals(const int edge,
-                                 const boost::shared_ptr<StdExpansion> &EdgeExp,
+                                 const std::shared_ptr<StdExpansion> &EdgeExp,
                                  const Array<OneD, const NekDouble> &inarray,
                                        Array<OneD,NekDouble> &outarray)
             {
                 v_GetEdgePhysVals(edge,EdgeExp,inarray,outarray);
             }
             
-            void GetTracePhysVals(const int edge, const boost::shared_ptr<StdExpansion> &EdgeExp, const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray)
+            void GetTracePhysVals(const int edge, const std::shared_ptr<StdExpansion> &EdgeExp, const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray)
             {
                 v_GetTracePhysVals(edge,EdgeExp,inarray,outarray);
             }
@@ -922,7 +911,7 @@ namespace Nektar
 
             void GetFacePhysVals(
                 const int                                face,
-                const boost::shared_ptr<StdExpansion>   &FaceExp,
+                const std::shared_ptr<StdExpansion>     &FaceExp,
                 const Array<OneD, const NekDouble>      &inarray,
                       Array<OneD,       NekDouble>      &outarray,
                 StdRegions::Orientation                  orient = eNoOrientation)
@@ -1189,11 +1178,6 @@ namespace Nektar
                 v_LocCoordToLocCollapsed(xi,eta);
             }
 
-            const boost::shared_ptr<SpatialDomains::GeomFactors>& GetMetricInfo(void) const
-            {
-                return v_GetMetricInfo();
-            }
-
             /// \brief Get the element id of this expansion when used
             /// in a list by returning value of #m_elmt_id
             STD_REGIONS_EXPORT virtual int v_GetElmtId();
@@ -1225,10 +1209,6 @@ namespace Nektar
             STD_REGIONS_EXPORT virtual StdRegions::Orientation v_GetForient(int face);
 
             STD_REGIONS_EXPORT virtual StdRegions::Orientation v_GetEorient(int edge);
-
-            STD_REGIONS_EXPORT virtual StdRegions::Orientation v_GetCartesianEorient(int edge);
-
-            STD_REGIONS_EXPORT virtual StdRegions::Orientation v_GetPorient(int point);
 
             /** \brief Function to evaluate the discrete \f$ L_\infty\f$
              *  error \f$ |\epsilon|_\infty = \max |u - u_{exact}|\f$ where \f$
@@ -1413,16 +1393,9 @@ namespace Nektar
                            Array<OneD, NekDouble>       &outarray);
 
             template<class T>
-            boost::shared_ptr<T> as()
+            std::shared_ptr<T> as()
             {
-#if defined __INTEL_COMPILER && BOOST_VERSION > 105200
-                typedef typename boost::shared_ptr<T>::element_type E;
-                E * p = dynamic_cast< E* >( shared_from_this().get() );
-                ASSERTL1(p, "Cannot perform cast");
-                return boost::shared_ptr<T>( shared_from_this(), p );
-#else
-                return boost::dynamic_pointer_cast<T>( shared_from_this() );
-#endif
+                return std::dynamic_pointer_cast<T>( shared_from_this() );
             }
 
             void IProductWRTBase_SumFac(const Array<OneD, const NekDouble>& inarray,
@@ -1607,10 +1580,10 @@ namespace Nektar
 
             STD_REGIONS_EXPORT virtual LibUtilities::ShapeType v_DetShapeType() const;
 
-            STD_REGIONS_EXPORT virtual boost::shared_ptr<StdExpansion> 
+            STD_REGIONS_EXPORT virtual std::shared_ptr<StdExpansion> 
                 v_GetStdExp(void) const;
 
-            STD_REGIONS_EXPORT virtual boost::shared_ptr<StdExpansion> 
+            STD_REGIONS_EXPORT virtual std::shared_ptr<StdExpansion> 
                 v_GetLinStdExp(void) const;
             
             STD_REGIONS_EXPORT virtual int v_GetShapeDimension() const;
@@ -1752,9 +1725,9 @@ namespace Nektar
              */
             STD_REGIONS_EXPORT virtual void v_GetEdgePhysVals(const int edge, const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray);
 
-            STD_REGIONS_EXPORT virtual void v_GetEdgePhysVals(const int edge,  const boost::shared_ptr<StdExpansion>  &EdgeExp, const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray);
+            STD_REGIONS_EXPORT virtual void v_GetEdgePhysVals(const int edge,  const std::shared_ptr<StdExpansion>  &EdgeExp, const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray);
 
-            STD_REGIONS_EXPORT virtual void v_GetTracePhysVals(const int edge,  const boost::shared_ptr<StdExpansion>  &EdgeExp, const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray, StdRegions::Orientation  orient = eNoOrientation);
+            STD_REGIONS_EXPORT virtual void v_GetTracePhysVals(const int edge,  const std::shared_ptr<StdExpansion>  &EdgeExp, const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray, StdRegions::Orientation  orient = eNoOrientation);
 
             STD_REGIONS_EXPORT virtual void v_GetVertexPhysVals(const int vertex, const Array<OneD, const NekDouble> &inarray, NekDouble &outarray);
 
@@ -1767,7 +1740,7 @@ namespace Nektar
 
             STD_REGIONS_EXPORT virtual void v_GetFacePhysVals(
                 const int                                face,
-                const boost::shared_ptr<StdExpansion>   &FaceExp,
+                const std::shared_ptr<StdExpansion>     &FaceExp,
                 const Array<OneD, const NekDouble>      &inarray,
                       Array<OneD,       NekDouble>      &outarray,
                 StdRegions::Orientation                  orient);
@@ -1787,8 +1760,6 @@ namespace Nektar
             STD_REGIONS_EXPORT virtual void v_MultiplyByStdQuadratureMetric(
                     const Array<OneD, const NekDouble> &inarray,
                     Array<OneD, NekDouble> &outarray);
-
-            STD_REGIONS_EXPORT virtual const  boost::shared_ptr<SpatialDomains::GeomFactors>& v_GetMetricInfo() const;
 
             STD_REGIONS_EXPORT virtual void v_BwdTrans_SumFac(const Array<OneD, const NekDouble>& inarray,
                                            Array<OneD, NekDouble> &outarray);
@@ -1903,9 +1874,8 @@ namespace Nektar
         };
 
 
-        typedef boost::shared_ptr<StdExpansion> StdExpansionSharedPtr;
+        typedef std::shared_ptr<StdExpansion> StdExpansionSharedPtr;
         typedef std::vector< StdExpansionSharedPtr > StdExpansionVector;
-        typedef std::vector< StdExpansionSharedPtr >::iterator StdExpansionVectorIter;
 
         /**
          *  This function is a wrapper around the virtual function

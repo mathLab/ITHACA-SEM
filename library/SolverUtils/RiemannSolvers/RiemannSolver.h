@@ -36,14 +36,12 @@
 #ifndef NEKTAR_SOLVERUTILS_RIEMANNSOLVER
 #define NEKTAR_SOLVERUTILS_RIEMANNSOLVER
 
+#include <LibUtilities/BasicUtils/SessionReader.h>
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
 #include <LibUtilities/LinearAlgebra/NekTypeDefs.hpp>
 #include <SolverUtils/SolverUtilsDeclspec.h>
 
 #include <string>
-
-#include <boost/function.hpp>
-#include <boost/call_traits.hpp>
 
 namespace Nektar
 {
@@ -52,11 +50,11 @@ namespace Nektar
 
     namespace SolverUtils
     {
-        typedef boost::function<
+        typedef std::function<
             const Array<OneD, const NekDouble>& ()> RSScalarFuncType;
-        typedef boost::function<
+        typedef std::function<
             const Array<OneD, const Array<OneD, NekDouble> >& ()> RSVecFuncType;
-        typedef boost::function<
+        typedef std::function<
             NekDouble ()> RSParamFuncType;
 
         class RiemannSolver
@@ -73,7 +71,7 @@ namespace Nektar
                            FuncPointerT   func,
                            ObjectPointerT obj)
             {
-                m_scalars[name] = boost::bind(func, obj);
+                m_scalars[name] = std::bind(func, obj);
             }
 
             void SetScalar(std::string name, RSScalarFuncType fp)
@@ -86,7 +84,7 @@ namespace Nektar
                            FuncPointerT   func,
                            ObjectPointerT obj)
             {
-                m_vectors[name] = boost::bind(func, obj);
+                m_vectors[name] = std::bind(func, obj);
             }
 
             void SetVector(std::string name, RSVecFuncType fp)
@@ -99,7 +97,7 @@ namespace Nektar
                           FuncPointerT   func,
                           ObjectPointerT obj)
             {
-                m_params[name] = boost::bind(func, obj);
+                m_params[name] = std::bind(func, obj);
             }
 
             void SetParam(std::string name, RSParamFuncType fp)
@@ -112,7 +110,7 @@ namespace Nektar
                               FuncPointerT   func,
                               ObjectPointerT obj)
             {
-                m_auxScal[name] = boost::bind(func, obj);
+                m_auxScal[name] = std::bind(func, obj);
             }
 
             template<typename FuncPointerT, typename ObjectPointerT>
@@ -120,7 +118,7 @@ namespace Nektar
                                  FuncPointerT   func,
                                  ObjectPointerT obj)
             {
-                m_auxVec[name] = boost::bind(func, obj);
+                m_auxVec[name] = std::bind(func, obj);
             }
 
             std::map<std::string, RSScalarFuncType> &GetScalars()
@@ -159,7 +157,8 @@ namespace Nektar
             /// Rotation storage
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > > m_rotStorage;
 
-            SOLVER_UTILS_EXPORT RiemannSolver();
+            SOLVER_UTILS_EXPORT RiemannSolver(
+                const LibUtilities::SessionReaderSharedPtr& pSession);
 
             virtual void v_Solve(
                 const int                                         nDim,
@@ -191,10 +190,11 @@ namespace Nektar
         };
 
         /// A shared pointer to an EquationSystem object
-        typedef boost::shared_ptr<RiemannSolver> RiemannSolverSharedPtr;
+        typedef std::shared_ptr<RiemannSolver> RiemannSolverSharedPtr;
         /// Datatype of the NekFactory used to instantiate classes derived
         /// from the RiemannSolver class.
-        typedef LibUtilities::NekFactory<std::string, RiemannSolver>
+        typedef LibUtilities::NekFactory<std::string, RiemannSolver,
+                                const LibUtilities::SessionReaderSharedPtr&>
             RiemannSolverFactory;
         SOLVER_UTILS_EXPORT RiemannSolverFactory& GetRiemannSolverFactory();
     }

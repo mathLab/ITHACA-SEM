@@ -66,7 +66,7 @@ zero. If we now integrate the 1st, 2nd and last term in equation
 (\ref{eqn.weakp}) by parts we can obtain the weak pressure equation
 \begin{align}
   \int_{\Omega} \nabla q \cdot \nabla p^{n+1}  &=  \int_{\Omega} q\, \nabla \cdot \left ( \frac{\partial \mathbf{u}}{\partial t}^{n+1}  + \mathbf{N}(\mathbf{u})^{n+1} \right )  \nonumber \\
-  &-  \int_{\partial \Omega} q  \left ( \frac{\partial \mathbf{u}}{\partial t}^{n+1}  + \mathbf{N}(\mathbf{u})^{n+1} - \nu \nabla \times \nabla \times \mathbf{u}^{n+1} \right ) \cdot \mathbf{n}
+  &-  \int_{\partial \Omega} q  \left ( \frac{\partial \mathbf{u}}{\partial t}^{n+1}  + \mathbf{N}(\mathbf{u})^{n+1} + \nu \nabla \times \nabla \times \mathbf{u}^{n+1} \right ) \cdot \mathbf{n}
  \label{eqn.weakp1}
 \end{align}
 where $\partial \Omega$ is the boundary of the domain and we have used
@@ -98,7 +98,7 @@ which to decouple the system we impose that $\nabla \cdot
   \int_{\Omega} \nabla q \cdot \nabla p^{n+1}  &=
   \int_{\Omega} q \, \nabla \cdot \left (-\frac{\hat{\mathbf{u}}}{\Delta t}
         + \mathbf{N}(\mathbf{u})^{*,n+1} \right ) \nonumber \\
-  &- \int_{\partial \Omega} q  \left ( \frac{\partial \mathbf{u}}{\partial t}^{n+1}  + \mathbf{N}(\mathbf{u})^{*.n+1} - \nu (\nabla \times \nabla  \times \mathbf{u})^{*,n+1} \right ) \cdot \mathbf{n}
+  &- \int_{\partial \Omega} q  \left ( \frac{\partial \mathbf{u}}{\partial t}^{n+1}  + \mathbf{N}(\mathbf{u})^{*.n+1} + \nu (\nabla \times \nabla  \times \mathbf{u})^{*,n+1} \right ) \cdot \mathbf{n}
  \label{eqn.weakpfinal}
   \end{align}
   We note this can be recast into an equivalent strong form of the
@@ -109,7 +109,7 @@ which to decouple the system we impose that $\nabla \cdot
  \end{equation}
 with consistent Neumann boundary conditions prescribed as
 \begin{equation}
-  \frac{\partial p}{\partial n}^{n+1}= - \Bigl[ \frac{\partial \mathbf{u}}{\partial t}^{n+1} - \nu (\nabla \times \nabla \times   \mathbf{u})^{*,n+1} + \mathbf{N}^{*,n+1}\Bigr]\cdot \mathbf{n}
+  \frac{\partial p}{\partial n}^{n+1}= - \Bigl[ \frac{\partial \mathbf{u}}{\partial t}^{n+1} + \nu (\nabla \times \nabla \times   \mathbf{u})^{*,n+1} + \mathbf{N}^{*,n+1}\Bigr]\cdot \mathbf{n}
   \label{eqn.pressurebcs}
 \end{equation}
 
@@ -214,7 +214,7 @@ and Chryssostomidis \cite{DoKa14}. In this paper they suggest to
 impose a pressure Dirichlet outflow condition of the form
 
 \begin{equation}
- p^{n+1}= \nu \nabla\mathbf{u}^{*,n+1}\cdot \mathbf{n}-\frac{1}{2}
+ p^{n+1}= \nu \mathbf{n} \cdot \nabla\mathbf{u}^{*,n+1}\cdot \mathbf{n}-\frac{1}{2}
  \mid \mathbf{u}^{*,n+1} \mid^2 S_o(\mathbf{n}\cdot
  \mathbf{u}^{*,n+1})+\mathbf{f}_b^{n+1}\cdot \mathbf{n}
 \end{equation}
@@ -411,7 +411,7 @@ viscosity, which arise for non-Newtonian flows, with only minor
 modifications.
 
 We consider the weak form of the Stokes problem for the velocity field
-$boldsymbol{u}=[u,v]^{T}$ and the pressure field $p$:
+$\boldsymbol{u}=[u,v]^{T}$ and the pressure field $p$:
 
 \begin{subequations}
 \begin{equation}

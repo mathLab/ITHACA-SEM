@@ -92,8 +92,8 @@ namespace Nektar
         NekDouble  val;
         DNekMatSharedPtr I = m_base[0]->GetI(Lcoord);
 
-        ASSERTL2(Lcoord[0] >= -1,"Lcoord[0] < -1");
-        ASSERTL2(Lcoord[0] <=  1,"Lcoord[0] >  1");
+        ASSERTL2(Lcoord[0] >= -1 - NekConstants::kNekZeroTol,"Lcoord[0] < -1");
+        ASSERTL2(Lcoord[0] <=  1 + NekConstants::kNekZeroTol,"Lcoord[0] >  1");
 
         val = Blas::Ddot(nquad, I->GetPtr(), 1, physvals, 1);
 
@@ -113,8 +113,7 @@ namespace Nektar
 		
 	const NormalVector & StdExpansion1D::v_GetVertexNormal(const int vertex) const
     {
-         std::map<int, NormalVector>::const_iterator x;
-         x = m_vertexNormals.find(vertex);
+         auto x = m_vertexNormals.find(vertex);
          ASSERTL0 (x != m_vertexNormals.end(),
 				  "vertex normal not computed.");
          return x->second;

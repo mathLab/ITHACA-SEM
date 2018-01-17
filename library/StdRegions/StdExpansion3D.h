@@ -47,7 +47,7 @@ namespace Nektar
     {
 
 	class StdExpansion3D;
-	typedef boost::shared_ptr<StdExpansion3D> StdExpansion3DSharedPtr;
+	typedef std::shared_ptr<StdExpansion3D> StdExpansion3DSharedPtr;
 
     class StdExpansion3D: virtual public StdExpansion
         {

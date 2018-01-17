@@ -86,13 +86,13 @@ void InputPts::Process(po::variables_map &vm)
     string inFile = m_config["infile"].as<string>();
 
     // Determine appropriate field input
-    if (m_f->m_inputfiles.count("pts") != 0)
+    if (m_f->m_inputfiles.count("csv") != 0)
     {
         LibUtilities::CsvIOSharedPtr csvIO =
             MemoryManager<LibUtilities::CsvIO>::AllocateSharedPtr(m_f->m_comm);
         csvIO->Import(inFile, m_f->m_fieldPts);
     }
-    else if (m_f->m_inputfiles.count("csv") != 0)
+    else if (m_f->m_inputfiles.count("pts") != 0)
     {
         LibUtilities::PtsIOSharedPtr ptsIO =
             MemoryManager<LibUtilities::PtsIO>::AllocateSharedPtr(m_f->m_comm);

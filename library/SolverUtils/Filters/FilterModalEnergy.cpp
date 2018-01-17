@@ -55,10 +55,8 @@ FilterModalEnergy::FilterModalEnergy(
     const ParamMap &pParams) :
     Filter(pSession)
 {
-    ParamMap::const_iterator it;
-
     // OutputFile
-    it = pParams.find("OutputFile");
+    auto it = pParams.find("OutputFile");
     if (it == pParams.end())
     {
         m_outputFile = m_session->GetSessionName();
@@ -82,7 +80,8 @@ FilterModalEnergy::FilterModalEnergy(
     }
     else
     {
-        LibUtilities::Equation equ(m_session, it->second);
+        LibUtilities::Equation equ(
+            m_session->GetExpressionEvaluator(), it->second);
         m_outputFrequency = round(equ.Evaluate());
     }
 
@@ -106,7 +105,8 @@ FilterModalEnergy::FilterModalEnergy(
         }
         else
         {
-            LibUtilities::Equation equ(m_session, it->second);
+            LibUtilities::Equation equ(
+                m_session->GetExpressionEvaluator(), it->second);
             m_outputPlane = round(equ.Evaluate());
         }
     }

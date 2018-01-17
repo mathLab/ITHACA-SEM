@@ -121,7 +121,7 @@ namespace Nektar
         Array<OneD, NekDouble> m_axispoint;
 
     };
-    typedef boost::shared_ptr<WomersleyParams> WomersleyParamsSharedPtr;
+    typedef std::shared_ptr<WomersleyParams> WomersleyParamsSharedPtr;
 
     /**
      * \brief This class is the base class for Navier Stokes problems
@@ -135,16 +135,6 @@ namespace Nektar
 
         virtual void v_InitObject();
 
-
-        virtual void v_GetFluxVector(
-                const int i,
-                Array<OneD, Array<OneD, NekDouble> > &physfield,
-                Array<OneD, Array<OneD, NekDouble> > &flux);
-
-        virtual void v_NumericalFlux(
-                Array<OneD, Array<OneD, NekDouble> > &physfield,
-                Array<OneD, Array<OneD, NekDouble> > &numflux);
-
         int GetNConvectiveFields(void)
         {
             return m_nConvectiveFields;  
@@ -154,11 +144,6 @@ namespace Nektar
         {
             return  m_velocity; 
         }
-
-        
-        Array<OneD, NekDouble> GetElmtCFLVals(void);
-        
-        NekDouble GetCFLEstimate(int &elmtid);
 
         void AddForcing(const SolverUtils::ForcingSharedPtr& pForce);
 
@@ -190,12 +175,6 @@ namespace Nektar
         NekDouble   m_kinvis;
         /// dump energy to file at steps time
         int         m_energysteps;
-        /// dump cfl estimate
-        int         m_cflsteps;
-        /// Check for steady state at step interval
-        int         m_steadyStateSteps;
-        /// Tolerance to which steady state should be evaluated at
-        NekDouble   m_steadyStateTol;
 
         /// equation type;
         EquationType  m_equationType;
@@ -212,7 +191,8 @@ namespace Nektar
         int m_intSteps;
 
         /// Constructor.
-        IncNavierStokes(const LibUtilities::SessionReaderSharedPtr& pSession);
+        IncNavierStokes(const LibUtilities::SessionReaderSharedPtr& pSession,
+                        const SpatialDomains::MeshGraphSharedPtr &pGraph);
 
         EquationType GetEquationType(void)
         {
@@ -238,9 +218,6 @@ namespace Nektar
 
         /// Set Up Womersley details
         void SetUpWomersley(const int bndid, std::string womstr);
-        
-        /// evaluate steady state
-        bool CalcSteadyState(void);
 
         /// Womersley parameters if required 
         std::map<int,WomersleyParamsSharedPtr> m_womersleyParams;
@@ -262,14 +239,15 @@ namespace Nektar
 
         virtual int v_GetForceDimension()=0;
 
+        virtual Array<OneD, NekDouble> v_GetMaxStdVelocity();
+
         virtual bool v_PreIntegrate(int step);
-        virtual bool v_PostIntegrate(int step);
 
     private:
 
     };
 
-    typedef boost::shared_ptr<IncNavierStokes> IncNavierStokesSharedPtr;
+    typedef std::shared_ptr<IncNavierStokes> IncNavierStokesSharedPtr;
 
 } //end of namespace
 

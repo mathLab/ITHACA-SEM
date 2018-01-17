@@ -53,11 +53,10 @@ FilterEnergyBase::FilterEnergyBase(
       m_planes      (),
       m_constDensity(pConstDensity)
 {
-    ParamMap::const_iterator it;
     std::string outName;
 
     // OutputFile
-    it = pParams.find("OutputFile");
+    auto it = pParams.find("OutputFile");
     if (it == pParams.end())
     {
         outName = m_session->GetSessionName();
@@ -87,7 +86,7 @@ FilterEnergyBase::FilterEnergyBase(
     // OutputFrequency
     it = pParams.find("OutputFrequency");
     ASSERTL0(it != pParams.end(), "Missing parameter 'OutputFrequency'.");
-    LibUtilities::Equation equ(m_session, it->second);
+    LibUtilities::Equation equ(m_session->GetExpressionEvaluator(), it->second);
     m_outputFrequency = round(equ.Evaluate());
 }
 

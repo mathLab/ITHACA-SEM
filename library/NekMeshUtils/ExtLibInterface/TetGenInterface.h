@@ -36,7 +36,7 @@
 #ifndef NEKTAR_MESHUTILS_EXTLIBINTERFACE_TETGENINTERFACE_H
 #define NEKTAR_MESHUTILS_EXTLIBINTERFACE_TETGENINTERFACE_H
 
-#include <boost/shared_ptr.hpp>
+#include <memory>
 
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
@@ -97,7 +97,7 @@ private:
     tetgenio surface, output, input, additional;
 };
 
-typedef boost::shared_ptr<TetGenInterface> TetGenInterfaceSharedPtr;
+typedef std::shared_ptr<TetGenInterface> TetGenInterfaceSharedPtr;
 }
 }
 #endif

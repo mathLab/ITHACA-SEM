@@ -45,10 +45,7 @@ ENDIF (NEKTAR_USE_VTK)
 IF (NEKTAR_USE_MESHGEN)
     SET(NekMeshSources ${NekMeshSources}
             ProcessModules/ProcessVarOpti/NodeOptiCAD.cpp
-            ProcessModules/ProcessVarOpti/ProcessVarOpti.cpp
-            ProcessModules/ProcessVarOpti/PreProcessing.cpp
-            ProcessModules/ProcessVarOpti/NodeOpti.cpp
-            ProcessModules/ProcessVarOpti/ElUtil.cpp
+            ProcessModules/ProcessProjectCAD.cpp
             InputModules/InputMCF.cpp)
 ENDIF (NEKTAR_USE_MESHGEN)
 

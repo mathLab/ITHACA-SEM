@@ -285,9 +285,14 @@ namespace Nektar
             
             STD_REGIONS_EXPORT virtual void v_SVVLaplacianFilter(Array<OneD, NekDouble> &array,const StdMatrixKey &mkey);
 
+            STD_REGIONS_EXPORT virtual void v_ExponentialFilter(
+                          Array<OneD, NekDouble> &array,
+                    const NekDouble        alpha,
+                    const NekDouble        exponent,
+                    const NekDouble        cutoff);
         };
 
-        typedef boost::shared_ptr<StdHexExp> StdHexExpSharedPtr;
+        typedef std::shared_ptr<StdHexExp> StdHexExpSharedPtr;
 
     }
 }

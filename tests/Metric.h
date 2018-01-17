@@ -40,7 +40,6 @@
 #include <string>
 
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
-#include <boost/version.hpp>
 #include <boost/filesystem.hpp>
 
 namespace fs = boost::filesystem;
@@ -75,7 +74,7 @@ namespace Nektar
     };
 
     /// A shared pointer to an EquationSystem object
-    typedef boost::shared_ptr<Metric> MetricSharedPtr;
+    typedef std::shared_ptr<Metric> MetricSharedPtr;
     
     /// Datatype of the NekFactory used to instantiate classes derived from the
     /// Advection class.

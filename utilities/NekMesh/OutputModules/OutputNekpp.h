@@ -36,8 +36,6 @@
 #ifndef UTILITIES_NEKMESH_OUTPUTNEKPP
 #define UTILITIES_NEKMESH_OUTPUTNEKPP
 
-#include <tinyxml.h>
-
 #include <NekMeshUtils/Module/Module.h>
 
 namespace Nektar
@@ -50,11 +48,11 @@ class OutputNekpp : public NekMeshUtils::OutputModule
 {
 public:
     /// Creates an instance of this class
-    static boost::shared_ptr<Module> create(NekMeshUtils::MeshSharedPtr m)
+    static std::shared_ptr<Module> create(NekMeshUtils::MeshSharedPtr m)
     {
         return MemoryManager<OutputNekpp>::AllocateSharedPtr(m);
     }
-    static NekMeshUtils::ModuleKey className;
+    static NekMeshUtils::ModuleKey className1, className2;
 
     OutputNekpp(NekMeshUtils::MeshSharedPtr m);
     virtual ~OutputNekpp();
@@ -63,24 +61,13 @@ public:
     virtual void Process();
 
 private:
-    /// Writes the <NODES> section of the XML file.
-    void WriteXmlNodes(TiXmlElement *pRoot);
-    /// Writes the <EDGES> section of the XML file.
-    void WriteXmlEdges(TiXmlElement *pRoot);
-    /// Writes the <FACES> section of the XML file if needed.
-    void WriteXmlFaces(TiXmlElement *pRoot);
-    /// Writes the <ELEMENTS> section of the XML file.
-    void WriteXmlElements(TiXmlElement *pRoot);
-    /// Writes the <CURVES> section of the XML file if needed.
-    void WriteXmlCurves(TiXmlElement *pRoot);
-    /// Writes the <COMPOSITES> section of the XML file.
-    void WriteXmlComposites(TiXmlElement *pRoot);
-    /// Writes the <DOMAIN> section of the XML file.
-    void WriteXmlDomain(TiXmlElement *pRoot);
-    /// Writes the <EXPANSIONS> section of the XML file.
-    void WriteXmlExpansions(TiXmlElement *pRoot);
-    /// Writes the <CONDITIONS> section of the XML file.
-    void WriteXmlConditions(TiXmlElement *pRoot);
+    void TransferVertices(SpatialDomains::MeshGraphSharedPtr graph);
+    void TransferEdges(SpatialDomains::MeshGraphSharedPtr graph);
+    void TransferFaces(SpatialDomains::MeshGraphSharedPtr graph);
+    void TransferElements(SpatialDomains::MeshGraphSharedPtr graph);
+    void TransferCurves(SpatialDomains::MeshGraphSharedPtr graph);
+    void TransferComposites(SpatialDomains::MeshGraphSharedPtr graph);
+    void TransferDomain(SpatialDomains::MeshGraphSharedPtr graph);
 };
 }
 }

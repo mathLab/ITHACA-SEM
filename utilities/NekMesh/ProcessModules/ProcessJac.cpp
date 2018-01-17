@@ -54,7 +54,7 @@ ProcessJac::ProcessJac(MeshSharedPtr m) : ProcessModule(m)
     m_config["extract"] =
         ConfigOption(false, "0.0", "Extract non-valid elements from mesh.");
     m_config["list"] = ConfigOption(
-        false, "0", "Print list of elements having negative Jacobian.");
+        true, "0", "Print list of elements having negative Jacobian.");
 }
 
 ProcessJac::~ProcessJac()
@@ -98,7 +98,7 @@ void ProcessJac::Process()
         // Generate geometric factors.
         SpatialDomains::GeomFactorsSharedPtr gfac = geom->GetGeomFactors();
 
-        LibUtilities::PointsKeyVector p = geom->GetPointsKeys();
+        LibUtilities::PointsKeyVector p = geom->GetXmap()->GetPointsKeys();
         SpatialDomains::DerivStorage deriv = gfac->GetDeriv(p);
         const int pts = deriv[0][0].num_elements();
         Array<OneD,NekDouble> jc(pts);

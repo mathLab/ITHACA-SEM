@@ -79,6 +79,9 @@ IF( NEKTAR_SOLVER_ADR )
     # 2D advection diffusion (Imex DG)
     ADD_NEKTAR_TEST(UnsteadyAdvectionDiffusion_2D_ImexDG)
 
+    # 2D advection diffusion (Weak DG)
+    ADD_NEKTAR_TEST(UnsteadyAdvectionDiffusion_2D_WeakDG)
+
     # 3D discontinous advection
     ADD_NEKTAR_TEST(Advection3D_m12_DG_hex_periodic_nodal LENGTHY)
     ADD_NEKTAR_TEST(Advection3D_m12_DG_hex_nodal)
@@ -179,6 +182,7 @@ IF( NEKTAR_SOLVER_ADR )
     ADD_NEKTAR_TEST(ImDiffusion_m12)
     ADD_NEKTAR_TEST(ImDiffusion_m6)
     ADD_NEKTAR_TEST(ImDiffusion_VarCoeff)
+    ADD_NEKTAR_TEST(ImDiffusion_VarCoeff_DirectFull)
     ADD_NEKTAR_TEST(ImDiffusion_Quad_Periodic_m7)
     ADD_NEKTAR_TEST(ImDiffusion_Hex_Periodic_m5)
     ADD_NEKTAR_TEST(SVV_Quad)

@@ -33,7 +33,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <LibUtilities/BasicUtils/ParseUtils.hpp>
+#include <LibUtilities/BasicUtils/ParseUtils.h>
 
 #include "VolumeMesh.h"
 #include <NekMeshUtils/CADSystem/CADCurve.h>
@@ -77,7 +77,7 @@ void VolumeMesh::Process()
     if (m_config["blsurfs"].beenSet)
     {
         makeBL = true;
-        ParseUtils::GenerateSeqVector(m_config["blsurfs"].as<string>().c_str(),
+        ParseUtils::GenerateSeqVector(m_config["blsurfs"].as<string>(),
                                       blSurfs);
     }
     else
@@ -137,7 +137,7 @@ void VolumeMesh::Process()
         for (int i = 0; i < symsurfs.size(); i++)
         {
             set<int> cIds;
-            vector<CADSystem::EdgeLoopSharedPtr> e =
+            vector<EdgeLoopSharedPtr> e =
                 m_mesh->m_cad->GetSurf(symsurfs[i])->GetEdges();
             for (int k = 0; k < e.size(); k++)
             {
@@ -153,14 +153,13 @@ void VolumeMesh::Process()
             for (it = m_mesh->m_vertexSet.begin();
                  it != m_mesh->m_vertexSet.end(); it++)
             {
-                vector<pair<int, CADCurveSharedPtr> > cc =
-                    (*it)->GetCADCurves();
+                vector<CADCurveSharedPtr> cc = (*it)->GetCADCurves();
                 for (int j = 0; j < cc.size(); j++)
                 {
-                    set<int>::iterator f = cIds.find(cc[j].first);
+                    set<int>::iterator f = cIds.find(cc[j]->GetId());
                     if (f != cIds.end())
                     {
-                        curveNodeMap[cc[j].first].push_back((*it));
+                        curveNodeMap[cc[j]->GetId()].push_back((*it));
                     }
                 }
             }

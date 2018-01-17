@@ -36,13 +36,19 @@
 #ifndef NEKTAR_MESHUTILS_EXTLIBINTERFACE_TRIANGLEINTERFACE_H
 #define NEKTAR_MESHUTILS_EXTLIBINTERFACE_TRIANGLEINTERFACE_H
 
-#include <boost/shared_ptr.hpp>
+#include <memory>
 
 #include <NekMeshUtils/MeshElements/Node.h>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 
-#include <NekMeshUtils/Triangle/Triangle.h>
+#define ANSI_DECLARATORS
+#define REAL double
+#define VOID void
+extern "C"
+{
+    #include <triangle.h>
+}
 
 namespace Nektar
 {
@@ -97,6 +103,16 @@ private:
      */
     void SetUp();
 
+    struct DelaunayTriangle
+    {
+    public:
+        void Run(char* cmd)
+        {
+            triangulate(cmd, &in, &out, NULL);
+        }
+        struct triangulateio in, out;
+    };
+
     /// List of bounding nodes to the surface
     std::vector<std::vector<NodeSharedPtr> > m_boundingloops;
     /// List of additional nodes
@@ -113,7 +129,7 @@ private:
     DelaunayTriangle dt;
 };
 
-typedef boost::shared_ptr<TriangleInterface> TriangleInterfaceSharedPtr;
+typedef std::shared_ptr<TriangleInterface> TriangleInterfaceSharedPtr;
 }
 }
 

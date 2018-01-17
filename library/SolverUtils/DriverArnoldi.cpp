@@ -46,8 +46,10 @@ namespace SolverUtils
 /**
  * Constructor
  */
-DriverArnoldi::DriverArnoldi(const LibUtilities::SessionReaderSharedPtr pSession)
-    : Driver(pSession)
+DriverArnoldi::DriverArnoldi(
+    const LibUtilities::SessionReaderSharedPtr pSession,
+    const SpatialDomains::MeshGraphSharedPtr pGraph)
+    : Driver(pSession, pGraph)
 {
     m_session->LoadParameter("IO_InfoSteps", m_infosteps, 1);
 };

@@ -20,9 +20,6 @@ int main(int argc, char *argv[])
     scal1  = boost::lexical_cast<double>(argv[argc-5]);
     scal2  = boost::lexical_cast<double>(argv[argc-4]);
 
-    //default meshgraph
-    SpatialDomains::MeshGraph graph;
-
     //----------------------------------------------
     // Import fieldfile1.
     string fieldfile1(argv[argc-3]);
@@ -84,10 +81,8 @@ int main(int argc, char *argv[])
         Vmath::Smul(fielddata2[i].size(), scal2, &fielddata2[i][0], 1,
                                                  &fielddata2[i][0], 1);
 
-        std::vector<NekDouble>::iterator vec_iter;
-
         vector<NekDouble> newdata;
-        vec_iter = fielddata2[i].begin();
+        auto vec_iter = fielddata2[i].begin();
 
         for(k = 0; k < fielddef2[i]->m_fields.size(); ++k)
         {

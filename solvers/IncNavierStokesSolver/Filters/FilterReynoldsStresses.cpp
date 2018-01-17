@@ -69,10 +69,8 @@ FilterReynoldsStresses::FilterReynoldsStresses(
     const std::map<std::string, std::string> &pParams)
     : FilterFieldConvert(pSession, pParams)
 {
-    ParamMap::const_iterator it;
-
     // Check if should use moving average
-    it = pParams.find("MovingAverage");
+    auto it = pParams.find("MovingAverage");
     if (it == pParams.end())
     {
         m_movAvg = false;
@@ -101,7 +99,8 @@ FilterReynoldsStresses::FilterReynoldsStresses(
         else
         {
             // Load time constant
-            LibUtilities::Equation equ(m_session, it->second);
+            LibUtilities::Equation equ(
+                m_session->GetExpressionEvaluator(), it->second);
             NekDouble tau = equ.Evaluate();
             // Load delta T between samples
             NekDouble dT;
@@ -113,7 +112,8 @@ FilterReynoldsStresses::FilterReynoldsStresses(
     }
     else
     {
-        LibUtilities::Equation equ(m_session, it->second);
+        LibUtilities::Equation equ(
+            m_session->GetExpressionEvaluator(), it->second);
         m_alpha = equ.Evaluate();
         // Check if tau was also defined
         it = pParams.find("tau");

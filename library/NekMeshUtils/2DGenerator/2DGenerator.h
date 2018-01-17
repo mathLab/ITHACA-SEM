@@ -54,7 +54,7 @@ class Generator2D : public ProcessModule
 {
 public:
     /// Creates an instance of this class
-    static boost::shared_ptr<Module> create(MeshSharedPtr m)
+    static std::shared_ptr<Module> create(MeshSharedPtr m)
     {
         return MemoryManager<Generator2D>::AllocateSharedPtr(m);
     }
@@ -84,13 +84,18 @@ private:
     std::map<int, CurveMeshSharedPtr> m_curvemeshes;
     /// map of periodic curve pairs
     std::map<unsigned, unsigned> m_periodicPairs;
-
+    /// list of curves needing a BL
     std::vector<unsigned int> m_blCurves;
     /// map of curves and Bl ends: 0, 1 or 2 (for both)
     std::map<unsigned, unsigned> m_blends;
+    /// list of BL edges
+    std::vector<EdgeSharedPtr> m_blEdges;
+    /// BL thickness expression
     LibUtilities::AnalyticExpressionEvaluator m_thickness;
+    /// BL thickness expression ID
     int m_thickness_ID;
-    std::map<NodeSharedPtr, std::vector<EdgeSharedPtr> > m_nodesToEdge;
+    /// map of BL curve nodes to adjacent edges
+    std::map<NodeSharedPtr, std::vector<EdgeSharedPtr>> m_nodesToEdge;
 };
 }
 }

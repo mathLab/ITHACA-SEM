@@ -63,11 +63,11 @@ namespace Nektar
             Expansion(geom),
             Expansion1D(geom),
             m_matrixManager(
-                    boost::bind(&SegExp::CreateMatrix, this, _1),
-                    std::string("SegExpMatrix")),
+                std::bind(&SegExp::CreateMatrix, this, std::placeholders::_1),
+                std::string("SegExpMatrix")),
             m_staticCondMatrixManager(
-                    boost::bind(&SegExp::CreateStaticCondMatrix, this, _1),
-                    std::string("SegExpStaticCondMatrix"))
+                std::bind(&SegExp::CreateStaticCondMatrix, this, std::placeholders::_1),
+                std::string("SegExpStaticCondMatrix"))
         {
         }
 
@@ -781,12 +781,6 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
                 }
             }
         }
-
-        StdRegions::Orientation SegExp::v_GetPorient(int point)
-        {
-            return m_geom->GetPorient(point);
-        }
-
 
         StdRegions::StdExpansionSharedPtr SegExp::v_GetStdExp() const
         {

@@ -44,14 +44,8 @@
 #include <LibUtilities/LinearAlgebra/StandardMatrix.hpp>
 #include <LibUtilities/LinearAlgebra/MatrixOperations.hpp>
 
-#ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
-// Only need NekVector if we are using expression templates so we can define the 
-// commutative traits.
-#include <ExpressionTemplates/ExpressionTemplates.hpp>
-#include <LibUtilities/LinearAlgebra/NekVector.hpp>
-#endif
 namespace Nektar
-{        
+{
     template<typename DataType, typename FormType>
     std::ostream& operator<<(std::ostream& os, const NekMatrix<DataType, FormType>& rhs)
     {
@@ -112,37 +106,6 @@ namespace Nektar
         return os;
     }
 }
-
-
-    
-    #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
-namespace expt
-{
-    template<typename T>
-    struct IsBlockMatrix : public boost::false_type {};
-
-    template<typename T>
-    struct IsBlockMatrix<Nektar::NekMatrix<T, Nektar::BlockMatrixTag> > : public boost::true_type {};
-
-    template<typename DataType>
-    struct HasUnaryOp<NegateOp, DataType, typename boost::enable_if<IsBlockMatrix<DataType> >::type> : public boost::false_type {};
-
-        template<typename LhsDataType, typename LhsMatrixType,
-            typename RhsDataType, typename RhsMatrixType>
-        struct CommutativeTraits<Nektar::NekMatrix<LhsDataType, LhsMatrixType> ,
-            expt::MultiplyOp, Nektar::NekMatrix<RhsDataType, RhsMatrixType> > : public boost::false_type
-        {
-        };
-
-    template<typename LhsDataType, typename LhsMatrixType,
-        typename RhsDataType>
-    struct CommutativeTraits<Nektar::NekMatrix<LhsDataType, LhsMatrixType> ,
-        expt::MultiplyOp, Nektar::NekVector<RhsDataType> > : public boost::false_type
-    {
-    };
-}
-
-    #endif
 
 #endif //NEKTAR_LIB_UTILITIES_NEK_MATRIX_HPP
 

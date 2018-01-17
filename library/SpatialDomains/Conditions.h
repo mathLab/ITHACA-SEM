@@ -43,7 +43,6 @@
 #include <LibUtilities/BasicUtils/Equation.h>
 #include <SpatialDomains/MeshGraph.h>
 
-
 namespace Nektar
 {
     struct OneD;
@@ -120,7 +119,7 @@ namespace Nektar
                 const std::string& filename=std::string(""),
                 const LibUtilities::CommSharedPtr comm=LibUtilities::CommSharedPtr()):
                     BoundaryConditionBase(eDirichlet, userDefined),
-                    m_dirichletCondition(pSession, eqn),
+                    m_dirichletCondition(pSession->GetExpressionEvaluator(), eqn),
                     m_expr(eqn),
                     m_filename(filename),
                     m_comm(comm)
@@ -142,7 +141,7 @@ namespace Nektar
                 const std::string& filename=std::string(""),
                 const LibUtilities::CommSharedPtr comm=LibUtilities::CommSharedPtr()):
                     BoundaryConditionBase(eNeumann, userDefined),
-                    m_neumannCondition(pSession, eqn),
+                    m_neumannCondition(pSession->GetExpressionEvaluator(), eqn),
                     m_filename(filename),
                     m_comm(comm)
             {
@@ -163,8 +162,8 @@ namespace Nektar
                 const std::string& filename=std::string(""),
                 const LibUtilities::CommSharedPtr comm=LibUtilities::CommSharedPtr()):
                     BoundaryConditionBase(eRobin, userDefined),
-                    m_robinFunction(pSession, a),
-                    m_robinPrimitiveCoeff(pSession, b),
+                    m_robinFunction(pSession->GetExpressionEvaluator(), a),
+                    m_robinPrimitiveCoeff(pSession->GetExpressionEvaluator(), b),
                     m_filename(filename),
                     m_comm(comm)
             {
@@ -199,7 +198,7 @@ namespace Nektar
                     const std::string& filename=std::string(""),
                     const LibUtilities::CommSharedPtr comm=LibUtilities::CommSharedPtr()):
             BoundaryConditionBase(eNotDefined, userDefined),
-                m_notDefinedCondition(pSession, eqn),
+                m_notDefinedCondition(pSession->GetExpressionEvaluator(), eqn),
                 m_filename(filename),
                 m_comm(comm)
                 {
@@ -211,18 +210,18 @@ namespace Nektar
         };
 
 
-        typedef std::map<int, Composite> BoundaryRegion;
-        typedef boost::shared_ptr<BoundaryRegion> BoundaryRegionShPtr;
-        typedef boost::shared_ptr<const BoundaryRegion> ConstBoundaryRegionShPtr;
+        typedef std::map<int, CompositeSharedPtr> BoundaryRegion;
+        typedef std::shared_ptr<BoundaryRegion> BoundaryRegionShPtr;
+        typedef std::shared_ptr<const BoundaryRegion> ConstBoundaryRegionShPtr;
         typedef std::map<int, BoundaryRegionShPtr> BoundaryRegionCollection;
 
-        typedef boost::shared_ptr<BoundaryConditionBase> BoundaryConditionShPtr;
-        typedef boost::shared_ptr<DirichletBoundaryCondition> DirichletBCShPtr;
-        typedef boost::shared_ptr<NeumannBoundaryCondition>   NeumannBCShPtr;
-        typedef boost::shared_ptr<RobinBoundaryCondition>     RobinBCShPtr;
+        typedef std::shared_ptr<BoundaryConditionBase> BoundaryConditionShPtr;
+        typedef std::shared_ptr<DirichletBoundaryCondition> DirichletBCShPtr;
+        typedef std::shared_ptr<NeumannBoundaryCondition>   NeumannBCShPtr;
+        typedef std::shared_ptr<RobinBoundaryCondition>     RobinBCShPtr;
 
         typedef std::map<std::string,BoundaryConditionShPtr>  BoundaryConditionMap;
-        typedef boost::shared_ptr<BoundaryConditionMap>  BoundaryConditionMapShPtr;
+        typedef std::shared_ptr<BoundaryConditionMap>  BoundaryConditionMapShPtr;
         typedef std::map<int, BoundaryConditionMapShPtr> BoundaryConditionCollection;
 
         const static Array<OneD, BoundaryConditionShPtr> NullBoundaryConditionShPtrArray;
@@ -280,7 +279,7 @@ namespace Nektar
             void CreateBoundaryComms();
         };
 
-        typedef boost::shared_ptr<BoundaryConditions> 
+        typedef std::shared_ptr<BoundaryConditions> 
             BoundaryConditionsSharedPtr;
     }
 }

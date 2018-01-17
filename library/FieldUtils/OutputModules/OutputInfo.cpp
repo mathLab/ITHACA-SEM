@@ -40,7 +40,7 @@ using namespace std;
 #include "OutputInfo.h"
 
 #include <LibUtilities/BasicUtils/FieldIOXml.h>
-#include <LibUtilities/BasicUtils/MeshPartition.h>
+#include <SpatialDomains/MeshPartition.h>
 #include <boost/format.hpp>
 
 namespace Nektar
@@ -73,7 +73,7 @@ void OutputInfo::Process(po::variables_map &vm)
              "Need to specify nparts for info output");
     int nparts = m_config["nparts"].as<int>();
 
-    LibUtilities::CommSharedPtr vComm = boost::shared_ptr<FieldConvertComm>(
+    LibUtilities::CommSharedPtr vComm = std::shared_ptr<FieldConvertComm>(
         new FieldConvertComm(0, NULL, nparts, 0));
     vComm->SplitComm(1, nparts);
 
@@ -95,15 +95,15 @@ void OutputInfo::Process(po::variables_map &vm)
     }
 
     LibUtilities::SessionReaderSharedPtr vSession =
-        boost::shared_ptr<LibUtilities::SessionReader>(
+        std::shared_ptr<LibUtilities::SessionReader>(
             new LibUtilities::SessionReader(0, 0, files, vComm));
-    vSession->SetUpXmlDoc();
+    vSession->InitSession();
 
     // Default partitioner to use is Metis. Use Scotch as default
     // if it is installed. Override default with command-line flags
     // if they are set.
     string vPartitionerName = "Metis";
-    if (LibUtilities::GetMeshPartitionFactory().ModuleExists("Scotch"))
+    if (SpatialDomains::GetMeshPartitionFactory().ModuleExists("Scotch"))
     {
         vPartitionerName = "Scotch";
     }
@@ -116,9 +116,15 @@ void OutputInfo::Process(po::variables_map &vm)
         vPartitionerName = "Scotch";
     }
 
-    LibUtilities::MeshPartitionSharedPtr vMeshPartition =
-        LibUtilities::GetMeshPartitionFactory().CreateInstance(vPartitionerName,
-                                                               vSession);
+    // Construct MeshGraph to read geometry.
+    SpatialDomains::MeshGraphSharedPtr mesh =
+        SpatialDomains::GetMeshGraphFactory().CreateInstance(
+            vSession->GetGeometryType());
+
+    SpatialDomains::MeshPartitionSharedPtr vMeshPartition =
+        SpatialDomains::GetMeshPartitionFactory().CreateInstance(
+            vPartitionerName, vSession, mesh);
+    mesh->ReadGeometry(SpatialDomains::NullDomainRangeShPtr, false);
 
     vMeshPartition->PartitionMesh(nparts, true);
 
@@ -144,8 +150,8 @@ void OutputInfo::Process(po::variables_map &vm)
 
     // Write the output file
     LibUtilities::CommSharedPtr c = m_f->m_comm;
-    boost::shared_ptr<LibUtilities::FieldIOXml> fldXml =
-        boost::static_pointer_cast<LibUtilities::FieldIOXml>(
+    std::shared_ptr<LibUtilities::FieldIOXml> fldXml =
+        std::static_pointer_cast<LibUtilities::FieldIOXml>(
             LibUtilities::GetFieldIOFactory().CreateInstance("Xml", c, true));
     fldXml->WriteMultiFldFileIDs(filename, filenames, ElementIDs);
 }

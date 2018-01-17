@@ -36,7 +36,7 @@
 #ifndef MULTIREGIONS_ASSEMBLYMAPCG_H
 #define MULTIREGIONS_ASSEMBLYMAPCG_H
 
-#include <boost/tuple/tuple.hpp>
+#include <tuple>
 
 #include <MultiRegions/MultiRegionsDeclspec.h>
 #include <MultiRegions/AssemblyMap/AssemblyMap.h>
@@ -50,8 +50,8 @@ namespace Nektar
         const static std::vector<std::map<int,int> > NullVecIntIntMap;
 
         class AssemblyMapCG;
-        typedef boost::shared_ptr<AssemblyMapCG>  AssemblyMapCGSharedPtr;
-        typedef boost::tuple<int, int, NekDouble> ExtraDirDof;
+        typedef std::shared_ptr<AssemblyMapCG>  AssemblyMapCGSharedPtr;
+        typedef std::tuple<int, int, NekDouble> ExtraDirDof;
 
         typedef std::vector<std::map<int, int> > DofGraph;
 

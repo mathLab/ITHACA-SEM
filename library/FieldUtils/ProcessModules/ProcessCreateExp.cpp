@@ -39,7 +39,6 @@ using namespace std;
 
 #include "ProcessCreateExp.h"
 
-#include <LibUtilities/BasicUtils/ParseUtils.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/BasicUtils/Timer.h>
 
@@ -80,11 +79,6 @@ void ProcessCreateExp::Process(po::variables_map &vm)
         // expansion defintion if required
         bool fldfilegiven = (m_f->m_fielddef.size() != 0);
 
-        // currently load all field (possibly could read data from
-        // expansion list but it is re-arranged in expansion)
-        const SpatialDomains::ExpansionMap &expansions =
-            m_f->m_graph->GetExpansions();
-
         // load fielddef header if fld file is defined. This gives
         // precedence to Homogeneous definition in fld file
         m_f->m_numHomogeneousDir = 0;
@@ -119,20 +113,28 @@ void ProcessCreateExp::Process(po::variables_map &vm)
 
         m_f->m_exp.resize(1);
 
+        // Check  if there are any elements to process
+        vector<int> IDs;
+        auto domain = m_f->m_graph->GetDomain();
+        for(int d = 0; d < domain.size(); ++d)
+        {
+            for (auto &compIter : domain[d])
+            {
+                for (auto &x : compIter.second->m_geomVec)
+                {
+                    IDs.push_back(x->GetGlobalID());
+                }
+            }
+        }
+
         // if Range has been specified it is possible to have a
         // partition which is empty so check this and return with empty
         // expansion if no elements present.
-        if (!expansions.size())
+        if (!IDs.size())
         {
             m_f->m_exp[0] = MemoryManager<MultiRegions::ExpList>::
                             AllocateSharedPtr();
             return;
-        }
-
-        if (fldfilegiven)
-        {
-            // Set up Expansion information to use mode order from field
-            m_f->m_graph->SetExpansions(m_f->m_fielddef);
         }
 
         // Adjust number of quadrature points
@@ -191,13 +193,12 @@ void ProcessCreateExp::Process(po::variables_map &vm)
 
             m_f->m_session->LoadParameter("Strip_Z", nstrips, 1);
 
-            vector<string> vars;
+            vector<string> vars = m_f->m_session->GetVariables();
             if (vm.count("useSessionVariables"))
             {
-                m_f->m_variables = m_f->m_session->GetVariables();
+                m_f->m_variables = vars;
             }
             nfields = m_f->m_variables.size();
-            vars    = m_f->m_variables;
 
             m_f->m_exp.resize(nfields * nstrips);
 
@@ -241,10 +242,9 @@ void ProcessCreateExp::Process(po::variables_map &vm)
                         int n = i * nstrips + s;
                         // In case of multiple flds, we might not have a
                         //   variable in this m_data[n] -> skip in this case
-                        vector<string>::iterator it =
-                            find (m_f->m_fielddef[n]->m_fields.begin(),
-                                  m_f->m_fielddef[n]->m_fields.end(),
-                                  m_f->m_variables[j]);
+                        auto it = find (m_f->m_fielddef[n]->m_fields.begin(),
+                                        m_f->m_fielddef[n]->m_fields.end(),
+                                        m_f->m_variables[j]);
                         if(it !=m_f->m_fielddef[n]->m_fields.end())
                         {
                             m_f->m_exp[s * nfields + j]->ExtractDataToCoeffs(

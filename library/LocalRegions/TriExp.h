@@ -197,8 +197,6 @@ namespace Nektar
                             std::vector<LibUtilities::BasisType> &fromType);
             LOCAL_REGIONS_EXPORT virtual
                 StdRegions::Orientation v_GetEorient(int edge);
-            LOCAL_REGIONS_EXPORT virtual
-                StdRegions::Orientation v_GetCartesianEorient(int edge);
             LOCAL_REGIONS_EXPORT virtual const
                 LibUtilities::BasisSharedPtr& v_GetBasis(int dir) const;
             LOCAL_REGIONS_EXPORT virtual int v_GetNumPoints(
@@ -291,11 +289,8 @@ namespace Nektar
             TriExp();
         };
 
-        // type defines for use of TriExp in a boost vector
-        typedef boost::shared_ptr<TriExp> TriExpSharedPtr;
+        typedef std::shared_ptr<TriExp> TriExpSharedPtr;
         typedef std::vector< TriExpSharedPtr > TriExpVector;
-        typedef std::vector< TriExpSharedPtr >::iterator TriExpVectorIter;
-
     }
 }
 

@@ -45,8 +45,9 @@ std::string UpwindSolver::solverName = SolverUtils::GetRiemannSolverFactory().
                                        RegisterCreatorFunction("APEUpwind", UpwindSolver::create,
                                                "Upwind solver for the APE equation");
 
-UpwindSolver::UpwindSolver() :
-    APESolver()
+UpwindSolver::UpwindSolver(
+    const LibUtilities::SessionReaderSharedPtr& pSession) :
+    APESolver(pSession)
 {
 
 }

@@ -184,6 +184,7 @@ namespace Nektar
                     const FlagList &flags,
                     const StdRegions::ConstFactorMap &factors,
                     const StdRegions::VarCoeffMap &varcoeff,
+                    const MultiRegions::VarFactorsMap &varfactors,
                     const Array<OneD, const NekDouble> &dirForcing,
                     const bool PhysSpaceForcing);
             virtual void v_GeneralMatrixOp(
@@ -205,7 +206,7 @@ namespace Nektar
             virtual void v_ClearGlobalLinSysManager(void);
 
         };
-        typedef boost::shared_ptr<ContField3D>      ContField3DSharedPtr;
+        typedef std::shared_ptr<ContField3D>      ContField3DSharedPtr;
 
         inline const Array<OneD,const MultiRegions::ExpListSharedPtr>
                 &ContField3D::GetBndCondExp()

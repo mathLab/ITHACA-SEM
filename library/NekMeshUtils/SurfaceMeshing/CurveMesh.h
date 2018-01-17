@@ -36,8 +36,6 @@
 #ifndef NEKTAR_MESHUTILS_SURFACEMESHING_CURVEMESH_H
 #define NEKTAR_MESHUTILS_SURFACEMESHING_CURVEMESH_H
 
-#include <boost/shared_ptr.hpp>
-
 #include <NekMeshUtils/CADSystem/CADCurve.h>
 #include <NekMeshUtils/CADSystem/CADVert.h>
 #include <NekMeshUtils/MeshElements/Mesh.h>
@@ -56,7 +54,7 @@ namespace NekMeshUtils
 
 //forward
 class CurveMesh;
-typedef boost::shared_ptr<CurveMesh> CurveMeshSharedPtr;
+typedef std::shared_ptr<CurveMesh> CurveMeshSharedPtr;
 
 class CurveMesh
 {
@@ -82,7 +80,12 @@ public:
     /**
      * @brief execute meshing
      */
-    void Mesh();
+    void Mesh(bool forceThree = false);
+
+    /**
+     * @brief Delete old mesh and mesh with forceThree on
+     */
+    void ReMesh();
 
     /**
      * @brief get id of first node

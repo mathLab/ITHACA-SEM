@@ -7,8 +7,6 @@ SET(BasicConstHeaders
 
 SET(BasicUtilsHeaders
     ./BasicUtils/ArrayPolicies.hpp
-    ./BasicUtils/BoostUtil.hpp
-    ./BasicUtils/Concepts.hpp
     ./BasicUtils/ConsistentObjectAccess.hpp
     ./BasicUtils/CompressData.h
     ./BasicUtils/CsvIO.h
@@ -17,14 +15,11 @@ SET(BasicUtilsHeaders
     ./BasicUtils/FieldIOXml.h
     ./BasicUtils/FileSystem.h
     ./BasicUtils/ErrorUtil.hpp
-    ./BasicUtils/MeshEntities.hpp
-    ./BasicUtils/MeshPartition.h
-    ./BasicUtils/MeshPartitionMetis.h
+    ./BasicUtils/HashUtils.hpp
     ./BasicUtils/NekManager.hpp
     ./BasicUtils/NekFactory.hpp
-    ./BasicUtils/NekPtr.hpp
     ./BasicUtils/OperatorGenerators.hpp
-    ./BasicUtils/ParseUtils.hpp
+    ./BasicUtils/ParseUtils.h
     ./BasicUtils/Progressbar.hpp
     ./BasicUtils/PtsField.h
     ./BasicUtils/PtsIO.h
@@ -39,7 +34,6 @@ SET(BasicUtilsHeaders
     ./BasicUtils/VmathArray.hpp
     ./BasicUtils/Metis.hpp
     ./BasicUtils/VtkUtil.hpp
-    ./BasicUtils/XmlUtil.h
 )
 
 SET(BasicUtilsSources
@@ -50,8 +44,7 @@ SET(BasicUtilsSources
     ./BasicUtils/FieldIO.cpp
     ./BasicUtils/FieldIOXml.cpp
     ./BasicUtils/FileSystem.cpp
-    ./BasicUtils/MeshPartition.cpp
-    ./BasicUtils/MeshPartitionMetis.cpp
+    ./BasicUtils/ParseUtils.cpp
     ./BasicUtils/PtsField.cpp
     ./BasicUtils/PtsIO.cpp
     ./BasicUtils/SessionReader.cpp
@@ -59,7 +52,6 @@ SET(BasicUtilsSources
     ./BasicUtils/ThreadBoost.cpp
     ./BasicUtils/Timer.cpp
     ./BasicUtils/Vmath.cpp
-    ./BasicUtils/XmlUtil.cpp
 )
 
 # HDF5
@@ -87,13 +79,6 @@ SET(CommunicationSources
     ./Communication/CommSerial.cpp
     ./Communication/Transposition.cpp
 )
-
-IF(NEKTAR_USE_SCOTCH)
-    SET(BasicUtilsHeaders ${BasicUtilsHeaders}
-        ./BasicUtils/MeshPartitionScotch.h)
-    SET(BasicUtilsSources ${BasicUtilsSources}
-        ./BasicUtils/MeshPartitionScotch.cpp)
-ENDIF(NEKTAR_USE_SCOTCH)
 
 IF(NEKTAR_USE_MPI)
     SET(CommunicationHeaders ${CommunicationHeaders}
@@ -200,18 +185,13 @@ SET(LinearAlgebraHeaders
     ./LinearAlgebra/Arpack.hpp
     ./LinearAlgebra/BlasArray.hpp
     ./LinearAlgebra/Blas.hpp
-    ./LinearAlgebra/BlasOverrideUtil.hpp
     ./LinearAlgebra/BlockMatrix.hpp
     ./LinearAlgebra/CanGetRawPtr.hpp
-    ./LinearAlgebra/DgemmOverride.hpp
-    ./LinearAlgebra/DgemvOverride.hpp
     ./LinearAlgebra/ExplicitInstantiation.h
     ./LinearAlgebra/Lapack.hpp
     ./LinearAlgebra/MatrixBase.hpp
     ./LinearAlgebra/MatrixFuncs.h
-    ./LinearAlgebra/MatrixOperationsDeclarations.hpp
     ./LinearAlgebra/MatrixOperations.hpp
-    ./LinearAlgebra/MatrixSize.hpp
     ./LinearAlgebra/MatrixStorageType.h
     ./LinearAlgebra/MatrixType.h
     ./LinearAlgebra/NekLinAlgAlgorithms.hpp
@@ -220,7 +200,6 @@ SET(LinearAlgebraHeaders
     ./LinearAlgebra/NekMatrix.hpp
     ./LinearAlgebra/NekPoint.hpp
     ./LinearAlgebra/NekTypeDefs.hpp
-    ./LinearAlgebra/NekVectorCommon.hpp
     ./LinearAlgebra/NekVectorFwd.hpp
     ./LinearAlgebra/NekVector.hpp
     ./LinearAlgebra/PointerWrapper.h
@@ -278,26 +257,6 @@ SET(TimeIntegrationSources
         ./TimeIntegration/TimeIntegrationWrapper.cpp
 )
 
-SET(ExpressionTemplates
-    ../ExpressionTemplates/AssociativeTraits.hpp
-    ../ExpressionTemplates/AssociativeTransform.hpp
-    ../ExpressionTemplates/BackwardInverseTransform.hpp
-    ../ExpressionTemplates/CommutativeTraits.hpp
-    ../ExpressionTemplates/CommutativeTransform.hpp
-    ../ExpressionTemplates/CreateFromTree.hpp
-    ../ExpressionTemplates/ExpressionEvaluator.hpp
-    ../ExpressionTemplates/ExpressionTemplates.hpp
-    ../ExpressionTemplates/ForwardInverseTransform.hpp
-    ../ExpressionTemplates/InverseOperatorTypeTraits.hpp
-    ../ExpressionTemplates/InvertNode.hpp
-    ../ExpressionTemplates/Node.hpp
-    ../ExpressionTemplates/Operators.hpp
-    ../ExpressionTemplates/PerformCommutativeTransformIfNeeded.hpp
-    ../ExpressionTemplates/PushDownUnaryNodes.hpp
-    ../ExpressionTemplates/RemoveAllUnecessaryTemporaries.hpp
-    ../ExpressionTemplates/SortAssociativeCommutativeClusters.hpp
-)
-
 SET(BaseHeaders
     LibUtilitiesDeclspec.h
 )
@@ -305,7 +264,6 @@ SET(BaseHeaders
 SOURCE_GROUP("Basic Const" FILES ${BasicConstHeaders})
 SOURCE_GROUP("Basic Utils Headers" FILES ${BasicUtilsHeaders})
 SOURCE_GROUP("Basic Utils Sources" FILES ${BasicUtilsSources})
-SOURCE_GROUP("Expression Templates" FILES ${ExpressionTemplates})
 SOURCE_GROUP("Foundation Headers" FILES ${FoundationHeaders})
 SOURCE_GROUP("Foundation Sources" FILES ${FoundationSources})
 SOURCE_GROUP("Linear Algebra Headers" FILES ${LinearAlgebraHeaders})
@@ -336,7 +294,6 @@ SOURCE_GROUP("Base" FILES ${BaseHeaders})
 SET(LibUtilityHeaders
     ${MemoryHeaders}
     ${BasicUtilsHeaders}
-    ${ExpressionTemplates}
     ${PolyLibHeaders}
     ${CommunicationHeaders}
     ${FoundationHeaders}
@@ -384,13 +341,6 @@ ADD_DEPENDENCIES(LibUtilities modmetis-5.1.0 boost tinyxml-2.6.2 zlib-1.2.7)
 
 ### Libraries needed specifically by LibUtilities ###
 ### Static libraries do not need to be linked by
-# Scotch
-IF( NEKTAR_USE_SCOTCH )
-    TARGET_LINK_LIBRARIES(LibUtilities LINK_PRIVATE
-        ${SCOTCH_LIBRARY} ${SCOTCHERR_LIBRARY})
-    ADD_DEPENDENCIES(LibUtilities scotch-6.0.0)
-ENDIF ()
-
 # Metis
 TARGET_LINK_LIBRARIES(LibUtilities LINK_PRIVATE ${METIS_LIB})
 
@@ -405,18 +355,16 @@ ENDIF( NEKTAR_USE_FFTW )
 # ARPACK
 IF( NEKTAR_USE_ARPACK )
     TARGET_LINK_LIBRARIES(LibUtilities LINK_PUBLIC ${ARPACK_LIBRARY})
+    ADD_DEPENDENCIES(LibUtilities arpack-ng-1.0)
 ENDIF( NEKTAR_USE_ARPACK )
 
 # Boost
 TARGET_LINK_LIBRARIES(LibUtilities LINK_PUBLIC
     ${Boost_THREAD_LIBRARY}
     ${Boost_IOSTREAMS_LIBRARY}
-    ${Boost_DATE_TIME_LIBRARY}
     ${Boost_PROGRAM_OPTIONS_LIBRARY}
     ${Boost_FILESYSTEM_LIBRARY}
     ${Boost_SYSTEM_LIBRARY}
-    ${Boost_TIMER_LIBRARY}
-    ${Boost_CHRONO_LIBRARY}
     debug ${ZLIB_LIBRARY_DEBUG} optimized ${ZLIB_LIBRARY_RELEASE}
 )
 
@@ -485,13 +433,10 @@ ENDIF( NEKTAR_USE_PETSC )
 
 # HDF5
 IF( NEKTAR_USE_HDF5 )
-    TARGET_LINK_LIBRARIES(LibUtilities LINK_PRIVATE ${HDF5_LIBRARIES})
+    TARGET_LINK_LIBRARIES(LibUtilities LINK_PUBLIC ${HDF5_LIBRARIES})
     ADD_DEPENDENCIES(LibUtilities hdf5-1.8.16)
 ENDIF( NEKTAR_USE_HDF5 )
 
-INSTALL(FILES ${ExpressionTemplates}
-    DESTINATION ${NEKTAR_INCLUDE_DIR}/ExpressionTemplates
-    COMPONENT dev)
 INSTALL(DIRECTORY ./
     DESTINATION ${NEKTAR_INCLUDE_DIR}/LibUtilities
     COMPONENT dev

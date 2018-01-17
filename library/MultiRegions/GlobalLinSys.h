@@ -38,7 +38,6 @@
 #include <MultiRegions/MultiRegionsDeclspec.h>
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
 #include <MultiRegions/GlobalLinSysKey.h>
-#include <boost/enable_shared_from_this.hpp>
 #include <MultiRegions/ExpList.h>
 #include <MultiRegions/AssemblyMap/AssemblyMapCG.h>
 
@@ -52,33 +51,33 @@ namespace Nektar
         class Preconditioner;
 
         /// Pointer to a GlobalLinSys object.
-        typedef boost::shared_ptr<GlobalLinSys> GlobalLinSysSharedPtr;
+        typedef std::shared_ptr<GlobalLinSys> GlobalLinSysSharedPtr;
         /// Mapping between GlobalLinSys objects and their associated keys.
         typedef std::map<GlobalLinSysKey,GlobalLinSysSharedPtr> GlobalLinSysMap;
         /// Pointer to a GlobalLinSys/key map.
-        typedef boost::shared_ptr<GlobalLinSysMap> GlobalLinSysMapShPtr;
+        typedef std::shared_ptr<GlobalLinSysMap> GlobalLinSysMapShPtr;
 
         // Forward declaration
-        typedef boost::shared_ptr<Preconditioner> PreconditionerSharedPtr;
+        typedef std::shared_ptr<Preconditioner> PreconditionerSharedPtr;
 
         /// Datatype of the NekFactory used to instantiate classes derived from
         /// the EquationSystem class.
         typedef LibUtilities::NekFactory< std::string, GlobalLinSys, 
             const GlobalLinSysKey&,
-            const boost::weak_ptr<ExpList>&,
-            const boost::shared_ptr<AssemblyMap>& > GlobalLinSysFactory;
+            const std::weak_ptr<ExpList>&,
+            const std::shared_ptr<AssemblyMap>& > GlobalLinSysFactory;
         GlobalLinSysFactory& GetGlobalLinSysFactory();
 
 
         /// A global linear system.
-        class GlobalLinSys: public boost::enable_shared_from_this<GlobalLinSys>
+        class GlobalLinSys: public std::enable_shared_from_this<GlobalLinSys>
         {
         public:
             /// Constructor for full direct matrix solve.
             MULTI_REGIONS_EXPORT GlobalLinSys(
                 const GlobalLinSysKey                &pKey,
-                const boost::weak_ptr<ExpList>       &pExpList,
-                const boost::shared_ptr<AssemblyMap> &pLocToGloMap);
+                const std::weak_ptr<ExpList>       &pExpList,
+                const std::shared_ptr<AssemblyMap> &pLocToGloMap);
 
             MULTI_REGIONS_EXPORT
             virtual ~GlobalLinSys() {}
@@ -87,11 +86,11 @@ namespace Nektar
             const inline GlobalLinSysKey &GetKey(void) const;
 
             //Returns the local matrix associated with the system
-            const inline boost::weak_ptr<ExpList> &GetLocMat(void) const;
+            const inline std::weak_ptr<ExpList> &GetLocMat(void) const;
 
             inline void InitObject();
             inline void Initialise(
-                const boost::shared_ptr<AssemblyMap>& pLocToGloMap);
+                const std::shared_ptr<AssemblyMap>& pLocToGloMap);
 
             /// Solve the linear system for given input and output vectors
             /// using a specified local to global map.
@@ -104,7 +103,7 @@ namespace Nektar
                     = NullNekDouble1DArray);
 
             /// Returns a shared pointer to the current object.
-            boost::shared_ptr<GlobalLinSys> GetSharedThisPtr()
+            std::shared_ptr<GlobalLinSys> GetSharedThisPtr()
             {
                 return shared_from_this();
             }
@@ -126,7 +125,7 @@ namespace Nektar
             /// Key associated with this linear system.
             const GlobalLinSysKey                m_linSysKey;
             /// Local Matrix System
-            const boost::weak_ptr<ExpList>       m_expList;
+            const std::weak_ptr<ExpList>       m_expList;
             /// Robin boundary info
             const std::map<int, RobinBCInfoSharedPtr> m_robinBCInfo;
             // Provide verbose output
@@ -140,6 +139,8 @@ namespace Nektar
             PreconditionerSharedPtr CreatePrecon(AssemblyMapSharedPtr asmMap);
 
         private:
+            LocalRegions::MatrixKey GetBlockMatrixKey(unsigned int n);
+            
             /// Solve a linear system based on mapping.
             virtual void v_Solve(
                 const Array<OneD, const NekDouble> &in,
@@ -158,7 +159,7 @@ namespace Nektar
 
             virtual void v_InitObject();
             virtual void v_Initialise(
-                const boost::shared_ptr<AssemblyMap>& pLocToGloMap);
+                const std::shared_ptr<AssemblyMap>& pLocToGloMap);
 
             static std::string lookupIds[];
             static std::string def;
@@ -176,7 +177,7 @@ namespace Nektar
         /**
          *
          */
-        const inline boost::weak_ptr<ExpList> &GlobalLinSys::GetLocMat(void) const
+        const inline std::weak_ptr<ExpList> &GlobalLinSys::GetLocMat(void) const
         {
             return m_expList;
         }
@@ -214,7 +215,7 @@ namespace Nektar
         }
 
         inline void GlobalLinSys::Initialise(
-            const boost::shared_ptr<AssemblyMap>& pLocToGloMap)
+            const std::shared_ptr<AssemblyMap>& pLocToGloMap)
         {
             v_Initialise(pLocToGloMap);
         }

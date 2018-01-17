@@ -41,7 +41,6 @@ using namespace std;
 
 #include "ProcessAddCompositeID.h"
 
-#include <LibUtilities/BasicUtils/ParseUtils.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 
 namespace Nektar
@@ -93,8 +92,7 @@ void ProcessAddCompositeID::Process(po::variables_map &vm)
     const SpatialDomains::CompositeMap CompositeMap =
         m_f->m_graph->GetComposites();
 
-    SpatialDomains::CompositeMapConstIter it;
-    NekDouble compid=0;
+    int compid = -1;
 
     // loop over elements
     for (int n = 0; n < exp->GetNumElmts(); ++n)
@@ -102,24 +100,25 @@ void ProcessAddCompositeID::Process(po::variables_map &vm)
         LocalRegions::ExpansionSharedPtr elmt = exp->GetExp(n);
 
         // loop over composite list and search for geometry pointer in list
-        for (it = CompositeMap.begin(); it != CompositeMap.end(); ++it)
+        for (auto &it : CompositeMap)
         {
-            if (find(it->second->begin(), it->second->end(), elmt->GetGeom()) !=
-                it->second->end())
+            if (find(it.second->m_geomVec.begin(),
+                     it.second->m_geomVec.end(), elmt->GetGeom()) !=
+                it.second->m_geomVec.end())
             {
-                compid = it->first;
+                compid = it.first;
                 break;
             }
         }
 
-        WARNINGL0(it != CompositeMap.end(),
+        WARNINGL0(compid != -1,
                   "Failed to find composite ID for element: " +
                       boost::lexical_cast<string>(n));
 
         // Fill element with the value of the index
         int npts = elmt->GetTotPoints();
         Array<OneD, NekDouble> tmp;
-        Vmath::Fill(npts, compid,
+        Vmath::Fill(npts, (NekDouble)compid,
                     tmp = exp->UpdatePhys() + exp->GetPhys_Offset(n), 1);
     }
 

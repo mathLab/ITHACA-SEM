@@ -79,7 +79,6 @@ namespace Nektar
         Array<OneD, unsigned int>           edgeInteriorMap;
         Array<OneD, int>                    edgeInteriorSign;
         int nvel = fields.num_elements();
-        MultiRegions::PeriodicMap::const_iterator pIt;
 
         const LocalRegions::ExpansionVector &locExpVector = *(fields[0]->GetExp());
         int id, diff;
@@ -122,7 +121,6 @@ namespace Nektar
 
         map<int,int> IsDirVertDof;
         map<int,int> IsDirEdgeDof;
-        map<int,int>::iterator mapIt;
 
         SpatialDomains::Geometry1DSharedPtr g;
         for(j = 0; j < bndCondExp.num_elements(); ++j)
@@ -146,17 +144,17 @@ namespace Nektar
                     {
                         IsDirEdgeDof[bndCondExp[j]->GetExp(k)
                                      ->as<LocalRegions::Expansion1D>()
-                                     ->GetGeom1D()->GetEid()] += 1;
+                                     ->GetGeom1D()->GetGlobalID()] += 1;
                     }
 
 
                     // Set number of Dirichlet conditions at vertices
                     // with a clamp on its maximum value being nvel to
                     // handle corners between expansions
-                    for(mapIt = BndExpVids.begin(); mapIt !=  BndExpVids.end(); mapIt++)
+                    for(auto &mapIt : BndExpVids)
                     {
-                        id = IsDirVertDof[mapIt->second]+1;
-                        IsDirVertDof[mapIt->second] = (id > nvel)?nvel:id;
+                        id = IsDirVertDof[mapIt.second]+1;
+                        IsDirVertDof[mapIt.second] = (id > nvel)?nvel:id;
                     }
                 }
                 else
@@ -214,7 +212,7 @@ namespace Nektar
                 {
                     id = bndCondExp[i]->GetExp(0)
                                 ->as<LocalRegions::Expansion1D>()->GetGeom1D()
-                                ->GetEid();
+                                ->GetGlobalID();
                     break;
                 }
             }
@@ -478,7 +476,7 @@ namespace Nektar
                             // edges with mixed id;
                             id = bndCondExp[i]->GetExp(k)
                                               ->as<LocalRegions::Expansion1D>()
-                                              ->GetGeom1D()->GetEid();
+                                              ->GetGeom1D()->GetGlobalID();
                             for(n = 0; n < nz_loc; ++n)
                             {
                                 graphVertOffset[ReorderedGraphVertId[1][id]*nvel*nz_loc+j*nz_loc +n] *= -1;
@@ -618,7 +616,7 @@ namespace Nektar
                 meshVertId   = (locExpansion->as<LocalRegions::Expansion2D>()
                                             ->GetGeom2D())->GetVid(j);
 
-                pIt = periodicEdges.find(meshEdgeId);
+                auto pIt = periodicEdges.find(meshEdgeId);
 
                 // See if this edge is periodic. If it is, then we map all
                 // edges to the one with lowest ID, and align all
@@ -692,7 +690,7 @@ namespace Nektar
                             m_bndCondCoeffsToGlobalCoeffsMap[cnt+bndSegExp->GetVertexMap(k)] = graphVertOffset[ReorderedGraphVertId[0][meshVertId]*nvel*nz_loc+nv*nz_loc+n];
                         }
 
-                        meshEdgeId = (bndSegExp->GetGeom1D())->GetEid();
+                        meshEdgeId = (bndSegExp->GetGeom1D())->GetGlobalID();
                         bndEdgeCnt = 0;
                         nEdgeCoeffs = bndSegExp->GetNcoeffs();
                         for(k = 0; k < nEdgeCoeffs; k++)
@@ -826,9 +824,6 @@ void CoupledLocalToGlobalC0ContMap::FindEdgeIdToAddMeanPressure(vector<map<int,i
 		}
 	}
 
-
-	map<int,int>::iterator mapIt;
-
 	// Start at second to last level and find edge on boundary
 	// to attach element
 	int nlevels = bottomUpGraph->GetNlevels();
@@ -917,7 +912,7 @@ void CoupledLocalToGlobalC0ContMap::FindEdgeIdToAddMeanPressure(vector<map<int,i
 
 						if(elmtid != -1)
 						{
-							mapIt = ElmtInBndry.find(elmtid);
+							auto mapIt = ElmtInBndry.find(elmtid);
 
 							if(mapIt != ElmtInBndry.end())
 							{

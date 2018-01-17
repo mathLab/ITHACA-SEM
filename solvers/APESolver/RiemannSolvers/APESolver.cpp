@@ -44,8 +44,9 @@ namespace Nektar
 /**
 *
 */
-APESolver::APESolver() :
-    RiemannSolver()
+APESolver::APESolver(
+    const LibUtilities::SessionReaderSharedPtr& pSession) :
+    RiemannSolver(pSession)
 {
     m_requiresRotation = true;
 }

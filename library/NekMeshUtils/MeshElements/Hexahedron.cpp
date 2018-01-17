@@ -166,12 +166,14 @@ SpatialDomains::GeometrySharedPtr Hexahedron::GetGeom(int coordDim)
 
     for (int i = 0; i < 6; ++i)
     {
-        faces[i] = boost::dynamic_pointer_cast<SpatialDomains::QuadGeom>(
+        faces[i] = std::dynamic_pointer_cast<SpatialDomains::QuadGeom>(
             m_face[i]->GetGeom(coordDim));
     }
 
-    ret = MemoryManager<SpatialDomains::HexGeom>::AllocateSharedPtr(faces);
+    ret = MemoryManager<SpatialDomains::HexGeom>::AllocateSharedPtr(
+        m_id, faces);
 
+    ret->Setup();
     return ret;
 }
 
@@ -258,7 +260,7 @@ void Hexahedron::MakeOrder(int                                order,
                     x[k] = xmap->PhysEvaluate(xp, phys[k]);
                 }
 
-                m_volumeNodes[cnt] = boost::shared_ptr<Node>(
+                m_volumeNodes[cnt] = std::shared_ptr<Node>(
                     new Node(id++, x[0], x[1], x[2]));
             }
         }

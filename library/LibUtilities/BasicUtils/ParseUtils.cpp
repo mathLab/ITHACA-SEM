@@ -52,9 +52,9 @@ namespace Nektar
  * @see ParseUtils::GenerateSeqVector
  */
 template<typename T>
-struct SeqFunctor
+struct PushBackFunctor
 {
-    SeqFunctor(std::vector<T> &in) : m_vec(in) {}
+    PushBackFunctor(std::vector<T> &in) : m_vec(in) {}
 
     /**
      * @brief Pushes back values onto #m_vec as given by @p num.
@@ -101,7 +101,7 @@ private:
 bool ParseUtils::GenerateSeqVector(
     const std::string &str, std::vector<unsigned int> &out)
 {
-    SeqFunctor<unsigned int> f1(out), f2(out);
+    PushBackFunctor<unsigned int> f1(out), f2(out);
 
     auto it = str.begin();
     bool success = qi::phrase_parse(

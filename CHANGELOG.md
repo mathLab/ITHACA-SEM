@@ -117,6 +117,7 @@ v4.4.2
 **Documentation**:
 - Fix sign of the viscous term in the velocity correction scheme equations in
   the user guide (!856)
+- Fixed anonymous clone URL (!909)
 
 **FieldConvert**
 - Allow passing input name with trailing separator (!879)

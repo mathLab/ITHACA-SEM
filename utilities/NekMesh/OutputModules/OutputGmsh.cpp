@@ -167,8 +167,8 @@ void OutputGmsh::Process()
     for (auto &it : tmp)
     {
         m_mshFile << it.first << " " << scientific << setprecision(10)
-                  << it.second->m_x << " " << it.second->m_y << " " << it.second->m_z
-                  << endl;
+                  << it.second->m_x << " " << it.second->m_y << " "
+                  << it.second->m_z << endl;
     }
 
     m_mshFile << "$EndNodes" << endl;

@@ -40,6 +40,8 @@
 #include <SpatialDomains/MeshEntities.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
+#include <type_traits>
+
 
 #include <tinyxml.h>
 using namespace std;
@@ -702,297 +704,98 @@ void MeshGraphHDF5::ReadComposites()
     }
 }
 
-void MeshGraphHDF5::WriteVertices(PointGeomMap &verts)
+template<class T, typename std::enable_if<T::kDim == 0, int>::type = 0>
+inline int GetGeomDataDim(std::map<int, std::shared_ptr<T>> &geomMap, int s)
 {
-    vector<double> vertData(verts.size() * m_spaceDimension);
-    //in the maps we write the id of the vertex and its location in
-    //the hdf5 list, in serial the location is a 1 to 1 map
-    //needed for parralell.
-    vector<int> v_map(verts.size() * 2);
+    return s;
+}
 
-    int i = 0;
-    for (auto it = verts.begin(); it != verts.end(); it++, i++)
+template<class T, typename std::enable_if<T::kDim == 1, int>::type = 0>
+inline int GetGeomDataDim(std::map<int, std::shared_ptr<T>> &geomMap, int s)
+{
+    return T::kNverts;
+}
+
+template<class T, typename std::enable_if<T::kDim == 2, int>::type = 0>
+inline int GetGeomDataDim(std::map<int, std::shared_ptr<T>> &geomMap, int s)
+{
+    return T::kNedges;
+}
+
+template<class T, typename std::enable_if<T::kDim == 3, int>::type = 0>
+inline int GetGeomDataDim(std::map<int, std::shared_ptr<T>> &geomMap, int s)
+{
+    return T::kNfaces;
+}
+
+template<class T, typename std::enable_if<T::kDim == 0, int>::type = 0>
+inline NekDouble GetGeomData(std::shared_ptr<T> &geom, int i)
+{
+    return (*geom)(i);
+}
+
+template<class T, typename std::enable_if<T::kDim == 1, int>::type = 0>
+inline int GetGeomData(std::shared_ptr<T> &geom, int i)
+{
+    return geom->GetVid(i);
+}
+
+template<class T, typename std::enable_if<T::kDim == 2, int>::type = 0>
+inline int GetGeomData(std::shared_ptr<T> &geom, int i)
+{
+    return geom->GetEid(i);
+}
+
+template<class T, typename std::enable_if<T::kDim == 3, int>::type = 0>
+inline int GetGeomData(std::shared_ptr<T> &geom, int i)
+{
+    return geom->GetFid(i);
+}
+
+template<class T>
+void MeshGraphHDF5::WriteGeometryMap(std::map<int, std::shared_ptr<T>> &geomMap,
+                                     std::string datasetName)
+{
+    typedef typename std::conditional<
+        std::is_same<T, PointGeom>::value, NekDouble, int>::type DataType;
+
+    const int nGeomData = GetGeomDataDim(geomMap, m_spaceDimension);
+    const size_t nGeom = geomMap.size();
+
+    if (nGeom == 0)
     {
-        v_map[i * 2 + 0] = it->first;
-        v_map[i * 2 + 1] = i;
-        Array<OneD, NekDouble> l(m_spaceDimension);
-        it->second->GetCoords(l);
-        for (int j = 0; j < m_spaceDimension; j++)
+        return;
+    }
+
+    cout << "type = " << typeid(T).name() << std::endl;
+    cout << "COCK: " << nGeomData << " " << nGeom << endl;
+    // Construct a map storing IDs
+    vector<int> idMap(nGeom * 2);
+    vector<DataType> data(nGeom * nGeomData);
+
+    int cnt1 = 0, cnt2 = 0;
+    for (auto &it : geomMap)
+    {
+        idMap[cnt1++] = it.first;
+        for (int j = 0; j < nGeomData; ++j, cnt2 += nGeomData)
         {
-            vertData[i * m_spaceDimension + j] = l[j];
+            data[cnt2 + j] = GetGeomData(it.second, j);
         }
     }
-    vector<hsize_t> dims;
-    dims.push_back(verts.size());
-    dims.push_back(m_spaceDimension);
 
-    H5::DataTypeSharedPtr tp = H5::DataType::OfObject(vertData[0]);
+    vector<hsize_t> dims = { static_cast<hsize_t>(nGeom),
+                             static_cast<hsize_t>(nGeomData) };
+    H5::DataTypeSharedPtr tp = H5::DataType::OfObject(data[0]);
     H5::DataSpaceSharedPtr ds =
         std::shared_ptr<H5::DataSpace>(new H5::DataSpace(dims));
-    H5::DataSetSharedPtr dst = m_mesh->CreateDataSet("vert", tp, ds);
-    dst->Write(vertData, ds);
+    H5::DataSetSharedPtr dst = m_mesh->CreateDataSet(datasetName, tp, ds);
+    dst->Write(data, ds);
 
-    tp = H5::DataType::OfObject(v_map[0]);
-    dims.clear();
-    dims.push_back(verts.size());
-    dims.push_back(2);
-    ds  = std::shared_ptr<H5::DataSpace>(new H5::DataSpace(dims));
-    dst = m_maps->CreateDataSet("vert", tp, ds);
-    dst->Write(v_map, ds);
-}
-
-void MeshGraphHDF5::WriteEdges(SegGeomMap &edges)
-{
-    vector<int> edgeData(edges.size() * 2);
-    vector<int> e_map(edges.size() * 2);
-    int i = 0;
-    for (auto it = edges.begin(); it != edges.end(); it++, i++)
-    {
-        e_map[i * 2 + 0] = it->first;
-        e_map[i * 2 + 1] = i;
-        edgeData[i * 2 + 0] = it->second->GetVertex(0)->GetGlobalID();
-        edgeData[i * 2 + 1] = it->second->GetVertex(1)->GetGlobalID();
-    }
-    vector<hsize_t> dims;
-    dims.push_back(edges.size());
-    dims.push_back(2);
-    H5::DataTypeSharedPtr tp = H5::DataType::OfObject(edgeData[0]);
-    H5::DataSpaceSharedPtr ds =
-        std::shared_ptr<H5::DataSpace>(new H5::DataSpace(dims));
-    H5::DataSetSharedPtr dst = m_mesh->CreateDataSet("seg", tp, ds);
-    dst->Write(edgeData, ds);
-
-    tp = H5::DataType::OfObject(e_map[0]);
-    dims.clear();
-    dims.push_back(edges.size());
-    dims.push_back(2);
-    ds  = std::shared_ptr<H5::DataSpace>(new H5::DataSpace(dims));
-    dst = m_maps->CreateDataSet("seg", tp, ds);
-    dst->Write(e_map, ds);
-}
-
-void MeshGraphHDF5::WriteTris(TriGeomMap &tris)
-{
-    if(tris.size() == 0)
-    {
-        return;
-    }
-
-    vector<int> triData(tris.size() * 3);
-    vector<int> t_map(tris.size() * 2);
-    int i = 0;
-    for (auto it = tris.begin(); it != tris.end(); it++, i++)
-    {
-        t_map[i * 2 + 0] = it->first;
-        t_map[i * 2 + 1] = i;
-        triData[i * 3 + 0] = it->second->GetEdge(0)->GetGlobalID();
-        triData[i * 3 + 1] = it->second->GetEdge(1)->GetGlobalID();
-        triData[i * 3 + 2] = it->second->GetEdge(2)->GetGlobalID();
-    }
-    vector<hsize_t> dims;
-    dims.push_back(tris.size());
-    dims.push_back(3);
-    H5::DataTypeSharedPtr tp = H5::DataType::OfObject(triData[0]);
-    H5::DataSpaceSharedPtr ds =
-        std::shared_ptr<H5::DataSpace>(new H5::DataSpace(dims));
-    H5::DataSetSharedPtr dst = m_mesh->CreateDataSet("tri", tp, ds);
-    dst->Write(triData, ds);
-
-    tp = H5::DataType::OfObject(t_map[0]);
-    dims.clear();
-    dims.push_back(tris.size());
-    dims.push_back(2);
-    ds  = std::shared_ptr<H5::DataSpace>(new H5::DataSpace(dims));
-    dst = m_maps->CreateDataSet("tri", tp, ds);
-    dst->Write(t_map, ds);
-}
-
-void MeshGraphHDF5::WriteQuads(QuadGeomMap &quads)
-{
-    if(quads.size() == 0)
-    {
-        return;
-    }
-
-    vector<int> quadData(quads.size() * 4);
-    vector<int> q_map(quads.size() * 2);
-    int i = 0;
-    for (auto it = quads.begin(); it != quads.end(); it++, i++)
-    {
-        q_map[i * 2 + 0] = it->first;
-        q_map[i * 2 + 1] = i;
-        quadData[i * 4 + 0] = it->second->GetEdge(0)->GetGlobalID();
-        quadData[i * 4 + 1] = it->second->GetEdge(1)->GetGlobalID();
-        quadData[i * 4 + 2] = it->second->GetEdge(2)->GetGlobalID();
-        quadData[i * 4 + 3] = it->second->GetEdge(3)->GetGlobalID();
-    }
-    vector<hsize_t> dims;
-    dims.push_back(quads.size());
-    dims.push_back(4);
-    H5::DataTypeSharedPtr tp = H5::DataType::OfObject(quadData[0]);
-    H5::DataSpaceSharedPtr ds =
-        std::shared_ptr<H5::DataSpace>(new H5::DataSpace(dims));
-    H5::DataSetSharedPtr dst = m_mesh->CreateDataSet("quad", tp, ds);
-    dst->Write(quadData, ds);
-
-    tp = H5::DataType::OfObject(q_map[0]);
-    dims.clear();
-    dims.push_back(quads.size());
-    dims.push_back(2);
-    ds  = std::shared_ptr<H5::DataSpace>(new H5::DataSpace(dims));
-    dst = m_maps->CreateDataSet("quad", tp, ds);
-    dst->Write(q_map, ds);
-}
-
-void MeshGraphHDF5::WriteTets(TetGeomMap &tets)
-{
-    if(tets.size() == 0)
-    {
-        return;
-    }
-
-    vector<int> els(tets.size() * 4);
-    vector<int> i_map(tets.size() * 2);
-    int i = 0;
-    for (auto it = tets.begin(); it != tets.end(); it++, i++)
-    {
-        i_map[i * 2 + 0] = it->first;
-        i_map[i * 2 + 1] = i;
-        els[i * 4 + 0] = it->second->GetFace(0)->GetGlobalID();
-        els[i * 4 + 1] = it->second->GetFace(1)->GetGlobalID();
-        els[i * 4 + 2] = it->second->GetFace(2)->GetGlobalID();
-        els[i * 4 + 3] = it->second->GetFace(3)->GetGlobalID();
-    }
-    vector<hsize_t> dims;
-    dims.push_back(tets.size());
-    dims.push_back(4);
-    H5::DataTypeSharedPtr tp = H5::DataType::OfObject(els[0]);
-    H5::DataSpaceSharedPtr ds =
-        std::shared_ptr<H5::DataSpace>(new H5::DataSpace(dims));
-    H5::DataSetSharedPtr dst = m_mesh->CreateDataSet("tet", tp, ds);
-    dst->Write(els, ds);
-
-    tp = H5::DataType::OfObject(i_map[0]);
-    dims.clear();
-    dims.push_back(tets.size());
-    dims.push_back(2);
-    ds  = std::shared_ptr<H5::DataSpace>(new H5::DataSpace(dims));
-    dst = m_maps->CreateDataSet("tet", tp, ds);
-    dst->Write(i_map, ds);
-}
-
-void MeshGraphHDF5::WritePyrs(PyrGeomMap &pyrs)
-{
-    if(pyrs.size() == 0)
-    {
-        return;
-    }
-
-    vector<int> els(pyrs.size() * 5);
-    vector<int> i_map(pyrs.size() * 2);
-    int i = 0;
-    for (auto it = pyrs.begin(); it != pyrs.end(); it++, i++)
-    {
-        i_map[i * 2 + 0] = it->first;
-        i_map[i * 2 + 1] = i;
-        els[i * 5 + 0] = it->second->GetFace(0)->GetGlobalID();
-        els[i * 5 + 1] = it->second->GetFace(1)->GetGlobalID();
-        els[i * 5 + 2] = it->second->GetFace(2)->GetGlobalID();
-        els[i * 5 + 3] = it->second->GetFace(3)->GetGlobalID();
-        els[i * 5 + 4] = it->second->GetFace(4)->GetGlobalID();
-    }
-    vector<hsize_t> dims;
-    dims.push_back(pyrs.size());
-    dims.push_back(5);
-    H5::DataTypeSharedPtr tp = H5::DataType::OfObject(els[0]);
-    H5::DataSpaceSharedPtr ds =
-        std::shared_ptr<H5::DataSpace>(new H5::DataSpace(dims));
-    H5::DataSetSharedPtr dst = m_mesh->CreateDataSet("pyr", tp, ds);
-    dst->Write(els, ds);
-
-    tp = H5::DataType::OfObject(i_map[0]);
-    dims.clear();
-    dims.push_back(pyrs.size());
-    dims.push_back(2);
-    ds  = std::shared_ptr<H5::DataSpace>(new H5::DataSpace(dims));
-    dst = m_maps->CreateDataSet("pyr", tp, ds);
-    dst->Write(i_map, ds);
-}
-
-void MeshGraphHDF5::WritePrisms(PrismGeomMap &prisms)
-{
-    if(prisms.size() == 0)
-    {
-        return;
-    }
-
-    vector<int> els(prisms.size() * 5);
-    vector<int> i_map(prisms.size() * 2);
-    int i = 0;
-    for (auto it = prisms.begin(); it != prisms.end();
-         it++, i++)
-    {
-        i_map[i * 2 + 0] = it->first;
-        i_map[i * 2 + 1] = i;
-        els[i * 5 + 0] = it->second->GetFace(0)->GetGlobalID();
-        els[i * 5 + 1] = it->second->GetFace(1)->GetGlobalID();
-        els[i * 5 + 2] = it->second->GetFace(2)->GetGlobalID();
-        els[i * 5 + 3] = it->second->GetFace(3)->GetGlobalID();
-        els[i * 5 + 4] = it->second->GetFace(4)->GetGlobalID();
-    }
-    vector<hsize_t> dims;
-    dims.push_back(prisms.size());
-    dims.push_back(5);
-    H5::DataTypeSharedPtr tp = H5::DataType::OfObject(els[0]);
-    H5::DataSpaceSharedPtr ds =
-        std::shared_ptr<H5::DataSpace>(new H5::DataSpace(dims));
-    H5::DataSetSharedPtr dst = m_mesh->CreateDataSet("prism", tp, ds);
-    dst->Write(els, ds);
-
-    tp = H5::DataType::OfObject(i_map[0]);
-    dims.clear();
-    dims.push_back(prisms.size());
-    dims.push_back(2);
-    ds  = std::shared_ptr<H5::DataSpace>(new H5::DataSpace(dims));
-    dst = m_maps->CreateDataSet("prism", tp, ds);
-    dst->Write(i_map, ds);
-}
-
-void MeshGraphHDF5::WriteHexs(HexGeomMap &hexs)
-{
-    if(hexs.size() == 0)
-    {
-        return;
-    }
-
-    vector<int> els(hexs.size() * 6);
-    vector<int> i_map(hexs.size() * 2);
-    int i = 0;
-    for (auto it = hexs.begin(); it != hexs.end(); it++, i++)
-    {
-        i_map[i * 2 + 0] = it->first;
-        i_map[i * 2 + 1] = i;
-        for(int j = 0; j < it->second->GetNumFaces(); j++)
-        {
-            els[i * 6 + j] = it->second->GetFace(j)->GetGlobalID();
-        }
-    }
-    vector<hsize_t> dims;
-    dims.push_back(hexs.size());
-    dims.push_back(6);
-    H5::DataTypeSharedPtr tp = H5::DataType::OfObject(els[0]);
-    H5::DataSpaceSharedPtr ds =
-        std::shared_ptr<H5::DataSpace>(new H5::DataSpace(dims));
-    H5::DataSetSharedPtr dst = m_mesh->CreateDataSet("hex", tp, ds);
-    dst->Write(els, ds);
-
-    tp = H5::DataType::OfObject(i_map[0]);
-    dims.clear();
-    dims.push_back(hexs.size());
-    dims.push_back(2);
-    ds  = std::shared_ptr<H5::DataSpace>(new H5::DataSpace(dims));
-    dst = m_maps->CreateDataSet("hex", tp, ds);
-    dst->Write(i_map, ds);
+    tp = H5::DataType::OfObject(idMap[0]);
+    dims = { nGeom, 2 };
+    ds = std::shared_ptr<H5::DataSpace>(new H5::DataSpace(dims));
+    dst = m_maps->CreateDataSet(datasetName, tp, ds);
+    dst->Write(idMap, ds);
 }
 
 void MeshGraphHDF5::WriteCurves(CurveMap &edges, CurveMap &faces)
@@ -1287,19 +1090,19 @@ void MeshGraphHDF5::WriteGeometry(
     m_mesh = m_file->CreateGroup("mesh");
     m_maps = m_file->CreateGroup("maps");
 
-    WriteVertices(m_vertSet);
-    WriteEdges(m_segGeoms);
+    WriteGeometryMap(m_vertSet, "vert");
+    WriteGeometryMap(m_segGeoms, "seg");
     if (m_meshDimension > 1)
     {
-        WriteTris(m_triGeoms);
-        WriteQuads(m_quadGeoms);
+        WriteGeometryMap(m_triGeoms, "tri");
+        WriteGeometryMap(m_quadGeoms, "quad");
     }
     if (m_meshDimension > 2)
     {
-        WriteTets(m_tetGeoms);
-        WritePyrs(m_pyrGeoms);
-        WritePrisms(m_prismGeoms);
-        WriteHexs(m_hexGeoms);
+        WriteGeometryMap(m_tetGeoms, "tet");
+        WriteGeometryMap(m_pyrGeoms, "pyr");
+        WriteGeometryMap(m_prismGeoms, "prism");
+        WriteGeometryMap(m_hexGeoms, "hex");
     }
     WriteCurves(m_curvedEdges, m_curvedFaces);
     WriteComposites(m_meshComposites);

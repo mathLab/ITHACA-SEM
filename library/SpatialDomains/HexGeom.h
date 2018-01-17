@@ -59,6 +59,7 @@ public:
     SPATIAL_DOMAINS_EXPORT static const int kNqfaces = 6;
     SPATIAL_DOMAINS_EXPORT static const int kNtfaces = 0;
     SPATIAL_DOMAINS_EXPORT static const int kNfaces = kNqfaces + kNtfaces;
+    SPATIAL_DOMAINS_EXPORT static const int kDim = 3;
     SPATIAL_DOMAINS_EXPORT static const std::string XMLElementType;
 
 protected:

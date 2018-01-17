@@ -94,14 +94,10 @@ private:
     void ReadElements();
     void ReadComposites();
 
-    void WriteVertices(PointGeomMap &verts);
-    void WriteEdges(SegGeomMap &edges);
-    void WriteTris(TriGeomMap &tris);
-    void WriteQuads(QuadGeomMap &quads);
-    void WriteHexs(HexGeomMap &hexs);
-    void WritePrisms(PrismGeomMap &pris);
-    void WritePyrs(PyrGeomMap &pyrs);
-    void WriteTets(TetGeomMap &tets);
+    template<class T>
+    void WriteGeometryMap(std::map<int, std::shared_ptr<T>> &geomMap,
+                          std::string datasetName);
+
     void WriteCurves(CurveMap &edges, CurveMap &faces);
     void WriteComposites(CompositeMap &comps);
     void WriteDomain(vector<CompositeMap> &domain);

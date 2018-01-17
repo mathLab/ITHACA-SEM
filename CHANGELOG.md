@@ -80,6 +80,9 @@ v4.4.1
 **Utilities**
 - Fix vtkToFld missing dependency which prevented compiling with VTK 7.1 (!808)
 
+**Documentation**
+- Fixed anonymous clone URL (!909)
+
 **Packaging**
 - Added missing package for FieldUtils library (!755)
 

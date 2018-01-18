@@ -61,6 +61,7 @@ void MeshGraphHDF5::ReadGeometry(
     bool fillGraph)
 {
     int err;
+
     //we use the xml geom to find information about the HDF5 file
     m_xmlGeom            = m_session->GetElement("NEKTAR/GEOMETRY");
     TiXmlAttribute *attr = m_xmlGeom->FirstAttribute();
@@ -115,16 +116,14 @@ void MeshGraphHDF5::ReadGeometry(
 
     //load the HDF5 mesh
     m_file = H5::File::Open(m_hdf5Name, H5F_ACC_RDWR);
-
     m_mesh = m_file->OpenGroup("mesh");
-
     m_maps = m_file->OpenGroup("maps");
 
-    ReadVertices();
-    ReadCurves();
+    ReadGeometryMap(m_vertSet, "vert");
+    //ReadCurves();
     if (m_meshDimension >= 2)
     {
-        ReadEdges();
+        ReadGeometryMap(m_segGeoms, "seg", m_curvedEdges);
         if (m_meshDimension == 3)
         {
             ReadFaces();
@@ -133,42 +132,210 @@ void MeshGraphHDF5::ReadGeometry(
     ReadElements();
     ReadComposites();
     ReadDomain();
+    ReadExpansions();
 }
 
 void MeshGraphHDF5::PartitionMesh(LibUtilities::SessionReaderSharedPtr session)
 {
+    m_session = session;
     // Don't do anything yet!
 }
 
-void MeshGraphHDF5::ReadVertices()
+template<class T, typename std::enable_if<T::kDim == 0, int>::type = 0>
+inline int GetGeomDataDim(std::map<int, std::shared_ptr<T>> &geomMap, int s)
 {
-    string nm = "vert";
+    return s;
+}
 
-    H5::DataSetSharedPtr data = m_mesh->OpenDataSet(nm);
+template<class T, typename std::enable_if<T::kDim == 1, int>::type = 0>
+inline int GetGeomDataDim(std::map<int, std::shared_ptr<T>> &geomMap, int s)
+{
+    return T::kNverts;
+}
+
+template<class T, typename std::enable_if<T::kDim == 2, int>::type = 0>
+inline int GetGeomDataDim(std::map<int, std::shared_ptr<T>> &geomMap, int s)
+{
+    return T::kNedges;
+}
+
+template<class T, typename std::enable_if<T::kDim == 3, int>::type = 0>
+inline int GetGeomDataDim(std::map<int, std::shared_ptr<T>> &geomMap, int s)
+{
+    return T::kNfaces;
+}
+
+template<class T, typename DataType> void MeshGraphHDF5::ConstructGeomObject(
+    std::map<int, std::shared_ptr<T>> &geomMap, int id,
+    DataType *data, CurveSharedPtr curve)
+{
+}
+
+template<> void MeshGraphHDF5::ConstructGeomObject(
+    std::map<int, std::shared_ptr<PointGeom>> &geomMap, int id,
+    NekDouble *data, CurveSharedPtr curve)
+{
+    geomMap[id] = MemoryManager<PointGeom>::AllocateSharedPtr(
+        m_spaceDimension, id, data[0], data[1], data[2]);
+}
+
+template<> void MeshGraphHDF5::ConstructGeomObject(
+    std::map<int, std::shared_ptr<SegGeom>> &geomMap, int id, int *data,
+    CurveSharedPtr curve)
+{
+    PointGeomSharedPtr pts[2] = { GetVertex(data[0]), GetVertex(data[1]) };
+    geomMap[id] = MemoryManager<SegGeom>::AllocateSharedPtr(
+        id, m_spaceDimension, pts, curve);
+}
+
+template<> void MeshGraphHDF5::ConstructGeomObject(
+    std::map<int, std::shared_ptr<TriGeom>> &geomMap, int id, int *data,
+    CurveSharedPtr curve)
+{
+    SegGeomSharedPtr segs[3] = {
+        GetSegGeom(data[0]), GetSegGeom(data[1]), GetSegGeom(data[2]) };
+    geomMap[id] = MemoryManager<TriGeom>::AllocateSharedPtr(id, segs, curve);
+}
+
+template<> void MeshGraphHDF5::ConstructGeomObject(
+    std::map<int, std::shared_ptr<QuadGeom>> &geomMap, int id, int *data,
+    CurveSharedPtr curve)
+{
+    SegGeomSharedPtr segs[4] = {
+        GetSegGeom(data[0]), GetSegGeom(data[1]), GetSegGeom(data[2]),
+        GetSegGeom(data[3])
+    };
+    geomMap[id] = MemoryManager<QuadGeom>::AllocateSharedPtr(id, segs, curve);
+}
+
+template<> void MeshGraphHDF5::ConstructGeomObject(
+    std::map<int, std::shared_ptr<TetGeom>> &geomMap, int id, int *data,
+    CurveSharedPtr curve)
+{
+    TriGeomSharedPtr faces[4] = {
+        std::static_pointer_cast<TriGeom>(GetGeometry2D(data[0])),
+        std::static_pointer_cast<TriGeom>(GetGeometry2D(data[1])),
+        std::static_pointer_cast<TriGeom>(GetGeometry2D(data[2])),
+        std::static_pointer_cast<TriGeom>(GetGeometry2D(data[3]))
+    };
+    geomMap[id] = MemoryManager<TetGeom>::AllocateSharedPtr(id, faces);
+}
+
+template<> void MeshGraphHDF5::ConstructGeomObject(
+    std::map<int, std::shared_ptr<PyrGeom>> &geomMap, int id, int *data,
+    CurveSharedPtr curve)
+{
+    Geometry2DSharedPtr faces[5] = {
+        GetGeometry2D(data[0]), GetGeometry2D(data[1]), GetGeometry2D(data[2]),
+        GetGeometry2D(data[3]), GetGeometry2D(data[4])
+    };
+    geomMap[id] = MemoryManager<PyrGeom>::AllocateSharedPtr(id, faces);
+}
+
+template<> void MeshGraphHDF5::ConstructGeomObject(
+    std::map<int, std::shared_ptr<PrismGeom>> &geomMap, int id, int *data,
+    CurveSharedPtr curve)
+{
+    Geometry2DSharedPtr faces[5] = {
+        GetGeometry2D(data[0]), GetGeometry2D(data[1]), GetGeometry2D(data[2]),
+        GetGeometry2D(data[3]), GetGeometry2D(data[4])
+    };
+    geomMap[id] = MemoryManager<PrismGeom>::AllocateSharedPtr(id, faces);
+}
+
+template<> void MeshGraphHDF5::ConstructGeomObject(
+    std::map<int, std::shared_ptr<HexGeom>> &geomMap, int id, int *data,
+    CurveSharedPtr curve)
+{
+    QuadGeomSharedPtr faces[6] = {
+        std::static_pointer_cast<QuadGeom>(GetGeometry2D(data[0])),
+        std::static_pointer_cast<QuadGeom>(GetGeometry2D(data[1])),
+        std::static_pointer_cast<QuadGeom>(GetGeometry2D(data[2])),
+        std::static_pointer_cast<QuadGeom>(GetGeometry2D(data[3])),
+        std::static_pointer_cast<QuadGeom>(GetGeometry2D(data[4])),
+        std::static_pointer_cast<QuadGeom>(GetGeometry2D(data[5]))
+    };
+    geomMap[id] = MemoryManager<HexGeom>::AllocateSharedPtr(id, faces);
+}
+
+template<class T>
+void MeshGraphHDF5::ReadGeometryMap(
+    std::map<int, std::shared_ptr<T>> &geomMap,
+    std::string dataSet,
+    const CurveMap &curveMap,
+    const std::unordered_set<unsigned int> &readIds)
+{
+    typedef typename std::conditional<
+        std::is_same<T, PointGeom>::value, NekDouble, int>::type DataType;
+
+    if (!m_mesh->ContainsDataSet(dataSet))
+    {
+        return;
+    }
+
+    // Open mesh dataset
+    H5::DataSetSharedPtr data = m_mesh->OpenDataSet(dataSet);
     H5::DataSpaceSharedPtr space = data->GetSpace();
     vector<hsize_t> dims = space->GetDims();
 
-    vector<NekDouble> verts;
-    data->Read(verts, space);
-
-    H5::DataSetSharedPtr mdata = m_maps->OpenDataSet(nm);
+    // Open metadata dataset
+    H5::DataSetSharedPtr mdata = m_maps->OpenDataSet(dataSet);
     H5::DataSpaceSharedPtr mspace = mdata->GetSpace();
     vector<hsize_t> mdims = mspace->GetDims();
 
-    vector<int> ids;
-    mdata->Read(ids, mspace);
-
     ASSERTL0(mdims[0] == dims[0], "map and data set lengths do not match");
 
-    for(int i = 0; i < dims[0]; i++)
+    // Read IDs: TODO: could be done in chunks
+    vector<int> ids, newids;
+    mdata->Read(ids, mspace);
+
+    vector<DataType> geomData;
+
+    const int nGeomData = GetGeomDataDim(geomMap, m_spaceDimension);
+
+    if (readIds.size() > 0)
     {
-        PointGeomSharedPtr vert(
-            MemoryManager<PointGeom>::AllocateSharedPtr(
-                                m_spaceDimension, ids[i],
-                                    verts[i*dims[1] + 0],
-                                    verts[i*dims[1] + 1],
-                                    verts[i*dims[1] + 2]));
-        m_vertSet[ids[i]] = vert;
+        // Selective reading
+        int i = 0;
+        for (auto &id : ids)
+        {
+            if (readIds.find(id) != readIds.end())
+            {
+                space->AppendRange(i, nGeomData);
+                newids.push_back(id);
+            }
+            i += nGeomData;
+        }
+    }
+    else
+    {
+        newids = ids;
+    }
+
+    // Read data (collectively)
+    data->Read(geomData, space);
+
+    const int nRows = geomData.size() / nGeomData;
+
+    CurveSharedPtr empty;
+
+    // Construct geometry object.
+    if (curveMap.size() > 0)
+    {
+        for(int i = 0, cnt = 0; i < nRows; i++, cnt += nGeomData)
+        {
+            auto cIt = curveMap.find(newids[i]);
+            ConstructGeomObject(
+                geomMap, newids[i], &geomData[cnt],
+                cIt == curveMap.end() ? cIt->second : empty);
+        }
+    }
+    else
+    {
+        for(int i = 0, cnt = 0; i < nRows; i++, cnt += nGeomData)
+        {
+            ConstructGeomObject(geomMap, newids[i], &geomData[cnt], empty);
+        }
     }
 }
 
@@ -285,160 +452,22 @@ void MeshGraphHDF5::ReadCurves()
 
 void MeshGraphHDF5::ReadDomain()
 {
-
-}
-
-void MeshGraphHDF5::ReadEdges()
-{
-    string nm = "seg";
-
-    H5::DataSetSharedPtr data = m_mesh->OpenDataSet(nm);
-    H5::DataSpaceSharedPtr space = data->GetSpace();
-    vector<hsize_t> dims = space->GetDims();
-
-    vector<int> edges;
-    data->Read(edges, space);
-
-    H5::DataSetSharedPtr mdata = m_maps->OpenDataSet(nm);
-    H5::DataSpaceSharedPtr mspace = mdata->GetSpace();
-    vector<hsize_t> mdims = mspace->GetDims();
-
-    vector<int> ids;
-    mdata->Read(ids, mspace);
-
-    ASSERTL0(mdims[0] == dims[0], "map and data set lengths do not match");
-
-    for(int i = 0; i < dims[0]; i++)
-    {
-        PointGeomSharedPtr verts[2] = {GetVertex(edges[i*2+0]),
-                                       GetVertex(edges[i*2+1])};
-
-        SegGeomSharedPtr edge;
-
-        auto it = m_curvedEdges.find(ids[i]);
-
-        if(it == m_curvedEdges.end())
-        {
-            edge = MemoryManager<SegGeom>::AllocateSharedPtr(
-                ids[i], m_spaceDimension, verts);
-        }
-        else
-        {
-            edge = MemoryManager<SegGeom>::AllocateSharedPtr(
-                ids[i], m_spaceDimension, verts, it->second);
-        }
-
-        m_segGeoms[ids[i]] = edge;
-    }
+    map<int, CompositeSharedPtr> fullDomain;
+    GetCompositeList("0", fullDomain);
+    m_domain.push_back(fullDomain);
 }
 
 void MeshGraphHDF5::ReadFaces()
 {
-    //tris
-    {
-        string nm = "tri";
-
-        if(m_mesh->ContainsDataSet(nm))
-        {
-            H5::DataSetSharedPtr data = m_mesh->OpenDataSet(nm);
-            H5::DataSpaceSharedPtr space = data->GetSpace();
-            vector<hsize_t> dims = space->GetDims();
-
-            vector<int> tris;
-            data->Read(tris, space);
-
-            H5::DataSetSharedPtr mdata = m_maps->OpenDataSet(nm);
-            H5::DataSpaceSharedPtr mspace = mdata->GetSpace();
-            vector<hsize_t> mdims = mspace->GetDims();
-
-            vector<int> ids;
-            mdata->Read(ids, mspace);
-
-            ASSERTL0(mdims[0] == dims[0], "map and data set lengths do not match");
-
-            for(int i = 0; i < dims[0]; i++)
-            {
-                SegGeomSharedPtr edges[TriGeom::kNedges] = {
-                    GetSegGeom(tris[i*3 + 0]),
-                    GetSegGeom(tris[i*3 + 1]),
-                    GetSegGeom(tris[i*3 + 2])};
-
-                TriGeomSharedPtr tri;
-
-                auto it = m_curvedFaces.find(ids[i]);
-
-                if(it == m_curvedFaces.end())
-                {
-                    tri = MemoryManager<TriGeom>::AllocateSharedPtr(
-                        ids[i], edges);
-                }
-                else
-                {
-                    tri = MemoryManager<TriGeom>::AllocateSharedPtr(
-                        ids[i], edges, it->second);
-                }
-
-                m_triGeoms[ids[i]] = tri;
-            }
-        }
-    }
-
-    //quads
-    {
-        string nm = "quad";
-
-        if(m_mesh->ContainsDataSet(nm))
-        {
-            H5::DataSetSharedPtr data = m_mesh->OpenDataSet(nm);
-            H5::DataSpaceSharedPtr space = data->GetSpace();
-            vector<hsize_t> dims = space->GetDims();
-
-            vector<int> quads;
-            data->Read(quads, space);
-
-            H5::DataSetSharedPtr mdata = m_maps->OpenDataSet(nm);
-            H5::DataSpaceSharedPtr mspace = mdata->GetSpace();
-            vector<hsize_t> mdims = mspace->GetDims();
-
-            vector<int> ids;
-            mdata->Read(ids, mspace);
-
-            ASSERTL0(mdims[0] == dims[0], "map and data set lengths do not match");
-
-            for(int i = 0; i < dims[0]; i++)
-            {
-                SegGeomSharedPtr edges[QuadGeom::kNedges] = {
-                    GetSegGeom(quads[i*4 + 0]),
-                    GetSegGeom(quads[i*4 + 1]),
-                    GetSegGeom(quads[i*4 + 2]),
-                    GetSegGeom(quads[i*4 + 3])};
-
-                QuadGeomSharedPtr quad;
-
-                auto it = m_curvedFaces.find(ids[i]);
-
-                if(it == m_curvedFaces.end())
-                {
-                    quad = MemoryManager<QuadGeom>::AllocateSharedPtr(
-                        ids[i], edges);
-                }
-                else
-                {
-                    quad = MemoryManager<QuadGeom>::AllocateSharedPtr(
-                        ids[i], edges, it->second);
-                }
-
-                m_quadGeoms[ids[i]] = quad;
-            }
-        }
-    }
+    ReadGeometryMap(m_triGeoms, "tri", m_curvedFaces);
+    ReadGeometryMap(m_quadGeoms, "quad", m_curvedFaces);
 }
 
 void MeshGraphHDF5::ReadElements()
 {
     if(m_meshDimension == 1)
     {
-        ReadEdges();
+        ReadGeometryMap(m_segGeoms, "seg", m_curvedEdges);
         return;
     }
     else if (m_meshDimension == 2)
@@ -447,169 +476,10 @@ void MeshGraphHDF5::ReadElements()
         return;
     }
 
-    //Tets
-    {
-        string nm = "tet";
-
-        if(m_mesh->ContainsDataSet(nm))
-        {
-
-            H5::DataSetSharedPtr data = m_mesh->OpenDataSet(nm);
-            H5::DataSpaceSharedPtr space = data->GetSpace();
-            vector<hsize_t> dims = space->GetDims();
-
-            vector<int> tets;
-            data->Read(tets, space);
-
-            H5::DataSetSharedPtr mdata = m_maps->OpenDataSet(nm);
-            H5::DataSpaceSharedPtr mspace = mdata->GetSpace();
-            vector<hsize_t> mdims = mspace->GetDims();
-
-            vector<int> ids;
-            mdata->Read(ids, mspace);
-
-            ASSERTL0(mdims[0] == dims[0], "map and data set lengths do not match");
-
-            for(int i = 0; i < dims[0]; i++)
-            {
-                TriGeomSharedPtr faces[TetGeom::kNfaces];
-
-                for(int j = 0; j < TetGeom::kNfaces; j++)
-                {
-                    Geometry2DSharedPtr face = GetGeometry2D(tets[i*4+j]);
-                    faces[j] = std::static_pointer_cast<TriGeom>(face);
-                }
-
-                TetGeomSharedPtr tet = MemoryManager<TetGeom>::AllocateSharedPtr(
-                    ids[i], faces);
-
-                m_tetGeoms[ids[i]] = tet;
-                PopulateFaceToElMap(tet, TetGeom::kNfaces);
-            }
-        }
-    }
-    //Pyrs
-    {
-        string nm = "pyr";
-
-        if(m_mesh->ContainsDataSet(nm))
-        {
-
-            H5::DataSetSharedPtr data = m_mesh->OpenDataSet(nm);
-            H5::DataSpaceSharedPtr space = data->GetSpace();
-            vector<hsize_t> dims = space->GetDims();
-
-            vector<int> pyrs;
-            data->Read(pyrs, space);
-
-            H5::DataSetSharedPtr mdata = m_maps->OpenDataSet(nm);
-            H5::DataSpaceSharedPtr mspace = mdata->GetSpace();
-            vector<hsize_t> mdims = mspace->GetDims();
-
-            vector<int> ids;
-            mdata->Read(ids, mspace);
-
-            ASSERTL0(mdims[0] == dims[0], "map and data set lengths do not match");
-
-            for(int i = 0; i < dims[0]; i++)
-            {
-                Geometry2DSharedPtr faces[PyrGeom::kNfaces];
-
-                for(int j = 0; j < PyrGeom::kNfaces; j++)
-                {
-                    Geometry2DSharedPtr face = GetGeometry2D(pyrs[i*5+j]);
-                    faces[j] = face;
-                }
-
-                PyrGeomSharedPtr pyr = MemoryManager<PyrGeom>::AllocateSharedPtr(
-                    ids[i], faces);
-
-                m_pyrGeoms[ids[i]] = pyr;
-                PopulateFaceToElMap(pyr, PyrGeom::kNfaces);
-            }
-        }
-    }
-    //Prism
-    {
-        string nm = "prism";
-
-        if(m_mesh->ContainsDataSet(nm))
-        {
-            H5::DataSetSharedPtr data = m_mesh->OpenDataSet(nm);
-            H5::DataSpaceSharedPtr space = data->GetSpace();
-            vector<hsize_t> dims = space->GetDims();
-
-            vector<int> prisms;
-            data->Read(prisms, space);
-
-            H5::DataSetSharedPtr mdata = m_maps->OpenDataSet(nm);
-            H5::DataSpaceSharedPtr mspace = mdata->GetSpace();
-            vector<hsize_t> mdims = mspace->GetDims();
-
-            vector<int> ids;
-            mdata->Read(ids, mspace);
-
-            ASSERTL0(mdims[0] == dims[0], "map and data set lengths do not match");
-
-            for(int i = 0; i < dims[0]; i++)
-            {
-                Geometry2DSharedPtr faces[PrismGeom::kNfaces];
-
-                for(int j = 0; j < PrismGeom::kNfaces; j++)
-                {
-                    Geometry2DSharedPtr face = GetGeometry2D(prisms[i*5+j]);
-                    faces[j] = face;
-                }
-
-                PrismGeomSharedPtr prism = MemoryManager<PrismGeom>::AllocateSharedPtr(
-                    ids[i], faces);
-
-                m_prismGeoms[ids[i]] = prism;
-                PopulateFaceToElMap(prism, PrismGeom::kNfaces);
-            }
-        }
-    }
-    //Hex
-    {
-        string nm = "hex";
-
-        if(m_mesh->ContainsDataSet(nm))
-        {
-            H5::DataSetSharedPtr data = m_mesh->OpenDataSet(nm);
-            H5::DataSpaceSharedPtr space = data->GetSpace();
-            vector<hsize_t> dims = space->GetDims();
-
-            vector<int> hexs;
-            data->Read(hexs, space);
-
-            H5::DataSetSharedPtr mdata = m_maps->OpenDataSet(nm);
-            H5::DataSpaceSharedPtr mspace = mdata->GetSpace();
-            vector<hsize_t> mdims = mspace->GetDims();
-
-            vector<int> ids;
-            mdata->Read(ids, mspace);
-
-            ASSERTL0(mdims[0] == dims[0], "map and data set lengths do not match");
-
-            for(int i = 0; i < dims[0]; i++)
-            {
-                QuadGeomSharedPtr faces[HexGeom::kNfaces];
-
-                for(int j = 0; j < HexGeom::kNfaces; j++)
-                {
-                    Geometry2DSharedPtr face = GetGeometry2D(hexs[i*6+j]);
-                    faces[j] = std::static_pointer_cast<QuadGeom>(face);
-                }
-
-                HexGeomSharedPtr hex = MemoryManager<HexGeom>::AllocateSharedPtr(
-                    ids[i], faces);
-
-                m_hexGeoms[ids[i]] = hex;
-                PopulateFaceToElMap(hex, HexGeom::kNfaces);
-            }
-        }
-    }
-
+    ReadGeometryMap(m_tetGeoms, "tet");
+    ReadGeometryMap(m_pyrGeoms, "pyr");
+    ReadGeometryMap(m_prismGeoms, "prism");
+    ReadGeometryMap(m_hexGeoms, "hex");
 }
 
 void MeshGraphHDF5::ReadComposites()
@@ -633,6 +503,7 @@ void MeshGraphHDF5::ReadComposites()
     for(int i = 0; i < dims[0]; i++)
     {
         string compStr = comps[i];
+
         char type;
         istringstream strm(compStr);
 
@@ -645,10 +516,9 @@ void MeshGraphHDF5::ReadComposites()
         string::size_type indxEnd = compStr.find_last_of(']') - 1;
 
         string indxStr = compStr.substr(indxBeg, indxEnd - indxBeg + 1);
-
         vector<unsigned int> seqVector;
 
-        ParseUtils::GenerateSeqVector(indxStr.c_str(), seqVector);
+        ParseUtils::GenerateSeqVector(indxStr, seqVector);
 
         switch (type)
         {
@@ -705,30 +575,6 @@ void MeshGraphHDF5::ReadComposites()
 }
 
 template<class T, typename std::enable_if<T::kDim == 0, int>::type = 0>
-inline int GetGeomDataDim(std::map<int, std::shared_ptr<T>> &geomMap, int s)
-{
-    return s;
-}
-
-template<class T, typename std::enable_if<T::kDim == 1, int>::type = 0>
-inline int GetGeomDataDim(std::map<int, std::shared_ptr<T>> &geomMap, int s)
-{
-    return T::kNverts;
-}
-
-template<class T, typename std::enable_if<T::kDim == 2, int>::type = 0>
-inline int GetGeomDataDim(std::map<int, std::shared_ptr<T>> &geomMap, int s)
-{
-    return T::kNedges;
-}
-
-template<class T, typename std::enable_if<T::kDim == 3, int>::type = 0>
-inline int GetGeomDataDim(std::map<int, std::shared_ptr<T>> &geomMap, int s)
-{
-    return T::kNfaces;
-}
-
-template<class T, typename std::enable_if<T::kDim == 0, int>::type = 0>
 inline NekDouble GetGeomData(std::shared_ptr<T> &geom, int i)
 {
     return (*geom)(i);
@@ -767,20 +613,21 @@ void MeshGraphHDF5::WriteGeometryMap(std::map<int, std::shared_ptr<T>> &geomMap,
         return;
     }
 
-    cout << "type = " << typeid(T).name() << std::endl;
-    cout << "COCK: " << nGeomData << " " << nGeom << endl;
     // Construct a map storing IDs
-    vector<int> idMap(nGeom * 2);
+    vector<int> idMap(nGeom);
     vector<DataType> data(nGeom * nGeomData);
 
     int cnt1 = 0, cnt2 = 0;
     for (auto &it : geomMap)
     {
         idMap[cnt1++] = it.first;
-        for (int j = 0; j < nGeomData; ++j, cnt2 += nGeomData)
+
+        for (int j = 0; j < nGeomData; ++j)
         {
             data[cnt2 + j] = GetGeomData(it.second, j);
         }
+
+        cnt2 += nGeomData;
     }
 
     vector<hsize_t> dims = { static_cast<hsize_t>(nGeom),
@@ -792,7 +639,7 @@ void MeshGraphHDF5::WriteGeometryMap(std::map<int, std::shared_ptr<T>> &geomMap,
     dst->Write(data, ds);
 
     tp = H5::DataType::OfObject(idMap[0]);
-    dims = { nGeom, 2 };
+    dims = { nGeom };
     ds = std::shared_ptr<H5::DataSpace>(new H5::DataSpace(dims));
     dst = m_maps->CreateDataSet(datasetName, tp, ds);
     dst->Write(idMap, ds);
@@ -957,26 +804,15 @@ void MeshGraphHDF5::WriteComposites(CompositeMap &composites)
     //composites do not need to be written in paralell.
     vector<int> c_map;
 
-    std::vector<unsigned int> idxList;
-    int i = 0;
-    for (auto cIt = composites.begin(); cIt != composites.end();
-         ++cIt, i++)
+    for (auto &cIt : composites)
     {
-
-        if (cIt->second->m_geomVec.size() == 0)
+        if (cIt.second->m_geomVec.size() == 0)
         {
             continue;
         }
 
-        idxList.clear();
-
-        for (int i = 0; i < cIt->second->m_geomVec.size(); ++i)
-        {
-            idxList.push_back(cIt->second->m_geomVec[i]->GetGlobalID());
-        }
-
-        comps.push_back(ParseUtils::GenerateSeqString(idxList));
-        c_map.push_back(cIt->first);
+        comps.push_back(GetCompositeString(cIt.second));
+        c_map.push_back(cIt.first);
     }
 
     H5::DataTypeSharedPtr tp  = H5::DataType::String();

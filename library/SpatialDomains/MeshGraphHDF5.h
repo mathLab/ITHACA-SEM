@@ -84,11 +84,9 @@ protected:
 
 private:
 
-    void ReadVertices();
     void ReadCurves();
     void ReadDomain();
 
-    void ReadEdges();
     void ReadFaces();
 
     void ReadElements();
@@ -97,6 +95,16 @@ private:
     template<class T>
     void WriteGeometryMap(std::map<int, std::shared_ptr<T>> &geomMap,
                           std::string datasetName);
+
+    template<class T>
+    void ReadGeometryMap(
+        std::map<int, std::shared_ptr<T>> &geomMap,
+        std::string dataSet,
+        const CurveMap &curveMap = CurveMap(),
+        const std::unordered_set<unsigned int> &readIds = std::unordered_set<unsigned int>());
+    template<class T, typename DataType> void ConstructGeomObject(
+        std::map<int, std::shared_ptr<T>> &geomMap, int id,
+        DataType *data, CurveSharedPtr curve);
 
     void WriteCurves(CurveMap &edges, CurveMap &faces);
     void WriteComposites(CompositeMap &comps);

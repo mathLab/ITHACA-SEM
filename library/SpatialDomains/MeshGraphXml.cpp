@@ -2647,48 +2647,16 @@ void MeshGraphXml::WriteComposites(TiXmlElement *geomTag, CompositeMap &comps)
 {
     TiXmlElement *compTag = new TiXmlElement("COMPOSITE");
 
-    // Create a map that gets around the issue of mapping faces -> F and
-    // edges -> E inside the tag.
-    map<LibUtilities::ShapeType, pair<string, string>> compMap;
-    compMap[LibUtilities::ePoint]         = make_pair("V", "V");
-    compMap[LibUtilities::eSegment]       = make_pair("S", "E");
-    compMap[LibUtilities::eQuadrilateral] = make_pair("Q", "F");
-    compMap[LibUtilities::eTriangle]      = make_pair("T", "F");
-    compMap[LibUtilities::eTetrahedron]   = make_pair("A", "A");
-    compMap[LibUtilities::ePyramid]       = make_pair("P", "P");
-    compMap[LibUtilities::ePrism]         = make_pair("R", "R");
-    compMap[LibUtilities::eHexahedron]    = make_pair("H", "H");
-
-    std::vector<unsigned int> idxList;
-
     for (auto &cIt : comps)
     {
-        stringstream s;
-        TiXmlElement *c = new TiXmlElement("C");
-
         if (cIt.second->m_geomVec.size() == 0)
         {
             continue;
         }
 
-        GeometrySharedPtr firstGeom = cIt.second->m_geomVec[0];
-        int shapeDim                = firstGeom->GetShapeDim();
-        string tag                  = (shapeDim < m_meshDimension)
-                         ? compMap[firstGeom->GetShapeType()].second
-                         : compMap[firstGeom->GetShapeType()].first;
-
-        idxList.clear();
-        s << " " << tag << "[";
-
-        for (int i = 0; i < cIt.second->m_geomVec.size(); ++i)
-        {
-            idxList.push_back(cIt.second->m_geomVec[i]->GetGlobalID());
-        }
-
-        s << ParseUtils::GenerateSeqString(idxList) << "] ";
-
+        TiXmlElement *c = new TiXmlElement("C");
         c->SetAttribute("ID", cIt.first);
-        c->LinkEndChild(new TiXmlText(s.str()));
+        c->LinkEndChild(new TiXmlText(GetCompositeString(cIt.second)));
         compTag->LinkEndChild(c);
     }
 

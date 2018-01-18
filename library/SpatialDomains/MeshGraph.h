@@ -424,6 +424,7 @@ protected:
 
     void PopulateFaceToElMap(Geometry3DSharedPtr element, int kNfaces);
     ExpansionMapShPtr SetUpExpansionMap();
+    std::string GetCompositeString(CompositeSharedPtr comp);
 
     LibUtilities::SessionReaderSharedPtr m_session;
     PointGeomMap m_vertSet;

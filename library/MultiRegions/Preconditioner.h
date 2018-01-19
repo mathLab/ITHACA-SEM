@@ -127,11 +127,8 @@ namespace Nektar
                 GetBlockTransposedTransformationMatrix() const;
 
             inline DNekScalMatSharedPtr TransformedSchurCompl(
-<<<<<<< HEAD
-                   int offset, int bndoffset, const boost::shared_ptr<DNekScalMat > &loc_mat);
-=======
-                int offset, const std::shared_ptr<DNekScalMat > &loc_mat);
->>>>>>> master
+                   int offset, int bndoffset, 
+                   const std::shared_ptr<DNekScalMat > &loc_mat);
 
 	protected:
             const std::weak_ptr<GlobalLinSys>   m_linsys;

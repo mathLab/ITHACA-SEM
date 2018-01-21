@@ -286,29 +286,6 @@ void Module::ProcessEdges(bool ReprocessEdges)
  */
 void Module::ProcessFaces(bool ReprocessFaces)
 {
-    if(m_mesh->m_expDim == 2)
-    {
-        vector<ElementSharedPtr> &elmt = m_mesh->m_element[m_mesh->m_expDim];
-
-        m_mesh->m_faceSet.clear();
-
-        // Scan all elements and generate list of unique faces
-        for (int i = 0, fid = 0; i < elmt.size(); ++i)
-        {
-            FaceSharedPtr fc = FaceSharedPtr(
-                new Face(elmt[i]->GetVertexList(), vector<NodeSharedPtr>(),
-                         elmt[i]->GetEdgeList(), LibUtilities::ePolyEvenlySpaced));
-            
-            pair<FaceSet::iterator,bool> testIns;
-            testIns = m_mesh->m_faceSet.insert(fc);
-
-            if (testIns.second)
-            {
-                (*(testIns.first))->m_id = fid++;
-            }
-        }
-    }
-
     if (m_mesh->m_expDim < 3) return;
 
     if(ReprocessFaces)
@@ -882,7 +859,7 @@ void Module::RegisterConfig(string key, string val)
         {
             it->second.value = it->second.defValue;
         }
-        else 
+        else
         {
             it->second.value = val;
         }

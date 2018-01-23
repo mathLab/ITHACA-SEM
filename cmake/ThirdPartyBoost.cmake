@@ -9,7 +9,13 @@
 #If the user has not set BOOST_ROOT, look in a couple common places first.
 MESSAGE(STATUS "Searching for Boost:")
 SET(MIN_VER "1.56.0")
+
 SET(NEEDED_BOOST_LIBS thread iostreams filesystem system program_options regex)
+
+IF (NEKTAR_BUILD_PYTHON)
+    SET(NEEDED_BOOST_LIBS ${NEEDED_BOOST_LIBS} python)
+ENDIF()
+
 SET(Boost_DEBUG 0)
 SET(Boost_NO_BOOST_CMAKE ON)
 IF( BOOST_ROOT )

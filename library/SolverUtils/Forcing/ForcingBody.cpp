@@ -124,12 +124,41 @@ namespace SolverUtils
             const Array< OneD, MultiRegions::ExpListSharedPtr > &pFields,
             const NekDouble &time)
     {
+        LibUtilities::EquationSharedPtr eqn = m_session->GetFunction(
+            m_funcName, m_session->GetVariable(0));
+
+        if (!boost::iequals(eqn->GetVlist(), "x y z t"))
+        {
+            // Coupled forcing
+            int nq = pFields[0]->GetNpoints();
+            Array<OneD, NekDouble> xc(nq), yc(nq), zc(nq), t(nq, time);
+            std::string varstr = "x y z";
+            std::vector<Array<OneD, const NekDouble>> fielddata = {
+                xc, yc, zc, t};
+
+            for (int i = 0; i < pFields.num_elements(); ++i)
+            {
+                varstr += " " + m_session->GetVariable(i);
+                fielddata.push_back(pFields[i]->GetPhys());
+            }
+
+            // Evaluate function
+            for (int i = 0; i < m_NumVariable; ++i)
+            {
+                m_session->GetFunction(m_funcName, m_session->GetVariable(i))->
+                    Evaluate(fielddata, m_Forcing[i]);
+            }
+
+            return;
+        }
+
         for (int i = 0; i < m_NumVariable; ++i)
         {
             std::string  s_FieldStr   = m_session->GetVariable(i);
             ASSERTL0(m_session->DefinesFunction(m_funcName, s_FieldStr),
                      "Variable '" + s_FieldStr + "' not defined.");
-            GetFunction(pFields, m_session, m_funcName, true)->Evaluate(s_FieldStr, m_Forcing[i], time);
+            GetFunction(pFields, m_session, m_funcName, true)->Evaluate(
+                s_FieldStr, m_Forcing[i], time);
         }
 
         // If singleMode or halfMode, transform the forcing term to be in

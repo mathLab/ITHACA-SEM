@@ -70,6 +70,7 @@ void MeshGraphHDF5::ReadGeometry(
     DomainRangeShPtr rng,
     bool fillGraph)
 {
+    /*
     ReadGeometryMap(m_vertSet, "vert");
     //ReadCurves();
     if (m_meshDimension >= 2)
@@ -81,6 +82,7 @@ void MeshGraphHDF5::ReadGeometry(
         }
     }
     ReadElements();
+    */
     ReadComposites();
     ReadDomain();
     ReadExpansions();
@@ -101,25 +103,25 @@ std::pair<size_t, size_t> SplitWork(size_t vecsize, int rank, int nprocs)
 }
 
 template<class T, typename std::enable_if<T::kDim == 0, int>::type = 0>
-inline int GetGeomDataDim(std::map<int, std::shared_ptr<T>> &geomMap, int s)
+inline int GetGeomDataDim(std::map<int, std::shared_ptr<T>> &geomMap)
 {
-    return s;
+    return 3;
 }
 
 template<class T, typename std::enable_if<T::kDim == 1, int>::type = 0>
-inline int GetGeomDataDim(std::map<int, std::shared_ptr<T>> &geomMap, int s)
+inline int GetGeomDataDim(std::map<int, std::shared_ptr<T>> &geomMap)
 {
     return T::kNverts;
 }
 
 template<class T, typename std::enable_if<T::kDim == 2, int>::type = 0>
-inline int GetGeomDataDim(std::map<int, std::shared_ptr<T>> &geomMap, int s)
+inline int GetGeomDataDim(std::map<int, std::shared_ptr<T>> &geomMap)
 {
     return T::kNedges;
 }
 
 template<class T, typename std::enable_if<T::kDim == 3, int>::type = 0>
-inline int GetGeomDataDim(std::map<int, std::shared_ptr<T>> &geomMap, int s)
+inline int GetGeomDataDim(std::map<int, std::shared_ptr<T>> &geomMap)
 {
     return T::kNfaces;
 }
@@ -190,7 +192,7 @@ void MeshGraphHDF5::PartitionMesh(LibUtilities::SessionReaderSharedPtr session)
              "Mesh dimension greater than space dimension");
 
     // Open handle to the HDF5 mesh
-    m_file = H5::File::Open(m_hdf5Name, H5F_ACC_RDWR);
+    m_file = H5::File::Open(m_hdf5Name, H5F_ACC_RDONLY);
     m_mesh = m_file->OpenGroup("mesh");
     m_maps = m_file->OpenGroup("maps");
 
@@ -206,14 +208,13 @@ void MeshGraphHDF5::PartitionMesh(LibUtilities::SessionReaderSharedPtr session)
 
     struct MeshEntity
     {
-        int id;
         LibUtilities::ShapeType shape;
         std::vector<int> facets;
     };
 
     // Read IDs for partitioning purposes
     std::vector<MeshEntity> elmts;
-    std::map<int, int> idToElmt;
+    std::vector<int> ids;
 
     for (auto &it : dataSets[m_meshDimension])
     {
@@ -241,26 +242,17 @@ void MeshGraphHDF5::PartitionMesh(LibUtilities::SessionReaderSharedPtr session)
 
         const int nGeomData = std::get<1>(it);
 
+        ids.insert(ids.end(), tmpIds.begin(), tmpIds.end());
+
         for (int i = 0, cnt = 0; i < tmpIds.size(); ++i)
         {
             MeshEntity e;
-            e.id = tmpIds[i];
             e.shape = std::get<2>(it);
             e.facets = std::vector<int>(
                 &tmpElmts[cnt], &tmpElmts[cnt+nGeomData]);
             elmts.push_back(e);
             cnt += nGeomData;
         }
-
-        // // Calculate range of work to perform
-        // auto elRange = SplitWork(mdims[0], rank, nproc);
-
-        // // Read this processor's IDs and element info
-        // mspace->SelectRange(elRange.first, elRange.second);
-        // space->SelectRange({ elRange.first, 0 }, { elRange.second, it.second });
-
-        // mdata->Read(ids[ds], mspace);
-        // data->Read(mesh[ds], space);
     }
 
     typedef boost::adjacency_list<
@@ -338,7 +330,6 @@ void MeshGraphHDF5::PartitionMesh(LibUtilities::SessionReaderSharedPtr session)
 
     // Now construct adjacency graph.
     int nVert = boost::num_vertices(graph), nLocal = nVert - nGhost;
-    int nEdges = boost::num_edges(graph);
     std::vector<int> adjncy, xadj(nLocal + 1);
 
     xadj[0] = 0;
@@ -369,9 +360,126 @@ void MeshGraphHDF5::PartitionMesh(LibUtilities::SessionReaderSharedPtr session)
     //SCOTCH_CALL(SCOTCH_stratDgraphMapBuild,
     //            (&strat, SCOTCH_STRATBALANCE, nproc, nproc, 0.1));
 
-    vector<int> partElmts(nVert);
+    vector<int> partElmts(nLocal, -1);
     SCOTCH_CALL(SCOTCH_dgraphPart, (&scGraph, nproc, &strat, &partElmts[0]));
+
+    std::unordered_set<unsigned int> toRead;
+
+    cout << "RANK " << rank << ":";
+    for (auto &el : partElmts)
+    {
+        std::cout << "(" << el << ")" << std::endl;
+        if (el != -1)
+        {
+            toRead.insert(ids[el]);
+            std::cout << " " << ids[el];
+        }
+    }
+    std::cout << std::endl;
+
+    // Now read geometry.
+    ReadGeometryMap(m_hexGeoms, "hex", CurveMap(), toRead);
 }
+
+template<class T> struct GeomShapeType
+{
+    static const LibUtilities::ShapeType value = LibUtilities::eNoShapeType;
+};
+
+template<> struct GeomShapeType<HexGeom>
+{
+    static const LibUtilities::ShapeType value = LibUtilities::eHexahedron;
+};
+
+template<> struct GeomShapeType<PrismGeom>
+{
+    static const LibUtilities::ShapeType value = LibUtilities::ePrism;
+};
+
+template<> struct GeomShapeType<PyrGeom>
+{
+    static const LibUtilities::ShapeType value = LibUtilities::ePyramid;
+};
+
+template<> struct GeomShapeType<TetGeom>
+{
+    static const LibUtilities::ShapeType value = LibUtilities::eTetrahedron;
+};
+
+template<> struct GeomShapeType<QuadGeom>
+{
+    static const LibUtilities::ShapeType value = LibUtilities::eQuadrilateral;
+};
+
+template<> struct GeomShapeType<TriGeom>
+{
+    static const LibUtilities::ShapeType value = LibUtilities::eTriangle;
+};
+
+template<> struct GeomShapeType<SegGeom>
+{
+    static const LibUtilities::ShapeType value = LibUtilities::eSegment;
+};
+
+template<> struct GeomShapeType<PointGeom>
+{
+    static const LibUtilities::ShapeType value = LibUtilities::ePoint;
+};
+
+/*
+template<class T> struct NumFacetMaps
+{
+    static const int value = 0;
+};
+
+template<> struct NumFacetMaps<HexGeom>
+{
+    static const int value = 1;
+};
+
+template<> struct NumFacetMaps<PrismGeom>
+{
+    static const int value = 2;
+};
+
+template<> struct NumFacetMaps<PyrGeom>
+{
+    static const int value = 2;
+};
+
+template<> struct NumFacetMaps<TetGeom>
+{
+    static const int value = 1;
+};
+
+template<> struct NumFacetMaps<QuadGeom>
+{
+    static const int value = 1;
+};
+
+template<> struct NumFacetMaps<TriGeom>
+{
+    static const int value = 1;
+};
+
+template<> struct NumFacetMaps<SegGeom>
+{
+    static const int value = 1;
+};
+
+/*
+template<class T, int n> struct FacetMap
+{
+};
+
+template<> struct FacetMap<HexGeom, 0>
+{
+    std::map<int, std::shared_ptr<QuadGeom>> operator()
+    {
+        return m_hexGeom;
+    }
+};
+*/
 
 template<class T, typename DataType> void MeshGraphHDF5::ConstructGeomObject(
     std::map<int, std::shared_ptr<T>> &geomMap, int id,
@@ -493,17 +601,21 @@ void MeshGraphHDF5::ReadGeometryMap(
 
     ASSERTL0(mdims[0] == dims[0], "map and data set lengths do not match");
 
-    // Read IDs: TODO: could be done in chunks
-    vector<int> ids, newids;
+    // Read IDs. Note for future: this could be done in chunks if we had
+    // super-huge meshes, but for now we just read everything in a single go.
+    vector<int> ids;
     mdata->Read(ids, mspace);
 
     vector<DataType> geomData;
 
-    const int nGeomData = GetGeomDataDim(geomMap, m_spaceDimension);
+    const int nGeomData = GetGeomDataDim(geomMap);
+    std::unordered_set<unsigned int> readNext;
 
     if (readIds.size() > 0)
     {
         // Selective reading
+        vector<int> newids;
+
         int i = 0;
         for (auto &id : ids)
         {
@@ -514,14 +626,52 @@ void MeshGraphHDF5::ReadGeometryMap(
             }
             i += nGeomData;
         }
-    }
-    else
-    {
-        newids = ids;
+
+        ids = newids;
     }
 
     // Read data (collectively)
     data->Read(geomData, space);
+
+    if (readIds.size() > 0)
+    {
+        // Compile list of unique IDs to read
+        for (auto &id : geomData)
+        {
+            readNext.insert(id);
+        }
+
+        // Before we can construct geometry objects, we need to recurse all the
+        // way down to vertices. We should use templates here, but this might
+        // work for now...
+        LibUtilities::ShapeType shape = GeomShapeType<T>::value;
+        switch(shape)
+        {
+            case ePoint:
+                // Nothing to do for points
+                break;
+            case eSegment:
+                ReadGeometryMap(m_vertSet, "vert", CurveMap(), readNext);
+                break;
+            case eTriangle:
+            case eQuadrilateral:
+                ReadGeometryMap(m_segGeoms, "seg", m_curvedEdges, readNext);
+                break;
+            case eTetrahedron:
+                ReadGeometryMap(m_triGeoms, "tri", m_curvedFaces, readNext);
+                break;
+            case eHexahedron:
+                ReadGeometryMap(m_quadGeoms, "quad", m_curvedFaces, readNext);
+                break;
+            case ePyramid:
+            case ePrism:
+                ReadGeometryMap(m_quadGeoms, "quad", m_curvedFaces, readNext);
+                ReadGeometryMap(m_triGeoms, "tri", m_curvedFaces, readNext);
+                break;
+            default:
+                ASSERTL0(false, "invalid shape type");
+        }
+    }
 
     const int nRows = geomData.size() / nGeomData;
 
@@ -532,9 +682,9 @@ void MeshGraphHDF5::ReadGeometryMap(
     {
         for(int i = 0, cnt = 0; i < nRows; i++, cnt += nGeomData)
         {
-            auto cIt = curveMap.find(newids[i]);
+            auto cIt = curveMap.find(ids[i]);
             ConstructGeomObject(
-                geomMap, newids[i], &geomData[cnt],
+                geomMap, ids[i], &geomData[cnt],
                 cIt == curveMap.end() ? cIt->second : empty);
         }
     }
@@ -542,7 +692,7 @@ void MeshGraphHDF5::ReadGeometryMap(
     {
         for(int i = 0, cnt = 0; i < nRows; i++, cnt += nGeomData)
         {
-            ConstructGeomObject(geomMap, newids[i], &geomData[cnt], empty);
+            ConstructGeomObject(geomMap, ids[i], &geomData[cnt], empty);
         }
     }
 }
@@ -673,6 +823,7 @@ void MeshGraphHDF5::ReadFaces()
 
 void MeshGraphHDF5::ReadElements()
 {
+    /*
     if(m_meshDimension == 1)
     {
         ReadGeometryMap(m_segGeoms, "seg", m_curvedEdges);
@@ -688,6 +839,7 @@ void MeshGraphHDF5::ReadElements()
     ReadGeometryMap(m_pyrGeoms, "pyr");
     ReadGeometryMap(m_prismGeoms, "prism");
     ReadGeometryMap(m_hexGeoms, "hex");
+    */
 }
 
 void MeshGraphHDF5::ReadComposites()
@@ -813,7 +965,7 @@ void MeshGraphHDF5::WriteGeometryMap(std::map<int, std::shared_ptr<T>> &geomMap,
     typedef typename std::conditional<
         std::is_same<T, PointGeom>::value, NekDouble, int>::type DataType;
 
-    const int nGeomData = GetGeomDataDim(geomMap, m_spaceDimension);
+    const int nGeomData = GetGeomDataDim(geomMap);
     const size_t nGeom = geomMap.size();
 
     if (nGeom == 0)

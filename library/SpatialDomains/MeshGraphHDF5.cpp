@@ -208,6 +208,7 @@ void MeshGraphHDF5::PartitionMesh(LibUtilities::SessionReaderSharedPtr session)
 
     struct MeshEntity
     {
+        int id;
         LibUtilities::ShapeType shape;
         std::vector<int> facets;
     };
@@ -242,11 +243,10 @@ void MeshGraphHDF5::PartitionMesh(LibUtilities::SessionReaderSharedPtr session)
 
         const int nGeomData = std::get<1>(it);
 
-        ids.insert(ids.end(), tmpIds.begin(), tmpIds.end());
-
         for (int i = 0, cnt = 0; i < tmpIds.size(); ++i)
         {
             MeshEntity e;
+            e.id = tmpIds[i];
             e.shape = std::get<2>(it);
             e.facets = std::vector<int>(
                 &tmpElmts[cnt], &tmpElmts[cnt+nGeomData]);
@@ -270,8 +270,6 @@ void MeshGraphHDF5::PartitionMesh(LibUtilities::SessionReaderSharedPtr session)
 
     // Calculate reasonably even distribution of processors for calling ptScotch
     auto elRange = SplitWork(numElmt, rank, nproc);
-
-    cout << "RANK " << rank << " reading: " << elRange.first << " -> " << elRange.second << endl;
 
     // Read all vertices.
     int vcnt = 0;
@@ -357,25 +355,61 @@ void MeshGraphHDF5::PartitionMesh(LibUtilities::SessionReaderSharedPtr session)
 
     SCOTCH_Strat strat;
     SCOTCH_CALL(SCOTCH_stratInit, (&strat));
-    //SCOTCH_CALL(SCOTCH_stratDgraphMapBuild,
-    //            (&strat, SCOTCH_STRATBALANCE, nproc, nproc, 0.1));
 
-    vector<int> partElmts(nLocal, -1);
+    vector<int> partElmts(nLocal);
     SCOTCH_CALL(SCOTCH_dgraphPart, (&scGraph, nproc, &strat, &partElmts[0]));
 
-    std::unordered_set<unsigned int> toRead;
+    // Now we need to distribute vertex IDs to all the different processors.
 
-    cout << "RANK " << rank << ":";
-    for (auto &el : partElmts)
+    // Figure out how many vertices we're going to get from each processor.
+    std::vector<int> numToSend(nproc, 0), numToRecv(nproc);
+    std::map<int, std::vector<int>> procMap;
+
+    for (int i = 0; i < nLocal; ++i)
     {
-        std::cout << "(" << el << ")" << std::endl;
-        if (el != -1)
+        int toProc = partElmts[i];
+        numToSend[toProc]++;
+        procMap[toProc].push_back(elmts[graph[i]].id);
+    }
+
+    comm->AlltoAll(numToSend, numToRecv);
+
+    // Build our offsets
+    Array<OneD, int> sendSizeMap(nproc, &numToSend[0]);
+    Array<OneD, int> recvSizeMap(nproc, &numToRecv[0]);
+    Array<OneD, int> sendOffsetMap(nproc), recvOffsetMap(nproc);
+
+    sendOffsetMap[0] = 0;
+    recvOffsetMap[0] = 0;
+    for (int i = 1; i < nproc; ++i)
+    {
+        sendOffsetMap[i] = sendOffsetMap[i-1] + sendSizeMap[i-1];
+        recvOffsetMap[i] = recvOffsetMap[i-1] + recvSizeMap[i-1];
+    }
+
+    // Build data to send
+    int totalSend = Vmath::Vsum(nproc, sendSizeMap, 1);
+    int totalRecv = Vmath::Vsum(nproc, recvSizeMap, 1);
+
+    Array<OneD, int> sendData(totalSend), recvData(totalRecv);
+
+    int cnt = 0;
+    for (auto &verts : procMap)
+    {
+        for (auto &vert : verts.second)
         {
-            toRead.insert(ids[el]);
-            std::cout << " " << ids[el];
+            sendData[cnt++] = vert;
         }
     }
-    std::cout << std::endl;
+
+    comm->AlltoAllv(sendData, sendSizeMap, sendOffsetMap,
+                    recvData, recvSizeMap, recvOffsetMap);
+
+    std::unordered_set<unsigned int> toRead;
+    for (int i = 0; i < recvData.num_elements(); ++i)
+    {
+        toRead.insert(recvData[i]);
+    }
 
     // Now read geometry.
     ReadGeometryMap(m_hexGeoms, "hex", CurveMap(), toRead);
@@ -606,6 +640,8 @@ void MeshGraphHDF5::ReadGeometryMap(
     vector<int> ids;
     mdata->Read(ids, mspace);
 
+    space->ClearRange();
+
     vector<DataType> geomData;
 
     const int nGeomData = GetGeomDataDim(geomMap);
@@ -621,10 +657,11 @@ void MeshGraphHDF5::ReadGeometryMap(
         {
             if (readIds.find(id) != readIds.end())
             {
-                space->AppendRange(i, nGeomData);
+                space->AppendRange({static_cast<hsize_t>(i), 0},
+                                   {1, static_cast<hsize_t>(nGeomData)});
                 newids.push_back(id);
             }
-            i += nGeomData;
+            ++i;
         }
 
         ids = newids;
@@ -644,6 +681,10 @@ void MeshGraphHDF5::ReadGeometryMap(
         // Before we can construct geometry objects, we need to recurse all the
         // way down to vertices. We should use templates here, but this might
         // work for now...
+        //
+        // TODO: This is a bit wasteful: we'll end up reading the datasets
+        // multiple times, but let's get it working first and then optimise
+        // later.
         LibUtilities::ShapeType shape = GeomShapeType<T>::value;
         switch(shape)
         {
@@ -883,48 +924,99 @@ void MeshGraphHDF5::ReadComposites()
         switch (type)
         {
             case 'V':
-                for(auto &i : seqVector)
+                for (auto &i : seqVector)
                 {
-                    comp->m_geomVec.push_back(m_vertSet[i]);
+                    auto it = m_vertSet.find(i);
+                    if (it != m_vertSet.end())
+                    {
+                        comp->m_geomVec.push_back(it->second);
+                    }
                 }
                 break;
             case 'S':
             case 'E':
-                for(auto &i : seqVector)
+                for (auto &i : seqVector)
                 {
-                    comp->m_geomVec.push_back(m_segGeoms[i]);
+                    auto it = m_segGeoms.find(i);
+                    if (it != m_segGeoms.end())
+                    {
+                        comp->m_geomVec.push_back(it->second);
+                    }
+                }
+                break;
+            case 'Q':
+                for (auto &i : seqVector)
+                {
+                    auto it = m_quadGeoms.find(i);
+                    if (it != m_quadGeoms.end())
+                    {
+                        comp->m_geomVec.push_back(it->second);
+                    }
                 }
                 break;
             case 'T':
-            case 'Q':
-            case 'F':
-                for(auto & i : seqVector)
+                for (auto &i : seqVector)
                 {
-                    comp->m_geomVec.push_back(GetGeometry2D(i));
+                    auto it = m_triGeoms.find(i);
+                    if (it != m_triGeoms.end())
+                    {
+                        comp->m_geomVec.push_back(it->second);
+                    }
+                }
+                break;
+            case 'F':
+                for(auto &i : seqVector)
+                {
+                    auto it1 = m_quadGeoms.find(i);
+                    if (it1 != m_quadGeoms.end())
+                    {
+                        comp->m_geomVec.push_back(it1->second);
+                    }
+                    auto it2 = m_triGeoms.find(i);
+                    if (it2 != m_triGeoms.end())
+                    {
+                        comp->m_geomVec.push_back(it2->second);
+                    }
                 }
                 break;
             case 'A':
                 for(auto &i : seqVector)
                 {
-                    comp->m_geomVec.push_back(m_tetGeoms[i]);
+                    auto it = m_tetGeoms.find(i);
+                    if (it != m_tetGeoms.end())
+                    {
+                        comp->m_geomVec.push_back(it->second);
+                    }
                 }
                 break;
             case 'P':
                 for(auto &i : seqVector)
                 {
-                    comp->m_geomVec.push_back(m_pyrGeoms[i]);
+                    auto it = m_pyrGeoms.find(i);
+                    if (it != m_pyrGeoms.end())
+                    {
+                        comp->m_geomVec.push_back(it->second);
+                    }
                 }
                 break;
             case 'R':
                 for(auto &i : seqVector)
                 {
-                    comp->m_geomVec.push_back(m_prismGeoms[i]);
+                    auto it = m_prismGeoms.find(i);
+                    if (it != m_prismGeoms.end())
+                    {
+                        comp->m_geomVec.push_back(it->second);
+                    }
                 }
                 break;
             case 'H':
                 for(auto &i : seqVector)
                 {
-                    comp->m_geomVec.push_back(m_hexGeoms[i]);
+                    auto it = m_hexGeoms.find(i);
+                    if (it != m_hexGeoms.end())
+                    {
+                        comp->m_geomVec.push_back(it->second);
+                    }
                 }
                 break;
         }

@@ -334,6 +334,8 @@ public:
     void AppendRange(const std::vector<hsize_t> start,
                      const std::vector<hsize_t> count);
 
+    void ClearRange();
+
     hsize_t GetSize();
     std::vector<hsize_t> GetDims();
 

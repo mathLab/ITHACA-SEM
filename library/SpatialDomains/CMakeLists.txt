@@ -71,17 +71,17 @@ ADD_NEKTAR_LIBRARY(SpatialDomains
     DESCRIPTION "This library provides the mappings between reference regions and physical regions in the domain.")
 
 IF (NEKTAR_USE_METIS)
+    # Metis
+    TARGET_LINK_LIBRARIES(SpatialDomains LINK_PRIVATE ${METIS_LIB})
     ADD_DEPENDENCIES(SpatialDomains metis-5.1.0)
 ENDIF()
 
-# Metis
-TARGET_LINK_LIBRARIES(SpatialDomains LINK_PRIVATE ${METIS_LIB})
-
-IF( NEKTAR_USE_SCOTCH )
+IF (NEKTAR_USE_SCOTCH)
+    # Scotch
     TARGET_LINK_LIBRARIES(SpatialDomains LINK_PUBLIC
         ${SCOTCH_LIBRARY} ${SCOTCHERR_LIBRARY})
     ADD_DEPENDENCIES(SpatialDomains scotch-6.0.4)
-ENDIF ()
+ENDIF()
 
 INSTALL(DIRECTORY ./ DESTINATION ${NEKTAR_INCLUDE_DIR}/SpatialDomains
     COMPONENT dev FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp")

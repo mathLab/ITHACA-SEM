@@ -32,6 +32,7 @@ SET(BasicUtilsHeaders
     ./BasicUtils/ThreadBoost.h
     ./BasicUtils/Vmath.hpp
     ./BasicUtils/VmathArray.hpp
+    ./BasicUtils/Metis.hpp
     ./BasicUtils/VtkUtil.hpp
 )
 

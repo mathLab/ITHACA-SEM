@@ -36,16 +36,26 @@
 
 #include "MeshGraphHDF5.h"
 
+#include <LibUtilities/Communication/CommMpi.h>
 #include <LibUtilities/BasicUtils/ParseUtils.h>
 #include <SpatialDomains/MeshEntities.hpp>
+#include <boost/graph/adjacency_list.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
 #include <type_traits>
 
-
 #include <tinyxml.h>
+#include <ptscotch.h>
 using namespace std;
 using namespace Nektar::LibUtilities;
+
+#define SCOTCH_CALL(scotchFunc, args)                                   \
+    {                                                                   \
+        ASSERTL0(scotchFunc args == 0,                                  \
+                 std::string("Error in Scotch calling function ")       \
+                 + std::string(#scotchFunc));                           \
+    }
+
 
 namespace Nektar
 {
@@ -60,7 +70,72 @@ void MeshGraphHDF5::ReadGeometry(
     DomainRangeShPtr rng,
     bool fillGraph)
 {
+    ReadGeometryMap(m_vertSet, "vert");
+    //ReadCurves();
+    if (m_meshDimension >= 2)
+    {
+        ReadGeometryMap(m_segGeoms, "seg", m_curvedEdges);
+        if (m_meshDimension == 3)
+        {
+            ReadFaces();
+        }
+    }
+    ReadElements();
+    ReadComposites();
+    ReadDomain();
+    ReadExpansions();
+}
+
+std::pair<size_t, size_t> SplitWork(size_t vecsize, int rank, int nprocs)
+{
+    size_t div = vecsize / nprocs;
+    size_t rem = vecsize % nprocs;
+    if (rank < rem)
+    {
+        return std::make_pair(rank * (div + 1), div + 1);
+    }
+    else
+    {
+        return std::make_pair((rank - rem) * div + rem * (div + 1), div);
+    }
+}
+
+template<class T, typename std::enable_if<T::kDim == 0, int>::type = 0>
+inline int GetGeomDataDim(std::map<int, std::shared_ptr<T>> &geomMap, int s)
+{
+    return s;
+}
+
+template<class T, typename std::enable_if<T::kDim == 1, int>::type = 0>
+inline int GetGeomDataDim(std::map<int, std::shared_ptr<T>> &geomMap, int s)
+{
+    return T::kNverts;
+}
+
+template<class T, typename std::enable_if<T::kDim == 2, int>::type = 0>
+inline int GetGeomDataDim(std::map<int, std::shared_ptr<T>> &geomMap, int s)
+{
+    return T::kNedges;
+}
+
+template<class T, typename std::enable_if<T::kDim == 3, int>::type = 0>
+inline int GetGeomDataDim(std::map<int, std::shared_ptr<T>> &geomMap, int s)
+{
+    return T::kNfaces;
+}
+
+void MeshGraphHDF5::PartitionMesh(LibUtilities::SessionReaderSharedPtr session)
+{
     int err;
+    LibUtilities::CommSharedPtr comm = session->GetComm();
+    int rank = comm->GetRank(), nproc = comm->GetSize();
+
+    m_session = session;
+
+    if (rank > 0)
+    {
+        m_session->InitSession();
+    }
 
     //we use the xml geom to find information about the HDF5 file
     m_xmlGeom            = m_session->GetElement("NEKTAR/GEOMETRY");
@@ -114,55 +189,188 @@ void MeshGraphHDF5::ReadGeometry(
     ASSERTL1(m_meshDimension <= m_spaceDimension,
              "Mesh dimension greater than space dimension");
 
-    //load the HDF5 mesh
+    // Open handle to the HDF5 mesh
     m_file = H5::File::Open(m_hdf5Name, H5F_ACC_RDWR);
     m_mesh = m_file->OpenGroup("mesh");
     m_maps = m_file->OpenGroup("maps");
 
-    ReadGeometryMap(m_vertSet, "vert");
-    //ReadCurves();
-    if (m_meshDimension >= 2)
+    // Depending on dimension, read element IDs.
+    std::map<int, std::vector<std::tuple<std::string, int, LibUtilities::ShapeType>>> dataSets;
+    dataSets[1] = { make_tuple("seg", 2, LibUtilities::eSegment) };
+    dataSets[2] = { make_tuple("tri", 3, LibUtilities::eTriangle),
+                    make_tuple("quad", 4, LibUtilities::eQuadrilateral) };
+    dataSets[3] = { make_tuple("tet", 4, LibUtilities::eTetrahedron),
+                    make_tuple("pyr", 5, LibUtilities::ePyramid),
+                    make_tuple("prism", 5, LibUtilities::ePrism),
+                    make_tuple("hex", 6, LibUtilities::eHexahedron) };
+
+    struct MeshEntity
     {
-        ReadGeometryMap(m_segGeoms, "seg", m_curvedEdges);
-        if (m_meshDimension == 3)
+        int id;
+        LibUtilities::ShapeType shape;
+        std::vector<int> facets;
+    };
+
+    // Read IDs for partitioning purposes
+    std::vector<MeshEntity> elmts;
+    std::map<int, int> idToElmt;
+
+    for (auto &it : dataSets[m_meshDimension])
+    {
+        std::string ds = std::get<0>(it);
+
+        if (!m_mesh->ContainsDataSet(ds))
         {
-            ReadFaces();
+            continue;
+        }
+
+        // Open metadata dataset
+        H5::DataSetSharedPtr data = m_mesh->OpenDataSet(ds);
+        H5::DataSpaceSharedPtr space = data->GetSpace();
+        vector<hsize_t> dims = space->GetDims();
+
+        H5::DataSetSharedPtr mdata = m_maps->OpenDataSet(ds);
+        H5::DataSpaceSharedPtr mspace = mdata->GetSpace();
+        vector<hsize_t> mdims = mspace->GetDims();
+
+        // TODO: This could be done more intelligently; reads all IDs so that we
+        // can construct the dual graph of the mesh.
+        vector<int> tmpElmts, tmpIds;
+        mdata->Read(tmpIds, mspace);
+        data->Read(tmpElmts, space);
+
+        const int nGeomData = std::get<1>(it);
+
+        for (int i = 0, cnt = 0; i < tmpIds.size(); ++i)
+        {
+            MeshEntity e;
+            e.id = tmpIds[i];
+            e.shape = std::get<2>(it);
+            e.facets = std::vector<int>(
+                &tmpElmts[cnt], &tmpElmts[cnt+nGeomData]);
+            elmts.push_back(e);
+            cnt += nGeomData;
+        }
+
+        // // Calculate range of work to perform
+        // auto elRange = SplitWork(mdims[0], rank, nproc);
+
+        // // Read this processor's IDs and element info
+        // mspace->SelectRange(elRange.first, elRange.second);
+        // space->SelectRange({ elRange.first, 0 }, { elRange.second, it.second });
+
+        // mdata->Read(ids[ds], mspace);
+        // data->Read(mesh[ds], space);
+    }
+
+    typedef boost::adjacency_list<
+        boost::setS, boost::vecS, boost::undirectedS, int,
+        boost::property<boost::edge_index_t, unsigned int>>
+        BoostGraph;
+
+    BoostGraph graph;
+    std::unordered_map<int, int> graphEdges;
+
+    // Check to see we have at least as many processors as elements.
+    size_t numElmt = elmts.size();
+    ASSERTL0(nproc <= numElmt,
+             "This mesh has more processors than elements!");
+
+    // Calculate reasonably even distribution of processors for calling ptScotch
+    auto elRange = SplitWork(numElmt, rank, nproc);
+
+    cout << "RANK " << rank << " reading: " << elRange.first << " -> " << elRange.second << endl;
+
+    // Read all vertices.
+    int vcnt = 0;
+    for (int el = elRange.first; el < elRange.first + elRange.second;
+         ++el, ++vcnt)
+    {
+        MeshEntity elmt = elmts[el];
+
+        // Create graph vertex.
+        auto vert = boost::add_vertex(graph);
+        graph[vert] = el;
+
+        // Check for existing connections.
+        for (auto &eId : elmt.facets)
+        {
+            auto edgeIt = graphEdges.find(eId);
+            if (edgeIt != graphEdges.end())
+            {
+                boost::add_edge(vcnt, edgeIt->second, graph);
+            }
+            else
+            {
+                graphEdges[eId] = vcnt;
+            }
         }
     }
-    ReadElements();
-    ReadComposites();
-    ReadDomain();
-    ReadExpansions();
-}
 
-void MeshGraphHDF5::PartitionMesh(LibUtilities::SessionReaderSharedPtr session)
-{
-    m_session = session;
-    // Don't do anything yet!
-}
+    // Now construct ghost vertices for the graph. This could probably be
+    // improved.
+    int nGhost = 0;
+    for (int i = 0; i < numElmt; ++i)
+    {
+        // Ignore anything we already read.
+        if (i >= elRange.first && i < elRange.first + elRange.second)
+        {
+            continue;
+        }
 
-template<class T, typename std::enable_if<T::kDim == 0, int>::type = 0>
-inline int GetGeomDataDim(std::map<int, std::shared_ptr<T>> &geomMap, int s)
-{
-    return s;
-}
+        MeshEntity elmt = elmts[i];
 
-template<class T, typename std::enable_if<T::kDim == 1, int>::type = 0>
-inline int GetGeomDataDim(std::map<int, std::shared_ptr<T>> &geomMap, int s)
-{
-    return T::kNverts;
-}
+        // Check for connections to local elements.
+        for (auto &eId : elmt.facets)
+        {
+            auto edgeIt = graphEdges.find(eId);
+            if (edgeIt != graphEdges.end())
+            {
+                auto vert = boost::add_vertex(graph);
+                graph[vert] = i;
 
-template<class T, typename std::enable_if<T::kDim == 2, int>::type = 0>
-inline int GetGeomDataDim(std::map<int, std::shared_ptr<T>> &geomMap, int s)
-{
-    return T::kNedges;
-}
+                boost::add_edge(vcnt, edgeIt->second, graph);
+                ++vcnt;
+                ++nGhost;
+            }
+        }
+    }
 
-template<class T, typename std::enable_if<T::kDim == 3, int>::type = 0>
-inline int GetGeomDataDim(std::map<int, std::shared_ptr<T>> &geomMap, int s)
-{
-    return T::kNfaces;
+    // Now construct adjacency graph.
+    int nVert = boost::num_vertices(graph), nLocal = nVert - nGhost;
+    int nEdges = boost::num_edges(graph);
+    std::vector<int> adjncy, xadj(nLocal + 1);
+
+    xadj[0] = 0;
+    int acnt = 1;
+
+    auto vs = boost::vertices(graph);
+    for (auto vIt = vs.first; vIt != vs.second && acnt <= nLocal; ++vIt, ++acnt)
+    {
+        auto neighbors = boost::adjacent_vertices(*vIt, graph);
+        for (auto nIt = neighbors.first; nIt != neighbors.second; ++nIt)
+        {
+            adjncy.push_back(graph[*nIt]);
+        }
+        xadj[acnt] = adjncy.size();
+    }
+
+    LibUtilities::CommMpiSharedPtr mpiComm = std::static_pointer_cast<
+        LibUtilities::CommMpi>(comm);
+    SCOTCH_Dgraph scGraph;
+    SCOTCH_CALL(SCOTCH_dgraphInit, (&scGraph, mpiComm->GetComm()));
+    SCOTCH_CALL(SCOTCH_dgraphBuild,
+                (&scGraph, 0, nLocal, nLocal, &xadj[0], &xadj[1], NULL,
+                 NULL, adjncy.size(), adjncy.size(), &adjncy[0], NULL, NULL));
+    SCOTCH_CALL(SCOTCH_dgraphCheck, (&scGraph));
+
+    SCOTCH_Strat strat;
+    SCOTCH_CALL(SCOTCH_stratInit, (&strat));
+    //SCOTCH_CALL(SCOTCH_stratDgraphMapBuild,
+    //            (&strat, SCOTCH_STRATBALANCE, nproc, nproc, 0.1));
+
+    vector<int> partElmts(nVert);
+    SCOTCH_CALL(SCOTCH_dgraphPart, (&scGraph, nproc, &strat, &partElmts[0]));
 }
 
 template<class T, typename DataType> void MeshGraphHDF5::ConstructGeomObject(

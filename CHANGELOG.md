@@ -22,7 +22,7 @@ v5.0.0
 - Simplify RawType typedefs (!840)
 - Remove unused files from BasicUtils (!841)
 - Remove checks for old boost versions which are no longer supported (!841)
-- Refactor ParseUtils to be more consistent (!843, !896)
+- Refactor ParseUtils to be more consistent (!843, !896, !908)
 - Added support for using the distance to a specific region (e.g. outlet) in the
   function definitions for the Absorption Forcing (!769)
 - Improve performance of DisContField2D::v_ExtractTracePhys (!824)

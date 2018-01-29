@@ -334,6 +334,9 @@ public:
     void AppendRange(const std::vector<hsize_t> start,
                      const std::vector<hsize_t> count);
 
+    void SetSelection(const hsize_t num_elmt,
+                      const std::vector<hsize_t> &coords);
+
     void ClearRange();
 
     hsize_t GetSize();

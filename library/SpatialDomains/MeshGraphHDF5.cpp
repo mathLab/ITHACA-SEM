@@ -233,6 +233,7 @@ void MeshGraphHDF5::PartitionMesh(LibUtilities::SessionReaderSharedPtr session)
     LibUtilities::H5::PListSharedPtr parallelProps = H5::PList::Default();
     m_readPL = H5::PList::Default();
 
+    /*
     if (nproc > 1)
     {
         // Use MPI/O to access the file
@@ -242,6 +243,7 @@ void MeshGraphHDF5::PartitionMesh(LibUtilities::SessionReaderSharedPtr session)
         m_readPL = H5::PList::DatasetXfer();
         m_readPL->SetDxMpioCollective();
     }
+    */
 
     m_file = H5::File::Open(m_hdf5Name, H5F_ACC_RDONLY, parallelProps);
     m_mesh = m_file->OpenGroup("mesh");
@@ -733,16 +735,22 @@ void MeshGraphHDF5::ReadGeometryData(
     space->ClearRange();
 
     int i = 0;
+    std::vector<hsize_t> coords;
     for (auto &id : allIds)
     {
         if (readIds.find(id) != readIds.end())
         {
-            space->AppendRange({static_cast<hsize_t>(i), 0},
-                               {1, static_cast<hsize_t>(nGeomData)});
+            for (int j = 0; j < nGeomData; ++j)
+            {
+                coords.push_back(i);
+                coords.push_back(j);
+            }
             ids.push_back(id);
         }
         ++i;
     }
+
+    space->SetSelection(coords.size() / 2, coords);
 
     // Read selected data.
     data->Read(geomData, space, m_readPL);

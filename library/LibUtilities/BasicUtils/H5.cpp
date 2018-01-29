@@ -481,6 +481,13 @@ void DataSpace::AppendRange(const std::vector<hsize_t> start,
     H5_CALL(H5Sselect_hyperslab,
             (m_Id, H5S_SELECT_OR, &start[0], NULL, &count[0], NULL));
 }
+void DataSpace::SetSelection(const hsize_t num_elmt,
+                             const std::vector<hsize_t> &coords)
+{
+    H5_CALL(H5Sselect_elements,
+            (m_Id, H5S_SELECT_SET, num_elmt, &coords[0]));
+}
+
 void DataSpace::ClearRange()
 {
     H5_CALL(H5Sselect_none, (m_Id));

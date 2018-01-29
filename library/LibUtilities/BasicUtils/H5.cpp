@@ -635,7 +635,10 @@ FileSharedPtr File::Open(const std::string &filename, unsigned mode,
 
 File::~File()
 {
-    Close();
+    if (m_Id != H5I_INVALID_HID)
+    {
+        Close();
+    }
 }
 
 void File::Close()
@@ -654,7 +657,10 @@ Group::Group(hid_t id) : Object(id)
 
 Group::~Group()
 {
-    Close();
+    if (m_Id != H5I_INVALID_HID)
+    {
+        Close();
+    }
 }
 
 void Group::Close()

@@ -112,6 +112,7 @@ private:
 
     string m_hdf5Name;
     LibUtilities::H5::FileSharedPtr m_file;
+    LibUtilities::H5::PListSharedPtr m_readPL;
     LibUtilities::H5::GroupSharedPtr m_mesh;
     LibUtilities::H5::GroupSharedPtr m_maps;
 };

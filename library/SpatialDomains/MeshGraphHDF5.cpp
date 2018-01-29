@@ -86,8 +86,24 @@ void MeshGraphHDF5::ReadGeometry(
     ReadComposites();
     ReadDomain();
     ReadExpansions();
+
+    // Close up shop.
+    m_mesh->Close();
+    m_maps->Close();
+    m_file->Close();
 }
 
+/**
+ * @brief Utility function to split a vector equally amongst a number of
+ * processors.
+ *
+ * @param vecsize  Size of the total amount of work
+ * @param rank     Rank of this process
+ * @param nprocs   Number of processors in the group
+ *
+ * @return A pair with the offset this process should occupy, along with the
+ *         count for the amount of work.
+ */
 std::pair<size_t, size_t> SplitWork(size_t vecsize, int rank, int nprocs)
 {
     size_t div = vecsize / nprocs;
@@ -126,25 +142,31 @@ inline int GetGeomDataDim(std::map<int, std::shared_ptr<T>> &geomMap)
     return T::kNfaces;
 }
 
+/**
+ * @brief Partition the mesh
+ */
 void MeshGraphHDF5::PartitionMesh(LibUtilities::SessionReaderSharedPtr session)
 {
     int err;
     LibUtilities::CommSharedPtr comm = session->GetComm();
     int rank = comm->GetRank(), nproc = comm->GetSize();
 
-    m_session = session;
-
+    // By default, only the root process will have read the session file, which
+    // is done to avoid every process needing to read the XML file. For HDF5, we
+    // don't care about this, so just have every process parse the session file.
     if (rank > 0)
     {
-        m_session->InitSession();
+        session->InitSession();
     }
 
-    //we use the xml geom to find information about the HDF5 file
+    // We use the XML geometry to find information about the HDF5 file.
+    m_session            = session;
     m_xmlGeom            = m_session->GetElement("NEKTAR/GEOMETRY");
     TiXmlAttribute *attr = m_xmlGeom->FirstAttribute();
     m_meshPartitioned    = false;
     m_meshDimension      = 3;
     m_spaceDimension     = 3;
+
     while (attr)
     {
         std::string attrName(attr->Name());
@@ -160,7 +182,8 @@ void MeshGraphHDF5::PartitionMesh(LibUtilities::SessionReaderSharedPtr session)
         }
         else if (attrName == "PARTITION")
         {
-            ASSERTL0(false,"PARTITION parameter should only be use in xml meshes");
+            ASSERTL0(false,
+                     "PARTITION parameter should only be use in XML meshes");
         }
         else if(attrName == "HDF5FILE")
         {
@@ -170,7 +193,7 @@ void MeshGraphHDF5::PartitionMesh(LibUtilities::SessionReaderSharedPtr session)
         else if(attrName == "PARTITIONED")
         {
             m_meshPartitioned = true;
-            if(m_session->GetComm()->GetSize() == 1)
+            if (m_session->GetComm()->GetSize() == 1)
             {
                 //mesh may be paritioned but we want the whole mesh
                 m_meshPartitioned = false;
@@ -187,12 +210,24 @@ void MeshGraphHDF5::PartitionMesh(LibUtilities::SessionReaderSharedPtr session)
     }
 
     ASSERTL0(m_hdf5Name.size() > 0, "unable to obtain mesh file name");
-
     ASSERTL1(m_meshDimension <= m_spaceDimension,
              "Mesh dimension greater than space dimension");
 
     // Open handle to the HDF5 mesh
-    m_file = H5::File::Open(m_hdf5Name, H5F_ACC_RDONLY);
+    LibUtilities::H5::PListSharedPtr parallelProps = H5::PList::Default();
+    m_readPL = H5::PList::Default();
+
+    if (nproc > 1)
+    {
+        // Use MPI/O to access the file
+        parallelProps = H5::PList::FileAccess();
+        parallelProps->SetMpio(comm);
+        // Use collective IO
+        m_readPL = H5::PList::DatasetXfer();
+        m_readPL->SetDxMpioCollective();
+    }
+
+    m_file = H5::File::Open(m_hdf5Name, H5F_ACC_RDONLY, parallelProps);
     m_mesh = m_file->OpenGroup("mesh");
     m_maps = m_file->OpenGroup("maps");
 
@@ -238,8 +273,8 @@ void MeshGraphHDF5::PartitionMesh(LibUtilities::SessionReaderSharedPtr session)
         // TODO: This could be done more intelligently; reads all IDs so that we
         // can construct the dual graph of the mesh.
         vector<int> tmpElmts, tmpIds;
-        mdata->Read(tmpIds, mspace);
-        data->Read(tmpElmts, space);
+        mdata->Read(tmpIds, mspace, m_readPL);
+        data->Read(tmpElmts, space, m_readPL);
 
         const int nGeomData = std::get<1>(it);
 
@@ -413,6 +448,9 @@ void MeshGraphHDF5::PartitionMesh(LibUtilities::SessionReaderSharedPtr session)
 
     // Now read geometry.
     ReadGeometryMap(m_hexGeoms, "hex", CurveMap(), toRead);
+    ReadGeometryMap(m_prismGeoms, "prism", CurveMap(), toRead);
+    ReadGeometryMap(m_pyrGeoms, "pyr", CurveMap(), toRead);
+    ReadGeometryMap(m_tetGeoms, "tet", CurveMap(), toRead);
 }
 
 template<class T> struct GeomShapeType
@@ -459,61 +497,6 @@ template<> struct GeomShapeType<PointGeom>
 {
     static const LibUtilities::ShapeType value = LibUtilities::ePoint;
 };
-
-/*
-template<class T> struct NumFacetMaps
-{
-    static const int value = 0;
-};
-
-template<> struct NumFacetMaps<HexGeom>
-{
-    static const int value = 1;
-};
-
-template<> struct NumFacetMaps<PrismGeom>
-{
-    static const int value = 2;
-};
-
-template<> struct NumFacetMaps<PyrGeom>
-{
-    static const int value = 2;
-};
-
-template<> struct NumFacetMaps<TetGeom>
-{
-    static const int value = 1;
-};
-
-template<> struct NumFacetMaps<QuadGeom>
-{
-    static const int value = 1;
-};
-
-template<> struct NumFacetMaps<TriGeom>
-{
-    static const int value = 1;
-};
-
-template<> struct NumFacetMaps<SegGeom>
-{
-    static const int value = 1;
-};
-
-/*
-template<class T, int n> struct FacetMap
-{
-};
-
-template<> struct FacetMap<HexGeom, 0>
-{
-    std::map<int, std::shared_ptr<QuadGeom>> operator()
-    {
-        return m_hexGeom;
-    }
-};
-*/
 
 template<class T, typename DataType> void MeshGraphHDF5::ConstructGeomObject(
     std::map<int, std::shared_ptr<T>> &geomMap, int id,
@@ -638,7 +621,7 @@ void MeshGraphHDF5::ReadGeometryMap(
     // Read IDs. Note for future: this could be done in chunks if we had
     // super-huge meshes, but for now we just read everything in a single go.
     vector<int> ids;
-    mdata->Read(ids, mspace);
+    mdata->Read(ids, mspace, m_readPL);
 
     space->ClearRange();
 
@@ -668,7 +651,7 @@ void MeshGraphHDF5::ReadGeometryMap(
     }
 
     // Read data (collectively)
-    data->Read(geomData, space);
+    data->Read(geomData, space, m_readPL);
 
     if (readIds.size() > 0)
     {
@@ -852,7 +835,12 @@ void MeshGraphHDF5::ReadCurves()
 void MeshGraphHDF5::ReadDomain()
 {
     map<int, CompositeSharedPtr> fullDomain;
-    GetCompositeList("0", fullDomain);
+    H5::DataSetSharedPtr dst = m_mesh->OpenDataSet("domain");
+    H5::DataSpaceSharedPtr space = dst->GetSpace();
+
+    vector<string> data;
+    dst->ReadVectorString(data, space, m_readPL);
+    GetCompositeList(data[0], fullDomain);
     m_domain.push_back(fullDomain);
 }
 

@@ -961,7 +961,7 @@ namespace Nektar
 
                 // interpolate Jacobian and invert
                 LibUtilities::Interp1D(from_key,jac,m_base[0]->GetPointsKey(),work);
-                Vmath::Sdiv(nq,1.0,&work[0],1,&work[0],1);
+                Vmath::Sdiv(nqe,1.0,&work[0],1,&work[0],1);
 
                 // interpolate
                 for(i = 0; i < GetCoordim(); ++i)

@@ -96,12 +96,17 @@ private:
     void WriteGeometryMap(std::map<int, std::shared_ptr<T>> &geomMap,
                           std::string datasetName);
 
-    template<class T>
-    void ReadGeometryMap(
+    template<class T, typename DataType> void ReadGeometryData(
+        std::map<int, std::shared_ptr<T>>      &geomMap,
+        std::string                             dataSet,
+        const std::unordered_set<int>          &readIds,
+        std::vector<int>                       &ids,
+        std::vector<DataType>                  &geomData);
+    template<class T, typename DataType> void FillGeomMap(
         std::map<int, std::shared_ptr<T>> &geomMap,
-        std::string dataSet,
-        const CurveMap &curveMap = CurveMap(),
-        const std::unordered_set<unsigned int> &readIds = std::unordered_set<unsigned int>());
+        const CurveMap                    &curveMap,
+        std::vector<int>                  &ids,
+        std::vector<DataType>             &geomData);
     template<class T, typename DataType> void ConstructGeomObject(
         std::map<int, std::shared_ptr<T>> &geomMap, int id,
         DataType *data, CurveSharedPtr curve);

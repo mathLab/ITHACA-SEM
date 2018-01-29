@@ -268,6 +268,8 @@ void MeshGraphHDF5::PartitionMesh(LibUtilities::SessionReaderSharedPtr session)
     std::vector<MeshEntity> elmts;
     std::vector<int> ids;
 
+    Timer t;
+    t.Start();
     for (auto &it : dataSets[m_meshDimension])
     {
         std::string ds = std::get<0>(it);
@@ -306,6 +308,14 @@ void MeshGraphHDF5::PartitionMesh(LibUtilities::SessionReaderSharedPtr session)
         }
     }
 
+    comm->Block();
+    t.Stop();
+
+    if (rank == 0)
+    {
+        std::cout << "initial read: " << t.TimePerTest(0) << std::endl;;
+    }
+
     typedef boost::adjacency_list<
         boost::setS, boost::vecS, boost::undirectedS, int,
         boost::property<boost::edge_index_t, unsigned int>>
@@ -322,6 +332,7 @@ void MeshGraphHDF5::PartitionMesh(LibUtilities::SessionReaderSharedPtr session)
     // Calculate reasonably even distribution of processors for calling ptScotch
     auto elRange = SplitWork(numElmt, rank, nproc);
 
+    t.Start();
     // Read all vertices.
     int vcnt = 0;
     for (int el = elRange.first; el < elRange.first + elRange.second;
@@ -394,6 +405,10 @@ void MeshGraphHDF5::PartitionMesh(LibUtilities::SessionReaderSharedPtr session)
         }
         xadj[acnt] = adjncy.size();
     }
+    t.Stop();
+    if (rank == 0) cout << "setup graph: " << t.TimePerTest(1) << endl;
+
+    t.Start();
 
     LibUtilities::CommMpiSharedPtr mpiComm = std::static_pointer_cast<
         LibUtilities::CommMpi>(comm);
@@ -456,13 +471,19 @@ void MeshGraphHDF5::PartitionMesh(LibUtilities::SessionReaderSharedPtr session)
     comm->AlltoAllv(sendData, sendSizeMap, sendOffsetMap,
                     recvData, recvSizeMap, recvOffsetMap);
 
+    t.Stop();
+    if (rank == 0) cout << "partitioning: " << t.TimePerTest(1) << endl;
+
     // Each process now knows which rows of the dataset it needs to read for the
     // elements of dimension m_meshDimension.
     std::unordered_set<int> toRead;
+    t.Start();
     for (auto &val : recvData)
     {
         toRead.insert(val);
     }
+    t.Stop();
+    if (rank == 0) cout << "insert crap: " << t.TimePerTest(1) << endl;
     //UniqueValues(toRead, recvData);
 
     // Since objects are going to be constructed starting from vertices, we now
@@ -474,6 +495,7 @@ void MeshGraphHDF5::PartitionMesh(LibUtilities::SessionReaderSharedPtr session)
 
     if (m_meshDimension == 3)
     {
+        t.Start();
         // Read 3D data
         ReadGeometryData(m_hexGeoms, "hex", toRead, hexIDs, hexData);
         ReadGeometryData(m_pyrGeoms, "pyr", toRead, pyrIDs, pyrData);
@@ -482,49 +504,72 @@ void MeshGraphHDF5::PartitionMesh(LibUtilities::SessionReaderSharedPtr session)
 
         toRead.clear();
         UniqueValues(toRead, hexData, pyrData, prismData, tetData);
+        t.Stop();
+        if (rank == 0) cout << "read 3D: " << t.TimePerTest(1) << endl;
     }
 
     if (m_meshDimension >= 2)
     {
+        t.Start();
         // Read 2D data
         ReadGeometryData(m_triGeoms, "tri", toRead, triIDs, triData);
         ReadGeometryData(m_quadGeoms, "quad", toRead, quadIDs, quadData);
 
         toRead.clear();
         UniqueValues(toRead, triData, quadData);
+        t.Stop();
+        if (rank == 0) cout << "read 2D: " << t.TimePerTest(1) << endl;
     }
 
     if (m_meshDimension >= 1)
     {
+        t.Start();
         // Read 2D data
         ReadGeometryData(m_segGeoms, "seg", toRead, segIDs, segData);
 
         toRead.clear();
         UniqueValues(toRead, segData);
+        t.Stop();
+        if (rank == 0) cout << "read 1D: " << t.TimePerTest(1) << endl;
     }
 
+    t.Start();
     ReadGeometryData(m_vertSet, "vert", toRead, vertIDs, vertData);
+    t.Stop();
+    if (rank == 0) cout << "read 3D: " << t.TimePerTest(1) << endl;
 
     // Now start to construct geometry objects, starting from vertices upwards.
+    t.Start();
     FillGeomMap(m_vertSet, CurveMap(), vertIDs, vertData);
+    t.Stop();
+    if (rank == 0) cout << "construct 1D: " << t.TimePerTest(1) << endl;
 
     if (m_meshDimension >= 1)
     {
+        t.Start();
         FillGeomMap(m_segGeoms, m_curvedEdges, segIDs, segData);
+        t.Stop();
+        if (rank == 0) cout << "construct 1D: " << t.TimePerTest(1) << endl;
     }
 
     if (m_meshDimension >= 2)
     {
+        t.Start();
         FillGeomMap(m_triGeoms, m_curvedFaces, triIDs, triData);
         FillGeomMap(m_quadGeoms, m_curvedFaces, quadIDs, quadData);
+        t.Stop();
+        if (rank == 0) cout << "construct 2D: " << t.TimePerTest(1) << endl;
     }
 
     if (m_meshDimension >= 3)
     {
+        t.Start();
         FillGeomMap(m_hexGeoms, CurveMap(), hexIDs, hexData);
         FillGeomMap(m_prismGeoms, CurveMap(), prismIDs, prismData);
         FillGeomMap(m_pyrGeoms, CurveMap(), pyrIDs, pyrData);
         FillGeomMap(m_tetGeoms, CurveMap(), tetIDs, tetData);
+        t.Stop();
+        if (rank == 0) cout << "construct 1D: " << t.TimePerTest(1) << endl;
     }
 }
 

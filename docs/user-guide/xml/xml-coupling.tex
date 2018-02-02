@@ -81,12 +81,13 @@ The coupling waits for the file given in the receive function to appear.
 \begin{notebox}
     The Cwipi coupling is only available when Nektar++ is compiled with OpenMPI and CWIPI
 \end{notebox}
-The Cwipi coupling uses CWIPI\footnote{http://sites.onera.fr/cwipi/} to facilitate real time data exchange and linear interpolation over MPI.
+The Cwipi coupling uses CWIPI\footnote{http://sites.onera.fr/cwipi/} to facilitate real time data exchange over MPI.
+See \cite{LaSaJa17} for details.
 All data transfers are non-blocking to minimize the computational overhead.
 The interface must be enabled with the command line option \inltt{--cwipi} and a unique application name, e.g:\begin{lstlisting}[style=BashInputStyle] 
 DummySolver --cwipi 'Dummy1' Dummy_3DCubeCwipi_1.xml
 \end{lstlisting}
-CWIPI uses the current applications and the name of the coupling to identify two peers in cosimulation setups.
+CWIPI uses the names of the current application and the coupling to identify two peers in cosimulation setups.
 The name of the remote application must be provided by the \inltt{RemoteName} parameter.
 Unlike the File-type coupling, a linear interpolation in time is applied to the received fields if non-unity values are set for \inltt{ReceiveSteps}.
 \begin{lstlisting}[style=XMLStyle] 
@@ -104,13 +105,12 @@ Unlike the File-type coupling, a linear interpolation in time is applied to the 
 \end{lstlisting}
 
 Additional options which define the coupling include \inltt{SendMethod}, the method used to retrieve the physical values at the locations requested by the remote application.
-The linear interpolation of CWIPI is not used for sending fields, instead the interpolation is implemented in Nektar++ directly.
 Available options are \inltt{NearestNeighbour}, \inltt{Shepard} and \inltt{Evaluate}. 
 The nearest neighbor interpolation gives the best performance at the cost of accuracy. 
 The last option directly evaluates the expansions using a backward transform, giving superior accuracy while being the most computationally expensive. 
 The Shepard interpolation can be a good compromise between computational efficiency and accuracy.
 
-When using non-conforming domains, the current application might request values outside of the remote applications computational domain.
+When using non-conforming domains, the current application might request values outside of the computational domain of the remote application.
 How to handle these not-located points is specified by the \inltt{NotLocMethod} parameter.
 When set to \inltt{keep}, the point value is not altered.
 With \inltt{Extrapolate}, the nearest neighbor value of the current application is used.
@@ -128,7 +128,7 @@ Note that this can be very inefficient when using many MPI ranks.
         \inltt{SendMethod}      & \xmark   & \inltt{NearestNeighbour} &
             Specifies how to evaluate fields before sending. Available options are \inltt{NearestNeighbour}, \inltt{Shepard} and \inltt{Evaluate}.\\
         \inltt{Oversample}      & \xmark   & 0 &
-            Receive fields at a higher (or lower) number of quadrature points before filtering.\\
+            Receive fields at a higher (or lower) number of quadrature points before filtering to avoid aliasing.\\
         \inltt{FilterWidth}      & \xmark   & 0 &
             Apply a spatial filter of a given filter width to the received fields. Disabled when set to zero.\\
         \inltt{NotLocMethod}      & \xmark   & \inltt{keep} &

@@ -53,10 +53,11 @@ public:
 
     /// Creates an instance of this class
     static EquationSystemSharedPtr create(
-        const LibUtilities::SessionReaderSharedPtr &pSession)
+        const LibUtilities::SessionReaderSharedPtr& pSession,
+        const SpatialDomains::MeshGraphSharedPtr& pGraph)
     {
-        EquationSystemSharedPtr p =
-            MemoryManager<Dummy>::AllocateSharedPtr(pSession);
+        EquationSystemSharedPtr p = MemoryManager<Dummy>
+            ::AllocateSharedPtr(pSession, pGraph);
         p->InitObject();
         return p;
     }
@@ -71,7 +72,8 @@ protected:
     SolverUtils::CouplingSharedPointer              m_coupling;
 
     /// Initialises UnsteadySystem class members.
-    Dummy(const LibUtilities::SessionReaderSharedPtr &pSession);
+    Dummy(const LibUtilities::SessionReaderSharedPtr& pSession,
+          const SpatialDomains::MeshGraphSharedPtr& pGraph);
 
     virtual void v_InitObject();
 

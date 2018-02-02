@@ -44,16 +44,22 @@ using namespace Nektar::SolverUtils;
 int main(int argc, char *argv[])
 {
     LibUtilities::SessionReaderSharedPtr session;
+    SpatialDomains::MeshGraphSharedPtr graph;
+    string vDriverModule;
     DriverSharedPtr drv;
 
     try
     {
         // Create session reader.
         session = LibUtilities::SessionReader::CreateInstance(argc, argv);
-        session->SetSolverInfo("EqType", "Dummy");
+
+        // Create MeshGraph.
+        graph = SpatialDomains::MeshGraph::Read(session);
 
         // Create driver
-        drv = GetDriverFactory().CreateInstance("Standard", session);
+        session->LoadSolverInfo("Driver", vDriverModule, "Standard");
+        drv = GetDriverFactory().CreateInstance(vDriverModule, session, graph);
+        session->SetSolverInfo("EqType", "Dummy");
 
         // Execute driver
         drv->Execute();

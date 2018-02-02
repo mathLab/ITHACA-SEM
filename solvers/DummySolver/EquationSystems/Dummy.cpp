@@ -47,8 +47,10 @@ string Dummy::className = GetEquationSystemFactory().RegisterCreatorFunction(
     Dummy::create,
     "Dummy Equation System that only sends/receives fields");
 
-Dummy::Dummy(const LibUtilities::SessionReaderSharedPtr &pSession)
-    : UnsteadySystem(pSession)
+Dummy::Dummy(
+    const LibUtilities::SessionReaderSharedPtr& pSession,
+    const SpatialDomains::MeshGraphSharedPtr& pGraph)
+    : UnsteadySystem(pSession, pGraph)
 {
 }
 

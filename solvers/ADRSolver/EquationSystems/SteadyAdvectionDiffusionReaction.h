@@ -46,9 +46,11 @@ namespace Nektar
 
         /// Creates an instance of this class
         static EquationSystemSharedPtr create(
-                const LibUtilities::SessionReaderSharedPtr& pSession)
+            const LibUtilities::SessionReaderSharedPtr& pSession,
+            const SpatialDomains::MeshGraphSharedPtr& pGraph)
         {
-            EquationSystemSharedPtr p = MemoryManager<SteadyAdvectionDiffusionReaction>::AllocateSharedPtr(pSession);
+            EquationSystemSharedPtr p = MemoryManager<SteadyAdvectionDiffusionReaction>
+                ::AllocateSharedPtr(pSession, pGraph);
             p->InitObject();
             return p;
         }
@@ -60,7 +62,8 @@ namespace Nektar
 
     protected:
         SteadyAdvectionDiffusionReaction(
-                  const LibUtilities::SessionReaderSharedPtr& pSession);
+            const LibUtilities::SessionReaderSharedPtr& pSession,
+            const SpatialDomains::MeshGraphSharedPtr& pGraph);
 
         virtual void v_InitObject();
 

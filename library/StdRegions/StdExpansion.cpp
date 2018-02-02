@@ -1046,20 +1046,6 @@ namespace Nektar
             return eForwards;
         }
 
-        StdRegions::Orientation StdExpansion::v_GetPorient(int point)
-        {
-            NEKERROR(ErrorUtil::efatal, "This function is only valid for one-dimensional  LocalRegions");
-            return eFwd;
-        }
-
-
-        StdRegions::Orientation StdExpansion::v_GetCartesianEorient(int edge)
-        {
-            NEKERROR(ErrorUtil::efatal, "This function is only valid for two-dimensional  LocalRegions");
-            return eForwards;
-        }
-
-
         void StdExpansion::v_SetCoeffsToOrientation(StdRegions::Orientation dir,
                                                     Array<OneD, const NekDouble> &inarray,
                                                     Array<OneD, NekDouble> &outarray)

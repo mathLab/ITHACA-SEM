@@ -16,9 +16,6 @@ SET(BasicUtilsHeaders
     ./BasicUtils/FileSystem.h
     ./BasicUtils/ErrorUtil.hpp
     ./BasicUtils/HashUtils.hpp
-    ./BasicUtils/MeshEntities.hpp
-    ./BasicUtils/MeshPartition.h
-    ./BasicUtils/MeshPartitionMetis.h
     ./BasicUtils/NekManager.hpp
     ./BasicUtils/NekFactory.hpp
     ./BasicUtils/OperatorGenerators.hpp
@@ -47,8 +44,6 @@ SET(BasicUtilsSources
     ./BasicUtils/FieldIO.cpp
     ./BasicUtils/FieldIOXml.cpp
     ./BasicUtils/FileSystem.cpp
-    ./BasicUtils/MeshPartition.cpp
-    ./BasicUtils/MeshPartitionMetis.cpp
     ./BasicUtils/ParseUtils.cpp
     ./BasicUtils/PtsField.cpp
     ./BasicUtils/PtsIO.cpp
@@ -85,19 +80,13 @@ SET(CommunicationSources
     ./Communication/Transposition.cpp
 )
 
-IF(NEKTAR_USE_SCOTCH)
-    SET(BasicUtilsHeaders ${BasicUtilsHeaders}
-        ./BasicUtils/MeshPartitionScotch.h)
-    SET(BasicUtilsSources ${BasicUtilsSources}
-        ./BasicUtils/MeshPartitionScotch.cpp)
-ENDIF(NEKTAR_USE_SCOTCH)
-
 IF(NEKTAR_USE_MPI)
     SET(CommunicationHeaders ${CommunicationHeaders}
         ./Communication/CommMpi.h)
     SET(CommunicationSources ${CommunicationSources}
         ./Communication/CommMpi.cpp)
 ENDIF(NEKTAR_USE_MPI)
+
 IF ( NEKTAR_USE_CWIPI )
     SET(CommunicationHeaders ${CommunicationHeaders}
         ./Communication/CommCwipi.h)
@@ -366,13 +355,6 @@ IF ( NEKTAR_USE_CWIPI )
     ADD_DEPENDENCIES(LibUtilities cwipi-0.8.2)
 ENDIF ()
 
-# Scotch
-IF( NEKTAR_USE_SCOTCH )
-    TARGET_LINK_LIBRARIES(LibUtilities LINK_PRIVATE
-        ${SCOTCH_LIBRARY} ${SCOTCHERR_LIBRARY})
-    ADD_DEPENDENCIES(LibUtilities scotch-6.0.0)
-ENDIF ()
-
 # Metis
 TARGET_LINK_LIBRARIES(LibUtilities LINK_PRIVATE ${METIS_LIB})
 
@@ -465,7 +447,7 @@ ENDIF( NEKTAR_USE_PETSC )
 
 # HDF5
 IF( NEKTAR_USE_HDF5 )
-    TARGET_LINK_LIBRARIES(LibUtilities LINK_PRIVATE ${HDF5_LIBRARIES})
+    TARGET_LINK_LIBRARIES(LibUtilities LINK_PUBLIC ${HDF5_LIBRARIES})
     ADD_DEPENDENCIES(LibUtilities hdf5-1.8.16)
 ENDIF( NEKTAR_USE_HDF5 )
 

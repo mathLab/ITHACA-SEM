@@ -51,8 +51,11 @@ namespace Nektar
 
         /// Creates an instance of this class
         static EquationSystemSharedPtr create(
-                const LibUtilities::SessionReaderSharedPtr& pSession) {
-            EquationSystemSharedPtr p = MemoryManager<EigenValuesAdvection>::AllocateSharedPtr(pSession);
+            const LibUtilities::SessionReaderSharedPtr& pSession,
+            const SpatialDomains::MeshGraphSharedPtr& pGraph)
+        {
+            EquationSystemSharedPtr p = MemoryManager<EigenValuesAdvection>
+                ::AllocateSharedPtr(pSession, pGraph);
             p->InitObject();
             return p;
         }
@@ -67,12 +70,14 @@ namespace Nektar
         SolverUtils::AdvectionSharedPtr m_advObject;
         Array<OneD, NekDouble>               m_traceVn;
 
-        EigenValuesAdvection(const LibUtilities::SessionReaderSharedPtr& pSession);
-		
+        EigenValuesAdvection(
+            const LibUtilities::SessionReaderSharedPtr& pSession,
+            const SpatialDomains::MeshGraphSharedPtr& pGraph);
+
         /// Get the normal velocity
         Array<OneD, NekDouble> &GetNormalVelocity();
 
-		virtual void v_InitObject();
+        virtual void v_InitObject();
         virtual void v_DoInitialise();
         virtual void v_DoSolve();
 

@@ -47,7 +47,8 @@ class AdvectionSystem: virtual public UnsteadySystem
 {
 public:
     SOLVER_UTILS_EXPORT AdvectionSystem(
-            const LibUtilities::SessionReaderSharedPtr &pSession);
+        const LibUtilities::SessionReaderSharedPtr &pSession,
+        const SpatialDomains::MeshGraphSharedPtr& pGraph);
 
     SOLVER_UTILS_EXPORT virtual ~AdvectionSystem();
 

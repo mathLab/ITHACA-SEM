@@ -85,7 +85,7 @@ IF (NEKTAR_USE_PETSC)
             TMP_DIR ${TPBUILD}/petsc-3.7.7-tmp
             INSTALL_DIR ${TPDIST}
             BINARY_DIR ${TPBUILD}/petsc-3.7.7
-            URL http://ftp.mcs.anl.gov/pub/petsc/release-snapshots/petsc-lite-3.7.7.tar.gz
+            URL ${TPURL}/petsc-lite-3.7.7.tar.gz
             URL_MD5 "7b476e38cfab4cddb26f73e5ef23538e"
             CONFIGURE_COMMAND
                 OMPI_FC=${CMAKE_Fortran_COMPILER}

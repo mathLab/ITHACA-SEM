@@ -99,7 +99,6 @@ MeshGraphSharedPtr MeshGraph::Read(
 
     if (isRoot)
     {
-        std::cout <<"lol init" << std::endl;
         // Parse the XML document.
         session->InitSession();
 

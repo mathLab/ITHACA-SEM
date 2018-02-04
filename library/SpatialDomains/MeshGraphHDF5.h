@@ -86,10 +86,6 @@ private:
 
     void ReadCurves();
     void ReadDomain();
-
-    void ReadFaces();
-
-    void ReadElements();
     void ReadComposites();
 
     template<class T>

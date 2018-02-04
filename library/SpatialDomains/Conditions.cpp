@@ -283,7 +283,10 @@ namespace Nektar
                                     "once!");
 
                     m_meshGraph->GetCompositeList(indxStr, *boundaryRegion);
-                    m_boundaryRegions[indx] = boundaryRegion;
+                    if (boundaryRegion->size() > 0)
+                    {
+                        m_boundaryRegions[indx] = boundaryRegion;
+                    }
                 }
 
                 boundaryRegionsElement =
@@ -333,6 +336,12 @@ namespace Nektar
                 std::string boundaryRegionIDStr;
                 std::ostringstream boundaryRegionIDStrm(boundaryRegionIDStr);
                 boundaryRegionIDStrm << boundaryRegionID;
+
+                if (m_boundaryRegions.count(boundaryRegionID) == 0)
+                {
+                    regionElement = regionElement->NextSiblingElement("REGION");
+                    continue;
+                }
 
                 ASSERTL0(m_boundaryRegions.count(boundaryRegionID) == 1,
                         "Boundary region " + boost::lexical_cast < string

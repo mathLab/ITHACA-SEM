@@ -108,6 +108,7 @@ v4.4.2
 - Fix calculation of BLPoints (!892)
 - Fix deadlock in DiffusionLDG (!885)
 - Fix uninitialised coefficients in DirectFull solver (!898)
+- Updated PETSc to 3.7.7 (!916)
 
 **NekMesh**
 - Fix missing periodic boundary meshing and boundary layer mesh adjustment

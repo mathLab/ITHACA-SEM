@@ -51,5 +51,8 @@ void export_Points()
         .def("GetW", &Points<double>::GetZ,
              py::return_value_policy<py::copy_const_reference>())
         .def("GetZW", &Points_GetZW)
+        .def("GetD", &Points<double>::GetD,
+             py::return_value_policy<py::copy_const_reference>(),
+             Points_GetD_overloads(py::args("dir")))
         ;
 }

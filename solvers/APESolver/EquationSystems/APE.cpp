@@ -337,10 +337,10 @@ bool APE::v_PreIntegrate(int step)
             for (int i = 0; i < x->GetForces().num_elements(); ++i)
             {
                 phys[m_fields.num_elements() + m_bfNames.size() + f] = x->GetForces()[i];
-                f++;
                 varNames.push_back("F_" + boost::lexical_cast<string>(f) +
                                     "_" + m_session->GetVariable(i));
             }
+            f++;
         }
 
         m_coupling->Send(step, m_time, phys, varNames);

@@ -39,56 +39,55 @@
 
 #include <APESolver/EquationSystems/APE.h>
 
-
 using namespace Nektar::SolverUtils;
 
 namespace Nektar
-{     
+{
 
 class LEE : public APE
 {
-    public:
+public:
+    friend class MemoryManager<LEE>;
 
-        friend class MemoryManager<LEE>;
+    /// Creates an instance of this class
+    static EquationSystemSharedPtr create(
+            const LibUtilities::SessionReaderSharedPtr& pSession,
+            const SpatialDomains::MeshGraphSharedPtr& pGraph)
+    {
+        EquationSystemSharedPtr p =
+            MemoryManager<LEE>::AllocateSharedPtr(pSession, pGraph);
+        p->InitObject();
+        return p;
+    }
+    /// Name of class
+    static std::string className;
 
-        /// Creates an instance of this class
-        static EquationSystemSharedPtr create(
-                const LibUtilities::SessionReaderSharedPtr& pSession)
-        {
-            EquationSystemSharedPtr p = MemoryManager<LEE>::AllocateSharedPtr(pSession);
-            p->InitObject();
-            return p;
-        }
-        /// Name of class
-        static std::string className;
+    /// Destructor
+    virtual ~LEE();
 
-        /// Destructor
-        virtual ~LEE();
+protected:
+    /// Initialises UnsteadySystem class members.
+    LEE(const LibUtilities::SessionReaderSharedPtr& pSession,
+          const SpatialDomains::MeshGraphSharedPtr& pGraph);
 
+    virtual void v_InitObject();
 
-    protected:
+    void GetFluxVector(
+        const Array<OneD, Array<OneD, NekDouble> > &physfield,
+        Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &flux);
 
-        /// Initialises UnsteadySystem class members.
-        LEE(const LibUtilities::SessionReaderSharedPtr& pSession);
+private:
+    virtual void v_AddLinTerm(
+        const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+        Array<OneD, Array<OneD, NekDouble> > &outarray);
 
-        virtual void v_InitObject();
-
-        void GetFluxVector(
-                const Array<OneD, Array<OneD, NekDouble> > &physfield,
-                Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &flux);
-    private:
-
-        virtual void v_AddLinTerm(const Array< OneD, const Array< OneD, NekDouble > > &inarray,
-                        Array<OneD, Array<OneD, NekDouble> > &outarray);
-
-        virtual void v_RiemannInvariantBC(int bcRegion,
-                                int cnt,
-                                Array<OneD, Array<OneD, NekDouble> > &Fwd,
-                                Array<OneD, Array<OneD, NekDouble> > &BfFwd,
-                                Array<OneD, Array<OneD, NekDouble> > &physarray);
-
+    virtual void v_RiemannInvariantBC(
+        int bcRegion,
+        int cnt,
+        Array<OneD, Array<OneD, NekDouble> > &Fwd,
+        Array<OneD, Array<OneD, NekDouble> > &BfFwd,
+        Array<OneD, Array<OneD, NekDouble> > &physarray);
 };
 }
 
-#endif 
-
+#endif

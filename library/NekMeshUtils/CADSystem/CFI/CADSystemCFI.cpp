@@ -367,13 +367,13 @@ void CADSystemCFI::AddSurf(int i, cfi::Face *in)
 
     vector<EdgeLoopSharedPtr> edgeloops;
     int done = 0;
-    while (done != edgeList->size())
+    while (done != fullEdgeList.size())
     {
         EdgeLoopSharedPtr edgeloop = EdgeLoopSharedPtr(new EdgeLoop);
         string firstVert;
         vector<cfi::Oriented<cfi::TopoEntity *>> *vertList =
-            edgeList->at(done).entity->getChildList();
-        if (edgeList->at(done).orientation == cfi::ORIENT_POSITIVE)
+            fullEdgeList.at(done).entity->getChildList();
+        if (fullEdgeList.at(done).orientation == cfi::ORIENT_POSITIVE)
         {
             firstVert = vertList->at(0).entity->getName();
             edgeloop->edgeo.push_back(CADOrientation::eForwards);
@@ -385,13 +385,13 @@ void CADSystemCFI::AddSurf(int i, cfi::Face *in)
         }
 
         edgeloop->edges.push_back(
-            m_curves[nameToCurveId[edgeList->at(done).entity->getName()]]);
+            m_curves[nameToCurveId[fullEdgeList.at(done).entity->getName()]]);
 
-        for (done++; done < edgeList->size(); done++)
+        for (done++; done < fullEdgeList.size(); done++)
         {
             bool end = false;
-            vertList = edgeList->at(done).entity->getChildList();
-            if (edgeList->at(done).orientation == cfi::ORIENT_POSITIVE)
+            vertList = fullEdgeList.at(done).entity->getChildList();
+            if (fullEdgeList.at(done).orientation == cfi::ORIENT_POSITIVE)
             {
                 if (vertList->at(1).entity->getName() == firstVert)
                 {
@@ -409,7 +409,7 @@ void CADSystemCFI::AddSurf(int i, cfi::Face *in)
             }
 
             edgeloop->edges.push_back(
-                m_curves[nameToCurveId[edgeList->at(done).entity->getName()]]);
+                m_curves[nameToCurveId[fullEdgeList.at(done).entity->getName()]]);
 
             if (end)
             {

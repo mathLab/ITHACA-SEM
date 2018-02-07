@@ -51,7 +51,6 @@
       <P> IO_CheckSteps  = 5                 </P>
       <P> IO_InfoSteps   = 10                </P>
       <P> Rho0           = 1.204             </P> <!-- Incompressible density -->
-      <P> Gamma          = 1.4               </P> <!-- Ratio of specific heats -->
       <P> Pinfinity      = 100000            </P> <!-- Ambient pressure -->
       <P> omega0         = 6283.185          </P>
       <P> pmax           = 100               </P>
@@ -65,7 +64,7 @@
     </BOUNDARYREGIONS>
     <BOUNDARYCONDITIONS>
       <REGION REF="0">
-        <D VAR="p" VALUE="0"/>
+<D VAR="p" VALUE="0"/>
         <D VAR="u" VALUE="0"/>
       </REGION>
     </BOUNDARYCONDITIONS>

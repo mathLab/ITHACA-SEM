@@ -21,10 +21,8 @@ IF( NEKTAR_SOLVER_ACOUSTIC )
 
     ADD_SOLVER_EXECUTABLE(AcousticSolver SOURCES ${AcousticSolverSource})
 
-    # TODO: We have a bug somewhere in the 1D boundary conditions. Therefore 1D
-    # problems are currently disabled. This should get fixed in the future. (See APE.cpp:64)
-    #    ADD_NEKTAR_TEST(APE_1DPulseSource_WeakDG_MODIFIED)
-    #    ADD_NEKTAR_TEST(APE_1DPulseWall_WeakDG_MODIFIED)
+    ADD_NEKTAR_TEST(APE_1DPulseSource_WeakDG_MODIFIED)
+    ADD_NEKTAR_TEST(APE_1DPulseWall_WeakDG_MODIFIED)
     ADD_NEKTAR_TEST(APE_2DChannel_WeakDG_MODIFIED)
     ADD_NEKTAR_TEST(APE_2DPulseAdv_WeakDG_MODIFIED)
     ADD_NEKTAR_TEST(APE_2DPulseInterp_WeakDG_MODIFIED)

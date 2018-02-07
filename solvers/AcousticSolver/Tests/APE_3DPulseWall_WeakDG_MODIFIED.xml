@@ -1371,7 +1371,6 @@
       <P> IO_CheckSteps  = NumSteps * 2       </P>
       <P> IO_InfoSteps   = NumSteps * 2       </P>
       <P> Rho0           = 1.204              </P> <!-- Incompressible density -->
-      <P> Gamma          = 1.4                </P> <!-- Ratio of specific heats -->
       <P> Pinfinity      = 100000             </P> <!-- Ambient pressure -->
     </PARAMETERS>
     <VARIABLES>
@@ -1402,7 +1401,7 @@
       <E VAR="u0" VALUE="0"/>
       <E VAR="v0" VALUE="0"/>
       <E VAR="w0" VALUE="0"/>
-      <E VAR="p0" VALUE="Pinfinity"/>
+      <E VAR="c0sq" VALUE="1.4 * Pinfinity / Rho0"/>
       <E VAR="rho0" VALUE="Rho0"/>
     </FUNCTION>
     <FUNCTION NAME="ExactSolution"> <!-- Not really the exact solution -->

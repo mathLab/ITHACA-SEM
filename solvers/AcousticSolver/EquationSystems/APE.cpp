@@ -74,10 +74,6 @@ void APE::v_InitObject()
 {
     AdvectionSystem::v_InitObject();
 
-    // TODO: We have a bug somewhere in the 1D boundary conditions. Therefore 1D
-    // problems are currently disabled. This should get fixed in the future.
-    ASSERTL0(m_spacedim > 1, "1D problems currently not supported by the APE class.");
-
     ASSERTL0(m_projectionType == MultiRegions::eDiscontinuous,
              "Only Projection=DisContinuous supported by the APE class.");
 

@@ -756,13 +756,18 @@ const Array<OneD, const Array<OneD, NekDouble> > &APE::GetVecLocs()
  */
 const Array<OneD, const Array<OneD, NekDouble> > &APE::GetBasefieldFwdBwd()
 {
+    return m_bfFwdBwd;
+}
+
+
+void APE::UpdateBasefieldFwdBwd()
+{
     for (int i = 0; i < m_spacedim + 2; i++)
     {
         int j = (m_spacedim + 2) + i;
         m_fields[0]->GetFwdBwdTracePhys(m_bf[i], m_bfFwdBwd[i], m_bfFwdBwd[j]);
         CopyBoundaryTrace(m_bfFwdBwd[i], m_bfFwdBwd[j]);
     }
-    return m_bfFwdBwd;
 }
 
 

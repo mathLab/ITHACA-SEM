@@ -149,6 +149,8 @@ class APE : public AdvectionSystem
 
         void CopyBoundaryTrace(const Array<OneD, NekDouble>&Fwd,
                                      Array<OneD, NekDouble>&Bwd);
+
+        void UpdateBasefieldFwdBwd();
 };
 }
 

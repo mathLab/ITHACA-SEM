@@ -1,12 +1,12 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File: LEECharacteristicsSolver.h
+// File: APELaxFriedrichsSolver.h
 //
 // For more information, please see: http://www.nektar.info
 //
 // The MIT License
 //
-// Copyright (c) 2017 Kilian Lackhove
+// Copyright (c) 2015 Kilian Lackhove
 // Copyright (c) 2006 Division of Applied Mathematics, Brown University (USA),
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
@@ -30,40 +30,40 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Lax-Friedrichs solver for the LEE equations.
+// Description: Lax-Friedrichs solver for the APE equations.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_SOLVERS_APESOLVER_RIEMANNSOLVERS_LEELAXFRIEDRICHSSOLVER
-#define NEKTAR_SOLVERS_APESOLVER_RIEMANNSOLVERS_LEELAXFRIEDRICHSSOLVER
+#ifndef NEKTAR_SOLVERS_APESOLVER_RIEMANNSOLVERS_LAXFRIEDRICHSSOLVER
+#define NEKTAR_SOLVERS_APESOLVER_RIEMANNSOLVERS_LAXFRIEDRICHSSOLVER
 
 #include <SolverUtils/SolverUtilsDeclspec.h>
-#include <APESolver/RiemannSolvers/LEESolver.h>
+#include <APESolver/RiemannSolvers/APESolver.h>
 
 using namespace Nektar::SolverUtils;
 
 namespace Nektar
 {
 
-class LEECharacteristicsSolver : public LEESolver
+class APELaxFriedrichsSolver : public APESolver
 {
     public:
-        static RiemannSolverSharedPtr create()
+        static RiemannSolverSharedPtr create(const LibUtilities::SessionReaderSharedPtr& pSession)
         {
-            return RiemannSolverSharedPtr(new LEECharacteristicsSolver());
+            return RiemannSolverSharedPtr(new APELaxFriedrichsSolver(pSession));
         }
 
         static std::string solverName;
 
     protected:
-        LEECharacteristicsSolver();
+        APELaxFriedrichsSolver(const LibUtilities::SessionReaderSharedPtr& pSession);
 
         virtual void v_PointSolve(
-            NekDouble  pL,  NekDouble  rhoL,  NekDouble  ruL, NekDouble  rvL, NekDouble  rwL,
-            NekDouble  pR,  NekDouble  rhoR,  NekDouble  ruR, NekDouble  rvR, NekDouble  rwR,
+            NekDouble  pL,  NekDouble  rhoL,  NekDouble  uL,  NekDouble  vL,  NekDouble  wL,
+            NekDouble  pR,  NekDouble  rhoR,  NekDouble  uR,  NekDouble  vR,  NekDouble  wR,
             NekDouble  p0L, NekDouble  rho0L, NekDouble  u0L, NekDouble  v0L, NekDouble  w0L,
             NekDouble  p0R, NekDouble  rho0R, NekDouble  u0R, NekDouble  v0R, NekDouble  w0R,
-            NekDouble &pF,  NekDouble &rhoF,  NekDouble &ruF, NekDouble &rvF, NekDouble &rwF);
+            NekDouble &pF,  NekDouble &rhoF,  NekDouble &uF,  NekDouble &vF,  NekDouble &wF);
 };
 
 }

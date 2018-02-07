@@ -755,7 +755,7 @@
       <I PROPERTY="Projection"            VALUE="DisContinuous"       />
       <I PROPERTY="AdvectionType"         VALUE="WeakDG"              />
       <I PROPERTY="TimeIntegrationMethod" VALUE="ClassicalRungeKutta4"/>
-      <I PROPERTY="UpwindType"            VALUE="APEUpwind"              />
+      <I PROPERTY="UpwindType"            VALUE="Upwind"              />
     </SOLVERINFO>
     <PARAMETERS>
       <P> TimeStep      = 0.00002           </P>

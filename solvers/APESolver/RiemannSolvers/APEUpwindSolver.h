@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File: LaxFriedrichsSolver.h
+// File: APEUpwindSolver.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -30,12 +30,12 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Lax-Friedrichs solver for the APE equations.
+// Description: Upwind Riemann solver for the APE equations.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_SOLVERS_APESOLVER_RIEMANNSOLVERS_LAXFRIEDRICHSSOLVER
-#define NEKTAR_SOLVERS_APESOLVER_RIEMANNSOLVERS_LAXFRIEDRICHSSOLVER
+#ifndef NEKTAR_SOLVERS_APESOLVER_RIEMANNSOLVERS_UPWINDSOLVER
+#define NEKTAR_SOLVERS_APESOLVER_RIEMANNSOLVERS_UPWINDSOLVER
 
 #include <SolverUtils/SolverUtilsDeclspec.h>
 #include <APESolver/RiemannSolvers/APESolver.h>
@@ -45,20 +45,18 @@ using namespace Nektar::SolverUtils;
 namespace Nektar
 {
 
-class LaxFriedrichsSolver : public APESolver
+class APEUpwindSolver : public APESolver
 {
     public:
-        static RiemannSolverSharedPtr create(
-            const LibUtilities::SessionReaderSharedPtr& pSession)
+        static RiemannSolverSharedPtr create(const LibUtilities::SessionReaderSharedPtr& pSession)
         {
-            return RiemannSolverSharedPtr(new LaxFriedrichsSolver(pSession));
+            return RiemannSolverSharedPtr(new APEUpwindSolver(pSession));
         }
 
         static std::string solverName;
 
     protected:
-        LaxFriedrichsSolver(
-                const LibUtilities::SessionReaderSharedPtr& pSession);
+        APEUpwindSolver(const LibUtilities::SessionReaderSharedPtr& pSession);
 
         virtual void v_PointSolve(
             NekDouble  pL,  NekDouble  rhoL,  NekDouble  uL,  NekDouble  vL,  NekDouble  wL,
@@ -69,4 +67,5 @@ class LaxFriedrichsSolver : public APESolver
 };
 
 }
+
 #endif

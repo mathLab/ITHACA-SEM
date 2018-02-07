@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File: LEECharacteristicsSolver.cpp
+// File: LEEUpwindSolver.cpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -34,23 +34,23 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <APESolver/RiemannSolvers/LEECharacteristicsSolver.h>
+#include <APESolver/RiemannSolvers/LEEUpwindSolver.h>
 
 using namespace std;
 
 namespace Nektar
 {
 
-std::string LEECharacteristicsSolver::solverName =
+std::string LEEUpwindSolver::solverName =
     SolverUtils::GetRiemannSolverFactory().RegisterCreatorFunction(
-        "LEECharacteristics",
-        LEECharacteristicsSolver::create,
-        "Characteristics Solver for LEE");
+        "LEEUpwind",
+        LEEUpwindSolver::create,
+        "Upwind Solver for LEE");
 
 /**
 *
 */
-LEECharacteristicsSolver::LEECharacteristicsSolver() : LEESolver()
+LEEUpwindSolver::LEEUpwindSolver(const LibUtilities::SessionReaderSharedPtr& pSession) : LEESolver(pSession)
 {
 }
 
@@ -78,7 +78,7 @@ LEECharacteristicsSolver::LEECharacteristicsSolver() : LEESolver()
  * @param rvF    Computed Riemann flux for y perturbation velocity component
  * @param rwF    Computed Riemann flux for z perturbation velocity component
  */
-void LEECharacteristicsSolver::v_PointSolve(
+void LEEUpwindSolver::v_PointSolve(
     NekDouble  pL,  NekDouble  rhoL,  NekDouble  ruL, NekDouble  rvL, NekDouble  rwL,
     NekDouble  pR,  NekDouble  rhoR,  NekDouble  ruR, NekDouble  rvR, NekDouble  rwR,
     NekDouble  p0L, NekDouble  rho0L, NekDouble  u0L, NekDouble  v0L, NekDouble  w0L,

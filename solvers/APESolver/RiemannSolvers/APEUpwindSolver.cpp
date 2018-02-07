@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File: LaxFriedrichsSolver.cpp
+// File: APEUpwindSolver.cpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -30,35 +30,30 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Lax-Friedrichs solver for the APE equations.
+// Description: Upwind Riemann solver for the APE equations.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <APESolver/RiemannSolvers/LaxFriedrichsSolver.h>
+#include <APESolver/RiemannSolvers/APEUpwindSolver.h>
 
 using namespace std;
 
 namespace Nektar
 {
 
-std::string LaxFriedrichsSolver::solverName =
-    SolverUtils::GetRiemannSolverFactory().
-    RegisterCreatorFunction("LaxFriedrichs", LaxFriedrichsSolver::create,
-                            "Lax-Friedrichs Solver");
+std::string APEUpwindSolver::solverName = SolverUtils::GetRiemannSolverFactory().
+                                       RegisterCreatorFunction("APEUpwind", APEUpwindSolver::create,
+                                               "Upwind solver for the APE equation");
 
-
-/**
-*
-*/
-LaxFriedrichsSolver::LaxFriedrichsSolver(
-    const LibUtilities::SessionReaderSharedPtr& pSession) :
+APEUpwindSolver::APEUpwindSolver(const LibUtilities::SessionReaderSharedPtr& pSession) :
     APESolver(pSession)
 {
 
 }
 
+
 /**
- * @brief Lax-Friedrichs Riemann solver
+ * @brief Upwind Riemann solver
  *
  * @param pL     Perturbation pressure left state
  * @param rhoL   Perturbation density left state
@@ -81,13 +76,14 @@ LaxFriedrichsSolver::LaxFriedrichsSolver(
  * @param vF     Computed Riemann flux for y perturbation velocity component
  * @param wF     Computed Riemann flux for z perturbation velocity component
  */
-void LaxFriedrichsSolver::v_PointSolve(
+void APEUpwindSolver::v_PointSolve(
     NekDouble  pL,  NekDouble  rhoL,  NekDouble  uL,  NekDouble  vL,  NekDouble  wL,
     NekDouble  pR,  NekDouble  rhoR,  NekDouble  uR,  NekDouble  vR,  NekDouble  wR,
     NekDouble  p0L, NekDouble  rho0L, NekDouble  u0L, NekDouble  v0L, NekDouble  w0L,
     NekDouble  p0R, NekDouble  rho0R, NekDouble  u0R, NekDouble  v0R, NekDouble  w0R,
     NekDouble &pF,  NekDouble &rhoF,  NekDouble &uF,  NekDouble &vF,  NekDouble &wF)
 {
+    // fetch params
     ASSERTL1(CheckParams("Gamma"), "Gamma not defined.");
     const NekDouble &gamma = m_params["Gamma"]();
 
@@ -95,29 +91,47 @@ void LaxFriedrichsSolver::v_PointSolve(
     NekDouble cL = sqrt(gamma * p0L / rho0L);
     NekDouble cR = sqrt(gamma * p0R / rho0R);
 
-    // max absolute eigenvalue of the jacobian of F_n1
-    NekDouble a_1_max = 0;
-    a_1_max = std::max(a_1_max, std::abs(u0L - cL));
-    a_1_max = std::max(a_1_max, std::abs(u0R - cR));
-    a_1_max = std::max(a_1_max, std::abs(u0L + cL));
-    a_1_max = std::max(a_1_max, std::abs(u0R + cR));
+    Array<OneD, NekDouble> characteristic(4);
+    Array<OneD, NekDouble> W(2);
+    Array<OneD, NekDouble> lambda(2);
 
-    NekDouble pFL = gamma * p0L * uL + pL * u0L;
-    NekDouble uFL = pL / rho0L + u0L * uL + v0L * vL + w0L * wL;
-    NekDouble vFL = 0;
-    NekDouble wFL = 0;
+    // compute the wave speeds
+    lambda[0] = (u0L + u0R) / 2 + (cL + cR) / 2;
+    lambda[1] = (u0L + u0R) / 2 - (cL + cR) / 2;
 
-    NekDouble pFR = gamma * p0R * uR + pR * u0R;
-    NekDouble uFR = pR / rho0R + u0R * uR + v0R * vR + w0R * wR;
-    NekDouble vFR = 0;
-    NekDouble wFR = 0;
+    // calculate the caracteristic variables
+    // left characteristics
+    characteristic[0] = pL / 2 + uL * cL * rho0L / 2;
+    characteristic[1] = pL / 2 - uL * cL * rho0L / 2;
+    // right characteristics
+    characteristic[2] = pR / 2 + uR * cR * rho0R / 2;
+    characteristic[3] = pR / 2 - uR * cR * rho0R / 2;
 
-    // assemble the face-normal fluxes
-    pF = 0.5 * (pFL + pFR - a_1_max * (pR - pL));
-    uF = 0.5 * (uFL + uFR - a_1_max * (uR - uL));
-    vF = 0.5 * (vFL + vFR - a_1_max * (vR - vL));
-    wF = 0.5 * (wFL + wFR - a_1_max * (wR - wL));
+    // take left or right value of characteristic variable
+    for (int j = 0; j < 2; j++)
+    {
+        if (lambda[j] >= 0)
+        {
+            W[j] = characteristic[j];
+        }
+        else
+        {
+            W[j] = characteristic[j + 2];
+        }
+    }
+
+    // calculate conservative variables from characteristics
+    NekDouble p = W[0] + W[1];
+    NekDouble u = (W[0] - W[1]) / (cL * rho0L); // TODO
+
+    // assemble the fluxes
+    pF = gamma * p0L * u + u0L * p; // TODO
+    uF =
+        p / rho0L + u0L * u + v0L * (vL + vR) / 2 + w0L * (wL + wR) / 2; // TODO
+    vF = 0.0;
+    wF = 0.0;
 }
 
 }
+
 

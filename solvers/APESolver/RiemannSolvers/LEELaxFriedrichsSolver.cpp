@@ -50,8 +50,8 @@ std::string LEELaxFriedrichsSolver::solverName =
 /**
 *
 */
-LEELaxFriedrichsSolver::LEELaxFriedrichsSolver() :
-    LEESolver()
+LEELaxFriedrichsSolver::LEELaxFriedrichsSolver(const LibUtilities::SessionReaderSharedPtr& pSession) :
+    LEESolver(pSession)
 {
 
 }

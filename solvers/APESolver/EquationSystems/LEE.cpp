@@ -117,7 +117,17 @@ void LEE::v_InitObject()
     }
 
     string riemName;
-    m_session->LoadSolverInfo("UpwindType", riemName, "LEEUpwind");
+    m_session->LoadSolverInfo("UpwindType", riemName, "Upwind");
+    if (boost::to_lower_copy(riemName) == "characteristics" ||
+        boost::to_lower_copy(riemName) == "leeupwind" ||
+        boost::to_lower_copy(riemName) == "upwind")
+    {
+        riemName = "LEEUpwind";
+    }
+    if (boost::to_lower_copy(riemName) == "laxfriedrichs")
+    {
+        riemName = "LEELaxFriedrichs";
+    }
     m_riemannSolver = SolverUtils::GetRiemannSolverFactory().CreateInstance(
                           riemName);
     m_riemannSolver->SetVector("N",         &LEE::GetNormals,   this);

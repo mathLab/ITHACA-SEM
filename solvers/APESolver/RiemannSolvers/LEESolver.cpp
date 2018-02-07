@@ -44,8 +44,8 @@ namespace Nektar
 /**
 *
 */
-LEESolver::LEESolver() :
-    APESolver()
+LEESolver::LEESolver(const LibUtilities::SessionReaderSharedPtr& pSession) :
+    APESolver(pSession)
 {
     m_requiresRotation = true;
 }

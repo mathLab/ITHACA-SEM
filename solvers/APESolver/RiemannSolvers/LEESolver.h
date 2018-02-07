@@ -38,6 +38,7 @@
 #define NEKTAR_SOLVERS_LEESOLVER_RIEMANNSOLVERS_LEESOLVER
 
 #include <SolverUtils/SolverUtilsDeclspec.h>
+#include <SolverUtils/RiemannSolvers/RiemannSolver.h>
 #include <APESolver/RiemannSolvers/APESolver.h>
 
 using namespace Nektar::SolverUtils;
@@ -48,7 +49,7 @@ namespace Nektar
 class LEESolver : public APESolver
 {
     protected:
-        LEESolver();
+        LEESolver(const LibUtilities::SessionReaderSharedPtr& pSession);
 
         virtual void v_Solve(
             const int                                         nDim,

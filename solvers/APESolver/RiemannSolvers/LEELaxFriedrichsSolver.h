@@ -48,15 +48,15 @@ namespace Nektar
 class LEELaxFriedrichsSolver : public LEESolver
 {
     public:
-        static RiemannSolverSharedPtr create()
+        static RiemannSolverSharedPtr create(const LibUtilities::SessionReaderSharedPtr& pSession)
         {
-            return RiemannSolverSharedPtr(new LEELaxFriedrichsSolver());
+            return RiemannSolverSharedPtr(new LEELaxFriedrichsSolver(pSession));
         }
 
         static std::string solverName;
 
     protected:
-        LEELaxFriedrichsSolver();
+        LEELaxFriedrichsSolver(const LibUtilities::SessionReaderSharedPtr& pSession);
 
         virtual void v_PointSolve(
             NekDouble  pL,  NekDouble  rhoL,  NekDouble  ruL, NekDouble  rvL, NekDouble  rwL,

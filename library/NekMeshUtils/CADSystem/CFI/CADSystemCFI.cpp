@@ -187,7 +187,31 @@ bool CADSystemCFI::LoadCAD()
             {
                 vector<cfi::Oriented<cfi::TopoEntity *>> *edgeList =
                     face->getChildList();
+
+                // unrolling combined edges
+                vector<cfi::Oriented<cfi::TopoEntity *>> fullEdgeList;
                 for (it2 = edgeList->begin(); it2 != edgeList->end(); it2++)
+                {
+                    cfi::Line *edge = static_cast<cfi::Line *>(it2->entity);
+
+                    if (edge->getTopoSubtype() == cfi::SUBTYPE_COMBINED)
+                    {
+                        vector<cfi::Oriented<cfi::TopoEntity *>> *subEdgeList =
+                            edge->getChildList();
+
+                        for (it3 = subEdgeList->begin();
+                             it3 != subEdgeList->end(); it3++)
+                        {
+                            fullEdgeList.push_back(*it3);
+                        }
+                    }
+                    else
+                    {
+                        fullEdgeList.push_back(*it2);
+                    }
+                }
+
+                for (it2 = fullEdgeList.begin(); it2 != fullEdgeList.end(); it2++)
                 {
                     cfi::Oriented<cfi::TopoEntity *> orientatedEdge = *it2;
                     cfi::Line *edge =
@@ -310,6 +334,36 @@ void CADSystemCFI::AddSurf(int i, cfi::Face *in)
     static_pointer_cast<CADSurfCFI>(newSurf)->Initialise(i, in, m_scal);
 
     vector<cfi::Oriented<cfi::TopoEntity *>> *edgeList = in->getChildList();
+
+    // unrolling combined edges
+    vector<cfi::Oriented<cfi::TopoEntity *>> fullEdgeList;
+    vector<cfi::Oriented<cfi::TopoEntity *>>::iterator it2, it3;
+    for (it2 = edgeList->begin(); it2 != edgeList->end(); it2++)
+    {
+        cfi::Line *edge = static_cast<cfi::Line *>(it2->entity);
+
+        if (edge->getTopoSubtype() == cfi::SUBTYPE_COMBINED)
+        {
+            vector<cfi::Oriented<cfi::TopoEntity *>> *subEdgeList =
+                edge->getChildList();
+
+            for (it3 = subEdgeList->begin(); it3 != subEdgeList->end(); it3++)
+            {
+                fullEdgeList.push_back(*it3);
+            }
+
+            if (it2->orientation == cfi::ORIENT_NEGATIVE)
+            {
+                reverse(fullEdgeList.begin() + fullEdgeList.size() -
+                            subEdgeList->size(),
+                        fullEdgeList.end());
+            }
+        }
+        else
+        {
+            fullEdgeList.push_back(*it2);
+        }
+    }
 
     vector<EdgeLoopSharedPtr> edgeloops;
     int done = 0;

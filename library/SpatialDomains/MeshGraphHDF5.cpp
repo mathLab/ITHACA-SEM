@@ -529,6 +529,14 @@ void MeshGraphHDF5::PartitionMesh(LibUtilities::SessionReaderSharedPtr session)
 
     if (m_meshDimension >= 1)
     {
+        // Read curves
+        toRead.clear();
+        for (auto &edge : segIDs)
+        {
+            toRead.insert(edge);
+        }
+        ReadCurveMap(m_curvedEdges, "curve_edge", toRead);
+
         t.Start();
         FillGeomMap(m_segGeoms, m_curvedEdges, segIDs, segData);
         t.Stop();
@@ -537,6 +545,18 @@ void MeshGraphHDF5::PartitionMesh(LibUtilities::SessionReaderSharedPtr session)
 
     if (m_meshDimension >= 2)
     {
+        // Read curves
+        toRead.clear();
+        for (auto &face : triIDs)
+        {
+            toRead.insert(face);
+        }
+        for (auto &face : quadIDs)
+        {
+            toRead.insert(face);
+        }
+        ReadCurveMap(m_curvedFaces, "curve_face", toRead);
+
         t.Start();
         FillGeomMap(m_triGeoms, m_curvedFaces, triIDs, triData);
         FillGeomMap(m_quadGeoms, m_curvedFaces, quadIDs, quadData);
@@ -553,32 +573,6 @@ void MeshGraphHDF5::PartitionMesh(LibUtilities::SessionReaderSharedPtr session)
         FillGeomMap(m_tetGeoms, CurveMap(), tetIDs, tetData);
         t.Stop();
         if (rank == 0) cout << "construct 3D: " << t.TimePerTest(1) << endl;
-    }
-
-    // Finally, read curves.
-    if (m_meshDimension >= 1)
-    {
-        std::unordered_set<int> readIds;
-        for (auto &edge : m_segGeoms)
-        {
-            readIds.insert(edge.first);
-        }
-        ReadCurveMap(m_curvedEdges, "curve_edge", readIds);
-    }
-
-    // Finally, read curves.
-    if (m_meshDimension >= 2)
-    {
-        std::unordered_set<int> readIds;
-        for (auto &face : m_triGeoms)
-        {
-            readIds.insert(face.first);
-        }
-        for (auto &face : m_quadGeoms)
-        {
-            readIds.insert(face.first);
-        }
-        ReadCurveMap(m_curvedFaces, "curve_face", readIds);
     }
 }
 
@@ -706,7 +700,7 @@ void MeshGraphHDF5::FillGeomMap(
             auto cIt = curveMap.find(ids[i]);
             ConstructGeomObject(
                 geomMap, ids[i], &geomData[cnt],
-                cIt == curveMap.end() ? cIt->second : empty);
+                cIt == curveMap.end() ? empty : cIt->second);
         }
     }
     else

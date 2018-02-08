@@ -235,7 +235,9 @@ void MeshGraphHDF5::PartitionMesh(LibUtilities::SessionReaderSharedPtr session)
     m_maps = m_file->OpenGroup("maps");
 
     // Depending on dimension, read element IDs.
-    std::map<int, std::vector<std::tuple<std::string, int, LibUtilities::ShapeType>>> dataSets;
+    std::map<int, std::vector<std::tuple<
+        std::string, int, LibUtilities::ShapeType>>> dataSets;
+
     dataSets[1] = { make_tuple("seg", 2, LibUtilities::eSegment) };
     dataSets[2] = { make_tuple("tri", 3, LibUtilities::eTriangle),
                     make_tuple("quad", 4, LibUtilities::eQuadrilateral) };
@@ -813,13 +815,6 @@ void MeshGraphHDF5::ReadCurveMap(
         ++cnt;
     }
 
-    cout << "READ:";
-    for (int i = 0; i < curveSel.size(); ++i)
-    {
-        cout << " " << curveSel[i];
-    }
-    cout << endl;
-    
     // Now read curve map and read data.
     vector<int> curveInfo;
     curveSpace->SetSelection(curveSel.size() / 2, curveSel);

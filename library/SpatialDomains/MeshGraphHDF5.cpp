@@ -38,7 +38,6 @@
 
 #include <LibUtilities/Communication/CommMpi.h>
 #include <LibUtilities/BasicUtils/ParseUtils.h>
-#include <SpatialDomains/MeshEntities.hpp>
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
@@ -466,13 +465,15 @@ void MeshGraphHDF5::PartitionMesh(LibUtilities::SessionReaderSharedPtr session)
     t.Start();
     UniqueValues(toRead, recvData);
     t.Stop();
-    if (rank == 0) cout << "insert crap: " << t.TimePerTest(1) << endl;
+    if (rank == 0) cout << "insert values: " << t.TimePerTest(1) << endl;
 
     // Since objects are going to be constructed starting from vertices, we now
     // need to recurse down the geometry facet dimensions to figure out which
     // rows to read from each dataset.
-    std::vector<int> vertIDs, segIDs, triIDs, quadIDs, tetIDs, prismIDs, pyrIDs, hexIDs;
-    std::vector<int> segData, triData, quadData, tetData, prismData, pyrData, hexData;
+    std::vector<int> vertIDs, segIDs, triIDs, quadIDs;
+    std::vector<int> tetIDs, prismIDs, pyrIDs, hexIDs;
+    std::vector<int> segData, triData, quadData, tetData;
+    std::vector<int> prismData, pyrData, hexData;
     std::vector<NekDouble> vertData;
 
     if (m_meshDimension == 3)
@@ -518,13 +519,13 @@ void MeshGraphHDF5::PartitionMesh(LibUtilities::SessionReaderSharedPtr session)
     t.Start();
     ReadGeometryData(m_vertSet, "vert", toRead, vertIDs, vertData);
     t.Stop();
-    if (rank == 0) cout << "read 3D: " << t.TimePerTest(1) << endl;
+    if (rank == 0) cout << "read 0D: " << t.TimePerTest(1) << endl;
 
     // Now start to construct geometry objects, starting from vertices upwards.
     t.Start();
     FillGeomMap(m_vertSet, CurveMap(), vertIDs, vertData);
     t.Stop();
-    if (rank == 0) cout << "construct 1D: " << t.TimePerTest(1) << endl;
+    if (rank == 0) cout << "construct 0D: " << t.TimePerTest(1) << endl;
 
     if (m_meshDimension >= 1)
     {
@@ -551,7 +552,33 @@ void MeshGraphHDF5::PartitionMesh(LibUtilities::SessionReaderSharedPtr session)
         FillGeomMap(m_pyrGeoms, CurveMap(), pyrIDs, pyrData);
         FillGeomMap(m_tetGeoms, CurveMap(), tetIDs, tetData);
         t.Stop();
-        if (rank == 0) cout << "construct 1D: " << t.TimePerTest(1) << endl;
+        if (rank == 0) cout << "construct 3D: " << t.TimePerTest(1) << endl;
+    }
+
+    // Finally, read curves.
+    if (m_meshDimension >= 1)
+    {
+        std::unordered_set<int> readIds;
+        for (auto &edge : m_segGeoms)
+        {
+            readIds.insert(edge.first);
+        }
+        ReadCurveMap(m_curvedEdges, "curve_edge", readIds);
+    }
+
+    // Finally, read curves.
+    if (m_meshDimension >= 2)
+    {
+        std::unordered_set<int> readIds;
+        for (auto &face : m_triGeoms)
+        {
+            readIds.insert(face.first);
+        }
+        for (auto &face : m_quadGeoms)
+        {
+            readIds.insert(face.first);
+        }
+        ReadCurveMap(m_curvedFaces, "curve_face", readIds);
     }
 }
 
@@ -748,114 +775,123 @@ void MeshGraphHDF5::ReadGeometryData(
     data->Read(geomData, space, m_readPL);
 }
 
-void MeshGraphHDF5::ReadCurves()
+void MeshGraphHDF5::ReadCurveMap(
+    CurveMap                      &curveMap,
+    std::string                    dsName,
+    const std::unordered_set<int> &readIds)
 {
-    string nmEdge = "curve_edge";
-    string nmFace = "curve_face";
-    string nmNodes = "curve_nodes";
-
-    /*ta[i * 4 + 0] = edgeInfo[i].entityid;
-    data[i * 4 + 1] = edgeInfo[i].npoints;
-    data[i * 4 + 2] = edgeInfo[i].ptype;
-    data[i * 4 + 3] = edgeInfo[i].ptoffset;  */
-
-    H5::DataSetSharedPtr dataEdge = m_mesh->OpenDataSet(nmEdge);
-    H5::DataSpaceSharedPtr spaceEdge = dataEdge->GetSpace();
-    vector<hsize_t> dimsEdge = spaceEdge->GetDims();
-
-    vector<int> rawDataEdge;
-
-    dataEdge->Read(rawDataEdge, spaceEdge);
-
-    H5::DataSetSharedPtr dataFace = m_mesh->OpenDataSet(nmEdge);
-    H5::DataSpaceSharedPtr spaceFace = dataFace->GetSpace();
-    vector<hsize_t> dimsFace = spaceFace->GetDims();
-
-    vector<int> rawDataFace;
-
-    dataEdge->Read(rawDataFace, spaceFace);
-
-    H5::DataSetSharedPtr dataNodes = m_mesh->OpenDataSet(nmNodes);
-    H5::DataSpaceSharedPtr spaceNodes = dataNodes->GetSpace();
-
-    for(int i = 0; i < dimsEdge[0]; i++)
+    // If dataset does not exist, exit.
+    if (!m_mesh->ContainsDataSet(dsName))
     {
-        int numPoints = rawDataEdge[i*4+1];
-        int ptoffset = rawDataEdge[i*4+3];
-        vector<vector<int> > required;
-        for(int j = 0; j < numPoints; j++)
-        {
-            vector<int> x, y, z;
-            x.push_back(ptoffset+j);
-            x.push_back(0);
-            y.push_back(ptoffset+j);
-            y.push_back(1);
-            z.push_back(ptoffset+j);
-            z.push_back(2);
-            required.push_back(x);
-            required.push_back(y);
-            required.push_back(z);
-        }
-
-        int edgeId = rawDataEdge[i*4+0];
-        LibUtilities::PointsType type;
-        type = (LibUtilities::PointsType)rawDataEdge[i*4+2];
-
-        CurveSharedPtr curve =
-            MemoryManager<Curve>::AllocateSharedPtr(edgeId, type);
-
-        vector<NekDouble> points;
-        dataNodes->Read(points, spaceNodes, required);
-
-        for(int j = 0; j < numPoints; j++)
-        {
-            PointGeomSharedPtr vert = MemoryManager<PointGeom>::AllocateSharedPtr
-                (m_meshDimension, i, points[j*3+0], points[j*3+1], points[j*3+2]);
-
-            curve->m_points.push_back(vert);
-        }
-
-        m_curvedEdges[edgeId] = curve;
+        return;
     }
 
-    for(int i = 0; i < dimsFace[0]; i++)
+    // Open up curve map data.
+    H5::DataSetSharedPtr curveData = m_mesh->OpenDataSet(dsName);
+    H5::DataSpaceSharedPtr curveSpace = curveData->GetSpace();
+
+    // Open up ID data set.
+    H5::DataSetSharedPtr idData = m_maps->OpenDataSet(dsName);
+    H5::DataSpaceSharedPtr idSpace = idData->GetSpace();
+
+    // Read all IDs and clear data space.
+    vector<int> ids, newIds;
+    idData->Read(ids, idSpace);
+    curveSpace->ClearRange();
+
+    // Search IDs to figure out which curves to read.
+    vector<hsize_t> curveSel;
+
+    int cnt = 0;
+    for (auto &id : ids)
     {
-        int numPoints = rawDataFace[i*4+1];
-        int ptoffset = rawDataFace[i*4+3];
-        vector<vector<int> > required;
-        for(int j = 0; j < numPoints; j++)
+        if (readIds.find(id) != readIds.end())
         {
-            vector<int> x, y, z;
-            x.push_back(ptoffset+j);
-            x.push_back(0);
-            y.push_back(ptoffset+j);
-            y.push_back(1);
-            z.push_back(ptoffset+j);
-            z.push_back(2);
-            required.push_back(x);
-            required.push_back(y);
-            required.push_back(z);
+            curveSel.push_back(cnt);
+            curveSel.push_back(0);
+            curveSel.push_back(cnt);
+            curveSel.push_back(1);
+            curveSel.push_back(cnt);
+            curveSel.push_back(2);
+            newIds.push_back(id);
         }
 
-        int faceId = rawDataFace[i*4+0];
-        LibUtilities::PointsType type;
-        type = (LibUtilities::PointsType)rawDataFace[i*4+2];
+        ++cnt;
+    }
 
-        CurveSharedPtr curve =
-            MemoryManager<Curve>::AllocateSharedPtr(faceId, type);
+    cout << "READ:";
+    for (int i = 0; i < curveSel.size(); ++i)
+    {
+        cout << " " << curveSel[i];
+    }
+    cout << endl;
+    
+    // Now read curve map and read data.
+    vector<int> curveInfo;
+    curveSpace->SetSelection(curveSel.size() / 2, curveSel);
+    curveData->Read(curveInfo, curveSpace, m_readPL);
 
-        vector<NekDouble> points;
-        dataNodes->Read(points, spaceNodes, required);
+    curveSel.clear();
 
-        for(int j = 0; j < numPoints; j++)
+    std::unordered_map<int, int> curvePtOffset;
+
+    // Construct curves. We'll populate nodes in a minute!
+    for (int i = 0, cnt = 0, cnt2 = 0; i < curveInfo.size() / 3; ++i, cnt += 3)
+    {
+        CurveSharedPtr curve = MemoryManager<Curve>::AllocateSharedPtr(
+            newIds[i], (LibUtilities::PointsType)curveInfo[cnt + 1]);
+
+        curve->m_points.resize(curveInfo[cnt]);
+
+        const int ptOffset = curveInfo[cnt + 2];
+
+        for (int j = 0; j < curveInfo[cnt]; ++j)
         {
-            PointGeomSharedPtr vert = MemoryManager<PointGeom>::AllocateSharedPtr
-                (m_meshDimension, i, points[j*3+0], points[j*3+1], points[j*3+2]);
-
-            curve->m_points.push_back(vert);
+            // ptoffset gives us the row, multiply by 3 for number of
+            // coordinates.
+            curveSel.push_back(ptOffset + j);
+            curveSel.push_back(0);
+            curveSel.push_back(ptOffset + j);
+            curveSel.push_back(1);
+            curveSel.push_back(ptOffset + j);
+            curveSel.push_back(2);
         }
 
-        m_curvedFaces[faceId] = curve;
+        // Store the offset so we know to come back later on to fill in these
+        // points.
+        curvePtOffset[newIds[i]] = 3 * cnt2;
+        cnt2 += curveInfo[cnt];
+
+        curveMap[newIds[i]] = curve;
+    }
+
+    cout << "read " << curveInfo.size() << " " << curveSel.size() << endl;
+
+    curveInfo.clear();
+
+    // Open node data spacee.
+    H5::DataSetSharedPtr nodeData = m_mesh->OpenDataSet("curve_nodes");
+    H5::DataSpaceSharedPtr nodeSpace = nodeData->GetSpace();
+
+    nodeSpace->ClearRange();
+    nodeSpace->SetSelection(curveSel.size() / 2, curveSel);
+
+    vector<NekDouble> nodeRawData;
+    nodeData->Read(nodeRawData, nodeSpace, m_readPL);
+
+    // Go back and populate data from nodes.
+    for (auto &cIt : curvePtOffset)
+    {
+        CurveSharedPtr curve = curveMap[cIt.first];
+
+        // Create nodes.
+        int cnt = cIt.second;
+        for (int i = 0; i < curve->m_points.size(); ++i, cnt += 3)
+        {
+            curve->m_points[i] = MemoryManager<PointGeom>::AllocateSharedPtr(
+                0, m_spaceDimension, nodeRawData[cnt], nodeRawData[cnt+1],
+                nodeRawData[cnt+2]);
+        }
     }
 }
 
@@ -1088,154 +1124,67 @@ void MeshGraphHDF5::WriteGeometryMap(std::map<int, std::shared_ptr<T>> &geomMap,
     dst->Write(idMap, ds);
 }
 
-void MeshGraphHDF5::WriteCurves(CurveMap &edges, CurveMap &faces)
+void MeshGraphHDF5::WriteCurveMap(CurveMap &curves,
+                                  std::string dsName,
+                                  MeshCurvedPts &curvedPts,
+                                  int &ptOffset,
+                                  int &newIdx)
 {
-    if(edges.size() == 0 && faces.size() == 0)
+    vector<int> data, map;
+
+    // Compile curve data.
+    for (auto &c : curves)
     {
-        return;
-    }
+        map.push_back(c.first);
+        data.push_back(c.second->m_points.size());
+        data.push_back(c.second->m_ptype);
+        data.push_back(ptOffset);
 
-    vector<MeshCurvedInfo> edgeInfo;
-    vector<MeshCurvedInfo> faceInfo;
-    MeshCurvedPts curvedPts;
-    curvedPts.id = 0;
-    int ptOffset = 0;
-    int newIdx = 0;
+        ptOffset += c.second->m_points.size();
 
-    for (auto& i : edges)
-    {
-        MeshCurvedInfo cinfo;
-        cinfo.entityid = i.first;
-        cinfo.npoints = i.second->m_points.size();
-        cinfo.ptype = i.second->m_ptype;
-        cinfo.ptid = 0;
-        cinfo.ptoffset = ptOffset;
-
-        edgeInfo.push_back(cinfo);
-
-        for(int j = 0; j < i.second->m_points.size(); j++)
+        for (auto &pt : c.second->m_points)
         {
             MeshVertex v;
             v.id = newIdx;
-            i.second->m_points[j]->GetCoords(v.x,v.y,v.z);
+            pt->GetCoords(v.x, v.y, v.z);
             curvedPts.pts.push_back(v);
-            curvedPts.index.push_back(newIdx);
-            newIdx++;
+            curvedPts.index.push_back(newIdx++);
         }
-        ptOffset += cinfo.npoints;
     }
 
-    for (auto& i : faces)
+    // Write data.
+    vector<hsize_t> dims = { data.size() / 3, 3 };
+    H5::DataTypeSharedPtr tp = H5::DataType::OfObject(data[0]);
+    H5::DataSpaceSharedPtr ds =
+        std::shared_ptr<H5::DataSpace>(new H5::DataSpace(dims));
+    H5::DataSetSharedPtr dst = m_mesh->CreateDataSet(dsName, tp, ds);
+    dst->Write(data, ds);
+
+    tp = H5::DataType::OfObject(map[0]);
+    dims = { map.size() };
+    ds = std::shared_ptr<H5::DataSpace>(new H5::DataSpace(dims));
+    dst = m_maps->CreateDataSet(dsName, tp, ds);
+    dst->Write(map, ds);
+}
+
+void MeshGraphHDF5::WriteCurvePoints(MeshCurvedPts &curvedPts)
+{
+    vector<double> vertData(curvedPts.pts.size() * 3);
+
+    int cnt = 0;
+    for (auto &pt : curvedPts.pts)
     {
-        MeshCurvedInfo cinfo;
-        cinfo.entityid = i.first;
-        cinfo.npoints = i.second->m_points.size();
-        cinfo.ptype = i.second->m_ptype;
-        cinfo.ptid = 0;
-        cinfo.ptoffset = ptOffset;
-
-        faceInfo.push_back(cinfo);
-
-        for(int j = 0; j < i.second->m_points.size(); j++)
-        {
-            MeshVertex v;
-            v.id = newIdx;
-            i.second->m_points[j]->GetCoords(v.x,v.y,v.z);
-            curvedPts.pts.push_back(v);
-            curvedPts.index.push_back(newIdx);
-            newIdx++;
-        }
-        ptOffset += cinfo.npoints;
+        vertData[cnt++] = pt.x;
+        vertData[cnt++] = pt.y;
+        vertData[cnt++] = pt.z;
     }
 
-    if(edgeInfo.size())
-    {
-        vector<int> data(edgeInfo.size() * 3);
-        vector<int> map(edgeInfo.size() * 2);
-        for (int i = 0; i < edgeInfo.size(); i++)
-        {
-            map[i * 2 + 0] = edgeInfo[i].entityid;
-            map[i * 2 + 1] = i;
-            data[i * 3 + 0] = edgeInfo[i].npoints;
-            data[i * 3 + 1] = edgeInfo[i].ptype;
-            data[i * 3 + 2] = edgeInfo[i].ptoffset;
-        }
-        vector<hsize_t> dims;
-        dims.push_back(edgeInfo.size());
-        dims.push_back(3);
-        H5::DataTypeSharedPtr tp = H5::DataType::OfObject(data[0]);
-        H5::DataSpaceSharedPtr ds =
-            std::shared_ptr<H5::DataSpace>(new H5::DataSpace(dims));
-        H5::DataSetSharedPtr dst = m_mesh->CreateDataSet("curve_edge", tp, ds);
-        dst->Write(data, ds);
-
-        tp = H5::DataType::OfObject(map[0]);
-        dims.clear();
-        dims.push_back(edgeInfo.size());
-        dims.push_back(2);
-        ds  = std::shared_ptr<H5::DataSpace>(new H5::DataSpace(dims));
-        dst = m_maps->CreateDataSet("curve_edge", tp, ds);
-        dst->Write(map, ds);
-    }
-
-    if(faceInfo.size())
-    {
-        vector<int> data(faceInfo.size() * 3);
-        vector<int> map(faceInfo.size() * 2);
-        for (int i = 0; i < faceInfo.size(); i++)
-        {
-            map[i * 2 + 0] = faceInfo[i].entityid;
-            map[i * 2 + 1] = i;
-            data[i * 3 + 0] = faceInfo[i].npoints;
-            data[i * 3 + 1] = faceInfo[i].ptype;
-            data[i * 3 + 2] = faceInfo[i].ptoffset;
-        }
-        vector<hsize_t> dims;
-        dims.push_back(faceInfo.size());
-        dims.push_back(3);
-        H5::DataTypeSharedPtr tp = H5::DataType::OfObject(data[0]);
-        H5::DataSpaceSharedPtr ds =
-            std::shared_ptr<H5::DataSpace>(new H5::DataSpace(dims));
-        H5::DataSetSharedPtr dst = m_mesh->CreateDataSet("curve_face", tp, ds);
-        dst->Write(data, ds);
-
-        tp = H5::DataType::OfObject(map[0]);
-        dims.clear();
-        dims.push_back(faceInfo.size());
-        dims.push_back(2);
-        ds  = std::shared_ptr<H5::DataSpace>(new H5::DataSpace(dims));
-        dst = m_maps->CreateDataSet("curve_face", tp, ds);
-        dst->Write(map, ds);
-    }
-
-    if(edgeInfo.size() || faceInfo.size())
-    {
-        vector<double> vertData(curvedPts.pts.size() * m_spaceDimension);
-        for (int i = 0; i < curvedPts.pts.size(); i++)
-        {
-            for (int j = 0; j < m_spaceDimension; j++)
-            {
-                vertData[i * 3 + 0] = curvedPts.pts[i].x;
-                if(m_meshDimension > 1)
-                {
-                    vertData[i * 3 + 1] = curvedPts.pts[i].y;
-                }
-                if(m_meshDimension > 2)
-                {
-                    vertData[i * 3 + 2] = curvedPts.pts[i].z;
-                }
-            }
-        }
-        vector<hsize_t> dims;
-        dims.push_back(curvedPts.pts.size());
-        dims.push_back(m_spaceDimension);
-
-        H5::DataTypeSharedPtr tp = H5::DataType::OfObject(vertData[0]);
-        H5::DataSpaceSharedPtr ds =
-            std::shared_ptr<H5::DataSpace>(new H5::DataSpace(dims));
-        H5::DataSetSharedPtr dst = m_mesh->CreateDataSet("curve_nodes", tp, ds);
-        dst->Write(vertData, ds);
-    }
+    vector<hsize_t> dims = { curvedPts.pts.size(), 3 };
+    H5::DataTypeSharedPtr tp = H5::DataType::OfObject(vertData[0]);
+    H5::DataSpaceSharedPtr ds =
+        std::shared_ptr<H5::DataSpace>(new H5::DataSpace(dims));
+    H5::DataSetSharedPtr dst = m_mesh->CreateDataSet("curve_nodes", tp, ds);
+    dst->Write(vertData, ds);
 }
 
 void MeshGraphHDF5::WriteComposites(CompositeMap &composites)
@@ -1383,7 +1332,15 @@ void MeshGraphHDF5::WriteGeometry(
         WriteGeometryMap(m_prismGeoms, "prism");
         WriteGeometryMap(m_hexGeoms, "hex");
     }
-    WriteCurves(m_curvedEdges, m_curvedFaces);
+
+    // Write curves
+    int ptOffset = 0, newIdx = 0;
+    MeshCurvedPts curvePts;
+    WriteCurveMap(m_curvedEdges, "curve_edge", curvePts, ptOffset, newIdx);
+    WriteCurveMap(m_curvedFaces, "curve_face", curvePts, ptOffset, newIdx);
+    WriteCurvePoints(curvePts);
+
+    // Write composites and domain.
     WriteComposites(m_meshComposites);
     WriteDomain(m_domain);
 }

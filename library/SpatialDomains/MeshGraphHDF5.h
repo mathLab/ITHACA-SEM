@@ -37,8 +37,8 @@
 #ifndef NEKTAR_SPATIALDOMAINS_MGHDF5_H
 #define NEKTAR_SPATIALDOMAINS_MGHDF5_H
 
-#include "MeshGraph.h"
-
+#include <SpatialDomains/MeshEntities.hpp>
+#include <SpatialDomains/MeshGraph.h>
 #include <LibUtilities/BasicUtils/H5.h>
 
 namespace Nektar
@@ -84,7 +84,10 @@ protected:
 
 private:
 
-    void ReadCurves();
+    void ReadCurveMap(
+        CurveMap                      &curveMap,
+        std::string                    dsName,
+        const std::unordered_set<int> &readIds);
     void ReadDomain();
     void ReadComposites();
 
@@ -107,7 +110,13 @@ private:
         std::map<int, std::shared_ptr<T>> &geomMap, int id,
         DataType *data, CurveSharedPtr curve);
 
-    void WriteCurves(CurveMap &edges, CurveMap &faces);
+    void WriteCurveMap(CurveMap &curves,
+                       std::string dsName,
+                       MeshCurvedPts &curvedPts,
+                       int &ptOffset,
+                       int &newIdx);
+    void WriteCurvePoints(MeshCurvedPts &curvedPts);
+
     void WriteComposites(CompositeMap &comps);
     void WriteDomain(vector<CompositeMap> &domain);
 

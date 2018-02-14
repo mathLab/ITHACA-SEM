@@ -4,9 +4,11 @@
 
 #include <NekPyConfig.hpp>
 
+using namespace Nektar;
 using namespace Nektar::LibUtilities;
 
 typedef std::shared_ptr<Points<double> > PointsSharedPtr;
+typedef std::shared_ptr<NekMatrix<NekDouble> > MatrixSharedPtrType;
 
 PointsSharedPtr Points_Create(const PointsKey &pts)
 {
@@ -17,6 +19,18 @@ py::tuple Points_GetZW(PointsSharedPtr pts)
 {
     return py::make_tuple(pts->GetZ(), pts->GetW());
 }
+
+MatrixSharedPtrType Points_GetD(PointsSharedPtr pts) 
+{
+    return pts->GetD();
+}
+
+MatrixSharedPtrType Points_GetD2(PointsSharedPtr pts, 
+    Direction dir)
+{
+    return pts->GetD(dir);
+}
+
 
 /**
  * @brief Points exports.
@@ -51,8 +65,7 @@ void export_Points()
         .def("GetW", &Points<double>::GetZ,
              py::return_value_policy<py::copy_const_reference>())
         .def("GetZW", &Points_GetZW)
-        .def("GetD", &Points<double>::GetD,
-             py::return_value_policy<py::copy_const_reference>(),
-             Points_GetD_overloads(py::args("dir")))
+        .def("GetD", &Points_GetD)
+        .def("GetD", &Points_GetD2)
         ;
 }

@@ -8,6 +8,9 @@ void export_ShapeType();
 template<typename T>
 void export_SharedArray();
 
+template<typename T>
+void export_NekMatrix();
+
 BOOST_PYTHON_FUNCTION_OVERLOADS(Points_GetD_overloads, GetD, 1, 1);
 
 BOOST_PYTHON_MODULE(_LibUtilities)
@@ -19,4 +22,5 @@ BOOST_PYTHON_MODULE(_LibUtilities)
     export_SessionReader();
     export_ShapeType();
     export_SharedArray<double>();
+    export_NekMatrix<double>();
 }

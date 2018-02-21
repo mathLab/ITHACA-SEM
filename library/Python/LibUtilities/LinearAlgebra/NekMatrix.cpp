@@ -57,7 +57,7 @@ struct NekMatrixToPython
             np::from_data(
                 mat->GetRawPtr(), np::dtype::get_builtin<T>(),
                 py::make_tuple(nRows, nCols),
-                py::make_tuple(nRows * sizeof(T), sizeof(T)),
+                py::make_tuple(sizeof(T), nCols * sizeof(T)),
                 capsule).ptr());
     }
 };

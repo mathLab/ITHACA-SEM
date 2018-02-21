@@ -11,7 +11,7 @@ void export_SharedArray();
 template<typename T>
 void export_NekMatrix();
 
-BOOST_PYTHON_FUNCTION_OVERLOADS(Points_GetD_overloads, GetD, 1, 1);
+// BOOST_PYTHON_FUNCTION_OVERLOADS(Points_GetD_overloads, GetD, 1, 1);
 
 BOOST_PYTHON_MODULE(_LibUtilities)
 {

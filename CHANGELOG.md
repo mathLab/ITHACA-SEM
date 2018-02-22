@@ -62,6 +62,7 @@ v5.0.0
 - Add ability to space out 2D BL nodes to better fit local target Delta (!890)
 - Fix automatic peralign call in 2D periodic meshing (!888)
 - Fix BL splitting call from MCF (!910)
+- Order nodes in Gmsh output (!912)
 - Fix manifold face curvature nodes (!913)
 
 **FieldConvert**:

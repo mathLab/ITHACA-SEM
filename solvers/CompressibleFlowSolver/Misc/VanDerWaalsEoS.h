@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File MeshPartitionMetis.h
+// File: VanDerWaalsEoS.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,54 +29,65 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Metis partitioner interface
+// Description: Van der Waals equation of state
 //
 ///////////////////////////////////////////////////////////////////////////////
-#ifndef NEKTAR_LIB_UTILITIES_MESHPARTITIONMETIS_H
-#define NEKTAR_LIB_UTILITIES_MESHPARTITIONMETIS_H
 
-#include "LibUtilities/Memory/NekMemoryManager.hpp"
+#ifndef NEKTAR_SOLVERS_COMPRESSIBLEFLOWSOLVER_MISC_VANDERWAALSEOS
+#define NEKTAR_SOLVERS_COMPRESSIBLEFLOWSOLVER_MISC_VANDERWAALSEOS
 
-#include "MeshPartition.h"
+#include "EquationOfState.h"
 
 namespace Nektar
 {
-namespace LibUtilities
+
+/**
+* @brief van der Waals equation of state:
+ *       p = RT/(1/rho - b) - a * rho^2
+ *       with a = 27/64 * (R*Tc)^2 / Pc
+ *            b = 1/8   * (R*Tc) / Pc
+*/
+class VanDerWaalsEoS : public EquationOfState
 {
+public:
+    friend class MemoryManager<VanDerWaalsEoS>;
 
-    class MeshPartitionMetis : public MeshPartition
+    /// Creates an instance of this class
+    static EquationOfStateSharedPtr create(
+        const LibUtilities::SessionReaderSharedPtr &pSession)
     {
-        public:
-            /// Creates an instance of this class
-            static MeshPartitionSharedPtr create(const SessionReaderSharedPtr& pSession)
-            {
-                return MemoryManager<MeshPartitionMetis>::AllocateSharedPtr(pSession);
-            }
+        EquationOfStateSharedPtr p =
+            MemoryManager<VanDerWaalsEoS>::AllocateSharedPtr(pSession);
+        return p;
+    }
 
-            /// Name of class
-            static std::string className;
-            static std::string cmdSwitch;
+    /// Name of the class
+    static std::string className;
 
-            MeshPartitionMetis(const SessionReaderSharedPtr& pSession);
-            virtual ~MeshPartitionMetis();
+protected:
+    NekDouble m_a;
+    NekDouble m_b;
 
-        private:
-            virtual void PartitionGraphImpl(
-                    int&                              nVerts,
-                    int&                              nVertConds,
-                    Nektar::Array<Nektar::OneD, int>& xadj,
-                    Nektar::Array<Nektar::OneD, int>& adjcy,
-                    Nektar::Array<Nektar::OneD, int>& vertWgt,
-                    Nektar::Array<Nektar::OneD, int>& vertSize,
-                    Nektar::Array<Nektar::OneD, int>& edgeWgt,
-                    int&                              nparts,
-                    int&                              volume,
-                    Nektar::Array<Nektar::OneD, int>& part);
+    virtual NekDouble v_GetTemperature(const NekDouble &rho,
+                                       const NekDouble &e);
 
+    virtual NekDouble v_GetPressure(const NekDouble &rho, const NekDouble &e);
 
-    };
+    virtual NekDouble v_GetEntropy(const NekDouble &rho, const NekDouble &e);
 
-}
+    virtual NekDouble v_GetDPDrho_e(const NekDouble &rho, const NekDouble &e);
+
+    virtual NekDouble v_GetDPDe_rho(const NekDouble &rho, const NekDouble &e);
+
+    virtual NekDouble v_GetEFromRhoP(const NekDouble &rho, const NekDouble &p);
+
+    virtual NekDouble v_GetRhoFromPT(const NekDouble &rho, const NekDouble &p);
+
+private:
+    VanDerWaalsEoS(const LibUtilities::SessionReaderSharedPtr &pSession);
+
+    virtual ~VanDerWaalsEoS(void){};
+};
 }
 
 #endif

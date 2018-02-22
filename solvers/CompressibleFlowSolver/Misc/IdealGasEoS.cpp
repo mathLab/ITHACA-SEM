@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File: PartitionAnalyse.cpp
+// File: IdealGasEoS.cpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,69 +29,76 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Small utility to export histogram of partition sizes.
+// Description: Ideal gas equation of state
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <LibUtilities/BasicUtils/SessionReader.h>
-#include <LibUtilities/BasicUtils/MeshPartition.h>
-#include <LibUtilities/Communication/CommSerial.h>
-
-#include <iostream>
+#include "IdealGasEoS.h"
 
 using namespace std;
-using namespace Nektar;
-using namespace Nektar::LibUtilities;
 
-class FauxComm : public CommSerial
+namespace Nektar
 {
-public:
-    FauxComm(int argc, char* argv[], int size)
-        : CommSerial(argc, argv)
-    {
-        m_size = size;
-        m_type = "Faux parallel";
-    }
-    FauxComm(int size) : CommSerial(0, NULL)
-    {
-        m_size = size;
-        m_type = "Faux parallel";
-    }
-    virtual ~FauxComm() {}
-    void v_SplitComm(int pRows, int pColumns)
-    {
-        m_commRow    = std::shared_ptr<FauxComm>(new FauxComm(pColumns));
-        m_commColumn = std::shared_ptr<FauxComm>(new FauxComm(pRows));
-    }
-};
 
-int main(int argc, char *argv[])
+std::string IdealGasEoS::className = GetEquationOfStateFactory().
+    RegisterCreatorFunction("IdealGas",
+                            IdealGasEoS::create,
+                            "Ideal gas equation of state.");
+
+IdealGasEoS::IdealGasEoS(const LibUtilities::SessionReaderSharedPtr& pSession)
+    : EquationOfState(pSession)
 {
-    if (argc < 3)
-    {
-        cerr << "Usage: PartitionAnalyse <nproc> <xml file1> [xml file 2..n]"
-             << endl;
-        return 1;
-    }
 
-    int nParts = atoi(argv[1]);
-    vector<string> filenames(argv + 2, argv + argc);
-    
-    CommSharedPtr vComm = std::shared_ptr<FauxComm>(
-        new FauxComm(argc, argv, nParts));
-
-    char **new_argv = new char*[argc];
-    new_argv[0] = strdup("PartitionAnalyse");
-    new_argv[1] = strdup("--part-info");
-    for (int i = 0; i < argc-2; ++i)
-    {
-        new_argv[i+2] = strdup(filenames[i].c_str());
-    }
-
-    LibUtilities::SessionReaderSharedPtr vSession
-        = LibUtilities::SessionReader::CreateInstance(
-            argc, new_argv, filenames, vComm);
-
-    return 0;
 }
 
+NekDouble IdealGasEoS::v_GetTemperature(
+    const NekDouble &rho, const NekDouble &e)
+{
+    return e*(m_gamma-1)/m_gasConstant;
+}
+
+NekDouble IdealGasEoS::v_GetPressure(
+    const NekDouble &rho, const NekDouble &e)
+{
+    return rho*e*(m_gamma-1);
+}
+
+NekDouble IdealGasEoS::v_GetSoundSpeed(
+    const NekDouble &rho, const NekDouble &e)
+{
+    NekDouble T = GetTemperature(rho,e);
+    return sqrt(m_gamma * m_gasConstant * T);
+}
+
+NekDouble IdealGasEoS::v_GetEntropy(
+    const NekDouble &rho, const NekDouble &e)
+{
+    NekDouble T = GetTemperature(rho,e);
+    return m_gasConstant/(m_gamma-1) * log(T) - m_gasConstant * log(rho);
+}
+
+NekDouble IdealGasEoS::v_GetDPDrho_e(
+    const NekDouble &rho, const NekDouble &e)
+{
+    return e*(m_gamma-1);
+}
+
+NekDouble IdealGasEoS::v_GetDPDe_rho(
+    const NekDouble &rho, const NekDouble &e)
+{
+    return rho*(m_gamma-1);
+}
+
+NekDouble IdealGasEoS::v_GetEFromRhoP(
+            const NekDouble &rho, const NekDouble &p)
+{
+    return p / (rho * (m_gamma-1));
+}
+
+NekDouble IdealGasEoS::v_GetRhoFromPT(
+            const NekDouble &p, const NekDouble &T)
+{
+    return p/(m_gasConstant*T);
+}
+
+}

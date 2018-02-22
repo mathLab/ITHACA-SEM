@@ -164,47 +164,13 @@ int main(int argc, char* argv[])
 
     MeshSharedPtr mesh = std::shared_ptr<Mesh>(new Mesh());
 
-    // add provenance information to mesh
-    map<string, string> metadata;
-    // Nektar++ release version from VERSION file
-    metadata["NektarVersion"] = string(NEKTAR_VERSION);
-    // Date/time stamp
-    auto now = std::chrono::system_clock::now();
-    auto now_t = std::chrono::system_clock::to_time_t(now);
-    auto now_tm = *std::localtime(&now_t);
-    char buffer[128];
-    strftime(buffer, sizeof(buffer), "%d-%b-%Y %H:%M:%S", &now_tm);
-    metadata["Timestamp"] = buffer;
-    // Hostname
-    boost::system::error_code ec;
-    metadata["Hostname"] = ip::host_name(ec);
-    // Git information
-    // If built from a distributed package, do not include this
-    Nektar::LibUtilities::GitConsts gc = Nektar::LibUtilities::GitConsts();
-    if (gc.GetSha1() != "GITDIR-NOTFOUND")
-    {
-        metadata["GitSHA1"]   = gc.GetSha1();
-        metadata["GitBranch"] = gc.GetBranch();
-    }
-
-    mesh->m_infotag = new TiXmlElement("METADATA");
-
+    // Add provenance information to mesh.
     stringstream ss;
     for(int i = 1; i < argc; i++)
     {
         ss << argv[i] << " ";
     }
-    metadata["CommandString"] = ss.str();
-
-    TiXmlElement *provTag = new TiXmlElement("PROVENANCE");
-    for (auto &infoit : metadata)
-    {
-        TiXmlElement *e = new TiXmlElement(infoit.first);
-        e->LinkEndChild(new TiXmlText(infoit.second));
-        provTag->LinkEndChild(e);
-    }
-    mesh->m_infotag->LinkEndChild(provTag);
-
+    mesh->m_metadata["NekMeshCommandLine"] = ss.str();
 
     vector<ModuleSharedPtr> modules;
     vector<string>          modcmds;

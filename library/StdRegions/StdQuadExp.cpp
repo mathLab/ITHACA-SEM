@@ -1074,7 +1074,7 @@ namespace Nektar
                             maparray[i] = nummodes0+i+2;
                         }
 
-                        if(edgeOrient==eForwards)
+                        if(edgeOrient==eBackwards)
                         {
                             for(i = 1; i < nEdgeIntCoeffs; i+=2)
                             {
@@ -1090,7 +1090,7 @@ namespace Nektar
                             maparray[i] = (i+2)*nummodes0;
                         }
 
-                        if(edgeOrient==eForwards)
+                        if(edgeOrient==eBackwards)
                         {
                             for(i = 1; i < nEdgeIntCoeffs; i+=2)
                             {
@@ -1128,7 +1128,7 @@ namespace Nektar
                     {
                         for(i = 0; i < nEdgeIntCoeffs; i++)
                         {
-                            maparray[i] = nummodes0*nummodes1 - 2 - i;
+                            maparray[i] = nummodes0*(nummodes1-1) + i + 1;
                         }
                     }
                     break;
@@ -1136,7 +1136,7 @@ namespace Nektar
                     {
                         for(i = 0; i < nEdgeIntCoeffs; i++)
                         {
-                            maparray[i] = nummodes0*(nummodes1-2-i);
+                            maparray[i] = nummodes0 * (i+1);
                         }
                     }
                     break;
@@ -1255,7 +1255,7 @@ namespace Nektar
                             maparray[i] = order0+i;
                         }
 
-                        if (edgeOrient == eForwards)
+                        if (edgeOrient == eBackwards)
                         {
                             swap(maparray[0], maparray[1]);
 
@@ -1273,7 +1273,7 @@ namespace Nektar
                             maparray[i] = i*order0;
                         }
 
-                        if (edgeOrient == eForwards)
+                        if (edgeOrient == eBackwards)
                         {
                             swap(maparray[0], maparray[1]);
 
@@ -1314,7 +1314,7 @@ namespace Nektar
                     {
                         for (i = 0; i < P; i++)
                         {
-                            maparray[i] = order0*order1 - 1 - i;
+                            maparray[i] = order0*(order1-1) + i;
                         }
                     }
                     break;
@@ -1322,7 +1322,7 @@ namespace Nektar
                     {
                         for (i = 0; i < P; i++)
                         {
-                            maparray[i] = order0*(order1-1-i);
+                            maparray[i] = order0*i;
                         }
                     }
                     break;
@@ -1581,7 +1581,6 @@ namespace Nektar
             }
             else if(mkey.ConstFactorExists(eFactorSVVDGKerDiffCoeff)) // Rodrigo/mansoor's DG kernel
             {
-                NekDouble cutoff = mkey.GetConstFactor(eFactorSVVCutoffRatio); 
                 NekDouble  SvvDiffCoeff  =
                     mkey.GetConstFactor(eFactorSVVDGKerDiffCoeff)*
                     mkey.GetConstFactor(eFactorSVVDiffCoeff);

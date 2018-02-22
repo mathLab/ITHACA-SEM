@@ -1233,7 +1233,59 @@ namespace Nektar
         // Mappings
         //--------------------------
 
-        /**
+        void StdTetExp::v_GetEdgeToElementMap(
+            const int                  eid,
+            const Orientation          edgeOrient,
+            Array<OneD, unsigned int>& maparray,
+            Array<OneD,          int>& signarray,
+            int                        P)
+        {
+            ASSERTL2(eid >= 0 && eid < 6, "Invalid edge");
+            ASSERTL2(v_IsBoundaryInteriorExpansion(),
+                     "Method only implemented for Modified_A BasisType (x "
+                     "direction), Modified_B BasisType (y direction), and "
+                     "Modified_C BasisType(z direction)");
+
+            int edgeVerts[6][2] = {{0,1},{1,2},{0,2},{0,3},{1,3},{2,3}};
+            int nEdgeModes = v_GetEdgeNcoeffs(eid);
+
+            if (maparray.num_elements() != nEdgeModes)
+            {
+                maparray  = Array<OneD, unsigned int>(nEdgeModes);
+            }
+
+            if (signarray.num_elements() != nEdgeModes)
+            {
+                signarray = Array<OneD, int>(nEdgeModes, 1.0);
+            }
+
+            if (edgeOrient == StdRegions::eForwards)
+            {
+                maparray[0] = v_GetVertexMap(edgeVerts[eid][0]);
+                maparray[1] = v_GetVertexMap(edgeVerts[eid][1]);
+            }
+            else if (edgeOrient == StdRegions::eBackwards)
+            {
+                maparray[0] = v_GetVertexMap(edgeVerts[eid][1]);
+                maparray[1] = v_GetVertexMap(edgeVerts[eid][0]);
+            }
+            else
+            {
+                ASSERTL2(false, "Unsupported edge orientation");
+            }
+
+            Array<OneD, unsigned int> tmp1(nEdgeModes-2);
+            Array<OneD,          int> tmp2(nEdgeModes-2);
+            v_GetEdgeInteriorMap(eid, edgeOrient, tmp1, tmp2);
+
+            for (int i = 0; i < nEdgeModes-2; ++i)
+            {
+                maparray[i+2] = tmp1[i];
+                signarray[i+2] = tmp2[i];
+            }
+        }
+
+       /**
          * Maps Expansion2D modes of a 2D face to the corresponding expansion
          * modes.
          */
@@ -2094,7 +2146,6 @@ namespace Nektar
             }
             else if(mkey.ConstFactorExists(eFactorSVVDGKerDiffCoeff))  // Rodrigo/Mansoor's DG Kernel
             {
-                NekDouble cutoff = mkey.GetConstFactor(eFactorSVVCutoffRatio); 
                 NekDouble  SvvDiffCoeff  =
                     mkey.GetConstFactor(eFactorSVVDGKerDiffCoeff)*
                     mkey.GetConstFactor(eFactorSVVDiffCoeff);

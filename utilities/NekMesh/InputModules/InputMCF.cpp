@@ -71,6 +71,7 @@ void InputMCF::ParseFile(string nm)
     filename.push_back(nm);
     LibUtilities::SessionReaderSharedPtr pSession =
         LibUtilities::SessionReader::CreateInstance(0, NULL, filename);
+    pSession->InitSession();
 
     ASSERTL0(pSession->DefinesElement("NEKTAR/MESHING"), "no meshing tag");
     ASSERTL0(pSession->DefinesElement("NEKTAR/MESHING/INFORMATION"),
@@ -79,10 +80,11 @@ void InputMCF::ParseFile(string nm)
              "no parameters tag");
 
     TiXmlElement *mcf = pSession->GetElement("NEKTAR/MESHING");
-    TiXmlNode *clone = mcf->Clone();
 
-    //save meshing tag to end of file
-    m_mesh->m_infotag->LinkEndChild(clone);
+    // Save MESHING tag as provenance information.
+    std::stringstream ss;
+    ss << *mcf;
+    m_mesh->m_metadata["XML_NekMeshMCF"] = ss.str();
 
     TiXmlElement *info = mcf->FirstChildElement("INFORMATION");
     TiXmlElement *I    = info->FirstChildElement("I");
@@ -256,6 +258,10 @@ void InputMCF::ParseFile(string nm)
         {
             m_spaceoutbl = false;
         }
+    }
+    else
+    {
+        m_splitBL = false;
     }
 
     m_naca = false;

@@ -59,9 +59,10 @@ namespace Nektar
      * \param
      */
     VelocityCorrectionScheme::VelocityCorrectionScheme(
-            const LibUtilities::SessionReaderSharedPtr& pSession)
-        : UnsteadySystem(pSession),
-          IncNavierStokes(pSession),
+        const LibUtilities::SessionReaderSharedPtr& pSession,
+        const SpatialDomains::MeshGraphSharedPtr &pGraph)
+        : UnsteadySystem(pSession, pGraph),
+          IncNavierStokes(pSession, pGraph),
           m_varCoeffLap(StdRegions::NullVarCoeffMap)
     {
         
@@ -696,13 +697,13 @@ namespace Nektar
                              *(exp3D->GetGeom3D()->GetEdge(i)->GetVertex(1))));
                 }
 
-                NekDouble p;
+                int p = 0;
                 for(int i = 0; i < 3; ++i)
                 {
-                    p = max(p,exp3D->GetBasisNumModes(i)-1.0);
+                    p = max(p,exp3D->GetBasisNumModes(i)-1);
                 }
                 
-                diffcoeff[e] *= h/p; 
+                diffcoeff[e] *= h/p;
             }
         }
         else
@@ -719,13 +720,13 @@ namespace Nektar
                              *(exp2D->GetGeom2D()->GetEdge(i)->GetVertex(1))));
                 }
 
-                NekDouble p;
+                int p = 0;
                 for(int i = 0; i < 2; ++i)
                 {
-                    p = max(p,exp2D->GetBasisNumModes(i)-1.0);
+                    p = max(p,exp2D->GetBasisNumModes(i)-1);
                 }
                 
-                diffcoeff[e] *= h/p; 
+                diffcoeff[e] *= h/p;
             }
         }
     }

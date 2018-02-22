@@ -216,7 +216,7 @@ namespace Nektar
                                 edgeDirMap.insert(meshEdgeId);
                             }
                         }
-                        meshFaceId = bndCondFaceExp->as<LocalRegions::Expansion2D>()->GetGeom2D()->GetFid();
+                        meshFaceId = bndCondFaceExp->as<LocalRegions::Expansion2D>()->GetGeom2D()->GetGlobalID();
                         faceDirMap.insert(meshFaceId);
                     }
                 }
@@ -1545,16 +1545,13 @@ namespace Nektar
             ////////////////////////
             
             const int nFaces = 5;
-            //quad-edge connectivity base-face0, vertical-quadface2,
-            //vertical-quadface4
-            const int quadEdgeConnectivity[][4] = { {0,1,2,3}, {1,6,8,5}, {3,7,8,4}}; 
-            const bool   isQuadEdgeFlipped[][4] = { {0,0,1,1}, {0,0,1,1}, {0,0,1,1}};
+            //quad-edge connectivity base-face0, vertical-quadface2, vertical-quadface4
+            const int quadEdgeConnectivity[][4] = { {0,1,2,3}, {1,6,8,5}, {3,7,8,4} }; 
             // QuadId ordered as 0, 1, 2, otherwise return false
             const int                  quadId[] = { 0,-1,1,-1,2 }; 
             
             //triangle-edge connectivity side-triface-1, side triface-3 
             const int  triEdgeConnectivity[][3] = { {0,5,4}, {2,6,7} };
-            const bool    isTriEdgeFlipped[][3] = { {0,0,1}, {0,0,1} };
             // TriId ordered as 0, 1, otherwise return false
             const int                   triId[] = { -1,0,-1,1,-1 }; 
             
@@ -1564,29 +1561,22 @@ namespace Nektar
                 if(f == 1 || f == 3) {
                     int i = triId[f];
                     SpatialDomains::SegGeomSharedPtr edgeArray[3];
-		    StdRegions::Orientation eorientArray[3];
                     for(int j = 0; j < 3; ++j){
                         edgeArray[j] = edges[triEdgeConnectivity[i][j]];
-                        eorientArray[j] = isTriEdgeFlipped[i][j] ?
-                            StdRegions::eBackwards : StdRegions::eForwards;
                     }
-                    faces[f] = MemoryManager<SpatialDomains::TriGeom>::AllocateSharedPtr(f, edgeArray, eorientArray);
+                    faces[f] = MemoryManager<SpatialDomains::TriGeom>::AllocateSharedPtr(f, edgeArray);
                 }            
                 else {
                     int i = quadId[f];
                     SpatialDomains::SegGeomSharedPtr edgeArray[4];
-		    StdRegions::Orientation eorientArray[4]; 
                     for(int j=0; j < 4; ++j){
                         edgeArray[j] = edges[quadEdgeConnectivity[i][j]];
-                        eorientArray[j] = isQuadEdgeFlipped[i][j] ? StdRegions::eBackwards : StdRegions::eForwards;
                     }
-                    faces[f] = MemoryManager<SpatialDomains::QuadGeom>::AllocateSharedPtr(f, edgeArray, eorientArray);
+                    faces[f] = MemoryManager<SpatialDomains::QuadGeom>::AllocateSharedPtr(f, edgeArray);
                 }
             } 
             
-            SpatialDomains::PrismGeomSharedPtr geom = MemoryManager<SpatialDomains::PrismGeom>::AllocateSharedPtr(faces);
-
-            geom->SetOwnData();
+            SpatialDomains::PrismGeomSharedPtr geom = MemoryManager<SpatialDomains::PrismGeom>::AllocateSharedPtr(0, faces);
 
             return geom;
         }
@@ -1749,33 +1739,25 @@ namespace Nektar
             const int edgeConnectivity[][3] = {
                 {0,1,2}, {0,4,3}, {1,5,4}, {2,5,3}
             };
-            const bool isEdgeFlipped[][3] = {
-                {0,0,1}, {0,0,1}, {0,0,1}, {0,0,1}
-            };
             
             // Populate the list of faces
             SpatialDomains::TriGeomSharedPtr faces[nFaces];
             for(i=0; i < nFaces; ++i)
             {
                 SpatialDomains::SegGeomSharedPtr edgeArray[3];
-                StdRegions::Orientation eorientArray[3];
                 for(j=0; j < 3; ++j)
                 {
                     edgeArray[j] = edges[edgeConnectivity[i][j]];
-                    eorientArray[j] = isEdgeFlipped[i][j] ? 
-                        StdRegions::eBackwards : StdRegions::eForwards;
                 }
                 
                 
                 faces[i] = MemoryManager<SpatialDomains::TriGeom>
-                    ::AllocateSharedPtr(i, edgeArray, eorientArray);
+                    ::AllocateSharedPtr(i, edgeArray);
             }
             
             SpatialDomains::TetGeomSharedPtr geom =
                 MemoryManager<SpatialDomains::TetGeom>::AllocateSharedPtr
-                (faces);
-            
-            geom->SetOwnData();
+                (0, faces);
 
             return geom;
         }
@@ -1837,31 +1819,21 @@ namespace Nektar
                 {0,1,2,3}, {0,5,8,4}, {1,6,9,5},
                 {2,7,10,6}, {3,7,11,4}, {8,9,10,11}
             };
-            const bool isEdgeFlipped[][4] = {
-                {0,0,0,1}, {0,0,1,1}, {0,0,1,1},
-                {0,0,1,1}, {0,0,1,1}, {0,0,0,1}
-            };
 
             // Populate the list of faces
             SpatialDomains::QuadGeomSharedPtr faces[nFaces];
             for( int i = 0; i < nFaces; ++i ) {
                 SpatialDomains::SegGeomSharedPtr edgeArray[4];
-                StdRegions::Orientation eorientArray[4];
                 for( int j = 0; j < 4; ++j ) {
                     edgeArray[j]    = edges[edgeConnectivity[i][j]];
-                    eorientArray[j] = isEdgeFlipped[i][j] ? 
-                        StdRegions::eBackwards : StdRegions::eForwards;
                 }
-                faces[i] = MemoryManager<SpatialDomains::QuadGeom>::AllocateSharedPtr(i, edgeArray,
-                                                                                      eorientArray);
+                faces[i] = MemoryManager<SpatialDomains::QuadGeom>::AllocateSharedPtr(i, edgeArray);
             }
 
             SpatialDomains::HexGeomSharedPtr geom =
                 MemoryManager<SpatialDomains::HexGeom>::AllocateSharedPtr
-                (faces);
+                (0, faces);
             
-            geom->SetOwnData();
-
             return geom;
         }
 

@@ -51,10 +51,11 @@ class DriverModifiedArnoldi: public DriverArnoldi
 
         /// Creates an instance of this class
         static DriverSharedPtr create(
-                const LibUtilities::SessionReaderSharedPtr& pSession)
+            const LibUtilities::SessionReaderSharedPtr& pSession,
+            const SpatialDomains::MeshGraphSharedPtr& pGraph)
         {
             DriverSharedPtr p = MemoryManager<DriverModifiedArnoldi>
-                                            ::AllocateSharedPtr(pSession);
+                ::AllocateSharedPtr(pSession, pGraph);
             p->InitObject();
             return p;
         }
@@ -65,7 +66,9 @@ class DriverModifiedArnoldi: public DriverArnoldi
     protected:
 
         /// Constructor
-        DriverModifiedArnoldi(const LibUtilities::SessionReaderSharedPtr pSession);
+        DriverModifiedArnoldi(
+            const LibUtilities::SessionReaderSharedPtr pSession,
+            const SpatialDomains::MeshGraphSharedPtr pGraph);
 
         /// Destructor
         virtual ~DriverModifiedArnoldi();

@@ -334,7 +334,7 @@ SpatialDomains::Geometry2DSharedPtr Face::GetGeom(int coordDim)
             }
 
             ret = MemoryManager<SpatialDomains::TriGeom>::AllocateSharedPtr(
-                m_id, edges, edgeo, c);
+                m_id, edges, c);
         }
         else
         {
@@ -399,7 +399,7 @@ SpatialDomains::Geometry2DSharedPtr Face::GetGeom(int coordDim)
 
             ret =
                 MemoryManager<SpatialDomains::QuadGeom>::AllocateSharedPtr(
-                    m_id, edges, edgeo, c);
+                    m_id, edges, c);
         }
     }
     else
@@ -407,16 +407,17 @@ SpatialDomains::Geometry2DSharedPtr Face::GetGeom(int coordDim)
         if (nEdge == 3)
         {
             ret = MemoryManager<SpatialDomains::TriGeom>::AllocateSharedPtr(
-                m_id, edges, edgeo);
+                m_id, edges);
         }
         else
         {
             ret =
                 MemoryManager<SpatialDomains::QuadGeom>::AllocateSharedPtr(
-                    m_id, edges, edgeo);
+                    m_id, edges);
         }
     }
 
+    ret->Setup();
     return ret;
 }
 

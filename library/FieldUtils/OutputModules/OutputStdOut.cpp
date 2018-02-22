@@ -38,7 +38,6 @@
 using namespace std;
 
 #include "OutputStdOut.h"
-#include <LibUtilities/BasicUtils/MeshPartition.h>
 #include <boost/format.hpp>
 
 namespace Nektar

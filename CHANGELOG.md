@@ -14,7 +14,7 @@ v5.0.0
   functionality in FUNCTIONs defined for forcings (!759)
 - Add patch to tinyxml to fix size_t vs int bug (!820)
 - Add ARPACK thirdparty build capabilities (!828)
-- Added native support for csv files in addititon to pts (!760 !835)
+- Added native support for csv files in addititon to pts (!760, !835, !906)
 - Utilize LAPACK_DIR env variable to find the native blas/lapack install (!827)
 - Remove StdExpansion use from MultiRegion (use Expansions instead). (!831)
 - Move steady state check and CFL output from solvers to SolverUtils (!832)
@@ -35,6 +35,8 @@ v5.0.0
 - Fix error from (!826) (!876)
 - Fix minor bug in ARPACK thirdparty build cmake (!874)
 - Added in sum factorisation version for pyramid expnasions and orthogonal expansion in pyramids (!750)
+- Switch MeshGraph to use factory pattern and add HDF5 geometry support (!900,
+  !904)
 
 **NekMesh**:
 - Add feature to read basic 2D geo files as CAD (!731)
@@ -60,6 +62,7 @@ v5.0.0
 - Skip CFI groups of bodies and non-numbered nodes (!891)
 - Add ability to space out 2D BL nodes to better fit local target Delta (!890)
 - Fix automatic peralign call in 2D periodic meshing (!888)
+- Fix BL splitting call from MCF (!910)
 
 **FieldConvert**:
 - Add input module for Semtex field files (!777)
@@ -71,13 +74,13 @@ v5.0.0
 - Enable output to multiple files (!844)
 - Allow using xml file without expansion tag in FieldConvert (!849)
 - Add Lambda 2 vortex detection criteria (!882)
-- Add module for calculating new field from existing ones (!889)
+- Add module for modifying/adding fields from expressions (!889, !903)
 - Add module for evaluating the mean of variables on the domain (!894)
 
 **IncNavierStokesSolver**
 - Replace steady-state check based on difference of norms by check based on
   norm of the difference, to be consistent with the compressible solver (!832)
-- Updated SVV to allow for the DGKernel extension (!851) 
+- Updated SVV to allow for the DGKernel extension (!851)
 
 **CompressibleFlowSolver**
 - Add 3D regression tests (!567)
@@ -85,6 +88,7 @@ v5.0.0
 - Allow performing axi-symmetric Euler simulations (!771)
 - Add ability to use an exponential filtering for stabilization with
   seg, quad and hex elements (!771, !862)
+- Introduce equations of state to account for real gas effects (!880)
 
 **APESolver:**
 - Added two new boundary conditions to the APE system: RiemannInvariantBC
@@ -99,9 +103,13 @@ v4.4.2
 - Fix evaluation of points (e.g. HistoryPoints, Interpolation to pts) close to
   the interface of two elements (!836)
 - Fix deadlock in Hdf5 with homogeneous expansions (!858)
+- Fix a few memory leaks in polylib (!863)
 - Fix a crash when Interpolator is called on an empty field (!869)
 - Fix petsc compile without MPI (!873)
+- Fix calculation of BLPoints (!892)
+- Fix deadlock in DiffusionLDG (!885)
 - Fix uninitialised coefficients in DirectFull solver (!898)
+- Updated PETSc to 3.7.7 (!916)
 
 **NekMesh**
 - Fix missing periodic boundary meshing and boundary layer mesh adjustment
@@ -111,6 +119,7 @@ v4.4.2
 **Documentation**:
 - Fix sign of the viscous term in the velocity correction scheme equations in
   the user guide (!856)
+- Fixed anonymous clone URL (!909)
 
 **FieldConvert**
 - Allow passing input name with trailing separator (!879)
@@ -145,6 +154,7 @@ v4.4.1
 - Added regression tests for IMEXOrder1, IMEXOrder2, IMEXOrder3, MCNAB,
   IMEXGear, CNAB, 2nd order IMEX-DIRK, 3rd order IMEX-DIRK (!854)
 - Fix bug due to subtractive cancellation in polylib routines (!778)
+
 
 **FieldConvert:**
 - Fix issue with field ordering in the interppointdatatofld module (!754)

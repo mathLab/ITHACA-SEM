@@ -51,10 +51,11 @@ namespace Nektar
 
     // Creates an instance of this class
     static SolverUtils::EquationSystemSharedPtr create(
-            const LibUtilities::SessionReaderSharedPtr& pSession)
+        const LibUtilities::SessionReaderSharedPtr& pSession,
+        const SpatialDomains::MeshGraphSharedPtr& pGraph)
     {
       SolverUtils::EquationSystemSharedPtr p =
-            MemoryManager<NavierStokesCFE>::AllocateSharedPtr(pSession);
+          MemoryManager<NavierStokesCFE>::AllocateSharedPtr(pSession, pGraph);
       p->InitObject();
       return p;
     }
@@ -64,7 +65,14 @@ namespace Nektar
     virtual ~NavierStokesCFE();
 
   protected:
-    NavierStokesCFE(const LibUtilities::SessionReaderSharedPtr& pSession);
+    std::string                         m_ViscosityType;
+    NekDouble                           m_mu;
+    NekDouble                           m_thermalConductivity;
+    NekDouble                           m_Cp;
+    NekDouble                           m_Prandtl;
+
+    NavierStokesCFE(const LibUtilities::SessionReaderSharedPtr& pSession,
+                    const SpatialDomains::MeshGraphSharedPtr& pGraph);
 
     virtual void v_InitObject();
 

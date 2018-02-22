@@ -87,12 +87,8 @@ namespace Nektar
                 Array<OneD, NekDouble>& pInput);
 
             virtual DNekScalMatSharedPtr
-<<<<<<< HEAD
                 v_TransformedSchurCompl(int n, int offset,
-                                        const boost::shared_ptr<DNekScalMat > &loc_mat);
-=======
-                v_TransformedSchurCompl(int offset, const std::shared_ptr<DNekScalMat > &loc_mat);
->>>>>>> master
+                                        const std::shared_ptr<DNekScalMat > &loc_mat);
 
             virtual void v_DoPreconditioner(                
                       const Array<OneD, NekDouble>& pInput,

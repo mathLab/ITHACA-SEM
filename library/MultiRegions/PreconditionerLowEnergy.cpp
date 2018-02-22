@@ -124,8 +124,8 @@ namespace Nektar
             std::shared_ptr<MultiRegions::ExpList> 
                 expList=((m_linsys.lock())->GetLocMat()).lock();
             LocalRegions::ExpansionSharedPtr locExpansion;
-            GlobalLinSysKey m_linSysKey=(m_linsys.lock())->GetKey();
-            StdRegions::VarCoeffMap vVarCoeffMap;
+            GlobalLinSysKey linSysKey=(m_linsys.lock())->GetKey();
+
             int i, j, k;
             int nVerts, nEdges,nFaces; 
             int eid, fid, n, cnt, nmodes, nedgemodes, nfacemodes;
@@ -181,14 +181,9 @@ namespace Nektar
             Array<OneD, int> globaloffset(1 + nNonDirEdgeIDs + nNonDirFaceIDs,0);
 
             const Array<OneD, const ExpListSharedPtr>& bndCondExp = expList->GetBndCondExpansions();
-<<<<<<< HEAD
-            StdRegions::StdExpansion2DSharedPtr bndCondFaceExp;
-            const Array<OneD, const SpatialDomains::BoundaryConditionShPtr>&
-                bndConditions = expList->GetBndConditions();
-=======
             LocalRegions::Expansion2DSharedPtr bndCondFaceExp;
-            const Array<OneD, const SpatialDomains::BoundaryConditionShPtr>& bndConditions = expList->GetBndConditions();
->>>>>>> master
+            const Array<OneD, const SpatialDomains::BoundaryConditionShPtr>& 
+		bndConditions = expList->GetBndConditions();
 
             int meshVertId;
             int meshEdgeId;
@@ -360,12 +355,7 @@ namespace Nektar
                                 continue;
                             }
                             
-<<<<<<< HEAD
-                            int meshEdgeId2 = pIt->second[i].id;
-=======
                             int meshEdgeId2 = pIt.second[i].id;
-                            
->>>>>>> master
                             if(edgeDirMap.count(meshEdgeId2)==0)
                             {
                                 if(uniqueEdgeMap.count(meshEdgeId2)!=0)
@@ -801,19 +791,13 @@ namespace Nektar
                             MemoryManager<DNekMat>::AllocateSharedPtr
                             (nfacemodes,nfacemodes,zero,storage);
                         
-<<<<<<< HEAD
-                        
-                        if(faceDirMap.count(meshFaceId)==0)
-=======
-                        auto pIt = periodicFaces.find(meshFaceId);
-                        if (pIt != periodicFaces.end())
->>>>>>> master
+                        if(faceDirMap.count(meshFaceId) == 0)
                         {
                             Array<OneD, unsigned int> facemodearray;
                             StdRegions::Orientation faceOrient =
                                 locExpansion->GetForient(fid);
                             
-                            pIt = periodicFaces.find(meshFaceId);
+                            auto pIt = periodicFaces.find(meshFaceId);
                             if (pIt != periodicFaces.end())
                             {
                                 if(meshFaceId == min(meshFaceId, pIt->second[0].id))
@@ -965,7 +949,6 @@ namespace Nektar
 	}
         
 
-<<<<<<< HEAD
         /**
          * Set a block transformation matrices for each element type. These are
          * needed in routines that transform the schur complement matrix to and
@@ -973,7 +956,7 @@ namespace Nektar
          */
         void PreconditionerLowEnergy::SetupBlockTransformationMatrix(void)
         {
-            boost::shared_ptr<MultiRegions::ExpList> 
+            std::shared_ptr<MultiRegions::ExpList> 
                 expList=((m_linsys.lock())->GetLocMat()).lock();
             StdRegions::StdExpansionSharedPtr locExp;
             StdRegions::StdExpansionSharedPtr locExpSav;
@@ -997,53 +980,6 @@ namespace Nektar
             int n_exp=expList->GetNumElmts();
 
             MatrixStorage blkmatStorage = eDIAGONAL;
-=======
-       /**
-        * Set a block transformation matrices for each element type. These are
-        * needed in routines that transform the schur complement matrix to and
-        * from the low energy basis.
-        */
-       void PreconditionerLowEnergy::SetupBlockTransformationMatrix()
-       {
-           std::shared_ptr<MultiRegions::ExpList> 
-               expList=((m_linsys.lock())->GetLocMat()).lock();
-           LocalRegions::ExpansionSharedPtr locExpansion;
-
-           int n, nel;
- 
-           const Array<OneD,const unsigned int>& nbdry_size
-               = m_locToGloMap->GetNumLocalBndCoeffsPerPatch();
-
-           int n_exp=expList->GetNumElmts();
-
-           //maps for different element types
-           map<LibUtilities::ShapeType,DNekScalMatSharedPtr> transmatrixmap;
-           map<LibUtilities::ShapeType,DNekScalMatSharedPtr> transposedtransmatrixmap;
-           map<LibUtilities::ShapeType,DNekScalMatSharedPtr> invtransmatrixmap;
-           map<LibUtilities::ShapeType,DNekScalMatSharedPtr> invtransposedtransmatrixmap;
-
-           //Transformation matrix map
-           transmatrixmap[LibUtilities::eTetrahedron]=m_Rtet;
-           transmatrixmap[LibUtilities::ePrism]=m_Rprism;
-           transmatrixmap[LibUtilities::eHexahedron]=m_Rhex;
-
-           //Transposed transformation matrix map
-           transposedtransmatrixmap[LibUtilities::eTetrahedron]=m_RTtet;
-           transposedtransmatrixmap[LibUtilities::ePrism]=m_RTprism;
-           transposedtransmatrixmap[LibUtilities::eHexahedron]=m_RThex;
-
-           //Inverse transfomation map
-           invtransmatrixmap[LibUtilities::eTetrahedron]=m_Rinvtet;
-           invtransmatrixmap[LibUtilities::ePrism]=m_Rinvprism;
-           invtransmatrixmap[LibUtilities::eHexahedron]=m_Rinvhex;
-
-           //Inverse transposed transformation map
-           invtransposedtransmatrixmap[LibUtilities::eTetrahedron]=m_RTinvtet;
-           invtransposedtransmatrixmap[LibUtilities::ePrism]=m_RTinvprism;
-           invtransposedtransmatrixmap[LibUtilities::eHexahedron]=m_RTinvhex;
-
-           MatrixStorage blkmatStorage = eDIAGONAL;
->>>>>>> master
            
             //Variants of R matrices required for low energy preconditioning
             m_RBlk      = MemoryManager<DNekBlkMat>
@@ -1274,14 +1210,8 @@ namespace Nektar
             //Block  transformation matrix
             DNekBlkMat &R = *m_RBlk;
 
-<<<<<<< HEAD
-            NekVector<NekDouble> V_GlobHomBnd(nGlobHomBndDofs,
-                                              pInOut+nDirBndDofs,
-                                              eWrapper);
-=======
             Array<OneD, NekDouble> tmpOffset = pInOut + nDirBndDofs;
             NekVector<NekDouble> V_GlobHomBnd(nGlobHomBndDofs, tmpOffset, eWrapper);
->>>>>>> master
 
             Array<OneD, NekDouble> pLocalIn(nLocBndDofs, 0.0);
             NekVector<NekDouble> V_LocBnd(nLocBndDofs,pLocalIn,eWrapper);
@@ -1440,31 +1370,20 @@ namespace Nektar
          * i.e. \f$\mathbf{S}_{2}=\mathbf{R}\mathbf{S}_{1}\mathbf{R}^{T}\f$
          */     
         DNekScalMatSharedPtr PreconditionerLowEnergy::
-<<<<<<< HEAD
         v_TransformedSchurCompl( int n,
                                  int bndoffset,
-                                 const boost::shared_ptr<DNekScalMat > &loc_mat)
-=======
-        v_TransformedSchurCompl(
-            int offset, 
-            const std::shared_ptr<DNekScalMat > &loc_mat)
->>>>>>> master
+                                 const std::shared_ptr<DNekScalMat > &loc_mat)
 	{
             std::shared_ptr<MultiRegions::ExpList> 
                 expList=((m_linsys.lock())->GetLocMat()).lock();
          
-<<<<<<< HEAD
-            StdRegions::StdExpansionSharedPtr locExpansion;                
-            locExpansion = expList->GetExp(n);
-=======
             LocalRegions::ExpansionSharedPtr locExpansion;                
-            locExpansion = expList->GetExp(offset);
+            locExpansion = expList->GetExp(n);
             unsigned int nbnd=locExpansion->NumBndryCoeffs();
->>>>>>> master
 
-            int nbnd=locExpansion->NumBndryCoeffs();
             MatrixStorage storage = eFULL;
-            DNekMatSharedPtr pS2 = MemoryManager<DNekMat>::AllocateSharedPtr(nbnd,nbnd,0.0,storage);
+            DNekMatSharedPtr pS2 = MemoryManager<DNekMat>::
+                AllocateSharedPtr(nbnd,nbnd,0.0,storage);
             
             //transformation matrices
             DNekMat &R = (*m_RBlk->GetBlock(n,n));
@@ -1959,21 +1878,13 @@ namespace Nektar
                  map<ShapeType, Array<OneD, unsigned int> >        &vertMapMaxR,
                  map<ShapeType, Array<OneD, Array<OneD, unsigned int> > > &edgeMapMaxR)
         {
-<<<<<<< HEAD
-            boost::shared_ptr<MultiRegions::ExpList> 
-                expList=((m_linsys.lock())->GetLocMat()).lock();
-            GlobalLinSysKey linSysKey=(m_linsys.lock())->GetKey();
-=======
+
             int cnt,i,j;
             std::shared_ptr<MultiRegions::ExpList> 
                 expList=((m_linsys.lock())->GetLocMat()).lock();
-            GlobalLinSysKey m_linSysKey=(m_linsys.lock())->GetKey();
-            StdRegions::VarCoeffMap vVarCoeffMap;
-            LocalRegions::ExpansionSharedPtr locExpansion;
-            locExpansion = expList->GetExp(0);
->>>>>>> master
+            GlobalLinSysKey linSysKey=(m_linsys.lock())->GetKey();
 
-            StdRegions::StdExpansionSharedPtr locExp;
+            LocalRegions::ExpansionSharedPtr locExp;
 
             // face maps for pyramid and hybrid meshes - not need to return. 
             map<ShapeType, Array<OneD, Array<OneD, unsigned int> > > faceMapMaxR;
@@ -1981,9 +1892,9 @@ namespace Nektar
             /* Determine the maximum expansion order for all elements */
             int nummodesmax = 0; 
             Array<OneD, int> Shapes(LibUtilities::SIZE_ShapeType,0);
+
             for(int n = 0; n < expList->GetNumElmts(); ++n)
             {
-<<<<<<< HEAD
                 locExp = expList->GetExp(n);
 
                 nummodesmax = max(nummodesmax, locExp->GetBasisNumModes(0));
@@ -1991,13 +1902,6 @@ namespace Nektar
                 nummodesmax = max(nummodesmax, locExp->GetBasisNumModes(2));
 
                 Shapes[locExp->DetShapeType()] = 1;
-=======
-                cnt = expList->GetPhys_Offset(0);
-                for (auto &x : m_linSysKey.GetVarCoeffs())
-                {
-                    vVarCoeffMap[x.first] = x.second + cnt;
-                }
->>>>>>> master
             }
 
 

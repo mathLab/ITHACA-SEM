@@ -63,6 +63,8 @@ v5.0.0
 - Fix automatic peralign call in 2D periodic meshing (!888)
 - Fix BL splitting call from MCF (!910)
 - Support CFI combined lines (!917)
+- Order nodes in Gmsh output (!912)
+- Fix manifold face curvature nodes (!913)
 
 **FieldConvert**:
 - Add input module for Semtex field files (!777)

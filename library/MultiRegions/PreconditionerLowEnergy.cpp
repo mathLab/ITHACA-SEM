@@ -1630,12 +1630,9 @@ namespace Nektar
             const int nFaces = 5;
             //quad-edge connectivity base-face0,
             const int quadEdgeConnectivity[][4] = {{0,1,2,3}}; 
-            const bool   isQuadEdgeFlipped[][4] = {{0,0,0,0}};
-
             
             //triangle-edge connectivity side-triface-1, side triface-2
             const int  triEdgeConnectivity[][3] = { {0,5,4}, {1,6,5}, {2,7,6}, {3,4,7}};
-            const bool    isTriEdgeFlipped[][3] = { {0,0,1}, {0,0,1}, {0,0,1}, {0,0,1} };
 
             // Populate the list of faces  
             SpatialDomains::Geometry2DSharedPtr faces[nFaces]; 
@@ -1644,36 +1641,26 @@ namespace Nektar
                 if(f == 0)
                 {
                     SpatialDomains::SegGeomSharedPtr edgeArray[4];
-		    StdRegions::Orientation          eorientArray[4]; 
-
                     for(int j=0; j < 4; ++j)
                     {
                         edgeArray[j] = edges[quadEdgeConnectivity[f][j]];
-                        eorientArray[j] = isQuadEdgeFlipped[f][j] ? StdRegions::eBackwards :
-                            StdRegions::eForwards;
                     }
 
-                    faces[f] = MemoryManager<SpatialDomains::QuadGeom>::AllocateSharedPtr(f,
-                                                                           edgeArray, eorientArray);
+                    faces[f] = MemoryManager<SpatialDomains::QuadGeom>::AllocateSharedPtr(f,edgeArray);
                 }            
                 else {
                     int i = f-1;
                     SpatialDomains::SegGeomSharedPtr edgeArray[3];
-		    StdRegions::Orientation eorientArray[3];
                     for(int j = 0; j < 3; ++j)
                     {
                         edgeArray[j] = edges[triEdgeConnectivity[i][j]];
-                        eorientArray[j] = isTriEdgeFlipped[i][j] ? StdRegions::eBackwards :
-                            StdRegions::eForwards;
                     }
-                    faces[f] = MemoryManager<SpatialDomains::TriGeom>::AllocateSharedPtr(f,
-                                                                            edgeArray, eorientArray);
+                    faces[f] = MemoryManager<SpatialDomains::TriGeom>::AllocateSharedPtr(f, edgeArray);
                 }
             } 
             
-            SpatialDomains::PyrGeomSharedPtr geom = MemoryManager<SpatialDomains::PyrGeom>::AllocateSharedPtr(faces);
-
-            geom->SetOwnData();
+            SpatialDomains::PyrGeomSharedPtr geom =
+                MemoryManager<SpatialDomains::PyrGeom>::AllocateSharedPtr(0,faces);
 
             return geom;
         }
@@ -1851,7 +1838,6 @@ namespace Nektar
                  map<ShapeType, Array<OneD, Array<OneD, unsigned int> > > &edgeMapMaxR)
         {
 
-            int cnt,i,j;
             std::shared_ptr<MultiRegions::ExpList> 
                 expList=((m_linsys.lock())->GetLocMat()).lock();
             GlobalLinSysKey linSysKey=(m_linsys.lock())->GetKey();

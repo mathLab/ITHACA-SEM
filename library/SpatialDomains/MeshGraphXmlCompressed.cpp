@@ -1333,7 +1333,7 @@ void MeshGraphXmlCompressed::WriteCurves(TiXmlElement *geomTag, CurveMap &edges,
         cinfo.ptid = 0;
         cinfo.ptoffset = ptOffset;
 
-        edgeInfo.push_back(cinfo);
+        faceInfo.push_back(cinfo);
 
         for(int j = 0; j < i.second->m_points.size(); j++)
         {

@@ -63,6 +63,7 @@ v5.0.0
 - Fix automatic peralign call in 2D periodic meshing (!888)
 - Fix BL splitting call from MCF (!910)
 - Order nodes in Gmsh output (!912)
+- Fix manifold face curvature nodes (!913)
 
 **FieldConvert**:
 - Add input module for Semtex field files (!777)
@@ -109,6 +110,7 @@ v4.4.2
 - Fix calculation of BLPoints (!892)
 - Fix deadlock in DiffusionLDG (!885)
 - Fix uninitialised coefficients in DirectFull solver (!898)
+- Updated PETSc to 3.7.7 (!916)
 
 **NekMesh**
 - Fix missing periodic boundary meshing and boundary layer mesh adjustment
@@ -118,6 +120,7 @@ v4.4.2
 **Documentation**:
 - Fix sign of the viscous term in the velocity correction scheme equations in
   the user guide (!856)
+- Fixed anonymous clone URL (!909)
 
 **FieldConvert**
 - Allow passing input name with trailing separator (!879)

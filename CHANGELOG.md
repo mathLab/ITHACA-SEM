@@ -37,7 +37,8 @@ v5.0.0
 - Added in sum factorisation version for pyramid expnasions and orthogonal expansion in pyramids (!750)
 - Switch MeshGraph to use factory pattern and add HDF5 geometry support (!900,
   !904)
-
+- Restructure the low energy preconditioner to handle pyramidic and variable p expansions (!920)
+	
 **NekMesh**:
 - Add feature to read basic 2D geo files as CAD (!731)
 - Add periodic boundary condition meshing in 2D (!733)

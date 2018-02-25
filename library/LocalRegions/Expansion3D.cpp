@@ -1942,31 +1942,37 @@ namespace Nektar
             {
             case LibUtilities::eTriangle:
                 {
-                    facemaparray= Array<OneD, unsigned int>(LibUtilities::StdTriData::getNumberOfCoefficients(P1-3,P2-3));                    
-                    int cnt = 0;
-                    int cnt1 = 0; 
-                    for(n = 0; n < P1-3; ++n)
+                    if(((P1-3)>0)&&((P2-3)>0))
                     {
-                        for(int m = 0; m < P2-3-n; ++m, ++cnt)
+                        facemaparray= Array<OneD, unsigned int>(LibUtilities::StdTriData::getNumberOfCoefficients(P1-3,P2-3));                    
+                        int cnt = 0;
+                        int cnt1 = 0; 
+                        for(n = 0; n < P1-3; ++n)
                         {
-                            facemaparray[cnt] = reversemap[maparray[cnt1+m]];
+                            for(int m = 0; m < P2-3-n; ++m, ++cnt)
+                            {
+                                facemaparray[cnt] = reversemap[maparray[cnt1+m]];
+                            }
+                            cnt1 += locP2-3-n;
                         }
-                        cnt1 += locP2-3-n;
                     }
                 }
             break;
             case LibUtilities::eQuadrilateral:
                 {
-                    facemaparray = Array<OneD, unsigned int>(LibUtilities::StdQuadData::getNumberOfCoefficients(P1-2,P2-2));                    
-                    int cnt = 0;
-                    int cnt1 = 0; 
-                    for(n = 0; n < P2-2; ++n)
+                    if(((P1-2)>0)&&((P2-2)>0))
                     {
-                        for(int m = 0; m < P1-2; ++m, ++cnt)
+                        facemaparray = Array<OneD, unsigned int>(LibUtilities::StdQuadData::getNumberOfCoefficients(P1-2,P2-2));                    
+                        int cnt = 0;
+                        int cnt1 = 0; 
+                        for(n = 0; n < P2-2; ++n)
                         {
-                            facemaparray[cnt] = reversemap[maparray[cnt1+m]];
+                            for(int m = 0; m < P1-2; ++m, ++cnt)
+                            {
+                                facemaparray[cnt] = reversemap[maparray[cnt1+m]];
+                            }
+                            cnt1 += locP1-2;
                         }
-                        cnt1 += locP1-2;
                     }
                 }
                 break;

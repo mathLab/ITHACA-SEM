@@ -317,7 +317,7 @@
         <DOMAIN> C[10-13] </DOMAIN>
     </GEOMETRY>
     <EXPANSIONS>
-        <E COMPOSITE="C[10]" NUMMODES="4" FIELDS="u,v,w,p" TYPE="MODIFIED" />
+        <E COMPOSITE="C[10]" NUMMODES="3" FIELDS="u,v,w,p" TYPE="MODIFIED" />
         <E COMPOSITE="C[11]" NUMMODES="6" FIELDS="u,v,w,p" TYPE="MODIFIED" />
         <E COMPOSITE="C[12]" NUMMODES="4" FIELDS="u,v,w,p" TYPE="MODIFIED" />
         <E COMPOSITE="C[13]" NUMMODES="5" FIELDS="u,v,w,p" TYPE="MODIFIED" />

@@ -374,11 +374,11 @@ void MeshPartition::ReadExpansions()
 	    {
                 for (int j = 0; j < fieldName.size(); j++)
                 {
-                    for (int k = 0; k < compMap[i]->m_geomVec.size(); k++)
+                    for (int k = 0; k < compMap[composite[i]]->m_geomVec.size(); k++)
                     {
-                        int elid = compMap[i]->m_geomVec[k]->GetGlobalID();
+                        int elid = compMap[composite[i]]->m_geomVec[k]->GetGlobalID();
                         m_expansions[elid][fieldName[j]] = nummodes;
-                        m_shape[elid] = compMap[i]->m_geomVec[k]->GetShapeType();
+                        m_shape[elid] = compMap[composite[i]]->m_geomVec[k]->GetShapeType();
                     }
                 }
             }

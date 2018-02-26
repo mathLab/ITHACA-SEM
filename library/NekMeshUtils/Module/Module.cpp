@@ -859,7 +859,7 @@ void Module::RegisterConfig(string key, string val)
         {
             it->second.value = it->second.defValue;
         }
-        else 
+        else
         {
             it->second.value = val;
         }

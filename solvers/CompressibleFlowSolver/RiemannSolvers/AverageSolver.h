@@ -43,16 +43,17 @@ namespace Nektar
     class AverageSolver : public CompressibleSolver
     {
     public:
-        static RiemannSolverSharedPtr create()
+        static RiemannSolverSharedPtr create(
+            const LibUtilities::SessionReaderSharedPtr& pSession)
         {
             return RiemannSolverSharedPtr(
-                new AverageSolver());
+                new AverageSolver(pSession));
         }
         
         static std::string solverName;
         
     protected:
-        AverageSolver();
+        AverageSolver(const LibUtilities::SessionReaderSharedPtr& pSession);
         
         virtual void v_ArraySolve(
             const Array<OneD, const Array<OneD, NekDouble> > &Fwd,

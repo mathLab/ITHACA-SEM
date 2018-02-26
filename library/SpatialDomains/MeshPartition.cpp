@@ -369,15 +369,16 @@ void MeshPartition::ReadExpansions()
             // construct mapping (elmt id, field name) -> nummodes
             map<int, CompositeSharedPtr> &compMap =
                 m_meshgraph->GetComposites();
-            for (auto &i : compMap)
-            {
+
+	    for (int i = 0; i < composite.size(); ++i)
+	    {
                 for (int j = 0; j < fieldName.size(); j++)
                 {
-                    for (int k = 0; k < i.second->m_geomVec.size(); k++)
+                    for (int k = 0; k < compMap[i]->m_geomVec.size(); k++)
                     {
-                        int elid = i.second->m_geomVec[k]->GetGlobalID();
+                        int elid = compMap[i]->m_geomVec[k]->GetGlobalID();
                         m_expansions[elid][fieldName[j]] = nummodes;
-                        m_shape[elid] = i.second->m_geomVec[k]->GetShapeType();
+                        m_shape[elid] = compMap[i]->m_geomVec[k]->GetShapeType();
                     }
                 }
             }

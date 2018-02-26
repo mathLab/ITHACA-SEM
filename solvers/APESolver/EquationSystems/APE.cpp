@@ -169,7 +169,7 @@ void APE::v_InitObject()
     string riemName;
     m_session->LoadSolverInfo("UpwindType", riemName, "APEUpwind");
     m_riemannSolver = SolverUtils::GetRiemannSolverFactory().CreateInstance(
-                          riemName);
+                          riemName, m_session);
     m_riemannSolver->SetVector("N",         &APE::GetNormals,   this);
     m_riemannSolver->SetVector("basefield", &APE::GetBfTrace,   this);
     m_riemannSolver->SetAuxVec("vecLocs",   &APE::GetVecLocs,   this);

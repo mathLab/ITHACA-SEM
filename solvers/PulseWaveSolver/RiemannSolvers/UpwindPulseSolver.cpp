@@ -41,7 +41,9 @@ std::string UpwindPulseSolver::solverName =
     SolverUtils::GetRiemannSolverFactory().RegisterCreatorFunction(
         "UpwindPulse", UpwindPulseSolver::create, "UpwindPulseSolver");
 
-UpwindPulseSolver::UpwindPulseSolver() : RiemannSolver()
+UpwindPulseSolver::UpwindPulseSolver(
+    const LibUtilities::SessionReaderSharedPtr& pSession)
+    : RiemannSolver(pSession)
 {
 }
 

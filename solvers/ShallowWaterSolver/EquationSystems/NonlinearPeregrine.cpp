@@ -139,7 +139,7 @@ void NonlinearPeregrine::v_InitObject()
 
             m_riemannSolver =
                     SolverUtils::GetRiemannSolverFactory().CreateInstance(
-                            riemName);
+                            riemName, m_session);
 
             // Setting up parameters for advection operator Riemann solver
             m_riemannSolver->SetParam("gravity",

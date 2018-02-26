@@ -44,16 +44,18 @@ namespace Nektar
     class LinearAverageSolver : public LinearSWESolver
     {
     public:
-        static RiemannSolverSharedPtr create()
+        static RiemannSolverSharedPtr create(
+            const LibUtilities::SessionReaderSharedPtr& pSession)
         {
             return RiemannSolverSharedPtr(
-                new LinearAverageSolver());
+                new LinearAverageSolver(pSession));
         }
         
         static std::string solverName;
         
     protected:
-        LinearAverageSolver();
+        LinearAverageSolver(
+                const LibUtilities::SessionReaderSharedPtr& pSession);
         
         virtual void v_PointSolve(
 				  double  etaL, double  uL, double  vL, double dL,

@@ -82,9 +82,6 @@ void PressureInflowFileBC::v_Apply(
     const Array<OneD, const int> &traceBndMap
         = m_fields[0]->GetTraceBndMap();
 
-    NekDouble gammaMinusOne    = m_gamma - 1.0;
-    NekDouble gammaMinusOneInv = 1.0 / gammaMinusOne;
-
     // Computing the normal velocity for characteristics coming
     // from inside the computational domain
     Array<OneD, NekDouble > Vn (nTracePts, 0.0);
@@ -105,7 +102,7 @@ void PressureInflowFileBC::v_Apply(
     Array<OneD, NekDouble > soundSpeed(nTracePts);
 
     m_varConv->GetPressure(Fwd, pressure);
-    m_varConv->GetSoundSpeed(Fwd, pressure, soundSpeed);
+    m_varConv->GetSoundSpeed(Fwd, soundSpeed);
 
     // Get Mach
     Array<OneD, NekDouble > Mach(nTracePts, 0.0);
@@ -125,6 +122,12 @@ void PressureInflowFileBC::v_Apply(
         id1 = m_fields[0]->GetBndCondExpansions()[m_bcRegion]->
         GetPhys_Offset(e);
         id2 = m_fields[0]->GetTrace()->GetPhys_Offset(traceBndMap[m_offset+e]);
+
+        // Get internal energy
+        Array<OneD, NekDouble> tmpPressure (npts, pressure+id2);
+        Array<OneD, NekDouble> rho         (npts, Fwd[0]+id2);
+        Array<OneD, NekDouble> e(npts);
+        m_varConv->GetEFromRhoP(rho, tmpPressure, e);
 
         // Loop on points of m_bcRegion 'e'
         for (i = 0; i < npts; i++)
@@ -149,7 +152,8 @@ void PressureInflowFileBC::v_Apply(
                                  m_fieldStorage[j][id1+i]) /
                                     m_fieldStorage[0][id1+i];
                 }
-                rhoeb = gammaMinusOneInv * pressure[pnt] + Ek;
+
+                rhoeb = Fwd[0][pnt] * e[i] + Ek;
 
                 (m_fields[nVariables-1]->GetBndCondExpansions()[m_bcRegion]->
                  UpdatePhys())[id1+i] = rhoeb;

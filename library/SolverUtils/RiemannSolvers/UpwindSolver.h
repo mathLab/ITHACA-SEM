@@ -46,16 +46,18 @@ namespace Nektar
         class UpwindSolver : public RiemannSolver
         {
         public:
-            SOLVER_UTILS_EXPORT static RiemannSolverSharedPtr create()
+            SOLVER_UTILS_EXPORT static RiemannSolverSharedPtr create(
+                const LibUtilities::SessionReaderSharedPtr& pSession)
             {
                 return RiemannSolverSharedPtr(
-                    new UpwindSolver());
+                    new UpwindSolver(pSession));
             }
             
             static std::string solverName;
             
         protected:
-            UpwindSolver();
+            UpwindSolver(
+                    const LibUtilities::SessionReaderSharedPtr& pSession);
             
             virtual void v_Solve(
                 const int                                         nDim,

@@ -63,8 +63,9 @@ namespace Nektar
         /**
          * @brief Default constructor.
          */
-        UpwindSolver::UpwindSolver() :
-            RiemannSolver()
+        UpwindSolver::UpwindSolver(
+            const LibUtilities::SessionReaderSharedPtr& pSession)
+            : RiemannSolver(pSession)
         {
         }
         

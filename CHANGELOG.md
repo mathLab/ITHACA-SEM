@@ -34,6 +34,7 @@ v5.0.0
 - Fix mac OSX on buildbots (!876)
 - Fix error from (!826) (!876)
 - Fix minor bug in ARPACK thirdparty build cmake (!874)
+- Remove requirement for modmetis, switch to SCOTCH by default (!899)
 - Switch MeshGraph to use factory pattern and add HDF5 geometry support
   (!900, !904)
 - Fix bug in MeshPartition.cpp which caused incorrect array access when

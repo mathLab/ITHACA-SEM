@@ -10,6 +10,13 @@ using namespace Nektar::LibUtilities;
 typedef std::shared_ptr<Points<double> > PointsSharedPtr;
 typedef std::shared_ptr<NekMatrix<NekDouble> > MatrixSharedPtrType;
 
+// DocString: foo
+/**
+ * @brief Foo doc
+ * @param i an integer
+ * @return something
+ *
+ */
 PointsSharedPtr Points_Create(const PointsKey &pts)
 {
     return PointsManager()[pts];
@@ -61,7 +68,7 @@ void export_Points()
                    "Points", 
                    "docstring", 
                    py::no_init)
-        .def("Create", &Points_Create)
+        .def("Create", &Points_Create, "@DocString(foo)")
         .staticmethod("Create")
 
         .def("Initialise", &Points<double>::Initialize)

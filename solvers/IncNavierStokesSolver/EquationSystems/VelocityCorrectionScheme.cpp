@@ -199,7 +199,7 @@ namespace Nektar
         const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &bcs =
             m_fields[0]->GetBndConditions();
 
-        char *forces[] = { "X", "Y", "Z" };
+        std::string forces[] = { "X", "Y", "Z" };
         Array<OneD, NekDouble> flowrateForce(m_spacedim);
 
         for (int i = 0; i < m_spacedim; ++i)
@@ -323,7 +323,7 @@ namespace Nektar
 
             for (int i = 0; i < m_spacedim; ++i)
             {
-                m_fields[i]->ExtractElmtToBndPhys(
+                m_fields[i]->ExtractPhysToBnd(
                     m_flowrateBndID, inarray[i], boundary[i]);
             }
 
@@ -341,6 +341,7 @@ namespace Nektar
         }
         else if (m_HomogeneousType == eHomogeneous1D)
         {
+            // Remaining homogeneous processors that do not contain boundary.
             m_comm->GetColumnComm()->AllReduce(
                 flowrate, LibUtilities::ReduceSum);
         }
@@ -354,10 +355,13 @@ namespace Nektar
 
     bool VelocityCorrectionScheme::v_PostIntegrate(int step)
     {
-        if (m_comm->GetRank() == 0 && (step + 1) % m_flowrateSteps == 0)
+        if (m_flowrateSteps > 0)
         {
-            m_flowrateStream << setw(8) << step << setw(16) << m_time
-                             << setw(16) << m_alpha << endl;
+            if (m_comm->GetRank() == 0 && (step + 1) % m_flowrateSteps == 0)
+            {
+                m_flowrateStream << setw(8) << step << setw(16) << m_time
+                                 << setw(16) << m_alpha << endl;
+            }
         }
 
         return IncNavierStokes::v_PostIntegrate(step);
@@ -450,6 +454,13 @@ namespace Nektar
      */
     void VelocityCorrectionScheme::v_DoInitialise(void)
     {
+        m_F = Array<OneD, Array<OneD, NekDouble> > (m_nConvectiveFields);
+
+        for (int i = 0; i < m_nConvectiveFields; ++i)
+        {
+            m_F[i] = Array< OneD, NekDouble> (m_fields[0]->GetTotPoints(), 0.0);
+        }
+
         // Set up flowrate before m_fields are initialised.
         if (m_flowrate > 0.0)
         {
@@ -469,7 +480,6 @@ namespace Nektar
         // field below
         SetBoundaryConditions(m_time);
 
-        m_F = Array<OneD, Array< OneD, NekDouble> > (m_nConvectiveFields);
         for(int i = 0; i < m_nConvectiveFields; ++i)
         {
             m_fields[i]->LocalToGlobal();
@@ -477,7 +487,6 @@ namespace Nektar
             m_fields[i]->GlobalToLocal();
             m_fields[i]->BwdTrans(m_fields[i]->GetCoeffs(),
                                   m_fields[i]->UpdatePhys());
-            m_F[i] = Array< OneD, NekDouble> (m_fields[0]->GetTotPoints(), 0.0);
         }
     }
     
@@ -568,6 +577,8 @@ namespace Nektar
         const NekDouble time, 
         const NekDouble aii_Dt)
     {
+        int physTot = m_fields[0]->GetTotPoints();
+
         // Substep the pressure boundary condition if using substepping
         m_extrapolation->SubStepSetPressureBCs(inarray,aii_Dt,m_kinvis);
 
@@ -591,7 +602,7 @@ namespace Nektar
 
             for (int i = 0; i < m_spacedim; ++i)
             {
-                Vmath::Svtvp(phystot, m_alpha, m_flowrateStokes[i], 1,
+                Vmath::Svtvp(physTot, m_alpha, m_flowrateStokes[i], 1,
                              outarray[i], 1, outarray[i], 1);
             }
         }

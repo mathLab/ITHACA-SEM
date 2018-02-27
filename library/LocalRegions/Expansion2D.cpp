@@ -34,6 +34,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 #include <LocalRegions/Expansion2D.h>
 #include <LocalRegions/Expansion1D.h>
+#include <LocalRegions/Expansion3D.h>
 #include <SpatialDomains/Geometry.h>
 #include <SpatialDomains/Geometry2D.h>
 #include <LibUtilities/Foundations/InterpCoeff.h>
@@ -1444,7 +1445,7 @@ namespace Nektar
             Vmath::Vvtvp(nq, &vec[1][0], 1, &normals[1][0], 1, &Fn[0], 1, &Fn[0], 1);
             Vmath::Vvtvp(nq, &vec[2][0], 1, &normals[2][0], 1, &Fn[0], 1, &Fn[0], 1);
 
-            return v_Integral(Fn);
+            return StdExpansion::Integral(Fn);
         }
     }
 }

@@ -147,7 +147,6 @@ namespace Nektar
                 const LibUtilities::CommSharedPtr comm=LibUtilities::CommSharedPtr()):
                     BoundaryConditionBase(eNeumann, userDefined, comm),
                     m_neumannCondition(pSession->GetExpressionEvaluator(), eqn),
-                    m_neumannCondition(pSession, eqn),
                     m_filename(filename)
             {
             }

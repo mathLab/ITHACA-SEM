@@ -551,29 +551,16 @@ namespace Nektar
             for (auto &it : bregions)
             {
                 const SpatialDomains::BoundaryConditionShPtr boundaryCondition =
-<<<<<<< HEAD
-                    GetBoundaryCondition(bconditions, it->first, variable);
-                SpatialDomains::BoundaryRegion::iterator bregionIt;
-                for (bregionIt  = it->second->begin();
-                     bregionIt != it->second->end(); bregionIt++)
-                {
-                    cnt += bregionIt->second->size();
-=======
                     GetBoundaryCondition(bconditions, it.first, variable);
-                if (boundaryCondition->GetBoundaryConditionType() !=
-                    SpatialDomains::ePeriodic )
+                SpatialDomains::BoundaryRegion::iterator bregionIt;
+                for (auto &bregionIt : *(it.second))
                 {
-                    for (auto &bregionIt : *it.second)
-                    {
-                        cnt += bregionIt.second->m_geomVec.size();
-                    }
->>>>>>> master
+                    cnt += bregionIt.second->m_geomVec.size();
                 }
             }
 
             m_bndCondExpansions
                     = Array<OneD,MultiRegions::ExpListSharedPtr>(cnt);
-
             m_bndConditions
                     = Array<OneD,SpatialDomains::BoundaryConditionShPtr>(cnt);
 
@@ -722,10 +709,6 @@ namespace Nektar
                 = bcs.GetBoundaryRegions();
             const SpatialDomains::BoundaryConditionCollection &bconditions
                 = bcs.GetBoundaryConditions();
-<<<<<<< HEAD
-            SpatialDomains::BoundaryRegionCollection::const_iterator it;
-=======
->>>>>>> master
 
             MultiRegions::ExpList0DSharedPtr         locPointExp;
             SpatialDomains::BoundaryConditionShPtr   locBCond;
@@ -736,16 +719,13 @@ namespace Nektar
             {
                 locBCond = GetBoundaryCondition(bconditions, it.first, variable);
 
-                SpatialDomains::BoundaryRegion::iterator bregionIt;
-                for (bregionIt  = it->second->begin();
-                     bregionIt != it->second->end(); bregionIt++)
+                for (auto &bregionIt : *(it.second))
                 {
-<<<<<<< HEAD
-                    for (k = 0; k < bregionIt->second->size(); k++)
+                    for (k = 0; k < bregionIt.second->m_geomVec.size(); k++)
                     {
-                        if((vert = boost::dynamic_pointer_cast
+                        if((vert = std::dynamic_pointer_cast
                             <SpatialDomains::PointGeom>(
-                                (*bregionIt->second)[k])))
+                                bregionIt.second->m_geomVec[k])))
                         {
                             locPointExp
                                 = MemoryManager<MultiRegions::ExpList0D>
@@ -757,27 +737,6 @@ namespace Nektar
                         {
                             ASSERTL0(false,
                                      "dynamic cast to a vertex failed");
-=======
-                    for (auto &bregionIt : *it.second)
-                    {
-                        for (k = 0; k < bregionIt.second->m_geomVec.size(); k++)
-                        {
-                            if((vert = std::dynamic_pointer_cast
-                                    <SpatialDomains::PointGeom>(
-                                        bregionIt.second->m_geomVec[k])))
-                            {
-                                locPointExp
-                                    = MemoryManager<MultiRegions::ExpList0D>
-                                        ::AllocateSharedPtr(vert);
-                                bndCondExpansions[cnt]  = locPointExp;
-                                bndConditions[cnt++]    = locBCond;
-                            }
-                            else
-                            {
-                                ASSERTL0(false,
-                                    "dynamic cast to a vertex failed");
-                            }
->>>>>>> master
                         }
                     }
                 }

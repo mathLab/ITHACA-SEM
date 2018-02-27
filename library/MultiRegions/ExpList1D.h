@@ -115,10 +115,10 @@ namespace Nektar
                 const SpatialDomains::MeshGraphSharedPtr &graph2D,
                 const bool DeclareCoeffPhysArrays = true,
                 const std::string variable = "DefaultVar",
-                const Collections::ImplementationType ImpType
-                                                      = Collections::eNoImpType,
                 const LibUtilities::CommSharedPtr comm
-                                               = LibUtilities::CommSharedPtr());
+                                                = LibUtilities::CommSharedPtr(),
+                const Collections::ImplementationType ImpType
+                                                     = Collections::eNoImpType);
 
             MULTI_REGIONS_EXPORT ExpList1D(
                 const LibUtilities::SessionReaderSharedPtr &pSession,

@@ -385,9 +385,9 @@ namespace Nektar
                              const SpatialDomains::MeshGraphSharedPtr &graph2D,
                              const bool DeclareCoeffPhysArrays,
                              const std::string variable,
-                             const Collections::ImplementationType ImpType,
-                             const LibUtilities::CommSharedPtr comm):
-            ExpList(pSession,graph2D)
+                             const LibUtilities::CommSharedPtr comm,
+                             const Collections::ImplementationType ImpType)
+            : ExpList(pSession,graph2D)
         {
             SetExpType(e1D);
 

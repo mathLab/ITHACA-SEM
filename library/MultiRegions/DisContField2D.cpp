@@ -653,7 +653,7 @@ namespace Nektar
                 bc = GetBoundaryCondition(bconditions, it.first, variable);
 
                 locExpList = MemoryManager<MultiRegions::ExpList1D>
-                    ::AllocateSharedPtr(m_session, *(it->second), graph2D,
+                    ::AllocateSharedPtr(m_session, *(it.second), graph2D,
                                         DeclareCoeffPhysArrays, variable,
                                         bc->GetComm());
 

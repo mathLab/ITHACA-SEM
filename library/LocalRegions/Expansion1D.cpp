@@ -34,6 +34,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <LocalRegions/Expansion1D.h>
+#include <LocalRegions/Expansion2D.h>
 
 using namespace std;
 
@@ -425,7 +426,7 @@ namespace Nektar
             Vmath::Vmul (nq, &vec[0][0], 1, &normals[0][0], 1, &Fn[0], 1);
             Vmath::Vvtvp(nq, &vec[1][0], 1, &normals[1][0], 1, &Fn[0], 1, &Fn[0], 1);
 
-            return v_Integral(Fn);
+            return Integral(Fn);
         }
     } //end of namespace
 } //end of namespace

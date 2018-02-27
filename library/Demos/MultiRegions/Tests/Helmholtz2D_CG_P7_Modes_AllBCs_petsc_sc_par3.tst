@@ -2,7 +2,7 @@
 <test>
     <description>Helmholtz 2D CG with P=7, all BCs, PETSc sc, par(3)</description>
     <executable>Helmholtz2D</executable>
-    <parameters>--use-metis -I GlobalSysSoln=PETScStaticCond Helmholtz2D_P7_AllBCs.xml</parameters>
+    <parameters>--use-scotch -I GlobalSysSoln=PETScStaticCond Helmholtz2D_P7_AllBCs.xml</parameters>
     <processes>3</processes>
     <files>
         <file description="Session File">Helmholtz2D_P7_AllBCs.xml</file>

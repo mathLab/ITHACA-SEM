@@ -34,9 +34,12 @@ v5.0.0
 - Fix mac OSX on buildbots (!876)
 - Fix error from (!826) (!876)
 - Fix minor bug in ARPACK thirdparty build cmake (!874)
-- Switch MeshGraph to use factory pattern and add HDF5 geometry support (!900,
-  !904)
-
+- Remove requirement for modmetis, switch to SCOTCH by default (!899)
+- Switch MeshGraph to use factory pattern and add HDF5 geometry support
+  (!900, !904)
+- Fix bug in MeshPartition.cpp which caused incorrect array access when
+  WeightPartitions was used in parallel (!923)
+	
 **NekMesh**:
 - Add feature to read basic 2D geo files as CAD (!731)
 - Add periodic boundary condition meshing in 2D (!733)
@@ -62,6 +65,9 @@ v5.0.0
 - Add ability to space out 2D BL nodes to better fit local target Delta (!890)
 - Fix automatic peralign call in 2D periodic meshing (!888)
 - Fix BL splitting call from MCF (!910)
+- Support CFI combined lines (!917)
+- Order nodes in Gmsh output (!912)
+- Fix manifold face curvature nodes (!913)
 
 **FieldConvert**:
 - Add input module for Semtex field files (!777)
@@ -84,7 +90,7 @@ v5.0.0
 **CompressibleFlowSolver**
 - Add 3D regression tests (!567)
 - Introduce forcing for quasi-1D Euler simulations (!771)
-- Allow performing axi-symmetric Euler simulations (!771)
+- Allow performing axi-symmetric Euler and NS simulations (!771, !866)
 - Add ability to use an exponential filtering for stabilization with
   seg, quad and hex elements (!771, !862)
 - Introduce equations of state to account for real gas effects (!880)
@@ -108,6 +114,8 @@ v4.4.2
 - Fix calculation of BLPoints (!892)
 - Fix deadlock in DiffusionLDG (!885)
 - Fix uninitialised coefficients in DirectFull solver (!898)
+- Updated PETSc to 3.7.7 (!916)
+- Fix typcase to an integer which set Lz < 1 to zero when postprocess hdf5 output (!9922)
 
 **NekMesh**
 - Fix missing periodic boundary meshing and boundary layer mesh adjustment

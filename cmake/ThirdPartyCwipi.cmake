@@ -46,7 +46,7 @@ IF (NEKTAR_USE_CWIPI)
 
         EXTERNALPROJECT_ADD(
             cwipi-0.8.2
-            URL "http://sites.onera.fr/cwipi/sites/sites.onera.fr.cwipi/files/u4/cwipi-0.8.2.tgz"
+            URL ${TPURL}/cwipi-0.8.2.tgz
             URL_MD5 "cd28dbea20a08d71f5ff4b4770867268"
             STAMP_DIR ${TPBUILD}/stamp
             DOWNLOAD_DIR ${TPSRC}

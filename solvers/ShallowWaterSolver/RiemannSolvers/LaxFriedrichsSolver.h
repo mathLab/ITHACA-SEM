@@ -43,16 +43,18 @@ namespace Nektar
     class LaxFriedrichsSolver : public NonlinearSWESolver
     {
     public:
-        static RiemannSolverSharedPtr create()
+        static RiemannSolverSharedPtr create(
+            const LibUtilities::SessionReaderSharedPtr& pSession)
         {
             return RiemannSolverSharedPtr(
-                new LaxFriedrichsSolver());
+                new LaxFriedrichsSolver(pSession));
         }
         
         static std::string solverName;
         
     protected:
-        LaxFriedrichsSolver();
+        LaxFriedrichsSolver(
+                const LibUtilities::SessionReaderSharedPtr& pSession);
         
         virtual void v_PointSolve(
             double  hL, double  huL, double  hvL,

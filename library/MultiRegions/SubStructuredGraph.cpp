@@ -987,7 +987,9 @@ namespace Nektar
                     }
                     else
                     {
-                        ASSERTL0(false, "Error in constructing Scotch graph for"
+                        // This should never be possible, but let's be pedantic
+                        // and check anyway.
+                        ASSERTL1(false, "Error in constructing Scotch graph for"
                                         " multi-level static condensation");
                     }
                 }
@@ -1028,7 +1030,7 @@ namespace Nektar
                 // and reorder the permutation from Scotch.
                 //
                 substructgraph = MemoryManager<BottomUpSubStructuredGraph>::
-                    AllocateSharedPtr(graphs[graphs.size()-1], nPartition, true);
+                    AllocateSharedPtr(graphs.back(), nPartition, true);
 
                 // Important: we cannot simply use the ordering given by Scotch
                 // as it does not order the different blocks as we would like

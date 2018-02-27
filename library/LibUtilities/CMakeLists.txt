@@ -32,6 +32,7 @@ SET(BasicUtilsHeaders
     ./BasicUtils/ThreadBoost.h
     ./BasicUtils/Vmath.hpp
     ./BasicUtils/VmathArray.hpp
+    ./BasicUtils/Metis.hpp
     ./BasicUtils/VtkUtil.hpp
 )
 
@@ -425,7 +426,7 @@ ENDIF()
 IF( NEKTAR_USE_PETSC )
     TARGET_LINK_LIBRARIES(LibUtilities LINK_PRIVATE ${PETSC_LIBRARIES})
     TARGET_LINK_LIBRARIES(LibUtilities LINK_PUBLIC ${CMAKE_DL_LIBS})
-    ADD_DEPENDENCIES(LibUtilities petsc-3.7.2)
+    ADD_DEPENDENCIES(LibUtilities petsc-3.7.7)
 ENDIF( NEKTAR_USE_PETSC )
 
 # HDF5

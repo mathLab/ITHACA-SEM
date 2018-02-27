@@ -46,9 +46,10 @@ namespace Nektar
                                 "Unsteady Advection equation.");
 
     UnsteadyAdvection::UnsteadyAdvection(
-            const LibUtilities::SessionReaderSharedPtr& pSession)
-        : UnsteadySystem(pSession),
-          AdvectionSystem(pSession)
+        const LibUtilities::SessionReaderSharedPtr& pSession,
+        const SpatialDomains::MeshGraphSharedPtr& pGraph)
+        : UnsteadySystem(pSession, pGraph),
+          AdvectionSystem(pSession, pGraph)
     {
         m_planeNumber = 0;
     }
@@ -74,7 +75,7 @@ namespace Nektar
 
         // Store in the global variable m_velocity the advection velocities
         m_velocity = Array<OneD, Array<OneD, NekDouble> >(m_spacedim);
-        EvaluateFunction(vel, m_velocity, "AdvectionVelocity");
+        GetFunction( "AdvectionVelocity")->Evaluate(vel,  m_velocity);
 
         // Type of advection class to be used
         switch(m_projectionType)

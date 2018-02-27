@@ -66,7 +66,7 @@ zero. If we now integrate the 1st, 2nd and last term in equation
 (\ref{eqn.weakp}) by parts we can obtain the weak pressure equation
 \begin{align}
   \int_{\Omega} \nabla q \cdot \nabla p^{n+1}  &=  \int_{\Omega} q\, \nabla \cdot \left ( \frac{\partial \mathbf{u}}{\partial t}^{n+1}  + \mathbf{N}(\mathbf{u})^{n+1} \right )  \nonumber \\
-  &-  \int_{\partial \Omega} q  \left ( \frac{\partial \mathbf{u}}{\partial t}^{n+1}  + \mathbf{N}(\mathbf{u})^{n+1} - \nu \nabla \times \nabla \times \mathbf{u}^{n+1} \right ) \cdot \mathbf{n}
+  &-  \int_{\partial \Omega} q  \left ( \frac{\partial \mathbf{u}}{\partial t}^{n+1}  + \mathbf{N}(\mathbf{u})^{n+1} + \nu \nabla \times \nabla \times \mathbf{u}^{n+1} \right ) \cdot \mathbf{n}
  \label{eqn.weakp1}
 \end{align}
 where $\partial \Omega$ is the boundary of the domain and we have used
@@ -98,7 +98,7 @@ which to decouple the system we impose that $\nabla \cdot
   \int_{\Omega} \nabla q \cdot \nabla p^{n+1}  &=
   \int_{\Omega} q \, \nabla \cdot \left (-\frac{\hat{\mathbf{u}}}{\Delta t}
         + \mathbf{N}(\mathbf{u})^{*,n+1} \right ) \nonumber \\
-  &- \int_{\partial \Omega} q  \left ( \frac{\partial \mathbf{u}}{\partial t}^{n+1}  + \mathbf{N}(\mathbf{u})^{*.n+1} - \nu (\nabla \times \nabla  \times \mathbf{u})^{*,n+1} \right ) \cdot \mathbf{n}
+  &- \int_{\partial \Omega} q  \left ( \frac{\partial \mathbf{u}}{\partial t}^{n+1}  + \mathbf{N}(\mathbf{u})^{*.n+1} + \nu (\nabla \times \nabla  \times \mathbf{u})^{*,n+1} \right ) \cdot \mathbf{n}
  \label{eqn.weakpfinal}
   \end{align}
   We note this can be recast into an equivalent strong form of the
@@ -109,7 +109,7 @@ which to decouple the system we impose that $\nabla \cdot
  \end{equation}
 with consistent Neumann boundary conditions prescribed as
 \begin{equation}
-  \frac{\partial p}{\partial n}^{n+1}= - \Bigl[ \frac{\partial \mathbf{u}}{\partial t}^{n+1} - \nu (\nabla \times \nabla \times   \mathbf{u})^{*,n+1} + \mathbf{N}^{*,n+1}\Bigr]\cdot \mathbf{n}
+  \frac{\partial p}{\partial n}^{n+1}= - \Bigl[ \frac{\partial \mathbf{u}}{\partial t}^{n+1} + \nu (\nabla \times \nabla \times   \mathbf{u})^{*,n+1} + \mathbf{N}^{*,n+1}\Bigr]\cdot \mathbf{n}
   \label{eqn.pressurebcs}
 \end{equation}
 
@@ -214,7 +214,7 @@ and Chryssostomidis \cite{DoKa14}. In this paper they suggest to
 impose a pressure Dirichlet outflow condition of the form
 
 \begin{equation}
- p^{n+1}= \nu \nabla\mathbf{u}^{*,n+1}\cdot \mathbf{n}-\frac{1}{2}
+ p^{n+1}= \nu \mathbf{n} \cdot \nabla\mathbf{u}^{*,n+1}\cdot \mathbf{n}-\frac{1}{2}
  \mid \mathbf{u}^{*,n+1} \mid^2 S_o(\mathbf{n}\cdot
  \mathbf{u}^{*,n+1})+\mathbf{f}_b^{n+1}\cdot \mathbf{n}
 \end{equation}
@@ -411,7 +411,7 @@ viscosity, which arise for non-Newtonian flows, with only minor
 modifications.
 
 We consider the weak form of the Stokes problem for the velocity field
-$boldsymbol{u}=[u,v]^{T}$ and the pressure field $p$:
+$\boldsymbol{u}=[u,v]^{T}$ and the pressure field $p$:
 
 \begin{subequations}
 \begin{equation}
@@ -830,7 +830,6 @@ the advection term using the pressure inverse mass matrix. It can be used just i
 <I PROPERTY="SmoothAdvection" VALUE="True"/>
 \end{lstlisting}
 
-
 \item \inltt{SpectralVanishingViscosity}: activates a stabilization technique
 which increases the viscosity on the modes with the highest frequencies.
 \begin{lstlisting}[style=XMLStyle]
@@ -839,7 +838,34 @@ which increases the viscosity on the modes with the highest frequencies.
 
 In a Quasi-3D simulation, this will affect both the Fourier and the spectral/hp expansions.
 To activate them independently, use \inltt{SpectralVanishingViscositySpectralHP} 
-and \inltt{SpectralVanishingViscosityHomo1D}.
+and \inltt{SpectralVanishingViscosityHomo1D}. \\
+
+There are three spectral vanishing viscosity kernels available:
+
+\begin{center}
+\footnotesize
+\begin{tabular}{lcc}
+\toprule
+{SVV Kernel} & {\texttt{SpectralVanishingViscosity}} \\
+\midrule
+Exponential Kernel & \texttt{True} \\
+Power Kernel & \texttt{PowerKernel} \\
+DG Kernel & \texttt{DGKernel} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+The Exponential kernel is based on the work of Maday et al. \cite{yvsiouei93},
+its extension to 2D can be found in \cite{rosh06}. A diffusion coefficient can
+be specified which defines the base magnitude of the viscosity; this parameter
+is scaled by $h/p$. SVV viscosity is activated for expansion modes greater than
+the product of the cut-off ratio and the expansion order. The Power kernel is a
+smooth function with no cut-off frequency; it focusses on a narrower band of
+higher expansion modes as the polynomial order increases. The cut-off ratio
+parameter for the Power kernel corresponds to the power ratio, see Moura et al.
+\cite{rospjo16}. The DG-Kernel is an attempt to match the dissipation of CG-SVV
+to DG schemes of lower expansion orders. This kernel does not require any parameters
+although the diffusion coefficient can still be modified.   
 
 \item \inltt{DEALIASING}: activates the 3/2 padding rule on the advection term
 of a Quasi-3D simulation.
@@ -856,7 +882,6 @@ stabilize the simulation. This method is based on the work of Kirby and Sherwin 
 
 \end{itemize}
 
-
 \subsection{Parameters}
 The following parameters can be specified in the \inltt{PARAMETERS} section of
 the session file:
@@ -869,7 +894,7 @@ the session file:
 \item \inltt{MinSubSteps}: perform a minimum number of substeps in sub-stepping algorithm (default is 1)
 \item \inltt{MaxSubSteps}: perform a maxmimum  number of substeps in sub-stepping algorithm otherwise exit (default is 100)
 \item \inltt{SVVCutoffRatio}: sets the ratio of Fourier frequency not affected by the SVV technique (default value = 0.75, i.e. the first 75\% of frequency are not damped)
-\item \inltt{SVVDiffCoeff}: sets the SVV diffusion coefficient (default value = 0.1)
+\item \inltt{SVVDiffCoeff}: sets the SVV diffusion coefficient (default value = 0.1 (Exponential and Power kernel), 1 (DG-Kernel))
 \end{itemize}
 
 \subsection{Womersley Boundary Condition}

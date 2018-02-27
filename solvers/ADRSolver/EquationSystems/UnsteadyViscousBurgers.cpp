@@ -48,9 +48,10 @@ namespace Nektar
                 UnsteadyViscousBurgers::create);
     
     UnsteadyViscousBurgers::UnsteadyViscousBurgers(
-            const LibUtilities::SessionReaderSharedPtr& pSession)
-        : UnsteadySystem(pSession),
-          AdvectionSystem(pSession),
+        const LibUtilities::SessionReaderSharedPtr& pSession,
+        const SpatialDomains::MeshGraphSharedPtr& pGraph)
+        : UnsteadySystem(pSession, pGraph),
+          AdvectionSystem(pSession, pGraph),
           m_varCoeffLap(StdRegions::NullVarCoeffMap)
     {
         m_planeNumber = 0;
@@ -256,11 +257,10 @@ namespace Nektar
         }
         
         // Add forcing terms
-        std::vector<SolverUtils::ForcingSharedPtr>::const_iterator x;
-        for (x = m_forcing.begin(); x != m_forcing.end(); ++x)
+        for (auto &x : m_forcing)
         {
             // set up non-linear terms
-            (*x)->Apply(m_fields, inarray, outarray, time);
+            x->Apply(m_fields, inarray, outarray, time);
         }
     }
     

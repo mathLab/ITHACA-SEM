@@ -53,19 +53,6 @@ namespace Nektar
 
         Graph::~Graph()
         {
-#if 0       
-            std::list<GraphVertexObject *>::const_iterator def; 
-            for(def = m_vertset.begin(); def != m_vertset.end(); ++def)
-            {
-                delete  *def;
-            }
-
-            std::list<GraphEdgeObject *>::const_iterator def1; 
-            for(def1 = _Edgeset.begin(); def1 != _Edgeset.end(); ++def1)
-            {
-                delete  *def1;
-            }
-#endif    
         }
 
         bool operator  == (const GraphVertexObject &x, const GraphVertexObject &y)

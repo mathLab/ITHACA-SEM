@@ -36,10 +36,13 @@
 #ifndef NEKMESHUTILS_MESHELEMENTS_NODE
 #define NEKMESHUTILS_MESHELEMENTS_NODE
 
+#include <LibUtilities/BasicUtils/HashUtils.hpp>
 #include <NekMeshUtils/NekMeshUtilsDeclspec.h>
 
 #include <iomanip>
 
+#include <NekMeshUtils/CADSystem/CADCurve.h>
+#include <NekMeshUtils/CADSystem/CADSurf.h>
 #include <NekMeshUtils/CADSystem/CADSystem.h>
 #include <SpatialDomains/PointGeom.h>
 
@@ -48,7 +51,7 @@ namespace Nektar
 namespace NekMeshUtils
 {
 class Node;
-typedef boost::shared_ptr<Node> NodeSharedPtr;
+typedef std::shared_ptr<Node> NodeSharedPtr;
 
 /**
  * @brief Represents a point in the domain.
@@ -148,7 +151,7 @@ public:
 
     NEKMESHUTILS_EXPORT NodeSharedPtr copy()
     {
-        return boost::shared_ptr<Node>(new Node(m_id, m_x, m_y, m_z));
+        return std::shared_ptr<Node>(new Node(m_id, m_x, m_y, m_z));
     }
 
     NEKMESHUTILS_EXPORT NekDouble abs2() const
@@ -229,74 +232,60 @@ public:
 
     // functions for cad information
 
-    void SetCADCurve(int i, CADCurveSharedPtr c, NekDouble t)
+    void SetCADCurve(CADCurveSharedPtr c, NekDouble t)
     {
-        CADCurveList[i] = std::pair<CADCurveSharedPtr, NekDouble>(c, t);
+        auto it = CADCurveList.find(c->GetId());
+        if(it != CADCurveList.end())
+        {
+            //already in list so remove it
+            CADCurveList.erase(it);
+        }
+        CADCurveList.insert(make_pair(c->GetId(), make_pair(c, t)));
     }
 
-    void SetCADSurf(int i, CADSurfSharedPtr s, Array<OneD, NekDouble> uv)
+    void SetCADSurf(CADSurfSharedPtr s, Array<OneD, NekDouble> uv)
     {
-        CADSurfList[i] =
-            std::pair<CADSurfSharedPtr, Array<OneD, NekDouble> >(s, uv);
-    }
-
-    CADCurveSharedPtr GetCADCurve(int i)
-    {
-        std::map<int, std::pair<CADCurveSharedPtr, NekDouble> >::iterator
-            search = CADCurveList.find(i);
-        ASSERTL0(search->first == i, "node not on this curve");
-
-        return search->second.first;
-    }
-
-    CADSurfSharedPtr GetCADSurf(int i)
-    {
-        std::map<int, std::pair<CADSurfSharedPtr, Array<OneD, NekDouble> > >::
-            iterator search = CADSurfList.find(i);
-        ASSERTL0(search->first == i, "surface not found");
-
-        return search->second.first;
+        auto it = CADSurfList.find(s->GetId());
+        if(it != CADSurfList.end())
+        {
+            //already in list so remove it
+            CADSurfList.erase(it);
+        }
+        CADSurfList.insert(make_pair(s->GetId(), make_pair(s, uv)));
     }
 
     NekDouble GetCADCurveInfo(int i)
     {
-        std::map<int, std::pair<CADCurveSharedPtr, NekDouble> >::iterator
-            search = CADCurveList.find(i);
-        ASSERTL0(search->first == i, "node not on this curve");
+        auto search = CADCurveList.find(i);
+        ASSERTL0(search != CADCurveList.end(), "node not on this curve");
 
         return search->second.second;
     }
 
     Array<OneD, NekDouble> GetCADSurfInfo(int i)
     {
-        std::map<int, std::pair<CADSurfSharedPtr, Array<OneD, NekDouble> > >::
-            iterator search = CADSurfList.find(i);
-        ASSERTL0(search->first == i, "surface not found");
+        auto search = CADSurfList.find(i);
+        ASSERTL0(search != CADSurfList.end(), "surface not found");
 
         return search->second.second;
     }
 
-    std::vector<std::pair<int, CADCurveSharedPtr> > GetCADCurves()
+    std::vector<CADCurveSharedPtr> GetCADCurves()
     {
-        std::vector<std::pair<int, CADCurveSharedPtr> > lst;
-        std::map<int, std::pair<CADCurveSharedPtr, NekDouble> >::iterator c;
-        for (c = CADCurveList.begin(); c != CADCurveList.end(); c++)
+        std::vector<CADCurveSharedPtr> lst;
+        for (auto &c : CADCurveList)
         {
-            lst.push_back(
-                std::pair<int, CADCurveSharedPtr>(c->first, c->second.first));
+            lst.push_back(c.second.first);
         }
         return lst;
     }
 
-    std::vector<std::pair<int, CADSurfSharedPtr> > GetCADSurfs()
+    std::vector<CADSurfSharedPtr> GetCADSurfs()
     {
-        std::vector<std::pair<int, CADSurfSharedPtr> > lst;
-        std::map<int, std::pair<CADSurfSharedPtr,
-                                Array<OneD, NekDouble> > >::iterator s;
-        for (s = CADSurfList.begin(); s != CADSurfList.end(); s++)
+        std::vector<CADSurfSharedPtr> lst;
+        for (auto &s : CADSurfList)
         {
-            lst.push_back(
-                std::pair<int, CADSurfSharedPtr>(s->first, s->second.first));
+            lst.push_back(s.second.first);
         }
         return lst;
     }
@@ -317,46 +306,16 @@ public:
         m_y                 = l[1];
         m_z                 = l[2];
         CADSurfSharedPtr su = CADSurfList[s].first;
-        CADSurfList[s] =
-            std::pair<CADSurfSharedPtr, Array<OneD, NekDouble> >(su, uv);
+        SetCADSurf(su, uv);
     }
 
-    void MoveCurve(Array<OneD, NekDouble> l, int s, NekDouble t)
+    void Move(Array<OneD, NekDouble> l, int c, NekDouble t)
     {
         m_x                  = l[0];
         m_y                  = l[1];
         m_z                  = l[2];
-        CADCurveSharedPtr cu = CADCurveList[s].first;
-        CADCurveList[s]      = std::pair<CADCurveSharedPtr, NekDouble>(cu, t);
-    }
-
-    std::vector<std::pair<int, std::string> > GetCADCurveInfoVector()
-    {
-        std::vector<std::pair<int, std::string> > ret;
-        std::map<int, std::pair<CADCurveSharedPtr, NekDouble> >::iterator c;
-        for (c = CADCurveList.begin(); c != CADCurveList.end(); c++)
-        {
-            std::stringstream ss;
-            ss << std::scientific << std::setprecision(8);
-            ss << c->second.second;
-            ret.push_back(std::pair<int, std::string>(c->first, ss.str()));
-        }
-        return ret;
-    }
-
-    std::vector<std::pair<int, std::string> > GetCADSurfInfoVector()
-    {
-        std::vector<std::pair<int, std::string> > ret;
-        std::map<int, std::pair<CADSurfSharedPtr,
-                                Array<OneD, NekDouble> > >::iterator s;
-        for (s = CADSurfList.begin(); s != CADSurfList.end(); s++)
-        {
-            std::stringstream ss;
-            ss << std::scientific << std::setprecision(8);
-            ss << s->second.second[0] << " " << s->second.second[1];
-            ret.push_back(std::pair<int, std::string>(s->first, ss.str()));
-        }
-        return ret;
+        CADCurveSharedPtr cu = CADCurveList[c].first;
+        SetCADCurve(cu, t);
     }
 
     NekDouble Angle(Array<OneD, NekDouble> locA, Array<OneD, NekDouble> locB,
@@ -403,9 +362,9 @@ public:
     NekDouble m_z;
 
     /// list of cadcurves the node lies on
-    std::map<int, std::pair<CADCurveSharedPtr, NekDouble> > CADCurveList;
+    std::map<int, std::pair<CADCurveSharedPtr, NekDouble>> CADCurveList;
     /// list of cadsurfs the node lies on
-    std::map<int, std::pair<CADSurfSharedPtr, Array<OneD, NekDouble> > >
+    std::map<int, std::pair<CADSurfSharedPtr, Array<OneD, NekDouble>>>
         CADSurfList;
 
 private:
@@ -431,14 +390,10 @@ struct NodeHash : std::unary_function<NodeSharedPtr, std::size_t>
 {
     std::size_t operator()(NodeSharedPtr const &p) const
     {
-        std::size_t seed = 0;
-        boost::hash_combine(seed, p->m_x);
-        boost::hash_combine(seed, p->m_y);
-        boost::hash_combine(seed, p->m_z);
-        return seed;
+        return hash_combine(p->m_x, p->m_y, p->m_z);
     }
 };
-typedef boost::unordered_set<NodeSharedPtr, NodeHash> NodeSet;
+typedef std::unordered_set<NodeSharedPtr, NodeHash> NodeSet;
 }
 }
 

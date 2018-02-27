@@ -63,11 +63,11 @@ namespace Nektar
             Expansion(geom),
             Expansion1D(geom),
             m_matrixManager(
-                    boost::bind(&SegExp::CreateMatrix, this, _1),
-                    std::string("SegExpMatrix")),
+                std::bind(&SegExp::CreateMatrix, this, std::placeholders::_1),
+                std::string("SegExpMatrix")),
             m_staticCondMatrixManager(
-                    boost::bind(&SegExp::CreateStaticCondMatrix, this, _1),
-                    std::string("SegExpStaticCondMatrix"))
+                std::bind(&SegExp::CreateStaticCondMatrix, this, std::placeholders::_1),
+                std::string("SegExpStaticCondMatrix"))
         {
         }
 
@@ -426,7 +426,9 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
                     case LibUtilities::eModified_A:
                     case LibUtilities::eModified_B:
                         {
-                            ASSERTL1(m_base[0]->GetPointsType() == LibUtilities::eGaussLobattoLegendre,"Cannot use FwdTrans_BndConstrained method with non GLL points");
+                            ASSERTL1(m_base[0]->GetPointsType() == LibUtilities::eGaussLobattoLegendre ||
+                                     m_base[0]->GetPointsType() == LibUtilities::ePolyEvenlySpaced,
+                                     "Cannot use FwdTrans_BndConstrained with these points.");
                             offset = 2;
                         }
                         break;
@@ -779,12 +781,6 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
                 }
             }
         }
-
-        StdRegions::Orientation SegExp::v_GetPorient(int point)
-        {
-            return m_geom->GetPorient(point);
-        }
-
 
         StdRegions::StdExpansionSharedPtr SegExp::v_GetStdExp() const
         {

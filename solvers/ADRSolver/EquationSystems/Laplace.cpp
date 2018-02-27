@@ -43,8 +43,9 @@ namespace Nektar
         RegisterCreatorFunction("Laplace", Laplace::create);
 
     Laplace::Laplace(
-            const LibUtilities::SessionReaderSharedPtr& pSession)
-        : EquationSystem(pSession),
+        const LibUtilities::SessionReaderSharedPtr& pSession,
+        const SpatialDomains::MeshGraphSharedPtr& pGraph)
+        : EquationSystem(pSession, pGraph),
           m_factors()
     {
         m_factors[StdRegions::eFactorLambda] = 0.0;

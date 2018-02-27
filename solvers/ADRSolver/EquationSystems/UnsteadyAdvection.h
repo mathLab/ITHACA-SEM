@@ -49,9 +49,11 @@ namespace Nektar
 
         /// Creates an instance of this class
         static SolverUtils::EquationSystemSharedPtr create(
-                const LibUtilities::SessionReaderSharedPtr& pSession) {
-            SolverUtils::EquationSystemSharedPtr p
-                = MemoryManager<UnsteadyAdvection>::AllocateSharedPtr(pSession);
+            const LibUtilities::SessionReaderSharedPtr& pSession,
+            const SpatialDomains::MeshGraphSharedPtr& pGraph)
+        {
+            SolverUtils::EquationSystemSharedPtr p = MemoryManager<
+                UnsteadyAdvection>::AllocateSharedPtr(pSession, pGraph);
             p->InitObject();
             return p;
         }
@@ -73,7 +75,8 @@ namespace Nektar
         int                                     m_planeNumber;
 
         /// Session reader
-        UnsteadyAdvection(const LibUtilities::SessionReaderSharedPtr& pSession);
+        UnsteadyAdvection(const LibUtilities::SessionReaderSharedPtr& pSession,
+                          const SpatialDomains::MeshGraphSharedPtr& pGraph);
 
         /// Evaluate the flux at each solution point
         void GetFluxVector(

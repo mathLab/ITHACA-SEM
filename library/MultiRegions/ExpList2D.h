@@ -49,11 +49,9 @@ namespace Nektar
         class ExpList2D;
 
         /// Shared pointer to an ExpList2D object.
-        typedef boost::shared_ptr<ExpList2D>      ExpList2DSharedPtr;
+        typedef std::shared_ptr<ExpList2D>      ExpList2DSharedPtr;
         /// Vector of pointers to ExpList2D objects.
         typedef std::vector< ExpList2DSharedPtr > ExpList2DVector;
-        /// Iterator for the vector of ExpList2D pointers.
-        typedef std::vector< ExpList2DSharedPtr >::iterator ExpList2DVectorIter;
 
         /// Abstraction of a two-dimensional multi-elemental expansion which
         /// is merely a collection of local expansions.
@@ -70,20 +68,26 @@ namespace Nektar
             /// Constructor copying only elements defined in eIds.
             MULTI_REGIONS_EXPORT ExpList2D(  const ExpList2D &In,
                 const std::vector<unsigned int> &eIDs,
-                const bool DeclareCoeffPhysArrays = true);
+                const bool DeclareCoeffPhysArrays = true,
+                const Collections::ImplementationType ImpType
+                                             = Collections::eNoImpType);
 
             /// Sets up a list of local expansions based on an input mesh.
             MULTI_REGIONS_EXPORT ExpList2D(
                 const LibUtilities::SessionReaderSharedPtr &pSession,
                 const SpatialDomains::MeshGraphSharedPtr &graph2D,
                 const bool DelcareCoeffPhysArrays = true,
-                const std::string &var = "DefaultVar");
+                const std::string &var = "DefaultVar",
+                const Collections::ImplementationType ImpType
+                                             = Collections::eNoImpType);
 
             /// Sets up a list of local expansions based on an expansion  Map
             MULTI_REGIONS_EXPORT ExpList2D(
                 const LibUtilities::SessionReaderSharedPtr &pSession,
                 const SpatialDomains::ExpansionMap &expansions,
-                const bool DeclareCoeffPhysArrays = true);
+                const bool DeclareCoeffPhysArrays = true,
+                const Collections::ImplementationType ImpType
+                                             = Collections::eNoImpType);
             
             /// Sets up a list of local expansions based on an input mesh
             /// and separately defined basiskeys
@@ -95,7 +99,9 @@ namespace Nektar
                 const LibUtilities::BasisKey &QuadBb,
                 const SpatialDomains::MeshGraphSharedPtr &graph2D,
                 const LibUtilities::PointsType
-                      TriNb = LibUtilities::SIZE_PointsType);
+                TriNb = LibUtilities::SIZE_PointsType,
+                const Collections::ImplementationType ImpType
+                                             = Collections::eNoImpType);
 
 			//Specialized constructor for trace expansions.
             MULTI_REGIONS_EXPORT ExpList2D(
@@ -107,7 +113,9 @@ namespace Nektar
                 const SpatialDomains::MeshGraphSharedPtr &graph3D,
                 const PeriodicMap &periodicFaces,
                 const bool DeclareCoeffPhysArrays = true,
-                const std::string variable = "DefaultVar");
+                const std::string variable = "DefaultVar",
+                const Collections::ImplementationType ImpType
+                                             = Collections::eNoImpType);
 
             /// Specialised constructor for Neumann boundary conditions in
             /// DisContField3D and ContField3D.
@@ -116,9 +124,11 @@ namespace Nektar
                 const SpatialDomains::CompositeMap &domain,
                 const SpatialDomains::MeshGraphSharedPtr &graph3D,
                 const std::string variable = "DefaultVar",
+                const Collections::ImplementationType ImpType
+                                                      = Collections::eNoImpType,
                 const LibUtilities::CommSharedPtr comm =
                                                  LibUtilities::CommSharedPtr());
-            
+
             /// Destructor.
             MULTI_REGIONS_EXPORT virtual ~ExpList2D();
 

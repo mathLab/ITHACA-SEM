@@ -138,6 +138,26 @@ void PtsField::AddField(const Array< OneD, NekDouble > &pts,
     m_fieldNames.push_back(fieldName);
 }
 
+
+void PtsField::RemoveField(const string fieldName)
+{
+    int nTotvars = m_pts.num_elements();
+
+    // redirect existing pts
+    Array<OneD, Array<OneD, NekDouble> > newpts(nTotvars - 1);
+    for (int i = 0, j = 0; i < nTotvars; ++i)
+    {
+        if (i < GetDim() || m_fieldNames[i - GetDim()] != fieldName)
+        {
+            newpts[j++] = m_pts[i];
+        }
+    }
+
+    m_pts = newpts;
+
+    m_fieldNames.erase(remove(m_fieldNames.begin(), m_fieldNames.end(), fieldName), m_fieldNames.end());
+}
+
 void PtsField::AddPoints(const Array<OneD, const Array<OneD, NekDouble> > &pts)
 {
     ASSERTL1(pts.num_elements() == m_pts.num_elements(),

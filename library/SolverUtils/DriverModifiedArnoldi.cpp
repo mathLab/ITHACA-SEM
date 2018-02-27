@@ -56,8 +56,9 @@ string DriverModifiedArnoldi::driverLookupId =
  *
  */
 DriverModifiedArnoldi::DriverModifiedArnoldi(
-        const LibUtilities::SessionReaderSharedPtr pSession)
-    : DriverArnoldi(pSession)
+    const LibUtilities::SessionReaderSharedPtr pSession,
+    const SpatialDomains::MeshGraphSharedPtr pGraph)
+    : DriverArnoldi(pSession, pGraph)
 {
 }
 

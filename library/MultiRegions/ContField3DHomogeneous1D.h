@@ -53,11 +53,13 @@ namespace Nektar
                            const LibUtilities::SessionReaderSharedPtr &pSession,
                            const LibUtilities::BasisKey &HomoBasis,
                            const NekDouble lhom,
-						   const bool useFFT,
-						   const bool dealiasing,
+                           const bool useFFT,
+                           const bool dealiasing,
                            const SpatialDomains::MeshGraphSharedPtr &graph2D,
                            const std::string &variable,
-						   const bool CheckIfSingularSystem = false);
+                           const bool CheckIfSingularSystem = false,
+                           const Collections::ImplementationType ImpType
+                           = Collections::eNoImpType);
             
             /// Copy constructor.
             MULTI_REGIONS_EXPORT ContField3DHomogeneous1D(const ContField3DHomogeneous1D &In);
@@ -95,6 +97,7 @@ namespace Nektar
                     const FlagList &flags,
                     const StdRegions::ConstFactorMap &factors,
                     const StdRegions::VarCoeffMap &varcoeff,
+                    const MultiRegions::VarFactorsMap &varfactors,
                     const Array<OneD, const NekDouble> &dirForcing,
                     const bool PhysSpaceForcing);
                     
@@ -102,7 +105,7 @@ namespace Nektar
             virtual void v_ClearGlobalLinSysManager(void);
         };
 
-        typedef boost::shared_ptr<ContField3DHomogeneous1D>  
+        typedef std::shared_ptr<ContField3DHomogeneous1D>  
             ContField3DHomogeneous1DSharedPtr;
 
     } //end of namespace

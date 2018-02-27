@@ -53,11 +53,11 @@ namespace Nektar
             Expansion     (geom),
             Expansion2D   (geom),
             m_matrixManager(
-                    boost::bind(&TriExp::CreateMatrix, this, _1),
-                    std::string("TriExpMatrix")),
+                std::bind(&TriExp::CreateMatrix, this, std::placeholders::_1),
+                std::string("TriExpMatrix")),
             m_staticCondMatrixManager(
-                    boost::bind(&TriExp::CreateStaticCondMatrix, this, _1),
-                    std::string("TriExpStaticCondMatrix"))
+                std::bind(&TriExp::CreateStaticCondMatrix, this, std::placeholders::_1),
+                std::string("TriExpStaticCondMatrix"))
         {
         }
 
@@ -319,7 +319,7 @@ namespace Nektar
             NekDouble sign;
             // define an orientation to get EdgeToElmtMapping from Cartesian data 
             StdRegions::Orientation orient[3] = {StdRegions::eForwards,StdRegions::eForwards,
-                                                 StdRegions::eBackwards};
+                                                 StdRegions::eForwards};
 
             for(i = 0; i < 3; i++)
             {
@@ -705,14 +705,17 @@ namespace Nektar
             }
         }
 
-        void TriExp::v_GetEdgePhysVals(const int edge, const StdRegions::StdExpansionSharedPtr &EdgeExp,
-                                     const Array<OneD, const NekDouble> &inarray,
-                                     Array<OneD,NekDouble> &outarray)
+        void TriExp::v_GetEdgePhysVals(
+            const int                                edge,
+            const StdRegions::StdExpansionSharedPtr &EdgeExp,
+            const Array<OneD, const NekDouble>      &inarray,
+            Array<OneD, NekDouble>                  &outarray)
         {
             int nquad0 = m_base[0]->GetNumPoints();
             int nquad1 = m_base[1]->GetNumPoints();
 
-            // get points in Cartesian orientation
+            // Extract in Cartesian direction because we have to deal with
+            // e.g. Gauss-Radau points.
             switch(edge)
             {
             case 0:
@@ -730,6 +733,10 @@ namespace Nektar
                 break;
             }
 
+            ASSERTL1(EdgeExp->GetBasis(0)->GetPointsType()
+                         == LibUtilities::eGaussLobattoLegendre,
+                     "Edge expansion should be GLL");
+
             // Interpolate if required
             if(m_base[edge?1:0]->GetPointsKey() != EdgeExp->GetBasis(0)->GetPointsKey())
             {
@@ -742,9 +749,16 @@ namespace Nektar
                                        EdgeExp->GetBasis(0)->GetPointsKey(),
                                        outarray);
             }
-            
+
+            StdRegions::Orientation orient = GetEorient(edge);
+            if (edge == 2)
+            {
+                orient = orient == StdRegions::eForwards ?
+                    StdRegions::eBackwards : StdRegions::eForwards;
+            }
+
             //Reverse data if necessary
-            if(GetCartesianEorient(edge) == StdRegions::eBackwards)
+            if(orient == StdRegions::eBackwards)
             {
                 Vmath::Reverse(EdgeExp->GetNumPoints(0),&outarray[0],1,
                                &outarray[0],1);
@@ -952,16 +966,6 @@ namespace Nektar
                 {
                     Vmath::Vmul(nqe,normal[i],1,work,1,normal[i],1);
                 }
-
-                // Reverse direction so that points are in
-                // anticlockwise direction if edge >=2
-                if(edge >= 2)
-                {
-                    for(i = 0; i < GetCoordim(); ++i)
-                    {
-                        Vmath::Reverse(nqe,normal[i],1, normal[i],1);
-                    }
-                }
             }
             if(GetGeom()->GetEorient(edge) == StdRegions::eBackwards)
             {
@@ -1024,13 +1028,6 @@ namespace Nektar
         {
             return GetGeom2D()->GetEorient(edge);
         }
-
-
-        StdRegions::Orientation TriExp::v_GetCartesianEorient(int edge)
-        {
-            return GetGeom2D()->GetCartesianEorient(edge);
-        }
-
 
         const LibUtilities::BasisSharedPtr& TriExp::v_GetBasis(int dir) const
             {

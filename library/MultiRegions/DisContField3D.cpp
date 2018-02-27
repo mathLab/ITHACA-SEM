@@ -37,17 +37,15 @@
 #include <MultiRegions/DisContField3D.h>
 #include <LocalRegions/Expansion3D.h>
 #include <LocalRegions/Expansion2D.h>
-#include <SpatialDomains/MeshGraph3D.h>
+#include <SpatialDomains/MeshGraph.h>
 #include <LocalRegions/HexExp.h>
 #include <LocalRegions/TetExp.h>
 #include <LocalRegions/PrismExp.h>
 #include <LibUtilities/Foundations/Interp.h>
-#include <LibUtilities/Foundations/ManagerAccess.h> 
-#include <boost/assign/std/vector.hpp>
-#include <boost/tuple/tuple.hpp>
+#include <LibUtilities/Foundations/ManagerAccess.h>
+#include <tuple>
 
 using namespace std;
-using namespace boost::assign;
 
  namespace Nektar
  {
@@ -79,8 +77,9 @@ using namespace boost::assign;
              const LibUtilities::SessionReaderSharedPtr &pSession,
              const SpatialDomains::MeshGraphSharedPtr   &graph3D,
              const std::string                          &variable,
-             const bool                                  SetUpJustDG)
-             : ExpList3D          (pSession, graph3D, variable),
+             const bool                                  SetUpJustDG,
+             const Collections::ImplementationType       ImpType):
+             ExpList3D          (pSession, graph3D, variable, ImpType),
                m_bndCondExpansions(),
                m_bndConditions    (),
                m_trace(NullExpListSharedPtr)
@@ -286,7 +285,7 @@ using namespace boost::assign;
                       "solution type");
 
              GlobalLinSysSharedPtr glo_matrix;
-             GlobalLinSysMap::iterator matrixIter = m_globalBndMat->find(mkey);
+             auto matrixIter = m_globalBndMat->find(mkey);
 
              if (matrixIter == m_globalBndMat->end())
              {
@@ -313,10 +312,6 @@ using namespace boost::assign;
 
              ExpList2DSharedPtr trace;
 
-             SpatialDomains::MeshGraph3DSharedPtr graph3D = 
-                 boost::dynamic_pointer_cast<SpatialDomains::MeshGraph3D>(
-                     m_graph);
-
              // Set up matrix map
              m_globalBndMat = MemoryManager<GlobalLinSysMap>::
                  AllocateSharedPtr();
@@ -325,12 +320,12 @@ using namespace boost::assign;
              bool UseGenSegExp = true;
              trace = MemoryManager<ExpList2D>::AllocateSharedPtr(
                  m_session, m_bndCondExpansions, m_bndConditions,
-                 *m_exp,graph3D, m_periodicFaces, UseGenSegExp);
+                 *m_exp, m_graph, m_periodicFaces, UseGenSegExp);
 
              m_trace    = trace;
 
              m_traceMap = MemoryManager<AssemblyMapDG>::AllocateSharedPtr(
-                 m_session,graph3D,trace,*this,m_bndCondExpansions,
+                 m_session, m_graph, trace, *this, m_bndCondExpansions,
                  m_bndConditions, m_periodicFaces,variable);
 
              if (m_session->DefinesCmdLineArgument("verbose"))
@@ -370,8 +365,7 @@ using namespace boost::assign;
 
                  int offset      = m_trace->GetPhys_Offset(i);
                  int traceGeomId = traceEl->GetGeom2D()->GetGlobalID();
-                 PeriodicMap::iterator pIt = m_periodicFaces.find(
-                     traceGeomId);
+                 auto pIt = m_periodicFaces.find(traceGeomId);
 
                  if (pIt != m_periodicFaces.end() && !pIt->second[0].isLocal)
                  {
@@ -406,8 +400,7 @@ using namespace boost::assign;
              }
 
              // Set up information for periodic boundary conditions.
-             boost::unordered_map<int,pair<int,int> > perFaceToExpMap;
-             boost::unordered_map<int,pair<int,int> >::iterator it2;
+             std::unordered_map<int,pair<int,int> > perFaceToExpMap;
              cnt = 0;
              LocalRegions::Expansion3DSharedPtr exp3d;
              for (int n = 0; n < m_exp->size(); ++n)
@@ -415,7 +408,7 @@ using namespace boost::assign;
                  exp3d = (*m_exp)[n]->as<LocalRegions::Expansion3D>();
                  for (int e = 0; e < exp3d->GetNfaces(); ++e, ++cnt)
                  {
-                     PeriodicMap::iterator it = m_periodicFaces.find(
+                     auto it = m_periodicFaces.find(
                          exp3d->GetGeom3D()->GetFid(e));
 
                      if (it != m_periodicFaces.end())
@@ -448,12 +441,12 @@ using namespace boost::assign;
                          elmtToTrace[n][e]->GetElmtId());
 
                      // Check to see if this face is periodic.
-                     PeriodicMap::iterator it = m_periodicFaces.find(faceGeomId);
+                     auto it = m_periodicFaces.find(faceGeomId);
                      
                      if (it != m_periodicFaces.end())
                      {
                          const PeriodicEntity &ent = it->second[0];
-                         it2 = perFaceToExpMap.find(ent.id);
+                         auto it2 = perFaceToExpMap.find(ent.id);
 
                          if (it2 == perFaceToExpMap.end())
                          {
@@ -610,7 +603,7 @@ using namespace boost::assign;
             const SpatialDomains::BoundaryConditions &bcs,
             const std::string                        &variable)
         {
-            int cnt  = 0;
+            int cnt = 0;
             MultiRegions::ExpList2DSharedPtr       locExpList;
             SpatialDomains::BoundaryConditionShPtr locBCond;
 
@@ -618,7 +611,6 @@ using namespace boost::assign;
                 bcs.GetBoundaryRegions();
             const SpatialDomains::BoundaryConditionCollection &bconditions =
                 bcs.GetBoundaryConditions();
-            SpatialDomains::BoundaryRegionCollection::const_iterator it;
 
             m_bndCondExpansions =
                 Array<OneD,MultiRegions::ExpListSharedPtr>(bregions.size());
@@ -626,12 +618,12 @@ using namespace boost::assign;
                 Array<OneD,SpatialDomains::BoundaryConditionShPtr>(bregions.size());
 
             // list Dirichlet boundaries first
-            for (it = bregions.begin(), cnt = 0; it != bregions.end(); ++it)
+            for (auto &it : bregions)
             {
                 locBCond = GetBoundaryCondition(
-                    bconditions, it->first, variable);
+                    bconditions, it.first, variable);
                 locExpList = MemoryManager<MultiRegions::ExpList2D>
-                    ::AllocateSharedPtr(m_session, *(it->second),
+                    ::AllocateSharedPtr(m_session, *(it.second),
                                         graph3D, variable, locBCond->GetComm());
 
                 // Set up normals on non-Dirichlet boundary conditions
@@ -661,18 +653,14 @@ using namespace boost::assign;
                 = bcs.GetBoundaryRegions();
             const SpatialDomains::BoundaryConditionCollection &bconditions
                 = bcs.GetBoundaryConditions();
-            SpatialDomains::MeshGraph3DSharedPtr graph3D
-                = boost::dynamic_pointer_cast<
-                    SpatialDomains::MeshGraph3D>(m_graph);
-            SpatialDomains::BoundaryRegionCollection::const_iterator it;
 
-            LibUtilities::CommSharedPtr     vComm       =
+            LibUtilities::CommSharedPtr       vComm       =
                 m_session->GetComm()->GetRowComm();
-            LibUtilities::CompositeOrdering compOrder   =
-                m_session->GetCompositeOrdering();
-            LibUtilities::BndRegionOrdering bndRegOrder =
-                m_session->GetBndRegionOrdering();
-            SpatialDomains::CompositeMap    compMap     =
+            SpatialDomains::CompositeOrdering compOrder   =
+                m_graph->GetCompositeOrdering();
+            SpatialDomains::BndRegionOrdering bndRegOrder =
+                m_graph->GetBndRegionOrdering();
+            SpatialDomains::CompositeMap      compMap     =
                 m_graph->GetComposites();
 
             // perComps: Stores a unique collection of pairs of periodic
@@ -718,10 +706,10 @@ using namespace boost::assign;
             // Begin by populating the perComps map. We loop over all periodic
             // boundary conditions and determine the composite associated with
             // it, then fill out the all* maps.
-            for (it = bregions.begin(); it != bregions.end(); ++it)
+            for (auto &it : bregions)
             {
                 locBCond = GetBoundaryCondition(
-                    bconditions, it->first, variable);
+                    bconditions, it.first, variable);
 
                 if (locBCond->GetBoundaryConditionType()
                         != SpatialDomains::ePeriodic)
@@ -730,13 +718,13 @@ using namespace boost::assign;
                 }
 
                 // Identify periodic boundary region IDs.
-                region1ID = it->first;
-                region2ID = boost::static_pointer_cast<
+                region1ID = it.first;
+                region2ID = std::static_pointer_cast<
                     SpatialDomains::PeriodicBoundaryCondition>(
                         locBCond)->m_connectedBoundaryRegion;
 
                 // Check the region only contains a single composite.
-                ASSERTL0(it->second->size() == 1,
+                ASSERTL0(it.second->size() == 1,
                          "Boundary region "+boost::lexical_cast<string>(
                              region1ID)+" should only contain 1 composite.");
 
@@ -748,7 +736,7 @@ using namespace boost::assign;
                 int cId1, cId2;
                 if (vComm->GetSize() == 1)
                 {
-                    cId1 = it->second->begin()->first;
+                    cId1 = it.second->begin()->first;
                     cId2 = bregions.find(region2ID)->second->begin()->first;
                 }
                 else
@@ -757,29 +745,29 @@ using namespace boost::assign;
                     cId2 = bndRegOrder.find(region2ID)->second[0];
                 }
 
-                SpatialDomains::Composite c = it->second->begin()->second;
+                SpatialDomains::CompositeSharedPtr c = it.second->begin()->second;
                 vector<unsigned int> tmpOrder;
                 
                 // From the composite, we now construct the allVerts, allEdges
                 // and allCoord map so that they can be transferred across
                 // processors. We also populate the locFaces set to store a
                 // record of all faces local to this process.
-                for (i = 0; i < c->size(); ++i)
+                for (i = 0; i < c->m_geomVec.size(); ++i)
                 {
                     SpatialDomains::Geometry2DSharedPtr faceGeom =
-                        boost::dynamic_pointer_cast<
-                            SpatialDomains::Geometry2D>((*c)[i]);
+                        std::dynamic_pointer_cast<
+                            SpatialDomains::Geometry2D>(c->m_geomVec[i]);
                     ASSERTL1(faceGeom, "Unable to cast to shared ptr");
 
                     // Get geometry ID of this face and store in locFaces.
-                    int faceId = (*c)[i]->GetGlobalID();
+                    int faceId = c->m_geomVec[i]->GetGlobalID();
                     locFaces.insert(faceId);
 
                     // In serial, mesh partitioning will not have occurred so
                     // need to fill composite ordering map manually.
                     if (vComm->GetSize() == 1)
                     {
-                        tmpOrder.push_back((*c)[i]->GetGlobalID());
+                        tmpOrder.push_back(c->m_geomVec[i]->GetGlobalID());
                     }
 
                     // Loop over vertices and edges of the face to populate
@@ -805,7 +793,7 @@ using namespace boost::assign;
                 // later in the routine.
                 if (vComm->GetSize() == 1)
                 {
-                    compOrder[it->second->begin()->first] = tmpOrder;
+                    compOrder[it.second->begin()->first] = tmpOrder;
                 }
 
                 // See if we already have either region1 or region2 stored in
@@ -869,8 +857,8 @@ using namespace boost::assign;
             // Process p writes IDs of its faces into position faceoffset[p] of
             // faceIds which allows us to perform an AllReduce to distribute
             // information amongst processors.
-            set<int>::iterator sIt;
-            for (i = 0, sIt = locFaces.begin(); sIt != locFaces.end(); ++sIt)
+            auto sIt = locFaces.begin();
+            for (i = 0; sIt != locFaces.end(); ++sIt)
             {
                 faceIds  [faceoffset[p] + i  ] = *sIt;
                 faceVerts[faceoffset[p] + i++] = allVerts[*sIt].size();
@@ -982,10 +970,10 @@ using namespace boost::assign;
                         ::AllocateSharedPtr(
                             3, verts[j], vertX[cnt], vertY[cnt], vertZ[cnt]);
                     vCoMap[vertIds[cnt]] = coord[j];
-                    
+
                     // Try to insert edge into the eIdMap to avoid re-inserting.
-                    pair<map<int, pair<int, int> >::iterator, bool> testIns =
-                        eIdMap.insert(make_pair(
+                    auto testIns = eIdMap.insert(
+                        make_pair(
                             edgeIds[cnt],
                             make_pair(vertIds[tmp+j],
                                       vertIds[tmp+((j+1) % faceVerts[i])])));
@@ -998,9 +986,19 @@ using namespace boost::assign;
                     // If the edge is reversed with respect to the face, then
                     // swap the edges so that we have the original ordering of
                     // the edge in the 3D element. This is necessary to properly
-                    // determine edge orientation.
-                    if ((StdRegions::Orientation)edgeOrt[cnt]
-                            == StdRegions::eBackwards)
+                    // determine edge orientation. Note that the logic relies on
+                    // the fact that all edge forward directions are CCW
+                    // orientated: we use a tensor product ordering for 2D
+                    // elements so need to reverse this for edge IDs 2 and 3.
+                    StdRegions::Orientation edgeOrient =
+                        static_cast<StdRegions::Orientation>(edgeOrt[cnt]);
+                    if (j > 1)
+                    {
+                        edgeOrient = edgeOrient == StdRegions::eForwards ?
+                            StdRegions::eBackwards : StdRegions::eForwards;
+                    }
+
+                    if (edgeOrient == StdRegions::eBackwards)
                     {
                         swap(testIns.first->second.first,
                              testIns.first->second.second);
@@ -1015,16 +1013,13 @@ using namespace boost::assign;
             // Go through list of composites and figure out which edges are
             // parallel from original ordering in session file. This includes
             // composites which are not necessarily on this process.
-            map<int,int>::iterator cIt, pIt;
-            map<int,int>::const_iterator oIt;
 
             // Store temporary map of periodic vertices which will hold all
             // periodic vertices on the entire mesh so that doubly periodic
             // vertices/edges can be counted properly across partitions. Local
             // vertices/edges are copied into m_periodicVerts and
             // m_periodicEdges at the end of the function.
-            PeriodicMap periodicVerts;
-            PeriodicMap periodicEdges;
+            PeriodicMap periodicVerts, periodicEdges;
 
             // Construct two maps which determine how vertices and edges of
             // faces connect given a specific face orientation. The key of the
@@ -1034,32 +1029,32 @@ using namespace boost::assign;
             map<int, map<StdRegions::Orientation, vector<int> > > emap;
 
             map<StdRegions::Orientation, vector<int> > quadVertMap;
-            quadVertMap[StdRegions::eDir1FwdDir1_Dir2FwdDir2] += 0,1,2,3;
-            quadVertMap[StdRegions::eDir1FwdDir1_Dir2BwdDir2] += 3,2,1,0;
-            quadVertMap[StdRegions::eDir1BwdDir1_Dir2FwdDir2] += 1,0,3,2;
-            quadVertMap[StdRegions::eDir1BwdDir1_Dir2BwdDir2] += 2,3,0,1;
-            quadVertMap[StdRegions::eDir1FwdDir2_Dir2FwdDir1] += 0,3,2,1;
-            quadVertMap[StdRegions::eDir1FwdDir2_Dir2BwdDir1] += 1,2,3,0;
-            quadVertMap[StdRegions::eDir1BwdDir2_Dir2FwdDir1] += 3,0,1,2;
-            quadVertMap[StdRegions::eDir1BwdDir2_Dir2BwdDir1] += 2,1,0,3;
+            quadVertMap[StdRegions::eDir1FwdDir1_Dir2FwdDir2] = {0,1,2,3};
+            quadVertMap[StdRegions::eDir1FwdDir1_Dir2BwdDir2] = {3,2,1,0};
+            quadVertMap[StdRegions::eDir1BwdDir1_Dir2FwdDir2] = {1,0,3,2};
+            quadVertMap[StdRegions::eDir1BwdDir1_Dir2BwdDir2] = {2,3,0,1};
+            quadVertMap[StdRegions::eDir1FwdDir2_Dir2FwdDir1] = {0,3,2,1};
+            quadVertMap[StdRegions::eDir1FwdDir2_Dir2BwdDir1] = {1,2,3,0};
+            quadVertMap[StdRegions::eDir1BwdDir2_Dir2FwdDir1] = {3,0,1,2};
+            quadVertMap[StdRegions::eDir1BwdDir2_Dir2BwdDir1] = {2,1,0,3};
 
             map<StdRegions::Orientation, vector<int> > quadEdgeMap;
-            quadEdgeMap[StdRegions::eDir1FwdDir1_Dir2FwdDir2] += 0,1,2,3;
-            quadEdgeMap[StdRegions::eDir1FwdDir1_Dir2BwdDir2] += 2,1,0,3;
-            quadEdgeMap[StdRegions::eDir1BwdDir1_Dir2FwdDir2] += 0,3,2,1;
-            quadEdgeMap[StdRegions::eDir1BwdDir1_Dir2BwdDir2] += 2,3,0,1;
-            quadEdgeMap[StdRegions::eDir1FwdDir2_Dir2FwdDir1] += 3,2,1,0;
-            quadEdgeMap[StdRegions::eDir1FwdDir2_Dir2BwdDir1] += 1,2,3,0;
-            quadEdgeMap[StdRegions::eDir1BwdDir2_Dir2FwdDir1] += 3,0,1,2;
-            quadEdgeMap[StdRegions::eDir1BwdDir2_Dir2BwdDir1] += 1,0,3,2;
+            quadEdgeMap[StdRegions::eDir1FwdDir1_Dir2FwdDir2] = {0,1,2,3};
+            quadEdgeMap[StdRegions::eDir1FwdDir1_Dir2BwdDir2] = {2,1,0,3};
+            quadEdgeMap[StdRegions::eDir1BwdDir1_Dir2FwdDir2] = {0,3,2,1};
+            quadEdgeMap[StdRegions::eDir1BwdDir1_Dir2BwdDir2] = {2,3,0,1};
+            quadEdgeMap[StdRegions::eDir1FwdDir2_Dir2FwdDir1] = {3,2,1,0};
+            quadEdgeMap[StdRegions::eDir1FwdDir2_Dir2BwdDir1] = {1,2,3,0};
+            quadEdgeMap[StdRegions::eDir1BwdDir2_Dir2FwdDir1] = {3,0,1,2};
+            quadEdgeMap[StdRegions::eDir1BwdDir2_Dir2BwdDir1] = {1,0,3,2};
 
             map<StdRegions::Orientation, vector<int> > triVertMap;
-            triVertMap[StdRegions::eDir1FwdDir1_Dir2FwdDir2] += 0,1,2;
-            triVertMap[StdRegions::eDir1BwdDir1_Dir2FwdDir2] += 1,0,2;
+            triVertMap[StdRegions::eDir1FwdDir1_Dir2FwdDir2] = {0,1,2};
+            triVertMap[StdRegions::eDir1BwdDir1_Dir2FwdDir2] = {1,0,2};
 
             map<StdRegions::Orientation, vector<int> > triEdgeMap;
-            triEdgeMap[StdRegions::eDir1FwdDir1_Dir2FwdDir2] += 0,1,2;
-            triEdgeMap[StdRegions::eDir1BwdDir1_Dir2FwdDir2] += 0,2,1;
+            triEdgeMap[StdRegions::eDir1FwdDir1_Dir2FwdDir2] = {0,1,2};
+            triEdgeMap[StdRegions::eDir1BwdDir1_Dir2FwdDir2] = {0,2,1};
 
             vmap[3] = triVertMap;
             vmap[4] = quadVertMap;
@@ -1071,11 +1066,11 @@ using namespace boost::assign;
             // Finally we have enough information to populate the periodic
             // vertex, edge and face maps. Begin by looping over all pairs of
             // periodic composites to determine pairs of periodic faces.
-            for (cIt = perComps.begin(); cIt != perComps.end(); ++cIt)
+            for (auto &cIt : perComps)
             {
-                SpatialDomains::Composite c[2];
-                const int   id1  = cIt->first;
-                const int   id2  = cIt->second;
+                SpatialDomains::CompositeSharedPtr c[2];
+                const int   id1  = cIt.first;
+                const int   id2  = cIt.second;
                 std::string id1s = boost::lexical_cast<string>(id1);
                 std::string id2s = boost::lexical_cast<string>(id2);
 
@@ -1128,18 +1123,18 @@ using namespace boost::assign;
                 // Now that we have all pairs of periodic faces, loop over the
                 // ones local to this process and populate face/edge/vertex
                 // maps.
-                for (pIt = compPairs.begin(); pIt != compPairs.end(); ++pIt)
+                for (auto &pIt : compPairs)
                 {
-                    int  ids  [2] = {pIt->first, pIt->second};
-                    bool local[2] = {locFaces.count(pIt->first) > 0,
-                                     locFaces.count(pIt->second) > 0};
+                    int  ids  [2] = {pIt.first, pIt.second};
+                    bool local[2] = {locFaces.count(pIt.first) > 0,
+                                     locFaces.count(pIt.second) > 0};
 
                     ASSERTL0(coordMap.count(ids[0]) > 0 &&
                              coordMap.count(ids[1]) > 0,
                              "Unable to find face in coordinate map");
 
-                    allCompPairs[pIt->first ] = pIt->second;
-                    allCompPairs[pIt->second] = pIt->first;
+                    allCompPairs[pIt.first ] = pIt.second;
+                    allCompPairs[pIt.second] = pIt.first;
 
                     // Loop up coordinates of the faces, check they have the
                     // same number of vertices.
@@ -1222,7 +1217,6 @@ using namespace boost::assign;
                         // tmpMap will hold the pairs of vertices which are
                         // periodic.
                         map<int, pair<int, bool> > tmpMap;
-                        map<int, pair<int, bool> >::iterator mIt;
 
                         // Use vmap to determine which vertices connect given
                         // the orientation o.
@@ -1234,31 +1228,30 @@ using namespace boost::assign;
                         }
 
                         // Now loop over tmpMap to associate periodic vertices.
-                        for (mIt = tmpMap.begin(); mIt != tmpMap.end(); ++mIt)
+                        for (auto &mIt : tmpMap)
                         {
-                            PeriodicEntity ent2(mIt->second.first,
+                            PeriodicEntity ent2(mIt.second.first,
                                                 StdRegions::eNoOrientation,
-                                                mIt->second.second);
+                                                mIt.second.second);
 
                             // See if this vertex has been recorded already.
-                            PeriodicMap::iterator perIt = periodicVerts.find(
-                                mIt->first);
+                            auto perIt = periodicVerts.find(mIt.first);
 
                             if (perIt == periodicVerts.end())
                             {
                                 // Vertex is new - just record this entity as
                                 // usual.
-                                periodicVerts[mIt->first].push_back(ent2);
-                                perIt = periodicVerts.find(mIt->first);
+                                periodicVerts[mIt.first].push_back(ent2);
+                                perIt = periodicVerts.find(mIt.first);
                             }
                             else
                             {
                                 // Vertex is known - loop over the vertices
                                 // inside the record and potentially add vertex
-                                // mIt->second to the list.
+                                // mIt.second to the list.
                                 for (k = 0; k < perIt->second.size(); ++k)
                                 {
-                                    if (perIt->second[k].id == mIt->second.first)
+                                    if (perIt->second[k].id == mIt.second.first)
                                     {
                                         break;
                                     }
@@ -1292,8 +1285,7 @@ using namespace boost::assign;
                         vector<int> per1 = edgeMap[ids[i]];
                         vector<int> per2 = edgeMap[ids[other]];
 
-                        map<int, pair<int, bool> >           tmpMap;
-                        map<int, pair<int, bool> >::iterator mIt;
+                        map<int, pair<int, bool> > tmpMap;
 
                         for (j = 0; j < nFaceVerts; ++j)
                         {
@@ -1302,26 +1294,25 @@ using namespace boost::assign;
                                 per2[e], locEdges.count(per2[e]) > 0);
                         }
 
-                        for (mIt = tmpMap.begin(); mIt != tmpMap.end(); ++mIt)
+                        for (auto &mIt : tmpMap)
                         {
                             // Note we assume orientation of edges is forwards -
                             // this may be reversed later.
-                            PeriodicEntity ent2(mIt->second.first,
+                            PeriodicEntity ent2(mIt.second.first,
                                                 StdRegions::eForwards,
-                                                mIt->second.second);
-                            PeriodicMap::iterator perIt = periodicEdges.find(
-                                mIt->first);
+                                                mIt.second.second);
+                            auto perIt = periodicEdges.find(mIt.first);
 
                             if (perIt == periodicEdges.end())
                             {
-                                periodicEdges[mIt->first].push_back(ent2);
-                                perIt = periodicEdges.find(mIt->first);
+                                periodicEdges[mIt.first].push_back(ent2);
+                                perIt = periodicEdges.find(mIt.first);
                             }
                             else
                             {
                                 for (k = 0; k < perIt->second.size(); ++k)
                                 {
-                                    if (perIt->second[k].id == mIt->second.first)
+                                    if (perIt->second[k].id == mIt.second.first)
                                     {
                                         break;
                                     }
@@ -1356,10 +1347,10 @@ using namespace boost::assign;
 
             cnt = pairOffsets[p];
 
-            for (pIt = allCompPairs.begin(); pIt != allCompPairs.end(); ++pIt)
+            for (auto &pIt : allCompPairs)
             {
-                first [cnt  ] = pIt->first;
-                second[cnt++] = pIt->second;
+                first [cnt  ] = pIt.first;
+                second[cnt++] = pIt.second;
             }
 
             vComm->AllReduce(first,  LibUtilities::ReduceSum);
@@ -1389,7 +1380,7 @@ using namespace boost::assign;
                 {
                     int vId = vertIds[cnt];
 
-                    PeriodicMap::iterator perId = periodicVerts.find(vId);
+                    auto perId = periodicVerts.find(vId);
 
                     if (perId == periodicVerts.end())
                     {
@@ -1457,15 +1448,13 @@ using namespace boost::assign;
 
             // Finally, we must loop over the periodicVerts and periodicEdges
             // map to complete connectivity information.
-            PeriodicMap::iterator perIt, perIt2;
-            for (perIt  = periodicVerts.begin();
-                 perIt != periodicVerts.end(); ++perIt)
+            for (auto &perIt : periodicVerts)
             {
                 // For each vertex that is periodic with this one...
-                for (i = 0; i < perIt->second.size(); ++i)
+                for (i = 0; i < perIt.second.size(); ++i)
                 {
                     // Find the vertex in the periodicVerts map...
-                    perIt2 = periodicVerts.find(perIt->second[i].id);
+                    auto perIt2 = periodicVerts.find(perIt.second[i].id);
                     ASSERTL0(perIt2 != periodicVerts.end(),
                              "Couldn't find periodic vertex.");
 
@@ -1474,66 +1463,63 @@ using namespace boost::assign;
                     // original list.
                     for (j = 0; j < perIt2->second.size(); ++j)
                     {
-                        if (perIt2->second[j].id == perIt->first)
+                        if (perIt2->second[j].id == perIt.first)
                         {
                             continue;
                         }
 
-                        for (k = 0; k < perIt->second.size(); ++k)
+                        for (k = 0; k < perIt.second.size(); ++k)
                         {
-                            if (perIt2->second[j].id == perIt->second[k].id)
+                            if (perIt2->second[j].id == perIt.second[k].id)
                             {
                                 break;
                             }
                         }
 
-                        if (k == perIt->second.size())
+                        if (k == perIt.second.size())
                         {
-                            perIt->second.push_back(perIt2->second[j]);
+                            perIt.second.push_back(perIt2->second[j]);
                         }
                     }
                 }
             }
 
-            for (perIt  = periodicEdges.begin();
-                 perIt != periodicEdges.end(); ++perIt)
+            for (auto &perIt : periodicEdges)
             {
-                for (i = 0; i < perIt->second.size(); ++i)
+                for (i = 0; i < perIt.second.size(); ++i)
                 {
-                    perIt2 = periodicEdges.find(perIt->second[i].id);
+                    auto perIt2 = periodicEdges.find(perIt.second[i].id);
                     ASSERTL0(perIt2 != periodicEdges.end(),
                              "Couldn't find periodic edge.");
 
                     for (j = 0; j < perIt2->second.size(); ++j)
                     {
-                        if (perIt2->second[j].id == perIt->first)
+                        if (perIt2->second[j].id == perIt.first)
                         {
                             continue;
                         }
 
-                        for (k = 0; k < perIt->second.size(); ++k)
+                        for (k = 0; k < perIt.second.size(); ++k)
                         {
-                            if (perIt2->second[j].id == perIt->second[k].id)
+                            if (perIt2->second[j].id == perIt.second[k].id)
                             {
                                 break;
                             }
                         }
 
-                        if (k == perIt->second.size())
+                        if (k == perIt.second.size())
                         {
-                            perIt->second.push_back(perIt2->second[j]);
+                            perIt.second.push_back(perIt2->second[j]);
                         }
                     }
                 }
             }
 
             // Loop over periodic edges to determine relative edge orientations.
-            for (perIt  = periodicEdges.begin();
-                 perIt != periodicEdges.end(); perIt++)
+            for (auto &perIt : periodicEdges)
             {
                 // Find edge coordinates
-                map<int, pair<int, int> >::iterator eIt
-                    = eIdMap.find(perIt->first);
+                auto eIt = eIdMap.find(perIt.first);
                 SpatialDomains::PointGeom v[2] = {
                     *vCoMap[eIt->second.first],
                     *vCoMap[eIt->second.second]
@@ -1542,9 +1528,9 @@ using namespace boost::assign;
                 // Loop over each edge, and construct a vector that takes us
                 // from one vertex to another. Use this to figure out which
                 // vertex maps to which.
-                for (i = 0; i < perIt->second.size(); ++i)
+                for (i = 0; i < perIt.second.size(); ++i)
                 {
-                    eIt = eIdMap.find(perIt->second[i].id);
+                    eIt = eIdMap.find(perIt.second[i].id);
 
                     SpatialDomains::PointGeom w[2] = {
                         *vCoMap[eIt->second.first],
@@ -1588,35 +1574,32 @@ using namespace boost::assign;
                     // reverse the orientation.
                     if (vMap[0] != 0)
                     {
-                        perIt->second[i].orient = StdRegions::eBackwards;
+                        perIt.second[i].orient = StdRegions::eBackwards;
                     }
                 }
             }
 
             // Do one final loop over periodic vertices/edges to remove
             // non-local vertices/edges from map.
-            for (perIt  = periodicVerts.begin();
-                 perIt != periodicVerts.end(); ++perIt)
+            for (auto &perIt : periodicVerts)
             {
-                if (locVerts.count(perIt->first) > 0)
+                if (locVerts.count(perIt.first) > 0)
                 {
-                    m_periodicVerts.insert(*perIt);
+                    m_periodicVerts.insert(perIt);
                 }
             }
 
-            for (perIt  = periodicEdges.begin();
-                 perIt != periodicEdges.end(); ++perIt)
+            for (auto &perIt : periodicEdges)
             {
-                if (locEdges.count(perIt->first) > 0)
+                if (locEdges.count(perIt.first) > 0)
                 {
-                    m_periodicEdges.insert(*perIt);
+                    m_periodicEdges.insert(perIt);
                 }
             }
         }
 
         bool DisContField3D::IsLeftAdjacentFace(const int n, const int e)
         {
-            set<int>::iterator it;
             LocalRegions::Expansion2DSharedPtr traceEl = 
                     m_traceMap->GetElmtToTrace()[n][e]->
                          as<LocalRegions::Expansion2D>();
@@ -1629,15 +1612,14 @@ using namespace boost::assign;
             {
                 // Boundary edge (1 connected element). Do nothing in
                 // serial.
-                it = m_boundaryFaces.find(traceEl->GetElmtId());
+                auto it = m_boundaryFaces.find(traceEl->GetElmtId());
 
                 // If the edge does not have a boundary condition set on
                 // it, then assume it is a partition edge.
                 if (it == m_boundaryFaces.end())
                 {
                     int traceGeomId = traceEl->GetGeom2D()->GetGlobalID();
-                    PeriodicMap::iterator pIt = m_periodicFaces.find(
-                        traceGeomId);
+                    auto pIt = m_periodicFaces.find(traceGeomId);
 
                     if (pIt != m_periodicFaces.end() && !pIt->second[0].isLocal)
                     {
@@ -1654,9 +1636,7 @@ using namespace boost::assign;
                      traceEl->GetRightAdjacentElementFace() != -1)
             {
                 // Non-boundary edge (2 connected elements).
-                fwd = dynamic_cast<Nektar::StdRegions::StdExpansion*>
-                    (traceEl->GetLeftAdjacentElementExp().get()) ==
-                    (*m_exp)[n].get();
+                fwd = (traceEl->GetLeftAdjacentElementExp().get() == (*m_exp)[n].get() );
             }
             else
             {
@@ -1896,10 +1876,6 @@ using namespace boost::assign;
                 int cnt;
                 int nbcs = 0;
 
-                SpatialDomains::MeshGraph3DSharedPtr graph3D = 
-                    boost::dynamic_pointer_cast<SpatialDomains::MeshGraph3D>(
-                        m_graph);
-
                 // Populate global ID map (takes global geometry ID to local
                 // expansion list ID).
                 LocalRegions::Expansion3DSharedPtr exp3d;
@@ -1926,13 +1902,12 @@ using namespace boost::assign;
                     {
                         exp2d = m_bndCondExpansions[n]->GetExp(i)->
                                             as<LocalRegions::Expansion2D>();
-                        // Use face to element map from MeshGraph3D.
-                        SpatialDomains::ElementFaceVectorSharedPtr tmp = 
-                            graph3D->GetElementsFromFace(exp2d->GetGeom2D());
 
-                        m_BCtoElmMap[cnt] = globalIdMap[(*tmp)[0]->
-                                                  m_Element->GetGlobalID()];
-                        m_BCtoFaceMap[cnt] = (*tmp)[0]->m_FaceIndx;
+                        SpatialDomains::GeometryLinkSharedPtr tmp =
+                            m_graph->GetElementsFromFace(exp2d->GetGeom2D());
+                        m_BCtoElmMap[cnt] = globalIdMap[
+                            tmp->at(0).first->GetGlobalID()];
+                        m_BCtoFaceMap[cnt] = tmp->at(0).second;
                     }
                 }
             }
@@ -1941,7 +1916,7 @@ using namespace boost::assign;
         }
         
         void DisContField3D::v_GetBndElmtExpansion(int i,
-                            boost::shared_ptr<ExpList> &result,
+                            std::shared_ptr<ExpList> &result,
                             const bool DeclareCoeffPhysArrays)
         {
             int n, cnt, nq;
@@ -2012,6 +1987,7 @@ using namespace boost::assign;
                 const FlagList &flags,
                 const StdRegions::ConstFactorMap &factors,
                 const StdRegions::VarCoeffMap &varcoeff,
+                const MultiRegions::VarFactorsMap &varfactors,
                 const Array<OneD, const NekDouble> &dirForcing,
                 const bool PhysSpaceForcing)
         {
@@ -2208,7 +2184,7 @@ using namespace boost::assign;
                     locExpList->GetCoords(x0, x1, x2);
                     
                     LibUtilities::Equation coeffeqn =
-                        boost::static_pointer_cast<
+                        std::static_pointer_cast<
                             SpatialDomains::RobinBoundaryCondition>
                         (m_bndConditions[i])->m_robinPrimitiveCoeff;
                     
@@ -2321,7 +2297,7 @@ using namespace boost::assign;
                         LibUtilities::BasisKey  BkeyH1(LibUtilities::eOrtho_A, num_modes0, PkeyH1);
                         LibUtilities::BasisKey  BkeyH2(LibUtilities::eOrtho_A, num_modes1, PkeyH2);
                         LibUtilities::BasisKey  BkeyH3(LibUtilities::eOrtho_A, num_modes2, PkeyH3);
-                        SpatialDomains::HexGeomSharedPtr hGeom = boost::dynamic_pointer_cast<SpatialDomains::HexGeom>((*m_exp)[i]->GetGeom());
+                        SpatialDomains::HexGeomSharedPtr hGeom = std::dynamic_pointer_cast<SpatialDomains::HexGeom>((*m_exp)[i]->GetGeom());
                         ppExp = MemoryManager<LocalRegions::HexExp>::AllocateSharedPtr(BkeyH1, BkeyH2, BkeyH3, hGeom);
                     }
                     break;
@@ -2333,7 +2309,7 @@ using namespace boost::assign;
                         LibUtilities::BasisKey  BkeyT1(LibUtilities::eOrtho_A, num_modes0, PkeyT1);
                         LibUtilities::BasisKey  BkeyT2(LibUtilities::eOrtho_B, num_modes1, PkeyT2);
                         LibUtilities::BasisKey  BkeyT3(LibUtilities::eOrtho_C, num_modes2, PkeyT3);
-                        SpatialDomains::TetGeomSharedPtr tGeom = boost::dynamic_pointer_cast<SpatialDomains::TetGeom>((*m_exp)[i]->GetGeom());
+                        SpatialDomains::TetGeomSharedPtr tGeom = std::dynamic_pointer_cast<SpatialDomains::TetGeom>((*m_exp)[i]->GetGeom());
                         ppExp = MemoryManager<LocalRegions::TetExp>::AllocateSharedPtr(BkeyT1, BkeyT2, BkeyT3, tGeom);
                     }
                     break;
@@ -2345,7 +2321,7 @@ using namespace boost::assign;
                         LibUtilities::BasisKey  BkeyP1(LibUtilities::eOrtho_A, num_modes0, PkeyP1);
                         LibUtilities::BasisKey  BkeyP2(LibUtilities::eOrtho_A, num_modes1, PkeyP2);
                         LibUtilities::BasisKey  BkeyP3(LibUtilities::eOrtho_B, num_modes2, PkeyP3);
-                        SpatialDomains::PrismGeomSharedPtr pGeom = boost::dynamic_pointer_cast<SpatialDomains::PrismGeom>((*m_exp)[i]->GetGeom());
+                        SpatialDomains::PrismGeomSharedPtr pGeom = std::dynamic_pointer_cast<SpatialDomains::PrismGeom>((*m_exp)[i]->GetGeom());
                         ppExp = MemoryManager<LocalRegions::PrismExp>::AllocateSharedPtr(BkeyP1, BkeyP2, BkeyP3, pGeom);
                     }
                     break;
@@ -2463,7 +2439,7 @@ using namespace boost::assign;
                     if (m_bndConditions[i]->GetBoundaryConditionType()
                         == SpatialDomains::eDirichlet)
                     {
-                        SpatialDomains::DirichletBCShPtr bcPtr = boost::static_pointer_cast<
+                        SpatialDomains::DirichletBCShPtr bcPtr = std::static_pointer_cast<
                             SpatialDomains::DirichletBoundaryCondition>(
                                 m_bndConditions[i]);
                         string filebcs = bcPtr->m_filename;
@@ -2477,7 +2453,7 @@ using namespace boost::assign;
                         
                         if (exprbcs != "")
                         {
-                            LibUtilities::Equation  condition = boost::static_pointer_cast<SpatialDomains::
+                            LibUtilities::Equation  condition = std::static_pointer_cast<SpatialDomains::
                                     DirichletBoundaryCondition >(
                                     m_bndConditions[i])->m_dirichletCondition;
                             
@@ -2493,7 +2469,7 @@ using namespace boost::assign;
                     else if (m_bndConditions[i]->GetBoundaryConditionType()
                              == SpatialDomains::eNeumann)
                     {
-                        SpatialDomains::NeumannBCShPtr bcPtr = boost::static_pointer_cast<
+                        SpatialDomains::NeumannBCShPtr bcPtr = std::static_pointer_cast<
                             SpatialDomains::NeumannBoundaryCondition>(
                                 m_bndConditions[i]);
                         string filebcs = bcPtr->m_filename;
@@ -2505,7 +2481,7 @@ using namespace boost::assign;
                         else
                         {
                             
-                            LibUtilities::Equation condition = boost::
+                            LibUtilities::Equation condition = std::
                                 static_pointer_cast<SpatialDomains::
                                                     NeumannBoundaryCondition>(
                                     m_bndConditions[i])->m_neumannCondition;
@@ -2520,7 +2496,7 @@ using namespace boost::assign;
                     else if (m_bndConditions[i]->GetBoundaryConditionType()
                              == SpatialDomains::eRobin)
                     {
-                        SpatialDomains::RobinBCShPtr bcPtr = boost::static_pointer_cast<
+                        SpatialDomains::RobinBCShPtr bcPtr = std::static_pointer_cast<
                             SpatialDomains::RobinBoundaryCondition>(
                                 m_bndConditions[i]);
                         string filebcs = bcPtr->m_filename;
@@ -2531,7 +2507,7 @@ using namespace boost::assign;
                         }
                         else
                         {
-                            LibUtilities::Equation condition = boost::
+                            LibUtilities::Equation condition = std::
                                 static_pointer_cast<SpatialDomains::
                                                     RobinBoundaryCondition>(
                                     m_bndConditions[i])->m_robinFunction;

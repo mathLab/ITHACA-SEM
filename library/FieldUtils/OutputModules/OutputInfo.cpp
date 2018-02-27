@@ -40,7 +40,7 @@ using namespace std;
 #include "OutputInfo.h"
 
 #include <LibUtilities/BasicUtils/FieldIOXml.h>
-#include <LibUtilities/BasicUtils/MeshPartition.h>
+#include <SpatialDomains/MeshPartition.h>
 #include <boost/format.hpp>
 
 namespace Nektar
@@ -55,6 +55,7 @@ ModuleKey OutputInfo::m_className =
 
 OutputInfo::OutputInfo(FieldSharedPtr f) : OutputModule(f)
 {
+    m_config["nparts"] = ConfigOption(false, "NotSet", "Number of partitions over which to create the info file");
 }
 
 OutputInfo::~OutputInfo()
@@ -67,22 +68,16 @@ void OutputInfo::Process(po::variables_map &vm)
     string filename = m_config["outfile"].as<string>();
     int i;
 
-    if (m_f->m_verbose)
-    {
-        cout << "OutputInfo: Writing Info file..." << endl;
-    }
-
     // partition mesh
-    ASSERTL0(vm.count("nprocs") > 0,
-             "--nprocs nust be specified with info output");
+    ASSERTL0(m_config["nparts"].as<string>().compare("NotSet") != 0,
+             "Need to specify nparts for info output");
+    int nparts = m_config["nparts"].as<int>();
 
-    int nprocs = vm["nprocs"].as<int>();
+    LibUtilities::CommSharedPtr vComm = std::shared_ptr<FieldConvertComm>(
+        new FieldConvertComm(0, NULL, nparts, 0));
+    vComm->SplitComm(1, nparts);
 
-    LibUtilities::CommSharedPtr vComm = boost::shared_ptr<FieldConvertComm>(
-        new FieldConvertComm(0, NULL, nprocs, 0));
-    vComm->SplitComm(1, nprocs);
-
-    // define new session with psuedo parallel communicator
+    // define new session with pseudo parallel communicator
     string xml_ending    = "xml";
     string xml_gz_ending = "xml.gz";
 
@@ -100,15 +95,15 @@ void OutputInfo::Process(po::variables_map &vm)
     }
 
     LibUtilities::SessionReaderSharedPtr vSession =
-        boost::shared_ptr<LibUtilities::SessionReader>(
+        std::shared_ptr<LibUtilities::SessionReader>(
             new LibUtilities::SessionReader(0, 0, files, vComm));
-    vSession->SetUpXmlDoc();
+    vSession->InitSession();
 
     // Default partitioner to use is Metis. Use Scotch as default
     // if it is installed. Override default with command-line flags
     // if they are set.
     string vPartitionerName = "Metis";
-    if (LibUtilities::GetMeshPartitionFactory().ModuleExists("Scotch"))
+    if (SpatialDomains::GetMeshPartitionFactory().ModuleExists("Scotch"))
     {
         vPartitionerName = "Scotch";
     }
@@ -121,17 +116,23 @@ void OutputInfo::Process(po::variables_map &vm)
         vPartitionerName = "Scotch";
     }
 
-    LibUtilities::MeshPartitionSharedPtr vMeshPartition =
-        LibUtilities::GetMeshPartitionFactory().CreateInstance(vPartitionerName,
-                                                               vSession);
+    // Construct MeshGraph to read geometry.
+    SpatialDomains::MeshGraphSharedPtr mesh =
+        SpatialDomains::GetMeshGraphFactory().CreateInstance(
+            vSession->GetGeometryType());
 
-    vMeshPartition->PartitionMesh(nprocs, true);
+    SpatialDomains::MeshPartitionSharedPtr vMeshPartition =
+        SpatialDomains::GetMeshPartitionFactory().CreateInstance(
+            vPartitionerName, vSession, mesh);
+    mesh->ReadGeometry(SpatialDomains::NullDomainRangeShPtr, false);
+
+    vMeshPartition->PartitionMesh(nparts, true);
 
     // get hold of local partition ids
-    std::vector<std::vector<unsigned int> > ElementIDs(nprocs);
+    std::vector<std::vector<unsigned int> > ElementIDs(nparts);
 
     // Populate the list of element ID lists from all processes
-    for (i = 0; i < nprocs; ++i)
+    for (i = 0; i < nparts; ++i)
     {
         std::vector<unsigned int> tmp;
         vMeshPartition->GetElementIDs(i, tmp);
@@ -140,7 +141,7 @@ void OutputInfo::Process(po::variables_map &vm)
 
     // Set up output names
     std::vector<std::string> filenames;
-    for (int i = 0; i < nprocs; ++i)
+    for (int i = 0; i < nparts; ++i)
     {
         boost::format pad("P%1$07d.fld");
         pad % i;
@@ -148,10 +149,9 @@ void OutputInfo::Process(po::variables_map &vm)
     }
 
     // Write the output file
-    LibUtilities::CommSharedPtr c = m_f->m_session ? m_f->m_session->GetComm() :
-        LibUtilities::GetCommFactory().CreateInstance("Serial", 0, 0);
-    boost::shared_ptr<LibUtilities::FieldIOXml> fldXml =
-        boost::static_pointer_cast<LibUtilities::FieldIOXml>(
+    LibUtilities::CommSharedPtr c = m_f->m_comm;
+    std::shared_ptr<LibUtilities::FieldIOXml> fldXml =
+        std::static_pointer_cast<LibUtilities::FieldIOXml>(
             LibUtilities::GetFieldIOFactory().CreateInstance("Xml", c, true));
     fldXml->WriteMultiFldFileIDs(filename, filenames, ElementIDs);
 }

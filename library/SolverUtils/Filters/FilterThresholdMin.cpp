@@ -55,18 +55,18 @@ FilterThresholdMin::FilterThresholdMin(
         const ParamMap &pParams)
     : Filter(pSession)
 {
-    ParamMap::const_iterator it;
-
     // ThresholdValue
-    it = pParams.find("ThresholdValue");
+    auto it = pParams.find("ThresholdValue");
     ASSERTL0(it != pParams.end(), "Missing parameter 'ThresholdValue'.");
-    LibUtilities::Equation equ1(m_session, it->second);
+    LibUtilities::Equation equ1(
+        m_session->GetExpressionEvaluator(), it->second);
     m_thresholdValue = equ1.Evaluate();
 
     // InitialValue
     it = pParams.find("InitialValue");
     ASSERTL0(it != pParams.end(), "Missing parameter 'InitialValue'.");
-    LibUtilities::Equation equ2(m_session, it->second);
+    LibUtilities::Equation equ2(
+        m_session->GetExpressionEvaluator(), it->second);
     m_initialValue = equ2.Evaluate();
 
     // StartTime
@@ -74,7 +74,8 @@ FilterThresholdMin::FilterThresholdMin(
     m_startTime = 0.0;
     if (it != pParams.end())
     {
-        LibUtilities::Equation equ(m_session, it->second);
+        LibUtilities::Equation equ(
+            m_session->GetExpressionEvaluator(), it->second);
         m_startTime = equ.Evaluate();
     }
 
@@ -93,9 +94,8 @@ FilterThresholdMin::FilterThresholdMin(
     {
         std::string var = it->second.c_str();
         std::vector<string> varlist = pSession->GetVariables();
-        std::vector<string>::const_iterator x;
-        ASSERTL0((x=std::find(varlist.begin(), varlist.end(), var))
-                        != varlist.end(),
+        auto x = std::find(varlist.begin(), varlist.end(), var);
+        ASSERTL0(x != varlist.end(),
                  "Specified variable " + var +
                  " in ThresholdMin filter is not available.");
         m_thresholdVar = x - varlist.begin();

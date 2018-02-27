@@ -39,6 +39,7 @@
 #include <string>
 
 #include <boost/algorithm/string.hpp>
+#include <LibUtilities/BasicUtils/HashUtils.hpp>
 #include <LibUtilities/Foundations/ManagerAccess.h>
 #include <NekMeshUtils/MeshElements/Element.h>
 
@@ -215,11 +216,10 @@ void InputNek5000::Process()
         vector<NodeSharedPtr> nodeList(nNodes);
         for (k = 0; k < nNodes; ++k)
         {
-            nodeList[k] = boost::shared_ptr<Node>(
+            nodeList[k] = std::shared_ptr<Node>(
                 new Node(
                     0, vertex[k][0], vertex[k][1], vertex[k][2]));
-            pair<NodeSet::iterator, bool> testIns =
-                m_mesh->m_vertexSet.insert(nodeList[k]);
+            auto testIns = m_mesh->m_vertexSet.insert(nodeList[k]);
 
             if (!testIns.second)
             {
@@ -436,7 +436,7 @@ void InputNek5000::Process()
     }
 
     int nSurfaces = 0;
-    boost::unordered_set<pair<int, int> > periodicIn;
+    std::unordered_set<pair<int, int>, PairHash> periodicIn;
     int periodicInId = -1, periodicOutId = -1;
 
     // Boundary conditions: should be precisely nElements * nFaces lines to
@@ -464,6 +464,13 @@ void InputNek5000::Process()
         s.clear();
         s.str(line.substr(0, 4));
         s >> bcType;
+
+        // Some lines have no boundary condition entries
+        if (s.fail())
+        {
+            lineCnt++;
+            continue;
+        }
 
         if (nElements < 1000)
         {
@@ -670,15 +677,13 @@ void InputNek5000::Process()
         // Now attempt to find this boundary condition inside
         // m_mesh->condition. This is currently a linear search and should
         // probably be made faster!
-        ConditionMap::iterator it;
         bool found = false;
-        for (it = m_mesh->m_condition.begin(); it != m_mesh->m_condition.end();
-             ++it)
+        for (auto &it : m_mesh->m_condition)
         {
-            if (c == it->second)
+            if (c == it.second)
             {
                 found = true;
-                c = it->second;
+                c = it.second;
                 break;
             }
         }

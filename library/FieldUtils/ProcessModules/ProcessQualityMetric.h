@@ -48,7 +48,7 @@ class ProcessQualityMetric : public ProcessModule
 {
 public:
     /// Creates an instance of this class
-    static boost::shared_ptr<Module> create(FieldSharedPtr f)
+    static std::shared_ptr<Module> create(FieldSharedPtr f)
     {
         return MemoryManager<ProcessQualityMetric>::AllocateSharedPtr(f);
     }
@@ -63,6 +63,16 @@ public:
     virtual std::string GetModuleName()
     {
         return "ProcessQualityMetric";
+    }
+
+    virtual std::string GetModuleDescription()
+    {
+        return "Adding quality metric to field";
+    }
+
+    virtual ModulePriority GetModulePriority()
+    {
+        return eModifyExp;
     }
 
 private:

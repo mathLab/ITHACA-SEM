@@ -269,11 +269,14 @@ namespace Nektar
         std::string m_sessionName;
         LibUtilities::SessionReaderSharedPtr m_sessionVWI; 
 
-        LibUtilities::SessionReaderSharedPtr m_sessionRoll; 
+        LibUtilities::SessionReaderSharedPtr m_sessionRoll;
+        SpatialDomains::MeshGraphSharedPtr m_graphRoll;
         EquationSystemSharedPtr m_solverRoll;
 
-        LibUtilities::SessionReaderSharedPtr m_sessionStreak; 
-        LibUtilities::SessionReaderSharedPtr m_sessionWave; 
+        LibUtilities::SessionReaderSharedPtr m_sessionStreak;
+        SpatialDomains::MeshGraphSharedPtr m_graphStreak;
+        LibUtilities::SessionReaderSharedPtr m_sessionWave;
+        SpatialDomains::MeshGraphSharedPtr m_graphWave;
     };
 }
 

@@ -47,11 +47,12 @@ namespace Nektar
         {
         }
 
-        ContField3DHomogeneous2D::ContField3DHomogeneous2D(const ContField3DHomogeneous2D &In):
+        ContField3DHomogeneous2D::ContField3DHomogeneous2D(
+                                   const ContField3DHomogeneous2D &In):
             DisContField3DHomogeneous2D (In,false)
         {
             
-            ContField1DSharedPtr zero_line = boost::dynamic_pointer_cast<ContField1D> (In.m_lines[0]);
+            ContField1DSharedPtr zero_line = std::dynamic_pointer_cast<ContField1D> (In.m_lines[0]);
             
             for(int n = 0; n < m_lines.num_elements(); ++n)
             {
@@ -65,22 +66,24 @@ namespace Nektar
         {
         }
 
-        ContField3DHomogeneous2D::ContField3DHomogeneous2D(const LibUtilities::SessionReaderSharedPtr &pSession,
-                                                           const LibUtilities::BasisKey &HomoBasis_y,
-														   const LibUtilities::BasisKey &HomoBasis_z,
-														   const NekDouble lhom_y,
-														   const NekDouble lhom_z,
-														   const bool useFFT,
-														   const bool dealiasing,
-														   const SpatialDomains::MeshGraphSharedPtr &graph1D,
-														   const std::string &variable):
-            DisContField3DHomogeneous2D(pSession,HomoBasis_y,HomoBasis_z,lhom_y,lhom_z,useFFT,dealiasing)
+        ContField3DHomogeneous2D::ContField3DHomogeneous2D(
+                         const LibUtilities::SessionReaderSharedPtr &pSession,
+                         const LibUtilities::BasisKey &HomoBasis_y,
+                         const LibUtilities::BasisKey &HomoBasis_z,
+                         const NekDouble lhom_y,
+                         const NekDouble lhom_z,
+                         const bool useFFT,
+                         const bool dealiasing,
+                         const SpatialDomains::MeshGraphSharedPtr &graph1D,
+                         const std::string &variable,
+                         const Collections::ImplementationType ImpType):
+            DisContField3DHomogeneous2D(pSession,HomoBasis_y,HomoBasis_z,lhom_y,lhom_z,useFFT,dealiasing,ImpType)
         {
             int i,n,nel;
             ContField1DSharedPtr line_zero;
             SpatialDomains::BoundaryConditions bcs(pSession, graph1D);
 
-            m_lines[0] = line_zero = MemoryManager<ContField1D>::AllocateSharedPtr(pSession,graph1D,variable);
+            m_lines[0] = line_zero = MemoryManager<ContField1D>::AllocateSharedPtr(pSession,graph1D,variable,ImpType);
 
             m_exp = MemoryManager<LocalRegions::ExpansionVector>::AllocateSharedPtr();
             nel = m_lines[0]->GetExpSize();
@@ -95,7 +98,7 @@ namespace Nektar
 
             for(n = 1; n < nylines*nzlines; ++n)
             {
-                m_lines[n] = MemoryManager<ContField1D>::AllocateSharedPtr(pSession,graph1D,variable);
+                m_lines[n] = MemoryManager<ContField1D>::AllocateSharedPtr(pSession,graph1D,variable,ImpType);
                 
                 for(i = 0; i < nel; ++i)
                 {
@@ -158,6 +161,7 @@ namespace Nektar
                 const FlagList &flags,
                 const StdRegions::ConstFactorMap &factors,
                 const StdRegions::VarCoeffMap &varcoeff,
+                const MultiRegions::VarFactorsMap &varfactors,
                 const Array<OneD, const NekDouble> &dirForcing,
                 const bool PhysSpaceForcing)
         {
@@ -199,7 +203,8 @@ namespace Nektar
                     wfce = (PhysSpaceForcing)? fce+cnt:fce+cnt1;
                     m_lines[l]->HelmSolve(wfce,
                               e_out = outarray + cnt1,
-                              flags, new_factors, varcoeff, dirForcing,
+                              flags, new_factors, varcoeff, varfactors,
+                              dirForcing,
                               PhysSpaceForcing);
                     
                     cnt  += m_lines[l]->GetTotPoints();

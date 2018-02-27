@@ -44,9 +44,9 @@ namespace Nektar
     {  
         TimeIntegrationSchemeManagerT &TimeIntegrationSchemeManager(void)
         {
-            TimeIntegrationSchemeManagerT& m = Loki::SingletonHolder<TimeIntegrationSchemeManagerT>::Instance();
-            m.RegisterGlobalCreator(TimeIntegrationScheme::Create);
-            return m;
+            static TimeIntegrationSchemeManagerT instance;
+            instance.RegisterGlobalCreator(TimeIntegrationScheme::Create);
+            return instance;
         }
         
 
@@ -742,7 +742,7 @@ namespace Nektar
 
                     m_A[0] = Array<TwoD,NekDouble>(m_numstages,m_numstages,twothirdth);
                     m_B[0] = Array<TwoD,NekDouble>(m_numsteps ,m_numstages,0.0);
-                    m_A[1] = Array<TwoD,NekDouble>(m_numstages,m_numstages,twothirdth);
+                    m_A[1] = Array<TwoD,NekDouble>(m_numstages,m_numstages,0.0);
                     m_B[1] = Array<TwoD,NekDouble>(m_numsteps ,m_numstages,0.0);
                     m_U    = Array<TwoD,NekDouble>(m_numstages,m_numsteps,twothirdth);
                     m_V    = Array<TwoD,NekDouble>(m_numsteps ,m_numsteps, 0.0);
@@ -1076,7 +1076,7 @@ namespace Nektar
                         if( fabs(A[m][i][j]) > NekConstants::kNekZeroTol )
                         {
                             vertype[m] = eImplicit;
-                            ASSERTL1(false,"Fully Impplicit schemes cannnot be handled by the TimeIntegrationScheme class");
+                            ASSERTL1(false,"Fully Implicit schemes cannnot be handled by the TimeIntegrationScheme class");
                         }
                     }
                 }
@@ -1110,6 +1110,12 @@ namespace Nektar
             // and derivatives to zero
             TimeIntegrationSolutionSharedPtr y_out = 
                 MemoryManager<TimeIntegrationSolution>::AllocateSharedPtr(m_schemeKey,y_0,time,timestep); 
+
+            if( GetIntegrationSchemeType() == eExplicit)
+            {
+                // ensure initial solution is in correct space
+                op.DoProjection(y_0,y_out->UpdateSolution(),time);
+            }
 
             // calculate the initial derivative, if is part of the
             // solution vector of the current scheme
@@ -1573,8 +1579,12 @@ namespace Nektar
                 }
                 else if( type == eExplicit)
                 {
-                    // ensure solution is in correct space
-                    op.DoProjection(m_Y,m_Y,m_T); 
+                    // Avoid projecting the same solution twice
+                    if( ! ((i==0) && m_firstStageEqualsOldSolution) )
+                    {
+                        // ensure solution is in correct space
+                        op.DoProjection(m_Y,m_Y,m_T);
+                    }
                     op.DoOdeRhs(m_Y, m_F[i], m_T);        
                 }
             }

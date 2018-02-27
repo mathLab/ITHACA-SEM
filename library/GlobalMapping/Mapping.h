@@ -51,7 +51,7 @@ namespace GlobalMapping
 class Mapping;
 
 /// A shared pointer to a Mapping object
-GLOBAL_MAPPING_EXPORT typedef boost::shared_ptr<Mapping> MappingSharedPtr;
+GLOBAL_MAPPING_EXPORT typedef std::shared_ptr<Mapping> MappingSharedPtr;
 
 /// Declaration of the mapping factory
 typedef LibUtilities::NekFactory<std::string, Mapping,

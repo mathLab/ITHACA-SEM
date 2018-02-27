@@ -52,7 +52,7 @@ class ProcessMapping : public ProcessModule
 {
 public:
     /// Creates an instance of this class
-    static boost::shared_ptr<Module> create(FieldSharedPtr f)
+    static std::shared_ptr<Module> create(FieldSharedPtr f)
     {
         return MemoryManager<ProcessMapping>::AllocateSharedPtr(f);
     }
@@ -69,10 +69,18 @@ public:
         return "ProcessMapping";
     }
 
+    virtual std::string GetModuleDescription()
+    {
+        return "Applying mapping to field";
+    }
+
+    virtual ModulePriority GetModulePriority()
+    {
+        return eModifyExp;
+    }
+
     static GlobalMapping::MappingSharedPtr GetMapping(FieldSharedPtr f);
 
-private:
-    FieldSharedPtr m_fromField;
 };
 }
 }

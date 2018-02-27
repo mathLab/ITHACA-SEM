@@ -36,33 +36,25 @@
 #ifndef NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_CAN_GET_RAW_PTR_HPP
 #define NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_CAN_GET_RAW_PTR_HPP
 
-#include <boost/utility/enable_if.hpp>
-#include <boost/mpl/if.hpp>
-#include <boost/mpl/and.hpp>
-#include <boost/type_traits.hpp>
+#include <type_traits>
 #include <LibUtilities/LinearAlgebra/NekMatrixFwd.hpp>
 
 namespace Nektar
 {
     template<typename MatrixType>
-    struct CanGetRawPtr : public boost::false_type {};
+    struct CanGetRawPtr : public std::false_type {};
     
     template<typename T>
-    struct CanGetRawPtr<NekMatrix<T, StandardMatrixTag> > : public boost::true_type {};
+    struct CanGetRawPtr<NekMatrix<T, StandardMatrixTag> > : public std::true_type {};
     
     template<typename T, typename R>
-    struct CanGetRawPtr<NekMatrix<NekMatrix<T, R>, ScaledMatrixTag> > : public boost::true_type {};
+    struct CanGetRawPtr<NekMatrix<NekMatrix<T, R>, ScaledMatrixTag> > : public std::true_type {};
     
     template<typename T, typename M>
-    struct CanGetRawPtr<NekMatrix<T, M> > :
-        boost::mpl::if_
-        <
-            boost::mpl::and_
-            <
-                boost::mpl::not_<boost::is_same<BlockMatrixTag, M> >,
-                CanGetRawPtr<T>
-            >, boost::true_type, boost::false_type
-        >::type {};
+    struct CanGetRawPtr<NekMatrix<T, M> > : std::conditional<
+        !std::is_same<BlockMatrixTag, M>::value && CanGetRawPtr<T>::value,
+        std::true_type, std::false_type>::type
+    {};
 }
 
 #endif //NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_CAN_GET_RAW_PTR_HPP

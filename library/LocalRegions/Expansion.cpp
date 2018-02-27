@@ -37,8 +37,6 @@
 #include <LocalRegions/Expansion.h>
 #include <LocalRegions/MatrixKey.h>
 
-#include <SpatialDomains/MeshComponents.h>
-
 using namespace std;
 
 namespace Nektar
@@ -114,7 +112,7 @@ namespace Nektar
 
         void Expansion::AddEdgeNormBoundaryInt(
             const int                           edge,
-            const boost::shared_ptr<Expansion> &EdgeExp,
+            const std::shared_ptr<Expansion>   &EdgeExp,
             const Array<OneD, const NekDouble> &Fx,
             const Array<OneD, const NekDouble> &Fy,
                   Array<OneD,       NekDouble> &outarray)
@@ -124,7 +122,7 @@ namespace Nektar
 
         void Expansion::AddEdgeNormBoundaryInt(
             const int                           edge,
-            const boost::shared_ptr<Expansion> &EdgeExp,
+            const std::shared_ptr<Expansion>   &EdgeExp,
             const Array<OneD, const NekDouble> &Fn,
                   Array<OneD,       NekDouble> &outarray)
         {
@@ -133,7 +131,7 @@ namespace Nektar
 
         void Expansion::AddFaceNormBoundaryInt(
             const int                           face,
-            const boost::shared_ptr<Expansion> &FaceExp,
+            const std::shared_ptr<Expansion>   &FaceExp,
             const Array<OneD, const NekDouble> &Fn,
                   Array<OneD,       NekDouble> &outarray)
         {
@@ -178,7 +176,7 @@ namespace Nektar
             m_metricinfo = m_geom->GetGeomFactors();
         }
 
-        const SpatialDomains::GeomFactorsSharedPtr& Expansion::v_GetMetricInfo() const
+        const SpatialDomains::GeomFactorsSharedPtr& Expansion::GetMetricInfo() const
         {
             return m_metricinfo;
         }
@@ -246,7 +244,7 @@ namespace Nektar
 
             for (int i = 0; i < expDim; ++i)
             {
-                CBasis[i] = m_geom->GetBasis(i);
+                CBasis[i] = m_geom->GetXmap()->GetBasis(i);
                 nqGeom   *= CBasis[i]->GetNumPoints();
                 doCopy    = doCopy && m_base[i]->GetBasisKey().SamePoints(
                                                       CBasis[i]->GetBasisKey());
@@ -335,7 +333,7 @@ namespace Nektar
 
         void Expansion::v_AddEdgeNormBoundaryInt(
             const int                           edge,
-            const boost::shared_ptr<Expansion> &EdgeExp,
+            const std::shared_ptr<Expansion>   &EdgeExp,
             const Array<OneD, const NekDouble> &Fx,
             const Array<OneD, const NekDouble> &Fy,
                   Array<OneD,       NekDouble> &outarray)
@@ -345,7 +343,7 @@ namespace Nektar
 
         void Expansion::v_AddEdgeNormBoundaryInt(
             const int                           edge,
-            const boost::shared_ptr<Expansion> &EdgeExp,
+            const std::shared_ptr<Expansion>   &EdgeExp,
             const Array<OneD, const NekDouble> &Fn,
                   Array<OneD,       NekDouble> &outarray)
         {
@@ -354,7 +352,7 @@ namespace Nektar
 
         void Expansion::v_AddFaceNormBoundaryInt(
             const int                           face,
-            const boost::shared_ptr<Expansion> &FaceExp,
+            const std::shared_ptr<Expansion>   &FaceExp,
             const Array<OneD, const NekDouble> &Fn,
                   Array<OneD,       NekDouble> &outarray)
         {

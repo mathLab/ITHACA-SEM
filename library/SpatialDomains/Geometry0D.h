@@ -41,27 +41,28 @@
 
 namespace Nektar
 {
-    namespace SpatialDomains
-    {
-        class Geometry0D;
+namespace SpatialDomains
+{
+class Geometry0D;
 
-        // shorthand for boost pointer
-        typedef boost::shared_ptr<Geometry0D> Geometry0DSharedPtr;
-        typedef std::vector< Geometry0DSharedPtr > Geometry0DVector;
-        typedef std::vector< Geometry0DSharedPtr >::iterator Geometry0DVectorIter;
+// shorthand for boost pointer
+typedef std::shared_ptr<Geometry0D> Geometry0DSharedPtr;
+typedef std::vector<Geometry0DSharedPtr> Geometry0DVector;
+typedef std::vector<Geometry0DSharedPtr>::iterator Geometry0DVectorIter;
 
-        /// 1D geometry information
-        class Geometry0D: public Geometry
-        {
-        public:
-            SPATIAL_DOMAINS_EXPORT Geometry0D();
-            SPATIAL_DOMAINS_EXPORT Geometry0D(const int coordim);
-            SPATIAL_DOMAINS_EXPORT virtual ~Geometry0D();
+/// 1D geometry information
+class Geometry0D : public Geometry
+{
+public:
+    SPATIAL_DOMAINS_EXPORT Geometry0D();
+    SPATIAL_DOMAINS_EXPORT Geometry0D(const int coordim);
+    SPATIAL_DOMAINS_EXPORT virtual ~Geometry0D();
 
-        };
+protected:
+    virtual int v_GetShapeDim() const;
+};
 
-    }; //end of namespace
-}; //end of namespace
+}; // end of namespace
+}; // end of namespace
 
-#endif //NEKTAR_SPATIALDOMAINS_GEOMETRY1D_H
-
+#endif // NEKTAR_SPATIALDOMAINS_GEOMETRY1D_H

@@ -9,10 +9,10 @@
     </files>
     <metrics>
         <metric type="L2" id="1">
-            <value variable="rho" tolerance="1e-12">42.8326</value>
-            <value variable="rhou" tolerance="1e-12">4.28538</value>
-            <value variable="rhov" tolerance="1e-12">0.081067</value>
-            <value variable="E" tolerance="1e-12">5.24021</value>
+            <value variable="rho" tolerance="1e-12">42.8142</value>
+            <value variable="rhou" tolerance="1e-12">4.28266</value>
+            <value variable="rhov" tolerance="1e-12">0.0825261</value>
+            <value variable="E" tolerance="1e-12">5.23742</value>
         </metric>
         <metric type="Linf" id="2">
             <value variable="rho" tolerance="1e-12">1.32134</value>

@@ -50,15 +50,15 @@ namespace Nektar
                                                        SpatialDomains::PointGeomSharedPtr v1)
         {
             SpatialDomains::PointGeomSharedPtr vertices[] = {v0, v1};
-            SpatialDomains::SegGeomSharedPtr result(new SpatialDomains::SegGeom(id, 2, vertices));
+            SpatialDomains::SegGeomSharedPtr result(new SpatialDomains::SegGeom(id, 1, vertices));
             return result;
         }
         
         
         BOOST_AUTO_TEST_CASE(TestSegBwdTrans_StdMat_UniformP)
         {
-            SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(2u, 0u, -1.0, -1.0, 0.0));
-            SpatialDomains::PointGeomSharedPtr v1(new SpatialDomains::PointGeom(2u, 1u,  1.0, -1.0, 0.0));
+            SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(1u, 0u, -1.0, 0.0, 0.0));
+            SpatialDomains::PointGeomSharedPtr v1(new SpatialDomains::PointGeom(1u, 1u,  1.0, 0.0, 0.0));
             
             SpatialDomains::SegGeomSharedPtr segGeom = CreateSegGeom(0, v0, v1);
             
@@ -97,8 +97,8 @@ namespace Nektar
         
         BOOST_AUTO_TEST_CASE(TestSegBwdTrans_StdMat_UniformP_MultiElmt)
         {
-            SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(2u, 0u, -1.0, -1.0, 0.0));
-            SpatialDomains::PointGeomSharedPtr v1(new SpatialDomains::PointGeom(2u, 1u,  1.0, -1.0, 0.0));
+            SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(1u, 0u, -1.0, 0.0, 0.0));
+            SpatialDomains::PointGeomSharedPtr v1(new SpatialDomains::PointGeom(1u, 1u,  1.0, 0.0, 0.0));
             
             SpatialDomains::SegGeomSharedPtr segGeom = CreateSegGeom(0, v0, v1);
             
@@ -144,8 +144,8 @@ namespace Nektar
 
         BOOST_AUTO_TEST_CASE(TestSegBwdTrans_IterPerExp_UniformP)
         {
-            SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(2u, 0u, -1.0, -1.0, 0.0));
-            SpatialDomains::PointGeomSharedPtr v1(new SpatialDomains::PointGeom(2u, 1u,  1.0, -1.0, 0.0));
+            SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(1u, 0u, -1.0, 0.0, 0.0));
+            SpatialDomains::PointGeomSharedPtr v1(new SpatialDomains::PointGeom(1u, 1u,  1.0, 0.0, 0.0));
             
             SpatialDomains::SegGeomSharedPtr segGeom = CreateSegGeom(0, v0, v1);
             
@@ -184,8 +184,8 @@ namespace Nektar
         
         BOOST_AUTO_TEST_CASE(TestSegBwdTrans_SumFac_UniformP)
         {
-            SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(2u, 0u, -1.0, -1.0, 0.0));
-            SpatialDomains::PointGeomSharedPtr v1(new SpatialDomains::PointGeom(2u, 1u,  1.0, -1.0, 0.0));
+            SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(1u, 0u, -1.0, 0.0, 0.0));
+            SpatialDomains::PointGeomSharedPtr v1(new SpatialDomains::PointGeom(1u, 1u,  1.0, 0.0, 0.0));
             
             SpatialDomains::SegGeomSharedPtr segGeom = CreateSegGeom(0, v0, v1);
             
@@ -231,8 +231,8 @@ namespace Nektar
 
         BOOST_AUTO_TEST_CASE(TestSegBwdTrans_SumFac_UniformP_MultiElmt)
         {
-            SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(2u, 0u, -1.0, -1.0, 0.0));
-            SpatialDomains::PointGeomSharedPtr v1(new SpatialDomains::PointGeom(2u, 1u,  1.0, -1.0, 0.0));
+            SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(1u, 0u, -1.0, 0.0, 0.0));
+            SpatialDomains::PointGeomSharedPtr v1(new SpatialDomains::PointGeom(1u, 1u,  1.0, 0.0, 0.0));
             
             SpatialDomains::SegGeomSharedPtr segGeom = CreateSegGeom(0, v0, v1);
             
@@ -279,8 +279,8 @@ namespace Nektar
 
         BOOST_AUTO_TEST_CASE(TestSegIProductWRTBase_IterPerExp_UniformP_MultiElmt)
         {
-            SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(2u, 0u, -1.5, -1.5, 0.0));
-            SpatialDomains::PointGeomSharedPtr v1(new SpatialDomains::PointGeom(2u, 1u,  1.0, -1.0, 0.0));
+            SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(1u, 0u, -1.5, 0.0, 0.0));
+            SpatialDomains::PointGeomSharedPtr v1(new SpatialDomains::PointGeom(1u, 1u,  1.0, 0.0, 0.0));
             
             SpatialDomains::SegGeomSharedPtr segGeom = CreateSegGeom(0, v0, v1);
             
@@ -337,8 +337,8 @@ namespace Nektar
 
         BOOST_AUTO_TEST_CASE(TestSegIProductWRTBase_StdMat_UniformP_MultiElmt)
         {
-            SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(2u, 0u, -1.5, -1.5, 0.0));
-            SpatialDomains::PointGeomSharedPtr v1(new SpatialDomains::PointGeom(2u, 1u,  1.0, -1.0, 0.0));
+            SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(1u, 0u, -1.5, 0.0, 0.0));
+            SpatialDomains::PointGeomSharedPtr v1(new SpatialDomains::PointGeom(1u, 1u,  1.0, 0.0, 0.0));
             
             SpatialDomains::SegGeomSharedPtr segGeom = CreateSegGeom(0, v0, v1);
             
@@ -395,8 +395,8 @@ namespace Nektar
 
         BOOST_AUTO_TEST_CASE(TestSegIProductWRTBase_SumFac_UniformP_MultiElmt)
         {
-            SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(2u, 0u, -1.5, -1.5, 0.0));
-            SpatialDomains::PointGeomSharedPtr v1(new SpatialDomains::PointGeom(2u, 1u,  1.0, -1.0, 0.0));
+            SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(1u, 0u, -1.5, 0.0, 0.0));
+            SpatialDomains::PointGeomSharedPtr v1(new SpatialDomains::PointGeom(1u, 1u,  1.0, 0.0, 0.0));
             
             SpatialDomains::SegGeomSharedPtr segGeom = CreateSegGeom(0, v0, v1);
             
@@ -454,8 +454,8 @@ namespace Nektar
 
         BOOST_AUTO_TEST_CASE(TestSegPhysDeriv_IterPerExp_UniformP)
         {
-            SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(2u, 0u, -1.5, -1.5, 0.0));
-            SpatialDomains::PointGeomSharedPtr v1(new SpatialDomains::PointGeom(2u, 1u,  1.0, -1.0, 0.0));
+            SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(1u, 0u, -1.5, 0.0, 0.0));
+            SpatialDomains::PointGeomSharedPtr v1(new SpatialDomains::PointGeom(1u, 1u,  1.0, 0.0, 0.0));
             
             SpatialDomains::SegGeomSharedPtr segGeom = CreateSegGeom(0, v0, v1);
             
@@ -502,8 +502,8 @@ namespace Nektar
 
         BOOST_AUTO_TEST_CASE(TestSegPhysDeriv_IterPerExp_UniformP_MultiElmt)
         {
-            SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(2u, 0u, -1.5, -1.5, 0.0));
-            SpatialDomains::PointGeomSharedPtr v1(new SpatialDomains::PointGeom(2u, 1u,  1.0, -1.0, 0.0));
+            SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(1u, 0u, -1.5, 0.0, 0.0));
+            SpatialDomains::PointGeomSharedPtr v1(new SpatialDomains::PointGeom(1u, 1u,  1.0, 0.0, 0.0));
             
             SpatialDomains::SegGeomSharedPtr segGeom = CreateSegGeom(0, v0, v1);
             
@@ -563,8 +563,8 @@ namespace Nektar
 
         BOOST_AUTO_TEST_CASE(TestSegPhysDeriv_StdMat_UniformP)
         {
-            SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(2u, 0u, -1.5, -1.5, 0.0));
-            SpatialDomains::PointGeomSharedPtr v1(new SpatialDomains::PointGeom(2u, 1u,  1.0, -1.0, 0.0));
+            SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(1u, 0u, -1.5, 0.0, 0.0));
+            SpatialDomains::PointGeomSharedPtr v1(new SpatialDomains::PointGeom(1u, 1u,  1.0, 0.0, 0.0));
             
             SpatialDomains::SegGeomSharedPtr segGeom = CreateSegGeom(0, v0, v1);
             
@@ -611,8 +611,8 @@ namespace Nektar
 
         BOOST_AUTO_TEST_CASE(TestSegPhysDeriv_StdMat_UniformP_MultiElmt)
         {
-            SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(2u, 0u, -1.5, -1.5, 0.0));
-            SpatialDomains::PointGeomSharedPtr v1(new SpatialDomains::PointGeom(2u, 1u,  1.0, -1.0, 0.0));
+            SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(1u, 0u, -1.5, 0.0, 0.0));
+            SpatialDomains::PointGeomSharedPtr v1(new SpatialDomains::PointGeom(1u, 1u,  1.0, 0.0, 0.0));
             
             SpatialDomains::SegGeomSharedPtr segGeom = CreateSegGeom(0, v0, v1);
             
@@ -671,8 +671,8 @@ namespace Nektar
 
         BOOST_AUTO_TEST_CASE(TestSegPhysDeriv_SumFac_UniformP_MultiElmt)
         {
-            SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(2u, 0u, -1.5, -1.5, 0.0));
-            SpatialDomains::PointGeomSharedPtr v1(new SpatialDomains::PointGeom(2u, 1u,  1.0, -1.0, 0.0));
+            SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(1u, 0u, -1.5, 0.0, 0.0));
+            SpatialDomains::PointGeomSharedPtr v1(new SpatialDomains::PointGeom(1u, 1u,  1.0, 0.0, 0.0));
             
             SpatialDomains::SegGeomSharedPtr segGeom = CreateSegGeom(0, v0, v1);
             
@@ -732,8 +732,8 @@ namespace Nektar
 
         BOOST_AUTO_TEST_CASE(TestSegIProductWRTDerivBase_IterPerExp_UniformP)
         {
-            SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(2u, 0u, -1.0, -1.0, 0.0));
-            SpatialDomains::PointGeomSharedPtr v1(new SpatialDomains::PointGeom(2u, 1u,  1.0, -1.0, 0.0));
+            SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(1u, 0u, -1.0, 0.0, 0.0));
+            SpatialDomains::PointGeomSharedPtr v1(new SpatialDomains::PointGeom(1u, 1u,  1.0, 0.0, 0.0));
             
             SpatialDomains::SegGeomSharedPtr segGeom = CreateSegGeom(0, v0, v1);
             
@@ -787,8 +787,8 @@ namespace Nektar
         
         BOOST_AUTO_TEST_CASE(TestSegIProductWRTDerivBase_IterPerExp_UniformP_MultiElmt)
         {
-            SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(2u, 0u, -1.0, -1.0, 0.0));
-            SpatialDomains::PointGeomSharedPtr v1(new SpatialDomains::PointGeom(2u, 1u,  1.0, -1.0, 0.0));
+            SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(1u, 0u, -1.0, 0.0, 0.0));
+            SpatialDomains::PointGeomSharedPtr v1(new SpatialDomains::PointGeom(1u, 1u,  1.0, 0.0, 0.0));
             
             SpatialDomains::SegGeomSharedPtr segGeom = CreateSegGeom(0, v0, v1);
             
@@ -851,8 +851,8 @@ namespace Nektar
 
         BOOST_AUTO_TEST_CASE(TestSegIProductWRTDerivBase_StdMat_UniformP)
         {
-            SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(2u, 0u, -1.0, -1.0, 0.0));
-            SpatialDomains::PointGeomSharedPtr v1(new SpatialDomains::PointGeom(2u, 1u,  1.0, -1.0, 0.0));
+            SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(1u, 0u, -1.0, 0.0, 0.0));
+            SpatialDomains::PointGeomSharedPtr v1(new SpatialDomains::PointGeom(1u, 1u,  1.0, 0.0, 0.0));
             
             SpatialDomains::SegGeomSharedPtr segGeom = CreateSegGeom(0, v0, v1);
             
@@ -906,8 +906,8 @@ namespace Nektar
         
         BOOST_AUTO_TEST_CASE(TestSegIProductWRTDerivBase_StdMat_UniformP_MultiElmt)
         {
-            SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(2u, 0u, -1.0, -1.0, 0.0));
-            SpatialDomains::PointGeomSharedPtr v1(new SpatialDomains::PointGeom(2u, 1u,  1.0, -1.0, 0.0));
+            SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(1u, 0u, -1.0, 0.0, 0.0));
+            SpatialDomains::PointGeomSharedPtr v1(new SpatialDomains::PointGeom(1u, 1u,  1.0, 0.0, 0.0));
             
             SpatialDomains::SegGeomSharedPtr segGeom = CreateSegGeom(0, v0, v1);
             
@@ -970,8 +970,8 @@ namespace Nektar
 
         BOOST_AUTO_TEST_CASE(TestSegIProductWRTDerivBase_SumFac_UniformP)
         {
-            SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(2u, 0u, -1.0, -1.0, 0.0));
-            SpatialDomains::PointGeomSharedPtr v1(new SpatialDomains::PointGeom(2u, 1u,  1.0, -1.0, 0.0));
+            SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(1u, 0u, -1.0, 0.0, 0.0));
+            SpatialDomains::PointGeomSharedPtr v1(new SpatialDomains::PointGeom(1u, 1u,  1.0, 0.0, 0.0));
             
             SpatialDomains::SegGeomSharedPtr segGeom = CreateSegGeom(0, v0, v1);
             
@@ -1024,8 +1024,8 @@ namespace Nektar
 
         BOOST_AUTO_TEST_CASE(TestSegIProductWRTDerivBase_SumFac_UniformP_MultiElmt)
         {
-            SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(2u, 0u, -1.0, -1.0, 0.0));
-            SpatialDomains::PointGeomSharedPtr v1(new SpatialDomains::PointGeom(2u, 1u,  1.0, -1.0, 0.0));
+            SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(1u, 0u, -1.0, 0.0, 0.0));
+            SpatialDomains::PointGeomSharedPtr v1(new SpatialDomains::PointGeom(1u, 1u,  1.0, 0.0, 0.0));
             
             SpatialDomains::SegGeomSharedPtr segGeom = CreateSegGeom(0, v0, v1);
             

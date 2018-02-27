@@ -42,8 +42,8 @@ IF (NEKTAR_USE_PETSC)
             SET(PETSC_NO_MPI "--with-mpi=0")
         ENDIF (NEKTAR_USE_MPI)
 
-        IF(CMAKE_Fortran_COMPILER)
-            IF(NEKTAR_USE_MPI AND NOT MPI_Fortran_COMPILER)
+        IF(CMAKE_Fortran_COMPILER AND NEKTAR_USE_MPI)
+            IF(NOT MPI_Fortran_COMPILER)
                 MESSAGE(ERROR "MPI_Fortran_COMPILER not set")
             ENDIF()
             # we use a MUMPS build in ordering here, in the future it might make
@@ -71,7 +71,7 @@ IF (NEKTAR_USE_PETSC)
             ENDIF()
 
         ELSE()
-            MESSAGE(WARNING "No Fortran support. Building PETSc without MUMPS support")
+            MESSAGE(WARNING "No MPI and/or Fortran support. Building PETSc without MUMPS support")
             SET(PETSC_Fortran_COMPILER "0")
         ENDIF()
 
@@ -106,13 +106,11 @@ IF (NEKTAR_USE_PETSC)
                 ${PETSC_NO_MPI}
             BUILD_COMMAND MAKEFLAGS= make)
 
-        SET(PETSC_LIBRARIES petsc CACHE FILEPATH
-            "PETSc library" FORCE)
+        THIRDPARTY_LIBRARY(PETSC_LIBRARIES SHARED petsc
+            DESCRIPTION "PETSc library")
         SET(PETSC_INCLUDES ${TPDIST}/include CACHE FILEPATH
             "PETSc includes" FORCE)
-
-        LINK_DIRECTORIES(${TPDIST}/lib)
-        MESSAGE(STATUS "Build PETSc: ${TPDIST}/${LIB_DIR}/lib${PETSC_LIBRARIES}.so")
+        MESSAGE(STATUS "Build PETSc: ${PETSC_LIBRARIES}")
         SET(PETSC_CONFIG_INCLUDE_DIR ${TPINC})
     ELSE (THIRDPARTY_BUILD_PETSC)
         INCLUDE(FindPETSc)
@@ -127,9 +125,9 @@ IF (NEKTAR_USE_PETSC)
     ENDIF (THIRDPARTY_BUILD_PETSC)
 
     ADD_DEFINITIONS(-DNEKTAR_USING_PETSC)
-    INCLUDE_DIRECTORIES(SYSTEM ${PETSC_INCLUDES})
+    INCLUDE_DIRECTORIES(${PETSC_INCLUDES})
     IF (NOT NEKTAR_USE_MPI)
-        INCLUDE_DIRECTORIES(SYSTEM ${PETSC_INCLUDES}/petsc/mpiuni)
+        INCLUDE_DIRECTORIES(${PETSC_INCLUDES}/petsc/mpiuni)
     ENDIF (NOT NEKTAR_USE_MPI)
 
     MARK_AS_ADVANCED(PETSC_CURRENT PETSC_DIR PETSC_LIBRARIES PETSC_INCLUDES)

@@ -56,10 +56,12 @@ namespace Nektar
      * global mapping arrays and the basic memory definitions for
      * coupled matrix system
      */ 
-    CoupledLinearNS::CoupledLinearNS(const LibUtilities::SessionReaderSharedPtr &pSession):
-        UnsteadySystem(pSession),
-        IncNavierStokes(pSession),
-        m_zeroMode(false)
+    CoupledLinearNS::CoupledLinearNS(
+        const LibUtilities::SessionReaderSharedPtr &pSession,
+        const SpatialDomains::MeshGraphSharedPtr &pGraph)
+        : UnsteadySystem(pSession, pGraph),
+          IncNavierStokes(pSession, pGraph),
+          m_zeroMode(false)
     {
     }
 
@@ -455,7 +457,7 @@ namespace Nektar
         ::AllocateSharedPtr(nsize_p_m1,nsize_p_m1,blkmatStorage);
         
         
-        Timer timer;
+        LibUtilities::Timer timer;
         timer.Start();
         for(n = 0; n < nel; ++n)
         {
@@ -1258,7 +1260,7 @@ namespace Nektar
                 {
                     fieldStr.push_back(m_boundaryConditions->GetVariable(m_velocity[i]));
                 }
-                EvaluateFunction(fieldStr,AdvField,"AdvectionVelocity");
+                GetFunction("AdvectionVelocity")->Evaluate(fieldStr, AdvField);
                 
                 SetUpCoupledMatrix(0.0,AdvField,false);
             }
@@ -1290,7 +1292,7 @@ namespace Nektar
                     {
                         fieldStr.push_back(m_boundaryConditions->GetVariable(m_velocity[i]));
                     }
-                    EvaluateFunction(fieldStr, Restart, "Restart");
+                    GetFunction( "Restart")->Evaluate(fieldStr,  Restart);
                     
                     for(int i = 0; i < m_velocity.num_elements(); ++i)
                     {
@@ -1338,7 +1340,7 @@ namespace Nektar
                 {
                     fieldStr.push_back(m_boundaryConditions->GetVariable(m_velocity[i]));
                 }
-                EvaluateFunction(fieldStr,AdvField,"AdvectionVelocity");
+                GetFunction("AdvectionVelocity")->Evaluate(fieldStr, AdvField);
                 
                 SetUpCoupledMatrix(m_lambda,AdvField,true);
             }
@@ -1356,10 +1358,9 @@ namespace Nektar
         // evaluate convection terms
         EvaluateAdvectionTerms(inarray,outarray);
 
-        std::vector<SolverUtils::ForcingSharedPtr>::const_iterator x;
-        for (x = m_forcing.begin(); x != m_forcing.end(); ++x)
+        for (auto &x : m_forcing)
         {
-            (*x)->Apply(m_fields, outarray, outarray, time);
+            x->Apply(m_fields, outarray, outarray, time);
         }
     }
     
@@ -1445,7 +1446,7 @@ namespace Nektar
             }
             case eSteadyNavierStokes:
             {	
-                Timer Generaltimer;
+                LibUtilities::Timer Generaltimer;
                 Generaltimer.Start();
                 
                 int Check(0);
@@ -1513,11 +1514,10 @@ namespace Nektar
             forcing[i]      = Array<OneD, NekDouble> (m_fields[m_velocity[0]]->GetNcoeffs(),0.0);
         }
 
-        std::vector<SolverUtils::ForcingSharedPtr>::const_iterator x;
-        for (x = m_forcing.begin(); x != m_forcing.end(); ++x)
+        for (auto &x : m_forcing)
         {
             const NekDouble time = 0;
-            (*x)->Apply(m_fields, forcing_phys, forcing_phys, time);
+            x->Apply(m_fields, forcing_phys, forcing_phys, time);
         }
         for (unsigned int i = 0; i < ncmpt; ++i)
         {
@@ -1548,7 +1548,7 @@ namespace Nektar
             {
                 fieldStr.push_back(m_boundaryConditions->GetVariable(m_velocity[i]));
             }
-            EvaluateFunction(fieldStr, m_ForcingTerm, "ForcingTerm");
+            GetFunction( "ForcingTerm")->Evaluate(fieldStr,  m_ForcingTerm);
             for(int i = 0; i < m_velocity.num_elements(); ++i)
             {
                 m_fields[m_velocity[i]]->FwdTrans_IterPerExp(m_ForcingTerm[i], m_ForcingTerm_Coeffs[i]);
@@ -1562,7 +1562,7 @@ namespace Nektar
     
     void CoupledLinearNS::SolveSteadyNavierStokes(void)
     {
-        Timer Newtontimer;
+        LibUtilities::Timer Newtontimer;
         Newtontimer.Start();
         
         Array<OneD, Array<OneD, NekDouble> > RHS_Coeffs(m_velocity.num_elements());
@@ -1787,16 +1787,15 @@ namespace Nektar
         
         returnval = MemoryManager<SpatialDomains::ExpansionMap>::AllocateSharedPtr();
         
-        SpatialDomains::ExpansionMap::const_iterator  expMapIter;
         int nummodes;
         
-        for (expMapIter = VelExp.begin(); expMapIter != VelExp.end(); ++expMapIter)
+        for (auto &expMapIter : VelExp)
         {
             LibUtilities::BasisKeyVector BasisVec;
             
-            for(i = 0; i <  expMapIter->second->m_basisKeyVector.size(); ++i)
+            for(i = 0; i <  expMapIter.second->m_basisKeyVector.size(); ++i)
             {
-                LibUtilities::BasisKey B = expMapIter->second->m_basisKeyVector[i];
+                LibUtilities::BasisKey B = expMapIter.second->m_basisKeyVector[i];
                 nummodes = B.GetNumModes();
                 ASSERTL0(nummodes > 3,"Velocity polynomial space not sufficiently high (>= 4)");
                 // Should probably set to be an orthogonal basis. 
@@ -1806,8 +1805,8 @@ namespace Nektar
             
             // Put new expansion into list. 
             SpatialDomains::ExpansionShPtr expansionElementShPtr =
-            MemoryManager<SpatialDomains::Expansion>::AllocateSharedPtr(expMapIter->second->m_geomShPtr, BasisVec);
-            (*returnval)[expMapIter->first] = expansionElementShPtr;
+            MemoryManager<SpatialDomains::Expansion>::AllocateSharedPtr(expMapIter.second->m_geomShPtr, BasisVec);
+            (*returnval)[expMapIter.first] = expansionElementShPtr;
         }
         
         // Save expansion into graph. 
@@ -2240,7 +2239,3 @@ namespace Nektar
         return m_session->GetVariables().size();
     }
 }
-
-/**
- * $Log: CoupledLinearNS.cpp,v $
- **/

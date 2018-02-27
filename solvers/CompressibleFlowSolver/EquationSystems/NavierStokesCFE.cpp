@@ -45,8 +45,10 @@ namespace Nektar
             "NavierStokes equations in conservative variables.");
 
     NavierStokesCFE::NavierStokesCFE(
-            const LibUtilities::SessionReaderSharedPtr& pSession)
-        : CompressibleFlowSystem(pSession)
+        const LibUtilities::SessionReaderSharedPtr& pSession,
+        const SpatialDomains::MeshGraphSharedPtr& pGraph)
+        : UnsteadySystem(pSession, pGraph),
+          CompressibleFlowSystem(pSession, pGraph)
     {
     }
 

@@ -80,7 +80,7 @@ namespace Nektar
         int m_bcPosition; // Position of boundary condition in region
     };
 
-    typedef boost::shared_ptr<InterfacePoint> InterfacePointShPtr;
+    typedef std::shared_ptr<InterfacePoint> InterfacePointShPtr;
 
     /// Base class for unsteady solvers.
     class PulseWaveSystem : public UnsteadySystem
@@ -128,7 +128,8 @@ namespace Nektar
         std::vector<std::vector<InterfacePointShPtr> >  m_mergingJcts;
     
         /// Initialises PulseWaveSystem class members.
-        PulseWaveSystem(const LibUtilities::SessionReaderSharedPtr& m_session);
+        PulseWaveSystem(const LibUtilities::SessionReaderSharedPtr& pSession,
+                        const SpatialDomains::MeshGraphSharedPtr& pGraph);
         
         virtual void v_InitObject();
 	
@@ -183,7 +184,7 @@ namespace Nektar
             
     };
         
-    typedef boost::shared_ptr<PulseWaveSystem> PulseWaveSystemSharedPtr;
+    typedef std::shared_ptr<PulseWaveSystem> PulseWaveSystemSharedPtr;
 
        
 }

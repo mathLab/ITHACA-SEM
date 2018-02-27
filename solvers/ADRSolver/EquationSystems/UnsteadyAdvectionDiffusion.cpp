@@ -47,9 +47,10 @@ namespace Nektar
                 UnsteadyAdvectionDiffusion::create);
     
     UnsteadyAdvectionDiffusion::UnsteadyAdvectionDiffusion(
-            const LibUtilities::SessionReaderSharedPtr& pSession)
-        : UnsteadySystem(pSession),
-          AdvectionSystem(pSession)
+        const LibUtilities::SessionReaderSharedPtr& pSession,
+        const SpatialDomains::MeshGraphSharedPtr& pGraph)
+        : UnsteadySystem(pSession, pGraph),
+          AdvectionSystem(pSession, pGraph)
     {
         m_planeNumber = 0;
     }
@@ -77,7 +78,7 @@ namespace Nektar
         vel.push_back("Vz");
         vel.resize(m_spacedim);
         
-        EvaluateFunction(vel, m_velocity, "AdvectionVelocity");
+        GetFunction( "AdvectionVelocity")->Evaluate(vel,  m_velocity);
         
         m_session->MatchSolverInfo(
             "SpectralVanishingViscosity", "True", m_useSpecVanVisc, false);
@@ -271,8 +272,9 @@ namespace Nektar
 
             for (int i = 0; i < nVariables; ++i)
             {
-                Vmath::Vadd(nSolutionPts, &outarray[i][0], 1, 
-                            &outarrayDiff[i][0], 1, &outarray[i][0], 1);
+                Vmath::Svtvp(nSolutionPts, m_epsilon, &outarrayDiff[i][0], 1,
+                             &outarray[i][0], 1,
+                             &outarray[i][0], 1);
             }
         }
         

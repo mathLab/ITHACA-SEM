@@ -33,7 +33,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <LibUtilities/BasicUtils/ParseUtils.hpp>
+#include <LibUtilities/BasicUtils/ParseUtils.h>
 #include <NekMeshUtils/MeshElements/Element.h>
 #include "ProcessExtractSurf.h"
 
@@ -71,7 +71,7 @@ void ProcessExtractSurf::Process()
 
     // Obtain vector of surface IDs from string.
     vector<unsigned int> surfs;
-    ASSERTL0(ParseUtils::GenerateSeqVector(surf.c_str(), surfs),
+    ASSERTL0(ParseUtils::GenerateSeqVector(surf, surfs),
              "Failed to interp surf string. Have you specified this string?");
     sort(surfs.begin(), surfs.end());
 
@@ -114,7 +114,7 @@ void ProcessExtractSurf::Process()
     }
 
     // keptIds stores IDs of elements we processed earlier.
-    boost::unordered_set<int> keptIds;
+    std::unordered_set<int> keptIds;
 
     EdgeSet bndEdgeSet;
 
@@ -165,7 +165,6 @@ void ProcessExtractSurf::Process()
                 elmt->SetVertex(j, f->m_vertexList[j]);
             }
 
-            EdgeSet::iterator edit;
             for (j = 0; j < edges.size(); ++j)
             {
                 m_mesh->m_edgeSet.insert(f->m_edgeList[j]);
@@ -174,7 +173,7 @@ void ProcessExtractSurf::Process()
 
                 // generate a list of edges on boundary of surfaces being
                 // extracted
-                edit = bndEdgeSet.find(f->m_edgeList[j]);
+                auto edit = bndEdgeSet.find(f->m_edgeList[j]);
                 if (edit != bndEdgeSet.end())
                 {
                     // remove since visited more than once
@@ -213,52 +212,50 @@ void ProcessExtractSurf::Process()
     // contain both quadrilaterals and triangles and so need to be split
     // up.
     CompositeMap tmp = m_mesh->m_composite;
-    CompositeMap::iterator it;
 
     m_mesh->m_composite.clear();
     int maxId = -1;
 
     // Loop over composites for first time to determine any composites
     // which don't have elements of the correct dimension.
-    for (it = tmp.begin(); it != tmp.end(); ++it)
+    for (auto &it : tmp)
     {
-        if (it->second->m_items[0]->GetDim() != m_mesh->m_expDim)
+        if (it.second->m_items[0]->GetDim() != m_mesh->m_expDim)
         {
             continue;
         }
 
-        vector<ElementSharedPtr> el = it->second->m_items;
-        it->second->m_items.clear();
+        vector<ElementSharedPtr> el = it.second->m_items;
+        it.second->m_items.clear();
 
         for (i = 0; i < el.size(); ++i)
         {
             if (keptIds.count(el[i]->GetId()) > 0)
             {
-                it->second->m_items.push_back(el[i]);
+                it.second->m_items.push_back(el[i]);
             }
         }
 
-        if (it->second->m_items.size() == 0)
+        if (it.second->m_items.size() == 0)
         {
             continue;
         }
 
-        m_mesh->m_composite.insert(*it);
+        m_mesh->m_composite.insert(it);
 
         // Figure out the maximum ID so if we need to create new
         // composites we can give them a unique ID.
-        maxId = (std::max)(maxId, (int)it->second->m_id) + 1;
+        maxId = (std::max)(maxId, (int)it.second->m_id) + 1;
     }
 
     tmp = m_mesh->m_composite;
     m_mesh->m_composite.clear();
-    map<string, CompositeSharedPtr>::iterator it2;
 
     // Now do another loop over the composites to remove composites
     // which don't contain any elements in the new mesh.
-    for (it = tmp.begin(); it != tmp.end(); ++it)
+    for (auto &it : tmp)
     {
-        CompositeSharedPtr c        = it->second;
+        CompositeSharedPtr c        = it.second;
         vector<ElementSharedPtr> el = c->m_items;
 
         // Remove all but the first element from this composite.
@@ -279,7 +276,7 @@ void ProcessExtractSurf::Process()
             // composite, otherwise we create a new composite and store
             // it in newComps.
             string tag = el[i]->GetTag();
-            it2 = newComps.find(tag);
+            auto it2 = newComps.find(tag);
             if (it2 == newComps.end())
             {
                 CompositeSharedPtr newComp(new Composite());
@@ -297,18 +294,20 @@ void ProcessExtractSurf::Process()
         // Print out mapping information if we remapped composite IDs.
         if (m_mesh->m_verbose && newComps.size() > 1)
         {
-            cout << "- Mapping composite " << it->first << " ->";
+            cout << "- Mapping composite " << it.first << " ->";
         }
 
         // Insert new composites.
-        for (i = 0, it2 = newComps.begin(); it2 != newComps.end(); ++it2, ++i)
+        i = 0;
+        for (auto &it2 : newComps)
         {
             if (m_mesh->m_verbose && newComps.size() > 1)
             {
-                cout << (i > 0 ? ", " : " ") << it2->second->m_id << "("
-                     << it2->second->m_tag << ")";
+                cout << (i > 0 ? ", " : " ") << it2.second->m_id << "("
+                     << it2.second->m_tag << ")";
             }
-            m_mesh->m_composite[it2->second->m_id] = it2->second;
+            m_mesh->m_composite[it2.second->m_id] = it2.second;
+            ++i;
         }
 
         if (m_mesh->m_verbose && newComps.size() > 1)
@@ -333,7 +332,6 @@ void ProcessExtractSurf::Process()
         }
 
         map<int, EdgeSet> surfBndEdgeSet;
-        EdgeSet::iterator edit;
         map<int, string> surfLabels;
 
         // Iterate over list of surface elements.
@@ -378,7 +376,7 @@ void ProcessExtractSurf::Process()
                     // extracted
                     if (surfBndEdgeSet.count(surf))
                     {
-                        edit = surfBndEdgeSet[surf].find(f->m_edgeList[j]);
+                        auto edit = surfBndEdgeSet[surf].find(f->m_edgeList[j]);
                         if (edit != surfBndEdgeSet[surf].end())
                         {
                             // remove since visited more than once
@@ -402,24 +400,21 @@ void ProcessExtractSurf::Process()
         m_mesh->m_faceLabels.clear();
 
         // iteratve over surfBndEdgeSet and see if they are in BndEdgeSet
-        map<int, EdgeSet>::iterator esetit;
-        for (esetit = surfBndEdgeSet.begin(); esetit != surfBndEdgeSet.end();
-             ++esetit)
+        for (auto &esetit : surfBndEdgeSet)
         {
             CompositeSharedPtr newComp(new Composite());
             newComp->m_id  = maxId;
             newComp->m_tag = "E";
             // set up labels if they exist
-            if (surfLabels.count(esetit->first))
+            if (surfLabels.count(esetit.first))
             {
-                newComp->m_label = surfLabels[esetit->first];
+                newComp->m_label = surfLabels[esetit.first];
             }
 
-            for (edit = esetit->second.begin(); edit != esetit->second.end();
-                 ++edit)
+            for (auto &edit : esetit.second)
             {
-                EdgeSet::iterator locit;
-                if ((locit = bndEdgeSet.find(*edit)) != bndEdgeSet.end())
+                auto locit = bndEdgeSet.find(edit);
+                if (locit != bndEdgeSet.end())
                 {
                     // make 1D segment element
                     LibUtilities::ShapeType elType = LibUtilities::eSegment;

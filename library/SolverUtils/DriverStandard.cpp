@@ -49,8 +49,10 @@ namespace Nektar
         /**
 	 *
          */
-        DriverStandard::DriverStandard(const LibUtilities::SessionReaderSharedPtr pSession)
-            : Driver(pSession)
+        DriverStandard::DriverStandard(
+            const LibUtilities::SessionReaderSharedPtr pSession,
+            const SpatialDomains::MeshGraphSharedPtr pGraph)
+            : Driver(pSession, pGraph)
         {
         }
     

@@ -3,7 +3,7 @@
 #include <iomanip>
 
 #include <boost/filesystem/path.hpp>
-#include <SpatialDomains/MeshGraph2D.h>
+#include <SpatialDomains/MeshGraph.h>
 #include <MultiRegions/ContField2D.h>
 
 using namespace std;
@@ -20,7 +20,7 @@ int main(int argc, char *argv[])
     NekDouble  lambda;
     vector<string> vFilenames;
     //defining timing variables
-    Timer timer;
+    LibUtilities::Timer timer;
     NekDouble exeTime, fullTime, ppTime = 0.0;
 
     if(argc < 6)//< allows to parse "verbose" option
@@ -200,7 +200,7 @@ int main(int argc, char *argv[])
     
     //----------------------------------------------
     // Read in mesh from input file
-    SpatialDomains::MeshGraphSharedPtr graph2D = MemoryManager<SpatialDomains::MeshGraph2D>::AllocateSharedPtr(vSession);
+    SpatialDomains::MeshGraphSharedPtr graph2D = SpatialDomains::MeshGraph::Read(vSession);;
     //----------------------------------------------
 
     //----------------------------------------------
@@ -421,12 +421,7 @@ int main(int argc, char *argv[])
 std::string PortablePath(const boost::filesystem::path& path)
 {
     boost::filesystem::path temp = path;
-#if BOOST_VERSION > 104200
     temp.make_preferred();
     return temp.string();
-#else
-    return temp.file_string();
-#endif
-
 }
 

@@ -43,8 +43,9 @@ namespace Nektar
     string Poisson::className2 = GetEquationSystemFactory().RegisterCreatorFunction("SteadyDiffusion", Poisson::create);
 
     Poisson::Poisson(
-            const LibUtilities::SessionReaderSharedPtr& pSession)
-        : Laplace(pSession)
+        const LibUtilities::SessionReaderSharedPtr& pSession,
+        const SpatialDomains::MeshGraphSharedPtr& pGraph)
+        : Laplace(pSession, pGraph)
     {
     }
 
@@ -52,7 +53,7 @@ namespace Nektar
     {
         Laplace::v_InitObject();
 
-        EvaluateFunction(m_session->GetVariables(), m_fields, "Forcing");
+        GetFunction("Forcing")->Evaluate(m_session->GetVariables(), m_fields);
     }
 
     Poisson::~Poisson()

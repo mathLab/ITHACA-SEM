@@ -57,6 +57,8 @@ int CommDataTypeGetSize(CommDataType dt)
 #else
     switch (dt)
     {
+        case MPI_CHAR:
+            return sizeof(char);
         case MPI_INT:
             return sizeof(int);
         case MPI_UNSIGNED:
@@ -82,27 +84,65 @@ int CommDataTypeGetSize(CommDataType dt)
 #endif
 }
 
-/// Type trait mapping an int to MPI_INT
-template <> CommDataType CommDataTypeTraits<int>::type      = MPI_INT;
-/// Type trait mapping an unsigned int to MPI_UNSIGNED
-template <> CommDataType CommDataTypeTraits<unsigned>::type = MPI_UNSIGNED;
-/// Type trait mapping a long int to MPI_LONG
-template <> CommDataType CommDataTypeTraits<long>::type     = MPI_LONG;
-/// Type trait mapping an unsigned long int to MPI_UNSIGNED_LONG
-template <>
-CommDataType CommDataTypeTraits<unsigned long>::type = MPI_UNSIGNED_LONG;
-/// Type trait mapping a long long int to MPI_LONG_LONG
-template <> CommDataType CommDataTypeTraits<long long>::type = MPI_LONG_LONG;
-/// Type trait mapping an unsigned long long int to MPI_UNSIGNED_LONG_LONG
-template <>
-CommDataType CommDataTypeTraits<unsigned long long>::type =
-    MPI_UNSIGNED_LONG_LONG;
-/// Type trait mapping a float to MPI_FLOAT
-template <> CommDataType CommDataTypeTraits<float>::type  = MPI_FLOAT;
-/// Type trait mapping a double to MPI_DOUBLE
-template <> CommDataType CommDataTypeTraits<double>::type = MPI_DOUBLE;
-/// Type trait mapping a long double to MPI_LONG_DOUBLE
-template <>
-CommDataType CommDataTypeTraits<long double>::type = MPI_LONG_DOUBLE;
+template<> CommDataType &CommDataTypeTraits<char>::GetDataType()
+{
+    static CommDataType type = MPI_CHAR;
+    return type;
+}
+
+template<> CommDataType &CommDataTypeTraits<int>::GetDataType()
+{
+    static CommDataType type = MPI_INT;
+    return type;
+}
+
+template<> CommDataType &CommDataTypeTraits<unsigned>::GetDataType()
+{
+    static CommDataType type = MPI_UNSIGNED;
+    return type;
+}
+
+template<> CommDataType &CommDataTypeTraits<long>::GetDataType()
+{
+    static CommDataType type = MPI_LONG;
+    return type;
+}
+
+template<> CommDataType &CommDataTypeTraits<unsigned long>::GetDataType()
+{
+    static CommDataType type = MPI_UNSIGNED_LONG;
+    return type;
+}
+
+template<> CommDataType &CommDataTypeTraits<long long>::GetDataType()
+{
+    static CommDataType type = MPI_LONG_LONG;
+    return type;
+}
+
+template<> CommDataType &CommDataTypeTraits<unsigned long long>::GetDataType()
+{
+    static CommDataType type = MPI_UNSIGNED_LONG_LONG;
+    return type;
+}
+
+template<> CommDataType &CommDataTypeTraits<float>::GetDataType()
+{
+    static CommDataType type = MPI_FLOAT;
+    return type;
+}
+
+template<> CommDataType &CommDataTypeTraits<double>::GetDataType()
+{
+    static CommDataType type = MPI_DOUBLE;
+    return type;
+}
+
+template<> CommDataType &CommDataTypeTraits<long double>::GetDataType()
+{
+    static CommDataType type = MPI_LONG_DOUBLE;
+    return type;
+}
+
 }
 }

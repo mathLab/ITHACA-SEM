@@ -52,7 +52,7 @@ namespace Nektar
         typedef DiagonalMatrixFuncs Policy;
 
                     
-        BOOST_AUTO_TEST_CASE(TestAdvance)
+        BOOST_AUTO_TEST_CASE(TestAdvanceDiagonal)
         {
             UnitTests::RedirectCerrIfNeeded();
             typedef DiagonalMatrixFuncs Policy;

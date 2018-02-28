@@ -42,6 +42,7 @@
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <IncNavierStokesSolver/EquationSystems/Extrapolate.h>
 #include <SolverUtils/Forcing/Forcing.h>
+#include <complex>
 
 namespace Nektar
 {
@@ -97,6 +98,8 @@ namespace Nektar
     };
 
 
+    typedef std::complex<double> NekComplexDouble;
+
     struct WomersleyParams
     {
         WomersleyParams(int dim)
@@ -109,7 +112,7 @@ namespace Nektar
         {};
 
         // Real and imaginary velocity comp. of wom
-        std::vector<NekCDouble> m_wom_vel;
+        std::vector<NekComplexDouble> m_wom_vel;
 
         // Womersley  BC constants
         NekDouble m_radius;
@@ -121,7 +124,7 @@ namespace Nektar
 
         // poiseuille flow and fourier coefficients
         Array<OneD, Array<OneD, NekDouble> > m_poiseuille;
-        Array<OneD, Array<OneD, Array<OneD, NekCDouble> > > m_zvel;
+        Array<OneD, Array<OneD, Array<OneD, NekComplexDouble> > > m_zvel;
 
     };
     typedef std::shared_ptr<WomersleyParams> WomersleyParamsSharedPtr;

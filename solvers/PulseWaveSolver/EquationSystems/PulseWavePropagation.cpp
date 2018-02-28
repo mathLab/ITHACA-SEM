@@ -100,7 +100,7 @@ namespace Nektar
         m_advObject->SetFluxVector(
             &PulseWavePropagation::GetFluxVector, this);
         m_riemannSolver = SolverUtils::
-            GetRiemannSolverFactory().CreateInstance(riemName);
+            GetRiemannSolverFactory().CreateInstance(riemName, m_session);
         m_riemannSolver->SetScalar(
             "A0", &PulseWavePropagation::GetA0, this);
         m_riemannSolver->SetScalar(

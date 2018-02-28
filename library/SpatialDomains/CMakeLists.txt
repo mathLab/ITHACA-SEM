@@ -11,7 +11,6 @@ MeshGraph.cpp
 MeshGraphXml.cpp
 MeshGraphXmlCompressed.cpp
 MeshPartition.cpp
-MeshPartitionMetis.cpp
 PrismGeom.cpp
 PyrGeom.cpp
 QuadGeom.cpp
@@ -36,7 +35,6 @@ MeshGraph.h
 MeshGraphXml.h
 MeshGraphXmlCompressed.h
 MeshPartition.h
-MeshPartitionMetis.h
 PrismGeom.h
 PyrGeom.h
 QuadGeom.h
@@ -49,13 +47,18 @@ SpatialDomains.hpp
 )
 
 IF(NEKTAR_USE_HDF5)
-	SET(SPATIAL_DOMAINS_HEADERS ${SPATIAL_DOMAINS_HEADERS} MeshGraphHDF5.h)
-	SET(SPATIAL_DOMAINS_SOURCES ${SPATIAL_DOMAINS_SOURCES} MeshGraphHDF5.cpp)
+    SET(SPATIAL_DOMAINS_HEADERS ${SPATIAL_DOMAINS_HEADERS} MeshGraphHDF5.h)
+    SET(SPATIAL_DOMAINS_SOURCES ${SPATIAL_DOMAINS_SOURCES} MeshGraphHDF5.cpp)
 ENDIF()
 
 IF(NEKTAR_USE_SCOTCH)
-	SET(SPATIAL_DOMAINS_HEADERS ${SPATIAL_DOMAINS_HEADERS} MeshPartitionScotch.h)
-	SET(SPATIAL_DOMAINS_SOURCES ${SPATIAL_DOMAINS_SOURCES} MeshPartitionScotch.cpp)
+    SET(SPATIAL_DOMAINS_HEADERS ${SPATIAL_DOMAINS_HEADERS} MeshPartitionScotch.h)
+    SET(SPATIAL_DOMAINS_SOURCES ${SPATIAL_DOMAINS_SOURCES} MeshPartitionScotch.cpp)
+ENDIF()
+
+IF(NEKTAR_USE_METIS)
+    SET(SPATIAL_DOMAINS_HEADERS ${SPATIAL_DOMAINS_HEADERS} MeshPartitionMetis.h)
+    SET(SPATIAL_DOMAINS_SOURCES ${SPATIAL_DOMAINS_SOURCES} MeshPartitionMetis.cpp)
 ENDIF()
 
 ADD_DEFINITIONS(-DSPATIAL_DOMAINS_EXPORTS)
@@ -67,16 +70,18 @@ ADD_NEKTAR_LIBRARY(SpatialDomains
     SUMMARY "Nektar++ SpatialDomains library"
     DESCRIPTION "This library provides the mappings between reference regions and physical regions in the domain.")
 
-ADD_DEPENDENCIES(SpatialDomains modmetis-5.1.0)
+IF (NEKTAR_USE_METIS)
+    # Metis
+    TARGET_LINK_LIBRARIES(SpatialDomains LINK_PRIVATE ${METIS_LIB})
+    ADD_DEPENDENCIES(SpatialDomains metis-5.1.0)
+ENDIF()
 
-# Metis
-TARGET_LINK_LIBRARIES(SpatialDomains LINK_PRIVATE ${METIS_LIB})
-
-IF( NEKTAR_USE_SCOTCH )
-    TARGET_LINK_LIBRARIES(SpatialDomains LINK_PRIVATE
+IF (NEKTAR_USE_SCOTCH)
+    # Scotch
+    TARGET_LINK_LIBRARIES(SpatialDomains LINK_PUBLIC
         ${SCOTCH_LIBRARY} ${SCOTCHERR_LIBRARY})
-    ADD_DEPENDENCIES(SpatialDomains scotch-6.0.0)
-ENDIF ()
+    ADD_DEPENDENCIES(SpatialDomains scotch-6.0.4)
+ENDIF()
 
 INSTALL(DIRECTORY ./ DESTINATION ${NEKTAR_INCLUDE_DIR}/SpatialDomains
     COMPONENT dev FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp")

@@ -495,7 +495,7 @@ namespace Nektar
                 "Womersley parameters for this boundary have not been set up");
 
         WomersleyParamsSharedPtr WomParam = m_womersleyParams[fldid][bndid];
-        NekCDouble zvel;
+        NekComplexDouble zvel;
         int  i,j,k;
 
         int M_coeffs = WomParam->m_wom_vel.size();
@@ -504,11 +504,11 @@ namespace Nektar
         NekDouble axis_normal = WomParam->m_axisnormal[fldid];
 
         // Womersley Number
-        NekCDouble omega_c (2.0*M_PI/T, 0.0);
-        NekCDouble k_c (0.0, 0.0);
-        NekCDouble m_time_c (m_time, 0.0);
-        NekCDouble zi (0.0,1.0);
-        NekCDouble i_pow_3q2 (-1.0/sqrt(2.0),1.0/sqrt(2.0));
+        NekComplexDouble omega_c (2.0*M_PI/T, 0.0);
+        NekComplexDouble k_c (0.0, 0.0);
+        NekComplexDouble m_time_c (m_time, 0.0);
+        NekComplexDouble zi (0.0,1.0);
+        NekComplexDouble i_pow_3q2 (-1.0/sqrt(2.0),1.0/sqrt(2.0));
 
         MultiRegions::ExpListSharedPtr  BndCondExp;
         BndCondExp   = m_fields[fldid]->GetBndCondExpansions()[bndid];
@@ -520,12 +520,12 @@ namespace Nektar
         int exp_npts = BndCondExp->GetExpSize();
         Array<OneD, NekDouble> wbc(exp_npts,0.0);
 
-        Array<OneD, NekCDouble> zt(M_coeffs);
+        Array<OneD, NekComplexDouble> zt(M_coeffs);
 
         // preallocate the exponent
         for (k=1; k < M_coeffs; k++)
         {
-            k_c  = NekCDouble((NekDouble) k, 0.0);
+            k_c  = NekComplexDouble((NekDouble) k, 0.0);
             zt[k] = std::exp(zi * omega_c * k_c * m_time_c);
         }
 
@@ -565,7 +565,7 @@ namespace Nektar
         std::string::size_type indxBeg = womStr.find_first_of(':') + 1;
         string filename = womStr.substr(indxBeg,string::npos);
 
-        NekCDouble coef;
+        NekComplexDouble coef;
 
         TiXmlDocument doc(filename);
 
@@ -683,7 +683,7 @@ namespace Nektar
                     (std::string("Have not read two entries of Fourier coefficicent from ID="+
                     boost::lexical_cast<string>(indx)).c_str()));
 
-            m_womersleyParams[fldid][bndid]->m_wom_vel.push_back(NekCDouble (coeffvals[0], coeffvals[1]));
+            m_womersleyParams[fldid][bndid]->m_wom_vel.push_back(NekComplexDouble (coeffvals[0], coeffvals[1]));
 
             fval = fval->NextSiblingElement("F");
         }
@@ -696,12 +696,12 @@ namespace Nektar
         NekDouble T = m_womersleyParams[fldid][bndid]->m_period;
         Array<OneD, NekDouble > x0 = m_womersleyParams[fldid][bndid]->m_axispoint;
 
-        NekCDouble rqR;
+        NekComplexDouble rqR;
         // Womersley Number
-        NekCDouble omega_c (2.0*M_PI/T, 0.0);
-        NekCDouble alpha_c (R*sqrt(omega_c.real()/m_kinvis), 0.0);
-        NekCDouble z1 (1.0,0.0);
-        NekCDouble i_pow_3q2 (-1.0/sqrt(2.0),1.0/sqrt(2.0));
+        NekComplexDouble omega_c (2.0*M_PI/T, 0.0);
+        NekComplexDouble alpha_c (R*sqrt(omega_c.real()/m_kinvis), 0.0);
+        NekComplexDouble z1 (1.0,0.0);
+        NekComplexDouble i_pow_3q2 (-1.0/sqrt(2.0),1.0/sqrt(2.0));
 
         MultiRegions::ExpListSharedPtr  BndCondExp;
         BndCondExp   = m_fields[fldid]->GetBndCondExpansions()[bndid];
@@ -716,16 +716,16 @@ namespace Nektar
 
         // allocate time indepedent variables
         m_womersleyParams[fldid][bndid]->m_poiseuille = Array<OneD, Array<OneD, NekDouble> > (exp_npts);
-        m_womersleyParams[fldid][bndid]->m_zvel = Array<OneD, Array<OneD, Array<OneD, NekCDouble> > > (exp_npts);
+        m_womersleyParams[fldid][bndid]->m_zvel = Array<OneD, Array<OneD, Array<OneD, NekComplexDouble> > > (exp_npts);
         // could use M_coeffs - 1 but need to avoid complicating things
-        Array<OneD, NekCDouble> zJ0(M_coeffs);
-        Array<OneD, NekCDouble> lamda_n(M_coeffs);
-        Array<OneD, NekCDouble> k_c(M_coeffs);
-        NekCDouble zJ0r;
+        Array<OneD, NekComplexDouble> zJ0(M_coeffs);
+        Array<OneD, NekComplexDouble> lamda_n(M_coeffs);
+        Array<OneD, NekComplexDouble> k_c(M_coeffs);
+        NekComplexDouble zJ0r;
 
         for (k=1; k < M_coeffs; k++)
         {
-            k_c[k]  = NekCDouble((NekDouble) k, 0.0);
+            k_c[k]  = NekComplexDouble((NekDouble) k, 0.0);
             lamda_n[k] = i_pow_3q2 * alpha_c * sqrt(k_c[k]);
             zJ0[k]  = Polylib::ImagBesselComp(0,lamda_n[k]);
         }
@@ -745,12 +745,12 @@ namespace Nektar
             m_womersleyParams[fldid][bndid]->m_poiseuille[i] =
                     Array<OneD, NekDouble> (nfq);
             m_womersleyParams[fldid][bndid]->m_zvel[i] =
-                    Array<OneD, Array<OneD, NekCDouble> > (nfq);
+                    Array<OneD, Array<OneD, NekComplexDouble> > (nfq);
 
             // Compute coefficients
             for (j=0; j < nfq; j++)
             {
-                rqR = NekCDouble (sqrt((x[j]-x0[0])*(x[j]-x0[0]) +
+                rqR = NekComplexDouble (sqrt((x[j]-x0[0])*(x[j]-x0[0]) +
                          (y[j]-x0[1])*(y[j]-x0[1]) +
                          (z[j]-x0[2])*(z[j]-x0[2]))/R, 0.0);
 
@@ -761,7 +761,7 @@ namespace Nektar
 
 
                 m_womersleyParams[fldid][bndid]->m_zvel[i][j] =
-                        Array<OneD, NekCDouble> (M_coeffs);
+                        Array<OneD, NekComplexDouble> (M_coeffs);
 
                 // compute the velocity information
                 for (k=1; k < M_coeffs; k++)

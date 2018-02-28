@@ -38,12 +38,10 @@
 
 #include <map>
 #include <cstdint>
-#include <complex>
 
 namespace Nektar
 {
     typedef double NekDouble;
-    typedef std::complex<double> NekCDouble;
 
     typedef std::int32_t  NekInt;
     typedef std::int32_t  NekInt32;

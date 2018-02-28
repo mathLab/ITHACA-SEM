@@ -14,7 +14,7 @@ namespace po = boost::program_options;
 #include <LibUtilities/BasicUtils/FieldIO.h>
 #include <LibUtilities/Communication/Comm.h>
 #include <LibUtilities/BasicUtils/HashUtils.hpp>
-#include <SpatialDomains/MeshGraph2D.h>
+#include <SpatialDomains/MeshGraph.h>
 #include <MultiRegions/ExpList2D.h>
 #include <LocalRegions/Expansion2D.h>
 
@@ -145,8 +145,7 @@ int main(int argc, char* argv[])
     {
         //----------------------------------------------
         // Read in mesh from input file
-        graph2D = MemoryManager<SpatialDomains::MeshGraph2D>::
-                    AllocateSharedPtr(vSession);
+        graph2D = SpatialDomains::MeshGraph::Read(vSession);
         //----------------------------------------------
 
         //----------------------------------------------

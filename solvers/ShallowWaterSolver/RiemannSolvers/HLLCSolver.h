@@ -43,16 +43,17 @@ namespace Nektar
     class HLLCSolver : public NonlinearSWESolver
     {
     public:
-        static RiemannSolverSharedPtr create()
+        static RiemannSolverSharedPtr create(
+            const LibUtilities::SessionReaderSharedPtr& pSession)
         {
             return RiemannSolverSharedPtr(
-                new HLLCSolver());
+                new HLLCSolver(pSession));
         }
         
         static std::string solverName;
         
     protected:
-        HLLCSolver();
+        HLLCSolver(const LibUtilities::SessionReaderSharedPtr& pSession);
         
         virtual void v_PointSolve(
             double  hL, double  huL, double  hvL,

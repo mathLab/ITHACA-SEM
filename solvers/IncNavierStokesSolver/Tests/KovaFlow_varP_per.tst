@@ -2,7 +2,7 @@
 <test>
     <description>Kovasznay Flow variable P, periodic BC</description>
     <executable>IncNavierStokesSolver</executable>
-    <parameters>-I GlobalSysSoln=DirectMultiLevelStaticCond KovaFlow_varP_per.xml</parameters>
+    <parameters>KovaFlow_varP_per.xml</parameters>
     <files>
         <file description="Session File">KovaFlow_varP_per.xml</file>
     </files>

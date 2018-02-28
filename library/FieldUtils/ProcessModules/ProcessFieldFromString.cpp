@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-//  File: ProcessAddFieldFromString.cpp
+//  File: ProcessFieldFromString.cpp
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,14 +29,14 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Add a new field from a string based on existing variable
+//  Description: Modify an existing or add a new field from a string based on existing variable
 //
 ///////////////////////////////////////////////////////////////////////////////
 #include <iostream>
 #include <string>
 using namespace std;
 
-#include "ProcessAddFieldFromString.h"
+#include "ProcessFieldFromString.h"
 
 #include <LibUtilities/BasicUtils/ParseUtils.h>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
@@ -46,28 +46,30 @@ namespace Nektar
 namespace FieldUtils
 {
 
-ModuleKey ProcessAddFieldFromString::className =
+ModuleKey ProcessFieldFromString::className =
     GetModuleFactory().RegisterCreatorFunction(
-        ModuleKey(eProcessModule, "addfieldfromstring"),
-        ProcessAddFieldFromString::create,
-        "Create a new field from the existing fields as specified by a string"
-        " using a required argument of the form fieldstr=\"x + y + u\" ");
+        ModuleKey(eProcessModule, "fieldfromstring"),
+        ProcessFieldFromString::create,
+        "Modify an existing or create a new field from the existing fields as "
+        "specified by a string using a required argument of the form "
+        "fieldstr=\"x + y + u\" ");
 
-ProcessAddFieldFromString::ProcessAddFieldFromString(FieldSharedPtr f)
+ProcessFieldFromString::ProcessFieldFromString(FieldSharedPtr f)
     : ProcessModule(f)
 {
     m_config["fieldstr"] = ConfigOption(
-        false, "NotSet", "string of new field to be added (required)");
+        false, "NotSet", "Analytic expression");
     m_config["fieldname"] =
-        ConfigOption(false, "newfield",
-                     "name for new field, default is newfield (optional)");
+        ConfigOption(false,
+                     "newfield",
+                     "name for modified new field, default is \"newfield\" (optional)");
 }
 
-ProcessAddFieldFromString::~ProcessAddFieldFromString(void)
+ProcessFieldFromString::~ProcessFieldFromString(void)
 {
 }
 
-void ProcessAddFieldFromString::Process(po::variables_map &vm)
+void ProcessFieldFromString::Process(po::variables_map &vm)
 {
     // Check if required parameter fieldstr was provided
     ASSERTL0(m_config["fieldstr"].m_beenSet, "fieldstr must be specified");
@@ -77,7 +79,24 @@ void ProcessAddFieldFromString::Process(po::variables_map &vm)
 
     // Set up new field name
     string fieldName = m_config["fieldname"].as<string>();
-    m_f->m_variables.push_back(fieldName);
+
+    int fieldID;
+    bool addField;
+    // check if field exists
+    auto it =
+        std::find(m_f->m_variables.begin(), m_f->m_variables.end(), fieldName);
+    if (it != m_f->m_variables.end())
+    {
+        addField = false;
+        fieldID = std::distance(m_f->m_variables.begin(), it);
+    }
+    else
+    {
+        // Create new expansion
+        addField = true;
+        fieldID  = nfields;
+        m_f->m_variables.push_back(fieldName);
+    }
 
     // Skip in case of empty partition
     if (m_f->m_exp[0]->GetNumElmts() == 0)
@@ -91,13 +110,15 @@ void ProcessAddFieldFromString::Process(po::variables_map &vm)
     ASSERTL0(nstrips == 1,
              "Routine is currently only setup for non-strip files");
 
-    // Create new expansion
-    m_f->m_exp.resize(nfields + 1);
-    m_f->m_exp[nfields] = m_f->AppendExpList(m_f->m_numHomogeneousDir);
+    if (addField)
+    {
+        m_f->m_exp.resize(nfields + 1);
+        m_f->m_exp[nfields] = m_f->AppendExpList(m_f->m_numHomogeneousDir);
+    }
 
     // Variables for storing names and values for evaluating the function
     string varstr;
-    vector<Array<OneD, const NekDouble>> interpfields;
+    vector<Array<OneD, const NekDouble> > interpfields;
 
     // Add the coordinate values
     varstr += "x y z";
@@ -124,11 +145,11 @@ void ProcessAddFieldFromString::Process(po::variables_map &vm)
     exprId          = strEval.DefineFunction(varstr.c_str(), fieldstr);
 
     // Evaluate function
-    strEval.Evaluate(exprId, interpfields, m_f->m_exp[nfields]->UpdatePhys());
+    strEval.Evaluate(exprId, interpfields, m_f->m_exp[fieldID]->UpdatePhys());
 
     // Update coeffs
-    m_f->m_exp[nfields]->FwdTrans_IterPerExp(
-        m_f->m_exp[nfields]->GetPhys(), m_f->m_exp[nfields]->UpdateCoeffs());
+    m_f->m_exp[fieldID]->FwdTrans_IterPerExp(
+        m_f->m_exp[fieldID]->GetPhys(), m_f->m_exp[fieldID]->UpdateCoeffs());
 }
 }
 }

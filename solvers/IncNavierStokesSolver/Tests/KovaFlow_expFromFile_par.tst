@@ -2,7 +2,7 @@
 <test>
     <description>Kovasznay Flow, expansion from restart file, par(2)</description>
     <executable>IncNavierStokesSolver</executable>
-    <parameters>--use-metis KovaFlow_expFromFile.xml</parameters>
+    <parameters>--use-scotch KovaFlow_expFromFile.xml</parameters>
     <processes>2</processes>
     <files>
         <file description="Session File">KovaFlow_expFromFile.xml</file>

@@ -65,6 +65,12 @@ namespace Nektar
     virtual ~NavierStokesCFE();
 
   protected:
+    std::string                         m_ViscosityType;
+    NekDouble                           m_mu;
+    NekDouble                           m_thermalConductivity;
+    NekDouble                           m_Cp;
+    NekDouble                           m_Prandtl;
+
     NavierStokesCFE(const LibUtilities::SessionReaderSharedPtr& pSession,
                     const SpatialDomains::MeshGraphSharedPtr& pGraph);
 
@@ -76,11 +82,11 @@ namespace Nektar
             const Array<OneD, Array<OneD, NekDouble> >   &pFwd,
             const Array<OneD, Array<OneD, NekDouble> >   &pBwd);
 
-    void GetViscousFluxVector(
+    virtual void v_GetViscousFluxVector(
         const Array<OneD, Array<OneD, NekDouble> >         &physfield,
         Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &derivatives,
         Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &viscousTensor);
-    void GetViscousFluxVectorDeAlias(
+    virtual void v_GetViscousFluxVectorDeAlias(
         const Array<OneD, Array<OneD, NekDouble> >         &physfield,
         Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &derivatives,
         Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &viscousTensor);

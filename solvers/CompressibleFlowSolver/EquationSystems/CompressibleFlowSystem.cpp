@@ -40,9 +40,10 @@ using namespace std;
 namespace Nektar
 {
     CompressibleFlowSystem::CompressibleFlowSystem(
-        const LibUtilities::SessionReaderSharedPtr& pSession)
-        : UnsteadySystem(pSession),
-          AdvectionSystem(pSession)
+        const LibUtilities::SessionReaderSharedPtr& pSession,
+        const SpatialDomains::MeshGraphSharedPtr& pGraph)
+        : UnsteadySystem(pSession, pGraph),
+          AdvectionSystem(pSession, pGraph)
     {
     }
 
@@ -134,60 +135,8 @@ namespace Nektar
      */
     void CompressibleFlowSystem::InitialiseParameters()
     {
-        NekDouble velInf, gasConstant;
-
         // Get gamma parameter from session file.
         m_session->LoadParameter("Gamma", m_gamma, 1.4);
-
-        // Get gas constant from session file and compute Cp
-        m_session->LoadParameter ("GasConstant",   gasConstant,   287.058);
-        m_Cp      = m_gamma / (m_gamma - 1.0) * gasConstant;
-
-        // Get pInf parameter from session file.
-        m_session->LoadParameter("pInf", m_pInf, 101325);
-
-        // Get rhoInf parameter from session file.
-        m_session->LoadParameter("rhoInf", m_rhoInf, 1.225);
-
-        // Get uInf parameter from session file.
-        m_session->LoadParameter("uInf", velInf, 0.1);
-
-        m_UInf = velInf*velInf;
-
-        // Get vInf parameter from session file.
-        if (m_spacedim == 2 || m_spacedim == 3)
-        {
-            m_session->LoadParameter("vInf", velInf, 0.0);
-            m_UInf += velInf*velInf;
-        }
-
-        // Get wInf parameter from session file.
-        if (m_spacedim == 3)
-        {
-            m_session->LoadParameter("wInf", velInf, 0.0);
-            m_UInf += velInf*velInf;
-        }
-        m_UInf = sqrt(m_UInf);
-
-        // Viscosity
-        m_session->LoadSolverInfo("ViscosityType", m_ViscosityType, "Constant");
-        m_session->LoadParameter ("mu",            m_mu,            1.78e-05);
-
-        // Thermal conductivity or Prandtl
-        if( m_session->DefinesParameter("thermalConductivity"))
-        {
-            ASSERTL0( !m_session->DefinesParameter("Pr"),
-                 "Cannot define both Pr and thermalConductivity.");
-
-            m_session->LoadParameter ("thermalConductivity",
-                                        m_thermalConductivity);
-            m_Prandtl = m_Cp * m_mu / m_thermalConductivity;
-        }
-        else
-        {
-            m_session->LoadParameter ("Pr", m_Prandtl, 0.72);
-            m_thermalConductivity = m_Cp * m_mu / m_Prandtl;
-        }
 
         // Shock capture
         m_session->LoadSolverInfo("ShockCaptureType",
@@ -244,7 +193,7 @@ namespace Nektar
 
         SolverUtils::RiemannSolverSharedPtr riemannSolver;
         riemannSolver = SolverUtils::GetRiemannSolverFactory()
-                                    .CreateInstance(riemName);
+                                    .CreateInstance(riemName, m_session);
 
         // Setting up parameters for advection operator Riemann solver
         riemannSolver->SetParam (
@@ -461,7 +410,7 @@ namespace Nektar
         }
 
         m_varConv->GetVelocityVector(physfield, velocity);
-        m_varConv->GetPressure(physfield, velocity, pressure);
+        m_varConv->GetPressure(physfield, pressure);
 
         // Flux vector for the velocity fields
         for (i = 0; i < m_spacedim; ++i)
@@ -547,7 +496,7 @@ namespace Nektar
         }
 
         m_varConv->GetVelocityVector(physfield_interp, velocity);
-        m_varConv->GetPressure      (physfield_interp, velocity, pressure);
+        m_varConv->GetPressure      (physfield_interp, pressure);
 
         // Evaluation of flux vector for the velocity fields
         for (i = 0; i < m_spacedim; ++i)
@@ -703,7 +652,6 @@ namespace Nektar
         Array<OneD, Array<OneD, NekDouble> > velocity   (m_spacedim);
         Array<OneD, Array<OneD, NekDouble> > stdVelocity(m_spacedim);
         Array<OneD, Array<OneD, NekDouble> > stdSoundSpeed(m_spacedim);
-        Array<OneD, NekDouble>               pressure   (nTotQuadPoints);
         Array<OneD, NekDouble>               soundspeed (nTotQuadPoints);
         LibUtilities::PointsKeyVector        ptsKeys;
 
@@ -715,8 +663,7 @@ namespace Nektar
         }
 
         m_varConv->GetVelocityVector(physfields, velocity);
-        m_varConv->GetPressure      (physfields, velocity, pressure);
-        m_varConv->GetSoundSpeed    (physfields, pressure, soundspeed);
+        m_varConv->GetSoundSpeed    (physfields, soundspeed);
 
         for(int el = 0; el < n_element; ++el)
         {
@@ -873,12 +820,15 @@ namespace Nektar
                 tmp[i] = m_fields[i]->GetPhys();
             }
 
-            Array<OneD, NekDouble> pressure(nPhys);
+            Array<OneD, NekDouble> pressure(nPhys), temperature(nPhys);
+            Array<OneD, NekDouble> entropy(nPhys);
             Array<OneD, NekDouble> soundspeed(nPhys), mach(nPhys);
             Array<OneD, NekDouble> sensor(nPhys), SensorKappa(nPhys);
 
             m_varConv->GetPressure  (tmp, pressure);
-            m_varConv->GetSoundSpeed(tmp, pressure, soundspeed);
+            m_varConv->GetTemperature(tmp, temperature);
+            m_varConv->GetEntropy   (tmp, entropy);
+            m_varConv->GetSoundSpeed(tmp, soundspeed);
             m_varConv->GetMach      (tmp, soundspeed, mach);
 
             int sensorOffset;
@@ -886,20 +836,28 @@ namespace Nektar
             m_varConv->GetSensor (m_fields[0], tmp, sensor, SensorKappa,
                                     sensorOffset);
 
-            Array<OneD, NekDouble> pFwd(nCoeffs), sFwd(nCoeffs), mFwd(nCoeffs);
+            Array<OneD, NekDouble> pFwd(nCoeffs), TFwd(nCoeffs);
+            Array<OneD, NekDouble> sFwd(nCoeffs);
+            Array<OneD, NekDouble> aFwd(nCoeffs), mFwd(nCoeffs);
             Array<OneD, NekDouble> sensFwd(nCoeffs);
 
             m_fields[0]->FwdTrans_IterPerExp(pressure,   pFwd);
-            m_fields[0]->FwdTrans_IterPerExp(soundspeed, sFwd);
+            m_fields[0]->FwdTrans_IterPerExp(temperature,TFwd);
+            m_fields[0]->FwdTrans_IterPerExp(entropy,    sFwd);
+            m_fields[0]->FwdTrans_IterPerExp(soundspeed, aFwd);
             m_fields[0]->FwdTrans_IterPerExp(mach,       mFwd);
             m_fields[0]->FwdTrans_IterPerExp(sensor,     sensFwd);
 
             variables.push_back  ("p");
+            variables.push_back  ("T");
+            variables.push_back  ("s");
             variables.push_back  ("a");
             variables.push_back  ("Mach");
             variables.push_back  ("Sensor");
             fieldcoeffs.push_back(pFwd);
+            fieldcoeffs.push_back(TFwd);
             fieldcoeffs.push_back(sFwd);
+            fieldcoeffs.push_back(aFwd);
             fieldcoeffs.push_back(mFwd);
             fieldcoeffs.push_back(sensFwd);
 

@@ -62,8 +62,9 @@ std::string DriverArpack::ArpackProblemTypeTrans[6] =
 /**
  *
  */
-DriverArpack::DriverArpack(const LibUtilities::SessionReaderSharedPtr pSession)
-    : DriverArnoldi(pSession)
+DriverArpack::DriverArpack(const LibUtilities::SessionReaderSharedPtr pSession,
+                           const SpatialDomains::MeshGraphSharedPtr pGraph)
+    : DriverArnoldi(pSession, pGraph)
 {
 }
 

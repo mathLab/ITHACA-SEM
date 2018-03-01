@@ -48,9 +48,10 @@ namespace Nektar
                 UnsteadyViscousBurgers::create);
     
     UnsteadyViscousBurgers::UnsteadyViscousBurgers(
-            const LibUtilities::SessionReaderSharedPtr& pSession)
-        : UnsteadySystem(pSession),
-          AdvectionSystem(pSession),
+        const LibUtilities::SessionReaderSharedPtr& pSession,
+        const SpatialDomains::MeshGraphSharedPtr& pGraph)
+        : UnsteadySystem(pSession, pGraph),
+          AdvectionSystem(pSession, pGraph),
           m_varCoeffLap(StdRegions::NullVarCoeffMap)
     {
         m_planeNumber = 0;
@@ -102,7 +103,7 @@ namespace Nektar
                                            GetFluxVectorAdv, this);
                 m_session->LoadSolverInfo("UpwindType", riemName, "Upwind");
                 m_riemannSolver = SolverUtils::GetRiemannSolverFactory().
-                    CreateInstance(riemName);
+                    CreateInstance(riemName, m_session);
                 m_advObject->SetRiemannSolver(m_riemannSolver);
                 m_advObject->InitObject      (m_session, m_fields);
                 

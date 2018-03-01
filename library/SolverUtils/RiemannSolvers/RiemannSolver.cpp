@@ -72,8 +72,9 @@ namespace Nektar
          * which solvers for various Riemann problems can be implemented.
          */
         
-        RiemannSolver::RiemannSolver() : m_requiresRotation(false),
-                                         m_rotStorage      (3)
+        RiemannSolver::RiemannSolver(
+            const LibUtilities::SessionReaderSharedPtr& pSession)
+            : m_requiresRotation(false), m_rotStorage (3)
         {
             
         }

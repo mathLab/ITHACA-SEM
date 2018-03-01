@@ -107,6 +107,7 @@ SpatialDomains::GeometrySharedPtr Line::GetGeom(int coordDim)
             m_id, 2, p);
     }
 
+    ret->Setup();
     return ret;
 }
 

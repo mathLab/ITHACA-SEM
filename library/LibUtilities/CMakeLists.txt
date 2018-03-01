@@ -16,9 +16,6 @@ SET(BasicUtilsHeaders
     ./BasicUtils/FileSystem.h
     ./BasicUtils/ErrorUtil.hpp
     ./BasicUtils/HashUtils.hpp
-    ./BasicUtils/MeshEntities.hpp
-    ./BasicUtils/MeshPartition.h
-    ./BasicUtils/MeshPartitionMetis.h
     ./BasicUtils/NekManager.hpp
     ./BasicUtils/NekFactory.hpp
     ./BasicUtils/OperatorGenerators.hpp
@@ -47,8 +44,6 @@ SET(BasicUtilsSources
     ./BasicUtils/FieldIO.cpp
     ./BasicUtils/FieldIOXml.cpp
     ./BasicUtils/FileSystem.cpp
-    ./BasicUtils/MeshPartition.cpp
-    ./BasicUtils/MeshPartitionMetis.cpp
     ./BasicUtils/ParseUtils.cpp
     ./BasicUtils/PtsField.cpp
     ./BasicUtils/PtsIO.cpp
@@ -69,6 +64,7 @@ IF( NEKTAR_USE_HDF5 )
         ./BasicUtils/FieldIOHdf5.cpp)
 ENDIF( NEKTAR_USE_HDF5 )
 
+
 SET(CommunicationHeaders
     ./Communication/Comm.h
     ./Communication/CommSerial.h
@@ -84,13 +80,6 @@ SET(CommunicationSources
     ./Communication/CommSerial.cpp
     ./Communication/Transposition.cpp
 )
-
-IF(NEKTAR_USE_SCOTCH)
-    SET(BasicUtilsHeaders ${BasicUtilsHeaders}
-        ./BasicUtils/MeshPartitionScotch.h)
-    SET(BasicUtilsSources ${BasicUtilsSources}
-        ./BasicUtils/MeshPartitionScotch.cpp)
-ENDIF(NEKTAR_USE_SCOTCH)
 
 IF(NEKTAR_USE_MPI)
     SET(CommunicationHeaders ${CommunicationHeaders}
@@ -349,19 +338,9 @@ ADD_NEKTAR_LIBRARY(LibUtilities
     SUMMARY "Nektar++ LibUtilities library"
     DESCRIPTION "This library provides core routines including linear algebra and integration with ThirdParty libraries.")
 
-ADD_DEPENDENCIES(LibUtilities modmetis-5.1.0 boost tinyxml-2.6.2 zlib-1.2.7)
+ADD_DEPENDENCIES(LibUtilities boost tinyxml-2.6.2 zlib-1.2.7)
 
 ### Libraries needed specifically by LibUtilities ###
-### Static libraries do not need to be linked by
-# Scotch
-IF( NEKTAR_USE_SCOTCH )
-    TARGET_LINK_LIBRARIES(LibUtilities LINK_PRIVATE
-        ${SCOTCH_LIBRARY} ${SCOTCHERR_LIBRARY})
-    ADD_DEPENDENCIES(LibUtilities scotch-6.0.0)
-ENDIF ()
-
-# Metis
-TARGET_LINK_LIBRARIES(LibUtilities LINK_PRIVATE ${METIS_LIB})
 
 # FFTW
 IF( NEKTAR_USE_FFTW )
@@ -447,12 +426,12 @@ ENDIF()
 IF( NEKTAR_USE_PETSC )
     TARGET_LINK_LIBRARIES(LibUtilities LINK_PRIVATE ${PETSC_LIBRARIES})
     TARGET_LINK_LIBRARIES(LibUtilities LINK_PUBLIC ${CMAKE_DL_LIBS})
-    ADD_DEPENDENCIES(LibUtilities petsc-3.7.2)
+    ADD_DEPENDENCIES(LibUtilities petsc-3.7.7)
 ENDIF( NEKTAR_USE_PETSC )
 
 # HDF5
 IF( NEKTAR_USE_HDF5 )
-    TARGET_LINK_LIBRARIES(LibUtilities LINK_PRIVATE ${HDF5_LIBRARIES})
+    TARGET_LINK_LIBRARIES(LibUtilities LINK_PUBLIC ${HDF5_LIBRARIES})
     ADD_DEPENDENCIES(LibUtilities hdf5-1.8.16)
 ENDIF( NEKTAR_USE_HDF5 )
 

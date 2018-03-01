@@ -2,7 +2,7 @@
 <test>
     <description>Helmholtz 3D CG, hexes, mixed BCs, PETSc sc with matshell and low energy precon, par(3)</description>
     <executable>Helmholtz3D</executable>
-    <parameters>--use-metis -I GlobalSysSoln=PETScStaticCond -I PETScMatMult=Shell -I Preconditioner=LowEnergyBlock Helmholtz3D_Hex_AllBCs_P6.xml</parameters>
+    <parameters>--use-scotch -I GlobalSysSoln=PETScStaticCond -I PETScMatMult=Shell -I Preconditioner=LowEnergyBlock Helmholtz3D_Hex_AllBCs_P6.xml</parameters>
     <processes>3</processes>
     <files>
         <file description="Session File">Helmholtz3D_Hex_AllBCs_P6.xml</file>

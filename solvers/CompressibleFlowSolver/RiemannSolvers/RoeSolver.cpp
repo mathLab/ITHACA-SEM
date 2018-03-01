@@ -43,7 +43,8 @@ namespace Nektar
             RoeSolver::create,
             "Roe Riemann solver");
 
-    RoeSolver::RoeSolver() : CompressibleSolver()
+    RoeSolver::RoeSolver(const LibUtilities::SessionReaderSharedPtr& pSession)
+        : CompressibleSolver(pSession)
     {
 
     }

@@ -14,7 +14,7 @@ v5.0.0
   functionality in FUNCTIONs defined for forcings (!759)
 - Add patch to tinyxml to fix size_t vs int bug (!820)
 - Add ARPACK thirdparty build capabilities (!828)
-- Added native support for csv files in addititon to pts (!760 !835)
+- Added native support for csv files in addititon to pts (!760, !835, !906)
 - Utilize LAPACK_DIR env variable to find the native blas/lapack install (!827)
 - Remove StdExpansion use from MultiRegion (use Expansions instead). (!831)
 - Move steady state check and CFL output from solvers to SolverUtils (!832)
@@ -22,18 +22,24 @@ v5.0.0
 - Simplify RawType typedefs (!840)
 - Remove unused files from BasicUtils (!841)
 - Remove checks for old boost versions which are no longer supported (!841)
-- Refactor ParseUtils to be more consistent (!843)
+- Refactor ParseUtils to be more consistent (!843, !896, !908)
 - Added support for using the distance to a specific region (e.g. outlet) in the
   function definitions for the Absorption Forcing (!769)
 - Improve performance of DisContField2D::v_ExtractTracePhys (!824)
 - Fix small bug in Jacobian Energy (!857)
+- fix variable name overriding in file functions (!870)
 - Adds CFI CAD engine back-end (!864)
 - Adds CFI Mesh IO support (!864)
 - Cleanup of CAD system data structures (!864)
 - Fix mac OSX on buildbots (!876)
 - Fix error from (!826) (!876)
 - Fix minor bug in ARPACK thirdparty build cmake (!874)
-
+- Remove requirement for modmetis, switch to SCOTCH by default (!899)
+- Switch MeshGraph to use factory pattern and add HDF5 geometry support
+  (!900, !904)
+- Fix bug in MeshPartition.cpp which caused incorrect array access when
+  WeightPartitions was used in parallel (!923)
+	
 **NekMesh**:
 - Add feature to read basic 2D geo files as CAD (!731)
 - Add periodic boundary condition meshing in 2D (!733)
@@ -48,10 +54,25 @@ v5.0.0
 - Additional curve types in GEO reader: BSpline, Circle, Ellipse (!800)
 - Fix default command line argument value (!823)
 - Add projection meshing module which can curve linear meshes with CAD (!826)
+- XML meshes now write with provenance information, including information about
+  their source, for debugging purposes (!872)
+- Force 3-node loops to avoid degenerate 1-triangle faces (!875)
+- Smooth BL normals in 2D when normals intersect or cause invalid macro BL
+  elements (!877)
+- Revert triangle code to ThirdParty library (!883)
+- Fix coinciding nodes issue with very fine meshes (!883)
+- Skip CFI groups of bodies and non-numbered nodes (!891)
+- Add ability to space out 2D BL nodes to better fit local target Delta (!890)
+- Fix automatic peralign call in 2D periodic meshing (!888)
+- Fix BL splitting call from MCF (!910)
+- Support CFI combined lines (!917)
+- Order nodes in Gmsh output (!912)
+- Fix manifold face curvature nodes (!913)
 
 **FieldConvert**:
 - Add input module for Semtex field files (!777)
 - Fixed interppoints module (!760)
+- Fix OutputTecplot in 2DH1D (!818)
 - Move StreamFunction utility to a FieldConvert module (!809)
 - Allow using expansion from session file with new `--useSessionExpansion`
   command line option (!842)
@@ -60,17 +81,26 @@ v5.0.0
 - Enable output to multiple files (!844)
 - Allow using xml file without expansion tag in FieldConvert (!849)
 - Add Lambda 2 vortex detection criteria (!882)
+- Add module for modifying/adding fields from expressions (!889, !903)
+- Add module for evaluating the mean of variables on the domain (!894)
 
 **IncNavierStokesSolver**
 - Replace steady-state check based on difference of norms by check based on
   norm of the difference, to be consistent with the compressible solver (!832)
+- Updated SVV to allow for the DGKernel extension (!851)
+- Pre-calculate Time invariant portion of Womersley Solution (!814)
 
 **CompressibleFlowSolver**
 - Add 3D regression tests (!567)
 - Introduce forcing for quasi-1D Euler simulations (!771)
-- Allow performing axi-symmetric Euler simulations (!771)
+- Allow performing axi-symmetric Euler and NS simulations (!771, !866)
 - Add ability to use an exponential filtering for stabilization with
   seg, quad and hex elements (!771, !862)
+- Introduce equations of state to account for real gas effects (!880)
+
+**APESolver:**
+- Added two new boundary conditions to the APE system: RiemannInvariantBC
+  and WhiteNoise (!782)
 
 **Documentation**:
 - Added the developer-guide repository as a submodule (!751)
@@ -81,15 +111,27 @@ v4.4.2
 - Fix evaluation of points (e.g. HistoryPoints, Interpolation to pts) close to
   the interface of two elements (!836)
 - Fix deadlock in Hdf5 with homogeneous expansions (!858)
+- Fix a few memory leaks in polylib (!863)
+- Fix a crash when Interpolator is called on an empty field (!869)
 - Fix petsc compile without MPI (!873)
+- Fix calculation of BLPoints (!892)
+- Fix deadlock in DiffusionLDG (!885)
+- Fix uninitialised coefficients in DirectFull solver (!898)
+- Updated PETSc to 3.7.7 (!916)
+- Fix typcase to an integer which set Lz < 1 to zero when postprocess hdf5 output (!9922)
 
 **NekMesh**
 - Fix missing periodic boundary meshing and boundary layer mesh adjustment
   configurations in 2D (!859)
+- Fix 2D BL splitting where out-of-plane nodes would be created (!887)
 
 **Documentation**:
 - Fix sign of the viscous term in the velocity correction scheme equations in
   the user guide (!856)
+- Fixed anonymous clone URL (!909)
+
+**FieldConvert**
+- Allow passing input name with trailing separator (!879)
 
 v4.4.1
 ------
@@ -121,6 +163,7 @@ v4.4.1
 - Added regression tests for IMEXOrder1, IMEXOrder2, IMEXOrder3, MCNAB,
   IMEXGear, CNAB, 2nd order IMEX-DIRK, 3rd order IMEX-DIRK (!854)
 - Fix bug due to subtractive cancellation in polylib routines (!778)
+
 
 **FieldConvert:**
 - Fix issue with field ordering in the interppointdatatofld module (!754)

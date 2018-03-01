@@ -50,10 +50,12 @@ namespace Nektar
 
         /// Creates an instance of this class
         static SolverUtils::EquationSystemSharedPtr create(
-            const LibUtilities::SessionReaderSharedPtr& pSession) {
+            const LibUtilities::SessionReaderSharedPtr& pSession,
+            const SpatialDomains::MeshGraphSharedPtr& pGraph)
+        {
             SolverUtils::EquationSystemSharedPtr p
                 = MemoryManager<UnsteadyAdvectionDiffusion>::
-                                        AllocateSharedPtr(pSession);
+                AllocateSharedPtr(pSession, pGraph);
             p->InitObject();
             return p;
         }
@@ -79,7 +81,8 @@ namespace Nektar
 
         /// Session reader
         UnsteadyAdvectionDiffusion(
-            const LibUtilities::SessionReaderSharedPtr& pSession);
+            const LibUtilities::SessionReaderSharedPtr& pSession,
+            const SpatialDomains::MeshGraphSharedPtr& pGraph);
 
         /// Evaluate the flux at each solution point for the advection part
         void GetFluxVectorAdv(

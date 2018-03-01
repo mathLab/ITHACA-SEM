@@ -81,11 +81,11 @@ void InputNekpp::Process()
 
     // Copy vertices.
     map<int, NodeSharedPtr> vIdMap;
-    for (auto &vit : graph->GetVertSet())
+    for (auto &vit : graph->GetAllPointGeoms())
     {
         SpatialDomains::PointGeomSharedPtr vert = vit.second;
         NodeSharedPtr n(
-            new Node(vert->GetVid(), (*vert)(0), (*vert)(1), (*vert)(2)));
+            new Node(vert->GetGlobalID(), (*vert)(0), (*vert)(1), (*vert)(2)));
         m_mesh->m_vertexSet.insert(n);
         vIdMap[vert->GetVid()] = n;
     }
@@ -107,13 +107,13 @@ void InputNekpp::Process()
             int id0 = it.second->GetVid(0);
             int id1 = it.second->GetVid(1);
             LibUtilities::PointsType ptype =
-                it.second->GetPointsKeys()[0].GetPointsType();
+                it.second->GetXmap()->GetPointsKeys()[0].GetPointsType();
             EdgeSharedPtr ed =
                 EdgeSharedPtr(new Edge(vIdMap[id0], vIdMap[id1], curve, ptype));
 
             auto testIns = m_mesh->m_edgeSet.insert(ed);
-            (*(testIns.first))->m_id = it.second->GetEid();
-            eIdMap[it.second->GetEid()] = ed;
+            (*(testIns.first))->m_id = it.second->GetGlobalID();
+            eIdMap[it.second->GetGlobalID()] = ed;
         }
     }
 
@@ -142,8 +142,8 @@ void InputNekpp::Process()
                                        faceEdges,
                                        LibUtilities::ePolyEvenlySpaced));
             auto testIns = m_mesh->m_faceSet.insert(fac);
-            (*(testIns.first))->m_id = it.second->GetFid();
-            fIdMap[it.second->GetFid()] = fac;
+            (*(testIns.first))->m_id = it.second->GetGlobalID();
+            fIdMap[it.second->GetGlobalID()] = fac;
         }
 
         for (auto &it : graph->GetAllQuadGeoms())
@@ -169,8 +169,8 @@ void InputNekpp::Process()
                                        faceEdges,
                                        LibUtilities::ePolyEvenlySpaced));
             auto testIns = m_mesh->m_faceSet.insert(fac);
-            (*(testIns.first))->m_id = it.second->GetFid();
-            fIdMap[it.second->GetFid()] = fac;
+            (*(testIns.first))->m_id = it.second->GetGlobalID();
+            fIdMap[it.second->GetGlobalID()] = fac;
         }
     }
 
@@ -241,10 +241,10 @@ void InputNekpp::Process()
     for (auto &compIt : graph->GetComposites())
     {
         // Get hold of dimension
-        int dim = (*compIt.second)[0]->GetShapeDim();
+        int dim = compIt.second->m_geomVec[0]->GetShapeDim();
 
         // compIt->second is a GeometryVector
-        for (auto &geomIt : *compIt.second)
+        for (auto &geomIt : compIt.second->m_geomVec)
         {
             ElmtConfig conf(geomIt->GetShapeType(), 1, true, true, false);
 

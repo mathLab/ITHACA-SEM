@@ -50,8 +50,9 @@ namespace Nektar
           "Linear shallow water equation in primitive variables.");
   
   LinearSWE::LinearSWE(
-          const LibUtilities::SessionReaderSharedPtr& pSession)
-    : ShallowWaterSystem(pSession)
+      const LibUtilities::SessionReaderSharedPtr& pSession,
+      const SpatialDomains::MeshGraphSharedPtr& pGraph)
+      : ShallowWaterSystem(pSession, pGraph)
   {
   }
 
@@ -107,7 +108,7 @@ namespace Nektar
 	      ASSERTL0(false,"LinearHLL only valid for constant depth"); 
 	    }
 	  m_riemannSolver = SolverUtils::GetRiemannSolverFactory()
-	    .CreateInstance(riemName);
+	    .CreateInstance(riemName, m_session);
          
        	  // Setting up upwind solver for diffusion operator
 	  // m_riemannSolverLDG = SolverUtils::GetRiemannSolverFactory()

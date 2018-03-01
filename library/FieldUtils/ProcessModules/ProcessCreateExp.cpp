@@ -121,7 +121,7 @@ void ProcessCreateExp::Process(po::variables_map &vm)
         {
             for (auto &compIter : domain[d])
             {
-                for (auto &x : *compIter.second)
+                for (auto &x : compIter.second->m_geomVec)
                 {
                     IDs.push_back(x->GetGlobalID());
                 }

@@ -34,8 +34,12 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include <string>
+#include <chrono>
 #include <boost/algorithm/string.hpp>
+#include <LibUtilities/BasicConst/GitRevision.h>
 #include <boost/program_options.hpp>
+#include <boost/asio/ip/host_name.hpp>
+#include <boost/format.hpp>
 
 #include <NekMeshUtils/Module/Module.h>
 
@@ -43,6 +47,7 @@ using namespace std;
 using namespace Nektar::NekMeshUtils;
 
 namespace po = boost::program_options;
+namespace ip    = boost::asio::ip;
 
 int main(int argc, char* argv[])
 {
@@ -158,6 +163,15 @@ int main(int argc, char* argv[])
      */
 
     MeshSharedPtr mesh = std::shared_ptr<Mesh>(new Mesh());
+
+    // Add provenance information to mesh.
+    stringstream ss;
+    for(int i = 1; i < argc; i++)
+    {
+        ss << argv[i] << " ";
+    }
+    mesh->m_metadata["NekMeshCommandLine"] = ss.str();
+
     vector<ModuleSharedPtr> modules;
     vector<string>          modcmds;
 

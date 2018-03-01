@@ -43,16 +43,18 @@ namespace Nektar
     class ExactSolverToro : public CompressibleSolver
     {
     public:
-        static RiemannSolverSharedPtr create()
+        static RiemannSolverSharedPtr create(
+            const LibUtilities::SessionReaderSharedPtr& pSession)
         {
             return RiemannSolverSharedPtr(
-                new ExactSolverToro());
+                new ExactSolverToro(pSession));
         }
         
         static std::string solverName;
         
     protected:
-        ExactSolverToro();
+        ExactSolverToro(
+            const LibUtilities::SessionReaderSharedPtr& pSession);
         
         virtual void v_PointSolve(
             NekDouble  rhoL, NekDouble  rhouL, NekDouble  rhovL, NekDouble  rhowL, NekDouble  EL,

@@ -239,7 +239,9 @@ SpatialDomains::GeometrySharedPtr Tetrahedron::GetGeom(int coordDim)
             m_face[i]->GetGeom(coordDim));
     }
 
-    ret = MemoryManager<SpatialDomains::TetGeom>::AllocateSharedPtr(tfaces);
+    ret = MemoryManager<SpatialDomains::TetGeom>::AllocateSharedPtr(
+        m_id, tfaces);
+    ret->Setup();
 
     return ret;
 }

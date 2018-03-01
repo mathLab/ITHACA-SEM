@@ -153,17 +153,20 @@ namespace Nektar
      * @brief Set up the Stokes solution used to impose constant flowrate
      * through a boundary.
      *
-     * This routine solves a Stokes equation using a unit forcing that is
-     * determined by the user in order to obtain a correction field applied at
-     * the end of each timestep to impose a constant volumetric flow rate
-     * through a user-defined surface.
+     * This routine solves a Stokes equation using a unit forcing direction,
+     * specified by the user to be in the desired flow direction. This field can
+     * then be used to correct the end of each timestep to impose a constant
+     * volumetric flow rate through a user-defined boundary.
      *
-     * There are essentially three modes of operation:
+     * There are three modes of operation:
      *
-     * - Standard two-dimensional or three-dimensional simulations
+     * - Standard two-dimensional or three-dimensional simulations (e.g. pipes
+     *   or channels)
      * - 3DH1D simulations where the forcing is not in the homogeneous
-     *   direction.
-     * - 3DH1D simulations where the forcing is in the homogeneous direction.
+     *   direction (e.g. channel flow, where the y-direction of the 2D mesh
+     *   is perpendicular to the wall);
+     * - 3DH1D simulations where the forcing is in the homogeneous direction
+     *   (e.g. pipe flow in the z-direction).
      *
      * In the first two cases, the user should define:
      * - the `Flowrate` parameter, which dictates the volumetric flux through
@@ -173,11 +176,12 @@ namespace Nektar
      * - define a `FlowrateForce` function with components `ForceX`, `ForceY`
      *   and `ForceZ` that defines a unit forcing in the appropriate direction.
      *
-     * In the latter case, the user should define the `Flowrate` and the
-     * `FlowrateForce` function. The reference area is taken to be the
-     * homogeneous plane.
+     * In the latter case, the user should define only the `Flowrate`; the
+     * reference area is taken to be the homogeneous plane and the force is
+     * assumed to be the unit z-vector \f$ \hat{e}_z \f$.
      *
-     * We then solve one timestep of the Stokes problem
+     * This routine solves a single timestep of the Stokes problem
+     * (premultiplied by the backwards difference coefficient):
      *
      * \f[ \frac{\partial\mathbf{u}}{\partial t} = -\nabla p +
      * \nu\nabla^2\mathbf{u} + \mathbf{f} \f]
@@ -188,12 +192,12 @@ namespace Nektar
      *
      * \f[ \alpha = \frac{\overline{Q} - Q(\mathbf{u^n})}{Q(\mathbf{u}_s)} \f]
      *
-     * where \f$ Q(\cdot)\f$ is implemented in
-     * VelocityCorrectionScheme::MeasureFlowrate that calculates the volumetric
-     * flux. For more details, see chapter 3.2 of the thesis of D. Moxey
-     * (University of Warwick, 2011).
+     * where \f$ Q(\cdot)\f$ is the volumetric flux through the appropriate
+     * surface or line, which is implemented in
+     * VelocityCorrectionScheme::MeasureFlowrate. For more details, see chapter
+     * 3.2 of the thesis of D. Moxey (University of Warwick, 2011).
      */
-    void VelocityCorrectionScheme::SetupFlowrate()
+    void VelocityCorrectionScheme::SetupFlowrate(NekDouble aii_dt)
     {
         m_flowrateBndID = -1;
         m_flowrateArea = 0.0;
@@ -202,12 +206,21 @@ namespace Nektar
             m_fields[0]->GetBndConditions();
 
         std::string forces[] = { "X", "Y", "Z" };
-        Array<OneD, NekDouble> flowrateForce(m_spacedim);
+        Array<OneD, NekDouble> flowrateForce(m_spacedim, 0.0);
 
+        // Set up flowrate forces.
+        bool defined = true;
         for (int i = 0; i < m_spacedim; ++i)
         {
             std::string varName = std::string("Force") + forces[i];
-            ASSERTL0(m_session->DefinesFunction("FlowrateForce", varName),
+            defined = m_session->DefinesFunction("FlowrateForce", varName);
+
+            if (!defined && m_HomogeneousType == eHomogeneous1D)
+            {
+                break;
+            }
+
+            ASSERTL0(defined,
                      "A 'FlowrateForce' function must defined with components "
                      "[ForceX, ...] to define direction of flowrate forcing");
 
@@ -216,6 +229,14 @@ namespace Nektar
             flowrateForce[i] = ffunc->Evaluate();
         }
 
+        // For 3DH1D simulations, if force isn't defined then assume in
+        // z-direction.
+        if (!defined)
+        {
+            flowrateForce[2] = 1.0;
+        }
+
+        // Find the boundary condition that is tagged as the flowrate boundary.
         for (int i = 0; i < bcs.num_elements(); ++i)
         {
             if (boost::iequals(bcs[i]->GetUserDefined(), "Flowrate"))
@@ -231,13 +252,16 @@ namespace Nektar
                  "One boundary region must be marked using the 'Flowrate' "
                  "user-defined type to monitor the volumetric flowrate.");
 
+        // Extract an appropriate expansion list to represents the boundary.
         if (m_flowrateBndID >= 0)
         {
+            // For a boundary, extract the boundary itself.
             m_flowrateBnd = m_fields[0]->GetBndCondExpansions()[m_flowrateBndID];
         }
         else if (m_HomogeneousType == eHomogeneous1D)
         {
-            // Get z IDs to find zero-th plane
+            // For 3DH1D simulations with no force specified, find the mean
+            // (0th) plane.
             Array<OneD, unsigned int> zIDs = m_fields[0]->GetZIDs();
             int tmpId = -1;
 
@@ -259,6 +283,11 @@ namespace Nektar
             }
         }
 
+        // At this point, some processors may not have m_flowrateBnd set if they
+        // don't contain the appropriate boundary. To calculate the area, we
+        // integrate 1.0 over the boundary (which has been set up with the
+        // appropriate subcommunicator to avoid deadlock), and then communicate
+        // this to the other processors with an AllReduce.
         if (m_flowrateBnd)
         {
             Array<OneD, NekDouble> inArea(m_flowrateBnd->GetNpoints(), 1.0);
@@ -266,6 +295,9 @@ namespace Nektar
         }
         m_comm->AllReduce(m_flowrateArea, LibUtilities::ReduceMax);
 
+        // Set up some storage for the Stokes solution (to be stored in
+        // m_flowrateStokes) and its initial condition (inTmp), which holds the
+        // unit forcing.
         int nqTot = m_fields[0]->GetNpoints();
         Array<OneD, Array<OneD, NekDouble> > inTmp(m_spacedim);
         m_flowrateStokes = Array<OneD, Array<OneD, NekDouble> >(m_spacedim);
@@ -273,8 +305,9 @@ namespace Nektar
         for (int i = 0; i < m_spacedim; ++i)
         {
             inTmp[i] = Array<OneD, NekDouble>(
-                nqTot, flowrateForce[i] * m_timestep);
+                nqTot, flowrateForce[i] * aii_dt);
             m_flowrateStokes[i] = Array<OneD, NekDouble>(nqTot, 0.0);
+
             if (m_HomogeneousType == eHomogeneous1D)
             {
                 Array<OneD, NekDouble> inTmp2(nqTot);
@@ -282,17 +315,28 @@ namespace Nektar
                 m_fields[i]->SetWaveSpace(true);
                 inTmp[i] = inTmp2;
             }
-            Vmath::Zero(m_fields[i]->GetNcoeffs(), m_fields[i]->UpdateCoeffs(), 1);
+
+            Vmath::Zero(
+                m_fields[i]->GetNcoeffs(), m_fields[i]->UpdateCoeffs(), 1);
         }
 
+        // Create temporary extrapolation object to avoid issues with
+        // m_extrapolation for HOPBCs using higher order timestepping schemes.
+        ExtrapolateSharedPtr tmpExtrap = m_extrapolation;
+        m_extrapolation = GetExtrapolateFactory().CreateInstance(
+            "Standard", m_session, m_fields, m_pressure, m_velocity,
+            m_advObject);
+
+        // Finally, calculate the solution and the flux of the Stokes
+        // solution. We set m_greenFlux to maximum numeric limit, which signals
+        // to SolveUnsteadyStokesSystem that we don't need to apply a flowrate
+        // force.
         m_greenFlux = numeric_limits<NekDouble>::max();
-        SolveUnsteadyStokesSystem(inTmp, m_flowrateStokes, 0.0, m_timestep);
+        m_flowrateAiidt = aii_dt;
+        SolveUnsteadyStokesSystem(inTmp, m_flowrateStokes, 0.0, aii_dt);
         m_greenFlux = MeasureFlowrate(m_flowrateStokes);
 
-        // Reset extrapolation.
-        SetUpExtrapolation();
-
-        // Open field
+        // If the user specified IO_FlowSteps, open a handle to store output.
         if (m_comm->GetRank() == 0 && m_flowrateSteps)
         {
             std::string filename = m_session->GetSessionName();
@@ -303,6 +347,8 @@ namespace Nektar
                              << "# -------------------------------------------"
                              << endl;
         }
+
+        m_extrapolation = tmpExtrap;
     }
 
     /**
@@ -324,6 +370,8 @@ namespace Nektar
 
         if (m_flowrateBnd && m_flowrateBndID >= 0)
         {
+            // If we're an actual boundary, calculate the vector flux through
+            // the boundary.
             Array<OneD, Array<OneD, NekDouble> > boundary(m_spacedim);
 
             for (int i = 0; i < m_spacedim; ++i)
@@ -337,7 +385,7 @@ namespace Nektar
         }
         else if (m_flowrateBnd)
         {
-            // Homogeneous case
+            // 3DH1D case: compute flux through the zero-th (mean) plane.
             flowrate = m_flowrateBnd->Integral(inarray[2]);
 
             // Now communicate this with other planes
@@ -352,6 +400,7 @@ namespace Nektar
         }
         else
         {
+            // Remaining processors that do not contain boundary.
             m_comm->AllReduce(flowrate, LibUtilities::ReduceSum);
         }
 
@@ -466,11 +515,7 @@ namespace Nektar
             m_F[i] = Array< OneD, NekDouble> (m_fields[0]->GetTotPoints(), 0.0);
         }
 
-        // Set up flowrate before m_fields are initialised.
-        if (m_flowrate > 0.0)
-        {
-            SetupFlowrate();
-        }
+        m_flowrateAiidt = 0.0;
 
         AdvectionSystem::v_DoInitialise();
 
@@ -582,6 +627,13 @@ namespace Nektar
         const NekDouble time, 
         const NekDouble aii_Dt)
     {
+        // Set up flowrate if we're starting for the first time or the value of
+        // aii_Dt has changed.
+        if (m_flowrate > 0.0 && (aii_Dt != m_flowrateAiidt))
+        {
+            SetupFlowrate(aii_Dt);
+        }
+
         int physTot = m_fields[0]->GetTotPoints();
 
         // Substep the pressure boundary condition if using substepping

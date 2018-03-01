@@ -151,8 +151,10 @@ namespace Nektar
         std::ofstream m_flowrateStream;
         /// Interval at which to record flowrate data
         int m_flowrateSteps;
+        /// Value of aii_dt used to compute Stokes flowrate solution.
+        NekDouble m_flowrateAiidt;
 
-        void SetupFlowrate();
+        void SetupFlowrate(NekDouble aii_dt);
         NekDouble MeasureFlowrate(
             const Array<OneD, Array<OneD, NekDouble> > &inarray);
 

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <NEKTAR>
     <EXPANSIONS>
-        <E COMPOSITE="C[0]" NUMMODES="6" FIELDS="u,v,w,p" TYPE="MODIFIED" />
+        <E COMPOSITE="C[0]" NUMMODES="4" FIELDS="u,v,w,p" TYPE="MODIFIED" />
     </EXPANSIONS>
     <CONDITIONS>
         <SOLVERINFO>
@@ -14,11 +14,11 @@
         </SOLVERINFO>
 
         <PARAMETERS>
-            <P> TimeStep      = 0.001     </P>
+            <P> TimeStep      = 0.01      </P>
             <P> NumSteps      = 100       </P>
             <P> IO_CheckSteps = 1000       </P>
             <P> IO_InfoSteps  = 1000       </P>
-            <P> Kinvis        = 1/200         </P>
+            <P> Kinvis        = 1          </P>
             <P> HomModesZ     = 8          </P>
             <P> LZ            = 1.0        </P>
             <P> Flowrate      = 1.0        </P>
@@ -58,16 +58,10 @@
             </REGION>
         </BOUNDARYCONDITIONS>
 
-        <FUNCTION NAME="FlowrateForce">
-            <E VAR="ForceX" VALUE="0" />
-            <E VAR="ForceY" VALUE="0" />
-            <E VAR="ForceZ" VALUE="1" />
-        </FUNCTION>
-
         <FUNCTION NAME="InitialConditions">
             <E VAR="u" VALUE="0" />
             <E VAR="v" VALUE="0" />
-            <E VAR="w" VALUE="6*y*(1-y)" />
+            <E VAR="w" VALUE="0" />
             <E VAR="p" VALUE="0" />
         </FUNCTION>
 

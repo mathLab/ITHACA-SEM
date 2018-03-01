@@ -99,32 +99,13 @@ namespace Nektar
             }
         }
 
-        // creation of the extrapolation object
-        if(m_equationType == eUnsteadyNavierStokes)
-        {
-            std::string vExtrapolation = v_GetExtrapolateStr();
-
-            if (m_session->DefinesSolverInfo("Extrapolation"))
-            {
-                vExtrapolation = v_GetSubSteppingExtrapolateStr(
-                                 m_session->GetSolverInfo("Extrapolation"));
-            }
-
-            m_extrapolation = GetExtrapolateFactory().CreateInstance(
-                vExtrapolation,
-                m_session,
-                m_fields,
-                m_pressure,
-                m_velocity,
-                m_advObject);
-        }
-
         // Integrate only the convective fields
         for (n = 0; n < m_nConvectiveFields; ++n)
         {
             m_intVariables.push_back(n);
         }
-        
+
+        SetUpExtrapolation();
         SetUpSVV();
 
         m_session->MatchSolverInfo("SmoothAdvection", "True",
@@ -134,10 +115,6 @@ namespace Nektar
         m_ode.DefineOdeRhs(
             &VelocityCorrectionScheme::EvaluateAdvection_SetPressureBCs, this);
 
-        m_extrapolation->SubSteppingTimeIntegration(
-            m_intScheme->GetIntegrationMethod(), m_intScheme);
-        m_extrapolation->GenerateHOPBCMap(m_session);
-
         // set implicit time-intregration class operators
         m_ode.DefineImplicitSolve(
             &VelocityCorrectionScheme::SolveUnsteadyStokesSystem, this);
@@ -145,6 +122,31 @@ namespace Nektar
         // Set up bits for flowrate.
         m_session->LoadParameter("Flowrate", m_flowrate, 0.0);
         m_session->LoadParameter("IO_FlowSteps", m_flowrateSteps, 0);
+    }
+
+    void VelocityCorrectionScheme::SetUpExtrapolation()
+    {
+        // creation of the extrapolation object
+        if (m_equationType == eUnsteadyNavierStokes)
+        {
+            std::string vExtrapolation = v_GetExtrapolateStr();
+            if (m_session->DefinesSolverInfo("Extrapolation"))
+            {
+                vExtrapolation = v_GetSubSteppingExtrapolateStr(
+                    m_session->GetSolverInfo("Extrapolation"));
+            }
+            m_extrapolation = GetExtrapolateFactory().CreateInstance(
+                vExtrapolation,
+                m_session,
+                m_fields,
+                m_pressure,
+                m_velocity,
+                m_advObject);
+
+            m_extrapolation->SubSteppingTimeIntegration(
+                m_intScheme->GetIntegrationMethod(), m_intScheme);
+            m_extrapolation->GenerateHOPBCMap(m_session);
+        }
     }
 
     /**
@@ -286,6 +288,9 @@ namespace Nektar
         m_greenFlux = numeric_limits<NekDouble>::max();
         SolveUnsteadyStokesSystem(inTmp, m_flowrateStokes, 0.0, m_timestep);
         m_greenFlux = MeasureFlowrate(m_flowrateStokes);
+
+        // Reset extrapolation.
+        SetUpExtrapolation();
 
         // Open field
         if (m_comm->GetRank() == 0 && m_flowrateSteps)
@@ -666,7 +671,7 @@ namespace Nektar
         {
             Vmath::Zero(phystot,Forcing[i],1);
         }
-        
+
         // Subtract inarray/(aii_dt) and divide by kinvis. Kinvis will
         // need to be updated for the convected fields.
         for(int i = 0; i < m_nConvectiveFields; ++i)

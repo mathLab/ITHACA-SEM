@@ -195,7 +195,7 @@ namespace Nektar
 
         virtual bool v_RequireFwdTrans()
         {
-            return false;
+            return false || m_flowrate > 0.0;
         }
 
         virtual std::string v_GetExtrapolateStr(void)
@@ -212,6 +212,7 @@ namespace Nektar
         Array<OneD, Array< OneD, NekDouble> > m_F;
 
         void SetUpSVV(void);
+        void SetUpExtrapolation(void);
         
         void SVVVarDiffCoeff(const NekDouble velmag, 
                              Array<OneD, NekDouble> &diffcoeff,

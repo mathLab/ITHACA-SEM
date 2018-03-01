@@ -86,6 +86,7 @@ v5.0.0
 - Replace steady-state check based on difference of norms by check based on
   norm of the difference, to be consistent with the compressible solver (!832)
 - Updated SVV to allow for the DGKernel extension (!851)
+- Pre-calculate Time invariant portion of Womersley Solution (!814)
 
 **CompressibleFlowSolver**
 - Add 3D regression tests (!567)

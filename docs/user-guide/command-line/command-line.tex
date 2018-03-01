@@ -57,9 +57,10 @@ high-memory node, prior to being executed on a multi-node cluster.
 
 \lstinline[style=BashInputStyle]{--use-metis}\\
 \hangindent=1.5cm
-Forces the use of METIS for mesh partitioning. If \nekpp{} is compiled with
-Scotch support, the default is to use Scotch.
+Forces the use of METIS for mesh partitioning. Requires the
+\inltt{NEKTAR\_USE\_METIS} option to be set.
 
 \lstinline[style=BashInputStyle]{--use-scotch}\\
 \hangindent=1.5cm
-Forces the use of Scotch for mesh partitioning.
+Forces the use of Scotch for mesh partitioning. If \nekpp{} is compiled with
+METIS support, the default is to use METIS.

@@ -1,8 +1,8 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8" ?>
 <test>
-    <description>Helmholtz 3D CG, hexes, mixed BCs, iterative ML, Scotch</description>
+    <description>Helmholtz 3D CG, hexes, mixed BCs, iterative ML, METIS</description>
     <executable>Helmholtz3D</executable>
-    <parameters>--use-scotch --verbose -I GlobalSysSoln=IterativeMultiLevelStaticCond Helmholtz3D_Hex_AllBCs_P6.xml</parameters>
+    <parameters>--use-metis --verbose -I GlobalSysSoln=IterativeMultiLevelStaticCond Helmholtz3D_Hex_AllBCs_P6.xml</parameters>
     <processes>3</processes>
     <files>
         <file description="Session File">Helmholtz3D_Hex_AllBCs_P6.xml</file>
@@ -16,5 +16,3 @@
         </metric>
     </metrics>
 </test>
-
-

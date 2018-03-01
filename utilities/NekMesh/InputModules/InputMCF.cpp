@@ -259,6 +259,10 @@ void InputMCF::ParseFile(string nm)
             m_spaceoutbl = false;
         }
     }
+    else
+    {
+        m_splitBL = false;
+    }
 
     m_naca = false;
     if (m_2D && m_cadfile.find('.') == std::string::npos)

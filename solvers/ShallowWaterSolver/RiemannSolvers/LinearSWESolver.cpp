@@ -37,8 +37,9 @@
 
 namespace Nektar
 {
-    LinearSWESolver::LinearSWESolver() : RiemannSolver(),
-                                               m_pointSolve(true)
+    LinearSWESolver::LinearSWESolver(
+        const LibUtilities::SessionReaderSharedPtr& pSession)
+        : RiemannSolver(pSession), m_pointSolve(true)
     {
         m_requiresRotation = true;
 

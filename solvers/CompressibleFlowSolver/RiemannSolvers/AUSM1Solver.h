@@ -43,16 +43,17 @@ namespace Nektar
     class AUSM1Solver : public CompressibleSolver
     {
     public:
-        static RiemannSolverSharedPtr create()
+        static RiemannSolverSharedPtr create(
+            const LibUtilities::SessionReaderSharedPtr& pSession)
         {
             return RiemannSolverSharedPtr(
-                new AUSM1Solver());
+                new AUSM1Solver(pSession));
         }
         
         static std::string solverName;
         
     protected:
-        AUSM1Solver();
+        AUSM1Solver(const LibUtilities::SessionReaderSharedPtr& pSession);
         
         virtual void v_PointSolve(
             double  rhoL, double  rhouL, double  rhovL, double  rhowL, double  EL,

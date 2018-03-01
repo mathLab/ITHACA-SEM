@@ -62,7 +62,6 @@ IF( NEKTAR_SOLVER_INCNAVIERSTOKES )
     ADD_NEKTAR_TEST(Hex_channel_varP)
     ADD_NEKTAR_TEST(Pyr_channel_m3)
     ADD_NEKTAR_TEST(Pyr_channel_varP)
-    ADD_NEKTAR_TEST(Pyr_channel_SVV)
     ADD_NEKTAR_TEST(Hex_channel_m6_nodalRestart)
     ADD_NEKTAR_TEST(Hex_channel_m8 LENGTHY)
     ADD_NEKTAR_TEST(Hex_channel_m8_srhs LENGTHY)
@@ -120,6 +119,12 @@ IF( NEKTAR_SOLVER_INCNAVIERSTOKES )
     ADD_NEKTAR_TEST(PPF_R10000_ModifiedArnoldi_Shift) 
     ADD_NEKTAR_TEST(PPF_R15000_ModifiedArnoldi_Shift)
     ADD_NEKTAR_TEST(ChanFlow_m8_Flowrate)
+
+    IF (NEKTAR_USE_SCOTCH)
+        # This tests exhibits sensitivity to the choice of DirectStaticCond
+        # vs. DirectMultiLevelStaticCond.
+        ADD_NEKTAR_TEST(Pyr_channel_SVV)
+    ENDIF()
 
     IF (NEKTAR_USE_ARPACK)
         ADD_NEKTAR_TEST(ChanStability_adj_Ar) 

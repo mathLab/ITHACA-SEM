@@ -76,6 +76,8 @@ v5.0.0
 - Fixed interppoints module (!760)
 - Fix OutputTecplot in 2DH1D (!818)
 - Move StreamFunction utility to a FieldConvert module (!809)
+- Allow using expansion from session file with new `--useSessionExpansion`
+  command line option (!842)
 - Extend wss module to compressible flows (!810)
 - Allow explicitly setting bool options of FieldConvert modules as false (!811)
 - Enable output to multiple files (!844)

@@ -105,8 +105,7 @@ namespace Nektar
             ival = StdQuadExp::v_Integral(tmp);
             return  ival;
         }
-		
-		
+
         void QuadExp::v_PhysDeriv(
             const Array<OneD, const NekDouble> & inarray,
                   Array<OneD,NekDouble> &out_d0,

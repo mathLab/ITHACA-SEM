@@ -45,15 +45,16 @@ namespace Nektar
 class UpwindPulseSolver : public RiemannSolver
 {
 public:
-    static RiemannSolverSharedPtr create()
+    static RiemannSolverSharedPtr create(
+        const LibUtilities::SessionReaderSharedPtr& pSession)
     {
-        return RiemannSolverSharedPtr(new UpwindPulseSolver());
+        return RiemannSolverSharedPtr(new UpwindPulseSolver(pSession));
     }
 
     static std::string solverName;
 
 protected:
-    UpwindPulseSolver();
+    UpwindPulseSolver(const LibUtilities::SessionReaderSharedPtr& pSession);
 
     virtual void v_Solve(const int nDim,
                          const Array<OneD, const Array<OneD, NekDouble>> &Fwd,

@@ -156,7 +156,7 @@ class PhysDeriv_StdMat : public Operator
             int nqtot = 1;
             LibUtilities::PointsKeyVector PtsKey = m_stdExp->GetPointsKeys();
             m_dim = PtsKey.size();
-            m_coordim = m_stdExp->GetCoordim();
+            m_coordim = pCollExp[0]->GetCoordim();
 
             for(int i = 0; i < m_dim; ++i)
             {
@@ -326,7 +326,7 @@ class PhysDeriv_IterPerExp : public Operator
             int nqtot = 1;
             LibUtilities::PointsKeyVector PtsKey = m_stdExp->GetPointsKeys();
             m_dim = PtsKey.size();
-            m_coordim = m_stdExp->GetCoordim();
+            m_coordim = pCollExp[0]->GetCoordim();
 
             for(int i = 0; i < m_dim; ++i)
             {
@@ -582,7 +582,7 @@ class PhysDeriv_SumFac_Seg : public Operator
               m_nquad0 (m_stdExp->GetNumPoints(0))
         {
             LibUtilities::PointsKeyVector PtsKey = m_stdExp->GetPointsKeys();
-            m_coordim = m_stdExp->GetCoordim();
+            m_coordim = pCollExp[0]->GetCoordim();
 
             m_derivFac = pGeomData->GetDerivFactors(pCollExp);
 
@@ -712,7 +712,7 @@ class PhysDeriv_SumFac_Quad : public Operator
               m_nquad1 (m_stdExp->GetNumPoints(1))
         {
             LibUtilities::PointsKeyVector PtsKey = m_stdExp->GetPointsKeys();
-            m_coordim = m_stdExp->GetCoordim();
+            m_coordim = pCollExp[0]->GetCoordim();
 
             m_derivFac = pGeomData->GetDerivFactors(pCollExp);
 
@@ -864,7 +864,7 @@ class PhysDeriv_SumFac_Tri : public Operator
               m_nquad1 (m_stdExp->GetNumPoints(1))
         {
             LibUtilities::PointsKeyVector PtsKey = m_stdExp->GetPointsKeys();
-            m_coordim = m_stdExp->GetCoordim();
+            m_coordim = pCollExp[0]->GetCoordim();
 
             m_derivFac = pGeomData->GetDerivFactors(pCollExp);
 
@@ -1046,7 +1046,7 @@ class PhysDeriv_SumFac_Hex : public Operator
         {
             LibUtilities::PointsKeyVector PtsKey = m_stdExp->GetPointsKeys();
 
-            m_coordim = m_stdExp->GetCoordim();
+            m_coordim = pCollExp[0]->GetCoordim();
 
             m_derivFac = pGeomData->GetDerivFactors(pCollExp);
 
@@ -1274,7 +1274,7 @@ class PhysDeriv_SumFac_Tet : public Operator
         {
             LibUtilities::PointsKeyVector PtsKey = m_stdExp->GetPointsKeys();
 
-            m_coordim = m_stdExp->GetCoordim();
+            m_coordim = pCollExp[0]->GetCoordim();
 
             m_derivFac = pGeomData->GetDerivFactors(pCollExp);
 
@@ -1488,7 +1488,7 @@ class PhysDeriv_SumFac_Prism : public Operator
         {
             LibUtilities::PointsKeyVector PtsKey = m_stdExp->GetPointsKeys();
 
-            m_coordim = m_stdExp->GetCoordim();
+            m_coordim = pCollExp[0]->GetCoordim();
 
             m_derivFac = pGeomData->GetDerivFactors(pCollExp);
 
@@ -1705,7 +1705,7 @@ class PhysDeriv_SumFac_Pyr : public Operator
         {
             LibUtilities::PointsKeyVector PtsKey = m_stdExp->GetPointsKeys();
 
-            m_coordim = m_stdExp->GetCoordim();
+            m_coordim = pCollExp[0]->GetCoordim();
 
             m_derivFac = pGeomData->GetDerivFactors(pCollExp);
 

@@ -44,7 +44,9 @@ namespace Nektar
             LinearHLLSolver::create,
             "Linear HLL Riemann solver");
 
-    LinearHLLSolver::LinearHLLSolver() : LinearSWESolver()
+    LinearHLLSolver::LinearHLLSolver(
+        const LibUtilities::SessionReaderSharedPtr& pSession)
+        : LinearSWESolver(pSession)
     {
 
     }

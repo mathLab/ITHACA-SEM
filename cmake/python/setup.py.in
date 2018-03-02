@@ -1,0 +1,10 @@
+from distutils.core import setup
+
+libs = ['LibUtilities', 'StdRegions', 'SpatialDomains', 'LocalRegions', 'MultiRegions']
+
+setup(name='NekPy',
+      version='${NEKTAR_VERSION}',
+      package_dir={ '': '${CMAKE_BINARY_DIR}' },
+      packages=[ 'NekPy' ] + [ 'NekPy.%s' % l for l in libs ],
+      package_data={ 'NekPy.%s' % l : ['_%s.so' % l] for l in libs }
+)

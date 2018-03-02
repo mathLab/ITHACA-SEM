@@ -1,4 +1,4 @@
-SET(LIBUTILITIES_SOURCES
+ADD_NEKPY_LIBRARY(LibUtilities SOURCES
     LibUtilities.cpp
     BasicUtils/SessionReader.cpp
     BasicUtils/SharedArray.cpp
@@ -7,5 +7,3 @@ SET(LIBUTILITIES_SOURCES
     Foundations/Points.cpp
     LinearAlgebra/NekMatrix.cpp
     )
-
-ADD_NEKPY_LIBRARY(LibUtilities LIBUTILITIES_SOURCES)

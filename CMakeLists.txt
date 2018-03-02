@@ -160,7 +160,6 @@ OPTION(NEKTAR_BUILD_PYTHON     "Build Nektar++ Python bindings" OFF)
 OPTION(NEKTAR_BUILD_PACKAGES   "Build Nektar++ binary packages" OFF)
 MARK_AS_ADVANCED(NEKTAR_BUILD_PACKAGES)
 
-
 OPTION(NEKTAR_TEST_ALL "Include full set of regression tests to this build." OFF)
 OPTION(NEKTAR_TEST_USE_HOSTFILE "Use a hostfile to explicitly specify number of
 slots." OFF)
@@ -250,6 +249,7 @@ INCLUDE (ThirdPartyOCE)
 INCLUDE (ThirdPartyTriangle)
 INCLUDE (ThirdPartyTetGen)
 INCLUDE (ThirdPartyCCM)
+INCLUDE (ThirdPartyPython)
 INCLUDE (FindCFI)
 
 INCLUDE (Doxygen)

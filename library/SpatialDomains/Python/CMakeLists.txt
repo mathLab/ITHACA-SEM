@@ -1,4 +1,4 @@
-SET(SPATIALDOMAINS_SOURCES
+ADD_NEKPY_LIBRARY(SpatialDomains SOURCES
     SpatialDomains.cpp
     Geometry.cpp
     Geometry1D.cpp
@@ -8,5 +8,3 @@ SET(SPATIALDOMAINS_SOURCES
     QuadGeom.cpp
     TriGeom.cpp
     )
-
-ADD_NEKPY_LIBRARY(SpatialDomains SPATIALDOMAINS_SOURCES)

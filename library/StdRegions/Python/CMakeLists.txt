@@ -1,9 +1,7 @@
-SET(STDREGIONS_SOURCES
+ADD_NEKPY_LIBRARY(StdRegions SOURCES
     StdRegions.cpp
     StdExpansion.cpp
     StdSegExp.cpp
     StdTriExp.cpp
     StdQuadExp.cpp
     )
-
-ADD_NEKPY_LIBRARY(StdRegions STDREGIONS_SOURCES)

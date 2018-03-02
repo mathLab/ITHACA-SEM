@@ -137,7 +137,7 @@ namespace Nektar
             //ival = StdSegExp::Integral(tmp);
             return ival;
         }
-		
+
         //-----------------------------
         // Differentiation Methods
         //-----------------------------

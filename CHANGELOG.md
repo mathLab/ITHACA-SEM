@@ -39,6 +39,8 @@ v5.0.0
   (!900, !904)
 - Fix bug in MeshPartition.cpp which caused incorrect array access when
   WeightPartitions was used in parallel (!923)
+- Removed instance count from beginning of Array storage to improve memory
+  alignment (!921)
 	
 **NekMesh**:
 - Add feature to read basic 2D geo files as CAD (!731)

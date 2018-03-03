@@ -90,47 +90,59 @@ namespace Nektar
 
             bool m_signChange;
             
-            // store how many consecutive similar blocks there are in R and Rinv
+            // store how many consecutive similar blocks there
+            // are in R and Rinv
             std::vector<std::pair<int,int> >  m_sameBlock;  
             
 	private:
 
             void SetupBlockTransformationMatrix(void);
 
-            void SetUpReferenceElements(
-                 std::map<LibUtilities::ShapeType, DNekScalMatSharedPtr> &maxRmat,
-                 std::map<LibUtilities::ShapeType, LocalRegions::ExpansionSharedPtr > &maxElmt,
-                 std::map<LibUtilities::ShapeType, Array<OneD, unsigned int> >        &vertMapMaxR,
-                 std::map<LibUtilities::ShapeType, Array<OneD, Array<OneD, unsigned int> > > &edgeMapMaxR);
+            typedef std::map<LibUtilities::ShapeType, DNekScalMatSharedPtr>
+                ShapeToDNekMap;
+            typedef std::map<LibUtilities::ShapeType,
+                LocalRegions::ExpansionSharedPtr > ShapeToExpMap;
+            typedef std::map<LibUtilities::ShapeType,
+                Array<OneD, unsigned int> > ShapeToIntArrayMap;
+            typedef std::map<LibUtilities::ShapeType,
+                Array<OneD, Array<OneD, unsigned int> > >
+                ShapeToIntArrayArrayMap;
+            
+            void SetUpReferenceElements(ShapeToDNekMap &maxRmat,
+                                        ShapeToExpMap &maxElmt,
+                                        ShapeToIntArrayMap      &vertMapMaxR,
+                                        ShapeToIntArrayArrayMap &edgeMapMaxR);
             
             void SetUpPyrMaxRMat(int nummodesmax,
-                 LocalRegions::PyrExpSharedPtr &PyrExp,
-                 std::map<LibUtilities::ShapeType, DNekScalMatSharedPtr> &maxRmat,
-                 std::map<LibUtilities::ShapeType, Array<OneD, unsigned int> >        &vertMapMaxR,
-                 std::map<LibUtilities::ShapeType, Array<OneD, Array<OneD, unsigned int> > > &edgeMapMaxR,
-                 std::map<LibUtilities::ShapeType, Array<OneD, Array<OneD, unsigned int> > > &faceMapMaxR);
+                                 LocalRegions::PyrExpSharedPtr &PyrExp,
+                                 ShapeToDNekMap          &maxRmat,
+                                 ShapeToIntArrayMap      &vertMapMaxR,
+                                 ShapeToIntArrayArrayMap &edgeMapMaxR,
+                                 ShapeToIntArrayArrayMap &faceMapMaxR);
 
             void ReSetTetMaxRMat(int nummodesmax,
-                 LocalRegions::TetExpSharedPtr &TetExp,
-                 std::map<LibUtilities::ShapeType, DNekScalMatSharedPtr> &maxRmat,
-                 std::map<LibUtilities::ShapeType, Array<OneD, unsigned int> >        &vertMapMaxR,
-                 std::map<LibUtilities::ShapeType, Array<OneD, Array<OneD, unsigned int> > > &edgeMapMaxR,
-                 std::map<LibUtilities::ShapeType, Array<OneD, Array<OneD, unsigned int> > > &faceMapMaxR);
+                                 LocalRegions::TetExpSharedPtr &TetExp,
+                                 ShapeToDNekMap          &maxRmat,
+                                 ShapeToIntArrayMap      &vertMapMaxR,
+                                 ShapeToIntArrayArrayMap &edgeMapMaxR,
+                                 ShapeToIntArrayArrayMap &faceMapMaxR);
+
 
             void ReSetPrismMaxRMat(int nummodesmax,
-                   LocalRegions::PrismExpSharedPtr &PirsmExp,
-                   std::map<LibUtilities::ShapeType, DNekScalMatSharedPtr> &maxRmat,
-                   std::map<LibUtilities::ShapeType, Array<OneD, unsigned int> >        &vertMapMaxR,
-                   std::map<LibUtilities::ShapeType, Array<OneD, Array<OneD, unsigned int> > > &edgeMapMaxR,
-                   std::map<LibUtilities::ShapeType, Array<OneD, Array<OneD, unsigned int> > > &faceMapMaxR,
-                   bool UseTetOnly);
+                                   LocalRegions::PrismExpSharedPtr &PirsmExp,
+                                   ShapeToDNekMap          &maxRmat,
+                                   ShapeToIntArrayMap      &vertMapMaxR,
+                                   ShapeToIntArrayArrayMap &edgeMapMaxR,
+                                   ShapeToIntArrayArrayMap &faceMapMaxR,
+                                   bool UseTetOnly);
             
-            DNekMatSharedPtr ExtractLocMat(StdRegions::StdExpansionSharedPtr &locExp,
-                                           DNekScalMatSharedPtr              &maxRmat,
-                                           LocalRegions::ExpansionSharedPtr  &expMax,
-                                           Array<OneD, unsigned int>         &vertMapMaxR,
-                                      Array<OneD, Array<OneD, unsigned int> > &edgeMapMaxR);
-
+            DNekMatSharedPtr ExtractLocMat(
+                          StdRegions::StdExpansionSharedPtr &locExp,
+                          DNekScalMatSharedPtr              &maxRmat,
+                          LocalRegions::ExpansionSharedPtr  &expMax,
+                          Array<OneD, unsigned int>         &vertMapMaxR,
+                          Array<OneD, Array<OneD, unsigned int> > &edgeMapMaxR);
+            
             void CreateMultiplicityMap(void);
             
             SpatialDomains::TetGeomSharedPtr   CreateRefTetGeom(void);

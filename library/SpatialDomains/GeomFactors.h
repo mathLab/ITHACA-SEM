@@ -139,12 +139,10 @@ namespace SpatialDomains
             int m_coordDim;
             /// Validity of element (Jacobian positive)
             bool m_valid;
-        
+
             /// Principle tangent direction.
-           enum GeomMMF m_MMFDir;
-        
-        /// Principle tangent circular dir coords
-        Array<OneD,NekDouble> m_MMFCircCentre;
+            enum GeomMMF m_MMFDir;
+
             /// Stores information about the expansion.
             StdRegions::StdExpansionSharedPtr m_xmap;
             /// Stores coordinates of the geometry.
@@ -177,7 +175,8 @@ namespace SpatialDomains
             /// to the mapping, \f$\frac{\partial \xi_i}{\partial \chi_j}\f$.
             SPATIAL_DOMAINS_EXPORT Array<TwoD, NekDouble> ComputeDerivFactors(
                     const LibUtilities::PointsKeyVector &keyTgt) const;
-           SPATIAL_DOMAINS_EXPORT void ComputeMovingFrames(const LibUtilities::PointsKeyVector &keyTgt,
+
+            SPATIAL_DOMAINS_EXPORT void ComputeMovingFrames(const LibUtilities::PointsKeyVector &keyTgt,
                                                         const SpatialDomains::GeomMMF MMFdir,
                                                         const Array<OneD, const NekDouble> &CircCentre,
                                                         Array<OneD, Array<OneD, NekDouble> > &movingframes);
@@ -195,18 +194,18 @@ namespace SpatialDomains
                     const Array<TwoD, const NekDouble>& src,
                     Array<TwoD, NekDouble>& tgt) const;
 
-    void ComputePrincipleDirection(const LibUtilities::PointsKeyVector& keyTgt,
+            void ComputePrincipleDirection(const LibUtilities::PointsKeyVector& keyTgt,
                                    const SpatialDomains::GeomMMF MMFdir,
                                    const Array<OneD, const NekDouble> &CircCentre,
                                    Array<OneD,Array<OneD,NekDouble> > &output);
-    
-    void VectorNormalise(Array<OneD, Array<OneD, NekDouble> > &array);
 
-    void VectorCrossProd(const Array<OneD, const Array<OneD, NekDouble> > &v1,
+            void VectorNormalise(Array<OneD, Array<OneD, NekDouble> > &array);
+
+            void VectorCrossProd(const Array<OneD, const Array<OneD, NekDouble> > &v1,
                          const Array<OneD, const Array<OneD, NekDouble> > &v2,
                          Array<OneD,       Array<OneD, NekDouble> > &v3);
-    
-};
+
+    };
 
 
     /// A hash functor for geometric factors. Utilises

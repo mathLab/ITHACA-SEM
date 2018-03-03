@@ -36,138 +36,130 @@
 #ifndef NEKTAR_SOLVERS_ADRSOLVER_EQUATIONSYSTEMS_MMFADVECTION_H
 #define NEKTAR_SOLVERS_ADRSOLVER_EQUATIONSYSTEMS_MMFADVECTION_H
 
-#include <SolverUtils/UnsteadySystem.h>
-#include <SolverUtils/MMFSystem.h>
 #include <SolverUtils/AdvectionSystem.h>
+#include <SolverUtils/MMFSystem.h>
+#include <SolverUtils/UnsteadySystem.h>
 
-
-
-  enum TestType
-  {          
+enum TestType
+{
     eTestPlane,
     eTestPlaneMassConsv,
     eTestCube,
     eAdvectionBell,
-    SIZE_TestType   ///< Length of enum list
-  };
+    SIZE_TestType ///< Length of enum list
+};
 
-  const char* const TestTypeMap[] =
-    {
-      "TestPlane",
-      "TestPlaneMassConsv",
-      "TestCube",
-      "AdvectionBell",
-    };
+const char *const TestTypeMap[] = {
+    "TestPlane", "TestPlaneMassConsv", "TestCube", "AdvectionBell",
+};
 
 namespace Nektar
 {
-    class MMFAdvection : public SolverUtils::MMFSystem
+class MMFAdvection : public SolverUtils::MMFSystem
+{
+public:
+    friend class MemoryManager<MMFAdvection>;
+
+    /// Creates an instance of this class
+    static SolverUtils::EquationSystemSharedPtr create(
+        const LibUtilities::SessionReaderSharedPtr &pSession)
     {
-    public:
-        friend class MemoryManager<MMFAdvection>;
+        SolverUtils::EquationSystemSharedPtr p =
+            MemoryManager<MMFAdvection>::AllocateSharedPtr(pSession);
+        p->InitObject();
+        return p;
+    }
+    /// Name of class
+    static std::string className;
 
-        /// Creates an instance of this class
-        static SolverUtils::EquationSystemSharedPtr create(
-                const LibUtilities::SessionReaderSharedPtr& pSession) {
-            SolverUtils::EquationSystemSharedPtr p
-                = MemoryManager<MMFAdvection>::AllocateSharedPtr(pSession);
-            p->InitObject();
-            return p;
-        }
-        /// Name of class
-        static std::string className;
+    TestType m_TestType;
 
-	TestType                                        m_TestType; 
+    /// Destructor
+    virtual ~MMFAdvection();
 
-        /// Destructor
-        virtual ~MMFAdvection();
+protected:
+    NekDouble m_advx, m_advy, m_advz;
+    NekDouble m_waveFreq, m_RotAngle;
 
-    protected:
+    NekDouble m_Mass0;
+    int m_VelProjection;
 
-	NekDouble m_advx, m_advy, m_advz;
-        NekDouble m_waveFreq, m_RotAngle;
+    /// Advection velocity
+    Array<OneD, Array<OneD, NekDouble>> m_velocity;
+    Array<OneD, NekDouble> m_traceVn;
 
-	NekDouble m_Mass0;
-	int m_VelProjection;
-	
-        /// Advection velocity
-        Array<OneD, Array<OneD, NekDouble> >    m_velocity;
-        Array<OneD, NekDouble>                  m_traceVn;
+    Array<OneD, Array<OneD, NekDouble>> m_veldotMF;
+    Array<OneD, NekDouble> m_vellc;
 
-	Array<OneD, Array<OneD, NekDouble> > m_veldotMF;
-	Array<OneD, NekDouble> m_vellc;
+    // Plane (used only for Discontinous projection
+    //        with 3DHomogenoeus1D expansion)
+    int m_planeNumber;
 
-        // Plane (used only for Discontinous projection
-        //        with 3DHomogenoeus1D expansion)
-        int                                     m_planeNumber;
+    /// Session reader
+    MMFAdvection(const LibUtilities::SessionReaderSharedPtr &pSession);
 
-        /// Session reader
-        MMFAdvection(const LibUtilities::SessionReaderSharedPtr& pSession);
+    void WeakDGDirectionalAdvection(
+        const Array<OneD, Array<OneD, NekDouble>> &InField,
+        Array<OneD, Array<OneD, NekDouble>> &OutField);
 
+    /// Evaluate the flux at each solution point
+    void GetFluxVector(const Array<OneD, Array<OneD, NekDouble>> &physfield,
+                       Array<OneD, Array<OneD, Array<OneD, NekDouble>>> &flux);
 
-	void WeakDGDirectionalAdvection(const Array<OneD, Array<OneD, NekDouble> >& InField,
-					Array<OneD, Array<OneD, NekDouble> >& OutField);
-	
-        /// Evaluate the flux at each solution point
-        void GetFluxVector(
-            const Array<OneD, Array<OneD, NekDouble> >               &physfield,
-                  Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &flux);
+    /// Evaluate the flux at each solution point using dealiasing
+    void GetFluxVectorDeAlias(
+        const Array<OneD, Array<OneD, NekDouble>> &physfield,
+        Array<OneD, Array<OneD, Array<OneD, NekDouble>>> &flux);
 
-        /// Evaluate the flux at each solution point using dealiasing
-        void GetFluxVectorDeAlias(
-            const Array<OneD, Array<OneD, NekDouble> >               &physfield,
-                  Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &flux);
+    /// Compute the RHS
+    void DoOdeRhs(const Array<OneD, const Array<OneD, NekDouble>> &inarray,
+                  Array<OneD, Array<OneD, NekDouble>> &outarray,
+                  const NekDouble time);
 
-        /// Compute the RHS
-        void DoOdeRhs(
-            const Array<OneD,  const  Array<OneD, NekDouble> > &inarray,
-                  Array<OneD,         Array<OneD, NekDouble> > &outarray,
-            const NekDouble time);
+    /// Compute the projection
+    void DoOdeProjection(
+        const Array<OneD, const Array<OneD, NekDouble>> &inarray,
+        Array<OneD, Array<OneD, NekDouble>> &outarray, const NekDouble time);
 
-        /// Compute the projection
-        void DoOdeProjection(
-            const Array<OneD,  const  Array<OneD, NekDouble> > &inarray,
-                  Array<OneD,         Array<OneD, NekDouble> > &outarray,
-            const NekDouble time);
+    // Compute the velocity vector
+    void EvaluateAdvectionVelocity(
+        Array<OneD, Array<OneD, NekDouble>> &velocity);
 
-	// Compute the velocity vector
-	void EvaluateAdvectionVelocity(Array<OneD, Array<OneD, NekDouble> > &velocity);
+    // Compute arclenght of the surface at zlebel
+    NekDouble ComputeCirculatingArclength(const NekDouble zlevel,
+                                          const NekDouble Rhs);
 
-	// Compute arclenght of the surface at zlebel
-	NekDouble ComputeCirculatingArclength(const NekDouble zlevel, const NekDouble Rhs);
+    /// Get the normal velocity
+    void GetNormalVelocity(Array<OneD, NekDouble> &traceVn);
 
-        /// Get the normal velocity
-        void GetNormalVelocity(Array<OneD, NekDouble> &traceVn);
+    void ComputeNablaCdotVelocity(Array<OneD, NekDouble> &vellc);
 
-	void ComputeNablaCdotVelocity(Array<OneD, NekDouble> &vellc);
+    void ComputeveldotMF(Array<OneD, Array<OneD, NekDouble>> &veldotMF);
 
-	void ComputeveldotMF(Array<OneD, Array<OneD, NekDouble> > &veldotMF);
+    void AdvectionBellPlane(Array<OneD, NekDouble> &outfield);
+    void AdvectionBellSphere(Array<OneD, NekDouble> &outfield);
 
-	void AdvectionBellPlane(Array<OneD, NekDouble> &outfield);
-	void AdvectionBellSphere(Array<OneD, NekDouble> &outfield);
+    void Test2Dproblem(const NekDouble time, Array<OneD, NekDouble> &outfield);
+    void Test3Dproblem(const NekDouble time, Array<OneD, NekDouble> &outfield);
 
-	void Test2Dproblem(const NekDouble time, Array<OneD, NekDouble> &outfield);
-	void Test3Dproblem(const NekDouble time, Array<OneD, NekDouble> &outfield);
-	
-        /// Initialise the object
-        virtual void v_InitObject();
+    /// Initialise the object
+    virtual void v_InitObject();
 
-	virtual void v_DoSolve();
+    virtual void v_DoSolve();
 
-        /// Print Summary
-        virtual void v_GenerateSummary(SolverUtils::SummaryList& s);
+    /// Print Summary
+    virtual void v_GenerateSummary(SolverUtils::SummaryList &s);
 
-	virtual void v_SetInitialConditions(const NekDouble initialtime,
-					    bool dumpInitialConditions,
-					    const int domain);
+    virtual void v_SetInitialConditions(const NekDouble initialtime,
+                                        bool dumpInitialConditions,
+                                        const int domain);
 
-	virtual void v_EvaluateExactSolution(unsigned int field,
-					     Array<OneD, NekDouble> &outfield,
-					     const NekDouble time);
+    virtual void v_EvaluateExactSolution(unsigned int field,
+                                         Array<OneD, NekDouble> &outfield,
+                                         const NekDouble time);
 
-    private:
-
-    };
+private:
+};
 }
 
 #endif

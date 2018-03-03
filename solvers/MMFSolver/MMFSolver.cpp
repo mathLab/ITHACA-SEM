@@ -33,8 +33,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <SolverUtils/Driver.h>
 #include <LibUtilities/BasicUtils/SessionReader.h>
+#include <SolverUtils/Driver.h>
 
 using namespace Nektar;
 using namespace Nektar::SolverUtils;
@@ -60,13 +60,13 @@ int main(int argc, char *argv[])
         // Finalise session
         session->Finalise();
     }
-    catch (const std::runtime_error& e)
+    catch (const std::runtime_error &e)
     {
         return 1;
     }
-    catch (const std::string& eStr)
+    catch (const std::string &eStr)
     {
-       Gs::cout << "Error: " << eStr << Gs::endl;
+        Gs::cout << "Error: " << eStr << Gs::endl;
     }
 
     return 0;

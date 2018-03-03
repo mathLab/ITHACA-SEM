@@ -2462,34 +2462,34 @@ namespace Nektar
                 offset += fromExpList->GetExp(i)->GetNcoeffs();
             }
         }
-        
-        
+
+
         void ExpList::v_GetMovingFrames(const SpatialDomains::GeomMMF MMFdir,
                                         const Array<OneD, const NekDouble> &CircCentre,
                                         Array<OneD, Array<OneD, NekDouble> > &outarray)
         {
             int npts;
-            
+
             int MFdim = 3;
             int nq = outarray[0].num_elements()/MFdim;
-            
+
             // Assume whole array is of same coordinate dimension
             int coordim = (*m_exp)[0]->GetGeom()->GetCoordim();
-            
+
             Array<OneD, Array<OneD, NekDouble> > MFloc(MFdim*coordim);
             // Process each expansion.
             for(int i = 0; i < m_exp->size(); ++i)
             {
                 npts  = (*m_exp)[i]->GetTotPoints();
-                
+
                 for (int j=0; j< MFdim*coordim; ++j)
                 {
                     MFloc[j] = Array<OneD, NekDouble>(npts, 0.0);
                 }
-                
+
                 // MF from LOCALREGIONS
-                (*m_exp)[i]->GetMovingFrames(MMFdir, CircCentre, MFloc);
-                
+                (*m_exp)[i]->GetMetricInfo()->GetMovingFrames((*m_exp)[i]->GetPointsKeys(), MMFdir, CircCentre, MFloc);
+
                 // Get the physical data offset for this expansion.
                 for (int j = 0; j < MFdim; ++j)
                 {
@@ -2499,10 +2499,10 @@ namespace Nektar
                     }
                 }
             }
-            
+
         }
-        
-        
+
+
         // Generate vector v such that v[i] = scalar1 if i is in the element < ElementID. Otherwise, v[i] = scalar2.
         void ExpList::GenerateElementVector(const int ElementID,
                                             const NekDouble scalar1,
@@ -2511,23 +2511,23 @@ namespace Nektar
         {
             int npoints_e;
             NekDouble coeff;
-            
+
             Array<OneD, NekDouble> outarray_e;
-            
+
             for(int i = 0 ; i < (*m_exp).size(); ++i)
             {
                 npoints_e = (*m_exp)[i]->GetTotPoints();
-                
+
                 if(i<=ElementID)
                 {
                     coeff = scalar1;
                 }
-                
+
                 else
                 {
                     coeff = scalar2;
                 }
-                
+
                 outarray_e = Array<OneD, NekDouble>(npoints_e, coeff);
                 Vmath::Vcopy(npoints_e, &outarray_e[0], 1, &outarray[m_phys_offset[i]], 1);
             }

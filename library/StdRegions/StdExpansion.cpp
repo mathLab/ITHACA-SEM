@@ -1309,14 +1309,6 @@ namespace Nektar
             NEKERROR(ErrorUtil::efatal, "This function is only valid for "
                      "specific element types");
         }
-        
-        void StdExpansion::v_GetMovingFrames(const SpatialDomains::GeomMMF MMFdir,
-                                             const Array<OneD, const NekDouble> &CircCentre,
-                                             Array<OneD, Array<OneD, NekDouble> > &outarray)
-        {
-            NEKERROR(ErrorUtil::efatal, "This function is only valid for "
-                     "local expansions");
-        }
 
         /**
          * @brief Calculate the derivative of the physical points

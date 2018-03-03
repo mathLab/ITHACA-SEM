@@ -1070,14 +1070,6 @@ namespace Nektar
             {
                 return v_GenMatrix(mkey);
             }
-            
-            void GetMovingFrames(const SpatialDomains::GeomMMF MMFdir,
-                                 const Array<OneD, const NekDouble> &CircCentre,
-                                 Array<OneD, Array<OneD, NekDouble> > &outarray)
-            {
-                v_GetMovingFrames(MMFdir, CircCentre, outarray);
-            }
-            
 
             void PhysDeriv (const Array<OneD, const NekDouble>& inarray,
                             Array<OneD, NekDouble> &out_d0,
@@ -1670,9 +1662,6 @@ namespace Nektar
                                                    Array<OneD, NekDouble> &outarray);
 
             STD_REGIONS_EXPORT virtual NekDouble v_Integral(const Array<OneD, const NekDouble>& inarray );
-            STD_REGIONS_EXPORT virtual void v_GetMovingFrames (const SpatialDomains::GeomMMF MMFdir,
-                                                               const Array<OneD, const NekDouble> &CircCentre,
-                                                               Array<OneD, Array<OneD, NekDouble> > &outarray);
 
             STD_REGIONS_EXPORT virtual void   v_PhysDeriv (const Array<OneD, const NekDouble>& inarray,
                                         Array<OneD, NekDouble> &out_d1,

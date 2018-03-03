@@ -188,9 +188,6 @@ namespace Nektar
                           Array<OneD, ExpansionSharedPtr>      &EdgeExp,
                           Array<OneD, Array<OneD, NekDouble> > &coeffs,
                           Array<OneD,             NekDouble>   &outarray);
-            virtual  void v_GetMovingFrames(const SpatialDomains::GeomMMF MMFdir,
-                                           const Array<OneD, const NekDouble> &CircCentre,
-                                           Array<OneD, Array<OneD, NekDouble> > &outarray);
 
             private:
 

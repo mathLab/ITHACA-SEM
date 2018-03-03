@@ -164,11 +164,6 @@ namespace Nektar
                                   Array<OneD,       NekDouble> &coords_1,
                                   Array<OneD,       NekDouble> &coords_2,
                                   Array<OneD,       NekDouble> &coords_3);
-            
-            LOCAL_REGIONS_EXPORT void v_ComputeGmatcdotMF(
-                                                          const Array<TwoD, const NekDouble> &df,
-                                                          const Array<OneD, const NekDouble> &direction,
-                                                          Array<OneD, Array<OneD, NekDouble> > &dfdir);
             LOCAL_REGIONS_EXPORT virtual NekDouble v_StdPhysEvaluate(
                             const Array<OneD, const NekDouble> &Lcoord,
                             const Array<OneD, const NekDouble> &physvals);

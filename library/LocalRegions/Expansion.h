@@ -129,6 +129,9 @@ namespace Nektar
 
                 void ComputeLaplacianMetric();
                 void ComputeQuadratureMetric();
+                void ComputeGmatcdotMF(const Array<TwoD, const NekDouble> &df,
+                                     const Array<OneD, const NekDouble> &direction,
+                                     Array<OneD, Array<OneD, NekDouble> > &dfdir);
 
                 virtual void v_MultiplyByQuadratureMetric(
                                 const Array<OneD, const NekDouble> &inarray,
@@ -139,9 +142,7 @@ namespace Nektar
                 virtual void v_GetCoords(Array<OneD,NekDouble> &coords_1,
                                          Array<OneD,NekDouble> &coords_2,
                                          Array<OneD,NekDouble> &coords_3);
-            void v_ComputeGmatcdotMF(const Array<TwoD, const NekDouble> &df,
-                                     const Array<OneD, const NekDouble> &direction,
-                                     Array<OneD, Array<OneD, NekDouble> > &dfdir);
+
             Array<OneD, NekDouble> v_GetMF(const int dir,
                                            const int shapedim,
                                            const StdRegions::VarCoeffMap   &varcoeffs);

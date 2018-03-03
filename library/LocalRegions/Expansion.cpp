@@ -301,8 +301,8 @@ namespace Nektar
                 }
             }
         }
-        
-        void Expansion::v_ComputeGmatcdotMF(const Array<TwoD, const NekDouble> &df,
+
+        void Expansion::ComputeGmatcdotMF(const Array<TwoD, const NekDouble> &df,
                                             const Array<OneD, const NekDouble> &direction,
                                             Array<OneD, Array<OneD, NekDouble> > &dfdir)
         {

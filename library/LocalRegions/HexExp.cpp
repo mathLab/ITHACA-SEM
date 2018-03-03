@@ -293,7 +293,7 @@ namespace Nektar
             StdHexExp::v_PhysDeriv(inarray, Diff0, Diff1, Diff2);
             
             Array<OneD, Array<OneD, NekDouble> > dfdir(shapedim);
-            v_ComputeGmatcdotMF(df,direction,dfdir);
+            Expansion::ComputeGmatcdotMF(df,direction,dfdir);
             
             Vmath::Vmul (ntot,&dfdir[0][0],1,&Diff0[0],1, &outarray[0], 1);
             Vmath::Vvtvp(ntot,&dfdir[1][0],1,&Diff1[0],1, &outarray[0], 1, &outarray[0],1);
@@ -589,7 +589,7 @@ namespace Nektar
             MultiplyByQuadratureMetric(inarray, tmp1);
             
             Array<OneD, Array<OneD, NekDouble> > dfdir(shapedim);
-            v_ComputeGmatcdotMF(df,direction,dfdir);
+            Expansion::ComputeGmatcdotMF(df,direction,dfdir);
             
             Vmath::Vmul(nq,&dfdir[0][0],1,tmp1.get(),1,tmp2.get(),1);
             Vmath::Vmul(nq,&dfdir[1][0],1,tmp1.get(),1,tmp3.get(),1);

@@ -602,7 +602,7 @@ namespace Nektar
             
             // Compute gmat \cdot e^j
             Array<OneD, Array<OneD, NekDouble> > dfdir(shapedim);
-            v_ComputeGmatcdotMF(df,direction,dfdir);
+            Expansion::ComputeGmatcdotMF(df,direction,dfdir);
             
             Vmath::Vmul(nqtot, &dfdir[0][0], 1, &tmp0[0], 1, &tmp0[0], 1);
             Vmath::Vmul(nqtot, &dfdir[1][0], 1, &tmp1[0], 1, &tmp1[0], 1);
@@ -700,13 +700,6 @@ namespace Nektar
             Expansion::v_GetCoords(coords_0, coords_1, coords_2);
         }
         
-        void TriExp::v_ComputeGmatcdotMF(const Array<TwoD, const NekDouble> &df,
-                                         const Array<OneD, const NekDouble> &direction,
-                                         Array<OneD, Array<OneD, NekDouble> > &dfdir)
-        {
-            Expansion::v_ComputeGmatcdotMF(df, direction, dfdir);
-        }
-
 
         /** 
          * Given the local cartesian coordinate \a Lcoord evaluate the
@@ -1293,7 +1286,7 @@ namespace Nektar
                         //            = (e^0 * df[0] + e^1 * df[2] + e^2 * df[4]) * deriv0 + (e^0 * df[1] + e^1 * df[3] + e^2 * df[5]) * deriv1
                         // dfdir[dir] = e^0 * df[2 * 0 + dir] + e^1 * df[2 * 1 + dir] + e^2 * df [ 2 * 2 + dir]
                         Array<OneD, Array<OneD, NekDouble> > dfdir(shapedim);
-                        v_ComputeGmatcdotMF(df,direction,dfdir);
+                        Expansion::ComputeGmatcdotMF(df,direction,dfdir);
                         
                         StdRegions::VarCoeffMap dfdirxi;
                         StdRegions::VarCoeffMap dfdireta;

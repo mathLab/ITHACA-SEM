@@ -1536,6 +1536,14 @@ void MMFSWE::v_DoInitialise()
     EvaluateCoriolis();
     SetInitialConditions();
     PrimitiveToConservative();
+
+    // transfer the initial conditions to modal values
+    for(int i = 0; i < m_fields.num_elements(); ++i)
+    {
+        m_fields[i]->SetPhysState(true);
+        m_fields[i]->FwdTrans(m_fields[i]->GetPhys(),m_fields[i]->UpdateCoeffs());
+    }
+
 }
 
 void MMFSWE::EvaluateWaterDepth(void)
@@ -2812,7 +2820,7 @@ void MMFSWE::ConservativeToPrimitive(
 {
     int nq = GetTotPoints();
 
-    if (physin.get() == physout.get())
+    if (physin[0].get() == physout[0].get())
     {
         // copy indata and work with tmp array
         Array<OneD, Array<OneD, NekDouble>> tmp(3);
@@ -2852,7 +2860,7 @@ void MMFSWE::PrimitiveToConservative(
 
     int nq = GetTotPoints();
 
-    if (physin.get() == physout.get())
+    if (physin[0].get() == physout[0].get())
     {
         // copy indata and work with tmp array
         Array<OneD, Array<OneD, NekDouble>> tmp(3);

@@ -61,12 +61,9 @@ ADD_NEKTAR_TEST(Helmholtz3D_CG_Tet)
 ADD_NEKTAR_TEST(Helmholtz3D_CG_Tet_VarP)
 ADD_NEKTAR_TEST(Helmholtz3D_CG_Tet_VarP_iterLE)
 ADD_NEKTAR_TEST(Helmholtz3D_CG_Prism)
-<<<<<<< HEAD
 ADD_NEKTAR_TEST(Helmholtz3D_CG_Prism_VarP)
 ADD_NEKTAR_TEST(Helmholtz3D_CG_Prism_VarP_iterLE)
 ADD_NEKTAR_TEST(Helmholtz3D_CG_Prism_iter_ml)
-=======
->>>>>>> master
 ADD_NEKTAR_TEST(Helmholtz3D_CG_Prism_Deformed)
 ADD_NEKTAR_TEST(Helmholtz3D_CG_Pyr)
 ADD_NEKTAR_TEST(Helmholtz3D_CG_Pyr_VarP)

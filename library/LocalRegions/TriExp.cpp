@@ -102,7 +102,6 @@ namespace Nektar
             ival = StdTriExp::v_Integral(tmp);
             return ival;
         }
-		
 
         void TriExp::v_PhysDeriv(const Array<OneD, const NekDouble> & inarray,
                                Array<OneD,NekDouble> &out_d0,

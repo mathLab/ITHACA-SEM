@@ -110,6 +110,12 @@ namespace Nektar
 
             for(i = 0; i < bndCondExp.num_elements(); i++)
             {
+                if (bndConditions[0][i]->GetBoundaryConditionType() ==
+                       SpatialDomains::ePeriodic)
+                {
+                    continue;
+                }
+
                 // Check to see if any value on boundary has Dirichlet value.
                 cnt = 0;
                 for(k = 0; k < bndConditions.num_elements(); ++k)
@@ -1784,6 +1790,12 @@ namespace Nektar
             int offset = 0;
             for(i = 0; i < bndCondExp.num_elements(); i++)
             {
+                if (bndConditions[i]->GetBoundaryConditionType() ==
+                    SpatialDomains::ePeriodic)
+                {
+                    continue;
+                }
+
                 set<int> foundExtraVerts, foundExtraEdges;
                 for(j = 0; j < bndCondExp[i]->GetNumElmts(); j++)
                 {

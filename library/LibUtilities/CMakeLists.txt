@@ -64,6 +64,7 @@ IF( NEKTAR_USE_HDF5 )
         ./BasicUtils/FieldIOHdf5.cpp)
 ENDIF( NEKTAR_USE_HDF5 )
 
+
 SET(CommunicationHeaders
     ./Communication/Comm.h
     ./Communication/CommSerial.h
@@ -337,12 +338,9 @@ ADD_NEKTAR_LIBRARY(LibUtilities
     SUMMARY "Nektar++ LibUtilities library"
     DESCRIPTION "This library provides core routines including linear algebra and integration with ThirdParty libraries.")
 
-ADD_DEPENDENCIES(LibUtilities modmetis-5.1.0 boost tinyxml-2.6.2 zlib-1.2.7)
+ADD_DEPENDENCIES(LibUtilities boost tinyxml-2.6.2 zlib-1.2.7)
 
 ### Libraries needed specifically by LibUtilities ###
-### Static libraries do not need to be linked by
-# Metis
-TARGET_LINK_LIBRARIES(LibUtilities LINK_PRIVATE ${METIS_LIB})
 
 # FFTW
 IF( NEKTAR_USE_FFTW )

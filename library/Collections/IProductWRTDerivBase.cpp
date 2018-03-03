@@ -318,7 +318,7 @@ class IProductWRTDerivBase_IterPerExp : public Operator
         {
             LibUtilities::PointsKeyVector PtsKey = m_stdExp->GetPointsKeys();
             m_dim      = PtsKey.size();
-            m_coordim  = m_stdExp->GetCoordim();
+            m_coordim  = pCollExp[0]->GetCoordim();
 
             int nqtot  = m_stdExp->GetTotPoints();
 
@@ -605,7 +605,7 @@ class IProductWRTDerivBase_SumFac_Quad : public Operator
             {
                 Vmath::Vmul (ntot,m_derivFac[i],1, in[0],1,
                              tmp[i],1);
-                for(int j = 1; j < m_coordim; ++j)
+                for(int j = 1; j < 2; ++j)
                 {
                     Vmath::Vvtvp (ntot,m_derivFac[i +j*2],1,
                                   in[j],1, tmp[i], 1, tmp[i],1);
@@ -670,7 +670,7 @@ class IProductWRTDerivBase_SumFac_Quad : public Operator
               m_derbase1(m_stdExp->GetBasis(1)->GetDbdata())
         {
             LibUtilities::PointsKeyVector PtsKey = m_stdExp->GetPointsKeys();
-            m_coordim = m_stdExp->GetCoordim();
+            m_coordim  = pCollExp[0]->GetCoordim();
 
             m_derivFac = pGeomData->GetDerivFactors(pCollExp);
             m_jac      = pGeomData->GetJacWithStdWeights(pCollExp);
@@ -756,7 +756,7 @@ class IProductWRTDerivBase_SumFac_Tri : public Operator
             {
                 Vmath::Vmul (ntot,m_derivFac[i],1, in[0],1, tmp[i],1);
 
-                for(int j = 1; j < m_coordim; ++j)
+                for(int j = 1; j < 2; ++j)
                 {
                     Vmath::Vvtvp (ntot,m_derivFac[i +j*2],1,
                                   in[j],1, tmp[i], 1, tmp[i],1);
@@ -832,7 +832,7 @@ class IProductWRTDerivBase_SumFac_Tri : public Operator
               m_derbase1(m_stdExp->GetBasis(1)->GetDbdata())
         {
             LibUtilities::PointsKeyVector PtsKey = m_stdExp->GetPointsKeys();
-            m_coordim = m_stdExp->GetCoordim();
+            m_coordim  = pCollExp[0]->GetCoordim();
 
             m_derivFac = pGeomData->GetDerivFactors(pCollExp);
             m_jac      = pGeomData->GetJacWithStdWeights(pCollExp);

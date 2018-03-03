@@ -6,5 +6,5 @@
 [submodule "docs/developer-guide"]
     branch = master
 	path = docs/developer-guide
-	url = git@gitlab.nektar.info:nektar/developer-guide.git
+	url = git@gitlab.nektar.info:nektar/developer-guide
     ignore = all

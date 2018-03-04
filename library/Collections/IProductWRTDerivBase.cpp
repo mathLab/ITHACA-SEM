@@ -216,7 +216,10 @@ OperatorKey IProductWRTDerivBase_StdMat::m_typeArr[] = {
     GetOperatorFactory().RegisterCreatorFunction(
         OperatorKey(eHexahedron,    eIProductWRTDerivBase, eStdMat, false),
         IProductWRTDerivBase_StdMat::create,
-        "IProductWRTDerivBase_StdMat_Hex")
+        "IProductWRTDerivBase_StdMat_Hex"),
+    GetOperatorFactory().RegisterCreatorFunction(
+        OperatorKey(ePyramid, eIProductWRTDerivBase, eSumFac, false),
+        IProductWRTDerivBase_StdMat::create, "IProductWRTDerivBase_SumFac_Pyr")
 };
 
 

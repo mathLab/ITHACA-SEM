@@ -1668,25 +1668,25 @@ namespace Nektar
                     exp->GetEdgeInteriorMap(j,edgeOrient,edgeInteriorMap,edgeInteriorSign);
 
                     // Set the global DOF's for the interior modes of edge j
-                    for(k = 0; k < dofs[1][exp->GetGeom()->GetEid(j)]; ++k)
+                    for(k = 0; k < dofs[1][meshEdgeId]; ++k)
                     {
                         m_localToGlobalMap[cnt+edgeInteriorMap[k]] =
                             graphVertOffset[graph[1][meshEdgeId]]+k;
                     }
-                    for(k = dofs[1][exp->GetGeom()->GetEid(j)]; k < nEdgeInteriorCoeffs; ++k)
+                    for(k = dofs[1][meshEdgeId]; k < nEdgeInteriorCoeffs; ++k)
                     {
-                        m_localToGlobalMap[cnt+edgeInteriorMap[k]] =
-                            graphVertOffset[graph[1][meshEdgeId]];
+                        m_localToGlobalMap[cnt+edgeInteriorMap[k]] = 0;
                     }
-
+                    
                     // Fill the sign vector if required
                     if(m_signChange)
                     {
-                        for(k = 0; k < dofs[1][exp->GetGeom()->GetEid(j)]; ++k)
+                        for(k = 0; k < dofs[1][meshEdgeId]; ++k)
                         {
-                            m_localToGlobalSign[cnt+edgeInteriorMap[k]] = (NekDouble) edgeInteriorSign[k];
+                            m_localToGlobalSign[cnt+edgeInteriorMap[k]] =
+                                (NekDouble) edgeInteriorSign[k];
                         }
-                        for(k = dofs[1][exp->GetGeom()->GetEid(j)]; k < nEdgeInteriorCoeffs; ++k)
+                        for(k = dofs[1][meshEdgeId]; k < nEdgeInteriorCoeffs; ++k)
                         {
                             m_localToGlobalSign[cnt+edgeInteriorMap[k]] = 0.0;
                         }
@@ -1734,8 +1734,7 @@ namespace Nektar
                                 }
                                 else
                                 {
-                                    m_localToGlobalMap[cnt+faceInteriorMap[kLoc]] =
-                                        graphVertOffset[graph[2][meshFaceId]];
+                                    m_localToGlobalMap[cnt+faceInteriorMap[kLoc]] =  0; 
                                     if(m_signChange)
                                     {
                                         m_localToGlobalSign[cnt+faceInteriorMap[kLoc]] = 0.0;
@@ -1768,8 +1767,7 @@ namespace Nektar
                                 }
                                 else
                                 {
-                                    m_localToGlobalMap[cnt+faceInteriorMap[kLoc]] =
-                                        graphVertOffset[graph[2][meshFaceId]];
+                                    m_localToGlobalMap[cnt+faceInteriorMap[kLoc]] = 0;
                                     if(m_signChange)
                                     {
                                         m_localToGlobalSign[cnt+faceInteriorMap[kLoc]] = 0.0;

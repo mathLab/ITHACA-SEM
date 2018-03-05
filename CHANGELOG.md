@@ -34,10 +34,12 @@ v5.0.0
 - Fix mac OSX on buildbots (!876)
 - Fix error from (!826) (!876)
 - Fix minor bug in ARPACK thirdparty build cmake (!874)
-- Added in sum factorisation version for pyramid expnasions and orthogonal expansion in pyramids (!750)
+- Added in sum factorisation version for pyramid expnasions and orthogonal
+  expansion in pyramids (!750)
 - Switch MeshGraph to use factory pattern and add HDF5 geometry support (!900,
   !904)
-- Restructure the low energy preconditioner to handle pyramidic and variable p expansions (!920)
+- Restructure the low energy preconditioner to handle pyramidic and variable
+  p expansions (!920)
 - Remove requirement for modmetis, switch to SCOTCH by default (!899)
 - Switch MeshGraph to use factory pattern and add HDF5 geometry support
   (!900, !904)

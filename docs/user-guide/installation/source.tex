@@ -498,6 +498,14 @@ Components of the \nekpp package can be selected using the following options:
     Compiles the Nektar++ framework libraries. This is required for all other
     options.
 
+    \item \inlsh{NEKTAR\_BUILD\_PYTHON}
+
+    Installs the Python wrapper to \nekpp. Requires running the following command after installing \nekpp in order to install the Python package:
+
+    \begin{lstlisting}[style=BashInputStyle]
+    make nekpy-install-user
+    \end{lstlisting}
+
     \item \inlsh{NEKTAR\_BUILD\_SOLVERS} (Recommended)
 
     Compiles the solvers distributed with the \nekpp framework.

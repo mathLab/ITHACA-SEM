@@ -44,7 +44,7 @@ using namespace std;
 namespace Nektar
 {
     TestData::TestData(const fs::path& pFilename, po::variables_map& pVm)
-            : m_cmdoptions(pVm)
+            : m_cmdoptions(pVm), m_pythonTest(false)
     {
         // Process test file format.
         m_doc = new TiXmlDocument(pFilename.string().c_str());

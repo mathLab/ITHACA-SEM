@@ -1643,19 +1643,6 @@ namespace Nektar
                     returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,R);
                 }
                 break;
-            case StdRegions::ePreconRT:
-                {
-                    NekDouble one = 1.0;
-                    MatrixKey helmkey(StdRegions::eHelmholtz, mkey.GetShapeType(), *this,mkey.GetConstFactors(), mkey.GetVarCoeffs());
-                    DNekScalBlkMatSharedPtr helmStatCond = GetLocStaticCondMatrix(helmkey);
-                    DNekScalMatSharedPtr A =helmStatCond->GetBlock(0,0);
-
-                    DNekScalMatSharedPtr Atmp;
-                    DNekMatSharedPtr RT=BuildTransformationMatrix(A,mkey.GetMatrixType());
-
-                    returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,RT);
-                }
-                break;
             case StdRegions::ePreconRMass:
                 {
                     NekDouble one = 1.0;
@@ -1667,19 +1654,6 @@ namespace Nektar
                     DNekMatSharedPtr R=BuildTransformationMatrix(A,mkey.GetMatrixType());
 
                     returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,R);
-                }
-                break;
-            case StdRegions::ePreconRTMass:
-                {
-                    NekDouble one = 1.0;
-                    MatrixKey masskey(StdRegions::eMass, mkey.GetShapeType(), *this);
-                    DNekScalBlkMatSharedPtr massStatCond = GetLocStaticCondMatrix(masskey);
-                    DNekScalMatSharedPtr A =massStatCond->GetBlock(0,0);
-
-                    DNekScalMatSharedPtr Atmp;
-                    DNekMatSharedPtr RT=BuildTransformationMatrix(A,mkey.GetMatrixType());
-
-                    returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,RT);
                 }
                 break;
             default:

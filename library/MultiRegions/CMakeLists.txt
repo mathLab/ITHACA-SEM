@@ -137,9 +137,6 @@ ADD_NEKTAR_LIBRARY(MultiRegions
     SUMMARY "Nektar++ MultiRegions library"
     DESCRIPTION "This library provides global expansions on multi-element domains.")
 
-# MultiRegions uses additional routines from Metis
-TARGET_LINK_LIBRARIES(MultiRegions LINK_PRIVATE ${METIS_LIB})
-
 # MultiRegions uses additional routines from GSMPI
 IF( NEKTAR_USE_MPI )
     TARGET_LINK_LIBRARIES(MultiRegions LINK_PRIVATE ${GSMPI_LIBRARY} ${XXT_LIBRARY})
@@ -147,7 +144,7 @@ ENDIF( NEKTAR_USE_MPI )
 
 IF( NEKTAR_USE_PETSC )
     TARGET_LINK_LIBRARIES(MultiRegions LINK_PRIVATE ${PETSC_LIBRARIES})
-    ADD_DEPENDENCIES(MultiRegions petsc-3.7.2)
+    ADD_DEPENDENCIES(MultiRegions petsc-3.7.7)
 ENDIF( NEKTAR_USE_PETSC )
 
 IF (NEKTAR_BUILD_PYTHON)

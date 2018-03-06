@@ -49,7 +49,7 @@ be downloaded and compiled for use with Nektar++ \emph{automatically} (but not
 installed system-wide).
 
 \begin{center}
-\begin{tabular}{lccccl}
+\begin{tabularx}{\linewidth}{lccccX}
 \toprule
         &      & \multicolumn{3}{c}{Installation} & \\ \cmidrule(r){3-5}
 Package & Req. & Sys. & User & Auto.              & Note \\
@@ -65,7 +65,10 @@ LAPACK          & \cmark & \cmark & \cmark &        & \\
 Boost $>=1.52$   & \cmark & \cmark & \cmark & \cmark & Compile
 with iostreams
 \\
-ModMETIS        & \cmark &        &        & \cmark & \\
+Scotch          &        & \cmark & \cmark & \cmark & Required
+for multi-level static condensation, highly recommended\\
+METIS           &        & \cmark & \cmark & \cmark &
+Alternative mesh partitioning\\
 FFTW $>3.0$     &        & \cmark & \cmark & \cmark & For
 high-performance FFTs\\
 ARPACK $>2.0$   &        & \cmark & \cmark &        & For
@@ -78,12 +81,10 @@ HDF5            &        & \cmark & \cmark & \cmark & For
 large-scale parallel I/O (requires CMake >3.1)\\
 PETSc           &        &        & \cmark & \cmark &
 Alternative linear solvers\\
-Scotch          &        & \cmark & \cmark & \cmark &
-Alternative mesh partitioning\\
 VTK $>5.8$      &        & \cmark & \cmark &        & Visualisation
 utilities\\
 \bottomrule
-\end{tabular}
+\end{tabularx}
 \end{center}
 
 \begin{warningbox}
@@ -208,7 +209,7 @@ system-wide).
 \end{notebox}
 
 \begin{center}
-\begin{tabular}{lccccl}
+\begin{tabularx}{\linewidth}{lccccX}
 \toprule
         &      & \multicolumn{3}{c}{Installation} & \\ \cmidrule(r){3-5}
 Package & Req. & MacPorts & User & Auto.          & Note \\
@@ -223,7 +224,10 @@ Xcode \\
 Boost $>=1.52$   & \cmark & \texttt{boost}   & \cmark & \cmark & Compile
 with iostreams \\
 TinyXML         & \cmark & \texttt{tinyxml} & \cmark & \cmark & \\
-ModMETIS        & \cmark &                  &        & \cmark & \\
+Scotch          &        & \texttt{scotch}  & \cmark & \cmark & Required
+for multi-level static condensation, highly recommended\\
+METIS           &        & \texttt{metis}   & \cmark & \cmark &
+Alternative mesh partitioning\\
 FFTW $>3.0$     &        & \texttt{fftw-3}  & \cmark & \cmark & For
 high-performance FFTs\\
 ARPACK $>2.0$   &        & \texttt{arpack}  & \cmark &        & For
@@ -236,12 +240,10 @@ HDF5            &        & \cmark & \cmark & \cmark & For
 large-scale parallel I/O (requires CMake >3.1)\\
 PETSc           &        & \texttt{petsc}   & \cmark & \cmark &
 Alternative linear solvers\\
-Scotch          &        & \texttt{scotch}  & \cmark & \cmark &
-Alternative mesh partitioning\\
 VTK $>5.8$      &        & \texttt{vtk}     & \cmark &        &
 Visualisation utilities\\
 \bottomrule
-\end{tabular}
+\end{tabularx}
 \end{center}
 
 \newsavebox\installationOSXMacPortsTip
@@ -364,7 +366,7 @@ additional build packages. These can either be installed by the user, or
 automatically in the build process.
 
 \begin{center}
-\begin{tabular}{lcccl}
+\begin{tabularx}{\linewidth}{lcccX}
 \toprule
                   &        & \multicolumn{2}{c}{Installation} & \\ \cmidrule(r){3-4}
 Package           & Req.   & User   & Auto.        & Note \\
@@ -374,9 +376,8 @@ CMake $\geq 3.0$  & \cmark & \cmark &              & \\
 BLAS              & \cmark & \cmark & \cmark       & \\
 LAPACK            & \cmark & \cmark & \cmark       & \\
 Boost $\geq 1.55$ & \cmark & \cmark & \cmark       & Compile with iostreams\\
-ModMETIS          & \cmark & \cmark & \cmark       & \\
 \bottomrule
-\end{tabular}
+\end{tabularx}
 \end{center}
 
 \subsubsection{Detailed instructions}
@@ -591,6 +592,12 @@ can be selected using the following options:
     that \nekpp be built with MPI support with \inlsh{NEKTAR\_USE\_MPI} enabled
     and that HDF5 is compiled with MPI support.
 
+    \item \inlsh{NEKTAR\_USE\_METIS}
+
+    Build \nekpp with support for the METIS graph partitioning library. This
+    provides both an alternative mesh partitioning algorithm to SCOTCH for
+    parallel simulations.
+
     \item \inlsh{NEKTAR\_USE\_MKL}
 
     Use the Intel MKL library. This is typically available on cluster
@@ -612,12 +619,13 @@ can be selected using the following options:
 
     Build \nekpp with support for the PETSc package for solving linear systems.
 
-    \item \inlsh{NEKTAR\_USE\_SCOTCH}
+    \item \inlsh{NEKTAR\_USE\_SCOTCH} (Recommended)
 
     Build \nekpp with support for the SCOTCH graph partitioning library. This
-    provides an alternative mesh partitioning algorithm to METIS. However, METIS
-    is still required as it is used by the multi-level static condensation
-    algorithm.
+    provides both a mesh partitioning algorithm for parallel simulations and
+    enabled support for multi-level static condensation, so is highly
+    recommended and enabled by default. However for systems that do not support
+    SCOTCH build requirements (e.g. Windows), this can be disabled.
 
     \item \inlsh{NEKTAR\_USE\_SMV}
 
@@ -650,8 +658,8 @@ automatically built during the \nekpp build process. Below are the choices of X:
 
     \item \inlsh{METIS}
 
-    A graph partitioning library used for substructuring of matrices and mesh
-    partitioning when \nekpp is run in parallel.
+    A graph partitioning library used for mesh partitioning when \nekpp is run
+    in parallel.
 
     \item \inlsh{PETSC}
 
@@ -659,8 +667,9 @@ automatically built during the \nekpp build process. Below are the choices of X:
 
     \item \inlsh{SCOTCH}
 
-    An alternative graph partitioning library used for mesh partitioning when
-    \nekpp is run in parallel.
+    A graph partitioning library used for mesh partitioning when \nekpp is run
+    in parallel, and reordering routines that are used in multi-level static
+    condensation.
 
     \item \inlsh{TINYXML}
 

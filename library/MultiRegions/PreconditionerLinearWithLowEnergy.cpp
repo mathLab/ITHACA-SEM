@@ -99,10 +99,11 @@ namespace Nektar
 
 
         DNekScalMatSharedPtr PreconditionerLinearWithLowEnergy::
-        v_TransformedSchurCompl(int offset, const std::shared_ptr<DNekScalMat > &loc_mat)
+        v_TransformedSchurCompl(int n, int offset,
+                                const std::shared_ptr<DNekScalMat > &loc_mat)
 	{
             DNekScalMatSharedPtr returnval;
-            returnval=m_lowEnergyPrecon->TransformedSchurCompl(offset,loc_mat);
+            returnval=m_lowEnergyPrecon->TransformedSchurCompl(n,offset, loc_mat);
             return returnval;
         }
 

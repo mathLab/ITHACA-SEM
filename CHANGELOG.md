@@ -141,6 +141,9 @@ v4.4.2
 **FieldConvert**
 - Allow passing input name with trailing separator (!879)
 
+**Utilities**
+- Fix VtkToPng to account for deprecated VTK API for VTK version > 8.1 (!925)
+
 v4.4.1
 ------
 **Library**
@@ -195,7 +198,6 @@ v4.4.1
 
 **Utilities**
 - Fix vtkToFld missing dependency which prevented compiling with VTK 7.1 (!808)
-- Fix VtkToPng to account for deprecated VTK API for VTK version > 8.1 (!925)
 
 **Documentation**
 - Added missing details on artificial viscosity and dealising to compressible

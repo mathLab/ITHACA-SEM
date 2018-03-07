@@ -35,7 +35,7 @@ namespace np = boost::numpy;
         }                                                          \
         tmp.export_values();                                       \
     }
-#define NEKPY_WRAP_ENUM_STRING_DOCS(ENUMNAME,MAPNAME, DOCSTRING)   \
+#define NEKPY_WRAP_ENUM_STRING_DOCS(ENUMNAME,MAPNAME,DOCSTRING)    \
     {                                                              \
         py::enum_<ENUMNAME> tmp(#ENUMNAME);                        \
         for (int a = 0; a < (int)SIZENAME(ENUMNAME); ++a)          \

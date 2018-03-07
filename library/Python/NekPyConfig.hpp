@@ -35,3 +35,17 @@ namespace np = boost::numpy;
         }                                                          \
         tmp.export_values();                                       \
     }
+#define NEKPY_WRAP_ENUM_STRING_DOCS(ENUMNAME,MAPNAME, DOCSTRING)   \
+    {                                                              \
+        py::enum_<ENUMNAME> tmp(#ENUMNAME);                        \
+        for (int a = 0; a < (int)SIZENAME(ENUMNAME); ++a)          \
+        {                                                          \
+            tmp.value(MAPNAME[a].c_str(), (ENUMNAME)a);            \
+        }                                                          \
+        tmp.export_values();                                       \
+        PyTypeObject * pto =                                       \
+            reinterpret_cast<PyTypeObject*>(tmp.ptr());            \
+        PyDict_SetItemString(pto->tp_dict, "__doc__",              \
+            PyString_FromString(DOCSTRING));                       \
+    }
+

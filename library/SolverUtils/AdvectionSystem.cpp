@@ -111,10 +111,11 @@ Array<OneD, NekDouble>  AdvectionSystem::GetElmtCFLVals(void)
     stdVelocity = v_GetMaxStdVelocity();
 
     Array<OneD, NekDouble> cfl(nelmt, 0.0);
+    NekDouble order;
     for(int el = 0; el < nelmt; ++el)
     {
-        cfl[el] =  m_timestep*(stdVelocity[el] * cLambda *
-                               (expOrder[el]-1) * (expOrder[el]-1));
+        order = max(expOrder[el]-1, 1);
+        cfl[el] =  m_timestep*(stdVelocity[el] * cLambda * order * order);
     }
 
     return cfl;

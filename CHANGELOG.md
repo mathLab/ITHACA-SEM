@@ -104,6 +104,7 @@ v5.0.0
 - Allow performing axi-symmetric Euler and NS simulations (!771, !866)
 - Add ability to use an exponential filtering for stabilization with
   seg, quad and hex elements (!771, !862)
+- Fix compressible solver with NUMMODES=1 (!868)
 - Introduce equations of state to account for real gas effects (!880)
 
 **APESolver:**

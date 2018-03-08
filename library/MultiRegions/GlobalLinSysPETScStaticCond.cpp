@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File GlobalLinSys.cpp
+// File GlobalLinSysPETScStaticCond.cpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -163,14 +163,17 @@ namespace Nektar
             m_precon->BuildPreconditioner();
 
             // Do transform of Schur complement matrix
+            int cnt = 0;
             for (n = 0; n < n_exp; ++n)
             {
                 if (m_linSysKey.GetMatrixType() !=
                         StdRegions::eHybridDGHelmBndLam)
                 {
                     DNekScalMatSharedPtr mat = m_S1Blk->GetBlock(n, n);
-                    DNekScalMatSharedPtr t = m_precon->TransformedSchurCompl(n, mat);
+                    DNekScalMatSharedPtr t = m_precon->TransformedSchurCompl(
+                                                             n, cnt, mat);
                     m_schurCompl->SetBlock(n, n, t);
+                    cnt += mat->GetRows();
                 }
             }
 
@@ -303,14 +306,14 @@ namespace Nektar
             }
         }
 
-        void GlobalLinSysPETScStaticCond::v_BasisTransform(
+        void GlobalLinSysPETScStaticCond::v_BasisFwdTransform(
             Array<OneD, NekDouble>& pInOut,
             int                     offset)
         {
             m_precon->DoTransformToLowEnergy(pInOut, offset);
         }
 
-        void GlobalLinSysPETScStaticCond::v_BasisInvTransform(
+        void GlobalLinSysPETScStaticCond::v_BasisBwdTransform(
             Array<OneD, NekDouble>& pInOut)
         {
             m_precon->DoTransformFromLowEnergy(pInOut);

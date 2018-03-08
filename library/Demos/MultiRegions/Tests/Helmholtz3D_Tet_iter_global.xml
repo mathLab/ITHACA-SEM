@@ -334,7 +334,6 @@
         <PARAMETERS>
             <P> Lambda = 1 </P>
         </PARAMETERS>
-
         <VARIABLES>
             <V ID="0"> u </V>
         </VARIABLES>

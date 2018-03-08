@@ -202,9 +202,6 @@ OperatorKey PhysDeriv_StdMat::m_typeArr[] =
         OperatorKey(eTetrahedron,   ePhysDeriv, eStdMat, false),
         PhysDeriv_StdMat::create, "PhysDeriv_StdMat_Tet"),
     GetOperatorFactory().RegisterCreatorFunction(
-        OperatorKey(eTetrahedron,   ePhysDeriv, eStdMat, false),
-        PhysDeriv_StdMat::create, "PhysDeriv_StdMat_Tet"),
-    GetOperatorFactory().RegisterCreatorFunction(
         OperatorKey(eTetrahedron,   ePhysDeriv, eStdMat, true),
         PhysDeriv_StdMat::create, "PhysDeriv_StdMat_NodalTet"),
     GetOperatorFactory().RegisterCreatorFunction(
@@ -218,7 +215,10 @@ OperatorKey PhysDeriv_StdMat::m_typeArr[] =
         PhysDeriv_StdMat::create, "PhysDeriv_StdMat_NodalPrism"),
     GetOperatorFactory().RegisterCreatorFunction(
         OperatorKey(eHexahedron,    ePhysDeriv, eStdMat, false),
-        PhysDeriv_StdMat::create, "PhysDeriv_StdMat_Hex")
+        PhysDeriv_StdMat::create, "PhysDeriv_StdMat_Hex"),
+    GetOperatorFactory().RegisterCreatorFunction(
+        OperatorKey(ePyramid, ePhysDeriv, eSumFac, false),
+        PhysDeriv_StdMat::create, "PhysDeriv_SumFac_Pyr")
 };
 
 
@@ -1751,7 +1751,6 @@ OperatorKey PhysDeriv_SumFac_Pyr::m_typeArr[] = {
         OperatorKey(ePyramid, ePhysDeriv, eSumFac, false),
         PhysDeriv_SumFac_Pyr::create, "PhysDeriv_SumFac_Pyr")
 };
-
 
 }
 }

@@ -9,10 +9,11 @@ using namespace Nektar::LibUtilities;
  */
 void export_ShapeType()
 {
-    py::enum_<ShapeType> tmp("ShapeType");
+    /*py::enum_<ShapeType> tmp("ShapeType");
     for (int i = 0; i < (int)SIZE_ShapeType; ++i)
     {
         tmp.value(ShapeTypeMap[i], (ShapeType) i);
     }
-    tmp.export_values();
+    tmp.export_values();*/
+    NEKPY_WRAP_ENUM(ShapeType, ShapeTypeMap)
 }

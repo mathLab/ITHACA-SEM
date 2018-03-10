@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<NEKTAR>
+    <EXPANSIONS>
+        <E COMPOSITE="C[0]" BASISTYPE="Modified_A,Modified_A" NUMMODES="6,6"
+           POINTSTYPE="GaussLobattoLegendre,GaussLobattoLegendre" NUMPOINTS="12,12"
+           FIELDS="rho,rhou,rhov,E" />
+    </EXPANSIONS>
+
+   <CONDITIONS>
+        <PARAMETERS>
+            <!-- Simulation parameters -->
+            <P> CFL            = 0.1                </P>
+            <P> NumSteps       = 1000               </P>
+            <P> IO_InfoSteps   = 1000               </P>
+            <P> IO_CheckSteps  = 0                  </P>
+            <P> SteadyStateTol = 1e-8               </P>
+            <!-- Fluid Properties -->
+            <P> Gamma          = 1.4                </P>
+            <P> GasConstant    = 287.058            </P>
+
+            <!-- Parameters for boundary conditions -->
+            <P> pIn            = 1e5                </P>
+            <P> TIn            = 288                </P>
+            <P> MachIn         = 0.01                </P>
+
+            <P> rhoIn         = pIn/(GasConstant*TIn) </P>
+            <P> cIn           = sqrt(Gamma*pIn/rhoIn) </P>
+            <P> vIn           = MachIn*cIn            </P>
+
+            <!-- Reference state -->
+            <P> rhoInf         = rhoIn              </P>
+            <P> pInf           = pIn                </P>
+            <P> vInf           = vIn                </P>
+            <P> uInf           = 0                  </P>
+
+            <!-- Viscous parameters -->
+            <P> Re             = 1e2                </P>
+            <P> Pr             = 0.72               </P>
+            <P> mu             = rhoIn*vIn*2 / Re   </P>
+       </PARAMETERS>
+        
+        <SOLVERINFO>
+            <I PROPERTY="EQTYPE" VALUE="NavierStokesCFEAxisym" />
+            <I PROPERTY="Projection" VALUE="DisContinuous" />
+            <I PROPERTY="AdvectionType" VALUE="WeakDG" />
+            <I PROPERTY="TimeIntegrationMethod" VALUE="ForwardEuler" />
+            <I PROPERTY="UpwindType"  VALUE="HLLC"/>
+            <I PROPERTY="ExponentialFiltering"  VALUE="True"/>
+        </SOLVERINFO>
+
+        <VARIABLES>
+            <V ID="0"> rho </V>
+            <V ID="1"> rhou </V>
+            <V ID="2"> rhov </V>
+            <V ID="3"> E </V>
+        </VARIABLES>
+
+        <BOUNDARYREGIONS>
+            <B ID="0"> C[1] </B>
+            <B ID="1"> C[2] </B>
+            <B ID="2"> C[3] </B>
+            <B ID="3"> C[4] </B>
+        </BOUNDARYREGIONS>
+
+        <BOUNDARYCONDITIONS>
+            <REGION REF="0">
+                <D VAR="rho" USERDEFINEDTYPE="Symmetry" VALUE="0" />
+                <D VAR="rhou" USERDEFINEDTYPE="Symmetry" VALUE="0" />
+                <D VAR="rhov" USERDEFINEDTYPE="Symmetry" VALUE="0" />
+                <D VAR="E" USERDEFINEDTYPE="Symmetry" VALUE="0" />
+            </REGION>
+            <REGION REF="1">
+                <D VAR="rho" USERDEFINEDTYPE="WallAdiabatic" VALUE="0" />
+                <D VAR="rhou" USERDEFINEDTYPE="WallAdiabatic" VALUE="0" />
+                <D VAR="rhov" USERDEFINEDTYPE="WallAdiabatic" VALUE="0" />
+                <D VAR="E" USERDEFINEDTYPE="WallAdiabatic" VALUE="0" />
+            </REGION>
+            <REGION REF="2">
+                <D VAR="rho"  VALUE="rhoIn" />
+                <D VAR="rhou" VALUE="0" />
+                <D VAR="rhov" VALUE="rhoIn*vIn*(1-x*x)" />
+                <D VAR="E"    VALUE="(pIn - 4*y*vIn*mu)/(Gamma-1) + 0.5*rhoIn*vIn*(1-x*x)*vIn*(1-x*x)" />
+            </REGION>
+            <REGION REF="3">
+                <D VAR="rho"  VALUE="rhoIn" />
+                <D VAR="rhou" VALUE="0" />
+                <D VAR="rhov" VALUE="rhoIn*vIn*(1-x*x)" />
+                <D VAR="E"    VALUE="(pIn - 4*y*vIn*mu)/(Gamma-1) + 0.5*rhoIn*vIn*(1-x*x)*vIn*(1-x*x)" />
+            </REGION>
+        </BOUNDARYCONDITIONS>
+
+        <!-- Exact solution for incompressible flow -->
+        <FUNCTION NAME="InitialConditions">
+            <E VAR="rho" VALUE="rhoIn" />
+            <E VAR="rhou" VALUE="0" />
+            <E VAR="rhov" VALUE="rhoIn*vIn*(1-x*x)" />
+            <E VAR="E" VALUE="(pIn - 4*y*vIn*mu)/(Gamma-1) + 0.5*rhoIn*vIn*(1-x*x)*vIn*(1-x*x)" />
+        </FUNCTION>
+
+        <FUNCTION NAME="ExactSolution">
+            <E VAR="rho" VALUE="rhoIn" />
+            <E VAR="rhou" VALUE="0" />
+            <E VAR="rhov" VALUE="rhoIn*vIn*(1-x*x)" />
+            <E VAR="E" VALUE="(pIn - 4*y*vIn*mu)/(Gamma-1) + 0.5*rhoIn*vIn*(1-x*x)*vIn*(1-x*x)" />
+        </FUNCTION>
+
+    </CONDITIONS>
+
+   <FORCING>
+       <FORCE TYPE="AxiSymmetric">
+       </FORCE>
+    </FORCING>
+
+    <GEOMETRY DIM="2" SPACE="2">
+        <VERTEX COMPRESSED="B64Z-LittleEndian" BITSIZE="64">eJzjY8APOFF4H+zxq4bJqzjARLiwqkPIc0Dp74v/A8F9DPPZ0cy3vA5SxwzXz4omP+keSF4YLs+MJu/xHiQvC5dnhNJlHiDyAYb7udHc8+s/qn4eNPnf/1Ht58Uqj3A/E5S+oQWxf/F3VPNZoLQVL0Qe4n6E+WxQ2vg+JPxmvUY1HwBmH050</VERTEX>
+        <EDGE COMPRESSED="B64Z-LittleEndian" BITSIZE="64">eJx1kDkOgDAMBMNNuI/w/6/SMAUj2c1qrM3Gdkr/qgKtA20CpVr54S7gXkzeID++UYwvi8mbgvezmPdLkLd+yn3I3cTk7mLucajPf6eYvS/1meMWs19Rn/keMXu/f58CDgAA</EDGE>
+        <ELEMENT>
+            <Q COMPRESSED="B64Z-LittleEndian" BITSIZE="64">eJx1zkcOwCAQwEBSgHRS///VXMwhlsJlJK+0bAjf12CL3U/vMWLSvPaMA47aW/uEMy76Z8UNi+6K6jse2pPUT7x0b1a/8dG9L50oAVwA</Q>
+        </ELEMENT>
+        <CURVED COMPRESSED="B64Z-LittleEndian" BITSIZE="64">
+            <E>eJx106kSwjAARdGyl7WsMwgEAoFAIBAIBAKBQCD4/29B8K65Q2LetDmZTl+SqvqNTbJb/R+LZCu5Lnie8e3kquBr+U5yWfATeX/Pfq75nt7b81/4vtbZb+UHWme/k6/l7PfywyQ92R/kR0n2wf4oP9a8/Ume/eBc2J/lp0l6sr/Iz5LuiXGVb5L0ZH+T5xzQk/1d3j3ZP+Q4x/Rk/5TnntCT/Uue80pP9m957jk92X/kv81dBzkA</E>
+            <DATAPOINTS ID="0">
+                <INDEX>eJxd0EcCwjAMRFFDaKGGntB7ryHU+x+MBV8Lxpu3kEa25dzvpDCNHmYwizn3f6yexwL6WMQSliVn9QpWsYYB1rEhOetrYgvbYge7GGKEPezLXOsb4BBHkh/jRHLWN8UZzsUFLmWuvWOFa/TFDW5xJ+7xgLYXyx/xhJ54xgtexRhvcq/9L8E7PsQnvjAQ3/hB288XB2cI/gAA</INDEX>
+                <POINTS>eJx9lUtME1EUhisVqKg8RKyCQOVRFVCEIkgXDDtIl4omEEJcmC50ZWKRuDTGhYkQdWGCJi4ISmTBikeCumNlXBLEBCgGFgoJtTZpWmNqb8+ZO/OfEs9ivky/zrn/vTN3xuH4fx1gBrzX07VkSJ/DfFqh/HKWdzLjE6l0bWT5g+L8j/pbytltnucKn/j4Pl1J3SdP+Juryv/UPp85YlD+lgT2d4FfNm5F0R9i+jYo//gO+oJ985dqf1h415TKV6z9EemnlS/Q/qg57yDlv5PE/oXMeJDyr8bQFzH9mUZho3cPfbEYP9M+Val9ifAfMvnKtT8m/KcbKodb+1Kmd0j9vm3M/cDxj5v/m6H7Vr+Fvgy6R4zn6+hPCO/y4/hu4QMvMP9J4Wl9rPmfYn5tUMewMRFHX85MeMg/eoP9K8w+bvLBHsx3Woz/a1Jd79G+UnjvVXV9jfZVwhPrtK9mbt+l9f8Ww/weZnSB1r8kiv4M8+GSfV9Z/WuYg4+pv/S1zOFedQxn+Trmyy7ykWs4v3rmfBv5zXe4Pl7mgJN89WvcX2eZsSjt391nuL/OMYMByv9lC/f3eaZvkubvXEff4LBXxOhcQd8o/Nowjt8k/PcnmP8CM/SZ8ofG8P13kTk3T35kDN9/zcypdvv9seoSs+8VXmdWi8gnfavwiw+wj0/4/nuYv435e9b+/bCej8vM2Kz9+2P5dhlI+A5hyvrw+boi/Vt8vjqZ90dp/Na/uD/8zNAo5b+dRP8PBalp/QAA</POINTS>
+            </DATAPOINTS>
+        </CURVED>
+        <COMPOSITE>
+            <C ID="0"> Q[0-7] </C>
+            <C ID="1"> E[14,16,18,20] </C>
+            <C ID="2"> E[12,9,6,3] </C>
+            <C ID="3"> E[21,11] </C>
+            <C ID="4"> E[0,13] </C>
+        </COMPOSITE>
+        <DOMAIN> C[0] </DOMAIN>
+    </GEOMETRY>
+
+</NEKTAR>
+

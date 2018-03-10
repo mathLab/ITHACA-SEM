@@ -127,7 +127,8 @@ namespace Nektar
                 GetBlockTransposedTransformationMatrix() const;
 
             inline DNekScalMatSharedPtr TransformedSchurCompl(
-                int offset, const std::shared_ptr<DNekScalMat > &loc_mat);
+                   int offset, int bndoffset, 
+                   const std::shared_ptr<DNekScalMat > &loc_mat);
 
 	protected:
             const std::weak_ptr<GlobalLinSys>   m_linsys;
@@ -137,7 +138,8 @@ namespace Nektar
             LibUtilities::CommSharedPtr         m_comm;
 
             virtual DNekScalMatSharedPtr v_TransformedSchurCompl(
-                int offset, const std::shared_ptr<DNekScalMat > &loc_mat);
+                        int offset, int bndoffset,
+                        const std::shared_ptr<DNekScalMat > &loc_mat);
 
 
 	private:
@@ -195,9 +197,10 @@ namespace Nektar
          *
          */ 
         inline DNekScalMatSharedPtr Preconditioner::TransformedSchurCompl(
-            int offset, const std::shared_ptr<DNekScalMat > &loc_mat)
+                            int offset, int bndoffset,
+                            const std::shared_ptr<DNekScalMat > &loc_mat)
         {
-            return v_TransformedSchurCompl(offset,loc_mat);
+            return v_TransformedSchurCompl(offset,bndoffset,loc_mat);
         }
 
         /**

@@ -45,7 +45,9 @@ namespace Nektar
             AverageSolver::create,
             "Average Value Riemann solver");
 
-    AverageSolver::AverageSolver() : NonlinearSWESolver()
+    AverageSolver::AverageSolver(
+        const LibUtilities::SessionReaderSharedPtr& pSession)
+        : NonlinearSWESolver(pSession)
     {
 
     }

@@ -124,6 +124,25 @@ bool FaceMesh::ValidateCurves()
     return error;
 }
 
+void FaceMesh::ValidateLoops()
+{
+    OrientateCurves();
+
+    for (int i = 0; i < orderedLoops.size(); i++)
+    {
+        int numPoints = orderedLoops[i].size();
+        if(numPoints == 2)
+        {
+            //force a remesh of the curves
+            for(int j = 0; j < m_edgeloops[i]->edges.size(); j++)
+            {
+                int cid = m_edgeloops[i]->edges[j]->GetId();
+                m_curvemeshes[cid]->ReMesh();
+            }
+        }
+    }
+}
+
 void FaceMesh::Mesh()
 {
     Stretching();
@@ -151,7 +170,7 @@ void FaceMesh::Mesh()
         }
     }
 
-    ASSERTL0(numPoints > 2, ss.str());
+    ASSERTL0(numPoints > 2, "number of verts in face is less than 3");
 
     // create interface to triangle thirdparty library
     TriangleInterfaceSharedPtr pplanemesh =
@@ -350,7 +369,7 @@ void FaceMesh::Smoothing()
                     Array<OneD, NekDouble> locd = m_cadsurf->P(ud);
                     NodeSharedPtr dn = std::shared_ptr<Node>(
                         new Node(0, locd[0], locd[1], locd[2]));
-                    dn->SetCADSurf(m_id, m_cadsurf, ud);
+                    dn->SetCADSurf(m_cadsurf, ud);
 
                     nodesystem.push_back(dn);
                     lamp.push_back(lambda[0]);
@@ -1147,7 +1166,7 @@ void FaceMesh::AddNewPoint(Array<OneD, NekDouble> uv)
 
     if (add)
     {
-        n->SetCADSurf(m_id, m_cadsurf, uv);
+        n->SetCADSurf(m_cadsurf, uv);
         m_stienerpoints.push_back(n);
     }
 }

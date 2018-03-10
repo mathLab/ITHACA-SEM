@@ -12,7 +12,7 @@ static double solutionfourier(double x, int order, double a, double b);
 static double deriv_solutionpoly(double x, int order);
 static double deriv_solutionfourier(double x, int order, double a, double b);
 
-// This routine projects a polynomial or trigonmetric functions which 
+// This routine projects a polynomial or trigonmetric functions which
 // has energy in all mdoes of the expansions and report an error.
 
 int main(int argc, char *argv[])
@@ -63,7 +63,7 @@ int main(int argc, char *argv[])
     x[1]  =   atof(argv[5]);
 
     Array<OneD,NekDouble> sol(nq);
-    
+
     if(btype== LibUtilities::eFourier)
 	{
 		Qtype = LibUtilities::eFourierEvenlySpaced;
@@ -81,8 +81,8 @@ int main(int argc, char *argv[])
     // Define a segment expansion based on basis definition
     SpatialDomains::PointGeomSharedPtr  vert1(new SpatialDomains::PointGeom(1,0,x[0],0,0));
     SpatialDomains::PointGeomSharedPtr  vert2(new SpatialDomains::PointGeom(1,0,x[1],0,0));
-    SpatialDomains::SegGeomSharedPtr geom(new SpatialDomains::SegGeom(0,vert1,vert2));
-    geom->SetOwnData();
+    SpatialDomains::PointGeomSharedPtr pts[2] = {vert1,vert2};
+    SpatialDomains::SegGeomSharedPtr geom(new SpatialDomains::SegGeom(0,1,pts));
 
     const LibUtilities::PointsKey Pkey(nq,Qtype);
     const LibUtilities::BasisKey Bkey(btype,order,Pkey);
@@ -90,7 +90,7 @@ int main(int argc, char *argv[])
     //-----------------------------------------------
 
     //----------------------------------------------
-    // Define solution to be projected 
+    // Define solution to be projected
     Array<OneD,NekDouble> xc(nq);
 
     E->GetCoords(xc);
@@ -122,11 +122,11 @@ int main(int argc, char *argv[])
     Array<OneD, NekDouble> phys(nq);
     E->FwdTrans(sol, coeffs);
     //---------------------------------------------
-    
+
     //-------------------------------------------
     // Backward Transform Solution to get projected values
     E->BwdTrans(coeffs, phys);
-    //-------------------------------------------  
+    //-------------------------------------------
 
     //-------------------------------------------------
     // Define derivative of the solution
@@ -147,7 +147,7 @@ int main(int argc, char *argv[])
     //---------------------------------------------------
 
     //--------------------------------------------
-    // Calculate L_inf error 
+    // Calculate L_inf error
     cout << "L infinity error: " << E->Linf(phys, sol) << endl;
     cout << "L 2 error:        " << E->L2  (phys, sol) << endl;
     //--------------------------------------------

@@ -130,7 +130,7 @@ void NodeOpti1D3D::Optimise()
         else
         {
             m_minJac = minJacNew;
-            m_node->MoveCurve(p, curve->GetId(), nt);
+            m_node->Move(p, curve->GetId(), nt);
         }
         mtx.lock();
         m_res->val = max(sqrt((m_node->m_x - xc) * (m_node->m_x - xc) +

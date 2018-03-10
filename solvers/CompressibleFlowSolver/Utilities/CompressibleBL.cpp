@@ -66,8 +66,7 @@
 #include <LibUtilities/Communication/Comm.h>
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 
-#include <SpatialDomains/MeshGraph2D.h>
-#include <SpatialDomains/MeshGraph3D.h>
+#include <SpatialDomains/MeshGraph.h>
 
 #include <SolverUtils/SolverUtilsDeclspec.h>
 
@@ -405,9 +404,6 @@ int main(int argc, char *argv[])
 
     if (expdim == 2)
     {
-        graphShPt = MemoryManager<SpatialDomains::MeshGraph2D>
-            ::AllocateSharedPtr(vSession);
-
         MultiRegions::ContField2DSharedPtr Domain;
         Domain = MemoryManager<MultiRegions::ContField2D>
             ::AllocateSharedPtr(vSession, graphShPt,
@@ -431,9 +427,6 @@ int main(int argc, char *argv[])
     }
     else if (expdim == 3)
     {
-        graphShPt = MemoryManager<SpatialDomains::MeshGraph3D>
-            ::AllocateSharedPtr(vSession);
-
         MultiRegions::ContField3DSharedPtr Domain;
         Domain = MemoryManager<MultiRegions::ContField3D>
             ::AllocateSharedPtr(vSession, graphShPt, vSession->GetVariable(0));
@@ -707,9 +700,6 @@ int main(int argc, char *argv[])
     string file_name;
     if (expdim == 2)
     {
-        graphShPt = MemoryManager<SpatialDomains::MeshGraph2D>
-            ::AllocateSharedPtr(vSession);
-
         MultiRegions::ContField2DSharedPtr Domain;
         Domain = MemoryManager<MultiRegions::ContField2D>
             ::AllocateSharedPtr(vSession, graphShPt, vSession->GetVariable(0));
@@ -805,9 +795,6 @@ int main(int argc, char *argv[])
     }
     else if (expdim == 3)
     {
-        graphShPt = MemoryManager<SpatialDomains::MeshGraph3D>
-            ::AllocateSharedPtr(vSession);
-
         MultiRegions::ContField3DSharedPtr Domain;
         Domain = MemoryManager<MultiRegions::ContField3D>
             ::AllocateSharedPtr(vSession, graphShPt, vSession->GetVariable(0));

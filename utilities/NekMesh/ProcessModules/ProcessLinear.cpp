@@ -264,7 +264,7 @@ bool ProcessLinear::Invalid(ElementSharedPtr el, NekDouble thr)
     SpatialDomains::GeometrySharedPtr geomL = elL->GetGeom(m_mesh->m_spaceDim);
     SpatialDomains::GeomFactorsSharedPtr gfacL = geomL->GetGeomFactors();
 
-    LibUtilities::PointsKeyVector p = geom->GetPointsKeys();
+    LibUtilities::PointsKeyVector p = geom->GetXmap()->GetPointsKeys();
     SpatialDomains::DerivStorage deriv = gfac->GetDeriv(p);
     SpatialDomains::DerivStorage derivL = gfacL->GetDeriv(p);
     const int pts = deriv[0][0].num_elements();

@@ -36,6 +36,7 @@
 #ifndef NEKTAR_SOLVERUTILS_RIEMANNSOLVER
 #define NEKTAR_SOLVERUTILS_RIEMANNSOLVER
 
+#include <LibUtilities/BasicUtils/SessionReader.h>
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
 #include <LibUtilities/LinearAlgebra/NekTypeDefs.hpp>
 #include <SolverUtils/SolverUtilsDeclspec.h>
@@ -156,7 +157,8 @@ namespace Nektar
             /// Rotation storage
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > > m_rotStorage;
 
-            SOLVER_UTILS_EXPORT RiemannSolver();
+            SOLVER_UTILS_EXPORT RiemannSolver(
+                const LibUtilities::SessionReaderSharedPtr& pSession);
 
             virtual void v_Solve(
                 const int                                         nDim,
@@ -191,7 +193,8 @@ namespace Nektar
         typedef std::shared_ptr<RiemannSolver> RiemannSolverSharedPtr;
         /// Datatype of the NekFactory used to instantiate classes derived
         /// from the RiemannSolver class.
-        typedef LibUtilities::NekFactory<std::string, RiemannSolver>
+        typedef LibUtilities::NekFactory<std::string, RiemannSolver,
+                                const LibUtilities::SessionReaderSharedPtr&>
             RiemannSolverFactory;
         SOLVER_UTILS_EXPORT RiemannSolverFactory& GetRiemannSolverFactory();
     }

@@ -52,10 +52,11 @@ public:
 
     /// Creates an instance of this class
     static DriverSharedPtr create(
-        const LibUtilities::SessionReaderSharedPtr &pSession)
+        const LibUtilities::SessionReaderSharedPtr &pSession,
+        const SpatialDomains::MeshGraphSharedPtr& pGraph)
     {
         DriverSharedPtr p =
-            MemoryManager<DriverAdaptive>::AllocateSharedPtr(pSession);
+            MemoryManager<DriverAdaptive>::AllocateSharedPtr(pSession, pGraph);
         p->InitObject();
         return p;
     }
@@ -66,7 +67,8 @@ public:
 protected:
     /// Constructor
     SOLVER_UTILS_EXPORT DriverAdaptive(
-        const LibUtilities::SessionReaderSharedPtr pSession);
+        const LibUtilities::SessionReaderSharedPtr pSession,
+        const SpatialDomains::MeshGraphSharedPtr pGraph);
 
     /// Destructor
     SOLVER_UTILS_EXPORT virtual ~DriverAdaptive();

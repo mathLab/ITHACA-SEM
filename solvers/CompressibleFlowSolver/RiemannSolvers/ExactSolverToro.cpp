@@ -46,7 +46,9 @@ namespace Nektar
             ExactSolverToro::create,
             "Exact Riemann solver");
 
-    ExactSolverToro::ExactSolverToro() : CompressibleSolver()
+    ExactSolverToro::ExactSolverToro(
+        const LibUtilities::SessionReaderSharedPtr& pSession)
+        : CompressibleSolver(pSession)
     {
 
     }

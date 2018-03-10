@@ -37,8 +37,6 @@
 #include <LocalRegions/Expansion.h>
 #include <LocalRegions/MatrixKey.h>
 
-#include <SpatialDomains/MeshComponents.h>
-
 using namespace std;
 
 namespace Nektar
@@ -150,6 +148,12 @@ namespace Nektar
             v_DGDeriv(dir, inarray, EdgeExp, coeffs, outarray);
         }
 
+        NekDouble Expansion::VectorFlux(
+            const Array<OneD, Array<OneD, NekDouble > > &vec)
+        {
+            return v_VectorFlux(vec);
+        }
+
         DNekScalMatSharedPtr Expansion::GetLocMatrix(const StdRegions::MatrixType mtype,
                     const StdRegions::ConstFactorMap &factors,
                     const StdRegions::VarCoeffMap &varcoeffs)
@@ -240,7 +244,7 @@ namespace Nektar
 
             for (int i = 0; i < expDim; ++i)
             {
-                CBasis[i] = m_geom->GetBasis(i);
+                CBasis[i] = m_geom->GetXmap()->GetBasis(i);
                 nqGeom   *= CBasis[i]->GetNumPoints();
                 doCopy    = doCopy && m_base[i]->GetBasisKey().SamePoints(
                                                       CBasis[i]->GetBasisKey());
@@ -363,6 +367,13 @@ namespace Nektar
                   Array<OneD,             NekDouble>   &outarray)
         {
             NEKERROR(ErrorUtil::efatal, "This function is only valid for LocalRegions");
+        }
+
+        NekDouble Expansion::v_VectorFlux(
+            const Array<OneD, Array<OneD, NekDouble > > &vec)
+        {
+            NEKERROR(ErrorUtil::efatal, "This function is only valid for LocalRegions");
+            return 0.0;
         }
     } //end of namespace
 } //end of namespace

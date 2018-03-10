@@ -1,6 +1,6 @@
 #include <MultiRegions/ExpList1D.h>
 #include <LibUtilities/Kernel/kernel.h>
-#include <SpatialDomains/MeshGraph1D.h>
+#include <SpatialDomains/MeshGraph.h>
 
 using namespace std;
 using namespace Nektar;
@@ -18,7 +18,7 @@ int main(int argc, char *argv[])
 	}
 	/************************* Mesh File ***********************/
 	// Read the mesh
-    SpatialDomains::MeshGraphSharedPtr graph1D = MemoryManager<SpatialDomains::MeshGraph1D>::AllocateSharedPtr(vSession);
+    SpatialDomains::MeshGraphSharedPtr graph1D = SpatialDomains::MeshGraph::Read(vSession);
 
 	/***********************************************************/
 

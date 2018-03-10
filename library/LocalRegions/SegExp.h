@@ -68,7 +68,7 @@ namespace Nektar
             //----------------------------
             LOCAL_REGIONS_EXPORT virtual NekDouble v_Integral(
                     const Array<OneD, const NekDouble>& inarray);
-			
+
             //-----------------------------
             // Differentiation Methods
             //-----------------------------
@@ -193,8 +193,6 @@ namespace Nektar
 
             LOCAL_REGIONS_EXPORT virtual void v_ComputeVertexNormal(
                  const int vertex);
-
-            LOCAL_REGIONS_EXPORT virtual StdRegions::Orientation v_GetPorient(int point);
 
             LOCAL_REGIONS_EXPORT virtual SpatialDomains::GeomType  v_MetricInfoType();
 

@@ -64,11 +64,12 @@ public:
     bool LoadCAD();
 
     Array<OneD, NekDouble> GetBoundingBox();
-    
+
     TopoDS_Shape GetShape()
     {
         return shape;
     }
+
 
 private:
     /// Function to add curve to CADSystem::m_verts.
@@ -85,7 +86,7 @@ private:
     TopTools_IndexedMapOfShape mapOfVerts, mapOfEdges, mapOfFaces;
 };
 
-typedef boost::shared_ptr<CADSystemOCE> CADSystemOCESharedPtr;
+typedef std::shared_ptr<CADSystemOCE> CADSystemOCESharedPtr;
 
 
 }

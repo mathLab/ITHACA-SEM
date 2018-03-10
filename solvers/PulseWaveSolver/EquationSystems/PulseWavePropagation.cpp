@@ -54,8 +54,10 @@ namespace Nektar
 	 *    {\partial x}, \mathbf{\psi}^{\delta}  \right)_{\Omega_e} + \left[ \mathbf{\psi}^{\delta} 
 	 *    \cdot \{ \mathbf{F}^u - \mathbf{F}(\mathbf{U}^{\delta}) \} \right]_{x_e^l}^{x_eû} \right] = 0 \f$
      */ 
-    PulseWavePropagation::PulseWavePropagation(const LibUtilities::SessionReaderSharedPtr& pSession)
-	: PulseWaveSystem(pSession)
+    PulseWavePropagation::PulseWavePropagation(
+        const LibUtilities::SessionReaderSharedPtr& pSession,
+        const SpatialDomains::MeshGraphSharedPtr& pGraph)
+        : PulseWaveSystem(pSession, pGraph)
     {
     }
 
@@ -75,6 +77,43 @@ namespace Nektar
         {
             ASSERTL0(false, "Implicit Pulse Wave Propagation not set up.");
         }
+
+        // Create advection object
+        string advName;
+        string riemName;
+        switch(m_upwindTypePulse)
+        {
+        case eUpwindPulse:
+            {
+                advName  = "WeakDG";
+                riemName = "UpwindPulse";
+            }
+            break;
+        default:
+            {
+                ASSERTL0(false,"populate switch statement for upwind flux");
+            }
+            break;
+        }
+        m_advObject = SolverUtils::
+            GetAdvectionFactory().CreateInstance(advName, advName);
+        m_advObject->SetFluxVector(
+            &PulseWavePropagation::GetFluxVector, this);
+        m_riemannSolver = SolverUtils::
+            GetRiemannSolverFactory().CreateInstance(riemName, m_session);
+        m_riemannSolver->SetScalar(
+            "A0", &PulseWavePropagation::GetA0, this);
+        m_riemannSolver->SetScalar(
+            "beta", &PulseWavePropagation::GetBeta, this);
+        m_riemannSolver->SetScalar(
+            "N", &PulseWavePropagation::GetN, this);
+        m_riemannSolver->SetParam (
+            "rho",&PulseWavePropagation::GetRho, this);
+        m_riemannSolver->SetParam (
+            "pext",&PulseWavePropagation::GetPext, this);
+
+        m_advObject->SetRiemannSolver(m_riemannSolver);
+        m_advObject->InitObject(m_session, m_fields);
     }
 
     PulseWavePropagation::~PulseWavePropagation()
@@ -86,9 +125,8 @@ namespace Nektar
      *  Computes the right hand side of (1). The RHS is everything
      *  except the term that contains the time derivative
      *  \f$\frac{\partial \mathbf{U}}{\partial t}\f$. In case of a
-     *  Discontinuous Galerkin projection, the routine WeakDGAdvection
-     *  will be called which then calls v_GetFluxVector and
-     *  v_NumericalFlux implemented in the PulseWavePropagation class.
+     *  Discontinuous Galerkin projection, m_advObject->Advect
+     *  will be called 
      *
      */
     void PulseWavePropagation::DoOdeRhs(const Array<OneD, const  Array<OneD, NekDouble> >&inarray,
@@ -98,48 +136,45 @@ namespace Nektar
         int i;
             
         Array<OneD, Array<OneD, NekDouble> > physarray(m_nVariables);
-        Array<OneD, Array<OneD, NekDouble> > modarray (m_nVariables);
-	
-	Array<OneD, NekDouble> tmpArray;
+
+        // Dummy array for WeakDG advection
+        Array<OneD, Array<OneD, NekDouble> > advVel(m_spacedim);
+
+        // Output array for advection
+        Array<OneD, Array<OneD, NekDouble> > out(m_nVariables);
 
         int cnt = 0;
 
         // Set up Inflow and Outflow boundary conditions. 
         SetPulseWaveBoundaryConditions(inarray, outarray, time);
-    
+
         // Set up any interface conditions and write into boundary condition
         EnforceInterfaceConditions(inarray);
-        
+
         // do advection evauation in all domains
         for(int omega=0; omega < m_nDomains; ++omega)
         {
             m_currentDomain = omega;
             int nq = m_vessels[omega*m_nVariables]->GetTotPoints();
-            int ncoeffs = m_vessels[omega*m_nVariables]->GetNcoeffs();
             
             for (i = 0; i < m_nVariables; ++i)
             {
                 physarray[i] = inarray[i]+cnt;
-                modarray[i]  = Array<OneD, NekDouble>(ncoeffs);
+                out[i]       = outarray[i]+cnt;
             }
 
             for(i = 0; i < m_nVariables; ++i)
             {
                 m_fields[i] = m_vessels[omega*m_nVariables+ i];
             }
-            
-            WeakDGAdvection(physarray, modarray, true, true);
-            
+
+            m_advObject->Advect(m_nVariables, m_fields, advVel, physarray,
+                                out, time);
             for(i = 0; i < m_nVariables; ++i)
             {
-                Vmath::Neg(ncoeffs,modarray[i],1);
-            }	  
-            
-            for(i = 0; i < m_nVariables; ++i)
-            {
-                m_vessels[omega*m_nVariables+i]->MultiplyByElmtInvMass(modarray[i],modarray[i]);
-                m_vessels[omega*m_nVariables+i]->BwdTrans(modarray[i],tmpArray = outarray[i]+cnt);
+                Vmath::Neg(nq,out[i],1);
             }
+
             cnt += nq;
         }
     }
@@ -231,160 +266,53 @@ namespace Nektar
 	 *  flux[0] = F[0] = A*u    flux[1] = F[1] = u^2/2 + p/rho
 	 *  p-A-relationship: p = p_ext + beta*(sqrt(A)-sqrt(A_0))
 	 */
-    void PulseWavePropagation::v_GetFluxVector(const int i, Array<OneD, Array<OneD, NekDouble> > &physfield,
-                                               Array<OneD, Array<OneD, NekDouble> > &flux)
+    void PulseWavePropagation::GetFluxVector(
+            const Array<OneD, Array<OneD, NekDouble> >           &physfield,
+                  Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &flux)
     {
         int nq = m_vessels[m_currentDomain*m_nVariables]->GetTotPoints();
         NekDouble p = 0.0;
         NekDouble p_t = 0.0;
-	
-        switch (i)
+
+        for (int j = 0; j < nq; j++)
         {
-        case 0:   // Flux for A equation
-            {
-                for (int j = 0; j < nq; j++)
-                {
-                    flux[0][j] = physfield[0][j]*physfield[1][j]; 
-                }
-            }
-            break;
-        case 1:  // Flux for u equation
-            {
-                for (int j = 0; j < nq; j++)
-                {
-                    ASSERTL0(physfield[0][j]>=0,"Negative A not allowed.");
+            flux[0][0][j] = physfield[0][j]*physfield[1][j];
 
-                    p = m_pext + m_beta[m_currentDomain][j]*
-                        (sqrt(physfield[0][j]) - sqrt(m_A_0[m_currentDomain][j]));
+            ASSERTL0(physfield[0][j]>=0,"Negative A not allowed.");
 
-                    p_t = (physfield[1][j]*physfield[1][j])/2 + p/m_rho;
-                    flux[0][j] =  p_t;
-                }
-            }
-            break;
-        default:
-            ASSERTL0(false,"GetFluxVector: illegal vector index");
-			break;
+            p = m_pext + m_beta[m_currentDomain][j]*
+                (sqrt(physfield[0][j]) - sqrt(m_A_0[m_currentDomain][j]));
+
+            p_t = (physfield[1][j]*physfield[1][j])/2 + p/m_rho;
+            flux[1][0][j] =  p_t;
         }
     }
     
-    
-    /**
-     *  Calculates the third term of the weak form (1): numerical flux
-     *  at boundary \f$ \left[ \mathbf{\psi}^{\delta} \cdot \{
-     *  \mathbf{F}^u - \mathbf{F}(\mathbf{U}^{\delta}) \}
-     *  \right]_{x_e^l}^{x_eû} \f$
-     */
-    void PulseWavePropagation::v_NumericalFlux(Array<OneD, Array<OneD, NekDouble> > &physfield, 
-                                               Array<OneD, Array<OneD, NekDouble> > &numflux)
-    {		
-        int i;
-        int nTracePts = GetTraceTotPoints();
-        
-        Array<OneD, Array<OneD, NekDouble> > Fwd(m_nVariables);
-        Array<OneD, Array<OneD, NekDouble> > Bwd(m_nVariables);
-        
-        for (i = 0; i < m_nVariables; ++i)
-        {
-            Fwd[i] = Array<OneD, NekDouble>(nTracePts);
-            Bwd[i] = Array<OneD, NekDouble>(nTracePts);
-        }
-	
-        // Get the physical values at the trace
-        for (i = 0; i < m_nVariables; ++i)
-        {
-            m_vessels[m_currentDomain*m_nVariables+ i]->
-                GetFwdBwdTracePhys(physfield[i],Fwd[i],Bwd[i]);
-        }
-        
-        // Solve the upwinding Riemann problem within one arterial
-        // segment by calling the upwinding Riemann solver implemented
-        // in this file
-        NekDouble Aflux, uflux;
-        for (i = 0; i < nTracePts; ++i)
-        {
-            switch(m_upwindTypePulse)
-            {
-            case eUpwindPulse:
-                {
-                    RiemannSolverUpwind(Fwd[0][i],Fwd[1][i],Bwd[0][i],Bwd[1][i],
-                                        Aflux, uflux, m_A_0_trace[m_currentDomain][i],
-                                        m_beta_trace[m_currentDomain][i],
-                                        m_trace_fwd_normal[m_currentDomain][i]);
-                }
-                break;
-            default:
-                {
-                    ASSERTL0(false,"populate switch statement for upwind flux");
-                }
-                break;
-            }
-            numflux[0][i] = Aflux;
-            numflux[1][i] = uflux;
-        }
-    }
-    
-    
-    /**
-     *  Riemann solver for upwinding at an interface between two
-     *  elements. Uses the characteristic variables for calculating
-     *  the upwinded state \f$(A_u,u_u)\f$ from the left
-     *  \f$(A_L,u_L)\f$ and right state \f$(A_R,u_R)\f$.  Returns the
-     *  upwinded flux $\mathbf{F}^u$ needed for the weak formulation
-     *  (1). Details can be found in "Pulse wave propagation in the
-     *  human vascular system", section 3.3
-     *
-     */
-    void PulseWavePropagation::RiemannSolverUpwind(NekDouble AL,NekDouble uL,
-                                                   NekDouble AR,NekDouble uR, 
-                                                   NekDouble &Aflux, 
-                                                   NekDouble &uflux, 
-                                                   NekDouble A_0, 
-                                                   NekDouble beta,
-                                                   NekDouble n)
+    Array<OneD, NekDouble> &PulseWavePropagation::GetA0()
     {
-        Array<OneD, NekDouble> W(2);
-        Array<OneD, NekDouble> upwindedphysfield(2);
-        NekDouble cL = 0.0;
-        NekDouble cR = 0.0;
-        NekDouble rho = m_rho; 
-        NekDouble pext = m_pext; 
-        NekDouble p = 0.0;
-        NekDouble p_t = 0.0;
-        
-        // Compute the wave speeds. The use of the normal here allows
-        // for the definition of the characteristics to be inverted
-        // (and hence the left and right state) if n is in the -ve
-        // x-direction. This means we end up with the positive
-        // defintion of the flux which has to therefore be multiplied
-        // by the normal at the end of the methods This is a bit of a
-        // mind twister but is efficient from a coding perspective.
-        cL = sqrt(beta*sqrt(AL)/(2*rho))*n;
-        cR = sqrt(beta*sqrt(AR)/(2*rho))*n;
+        return m_A_0_trace[m_currentDomain];
+    }
 
-        ASSERTL1(fabs(cL+cR) > fabs(uL+uR),"Conditions are not sub-sonic");
+    Array<OneD, NekDouble> &PulseWavePropagation::GetBeta()
+    {
+        return m_beta_trace[m_currentDomain];
+    }
 
-        // If upwinding from left and right for subsonic domain
-        // then know characteristics immediately
-        W[0] = uL + 4*cL;
-        W[1] = uR - 4*cR;
+    Array<OneD, NekDouble> &PulseWavePropagation::GetN()
+    {
+        return m_trace_fwd_normal[m_currentDomain];
+    }
 
-        // Calculate conservative variables from characteristics
-        NekDouble w0mw1 = 0.25*(W[0]-W[1]);
-        NekDouble fac = rho/(2*beta);
-        w0mw1 *= w0mw1; // squared
-        w0mw1 *= w0mw1; // fourth power
-        fac *= fac;     // squared
-        upwindedphysfield[0]= w0mw1*fac;
-        upwindedphysfield[1]= 0.5*(W[0] + W[1]);
+    NekDouble PulseWavePropagation::GetRho()
+    {
+        return m_rho;
+    }
 
-        // Compute the fluxes multipled by the normal. 
-        Aflux = upwindedphysfield[0] * upwindedphysfield[1]*n;
-        p = pext + beta*(sqrt(upwindedphysfield[0]) - sqrt(A_0));
-        p_t = 0.5*(upwindedphysfield[1]*upwindedphysfield[1]) + p/rho;				
-        uflux =  p_t*n;
-    }    
-    
+    NekDouble PulseWavePropagation::GetPext()
+    {
+        return m_pext;
+    }
+
     /**
      *  Print summary routine, calls virtual routine reimplemented in
      *  UnsteadySystem

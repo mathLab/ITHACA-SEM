@@ -33,7 +33,7 @@
    <CONDITIONS>
         <PARAMETERS>
             <!-- Simulation parameters -->
-            <P> CFL            = 0.8/2.784*0.2               </P>
+            <P> CFL            = 0.2               </P>
             <P> TimeStep       = 0.0               </P>
             <P> NumSteps       = 100  </P>
             <P> IO_InfoSteps   = 100                </P>

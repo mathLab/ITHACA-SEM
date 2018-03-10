@@ -39,7 +39,6 @@
 #include <LocalRegions/SegExp.h>
 #include <LocalRegions/QuadExp.h>
 #include <LocalRegions/Expansion2D.h>
-#include <SpatialDomains/MeshGraph2D.h>
 #include <LibUtilities/Foundations/ManagerAccess.h>  // for PointsManager, etc
 #include <LibUtilities/Foundations/Interp.h>
 
@@ -303,14 +302,12 @@ namespace Nektar
             // Process each composite region in domain
             for(auto &compIt : domain)
             {
-                comp = compIt.second;
-
                 // Process each expansion in the graph
-                for(j = 0; j < compIt.second->size(); ++j)
+                for(j = 0; j < compIt.second->m_geomVec.size(); ++j)
                 {
                     if((SegmentGeom = std::dynamic_pointer_cast<
                             SpatialDomains::SegGeom>(
-                                (*compIt.second)[j])))
+                                compIt.second->m_geomVec[j])))
                     {
                         // Retrieve basis key from expansion and define expansion
                         auto expIt = expansions.find(SegmentGeom->GetGlobalID());
@@ -388,12 +385,18 @@ namespace Nektar
                              const SpatialDomains::MeshGraphSharedPtr &graph2D,
                              const bool DeclareCoeffPhysArrays,
                              const std::string variable,
-                             const Collections::ImplementationType ImpType):
-            ExpList(pSession,graph2D)
+                             const LibUtilities::CommSharedPtr comm,
+                             const Collections::ImplementationType ImpType)
+            : ExpList(pSession,graph2D)
         {
             SetExpType(e1D);
 
             m_graph = graph2D;
+
+            if (comm)
+            {
+                m_comm = comm;
+            }
 
             int j, id=0;
             SpatialDomains::Composite comp;
@@ -403,19 +406,16 @@ namespace Nektar
             // Process each composite region.
             for(auto &compIt : domain)
             {
-                comp = compIt.second;
-
                 // Process each expansion in the region.
-                for(j = 0; j < compIt.second->size(); ++j)
+                for(j = 0; j < compIt.second->m_geomVec.size(); ++j)
                 {
                     if((SegmentGeom = std::dynamic_pointer_cast<
                             SpatialDomains::SegGeom>(
-                                (*compIt.second)[j])))
+                                compIt.second->m_geomVec[j])))
                     {
                         // Retrieve the basis key from the expansion.
-                        LibUtilities::BasisKey bkey = std::dynamic_pointer_cast<
-                            SpatialDomains::MeshGraph2D>(graph2D)
-                            ->GetEdgeBasisKey(SegmentGeom, variable);
+                        LibUtilities::BasisKey bkey = graph2D->GetEdgeBasisKey(
+                            SegmentGeom, variable);
 
                         seg = MemoryManager<LocalRegions::SegExp>
                                         ::AllocateSharedPtr(bkey, SegmentGeom);
@@ -512,7 +512,7 @@ namespace Nektar
 
                         seg = MemoryManager<LocalRegions::SegExp>
                                             ::AllocateSharedPtr(bkey, segGeom);
-                        edgesDone.insert(segGeom->GetEid());
+                        edgesDone.insert(segGeom->GetGlobalID());
 
                         seg->SetElmtId(elmtid++);
                         (*m_exp).push_back(seg);
@@ -530,7 +530,7 @@ namespace Nektar
                 for(j = 0; j < locexp[i]->GetNedges(); ++j)
                 {
                     segGeom = exp2D->GetGeom2D()->GetEdge(j);
-                    id      = segGeom->GetEid();
+                    id      = segGeom->GetGlobalID();
                     // Ignore Dirichlet edges
                     if (edgesDone.count(id) != 0)
                     {

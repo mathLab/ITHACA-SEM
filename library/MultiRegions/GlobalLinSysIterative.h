@@ -150,9 +150,11 @@ namespace Nektar
 
             /// Actual iterative gmres solver for one restart
             void DoGmresRestart(
-                    const int pLinSysDim,
+                    const bool                         rested,
+                    const int                          nGlobal,
                     const Array<OneD,const NekDouble> &pInput,
-                          Array<OneD,      NekDouble> &pOutput);
+                          Array<OneD,      NekDouble> &pOutput,
+                    const int                          nDir);
         };
     }
 }

@@ -64,7 +64,13 @@ namespace Nektar
             /// Global to universal unique map
             Array<OneD, int>                            m_map;
 
-            /// maximum iterations
+            /// maximum gmres restart iteration
+            int                                         m_maxrestart;
+
+            /// maximum gmres search directions for one restart(determines the max storage usage)
+            int                                         m_maxdirction;
+            
+            /// maximum iterations (for gmres m_maxiter =  m_maxrestart*m_maxdirction)
             int                                         m_maxiter;
 
             /// Tolerance of iterative solver.
@@ -84,6 +90,9 @@ namespace Nektar
 
             /// Whether to apply projection technique
             bool                                        m_useProjection;
+
+            /// Whether the iteration has been converged
+            bool                                        m_converged;
 
             /// Root if parallel
             bool                                        m_root;
@@ -138,6 +147,12 @@ namespace Nektar
             virtual void v_DoMatrixMultiply(
                     const Array<OneD, NekDouble>& pInput,
                           Array<OneD, NekDouble>& pOutput) = 0;
+
+            /// Actual iterative gmres solver for one restart
+            void DoGmresRestart(
+                    const int pLinSysDim,
+                    const Array<OneD,const NekDouble> &pInput,
+                          Array<OneD,      NekDouble> &pOutput);
         };
     }
 }

@@ -373,22 +373,96 @@ namespace Nektar
             // Get vector sizes
             int nNonDir = nGlobal - nDir;
 
+            // zero homogeneous out array ready for solution updates
+            // Should not be earlier in case input vector is same as
+            // output and above copy has been peformed
+            Vmath::Zero(nNonDir,tmp = pOutput + nDir,1);
+
+
+            if(m_rhs_magnitude == NekConstants::kNekUnsetDouble)
+            {
+                NekVector<NekDouble> inGlob (nGlobal, pInput, eWrapper);
+                Set_Rhs_Magnitude(inGlob);
+            }
+
+            m_totalIterations = 0;
+            m_converged       = false;
+            
+            for(nrestart=0,nrestart<m_maxrestart,++nrestart)
+            {
+                if(!m_converged)
+                {
+                    DoGmresRestart(nNonDir,pInput  + nDir,pOutput  + nDir);
+                }
+                else
+                {
+                    if (m_verbose && m_root)
+                    {
+                        cout << "GMRES iterations made = " << m_totalIterations 
+                             << " using tolerance of "  << m_tolerance 
+                             << " (error = " << sqrt(eps/m_rhs_magnitude) 
+                             << ", rhs_mag = " << sqrt(m_rhs_magnitude) <<  ")" 
+                             << endl;
+                    }
+                    return;
+                }
+            }
+
+
+            if (m_root)
+            {
+                cout << "GMRES iterations made = " << m_totalIterations 
+                     << " using tolerance of "  << m_tolerance 
+                     << " (error = " << sqrt(eps/m_rhs_magnitude)
+                     << ", rhs_mag = " << sqrt(m_rhs_magnitude) <<  ")"
+                     << endl;
+            }
+            ROOTONLY_NEKERROR(ErrorUtil::efatal,
+                              "Exceeded maximum number of iterations");
+
+        }
+
+
+        /**  
+         * Solve a global linear system using the conjugate gradient method.  
+         * We solve only for the non-Dirichlet modes. The operator is evaluated  
+         * using an auxiliary function v_DoMatrixMultiply defined by the  
+         * specific solver. Distributed math routines are used to support  
+         * parallel execution of the solver.  
+         *  
+         * The implemented algorithm uses a reduced-communication reordering of  
+         * the standard PCG method (Demmel, Heath and Vorst, 1993)  
+         *  
+         * @param       pInput      Input residual  of all DOFs.  
+         * @param       pOutput     Solution vector of all DOFs.  
+         */
+        void GlobalLinSysIterative::DoGmresRestart(
+            const int                          nNonDir,
+            const Array<OneD,const NekDouble> &pInput,
+                  Array<OneD,      NekDouble> &pOutput)
+        {
+
+            // Get the communicator for performing data exchanges
+            LibUtilities::CommSharedPtr vComm
+                = m_expList.lock()->GetComm()->GetRowComm();
+
+
+            Array<TwoD, NekDouble> han    (m_maxiter+1,m_maxiter+1, 0.0);
+            Array<OneD, NekDouble> eta    (m_maxiter+1, 0.0);
+            Array<OneD, NekDouble> cs     (m_maxiter+1, 0.0);
+            Array<OneD, NekDouble> sn     (m_maxiter+1, 0.0);
+            Array<OneD, NekDouble> yk     (m_maxiter+1, 0.0);
+            Array<OneD, NekDouble> ek    
+            Array<OneD, NekDouble> qnrm   
+
             // Allocate array storage
-            Array<OneD, NekDouble> w_A    (nGlobal, 0.0);
-            Array<OneD, NekDouble> s_A    (nGlobal, 0.0);
-            Array<OneD, NekDouble> p_A    (nNonDir, 0.0);
-            Array<OneD, NekDouble> r_A    (nNonDir, 0.0);
-            Array<OneD, NekDouble> q_A    (nNonDir, 0.0);
-            Array<OneD, NekDouble> tmp;
+            Array<TwoD, NekDouble> qk_a   (m_maxiter+1,nNonDir, 0.0);
+            
 
             // Create NekVector wrappers for linear algebra operations
-            NekVector<NekDouble> in (nNonDir,pInput  + nDir,      eWrapper);
-            NekVector<NekDouble> out(nNonDir,tmp = pOutput + nDir,eWrapper);
-            NekVector<NekDouble> w  (nNonDir,tmp = w_A + nDir,    eWrapper);
-            NekVector<NekDouble> s  (nNonDir,tmp = s_A + nDir,    eWrapper);
-            NekVector<NekDouble> p  (nNonDir,p_A,                 eWrapper);
-            NekVector<NekDouble> r  (nNonDir,r_A,                 eWrapper);
-            NekVector<NekDouble> q  (nNonDir,q_A,                 eWrapper);
+            NekVector<NekDouble> in (nNonDir,pInput,            eWrapper);
+            NekVector<NekDouble> out(nNonDir,pOutput,           eWrapper);
+            NekVector<NekDouble> qk (nNonDir,tmp = qk_a[0],     eWrapper);
 
             int k;
             NekDouble alpha, beta, rho, rho_new, mu, eps,  min_resid;
@@ -517,7 +591,6 @@ namespace Nektar
                 eps     = vExchange[2];
 
                 m_totalIterations++;
-
                 // test if norm is within tolerance
                 if (eps < m_tolerance * m_tolerance * m_rhs_magnitude)
                 {
@@ -540,6 +613,7 @@ namespace Nektar
                 k++;
             }
         }
+
 
         void GlobalLinSysIterative::Set_Rhs_Magnitude(
             const NekVector<NekDouble> &pIn)

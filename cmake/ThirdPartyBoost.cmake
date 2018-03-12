@@ -75,19 +75,23 @@ IF (THIRDPARTY_BUILD_BOOST)
         ENDIF ()
     ENDIF()
 
-    # Build Boost
+    # Build Boost: first need to select toolset. 
     IF (APPLE)
         SET(TOOLSET darwin)
     ELSEIF (WIN32)
-        IF (MSVC10)
-            SET(TOOLSET msvc-10.0)
-        ELSEIF (MSVC11)
-            SET(TOOLSET msvc-11.0)
-        ELSEIF (MSVC12)
-            SET(TOOLSET msvc-12.0)
-        ELSEIF (MSVC14)
-            SET(TOOLSET msvc-14.0)
+        IF (MSVC_VERSION EQUAL 1600)
+            SET(TOOLSET msvc-10.0) # Visual Studio 2010
+        ELSEIF (MSVC_VERSION EQUAL 1700)
+            SET(TOOLSET msvc-11.0) # Visual Studio 2012
+        ELSEIF (MSVC_VERSION EQUAL 1800)
+            SET(TOOLSET msvc-12.0) # Visual Studio 2013
+        ELSEIF (MSVC_VERSION EQUAL 1900)
+            SET(TOOLSET msvc-14.0) # Visual Studio 2015
+        ELSEIF (MSVC_VERSION GREATER 1909 OR MSVC_VERSION LESS 1920)
+            SET(TOOLSET msvc-14.1) # Visual Studio 2017
         ENDIF()
+    ELSEIF(${CMAKE_CXX_COMPILER_ID} STREQUAL "Cray")
+        SET(TOOLSET cray)
     ELSE()
         SET(TOOLSET gcc-${CMAKE_CXX_COMPILER_VERSION})
     ENDIF()

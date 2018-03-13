@@ -149,7 +149,7 @@ namespace Nektar
                           Array<OneD, NekDouble>& pOutput) = 0;
 
             /// Actual iterative gmres solver for one restart
-            void DoGmresRestart(
+            NekDouble DoGmresRestart(
                     const bool                         rested,
                     const int                          nGlobal,
                     const Array<OneD,const NekDouble> &pInput,

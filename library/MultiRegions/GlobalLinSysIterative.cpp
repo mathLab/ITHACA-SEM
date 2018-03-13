@@ -145,8 +145,8 @@ namespace Nektar
                 // check the input vector (rhs) is not zero
 
                 NekDouble rhsNorm = Vmath::Dot2(nNonDir,
-                                                pInput + nDir,
-                                                pInput + nDir,
+                                                &pInput + nDir,
+                                                &pInput + nDir,
                                                 m_map + nDir);
 
                 vComm->AllReduce(rhsNorm, Nektar::LibUtilities::ReduceSum);
@@ -378,7 +378,7 @@ namespace Nektar
             // zero homogeneous out array ready for solution updates
             // Should not be earlier in case input vector is same as
             // output and above copy has been peformed
-            Vmath::Zero(nNonDir, pOutput + nDir,1);
+            Vmath::Zero(nNonDir, &pOutput + nDir,1);
 
 
             if(m_rhs_magnitude == NekConstants::kNekUnsetDouble)
@@ -477,12 +477,13 @@ namespace Nektar
             Array<OneD, NekDouble> vExchange(3,0.0);
             NekDouble   vExchange=0.0;
             
-            Vmath::Zero(nGlobal,tmp0 = qk_a[0],1);
+            Vmath::Zero(nGlobal,&qk_a[0],1);
             
             if(rested)
             {
                 // qk_a[0] = A*x0
-                v_DoMatrixMultiply(pOutput, qk_a[0]);
+                tmp0 = qk_a[0];
+                v_DoMatrixMultiply(pOutput, tmp0);
             }
 
             beta = -1.0;
@@ -515,13 +516,13 @@ namespace Nektar
 
             int nswp = 0;
             
-            for(nd=0, nd<m_maxdirction,++nd)
+            for(int nd=0, nd<m_maxdirction,++nd)
             {
                 tmp0 = qk_a[nd]+nDir;
                 tmp1 = qk_a[nd+1]+nDir;
                 //m_precon->DoPreconditioner(r_A, tmp = w_A + nDir);
                 v_DoMatrixMultiply(qk_a[nd], qk_a[nd+1]);
-                for(i=0,i<nd+1,++i)
+                for(int i=0,i<nd+1,++i)
                 {
                     // evaluate initial residual error for exit check
                     tmp0 = qk_a[i]+nDir;
@@ -546,7 +547,7 @@ namespace Nektar
                 alpha        = 1.0/han[nd+1][nd] ;
                 Vmath::Smul(nNonDir,alpha,&tmp1,1,&tmp1,1);
 
-                for(i=0,i<nd,++i)
+                for(int i=0,i<nd,++i)
                 {
                     tmp0            = cs[i]*han[i][nd] + sn[i]*han[i+1][nd];
                     han[i+1][nd]    = cs[i]*han[i][nd] + sn[i]*han[i+1][nd];
@@ -591,22 +592,22 @@ namespace Nektar
                 }
             }
 
-            for(i=0,i<nswp+1,++i)
+            for(int i=0,i<nswp+1,++i)
             {
                 yk[i] = eta[i];
             }
 
-            for(i=nswp,i>-1,--i)
+            for(int i=nswp,i>-1,--i)
             {
                 yk[i] = yk[i]/han[i][i];
-                for(j=0,j<i,++j)
+                for(int j=0,j<i,++j)
                 {
                     yk[j] = yk[j]-han[j][i]*yk[i];
                 }
             }
 
 
-            tmp1 = qk_a[0]+nDir;
+            tmp1 = qk_a[nDir];
             for(i=0,i<nswp+1,++i)
             {
                 // q_k[0] = f-A*x0

@@ -378,7 +378,7 @@ namespace Nektar
             // zero homogeneous out array ready for solution updates
             // Should not be earlier in case input vector is same as
             // output and above copy has been peformed
-            Vmath::Zero(nNonDir,tmp = pOutput + nDir,1);
+            Vmath::Zero(nNonDir, pOutput + nDir,1);
 
 
             if(m_rhs_magnitude == NekConstants::kNekUnsetDouble)
@@ -390,11 +390,9 @@ namespace Nektar
             m_totalIterations = 0;
             m_converged       = false;
             
-            int ndirc= 0;
             bool restarted = false;
-            for(nrestart=0,nrestart<m_maxrestart,++nrestart)
+            for(int nrestart=0,nrestart<m_maxrestart,++nrestart)
             {
-                ndirc = 0;
                 DoGmresRestart(restarted, nNonDir,pInput,pOutput,ndirc);
                 m_totalIterations = m_totalIterations + ndirc;
 
@@ -412,9 +410,8 @@ namespace Nektar
                 }
                 restarted = true;
             }
-
-
-            if (m_root)
+            
+            if(m_root)
             {
                 cout << "GMRES iterations made = " << m_totalIterations 
                      << " using tolerance of "  << m_tolerance 
@@ -460,8 +457,8 @@ namespace Nektar
             Array<OneD, NekDouble> cs     (m_maxdirction+1, 0.0);
             Array<OneD, NekDouble> sn     (m_maxdirction+1, 0.0);
             Array<OneD, NekDouble> yk     (m_maxdirction+1, 0.0);
-            Array<OneD, NekDouble> ek    
-            Array<OneD, NekDouble> qnrm   
+            Array<OneD, NekDouble> ek;    
+            Array<OneD, NekDouble> qnrm;   
             Array<OneD, NekDouble> tmp0;
             Array<OneD, NekDouble> tmp1;
 
@@ -584,6 +581,7 @@ namespace Nektar
                 eps          = eta[nd+1]*eta[nd+1];
 
                 nswp++;
+                m_totalIterations++;
 
                 // If input residual is less than tolerance skip solve.
                 if (eps < m_tolerance * m_tolerance * m_rhs_magnitude)

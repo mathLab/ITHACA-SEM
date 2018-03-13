@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File StdSegExp.cpp
+// File: StdSegExp.cpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,7 +29,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Routines within Standard Segment Expansions
+// Description: Python wrapper for StdSegExp.
 //
 ///////////////////////////////////////////////////////////////////////////////
 

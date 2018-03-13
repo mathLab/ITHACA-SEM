@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File:  Geometry2D.cpp
+//  File: Geometry2D.cpp
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,8 +29,7 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description:  2D geometry information
-//
+//  Description: Python wrapper for Geometry2D.
 //
 ////////////////////////////////////////////////////////////////////////////////
 

@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File:  SpatialDomains.cpp
+//  File: SpatialDomains.cpp
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,7 +29,7 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Spatial domains definitions and enumerations.
+//  Description: Python wrapper for SpatialDomains classes.
 //
 ////////////////////////////////////////////////////////////////////////////////
 

@@ -29,9 +29,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: 
-//
-// 
+// Description: Python wrapper for LibUtilities classes.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -47,8 +45,6 @@ void export_SharedArray();
 
 template<typename T>
 void export_NekMatrix();
-
-// BOOST_PYTHON_FUNCTION_OVERLOADS(Points_GetD_overloads, GetD, 1, 1);
 
 BOOST_PYTHON_MODULE(_LibUtilities)
 {

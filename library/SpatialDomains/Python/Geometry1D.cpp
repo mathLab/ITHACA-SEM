@@ -29,8 +29,7 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description:  1D geometry information
-//
+//  Description: Python wrapper for Geometry1D.
 //
 ////////////////////////////////////////////////////////////////////////////////
 

@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File StdExpansion.cpp
+// File: StdExpansion.cpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,8 +29,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Definition of methods in class StdExpansion which is
-// the base class to all expansion shapes
+// Description: Python wrapper for StdExpansion.
 //
 ///////////////////////////////////////////////////////////////////////////////
 

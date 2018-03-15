@@ -32,6 +32,7 @@
 // Description: GlobalLinSysIterative header
 //
 ///////////////////////////////////////////////////////////////////////////////
+
 #ifndef NEKTAR_LIB_MULTIREGIONS_GLOBALLINSYSITERATIVE_H
 #define NEKTAR_LIB_MULTIREGIONS_GLOBALLINSYSITERATIVE_H
 
@@ -59,6 +60,22 @@ namespace Nektar
                     const std::shared_ptr<AssemblyMap>   &pLocToGloMap);
 
             MULTI_REGIONS_EXPORT virtual ~GlobalLinSysIterative();
+
+            /// Actual iterative solve-CG
+            void DoConjugateGradient(
+                    const int pNumRows,
+                    const Array<OneD,const NekDouble> &pInput,
+                          Array<OneD,      NekDouble> &pOutput,
+                    const AssemblyMapSharedPtr &locToGloMap,
+                    const int pNumDir);
+
+            /// Actual iterative solve-GMRS
+            void DoGMRES(
+                    const int pNumRows,
+                    const Array<OneD,const NekDouble> &pInput,
+                          Array<OneD,      NekDouble> &pOutput,
+                    const AssemblyMapSharedPtr &locToGloMap,
+                    const int pNumDir);
 
         protected:
             /// Global to universal unique map
@@ -111,13 +128,7 @@ namespace Nektar
                     const AssemblyMapSharedPtr &locToGloMap,
                     const int pNumDir);
 
-            /// Actual iterative solve
-            void DoConjugateGradient(
-                    const int pNumRows,
-                    const Array<OneD,const NekDouble> &pInput,
-                          Array<OneD,      NekDouble> &pOutput,
-                    const AssemblyMapSharedPtr &locToGloMap,
-                    const int pNumDir);
+            
 
 
             void Set_Rhs_Magnitude(const NekVector<NekDouble> &pIn);

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<NEKTAR xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="http://www.nektar.info/schema/nektar.xsd">
+
+    <CONDITIONS>
+        <PARAMETERS>
+            <P> LinSysDimens    = 5         </P>
+            <P> MaxDirction     = 5         </P>
+            <P> MaxRestart      = 1         </P>
+            <P> Tolerance       = 1.0e-10   </P>
+        </PARAMETERS>
+    </CONDITIONS>
+
+</NEKTAR>
+

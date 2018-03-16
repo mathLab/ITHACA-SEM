@@ -61,8 +61,9 @@ into a directory which we will refer to as `$NEKDIR`. By default this is the
 `dist` directory inside the Nektar++ build directory.
 
 Note that Nektar++ must, at a minimum, be compiled with `NEKTAR_BUILD_LIBRARY`,
-`NEKTAR_BUILD_UTILITIES` and `NEKTAR_BUILD_SOLVERS`. Note that all solvers may
-be disabled as long as the `NEKTAR_BUILD_SOLVERS` option is set.
+`NEKTAR_BUILD_UTILITIES` , `NEKTAR_BUILD_SOLVERS` and `NEKTAR_BUILD_PYTHON`. 
+This will automatically download and install `Boost.NumPy` if required. Note 
+that all solvers may be disabled as long as the `NEKTAR_BUILD_SOLVERS` option is set. 
 
 ## macOS
 
@@ -90,20 +91,8 @@ sudo port install python27 py27-numpy
 sudo port select --set python python27
 ```
 
-### Compiling the wrappers
 
-Clone and compile the wrappers as follows:
-
-```
-git clone https://gitlab.nektar.info/nektar/nektar-python.git
-cd nektar-python && mkdir builds && cd builds
-cmake -DNektar++_DIR=$NEKDIR/lib/nektar++-4.5.0/cmake ..
-make install
-```
-
-This will automatically download and install `Boost.NumPy` if required.
-
-### Linux: Ubuntu/Debian
+## Linux: Ubuntu/Debian
 
 Users of Debian and Ubuntu Linux systems should sure their installation is
 up-to-date with `sudo apt-get update && sudo apt-get upgrade`
@@ -112,11 +101,27 @@ up-to-date with `sudo apt-get update && sudo apt-get upgrade`
 sudo apt-get install libboost-python-dev python-numpy
 ```
 
+## Compiling the wrappers
+
+Run the following command in `$NEKDIR\build` directory to install the Python package
+for the current user:
+
+```
+make nekpy-install-user
+```
+
+Alternatively, the following command can be used to install the package for all users:
+
+```
+make nekpy-install-system
+```
+
+
 # Using the bindings
 
 By default, the bindings will install into the `dist` directory, along with a
-number of examples that are stored in the `example` directory. To test your
-installation, you can for example run one of these (e.g. `python Basis.py`) or
+number of examples that are stored in the `$NEKDIR\library\Demos\Python` directory. To 
+test your installation, you can for example run one of these (e.g. `python Basis.py`) or
 launch an interactive session:
 
 ```
@@ -132,8 +137,8 @@ Type "help", "copyright", "credits" or "license" for more information.
 
 ## Examples
 
-A number of examples of the wrappers can be found in the `dist` directory, along
-with a sample mesh `newsquare_2x2.xml`:
+A number of examples of the wrappers can be found in the `$NEKDIR\library\Demos\Python` 
+directory, along with a sample mesh `newsquare_2x2.xml`:
 
 - `SessionReader.py` is the simplest example and shows how to construct a
   session reader object. Run it as `python SessionReader.py mesh.xml`.
@@ -146,5 +151,5 @@ with a sample mesh `newsquare_2x2.xml`:
   quadrilateral elements. Run it as `python MeshGraph.py newsquare_2x2.xml`.
 
 If you want to modify the source files, it's advisable to edit them in the
-`examples` directory and re-run `make install`, otherwise local changes will be
-overwritten by the next `make install`.
+`$NEKDIR\library\Demos\Python` directory and re-run `make install`, otherwise local 
+changes will be overwritten by the next `make install`.

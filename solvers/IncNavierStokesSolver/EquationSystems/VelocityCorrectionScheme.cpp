@@ -901,7 +901,11 @@ namespace Nektar
             if(testForFalse)
             {
                 m_useHomo1DSpecVanVisc = false;
-            }            
+            }
+            else
+            {
+                m_useHomo1DSpecVanVisc = true;
+            }
         }
 
         m_session->LoadParameter("SVVCutoffRatio",m_sVVCutoffRatio,0.75);

@@ -115,7 +115,7 @@ public:
                     Array<OneD, int> &pRecvDataSizeMap,
                     Array<OneD, int> &pRecvDataOffsetMap);
     template <class T>
-    void AllGathervI(T &pRecvData,
+    void AllGatherv(T &pRecvData,
                     Array<OneD, int> &pRecvDataSizeMap,
                     Array<OneD, int> &pRecvDataOffsetMap);
 
@@ -170,8 +170,8 @@ protected:
     virtual void v_AllGatherv(void *sendbuf, int sendcount, CommDataType sendtype,
                               void *recvbuf, int recvcounts[], int rdispls[],
                               CommDataType recvtype) = 0;
-    virtual void v_AllGathervI(void *recvbuf, int recvcounts[], int rdispls[],
-                               CommDataType recvtype) = 0;
+    virtual void v_AllGatherv(void *recvbuf, int recvcounts[], int rdispls[],
+                              CommDataType recvtype) = 0;
     virtual void v_Bcast(void *buffer, int count, CommDataType dt,
                          int root) = 0;
 
@@ -371,18 +371,18 @@ void Comm::AllGatherv(T &pSendData,
  *
  */
 template <class T>
-void Comm::AllGathervI(T &pRecvData,
-                       Array<OneD, int> &pRecvDataSizeMap,
-                       Array<OneD, int> &pRecvDataOffsetMap)
+void Comm::AllGatherv(T &pRecvData,
+                      Array<OneD, int> &pRecvDataSizeMap,
+                      Array<OneD, int> &pRecvDataOffsetMap)
 {
     BOOST_STATIC_ASSERT_MSG(
         CommDataTypeTraits<T>::IsVector,
         "AllGatherv only valid with Array or vector arguments.");
 
-    v_AllGathervI(CommDataTypeTraits<T>::GetPointer(pRecvData),
-                  pRecvDataSizeMap.get(),
-                  pRecvDataOffsetMap.get(),
-                  CommDataTypeTraits<T>::GetDataType());
+    v_AllGatherv(CommDataTypeTraits<T>::GetPointer(pRecvData),
+                 pRecvDataSizeMap.get(),
+                 pRecvDataOffsetMap.get(),
+                 CommDataTypeTraits<T>::GetDataType());
 }
 
 /**

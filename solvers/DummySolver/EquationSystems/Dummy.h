@@ -69,7 +69,7 @@ public:
 
 protected:
 
-    SolverUtils::CouplingSharedPointer              m_coupling;
+    SolverUtils::CouplingSharedPtr m_coupling;
 
     /// Initialises UnsteadySystem class members.
     Dummy(const LibUtilities::SessionReaderSharedPtr& pSession,

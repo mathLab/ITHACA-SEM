@@ -40,14 +40,14 @@
 
 #include <cwipi.h>
 
+#include <functional>
+
 namespace Nektar
 {
 namespace SolverUtils
 {
 
 class CouplingCwipi;
-
-typedef std::shared_ptr<CouplingCwipi> CouplingCwipiSharedPointer;
 
 
 class CouplingCwipi : public Coupling
@@ -58,10 +58,10 @@ public:
     static std::string className;
 
     /// Creates an instance of this class
-    static CouplingSharedPointer create(
+    static CouplingSharedPtr create(
         MultiRegions::ExpListSharedPtr field)
     {
-        CouplingSharedPointer p =
+        CouplingSharedPtr p =
             MemoryManager<CouplingCwipi>::AllocateSharedPtr(field);
         p->Init();
         return p;
@@ -186,8 +186,8 @@ private:
                            int &conidxPos);
 };
 
-typedef boost::function<void(Array<OneD, Array<OneD, NekDouble> > &interpField,
-                             Array<OneD, Array<OneD, NekDouble> > &distCoords)>
+typedef std::function<void(Array<OneD, Array<OneD, NekDouble> > &interpField,
+                           Array<OneD, Array<OneD, NekDouble> > &distCoords)>
     SendCallbackType;
 
 static std::map<std::string, SendCallbackType> SendCallbackMap;

@@ -341,7 +341,7 @@ void CouplingCwipi::SetupSend()
     std::stringstream sst;
     sst << m_spacedim << "," << m_evalField->GetGraph()->GetNvertices() << ","
         << m_nSendVars;
-    SendCallbackMap[sst.str()] = boost::bind(&CouplingCwipi::SendCallback, this, _1, _2);
+    SendCallbackMap[sst.str()] = std::bind(&CouplingCwipi::SendCallback, this, std::placeholders::_1, std::placeholders::_2);
     cwipi_set_interpolation_function(m_couplingName.c_str(), CouplingCwipi::InterpCallback);
 }
 
@@ -999,7 +999,7 @@ void CouplingCwipi::ExtrapolateFields(
     timer2.Start();
     for (int i = 0; i < totvars; ++i)
     {
-        m_evalField->GetSession()->GetComm()->AllGathervI(
+        m_evalField->GetSession()->GetComm()->AllGatherv(
             locatedVals[i], sizeMap, offsetMap);
     }
     timer2.Stop();

@@ -74,7 +74,7 @@ class APE : public AdvectionSystem
         virtual ~APE();
 
     protected:
-        SolverUtils::CouplingSharedPointer              m_coupling;
+        SolverUtils::CouplingSharedPtr                  m_coupling;
         SolverUtils::AdvectionSharedPtr                 m_advection;
         std::vector<SolverUtils::ForcingSharedPtr>      m_forcing;
         SolverUtils::RiemannSolverSharedPtr             m_riemannSolver;

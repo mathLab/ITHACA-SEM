@@ -44,8 +44,6 @@ namespace SolverUtils
 
 class CouplingFile;
 
-typedef std::shared_ptr<CouplingFile> CouplingFileSharedPointer;
-
 class CouplingFile : public Coupling
 {
 
@@ -53,9 +51,9 @@ public:
     static std::string className;
 
     /// Creates an instance of this class
-    SOLVER_UTILS_EXPORT static CouplingSharedPointer create(MultiRegions::ExpListSharedPtr field)
+    SOLVER_UTILS_EXPORT static CouplingSharedPtr create(MultiRegions::ExpListSharedPtr field)
     {
-        CouplingSharedPointer p =
+        CouplingSharedPtr p =
             MemoryManager<CouplingFile>::AllocateSharedPtr(field);
         p->Init();
         return p;

@@ -65,7 +65,8 @@ CommCwipi::CommCwipi(int narg, char* arg[])
     }
 
     std::string localName = "";
-    for (int i = 0; i < narg; ++i) {
+    for (int i = 0; i < narg; ++i)
+    {
         if (!std::strcmp(arg[i], "--cwipi"))
         {
             localName = arg[i+1];

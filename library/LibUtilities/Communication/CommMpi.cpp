@@ -294,8 +294,8 @@ void CommMpi::v_AllGatherv(void *sendbuf, int sendcount, CommDataType sendtype,
     ASSERTL0(retval == MPI_SUCCESS, "MPI error performing Allgather.");
 }
 
-void CommMpi::v_AllGathervI(void *recvbuf, int recvcounts[], int rdispls[],
-                            CommDataType recvtype)
+void CommMpi::v_AllGatherv(void *recvbuf, int recvcounts[], int rdispls[],
+                           CommDataType recvtype)
 {
     int retval = MPI_Allgatherv(MPI_IN_PLACE, 0, MPI_DATATYPE_NULL, recvbuf,
                                 recvcounts, rdispls, recvtype, m_comm);

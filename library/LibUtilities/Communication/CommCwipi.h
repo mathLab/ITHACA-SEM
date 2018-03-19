@@ -50,7 +50,7 @@ namespace LibUtilities
 class CommCwipi;
 
 /// Pointer to a Communicator object.
-typedef boost::shared_ptr<CommCwipi> CommCwipiSharedPtr;
+typedef std::shared_ptr<CommCwipi> CommCwipiSharedPtr;
 
 /// A global linear system.
 class CommCwipi : public CommMpi

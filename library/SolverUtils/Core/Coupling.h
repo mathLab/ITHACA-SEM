@@ -45,13 +45,12 @@ namespace SolverUtils
 
 class Coupling;
 
-SOLVER_UTILS_EXPORT typedef std::shared_ptr<Coupling> CouplingSharedPointer;
+SOLVER_UTILS_EXPORT typedef std::shared_ptr<Coupling> CouplingSharedPtr;
 
 /// Declaration of the Coupling factory
-SOLVER_UTILS_EXPORT typedef LibUtilities::NekFactory<std::string,
-                                 Coupling,
-                                 MultiRegions::ExpListSharedPtr>
-    CouplingFactory;
+SOLVER_UTILS_EXPORT typedef LibUtilities::
+    NekFactory<std::string, Coupling, MultiRegions::ExpListSharedPtr>
+        CouplingFactory;
 
 /// Declaration of the Coupling factory singleton
 SOLVER_UTILS_EXPORT CouplingFactory &GetCouplingFactory();
@@ -62,12 +61,14 @@ class Coupling
 public:
     typedef std::map<std::string, std::string> CouplingConfigMap;
 
-    SOLVER_UTILS_EXPORT virtual ~Coupling(){};
+    SOLVER_UTILS_EXPORT virtual ~Coupling()
+    {
+    }
 
     SOLVER_UTILS_EXPORT inline void Init()
     {
         v_Init();
-    };
+    }
 
     SOLVER_UTILS_EXPORT inline const std::map<std::string, std::string> GetConfig()
     {
@@ -87,23 +88,25 @@ public:
     SOLVER_UTILS_EXPORT inline void Finalize()
     {
         v_Finalize();
-    };
+    }
 
-    SOLVER_UTILS_EXPORT inline void Send(const int step,
-                     const NekDouble time,
-                     const Array<OneD, const Array<OneD, NekDouble> > &field,
-                     vector<string> &varNames)
+    SOLVER_UTILS_EXPORT inline void Send(
+        const int step,
+        const NekDouble time,
+        const Array<OneD, const Array<OneD, NekDouble> > &field,
+        vector<string> &varNames)
     {
         v_Send(step, time, field, varNames);
-    };
+    }
 
-    SOLVER_UTILS_EXPORT inline void Receive(const int step,
-                        const NekDouble time,
-                        Array<OneD, Array<OneD, NekDouble> > &field,
-                        vector<string> &varNames)
+    SOLVER_UTILS_EXPORT inline void Receive(
+        const int step,
+        const NekDouble time,
+        Array<OneD, Array<OneD, NekDouble> > &field,
+        vector<string> &varNames)
     {
         v_Receive(step, time, field, varNames);
-    };
+    }
 
 protected:
     std::string m_couplingName;
@@ -124,10 +127,11 @@ protected:
 
     SOLVER_UTILS_EXPORT virtual void v_Init();
 
-    SOLVER_UTILS_EXPORT virtual void v_Send(const int step,
-                        const NekDouble time,
-                        const Array<OneD, const Array<OneD, NekDouble> > &field,
-                        vector<string> &varNames) = 0;
+    SOLVER_UTILS_EXPORT virtual void v_Send(
+        const int step,
+        const NekDouble time,
+        const Array<OneD, const Array<OneD, NekDouble> > &field,
+        vector<string> &varNames) = 0;
 
     SOLVER_UTILS_EXPORT virtual void v_Receive(
         const int step,
@@ -137,10 +141,10 @@ protected:
 
     SOLVER_UTILS_EXPORT virtual void v_Finalize()
     {
-    };
+    }
 
-    SOLVER_UTILS_EXPORT std::vector<int> GenerateVariableMapping(std::vector<std::string> &vars, std::vector<std::string> &transVars);
-
+    SOLVER_UTILS_EXPORT std::vector<int> GenerateVariableMapping(
+        std::vector<std::string> &vars, std::vector<std::string> &transVars);
 };
 }
 }

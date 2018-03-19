@@ -171,8 +171,8 @@ void CommSerial::v_AllGatherv(void *sendbuf, int sendcount, CommDataType sendtyp
 {
 }
 
-void CommSerial::v_AllGathervI(void *recvbuf, int recvcounts[], int rdispls[],
-                               CommDataType recvtype)
+void CommSerial::v_AllGatherv(void *recvbuf, int recvcounts[], int rdispls[],
+                              CommDataType recvtype)
 {
 }
 

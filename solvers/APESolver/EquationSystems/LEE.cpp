@@ -339,6 +339,8 @@ void LEE::v_RiemannInvariantBC(int bcRegion,
 
             NekDouble h0, h1, h2;
 
+            //TODO: handle the vorticity mode
+
             if (RVn0[i] > 0)
             {
                 // rho - p / c^2

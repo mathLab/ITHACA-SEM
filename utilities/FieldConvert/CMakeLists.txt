@@ -23,7 +23,6 @@ ADD_NEKTAR_TEST(chan3DH1D_stretch)
 ADD_NEKTAR_TEST(chan3D_modp)
 ADD_NEKTAR_TEST(chan3D_probe)
 ADD_NEKTAR_TEST(cube_prismhex)
-# ADD_NEKTAR_TEST(outflow_pointdatatofld) # need to redefine outflow.pts since GetOffsetElmtId
 ADD_NEKTAR_TEST(cube_prismhex_range)
 ADD_NEKTAR_TEST(chan3D_equispacedoutput)
 ADD_NEKTAR_TEST(chan3D_isocontour)

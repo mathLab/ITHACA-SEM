@@ -179,7 +179,7 @@ namespace Nektar
                 Subtract(F_HomBnd, F_HomBnd, V_GlobHomBndTmp);
 
                 // Transform from original basis to low energy
-                v_BasisTransform(F, nDirBndDofs);
+                v_BasisFwdTransform(F, nDirBndDofs);
 
                 // For parallel multi-level static condensation some
                 // processors may have different levels to others. This
@@ -215,7 +215,7 @@ namespace Nektar
                         nGlobBndDofs, F, pert, pLocToGloMap, nDirBndDofs);
 
                     // Transform back to original basis
-                    v_BasisInvTransform(pert);
+                    v_BasisBwdTransform(pert);
 
                     // Add back initial conditions onto difference
                     Vmath::Vadd(nGlobHomBndDofs,&out[nDirBndDofs],1,

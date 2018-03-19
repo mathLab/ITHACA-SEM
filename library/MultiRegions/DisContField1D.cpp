@@ -226,10 +226,6 @@ namespace Nektar
                             m_traceMap->GetBndCondTraceToGlobalTraceMap(cnt+e));
                     }
                 }
-                else
-                {
-                    ASSERTL0(false,"Periodic verts need setting up");
-                }
                 cnt += m_bndCondExpansions[n]->GetExpSize();
             }
 
@@ -556,19 +552,15 @@ namespace Nektar
             {
                 const SpatialDomains::BoundaryConditionShPtr boundaryCondition =
                     GetBoundaryCondition(bconditions, it.first, variable);
-                if (boundaryCondition->GetBoundaryConditionType() !=
-                    SpatialDomains::ePeriodic )
+                SpatialDomains::BoundaryRegion::iterator bregionIt;
+                for (auto &bregionIt : *(it.second))
                 {
-                    for (auto &bregionIt : *it.second)
-                    {
-                        cnt += bregionIt.second->m_geomVec.size();
-                    }
+                    cnt += bregionIt.second->m_geomVec.size();
                 }
             }
 
             m_bndCondExpansions
                     = Array<OneD,MultiRegions::ExpListSharedPtr>(cnt);
-
             m_bndConditions
                     = Array<OneD,SpatialDomains::BoundaryConditionShPtr>(cnt);
 
@@ -727,28 +719,24 @@ namespace Nektar
             {
                 locBCond = GetBoundaryCondition(bconditions, it.first, variable);
 
-                if (locBCond->GetBoundaryConditionType() !=
-                    SpatialDomains::ePeriodic)
+                for (auto &bregionIt : *(it.second))
                 {
-                    for (auto &bregionIt : *it.second)
+                    for (k = 0; k < bregionIt.second->m_geomVec.size(); k++)
                     {
-                        for (k = 0; k < bregionIt.second->m_geomVec.size(); k++)
+                        if((vert = std::dynamic_pointer_cast
+                            <SpatialDomains::PointGeom>(
+                                bregionIt.second->m_geomVec[k])))
                         {
-                            if((vert = std::dynamic_pointer_cast
-                                    <SpatialDomains::PointGeom>(
-                                        bregionIt.second->m_geomVec[k])))
-                            {
-                                locPointExp
-                                    = MemoryManager<MultiRegions::ExpList0D>
-                                        ::AllocateSharedPtr(vert);
-                                bndCondExpansions[cnt]  = locPointExp;
-                                bndConditions[cnt++]    = locBCond;
-                            }
-                            else
-                            {
-                                ASSERTL0(false,
-                                    "dynamic cast to a vertex failed");
-                            }
+                            locPointExp
+                                = MemoryManager<MultiRegions::ExpList0D>
+                                ::AllocateSharedPtr(vert);
+                            bndCondExpansions[cnt]  = locPointExp;
+                            bndConditions[cnt++]    = locBCond;
+                        }
+                        else
+                        {
+                            ASSERTL0(false,
+                                     "dynamic cast to a vertex failed");
                         }
                     }
                 }
@@ -1263,7 +1251,10 @@ namespace Nektar
                     id = m_traceMap->GetBndCondCoeffsToGlobalCoeffsMap(i);
                     BndSol[id] = m_bndCondExpansions[i]->GetCoeff(0);
                 }
-                else
+                else if (m_bndConditions[i]->GetBoundaryConditionType() ==
+                             SpatialDomains::eNeumann ||
+                         m_bndConditions[i]->GetBoundaryConditionType() ==
+                             SpatialDomains::eRobin)
                 {
                     id = m_traceMap->GetBndCondCoeffsToGlobalCoeffsMap(i);
                     BndRhs[id] += m_bndCondExpansions[i]->GetCoeff(0);
@@ -1359,6 +1350,11 @@ namespace Nektar
                              ::RobinBoundaryCondition>(m_bndConditions[i])
                              ->m_robinFunction).Evaluate(x0[0],x1[0],x2[0],time));
                         
+                    }
+                    else if (m_bndConditions[i]->GetBoundaryConditionType()
+                            == SpatialDomains::ePeriodic)
+                    {
+                        continue;
                     }
                     else if (m_bndConditions[i]->GetBoundaryConditionType()
                              == SpatialDomains::eNotDefined)

@@ -471,8 +471,8 @@ namespace Nektar
                         m_boundaryEdges.insert(
                             m_traceMap->GetBndCondTraceToGlobalTraceMap(cnt+e));
                     }
+                    cnt += m_bndCondExpansions[n]->GetExpSize();
                 }
-                cnt += m_bndCondExpansions[n]->GetExpSize();
             }
                 
             // Set up information for periodic boundary conditions.
@@ -634,63 +634,44 @@ namespace Nektar
             const SpatialDomains::BoundaryConditions &bcs,
             const std::string &variable,
             const bool DeclareCoeffPhysArrays)
-        {      
+        {
             int cnt = 0;
             SpatialDomains::BoundaryConditionShPtr             bc;
             MultiRegions::ExpList1DSharedPtr                   locExpList;
-            const SpatialDomains::BoundaryRegionCollection    &bregions = 
+            const SpatialDomains::BoundaryRegionCollection    &bregions =
                 bcs.GetBoundaryRegions();
-            const SpatialDomains::BoundaryConditionCollection &bconditions = 
+            const SpatialDomains::BoundaryConditionCollection &bconditions =
                 bcs.GetBoundaryConditions();
 
-            // count the number of non-periodic boundary regions
-            for (auto &it : bregions)
-            {
-                bc = GetBoundaryCondition(bconditions, it.first, variable);
-                
-                if (bc->GetBoundaryConditionType() != SpatialDomains::ePeriodic)
-                {
-                    cnt++;
-                }
-            }
+            m_bndCondExpansions =
+                Array<OneD, MultiRegions::ExpListSharedPtr>(bregions.size());
+            m_bndConditions     =
+                Array<OneD, SpatialDomains::BoundaryConditionShPtr>(bregions.size());
 
-            m_bndCondExpansions = 
-                Array<OneD, MultiRegions::ExpListSharedPtr>(cnt);
-            m_bndConditions     = 
-                Array<OneD, SpatialDomains::BoundaryConditionShPtr>(cnt);
-        
-            cnt = 0;
-
-            // list non-periodic boundaries
             for (auto &it : bregions)
             {
                 bc = GetBoundaryCondition(bconditions, it.first, variable);
 
-                if (bc->GetBoundaryConditionType() != SpatialDomains::ePeriodic)
+                locExpList = MemoryManager<MultiRegions::ExpList1D>
+                    ::AllocateSharedPtr(m_session, *(it.second), graph2D,
+                                        DeclareCoeffPhysArrays, variable,
+                                        bc->GetComm());
+
+                m_bndCondExpansions[cnt]  = locExpList;
+                m_bndConditions[cnt]      = bc;
+
+                std::string type = m_bndConditions[cnt]->GetUserDefined();
+
+                // Set up normals on non-Dirichlet boundary conditions. Second
+                // two conditions ideally should be in local solver setup (when
+                // made into factory)
+                if(bc->GetBoundaryConditionType() != SpatialDomains::eDirichlet
+                   || boost::iequals(type,"I") || boost::iequals(type,"CalcBC"))
                 {
-                    locExpList = MemoryManager<MultiRegions::ExpList1D>
-                        ::AllocateSharedPtr(m_session, *it.second, graph2D,
-                                            DeclareCoeffPhysArrays, variable);
-
-                    m_bndCondExpansions[cnt]  = locExpList;
-                    m_bndConditions[cnt]      = bc;
-                    
-
-                    std::string type = m_bndConditions[cnt]->GetUserDefined();
-                    
-                    // Set up normals on non-Dirichlet boundary
-                    // conditions. Second two conditions ideally
-                    // should be in local solver setup (when made into factory)
-                    if((bc->GetBoundaryConditionType() != 
-                        SpatialDomains::eDirichlet)||
-                       boost::iequals(type,"I") || 
-                       boost::iequals(type,"CalcBC"))
-                    {
-                        SetUpPhysNormals();
-                    }
-
-                    cnt++;
+                    SetUpPhysNormals();
                 }
+
+                cnt++;
             }
         }
 
@@ -1956,7 +1937,7 @@ namespace Nektar
             cnt = 0;
             for(i = 0; i < m_bndCondExpansions.num_elements(); ++i)
             {
-                if(m_bndConditions[i]->GetBoundaryConditionType() == 
+                if(m_bndConditions[i]->GetBoundaryConditionType() ==
                        SpatialDomains::eDirichlet)
                 {
                     for(j = 0; j < (m_bndCondExpansions[i])->GetNcoeffs(); ++j)
@@ -1965,7 +1946,10 @@ namespace Nektar
                         BndSol[id] = m_bndCondExpansions[i]->GetCoeffs()[j];
                     }
                 }
-                else
+                else if (m_bndConditions[i]->GetBoundaryConditionType() ==
+                             SpatialDomains::eNeumann ||
+                         m_bndConditions[i]->GetBoundaryConditionType() ==
+                             SpatialDomains::eRobin)
                 {
                     //Add weak boundary condition to trace forcing
                     for(j = 0; j < (m_bndCondExpansions[i])->GetNcoeffs(); ++j)
@@ -2301,7 +2285,7 @@ namespace Nektar
                         
                         if (filebcs != "")
                         {
-                            ExtractFileBCs(filebcs, bcPtr->m_comm, varName, locExpList);
+                            ExtractFileBCs(filebcs, bcPtr->GetComm(), varName, locExpList);
                         }
                         else
                         {
@@ -2328,7 +2312,7 @@ namespace Nektar
                         string filebcs  = bcPtr->m_filename;
                         if (filebcs != "")
                         {
-                            ExtractFileBCs(filebcs, bcPtr->m_comm, varName, locExpList);
+                            ExtractFileBCs(filebcs, bcPtr->GetComm(), varName, locExpList);
                         }
                         else
                         {
@@ -2355,7 +2339,7 @@ namespace Nektar
                         
                         if (filebcs != "")
                         {
-                            ExtractFileBCs(filebcs, bcPtr->m_comm, varName, locExpList);
+                            ExtractFileBCs(filebcs, bcPtr->GetComm(), varName, locExpList);
                         }
                         else
                         {
@@ -2371,7 +2355,12 @@ namespace Nektar
                         locExpList->IProductWRTBase(
                             locExpList->GetPhys(),
                             locExpList->UpdateCoeffs());
-                    }    
+                    }
+                    else if (m_bndConditions[i]->GetBoundaryConditionType()
+                             == SpatialDomains::ePeriodic)
+                    {
+                        continue;
+                    }
                     else
                     {
                         ASSERTL0(false, "This type of BC not implemented yet");

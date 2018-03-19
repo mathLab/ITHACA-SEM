@@ -22,7 +22,7 @@ v5.0.0
 - Simplify RawType typedefs (!840)
 - Remove unused files from BasicUtils (!841)
 - Remove checks for old boost versions which are no longer supported (!841)
-- Refactor ParseUtils to be more consistent (!843, !896)
+- Refactor ParseUtils to be more consistent (!843, !896, !908)
 - Added support for using the distance to a specific region (e.g. outlet) in the
   function definitions for the Absorption Forcing (!769)
 - Improve performance of DisContField2D::v_ExtractTracePhys (!824)
@@ -34,11 +34,19 @@ v5.0.0
 - Fix mac OSX on buildbots (!876)
 - Fix error from (!826) (!876)
 - Fix minor bug in ARPACK thirdparty build cmake (!874)
+- Added in sum factorisation version for pyramid expnasions and orthogonal
+  expansion in pyramids (!750)
+- Switch MeshGraph to use factory pattern and add HDF5 geometry support (!900,
+  !904)
+- Restructure the low energy preconditioner to handle pyramidic and variable
+  p expansions (!920)
 - Remove requirement for modmetis, switch to SCOTCH by default (!899)
 - Switch MeshGraph to use factory pattern and add HDF5 geometry support
   (!900, !904)
 - Fix bug in MeshPartition.cpp which caused incorrect array access when
   WeightPartitions was used in parallel (!923)
+- Removed instance count from beginning of Array storage to improve memory
+  alignment (!921)
 	
 **NekMesh**:
 - Add feature to read basic 2D geo files as CAD (!731)
@@ -74,6 +82,8 @@ v5.0.0
 - Fixed interppoints module (!760)
 - Fix OutputTecplot in 2DH1D (!818)
 - Move StreamFunction utility to a FieldConvert module (!809)
+- Allow using expansion from session file with new `--useSessionExpansion`
+  command line option (!842)
 - Extend wss module to compressible flows (!810)
 - Allow explicitly setting bool options of FieldConvert modules as false (!811)
 - Enable output to multiple files (!844)
@@ -86,6 +96,7 @@ v5.0.0
 - Replace steady-state check based on difference of norms by check based on
   norm of the difference, to be consistent with the compressible solver (!832)
 - Updated SVV to allow for the DGKernel extension (!851)
+- Pre-calculate Time invariant portion of Womersley Solution (!814)
 
 **CompressibleFlowSolver**
 - Add 3D regression tests (!567)
@@ -93,6 +104,7 @@ v5.0.0
 - Allow performing axi-symmetric Euler and NS simulations (!771, !866)
 - Add ability to use an exponential filtering for stabilization with
   seg, quad and hex elements (!771, !862)
+- Fix compressible solver with NUMMODES=1 (!868)
 - Introduce equations of state to account for real gas effects (!880)
 
 **APESolver:**
@@ -129,6 +141,9 @@ v4.4.2
 
 **FieldConvert**
 - Allow passing input name with trailing separator (!879)
+
+**Utilities**
+- Fix VtkToPng to account for deprecated VTK API for VTK version > 8.1 (!925)
 
 v4.4.1
 ------

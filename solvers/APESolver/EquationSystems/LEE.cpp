@@ -322,17 +322,6 @@ void LEE::v_RiemannInvariantBC(int bcRegion,
                          &RVn[0], 1);
         }
 
-        // Calculate v - (v.n) n
-        Array<OneD, Array<OneD, NekDouble> > RVp(m_spacedim);
-        for (int i = 0; i < m_spacedim; ++i)
-        {
-            RVp[i] = Array<OneD, NekDouble>(nBCEdgePts, 0.0);
-            Vmath::Vsub(nBCEdgePts,
-                        &Fwd[_iu + i][id2], 1,
-                        &RVn[0], 1,
-                        &RVp[i][0], 1);
-        }
-
         // Calculate (v0.n)
         Array<OneD, NekDouble> RVn0(nBCEdgePts, 0.0);
         for (int i = 0; i < m_spacedim; ++i)
@@ -360,19 +349,6 @@ void LEE::v_RiemannInvariantBC(int bcRegion,
                 h1 = 0.0;
             }
 
-            if (RVn0[i] > 0)
-            {
-                // keep vorticity mode
-            }
-            else
-            {
-                // set wall parallel velocities to zero, i.e. set h2 and h3 to
-                // zero
-                for (int j = 0; j < m_spacedim; ++j)
-                {
-                    RVp[j][i] = 0.0;
-                }
-            }
 
             if (RVn0[i] - c > 0)
             {
@@ -403,10 +379,17 @@ void LEE::v_RiemannInvariantBC(int bcRegion,
             NekDouble RVnNew    = h4 + h5;
 
             // adjust velocity pert. according to new value
+            // here we just omit the wall parallel velocity components, i.e
+            // setting them to zero. This is equivalent to setting the two
+            // vorticity characteristics h2 and h3 to zero. Mathematically,
+            // this is only legitimate for incoming characteristics. However,
+            // as h2 and h3 are convected by the flow, the value we precribe at
+            // an the boundary for putgoing characteristics does not matter.
+            // This implementation saves a few operations and is more robust
+            // for mixed in/outflow boundaries and at the boundaries edges.
             for (int j = 0; j < m_spacedim; ++j)
             {
-                Fwd[_iu + j][id2 + i] =
-                    RVp[j][i] + RVnNew * m_traceNormals[j][id2 + i];
+                Fwd[_iu + j][id2 + i] = RVnNew * m_traceNormals[j][id2 + i];
             }
         }
 

@@ -27,7 +27,8 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: File based Coupling class. Rather pointless, only for demonstration.
+// Description: File based Coupling class. Rather pointless, only for
+// demonstration.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -51,7 +52,8 @@ public:
     static std::string className;
 
     /// Creates an instance of this class
-    SOLVER_UTILS_EXPORT static CouplingSharedPtr create(MultiRegions::ExpListSharedPtr field)
+    SOLVER_UTILS_EXPORT static CouplingSharedPtr create(
+        MultiRegions::ExpListSharedPtr field)
     {
         CouplingSharedPtr p =
             MemoryManager<CouplingFile>::AllocateSharedPtr(field);
@@ -66,15 +68,17 @@ public:
 protected:
     SOLVER_UTILS_EXPORT virtual void v_Init();
 
-    SOLVER_UTILS_EXPORT virtual void v_Send(const int step,
-                        const NekDouble time,
-                        const Array<OneD, const Array<OneD, NekDouble> > &field,
-                        vector<string> &varNames);
+    SOLVER_UTILS_EXPORT virtual void v_Send(
+        const int step,
+        const NekDouble time,
+        const Array<OneD, const Array<OneD, NekDouble> > &field,
+        vector<string> &varNames);
 
-    SOLVER_UTILS_EXPORT virtual void v_Receive(const int step,
-                           const NekDouble time,
-                           Array<OneD, Array<OneD, NekDouble> > &field,
-                           vector<string> &varNames);
+    SOLVER_UTILS_EXPORT virtual void v_Receive(
+        const int step,
+        const NekDouble time,
+        Array<OneD, Array<OneD, NekDouble> > &field,
+        vector<string> &varNames);
 
 private:
     int m_lastSend;

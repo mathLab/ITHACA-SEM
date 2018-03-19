@@ -34,8 +34,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <SolverUtils/Driver.h>
 #include <LibUtilities/BasicUtils/SessionReader.h>
+#include <SolverUtils/Driver.h>
 
 using namespace std;
 using namespace Nektar;

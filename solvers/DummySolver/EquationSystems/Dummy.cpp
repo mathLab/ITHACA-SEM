@@ -47,9 +47,8 @@ string Dummy::className = GetEquationSystemFactory().RegisterCreatorFunction(
     Dummy::create,
     "Dummy Equation System that only sends/receives fields");
 
-Dummy::Dummy(
-    const LibUtilities::SessionReaderSharedPtr& pSession,
-    const SpatialDomains::MeshGraphSharedPtr& pGraph)
+Dummy::Dummy(const LibUtilities::SessionReaderSharedPtr &pSession,
+             const SpatialDomains::MeshGraphSharedPtr &pGraph)
     : UnsteadySystem(pSession, pGraph)
 {
 }
@@ -68,7 +67,7 @@ void Dummy::v_InitObject()
 
     if (m_session->DefinesElement("Nektar/Coupling"))
     {
-        TiXmlElement* vCoupling = m_session->GetElement("Nektar/Coupling");
+        TiXmlElement *vCoupling = m_session->GetElement("Nektar/Coupling");
 
         ASSERTL0(vCoupling->Attribute("TYPE"),
                  "Missing TYPE attribute in Coupling");
@@ -94,7 +93,6 @@ Dummy::~Dummy()
 {
 }
 
-
 /**
  * @brief v_PreIntegrate
  */
@@ -107,7 +105,7 @@ bool Dummy::v_PreIntegrate(int step)
         for (int i = 0; i < m_fields.num_elements(); ++i)
         {
             varNames.push_back(m_session->GetVariable(i));
-            phys[i]   = m_fields[i]->UpdatePhys();
+            phys[i] = m_fields[i]->UpdatePhys();
         }
 
         m_coupling->Send(step, m_time, phys, varNames);
@@ -116,7 +114,6 @@ bool Dummy::v_PreIntegrate(int step)
 
     return UnsteadySystem::v_PreIntegrate(step);
 }
-
 
 /**
  * @brief v_PostIntegrate
@@ -164,7 +161,6 @@ void Dummy::v_Output()
 
     UnsteadySystem::v_Output();
 }
-
 
 /**
  * @brief Compute the right-hand side.

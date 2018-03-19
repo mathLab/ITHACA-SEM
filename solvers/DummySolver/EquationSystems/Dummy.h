@@ -37,9 +37,8 @@
 #ifndef NEKTAR_SOLVERS_DummySOLVER_EQUATIONSYSTEMS_DUMMY_H
 #define NEKTAR_SOLVERS_DummySOLVER_EQUATIONSYSTEMS_DUMMY_H
 
-#include <SolverUtils/UnsteadySystem.h>
 #include <SolverUtils/Core/Coupling.h>
-
+#include <SolverUtils/UnsteadySystem.h>
 
 using namespace Nektar::SolverUtils;
 
@@ -53,11 +52,11 @@ public:
 
     /// Creates an instance of this class
     static EquationSystemSharedPtr create(
-        const LibUtilities::SessionReaderSharedPtr& pSession,
-        const SpatialDomains::MeshGraphSharedPtr& pGraph)
+        const LibUtilities::SessionReaderSharedPtr &pSession,
+        const SpatialDomains::MeshGraphSharedPtr &pGraph)
     {
-        EquationSystemSharedPtr p = MemoryManager<Dummy>
-            ::AllocateSharedPtr(pSession, pGraph);
+        EquationSystemSharedPtr p =
+            MemoryManager<Dummy>::AllocateSharedPtr(pSession, pGraph);
         p->InitObject();
         return p;
     }
@@ -68,12 +67,11 @@ public:
     virtual ~Dummy();
 
 protected:
-
     SolverUtils::CouplingSharedPtr m_coupling;
 
     /// Initialises UnsteadySystem class members.
-    Dummy(const LibUtilities::SessionReaderSharedPtr& pSession,
-          const SpatialDomains::MeshGraphSharedPtr& pGraph);
+    Dummy(const LibUtilities::SessionReaderSharedPtr &pSession,
+          const SpatialDomains::MeshGraphSharedPtr &pGraph);
 
     virtual void v_InitObject();
 
@@ -96,7 +94,6 @@ protected:
     {
         return false;
     }
-
 };
 }
 

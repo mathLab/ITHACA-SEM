@@ -115,8 +115,7 @@ void Coupling::v_Init()
     ParseUtils::GenerateVector(m_config["RECEIVEVARIABLES"], m_recvFieldNames);
     m_nRecvVars = m_recvFieldNames.size();
 
-    ParseUtils::GenerateVector(m_config["SENDVARIABLES"],
-                               m_sendFieldNames);
+    ParseUtils::GenerateVector(m_config["SENDVARIABLES"], m_sendFieldNames);
     m_nSendVars = m_sendFieldNames.size();
 
     m_recvSteps = boost::lexical_cast<int>(m_config["RECEIVESTEPS"]);

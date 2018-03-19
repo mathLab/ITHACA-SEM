@@ -33,9 +33,9 @@
 
 #include "CouplingCwipi.h"
 
+#include <LibUtilities/BasicUtils/CsvIO.h>
 #include <LibUtilities/BasicUtils/ParseUtils.h>
 #include <LibUtilities/BasicUtils/PtsField.h>
-#include <LibUtilities/BasicUtils/CsvIO.h>
 #include <LibUtilities/BasicUtils/Timer.h>
 #include <LibUtilities/BasicUtils/Vmath.hpp>
 #include <LibUtilities/Foundations/Interp.h>
@@ -45,8 +45,8 @@
 #include <MultiRegions/ContField2D.h>
 #include <MultiRegions/ContField3D.h>
 
-#include <boost/functional/hash.hpp>
 #include <boost/format.hpp>
+#include <boost/functional/hash.hpp>
 
 #define OUTPUT_FREQ 0
 
@@ -112,18 +112,20 @@ void CouplingCwipi::InterpCallback(
     }
 }
 
-CouplingCwipi::CouplingCwipi(MultiRegions::ExpListSharedPtr field): Coupling(field), m_sendHandle(-1), m_recvHandle(-1), m_lastSend(-1E6),m_lastReceive(-1E6), m_points(NULL), m_coords(NULL), m_connecIdx(NULL),
+CouplingCwipi::CouplingCwipi(MultiRegions::ExpListSharedPtr field)
+    : Coupling(field), m_sendHandle(-1), m_recvHandle(-1), m_lastSend(-1E6),
+      m_lastReceive(-1E6), m_points(NULL), m_coords(NULL), m_connecIdx(NULL),
       m_connec(NULL), m_rValsInterl(NULL), m_sValsInterl(NULL)
 {
     // defaults
-    m_config["GEOMTOL"]          = "0.1";
-    m_config["LOCALNAME"]        = "nektar";
-    m_config["REMOTENAME"]       = "precise";
-    m_config["OVERSAMPLE"]       = "0";
-    m_config["FILTERWIDTH"]      = "-1";
-    m_config["DUMPRAW"]          = "0";
-    m_config["SENDMETHOD"]       = "NEARESTNEIGHBOUR";
-    m_config["NOTLOCMETHOD"]     = "KEEP";
+    m_config["GEOMTOL"]      = "0.1";
+    m_config["LOCALNAME"]    = "nektar";
+    m_config["REMOTENAME"]   = "precise";
+    m_config["OVERSAMPLE"]   = "0";
+    m_config["FILTERWIDTH"]  = "-1";
+    m_config["DUMPRAW"]      = "0";
+    m_config["SENDMETHOD"]   = "NEARESTNEIGHBOUR";
+    m_config["NOTLOCMETHOD"] = "KEEP";
 }
 
 void CouplingCwipi::v_Init()
@@ -138,7 +140,10 @@ void CouplingCwipi::v_Init()
         "recvFieldNames", m_config["RECEIVEVARIABLES"].c_str());
     cwipi_add_local_string_control_parameter("sendFieldNames",
                                              m_config["SENDVARIABLES"].c_str());
-    m_recvTag = boost::hash<std::string>()(m_couplingName + m_config["REMOTENAME"] + m_config["LOCALNAME"]) % INT_MAX;
+    m_recvTag =
+        boost::hash<std::string>()(m_couplingName + m_config["REMOTENAME"] +
+                                   m_config["LOCALNAME"]) %
+        INT_MAX;
     cwipi_add_local_int_control_parameter("receiveTag", m_recvTag);
 
     m_spacedim = m_evalField->GetGraph()->GetSpaceDimension();
@@ -170,18 +175,23 @@ void CouplingCwipi::v_Init()
         cwipi_dump_application_properties();
     }
 
-    m_sendTag = cwipi_get_distant_int_control_parameter(m_config["REMOTENAME"].c_str(), "receiveTag");
+    m_sendTag = cwipi_get_distant_int_control_parameter(
+        m_config["REMOTENAME"].c_str(), "receiveTag");
 
     if (cwipi_has_int_parameter(m_config["REMOTENAME"].c_str(), "nRecvVars"))
     {
-        int remoteNRecvVars = cwipi_get_distant_int_control_parameter(m_config["REMOTENAME"].c_str(), "nRecvVars");
-        ASSERTL0(remoteNRecvVars == m_nSendVars, "Number of local send vars different to remote received vars");
+        int remoteNRecvVars = cwipi_get_distant_int_control_parameter(
+            m_config["REMOTENAME"].c_str(), "nRecvVars");
+        ASSERTL0(remoteNRecvVars == m_nSendVars,
+                 "Number of local send vars different to remote received vars");
     }
 
     if (cwipi_has_int_parameter(m_config["REMOTENAME"].c_str(), "nSendVars"))
     {
-        int remoteNSendVars = cwipi_get_distant_int_control_parameter(m_config["REMOTENAME"].c_str(), "nSendVars");
-        ASSERTL0(remoteNSendVars == m_nRecvVars, "Number of local receive vars different to remote sent vars");
+        int remoteNSendVars = cwipi_get_distant_int_control_parameter(
+            m_config["REMOTENAME"].c_str(), "nSendVars");
+        ASSERTL0(remoteNSendVars == m_nRecvVars,
+                 "Number of local receive vars different to remote sent vars");
     }
 
     AnnounceMesh();
@@ -341,8 +351,12 @@ void CouplingCwipi::SetupSend()
     std::stringstream sst;
     sst << m_spacedim << "," << m_evalField->GetGraph()->GetNvertices() << ","
         << m_nSendVars;
-    SendCallbackMap[sst.str()] = std::bind(&CouplingCwipi::SendCallback, this, std::placeholders::_1, std::placeholders::_2);
-    cwipi_set_interpolation_function(m_couplingName.c_str(), CouplingCwipi::InterpCallback);
+    SendCallbackMap[sst.str()] = std::bind(&CouplingCwipi::SendCallback,
+                                           this,
+                                           std::placeholders::_1,
+                                           std::placeholders::_2);
+    cwipi_set_interpolation_function(m_couplingName.c_str(),
+                                     CouplingCwipi::InterpCallback);
 }
 
 void CouplingCwipi::EvaluateFields(
@@ -464,7 +478,7 @@ void CouplingCwipi::AnnounceMesh()
     };
 
     int nVerts = graph->GetNvertices();
-    int nElts = seggeom.size() + trigeom.size() + quadgeom.size() +
+    int nElts  = seggeom.size() + trigeom.size() + quadgeom.size() +
                 tetgeom.size() + pyrgeom.size() + prismgeom.size() +
                 hexgeom.size();
 
@@ -564,7 +578,6 @@ void CouplingCwipi::AddElementsToMesh(T geom,
     }
 }
 
-
 void CouplingCwipi::SendCallback(
     Array<OneD, Array<OneD, NekDouble> > &interpField,
     Array<OneD, Array<OneD, NekDouble> > &distCoords)
@@ -577,10 +590,9 @@ void CouplingCwipi::SendCallback(
     }
 
     if (boost::to_upper_copy(m_config["SENDMETHOD"]) == "NEARESTNEIGHBOUR" ||
-        boost::to_upper_copy(m_config["SENDMETHOD"]) == "SHEPARD"
-    )
+        boost::to_upper_copy(m_config["SENDMETHOD"]) == "SHEPARD")
     {
-        if (! m_sendInterpolator)
+        if (!m_sendInterpolator)
         {
             SetupSendInterpolation();
         }
@@ -616,8 +628,9 @@ void CouplingCwipi::v_Send(
 
         m_lastSend = step;
 
-        vector<int> sendVarsToVars = GenerateVariableMapping(varNames, m_sendFieldNames);
-        m_sendField = Array<OneD, Array<OneD, NekDouble> > (m_nSendVars);
+        vector<int> sendVarsToVars =
+            GenerateVariableMapping(varNames, m_sendFieldNames);
+        m_sendField = Array<OneD, Array<OneD, NekDouble> >(m_nSendVars);
         for (int i = 0; i < sendVarsToVars.size(); ++i)
         {
             m_sendField[i] = field[sendVarsToVars[i]];
@@ -637,14 +650,14 @@ void CouplingCwipi::v_Send(
         strcpy(sendFN, "dummyName");
 
         cwipi_issend(m_couplingName.c_str(),
-                       "ex1",
-                       m_sendTag,
-                       m_nSendVars,
-                       step,
-                       time,
-                       sendFN,
-                       m_sValsInterl,
-                       &m_sendHandle);
+                     "ex1",
+                     m_sendTag,
+                     m_nSendVars,
+                     step,
+                     time,
+                     sendFN,
+                     m_sValsInterl,
+                     &m_sendHandle);
         timer1.Stop();
 
         if (m_evalField->GetComm()->GetRank() == 0 &&
@@ -654,7 +667,6 @@ void CouplingCwipi::v_Send(
         }
     }
 }
-
 
 void CouplingCwipi::SendComplete()
 {
@@ -677,7 +689,6 @@ void CouplingCwipi::SendComplete()
         cout << "Send waiting time: " << timer1.TimePerTest(1) << endl;
     }
 }
-
 
 void CouplingCwipi::ReceiveStart()
 {
@@ -712,9 +723,9 @@ void CouplingCwipi::ReceiveStart()
 }
 
 void CouplingCwipi::v_Receive(const int step,
-                                  const NekDouble time,
-                                  Array<OneD, Array<OneD, NekDouble> > &field,
-                                  vector<string> &varNames)
+                              const NekDouble time,
+                              Array<OneD, Array<OneD, NekDouble> > &field,
+                              vector<string> &varNames)
 {
     if (m_nRecvVars < 1 || m_recvSteps < 1)
     {
@@ -722,7 +733,8 @@ void CouplingCwipi::v_Receive(const int step,
     }
 
     Array<OneD, Array<OneD, NekDouble> > recvFields(m_nRecvVars);
-    vector<int> recvVarsToVars = GenerateVariableMapping(varNames, m_recvFieldNames);
+    vector<int> recvVarsToVars =
+        GenerateVariableMapping(varNames, m_recvFieldNames);
     ASSERTL1(m_nRecvVars == recvVarsToVars.size(), "field size mismatch");
     for (int i = 0; i < recvVarsToVars.size(); ++i)
     {
@@ -769,8 +781,8 @@ void CouplingCwipi::v_Receive(const int step,
 }
 
 void CouplingCwipi::ReceiveCwipi(const int step,
-                            const NekDouble time,
-                            Array<OneD, Array<OneD, NekDouble> > &field)
+                                 const NekDouble time,
+                                 Array<OneD, Array<OneD, NekDouble> > &field)
 {
     ASSERTL1(m_nRecvVars == field.num_elements(), "field size mismatch");
 
@@ -786,7 +798,8 @@ void CouplingCwipi::ReceiveCwipi(const int step,
         if (m_evalField->GetComm()->GetRank() == 0 &&
             m_evalField->GetSession()->DefinesCmdLineArgument("verbose"))
         {
-            cout << "waiting for receive at i = " << step << ", t = " << time << endl;
+            cout << "waiting for receive at i = " << step << ", t = " << time
+                 << endl;
         }
 
         LibUtilities::Timer timer1, timer2, timer3;
@@ -806,15 +819,15 @@ void CouplingCwipi::ReceiveCwipi(const int step,
         // set to -1 so we know we can start receiving again
         m_recvHandle = -1;
 
-
         int nNotLoc = cwipi_get_n_not_located_points(m_couplingName.c_str());
         Array<OneD, int> notLoc;
         if (nNotLoc != 0)
         {
             cout << "WARNING: relocating " << nNotLoc << " of " << m_nPoints
-                << " points" << endl;
+                 << " points" << endl;
 
-            const int *tmp = cwipi_get_not_located_points(m_couplingName.c_str());
+            const int *tmp =
+                cwipi_get_not_located_points(m_couplingName.c_str());
             notLoc = Array<OneD, int>(nNotLoc);
             for (int i = 0; i < nNotLoc; ++i)
             {
@@ -831,7 +844,6 @@ void CouplingCwipi::ReceiveCwipi(const int step,
                 }
             }
         }
-
 
         for (int i = 0, locPos = 0, intPos = 0; i < m_nPoints; ++i)
         {
@@ -857,7 +869,8 @@ void CouplingCwipi::ReceiveCwipi(const int step,
             {
                 doExtrapolate = 1;
             }
-            m_evalField->GetSession()->GetComm()->AllReduce(doExtrapolate, LibUtilities::ReduceMax);
+            m_evalField->GetSession()->GetComm()->AllReduce(
+                doExtrapolate, LibUtilities::ReduceMax);
             if (doExtrapolate > 0)
             {
                 ExtrapolateFields(rVals, notLoc);
@@ -898,10 +911,11 @@ void CouplingCwipi::ReceiveCwipi(const int step,
                 timer3.Stop();
 
                 if (m_evalField->GetComm()->GetRank() == 0 &&
-                    m_evalField->GetSession()->DefinesCmdLineArgument("verbose"))
+                    m_evalField->GetSession()->DefinesCmdLineArgument(
+                        "verbose"))
                 {
                     cout << "Smoother time (" << m_recvFieldNames[i]
-                        << "): " << timer3.TimePerTest(1) << endl;
+                         << "): " << timer3.TimePerTest(1) << endl;
                 }
             }
         }
@@ -925,7 +939,6 @@ void CouplingCwipi::ReceiveCwipi(const int step,
         ReceiveStart();
     }
 }
-
 
 void CouplingCwipi::ExtrapolateFields(
     Array<OneD, Array<OneD, NekDouble> > &rVals, Array<OneD, int> &notLoc)
@@ -1025,7 +1038,7 @@ void CouplingCwipi::ExtrapolateFields(
 
         // perform a nearest neighbour interpolation from locatedVals to the not
         // located rVals
-        if (! m_extrapInterpolator)
+        if (!m_extrapInterpolator)
         {
             m_extrapInterpolator =
                 MemoryManager<FieldUtils::Interpolator>::AllocateSharedPtr(
@@ -1064,7 +1077,7 @@ void CouplingCwipi::DumpRawFields(const NekDouble time,
     // two digits in the exponents of Scientific notation.
     unsigned int old_exponent_format;
     old_exponent_format = _set_output_format(_TWO_DIGIT_EXPONENT);
-    filename = boost::str(boost::format(filename) % m_time);
+    filename            = boost::str(boost::format(filename) % m_time);
     _set_output_format(old_exponent_format);
 #else
     std::string filename =
@@ -1091,7 +1104,7 @@ void CouplingCwipi::DumpRawFields(const NekDouble time,
 
     timer1.Stop();
     if (m_evalField->GetComm()->GetRank() == 0 &&
-            m_evalField->GetSession()->DefinesCmdLineArgument("verbose"))
+        m_evalField->GetSession()->DefinesCmdLineArgument("verbose"))
     {
         cout << "DumpRawFields total time: " << timer1.TimePerTest(1) << endl;
     }

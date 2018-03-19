@@ -49,17 +49,14 @@ namespace SolverUtils
 
 class CouplingCwipi;
 
-
 class CouplingCwipi : public Coupling
 {
 
 public:
-
     static std::string className;
 
     /// Creates an instance of this class
-    static CouplingSharedPtr create(
-        MultiRegions::ExpListSharedPtr field)
+    static CouplingSharedPtr create(MultiRegions::ExpListSharedPtr field)
     {
         CouplingSharedPtr p =
             MemoryManager<CouplingCwipi>::AllocateSharedPtr(field);
@@ -69,10 +66,11 @@ public:
 
     SOLVER_UTILS_EXPORT CouplingCwipi(MultiRegions::ExpListSharedPtr field);
 
-    SOLVER_UTILS_EXPORT  virtual ~CouplingCwipi();
+    SOLVER_UTILS_EXPORT virtual ~CouplingCwipi();
 
-    SOLVER_UTILS_EXPORT void SendCallback(Array<OneD, Array<OneD, NekDouble> > &interpField,
-                      Array<OneD, Array<OneD, NekDouble> > &distCoords);
+    SOLVER_UTILS_EXPORT void SendCallback(
+        Array<OneD, Array<OneD, NekDouble> > &interpField,
+        Array<OneD, Array<OneD, NekDouble> > &distCoords);
 
     SOLVER_UTILS_EXPORT static void InterpCallback(
         const int entities_dim,
@@ -98,7 +96,6 @@ public:
         void *distant_field);
 
 protected:
-
     NekDouble m_filtWidth;
 
     Array<OneD, Array<OneD, NekDouble> > m_sendField;
@@ -134,19 +131,22 @@ protected:
 
     SOLVER_UTILS_EXPORT virtual void v_Init();
 
-    SOLVER_UTILS_EXPORT virtual void v_Send(const int step,
-              const NekDouble time,
-              const Array<OneD, const Array<OneD, NekDouble> > &field,
-              vector<string> &varNames);
+    SOLVER_UTILS_EXPORT virtual void v_Send(
+        const int step,
+        const NekDouble time,
+        const Array<OneD, const Array<OneD, NekDouble> > &field,
+        vector<string> &varNames);
 
-    SOLVER_UTILS_EXPORT virtual void v_Receive(const int step,
-                       const NekDouble time,
-                       Array<OneD, Array<OneD, NekDouble> > &field,
-                       vector<string> &varNames);
+    SOLVER_UTILS_EXPORT virtual void v_Receive(
+        const int step,
+        const NekDouble time,
+        Array<OneD, Array<OneD, NekDouble> > &field,
+        vector<string> &varNames);
 
     SOLVER_UTILS_EXPORT virtual void v_Finalize();
 
-    SOLVER_UTILS_EXPORT const NekDouble GetSendField(const int i, const int j) const
+    SOLVER_UTILS_EXPORT const NekDouble GetSendField(const int i,
+                                                     const int j) const
     {
         return m_sendField[i][j];
     }
@@ -163,8 +163,8 @@ private:
     void ReceiveStart();
 
     void ReceiveCwipi(const int step,
-                 const NekDouble time,
-                 Array<OneD, Array<OneD, NekDouble> > &field);
+                      const NekDouble time,
+                      Array<OneD, Array<OneD, NekDouble> > &field);
 
     void EvaluateFields(Array<OneD, Array<OneD, NekDouble> > interpField,
                         Array<OneD, Array<OneD, NekDouble> > distCoords);
@@ -191,7 +191,6 @@ typedef std::function<void(Array<OneD, Array<OneD, NekDouble> > &interpField,
     SendCallbackType;
 
 static std::map<std::string, SendCallbackType> SendCallbackMap;
-
 }
 }
 

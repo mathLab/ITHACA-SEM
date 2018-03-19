@@ -6,7 +6,7 @@
 //
 // The MIT License
 //
-// Copyright (c) 2015 Kilian Lackhove
+// Copyright (c) 2018 Kilian Lackhove
 // Copyright (c) 2006 Division of Applied Mathematics, Brown University (USA),
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
@@ -34,8 +34,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <LibUtilities/Communication/CommCwipi.h>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
+#include <LibUtilities/Communication/CommCwipi.h>
 
 #include <cwipi.h>
 
@@ -44,15 +44,13 @@ namespace Nektar
 namespace LibUtilities
 {
 
-std::string CommCwipi::className
-    = GetCommFactory().RegisterCreatorFunction("CWIPI", CommCwipi::create,
-          "Parallel communication using MPI with CWIPI.");
+std::string CommCwipi::className = GetCommFactory().RegisterCreatorFunction(
+    "CWIPI", CommCwipi::create, "Parallel communication using MPI with CWIPI.");
 
 /**
  *
  */
-CommCwipi::CommCwipi(int narg, char* arg[])
-    : CommMpi()
+CommCwipi::CommCwipi(int narg, char *arg[]) : CommMpi()
 {
     int init = 0;
     MPI_Initialized(&init);
@@ -69,7 +67,7 @@ CommCwipi::CommCwipi(int narg, char* arg[])
     {
         if (!std::strcmp(arg[i], "--cwipi"))
         {
-            localName = arg[i+1];
+            localName = arg[i + 1];
         }
     }
 
@@ -77,12 +75,11 @@ CommCwipi::CommCwipi(int narg, char* arg[])
     cwipi_init(MPI_COMM_WORLD, localName.c_str(), &localComm);
     m_comm = localComm;
 
-    MPI_Comm_size( m_comm, &m_size );
-    MPI_Comm_rank( m_comm, &m_rank );
+    MPI_Comm_size(m_comm, &m_size);
+    MPI_Comm_rank(m_comm, &m_rank);
 
     m_type = "Parallel MPI with CWIPI";
 }
-
 
 /**
  *
@@ -99,7 +96,5 @@ void CommCwipi::v_Finalise()
     cwipi_finalize();
     CommMpi::v_Finalise();
 }
-
-
 }
 }

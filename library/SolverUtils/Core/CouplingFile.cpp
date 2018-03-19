@@ -33,8 +33,8 @@
 
 #include "CouplingFile.h"
 
-#include <LibUtilities/BasicUtils/ParseUtils.h>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
+#include <LibUtilities/BasicUtils/ParseUtils.h>
 #include <LibUtilities/BasicUtils/PtsField.h>
 #include <LibUtilities/BasicUtils/PtsIO.h>
 
@@ -55,7 +55,7 @@ CouplingFile::CouplingFile(MultiRegions::ExpListSharedPtr field)
     : Coupling(field), m_lastSend(-1E6), m_lastReceive(-1E6)
 {
     m_config["RECEIVEFUNCTION"] = "CouplingIn";
-    m_config["SENDFILENAME"] = "CouplingOut_%14.8E.pts";
+    m_config["SENDFILENAME"]    = "CouplingOut_%14.8E.pts";
 }
 
 CouplingFile::~CouplingFile()
@@ -69,7 +69,10 @@ void CouplingFile::v_Init()
     if (m_nRecvVars > 0 && m_recvSteps > 0)
     {
         m_inputFunction = MemoryManager<SessionFunction>::AllocateSharedPtr(
-            m_evalField->GetSession(), m_evalField, m_config["RECEIVEFUNCTION"], true);
+            m_evalField->GetSession(),
+            m_evalField,
+            m_config["RECEIVEFUNCTION"],
+            true);
     }
 }
 
@@ -93,8 +96,7 @@ void CouplingFile::v_Send(
     if (m_evalField->GetComm()->GetRank() == 0 &&
         m_evalField->GetSession()->DefinesCmdLineArgument("verbose"))
     {
-        cout << "sending fields at i = " << step << ", t = " << time
-                << endl;
+        cout << "sending fields at i = " << step << ", t = " << time << endl;
     }
 
     vector<int> sendVarsToVars =
@@ -105,7 +107,8 @@ void CouplingFile::v_Send(
     // two digits in the exponents of Scientific notation.
     unsigned int old_exponent_format;
     old_exponent_format = _set_output_format(_TWO_DIGIT_EXPONENT);
-    std::string filename = boost::str(boost::format(m_config["SENDFILENAME"]) % time);
+    std::string filename =
+        boost::str(boost::format(m_config["SENDFILENAME"]) % time);
     _set_output_format(old_exponent_format);
 #else
     std::string filename =
@@ -154,26 +157,25 @@ void CouplingFile::v_Receive(const int step,
     if (m_evalField->GetComm()->GetRank() == 0 &&
         m_evalField->GetSession()->DefinesCmdLineArgument("verbose"))
     {
-        cout << "receiving fields at i = " << step << ", t = " << time
-                << endl;
+        cout << "receiving fields at i = " << step << ", t = " << time << endl;
     }
 
-    string filename = m_evalField->GetSession()->GetFunctionFilename(m_config["RECEIVEFUNCTION"], m_recvFieldNames[0]);
+    string filename = m_evalField->GetSession()->GetFunctionFilename(
+        m_config["RECEIVEFUNCTION"], m_recvFieldNames[0]);
 
 #ifdef _WIN32
     // We need this to make sure boost::format has always
     // two digits in the exponents of Scientific notation.
     unsigned int old_exponent_format;
     old_exponent_format = _set_output_format(_TWO_DIGIT_EXPONENT);
-    filename = boost::str(boost::format(filename) % time);
+    filename            = boost::str(boost::format(filename) % time);
     _set_output_format(old_exponent_format);
 #else
-    filename =
-        boost::str(boost::format(filename) % time);
+    filename = boost::str(boost::format(filename) % time);
 #endif
 
     int exists = 0;
-    while (! exists)
+    while (!exists)
     {
         exists = fs::exists(filename);
         m_evalField->GetComm()->AllReduce(exists, LibUtilities::ReduceMin);
@@ -187,9 +189,12 @@ void CouplingFile::v_Receive(const int step,
     ASSERTL1(m_nRecvVars == recvVarsToVars.size(), "field size mismatch");
     for (int i = 0; i < recvVarsToVars.size(); ++i)
     {
-        Vmath::Vcopy(recvFields[i].num_elements(), recvFields[i], 1, field[recvVarsToVars[i]], 1);
+        Vmath::Vcopy(recvFields[i].num_elements(),
+                     recvFields[i],
+                     1,
+                     field[recvVarsToVars[i]],
+                     1);
     }
 }
-
 }
 }

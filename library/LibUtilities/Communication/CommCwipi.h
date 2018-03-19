@@ -6,7 +6,7 @@
 //
 // The MIT License
 //
-// Copyright (c) 2015 Kilian Lackhove
+// Copyright (c) 2018 Kilian Lackhove
 // Copyright (c) 2006 Division of Applied Mathematics, Brown University (USA),
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
@@ -36,8 +36,8 @@
 #ifndef NEKTAR_LIB_UTILITIES_COMMCWIPI_H
 #define NEKTAR_LIB_UTILITIES_COMMCWIPI_H
 
-#include <string>
 #include <mpi.h>
+#include <string>
 
 #include <LibUtilities/Communication/CommMpi.h>
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
@@ -58,7 +58,7 @@ class CommCwipi : public CommMpi
 
 public:
     /// Creates an instance of this class
-    static CommSharedPtr create(int narg, char* arg[])
+    static CommSharedPtr create(int narg, char *arg[])
     {
         return MemoryManager<CommCwipi>::AllocateSharedPtr(narg, arg);
     }
@@ -66,16 +66,13 @@ public:
     /// Name of class
     static std::string className;
 
-    CommCwipi(int narg, char* arg[]);
+    CommCwipi(int narg, char *arg[]);
 
     virtual ~CommCwipi();
 
 protected:
     virtual void v_Finalise();
-
 };
-
-
 }
 }
 

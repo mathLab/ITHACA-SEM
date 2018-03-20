@@ -44,6 +44,11 @@ IF (NEKTAR_BUILD_PYTHON)
             COMMAND ${PYTHON_EXECUTABLE} setup.py install --user
             WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
 
+        ADD_CUSTOM_TARGET(nekpy-install-system
+            DEPENDS _MultiRegions
+            COMMAND ${PYTHON_EXECUTABLE} setup.py install
+            WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
+
         FILE(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/NekPy)
         FILE(WRITE ${CMAKE_BINARY_DIR}/NekPy/__init__.py "# placeholder")
     ELSE()

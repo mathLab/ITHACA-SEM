@@ -2,7 +2,6 @@ SET(_BOOST_NUMPY_SEARCH
     $ENV{BOOST_ROOT}
     $ENV{BOOST_DIR}
     $ENV{BOOST_NUMPY_DIR}
-    /Users/dave/sw/Boost.NumPy/builds/dist
     /usr/include
     /usr/local/include)
 

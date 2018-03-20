@@ -41,7 +41,7 @@ IF (NEKTAR_BUILD_PYTHON)
 
         ADD_CUSTOM_TARGET(nekpy-install-user
             DEPENDS _MultiRegions
-            COMMAND python setup.py install --user
+            COMMAND ${PYTHON_EXECUTABLE} setup.py install --user
             WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
 
         FILE(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/NekPy)

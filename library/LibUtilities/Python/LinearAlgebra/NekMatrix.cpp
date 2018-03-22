@@ -80,13 +80,9 @@ struct NekMatrixToPython
 #endif
 
         int nRows = mat->GetRows(), nCols = mat->GetColumns();
-        //StorageType storage = mat->GetStorageType();
+        MatrixStorage storage = mat->GetStorageType();
 
-        // if (storage != eFULL)
-        // {
-        //     // Only support full storage types at the moment - ignore symmetric,
-        //     // banded, etc.
-        // }
+        ASSERTL0(storage != eFULL, "Only full storage matrices are currently supported.");
 
         return py::incref(
             np::from_data(

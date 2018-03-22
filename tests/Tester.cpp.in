@@ -229,7 +229,7 @@ int main(int argc, char *argv[])
         if (file.IsPythonTest())
         {
             command += "PYTHONPATH=\"@BUILD_PATH\" ";
-            command += "python ";
+            command += "@PYTHON_EXECUTABLE@ ";
         }
 
         command += PortablePath(execPath);

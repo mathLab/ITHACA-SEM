@@ -35,7 +35,7 @@
 
 #include <LibUtilities/LinearAlgebra/NekMatrix.hpp>
 #include <LibUtilities/LinearAlgebra/MatrixStorageType.h>
-#include <NekPyConfig.hpp>
+#include <LibUtilities/Python/NekPyConfig.hpp>
 
 using namespace Nektar;
 using namespace Nektar::LibUtilities;

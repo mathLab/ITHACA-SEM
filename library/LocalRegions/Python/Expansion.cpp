@@ -33,7 +33,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <NekPyConfig.hpp>
+#include <LibUtilities/Python/NekPyConfig.hpp>
 #include <LocalRegions/Expansion.h>
 
 using namespace Nektar;

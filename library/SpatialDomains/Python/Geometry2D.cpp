@@ -35,7 +35,7 @@
 
 
 #include <SpatialDomains/Geometry2D.h>
-#include <NekPyConfig.hpp>
+#include <LibUtilities/Python/NekPyConfig.hpp>
 
 using namespace Nektar;
 using namespace Nektar::SpatialDomains;

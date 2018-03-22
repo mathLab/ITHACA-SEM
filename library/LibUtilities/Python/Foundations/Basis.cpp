@@ -36,7 +36,7 @@
 #include <LibUtilities/Foundations/Basis.h>
 #include <LibUtilities/Foundations/ManagerAccess.h>
 
-#include <NekPyConfig.hpp>
+#include <LibUtilities/Python/NekPyConfig.hpp>
 
 using namespace Nektar::LibUtilities;
 

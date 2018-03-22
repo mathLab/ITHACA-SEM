@@ -34,7 +34,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include <SpatialDomains/MeshGraph.h>
-#include <NekPyConfig.hpp>
+#include <LibUtilities/Python/NekPyConfig.hpp>
 #include <boost/python/suite/indexing/map_indexing_suite.hpp>
 
 using namespace Nektar;

@@ -35,7 +35,7 @@
 
 #include <vector>
 #include <LibUtilities/BasicUtils/ShapeType.hpp>
-#include <NekPyConfig.hpp>
+#include <LibUtilities/Python/NekPyConfig.hpp>
 
 using namespace Nektar::LibUtilities;
 

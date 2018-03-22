@@ -49,7 +49,7 @@ First consider `LibUtilities`. An abbreviated version of the base file,
 `LibUtilities.cpp` has the following structure:
 
 ```c++
-#include <NekPyConfig.hpp>
+#include <LibUtilities/Python/NekPyConfig.hpp>
 
 void export_Basis();
 void export_SessionReader();

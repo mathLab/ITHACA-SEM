@@ -37,7 +37,7 @@
 #include <LibUtilities/Foundations/Points.h>
 #include <LibUtilities/Foundations/PointsType.h>
 
-#include <NekPyConfig.hpp>
+#include <LibUtilities/Python/NekPyConfig.hpp>
 
 using namespace Nektar;
 using namespace Nektar::LibUtilities;

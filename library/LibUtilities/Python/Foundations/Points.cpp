@@ -237,7 +237,7 @@ void export_Points()
              "Returns:\n"
              "\tNumPy ndarray of length equal to the number of quadrature\n"
              "\tpoints, containing quadrature zeros.")
-        .def("GetW", &Points<double>::GetZ,
+        .def("GetW", &Points<double>::GetW,
              py::return_value_policy<py::copy_const_reference>(),
              "Get quadrature weights.\n"
              "\n"

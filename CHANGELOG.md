@@ -47,6 +47,7 @@ v5.0.0
   WeightPartitions was used in parallel (!923)
 - Removed instance count from beginning of Array storage to improve memory
   alignment (!921)
+- Fix naming issue of duplicate Unit tests (!924) 
 	
 **NekMesh**:
 - Add feature to read basic 2D geo files as CAD (!731)

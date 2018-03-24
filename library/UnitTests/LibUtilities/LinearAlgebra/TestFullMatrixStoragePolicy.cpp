@@ -66,7 +66,7 @@ namespace Nektar
 
 
                     
-        BOOST_AUTO_TEST_CASE(TestAdvance)
+        BOOST_AUTO_TEST_CASE(TestAdvanceFull)
         {
             UnitTests::RedirectCerrIfNeeded();
             typedef FullMatrixFuncs Policy;

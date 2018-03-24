@@ -81,7 +81,7 @@ namespace Nektar
 
         }
 
-        BOOST_AUTO_TEST_CASE(TestElementAccess)
+        BOOST_AUTO_TEST_CASE(TestElementAccessLinearAlgerbra)
         {
             double buf[] = {1.0, 2.0, 3.0,
                             4.0, 5.0, 6.0};

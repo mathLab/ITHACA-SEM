@@ -46,9 +46,10 @@ namespace Nektar
                 "Inviscid Burger equation");
     
     UnsteadyInviscidBurger::UnsteadyInviscidBurger(
-            const LibUtilities::SessionReaderSharedPtr& pSession)
-        : UnsteadySystem(pSession),
-          AdvectionSystem(pSession)
+        const LibUtilities::SessionReaderSharedPtr& pSession,
+        const SpatialDomains::MeshGraphSharedPtr& pGraph)
+        : UnsteadySystem(pSession, pGraph),
+          AdvectionSystem(pSession, pGraph)
     {
     }
     
@@ -89,7 +90,7 @@ namespace Nektar
                 m_advObject->SetFluxVector   (&UnsteadyInviscidBurger::GetFluxVector, this);
                 
                 m_session->LoadSolverInfo("UpwindType", riemName, "Upwind");
-                m_riemannSolver = SolverUtils::GetRiemannSolverFactory().CreateInstance(riemName);
+                m_riemannSolver = SolverUtils::GetRiemannSolverFactory().CreateInstance(riemName, m_session);
                 m_riemannSolver->SetScalar("Vn", &UnsteadyInviscidBurger::GetNormalVelocity, this);
                 
                 m_advObject->SetRiemannSolver(m_riemannSolver);

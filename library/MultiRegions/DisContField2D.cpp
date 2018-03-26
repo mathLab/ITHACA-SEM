@@ -40,7 +40,7 @@
 #include <LocalRegions/Expansion.h> 
 #include <LocalRegions/QuadExp.h>   
 #include <LocalRegions/TriExp.h>    
-#include <SpatialDomains/MeshGraph2D.h>
+#include <SpatialDomains/MeshGraph.h>
 #include <LibUtilities/LinearAlgebra/NekTypeDefs.hpp>
 #include <LibUtilities/LinearAlgebra/NekMatrix.hpp>
 
@@ -386,10 +386,7 @@ namespace Nektar
             }
             
             ExpList1DSharedPtr trace;
-            SpatialDomains::MeshGraph2DSharedPtr graph2D = 
-                std::dynamic_pointer_cast<SpatialDomains::MeshGraph2D>(
-                    m_graph);
-                
+
             // Set up matrix map
             m_globalBndMat = MemoryManager<GlobalLinSysMap>::
                 AllocateSharedPtr();
@@ -397,11 +394,11 @@ namespace Nektar
             // Set up trace space
             trace = MemoryManager<ExpList1D>::AllocateSharedPtr(
                 m_session, m_bndCondExpansions, m_bndConditions, *m_exp,
-                graph2D, m_periodicEdges);
+                m_graph, m_periodicEdges);
             
             m_trace = std::dynamic_pointer_cast<ExpList>(trace);
             m_traceMap = MemoryManager<AssemblyMapDG>::
-                AllocateSharedPtr(m_session, graph2D, trace, *this,
+                AllocateSharedPtr(m_session, m_graph, trace, *this,
                                   m_bndCondExpansions, m_bndConditions,
                                   m_periodicEdges,
                                   variable);
@@ -474,8 +471,8 @@ namespace Nektar
                         m_boundaryEdges.insert(
                             m_traceMap->GetBndCondTraceToGlobalTraceMap(cnt+e));
                     }
+                    cnt += m_bndCondExpansions[n]->GetExpSize();
                 }
-                cnt += m_bndCondExpansions[n]->GetExpSize();
             }
                 
             // Set up information for periodic boundary conditions.
@@ -637,63 +634,44 @@ namespace Nektar
             const SpatialDomains::BoundaryConditions &bcs,
             const std::string &variable,
             const bool DeclareCoeffPhysArrays)
-        {      
+        {
             int cnt = 0;
             SpatialDomains::BoundaryConditionShPtr             bc;
             MultiRegions::ExpList1DSharedPtr                   locExpList;
-            const SpatialDomains::BoundaryRegionCollection    &bregions = 
+            const SpatialDomains::BoundaryRegionCollection    &bregions =
                 bcs.GetBoundaryRegions();
-            const SpatialDomains::BoundaryConditionCollection &bconditions = 
+            const SpatialDomains::BoundaryConditionCollection &bconditions =
                 bcs.GetBoundaryConditions();
 
-            // count the number of non-periodic boundary regions
-            for (auto &it : bregions)
-            {
-                bc = GetBoundaryCondition(bconditions, it.first, variable);
-                
-                if (bc->GetBoundaryConditionType() != SpatialDomains::ePeriodic)
-                {
-                    cnt++;
-                }
-            }
+            m_bndCondExpansions =
+                Array<OneD, MultiRegions::ExpListSharedPtr>(bregions.size());
+            m_bndConditions     =
+                Array<OneD, SpatialDomains::BoundaryConditionShPtr>(bregions.size());
 
-            m_bndCondExpansions = 
-                Array<OneD, MultiRegions::ExpListSharedPtr>(cnt);
-            m_bndConditions     = 
-                Array<OneD, SpatialDomains::BoundaryConditionShPtr>(cnt);
-        
-            cnt = 0;
-
-            // list non-periodic boundaries
             for (auto &it : bregions)
             {
                 bc = GetBoundaryCondition(bconditions, it.first, variable);
 
-                if (bc->GetBoundaryConditionType() != SpatialDomains::ePeriodic)
+                locExpList = MemoryManager<MultiRegions::ExpList1D>
+                    ::AllocateSharedPtr(m_session, *(it.second), graph2D,
+                                        DeclareCoeffPhysArrays, variable,
+                                        bc->GetComm());
+
+                m_bndCondExpansions[cnt]  = locExpList;
+                m_bndConditions[cnt]      = bc;
+
+                std::string type = m_bndConditions[cnt]->GetUserDefined();
+
+                // Set up normals on non-Dirichlet boundary conditions. Second
+                // two conditions ideally should be in local solver setup (when
+                // made into factory)
+                if(bc->GetBoundaryConditionType() != SpatialDomains::eDirichlet
+                   || boost::iequals(type,"I") || boost::iequals(type,"CalcBC"))
                 {
-                    locExpList = MemoryManager<MultiRegions::ExpList1D>
-                        ::AllocateSharedPtr(m_session, *it.second, graph2D,
-                                            DeclareCoeffPhysArrays, variable);
-
-                    m_bndCondExpansions[cnt]  = locExpList;
-                    m_bndConditions[cnt]      = bc;
-                    
-
-                    std::string type = m_bndConditions[cnt]->GetUserDefined();
-                    
-                    // Set up normals on non-Dirichlet boundary
-                    // conditions. Second two conditions ideally
-                    // should be in local solver setup (when made into factory)
-                    if((bc->GetBoundaryConditionType() != 
-                        SpatialDomains::eDirichlet)||
-                       boost::iequals(type,"I") || 
-                       boost::iequals(type,"CalcBC"))
-                    {
-                        SetUpPhysNormals();
-                    }
-
-                    cnt++;
+                    SetUpPhysNormals();
                 }
+
+                cnt++;
             }
         }
 
@@ -716,26 +694,23 @@ namespace Nektar
                 = bcs.GetBoundaryRegions();
             const SpatialDomains::BoundaryConditionCollection &bconditions
                 = bcs.GetBoundaryConditions();
-            SpatialDomains::MeshGraph2DSharedPtr graph2D
-                = std::dynamic_pointer_cast<
-                    SpatialDomains::MeshGraph2D>(m_graph);
 
-            LibUtilities::CommSharedPtr     vComm       =
+            LibUtilities::CommSharedPtr       vComm       =
                 m_session->GetComm()->GetRowComm();
-            LibUtilities::CompositeOrdering compOrder   =
-                m_session->GetCompositeOrdering();
-            LibUtilities::BndRegionOrdering bndRegOrder =
-                m_session->GetBndRegionOrdering();
-            SpatialDomains::CompositeMap    compMap     =
+            SpatialDomains::CompositeOrdering compOrder   =
+                m_graph->GetCompositeOrdering();
+            SpatialDomains::BndRegionOrdering bndRegOrder =
+                m_graph->GetBndRegionOrdering();
+            SpatialDomains::CompositeMap      compMap     =
                 m_graph->GetComposites();
             
             // Unique collection of pairs of periodic composites (i.e. if
             // composites 1 and 2 are periodic then this map will contain either
             // the pair (1,2) or (2,1) but not both).
-            map<int,int>                     perComps;
-            map<int,vector<int> >            allVerts;
-            set<int>                         locVerts;
-            map<int,StdRegions::Orientation> allEdges;
+            map<int,int>                                 perComps;
+            map<int,vector<int>>                         allVerts;
+            set<int>                                     locVerts;
+            map<int, pair<int, StdRegions::Orientation>> allEdges;
             
             int region1ID, region2ID, i, j, k, cnt;
             SpatialDomains::BoundaryConditionShPtr locBCond;
@@ -787,41 +762,42 @@ namespace Nektar
                              region1ID)+" should only contain 1 composite.");
 
                 // Construct set containing all periodic edges on this process
-                SpatialDomains::Composite c = it.second->begin()->second;
+                SpatialDomains::CompositeSharedPtr c = it.second->begin()->second;
 
                 vector<unsigned int> tmpOrder;
                 
-                for (i = 0; i < c->size(); ++i)
+                for (i = 0; i < c->m_geomVec.size(); ++i)
                 {
                     SpatialDomains::SegGeomSharedPtr segGeom =
                         std::dynamic_pointer_cast<
-                            SpatialDomains::SegGeom>((*c)[i]);
+                            SpatialDomains::SegGeom>(c->m_geomVec[i]);
                     ASSERTL0(segGeom, "Unable to cast to shared ptr");
 
-                    SpatialDomains::ElementEdgeVectorSharedPtr elmt =
-                        graph2D->GetElementsFromEdge(segGeom);
+                    SpatialDomains::GeometryLinkSharedPtr elmt =
+                        m_graph->GetElementsFromEdge(segGeom);
                     ASSERTL0(elmt->size() == 1,
                              "The periodic boundaries belong to "
                              "more than one element of the mesh");
 
                     SpatialDomains::Geometry2DSharedPtr geom =
                         std::dynamic_pointer_cast<SpatialDomains::Geometry2D>(
-                            (*elmt)[0]->m_Element);
-                    
-                    allEdges[(*c)[i]->GetGlobalID()] = 
-                        geom->GetEorient((*elmt)[0]->m_EdgeIndx);
+                            elmt->at(0).first);
+
+                    allEdges[c->m_geomVec[i]->GetGlobalID()] =
+                        make_pair(elmt->at(0).second,
+                                  geom->GetEorient(elmt->at(0).second));
 
                     // In serial mesh partitioning will not have occurred so
                     // need to fill composite ordering map manually.
                     if (vComm->GetSize() == 1)
                     {
-                        tmpOrder.push_back((*c)[i]->GetGlobalID());
+                        tmpOrder.push_back(c->m_geomVec[i]->GetGlobalID());
                     }
                     
                     vector<int> vertList(2);
                     vertList[0] = segGeom->GetVid(0);
                     vertList[1] = segGeom->GetVid(1);
-                    allVerts[(*c)[i]->GetGlobalID()] = vertList;
+                    allVerts[c->m_geomVec[i]->GetGlobalID()] = vertList;
                 }
 
                 if (vComm->GetSize() == 1)
@@ -875,6 +851,7 @@ namespace Nektar
 
             totEdges = Vmath::Vsum(n, edgecounts, 1);
             Array<OneD, int> edgeIds   (totEdges, 0);
+            Array<OneD, int> edgeIdx   (totEdges, 0);
             Array<OneD, int> edgeOrient(totEdges, 0);
             Array<OneD, int> edgeVerts (totEdges, 0);
 
@@ -883,11 +860,13 @@ namespace Nektar
             for (i = 0; sIt != allEdges.end(); ++sIt)
             {
                 edgeIds   [edgeoffset[p] + i  ] = sIt->first;
-                edgeOrient[edgeoffset[p] + i  ] = sIt->second;
+                edgeIdx   [edgeoffset[p] + i  ] = sIt->second.first;
+                edgeOrient[edgeoffset[p] + i  ] = sIt->second.second;
                 edgeVerts [edgeoffset[p] + i++] = allVerts[sIt->first].size();
             }
 
             vComm->AllReduce(edgeIds,    LibUtilities::ReduceSum);
+            vComm->AllReduce(edgeIdx,    LibUtilities::ReduceSum);
             vComm->AllReduce(edgeOrient, LibUtilities::ReduceSum);
             vComm->AllReduce(edgeVerts,  LibUtilities::ReduceSum);
 
@@ -944,7 +923,24 @@ namespace Nektar
             {
                 ASSERTL0(orientMap.count(edgeIds[i]) == 0,
                          "Already found edge in orientation map!");
-                orientMap[edgeIds[i]] = (StdRegions::Orientation)edgeOrient[i];
+
+                // Work out relative orientations. To avoid having to exchange
+                // vertex locations, we figure out if the edges are backwards or
+                // forwards orientated with respect to a forwards orientation
+                // that is CCW. Since our local geometries are
+                // forwards-orientated with respect to the Cartesian axes, we
+                // need to invert the orientation for the top and left edges of
+                // a quad and the left edge of a triangle.
+                StdRegions::Orientation o =
+                    (StdRegions::Orientation)edgeOrient[i];
+
+                if (edgeIdx[i] > 1)
+                {
+                    o = o == StdRegions::eForwards ?
+                        StdRegions::eBackwards : StdRegions::eForwards;
+                }
+
+                orientMap[edgeIds[i]] = o;
 
                 vector<int> verts(edgeVerts[i]);
 
@@ -969,7 +965,7 @@ namespace Nektar
                 
             for (auto &cIt : perComps)
             {
-                SpatialDomains::Composite c[2];
+                SpatialDomains::CompositeSharedPtr c[2];
                 const int   id1  = cIt.first;
                 const int   id2  = cIt.second;
                 std::string id1s = boost::lexical_cast<string>(id1);
@@ -1030,11 +1026,11 @@ namespace Nektar
                         continue;
                     }
 
-                    if (c[i]->size() > 0)
+                    if (c[i]->m_geomVec.size() > 0)
                     {
-                        for (j = 0; j < c[i]->size(); ++j)
+                        for (j = 0; j < c[i]->m_geomVec.size(); ++j)
                         {
-                            locEdges.insert(c[i]->at(j)->GetGlobalID());
+                            locEdges.insert(c[i]->m_geomVec[j]->GetGlobalID());
                         }
                     }
                 }
@@ -1684,10 +1680,6 @@ namespace Nektar
                 int cnt;
                 int nbcs = 0;
 
-                SpatialDomains::MeshGraph2DSharedPtr graph2D =
-                    std::dynamic_pointer_cast<SpatialDomains::MeshGraph2D>(
-                        m_graph);
-
                 // Populate global ID map (takes global geometry ID to local
                 // expansion list ID).
                 for (i = 0; i < GetExpSize(); ++i)
@@ -1713,13 +1705,13 @@ namespace Nektar
                     {
                         exp1d = m_bndCondExpansions[n]->GetExp(i)->
                                             as<LocalRegions::Expansion1D>();
-                        // Use edge to element map from MeshGraph2D.
-                        SpatialDomains::ElementEdgeVectorSharedPtr tmp =
-                            graph2D->GetElementsFromEdge(exp1d->GetGeom1D());
+                        // Use edge to element map from MeshGraph.
+                        SpatialDomains::GeometryLinkSharedPtr tmp =
+                            m_graph->GetElementsFromEdge(exp1d->GetGeom1D());
 
-                        m_BCtoElmMap[cnt] = globalIdMap[(*tmp)[0]->
-                            m_Element->GetGlobalID()];
-                        m_BCtoEdgMap[cnt] = (*tmp)[0]->m_EdgeIndx;
+                        m_BCtoElmMap[cnt] = globalIdMap[
+                            (*tmp)[0].first->GetGlobalID()];
+                        m_BCtoEdgMap[cnt] = (*tmp)[0].second;
                     }
                 }
             }
@@ -1859,6 +1851,7 @@ namespace Nektar
                 const FlagList &flags,
                 const StdRegions::ConstFactorMap &factors,
                 const StdRegions::VarCoeffMap &varcoeff,
+                const MultiRegions::VarFactorsMap &varfactors,
                 const Array<OneD, const NekDouble> &dirForcing,
                 const bool  PhysSpaceForcing)
 
@@ -1944,7 +1937,7 @@ namespace Nektar
             cnt = 0;
             for(i = 0; i < m_bndCondExpansions.num_elements(); ++i)
             {
-                if(m_bndConditions[i]->GetBoundaryConditionType() == 
+                if(m_bndConditions[i]->GetBoundaryConditionType() ==
                        SpatialDomains::eDirichlet)
                 {
                     for(j = 0; j < (m_bndCondExpansions[i])->GetNcoeffs(); ++j)
@@ -1953,7 +1946,10 @@ namespace Nektar
                         BndSol[id] = m_bndCondExpansions[i]->GetCoeffs()[j];
                     }
                 }
-                else
+                else if (m_bndConditions[i]->GetBoundaryConditionType() ==
+                             SpatialDomains::eNeumann ||
+                         m_bndConditions[i]->GetBoundaryConditionType() ==
+                             SpatialDomains::eRobin)
                 {
                     //Add weak boundary condition to trace forcing
                     for(j = 0; j < (m_bndCondExpansions[i])->GetNcoeffs(); ++j)
@@ -2289,7 +2285,7 @@ namespace Nektar
                         
                         if (filebcs != "")
                         {
-                            ExtractFileBCs(filebcs, bcPtr->m_comm, varName, locExpList);
+                            ExtractFileBCs(filebcs, bcPtr->GetComm(), varName, locExpList);
                         }
                         else
                         {
@@ -2316,7 +2312,7 @@ namespace Nektar
                         string filebcs  = bcPtr->m_filename;
                         if (filebcs != "")
                         {
-                            ExtractFileBCs(filebcs, bcPtr->m_comm, varName, locExpList);
+                            ExtractFileBCs(filebcs, bcPtr->GetComm(), varName, locExpList);
                         }
                         else
                         {
@@ -2343,7 +2339,7 @@ namespace Nektar
                         
                         if (filebcs != "")
                         {
-                            ExtractFileBCs(filebcs, bcPtr->m_comm, varName, locExpList);
+                            ExtractFileBCs(filebcs, bcPtr->GetComm(), varName, locExpList);
                         }
                         else
                         {
@@ -2359,7 +2355,12 @@ namespace Nektar
                         locExpList->IProductWRTBase(
                             locExpList->GetPhys(),
                             locExpList->UpdateCoeffs());
-                    }    
+                    }
+                    else if (m_bndConditions[i]->GetBoundaryConditionType()
+                             == SpatialDomains::ePeriodic)
+                    {
+                        continue;
+                    }
                     else
                     {
                         ASSERTL0(false, "This type of BC not implemented yet");

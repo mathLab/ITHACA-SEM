@@ -15,6 +15,7 @@ IF( NEKTAR_SOLVER_COMPRESSIBLE_FLOW )
        ./BoundaryConditions/ExtrapOrder0BC.cpp
        ./BoundaryConditions/IsentropicVortexBC.cpp
        ./BoundaryConditions/PressureInflowFileBC.cpp
+       ./BoundaryConditions/PressureMachTemperatureBC.cpp
        ./BoundaryConditions/PressureOutflowBC.cpp
        ./BoundaryConditions/PressureOutflowFileBC.cpp
        ./BoundaryConditions/PressureOutflowNonReflectiveBC.cpp
@@ -25,15 +26,22 @@ IF( NEKTAR_SOLVER_COMPRESSIBLE_FLOW )
        ./BoundaryConditions/TimeDependentBC.cpp
        ./BoundaryConditions/WallBC.cpp
        ./BoundaryConditions/WallViscousBC.cpp
-       ./CompressibleFlowSolver.cpp 
+       ./CompressibleFlowSolver.cpp
+       ./Diffusion/DiffusionLDGNS.cpp
        ./EquationSystems/CompressibleFlowSystem.cpp
        ./EquationSystems/EulerCFE.cpp
        ./EquationSystems/IsentropicVortex.cpp
        ./EquationSystems/NavierStokesCFE.cpp
+       ./EquationSystems/NavierStokesCFEAxisym.cpp
        ./EquationSystems/RinglebFlow.cpp
        ./Filters/FilterEnergy.cpp
        ./Forcing/ForcingAxiSymmetric.cpp
        ./Forcing/ForcingQuasi1D.cpp
+       ./Misc/EquationOfState.cpp
+       ./Misc/IdealGasEoS.cpp
+       ./Misc/PengRobinsonEoS.cpp
+       ./Misc/RedlichKwongEoS.cpp
+       ./Misc/VanDerWaalsEoS.cpp
        ./Misc/VariableConverter.cpp
        ./RiemannSolvers/AverageSolver.cpp
        ./RiemannSolvers/AUSM0Solver.cpp
@@ -59,6 +67,7 @@ IF( NEKTAR_SOLVER_COMPRESSIBLE_FLOW )
     ADD_NEKTAR_TEST(CylinderSubsonic_P3)
     ADD_NEKTAR_TEST(CylinderSubsonic_P8 LENGTHY)
     ADD_NEKTAR_TEST(Euler1D)
+    ADD_NEKTAR_TEST(IsentropicVortex16_P1)
     ADD_NEKTAR_TEST(IsentropicVortex16_P3)
     ADD_NEKTAR_TEST(IsentropicVortex_FRDG_SEM)
     ADD_NEKTAR_TEST(IsentropicVortex_FRSD_SEM LENGTHY)
@@ -97,8 +106,10 @@ IF( NEKTAR_SOLVER_COMPRESSIBLE_FLOW )
     ADD_NEKTAR_TEST(Nozzle_AxiSym_NoSwirl)
     ADD_NEKTAR_TEST(Nozzle_AxiSym_Swirl)
     ADD_NEKTAR_TEST(Nozzle_Quasi1D_P6)
-    ADD_NEKTAR_TEST        (hump3D_GLL)
-    ADD_NEKTAR_TEST        (hump3D_SEM)
+    ADD_NEKTAR_TEST(PipeFlow_NSAxisym)
+    ADD_NEKTAR_TEST(hump3D_GLL)
+    ADD_NEKTAR_TEST(hump3D_SEM)
+    ADD_NEKTAR_TEST(Rarefaction_vanderWaals LENGTHY)
 
     IF (NEKTAR_USE_MPI)
         #ADD_NEKTAR_TEST(Perturbation_M05_square_CBC_par LENGTHY)

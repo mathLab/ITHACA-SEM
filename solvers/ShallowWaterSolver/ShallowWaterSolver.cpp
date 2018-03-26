@@ -42,9 +42,12 @@ using namespace Nektar::SolverUtils;
 
 int main(int argc, char *argv[])
 {
-    // Create session reader.
+    // Create session reader and MeshGraph.
     LibUtilities::SessionReaderSharedPtr session;
     session = LibUtilities::SessionReader::CreateInstance(argc, argv);
+
+    SpatialDomains::MeshGraphSharedPtr graph;
+    graph = SpatialDomains::MeshGraph::Read(session);
 
     time_t starttime, endtime;
     NekDouble CPUtime;
@@ -57,7 +60,7 @@ int main(int argc, char *argv[])
     try
     {
         equ = GetEquationSystemFactory().CreateInstance(
-                session->GetSolverInfo("EQTYPE"), session);
+            session->GetSolverInfo("EQTYPE"), session, graph);
     }
     catch (int e)
     {

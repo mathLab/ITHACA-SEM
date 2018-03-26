@@ -52,9 +52,12 @@ namespace Nektar
         friend class MemoryManager<PulseWavePropagation>;
 
         /// Creates an instance of this class
-        static EquationSystemSharedPtr create(const LibUtilities::SessionReaderSharedPtr& pSession)
+        static EquationSystemSharedPtr create(
+            const LibUtilities::SessionReaderSharedPtr& pSession,
+            const SpatialDomains::MeshGraphSharedPtr& pGraph)
         {
-            EquationSystemSharedPtr p = MemoryManager<PulseWavePropagation>::AllocateSharedPtr(pSession);
+            EquationSystemSharedPtr p = MemoryManager<PulseWavePropagation>
+                ::AllocateSharedPtr(pSession, pGraph);
             p->InitObject();
             return p;
         }
@@ -71,7 +74,9 @@ namespace Nektar
         NekDouble               GetRho();
         NekDouble               GetPext();
     protected:
-        PulseWavePropagation(const LibUtilities::SessionReaderSharedPtr& pSession);
+        PulseWavePropagation(
+            const LibUtilities::SessionReaderSharedPtr& pSession,
+            const SpatialDomains::MeshGraphSharedPtr& pGraph);
 
         void DoOdeRhs(const Array<OneD,  const  Array<OneD, NekDouble> > &inarray,
                       Array<OneD,  Array<OneD, NekDouble> > &outarray,

@@ -56,10 +56,12 @@ namespace Nektar
      * global mapping arrays and the basic memory definitions for
      * coupled matrix system
      */ 
-    CoupledLinearNS::CoupledLinearNS(const LibUtilities::SessionReaderSharedPtr &pSession):
-        UnsteadySystem(pSession),
-        IncNavierStokes(pSession),
-        m_zeroMode(false)
+    CoupledLinearNS::CoupledLinearNS(
+        const LibUtilities::SessionReaderSharedPtr &pSession,
+        const SpatialDomains::MeshGraphSharedPtr &pGraph)
+        : UnsteadySystem(pSession, pGraph),
+          IncNavierStokes(pSession, pGraph),
+          m_zeroMode(false)
     {
     }
 
@@ -2088,7 +2090,8 @@ namespace Nektar
                             }
                         }
                     }
-                    else
+                    else if (bndConds[i]->GetBoundaryConditionType() 
+                                        != SpatialDomains::ePeriodic)
                     {                    
                         for(j = 0; j < (bndCondExp[i])->GetNcoeffs(); j++)
                         {

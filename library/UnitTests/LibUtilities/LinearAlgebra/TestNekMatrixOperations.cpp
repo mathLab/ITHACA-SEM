@@ -231,7 +231,7 @@ namespace Nektar
 
     namespace MatrixSubtractionTests
     {
-        BOOST_AUTO_TEST_CASE(TestLhsFullRhsFull)
+        BOOST_AUTO_TEST_CASE(TestLhsFullRhsFullSubtraction)
         {
             //double lhs_values[] = {2, 4, 6, 8,
             //                        10, 12, 14, 16,

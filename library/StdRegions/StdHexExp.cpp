@@ -2395,39 +2395,102 @@ namespace Nektar
             StdHexExp OrthoExp(Ba,Bb,Bc);
 
             Array<OneD, NekDouble> orthocoeffs(OrthoExp.GetNcoeffs());
-            int i,j,k;
-
-            int cutoff = (int) (mkey.GetConstFactor(eFactorSVVCutoffRatio)*min(nmodes_a,nmodes_b));
-            NekDouble  SvvDiffCoeff  = mkey.GetConstFactor(eFactorSVVDiffCoeff);
-
+            int i,j,k,cnt=0;
+            
             // project onto modal  space.
             OrthoExp.FwdTrans(array,orthocoeffs);
-
-
-            //  Filter just trilinear space
-            int nmodes = max(nmodes_a,nmodes_b);
-            nmodes = max(nmodes,nmodes_c);
-
-            Array<OneD, NekDouble> fac(nmodes,1.0);
-            for(j = cutoff; j < nmodes; ++j)
+            
+            if(mkey.ConstFactorExists(eFactorSVVPowerKerDiffCoeff)) 
             {
-                fac[j] = fabs((j-nmodes)/((NekDouble) (j-cutoff+1.0)));
-                fac[j] *= fac[j]; //added this line to conform with equation
-            }
-
-            for(i = 0; i < nmodes_a; ++i)
-            {
-                for(j = 0; j < nmodes_b; ++j)
+                // Rodrigo's power kernel                
+                NekDouble cutoff = mkey.GetConstFactor(eFactorSVVCutoffRatio); 
+                NekDouble  SvvDiffCoeff  =
+                    mkey.GetConstFactor(eFactorSVVPowerKerDiffCoeff)*
+                    mkey.GetConstFactor(eFactorSVVDiffCoeff);
+                
+                for(int i = 0; i < nmodes_a; ++i)
                 {
-                    for(k =  0; k < nmodes_c; ++k)
+                    for(int j = 0; j < nmodes_b; ++j)
                     {
-                        if((i >= cutoff)||(j >= cutoff)||(k >= cutoff))
+                        NekDouble fac1 = std::max(
+                                   pow((1.0*i)/(nmodes_a-1),cutoff*nmodes_a),
+                                   pow((1.0*j)/(nmodes_b-1),cutoff*nmodes_b));
+
+                        for(int k = 0; k < nmodes_c; ++k)
                         {
-                            orthocoeffs[i*nmodes_a*nmodes_b + j*nmodes_c + k] *= (SvvDiffCoeff*exp( -(fac[i]+fac[j]+fac[k]) ));
+                            NekDouble fac = std::max(fac1,
+                                     pow((1.0*k)/(nmodes_c-1),cutoff*nmodes_c));
+                            
+                            orthocoeffs[cnt]
+                                *= SvvDiffCoeff * fac;
+                            cnt++;
                         }
-                        else
+                    }
+                }
+            }
+            else if(mkey.ConstFactorExists(eFactorSVVDGKerDiffCoeff))  // Rodrigo/Mansoor's DG Kernel
+            {
+                NekDouble  SvvDiffCoeff  =
+                    mkey.GetConstFactor(eFactorSVVDGKerDiffCoeff)*
+                    mkey.GetConstFactor(eFactorSVVDiffCoeff);
+
+                int max_abc = max(nmodes_a-kSVVDGFiltermodesmin,
+                                  nmodes_b-kSVVDGFiltermodesmin);
+                max_abc = max(max_abc, nmodes_c-kSVVDGFiltermodesmin);
+                // clamp max_abc
+                max_abc = max(max_abc,0);
+                max_abc = min(max_abc,kSVVDGFiltermodesmax-kSVVDGFiltermodesmin);
+                
+                for(int i = 0; i < nmodes_a; ++i)
+                {
+                    for(int j = 0; j < nmodes_b; ++j)
+                    {
+                        int maxij = max(i,j);
+                        
+                        for(int k = 0; k < nmodes_c; ++k)
                         {
-                            orthocoeffs[i*nmodes_a*nmodes_b + j*nmodes_c + k] *= 0.0;
+                            int maxijk = max(maxij,k);
+                            maxijk = min(maxijk,kSVVDGFiltermodesmax-1);
+                        
+                            orthocoeffs[cnt] *= SvvDiffCoeff *
+                                kSVVDGFilter[max_abc][maxijk];
+                            cnt++;
+                        }
+                    }
+                }
+            }
+            else
+            {
+                
+                int cutoff = (int) (mkey.GetConstFactor(eFactorSVVCutoffRatio)*min(nmodes_a,nmodes_b));
+                NekDouble  SvvDiffCoeff  = mkey.GetConstFactor(eFactorSVVDiffCoeff);
+                //  Filter just trilinear space
+                int nmodes = max(nmodes_a,nmodes_b);
+                nmodes = max(nmodes,nmodes_c);
+                
+                Array<OneD, NekDouble> fac(nmodes,1.0);
+                for(j = cutoff; j < nmodes; ++j)
+                {
+                    fac[j] = fabs((j-nmodes)/((NekDouble) (j-cutoff+1.0)));
+                    fac[j] *= fac[j]; //added this line to conform with equation
+                }
+                
+                for(i = 0; i < nmodes_a; ++i)
+                {
+                    for(j = 0; j < nmodes_b; ++j)
+                    {
+                        for(k =  0; k < nmodes_c; ++k)
+                        {
+                            if((i >= cutoff)||(j >= cutoff)||(k >= cutoff))
+                            {
+                                orthocoeffs[i*nmodes_a*nmodes_b +
+                                            j*nmodes_c + k] *=
+                                    (SvvDiffCoeff*exp(-(fac[i]+fac[j]+fac[k])));
+                            }
+                            else
+                            {
+                                orthocoeffs[i*nmodes_a*nmodes_b + j*nmodes_c + k] *= 0.0;
+                            }
                         }
                     }
                 }

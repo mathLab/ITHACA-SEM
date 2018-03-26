@@ -530,16 +530,16 @@ namespace Nektar
             Collections::Collection     c(CollExp, impTypes);
 
             const int nq = Exp->GetTotPoints();
-            Array<OneD, NekDouble> xc(nq), yc(nq);
+            Array<OneD, NekDouble> xc(nq);
             Array<OneD, NekDouble> phys(nelmts*nq),tmp;
             Array<OneD, NekDouble> diff1(nelmts*nq);
             Array<OneD, NekDouble> diff2(nelmts*nq);
             
-            Exp->GetCoords(xc, yc);
+            Exp->GetCoords(xc);
         
             for (int i = 0; i < nq; ++i)
             {
-                phys[i] = sin(xc[i])*cos(yc[i]);
+                phys[i] = sin(xc[i]);
             }
             Exp->PhysDeriv(phys, diff1);
 
@@ -586,12 +586,12 @@ namespace Nektar
             Collections::Collection     c(CollExp, impTypes);
 
             const int nq = Exp->GetTotPoints();
-            Array<OneD, NekDouble> xc(nq),yc(nq);
+            Array<OneD, NekDouble> xc(nq);
             Array<OneD, NekDouble> phys(nq),tmp;
             Array<OneD, NekDouble> diff1(nq);
             Array<OneD, NekDouble> diff2(nq);
             
-            Exp->GetCoords(xc,yc);
+            Exp->GetCoords(xc);
         
             for (int i = 0; i < nq; ++i)
             {
@@ -639,16 +639,16 @@ namespace Nektar
             Collections::Collection     c(CollExp, impTypes);
 
             const int nq = Exp->GetTotPoints();
-            Array<OneD, NekDouble> xc(nq), yc(nq);
+            Array<OneD, NekDouble> xc(nq);
             Array<OneD, NekDouble> phys(nelmts*nq),tmp;
             Array<OneD, NekDouble> diff1(nelmts*nq);
             Array<OneD, NekDouble> diff2(nelmts*nq);
             
-            Exp->GetCoords(xc, yc);
+            Exp->GetCoords(xc);
         
             for (int i = 0; i < nq; ++i)
             {
-                phys[i] = sin(xc[i])*cos(yc[i]);
+                phys[i] = sin(xc[i]);
             }
             Exp->PhysDeriv(phys, diff1);
 
@@ -699,16 +699,16 @@ namespace Nektar
             Collections::Collection     c(CollExp, impTypes);
 
             const int nq = Exp->GetTotPoints();
-            Array<OneD, NekDouble> xc(nq), yc(nq);
+            Array<OneD, NekDouble> xc(nq);
             Array<OneD, NekDouble> phys(nelmts*nq),tmp;
             Array<OneD, NekDouble> diff1(nelmts*nq);
             Array<OneD, NekDouble> diff2(nelmts*nq);
             
-            Exp->GetCoords(xc, yc);
+            Exp->GetCoords(xc);
         
             for (int i = 0; i < nq; ++i)
             {
-                phys[i] = sin(xc[i])*cos(yc[i]);
+                phys[i] = sin(xc[i]);
             }
             Exp->PhysDeriv(phys, diff1);
 
@@ -760,13 +760,13 @@ namespace Nektar
             Array<OneD, NekDouble> coeffs1(nm);
             Array<OneD, NekDouble> coeffs2(nm);
 
-            Array<OneD, NekDouble> xc(nq), yc(nq);
+            Array<OneD, NekDouble> xc(nq);
             
-            Exp->GetCoords(xc, yc);
+            Exp->GetCoords(xc);
         
             for (int i = 0; i < nq; ++i)
             {
-                phys1[i] = sin(xc[i])*cos(yc[i]);
+                phys1[i] = sin(xc[i]);
             }
 
             // Standard routines
@@ -816,16 +816,16 @@ namespace Nektar
 
             const int nq = Exp->GetTotPoints();
             const int nm = Exp->GetNcoeffs();
-            Array<OneD, NekDouble> xc(nq), yc(nq),tmp,tmp1;
+            Array<OneD, NekDouble> xc(nq),tmp,tmp1;
             Array<OneD, NekDouble> phys1(nelmts*nq);
             Array<OneD, NekDouble> coeffs1(nelmts*nm);
             Array<OneD, NekDouble> coeffs2(nelmts*nm);
             
-            Exp->GetCoords(xc, yc);
+            Exp->GetCoords(xc);
         
             for (int i = 0; i < nq; ++i)
             {
-                phys1[i] = sin(xc[i])*cos(yc[i]);
+                phys1[i] = sin(xc[i]);
             }
             Exp->IProductWRTDerivBase(0, phys1, coeffs1);
 
@@ -879,13 +879,13 @@ namespace Nektar
             Array<OneD, NekDouble> coeffs1(nm);
             Array<OneD, NekDouble> coeffs2(nm);
 
-            Array<OneD, NekDouble> xc(nq), yc(nq);
+            Array<OneD, NekDouble> xc(nq);
             
-            Exp->GetCoords(xc, yc);
+            Exp->GetCoords(xc);
         
             for (int i = 0; i < nq; ++i)
             {
-                phys1[i] = sin(xc[i])*cos(yc[i]);
+                phys1[i] = sin(xc[i]);
             }
 
             // Standard routines
@@ -935,16 +935,16 @@ namespace Nektar
 
             const int nq = Exp->GetTotPoints();
             const int nm = Exp->GetNcoeffs();
-            Array<OneD, NekDouble> xc(nq), yc(nq),tmp,tmp1;
+            Array<OneD, NekDouble> xc(nq),tmp,tmp1;
             Array<OneD, NekDouble> phys1(nelmts*nq);
             Array<OneD, NekDouble> coeffs1(nelmts*nm);
             Array<OneD, NekDouble> coeffs2(nelmts*nm);
             
-            Exp->GetCoords(xc, yc);
+            Exp->GetCoords(xc);
         
             for (int i = 0; i < nq; ++i)
             {
-                phys1[i] = sin(xc[i])*cos(yc[i]);
+                phys1[i] = sin(xc[i]);
             }
             Exp->IProductWRTDerivBase(0, phys1, coeffs1);
 
@@ -998,13 +998,13 @@ namespace Nektar
             Array<OneD, NekDouble> coeffs1(nm);
             Array<OneD, NekDouble> coeffs2(nm);
 
-            Array<OneD, NekDouble> xc(nq), yc(nq);
+            Array<OneD, NekDouble> xc(nq);
             
-            Exp->GetCoords(xc, yc);
+            Exp->GetCoords(xc);
         
             for (int i = 0; i < nq; ++i)
             {
-                phys1[i] = sin(xc[i])*cos(yc[i]);
+                phys1[i] = sin(xc[i]);
             }
 
             // Standard routines
@@ -1053,16 +1053,16 @@ namespace Nektar
 
             const int nq = Exp->GetTotPoints();
             const int nm = Exp->GetNcoeffs();
-            Array<OneD, NekDouble> xc(nq), yc(nq),tmp,tmp1;
+            Array<OneD, NekDouble> xc(nq),tmp,tmp1;
             Array<OneD, NekDouble> phys1(nelmts*nq);
             Array<OneD, NekDouble> coeffs1(nelmts*nm);
             Array<OneD, NekDouble> coeffs2(nelmts*nm);
             
-            Exp->GetCoords(xc, yc);
+            Exp->GetCoords(xc);
         
             for (int i = 0; i < nq; ++i)
             {
-                phys1[i] = sin(xc[i])*cos(yc[i]);
+                phys1[i] = sin(xc[i]);
             }
             Exp->IProductWRTDerivBase(0, phys1, coeffs1);
 

@@ -71,7 +71,8 @@ protected:
 
 
     /// Constructor
-    DriverArnoldi(const LibUtilities::SessionReaderSharedPtr pSession);
+    DriverArnoldi(const LibUtilities::SessionReaderSharedPtr pSession,
+                  const SpatialDomains::MeshGraphSharedPtr pGraph);
 
     /// Destructor
     virtual ~DriverArnoldi();

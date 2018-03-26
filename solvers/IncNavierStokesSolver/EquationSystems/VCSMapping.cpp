@@ -55,9 +55,10 @@ namespace Nektar
      * \param
      */
     VCSMapping::VCSMapping(
-            const LibUtilities::SessionReaderSharedPtr& pSession)
-        : UnsteadySystem(pSession),
-          VelocityCorrectionScheme(pSession)  
+        const LibUtilities::SessionReaderSharedPtr& pSession,
+        const SpatialDomains::MeshGraphSharedPtr &pGraph)
+        : UnsteadySystem(pSession, pGraph),
+          VelocityCorrectionScheme(pSession, pGraph)  
     {
 
     }

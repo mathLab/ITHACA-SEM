@@ -9,7 +9,7 @@ using namespace Nektar;
 static double solutionpoly(double x, int order);
 static double solutionfourier(double x, int order, double a, double b);
 
-// This routine projects a polynomial or trigonmetric functions which 
+// This routine projects a polynomial or trigonmetric functions which
 // has energy in all mdoes of the expansions and report an error.
 
 int main(int argc, char *argv[])
@@ -38,7 +38,7 @@ int main(int argc, char *argv[])
         fprintf(stderr,"\t Chebyshev      = 13\n");
         fprintf(stderr,"\t Monomial       = 14\n");
         fprintf(stderr,"\t FourierSingleMode   = 15\n");
-        
+
         fprintf(stderr,"Note type = 1,2,4,5,7,8 are for higher dimensional basis\n");
 
         exit(1);
@@ -81,8 +81,8 @@ int main(int argc, char *argv[])
     const double dZero=0.0;
     SpatialDomains::PointGeomSharedPtr  vert1 = MemoryManager<SpatialDomains::PointGeom>::AllocateSharedPtr(one,zero,x[0],dZero,dZero);
     SpatialDomains::PointGeomSharedPtr  vert2 = MemoryManager<SpatialDomains::PointGeom>::AllocateSharedPtr(one,zero,x[1],dZero,dZero);
-    SpatialDomains::SegGeomSharedPtr geom = MemoryManager<SpatialDomains::SegGeom>::AllocateSharedPtr(zero,vert1,vert2);
-    geom->SetOwnData();
+    SpatialDomains::PointGeomSharedPtr  verts[2] = {vert1,vert2};
+    SpatialDomains::SegGeomSharedPtr geom = MemoryManager<SpatialDomains::SegGeom>::AllocateSharedPtr(zero,1,verts);
 
     const LibUtilities::PointsKey Pkey(nq,Qtype);
     const LibUtilities::BasisKey Bkey(btype,order,Pkey);
@@ -90,7 +90,7 @@ int main(int argc, char *argv[])
     //-----------------------------------------------
 
     //----------------------------------------------
-    // Define solution to be projected 
+    // Define solution to be projected
     Array<OneD,NekDouble> xc(nq);
     E->GetCoords(xc);
 
@@ -116,14 +116,14 @@ int main(int argc, char *argv[])
     Array<OneD, NekDouble> phys  (nq);
     E->FwdTrans(sol, coeffs);
     //---------------------------------------------
-    
+
     //-------------------------------------------
     // Backward Transform Solution to get projected values
     E->BwdTrans(coeffs, phys);
-    //-------------------------------------------  
+    //-------------------------------------------
 
     //--------------------------------------------
-    // Calculate L_inf error 
+    // Calculate L_inf error
     cout << "L infinity error: " << E->Linf(phys, sol) << endl;
     cout << "L 2 error:        " << E->L2  (phys, sol) << endl;
     //--------------------------------------------

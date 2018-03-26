@@ -142,7 +142,8 @@ void APE::v_InitObject()
     }
     GetFunction("Baseflow", m_bfField, true)->Evaluate(m_bfNames, m_bf, m_time);
 
-    m_forcing = SolverUtils::Forcing::Load(m_session, m_fields, m_spacedim + 1);
+    m_forcing = SolverUtils::Forcing::Load(m_session, shared_from_this(),
+                                           m_fields, m_spacedim + 1);
 
     // Do not forwards transform initial condition
     m_homoInitialFwd = false;

@@ -140,7 +140,7 @@ namespace Nektar
             {
                 m_filters.push_back(
                     GetFilterFactory().CreateInstance(
-                        x.first, m_session, x.second));
+                        x.first, m_session, shared_from_this(), x.second));
             }
         }
         

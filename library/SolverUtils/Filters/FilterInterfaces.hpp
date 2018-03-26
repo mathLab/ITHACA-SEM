@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File FilterEnergy.h
+// File FilterInterfaces.hpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,47 +29,42 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Outputs solution fields during time-stepping.
+// Description: Interface class for solvers that support fluid physics
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_INCNAVIERSTOKESSOLVER_FILTERS_FILTERENERGY_H
-#define NEKTAR_INCNAVIERSTOKESSOLVER_FILTERS_FILTERENERGY_H
+#ifndef NEKTAR_SOLVERUTILS_FILTERS_FILTERINTERFACES_HPP
+#define NEKTAR_SOLVERUTILS_FILTERS_FILTERINTERFACES_HPP
 
-#include <SolverUtils/Filters/FilterEnergyBase.h>
+#include <LibUtilities/BasicUtils/SharedArray.hpp>
 
 namespace Nektar
 {
+namespace SolverUtils
+{
 
-class FilterEnergy : public SolverUtils::FilterEnergyBase
+class FluidInterface
 {
 public:
-    friend class MemoryManager<FilterEnergy>;
+    /// Extract array with velocity from physfield
+    SOLVER_UTILS_EXPORT virtual void GetVelocity(
+        const Array<OneD, const Array<OneD, NekDouble> > &physfield,
+              Array<OneD, Array<OneD, NekDouble> >       &velocity) = 0;
 
-    /// Creates an instance of this class
-    static SolverUtils::FilterSharedPtr create(
-        const LibUtilities::SessionReaderSharedPtr &pSession,
-        const ParamMap &pParams) {
-        SolverUtils::FilterSharedPtr p = MemoryManager<FilterEnergy>
-                                        ::AllocateSharedPtr(pSession, pParams);
-        return p;
-    }
+    SOLVER_UTILS_EXPORT virtual bool HasConstantDensity() = 0;
 
-    ///Name of the class
-    static std::string className;
+    /// Extract array with density from physfield
+    SOLVER_UTILS_EXPORT virtual void GetDensity(
+        const Array<OneD, const Array<OneD, NekDouble> > &physfield,
+              Array<OneD, NekDouble>                     &density) = 0;
 
-    SOLVER_UTILS_EXPORT FilterEnergy(
-        const LibUtilities::SessionReaderSharedPtr &pSession,
-        const ParamMap &pParams);
-    SOLVER_UTILS_EXPORT ~FilterEnergy();
-
-protected:
-    virtual void v_GetVelocity(
-        const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
-        const int i,
-        Array<OneD, NekDouble> &velocity);
+    /// Extract array with pressure from physfield
+    SOLVER_UTILS_EXPORT virtual void GetPressure(
+        const Array<OneD, const Array<OneD, NekDouble> > &physfield,
+              Array<OneD, NekDouble>                     &pressure) = 0;
 };
 
 }
+}
 
-#endif /* NEKTAR_SOLVERUTILS_FILTERS_FILTERCHECKPOINT_H */
+#endif

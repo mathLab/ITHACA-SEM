@@ -16,6 +16,7 @@ v5.0.0
 - Add ARPACK thirdparty build capabilities (!828)
 - Added native support for csv files in addititon to pts (!760, !835, !906)
 - Utilize LAPACK_DIR env variable to find the native blas/lapack install (!827)
+- Extend AeroForces filter to compressible flows (!815)
 - Remove StdExpansion use from MultiRegion (use Expansions instead). (!831)
 - Move steady state check and CFL output from solvers to SolverUtils (!832)
 - Remove DG advection implementation from EquationSystem (!832)

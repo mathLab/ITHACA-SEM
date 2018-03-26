@@ -24,7 +24,7 @@ SET(SOLVER_UTILS_SOURCES
   Filters/FilterAverageFields.cpp
   Filters/FilterCheckpoint.cpp
   Filters/FilterEnergy1D.cpp
-  Filters/FilterEnergyBase.cpp
+  Filters/FilterEnergy.cpp
   Filters/FilterHistoryPoints.cpp
   Filters/FilterModalEnergy.cpp
   Filters/FilterMovingAverage.cpp
@@ -68,7 +68,7 @@ SET(SOLVER_UTILS_HEADERS
   Filters/FilterAverageFields.h
   Filters/FilterCheckpoint.h
   Filters/FilterEnergy1D.h
-  Filters/FilterEnergyBase.h
+  Filters/FilterEnergy.h
   Filters/FilterHistoryPoints.h
   Filters/FilterModalEnergy.h
   Filters/FilterMovingAverage.h

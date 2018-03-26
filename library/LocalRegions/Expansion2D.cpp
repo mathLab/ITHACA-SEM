@@ -34,6 +34,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 #include <LocalRegions/Expansion2D.h>
 #include <LocalRegions/Expansion1D.h>
+#include <LocalRegions/Expansion3D.h>
 #include <SpatialDomains/Geometry.h>
 #include <SpatialDomains/Geometry2D.h>
 #include <LibUtilities/Foundations/InterpCoeff.h>
@@ -1429,6 +1430,22 @@ namespace Nektar
                     ASSERTL0(false, "Unknown orientation");
                     break;
             }
+        }
+
+        NekDouble Expansion2D::v_VectorFlux(
+            const Array<OneD, Array<OneD, NekDouble> > &vec)
+        {
+            const Array<OneD, const Array<OneD, NekDouble> >
+                &normals = GetLeftAdjacentElementExp()->
+                GetFaceNormal(GetLeftAdjacentElementFace());
+
+            int nq = GetTotPoints();
+            Array<OneD, NekDouble > Fn(nq);
+            Vmath::Vmul (nq, &vec[0][0], 1, &normals[0][0], 1, &Fn[0], 1);
+            Vmath::Vvtvp(nq, &vec[1][0], 1, &normals[1][0], 1, &Fn[0], 1, &Fn[0], 1);
+            Vmath::Vvtvp(nq, &vec[2][0], 1, &normals[2][0], 1, &Fn[0], 1, &Fn[0], 1);
+
+            return StdExpansion::Integral(Fn);
         }
     }
 }

@@ -196,6 +196,13 @@ namespace Polylib {
             z[0] = 0.0;
             w[0] = 2.0;
         }
+        else if( np == 2 ){
+            z[0] = -1.0;
+            z[1] =  1.0;
+
+            w[0] =  1.0;
+            w[1] =  1.0;
+        }
         else{
             register int i;
             double   fac, one = 1.0, apb = alpha + beta, two = 2.0;
@@ -678,8 +685,7 @@ namespace Polylib {
     void Dglj(double *D, const double *z, const int np, const double alpha,
         const double beta)
     {
-
-        if (np <= 0){
+        if (np <= 1){
             D[0] = 0.0;
         }
         else{

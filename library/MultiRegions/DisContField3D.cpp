@@ -395,8 +395,8 @@ using namespace std;
                          m_boundaryFaces.insert(
                              m_traceMap->GetBndCondTraceToGlobalTraceMap(cnt+e));
                      }
+                     cnt += m_bndCondExpansions[n]->GetExpSize();
                  }
-                 cnt += m_bndCondExpansions[n]->GetExpSize();
              }
 
              // Set up information for periodic boundary conditions.
@@ -603,55 +603,38 @@ using namespace std;
             const SpatialDomains::BoundaryConditions &bcs,
             const std::string                        &variable)
         {
-            int cnt  = 0;
+            int cnt = 0;
             MultiRegions::ExpList2DSharedPtr       locExpList;
             SpatialDomains::BoundaryConditionShPtr locBCond;
 
-            const SpatialDomains::BoundaryRegionCollection    &bregions = 
+            const SpatialDomains::BoundaryRegionCollection    &bregions =
                 bcs.GetBoundaryRegions();
-            const SpatialDomains::BoundaryConditionCollection &bconditions = 
+            const SpatialDomains::BoundaryConditionCollection &bconditions =
                 bcs.GetBoundaryConditions();
 
-            // count the number of non-periodic boundary regions
-            for (auto &it : bregions)
-            {
-                SpatialDomains::BoundaryConditionShPtr boundaryCondition = 
-                    GetBoundaryCondition(bconditions, it.first, variable);
-                if (boundaryCondition->GetBoundaryConditionType() != 
-                        SpatialDomains::ePeriodic)
-                {
-                    cnt++;
-                }
-            }
-
-            m_bndCondExpansions = Array<OneD,MultiRegions::ExpListSharedPtr>(cnt);
-            m_bndConditions     = Array<OneD,SpatialDomains::BoundaryConditionShPtr>(cnt);
-
-            cnt = 0;
+            m_bndCondExpansions =
+                Array<OneD,MultiRegions::ExpListSharedPtr>(bregions.size());
+            m_bndConditions     =
+                Array<OneD,SpatialDomains::BoundaryConditionShPtr>(bregions.size());
 
             // list Dirichlet boundaries first
             for (auto &it : bregions)
             {
                 locBCond = GetBoundaryCondition(
                     bconditions, it.first, variable);
+                locExpList = MemoryManager<MultiRegions::ExpList2D>
+                    ::AllocateSharedPtr(m_session, *(it.second),
+                                        graph3D, variable, locBCond->GetComm());
 
-                if(locBCond->GetBoundaryConditionType()
-                       != SpatialDomains::ePeriodic)
+                // Set up normals on non-Dirichlet boundary conditions
+                if(locBCond->GetBoundaryConditionType() !=
+                   SpatialDomains::eDirichlet)
                 {
-                    locExpList = MemoryManager<MultiRegions::ExpList2D>
-                        ::AllocateSharedPtr(m_session, *(it.second),
-                                            graph3D, variable);
-
-                    // Set up normals on non-Dirichlet boundary conditions
-                    if(locBCond->GetBoundaryConditionType() != 
-                           SpatialDomains::eDirichlet)
-                    {
-                        SetUpPhysNormals();
-                    }
-
-                    m_bndCondExpansions[cnt]  = locExpList;
-                    m_bndConditions[cnt++]    = locBCond;
+                    SetUpPhysNormals();
                 }
+
+                m_bndCondExpansions[cnt]  = locExpList;
+                m_bndConditions[cnt++]    = locBCond;
             }
         }
 
@@ -1759,6 +1742,11 @@ using namespace std;
 
                     cnt += e;
                 }
+                else if (m_bndConditions[n]->GetBoundaryConditionType() ==
+                             SpatialDomains::ePeriodic)
+                {
+                    continue;
+                }
                 else
                 {
                     ASSERTL0(false, "Method only set up for Dirichlet, Neumann "
@@ -2082,7 +2070,8 @@ using namespace std;
             cnt = 0;
             for(i = 0; i < m_bndCondExpansions.num_elements(); ++i)
             {
-                if(m_bndConditions[i]->GetBoundaryConditionType() == SpatialDomains::eDirichlet)
+                if(m_bndConditions[i]->GetBoundaryConditionType() ==
+                       SpatialDomains::eDirichlet)
                 {
                     for(j = 0; j < (m_bndCondExpansions[i])->GetNcoeffs(); ++j)
                     {
@@ -2090,7 +2079,10 @@ using namespace std;
                         BndSol[id] = m_bndCondExpansions[i]->GetCoeffs()[j];
                     }
                 }
-                else
+                else if (m_bndConditions[i]->GetBoundaryConditionType() ==
+                             SpatialDomains::eNeumann ||
+                         m_bndConditions[i]->GetBoundaryConditionType() ==
+                             SpatialDomains::eRobin)
                 {
                     //Add weak boundary condition to trace forcing
                     for(j = 0; j < (m_bndCondExpansions[i])->GetNcoeffs(); ++j)
@@ -2455,7 +2447,7 @@ using namespace std;
 
                         if (filebcs != "")
                         {
-                            ExtractFileBCs(filebcs, bcPtr->m_comm, varName, locExpList);
+                            ExtractFileBCs(filebcs, bcPtr->GetComm(), varName, locExpList);
                             valuesFile = locExpList->GetPhys();
                         }
                         
@@ -2484,7 +2476,7 @@ using namespace std;
 
                         if (filebcs != "")
                         {
-                            ExtractFileBCs(filebcs, bcPtr->m_comm, varName, locExpList);
+                            ExtractFileBCs(filebcs, bcPtr->GetComm(), varName, locExpList);
                         }
                         else
                         {
@@ -2511,7 +2503,7 @@ using namespace std;
 
                         if (filebcs != "")
                         {
-                            ExtractFileBCs(filebcs, bcPtr->m_comm, varName, locExpList);
+                            ExtractFileBCs(filebcs, bcPtr->GetComm(), varName, locExpList);
                         }
                         else
                         {
@@ -2528,6 +2520,11 @@ using namespace std;
                         locExpList->IProductWRTBase(locExpList->GetPhys(),
                                                     locExpList->UpdateCoeffs());
                         
+                    }
+                    else if (m_bndConditions[i]->GetBoundaryConditionType()
+                             == SpatialDomains::ePeriodic)
+                    {
+                        continue;
                     }
                     else
                     {

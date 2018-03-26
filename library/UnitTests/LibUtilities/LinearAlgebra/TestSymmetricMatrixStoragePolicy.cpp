@@ -52,7 +52,7 @@ namespace Nektar
         typedef SymmetricMatrixFuncs Policy;
 
                     
-        BOOST_AUTO_TEST_CASE(TestAdvance)
+        BOOST_AUTO_TEST_CASE(TestAdvanceSymmetric)
         {
             UnitTests::RedirectCerrIfNeeded();
             {

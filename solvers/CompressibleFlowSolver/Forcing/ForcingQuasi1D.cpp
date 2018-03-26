@@ -83,11 +83,35 @@ void ForcingQuasi1D::v_InitObject(
              "Variable '" + sFieldStr + "' not defined.");
     GetFunction(pFields, m_session, funcName, true)
         ->Evaluate(sFieldStr, m_geomFactor, 0.0);
-    pFields[0]->PhysDeriv(MultiRegions::DirCartesianMap[0], m_geomFactor, tmp);
+
+    // Check if DADXFCN is defined
+    const TiXmlElement* dAFuncNameElmt = pForce->FirstChildElement("DADXFCN");
+    if(dAFuncNameElmt)
+    {
+        funcName = dAFuncNameElmt->GetText();
+        ASSERTL0(m_session->DefinesFunction(funcName),
+             "Function '" + funcName + "' not defined.");
+        ASSERTL0(m_session->DefinesFunction(funcName, sFieldStr),
+             "Variable '" + sFieldStr + "' not defined.");
+        GetFunction(pFields, m_session, funcName, true)
+            ->Evaluate(sFieldStr, tmp, 0.0);
+    }
+    else
+    {
+        // Numerically evaluate dA/dX
+        pFields[0]->PhysDeriv(MultiRegions::DirCartesianMap[0],
+                              m_geomFactor, tmp);
+    }
+
     Vmath::Vdiv(pFields[0]->GetTotPoints(), tmp, 1,
                                             m_geomFactor, 1,
                                             m_geomFactor, 1);
     Vmath::Neg(pFields[0]->GetTotPoints(), m_geomFactor, 1);
+
+    // Project m_geomFactor to solution space
+    Array<OneD, NekDouble> tmpCoeff (pFields[0]->GetNcoeffs(), 0.0);
+    pFields[0]->FwdTrans_IterPerExp(m_geomFactor, tmpCoeff);
+    pFields[0]->BwdTrans(tmpCoeff, m_geomFactor);
 
     m_Forcing = Array<OneD, Array<OneD, NekDouble> > (m_NumVariable);
     for (int i = 0; i < m_NumVariable; ++i)

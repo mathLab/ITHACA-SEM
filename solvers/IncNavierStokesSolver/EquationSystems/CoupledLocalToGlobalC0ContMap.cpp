@@ -353,7 +353,11 @@ namespace Nektar
                     {
                         nLocDirBndCondDofs += bndSegExp->GetNcoeffs()*nz_loc;
                     }
-                    nLocBndCondDofs += bndSegExp->GetNcoeffs()*nz_loc;
+
+                    if (bndConditionsVec[k][i]->GetBoundaryConditionType()!=SpatialDomains::ePeriodic)
+                    {
+                        nLocBndCondDofs += bndSegExp->GetNcoeffs()*nz_loc;
+                    }
                 }
             }
         }
@@ -675,6 +679,11 @@ namespace Nektar
         {
             for(i = 0; i < bndCondExp.num_elements(); i++)
             {
+                if (bndConditionsVec[nv][i]->GetBoundaryConditionType()==SpatialDomains::ePeriodic)
+                {
+                    continue;
+                }
+
                 for(n = 0; n < nz_loc; ++n)
                 {
                     int ncoeffcnt = 0;

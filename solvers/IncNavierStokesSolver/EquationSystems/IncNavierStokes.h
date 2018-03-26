@@ -43,9 +43,10 @@
 #include <IncNavierStokesSolver/EquationSystems/Extrapolate.h>
 #include <SolverUtils/Forcing/Forcing.h>
 #include <SolverUtils/Filters/FilterInterfaces.hpp>
+#include <complex>
 
 namespace Nektar
-{     
+{
     enum EquationType
     {
         eNoEquationType,
@@ -98,6 +99,8 @@ namespace Nektar
     };
 
 
+    typedef std::complex<double> NekComplexDouble;
+
     struct WomersleyParams
     {
         WomersleyParams(int dim)
@@ -108,18 +111,21 @@ namespace Nektar
 
         virtual ~WomersleyParams()
         {};
-        
-        /// Real and imaginary velocity comp. of wom
-        std::vector<NekDouble> m_wom_vel_r;
-        std::vector<NekDouble> m_wom_vel_i;
 
-        /// Womersley  BC constants
+        // Real and imaginary velocity comp. of wom
+        std::vector<NekComplexDouble> m_wom_vel;
+
+        // Womersley  BC constants
         NekDouble m_radius;
         NekDouble m_period;
         Array<OneD, NekDouble> m_axisnormal;
         // currently this needs to be the point in the middle of the
-        // axis but shoudl be generalised to be any point on the axis
+        // axis but should be generalised to be any point on the axis
         Array<OneD, NekDouble> m_axispoint;
+
+        // poiseuille flow and fourier coefficients
+        Array<OneD, Array<OneD, NekDouble> > m_poiseuille;
+        Array<OneD, Array<OneD, Array<OneD, NekComplexDouble> > > m_zvel;
 
     };
     typedef std::shared_ptr<WomersleyParams> WomersleyParamsSharedPtr;
@@ -139,12 +145,12 @@ namespace Nektar
 
         int GetNConvectiveFields(void)
         {
-            return m_nConvectiveFields;  
+            return m_nConvectiveFields;
         }
 
         Array<OneD, int> &GetVelocity(void)
         {
-            return  m_velocity; 
+            return  m_velocity;
         }
 
         void AddForcing(const SolverUtils::ForcingSharedPtr& pForce);
@@ -167,11 +173,11 @@ namespace Nektar
                   Array<OneD, Array<OneD, NekDouble> >       &velocity);
 
     protected:
-		
+
         // pointer to the extrapolation class for sub-stepping and HOPBS
-        
+
         ExtrapolateSharedPtr m_extrapolation;
-		
+
         /// modal energy file
         std::ofstream m_mdlFile;
 
@@ -236,10 +242,10 @@ namespace Nektar
         void SetWomersleyBoundary(const int fldid, const int bndid);
 
         /// Set Up Womersley details
-        void SetUpWomersley(const int bndid, std::string womstr);
+        void SetUpWomersley(const int fldid, const int bndid, std::string womstr);
 
-        /// Womersley parameters if required 
-        std::map<int,WomersleyParamsSharedPtr> m_womersleyParams;
+        /// Womersley parameters if required
+        std::map<int, std::map<int,WomersleyParamsSharedPtr> > m_womersleyParams;
 
         virtual MultiRegions::ExpListSharedPtr v_GetPressure()
         {

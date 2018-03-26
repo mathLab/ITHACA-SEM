@@ -54,6 +54,13 @@ namespace Nektar
     {
         AdvectionSystem::v_InitObject();
 
+        for (int i = 0; i < m_fields.num_elements(); i++)
+        {
+            // Use BwdTrans to make sure initial condition is in solution space
+            m_fields[i]->BwdTrans(m_fields[i]->GetCoeffs(),
+                                  m_fields[i]->UpdatePhys());
+        }
+
         m_varConv = MemoryManager<VariableConverter>::AllocateSharedPtr(
                     m_session, m_spacedim);
 
@@ -95,8 +102,15 @@ namespace Nektar
         int cnt = 0;
         for (int n = 0; n < m_fields[0]->GetBndConditions().num_elements(); ++n)
         {
-            std::string type = 
-                    m_fields[0]->GetBndConditions()[n]->GetUserDefined();
+            std::string type =
+                m_fields[0]->GetBndConditions()[n]->GetUserDefined();
+
+            if (m_fields[0]->GetBndConditions()[n]->GetBoundaryConditionType()
+                == SpatialDomains::ePeriodic)
+            {
+                continue;
+            }
+
             if(!type.empty())
             {
                 m_bndConds.push_back(GetCFSBndCondFactory().CreateInstance(

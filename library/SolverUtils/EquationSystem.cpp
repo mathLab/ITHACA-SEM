@@ -1470,33 +1470,6 @@ namespace Nektar
             return null;
         }
 
-        void EquationSystem::v_GetPressure(
-            const Array<OneD, const Array<OneD, NekDouble> > &physfield,
-                  Array<OneD, NekDouble>                     &pressure)
-        {
-            ASSERTL0(false, "This function is not valid for the Base class");
-        }
-
-        void EquationSystem::v_GetDensity(
-            const Array<OneD, const Array<OneD, NekDouble> > &physfield,
-                  Array<OneD, NekDouble>                     &density)
-        {
-            ASSERTL0(false, "This function is not valid for the Base class");
-        }
-
-        bool EquationSystem::v_HasConstantDensity()
-        {
-            ASSERTL0(false, "This function is not valid for the Base class");
-            return false;
-        }
-
-        void EquationSystem::v_GetVelocity(
-            const Array<OneD, const Array<OneD, NekDouble> > &physfield,
-                  Array<OneD, Array<OneD, NekDouble> >       &velocity)
-        {
-            ASSERTL0(false, "This function is not valid for the Base class");
-        }
-
         void EquationSystem::v_ExtraFldOutput(
             std::vector<Array<OneD, NekDouble> > &fieldcoeffs,
             std::vector<std::string>             &variables)

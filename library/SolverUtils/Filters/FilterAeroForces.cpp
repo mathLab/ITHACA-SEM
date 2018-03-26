@@ -43,6 +43,7 @@
 #include <MultiRegions/ExpList3D.h>    
 #include <MultiRegions/ExpList3DHomogeneous1D.h>
 #include <SolverUtils/Filters/FilterAeroForces.h>
+#include <SolverUtils/Filters/FilterInterfaces.hpp>
 #include <LibUtilities/BasicUtils/ParseUtils.h>
 
 using namespace std;
@@ -589,6 +590,9 @@ void FilterAeroForces::CalculateForces(
     auto equ = m_equ.lock();
     ASSERTL0(equ, "Weak pointer expired");
 
+    auto fluidEqu = std::dynamic_pointer_cast<FluidInterface>(equ);
+    ASSERTL0(fluidEqu, "Aero forces filter is incompatible with this solver.");
+
     int i, j, k, n, cnt, elmtid, nq, offset, boundary, plane;
     // Get number of quadrature points and dimensions
     int physTot = pFields[0]->GetNpoints();
@@ -720,8 +724,8 @@ void FilterAeroForces::CalculateForces(
                 velocity[n] = Array<OneD, NekDouble>(fields[n]->GetTotPoints());
             }
             pressure = Array<OneD, NekDouble>(fields[0]->GetTotPoints());
-            equ->GetVelocity(physfields, velocity);
-            equ->GetPressure(physfields, pressure);
+            fluidEqu->GetVelocity(physfields, velocity);
+            fluidEqu->GetPressure(physfields, pressure);
 
             //Loop all the Boundary Regions
             for( cnt = n = 0; n < BndConds.num_elements(); n++)
@@ -857,7 +861,7 @@ void FilterAeroForces::CalculateForces(
                                                    fv[j], 1, 
                                                    fv[j], 1);
                             }
-                            if(!equ->HasConstantDensity())
+                            if(!fluidEqu->HasConstantDensity())
                             {
                                 // Add gradient term
                                 Vmath::Vvtvp (nbc, div, 1,

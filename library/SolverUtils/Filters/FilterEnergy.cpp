@@ -36,6 +36,7 @@
 #include <iomanip>
 
 #include <SolverUtils/Filters/FilterEnergy.h>
+#include <SolverUtils/Filters/FilterInterfaces.hpp>
 
 using namespace std;
 
@@ -48,7 +49,7 @@ std::string FilterEnergy::className = SolverUtils::GetFilterFactory().
 
 FilterEnergy::FilterEnergy(
     const LibUtilities::SessionReaderSharedPtr &pSession,
-    const std::weak_ptr<EquationSystem>      &pEquation,
+    const std::weak_ptr<EquationSystem>        &pEquation,
     const ParamMap &pParams)
     : Filter        (pSession, pEquation),
       m_index       (-1),
@@ -153,6 +154,9 @@ void FilterEnergy::v_Update(
     auto equ = m_equ.lock();
     ASSERTL0(equ, "Weak pointer expired");
 
+    auto fluidEqu = std::dynamic_pointer_cast<FluidInterface>(equ);
+    ASSERTL0(fluidEqu, "Energy filter is incompatible with this solver.");
+
     // Store physical values in an array
     Array<OneD, Array<OneD, NekDouble> > physfields(pFields.num_elements());
     for(i = 0; i < pFields.num_elements(); ++i)
@@ -169,7 +173,7 @@ void FilterEnergy::v_Update(
     {
         u[i] = Array<OneD, NekDouble>(nPoints);
     }
-    equ->GetVelocity(physfields, u);
+    fluidEqu->GetVelocity(physfields, u);
 
     for (i = 0; i < 3; ++i)
     {
@@ -181,10 +185,10 @@ void FilterEnergy::v_Update(
         Vmath::Vvtvp(nPoints, u[i], 1, u[i], 1, tmp, 1, tmp, 1);
     }
 
-    if (!equ->HasConstantDensity())
+    if (!fluidEqu->HasConstantDensity())
     {
         density = Array<OneD, NekDouble>(nPoints);
-        equ->GetDensity(physfields, density);
+        fluidEqu->GetDensity(physfields, density);
         Vmath::Vmul(nPoints, density, 1, tmp, 1, tmp, 1);
     }
 
@@ -234,7 +238,7 @@ void FilterEnergy::v_Update(
         Vmath::Vvtvp(nPoints, tmp2, 1, tmp2, 1, tmp, 1, tmp, 1);
     }
 
-    if (!equ->HasConstantDensity())
+    if (!fluidEqu->HasConstantDensity())
     {
         Vmath::Vmul(nPoints, density, 1, tmp, 1, tmp, 1);
     }

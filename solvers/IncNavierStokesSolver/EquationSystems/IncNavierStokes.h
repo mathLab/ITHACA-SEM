@@ -42,6 +42,7 @@
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <IncNavierStokesSolver/EquationSystems/Extrapolate.h>
 #include <SolverUtils/Forcing/Forcing.h>
+#include <SolverUtils/Filters/FilterInterfaces.hpp>
 
 namespace Nektar
 {     
@@ -127,7 +128,8 @@ namespace Nektar
      * \brief This class is the base class for Navier Stokes problems
      *
      */
-    class IncNavierStokes: public SolverUtils::AdvectionSystem
+    class IncNavierStokes: public SolverUtils::AdvectionSystem,
+                           public SolverUtils::FluidInterface
     {
     public:
         // Destructor
@@ -146,6 +148,23 @@ namespace Nektar
         }
 
         void AddForcing(const SolverUtils::ForcingSharedPtr& pForce);
+
+        virtual void GetPressure(
+            const Array<OneD, const Array<OneD, NekDouble> > &physfield,
+                  Array<OneD, NekDouble>                     &pressure);
+
+        virtual void GetDensity(
+            const Array<OneD, const Array<OneD, NekDouble> > &physfield,
+                  Array<OneD, NekDouble>                     &density);
+
+        virtual bool HasConstantDensity()
+        {
+            return true;
+        }
+
+        virtual void GetVelocity(
+            const Array<OneD, const Array<OneD, NekDouble> > &physfield,
+                  Array<OneD, Array<OneD, NekDouble> >       &velocity);
 
     protected:
 		
@@ -226,23 +245,6 @@ namespace Nektar
         {
             return m_pressure;
         }
-
-        virtual void v_GetPressure(
-            const Array<OneD, const Array<OneD, NekDouble> > &physfield,
-                  Array<OneD, NekDouble>                     &pressure);
-
-        virtual void v_GetDensity(
-            const Array<OneD, const Array<OneD, NekDouble> > &physfield,
-                  Array<OneD, NekDouble>                     &density);
-
-        virtual bool v_HasConstantDensity()
-        {
-            return true;
-        }
-
-        virtual void v_GetVelocity(
-            const Array<OneD, const Array<OneD, NekDouble> > &physfield,
-                  Array<OneD, Array<OneD, NekDouble> >       &velocity);
 
         virtual void v_TransCoeffToPhys(void)
         {

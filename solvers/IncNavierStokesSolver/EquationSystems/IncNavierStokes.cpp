@@ -806,7 +806,7 @@ namespace Nektar
     /**
      *
      */
-    void IncNavierStokes::v_GetPressure(
+    void IncNavierStokes::GetPressure(
         const Array<OneD, const Array<OneD, NekDouble> > &physfield,
               Array<OneD, NekDouble>                     &pressure)
     {
@@ -816,7 +816,7 @@ namespace Nektar
     /**
      *
      */
-    void IncNavierStokes::v_GetDensity(
+    void IncNavierStokes::GetDensity(
         const Array<OneD, const Array<OneD, NekDouble> > &physfield,
               Array<OneD, NekDouble>                     &density)
     {
@@ -827,7 +827,7 @@ namespace Nektar
     /**
      *
      */
-    void IncNavierStokes::v_GetVelocity(
+    void IncNavierStokes::GetVelocity(
         const Array<OneD, const Array<OneD, NekDouble> > &physfield,
               Array<OneD, Array<OneD, NekDouble> >       &velocity)
     {

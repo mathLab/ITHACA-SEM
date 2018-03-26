@@ -45,13 +45,15 @@
 #include <SolverUtils/AdvectionSystem.h>
 #include <SolverUtils/Diffusion/Diffusion.h>
 #include <SolverUtils/Forcing/Forcing.h>
+#include <SolverUtils/Filters/FilterInterfaces.hpp>
 
 namespace Nektar
 {
     /**
      *
      */
-    class CompressibleFlowSystem: public SolverUtils::AdvectionSystem
+    class CompressibleFlowSystem: public SolverUtils::AdvectionSystem,
+                                  public SolverUtils::FluidInterface
     {
     public:
 
@@ -66,6 +68,23 @@ namespace Nektar
         /// (a vector of them).
         Array<OneD, NekDouble> GetStabilityLimitVector(
             const Array<OneD,int> &ExpOrder);
+
+        virtual void GetPressure(
+            const Array<OneD, const Array<OneD, NekDouble> > &physfield,
+                  Array<OneD, NekDouble>                     &pressure);
+
+        virtual void GetDensity(
+            const Array<OneD, const Array<OneD, NekDouble> > &physfield,
+                  Array<OneD, NekDouble>                     &density);
+
+        virtual bool HasConstantDensity()
+        {
+            return false;
+        }
+
+        virtual void GetVelocity(
+            const Array<OneD, const Array<OneD, NekDouble> > &physfield,
+                  Array<OneD, Array<OneD, NekDouble> >       &velocity);
 
     protected:
         SolverUtils::DiffusionSharedPtr     m_diffusion;
@@ -173,23 +192,6 @@ namespace Nektar
         {
             // Do nothing by default
         }
-
-        virtual void v_GetPressure(
-            const Array<OneD, const Array<OneD, NekDouble> > &physfield,
-                  Array<OneD, NekDouble>                     &pressure);
-
-        virtual void v_GetDensity(
-            const Array<OneD, const Array<OneD, NekDouble> > &physfield,
-                  Array<OneD, NekDouble>                     &density);
-
-        virtual bool v_HasConstantDensity()
-        {
-            return false;
-        }
-
-        virtual void v_GetVelocity(
-            const Array<OneD, const Array<OneD, NekDouble> > &physfield,
-                  Array<OneD, Array<OneD, NekDouble> >       &velocity);
 
         virtual Array<OneD, NekDouble> v_GetMaxStdVelocity();
 

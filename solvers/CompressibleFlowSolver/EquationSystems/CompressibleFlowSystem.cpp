@@ -894,7 +894,7 @@ namespace Nektar
     /**
      *
      */
-    void CompressibleFlowSystem::v_GetPressure(
+    void CompressibleFlowSystem::GetPressure(
         const Array<OneD, const Array<OneD, NekDouble> > &physfield,
               Array<OneD, NekDouble>                     &pressure)
     {
@@ -904,7 +904,7 @@ namespace Nektar
     /**
      *
      */
-    void CompressibleFlowSystem::v_GetDensity(
+    void CompressibleFlowSystem::GetDensity(
         const Array<OneD, const Array<OneD, NekDouble> > &physfield,
               Array<OneD, NekDouble>                     &density)
     {
@@ -914,7 +914,7 @@ namespace Nektar
     /**
      *
      */
-    void CompressibleFlowSystem::v_GetVelocity(
+    void CompressibleFlowSystem::GetVelocity(
         const Array<OneD, const Array<OneD, NekDouble> > &physfield,
               Array<OneD, Array<OneD, NekDouble> >       &velocity)
     {

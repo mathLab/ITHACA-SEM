@@ -112,6 +112,9 @@ namespace Nektar
                                                             "GlobalSysSoln");
             m_preconType = pSession->GetSolverInfoAsEnum<PreconditionerType>(
                                                             "Preconditioner");
+            
+            m_IteraterType = pSession->GetSolverInfoAsEnum<LinSysIteraterType>(
+                                                            "LinSysIterater");
 
             // Override values with data from GlobalSysSolnInfo section 
             if(pSession->DefinesGlobalSysSolnInfo(variable, "GlobalSysSoln"))
@@ -128,6 +131,14 @@ namespace Nektar
                                                             "Preconditioner");
                 m_preconType = pSession->GetValueAsEnum<PreconditionerType>(
                                                     "Preconditioner", precon);
+            }
+
+            if(pSession->DefinesGlobalSysSolnInfo(variable, "LinSysIterater"))
+            {
+                std::string iterater = pSession->GetGlobalSysSolnInfo(variable,
+                                                            "LinSysIterater");
+                m_IteraterType = pSession->GetValueAsEnum<LinSysIteraterType>(
+                                                    "LinSysIterater", iterater);
             }
 
             if(pSession->DefinesGlobalSysSolnInfo(variable,
@@ -186,6 +197,7 @@ namespace Nektar
             m_hash(0),
             m_solnType(oldLevelMap->m_solnType),
             m_preconType(oldLevelMap->m_preconType),
+            m_IteraterType(oldLevelMap->m_IteraterType),
             m_maxIterations(oldLevelMap->m_maxIterations),
             m_iterativeTolerance(oldLevelMap->m_iterativeTolerance),
             m_successiveRHS(oldLevelMap->m_successiveRHS),
@@ -1208,6 +1220,11 @@ namespace Nektar
         PreconditionerType  AssemblyMap::GetPreconType() const
         {
             return m_preconType;
+        }
+
+        LinSysIteraterType  AssemblyMap::GetIteraterType() const
+        {
+            return m_IteraterType;
         }
 
         NekDouble AssemblyMap::GetIterativeTolerance() const

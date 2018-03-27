@@ -96,12 +96,17 @@ namespace Nektar
             /// dot product of rhs to normalise stopping criterion
             NekDouble                                   m_rhs_magnitude;
 
+            /// dot product of rhs to normalise stopping criterion
+            NekDouble                                   m_prec_factor;
+
             /// cnt to how many times rhs_magnitude is called 
             NekDouble                                   m_rhs_mag_sm; 
             
             PreconditionerSharedPtr                     m_precon;
 
             MultiRegions::PreconditionerType            m_precontype;
+
+            MultiRegions::LinSysIteraterType            m_IteraterType;
             
             int                                         m_totalIterations;
 
@@ -166,6 +171,8 @@ namespace Nektar
                     const Array<OneD,const NekDouble> &pInput,
                           Array<OneD,      NekDouble> &pOutput,
                     const int                          nDir);
+            static std::string lookupIds[];
+            static std::string def;
         };
     }
 }

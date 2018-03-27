@@ -79,19 +79,19 @@ using namespace Nektar;
         }
 
 
-        // void initializeLinSys(const LibUtilities::SessionReaderSharedPtr &session)
-        void initializeLinSys()
+        //void initializeLinSys()
+        void initializeLinSys(const LibUtilities::SessionReaderSharedPtr &session)
         {
             
-            // m_nlinsys                   = session->GetParameter("LinSysDimens");
-            // m_maxdirction               = session->GetParameter("MaxDirction" );
-            // m_maxrestart                = session->GetParameter("MaxRestart" );
-            // m_tolerance                 = session->GetParameter("Tolerance" );
+            m_nlinsys                   = session->GetParameter("LinSysDimens");
+            m_maxdirction               = session->GetParameter("MaxDirction" );
+            m_maxrestart                = session->GetParameter("MaxRestart" );
+            m_tolerance                 = session->GetParameter("Tolerance" );
 
-            m_nlinsys                   = 5;
-            m_maxdirction               = m_nlinsys-4;
-            m_maxrestart                = 1;
-            m_tolerance                 = 1.0E-8;
+            // m_nlinsys                   = 5;
+            // m_maxdirction               = m_nlinsys-1;
+            // m_maxrestart                = 1;
+            // m_tolerance                 = 1.0E-8;
             int nSubMatrix              = 0;
             
             m_rhs       =  Array<OneD, NekDouble>(m_nlinsys);
@@ -110,17 +110,17 @@ using namespace Nektar;
             // }
             
             int       nnn=0;
+            NekDouble sum = 0.0;
             for(int i=0; i<m_nlinsys-nSubMatrix; ++i)
-            {
+            {   
+                sum = 0.0;
                 for(int j=0; j<m_nlinsys-nSubMatrix; ++j)
                 {
                     m_mat[i*m_nlinsys+j] = 1.0+nnn;
                     nnn++;
-                    if (i==j)
-                    {
-                        m_mat[i*m_nlinsys+j]    =   m_mat[i*m_nlinsys+j]*10.0;
-                    }
+                    sum += m_mat[i*m_nlinsys+j];
                 }
+                m_mat[i*m_nlinsys+i]    =   -m_mat[i*m_nlinsys+i]+ sum +1.0;
             }
 
             for(int i=m_nlinsys-nSubMatrix; i<m_nlinsys; ++i)
@@ -299,6 +299,7 @@ using namespace Nektar;
                 // }
                 
 #endif            
+#ifndef GMRES_DEBUG        
                 for(int i=0;i<nd+1;++i)
                 {
                     // evaluate initial residual error for exit check
@@ -339,8 +340,33 @@ using namespace Nektar;
                     vExchange   =   han[i][nd];
                     beta = -1.0*vExchange;
                     Vmath::Svtvp(nNonDir, beta, &qk_a[iqki]+nDir, 1, &qk_a[iqk1]+nDir, 1, &qk_a[iqk1]+nDir, 1);
+                    //cout << "   han["<<i<<"]["<<nd<<"]="<<han[i][nd];
+                    cout << "   han["<<i<<"]["<<nd<<"]="<<setprecision(6)<<setw(10)<<scientific<< han[i][nd];
                 }
+#endif 
 
+                for(int i=0;i<nd+1;++i)
+                {
+                    // evaluate initial residual error for exit check
+                    // tmp0 = qk_a[nDir];
+                    int iqki = i*nGlobal;
+#ifndef GMRES_DEBUG        
+                    vExchange    = Vmath::Dot2(nNonDir,
+                                               &qk_a[iqki]+nDir,
+                                               &qk_a[iqk1]+nDir,
+                                               &m_map[0] + nDir);
+#else
+                    // evaluate initial residual error for exit check
+                    vExchange    = Vmath::Dot(nNonDir,
+                                               &qk_a[iqki]+nDir,
+                                               &qk_a[iqk1]+nDir);
+#endif 
+                    han[i][nd] = vExchange;
+
+                    beta = -1.0*vExchange;
+                    Vmath::Svtvp(nNonDir, beta, &qk_a[iqki]+nDir, 1, &qk_a[iqk1]+nDir, 1, &qk_a[iqk1]+nDir, 1);
+                    cout << "   han["<<i<<"]["<<nd<<"]="<<han[i][nd];
+                }
 
 #ifndef GMRES_DEBUG        
                 vExchange    = Vmath::Dot2(nNonDir,
@@ -363,6 +389,10 @@ using namespace Nektar;
                 vComm->AllReduce(vExchange, Nektar::LibUtilities::ReduceSum);
 #endif
                 han[nd+1][nd] = sqrt(vExchange);
+                //cout << "   han["<<nd+1<<"]["<<nd<<"]="<<han[nd+1][nd];
+                cout << "   han["<<nd+1<<"]["<<nd<<"]="<<setprecision(6)<<setw(10)<<scientific<< han[nd+1][nd];
+                cout << endl;
+                
                 // q_k[0] = f-A*x0
                 alpha        = 1.0/han[nd+1][nd] ;
                 Vmath::Smul(nNonDir,alpha,&qk_a[iqk1]+nDir,1,&qk_a[iqk1]+nDir,1);
@@ -561,18 +591,25 @@ using namespace Nektar;
 
 int main(int argc, char *argv[])
 {
-    // LibUtilities::SessionReaderSharedPtr pppsession;
+    LibUtilities::SessionReaderSharedPtr pppsession;
+    SpatialDomains::MeshGraphSharedPtr   graph;
     
-        // Create session reader.
-        // pppsession = LibUtilities::SessionReader::CreateInstance(argc, argv);
+        //Create session reader.
+        pppsession = LibUtilities::SessionReader::CreateInstance(argc, argv);
 
-        // // Get some information about the session
-        // string       sessionName    = pppsession->GetSessionName();
-        // string       outFile        = sessionName + ".fld";
+        // Read the geometry and the expansion information
+        graph = SpatialDomains::MeshGraph::Read(pppsession);
+
+        // Get some information about the session
+        string       sessionName    = pppsession->GetSessionName();
+        string       outFile        = sessionName + ".fld";
         
 
-
-        initializeLinSys();
+        cout <<setprecision(6)<<setw(10)<<scientific;
+        
+        cout << 1.0<<endl;
+        initializeLinSys(pppsession);
+        //initializeLinSys();
 
         int ndim = m_nlinsys;
 

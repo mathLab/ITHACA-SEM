@@ -143,6 +143,19 @@ namespace Nektar
         };
 
 
+        enum LinSysIteraterType
+        {
+            eConjugateGradient,
+            eGMRES
+        };
+
+        const char* const LinSysIteraterTypeMap[] =
+        {
+            "ConjugateGradient",
+            "GMRES"
+        };
+
+
         // let's keep this for linking to external
         // sparse libraries
         enum MatrixStorageType

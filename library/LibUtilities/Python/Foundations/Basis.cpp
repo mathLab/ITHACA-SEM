@@ -90,7 +90,7 @@ void export_Basis()
 
         .def("GetZ", &Basis::GetZ,
              py::return_value_policy<py::copy_const_reference>())
-        .def("GetW", &Basis::GetZ,
+        .def("GetW", &Basis::GetW,
              py::return_value_policy<py::copy_const_reference>())
         .def("GetZW", &Basis_GetZW)
 

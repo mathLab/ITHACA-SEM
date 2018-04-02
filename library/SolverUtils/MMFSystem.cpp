@@ -838,7 +838,7 @@ void MMFSystem::CartesianToSpherical(const NekDouble x0j, const NekDouble x1j,
 void MMFSystem::CopyBoundaryTrace(
     const Array<OneD, const NekDouble> &Fwd, Array<OneD, NekDouble> &Bwd,
     const BoundaryCopyType BDCopyType, const int var,
-    const SpatialDomains::BndUserDefinedType BDtype)
+    const std::string BDtype)
 {
     int id1, id2, npts, nptselem, cnt = 0, bdrycnt = 0;
     Array<OneD, NekDouble> Dirichlet, x0, x1, x2;
@@ -873,12 +873,8 @@ void MMFSystem::CopyBoundaryTrace(
                 m_fields[var]->GetTraceMap()->GetBndCondTraceToGlobalTraceMap(
                     cnt + e));
 
-            // if ( (m_fields[var]->GetBndConditions()[n]->GetUserDefined2() ==
-            // BDtype) || (BDtype == SpatialDomains::eNoUserDefined) )
             if (m_fields[var]->GetBndConditions()[n]->GetUserDefined() ==
-                    m_fields[var]->GetBndConditions()[n]->GetBndTypeAsString(
-                        BDtype) ||
-                BDtype == SpatialDomains::eNoUserDefined)
+                        BDtype || BDtype == "NoUserDefined")
             {
                 switch (BDCopyType)
                 {
@@ -1488,11 +1484,11 @@ void MMFSystem::UpwindMaxwellFlux1D(
 
     // E = 0 at the boundaries
     CopyBoundaryTrace(Fwd[0], Bwd[0], SolverUtils::eFwdEQNegBwd, 0,
-                      SpatialDomains::ePEC);
+                      "PEC");
 
     // d H / d n = 0 at the boundaries
     CopyBoundaryTrace(Fwd[1], Bwd[1], SolverUtils::eFwdEQBwd, 1,
-                      SpatialDomains::ePEC);
+                      "PEC");
 
     Array<OneD, NekDouble> dE(nTraceNumPoints);
     Array<OneD, NekDouble> dH(nTraceNumPoints);
@@ -1544,11 +1540,11 @@ void MMFSystem::LaxFriedrichMaxwellFlux1D(
 
     // E = 0 at the boundaries
     CopyBoundaryTrace(Fwd[0], Bwd[0], SolverUtils::eFwdEQNegBwd, 0,
-                      SpatialDomains::ePEC);
+                      "PEC");
 
     // d H / d n = 0 at the boundaries
     CopyBoundaryTrace(Fwd[1], Bwd[1], SolverUtils::eFwdEQBwd, 1,
-                      SpatialDomains::ePEC);
+                      "PEC");
 
     Array<OneD, NekDouble> dE(nTraceNumPoints);
     Array<OneD, NekDouble> dH(nTraceNumPoints);
@@ -1599,11 +1595,11 @@ void MMFSystem::AverageMaxwellFlux1D(
 
     // E = 0 at the boundaries
     CopyBoundaryTrace(Fwd[0], Bwd[0], SolverUtils::eFwdEQNegBwd, 0,
-                      SpatialDomains::ePEC);
+                      "PEC");
 
     // d H / d n = 0 at the boundaries
     CopyBoundaryTrace(Fwd[1], Bwd[1], SolverUtils::eFwdEQBwd, 1,
-                      SpatialDomains::ePEC);
+                      "PEC");
 
     for (i = 0; i < nTraceNumPoints; ++i)
     {
@@ -1851,32 +1847,32 @@ void MMFSystem::NumericalMaxwellFluxTM(
 
     // Total Field Formulation
     CopyBoundaryTrace(Fwd[0], Bwd[0], SolverUtils::eFwdEQBwd, 0,
-                      SpatialDomains::ePEC_Forces);
+                      "PEC_Forces");
     CopyBoundaryTrace(Fwd[1], Bwd[1], SolverUtils::eFwdEQBwd, 1,
-                      SpatialDomains::ePEC_Forces);
+                      "PEC_Forces");
     CopyBoundaryTrace(IncFieldFwd[2], Bwd[2], SolverUtils::eFwdEQNegBwd, 2,
-                      SpatialDomains::ePEC_Forces);
+                      "PEC_Forces");
 
     CopyBoundaryTrace(IncFieldFwd[0], Bwd[0], SolverUtils::eFwdEQNegBwd, 0,
-                      SpatialDomains::ePMC_Forces);
+                      "PMC_Forces");
     CopyBoundaryTrace(IncFieldFwd[1], Bwd[1], SolverUtils::eFwdEQNegBwd, 1,
-                      SpatialDomains::ePMC_Forces);
+                      "PMC_Forces");
     CopyBoundaryTrace(Fwd[2], Bwd[2], SolverUtils::eFwdEQBwd, 2,
-                      SpatialDomains::ePMC_Forces);
+                      "PMC_Forces");
 
     CopyBoundaryTrace(Fwd[0], Bwd[0], SolverUtils::eFwdEQBwd, 0,
-                      SpatialDomains::ePEC);
+                      "PEC");
     CopyBoundaryTrace(Fwd[1], Bwd[1], SolverUtils::eFwdEQBwd, 1,
-                      SpatialDomains::ePEC);
+                      "PEC");
     CopyBoundaryTrace(Fwd[2], Bwd[2], SolverUtils::eFwdEQNegBwd, 2,
-                      SpatialDomains::ePEC);
+                      "PEC");
 
     CopyBoundaryTrace(Fwd[0], Bwd[0], SolverUtils::eFwdEQNegBwd, 0,
-                      SpatialDomains::ePMC);
+                      "PMC");
     CopyBoundaryTrace(Fwd[1], Bwd[1], SolverUtils::eFwdEQNegBwd, 1,
-                      SpatialDomains::ePMC);
+                      "PMC");
     CopyBoundaryTrace(Fwd[2], Bwd[2], SolverUtils::eFwdEQBwd, 2,
-                      SpatialDomains::ePMC);
+                      "PMC");
 
     Array<OneD, NekDouble> e1Fwd_cdot_ncrossdH(nTraceNumPoints, 0.0);
     Array<OneD, NekDouble> e1Bwd_cdot_ncrossdH(nTraceNumPoints, 0.0);
@@ -1961,32 +1957,32 @@ void MMFSystem::NumericalMaxwellFluxTE(
     }
 
     CopyBoundaryTrace(IncFieldFwd[0], Bwd[0], SolverUtils::eFwdEQNegBwd, 0,
-                      SpatialDomains::ePEC_Forces);
+                      "PEC_Forces");
     CopyBoundaryTrace(IncFieldFwd[1], Bwd[1], SolverUtils::eFwdEQNegBwd, 1,
-                      SpatialDomains::ePEC_Forces);
+                      "PEC_Forces");
     CopyBoundaryTrace(Fwd[2], Bwd[2], SolverUtils::eFwdEQBwd, 2,
-                      SpatialDomains::ePEC_Forces);
+                      "PEC_Forces");
 
     CopyBoundaryTrace(Fwd[0], Bwd[0], SolverUtils::eFwdEQBwd, 0,
-                      SpatialDomains::ePMC_Forces);
+                      "PMC_Forces");
     CopyBoundaryTrace(Fwd[1], Bwd[1], SolverUtils::eFwdEQBwd, 1,
-                      SpatialDomains::ePMC_Forces);
+                      "PMC_Forces");
     CopyBoundaryTrace(IncFieldFwd[2], Bwd[2], SolverUtils::eFwdEQNegBwd, 2,
-                      SpatialDomains::ePMC_Forces);
+                      "PMC_Forces");
 
     CopyBoundaryTrace(Fwd[0], Bwd[0], SolverUtils::eFwdEQNegBwd, 0,
-                      SpatialDomains::ePEC);
+                      "PEC");
     CopyBoundaryTrace(Fwd[1], Bwd[1], SolverUtils::eFwdEQNegBwd, 1,
-                      SpatialDomains::ePEC);
+                      "PEC");
     CopyBoundaryTrace(Fwd[2], Bwd[2], SolverUtils::eFwdEQBwd, 2,
-                      SpatialDomains::ePEC);
+                      "PEC");
 
     CopyBoundaryTrace(Fwd[0], Bwd[0], SolverUtils::eFwdEQBwd, 0,
-                      SpatialDomains::ePMC);
+                      "PMC");
     CopyBoundaryTrace(Fwd[1], Bwd[1], SolverUtils::eFwdEQBwd, 1,
-                      SpatialDomains::ePMC);
+                      "PMC");
     CopyBoundaryTrace(Fwd[2], Bwd[2], SolverUtils::eFwdEQNegBwd, 2,
-                      SpatialDomains::ePMC);
+                      "PMC");
 
     Array<OneD, NekDouble> e1Fwd_cdot_ncrossdE(nTraceNumPoints);
     Array<OneD, NekDouble> e1Bwd_cdot_ncrossdE(nTraceNumPoints);

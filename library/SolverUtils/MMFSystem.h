@@ -168,8 +168,7 @@ public:
     SOLVER_UTILS_EXPORT void CopyBoundaryTrace(
         const Array<OneD, const NekDouble> &Fwd, Array<OneD, NekDouble> &Bwd,
         const BoundaryCopyType BDCopyType, const int var = 0,
-        const SpatialDomains::BndUserDefinedType =
-            SpatialDomains::eNoUserDefined);
+        const std::string btype = "NoUserDefined");
 
 protected:
     NekDouble m_alpha;

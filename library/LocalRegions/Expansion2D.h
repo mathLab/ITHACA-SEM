@@ -99,19 +99,13 @@ namespace Nektar
                 Array<OneD, NekDouble>          &edgePhys,
                 const StdRegions::VarCoeffMap   &dirForcing,
                 Array<OneD, NekDouble>          &outarray);
-            
-            inline void AddHDGHelmholtzEdgeTerms(
-              const int matrixID, const NekDouble                  tau, const int                        edge, Array<OneD, ExpansionSharedPtr> &EdgeExp, Array<OneD, NekDouble>          &edgePhys, const StdRegions::VarCoeffMap   &dirForcing, Array<OneD, NekDouble>          &outarray);
-            
+
             inline void AddHDGHelmholtzTraceTerms(
                 const NekDouble                     tau,
                 const Array<OneD, const NekDouble> &inarray,
                 Array<OneD, ExpansionSharedPtr>    &EdgeExp,
                 const StdRegions::VarCoeffMap      &dirForcing,
                 Array<OneD, NekDouble>             &outarray);
-            
-            inline void AddHDGHelmholtzTraceTerms( const int matrixID, const NekDouble                     tau, const Array<OneD, const NekDouble> &inarray, Array<OneD, ExpansionSharedPtr>    &EdgeExp, const StdRegions::VarCoeffMap      &dirForcing, Array<OneD, NekDouble>             &outarray);
-            
 
             inline Expansion3DSharedPtr GetLeftAdjacentElementExp() const;
 

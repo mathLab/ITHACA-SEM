@@ -50,18 +50,6 @@ namespace Nektar
             m_metricinfo( ( dynamic_cast<const Expansion&>( stdExpansion ) ).GetMetricInfo() )
         {
         }
-        MatrixKey::MatrixKey(const int matrixID,
-                             const StdRegions::MatrixType matrixType,
-                             const LibUtilities::ShapeType shapeType,
-                             const StdRegions::StdExpansion &stdExpansion,
-                             const StdRegions::ConstFactorMap &factorMap,
-                             const StdRegions::VarCoeffMap &varCoeffMap,
-                             LibUtilities::PointsType nodalType) :
-        StdMatrixKey(matrixID, matrixType, shapeType, stdExpansion, factorMap, varCoeffMap, nodalType),
-        m_metricinfo( (dynamic_cast<const Expansion&>( stdExpansion ) ).GetMetricInfo())
-        {
-        }
-
 
         MatrixKey::MatrixKey(const MatrixKey& mkey,
                       const StdRegions::MatrixType matrixType) :

@@ -58,13 +58,6 @@ namespace Nektar
                           const ConstFactorMap &factorMap = NullConstFactorMap,
                           const VarCoeffMap &varCoeffMap = NullVarCoeffMap,
                           LibUtilities::PointsType nodalType = LibUtilities::eNoPointsType);
-            STD_REGIONS_EXPORT StdMatrixKey(const int matrixID,
-                                            const StdRegions::MatrixType matrixType,
-                                            const LibUtilities::ShapeType shapeType,
-                                            const StdRegions::StdExpansion &stdExpansion,
-                                            const ConstFactorMap &factorMap = NullConstFactorMap,
-                                            const VarCoeffMap &varCoeffMap = NullVarCoeffMap,
-                                            LibUtilities::PointsType nodalType = LibUtilities::eNoPointsType);
 
             STD_REGIONS_EXPORT StdMatrixKey(const StdMatrixKey& rhs,
                           const StdRegions::MatrixType matrixType);
@@ -119,10 +112,6 @@ namespace Nektar
             inline const LibUtilities::BasisSharedPtr GetBasis(int dir) const
             {
                 return(m_base[dir]);
-            }
-            int GetmatrixID() const
-            {
-                return m_matrixID;
             }
 
             inline int GetNConstFactors() const
@@ -185,7 +174,6 @@ namespace Nektar
             Array<OneD, const LibUtilities::BasisSharedPtr> m_base;
 
             unsigned int m_ncoeffs;
-            int m_matrixID;
             MatrixType   m_matrixType;
             LibUtilities::PointsType m_nodalPointsType;
             

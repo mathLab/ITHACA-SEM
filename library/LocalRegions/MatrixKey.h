@@ -54,14 +54,6 @@ namespace Nektar
                       const StdRegions::ConstFactorMap &factorMap = StdRegions::NullConstFactorMap,
                       const StdRegions::VarCoeffMap &varCoeffMap = StdRegions::NullVarCoeffMap,
                       LibUtilities::PointsType nodalType = LibUtilities::eNoPointsType);
-            LOCAL_REGIONS_EXPORT MatrixKey(const int matrixID,
-                                           const StdRegions::MatrixType matrixType,
-                                           const LibUtilities::ShapeType shapeType,
-                                           const StdRegions::StdExpansion &stdExpansion,
-                                           const StdRegions::ConstFactorMap &factorMap = StdRegions::NullConstFactorMap,
-                                           const StdRegions::VarCoeffMap &varCoeffMap = StdRegions::NullVarCoeffMap,
-                                           LibUtilities::PointsType nodalType = LibUtilities::eNoPointsType);
-
             LOCAL_REGIONS_EXPORT MatrixKey(const MatrixKey& mkey,
                           const StdRegions::MatrixType matrixType);
             

@@ -496,32 +496,6 @@ namespace Nektar
             }
         }
         
-        void Expansion2D::AddHDGHelmholtzTraceTerms(
-            const int matrixID, const NekDouble                     tau, const Array<OneD, const NekDouble> &inarray, Array<OneD, ExpansionSharedPtr>    &EdgeExp, const StdRegions::VarCoeffMap      &dirForcing, Array<OneD,NekDouble>              &outarray)
-        {
-            ASSERTL0(&inarray[0] != &outarray[0],
-                     "Input and output arrays use the same memory");
-            
-            int e, cnt, order_e, nedges = GetNedges();
-            Array<OneD, const NekDouble> tmp;
-            
-            cnt = 0;
-            
-            for(e = 0; e < nedges; ++e)
-            {
-                order_e = EdgeExp[e]->GetNcoeffs();
-                Array<OneD, NekDouble> edgeCoeffs(order_e);
-                Array<OneD, NekDouble> edgePhys  (EdgeExp[e]->GetTotPoints());
-                
-                Vmath::Vcopy(order_e, tmp = inarray + cnt, 1, edgeCoeffs, 1);
-                EdgeExp[e]->BwdTrans(edgeCoeffs, edgePhys);
-                AddHDGHelmholtzEdgeTerms(matrixID, tau, e, EdgeExp, edgePhys, dirForcing, outarray);
-                
-                cnt += order_e;
-            }
-        }
-
-        
         // evaluate additional terms in HDG edges. Not that this assumes that
         // edges are unpacked into local cartesian order. 
         void Expansion2D::AddHDGHelmholtzEdgeTerms(
@@ -532,10 +506,11 @@ namespace Nektar
             const StdRegions::VarCoeffMap   &varcoeffs,
             Array<OneD, NekDouble>                         &outarray)
         {
+            bool mmf = (varcoeffs.find(StdRegions::eVarCoeffMF1x) != varcoeffs.end());
             int i, j, n;
             int nquad_e = EdgeExp[edge]->GetNumPoints(0); 
             int order_e = EdgeExp[edge]->GetNcoeffs();            
-            int coordim = GetCoordim();
+            int coordim = mmf ? 2 : GetCoordim();
             int ncoeffs = GetNcoeffs();
 
             Array<OneD, NekDouble> inval   (nquad_e);
@@ -547,8 +522,6 @@ namespace Nektar
 
             Array<OneD,unsigned int> emap;
             Array<OneD,int> sign;
-
-            DNekScalMat  &invMass = *GetLocMatrix(StdRegions::eInvMass);
             
             StdRegions::Orientation edgedir = GetEorient(edge);
 
@@ -591,9 +564,27 @@ namespace Nektar
             //                         \sum_i D_i M^{-1} G_i term
 
             // Two independent direction
+            DNekScalMatSharedPtr invMass;
             for(n = 0; n < coordim; ++n)
             {
-                Vmath::Vmul(nquad_e, normals[n], 1, edgePhys, 1, inval, 1);
+                if (mmf)
+                {
+                    StdRegions::VarCoeffMap Weight;
+                    Weight[StdRegions::eVarCoeffMass] = v_GetMFMag(n,varcoeffs);
+                    
+                    MatrixKey invMasskey( StdRegions::eInvMass, DetShapeType(), *this,
+                                         StdRegions::NullConstFactorMap, Weight);
+                    
+                    invMass = GetLocMatrix(invMasskey);
+                    
+                    Array<OneD, NekDouble> ncdotMF_e = v_GetnEdgecdotMF(n, edge, EdgeExp[edge], normals, varcoeffs);
+                    Vmath::Vmul(nquad_e, ncdotMF_e, 1, edgePhys, 1, inval, 1);
+                }
+                else
+                {
+                    Vmath::Vmul(nquad_e, normals[n], 1, edgePhys, 1, inval, 1);
+                    invMass = GetLocMatrix(StdRegions::eInvMass);
+                }
 
                 if (m_negatedNormals[edge])
                 {
@@ -617,134 +608,39 @@ namespace Nektar
                     tmpcoeff[i] = 0;
                     for(j = 0; j < order_e; ++j)
                     {
-                        tmpcoeff[i] += invMass(i,emap[j])*sign[j]*outcoeff[j];
-                    }
-                }
-
-                if(varcoeffs.find(VarCoeff[n]) != varcoeffs.end())
-                {
-                    MatrixKey mkey(DerivType[n], DetShapeType(), *this, StdRegions::NullConstFactorMap, varcoeffs);
-                    DNekScalMat &Dmat = *GetLocMatrix(mkey);
-                    Coeffs = Coeffs  + Dmat*Tmpcoeff;                 
-                }
-
-                else
-                {
-                    DNekScalMat &Dmat = *GetLocMatrix(DerivType[n]);
-                    Coeffs = Coeffs  + Dmat*Tmpcoeff;       
-                }
-            }
-        }
-        
-        void Expansion2D::AddHDGHelmholtzEdgeTerms(
-             const int matrixID, const NekDouble                  tau, const int edge, Array<OneD, ExpansionSharedPtr> &EdgeExp, Array<OneD, NekDouble> &edgePhys, const StdRegions::VarCoeffMap   &varcoeffs, Array<OneD, NekDouble>                         &outarray)
-        {
-            int i, j;
-            int nquad_e = EdgeExp[edge]->GetNumPoints(0);
-            int order_e = EdgeExp[edge]->GetNcoeffs();
-            int ncoeffs = GetNcoeffs();
-            int shapedim = 2;
-            
-            Array<OneD, NekDouble> inval   (nquad_e);
-            Array<OneD, NekDouble> outcoeff(order_e);
-            Array<OneD, NekDouble> tmpcoeff(ncoeffs);
-            
-            const Array<OneD, const Array<OneD, NekDouble> > &normals
-            = GetEdgeNormal(edge);
-            
-            Array<OneD,unsigned int> emap;
-            Array<OneD,int> sign;
-            
-            StdRegions::Orientation edgedir = GetEorient(edge);
-            
-            DNekVec                Coeffs  (ncoeffs,outarray,eWrapper);
-            DNekVec                Tmpcoeff(ncoeffs,tmpcoeff,eWrapper);
-            
-            GetEdgeToElementMap(edge,edgedir,emap,sign);
-            
-            //================================================================
-            // Add F = \tau <phi_i,in_phys>
-            // Fill edge and take inner product
-            EdgeExp[edge]->IProductWRTBase(edgePhys, outcoeff);
-            // add data to out array
-            for(i = 0; i < order_e; ++i)
-            {
-                outarray[emap[i]] += sign[i] * tau * outcoeff[i];
-            }
-            //================================================================
-            
-            //===============================================================
-            // Add -\sum_i D_i^T M^{-1} G_i + E_i M^{-1} G_i =
-            //                         \sum_i D_i M^{-1} G_i term
-            
-            DNekScalMatSharedPtr invMass;
-            StdRegions::VarCoeffMap::const_iterator x;
-            for(int dir = 0; dir < shapedim; ++dir)
-            {
-                // MMFCHANGES in AddHDGHelmholtzEdgeTerms (I)
-                if ((x = varcoeffs.find(StdRegions::eVarCoeffMF1x)) != varcoeffs.end())
-                {
-                    StdRegions::VarCoeffMap Weight;
-                    Weight[StdRegions::eVarCoeffMass] = v_GetMFMag(dir,varcoeffs);
-                    
-                    MatrixKey invMasskey( matrixID+dir*10000, StdRegions::eInvMass, DetShapeType(), *this,
-                                         StdRegions::NullConstFactorMap, Weight);
-                    
-                    invMass = GetLocMatrix(invMasskey);
-                    
-                    Array<OneD, NekDouble> ncdotMF_e = v_GetnEdgecdotMF(dir, edge, EdgeExp[edge], normals, varcoeffs);
-                    Vmath::Vmul(nquad_e, ncdotMF_e, 1, edgePhys, 1, inval, 1);
-                }
-                
-                else
-                {
-                    Vmath::Vmul(nquad_e, normals[dir], 1, edgePhys, 1, inval, 1);
-                    invMass = GetLocMatrix(StdRegions::eInvMass);
-                }
-                
-                if (m_negatedNormals[edge])
-                {
-                    Vmath::Neg(nquad_e, inval, 1);
-                }
-                
-                EdgeExp[edge]->IProductWRTBase(inval, outcoeff);
-                
-                // M^{-1} G
-                for(i = 0; i < ncoeffs; ++i)
-                {
-                    tmpcoeff[i] = 0;
-                    for(j = 0; j < order_e; ++j)
-                    {
                         tmpcoeff[i] += (*invMass)(i,emap[j])*sign[j]*outcoeff[j];
                     }
                 }
-                
-                // MMFCHANGES in AddHDGHelmholtzEdgeTerms (II)
-                if ((x = varcoeffs.find(StdRegions::eVarCoeffMF1x)) != varcoeffs.end())
+
+                if (mmf)
                 {
                     StdRegions::VarCoeffMap VarCoeffDirDeriv;
-                    VarCoeffDirDeriv[StdRegions::eVarCoeffMF] = v_GetMF(dir,shapedim,varcoeffs);
-                    VarCoeffDirDeriv[StdRegions::eVarCoeffMFDiv] = v_GetMFDiv(dir,varcoeffs);
+                    VarCoeffDirDeriv[StdRegions::eVarCoeffMF] = v_GetMF(n,coordim,varcoeffs);
+                    VarCoeffDirDeriv[StdRegions::eVarCoeffMFDiv] = v_GetMFDiv(n,varcoeffs);
                     
-                    MatrixKey Dmatkey(matrixID, StdRegions::eWeakDirectionalDeriv, DetShapeType(), *this,
+                    MatrixKey Dmatkey(StdRegions::eWeakDirectionalDeriv, DetShapeType(), *this,
                                       StdRegions::NullConstFactorMap, VarCoeffDirDeriv);
                     
                     DNekScalMat &Dmat = *GetLocMatrix(Dmatkey);
                     
                     Coeffs = Coeffs  + Dmat*Tmpcoeff;
                 }
-                
                 else
                 {
-                    StdRegions::MatrixType DerivType[3] = {StdRegions::eWeakDeriv0,
-                        StdRegions::eWeakDeriv1,
-                        StdRegions::eWeakDeriv2};
-                    DNekScalMat &Dmat = *GetLocMatrix(DerivType[dir]);
-                    Coeffs = Coeffs  + Dmat*Tmpcoeff;
+                    if(varcoeffs.find(VarCoeff[n]) != varcoeffs.end())
+                    {
+                        MatrixKey mkey(DerivType[n], DetShapeType(), *this, StdRegions::NullConstFactorMap, varcoeffs);
+                        DNekScalMat &Dmat = *GetLocMatrix(mkey);
+                        Coeffs = Coeffs  + Dmat*Tmpcoeff;                 
+                    }
+                    else
+                    {
+                        DNekScalMat &Dmat = *GetLocMatrix(DerivType[n]);
+                        Coeffs = Coeffs  + Dmat*Tmpcoeff;       
+                    }
                 }
             }
         }
-
 
         /**
          * Extracts the variable coefficients along an edge
@@ -839,7 +735,7 @@ namespace Nektar
                                 VarCoeffDirDeriv[StdRegions::eVarCoeffMF] = v_GetMF(i,shapedim,varcoeffs);
                                 VarCoeffDirDeriv[StdRegions::eVarCoeffMFDiv] = v_GetMFDiv(i,varcoeffs);
                                 
-                                MatrixKey Dmatkey(mkey.GetmatrixID()+i*10000,StdRegions::eWeakDirectionalDeriv, DetShapeType(), *this,
+                                MatrixKey Dmatkey(StdRegions::eWeakDirectionalDeriv, DetShapeType(), *this,
                                                   StdRegions::NullConstFactorMap, VarCoeffDirDeriv);
                                 
                                 DNekScalMat &Dmat = *GetLocMatrix(Dmatkey);
@@ -847,7 +743,7 @@ namespace Nektar
                                 StdRegions::VarCoeffMap Weight;
                                 Weight[StdRegions::eVarCoeffMass] = v_GetMFMag(i,mkey.GetVarCoeffs());
                                 
-                                MatrixKey invMasskey(mkey.GetmatrixID()+i*10000,StdRegions::eInvMass, DetShapeType(), *this,
+                                MatrixKey invMasskey(StdRegions::eInvMass, DetShapeType(), *this,
                                                      StdRegions::NullConstFactorMap, Weight);
                                 
                                 DNekScalMat &invMass = *GetLocMatrix(invMasskey);
@@ -953,7 +849,7 @@ namespace Nektar
                         SetTraceToGeomOrientation(EdgeExp,lambda);
                         
                         // Compute F = [I   D_1 M^{-1}   D_2 M^{-1}] C e_j
-                        AddHDGHelmholtzTraceTerms(mkey.GetmatrixID(),
+                        AddHDGHelmholtzTraceTerms(
                             tau, lambda, EdgeExp, mkey.GetVarCoeffs(), f);
                         
                         // Compute U^e_j
@@ -1038,7 +934,7 @@ namespace Nektar
                         VarCoeffDirDeriv[StdRegions::eVarCoeffMF] = v_GetMF(dir,shapedim,varcoeffs);
                         VarCoeffDirDeriv[StdRegions::eVarCoeffMFDiv] = v_GetMFDiv(dir,varcoeffs);
                         
-                        MatrixKey Dmatkey(mkey.GetmatrixID(), StdRegions::eWeakDirectionalDeriv, DetShapeType(), *this,
+                        MatrixKey Dmatkey(StdRegions::eWeakDirectionalDeriv, DetShapeType(), *this,
                                           StdRegions::NullConstFactorMap, VarCoeffDirDeriv);
                         
                         Dmat = GetLocMatrix(Dmatkey);
@@ -1046,7 +942,7 @@ namespace Nektar
                         StdRegions::VarCoeffMap Weight;
                         Weight[StdRegions::eVarCoeffMass] = v_GetMFMag(dir,mkey.GetVarCoeffs());
                         
-                        MatrixKey invMasskey(mkey.GetmatrixID(), StdRegions::eInvMass, DetShapeType(), *this,
+                        MatrixKey invMasskey(StdRegions::eInvMass, DetShapeType(), *this,
                                              StdRegions::NullConstFactorMap, Weight);
                         
                         invMass = *GetLocMatrix(invMasskey);

@@ -66,15 +66,6 @@ namespace Nektar
             LOCAL_REGIONS_EXPORT Expansion2DSharedPtr GetFaceExp(const int face);            
             LOCAL_REGIONS_EXPORT void SetTraceToGeomOrientation(Array<OneD, NekDouble> &inout);
             LOCAL_REGIONS_EXPORT void SetFaceToGeomOrientation(const int face, Array<OneD, NekDouble> &inout);
-            //Moving frame//
-            inline void AddHDGHelmholtzFaceTerms(
-                 const int  matrixID,
-                 const NekDouble                    tau,
-                 const int                          edge,
-                 Array<OneD, NekDouble>            &facePhys,
-                 const StdRegions::VarCoeffMap     &dirForcing,
-                 Array<OneD, NekDouble>            &outarray);
-            
             inline void AddHDGHelmholtzFaceTerms(
                 const NekDouble                    tau,
                 const int                          edge,

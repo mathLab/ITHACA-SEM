@@ -61,6 +61,7 @@ namespace Nektar
             int order_f = FaceExp->GetNcoeffs();
             int coordim = GetCoordim();
             int ncoeffs = GetNcoeffs();
+            bool mmf    = (varcoeffs.find(StdRegions::eVarCoeffMF1x) != varcoeffs.end());
 
             Array<OneD, NekDouble> inval   (nquad_f);
             Array<OneD, NekDouble> outcoeff(order_f);
@@ -111,8 +112,6 @@ namespace Nektar
             }
             //================================================================
 
-            NekDouble scale = invMass.Scale();
-            const NekDouble *data = invMass.GetRawPtr();
 
             //===============================================================
             // Add -\sum_i D_i^T M^{-1} G_i + E_i M^{-1} G_i = 
@@ -121,7 +120,25 @@ namespace Nektar
             // Three independent direction
             for(n = 0; n < coordim; ++n)
             {
-                Vmath::Vmul(nquad_f, normals[n], 1, facePhys, 1, inval, 1);
+                if (mmf) {
+                    StdRegions::VarCoeffMap Weight;
+                    Weight[StdRegions::eVarCoeffMass] = v_GetMFMag(n,varcoeffs);
+                    
+                    MatrixKey invMasskey( StdRegions::eInvMass, DetShapeType(), *this,
+                                         StdRegions::NullConstFactorMap, Weight);
+                    
+                    invMass = *GetLocMatrix(invMasskey);
+                    
+                    Array<OneD, NekDouble> ncdotMF_f = v_GetnFacecdotMF(n, face, FaceExp, normals, varcoeffs);
+                    Vmath::Vmul(nquad_f, ncdotMF_f, 1, facePhys, 1, inval, 1);
+                }
+                else {
+                    Vmath::Vmul(nquad_f, normals[n], 1, facePhys, 1, inval, 1);
+                }
+
+            
+                NekDouble scale = invMass.Scale();
+                const NekDouble *data = invMass.GetRawPtr();
 
                 if (m_negatedNormals[face])
                 {
@@ -151,8 +168,24 @@ namespace Nektar
                     }
                 }
 
-                DNekScalMat &Dmat = *GetLocMatrix(DerivType[n]);
-                Coeffs = Coeffs  + Dmat*Tmpcoeff;       
+                if (mmf)
+                {
+                    StdRegions::VarCoeffMap VarCoeffDirDeriv;
+                    VarCoeffDirDeriv[StdRegions::eVarCoeffMF] = v_GetMF(n,coordim,varcoeffs);
+                    VarCoeffDirDeriv[StdRegions::eVarCoeffMFDiv] = v_GetMFDiv(n,varcoeffs);
+                    
+                    MatrixKey Dmatkey(StdRegions::eWeakDirectionalDeriv, DetShapeType(), *this,
+                                      StdRegions::NullConstFactorMap, VarCoeffDirDeriv);
+                    
+                    DNekScalMat &Dmat = *GetLocMatrix(Dmatkey);
+                    
+                    Coeffs = Coeffs  + Dmat*Tmpcoeff;
+                }
+                else 
+                { 
+                    DNekScalMat &Dmat = *GetLocMatrix(DerivType[n]);
+                    Coeffs = Coeffs  + Dmat*Tmpcoeff;       
+                }
 
                 /*
                 if(varcoeffs.find(VarCoeff[n]) != varcoeffs.end())
@@ -170,182 +203,6 @@ namespace Nektar
                 */
             }
         }
-        
-        void Expansion3D::AddHDGHelmholtzFaceTerms(
-                                                   const int matrixID,
-                                                   const NekDouble                    tau,
-                                                   const int                          face,
-                                                   Array<OneD, NekDouble>            &facePhys,
-                                                   const StdRegions::VarCoeffMap     &varcoeffs,
-                                                   Array<OneD, NekDouble>            &outarray)
-        {
-            ExpansionSharedPtr FaceExp = GetFaceExp(face);
-            int i,j,n;
-            int nquad_f = FaceExp->GetNumPoints(0)*FaceExp->GetNumPoints(1);
-            int order_f = FaceExp->GetNcoeffs();
-            int coordim = GetCoordim();
-            int ncoeffs = GetNcoeffs();
-            
-            Array<OneD, NekDouble> inval   (nquad_f);
-            Array<OneD, NekDouble> outcoeff(order_f);
-            Array<OneD, NekDouble> tmpcoeff(ncoeffs);
-            
-            const Array<OneD, const Array<OneD, NekDouble> > &normals
-            = GetFaceNormal(face);
-            
-            DNekScalMat &invMass = *GetLocMatrix(StdRegions::eInvMass);
-            
-            DNekVec Coeffs(ncoeffs,outarray,eWrapper);
-            DNekVec Tmpcoeff(ncoeffs,tmpcoeff,eWrapper);
-            
-            StdRegions::IndexMapKey ikey(
-                                         StdRegions::eFaceToElement, DetShapeType(),
-                                         GetBasisNumModes(0), GetBasisNumModes(1), GetBasisNumModes(2),
-                                         face, GetForient(face));
-            StdRegions::IndexMapValuesSharedPtr map =
-            StdExpansion::GetIndexMap(ikey);
-            
-            
-            
-            // @TODO Variable coefficients
-            /*
-             StdRegions::VarCoeffType VarCoeff[3] = {StdRegions::eVarCoeffD00,
-             StdRegions::eVarCoeffD11,
-             StdRegions::eVarCoeffD22};
-             Array<OneD, NekDouble> varcoeff_work(nquad_f);
-             StdRegions::VarCoeffMap::const_iterator x;
-             ///// @TODO: What direction to use here??
-             if ((x = varcoeffs.find(VarCoeff[0])) != varcoeffs.end())
-             {
-             GetPhysFaceVarCoeffsFromElement(face,FaceExp,x->second,varcoeff_work);
-             Vmath::Vmul(nquad_f,varcoeff_work,1,FaceExp->GetPhys(),1,FaceExp->UpdatePhys(),1);
-             }
-             */
-            
-            //================================================================
-            // Add F = \tau <phi_i,in_phys>
-            // Fill face and take inner product
-            FaceExp->IProductWRTBase(facePhys, outcoeff);
-            
-            for(i = 0; i < order_f; ++i)
-            {
-                outarray[(*map)[i].index] += (*map)[i].sign*tau*outcoeff[i];
-            }
-            //================================================================
-            
-            
-            StdRegions::VarCoeffMap::const_iterator x;
-            //===============================================================
-            // Add -\sum_i D_i^T M^{-1} G_i + E_i M^{-1} G_i =
-            //                         \sum_i D_i M^{-1} G_i term
-            
-            // Three independent direction
-            for(n = 0; n < coordim; ++n)
-            {
-                
-                
-                // @TODO Multiply by variable coefficients
-                // @TODO: Document this (probably not needed)
-                /*
-                 StdRegions::VarCoeffMap::const_iterator x;
-                 if ((x = varcoeffs.find(VarCoeff[n])) != varcoeffs.end())
-                 {
-                 GetPhysEdgeVarCoeffsFromElement(edge,FaceExp,x->second,varcoeff_work);
-                 Vmath::Vmul(nquad_f,varcoeff_work,1,FaceExp->GetPhys(),1,FaceExp->UpdatePhys(),1);
-                 }
-                 */
-                //////////////////////////////////////////////////////////////////////////
-                
-                
-                // MMFCHANGES in AddHDGHelmholtzEdgeTerms (I)
-                if ((x = varcoeffs.find(StdRegions::eVarCoeffMF1x)) != varcoeffs.end())
-                {
-                    StdRegions::VarCoeffMap Weight;
-                    Weight[StdRegions::eVarCoeffMass] = v_GetMFMag(n,varcoeffs);
-                    
-                    MatrixKey invMasskey( matrixID+n*10000, StdRegions::eInvMass, DetShapeType(), *this,
-                                         StdRegions::NullConstFactorMap, Weight);
-                    
-                    invMass = *GetLocMatrix(invMasskey);
-                    
-                    Array<OneD, NekDouble> ncdotMF_f               = v_GetnFacecdotMF(n, face, FaceExp, normals, varcoeffs);
-                    Vmath::Vmul(nquad_f, ncdotMF_f, 1, facePhys, 1, inval, 1);
-                }
-                
-                else
-                {
-                    Vmath::Vmul(nquad_f, normals[n], 1, facePhys, 1, inval, 1);
-                    //invMass = GetLocMatrix(StdRegions::eInvMass);
-                }
-                
-                
-                ///////////////////////////////////////////////////////////////////////////
-                
-                
-                NekDouble scale = invMass.Scale();
-                const NekDouble *data = invMass.GetRawPtr();
-                
-                if (m_negatedNormals[face])
-                {
-                    Vmath::Neg(nquad_f, inval, 1);
-                }
-                
-                FaceExp->IProductWRTBase(inval, outcoeff);
-                
-                // M^{-1} G
-                for(i = 0; i < ncoeffs; ++i)
-                {
-                    tmpcoeff[i] = 0;
-                    for(j = 0; j < order_f; ++j)
-                    {
-                        tmpcoeff[i] += scale*data[i+(*map)[j].index*ncoeffs]*(*map)[j].sign*outcoeff[j];
-                    }
-                }
-                
-                
-                
-                /*
-                 if(varcoeffs.find(VarCoeff[n]) != varcoeffs.end())
-                 {
-                 MatrixKey mkey(DerivType[n], DetExpansionType(), *this, StdRegions::NullConstFactorMap, varcoeffs);
-                 DNekScalMat &Dmat = *GetLocMatrix(mkey);
-                 Coeffs = Coeffs  + Dmat*Tmpcoeff;
-                 }
-                 
-                 else
-                 {
-                 DNekScalMat &Dmat = *GetLocMatrix(DerivType[n]);
-                 Coeffs = Coeffs  + Dmat*Tmpcoeff;
-                 }
-                 */
-                // MMFCHANGES in AddHDGHelmholtzEdgeTerms (II)
-                if ((x = varcoeffs.find(StdRegions::eVarCoeffMF1x)) != varcoeffs.end())
-                {
-                    StdRegions::VarCoeffMap VarCoeffDirDeriv;
-                    VarCoeffDirDeriv[StdRegions::eVarCoeffMF] = v_GetMF(n,coordim,varcoeffs);
-                    VarCoeffDirDeriv[StdRegions::eVarCoeffMFDiv] = v_GetMFDiv(n,varcoeffs);
-                    
-                    MatrixKey Dmatkey(matrixID, StdRegions::eWeakDirectionalDeriv, DetShapeType(), *this,
-                                      StdRegions::NullConstFactorMap, VarCoeffDirDeriv);
-                    
-                    DNekScalMat &Dmat = *GetLocMatrix(Dmatkey);
-                    
-                    Coeffs = Coeffs  + Dmat*Tmpcoeff;
-                }
-                
-                else
-                {
-                    StdRegions::MatrixType DerivType[3] = {StdRegions::eWeakDeriv0,
-                        StdRegions::eWeakDeriv1,
-                        StdRegions::eWeakDeriv2};
-                    DNekScalMat &Dmat = *GetLocMatrix(DerivType[n]);
-                    Coeffs = Coeffs  + Dmat*Tmpcoeff;
-                    
-                }
-                ///////////////////////////////////////////////////////////////////////////
-            }
-        }
-        
         
         void Expansion3D::GetPhysFaceVarCoeffsFromElement(
                                                           const int                           face,
@@ -651,7 +508,7 @@ namespace Nektar
                             VarCoeffDirDeriv[StdRegions::eVarCoeffMF] = v_GetMF(i,coordim,varcoeffs);
                             VarCoeffDirDeriv[StdRegions::eVarCoeffMFDiv] = v_GetMFDiv(i,varcoeffs);
                             
-                            MatrixKey Dmatkey(mkey.GetmatrixID()+i*10000,StdRegions::eWeakDirectionalDeriv, DetShapeType(), *this,
+                            MatrixKey Dmatkey(StdRegions::eWeakDirectionalDeriv, DetShapeType(), *this,
                                               StdRegions::NullConstFactorMap, VarCoeffDirDeriv);
                             
                             DNekScalMat &Dmat = *GetLocMatrix(Dmatkey);
@@ -659,7 +516,7 @@ namespace Nektar
                             StdRegions::VarCoeffMap Weight;
                             Weight[StdRegions::eVarCoeffMass] = v_GetMFMag(i,mkey.GetVarCoeffs());
                             
-                            MatrixKey invMasskey(mkey.GetmatrixID()+i*10000,StdRegions::eInvMass, DetShapeType(), *this,
+                            MatrixKey invMasskey(StdRegions::eInvMass, DetShapeType(), *this,
                                                  StdRegions::NullConstFactorMap, Weight);
                             
                             DNekScalMat &invMass = *GetLocMatrix(invMasskey);
@@ -789,8 +646,7 @@ namespace Nektar
 
                             Array<OneD, NekDouble> tmp(FaceExp->GetTotPoints());
                             FaceExp->BwdTrans(face_lambda, tmp);
-                          //  AddHDGHelmholtzFaceTerms(tau, i, tmp, mkey.GetVarCoeffs(), f);
-                            AddHDGHelmholtzFaceTerms(mkey.GetmatrixID(), tau, i, tmp, mkey.GetVarCoeffs(), f);
+                            AddHDGHelmholtzFaceTerms(tau, i, tmp, mkey.GetVarCoeffs(), f);
 							
                             Ulam = invHmat*F; // generate Ulam from lambda
 
@@ -911,7 +767,7 @@ namespace Nektar
                         VarCoeffDirDeriv[StdRegions::eVarCoeffMF] = v_GetMF(dir,coordim,varcoeffs);
                         VarCoeffDirDeriv[StdRegions::eVarCoeffMFDiv] = v_GetMFDiv(dir,varcoeffs);
                         
-                        MatrixKey Dmatkey(mkey.GetmatrixID(), StdRegions::eWeakDirectionalDeriv, DetShapeType(), *this,
+                        MatrixKey Dmatkey(StdRegions::eWeakDirectionalDeriv, DetShapeType(), *this,
                                           StdRegions::NullConstFactorMap, VarCoeffDirDeriv);
                         
                         Dmat = GetLocMatrix(Dmatkey);
@@ -919,7 +775,7 @@ namespace Nektar
                         StdRegions::VarCoeffMap Weight;
                         Weight[StdRegions::eVarCoeffMass] = v_GetMFMag(dir,mkey.GetVarCoeffs());
                         
-                        MatrixKey invMasskey(mkey.GetmatrixID(), StdRegions::eInvMass, DetShapeType(), *this,
+                        MatrixKey invMasskey(StdRegions::eInvMass, DetShapeType(), *this,
                                              StdRegions::NullConstFactorMap, Weight);
                         
                         invMass = *GetLocMatrix(invMasskey);

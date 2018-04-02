@@ -1294,9 +1294,9 @@ namespace Nektar
                         dfdirxi[StdRegions::eVarCoeffWeakDeriv] = dfdir[0];
                         dfdireta[StdRegions::eVarCoeffWeakDeriv] = dfdir[1];
                         
-                        MatrixKey derivxikey(mkey.GetmatrixID(), StdRegions::eWeakDeriv0, mkey.GetShapeType(), *this,
+                        MatrixKey derivxikey(StdRegions::eWeakDeriv0, mkey.GetShapeType(), *this,
                                              StdRegions::NullConstFactorMap, dfdirxi);
-                        MatrixKey derivetakey(mkey.GetmatrixID(), StdRegions::eWeakDeriv1, mkey.GetShapeType(), *this,
+                        MatrixKey derivetakey(StdRegions::eWeakDeriv1, mkey.GetShapeType(), *this,
                                               StdRegions::NullConstFactorMap, dfdireta);
                         
                         DNekMat &derivxi = *GetStdMatrix(derivxikey);
@@ -1312,7 +1312,7 @@ namespace Nektar
                         // Add (\nabla \cdot e^k ) Mass
                         StdRegions::VarCoeffMap DiveMass;
                         DiveMass[StdRegions::eVarCoeffMass] = mkey.GetVarCoeff(StdRegions::eVarCoeffMFDiv);
-                        StdRegions::StdMatrixKey stdmasskey(mkey.GetmatrixID(), StdRegions::eMass, mkey.GetShapeType(), *this,
+                        StdRegions::StdMatrixKey stdmasskey(StdRegions::eMass, mkey.GetShapeType(), *this,
                                                             StdRegions::NullConstFactorMap, DiveMass);
                         
                         DNekMatSharedPtr DiveMassmat = GetStdMatrix(stdmasskey);

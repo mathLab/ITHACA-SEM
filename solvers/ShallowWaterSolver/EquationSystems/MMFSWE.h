@@ -66,10 +66,11 @@ public:
 
     /// Creates an instance of this class
     static SolverUtils::EquationSystemSharedPtr create(
-        const LibUtilities::SessionReaderSharedPtr &pSession)
+        const LibUtilities::SessionReaderSharedPtr &pSession,
+        const SpatialDomains::MeshGraphSharedPtr& pGraph)
     {
         SolverUtils::EquationSystemSharedPtr p =
-            MemoryManager<MMFSWE>::AllocateSharedPtr(pSession);
+            MemoryManager<MMFSWE>::AllocateSharedPtr(pSession, pGraph);
         p->InitObject();
         return p;
     }
@@ -115,7 +116,8 @@ protected:
     int m_planeNumber;
 
     /// Session reader
-    MMFSWE(const LibUtilities::SessionReaderSharedPtr &pSession);
+    MMFSWE(const LibUtilities::SessionReaderSharedPtr &pSession,
+           const SpatialDomains::MeshGraphSharedPtr& pGraph);
 
     /// Compute the RHS
     void DoOdeRhs(const Array<OneD, const Array<OneD, NekDouble>> &inarray,

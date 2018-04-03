@@ -80,10 +80,11 @@ public:
 
     /// Creates an instance of this class
     static SolverUtils::EquationSystemSharedPtr create(
-        const LibUtilities::SessionReaderSharedPtr &pSession)
+        const LibUtilities::SessionReaderSharedPtr &pSession,
+        const SpatialDomains::MeshGraphSharedPtr& pGraph)
     {
         SolverUtils::EquationSystemSharedPtr p =
-            MemoryManager<MMFMaxwell>::AllocateSharedPtr(pSession);
+            MemoryManager<MMFMaxwell>::AllocateSharedPtr(pSession, pGraph);
         p->InitObject();
         return p;
     }
@@ -123,7 +124,8 @@ protected:
     Array<OneD, Array<OneD, NekDouble>> m_CrossProductMF;
 
     /// Session reader
-    MMFMaxwell(const LibUtilities::SessionReaderSharedPtr &pSession);
+    MMFMaxwell(const LibUtilities::SessionReaderSharedPtr &pSession,
+               const SpatialDomains::MeshGraphSharedPtr& pGraph);
 
     NekDouble m_freq;
 

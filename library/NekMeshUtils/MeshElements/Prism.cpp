@@ -253,8 +253,10 @@ SpatialDomains::GeometrySharedPtr Prism::GetGeom(int coordDim)
         faces[i] = m_face[i]->GetGeom(coordDim);
     }
 
-    ret = MemoryManager<SpatialDomains::PrismGeom>::AllocateSharedPtr(faces);
+    ret = MemoryManager<SpatialDomains::PrismGeom>::AllocateSharedPtr(
+        m_id, faces);
 
+    ret->Setup();
     return ret;
 }
 

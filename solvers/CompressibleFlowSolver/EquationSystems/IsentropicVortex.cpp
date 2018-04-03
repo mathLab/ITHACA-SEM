@@ -45,8 +45,10 @@ namespace Nektar
         "Euler equations for the isentropic vortex test case.");
     
     IsentropicVortex::IsentropicVortex(
-        const LibUtilities::SessionReaderSharedPtr& pSession)
-    : EulerCFE(pSession)
+        const LibUtilities::SessionReaderSharedPtr& pSession,
+        const SpatialDomains::MeshGraphSharedPtr& pGraph)
+        : UnsteadySystem(pSession, pGraph),
+          EulerCFE(pSession, pGraph)
     {
     }
 
@@ -74,8 +76,6 @@ namespace Nektar
         bool        dumpInitialConditions,
         const int   domain)
     {
-        InitializeSteadyState();
-
         int nTotQuadPoints  = GetTotPoints();
         Array<OneD, NekDouble> x(nTotQuadPoints);
         Array<OneD, NekDouble> y(nTotQuadPoints);

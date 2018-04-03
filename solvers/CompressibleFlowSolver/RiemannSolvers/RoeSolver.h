@@ -43,16 +43,17 @@ namespace Nektar
     class RoeSolver : public CompressibleSolver
     {
     public:
-        static RiemannSolverSharedPtr create()
+        static RiemannSolverSharedPtr create(
+            const LibUtilities::SessionReaderSharedPtr& pSession)
         {
             return RiemannSolverSharedPtr(
-                new RoeSolver());
+                new RoeSolver(pSession));
         }
         
         static std::string solverName;
         
     protected:
-        RoeSolver();
+        RoeSolver(const LibUtilities::SessionReaderSharedPtr& pSession);
         
         virtual void v_PointSolve(
             double  rhoL, double  rhouL, double  rhovL, double  rhowL, double  EL,

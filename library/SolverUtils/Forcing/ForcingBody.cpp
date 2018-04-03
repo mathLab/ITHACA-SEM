@@ -53,8 +53,9 @@ namespace SolverUtils
                                 "Field Forcing");
 
     ForcingBody::ForcingBody(
-            const LibUtilities::SessionReaderSharedPtr& pSession)
-        : Forcing(pSession),
+            const LibUtilities::SessionReaderSharedPtr &pSession,
+            const std::weak_ptr<EquationSystem>      &pEquation)
+        : Forcing(pSession, pEquation),
           m_hasTimeFcnScaling(false)
     {
     }
@@ -104,7 +105,7 @@ namespace SolverUtils
 
             m_session->SubstituteExpressions(funcNameTime);
             m_timeFcnEqn = MemoryManager<LibUtilities::Equation>
-                            ::AllocateSharedPtr(m_session,funcNameTime);
+                ::AllocateSharedPtr(m_session->GetExpressionEvaluator(),funcNameTime);
 
             m_hasTimeFcnScaling = true;
         }

@@ -49,8 +49,9 @@ Gs::string MMFMaxwell::className =
     SolverUtils::GetEquationSystemFactory().RegisterCreatorFunction(
         "MMFMaxwell", MMFMaxwell::create, "MMFMaxwell equation.");
 
-MMFMaxwell::MMFMaxwell(const LibUtilities::SessionReaderSharedPtr &pSession)
-    : UnsteadySystem(pSession), MMFSystem(pSession)
+MMFMaxwell::MMFMaxwell(const LibUtilities::SessionReaderSharedPtr &pSession,
+                       const SpatialDomains::MeshGraphSharedPtr& pGraph)
+    : UnsteadySystem(pSession, pGraph), MMFSystem(pSession, pGraph)
 {
 }
 

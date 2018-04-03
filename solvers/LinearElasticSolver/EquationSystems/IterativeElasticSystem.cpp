@@ -56,8 +56,9 @@ string IterativeElasticSystem::className = GetEquationSystemFactory().
                             IterativeElasticSystem::create);
 
 IterativeElasticSystem::IterativeElasticSystem(
-    const LibUtilities::SessionReaderSharedPtr& pSession)
-    : LinearElasticSystem(pSession)
+    const LibUtilities::SessionReaderSharedPtr& pSession,
+    const SpatialDomains::MeshGraphSharedPtr &pGraph)
+    : LinearElasticSystem(pSession, pGraph)
 {
 }
 

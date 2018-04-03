@@ -105,12 +105,12 @@ int main(int argc, char *argv[])
     //-----------------------------------------------------------
     LibUtilities::SessionReaderSharedPtr vSession
         = LibUtilities::SessionReader::CreateInstance(2, argv);
+    SpatialDomains::MeshGraphSharedPtr mesh =
+        SpatialDomains::MeshGraph::Read(vSession);
     
     //-------------------------------------------------------------
     // Read in mesh from input file
     //------------------------------------------------------------
-    string meshfile(argv[argc-3]);
-    SpatialDomains::MeshGraphSharedPtr mesh = SpatialDomains::MeshGraph::Read(vSession);
     TiXmlDocument& meshdoc = vSession->GetDocument();
     TiXmlHandle docHandle(&meshdoc);
     TiXmlElement* doc = docHandle.FirstChildElement("NEKTAR").FirstChildElement("GEOMETRY").Element();
@@ -160,23 +160,23 @@ int main(int argc, char *argv[])
 
 void GetInterfaceVerts(const int compositeID, SpatialDomains::MeshGraphSharedPtr &mesh, vector<int> &InterfaceVerts)
 {
-    SpatialDomains::Composite composite;
+    SpatialDomains::CompositeSharedPtr composite;
     composite = mesh->GetComposite(compositeID);
-    int compsize = composite->size();
+    int compsize = composite->m_geomVec.size();
     map<int,int> vertmap;
 
     for(int i = 0; i < compsize; ++i)
     {
-        if(vertmap.count((*composite)[i]->GetVid(0)) == 0)
+        if(vertmap.count(composite->m_geomVec[i]->GetVid(0)) == 0)
         {
-            InterfaceVerts.push_back((*composite)[i]->GetVid(0)); 
-            vertmap[(*composite)[i]->GetVid(0)]  = 1;
+            InterfaceVerts.push_back(composite->m_geomVec[i]->GetVid(0)); 
+            vertmap[composite->m_geomVec[i]->GetVid(0)]  = 1;
         }
 
-        if(vertmap.count((*composite)[i]->GetVid(1)) == 0)
+        if(vertmap.count(composite->m_geomVec[i]->GetVid(1)) == 0)
         {
-            InterfaceVerts.push_back((*composite)[i]->GetVid(1)); 
-            vertmap[(*composite)[i]->GetVid(1)]  = 1;
+            InterfaceVerts.push_back(composite->m_geomVec[i]->GetVid(1)); 
+            vertmap[composite->m_geomVec[i]->GetVid(1)]  = 1;
         }
     }
 }

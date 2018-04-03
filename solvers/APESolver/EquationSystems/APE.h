@@ -37,7 +37,10 @@
 #ifndef NEKTAR_SOLVERS_APESOLVER_EQUATIONSYSTEMS_APE_H
 #define NEKTAR_SOLVERS_APESOLVER_EQUATIONSYSTEMS_APE_H
 
+#include <boost/random/mersenne_twister.hpp>
+
 #include <SolverUtils/UnsteadySystem.h>
+#include <SolverUtils/AdvectionSystem.h>
 #include <SolverUtils/Advection/Advection.h>
 #include <SolverUtils/Forcing/Forcing.h>
 #include <SolverUtils/RiemannSolvers/RiemannSolver.h>
@@ -47,7 +50,7 @@ using namespace Nektar::SolverUtils;
 namespace Nektar
 {     
 
-class APE : public UnsteadySystem
+class APE : public AdvectionSystem
 {
     public:
 
@@ -55,9 +58,11 @@ class APE : public UnsteadySystem
 
         /// Creates an instance of this class
         static EquationSystemSharedPtr create(
-                const LibUtilities::SessionReaderSharedPtr& pSession)
+            const LibUtilities::SessionReaderSharedPtr& pSession,
+            const SpatialDomains::MeshGraphSharedPtr& pGraph)
         {
-            EquationSystemSharedPtr p = MemoryManager<APE>::AllocateSharedPtr(pSession);
+            EquationSystemSharedPtr p = MemoryManager<APE>
+                ::AllocateSharedPtr(pSession, pGraph);
             p->InitObject();
             return p;
         }
@@ -67,15 +72,12 @@ class APE : public UnsteadySystem
         /// Destructor
         virtual ~APE();
 
-        NekDouble GetCFLEstimate();
-
-
     protected:
 
         SolverUtils::AdvectionSharedPtr                 m_advection;
         std::vector<SolverUtils::ForcingSharedPtr>      m_forcing;
         SolverUtils::RiemannSolverSharedPtr             m_riemannSolver;
-        Array<OneD, Array<OneD, NekDouble> >            m_traceBasefield;
+        Array<OneD, Array<OneD, NekDouble> >            m_bfTrace;
         Array<OneD, Array<OneD, NekDouble> >            m_vecLocs;
         /// Isentropic coefficient, Ratio of specific heats (APE)
         NekDouble                                       m_gamma;
@@ -86,7 +88,8 @@ class APE : public UnsteadySystem
         int                                             m_cflsteps;
 
         /// Initialises UnsteadySystem class members.
-        APE(const LibUtilities::SessionReaderSharedPtr& pSession);
+        APE(const LibUtilities::SessionReaderSharedPtr& pSession,
+            const SpatialDomains::MeshGraphSharedPtr& pGraph);
 
         virtual void v_InitObject();
 
@@ -104,9 +107,7 @@ class APE : public UnsteadySystem
 
         virtual bool v_PreIntegrate(int step);
 
-        virtual bool v_PostIntegrate(int step);
-
-        void GetStdVelocity(Array< OneD, NekDouble >& stdV);
+        virtual Array<OneD, NekDouble> v_GetMaxStdVelocity();
 
         virtual void v_ExtraFldOutput(std::vector<Array<OneD, NekDouble> > &fieldcoeffs,
                                       std::vector<std::string>             &variables);
@@ -115,15 +116,37 @@ class APE : public UnsteadySystem
 
         const Array<OneD, const Array<OneD, NekDouble> > &GetVecLocs();
 
-        const Array<OneD, const Array<OneD, NekDouble> > &GetBasefield();
+        const Array<OneD, const Array<OneD, NekDouble> > &GetBfTrace();
 
         NekDouble GetGamma();
 
     private:
 
-        void SetBoundaryConditions(Array<OneD, Array<OneD, NekDouble> > &physarray, NekDouble time);
+        std::map<int, boost::mt19937>  m_rng;
 
-        void WallBC(int bcRegion, int cnt, Array<OneD, Array<OneD, NekDouble> > &Fwd, Array<OneD, Array<OneD, NekDouble> > &physarray);
+        NekDouble                 m_whiteNoiseBC_lastUpdate;
+
+        NekDouble                 m_whiteNoiseBC_p;
+
+        void SetBoundaryConditions(Array<OneD, Array<OneD, NekDouble> > &physarray,
+                                   NekDouble time);
+
+        void WallBC(int bcRegion,
+                    int cnt,
+                    Array<OneD, Array<OneD, NekDouble> > &Fwd,
+                    Array<OneD, Array<OneD, NekDouble> > &physarray);
+
+        void RiemannInvariantBC(int bcRegion,
+                                int cnt,
+                                Array<OneD, Array<OneD, NekDouble> > &Fwd,
+                                Array<OneD, Array<OneD, NekDouble> > &BfFwd,
+                                Array<OneD, Array<OneD, NekDouble> > &physarray);
+
+        void WhiteNoiseBC(int bcRegion,
+                        int cnt,
+                        Array<OneD, Array<OneD, NekDouble> > &Fwd,
+                        Array<OneD, Array<OneD, NekDouble> > &BfFwd,
+                        Array<OneD, Array<OneD, NekDouble> > &physarray);
 };
 }
 

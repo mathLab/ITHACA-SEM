@@ -41,8 +41,9 @@ namespace Nektar
 namespace SolverUtils
 {
 
-MMFSystem::MMFSystem(const LibUtilities::SessionReaderSharedPtr &pSession)
-    : UnsteadySystem(pSession)
+MMFSystem::MMFSystem(const LibUtilities::SessionReaderSharedPtr &pSession,
+                     const SpatialDomains::MeshGraphSharedPtr& pGraph)
+    : UnsteadySystem(pSession, pGraph)
 {
 }
 

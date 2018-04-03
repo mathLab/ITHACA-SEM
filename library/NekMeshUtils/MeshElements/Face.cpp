@@ -268,13 +268,12 @@ void Face::MakeOrder(int                                order,
             loc[0] = m_faceNodes[i]->m_x;
             loc[1] = m_faceNodes[i]->m_y;
             loc[2] = m_faceNodes[i]->m_z;
-            Array<OneD, NekDouble> uv(2);
-            s->ProjectTo(loc,uv);
+            Array<OneD, NekDouble> uv = s->locuv(loc);
             loc = s->P(uv);
             m_faceNodes[i]->m_x = loc[0];
             m_faceNodes[i]->m_y = loc[1];
             m_faceNodes[i]->m_z = loc[2];
-            m_faceNodes[i]->SetCADSurf(s->GetId(),s,uv);
+            m_faceNodes[i]->SetCADSurf(s,uv);
         }
     }
 }
@@ -335,7 +334,7 @@ SpatialDomains::Geometry2DSharedPtr Face::GetGeom(int coordDim)
             }
 
             ret = MemoryManager<SpatialDomains::TriGeom>::AllocateSharedPtr(
-                m_id, edges, edgeo, c);
+                m_id, edges, c);
         }
         else
         {
@@ -400,7 +399,7 @@ SpatialDomains::Geometry2DSharedPtr Face::GetGeom(int coordDim)
 
             ret =
                 MemoryManager<SpatialDomains::QuadGeom>::AllocateSharedPtr(
-                    m_id, edges, edgeo, c);
+                    m_id, edges, c);
         }
     }
     else
@@ -408,16 +407,17 @@ SpatialDomains::Geometry2DSharedPtr Face::GetGeom(int coordDim)
         if (nEdge == 3)
         {
             ret = MemoryManager<SpatialDomains::TriGeom>::AllocateSharedPtr(
-                m_id, edges, edgeo);
+                m_id, edges);
         }
         else
         {
             ret =
                 MemoryManager<SpatialDomains::QuadGeom>::AllocateSharedPtr(
-                    m_id, edges, edgeo);
+                    m_id, edges);
         }
     }
 
+    ret->Setup();
     return ret;
 }
 

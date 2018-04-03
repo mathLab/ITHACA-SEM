@@ -1045,20 +1045,6 @@ namespace Nektar
             return eForwards;
         }
 
-        StdRegions::Orientation StdExpansion::v_GetPorient(int point)
-        {
-            NEKERROR(ErrorUtil::efatal, "This function is only valid for one-dimensional  LocalRegions");
-            return eFwd;
-        }
-
-
-        StdRegions::Orientation StdExpansion::v_GetCartesianEorient(int edge)
-        {
-            NEKERROR(ErrorUtil::efatal, "This function is only valid for two-dimensional  LocalRegions");
-            return eForwards;
-        }
-
-
         void StdExpansion::v_SetCoeffsToOrientation(StdRegions::Orientation dir,
                                                     Array<OneD, const NekDouble> &inarray,
                                                     Array<OneD, NekDouble> &outarray)
@@ -1777,13 +1763,23 @@ namespace Nektar
 
         Array<OneD, unsigned int>
         StdExpansion::v_GetFaceInverseBoundaryMap(int fid,
-                                StdRegions::Orientation faceOrient)
+                                                  StdRegions::Orientation faceOrient,
+                                                  int P1,
+                                                  int P2)
         {
             ASSERTL0(false, "Not implemented.");
             Array<OneD, unsigned int> noinversemap(1);
             return noinversemap;
         }
 
+        void StdExpansion::v_GetInverseBoundaryMaps(
+                    Array<OneD, unsigned int> &vmap,
+                    Array<OneD, Array<OneD, unsigned int> > &emap,
+                    Array<OneD, Array<OneD, unsigned int> > &fmap)
+        {
+            ASSERTL0(false, "Not implemented.");
+        }
+        
         DNekMatSharedPtr
         StdExpansion::v_BuildInverseTransformationMatrix(
             const DNekScalMatSharedPtr & m_transformationmatrix)

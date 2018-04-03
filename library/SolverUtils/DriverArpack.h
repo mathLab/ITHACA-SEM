@@ -52,8 +52,12 @@ public:
     friend class MemoryManager<DriverArpack>;
 
     /// Creates an instance of this class
-    static DriverSharedPtr create(const LibUtilities::SessionReaderSharedPtr& pSession) {
-        DriverSharedPtr p = MemoryManager<DriverArpack>::AllocateSharedPtr(pSession);
+    static DriverSharedPtr create(
+        const LibUtilities::SessionReaderSharedPtr& pSession,
+        const SpatialDomains::MeshGraphSharedPtr& pGraph)
+    {
+        DriverSharedPtr p = MemoryManager<DriverArpack>::AllocateSharedPtr(
+            pSession, pGraph);
         p->InitObject();
         return p;
     }
@@ -69,7 +73,8 @@ protected:
     int m_maxncv;//Largest number of basis vector used in Implicitly Restarted Arnoldi
 
     /// Constructor
-    DriverArpack( const LibUtilities::SessionReaderSharedPtr        pSession);
+    DriverArpack(const LibUtilities::SessionReaderSharedPtr pSession,
+                 const SpatialDomains::MeshGraphSharedPtr pGraph);
 
     /// Destructor
     virtual ~DriverArpack();

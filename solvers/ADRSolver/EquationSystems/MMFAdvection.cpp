@@ -46,8 +46,10 @@ Gs::string MMFAdvection::className =
     SolverUtils::GetEquationSystemFactory().RegisterCreatorFunction(
         "MMFAdvection", MMFAdvection::create, "MMFAdvection equation.");
 
-MMFAdvection::MMFAdvection(const LibUtilities::SessionReaderSharedPtr &pSession)
-    : UnsteadySystem(pSession), MMFSystem(pSession)
+MMFAdvection::MMFAdvection(const LibUtilities::SessionReaderSharedPtr &pSession,
+            const SpatialDomains::MeshGraphSharedPtr& pGraph)
+    : UnsteadySystem(pSession, pGraph), MMFSystem(pSession, pGraph),
+      AdvectionSystem(pSession, pGraph)
 {
     m_planeNumber = 0;
 }
@@ -135,8 +137,32 @@ void MMFAdvection::v_InitObject()
              << " , " << RootMeanSquare(m_velocity[1]) << " , "
              << RootMeanSquare(m_velocity[2]) << " ) " << Gs::endl;
 
+    // Define the normal velocity fields
+    if (m_fields[0]->GetTrace())
+    {
+        m_traceVn = Array<OneD, NekDouble>(GetTraceNpoints());
+    }
+
+    string advName;
+    string riemName;
+    m_session->LoadSolverInfo(
+        "AdvectionType", advName, "WeakDG");
+    m_advObject = SolverUtils::
+        GetAdvectionFactory().CreateInstance(advName, advName);
+    m_advObject->SetFluxVector(
+        &MMFAdvection::GetFluxVector, this);
+    m_session->LoadSolverInfo(
+        "UpwindType", riemName, "Upwind");
+    m_riemannSolver = SolverUtils::
+        GetRiemannSolverFactory().CreateInstance(riemName, m_session);
+    m_riemannSolver->SetScalar(
+        "Vn", &MMFAdvection::GetNormalVelocity, this);
+
+    m_advObject->SetRiemannSolver(m_riemannSolver);
+    m_advObject->InitObject(m_session, m_fields);
+
     // Compute m_traceVn = n \cdot v
-    GetNormalVelocity(m_traceVn);
+    GetNormalVelocity();
 
     // Compute m_vellc = nabal a^j \cdot m_vel
     ComputeNablaCdotVelocity(m_vellc);
@@ -335,24 +361,27 @@ void MMFAdvection::v_DoSolve()
 /**
  * @brief Get the normal velocity for the linear advection equation.
  */
-void MMFAdvection::GetNormalVelocity(Array<OneD, NekDouble> &traceVn)
+Array<OneD, NekDouble> &MMFAdvection::GetNormalVelocity()
 {
     // Number of trace (interface) points
+    int i;
     int nTracePts = GetTraceNpoints();
 
     // Auxiliary variable to compute the normal velocity
     Array<OneD, NekDouble> tmp(nTracePts);
 
     // Reset the normal velocity
-    traceVn = Array<OneD, NekDouble>(nTracePts, 0.0);
+    Vmath::Zero(nTracePts, m_traceVn, 1);
 
-    for (int i = 0; i < m_velocity.num_elements(); ++i)
+    for (i = 0; i < m_velocity.num_elements(); ++i)
     {
         m_fields[0]->ExtractTracePhys(m_velocity[i], tmp);
 
-        Vmath::Vvtvp(nTracePts, m_traceNormals[i], 1, tmp, 1, traceVn, 1,
-                     traceVn, 1);
+        Vmath::Vvtvp(nTracePts, m_traceNormals[i], 1, tmp, 1, m_traceVn, 1,
+                     m_traceVn, 1);
     }
+
+    return m_traceVn;
 }
 
 /**
@@ -375,36 +404,44 @@ void MMFAdvection::DoOdeRhs(
         case MultiRegions::eDiscontinuous:
         {
             int ncoeffs = inarray[0].num_elements();
-            Array<OneD, Array<OneD, NekDouble>> WeakAdv(nvariables);
-
-            WeakAdv[0] = Array<OneD, NekDouble>(ncoeffs * nvariables);
-            for (i = 1; i < nvariables; ++i)
-            {
-                WeakAdv[i] = WeakAdv[i - 1] + ncoeffs;
-            }
 
             if (m_spacedim == 3)
             {
+                Array<OneD, Array<OneD, NekDouble>> WeakAdv(nvariables);
+
+                WeakAdv[0] = Array<OneD, NekDouble>(ncoeffs * nvariables);
+                for (i = 1; i < nvariables; ++i)
+                {
+                    WeakAdv[i] = WeakAdv[i - 1] + ncoeffs;
+                }
+
                 // Compute \nabla \cdot \vel u according to MMF scheme
                 WeakDGDirectionalAdvection(inarray, WeakAdv);
+
+                for (i = 0; i < nvariables; ++i)
+                {
+                    m_fields[i]->MultiplyByElmtInvMass(WeakAdv[i], WeakAdv[i]);
+                    m_fields[i]->BwdTrans(WeakAdv[i], outarray[i]);
+
+                    // Add  m_vellc * inarray[i] = \nabla v^m \cdot e^m to
+                    // outarray[i]
+                    // Vmath::Vvtvp(npoints, &m_vellc[0], 1, &inarray[i][0], 1,
+                    // &outarray[i][0], 1, &outarray[i][0], 1);
+                    Vmath::Neg(npoints, outarray[i], 1);
+                }
             }
             else
             {
-                // Compute \nabla \cdot \vel u in the Cartesian coordinate
-                WeakDGAdvection(inarray, WeakAdv, false, true);
+                m_advObject->Advect(2, m_fields, m_velocity, inarray,
+                                    outarray, 0.0);
+
+                for (i = 0; i < nvariables; ++i)
+                {
+                    Vmath::Neg(npoints, outarray[i], 1);
+                }
             }
 
-            for (i = 0; i < nvariables; ++i)
-            {
-                m_fields[i]->MultiplyByElmtInvMass(WeakAdv[i], WeakAdv[i]);
-                m_fields[i]->BwdTrans(WeakAdv[i], outarray[i]);
 
-                // Add  m_vellc * inarray[i] = \nabla v^m \cdot e^m to
-                // outarray[i]
-                // Vmath::Vvtvp(npoints, &m_vellc[0], 1, &inarray[i][0], 1,
-                // &outarray[i][0], 1, &outarray[i][0], 1);
-                Vmath::Neg(npoints, outarray[i], 1);
-            }
         }
         break;
 

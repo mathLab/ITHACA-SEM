@@ -53,8 +53,9 @@ std::string FilterEnergy1D::className = GetFilterFactory().
  */
 FilterEnergy1D::FilterEnergy1D(
     const LibUtilities::SessionReaderSharedPtr &pSession,
+    const std::weak_ptr<EquationSystem>      &pEquation,
     const ParamMap &pParams) :
-    Filter(pSession),
+    Filter(pSession, pEquation),
     m_index(0)
 {
     ASSERTL0(pSession->GetComm()->GetSize() == 1,
@@ -84,7 +85,8 @@ FilterEnergy1D::FilterEnergy1D(
     }
     else
     {
-        LibUtilities::Equation equ(m_session, it->second);
+        LibUtilities::Equation equ(
+            m_session->GetExpressionEvaluator(), it->second);
         m_outputFrequency = round(equ.Evaluate());
     }
 }

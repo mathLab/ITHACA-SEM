@@ -35,7 +35,6 @@
 #define NOMINMAX
 
 #include <LibUtilities/BasicUtils/CompressData.h>
-#include <LibUtilities/BasicUtils/MeshEntities.hpp>
 #include <LibUtilities/BasicConst/GitRevision.h>
 
 #include <boost/archive/iterators/base64_from_binary.hpp>

@@ -155,7 +155,8 @@ public:
     Array<OneD, NekDouble> m_MMFfactors;
 
     SOLVER_UTILS_EXPORT MMFSystem(
-        const LibUtilities::SessionReaderSharedPtr &pSession);
+        const LibUtilities::SessionReaderSharedPtr &pSession,
+        const SpatialDomains::MeshGraphSharedPtr& pGraph);
 
     SOLVER_UTILS_EXPORT virtual ~MMFSystem();
 

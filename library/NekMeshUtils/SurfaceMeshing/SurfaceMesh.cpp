@@ -95,27 +95,30 @@ void SurfaceMesh::Process()
             LibUtilities::PrintProgressbar(
                 i, m_mesh->m_cad->GetNumSurf(), "Validating curve meshes");
         }
-        m_facemeshes[i] =
+        FaceMeshSharedPtr face =
             MemoryManager<FaceMesh>::AllocateSharedPtr(i,m_mesh,
                 m_curvemeshes, i);
 
-        validError = validError ? true : m_facemeshes[i]->ValidateCurves();
+        validError = validError ? true : face->ValidateCurves();
+
+        face->ValidateLoops();
     }
 
     ASSERTL0(!validError,"valdity error in curve meshes");
 
     // linear mesh all surfaces
-    map<int,FaceMeshSharedPtr>::iterator fit;
-    int i = 1;
-    for(fit = m_facemeshes.begin(); fit != m_facemeshes.end(); fit++)
+    for (int i = 1; i <= m_mesh->m_cad->GetNumSurf(); i++)
     {
         if (m_mesh->m_verbose)
         {
             LibUtilities::PrintProgressbar(
                 i, m_mesh->m_cad->GetNumSurf(), "Face progress");
         }
-        fit->second->Mesh();
-        i++;
+        m_facemeshes[i] =
+            MemoryManager<FaceMesh>::AllocateSharedPtr(i,m_mesh,
+                m_curvemeshes, i);
+
+        m_facemeshes[i]->Mesh();
     }
 
     ProcessVertices();
@@ -137,7 +140,6 @@ void SurfaceMesh::Process()
 
     m_mesh->m_expDim++; //revert dim
 }
-
 void SurfaceMesh::Report()
 {
     if (m_mesh->m_verbose)

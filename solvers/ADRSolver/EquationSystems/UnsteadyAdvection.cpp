@@ -46,9 +46,10 @@ namespace Nektar
                                 "Unsteady Advection equation.");
 
     UnsteadyAdvection::UnsteadyAdvection(
-            const LibUtilities::SessionReaderSharedPtr& pSession)
-        : UnsteadySystem(pSession),
-          AdvectionSystem(pSession)
+        const LibUtilities::SessionReaderSharedPtr& pSession,
+        const SpatialDomains::MeshGraphSharedPtr& pGraph)
+        : UnsteadySystem(pSession, pGraph),
+          AdvectionSystem(pSession, pGraph)
     {
         m_planeNumber = 0;
     }
@@ -130,7 +131,8 @@ namespace Nektar
                 m_session->LoadSolverInfo(
                     "UpwindType", riemName, "Upwind");
                 m_riemannSolver = SolverUtils::
-                    GetRiemannSolverFactory().CreateInstance(riemName);
+                    GetRiemannSolverFactory().CreateInstance(
+                        riemName, m_session);
                 m_riemannSolver->SetScalar(
                     "Vn", &UnsteadyAdvection::GetNormalVelocity, this);
 

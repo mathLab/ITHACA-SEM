@@ -53,11 +53,12 @@ namespace Nektar
     RegisterCreatorFunction("MMFDiffusion",
 			    MMFDiffusion::create,
 			    "MMFDiffusion equation.");
-  
+
     MMFDiffusion::MMFDiffusion(
-            const LibUtilities::SessionReaderSharedPtr& pSession)
-      : UnsteadySystem(pSession),
-	MMFSystem(pSession)	
+            const LibUtilities::SessionReaderSharedPtr& pSession,
+            const SpatialDomains::MeshGraphSharedPtr& pGraph)
+      : UnsteadySystem(pSession, pGraph),
+	MMFSystem(pSession, pGraph)
     {
     }
 
@@ -83,18 +84,18 @@ namespace Nektar
       m_session->LoadParameter("InitPtx", m_InitPtx, 0.0);
       m_session->LoadParameter("InitPty", m_InitPty, 0.0);
       m_session->LoadParameter("InitPtz", m_InitPtz, 0.0);
-      
+
       int shapedim = m_fields[0]->GetShapeDimension();
       Array<OneD, Array<OneD, NekDouble> > Anisotropy(shapedim);
       for(int j=0; j<shapedim; ++j)
 	{
 	  Anisotropy[j] = Array<OneD, NekDouble>(nq,1.0);
 	  Vmath::Fill(nq, sqrt(m_epsilon[j]), &Anisotropy[j][0], 1);
-        
+
 	}
-      
+
       MMFSystem::MMFInitObject(Anisotropy);
-      
+
       // Define ProblemType
       if(m_session->DefinesSolverInfo("TESTTYPE"))
         {
@@ -113,7 +114,7 @@ namespace Nektar
         {
 	  m_TestType = (TestType)0;
         }
-      
+
         if(m_session->DefinesSolverInfo("INITWAVETYPE"))
 	  {
             std::string InitWaveTypeStr = m_session->GetSolverInfo("INITWAVETYPE");
@@ -130,8 +131,8 @@ namespace Nektar
 	  {
             m_InitWaveType = (InitWaveType)0;
 	  }
-	
-      
+
+
       StdRegions::VarCoeffType MMFCoeffs[15] = {StdRegions::eVarCoeffMF1x,
 					       StdRegions::eVarCoeffMF1y,
 					       StdRegions::eVarCoeffMF1z,
@@ -160,7 +161,7 @@ namespace Nektar
 		m_varcoeff[MMFCoeffs[indx+j]] = Array<OneD, NekDouble>(nq, 0.0);
 		Vmath::Vcopy(nq, &m_movingframes[k][j*nq], 1, &m_varcoeff[MMFCoeffs[indx+j]][0], 1);
 	      }
-	    
+
 	    // m_DivMF
 	    m_varcoeff[MMFCoeffs[indx+3]] = Array<OneD, NekDouble>(nq, 0.0);
 	    Vmath::Vcopy(nq, &m_DivMF[k][0], 1, &m_varcoeff[MMFCoeffs[indx+3]][0], 1);
@@ -172,18 +173,18 @@ namespace Nektar
 	      {
 		Vmath::Vvtvp(nq, &m_movingframes[k][i*nq], 1, &m_movingframes[k][i*nq], 1, &tmp[0], 1, &tmp[0], 1);
 	      }
-	    
+
 	    Vmath::Vcopy(nq, &tmp[0], 1, &m_varcoeff[MMFCoeffs[indx+4]][0], 1);
-          
-          
+
+
 	  }
-        
-      
+
+
       if (!m_explicitDiffusion)
         {
 	  m_ode.DefineImplicitSolve (&MMFDiffusion::DoImplicitSolve, this);
         }
-        
+
       m_ode.DefineOdeRhs(&MMFDiffusion::DoOdeRhs, this);
     }
 
@@ -209,15 +210,15 @@ namespace Nektar
     {
         int nvariables  = inarray.num_elements();
         int nq          = m_fields[0]->GetNpoints();
-        
-        
+
+
         StdRegions::ConstFactorMap factors;
 	factors[StdRegions::eFactorTau]    = 1.0;
 
         Array<OneD, Array< OneD, NekDouble> > F(nvariables);
 	factors[StdRegions::eFactorLambda] = 1.0/lambda;
         F[0] = Array<OneD, NekDouble> (nq*nvariables);
-        
+
         for (int n = 1; n < nvariables; ++n)
         {
             F[n] = F[n-1] + nq;
@@ -229,18 +230,18 @@ namespace Nektar
         // outarray = output: nabla^2 \hat{Y}
         // where \hat = modal coeffs
 	SetBoundaryConditions(time);
-	
+
         for (int i = 0; i < nvariables; ++i)
         {
 	  factors[StdRegions::eFactorLambda] = 1.0/lambda/m_epsu[i];
-            
+
 	  // Multiply 1.0/timestep
 	  Vmath::Smul(nq, -factors[StdRegions::eFactorLambda],inarray[i], 1, F[i], 1);
-          
+
            /* for (int k = 0; k < 15; ++k)
                 cout << "inarray["<<i << "]"<< k<<"=" << inarray[i][k]<<endl;*/
 	  // Solve a system of equations with Helmholtz solver and transform
-	  // back into physical space.	  
+	  // back into physical space.
 	  m_fields[i]->HelmSolve(F[i], m_fields[i]->UpdateCoeffs(),NullFlagList, factors, m_varcoeff);
 
 	  m_fields[i]->BwdTrans(m_fields[i]->GetCoeffs(), outarray[i]);
@@ -250,7 +251,7 @@ namespace Nektar
         }
        /* for (int kk = 0; kk < 15; ++kk)
             cout << "inarray["<< kk<<"=" << m_varcoeff[StdRegions::eVarCoeffMF3Mag][kk]<<endl;*/
-     
+
 
     }
 
@@ -264,16 +265,16 @@ namespace Nektar
             const NekDouble time)
     {
         int nq = GetTotPoints();
-        
+
         switch(m_TestType)
         {
 	case eTestPlane:
 	  {
-	    
+
 	    Array<OneD, NekDouble> x(nq);
 	    Array<OneD, NekDouble> y(nq);
 	    Array<OneD, NekDouble> z(nq);
-	    
+
 	    m_fields[0]->GetCoords(x,y,z);
 
 	    for(int k=0; k<nq; k++)
@@ -285,19 +286,19 @@ namespace Nektar
 
 	case eTestCube:
 	  {
-	    
+
 	    Array<OneD, NekDouble> x(nq);
 	    Array<OneD, NekDouble> y(nq);
 	    Array<OneD, NekDouble> z(nq);
-	    
+
 	    m_fields[0]->GetCoords(x,y,z);
 
 	    for(int k=0; k<nq; k++)
 	      {
 		outarray[0][k] = (m_epsilon[0]+m_epsilon[1]+m_epsilon[2]-1.0)*m_pi*m_pi*exp(-1.0*m_pi*m_pi*time)*sin(m_pi*x[k])*sin(m_pi*y[k])*sin(m_pi*z[k]);
-        
+
           }
-          
+
 	  }
 	  break;
 
@@ -317,10 +318,10 @@ namespace Nektar
 	  temp = Array<OneD, NekDouble>(nq,0.0);
 	  Vmath::Svtvp(nq,m_a,&inarray[0][0],1,&temp[0],1,&temp[0],1);
 	  Vmath::Svtvp(nq,m_b,&inarray[1][0],1,&temp[0],1,&outarray[0][0],1);
-	  
+
 	  temp = Array<OneD, NekDouble>(nq,0.0);
 	  Vmath::Svtvp(nq,m_c,&inarray[0][0],1,&temp[0],1,&temp[0],1);
-	  Vmath::Svtvp(nq,m_d,&inarray[1][0],1,&temp[0],1,&outarray[1][0],1);        
+	  Vmath::Svtvp(nq,m_d,&inarray[1][0],1,&temp[0],1,&outarray[1][0],1);
 	}
         break;
 
@@ -335,13 +336,13 @@ namespace Nektar
 	    Array<OneD, NekDouble> cube(nq);
 	    Vmath::Vmul(nq,&inarray[0][0],1,&inarray[0][0],1,&cube[0],1);
 	    Vmath::Vmul(nq,&inarray[1][0],1,&cube[0],1,&cube[0],1);
-	    
+
 	    // outarray[0] = A - B*phy0 + phy0*phy0*phy1 - phy0
 	    NekDouble coeff = -1.0*B - 1.0;
 	    Array<OneD, NekDouble> tmp(nq);
 	    Vmath::Svtvp(nq,coeff,&inarray[0][0],1,&cube[0],1,&tmp[0],1);
 	    Vmath::Vadd(nq,&Aonevec[0],1,&tmp[0],1,&outarray[0][0],1);
-	    
+
 	    // outarray[1] = B*phys0 - phy0*phy0*phy1
 	    Vmath::Svtvm(nq,B,&inarray[0][0],1,&cube[0],1,&outarray[1][0],1);
 
@@ -356,7 +357,7 @@ namespace Nektar
 	  NekDouble c1 = 0.175;
 	  NekDouble c2 = 0.03;
 	  NekDouble d = 0.55;
-	  
+
 	  Array<OneD, NekDouble> tmp(nq);
 
 	  // Reaction for \phi = c1 \phi ( \phi - a)*(1 - \phi) - c2 v
@@ -368,8 +369,8 @@ namespace Nektar
 
 	  Vmath::Smul(nq, -1.0*c2, inarray[1], 1, tmp, 1);
 	  Vmath::Vadd(nq, tmp, 1, outarray[0], 1, outarray[0], 1);
-	  
-	  	  
+
+
 	  // Reaction for \psi = b (\phi - d \psi )
 	  Vmath::Svtvp(nq, -1.0*d, inarray[1], 1, inarray[0], 1, outarray[1], 1);
 	  Vmath::Smul(nq, b, outarray[1], 1, outarray[1], 1);
@@ -383,7 +384,7 @@ namespace Nektar
 	  NekDouble c1 = 0.26;
 	  NekDouble c2 = 0.1;
 	  NekDouble d = 1.0;
-	  
+
 	  Array<OneD, NekDouble> tmp(nq);
 
 	  // Reaction for \phi = c1 \phi ( \phi - a)*(1 - \phi) - c2 u v
@@ -396,7 +397,7 @@ namespace Nektar
 	  Vmath::Vmul(nq, inarray[0], 1, inarray[1], 1, tmp, 1);
 	  Vmath::Smul(nq, -1.0*c2, tmp, 1, tmp, 1);
 	  Vmath::Vadd(nq, tmp, 1, outarray[0], 1, outarray[0], 1);
-	  	  
+
 	  // Reaction for \psi = b (\phi - d \psi )
 	  Vmath::Svtvp(nq, -1.0*d, inarray[1], 1, inarray[0], 1, outarray[1], 1);
 	  Vmath::Smul(nq, b, outarray[1], 1, outarray[1], 1);
@@ -405,14 +406,14 @@ namespace Nektar
 
       case eFHNAlievPanf:
 	{
-	  
+
 	  NekDouble a = 0.15;
 	  NekDouble c1 = 8.0;
 	  NekDouble c2 = 1.0;
 	  NekDouble c0 = 0.002;
 	  NekDouble mu1 = 0.2;
 	  NekDouble mu2 = 0.3;
-	  
+
 	  Array<OneD, NekDouble> tmp(nq);
 
 	  // Reaction for \phi = c1 \phi ( \phi - a)*(1 - \phi) - c2 u v
@@ -442,7 +443,7 @@ namespace Nektar
 	  Vmath::Vmul(nq, tmp, 1, outarray[1], 1, outarray[1], 1);
 	}
 	break;
-	  
+
 	default:
 	  break;
 	}
@@ -463,17 +464,17 @@ namespace Nektar
         case eTestPlane:
 	  {
 	    Array<OneD, NekDouble> u(nq);
-	    
+
 	    TestPlaneProblem(initialtime,u);
 	    m_fields[0]->SetPhys(u);
-	         
+
 	  }
 	  break;
 
         case eTestCube:
 	  {
 	    Array<OneD, NekDouble> u(nq);
-	    
+
 	    TestCubeProblem(initialtime,u);
 	    m_fields[0]->SetPhys(u);
           /*for (int k=0; k<nq; ++k)
@@ -486,21 +487,21 @@ namespace Nektar
 
 	  }
 	  break;
-	  
+
         case eTestLinearSphere:
 	case eTestNonlinearSphere:
-	  {	    
+	  {
 	    Array<OneD, NekDouble> u(nq);
 	    Array<OneD, NekDouble> v(nq);
-	    
+
 	    Morphogenesis(initialtime,0,u);
 	    Morphogenesis(initialtime,1,v);
-	    
+
 	    m_fields[0]->SetPhys(u);
-	    m_fields[1]->SetPhys(v);      
+	    m_fields[1]->SetPhys(v);
 	  }
 	  break;
-	  
+
 	case eFHNStandard:
 	case eFHNRogers:
 	case eFHNAlievPanf:
@@ -510,7 +511,7 @@ namespace Nektar
 	    m_fields[1]->SetPhys(Zero);
 	  }
 	  break;
-	  
+
         default:
         {
             EquationSystem::v_SetInitialConditions(initialtime,false);
@@ -523,8 +524,8 @@ namespace Nektar
 	{
 	  m_fields[i]->SetPhysState(true);
 	  m_fields[i]->FwdTrans(m_fields[i]->GetPhys(),m_fields[i]->UpdateCoeffs());
-	}  
-      
+	}
+
         if(dumpInitialConditions)
         {
             std::string outname = m_sessionName + "_initial.chk";
@@ -538,7 +539,7 @@ namespace Nektar
 
   {
         int nq  = GetTotPoints();
-	
+
         Array<OneD, NekDouble> x(nq);
         Array<OneD, NekDouble> y(nq);
         Array<OneD, NekDouble> z(nq);
@@ -549,7 +550,7 @@ namespace Nektar
 	for (int k=0; k<nq; k++)
 	  {
 	    outfield[k] = exp(-1.0*m_pi*m_pi*time)*sin(m_pi*x[k])*cos(m_pi*y[k]);
-          
+
 	  }
   }
 
@@ -562,16 +563,16 @@ namespace Nektar
         Array<OneD, NekDouble> x(nq);
         Array<OneD, NekDouble> y(nq);
         Array<OneD, NekDouble> z(nq);
-	
+
         m_fields[0]->GetCoords(x,y,z);
-	
+
         outfield = Array<OneD, NekDouble> (nq);
 	for (int k=0; k<nq; k++)
 	  {
 	    outfield[k] = exp(-1.0*m_pi*m_pi*time)*sin(m_pi*x[k])*sin(m_pi*y[k])*sin(m_pi*z[k]);
 	  }
   }
-  
+
 
   void MMFDiffusion::Morphogenesis(const NekDouble time,
 				   unsigned int field,
@@ -588,7 +589,7 @@ namespace Nektar
         std::complex<double> B_mn, D_mn;
 
         // Set some parameter values
-        int Maxn = 6; 
+        int Maxn = 6;
         int Maxm = 2*Maxn-1;
 
         NekDouble A = 2.0;
@@ -598,7 +599,7 @@ namespace Nektar
         NekDouble m_nu = 0.002;
 
         NekDouble m_a, m_b, m_c, m_d;
-	
+
         m_a = B-1.0;
         m_b = A*A;
         m_c = -1.0*B;
@@ -647,13 +648,13 @@ namespace Nektar
         for (int i = 0; i < nq; ++i)
         {
 	  radius = sqrt(x[i]*x[i] + y[i]*y[i] + z[i]*z[i]) ;
-	  
+
 	  // theta is in [0, pi]
 	  theta = asin( z[i]/radius ) + 0.5*m_pi;
-	  
+
 	  // phi is in [0, 2*pi]
 	  phi = atan2( y[i], x[i] ) + m_pi;
-	
+
 	  varphi0 = 0.0*varphi0;
 	  varphi1 = 0.0*varphi1;
 	  for (n = 0; n < Maxn; ++n)
@@ -661,9 +662,9 @@ namespace Nektar
 	      // Set up parameters
 	      a_n = m_a - m_mu*( n*(n+1)/radius/radius );
 	      d_n = m_d - m_nu*( n*(n+1)/radius/radius );
-	      
+
 	      gamma_n = 0.5*( a_n + d_n );
-	      
+
 	      temp = ( a_n + d_n )*( a_n + d_n ) - 4.0*( a_n*d_n - m_b*m_c );
 	      delta_n = 0.5*sqrt( temp );
 
@@ -672,16 +673,16 @@ namespace Nektar
 		  ind = m + n;
 		  A_mn = Ainit[n][ind];
 		  C_mn = Binit[n][ind];
-		  
+
 		  B_mn = ( (a_n - gamma_n)*Ainit[n][ind] + m_b*Binit[n][ind])/delta_n;
 		  D_mn = ( m_c*Ainit[n][ind] + (d_n - gamma_n)*Binit[n][ind])/delta_n;
-		  
+
 		  Spericharmonic = boost::math::spherical_harmonic(n, m, theta, phi);
 		  varphi0 += exp(gamma_n*time)*(A_mn*cosh(delta_n*time) + B_mn*sinh(delta_n*time))*Spericharmonic;
 		  varphi1 += exp(gamma_n*time)*(C_mn*cosh(delta_n*time) + D_mn*sinh(delta_n*time))*Spericharmonic;
                }
 	    }
-	  
+
 	  u[i] = varphi0.real();
 	  v[i] = varphi1.real();
 	}
@@ -705,15 +706,15 @@ namespace Nektar
 
   Array<OneD, NekDouble> MMFDiffusion::PlanePhiWave()
   {
-    int nq  = GetTotPoints();    
+    int nq  = GetTotPoints();
     Array<OneD, NekDouble> outarray(nq,0.0);
-    
+
     Array<OneD, NekDouble> x(nq);
     Array<OneD, NekDouble> y(nq);
     Array<OneD, NekDouble> z(nq);
-    
+
     m_fields[0]->GetCoords(x,y,z);
-    
+
     NekDouble xmin, ymin, xmax;
 
     xmin = Vmath::Vmin(nq, x, 1);
@@ -734,15 +735,15 @@ namespace Nektar
 	      outarray[i] = 1.0/( 1.0 + exp( ( xp - radiusofinit)/frontstiff ) );
 	    }
 	    break;
-	
+
 	  case eBothEnds:
 	    {
 	      NekDouble radiusofinit = 3.0;
 	      NekDouble frontstiff = 0.1;
-	      
+
 	      xp = x[i] - xmin;
 	      xp2 = x[i] - xmax;
-	      
+
 	      outarray[i] = 1.0/( 1.0 + exp( ( sqrt(xp*xp) - radiusofinit)/frontstiff ) ) + 1.0/( 1.0 + exp( ( sqrt(xp2*xp2) - radiusofinit)/frontstiff ) );
 	    }
 	    break;
@@ -764,7 +765,7 @@ namespace Nektar
 	      NekDouble radiusofinit = 6.0;
 	      NekDouble frontstiff = 0.1;
 	      NekDouble bs = 2.0;
-	      
+
 	      xp = x[i] - xmin;
 	      yp = y[i] - ymin;
 	      outarray[i] = 1.0/( 1.0 + exp( ( sqrt(xp*xp+yp*yp)/bs - radiusofinit)/frontstiff ) );
@@ -779,18 +780,18 @@ namespace Nektar
 	      xloc = x[i]-m_InitPtx;
 	      yloc = y[i]-m_InitPty;
 	      zloc = z[i]-m_InitPtz;
-	      
+
 	      rad = sqrt(xloc*xloc + yloc*yloc + zloc*zloc);
-	      
+
 	      xloc = xloc/radiusofinit;
 	      yloc = yloc/radiusofinit;
 	      zloc = zloc/radiusofinit;
-	      
+
 	      if(rad<radiusofinit)
 		{
 		  outarray[i] = exp( -(1.0/2.0)*( xloc*xloc + yloc*yloc + zloc*zloc) ) ;
 		}
-	      
+
 	      else
 		{
 		  outarray[i] = 0.0;
@@ -804,7 +805,7 @@ namespace Nektar
 	      NekDouble frontstiff = 0.1;
 	      xp = x[i] - 4.0;
 	      yp = y[i];
-	      outarray[i] = (1.0/(1.0+exp(2.0*yp)))*(1.0/(1.0+exp(-2.0*xp)))*( 1.0/( 1.0 + exp( ( xp - radiusofinit)/frontstiff ) ) );	      
+	      outarray[i] = (1.0/(1.0+exp(2.0*yp)))*(1.0/(1.0+exp(-2.0*xp)))*( 1.0/( 1.0 + exp( ( xp - radiusofinit)/frontstiff ) ) );
 	    }
 	    break;
 
@@ -816,7 +817,7 @@ namespace Nektar
 
     return outarray;
   }
-  
+
   void MMFDiffusion::v_EvaluateExactSolution(unsigned int field,
 					     Array<OneD, NekDouble> &outfield,
 					     const NekDouble time)
@@ -834,7 +835,7 @@ namespace Nektar
 	  TestCubeProblem(time,outfield);
 	}
 	break;
-	
+
       case eTestLinearSphere:
       case eTestNonlinearSphere:
         {
@@ -849,7 +850,7 @@ namespace Nektar
 	  int nq  = GetTotPoints();
 	  outfield = Array<OneD, NekDouble>(nq, 0.0);
 	}
-	
+
       default:
         {
 	  EquationSystem::v_EvaluateExactSolution(field,outfield,time);
@@ -857,7 +858,7 @@ namespace Nektar
         break;
       }
   }
-  
+
   void MMFDiffusion::v_GenerateSummary(SolverUtils::SummaryList& s)
     {
         MMFSystem::v_GenerateSummary(s);
@@ -875,6 +876,7 @@ namespace Nektar
 int main(int argc, char *argv[])
 {
     LibUtilities::SessionReaderSharedPtr session;
+    SpatialDomains::MeshGraphSharedPtr graph;
     Gs::string vDriverModule;
     DriverSharedPtr drv;
 
@@ -883,9 +885,12 @@ int main(int argc, char *argv[])
         // Create session reader.
         session = LibUtilities::SessionReader::CreateInstance(argc, argv);
 
+        // Create MeshGraph
+        graph = SpatialDomains::MeshGraph::Read(session);
+
         // Create driver
         session->LoadSolverInfo("Driver", vDriverModule, "Standard");
-        drv = GetDriverFactory().CreateInstance(vDriverModule, session);
+        drv = GetDriverFactory().CreateInstance(vDriverModule, session, graph);
 
         // Execute driver
         drv->Execute();

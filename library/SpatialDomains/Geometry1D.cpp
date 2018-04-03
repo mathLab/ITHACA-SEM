@@ -7,7 +7,7 @@
 //  The MIT License
 //
 //  Copyright (c) 2006 Division of Applied Mathematics, Brown University (USA),
-//  Department of Aeronautics, Imperial College London (UK), and Scientific 
+//  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
 //  License for the specific language governing rights and limitations under
@@ -37,71 +37,25 @@
 
 namespace Nektar
 {
-    namespace SpatialDomains
-    {
+namespace SpatialDomains
+{
 
-        Geometry1D::Geometry1D()
-        {
-        }
+Geometry1D::Geometry1D()
+{
+}
 
-        Geometry1D::Geometry1D(const int coordim):
-            Geometry(coordim)
-        {
-        }
+Geometry1D::Geometry1D(const int coordim) : Geometry(coordim)
+{
+}
 
-        Geometry1D::~Geometry1D()
-        {
-        }
+Geometry1D::~Geometry1D()
+{
+}
 
-        PointGeomSharedPtr Geometry1D::GetVertex(const int i) const
-        {
-            return v_GetVertex(i);
-        }
+int Geometry1D::v_GetShapeDim() const
+{
+    return 1;
+}
 
-        LibUtilities::ShapeType Geometry1D::DetShapeType() const
-        {
-            return v_DetShapeType();
-        }
-
-        int Geometry1D::GetEid() const
-        {
-            return v_GetEid();
-        }
-
-
-        int Geometry1D::v_GetShapeDim() const
-        {
-            return 1;
-        }
-
-
-        int Geometry1D::v_GetEid() const 
-        {
-            NEKERROR(ErrorUtil::efatal,
-                     "This function is only valid for expansion type geometries");
-            return 0;
-        }
-
-        PointGeomSharedPtr Geometry1D::v_GetVertex(const int i) const
-        {
-            NEKERROR(ErrorUtil::efatal,
-                     "This function is only valid for expansion type geometries");
-            PointGeomSharedPtr returnval;
-            return returnval;
-        }
-
-        int Geometry1D::v_GetVid(int i) const
-        {
-            NEKERROR(ErrorUtil::efatal,
-                     "This function is only valid for expansion type geometries");
-            return 0;
-        }
-
-        LibUtilities::ShapeType Geometry1D::v_DetShapeType() const
-        {
-            NEKERROR(ErrorUtil::efatal,
-                     "This function is only valid for expansion type geometries");
-            return LibUtilities::eNoShapeType;
-        }
-    }; //end of namespace
-}; //end of namespace
+}
+}

@@ -542,6 +542,7 @@ namespace Nektar
                 const FlagList &flags,
                 const StdRegions::ConstFactorMap &factors,
                 const StdRegions::VarCoeffMap &varcoeff,
+                const MultiRegions::VarFactorsMap &varfactors,
                 const Array<OneD, const NekDouble> &dirForcing,
                 const bool PhysSpaceForcing)
         {
@@ -564,7 +565,10 @@ namespace Nektar
             int i;
             for(i = 0; i < m_bndCondExpansions.num_elements(); ++i)
             {
-                if(m_bndConditions[i]->GetBoundaryConditionType() != SpatialDomains::eDirichlet)
+                if(m_bndConditions[i]->GetBoundaryConditionType() ==
+                       SpatialDomains::eNeumann ||
+                   m_bndConditions[i]->GetBoundaryConditionType() ==
+                       SpatialDomains::eRobin)
                 {
                     wsp[m_locToGloMap->GetBndCondCoeffsToGlobalCoeffsMap(i)]
                         += m_bndCondExpansions[i]->GetCoeff(0);
@@ -573,7 +577,7 @@ namespace Nektar
 
             // Solve the system
             GlobalLinSysKey key(StdRegions::eHelmholtz,
-                                m_locToGloMap,factors,varcoeff);
+                                m_locToGloMap,factors,varcoeff,varfactors);
 
             if(flags.isSet(eUseGlobal))
             {

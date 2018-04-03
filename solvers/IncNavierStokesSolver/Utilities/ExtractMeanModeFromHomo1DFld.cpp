@@ -19,8 +19,6 @@ int main(int argc, char *argv[])
     int n       = 0;
     int nz      = 0;
     int ncoeffs = 0;
-    //default meshgraph
-    SpatialDomains::MeshGraph graph;
 
     //----------------------------------------------
     // Import fieldfile.

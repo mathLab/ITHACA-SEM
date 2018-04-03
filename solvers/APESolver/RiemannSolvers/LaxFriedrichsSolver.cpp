@@ -50,8 +50,9 @@ std::string LaxFriedrichsSolver::solverName =
 /**
 *
 */
-LaxFriedrichsSolver::LaxFriedrichsSolver() :
-    APESolver()
+LaxFriedrichsSolver::LaxFriedrichsSolver(
+    const LibUtilities::SessionReaderSharedPtr& pSession) :
+    APESolver(pSession)
 {
 
 }

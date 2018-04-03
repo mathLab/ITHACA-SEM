@@ -34,6 +34,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <LocalRegions/Expansion1D.h>
+#include <LocalRegions/Expansion2D.h>
 
 using namespace std;
 
@@ -411,6 +412,21 @@ namespace Nektar
             int map = GetVertexMap(vert);
             Vmath::Zero(GetNcoeffs(), coeffs, 1);
             coeffs[map] = primCoeffs[0];
+        }
+
+        NekDouble Expansion1D::v_VectorFlux(
+            const Array<OneD, Array<OneD, NekDouble> > &vec)
+        {
+            const Array<OneD, const Array<OneD, NekDouble> >
+                &normals = GetLeftAdjacentElementExp()->
+                GetEdgeNormal(GetLeftAdjacentElementEdge());
+
+            int nq = m_base[0]->GetNumPoints();
+            Array<OneD, NekDouble > Fn(nq);
+            Vmath::Vmul (nq, &vec[0][0], 1, &normals[0][0], 1, &Fn[0], 1);
+            Vmath::Vvtvp(nq, &vec[1][0], 1, &normals[1][0], 1, &Fn[0], 1, &Fn[0], 1);
+
+            return Integral(Fn);
         }
     } //end of namespace
 } //end of namespace

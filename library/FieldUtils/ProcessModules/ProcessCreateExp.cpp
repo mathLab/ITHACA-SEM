@@ -78,11 +78,12 @@ void ProcessCreateExp::Process(po::variables_map &vm)
         // check to see if fld file defined so can use in
         // expansion defintion if required
         bool fldfilegiven = (m_f->m_fielddef.size() != 0);
+        bool expFromFld   = fldfilegiven  && !vm.count("useSessionExpansion");
 
         // load fielddef header if fld file is defined. This gives
         // precedence to Homogeneous definition in fld file
         m_f->m_numHomogeneousDir = 0;
-        if (fldfilegiven)
+        if (expFromFld)
         {
             m_f->m_numHomogeneousDir = m_f->m_fielddef[0]->m_numHomogeneousDir;
 
@@ -120,7 +121,7 @@ void ProcessCreateExp::Process(po::variables_map &vm)
         {
             for (auto &compIter : domain[d])
             {
-                for (auto &x : *compIter.second)
+                for (auto &x : compIter.second->m_geomVec)
                 {
                     IDs.push_back(x->GetGlobalID());
                 }
@@ -169,7 +170,7 @@ void ProcessCreateExp::Process(po::variables_map &vm)
         }
 
         m_f->m_exp[0] = m_f->SetUpFirstExpList(m_f->m_numHomogeneousDir,
-                                                fldfilegiven);
+                                                expFromFld);
 
         if (m_f->m_verbose)
         {

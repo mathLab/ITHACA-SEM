@@ -45,16 +45,17 @@ namespace Nektar
     class AverageSolver : public NonlinearSWESolver
     {
     public:
-        static RiemannSolverSharedPtr create()
+        static RiemannSolverSharedPtr create(
+            const LibUtilities::SessionReaderSharedPtr& pSession)
         {
             return RiemannSolverSharedPtr(
-                new AverageSolver());
+                new AverageSolver(pSession));
         }
         
         static std::string solverName;
         
     protected:
-        AverageSolver();
+        AverageSolver(const LibUtilities::SessionReaderSharedPtr& pSession);
         
         virtual void v_PointSolve(
             double  hL, double  huL, double  hvL,

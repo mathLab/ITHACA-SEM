@@ -10,7 +10,6 @@ SET(SOLVER_UTILS_SOURCES
   Diffusion/Diffusion.cpp
   Diffusion/Diffusion3DHomogeneous1D.cpp
   Diffusion/DiffusionLDG.cpp
-  Diffusion/DiffusionLDGNS.cpp
   Diffusion/DiffusionLFR.cpp
   Diffusion/DiffusionLFRNS.cpp
   Driver.cpp
@@ -25,7 +24,7 @@ SET(SOLVER_UTILS_SOURCES
   Filters/FilterAverageFields.cpp
   Filters/FilterCheckpoint.cpp
   Filters/FilterEnergy1D.cpp
-  Filters/FilterEnergyBase.cpp
+  Filters/FilterEnergy.cpp
   Filters/FilterHistoryPoints.cpp
   Filters/FilterModalEnergy.cpp
   Filters/FilterMovingAverage.cpp
@@ -56,7 +55,6 @@ SET(SOLVER_UTILS_HEADERS
   Diffusion/Diffusion.h
   Diffusion/Diffusion3DHomogeneous1D.h
   Diffusion/DiffusionLDG.h
-  Diffusion/DiffusionLDGNS.h
   Diffusion/DiffusionLFR.h
   Diffusion/DiffusionLFRNS.h
   Driver.h
@@ -71,7 +69,7 @@ SET(SOLVER_UTILS_HEADERS
   Filters/FilterAverageFields.h
   Filters/FilterCheckpoint.h
   Filters/FilterEnergy1D.h
-  Filters/FilterEnergyBase.h
+  Filters/FilterEnergy.h
   Filters/FilterHistoryPoints.h
   Filters/FilterModalEnergy.h
   Filters/FilterMovingAverage.h

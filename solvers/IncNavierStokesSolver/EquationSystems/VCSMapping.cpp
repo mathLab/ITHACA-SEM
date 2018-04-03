@@ -55,9 +55,10 @@ namespace Nektar
      * \param
      */
     VCSMapping::VCSMapping(
-            const LibUtilities::SessionReaderSharedPtr& pSession)
-        : UnsteadySystem(pSession),
-          VelocityCorrectionScheme(pSession)  
+        const LibUtilities::SessionReaderSharedPtr& pSession,
+        const SpatialDomains::MeshGraphSharedPtr &pGraph)
+        : UnsteadySystem(pSession, pGraph),
+          VelocityCorrectionScheme(pSession, pGraph)  
     {
 
     }
@@ -80,7 +81,7 @@ namespace Nektar
             m_advObject); 
         m_extrapolation->SubSteppingTimeIntegration(
                             m_intScheme->GetIntegrationMethod(), m_intScheme);
-        m_extrapolation->GenerateHOPBCMap(m_session);        
+        m_extrapolation->GenerateHOPBCMap(m_session);
 
        // Storage to extrapolate pressure forcing
         int physTot = m_fields[0]->GetTotPoints();

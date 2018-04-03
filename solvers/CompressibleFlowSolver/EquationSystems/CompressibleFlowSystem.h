@@ -40,17 +40,20 @@
 #include <CompressibleFlowSolver/Misc/VariableConverter.h>
 #include <CompressibleFlowSolver/BoundaryConditions/CFSBndCond.h>
 #include <SolverUtils/UnsteadySystem.h>
+#include <SolverUtils/AdvectionSystem.h>
 #include <SolverUtils/RiemannSolvers/RiemannSolver.h>
 #include <SolverUtils/AdvectionSystem.h>
 #include <SolverUtils/Diffusion/Diffusion.h>
 #include <SolverUtils/Forcing/Forcing.h>
+#include <SolverUtils/Filters/FilterInterfaces.hpp>
 
 namespace Nektar
 {
     /**
      *
      */
-    class CompressibleFlowSystem: public SolverUtils::UnsteadySystem
+    class CompressibleFlowSystem: public SolverUtils::AdvectionSystem,
+                                  public SolverUtils::FluidInterface
     {
     public:
 
@@ -66,21 +69,29 @@ namespace Nektar
         Array<OneD, NekDouble> GetStabilityLimitVector(
             const Array<OneD,int> &ExpOrder);
 
+        virtual void GetPressure(
+            const Array<OneD, const Array<OneD, NekDouble> > &physfield,
+                  Array<OneD, NekDouble>                     &pressure);
+
+        virtual void GetDensity(
+            const Array<OneD, const Array<OneD, NekDouble> > &physfield,
+                  Array<OneD, NekDouble>                     &density);
+
+        virtual bool HasConstantDensity()
+        {
+            return false;
+        }
+
+        virtual void GetVelocity(
+            const Array<OneD, const Array<OneD, NekDouble> > &physfield,
+                  Array<OneD, Array<OneD, NekDouble> >       &velocity);
+
     protected:
-        SolverUtils::AdvectionSharedPtr     m_advection;
         SolverUtils::DiffusionSharedPtr     m_diffusion;
         ArtificialDiffusionSharedPtr        m_artificialDiffusion;
         Array<OneD, Array<OneD, NekDouble> >m_vecLocs;
         NekDouble                           m_gamma;
-        NekDouble                           m_pInf;
-        NekDouble                           m_rhoInf;
-        NekDouble                           m_UInf;
-        std::string                         m_ViscosityType;
         std::string                         m_shockCaptureType;
-        NekDouble                           m_mu;
-        NekDouble                           m_thermalConductivity;
-        NekDouble                           m_Cp;
-        NekDouble                           m_Prandtl;
 
         // Parameters for exponential filtering
         NekDouble                           m_filterAlpha;
@@ -97,20 +108,12 @@ namespace Nektar
         // User defined boundary conditions
         std::vector<CFSBndCondSharedPtr>    m_bndConds;
 
-        // L2 error file
-        std::ofstream m_errFile;
-
-        // Tolerance to which steady state should be evaluated at
-        NekDouble m_steadyStateTol;
-
         // Forcing term
         std::vector<SolverUtils::ForcingSharedPtr> m_forcing;
 
-        // Storage for L2 norm error
-        Array<OneD, Array<OneD, NekDouble> > m_un;
-
         CompressibleFlowSystem(
-            const LibUtilities::SessionReaderSharedPtr& pSession);
+            const LibUtilities::SessionReaderSharedPtr& pSession,
+            const SpatialDomains::MeshGraphSharedPtr& pGraph);
 
         virtual void v_InitObject();
 
@@ -147,22 +150,13 @@ namespace Nektar
             const Array<OneD, Array<OneD, NekDouble> >         &physfield,
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &flux);
 
-        void InitializeSteadyState();
-
         void SetBoundaryConditions(
             Array<OneD, Array<OneD, NekDouble> >             &physarray,
             NekDouble                                         time);
 
-        void GetStdVelocity(
-            const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-                  Array<OneD,                   NekDouble>   &stdV);
-
         void GetElmtTimeStep(
             const Array<OneD, const Array<OneD, NekDouble> > &inarray,
                   Array<OneD, NekDouble> &tstep);
-
-        virtual bool v_PostIntegrate(int step);
-        bool CalcSteadyState(bool output);
 
         virtual NekDouble v_GetTimeStep(
             const Array<OneD, const Array<OneD, NekDouble> > &inarray);
@@ -198,6 +192,9 @@ namespace Nektar
         {
             // Do nothing by default
         }
+
+        virtual Array<OneD, NekDouble> v_GetMaxStdVelocity();
+
     };
 }
 #endif

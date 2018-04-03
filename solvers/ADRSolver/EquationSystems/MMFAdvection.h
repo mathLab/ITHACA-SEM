@@ -38,6 +38,7 @@
 
 #include <SolverUtils/AdvectionSystem.h>
 #include <SolverUtils/MMFSystem.h>
+#include <SolverUtils/RiemannSolvers/RiemannSolver.h>
 #include <SolverUtils/UnsteadySystem.h>
 
 enum TestType
@@ -55,17 +56,18 @@ const char *const TestTypeMap[] = {
 
 namespace Nektar
 {
-class MMFAdvection : public SolverUtils::MMFSystem
+class MMFAdvection : public SolverUtils::MMFSystem, public SolverUtils::AdvectionSystem
 {
 public:
     friend class MemoryManager<MMFAdvection>;
 
     /// Creates an instance of this class
     static SolverUtils::EquationSystemSharedPtr create(
-        const LibUtilities::SessionReaderSharedPtr &pSession)
+        const LibUtilities::SessionReaderSharedPtr &pSession,
+        const SpatialDomains::MeshGraphSharedPtr& pGraph)
     {
         SolverUtils::EquationSystemSharedPtr p =
-            MemoryManager<MMFAdvection>::AllocateSharedPtr(pSession);
+            MemoryManager<MMFAdvection>::AllocateSharedPtr(pSession, pGraph);
         p->InitObject();
         return p;
     }
@@ -78,6 +80,8 @@ public:
     virtual ~MMFAdvection();
 
 protected:
+    SolverUtils::RiemannSolverSharedPtr     m_riemannSolver;
+
     NekDouble m_advx, m_advy, m_advz;
     NekDouble m_waveFreq, m_RotAngle;
 
@@ -96,7 +100,8 @@ protected:
     int m_planeNumber;
 
     /// Session reader
-    MMFAdvection(const LibUtilities::SessionReaderSharedPtr &pSession);
+    MMFAdvection(const LibUtilities::SessionReaderSharedPtr &pSession,
+            const SpatialDomains::MeshGraphSharedPtr& pGraph);
 
     void WeakDGDirectionalAdvection(
         const Array<OneD, Array<OneD, NekDouble>> &InField,
@@ -130,7 +135,7 @@ protected:
                                           const NekDouble Rhs);
 
     /// Get the normal velocity
-    void GetNormalVelocity(Array<OneD, NekDouble> &traceVn);
+    Array<OneD, NekDouble> &GetNormalVelocity();
 
     void ComputeNablaCdotVelocity(Array<OneD, NekDouble> &vellc);
 

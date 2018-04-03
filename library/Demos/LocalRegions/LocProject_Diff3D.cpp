@@ -10,7 +10,6 @@
 #include <LibUtilities/Foundations/Foundations.hpp>
 #include <LibUtilities/Foundations/Basis.h>
 
-#include <SpatialDomains/MeshComponents.h>
 #include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
 
 using namespace std;
@@ -141,7 +140,7 @@ int main(int argc, char *argv[]){
            || (btype1 == eModified_B) || (btype1 == eModified_C)
            || (btype1 == eModifiedPyr_C))
         {
-            NEKERROR(ErrorUtil::efatal, 
+            NEKERROR(ErrorUtil::efatal,
                      "Basis 1 cannot be of type Ortho_B, "
                      "Ortho_C, Modified_B or Modified_C");
         }
@@ -149,7 +148,7 @@ int main(int argc, char *argv[]){
            || (btype2 == eModified_A) || (btype2 == eModified_C)
            || (btype1 == eModifiedPyr_C))
         {
-            NEKERROR(ErrorUtil::efatal, 
+            NEKERROR(ErrorUtil::efatal,
                      "Basis 2 cannot be of type Ortho_A, "
                      "Ortho_C, Modified_A or Modified_C");
         }
@@ -157,7 +156,7 @@ int main(int argc, char *argv[]){
            || (btype3 == eModified_A) || (btype3 == eModified_B)
            ||  (btype1 == eModified_C))
         {
-            NEKERROR(ErrorUtil::efatal, 
+            NEKERROR(ErrorUtil::efatal,
                      "Basis 3 cannot be of type Ortho_A, "
                      "Ortho_B, Modified_A or Modified_B");
         }
@@ -167,7 +166,7 @@ int main(int argc, char *argv[]){
            || (btype1 == eModified_B) || (btype1 == eModified_C)
            || (btype1 == eModifiedPyr_C))
         {
-            NEKERROR(ErrorUtil::efatal, 
+            NEKERROR(ErrorUtil::efatal,
                      "Basis 1 cannot be of type Ortho_B, "
                      "Ortho_C, Modified_B or Modified_C");
         }
@@ -175,7 +174,7 @@ int main(int argc, char *argv[]){
            || (btype2 == eModified_B) || (btype2 == eModified_C)
            || (btype1 == eModifiedPyr_C))
         {
-            NEKERROR(ErrorUtil::efatal, 
+            NEKERROR(ErrorUtil::efatal,
                      "Basis 2 cannot be of type Ortho_B, "
                      "Ortho_C, Modified_B or Modified_C");
         }
@@ -183,7 +182,7 @@ int main(int argc, char *argv[]){
            || (btype3 == eModified_A) || (btype3 == eModified_B)
            || (btype1 == eModified_C))
         {
-            NEKERROR(ErrorUtil::efatal, 
+            NEKERROR(ErrorUtil::efatal,
                      "Basis 3 cannot be of type Ortho_A, "
                      "Ortho_B, Modified_A or Modified_B");
         }
@@ -232,7 +231,7 @@ int main(int argc, char *argv[]){
         ASSERTL0(false, "Not a 3D expansion.");
         break;
     }
-    
+
     order1 =   atoi(argv[5]);
     order2 =   atoi(argv[6]);
     order3 =   atoi(argv[7]);
@@ -256,7 +255,7 @@ int main(int argc, char *argv[]){
 
     if(btype2 != LibUtilities::eFourier)
     {
-        if (regionshape == LibUtilities::eTetrahedron) 
+        if (regionshape == LibUtilities::eTetrahedron)
         {
             Qtype2 = LibUtilities::eGaussRadauMAlpha1Beta0;
         }
@@ -356,9 +355,9 @@ int main(int argc, char *argv[]){
 
             SpatialDomains::PrismGeomSharedPtr geom = CreatePrismGeom(argc, argv);
             E = new LocalRegions::PrismExp(Bkey1, Bkey2, Bkey3, geom);
-            
+
             E->GetCoords(x,y,z);
-            
+
             //----------------------------------------------
             // Define solution to be projected
             for(i = 0; i < nq1*nq2*nq3; ++i)
@@ -376,12 +375,12 @@ int main(int argc, char *argv[]){
                 const LibUtilities::BasisKey Bkey1(btype1,order1,Pkey1);
                 const LibUtilities::BasisKey Bkey2(btype2,order2,Pkey2);
                 const LibUtilities::BasisKey Bkey3(btype3,order3,Pkey3);
-                
+
                 SpatialDomains::HexGeomSharedPtr geom = CreateHexGeom(argc, argv);
                 E = new LocalRegions::HexExp(Bkey1, Bkey2, Bkey3, geom);
-                
+
                 E->GetCoords(x,y,z);
-                
+
                 //----------------------------------------------
                 // Define solution to be projected
                 for(i = 0; i < nq1*nq2*nq3; ++i)
@@ -396,7 +395,7 @@ int main(int argc, char *argv[]){
         ASSERTL0(false, "Not a 3D expansion.");
         break;
     }
-    
+
     //---------------------------------------------
     // Evaluate derivative of solution, add together and put in sol
     E->PhysDeriv(sol,dx,dy,dz);
@@ -487,7 +486,7 @@ NekDouble Prism_sol(NekDouble x, NekDouble y, NekDouble z,
 {
     int k, l, m;
     NekDouble sol = 0;
-    
+
     for(k = 0; k < order1; ++k)
     {
         for(l = 0; l < order2; ++l)
@@ -563,7 +562,7 @@ NekDouble Prism_Dsol(NekDouble x, NekDouble y, NekDouble z,
                      int order1, int order2, int order3){
     int    l,k,m;
     NekDouble sol = 0;
-    
+
     for(k = 0; k < order1; ++k)
     {
         for(l = 0; l < order2; ++l)
@@ -687,27 +686,20 @@ SpatialDomains::HexGeomSharedPtr CreateHexGeom(int argc, char *argv[])
         {0,1,2,3}, {0,5,8,4}, {1,6,9,5},
         {2,7,10,6}, {3,7,11,4}, {8,9,10,11}
     };
-    const bool   isEdgeFlipped[][4] = {
-        {0,0,0,1}, {0,0,1,1}, {0,0,1,1},
-        {0,0,1,1}, {0,0,1,1}, {0,0,0,1}
-    };
 
     // Populate the list of faces
     QuadGeomSharedPtr faces[nFaces];
     for( int i = 0; i < nFaces; ++i ) {
         SegGeomSharedPtr edgeArray[4];
-        Orientation eorientArray[4];
         for( int j = 0; j < 4; ++j ) {
             edgeArray[j]    = edges[edgeConnectivity[i][j]];
-            eorientArray[j] = isEdgeFlipped[i][j]  ?  eBackwards  :  eForwards;
         }
         faces[i] = MemoryManager<QuadGeom>
-            ::AllocateSharedPtr( i, edgeArray, eorientArray);
+            ::AllocateSharedPtr( i, edgeArray);
     }
 
     SpatialDomains::HexGeomSharedPtr geom =
-        MemoryManager<SpatialDomains::HexGeom>::AllocateSharedPtr(faces);
-    geom->SetOwnData();
+        MemoryManager<SpatialDomains::HexGeom>::AllocateSharedPtr(0,faces);
 
     return geom;
 }
@@ -719,7 +711,7 @@ SpatialDomains::PrismGeomSharedPtr CreatePrismGeom(int argc, char *argv[])
     {
         cout << "Insufficient points for a prism!" << endl;
     }
-    
+
     // /////////////////////////////////////////////////////////////////////
     // Set up Prism vertex coordinates
     // PointGeom (const int coordim, const int vid, double x,
@@ -737,7 +729,7 @@ SpatialDomains::PrismGeomSharedPtr CreatePrismGeom(int argc, char *argv[])
     // Populate the list of verts
     PointGeomSharedPtr verts[nVerts];
     const int three = 3;
-    
+
     for( int i = 0; i < nVerts; ++i ) {
         verts[i] = MemoryManager<PointGeom>
             ::AllocateSharedPtr( three,  i,   point[i][0],
@@ -749,10 +741,10 @@ SpatialDomains::PrismGeomSharedPtr CreatePrismGeom(int argc, char *argv[])
     // SegGeom (int id, const int coordim), EdgeComponent(id, coordim)
     const int nEdges = 9;
     const int vertexConnectivity[][2] = {
-        {0,1}, {1,2}, {3,2}, {0,3}, {0,4}, 
+        {0,1}, {1,2}, {3,2}, {0,3}, {0,4},
         {1,4}, {2,5}, {3,5}, {4,5}
     };
-    
+
     // Populate the list of edges
     SegGeomSharedPtr edges[nEdges];
     for( int i = 0; i < nEdges; ++i ) {
@@ -763,59 +755,47 @@ SpatialDomains::PrismGeomSharedPtr CreatePrismGeom(int argc, char *argv[])
         edges[i] = MemoryManager<SegGeom>
             ::AllocateSharedPtr( i, three, vertsArray);
     }
-    
+
     // ////////////////////////////////////////////////////////////////////
     // Set up Prism faces
     const int nFaces  = 5;
     const int edgeConnectivity[][4] = {
-        {0,1,2,3}, 
+        {0,1,2,3},
         {0,5,4,-1}, // Triangular face
         {1,6,8,5},
-        {2,6,7,-1}, // Triangular face 
+        {2,6,7,-1}, // Triangular face
         {3,7,8,4}
     };
-    const bool   isEdgeFlipped[][4] = {
-        {0,0,1,1}, 
-        {0,0,1,0}, 
-        {0,0,1,1},
-        {0,0,1,0}, 
-        {0,0,1,1}
-    };
-    
+
     // Populate the list of faces
     Geometry2DSharedPtr faces[5];
 
     for (int i = 0; i < nFaces; ++i) {
-        if (i == 1 || i == 3) 
+        if (i == 1 || i == 3)
         {
             SegGeomSharedPtr edgeArray[3];
-            Orientation eorientArray[3];
-            
+
             for (int j = 0; j < 3; ++j) {
                 edgeArray[j]    = edges[edgeConnectivity[i][j]];
-                eorientArray[j] = isEdgeFlipped[i][j] ? eBackwards : eForwards;
             }
-            
+
             faces[i] = MemoryManager<TriGeom>
-                ::AllocateSharedPtr( i, edgeArray, eorientArray);
+                ::AllocateSharedPtr( i, edgeArray);
         }
         else
         {
             SegGeomSharedPtr edgeArray[4];
-            Orientation eorientArray[4];
-            
+
             for (int j = 0; j < 4; ++j) {
                 edgeArray[j]    = edges[edgeConnectivity[i][j]];
-                eorientArray[j] = isEdgeFlipped[i][j] ? eBackwards : eForwards;
             }
             faces[i] = MemoryManager<QuadGeom>
-                ::AllocateSharedPtr( i, edgeArray, eorientArray);
+                ::AllocateSharedPtr( i, edgeArray);
         }
     }
 
     SpatialDomains::PrismGeomSharedPtr geom =
-        MemoryManager<SpatialDomains::PrismGeom>::AllocateSharedPtr(faces);
-    geom->SetOwnData();
+        MemoryManager<SpatialDomains::PrismGeom>::AllocateSharedPtr(0,faces);
 
     return geom;
 }
@@ -826,7 +806,7 @@ SpatialDomains::PyrGeomSharedPtr CreatePyrGeom(int argc, char *argv[])
     {
         cout << "Insufficient points for a pyramid!" << endl;
     }
-    
+
     // /////////////////////////////////////////////////////////////////////
     // Set up Pyramid vertex coordinates
     // PointGeom (const int coordim, const int vid, double x,
@@ -843,7 +823,7 @@ SpatialDomains::PyrGeomSharedPtr CreatePyrGeom(int argc, char *argv[])
     // Populate the list of verts
     PointGeomSharedPtr verts[nVerts];
     const int three = 3;
-    
+
     for( int i = 0; i < nVerts; ++i ) {
         verts[i] = MemoryManager<PointGeom>
             ::AllocateSharedPtr( three,  i,   point[i][0],
@@ -869,25 +849,18 @@ SpatialDomains::PyrGeomSharedPtr CreatePyrGeom(int argc, char *argv[])
         edges[i] = MemoryManager<SegGeom>
             ::AllocateSharedPtr( i, three, vertsArray);
     }
-    
+
     // ////////////////////////////////////////////////////////////////////
     // Set up Pyramid faces
     const int nFaces  = 5;
     const int edgeConnectivity[][4] = {
-        {0,1,2,3}, 
+        {0,1,2,3},
         {0,5,4,-1}, // Triangular face
         {1,6,5,-1}, // Triangular face
-        {2,6,7,-1}, // Triangular face 
+        {2,6,7,-1}, // Triangular face
         {3,7,4,-1}  // Triangular face
     };
-    const bool   isEdgeFlipped[][4] = {
-        {0,0,1,1}, 
-        {0,0,1,0}, 
-        {0,0,1,0},
-        {0,0,1,0}, 
-        {0,0,1,0}
-    };
-    
+
     // Populate the list of faces
     Geometry2DSharedPtr faces[5];
 
@@ -895,33 +868,28 @@ SpatialDomains::PyrGeomSharedPtr CreatePyrGeom(int argc, char *argv[])
         if (i > 0)
         {
             SegGeomSharedPtr edgeArray[3];
-            Orientation eorientArray[3];
-            
+
             for (int j = 0; j < 3; ++j) {
                 edgeArray[j]    = edges[edgeConnectivity[i][j]];
-                eorientArray[j] = isEdgeFlipped[i][j] ? eBackwards : eForwards;
             }
-            
+
             faces[i] = MemoryManager<TriGeom>
-                ::AllocateSharedPtr( i, edgeArray, eorientArray);
+                ::AllocateSharedPtr( i, edgeArray);
         }
         else
         {
             SegGeomSharedPtr edgeArray[4];
-            Orientation eorientArray[4];
-            
+
             for (int j = 0; j < 4; ++j) {
                 edgeArray[j]    = edges[edgeConnectivity[i][j]];
-                eorientArray[j] = isEdgeFlipped[i][j] ? eBackwards : eForwards;
             }
             faces[i] = MemoryManager<QuadGeom>
-                ::AllocateSharedPtr( i, edgeArray, eorientArray);
+                ::AllocateSharedPtr( i, edgeArray);
         }
     }
 
     SpatialDomains::PyrGeomSharedPtr geom =
-        MemoryManager<SpatialDomains::PyrGeom>::AllocateSharedPtr(faces);
-    geom->SetOwnData();
+        MemoryManager<SpatialDomains::PyrGeom>::AllocateSharedPtr(0,faces);
 
     return geom;
 }
@@ -977,27 +945,20 @@ SpatialDomains::TetGeomSharedPtr CreateTetGeom(int argc, char *argv[])
     const int edgeConnectivity[][3] = {
         {0,1,2}, {0,4,3}, {1,5,4}, {2,5,3}
     };
-    const bool   isEdgeFlipped[][3] = {
-        {0,0,1}, {0,0,1}, {0,0,1}, {0,0,1}
-    };
 
     // Populate the list of faces
     TriGeomSharedPtr faces[nFaces];
     for(int i=0; i < nFaces; ++i){
         SegGeomSharedPtr edgeArray[3];
-        Orientation eorientArray[3];
         for(int j=0; j < 3; ++j){
             edgeArray[j] = edges[edgeConnectivity[i][j]];
-            eorientArray[j] = isEdgeFlipped[i][j] ? eBackwards : eForwards;
         }
         faces[i] = MemoryManager<TriGeom>
-            ::AllocateSharedPtr(i, edgeArray, eorientArray);
+            ::AllocateSharedPtr(i, edgeArray);
     }
 
     SpatialDomains::TetGeomSharedPtr geom =
-        MemoryManager<SpatialDomains::TetGeom>::AllocateSharedPtr(faces);
-    geom->SetOwnData();
+        MemoryManager<SpatialDomains::TetGeom>::AllocateSharedPtr(0,faces);
 
     return geom;
 }
-

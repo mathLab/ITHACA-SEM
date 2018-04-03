@@ -47,7 +47,6 @@ namespace NekMeshUtils
 class CADSurfOCE : public CADSurf
 {
 public:
-
     static CADSurfSharedPtr create()
     {
         return MemoryManager<CADSurfOCE>::AllocateSharedPtr();
@@ -66,14 +65,12 @@ public:
     void Initialise(int i, TopoDS_Shape in);
 
     virtual Array<OneD, NekDouble> GetBounds();
-    virtual Array<OneD, NekDouble> N    (Array<OneD, NekDouble> uv);
-    virtual Array<OneD, NekDouble> D1   (Array<OneD, NekDouble> uv);
-    virtual Array<OneD, NekDouble> D2   (Array<OneD, NekDouble> uv);
-    virtual Array<OneD, NekDouble> P    (Array<OneD, NekDouble> uv);
-    virtual Array<OneD, NekDouble> locuv(Array<OneD, NekDouble> p);
-    virtual NekDouble DistanceTo(Array<OneD, NekDouble> p);
-    virtual NekDouble ProjectTo(Array<OneD, NekDouble> &tp,
-                           Array<OneD, NekDouble> &uv);
+    virtual Array<OneD, NekDouble> N(Array<OneD, NekDouble> uv);
+    virtual Array<OneD, NekDouble> D1(Array<OneD, NekDouble> uv);
+    virtual Array<OneD, NekDouble> D2(Array<OneD, NekDouble> uv);
+    virtual Array<OneD, NekDouble> P(Array<OneD, NekDouble> uv);
+    virtual Array<OneD, NekDouble> locuv(Array<OneD, NekDouble> p,
+                                         NekDouble &dist);
     virtual NekDouble Curvature(Array<OneD, NekDouble> uv);
     virtual Array<OneD, NekDouble> BoundingBox();
     virtual bool IsPlanar();
@@ -82,8 +79,6 @@ private:
     /// Function which tests the the value of uv used is within the surface
     void Test(Array<OneD, NekDouble> uv);
     /// OpenCascade object for surface.
-    BRepAdaptor_Surface m_occSurface;
-    /// Alternate OpenCascade object for surface. Used by reverse lookup.
     Handle(Geom_Surface) m_s;
     /// parametric bounds
     Array<OneD, NekDouble> m_bounds;
@@ -95,9 +90,7 @@ private:
     BRepTopAdaptor_FClass2d *m_2Dclass;
 };
 
-typedef std::shared_ptr<CADSurf> CADSurfSharedPtr;
-
-}
-}
+} // namespace NekMeshUtils
+} // namespace Nektar
 
 #endif

@@ -46,8 +46,9 @@ Gs::string MMFSWE::className =
     SolverUtils::GetEquationSystemFactory().RegisterCreatorFunction(
         "MMFSWE", MMFSWE::create, "MMFSWE equation.");
 
-MMFSWE::MMFSWE(const LibUtilities::SessionReaderSharedPtr &pSession)
-    : UnsteadySystem(pSession), MMFSystem(pSession)
+MMFSWE::MMFSWE(const LibUtilities::SessionReaderSharedPtr &pSession,
+        const SpatialDomains::MeshGraphSharedPtr& pGraph)
+    : UnsteadySystem(pSession, pGraph), MMFSystem(pSession, pGraph)
 {
     m_planeNumber = 0;
 }

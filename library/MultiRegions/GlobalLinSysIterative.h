@@ -106,7 +106,7 @@ namespace Nektar
 
             MultiRegions::PreconditionerType            m_precontype;
 
-            MultiRegions::LinSysIteraterType            m_IteraterType;
+            MultiRegions::IterativeMethodType            m_IteraterType;
             
             int                                         m_totalIterations;
 

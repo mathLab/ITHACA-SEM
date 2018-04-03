@@ -113,8 +113,8 @@ namespace Nektar
             m_preconType = pSession->GetSolverInfoAsEnum<PreconditionerType>(
                                                             "Preconditioner");
             
-            m_IteraterType = pSession->GetSolverInfoAsEnum<LinSysIteraterType>(
-                                                            "LinSysIterater");
+            m_IteraterType = pSession->GetSolverInfoAsEnum<IterativeMethodType>(
+                                                            "IterativeMethod");
 
             // Override values with data from GlobalSysSolnInfo section 
             if(pSession->DefinesGlobalSysSolnInfo(variable, "GlobalSysSoln"))
@@ -133,12 +133,12 @@ namespace Nektar
                                                     "Preconditioner", precon);
             }
 
-            if(pSession->DefinesGlobalSysSolnInfo(variable, "LinSysIterater"))
+            if(pSession->DefinesGlobalSysSolnInfo(variable, "IterativeMethod"))
             {
                 std::string iterater = pSession->GetGlobalSysSolnInfo(variable,
-                                                            "LinSysIterater");
-                m_IteraterType = pSession->GetValueAsEnum<LinSysIteraterType>(
-                                                    "LinSysIterater", iterater);
+                                                            "IterativeMethod");
+                m_IteraterType = pSession->GetValueAsEnum<IterativeMethodType>(
+                                                    "IterativeMethod", iterater);
             }
 
             if(pSession->DefinesGlobalSysSolnInfo(variable,
@@ -1222,7 +1222,7 @@ namespace Nektar
             return m_preconType;
         }
 
-        LinSysIteraterType  AssemblyMap::GetIteraterType() const
+        IterativeMethodType  AssemblyMap::GetIteraterType() const
         {
             return m_IteraterType;
         }

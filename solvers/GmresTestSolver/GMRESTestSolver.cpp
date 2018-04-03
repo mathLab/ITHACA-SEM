@@ -98,11 +98,12 @@ using namespace Nektar;
             m_mat       =  Array<OneD, NekDouble>(m_nlinsys*m_nlinsys);
             Vmath::Fill(m_nlinsys,1.0,&m_rhs[0],1);
             Vmath::Zero(m_nlinsys*m_nlinsys,&m_mat[0],1);
+            
 
-            // // initial the matrix(A) in Ax = f
-            // for(int i=0; i<m_nlinsys*m_nlinsys; ++i);
+            // initial the matrix(A) in Ax = f
+            // for(int ij=0; ij<m_nlinsys*m_nlinsys; ++ij)
             // {
-            //     m_mat[i]    =   1.0+i;
+            //     m_mat[ij]    =   10.0+ij;
             // }
             // for(int i=0; i<m_nlinsys; ++i)
             // {
@@ -116,7 +117,7 @@ using namespace Nektar;
                 sum = 0.0;
                 for(int j=0; j<m_nlinsys-nSubMatrix; ++j)
                 {
-                    m_mat[i*m_nlinsys+j] = 1.0+nnn;
+                    m_mat[i*m_nlinsys+j] = 1.0+sqrt(1.0*nnn);
                     nnn++;
                     sum += m_mat[i*m_nlinsys+j];
                 }

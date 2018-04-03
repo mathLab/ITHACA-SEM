@@ -46,13 +46,13 @@ namespace Nektar
     {
         std::string GlobalLinSysIterative::lookupIds[2] = {
             LibUtilities::SessionReader::RegisterEnumValue(
-                "LinSysIterater", "ConjugateGradient", eConjugateGradient),
+                "IterativeMethod", "ConjugateGradient", eConjugateGradient),
             LibUtilities::SessionReader::RegisterEnumValue(
-                "LinSysIterater", "GMRES", eGMRES),
+                "IterativeMethod", "GMRES", eGMRES),
         };
         std::string GlobalLinSysIterative::def =
             LibUtilities::SessionReader::RegisterDefaultSolverInfo(
-                "LinSysIterater", "ConjugateGradient");
+                "IterativeMethod", "ConjugateGradient");
         
         
         
@@ -113,7 +113,7 @@ namespace Nektar
                     const int nDir)
         {
             
-            LinSysIteraterType pType = plocToGloMap->GetIteraterType();
+            IterativeMethodType pType = plocToGloMap->GetIteraterType();
             switch(pType)
             {
             case eGMRES:
@@ -132,7 +132,7 @@ namespace Nektar
                 }
                 break;
             default:
-                ASSERTL0(false, "LinSysIteraterType NOT CORRECT.");
+                ASSERTL0(false, "IterativeMethodType NOT CORRECT.");
                 break;
             }
         }
@@ -609,6 +609,13 @@ namespace Nektar
             }
 
               
+            if(m_rhs_magnitude == NekConstants::kNekUnsetDouble)
+            {
+                NekVector<NekDouble> inGlob (nGlobal, pInput, eWrapper);
+                Set_Rhs_Magnitude(inGlob);
+            }
+
+
             // Get vector sizes
             NekDouble eps = 0.0;
             int nNonDir = nGlobal - nDir;
@@ -781,6 +788,7 @@ namespace Nektar
                                                &m_map[0] + nDir);
                     vComm->AllReduce(vExchange, Nektar::LibUtilities::ReduceSum);
                     m_prec_factor = vExchange/eps;
+                    
                 }
             }
             
@@ -836,7 +844,7 @@ namespace Nektar
 
                 }
 
-                // // 1st step: calculate coefficient of Hessenberg matrix()
+                // 1st step: calculate coefficient of Hessenberg matrix()
                 // for(int i=0;i<nd+1;++i)
                 // {
                 //     int iqki = i*nGlobal;
@@ -916,7 +924,6 @@ namespace Nektar
 
                 nswp++;
                 m_totalIterations++;
-
 
                 // If input residual is less than tolerance break the for loop.
                 if (eps*m_prec_factor < m_tolerance * m_tolerance * m_rhs_magnitude)

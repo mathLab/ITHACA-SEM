@@ -143,13 +143,13 @@ namespace Nektar
         };
 
 
-        enum LinSysIteraterType
+        enum IterativeMethodType
         {
             eConjugateGradient,
             eGMRES
         };
 
-        const char* const LinSysIteraterTypeMap[] =
+        const char* const IterativeMethodTypeMap[] =
         {
             "ConjugateGradient",
             "GMRES"

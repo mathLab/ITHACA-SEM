@@ -9,12 +9,8 @@ ENDIF()
 IF( NEKTAR_SOLVER_GMRESTEST )
     SET(GMRESTestSolverSource 
         ./GMRESTestSolver.cpp)
-    SET(GMRESTestSolverTimeIntSource
-        ./GMRESTestSolverTimeInt.cpp)
         
     ADD_SOLVER_EXECUTABLE(GMRESTestSolver SOURCES GMRESTestSolver.cpp)
-    ADD_SOLVER_EXECUTABLE(GMRESTestSolverTimeInt SOURCES GMRESTestSolverTimeInt COMPONENT GMRESTestSolver)
-
     #ADD_NEKTAR_TEST(ImDiffusion_m6)
     #ADD_NEKTAR_TEST(ImDiffusion_m6_time_int)
 ENDIF( NEKTAR_SOLVER_GMRESTEST )

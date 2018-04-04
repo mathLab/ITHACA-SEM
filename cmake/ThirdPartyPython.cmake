@@ -7,13 +7,6 @@
 ########################################################################
 
 IF (NEKTAR_BUILD_PYTHON)
-    # Find Python
-    FIND_PACKAGE(PythonInterp  REQUIRED)
-    FIND_PACKAGE(PythonLibsNew REQUIRED)
-    INCLUDE_DIRECTORIES(SYSTEM ${PYTHON_INCLUDE_DIRS})
-
-    # Include headers from root directory for config file.
-
     # Try to find Boost.NumPy
     FIND_LIBRARY(BOOST_NUMPY_LIB boost_numpy PATHS ${Boost_LIBRARY_DIRS})
 
@@ -31,7 +24,9 @@ IF (NEKTAR_BUILD_PYTHON)
             TMP_DIR ${TPBUILD}/boost-numpy-tmp
             INSTALL_DIR ${TPDIST}
             CONFIGURE_COMMAND ${CMAKE_COMMAND}
-                -G ${CMAKE_GENERATOR} -DCMAKE_INSTALL_PREFIX:PATH=${TPDIST} -DBUILD_EXAMPLES=OFF -DBUILD_TESTS=OFF -DLIBRARY_TYPE=STATIC
+                -G ${CMAKE_GENERATOR} -DCMAKE_INSTALL_PREFIX:PATH=${TPDIST}
+                -DPYTHON_EXECUTABLE=${PYTHON_EXECUTABLE}
+                -DBUILD_EXAMPLES=OFF -DBUILD_TESTS=OFF -DLIBRARY_TYPE=STATIC
                 ${TPSRC}/boost-numpy
             )
 

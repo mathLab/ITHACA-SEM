@@ -154,6 +154,16 @@ endif()
 SET(PYTHON_INCLUDE_PATH "${PYTHON_INCLUDE_DIR}" CACHE INTERNAL
           "Path to where Python.h is found (deprecated)")
 
+# Added setting of PYTHONLIBS_VERSION_STRING from latest FindPythonLibs since
+# this is required by ThirdPartyBoost
+if(PYTHON_INCLUDE_DIR AND EXISTS "${PYTHON_INCLUDE_DIR}/patchlevel.h")
+  file(STRINGS "${PYTHON_INCLUDE_DIR}/patchlevel.h" python_version_str
+       REGEX "^#define[ \t]+PY_VERSION[ \t]+\"[^\"]+\"")
+  string(REGEX REPLACE "^#define[ \t]+PY_VERSION[ \t]+\"([^\"]+)\".*" "\\1"
+                       PYTHONLIBS_VERSION_STRING "${python_version_str}")
+  unset(python_version_str)
+endif()
+
 MARK_AS_ADVANCED(
   PYTHON_LIBRARY
   PYTHON_INCLUDE_DIR

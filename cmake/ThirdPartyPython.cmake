@@ -16,7 +16,8 @@ IF (NEKTAR_BUILD_PYTHON)
         EXTERNALPROJECT_ADD(
             boost-numpy
             PREFIX ${TPSRC}
-            GIT_REPOSITORY http://github.com/ndarray/Boost.NumPy.git
+            URL ${TPURL}/boost-numpy_1.0.1.tar.bz2
+            URL_MD5 de7a432749bee4132abbc607ef21a6bf
             STAMP_DIR ${TPBUILD}/stamp
             DOWNLOAD_DIR ${TPSRC}
             SOURCE_DIR ${TPSRC}/boost-numpy

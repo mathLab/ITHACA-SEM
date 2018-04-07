@@ -140,7 +140,7 @@ StdRegions::Orientation QuadGeom::GetFaceOrientation(const QuadGeom &face1,
             bool doRot, int dir, NekDouble angle, NekDouble tol)
 {
     return GetFaceOrientation(face1.m_verts, face2.m_verts,
-                              dRot, dir, angle, tol);
+                              doRot, dir, angle, tol);
 }
 
 /**

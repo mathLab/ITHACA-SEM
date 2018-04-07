@@ -125,8 +125,7 @@ StdRegions::Orientation TriGeom::GetFaceOrientation(const TriGeom &face1,
 
 StdRegions::Orientation TriGeom::GetFaceOrientation(
               const PointGeomVector &face1, const PointGeomVector &face2,
-              const TriGeom &face2, bool doRot, int dir,
-              NekDouble angle, NekDouble tol)
+              bool doRot, int dir, NekDouble angle, NekDouble tol)
 {
     int i, j, vmap[3] = {-1, -1, -1};
 

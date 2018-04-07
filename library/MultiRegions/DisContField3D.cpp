@@ -784,7 +784,7 @@ using namespace std;
                     }
                 }
 
-                SpatialDomains::CompositeSharedPtr c = it.second->begin()->second;
+                SpatialDomains::Composite c = it.second->begin()->second;
 
                 vector<unsigned int> tmpOrder;
 
@@ -794,22 +794,22 @@ using namespace std;
                 // and allCoord map so that they can be transferred across
                 // processors. We also populate the locFaces set to store a
                 // record of all faces local to this process.
-                for (i = 0; i < c->m_geomVec.size(); ++i)
+                for (i = 0; i < c->size(); ++i)
                 {
                     SpatialDomains::Geometry2DSharedPtr faceGeom =
                         std::dynamic_pointer_cast<
-                            SpatialDomains::Geometry2D>(c->m_geomVec[i]);
+                            SpatialDomains::Geometry2D>((*c)[i]);
                     ASSERTL1(faceGeom, "Unable to cast to shared ptr");
 
                     // Get geometry ID of this face and store in locFaces.
-                    int faceId = c->m_geomVec[i]->GetGlobalID();
+                    int faceId = (*c)[i]->GetGlobalID();
                     locFaces.insert(faceId);
 
                     // In serial, mesh partitioning will not have occurred so
                     // need to fill composite ordering map manually.
                     if (vComm->GetSize() == 1)
                     {
-                        tmpOrder.push_back(c->m_geomVec[i]->GetGlobalID());
+                        tmpOrder.push_back((*c)[i]->GetGlobalID());
                     }
 
                     // Loop over vertices and edges of the face to populate

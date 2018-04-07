@@ -85,6 +85,7 @@ public:
     SPATIAL_DOMAINS_EXPORT void Mult(PointGeom &a, PointGeom &b);
     SPATIAL_DOMAINS_EXPORT void Add(PointGeom &a, PointGeom &b);
     SPATIAL_DOMAINS_EXPORT void Sub(PointGeom &a, PointGeom &b);
+    SPATIAL_DOMAINS_EXPORT void  rotate (PointGeom& a, int dir, NekDouble angle);
     SPATIAL_DOMAINS_EXPORT NekDouble dist(PointGeom &a);
     SPATIAL_DOMAINS_EXPORT NekDouble dot(PointGeom &a);
 

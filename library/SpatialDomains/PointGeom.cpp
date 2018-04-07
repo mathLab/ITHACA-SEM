@@ -128,7 +128,7 @@ void PointGeom::Sub(PointGeom &a, PointGeom &b)
     m_coordim = std::max(a.GetCoordim(), b.GetCoordim());
 }
 
-// _this = a x b
+/// \brief _this = a x b
 void PointGeom::Mult(PointGeom &a, PointGeom &b)
 {
     (*this)(0) = a[1] * b[2] - a[2] * b[1];
@@ -137,14 +137,42 @@ void PointGeom::Mult(PointGeom &a, PointGeom &b)
     m_coordim = 3;
 }
 
-// _output = this.a
+/// _output = rotation of(this.a) by angle 'angle' around axis dir
+void PointGeom::rotate(PointGeom& a, int dir, NekDouble angle)
+{
+    switch(dir)
+    {
+    case 0:
+        {
+            NekDouble yrot = cos(angle)*a.y() - sin(angle)*a.z();
+            NekDouble zrot = sin(angle)*a.y() + cos(angle)*a.z();
+            
+            (*this)(0) = a.x();
+            (*this)(1) = yrot;
+            (*this)(2) = zrot;
+        }
+        break;
+    case 1:
+        {
+            ASSERTL0(false,"Set up y axis rotation");
+        }
+        break;
+    case 2:
+        {
+            ASSERTL0(false,"Set up z axis rotation");
+        }
+        break;
+    }
+}
+    
+///  \brief return distance between this and input a
 NekDouble PointGeom::dist(PointGeom &a)
 {
     return sqrt((x() - a.x()) * (x() - a.x()) + (y() - a.y()) * (y() - a.y()) +
                 (z() - a.z()) * (z() - a.z()));
 }
 
-// _output = this.a
+/// \brief retun the dot product between this and input a 
 NekDouble PointGeom::dot(PointGeom &a)
 {
     return (x() * a.x() + y() * a.y() + z() * a.z());

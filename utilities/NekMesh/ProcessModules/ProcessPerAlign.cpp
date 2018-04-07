@@ -123,7 +123,7 @@ void ProcessPerAlign::Process()
 
     NekDouble vec[3],rotangle;
 
-    if (tmp2.size() == 1)
+    if (tmp2.size() > 1)
     {
         // set up for syntax -m peralign:dir=“x":rot="PI/11":surf1=3:surf2=4:tol=1e-6 
         rotalign = true;

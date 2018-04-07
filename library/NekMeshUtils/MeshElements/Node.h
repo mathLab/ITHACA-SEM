@@ -318,6 +318,38 @@ public:
         SetCADCurve(cu, t);
     }
 
+    void Rotate(string dir, NekDouble angle)
+    {
+        if(dir == "x")
+        {
+            NekDouble yrot = cos(angle)*m_y - sin(angle)*m_z;
+            NekDouble zrot = sin(angle)*m_y + cos(angle)*m_z;
+            
+            m_y = yrot;
+            m_z = zrot; 
+        }
+        else if (dir == "y")
+        {
+            NekDouble zrot = cos(angle)*m_z - sin(angle)*m_x;
+            NekDouble xrot = sin(angle)*m_z + cos(angle)*m_x;
+            
+            m_z = zrot;
+            m_x = xrot; 
+                                }
+        else if (dir == "z")
+        {
+            NekDouble xrot = cos(angle)*m_x - sin(angle)*m_y;
+            NekDouble yrot = sin(angle)*m_x + cos(angle)*m_y;
+            
+            m_x = xrot;
+            m_y = yrot; 
+        }
+        else
+        {
+            ASSERTL0(false,"Unrecognised rotational direction: " + dir);
+        }
+    }
+
     NekDouble Angle(Array<OneD, NekDouble> locA, Array<OneD, NekDouble> locB,
                     Array<OneD, NekDouble> N)
     {

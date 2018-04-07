@@ -125,14 +125,20 @@ void ProcessPerAlign::Process()
 
     if (tmp2.size() == 1)
     {
+        // set up for syntax -m peralign:dir=“x":rot="PI/11":surf1=3:surf2=4:tol=1e-6 
         rotalign = true;
         // Evaluate expression since may be give as function of PI
         LibUtilities::AnalyticExpressionEvaluator strEval;
         int ExprId = strEval.DefineFunction(" ", tmp2[0]);
         rotangle = strEval.Evaluate(ExprId);
 
-        ASSERTL0(tmp1.size() == 1,"rot must also be accompanied with a dir=\"x\","
-                 "dir=\"y\" or dir=\"z\" option to specify axes of rotation");
+        // negate angle since we want to rotate second composite back
+        // to this one.
+        rotangle *= -1.0; 
+        
+        ASSERTL0(tmp1.size() == 1,"rot must also be accompanied "
+                 "with a dir=\"x\",dir=\"y\" or dir=\"z\" option "
+                 "to specify axes of rotation");
     }
     else if (tmp1.size() == 1)
     {
@@ -157,9 +163,9 @@ void ProcessPerAlign::Process()
                 return;
             }
 
-            vec[0] = dir == "x" ? 1.0 : 0.0;
-            vec[1] = dir == "y" ? 1.0 : 0.0;
-            vec[2] = dir == "z" ? 1.0 : 0.0;
+            vec[0] = (dir == "x") ? 1.0 : 0.0;
+            vec[1] = (dir == "y") ? 1.0 : 0.0;
+            vec[2] = (dir == "z") ? 1.0 : 0.0;
         }
     }
     else if (tmp1.size() == 3)
@@ -220,7 +226,7 @@ void ProcessPerAlign::Process()
 
         if(rotalign) // rotate centroid 
         {
-            RotateNode(dir,rotangle,centroid);
+            centroid.Rotate(dir,rotangle);
         }
 
         centroidMap[i] = centroid;
@@ -302,7 +308,7 @@ void ProcessPerAlign::Process()
                             if(rotalign) // rotate n2 
                             {
                                 Node n2tmp = *n2; 
-                                RotateNode(dir,rotangle,n2tmp);
+                                n2tmp.Rotate(dir,rotangle);
                                 Node dn = n2tmp - *n1;
                                 NekDouble dnabs = sqrt(dn.abs2());
                                 match = (dnabs< tol);
@@ -390,26 +396,5 @@ void ProcessPerAlign::Process()
     }
 }
 
-void ProcessPerAlign::RotateNode(string &dir, NekDouble rotangle,
-                                 NekMeshUtils::Node &node)
-{
-    if(dir == "x")
-    {
-        NekDouble angle = -1*rotangle;
-        NekDouble yrot = cos(angle)*node.m_y - sin(angle)*node.m_z;
-        NekDouble zrot = sin(angle)*node.m_y + cos(angle)*node.m_z;
-                                    
-        node.m_y = yrot;
-        node.m_z = zrot; 
-    }
-    else if (dir == "y")
-    {
-        ASSERTL0(false,"Set up y axis rotation");
-                                }
-    else if (dir == "z")
-    {
-        ASSERTL0(false,"Set up z axis rotation");
-    }
-}
 }
 }

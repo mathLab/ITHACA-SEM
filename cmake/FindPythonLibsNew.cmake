@@ -145,7 +145,12 @@ else()
     # Probably this needs to be more involved. It would be nice if the config
     # information the python interpreter itself gave us were more complete.
     find_library(PYTHON_LIBRARY
-        NAMES "python${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR}"
+        NAMES
+          python${PYTHON_VERSION_MAJOR}${PYTHON_VERSION_MINOR}
+          python${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR}mu
+          python${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR}m
+          python${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR}u
+          python${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR}
         PATHS ${_PYTHON_LIBS_SEARCH}
         NO_SYSTEM_ENVIRONMENT_PATH)
 endif()
@@ -184,7 +189,6 @@ SET(PYTHON_DEBUG_LIBRARIES "${PYTHON_DEBUG_LIBRARY}")
 find_package_message(PYTHON
     "Found PythonLibs: ${PYTHON_LIBRARY}"
     "${PYTHON_EXECUTABLE}${PYTHON_VERSION}")
-
 
 # PYTHON_ADD_MODULE(<name> src1 src2 ... srcN) is used to build modules for python.
 FUNCTION(PYTHON_ADD_MODULE _NAME )

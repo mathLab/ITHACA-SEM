@@ -56,6 +56,7 @@ IF (NEKTAR_BUILD_PYTHON)
         STRING(TOUPPER ${BPLIB} BPLIB_UPPER)
 
         IF (Boost_${BPLIB_UPPER}_FOUND)
+            SET(Boost_PYTHON_LIBRARY ${Boost_${BPLIB_UPPER}_LIBRARY})
             break()
         ENDIF()
     ENDFOREACH()

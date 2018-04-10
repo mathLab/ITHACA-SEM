@@ -67,6 +67,10 @@ namespace Nektar
             eNotFilled,     ///< Geometric information has not been generated.
             ePtsFilled      ///< Geometric information has been generated.
         };
+
+        /**
+         * @brief Principle direction for MMF
+         */
         enum GeomMMF
         {
             eTangentX,          ///< X coordinate direction.
@@ -74,12 +78,15 @@ namespace Nektar
             eTangentXY,         ///< XY direction.
             eTangentZ,          ///< Z coordinate direction.
             eTangentCircular,   ///< Circular around the centre of domain.
-            eTangentIrregular,   ///< Circular around the centre of domain.
-            eTangentNonconvex,   ///< Circular around the centre of domain.
+            eTangentIrregular,  ///< Circular around the centre of domain.
+            eTangentNonconvex,  ///< Circular around the centre of domain.
             eLOCAL,             ///< No Principal direction.
         };
-        
-        /// Session file names associated with tangent principle directions.
+
+        /**
+         * @brief Session file names associated with tangent principle
+         * directions.
+         */
         const char* const GeomMMFMap[] =
         {
             "TangentX",
@@ -92,8 +99,6 @@ namespace Nektar
             "LOCAL",
         };
 
-
-        
     }; // end of namespace
 }; // end of namespace
 

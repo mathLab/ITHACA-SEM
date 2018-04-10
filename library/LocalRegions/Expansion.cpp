@@ -306,36 +306,45 @@ namespace Nektar
             }
         }
 
-        void Expansion::ComputeGmatcdotMF(const Array<TwoD, const NekDouble> &df,
-                                            const Array<OneD, const NekDouble> &direction,
-                                            Array<OneD, Array<OneD, NekDouble> > &dfdir)
+        void Expansion::ComputeGmatcdotMF(
+                const Array<TwoD, const NekDouble> &df,
+                const Array<OneD, const NekDouble> &direction,
+                Array<OneD, Array<OneD, NekDouble> > &dfdir)
         {
             int shapedim = dfdir.num_elements();
             int coordim = GetCoordim();
             int nqtot = direction.num_elements()/coordim;
 
-            for(int j=0; j<shapedim; j++)
+            for(int j = 0; j < shapedim; j++)
             {
                 dfdir[j] = Array<OneD, NekDouble>(nqtot,0.0);
-                for (int k=0; k<coordim; k++)
+                for (int k = 0; k < coordim; k++)
                 {
                     if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
                     {
-                        Vmath::Vvtvp(nqtot, &df[shapedim*k+j][0], 1, &direction[k*nqtot], 1, &dfdir[j][0], 1, &dfdir[j][0], 1);
+                        Vmath::Vvtvp(nqtot,
+                                     &df[shapedim*k+j][0], 1,
+                                     &direction[k*nqtot],  1,
+                                     &dfdir[j][0],         1,
+                                     &dfdir[j][0],         1);
                     }
-
                     else
                     {
-                        Vmath::Svtvp(nqtot, df[shapedim*k+j][0], &direction[k*nqtot], 1, &dfdir[j][0], 1, &dfdir[j][0], 1);
+                        Vmath::Svtvp(nqtot,
+                                     df[shapedim*k+j][0],
+                                     &direction[k*nqtot],  1,
+                                     &dfdir[j][0],         1,
+                                     &dfdir[j][0],         1);
                     }
                 }
             }
         }
 
         // Get Moving frames
-        Array<OneD, NekDouble> Expansion::v_GetMF(const int dir,
-                                                  const int shapedim,
-                                                  const StdRegions::VarCoeffMap   &varcoeffs)
+        Array<OneD, NekDouble> Expansion::v_GetMF(
+                const int dir,
+                const int shapedim,
+                const StdRegions::VarCoeffMap   &varcoeffs)
         {
             int coordim = GetCoordim();
 
@@ -348,23 +357,23 @@ namespace Nektar
                     nquad0  = m_base[0]->GetNumPoints();
                     nquad1  = m_base[1]->GetNumPoints();
                     nqtot   = nquad0*nquad1;
-                }
                     break;
-
+                }
                 case 3:
                 {
                     nquad0 = m_base[0]->GetNumPoints();
                     nquad1 = m_base[1]->GetNumPoints();
                     nquad2 = m_base[2]->GetNumPoints();
                     nqtot   = nquad0 * nquad1 * nquad2;
-                }
                     break;
-
+                }
                 default:
                     break;
             }
 
-            StdRegions::VarCoeffType MMFCoeffs[15] = {StdRegions::eVarCoeffMF1x,
+            StdRegions::VarCoeffType MMFCoeffs[15] =
+            {
+                StdRegions::eVarCoeffMF1x,
                 StdRegions::eVarCoeffMF1y,
                 StdRegions::eVarCoeffMF1z,
                 StdRegions::eVarCoeffMF1Div,
@@ -378,14 +387,16 @@ namespace Nektar
                 StdRegions::eVarCoeffMF3y,
                 StdRegions::eVarCoeffMF3z,
                 StdRegions::eVarCoeffMF3Div,
-                StdRegions::eVarCoeffMF3Mag};
+                StdRegions::eVarCoeffMF3Mag
+            };
 
             Array<OneD, NekDouble> MF(coordim*nqtot);
             Array<OneD, NekDouble> tmp(nqtot);
-            for (int k=0; k<coordim; k++)
+            for (int k = 0; k < coordim; k++)
             {
-                StdRegions::VarCoeffMap::const_iterator MFdir = varcoeffs.find(MMFCoeffs[5*dir+k]);
-                tmp =  MFdir->second;
+                StdRegions::VarCoeffMap::const_iterator MFdir =
+                        varcoeffs.find(MMFCoeffs[5*dir+k]);
+                tmp = MFdir->second;
 
                 Vmath::Vcopy(nqtot, &tmp[0], 1, &MF[k*nqtot], 1);
             }
@@ -394,12 +405,15 @@ namespace Nektar
         }
 
         // Get magnitude of MF
-        Array<OneD, NekDouble> Expansion::v_GetMFDiv(const int dir,
-                                                     const StdRegions::VarCoeffMap   &varcoeffs)
+        Array<OneD, NekDouble> Expansion::v_GetMFDiv(
+                const int dir,
+                const StdRegions::VarCoeffMap   &varcoeffs)
         {
             int indxDiv = 3;
 
-            StdRegions::VarCoeffType MMFCoeffs[15] = {StdRegions::eVarCoeffMF1x,
+            StdRegions::VarCoeffType MMFCoeffs[15] =
+            {
+                StdRegions::eVarCoeffMF1x,
                 StdRegions::eVarCoeffMF1y,
                 StdRegions::eVarCoeffMF1z,
                 StdRegions::eVarCoeffMF1Div,
@@ -413,21 +427,26 @@ namespace Nektar
                 StdRegions::eVarCoeffMF3y,
                 StdRegions::eVarCoeffMF3z,
                 StdRegions::eVarCoeffMF3Div,
-                StdRegions::eVarCoeffMF3Mag};
+                StdRegions::eVarCoeffMF3Mag
+            };
 
-            StdRegions::VarCoeffMap::const_iterator MFdir = varcoeffs.find(MMFCoeffs[5*dir+indxDiv]);
+            StdRegions::VarCoeffMap::const_iterator MFdir =
+                    varcoeffs.find(MMFCoeffs[5*dir+indxDiv]);
             Array<OneD, NekDouble> MFDiv = MFdir->second;
 
             return MFDiv;
         }
 
         // Get magnitude of MF
-        Array<OneD, NekDouble> Expansion::v_GetMFMag(const int dir,
-                                                     const StdRegions::VarCoeffMap   &varcoeffs)
+        Array<OneD, NekDouble> Expansion::v_GetMFMag(
+                const int dir,
+                const StdRegions::VarCoeffMap   &varcoeffs)
         {
             int indxMag = 4;
 
-            StdRegions::VarCoeffType MMFCoeffs[15] = {StdRegions::eVarCoeffMF1x,
+            StdRegions::VarCoeffType MMFCoeffs[15] =
+            {
+                StdRegions::eVarCoeffMF1x,
                 StdRegions::eVarCoeffMF1y,
                 StdRegions::eVarCoeffMF1z,
                 StdRegions::eVarCoeffMF1Div,
@@ -441,7 +460,8 @@ namespace Nektar
                 StdRegions::eVarCoeffMF3y,
                 StdRegions::eVarCoeffMF3z,
                 StdRegions::eVarCoeffMF3Div,
-                StdRegions::eVarCoeffMF3Mag};
+                StdRegions::eVarCoeffMF3Mag
+            };
 
             StdRegions::VarCoeffMap::const_iterator MFdir = varcoeffs.find(MMFCoeffs[5*dir+indxMag]);
             Array<OneD, NekDouble> MFmag = MFdir->second;

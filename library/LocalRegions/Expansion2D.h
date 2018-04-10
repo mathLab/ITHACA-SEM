@@ -136,19 +136,19 @@ namespace Nektar
             Expansion3DWeakPtr                      m_elementRight;
             int                                     m_elementFaceLeft;
             int                                     m_elementFaceRight;
-            
-            //change
-            
-            
-            LOCAL_REGIONS_EXPORT virtual Array<OneD, NekDouble> v_GetMF(const int dir,
-                                                                        const int shapedim,
-                                                                        const StdRegions::VarCoeffMap   &varcoeffs);
-            
-            LOCAL_REGIONS_EXPORT virtual Array<OneD, NekDouble> v_GetMFDiv(const int dir,
-                                                                           const StdRegions::VarCoeffMap   &varcoeffs);
-            
-            LOCAL_REGIONS_EXPORT virtual Array<OneD, NekDouble> v_GetMFMag(const int dir,
-                                                                           const StdRegions::VarCoeffMap   &varcoeffs);
+
+            LOCAL_REGIONS_EXPORT virtual Array<OneD, NekDouble> v_GetMF(
+                const int dir,
+                const int shapedim,
+                const StdRegions::VarCoeffMap   &varcoeffs);
+
+            LOCAL_REGIONS_EXPORT virtual Array<OneD, NekDouble> v_GetMFDiv(
+                const int dir,
+                const StdRegions::VarCoeffMap   &varcoeffs);
+
+            LOCAL_REGIONS_EXPORT virtual Array<OneD, NekDouble> v_GetMFMag(
+                const int dir,
+                const StdRegions::VarCoeffMap   &varcoeffs);
 
             virtual DNekMatSharedPtr v_GenMatrix(
                 const StdRegions::StdMatrixKey &mkey);
@@ -192,9 +192,14 @@ namespace Nektar
                 ExpansionSharedPtr &EdgeExp,
                 const Array<OneD, const NekDouble>  &varcoeff,
                 Array<OneD,NekDouble> &outarray);
-            
-            Array<OneD, NekDouble> v_GetnEdgecdotMF(const int dir, const int edge, ExpansionSharedPtr &EdgeExp_e, const Array<OneD, const Array<OneD, NekDouble> > &normals, const StdRegions::VarCoeffMap   &varcoeffs);
-            
+
+            Array<OneD, NekDouble> v_GetnEdgecdotMF(
+                const int dir,
+                const int edge,
+                ExpansionSharedPtr &EdgeExp_e, 
+                const Array<OneD, const Array<OneD, NekDouble> > &normals,
+                const StdRegions::VarCoeffMap   &varcoeffs);
+
             LOCAL_REGIONS_EXPORT void ReOrientQuadEdgePhysMap(
                 const StdRegions::Orientation    orient,
                 const int                        nq0,

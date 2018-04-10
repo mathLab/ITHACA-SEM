@@ -57,11 +57,12 @@ namespace Nektar
         {
             ExpansionSharedPtr FaceExp = GetFaceExp(face);
             int i,j,n;
-            int nquad_f = FaceExp->GetNumPoints(0)*FaceExp->GetNumPoints(1); 
+            int nquad_f = FaceExp->GetNumPoints(0)*FaceExp->GetNumPoints(1);
             int order_f = FaceExp->GetNcoeffs();
             int coordim = GetCoordim();
             int ncoeffs = GetNcoeffs();
-            bool mmf    = (varcoeffs.find(StdRegions::eVarCoeffMF1x) != varcoeffs.end());
+            bool mmf    = (varcoeffs.find(StdRegions::eVarCoeffMF1x)
+                            != varcoeffs.end());
 
             Array<OneD, NekDouble> inval   (nquad_f);
             Array<OneD, NekDouble> outcoeff(order_f);
@@ -71,15 +72,15 @@ namespace Nektar
                 = GetFaceNormal(face);
 
             DNekScalMat &invMass = *GetLocMatrix(StdRegions::eInvMass);
-            
+
             DNekVec Coeffs(ncoeffs,outarray,eWrapper);
             DNekVec Tmpcoeff(ncoeffs,tmpcoeff,eWrapper);
 
             StdRegions::IndexMapKey ikey(
-                StdRegions::eFaceToElement, DetShapeType(), 
+                StdRegions::eFaceToElement, DetShapeType(),
                 GetBasisNumModes(0), GetBasisNumModes(1), GetBasisNumModes(2),
                 face, GetForient(face));
-            StdRegions::IndexMapValuesSharedPtr map = 
+            StdRegions::IndexMapValuesSharedPtr map =
                 StdExpansion::GetIndexMap(ikey);
 
             StdRegions::MatrixType DerivType[3] = {StdRegions::eWeakDeriv0,
@@ -123,20 +124,23 @@ namespace Nektar
                 if (mmf) {
                     StdRegions::VarCoeffMap Weight;
                     Weight[StdRegions::eVarCoeffMass] = v_GetMFMag(n,varcoeffs);
-                    
-                    MatrixKey invMasskey( StdRegions::eInvMass, DetShapeType(), *this,
-                                         StdRegions::NullConstFactorMap, Weight);
-                    
+
+                    MatrixKey invMasskey( StdRegions::eInvMass,
+                                          DetShapeType(), *this,
+                                          StdRegions::NullConstFactorMap,
+                                          Weight);
+
                     invMass = *GetLocMatrix(invMasskey);
-                    
-                    Array<OneD, NekDouble> ncdotMF_f = v_GetnFacecdotMF(n, face, FaceExp, normals, varcoeffs);
+
+                    Array<OneD, NekDouble> ncdotMF_f =
+                        v_GetnFacecdotMF(n, face, FaceExp, normals, varcoeffs);
+
                     Vmath::Vmul(nquad_f, ncdotMF_f, 1, facePhys, 1, inval, 1);
                 }
                 else {
                     Vmath::Vmul(nquad_f, normals[n], 1, facePhys, 1, inval, 1);
                 }
 
-            
                 NekDouble scale = invMass.Scale();
                 const NekDouble *data = invMass.GetRawPtr();
 
@@ -171,20 +175,24 @@ namespace Nektar
                 if (mmf)
                 {
                     StdRegions::VarCoeffMap VarCoeffDirDeriv;
-                    VarCoeffDirDeriv[StdRegions::eVarCoeffMF] = v_GetMF(n,coordim,varcoeffs);
-                    VarCoeffDirDeriv[StdRegions::eVarCoeffMFDiv] = v_GetMFDiv(n,varcoeffs);
-                    
-                    MatrixKey Dmatkey(StdRegions::eWeakDirectionalDeriv, DetShapeType(), *this,
-                                      StdRegions::NullConstFactorMap, VarCoeffDirDeriv);
-                    
+                    VarCoeffDirDeriv[StdRegions::eVarCoeffMF]
+                            = v_GetMF(n,coordim,varcoeffs);
+                    VarCoeffDirDeriv[StdRegions::eVarCoeffMFDiv]
+                            = v_GetMFDiv(n,varcoeffs);
+
+                    MatrixKey Dmatkey(StdRegions::eWeakDirectionalDeriv,
+                                      DetShapeType(), *this,
+                                      StdRegions::NullConstFactorMap,
+                                      VarCoeffDirDeriv);
+
                     DNekScalMat &Dmat = *GetLocMatrix(Dmatkey);
-                    
+
                     Coeffs = Coeffs  + Dmat*Tmpcoeff;
                 }
-                else 
-                { 
+                else
+                {
                     DNekScalMat &Dmat = *GetLocMatrix(DerivType[n]);
-                    Coeffs = Coeffs  + Dmat*Tmpcoeff;       
+                    Coeffs = Coeffs  + Dmat*Tmpcoeff;
                 }
 
                 /*
@@ -203,33 +211,35 @@ namespace Nektar
                 */
             }
         }
-        
+
+
         void Expansion3D::GetPhysFaceVarCoeffsFromElement(
-                                                          const int                           face,
-                                                          ExpansionSharedPtr                 &FaceExp,
-                                                          const Array<OneD, const NekDouble> &varcoeff,
-                                                          Array<OneD,NekDouble>              &outarray)
+            const int                           face,
+            ExpansionSharedPtr                 &FaceExp,
+            const Array<OneD, const NekDouble> &varcoeff,
+                  Array<OneD, NekDouble>       &outarray)
         {
             Array<OneD, NekDouble> tmp(GetNcoeffs());
             Array<OneD, NekDouble> facetmp(FaceExp->GetNcoeffs());
-            
+
             // FwdTrans varcoeffs
             FwdTrans(varcoeff, tmp);
-            
+
             // Map to edge
-            Array<OneD,unsigned int>    emap;
+            Array<OneD, unsigned int>    emap;
             Array<OneD, int>            sign;
-            
-            GetFaceToElementMap(face,GetForient(face),emap,sign);
-            
+
+            GetFaceToElementMap(face, GetForient(face), emap, sign);
+
             for (unsigned int i = 0; i < FaceExp->GetNcoeffs(); ++i)
             {
                 facetmp[i] = tmp[emap[i]];
             }
-            
+
             // BwdTrans
             FaceExp->BwdTrans(facetmp, outarray);
         }
+
 
         /**
          * Computes the C matrix entries due to the presence of the identity
@@ -277,27 +287,32 @@ namespace Nektar
 //                    GetPhysEdgeVarCoeffsFromElement(e,EdgeExp[e],x->second,varcoeff_work);
 //                    Vmath::Vmul(nquad_e,varcoeff_work,1,EdgeExp[e]->GetPhys(),1,EdgeExp[e]->UpdatePhys(),1);
 //                }
-                // MMFCHANGES in AddNormTraceInt
                 StdRegions::VarCoeffMap::const_iterator x;
-                if ((x = varcoeffs.find(StdRegions::eVarCoeffMF1x)) != varcoeffs.end())
+                if ((x = varcoeffs.find(StdRegions::eVarCoeffMF1x))
+                        != varcoeffs.end())
                 {
-                    Array<OneD, NekDouble> ncdotMF_f = v_GetnFacecdotMF(dir, f, FaceExp[f], normals, varcoeffs);
-                    Vmath::Vmul(nquad_f, ncdotMF_f, 1, facePhys, 1, facePhys, 1);
+                    Array<OneD, NekDouble> ncdotMF_f =
+                            v_GetnFacecdotMF(dir, f, FaceExp[f], normals,
+                                             varcoeffs);
+
+                    Vmath::Vmul(nquad_f, ncdotMF_f, 1,
+                                         facePhys,  1,
+                                         facePhys,  1);
                 }
-                
                 else
                 {
-
-
-                Vmath::Vmul(nquad_f, normals[dir], 1, facePhys, 1, facePhys, 1);
+                    Vmath::Vmul(nquad_f, normals[dir], 1,
+                                         facePhys,     1,
+                                         facePhys,     1);
                 }
-                
+
                 if (m_negatedNormals[f])
                 {
                     Vmath::Neg(nquad_f, facePhys, 1);
                 }
 
-                AddFaceBoundaryInt(f, FaceExp[f], facePhys, outarray, varcoeffs);
+                AddFaceBoundaryInt(f, FaceExp[f], facePhys, outarray,
+                                   varcoeffs);`
             }
         }
 
@@ -496,41 +511,46 @@ namespace Nektar
                     //                                       StdRegions::eVarCoeffD11,
                     //                                       StdRegions::eVarCoeffD22};
                     StdRegions::VarCoeffMap::const_iterator x;
-                    const StdRegions::VarCoeffMap &varcoeffs = mkey.GetVarCoeffs();
-                    
+                    const StdRegions::VarCoeffMap &varcoeffs =
+                            mkey.GetVarCoeffs();
 
-                    for(i=0;  i < coordim; ++i)
+                    for(i = 0; i < coordim; ++i)
                     {
-                        // MMFCHANGES in eHybridDGHelmholtz
-                        if ((x = varcoeffs.find(StdRegions::eVarCoeffMF1x)) != varcoeffs.end())
+                        if ((x = varcoeffs.find(StdRegions::eVarCoeffMF1x))
+                                != varcoeffs.end())
                         {
                             StdRegions::VarCoeffMap VarCoeffDirDeriv;
-                            VarCoeffDirDeriv[StdRegions::eVarCoeffMF] = v_GetMF(i,coordim,varcoeffs);
-                            VarCoeffDirDeriv[StdRegions::eVarCoeffMFDiv] = v_GetMFDiv(i,varcoeffs);
-                            
-                            MatrixKey Dmatkey(StdRegions::eWeakDirectionalDeriv, DetShapeType(), *this,
-                                              StdRegions::NullConstFactorMap, VarCoeffDirDeriv);
-                            
+                            VarCoeffDirDeriv[StdRegions::eVarCoeffMF] =
+                                    v_GetMF(i,coordim,varcoeffs);
+                            VarCoeffDirDeriv[StdRegions::eVarCoeffMFDiv] =
+                                    v_GetMFDiv(i,varcoeffs);
+
+                            MatrixKey Dmatkey(StdRegions::eWeakDirectionalDeriv,
+                                              DetShapeType(), *this,
+                                              StdRegions::NullConstFactorMap,
+                                              VarCoeffDirDeriv);
+
                             DNekScalMat &Dmat = *GetLocMatrix(Dmatkey);
-                            
+
                             StdRegions::VarCoeffMap Weight;
-                            Weight[StdRegions::eVarCoeffMass] = v_GetMFMag(i,mkey.GetVarCoeffs());
-                            
-                            MatrixKey invMasskey(StdRegions::eInvMass, DetShapeType(), *this,
-                                                 StdRegions::NullConstFactorMap, Weight);
-                            
+                            Weight[StdRegions::eVarCoeffMass] =
+                                    v_GetMFMag(i,mkey.GetVarCoeffs());
+
+                            MatrixKey invMasskey(StdRegions::eInvMass,
+                                                 DetShapeType(), *this,
+                                                 StdRegions::NullConstFactorMap,
+                                                 Weight);
+
                             DNekScalMat &invMass = *GetLocMatrix(invMasskey);
-                            
+
                             Mat = Mat + Dmat*invMass*Transpose(Dmat);
-                            
                         }
-                        
                         else
                         {
-                        DNekScalMat &Dmat = *GetLocMatrix(DerivType[i]);
-                        Mat = Mat + Dmat*invMass*Transpose(Dmat);
+                            DNekScalMat &Dmat = *GetLocMatrix(DerivType[i]);
+                            Mat = Mat + Dmat*invMass*Transpose(Dmat);
                         }
-                        
+
                         /*
                         if(mkey.HasVarCoeff(Coeffs[i]))
                         {
@@ -756,38 +776,44 @@ namespace Nektar
                         break;
                     }
                     
-                    // MMFCHANGES in eHybridDGLamToQk
                     //DNekScalMatSharedPtr Dmat;
                     //DNekScalMatSharedPtr &invMass;
                     StdRegions::VarCoeffMap::const_iterator x;
-                    const StdRegions::VarCoeffMap &varcoeffs = mkey.GetVarCoeffs();
-                    if ((x = varcoeffs.find(StdRegions::eVarCoeffMF1x)) != varcoeffs.end())
+                    const StdRegions::VarCoeffMap &varcoeffs =
+                            mkey.GetVarCoeffs();
+                    if ((x = varcoeffs.find(StdRegions::eVarCoeffMF1x)) !=
+                            varcoeffs.end())
                     {
                         StdRegions::VarCoeffMap VarCoeffDirDeriv;
-                        VarCoeffDirDeriv[StdRegions::eVarCoeffMF] = v_GetMF(dir,coordim,varcoeffs);
-                        VarCoeffDirDeriv[StdRegions::eVarCoeffMFDiv] = v_GetMFDiv(dir,varcoeffs);
-                        
-                        MatrixKey Dmatkey(StdRegions::eWeakDirectionalDeriv, DetShapeType(), *this,
-                                          StdRegions::NullConstFactorMap, VarCoeffDirDeriv);
-                        
+                        VarCoeffDirDeriv[StdRegions::eVarCoeffMF] =
+                                v_GetMF(dir,coordim,varcoeffs);
+                        VarCoeffDirDeriv[StdRegions::eVarCoeffMFDiv] =
+                                v_GetMFDiv(dir,varcoeffs);
+
+                        MatrixKey Dmatkey(StdRegions::eWeakDirectionalDeriv,
+                                          DetShapeType(), *this,
+                                          StdRegions::NullConstFactorMap,
+                                          VarCoeffDirDeriv);
+
                         Dmat = GetLocMatrix(Dmatkey);
-                        
+
                         StdRegions::VarCoeffMap Weight;
-                        Weight[StdRegions::eVarCoeffMass] = v_GetMFMag(dir,mkey.GetVarCoeffs());
-                        
-                        MatrixKey invMasskey(StdRegions::eInvMass, DetShapeType(), *this,
-                                             StdRegions::NullConstFactorMap, Weight);
-                        
+                        Weight[StdRegions::eVarCoeffMass] =
+                                v_GetMFMag(dir,mkey.GetVarCoeffs());
+
+                        MatrixKey invMasskey(StdRegions::eInvMass,
+                                             DetShapeType(), *this,
+                                             StdRegions::NullConstFactorMap,
+                                             Weight);
+
                         invMass = *GetLocMatrix(invMasskey);
                     }
-                    
                     else
                     {
                         // Inverse mass matrix
                         invMass = *GetLocMatrix(StdRegions::eInvMass);
                     }
 
-                
                     // for each degree of freedom of the lambda space
                     // calculate Qmat entry 
                     // Generate Lambda to Q_lambda matrix 
@@ -860,7 +886,6 @@ namespace Nektar
                     LamToQ[2] = GetLocMatrix(LamToQ2key);
 
                     // Set up edge segment expansions from local geom info
-                    StdRegions::VarCoeffMap::const_iterator x;
                     const StdRegions::VarCoeffMap &varcoeffs = mkey.GetVarCoeffs();
                     for(i = 0; i < nfaces; ++i)
                     {
@@ -920,21 +945,25 @@ namespace Nektar
                                 Vmath::Vmul(nquad_e,varcoeff_work,1,EdgeExp[e]->GetPhys(),1,EdgeExp[e]->UpdatePhys(),1);
                             }
                             */
-                            
-                            //MMFCHANGES in eHybridDGHelmBndLam (I)
-                            if ((x = varcoeffs.find(StdRegions::eVarCoeffMF1x)) != varcoeffs.end())
+
+                            if (varcoeffs.find(StdRegions::eVarCoeffMF1x)
+                                    != varcoeffs.end())
                             {
-                                Array<OneD, NekDouble> ncdotMF = v_GetnFacecdotMF(0, f, FaceExp[f], normals, varcoeffs);
-                                //Vmath::Vvtvp(nquad_f, ncdotMF, 1, facePhys, 1, work, 1, work, 1);
-                                Vmath::Vmul(nquad_f, ncdotMF, 1, facePhys, 1, work, 1);
+                                Array<OneD, NekDouble> ncdotMF =
+                                        v_GetnFacecdotMF(0, f, FaceExp[f],
+                                                         normals, varcoeffs);
+
+                                Vmath::Vmul(nquad_f, ncdotMF,  1,
+                                                     facePhys, 1,
+                                                     work,     1);
                             }
-                            
                             else
                             {
-          
-                            Vmath::Vmul(nquad_f, normals[0], 1, facePhys, 1, work, 1);
+                                Vmath::Vmul(nquad_f, normals[0], 1,
+                                                     facePhys,   1,
+                                                     work,       1);
                             }
-                            
+
                             // Q1 * n1 (BQ_1 terms)
                             for(j = 0; j < order_f; ++j)
                             {
@@ -953,19 +982,26 @@ namespace Nektar
                             }
                             */
 
-                            //MMFCHANGES in eHybridDGHelmBndLam (II)
-                            if ((x = varcoeffs.find(StdRegions::eVarCoeffMF1x)) != varcoeffs.end())
+                            if ((varcoeffs.find(StdRegions::eVarCoeffMF1x)) !=
+                                    varcoeffs.end())
                             {
-                                Array<OneD, NekDouble> ncdotMF = v_GetnFacecdotMF(1, f, FaceExp[f], normals, varcoeffs);
-                                Vmath::Vvtvp(nquad_f, ncdotMF, 1, facePhys, 1, work, 1, work, 1);
+                                Array<OneD, NekDouble> ncdotMF =
+                                        v_GetnFacecdotMF(1, f, FaceExp[f],
+                                                         normals, varcoeffs);
+
+                                Vmath::Vvtvp(nquad_f, ncdotMF,  1,
+                                                      facePhys, 1,
+                                                      work,     1,
+                                                      work,     1);
                             }
-                            
                             else
                             {
-                                
-                            Vmath::Vvtvp(nquad_f, normals[1], 1, facePhys, 1, work, 1, work, 1);
+                                Vmath::Vvtvp(nquad_f, normals[1], 1,
+                                                      facePhys,   1,
+                                                      work,       1,
+                                                      work,       1);
                             }
-                            
+
                             // Q2 * n2 (BQ_2 terms)
                             for(j = 0; j < order_f; ++j)
                             {
@@ -984,18 +1020,24 @@ namespace Nektar
                             }
                             */
 
-                            //change
-                            //MMFCHANGES in eHybridDGHelmBndLam (III)
-                            if ((x = varcoeffs.find(StdRegions::eVarCoeffMF1x)) != varcoeffs.end())
+                            if (varcoeffs.find(StdRegions::eVarCoeffMF1x) !=
+                                    varcoeffs.end())
                             {
-                                Array<OneD, NekDouble> ncdotMF = v_GetnFacecdotMF(2, f, FaceExp[f], normals, varcoeffs);
-                                Vmath::Vvtvp(nquad_f, ncdotMF, 1, facePhys, 1, work, 1, work, 1);
+                                Array<OneD, NekDouble> ncdotMF =
+                                        v_GetnFacecdotMF(2, f, FaceExp[f],
+                                                         normals, varcoeffs);
+
+                                Vmath::Vvtvp(nquad_f, ncdotMF,  1,
+                                                      facePhys, 1,
+                                                      work,     1,
+                                                      work,     1);
                             }
-                            
                             else
                             {
-                            Vmath::Vvtvp(nquad_f, normals[2], 1, facePhys, 1,
-                                                  work,       1, work,     1);
+                                Vmath::Vvtvp(nquad_f, normals[2], 1,
+                                                      facePhys,   1,
+                                                      work,       1,
+                                                      work,       1);
                             }
 
                             if (m_negatedNormals[f])
@@ -2474,21 +2516,24 @@ namespace Nektar
         {
             NormVectorIProductWRTBase(Fvec[0], Fvec[1], Fvec[2], outarray);
         }
-        
+
+
         // Compute edgenormal \cdot vector
-        Array<OneD, NekDouble> Expansion3D::v_GetnFacecdotMF(const int dir,
-                 const int face,                                                          ExpansionSharedPtr &FaceExp_f,
-                     const Array<OneD, const Array<OneD, NekDouble> > &normals,
-                     const StdRegions::VarCoeffMap   &varcoeffs)
+        Array<OneD, NekDouble> Expansion3D::v_GetnFacecdotMF(
+            const int dir,
+            const int face,
+            ExpansionSharedPtr &FaceExp_f,
+            const Array<OneD, const Array<OneD, NekDouble> > &normals,
+            const StdRegions::VarCoeffMap   &varcoeffs)
         {
             int nquad_f = FaceExp_f->GetNumPoints(0)*FaceExp_f->GetNumPoints(1);
             int coordim = GetCoordim();
-            
+
             int       nquad0  = m_base[0]->GetNumPoints();
             int       nquad1  = m_base[1]->GetNumPoints();
             int       nquad2  = m_base[2]->GetNumPoints();
             int       nqtot   = nquad0*nquad1*nquad2;
-            
+
             StdRegions::VarCoeffType MMFCoeffs[15] = {StdRegions::eVarCoeffMF1x,
                 StdRegions::eVarCoeffMF1y,
                 StdRegions::eVarCoeffMF1z,
@@ -2504,9 +2549,9 @@ namespace Nektar
                 StdRegions::eVarCoeffMF3z,
                 StdRegions::eVarCoeffMF3Div,
                 StdRegions::eVarCoeffMF3Mag};
-            
+
             StdRegions::VarCoeffMap::const_iterator MFdir;
-            
+
             Array<OneD, NekDouble> nFacecdotMF(nqtot,0.0);
             Array<OneD, NekDouble> tmp(nqtot);
             Array<OneD, NekDouble> tmp_f(nquad_f);
@@ -2514,13 +2559,15 @@ namespace Nektar
             {
                 MFdir = varcoeffs.find(MMFCoeffs[dir*5+k]);
                 tmp = MFdir->second;
-                
+
                 GetPhysFaceVarCoeffsFromElement(face, FaceExp_f, tmp, tmp_f);
-                
-                Vmath::Vvtvp(nquad_f,&tmp_f[0],1,&normals[k][0],1,&nFacecdotMF[0],1,&nFacecdotMF[0],1);
-                
+
+                Vmath::Vvtvp(nquad_f, &tmp_f[0],       1,
+                                      &normals[k][0],  1,
+                                      &nFacecdotMF[0], 1,
+                                      &nFacecdotMF[0], 1);
             }
-            
+
             return nFacecdotMF;
         }
     } //end of namespace

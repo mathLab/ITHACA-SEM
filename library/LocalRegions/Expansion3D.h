@@ -91,8 +91,9 @@ namespace Nektar
                 ExpansionSharedPtr            &FaceExp,
                 Array<OneD, NekDouble>        &facePhys,
                 Array<OneD, NekDouble>        &outarray,
-                const StdRegions::VarCoeffMap &varcoeffs = StdRegions::NullVarCoeffMap);
-            
+                const StdRegions::VarCoeffMap &varcoeffs
+                        = StdRegions::NullVarCoeffMap);
+
             inline SpatialDomains::Geometry3DSharedPtr GetGeom3D() const;
 
             LOCAL_REGIONS_EXPORT void ReOrientFacePhysMap(const int nvert,
@@ -137,17 +138,19 @@ namespace Nektar
                 const Array<OneD, const NekDouble>      &inarray,
                       Array<OneD,       NekDouble>      &outarray,
                 StdRegions::Orientation                  orient);
-            
-            void GetPhysFaceVarCoeffsFromElement(const int face,
-                                                 ExpansionSharedPtr &FaceExp,
-                                                 const Array<OneD, const NekDouble>  &varcoeff,
-                                                 Array<OneD,NekDouble> &outarray);
-            
-            virtual     Array<OneD, NekDouble> v_GetnFacecdotMF(const int dir,
-                                                                const int face,
-                                                                ExpansionSharedPtr &FaceExp_f,
-                                                                const Array<OneD, const Array<OneD, NekDouble> > &normals,
-                                                                const StdRegions::VarCoeffMap   &varcoeffs);
+
+            void GetPhysFaceVarCoeffsFromElement(
+                const int face,
+                ExpansionSharedPtr &FaceExp,
+                const Array<OneD, const NekDouble>  &varcoeff,
+                      Array<OneD,NekDouble> &outarray);
+
+            virtual Array<OneD, NekDouble> v_GetnFacecdotMF(
+                const int dir,
+                const int face,
+                ExpansionSharedPtr &FaceExp_f,
+                const Array<OneD, const Array<OneD, NekDouble> > &normals,
+                const StdRegions::VarCoeffMap   &varcoeffs);
 
             //-----------------------------
             // Low Energy Basis functions

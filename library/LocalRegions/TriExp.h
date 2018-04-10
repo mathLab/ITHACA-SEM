@@ -127,16 +127,17 @@ namespace Nektar
                             const int dir,
                             const Array<OneD, const NekDouble>& inarray,
                                   Array<OneD, NekDouble> & outarray);
-            LOCAL_REGIONS_EXPORT  virtual void v_IProductWRTDirectionalDerivBase(const Array<OneD, const NekDouble>& direction,
-                                                                                 const Array<OneD, const NekDouble>& inarray,
-                                                                                 Array<OneD, NekDouble> & outarray){
-                IProductWRTDirectionalDerivBase_SumFac(direction,inarray,outarray);
-            }
-            
-            LOCAL_REGIONS_EXPORT  virtual void v_IProductWRTDirectionalDerivBase_SumFac(const Array<OneD, const NekDouble>& direction,
-                                                                                        const Array<OneD, const NekDouble>& inarray,
-                                                                                        Array<OneD, NekDouble> & outarray);
 
+            LOCAL_REGIONS_EXPORT virtual void v_IProductWRTDirectionalDerivBase(
+                            const Array<OneD, const NekDouble>& direction,
+                            const Array<OneD, const NekDouble>& inarray,
+                                  Array<OneD, NekDouble> & outarray);
+
+            LOCAL_REGIONS_EXPORT virtual void
+                    v_IProductWRTDirectionalDerivBase_SumFac(
+                            const Array<OneD, const NekDouble>& direction,
+                            const Array<OneD, const NekDouble>& inarray,
+                                  Array<OneD, NekDouble> & outarray);
 
             LOCAL_REGIONS_EXPORT virtual void v_NormVectorIProductWRTBase(
                     const Array<OneD, const NekDouble> &Fx,

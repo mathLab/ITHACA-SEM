@@ -227,16 +227,16 @@ namespace Nektar
             /// \f$f(\boldsymbol{x})\f$ with respect to the derivative (in
             /// direction \param dir) of all \emph{local} expansion modes
             /// \f$\phi_n^e(\boldsymbol{x})\f$.
-            MULTI_REGIONS_EXPORT void   IProductWRTDerivBase
-                (const int dir,
-                 const Array<OneD, const NekDouble> &inarray,
-                       Array<OneD,       NekDouble> &outarray);
-            
-            MULTI_REGIONS_EXPORT void   IProductWRTDirectionalDerivBase
-            (const Array<OneD, const NekDouble> &direction,
-             const Array<OneD, const NekDouble> &inarray,
-             Array<OneD,       NekDouble> &outarray);
-            
+            MULTI_REGIONS_EXPORT void   IProductWRTDerivBase(
+                const int dir,
+                const Array<OneD, const NekDouble> &inarray,
+                      Array<OneD,       NekDouble> &outarray);
+
+            MULTI_REGIONS_EXPORT void   IProductWRTDirectionalDerivBase(
+                const Array<OneD, const NekDouble> &direction,
+                const Array<OneD, const NekDouble> &inarray,
+                      Array<OneD,       NekDouble> &outarray);
+
             /// This function calculates the inner product of a function
             /// \f$f(\boldsymbol{x})\f$ with respect to the derivative (in
             /// direction \param dir) of all \emph{local} expansion modes
@@ -729,15 +729,17 @@ namespace Nektar
             inline void CurlCurl(
                 Array<OneD, Array<OneD, NekDouble> > &Vel,
                 Array<OneD, Array<OneD, NekDouble> > &Q);
-            
-            inline void PhysDirectionalDeriv(const Array<OneD, const NekDouble> &direction,
-                                             const Array<OneD, const NekDouble> &inarray,
-                                             Array<OneD, NekDouble> &outarray);
-            
-            inline void GetMovingFrames(const SpatialDomains::GeomMMF MMFdir,
-                                        const Array<OneD, const NekDouble> &CircCentre,
-                                        Array<OneD, Array<OneD, NekDouble> > &outarray);
-            
+
+            inline void PhysDirectionalDeriv(
+                const Array<OneD, const NekDouble> &direction,
+                const Array<OneD, const NekDouble> &inarray,
+                      Array<OneD, NekDouble> &outarray);
+
+            inline void GetMovingFrames(
+                const SpatialDomains::GeomMMF MMFdir,
+                const Array<OneD, const NekDouble> &CircCentre,
+                      Array<OneD, Array<OneD, NekDouble> > &outarray);
+
             // functions associated with DisContField
             inline const Array<OneD, const  std::shared_ptr<ExpList> >
                 &GetBndCondExpansions();
@@ -947,11 +949,12 @@ namespace Nektar
                 std::vector<NekDouble> &fielddata,
                 std::string &field,
                 Array<OneD, NekDouble> &coeffs);
-            
-            MULTI_REGIONS_EXPORT void GenerateElementVector(const int ElementID,
-                                       const NekDouble scalar1,
-                                       const NekDouble scalar2,
-                                       Array<OneD, NekDouble> &outarray);
+
+            MULTI_REGIONS_EXPORT void GenerateElementVector(
+                const int ElementID,
+                const NekDouble scalar1,
+                const NekDouble scalar2,
+                Array<OneD, NekDouble> &outarray);
 
             /// Returns a shared pointer to the current object.
             std::shared_ptr<ExpList> GetSharedThisPtr()
@@ -1327,15 +1330,17 @@ namespace Nektar
             virtual void v_CurlCurl(
                 Array<OneD, Array<OneD, NekDouble> > &Vel,
                 Array<OneD, Array<OneD, NekDouble> > &Q);
-            
-            MULTI_REGIONS_EXPORT void v_PhysDirectionalDeriv(const Array<OneD, const NekDouble> &direction,
-                                        const Array<OneD, const NekDouble> &inarray,
-                                        Array<OneD, NekDouble> &outarray);
-            
-           virtual void v_GetMovingFrames(const SpatialDomains::GeomMMF MMFdir,
-                                   const Array<OneD, const NekDouble> &CircCentre,
-                                   Array<OneD, Array<OneD, NekDouble> > &outarray);
-            
+
+            virtual void v_PhysDirectionalDeriv(
+                const Array<OneD, const NekDouble> &direction,
+                const Array<OneD, const NekDouble> &inarray,
+                      Array<OneD, NekDouble> &outarray);
+
+            virtual void v_GetMovingFrames(
+                const SpatialDomains::GeomMMF MMFdir,
+                const Array<OneD, const NekDouble> &CircCentre,
+                      Array<OneD, Array<OneD, NekDouble> > &outarray);
+
             virtual void v_HomogeneousFwdTrans(
                 const Array<OneD, const NekDouble> &inarray,
                       Array<OneD, NekDouble> &outarray,
@@ -1829,15 +1834,20 @@ namespace Nektar
         {
             v_GetCoords(coord_0,coord_1,coord_2);
         }
-        
-        inline void ExpList::GetMovingFrames(const SpatialDomains::GeomMMF MMFdir,
-                                             const Array<OneD, const NekDouble> &CircCentre,
-                                             Array<OneD, Array<OneD, NekDouble> > &outarray)
+
+
+        /**
+         *
+         */
+        inline void ExpList::GetMovingFrames(
+            const SpatialDomains::GeomMMF MMFdir,
+            const Array<OneD, const NekDouble> &CircCentre,
+                  Array<OneD, Array<OneD, NekDouble> > &outarray)
         {
              v_GetMovingFrames(MMFdir,CircCentre,outarray);
         }
 
-        
+
         /**
          *
          */
@@ -1867,14 +1877,20 @@ namespace Nektar
         {
             v_PhysDeriv(edir, inarray,out_d);
         }        
-    
-        inline void ExpList::PhysDirectionalDeriv(const Array<OneD, const NekDouble> &direction,
-                                                  const Array<OneD, const NekDouble> &inarray,
-                                                  Array<OneD, NekDouble> &outarray)
+
+
+        /**
+         *
+         */
+        inline void ExpList::PhysDirectionalDeriv(
+            const Array<OneD, const NekDouble> &direction,
+            const Array<OneD, const NekDouble> &inarray,
+                  Array<OneD, NekDouble> &outarray)
         {
             v_PhysDirectionalDeriv(direction, inarray, outarray);
         }
-        
+
+
         /**
          *
          */
@@ -1976,6 +1992,7 @@ namespace Nektar
                      "eid is larger than number of elements");
             return (*m_exp)[eid]->GetCoordim();
         }
+
         /**
          * @param   eid         The index of the element to be checked.
          * @return  The dimension of the shape of the specific element.
@@ -1984,7 +2001,7 @@ namespace Nektar
         {
             return (*m_exp)[0]->GetShapeDimension();
         }
-        
+
         /**
          * @param   i           The index of m_coeffs to be set
          * @param   val         The value which m_coeffs[i] is to be set to.

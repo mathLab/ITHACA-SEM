@@ -418,38 +418,44 @@ namespace Nektar
                                                   e_outarray = outarray+m_coeff_offset[i]);
             }
         }
-        
-        // Directional derivative along direction
-        
-        void ExpList::IProductWRTDirectionalDerivBase(const Array<OneD, const NekDouble> &direction,
-                                                      const Array<OneD, const NekDouble> &inarray,
-                                                      Array<OneD, NekDouble> &outarray)
+
+
+        /**
+         * @brief Directional derivative along a given direction
+         *
+         */
+        void ExpList::IProductWRTDirectionalDerivBase(
+            const Array<OneD, const NekDouble> &direction,
+            const Array<OneD, const NekDouble> &inarray,
+                  Array<OneD, NekDouble> &outarray)
         {
             int npts_e;
             int coordim = (*m_exp)[0]->GetGeom()->GetCoordim();
-            int nq = direction.num_elements()/coordim;
-            
+            int nq      = direction.num_elements()/coordim;
+
             Array<OneD, NekDouble> e_outarray;
             Array<OneD, NekDouble> e_MFdiv;
-            
+
             Array<OneD, NekDouble> locdir;
-            
+
             for(int i = 0; i < (*m_exp).size(); ++i)
             {
-                npts_e  = (*m_exp)[i]->GetTotPoints();
+                npts_e = (*m_exp)[i]->GetTotPoints();
                 locdir = Array<OneD, NekDouble>(npts_e*coordim);
-                
+
                 for (int k = 0; k<coordim; ++k)
                 {
-                    Vmath::Vcopy(npts_e, &direction[k*nq+m_phys_offset[i]], 1, &locdir[k*npts_e], 1);
+                    Vmath::Vcopy(npts_e, &direction[k*nq+m_phys_offset[i]], 1,
+                                         &locdir[k*npts_e],                 1);
                 }
-                
-                (*m_exp)[i]->IProductWRTDirectionalDerivBase(locdir,
-                                                             inarray+m_phys_offset[i],
-                                                             e_outarray = outarray+m_coeff_offset[i]);
+
+                (*m_exp)[i]->IProductWRTDirectionalDerivBase(
+                                    locdir,
+                                    inarray+m_phys_offset[i],
+                                    e_outarray = outarray+m_coeff_offset[i] );
             }
         }
-        
+
 
         /**
          * The operation is evaluated locally for every element by the function
@@ -684,47 +690,39 @@ namespace Nektar
                     break;
             }
         }
-        
-        
-        void  ExpList::v_PhysDirectionalDeriv(const Array<OneD, const NekDouble> &direction,
-                 const Array<OneD, const NekDouble> &inarray,
-                 Array<OneD, NekDouble> &outarray)
+
+
+        void  ExpList::v_PhysDirectionalDeriv(
+            const Array<OneD, const NekDouble> &direction,
+            const Array<OneD, const NekDouble> &inarray,
+                  Array<OneD, NekDouble> &outarray)
         {
             int npts_e;
             int coordim = (*m_exp)[0]->GetGeom()->GetCoordim();
-            int nq = direction.num_elements()/coordim;
-            
+            int nq      = direction.num_elements() / coordim;
+
             Array<OneD, NekDouble> e_outarray;
             Array<OneD, NekDouble> e_MFdiv;
             Array<OneD, NekDouble> locdir;
-            
-            
+
             for(int i = 0; i < (*m_exp).size(); ++i)
             {
-                npts_e  = (*m_exp)[i]->GetTotPoints();
-                //Gs::cout <<i <<"\t" << npts_e<< Gs::endl;
+                npts_e = (*m_exp)[i]->GetTotPoints();
                 locdir = Array<OneD, NekDouble>(npts_e*coordim);
-                
+
                 for (int k = 0; k<coordim; ++k)
                 {
-                    Vmath::Vcopy(npts_e, &direction[k*nq+m_phys_offset[i]], 1, &locdir[k*npts_e], 1);
-                    
-                    // Gs::cout << "locdir[ " << k*nq << "]"<< "\t"<<direction[k*nq+m_phys_offset[i]]<< Gs::endl;
-                    
+                    Vmath::Vcopy(npts_e, &direction[k*nq+m_phys_offset[i]], 1,
+                                         &locdir[k*npts_e],                 1);
                 }
-                
-                //(*m_exp)[i]->PhysDirectionalDeriv(locdir, inarray+m_phys_offset[i],                                                  e_outarray = outarray+m_phys_offset[i]);
-                (*m_exp)[i]->PhysDirectionalDeriv(inarray+m_phys_offset[i], locdir,                                                 e_outarray = outarray+m_phys_offset[i]);
-                
-                /*  for (int k = 0; k<coordim; ++k)
-                 {
-                 
-                 Gs::cout << "locdir[ " << k*nq << "]"<< "\t"<<e_outarray[k*nq]<< Gs::endl;
-                 
-                 }*/
-                
+
+                (*m_exp)[i]->PhysDirectionalDeriv(
+                                     inarray + m_phys_offset[i],
+                                     locdir,
+                                     e_outarray = outarray+m_phys_offset[i] );
             }
         }
+
 
         void ExpList::ExponentialFilter(
                 Array<OneD, NekDouble> &array,
@@ -2483,9 +2481,10 @@ namespace Nektar
         }
 
 
-        void ExpList::v_GetMovingFrames(const SpatialDomains::GeomMMF MMFdir,
-                                        const Array<OneD, const NekDouble> &CircCentre,
-                                        Array<OneD, Array<OneD, NekDouble> > &outarray)
+        void ExpList::v_GetMovingFrames(
+            const SpatialDomains::GeomMMF MMFdir,
+            const Array<OneD, const NekDouble> &CircCentre,
+                  Array<OneD, Array<OneD, NekDouble> > &outarray)
         {
             int npts;
 
@@ -2507,14 +2506,20 @@ namespace Nektar
                 }
 
                 // MF from LOCALREGIONS
-                (*m_exp)[i]->GetMetricInfo()->GetMovingFrames((*m_exp)[i]->GetPointsKeys(), MMFdir, CircCentre, MFloc);
+                (*m_exp)[i]->GetMetricInfo()->GetMovingFrames(
+                                        (*m_exp)[i]->GetPointsKeys(),
+                                        MMFdir,
+                                        CircCentre,
+                                        MFloc );
 
                 // Get the physical data offset for this expansion.
                 for (int j = 0; j < MFdim; ++j)
                 {
                     for (int k = 0; k < coordim; ++k)
                     {
-                        Vmath::Vcopy(npts, &MFloc[j*coordim+k][0], 1, &outarray[j][k*nq+m_phys_offset[i]], 1);
+                        Vmath::Vcopy(npts,
+                                     &MFloc[j*coordim+k][0],              1,
+                                     &outarray[j][k*nq+m_phys_offset[i]], 1);
                     }
                 }
             }
@@ -2522,11 +2527,17 @@ namespace Nektar
         }
 
 
-        // Generate vector v such that v[i] = scalar1 if i is in the element < ElementID. Otherwise, v[i] = scalar2.
-        void ExpList::GenerateElementVector(const int ElementID,
-                                            const NekDouble scalar1,
-                                            const NekDouble scalar2,
-                                            Array<OneD, NekDouble> &outarray)
+
+        /**
+         * @brief Generate vector v such that v[i] = scalar1 if i is in the
+         * element < ElementID. Otherwise, v[i] = scalar2.
+         *
+         */
+        void ExpList::GenerateElementVector(
+            const int ElementID,
+            const NekDouble scalar1,
+            const NekDouble scalar2,
+            Array<OneD, NekDouble> &outarray)
         {
             int npoints_e;
             NekDouble coeff;
@@ -2537,18 +2548,18 @@ namespace Nektar
             {
                 npoints_e = (*m_exp)[i]->GetTotPoints();
 
-                if(i<=ElementID)
+                if(i <= ElementID)
                 {
                     coeff = scalar1;
                 }
-
                 else
                 {
                     coeff = scalar2;
                 }
 
                 outarray_e = Array<OneD, NekDouble>(npoints_e, coeff);
-                Vmath::Vcopy(npoints_e, &outarray_e[0], 1, &outarray[m_phys_offset[i]], 1);
+                Vmath::Vcopy(npoints_e, &outarray_e[0],              1,
+                                        &outarray[m_phys_offset[i]], 1);
             }
         }
 

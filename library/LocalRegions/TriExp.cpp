@@ -1371,7 +1371,7 @@ namespace Nektar
                         StdRegions::StdMatrixKey stdmasskey(
                                                 StdRegions::eMass,
                                                 mkey.GetShapeType(), *this,
-                                                StdRegions::NullConstFactorMap 
+                                                StdRegions::NullConstFactorMap,
                                                 DiveMass);
 
                         DNekMatSharedPtr DiveMassmat = GetStdMatrix(stdmasskey);

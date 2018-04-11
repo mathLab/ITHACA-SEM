@@ -648,16 +648,18 @@ namespace Nektar
             }
 
 
-            void   IProductWRTDerivBase(const int dir,
-                                        const Array<OneD, const NekDouble>& inarray,
-                                        Array<OneD, NekDouble> &outarray)
+            void   IProductWRTDerivBase(
+                    const int dir,
+                    const Array<OneD, const NekDouble>& inarray,
+                          Array<OneD, NekDouble> &outarray)
             {
                 v_IProductWRTDerivBase(dir,inarray, outarray);
             }
-            
-            void   IProductWRTDirectionalDerivBase(const Array<OneD, const NekDouble>& direction,
-                                                   const Array<OneD, const NekDouble>& inarray,
-                                                   Array<OneD, NekDouble> &outarray)
+
+            void   IProductWRTDirectionalDerivBase(
+                    const Array<OneD, const NekDouble>& direction,
+                    const Array<OneD, const NekDouble>& inarray,
+                          Array<OneD, NekDouble> &outarray)
             {
                 v_IProductWRTDirectionalDerivBase(direction, inarray, outarray);
             }
@@ -1470,18 +1472,22 @@ namespace Nektar
             }
 
 
-            void IProductWRTDerivBase_SumFac(const int dir,
-                                             const Array<OneD, const NekDouble>& inarray,
-                                             Array<OneD, NekDouble> &outarray)
+            void IProductWRTDerivBase_SumFac(
+                    const int dir,
+                    const Array<OneD, const NekDouble>& inarray,
+                          Array<OneD, NekDouble> &outarray)
             {
                 v_IProductWRTDerivBase_SumFac(dir,inarray,outarray);
             }
-            
-            void IProductWRTDirectionalDerivBase_SumFac(const Array<OneD, const NekDouble>& direction,
-                                                        const Array<OneD, const NekDouble>& inarray,
-                                                        Array<OneD, NekDouble> &outarray)
+
+
+            void IProductWRTDirectionalDerivBase_SumFac(
+                    const Array<OneD, const NekDouble>& direction,
+                    const Array<OneD, const NekDouble>& inarray,
+                          Array<OneD, NekDouble> &outarray)
             {
-                v_IProductWRTDirectionalDerivBase_SumFac(direction,inarray,outarray);
+                v_IProductWRTDirectionalDerivBase_SumFac(direction,
+                                                         inarray,outarray);
             }
 
 
@@ -1797,13 +1803,16 @@ namespace Nektar
             STD_REGIONS_EXPORT virtual void v_IProductWRTBase_SumFac(const Array<OneD, const NekDouble>& inarray,
                                                                      Array<OneD, NekDouble> &outarray, bool multiplybyweights = true);
 
-            STD_REGIONS_EXPORT virtual void v_IProductWRTDerivBase_SumFac(const int dir,
-                                                       const Array<OneD, const NekDouble>& inarray,
-                                                       Array<OneD, NekDouble> &outarray);
-            
-            STD_REGIONS_EXPORT  virtual void v_IProductWRTDirectionalDerivBase_SumFac(const Array<OneD, const NekDouble>& direction,
-                                                                                      const Array<OneD, const NekDouble>& inarray,
-                                                                                      Array<OneD, NekDouble> &outarray);
+            STD_REGIONS_EXPORT virtual void v_IProductWRTDerivBase_SumFac(
+                const int dir,
+                const Array<OneD, const NekDouble>& inarray,
+                      Array<OneD, NekDouble> &outarray);
+
+            STD_REGIONS_EXPORT virtual void
+                    v_IProductWRTDirectionalDerivBase_SumFac(
+                const Array<OneD, const NekDouble>& direction,
+                const Array<OneD, const NekDouble>& inarray,
+                      Array<OneD, NekDouble> &outarray);
 
             STD_REGIONS_EXPORT virtual void v_MassMatrixOp(const Array<OneD, const NekDouble> &inarray,
                                         Array<OneD,NekDouble> &outarray,

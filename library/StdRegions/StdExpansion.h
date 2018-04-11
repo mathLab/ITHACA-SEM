@@ -46,7 +46,6 @@
 #include <StdRegions/SpatialDomainsDeclarations.hpp>
 #include <StdRegions/StdMatrixKey.h>
 #include <StdRegions/IndexMapKey.h>
-#include <SpatialDomains/SpatialDomains.hpp>
 #include <LibUtilities/LinearAlgebra/NekTypeDefs.hpp>
 namespace Nektar { namespace LocalRegions { class MatrixKey; class Expansion; } }
 

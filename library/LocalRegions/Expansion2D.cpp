@@ -727,6 +727,8 @@ namespace Nektar
                     int       ncoeffs   = GetNcoeffs();
                     int       nedges    = GetNedges();
                     int       shapedim  = 2;
+                    const StdRegions::VarCoeffMap &varcoeffs
+                                        = mkey.GetVarCoeffs();
                     bool      mmf       =
                         (varcoeffs.find(StdRegions::eVarCoeffMF1x) !=
                          varcoeffs.end());
@@ -753,7 +755,6 @@ namespace Nektar
                                                           StdRegions::eVarCoeffD22};
                     
                     StdRegions::VarCoeffMap::const_iterator x;
-                    const StdRegions::VarCoeffMap &varcoeffs = mkey.GetVarCoeffs();
 
                     for(i=0;  i < coordim; ++i)
                     {
@@ -1055,6 +1056,9 @@ namespace Nektar
                     int coordim = GetCoordim();
                     int nedges  = GetNedges();
                     NekDouble tau = mkey.GetConstFactor(StdRegions::eFactorTau);
+                    StdRegions::VarCoeffMap::const_iterator x;
+                    const StdRegions::VarCoeffMap &varcoeffs
+                                = mkey.GetVarCoeffs();
                     bool mmf    =
                         (varcoeffs.find(StdRegions::eVarCoeffMF1x) !=
                          varcoeffs.end());
@@ -1125,8 +1129,6 @@ namespace Nektar
                             StdRegions::VarCoeffType VarCoeff[3] = {StdRegions::eVarCoeffD00,
                                                                     StdRegions::eVarCoeffD11,
                                                                     StdRegions::eVarCoeffD22};
-                            const StdRegions::VarCoeffMap &varcoeffs = mkey.GetVarCoeffs();
-                            StdRegions::VarCoeffMap::const_iterator x;
 
                             // Q0 * n0 (BQ_0 terms)
                             Array<OneD, NekDouble> edgeCoeffs(order_e);
@@ -1144,7 +1146,7 @@ namespace Nektar
 //                                GetPhysEdgeVarCoeffsFromElement(e,EdgeExp[e],x->second,varcoeff_work);
 //                                Vmath::Vmul(nquad_e,varcoeff_work,1,EdgeExp[e]->GetPhys(),1,EdgeExp[e]->UpdatePhys(),1);
 //                            }
-                            if ((mmf)
+                            if (mmf)
                             {
                                 Array<OneD, NekDouble> ncdotMF =
                                         v_GetnEdgecdotMF(0, e, EdgeExp[e],

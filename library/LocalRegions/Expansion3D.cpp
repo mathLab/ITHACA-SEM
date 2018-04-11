@@ -312,7 +312,7 @@ namespace Nektar
                 }
 
                 AddFaceBoundaryInt(f, FaceExp[f], facePhys, outarray,
-                                   varcoeffs);`
+                                   varcoeffs);
             }
         }
 

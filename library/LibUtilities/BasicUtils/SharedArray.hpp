@@ -76,7 +76,8 @@ namespace Nektar
                 m_capacity( 0 ),
                 m_data( nullptr ),
                 m_count( nullptr ),
-                m_offset( 0 )
+                m_offset( 0 ),
+                m_created_by_python( false )
             {
                 CreateStorage(m_capacity);
             }
@@ -91,7 +92,8 @@ namespace Nektar
                 m_capacity( dim1Size ),
                 m_data( nullptr ),
                 m_count( nullptr ),
-                m_offset( 0 )
+                m_offset( 0 ),
+                m_created_by_python( false )
             {
                 CreateStorage(m_capacity);
                 ArrayInitializationPolicy<DataType>::Initialize( m_data, m_capacity );
@@ -111,7 +113,8 @@ namespace Nektar
                 m_capacity( dim1Size ),
                 m_data( nullptr ),
                 m_count( nullptr ),
-                m_offset( 0 )
+                m_offset( 0 ),
+                m_created_by_python( false )
             {
                 CreateStorage(m_capacity);
                 ArrayInitializationPolicy<DataType>::Initialize( m_data, m_capacity, initValue );
@@ -129,7 +132,8 @@ namespace Nektar
                 m_capacity( dim1Size ),
                 m_data( nullptr ),
                 m_count( nullptr ),
-                m_offset( 0 )
+                m_offset( 0 ),
+                m_created_by_python( false )
             {
                 CreateStorage(m_capacity);
                 ArrayInitializationPolicy<DataType>::Initialize( m_data, m_capacity, data );
@@ -149,7 +153,8 @@ namespace Nektar
                 m_capacity(rhs.m_capacity),
                 m_data(rhs.m_data),
                 m_count(rhs.m_count),
-                m_offset(rhs.m_offset)
+                m_offset(rhs.m_offset),
+                m_created_by_python(rhs.m_created_by_python)
             {
                 *m_count += 1;
                 ASSERTL0(m_size <= rhs.num_elements(), "Requested size is larger than input array size.");
@@ -161,7 +166,8 @@ namespace Nektar
                 m_capacity(rhs.m_capacity),
                 m_data(rhs.m_data),
                 m_count(rhs.m_count),
-                m_offset(rhs.m_offset)
+                m_offset(rhs.m_offset),
+                m_created_by_python(rhs.m_created_by_python)
             {
                 *m_count += 1;
             }
@@ -200,6 +206,7 @@ namespace Nektar
                 *m_count += 1;
                 m_offset = rhs.m_offset;
                 m_size = rhs.m_size;
+                m_created_by_python = rhs.m_created_by_python;
                 return *this;
             }
 
@@ -275,6 +282,9 @@ namespace Nektar
             unsigned int* m_count; 
 
             unsigned int m_offset;
+
+            // m_created_by_python is true if the array was originally created using Python interface
+            bool m_created_by_python;
 
 
         private:

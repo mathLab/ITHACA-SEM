@@ -126,14 +126,15 @@ void AcousticSolver::GetRotBasefield(Array< OneD, Array< OneD, NekDouble > > &bf
     const Array<OneD, const Array<OneD, NekDouble> > normals = m_vectors["N"]();
     const Array<OneD, const Array<OneD, NekDouble> > basefieldFwdBwd = m_vectors["basefieldFwdBwd"]();
 
+    int nBF = basefieldFwdBwd.num_elements() / 2;
     int nDim = normals.num_elements();
 
-    Array<OneD, Array<OneD, NekDouble> > basefieldFwd(nDim + 2);
-    Array<OneD, Array<OneD, NekDouble> > basefieldBwd(nDim + 2);
+    Array<OneD, Array<OneD, NekDouble> > basefieldFwd(nBF);
+    Array<OneD, Array<OneD, NekDouble> > basefieldBwd(nBF);
 
-    for (int i = 0; i < nDim + 2; i++)
+    for (int i = 0; i < nBF; i++)
     {
-        int j = (nDim + 2) + i;
+        int j = nBF + i;
         basefieldFwd[i] = basefieldFwdBwd[i];
         basefieldBwd[i] = basefieldFwdBwd[j];
     }

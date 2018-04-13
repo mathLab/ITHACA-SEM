@@ -92,12 +92,9 @@ void LEELaxFriedrichsSolver::v_PointSolve(
     NekDouble  c0sqR, NekDouble  rho0R, NekDouble  u0R, NekDouble  v0R, NekDouble  w0R,
     NekDouble &pF,    NekDouble &rhoF,  NekDouble &ruF, NekDouble &rvF, NekDouble &rwF)
 {
-    ASSERTL1(CheckParams("Gamma"), "Gamma not defined.");
-    const NekDouble &gamma = m_params["Gamma"]();
-
     // Speed of sound
-    NekDouble cL = sqrt(gamma * p0L / rho0L);
-    NekDouble cR = sqrt(gamma * p0R / rho0R);
+    NekDouble cL = sqrt(c0sqL);
+    NekDouble cR = sqrt(c0sqR);
 
     // max absolute eigenvalue of the jacobian of F_n1
     NekDouble a_1_max = 0;
@@ -106,15 +103,15 @@ void LEELaxFriedrichsSolver::v_PointSolve(
     a_1_max           = std::max(a_1_max, std::abs(u0L + cL));
     a_1_max           = std::max(a_1_max, std::abs(u0R + cR));
 
-    NekDouble pFL   = ruL * cL * cL + u0L * pL;
+    NekDouble pFL   = ruL * c0sqL + u0L * pL;
     NekDouble rhoFL = ruL + rhoL * u0L;
-    NekDouble ruFL  = pL + ruL * u0L + rvL * u0L + rwL * u0L;
+    NekDouble ruFL  = pL + ruL * u0L;
     NekDouble rvFL  = 0;
     NekDouble rwFL  = 0;
 
-    NekDouble pFR   = ruR * cR * cR + u0R * pR;
+    NekDouble pFR   = ruR * c0sqR + u0R * pR;
     NekDouble rhoFR = ruR + rhoR * u0R;
-    NekDouble ruFR  = pR + ruR * u0R + rvR * u0R + rwR * u0R;
+    NekDouble ruFR  = pR + ruR * u0R;
     NekDouble rvFR  = 0;
     NekDouble rwFR  = 0;
 

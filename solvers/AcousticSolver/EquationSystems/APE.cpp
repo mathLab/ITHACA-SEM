@@ -97,17 +97,17 @@ void APE::v_InitObject()
     }
     GetFunction("Baseflow", m_fields[0], true)->Evaluate(m_bfNames, m_bf, m_time);
 
-    m_forcing = SolverUtils::Forcing::Load(m_session, m_fields, m_fields.num_elements());
-
-    // Do not forwards transform initial condition
-    m_homoInitialFwd = false;
-
     // Define the normal velocity fields
     m_bfFwdBwd = Array<OneD, Array<OneD, NekDouble> > (2*m_bfNames.size());
     for (int i = 0; i < m_bfFwdBwd.num_elements(); i++)
     {
         m_bfFwdBwd[i] = Array<OneD, NekDouble>(GetTraceNpoints(), 0.0);
     }
+
+    m_forcing = SolverUtils::Forcing::Load(m_session, m_fields, m_fields.num_elements());
+
+    // Do not forwards transform initial condition
+    m_homoInitialFwd = false;
 
     // Set up locations of velocity and base velocity vectors.
     m_vecLocs = Array<OneD, Array<OneD, NekDouble> >(1);
@@ -594,13 +594,11 @@ void APE::v_WhiteNoiseBC(int bcRegion,
         {
             for (int i = 0; i < nBCEdgePts; ++i)
             {
-                //TODO
                 // density perturbation
-                tmp[_irho][i] = m_whiteNoiseBC_p / (BfFwd[0][id2 + i] / BfFwd[1][id2 + i]);
+                tmp[_irho][i] = m_whiteNoiseBC_p * BfFwd[m_spacedim+2][id2 + i] / BfFwd[0][id2 + i];
 
                 // velocity perturbation
-                NekDouble ru = m_whiteNoiseBC_p /
-                            sqrt(1.4 * BfFwd[0][id2 + i] / BfFwd[1][id2 + i]);
+                NekDouble ru = m_whiteNoiseBC_p / sqrt(BfFwd[0][id2 + i]);
                 for (int j = 0; j < m_spacedim; ++j)
                 {
                     tmp[_iu + j][i] = -1.0 * ru * m_traceNormals[j][id2 + i];

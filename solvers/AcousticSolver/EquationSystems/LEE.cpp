@@ -75,6 +75,23 @@ void LEE::v_InitObject()
 {
     APE::v_InitObject();
 
+    m_bfNames.push_back("gamma");
+
+    // Initialize basefield again
+    m_bf = Array<OneD, Array<OneD, NekDouble> >(m_bfNames.size());
+    for (int i = 0; i < m_bf.num_elements(); ++i)
+    {
+        m_bf[i] = Array<OneD, NekDouble>(GetTotPoints());
+    }
+    GetFunction("Baseflow", m_fields[0], true)->Evaluate(m_bfNames, m_bf, m_time);
+
+    // Define the normal velocity fields
+    m_bfFwdBwd = Array<OneD, Array<OneD, NekDouble> > (2*m_bfNames.size());
+    for (int i = 0; i < m_bfFwdBwd.num_elements(); i++)
+    {
+        m_bfFwdBwd[i] = Array<OneD, NekDouble>(GetTraceNpoints(), 0.0);
+    }
+
     string riemName;
     m_session->LoadSolverInfo("UpwindType", riemName, "Upwind");
     if (boost::to_lower_copy(riemName) == "characteristics" ||
@@ -90,10 +107,8 @@ void LEE::v_InitObject()
     m_riemannSolver = SolverUtils::GetRiemannSolverFactory().CreateInstance(
                           riemName, m_session);
     m_riemannSolver->SetVector("N", &LEE::GetNormals, this);
-    m_riemannSolver->SetVector(
-        "basefieldFwdBwd", &LEE::GetBasefieldFwdBwd, this);
+    m_riemannSolver->SetVector("basefieldFwdBwd", &LEE::GetBasefieldFwdBwd, this);
     m_riemannSolver->SetAuxVec("vecLocs", &LEE::GetVecLocs, this);
-    m_riemannSolver->SetParam("Gamma", &LEE::GetGamma, this);
 
     // Set up advection operator
     string advName;
@@ -137,25 +152,20 @@ void LEE::GetFluxVector(
     ASSERTL1(flux[0].num_elements() == m_spacedim,
              "Dimension of flux array and velocity array do not match");
 
-    Array<OneD, NekDouble> p0   = m_bf[0];
-    Array<OneD, NekDouble> rho0 = m_bf[1];
-    Array<OneD, Array<OneD, NekDouble> > u0(m_spacedim);
+    Array<OneD, const NekDouble> c0sq = m_bf[0];
+    Array<OneD, Array<OneD, const NekDouble> > u0(m_spacedim);
     for (int i = 0; i < m_spacedim; ++i)
     {
         u0[i] = m_bf[2 + i];
     }
 
-    Array<OneD, NekDouble> p   = physfield[0];
-    Array<OneD, NekDouble> rho = physfield[1];
-    Array<OneD, Array<OneD, NekDouble> > ru(m_spacedim);
+    Array<OneD, const NekDouble> p   = physfield[_ip];
+    Array<OneD, const NekDouble> rho = physfield[_irho];
+    Array<OneD, Array<OneD, const NekDouble> > ru(m_spacedim);
     for (int i = 0; i < m_spacedim; ++i)
     {
-        ru[i] = physfield[2 + i];
+        ru[i] = physfield[_iu + i];
     }
-
-    Array<OneD, NekDouble> c0sq(nq);
-    Vmath::Vdiv(nq, p0, 1, rho0, 1, c0sq, 1);
-    Vmath::Smul(nq, m_gamma, c0sq, 1, c0sq, 1);
 
     // F_{adv,p',j} = c0^2 * ru_j + u0_j * p
     for (int j = 0; j < m_spacedim; ++j)
@@ -172,19 +182,19 @@ void LEE::GetFluxVector(
         Vmath::Vvtvp(nq, u0[j], 1, rho, 1, ru[j], 1, flux[i][j], 1);
     }
 
-    for (int i = 2; i < flux.num_elements(); ++i)
+    for (int i = 0; i < m_spacedim; ++i)
     {
         // F_{adv,u'_i,j} = ru_i * u0_j + delta_ij * p
         for (int j = 0; j < m_spacedim; ++j)
         {
             // ru_i * u0_j
-            Vmath::Vmul(nq, ru[i - 2], 1, u0[j], 1, flux[i][j], 1);
+            Vmath::Vmul(nq, ru[i], 1, u0[j], 1, flux[_iu + i][j], 1);
 
             // kronecker delta
-            if (i - 2 == j)
+            if (i == j)
             {
                 // delta_ij + p
-                Vmath::Vadd(nq, p, 1, flux[i][j], 1, flux[i][j], 1);
+                Vmath::Vadd(nq, p, 1, flux[_iu + i][j], 1, flux[_iu + i][j], 1);
             }
         }
     }
@@ -208,17 +218,27 @@ void LEE::v_AddLinTerm(
         linTerm[i] = Array<OneD, NekDouble>(nq);
     }
 
-    Array<OneD, NekDouble> p0   = m_bf[0];
-    Array<OneD, NekDouble> rho0 = m_bf[1];
-    Array<OneD, Array<OneD, NekDouble> > u0(m_spacedim);
+    Array<OneD, const NekDouble> c0sq = m_bf[0];
+    Array<OneD, const NekDouble> rho0 = m_bf[1];
+    Array<OneD, const NekDouble> gamma = m_bf[m_spacedim + 2];
+
+    Array<OneD, NekDouble> gammaMinOne (m_spacedim);
+    Vmath::Sadd(nq, -1.0, gamma, 1, gammaMinOne, 1);
+
+    Array<OneD, NekDouble> p0(m_spacedim);
+    Vmath::Vmul(nq, c0sq, 1, rho0, 1, p0, 1);
+    Vmath::Vdiv(nq, p0, 1, gamma, 1, p0, 1);
+
+    Array<OneD, Array<OneD, const NekDouble> > u0(m_spacedim);
     for (int i = 0; i < m_spacedim; ++i)
     {
         u0[i] = m_bf[2 + i];
     }
 
-    Array<OneD, NekDouble> p   = inarray[0];
-    Array<OneD, NekDouble> rho = inarray[1];
-    Array<OneD, Array<OneD, NekDouble> > ru(m_spacedim);
+    Array<OneD, const NekDouble> p   = inarray[0];
+    Array<OneD, const NekDouble> rho = inarray[1];
+
+    Array<OneD, Array<OneD, const NekDouble> > ru(m_spacedim);
     for (int i = 0; i < m_spacedim; ++i)
     {
         ru[i] = inarray[2 + i];
@@ -228,44 +248,40 @@ void LEE::v_AddLinTerm(
     Array<OneD, NekDouble> tmp1(nq);
 
     // p
-    for (int j = 0; j < m_spacedim; ++j)
     {
-        int i = 0;
-        Vmath::Zero(nq, linTerm[i], 1);
-
-        // (1-gamma) ( 1/rho0 * dp0/dx_j * ru_j - p * du0_j/dx_j )
+        Vmath::Zero(nq, linTerm[_ip], 1);
+        // (1-gamma) ( ru_j / rho0 * dp0/dx_j - p * du0_j/dx_j )
         for (int j = 0; j < m_spacedim; ++j)
         {
-            // 1/rho0 * dp0/dx_j * ru_j
+            // ru_j / rho0 * dp0/dx_j
             m_fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[j], p0, grad);
             Vmath::Vmul(nq, grad, 1, ru[j], 1, tmp1, 1);
             Vmath::Vdiv(nq, tmp1, 1, rho0, 1, tmp1, 1);
-            // p * du0_j/dx_j - 1/rho0 * dp0/dx_j * ru_j
+            // p * du0_j/dx_j - ru_j / rho0 * dp0/dx_j
             m_fields[0]->PhysDeriv(
                 MultiRegions::DirCartesianMap[j], u0[j], grad);
             Vmath::Vvtvm(nq, grad, 1, p, 1, tmp1, 1, tmp1, 1);
-            // -(1-gamma) (p * du0_j/dx_j - 1/rho0 * dp0/dx_j * ru_j)
-            Vmath::Svtvp(
-                nq, (m_gamma - 1), tmp1, 1, linTerm[i], 1, linTerm[i], 1);
+            // (gamma-1) (p * du0_j/dx_j - ru_j / rho0 * dp0/dx_j)
+            Vmath::Vvtvp(nq, gammaMinOne, 1, tmp1, 1, linTerm[_ip], 1, linTerm[_ip], 1);
         }
     }
 
     // rho has no linTerm
 
     // ru_i
-    for (int i = 2; i < m_spacedim + 2; ++i)
+    for (int i = 0; i < m_spacedim ; ++i)
     {
-        Vmath::Zero(nq, linTerm[i], 1);
+        Vmath::Zero(nq, linTerm[_iu+i], 1);
         // du0_i/dx_j * (u0_j * rho + ru_j)
         for (int j = 0; j < m_spacedim; ++j)
         {
             // d u0_i / d x_j
             m_fields[0]->PhysDeriv(
-                MultiRegions::DirCartesianMap[j], u0[i - 2], grad);
+                MultiRegions::DirCartesianMap[j], u0[i], grad);
             // u0_j * rho + ru_j
             Vmath::Vvtvp(nq, u0[j], 1, rho, 1, ru[j], 1, tmp1, 1);
             // du0_i/dx_j * (u0_j * rho + ru_j)
-            Vmath::Vvtvp(nq, grad, 1, tmp1, 1, linTerm[i], 1, linTerm[i], 1);
+            Vmath::Vvtvp(nq, grad, 1, tmp1, 1, linTerm[_iu+i], 1, linTerm[_iu+i], 1);
         }
     }
 
@@ -335,7 +351,7 @@ void LEE::v_RiemannInvariantBC(int bcRegion,
 
         for (int i = 0; i < nBCEdgePts; ++i)
         {
-            NekDouble c = sqrt(m_gamma * BfFwd[0][id2 + i] / BfFwd[1][id2 + i]);
+            NekDouble c = sqrt(BfFwd[0][id2 + i]);
 
             NekDouble h1, h4, h5;
 

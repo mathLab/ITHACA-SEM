@@ -66,6 +66,7 @@ public:
     virtual ~LEE();
 
 protected:
+
     /// Initialises UnsteadySystem class members.
     LEE(const LibUtilities::SessionReaderSharedPtr& pSession,
           const SpatialDomains::MeshGraphSharedPtr& pGraph);

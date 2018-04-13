@@ -62,9 +62,9 @@ void LEESolver::v_Solve(
 {
     int nTracePts = Fwd[0].num_elements();
 
-    Array< OneD, Array< OneD, NekDouble > > bfFwd(nDim+2);
-    Array< OneD, Array< OneD, NekDouble > > bfBwd(nDim+2);
-    for (int i = 0; i < nDim + 2; i++)
+    Array< OneD, Array< OneD, NekDouble > > bfFwd(nDim+3);
+    Array< OneD, Array< OneD, NekDouble > > bfBwd(nDim+3);
+    for (int i = 0; i < nDim + 3; i++)
     {
         bfFwd[i] = Array<OneD, NekDouble>(nTracePts);
         bfBwd[i] = Array<OneD, NekDouble>(nTracePts);

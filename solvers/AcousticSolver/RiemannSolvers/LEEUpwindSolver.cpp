@@ -90,12 +90,9 @@ void LEEUpwindSolver::v_PointSolve(
     NekDouble  c0sqR, NekDouble  rho0R, NekDouble  u0R, NekDouble  v0R, NekDouble  w0R,
     NekDouble &pF,    NekDouble &rhoF,  NekDouble &ruF, NekDouble &rvF, NekDouble &rwF)
 {
-    ASSERTL1(CheckParams("Gamma"), "Gamma not defined.");
-    const NekDouble &gamma = m_params["Gamma"]();
-
     // Speed of sound
-    NekDouble cL = sqrt(gamma * p0L / rho0L);
-    NekDouble cR = sqrt(gamma * p0R / rho0R);
+    NekDouble cL = sqrt(c0sqL);
+    NekDouble cR = sqrt(c0sqR);
 
     NekDouble cM  = (cL + cR) / 2;
     NekDouble u0M = (u0L + u0R) / 2;

@@ -87,13 +87,13 @@ namespace Nektar
             /// If DataType is a fundamental type (double, int, etc.), then the allocated array is
             /// uninitialized.  If it is any other type, each element is initialized with DataType's default
             /// constructor.
-            explicit Array(unsigned int dim1Size, bool created_by_python = false) :
+            explicit Array(unsigned int dim1Size) :
                 m_size( dim1Size ),
                 m_capacity( dim1Size ),
                 m_data( nullptr ),
                 m_count( nullptr ),
                 m_offset( 0 ),
-                m_created_by_python( created_by_python )
+                m_created_by_python( false )
             {
                 CreateStorage(m_capacity);
                 ArrayInitializationPolicy<DataType>::Initialize( m_data, m_capacity );
@@ -108,13 +108,13 @@ namespace Nektar
             /// then the initial value is copied directly into each
             /// element.  Otherwise, the DataType's copy constructor
             /// is used to initialize each element.
-            Array(unsigned int dim1Size, const DataType& initValue, bool created_by_python = false) :
+            Array(unsigned int dim1Size, const DataType& initValue) :
                 m_size( dim1Size ),
                 m_capacity( dim1Size ),
                 m_data( nullptr ),
                 m_count( nullptr ),
                 m_offset( 0 ),
-                m_created_by_python( created_by_python )
+                m_created_by_python( false )
             {
                 CreateStorage(m_capacity);
                 ArrayInitializationPolicy<DataType>::Initialize( m_data, m_capacity, initValue );
@@ -127,13 +127,13 @@ namespace Nektar
             /// If DataType is a fundamental type (double, int, etc.), then data is copied
             /// directly into the underlying storage.  Otherwise, the DataType's copy constructor
             /// is used to copy each element.
-            Array(unsigned int dim1Size, const DataType* data, bool created_by_python = false) :
+            Array(unsigned int dim1Size, const DataType* data) :
                 m_size( dim1Size ),
                 m_capacity( dim1Size ),
                 m_data( nullptr ),
                 m_count( nullptr ),
                 m_offset( 0 ),
-                m_created_by_python( created_by_python )
+                m_created_by_python( false )
             {
                 CreateStorage(m_capacity);
                 ArrayInitializationPolicy<DataType>::Initialize( m_data, m_capacity, data );

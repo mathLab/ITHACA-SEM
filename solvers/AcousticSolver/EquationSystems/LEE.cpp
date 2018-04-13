@@ -45,9 +45,9 @@
 #include <LocalRegions/TriExp.h>
 #include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
 
-#include <LocalRegions/TriExp.h>
-#include <LocalRegions/QuadExp.h>
 #include <LocalRegions/HexExp.h>
+#include <LocalRegions/QuadExp.h>
+#include <LocalRegions/TriExp.h>
 
 using namespace std;
 
@@ -56,9 +56,8 @@ namespace Nektar
 string LEE::className = GetEquationSystemFactory().RegisterCreatorFunction(
     "LEE", LEE::create, "Linearized Euler Equations");
 
-LEE::LEE(
-    const LibUtilities::SessionReaderSharedPtr& pSession,
-    const SpatialDomains::MeshGraphSharedPtr& pGraph)
+LEE::LEE(const LibUtilities::SessionReaderSharedPtr &pSession,
+         const SpatialDomains::MeshGraphSharedPtr &pGraph)
     : UnsteadySystem(pSession, pGraph), APE(pSession, pGraph)
 {
     _ip   = 0;
@@ -83,10 +82,11 @@ void LEE::v_InitObject()
     {
         m_bf[i] = Array<OneD, NekDouble>(GetTotPoints());
     }
-    GetFunction("Baseflow", m_fields[0], true)->Evaluate(m_bfNames, m_bf, m_time);
+    GetFunction("Baseflow", m_fields[0], true)
+        ->Evaluate(m_bfNames, m_bf, m_time);
 
     // Define the normal velocity fields
-    m_bfFwdBwd = Array<OneD, Array<OneD, NekDouble> > (2*m_bfNames.size());
+    m_bfFwdBwd = Array<OneD, Array<OneD, NekDouble> >(2 * m_bfNames.size());
     for (int i = 0; i < m_bfFwdBwd.num_elements(); i++)
     {
         m_bfFwdBwd[i] = Array<OneD, NekDouble>(GetTraceNpoints(), 0.0);
@@ -105,9 +105,10 @@ void LEE::v_InitObject()
         riemName = "LEELaxFriedrichs";
     }
     m_riemannSolver = SolverUtils::GetRiemannSolverFactory().CreateInstance(
-                          riemName, m_session);
+        riemName, m_session);
     m_riemannSolver->SetVector("N", &LEE::GetNormals, this);
-    m_riemannSolver->SetVector("basefieldFwdBwd", &LEE::GetBasefieldFwdBwd, this);
+    m_riemannSolver->SetVector(
+        "basefieldFwdBwd", &LEE::GetBasefieldFwdBwd, this);
     m_riemannSolver->SetAuxVec("vecLocs", &LEE::GetVecLocs, this);
 
     // Set up advection operator
@@ -218,11 +219,11 @@ void LEE::v_AddLinTerm(
         linTerm[i] = Array<OneD, NekDouble>(nq);
     }
 
-    Array<OneD, const NekDouble> c0sq = m_bf[0];
-    Array<OneD, const NekDouble> rho0 = m_bf[1];
+    Array<OneD, const NekDouble> c0sq  = m_bf[0];
+    Array<OneD, const NekDouble> rho0  = m_bf[1];
     Array<OneD, const NekDouble> gamma = m_bf[m_spacedim + 2];
 
-    Array<OneD, NekDouble> gammaMinOne (m_spacedim);
+    Array<OneD, NekDouble> gammaMinOne(m_spacedim);
     Vmath::Sadd(nq, -1.0, gamma, 1, gammaMinOne, 1);
 
     Array<OneD, NekDouble> p0(m_spacedim);
@@ -262,16 +263,17 @@ void LEE::v_AddLinTerm(
                 MultiRegions::DirCartesianMap[j], u0[j], grad);
             Vmath::Vvtvm(nq, grad, 1, p, 1, tmp1, 1, tmp1, 1);
             // (gamma-1) (p * du0_j/dx_j - ru_j / rho0 * dp0/dx_j)
-            Vmath::Vvtvp(nq, gammaMinOne, 1, tmp1, 1, linTerm[_ip], 1, linTerm[_ip], 1);
+            Vmath::Vvtvp(
+                nq, gammaMinOne, 1, tmp1, 1, linTerm[_ip], 1, linTerm[_ip], 1);
         }
     }
 
     // rho has no linTerm
 
     // ru_i
-    for (int i = 0; i < m_spacedim ; ++i)
+    for (int i = 0; i < m_spacedim; ++i)
     {
-        Vmath::Zero(nq, linTerm[_iu+i], 1);
+        Vmath::Zero(nq, linTerm[_iu + i], 1);
         // du0_i/dx_j * (u0_j * rho + ru_j)
         for (int j = 0; j < m_spacedim; ++j)
         {
@@ -281,7 +283,8 @@ void LEE::v_AddLinTerm(
             // u0_j * rho + ru_j
             Vmath::Vvtvp(nq, u0[j], 1, rho, 1, ru[j], 1, tmp1, 1);
             // du0_i/dx_j * (u0_j * rho + ru_j)
-            Vmath::Vvtvp(nq, grad, 1, tmp1, 1, linTerm[_iu+i], 1, linTerm[_iu+i], 1);
+            Vmath::Vvtvp(
+                nq, grad, 1, tmp1, 1, linTerm[_iu + i], 1, linTerm[_iu + i], 1);
         }
     }
 
@@ -365,7 +368,6 @@ void LEE::v_RiemannInvariantBC(int bcRegion,
                 h1 = 0.0;
             }
 
-
             if (RVn0[i] - c > 0)
             {
                 // ru / 2 - p / (2*c)
@@ -423,4 +425,4 @@ void LEE::v_RiemannInvariantBC(int bcRegion,
     }
 }
 
-} // end of namespace
+} // namespace Nektar

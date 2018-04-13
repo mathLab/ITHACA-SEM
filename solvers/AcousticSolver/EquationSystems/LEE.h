@@ -51,8 +51,8 @@ public:
 
     /// Creates an instance of this class
     static EquationSystemSharedPtr create(
-            const LibUtilities::SessionReaderSharedPtr& pSession,
-            const SpatialDomains::MeshGraphSharedPtr& pGraph)
+        const LibUtilities::SessionReaderSharedPtr &pSession,
+        const SpatialDomains::MeshGraphSharedPtr &pGraph)
     {
         EquationSystemSharedPtr p =
             MemoryManager<LEE>::AllocateSharedPtr(pSession, pGraph);
@@ -66,10 +66,9 @@ public:
     virtual ~LEE();
 
 protected:
-
     /// Initialises UnsteadySystem class members.
-    LEE(const LibUtilities::SessionReaderSharedPtr& pSession,
-          const SpatialDomains::MeshGraphSharedPtr& pGraph);
+    LEE(const LibUtilities::SessionReaderSharedPtr &pSession,
+        const SpatialDomains::MeshGraphSharedPtr &pGraph);
 
     virtual void v_InitObject();
 
@@ -89,6 +88,6 @@ private:
         Array<OneD, Array<OneD, NekDouble> > &BfFwd,
         Array<OneD, Array<OneD, NekDouble> > &physarray);
 };
-}
+} // namespace Nektar
 
 #endif

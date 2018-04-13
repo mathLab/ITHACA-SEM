@@ -91,8 +91,6 @@ void APEUpwindSolver::v_PointSolve(
     NekDouble  c0sqR, NekDouble  rho0R, NekDouble  u0R, NekDouble  v0R, NekDouble  w0R,
     NekDouble &pF,    NekDouble &rhoF,  NekDouble &uF,  NekDouble &vF,  NekDouble &wF)
 {
-    // fetch params
-
     // Speed of sound
     NekDouble c0L = sqrt(c0sqL);
     NekDouble c0R = sqrt(c0sqR);

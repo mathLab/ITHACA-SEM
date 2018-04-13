@@ -34,8 +34,7 @@
     <DOMAIN> C[0] </DOMAIN>
   </GEOMETRY>
   <EXPANSIONS>
-    <E COMPOSITE="C[0]" FIELDS="p" TYPE="MODIFIED" NUMMODES="4"/>
-    <E COMPOSITE="C[0]" FIELDS="u" TYPE="MODIFIED" NUMMODES="4"/>
+    <E COMPOSITE="C[0]" FIELDS="p,u" TYPE="MODIFIED" NUMMODES="4"/>
   </EXPANSIONS>
   <CONDITIONS>
     <SOLVERINFO>
@@ -64,11 +63,11 @@
     </BOUNDARYREGIONS>
     <BOUNDARYCONDITIONS>
       <REGION REF="0">
-<D VAR="p" VALUE="0"/>
-        <D VAR="u" VALUE="0"/>
+        <D VAR="p" USERDEFINEDTYPE="RiemannInvariantBC"/>
+        <D VAR="u" USERDEFINEDTYPE="RiemannInvariantBC"/>
       </REGION>
     </BOUNDARYCONDITIONS>
-    <FUNCTION NAME="Baseflow"> <!-- Incompressible base flow -->
+    <FUNCTION NAME="Baseflow">
       <E VAR="u0" VALUE="0"/>
       <E VAR="c0sq" VALUE="1.4 * Pinfinity / Rho0"/>
       <E VAR="rho0" VALUE="Rho0"/>
@@ -77,7 +76,7 @@
       <E VAR="p" VALUE="pmax*omega0*cos(omega0*t)*exp(-32*x^2)"/>
       <E VAR="u" VALUE="0"/>
     </FUNCTION>
-    <FUNCTION NAME="ExactSolution"> <!-- Not really the exact solution -->
+    <FUNCTION NAME="ExactSolution">
       <E VAR="p" VALUE="0"/>
       <E VAR="u" VALUE="0"/>
     </FUNCTION>

@@ -91,55 +91,62 @@ void LEEUpwindSolver::v_PointSolve(
     NekDouble &pF,    NekDouble &rhoF,  NekDouble &ruF, NekDouble &rvF, NekDouble &rwF)
 {
     // Speed of sound
-    NekDouble cL = sqrt(c0sqL);
-    NekDouble cR = sqrt(c0sqR);
+    NekDouble c0L = sqrt(c0sqL);
+    NekDouble c0R = sqrt(c0sqR);
+    NekDouble c0M = (c0L + c0R) / 2.0;
 
-    NekDouble cM  = (cL + cR) / 2;
-    NekDouble u0M = (u0L + u0R) / 2;
+    NekDouble u0M = (u0L + u0R) / 2.0;
 
-    NekDouble h1, h2, h3, h4, h5;
+    pF   = 0.0;
+    rhoF = 0.0;
+    ruF  = 0.0;
+    rvF  = 0.0;
+    rwF  = 0.0;
 
+    // lambda_1,2,3
     if (u0M > 0)
     {
-        h1 = rhoL - pL / pow(cL, 2);
-        h2 = rvL;
-        h3 = rwL;
+        rhoF = rhoF + u0L * (c0sqL * rhoL - pL) / c0sqL;
+        rvF  = rvF + rvL * u0L;
+        rwF  = rwF + rwL * u0L;
     }
     else
     {
-        h1 = rhoR - pR / pow(cR, 2);
-        h2 = rvR;
-        h3 = rwR;
+        rhoF = rhoF + u0R * (c0sqR * rhoR - pR) / c0sqR;
+        rvF  = rvF + rvR * u0R;
+        rwF  = rwF + rwR * u0R;
     }
 
-    if (u0M - cM > 0)
+    // lambda_4
+    if (u0M - c0M > 0)
     {
-        h4 = ruL / 2.0 - pL / (2 * cL);
+        pF   = pF + 0.5 * (c0L - u0L) * (ruL * c0L - pL);
+        rhoF = rhoF + 0.5 * (c0L - u0L) * (ruL * c0sqL - c0L * pL) /
+                          pow(c0sqL, 3.0 / 2.0);
+        ruF = ruF + 0.5 * (c0L - u0L) * (-ruL * c0L + pL) / c0L;
     }
     else
     {
-        h4 = ruR / 2.0 - pR / (2 * cR);
+        pF   = pF + 0.5 * (c0R - u0R) * (ruR * c0R - pR);
+        rhoF = rhoF + 0.5 * (c0R - u0R) * (ruR * c0sqR - c0R * pR) /
+                          pow(c0sqR, 3.0 / 2.0);
+        ruF = ruF + 0.5 * (c0R - u0R) * (-ruR * c0R + pR) / c0R;
     }
 
-    if (u0M + cM > 0)
+    // lambda_5
+    if (u0M + c0M > 0)
     {
-        h5 = ruL / 2.0 + pL / (2 * cL);
+        pF   = pF + 0.5 * (c0L + u0L) * (ruL * c0L + pL);
+        rhoF = rhoF + 0.5 * (c0L + u0L) * (ruL * c0sqL + c0L * pL) /
+                          pow(c0sqL, 3.0 / 2.0);
+        ruF = ruF + 0.5 * (c0L + u0L) * (ruL * c0L + pL) / c0L;
     }
     else
     {
-        h5 = ruR / 2.0 + pR / (2 * cR);
+        pF   = pF + 0.5 * (c0R + u0R) * (ruR * c0R + pR);
+        rhoF = rhoF + 0.5 * (c0R + u0R) * (ruR * c0sqR + c0R * pR) /
+                          pow(c0sqR, 3.0 / 2.0);
+        ruF = ruF + 0.5 * (c0R + u0R) * (ruR * c0R + pR) / c0R;
     }
-
-    NekDouble p   = cM * (h5 - h4);
-    NekDouble rho = h1 - cM * (h4 + h5);
-    NekDouble ru  = h4 + h5;
-    NekDouble rv  = h2;
-    NekDouble rw  = h3;
-
-    pF   = ru * pow(cM, 2) + u0M * p;
-    rhoF = ru + rho * u0M;
-    ruF  = ru * u0M + p;
-    rvF  = rv * u0M;
-    rwF  = rw * u0M;
 }
 }

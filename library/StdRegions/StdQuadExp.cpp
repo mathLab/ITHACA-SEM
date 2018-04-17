@@ -1345,7 +1345,7 @@ namespace Nektar
                 if (bType == LibUtilities::eModified_A)
                 {
                     // Zero signmap and set maparray to zero if
-                    // elemental modes are not as large as face modesl
+                    // elemental modes are not as large as face modes
                     for (int j = numModes; j < P; j++)
                     {
                         signarray[j] = 0.0;

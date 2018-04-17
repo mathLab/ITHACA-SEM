@@ -57,6 +57,7 @@ namespace Nektar
             eHelmholtzMatrixOp,
             eHybridDGHelmBndLamMatrixOp,
             eLinearAdvectionReactionOp,
+            eLinearAdvectionDiffusionReactionOp,
             SIZE_OptimizeOperationType
         };
 
@@ -71,7 +72,8 @@ namespace Nektar
             "WeakDerivMatrixOp",
             "HelmholtzMatrixOp",
             "HybridDGHelmBndLamMatrixOp",
-            "LinearAdvectionReactionOp"
+            "LinearAdvectionReactionOp",
+            "LinearAdvectionDiffusionReactionOp"
         };
 
         /// Processes global optimisation parameters from a session.
@@ -172,6 +174,11 @@ namespace Nektar
             case StdRegions::eLinearAdvectionReaction:
                 {
                     type = eLinearAdvectionReactionOp;
+                }
+                break;
+            case StdRegions::eLinearAdvectionDiffusionReaction:
+                {
+                    type = eLinearAdvectionDiffusionReactionOp;
                 }
                 break;
             default:

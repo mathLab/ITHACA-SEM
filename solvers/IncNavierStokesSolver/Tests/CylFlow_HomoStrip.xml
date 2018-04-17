@@ -1827,7 +1827,6 @@
             <I PROPERTY="SolverType" VALUE="VCSMapping" />
             <I PROPERTY="EvolutionOperator" VALUE="SkewSymmetric" />
             <I PROPERTY="Projection" VALUE="Galerkin" />
-            <I PROPERTY="GlobalSysSoln" VALUE="DirectMultiLevelStaticCond"/>
             <I PROPERTY="TimeIntegrationMethod" VALUE="IMEXOrder2" />
             <I PROPERTY="HOMOGENEOUS" VALUE="1D"/>
             <I PROPERTY="USEFFT" VALUE="FFTW"/>

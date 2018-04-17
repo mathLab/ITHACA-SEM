@@ -47,8 +47,9 @@ std::string ForcingMovingBody::className = SolverUtils::GetForcingFactory().
                                     "Moving Body Forcing");
 
 ForcingMovingBody::ForcingMovingBody(
-        const LibUtilities::SessionReaderSharedPtr& pSession)
-    : Forcing(pSession)
+                const LibUtilities::SessionReaderSharedPtr         &pSession,
+                const std::weak_ptr<SolverUtils::EquationSystem> &pEquation)
+    : Forcing(pSession, pEquation)
 {
 }
 
@@ -1249,7 +1250,7 @@ void ForcingMovingBody::InitialiseFilter(
     // fluid forces and write both the aerodynamic forces and motion variables
     // into the output files
     m_MovBodyfilter = MemoryManager<FilterMovingBody>::
-                                    AllocateSharedPtr(pSession, vParams);
+                                    AllocateSharedPtr(pSession, m_equ, vParams);
 
     // Initialise the object of MovingBody filter
     m_MovBodyfilter->Initialise(pFields, 0.0);

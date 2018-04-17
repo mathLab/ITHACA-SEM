@@ -128,6 +128,13 @@ namespace Nektar
                       Array<OneD,       NekDouble> &coords_2,
                       Array<OneD,       NekDouble> &coords_3);
 
+            LOCAL_REGIONS_EXPORT virtual void v_ExtractDataToCoeffs(
+                const NekDouble *data,
+                const std::vector<unsigned int > &nummodes,
+                const int mode_offset,
+                NekDouble * coeffs,
+                std::vector<LibUtilities::BasisType> &fromType);
+
             LOCAL_REGIONS_EXPORT virtual NekDouble v_PhysEvaluate(
                 const Array<OneD, const NekDouble>& coord,
                 const Array<OneD, const NekDouble>& physvals);

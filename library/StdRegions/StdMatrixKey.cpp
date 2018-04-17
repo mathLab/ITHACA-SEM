@@ -120,7 +120,19 @@ namespace Nektar
             {
                 return false;
             }
-            
+
+            if( LibUtilities::ShapeTypeDimMap[lhs.m_shapeType] <
+                LibUtilities::ShapeTypeDimMap[rhs.m_shapeType])
+            {
+                return true;
+            }
+
+            if( LibUtilities::ShapeTypeDimMap[lhs.m_shapeType] >
+                LibUtilities::ShapeTypeDimMap[rhs.m_shapeType])
+            {
+                return false;
+            }
+
             for(unsigned int i = 0; i < LibUtilities::ShapeTypeDimMap[lhs.m_shapeType]; ++i)
             {
                 if(lhs.m_base[i].get() < rhs.m_base[i].get())

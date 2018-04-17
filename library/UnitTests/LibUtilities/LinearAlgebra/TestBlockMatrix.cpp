@@ -620,7 +620,7 @@ namespace Nektar
             BOOST_CHECK_EQUAL(expected_transpose_result, transposed_result);
         }
         
-        BOOST_AUTO_TEST_CASE(TestMultiplication_1)
+        BOOST_AUTO_TEST_CASE(TestMultiplicationBlock_1)
         {
             typedef NekMatrix<double> InnerType;
             typedef NekMatrix<InnerType, BlockMatrixTag> BlockType;

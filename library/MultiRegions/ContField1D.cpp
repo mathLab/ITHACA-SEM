@@ -565,7 +565,10 @@ namespace Nektar
             int i;
             for(i = 0; i < m_bndCondExpansions.num_elements(); ++i)
             {
-                if(m_bndConditions[i]->GetBoundaryConditionType() != SpatialDomains::eDirichlet)
+                if(m_bndConditions[i]->GetBoundaryConditionType() ==
+                       SpatialDomains::eNeumann ||
+                   m_bndConditions[i]->GetBoundaryConditionType() ==
+                       SpatialDomains::eRobin)
                 {
                     wsp[m_locToGloMap->GetBndCondCoeffsToGlobalCoeffsMap(i)]
                         += m_bndCondExpansions[i]->GetCoeff(0);

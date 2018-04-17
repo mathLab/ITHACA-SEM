@@ -72,7 +72,7 @@ namespace Nektar
             //-------------------------------
             LOCAL_REGIONS_EXPORT virtual NekDouble v_Integral(
                     const Array<OneD, const NekDouble> &inarray);
-			
+
             //----------------------------
             // Differentiation Methods
             //----------------------------

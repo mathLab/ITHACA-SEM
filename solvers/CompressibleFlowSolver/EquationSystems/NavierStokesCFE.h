@@ -82,11 +82,11 @@ namespace Nektar
             const Array<OneD, Array<OneD, NekDouble> >   &pFwd,
             const Array<OneD, Array<OneD, NekDouble> >   &pBwd);
 
-    void GetViscousFluxVector(
+    virtual void v_GetViscousFluxVector(
         const Array<OneD, Array<OneD, NekDouble> >         &physfield,
         Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &derivatives,
         Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &viscousTensor);
-    void GetViscousFluxVectorDeAlias(
+    virtual void v_GetViscousFluxVectorDeAlias(
         const Array<OneD, Array<OneD, NekDouble> >         &physfield,
         Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &derivatives,
         Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &viscousTensor);

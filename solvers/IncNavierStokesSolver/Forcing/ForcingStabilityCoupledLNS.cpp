@@ -45,8 +45,9 @@ std::string ForcingStabilityCoupledLNS::className = SolverUtils::GetForcingFacto
                                     "RHS forcing for coupled LNS stability solver");
 
 ForcingStabilityCoupledLNS::ForcingStabilityCoupledLNS(
-        const LibUtilities::SessionReaderSharedPtr& pSession)
-    : Forcing(pSession)
+                const LibUtilities::SessionReaderSharedPtr         &pSession,
+                const std::weak_ptr<SolverUtils::EquationSystem> &pEquation)
+    : Forcing(pSession, pEquation)
 {
 }
 

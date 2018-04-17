@@ -2090,7 +2090,8 @@ namespace Nektar
                             }
                         }
                     }
-                    else
+                    else if (bndConds[i]->GetBoundaryConditionType() 
+                                        != SpatialDomains::ePeriodic)
                     {                    
                         for(j = 0; j < (bndCondExp[i])->GetNcoeffs(); j++)
                         {

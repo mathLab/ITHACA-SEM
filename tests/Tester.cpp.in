@@ -228,6 +228,12 @@ int main(int argc, char *argv[])
         command += file.GetParameters();
         command += " 1>output.out 2>output.err";
 
+        // override command if specified
+        if (file.GetCommand() != "")
+        {
+            command = file.GetCommand();
+        }
+
         status = 0;
         string line;
 

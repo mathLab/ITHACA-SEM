@@ -16,13 +16,14 @@ v5.0.0
 - Add ARPACK thirdparty build capabilities (!828)
 - Added native support for csv files in addititon to pts (!760, !835, !906)
 - Utilize LAPACK_DIR env variable to find the native blas/lapack install (!827)
+- Extend AeroForces filter to compressible flows (!815)
 - Remove StdExpansion use from MultiRegion (use Expansions instead). (!831)
 - Move steady state check and CFL output from solvers to SolverUtils (!832)
 - Remove DG advection implementation from EquationSystem (!832)
 - Simplify RawType typedefs (!840)
 - Remove unused files from BasicUtils (!841)
 - Remove checks for old boost versions which are no longer supported (!841)
-- Refactor ParseUtils to be more consistent (!843, !896)
+- Refactor ParseUtils to be more consistent (!843, !896, !908)
 - Added support for using the distance to a specific region (e.g. outlet) in the
   function definitions for the Absorption Forcing (!769)
 - Improve performance of DisContField2D::v_ExtractTracePhys (!824)
@@ -34,9 +35,21 @@ v5.0.0
 - Fix mac OSX on buildbots (!876)
 - Fix error from (!826) (!876)
 - Fix minor bug in ARPACK thirdparty build cmake (!874)
+- Added in sum factorisation version for pyramid expnasions and orthogonal
+  expansion in pyramids (!750)
 - Switch MeshGraph to use factory pattern and add HDF5 geometry support (!900,
   !904)
-
+- Restructure the low energy preconditioner to handle pyramidic and variable
+  p expansions (!920)
+- Remove requirement for modmetis, switch to SCOTCH by default (!899)
+- Switch MeshGraph to use factory pattern and add HDF5 geometry support
+  (!900, !904)
+- Fix bug in MeshPartition.cpp which caused incorrect array access when
+  WeightPartitions was used in parallel (!923)
+- Removed instance count from beginning of Array storage to improve memory
+  alignment (!921)
+- Fix naming issue of duplicate Unit tests (!924) 
+	
 **NekMesh**:
 - Add feature to read basic 2D geo files as CAD (!731)
 - Add periodic boundary condition meshing in 2D (!733)
@@ -62,12 +75,17 @@ v5.0.0
 - Add ability to space out 2D BL nodes to better fit local target Delta (!890)
 - Fix automatic peralign call in 2D periodic meshing (!888)
 - Fix BL splitting call from MCF (!910)
+- Support CFI combined lines (!917)
+- Order nodes in Gmsh output (!912)
+- Fix manifold face curvature nodes (!913)
 
 **FieldConvert**:
 - Add input module for Semtex field files (!777)
 - Fixed interppoints module (!760)
 - Fix OutputTecplot in 2DH1D (!818)
 - Move StreamFunction utility to a FieldConvert module (!809)
+- Allow using expansion from session file with new `--useSessionExpansion`
+  command line option (!842)
 - Extend wss module to compressible flows (!810)
 - Allow explicitly setting bool options of FieldConvert modules as false (!811)
 - Enable output to multiple files (!844)
@@ -80,13 +98,15 @@ v5.0.0
 - Replace steady-state check based on difference of norms by check based on
   norm of the difference, to be consistent with the compressible solver (!832)
 - Updated SVV to allow for the DGKernel extension (!851)
+- Pre-calculate Time invariant portion of Womersley Solution (!814)
 
 **CompressibleFlowSolver**
 - Add 3D regression tests (!567)
 - Introduce forcing for quasi-1D Euler simulations (!771)
-- Allow performing axi-symmetric Euler simulations (!771)
+- Allow performing axi-symmetric Euler and NS simulations (!771, !866)
 - Add ability to use an exponential filtering for stabilization with
   seg, quad and hex elements (!771, !862)
+- Fix compressible solver with NUMMODES=1 (!868)
 - Introduce equations of state to account for real gas effects (!880)
 
 **APESolver:**
@@ -108,6 +128,8 @@ v4.4.2
 - Fix calculation of BLPoints (!892)
 - Fix deadlock in DiffusionLDG (!885)
 - Fix uninitialised coefficients in DirectFull solver (!898)
+- Updated PETSc to 3.7.7 (!916)
+- Fix typcase to an integer which set Lz < 1 to zero when postprocess hdf5 output (!9922)
 
 **NekMesh**
 - Fix missing periodic boundary meshing and boundary layer mesh adjustment
@@ -121,6 +143,9 @@ v4.4.2
 
 **FieldConvert**
 - Allow passing input name with trailing separator (!879)
+
+**Utilities**
+- Fix VtkToPng to account for deprecated VTK API for VTK version > 8.1 (!925)
 
 v4.4.1
 ------

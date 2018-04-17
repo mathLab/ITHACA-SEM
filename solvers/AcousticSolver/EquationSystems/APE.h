@@ -6,7 +6,7 @@
 //
 // The MIT License
 //
-// Copyright (c) 2015 Kilian Lackhove
+// Copyright (c) 2018 Kilian Lackhove
 // Copyright (c) 2006 Division of Applied Mathematics, Brown University (USA),
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
@@ -44,6 +44,7 @@
 #include <SolverUtils/Advection/Advection.h>
 #include <SolverUtils/Forcing/Forcing.h>
 #include <SolverUtils/RiemannSolvers/RiemannSolver.h>
+#include <SolverUtils/Core/Coupling.h>
 
 using namespace Nektar::SolverUtils;
 
@@ -78,7 +79,7 @@ class APE : public AdvectionSystem
         int                                             _ip, _irho, _iu;
         /// we are dealing with a conservative formualtion
         bool                                            m_conservative;
-
+        SolverUtils::CouplingSharedPtr                  m_coupling;
         SolverUtils::AdvectionSharedPtr                 m_advection;
         std::vector<SolverUtils::ForcingSharedPtr>      m_forcing;
         SolverUtils::RiemannSolverSharedPtr             m_riemannSolver;
@@ -109,6 +110,8 @@ class APE : public AdvectionSystem
                 Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &flux);
 
         virtual bool v_PreIntegrate(int step);
+
+        virtual void v_Output();
 
         virtual Array<OneD, NekDouble> v_GetMaxStdVelocity();
 

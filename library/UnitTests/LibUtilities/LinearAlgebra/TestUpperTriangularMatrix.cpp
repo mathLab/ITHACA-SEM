@@ -48,7 +48,7 @@ namespace Nektar
     {
         typedef UpperTriangularMatrixFuncs Policy;
 
-        BOOST_AUTO_TEST_CASE(TestMatrixVectorMultiply)
+        BOOST_AUTO_TEST_CASE(TestMatrixVectorMultiplyUpper)
         {
             {
                 double matrix_buf[] = {1, 2,
@@ -67,7 +67,7 @@ namespace Nektar
             }
         }
 
-        BOOST_AUTO_TEST_CASE(Test3x3MatrixVectorMultiply)
+        BOOST_AUTO_TEST_CASE(Test3x3MatrixVectorMultiplyUpper)
         {
             {
                 //double matrix_buf[] = {1, 2, 3,

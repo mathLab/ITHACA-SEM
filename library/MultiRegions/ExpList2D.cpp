@@ -805,11 +805,16 @@ namespace Nektar
             const SpatialDomains::CompositeMap &domain,
             const SpatialDomains::MeshGraphSharedPtr &graph3D,
             const std::string variable,
-            const Collections::ImplementationType ImpType):
-            ExpList(pSession, graph3D)
+            const LibUtilities::CommSharedPtr comm,
+            const Collections::ImplementationType ImpType)
+            : ExpList(pSession, graph3D)
          {
-
              SetExpType(e2D);
+
+             if (comm)
+             {
+                 m_comm = comm;
+             }
 
              int j, elmtid=0;
              int nel = 0;

@@ -57,7 +57,6 @@ namespace Nektar
             eHelmholtzMatrixOp,
             eHybridDGHelmBndLamMatrixOp,
             eLinearAdvectionReactionOp,
-            eLinearAdvectionDiffusionReactionOp,
             SIZE_OptimizeOperationType
         };
 
@@ -72,8 +71,7 @@ namespace Nektar
             "WeakDerivMatrixOp",
             "HelmholtzMatrixOp",
             "HybridDGHelmBndLamMatrixOp",
-            "LinearAdvectionReactionOp",
-            "LinearAdvectionDiffusionReactionOp"
+            "LinearAdvectionReactionOp"
         };
 
         /// Processes global optimisation parameters from a session.
@@ -176,15 +174,11 @@ namespace Nektar
                     type = eLinearAdvectionReactionOp;
                 }
                 break;
-            case StdRegions::eLinearAdvectionDiffusionReaction:
-                {
-                    type = eLinearAdvectionDiffusionReactionOp;
-                }
-                break;
             default:
                 {
-                    ASSERTL0(false,"Optimisation suite not set up for this type"
-                                   " of matrix");
+                    return false;
+                    WARNINGL0(false,"Optimisation suite not set up for this type"
+                                   " of matrix, false is used");
                 }
             }
             return m_doGlobalMatOp[type];

@@ -147,14 +147,7 @@ namespace Nektar
             int n;
             for(n = 0; n < SIZE_OptimizeOperationType; n++)
             {
-                if(eLinearAdvectionReactionOp<n)
-                {
-                    // optimization not defined yet 
-                    // ignore input
-                    // forced to be false for the m_doGlobalMatOp
-                    continue; 
-                }
-                
+                                
                 TiXmlElement* operationType = paramList->FirstChildElement(
                                       OptimizationOperationTypeMap[n]);
 

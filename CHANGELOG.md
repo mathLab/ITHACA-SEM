@@ -49,6 +49,8 @@ v5.0.0
 - Removed instance count from beginning of Array storage to improve memory
   alignment (!921)
 - Fix naming issue of duplicate Unit tests (!924) 
+- Added a coupling interface to exchange data between solvers at run time
+  and a DummySolver to test the implementations (!853 !931)
 	
 **NekMesh**:
 - Add feature to read basic 2D geo files as CAD (!731)

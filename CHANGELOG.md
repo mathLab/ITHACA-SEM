@@ -50,7 +50,7 @@ v5.0.0
   alignment (!921)
 - Fix naming issue of duplicate Unit tests (!924) 
 - Fix warnings about missing virtual destructors in abstract classes (!932)
-	
+
 **NekMesh**:
 - Add feature to read basic 2D geo files as CAD (!731)
 - Add periodic boundary condition meshing in 2D (!733)
@@ -79,6 +79,7 @@ v5.0.0
 - Support CFI combined lines (!917)
 - Order nodes in Gmsh output (!912)
 - Fix manifold face curvature nodes (!913)
+- Fix writing 1D surfaces (!930)
 
 **FieldConvert**:
 - Add input module for Semtex field files (!777)

@@ -49,6 +49,7 @@ v5.0.0
 - Removed instance count from beginning of Array storage to improve memory
   alignment (!921)
 - Fix naming issue of duplicate Unit tests (!924) 
+- Fix warnings about missing virtual destructors in abstract classes (!932)
 
 **NekMesh**:
 - Add feature to read basic 2D geo files as CAD (!731)

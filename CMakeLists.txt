@@ -246,6 +246,7 @@ INCLUDE (ThirdPartyOCE)
 INCLUDE (ThirdPartyTriangle)
 INCLUDE (ThirdPartyTetGen)
 INCLUDE (ThirdPartyCCM)
+INCLUDE (ThirdPartyCwipi)
 INCLUDE (FindCFI)
 
 INCLUDE (Doxygen)

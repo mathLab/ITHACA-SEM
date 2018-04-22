@@ -62,13 +62,14 @@ namespace SolverUtils
 
             /// Creates an instance of this class
             SOLVER_UTILS_EXPORT static ForcingSharedPtr create(
-                    const LibUtilities::SessionReaderSharedPtr& pSession,
+                    const LibUtilities::SessionReaderSharedPtr &pSession,
+                    const std::weak_ptr<EquationSystem>      &pEquation,
                     const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields,
                     const unsigned int& pNumForcingFields,
                     const TiXmlElement* pForce)
             {
                 ForcingSharedPtr p = MemoryManager<ForcingAbsorption>::
-                                                AllocateSharedPtr(pSession);
+                                        AllocateSharedPtr(pSession, pEquation);
                 p->InitObject(pFields, pNumForcingFields, pForce);
                 return p;
             }
@@ -102,7 +103,9 @@ namespace SolverUtils
                     const NekDouble &time);
 
         private:
-            ForcingAbsorption(const LibUtilities::SessionReaderSharedPtr& pSession);
+            ForcingAbsorption(
+                const LibUtilities::SessionReaderSharedPtr &pSession,
+                const std::weak_ptr<EquationSystem>      &pEquation);
             virtual ~ForcingAbsorption(void){};
 
             void CalcAbsorption(

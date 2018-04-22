@@ -1,11 +1,12 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File FilterEnergy.h
+// File CommCwipi.h
 //
 // For more information, please see: http://www.nektar.info
 //
 // The MIT License
 //
+// Copyright (c) 2018 Kilian Lackhove
 // Copyright (c) 2006 Division of Applied Mathematics, Brown University (USA),
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
@@ -29,47 +30,50 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Outputs solution fields during time-stepping.
+// Description: CommCwipi header
 //
 ///////////////////////////////////////////////////////////////////////////////
+#ifndef NEKTAR_LIB_UTILITIES_COMMCWIPI_H
+#define NEKTAR_LIB_UTILITIES_COMMCWIPI_H
 
-#ifndef NEKTAR_INCNAVIERSTOKESSOLVER_FILTERS_FILTERENERGY_H
-#define NEKTAR_INCNAVIERSTOKESSOLVER_FILTERS_FILTERENERGY_H
+#include <mpi.h>
+#include <string>
 
-#include <SolverUtils/Filters/FilterEnergyBase.h>
+#include <LibUtilities/Communication/CommMpi.h>
+#include <LibUtilities/Memory/NekMemoryManager.hpp>
 
 namespace Nektar
 {
-
-class FilterEnergy : public SolverUtils::FilterEnergyBase
+namespace LibUtilities
 {
-public:
-    friend class MemoryManager<FilterEnergy>;
+// Forward declarations
+class CommCwipi;
 
+/// Pointer to a Communicator object.
+typedef std::shared_ptr<CommCwipi> CommCwipiSharedPtr;
+
+/// A global linear system.
+class CommCwipi : public CommMpi
+{
+
+public:
     /// Creates an instance of this class
-    static SolverUtils::FilterSharedPtr create(
-        const LibUtilities::SessionReaderSharedPtr &pSession,
-        const ParamMap &pParams) {
-        SolverUtils::FilterSharedPtr p = MemoryManager<FilterEnergy>
-                                        ::AllocateSharedPtr(pSession, pParams);
-        return p;
+    static CommSharedPtr create(int narg, char *arg[])
+    {
+        return MemoryManager<CommCwipi>::AllocateSharedPtr(narg, arg);
     }
 
-    ///Name of the class
+    /// Name of class
     static std::string className;
 
-    SOLVER_UTILS_EXPORT FilterEnergy(
-        const LibUtilities::SessionReaderSharedPtr &pSession,
-        const ParamMap &pParams);
-    SOLVER_UTILS_EXPORT ~FilterEnergy();
+    CommCwipi(int narg, char *arg[]);
+
+    virtual ~CommCwipi();
 
 protected:
-    virtual void v_GetVelocity(
-        const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
-        const int i,
-        Array<OneD, NekDouble> &velocity);
+    virtual void v_Finalise();
 };
-
+}
 }
 
-#endif /* NEKTAR_SOLVERUTILS_FILTERS_FILTERCHECKPOINT_H */
+#endif

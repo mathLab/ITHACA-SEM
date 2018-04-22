@@ -69,6 +69,10 @@ typedef std::function<void (
 class Advection
 {
 public:
+
+    SOLVER_UTILS_EXPORT virtual ~Advection()
+    {};
+
     /// Interface function to initialise the advection object.
     SOLVER_UTILS_EXPORT void InitObject(
         LibUtilities::SessionReaderSharedPtr               pSession,

@@ -88,6 +88,13 @@ IF(NEKTAR_USE_MPI)
         ./Communication/CommMpi.cpp)
 ENDIF(NEKTAR_USE_MPI)
 
+IF ( NEKTAR_USE_CWIPI )
+    SET(CommunicationHeaders ${CommunicationHeaders}
+        ./Communication/CommCwipi.h)
+    SET(CommunicationSources ${CommunicationSources}
+        ./Communication/CommCwipi.cpp)
+ENDIF ()
+
 SET(FFTHeaders
        ./FFT/NektarFFT.h
 )
@@ -341,6 +348,12 @@ ADD_NEKTAR_LIBRARY(LibUtilities
 ADD_DEPENDENCIES(LibUtilities boost tinyxml-2.6.2 zlib-1.2.7)
 
 ### Libraries needed specifically by LibUtilities ###
+
+# CWIPI
+IF ( NEKTAR_USE_CWIPI )
+    TARGET_LINK_LIBRARIES(LibUtilities LINK_PRIVATE ${CWIPI_LIBRARY} ${CWIPI_LIBRARY_FVMC} ${CWIPI_LIBRARY_BFTC})
+    ADD_DEPENDENCIES(LibUtilities cwipi-0.8.2)
+ENDIF ()
 
 # FFTW
 IF( NEKTAR_USE_FFTW )

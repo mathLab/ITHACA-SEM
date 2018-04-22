@@ -75,6 +75,7 @@ IF( NEKTAR_SOLVER_ADR )
     ADD_NEKTAR_TEST(Advection_m12_Order1)
     ADD_NEKTAR_TEST(Advection_m12_Order2)
     ADD_NEKTAR_TEST(Advection_m14_Order4)
+    ADD_NEKTAR_TEST(CylindricalHelmholtz)
 
     # 2D advection diffusion (Imex DG)
     ADD_NEKTAR_TEST(UnsteadyAdvectionDiffusion_2D_ImexDG)

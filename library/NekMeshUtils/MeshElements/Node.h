@@ -335,7 +335,7 @@ public:
             
             m_z = zrot;
             m_x = xrot; 
-                                }
+        }
         else if (dir == "z")
         {
             NekDouble xrot = cos(angle)*m_x - sin(angle)*m_y;

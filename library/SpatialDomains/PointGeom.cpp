@@ -137,7 +137,7 @@ void PointGeom::Mult(PointGeom &a, PointGeom &b)
     m_coordim = 3;
 }
 
-/// _output = rotation of(this.a) by angle 'angle' around axis dir
+/// \brief _this  = rotation of a by angle 'angle' around axis dir
 void PointGeom::rotate(PointGeom& a, int dir, NekDouble angle)
 {
     switch(dir)
@@ -154,12 +154,22 @@ void PointGeom::rotate(PointGeom& a, int dir, NekDouble angle)
         break;
     case 1:
         {
-            ASSERTL0(false,"Set up y axis rotation");
+            NekDouble zrot = cos(angle)*a.z() - sin(angle)*a.x();
+            NekDouble xrot = sin(angle)*a.z() + cos(angle)*a.x();
+            
+            (*this)(0) = xrot;
+            (*this)(1) = a.y(); 
+            (*this)(2) = zrot;
         }
         break;
     case 2:
         {
-            ASSERTL0(false,"Set up z axis rotation");
+            NekDouble xrot = cos(angle)*a.x() - sin(angle)*a.y();
+            NekDouble yrot = sin(angle)*a.x() + cos(angle)*a.y();
+            
+            (*this)(0) = xrot;
+            (*this)(1) = yrot;
+            (*this)(2) = a.z(); 
         }
         break;
     }

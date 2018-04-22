@@ -52,8 +52,9 @@ std::string FilterThresholdMin::className =
  */
 FilterThresholdMin::FilterThresholdMin(
         const LibUtilities::SessionReaderSharedPtr &pSession,
+        const std::weak_ptr<EquationSystem>      &pEquation,
         const ParamMap &pParams)
-    : Filter(pSession)
+    : Filter(pSession, pEquation)
 {
     // ThresholdValue
     auto it = pParams.find("ThresholdValue");

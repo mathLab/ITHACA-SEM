@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File FilterEnergy.cpp
+// File FilterInterfaces.hpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,36 +29,42 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Output kinetic energy and enstrophy.
+// Description: Interface class for solvers that support fluid physics
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <IncNavierStokesSolver/Filters/FilterEnergy.h>
+#ifndef NEKTAR_SOLVERUTILS_FILTERS_FILTERINTERFACES_HPP
+#define NEKTAR_SOLVERUTILS_FILTERS_FILTERINTERFACES_HPP
+
+#include <LibUtilities/BasicUtils/SharedArray.hpp>
 
 namespace Nektar
 {
-
-std::string FilterEnergy::className = SolverUtils::GetFilterFactory().
-    RegisterCreatorFunction("Energy", FilterEnergy::create);
-
-FilterEnergy::FilterEnergy(
-    const LibUtilities::SessionReaderSharedPtr &pSession,
-    const ParamMap &pParams)
-    : FilterEnergyBase(pSession, pParams, true)
-{
-}
-
-FilterEnergy::~FilterEnergy()
+namespace SolverUtils
 {
 
-}
-
-void FilterEnergy::v_GetVelocity(
-    const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
-    const int i,
-    Array<OneD, NekDouble> &velocity)
+class FluidInterface
 {
-    velocity = pFields[i]->GetPhys();
-}
+public:
+    /// Extract array with velocity from physfield
+    SOLVER_UTILS_EXPORT virtual void GetVelocity(
+        const Array<OneD, const Array<OneD, NekDouble> > &physfield,
+              Array<OneD, Array<OneD, NekDouble> >       &velocity) = 0;
+
+    SOLVER_UTILS_EXPORT virtual bool HasConstantDensity() = 0;
+
+    /// Extract array with density from physfield
+    SOLVER_UTILS_EXPORT virtual void GetDensity(
+        const Array<OneD, const Array<OneD, NekDouble> > &physfield,
+              Array<OneD, NekDouble>                     &density) = 0;
+
+    /// Extract array with pressure from physfield
+    SOLVER_UTILS_EXPORT virtual void GetPressure(
+        const Array<OneD, const Array<OneD, NekDouble> > &physfield,
+              Array<OneD, NekDouble>                     &pressure) = 0;
+};
 
 }
+}
+
+#endif

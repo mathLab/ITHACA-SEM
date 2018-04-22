@@ -49,12 +49,13 @@ public:
 
     /// Creates an instance of this class
     static SolverUtils::FilterSharedPtr create(
-        const LibUtilities::SessionReaderSharedPtr &pSession,
-        const ParamMap &pParams) {
+        const LibUtilities::SessionReaderSharedPtr         &pSession,
+        const std::weak_ptr<SolverUtils::EquationSystem> &pEquation,
+        const ParamMap &pParams)
+    {
         SolverUtils::FilterSharedPtr p
                         = MemoryManager<FilterCheckpointCellModel>
-                                ::AllocateSharedPtr(pSession, pParams);
-        //p->InitObject();
+                            ::AllocateSharedPtr(pSession, pEquation, pParams);
         return p;
     }
 
@@ -62,7 +63,8 @@ public:
     static std::string className;
 
     FilterCheckpointCellModel(
-        const LibUtilities::SessionReaderSharedPtr &pSession,
+        const LibUtilities::SessionReaderSharedPtr         &pSession,
+        const std::weak_ptr<SolverUtils::EquationSystem> &pEquation,
         const ParamMap &pParams);
     ~FilterCheckpointCellModel();
 

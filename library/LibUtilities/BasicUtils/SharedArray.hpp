@@ -77,7 +77,8 @@ namespace Nektar
                 m_data( nullptr ),
                 m_count( nullptr ),
                 m_offset( 0 ),
-                m_created_by_python( false )
+                m_memory_pointer( nullptr ),
+                m_python_decrement( nullptr )
             {
                 CreateStorage(m_capacity);
             }
@@ -93,14 +94,15 @@ namespace Nektar
                 m_data( nullptr ),
                 m_count( nullptr ),
                 m_offset( 0 ),
-                m_created_by_python( false )
+                m_memory_pointer( nullptr ),
+                m_python_decrement( nullptr )
             {
                 CreateStorage(m_capacity);
                 ArrayInitializationPolicy<DataType>::Initialize( m_data, m_capacity );
             }
 
-             /// \brief Creates a 1D array with each element
-             /// initialized to an initial value.
+            /// \brief Creates a 1D array with each element
+            /// initialized to an initial value.
             /// \param dim1Size The array's size.
             /// \param initValue Each element's initial value.
             ///
@@ -114,7 +116,8 @@ namespace Nektar
                 m_data( nullptr ),
                 m_count( nullptr ),
                 m_offset( 0 ),
-                m_created_by_python( false )
+                m_memory_pointer( nullptr ),
+                m_python_decrement( nullptr )
             {
                 CreateStorage(m_capacity);
                 ArrayInitializationPolicy<DataType>::Initialize( m_data, m_capacity, initValue );
@@ -133,10 +136,33 @@ namespace Nektar
                 m_data( nullptr ),
                 m_count( nullptr ),
                 m_offset( 0 ),
-                m_created_by_python( false )
+                m_memory_pointer( nullptr ),
+                m_python_decrement( nullptr )
             {
                 CreateStorage(m_capacity);
                 ArrayInitializationPolicy<DataType>::Initialize( m_data, m_capacity, data );
+            }
+
+            /// \brief Creates a 1D array a copies data into it.
+            /// \param dim1Size the array's size.
+            /// \param data The data to copy.
+            /// \param memory_pointer Pointer to the memory address of the array
+            /// \param python_decrement Pointer to decrementer
+            ///
+            /// If DataType is a fundamental type (double, int, etc.), then data is copied
+            /// directly into the underlying storage.  Otherwise, the DataType's copy constructor
+            /// is used to copy each element.
+            Array(unsigned int dim1Size, const DataType* data, void* memory_pointer, void (*python_decrement)(void *)) :
+                m_size( dim1Size ),
+                m_capacity( dim1Size ),
+                m_data( nullptr ),
+                m_count( nullptr ),
+                m_offset( 0 ),
+                m_memory_pointer( memory_pointer ),
+                m_python_decrement( python_decrement )
+            {
+                m_count = new unsigned int(); 
+                *m_count = 1;
             }
 
             /// \brief Creates a 1D array that references rhs.
@@ -154,7 +180,8 @@ namespace Nektar
                 m_data(rhs.m_data),
                 m_count(rhs.m_count),
                 m_offset(rhs.m_offset),
-                m_created_by_python(rhs.m_created_by_python)
+                m_memory_pointer(rhs.m_memory_pointer),
+                m_python_decrement(rhs.m_python_decrement)
             {
                 *m_count += 1;
                 ASSERTL0(m_size <= rhs.num_elements(), "Requested size is larger than input array size.");
@@ -167,10 +194,11 @@ namespace Nektar
                 m_data(rhs.m_data),
                 m_count(rhs.m_count),
                 m_offset(rhs.m_offset),
-                m_created_by_python(rhs.m_created_by_python)
+                m_memory_pointer(rhs.m_memory_pointer),
+                m_python_decrement(rhs.m_python_decrement)
             {
                 *m_count += 1;
-            }
+            }           
 
             ~Array()
             {
@@ -182,15 +210,20 @@ namespace Nektar
                 *m_count -= 1;
                 if( *m_count == 0 )
                 {
-                    ArrayDestructionPolicy<DataType>::Destroy( m_data, m_capacity );
-                    MemoryManager<DataType>::RawDeallocate( m_data, m_capacity );
+                    if (m_memory_pointer != nullptr)
+                    {
+                        m_python_decrement(m_data);                         
+                    } else {
+                        ArrayDestructionPolicy<DataType>::Destroy( m_data, m_capacity );
+                        MemoryManager<DataType>::RawDeallocate( m_data, m_capacity );
 
-                    delete m_count; // Clean up the memory used for the reference count.
+                        delete m_count; // Clean up the memory used for the reference count.
+                    }                    
                 }
             }
 
             /// \brief Creates a reference to rhs.
-            Array<OneD, const DataType>& operator=(const Array<OneD, const DataType>& rhs)
+            Array<OneD, const DataType>& operator=(const Array<OneD, const DataType>& rhs) 
             {
                 *m_count -= 1;
                 if( *m_count == 0 )
@@ -206,7 +239,8 @@ namespace Nektar
                 *m_count += 1;
                 m_offset = rhs.m_offset;
                 m_size = rhs.m_size;
-                m_created_by_python = rhs.m_created_by_python;
+                m_memory_pointer = rhs.m_memory_pointer;
+                m_python_decrement = rhs.m_python_decrement;
                 return *this;
             }
 
@@ -237,6 +271,9 @@ namespace Nektar
 
             /// \brief Returns the array's offset.
             unsigned int GetOffset() const { return m_offset; }
+
+            /// \brief Returns the array's reference counter.
+            unsigned int GetCount() const { return m_count; }
 
             /// \brief Returns true is this array and rhs overlap.
             bool Overlaps(const Array<OneD, const DataType>& rhs) const
@@ -283,8 +320,11 @@ namespace Nektar
 
             unsigned int m_offset;
 
-            // m_created_by_python is true if the array was originally created using Python interface
-            bool m_created_by_python;
+            // m_memory_pointer holds a pointer to the array.
+            void* m_memory_pointer;
+            // m_python_decrement holds a pointer to a function decrementing the reference
+            // counter in Python memory manager.
+            void (*m_python_decrement)(void *);
 
 
         private:

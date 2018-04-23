@@ -120,6 +120,12 @@ struct PythonToOneDArray
         return objPtr;
     }
 
+    static void decrement(void *objPtr) 
+    {
+        PyObject *pyObjPtr = (PyObject *)objPtr;
+        Py_XDECREF(pyObjPtr);
+    }
+
     static void construct(
         PyObject *objPtr,
         py::converter::rvalue_from_python_stage1_data* data)
@@ -134,8 +140,10 @@ struct PythonToOneDArray
             (py::converter::rvalue_from_python_storage<Array<OneD, T> >*)data)
             ->storage.bytes;
         data->convertible = storage;
-        new (storage) Array<OneD, T>(array.shape(0), (T *)array.get_data());
+        void *memory_pointer = objPtr;
+        new (storage) Array<OneD, T>(array.shape(0), (T *)array.get_data(), memory_pointer, &decrement);
     }
+
 };
 
 template<typename T>

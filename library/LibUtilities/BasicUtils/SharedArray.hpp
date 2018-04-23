@@ -148,10 +148,6 @@ namespace Nektar
             /// \param data The data to copy.
             /// \param memory_pointer Pointer to the memory address of the array
             /// \param python_decrement Pointer to decrementer
-            ///
-            /// If DataType is a fundamental type (double, int, etc.), then data is copied
-            /// directly into the underlying storage.  Otherwise, the DataType's copy constructor
-            /// is used to copy each element.
             Array(unsigned int dim1Size, const DataType* data, void* memory_pointer, void (*python_decrement)(void *)) :
                 m_size( dim1Size ),
                 m_capacity( dim1Size ),

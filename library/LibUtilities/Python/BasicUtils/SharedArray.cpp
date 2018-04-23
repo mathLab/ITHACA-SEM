@@ -145,6 +145,7 @@ struct PythonToOneDArray
         void *memory_pointer = objPtr;
         using nonconst_t = typename std::remove_const<T>::type;
         new (storage) Array<OneD, T>(array.shape(0), (nonconst_t *)array.get_data(), memory_pointer, &decrement);
+        Py_XINCREF(objPtr);
     }
 
 };

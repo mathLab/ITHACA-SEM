@@ -143,24 +143,6 @@ namespace Nektar
                 ArrayInitializationPolicy<DataType>::Initialize( m_data, m_capacity, data );
             }
 
-            /// \brief Creates a 1D array a copies data into it.
-            /// \param dim1Size the array's size.
-            /// \param data The data to copy.
-            /// \param memory_pointer Pointer to the memory address of the array
-            /// \param python_decrement Pointer to decrementer
-            Array(unsigned int dim1Size, const DataType* data, void* memory_pointer, void (*python_decrement)(void *)) :
-                m_size( dim1Size ),
-                m_capacity( dim1Size ),
-                m_data( nullptr ),
-                m_count( nullptr ),
-                m_offset( 0 ),
-                m_memory_pointer( memory_pointer ),
-                m_python_decrement( python_decrement )
-            {
-                m_count = new unsigned int(); 
-                *m_count = 1;
-            }
-
             /// \brief Creates a 1D array that references rhs.
             /// \param dim1Size The size of the array.  This is useful
             ///                 when you want this array to reference
@@ -181,6 +163,24 @@ namespace Nektar
             {
                 *m_count += 1;
                 ASSERTL0(m_size <= rhs.num_elements(), "Requested size is larger than input array size.");
+            }
+
+            /// \brief Creates a 1D array a copies data into it.
+            /// \param dim1Size the array's size.
+            /// \param data The data to copy.
+            /// \param memory_pointer Pointer to the memory address of the array
+            /// \param python_decrement Pointer to decrementer
+            Array(unsigned int dim1Size, DataType* data, void* memory_pointer, void (*python_decrement)(void *)) :
+                m_size( dim1Size ),
+                m_capacity( dim1Size ),
+                m_data( data ),
+                m_count( nullptr ),
+                m_offset( 0 ),
+                m_memory_pointer( memory_pointer ),
+                m_python_decrement( python_decrement )
+            {
+                m_count = new unsigned int(); 
+                *m_count = 1;
             }
 
             /// \brief Creates a reference to rhs.
@@ -569,6 +569,11 @@ namespace Nektar
 
             Array(const Array<OneD, const DataType>& rhs) :
                 BaseType(rhs.num_elements(), rhs.data())
+            {
+            }
+
+            Array(unsigned int dim1Size, DataType* data, void* memory_pointer, void (*python_decrement)(void *)) :
+                BaseType(dim1Size, data, memory_pointer, python_decrement)
             {
             }
 

@@ -36,6 +36,8 @@
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/Python/NekPyConfig.hpp>
 
+#include <type_traits>
+
 using namespace Nektar;
 using namespace Nektar::LibUtilities;
 
@@ -141,7 +143,8 @@ struct PythonToOneDArray
             ->storage.bytes;
         data->convertible = storage;
         void *memory_pointer = objPtr;
-        new (storage) Array<OneD, T>(array.shape(0), (T *)array.get_data(), memory_pointer, &decrement);
+        using nonconst_t = typename std::remove_const<T>::type;
+        new (storage) Array<OneD, T>(array.shape(0), (nonconst_t *)array.get_data(), memory_pointer, &decrement);
     }
 
 };

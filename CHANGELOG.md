@@ -42,7 +42,6 @@ v5.0.0
 - Restructure the low energy preconditioner to handle pyramidic and variable
   p expansions (!920)
 - Remove requirement for modmetis, switch to SCOTCH by default (!899)
->>>>>>> upstream/master
 - Switch MeshGraph to use factory pattern and add HDF5 geometry support
   (!900, !904)
 - Fix bug in MeshPartition.cpp which caused incorrect array access when
@@ -51,7 +50,8 @@ v5.0.0
   alignment (!921)
 - Fix naming issue of duplicate Unit tests (!924) 
 - Fix warnings about missing virtual destructors in abstract classes (!932)
-
+- Fix ability to have periodic boundary conditions that are aligned by a rotation rather than just a translation (!933)
+	
 **NekMesh**:
 - Add feature to read basic 2D geo files as CAD (!731)
 - Add periodic boundary condition meshing in 2D (!733)

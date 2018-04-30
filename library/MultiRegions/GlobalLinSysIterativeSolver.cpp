@@ -83,7 +83,8 @@ namespace Nektar
         {
             
             m_nlinsys                   = session->GetParameter("LinSysDimens");
-            m_maxdirction               = session->GetParameter("MaxDirction" );
+            m_maxstorage               = session->GetParameter("MaxStorage" );
+            m_maxhesband                =session->GetParameter("MaxHesband" );
             m_maxrestart                = session->GetParameter("MaxRestart" );
             m_tolerance                 = session->GetParameter("Tolerance" );
             

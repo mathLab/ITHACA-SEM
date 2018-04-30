@@ -206,15 +206,17 @@ namespace Nektar
                 *m_count -= 1;
                 if( *m_count == 0 )
                 {
-                    if (m_memory_pointer != nullptr)
+                    if (m_memory_pointer == nullptr)
                     {
-                        m_python_decrement(m_data);                         
-                    } else {
                         ArrayDestructionPolicy<DataType>::Destroy( m_data, m_capacity );
                         MemoryManager<DataType>::RawDeallocate( m_data, m_capacity );
+                    }
+                    else
+                    {
+                        m_python_decrement(m_data);
+                    }
 
-                        delete m_count; // Clean up the memory used for the reference count.
-                    }                    
+                    delete m_count; // Clean up the memory used for the reference count.
                 }
             }
 
@@ -224,9 +226,16 @@ namespace Nektar
                 *m_count -= 1;
                 if( *m_count == 0 )
                 {
-                    ArrayDestructionPolicy<DataType>::Destroy( m_data, m_capacity );
-                    MemoryManager<DataType>::RawDeallocate( m_data, m_capacity );
-                    delete m_count; // Clean up memory used for reference count.
+                    if (m_memory_pointer == nullptr)
+                    {
+                        ArrayDestructionPolicy<DataType>::Destroy( m_data, m_capacity );
+                        MemoryManager<DataType>::RawDeallocate( m_data, m_capacity );
+                    }
+                    else
+                    {
+                        m_python_decrement(m_memory_pointer);
+                    }
+                    delete m_count; // Clean up the memory used for the reference count.
                 }
 
                 m_data = rhs.m_data;

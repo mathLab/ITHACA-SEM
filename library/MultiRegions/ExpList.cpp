@@ -1964,6 +1964,25 @@ namespace Nektar
             return err;
         }
 
+        NekDouble ExpList::v_VectorFlux(const Array<OneD, Array<OneD, NekDouble> > &inarray)
+        {
+            NekDouble flux = 0.0;
+            int       i    = 0;
+            int       j;
+
+            for (i = 0; i < (*m_exp).size(); ++i)
+            {
+                Array<OneD, Array<OneD, NekDouble> > tmp(inarray.num_elements());
+                for (j = 0; j < inarray.num_elements(); ++j)
+                {
+                    tmp[j] = Array<OneD, NekDouble>(inarray[j] + m_phys_offset[i]);
+                }
+                flux += (*m_exp)[i]->VectorFlux(tmp);
+            }
+
+            return flux;
+        }
+
         Array<OneD, const NekDouble> ExpList::v_HomogeneousEnergy (void)
         {
             ASSERTL0(false,
@@ -2537,6 +2556,7 @@ namespace Nektar
                 const FlagList &flags,
                 const StdRegions::ConstFactorMap &factors,
                 const StdRegions::VarCoeffMap &varcoeff,
+                const MultiRegions::VarFactorsMap &varfactors,
                 const Array<OneD, const NekDouble> &dirForcing,
                 const bool PhysSpaceForcing)
         {
@@ -2842,9 +2862,9 @@ namespace Nektar
         
         /**
          */
-        void ExpList::v_ExtractElmtToBndPhys( int                      i,
-                                              const Array<OneD, NekDouble> & element,
-                                              Array<OneD, NekDouble> & boundary)
+        void ExpList::v_ExtractElmtToBndPhys(const int i,
+                                             const Array<OneD, NekDouble> &element,
+                                             Array<OneD, NekDouble> &boundary)
         {
             int n, cnt;
             Array<OneD, NekDouble> tmp1, tmp2;
@@ -2881,7 +2901,7 @@ namespace Nektar
         
         /**
          */
-        void ExpList::v_ExtractPhysToBndElmt(int i,
+        void ExpList::v_ExtractPhysToBndElmt(const int i,
                             const Array<OneD, const NekDouble> &phys,
                             Array<OneD, NekDouble> &bndElmt)
         {
@@ -2926,8 +2946,8 @@ namespace Nektar
                             Array<OneD, NekDouble> &bnd)
         {
             int n, cnt;
-            Array<OneD, NekDouble> tmp1, tmp2;
-            LocalRegions::ExpansionSharedPtr elmt;
+            Array<OneD, NekDouble> tmp1;
+            StdRegions::StdExpansionSharedPtr elmt;
 
             Array<OneD, int> ElmtID,EdgeID;
             GetBoundaryToElmtMap(ElmtID,EdgeID);
@@ -2952,8 +2972,8 @@ namespace Nektar
                 elmt   = GetExp(ElmtID[cnt+n]);
                 elmt->GetTracePhysVals(EdgeID[cnt+n],
                                       GetBndCondExpansions()[i]->GetExp(n),
-                                      tmp1 = phys + offsetPhys,
-                                      tmp2 = bnd + offsetBnd);
+                                      phys + offsetPhys,
+                                      tmp1 = bnd + offsetBnd);
             }
         }
 

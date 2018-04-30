@@ -36,6 +36,7 @@
 #include <string>
 #include <boost/algorithm/string.hpp>
 #include <boost/program_options.hpp>
+#include <LibUtilities/BasicUtils/FileSystem.h>
 #include <LibUtilities/BasicUtils/Timer.h>
 #include <FieldUtils/Module.h>
 
@@ -94,6 +95,8 @@ int main(int argc, char* argv[])
             "Specify modules which are to be used.")
         ("useSessionVariables",
             "Use variables defined in session for output")
+        ("useSessionExpansion",
+            "Use expansion defined in session.")
         ("verbose,v",
             "Enable verbose mode.");
 
@@ -326,6 +329,13 @@ int main(int argc, char* argv[])
                 {
                     int    dot = tmp1[0].find_last_of('.') + 1;
                     string ext = tmp1[0].substr(dot, tmp1[0].length() - dot);
+
+                    // Remove trailing separator from extension to allow
+                    //    folder inputs using file.fld/
+                    if(ext.back() == fs::path::preferred_separator)
+                    {
+                        ext.pop_back();
+                    }
 
                     if(ext == "gz")
                     {

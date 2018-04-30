@@ -48,8 +48,9 @@ namespace Nektar
      */
 
     SteadyAdvectionDiffusion::SteadyAdvectionDiffusion(
-            const LibUtilities::SessionReaderSharedPtr& pSession)
-        : EquationSystem(pSession),
+        const LibUtilities::SessionReaderSharedPtr& pSession,
+        const SpatialDomains::MeshGraphSharedPtr& pGraph)
+        : EquationSystem(pSession, pGraph),
           m_lambda(0.0)
     {
     }

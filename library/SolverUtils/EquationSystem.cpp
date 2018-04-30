@@ -91,9 +91,11 @@ namespace Nektar
          * @param   pSession The session reader holding problem parameters.
          */
         EquationSystem::EquationSystem(
-            const LibUtilities::SessionReaderSharedPtr& pSession)
+            const LibUtilities::SessionReaderSharedPtr& pSession,
+            const SpatialDomains::MeshGraphSharedPtr& pGraph)
             : m_comm (pSession->GetComm()),
               m_session (pSession),
+              m_graph (pGraph),
               m_lambda (0),
               m_fieldMetaDataMap(LibUtilities::NullFieldMetaDataMap)
         {
@@ -121,9 +123,6 @@ namespace Nektar
 
             // Instantiate a field reader/writer
             m_fld = LibUtilities::FieldIO::CreateDefault(m_session);
-
-            // Read the geometry and the expansion information
-            m_graph = SpatialDomains::MeshGraph::Read(m_session);
 
             // Also read and store the boundary conditions
             m_boundaryConditions =
@@ -1140,7 +1139,7 @@ namespace Nektar
                 variables[i] = m_boundaryConditions->GetVariable(i);
             }
 
-            v_ExtraFldOutput(fieldcoeffs, variables);
+            ExtraFldOutput(fieldcoeffs, variables);
 
             WriteFld(outname, m_fields[0], fieldcoeffs, variables);
         }

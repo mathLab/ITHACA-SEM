@@ -12,10 +12,10 @@ IF (NEKTAR_USE_VTK)
                                               vtkFiltersGeometry vtkFiltersCore)
         TARGET_LINK_LIBRARIES(VtkStripsToPolys LINK_PUBLIC vtkCommonCore vtkIOLegacy)
     ENDIF ()
-    
+
     ADD_UTILITIES_EXECUTABLE(VtkToPng COMPONENT utilities-extra SOURCES VtkToPng.cpp)
     IF (VTK_MAJOR_VERSION LESS 6)
-        TARGET_LINK_LIBRARIES(VtkToPng LINK_PUBLIC vtkCommon vtksys vtkViews vtkWidgets 
+        TARGET_LINK_LIBRARIES(VtkToPng LINK_PUBLIC vtkCommon vtksys vtkViews vtkWidgets
                                                    vtkRendering vtkIO)
     ELSE ()
         TARGET_LINK_LIBRARIES(VtkToPng LINK_PUBLIC ${VTK_LIBRARIES})

@@ -42,8 +42,9 @@ namespace SolverUtils {
  *
  */
 AdvectionSystem::AdvectionSystem(
-        const LibUtilities::SessionReaderSharedPtr& pSession)
-    : UnsteadySystem(pSession)
+    const LibUtilities::SessionReaderSharedPtr& pSession,
+    const SpatialDomains::MeshGraphSharedPtr& pGraph)
+    : UnsteadySystem(pSession, pGraph)
 {
 }
 
@@ -110,10 +111,11 @@ Array<OneD, NekDouble>  AdvectionSystem::GetElmtCFLVals(void)
     stdVelocity = v_GetMaxStdVelocity();
 
     Array<OneD, NekDouble> cfl(nelmt, 0.0);
+    NekDouble order;
     for(int el = 0; el < nelmt; ++el)
     {
-        cfl[el] =  m_timestep*(stdVelocity[el] * cLambda *
-                               (expOrder[el]-1) * (expOrder[el]-1));
+        order = max(expOrder[el]-1, 1);
+        cfl[el] =  m_timestep*(stdVelocity[el] * cLambda * order * order);
     }
 
     return cfl;

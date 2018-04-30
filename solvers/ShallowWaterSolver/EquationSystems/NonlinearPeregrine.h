@@ -63,10 +63,11 @@ public:
 
     /// Creates an instance of this class
     static SolverUtils::EquationSystemSharedPtr create(
-            const LibUtilities::SessionReaderSharedPtr& pSession)
+        const LibUtilities::SessionReaderSharedPtr& pSession,
+        const SpatialDomains::MeshGraphSharedPtr& pGraph)
     {
         SolverUtils::EquationSystemSharedPtr p = MemoryManager<
-                NonlinearPeregrine>::AllocateSharedPtr(pSession);
+            NonlinearPeregrine>::AllocateSharedPtr(pSession, pGraph);
         p->InitObject();
         return p;
     }
@@ -81,7 +82,8 @@ public:
 protected:
     StdRegions::ConstFactorMap m_factors;
 
-    NonlinearPeregrine(const LibUtilities::SessionReaderSharedPtr& pSession);
+    NonlinearPeregrine(const LibUtilities::SessionReaderSharedPtr& pSession,
+                       const SpatialDomains::MeshGraphSharedPtr& pGraph);
 
     virtual void v_InitObject();
 

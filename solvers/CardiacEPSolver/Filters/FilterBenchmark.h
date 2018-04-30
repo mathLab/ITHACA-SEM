@@ -49,11 +49,13 @@ public:
 
     /// Creates an instance of this class
     static SolverUtils::FilterSharedPtr create(
-        const LibUtilities::SessionReaderSharedPtr &pSession,
-        const ParamMap &pParams) {
+        const LibUtilities::SessionReaderSharedPtr         &pSession,
+        const std::weak_ptr<SolverUtils::EquationSystem> &pEquation,
+        const ParamMap &pParams)
+    {
         SolverUtils::FilterSharedPtr p =
             MemoryManager<FilterBenchmark>::AllocateSharedPtr(pSession,
-                                                              pParams);
+                                                        pEquation, pParams);
         return p;
     }
 
@@ -62,7 +64,8 @@ public:
 
     /// Construct the benchmark filter.
     FilterBenchmark(
-        const LibUtilities::SessionReaderSharedPtr &pSession,
+        const LibUtilities::SessionReaderSharedPtr         &pSession,
+        const std::weak_ptr<SolverUtils::EquationSystem> &pEquation,
         const ParamMap &pParams);
 
     /// Destructor for the benchmark filter.

@@ -663,10 +663,16 @@ DataSourceSharedPtr FieldIOXml::v_ImportFieldMetaData(
             if (paramString != "Provenance")
             {
                 // Now read body of param
-                TiXmlNode *paramBody     = param->FirstChild();
-                std::string paramBodyStr = paramBody->ToText()->Value();
-
-                fieldmetadatamap[paramString] = paramBodyStr;
+                if (param->NoChildren())
+                {
+                    fieldmetadatamap[paramString] = "";
+                }
+                else
+                {
+                    TiXmlNode *paramBody     = param->FirstChild();
+                    std::string paramBodyStr = paramBody->ToText()->Value();
+                    fieldmetadatamap[paramString] = paramBodyStr;
+                }
             }
             param = param->NextSiblingElement();
         }

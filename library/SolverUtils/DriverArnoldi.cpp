@@ -46,8 +46,10 @@ namespace SolverUtils
 /**
  * Constructor
  */
-DriverArnoldi::DriverArnoldi(const LibUtilities::SessionReaderSharedPtr pSession)
-    : Driver(pSession)
+DriverArnoldi::DriverArnoldi(
+    const LibUtilities::SessionReaderSharedPtr pSession,
+    const SpatialDomains::MeshGraphSharedPtr pGraph)
+    : Driver(pSession, pGraph)
 {
     m_session->LoadParameter("IO_InfoSteps", m_infosteps, 1);
 };
@@ -107,7 +109,21 @@ void DriverArnoldi::v_InitObject(ostream &out)
     m_session->LoadParameter("realShift", m_realShift, 0.0);
     m_equ[0]->SetLambda(m_realShift);
 
-    m_session->LoadParameter("imagShift", m_imagShift, 0.0);
+    m_session->LoadParameter("imagShift",m_imagShift,0.0);
+
+    // The imaginary shift is applied at system assembly
+    // Only if using HOMOGENEOUS expansion and ModeType set to SingleMode
+    if(m_imagShift != 0.0)
+    {
+        if(!m_session->DefinesSolverInfo("HOMOGENEOUS")&&!m_session->DefinesSolverInfo("ModeType"))
+        {
+            NEKERROR(ErrorUtil::efatal, "Imaginary shift only supported with HOMOGENEOUS expansion and ModeType set to SingleMode");
+        }
+        else if(!boost::iequals(m_session->GetSolverInfo("ModeType"),"SingleMode"))
+        {
+            NEKERROR(ErrorUtil::efatal, "Imaginary shift only supported with HOMOGENEOUS expansion and ModeType set to SingleMode");
+        }
+    }
 
 }
 

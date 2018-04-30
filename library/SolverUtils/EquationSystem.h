@@ -64,8 +64,10 @@ class Interpolator;
         /// Datatype of the NekFactory used to instantiate classes derived from
         /// the EquationSystem class.
         typedef LibUtilities::NekFactory<
-        std::string, EquationSystem,
-        const LibUtilities::SessionReaderSharedPtr&
+            std::string,
+            EquationSystem,
+            const LibUtilities::SessionReaderSharedPtr&,
+            const SpatialDomains::MeshGraphSharedPtr&
         > EquationSystemFactory;
         SOLVER_UTILS_EXPORT EquationSystemFactory& GetEquationSystemFactory();
 
@@ -126,7 +128,11 @@ class Interpolator;
             }
             
             /// Get pressure field if available
-            SOLVER_UTILS_EXPORT MultiRegions::ExpListSharedPtr GetPressure(); 
+            SOLVER_UTILS_EXPORT MultiRegions::ExpListSharedPtr GetPressure();
+
+            SOLVER_UTILS_EXPORT inline void ExtraFldOutput(
+                std::vector<Array<OneD, NekDouble> > &fieldcoeffs,
+                std::vector<std::string>             &variables);
             
             /// Print a summary of parameters and solver characteristics.
             SOLVER_UTILS_EXPORT inline void PrintSummary(std::ostream &out);
@@ -412,7 +418,9 @@ class Interpolator;
             int m_HomoDirec;    ///< number of homogenous directions
 
             /// Initialises EquationSystem class members.
-            SOLVER_UTILS_EXPORT EquationSystem( const LibUtilities::SessionReaderSharedPtr& pSession);
+            SOLVER_UTILS_EXPORT EquationSystem(
+                const LibUtilities::SessionReaderSharedPtr& pSession,
+                const SpatialDomains::MeshGraphSharedPtr& pGraph);
             
             SOLVER_UTILS_EXPORT virtual void v_InitObject();
             
@@ -563,7 +571,21 @@ class Interpolator;
         {
             return v_GetPressure();
         }
-        
+
+        /**
+         * Append the coefficients and name of variables with solver specific
+         * extra variables
+         *
+         * @param fieldcoeffs     Vector with coefficients
+         * @param variables       Vector with name of variables
+         */
+        inline void EquationSystem::ExtraFldOutput(
+                std::vector<Array<OneD, NekDouble> > &fieldcoeffs,
+                std::vector<std::string>             &variables)
+        {
+            v_ExtraFldOutput(fieldcoeffs, variables);
+        }
+
         /**
          * Prints a summary of variables and problem parameters.
          *

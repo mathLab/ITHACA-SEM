@@ -780,14 +780,14 @@
     </BOUNDARYREGIONS>
     <BOUNDARYCONDITIONS>
       <REGION REF="0"> <!-- Excitation at the inflow boundary -->
-        <D VAR="p" USERDEFINEDTYPE="TimeDependent" VALUE="100*(sin(Omega*t))^2" />
-        <D VAR="u" USERDEFINEDTYPE="TimeDependent" VALUE="100*((sin(Omega*t))^2)/Rho0/((Gamma*Pinfinity/Rho0)^0.5)" />
-        <D VAR="v" VALUE="0" />
+        <D VAR="p" USERDEFINEDTYPE="WhiteNoise" VALUE="100" />
+        <D VAR="u" USERDEFINEDTYPE="WhiteNoise" VALUE="100" />
+        <D VAR="v" USERDEFINEDTYPE="WhiteNoise" VALUE="100" />
       </REGION>
       <REGION REF="1"> <!-- Problem homogeneous in y-direction -->
-        <N VAR="p" VALUE="0" />
-        <N VAR="u" VALUE="0" />
-        <N VAR="v" VALUE="0" />
+        <D VAR="p" USERDEFINEDTYPE="RiemannInvariantBC"/>
+        <D VAR="u" USERDEFINEDTYPE="RiemannInvariantBC"/>
+        <D VAR="v" USERDEFINEDTYPE="RiemannInvariantBC"/>
       </REGION>
     </BOUNDARYCONDITIONS>
     <FUNCTION NAME="Baseflow"> <!-- Incompressible base flow -->

@@ -54,8 +54,10 @@ namespace Nektar
 	 *    {\partial x}, \mathbf{\psi}^{\delta}  \right)_{\Omega_e} + \left[ \mathbf{\psi}^{\delta} 
 	 *    \cdot \{ \mathbf{F}^u - \mathbf{F}(\mathbf{U}^{\delta}) \} \right]_{x_e^l}^{x_eû} \right] = 0 \f$
      */ 
-    PulseWavePropagation::PulseWavePropagation(const LibUtilities::SessionReaderSharedPtr& pSession)
-	: PulseWaveSystem(pSession)
+    PulseWavePropagation::PulseWavePropagation(
+        const LibUtilities::SessionReaderSharedPtr& pSession,
+        const SpatialDomains::MeshGraphSharedPtr& pGraph)
+        : PulseWaveSystem(pSession, pGraph)
     {
     }
 
@@ -98,7 +100,7 @@ namespace Nektar
         m_advObject->SetFluxVector(
             &PulseWavePropagation::GetFluxVector, this);
         m_riemannSolver = SolverUtils::
-            GetRiemannSolverFactory().CreateInstance(riemName);
+            GetRiemannSolverFactory().CreateInstance(riemName, m_session);
         m_riemannSolver->SetScalar(
             "A0", &PulseWavePropagation::GetA0, this);
         m_riemannSolver->SetScalar(

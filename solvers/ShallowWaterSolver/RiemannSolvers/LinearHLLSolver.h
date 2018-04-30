@@ -43,16 +43,17 @@ namespace Nektar
     class LinearHLLSolver : public LinearSWESolver
     {
     public:
-        static RiemannSolverSharedPtr create()
+        static RiemannSolverSharedPtr create(
+            const LibUtilities::SessionReaderSharedPtr& pSession)
         {
             return RiemannSolverSharedPtr(
-                new LinearHLLSolver());
+                new LinearHLLSolver(pSession));
         }
         
         static std::string solverName;
         
     protected:
-        LinearHLLSolver();
+        LinearHLLSolver(const LibUtilities::SessionReaderSharedPtr& pSession);
         
         virtual void v_PointSolve(
 	    double  etaL, double  uL, double  vL, double dL,

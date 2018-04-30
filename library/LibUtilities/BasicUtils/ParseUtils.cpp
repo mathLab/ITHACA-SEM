@@ -46,8 +46,8 @@ namespace Nektar
 {
 
 /**
- * @brief Helper functor for boost::spirit. This pushes back values onto a
- * std::vector.
+ * @brief Helper functors for holding a vector of numbers to be parsed by
+ * boost::spirit.
  *
  * @see ParseUtils::GenerateSeqVector
  */
@@ -56,28 +56,17 @@ struct PushBackFunctor
 {
     PushBackFunctor(std::vector<T> &in) : m_vec(in) {}
 
+    /**
+     * @brief Pushes back values onto #m_vec as given by @p num.
+     */
     void operator()(T num) const
     {
         m_vec.push_back(num);
     }
-private:
-    std::vector<T> &m_vec;
-};
-
-/**
- * @brief Helper functor for boost::spirit. This pushes back a range of values
- * onto a std::vector. Valid only for integer types.
- *
- * @see ParseUtils::GenerateSeqVector
- */
-template<typename T>
-struct SeqFunctor
-{
-    SeqFunctor(std::vector<T> &in) : m_vec(in) {}
 
     /**
      * @brief Pushes back values onto #m_vec between the range supplied by @p
-     * num.
+     * num. Valid for only integer types.
      */
     void operator()(fusion::vector<T, T> num) const
     {
@@ -88,6 +77,7 @@ struct SeqFunctor
         }
     }
 private:
+    /// Storage vector that will hold parsed variables from boost::spirit.
     std::vector<T> &m_vec;
 };
 
@@ -111,8 +101,7 @@ private:
 bool ParseUtils::GenerateSeqVector(
     const std::string &str, std::vector<unsigned int> &out)
 {
-    PushBackFunctor<unsigned int> f1(out);
-    SeqFunctor<unsigned int> f2(out);
+    PushBackFunctor<unsigned int> f1(out), f2(out);
 
     auto it = str.begin();
     bool success = qi::phrase_parse(
@@ -167,7 +156,7 @@ bool ParseUtils::GenerateVector(const std::string &str,
 {
     auto it = str.begin();
     bool success = qi::phrase_parse(
-        it, str.end(), *~qi::char_(",") % ',', qi::ascii::space, out);
+        it, str.end(), +~qi::char_(",") % ',', qi::ascii::space, out);
     return success && it == str.end();
 }
 

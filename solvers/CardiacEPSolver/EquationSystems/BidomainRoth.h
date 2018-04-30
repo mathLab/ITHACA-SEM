@@ -52,10 +52,11 @@ public:
 
     /// Creates an instance of this class
     static SolverUtils::EquationSystemSharedPtr create(
-            const LibUtilities::SessionReaderSharedPtr& pSession)
+        const LibUtilities::SessionReaderSharedPtr& pSession,
+        const SpatialDomains::MeshGraphSharedPtr& pGraph)
     {
         SolverUtils::EquationSystemSharedPtr p =
-                    MemoryManager<BidomainRoth>::AllocateSharedPtr(pSession);
+            MemoryManager<BidomainRoth>::AllocateSharedPtr(pSession, pGraph);
         p->InitObject();
         return p;
     }
@@ -69,7 +70,8 @@ public:
 protected:
     /// Constructor
     BidomainRoth(
-            const LibUtilities::SessionReaderSharedPtr& pSession);
+        const LibUtilities::SessionReaderSharedPtr& pSession,
+        const SpatialDomains::MeshGraphSharedPtr& pGraph);
 
     virtual void v_InitObject();
 

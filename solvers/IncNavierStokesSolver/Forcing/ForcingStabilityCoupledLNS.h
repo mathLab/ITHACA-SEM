@@ -52,14 +52,15 @@ class ForcingStabilityCoupledLNS : public SolverUtils::Forcing
 
         /// Creates an instance of this class
         static SolverUtils::ForcingSharedPtr create(
-                const LibUtilities::SessionReaderSharedPtr& pSession,
+                const LibUtilities::SessionReaderSharedPtr         &pSession,
+                const std::weak_ptr<SolverUtils::EquationSystem> &pEquation,
                 const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields,
                 const unsigned int& pNumForcingFields,
                 const TiXmlElement* pForce)
         {
             SolverUtils::ForcingSharedPtr p =
                 MemoryManager<ForcingStabilityCoupledLNS>::
-                AllocateSharedPtr(pSession);
+                AllocateSharedPtr(pSession, pEquation);
             p->InitObject(pFields, pNumForcingFields, pForce);
             return p;
         }
@@ -81,7 +82,8 @@ class ForcingStabilityCoupledLNS : public SolverUtils::Forcing
 
     private:
         ForcingStabilityCoupledLNS(
-            const LibUtilities::SessionReaderSharedPtr& pSession);
+                const LibUtilities::SessionReaderSharedPtr         &pSession,
+                const std::weak_ptr<SolverUtils::EquationSystem> &pEquation);
 };
 
 }

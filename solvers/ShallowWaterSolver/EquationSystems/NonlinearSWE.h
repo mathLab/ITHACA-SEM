@@ -54,9 +54,11 @@ namespace Nektar
 
     /// Creates an instance of this class
       static SolverUtils::EquationSystemSharedPtr create(
-            const LibUtilities::SessionReaderSharedPtr& pSession)
+          const LibUtilities::SessionReaderSharedPtr& pSession,
+          const SpatialDomains::MeshGraphSharedPtr& pGraph)
     {
-      SolverUtils::EquationSystemSharedPtr p = MemoryManager<NonlinearSWE>::AllocateSharedPtr(pSession);
+      SolverUtils::EquationSystemSharedPtr p = MemoryManager<NonlinearSWE>
+          ::AllocateSharedPtr(pSession, pGraph);
       p->InitObject();
       return p;
     }
@@ -67,7 +69,8 @@ namespace Nektar
 
   protected:
 
-    NonlinearSWE(const LibUtilities::SessionReaderSharedPtr& pSession);
+    NonlinearSWE(const LibUtilities::SessionReaderSharedPtr& pSession,
+                 const SpatialDomains::MeshGraphSharedPtr& pGraph);
 
     virtual void v_InitObject();
     

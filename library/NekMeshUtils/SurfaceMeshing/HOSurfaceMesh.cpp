@@ -129,12 +129,21 @@ void HOSurfaceMesh::Process()
 
         FaceSharedPtr f = m_mesh->m_element[2][i]->GetFaceLink();
 
+        bool dumFace = false;
+
         if (!f)
         {
+            //This uses a fake face to build the high-order info
+            //in the case of 2D and manifold geometries without having to
+            //rewrite the 3D code
+            //important to note that face nodes need to be inserted into the
+            //volume nodes of the surface element or they will be forgotton
             f = std::shared_ptr<Face>(new Face(
                 m_mesh->m_element[2][i]->GetVertexList(),
                 vector<NodeSharedPtr>(), m_mesh->m_element[2][i]->GetEdgeList(),
                 LibUtilities::ePolyEvenlySpaced));
+
+            dumFace = true;
         }
 
         f->m_parentCAD = s;
@@ -420,7 +429,7 @@ void HOSurfaceMesh::Process()
         }
 
         // just add the face interior nodes through interp and project
-        /*vector<NodeSharedPtr> vertices = f->m_vertexList;
+        vector<NodeSharedPtr> vertices = f->m_vertexList;
 
         SpatialDomains::GeometrySharedPtr geom = f->GetGeom(3);
         geom->FillGeom();
@@ -452,10 +461,8 @@ void HOSurfaceMesh::Process()
                 loc[1] = xmap->PhysEvaluate(xp, yc);
                 loc[2] = xmap->PhysEvaluate(xp, zc);
 
-                Array<OneD, NekDouble> uv(2);
-                s->locuv(loc,uv);
+                Array<OneD, NekDouble> uv = s->locuv(loc);
                 uvi.push_back(uv);
-
             }
 
             vector<NodeSharedPtr> honodes;
@@ -489,10 +496,8 @@ void HOSurfaceMesh::Process()
                     loc[1] = xmap->PhysEvaluate(xp, yc);
                     loc[2] = xmap->PhysEvaluate(xp, zc);
 
-                    Array<OneD, NekDouble> uv(2);
-                    s->locuv(loc,uv);
+                    Array<OneD, NekDouble> uv = s->locuv(loc);
                     uvi.push_back(uv);
-
                 }
             }
 
@@ -509,7 +514,13 @@ void HOSurfaceMesh::Process()
 
             f->m_faceNodes = honodes;
             f->m_curveType = LibUtilities::eGaussLobattoLegendre;
-        }*/
+        }
+
+        if(dumFace)
+        {
+            m_mesh->m_element[2][i]->SetVolumeNodes(f->m_faceNodes);
+            m_mesh->m_element[2][i]->SetCurveType(f->m_curveType);
+        }
     }
 
     if (m_mesh->m_verbose)

@@ -164,7 +164,9 @@ SpatialDomains::GeometrySharedPtr Pyramid::GetGeom(int coordDim)
         faces[i] = m_face[i]->GetGeom(coordDim);
     }
 
-    m_geom = MemoryManager<SpatialDomains::PyrGeom>::AllocateSharedPtr(faces);
+    m_geom = MemoryManager<SpatialDomains::PyrGeom>::AllocateSharedPtr(
+        m_id, faces);
+    m_geom->Setup();
 
     return m_geom;
 }

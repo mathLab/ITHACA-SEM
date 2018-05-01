@@ -267,7 +267,21 @@ namespace Nektar
                 break;
         }
     }
-    
+
+    void UnsteadyViscousBurgers::DoImplicitSolve_JFNK(
+                                                 const Array<OneD, const Array<OneD, NekDouble> >&inarray,
+                                                 Array<OneD,       Array<OneD, NekDouble> >&outarray,
+                                                 const NekDouble time,
+                                                 const NekDouble lambda)
+    {
+        int nvariables = inarray.num_elements();
+        int nq = m_fields[0]->GetNpoints();
+		
+        
+    }
+
+
+
     /**
      * @brief Return the flux vector for the inviscid Burger equation.
      * 

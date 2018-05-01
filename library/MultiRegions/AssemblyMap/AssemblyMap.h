@@ -294,6 +294,8 @@ namespace Nektar
             MULTI_REGIONS_EXPORT IterativeMethodType GetIteraterType() const;
             MULTI_REGIONS_EXPORT NekDouble GetIterativeTolerance() const;
             MULTI_REGIONS_EXPORT int GetMaxIterations() const;
+            MULTI_REGIONS_EXPORT int GetMaxStorage() const;
+            MULTI_REGIONS_EXPORT int GetMaxHesband() const;
             MULTI_REGIONS_EXPORT int GetSuccessiveRHS() const;
 
             MULTI_REGIONS_EXPORT int GetLowestStaticCondLevel() const
@@ -375,6 +377,12 @@ namespace Nektar
 
             /// Maximum iterations for iterative solver
             int m_maxIterations;
+
+            /// Maximum search directions for Gmres(m) iterative solver
+            int m_maxstorage;
+
+            /// Maximum bandwidth for Hessenburg matrix in truncted Gmres(m) iterative solver
+            int m_maxhesband;
 
             /// Tolerance for iterative solver
             NekDouble  m_iterativeTolerance;

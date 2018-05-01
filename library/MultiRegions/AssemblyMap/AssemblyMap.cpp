@@ -170,6 +170,35 @@ namespace Nektar
                                         5000);
             }
 
+            if(pSession->DefinesGlobalSysSolnInfo(variable,
+                                                  "MaxStorage"))
+            {
+                m_maxstorage = boost::lexical_cast<int>(
+                        pSession->GetGlobalSysSolnInfo(variable,
+                                "MaxStorage").c_str());
+            }
+            else
+            {
+                pSession->LoadParameter("MaxStorage",
+                                        m_maxstorage,
+                                        50);
+            }
+
+
+            if(pSession->DefinesGlobalSysSolnInfo(variable , 
+                                                  "MaxHesband"))
+            {
+                m_maxhesband = boost::lexical_cast<int>(
+                        pSession->GetGlobalSysSolnInfo(variable,
+                                "MaxHesband").c_str());
+            }
+            else
+            {
+                pSession->LoadParameter("MaxHesband",
+                                        m_maxhesband,
+                                        0);
+            }
+
 
             if(pSession->DefinesGlobalSysSolnInfo(variable,"SuccessiveRHS"))
             {
@@ -199,6 +228,8 @@ namespace Nektar
             m_preconType(oldLevelMap->m_preconType),
             m_IteraterType(oldLevelMap->m_IteraterType),
             m_maxIterations(oldLevelMap->m_maxIterations),
+            m_maxstorage(oldLevelMap->m_maxstorage),
+            m_maxhesband(oldLevelMap->m_maxhesband),
             m_iterativeTolerance(oldLevelMap->m_iterativeTolerance),
             m_successiveRHS(oldLevelMap->m_successiveRHS),
             m_gsh(oldLevelMap->m_gsh),
@@ -1235,6 +1266,16 @@ namespace Nektar
         int AssemblyMap::GetMaxIterations() const
         {
             return m_maxIterations;
+        }
+
+        int AssemblyMap::GetMaxStorage() const
+        {
+            return m_maxstorage;
+        }
+
+        int AssemblyMap::GetMaxHesband() const
+        {
+            return m_maxhesband;
         }
 
         int AssemblyMap::GetSuccessiveRHS() const

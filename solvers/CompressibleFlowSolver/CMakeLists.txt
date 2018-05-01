@@ -20,6 +20,7 @@ IF( NEKTAR_SOLVER_COMPRESSIBLE_FLOW )
        ./BoundaryConditions/PressureOutflowFileBC.cpp
        ./BoundaryConditions/PressureOutflowNonReflectiveBC.cpp
        ./BoundaryConditions/RiemannInvariantBC.cpp
+       ./BoundaryConditions/RiemannBoundary.cpp
        ./BoundaryConditions/RinglebFlowBC.cpp
        ./BoundaryConditions/StagnationInflowBC.cpp
        ./BoundaryConditions/SymmetryBC.cpp
@@ -110,6 +111,7 @@ IF( NEKTAR_SOLVER_COMPRESSIBLE_FLOW )
     ADD_NEKTAR_TEST(hump3D_GLL)
     ADD_NEKTAR_TEST(hump3D_SEM)
     ADD_NEKTAR_TEST(Rarefaction_vanderWaals LENGTHY)
+    ADD_NEKTAR_TEST(RiemannBoundary LENGTHY)
 
     IF (NEKTAR_USE_MPI)
         #ADD_NEKTAR_TEST(Perturbation_M05_square_CBC_par LENGTHY)

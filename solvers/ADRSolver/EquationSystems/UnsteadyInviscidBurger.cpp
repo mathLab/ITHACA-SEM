@@ -268,18 +268,117 @@ namespace Nektar
         }
     }
 
-    void UnsteadyViscousBurgers::DoImplicitSolve_JFNK(
-                                                 const Array<OneD, const Array<OneD, NekDouble> >&inarray,
-                                                 Array<OneD,       Array<OneD, NekDouble> >&outarray,
+#define DEMO_IMPLICITSOLVER_JFNK
+#ifndef DEMO_IMPLICITSOLVER_JFNK
+
+    /* @brief Compute the diffusion term implicitly. 
+     *      Solve the whole system implicitly 
+     *      incontract with only implicitly solve the 
+     *      linear(diffusion) part in the origin DoImplicitSolve.
+     * @param forc       The forcing term of the equation.
+     * @param inoutarray input initial guess/output Calculated solution.
+     * @param inrhs      input initial guess rhs.
+     * @param time       Time.
+     * @param lambda     Diffusion coefficient.
+     */
+    
+    void UnsteadyInviscidBurger::DoWhollyImplicitSolve_JFNK(
+                                                 const Array<OneD, const Array<OneD, NekDouble> >&forc,
+                                                 Array<OneD,       Array<OneD, NekDouble> >&sol,
+                                                 const Array<OneD,       Array<OneD, NekDouble> >&rhs0,
+                                                 const NekDouble time,
+                                                 const NekDouble lambda)
+    {
+        bool converged;
+        const unsigned int MaxNonlinIte =   500;
+        int nvariables = inarray.num_elements();
+        int npoints     = inforc[0].num_elements();
+        Nekdouble resnorm,dsolnorm;
+        Nekdouble resfactor=1.0;
+        Array<OneD,       Array<OneD, NekDouble> > NonlinSysRes(nvariables),dsol(nvariables);
+        Array<OneD,       Array<OneD, NekDouble> > rhs; // reuse 
+        for(int j = 0; j < nvariables; j++)
+        {
+            NonlinSysRes[j] =  Array<OneD, NekDouble>(m_npoints,0.0);
+            dsol[j] =  Array<OneD, NekDouble>(m_npoints,0.0);
+        }
+        rhs = rhs0;
+        NonlinSysEvaluator(forc,sol,rhs0,NonlinSysRes,lambda);
+
+        resnorm = Vmath::Dot(npoints,NonlinSysRes,NonlinSysRes);
+
+        if (resnorm<tolerence)
+        {
+            return;
+        }
+
+        converged = false;
+        for (int iNonl = 0; iNonl < MaxNonlinIte; iNonl++)
+        {
+            // 
+            JacobFreeLinSysSolver(NonlinSysRes,sol,dsol,time,lambda);
+
+            for(int j = 0; j < nvariables; j++)
+            {
+                Vmath::Vadd(npoints,dsol[k],1,sol[k],1);
+            }
+            dsolnorm = Vmath::Dot(npoints,dsol,dsol);
+            if (0==iNonl)
+            {
+                resfactor = resnorm/dsolnorm;
+            }
+
+
+            if (dsolnorm*resfactor<tolerence)
+            {
+                converged = true;
+                break;
+            }
+            else
+            {
+                DoProjection(sol,sol,time);
+                DoOdeRhs(sol, rhs, time);// dsol is reused as 
+
+                NonlinSysEvaluator(forc,sol,rhs,NonlinSysRes,lambda);
+            }
+        }
+
+        ASSERTL0((converged),"Nonlinear system solver not converge in DoWhollyImplicitSolve_JFNK ")
+        return;
+    }
+
+    inline void UnsteadyInviscidBurger::NonlinSysEvaluator(
+                                                 const Array<OneD, const Array<OneD, NekDouble> >&inforc,
+                                                 const Array<OneD,       Array<OneD, NekDouble> >&inarray,
+                                                 const Array<OneD,       Array<OneD, NekDouble> >&inrhs,
+                                                 Array<OneD,       Array<OneD, NekDouble> >&out,
+                                                 const NekDouble lambda)
+    {
+        int nvariables  = inforc.num_elements();
+        int npoints     = inforc[0].num_elements();
+        for(int k = 0; k < nvariables; k++)
+        {
+            Vmath::Vsub(npoints,inarray[k],1,inforc[k],1,out[k],1);
+            Vmath::Svtvp(npoints,-lambda,inrhs[k],1,out[k],1,out[k],1);
+        }
+    }
+
+    void UnsteadyInviscidBurger::JacobFreeLinSysSolver(
+                                                 const Array<OneD, const Array<OneD, NekDouble> >&,
+                                                 const Array<OneD,       Array<OneD, NekDouble> >&sol,
+                                                 Array<OneD,       Array<OneD, NekDouble> >&inoutarray,
                                                  const NekDouble time,
                                                  const NekDouble lambda)
     {
         int nvariables = inarray.num_elements();
         int nq = m_fields[0]->GetNpoints();
+         
 		
         
     }
 
+
+#endif
 
 
     /**

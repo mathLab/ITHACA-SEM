@@ -220,6 +220,17 @@ namespace Nektar
                     std::placeholders::_3, std::placeholders::_4);
             }
 
+            template<typename FuncPointerT, typename ObjectPointerT> 
+                void DefineWhollyImplicitSolve(FuncPointerT func, ObjectPointerT obj)
+            {
+                m_functors2[1] =  std::bind(
+                    func, obj, std::placeholders::_1, std::placeholders::_2,
+                    std::placeholders::_3, std::placeholders::_4, std::placeholders::_4);
+            }
+
+
+
+
             
             inline void DoOdeRhs(InArrayType     &inarray, 
                                  OutArrayType    &outarray, 
@@ -261,6 +272,18 @@ namespace Nektar
                 ASSERTL1(m_functors2[0],"ImplicitSolve should be defined for this time integration scheme");
                 m_functors2[0](inarray,outarray,time,lambda);
             }
+
+            inline void DoWhollyImplicitSolve(InArrayType     &inarray, 
+                                        OutArrayType    &inoutarray, 
+                                        OutArrayType    &inrhs, 
+                                        const NekDouble time, 
+                                        const NekDouble lambda) const
+            {
+                ASSERTL1(m_functors2[1],"ImplicitSolve should be defined for this time integration scheme");
+                m_functors2[1](inarray,inoutarray,inrhs,time,lambda);
+            }
+
+            
 
 
         protected:

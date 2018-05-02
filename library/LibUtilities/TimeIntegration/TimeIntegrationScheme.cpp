@@ -1382,7 +1382,8 @@ namespace Nektar
             ASSERTL1(CheckTimeIntegrateArguments(timestep,y_old,t_old,y_new,t_new,op), "Arguments not well defined");    
             
             unsigned int i,j,k;
-            unsigned int loopstart=0;
+            unsigned int loopstart;
+            DoubleArray inrhs;
             TimeIntegrationSchemeType type = GetIntegrationSchemeType();
 
             // Check if storage has already been initialised.
@@ -1463,22 +1464,23 @@ namespace Nektar
                 m_initialised = true;
             }
 			
+            // The if&loop below calculates the stage values and derivatives
             i = 0;
+            // to make sure m_Y is a the last value, 
+            // so that it is a good prediction of the new m_Y in implicit solvers
+            for(k = 0; k < m_nvar; k++)
+            {
+                Vmath::Vcopy(m_npoints,y_old[0][k],1,m_Y[k],1);
+            }
+
+            loopstart = 0;
             if( m_firstStageEqualsOldSolution )
             {
-                for(k = 0; k < m_nvar; k++)
-                {
-                    Vmath::Vcopy(m_npoints,y_old[0][k],1,m_Y[k],1);
-                }
                 m_T = t_old[0];
-                
                 op.DoOdeRhs(m_Y, m_F[i], m_T);    
-                loopstart = 1    
+                loopstart = 1;    
             }
-                
 
-
-            // The loop below calculates the stage values and derivatives
             for(i = loopstart; i < m_numstages; i++)
             {
                 // The stage values m_Y are a linear combination of:
@@ -1577,8 +1579,19 @@ namespace Nektar
                             m_T += A(i,j)*timestep;
                         }
                     }
+                    if (0==i)
+                    {
+                        op.DoProjection(m_Y,m_Y,m_T);
+                        op.DoOdeRhs(m_Y, m_F[i], m_T); 
+                        inrhs = m_F[i];
+                    }
+                    else
+                    {
+                        op.DoProjection(m_Y,m_Y,m_T);
+                        inrhs = m_F[i-1];
+                    }
                     
-                    op.DoImplicitSolve(m_tmp, m_Y, m_T, A(i,i)*timestep);
+                    op.DoWhollyImplicitSolve(m_tmp, m_Y, inrhs, m_T, A(i,i)*timestep);
                     
                     for(k = 0; k < m_nvar; k++)
                     {
@@ -1633,9 +1646,8 @@ namespace Nektar
                 }
                 i_start = 1;
             }
-            
             for(i = i_start; i < m_numsteps; i++)
-            {			
+            {
                 // The solution at the new time level is a linear
                 // combination of: 
                 // 1: the stage derivatives

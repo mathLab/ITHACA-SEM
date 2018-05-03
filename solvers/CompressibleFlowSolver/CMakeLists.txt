@@ -34,7 +34,6 @@ IF( NEKTAR_SOLVER_COMPRESSIBLE_FLOW )
        ./EquationSystems/NavierStokesCFE.cpp
        ./EquationSystems/NavierStokesCFEAxisym.cpp
        ./EquationSystems/RinglebFlow.cpp
-       ./Filters/FilterEnergy.cpp
        ./Forcing/ForcingAxiSymmetric.cpp
        ./Forcing/ForcingQuasi1D.cpp
        ./Misc/EquationOfState.cpp
@@ -67,6 +66,7 @@ IF( NEKTAR_SOLVER_COMPRESSIBLE_FLOW )
     ADD_NEKTAR_TEST(CylinderSubsonic_P3)
     ADD_NEKTAR_TEST(CylinderSubsonic_P8 LENGTHY)
     ADD_NEKTAR_TEST(Euler1D)
+    ADD_NEKTAR_TEST(IsentropicVortex16_P1)
     ADD_NEKTAR_TEST(IsentropicVortex16_P3)
     ADD_NEKTAR_TEST(IsentropicVortex_FRDG_SEM)
     ADD_NEKTAR_TEST(IsentropicVortex_FRSD_SEM LENGTHY)

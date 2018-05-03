@@ -198,9 +198,6 @@ namespace Nektar
 
             virtual void v_WriteVtkPieceHeader(std::ostream &outfile, int expansion, int istrip);
 
-            int m_firstIntEl;
-            
-            Array<OneD, NekDouble> m_normSign;
         };
 
         /// Empty ExpList1D object.

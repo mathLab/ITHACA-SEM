@@ -54,6 +54,13 @@ namespace Nektar
     {
         AdvectionSystem::v_InitObject();
 
+        for (int i = 0; i < m_fields.num_elements(); i++)
+        {
+            // Use BwdTrans to make sure initial condition is in solution space
+            m_fields[i]->BwdTrans(m_fields[i]->GetCoeffs(),
+                                  m_fields[i]->UpdatePhys());
+        }
+
         m_varConv = MemoryManager<VariableConverter>::AllocateSharedPtr(
                     m_session, m_spacedim);
 
@@ -88,8 +95,8 @@ namespace Nektar
         }
 
         // Forcing terms for the sponge region
-        m_forcing = SolverUtils::Forcing::Load(m_session, m_fields,
-                                               m_fields.num_elements());
+        m_forcing = SolverUtils::Forcing::Load(m_session, shared_from_this(),
+                                        m_fields, m_fields.num_elements());
 
         // User-defined boundary conditions
         int cnt = 0;
@@ -827,11 +834,20 @@ namespace Nektar
                 tmp[i] = m_fields[i]->GetPhys();
             }
 
+            Array<OneD, Array<OneD, NekDouble> > velocity(m_spacedim);
+            Array<OneD, Array<OneD, NekDouble> > velFwd  (m_spacedim);
+            for (int i = 0; i < m_spacedim; ++i)
+            {
+                velocity[i] = Array<OneD, NekDouble> (nPhys);
+                velFwd[i]   = Array<OneD, NekDouble> (nCoeffs);
+            }
+
             Array<OneD, NekDouble> pressure(nPhys), temperature(nPhys);
             Array<OneD, NekDouble> entropy(nPhys);
             Array<OneD, NekDouble> soundspeed(nPhys), mach(nPhys);
             Array<OneD, NekDouble> sensor(nPhys), SensorKappa(nPhys);
 
+            m_varConv->GetVelocityVector(tmp, velocity);
             m_varConv->GetPressure  (tmp, pressure);
             m_varConv->GetTemperature(tmp, temperature);
             m_varConv->GetEntropy   (tmp, entropy);
@@ -847,6 +863,14 @@ namespace Nektar
             Array<OneD, NekDouble> sFwd(nCoeffs);
             Array<OneD, NekDouble> aFwd(nCoeffs), mFwd(nCoeffs);
             Array<OneD, NekDouble> sensFwd(nCoeffs);
+
+            string velNames[3] = {"u", "v", "w"};
+            for (int i = 0; i < m_spacedim; ++i)
+            {
+                m_fields[0]->FwdTrans_IterPerExp(velocity[i], velFwd[i]);
+                variables.push_back(velNames[i]);
+                fieldcoeffs.push_back(velFwd[i]);
+            }
 
             m_fields[0]->FwdTrans_IterPerExp(pressure,   pFwd);
             m_fields[0]->FwdTrans_IterPerExp(temperature,TFwd);
@@ -879,5 +903,35 @@ namespace Nektar
                 fieldcoeffs.push_back(sensorFwd);
             }
         }
+    }
+
+    /**
+     *
+     */
+    void CompressibleFlowSystem::GetPressure(
+        const Array<OneD, const Array<OneD, NekDouble> > &physfield,
+              Array<OneD, NekDouble>                     &pressure)
+    {
+        m_varConv->GetPressure(physfield, pressure);
+    }
+
+    /**
+     *
+     */
+    void CompressibleFlowSystem::GetDensity(
+        const Array<OneD, const Array<OneD, NekDouble> > &physfield,
+              Array<OneD, NekDouble>                     &density)
+    {
+        density = physfield[0];
+    }
+
+    /**
+     *
+     */
+    void CompressibleFlowSystem::GetVelocity(
+        const Array<OneD, const Array<OneD, NekDouble> > &physfield,
+              Array<OneD, Array<OneD, NekDouble> >       &velocity)
+    {
+        m_varConv->GetVelocityVector(physfield, velocity);
     }
 }

@@ -248,6 +248,7 @@ INCLUDE (ThirdPartyTriangle)
 INCLUDE (ThirdPartyTetGen)
 INCLUDE (ThirdPartyCCM)
 INCLUDE (ThirdPartyPython)
+INCLUDE (ThirdPartyCwipi)
 INCLUDE (FindCFI)
 
 INCLUDE (Doxygen)

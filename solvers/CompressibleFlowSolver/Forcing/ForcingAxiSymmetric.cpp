@@ -45,8 +45,9 @@ std::string ForcingAxiSymmetric::className = SolverUtils::GetForcingFactory().
                                 "Forcing for axi-symmetric flow (around x=0)");
 
 ForcingAxiSymmetric::ForcingAxiSymmetric(
-        const LibUtilities::SessionReaderSharedPtr& pSession)
-    : Forcing(pSession)
+                const LibUtilities::SessionReaderSharedPtr         &pSession,
+                const std::weak_ptr<SolverUtils::EquationSystem> &pEquation)
+    : Forcing(pSession, pEquation)
 {
 }
 
@@ -83,6 +84,11 @@ void ForcingAxiSymmetric::v_InitObject(
             m_geomFactor[i] = -1.0/coords[0][i];
         }
     }
+
+    // Project m_geomFactor to solution space
+    Array<OneD, NekDouble> tmpCoeff (pFields[0]->GetNcoeffs(), 0.0);
+    pFields[0]->FwdTrans_IterPerExp(m_geomFactor, tmpCoeff);
+    pFields[0]->BwdTrans(tmpCoeff, m_geomFactor);
 
     m_Forcing = Array<OneD, Array<OneD, NekDouble> > (m_NumVariable);
     for (int i = 0; i < m_NumVariable; ++i)

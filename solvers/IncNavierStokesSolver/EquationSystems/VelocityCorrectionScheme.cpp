@@ -47,15 +47,15 @@ namespace Nektar
 {
     using namespace MultiRegions;
 
-    string VelocityCorrectionScheme::className = 
+    string VelocityCorrectionScheme::className =
         SolverUtils::GetEquationSystemFactory().RegisterCreatorFunction(
-            "VelocityCorrectionScheme", 
+            "VelocityCorrectionScheme",
             VelocityCorrectionScheme::create);
 
     /**
      * Constructor. Creates ...
      *
-     * \param 
+     * \param
      * \param
      */
     VelocityCorrectionScheme::VelocityCorrectionScheme(
@@ -65,13 +65,13 @@ namespace Nektar
           IncNavierStokes(pSession, pGraph),
           m_varCoeffLap(StdRegions::NullVarCoeffMap)
     {
-        
+
     }
 
     void VelocityCorrectionScheme::v_InitObject()
     {
         int n;
-        
+
         IncNavierStokes::v_InitObject();
         m_explicitDiffusion = false;
 
@@ -421,16 +421,16 @@ namespace Nektar
         return IncNavierStokes::v_PostIntegrate(step);
     }
 
-    
+
     /**
      * Destructor
      */
     VelocityCorrectionScheme::~VelocityCorrectionScheme(void)
     {
     }
-    
+
     /**
-     * 
+     *
      */
     void VelocityCorrectionScheme::v_GenerateSummary(SolverUtils::SummaryList& s)
     {
@@ -441,7 +441,7 @@ namespace Nektar
         if (m_extrapolation->GetSubStepIntegrationMethod() !=
             LibUtilities::eNoTimeIntegrationMethod)
         {
-            SolverUtils::AddSummaryItem(s, "Substepping", 
+            SolverUtils::AddSummaryItem(s, "Substepping",
                              LibUtilities::TimeIntegrationMethodMap[
                               m_extrapolation->GetSubStepIntegrationMethod()]);
         }
@@ -489,7 +489,7 @@ namespace Nektar
 
                 }
             }
-            
+
         }
 
         if (m_useHomo1DSpecVanVisc && (m_HomogeneousType == eHomogeneous1D))
@@ -504,7 +504,7 @@ namespace Nektar
     }
 
     /**
-     * 
+     *
      */
     void VelocityCorrectionScheme::v_DoInitialise(void)
     {
@@ -539,10 +539,10 @@ namespace Nektar
                                   m_fields[i]->UpdatePhys());
         }
     }
-    
+
 
     /**
-     * 
+     *
      */
     void VelocityCorrectionScheme:: v_TransCoeffToPhys(void)
     {
@@ -554,13 +554,13 @@ namespace Nektar
                                              m_fields[k]->UpdatePhys());
         }
     }
-    
+
     /**
-     * 
+     *
      */
     void VelocityCorrectionScheme:: v_TransPhysToCoeff(void)
     {
-        
+
         int nfields = m_fields.num_elements() - 1;
         for (int k=0 ; k < nfields; ++k)
         {
@@ -569,9 +569,9 @@ namespace Nektar
                                              m_fields[k]->UpdateCoeffs());
         }
     }
-    
+
     /**
-     * 
+     *
      */
     Array<OneD, bool> VelocityCorrectionScheme::v_GetSystemSingularChecks()
     {
@@ -580,9 +580,9 @@ namespace Nektar
         vChecks[vVar-1] = true;
         return vChecks;
     }
-    
+
     /**
-     * 
+     *
      */
     int VelocityCorrectionScheme::v_GetForceDimension()
     {
@@ -593,8 +593,8 @@ namespace Nektar
      * Explicit part of the method - Advection, Forcing + HOPBCs
      */
     void VelocityCorrectionScheme::v_EvaluateAdvection_SetPressureBCs(
-        const Array<OneD, const Array<OneD, NekDouble> > &inarray, 
-        Array<OneD, Array<OneD, NekDouble> > &outarray, 
+        const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+        Array<OneD, Array<OneD, NekDouble> > &outarray,
         const NekDouble time)
     {
         EvaluateAdvectionTerms(inarray, outarray);
@@ -617,14 +617,14 @@ namespace Nektar
         // Calculate High-Order pressure boundary conditions
         m_extrapolation->EvaluatePressureBCs(inarray,outarray,m_kinvis);
     }
-    
+
     /**
      * Implicit part of the method - Poisson + nConv*Helmholtz
      */
     void VelocityCorrectionScheme::SolveUnsteadyStokesSystem(
-        const Array<OneD, const Array<OneD, NekDouble> > &inarray, 
-        Array<OneD, Array<OneD, NekDouble> > &outarray, 
-        const NekDouble time, 
+        const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+        Array<OneD, Array<OneD, NekDouble> > &outarray,
+        const NekDouble time,
         const NekDouble aii_Dt)
     {
         // Set up flowrate if we're starting for the first time or the value of
@@ -664,21 +664,21 @@ namespace Nektar
             }
         }
     }
-        
+
     /**
      * Forcing term for Poisson solver solver
-     */ 
+     */
     void   VelocityCorrectionScheme::v_SetUpPressureForcing(
-        const Array<OneD, const Array<OneD, NekDouble> > &fields, 
-        Array<OneD, Array<OneD, NekDouble> > &Forcing, 
+        const Array<OneD, const Array<OneD, NekDouble> > &fields,
+        Array<OneD, Array<OneD, NekDouble> > &Forcing,
         const NekDouble aii_Dt)
-    {                
+    {
         int i;
         int physTot = m_fields[0]->GetTotPoints();
         int nvel = m_velocity.num_elements();
 
         m_fields[0]->PhysDeriv(eX,fields[0], Forcing[0]);
-        
+
         for(i = 1; i < nvel; ++i)
         {
             // Use Forcing[1] as storage since it is not needed for the pressure
@@ -688,13 +688,13 @@ namespace Nektar
 
         Vmath::Smul(physTot,1.0/aii_Dt,Forcing[0],1,Forcing[0],1);
     }
-    
+
     /**
      * Forcing term for Helmholtz solver
      */
     void   VelocityCorrectionScheme::v_SetUpViscousForcing(
-        const Array<OneD, const Array<OneD, NekDouble> > &inarray, 
-        Array<OneD, Array<OneD, NekDouble> > &Forcing, 
+        const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+        Array<OneD, Array<OneD, NekDouble> > &Forcing,
         const NekDouble aii_Dt)
     {
         NekDouble aii_dtinv = 1.0/aii_Dt;
@@ -713,12 +713,12 @@ namespace Nektar
         else
         {
             m_pressure->PhysDeriv(m_pressure->GetPhys(),
-                                  Forcing[m_velocity[0]], 
+                                  Forcing[m_velocity[0]],
                                   Forcing[m_velocity[1]],
                                   Forcing[m_velocity[2]]);
         }
 
-        // zero convective fields. 
+        // zero convective fields.
         for(int i = nvel; i < m_nConvectiveFields; ++i)
         {
             Vmath::Zero(phystot,Forcing[i],1);
@@ -733,7 +733,7 @@ namespace Nektar
         }
     }
 
-    
+
     /**
      * Solve pressure system
      */
@@ -751,7 +751,7 @@ namespace Nektar
         // Add presure to outflow bc if using convective like BCs
         m_extrapolation->AddPressureToOutflowBCs(m_kinvis);
     }
-    
+
     /**
      * Solve velocity system
      */
@@ -766,7 +766,7 @@ namespace Nektar
             MultiRegions::NullVarFactorsMap;
 
         AppendSVVFactors(factors,varFactorsMap);
-        
+
         // Solve Helmholtz system and put in Physical space
         for(int i = 0; i < m_nConvectiveFields; ++i)
         {
@@ -781,10 +781,10 @@ namespace Nektar
 
     void  VelocityCorrectionScheme::SetUpSVV(void)
     {
-        
+
         m_session->MatchSolverInfo("SpectralVanishingViscosity",
                                    "PowerKernel", m_useSpecVanVisc, false);
-        
+
         if(m_useSpecVanVisc)
         {
             m_useHomo1DSpecVanVisc = true;
@@ -812,7 +812,7 @@ namespace Nektar
                 m_session->MatchSolverInfo("SpectralVanishingViscositySpectralHP",
                                            "DGKernel", m_useSpecVanVisc, false);
             }
-            
+
             if(m_useSpecVanVisc)
             {
                 m_IsSVVPowerKernel = false;
@@ -839,7 +839,7 @@ namespace Nektar
                     SVVVelFields[i] = Array<OneD, NekDouble>(phystot);
                     vars.push_back(m_session->GetVariable(m_velocity[i]));
                 }
-                    
+
                 // Load up files into  m_fields;
                 GetFunction("SVVVelocityMagnitude")
                     ->Evaluate(vars,SVVVelFields);
@@ -881,7 +881,7 @@ namespace Nektar
 
 
         // Case of only Homo1D kernel
-        if(m_useSpecVanVisc == false)
+        if(m_session->DefinesSolverInfo("SpectralVanishingViscosityHomo1D"))
         {
             m_session->MatchSolverInfo("SpectralVanishingViscosityHomo1D",
                                 "True", m_useHomo1DSpecVanVisc, false);
@@ -889,22 +889,6 @@ namespace Nektar
             {
                 m_session->MatchSolverInfo("SpectralVanishingViscosityHomo1D",
                                        "ExpKernel", m_useHomo1DSpecVanVisc, false);
-            }
-        }
-        else
-        {
-            bool testForFalse;
-            // Case where Homo1D is turned off but has been turned on
-            // impliictly by SpectralVanishingViscosity solver info
-            m_session->MatchSolverInfo("SpectralVanishingViscosityHomo1D",
-                                "False", testForFalse, false);
-            if(testForFalse)
-            {
-                m_useHomo1DSpecVanVisc = false;
-            }
-            else
-            {
-                m_useHomo1DSpecVanVisc = true;
             }
         }
 
@@ -929,7 +913,7 @@ namespace Nektar
                 int pstart;
 
                 pstart = m_sVVCutoffRatioHomo1D*kmodes;
-                
+
                 for(int n = 0; n < num_planes; ++n)
                 {
                     if(planes[n] > pstart)
@@ -950,18 +934,18 @@ namespace Nektar
     }
 
     void VelocityCorrectionScheme::SVVVarDiffCoeff(
-                     const NekDouble velmag, 
+                     const NekDouble velmag,
                      Array<OneD, NekDouble> &diffcoeff,
                      const  Array<OneD, Array<OneD, NekDouble> >  &vel)
     {
         int phystot = m_fields[0]->GetTotPoints();
         int nel = m_fields[0]->GetNumElmts();
-        int nvel,cnt; 
-        
+        int nvel,cnt;
+
         Array<OneD, NekDouble> tmp;
-        
+
         Vmath::Fill(nel,velmag,diffcoeff,1);
-        
+
         if(vel != NullNekDoubleArrayofArray)
         {
             Array<OneD, NekDouble> Velmag(phystot);
@@ -974,11 +958,11 @@ namespace Nektar
                              Velmag,1);
             }
             Vmath::Vsqrt(phystot,Velmag,1,Velmag,1);
-                
+
 
             cnt = 0;
             Array<OneD, NekDouble> tmp;
-            // calculate mean value of vel mag. 
+            // calculate mean value of vel mag.
             for(int i = 0; i < nel; ++i)
             {
                 int nq = m_fields[0]->GetExp(i)->GetTotPoints();
@@ -994,17 +978,17 @@ namespace Nektar
         {
             nvel = m_expdim;
         }
-        
+
         if(m_expdim == 3)
         {
             LocalRegions::Expansion3DSharedPtr exp3D;
             for (int e = 0; e < nel; e++)
             {
                 exp3D = m_fields[0]->GetExp(e)->as<LocalRegions::Expansion3D>();
-                NekDouble h = 0; 
+                NekDouble h = 0;
                 for(int i = 0; i < exp3D->GetNedges(); ++i)
                 {
-                    
+
                     h = max(h, exp3D->GetGeom3D()->GetEdge(i)->GetVertex(0)->dist(
                              *(exp3D->GetGeom3D()->GetEdge(i)->GetVertex(1))));
                 }
@@ -1014,7 +998,7 @@ namespace Nektar
                 {
                     p = max(p,exp3D->GetBasisNumModes(i)-1);
                 }
-                
+
                 diffcoeff[e] *= h/p;
             }
         }
@@ -1027,7 +1011,7 @@ namespace Nektar
                 NekDouble h = 0;
                 for(int i = 0; i < exp2D->GetNedges(); ++i)
                 {
-                    
+
                    h = max(h, exp2D->GetGeom2D()->GetEdge(i)->GetVertex(0)->dist(
                              *(exp2D->GetGeom2D()->GetEdge(i)->GetVertex(1))));
                 }
@@ -1037,7 +1021,7 @@ namespace Nektar
                 {
                     p = max(p,exp2D->GetBasisNumModes(i)-1);
                 }
-                
+
                 diffcoeff[e] *= h/p;
             }
         }
@@ -1047,7 +1031,7 @@ namespace Nektar
                                  StdRegions::ConstFactorMap &factors,
                                  MultiRegions::VarFactorsMap &varFactorsMap)
     {
-        
+
         if(m_useSpecVanVisc)
         {
             factors[StdRegions::eFactorSVVCutoffRatio] = m_sVVCutoffRatio;

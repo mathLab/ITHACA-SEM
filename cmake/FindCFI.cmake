@@ -14,7 +14,7 @@ IF(NEKTAR_USE_MESHGEN)
 
 	SET(TEST_ENV $ENV{FEGS_TOP})
         IF(NOT DEFINED TEST_ENV)
-            MESSAGE(FATAL_ERROR "Cannot build with CFI without environment variable CFI_DIR set which points to cadfix1100fcs folder in the CFI installation")
+		MESSAGE(FATAL_ERROR "Cannot build with CFI without environment variable FEGS_TOP set which points to the top folder in the CFI installation")
         ENDIF()
 	FIND_LIBRARY(CFI_LIBRARY_API NAMES cadfixapi PATHS $ENV{FEGS_LIB})
 	FIND_LIBRARY(CFI_LIBRARY_CXX NAMES oocfi_cxx.a PATHS $ENV{FEGS_TOP}/cadfixdev/oocfi/cxx)

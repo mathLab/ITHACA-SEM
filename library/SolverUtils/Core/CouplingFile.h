@@ -1,14 +1,12 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File FilterEnergy.cpp
+// File CouplingFile.h
 //
 // For more information, please see: http://www.nektar.info
 //
 // The MIT License
 //
-// Copyright (c) 2006 Division of Applied Mathematics, Brown University (USA),
-// Department of Aeronautics, Imperial College London (UK), and Scientific
-// Computing and Imaging Institute, University of Utah (USA).
+// Copyright (c) 2017 Kilian Lackhove
 //
 // License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -29,44 +27,66 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Output kinetic energy and enstrophy.
+// Description: File based Coupling class. Rather pointless, only for
+// demonstration.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <CompressibleFlowSolver/Filters/FilterEnergy.h>
+#ifndef NEKTAR_COUPLINGFILE
+#define NEKTAR_COUPLINGFILE
+
+#include <SolverUtils/Core/Coupling.h>
+#include <SolverUtils/Core/SessionFunction.h>
 
 namespace Nektar
 {
-
-std::string FilterEnergy::className = SolverUtils::GetFilterFactory().
-    RegisterCreatorFunction("Energy", FilterEnergy::create);
-
-FilterEnergy::FilterEnergy(
-    const LibUtilities::SessionReaderSharedPtr &pSession,
-    const ParamMap &pParams)
-    : FilterEnergyBase(pSession, pParams, false)
+namespace SolverUtils
 {
 
-}
+class CouplingFile;
 
-FilterEnergy::~FilterEnergy()
+class CouplingFile : public Coupling
 {
 
+public:
+    static std::string className;
+
+    /// Creates an instance of this class
+    SOLVER_UTILS_EXPORT static CouplingSharedPtr create(
+        MultiRegions::ExpListSharedPtr field)
+    {
+        CouplingSharedPtr p =
+            MemoryManager<CouplingFile>::AllocateSharedPtr(field);
+        p->Init();
+        return p;
+    }
+
+    SOLVER_UTILS_EXPORT CouplingFile(MultiRegions::ExpListSharedPtr field);
+
+    SOLVER_UTILS_EXPORT virtual ~CouplingFile();
+
+protected:
+    SOLVER_UTILS_EXPORT virtual void v_Init();
+
+    SOLVER_UTILS_EXPORT virtual void v_Send(
+        const int step,
+        const NekDouble time,
+        const Array<OneD, const Array<OneD, NekDouble> > &field,
+        vector<string> &varNames);
+
+    SOLVER_UTILS_EXPORT virtual void v_Receive(
+        const int step,
+        const NekDouble time,
+        Array<OneD, Array<OneD, NekDouble> > &field,
+        vector<string> &varNames);
+
+private:
+    int m_lastSend;
+    int m_lastReceive;
+
+    SessionFunctionSharedPtr m_inputFunction;
+};
+}
 }
 
-void FilterEnergy::v_GetVelocity(
-    const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
-    const int i,
-    Array<OneD, NekDouble> &velocity)
-{
-    Vmath::Vdiv(pFields[0]->GetNpoints(), pFields[i+1]->GetPhys(), 1,
-                pFields[0]->GetPhys(), 1, velocity, 1);
-}
-
-Array<OneD, NekDouble> FilterEnergy::v_GetDensity(
-    const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields)
-{
-    return pFields[0]->GetPhys();
-}
-
-}
+#endif

@@ -1,0 +1,20 @@
+diff -crB cwipi-0.8.2/src/coupling.cxx cwipi-0.8.2.patched/src/coupling.cxx
+*** src/coupling.cxx	2014-12-10 16:16:36.000000000 +0100
+--- src/coupling.cxx	2017-06-15 12:42:35.919177812 +0200
+***************
+*** 1221,1227 ****
+  #ifdef NAN
+        if (receivingField != NULL && nInteriorList > 0) {
+          const int idx = 0;
+!         if (isnan(receivingField[idx]))
+            status = CWIPI_EXCHANGE_BAD_RECEIVING;
+        }
+  #endif
+--- 1221,1227 ----
+  #ifdef NAN
+        if (receivingField != NULL && nInteriorList > 0) {
+          const int idx = 0;
+!         if (std::isnan(receivingField[idx]))
+            status = CWIPI_EXCHANGE_BAD_RECEIVING;
+        }
+  #endif

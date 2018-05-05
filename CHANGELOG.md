@@ -16,6 +16,7 @@ v5.0.0
 - Add ARPACK thirdparty build capabilities (!828)
 - Added native support for csv files in addititon to pts (!760, !835, !906)
 - Utilize LAPACK_DIR env variable to find the native blas/lapack install (!827)
+- Extend AeroForces filter to compressible flows (!815)
 - Remove StdExpansion use from MultiRegion (use Expansions instead). (!831)
 - Move steady state check and CFL output from solvers to SolverUtils (!832)
 - Remove DG advection implementation from EquationSystem (!832)
@@ -48,7 +49,8 @@ v5.0.0
 - Removed instance count from beginning of Array storage to improve memory
   alignment (!921)
 - Fix naming issue of duplicate Unit tests (!924) 
-	
+- Fix warnings about missing virtual destructors in abstract classes (!932)
+
 **NekMesh**:
 - Add feature to read basic 2D geo files as CAD (!731)
 - Add periodic boundary condition meshing in 2D (!733)
@@ -77,6 +79,7 @@ v5.0.0
 - Support CFI combined lines (!917)
 - Order nodes in Gmsh output (!912)
 - Fix manifold face curvature nodes (!913)
+- Fix writing 1D surfaces (!930)
 
 **FieldConvert**:
 - Add input module for Semtex field files (!777)
@@ -98,6 +101,7 @@ v5.0.0
   norm of the difference, to be consistent with the compressible solver (!832)
 - Updated SVV to allow for the DGKernel extension (!851)
 - Pre-calculate Time invariant portion of Womersley Solution (!814)
+- Fix for independent setting of SVV in Homogeneous direction (!936)
 
 **CompressibleFlowSolver**
 - Add 3D regression tests (!567)
@@ -130,6 +134,9 @@ v4.4.2
 - Updated PETSc to 3.7.7 (!916)
 - Fix typcase to an integer which set Lz < 1 to zero when postprocess hdf5 output (!9922)
 
+**IncNavierStokesSolver**
+- Add a test for imaginary shift to be only used with Homogenous and SingleMode on. (!928)
+
 **NekMesh**
 - Fix missing periodic boundary meshing and boundary layer mesh adjustment
   configurations in 2D (!859)
@@ -139,6 +146,7 @@ v4.4.2
 - Fix sign of the viscous term in the velocity correction scheme equations in
   the user guide (!856)
 - Fixed anonymous clone URL (!909)
+- Add information on the limitations of Imaginary Shift for stability. (!928)
 
 **FieldConvert**
 - Allow passing input name with trailing separator (!879)

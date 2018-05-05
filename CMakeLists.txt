@@ -214,6 +214,7 @@ INCLUDE (ThirdPartyTriangle)
 INCLUDE (ThirdPartyTetGen)
 INCLUDE (ThirdPartyCCM)
 INCLUDE (ThirdPartyBlasLapack)
+INCLUDE (ThirdPartyCwipi)
 INCLUDE (FindCFI)
 
 INCLUDE (Doxygen)

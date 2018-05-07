@@ -583,20 +583,6 @@ namespace Nektar
         }
 
 
-        /**  
-         * Solve a global linear system using the conjugate gradient method.  
-         * We solve only for the non-Dirichlet modes. The operator is evaluated  
-         * using an auxiliary function v_DoMatrixMultiply defined by the  
-         * specific solver. Distributed math routines are used to support  
-         * parallel execution of the solver.  
-         *  
-         * The implemented algorithm uses a reduced-communication reordering of  
-         * the standard PCG method (Demmel, Heath and Vorst, 1993)  
-         *  
-         * @param       pInput      Input residual  of all DOFs.  
-         * @param       pOutput     Solution vector of all DOFs.  
-         */
-
         // Arnoldi Subroutine
         void GlobalLinSysIterative::DoArnoldi(
             const int starttem,
@@ -610,8 +596,7 @@ namespace Nektar
             // V[nd+1]
             Array<OneD, NekDouble> &Vsingle2,
             //h
-            Array<OneD, NekDouble> &hsingle
-        )
+            Array<OneD, NekDouble> &hsingle)
         {
             // Get the communicator for performing data exchanges
             LibUtilities::CommSharedPtr vComm
@@ -716,8 +701,7 @@ namespace Nektar
             Array<OneD, NekDouble> &c,
             Array<OneD, NekDouble> &s,
             Array<OneD, NekDouble> &hsingle,
-            Array<OneD, NekDouble> &eta
-        )
+            Array<OneD, NekDouble> &eta)
         {
             NekDouble temp_dbl, dd, hh;
             int idtem = endtem - 1;
@@ -762,8 +746,6 @@ namespace Nektar
             temp_dbl = c[idtem] * eta[idtem] - s[idtem] * eta[endtem];
             eta[endtem]       = s[idtem] * eta[idtem] + c[idtem] * eta[endtem];
             eta[idtem] = temp_dbl;
-
-
         }
 
 
@@ -804,14 +786,11 @@ namespace Nektar
             Array<OneD,      NekDouble> &pOutput,
             const int                          nDir)
         {
-
             // Get the communicator for performing data exchanges
             LibUtilities::CommSharedPtr vComm
                 = m_expList.lock()->GetComm()->GetRowComm();
 
             int nNonDir = nGlobal - nDir;
-
-
 
             // Allocate array storage of coefficients
             // Hessenburg matrix
@@ -852,11 +831,8 @@ namespace Nektar
             NekDouble vExchange = 0;
             // temporary Array
             Array<OneD, NekDouble> r0(nGlobal, 0.0);
-            Array<OneD, NekDouble> w(nGlobal, 0.0);
             Array<OneD, NekDouble> tmp1;
             Array<OneD, NekDouble> tmp2;
-            Array<OneD, NekDouble> tmp3(nGlobal, 0.0);
-            Array<OneD, NekDouble> tmp4(nGlobal, 0.0);
             Array<OneD, NekDouble> Vsingle1;
             Array<OneD, NekDouble> Vsingle2;
             Array<OneD, NekDouble> hsingle1;
@@ -865,17 +841,12 @@ namespace Nektar
             ///////////////////////////////////////////////////////////////////////////////
             // // tmp2 for preconditioner multiplication, later consider it
 
-
+            
             if(restarted)
             {
                 // tmp2=Ax
-                v_DoMatrixMultiply(pOutput, tmp4);
-                // because preconditioner deal with nonDirichlet part, store it for later use
-                tmp1 = r0;
-                for(int i = 0; i < nGlobal; ++i)
-                {
-                    tmp1[i] = tmp4[i];
-                }
+                v_DoMatrixMultiply(pOutput, r0);
+                
 
                 //The first search direction
                 beta = -1.0;
@@ -896,6 +867,7 @@ namespace Nektar
             tmp2 = r0 + nDir;
             m_precon->DoPreconditioner(tmp1, tmp2);
 
+            
             // norm of (r0)
             // m_map tells how to connect
             vExchange    = Vmath::Dot2(nNonDir,
@@ -952,15 +924,6 @@ namespace Nektar
                 }
             }
 
-
-            // check for id if needed
-            //     for(int i = 0; i < m_maxstorage; ++i)
-            //     {
-            // cout << "id[" << i << "] is " << id[i] << ", id_start[" << i << "] is " << id_start[i] << ", id_end[" << i << "] is " << id_end[i] << endl;
-
-            //     }
-
-
             //Normlized by r0 norm V(:,1)=r0/norm(r0)
             alpha = 1.0 / eta[0];
             //Scalar multiplication
@@ -1001,10 +964,6 @@ namespace Nektar
                 {
                     eps = eta[nd + 1] * eta[nd + 1];
 
-                    // ofstream outfile1("/home/yp3015/Documents/Week12_20180408/Gmres_New_code2/test7/t.txt", ios::app);
-                    // outfile1 << setprecision(14) << setw(14) << m_totalIterations << "          " << clock() - t << "\n";
-                    // ofstream outfile2("/home/yp3015/Documents/Week12_20180408/Gmres_New_code2/test7/Test2/eps.txt", ios::app);
-                    // outfile2 << setprecision(14) << setw(14) << m_totalIterations << "             " << eps << "\n";
                     if (eps * m_prec_factor < m_tolerance * m_tolerance * m_rhs_magnitude)
                     {
                         m_converged = true;
@@ -1031,13 +990,7 @@ namespace Nektar
 
                 Vmath::Svtvp(nNonDir, beta, &V_total[i][0] + nDir, 1, &pOutput[0] + nDir, 1, &pOutput[0] + nDir, 1);
             }
-
-
-
             return eps;
-
-
-
         }
 
         /**  
@@ -1114,8 +1067,6 @@ namespace Nektar
                                      pInput,
                                      pOutput,
                                      nDir);
-
-
                 if(m_converged)
                 {
                     if (m_verbose && m_root)
@@ -1139,8 +1090,6 @@ namespace Nektar
 
             if(m_root)
             {
-
-
                         cout << "Gmres(" << m_maxstorage << "), bandwidth(" << m_maxhesband << "): " << endl;
                         cout << "GMRES iterations made = " << m_totalIterations
                              << " using tolerance of "  << m_tolerance
@@ -1152,12 +1101,6 @@ namespace Nektar
                               "Exceeded maximum number of iterations");
 
         }
-
-
-
-        ////////////////////////////////////////////////////////////////////////////
-
-
 
 
         void GlobalLinSysIterative::Set_Rhs_Magnitude(

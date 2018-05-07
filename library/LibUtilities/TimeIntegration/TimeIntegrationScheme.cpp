@@ -1527,6 +1527,7 @@ namespace Nektar
                 } 
 
                 // Calculate the stage derivative based upon the stage value
+                //type = IMEXOrder2;
                 if(eIMEX    ==   type)
                 {
                     for( j = 1; j < i; j++ )
@@ -1579,19 +1580,17 @@ namespace Nektar
                             m_T += A(i,j)*timestep;
                         }
                     }
-                    if (0==i)
-                    {
-                        op.DoProjection(m_Y,m_Y,m_T);
-                        op.DoOdeRhs(m_Y, m_F[i], m_T); 
-                        inrhs = m_F[i];
-                    }
-                    else
-                    {
-                        op.DoProjection(m_Y,m_Y,m_T);
-                        inrhs = m_F[i-1];
-                    }
+                    // if (0==i)
+                    // {
+                    //     op.DoProjection(m_Y,m_Y,m_T);
+                    //     op.DoOdeRhs(m_Y, m_F[i], m_T); 
+                    // }
+                    // else
+                    // {
+                    //     op.DoProjection(m_Y,m_Y,m_T);
+                    // }
                     
-                    op.DoWhollyImplicitSolve(m_tmp, m_Y, inrhs, m_T, A(i,i)*timestep);
+                    op.DoImplicitSolve(m_tmp, m_Y, m_T, A(i,i)*timestep);
                     
                     for(k = 0; k < m_nvar; k++)
                     {
@@ -1710,6 +1709,16 @@ namespace Nektar
             {
                 op.DoProjection(y_new[0],y_new[0],t_new[0]);
             }
+            
+            for (int i = 0; i < m_npoints; i++)
+            {
+                cout <<"y_old["<<i<<"]= "<<y_old[0][0][i]<<endl;
+            }
+            for (int i = 0; i < m_npoints; i++)
+            {
+                cout <<"y_new["<<i<<"]= "<<y_new[0][0][i]<<endl;
+            }
+
         }
         
         bool TimeIntegrationScheme::CheckIfFirstStageEqualsOldSolution(const Array<OneD, const Array<TwoD, NekDouble> >& A,

@@ -122,6 +122,34 @@ namespace Nektar
                   Array<OneD,       Array<OneD, NekDouble> >&outarray,
             NekDouble time,
             NekDouble lambda);
+//#define DEMO_IMPLICITSOLVER_JFNK
+#ifdef DEMO_IMPLICITSOLVER_JFNK_VIS 
+
+        void NonlinSysEvaluator(
+            const Array<OneD,       Array<OneD, NekDouble> >&inarray,
+                  Array<OneD,       Array<OneD, NekDouble> >&out);
+
+        // void preconditioner(
+        //     const Array<OneD,       Array<OneD, NekDouble> >&inarray,
+        //           Array<OneD,       Array<OneD, NekDouble> >&out);
+
+        // void NonlinSysEvaluator(
+        //     const Array<OneD, Array<OneD, NekDouble> > &inarray,
+        //           Array<OneD, Array<OneD, NekDouble> > &out)
+    
+        void MatrixMultiply(
+            const Array<OneD, NekDouble> &inarray,
+                  Array<OneD, NekDouble >&out);
+
+        void MatrixMultiply_MatrixFree(
+            const  Array<OneD, NekDouble> &inarray,
+                   Array<OneD, NekDouble >&out);
+
+        void preconditioner(
+            const Array<OneD, NekDouble> &inarray,
+                  Array<OneD, NekDouble >&out);
+
+#endif
 
         /// Get the normal velocity
         Array<OneD, NekDouble> &GetNormalVelocity(

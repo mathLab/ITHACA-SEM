@@ -39,9 +39,12 @@
 #include <SolverUtils/UnsteadySystem.h>
 #include <SolverUtils/RiemannSolvers/RiemannSolver.h>
 #include <SolverUtils/AdvectionSystem.h>
+#include <MultiRegions/ExpList.h>
 
 namespace Nektar
 {
+    class ExpList;
+    
     class UnsteadyInviscidBurger : public SolverUtils::AdvectionSystem
     {
     public:
@@ -89,7 +92,42 @@ namespace Nektar
             const Array<OneD,  const  Array<OneD, NekDouble> > &inarray,
                   Array<OneD,         Array<OneD, NekDouble> > &outarray,
             const NekDouble time);
-        
+
+        /// Compute the projection
+#define DEMO_IMPLICITSOLVER_JFNK
+#ifdef DEMO_IMPLICITSOLVER_JFNK 
+        void DoImplicitSolve(
+            const Array<OneD, const Array<OneD, NekDouble> >&forc,
+                  Array<OneD,       Array<OneD, NekDouble> >&sol,
+            const NekDouble time,
+            const NekDouble lambda);
+
+        void NonlinSysEvaluator(
+                  Array<OneD,       Array<OneD, NekDouble> >&inarray,
+                  Array<OneD,       Array<OneD, NekDouble> >&out);
+
+        // void preconditioner(
+        //     const Array<OneD,       Array<OneD, NekDouble> >&inarray,
+        //           Array<OneD,       Array<OneD, NekDouble> >&out);
+
+        // void NonlinSysEvaluator(
+        //     const Array<OneD, Array<OneD, NekDouble> > &inarray,
+        //           Array<OneD, Array<OneD, NekDouble> > &out)
+    
+        void MatrixMultiply(
+            const Array<OneD, NekDouble> &inarray,
+                  Array<OneD, NekDouble >&out);
+
+        void MatrixMultiply_MatrixFree(
+            const  Array<OneD, NekDouble> &inarray,
+                   Array<OneD, NekDouble >&out);
+
+        void preconditioner(
+            const Array<OneD, NekDouble> &inarray,
+                  Array<OneD, NekDouble >&out);
+
+#endif
+
         /// Get the normal velocity
         Array<OneD, NekDouble> &GetNormalVelocity();
 

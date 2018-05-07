@@ -46,6 +46,7 @@
 #include <LibUtilities/BasicUtils/Progressbar.hpp>
 #include <LibUtilities/BasicUtils/PtsField.h>
 #include <LibUtilities/BasicUtils/PtsIO.h>
+#include <LibUtilities/LinearAlgebra/NekLinSysIterative.h>
 #include <MultiRegions/ExpList.h>
 #include <SolverUtils/SolverUtilsDeclspec.h>
 #include <SolverUtils/Core/Misc.h>
@@ -388,6 +389,11 @@ class Interpolator;
             Array<OneD, bool>                           m_checkIfSystemSingular;
             /// Map to identify relevant solver info to dump in output fields
             LibUtilities::FieldMetaDataMap              m_fieldMetaDataMap;
+
+            /// Map to identify relevant solver info to dump in output fields
+            LinSysOperators                             m_LinSysOprtors;
+
+            
 
             /// Number of Quadrature points used to work out the error
             int  m_NumQuadPointsError;

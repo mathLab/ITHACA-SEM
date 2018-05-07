@@ -104,6 +104,7 @@ namespace Nektar
             }
         }
                 
+        m_ode.DefineImplicitSolve(&UnsteadyInviscidBurger::DoImplicitSolve, this);
         // If explicit it computes RHS and PROJECTION for the time integration
         if (m_explicitAdvection)
         {
@@ -268,8 +269,7 @@ namespace Nektar
         }
     }
 
-#define DEMO_IMPLICITSOLVER_JFNK
-#ifndef DEMO_IMPLICITSOLVER_JFNK
+#ifdef DEMO_IMPLICITSOLVER_JFNK
 
     /* @brief Compute the diffusion term implicitly. 
      *      Solve the whole system implicitly 
@@ -282,102 +282,185 @@ namespace Nektar
      * @param lambda     Diffusion coefficient.
      */
     
-    void UnsteadyInviscidBurger::DoWhollyImplicitSolve_JFNK(
+    void UnsteadyInviscidBurger::DoImplicitSolve(
                                                  const Array<OneD, const Array<OneD, NekDouble> >&forc,
-                                                 Array<OneD,       Array<OneD, NekDouble> >&sol,
-                                                 const Array<OneD,       Array<OneD, NekDouble> >&rhs0,
+                                                       Array<OneD,       Array<OneD, NekDouble> >&sol,
                                                  const NekDouble time,
                                                  const NekDouble lambda)
     {
-        bool converged;
+        m_TimeIntegSoltn  = sol;
+        m_TimeIntegForce  = forc;
+        m_TimeIntegLambda = lambda;
+        m_BndEvaluateTime = time;
+
+        
+
         const unsigned int MaxNonlinIte =   500;
-        int nvariables = inarray.num_elements();
-        int npoints     = inforc[0].num_elements();
-        Nekdouble resnorm,dsolnorm;
-        Nekdouble resfactor=1.0;
-        Array<OneD,       Array<OneD, NekDouble> > NonlinSysRes(nvariables),dsol(nvariables);
-        Array<OneD,       Array<OneD, NekDouble> > rhs; // reuse 
-        for(int j = 0; j < nvariables; j++)
+        unsigned int nvariables  = forc.num_elements();
+        unsigned int npoints     = forc[0].num_elements();
+        unsigned int ntotal      = nvariables*npoints;
+
+        bool converged;
+        unsigned int nGlobal,nDir;
+        NekDouble resnorm,dsolnorm;
+        NekDouble resfactor = 1.0;
+        NekDouble tolrnc    = 1.0E-6;
+        NekDouble tol2      = tolrnc*tolrnc;
+
+
+        for (int i = 0; i < npoints; i++)
         {
-            NonlinSysRes[j] =  Array<OneD, NekDouble>(m_npoints,0.0);
-            dsol[j] =  Array<OneD, NekDouble>(m_npoints,0.0);
+            cout <<"forc["<<i<<"]= "<<forc[0][i]<<endl;
         }
-        rhs = rhs0;
-        NonlinSysEvaluator(forc,sol,rhs0,NonlinSysRes,lambda);
+        for (int i = 0; i < npoints; i++)
+        {
+            cout <<"sol["<<i<<"]= "<<sol[0][i]<<endl;
+        }
 
-        resnorm = Vmath::Dot(npoints,NonlinSysRes,NonlinSysRes);
+        Array<OneD, NekDouble> NonlinSysRes_1D(ntotal,0.0),dsol_1D(ntotal,0.0);
+        Array<OneD,       Array<OneD, NekDouble> > NonlinSysRes(nvariables),dsol(nvariables);
+        for(int i = 0; i < nvariables; i++)
+        {
+            int offset = i*npoints;
+            NonlinSysRes[i] =  NonlinSysRes_1D + offset;
+            dsol[i]         =  dsol_1D + offset;
+        }
+        m_SysEquatResidu = NonlinSysRes;
 
-        if (resnorm<tolerence)
+        ASSERTL0((1==nvariables),"only 1==nvariables")
+
+        NonlinSysEvaluator(sol,NonlinSysRes);
+
+        resnorm = Vmath::Dot(ntotal,NonlinSysRes_1D,NonlinSysRes_1D);
+            
+
+        if (resnorm<tol2)
         {
             return;
         }
 
+        // TODO: 
+        // v_Comm is based on the explist used may be different(m_tracemap or m_locToGloMap) for diffrent
+        // should generate GlobalLinSys first and get the v_Comm from GlobalLinSys. here just give it a m_Comm no parallel support yet!!
+        //const std::weak_ptr<ExpList>       explist= *m_fields[0];
+        LibUtilities::CommSharedPtr v_Comm
+             = m_fields[0]->GetComm()->GetRowComm();
+
+        //LibUtilities::CommSharedPtr                 v_Comm;
+        NekLinSysIterative linsol(m_session,v_Comm);
+        m_LinSysOprtors.DefineMatrixMultiply(&UnsteadyInviscidBurger::MatrixMultiply, this);
+        m_LinSysOprtors.DefinePrecond(&UnsteadyInviscidBurger::preconditioner, this);
+        linsol.setLinSysOperators(m_LinSysOprtors);
+
         converged = false;
         for (int iNonl = 0; iNonl < MaxNonlinIte; iNonl++)
         {
-            // 
-            JacobFreeLinSysSolver(NonlinSysRes,sol,dsol,time,lambda);
+            //TODO: currently  NonlinSysRes is 2D array and SolveLinearSystem needs 1D array
+            linsol.SolveLinearSystem(ntotal,NonlinSysRes_1D,dsol_1D,0);
 
-            for(int j = 0; j < nvariables; j++)
+            for(int i = 0; i < nvariables; i++)
             {
-                Vmath::Vadd(npoints,dsol[k],1,sol[k],1);
+                Vmath::Vadd(npoints,dsol[i],1,sol[i],1,sol[i],1);
             }
-            dsolnorm = Vmath::Dot(npoints,dsol,dsol);
-            if (0==iNonl)
-            {
-                resfactor = resnorm/dsolnorm;
-            }
-
-
-            if (dsolnorm*resfactor<tolerence)
+            
+            // dsolnorm = Vmath::Dot(ntotal,dsol_1D,dsol_1D);
+            
+            // // the resfactor between L2norm of nonlinear risidual and dsol;
+            // if (0==iNonl)
+            // {
+            //     resfactor = resnorm/dsolnorm;
+            // }
+            // resfactor = 1.0;
+            NonlinSysEvaluator(sol,NonlinSysRes);
+            resnorm = Vmath::Dot(ntotal,dsol_1D,dsol_1D);
+            cout << "   iNonl = "<<iNonl<<" resnorm = "<<resnorm<<"  resfactor = "<<resfactor<<endl;
+            if (resnorm<tol2)
             {
                 converged = true;
                 break;
             }
-            else
-            {
-                DoProjection(sol,sol,time);
-                DoOdeRhs(sol, rhs, time);// dsol is reused as 
 
-                NonlinSysEvaluator(forc,sol,rhs,NonlinSysRes,lambda);
-            }
         }
 
-        ASSERTL0((converged),"Nonlinear system solver not converge in DoWhollyImplicitSolve_JFNK ")
+        ASSERTL0((converged),"Nonlinear system solver not converge in UnsteadyInviscidBurger::DoImplicitSolve ")
+        return;
+    }
+    
+    
+
+    void UnsteadyInviscidBurger::NonlinSysEvaluator(
+                                                       Array<OneD, Array<OneD, NekDouble> > &inarray,
+                                                       Array<OneD, Array<OneD, NekDouble> > &out)
+    {
+        Array<OneD, Array<OneD, NekDouble> > inforc;
+        inforc = m_TimeIntegForce;
+        unsigned int nvariable = inforc.num_elements();
+        unsigned int npoints   = inforc[0].num_elements();
+        
+
+        DoOdeProjection(inarray,inarray,m_BndEvaluateTime);
+        DoOdeRhs(inarray,out,m_BndEvaluateTime);
+        for (int i = 0; i < nvariable; i++)
+        {
+            Vmath::Svtvp(npoints,-m_TimeIntegLambda,out[i],1,inarray[i],1,out[i],1);
+            Vmath::Vsub(npoints,out[i],1,inforc[i],1,out[i],1);
+        }
         return;
     }
 
-    inline void UnsteadyInviscidBurger::NonlinSysEvaluator(
-                                                 const Array<OneD, const Array<OneD, NekDouble> >&inforc,
-                                                 const Array<OneD,       Array<OneD, NekDouble> >&inarray,
-                                                 const Array<OneD,       Array<OneD, NekDouble> >&inrhs,
-                                                 Array<OneD,       Array<OneD, NekDouble> >&out,
-                                                 const NekDouble lambda)
+    
+    void UnsteadyInviscidBurger::MatrixMultiply(
+                                                 const Array<OneD, NekDouble> &inarray,
+                                                 Array<OneD, NekDouble >&out)
     {
-        int nvariables  = inforc.num_elements();
-        int npoints     = inforc[0].num_elements();
-        for(int k = 0; k < nvariables; k++)
+        MatrixMultiply_MatrixFree(inarray,out);
+        return;
+    }
+
+
+    void UnsteadyInviscidBurger::MatrixMultiply_MatrixFree(
+                                                 const  Array<OneD, NekDouble> &inarray,
+                                                        Array<OneD, NekDouble >&out)
+    {
+        NekDouble eps = 1.0E-6;
+        NekDouble oeps = 1.0/eps;
+        unsigned int nvariables = m_TimeIntegSoltn.num_elements();
+        unsigned int npoints    = m_TimeIntegSoltn[0].num_elements();
+        Array<OneD, NekDouble > tmp;
+        Array<OneD,       Array<OneD, NekDouble> > solplus(nvariables);
+        Array<OneD,       Array<OneD, NekDouble> > resplus(nvariables);
+        for(int i = 0; i < nvariables; i++)
         {
-            Vmath::Vsub(npoints,inarray[k],1,inforc[k],1,out[k],1);
-            Vmath::Svtvp(npoints,-lambda,inrhs[k],1,out[k],1,out[k],1);
+            solplus[i] =  Array<OneD, NekDouble>(npoints,0.0);
+            resplus[i] =  Array<OneD, NekDouble>(npoints,0.0);
         }
-    }
 
-    void UnsteadyInviscidBurger::JacobFreeLinSysSolver(
-                                                 const Array<OneD, const Array<OneD, NekDouble> >&,
-                                                 const Array<OneD,       Array<OneD, NekDouble> >&sol,
-                                                 Array<OneD,       Array<OneD, NekDouble> >&inoutarray,
-                                                 const NekDouble time,
-                                                 const NekDouble lambda)
+        tmp = inarray;
+        for (int i = 0; i < nvariables; i++)
+        {
+            tmp = tmp + i*npoints;
+            Vmath::Svtvp(npoints,eps,tmp,1,m_TimeIntegSoltn[i],1,solplus[i],1);
+        }
+        NonlinSysEvaluator(solplus,resplus);
+
+        tmp = out;
+        for (int i = 0; i < nvariables; i++)
+        {
+            tmp = tmp + i*npoints;
+            Vmath::Vvpts(npoints,&solplus[i][0],1,&m_TimeIntegSoltn[i][0],1,oeps,&tmp[0],1);
+        }
+        return;
+    }
+    
+    
+    void UnsteadyInviscidBurger::preconditioner(
+                                                 const Array<OneD, NekDouble> &inarray,
+                                                 Array<OneD, NekDouble >&out)
     {
-        int nvariables = inarray.num_elements();
-        int nq = m_fields[0]->GetNpoints();
-         
-		
-        
+        int ntotal     = inarray.num_elements();
+        Vmath::Vcopy(ntotal,inarray,1,out,1);
+        return;
     }
-
-
 #endif
 
 

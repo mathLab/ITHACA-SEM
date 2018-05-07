@@ -213,6 +213,7 @@ SET(LinearAlgebraHeaders
     ./LinearAlgebra/SparseMatrix.hpp
     ./LinearAlgebra/SparseMatrixFwd.hpp
     ./LinearAlgebra/SparseUtils.hpp
+    ./LinearAlgebra/NekLinSysIterative.h
 )
 
 SET(LinearAlgebraSources
@@ -229,6 +230,7 @@ SET(LinearAlgebraSources
     ./LinearAlgebra/StorageSmvBsr.cpp
     ./LinearAlgebra/SparseDiagBlkMatrix.cpp
     ./LinearAlgebra/SparseMatrix.cpp
+    ./LinearAlgebra/NekLinSysIterative.cpp    
 )
 
 SET(MemoryHeaders

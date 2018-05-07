@@ -612,6 +612,30 @@ namespace Vmath
                                       Nektar::NekDouble* z, int incz);
 
 
+    /// \brief  Vvpts ( (vector plus vector) times scalar):
+    // z = alpha*(x +y)
+    template<class T> void Vvpts (int n,
+                                    const T* x, int incx,
+                                    const T* y, int incy,
+                                    const T alpha,
+                                          T* z, int incz)
+    {
+        while( n-- )
+        {
+            *z = alpha * (*x + *y);
+            x += incx;
+            y += incy;
+            z += incz;
+        }
+    }
+
+    template LIB_UTILITIES_EXPORT void Vvpts (int n,
+                                const Nektar::NekDouble* x, int incx,
+                                const Nektar::NekDouble* y, int incy,
+                                const Nektar::NekDouble alpha,
+                                      Nektar::NekDouble* z, int incz);
+
+
     /// \brief  Vstvpp (scalar times vector plus vector plus vector):
     // z = v*w + x*y
     template<class T> void Vstvpp(int n,

@@ -94,6 +94,21 @@ namespace Nektar
 
             std::vector<FilterSharedPtr>                    m_filters;
 
+            /// at which time to evaluate the boundary conditions(used in unsteady time integrations)
+            NekDouble                                       m_BndEvaluateTime;
+
+            /// coefff of spacial(rhs) in calculating the residual of the whole equation(used in unsteady time integrations)
+            NekDouble                                       m_TimeIntegLambda;
+
+            /// coefff of spacial(rhs) in calculating the residual of the whole equation(used in unsteady time integrations)
+            Array<OneD,       Array<OneD, NekDouble> >      m_TimeIntegForce;
+            
+            /// coefff of spacial(rhs) in calculating the residual of the whole equation(used in unsteady time integrations)
+            Array<OneD,       Array<OneD, NekDouble> >      m_TimeIntegSoltn;
+            /// coefff of spacial(rhs) in calculating the residual of the whole equation(used in unsteady time integrations)
+            Array<OneD,       Array<OneD, NekDouble> >      m_SysEquatResidu;
+            
+
             /// Initialises UnsteadySystem class members.
             SOLVER_UTILS_EXPORT UnsteadySystem(
                 const LibUtilities::SessionReaderSharedPtr& pSession,

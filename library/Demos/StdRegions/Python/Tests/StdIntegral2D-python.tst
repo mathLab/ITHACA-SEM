@@ -5,10 +5,10 @@
     <parameters></parameters>
     <metrics>
         <metric type="regex" id="1">
-            <regex>   error      = ^([-+]?\d*\.?\d+)(?:[eE]([-+]?\d+))?$</regex>
+            <regex>.*error = ([-+]?\d*\.?\d+[eE]-+]?\d+)?$</regex>
             <matches>
                 <match>
-                    <field id="0">4.44089e-16</field>
+                    <field id="0" tolerance="1e-12">4.44089e-16</field>
                 </match>
             </matches>
         </metric>

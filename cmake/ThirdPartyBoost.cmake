@@ -37,6 +37,7 @@ MESSAGE(STATUS "Searching for Boost:")
 # Minimum version and boost libraries required
 SET(MIN_VER "1.56.0")
 SET(NEEDED_BOOST_LIBS thread iostreams filesystem system program_options regex)
+<<<<<<< HEAD
 
 IF (NEKTAR_BUILD_PYTHON)
     # We need to try a few variants, depending on if we're doing Python 2 or
@@ -62,6 +63,27 @@ IF (NEKTAR_BUILD_PYTHON)
     ENDFOREACH()
 ELSE()
     NektarFindBoost()
+=======
+SET(Boost_NO_BOOST_CMAKE ON)
+IF( BOOST_ROOT )
+    SET(Boost_NO_SYSTEM_PATHS ON)
+    FIND_PACKAGE( Boost ${MIN_VER} COMPONENTS ${NEEDED_BOOST_LIBS})
+ELSE ()
+    SET(TEST_ENV1 $ENV{BOOST_HOME})
+    SET(TEST_ENV2 $ENV{BOOST_DIR})
+    IF (DEFINED TEST_ENV1)
+        SET(BOOST_ROOT $ENV{BOOST_HOME})
+        SET(Boost_NO_SYSTEM_PATHS ON)
+        FIND_PACKAGE( Boost ${MIN_VER} QUIET COMPONENTS ${NEEDED_BOOST_LIBS} )
+    ELSEIF (DEFINED TEST_ENV2)
+        SET(BOOST_ROOT $ENV{BOOST_DIR})
+        SET(Boost_NO_SYSTEM_PATHS ON)
+        FIND_PACKAGE( Boost ${MIN_VER} QUIET COMPONENTS ${NEEDED_BOOST_LIBS} )
+    ELSE ()
+        SET(BOOST_ROOT ${TPDIST})
+        FIND_PACKAGE( Boost ${MIN_VER} QUIET COMPONENTS ${NEEDED_BOOST_LIBS} )
+    ENDIF()
+>>>>>>> master
 ENDIF()
 
 # Check what we found and determine if we need to build boost
@@ -197,13 +219,7 @@ IF (THIRDPARTY_BUILD_BOOST)
         STRING(TOUPPER ${BOOSTLIB} BOOSTLIB_UPPER)
         THIRDPARTY_LIBRARY(Boost_${BOOSTLIB_UPPER}_LIBRARY
             SHARED boost_${BOOSTLIB} DESCRIPTION "Boost ${BOOSTLIB} library")
-        THIRDPARTY_LIBRARY(Boost_${BOOSTLIB_UPPER}_LIBRARY_DEBUG
-            SHARED boost_${BOOSTLIB} DESCRIPTION "Boost ${BOOSTLIB} library, debug")
-        THIRDPARTY_LIBRARY(Boost_${BOOSTLIB_UPPER}_LIBRARY_RELEASE
-            SHARED boost_${BOOSTLIB} DESCRIPTION "Boost ${BOOSTLIB} library, release")
         MARK_AS_ADVANCED(Boost_${BOOSTLIB_UPPER}_LIBRARY)
-        MARK_AS_ADVANCED(Boost_${BOOSTLIB_UPPER}_LIBRARY_DEBUG)
-        MARK_AS_ADVANCED(Boost_${BOOSTLIB_UPPER}_LIBRARY_RELEASE)
         LIST(APPEND Boost_LIBRARIES ${Boost_${BOOSTLIB_UPPER}_LIBRARY})
     ENDFOREACH()
 

@@ -45,8 +45,9 @@ std::string FilterCheckpoint::className =
 
 FilterCheckpoint::FilterCheckpoint(
     const LibUtilities::SessionReaderSharedPtr &pSession,
+    const std::weak_ptr<EquationSystem>      &pEquation,
     const ParamMap &pParams) :
-    Filter(pSession)
+    Filter(pSession, pEquation)
 {
     // OutputFile
     auto it = pParams.find("OutputFile");

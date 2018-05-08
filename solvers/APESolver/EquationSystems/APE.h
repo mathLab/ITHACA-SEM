@@ -44,6 +44,7 @@
 #include <SolverUtils/Advection/Advection.h>
 #include <SolverUtils/Forcing/Forcing.h>
 #include <SolverUtils/RiemannSolvers/RiemannSolver.h>
+#include <SolverUtils/Core/Coupling.h>
 
 using namespace Nektar::SolverUtils;
 
@@ -73,7 +74,7 @@ class APE : public AdvectionSystem
         virtual ~APE();
 
     protected:
-
+        SolverUtils::CouplingSharedPtr                  m_coupling;
         SolverUtils::AdvectionSharedPtr                 m_advection;
         std::vector<SolverUtils::ForcingSharedPtr>      m_forcing;
         SolverUtils::RiemannSolverSharedPtr             m_riemannSolver;
@@ -106,6 +107,8 @@ class APE : public AdvectionSystem
                 Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &flux);
 
         virtual bool v_PreIntegrate(int step);
+
+        virtual void v_Output();
 
         virtual Array<OneD, NekDouble> v_GetMaxStdVelocity();
 

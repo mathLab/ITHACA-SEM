@@ -65,7 +65,7 @@ namespace Nektar
             
         }
                 
-        BOOST_AUTO_TEST_CASE(TestElementAccess)
+        BOOST_AUTO_TEST_CASE(TestElementAccessBlockMatrix)
         {
             {
                 typedef NekMatrix<NekMatrix<NekDouble>, BlockMatrixTag> BlockMatrixType;

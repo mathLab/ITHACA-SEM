@@ -71,6 +71,10 @@ namespace Nektar
         class Diffusion
         {
         public:
+
+            SOLVER_UTILS_EXPORT virtual ~Diffusion()
+            {};
+
             SOLVER_UTILS_EXPORT void InitObject(
                 LibUtilities::SessionReaderSharedPtr              pSession,
                 Array<OneD, MultiRegions::ExpListSharedPtr>       pFields);

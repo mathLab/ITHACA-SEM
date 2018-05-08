@@ -51,7 +51,7 @@ namespace Nektar
     {
         typedef LowerTriangularMatrixFuncs Policy;
                     
-        BOOST_AUTO_TEST_CASE(TestAdvance)
+        BOOST_AUTO_TEST_CASE(TestAdvanceLowerTriangular)
         {
             UnitTests::RedirectCerrIfNeeded();
 

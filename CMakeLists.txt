@@ -54,15 +54,6 @@ INCLUDE(CMakeParseArguments)
 # Enable CTest.
 ENABLE_TESTING()
 
-# Use the CMake 2.4 policy for CMake 2.6
-IF(COMMAND cmake_policy)
-    # Silence warnings when using generator expressions in
-    # TARGET_LINK_LIBRARIES.
-    IF(POLICY CMP0022)
-        CMAKE_POLICY(SET CMP0022 NEW)
-    ENDIF()
-ENDIF(COMMAND cmake_policy)
-
 # Find the modules included with Nektar
 SET(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake ${CMAKE_MODULE_PATH})
 
@@ -129,10 +120,6 @@ SET(NEKTAR_LIBRARY_TYPE "SHARED")
 SET(CMAKE_SKIP_BUILD_RPATH  FALSE)
 SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 SET(CMAKE_INSTALL_NAME_DIR "${CMAKE_INSTALL_PREFIX}/${LIB_DIR}")
-IF (APPLE)
-    SET(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
-    SET(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/${LIB_DIR}")
-ENDIF()
 LIST(FIND CMAKE_PLATFORM_IMPLICIT_LINK_DIRECTORIES
 	"${CMAKE_INSTALL_PREFIX}/${LIB_DIR}" isSystemDir)
 IF("${isSystemDir}" STREQUAL "-1")
@@ -176,26 +163,6 @@ IF (${CMAKE_COMPILER_IS_GNUCXX})
     MARK_AS_ADVANCED(NEKTAR_ENABLE_PROFILE)
 ENDIF (${CMAKE_COMPILER_IS_GNUCXX})
 
-# BLAS Support
-CMAKE_DEPENDENT_OPTION(NEKTAR_USE_SYSTEM_BLAS_LAPACK
-    "Use the system provided blas and lapack libraries" ON
-    "UNIX; NOT APPLE; NOT NEKTAR_USE_OPENBLAS; NOT NEKTAR_USE_MKL; NOT NEKTAR_USE_ACML; NOT NEKTAR_USE_ACCELERATE_FRAMEWORK" OFF)
-CMAKE_DEPENDENT_OPTION(NEKTAR_USE_OPENBLAS
-    "Use OpenBLAS library as a substitute to native BLAS." OFF
-    "NOT NEKTAR_USE_SYSTEM_BLAS_LAPACK" OFF)
-CMAKE_DEPENDENT_OPTION(NEKTAR_USE_ACML
-    "Use the AMD Core Math Library (ACML) for BLAS and Lapack support." OFF
-    "NOT NEKTAR_USE_SYSTEM_BLAS_LAPACK" OFF)
-CMAKE_DEPENDENT_OPTION(NEKTAR_USE_MKL
-    "Use the Intel Math Kernel Library (MKL) for BLAS and Lapack support." OFF
-    "NOT NEKTAR_USE_SYSTEM_BLAS_LAPACK" OFF)
-CMAKE_DEPENDENT_OPTION(NEKTAR_USE_ACCELERATE_FRAMEWORK
-    "Use the Mac Accelerate Framework for BLAS and Lapack support." ON
-    "NOT NEKTAR_USE_SYSTEM_BLAS_LAPACK; APPLE" OFF)
-CMAKE_DEPENDENT_OPTION(NEKTAR_USE_WIN32_LAPACK
-    "Use Win32 Lapack provided with the Third Party Distribution."
-    ON "NOT NEKTAR_USE_SYSTEM_BLAS_LAPACK; WIN32" OFF)
-
 # Memory pools
 OPTION(NEKTAR_USE_MEMORY_POOLS
     "Use memory pools to accelerate memory allocation." ON)
@@ -208,6 +175,29 @@ IF (MSVC)
     # Removes the warnings about unsafe methods such as strcpy, std::copy,
     # memcmp, etc.
     ADD_DEFINITIONS(-D_CRT_SECURE_NO_DEPRECATE -D_SCL_SECURE_NO_DEPRECATE)
+ENDIF()
+
+# Add option to use Python 3.
+CMAKE_DEPENDENT_OPTION(NEKTAR_USE_PYTHON3
+    "If true, prefer to use Python 3." OFF "NEKTAR_BUILD_PYTHON" OFF)
+
+IF (NEKTAR_BUILD_PYTHON)
+    # Unset any existing python executable/library settings so that
+    # we can rediscover correct python version if v2/3 settings changed
+    unset(PYTHON_EXECUTABLE CACHE)
+    unset(PYTHON_INCLUDE_DIR CACHE)
+    unset(PYTHON_LIBRARY CACHE)
+    unset(PYTHON_LIBRARY_DEBUG CACHE)
+
+    SET(PYTHONVER 2.7)
+    IF (NEKTAR_USE_PYTHON3)
+        SET(PYTHONVER 3.0)
+    ENDIF()
+
+    # Find Python
+    FIND_PACKAGE(PythonInterp  ${PYTHONVER} REQUIRED)
+    FIND_PACKAGE(PythonLibsNew ${PYTHONVER} REQUIRED)
+    INCLUDE_DIRECTORIES(SYSTEM ${PYTHON_INCLUDE_DIRS})
 ENDIF()
 
 # Include Nektar++ common macros
@@ -248,34 +238,11 @@ INCLUDE (ThirdPartyTriangle)
 INCLUDE (ThirdPartyTetGen)
 INCLUDE (ThirdPartyCCM)
 INCLUDE (ThirdPartyPython)
+INCLUDE (ThirdPartyBlasLapack)
 INCLUDE (ThirdPartyCwipi)
 INCLUDE (FindCFI)
 
 INCLUDE (Doxygen)
-
-IF( NEKTAR_USE_MKL )
-    INCLUDE (FindMKL)
-ENDIF( NEKTAR_USE_MKL )
-
-IF( NEKTAR_USE_OPENBLAS )
-    INCLUDE (FindOpenBlas)
-ENDIF( NEKTAR_USE_OPENBLAS )
-
-IF( NEKTAR_USE_ACCELERATE_FRAMEWORK )
-    INCLUDE (FindAccelerateFramework)
-ENDIF( NEKTAR_USE_ACCELERATE_FRAMEWORK )
-
-IF( NEKTAR_USE_ACML )
-    INCLUDE (FindACML)
-ENDIF( NEKTAR_USE_ACML )
-
-IF( NEKTAR_USE_WIN32_LAPACK )
-    INCLUDE (FindWin32Lapack)
-ENDIF( NEKTAR_USE_WIN32_LAPACK )
-
-IF( NEKTAR_USE_SYSTEM_BLAS_LAPACK )
-    INCLUDE(ThirdPartyBlasLapack)
-ENDIF( NEKTAR_USE_SYSTEM_BLAS_LAPACK )
 
 IF( NEKTAR_USE_TINYXML_STL )
     ADD_DEFINITIONS( -DTIXML_USE_STL)

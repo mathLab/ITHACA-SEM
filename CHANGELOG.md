@@ -50,6 +50,8 @@ v5.0.0
   alignment (!921)
 - Fix naming issue of duplicate Unit tests (!924) 
 - Fix warnings about missing virtual destructors in abstract classes (!932)
+- Added a coupling interface to exchange data between solvers at run time
+  and a DummySolver to test the implementations (!853 !931)
 
 **NekMesh**:
 - Add feature to read basic 2D geo files as CAD (!731)
@@ -101,6 +103,7 @@ v5.0.0
   norm of the difference, to be consistent with the compressible solver (!832)
 - Updated SVV to allow for the DGKernel extension (!851)
 - Pre-calculate Time invariant portion of Womersley Solution (!814)
+- Fix for independent setting of SVV in Homogeneous direction (!936)
 
 **CompressibleFlowSolver**
 - Add 3D regression tests (!567)

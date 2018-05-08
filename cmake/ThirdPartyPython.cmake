@@ -17,7 +17,7 @@ IF (NEKTAR_BUILD_PYTHON)
             boost-numpy
             PREFIX ${TPSRC}
             URL ${TPURL}/boost-numpy_1.0.1.tar.bz2
-            URL_MD5 de7a432749bee4132abbc607ef21a6bf
+            URL_MD5 ae8c6f4d114a9c20dff72e915288a408
             STAMP_DIR ${TPBUILD}/stamp
             DOWNLOAD_DIR ${TPSRC}
             SOURCE_DIR ${TPSRC}/boost-numpy

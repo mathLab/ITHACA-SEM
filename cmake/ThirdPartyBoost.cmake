@@ -37,7 +37,6 @@ MESSAGE(STATUS "Searching for Boost:")
 # Minimum version and boost libraries required
 SET(MIN_VER "1.56.0")
 SET(NEEDED_BOOST_LIBS thread iostreams filesystem system program_options regex)
-<<<<<<< HEAD
 
 IF (NEKTAR_BUILD_PYTHON)
     # We need to try a few variants, depending on if we're doing Python 2 or
@@ -63,7 +62,8 @@ IF (NEKTAR_BUILD_PYTHON)
     ENDFOREACH()
 ELSE()
     NektarFindBoost()
-=======
+ENDIF()
+
 SET(Boost_NO_BOOST_CMAKE ON)
 IF( BOOST_ROOT )
     SET(Boost_NO_SYSTEM_PATHS ON)
@@ -83,7 +83,6 @@ ELSE ()
         SET(BOOST_ROOT ${TPDIST})
         FIND_PACKAGE( Boost ${MIN_VER} QUIET COMPONENTS ${NEEDED_BOOST_LIBS} )
     ENDIF()
->>>>>>> master
 ENDIF()
 
 # Check what we found and determine if we need to build boost

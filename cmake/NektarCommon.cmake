@@ -289,3 +289,9 @@ MACRO(ADD_NEKPY_EXECUTABLE name source)
     FILE(COPY ${source} DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
     ADD_CUSTOM_TARGET(${name} SOURCES ${source})
 ENDMACRO()
+
+MACRO(ADD_NEKPY_TEST testname)
+    ADD_TEST(NAME python_${testname}
+        COMMAND $<TARGET_FILE:Tester>
+        ${CMAKE_CURRENT_SOURCE_DIR}/Python/Tests/${testname}.tst)
+ENDMACRO()

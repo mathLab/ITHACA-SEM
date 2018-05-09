@@ -138,6 +138,13 @@ py::tuple ExpList_GetCoords(ExpListSharedPtr exp)
     return py::tuple();
 }
 
+void ExpList_SetPhysArray(
+    ExpListSharedPtr exp, 
+    Array<OneD, NekDouble> &inarray)
+{
+    exp->SetPhysArray(inarray);
+}
+
 
 void export_ExpList()
 {
@@ -157,6 +164,7 @@ void export_ExpList()
         .def("IProductWRTBase", &ExpList_IProductWRTBase)
         .def("L2", &ExpList_L2)
         .def("L2", &ExpList_L2_Error)
+        .def("SetPhysArray", &ExpList_SetPhysArray)
 
         ;
 }

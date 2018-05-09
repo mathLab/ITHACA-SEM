@@ -111,6 +111,32 @@ namespace Nektar
                   Array<OneD,       Array<OneD, NekDouble> > &outarray,
             const NekDouble                                   time);
 
+#define DEMO_IMPLICITSOLVER_JFNK
+#ifdef DEMO_IMPLICITSOLVER_JFNK 
+        void DoImplicitSolve(
+            const Array<OneD, const Array<OneD, NekDouble> >&forc,
+                  Array<OneD,       Array<OneD, NekDouble> >&sol,
+            const NekDouble time,
+            const NekDouble lambda);
+
+        void NonlinSysEvaluator(
+                  Array<OneD,       Array<OneD, NekDouble> >&inarray,
+                  Array<OneD,       Array<OneD, NekDouble> >&out);
+
+        void MatrixMultiply(
+            const Array<OneD, NekDouble> &inarray,
+                  Array<OneD, NekDouble >&out);
+
+        void MatrixMultiply_MatrixFree(
+            const  Array<OneD, NekDouble> &inarray,
+                   Array<OneD, NekDouble >&out);
+
+        void preconditioner(
+            const Array<OneD, NekDouble> &inarray,
+                  Array<OneD, NekDouble >&out);
+
+#endif
+
         void DoAdvection(
             const Array<OneD, const Array<OneD, NekDouble> > &inarray,
                   Array<OneD,       Array<OneD, NekDouble> > &outarray,

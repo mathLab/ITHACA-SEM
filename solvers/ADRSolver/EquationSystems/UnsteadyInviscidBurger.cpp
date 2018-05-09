@@ -104,7 +104,6 @@ namespace Nektar
             }
         }
                 
-        m_ode.DefineImplicitSolve(&UnsteadyInviscidBurger::DoImplicitSolve, this);
         // If explicit it computes RHS and PROJECTION for the time integration
         if (m_explicitAdvection)
         {
@@ -114,6 +113,9 @@ namespace Nektar
         // Otherwise it gives an error because (no implicit integration)
         else
         {
+            m_ode.DefineOdeRhs     (&UnsteadyInviscidBurger::DoOdeRhs,        this);
+            m_ode.DefineProjection (&UnsteadyInviscidBurger::DoOdeProjection, this);
+            m_ode.DefineImplicitSolve(&UnsteadyInviscidBurger::DoImplicitSolve, this);
             ASSERTL0(false, "Implicit unsteady Advection not set up.");
         }
     }
@@ -283,41 +285,39 @@ namespace Nektar
      */
     
     void UnsteadyInviscidBurger::DoImplicitSolve(
-                                                 const Array<OneD, const Array<OneD, NekDouble> >&forc,
-                                                       Array<OneD,       Array<OneD, NekDouble> >&sol,
+                                                 const Array<OneD, const Array<OneD, NekDouble> >&inarray,
+                                                       Array<OneD,       Array<OneD, NekDouble> >&out,
                                                  const NekDouble time,
                                                  const NekDouble lambda)
     {
-        m_TimeIntegSoltn  = sol;
-        m_TimeIntegForce  = forc;
-        m_TimeIntegLambda = lambda;
-        m_BndEvaluateTime = time;
+        m_TimeIntegtSol_n   = inarray;
+        m_TimeIntegtSol_k   = out;
+        m_TimeIntegLambda   = lambda;
+        m_BndEvaluateTime   = time;
 
         
 
         const unsigned int MaxNonlinIte =   500;
-        unsigned int nvariables  = forc.num_elements();
-        unsigned int npoints     = forc[0].num_elements();
+        unsigned int nvariables  = inarray.num_elements();
+        unsigned int npoints     = inarray[0].num_elements();
         unsigned int ntotal      = nvariables*npoints;
 
         bool converged;
         unsigned int nGlobal,nDir;
         NekDouble resnorm,dsolnorm;
         NekDouble resfactor = 1.0;
-        NekDouble tolrnc    = 1.0E-6;
+        NekDouble tolrnc    = 1.0E-12;
         NekDouble tol2      = tolrnc*tolrnc;
 
 
-        for (int i = 0; i < npoints; i++)
-        {
-            cout <<"forc["<<i<<"]= "<<forc[0][i]<<endl;
-        }
-        for (int i = 0; i < npoints; i++)
-        {
-            cout <<"sol["<<i<<"]= "<<sol[0][i]<<endl;
-        }
 
-        Array<OneD, NekDouble> NonlinSysRes_1D(ntotal,0.0),dsol_1D(ntotal,0.0);
+        // for (int i = 0; i < npoints; i++)
+        // {
+        //     cout <<"inarray["<<i<<"]= "<<inarray[0][i]<<endl;
+        // }
+
+        Array<OneD, NekDouble> NonlinSysRes_1D(ntotal,0.0),sol_k_1D(ntotal,0.0),dsol_1D(ntotal,0.0);
+        //Array<OneD,       Array<OneD, NekDouble> > sol_k;
         Array<OneD,       Array<OneD, NekDouble> > NonlinSysRes(nvariables),dsol(nvariables);
         for(int i = 0; i < nvariables; i++)
         {
@@ -325,24 +325,21 @@ namespace Nektar
             NonlinSysRes[i] =  NonlinSysRes_1D + offset;
             dsol[i]         =  dsol_1D + offset;
         }
-        m_SysEquatResidu = NonlinSysRes;
+        m_SysEquatResid_k = NonlinSysRes;
+
+        //sol_k = out;
+        for(int i = 0; i < nvariables; i++)
+        {
+            Vmath::Vcopy(npoints,inarray[i],1,m_TimeIntegtSol_k[i],1);
+        }
 
         ASSERTL0((1==nvariables),"only 1==nvariables")
 
-        NonlinSysEvaluator(sol,NonlinSysRes);
-
-        resnorm = Vmath::Dot(ntotal,NonlinSysRes_1D,NonlinSysRes_1D);
-            
-
-        if (resnorm<tol2)
-        {
-            return;
-        }
 
         // TODO: 
         // v_Comm is based on the explist used may be different(m_tracemap or m_locToGloMap) for diffrent
         // should generate GlobalLinSys first and get the v_Comm from GlobalLinSys. here just give it a m_Comm no parallel support yet!!
-        //const std::weak_ptr<ExpList>       explist= *m_fields[0];
+        //const std::weak_ptr<ExpList> 
         LibUtilities::CommSharedPtr v_Comm
              = m_fields[0]->GetComm()->GetRowComm();
 
@@ -353,34 +350,32 @@ namespace Nektar
         linsol.setLinSysOperators(m_LinSysOprtors);
 
         converged = false;
-        for (int iNonl = 0; iNonl < MaxNonlinIte; iNonl++)
+        for (int k = 0; k < MaxNonlinIte; k++)
         {
-            //TODO: currently  NonlinSysRes is 2D array and SolveLinearSystem needs 1D array
-            linsol.SolveLinearSystem(ntotal,NonlinSysRes_1D,dsol_1D,0);
+            
+            NonlinSysEvaluator(m_TimeIntegtSol_k,m_SysEquatResid_k);
 
-            for(int i = 0; i < nvariables; i++)
-            {
-                Vmath::Vadd(npoints,dsol[i],1,sol[i],1,sol[i],1);
-            }
-            
-            // dsolnorm = Vmath::Dot(ntotal,dsol_1D,dsol_1D);
-            
-            // // the resfactor between L2norm of nonlinear risidual and dsol;
-            // if (0==iNonl)
-            // {
-            //     resfactor = resnorm/dsolnorm;
-            // }
-            // resfactor = 1.0;
-            NonlinSysEvaluator(sol,NonlinSysRes);
-            resnorm = Vmath::Dot(ntotal,dsol_1D,dsol_1D);
-            cout << "   iNonl = "<<iNonl<<" resnorm = "<<resnorm<<"  resfactor = "<<resfactor<<endl;
+            // NonlinSysRes_1D and m_SysEquatResid_k share the same storage
+            resnorm = Vmath::Dot(ntotal,NonlinSysRes_1D,NonlinSysRes_1D);
+
+            //cout << "resnorm =" << resnorm<<endl;
             if (resnorm<tol2)
             {
                 converged = true;
                 break;
             }
+            
+
+            //TODO: currently  NonlinSysRes is 2D array and SolveLinearSystem needs 1D array
+             linsol.SolveLinearSystem(ntotal,NonlinSysRes_1D,dsol_1D,0);
+
+            for(int i = 0; i < nvariables; i++)
+            {
+                Vmath::Vsub(npoints,m_TimeIntegtSol_k[i],1,dsol[i],1,m_TimeIntegtSol_k[i],1);
+            }
 
         }
+        //cout << "Residual of Nonlinear System is:" << sqrt(resnorm)<<endl;
 
         ASSERTL0((converged),"Nonlinear system solver not converge in UnsteadyInviscidBurger::DoImplicitSolve ")
         return;
@@ -392,18 +387,19 @@ namespace Nektar
                                                        Array<OneD, Array<OneD, NekDouble> > &inarray,
                                                        Array<OneD, Array<OneD, NekDouble> > &out)
     {
-        Array<OneD, Array<OneD, NekDouble> > inforc;
-        inforc = m_TimeIntegForce;
-        unsigned int nvariable = inforc.num_elements();
-        unsigned int npoints   = inforc[0].num_elements();
+        Array<OneD, Array<OneD, NekDouble> > sol_n;
+        sol_n                  = m_TimeIntegtSol_n;
+        //inforc = m_TimeIntegForce;
+        unsigned int nvariable = inarray.num_elements();
+        unsigned int npoints   = inarray[0].num_elements();
         
-
+        
         DoOdeProjection(inarray,inarray,m_BndEvaluateTime);
         DoOdeRhs(inarray,out,m_BndEvaluateTime);
         for (int i = 0; i < nvariable; i++)
         {
-            Vmath::Svtvp(npoints,-m_TimeIntegLambda,out[i],1,inarray[i],1,out[i],1);
-            Vmath::Vsub(npoints,out[i],1,inforc[i],1,out[i],1);
+            Vmath::Svtvp(npoints,m_TimeIntegLambda,out[i],1,sol_n[i],1,out[i],1);
+            Vmath::Vsub(npoints,inarray[i],1,out[i],1,out[i],1);
         }
         return;
     }
@@ -424,8 +420,8 @@ namespace Nektar
     {
         NekDouble eps = 1.0E-6;
         NekDouble oeps = 1.0/eps;
-        unsigned int nvariables = m_TimeIntegSoltn.num_elements();
-        unsigned int npoints    = m_TimeIntegSoltn[0].num_elements();
+        unsigned int nvariables = m_TimeIntegtSol_n.num_elements();
+        unsigned int npoints    = m_TimeIntegtSol_n[0].num_elements();
         Array<OneD, NekDouble > tmp;
         Array<OneD,       Array<OneD, NekDouble> > solplus(nvariables);
         Array<OneD,       Array<OneD, NekDouble> > resplus(nvariables);
@@ -435,19 +431,21 @@ namespace Nektar
             resplus[i] =  Array<OneD, NekDouble>(npoints,0.0);
         }
 
-        tmp = inarray;
         for (int i = 0; i < nvariables; i++)
         {
-            tmp = tmp + i*npoints;
-            Vmath::Svtvp(npoints,eps,tmp,1,m_TimeIntegSoltn[i],1,solplus[i],1);
+            tmp = inarray + i*npoints;
+            Vmath::Svtvp(npoints,eps,tmp,1,m_TimeIntegtSol_k[i],1,solplus[i],1);
         }
         NonlinSysEvaluator(solplus,resplus);
 
-        tmp = out;
         for (int i = 0; i < nvariables; i++)
         {
-            tmp = tmp + i*npoints;
-            Vmath::Vvpts(npoints,&solplus[i][0],1,&m_TimeIntegSoltn[i][0],1,oeps,&tmp[0],1);
+            tmp = out + i*npoints;
+            // cout << "resplus[i][0]           =" << resplus[i][0]           <<endl;
+            // cout << "m_SysEquatResid_k[i][0] =" << m_SysEquatResid_k[i][0] <<endl;
+            // cout << "tmp[0]                  =" << tmp[0]                  <<endl;
+            Vmath::Vsub(npoints,&resplus[i][0],1,&m_SysEquatResid_k[i][0],1,&tmp[0],1);
+            Vmath::Smul(npoints, oeps ,&tmp[0],1,&tmp[0],1);
         }
         return;
     }

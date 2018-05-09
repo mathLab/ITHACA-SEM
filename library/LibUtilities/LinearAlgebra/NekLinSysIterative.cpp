@@ -36,6 +36,9 @@
 #include <LibUtilities/LinearAlgebra/NekLinSysIterative.h>
 #include <LibUtilities/BasicUtils/Timer.h>
 
+//#define DEBUG_MPI
+
+
 using namespace std;
 
 namespace Nektar
@@ -55,11 +58,12 @@ namespace Nektar
         m_maxstorage        =   100;
         m_maxhesband        =   100;
         m_maxiter           =   5000;
-        m_tolerance         =   1.0E-11;
+        m_tolerance         =   1.0E-15;
         m_rhs_magnitude     =   1.0E-2;
         m_prec_factor       =   1.0;
         m_rhs_mag_sm        =   1.0;
         m_root              =   true;
+        m_verbose           =   true;
         std::vector<std::string>  variables(1);
         variables[0] =  pSession->GetVariable(0);
         string variable = variables[0];
@@ -72,6 +76,7 @@ namespace Nektar
             m_IteraterType = pSession->GetValueAsEnum<IterativeMethodType>(
                                                 "IterativeMethod", iterater);
         } */
+
 
         if(pSession->DefinesGlobalSysSolnInfo(variable,
                                               "IterativeSolverTolerance"))
@@ -166,6 +171,31 @@ namespace Nektar
             break;
         } */
     }
+
+    /**
+     *
+     */
+    void NekLinSysIterative::SolveLinearSystem(
+        const int nGlobal,
+        const Array<OneD, const NekDouble> &pInput,
+        Array<OneD,      NekDouble> &pOutput,
+        const int nDir,
+        const NekDouble  tol)
+    {
+        m_map =  Array<OneD,      int>(nGlobal,1);
+        m_tolerance = max(tol,1.0E-10);
+        DoGMRES(nGlobal, pInput, pOutput, nDir);
+        /* //IterativeMethodType pType = eGMRES;
+        switch(1)
+        {
+        case eGMRES:
+            break;
+        default:
+            ASSERTL0(false, "IterativeMethodType NOT CORRECT.");
+            break;
+        } */
+    }
+
 
 
 
@@ -455,18 +485,17 @@ namespace Nektar
 
             if(m_converged)
             {
-                //if (m_verbose && m_root)
-
+                if (m_verbose && m_root)
+                {
                     cout << "Gmres(" << m_maxstorage << "), bandwidth(" << m_maxhesband << "): " << endl;
                     cout << "GMRES iterations made = " << m_totalIterations
                          << " using tolerance of "  << m_tolerance
                          // << " (error = " << sqrt(eps / m_rhs_magnitude)
                          << " (error = " << sqrt(eps * m_prec_factor / m_rhs_magnitude) << ")" 
                          << ", rhs_mag = " << sqrt(m_rhs_magnitude) << ")"<<endl;
-
+                }
 
                 return;
-
             }
             restarted = true;
         }

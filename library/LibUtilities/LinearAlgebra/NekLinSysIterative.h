@@ -174,7 +174,13 @@ namespace Nektar
             const Array<OneD, const NekDouble> &pInput,
                   Array<OneD,       NekDouble> &pOutput,
             const int pNumDir);
-
+            
+        void SolveLinearSystem(
+            const int nGlobal,
+            const Array<OneD, const NekDouble> &pInput,
+                  Array<OneD,      NekDouble> &pOutput,
+            const int nDir,
+            const NekDouble  tol);
      
  protected:
         /// Global to universal unique map

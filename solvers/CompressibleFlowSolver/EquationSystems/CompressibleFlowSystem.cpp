@@ -131,8 +131,11 @@ namespace Nektar
             m_ode.DefineProjection(&CompressibleFlowSystem::DoOdeProjection, this);
         }
         else
-        {
-            ASSERTL0(false, "Implicit CFS not set up.");
+        {   
+            m_ode.DefineOdeRhs    (&CompressibleFlowSystem::DoOdeRhs, this);
+            m_ode.DefineProjection(&CompressibleFlowSystem::DoOdeProjection, this);
+            m_ode.DefineImplicitSolve    (&CompressibleFlowSystem::DoImplicitSolve, this);
+            //ASSERTL0(false, "Implicit CFS not set up.");
         }
     }
 
@@ -340,7 +343,197 @@ namespace Nektar
                 break;
         }
     }
+#ifdef DEMO_IMPLICITSOLVER_JFNK
 
+    /* @brief Compute the diffusion term implicitly. 
+     *      Solve the whole system implicitly 
+     *      incontract with only implicitly solve the 
+     *      linear(diffusion) part in the origin DoImplicitSolve.
+     * @param forc       The forcing term of the equation.
+     * @param inoutarray input initial guess/output Calculated solution.
+     * @param inrhs      input initial guess rhs.
+     * @param time       Time.
+     * @param lambda     Diffusion coefficient.
+     */
+    
+    void CompressibleFlowSystem::DoImplicitSolve(
+                                                 const Array<OneD, const Array<OneD, NekDouble> >&inarray,
+                                                       Array<OneD,       Array<OneD, NekDouble> >&out,
+                                                 const NekDouble time,
+                                                 const NekDouble lambda)
+    {
+        m_TimeIntegtSol_n   = inarray;
+        m_TimeIntegtSol_k   = out;
+        m_TimeIntegLambda   = lambda;
+        m_BndEvaluateTime   = time;
+
+        
+
+        const unsigned int MaxNonlinIte =   500;
+        unsigned int nvariables  = inarray.num_elements();
+        unsigned int npoints     = inarray[0].num_elements();
+        unsigned int ntotal      = nvariables*npoints;
+
+        bool converged;
+        unsigned int nGlobal,nDir;
+        NekDouble resnorm,dsolnorm;
+        NekDouble resfactor = 1.0;
+        NekDouble tolrnc    = 1.0E-8;
+        NekDouble tol2      = tolrnc*tolrnc;
+        NekDouble LinSysTol = 0.0;
+
+
+
+        // for (int i = 0; i < npoints; i++)
+        // {
+        //     cout <<"inarray["<<i<<"]= "<<inarray[0][i]<<endl;
+        // }
+
+        Array<OneD, NekDouble> NonlinSysRes_1D(ntotal,0.0),sol_k_1D(ntotal,0.0),dsol_1D(ntotal,0.0);
+        //Array<OneD,       Array<OneD, NekDouble> > sol_k;
+        Array<OneD,       Array<OneD, NekDouble> > NonlinSysRes(nvariables),dsol(nvariables);
+        for(int i = 0; i < nvariables; i++)
+        {
+            int offset = i*npoints;
+            NonlinSysRes[i] =  NonlinSysRes_1D + offset;
+            dsol[i]         =  dsol_1D + offset;
+        }
+        m_SysEquatResid_k = NonlinSysRes;
+
+        //sol_k = out;
+        for(int i = 0; i < nvariables; i++)
+        {
+            Vmath::Vcopy(npoints,inarray[i],1,m_TimeIntegtSol_k[i],1);
+        }
+
+        //ASSERTL0((1==nvariables),"only 1==nvariables")
+
+
+        // TODO: 
+        // v_Comm is based on the explist used may be different(m_tracemap or m_locToGloMap) for diffrent
+        // should generate GlobalLinSys first and get the v_Comm from GlobalLinSys. here just give it a m_Comm no parallel support yet!!
+        //const std::weak_ptr<ExpList> 
+        LibUtilities::CommSharedPtr v_Comm
+             = m_fields[0]->GetComm()->GetRowComm();
+
+        //LibUtilities::CommSharedPtr                 v_Comm;
+        NekLinSysIterative linsol(m_session,v_Comm);
+        m_LinSysOprtors.DefineMatrixMultiply(&CompressibleFlowSystem::MatrixMultiply, this);
+        m_LinSysOprtors.DefinePrecond(&CompressibleFlowSystem::preconditioner, this);
+        linsol.setLinSysOperators(m_LinSysOprtors);
+
+        converged = false;
+        for (int k = 0; k < MaxNonlinIte; k++)
+        {
+            
+            NonlinSysEvaluator(m_TimeIntegtSol_k,m_SysEquatResid_k);
+
+            // NonlinSysRes_1D and m_SysEquatResid_k share the same storage
+            resnorm = Vmath::Dot(ntotal,NonlinSysRes_1D,NonlinSysRes_1D);
+
+            cout <<k<<"th resnorm =" << sqrt(resnorm)<<endl;
+            if (resnorm<tol2)
+            {
+                converged = true;
+                break;
+            }
+            
+
+            //TODO: currently  NonlinSysRes is 2D array and SolveLinearSystem needs 1D array
+            LinSysTol = 0.01*sqrt(resnorm);
+            linsol.SolveLinearSystem(ntotal,NonlinSysRes_1D,dsol_1D,0,LinSysTol);
+
+            for(int i = 0; i < nvariables; i++)
+            {
+                Vmath::Vsub(npoints,m_TimeIntegtSol_k[i],1,dsol[i],1,m_TimeIntegtSol_k[i],1);
+            }
+
+        }
+        //cout << "Residual of Nonlinear System is:" << sqrt(resnorm)<<endl;
+
+        ASSERTL0((converged),"Nonlinear system solver not converge in CompressibleFlowSystem::DoImplicitSolve ")
+        return;
+    }
+    
+    
+
+    void CompressibleFlowSystem::NonlinSysEvaluator(
+                                                       Array<OneD, Array<OneD, NekDouble> > &inarray,
+                                                       Array<OneD, Array<OneD, NekDouble> > &out)
+    {
+        Array<OneD, Array<OneD, NekDouble> > sol_n;
+        sol_n                  = m_TimeIntegtSol_n;
+        //inforc = m_TimeIntegForce;
+        unsigned int nvariable = inarray.num_elements();
+        unsigned int npoints   = inarray[0].num_elements();
+        
+        
+        DoOdeProjection(inarray,inarray,m_BndEvaluateTime);
+        DoOdeRhs(inarray,out,m_BndEvaluateTime);
+        for (int i = 0; i < nvariable; i++)
+        {
+            Vmath::Svtvp(npoints,m_TimeIntegLambda,out[i],1,sol_n[i],1,out[i],1);
+            Vmath::Vsub(npoints,inarray[i],1,out[i],1,out[i],1);
+        }
+        return;
+    }
+
+    
+    void CompressibleFlowSystem::MatrixMultiply(
+                                                 const Array<OneD, NekDouble> &inarray,
+                                                 Array<OneD, NekDouble >&out)
+    {
+        MatrixMultiply_MatrixFree(inarray,out);
+        return;
+    }
+
+
+    void CompressibleFlowSystem::MatrixMultiply_MatrixFree(
+                                                 const  Array<OneD, NekDouble> &inarray,
+                                                        Array<OneD, NekDouble >&out)
+    {
+        NekDouble eps = 1.0E-6;
+        NekDouble oeps = 1.0/eps;
+        unsigned int nvariables = m_TimeIntegtSol_n.num_elements();
+        unsigned int npoints    = m_TimeIntegtSol_n[0].num_elements();
+        Array<OneD, NekDouble > tmp;
+        Array<OneD,       Array<OneD, NekDouble> > solplus(nvariables);
+        Array<OneD,       Array<OneD, NekDouble> > resplus(nvariables);
+        for(int i = 0; i < nvariables; i++)
+        {
+            solplus[i] =  Array<OneD, NekDouble>(npoints,0.0);
+            resplus[i] =  Array<OneD, NekDouble>(npoints,0.0);
+        }
+
+        for (int i = 0; i < nvariables; i++)
+        {
+            tmp = inarray + i*npoints;
+            Vmath::Svtvp(npoints,eps,tmp,1,m_TimeIntegtSol_k[i],1,solplus[i],1);
+        }
+        NonlinSysEvaluator(solplus,resplus);
+
+        for (int i = 0; i < nvariables; i++)
+        {
+            tmp = out + i*npoints;
+            // cout << "resplus[i][0]           =" << resplus[i][0]           <<endl;
+            // cout << "m_SysEquatResid_k[i][0] =" << m_SysEquatResid_k[i][0] <<endl;
+            // cout << "tmp[0]                  =" << tmp[0]                  <<endl;
+            Vmath::Vsub(npoints,&resplus[i][0],1,&m_SysEquatResid_k[i][0],1,&tmp[0],1);
+            Vmath::Smul(npoints, oeps ,&tmp[0],1,&tmp[0],1);
+        }
+        return;
+    }
+    
+    
+    void CompressibleFlowSystem::preconditioner(
+                                                 const Array<OneD, NekDouble> &inarray,
+                                                 Array<OneD, NekDouble >&out)
+    {
+        int ntotal     = inarray.num_elements();
+        Vmath::Vcopy(ntotal,inarray,1,out,1);
+        return;
+    }
+#endif
     /**
      * @brief Compute the advection terms for the right-hand side
      */

@@ -5,12 +5,12 @@
     <GEOMETRY DIM="1" SPACE="1">
 
         <VERTEX>
-            <V ID="0"> 0.0 0.0 0.0 </V>
-            <V ID="1"> 1.1 0.0 0.0 </V>
-            <V ID="2"> 2.0 0.0 0.0 </V>
-            <V ID="3"> 3.2 0.0 0.0 </V>
-            <V ID="4"> 4.0 0.0 0.0 </V>
-            <V ID="5"> 5.0 0.0 0.0 </V>
+            <V ID="0"> -2.5 0.0 0.0 </V>
+            <V ID="1"> -1.5 0.0 0.0 </V>
+            <V ID="2"> -0.5 0.0 0.0 </V>
+            <V ID="3"> 0.5 0.0 0.0 </V>
+            <V ID="4"> 1.5 0.0 0.0 </V>
+            <V ID="5"> 2.5 0.0 0.0 </V>
         </VERTEX>
 
         <ELEMENT>
@@ -32,21 +32,22 @@
     </GEOMETRY>
 
     <EXPANSIONS>
-        <E COMPOSITE="C[0]" NUMMODES="11" FIELDS="u" TYPE="MODIFIED" />
+        <E COMPOSITE="C[0]" NUMMODES="2" FIELDS="u" TYPE="MODIFIED" />
     </EXPANSIONS>
 
     <CONDITIONS>
 
         <PARAMETERS>
-            <P> FinTime         = 1                </P>
+            <P> FinTime         = 0.5                </P>
             <P> TimeStep        = 0.0001                </P>
             <P> NumSteps        = FinTime/TimeStep      </P>
             <P> IO_InfoSteps    = 5000             </P>
 	    <P> IterativeSolverTolerance    = 1.0E-12   </P>
+	    <P> epsilon       = 1.0/20.0          </P>
         </PARAMETERS>
         
         <SOLVERINFO>
-            <I PROPERTY="EQTYPE"                VALUE="UnsteadyInviscidBurger"  />
+            <I PROPERTY="EQTYPE"                VALUE="UnsteadyViscousBurgers"  />
             <I PROPERTY="Projection"            VALUE="DisContinuous"           />
             <I PROPERTY="AdvectionType"         VALUE="WeakDG"                  />
             <I PROPERTY="UpwindType"            VALUE="Upwind"                  />
@@ -64,19 +65,19 @@
 
         <BOUNDARYCONDITIONS>
             <REGION REF="0">
-                <D VAR="u" USERDEFINEDTYPE="TimeDependent" VALUE="-5/(t-2)" />
+                <D VAR="u" USERDEFINEDTYPE="Timedependent" VALUE="-(1+tanh(10*(-2.5+t)))" />
             </REGION>
             <REGION REF="1">
-                <D VAR="u" VALUE="0" />
+                <D VAR="u" USERDEFINEDTYPE="Timedependent" VALUE="-(1+tanh(10*(2.5+t)))" />
             </REGION>
         </BOUNDARYCONDITIONS>
 
         <FUNCTION NAME="InitialConditions">
-            <E VAR="u" VALUE="(5-x)/2" />
+            <E VAR="u" VALUE="-(1+tanh(10*(x)))" />
         </FUNCTION>
 
         <FUNCTION NAME="ExactSolution">
-            <E VAR="u" VALUE="(x-5)/(t-2)" />
+            <E VAR="u" VALUE="-(1+tanh(10*(x+t)))" />
         </FUNCTION>
 
     </CONDITIONS>

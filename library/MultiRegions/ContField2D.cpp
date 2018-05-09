@@ -706,6 +706,12 @@ namespace Nektar
             // Now fill in all other Dirichlet coefficients.
             for(int i = 0; i < m_bndCondExpansions.num_elements(); ++i)
             {
+                if (m_bndConditions[i]->GetBoundaryConditionType() ==
+                       SpatialDomains::ePeriodic)
+                {
+                    continue;
+                }
+
                 Array<OneD, NekDouble>& coeffs = m_bndCondExpansions[i]->UpdateCoeffs();
                 
                 for(int j = 0; j < (m_bndCondExpansions[i])->GetNcoeffs(); ++j)
@@ -735,7 +741,13 @@ namespace Nektar
             Array<OneD, NekDouble>& coeffs = m_bndCondExpansions[nreg]->UpdateCoeffs();
                 
             for(int j = 0; j < nreg; ++j)
-            {
+            { 
+                if (m_bndConditions[j]->GetBoundaryConditionType() ==
+                    SpatialDomains::ePeriodic)
+                {
+                    continue;
+                }
+                
                 bndcnt += m_bndCondExpansions[j]->GetNcoeffs();
             }
             

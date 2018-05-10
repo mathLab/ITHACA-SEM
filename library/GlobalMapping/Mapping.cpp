@@ -1211,11 +1211,6 @@ void Mapping::v_UpdateBCs( const NekDouble time)
                 {
                     BndExp[n]->FwdTrans_BndConstrained(BndExp[n]->GetPhys(),
                                                 BndExp[n]->UpdateCoeffs());
-                    if (m_fields[i]->GetExpType() == MultiRegions::e3DH1D)
-                    {
-                        BndExp[n]->HomogeneousFwdTrans(BndExp[n]->GetCoeffs(),
-                                                BndExp[n]->UpdateCoeffs());
-                    }
                 }
             }
         }

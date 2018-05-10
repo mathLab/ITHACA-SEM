@@ -36,23 +36,23 @@ IF (NEKTAR_BUILD_PYTHON)
             )
 
         SET(BOOST_NUMPY_LIB ${TPDIST}/lib64/${CMAKE_STATIC_LIBRARY_PREFIX}boost_numpy${CMAKE_STATIC_LIBRARY_SUFFIX})
-        INCLUDE_DIRECTORIES(SYSTEM ${TPDIST}/include)
-        CONFIGURE_FILE(${CMAKE_SOURCE_DIR}/cmake/python/setup.py.in ${CMAKE_BINARY_DIR}/setup.py)
-
-        ADD_CUSTOM_TARGET(nekpy-install-user
-            DEPENDS _MultiRegions
-            COMMAND ${PYTHON_EXECUTABLE} setup.py install --user
-            WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
-
-        ADD_CUSTOM_TARGET(nekpy-install-system
-            DEPENDS _MultiRegions
-            COMMAND ${PYTHON_EXECUTABLE} setup.py install
-            WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
-
-        FILE(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/NekPy)
-        FILE(WRITE ${CMAKE_BINARY_DIR}/NekPy/__init__.py "# placeholder")
+        INCLUDE_DIRECTORIES(SYSTEM ${TPDIST}/include)        
     ELSE()
         ADD_CUSTOM_TARGET(boost-numpy ALL)
         ADD_DEFINITIONS(-DBOOST_HAS_NUMPY)
     ENDIF()
+    CONFIGURE_FILE(${CMAKE_SOURCE_DIR}/cmake/python/setup.py.in ${CMAKE_BINARY_DIR}/setup.py)
+
+    ADD_CUSTOM_TARGET(nekpy-install-user
+        DEPENDS _MultiRegions
+        COMMAND ${PYTHON_EXECUTABLE} setup.py install --user
+        WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
+
+    ADD_CUSTOM_TARGET(nekpy-install-system
+        DEPENDS _MultiRegions
+        COMMAND ${PYTHON_EXECUTABLE} setup.py install
+        WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
+
+    FILE(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/NekPy)
+    FILE(WRITE ${CMAKE_BINARY_DIR}/NekPy/__init__.py "# placeholder")
 ENDIF()

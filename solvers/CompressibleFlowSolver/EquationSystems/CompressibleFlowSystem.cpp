@@ -367,6 +367,8 @@ namespace Nektar
         m_TimeIntegLambda   = lambda;
         m_BndEvaluateTime   = time;
 
+        bool l_verbose      = m_session->DefinesCmdLineArgument("verbose");
+
         
 
         const unsigned int MaxNonlinIte =   500;
@@ -431,9 +433,13 @@ namespace Nektar
             // NonlinSysRes_1D and m_SysEquatResid_k share the same storage
             resnorm = Vmath::Dot(ntotal,NonlinSysRes_1D,NonlinSysRes_1D);
 
-            cout <<k<<"th resnorm =" << sqrt(resnorm)<<endl;
             if (resnorm<tol2)
             {
+                /// TODO: m_root
+                if(l_verbose)
+                {
+                    cout <<"Newton iteration converged with residual:   " << sqrt(resnorm)<<"  using   "<<k<<"   iterations"<<endl;
+                }
                 converged = true;
                 break;
             }

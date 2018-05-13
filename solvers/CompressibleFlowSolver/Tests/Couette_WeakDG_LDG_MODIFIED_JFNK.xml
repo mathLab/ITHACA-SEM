@@ -69,11 +69,10 @@
     <!-- Castonguay Test-Case -->
     <!-- M = 0.2, Re = 200, Pr = 0.72 -->
     <PARAMETERS>
-      <P> TimeStep              = 0.001       </P>
-      <P> NumSteps              = 20          </P>
-      <P> FinTime               = 0             </P>
-      <P> IO_CheckSteps         = 500000        </P>
-      <P> IO_InfoSteps          = 500000        </P>
+      <P> TimeStep              = 0.002       </P>
+      <P> FinTime               = 0.02             </P>
+      <P> NumSteps              = FinTime/TimeStep          </P>
+      <P> IO_InfoSteps          = 50        </P>
       <P> GasConstant           = 287.058       </P>
       <P> Gamma                 = 1.4           </P>
       <P> pInf                  = 101325        </P>
@@ -91,7 +90,9 @@
         <I PROPERTY="Projection"            VALUE="DisContinuous"       />
         <I PROPERTY="AdvectionType"         VALUE="WeakDG"              />
         <I PROPERTY="DiffusionType"         VALUE="LDGNS"               />
-        <I PROPERTY="TimeIntegrationMethod" VALUE="DIRKOrder3"/>
+        <I PROPERTY="AdvectionAdvancement"  VALUE="Implicit"            />
+        <I PROPERTY="DiffusionAdvancement"  VALUE="Implicit"            />
+        <I PROPERTY="TimeIntegrationMethod" VALUE="DIRKOrder3"          />
         <I PROPERTY="UpwindType"            VALUE="HLLC"                />
         <I PROPERTY="ProblemType"           VALUE="General"             />
         <I PROPERTY="ViscosityType"         VALUE="Constant"            />

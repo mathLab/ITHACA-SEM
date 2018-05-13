@@ -59,11 +59,11 @@ namespace Nektar
         m_maxhesband        =   100;
         m_maxiter           =   5000;
         m_tolerance         =   1.0E-15;
-        m_rhs_magnitude     =   1.0E-2;
+        m_rhs_magnitude     =   1.0;
         m_prec_factor       =   1.0;
         m_rhs_mag_sm        =   1.0;
         m_root              =   true;
-        m_verbose           =   true;
+        m_verbose           =   false;
         std::vector<std::string>  variables(1);
         variables[0] =  pSession->GetVariable(0);
         string variable = variables[0];

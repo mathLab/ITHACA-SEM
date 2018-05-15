@@ -49,6 +49,7 @@ ModuleKey OutputCADfix::className =
 
 OutputCADfix::OutputCADfix(MeshSharedPtr m) : OutputModule(m)
 {
+    m_config["from"] = ConfigOption(false, "", "FBM file to load");
 }
 
 OutputCADfix::~OutputCADfix()
@@ -59,7 +60,7 @@ void OutputCADfix::Process()
 {
     ModuleSharedPtr module = GetModuleFactory().CreateInstance(
         ModuleKey(eProcessModule, "loadcad"), m_mesh);
-    module->RegisterConfig("filename", m_config["outfile"].as<string>());
+    module->RegisterConfig("filename", m_config["from"].as<string>());
     module->RegisterConfig("CFIMesh", "");
     if (m_mesh->m_verbose)
     {

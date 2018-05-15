@@ -60,12 +60,14 @@ void OutputCADfix::Process()
 {
     ModuleSharedPtr module = GetModuleFactory().CreateInstance(
         ModuleKey(eProcessModule, "loadcad"), m_mesh);
-    module->RegisterConfig("filename", m_config["from"].as<string>());
     module->RegisterConfig("CFIMesh", "");
     if (m_mesh->m_verbose)
     {
         module->RegisterConfig("verbose", "");
     }
+
+    // If no input file specified, load output file
+    module->RegisterConfig("filename", m_config["from"].beenSet ? m_config["from"].as<string>() : m_config["outfile"].as<string>());
 
     module->SetDefaults();
     module->Process();

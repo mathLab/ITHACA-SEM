@@ -50,8 +50,11 @@ v5.0.0
   alignment (!921)
 - Fix naming issue of duplicate Unit tests (!924) 
 - Fix warnings about missing virtual destructors in abstract classes (!932)
-- Fix ability to have periodic boundary conditions that are aligned by a rotation rather than just a translation (!933)
-	
+- Fix ability to have periodic boundary conditions that are aligned by a 
+  rotation rather than just a translation (!933)
+- Added a coupling interface to exchange data between solvers at run time
+  and a DummySolver to test the implementations (!853 !931)
+
 **NekMesh**:
 - Add feature to read basic 2D geo files as CAD (!731)
 - Add periodic boundary condition meshing in 2D (!733)
@@ -102,6 +105,7 @@ v5.0.0
   norm of the difference, to be consistent with the compressible solver (!832)
 - Updated SVV to allow for the DGKernel extension (!851)
 - Pre-calculate Time invariant portion of Womersley Solution (!814)
+- Fix for independent setting of SVV in Homogeneous direction (!936)
 
 **CompressibleFlowSolver**
 - Add 3D regression tests (!567)
@@ -134,6 +138,9 @@ v4.4.2
 - Updated PETSc to 3.7.7 (!916)
 - Fix typcase to an integer which set Lz < 1 to zero when postprocess hdf5 output (!9922)
 
+**IncNavierStokesSolver**
+- Add a test for imaginary shift to be only used with Homogenous and SingleMode on. (!928)
+
 **NekMesh**
 - Fix missing periodic boundary meshing and boundary layer mesh adjustment
   configurations in 2D (!859)
@@ -143,6 +150,7 @@ v4.4.2
 - Fix sign of the viscous term in the velocity correction scheme equations in
   the user guide (!856)
 - Fixed anonymous clone URL (!909)
+- Add information on the limitations of Imaginary Shift for stability. (!928)
 
 **FieldConvert**
 - Allow passing input name with trailing separator (!879)

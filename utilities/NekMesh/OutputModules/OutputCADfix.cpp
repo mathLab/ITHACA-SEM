@@ -33,21 +33,6 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <set>
-#include <string>
-using namespace std;
-
-#include <boost/iostreams/filtering_streambuf.hpp>
-#include <boost/iostreams/copy.hpp>
-#include <boost/iostreams/filter/gzip.hpp>
-#include <boost/filesystem.hpp>
-namespace io = boost::iostreams;
-
-#include <tinyxml.h>
-#include <SpatialDomains/MeshGraph.h>
-#include <SpatialDomains/PointGeom.h>
-
-#include <NekMeshUtils/MeshElements/Element.h>
 #include "OutputCADfix.h"
 
 using namespace Nektar::NekMeshUtils;
@@ -72,6 +57,18 @@ OutputCADfix::~OutputCADfix()
 
 void OutputCADfix::Process()
 {
+    ModuleSharedPtr module = GetModuleFactory().CreateInstance(
+        ModuleKey(eProcessModule, "loadcad"), m_mesh);
+    module->RegisterConfig("filename", m_config["outfile"].as<string>());
+    module->RegisterConfig("CFIMesh", "");
+    if (m_mesh->m_verbose)
+    {
+        module->RegisterConfig("verbose", "");
+    }
+
+    module->SetDefaults();
+    module->Process();
+    
     if (m_mesh->m_verbose)
     {
         cout << "OutputCADfix: Writing file..." << endl;
@@ -117,30 +114,17 @@ void OutputCADfix::Process()
     // Write out nodes
     for (auto &it : m_mesh->m_vertexSet)
     {
-        /*
-        NekDouble *xyz = new NekDouble[3];
-        xyz[0] = it->m_x / scal;
-        xyz[1] = it->m_y / scal;
-        xyz[2] = it->m_z / scal;
-        
-        int n*;
-
-        m_model->cficCreFenode(
-            0, // node number
-            xyz, // coordinates
-            0, // parent type
-            0, // parent number (orphan here)
-            n // actual node number
-        );
-        */
-        
         newMap[it] = m_model->createOrphanFenode(0, it->m_x / scal, it->m_y / scal, it->m_z / scal);
     }
 
+    // Write out elements
     for (auto &el : m_mesh->m_element[3])
     {
         vector<cfi::Node*> nodes;
         
+        // Assuming it's a tet
+        int type = CFI_SUBTYPE_TE10;
+
         for (auto &node : el->GetVertexList())
         {
             nodes.push_back(newMap[node]);
@@ -150,31 +134,36 @@ void OutputCADfix::Process()
         {
             nodes.push_back(newMap[edge->m_edgeNodes[0]]);
         }
-
-        int type = CFI_SUBTYPE_TE10;
         
         if (el->GetTag() != "A")
         {
+            // Now assuming it's a prism
+            type = CFI_SUBTYPE_PE18;
+
             for (auto &face : el->GetFaceList())
             {
-                nodes.push_back(newMap[face->m_faceNodes[0]]);
+                if (face->m_faceNodes.size())
+                {
+                    nodes.push_back(newMap[face->m_faceNodes[0]]);
+                }
             }
-
-            type = CFI_SUBTYPE_PE18;
 
             if (el->GetTag() != "R")
             {
+                // It's definitely a hex now
+                type = CFI_SUBTYPE_HE27;
+
                 for (auto &node : el->GetVolumeNodes())
                 {
                     nodes.push_back(newMap[node]);
                 }
-
-                type = CFI_SUBTYPE_HE27;
             }
         }
 
         m_model->createOrphanElement(0, cfi::EntitySubtype(type), nodes);
     }
+
+    m_model->saveCopy(m_config["outfile"].as<string>());
 }
 
 }

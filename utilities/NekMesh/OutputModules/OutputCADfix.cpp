@@ -42,10 +42,9 @@ namespace Nektar
 {
 namespace Utilities
 {
-ModuleKey OutputCADfix::className =
-    GetModuleFactory().RegisterCreatorFunction(ModuleKey(eOutputModule, "fbm"),
-                                               OutputCADfix::create,
-                                               "Appends to a CADfix database file.");
+ModuleKey OutputCADfix::className = GetModuleFactory().RegisterCreatorFunction(
+    ModuleKey(eOutputModule, "fbm"), OutputCADfix::create,
+    "Appends to a CADfix database file.");
 
 OutputCADfix::OutputCADfix(MeshSharedPtr m) : OutputModule(m)
 {
@@ -67,11 +66,13 @@ void OutputCADfix::Process()
     }
 
     // If no input file specified, load output file
-    module->RegisterConfig("filename", m_config["from"].beenSet ? m_config["from"].as<string>() : m_config["outfile"].as<string>());
+    module->RegisterConfig("filename", m_config["from"].beenSet
+                                           ? m_config["from"].as<string>()
+                                           : m_config["outfile"].as<string>());
 
     module->SetDefaults();
     module->Process();
-    
+
     if (m_mesh->m_verbose)
     {
         cout << "OutputCADfix: Writing file..." << endl;
@@ -80,9 +81,9 @@ void OutputCADfix::Process()
     m_mesh->m_expDim   = 3;
     m_mesh->m_spaceDim = 3;
 
-    m_cad           = std::dynamic_pointer_cast<CADSystemCFI>(m_mesh->m_cad);
-    m_model         = m_cad->GetCFIModel();
-    NekDouble scal  = m_cad->GetScaling();
+    m_cad          = std::dynamic_pointer_cast<CADSystemCFI>(m_mesh->m_cad);
+    m_model        = m_cad->GetCFIModel();
+    NekDouble scal = m_cad->GetScaling();
 
     // Force order 2
     m_mesh->MakeOrder(2, LibUtilities::ePolyEvenlySpaced);
@@ -105,26 +106,27 @@ void OutputCADfix::Process()
     {
         for (int i = 0; i < m_mesh->m_element[d].size(); ++i)
         {
-            ElementSharedPtr e = m_mesh->m_element[d][i];
+            ElementSharedPtr e            = m_mesh->m_element[d][i];
             vector<NodeSharedPtr> volList = e->GetVolumeNodes();
             m_mesh->m_vertexSet.insert(volList.begin(), volList.end());
         }
     }
 
     // map of new node numbers
-    map<NodeSharedPtr, cfi::Node*> newMap;
+    map<NodeSharedPtr, cfi::Node *> newMap;
 
     // Write out nodes
     for (auto &it : m_mesh->m_vertexSet)
     {
-        newMap[it] = m_model->createOrphanFenode(0, it->m_x / scal, it->m_y / scal, it->m_z / scal);
+        newMap[it] = m_model->createOrphanFenode(
+            0, it->m_x / scal, it->m_y / scal, it->m_z / scal);
     }
 
     // Write out elements
     for (auto &el : m_mesh->m_element[3])
     {
-        vector<cfi::Node*> nodes;
-        
+        vector<cfi::Node *> nodes;
+
         // Assuming it's a tet
         int type = CFI_SUBTYPE_TE10;
 
@@ -132,12 +134,12 @@ void OutputCADfix::Process()
         {
             nodes.push_back(newMap[node]);
         }
-        
+
         for (auto &edge : el->GetEdgeList())
         {
             nodes.push_back(newMap[edge->m_edgeNodes[0]]);
         }
-        
+
         if (el->GetTag() != "A")
         {
             // Now assuming it's a prism
@@ -168,6 +170,5 @@ void OutputCADfix::Process()
 
     m_model->saveCopy(m_config["outfile"].as<string>());
 }
-
 }
 }

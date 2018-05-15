@@ -63,7 +63,6 @@ public:
     virtual void Process();
 
 private:
-
     NekMeshUtils::CADSystemCFISharedPtr m_cad;
     cfi::Model *m_model;
 };

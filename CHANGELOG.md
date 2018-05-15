@@ -82,6 +82,7 @@ v5.0.0
 - Order nodes in Gmsh output (!912)
 - Fix manifold face curvature nodes (!913)
 - Fix writing 1D surfaces (!930)
+- Fix surface string parsin in BL splitting (!937)
 
 **FieldConvert**:
 - Add input module for Semtex field files (!777)

@@ -195,6 +195,8 @@ namespace Nektar
             /// filled or not.
             inline void SetPhysState(const bool physState);
 
+            inline void DelPhys();
+
             /// This function indicates whether the array of physical values
             /// \f$\boldsymbol{u}_l\f$ (implemented as #m_phys) is filled or
             /// not.
@@ -2063,6 +2065,11 @@ namespace Nektar
         inline const Array<OneD, const NekDouble> &ExpList::GetPhys()  const
         {
             return m_phys;
+        }
+
+        inline void ExpList::DelPhys()
+        {
+            delete &m_phys;
         }
 
         /**

@@ -145,6 +145,21 @@ void ExpList_SetPhys(
     exp->SetPhys(inarray);
 }
 
+const Array<OneD, const NekDouble> ExpList_GetPhys(ExpListSharedPtr exp)
+{
+    return exp->GetPhys();
+}
+
+void ExpList_DelPhys(ExpListSharedPtr exp)
+{
+   exp->DelPhys();
+    
+}
+
+NekDouble ExpList_PhysIntegral(ExpListSharedPtr exp)
+{
+    return exp->PhysIntegral();
+}
 
 void export_ExpList()
 {
@@ -165,6 +180,8 @@ void export_ExpList()
         .def("L2", &ExpList_L2)
         .def("L2", &ExpList_L2_Error)
         .def("SetPhys", &ExpList_SetPhys)
-
+        .def("GetPhys", &ExpList_GetPhys)
+        .def("DelPhys", &ExpList_DelPhys)
+        .def("PhysIntegral", &ExpList_PhysIntegral)
         ;
 }

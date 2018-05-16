@@ -13,6 +13,19 @@ def get_refcount(coords_address):
 # def namestr(obj, namespace):
 #     return [name for name in namespace if namespace[name] is obj]
 
+def test(coords, coords_address, exp):
+	print("Jumped into test() method...")
+	print("Reference count for expansion coordinates: %d" % get_refcount(coords_address))
+
+	exp.SetPhys(coords)
+	print("exp.SetPhys() completed...")
+	print("Reference count for expansion coordinates: %d" % get_refcount(coords_address))
+
+	del coords
+	print("del coords completed...")
+	print("Reference count for expansion coordinates: %d" % get_refcount(coords_address))
+
+
 def main(): 
 	session_name = ["MemoryTest.py", "newsquare_2x2.xml"]
 
@@ -32,22 +45,18 @@ def main():
 	print("Got coordinates...")
 	print("Reference count for expansion coordinates: %d" % get_refcount(coords_address))
 
-	exp.SetPhys(coords)
-	print("exp.SetPhys() completed...")
+	test(coords, coords_address, exp)
+	
+	print("Jumped out of test() method...")
 	print("Reference count for expansion coordinates: %d" % get_refcount(coords_address))
-
-	del coords
-	print("del coords completed...")
-	print("Reference count for expansion coordinates: %d" % get_refcount(coords_address))
-
+	
 	# print exp.GetPhys()
-	print "Calculating the integral..."
 	print exp.PhysIntegral()
-	# exp.DelPhys()
-	# print("del exp completed...")
+	del exp
+	print("del exp completed...")
 	print("Reference count for expansion coordinates: %d" % get_refcount(coords_address))
 
-
+	
 	# print ctypes.cast(coords_address, ctypes.py_object).value
 
 if __name__ == '__main__':

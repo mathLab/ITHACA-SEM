@@ -455,8 +455,11 @@ namespace Nektar
             }
 
         }
-        //cout << "Residual of Nonlinear System is:" << sqrt(resnorm)<<endl;
 
+        /// TODO: disconnect these from other arrays to avoid memory cannot release.
+        // m_TimeIntegtSol_k   =   nullptr;
+        // m_TimeIntegtSol_n   =   nullptr;
+        // m_SysEquatResid_k   =   nullptr;
         ASSERTL0((converged),"Nonlinear system solver not converge in CompressibleFlowSystem::DoImplicitSolve ")
         return;
     }

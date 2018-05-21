@@ -1,0 +1,289 @@
+///////////////////////////////////////////////////////////////////////////////
+//
+// File: StegerWarmingSolver.cpp
+//
+// For more information, please see: http://www.nektar.info
+//
+// The MIT License
+//
+// Copyright (c) 2006 Division of Applied Mathematics, Brown University (USA),
+// Department of Aeronautics, Imperial College London (UK), and Scientific
+// Computing and Imaging Institute, University of Utah (USA).
+//
+// License for the specific language governing rights and limitations under
+// Permission is hereby granted, free of charge, to any person obtaining a
+// copy of this software and associated documentation files (the "Software"),
+// to deal in the Software without restriction, including without limitation
+// the rights to use, copy, modify, merge, publish, distribute, sublicense,
+// and/or sell copies of the Software, and to permit persons to whom the
+// Software is furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included
+// in all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+// THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+// DEALINGS IN THE SOFTWARE.
+//
+// Description: StegerWarming Riemann solver.
+//
+///////////////////////////////////////////////////////////////////////////////
+
+#include <CompressibleFlowSolver/RiemannSolvers/StegerWarmingSolver.h>
+#include <algorithm>
+//#include <>
+
+namespace Nektar
+{
+    std::string StegerWarmingSolver::solverName =
+        SolverUtils::GetRiemannSolverFactory().RegisterCreatorFunction(
+            "StegerWarming",
+			StegerWarmingSolver::create,
+            "StegerWarming Riemann solver");
+
+    StegerWarmingSolver::StegerWarmingSolver(
+        const LibUtilities::SessionReaderSharedPtr& pSession)
+        : CompressibleSolver(pSession)
+    {
+    }
+    
+    /**
+     * @brief StegerWarming Riemann solver
+     *
+     * @param rhoL      Density left state.
+     * @param rhoR      Density right state.
+     * @param rhouL     x-momentum component left state.
+     * @param rhouR     x-momentum component right state.
+     * @param rhovL     y-momentum component left state.
+     * @param rhovR     y-momentum component right state.
+     * @param rhowL     z-momentum component left state.
+     * @param rhowR     z-momentum component right state.
+     * @param EL        Energy left state.
+     * @param ER        Energy right state.
+     * @param rhof      Computed Riemann flux for density.
+     * @param rhouf     Computed Riemann flux for x-momentum component
+     * @param rhovf     Computed Riemann flux for y-momentum component
+     * @param rhowf     Computed Riemann flux for z-momentum component
+     * @param Ef        Computed Riemann flux for energy.
+     */
+    void StegerWarmingSolver::v_PointSolve(
+        double  rhoL, double  rhouL, double  rhovL, double  rhowL, double  EL,
+        double  rhoR, double  rhouR, double  rhovR, double  rhowR, double  ER,
+        double &rhof, double &rhouf, double &rhovf, double &rhowf, double &Ef)
+    {
+        NekDouble nx,ny,nz;
+        NekDouble f1,f2,f3,f4,f5;
+        nx = 1.0;
+        ny = 0.0;
+        nz = 0.0;
+
+        NekDouble fsw,efix;
+        efix = 0.1;
+        fsw =  1.0;
+        flux_sw_pn(
+            rhoL,   rhouL,  rhovL,  rhowL,  EL,
+            nx  ,   ny   ,  nz,
+            f1  ,   f2   ,  f3   ,  f4   ,  f5,
+            efix,   fsw);
+
+        rhof    = f1;
+        rhouf   = f2;
+        rhovf   = f3;
+        rhowf   = f4;
+        Ef      = f5;
+
+
+        fsw =-1.0;
+        flux_sw_pn(
+            rhoR,   rhouR,  rhovR,  rhowR,  ER,
+            nx  ,   ny   ,  nz,
+            f1  ,   f2   ,  f3   ,  f4   ,  f5,
+            efix,   fsw);
+
+        rhof    += f1;
+        rhouf   += f2;
+        rhovf   += f3;
+        rhowf   += f4;
+        Ef      += f5;
+        
+    }
+
+
+    void StegerWarmingSolver::flux_sw_pn(
+        double  rhoL, double  rhouL, double  rhovL, double  rhowL, double  EL,
+        double  nx  , double  ny   , double  nz   ,
+        double &rhof, double &rhouf, double &rhovf, double &rhowf, double &Ef,
+        NekDouble efix, NekDouble fsw)
+    {
+        NekDouble   ro = rhoL;
+        NekDouble   vx = rhouL / rhoL;
+        NekDouble   vy = rhovL / rhoL;
+        NekDouble   vz = rhowL / rhoL;
+
+        // Internal energy (per unit mass)
+        NekDouble eL =
+                (EL - 0.5 * (rhouL * vx + rhovL * vy + rhowL * vz)) / rhoL;
+
+
+        NekDouble   ps = m_eos->GetPressure(rhoL, eL);
+        NekDouble   c  = m_eos->GetSoundSpeed(rhoL,eL);
+        NekDouble   T  = m_eos->GetTemperature(rhoL, eL);
+        NekDouble   h  = m_eos->GetEnthalpy(T);
+        NekDouble   c2 = c*c;
+        NekDouble   v2 = vx*vx + vy*vy + vz*vz;
+        NekDouble   h0 = h + 0.5*v2;
+        NekDouble   e0 = eL + 0.5*v2;
+        
+        NekDouble sml_ssf= 1.0E-12;
+
+
+        NekDouble   vn = nx*vx + ny*vy + nz*vz;
+        // NekDouble   sn = std::numeric_limits::max(sqrt(nx*nx + ny*ny + nz*nz),sml_ssf);
+        NekDouble   sn = std::max(sqrt(nx*nx + ny*ny + nz*nz),sml_ssf);
+        NekDouble   osn = 1.0/sn;
+        NekDouble   nxa = nx * osn;
+        NekDouble   nya = ny * osn;
+        NekDouble   nza = nz * osn;
+        NekDouble   vna = vn * osn;
+        NekDouble   l1 = vn;
+        NekDouble   l4 = vn + sn*c;
+        NekDouble   l5 = vn - sn*c;
+
+        NekDouble   eps = efix*sn;
+        NekDouble   eps2 = eps*eps;
+        NekDouble   al1 = sqrt(l1*l1 + eps2);
+        NekDouble   al4 = sqrt(l4*l4 + eps2);
+        NekDouble   al5 = sqrt(l5*l5 + eps2);
+
+        l1 = 0.5*(l1 + fsw*al1);
+        l4 = 0.5*(l4 + fsw*al4);
+        l5 = 0.5*(l5 + fsw*al5);
+
+        
+        NekDouble   c2r = c2 / m_eos->GetGamma();
+        NekDouble   x1 = c2r * ( 2.0*l1 - l4 - l5 )/( 2.0 * c2 );
+        NekDouble   x2 = c2r * ( l4 - l5 )/( 2.0 * c );
+
+        rhof    = (l1 - x1 ) * ro;
+        rhouf   = (l1*vx - x1*vx + nxa*x2 ) * ro;
+        rhovf   = (l1*vy - x1*vy + nya*x2 ) * ro;
+        rhowf   = (l1*vz - x1*vz + nza*x2 ) * ro;
+        Ef      = (l1*e0 - x1*h0 + vna*x2 ) * ro;
+    }
+    
+
+    void StegerWarmingSolver::v_PointFluxJacobian(
+            const int                     nDim,
+            const Array<OneD, NekDouble> &Fwd,
+            const Array<OneD, NekDouble> &Bwd,
+            const Array<OneD, NekDouble> &normals,
+                  DNekMatSharedPtr        FJac,
+                  DNekMatSharedPtr        BJac)
+    {
+        NekDouble fsw,efix;
+        efix = 0.1;
+
+        fsw = 1.0;
+        PointFluxJacobian_pn(nDim,Fwd,normals,FJac,efix,fsw);
+        fsw = -1.0;
+        PointFluxJacobian_pn(nDim,Bwd,normals,BJac,efix,fsw);
+        return;
+    }
+
+    void StegerWarmingSolver::PointFluxJacobian_pn(
+            const int                     nDim,
+            const Array<OneD, NekDouble> &Fwd,
+            const Array<OneD, NekDouble> &normals,
+                  DNekMatSharedPtr        FJac,
+                  NekDouble efix, NekDouble fsw)
+    {
+            NekDouble ro,vx,vy,vz,ps,gama,ae ;
+            NekDouble a,a2,h,h0,v2,vn,eps,eps2;
+            NekDouble nx,ny,nz;
+            NekDouble sn,osn,nxa,nya,nza,vna;
+            NekDouble l1,l4,l5,al1,al4,al5,x1,x2,x3,y1;
+            NekDouble c1,d1,c2,d2,c3,d3,c4,d4,c5,d5;
+            NekDouble sml_ssf= 1.0E-12;
+
+            ro = Fwd[0];
+            vx = Fwd[1];
+            vy = Fwd[2];
+            vz = Fwd[3];
+            ps = Fwd[4];
+            gama = m_eos->GetGamma();
+            ae = gama - 1.0;
+            v2 = vx*vx + vy*vy + vz*vz;
+            a2 = gama*ps/ro;
+            h = a2/ae;
+            h0 = h + 0.5*v2;
+            a = sqrt(a2);
+
+            nx = normals[0];
+            ny = normals[1];
+            nz = normals[2];
+            vn = nx*vx + ny*vy + nz*vz;
+            sn = std::max(sqrt(nx*nx + ny*ny + nz*nz),sml_ssf);
+            osn = 1.0/sn;
+            nxa = nx * osn;
+            nya = ny * osn;
+            nza = nz * osn;
+            vna = vn * osn;
+            l1 = vn;
+            l4 = vn + sn*a;
+            l5 = vn - sn*a;
+            eps = efix*sn;
+            eps2 = eps*eps;
+            al1 = sqrt(l1*l1 + eps2);
+            al4 = sqrt(l4*l4 + eps2);
+            al5 = sqrt(l5*l5 + eps2);
+            l1 = al1;
+            l4 = al4;
+            l5 = al5;
+            x1 = 0.5*(l4 + l5);
+            x2 = 0.5*(l4 - l5);
+            x3 = x1 - l1;
+            y1 = 0.5*v2;
+            c1 = ae*x3/a2;
+            d1 = x2/a;
+
+
+            int nsf = 0;
+            (*FJac)(nsf  ,nsf  ) = c1*y1 - d1*vna + l1;
+            (*FJac)(nsf  ,nsf+1) = -c1*vx + d1*nxa;
+            (*FJac)(nsf  ,nsf+2) = -c1*vy + d1*nya;
+            (*FJac)(nsf  ,nsf+3) = -c1*vz + d1*nza;
+            (*FJac)(nsf  ,nsf+4) = c1;
+            c2 = c1*vx + d1*nxa*ae;
+            d2 = x3*nxa + d1*vx;
+            (*FJac)(nsf+1,nsf  ) = c2*y1 - d2*vna;
+            (*FJac)(nsf+1,nsf+1) = -c2*vx + d2*nxa + l1;
+            (*FJac)(nsf+1,nsf+2) = -c2*vy + d2*nya;
+            (*FJac)(nsf+1,nsf+3) = -c2*vz + d2*nza;
+            (*FJac)(nsf+1,nsf+4) = c2;
+            c3 = c1*vy + d1*nya*ae;
+            d3 = x3*nya + d1*vy;
+            (*FJac)(nsf+2,nsf  ) = c3*y1 - d3*vna;
+            (*FJac)(nsf+2,nsf+1) = -c3*vx + d3*nxa;
+            (*FJac)(nsf+2,nsf+2) = -c3*vy + d3*nya + l1;
+            (*FJac)(nsf+2,nsf+3) = -c3*vz + d3*nza;
+            (*FJac)(nsf+2,nsf+4) = c3;
+            c4 = c1*vz + d1*nza*ae;
+            d4 = x3*nza + d1*vz;
+            (*FJac)(nsf+3,nsf  ) = c4*y1 - d4*vna;
+            (*FJac)(nsf+3,nsf+1) = -c4*vx + d4*nxa;
+            (*FJac)(nsf+3,nsf+2) = -c4*vy + d4*nya;
+            (*FJac)(nsf+3,nsf+3) = -c4*vz + d4*nza + l1;
+            (*FJac)(nsf+3,nsf+4) = c4;
+            c5 = c1*h0 + d1*vna*ae;
+            d5 = x3*vna + d1*h0;
+            (*FJac)(nsf+4,nsf  ) = c5*y1 - d5*vna;
+            (*FJac)(nsf+4,nsf+1) = -c5*vx + d5*nxa;
+            (*FJac)(nsf+4,nsf+2) = -c5*vy + d5*nya;
+            (*FJac)(nsf+4,nsf+3) = -c5*vz + d5*nza;
+            (*FJac)(nsf+4,nsf+4) = c5 + l1;
+    }
+}

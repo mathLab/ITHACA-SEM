@@ -52,6 +52,8 @@ EquationOfState::EquationOfState(
     pSession->LoadParameter("GasConstant", m_gasConstant, 287.058);
 }
 
+
+
 NekDouble EquationOfState::GetTemperature(const NekDouble &rho,
                                           const NekDouble &e)
 {
@@ -72,6 +74,11 @@ NekDouble EquationOfState::GetSoundSpeed(const NekDouble &rho,
 NekDouble EquationOfState::GetEntropy(const NekDouble &rho, const NekDouble &e)
 {
     return v_GetEntropy(rho, e);
+}
+
+NekDouble EquationOfState::GetEnthalpy(const NekDouble &T)
+{
+    return v_GetEnthalpy(T);
 }
 
 NekDouble EquationOfState::GetDPDrho_e(const NekDouble &rho, const NekDouble &e)
@@ -111,4 +118,11 @@ NekDouble EquationOfState::v_GetSoundSpeed(const NekDouble &rho,
 
     return sqrt(chi + kappa * enthalpy);
 }
+
+NekDouble EquationOfState::v_GetEnthalpy(const NekDouble &T)
+{
+    ASSERTL0(false,"v_GetEnthalpy not defined");
+}
+
+
 }

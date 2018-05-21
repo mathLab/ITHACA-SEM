@@ -66,6 +66,16 @@ namespace Nektar
                 const Array<OneD, const Array<OneD, NekDouble> > &Bwd,
                       Array<OneD,       Array<OneD, NekDouble> > &flux);
 
+
+            SOLVER_UTILS_EXPORT void CalcFluxJacobian(
+            const int                                         nDim,
+            const Array<OneD, const Array<OneD, NekDouble> > &Fwd,
+            const Array<OneD, const Array<OneD, NekDouble> > &Bwd,
+                  DNekBlkMatSharedPtr                         FJac,
+                  DNekBlkMatSharedPtr                         BJac);
+
+
+
             template<typename FuncPointerT, typename ObjectPointerT>
             void SetScalar(std::string    name,
                            FuncPointerT   func,
@@ -187,6 +197,16 @@ namespace Nektar
             SOLVER_UTILS_EXPORT bool CheckParams  (std::string name);
             SOLVER_UTILS_EXPORT bool CheckAuxScal (std::string name);
             SOLVER_UTILS_EXPORT bool CheckAuxVec  (std::string name);
+
+
+            virtual void v_CalcFluxJacobian(
+            const int                                         nDim,
+            const Array<OneD, const Array<OneD, NekDouble> > &Fwd,
+            const Array<OneD, const Array<OneD, NekDouble> > &Bwd,
+            const Array<OneD, const Array<OneD, NekDouble> > &normals,
+                  DNekBlkMatSharedPtr                         FJac,
+                  DNekBlkMatSharedPtr                         BJac);
+
         };
 
         /// A shared pointer to an EquationSystem object

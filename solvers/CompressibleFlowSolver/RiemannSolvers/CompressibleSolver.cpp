@@ -34,6 +34,10 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <CompressibleFlowSolver/RiemannSolvers/CompressibleSolver.h>
+#include <LibUtilities/Memory/NekMemoryManager.hpp>
+#include <LibUtilities/LinearAlgebra/NekTypeDefs.hpp>
+//#include <LocalRegions/MatrixKey.h>
+
 
 namespace Nektar
 {
@@ -87,6 +91,12 @@ namespace Nektar
                             Fwd [0][i], Fwd [1][i], Fwd [2][i], 0.0,   Fwd [3][i],
                             Bwd [0][i], Bwd [1][i], Bwd [2][i], 0.0,   Bwd [3][i],
                             flux[0][i], flux[1][i], flux[2][i], rhovf, flux[3][i]);
+
+                        // std::cout   <<std::endl<< "i  =    " <<i<<std::endl;
+                        // std::cout   << "flux[0][i]=    " <<flux[0][i]<<std::endl
+                        //             << "flux[1][i]=    " <<flux[1][i]<<std::endl
+                        //             << "flux[2][i]=    " <<flux[2][i]<<std::endl
+                        //             << "flux[3][i]=    " <<flux[3][i]<<std::endl;
                     }
                 }
                 
@@ -128,6 +138,113 @@ namespace Nektar
             v_ArraySolve(Fwd, Bwd, flux);
         }
     }
+
+    void CompressibleSolver::v_CalcFluxJacobian(
+        const int                                         nDim,
+        const Array<OneD, const Array<OneD, NekDouble> > &Fwd,
+        const Array<OneD, const Array<OneD, NekDouble> > &Bwd,
+        const Array<OneD, const Array<OneD, NekDouble> > &normals,
+              DNekBlkMatSharedPtr                         FJac,
+              DNekBlkMatSharedPtr                         BJac)
+    {
+        int expDim      = nDim;
+        int nvariables  = Fwd.num_elements();
+        int nnomals     = normals.num_elements();
+
+        DNekMatSharedPtr PointFJac = MemoryManager<DNekMat>
+            ::AllocateSharedPtr(nvariables, nvariables);
+        DNekMatSharedPtr PointBJac = MemoryManager<DNekMat>
+            ::AllocateSharedPtr(nvariables, nvariables);
+        
+        NekDouble rhouf, rhovf;
+
+        Array<OneD, NekDouble> PointFwd(nvariables,0.0),PointBwd(nvariables,0.0);
+        Array<OneD, NekDouble> PointNormal(3,0.0);
+
+        
+        // Check if PDE-based SC is used
+        if (expDim == 1)
+        {
+            for (int i = 0; i < Fwd[0].num_elements(); ++i)
+            {
+                for(int j=0; j< nnomals; j++)
+                {
+                    PointNormal[j] = normals [j][i];
+                }
+                
+                
+                PointFwd[0] = Fwd [0][i];
+                PointFwd[1] = Fwd [1][i];
+                PointFwd[2] = 0.0;
+                PointFwd[3] = 0.0;
+                PointFwd[4] = Fwd [2][i];
+
+                PointBwd[0] = Bwd [0][i];
+                PointBwd[1] = Bwd [1][i];
+                PointBwd[2] = 0.0;
+                PointBwd[3] = 0.0;
+                PointBwd[4] = Bwd [2][i];
+                v_PointFluxJacobian(nDim,PointFwd,PointBwd,PointNormal,PointFJac,PointBJac);
+            }
+        }
+        else if (expDim == 2)
+        {
+            if (nvariables == expDim+2)
+            {
+                for (int i = 0; i < Fwd[0].num_elements(); ++i)
+                {
+                    for(int j=0; j< nnomals; j++)
+                    {
+                        PointNormal[j] = normals [j][i];
+                    }
+                    
+                    PointFwd[0] = Fwd [0][i];
+                    PointFwd[1] = Fwd [1][i];
+                    PointFwd[2] = Fwd [2][i];
+                    PointFwd[3] = 0.0;
+                    PointFwd[4] = Fwd [3][i];
+
+                    PointBwd[0] = Bwd [0][i];
+                    PointBwd[1] = Bwd [1][i];
+                    PointBwd[2] = Bwd [2][i];
+                    PointBwd[3] = 0.0;
+                    PointBwd[4] = Bwd [3][i];
+                    v_PointFluxJacobian(nDim,PointFwd,PointBwd,PointNormal,PointFJac,PointBJac);
+                }
+            }
+            
+            if (nvariables > expDim+2)
+            {
+                ASSERTL0(false,"expDim == 2 and nvariables > expDim+2 case not coded")
+            }
+            
+        }
+        else if (expDim == 3)
+        {
+            for (int i = 0; i < Fwd[0].num_elements(); ++i)
+            {
+                for(int j=0; j< nnomals; j++)
+                {
+                    PointNormal[j] = normals [j][i];
+                }
+                
+                for(int j=0; j< nvariables; j++)
+                {
+                    PointFwd[j] = Fwd [j][i];
+                    PointBwd[j] = Bwd [j][i];
+                }
+                
+                v_PointFluxJacobian(nDim,PointFwd,PointBwd,PointNormal,PointFJac,PointBJac);
+                
+            }
+            if (nvariables > expDim+2)
+            {
+                ASSERTL0(false,"expDim == 2 and nvariables > expDim+2 case not coded")
+            }
+        }
+        
+    }
+   
 
     NekDouble CompressibleSolver::GetRoeSoundSpeed(
         NekDouble rhoL, NekDouble pL, NekDouble eL, NekDouble HL, NekDouble srL,

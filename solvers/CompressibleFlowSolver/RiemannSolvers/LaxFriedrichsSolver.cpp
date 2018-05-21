@@ -91,6 +91,14 @@ namespace Nektar
         NekDouble pL = m_eos->GetPressure(rhoL, eL);
         NekDouble pR = m_eos->GetPressure(rhoR, eR);
 
+        // // Pressure
+        // NekDouble TL = m_eos->GetTemperature(rhoL, eL);
+        // NekDouble TR = m_eos->GetTemperature(rhoR, eR);
+
+        // // Pressure
+        // NekDouble CcL = m_eos->GetSoundSpeed(rhoL, eL);
+        // NekDouble CcR = m_eos->GetSoundSpeed(rhoR, eR);
+
         // Left and right total enthalpy
         NekDouble HL = (EL + pL) / rhoL;
         NekDouble HR = (ER + pR) / rhoR;

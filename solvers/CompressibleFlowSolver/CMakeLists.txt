@@ -55,6 +55,7 @@ IF( NEKTAR_SOLVER_COMPRESSIBLE_FLOW )
        ./RiemannSolvers/HLLCSolver.cpp
        ./RiemannSolvers/LaxFriedrichsSolver.cpp
        ./RiemannSolvers/RoeSolver.cpp
+       ./RiemannSolvers/StegerWarmingSolver.cpp
        )
 
     ADD_SOLVER_EXECUTABLE(CompressibleFlowSolver SOURCES ${CompressibleFlowSolverSource})

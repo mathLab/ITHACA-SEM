@@ -87,6 +87,25 @@ namespace Nektar
             NekDouble rhoL, NekDouble pL, NekDouble eL, NekDouble HL, NekDouble srL,
             NekDouble rhoR, NekDouble pR, NekDouble eR, NekDouble HR, NekDouble srR,
             NekDouble HRoe, NekDouble URoe2, NekDouble srLR);
+
+        virtual void v_CalcFluxJacobian(
+            const int                                         nDim,
+            const Array<OneD, const Array<OneD, NekDouble> > &Fwd,
+            const Array<OneD, const Array<OneD, NekDouble> > &Bwd,
+            const Array<OneD, const Array<OneD, NekDouble> > &normals,
+                  DNekBlkMatSharedPtr                         FJac,
+                  DNekBlkMatSharedPtr                         BJac);
+        
+        virtual void v_PointFluxJacobian(
+            const int                     nDim,
+            const Array<OneD, NekDouble> &Fwd,
+            const Array<OneD, NekDouble> &Bwd,
+            const Array<OneD, NekDouble> &normals,
+                  DNekMatSharedPtr        FJac,
+                  DNekMatSharedPtr        BJac)
+        {
+            ASSERTL0(false, "v_PointFluxJacobian This function should be defined by subclasses.");
+        }
     };
 }
 

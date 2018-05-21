@@ -68,6 +68,12 @@ public:
     }
 
     /// Calculate the temperature
+    inline NekDouble GetGamma()
+    {
+        return m_gamma;
+    };
+
+    /// Calculate the temperature
     NekDouble GetTemperature(const NekDouble &rho, const NekDouble &e);
 
     /// Calculate the pressure
@@ -78,6 +84,10 @@ public:
 
     /// Calculate the entropy
     NekDouble GetEntropy(const NekDouble &rho, const NekDouble &e);
+
+    /// Calculate the enthalpy
+    NekDouble GetEnthalpy(const NekDouble &T);
+
 
     /// Calculate the partial derivative of P(rho,e) with respect to rho
     NekDouble GetDPDrho_e(const NekDouble &rho, const NekDouble &e);
@@ -109,6 +119,7 @@ protected:
     virtual NekDouble v_GetEntropy(const NekDouble &rho,
                                    const NekDouble &e) = 0;
 
+
     virtual NekDouble v_GetDPDrho_e(const NekDouble &rho,
                                     const NekDouble &e) = 0;
 
@@ -120,6 +131,8 @@ protected:
 
     virtual NekDouble v_GetRhoFromPT(const NekDouble &rho,
                                      const NekDouble &p) = 0;
+                                     
+    virtual NekDouble v_GetEnthalpy(const NekDouble &T);
 };
 }
 

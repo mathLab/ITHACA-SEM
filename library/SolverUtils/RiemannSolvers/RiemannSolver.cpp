@@ -128,16 +128,133 @@ namespace Nektar
                 }
 
                 rotateToNormal  (Fwd, normals, vecLocs, m_rotStorage[0]);
+
+                
+
                 rotateToNormal  (Bwd, normals, vecLocs, m_rotStorage[1]);
+                /* for(int i = 0;i<nPts;i++)
+                {
+                    
+                    
+                    std::cout   <<std::endl<<std::endl<< "***************************";
+                    std::cout   <<std::endl<< "i  =    " <<i<<std::endl;
+                    std::cout   << "Fwd[0][i]=    " <<Fwd[0][i]<<std::endl
+                                << "Fwd[1][i]=    " <<Fwd[1][i]<<std::endl
+                                << "Fwd[2][i]=    " <<Fwd[2][i]<<std::endl
+                                << "Fwd[3][i]=    " <<Fwd[3][i]<<std::endl;
+
+                    std::cout   << "m_rotStorage[0][0][i]=    " <<m_rotStorage[0][0][i]<<std::endl
+                                << "m_rotStorage[0][1][i]=    " <<m_rotStorage[0][1][i]<<std::endl
+                                << "m_rotStorage[0][2][i]=    " <<m_rotStorage[0][2][i]<<std::endl
+                                << "m_rotStorage[0][3][i]=    " <<m_rotStorage[0][3][i]<<std::endl;
+
+                    std::cout   << "normals[0][i]=    " <<normals[0][i]<<std::endl
+                                << "normals[1][i]=    " <<normals[1][i]<<std::endl;
+
+                    std::cout   <<std::endl<< "i  =    " <<i<<std::endl;
+                    std::cout   << "Bwd[0][i]=    " <<Bwd[0][i]<<std::endl
+                                << "Bwd[1][i]=    " <<Bwd[1][i]<<std::endl
+                                << "Bwd[2][i]=    " <<Bwd[2][i]<<std::endl
+                                << "Bwd[3][i]=    " <<Bwd[3][i]<<std::endl;
+
+                    std::cout   << "m_rotStorage[1][0][i]=    " <<m_rotStorage[1][0][i]<<std::endl
+                                << "m_rotStorage[1][1][i]=    " <<m_rotStorage[1][1][i]<<std::endl
+                                << "m_rotStorage[1][2][i]=    " <<m_rotStorage[1][2][i]<<std::endl
+                                << "m_rotStorage[1][3][i]=    " <<m_rotStorage[1][3][i]<<std::endl;
+
+                    std::cout   << "normals[0][i]=    " <<normals[0][i]<<std::endl
+                                << "normals[1][i]=    " <<normals[1][i]<<std::endl;
+                    int j = 0;
+                } */
+
+                
+
                 v_Solve         (nDim, m_rotStorage[0], m_rotStorage[1],
                                        m_rotStorage[2]);
+
+                /* std::cout   << "m_rotStorage[2][0][i]=    " <<m_rotStorage[2][0][i]<<std::endl
+                            << "m_rotStorage[2][1][i]=    " <<m_rotStorage[2][1][i]<<std::endl
+                            << "m_rotStorage[2][2][i]=    " <<m_rotStorage[2][2][i]<<std::endl
+                            << "m_rotStorage[2][3][i]=    " <<m_rotStorage[2][3][i]<<std::endl; */
+                
                 rotateFromNormal(m_rotStorage[2], normals, vecLocs, flux);
+                /* std::cout   << "flux[0][i]=    " <<flux[0][i]<<std::endl
+                            << "flux[1][i]=    " <<flux[1][i]<<std::endl
+                            << "flux[2][i]=    " <<flux[2][i]<<std::endl
+                            << "flux[3][i]=    " <<flux[3][i]<<std::endl;
+                i = 0; */
             }
             else
             {
                 v_Solve(nDim, Fwd, Bwd, flux);
             }
         }
+
+
+
+        /**
+         * @brief Perform the Riemann solve given the forwards and backwards
+         * spaces.
+         * 
+         * This routine calls the virtual function #v_Solve to perform the
+         * Riemann solve. If the flag #m_requiresRotation is set, then the
+         * velocity field is rotated to the normal direction to perform
+         * dimensional splitting, and the resulting fluxes are rotated back to
+         * the Cartesian directions before being returned. For the Rotation to
+         * work, the normal vectors "N" and the location of the vector
+         * components in Fwd "vecLocs"must be set via the SetAuxVec() method.
+         * 
+         * @param Fwd   Forwards trace space.
+         * @param Bwd   Backwards trace space.
+         * @param flux  Resultant flux along trace space.
+         */
+        void RiemannSolver::CalcFluxJacobian(
+            const int                                         nDim,
+            const Array<OneD, const Array<OneD, NekDouble> > &Fwd,
+            const Array<OneD, const Array<OneD, NekDouble> > &Bwd,
+                  DNekBlkMatSharedPtr                         FJac,
+                  DNekBlkMatSharedPtr                         BJac)
+        {
+            
+            
+            int nPts    = Fwd[0].num_elements();
+
+            if (m_requiresRotation)
+            {
+                ASSERTL1(CheckVectors("N"), "N not defined.");
+                ASSERTL1(CheckAuxVec("vecLocs"), "vecLocs not defined.");
+                const Array<OneD, const Array<OneD, NekDouble> > normals =
+                    m_vectors["N"]();
+                const Array<OneD, const Array<OneD, NekDouble> > vecLocs =
+                    m_auxVec["vecLocs"]();
+                
+                v_CalcFluxJacobian(nDim, Fwd, Bwd,normals, FJac, BJac);
+            }
+            else
+            {
+                Array<OneD, Array<OneD, NekDouble> > normals(nDim);
+                for(int i=0;i< nDim;i++)
+                {
+                    normals[i] = Array<OneD, NekDouble> (nPts,0.0);
+                }
+                Vmath::Fill(nPts, 1.0, normals[0],1);
+
+                v_CalcFluxJacobian(nDim, Fwd, Bwd,normals, FJac, BJac);
+            }
+        }
+
+
+        void RiemannSolver::v_CalcFluxJacobian(
+            const int                                         nDim,
+            const Array<OneD, const Array<OneD, NekDouble> > &Fwd,
+            const Array<OneD, const Array<OneD, NekDouble> > &Bwd,
+            const Array<OneD, const Array<OneD, NekDouble> > &normals,
+                  DNekBlkMatSharedPtr                         FJac,
+                  DNekBlkMatSharedPtr                         BJac)
+        {
+            ASSERTL1(false, "v_CalcFluxJacobian not specified.");
+        }
+
 
         /**
          * @brief Rotate a vector field to trace normal.

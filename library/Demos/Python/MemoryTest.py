@@ -15,7 +15,7 @@ def get_refcount(coords_address):
 #     return [name for name in namespace if namespace[name] is obj]
 
 def main(): 
-	hp = guppy.hpy()
+	# hp = guppy.hpy()
 	session_name = ["MemoryTest.py", "newsquare_2x2.xml"]
 
 	session = SessionReader.CreateInstance(session_name)

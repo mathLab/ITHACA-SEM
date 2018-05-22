@@ -4,7 +4,7 @@ from NekPy.MultiRegions import ExpList2D
 import sys
 import ctypes
 import gc
-import guppy
+# import guppy
 
 def get_refcount(coords_address):
 	gc.collect()

@@ -126,6 +126,7 @@ struct PythonToOneDArray
     {
         PyObject *pyObjPtr = (PyObject *)objPtr;
         Py_XDECREF(pyObjPtr);
+        std::cout << "Decrement" << std::endl;
     }
 
     static void construct(

@@ -4,6 +4,7 @@ from NekPy.MultiRegions import ExpList2D
 import sys
 import ctypes
 import gc
+import guppy
 
 def get_refcount(coords_address):
 	gc.collect()
@@ -14,6 +15,7 @@ def get_refcount(coords_address):
 #     return [name for name in namespace if namespace[name] is obj]
 
 def main(): 
+	hp = guppy.hpy()
 	session_name = ["MemoryTest.py", "newsquare_2x2.xml"]
 
 	session = SessionReader.CreateInstance(session_name)
@@ -24,28 +26,36 @@ def main():
 	print("Loaded MeshGraph of dimension: %d" % graph.GetMeshDimension())
 
 	coords = exp.GetCoords()
+	coords1 = coords[1]
 	coords = coords[0]
 
 	# print coords
 
 	coords_address = id(coords)
+	print hex(coords_address)
 	print("Got coordinates...")
-	print("Reference count for expansion coordinates: %d" % get_refcount(coords_address))
+	print("Reference count for expansion coordinates: %d" % get_refcount(coords_address)) #1
+	# print hp.iso(coords).referrers
 
-	exp.SetPhys(coords)
+	exp.SetPhysArray(coords) 
 	print("exp.SetPhys() completed...")
-	print("Reference count for expansion coordinates: %d" % get_refcount(coords_address))
+	print("Reference count for expansion coordinates: %d" % get_refcount(coords_address)) #2
+	# print hp.iso(coords).referrers
+	print exp.ReturnPhysAddress()
 
 	del coords
 	print("del coords completed...")
-	print("Reference count for expansion coordinates: %d" % get_refcount(coords_address))
+	print("Reference count for expansion coordinates: %d" % get_refcount(coords_address)) #1
 
 	# print exp.GetPhys()
 	print "Calculating the integral..."
 	print exp.PhysIntegral()
+
+	# exp.SetPhysArray(coords1)
 	# exp.DelPhys()
-	# print("del exp completed...")
-	print("Reference count for expansion coordinates: %d" % get_refcount(coords_address))
+	# del exp
+	# print("coords substituted")
+	# print("Reference count for expansion coordinates: %d" % get_refcount(coords_address)) # 0
 
 
 	# print ctypes.cast(coords_address, ctypes.py_object).value

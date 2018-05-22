@@ -197,6 +197,8 @@ namespace Nektar
 
             inline void DelPhys();
 
+            inline void ReturnPhysAddress();
+
             /// This function indicates whether the array of physical values
             /// \f$\boldsymbol{u}_l\f$ (implemented as #m_phys) is filled or
             /// not.
@@ -2070,6 +2072,12 @@ namespace Nektar
         inline void ExpList::DelPhys()
         {
             delete &m_phys;
+        }
+
+        inline void ExpList::ReturnPhysAddress ()
+        {
+            std::cout << "m_phys address is: " << std::endl;
+            m_phys.GetDataAddress();
         }
 
         /**

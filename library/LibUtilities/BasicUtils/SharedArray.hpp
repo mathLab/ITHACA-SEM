@@ -181,6 +181,7 @@ namespace Nektar
             {
                 m_count = new unsigned int(); 
                 *m_count = 1;
+                // std::cout << "Address of array: " << &this << std::endl;
             }
 
             /// \brief Creates a reference to rhs.
@@ -279,6 +280,8 @@ namespace Nektar
 
             /// \brief Returns the array's reference counter.
             unsigned int GetCount() const { return m_count; }
+
+            void GetDataAddress() { std::cout << &m_data << std::endl; }
 
             /// \brief Returns true is this array and rhs overlap.
             bool Overlaps(const Array<OneD, const DataType>& rhs) const

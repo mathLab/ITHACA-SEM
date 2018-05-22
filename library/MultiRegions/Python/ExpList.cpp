@@ -138,6 +138,13 @@ py::tuple ExpList_GetCoords(ExpListSharedPtr exp)
     return py::tuple();
 }
 
+void ExpList_SetPhysArray(
+    ExpListSharedPtr exp, 
+    Array<OneD, NekDouble> inarray)
+{
+    exp->SetPhysArray(inarray);
+}
+
 void ExpList_SetPhys(
     ExpListSharedPtr exp, 
     const Array<OneD, const NekDouble> &inarray)
@@ -152,8 +159,7 @@ const Array<OneD, const NekDouble> ExpList_GetPhys(ExpListSharedPtr exp)
 
 void ExpList_DelPhys(ExpListSharedPtr exp)
 {
-   exp->DelPhys();
-    
+   exp->DelPhys();    
 }
 
 NekDouble ExpList_PhysIntegral(ExpListSharedPtr exp)
@@ -179,9 +185,11 @@ void export_ExpList()
         .def("IProductWRTBase", &ExpList_IProductWRTBase)
         .def("L2", &ExpList_L2)
         .def("L2", &ExpList_L2_Error)
+        .def("SetPhysArray", &ExpList_SetPhysArray)
         .def("SetPhys", &ExpList_SetPhys)
         .def("GetPhys", &ExpList_GetPhys)
         .def("DelPhys", &ExpList_DelPhys)
         .def("PhysIntegral", &ExpList_PhysIntegral)
+        .def("ReturnPhysAddress", &ExpList::ReturnPhysAddress)
         ;
 }

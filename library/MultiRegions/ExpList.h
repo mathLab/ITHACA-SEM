@@ -2076,7 +2076,7 @@ namespace Nektar
 
         inline void ExpList::ReturnPhysAddress ()
         {
-            std::cout << "m_phys address is: " << std::endl;
+            std::cout << "m_phys address is: " << &m_phys << std::endl;
             m_phys.GetDataAddress();
         }
 

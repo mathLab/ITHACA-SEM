@@ -24,6 +24,7 @@ def main():
 
 	print("Loaded session: %s" % session.GetSessionName())
 	print("Loaded MeshGraph of dimension: %d" % graph.GetMeshDimension())
+	print("\n")
 
 	coords = exp.GetCoords()
 	coords1 = coords[1]
@@ -32,24 +33,35 @@ def main():
 	# print coords
 
 	coords_address = id(coords)
-	print hex(coords_address)
 	print("Got coordinates...")
 	print("Reference count for expansion coordinates: %d" % get_refcount(coords_address)) #1
+	print "The memory address of coordinates is: {}\n".format(hex(coords_address))
 	# print hp.iso(coords).referrers
 
+	print("Setting PhysArray (exp.SetPhysArray())...")
 	exp.SetPhysArray(coords) 
-	print("exp.SetPhys() completed...")
-	print("Reference count for expansion coordinates: %d" % get_refcount(coords_address)) #2
+	print("exp.SetPhysArray() completed...")
+	print("Reference count for expansion coordinates: %d\n" % get_refcount(coords_address)) #2
 	# print hp.iso(coords).referrers
 	print exp.ReturnPhysAddress()
 
-	del coords
-	print("del coords completed...")
-	print("Reference count for expansion coordinates: %d" % get_refcount(coords_address)) #1
+	# del coords
+	# print("del coords completed...")
+	# print("Reference count for expansion coordinates: %d" % get_refcount(coords_address)) #1
+
+	location = id(coords)
+	size = sys.getsizeof(coords)
+	
+
+	print "Clearing 0x%08x size %i bytes" % (location, size)
+	ctypes.memset(location, 0, size)
 
 	# print exp.GetPhys()
 	print "Calculating the integral..."
 	print exp.PhysIntegral()
+
+	print "Memory has been cleared. Attempting to retrieve the data..."
+	print ctypes.cast(coords_address, ctypes.py_object).value
 
 	# exp.SetPhysArray(coords1)
 	# exp.DelPhys()
@@ -58,7 +70,7 @@ def main():
 	# print("Reference count for expansion coordinates: %d" % get_refcount(coords_address)) # 0
 
 
-	# print ctypes.cast(coords_address, ctypes.py_object).value
+	
 
 if __name__ == '__main__':
     main()

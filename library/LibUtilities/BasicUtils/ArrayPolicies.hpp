@@ -58,16 +58,19 @@ namespace Nektar
         public:
             static void Initialize(ObjectType* data, unsigned int itemsToCreate)
             {
+                //std::cout << "static void Initialize(ObjectType* data, unsigned int itemsToCreate) called..." << std::endl;
             }
             
             static void Initialize(ObjectType* data, unsigned int itemsToCreate, const ObjectType& initValue)
             {
                 std::fill_n(data, itemsToCreate, initValue);
+                //std::cout << "static void Initialize(ObjectType* data, unsigned int itemsToCreate, const ObjectType& initValue) called..." << std::endl;
             }
 
             static void Initialize(ObjectType* data, unsigned int itemsToCreate, const ObjectType* initValue)
             {
                 std::copy(initValue, initValue + itemsToCreate, data);
+                //std::cout << "static void Initialize(ObjectType* data, unsigned int itemsToCreate, const ObjectType* initValue) called..." << std::endl;
             }
     };
     
@@ -95,6 +98,7 @@ namespace Nektar
                 DoInitialization(
                     data, itemsToCreate,
                     [](ObjectType *element) { new (element) ObjectType; });
+                //std::cout << "static void Initialize(ObjectType* data, unsigned int itemsToCreate) called..." << std::endl;
             }
             
             /// \brief Initalize each element in the array with ObjectType's copy constructor.
@@ -106,6 +110,7 @@ namespace Nektar
                 DoInitialization(
                     data, itemsToCreate,
                     [&](ObjectType *element) { new (element) ObjectType(initValue); });
+                //std::cout << "static void Initialize(ObjectType* data, unsigned int itemsToCreate, const ObjectType& initValue) called..." << std::endl;
             }
 
             static void Initialize(ObjectType* data, unsigned int itemsToCreate, const ObjectType* initValue)
@@ -113,6 +118,7 @@ namespace Nektar
                 DoInitialization(
                     data, itemsToCreate,
                     [&](ObjectType *element) { new (element) ObjectType(*initValue); initValue++; });
+                //std::cout << "static void Initialize(ObjectType* data, unsigned int itemsToCreate, const ObjectType* initValue) called..." << std::endl;
             }
             
             private:

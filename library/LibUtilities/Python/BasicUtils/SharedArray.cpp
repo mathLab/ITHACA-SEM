@@ -135,8 +135,11 @@ struct PythonToOneDArray
     {
         // This has to be a _borrowed_ reference, otherwise at the end of this
         // scope it seems memory gets deallocated
+        std::cout << "objPtr = " << objPtr << std::endl;
         py::object obj((py::handle<>(py::borrowed(objPtr))));
+        std::cout << "obj = " << &obj << std::endl;
         np::ndarray array = py::extract<np::ndarray>(obj);
+        std::cout << "array = " << &array << std::endl;
 
         // Construct OneD array from numpy array
         void *storage = (
@@ -146,6 +149,8 @@ struct PythonToOneDArray
         void *memory_pointer = objPtr;
         using nonconst_t = typename std::remove_const<T>::type;
         new (storage) Array<OneD, T>(array.shape(0), (nonconst_t *)array.get_data(), memory_pointer, &decrement);
+        std::cout << "(nonconst_t *)array.get_data() = " << (nonconst_t *)array.get_data() << "\n" << std::endl;
+        // std::cout << array.get_data() << std::endl;
         Py_XINCREF(objPtr);
     }
 

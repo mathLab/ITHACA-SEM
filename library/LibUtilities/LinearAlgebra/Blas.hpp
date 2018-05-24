@@ -207,8 +207,8 @@ namespace Blas
     }
 
 
-    /// \brief BLAS level 3: Matrix-matrix multiply C = A x B where A[m x n],
-    ///   B[n x k], C[m x k]
+    /// \brief BLAS level 3: Matrix-matrix multiply C = A x B where A[m x k],
+    ///   B[k x n], C[m x n]
     ///   DGEMM  performs one of the matrix-matrix operations:  C := alpha*op( A )*op( B ) + beta*C,
     static inline void Dgemm (const char& transa,  const char& transb, const int& m,
           const int& n,        const int& k,       const double& alpha,

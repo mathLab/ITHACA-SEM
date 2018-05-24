@@ -91,12 +91,6 @@ namespace Nektar
                             Fwd [0][i], Fwd [1][i], Fwd [2][i], 0.0,   Fwd [3][i],
                             Bwd [0][i], Bwd [1][i], Bwd [2][i], 0.0,   Bwd [3][i],
                             flux[0][i], flux[1][i], flux[2][i], rhovf, flux[3][i]);
-
-                        // std::cout   <<std::endl<< "i  =    " <<i<<std::endl;
-                        // std::cout   << "flux[0][i]=    " <<flux[0][i]<<std::endl
-                        //             << "flux[1][i]=    " <<flux[1][i]<<std::endl
-                        //             << "flux[2][i]=    " <<flux[2][i]<<std::endl
-                        //             << "flux[3][i]=    " <<flux[3][i]<<std::endl;
                     }
                 }
                 
@@ -150,99 +144,66 @@ namespace Nektar
         int expDim      = nDim;
         int nvariables  = Fwd.num_elements();
         int nnomals     = normals.num_elements();
+        int nvariables3D = nvariables+2;
 
-        DNekMatSharedPtr PointFJac = MemoryManager<DNekMat>
-            ::AllocateSharedPtr(nvariables, nvariables);
-        DNekMatSharedPtr PointBJac = MemoryManager<DNekMat>
-            ::AllocateSharedPtr(nvariables, nvariables);
+        if (nvariables > expDim+2)
+        {
+            ASSERTL0(false,"nvariables > expDim+2 case not coded")
+        }
+
+        DNekMatSharedPtr PointFJac3D = MemoryManager<DNekMat>
+            ::AllocateSharedPtr(nvariables3D, nvariables3D);
+        DNekMatSharedPtr PointBJac3D = MemoryManager<DNekMat>
+            ::AllocateSharedPtr(nvariables3D, nvariables3D);
         
-        NekDouble rhouf, rhovf;
-
-        Array<OneD, NekDouble> PointFwd(nvariables,0.0),PointBwd(nvariables,0.0);
+        Array<OneD, NekDouble> PointFwd(nvariables3D,0.0),PointBwd(nvariables3D,0.0);
         Array<OneD, NekDouble> PointNormal(3,0.0);
 
-        
-        // Check if PDE-based SC is used
-        if (expDim == 1)
-        {
-            for (int i = 0; i < Fwd[0].num_elements(); ++i)
-            {
-                for(int j=0; j< nnomals; j++)
-                {
-                    PointNormal[j] = normals [j][i];
-                }
-                
-                
-                PointFwd[0] = Fwd [0][i];
-                PointFwd[1] = Fwd [1][i];
-                PointFwd[2] = 0.0;
-                PointFwd[3] = 0.0;
-                PointFwd[4] = Fwd [2][i];
+        Array<OneD, unsigned int> index(nvariables);
 
-                PointBwd[0] = Bwd [0][i];
-                PointBwd[1] = Bwd [1][i];
-                PointBwd[2] = 0.0;
-                PointBwd[3] = 0.0;
-                PointBwd[4] = Bwd [2][i];
-                v_PointFluxJacobian(nDim,PointFwd,PointBwd,PointNormal,PointFJac,PointBJac);
-            }
+        index[nvariables-1] = 4;
+        for(int i=0;i<nvariables-1;i++)
+        {
+            index[i] = i;
         }
-        else if (expDim == 2)
-        {
-            if (nvariables == expDim+2)
-            {
-                for (int i = 0; i < Fwd[0].num_elements(); ++i)
-                {
-                    for(int j=0; j< nnomals; j++)
-                    {
-                        PointNormal[j] = normals [j][i];
-                    }
-                    
-                    PointFwd[0] = Fwd [0][i];
-                    PointFwd[1] = Fwd [1][i];
-                    PointFwd[2] = Fwd [2][i];
-                    PointFwd[3] = 0.0;
-                    PointFwd[4] = Fwd [3][i];
 
-                    PointBwd[0] = Bwd [0][i];
-                    PointBwd[1] = Bwd [1][i];
-                    PointBwd[2] = Bwd [2][i];
-                    PointBwd[3] = 0.0;
-                    PointBwd[4] = Bwd [3][i];
-                    v_PointFluxJacobian(nDim,PointFwd,PointBwd,PointNormal,PointFJac,PointBJac);
-                }
+        int nj=0;
+        int nk=0;
+        for (int i = 0; i < Fwd[0].num_elements(); ++i)
+        {
+            for(int j=0; j< nnomals; j++)
+            {
+                PointNormal[j] = normals [j][i];
+            }
+
+            for(int j=0; j< nvariables; j++)
+            {
+                nj = index[j];
+                PointFwd[nj] = Fwd [j][i];
+                PointBwd[nj] = Bwd [j][i];
             }
             
-            if (nvariables > expDim+2)
+            v_PointFluxJacobian(nDim,PointFwd,PointBwd,PointNormal,PointFJac3D,PointBJac3D);
+
+            DNekMatSharedPtr PointFJac = MemoryManager<DNekMat>
+                ::AllocateSharedPtr(nvariables, nvariables);
+            DNekMatSharedPtr PointBJac = MemoryManager<DNekMat>
+                ::AllocateSharedPtr(nvariables, nvariables);
+
+            for(int j=0; j< nvariables; j++)
             {
-                ASSERTL0(false,"expDim == 2 and nvariables > expDim+2 case not coded")
-            }
-            
-        }
-        else if (expDim == 3)
-        {
-            for (int i = 0; i < Fwd[0].num_elements(); ++i)
-            {
-                for(int j=0; j< nnomals; j++)
+                nj = index[j];
+                for(int k=0; k< nvariables; k++)
                 {
-                    PointNormal[j] = normals [j][i];
+                    nk = index[k];
+                    (*PointFJac)(j,k) = (*PointFJac3D)(nj,nk); 
+                    (*PointBJac)(j,k) = (*PointBJac3D)(nj,nk); 
                 }
-                
-                for(int j=0; j< nvariables; j++)
-                {
-                    PointFwd[j] = Fwd [j][i];
-                    PointBwd[j] = Bwd [j][i];
-                }
-                
-                v_PointFluxJacobian(nDim,PointFwd,PointBwd,PointNormal,PointFJac,PointBJac);
-                
             }
-            if (nvariables > expDim+2)
-            {
-                ASSERTL0(false,"expDim == 2 and nvariables > expDim+2 case not coded")
-            }
+
+            FJac->SetBlock(i, i, PointFJac);
+            BJac->SetBlock(i, i, PointBJac);
         }
-        
     }
    
 

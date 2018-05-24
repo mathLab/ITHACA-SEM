@@ -128,61 +128,11 @@ namespace Nektar
                 }
 
                 rotateToNormal  (Fwd, normals, vecLocs, m_rotStorage[0]);
-
-                
-
                 rotateToNormal  (Bwd, normals, vecLocs, m_rotStorage[1]);
-                /* for(int i = 0;i<nPts;i++)
-                {
-                    
-                    
-                    std::cout   <<std::endl<<std::endl<< "***************************";
-                    std::cout   <<std::endl<< "i  =    " <<i<<std::endl;
-                    std::cout   << "Fwd[0][i]=    " <<Fwd[0][i]<<std::endl
-                                << "Fwd[1][i]=    " <<Fwd[1][i]<<std::endl
-                                << "Fwd[2][i]=    " <<Fwd[2][i]<<std::endl
-                                << "Fwd[3][i]=    " <<Fwd[3][i]<<std::endl;
-
-                    std::cout   << "m_rotStorage[0][0][i]=    " <<m_rotStorage[0][0][i]<<std::endl
-                                << "m_rotStorage[0][1][i]=    " <<m_rotStorage[0][1][i]<<std::endl
-                                << "m_rotStorage[0][2][i]=    " <<m_rotStorage[0][2][i]<<std::endl
-                                << "m_rotStorage[0][3][i]=    " <<m_rotStorage[0][3][i]<<std::endl;
-
-                    std::cout   << "normals[0][i]=    " <<normals[0][i]<<std::endl
-                                << "normals[1][i]=    " <<normals[1][i]<<std::endl;
-
-                    std::cout   <<std::endl<< "i  =    " <<i<<std::endl;
-                    std::cout   << "Bwd[0][i]=    " <<Bwd[0][i]<<std::endl
-                                << "Bwd[1][i]=    " <<Bwd[1][i]<<std::endl
-                                << "Bwd[2][i]=    " <<Bwd[2][i]<<std::endl
-                                << "Bwd[3][i]=    " <<Bwd[3][i]<<std::endl;
-
-                    std::cout   << "m_rotStorage[1][0][i]=    " <<m_rotStorage[1][0][i]<<std::endl
-                                << "m_rotStorage[1][1][i]=    " <<m_rotStorage[1][1][i]<<std::endl
-                                << "m_rotStorage[1][2][i]=    " <<m_rotStorage[1][2][i]<<std::endl
-                                << "m_rotStorage[1][3][i]=    " <<m_rotStorage[1][3][i]<<std::endl;
-
-                    std::cout   << "normals[0][i]=    " <<normals[0][i]<<std::endl
-                                << "normals[1][i]=    " <<normals[1][i]<<std::endl;
-                    int j = 0;
-                } */
-
-                
 
                 v_Solve         (nDim, m_rotStorage[0], m_rotStorage[1],
                                        m_rotStorage[2]);
-
-                /* std::cout   << "m_rotStorage[2][0][i]=    " <<m_rotStorage[2][0][i]<<std::endl
-                            << "m_rotStorage[2][1][i]=    " <<m_rotStorage[2][1][i]<<std::endl
-                            << "m_rotStorage[2][2][i]=    " <<m_rotStorage[2][2][i]<<std::endl
-                            << "m_rotStorage[2][3][i]=    " <<m_rotStorage[2][3][i]<<std::endl; */
-                
                 rotateFromNormal(m_rotStorage[2], normals, vecLocs, flux);
-                /* std::cout   << "flux[0][i]=    " <<flux[0][i]<<std::endl
-                            << "flux[1][i]=    " <<flux[1][i]<<std::endl
-                            << "flux[2][i]=    " <<flux[2][i]<<std::endl
-                            << "flux[3][i]=    " <<flux[3][i]<<std::endl;
-                i = 0; */
             }
             else
             {
@@ -215,8 +165,6 @@ namespace Nektar
                   DNekBlkMatSharedPtr                         FJac,
                   DNekBlkMatSharedPtr                         BJac)
         {
-            
-            
             int nPts    = Fwd[0].num_elements();
 
             if (m_requiresRotation)
@@ -227,7 +175,7 @@ namespace Nektar
                     m_vectors["N"]();
                 const Array<OneD, const Array<OneD, NekDouble> > vecLocs =
                     m_auxVec["vecLocs"]();
-                
+
                 v_CalcFluxJacobian(nDim, Fwd, Bwd,normals, FJac, BJac);
             }
             else
@@ -252,7 +200,7 @@ namespace Nektar
                   DNekBlkMatSharedPtr                         FJac,
                   DNekBlkMatSharedPtr                         BJac)
         {
-            ASSERTL1(false, "v_CalcFluxJacobian not specified.");
+            ASSERTL0(false, "v_CalcFluxJacobian not specified.");
         }
 
 

@@ -34,8 +34,10 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <SolverUtils/Advection/AdvectionWeakDG.h>
+#include <LocalRegions/MatrixKey.h>
 #include <iostream>
 #include <iomanip>
+#include <math.h>
 
 namespace Nektar
 {
@@ -143,6 +145,74 @@ namespace Nektar
             }
 
             m_riemann->Solve(m_spaceDim, Fwd, Bwd, numflux);
+
+  /*           
+
+            if(FALSE)
+            {
+
+                Array<OneD, unsigned int> n_blks(nTracePointsTot);
+                for(int i=0;i<nTracePointsTot;i++)
+                {
+                    n_blks[i]    = nConvectiveFields;
+                }
+                DNekBlkMatSharedPtr FJac = MemoryManager<DNekBlkMat>
+                    ::AllocateSharedPtr(n_blks, n_blks, eDIAGONAL);
+                DNekBlkMatSharedPtr BJac = MemoryManager<DNekBlkMat>
+                    ::AllocateSharedPtr(n_blks, n_blks, eDIAGONAL);
+                m_riemann->CalcFluxJacobian(m_spaceDim, Fwd, Bwd, FJac,BJac);
+
+
+
+
+                Array<OneD, NekDouble> PointFwd(nConvectiveFields,0.0),PointBwd(nConvectiveFields,0.0);
+                Array<OneD, NekDouble> PntFluxFwd(nConvectiveFields,0.0);
+                Array<OneD, NekDouble> PntFluxBwd(nConvectiveFields,0.0);
+                Array<OneD, NekDouble> PointFlux(nConvectiveFields,0.0);
+                int cnt=0;
+                for(int i=0; i<nTracePointsTot;  i++)
+                {
+                    for(int j=0; j<nConvectiveFields;j++)
+                    {
+                        PointFwd[j] = Fwd[j][i];
+                        PointBwd[j] = Bwd[j][i];
+                    }
+                    NekVector<NekDouble> VectFluxFwd(nConvectiveFields,PntFluxFwd,eWrapper);
+                    NekVector<NekDouble> VectFluxBwd(nConvectiveFields,PntFluxBwd,eWrapper);
+
+                    DNekMat &MF = (*FJac->GetBlock(i,i));
+                    NekVector<NekDouble> VectFwd(nConvectiveFields,PointFwd,eWrapper);
+                    VectFluxFwd = MF * VectFwd;
+
+
+                    DNekMat &MB = (*BJac->GetBlock(i,i));
+                    NekVector<NekDouble> VectBwd(nConvectiveFields,PointBwd,eWrapper);
+                    VectFluxBwd = MB * VectBwd;
+
+                    NekDouble error=0.0;
+                    for(int j=0;j<nConvectiveFields;j++)
+                    {
+                        PointFlux[j] = PntFluxFwd[j]+PntFluxBwd[j];
+                        error += abs(PointFlux[j]-numflux[j][i]);
+                    }
+
+                    if(error>1.0E-7)
+                    {
+                        cnt++;
+                        std::cout   <<std::scientific<<std::setw(12)<<std::setprecision(5)
+                                <<"abs(PointFlux[0]-numflux[0][i])   =   "<<abs(PointFlux[0]-numflux[0][i])<<"    "<<PointFlux[0]<<"    "<<numflux[0][i]<<std::endl
+                                <<"abs(PointFlux[1]-numflux[1][i])   =   "<<abs(PointFlux[1]-numflux[1][i])<<"    "<<PointFlux[1]<<"    "<<numflux[1][i]<<std::endl
+                                <<"abs(PointFlux[2]-numflux[2][i])   =   "<<abs(PointFlux[2]-numflux[2][i])<<"    "<<PointFlux[2]<<"    "<<numflux[2][i]<<std::endl
+                                <<"abs(PointFlux[3]-numflux[3][i])   =   "<<abs(PointFlux[3]-numflux[3][i])<<"    "<<PointFlux[3]<<"    "<<numflux[3][i]<<std::endl;
+                    }
+                }
+                
+                std::cout   <<"cnt= "<<cnt<<std::endl;
+                
+                int j = 0;
+            }
+
+ */
 
             // Evaulate <\phi, \hat{F}\cdot n> - OutField[i]
             for(i = 0; i < nConvectiveFields; ++i)

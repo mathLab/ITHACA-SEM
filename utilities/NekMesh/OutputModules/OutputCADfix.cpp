@@ -35,6 +35,9 @@
 
 #include "OutputCADfix.h"
 
+#include "NekMeshUtils/CADSystem/CFI/CADCurveCFI.h"
+#include "NekMeshUtils/CADSystem/CFI/CADSurfCFI.h"
+
 using namespace Nektar::NekMeshUtils;
 using namespace Nektar::SpatialDomains;
 
@@ -57,21 +60,25 @@ OutputCADfix::~OutputCADfix()
 
 void OutputCADfix::Process()
 {
-    ModuleSharedPtr module = GetModuleFactory().CreateInstance(
-        ModuleKey(eProcessModule, "loadcad"), m_mesh);
-    module->RegisterConfig("CFIMesh", "");
-    if (m_mesh->m_verbose)
+    if (!m_mesh->m_cad)
     {
-        module->RegisterConfig("verbose", "");
+        ModuleSharedPtr module = GetModuleFactory().CreateInstance(
+            ModuleKey(eProcessModule, "loadcad"), m_mesh);
+        module->RegisterConfig("CFIMesh", "");
+        if (m_mesh->m_verbose)
+        {
+            module->RegisterConfig("verbose", "");
+        }
+
+        // If no input file specified, load output file
+        module->RegisterConfig("filename",
+                               m_config["from"].beenSet
+                                   ? m_config["from"].as<string>()
+                                   : m_config["outfile"].as<string>());
+
+        module->SetDefaults();
+        module->Process();
     }
-
-    // If no input file specified, load output file
-    module->RegisterConfig("filename", m_config["from"].beenSet
-                                           ? m_config["from"].as<string>()
-                                           : m_config["outfile"].as<string>());
-
-    module->SetDefaults();
-    module->Process();
 
     if (m_mesh->m_verbose)
     {
@@ -85,6 +92,7 @@ void OutputCADfix::Process()
     m_model        = m_cad->GetCFIModel();
     NekDouble scal = m_cad->GetScaling();
 
+    /*
     // Force order 2
     m_mesh->MakeOrder(2, LibUtilities::ePolyEvenlySpaced);
 
@@ -111,8 +119,24 @@ void OutputCADfix::Process()
             m_mesh->m_vertexSet.insert(volList.begin(), volList.end());
         }
     }
+    */
 
-    // map of new node numbers
+    // Find main body
+    cfi::Body *body;
+    vector<cfi::Entity *> *bds =
+        m_model->getEntityList(cfi::TYPE_BODY, cfi::SUBTYPE_ALL);
+
+    for (auto &i : *bds)
+    {
+        cfi::Body *b = static_cast<cfi::Body *>(i);
+        if (b->getTopoSubtype() != cfi::SUBTYPE_COMBINED)
+        {
+            body = b;
+            break;
+        }
+    }
+
+    // map of new nodes
     map<NodeSharedPtr, cfi::Node *> newMap;
 
     // Write out nodes
@@ -120,24 +144,121 @@ void OutputCADfix::Process()
     {
         newMap[it] = m_model->createOrphanFenode(
             0, it->m_x / scal, it->m_y / scal, it->m_z / scal);
+
+        // Point parent
+        if (it->GetNumCadCurve() > 1)
+        {
+            map<cfi::Point *, int> allVerts;
+
+            for (auto &curve : it->GetCADCurves())
+            {
+                vector<cfi::Oriented<cfi::TopoEntity *>> *vertList =
+                    std::dynamic_pointer_cast<CADCurveCFI>(curve)
+                        ->GetCfiPointer()
+                        ->getChildList();
+
+                for (auto &vert : *vertList)
+                {
+                    cfi::Point *v = static_cast<cfi::Point *>(vert.entity);
+                    if (allVerts.count(v))
+                    {
+                        allVerts[v]++;
+                    }
+                    else
+                    {
+                        allVerts[v] = 1;
+                    }
+                }
+            }
+
+            // Search for most likely parent vertex
+            map<cfi::Point *, int>::iterator maxIt = allVerts.begin();
+            for (auto it = allVerts.begin(); it != allVerts.end(); ++it)
+            {
+                if (it->second > maxIt->second)
+                {
+                    maxIt = it;
+                }
+            }
+
+            newMap[it]->setParent(maxIt->first);
+        }
+        // Line parent
+        else if (it->GetNumCadCurve())
+        {
+            vector<CADCurveSharedPtr> curves = it->GetCADCurves();
+            cfi::Line *c = std::dynamic_pointer_cast<CADCurveCFI>(curves[0])
+                               ->GetCfiPointer();
+            newMap[it]->setParent(c);
+        }
+        // Face parent
+        else if (it->GetNumCADSurf())
+        {
+            vector<CADSurfSharedPtr> surfs = it->GetCADSurfs();
+            cfi::Face *s = std::dynamic_pointer_cast<CADSurfCFI>(surfs[0])
+                               ->GetCfiPointer();
+            newMap[it]->setParent(s);
+        }
+        // Body parent
+        else
+        {
+            newMap[it]->setParent(body);
+        }
     }
 
     // Write out elements
     for (auto &el : m_mesh->m_element[3])
     {
-        vector<cfi::Node *> nodes;
+        vector<cfi::Node *> cfiNodes;
+        vector<NodeSharedPtr> nekNodes = el->GetVertexList();
+        int type;
 
+        if (el->GetTag() == "H")
+        {
+            type = CFI_SUBTYPE_HE8;
+        }
+        else if (el->GetTag() == "R")
+        {
+            type = CFI_SUBTYPE_PE6;
+
+            // Nodes need re-ordering
+            vector<NodeSharedPtr> newNekNodes;
+            newNekNodes.push_back(nekNodes[0]);
+            newNekNodes.push_back(nekNodes[4]);
+            newNekNodes.push_back(nekNodes[1]);
+            newNekNodes.push_back(nekNodes[3]);
+            newNekNodes.push_back(nekNodes[5]);
+            newNekNodes.push_back(nekNodes[2]);
+
+            nekNodes.swap(newNekNodes);
+        }
+        else if (el->GetTag() == "A")
+        {
+            type = CFI_SUBTYPE_TE4;
+        }
+        else
+        {
+            WARNINGL0(false, "Element type not supported");
+            continue;
+        }
+
+        for (auto &node : nekNodes)
+        {
+            cfiNodes.push_back(newMap[node]);
+        }
+
+        /*
         // Assuming it's a tet
         int type = CFI_SUBTYPE_TE10;
 
         for (auto &node : el->GetVertexList())
         {
-            nodes.push_back(newMap[node]);
+            cfiNodes.push_back(newMap[node]);
         }
 
         for (auto &edge : el->GetEdgeList())
         {
-            nodes.push_back(newMap[edge->m_edgeNodes[0]]);
+            cfiNodes.push_back(newMap[edge->m_edgeNodes[0]]);
         }
 
         if (el->GetTag() != "A")
@@ -149,7 +270,7 @@ void OutputCADfix::Process()
             {
                 if (face->m_faceNodes.size())
                 {
-                    nodes.push_back(newMap[face->m_faceNodes[0]]);
+                    cfiNodes.push_back(newMap[face->m_faceNodes[0]]);
                 }
             }
 
@@ -160,12 +281,13 @@ void OutputCADfix::Process()
 
                 for (auto &node : el->GetVolumeNodes())
                 {
-                    nodes.push_back(newMap[node]);
+                    cfiNodes.push_back(newMap[node]);
                 }
             }
         }
+        */
 
-        m_model->createOrphanElement(0, cfi::EntitySubtype(type), nodes);
+        m_model->createOrphanElement(0, cfi::EntitySubtype(type), cfiNodes);
     }
 
     m_model->saveCopy(m_config["outfile"].as<string>());

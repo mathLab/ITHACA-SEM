@@ -81,6 +81,11 @@ public:
 
     void Initialise(int i, cfi::Line *in, NekDouble s);
 
+    cfi::Line *GetCfiPointer()
+    {
+        return m_cfiEdge;
+    }
+
 private:
     /// cfi object
     cfi::Line *m_cfiEdge;

@@ -116,26 +116,14 @@ namespace Nektar
 
         int MultiLevelBisectedGraph::GetTotDofs() const
         {
-            static int nBndDofs = 0;
-            static int level = 0;
-            level++;
-
-            int returnval;
+            int returnval = 0;
 
             for (auto &g : m_daughterGraphs)
             {
-                g->GetTotDofs();
+                returnval += g->GetTotDofs();
             }
 
-            nBndDofs += m_BndDofs->GetNverts();
-            returnval = nBndDofs;
-
-            level--;
-            if(level == 0)
-            {
-                nBndDofs = 0;
-            }
-
+            returnval += m_BndDofs->GetNverts();
             return returnval;
         }
 

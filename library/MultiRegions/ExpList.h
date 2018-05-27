@@ -195,9 +195,9 @@ namespace Nektar
             /// filled or not.
             inline void SetPhysState(const bool physState);
 
-            inline void DelPhys();
-
-            inline void ReturnPhysAddress();
+            /// This function returns the memory address of the array data of 
+            /// m_phys array.
+            inline void GetPhysAddress();
 
             /// This function indicates whether the array of physical values
             /// \f$\boldsymbol{u}_l\f$ (implemented as #m_phys) is filled or
@@ -2069,14 +2069,12 @@ namespace Nektar
             return m_phys;
         }
 
-        inline void ExpList::DelPhys()
+        /**
+         * Prints out the memory address of the data in m_phys.
+         * Originally written for test and debug purposes for NekPy.
+         */
+        inline void ExpList::GetPhysAddress ()
         {
-            delete &m_phys;
-        }
-
-        inline void ExpList::ReturnPhysAddress ()
-        {
-            std::cout << "m_phys address is: " << &m_phys << std::endl;
             m_phys.GetDataAddress();
         }
 

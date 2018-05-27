@@ -167,7 +167,7 @@ namespace Nektar
 
             /// \brief Creates a 1D array a copies data into it.
             /// \param dim1Size the array's size.
-            /// \param data The data to copy.
+            /// \param data The data to reference.
             /// \param memory_pointer Pointer to the memory address of the array
             /// \param python_decrement Pointer to decrementer
             Array(unsigned int dim1Size, DataType* data, void* memory_pointer, void (*python_decrement)(void *)) :
@@ -181,8 +181,6 @@ namespace Nektar
             {
                 m_count = new unsigned int(); 
                 *m_count = 1;
-                // std::cout << "Address of array: " << &this << std::endl;
-                std::cout << "Array(unsigned int dim1Size, DataType* data, void* memory_pointer, void (*python_decrement)(void *)) constructor called..." << std::endl;
             }
 
             /// \brief Creates a reference to rhs.
@@ -282,6 +280,7 @@ namespace Nektar
             /// \brief Returns the array's reference counter.
             unsigned int GetCount() const { return m_count; }
 
+            /// \brief Prints out the memory address of m_data.
             void GetDataAddress() { std::cout << "m_data memory address is: " << m_data << std::endl; }
 
             /// \brief Returns true is this array and rhs overlap.
@@ -588,7 +587,6 @@ namespace Nektar
             Array(unsigned int dim1Size, DataType* data, void* memory_pointer, void (*python_decrement)(void *)) :
                 BaseType(dim1Size, data, memory_pointer, python_decrement)
             {
-                std::cout << "Array(unsigned int dim1Size, DataType* data, void* memory_pointer, void (*python_decrement)(void *)) (const) called..." << std::endl;
             }
 
             Array<OneD, DataType>& operator=(const Array<OneD, DataType>& rhs)

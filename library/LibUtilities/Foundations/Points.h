@@ -320,6 +320,7 @@ namespace Nektar
 
             inline const MatrixSharedPtrType& GetD(Direction dir = xDir) const
             {
+                std::cout << &(*m_derivmatrix[(int)dir]) << std::endl;
                 return m_derivmatrix[(int)dir];
             }
 

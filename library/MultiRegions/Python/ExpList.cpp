@@ -157,11 +157,6 @@ const Array<OneD, const NekDouble> ExpList_GetPhys(ExpListSharedPtr exp)
     return exp->GetPhys();
 }
 
-void ExpList_DelPhys(ExpListSharedPtr exp)
-{
-   exp->DelPhys();    
-}
-
 NekDouble ExpList_PhysIntegral(ExpListSharedPtr exp)
 {
     return exp->PhysIntegral();
@@ -188,8 +183,7 @@ void export_ExpList()
         .def("SetPhysArray", &ExpList_SetPhysArray)
         .def("SetPhys", &ExpList_SetPhys)
         .def("GetPhys", &ExpList_GetPhys)
-        .def("DelPhys", &ExpList_DelPhys)
         .def("PhysIntegral", &ExpList_PhysIntegral)
-        .def("ReturnPhysAddress", &ExpList::ReturnPhysAddress)
+        .def("GetPhysAddress", &ExpList::GetPhysAddress)
         ;
 }

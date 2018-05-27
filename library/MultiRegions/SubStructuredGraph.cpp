@@ -895,8 +895,8 @@ namespace Nektar
                     graphs[i] = MemoryManager<MultiLevelBisectedGraph>
                         ::AllocateSharedPtr(rangtab[i+1] - rangtab[i]);
 
-                    // If we're the root block (treetab[i] == -1) we don't need
-                    // to do anything, go onto the next block.
+                    // If we're a root block (treetab[i] == -1) we don't need to
+                    // do anything, just move onto the next block.
                     if (treetab[i] == -1)
                     {
                         continue;
@@ -908,9 +908,9 @@ namespace Nektar
                     // _first_ in the iperm/perm arrays returned from Scotch,
                     // but if there is both a left and right daughter, we'll
                     // come across the right daughter first because the
-                    // separators are being traversed backwards. In this case we
-                    // therefore need to set the left daughter graph to be the
-                    // right daughter and re-set the left daughter.
+                    // separators are being traversed backwards. We'll therefore
+                    // insert this at the beginning of the daughter graphs
+                    // vector.
                     MultiLevelBisectedGraphSharedPtr tmp = graphs[treetab[i]];
                     std::vector<MultiLevelBisectedGraphSharedPtr> &daughters =
                         tmp->GetDaughterGraphs();
@@ -941,9 +941,8 @@ namespace Nektar
                              + boost::lexical_cast<std::string>(i));
                 }
 
-                /*
                 // If we were passed a graph with disconnected regions, we need
-                // to figure this out .
+                // to create a bisected graph with the appropriate roots.
                 std::vector<int> rootBlocks;
                 for (i = 0; i < cblknbr; ++i)
                 {
@@ -956,7 +955,7 @@ namespace Nektar
                 MultiLevelBisectedGraphSharedPtr root;
                 if (rootBlocks.size() == 1)
                 {
-                    root = graphs[rootBlocks[i]];
+                    root = graphs[rootBlocks[0]];
                 }
                 else
                 {
@@ -968,12 +967,11 @@ namespace Nektar
                         root->GetDaughterGraphs().push_back(graphs[rootBlocks[i]]);
                     }
                 }
-                */
 
                 // Check that our degree of freedom count in the constructed
                 // graph is the same as the number of degrees of freedom that we
                 // were given in the function input.
-                ASSERTL0(graphs.back()->GetTotDofs() == nNonPartition,
+                ASSERTL0(root->GetTotDofs() == nNonPartition,
                          "Error in constructing Scotch graph for multi-level"
                          " static condensation.");
 
@@ -982,7 +980,7 @@ namespace Nektar
                 // and reorder the permutation from Scotch.
                 //
                 substructgraph = MemoryManager<BottomUpSubStructuredGraph>::
-                    AllocateSharedPtr(graphs.back(), nPartition, true);
+                    AllocateSharedPtr(root, nPartition, true);
 
                 // Important: we cannot simply use the ordering given by Scotch
                 // as it does not order the different blocks as we would like

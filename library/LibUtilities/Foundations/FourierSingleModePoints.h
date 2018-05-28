@@ -61,37 +61,37 @@ namespace Nektar
 
                 FourierSingleModePoints(const PointsKey &key):PointsBaseType(key)
                 {
-                    using namespace std::placeholders;
+                    namespace pl = std::placeholders;
                     m_InterpManager.RegisterCreator(PointsKey(0, eGaussGaussLegendre),
-                        std::bind(&FourierSingleModePoints::CreateMatrix, this, _1));
+                        std::bind(&FourierSingleModePoints::CreateMatrix, this, pl::_1));
                     m_InterpManager.RegisterCreator(PointsKey(0, eGaussRadauMLegendre),
-                        std::bind(&FourierSingleModePoints::CreateMatrix, this, _1));
+                        std::bind(&FourierSingleModePoints::CreateMatrix, this, pl::_1));
                     m_InterpManager.RegisterCreator(PointsKey(0, eGaussRadauPLegendre),
-                        std::bind(&FourierSingleModePoints::CreateMatrix, this, _1));
+                        std::bind(&FourierSingleModePoints::CreateMatrix, this, pl::_1));
                     m_InterpManager.RegisterCreator(PointsKey(0, eGaussLobattoLegendre),
-                        std::bind(&FourierSingleModePoints::CreateMatrix, this, _1));
+                        std::bind(&FourierSingleModePoints::CreateMatrix, this, pl::_1));
                     m_InterpManager.RegisterCreator(PointsKey(0, eGaussGaussChebyshev),
-                        std::bind(&FourierSingleModePoints::CreateMatrix, this, _1));
+                        std::bind(&FourierSingleModePoints::CreateMatrix, this, pl::_1));
                     m_InterpManager.RegisterCreator(PointsKey(0, eGaussRadauMChebyshev),
-                        std::bind(&FourierSingleModePoints::CreateMatrix, this, _1));
+                        std::bind(&FourierSingleModePoints::CreateMatrix, this, pl::_1));
                     m_InterpManager.RegisterCreator(PointsKey(0, eGaussRadauPChebyshev),
-                        std::bind(&FourierSingleModePoints::CreateMatrix, this, _1));
+                        std::bind(&FourierSingleModePoints::CreateMatrix, this, pl::_1));
                     m_InterpManager.RegisterCreator(PointsKey(0, eGaussLobattoChebyshev),
-                        std::bind(&FourierSingleModePoints::CreateMatrix, this, _1));
+                        std::bind(&FourierSingleModePoints::CreateMatrix, this, pl::_1));
                     m_InterpManager.RegisterCreator(PointsKey(0, eGaussRadauMAlpha0Beta1),
-                        std::bind(&FourierSingleModePoints::CreateMatrix, this, _1));
+                        std::bind(&FourierSingleModePoints::CreateMatrix, this, pl::_1));
                     m_InterpManager.RegisterCreator(PointsKey(0, eGaussRadauMAlpha0Beta2),
-                        std::bind(&FourierSingleModePoints::CreateMatrix, this, _1));
+                        std::bind(&FourierSingleModePoints::CreateMatrix, this, pl::_1));
                     m_InterpManager.RegisterCreator(PointsKey(0, eGaussRadauMAlpha1Beta0),
-                        std::bind(&FourierSingleModePoints::CreateMatrix, this, _1));
+                        std::bind(&FourierSingleModePoints::CreateMatrix, this, pl::_1));
                     m_InterpManager.RegisterCreator(PointsKey(0, eGaussRadauMAlpha2Beta0),
-                        std::bind(&FourierSingleModePoints::CreateMatrix, this, _1));
+                        std::bind(&FourierSingleModePoints::CreateMatrix, this, pl::_1));
                     m_InterpManager.RegisterCreator(PointsKey(0, ePolyEvenlySpaced),
-                        std::bind(&FourierSingleModePoints::CreateMatrix, this, _1));
+                        std::bind(&FourierSingleModePoints::CreateMatrix, this, pl::_1));
                     m_InterpManager.RegisterCreator(PointsKey(0, eFourierEvenlySpaced),
-                        std::bind(&FourierSingleModePoints::CreateMatrix, this, _1));
+                        std::bind(&FourierSingleModePoints::CreateMatrix, this, pl::_1));
                     m_InterpManager.RegisterCreator(PointsKey(0, eFourierSingleModeSpaced),
-                        std::bind(&FourierSingleModePoints::CreateMatrix, this, _1));
+                        std::bind(&FourierSingleModePoints::CreateMatrix, this, pl::_1));
                 }
 
             private:

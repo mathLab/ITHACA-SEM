@@ -12,6 +12,7 @@ v5.0.0
 - Use chrono in Timer (!807)
 - Fix caching of FUNCTION tags that read from file and provide the same
   functionality in FUNCTIONs defined for forcings (!759)
+- Transition to C++11 (!795, !847)
 - Add patch to tinyxml to fix size_t vs int bug (!820)
 - Add ARPACK thirdparty build capabilities (!828)
 - Added native support for csv files in addititon to pts (!760, !835, !906)
@@ -51,7 +52,8 @@ v5.0.0
 - Fix naming issue of duplicate Unit tests (!924) 
 - Fix warnings about missing virtual destructors in abstract classes (!932)
 - Added a coupling interface to exchange data between solvers at run time
-  and a DummySolver to test the implementations (!853 !931)
+  and a DummySolver to test the implementations (!853, !931)
+- Fix compilation issue with newer Boost versions and clang (!940)
 
 **NekMesh**:
 - Add feature to read basic 2D geo files as CAD (!731)

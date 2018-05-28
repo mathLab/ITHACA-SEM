@@ -8,7 +8,13 @@
 
 IF (NEKTAR_BUILD_PYTHON)
     # Try to find Boost.NumPy
-    FIND_LIBRARY(BOOST_NUMPY_LIB boost_numpy PATHS ${Boost_LIBRARY_DIRS})
+    FIND_LIBRARY(BOOST_NUMPY_LIB
+        NAMES boost_numpy-py${BOOST_PYTHON_VERSION_MAJOR}${BOOST_PYTHON_VERSION_MINOR}
+        boost_numpy${BOOST_PYTHON_VERSION_MAJOR}${BOOST_PYTHON_VERSION_MINOR}
+        boost_numpy-py${BOOST_PYTHON_VERSION_MAJOR}
+        boost_numpy${BOOST_PYTHON_VERSION_MAJOR}
+        boost_numpy
+        PATHS ${Boost_LIBRARY_DIRS})
 
     # If we can't find it, pull it from git and compile it
     IF (NOT BOOST_NUMPY_LIB)
@@ -51,4 +57,6 @@ IF (NEKTAR_BUILD_PYTHON)
 
     FILE(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/NekPy)
     FILE(WRITE ${CMAKE_BINARY_DIR}/NekPy/__init__.py "# placeholder")
+
+    MARK_AS_ADVANCED(BOOST_NUMPY_LIB)
 ENDIF()

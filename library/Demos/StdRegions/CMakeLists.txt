@@ -58,6 +58,5 @@ ADD_NEKTAR_TEST(StdProject_Diff3D_Hex_Legendre_P6_Q7)
 ADD_NEKTAR_TEST(StdProject_Diff3D_Hex_Chebyshev_P6_Q7)
 
 IF (NEKTAR_BUILD_PYTHON)
-   ADD_NEKPY_EXECUTABLE(StdIntegral2D.py Python/StdIntegral2D.py) 
-   ADD_NEKPY_TEST(StdIntegral2D-python) 
+   SUBDIRS(Python)
 ENDIF()

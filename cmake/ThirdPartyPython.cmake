@@ -7,6 +7,57 @@
 ########################################################################
 
 IF (NEKTAR_BUILD_PYTHON)
+    CMAKE_DEPENDENT_OPTION(NEKTAR_USE_PYTHON3
+        "If true, prefer to use Python 3." OFF "NEKTAR_BUILD_PYTHON" OFF)
+
+    # Unset any existing python executable/library settings so that
+    # we can rediscover correct python version if v2/3 settings changed
+    unset(PYTHON_EXECUTABLE CACHE)
+    unset(PYTHON_INCLUDE_DIR CACHE)
+    unset(PYTHON_LIBRARY CACHE)
+    unset(PYTHON_LIBRARY_DEBUG CACHE)
+
+    SET(PYTHONVER 2.7)
+    IF (NEKTAR_USE_PYTHON3)
+        SET(PYTHONVER 3.0)
+    ENDIF()
+
+    # Find Python
+    FIND_PACKAGE(PythonInterp  ${PYTHONVER} REQUIRED)
+    FIND_PACKAGE(PythonLibsNew ${PYTHONVER} REQUIRED)
+    INCLUDE_DIRECTORIES(SYSTEM ${PYTHON_INCLUDE_DIRS})
+
+    # Now try to find Boost::Python. For now we are relying entirely on
+    # distributed versions of this (versus trying to compile via ThirdParty)
+    # because they come with various names and FindBoost is not really geared up
+    # for this at present. Therefore this is done separately to avoid lots of
+    # warnings and extraneous output.
+    #
+    # We need to try a few variants, depending on if we're doing Python 2 or
+    # Python 3. Irritatingly this is all very much distriution dependent so we
+    # just take our best guess at filenames. Seemingly from Boost 1.67 onwards,
+    # names are just `python27` and `numpy32` but for now we have to deal with
+    # this ourselves.
+    STRING(REPLACE "." ";" BOOST_PYTHON_VERSION ${PYTHONLIBS_VERSION_STRING})
+    LIST(GET BOOST_PYTHON_VERSION 0 BOOST_PYTHON_VERSION_MAJOR)
+    LIST(GET BOOST_PYTHON_VERSION 1 BOOST_PYTHON_VERSION_MINOR)
+    SET(TMP_BOOST_LIST ${NEEDED_BOOST_LIBS})
+
+    # Try to find Boost::Python
+    FIND_LIBRARY(BOOST_PYTHON_LIB
+        NAMES boost_python-py${BOOST_PYTHON_VERSION_MAJOR}${BOOST_PYTHON_VERSION_MINOR}
+        boost_python${BOOST_PYTHON_VERSION_MAJOR}${BOOST_PYTHON_VERSION_MINOR}
+        boost_python-py${BOOST_PYTHON_VERSION_MAJOR}
+        boost_python${BOOST_PYTHON_VERSION_MAJOR}
+        boost_python
+        PATHS ${Boost_LIBRARY_DIRS})
+
+    IF (NOT BOOST_PYTHON_LIB)
+        MESSAGE(FATAL_ERROR "Could not find Boost Python installation: check it is installed in your distribution.")
+    ENDIF()
+
+    MESSAGE(STATUS "Found Boost.Python: ${BOOST_PYTHON_LIB}")
+
     # Try to find Boost.NumPy
     FIND_LIBRARY(BOOST_NUMPY_LIB
         NAMES boost_numpy-py${BOOST_PYTHON_VERSION_MAJOR}${BOOST_PYTHON_VERSION_MINOR}
@@ -38,8 +89,10 @@ IF (NEKTAR_BUILD_PYTHON)
             )
 
         SET(BOOST_NUMPY_LIB ${TPDIST}/lib64/${CMAKE_STATIC_LIBRARY_PREFIX}boost_numpy${CMAKE_STATIC_LIBRARY_SUFFIX})
-        INCLUDE_DIRECTORIES(SYSTEM ${TPDIST}/include)        
+        INCLUDE_DIRECTORIES(SYSTEM ${TPDIST}/include)
+        MESSAGE(STATUS "Build Boost.NumPy: ${BOOST_NUMPY_LIB}")
     ELSE()
+        MESSAGE(STATUS "Found Boost.NumPy: ${BOOST_NUMPY_LIB}")
         ADD_CUSTOM_TARGET(boost-numpy ALL)
         ADD_DEFINITIONS(-DBOOST_HAS_NUMPY)
     ENDIF()

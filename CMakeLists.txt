@@ -177,29 +177,6 @@ IF (MSVC)
     ADD_DEFINITIONS(-D_CRT_SECURE_NO_DEPRECATE -D_SCL_SECURE_NO_DEPRECATE)
 ENDIF()
 
-# Add option to use Python 3.
-CMAKE_DEPENDENT_OPTION(NEKTAR_USE_PYTHON3
-    "If true, prefer to use Python 3." OFF "NEKTAR_BUILD_PYTHON" OFF)
-
-IF (NEKTAR_BUILD_PYTHON)
-    # Unset any existing python executable/library settings so that
-    # we can rediscover correct python version if v2/3 settings changed
-    unset(PYTHON_EXECUTABLE CACHE)
-    unset(PYTHON_INCLUDE_DIR CACHE)
-    unset(PYTHON_LIBRARY CACHE)
-    unset(PYTHON_LIBRARY_DEBUG CACHE)
-
-    SET(PYTHONVER 2.7)
-    IF (NEKTAR_USE_PYTHON3)
-        SET(PYTHONVER 3.0)
-    ENDIF()
-
-    # Find Python
-    FIND_PACKAGE(PythonInterp  ${PYTHONVER} REQUIRED)
-    FIND_PACKAGE(PythonLibsNew ${PYTHONVER} REQUIRED)
-    INCLUDE_DIRECTORIES(SYSTEM ${PYTHON_INCLUDE_DIRS})
-ENDIF()
-
 # Include Nektar++ common macros
 INCLUDE (NektarCommon)
 

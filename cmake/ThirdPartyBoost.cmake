@@ -6,68 +6,12 @@
 #
 ########################################################################
 
-# Define a macro that checks for common Boost environment variables.
-MACRO(NektarFindBoost)
-    SET(Boost_DEBUG 0)
-    SET(Boost_NO_BOOST_CMAKE ON)
-    IF (BOOST_ROOT)
-        SET(Boost_NO_SYSTEM_PATHS ON)
-        FIND_PACKAGE(Boost ${MIN_VER} QUIET COMPONENTS ${NEEDED_BOOST_LIBS})
-    ELSE ()
-        SET(TEST_ENV1 $ENV{BOOST_HOME})
-        SET(TEST_ENV2 $ENV{BOOST_DIR})
-        IF (DEFINED TEST_ENV1)
-            SET(BOOST_ROOT $ENV{BOOST_HOME})
-            SET(Boost_NO_SYSTEM_PATHS ON)
-            FIND_PACKAGE(Boost ${MIN_VER} QUIET COMPONENTS ${NEEDED_BOOST_LIBS})
-        ELSEIF (DEFINED TEST_ENV2)
-            SET(BOOST_ROOT $ENV{BOOST_DIR})
-            SET(Boost_NO_SYSTEM_PATHS ON)
-            FIND_PACKAGE(Boost ${MIN_VER} QUIET COMPONENTS ${NEEDED_BOOST_LIBS})
-        ELSE ()
-            SET(BOOST_ROOT ${TPDIST})
-            FIND_PACKAGE(Boost ${MIN_VER} QUIET COMPONENTS ${NEEDED_BOOST_LIBS})
-        ENDIF()
-    ENDIF()
-ENDMACRO()
-
 #If the user has not set BOOST_ROOT, look in a couple common places first.
 MESSAGE(STATUS "Searching for Boost:")
 
 # Minimum version and boost libraries required
 SET(MIN_VER "1.56.0")
 SET(NEEDED_BOOST_LIBS thread iostreams filesystem system program_options regex)
-
-IF (NEKTAR_BUILD_PYTHON)
-    # We need to try a few variants, depending on if we're doing Python 2 or
-    # Python 3. Irritatingly this is all very much distriution dependent so we
-    # just take our best guess at filenames.
-    STRING(REPLACE "." ";" BOOST_PYTHON_VERSION ${PYTHONLIBS_VERSION_STRING})
-    LIST(GET BOOST_PYTHON_VERSION 0 BOOST_PYTHON_VERSION_MAJOR)
-    LIST(GET BOOST_PYTHON_VERSION 1 BOOST_PYTHON_VERSION_MINOR)
-    SET(TMP_BOOST_LIST ${NEEDED_BOOST_LIBS})
-
-    # Now try different versions of the string.
-    SET(NAMES_TO_TRY python-py${BOOST_PYTHON_VERSION_MAJOR}${BOOST_PYTHON_VERSION_MINOR}
-                     python-py${BOOST_PYTHON_VERSION_MAJOR}
-                     python${BOOST_PYTHON_VERSION_MAJOR}${BOOST_PYTHON_VERSION_MINOR}
-                     python${BOOST_PYTHON_VERSION_MAJOR}
-                     python
-        )
-
-    FOREACH(BPLIB ${NAMES_TO_TRY})
-        SET(NEEDED_BOOST_LIBS ${TMP_BOOST_LIST} ${BPLIB})
-        NektarFindBoost()
-        STRING(TOUPPER ${BPLIB} BPLIB_UPPER)
-
-        IF (Boost_${BPLIB_UPPER}_FOUND)
-            SET(Boost_PYTHON_LIBRARY ${Boost_${BPLIB_UPPER}_LIBRARY})
-            break()
-        ENDIF()
-    ENDFOREACH()
-ELSE()
-    NektarFindBoost()
-ENDIF()
 
 SET(Boost_NO_BOOST_CMAKE ON)
 IF( BOOST_ROOT )

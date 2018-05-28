@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: SpatialDomains.cpp
+//  File: StdMatrixKey.cpp
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,31 +29,45 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Python wrapper for SpatialDomains classes.
+//  Description: Python wrapper for StdMatrixKey.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
+#include <vector>
+#include <StdRegions/StdExpansion.h>
+#include <StdRegions/StdMatrixKey.h>
 #include <LibUtilities/Python/NekPyConfig.hpp>
 
-void export_Geometry();
-void export_Geometry1D();
-void export_Geometry2D();
-void export_MeshGraph();
-void export_PointGeom();
-void export_QuadGeom();
-void export_SegGeom();
-void export_TriGeom();
+using namespace Nektar;
+using namespace Nektar::StdRegions;
 
-BOOST_PYTHON_MODULE(_SpatialDomains)
+StdMatrixKey StdMatrixKey_Init(const MatrixType matType,
+                               const LibUtilities::ShapeType shapeType,
+                               const StdExpansionSharedPtr exp,
+                               const ConstFactorMap &factorMap)
 {
-    np::initialize();
+    return StdMatrixKey(matType, shapeType, *exp, factorMap);
+}
 
-    export_Geometry();
-    export_Geometry1D();
-    export_Geometry2D();
-    export_MeshGraph();
-    export_PointGeom();
-    export_QuadGeom();
-    export_SegGeom();
-    export_TriGeom();
+/**
+ * @brief Export for StdMatrixKey enumeration.
+ */
+void export_StdMatrixKey()
+{
+    NEKPY_WRAP_ENUM(MatrixType, MatrixTypeMap);
+    NEKPY_WRAP_ENUM(ConstFactorType, ConstFactorTypeMap);
+
+    py::class_<StdMatrixKey>(
+        "StdMatrixKey", py::init<const MatrixType,
+        const LibUtilities::ShapeType, const StdExpansion&>() )
+
+        .def("GetMatrixType", &StdMatrixKey::GetMatrixType)
+        ;
+
+    // py::class_<StdMatrixKey>(
+    //     "StdMatrixKey", py::no_init)
+    //     .def("__init__", py::make_constructor(
+    //              &StdMatrixKey_Init, py::default_call_policies(),
+    //              (py::arg("matType"), py::arg("shapeType"), py::arg("exp"),
+    //               py::arg("factorMap"))));
 }

@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: SpatialDomains.cpp
+//  File: PointGeom.cpp
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,31 +29,20 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Python wrapper for SpatialDomains classes.
+//  Description: Python wrapper for PointGeom.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
+#include <SpatialDomains/PointGeom.h>
 #include <LibUtilities/Python/NekPyConfig.hpp>
 
-void export_Geometry();
-void export_Geometry1D();
-void export_Geometry2D();
-void export_MeshGraph();
-void export_PointGeom();
-void export_QuadGeom();
-void export_SegGeom();
-void export_TriGeom();
+using namespace Nektar;
+using namespace Nektar::SpatialDomains;
 
-BOOST_PYTHON_MODULE(_SpatialDomains)
+void export_PointGeom()
 {
-    np::initialize();
-
-    export_Geometry();
-    export_Geometry1D();
-    export_Geometry2D();
-    export_MeshGraph();
-    export_PointGeom();
-    export_QuadGeom();
-    export_SegGeom();
-    export_TriGeom();
+    py::class_<PointGeom, py::bases<Geometry>, std::shared_ptr<PointGeom> >(
+        "PointGeom", py::init<>())
+        .def(py::init<int, int, NekDouble, NekDouble, NekDouble>());
+        //.def(py::init<int, int, py::optional<CurveSharedPtr>)
 }

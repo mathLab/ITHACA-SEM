@@ -140,6 +140,8 @@ void export_StdExpansion()
         .def("GetBasis", &StdExpansion::GetBasis,
              py::return_value_policy<py::copy_const_reference>())
 
+        .def("GenMatrix", &StdExpansion::GenMatrix)
+
         .def("FwdTrans", &StdExpansion_FwdTrans)
         .def("BwdTrans", &StdExpansion_BwdTrans)
         .def("IProductWRTBase", &StdExpansion_IProductWRTBase)

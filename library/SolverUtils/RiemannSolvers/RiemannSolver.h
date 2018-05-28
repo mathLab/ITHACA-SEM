@@ -160,6 +160,9 @@ namespace Nektar
             SOLVER_UTILS_EXPORT RiemannSolver(
                 const LibUtilities::SessionReaderSharedPtr& pSession);
 
+            SOLVER_UTILS_EXPORT virtual ~RiemannSolver()
+            {};
+
             virtual void v_Solve(
                 const int                                         nDim,
                 const Array<OneD, const Array<OneD, NekDouble> > &Fwd,

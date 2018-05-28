@@ -319,7 +319,10 @@ namespace Nektar
                 // Transform data into coefficient space
                 for (i = 0; i < nvariables; ++i)
                 {
+                    // copy fields into ExpList::m_phys and assign the new
+                    // array to fields
                     m_fields[m_intVariables[i]]->SetPhys(fields[i]);
+                    fields[i] = m_fields[m_intVariables[i]]->UpdatePhys();
                     if( v_RequireFwdTrans() )
                     {
                         m_fields[m_intVariables[i]]->FwdTrans_IterPerExp(

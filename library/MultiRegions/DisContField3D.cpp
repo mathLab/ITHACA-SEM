@@ -393,7 +393,7 @@ using namespace std;
                      for(e = 0; e < m_bndCondExpansions[n]->GetExpSize(); ++e)
                      {
                          m_boundaryFaces.insert(
-                             m_traceMap->GetBndCondTraceToGlobalTraceMap(cnt+e));
+                             m_traceMap->GetBndCondIDToGlobalTraceID(cnt+e));
                      }
                      cnt += m_bndCondExpansions[n]->GetExpSize();
                  }
@@ -1940,7 +1940,7 @@ using namespace std;
                         npts = m_bndCondExpansions[n]->GetExp(e)->GetTotPoints();
                         id1  = m_bndCondExpansions[n]->GetPhys_Offset(e);
                         id2  = m_trace->GetPhys_Offset(
-                            m_traceMap->GetBndCondTraceToGlobalTraceMap(cnt+e));
+                            m_traceMap->GetBndCondIDToGlobalTraceID(cnt+e));
                         Vmath::Vcopy(npts,
                             &(m_bndCondExpansions[n]->GetPhys())[id1], 1,
                             &Bwd[id2],                                 1);
@@ -1958,7 +1958,7 @@ using namespace std;
                         npts = m_bndCondExpansions[n]->GetExp(e)->GetTotPoints();
                         id1  = m_bndCondExpansions[n]->GetPhys_Offset(e);
                         id2  = m_trace->GetPhys_Offset(
-                            m_traceMap->GetBndCondTraceToGlobalTraceMap(cnt+e));
+                            m_traceMap->GetBndCondIDToGlobalTraceID(cnt+e));
                         
                         // Turning this off since we can have non-zero
                         //Neumann in mixed CG-DG method
@@ -2246,7 +2246,7 @@ using namespace std;
             //----------------------------------
             int GloBndDofs   = m_traceMap->GetNumGlobalBndCoeffs();
             int NumDirichlet = m_traceMap->GetNumLocalDirBndCoeffs();
-            int e_ncoeffs,id;
+            int e_ncoeffs;
 
             // Retrieve block matrix of U^e
             GlobalMatrixKey HDGLamToUKey(StdRegions::eHybridDGLamToU,NullAssemblyMapSharedPtr,factors,varcoeff);
@@ -2294,18 +2294,23 @@ using namespace std;
             // Assemble local \lambda_e into global \Lambda
             m_traceMap->AssembleBnd(loc_lambda,BndRhs);
 
+            Array<OneD, const int> bndCondCoeffToGlobalTraceMap = 
+                m_traceMap->GetBndCondCoeffsToGlobalTraceMap();
+
             // Copy Dirichlet boundary conditions and weak forcing into trace
             // space
             cnt = 0;
             for(i = 0; i < m_bndCondExpansions.num_elements(); ++i)
             {
+                Array<OneD, const NekDouble> bndcoeffs = m_bndCondExpansions[i]->GetCoeffs();
+
                 if(m_bndConditions[i]->GetBoundaryConditionType() ==
                        SpatialDomains::eDirichlet)
                 {
                     for(j = 0; j < (m_bndCondExpansions[i])->GetNcoeffs(); ++j)
                     {
-                        id = m_traceMap->GetBndCondCoeffsToGlobalCoeffsMap(cnt++);
-                        BndSol[id] = m_bndCondExpansions[i]->GetCoeffs()[j];
+                        BndSol[bndCondCoeffToGlobalTraceMap[cnt + j]] =
+                            bndcoeffs[j]; 
                     }
                 }
                 else if (m_bndConditions[i]->GetBoundaryConditionType() ==
@@ -2316,10 +2321,12 @@ using namespace std;
                     //Add weak boundary condition to trace forcing
                     for(j = 0; j < (m_bndCondExpansions[i])->GetNcoeffs(); ++j)
                     {
-                        id = m_traceMap->GetBndCondCoeffsToGlobalCoeffsMap(cnt++);
-                        BndRhs[id] += m_bndCondExpansions[i]->GetCoeffs()[j];
+                        BndRhs[bndCondCoeffToGlobalTraceMap[cnt + j]] +=
+                            bndcoeffs[j]; 
                     }
                 }
+
+                cnt += (m_bndCondExpansions[i])->GetNcoeffs();
             }
 
             //----------------------------------

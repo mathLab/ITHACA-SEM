@@ -147,22 +147,25 @@ namespace Nektar
             MULTI_REGIONS_EXPORT NekDouble GetLocalToGlobalBndSign(const int i) const;
             /// Retrieve the sign change for all local boundary modes.
             MULTI_REGIONS_EXPORT Array<OneD, const NekDouble> GetLocalToGlobalBndSign() const;
-            /// Retrieves the global index corresponding to a boundary expansion
-            /// mode.
-            MULTI_REGIONS_EXPORT int GetBndCondCoeffsToGlobalCoeffsMap(const int i);
-            /// Retrieves the global indices corresponding to the boundary
-            /// expansion modes.
-            MULTI_REGIONS_EXPORT const Array<OneD,const int>&
-                    GetBndCondCoeffsToGlobalCoeffsMap();
-            /// Returns the modal sign associated with a given boundary
-            /// expansion mode.
-            MULTI_REGIONS_EXPORT NekDouble GetBndCondCoeffsToGlobalCoeffsSign(const int i);
+            /// Retrieves the local indices corresponding to the
+            /// boundary expansion modes.
+            MULTI_REGIONS_EXPORT const Array<OneD,const int>
+                                              &GetBndCondCoeffsToLocalCoeffsMap();
+            /// Returns the modal sign associated with a given
+            /// boundary expansion mode.
+            MULTI_REGIONS_EXPORT const Array<OneD, NekDouble>
+                                              &GetBndCondCoeffsToLocalCoeffsSign();
+
+            /// Retrieves the local indices corresponding to the
+            /// boundary expansion modes to global trace
+            MULTI_REGIONS_EXPORT const Array<OneD,const int>
+                                              &GetBndCondCoeffsToGlobalTraceMap();
 
             /// Returns the global index of the boundary trace giving the
             /// index on the boundary expansion
-            MULTI_REGIONS_EXPORT int GetBndCondTraceToGlobalTraceMap(const int i);
+            MULTI_REGIONS_EXPORT int GetBndCondIDToGlobalTraceID(const int i);
             MULTI_REGIONS_EXPORT const Array<OneD, const int>
-                &GetBndCondTraceToGlobalTraceMap();
+                &GetBndCondIDToGlobalTraceID();
  
             /// Returns the number of global Dirichlet boundary coefficients.
             MULTI_REGIONS_EXPORT int GetNumGlobalDirBndCoeffs() const;
@@ -351,11 +354,13 @@ namespace Nektar
             /// Integer sign of local boundary coeffs to global space
             Array<OneD,NekDouble> m_localToGlobalBndSign;
             /// Integer map of bnd cond coeffs to global coefficients
-            Array<OneD,int>       m_bndCondCoeffsToGlobalCoeffsMap;
+            Array<OneD,int>       m_bndCondCoeffsToLocalCoeffsMap;
             /// Integer map of bnd cond coeffs to global coefficients
-            Array<OneD,NekDouble> m_bndCondCoeffsToGlobalCoeffsSign;
+            Array<OneD,NekDouble> m_bndCondCoeffsToLocalCoeffsSign;
+            /// Integer map of bnd cond coeff to global trace coeff
+            Array<OneD, int>      m_bndCondCoeffsToGlobalTraceMap;
             /// Integer map of bnd cond trace number to global trace number
-            Array<OneD,int>       m_bndCondTraceToGlobalTraceMap;
+            Array<OneD,int>       m_bndCondIDToGlobalTraceID;
             /// Integer map of process coeffs to universal space
             Array<OneD,int>       m_globalToUniversalBndMap;
             /// Integer map of unique process coeffs to universal space (signed)

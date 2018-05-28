@@ -1270,7 +1270,7 @@ namespace Nektar
                     // Offset of the trace space related to boundary expansion
                     id2 = fields[0]->GetTrace()->
                     GetPhys_Offset(fields[0]->GetTraceMap()->
-                                   GetBndCondTraceToGlobalTraceMap(cnt++));
+                                   GetBndCondIDToGlobalTraceID(cnt++));
                     
                     // Dirichlet bcs ==> uflux = gD
                     if (fields[var]->GetBndConditions()[i]->
@@ -1429,7 +1429,7 @@ namespace Nektar
                     
                     id2 = fields[0]->GetTrace()->
                     GetPhys_Offset(fields[0]->GetTraceMap()->
-                                   GetBndCondTraceToGlobalTraceMap(cnt++));
+                                   GetBndCondIDToGlobalTraceID(cnt++));
                     
                     // For Dirichlet boundary condition: 
                     //qflux = q+ - C_11 (u+ -    g_D) (nx, ny)

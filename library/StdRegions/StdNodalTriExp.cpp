@@ -290,9 +290,12 @@ namespace Nektar
             ASSERTL0(eid >= 0 && eid <= 2,
                      "Local Edge ID must be between 0 and 2"); 
 
-            ASSERTL0(P == -1, "Nodal triangle not set up to deal with variable"
-                              "polynomial order.");
+            
             const int nEdgeCoeffs = GetEdgeNcoeffs(eid);
+            
+            ASSERTL0(P == -1 || P == nEdgeCoeffs,
+                     "Nodal triangle not set up to deal with variable"
+                     "polynomial order.");
             
             if (maparray.num_elements() != nEdgeCoeffs)
             {
@@ -315,10 +318,10 @@ namespace Nektar
             }
 
             maparray[0] = eid;
-            maparray[1] = eid == 2 ? 0 : eid+1;
+            maparray[nEdgeCoeffs-1] = eid == 2 ? 0 : eid+1;
             for (int i = 2; i < nEdgeCoeffs; i++)
             {
-                maparray[i] = eid*(nEdgeCoeffs-2)+1+i; 
+                maparray[i-1] = eid*(nEdgeCoeffs-2)+1+i; 
             }  
 
             if (orient == eBackwards)

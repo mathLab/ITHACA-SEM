@@ -174,7 +174,7 @@ namespace Nektar
 
                         int id2 = fields[0]->GetTrace()->GetPhys_Offset(
                             fields[0]->GetTraceMap()
-                                ->GetBndCondTraceToGlobalTraceMap(cnt++));
+                                ->GetBndCondIDToGlobalTraceID(cnt++));
 
                         for (k = 0; k < nBndEdgePts; ++k)
                         {
@@ -331,7 +331,7 @@ namespace Nektar
                     
                     id2 = fields[0]->GetTrace()->
                     GetPhys_Offset(fields[0]->GetTraceMap()->
-                                   GetBndCondTraceToGlobalTraceMap(cnt++));
+                                   GetBndCondIDToGlobalTraceID(cnt++));
 
                     // For Dirichlet boundary condition: uflux = g_D
                     if (fields[var]->GetBndConditions()[i]->
@@ -509,7 +509,7 @@ namespace Nektar
                     
                     id2 = fields[0]->GetTrace()->
                     GetPhys_Offset(fields[0]->GetTraceMap()->
-                                   GetBndCondTraceToGlobalTraceMap(cnt++));
+                                   GetBndCondIDToGlobalTraceID(cnt++));
                     
                     // For Dirichlet boundary condition: 
                     //qflux = q+ - C_11 (u+ -    g_D) (nx, ny)

@@ -110,6 +110,11 @@ namespace Nektar
                 return m_extraDirDofs;
             }
 
+            MULTI_REGIONS_EXPORT std::set<ExtraDirDof> &GetCopyLocalDirDofs()
+            {
+                return m_copyLocalDirDofs;
+            }
+
         protected:
             /// Integer map of local coeffs to global space
             Array<OneD,int> m_localToGlobalMap;
@@ -143,6 +148,9 @@ namespace Nektar
             int m_numLocDirBndCondDofs;
             /// Maximum static condensation level.
             int m_maxStaticCondLevel;
+            /// Map indicating degrees of freedom which are Dirichlet but whose
+            /// value is stored on another processor.
+            std::set<ExtraDirDof> m_copyLocalDirDofs;
             /// Map indicating degrees of freedom which are Dirichlet but whose
             /// value is stored on another processor.
             std::map<int, std::vector<ExtraDirDof> > m_extraDirDofs;

@@ -223,7 +223,7 @@ namespace Nektar
                     for(e = 0; e < m_bndCondExpansions[n]->GetExpSize(); ++e)
                     {
                         m_boundaryVerts.insert(
-                            m_traceMap->GetBndCondTraceToGlobalTraceMap(cnt+e));
+                            m_traceMap->GetBndCondIDToGlobalTraceID(cnt+e));
                     }
                 }
                 cnt += m_bndCondExpansions[n]->GetExpSize();
@@ -911,8 +911,8 @@ namespace Nektar
                 if (m_bndConditions[n]->GetBoundaryConditionType() == 
                         SpatialDomains::eDirichlet)
                 {
-                    id  = m_trace->GetPhys_Offset(m_traceMap->GetBndCondTraceToGlobalTraceMap(cnt));
-                    Bwd[id] = m_bndCondExpansions[n]->GetPhys()[0]; //this is not getting the correct value?
+                    id  = m_trace->GetPhys_Offset(m_traceMap->GetBndCondIDToGlobalTraceID(cnt));
+                    Bwd[id] = m_bndCondExpansions[n]->GetPhys()[0]; 
                     cnt++;
                 }
                 else if (m_bndConditions[n]->GetBoundaryConditionType() == 
@@ -923,7 +923,7 @@ namespace Nektar
                     ASSERTL0((m_bndCondExpansions[n]->GetPhys())[0]==0.0,
                              "Method not set up for non-zero Neumann "
                              "boundary condition");
-                    id  = m_trace->GetPhys_Offset(m_traceMap->GetBndCondTraceToGlobalTraceMap(cnt));
+                    id  = m_trace->GetPhys_Offset(m_traceMap->GetBndCondIDToGlobalTraceID(cnt));
                     Bwd[id] = Fwd[id];
                     
                     cnt++;
@@ -1248,7 +1248,8 @@ namespace Nektar
                 if (m_bndConditions[i]->GetBoundaryConditionType() ==
                     SpatialDomains::eDirichlet)
                 {
-                    id = m_traceMap->GetBndCondCoeffsToGlobalCoeffsMap(i);
+                    id = m_traceMap->GetBndCondIDToGlobalTraceID(i);
+
                     BndSol[id] = m_bndCondExpansions[i]->GetCoeff(0);
                 }
                 else if (m_bndConditions[i]->GetBoundaryConditionType() ==
@@ -1256,7 +1257,7 @@ namespace Nektar
                          m_bndConditions[i]->GetBoundaryConditionType() ==
                              SpatialDomains::eRobin)
                 {
-                    id = m_traceMap->GetBndCondCoeffsToGlobalCoeffsMap(i);
+                    id = m_traceMap->GetBndCondIDToGlobalTraceID(i);
                     BndRhs[id] += m_bndCondExpansions[i]->GetCoeff(0);
                 }
             }

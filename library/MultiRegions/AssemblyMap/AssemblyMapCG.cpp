@@ -110,13 +110,9 @@ namespace Nektar
 
             for(i = 0; i < bndCondExp.num_elements(); i++)
             {
-                if (bndConditions[0][i]->GetBoundaryConditionType() ==
-                       SpatialDomains::ePeriodic)
-                {
-                    continue;
-                }
-
-                // Check to see if any value on boundary has Dirichlet value.
+                // Check to see if any value on boundary has Dirichlet
+                // value.  note this is a vector to manage coupled
+                // solver but for scalar will just be a vector of size 11
                 cnt = 0;
                 for(k = 0; k < bndConditions.num_elements(); ++k)
                 {
@@ -144,10 +140,9 @@ namespace Nektar
                             vMaxVertId = bndExp->GetGeom()->GetVid(k);
                         }
                     }
-
                 }
 
-                // If all boundaries are Dirichlet take out of mask
+                // If all boundaries are Dirichlet fill iin graph
                 if(cnt == bndConditions.num_elements())
                 {
                     for(j = 0; j < bndCondExp[i]->GetNumElmts(); j++)
@@ -172,7 +167,7 @@ namespace Nektar
                             }
                         }
 
-                        // Possibly not a face.
+                        // Possibility of a face in 3D or edge in 2D
                         meshFaceId = bndExp->GetGeom()->GetGlobalID();
                         const int bndDim = bndExp->GetNumBases();
                         if (graph[bndDim].count(meshFaceId) == 0)
@@ -266,7 +261,7 @@ namespace Nektar
             //
             // To do this we look over all elements and vertices in local
             // partition and see if they match the values stored in the vertlist
-            // from othe processors and if so record the meshVertId/meshEdgeId
+            // from other processors and if so record the meshVertId/meshEdgeId
             // and the processor it comes from.
             for (i = 0; i < n; ++i)
             {
@@ -1309,7 +1304,6 @@ namespace Nektar
             int i, j, k, l;
             int p, q, numModes0, numModes1;
             int cnt = 0;
-            int intDofCnt;
             int meshVertId, meshEdgeId, meshEdgeId2, meshFaceId, meshFaceId2;
             int globalId;
             int nEdgeInteriorCoeffs;
@@ -1599,13 +1593,14 @@ namespace Nektar
             m_numGlobalDirBndCoeffs          = graphVertOffset[firstNonDirGraphVertId];
             m_localToGlobalMap               = Array<OneD, int>(m_numLocalCoeffs,-1);
             m_localToGlobalBndMap            = Array<OneD, int>(m_numLocalBndCoeffs,-1);
-            m_bndCondCoeffsToGlobalCoeffsMap = Array<OneD, int>(m_numLocalBndCondCoeffs,-1);
+            m_bndCondCoeffsToLocalCoeffsMap  = Array<OneD, int>(m_numLocalBndCondCoeffs,-1);
+            
             // If required, set up the sign-vector
             if(m_signChange)
             {
                 m_localToGlobalSign = Array<OneD, NekDouble>(m_numLocalCoeffs,1.0);
                 m_localToGlobalBndSign = Array<OneD, NekDouble>(m_numLocalBndCoeffs,1.0);
-                m_bndCondCoeffsToGlobalCoeffsSign = Array<OneD,NekDouble>(m_numLocalBndCondCoeffs,1.0);
+                m_bndCondCoeffsToLocalCoeffsSign = Array<OneD,NekDouble>(m_numLocalBndCondCoeffs,1.0);
             }
 
             m_staticCondLevel = 0;
@@ -1786,134 +1781,200 @@ namespace Nektar
             }
 
             // Set up the mapping for the boundary conditions
+            // Set up boundary mapping
+            map<int, pair<int,int> > traceToElmtTraceMap;
+            int id;
+            
+            for(cnt = i = 0; i < locExpVector.size(); ++i)
+            {
+                exp = locExpVector[i];
+
+                for(j = 0; j < exp->GetNtrace(); ++j)
+                {
+                    id = exp->GetGeom()->GetTid(j);
+                    
+                    traceToElmtTraceMap[id] = pair<int,int>(i,j);
+                }
+            }
+
+            Array<OneD, unsigned int> maparray;
+            Array<OneD, int>          signarray;
+            map<int,pair<int,NekDouble>> GloDirBndCoeffToLocalCoeff; 
+            set<int> CoeffOnDirTrace;
+            
             cnt = 0;
             int offset = 0;
             for(i = 0; i < bndCondExp.num_elements(); i++)
             {
-                if (bndConditions[i]->GetBoundaryConditionType() ==
-                    SpatialDomains::ePeriodic)
-                {
-                    continue;
-                }
-
                 set<int> foundExtraVerts, foundExtraEdges;
                 for(j = 0; j < bndCondExp[i]->GetNumElmts(); j++)
                 {
                     bndExp  = bndCondExp[i]->GetExp(j);
                     cnt = offset + bndCondExp[i]->GetCoeff_Offset(j);
+
+                    int id = bndExp->GetGeom()->GetGlobalID();
+
+                    ASSERTL1(traceToElmtTraceMap.count(id) > 0,
+                             "Failed to find trace id");
+
+                    int eid = traceToElmtTraceMap[id].first;
+                    int tid = traceToElmtTraceMap[id].second;
+
+                    exp = locExpVector[eid]; 
+                    int dim = exp->GetShapeDimension();
+                    
+                    if(dim == 1)
+                    {
+                        m_bndCondCoeffsToLocalCoeffsMap [cnt] =
+                            locExp.GetCoeff_Offset(eid) + exp->GetVertexMap(tid);
+                    }
+                    else
+                    {
+                        if(dim == 2)
+                        {
+                            exp->GetEdgeToElementMap(tid,exp->GetEorient(tid),
+                                                     maparray,signarray,
+                                                     bndExp->GetBasisNumModes(0));
+                        }
+                        else if (dim == 3)
+                        {
+                            exp->GetFaceToElementMap(tid,exp->GetForient(tid),
+                                                     maparray,signarray,
+                                                     bndExp->GetBasisNumModes(0),
+                                                     bndExp->GetBasisNumModes(1));
+                        }
+                        
+                        for(k = 0; k < bndExp->GetNcoeffs(); k++)
+                        {
+                            m_bndCondCoeffsToLocalCoeffsMap [cnt+k] =
+                                locExp.GetCoeff_Offset(eid) + maparray[k];
+                            if(m_signChange)
+                            {
+                                m_bndCondCoeffsToLocalCoeffsSign[cnt+k] = signarray[k];
+                            }
+                        }
+
+                    }
+
+                    // we now need some information to work out how to
+                    // handle vertices and edges that are only just
+                    // touching a dirichlet boundary (and not the
+                    // whole edge/face)
+                        
+                    for(k = 0; k < bndExp->GetNcoeffs(); k++)
+                    {
+                        int locid = m_bndCondCoeffsToLocalCoeffsMap [cnt+k];
+                        int gloid = m_localToGlobalMap[ locid];
+                        NekDouble sign = 1.0;
+
+                        if(m_signChange)
+                        {
+                            sign = m_bndCondCoeffsToLocalCoeffsSign[cnt+k];
+                        }
+
+                        if (bndConditions[i]->GetBoundaryConditionType() ==
+                            SpatialDomains::eDirichlet)
+                        {
+                            CoeffOnDirTrace.insert(locid);
+                        
+                            // store the local id and sign from global id
+                            // back to lcoal space;
+                            GloDirBndCoeffToLocalCoeff[gloid] =
+                                pair<int,NekDouble> (locid,sign);
+                        }
+                    }
+
+                    // Set up extra dirichlet degrees of freedom where
+                    // only one vertex in an element (not a edge of
+                    // face) in a partition is touching a boundary
                     for(k = 0; k < bndExp->GetNverts(); k++)
                     {
-                        meshVertId = bndExp->GetGeom()->GetVid(k);
-                        m_bndCondCoeffsToGlobalCoeffsMap[cnt+bndExp->GetVertexMap(k)] = graphVertOffset[graph[0][meshVertId]];
-
                         if (bndConditions[i]->GetBoundaryConditionType() !=
                             SpatialDomains::eDirichlet)
                         {
                             continue;
                         }
 
+                        meshVertId = bndExp->GetGeom()->GetVid(k);
+
                         auto iter = extraDirVerts.find(meshVertId);
                         if (iter != extraDirVerts.end() &&
                             foundExtraVerts.count(meshVertId) == 0)
                         {
-                            int loc = bndCondExp[i]->GetCoeff_Offset(j) +
+                            int v; 
+                            for(v = 0; v < exp->GetNverts(); ++v)
+                            {
+                                if(exp->GetGeom()->GetVid(v) == meshVertId)
+                                {
+                                    break;
+                                }
+                            }
+                            ASSERTL1(v == exp->GetNverts(),
+                                     "Failed to find vert id in extraDirDof setup");
+
+                            int bloc = bndCondExp[i]->GetCoeff_Offset(j) +
                                 bndExp->GetVertexMap(k);
-                            int gid = graphVertOffset[
-                                graph[0][meshVertId]];
-                            ExtraDirDof t(loc, gid, 1.0);
+                            int eloc = locExp.GetCoeff_Offset(eid) +
+                                exp->GetVertexMap(v);
+                            ExtraDirDof t(bloc, eloc, 1.0);
                             m_extraDirDofs[i].push_back(t);
                             foundExtraVerts.insert(meshVertId);
                         }
                     }
 
+                    // Set up extra dirichlet degrees of freedom where
+                    // only a single edge of an element in a partition is touching a
+                    // boundary
                     for(k = 0; k < bndExp->GetNedges(); k++)
                     {
-                        nEdgeInteriorCoeffs = bndExp->GetEdgeNcoeffs(k)-2;
-                        edgeOrient          = bndExp->GetGeom()->GetEorient(k);
-                        meshEdgeId          = bndExp->GetGeom()->GetEid(k);
-
-                        auto pIt = periodicEdges.find(meshEdgeId);
-
-                        // See if this edge is periodic. If it is, then we map
-                        // all edges to the one with lowest ID, and align all
-                        // coefficients to this edge orientation.
-                        if (pIt != periodicEdges.end())
-                        {
-                            pair<int, StdRegions::Orientation> idOrient =
-                                DeterminePeriodicEdgeOrientId(
-                                    meshEdgeId, edgeOrient, pIt->second);
-                            edgeOrient = idOrient.second;
-                        }
-
-                        bndExp->GetEdgeInteriorMap(
-                            k,edgeOrient,edgeInteriorMap,edgeInteriorSign);
-
-                        for(l = 0; l < dofs[1][meshEdgeId]; ++l)
-                        {
-                            m_bndCondCoeffsToGlobalCoeffsMap[cnt+edgeInteriorMap[l]] =
-                                graphVertOffset[graph[1][meshEdgeId]]+l;
-                        }
-                        for(l = dofs[1][meshEdgeId]; l < nEdgeInteriorCoeffs; ++l)
-                        {
-                            m_bndCondCoeffsToGlobalCoeffsMap[cnt+edgeInteriorMap[l]] =
-                                graphVertOffset[graph[1][meshEdgeId]];
-                        }
-
-                        // Fill the sign vector if required
-                        if(m_signChange)
-                        {
-                            for(l = 0; l < dofs[1][meshEdgeId]; ++l)
-                            {
-                                m_bndCondCoeffsToGlobalCoeffsSign[cnt+edgeInteriorMap[l]] = (NekDouble) edgeInteriorSign[l];
-                            }
-                            for(l = dofs[1][meshEdgeId]; l < nEdgeInteriorCoeffs; ++l)
-                            {
-                                m_bndCondCoeffsToGlobalCoeffsSign[cnt+edgeInteriorMap[l]] = 0.0;
-                            }
-                        }
-
                         if (bndConditions[i]->GetBoundaryConditionType() !=
                                 SpatialDomains::eDirichlet)
                         {
                             continue;
                         }
 
+                        meshEdgeId          = bndExp->GetGeom()->GetEid(k);
+                        nEdgeInteriorCoeffs = bndExp->GetEdgeNcoeffs(k)-2;
+
                         auto iter = extraDirEdges.find(meshEdgeId);
                         if (iter != extraDirEdges.end()            &&
                             foundExtraEdges.count(meshEdgeId) == 0 &&
                             nEdgeInteriorCoeffs > 0)
                         {
+
+                            int e; 
+                            for(e = 0; e < exp->GetNedges(); ++e)
+                            {
+                                if(exp->GetGeom()->GetEid(e) == meshEdgeId)
+                                    break;
+                            }
+                            ASSERTL1(e == exp->GetNedges(),
+                                     "Failed to find edge id in extraDirDof setup");
+
+                            
+                            exp->GetEdgeInteriorMap(e,exp->GetEorient(e),
+                                                    edgeInteriorMap,edgeInteriorSign);
+
                             for(l = 0; l < dofs[1][meshEdgeId]; ++l)
                             {
-                                int loc = bndCondExp[i]->GetCoeff_Offset(j) +
+                                int bloc = bndCondExp[i]->GetCoeff_Offset(j) +
                                     edgeInteriorMap[l];
-                                int gid = graphVertOffset[
-                                    graph[1][meshEdgeId]]+l;
-                                ExtraDirDof t(loc, gid, edgeInteriorSign[l]);
+                                
+                                int eloc = locExp.GetCoeff_Offset(eid) +
+                                    edgeInteriorMap[l];
+                                ExtraDirDof t(bloc, eloc, edgeInteriorSign[l]);
                                 m_extraDirDofs[i].push_back(t);
                             }
                             for(l = dofs[1][meshEdgeId]; l < nEdgeInteriorCoeffs; ++l)
                             {
-                                int loc = bndCondExp[i]->GetCoeff_Offset(j) +
+                                int bloc = bndCondExp[i]->GetCoeff_Offset(j) +
                                     edgeInteriorMap[l];
-                                int gid = graphVertOffset[
-                                    graph[1][meshEdgeId]];
-                                ExtraDirDof t(loc, gid, 0.0);
+                                int eloc = locExp.GetCoeff_Offset(eid) +
+                                    edgeInteriorMap[l];
+                                ExtraDirDof t(bloc, eloc, 0.0);
                                 m_extraDirDofs[i].push_back(t);
                             }
                             foundExtraEdges.insert(meshEdgeId);
-                        }
-                    }
-
-                    meshFaceId = bndExp->GetGeom()->GetGlobalID();
-                    intDofCnt = 0;
-                    for(k = 0; k < bndExp->GetNcoeffs(); k++)
-                    {
-                        if(m_bndCondCoeffsToGlobalCoeffsMap[cnt+k] == -1)
-                        {
-                            m_bndCondCoeffsToGlobalCoeffsMap[cnt+k] =
-                                graphVertOffset[graph[bndExp->GetNumBases()][meshFaceId]]+intDofCnt;
-                            intDofCnt++;
                         }
                     }
                 }
@@ -1924,6 +1985,55 @@ namespace Nektar
             m_numGlobalBndCoeffs = globalId;
 
 
+            // Set up a mapping list of Dirichlet Local Dofs that
+            // arise due to one vertex or edge just touching a
+            // Dirichlet boundary and need from another local coeff
+            // that has been filled by the boundary coeffs.
+
+            Array<OneD, unsigned int> bndmap; 
+            cnt = 0; 
+            for(i = 0; i < locExpVector.size(); ++i)
+            {
+                int gloid;
+                
+                exp = locExpVector[i];
+
+                exp->GetBoundaryMap(bndmap);
+                
+                for(j = 0; j < bndmap.num_elements(); ++j)
+                {
+                    k = cnt + bndmap[j];
+                    
+                    if(CoeffOnDirTrace.count(k) == 0) 
+                    {
+                        gloid = m_localToGlobalMap[k];
+                
+                        if(gloid < m_numGlobalDirBndCoeffs) // point on Dir BC
+                        {
+                            if(GloDirBndCoeffToLocalCoeff.count(gloid))
+                            {
+                                int locid = GloDirBndCoeffToLocalCoeff[gloid].first;
+                                NekDouble sign = GloDirBndCoeffToLocalCoeff[gloid].second;
+                                
+                                if(m_signChange)
+                                {
+                                    sign *= m_localToGlobalSign[k];
+                                }
+
+                                ExtraDirDof  DirDofs(k,locid,sign);
+                                // could make same `structure as extraDirDof
+                                m_copyLocalDirDofs.insert(DirDofs);
+
+                            } // else could be on another parallel partition.
+                            
+                        }
+                    }
+                }
+
+                cnt += exp->GetNcoeffs();
+            }
+
+            
             /*
              * The boundary condition mapping is generated from the same vertex
              * renumbering.

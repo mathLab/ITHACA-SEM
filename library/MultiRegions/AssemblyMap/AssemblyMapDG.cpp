@@ -443,7 +443,7 @@ namespace Nektar
                 }
             }
 
-            // set up m_bndCondCoeffsToGlobalCoeffsMap to align with map
+          // set up m_bndCondCoeffsToGlobalCoeffsMap to align with map
             cnt = 0;
             for(i = 0; i < nbnd; ++i)
             {
@@ -455,7 +455,7 @@ namespace Nektar
                 cnt += bndCondExp[i]->GetNcoeffs();
             }
 
-            m_bndCondCoeffsToGlobalCoeffsMap = Array<OneD, int>(cnt);
+            m_bndCondCoeffsToGlobalTraceMap = Array<OneD, int>(cnt);
 
             // Number of boundary expansions
             int nbndexp = 0, bndOffset, bndTotal = 0;
@@ -479,7 +479,7 @@ namespace Nektar
                     // directions) defintiion for gid's
                     for(k = 0; k < bndExp->GetNcoeffs(); ++k)
                     {
-                        m_bndCondCoeffsToGlobalCoeffsMap[bndOffset+k] = gid + k;
+                        m_bndCondCoeffsToGlobalTraceMap[bndOffset+k] = gid + k;
                     }
                 }
 
@@ -493,7 +493,7 @@ namespace Nektar
             CalculateBndSystemBandWidth();
 
             cnt = 0;
-            m_bndCondTraceToGlobalTraceMap = Array<OneD, int>(nbndexp);
+            m_bndCondIDToGlobalTraceID = Array<OneD, int>(nbndexp);
             for(i = 0; i < bndCondExp.num_elements(); ++i)
             {
                 if (bndCond[i]->GetBoundaryConditionType() ==
@@ -507,7 +507,7 @@ namespace Nektar
                     bndExp    = bndCondExp[i]->GetExp(j);
                     traceGeom = bndExp->GetGeom();
                     id        = traceGeom->GetGlobalID();
-                    m_bndCondTraceToGlobalTraceMap[cnt++] =
+                    m_bndCondIDToGlobalTraceID[cnt++] =
                         meshTraceId.find(id)->second;
                 }
             }

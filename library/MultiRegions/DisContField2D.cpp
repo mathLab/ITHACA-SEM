@@ -469,7 +469,7 @@ namespace Nektar
                     for (e = 0; e < m_bndCondExpansions[n]->GetExpSize(); ++e)
                     {
                         m_boundaryEdges.insert(
-                            m_traceMap->GetBndCondTraceToGlobalTraceMap(cnt+e));
+                            m_traceMap->GetBndCondIDToGlobalTraceID(cnt+e));
                     }
                     cnt += m_bndCondExpansions[n]->GetExpSize();
                 }
@@ -1395,14 +1395,13 @@ namespace Nektar
                                                    field + phys_offset,
                                                    e_tmp = Bwd + offset);
                         }
-
                     }
                 }
             }
             
             // Fill boundary conditions into missing elements
             int id1, id2 = 0;
-            
+
             for (cnt = n = 0; n < m_bndCondExpansions.num_elements(); ++n)
             {
                 if (m_bndConditions[n]->GetBoundaryConditionType() == 
@@ -1413,7 +1412,7 @@ namespace Nektar
                         npts = m_bndCondExpansions[n]->GetExp(e)->GetNumPoints(0);
                         id1 = m_bndCondExpansions[n]->GetPhys_Offset(e);
                         id2 = m_trace->GetPhys_Offset(m_traceMap->
-                                        GetBndCondTraceToGlobalTraceMap(cnt+e));
+                                        GetBndCondIDToGlobalTraceID(cnt+e));
                         Vmath::Vcopy(npts,
                             &(m_bndCondExpansions[n]->GetPhys())[id1], 1,
                             &Bwd[id2],                                 1);
@@ -1434,7 +1433,7 @@ namespace Nektar
                                  "Method not set up for non-zero Neumann "
                                  "boundary condition");
                         id2  = m_trace->GetPhys_Offset(
-                            m_traceMap->GetBndCondTraceToGlobalTraceMap(cnt+e));
+                            m_traceMap->GetBndCondIDToGlobalTraceID(cnt+e));
                         Vmath::Vcopy(npts, &Fwd[id2], 1, &Bwd[id2], 1);
                     }
                     
@@ -1881,7 +1880,7 @@ namespace Nektar
             //----------------------------------
             int GloBndDofs   = m_traceMap->GetNumGlobalBndCoeffs();
             int NumDirichlet = m_traceMap->GetNumLocalDirBndCoeffs();
-            int e_ncoeffs,id;
+            int e_ncoeffs;
 
             // Retrieve block matrix of U^e
             GlobalMatrixKey HDGLamToUKey(StdRegions::eHybridDGLamToU,
@@ -1932,18 +1931,24 @@ namespace Nektar
             // Assemble local \lambda_e into global \Lambda
             m_traceMap->AssembleBnd(loc_lambda,BndRhs);
 
+
+            Array<OneD, const int> bndCondCoeffToGlobalTraceMap = 
+                m_traceMap->GetBndCondCoeffsToGlobalTraceMap();
+
             // Copy Dirichlet boundary conditions and weak forcing into trace
             // space
             cnt = 0;
             for(i = 0; i < m_bndCondExpansions.num_elements(); ++i)
             {
+                Array<OneD, const NekDouble> bndcoeffs = m_bndCondExpansions[i]->GetCoeffs();
+
                 if(m_bndConditions[i]->GetBoundaryConditionType() ==
                        SpatialDomains::eDirichlet)
                 {
                     for(j = 0; j < (m_bndCondExpansions[i])->GetNcoeffs(); ++j)
                     {
-                        id = m_traceMap->GetBndCondCoeffsToGlobalCoeffsMap(cnt++);
-                        BndSol[id] = m_bndCondExpansions[i]->GetCoeffs()[j];
+                        BndSol[bndCondCoeffToGlobalTraceMap[cnt + j]] =
+                            bndcoeffs[j]; 
                     }
                 }
                 else if (m_bndConditions[i]->GetBoundaryConditionType() ==
@@ -1954,10 +1959,12 @@ namespace Nektar
                     //Add weak boundary condition to trace forcing
                     for(j = 0; j < (m_bndCondExpansions[i])->GetNcoeffs(); ++j)
                     {
-                        id = m_traceMap->GetBndCondCoeffsToGlobalCoeffsMap(cnt++);
-                        BndRhs[id] += m_bndCondExpansions[i]->GetCoeffs()[j];
+                        BndRhs[bndCondCoeffToGlobalTraceMap[cnt + j]] +=
+                            bndcoeffs[j]; 
                     }
                 }
+
+                cnt += (m_bndCondExpansions[i])->GetNcoeffs();
             }
 
             //----------------------------------

@@ -2466,7 +2466,7 @@ namespace Nektar
 
         const Array<OneD, const int> &ExpList::v_GetTraceBndMap()
         {
-            return GetTraceMap()->GetBndCondTraceToGlobalTraceMap();
+            return GetTraceMap()->GetBndCondIDToGlobalTraceID();
         }
 
         void ExpList::v_GetNormals(

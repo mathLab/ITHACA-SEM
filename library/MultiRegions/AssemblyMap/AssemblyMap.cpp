@@ -880,25 +880,22 @@ namespace Nektar
         }
 
 
+        const Array<OneD,const int>&
+                    AssemblyMap::GetBndCondCoeffsToLocalCoeffsMap()
+        {
+            return  m_bndCondCoeffsToLocalCoeffsMap;
+        }
+        
+        const Array<OneD, NekDouble > &AssemblyMap::GetBndCondCoeffsToLocalCoeffsSign()
+        {
+            return m_bndCondCoeffsToLocalCoeffsSign;
+        }
+
+#if 0 
         int AssemblyMap::GetBndCondCoeffsToGlobalCoeffsMap(
                     const int i)
         {
             return m_bndCondCoeffsToGlobalCoeffsMap[i];
-        }
-
-
-        int AssemblyMap::GetBndCondTraceToGlobalTraceMap(
-                    const int i)
-        {
-            ASSERTL1(i < m_bndCondTraceToGlobalTraceMap.num_elements(),
-                     "Index out of range.");
-            return m_bndCondTraceToGlobalTraceMap[i];
-        }
-
-        const Array<OneD, const int> &AssemblyMap
-            ::GetBndCondTraceToGlobalTraceMap()
-        {
-            return m_bndCondTraceToGlobalTraceMap;
         }
 
         NekDouble AssemblyMap::GetBndCondCoeffsToGlobalCoeffsSign(const int i)
@@ -913,10 +910,25 @@ namespace Nektar
             }
         }
 
+#endif
         const Array<OneD,const int>&
-                    AssemblyMap::GetBndCondCoeffsToGlobalCoeffsMap()
+                    AssemblyMap::GetBndCondCoeffsToGlobalTraceMap()
         {
-            return m_bndCondCoeffsToGlobalCoeffsMap;
+            return m_bndCondCoeffsToGlobalTraceMap;
+        }
+
+
+        int AssemblyMap::GetBndCondIDToGlobalTraceID(
+                    const int i)
+        {
+            ASSERTL1(i < m_bndCondIDToGlobalTraceID.num_elements(),
+                     "Index out of range.");
+            return m_bndCondIDToGlobalTraceID[i];
+        }
+        
+        const Array<OneD, const int> &AssemblyMap::GetBndCondIDToGlobalTraceID()
+        {
+            return m_bndCondIDToGlobalTraceID;
         }
 
 

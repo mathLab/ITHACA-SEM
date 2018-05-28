@@ -26,7 +26,7 @@ OPTION(THIRDPARTY_BUILD_CCMIO
 
 IF (THIRDPARTY_BUILD_CCMIO)
     INCLUDE(ExternalProject)
-    MESSAGE(WARNING "We are seeking permission to distribute ccmio with Nektar++. If you are entitled to use libccmio please contact nektar-users@imperial.ac.uk and place the file ccmio-2.06.tar.bz2 in the director $NEKTAR/ThirdParty")
+#    MESSAGE(WARNING "We are seeking permission to distribute ccmio with Nektar++. If you are entitled to use libccmio please contact nektar-users@imperial.ac.uk and place the file ccmio-2.06.tar.bz2 in the director $NEKTAR/ThirdParty")
     EXTERNALPROJECT_ADD(
         ccmio-2.06
         PREFIX ${TPSRC}

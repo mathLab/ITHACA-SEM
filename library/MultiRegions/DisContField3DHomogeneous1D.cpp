@@ -617,7 +617,7 @@ namespace Nektar
             // Get trace map from first plane.
             AssemblyMapDGSharedPtr traceMap = m_planes[0]->GetTraceMap();
             const Array<OneD, const int> &traceBndMap
-                = traceMap->GetBndCondTraceToGlobalTraceMap();
+                = traceMap->GetBndCondIDToGlobalTraceID();
             int mapSize = traceBndMap.num_elements();
 
             // Set up trace boundary map

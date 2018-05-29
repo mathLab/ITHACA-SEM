@@ -48,6 +48,6 @@ void export_QuadExp()
                    const SpatialDomains::QuadGeomSharedPtr &>());
 
     NEKPY_SHPTR_FIX(QuadExp, Expansion);
-    NEKPY_SHPTR_FIX(QuadExp, StdQuadExp);
-    NEKPY_SHPTR_FIX(QuadExp, StdExpansion);
+    NEKPY_SHPTR_FIX(QuadExp, StdRegions::StdQuadExp);
+    NEKPY_SHPTR_FIX(QuadExp, StdRegions::StdExpansion);
 }

@@ -47,6 +47,6 @@ void export_SegExp()
                    const SpatialDomains::Geometry1DSharedPtr &>());
 
     NEKPY_SHPTR_FIX(SegExp, Expansion);
-    NEKPY_SHPTR_FIX(SegExp, StdSegExp);
-    NEKPY_SHPTR_FIX(SegExp, StdExpansion);
+    NEKPY_SHPTR_FIX(SegExp, StdRegions::StdSegExp);
+    NEKPY_SHPTR_FIX(SegExp, StdRegions::StdExpansion);
 }

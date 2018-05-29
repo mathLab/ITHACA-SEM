@@ -48,6 +48,6 @@ void export_TriExp()
                    const SpatialDomains::TriGeomSharedPtr &>());
 
     NEKPY_SHPTR_FIX(TriExp, Expansion);
-    NEKPY_SHPTR_FIX(TriExp, StdTriExp);
-    NEKPY_SHPTR_FIX(TriExp, StdExpansion);
+    NEKPY_SHPTR_FIX(TriExp, StdRegions::StdTriExp);
+    NEKPY_SHPTR_FIX(TriExp, StdRegions::StdExpansion);
 }

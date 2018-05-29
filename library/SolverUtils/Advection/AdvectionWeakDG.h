@@ -68,6 +68,12 @@ namespace Nektar
                 const NekDouble                                   &time,
                 const Array<OneD, Array<OneD, NekDouble> > &pFwd = NullNekDoubleArrayofArray,
                 const Array<OneD, Array<OneD, NekDouble> > &pBwd = NullNekDoubleArrayofArray);
+                
+            virtual void v_AddTraceJac2Mat(
+                const int                                          nConvectiveFields,
+                const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
+                const Array<OneD, DNekBlkMatSharedPtr>            &TraceJac,
+                DNekScalBlkMatSharedPtr &gmtx);
         };
     }
 }

@@ -45,12 +45,14 @@
 #include <SolverUtils/AdvectionSystem.h>
 #include <SolverUtils/Diffusion/Diffusion.h>
 #include <SolverUtils/Forcing/Forcing.h>
+#include <MultiRegions/GlobalMatrixKey.h>
 
 namespace Nektar
 {
     /**
      *
      */
+
     class CompressibleFlowSystem: public SolverUtils::AdvectionSystem
     {
     public:
@@ -135,6 +137,25 @@ namespace Nektar
             const Array<OneD, NekDouble> &inarray,
                   Array<OneD, NekDouble >&out);
 
+        void GetpreconditionerNSBlkDiag(const Array<OneD, const Array<OneD, NekDouble> >&inarray,
+                                            DNekScalBlkMatSharedPtr gmtx);
+
+        void AddMatNSBlkDiag_MassSource(DNekScalBlkMatSharedPtr gmtx);
+
+        void AddMatNSBlkDiag_volume(const Array<OneD, const Array<OneD, NekDouble> >&inarray,
+                                        DNekScalBlkMatSharedPtr gmtx);
+
+        void AddMatNSBlkDiag_boundary(const Array<OneD, const Array<OneD, NekDouble> >&inarray,
+                                        DNekScalBlkMatSharedPtr gmtx);
+
+        void PointFluxJacobian_pn(
+            const Array<OneD, NekDouble> &Fwd,
+            const Array<OneD, NekDouble> &normals,
+                  DNekMatSharedPtr       &FJac,
+            const NekDouble efix,   const NekDouble fsw);
+        Array<OneD, DNekBlkMatSharedPtr> &GetTraceJac(
+            const Array<OneD, const Array<OneD, NekDouble> > &inarray);
+
 #endif
 
         void DoAdvection(
@@ -153,6 +174,14 @@ namespace Nektar
         void GetFluxVector(
             const Array<OneD, Array<OneD, NekDouble> >               &physfield,
                   Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &flux);
+        
+        Array<OneD, Array<OneD, DNekMatSharedPtr> > &
+            GetFluxVectorJacDirctn(const int nDirctn,
+                         const Array<OneD, const Array<OneD, NekDouble> >&inarray);
+        void GetFluxVectorJacPoint(
+            const Array<OneD, NekDouble>                &conservVar, 
+            const Array<OneD, NekDouble>                &normals, 
+                 DNekMatSharedPtr                       &fluxJac);
         void GetFluxVectorDeAlias(
             const Array<OneD, Array<OneD, NekDouble> >         &physfield,
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &flux);

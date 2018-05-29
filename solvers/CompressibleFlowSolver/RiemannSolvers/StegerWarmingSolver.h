@@ -68,7 +68,6 @@ namespace Nektar
             NekDouble efix, NekDouble fsw);
 
         virtual void v_PointFluxJacobian(
-            const int                     nDim,
             const Array<OneD, NekDouble> &Fwd,
             const Array<OneD, NekDouble> &Bwd,
             const Array<OneD, NekDouble> &normals,
@@ -76,11 +75,10 @@ namespace Nektar
                   DNekMatSharedPtr        BJac);
 
         void PointFluxJacobian_pn(
-            const int                     nDim,
             const Array<OneD, NekDouble> &Fwd,
             const Array<OneD, NekDouble> &normals,
-                  DNekMatSharedPtr        FJac,
-                  NekDouble efix, NekDouble fsw);
+                  DNekMatSharedPtr       &FJac,
+            const NekDouble efix,   const NekDouble fsw);
 
     };
 }

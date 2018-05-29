@@ -223,6 +223,15 @@ namespace Nektar
                       Array<OneD,       NekDouble> &outarray,
                       CoeffState coeffstate = eLocal);
 
+                      
+            void ElmtAddMatNSBlkDiag_volume( const int nConvectiveFields,
+                                        const   Array<OneD, const  Array<OneD, DNekMatSharedPtr> >&ElmtJac,
+                                        const int nDirctn, DNekScalBlkMatSharedPtr &gmtx);
+                                        
+            // void IProductWRTDerivBaseElmt(const int nElmt, const int dir,
+            //                                const Array<OneD, const NekDouble> &inarray,
+            //                                Array<OneD, NekDouble> &outarray);
+
             /// This function calculates the inner product of a function
             /// \f$f(\boldsymbol{x})\f$ with respect to the derivative (in
             /// direction \param dir) of all \emph{local} expansion modes
@@ -974,6 +983,9 @@ namespace Nektar
 
             MULTI_REGIONS_EXPORT void ClearGlobalLinSysManager(void);
 
+            const DNekScalBlkMatSharedPtr& GetBlockMatrix(
+                const GlobalMatrixKey &gkey);
+
         protected:
             /// Definition of the total number of degrees of freedom and
             /// quadrature points and offsets to access data
@@ -1087,8 +1099,9 @@ namespace Nektar
             const DNekScalBlkMatSharedPtr GenBlockMatrix(
                 const GlobalMatrixKey &gkey);
 
-            const DNekScalBlkMatSharedPtr& GetBlockMatrix(
-                const GlobalMatrixKey &gkey);
+            void GetElmt_id(const GlobalMatrixKey &gkey,map<int,int> &elmt_id);
+            
+
 
             void MultiplyByBlockMatrix(
                 const GlobalMatrixKey             &gkey,

@@ -231,7 +231,6 @@ namespace Nektar
     
 
     void StegerWarmingSolver::v_PointFluxJacobian(
-            const int                     nDim,
             const Array<OneD, NekDouble> &Fwd,
             const Array<OneD, NekDouble> &Bwd,
             const Array<OneD, NekDouble> &normals,
@@ -242,18 +241,22 @@ namespace Nektar
         efix_StegerWarming = 0.0;
 
         fsw = 1.0;
-        PointFluxJacobian_pn(nDim,Fwd,normals,FJac,efix_StegerWarming,fsw);
+        PointFluxJacobian_pn(Fwd,normals,FJac,efix_StegerWarming,fsw);
+  
         fsw = -1.0;
-        PointFluxJacobian_pn(nDim,Bwd,normals,BJac,efix_StegerWarming,fsw);
+        PointFluxJacobian_pn(Bwd,normals,BJac,efix_StegerWarming,fsw);
         return;
     }
 
+    // Currently duplacate in compressibleFlowSys
+    // if fsw=+-1 calculate the steger-Warming flux vector splitting flux Jacobian
+    // if fsw=0   calculate the Jacobian of the exact flux 
+    // efix is the numerical flux entropy fix parameter
     void StegerWarmingSolver::PointFluxJacobian_pn(
-            const int                     nDim,
             const Array<OneD, NekDouble> &Fwd,
             const Array<OneD, NekDouble> &normals,
-                  DNekMatSharedPtr        FJac,
-                  NekDouble efix, NekDouble fsw)
+                  DNekMatSharedPtr       &FJac,
+            const NekDouble efix,   const NekDouble fsw)
     {
             NekDouble ro,vx,vy,vz,ps,gama,ae ;
             NekDouble a,a2,h,h0,v2,vn,eps,eps2;
@@ -262,6 +265,8 @@ namespace Nektar
             NekDouble l1,l4,l5,al1,al4,al5,x1,x2,x3,y1;
             NekDouble c1,d1,c2,d2,c3,d3,c4,d4,c5,d5;
             NekDouble sml_ssf= 1.0E-12;
+
+            NekDouble fExactorSplt = 2.0-abs(fsw); // if fsw=+-1 calculate 
 
             NekDouble   rhoL  = Fwd[0];
             NekDouble   rhouL = Fwd[1];
@@ -310,9 +315,9 @@ namespace Nektar
             al4 = sqrt(l4*l4 + eps2);
             al5 = sqrt(l5*l5 + eps2);
 
-            l1 = 0.5*(l1 + fsw*al1);
-            l4 = 0.5*(l4 + fsw*al4);
-            l5 = 0.5*(l5 + fsw*al5);
+            l1 = 0.5*(fExactorSplt*l1 + fsw*al1);
+            l4 = 0.5*(fExactorSplt*l4 + fsw*al4);
+            l5 = 0.5*(fExactorSplt*l5 + fsw*al5);
 
             x1 = 0.5*(l4 + l5);
             x2 = 0.5*(l4 - l5);

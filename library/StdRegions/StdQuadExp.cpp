@@ -1459,13 +1459,18 @@ namespace Nektar
                 }
                 case eFwdTrans:
                 {
-                    Mat = MemoryManager<DNekMat>::AllocateSharedPtr(m_ncoeffs,m_ncoeffs);
+                    Mat = MemoryManager<DNekMat>::AllocateSharedPtr(m_ncoeffs,m_ncoeffs);// bug??
                     StdMatrixKey iprodkey(eIProductWRTBase,DetShapeType(),*this);
                     DNekMat &Iprod = *GetStdMatrix(iprodkey);
                     StdMatrixKey imasskey(eInvMass,DetShapeType(),*this);
                     DNekMat &Imass = *GetStdMatrix(imasskey);
 
                     (*Mat) = Imass*Iprod;
+                    break;
+                }
+                case eBwdTrans:
+                {
+                    Mat = GetBwdTransMat();
                     break;
                 }
                 case eGaussDG:

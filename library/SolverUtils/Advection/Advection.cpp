@@ -85,6 +85,122 @@ void Advection::Advect(
 }
 
 
+void Advection::AddTraceJac2Mat(
+    const int                                          nConvectiveFields,
+    const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
+    const Array<OneD, DNekBlkMatSharedPtr>            &TraceJac,
+    DNekScalBlkMatSharedPtr &gmtx)
+{
+    v_AddTraceJac2Mat(nConvectiveFields, pFields, TraceJac, gmtx);
+}
+
+void Advection::v_AddTraceJac2Mat(
+    const int                                          nConvectiveFields,
+    const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
+    const Array<OneD, DNekBlkMatSharedPtr>            &TraceJac,
+    DNekScalBlkMatSharedPtr &gmtx)
+{
+    ASSERTL0(false,"v_AddTraceJac2Mat NOT SPECIFIED");
+    return;
+}
+
+void Advection::TraceJac(
+    const int                                          nConvectiveFields,
+    const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
+    const Array<OneD, Array<OneD, NekDouble> >        &AdvVel,
+    const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+    const Array<OneD, Array<OneD, NekDouble> >        &pFwd,
+    const Array<OneD, Array<OneD, NekDouble> >        &pBwd,
+    DNekBlkMatSharedPtr &FJac,
+    DNekBlkMatSharedPtr &BJac)
+{
+    int nPointsTot      = fields[0]->GetTotPoints();
+    int nCoeffs         = fields[0]->GetNcoeffs();
+    int nTracePointsTot = fields[0]->GetTrace()->GetTotPoints();
+    
+    // Store forwards/backwards space along trace space
+    Array<OneD, Array<OneD, NekDouble> > Fwd    (nConvectiveFields);
+    Array<OneD, Array<OneD, NekDouble> > Bwd    (nConvectiveFields);
+
+    if (pFwd == NullNekDoubleArrayofArray ||
+        pBwd == NullNekDoubleArrayofArray)
+    {
+        for(int i = 0; i < nConvectiveFields; ++i)
+        {
+            Fwd[i]     = Array<OneD, NekDouble>(nTracePointsTot, 0.0);
+            Bwd[i]     = Array<OneD, NekDouble>(nTracePointsTot, 0.0);
+            fields[i]->GetFwdBwdTracePhys(inarray[i], Fwd[i], Bwd[i]);
+        }
+    }
+    else
+    {
+        for(int i = 0; i < nConvectiveFields; ++i)
+        {
+            Fwd[i]     = pFwd[i];
+            Bwd[i]     = pBwd[i];
+        }
+    }
+
+    ASSERTL1(m_riemann,
+                "Riemann solver must be provided for AdvectionWeakDG.");
+   
+    m_riemann->CalcFluxJacobian(m_spaceDim, Fwd, Bwd, FJac,BJac);
+
+     /*      
+
+    if(FALSE)
+    {
+        Array<OneD, NekDouble> PointFwd(nConvectiveFields,0.0),PointBwd(nConvectiveFields,0.0);
+        Array<OneD, NekDouble> PntFluxFwd(nConvectiveFields,0.0);
+        Array<OneD, NekDouble> PntFluxBwd(nConvectiveFields,0.0);
+        Array<OneD, NekDouble> PointFlux(nConvectiveFields,0.0);
+        int cnt=0;
+        for(int i=0; i<nTracePointsTot;  i++)
+        {
+            for(int j=0; j<nConvectiveFields;j++)
+            {
+                PointFwd[j] = Fwd[j][i];
+                PointBwd[j] = Bwd[j][i];
+            }
+            NekVector<NekDouble> VectFluxFwd(nConvectiveFields,PntFluxFwd,eWrapper);
+            NekVector<NekDouble> VectFluxBwd(nConvectiveFields,PntFluxBwd,eWrapper);
+
+            DNekMat &MF = (*FJac->GetBlock(i,i));
+            NekVector<NekDouble> VectFwd(nConvectiveFields,PointFwd,eWrapper);
+            VectFluxFwd = MF * VectFwd;
+
+
+            DNekMat &MB = (*BJac->GetBlock(i,i));
+            NekVector<NekDouble> VectBwd(nConvectiveFields,PointBwd,eWrapper);
+            VectFluxBwd = MB * VectBwd;
+
+            NekDouble error=0.0;
+            for(int j=0;j<nConvectiveFields;j++)
+            {
+                PointFlux[j] = PntFluxFwd[j]+PntFluxBwd[j];
+                error += abs(PointFlux[j]-numflux[j][i]);
+            }
+
+            if(error>1.0E-7)
+            {
+                cnt++;
+                std::cout   <<std::scientific<<std::setw(12)<<std::setprecision(5)
+                        <<"abs(PointFlux[0]-numflux[0][i])   =   "<<abs(PointFlux[0]-numflux[0][i])<<"    "<<PointFlux[0]<<"    "<<numflux[0][i]<<std::endl
+                        <<"abs(PointFlux[1]-numflux[1][i])   =   "<<abs(PointFlux[1]-numflux[1][i])<<"    "<<PointFlux[1]<<"    "<<numflux[1][i]<<std::endl
+                        <<"abs(PointFlux[2]-numflux[2][i])   =   "<<abs(PointFlux[2]-numflux[2][i])<<"    "<<PointFlux[2]<<"    "<<numflux[2][i]<<std::endl
+                        <<"abs(PointFlux[3]-numflux[3][i])   =   "<<abs(PointFlux[3]-numflux[3][i])<<"    "<<PointFlux[3]<<"    "<<numflux[3][i]<<std::endl;
+            }
+        }
+        
+        std::cout   <<"cnt= "<<cnt<<std::endl;
+        
+        int j = 0;
+    }
+
+ */
+}
+
+
 /**
  * This function should be overridden in derived classes to initialise the
  * specific advection data members. However, this base class function should

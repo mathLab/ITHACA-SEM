@@ -144,7 +144,8 @@ namespace Nektar
         int expDim      = nDim;
         int nvariables  = Fwd.num_elements();
         int nnomals     = normals.num_elements();
-        int nvariables3D = nvariables+2;
+        // int nvariables3D = nvariables+2;
+        int nvariables3D = 5;
 
         if (nvariables > expDim+2)
         {
@@ -183,7 +184,7 @@ namespace Nektar
                 PointBwd[nj] = Bwd [j][i];
             }
             
-            v_PointFluxJacobian(nDim,PointFwd,PointBwd,PointNormal,PointFJac3D,PointBJac3D);
+            v_PointFluxJacobian(PointFwd,PointBwd,PointNormal,PointFJac3D,PointBJac3D);
 
             DNekMatSharedPtr PointFJac = MemoryManager<DNekMat>
                 ::AllocateSharedPtr(nvariables, nvariables);

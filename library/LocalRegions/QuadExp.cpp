@@ -1944,7 +1944,15 @@ namespace Nektar
                     returnval =
                         MemoryManager<DNekScalMat>::AllocateSharedPtr(one, R);
                 }
-                break;
+                    break;
+                case StdRegions::eBwdTrans:
+                {
+                    NekDouble one = 1.0;
+                    DNekMatSharedPtr mat = GetStdMatrix(mkey);
+                    returnval = MemoryManager<DNekScalMat>::
+                        AllocateSharedPtr(one,mat);
+                }
+                    break;
             default:
                 {
                     NekDouble        one = 1.0;

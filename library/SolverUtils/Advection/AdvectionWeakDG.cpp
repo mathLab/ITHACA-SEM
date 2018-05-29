@@ -223,5 +223,14 @@ namespace Nektar
                 fields[i]->BwdTrans             (tmp[i], outarray[i]);
             }
         }
+
+        void AdvectionWeakDG::v_AddTraceJac2Mat(
+            const int                                          nConvectiveFields,
+            const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
+            const Array<OneD, DNekBlkMatSharedPtr>            &TraceJac,
+            DNekScalBlkMatSharedPtr &gmtx)
+        {
+            return;
+        }
     }//end of namespace SolverUtils
 }//end of namespace Nektar

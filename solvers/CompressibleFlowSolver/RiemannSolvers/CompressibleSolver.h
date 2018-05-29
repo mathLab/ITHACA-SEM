@@ -97,7 +97,6 @@ namespace Nektar
                   DNekBlkMatSharedPtr                         BJac);
         
         virtual void v_PointFluxJacobian(
-            const int                     nDim,
             const Array<OneD, NekDouble> &Fwd,
             const Array<OneD, NekDouble> &Bwd,
             const Array<OneD, NekDouble> &normals,

@@ -85,6 +85,21 @@ public:
         const Array<OneD, Array<OneD, NekDouble> > &pFwd = NullNekDoubleArrayofArray,
         const Array<OneD, Array<OneD, NekDouble> > &pBwd = NullNekDoubleArrayofArray);
 
+    SOLVER_UTILS_EXPORT void TraceJac(
+        const int                                          nConvectiveFields,
+        const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
+        const Array<OneD, Array<OneD, NekDouble> >        &advVel,
+        const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+        const Array<OneD, Array<OneD, NekDouble> >        &pFwd,
+        const Array<OneD, Array<OneD, NekDouble> >        &pBwd,
+        DNekBlkMatSharedPtr &FJac,
+        DNekBlkMatSharedPtr &BJac);
+
+    SOLVER_UTILS_EXPORT void AddTraceJac2Mat(
+        const int                                          nConvectiveFields,
+        const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
+        const Array<OneD, DNekBlkMatSharedPtr>            &TraceJac,
+        DNekScalBlkMatSharedPtr &gmtx);
     /**
      * @brief Set the flux vector callback function.
      *
@@ -155,6 +170,12 @@ protected:
         const NekDouble                                   &time,
         const Array<OneD, Array<OneD, NekDouble> > &pFwd = NullNekDoubleArrayofArray,
         const Array<OneD, Array<OneD, NekDouble> > &pBwd = NullNekDoubleArrayofArray)=0;
+
+    SOLVER_UTILS_EXPORT virtual void v_AddTraceJac2Mat(
+        const int                                          nConvectiveFields,
+        const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
+        const Array<OneD, DNekBlkMatSharedPtr>            &TraceJac,
+        DNekScalBlkMatSharedPtr &gmtx);
 
     /// Overrides the base flow used during linearised advection
     SOLVER_UTILS_EXPORT virtual void v_SetBaseFlow(

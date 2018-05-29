@@ -62,4 +62,7 @@ void export_SegGeom()
                      py::arg("id"), py::arg("coordim"),
                      py::arg("segments")=py::list())));
         //.def(py::init<int, int, py::optional<CurveSharedPtr>)
+
+    NEKPY_SHPTR_FIX(SegGeom, Geometry1D);
+    NEKPY_SHPTR_FIX(SegGeom, Geometry);
 }

@@ -45,4 +45,6 @@ void export_PointGeom()
         "PointGeom", py::init<>())
         .def(py::init<int, int, NekDouble, NekDouble, NekDouble>());
         //.def(py::init<int, int, py::optional<CurveSharedPtr>)
+
+    NEKPY_SHPTR_FIX(PointGeom, Geometry);
 }

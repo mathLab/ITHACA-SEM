@@ -33,6 +33,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <boost/version.hpp>
+
 #ifdef BOOST_HAS_NUMPY
 
 #include <boost/python.hpp>
@@ -96,6 +98,16 @@ namespace np = boost::numpy;
         PyTypeObject * pto =                                       \
             reinterpret_cast<PyTypeObject*>(tmp.ptr());            \
         PyDict_SetItemString(pto->tp_dict, "__doc__",              \
-            PyUnicode_FromString(DOCSTRING));                       \
+                             PyUnicode_FromString(DOCSTRING));     \
     }
 #endif
+
+// Boost 1.62 and earlier don't have native support for std::shared_ptr.
+#if BOOST_VERSION < 106300
+#define NEKPY_SHPTR_FIX(SOURCE,TARGET)                             \
+    py::implicitly_convertible<std::shared_ptr<SOURCE>,            \
+                               std::shared_ptr<TARGET>>();
+#else
+#define NEKPY_SHPTR_FIX(SOURCE,TARGET)
+#endif
+

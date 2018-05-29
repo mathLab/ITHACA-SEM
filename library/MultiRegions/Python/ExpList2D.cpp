@@ -46,4 +46,6 @@ void export_ExpList2D()
                    "ExpList2D", py::init<
                    const LibUtilities::SessionReaderSharedPtr &,
                    const SpatialDomains::MeshGraphSharedPtr &>());
+
+    NEKPY_SHPTR_FIX(ExpList2D, ExpList);
 }

@@ -45,4 +45,6 @@ void export_StdQuadExp()
                std::shared_ptr<StdQuadExp> >(
                    "StdQuadExp", py::init<const LibUtilities::BasisKey&,
                    const LibUtilities::BasisKey&>());
+
+    NEKPY_SHPTR_FIX(StdQuadExp, StdExpansion);
 }

@@ -234,8 +234,8 @@ namespace Nektar
             const Array<OneD, NekDouble> &Fwd,
             const Array<OneD, NekDouble> &Bwd,
             const Array<OneD, NekDouble> &normals,
-                  DNekMatSharedPtr        FJac,
-                  DNekMatSharedPtr        BJac)
+                  DNekMatSharedPtr       &FJac,
+                  DNekMatSharedPtr       &BJac)
     {
         NekDouble fsw,efix_StegerWarming;
         efix_StegerWarming = 0.0;

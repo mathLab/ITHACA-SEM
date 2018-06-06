@@ -162,8 +162,8 @@ namespace Nektar
             const int                                         nDim,
             const Array<OneD, const Array<OneD, NekDouble> > &Fwd,
             const Array<OneD, const Array<OneD, NekDouble> > &Bwd,
-                  DNekBlkMatSharedPtr                         FJac,
-                  DNekBlkMatSharedPtr                         BJac)
+                  DNekBlkMatSharedPtr                        &FJac,
+                  DNekBlkMatSharedPtr                        &BJac)
         {
             int nPts    = Fwd[0].num_elements();
 
@@ -197,8 +197,8 @@ namespace Nektar
             const Array<OneD, const Array<OneD, NekDouble> > &Fwd,
             const Array<OneD, const Array<OneD, NekDouble> > &Bwd,
             const Array<OneD, const Array<OneD, NekDouble> > &normals,
-                  DNekBlkMatSharedPtr                         FJac,
-                  DNekBlkMatSharedPtr                         BJac)
+                  DNekBlkMatSharedPtr                        &FJac,
+                  DNekBlkMatSharedPtr                        &BJac)
         {
             ASSERTL0(false, "v_CalcFluxJacobian not specified.");
         }

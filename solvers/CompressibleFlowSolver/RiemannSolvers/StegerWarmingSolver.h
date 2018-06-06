@@ -71,8 +71,8 @@ namespace Nektar
             const Array<OneD, NekDouble> &Fwd,
             const Array<OneD, NekDouble> &Bwd,
             const Array<OneD, NekDouble> &normals,
-                  DNekMatSharedPtr        FJac,
-                  DNekMatSharedPtr        BJac);
+                  DNekMatSharedPtr       &FJac,
+                  DNekMatSharedPtr       &BJac);
 
         void PointFluxJacobian_pn(
             const Array<OneD, NekDouble> &Fwd,

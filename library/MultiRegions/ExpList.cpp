@@ -419,121 +419,6 @@ namespace Nektar
             }
         }
 
-        void ExpList::ElmtAddMatNSBlkDiag_volume( const int nConvectiveFields,
-                                        const   Array<OneD, const  Array<OneD, DNekMatSharedPtr> >&ElmtJac,
-                                        const int nDirctn, DNekScalBlkMatSharedPtr &gmtx)
-        {
-
-            // DNekScalBlkMatSharedPtr helmStatCond;
-            // DNekScalMatSharedPtr A =helmStatCond->GetBlock(0,0);
-            // DNekScalMatSharedPtr B =   gmtx->GetBlock(0,0);
-
-            int ntotElmt            = (*m_exp).size();
-            int nElmtPnt            = (*m_exp)[0]->GetTotPoints();
-            int nElmtCoef           = (*m_exp)[0]->GetNcoeffs();
-            int nCoefVar            =   nElmtCoef*nConvectiveFields;
-
-            StdRegions::ConstFactorMap  factors;
-            StdRegions::VarCoeffMap     VarCoeff;
-
-            NekDouble tmp;
-
-            DNekMatSharedPtr    ElmtMat = MemoryManager<DNekMat>
-                ::AllocateSharedPtr(nElmtCoef, nElmtCoef);
-
-            DNekScalMatSharedPtr    tmpElmtSclMat;
-            DNekScalMatSharedPtr    loc_ScalmatNvar;
-            DNekMatSharedPtr        loc_matNvar;
-            // DNekMatSharedPtr        tmpElmtMat ;
-
-            Array<OneD, NekDouble>  tmpPhys(nElmtPnt,0.0);
-            Array<OneD, NekDouble>  tmpCoef(nElmtCoef,0.0);
-
-            for(int  nelmt = 0; nelmt < ntotElmt; nelmt++)
-            {
-                nElmtCoef           = (*m_exp)[nelmt]->GetNcoeffs();
-                nElmtPnt            = (*m_exp)[nelmt]->GetTotPoints();
-
-                tmpElmtSclMat       =   gmtx->GetBlock(nelmt,nelmt);
-                // tmpElmtMat          =   tmpElmtSclMat->GetOwnedMatrix();
-
-                int nrowsVars   = nElmtCoef*nConvectiveFields;
-                int ncolsVars   = nElmtCoef*nConvectiveFields;
-                loc_matNvar = MemoryManager<DNekMat>::AllocateSharedPtr(nrowsVars,ncolsVars,0.0);
-
-                if (tmpPhys.num_elements()!=nElmtPnt||tmpCoef.num_elements()!=nElmtCoef) 
-                {
-                    ElmtMat = MemoryManager<DNekMat>
-                            ::AllocateSharedPtr(nElmtCoef, nElmtCoef);
-                    
-                    tmpPhys     =   Array<OneD, NekDouble>(nElmtPnt,0.0);
-                    tmpCoef     =   Array<OneD, NekDouble>(nElmtCoef,0.0);
-
-                    nCoefVar    =   nElmtCoef*nConvectiveFields;
-                }
-
-                LocalRegions::MatrixKey matkey(StdRegions::eBwdTrans,
-                                            (*m_exp)[nelmt]->DetShapeType(),
-                                            *((*m_exp)[nelmt]), factors, VarCoeff);
-
-                DNekScalMatSharedPtr BwdTransMat =  (*m_exp)[nelmt]->GetLocMatrix(matkey);
-
-                for(int m = 0; m < nConvectiveFields; m++)
-                {
-                    for(int n = 0; n < nConvectiveFields; n++)
-                    {
-
-                        for(int ncl = 0; ncl < nElmtCoef; ncl++)
-                        {
-                            for(int npnt = 0; npnt < nElmtPnt; npnt++)
-                            {
-                                tmpPhys[npnt]   =   (*(ElmtJac[nelmt][npnt]))(m,n)*(*BwdTransMat)(npnt,ncl);
-                            }
-
-                            (*m_exp)[nelmt]->IProductWRTDerivBase(nDirctn,tmpPhys,tmpCoef);
-
-                            for(int nrw = 0; nrw < nElmtCoef; nrw++)
-                            {
-                                (*ElmtMat)(nrw,ncl)   =   tmpCoef[nrw];
-                            }
-                        }
-
-                        for(int ncl = 0; ncl < nElmtCoef; ncl++)
-                        {
-                            int nclVar = ncl*nConvectiveFields+m;
-
-                            for(int nrw = 0; nrw < nElmtCoef; nrw++)
-                            {
-                                int nrwVar = nrw*nConvectiveFields+n;
-                                tmp   =   (*tmpElmtSclMat)(nrwVar,nclVar) + (*ElmtMat)(nrw,ncl);
-                                loc_matNvar->SetValue(nrwVar,nclVar,tmp);
-                            }
-                        }
-
-                    }
-                    
-                }
-
-                loc_ScalmatNvar = MemoryManager<DNekScalMat>::
-                            AllocateSharedPtr(1.0,loc_matNvar);
-                gmtx->SetBlock(nelmt,nelmt,loc_ScalmatNvar);
-                
-            }
-      
-        }
-        
-        
-        
-        // void ExpList::IProductWRTDerivBaseElmt(const int nElmt, const int dir,
-        //                                    const Array<OneD, const NekDouble> &inarray,
-        //                                    Array<OneD, NekDouble> &outarray)
-        // {
-
-        //     (*m_exp)[nElmt]->IProductWRTDerivBase(dir,inarray,
-        //                                           outarray);
-        // }
-
-
         /**
          * The operation is evaluated locally for every element by the function
          * StdRegions#StdExpansion#IProductWRTDerivBase.
@@ -1045,7 +930,7 @@ namespace Nektar
 
         void ExpList::GetElmt_id(const GlobalMatrixKey &gkey,map<int,int> &elmt_id)
         {
-            int i,cnt1;
+            int i;
             int n_exp = 0;
             LibUtilities::ShapeType ShapeType = gkey.GetShapeType();
 
@@ -2628,6 +2513,14 @@ namespace Nektar
         }
 
         void ExpList::v_AddTraceIntegral(
+                                const Array<OneD, const NekDouble> &Fn,
+                                      Array<OneD, NekDouble> &outarray)
+        {
+            ASSERTL0(false,
+                     "This method is not defined or valid for this class type");
+        }
+
+        void ExpList::v_CalcTraceJacMatIntegral(
                                 const Array<OneD, const NekDouble> &Fn,
                                       Array<OneD, NekDouble> &outarray)
         {

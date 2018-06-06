@@ -222,15 +222,7 @@ namespace Nektar
                 const Array<OneD, const NekDouble> &inarray,
                       Array<OneD,       NekDouble> &outarray,
                       CoeffState coeffstate = eLocal);
-
-                      
-            void ElmtAddMatNSBlkDiag_volume( const int nConvectiveFields,
-                                        const   Array<OneD, const  Array<OneD, DNekMatSharedPtr> >&ElmtJac,
-                                        const int nDirctn, DNekScalBlkMatSharedPtr &gmtx);
                                         
-            // void IProductWRTDerivBaseElmt(const int nElmt, const int dir,
-            //                                const Array<OneD, const NekDouble> &inarray,
-            //                                Array<OneD, NekDouble> &outarray);
 
             /// This function calculates the inner product of a function
             /// \f$f(\boldsymbol{x})\f$ with respect to the derivative (in
@@ -767,6 +759,10 @@ namespace Nektar
             inline void AddTraceIntegral(
                 const Array<OneD, const NekDouble> &Fn,
                       Array<OneD, NekDouble> &outarray);
+            
+            inline void CalcTraceJacMatIntegral(
+                const Array<OneD, const NekDouble> &Fn,
+                      Array<OneD, NekDouble> &outarray);
 
             inline void AddFwdBwdTraceIntegral(
                 const Array<OneD, const NekDouble> &Fwd,
@@ -1180,6 +1176,12 @@ namespace Nektar
             virtual void v_AddTraceIntegral(
                 const Array<OneD, const NekDouble> &Fn,
                       Array<OneD, NekDouble> &outarray);
+
+            virtual void v_CalcTraceJacMatIntegral(
+                const Array<OneD, const NekDouble> &Fn,
+                      Array<OneD, NekDouble> &outarray);
+
+                      
             
             virtual void v_AddFwdBwdTraceIntegral(
                 const Array<OneD, const NekDouble> &Fwd,
@@ -2213,6 +2215,14 @@ namespace Nektar
             Array<OneD, NekDouble> &outarray)
         {
             v_AddTraceIntegral(Fn,outarray);
+        }
+
+
+        inline void ExpList::CalcTraceJacMatIntegral(
+            const Array<OneD, const NekDouble> &Fn,
+            Array<OneD, NekDouble> &outarray)
+        {
+            v_CalcTraceJacMatIntegral(Fn,outarray);
         }
 
         inline void ExpList::AddFwdBwdTraceIntegral(

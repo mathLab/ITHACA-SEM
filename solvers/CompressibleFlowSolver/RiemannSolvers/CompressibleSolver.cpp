@@ -138,8 +138,8 @@ namespace Nektar
         const Array<OneD, const Array<OneD, NekDouble> > &Fwd,
         const Array<OneD, const Array<OneD, NekDouble> > &Bwd,
         const Array<OneD, const Array<OneD, NekDouble> > &normals,
-              DNekBlkMatSharedPtr                         FJac,
-              DNekBlkMatSharedPtr                         BJac)
+              DNekBlkMatSharedPtr                        &FJac,
+              DNekBlkMatSharedPtr                        &BJac)
     {
         int expDim      = nDim;
         int nvariables  = Fwd.num_elements();

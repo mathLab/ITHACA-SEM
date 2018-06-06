@@ -95,6 +95,11 @@ public:
                       const Array<OneD, NekDouble> &temperature,
                       Array<OneD, NekDouble> &rho);
 
+    EquationOfStateSharedPtr Geteos()
+    {
+        return m_eos;
+    }
+
 protected:
     LibUtilities::SessionReaderSharedPtr m_session;
     EquationOfStateSharedPtr m_eos;

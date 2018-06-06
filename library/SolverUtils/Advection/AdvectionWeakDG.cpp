@@ -224,13 +224,199 @@ namespace Nektar
             }
         }
 
+        
+        void AdvectionWeakDG::v_AddVolumJac2Mat( const int nConvectiveFields,
+                                        const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
+                                        const   Array<OneD, const  Array<OneD, DNekMatSharedPtr> >&ElmtJac,
+                                        const int nDirctn, DNekBlkMatSharedPtr &gmtx)
+        {
+
+            std::shared_ptr<LocalRegions::ExpansionVector> pexp;
+            pexp        = pFields[0]->GetExp();
+            int ntotElmt            = (*pexp).size();
+            int nElmtPnt            = (*pexp)[0]->GetTotPoints();
+            int nElmtCoef           = (*pexp)[0]->GetNcoeffs();
+            // int nCoefVar            =   nElmtCoef*nConvectiveFields;
+
+            StdRegions::ConstFactorMap  factors;
+            StdRegions::VarCoeffMap     VarCoeff;
+
+            NekDouble tmp;
+
+            DNekMatSharedPtr    ElmtMat = MemoryManager<DNekMat>
+                ::AllocateSharedPtr(nElmtCoef, nElmtCoef);
+
+            Array<OneD, NekDouble>  tmpPhys(nElmtPnt,0.0);
+            Array<OneD, NekDouble>  tmpCoef(nElmtCoef,0.0);
+
+            // DNekScalMatSharedPtr    loc_ScalmatNvar;
+            // DNekMatSharedPtr        loc_matNvar;
+            DNekMatSharedPtr        tmpElmtMat ;
+
+            
+
+            for(int  nelmt = 0; nelmt < ntotElmt; nelmt++)
+            {
+                nElmtCoef           = (*pexp)[nelmt]->GetNcoeffs();
+                nElmtPnt            = (*pexp)[nelmt]->GetTotPoints();
+
+                tmpElmtMat       =   gmtx->GetBlock(nelmt,nelmt);
+                // tmpElmtMat          =   tmpElmtSclMat->GetOwnedMatrix();
+
+                // int nrowsVars   = nElmtCoef*nConvectiveFields;
+                // int ncolsVars   = nElmtCoef*nConvectiveFields;
+                // loc_matNvar = MemoryManager<DNekMat>::AllocateSharedPtr(nrowsVars,ncolsVars,0.0);
+
+                if (tmpPhys.num_elements()!=nElmtPnt||tmpCoef.num_elements()!=nElmtCoef) 
+                {
+                    ElmtMat = MemoryManager<DNekMat>
+                            ::AllocateSharedPtr(nElmtCoef, nElmtCoef);
+                    
+                    tmpPhys     =   Array<OneD, NekDouble>(nElmtPnt,0.0);
+                    tmpCoef     =   Array<OneD, NekDouble>(nElmtCoef,0.0);
+
+                    // nCoefVar    =   nElmtCoef*nConvectiveFields;
+                }
+
+                // LocalRegions::MatrixKey matkey(StdRegions::eBwdTrans,
+                //                             (*pexp)[nelmt]->DetShapeType(),
+                //                             *((*pexp)[nelmt]), factors, VarCoeff);
+
+                StdRegions::StdMatrixKey matkey(StdRegions::eFwdTrans,
+                                            (*pexp)[nelmt]->.DetShapeType(),
+                                             *((*pexp)[nelmt]));
+
+                DNekScalMatSharedPtr BwdTransMat =  (*pexp)[nelmt]->GetStdMatrix(matkey);
+
+                for(int m = 0; m < nConvectiveFields; m++)
+                {
+                    for(int n = 0; n < nConvectiveFields; n++)
+                    {
+                        for(int ncl = 0; ncl < nElmtCoef; ncl++)
+                        {
+                            for(int npnt = 0; npnt < nElmtPnt; npnt++)
+                            {
+                                tmpPhys[npnt]   =   (*(ElmtJac[nelmt][npnt]))(m,n)*(*BwdTransMat)(npnt,ncl);
+                            }
+
+                            (*pexp)[nelmt]->IProductWRTDerivBase(nDirctn,tmpPhys,tmpCoef);
+
+                            for(int nrw = 0; nrw < nElmtCoef; nrw++)
+                            {
+                                (*ElmtMat)(nrw,ncl)   =   tmpCoef[nrw];
+                            }
+                        }
+
+                        for(int ncl = 0; ncl < nElmtCoef; ncl++)
+                        {
+                            int nclVar = ncl*nConvectiveFields+m;
+
+                            for(int nrw = 0; nrw < nElmtCoef; nrw++)
+                            {
+                                int nrwVar = nrw*nConvectiveFields+n;
+                                tmp   =   (*tmpElmtMat)(nrwVar,nclVar) + (*ElmtMat)(nrw,ncl);
+                                tmpElmtMat->SetValue(nrwVar,nclVar,tmp);
+                            }
+                        }
+
+                    }
+                    
+                }
+
+                // loc_ScalmatNvar = MemoryManager<DNekScalMat>::
+                //             AllocateSharedPtr(1.0,loc_matNvar);
+                // gmtx->SetBlock(nelmt,nelmt,loc_ScalmatNvar);
+                
+            }
+      
+        }
+
         void AdvectionWeakDG::v_AddTraceJac2Mat(
             const int                                          nConvectiveFields,
             const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
             const Array<OneD, DNekBlkMatSharedPtr>            &TraceJac,
-            DNekScalBlkMatSharedPtr &gmtx)
+            DNekBlkMatSharedPtr &gmtx)
         {
-            return;
+            std::shared_ptr<LocalRegions::ExpansionVector> pexp;
+            pexp                = pFields[0]->GetTrace();
+            int ntotTrace       = (*pexp).size();
+            int nTracePointsTot = pexp->GetTotPoints();
+            int nTraceCoeffsTot = pexp->GetNcoeffs();
+            
+            Array<TwoD, int      > BlkId(nTraceCoeffsTot,0  );
+            Array<TwoD, int      > IdArray(nTraceCoeffsTot,0  );
+
+            int MaxElmtNcoef   =   (*pexp)[0]->GetNcoeffs();
+            int MaxElmtNphys   =   (*pexp)[0]->GetTotPoints();
+            
+            for(int  nelmt = 0; nelmt < ntotTrace; nelmt++)
+            {
+                nElmtCoef           = (*pexp)[nelmt]->GetNcoeffs();
+                nElmtPnt            = (*pexp)[nelmt]->GetTotPoints();
+
+                MaxElmtNcoef = std::max(MaxElmtNcoef,nElmtCoef);
+                MaxElmtNphys = std::max(MaxElmtNphys,nElmtPnt);
+            }
+            WARNINGL0(  (*pexp)[0]->GetTotPoints()==MaxElmtNphys   ,    "traces have nonuniform phys points, needs test");
+            WARNINGL0(  (*pexp)[0]->GetNcoeffs()==MaxElmtNcoef   ,    "traces have nonuniform modes coeff, needs test");
+           
+            Array<OneD, Array<OneD, NekDouble> >    tmpPhys(MaxElmtNcoef);
+            for(int i = 0; i < MaxElmtNcoef; i++)
+            {
+                tmpPhys[i]  =   Array<OneD, NekDouble> tmpPhys(nTracePointsTot,0.0);
+            }
+            
+            int ncoef_offset,nphys_offset;
+            Array<OneD, DNekBlkMatSharedPtr> tmpelmtJac;
+            
+            for(int m = 0; m < nConvectiveFields; ++m)
+            {
+                for(int n = 0; n < nConvectiveFields; ++n)
+                {
+                    for(int  nelmt = 0; nelmt < ntotTrace; nelmt++)
+                    {
+                        nElmtCoef           = (*pexp)[nelmt]->GetNcoeffs();
+                        nElmtPnt            = (*pexp)[nelmt]->GetTotPoints();
+
+                        ncoef_offset        =  pexp->GetCoeff_Offset(nelmt);
+                        nphys_offset        =  pexp->GetPhys_Offset(nelmt);
+                        tmpelmtJac          =  TraceJac[nphys_offset];
+
+                        LocalRegions::MatrixKey matkey(StdRegions::eBwdTrans,
+                                                    (*pexp)[nelmt]->DetShapeType(),
+                                                    *((*pexp)[nelmt]), factors, VarCoeff);
+
+                        DNekScalMatSharedPtr BwdTransMat =  (*pexp)[nelmt]->GetLocMatrix(matkey);
+
+                        for(int ncolms = 0; ncolms < nElmtCoef; ncolms++)
+                        {
+                            for(int nrows = 0; nrows < nElmtPnt; nrows++)
+                            {
+                                tmpPhys[ncolms][nrows] = (*tmpelmtJac[nElmtPnt])(m,n)*(*BwdTransMat)(nElmtPnt,nElmtCoef);
+                            }
+                        }
+
+                        /// in case nonuniform trace coeff 
+                        for(int ncolms = nElmtCoef; ncolms < MaxElmtNcoef; ncolms++)
+                        {
+                            for(int nrows = 0; nrows < nElmtPnt; nrows++)
+                            {
+                                tmpPhys[ncolms][nrows] = 0.0;
+                            }
+                        }
+                    }
+
+                    fields[m]->AddTraceIntegral     (tmpPhys[i], tmp[m]);
+
+
+
+
+
+                    fields[m]->MultiplyByElmtInvMass(tmp[m], tmp[m]);
+                    fields[m]->BwdTrans             (tmp[m], outarray[m]);
+                }
+               
+            }
         }
     }//end of namespace SolverUtils
 }//end of namespace Nektar

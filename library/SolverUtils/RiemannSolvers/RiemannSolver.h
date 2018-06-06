@@ -71,8 +71,8 @@ namespace Nektar
             const int                                         nDim,
             const Array<OneD, const Array<OneD, NekDouble> > &Fwd,
             const Array<OneD, const Array<OneD, NekDouble> > &Bwd,
-                  DNekBlkMatSharedPtr                         FJac,
-                  DNekBlkMatSharedPtr                         BJac);
+                  DNekBlkMatSharedPtr                        &FJac,
+                  DNekBlkMatSharedPtr                        &BJac);
 
 
 
@@ -204,8 +204,8 @@ namespace Nektar
             const Array<OneD, const Array<OneD, NekDouble> > &Fwd,
             const Array<OneD, const Array<OneD, NekDouble> > &Bwd,
             const Array<OneD, const Array<OneD, NekDouble> > &normals,
-                  DNekBlkMatSharedPtr                         FJac,
-                  DNekBlkMatSharedPtr                         BJac);
+                  DNekBlkMatSharedPtr                        &FJac,
+                  DNekBlkMatSharedPtr                        &BJac);
 
         };
 

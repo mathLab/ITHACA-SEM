@@ -137,23 +137,29 @@ namespace Nektar
             const Array<OneD, NekDouble> &inarray,
                   Array<OneD, NekDouble >&out);
 
-        void GetpreconditionerNSBlkDiag(const Array<OneD, const Array<OneD, NekDouble> >&inarray,
-                                            DNekScalBlkMatSharedPtr gmtx);
+        void AllocatePrecondBlkDiag(DNekBlkMatSharedPtr &gmtx);
 
-        void AddMatNSBlkDiag_MassSource(DNekScalBlkMatSharedPtr gmtx);
+        void GetpreconditionerNSBlkDiag(const Array<OneD, const Array<OneD, NekDouble> >&inarray,
+                                            DNekBlkMatSharedPtr &gmtx);
+
+        void AddMatNSBlkDiag_MassSource(DNekBlkMatSharedPtr &gmtx);
+        
 
         void AddMatNSBlkDiag_volume(const Array<OneD, const Array<OneD, NekDouble> >&inarray,
-                                        DNekScalBlkMatSharedPtr gmtx);
+                                        DNekBlkMatSharedPtr &gmtx);
 
         void AddMatNSBlkDiag_boundary(const Array<OneD, const Array<OneD, NekDouble> >&inarray,
-                                        DNekScalBlkMatSharedPtr gmtx);
+                                        DNekBlkMatSharedPtr &gmtx);
+
+
+        void CoutScalBlkMat(DNekBlkMatSharedPtr &gmtx, const unsigned int nwidthcolm=12);
 
         void PointFluxJacobian_pn(
             const Array<OneD, NekDouble> &Fwd,
             const Array<OneD, NekDouble> &normals,
                   DNekMatSharedPtr       &FJac,
             const NekDouble efix,   const NekDouble fsw);
-        Array<OneD, DNekBlkMatSharedPtr> &GetTraceJac(
+        Array<OneD, DNekBlkMatSharedPtr> GetTraceJac(
             const Array<OneD, const Array<OneD, NekDouble> > &inarray);
 
 #endif
@@ -175,7 +181,7 @@ namespace Nektar
             const Array<OneD, Array<OneD, NekDouble> >               &physfield,
                   Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &flux);
         
-        Array<OneD, Array<OneD, DNekMatSharedPtr> > &
+        Array<OneD, Array<OneD, DNekMatSharedPtr> > 
             GetFluxVectorJacDirctn(const int nDirctn,
                          const Array<OneD, const Array<OneD, NekDouble> >&inarray);
         void GetFluxVectorJacPoint(

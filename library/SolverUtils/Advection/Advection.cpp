@@ -85,26 +85,27 @@ void Advection::Advect(
 }
 
 
-void Advection::AddTraceJac2Mat(
-    const int                                          nConvectiveFields,
-    const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
-    const Array<OneD, DNekBlkMatSharedPtr>            &TraceJac,
-    DNekScalBlkMatSharedPtr &gmtx)
-{
-    v_AddTraceJac2Mat(nConvectiveFields, pFields, TraceJac, gmtx);
-}
-
 void Advection::v_AddTraceJac2Mat(
     const int                                          nConvectiveFields,
     const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
     const Array<OneD, DNekBlkMatSharedPtr>            &TraceJac,
-    DNekScalBlkMatSharedPtr &gmtx)
+    DNekBlkMatSharedPtr &gmtx)
 {
     ASSERTL0(false,"v_AddTraceJac2Mat NOT SPECIFIED");
     return;
 }
 
-void Advection::TraceJac(
+
+void Advection::v_AddVolumJac2Mat( const int nConvectiveFields,
+                                const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
+                                const   Array<OneD, const  Array<OneD, DNekMatSharedPtr> >&ElmtJac,
+                                const int nDirctn, DNekBlkMatSharedPtr &gmtx)
+{
+    ASSERTL0(false,"v_AddVolumJac2Mat NOT SPECIFIED");
+    return;
+}
+
+void Advection::CalcTraceJac(
     const int                                          nConvectiveFields,
     const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
     const Array<OneD, Array<OneD, NekDouble> >        &AdvVel,
@@ -114,8 +115,8 @@ void Advection::TraceJac(
     DNekBlkMatSharedPtr &FJac,
     DNekBlkMatSharedPtr &BJac)
 {
-    int nPointsTot      = fields[0]->GetTotPoints();
-    int nCoeffs         = fields[0]->GetNcoeffs();
+    // int nPointsTot      = fields[0]->GetTotPoints();
+    // int nCoeffs         = fields[0]->GetNcoeffs();
     int nTracePointsTot = fields[0]->GetTrace()->GetTotPoints();
     
     // Store forwards/backwards space along trace space

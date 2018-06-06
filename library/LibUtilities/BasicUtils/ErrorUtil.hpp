@@ -37,8 +37,8 @@
 
 #include <iostream>
 #include <stdexcept>
-#include <boost/lexical_cast.hpp>
-#include <boost/optional.hpp>
+#include <sstream>
+
 #include <LibUtilities/LibUtilitiesDeclspec.h>
 
 #if defined(NEKTAR_USE_MPI)
@@ -49,46 +49,56 @@
 #include <execinfo.h>
 #endif
 
-namespace ErrorUtil
+namespace Nektar
 {
-    static boost::optional<std::ostream&> outStream;
 
-    inline static void SetErrorStream(std::ostream& o)
+struct ErrorUtil
+{
+    class NekError : public std::runtime_error
     {
-        outStream = o;
-    }
-    
-    inline static bool HasCustomErrorStream()
-    {
-        return outStream ? true : false;
-    }
+    public:
+        NekError(const std::string& message) : std::runtime_error(message)
+        {
+        }
+    };
 
     enum ErrType
     {
         efatal,
         ewarning
-    }; 
-
-    class NekError : public std::runtime_error
-    {
-    public:
-        NekError(const std::string& message) : std::runtime_error(message) {}
     };
-        
-    inline static void Error(ErrType type, const char *routine, int lineNumber, const char *msg, unsigned int level, bool DoComm = false)
-    {
-        // The user of outStream is primarily for the unit tests.
-        // The unit tests often generate errors on purpose to make sure
-        // invalid usage is flagged appropriately.  Printing the error
-        // messages to cerr made the unit test output hard to parse.
 
-        std::string baseMsg = std::string("Level ") +
-            boost::lexical_cast<std::string>(level) +
-            std::string(" assertion violation\n") +
+    inline static void SetErrorStream(std::ostream& o)
+    {
+        m_outStream = &o;
+    }
+
+    inline static bool HasCustomErrorStream()
+    {
+        return m_outStream == &std::cerr;
+    }
+
+    inline static void Error(ErrType       type,
+                             const char   *routine,
+                             int           lineNumber,
+                             const char   *msg,
+                             unsigned int  level,
+                             bool          DoComm = false)
+    {
+        // The user of outStream is primarily for the unit tests.  The unit
+        // tests often generate errors on purpose to make sure invalid usage is
+        // flagged appropriately.  Printing the error messages to cerr made the
+        // unit test output hard to parse.
+
+        std::stringstream ss;
+
+        ss << "Level " << level << " assertion violation" << std::endl;
 #if defined(NEKTAR_DEBUG) || defined(NEKTAR_FULLDEBUG)
-            std::string("Where   : ") + boost::lexical_cast<std::string>(routine) +  std::string("[") +  boost::lexical_cast<std::string>(lineNumber) +  std::string("]\n") + std::string("Message : ") +
+        ss << "Where   : " routine << "[" << lineNumber << "]" << std::endl;
 #endif
-            msg;
+        ss << msg;
+
+        std::string baseMsg = ss.str();
 
         // Default rank is zero. If MPI used and initialised, populate with
         // the correct rank. Messages are only printed on rank zero.
@@ -128,17 +138,8 @@ namespace ErrorUtil
         case efatal:
             if (!rank)
             {
-                if (outStream)
-                {
-                    (*outStream) << btMessage;
-                    (*outStream) << "Fatal   : " << baseMsg << std::endl;
-                }
-                else
-                {
-                    std::cerr << btMessage;
-                    std::cerr << std::endl << "Fatal   : " << baseMsg
-                              << std::endl;
-                }
+                (*m_outStream) << btMessage;
+                (*m_outStream) << "Fatal   : " << baseMsg << std::endl;
             }
 
 #if defined(NEKTAR_USE_MPI) && !defined(NEKTAR_USE_CWIPI)
@@ -155,20 +156,12 @@ namespace ErrorUtil
         case ewarning:
             if (!rank)
             {
-                if (outStream)
-                {
-                    (*outStream) << btMessage;
-                    (*outStream) << "Warning: " << baseMsg << std::endl;
-                }
-                else
-                {
-                    std::cerr << btMessage;
-                    std::cerr << "Warning: " << baseMsg << std::endl;
-                }
+                (*m_outStream) << btMessage;
+                (*m_outStream) << "Warning: " << baseMsg << std::endl;
             }
             break;
         default:
-            std::cerr << "Unknown warning type: " << baseMsg << std::endl;
+            (*m_outStream) << "Unknown warning type: " << baseMsg << std::endl;
         }
     }
 
@@ -181,7 +174,10 @@ namespace ErrorUtil
     {
         Error(type, routine, lineNumber, msg, 0);
     }
-} // end of namespace
+
+private:
+    static std::ostream *m_outStream;
+};
 
 /// Assert Level 0 -- Fundamental assert which
 /// is used whether in FULLDEBUG, DEBUG or OPT
@@ -251,6 +247,8 @@ namespace ErrorUtil
 #define ASSERTL2(condition,msg)
 #define WARNINGL2(condition,msg)
 #endif //NEKTAR_FULLDEBUG
+
+}
 
 #endif //ERRORUTIL_HPP
 

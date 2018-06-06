@@ -42,6 +42,7 @@
 
 #include <boost/thread/shared_mutex.hpp>
 #include <boost/thread/locks.hpp>
+#include <boost/lexical_cast.hpp>
 
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 

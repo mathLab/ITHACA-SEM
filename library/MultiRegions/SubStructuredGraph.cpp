@@ -40,6 +40,7 @@
 #include <iostream>
 #include <iomanip>
 #include <algorithm>
+#include <boost/lexical_cast.hpp>
 #include <boost/config.hpp>
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/cuthill_mckee_ordering.hpp>

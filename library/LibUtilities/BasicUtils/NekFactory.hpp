@@ -256,9 +256,7 @@ public:
                 return it.first;
             }
         }
-        std::string errstr = "Module '"
-            + boost::lexical_cast<std::string>(pDesc)
-            + "' is not known.";
+        std::string errstr = "Module '" + pDesc + "' is not known.";
         ASSERTL0(false, errstr);
     }
 

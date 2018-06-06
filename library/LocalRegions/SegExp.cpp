@@ -1219,14 +1219,6 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
 
             switch (mkey.GetMatrixType())
             {
-                case StdRegions::eBwdTrans:
-                {
-                    NekDouble one = 1.0;
-                    DNekMatSharedPtr mat = GetStdMatrix(mkey);
-                    returnval = MemoryManager<DNekScalMat>::
-                        AllocateSharedPtr(one,mat);
-                }
-                    break;
                 case StdRegions::eMass:
                 {
                     if ((m_metricinfo->GetGtype() == SpatialDomains::eDeformed)

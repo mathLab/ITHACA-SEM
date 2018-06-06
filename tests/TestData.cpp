@@ -35,9 +35,10 @@
 
 #include <boost/lexical_cast.hpp>
 #include <boost/algorithm/string.hpp>
-#include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 
 #include <TestData.h>
+
+#define ASSERTL0(condition,msg)
 
 using namespace std;
 

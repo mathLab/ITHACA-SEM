@@ -38,9 +38,10 @@
 
 #include <tinyxml.h>
 #include <string>
-
-#include <LibUtilities/BasicUtils/NekFactory.hpp>
+#include <map>
 #include <boost/filesystem.hpp>
+
+#define ASSERTL0(condition,msg)
 
 namespace fs = boost::filesystem;
 
@@ -75,11 +76,28 @@ namespace Nektar
 
     /// A shared pointer to an EquationSystem object
     typedef std::shared_ptr<Metric> MetricSharedPtr;
-    
+
     /// Datatype of the NekFactory used to instantiate classes derived from the
     /// Advection class.
-    typedef LibUtilities::NekFactory<std::string, Metric, TiXmlElement*, bool>
-        MetricFactory;
+    struct MetricFactory
+    {
+        typedef MetricSharedPtr (*CreatorFunction)(TiXmlElement *, bool);
+
+        std::string RegisterCreatorFunction(std::string key, CreatorFunction func)
+        {
+            m_map[key] = func;
+            return key;
+        }
+
+        MetricSharedPtr CreateInstance(
+            std::string key, TiXmlElement *elmt, bool generate)
+        {
+            return m_map[key](elmt, generate);
+        }
+
+    private:
+        std::map<std::string, CreatorFunction> m_map;
+    };
 
     MetricFactory& GetMetricFactory();
 }

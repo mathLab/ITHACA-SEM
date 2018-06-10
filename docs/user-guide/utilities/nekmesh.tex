@@ -127,10 +127,10 @@ to generate the XML file.
 \end{notebox}
 %
 To validate the mesh visually, we can use a utility such as Paraview or
-VisIt. To do this, run the command
+VisIt. To do this, we can use the \inltt{FieldConvert} command using:
 %
 \begin{lstlisting}[style=BashInputStyle]
-XmlToVtk test.xml
+FieldConvert test.xml test.vtu
 \end{lstlisting}
 %
 which generates an unstructured VTK file \inlsh{test.vtu}.

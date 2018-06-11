@@ -256,7 +256,7 @@ namespace Nektar
             const Array<OneD, NekDouble> &Fwd,
             const Array<OneD, NekDouble> &normals,
                   DNekMatSharedPtr       &FJac,
-            const NekDouble efix,   const NekDouble fsw)
+            const NekDouble efix,   const NekDouble fsw1)
     {
             NekDouble ro,vx,vy,vz,ps,gama,ae ;
             NekDouble a,a2,h,h0,v2,vn,eps,eps2;
@@ -265,6 +265,8 @@ namespace Nektar
             NekDouble l1,l4,l5,al1,al4,al5,x1,x2,x3,y1;
             NekDouble c1,d1,c2,d2,c3,d3,c4,d4,c5,d5;
             NekDouble sml_ssf= 1.0E-12;
+
+            NekDouble fsw = fsw1;
 
             NekDouble fExactorSplt = 2.0-abs(fsw); // if fsw=+-1 calculate 
 
@@ -297,6 +299,7 @@ namespace Nektar
             ny = normals[1];
             nz = normals[2];
             vn = nx*vx + ny*vy + nz*vz;
+
             sn = std::max(sqrt(nx*nx + ny*ny + nz*nz),sml_ssf);
             osn = 1.0/sn;
 
@@ -304,6 +307,12 @@ namespace Nektar
             nya = ny * osn;
             nza = nz * osn;
             vna = vn * osn;
+
+            // if(vn<0)
+            // {
+            //     a = -a;
+            // }
+
             l1 = vn;
             l4 = vn + sn*a;
             l5 = vn - sn*a;

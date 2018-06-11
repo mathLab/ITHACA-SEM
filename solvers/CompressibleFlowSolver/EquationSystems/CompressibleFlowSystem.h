@@ -153,6 +153,9 @@ namespace Nektar
 
 
         void CoutScalBlkMat(DNekBlkMatSharedPtr &gmtx, const unsigned int nwidthcolm=12);
+        void CoutStandardMat(
+            DNekMatSharedPtr &loc_matNvar,
+            const unsigned int nwidthcolm=12);
 
         void PointFluxJacobian_pn(
             const Array<OneD, NekDouble> &Fwd,

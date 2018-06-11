@@ -591,7 +591,7 @@ namespace Nektar
                                             DNekBlkMatSharedPtr &gmtx)
     {
         AddMatNSBlkDiag_boundary(inarray,gmtx);
-        CoutScalBlkMat(gmtx);
+        CoutScalBlkMat(gmtx,12);
         AddMatNSBlkDiag_volume(inarray,gmtx);
         AddMatNSBlkDiag_MassSource(gmtx);
         
@@ -600,48 +600,48 @@ namespace Nektar
 
     void CompressibleFlowSystem::CoutScalBlkMat(DNekBlkMatSharedPtr &gmtx,const unsigned int nwidthcolm)
     {
-        // int nvars = m_fields.num_elements();
-        int nrows, ncols;
-        // int nrows, ncols,nrowsVars,ncolsVars,ncoloffset,nrowoffset;
-        DNekMatSharedPtr    loc_ScalmatNvar;
+        DNekMatSharedPtr    loc_matNvar;
 
         Array<OneD, unsigned int> rowSizes;
         Array<OneD, unsigned int> colSizes;
         gmtx->GetBlockSizes(rowSizes,colSizes);
 
         int nelmts  = rowSizes.num_elements();
-
         
-        NekDouble tmp=0.0;
         // int noffset = 0;
         for(int i = 0; i < nelmts; ++i)
         {
-
-            loc_ScalmatNvar =   gmtx->GetBlock(i,i);
-            nrows = loc_ScalmatNvar->GetRows();
-            ncols = loc_ScalmatNvar->GetColumns();
-
-
+            loc_matNvar =   gmtx->GetBlock(i,i);
             std::cout   <<std::endl<<"*********************************"<<std::endl<<"element :   "<<i<<std::endl;
-            std::cout   <<"ROW="<<std::setw(3)<<-1<<" ";
-            for(int k = 0; k < ncols; k++)
-            {
-                std::cout   <<"   COL="<<std::setw(nwidthcolm-7)<<k;
-            }
-            std::cout   << endl;
-
-            for(int j = 0; j < nrows; j++)
-            {
-                std::cout   <<"ROW="<<std::setw(3)<<j<<" ";
-                for(int k = 0; k < ncols; k++)
-                {
-                    tmp =   (*loc_ScalmatNvar)(j,k);
-                    std::cout   <<std::scientific<<std::setw(nwidthcolm)<<std::setprecision(nwidthcolm-8)<<tmp;
-                }
-                std::cout   << endl;
-            }
+            CoutStandardMat(loc_matNvar,nwidthcolm);
         }
         return;
+    }
+
+
+    void CompressibleFlowSystem::CoutStandardMat(DNekMatSharedPtr &loc_matNvar,const unsigned int nwidthcolm)
+    {
+        int nrows = loc_matNvar->GetRows();
+        int ncols = loc_matNvar->GetColumns();
+        NekDouble tmp=0.0;
+        std::cout   <<"ROW="<<std::setw(3)<<-1<<" ";
+        for(int k = 0; k < ncols; k++)
+        {
+            std::cout   <<"   COL="<<std::setw(nwidthcolm-7)<<k;
+        }
+        std::cout   << endl;
+
+        for(int j = 0; j < nrows; j++)
+        {
+            std::cout   <<"ROW="<<std::setw(3)<<j<<" ";
+            for(int k = 0; k < ncols; k++)
+            {
+                tmp =   (*loc_matNvar)(j,k);
+                std::cout   <<std::scientific<<std::setw(nwidthcolm)<<std::setprecision(nwidthcolm-8)<<tmp;
+            }
+            std::cout   << endl;
+        }
+
     }
 
     void CompressibleFlowSystem::AddMatNSBlkDiag_MassSource(DNekBlkMatSharedPtr &gmtx)
@@ -762,6 +762,11 @@ namespace Nektar
         int nvariables = inarray.num_elements();
         Array<OneD, DNekBlkMatSharedPtr > TraceJac;
         TraceJac    =   GetTraceJac(inarray);
+        cout<<"fwd"<<endl;
+        CoutScalBlkMat(TraceJac[0],12);
+        cout<<"bwd"<<endl;
+        CoutScalBlkMat(TraceJac[1],12);
+        
         m_advObject->AddTraceJac2Mat(nvariables,m_fields, TraceJac,gmtx);
 
     }

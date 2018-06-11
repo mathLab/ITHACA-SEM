@@ -1840,28 +1840,6 @@ namespace Nektar
             out = (*intmat) * in;
         }
 
-        DNekMatSharedPtr StdExpansion::GetBwdTransMat()
-        {
-            int nmods = GetNcoeffs();
-            int npnts = GetTotPoints();
-
-            Array<OneD, NekDouble> phys(npnts,0.0);
-            Array<OneD, NekDouble> coef(nmods,0.0);
-            DNekMatSharedPtr mat = MemoryManager<DNekMat>::AllocateSharedPtr(npnts,nmods);
-            
-            for(int i = 0; i < nmods; i++)
-            {
-                coef[i] =   1.0;
-
-                BwdTrans(coef,phys);
-                for(int j = 0; j < nmods; j++)
-                {
-                    (*mat)(j,i) = phys[j];
-                }
-                coef[i] =   0.0;
-            }
-            return mat;
-        }
 
     }//end namespace
 }//end namespace

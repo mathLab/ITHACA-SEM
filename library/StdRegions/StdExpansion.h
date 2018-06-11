@@ -532,9 +532,6 @@ namespace Nektar
             {
                 v_BwdTrans (inarray, outarray);
             }
-
-
-            DNekMatSharedPtr GetBwdTransMat();
           
 
             /**

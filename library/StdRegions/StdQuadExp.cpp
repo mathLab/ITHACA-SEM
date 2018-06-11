@@ -1468,11 +1468,11 @@ namespace Nektar
                     (*Mat) = Imass*Iprod;
                     break;
                 }
-                case eBwdTrans:
-                {
-                    Mat = GetBwdTransMat();
-                    break;
-                }
+                // case eBwdTrans:
+                // {
+                //     Mat = GetBwdTransMat();
+                //     break;
+                // }
                 case eGaussDG:
                 {
                     ConstFactorMap factors = mkey.GetConstFactors();

@@ -44,6 +44,15 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
 
+#include <ElCLib.hxx>
+#include <gce_MakeCirc.hxx>
+#include <gce_MakePln.hxx>
+
+#include <BRepOffsetAPI_MakeFilling.hxx>
+#include <BRepBuilderAPI_MakeShell.hxx>
+#include <GC_MakeArcOfCircle.hxx>
+#include <StlAPI_Writer.hxx>
+
 using namespace std;
 
 namespace Nektar
@@ -545,15 +554,15 @@ TopoDS_Shape CADSystemOCE::BuildGeo(string geo)
     map<int, string> circles;
     map<int, string> ellipses;
     map<int, string> loops;
-    map<int, string> surfs;
+    map<int, string> planeSurfs;
+    map<int, string> ruledSurfs;
+    map<int, string> surfLoops;
 
     string fline;
     string flinetmp;
 
-    while (!f.eof())
+    while (getline(f, fline))
     {
-        getline(f, fline);
-
         boost::erase_all(fline, "\r");
 
         vector<string> tmp1, tmp2;
@@ -619,7 +628,15 @@ TopoDS_Shape CADSystemOCE::BuildGeo(string geo)
         }
         else if (boost::iequals(type, "Plane Surface"))
         {
-            surfs[id] = var;
+            planeSurfs[id] = var;
+        }
+        else if (boost::iequals(type, "Ruled Surface"))
+        {
+            ruledSurfs[id] = var;
+        }
+        else if (boost::iequals(type, "Surface Loop"))
+        {
+            surfLoops[id] = var;
         }
         else
         {
@@ -692,9 +709,33 @@ TopoDS_Shape CADSystemOCE::BuildGeo(string geo)
         gp_Pnt centre = cPoints[data[1]];
         gp_Pnt end    = cPoints[data[2]];
 
+        gp_Vec axis(centre, end);
+        Standard_Real radius = centre.Distance(start);
+
+        gce_MakeCirc mkArc(
+            centre, gce_MakePln(start, centre, end).Value(), radius);
+
+        const gp_Circ &circ = mkArc.Value();
+        Standard_Real alpha1 = ElCLib::Parameter(circ, start);
+        Standard_Real alpha2 = ElCLib::Parameter(circ, end);
+        Handle(Geom_Circle) c = new Geom_Circle(circ);
+
+        
+        Handle(Geom_TrimmedCurve) tc = new Geom_TrimmedCurve(c, alpha1, alpha2, false);
+
+        // cout << tc->FirstParameter() << " " << tc->LastParameter() << endl;
+
+        BRepBuilderAPI_MakeEdge em(tc);
+        em.Build();
+        cEdges[it->first] = em.Edge();
+
+        /*
+        
         NekDouble r1 = start.Distance(centre);
         NekDouble r2 = end.Distance(centre);
         ASSERTL0(fabs(r1 - r2) < 1e-7, "Non-matching radii");
+
+        gp_Ax2 ax(centre, );
 
         gp_Circ c;
         c.SetLocation(centre);
@@ -706,9 +747,13 @@ TopoDS_Shape CADSystemOCE::BuildGeo(string geo)
         sac.Project(gc, start, 1e-8, start, p1);
         sac.Project(gc, end, 1e-8, end, p2);
 
+        cout << "DATA: " << data[0] << " " << data[1] << " " << data[2] << endl;
+        cout << p1 << " " << p2 << endl;
+
         // Make sure the arc is always of length less than pi
         if ((p1 > p2) ^ (fabs(p2 - p1) > M_PI))
         {
+            cout << "swapping" << endl;
             swap(p1, p2);
         }
 
@@ -717,6 +762,7 @@ TopoDS_Shape CADSystemOCE::BuildGeo(string geo)
         BRepBuilderAPI_MakeEdge em(tc);
         em.Build();
         cEdges[it->first] = em.Edge();
+        */
     }
     for (it = ellipses.begin(); it != ellipses.end(); it++)
     {
@@ -784,10 +830,69 @@ TopoDS_Shape CADSystemOCE::BuildGeo(string geo)
         cWires[it->first] = wm.Wire();
     }
 
+    // build ruled surfaces
+    map<int, TopoDS_Face> cFaces;
+    for (auto &surf : ruledSurfs)
+    {
+        vector<unsigned int> data;
+        ParseUtils::GenerateVector(surf.second, data);
+        ASSERTL0(data.size() == 1,
+                 "Ruled surface should have only one curve loop");
+
+        BRepOffsetAPI_MakeFilling fill;
+        TopExp_Explorer ex;
+
+        for (ex.Init(cWires[data[0]], TopAbs_EDGE); ex.More(); ex.Next())
+        {
+            const TopoDS_Edge &shape = TopoDS::Edge(ex.Current());
+            fill.Add(shape, GeomAbs_C0);
+        }
+
+        fill.Build();
+
+        //StlAPI_Writer writer;
+        TopoDS_Face face = TopoDS::Face(fill.Shape());
+        //BRepMesh_IncrementalMesh Mesh( face, 10.0 );
+        //Mesh.Perform();
+        // StlAPI_Writer asd;
+        //std::string outfname = "out-" + boost::lexical_cast<std::string>(surf.first) + ".stl";
+        //asd.Write(face, outfname.c_str());
+
+        cFaces[surf.first] = face;
+    }
+
+    map<int, TopoDS_Shell> cShells;
+    for (auto &sloop : surfLoops)
+    {
+        vector<unsigned int> data;
+        ParseUtils::GenerateVector(sloop.second, data);
+
+        BRepBuilderAPI_Sewing shellMaker;
+
+        for (int i = 0; i < data.size(); ++i)
+        {
+            cout << "adding " << data[i] << endl;
+            shellMaker.Add(cFaces[data[i]]);
+        }
+
+        cout << "cock" << endl;
+        shellMaker.Perform();
+
+        TopoDS_Shape shell = shellMaker.SewedShape();
+        BRepMesh_IncrementalMesh Mesh( shell, 200.0 );
+        Mesh.Perform();
+        StlAPI_Writer asd;
+        std::string outfname = "out.stl";
+        asd.Write(shell, outfname.c_str());
+
+        return shell;
+    }
+
     // make surface, at this point assuming its 2D (therefore only 1)
     // also going to assume that the first loop in the list is the outer domain
-    ASSERTL0(surfs.size() == 1, "more than 1 surf");
-    it = surfs.begin();
+    /*
+    ASSERTL0(planeSurfs.size() == 1, "more than 1 surf");
+    it = planeSurfs.begin();
     vector<unsigned int> data;
     ParseUtils::GenerateVector(it->second, data);
     BRepBuilderAPI_MakeFace face(cWires[data[0]], true);
@@ -798,10 +903,13 @@ TopoDS_Shape CADSystemOCE::BuildGeo(string geo)
 
     ASSERTL0(face.Error() == BRepBuilderAPI_FaceDone, "build geo failed");
 
+
+
     ShapeFix_Face sf(face.Face());
     sf.FixOrientation();
 
     return sf.Face();
+    */
 }
 }
 }

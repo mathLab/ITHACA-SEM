@@ -38,7 +38,7 @@ v5.0.0
 - Added in sum factorisation version for pyramid expnasions and orthogonal
   expansion in pyramids (!750)
 - Switch MeshGraph to use factory pattern and add HDF5 geometry support (!900,
-  !904)
+  !904, !941)
 - Restructure the low energy preconditioner to handle pyramidic and variable
   p expansions (!920)
 - Remove requirement for modmetis, switch to SCOTCH by default (!899)

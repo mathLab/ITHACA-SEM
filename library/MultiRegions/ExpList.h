@@ -983,10 +983,18 @@ namespace Nektar
                 const   Array<OneD, const  Array<OneD, NekDouble> >&inarray,
                 const int nDirctn, Array<OneD, DNekMatSharedPtr> &mtxPerVar);
 
-            MULTI_REGIONS_EXPORT void GetMatIpwrtdbWeightBwd(
+            // MULTI_REGIONS_EXPORT void GetMatIpwrtdbWeightBwd(
+            //     const   Array<OneD, const  Array<OneD, NekDouble> >&inarray,
+            //     Array<OneD, DNekMatSharedPtr> &mtxPerVar);
+            MULTI_REGIONS_EXPORT void GetMatIpwrtbWeightBwd(
                 const   Array<OneD, const  Array<OneD, NekDouble> >&inarray,
                 Array<OneD, DNekMatSharedPtr> &mtxPerVar);
-            void GetMatIpwrtbWeightBwd(
+
+            MULTI_REGIONS_EXPORT void GetMatIpwrtDeriveBase(
+                const   Array<OneD, const  Array<OneD, NekDouble> >&inarray,
+                const int nDirctn, Array<OneD, DNekMatSharedPtr> &mtxPerVar);
+
+            MULTI_REGIONS_EXPORT void GetMatIpwrtBase(
                 const   Array<OneD, const  Array<OneD, NekDouble> >&inarray,
                 Array<OneD, DNekMatSharedPtr> &mtxPerVar);
 

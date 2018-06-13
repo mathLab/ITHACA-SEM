@@ -151,11 +151,15 @@ namespace Nektar
         void AddMatNSBlkDiag_boundary(const Array<OneD, const Array<OneD, NekDouble> >&inarray,
                                         DNekBlkMatSharedPtr &gmtx);
 
+        void MultiplyElmtBwdInvMass(DNekBlkMatSharedPtr &gmtx,const NekDouble dtlamda);
 
         void CoutScalBlkMat(DNekBlkMatSharedPtr &gmtx, const unsigned int nwidthcolm=12);
         void CoutStandardMat(
             DNekMatSharedPtr &loc_matNvar,
             const unsigned int nwidthcolm=12);
+        void FillBlkMat(DNekBlkMatSharedPtr &gmtx,const NekDouble valu);
+        void AllocatePrecondBlkDiag_2d(Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray);
+        
 
         void PointFluxJacobian_pn(
             const Array<OneD, NekDouble> &Fwd,

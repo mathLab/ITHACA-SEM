@@ -240,7 +240,7 @@ namespace Nektar
             int nElmtPnt,nElmtCoef;
 
             NekDouble tmp;
-            DNekMatSharedPtr        tmpGmtx,ElmtMat ;
+            DNekMatSharedPtr        tmpGmtx,ElmtMat;
 
             Array<OneD, DNekMatSharedPtr>  mtxPerVar(ntotElmt);
             Array<OneD, Array<OneD, NekDouble> > JacArray(ntotElmt);
@@ -253,7 +253,7 @@ namespace Nektar
                 elmtpnts[nelmt]     =   nElmtPnt;
                 elmtcoef[nelmt]     =   nElmtCoef;
                 mtxPerVar[nelmt]    =MemoryManager<DNekMat>
-                                    ::AllocateSharedPtr(nElmtCoef, nElmtCoef);
+                                    ::AllocateSharedPtr(nElmtCoef, nElmtPnt);
                 JacArray[nelmt]    =Array<OneD, NekDouble>(nElmtPnt,0.0);
             }
 
@@ -270,16 +270,18 @@ namespace Nektar
                         }
                     }
 
-                    explist->GetMatIpwrtdbWeightBwd(JacArray,nDirctn,mtxPerVar);
+                    // explist->GetMatIpwrtdbWeightBwd(JacArray,nDirctn,mtxPerVar);
+                    explist->GetMatIpwrtDeriveBase(JacArray,nDirctn,mtxPerVar);
 
                     for(int  nelmt = 0; nelmt < ntotElmt; nelmt++)
                     {
                         nElmtCoef       = elmtcoef[nelmt];
+                        nElmtPnt        = elmtpnts[nelmt];
 
                         tmpGmtx         = gmtx->GetBlock(nelmt,nelmt);
                         ElmtMat         = mtxPerVar[nelmt];
 
-                        for(int ncl = 0; ncl < nElmtCoef; ncl++)
+                        for(int ncl = 0; ncl < nElmtPnt; ncl++)
                         {
                             int nclVar = ncl*nConvectiveFields+m;
 
@@ -328,7 +330,7 @@ namespace Nektar
                 elmtpnts[nelmt]     =   nElmtPnt;
                 elmtcoef[nelmt]     =   nElmtCoef;
                 mtxPerVar[nelmt]    =MemoryManager<DNekMat>
-                                    ::AllocateSharedPtr(nElmtCoef, nElmtCoef,0.0);
+                                    ::AllocateSharedPtr(nElmtCoef, nElmtPnt,0.0);
                 JacFwd[nelmt]     =Array<OneD, NekDouble>(nElmtPnt,0.0);
                 JacBwd[nelmt]     =Array<OneD, NekDouble>(nElmtPnt,0.0);
             }
@@ -388,11 +390,11 @@ namespace Nektar
                         LAdjExpid[nelmt]    =   ntmp;
                         orient  =   LAdjExp->v_GetEorient(LAdjBndid);
                         LAdjExp->GetEdgeToElementMap(LAdjBndid,orient,elmtLeftMap[nelmt],elmtLeftSign[nelmt]);
-                        std::cout<<"^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"<<std::endl<<"Ntrace=    "<<nelmt<<std::endl<<"LAdjExp=    "<<ntmp<<endl;
-                        for(int i = 0; i < elmtLeftMap[nelmt].num_elements(); i++)
-                        {
-                            std::cout<<"elmtLeftMap=    "<<elmtLeftMap[nelmt][i]<<" elmtLeftSign=    "<<elmtLeftSign[nelmt][i]<<endl;
-                        }
+                        // std::cout<<"^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"<<std::endl<<"Ntrace=    "<<nelmt<<std::endl<<"LAdjExp=    "<<ntmp<<endl;
+                        // for(int i = 0; i < elmtLeftMap[nelmt].num_elements(); i++)
+                        // {
+                        //     std::cout<<"elmtLeftMap=    "<<elmtLeftMap[nelmt][i]<<" elmtLeftSign=    "<<elmtLeftSign[nelmt][i]<<endl;
+                        // }
                         if (RAdjBndid>-1) 
                         {
                             RAdjflag[nelmt] = true;
@@ -400,11 +402,11 @@ namespace Nektar
                             RAdjExpid[nelmt]    =   ntmp;
                             orient  =   RAdjExp->v_GetEorient(RAdjBndid);
                             RAdjExp->GetEdgeToElementMap(RAdjBndid,orient,elmtRightMap[nelmt],elmtRightSign[nelmt]);
-                            std::cout<<"RAdjExp=    "<<ntmp<<endl;
-                            for(int i = 0; i < elmtRightMap[nelmt].num_elements(); i++)
-                            {
-                                std::cout<<"elmtRightMap=    "<<elmtRightMap[nelmt][i]<<" elmtRightSign=    "<<elmtRightSign[nelmt][i]<<endl;
-                            }
+                            // std::cout<<"RAdjExp=    "<<ntmp<<endl;
+                            // for(int i = 0; i < elmtRightMap[nelmt].num_elements(); i++)
+                            // {
+                            //     std::cout<<"elmtRightMap=    "<<elmtRightMap[nelmt][i]<<" elmtRightSign=    "<<elmtRightSign[nelmt][i]<<endl;
+                            // }
                         }
                     }
                     break;
@@ -441,7 +443,7 @@ namespace Nektar
             {
                 for(int n = 0; n < nConvectiveFields; n++)
                 {
-                    std::cout<<std::endl<<"^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"<<std::endl<<"m=    "<<m<<"  n=    "<<n<<endl;
+                    // std::cout<<std::endl<<"^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"<<std::endl<<"m=    "<<m<<"  n=    "<<n<<endl;
                     
                     for(int  nelmt = 0; nelmt < ntotElmt; nelmt++)
                     {
@@ -450,24 +452,27 @@ namespace Nektar
                         for(int npnt = 0; npnt < nElmtPnt; npnt++)
                         {
                             pntoffset = noffset+npnt;
-                            cout<<"pntoffset="<<pntoffset<<endl;
+                            // cout<<"pntoffset="<<pntoffset<<endl;
                             JacFwd[nelmt][npnt]   =   (*(TraceJac[0]->GetBlock(pntoffset,pntoffset)))(m,n);
                             JacBwd[nelmt][npnt]   =   (*(TraceJac[1]->GetBlock(pntoffset,pntoffset)))(m,n);
                         }
                     }
 
-                    explist->GetMatIpwrtbWeightBwd(JacFwd,mtxPerVar);
+                    // explist->GetMatIpwrtbWeightBwd(JacFwd,mtxPerVar);
+                    explist->GetMatIpwrtBase(JacFwd,mtxPerVar);
 
                     for(int  nelmt = 0; nelmt < ntotElmt; nelmt++)
                     {
                         nElmtCoef       = elmtcoef[nelmt];
+                        nElmtPnt        = elmtpnts[nelmt];
+
                         ElmtMat         = mtxPerVar[nelmt];
-                        std::cout   <<std::endl<<"*********************************"<<std::endl<<"element :   "<<nelmt<<std::endl;
-                        std::cout   <<(*ElmtMat)<<endl;
+                        // std::cout   <<std::endl<<"*********************************"<<std::endl<<"element :   "<<nelmt<<std::endl;
+                        // std::cout   <<(*ElmtMat)<<endl;
                        
                         tmpGmtx         = gmtx->GetBlock(LAdjExpid[nelmt],LAdjExpid[nelmt]);
 
-                        for(int ncl = 0; ncl < nElmtCoef; ncl++)
+                        for(int ncl = 0; ncl < nElmtPnt; ncl++)
                         {
                             int nclAdjExp = elmtLeftMap[nelmt][ncl];
                             int nclAdjExpVar = nclAdjExp*nConvectiveFields+m;
@@ -483,20 +488,23 @@ namespace Nektar
                         }
                     }
                     
-                    explist->GetMatIpwrtbWeightBwd(JacBwd,mtxPerVar);
+                    // explist->GetMatIpwrtbWeightBwd(JacBwd,mtxPerVar);
+                    explist->GetMatIpwrtBase(JacBwd,mtxPerVar);
 
                     for(int  nelmt = 0; nelmt < ntotElmt; nelmt++)
                     {
                         if(RAdjflag[nelmt])
                         {
                             nElmtCoef       = elmtcoef[nelmt];
+                            nElmtPnt        = elmtpnts[nelmt];
+
                             ElmtMat         = mtxPerVar[nelmt];
 
-                            std::cout   <<std::endl<<"*********************************"<<std::endl<<"element :   "<<nelmt<<std::endl;
-                            std::cout   <<(*ElmtMat)<<endl;
+                            // std::cout   <<std::endl<<"*********************************"<<std::endl<<"element :   "<<nelmt<<std::endl;
+                            // std::cout   <<(*ElmtMat)<<endl;
 
                             tmpGmtx         = gmtx->GetBlock(RAdjExpid[nelmt],RAdjExpid[nelmt]);
-                            for(int ncl = 0; ncl < nElmtCoef; ncl++)
+                            for(int ncl = 0; ncl < nElmtPnt; ncl++)
                             {
                                 int nclAdjExp = elmtRightMap[nelmt][ncl];
                                 int nclAdjExpVar = nclAdjExp*nConvectiveFields+m;

@@ -3409,6 +3409,100 @@ namespace Nektar
       
         }
 
+        void ExpList::GetMatIpwrtDeriveBase(
+                                        const   Array<OneD, const  Array<OneD, NekDouble> >&inarray,
+                                        const int nDirctn, Array<OneD, DNekMatSharedPtr> &mtxPerVar)
+        {
+            int ntotElmt            = (*m_exp).size();
+            int nElmtPnt            = (*m_exp)[0]->GetTotPoints();
+            int nElmtCoef           = (*m_exp)[0]->GetNcoeffs();
+ 
+
+            Array<OneD, NekDouble>  tmpCoef(nElmtCoef,0.0);
+            Array<OneD, NekDouble>  tmpPhys(nElmtPnt,0.0);
+
+            for(int  nelmt = 0; nelmt < ntotElmt; nelmt++)
+            {
+                nElmtCoef           = (*m_exp)[nelmt]->GetNcoeffs();
+                nElmtPnt            = (*m_exp)[nelmt]->GetTotPoints();
+
+                if (tmpPhys.num_elements()!=nElmtPnt||tmpCoef.num_elements()!=nElmtCoef) 
+                {
+                    tmpPhys     =   Array<OneD, NekDouble>(nElmtPnt,0.0);
+                    tmpCoef     =   Array<OneD, NekDouble>(nElmtCoef,0.0);
+                }
+
+                                
+                for(int ncl = 0; ncl < nElmtPnt; ncl++)
+                {
+                    tmpPhys[ncl]   =   inarray[nelmt][ncl];
+
+                    (*m_exp)[nelmt]->IProductWRTDerivBase(nDirctn,tmpPhys,tmpCoef);
+
+                    for(int nrw = 0; nrw < nElmtCoef; nrw++)
+                    {
+                        (*mtxPerVar[nelmt])(nrw,ncl)   =   tmpCoef[nrw];
+                    }
+                    tmpPhys[ncl]   =   0.0; // to maintain all the other columes are zero.
+                }
+            }
+        }
+
+        void ExpList::GetMatIpwrtBase(
+                                        const   Array<OneD, const  Array<OneD, NekDouble> >&inarray,
+                                        Array<OneD, DNekMatSharedPtr> &mtxPerVar)
+        {
+            int ntotElmt            = (*m_exp).size();
+            int nElmtPnt            = (*m_exp)[0]->GetTotPoints();
+            int nElmtCoef           = (*m_exp)[0]->GetNcoeffs();
+            // int nCoefVar            =   nElmtCoef*nConvectiveFields;
+
+            // NekDouble tmp;
+            // DNekMatSharedPtr        ElmtMat ;
+
+            Array<OneD, NekDouble>  tmpCoef(nElmtCoef,0.0);
+            Array<OneD, NekDouble>  tmpPhys(nElmtPnt,0.0);
+
+            for(int  nelmt = 0; nelmt < ntotElmt; nelmt++)
+            {
+                nElmtCoef           = (*m_exp)[nelmt]->GetNcoeffs();
+                nElmtPnt            = (*m_exp)[nelmt]->GetTotPoints();
+
+                if (tmpPhys.num_elements()!=nElmtPnt||tmpCoef.num_elements()!=nElmtCoef) 
+                {
+                    tmpPhys     =   Array<OneD, NekDouble>(nElmtPnt,0.0);
+                    tmpCoef     =   Array<OneD, NekDouble>(nElmtCoef,0.0);
+                }
+
+                // ElmtMat = mtxPerVar[nelmt];
+                
+
+                // StdRegions::StdMatrixKey matkey(StdRegions::eBwdTrans,
+                //                             (*m_exp)[nelmt]->DetShapeType(),
+                //                              *((*m_exp)[nelmt]));
+                // DNekMatSharedPtr BwdTransMat =  (*m_exp)[nelmt]->GetStdMatrix(matkey);
+
+                
+                for(int ncl = 0; ncl < nElmtPnt; ncl++)
+                {
+                    // for(int npnt = 0; npnt < nElmtPnt; npnt++)
+                    // {
+                    //     tmpPhys[npnt]   =   inarray[nelmt][npnt]*(*BwdTransMat)(npnt,ncl);
+                    // }
+                    tmpPhys[ncl]   =   inarray[nelmt][ncl];
+
+                    (*m_exp)[nelmt]->IProductWRTBase(tmpPhys,tmpCoef);
+
+                    for(int nrw = 0; nrw < nElmtCoef; nrw++)
+                    {
+                        (*mtxPerVar[nelmt])(nrw,ncl)   =   tmpCoef[nrw];
+                    }
+                    tmpPhys[ncl]   =   0.0; // to maintain all the other columes are zero.
+                }
+            }
+      
+        }
+
     } //end of namespace
 } //end of namespace
 

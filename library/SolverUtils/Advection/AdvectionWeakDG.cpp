@@ -232,7 +232,8 @@ namespace Nektar
         void AdvectionWeakDG::v_AddVolumJac2Mat( const int nConvectiveFields,
                                         const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
                                         const   Array<OneD, const  Array<OneD, DNekMatSharedPtr> >&ElmtJac,
-                                        const int nDirctn, DNekBlkMatSharedPtr &gmtx)
+                                        const int nDirctn, 
+                                        Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray)
         {
             MultiRegions::ExpListSharedPtr explist = pFields[0];
                 std::shared_ptr<LocalRegions::ExpansionVector> pexp = explist->GetExp();
@@ -278,18 +279,15 @@ namespace Nektar
                         nElmtCoef       = elmtcoef[nelmt];
                         nElmtPnt        = elmtpnts[nelmt];
 
-                        tmpGmtx         = gmtx->GetBlock(nelmt,nelmt);
+                        tmpGmtx         = gmtxarray[m][n]->GetBlock(nelmt,nelmt);
                         ElmtMat         = mtxPerVar[nelmt];
 
                         for(int ncl = 0; ncl < nElmtPnt; ncl++)
                         {
-                            int nclVar = ncl*nConvectiveFields+m;
-
                             for(int nrw = 0; nrw < nElmtCoef; nrw++)
                             {
-                                int nrwVar = nrw*nConvectiveFields+n;
-                                tmp   =   (*tmpGmtx)(nrwVar,nclVar) + (*ElmtMat)(nrw,ncl);
-                                tmpGmtx->SetValue(nrwVar,nclVar,tmp);
+                                tmp   =   (*tmpGmtx)(nrw,ncl) + (*ElmtMat)(nrw,ncl);
+                                tmpGmtx->SetValue(nrw,ncl,tmp);
                             }
                         }
                     }
@@ -304,7 +302,7 @@ namespace Nektar
             const int                                          nConvectiveFields,
             const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
             const Array<OneD, DNekBlkMatSharedPtr>            &TraceJac,
-            DNekBlkMatSharedPtr &gmtx)
+            Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray)
         {
             MultiRegions::ExpListSharedPtr explist = pFields[0]->GetTrace();
             std::shared_ptr<LocalRegions::ExpansionVector> pexp= explist->GetExp();
@@ -470,20 +468,18 @@ namespace Nektar
                         // std::cout   <<std::endl<<"*********************************"<<std::endl<<"element :   "<<nelmt<<std::endl;
                         // std::cout   <<(*ElmtMat)<<endl;
                        
-                        tmpGmtx         = gmtx->GetBlock(LAdjExpid[nelmt],LAdjExpid[nelmt]);
+                        tmpGmtx         = gmtxarray[m][n]->GetBlock(LAdjExpid[nelmt],LAdjExpid[nelmt]);
 
                         for(int ncl = 0; ncl < nElmtPnt; ncl++)
                         {
                             int nclAdjExp = elmtLeftMap[nelmt][ncl];
-                            int nclAdjExpVar = nclAdjExp*nConvectiveFields+m;
 
                             for(int nrw = 0; nrw < nElmtCoef; nrw++)
                             {
                                 int nrwAdjExp = elmtLeftMap[nelmt][nrw];
-                                int nrwAdjExpVar = nrwAdjExp*nConvectiveFields+n;
-                                tmp   =   (*tmpGmtx)(nclAdjExpVar,nrwAdjExpVar);
+                                tmp   =   (*tmpGmtx)(nclAdjExp,nrwAdjExp);
                                 tmp   +=  elmtLeftSign[nelmt][ncl]*elmtLeftSign[nelmt][nrw]*(*ElmtMat)(nrw,ncl);
-                                tmpGmtx->SetValue(nclAdjExpVar,nrwAdjExpVar,tmp);
+                                tmpGmtx->SetValue(nclAdjExp,nrwAdjExp,tmp);
                             }
                         }
                     }
@@ -503,19 +499,17 @@ namespace Nektar
                             // std::cout   <<std::endl<<"*********************************"<<std::endl<<"element :   "<<nelmt<<std::endl;
                             // std::cout   <<(*ElmtMat)<<endl;
 
-                            tmpGmtx         = gmtx->GetBlock(RAdjExpid[nelmt],RAdjExpid[nelmt]);
+                            tmpGmtx         = gmtxarray[m][n]->GetBlock(RAdjExpid[nelmt],RAdjExpid[nelmt]);
                             for(int ncl = 0; ncl < nElmtPnt; ncl++)
                             {
                                 int nclAdjExp = elmtRightMap[nelmt][ncl];
-                                int nclAdjExpVar = nclAdjExp*nConvectiveFields+m;
 
                                 for(int nrw = 0; nrw < nElmtCoef; nrw++)
                                 {
                                     int nrwAdjExp = elmtRightMap[nelmt][nrw];
-                                    int nrwAdjExpVar = nrwAdjExp*nConvectiveFields+n;
-                                    tmp   =   (*tmpGmtx)(nclAdjExpVar,nrwAdjExpVar);
+                                    tmp   =   (*tmpGmtx)(nclAdjExp,nrwAdjExp);
                                     tmp   -=  elmtRightSign[nelmt][ncl]*elmtRightSign[nelmt][nrw]*(*ElmtMat)(nrw,ncl);
-                                    tmpGmtx->SetValue(nclAdjExpVar,nrwAdjExpVar,tmp);
+                                    tmpGmtx->SetValue(nclAdjExp,nrwAdjExp,tmp);
                                 }
                             }
                         }

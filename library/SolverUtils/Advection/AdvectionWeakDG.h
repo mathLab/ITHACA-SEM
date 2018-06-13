@@ -72,14 +72,15 @@ namespace Nektar
             virtual void v_AddVolumJac2Mat( const int nConvectiveFields,
                 const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
                 const Array<OneD, const  Array<OneD, DNekMatSharedPtr> >&ElmtJac,
-                const int nDirctn, DNekBlkMatSharedPtr &gmtx);
+                const int nDirctn, 
+                Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray);
 
 
             virtual void v_AddTraceJac2Mat(
                 const int                                          nConvectiveFields,
                 const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
                 const Array<OneD, DNekBlkMatSharedPtr>            &TraceJac,
-                DNekBlkMatSharedPtr &gmtx);
+                Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray);
         };
     }
 }

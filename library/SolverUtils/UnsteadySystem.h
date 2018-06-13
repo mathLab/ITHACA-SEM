@@ -108,6 +108,8 @@ namespace Nektar
             /// Residual of the nonlinear system at the kth iteration in the Newton method(Nonlinear iteration)
             /// also the b of linearsys(Ax=b) stored to compute Jacobian_
             Array<OneD,       Array<OneD, NekDouble> >      m_SysEquatResid_k;
+
+            Array<OneD, Array<OneD, DNekBlkMatSharedPtr> >  m_PrecMatVars;
             
 
             /// Initialises UnsteadySystem class members.

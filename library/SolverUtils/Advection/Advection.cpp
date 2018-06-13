@@ -89,7 +89,7 @@ void Advection::v_AddTraceJac2Mat(
     const int                                          nConvectiveFields,
     const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
     const Array<OneD, DNekBlkMatSharedPtr>            &TraceJac,
-    DNekBlkMatSharedPtr &gmtx)
+    Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray)
 {
     ASSERTL0(false,"v_AddTraceJac2Mat NOT SPECIFIED");
     return;
@@ -99,7 +99,8 @@ void Advection::v_AddTraceJac2Mat(
 void Advection::v_AddVolumJac2Mat( const int nConvectiveFields,
                                 const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
                                 const   Array<OneD, const  Array<OneD, DNekMatSharedPtr> >&ElmtJac,
-                                const int nDirctn, DNekBlkMatSharedPtr &gmtx)
+                                const int nDirctn, 
+                                Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray)
 {
     ASSERTL0(false,"v_AddVolumJac2Mat NOT SPECIFIED");
     return;

@@ -136,29 +136,32 @@ namespace Nektar
         void preconditioner(
             const Array<OneD, NekDouble> &inarray,
                   Array<OneD, NekDouble >&out);
+        void preconditioner_BlkDiag(
+            const Array<OneD, NekDouble> &inarray,
+            Array<OneD, NekDouble >&outarray);
 
-        void AllocatePrecondBlkDiag(DNekBlkMatSharedPtr &gmtx);
+        void AllocatePrecondBlkDiag(Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray);
 
         void GetpreconditionerNSBlkDiag(const Array<OneD, const Array<OneD, NekDouble> >&inarray,
-                                            DNekBlkMatSharedPtr &gmtx);
+                                            Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray);
 
-        void AddMatNSBlkDiag_MassSource(DNekBlkMatSharedPtr &gmtx);
         
-
         void AddMatNSBlkDiag_volume(const Array<OneD, const Array<OneD, NekDouble> >&inarray,
-                                        DNekBlkMatSharedPtr &gmtx);
+                                        Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray);
 
         void AddMatNSBlkDiag_boundary(const Array<OneD, const Array<OneD, NekDouble> >&inarray,
-                                        DNekBlkMatSharedPtr &gmtx);
+                                        Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray);
 
-        void MultiplyElmtBwdInvMass(DNekBlkMatSharedPtr &gmtx,const NekDouble dtlamda);
+        void MultiplyElmtBwdInvMass(Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray,const NekDouble dtlamda);
 
+        void ElmtVarInvMtrx(Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray);
         void CoutScalBlkMat(DNekBlkMatSharedPtr &gmtx, const unsigned int nwidthcolm=12);
         void CoutStandardMat(
             DNekMatSharedPtr &loc_matNvar,
             const unsigned int nwidthcolm=12);
-        void FillBlkMat(DNekBlkMatSharedPtr &gmtx,const NekDouble valu);
-        void AllocatePrecondBlkDiag_2d(Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray);
+        void Fill2DArrayOfBlkDiagonalMat(
+            Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray,
+            const NekDouble valu);
         
 
         void PointFluxJacobian_pn(

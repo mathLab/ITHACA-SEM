@@ -116,7 +116,7 @@ namespace Nektar
             m_ode.DefineOdeRhs     (&UnsteadyInviscidBurger::DoOdeRhs,        this);
             m_ode.DefineProjection (&UnsteadyInviscidBurger::DoOdeProjection, this);
             m_ode.DefineImplicitSolve(&UnsteadyInviscidBurger::DoImplicitSolve, this);
-            ASSERTL0(false, "Implicit unsteady Advection not set up.");
+            // ASSERTL0(false, "Implicit unsteady Advection not set up.");
         }
     }
     
@@ -295,7 +295,7 @@ namespace Nektar
         m_TimeIntegLambda   = lambda;
         m_BndEvaluateTime   = time;
 
-        
+        bool l_verbose      = m_session->DefinesCmdLineArgument("verbose");
 
         const unsigned int MaxNonlinIte =   500;
         unsigned int nvariables  = inarray.num_elements();
@@ -303,18 +303,22 @@ namespace Nektar
         unsigned int ntotal      = nvariables*npoints;
 
         bool converged;
-        unsigned int nGlobal,nDir;
-        NekDouble resnorm,dsolnorm;
-        NekDouble resfactor = 1.0;
-        NekDouble tolrnc    = 1.0E-12;
+        // unsigned int nGlobal,nDir;
+        // NekDouble dsolnorm;
+        // NekDouble resfactor = 1.0;
+        NekDouble resnorm;
+        NekDouble tolrnc    = 1.0E-8;
         NekDouble tol2      = tolrnc*tolrnc;
+        NekDouble LinSysTol = 0.0;
 
 
+        m_PrecMatVars = Array<OneD, Array<OneD, DNekBlkMatSharedPtr> >(nvariables);
+        for(int i = 0; i < nvariables; i++)
+        {
+            m_PrecMatVars[i] =  Array<OneD, DNekBlkMatSharedPtr> (nvariables);
+        }
 
-        // for (int i = 0; i < npoints; i++)
-        // {
-        //     cout <<"inarray["<<i<<"]= "<<inarray[0][i]<<endl;
-        // }
+        AllocatePrecondBlkDiag(m_PrecMatVars);
 
         Array<OneD, NekDouble> NonlinSysRes_1D(ntotal,0.0),sol_k_1D(ntotal,0.0),dsol_1D(ntotal,0.0);
         //Array<OneD,       Array<OneD, NekDouble> > sol_k;
@@ -333,7 +337,7 @@ namespace Nektar
             Vmath::Vcopy(npoints,inarray[i],1,m_TimeIntegtSol_k[i],1);
         }
 
-        ASSERTL0((1==nvariables),"only 1==nvariables")
+        //ASSERTL0((1==nvariables),"only 1==nvariables")
 
 
         // TODO: 
@@ -346,28 +350,40 @@ namespace Nektar
         //LibUtilities::CommSharedPtr                 v_Comm;
         NekLinSysIterative linsol(m_session,v_Comm);
         m_LinSysOprtors.DefineMatrixMultiply(&UnsteadyInviscidBurger::MatrixMultiply, this);
-        m_LinSysOprtors.DefinePrecond(&UnsteadyInviscidBurger::preconditioner, this);
+        m_LinSysOprtors.DefinePrecond(&UnsteadyInviscidBurger::preconditioner_BlkDiag, this);
         linsol.setLinSysOperators(m_LinSysOprtors);
-
+        // NonlinSysEvaluator(m_TimeIntegtSol_k,m_SysEquatResid_k);
+        NonlinSysEvaluator(m_TimeIntegtSol_k,m_SysEquatResid_k);
+        DebugNumCalJac(m_PrecMatVars);
+        // Cout2DArrayBlkMat(m_PrecMatVars);
+        ElmtVarInvMtrx(m_PrecMatVars);
+        // Cout2DArrayBlkMat(m_PrecMatVars);
         converged = false;
         for (int k = 0; k < MaxNonlinIte; k++)
         {
             
             NonlinSysEvaluator(m_TimeIntegtSol_k,m_SysEquatResid_k);
+            // GetpreconditionerNSBlkDiag(m_TimeIntegtSol_k,m_PrecMatVars);
+
+            // DebugNumCalElmtJac(0);
 
             // NonlinSysRes_1D and m_SysEquatResid_k share the same storage
             resnorm = Vmath::Dot(ntotal,NonlinSysRes_1D,NonlinSysRes_1D);
-
-            //cout << "resnorm =" << resnorm<<endl;
             if (resnorm<tol2)
             {
+                /// TODO: m_root
+                if(l_verbose)
+                {
+                    cout <<"Newton iteration converged with residual:   " << sqrt(resnorm)<<"  using   "<<k<<"   iterations"<<endl;
+                }
                 converged = true;
                 break;
             }
             
 
             //TODO: currently  NonlinSysRes is 2D array and SolveLinearSystem needs 1D array
-             linsol.SolveLinearSystem(ntotal,NonlinSysRes_1D,dsol_1D,0);
+            LinSysTol = 0.01*sqrt(resnorm);
+            linsol.SolveLinearSystem(ntotal,NonlinSysRes_1D,dsol_1D,0,LinSysTol);
 
             for(int i = 0; i < nvariables; i++)
             {
@@ -375,12 +391,15 @@ namespace Nektar
             }
 
         }
-        //cout << "Residual of Nonlinear System is:" << sqrt(resnorm)<<endl;
 
-        ASSERTL0((converged),"Nonlinear system solver not converge in UnsteadyInviscidBurger::DoImplicitSolve ")
+        /// TODO: disconnect these from other arrays to avoid memory cannot release.
+        // m_TimeIntegtSol_k   =   nullptr;
+        // m_TimeIntegtSol_n   =   nullptr;
+        // m_SysEquatResid_k   =   nullptr;
+        ASSERTL0((converged),"Nonlinear system solver not converge in CompressibleFlowSystem::DoImplicitSolve ")
         return;
     }
-    
+
     
 
     void UnsteadyInviscidBurger::NonlinSysEvaluator(
@@ -459,6 +478,593 @@ namespace Nektar
         Vmath::Vcopy(ntotal,inarray,1,out,1);
         return;
     }
+
+
+    void UnsteadyInviscidBurger::DebugNumCalJac(Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray)
+    {
+        MultiRegions::ExpListSharedPtr explist = m_fields[0];
+            std::shared_ptr<LocalRegions::ExpansionVector> pexp = explist->GetExp();
+        int nElmts    = (*pexp).size();
+        int nvariables= gmtxarray.num_elements();
+
+        Array<OneD, Array<OneD, DNekMatSharedPtr> >  ElmtPrecMatVars;
+        for(int i = 0; i < nElmts; i++)
+        {
+            DebugNumCalElmtJac(ElmtPrecMatVars,i);
+            for(int m = 0; m < nvariables; m++)
+            {
+                for(int n = 0; n < nvariables; n++)
+                {
+                    gmtxarray[m][n]->SetBlock(i,i,ElmtPrecMatVars[m][n]);
+                }
+            }
+        }
+    }
+
+    
+    void UnsteadyInviscidBurger::DebugNumCalElmtJac(Array<OneD, Array<OneD, DNekMatSharedPtr> > &ElmtPrecMatVars ,const int nelmt)
+    {
+        MultiRegions::ExpListSharedPtr explist = m_fields[0];
+            std::shared_ptr<LocalRegions::ExpansionVector> pexp = explist->GetExp();
+        int nElmtPnt    = (*pexp)[nelmt]->GetTotPoints();
+        int nElmtOffset = explist->GetPhys_Offset(nelmt);
+        
+        unsigned int nvariables = m_TimeIntegtSol_n.num_elements();
+        unsigned int npoints    = m_TimeIntegtSol_n[0].num_elements();
+        unsigned int ntotpnt    = nvariables*npoints;
+        Array<OneD, NekDouble > tmpinn_1d(ntotpnt,0.0);
+        Array<OneD, NekDouble > tmpout_1d(ntotpnt,0.0);
+        Array<OneD,       Array<OneD, NekDouble> > tmpinn(nvariables);
+        Array<OneD,       Array<OneD, NekDouble> > tmpout(nvariables);
+        for(int i = 0; i < nvariables; i++)
+        {
+            int noffset = i*npoints;
+            tmpinn[i] = tmpinn_1d+noffset;
+            tmpout[i] = tmpout_1d+noffset;
+        }
+
+        DNekMatSharedPtr    tmpStdMat;
+
+        ElmtPrecMatVars = Array<OneD, Array<OneD, DNekMatSharedPtr> >  (nvariables);
+
+        for(int i = 0; i < nvariables; i++)
+        {
+            ElmtPrecMatVars[i] =  Array<OneD, DNekMatSharedPtr> (nvariables);
+            for(int j = 0; j < nvariables; j++)
+            {
+                ElmtPrecMatVars[i][j] =  MemoryManager<DNekMat>
+                    ::AllocateSharedPtr(nElmtPnt, nElmtPnt, 0.0);
+            }
+        }
+
+        for (int i = 0; i < nvariables; i++)
+        {
+            for (int npnt = 0; npnt < nElmtPnt; npnt++)
+            {
+                tmpinn[i][nElmtOffset+npnt] = 1.0;
+                MatrixMultiply(tmpinn_1d,tmpout_1d);
+                for (int j = 0; j < nvariables; j++)
+                {
+                    for (int npntf = 0; npntf < nElmtPnt; npntf++)
+                    {
+                        tmpStdMat = ElmtPrecMatVars[j][i];
+                        (*tmpStdMat)(npntf,npnt) = tmpout[j][nElmtOffset+npntf];
+                    }
+                }
+                tmpinn[i][nElmtOffset+npnt] = 0.0;
+            }
+        }
+        // Cout2DArrayBlkMat(ElmtPrecMatVars);
+        return ElmtPrecMatVars;
+    }
+
+    void UnsteadyInviscidBurger::preconditioner_BlkDiag(
+                                                 const Array<OneD, NekDouble> &inarray,
+                                                 Array<OneD, NekDouble >&outarray)
+    {
+        unsigned int nvariables = m_TimeIntegtSol_n.num_elements();
+        unsigned int npoints    = m_TimeIntegtSol_n[0].num_elements();
+        Array<OneD, NekVector<NekDouble> > tmparray(nvariables);
+
+
+        PointerWrapper pwrapp = eWrapper;
+        if(inarray.get() == outarray.get())
+        {
+            pwrapp = eCopy;
+        }
+
+        for(int m = 0; m < nvariables; m++)
+        {
+            int moffset = m*npoints;
+            tmparray[m] =  NekVector<NekDouble> (npoints,inarray+moffset,pwrapp);
+        }
+        
+        Vmath::Fill(outarray.num_elements(),0.0,outarray,1);
+        for(int m = 0; m < nvariables; m++)
+        {
+            int moffset = m*npoints;
+            NekVector<NekDouble> out(npoints,outarray+moffset,eWrapper);
+            for(int n = 0; n < nvariables; n++)
+            {
+                out += (*m_PrecMatVars[m][n])*tmparray[m];
+            }
+        }
+        
+    }
+    void UnsteadyInviscidBurger::AllocatePrecondBlkDiag(Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray)
+    {
+
+        int nvars = m_fields.num_elements();
+        int nelmts  = m_fields[0]->GetNumElmts();
+        int nrowsVars,ncolsVars;
+        int nelmtcoef,nelmtpnts;
+        DNekMatSharedPtr loc_matNvar;
+        Array<OneD, unsigned int > nelmtmatdim(nelmts);
+        for(int i = 0; i < nelmts; i++)
+        {
+            nelmtcoef   =   m_fields[0]->GetExp(i)->GetNcoeffs();
+            nelmtpnts   =   m_fields[0]->GetExp(i)->GetTotPoints();
+            ASSERTL0(nelmtpnts>=nelmtcoef,"in AllocatePrecondBlkDiag nelmtpnts>=nelmtcoef must hold");
+            nelmtmatdim[i]  =   nelmtpnts;
+        }
+
+        for(int i = 0; i < nvars; i++)
+        {
+            for(int j = 0; j < nvars; j++)
+            {
+                gmtxarray[i][j] = MemoryManager<DNekBlkMat>
+                    ::AllocateSharedPtr(nelmtmatdim, nelmtmatdim, eDIAGONAL);
+                for(int nelm = 0; nelm < nelmts; ++nelm)
+                {
+                    nrowsVars = nelmtmatdim[nelm];
+                    ncolsVars = nrowsVars;
+                    
+                    loc_matNvar = MemoryManager<DNekMat>::AllocateSharedPtr(nrowsVars,ncolsVars,0.0);
+                    gmtxarray[i][j]->SetBlock(nelm,nelm,loc_matNvar);
+                }
+                
+            }
+        }
+    }
+
+    void UnsteadyInviscidBurger::ElmtVarInvMtrx(Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray)
+    {
+        MultiRegions::ExpListSharedPtr explist = m_fields[0];
+            std::shared_ptr<LocalRegions::ExpansionVector> pexp = explist->GetExp();
+        int ntotElmt            = (*pexp).size();
+        int nConvectiveFields = m_fields.num_elements();
+
+        DNekMatSharedPtr        ElmtMat;
+
+        Array<OneD, NekDouble> coefarray(explist->GetNcoeffs(),0.0);
+        Array<OneD, NekDouble> physarray(explist->GetTotPoints(),0.0);
+
+        Array<OneD, int > elmtpnts(ntotElmt);
+        Array<OneD, int > elmtcoef(ntotElmt);
+        int nElmtPnt   =    (*pexp)[0]->GetTotPoints();
+        int nElmtPnt0  =    nElmtPnt;
+
+        int nElmtPntVAr = nElmtPnt0*nConvectiveFields;
+        DNekMatSharedPtr    tmpGmtx = MemoryManager<DNekMat>
+                    ::AllocateSharedPtr(nElmtPntVAr, nElmtPntVAr,0.0);
+        for(int  nelmt = 0; nelmt < ntotElmt; nelmt++)
+        {
+            nElmtPnt            = (*pexp)[nelmt]->GetTotPoints();
+            
+            if (nElmtPnt0!=nElmtPnt) 
+            {
+                nElmtPnt0 = nElmtPnt;
+                nElmtPntVAr = nElmtPnt0*nConvectiveFields;
+                tmpGmtx = MemoryManager<DNekMat>
+                    ::AllocateSharedPtr(nElmtPntVAr, nElmtPntVAr,0.0);
+            }
+
+            for(int m = 0; m < nConvectiveFields; m++)
+            {
+                for(int n = 0; n < nConvectiveFields; n++)
+                {
+                    ElmtMat =   gmtxarray[m][n]->GetBlock(nelmt,nelmt);
+                    for(int nrw = 0; nrw < nElmtPnt; nrw++)
+                    {
+                        int nrwvar = m*nElmtPnt+nrw;
+                        for(int ncl = 0; ncl < nElmtPnt; ncl++)
+                        {
+                            int nclvar = n*nElmtPnt+ncl;
+                            (*tmpGmtx)(nrwvar,nclvar)=(*ElmtMat)(nrw,ncl);
+                        }
+                    }
+                }
+            }
+
+            tmpGmtx->Invert();
+
+            for(int m = 0; m < nConvectiveFields; m++)
+            {
+                for(int n = 0; n < nConvectiveFields; n++)
+                {
+                    ElmtMat =   gmtxarray[m][n]->GetBlock(nelmt,nelmt);
+                    for(int nrw = 0; nrw < nElmtPnt; nrw++)
+                    {
+                        int nrwvar = m*nElmtPnt+nrw;
+                        for(int ncl = 0; ncl < nElmtPnt; ncl++)
+                        {
+                            int nclvar = n*nElmtPnt+ncl;
+                            (*ElmtMat)(nrw,ncl) =   (*tmpGmtx)(nrwvar,nclvar);
+                        }
+                    }
+                }
+            }
+        }
+        return;
+    }
+
+    void UnsteadyInviscidBurger::GetpreconditionerNSBlkDiag(
+                                            const Array<OneD, const Array<OneD, NekDouble> >&inarray,
+                                            Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray)
+    {
+        // DoOdeProjection(inarray,inarray,m_BndEvaluateTime);
+
+        Fill2DArrayOfBlkDiagonalMat(gmtxarray,0.0);
+        // Cout2DArrayBlkMat(gmtxarray);
+        // AddMatNSBlkDiag_volume(inarray,gmtxarray);
+        // Cout2DArrayBlkMat(gmtxarray);
+
+        AddMatNSBlkDiag_boundary(inarray,gmtxarray);
+        // Cout2DArrayBlkMat(gmtxarray);
+        MultiplyElmtBwdInvMassFwd(gmtxarray,m_TimeIntegLambda);
+        // Cout2DArrayBlkMat(gmtxarray);
+        ElmtVarInvMtrx(gmtxarray);
+    }
+
+    void UnsteadyInviscidBurger::Fill2DArrayOfBlkDiagonalMat(Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray,const NekDouble valu)
+    {
+        
+        int n1d = gmtxarray.num_elements();
+        int n2d = gmtxarray[0].num_elements();
+
+        Array<OneD, unsigned int> rowSizes;
+        Array<OneD, unsigned int> colSizes;
+
+        DNekMatSharedPtr    loc_matNvar;
+
+        for(int n1 = 0; n1 < n1d; ++n1)
+        {
+            for(int n2 = 0; n2 < n2d; ++n2)
+            {
+                
+                gmtxarray[n1][n2]->GetBlockSizes(rowSizes,colSizes);
+                int nelmts  = rowSizes.num_elements();
+
+                for(int i = 0; i < nelmts; ++i)
+                {
+                    loc_matNvar =   gmtxarray[n1][n2]->GetBlock(i,i);
+
+                    int nrows = loc_matNvar->GetRows();
+                    int ncols = loc_matNvar->GetColumns();
+
+                    for(int j = 0; j < nrows; j++)
+                    {
+                        for(int k = 0; k < ncols; k++)
+                        {
+                            (*loc_matNvar)(j,k)=valu;
+                        }
+                    }
+                }
+            }
+        }
+
+    }
+
+
+    void UnsteadyInviscidBurger::MultiplyElmtBwdInvMassFwd(Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray,const NekDouble dtlamda)
+    {
+        MultiRegions::ExpListSharedPtr explist = m_fields[0];
+            std::shared_ptr<LocalRegions::ExpansionVector> pexp = explist->GetExp();
+        int ntotElmt            = (*pexp).size();
+        int nElmtPnt,nElmtCoef;
+        int nConvectiveFields = m_fields.num_elements();
+
+        NekDouble Negdtlamda    =   -dtlamda;
+        DNekMatSharedPtr        tmpGmtx,ElmtMat;
+        DNekMatSharedPtr        Fwdmat;
+
+        Array<OneD, NekDouble> coefarray(explist->GetNcoeffs(),0.0);
+        Array<OneD, NekDouble> physarray(explist->GetTotPoints(),0.0);
+
+        Array<OneD, int > elmtpnts(ntotElmt);
+        Array<OneD, int > elmtcoef(ntotElmt);
+        int nElmtCoef0 =    (*pexp)[0]->GetNcoeffs();
+        int nElmtPnt0  =    (*pexp)[0]->GetTotPoints();
+        for(int  nelmt = 0; nelmt < ntotElmt; nelmt++)
+        {
+            nElmtCoef           = (*pexp)[nelmt]->GetNcoeffs();
+            nElmtPnt            = (*pexp)[nelmt]->GetTotPoints();
+            ASSERTL0(nElmtCoef==nElmtCoef0,"nElmtCoef==nElmtCoef0");
+            ASSERTL0(nElmtPnt==nElmtPnt0,"nElmtPnt==nElmtPnt0");
+            elmtpnts[nelmt]     =   nElmtPnt;
+            elmtcoef[nelmt]     =   nElmtCoef;
+        }
+
+        for(int m = 0; m < nConvectiveFields; m++)
+        {
+            for(int n = 0; n < nConvectiveFields; n++)
+            {
+                for(int  nelmt = 0; nelmt < ntotElmt; nelmt++)
+                {
+                    StdRegions::StdMatrixKey  key(StdRegions::eFwdTrans,
+                                          (*pexp)[nelmt]->DetShapeType(), *(*pexp)[nelmt]);
+                    Fwdmat = (*pexp)[nelmt]->GetStdMatrix(key);
+
+                    nElmtPnt            = elmtpnts[nelmt];
+                    nElmtCoef           = elmtcoef[nelmt];
+                    tmpGmtx =   gmtxarray[m][n]->GetBlock(nelmt,nelmt);
+
+                    DNekMatSharedPtr coefmat = MemoryManager<DNekMat>
+                        ::AllocateSharedPtr(1, nElmtCoef,0.0);
+                    DNekMatSharedPtr pntsmat = MemoryManager<DNekMat>
+                        ::AllocateSharedPtr(1, nElmtPnt,0.0);
+
+                    for(int nrw = 0; nrw < nElmtCoef; nrw++)
+                    {
+                        for(int ncl = 0; ncl < nElmtCoef; ncl++)
+                        {
+                            (*coefmat)(0,ncl)   =   (*tmpGmtx)(nrw,ncl);
+                        }
+                        (*pntsmat) = (*coefmat)*(*Fwdmat);
+                        for(int ncl = 0; ncl < nElmtPnt; ncl++)
+                        {
+                            (*tmpGmtx)(nrw,ncl) =   (*pntsmat)(0,ncl);
+                        }
+                    }
+                }
+            }
+        }
+
+        for(int m = 0; m < nConvectiveFields; m++)
+        {
+            for(int n = 0; n < nConvectiveFields; n++)
+            {
+                for(int ncl = 0; ncl < nElmtPnt0; ncl++)
+                {
+                    for(int  nelmt = 0; nelmt < ntotElmt; nelmt++)
+                    {
+                        nElmtPnt            = elmtpnts[nelmt];
+                        nElmtCoef           = elmtcoef[nelmt];
+                        tmpGmtx =   gmtxarray[m][n]->GetBlock(nelmt,nelmt);
+
+                        int n_offset    =   explist->GetCoeff_Offset(nelmt);
+                        
+                        for(int nrw = 0; nrw < nElmtCoef; nrw++)
+                        {
+                            coefarray[n_offset+nrw]   =   (*tmpGmtx)(nrw,ncl);
+                        }
+                    }
+                    explist->MultiplyByElmtInvMass(coefarray, coefarray);
+                    explist->BwdTrans             (coefarray, physarray);
+
+                    for(int  nelmt = 0; nelmt < ntotElmt; nelmt++)
+                    {
+                        nElmtPnt            = elmtpnts[nelmt];
+                        tmpGmtx =   gmtxarray[m][n]->GetBlock(nelmt,nelmt);
+                        int n_offset    =   explist->GetPhys_Offset(nelmt);
+                        for(int nrw = 0; nrw < nElmtPnt; nrw++)
+                        {
+                            (*tmpGmtx)(nrw,ncl)   = Negdtlamda*physarray[n_offset+nrw];
+                        }
+                    }
+                }
+            }
+        }
+
+        for(int m = 0; m < nConvectiveFields; m++)
+        {
+            for(int ncl = 0; ncl < nElmtPnt0; ncl++)
+            {
+                for(int  nelmt = 0; nelmt < ntotElmt; nelmt++)
+                {
+                    tmpGmtx =   gmtxarray[m][m]->GetBlock(nelmt,nelmt);
+                    (*tmpGmtx)(ncl,ncl)   += 1.0;
+                }
+            }
+        }
+        return;
+    }
+
+    void UnsteadyInviscidBurger::AddMatNSBlkDiag_volume(
+                                        const Array<OneD, const Array<OneD, NekDouble> >&inarray,
+                                        Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray)
+    {
+        int nSpaceDim = m_graph->GetSpaceDimension();
+        int nvariable = inarray.num_elements();
+
+        Array<OneD, Array<OneD, DNekMatSharedPtr> > ElmtJac;
+        
+        for(int nDirctn = 0; nDirctn < nSpaceDim; nDirctn++)
+        {
+            ElmtJac = GetFluxVectorJacDirctn(nDirctn,inarray);
+            m_advObject->AddVolumJac2Mat(nvariable,m_fields,ElmtJac,nDirctn,gmtxarray);
+        }
+    }
+
+
+    void UnsteadyInviscidBurger::AddMatNSBlkDiag_boundary(const Array<OneD, const Array<OneD, NekDouble> >&inarray,
+                                        Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray)
+    {
+        int nvariables = inarray.num_elements();
+        Array<OneD, DNekBlkMatSharedPtr > TraceJac;
+        TraceJac    =   GetTraceJac(inarray);
+        m_advObject->AddTraceJac2Mat(nvariables,m_fields, TraceJac,gmtxarray);
+    }
+
+    Array<OneD, DNekBlkMatSharedPtr> UnsteadyInviscidBurger::GetTraceJac(
+        const Array<OneD, const Array<OneD, NekDouble> > &inarray)
+    {
+        int nvariables = inarray.num_elements();
+        // int npoints    = GetNpoints();
+        int nTracePts  = GetTraceTotPoints();
+
+        // Store forwards/backwards space along trace space
+        Array<OneD, Array<OneD, NekDouble> > Fwd    (nvariables);
+        Array<OneD, Array<OneD, NekDouble> > Bwd    (nvariables);
+
+        Array<OneD, unsigned int> n_blks(nTracePts);
+        for(int i=0;i<nTracePts;i++)
+        {
+            n_blks[i]    = nvariables;
+        }
+        DNekBlkMatSharedPtr FJac = MemoryManager<DNekBlkMat>
+            ::AllocateSharedPtr(n_blks, n_blks, eDIAGONAL);
+        DNekBlkMatSharedPtr BJac = MemoryManager<DNekBlkMat>
+            ::AllocateSharedPtr(n_blks, n_blks, eDIAGONAL);
+
+        if (m_HomogeneousType == eHomogeneous1D)
+        {
+            Fwd = NullNekDoubleArrayofArray;
+            Bwd = NullNekDoubleArrayofArray;
+        }
+        else
+        {
+            for(int i = 0; i < nvariables; ++i)
+            {
+                Fwd[i]     = Array<OneD, NekDouble>(nTracePts, 0.0);
+                Bwd[i]     = Array<OneD, NekDouble>(nTracePts, 0.0);
+                m_fields[i]->GetFwdBwdTracePhys(inarray[i], Fwd[i], Bwd[i]);
+            }
+        }
+
+        Array<OneD, Array<OneD, NekDouble> > advVel(m_spacedim);
+
+        m_advObject->CalcTraceJac(nvariables, m_fields, advVel, inarray,
+                            Fwd, Bwd, FJac, BJac);
+
+        Array<OneD, DNekBlkMatSharedPtr>    TraceJac(2);
+        TraceJac[0] = FJac;
+        TraceJac[1] = BJac;
+
+        return TraceJac;
+    }
+
+    Array<OneD, Array<OneD, DNekMatSharedPtr> > UnsteadyInviscidBurger::GetFluxVectorJacDirctn(const int nDirctn,
+                                                        const Array<OneD, const Array<OneD, NekDouble> >&inarray)
+    {
+        int nConvectiveFields   = inarray.num_elements();
+        std::shared_ptr<LocalRegions::ExpansionVector> expvect =    m_fields[0]->GetExp();
+        int ntotElmt            = (*expvect).size();
+        LocalRegions::ExpansionSharedPtr pexp = (*expvect)[0];
+        // int nElmtPnt            = pexp->GetTotPoints();
+        // int nElmtCoef           = pexp->GetNcoeffs();
+        // int nSpaceDim           = m_graph->GetSpaceDimension();  
+        Array<OneD, NekDouble> normals;
+        Array<OneD, Array<OneD, NekDouble> > normal3D(3);
+        for(int i = 0; i < 3; i++)
+        {
+            normal3D[i] = Array<OneD, NekDouble>(3,0.0);
+        }
+        normal3D[0][0] = 1.0;
+        normal3D[1][1] = 1.0;
+        normal3D[2][2] = 1.0;
+        normals =   normal3D[nDirctn];
+
+        Array<OneD, NekDouble> pointVar(nConvectiveFields,0.0);
+
+        Array<OneD, Array<OneD, DNekMatSharedPtr> > ElmtJac(ntotElmt);
+
+        Array<OneD, Array<OneD, NekDouble> > locVars(nConvectiveFields);
+
+
+        for(int  nelmt = 0; nelmt < ntotElmt; nelmt++)
+        {
+            // nElmtCoef           = (*expvect)[nelmt]->GetNcoeffs();
+            int nElmtPnt            = (*expvect)[nelmt]->GetTotPoints();
+    
+            for(int j = 0; j < nConvectiveFields; j++)
+            {   
+                locVars[j] = inarray[j]+GetPhys_Offset(nelmt);
+            }
+
+            ElmtJac[nelmt] =   Array<OneD, DNekMatSharedPtr>(nElmtPnt);
+            for(int npnt = 0; npnt < nElmtPnt; npnt++)
+            {
+                ElmtJac[nelmt][npnt] = MemoryManager<DNekMat>
+                    ::AllocateSharedPtr(nConvectiveFields, nConvectiveFields);
+                for(int j = 0; j < nConvectiveFields; j++)
+                {
+                    pointVar[j] = locVars[j][npnt];
+                }
+
+                GetFluxVectorJacPoint(pointVar,normals,ElmtJac[nelmt][npnt]);
+            }
+        }
+        return ElmtJac;
+    }
+
+
+
+
+    void UnsteadyInviscidBurger::GetFluxVectorJacPoint(
+            const Array<OneD, NekDouble>                &conservVar, 
+            const Array<OneD, NekDouble>                &normals, 
+                 DNekMatSharedPtr                       &fluxJac)
+    {
+        int nvariables      = conservVar.num_elements();
+        int expDim          = m_spacedim;
+
+        if (nvariables > expDim+2)
+        {
+            ASSERTL0(false,"nvariables > expDim+2 case not coded")
+        }
+
+        DNekMatSharedPtr PointFJac3D = MemoryManager<DNekMat>
+            ::AllocateSharedPtr(nvariables, nvariables);
+        
+        Array<OneD, NekDouble> PointFwd(nvariables,0.0);
+
+
+        int nj=0;
+        int nk=0;
+        for(int j=0; j< nvariables; j++)
+        {
+            nj = j;
+            PointFwd[nj] = conservVar[j];
+        }
+        NekDouble fsw,efix_StegerWarming;
+        efix_StegerWarming = 0.0;
+
+        fsw = 0.0; // exact flux Jacobian if fsw=0.0
+        PointFluxJacobian_pn(PointFwd,normals,PointFJac3D,efix_StegerWarming,fsw);
+
+        for(int j=0; j< nvariables; j++)
+        {
+            nj = j;
+            for(int k=0; k< nvariables; k++)
+            {
+                nk = k;
+                (*fluxJac)(j,k) = (*PointFJac3D)(nj,nk); 
+            }
+        }
+        
+    }
+
+    // Currently duplacate in compressibleFlowSys
+    // if fsw=+-1 calculate the steger-Warming flux vector splitting flux Jacobian
+    // if fsw=0   calculate the Jacobian of the exact flux 
+    // efix is the numerical flux entropy fix parameter
+    void UnsteadyInviscidBurger::PointFluxJacobian_pn(
+            const Array<OneD, NekDouble> &Fwd,
+            const Array<OneD, NekDouble> &normals,
+                  DNekMatSharedPtr       &FJac,
+            const NekDouble efix,   const NekDouble fsw)
+    {
+        for(int i = 0; i < Fwd.num_elements(); i++)
+        {
+            (*FJac)(i,i)   =   Fwd[i];
+        }
+    }
+
+    
+
+
+
 #endif
 
 

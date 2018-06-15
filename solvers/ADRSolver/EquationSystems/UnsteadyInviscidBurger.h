@@ -118,6 +118,62 @@ namespace Nektar
             const Array<OneD, NekDouble> &inarray,
                   Array<OneD, NekDouble >&out);
 
+        void DebugNumCalJac(
+            Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray);
+
+        void DebugNumCalElmtJac(
+            Array<OneD, Array<OneD, DNekMatSharedPtr> > &ElmtPrecMatVars,
+            const int nelmt);
+
+
+        void preconditioner_BlkDiag(
+            const Array<OneD, NekDouble> &inarray,
+            Array<OneD, NekDouble >&outarray);
+
+        void AllocatePrecondBlkDiag(
+            Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray);
+
+        void ElmtVarInvMtrx(
+            Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray);
+
+        void GetpreconditionerNSBlkDiag(
+            const Array<OneD, const Array<OneD, NekDouble> >&inarray,
+            Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray);
+        
+        void Fill2DArrayOfBlkDiagonalMat(
+            Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray,const NekDouble valu);
+
+        void AddMatNSBlkDiag_volume(
+            const Array<OneD, const Array<OneD, NekDouble> >&inarray,
+            Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray); 
+
+        void AddMatNSBlkDiag_boundary(
+            const Array<OneD, const Array<OneD, NekDouble> >&inarray,
+            Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray);
+
+        Array<OneD, DNekBlkMatSharedPtr> GetTraceJac(
+            const Array<OneD, const Array<OneD, NekDouble> > &inarray);
+
+        Array<OneD, Array<OneD, DNekMatSharedPtr> > GetFluxVectorJacDirctn(
+            const int nDirctn,
+            const Array<OneD, const Array<OneD, NekDouble> >&inarray);
+
+        void GetFluxVectorJacPoint(
+            const Array<OneD, NekDouble>                &conservVar, 
+            const Array<OneD, NekDouble>                &normals, 
+                 DNekMatSharedPtr                       &fluxJac);
+
+        void PointFluxJacobian_pn(
+            const Array<OneD, NekDouble> &Fwd,
+            const Array<OneD, NekDouble> &normals,
+                  DNekMatSharedPtr       &FJac,
+            const NekDouble efix,   const NekDouble fsw);
+
+        void MultiplyElmtBwdInvMassFwd(
+            Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray,
+            const NekDouble dtlamda);
+        
+
 #endif
 
         /// Get the normal velocity

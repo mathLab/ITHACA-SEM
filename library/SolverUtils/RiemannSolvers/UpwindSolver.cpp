@@ -101,5 +101,40 @@ namespace Nektar
                 }
             }
         }
+
+
+        void UpwindSolver::v_CalcFluxJacobian(
+            const int                                         nDim,
+            const Array<OneD, const Array<OneD, NekDouble> > &Fwd,
+            const Array<OneD, const Array<OneD, NekDouble> > &Bwd,
+            const Array<OneD, const Array<OneD, NekDouble> > &normals,
+                  DNekBlkMatSharedPtr                        &FJac,
+                  DNekBlkMatSharedPtr                        &BJac)
+        {
+            ASSERTL1(CheckScalars("Vn"), "Vn not defined.");
+            const Array<OneD, NekDouble> &traceVel = m_scalars["Vn"]();
+            
+            DNekMatSharedPtr                        tmpMat;
+            
+            for (int j = 0; j < traceVel.num_elements(); ++j)
+            {
+                
+                if (traceVel[j] >= 0) 
+                {
+                    for (int i = 0; i < Fwd.num_elements(); ++i)
+                    {
+                        tmpMat = FJac->GetBlock(i,i);
+                        FJac[i][j] = tmp[i][j];
+                    }
+                }
+                
+                const Array<OneD, const Array<OneD, NekDouble> > &tmp = 
+                    traceVel[j] >= 0 ? Fwd : Bwd;
+                for (int i = 0; i < Fwd.num_elements(); ++i)
+                {
+                    flux[i][j] = tmp[i][j];
+                }
+            }
+        }
     }
 }

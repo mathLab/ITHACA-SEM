@@ -39,7 +39,7 @@
 
         <PARAMETERS>
             <P> FinTime         = 1                </P>
-            <P> TimeStep        = 0.0001                </P>
+            <P> TimeStep        = 0.5                </P>
             <P> NumSteps        = FinTime/TimeStep      </P>
             <P> IO_InfoSteps    = 5000             </P>
 	    <P> IterativeSolverTolerance    = 1.0E-12   </P>
@@ -48,9 +48,11 @@
         <SOLVERINFO>
             <I PROPERTY="EQTYPE"                VALUE="UnsteadyInviscidBurger"  />
             <I PROPERTY="Projection"            VALUE="DisContinuous"           />
-            <I PROPERTY="AdvectionType"         VALUE="WeakDG"                  />
+            <I PROPERTY="AdvectionType"         VALUE="WeakDG"              />
+            <I PROPERTY="AdvectionAdvancement"  VALUE="Implicit"            />
+            <I PROPERTY="DiffusionAdvancement"  VALUE="Implicit"            />
+            <I PROPERTY="TimeIntegrationMethod" VALUE="DIRKOrder3"          />
             <I PROPERTY="UpwindType"            VALUE="Upwind"                  />
-            <I PROPERTY="TimeIntegrationMethod" VALUE="RungeKutta3_SSP"    />
         </SOLVERINFO>
 
         <VARIABLES>

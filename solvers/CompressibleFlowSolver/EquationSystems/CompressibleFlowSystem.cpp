@@ -260,6 +260,14 @@ namespace Nektar
             }
         }
 
+        // for(int i = 0; i < nvariables; ++i)
+        // {
+        //     for(int j = 0; j < nTracePts; ++j)
+        //     {
+        //         cout<<" Fwd["<<i<<"]["<<j<<"]=  "<<Fwd[i][j]<<" Bwd["<<i<<"]["<<j<<"]=  "<<Bwd[i][j]<<endl;
+        //     }
+        // }
+
         // Calculate advection
         DoAdvection(inarray, outarray, time, Fwd, Bwd);
 
@@ -425,13 +433,14 @@ namespace Nektar
         //LibUtilities::CommSharedPtr                 v_Comm;
         NekLinSysIterative linsol(m_session,v_Comm);
         m_LinSysOprtors.DefineMatrixMultiply(&CompressibleFlowSystem::MatrixMultiply, this);
-        m_LinSysOprtors.DefinePrecond(&CompressibleFlowSystem::preconditioner, this);
+        m_LinSysOprtors.DefinePrecond(&CompressibleFlowSystem::preconditioner_BlkDiag, this);
         linsol.setLinSysOperators(m_LinSysOprtors);
         // NonlinSysEvaluator(m_TimeIntegtSol_k,m_SysEquatResid_k);
+        NonlinSysEvaluator(m_TimeIntegtSol_k,m_SysEquatResid_k);
         DebugNumCalJac(m_PrecMatVars);
-        Cout2DArrayBlkMat(m_PrecMatVars);
+        // Cout2DArrayBlkMat(m_PrecMatVars);
         ElmtVarInvMtrx(m_PrecMatVars);
-        Cout2DArrayBlkMat(m_PrecMatVars);
+        // Cout2DArrayBlkMat(m_PrecMatVars);
         converged = false;
         for (int k = 0; k < MaxNonlinIte; k++)
         {
@@ -441,11 +450,9 @@ namespace Nektar
 
             // DebugNumCalElmtJac(0);
 
-            
-
             // NonlinSysRes_1D and m_SysEquatResid_k share the same storage
             resnorm = Vmath::Dot(ntotal,NonlinSysRes_1D,NonlinSysRes_1D);
-
+            cout <<"Newton residual   " << sqrt(resnorm)<<"  using   "<<k<<"   iterations"<<endl;
             if (resnorm<tol2)
             {
                 /// TODO: m_root
@@ -499,8 +506,6 @@ namespace Nektar
     }
 
     
-    
-    
     void CompressibleFlowSystem::DebugNumCalElmtJac(Array<OneD, Array<OneD, DNekMatSharedPtr> > &ElmtPrecMatVars ,const int nelmt)
     {
         MultiRegions::ExpListSharedPtr explist = m_fields[0];
@@ -522,11 +527,8 @@ namespace Nektar
             tmpout[i] = tmpout_1d+noffset;
         }
 
-        // DNekBlkMatSharedPtr tmpBlkMat;
         DNekMatSharedPtr    tmpStdMat;
 
-        // Array<OneD, unsigned int>  nblk(1);
-        // nblk[0] =   nElmtPnt;
         ElmtPrecMatVars = Array<OneD, Array<OneD, DNekMatSharedPtr> >  (nvariables);
 
         for(int i = 0; i < nvariables; i++)
@@ -536,10 +538,6 @@ namespace Nektar
             {
                 ElmtPrecMatVars[i][j] =  MemoryManager<DNekMat>
                     ::AllocateSharedPtr(nElmtPnt, nElmtPnt, 0.0);
-                // tmpBlkMat = ElmtPrecMatVars[i][j];
-                // tmpStdMat =  MemoryManager<DNekMat>
-                //     ::AllocateSharedPtr(nElmtPnt, nElmtPnt, 0.0);
-                // tmpBlkMat->SetBlock(0,0,tmpStdMat);
             }
         }
 

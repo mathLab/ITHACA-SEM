@@ -390,6 +390,7 @@ namespace Nektar
                 if (eps * m_prec_factor < m_tolerance * m_tolerance * m_rhs_magnitude)
                 {
                     m_converged = true;
+                    // cout << "eps = "<<eps<< "m_prec_factor = "<<m_prec_factor<< "m_tolerance = "<<m_tolerance<< "m_rhs_magnitude = "<<m_rhs_magnitude<<endl;
                 }
 
             }

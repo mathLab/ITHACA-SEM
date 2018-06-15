@@ -133,6 +133,7 @@ namespace Nektar
             const  Array<OneD, NekDouble> &inarray,
                    Array<OneD, NekDouble >&out);
 
+        
         void preconditioner(
             const Array<OneD, NekDouble> &inarray,
                   Array<OneD, NekDouble >&out);
@@ -153,15 +154,25 @@ namespace Nektar
                                         Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray);
 
         void MultiplyElmtBwdInvMass(Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray,const NekDouble dtlamda);
+        void MultiplyElmtBwdInvMassFwd(Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray,const NekDouble dtlamda);
 
         void ElmtVarInvMtrx(Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray);
-        void CoutScalBlkMat(DNekBlkMatSharedPtr &gmtx, const unsigned int nwidthcolm=12);
+        void CoutBlkMat(DNekBlkMatSharedPtr &gmtx, const unsigned int nwidthcolm=12);
         void CoutStandardMat(
             DNekMatSharedPtr &loc_matNvar,
+            const unsigned int nwidthcolm=12);
+
+        void Cout2DArrayBlkMat(
+            Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray,
             const unsigned int nwidthcolm=12);
         void Fill2DArrayOfBlkDiagonalMat(
             Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray,
             const NekDouble valu);
+        
+        void DebugNumCalElmtJac(
+            Array<OneD, Array<OneD, DNekMatSharedPtr> > &ElmtPrecMatVars,
+            const int nelmt);
+        void DebugNumCalJac(Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray);
         
 
         void PointFluxJacobian_pn(
@@ -171,6 +182,49 @@ namespace Nektar
             const NekDouble efix,   const NekDouble fsw);
         Array<OneD, DNekBlkMatSharedPtr> GetTraceJac(
             const Array<OneD, const Array<OneD, NekDouble> > &inarray);
+
+        void DoImplicitSolve_phy2coeff(
+            const Array<OneD, const Array<OneD, NekDouble> >&inarray,
+                Array<OneD,       Array<OneD, NekDouble> >&out,
+            const NekDouble time,
+            const NekDouble lambda);
+
+        void DoImplicitSolve_coeff(
+            const Array<OneD, const Array<OneD, NekDouble> >&inarray,
+                Array<OneD,       Array<OneD, NekDouble> >&out,
+            const NekDouble time,
+            const NekDouble lambda);
+
+        void AllocatePrecondBlkDiag_coeff(Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray);
+
+        void MatrixMultiply_MatrixFree_coeff(
+            const  Array<OneD, NekDouble> &inarray,
+                   Array<OneD, NekDouble >&out);
+
+        void DebugNumCalElmtJac_coeff(const int nelmt);
+
+        
+        void NonlinSysEvaluator_coeff(
+                Array<OneD, Array<OneD, NekDouble> > &inarray,
+                Array<OneD, Array<OneD, NekDouble> > &out);
+
+        void NonlinSysEvaluator_coeff_bnd(
+                Array<OneD, Array<OneD, NekDouble> > &inarray,
+                Array<OneD, Array<OneD, NekDouble> > &out);
+        
+
+        void DoOdeRhs_coeff(
+            const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+                Array<OneD,       Array<OneD, NekDouble> > &outarray,
+            const NekDouble                                   time);
+
+        
+        void DoAdvection_coeff(
+            const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+                Array<OneD,       Array<OneD, NekDouble> > &outarray,
+            const NekDouble                                   time,
+            const Array<OneD, Array<OneD, NekDouble> >       &pFwd,
+            const Array<OneD, Array<OneD, NekDouble> >       &pBwd);
 
 #endif
 

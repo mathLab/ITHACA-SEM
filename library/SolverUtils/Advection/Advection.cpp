@@ -85,6 +85,29 @@ void Advection::Advect(
 }
 
 
+/**
+ * @param   nConvectiveFields   Number of velocity components.
+ * @param   pFields             Expansion lists for scalar fields.
+ * @param   pAdvVel             Advection velocity.
+ * @param   pInarray            Scalar data to advect.
+ * @param   pOutarray           Advected scalar data.
+ * @param   pTime               Simulation time.
+ */
+void Advection::Advect_coeff(
+    const int                                          nConvectiveFields,
+    const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
+    const Array<OneD, Array<OneD, NekDouble> >        &pAdvVel,
+    const Array<OneD, Array<OneD, NekDouble> >        &pInarray,
+    Array<OneD, Array<OneD, NekDouble> >              &pOutarray,
+    const NekDouble                                   &pTime,
+    const Array<OneD, Array<OneD, NekDouble> >        &pFwd,
+    const Array<OneD, Array<OneD, NekDouble> >        &pBwd)
+{
+    v_Advect_coeff(nConvectiveFields, pFields, pAdvVel, pInarray,
+            pOutarray, pTime, pFwd, pBwd);
+}
+
+
 void Advection::v_AddTraceJac2Mat(
     const int                                          nConvectiveFields,
     const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
@@ -246,6 +269,19 @@ void Advection::v_SetBaseFlow(
     ASSERTL0(false,
             "A baseflow is not appropriate for this advection type.");
 }
+
+void Advection::v_Advect_coeff(
+        const int nConvectiveFields,
+        const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
+        const Array<OneD, Array<OneD, NekDouble> >        &advVel,
+        const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+              Array<OneD, Array<OneD, NekDouble> >        &outarray,
+        const NekDouble                                   &time,
+        const Array<OneD, Array<OneD, NekDouble> > &pFwd = NullNekDoubleArrayofArray,
+        const Array<OneD, Array<OneD, NekDouble> > &pBwd = NullNekDoubleArrayofArray)
+        {
+            ASSERTL0(false, "v_Advect_coeff no defined");
+        }
 
 }
 }

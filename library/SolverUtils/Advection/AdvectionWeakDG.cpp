@@ -150,73 +150,180 @@ namespace Nektar
 
             m_riemann->Solve(m_spaceDim, Fwd, Bwd, numflux);
 
-  /*           
-
-            if(FALSE)
+            // Evaulate <\phi, \hat{F}\cdot n> - OutField[i]
+            for(i = 0; i < nConvectiveFields; ++i)
             {
+                Vmath::Neg                      (nCoeffs, tmp[i], 1);
+                fields[i]->AddTraceIntegral     (numflux[i], tmp[i]);
+                fields[i]->MultiplyByElmtInvMass(tmp[i], tmp[i]);
+                fields[i]->BwdTrans             (tmp[i], outarray[i]);
+            }
+        }
 
-                Array<OneD, unsigned int> n_blks(nTracePointsTot);
-                for(int i=0;i<nTracePointsTot;i++)
+
+        void AdvectionWeakDG::v_Advect_coeff(
+            const int                                         nConvectiveFields,
+            const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
+            const Array<OneD, Array<OneD, NekDouble> >        &advVel,
+            const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+                  Array<OneD, Array<OneD, NekDouble> >        &outarray,
+            const NekDouble                                   &time,
+            const Array<OneD, Array<OneD, NekDouble> >        &pFwd,
+            const Array<OneD, Array<OneD, NekDouble> >        &pBwd)
+        {
+            int nPointsTot      = fields[0]->GetTotPoints();
+            int nCoeffs         = fields[0]->GetNcoeffs();
+            int nTracePointsTot = fields[0]->GetTrace()->GetTotPoints();
+            int i, j;
+            
+            Array<OneD, Array<OneD, Array<OneD, NekDouble> > > fluxvector(
+                nConvectiveFields);
+
+            // Allocate storage for flux vector F(u).
+            for (i = 0; i < nConvectiveFields; ++i)
+            {
+                fluxvector[i] =
+                    Array<OneD, Array<OneD, NekDouble> >(m_spaceDim);
+                for (j = 0; j < m_spaceDim; ++j)
                 {
-                    n_blks[i]    = nConvectiveFields;
+                    fluxvector[i][j] = Array<OneD, NekDouble>(nPointsTot);
                 }
-                DNekBlkMatSharedPtr FJac = MemoryManager<DNekBlkMat>
-                    ::AllocateSharedPtr(n_blks, n_blks, eDIAGONAL);
-                DNekBlkMatSharedPtr BJac = MemoryManager<DNekBlkMat>
-                    ::AllocateSharedPtr(n_blks, n_blks, eDIAGONAL);
-                m_riemann->CalcFluxJacobian(m_spaceDim, Fwd, Bwd, FJac,BJac);
-
-
-
-
-                Array<OneD, NekDouble> PointFwd(nConvectiveFields,0.0),PointBwd(nConvectiveFields,0.0);
-                Array<OneD, NekDouble> PntFluxFwd(nConvectiveFields,0.0);
-                Array<OneD, NekDouble> PntFluxBwd(nConvectiveFields,0.0);
-                Array<OneD, NekDouble> PointFlux(nConvectiveFields,0.0);
-                int cnt=0;
-                for(int i=0; i<nTracePointsTot;  i++)
-                {
-                    for(int j=0; j<nConvectiveFields;j++)
-                    {
-                        PointFwd[j] = Fwd[j][i];
-                        PointBwd[j] = Bwd[j][i];
-                    }
-                    NekVector<NekDouble> VectFluxFwd(nConvectiveFields,PntFluxFwd,eWrapper);
-                    NekVector<NekDouble> VectFluxBwd(nConvectiveFields,PntFluxBwd,eWrapper);
-
-                    DNekMat &MF = (*FJac->GetBlock(i,i));
-                    NekVector<NekDouble> VectFwd(nConvectiveFields,PointFwd,eWrapper);
-                    VectFluxFwd = MF * VectFwd;
-
-
-                    DNekMat &MB = (*BJac->GetBlock(i,i));
-                    NekVector<NekDouble> VectBwd(nConvectiveFields,PointBwd,eWrapper);
-                    VectFluxBwd = MB * VectBwd;
-
-                    NekDouble error=0.0;
-                    for(int j=0;j<nConvectiveFields;j++)
-                    {
-                        PointFlux[j] = PntFluxFwd[j]+PntFluxBwd[j];
-                        error += abs(PointFlux[j]-numflux[j][i]);
-                    }
-
-                    if(error>1.0E-7)
-                    {
-                        cnt++;
-                        std::cout   <<std::scientific<<std::setw(12)<<std::setprecision(5)
-                                <<"abs(PointFlux[0]-numflux[0][i])   =   "<<abs(PointFlux[0]-numflux[0][i])<<"    "<<PointFlux[0]<<"    "<<numflux[0][i]<<std::endl
-                                <<"abs(PointFlux[1]-numflux[1][i])   =   "<<abs(PointFlux[1]-numflux[1][i])<<"    "<<PointFlux[1]<<"    "<<numflux[1][i]<<std::endl
-                                <<"abs(PointFlux[2]-numflux[2][i])   =   "<<abs(PointFlux[2]-numflux[2][i])<<"    "<<PointFlux[2]<<"    "<<numflux[2][i]<<std::endl
-                                <<"abs(PointFlux[3]-numflux[3][i])   =   "<<abs(PointFlux[3]-numflux[3][i])<<"    "<<PointFlux[3]<<"    "<<numflux[3][i]<<std::endl;
-                    }
-                }
-                
-                std::cout   <<"cnt= "<<cnt<<std::endl;
-                
-                int j = 0;
             }
 
- */
+            ASSERTL1(m_riemann,
+                     "Riemann solver must be provided for AdvectionWeakDG.");
+
+            m_fluxVector(inarray, fluxvector);
+
+            // Get the advection part (without numerical flux)
+            for(int i = 0; i < nConvectiveFields; ++i)
+            {
+                for(int j = 0; j< outarray[i].num_elements(); ++j)
+                {
+                    outarray[i][j] = 0.0;
+                }
+                // fields[i]->IProductWRTDerivBase(fluxvector[i],outarray[i]);
+            }
+
+            // Store forwards/backwards space along trace space
+            Array<OneD, Array<OneD, NekDouble> > Fwd    (nConvectiveFields);
+            Array<OneD, Array<OneD, NekDouble> > Bwd    (nConvectiveFields);
+            Array<OneD, Array<OneD, NekDouble> > numflux(nConvectiveFields);
+
+            if (pFwd == NullNekDoubleArrayofArray ||
+                pBwd == NullNekDoubleArrayofArray)
+            {
+                for(i = 0; i < nConvectiveFields; ++i)
+                {
+                    Fwd[i]     = Array<OneD, NekDouble>(nTracePointsTot, 0.0);
+                    Bwd[i]     = Array<OneD, NekDouble>(nTracePointsTot, 0.0);
+                    numflux[i] = Array<OneD, NekDouble>(nTracePointsTot, 0.0);
+                    fields[i]->GetFwdBwdTracePhys(inarray[i], Fwd[i], Bwd[i]);
+                }
+            }
+            else
+            {
+                for(i = 0; i < nConvectiveFields; ++i)
+                {
+                    Fwd[i]     = pFwd[i];
+                    Bwd[i]     = pBwd[i];
+                    numflux[i] = Array<OneD, NekDouble>(nTracePointsTot, 0.0);
+                }
+            }
+
+            m_riemann->Solve(m_spaceDim, Fwd, Bwd, numflux);
+
+            for(i = 0; i < nConvectiveFields; ++i)
+            {
+                Vmath::Vcopy(nTracePointsTot,Fwd[i],1,numflux[i],1);
+            }
+  
+
+            // Evaulate <\phi, \hat{F}\cdot n> - OutField[i]
+            for(i = 0; i < nConvectiveFields; ++i)
+            {
+                Vmath::Neg                      (nCoeffs, outarray[i], 1);
+                fields[i]->AddTraceIntegral     (numflux[i], outarray[i]);
+                // fields[i]->MultiplyByElmtInvMass(outarray[i], outarray[i]);
+            }
+        }
+
+/* 
+        void AdvectionWeakDG::v_Advect(
+            const int                                         nConvectiveFields,
+            const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
+            const Array<OneD, Array<OneD, NekDouble> >        &advVel,
+            const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+                  Array<OneD, Array<OneD, NekDouble> >        &outarray,
+            const NekDouble                                   &time,
+            const Array<OneD, Array<OneD, NekDouble> >        &pFwd,
+            const Array<OneD, Array<OneD, NekDouble> >        &pBwd)
+        {
+            int nPointsTot      = fields[0]->GetTotPoints();
+            int nCoeffs         = fields[0]->GetNcoeffs();
+            int nTracePointsTot = fields[0]->GetTrace()->GetTotPoints();
+            int i, j;
+            
+            Array<OneD, Array<OneD, NekDouble> > tmp(nConvectiveFields);
+            Array<OneD, Array<OneD, Array<OneD, NekDouble> > > fluxvector(
+                nConvectiveFields);
+
+            // Allocate storage for flux vector F(u).
+            for (i = 0; i < nConvectiveFields; ++i)
+            {
+                fluxvector[i] =
+                    Array<OneD, Array<OneD, NekDouble> >(m_spaceDim);
+                for (j = 0; j < m_spaceDim; ++j)
+                {
+                    fluxvector[i][j] = Array<OneD, NekDouble>(nPointsTot);
+                }
+            }
+
+            ASSERTL1(m_riemann,
+                     "Riemann solver must be provided for AdvectionWeakDG.");
+
+            m_fluxVector(inarray, fluxvector);
+
+            // Get the advection part (without numerical flux)
+            for(i = 0; i < nConvectiveFields; ++i)
+            {
+                tmp[i] = Array<OneD, NekDouble>(nCoeffs, 0.0);
+
+                fields[i]->IProductWRTDerivBase(fluxvector[i],tmp[i]);
+            }
+
+            // Store forwards/backwards space along trace space
+            Array<OneD, Array<OneD, NekDouble> > Fwd    (nConvectiveFields);
+            Array<OneD, Array<OneD, NekDouble> > Bwd    (nConvectiveFields);
+            Array<OneD, Array<OneD, NekDouble> > numflux(nConvectiveFields);
+
+            if (pFwd == NullNekDoubleArrayofArray ||
+                pBwd == NullNekDoubleArrayofArray)
+            {
+                for(i = 0; i < nConvectiveFields; ++i)
+                {
+                    Fwd[i]     = Array<OneD, NekDouble>(nTracePointsTot, 0.0);
+                    Bwd[i]     = Array<OneD, NekDouble>(nTracePointsTot, 0.0);
+                    numflux[i] = Array<OneD, NekDouble>(nTracePointsTot, 0.0);
+                    fields[i]->GetFwdBwdTracePhys(inarray[i], Fwd[i], Bwd[i]);
+                }
+            }
+            else
+            {
+                for(i = 0; i < nConvectiveFields; ++i)
+                {
+                    Fwd[i]     = pFwd[i];
+                    Bwd[i]     = pBwd[i];
+                    numflux[i] = Array<OneD, NekDouble>(nTracePointsTot, 0.0);
+                }
+            }
+
+            m_riemann->Solve(m_spaceDim, Fwd, Bwd, numflux);
+  
+            // for(i = 0; i < nTracePointsTot; ++i)
+            // {
+            //     std::cout << "flux at "<<i<<std::endl<<numflux[0][i]<<std::endl<<numflux[1][i]<<std::endl<<numflux[2][i]<<std::endl<<numflux[3][i]<<std::endl;
+            // }
 
             // Evaulate <\phi, \hat{F}\cdot n> - OutField[i]
             for(i = 0; i < nConvectiveFields; ++i)
@@ -228,7 +335,7 @@ namespace Nektar
             }
         }
 
-        
+         */
         void AdvectionWeakDG::v_AddVolumJac2Mat( const int nConvectiveFields,
                                         const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
                                         const   Array<OneD, const  Array<OneD, DNekMatSharedPtr> >&ElmtJac,
@@ -271,8 +378,8 @@ namespace Nektar
                         }
                     }
 
-                    // explist->GetMatIpwrtdbWeightBwd(JacArray,nDirctn,mtxPerVar);
-                    explist->GetMatIpwrtDeriveBase(JacArray,nDirctn,mtxPerVar);
+                    explist->GetMatIpwrtdbWeightBwd(JacArray,nDirctn,mtxPerVar);
+                    // explist->GetMatIpwrtDeriveBase(JacArray,nDirctn,mtxPerVar);
 
                     for(int  nelmt = 0; nelmt < ntotElmt; nelmt++)
                     {
@@ -282,7 +389,7 @@ namespace Nektar
                         tmpGmtx         = gmtxarray[m][n]->GetBlock(nelmt,nelmt);
                         ElmtMat         = mtxPerVar[nelmt];
 
-                        for(int ncl = 0; ncl < nElmtPnt; ncl++)
+                        for(int ncl = 0; ncl < nElmtCoef; ncl++)
                         {
                             for(int nrw = 0; nrw < nElmtCoef; nrw++)
                             {
@@ -388,11 +495,11 @@ namespace Nektar
                         LAdjExpid[nelmt]    =   ntmp;
                         orient  =   LAdjExp->v_GetEorient(LAdjBndid);
                         LAdjExp->GetEdgeToElementMap(LAdjBndid,orient,elmtLeftMap[nelmt],elmtLeftSign[nelmt]);
-                        // std::cout<<"^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"<<std::endl<<"Ntrace=    "<<nelmt<<std::endl<<"LAdjExp=    "<<ntmp<<endl;
-                        // for(int i = 0; i < elmtLeftMap[nelmt].num_elements(); i++)
-                        // {
-                        //     std::cout<<"elmtLeftMap=    "<<elmtLeftMap[nelmt][i]<<" elmtLeftSign=    "<<elmtLeftSign[nelmt][i]<<endl;
-                        // }
+                        std::cout<<"^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"<<std::endl<<"Ntrace=    "<<nelmt<<std::endl<<"LAdjExp=    "<<ntmp<<endl;
+                        for(int i = 0; i < elmtLeftMap[nelmt].num_elements(); i++)
+                        {
+                            std::cout<<"elmtLeftMap=    "<<elmtLeftMap[nelmt][i]<<" elmtLeftSign=    "<<elmtLeftSign[nelmt][i]<<endl;
+                        }
                         if (RAdjBndid>-1) 
                         {
                             RAdjflag[nelmt] = true;
@@ -400,11 +507,11 @@ namespace Nektar
                             RAdjExpid[nelmt]    =   ntmp;
                             orient  =   RAdjExp->v_GetEorient(RAdjBndid);
                             RAdjExp->GetEdgeToElementMap(RAdjBndid,orient,elmtRightMap[nelmt],elmtRightSign[nelmt]);
-                            // std::cout<<"RAdjExp=    "<<ntmp<<endl;
-                            // for(int i = 0; i < elmtRightMap[nelmt].num_elements(); i++)
-                            // {
-                            //     std::cout<<"elmtRightMap=    "<<elmtRightMap[nelmt][i]<<" elmtRightSign=    "<<elmtRightSign[nelmt][i]<<endl;
-                            // }
+                            std::cout<<"RAdjExp=    "<<ntmp<<endl;
+                            for(int i = 0; i < elmtRightMap[nelmt].num_elements(); i++)
+                            {
+                                std::cout<<"elmtRightMap=    "<<elmtRightMap[nelmt][i]<<" elmtRightSign=    "<<elmtRightSign[nelmt][i]<<endl;
+                            }
                         }
                     }
                     break;
@@ -450,14 +557,23 @@ namespace Nektar
                         for(int npnt = 0; npnt < nElmtPnt; npnt++)
                         {
                             pntoffset = noffset+npnt;
-                            // cout<<"pntoffset="<<pntoffset<<endl;
+                            cout<<"pntoffset="<<pntoffset<<endl;
                             JacFwd[nelmt][npnt]   =   (*(TraceJac[0]->GetBlock(pntoffset,pntoffset)))(m,n);
                             JacBwd[nelmt][npnt]   =   (*(TraceJac[1]->GetBlock(pntoffset,pntoffset)))(m,n);
+                            
+                            // JacFwd[nelmt][npnt]   =   0.0;
+                            // JacBwd[nelmt][npnt]   =   0.0;
+                            
+                            // if(m==n)
+                            // {
+                            //     JacFwd[nelmt][npnt]   =   1.0;
+                            //     JacBwd[nelmt][npnt]   =   1.0;
+                            // }
                         }
                     }
 
-                    // explist->GetMatIpwrtbWeightBwd(JacFwd,mtxPerVar);
-                    explist->GetMatIpwrtBase(JacFwd,mtxPerVar);
+                    explist->GetMatIpwrtbWeightBwd(JacFwd,mtxPerVar);
+                    // explist->GetMatIpwrtBase(JacFwd,mtxPerVar);
 
                     for(int  nelmt = 0; nelmt < ntotElmt; nelmt++)
                     {
@@ -465,27 +581,27 @@ namespace Nektar
                         nElmtPnt        = elmtpnts[nelmt];
 
                         ElmtMat         = mtxPerVar[nelmt];
-                        // std::cout   <<std::endl<<"*********************************"<<std::endl<<"element :   "<<nelmt<<std::endl;
-                        // std::cout   <<(*ElmtMat)<<endl;
+                        std::cout   <<std::endl<<"*********************************"<<std::endl<<"element :   "<<nelmt<<std::endl;
+                        std::cout   <<(*ElmtMat)<<endl;
                        
                         tmpGmtx         = gmtxarray[m][n]->GetBlock(LAdjExpid[nelmt],LAdjExpid[nelmt]);
 
-                        for(int ncl = 0; ncl < nElmtPnt; ncl++)
+                        for(int ncl = 0; ncl < nElmtCoef; ncl++)
                         {
                             int nclAdjExp = elmtLeftMap[nelmt][ncl];
 
                             for(int nrw = 0; nrw < nElmtCoef; nrw++)
                             {
                                 int nrwAdjExp = elmtLeftMap[nelmt][nrw];
-                                tmp   =   (*tmpGmtx)(nclAdjExp,nrwAdjExp);
-                                tmp   +=  elmtLeftSign[nelmt][ncl]*elmtLeftSign[nelmt][nrw]*(*ElmtMat)(nrw,ncl);
+                                tmp   =  elmtLeftSign[nelmt][ncl]*elmtLeftSign[nelmt][nrw]*(*ElmtMat)(nrw,ncl);
+                                tmp   +=   (*tmpGmtx)(nclAdjExp,nrwAdjExp);
                                 tmpGmtx->SetValue(nclAdjExp,nrwAdjExp,tmp);
                             }
                         }
                     }
                     
-                    // explist->GetMatIpwrtbWeightBwd(JacBwd,mtxPerVar);
-                    explist->GetMatIpwrtBase(JacBwd,mtxPerVar);
+                    explist->GetMatIpwrtbWeightBwd(JacBwd,mtxPerVar);
+                    // explist->GetMatIpwrtBase(JacBwd,mtxPerVar);
 
                     for(int  nelmt = 0; nelmt < ntotElmt; nelmt++)
                     {
@@ -500,7 +616,7 @@ namespace Nektar
                             // std::cout   <<(*ElmtMat)<<endl;
 
                             tmpGmtx         = gmtxarray[m][n]->GetBlock(RAdjExpid[nelmt],RAdjExpid[nelmt]);
-                            for(int ncl = 0; ncl < nElmtPnt; ncl++)
+                            for(int ncl = 0; ncl < nElmtCoef; ncl++)
                             {
                                 int nclAdjExp = elmtRightMap[nelmt][ncl];
 

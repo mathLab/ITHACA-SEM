@@ -63,7 +63,7 @@ namespace Nektar
         m_prec_factor       =   1.0;
         m_rhs_mag_sm        =   1.0;
         m_root              =   true;
-        m_verbose           =   false;
+        m_verbose           =   true;
         std::vector<std::string>  variables(1);
         variables[0] =  pSession->GetVariable(0);
         string variable = variables[0];

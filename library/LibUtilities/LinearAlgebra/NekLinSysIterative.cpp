@@ -374,8 +374,18 @@ namespace Nektar
         tmp1 = r0 + nDir;
         tmp2 = r0 + nDir;
         // m_precon->DoPreconditioner(tmp1, tmp2);
+        // cout << "before precond r0:     lkjfdaaaaaaaaaaaaaaaaaaaaaaaaaaaaas;jfasfjoiajfioawjfioaejfiojaiewjifjaiew "<<endl;
+        // for(int i = 0; i < r0.num_elements(); i++)
+        // {
+        //     cout << "   i=  "<<i<<"     r0="<< r0[i]<<endl;
+        // }
 
         m_oprtor.DoPrecond(tmp1, tmp2);
+        // cout << "After precond r0:     lkjfdaaaaaaaaaaaaaaaaaaaaaaaaaaaaas;jfasfjoiajfioawjfioaejfiojaiewjifjaiew "<<endl;
+        // for(int i = 0; i < r0.num_elements(); i++)
+        // {
+        //     cout << "   i=  "<<i<<"     r0="<< r0[i]<<endl;
+        // }
         tmp2 = r0 + nDir;
 
         // norm of (r0)

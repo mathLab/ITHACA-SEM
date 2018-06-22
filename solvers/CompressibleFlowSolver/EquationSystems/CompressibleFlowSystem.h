@@ -113,7 +113,6 @@ namespace Nektar
                   Array<OneD,       Array<OneD, NekDouble> > &outarray,
             const NekDouble                                   time);
 
-#define DEMO_IMPLICITSOLVER_JFNK
 #ifdef DEMO_IMPLICITSOLVER_JFNK 
         void DoImplicitSolve(
             const Array<OneD, const Array<OneD, NekDouble> >&forc,
@@ -133,6 +132,25 @@ namespace Nektar
             const  Array<OneD, NekDouble> &inarray,
                    Array<OneD, NekDouble >&out);
 
+
+        void AllocatePrecondBlkDiag(Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray);
+
+        void GetpreconditionerNSBlkDiag(const Array<OneD, const Array<OneD, NekDouble> >&inarray,
+                                            Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray);
+
+        void MultiplyElmtBwdInvMass(
+            Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray,const NekDouble dtlamda);
+
+        void MultiplyElmtBwdInvMassFwd(
+            Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray,const NekDouble dtlamda);
+        
+        void DebugNumCalElmtJac(
+            Array<OneD, Array<OneD, DNekMatSharedPtr> > &ElmtPrecMatVars,
+            const int nelmt);
+        void DebugNumCalJac(Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray);
+        
+#endif
+        
         
         void preconditioner(
             const Array<OneD, NekDouble> &inarray,
@@ -141,30 +159,23 @@ namespace Nektar
             const Array<OneD, NekDouble> &inarray,
             Array<OneD, NekDouble >&outarray);
 
-        void AllocatePrecondBlkDiag(Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray);
-
-        void GetpreconditionerNSBlkDiag(const Array<OneD, const Array<OneD, NekDouble> >&inarray,
-                                            Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray);
-
-        
         void AddMatNSBlkDiag_volume(const Array<OneD, const Array<OneD, NekDouble> >&inarray,
                                         Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray);
 
         void AddMatNSBlkDiag_boundary(const Array<OneD, const Array<OneD, NekDouble> >&inarray,
                                         Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray);
 
-        void MultiplyElmtBwdInvMass(
-            Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray,const NekDouble dtlamda);
-
-        void MultiplyElmtBwdInvMassFwd(
-            Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray,const NekDouble dtlamda);
-            
-        void MultiplyElmtInvMass_PlusSource(
-            Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray,const NekDouble dtlamda);
-
         void ElmtVarInvMtrx(Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray);
-        void ElmtVarInvMtrx_coeff(Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray);
         
+        Array<OneD, DNekBlkMatSharedPtr> GetTraceJac(
+            const Array<OneD, const Array<OneD, NekDouble> > &inarray);
+
+        void PointFluxJacobian_pn(
+            const Array<OneD, NekDouble> &Fwd,
+            const Array<OneD, NekDouble> &normals,
+                  DNekMatSharedPtr       &FJac,
+            const NekDouble efix,   const NekDouble fsw);
+
         void CoutBlkMat(
             DNekBlkMatSharedPtr &gmtx, 
             const unsigned int nwidthcolm=12);
@@ -180,20 +191,9 @@ namespace Nektar
         void Fill2DArrayOfBlkDiagonalMat(
             Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray,
             const NekDouble valu);
-        
-        void DebugNumCalElmtJac(
-            Array<OneD, Array<OneD, DNekMatSharedPtr> > &ElmtPrecMatVars,
-            const int nelmt);
-        void DebugNumCalJac(Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray);
-        
 
-        void PointFluxJacobian_pn(
-            const Array<OneD, NekDouble> &Fwd,
-            const Array<OneD, NekDouble> &normals,
-                  DNekMatSharedPtr       &FJac,
-            const NekDouble efix,   const NekDouble fsw);
-        Array<OneD, DNekBlkMatSharedPtr> GetTraceJac(
-            const Array<OneD, const Array<OneD, NekDouble> > &inarray);
+#define DEMO_IMPLICITSOLVER_JFNK_COEFF
+#ifdef DEMO_IMPLICITSOLVER_JFNK_COEFF
 
         void DoImplicitSolve_phy2coeff(
             const Array<OneD, const Array<OneD, NekDouble> >&inarray,
@@ -247,6 +247,10 @@ namespace Nektar
             const NekDouble                                   time,
             const Array<OneD, Array<OneD, NekDouble> >       &pFwd,
             const Array<OneD, Array<OneD, NekDouble> >       &pBwd);
+
+        void MultiplyElmtInvMass_PlusSource(
+            Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray,const NekDouble dtlamda);
+        
 
 #endif
 

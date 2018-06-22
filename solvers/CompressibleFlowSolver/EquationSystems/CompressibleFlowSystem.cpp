@@ -573,7 +573,6 @@ namespace Nektar
             Vmath::Vsub(npoints,inarray[i],1,out[i],1,out[i],1);
         }
     }
-
     
     void CompressibleFlowSystem::MatrixMultiply(
                                                  const Array<OneD, NekDouble> &inarray,
@@ -587,7 +586,7 @@ namespace Nektar
                                                  const  Array<OneD, NekDouble> &inarray,
                                                         Array<OneD, NekDouble >&out)
     {
-        NekDouble eps = 1.0E-6
+        NekDouble eps = 1.0E-6;
         NekDouble oeps = 1.0/eps;
         unsigned int nvariables = m_TimeIntegtSol_n.num_elements();
         unsigned int npoints    = m_TimeIntegtSol_n[0].num_elements();
@@ -614,50 +613,6 @@ namespace Nektar
             Vmath::Smul(npoints, oeps ,&tmp[0],1,&tmp[0],1);
         }
         return;
-    }
-
-    
-    void CompressibleFlowSystem::preconditioner(
-                                                 const Array<OneD, NekDouble> &inarray,
-                                                 Array<OneD, NekDouble >&out)
-    {
-        int ntotal     = inarray.num_elements();
-        Vmath::Vcopy(ntotal,inarray,1,out,1);
-        return;
-    }
-
-    void CompressibleFlowSystem::preconditioner_BlkDiag(
-                                                 const Array<OneD, NekDouble> &inarray,
-                                                 Array<OneD, NekDouble >&outarray)
-    {
-        unsigned int nvariables = m_TimeIntegtSol_n.num_elements();
-        unsigned int npoints    = m_TimeIntegtSol_n[0].num_elements();
-        Array<OneD, NekVector<NekDouble> > tmparray(nvariables);
-
-
-        PointerWrapper pwrapp = eWrapper;
-        if(inarray.get() == outarray.get())
-        {
-            pwrapp = eCopy;
-        }
-
-        for(int m = 0; m < nvariables; m++)
-        {
-            int moffset = m*npoints;
-            tmparray[m] =  NekVector<NekDouble> (npoints,inarray+moffset,pwrapp);
-        }
-        
-        Vmath::Fill(outarray.num_elements(),0.0,outarray,1);
-        for(int m = 0; m < nvariables; m++)
-        {
-            int moffset = m*npoints;
-            NekVector<NekDouble> out(npoints,outarray+moffset,eWrapper);
-            for(int n = 0; n < nvariables; n++)
-            {
-                out += (*m_PrecMatVars[m][n])*tmparray[n];
-            }
-        }
-        
     }
 
 
@@ -697,7 +652,6 @@ namespace Nektar
         }
     }
 
-    
 
     void CompressibleFlowSystem::GetpreconditionerNSBlkDiag(
                                             const Array<OneD, const Array<OneD, NekDouble> >&inarray,
@@ -712,111 +666,7 @@ namespace Nektar
         AddMatNSBlkDiag_boundary(inarray,gmtxarray);
         MultiplyElmtInvMass_PlusSource(gmtxarray,m_TimeIntegLambda);
         // Cout2DArrayBlkMat(gmtxarray);
-        ElmtVarInvMtrx_coeff(gmtxarray);
-    }
-
-    void CompressibleFlowSystem::Cout2DArrayBlkMat(Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray,const unsigned int nwidthcolm)
-    {
-        int nvar1 = gmtxarray.num_elements();
-        int nvar2 = gmtxarray[0].num_elements();
-
-        
-        for(int i = 0; i < nvar1; i++)
-        {
-            for(int j = 0; j < nvar2; j++)
-            {
-                cout<<endl<<"£$£$£$£$£$£$££$£$£$$$£$££$$£$££$£$$££££$$£$£$£$£$£$£$££$£$$"<<endl<< "Cout2DArrayBlkMat i= "<<i<<" j=  "<<j<<endl;
-                CoutBlkMat(gmtxarray[i][j],nwidthcolm);
-            }
-        }
-        
-        
-        
-    }
-
-    void CompressibleFlowSystem::CoutBlkMat(DNekBlkMatSharedPtr &gmtx,const unsigned int nwidthcolm)
-    {
-        DNekMatSharedPtr    loc_matNvar;
-
-        Array<OneD, unsigned int> rowSizes;
-        Array<OneD, unsigned int> colSizes;
-        gmtx->GetBlockSizes(rowSizes,colSizes);
-
-        int nelmts  = rowSizes.num_elements();
-        
-        // int noffset = 0;
-        for(int i = 0; i < nelmts; ++i)
-        {
-            loc_matNvar =   gmtx->GetBlock(i,i);
-            std::cout   <<std::endl<<"*********************************"<<std::endl<<"element :   "<<i<<std::endl;
-            CoutStandardMat(loc_matNvar,nwidthcolm);
-        }
-        return;
-    }
-
-
-    void CompressibleFlowSystem::CoutStandardMat(DNekMatSharedPtr &loc_matNvar,const unsigned int nwidthcolm)
-    {
-        int nrows = loc_matNvar->GetRows();
-        int ncols = loc_matNvar->GetColumns();
-        NekDouble tmp=0.0;
-        std::cout   <<"ROW="<<std::setw(3)<<-1<<" ";
-        for(int k = 0; k < ncols; k++)
-        {
-            std::cout   <<"   COL="<<std::setw(nwidthcolm-7)<<k;
-        }
-        std::cout   << endl;
-
-        for(int j = 0; j < nrows; j++)
-        {
-            std::cout   <<"ROW="<<std::setw(3)<<j<<" ";
-            for(int k = 0; k < ncols; k++)
-            {
-                tmp =   (*loc_matNvar)(j,k);
-                std::cout   <<std::scientific<<std::setw(nwidthcolm)<<std::setprecision(nwidthcolm-8)<<tmp;
-            }
-            std::cout   << endl;
-        }
-
-    }
-
-    void CompressibleFlowSystem::Fill2DArrayOfBlkDiagonalMat(Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray,const NekDouble valu)
-    {
-        
-        int n1d = gmtxarray.num_elements();
-        int n2d = gmtxarray[0].num_elements();
-
-        Array<OneD, unsigned int> rowSizes;
-        Array<OneD, unsigned int> colSizes;
-
-        DNekMatSharedPtr    loc_matNvar;
-
-        for(int n1 = 0; n1 < n1d; ++n1)
-        {
-            for(int n2 = 0; n2 < n2d; ++n2)
-            {
-                
-                gmtxarray[n1][n2]->GetBlockSizes(rowSizes,colSizes);
-                int nelmts  = rowSizes.num_elements();
-
-                for(int i = 0; i < nelmts; ++i)
-                {
-                    loc_matNvar =   gmtxarray[n1][n2]->GetBlock(i,i);
-
-                    int nrows = loc_matNvar->GetRows();
-                    int ncols = loc_matNvar->GetColumns();
-
-                    for(int j = 0; j < nrows; j++)
-                    {
-                        for(int k = 0; k < ncols; k++)
-                        {
-                            (*loc_matNvar)(j,k)=valu;
-                        }
-                    }
-                }
-            }
-        }
-
+        ElmtVarInvMtrx(gmtxarray);
     }
 
     void CompressibleFlowSystem::MultiplyElmtBwdInvMass(Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray,const NekDouble dtlamda)
@@ -1004,171 +854,83 @@ namespace Nektar
     }
 
 
-    void CompressibleFlowSystem::MultiplyElmtInvMass_PlusSource(Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray,const NekDouble dtlamda)
+#endif
+
+
+    void CompressibleFlowSystem::preconditioner(
+                                                 const Array<OneD, NekDouble> &inarray,
+                                                 Array<OneD, NekDouble >&out)
     {
-        MultiRegions::ExpListSharedPtr explist = m_fields[0];
-            std::shared_ptr<LocalRegions::ExpansionVector> pexp = explist->GetExp();
-        int ntotElmt            = (*pexp).size();
-        int nElmtCoef;
-        int nConvectiveFields = m_fields.num_elements();
-
-        NekDouble Negdtlamda    =   -dtlamda;
-        DNekMatSharedPtr        tmpGmtx,ElmtMat;
-
-        Array<OneD, NekDouble> coefarray(explist->GetNcoeffs(),0.0);
-
-        Array<OneD, int > elmtcoef(ntotElmt);
-        int nElmtCoef0 =    (*pexp)[0]->GetNcoeffs();
-        for(int  nelmt = 0; nelmt < ntotElmt; nelmt++)
-        {
-            nElmtCoef           = (*pexp)[nelmt]->GetNcoeffs();
-            ASSERTL0(nElmtCoef==nElmtCoef0,"nElmtCoef==nElmtCoef0");
-            elmtcoef[nelmt]     =   nElmtCoef;
-        }
-
-
-        for(int m = 0; m < nConvectiveFields; m++)
-        {
-            for(int n = 0; n < nConvectiveFields; n++)
-            {
-                for(int ncl = 0; ncl < nElmtCoef0; ncl++)
-                {
-                    for(int  nelmt = 0; nelmt < ntotElmt; nelmt++)
-                    {
-                        nElmtCoef           = elmtcoef[nelmt];
-                        tmpGmtx =   gmtxarray[m][n]->GetBlock(nelmt,nelmt);
-
-                        int n_offset    =   explist->GetCoeff_Offset(nelmt);
-                        
-                        for(int nrw = 0; nrw < nElmtCoef; nrw++)
-                        {
-                            coefarray[n_offset+nrw]   =   (*tmpGmtx)(nrw,ncl);
-                        }
-                    }
-                    explist->MultiplyByElmtInvMass(coefarray, coefarray);
-
-                    for(int  nelmt = 0; nelmt < ntotElmt; nelmt++)
-                    {
-                        nElmtCoef            = elmtcoef[nelmt];
-                        tmpGmtx =   gmtxarray[m][n]->GetBlock(nelmt,nelmt);
-                        int n_offset    =   explist->GetCoeff_Offset(nelmt);
-                        for(int nrw = 0; nrw < nElmtCoef; nrw++)
-                        {
-                            (*tmpGmtx)(nrw,ncl)   = Negdtlamda*coefarray[n_offset+nrw];
-                        }
-                    }
-                }
-            }
-        }
-
-        for(int m = 0; m < nConvectiveFields; m++)
-        {
-            for(int  nelmt = 0; nelmt < ntotElmt; nelmt++)
-            {
-                tmpGmtx =   gmtxarray[m][m]->GetBlock(nelmt,nelmt);
-                nElmtCoef            = elmtcoef[nelmt];
-                for(int ncl = 0; ncl < nElmtCoef; ncl++)
-                {
-                    (*tmpGmtx)(ncl,ncl)   += 1.0;
-                }
-            }
-        }
+        int ntotal     = inarray.num_elements();
+        Vmath::Vcopy(ntotal,inarray,1,out,1);
         return;
     }
 
+    void CompressibleFlowSystem::preconditioner_BlkDiag(
+                                                 const Array<OneD, NekDouble> &inarray,
+                                                 Array<OneD, NekDouble >&outarray)
+    {
+        unsigned int nvariables = m_TimeIntegtSol_n.num_elements();
+        unsigned int npoints    = m_TimeIntegtSol_n[0].num_elements();
+        Array<OneD, NekVector<NekDouble> > tmparray(nvariables);
+
+
+        PointerWrapper pwrapp = eWrapper;
+        if(inarray.get() == outarray.get())
+        {
+            pwrapp = eCopy;
+        }
+
+        for(int m = 0; m < nvariables; m++)
+        {
+            int moffset = m*npoints;
+            tmparray[m] =  NekVector<NekDouble> (npoints,inarray+moffset,pwrapp);
+        }
+        
+        Vmath::Fill(outarray.num_elements(),0.0,outarray,1);
+        for(int m = 0; m < nvariables; m++)
+        {
+            int moffset = m*npoints;
+            NekVector<NekDouble> out(npoints,outarray+moffset,eWrapper);
+            for(int n = 0; n < nvariables; n++)
+            {
+                out += (*m_PrecMatVars[m][n])*tmparray[n];
+            }
+        }
+        
+    }
     
     void CompressibleFlowSystem::ElmtVarInvMtrx(Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray)
     {
-        MultiRegions::ExpListSharedPtr explist = m_fields[0];
-            std::shared_ptr<LocalRegions::ExpansionVector> pexp = explist->GetExp();
-        int ntotElmt            = (*pexp).size();
-        int nConvectiveFields = m_fields.num_elements();
+        int n1d = gmtxarray.num_elements();
+        int n2d = gmtxarray[0].num_elements();
+        int nConvectiveFields = n1d;
 
-        DNekMatSharedPtr        ElmtMat;
+        ASSERTL0(n1d==n2d,"ElmtVarInvMtrx requires n1d==n2d");
 
-        Array<OneD, NekDouble> coefarray(explist->GetNcoeffs(),0.0);
-        Array<OneD, NekDouble> physarray(explist->GetTotPoints(),0.0);
+        Array<OneD, unsigned int> rowSizes;
+        Array<OneD, unsigned int> colSizes;
 
-        Array<OneD, int > elmtpnts(ntotElmt);
-        Array<OneD, int > elmtcoef(ntotElmt);
-        int nElmtPnt   =    (*pexp)[0]->GetTotPoints();
-        int nElmtPnt0  =    nElmtPnt;
-
-        int nElmtPntVAr = nElmtPnt0*nConvectiveFields;
-        DNekMatSharedPtr    tmpGmtx = MemoryManager<DNekMat>
-                    ::AllocateSharedPtr(nElmtPntVAr, nElmtPntVAr,0.0);
-        for(int  nelmt = 0; nelmt < ntotElmt; nelmt++)
-        {
-            nElmtPnt            = (*pexp)[nelmt]->GetTotPoints();
-            
-            if (nElmtPnt0!=nElmtPnt) 
-            {
-                nElmtPnt0 = nElmtPnt;
-                nElmtPntVAr = nElmtPnt0*nConvectiveFields;
-                tmpGmtx = MemoryManager<DNekMat>
-                    ::AllocateSharedPtr(nElmtPntVAr, nElmtPntVAr,0.0);
-            }
-
-            for(int m = 0; m < nConvectiveFields; m++)
-            {
-                for(int n = 0; n < nConvectiveFields; n++)
-                {
-                    ElmtMat =   gmtxarray[m][n]->GetBlock(nelmt,nelmt);
-                    for(int nrw = 0; nrw < nElmtPnt; nrw++)
-                    {
-                        int nrwvar = m*nElmtPnt+nrw;
-                        for(int ncl = 0; ncl < nElmtPnt; ncl++)
-                        {
-                            int nclvar = n*nElmtPnt+ncl;
-                            (*tmpGmtx)(nrwvar,nclvar)=(*ElmtMat)(nrw,ncl);
-                        }
-                    }
-                }
-            }
-
-            tmpGmtx->Invert();
-
-            for(int m = 0; m < nConvectiveFields; m++)
-            {
-                for(int n = 0; n < nConvectiveFields; n++)
-                {
-                    ElmtMat =   gmtxarray[m][n]->GetBlock(nelmt,nelmt);
-                    for(int nrw = 0; nrw < nElmtPnt; nrw++)
-                    {
-                        int nrwvar = m*nElmtPnt+nrw;
-                        for(int ncl = 0; ncl < nElmtPnt; ncl++)
-                        {
-                            int nclvar = n*nElmtPnt+ncl;
-                            (*ElmtMat)(nrw,ncl) =   (*tmpGmtx)(nrwvar,nclvar);
-                        }
-                    }
-                }
-            }
-        }
-        return;
-    }
-
-    void CompressibleFlowSystem::ElmtVarInvMtrx_coeff(Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray)
-    {
-        MultiRegions::ExpListSharedPtr explist = m_fields[0];
-            std::shared_ptr<LocalRegions::ExpansionVector> pexp = explist->GetExp();
-        int ntotElmt            = (*pexp).size();
-        int nConvectiveFields = m_fields.num_elements();
-
-        DNekMatSharedPtr        ElmtMat;
-
-        Array<OneD, NekDouble> coefarray(explist->GetNcoeffs(),0.0);
-
-        Array<OneD, int > elmtcoef(ntotElmt);
-        int nElmtCoef   =    (*pexp)[0]->GetNcoeffs();
+        gmtxarray[0][0]->GetBlockSizes(rowSizes,colSizes);
+        int ntotElmt  = rowSizes.num_elements();
+        int nElmtCoef   =    rowSizes[0]-1;
         int nElmtCoef0  =    nElmtCoef;
 
         int nElmtCoefVAr = nElmtCoef0*nConvectiveFields;
         DNekMatSharedPtr    tmpGmtx = MemoryManager<DNekMat>
                     ::AllocateSharedPtr(nElmtCoefVAr, nElmtCoefVAr,0.0);
+
+        DNekMatSharedPtr        ElmtMat;
+
         for(int  nelmt = 0; nelmt < ntotElmt; nelmt++)
         {
-            nElmtCoef            = (*pexp)[nelmt]->GetNcoeffs();
+            ElmtMat =   gmtxarray[0][0]->GetBlock(nelmt,nelmt);
+
+            int nrows = ElmtMat->GetRows();
+            int ncols = ElmtMat->GetColumns();
+            ASSERTL0(nrows==ncols,"ElmtVarInvMtrx requires nrows==ncols");
+
+            nElmtCoef            = nrows;
             
             if (nElmtCoef0!=nElmtCoef) 
             {
@@ -1295,21 +1057,110 @@ namespace Nektar
         Array<OneD, DNekBlkMatSharedPtr>    TraceJac(2);
         TraceJac[0] = FJac;
         TraceJac[1] = BJac;
-
-        // for(int i = 0; i < nTracePts; ++i)
-        // {
-        //     DNekMatSharedPtr tmpMat;
-        //     tmpMat  =   FJac->GetBlock(i,i);
-        //     cout << "FJac at trace "<<i<<" =    "<<endl<<(*tmpMat)<<endl;
-
-        //     tmpMat  =   BJac->GetBlock(i,i);
-        //     cout << "BJac at trace "<<i<<" =    "<<endl<<(*tmpMat)<<endl;
-        // }
-
-        
         return TraceJac;
     }
 
+     void CompressibleFlowSystem::Cout2DArrayBlkMat(Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray,const unsigned int nwidthcolm)
+    {
+        int nvar1 = gmtxarray.num_elements();
+        int nvar2 = gmtxarray[0].num_elements();
+
+        
+        for(int i = 0; i < nvar1; i++)
+        {
+            for(int j = 0; j < nvar2; j++)
+            {
+                cout<<endl<<"£$£$£$£$£$£$££$£$£$$$£$££$$£$££$£$$££££$$£$£$£$£$£$£$££$£$$"<<endl<< "Cout2DArrayBlkMat i= "<<i<<" j=  "<<j<<endl;
+                CoutBlkMat(gmtxarray[i][j],nwidthcolm);
+            }
+        }
+    }
+
+    void CompressibleFlowSystem::CoutBlkMat(DNekBlkMatSharedPtr &gmtx,const unsigned int nwidthcolm)
+    {
+        DNekMatSharedPtr    loc_matNvar;
+
+        Array<OneD, unsigned int> rowSizes;
+        Array<OneD, unsigned int> colSizes;
+        gmtx->GetBlockSizes(rowSizes,colSizes);
+
+        int nelmts  = rowSizes.num_elements();
+        
+        // int noffset = 0;
+        for(int i = 0; i < nelmts; ++i)
+        {
+            loc_matNvar =   gmtx->GetBlock(i,i);
+            std::cout   <<std::endl<<"*********************************"<<std::endl<<"element :   "<<i<<std::endl;
+            CoutStandardMat(loc_matNvar,nwidthcolm);
+        }
+        return;
+    }
+
+
+    void CompressibleFlowSystem::CoutStandardMat(DNekMatSharedPtr &loc_matNvar,const unsigned int nwidthcolm)
+    {
+        int nrows = loc_matNvar->GetRows();
+        int ncols = loc_matNvar->GetColumns();
+        NekDouble tmp=0.0;
+        std::cout   <<"ROW="<<std::setw(3)<<-1<<" ";
+        for(int k = 0; k < ncols; k++)
+        {
+            std::cout   <<"   COL="<<std::setw(nwidthcolm-7)<<k;
+        }
+        std::cout   << endl;
+
+        for(int j = 0; j < nrows; j++)
+        {
+            std::cout   <<"ROW="<<std::setw(3)<<j<<" ";
+            for(int k = 0; k < ncols; k++)
+            {
+                tmp =   (*loc_matNvar)(j,k);
+                std::cout   <<std::scientific<<std::setw(nwidthcolm)<<std::setprecision(nwidthcolm-8)<<tmp;
+            }
+            std::cout   << endl;
+        }
+    }
+
+    void CompressibleFlowSystem::Fill2DArrayOfBlkDiagonalMat(Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray,const NekDouble valu)
+    {
+        
+        int n1d = gmtxarray.num_elements();
+        int n2d = gmtxarray[0].num_elements();
+
+        Array<OneD, unsigned int> rowSizes;
+        Array<OneD, unsigned int> colSizes;
+
+        DNekMatSharedPtr    loc_matNvar;
+
+        for(int n1 = 0; n1 < n1d; ++n1)
+        {
+            for(int n2 = 0; n2 < n2d; ++n2)
+            {
+                
+                gmtxarray[n1][n2]->GetBlockSizes(rowSizes,colSizes);
+                int nelmts  = rowSizes.num_elements();
+
+                for(int i = 0; i < nelmts; ++i)
+                {
+                    loc_matNvar =   gmtxarray[n1][n2]->GetBlock(i,i);
+
+                    int nrows = loc_matNvar->GetRows();
+                    int ncols = loc_matNvar->GetColumns();
+
+                    for(int j = 0; j < nrows; j++)
+                    {
+                        for(int k = 0; k < ncols; k++)
+                        {
+                            (*loc_matNvar)(j,k)=valu;
+                        }
+                    }
+                }
+            }
+        }
+
+    }
+
+#ifdef DEMO_IMPLICITSOLVER_JFNK_COEFF
 
     void CompressibleFlowSystem::DoImplicitSolve_phy2coeff(
                                                  const Array<OneD, const Array<OneD, NekDouble> >&inpnts,
@@ -1425,7 +1276,7 @@ namespace Nektar
         }
 
         DoOdeProjection(inpnts,intmp,m_BndEvaluateTime);
-        GetpreconditionerNSBlkDiag(intmp,m_PrecMatVars);
+        GetpreconditionerNSBlkDiag_coeff(intmp,m_PrecMatVars);
 
         // to free the storage
         for(int i = 0; i < nvariables; i++)
@@ -1511,6 +1362,94 @@ namespace Nektar
                 
             }
         }
+    }
+
+    void CompressibleFlowSystem::GetpreconditionerNSBlkDiag_coeff(
+                                            const Array<OneD, const Array<OneD, NekDouble> >&inarray,
+                                            Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray)
+    {
+        // DoOdeProjection(inarray,inarray,m_BndEvaluateTime);
+
+        Fill2DArrayOfBlkDiagonalMat(gmtxarray,0.0);
+        // Cout2DArrayBlkMat(gmtxarray);
+        AddMatNSBlkDiag_volume(inarray,gmtxarray);
+
+        AddMatNSBlkDiag_boundary(inarray,gmtxarray);
+        MultiplyElmtInvMass_PlusSource(gmtxarray,m_TimeIntegLambda);
+        Cout2DArrayBlkMat(gmtxarray);
+        ElmtVarInvMtrx(gmtxarray);
+    }
+
+    void CompressibleFlowSystem::MultiplyElmtInvMass_PlusSource(Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray,const NekDouble dtlamda)
+    {
+        MultiRegions::ExpListSharedPtr explist = m_fields[0];
+            std::shared_ptr<LocalRegions::ExpansionVector> pexp = explist->GetExp();
+        int ntotElmt            = (*pexp).size();
+        int nElmtCoef;
+        int nConvectiveFields = m_fields.num_elements();
+
+        NekDouble Negdtlamda    =   -dtlamda;
+        DNekMatSharedPtr        tmpGmtx,ElmtMat;
+
+        Array<OneD, NekDouble> coefarray(explist->GetNcoeffs(),0.0);
+
+        Array<OneD, int > elmtcoef(ntotElmt);
+        int nElmtCoef0 =    (*pexp)[0]->GetNcoeffs();
+        for(int  nelmt = 0; nelmt < ntotElmt; nelmt++)
+        {
+            nElmtCoef           = (*pexp)[nelmt]->GetNcoeffs();
+            ASSERTL0(nElmtCoef==nElmtCoef0,"nElmtCoef==nElmtCoef0");
+            elmtcoef[nelmt]     =   nElmtCoef;
+        }
+
+
+        for(int m = 0; m < nConvectiveFields; m++)
+        {
+            for(int n = 0; n < nConvectiveFields; n++)
+            {
+                for(int ncl = 0; ncl < nElmtCoef0; ncl++)
+                {
+                    for(int  nelmt = 0; nelmt < ntotElmt; nelmt++)
+                    {
+                        nElmtCoef           = elmtcoef[nelmt];
+                        tmpGmtx =   gmtxarray[m][n]->GetBlock(nelmt,nelmt);
+
+                        int n_offset    =   explist->GetCoeff_Offset(nelmt);
+                        
+                        for(int nrw = 0; nrw < nElmtCoef; nrw++)
+                        {
+                            coefarray[n_offset+nrw]   =   (*tmpGmtx)(nrw,ncl);
+                        }
+                    }
+                    explist->MultiplyByElmtInvMass(coefarray, coefarray);
+
+                    for(int  nelmt = 0; nelmt < ntotElmt; nelmt++)
+                    {
+                        nElmtCoef            = elmtcoef[nelmt];
+                        tmpGmtx =   gmtxarray[m][n]->GetBlock(nelmt,nelmt);
+                        int n_offset    =   explist->GetCoeff_Offset(nelmt);
+                        for(int nrw = 0; nrw < nElmtCoef; nrw++)
+                        {
+                            (*tmpGmtx)(nrw,ncl)   = Negdtlamda*coefarray[n_offset+nrw];
+                        }
+                    }
+                }
+            }
+        }
+
+        for(int m = 0; m < nConvectiveFields; m++)
+        {
+            for(int  nelmt = 0; nelmt < ntotElmt; nelmt++)
+            {
+                tmpGmtx =   gmtxarray[m][m]->GetBlock(nelmt,nelmt);
+                nElmtCoef            = elmtcoef[nelmt];
+                for(int ncl = 0; ncl < nElmtCoef; ncl++)
+                {
+                    (*tmpGmtx)(ncl,ncl)   += 1.0;
+                }
+            }
+        }
+        return;
     }
 
     void CompressibleFlowSystem::DebugNumCalJac_coeff(Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray)
@@ -1652,38 +1591,6 @@ namespace Nektar
             Vmath::Svtvp(ncoeffs,m_TimeIntegLambda,out[i],1,sol_n[i],1,out[i],1);
             Vmath::Vsub(ncoeffs,inarray[i],1,out[i],1,out[i],1);
         }
-        return;
-    }
-
-    void CompressibleFlowSystem::NonlinSysEvaluator_coeff_bnd(
-                                                       Array<OneD, Array<OneD, NekDouble> > &inarray,
-                                                       Array<OneD, Array<OneD, NekDouble> > &out)
-    {
-        Array<OneD, Array<OneD, NekDouble> > sol_n;
-        sol_n                  = m_TimeIntegtSol_n;
-        //inforc = m_TimeIntegForce;
-        unsigned int nvariable  = inarray.num_elements();
-        unsigned int ncoeffs    = inarray[0].num_elements();
-        unsigned int npoints    = m_fields[0]->GetNpoints();
-
-        Array<OneD, Array<OneD, NekDouble> > inpnts(nvariable);
-
-        for(int i = 0; i < nvariable; i++)
-        {
-            inpnts[i]   =   Array<OneD, NekDouble>(npoints,0.0);
-            m_fields[i]->BwdTrans(inarray[i], inpnts[i]);
-        }
-
-        DoOdeProjection(inpnts,inpnts,m_BndEvaluateTime);
-        DoOdeRhs_coeff(inpnts,out,m_BndEvaluateTime);
-        
-        // for (int i = 0; i < nvariable; i++)
-        // {
-        //     Vmath::Svtvp(ncoeffs,m_TimeIntegLambda,out[i],1,sol_n[i],1,out[i],1);
-        //     Vmath::Vsub(ncoeffs,inarray[i],1,out[i],1,out[i],1);
-        // }
-
-        
         return;
     }
 

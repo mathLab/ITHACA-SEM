@@ -124,6 +124,20 @@ public:
     {
         v_AddVolumJac2Mat(nConvectiveFields,pFields,ElmtJac,nDirctn,gmtxarray);
     }
+
+
+    SOLVER_UTILS_EXPORT void NumCalRiemFluxJac( 
+        const int                                          nConvectiveFields,
+        const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
+        const Array<OneD, Array<OneD, NekDouble> >        &AdvVel,
+        const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+        const Array<OneD, Array<OneD, NekDouble> >        &pFwd,
+        const Array<OneD, Array<OneD, NekDouble> >        &pBwd,
+        DNekBlkMatSharedPtr &FJac,
+        DNekBlkMatSharedPtr &BJac)
+    {
+        v_NumCalRiemFluxJac(nConvectiveFields,fields,AdvVel,inarray,pFwd,pBwd,FJac,BJac);
+    }
     /**
      * @brief Set the flux vector callback function.
      *
@@ -222,6 +236,17 @@ protected:
     SOLVER_UTILS_EXPORT virtual void v_SetBaseFlow(
         const Array<OneD, Array<OneD, NekDouble> >        &inarray,
         const Array<OneD, MultiRegions::ExpListSharedPtr> &fields);
+
+
+    SOLVER_UTILS_EXPORT virtual  void v_NumCalRiemFluxJac( 
+        const int                                          nConvectiveFields,
+        const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
+        const Array<OneD, Array<OneD, NekDouble> >        &AdvVel,
+        const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+        const Array<OneD, Array<OneD, NekDouble> >        &pFwd,
+        const Array<OneD, Array<OneD, NekDouble> >        &pBwd,
+        DNekBlkMatSharedPtr &FJac,
+        DNekBlkMatSharedPtr &BJac);
 };
 
 /// A shared pointer to an Advection object.

@@ -168,19 +168,14 @@ namespace Nektar
             m_oprtor = LinSysOperators(in);
         }
 
-        /// Solve the matrix system
-        void SolveLinearSystem(
-            const int pNumRows,
-            const Array<OneD, const NekDouble> &pInput,
-                  Array<OneD,       NekDouble> &pOutput,
-            const int pNumDir);
             
-        void SolveLinearSystem(
+        NekDouble SolveLinearSystem(
             const int nGlobal,
             const Array<OneD, const NekDouble> &pInput,
                   Array<OneD,      NekDouble> &pOutput,
             const int nDir,
-            const NekDouble  tol);
+            const NekDouble  tol    =   1.0E-9,
+            const NekDouble  factor =   1.0);
      
  protected:
         /// Global to universal unique map
@@ -227,7 +222,7 @@ namespace Nektar
         void Set_Rhs_Magnitude(const NekVector<NekDouble> &pIn);
  private:
         /// Actual iterative solve-GMRS
-        void DoGMRES(
+        NekDouble DoGMRES(
             const int pNumRows,
             const Array<OneD, const NekDouble> &pInput,
                   Array<OneD,       NekDouble> &pOutput,

@@ -161,12 +161,6 @@ namespace Nektar
         
         Array<OneD, NekDouble> PointFwd(nvariables3D,0.0),PointBwd(nvariables3D,0.0);
         Array<OneD, NekDouble> PointNormal(3,0.0);
-        NekVector<NekDouble> vctFwd(nvariables3D,PointFwd,eWrapper);
-        NekVector<NekDouble> vctBwd(nvariables3D,PointBwd,eWrapper);
-        Array<OneD, NekDouble> FluxFwd(nvariables3D,0.0),FluxBwd(nvariables3D,0.0);
-
-        NekVector<NekDouble> vctFluxFwd(nvariables3D,FluxFwd,eWrapper);
-        NekVector<NekDouble> vctFluxBwd(nvariables3D,FluxBwd,eWrapper);
 
 
         Array<OneD, unsigned int> index(nvariables);
@@ -196,25 +190,6 @@ namespace Nektar
             
             v_PointFluxJacobian(PointFwd,PointBwd,PointNormal,PointFJac3D,PointBJac3D);
             
-            vctFluxFwd = (*PointFJac3D)*vctFwd;
-            vctFluxBwd = (*PointBJac3D)*vctBwd;
-
-            std::cout << "Jacobian*Q at "<<i<<std::endl
-                      <<FluxFwd[0]+FluxBwd[0]<<std::endl<<FluxFwd[1]+FluxBwd[1]<<std::endl
-                      <<FluxFwd[2]+FluxBwd[2]<<std::endl<<FluxFwd[4]+FluxBwd[4]<<std::endl;
-
-
-            // for(int j=0; j< 5; j++)
-            // {
-            //     std::cout << "PointFwd["<<j<<"]=    "<< PointFwd[j]<<std::endl;
-            //     std::cout << "PointBwd["<<j<<"]=    "<< PointBwd[j]<<std::endl;
-
-            //     std::cout << "FluxFwd["<<j<<"]=    "<< FluxFwd[j]<<std::endl;
-            //     std::cout << "FluxBwd["<<j<<"]=    "<< FluxBwd[j]<<std::endl;
-            //     std::cout << "Flux["<<j<<"]=    "<< FluxFwd[j]+FluxBwd[j]<<std::endl;
-            // }
-            // std::cout << "PointFJac3D;= "<<std::endl<< (*PointFJac3D)<<std::endl;
-            // std::cout << "PointBJac3D;= "<<std::endl<< (*PointBJac3D)<<std::endl;
             DNekMatSharedPtr PointFJac = MemoryManager<DNekMat>
                 ::AllocateSharedPtr(nvariables, nvariables);
             DNekMatSharedPtr PointBJac = MemoryManager<DNekMat>

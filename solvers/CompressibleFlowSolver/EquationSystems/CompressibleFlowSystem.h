@@ -153,11 +153,22 @@ namespace Nektar
         void AddMatNSBlkDiag_boundary(const Array<OneD, const Array<OneD, NekDouble> >&inarray,
                                         Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray);
 
-        void MultiplyElmtBwdInvMass(Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray,const NekDouble dtlamda);
-        void MultiplyElmtBwdInvMassFwd(Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray,const NekDouble dtlamda);
+        void MultiplyElmtBwdInvMass(
+            Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray,const NekDouble dtlamda);
+
+        void MultiplyElmtBwdInvMassFwd(
+            Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray,const NekDouble dtlamda);
+            
+        void MultiplyElmtInvMass_PlusSource(
+            Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray,const NekDouble dtlamda);
 
         void ElmtVarInvMtrx(Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray);
-        void CoutBlkMat(DNekBlkMatSharedPtr &gmtx, const unsigned int nwidthcolm=12);
+        void ElmtVarInvMtrx_coeff(Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray);
+        
+        void CoutBlkMat(
+            DNekBlkMatSharedPtr &gmtx, 
+            const unsigned int nwidthcolm=12);
+
         void CoutStandardMat(
             DNekMatSharedPtr &loc_matNvar,
             const unsigned int nwidthcolm=12);
@@ -165,6 +176,7 @@ namespace Nektar
         void Cout2DArrayBlkMat(
             Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray,
             const unsigned int nwidthcolm=12);
+
         void Fill2DArrayOfBlkDiagonalMat(
             Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray,
             const NekDouble valu);
@@ -190,6 +202,7 @@ namespace Nektar
             const NekDouble lambda);
 
         void DoImplicitSolve_coeff(
+            const Array<OneD, const Array<OneD, NekDouble> >&inpnts,
             const Array<OneD, const Array<OneD, NekDouble> >&inarray,
                 Array<OneD,       Array<OneD, NekDouble> >&out,
             const NekDouble time,
@@ -197,11 +210,20 @@ namespace Nektar
 
         void AllocatePrecondBlkDiag_coeff(Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray);
 
+         void GetpreconditionerNSBlkDiag_coeff(
+            const Array<OneD, const Array<OneD, NekDouble> >&inarray,
+            Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray);
+
         void MatrixMultiply_MatrixFree_coeff(
             const  Array<OneD, NekDouble> &inarray,
                    Array<OneD, NekDouble >&out);
 
-        void DebugNumCalElmtJac_coeff(const int nelmt);
+        void DebugNumCalJac_coeff(
+            Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray);
+            
+        void DebugNumCalElmtJac_coeff(
+            Array<OneD, Array<OneD, DNekMatSharedPtr> > &ElmtPrecMatVars,
+            const int nelmt);
 
         
         void NonlinSysEvaluator_coeff(
@@ -240,6 +262,11 @@ namespace Nektar
                   Array<OneD,       Array<OneD, NekDouble> > &outarray,
             const Array<OneD, Array<OneD, NekDouble> >       &pFwd,
             const Array<OneD, Array<OneD, NekDouble> >       &pBwd);
+        void DoDiffusion_coeff(
+            const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+                  Array<OneD,       Array<OneD, NekDouble> > &outarray,
+            const Array<OneD, Array<OneD, NekDouble> >   &pFwd,
+            const Array<OneD, Array<OneD, NekDouble> >   &pBwd);
 
         void GetFluxVector(
             const Array<OneD, Array<OneD, NekDouble> >               &physfield,
@@ -291,6 +318,15 @@ namespace Nektar
             std::vector<std::string>             &variables);
 
         virtual void v_DoDiffusion(
+            const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+                  Array<OneD,       Array<OneD, NekDouble> > &outarray,
+            const Array<OneD, Array<OneD, NekDouble> >       &pFwd,
+            const Array<OneD, Array<OneD, NekDouble> >       &pBwd)
+        {
+            // Do nothing by default
+        }
+
+        virtual void v_DoDiffusion_coeff(
             const Array<OneD, const Array<OneD, NekDouble> > &inarray,
                   Array<OneD,       Array<OneD, NekDouble> > &outarray,
             const Array<OneD, Array<OneD, NekDouble> >       &pFwd,

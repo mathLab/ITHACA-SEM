@@ -3395,16 +3395,16 @@ namespace Nektar
                     for(int npnt = 0; npnt < nElmtPnt; npnt++)
                     {
                         tmpPhys[npnt]   =   inarray[nelmt][npnt]*(*BwdTransMat)(npnt,ncl);
-                        cout<< "    tmpPhys["<<npnt<<"] =   "<<tmpPhys[npnt];
-                        cout<< "    inarray["<<nelmt<<"]"<<"["<<npnt<<"] =   "<<inarray[nelmt][npnt];
-                        cout<< "    BwdTransMat["<<npnt<<"]["<<ncl<<"] =   "<<(*BwdTransMat)(npnt,ncl)<<endl;
+                        // cout<< "    tmpPhys["<<npnt<<"] =   "<<tmpPhys[npnt];
+                        // cout<< "    inarray["<<nelmt<<"]"<<"["<<npnt<<"] =   "<<inarray[nelmt][npnt];
+                        // cout<< "    BwdTransMat["<<npnt<<"]["<<ncl<<"] =   "<<(*BwdTransMat)(npnt,ncl)<<endl;
                     }
 
                     (*m_exp)[nelmt]->IProductWRTBase(tmpPhys,tmpCoef);
 
                     for(int nrw = 0; nrw < nElmtCoef; nrw++)
                     {
-                        cout<< "    tmpCoef["<<nrw<<"] =   "<<tmpCoef[nrw]<<endl;
+                        // cout<< "    tmpCoef["<<nrw<<"] =   "<<tmpCoef[nrw]<<endl;
                         (*mtxPerVar[nelmt])(nrw,ncl)   =   tmpCoef[nrw];
                     }
                 }

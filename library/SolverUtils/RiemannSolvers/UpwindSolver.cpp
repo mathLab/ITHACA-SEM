@@ -115,24 +115,48 @@ namespace Nektar
             const Array<OneD, NekDouble> &traceVel = m_scalars["Vn"]();
             
             DNekMatSharedPtr                        tmpMat;
+
+            int nvariables  = Fwd.num_elements();
+
+            for (int i = 0; i < Fwd[0].num_elements(); ++i)
+            {
+                DNekMatSharedPtr PointFJac = MemoryManager<DNekMat>
+                    ::AllocateSharedPtr(nvariables, nvariables);
+                DNekMatSharedPtr PointBJac = MemoryManager<DNekMat>
+                    ::AllocateSharedPtr(nvariables, nvariables);
+                FJac->SetBlock(i, i, PointFJac);
+                BJac->SetBlock(i, i, PointBJac);
+            }
+
             
             for (int j = 0; j < traceVel.num_elements(); ++j)
             {
                 
                 if (traceVel[j] >= 0) 
                 {
-                    for (int i = 0; i < Fwd.num_elements(); ++i)
+                    for (int i = 0; i < nvariables; ++i)
                     {
-                        tmpMat = FJac->GetBlock(i,i);
-                        FJac[i][j] = tmp[i][j];
+                        tmpMat = FJac->GetBlock(j,j);
+                        (*tmpMat)(i,i) = Fwd[i][j];
+                    }
+                    for (int i = 0; i < nvariables; ++i)
+                    {
+                        tmpMat = BJac->GetBlock(j,j);
+                        (*tmpMat)(i,i) = 0.0;
                     }
                 }
-                
-                const Array<OneD, const Array<OneD, NekDouble> > &tmp = 
-                    traceVel[j] >= 0 ? Fwd : Bwd;
-                for (int i = 0; i < Fwd.num_elements(); ++i)
+                else
                 {
-                    flux[i][j] = tmp[i][j];
+                    for (int i = 0; i < nvariables; ++i)
+                    {
+                        tmpMat = FJac->GetBlock(j,j);
+                        (*tmpMat)(i,i) = 0.0;
+                    }
+                    for (int i = 0; i < nvariables; ++i)
+                    {
+                        tmpMat = BJac->GetBlock(j,j);
+                        (*tmpMat)(i,i) = Bwd[i][j];
+                    }
                 }
             }
         }

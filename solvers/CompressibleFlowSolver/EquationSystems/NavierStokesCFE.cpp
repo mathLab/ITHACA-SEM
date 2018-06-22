@@ -182,6 +182,79 @@ namespace Nektar
         }
     }
 
+
+    void NavierStokesCFE::v_DoDiffusion_coeff(
+        const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+              Array<OneD,       Array<OneD, NekDouble> > &outarray,
+            const Array<OneD, Array<OneD, NekDouble> >   &pFwd,
+            const Array<OneD, Array<OneD, NekDouble> >   &pBwd)
+    {
+        int i;
+        int nvariables = inarray.num_elements();
+        int npoints    = GetNpoints();
+        int ncoeffs    = GetNcoeffs();
+        int nTracePts  = GetTraceTotPoints();
+
+        Array<OneD, Array<OneD, NekDouble> > outarrayDiff(nvariables);
+
+        Array<OneD, Array<OneD, NekDouble> > inarrayDiff(nvariables-1);
+        Array<OneD, Array<OneD, NekDouble> > inFwd(nvariables-1);
+        Array<OneD, Array<OneD, NekDouble> > inBwd(nvariables-1);
+
+        for (i = 0; i < nvariables; ++i)
+        {
+            outarrayDiff[i] = Array<OneD, NekDouble>(ncoeffs);
+        }
+
+        for (i = 0; i < nvariables-1; ++i)
+        {
+            inarrayDiff[i] = Array<OneD, NekDouble>(npoints);
+            inFwd[i]       = Array<OneD, NekDouble>(nTracePts);
+            inBwd[i]       = Array<OneD, NekDouble>(nTracePts);
+        }
+
+        // Extract pressure
+        //    (use inarrayDiff[0] as a temporary storage for the pressure)
+        m_varConv->GetPressure(inarray, inarrayDiff[0]);
+
+        // Extract temperature
+        m_varConv->GetTemperature(inarray, inarrayDiff[nvariables-2]);
+
+        // Extract velocities
+        m_varConv->GetVelocityVector(inarray, inarrayDiff);
+
+        // Repeat calculation for trace space
+        if (pFwd == NullNekDoubleArrayofArray || 
+            pBwd == NullNekDoubleArrayofArray)
+        {
+            inFwd = NullNekDoubleArrayofArray;
+            inBwd = NullNekDoubleArrayofArray;
+        }
+        else
+        {
+            m_varConv->GetPressure(pFwd,    inFwd[0]);
+            m_varConv->GetPressure(pBwd,    inBwd[0]);
+
+            m_varConv->GetTemperature(pFwd, inFwd[nvariables-2]);
+            m_varConv->GetTemperature(pBwd, inBwd[nvariables-2]);
+
+            m_varConv->GetVelocityVector(pFwd, inFwd);
+            m_varConv->GetVelocityVector(pBwd, inBwd);
+        }
+
+        // Diffusion term in physical rhs form
+        m_diffusion->Diffuse_coeff(nvariables, m_fields, inarrayDiff, outarrayDiff,
+                             inFwd, inBwd);
+
+        for (i = 0; i < nvariables; ++i)
+        {
+            Vmath::Vadd(ncoeffs,
+                        outarrayDiff[i], 1,
+                        outarray[i], 1,
+                        outarray[i], 1);
+        }
+    }
+
     /**
      * @brief Return the flux vector for the LDG diffusion problem.
      * \todo Complete the viscous flux vector

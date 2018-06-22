@@ -172,6 +172,18 @@ namespace Nektar
         void MultiplyElmtBwdInvMassFwd(
             Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray,
             const NekDouble dtlamda);
+
+        void CoutBlkMat(
+            DNekBlkMatSharedPtr &gmtx, 
+            const unsigned int nwidthcolm=12);
+
+        void CoutStandardMat(
+            DNekMatSharedPtr &loc_matNvar,
+            const unsigned int nwidthcolm=12);
+
+        void Cout2DArrayBlkMat(
+            Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray,
+            const unsigned int nwidthcolm=12);
         
 
 #endif

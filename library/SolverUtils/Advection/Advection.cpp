@@ -283,5 +283,20 @@ void Advection::v_Advect_coeff(
             ASSERTL0(false, "v_Advect_coeff no defined");
         }
 
+void Advection::v_NumCalRiemFluxJac( 
+        const int                                          nConvectiveFields,
+        const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
+        const Array<OneD, Array<OneD, NekDouble> >        &AdvVel,
+        const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+        const Array<OneD, Array<OneD, NekDouble> >        &pFwd,
+        const Array<OneD, Array<OneD, NekDouble> >        &pBwd,
+        DNekBlkMatSharedPtr &FJac,
+        DNekBlkMatSharedPtr &BJac)
+        {
+            ASSERTL0(false, "v_NumCalRiemFluxJac no defined");
+        }
+
 }
+
+
 }

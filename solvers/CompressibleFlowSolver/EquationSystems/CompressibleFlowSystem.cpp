@@ -1117,7 +1117,7 @@ namespace Nektar
         // NekDouble resfactor = 1.0;
         NekDouble resnorm;
         NekDouble LinSysEPS,factor=1.0;
-        NekDouble tolrnc    = 1.0E-10*ntotal;
+        NekDouble tolrnc    = 1.0E-8*ntotal;
         NekDouble tol2      = tolrnc*tolrnc;
         NekDouble LinSysTol = 0.0;
         NekDouble LinSysTol0 = 1.0;

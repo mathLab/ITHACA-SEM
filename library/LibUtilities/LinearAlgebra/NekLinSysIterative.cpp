@@ -282,7 +282,7 @@ namespace Nektar
         }
         // ROOTONLY_NEKERROR(ErrorUtil::efatal,
         //                   "Exceeded maximum number of iterations");
-        WARNINGL0(false,"GMRES Exceeded maximum number of iterations");
+        cout <<"            WARNING: GMRES Exceeded maximum number of iterations"<<endl;
         return m_totalIterations;
 
     }

@@ -169,12 +169,12 @@ namespace Nektar
         }
 
             
-        NekDouble SolveLinearSystem(
+        int SolveLinearSystem(
             const int nGlobal,
             const Array<OneD, const NekDouble> &pInput,
                   Array<OneD,      NekDouble> &pOutput,
             const int nDir,
-            const NekDouble  tol    =   1.0E-9,
+            const NekDouble  tol    =   1.0E-7,
             const NekDouble  factor =   1.0);
      
  protected:
@@ -222,7 +222,7 @@ namespace Nektar
         void Set_Rhs_Magnitude(const NekVector<NekDouble> &pIn);
  private:
         /// Actual iterative solve-GMRS
-        NekDouble DoGMRES(
+        int DoGMRES(
             const int pNumRows,
             const Array<OneD, const NekDouble> &pInput,
                   Array<OneD,       NekDouble> &pOutput,

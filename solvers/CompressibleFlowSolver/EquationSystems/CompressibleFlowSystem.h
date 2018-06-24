@@ -163,7 +163,8 @@ namespace Nektar
                                         Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray);
 
         void AddMatNSBlkDiag_boundary(const Array<OneD, const Array<OneD, NekDouble> >&inarray,
-                                        Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray);
+                                        Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray,
+                                        Array<OneD, DNekBlkMatSharedPtr > TraceJac);
 
         void ElmtVarInvMtrx(Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray);
         
@@ -212,7 +213,8 @@ namespace Nektar
 
          void GetpreconditionerNSBlkDiag_coeff(
             const Array<OneD, const Array<OneD, NekDouble> >&inarray,
-            Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray);
+            Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray,
+            Array<OneD, DNekBlkMatSharedPtr > TraceJac);
 
         void MatrixMultiply_MatrixFree_coeff(
             const  Array<OneD, NekDouble> &inarray,

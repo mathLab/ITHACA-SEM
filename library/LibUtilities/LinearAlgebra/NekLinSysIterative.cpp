@@ -63,7 +63,7 @@ namespace Nektar
         m_prec_factor       =   1.0;
         m_rhs_mag_sm        =   1.0;
         m_root              =   true;
-        m_verbose           =   true;
+        m_verbose           =   false;
         std::vector<std::string>  variables(1);
         variables[0] =  pSession->GetVariable(0);
         string variable = variables[0];
@@ -158,7 +158,7 @@ namespace Nektar
     /**
      *
      */
-    NekDouble NekLinSysIterative::SolveLinearSystem(
+    int NekLinSysIterative::SolveLinearSystem(
         const int nGlobal,
         const Array<OneD, const NekDouble> &pInput,
         Array<OneD,      NekDouble> &pOutput,
@@ -196,7 +196,7 @@ namespace Nektar
     * @param       pOutput     Solution vector of all DOFs.  
     */
 
-    NekDouble  NekLinSysIterative::DoGMRES(
+    int  NekLinSysIterative::DoGMRES(
         const int                          nGlobal,
         const Array<OneD, const NekDouble> &pInput,
         Array<OneD,      NekDouble> &pOutput,
@@ -240,6 +240,7 @@ namespace Nektar
             truncted = true;
         }
 
+        int nwidthcolm = 10;
 
         for(int nrestart = 0; nrestart < m_maxrestart; ++nrestart)
         {
@@ -255,16 +256,17 @@ namespace Nektar
                 if (m_verbose && m_root)
                 {
                     // cout << "Gmres(" << m_maxstorage << "), bandwidth(" << m_maxhesband << "): " << endl;
-                    cout << "       GMRES iterations made = " << m_totalIterations
+                    cout <<std::scientific<<std::setw(nwidthcolm)<<std::setprecision(nwidthcolm-8) 
+                         << "       GMRES iterations made = " << m_totalIterations
                          << " using tolerance of "  << m_tolerance
                          // << " (error = " << sqrt(eps / m_rhs_magnitude)
-                         << " (error = " << sqrt(eps * m_prec_factor / m_rhs_magnitude) << ")" <<endl
-                         << "       WITH (eps = " << eps << ")"
-                         << ", (rhs_mag = " << m_rhs_magnitude << ")"
-                         << ", (prec_factor = " << m_prec_factor << ")"<<endl;
+                         << " (error = " << sqrt(eps * m_prec_factor / m_rhs_magnitude) << ")" <<endl;
+                        //  << "       WITH (eps = " << eps << ")"
+                        //  << ", (rhs_mag = " << m_rhs_magnitude << ")"
+                        //  << ", (prec_factor = " << m_prec_factor << ")"<<endl;
                 }
 
-                return (eps * m_prec_factor / m_rhs_magnitude);
+                return m_totalIterations;
             }
             restarted = true;
         }
@@ -281,7 +283,7 @@ namespace Nektar
         // ROOTONLY_NEKERROR(ErrorUtil::efatal,
         //                   "Exceeded maximum number of iterations");
         WARNINGL0(false,"GMRES Exceeded maximum number of iterations");
-        return (eps * m_prec_factor / m_rhs_magnitude);
+        return m_totalIterations;
 
     }
 
@@ -399,7 +401,6 @@ namespace Nektar
 #endif // DEBUG
         eps = vExchange;
 
-        eta[0] = sqrt(eps);
 
 
         if(!restarted)
@@ -421,10 +422,27 @@ namespace Nektar
             }
         }
 
+        // cout << "m_prec_factor  =   "<<m_prec_factor<<endl;
 
+        // cout << "before precond r0:     lkjfdaaaaaaaaaaaaaaaaaaaaaaaaaaaaas;jfasfjoiajfioawjfioaejfiojaiewjifjaiew "<<endl;
+        // for(int i = 0; i < tmp2.num_elements(); i++)
+        // {
+        //     cout << "   i=  "<<i<<"     r0="<< tmp2[i]<<endl;
+        // }
+
+        Vmath::Smul(nNonDir,sqrt(m_prec_factor),tmp2,1,tmp2,1);
+
+        // cout << "before precond r0:     lkjfdaaaaaaaaaaaaaaaaaaaaaaaaaaaaas;jfasfjoiajfioawjfioaejfiojaiewjifjaiew "<<endl;
+        // for(int i = 0; i < tmp2.num_elements(); i++)
+        // {
+        //     cout << "   i=  "<<i<<"     r0="<< tmp2[i]<<endl;
+        // }
+        eps     =   eps*m_prec_factor;
+        eta[0] = sqrt(eps);
 
         // If input residual is less than tolerance skip solve.
-        if (eps * m_prec_factor < m_tolerance * m_tolerance * m_rhs_magnitude)
+        // if (eps * m_prec_factor < m_tolerance * m_tolerance * m_rhs_magnitude)
+        if (eps < m_tolerance * m_tolerance * m_rhs_magnitude)
         {
             m_converged = true;
             return eps;
@@ -488,7 +506,8 @@ namespace Nektar
             {
                 eps = eta[nd + 1] * eta[nd + 1];
 
-                if (eps * m_prec_factor < m_tolerance * m_tolerance * m_rhs_magnitude )
+                // if (eps * m_prec_factor < m_tolerance * m_tolerance * m_rhs_magnitude )
+                if (eps < m_tolerance * m_tolerance * m_rhs_magnitude )
                 {
                     m_converged = true;
                     // cout << "eps = "<<eps<< "m_prec_factor = "<<m_prec_factor<< "m_tolerance = "<<m_tolerance<< "m_rhs_magnitude = "<<m_rhs_magnitude<<endl;
@@ -555,6 +574,8 @@ namespace Nektar
         tmp1 = w + nDir;
         tmp2 = w + nDir;
         m_oprtor.DoPrecond(tmp1, tmp2);
+        
+        Vmath::Smul(nNonDir,sqrt(m_prec_factor),tmp2,1,tmp2,1);
 
         //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         // Modified Gram-Schmidt

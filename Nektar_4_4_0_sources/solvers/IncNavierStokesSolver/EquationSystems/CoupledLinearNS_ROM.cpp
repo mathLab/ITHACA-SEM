@@ -2062,23 +2062,15 @@ namespace Nektar
         WriteFld(outname,m_fields[0],fieldcoeffs,variables);
 
 
-//        Array<OneD, NekDouble> glo_fieldcoeffs(m_fields[0]->GetNcoeffs(), 1337.1337);
-        Array<OneD, NekDouble> glo_fieldcoeffs(fieldcoeffs[2].num_elements(), 1337.1337);
+//        Array<OneD, NekDouble> glo_fieldcoeffs(m_fields[0]->GetNcoeffs(), 1234.5678);
+        Array<OneD, NekDouble> glo_fieldcoeffs(fieldcoeffs[2].num_elements(), 1234.5678);
 	m_fields[0]->LocalToGlobal(fieldcoeffs[2], glo_fieldcoeffs);
 //	m_pressure->LocalToGlobal(fieldcoeffs[2], glo_fieldcoeffs); This method is not defined or valid for this class type
 
-// 	probably better to identify the ngc correctly
 
 	int first_ngc_index = 0;
 
-/*	for(int counter_find_index = 0; counter_find_index < fieldcoeffs[2].num_elements(); counter_find_index++)
-	{
-		if(glo_fieldcoeffs[counter_find_index] < 1337.1338 && glo_fieldcoeffs[counter_find_index] > 1337.1336)
-			first_ngc_index = counter_find_index;
-		
-	} */
-
-	while(glo_fieldcoeffs[first_ngc_index] > 1337.1338 || glo_fieldcoeffs[first_ngc_index] < 1337.1336)
+	while(glo_fieldcoeffs[first_ngc_index] > 1234.5679 || glo_fieldcoeffs[first_ngc_index] < 1234.5677)
 	{
 		first_ngc_index++;
 	}
@@ -2090,7 +2082,6 @@ namespace Nektar
 	{
 	        Array<OneD, NekDouble> phys_fieldcoeffs(m_fields[0]->GetNpoints(), 0.0);
 	        Array<OneD, NekDouble> loc_fieldcoeffs(m_fields[0]->GetNcoeffs(), 0.0);
-//	        Array<OneD, NekDouble> glo_fieldcoeffs(fieldcoeffs[2].num_elements(), 1337.1337);
 	        Array<OneD, NekDouble> glo_fieldcoeffs(first_ngc_index, 0.0);
 		phys_fieldcoeffs[counter_phys_index] = 1.0;
                 m_fields[0]->FwdTrans_IterPerExp(phys_fieldcoeffs, loc_fieldcoeffs);

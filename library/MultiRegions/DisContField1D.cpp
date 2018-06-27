@@ -1241,6 +1241,32 @@ namespace Nektar
             // Assemble into global operator
             m_traceMap->AssembleBnd(loc_lambda,BndRhs);
 
+            Array<OneD, const int> bndCondCoeffToGlobalTraceMap = 
+                m_traceMap->GetBndCondCoeffsToGlobalTraceMap();
+
+            // Copy Dirichlet boundary conditions and weak forcing into trace
+            // space
+            for(i = 0; i < m_bndCondExpansions.num_elements(); ++i)
+            {
+                Array<OneD, const NekDouble> bndcoeffs = m_bndCondExpansions[i]->GetCoeffs();
+
+                if(m_bndConditions[i]->GetBoundaryConditionType() ==
+                       SpatialDomains::eDirichlet)
+                {
+                    BndSol[bndCondCoeffToGlobalTraceMap[i]] =
+                            bndcoeffs[0]; 
+                }
+                else if (m_bndConditions[i]->GetBoundaryConditionType() ==
+                             SpatialDomains::eNeumann ||
+                         m_bndConditions[i]->GetBoundaryConditionType() ==
+                             SpatialDomains::eRobin)
+                {
+                    //Add weak boundary condition to trace forcing
+                    BndRhs[bndCondCoeffToGlobalTraceMap[i]] +=
+                            bndcoeffs[0]; 
+                }
+            }
+
             cnt = 0;
             // Copy Dirichlet boundary conditions into trace space
             for (i = 0; i < m_bndCondExpansions.num_elements(); ++i)

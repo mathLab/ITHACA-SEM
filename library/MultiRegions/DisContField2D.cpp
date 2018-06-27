@@ -1931,7 +1931,6 @@ namespace Nektar
             // Assemble local \lambda_e into global \Lambda
             m_traceMap->AssembleBnd(loc_lambda,BndRhs);
 
-
             Array<OneD, const int> bndCondCoeffToGlobalTraceMap = 
                 m_traceMap->GetBndCondCoeffsToGlobalTraceMap();
 

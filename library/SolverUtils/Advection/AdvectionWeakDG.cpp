@@ -150,6 +150,7 @@ namespace Nektar
 
             m_riemann->Solve(m_spaceDim, Fwd, Bwd, numflux);
             
+            // NumericalFlux(nConvectiveFields, fields, advVel, inarray, numflux,time,pFwd,pBwd);
 
             // Evaulate <\phi, \hat{F}\cdot n> - OutField[i]
             for(i = 0; i < nConvectiveFields; ++i)
@@ -204,32 +205,13 @@ namespace Nektar
             }
 
             // Store forwards/backwards space along trace space
-            Array<OneD, Array<OneD, NekDouble> > Fwd    (nConvectiveFields);
-            Array<OneD, Array<OneD, NekDouble> > Bwd    (nConvectiveFields);
             Array<OneD, Array<OneD, NekDouble> > numflux(nConvectiveFields);
-
-            if (pFwd == NullNekDoubleArrayofArray ||
-                pBwd == NullNekDoubleArrayofArray)
+            for(i = 0; i < nConvectiveFields; ++i)
             {
-                for(i = 0; i < nConvectiveFields; ++i)
-                {
-                    Fwd[i]     = Array<OneD, NekDouble>(nTracePointsTot, 0.0);
-                    Bwd[i]     = Array<OneD, NekDouble>(nTracePointsTot, 0.0);
-                    numflux[i] = Array<OneD, NekDouble>(nTracePointsTot, 0.0);
-                    fields[i]->GetFwdBwdTracePhys(inarray[i], Fwd[i], Bwd[i]);
-                }
-            }
-            else
-            {
-                for(i = 0; i < nConvectiveFields; ++i)
-                {
-                    Fwd[i]     = pFwd[i];
-                    Bwd[i]     = pBwd[i];
-                    numflux[i] = Array<OneD, NekDouble>(nTracePointsTot, 0.0);
-                }
+                numflux[i] = Array<OneD, NekDouble>(nTracePointsTot, 0.0);
             }
 
-            m_riemann->Solve(m_spaceDim, Fwd, Bwd, numflux);
+            NumericalFlux(nConvectiveFields, fields, advVel, inarray, numflux,time,pFwd,pBwd);
 
             // Evaulate <\phi, \hat{F}\cdot n> - OutField[i]
             for(i = 0; i < nConvectiveFields; ++i)
@@ -594,6 +576,7 @@ namespace Nektar
             Array<OneD,       Array<OneD, NekDouble> >  plusflux(nFields),plusfield(nFields);
             Array<OneD,       Array<OneD, NekDouble> >  Jacvect(nFields);
             
+            // estimate the magnitude of each flow variables 
             Array<OneD, NekDouble>  magnitdEstimat(nFields,0.0);
             for(int i = 0; i < nFields; i++)
             {
@@ -616,6 +599,7 @@ namespace Nektar
                 magnitdEstimat[i] = sqrt(magnitdEstimat[i]*ototpnts);
             }
 
+            // Allocate the Jacobian matrix
             for(int i=0;i<nPts;i++)
             {
                 DNekMatSharedPtr    tmpMat;
@@ -627,7 +611,8 @@ namespace Nektar
                         ::AllocateSharedPtr(nFields, nFields);
                 BJac->SetBlock(i,i,tmpMat);
             }
-            
+
+            // Allocate temporary variables
             for(int i = 0; i < nFields; i++)
             {
                 Jacvect[i]      =    Array<OneD, NekDouble>(nPts,0.0);
@@ -643,6 +628,7 @@ namespace Nektar
                 Vmath::Vcopy(nPts, Fwd[i],1,plusfield[i],1);
             }
 
+            // Fwd Jacobian
             for(int i = 0; i < nFields; i++)
             {
                 NekDouble epsvar = eps*magnitdEstimat[i];
@@ -651,6 +637,8 @@ namespace Nektar
                 {
                     plusfield[i][j] =    Fwd[i][j]  +   epsvar;
                 }
+
+
                 
 
                 m_riemann->Solve(m_spaceDim, plusfield, Bwd, plusflux);
@@ -711,8 +699,6 @@ namespace Nektar
                     plusfield[i][j] =    Bwd[i][j];
                 }
             }
-
-            
         }
     }//end of namespace SolverUtils
 }//end of namespace Nektar

@@ -159,17 +159,39 @@ namespace Nektar
             const Array<OneD, NekDouble> &inarray,
             Array<OneD, NekDouble >&outarray);
 
+        void preconditioner_BlkSOR_coeff(
+            const Array<OneD, NekDouble> &inarray,
+                  Array<OneD, NekDouble >&outarray);
+        
+        void MinusOffDiag2Rhs(
+            const int nvariables,
+            const int npoints,
+            const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+                  Array<OneD,       Array<OneD, NekDouble> > &outarray);
+
         void AddMatNSBlkDiag_volume(const Array<OneD, const Array<OneD, NekDouble> >&inarray,
                                         Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray);
 
         void AddMatNSBlkDiag_boundary(const Array<OneD, const Array<OneD, NekDouble> >&inarray,
                                         Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray,
-                                        Array<OneD, DNekBlkMatSharedPtr > TraceJac);
+                                        Array<OneD, DNekBlkMatSharedPtr > &TraceJac);
 
         void ElmtVarInvMtrx(Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray);
         
-        Array<OneD, DNekBlkMatSharedPtr> GetTraceJac(
-            const Array<OneD, const Array<OneD, NekDouble> > &inarray);
+        void GetTraceJac(
+            const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+            Array<OneD, DNekBlkMatSharedPtr > &TraceJac);
+
+        void NumCalRiemFluxJac(
+            const int                                          nConvectiveFields,
+            const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
+            const Array<OneD, Array<OneD, NekDouble> >        &AdvVel,
+            const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+            const NekDouble                                   &time,
+            const Array<OneD, Array<OneD, NekDouble> >        &Fwd,
+            const Array<OneD, Array<OneD, NekDouble> >        &Bwd,
+            DNekBlkMatSharedPtr &FJac,
+            DNekBlkMatSharedPtr &BJac);
 
         void PointFluxJacobian_pn(
             const Array<OneD, NekDouble> &Fwd,
@@ -214,7 +236,7 @@ namespace Nektar
          void GetpreconditionerNSBlkDiag_coeff(
             const Array<OneD, const Array<OneD, NekDouble> >&inarray,
             Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray,
-            Array<OneD, DNekBlkMatSharedPtr > TraceJac);
+            Array<OneD, DNekBlkMatSharedPtr > &TraceJac);
 
         void MatrixMultiply_MatrixFree_coeff(
             const  Array<OneD, NekDouble> &inarray,

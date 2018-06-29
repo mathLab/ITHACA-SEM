@@ -555,8 +555,6 @@ namespace Nektar
                 tmpinn[i][nElmtOffset+npnt] = 0.0;
             }
         }
-        // Cout2DArrayBlkMat(ElmtPrecMatVars);
-        return ElmtPrecMatVars;
     }
 
     void UnsteadyInviscidBurger::preconditioner_BlkDiag(

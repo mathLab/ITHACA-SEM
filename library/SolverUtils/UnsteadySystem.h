@@ -113,6 +113,10 @@ namespace Nektar
 
             Array<OneD, DNekBlkMatSharedPtr > m_TraceJac;
 
+            NekDouble   m_inArrayNorm=-1.0;
+
+            int m_TotLinItePrecondMat=600;
+
             
 
             /// Initialises UnsteadySystem class members.

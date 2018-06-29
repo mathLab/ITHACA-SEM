@@ -3074,6 +3074,23 @@ namespace Nektar
                      "This method is not defined or valid for this class type");
         }
 
+
+        void ExpList::v_FillBwdWITHBound(
+            const Array<OneD, const NekDouble> &Fwd,
+                  Array<OneD,       NekDouble> &Bwd)
+        {
+            ASSERTL0(false,"v_FillBwdWITHBound not defined");
+        }
+
+        void ExpList::v_AddTraceIntegral2OffDiag(
+                const Array<OneD, const NekDouble> &FwdFlux, 
+                const Array<OneD, const NekDouble> &BwdFlux, 
+                      Array<OneD,       NekDouble> &outarray)
+        {
+            ASSERTL0(false,"AddTraceIntegral2OffDiag not defined");
+        }
+            
+
         /**
          */
         const Array<OneD,const SpatialDomains::BoundaryConditionShPtr>

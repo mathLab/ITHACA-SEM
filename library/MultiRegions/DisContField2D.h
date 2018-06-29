@@ -302,6 +302,15 @@ namespace Nektar
                 const NekDouble   x3_in   = NekConstants::kNekUnsetDouble);
 
             virtual std::map<int, RobinBCInfoSharedPtr> v_GetRobinBCInfo();
+
+            virtual void v_FillBwdWITHBound(
+                const Array<OneD, const NekDouble> &Fwd,
+                      Array<OneD,       NekDouble> &Bwd);
+            virtual void v_AddTraceIntegral2OffDiag(
+                const Array<OneD, const NekDouble> &FwdFlux, 
+                const Array<OneD, const NekDouble> &BwdFlux, 
+                    Array<OneD,       NekDouble> &outarray);
+
         };
         
         typedef std::shared_ptr<DisContField2D>   DisContField2DSharedPtr;

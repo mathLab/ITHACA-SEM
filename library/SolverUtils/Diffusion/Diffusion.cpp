@@ -79,8 +79,8 @@ namespace Nektar
             const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
             const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                     Array<OneD, Array<OneD, NekDouble> >        &outarray,
-            const Array<OneD, Array<OneD, NekDouble> > &pFwd = NullNekDoubleArrayofArray,
-            const Array<OneD, Array<OneD, NekDouble> > &pBwd = NullNekDoubleArrayofArray)
+            const Array<OneD, Array<OneD, NekDouble> > &pFwd,
+            const Array<OneD, Array<OneD, NekDouble> > &pBwd)
         {
             ASSERTL0(false,"v_Diffuse_coeff not defined");
         }

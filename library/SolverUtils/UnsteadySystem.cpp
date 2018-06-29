@@ -328,7 +328,7 @@ namespace Nektar
                     }
                     m_fields[m_intVariables[i]]->SetPhysState(false);
                 }
-
+                
                 // Perform any solver-specific post-integration steps
                 if (v_PostIntegrate(step))
                 {
@@ -416,6 +416,19 @@ namespace Nektar
                 ++step;
                 ++stepCounter;
             }
+
+            // Debug output data
+            int nwidthcolm  =   23;
+            for (int i = nvariables; i < nvariables; ++i)
+            {
+                for (int j = 0; j < fields[i].num_elements()/100; ++j)
+                {
+                    cout    << "fields["<<i<<"]["<<j<<"]=  "
+                            <<std::scientific<<std::setw(nwidthcolm)<<std::setprecision(nwidthcolm-8)
+                            <<fields[i][j]<<endl;
+                }
+            }
+
             
             // Print out summary statistics
             if (m_session->GetComm()->GetRank() == 0)

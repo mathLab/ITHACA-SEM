@@ -759,6 +759,12 @@ namespace Nektar
             inline void AddTraceIntegral(
                 const Array<OneD, const NekDouble> &Fn,
                       Array<OneD, NekDouble> &outarray);
+
+            inline void AddTraceIntegral2OffDiag(
+                const Array<OneD, const NekDouble> &FwdFlux, 
+                const Array<OneD, const NekDouble> &BwdFlux, 
+                      Array<OneD,       NekDouble> &outarray);
+        
             
             inline void CalcTraceJacMatIntegral(
                 const Array<OneD, const NekDouble> &Fn,
@@ -777,6 +783,10 @@ namespace Nektar
                 const Array<OneD,const NekDouble> &field,
                       Array<OneD,NekDouble> &Fwd,
                       Array<OneD,NekDouble> &Bwd);
+
+            inline void FillBwdWITHBound(
+                  const Array<OneD, const NekDouble> &Fwd,
+                        Array<OneD,       NekDouble> &Bwd);
 
             inline const std::vector<bool> &GetLeftAdjacentFaces(void) const;
             
@@ -1196,6 +1206,12 @@ namespace Nektar
                 const Array<OneD, const NekDouble> &Fn,
                       Array<OneD, NekDouble> &outarray);
 
+            virtual void v_AddTraceIntegral2OffDiag(
+                const Array<OneD, const NekDouble> &FwdFlux, 
+                const Array<OneD, const NekDouble> &BwdFlux, 
+                      Array<OneD,       NekDouble> &outarray);
+        
+
             virtual void v_CalcTraceJacMatIntegral(
                 const Array<OneD, const NekDouble> &Fn,
                       Array<OneD, NekDouble> &outarray);
@@ -1215,6 +1231,9 @@ namespace Nektar
                 const Array<OneD,const NekDouble>  &field,
                       Array<OneD,NekDouble> &Fwd,
                       Array<OneD,NekDouble> &Bwd);
+            virtual void v_FillBwdWITHBound(
+                const Array<OneD, const NekDouble> &Fwd,
+                      Array<OneD,       NekDouble> &Bwd);
 
             virtual const std::vector<bool> &v_GetLeftAdjacentFaces(void) const;
 
@@ -2236,6 +2255,14 @@ namespace Nektar
             v_AddTraceIntegral(Fn,outarray);
         }
 
+        inline void ExpList::AddTraceIntegral2OffDiag(
+                const Array<OneD, const NekDouble> &FwdFlux, 
+                const Array<OneD, const NekDouble> &BwdFlux, 
+                      Array<OneD,       NekDouble> &outarray)
+        {
+            v_AddTraceIntegral2OffDiag(FwdFlux,BwdFlux,outarray);
+        }
+
 
         inline void ExpList::CalcTraceJacMatIntegral(
             const Array<OneD, const NekDouble> &Fn,
@@ -2266,6 +2293,15 @@ namespace Nektar
         {
             v_GetFwdBwdTracePhys(field,Fwd,Bwd);
         }
+
+        inline void ExpList::FillBwdWITHBound(
+            const Array<OneD, const NekDouble> &Fwd,
+                  Array<OneD,       NekDouble> &Bwd)
+        {
+            v_FillBwdWITHBound(Fwd,Bwd);
+        }
+
+        
 
         inline const std::vector<bool> &ExpList::GetLeftAdjacentFaces(void) const
         {

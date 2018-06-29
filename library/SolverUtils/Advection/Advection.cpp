@@ -85,6 +85,53 @@ void Advection::Advect(
 }
 
 
+void Advection::NumericalFlux(
+    const int                                          nConvectiveFields,
+    const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
+    const Array<OneD, Array<OneD, NekDouble> >        &pAdvVel,
+    const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+    Array<OneD, Array<OneD, NekDouble> >              &numflux,
+    const NekDouble                                   &pTime,
+    const Array<OneD, Array<OneD, NekDouble> >        &pFwd,
+    const Array<OneD, Array<OneD, NekDouble> >        &pBwd)
+{
+    int nTracePointsTot = fields[0]->GetTrace()->GetTotPoints();
+    // Store forwards/backwards space along trace space
+    Array<OneD, Array<OneD, NekDouble> > Fwd    (nConvectiveFields);
+    Array<OneD, Array<OneD, NekDouble> > Bwd    (nConvectiveFields);
+
+    if (pFwd == NullNekDoubleArrayofArray ||
+        pBwd == NullNekDoubleArrayofArray)
+    {
+        for(int i = 0; i < nConvectiveFields; ++i)
+        {
+            Fwd[i]     = Array<OneD, NekDouble>(nTracePointsTot, 0.0);
+            Bwd[i]     = Array<OneD, NekDouble>(nTracePointsTot, 0.0);
+            fields[i]->GetFwdBwdTracePhys(inarray[i], Fwd[i], Bwd[i]);
+        }
+    }
+    else
+    {
+        for(int i = 0; i < nConvectiveFields; ++i)
+        {
+            Fwd[i]     = pFwd[i];
+            Bwd[i]     = pBwd[i];
+        }
+    }
+
+    if (numflux == NullNekDoubleArrayofArray)
+    {
+        Array<OneD, Array<OneD, NekDouble> > numflux    (nConvectiveFields);
+        for(int i = 0; i < nConvectiveFields; ++i)
+        {
+            numflux[i] = Array<OneD, NekDouble>(nTracePointsTot, 0.0);
+        }
+    }
+
+    m_riemann->Solve(m_spaceDim, Fwd, Bwd, numflux);
+}
+
+
 /**
  * @param   nConvectiveFields   Number of velocity components.
  * @param   pFields             Expansion lists for scalar fields.
@@ -277,8 +324,8 @@ void Advection::v_Advect_coeff(
         const Array<OneD, Array<OneD, NekDouble> >        &inarray,
               Array<OneD, Array<OneD, NekDouble> >        &outarray,
         const NekDouble                                   &time,
-        const Array<OneD, Array<OneD, NekDouble> > &pFwd = NullNekDoubleArrayofArray,
-        const Array<OneD, Array<OneD, NekDouble> > &pBwd = NullNekDoubleArrayofArray)
+        const Array<OneD, Array<OneD, NekDouble> > &pFwd,
+        const Array<OneD, Array<OneD, NekDouble> > &pBwd)
         {
             ASSERTL0(false, "v_Advect_coeff no defined");
         }

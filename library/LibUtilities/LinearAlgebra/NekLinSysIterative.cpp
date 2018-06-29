@@ -142,10 +142,10 @@ namespace Nektar
                                     m_successiveRHS,0);
         } */
 
-        m_maxrestart        =   2;
-        m_maxstorage        =   30;
-        m_maxhesband        =   30;
-        m_maxiter           =   59;
+        m_maxrestart        =   1;
+        m_maxstorage        =   50;
+        m_maxhesband        =   50;
+        m_maxiter           =   49;
 
     }
 

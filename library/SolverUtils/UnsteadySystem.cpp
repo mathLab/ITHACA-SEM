@@ -258,6 +258,8 @@ namespace Nektar
             NekDouble cpuTime       = 0.0;
             NekDouble elapsed       = 0.0;
 
+
+            m_timestepMax = m_timestep;
             while (step   < m_steps ||
                    m_time < m_fintime - NekConstants::kNekZeroTol)
             {
@@ -279,6 +281,34 @@ namespace Nektar
                         doCheckTime    = true;
                     }
                 }
+
+                bool TimestepIncrement = true; 
+
+                if (TimestepIncrement)
+                {
+
+                    if(m_TotLinItePerStep<220)
+                    {
+                        if(m_timestepMax>m_timestep)
+                        {}
+                        else
+                        {
+                            m_timestepMax = 1.10*m_timestep;
+                        }
+                    }
+                    NekDouble timeincrementFactor = 1.01;
+
+                    if(m_timestepMax>m_timestep)
+                    {
+                        m_timestep  *=  timeincrementFactor;
+                        m_timestep  =   (m_timestepMax>m_timestep)?m_timestep:m_timestepMax;
+                    }
+
+                    if (m_time + m_timestep > m_fintime && m_fintime > 0.0)
+                    {
+                        m_timestep = m_fintime - m_time;
+                    }
+                }
                 
                 // Perform any solver-specific pre-integration steps
                 timer.Start();
@@ -287,6 +317,7 @@ namespace Nektar
                     break;
                 }
 
+                m_TotLinItePerStep =0;
                 fields = m_intScheme->TimeIntegrate(
                     stepCounter, m_timestep, m_intSoln, m_ode);
                 timer.Stop();
@@ -303,7 +334,7 @@ namespace Nektar
                     cout << "Steps: " << setw(8)  << left << step+1 << " "
                          << "Time: "  << setw(12) << left << m_time;
 
-                    if (m_cflSafetyFactor)
+                    if (m_cflSafetyFactor||TimestepIncrement)
                     {
                         cout << " Time-step: " << setw(12)
                              << left << m_timestep;
@@ -419,9 +450,9 @@ namespace Nektar
 
             // Debug output data
             int nwidthcolm  =   23;
-            for (int i = nvariables; i < nvariables; ++i)
+            for (int i = 0; i < nvariables; ++i)
             {
-                for (int j = 0; j < fields[i].num_elements()/100; ++j)
+                for (int j = 0; j < (fields[i].num_elements()/100); ++j)
                 {
                     cout    << "fields["<<i<<"]["<<j<<"]=  "
                             <<std::scientific<<std::setw(nwidthcolm)<<std::setprecision(nwidthcolm-8)

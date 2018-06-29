@@ -117,6 +117,8 @@ namespace Nektar
 
             int m_TotLinItePrecondMat=600;
 
+            int m_TotLinItePerStep=600;
+
             
 
             /// Initialises UnsteadySystem class members.

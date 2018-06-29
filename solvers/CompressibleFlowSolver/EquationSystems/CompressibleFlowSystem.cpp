@@ -1474,7 +1474,7 @@ namespace Nektar
 
         NekDouble resnorm;
         NekDouble LinSysTol = 0.0;
-        NekDouble tolrnc    = 1.0E-12;
+        NekDouble tolrnc    = 1.0E-10;
         NekDouble tol2      = m_inArrayNorm*tolrnc*tolrnc*ntotal;
 
         m_PrecMatVars = Array<OneD, Array<OneD, DNekBlkMatSharedPtr> >(nvariables);
@@ -1577,6 +1577,8 @@ namespace Nektar
             }
 
         }
+
+        m_TotLinItePerStep += NtotDoOdeRHS;
 
         /// TODO: disconnect these from other arrays to avoid memory cannot release.
         // m_TimeIntegtSol_k   =   nullptr;

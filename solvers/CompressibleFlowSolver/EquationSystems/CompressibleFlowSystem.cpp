@@ -937,6 +937,8 @@ namespace Nektar
 
         Vmath::Fill(ntotpnt,0.0,outN,1);
 
+        preconditioner_BlkDiag(inarray,outN);
+
         PointerWrapper pwrapp = eWrapper;
         Array<OneD, NekVector<NekDouble> > tmparray(nvariables);
         for(int m = 0; m < nvariables; m++)
@@ -945,7 +947,7 @@ namespace Nektar
             tmparray[m] =  NekVector<NekDouble> (npoints,outN+moffset,pwrapp);
         }
 
-        for(int nsor = 0; nsor < nSORTot; nsor++)
+        for(int nsor = 0; nsor < nSORTot-1; nsor++)
         {
             Vmath::Smul(ntotpnt,OmSORParam,outN,1,outarray,1);
             
@@ -1474,7 +1476,7 @@ namespace Nektar
 
         NekDouble resnorm;
         NekDouble LinSysTol = 0.0;
-        NekDouble tolrnc    = 1.0E-10;
+        NekDouble tolrnc    = m_NewtonIteTol;
         NekDouble tol2      = m_inArrayNorm*tolrnc*tolrnc*ntotal;
 
         m_PrecMatVars = Array<OneD, Array<OneD, DNekBlkMatSharedPtr> >(nvariables);
@@ -1508,6 +1510,7 @@ namespace Nektar
         NekLinSysIterative linsol(m_session,v_Comm);
         m_LinSysOprtors.DefineMatrixMultiply(&CompressibleFlowSystem::MatrixMultiply_MatrixFree_coeff, this);
         m_LinSysOprtors.DefinePrecond(&CompressibleFlowSystem::preconditioner_BlkSOR_coeff, this);
+        // m_LinSysOprtors.DefinePrecond(&CompressibleFlowSystem::preconditioner_BlkDiag, this);
         linsol.setLinSysOperators(m_LinSysOprtors);
 
         // NonlinSysEvaluator_coeff(m_TimeIntegtSol_k,m_SysEquatResid_k);

@@ -351,10 +351,18 @@ class Interpolator;
             NekDouble                                   m_timestep;
             /// Time step size
             NekDouble                                   m_timestepMax=-1.0;
+            
             /// Lambda constant in real system if one required.
             NekDouble                                   m_lambda;
             /// Time between checkpoints.
             NekDouble                                   m_checktime;
+
+            NekDouble                                   m_NewtonIteTol;
+
+            NekDouble                                   m_TimeIncrementFactor;
+
+            /// Time step size
+            int                                         m_TotLinItePerStepSET;
             /// Number of checkpoints written so far
             int                                         m_nchk;
             /// Number of steps to take.

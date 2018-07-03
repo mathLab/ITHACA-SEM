@@ -282,26 +282,13 @@ namespace Nektar
                     }
                 }
 
-                bool TimestepIncrement = true; 
-
-                if (TimestepIncrement)
+                if (m_TimeIncrementFactor>1.0)
                 {
-
-                    if(m_TotLinItePerStep<220)
-                    {
-                        if(m_timestepMax>m_timestep)
-                        {}
-                        else
-                        {
-                            m_timestepMax = 1.10*m_timestep;
-                        }
-                    }
-                    NekDouble timeincrementFactor = 1.01;
-
-                    if(m_timestepMax>m_timestep)
+                    NekDouble timeincrementFactor = m_TimeIncrementFactor;
+                    // cout << "m_TotLinItePerStepSET = "<< m_TotLinItePerStepSET<< endl;
+                    if(m_TotLinItePerStep<m_TotLinItePerStepSET&&m_TotLinItePerStep>0)
                     {
                         m_timestep  *=  timeincrementFactor;
-                        m_timestep  =   (m_timestepMax>m_timestep)?m_timestep:m_timestepMax;
                     }
 
                     if (m_time + m_timestep > m_fintime && m_fintime > 0.0)
@@ -334,7 +321,7 @@ namespace Nektar
                     cout << "Steps: " << setw(8)  << left << step+1 << " "
                          << "Time: "  << setw(12) << left << m_time;
 
-                    if (m_cflSafetyFactor||TimestepIncrement)
+                    if (m_cflSafetyFactor||m_TimeIncrementFactor>1.0)
                     {
                         cout << " Time-step: " << setw(12)
                              << left << m_timestep;

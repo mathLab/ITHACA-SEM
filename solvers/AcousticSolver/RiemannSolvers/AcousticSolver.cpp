@@ -119,14 +119,17 @@ void AcousticSolver::v_Solve(
 /**
 *
 */
-void AcousticSolver::GetRotBasefield(Array< OneD, Array< OneD, NekDouble > > &bfFwd, Array< OneD, Array< OneD, NekDouble > > &bfBwd)
+void AcousticSolver::GetRotBasefield(
+    Array<OneD, Array<OneD, NekDouble> > &bfFwd,
+    Array<OneD, Array<OneD, NekDouble> > &bfBwd)
 {
     ASSERTL1(CheckVectors("N"), "N not defined.");
     ASSERTL1(CheckVectors("basefieldFwdBwd"), "basefieldFwdBwd not defined.");
     const Array<OneD, const Array<OneD, NekDouble> > normals = m_vectors["N"]();
-    const Array<OneD, const Array<OneD, NekDouble> > basefieldFwdBwd = m_vectors["basefieldFwdBwd"]();
+    const Array<OneD, const Array<OneD, NekDouble> > basefieldFwdBwd =
+        m_vectors["basefieldFwdBwd"]();
 
-    int nBF = basefieldFwdBwd.num_elements() / 2;
+    int nBF  = basefieldFwdBwd.num_elements() / 2;
     int nDim = normals.num_elements();
 
     Array<OneD, Array<OneD, NekDouble> > basefieldFwd(nBF);
@@ -134,7 +137,7 @@ void AcousticSolver::GetRotBasefield(Array< OneD, Array< OneD, NekDouble > > &bf
 
     for (int i = 0; i < nBF; i++)
     {
-        int j = nBF + i;
+        int j           = nBF + i;
         basefieldFwd[i] = basefieldFwdBwd[i];
         basefieldBwd[i] = basefieldFwdBwd[j];
     }
@@ -147,8 +150,6 @@ void AcousticSolver::GetRotBasefield(Array< OneD, Array< OneD, NekDouble > > &bf
     }
     rotateToNormal(basefieldFwd, normals, baseVecLocs, bfFwd);
     rotateToNormal(basefieldBwd, normals, baseVecLocs, bfBwd);
-
-
 }
 
 }

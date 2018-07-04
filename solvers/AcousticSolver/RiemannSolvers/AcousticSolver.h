@@ -67,7 +67,8 @@ class AcousticSolver : public RiemannSolver
             ASSERTL0(false, "This function should be defined by subclasses.");
         }
 
-        void GetRotBasefield(Array<OneD, Array<OneD, NekDouble> > &bfFwd, Array<OneD, Array<OneD, NekDouble> > &bfBwd);
+        void GetRotBasefield(Array<OneD, Array<OneD, NekDouble> > &bfFwd,
+                             Array<OneD, Array<OneD, NekDouble> > &bfBwd);
 };
 
 }

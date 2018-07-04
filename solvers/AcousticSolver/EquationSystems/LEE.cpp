@@ -210,12 +210,12 @@ void LEE::v_AddLinTerm(
 
     Array<OneD, const NekDouble> c0sq  = m_bf[0];
     Array<OneD, const NekDouble> rho0  = m_bf[1];
-    Array<OneD, const NekDouble> gamma = m_bf[m_spacedim + 2];
+    Array<OneD, const NekDouble> gamma = m_bf[m_iu + m_spacedim];
 
-    Array<OneD, NekDouble> gammaMinOne(m_spacedim);
+    Array<OneD, NekDouble> gammaMinOne(nq);
     Vmath::Sadd(nq, -1.0, gamma, 1, gammaMinOne, 1);
 
-    Array<OneD, NekDouble> p0(m_spacedim);
+    Array<OneD, NekDouble> p0(nq);
     Vmath::Vmul(nq, c0sq, 1, rho0, 1, p0, 1);
     Vmath::Vdiv(nq, p0, 1, gamma, 1, p0, 1);
 

@@ -106,6 +106,11 @@ class APE : public AdvectionSystem
                 const Array<OneD, Array<OneD, NekDouble> > &physfield,
                 Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &flux);
 
+        virtual void v_AddLinTerm(
+        const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+              Array<OneD,       Array<OneD, NekDouble> > &outarray)
+        {}
+
         virtual bool v_PreIntegrate(int step);
 
         virtual void v_Output();

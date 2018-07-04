@@ -46,15 +46,6 @@ namespace Nektar
 namespace FieldUtils
 {
 
-enum InterpMethod
-{
-    eNoMethod,
-    eNearestNeighbour,
-    eQuadratic,
-    eShepard,
-    eGauss,
-};
-
 /// A class that contains algorithms for interpolation between pts fields,
 /// expansions and different meshes
 class Interpolator : public LibUtilities::Interpolator

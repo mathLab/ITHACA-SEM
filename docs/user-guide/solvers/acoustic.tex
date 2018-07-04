@@ -7,7 +7,7 @@ totally decoupled from the underlying hydrodynamic field.
 
 \subsection{Linearized Euler Equations}
 The Linearized Euler Equations (LEE) are obtained by linearizing the Euler Equations about a mean flow state $\left( \overline{\rho},\,\overline{c^2},\,\overline{\boldsymbol{u}} \right)$.
-Hence, they describe the evolution of perturbations $\left(p^\mathrm{a},\,\rho^\mathrm{a},\,\rho\boldsymbol{u}^\mathrm{a} \right)$ around this state.
+Hence, they describe the evolution of perturbations $\left(p^\mathrm{a},\,\rho^\mathrm{a},\,\overline{\rho}\boldsymbol{u}^\mathrm{a} \right)$ around this state.
 In conservative form, the LEE are given as:
 \begin{equation} 
 \frac{\partial \boldsymbol{U}}{\partial t}
@@ -194,7 +194,7 @@ Under this section it is possible to set the parameters of the simulation.
 For the APE operator, the acoustic pressure and velocity perturbations are solved, e.g.:
 \begin{lstlisting}[style=XmlStyle]
 <VARIABLES>
-  <V ID="0"> p  </V>
+  <V ID="0"> p </V>
   <V ID="1"> u </V>
   <V ID="2"> v </V>
   <V ID="3"> w </V>
@@ -203,8 +203,8 @@ For the APE operator, the acoustic pressure and velocity perturbations are solve
 The LEE use a conservative formulation and introduce the additional density perturbation:
 \begin{lstlisting}[style=XmlStyle]
 <VARIABLES>
-  <V ID="0"> p  </V>
-  <V ID="1"> rho </V>
+  <V ID="0"> p    </V>
+  <V ID="1"> rho  </V>
   <V ID="2"> rhou </V>
   <V ID="3"> rhov </V>
   <V ID="4"> rhow </V>

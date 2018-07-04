@@ -71,9 +71,6 @@ void APE::v_InitObject()
     ASSERTL0(m_projectionType == MultiRegions::eDiscontinuous,
              "Only Projection=DisContinuous supported by the APE class.");
 
-    // Load isentropic coefficient, Ratio of specific heats
-    m_session->LoadParameter("IO_CFLSteps", m_cflsteps, 0);
-
     m_bfNames.push_back("c0sq");
     m_bfNames.push_back("rho0");
     m_bfNames.push_back("u0");

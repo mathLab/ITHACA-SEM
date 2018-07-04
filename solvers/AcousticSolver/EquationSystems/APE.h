@@ -85,11 +85,8 @@ class APE : public AdvectionSystem
         SolverUtils::RiemannSolverSharedPtr             m_riemannSolver;
         Array<OneD, Array<OneD, NekDouble> >            m_bfFwdBwd;
         Array<OneD, Array<OneD, NekDouble> >            m_vecLocs;
-        /// Isentropic coefficient, Ratio of specific heats (APE)
         Array<OneD, Array<OneD, NekDouble> >            m_bf;
         std::vector<std::string>                        m_bfNames;
-        /// dump cfl estimate
-        int                                             m_cflsteps;
 
         /// Initialises UnsteadySystem class members.
         APE(const LibUtilities::SessionReaderSharedPtr& pSession,
@@ -123,8 +120,6 @@ class APE : public AdvectionSystem
         const Array<OneD, const Array<OneD, NekDouble> > &GetVecLocs();
 
         const Array<OneD, const Array<OneD, NekDouble> > &GetBasefieldFwdBwd();
-
-        NekDouble GetGamma();
 
 
     private:

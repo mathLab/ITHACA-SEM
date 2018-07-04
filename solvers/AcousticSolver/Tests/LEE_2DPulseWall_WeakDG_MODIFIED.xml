@@ -305,7 +305,7 @@
     <DOMAIN> C[0] </DOMAIN>
   </GEOMETRY>
   <EXPANSIONS>
-    <E COMPOSITE="C[0]" NUMMODES="4" FIELDS="p,rho,ru,rv" TYPE="MODIFIED"/>
+    <E COMPOSITE="C[0]" NUMMODES="4" FIELDS="p,rho,rhou,rhov" TYPE="MODIFIED"/>
   </EXPANSIONS>
   <CONDITIONS>
     <SOLVERINFO>
@@ -326,8 +326,8 @@
     <VARIABLES>
       <V ID="0"> p  </V>
       <V ID="1"> rho  </V>
-      <V ID="2"> ru </V>
-      <V ID="3"> rv </V>
+      <V ID="2"> rhou </V>
+      <V ID="3"> rhov </V>
     </VARIABLES>
     <BOUNDARYREGIONS>
       <B ID="0"> C[2,3]  </B>
@@ -337,14 +337,14 @@
       <REGION REF="0">
         <D VAR="p" USERDEFINEDTYPE="RiemannInvariantBC" VALUE="0" />
         <D VAR="rho" USERDEFINEDTYPE="RiemannInvariantBC" VALUE="0" />
-        <D VAR="ru" USERDEFINEDTYPE="RiemannInvariantBC" VALUE="0" />
-        <D VAR="rv" USERDEFINEDTYPE="RiemannInvariantBC" VALUE="0" />
+        <D VAR="rhou" USERDEFINEDTYPE="RiemannInvariantBC" VALUE="0" />
+        <D VAR="rhov" USERDEFINEDTYPE="RiemannInvariantBC" VALUE="0" />
       </REGION>
       <REGION REF="1">
         <D VAR="p" USERDEFINEDTYPE="Wall" VALUE="0" />
         <D VAR="rho" USERDEFINEDTYPE="Wall" VALUE="0" />
-        <D VAR="ru" USERDEFINEDTYPE="Wall" VALUE="0" />
-        <D VAR="rv" USERDEFINEDTYPE="Wall" VALUE="0" />
+        <D VAR="rhou" USERDEFINEDTYPE="Wall" VALUE="0" />
+        <D VAR="rhov" USERDEFINEDTYPE="Wall" VALUE="0" />
       </REGION>
     </BOUNDARYCONDITIONS>
     <FUNCTION NAME="Baseflow">
@@ -357,21 +357,21 @@
     <FUNCTION NAME="ExactSolution">
       <E VAR="p"   VALUE="0"/>
       <E VAR="rho" VALUE="0"/>
-      <E VAR="ru"  VALUE="0"/>
-      <E VAR="rv"  VALUE="0"/>
+      <E VAR="rhou"  VALUE="0"/>
+      <E VAR="rhov"  VALUE="0"/>
     </FUNCTION>
     <FUNCTION NAME="InitialConditions">
       <E VAR="p"   VALUE="100*exp(-32*(x^2+y^2))"/> <!-- Gaussian pulse located at the origin -->
       <E VAR="rho" VALUE="1.4 * 100*exp(-32*(x^2+y^2)) / (1.4 * Pinfinity / Rho0)"/>
-      <E VAR="ru"  VALUE="0"/>
-      <E VAR="rv"  VALUE="0"/>
+      <E VAR="rhou"  VALUE="0"/>
+      <E VAR="rhov"  VALUE="0"/>
     </FUNCTION>
     <!-- 0.4 m thick sponge layer around the RiemannInvariantBC BCs -->
     <FUNCTION NAME="SpongeCoefficient">
         <E VAR="p"   EVARS="r" VALUE="-5000 * exp(-0.5 * (3*r / 0.4)^2)" />
         <E VAR="rho" EVARS="r" VALUE="-5000 * exp(-0.5 * (3*r / 0.4)^2)" />
-        <E VAR="ru"  EVARS="r" VALUE="-5000 * exp(-0.5 * (3*r / 0.4)^2)" />
-        <E VAR="rv"  EVARS="r" VALUE="-5000 * exp(-0.5 * (3*r / 0.4)^2)" />
+        <E VAR="rhou"  EVARS="r" VALUE="-5000 * exp(-0.5 * (3*r / 0.4)^2)" />
+        <E VAR="rhov"  EVARS="r" VALUE="-5000 * exp(-0.5 * (3*r / 0.4)^2)" />
     </FUNCTION>
   </CONDITIONS>
   <FORCING>

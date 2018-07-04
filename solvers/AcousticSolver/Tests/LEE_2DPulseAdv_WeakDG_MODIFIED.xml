@@ -305,7 +305,7 @@
     <DOMAIN> C[0] </DOMAIN>
   </GEOMETRY>
   <EXPANSIONS>
-    <E COMPOSITE="C[0]" NUMMODES="4" FIELDS="p,rho,ru,rv" TYPE="MODIFIED"/>
+    <E COMPOSITE="C[0]" NUMMODES="4" FIELDS="p,rho,rhou,rhov" TYPE="MODIFIED"/>
   </EXPANSIONS>
   <CONDITIONS>
     <SOLVERINFO>
@@ -326,8 +326,8 @@
     <VARIABLES>
       <V ID="0"> p  </V>
       <V ID="1"> rho  </V>
-      <V ID="2"> ru </V>
-      <V ID="3"> rv </V>
+      <V ID="2"> rhou </V>
+      <V ID="3"> rhov </V>
     </VARIABLES>
     <BOUNDARYREGIONS>
       <B ID="0"> C[1,2,3]  </B>
@@ -336,8 +336,8 @@
       <REGION REF="0">
         <D VAR="p" USERDEFINEDTYPE="RiemannInvariantBC"/>
         <D VAR="rho" USERDEFINEDTYPE="RiemannInvariantBC"/>
-        <D VAR="ru" USERDEFINEDTYPE="RiemannInvariantBC"/>
-        <D VAR="rv" USERDEFINEDTYPE="RiemannInvariantBC"/>
+        <D VAR="rhou" USERDEFINEDTYPE="RiemannInvariantBC"/>
+        <D VAR="rhov" USERDEFINEDTYPE="RiemannInvariantBC"/>
       </REGION>
     </BOUNDARYCONDITIONS>
     <FUNCTION NAME="Baseflow">
@@ -350,20 +350,20 @@
     <FUNCTION NAME="ExactSolution">
       <E VAR="p" VALUE="0"/>
       <E VAR="rho" VALUE="0"/>
-      <E VAR="ru" VALUE="0"/>
-      <E VAR="rv" VALUE="0"/>
+      <E VAR="rhou" VALUE="0"/>
+      <E VAR="rhov" VALUE="0"/>
     </FUNCTION>
     <FUNCTION NAME="InitialConditions">
       <E VAR="p" VALUE="0"/>
       <E VAR="rho" VALUE="0"/>
-      <E VAR="ru" VALUE="0"/>
-      <E VAR="rv" VALUE="0"/>
+      <E VAR="rhou" VALUE="0"/>
+      <E VAR="rhov" VALUE="0"/>
     </FUNCTION>
     <FUNCTION NAME="Source">
       <E VAR="p" VALUE="100 * 2*PI*5E2 * cos(2*PI*5E2 * t) * exp(-32*(x^2+y^2))"/>
       <E VAR="rho" VALUE="0"/>
-      <E VAR="ru" VALUE="0"/>
-      <E VAR="rv" VALUE="0"/>
+      <E VAR="rhou" VALUE="0"/>
+      <E VAR="rhov" VALUE="0"/>
     </FUNCTION>
   </CONDITIONS>
   <FORCING>

@@ -34,7 +34,7 @@
     <DOMAIN> C[0] </DOMAIN>
   </GEOMETRY>
   <EXPANSIONS>
-    <E COMPOSITE="C[0]" FIELDS="p,rho,ru" TYPE="MODIFIED" NUMMODES="4"/>
+    <E COMPOSITE="C[0]" FIELDS="p,rho,rhou" TYPE="MODIFIED" NUMMODES="4"/>
   </EXPANSIONS>
   <CONDITIONS>
     <SOLVERINFO>
@@ -57,7 +57,7 @@
     <VARIABLES>
       <V ID="0"> p  </V>
       <V ID="1"> rho</V>
-      <V ID="2"> ru </V>
+      <V ID="2"> rhou </V>
     </VARIABLES>
     <BOUNDARYREGIONS>
       <B ID="0"> C[1,2] </B>
@@ -66,7 +66,7 @@
       <REGION REF="0">
         <D VAR="p" USERDEFINEDTYPE="RiemannInvariantBC"/>
         <D VAR="rho" USERDEFINEDTYPE="RiemannInvariantBC"/>
-        <D VAR="ru" USERDEFINEDTYPE="RiemannInvariantBC"/>
+        <D VAR="rhou" USERDEFINEDTYPE="RiemannInvariantBC"/>
       </REGION>
     </BOUNDARYCONDITIONS>
     <FUNCTION NAME="Baseflow">
@@ -78,17 +78,17 @@
     <FUNCTION NAME="Source">
       <E VAR="p" VALUE="pmax*omega0*cos(omega0*t)*exp(-32*x^2)"/>
       <E VAR="rho" VALUE="0"/>
-      <E VAR="ru" VALUE="0"/>
+      <E VAR="rhou" VALUE="0"/>
     </FUNCTION>
     <FUNCTION NAME="ExactSolution">
       <E VAR="p" VALUE="0"/>
       <E VAR="rho" VALUE="0"/>
-      <E VAR="ru" VALUE="0"/>
+      <E VAR="rhou" VALUE="0"/>
     </FUNCTION>
     <FUNCTION NAME="InitialConditions">
       <E VAR="p" VALUE="0"/>
       <E VAR="rho" VALUE="0"/>
-      <E VAR="ru" VALUE="0"/>
+      <E VAR="rhou" VALUE="0"/>
     </FUNCTION>
   </CONDITIONS>
   <FORCING>

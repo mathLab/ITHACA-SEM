@@ -176,7 +176,7 @@ Under this section it is possible to set the parameters of the simulation.
     \item \inltt{EQType} is the tag which specify the equations we want solve:
     \begin{itemize}
         \item \inltt{APE} Acoustic Perturbation Equations (variables: \inltt{p,u,v,w});
-        \item \inltt{LEE} Linearized Euler Equations (variables: \inltt{p,rho,ru,rv,rw}).
+        \item \inltt{LEE} Linearized Euler Equations (variables: \inltt{p,rho,rhou,rhov,rhow}).
     \end{itemize}
     \item \inltt{Projection} is the type of projection we want to use. Currently, only \inltt{DisContinuous} is supported.
     \item \inltt{AdvectionType} is the advection operator. Currently, only \inltt{WeakDG} (classical DG in weak form) is supported.
@@ -205,9 +205,9 @@ The LEE use a conservative formulation and introduce the additional density pert
 <VARIABLES>
   <V ID="0"> p  </V>
   <V ID="1"> rho </V>
-  <V ID="2"> ru </V>
-  <V ID="3"> rv </V>
-  <V ID="4"> rw </V>
+  <V ID="2"> rhou </V>
+  <V ID="3"> rhov </V>
+  <V ID="4"> rhow </V>
 </VARIABLES>
 \end{lstlisting}
 

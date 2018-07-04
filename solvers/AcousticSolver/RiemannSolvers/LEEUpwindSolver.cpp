@@ -61,12 +61,12 @@ LEEUpwindSolver::LEEUpwindSolver(const LibUtilities::SessionReaderSharedPtr& pSe
  * @param rhoL   Perturbation density left state
  * @param pR     Perturbation pressure right state
  * @param rhoR   Perturbation density right state
- * @param ruL    x perturbation velocity component left state
- * @param ruR    x perturbation velocity component right state
- * @param rvL     y perturbation velocity component left state
- * @param rvR     y perturbation velocity component right state
- * @param rwL    z perturbation velocity component left state
- * @param rwR    z perturbation velocity component right state
+ * @param rhouL  x perturbation velocity component left state
+ * @param rhouR  x perturbation velocity component right state
+ * @param rhovL  y perturbation velocity component left state
+ * @param rhovR  y perturbation velocity component right state
+ * @param rhowL  z perturbation velocity component left state
+ * @param rhowR  z perturbation velocity component right state
  * @param c0sqL  Base pressure left state
  * @param c0sqR  Base pressure right state
  * @param rho0L  Base density left state
@@ -79,16 +79,16 @@ LEEUpwindSolver::LEEUpwindSolver(const LibUtilities::SessionReaderSharedPtr& pSe
  * @param w0R    Base z velocity component right state
  * @param pF     Computed Riemann flux for perturbation pressure
  * @param rhoF   Computed Riemann flux for perturbation density
- * @param ruF    Computed Riemann flux for x perturbation velocity component
- * @param rvF    Computed Riemann flux for y perturbation velocity component
- * @param rwF    Computed Riemann flux for z perturbation velocity component
+ * @param rhouF  Computed Riemann flux for x perturbation velocity component
+ * @param rhovF  Computed Riemann flux for y perturbation velocity component
+ * @param rhowF  Computed Riemann flux for z perturbation velocity component
  */
 void LEEUpwindSolver::v_PointSolve(
-    NekDouble  pL,    NekDouble  rhoL,  NekDouble  ruL, NekDouble  rvL, NekDouble  rwL,
-    NekDouble  pR,    NekDouble  rhoR,  NekDouble  ruR, NekDouble  rvR, NekDouble  rwR,
-    NekDouble  c0sqL, NekDouble  rho0L, NekDouble  u0L, NekDouble  v0L, NekDouble  w0L,
-    NekDouble  c0sqR, NekDouble  rho0R, NekDouble  u0R, NekDouble  v0R, NekDouble  w0R,
-    NekDouble &pF,    NekDouble &rhoF,  NekDouble &ruF, NekDouble &rvF, NekDouble &rwF)
+    NekDouble  pL,    NekDouble  rhoL,  NekDouble  rhouL, NekDouble  rhovL, NekDouble  rhowL,
+    NekDouble  pR,    NekDouble  rhoR,  NekDouble  rhouR, NekDouble  rhovR, NekDouble  rhowR,
+    NekDouble  c0sqL, NekDouble  rho0L, NekDouble  u0L,   NekDouble  v0L,   NekDouble  w0L,
+    NekDouble  c0sqR, NekDouble  rho0R, NekDouble  u0R,   NekDouble  v0R,   NekDouble  w0R,
+    NekDouble &pF,    NekDouble &rhoF,  NekDouble &rhouF, NekDouble &rhovF, NekDouble &rhowF)
 {
     // Speed of sound
     NekDouble c0L = sqrt(c0sqL);
@@ -97,56 +97,56 @@ void LEEUpwindSolver::v_PointSolve(
 
     NekDouble u0M = (u0L + u0R) / 2.0;
 
-    pF   = 0.0;
-    rhoF = 0.0;
-    ruF  = 0.0;
-    rvF  = 0.0;
-    rwF  = 0.0;
+    pF    = 0.0;
+    rhoF  = 0.0;
+    rhouF = 0.0;
+    rhovF = 0.0;
+    rhowF = 0.0;
 
     // lambda_1,2,3
     if (u0M > 0)
     {
-        rhoF = rhoF + u0L * (c0sqL * rhoL - pL) / c0sqL;
-        rvF  = rvF + rvL * u0L;
-        rwF  = rwF + rwL * u0L;
+        rhoF  = rhoF + u0L * (c0sqL * rhoL - pL) / c0sqL;
+        rhovF = rhovF + rhovL * u0L;
+        rhowF = rhowF + rhowL * u0L;
     }
     else
     {
-        rhoF = rhoF + u0R * (c0sqR * rhoR - pR) / c0sqR;
-        rvF  = rvF + rvR * u0R;
-        rwF  = rwF + rwR * u0R;
+        rhoF  = rhoF + u0R * (c0sqR * rhoR - pR) / c0sqR;
+        rhovF = rhovF + rhovR * u0R;
+        rhowF = rhowF + rhowR * u0R;
     }
 
     // lambda_4
     if (u0M - c0M > 0)
     {
-        pF   = pF + 0.5 * (c0L - u0L) * (ruL * c0L - pL);
-        rhoF = rhoF + 0.5 * (c0L - u0L) * (ruL * c0sqL - c0L * pL) /
+        pF   = pF + 0.5 * (c0L - u0L) * (rhouL * c0L - pL);
+        rhoF = rhoF + 0.5 * (c0L - u0L) * (rhouL * c0sqL - c0L * pL) /
                           pow(c0sqL, 3.0 / 2.0);
-        ruF = ruF + 0.5 * (c0L - u0L) * (-ruL * c0L + pL) / c0L;
+        rhouF = rhouF + 0.5 * (c0L - u0L) * (-rhouL * c0L + pL) / c0L;
     }
     else
     {
-        pF   = pF + 0.5 * (c0R - u0R) * (ruR * c0R - pR);
-        rhoF = rhoF + 0.5 * (c0R - u0R) * (ruR * c0sqR - c0R * pR) /
+        pF   = pF + 0.5 * (c0R - u0R) * (rhouR * c0R - pR);
+        rhoF = rhoF + 0.5 * (c0R - u0R) * (rhouR * c0sqR - c0R * pR) /
                           pow(c0sqR, 3.0 / 2.0);
-        ruF = ruF + 0.5 * (c0R - u0R) * (-ruR * c0R + pR) / c0R;
+        rhouF = rhouF + 0.5 * (c0R - u0R) * (-rhouR * c0R + pR) / c0R;
     }
 
     // lambda_5
     if (u0M + c0M > 0)
     {
-        pF   = pF + 0.5 * (c0L + u0L) * (ruL * c0L + pL);
-        rhoF = rhoF + 0.5 * (c0L + u0L) * (ruL * c0sqL + c0L * pL) /
+        pF   = pF + 0.5 * (c0L + u0L) * (rhouL * c0L + pL);
+        rhoF = rhoF + 0.5 * (c0L + u0L) * (rhouL * c0sqL + c0L * pL) /
                           pow(c0sqL, 3.0 / 2.0);
-        ruF = ruF + 0.5 * (c0L + u0L) * (ruL * c0L + pL) / c0L;
+        rhouF = rhouF + 0.5 * (c0L + u0L) * (rhouL * c0L + pL) / c0L;
     }
     else
     {
-        pF   = pF + 0.5 * (c0R + u0R) * (ruR * c0R + pR);
-        rhoF = rhoF + 0.5 * (c0R + u0R) * (ruR * c0sqR + c0R * pR) /
+        pF   = pF + 0.5 * (c0R + u0R) * (rhouR * c0R + pR);
+        rhoF = rhoF + 0.5 * (c0R + u0R) * (rhouR * c0sqR + c0R * pR) /
                           pow(c0sqR, 3.0 / 2.0);
-        ruF = ruF + 0.5 * (c0R + u0R) * (ruR * c0R + pR) / c0R;
+        rhouF = rhouF + 0.5 * (c0R + u0R) * (rhouR * c0R + pR) / c0R;
     }
 }
 }

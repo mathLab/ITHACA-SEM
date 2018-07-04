@@ -63,12 +63,12 @@ LEELaxFriedrichsSolver::LEELaxFriedrichsSolver(const LibUtilities::SessionReader
  * @param rhoL   Perturbation density left state
  * @param pR     Perturbation pressure right state
  * @param rhoR   Perturbation density right state
- * @param ruL    x perturbation velocity component left state
- * @param ruR    x perturbation velocity component right state
- * @param rvL     y perturbation velocity component left state
- * @param rvR     y perturbation velocity component right state
- * @param rwL    z perturbation velocity component left state
- * @param rwR    z perturbation velocity component right state
+ * @param rhouL  x perturbation velocity component left state
+ * @param rhouR  x perturbation velocity component right state
+ * @param rhovL  y perturbation velocity component left state
+ * @param rhovR  y perturbation velocity component right state
+ * @param rhowL  z perturbation velocity component left state
+ * @param rhowR  z perturbation velocity component right state
  * @param c0sqL  Base pressure left state
  * @param c0sqR  Base pressure right state
  * @param rho0L  Base density left state
@@ -81,16 +81,16 @@ LEELaxFriedrichsSolver::LEELaxFriedrichsSolver(const LibUtilities::SessionReader
  * @param w0R    Base z velocity component right state
  * @param pF     Computed Riemann flux for perturbation pressure
  * @param rhoF   Computed Riemann flux for perturbation density
- * @param ruF    Computed Riemann flux for x perturbation velocity component
- * @param rvF    Computed Riemann flux for y perturbation velocity component
- * @param rwF    Computed Riemann flux for z perturbation velocity component
+ * @param rhouF  Computed Riemann flux for x perturbation velocity component
+ * @param rhovF  Computed Riemann flux for y perturbation velocity component
+ * @param rhowF  Computed Riemann flux for z perturbation velocity component
  */
 void LEELaxFriedrichsSolver::v_PointSolve(
-    NekDouble  pL,    NekDouble  rhoL,  NekDouble  ruL, NekDouble  rvL, NekDouble  rwL,
-    NekDouble  pR,    NekDouble  rhoR,  NekDouble  ruR, NekDouble  rvR, NekDouble  rwR,
-    NekDouble  c0sqL, NekDouble  rho0L, NekDouble  u0L, NekDouble  v0L, NekDouble  w0L,
-    NekDouble  c0sqR, NekDouble  rho0R, NekDouble  u0R, NekDouble  v0R, NekDouble  w0R,
-    NekDouble &pF,    NekDouble &rhoF,  NekDouble &ruF, NekDouble &rvF, NekDouble &rwF)
+    NekDouble  pL,    NekDouble  rhoL,  NekDouble  rhouL, NekDouble  rhovL, NekDouble  rhowL,
+    NekDouble  pR,    NekDouble  rhoR,  NekDouble  rhouR, NekDouble  rhovR, NekDouble  rhowR,
+    NekDouble  c0sqL, NekDouble  rho0L, NekDouble  u0L,   NekDouble  v0L,   NekDouble  w0L,
+    NekDouble  c0sqR, NekDouble  rho0R, NekDouble  u0R,   NekDouble  v0R,   NekDouble  w0R,
+    NekDouble &pF,    NekDouble &rhoF,  NekDouble &rhouF, NekDouble &rhovF, NekDouble &rhowF)
 {
     // Speed of sound
     NekDouble cL = sqrt(c0sqL);
@@ -103,24 +103,24 @@ void LEELaxFriedrichsSolver::v_PointSolve(
     a_1_max           = std::max(a_1_max, std::abs(u0L + cL));
     a_1_max           = std::max(a_1_max, std::abs(u0R + cR));
 
-    NekDouble pFL   = ruL * c0sqL + u0L * pL;
-    NekDouble rhoFL = ruL + rhoL * u0L;
-    NekDouble ruFL  = pL + ruL * u0L;
-    NekDouble rvFL  = 0;
-    NekDouble rwFL  = 0;
+    NekDouble pFL    = rhouL * c0sqL + u0L * pL;
+    NekDouble rhoFL  = rhouL + rhoL * u0L;
+    NekDouble rhouFL = pL + rhouL * u0L;
+    NekDouble rhovFL = 0;
+    NekDouble rhowFL = 0;
 
-    NekDouble pFR   = ruR * c0sqR + u0R * pR;
-    NekDouble rhoFR = ruR + rhoR * u0R;
-    NekDouble ruFR  = pR + ruR * u0R;
-    NekDouble rvFR  = 0;
-    NekDouble rwFR  = 0;
+    NekDouble pFR    = rhouR * c0sqR + u0R * pR;
+    NekDouble rhoFR  = rhouR + rhoR * u0R;
+    NekDouble rhouFR = pR + rhouR * u0R;
+    NekDouble rhovFR = 0;
+    NekDouble rhowFR = 0;
 
     // assemble the face-normal fluxes
-    pF   = 0.5 * (pFL + pFR - a_1_max * (pR - pL));
-    rhoF = 0.5 * (rhoFL + rhoFR - a_1_max * (rhoR - rhoL));
-    ruF  = 0.5 * (ruFL + ruFR - a_1_max * (ruR - ruL));
-    rvF  = 0.5 * (rvFL + rvFR - a_1_max * (rvR - rvL));
-    rwF  = 0.5 * (rwFL + rwFR - a_1_max * (rwR - rwL));
+    pF    = 0.5 * (pFL + pFR - a_1_max * (pR - pL));
+    rhoF  = 0.5 * (rhoFL + rhoFR - a_1_max * (rhoR - rhoL));
+    rhouF = 0.5 * (rhouFL + rhouFR - a_1_max * (rhouR - rhouL));
+    rhovF = 0.5 * (rhovFL + rhovFR - a_1_max * (rhovR - rhovL));
+    rhowF = 0.5 * (rhowFL + rhowFR - a_1_max * (rhowR - rhowL));
 }
 
 }

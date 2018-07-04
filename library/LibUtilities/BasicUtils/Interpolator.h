@@ -139,6 +139,17 @@ public:
     }
 
 protected:
+
+    /// input field
+    LibUtilities::PtsFieldSharedPtr m_ptsInField;
+    /// output field
+    LibUtilities::PtsFieldSharedPtr m_ptsOutField;
+
+    std::function<void(const int position, const int goal)>
+    m_progressCallback;
+
+private:
+
     class PtsPoint
     {
     public:
@@ -163,10 +174,7 @@ protected:
     typedef std::pair<BPoint, unsigned int> PtsPointPair;
     typedef boost::geometry::index::rtree<PtsPointPair, boost::geometry::index::rstar<16> > PtsRtree;
 
-    /// input field
-    LibUtilities::PtsFieldSharedPtr m_ptsInField;
-    /// output field
-    LibUtilities::PtsFieldSharedPtr m_ptsOutField;
+
 
     /// Interpolation Method
     InterpMethod m_method;
@@ -186,9 +194,6 @@ protected:
     int m_maxPts;
     /// coordinate id along which the interpolation should be performed
     short int m_coordId;
-
-    std::function<void(const int position, const int goal)>
-        m_progressCallback;
 
     LIB_UTILITIES_EXPORT void CalcW_Gauss(const PtsPoint &searchPt,
                                           const NekDouble sigma,

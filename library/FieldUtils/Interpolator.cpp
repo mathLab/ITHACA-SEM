@@ -68,11 +68,11 @@ void Interpolator::Interpolate(
 {
     ASSERTL0(expInField.size() == expOutField.size(),
              "number of fields does not match");
-    ASSERTL0(expInField[0]->GetCoordim(0) <= m_dim,
+    ASSERTL0(expInField[0]->GetCoordim(0) <= GetDim(),
              "too many dimesions in inField");
-    ASSERTL0(expOutField[0]->GetCoordim(0) <= m_dim,
+    ASSERTL0(expOutField[0]->GetCoordim(0) <= GetDim(),
              "too many dimesions in outField");
-    ASSERTL0(m_method == LibUtilities::eNoMethod,
+    ASSERTL0(GetInterpMethod() == LibUtilities::eNoMethod,
              "only direct evaluation supported for this interpolation");
 
     m_expInField  = expInField;
@@ -178,10 +178,10 @@ void Interpolator::Interpolate(
 {
     ASSERTL0(expInField.size() == ptsOutField->GetNFields(),
              "number of fields does not match");
-    ASSERTL0(expInField[0]->GetCoordim(0) <= m_dim,
+    ASSERTL0(expInField[0]->GetCoordim(0) <= GetDim(),
              "too many dimesions in inField");
-    ASSERTL0(ptsOutField->GetDim() <= m_dim, "too many dimesions in outField");
-    ASSERTL0(m_method == LibUtilities::eNoMethod,
+    ASSERTL0(ptsOutField->GetDim() <= GetDim(), "too many dimesions in outField");
+    ASSERTL0(GetInterpMethod() == LibUtilities::eNoMethod,
              "only direct evaluation supported for this interpolation");
 
     m_expInField  = expInField;
@@ -266,8 +266,8 @@ void Interpolator::Interpolate(
 {
     ASSERTL0(expOutField.size() == ptsInField->GetNFields(),
              "number of fields does not match");
-    ASSERTL0(ptsInField->GetDim() <= m_dim, "too many dimesions in inField");
-    ASSERTL0(expOutField[0]->GetCoordim(0) <= m_dim,
+    ASSERTL0(ptsInField->GetDim() <= GetDim(), "too many dimesions in inField");
+    ASSERTL0(expOutField[0]->GetCoordim(0) <= GetDim(),
              "too many dimesions in outField");
 
     m_ptsInField  = ptsInField;

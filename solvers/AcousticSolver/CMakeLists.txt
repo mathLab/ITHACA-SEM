@@ -9,6 +9,7 @@ ENDIF()
 IF( NEKTAR_SOLVER_ACOUSTIC )
     SET(AcousticSolverSource 
        ./AcousticSolver.cpp
+       ./EquationSystems/AcousticSystem.cpp
        ./EquationSystems/APE.cpp
        ./EquationSystems/LEE.cpp
        ./RiemannSolvers/AcousticSolver.cpp

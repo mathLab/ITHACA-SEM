@@ -47,7 +47,7 @@ string LEE::className = GetEquationSystemFactory().RegisterCreatorFunction(
 
 LEE::LEE(const LibUtilities::SessionReaderSharedPtr &pSession,
          const SpatialDomains::MeshGraphSharedPtr &pGraph)
-    : UnsteadySystem(pSession, pGraph), APE(pSession, pGraph)
+    : UnsteadySystem(pSession, pGraph), AcousticSystem(pSession, pGraph)
 {
     m_ip   = 0;
     m_irho = 1;
@@ -61,7 +61,7 @@ LEE::LEE(const LibUtilities::SessionReaderSharedPtr &pSession,
  */
 void LEE::v_InitObject()
 {
-    APE::v_InitObject();
+    AcousticSystem::v_InitObject();
 
     m_bfNames.push_back("gamma");
 

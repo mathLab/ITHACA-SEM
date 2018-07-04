@@ -37,14 +37,14 @@
 #ifndef NEKTAR_SOLVERS_LEESOLVER_EQUATIONSYSTEMS_LEE_H
 #define NEKTAR_SOLVERS_LEESOLVER_EQUATIONSYSTEMS_LEE_H
 
-#include <AcousticSolver/EquationSystems/APE.h>
+#include <AcousticSolver/EquationSystems/AcousticSystem.h>
 
 using namespace Nektar::SolverUtils;
 
 namespace Nektar
 {
 
-class LEE : public APE
+class LEE : public AcousticSystem
 {
 public:
     friend class MemoryManager<LEE>;

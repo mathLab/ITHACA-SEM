@@ -42,28 +42,26 @@ namespace Nektar
 {
 
 /**
-*
-*/
-LEESolver::LEESolver(const LibUtilities::SessionReaderSharedPtr& pSession) :
-    AcousticSolver(pSession)
+ *
+ */
+LEESolver::LEESolver(const LibUtilities::SessionReaderSharedPtr &pSession)
+    : AcousticSolver(pSession)
 {
     m_requiresRotation = true;
 }
 
-
 /**
-*
-*/
-void LEESolver::v_Solve(
-    const int                                         nDim,
-    const Array<OneD, const Array<OneD, NekDouble> > &Fwd,
-    const Array<OneD, const Array<OneD, NekDouble> > &Bwd,
-          Array<OneD,       Array<OneD, NekDouble> > &flux)
+ *
+ */
+void LEESolver::v_Solve(const int nDim,
+                        const Array<OneD, const Array<OneD, NekDouble>> &Fwd,
+                        const Array<OneD, const Array<OneD, NekDouble>> &Bwd,
+                        Array<OneD, Array<OneD, NekDouble>> &flux)
 {
     int nTracePts = Fwd[0].num_elements();
 
-    Array< OneD, Array< OneD, NekDouble > > bfFwd(nDim+3);
-    Array< OneD, Array< OneD, NekDouble > > bfBwd(nDim+3);
+    Array<OneD, Array<OneD, NekDouble>> bfFwd(nDim + 3);
+    Array<OneD, Array<OneD, NekDouble>> bfBwd(nDim + 3);
     for (int i = 0; i < nDim + 3; i++)
     {
         bfFwd[i] = Array<OneD, NekDouble>(nTracePts);
@@ -113,5 +111,4 @@ void LEESolver::v_Solve(
     }
 }
 
-
-}
+} // namespace Nektar

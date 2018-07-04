@@ -42,18 +42,17 @@ namespace Nektar
 {
 
 std::string APELaxFriedrichsSolver::solverName =
-    SolverUtils::GetRiemannSolverFactory().
-    RegisterCreatorFunction("APELaxFriedrichs", APELaxFriedrichsSolver::create,
-                            "Lax-Friedrichs Solver");
-
+    SolverUtils::GetRiemannSolverFactory().RegisterCreatorFunction(
+        "APELaxFriedrichs", APELaxFriedrichsSolver::create,
+        "Lax-Friedrichs Solver");
 
 /**
-*
-*/
-APELaxFriedrichsSolver::APELaxFriedrichsSolver(const LibUtilities::SessionReaderSharedPtr& pSession) :
-    AcousticSolver(pSession)
+ *
+ */
+APELaxFriedrichsSolver::APELaxFriedrichsSolver(
+    const LibUtilities::SessionReaderSharedPtr &pSession)
+    : AcousticSolver(pSession)
 {
-
 }
 
 /**
@@ -98,10 +97,10 @@ void APELaxFriedrichsSolver::v_PointSolve(
 
     // max absolute eigenvalue of the jacobian of F_n1
     NekDouble a_1_max = 0;
-    a_1_max = std::max(a_1_max, std::abs(u0L - cL));
-    a_1_max = std::max(a_1_max, std::abs(u0R - cR));
-    a_1_max = std::max(a_1_max, std::abs(u0L + cL));
-    a_1_max = std::max(a_1_max, std::abs(u0R + cR));
+    a_1_max           = std::max(a_1_max, std::abs(u0L - cL));
+    a_1_max           = std::max(a_1_max, std::abs(u0R - cR));
+    a_1_max           = std::max(a_1_max, std::abs(u0L + cL));
+    a_1_max           = std::max(a_1_max, std::abs(u0R + cR));
 
     NekDouble pFL = rho0L * c0sqL * uL + pL * u0L;
     NekDouble uFL = pL / rho0L + u0L * uL + v0L * vL + w0L * wL;
@@ -120,5 +119,4 @@ void APELaxFriedrichsSolver::v_PointSolve(
     wF = 0.5 * (wFL + wFR - a_1_max * (wR - wL));
 }
 
-}
-
+} // namespace Nektar

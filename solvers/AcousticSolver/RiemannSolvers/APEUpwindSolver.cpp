@@ -41,16 +41,16 @@ using namespace std;
 namespace Nektar
 {
 
-std::string APEUpwindSolver::solverName = SolverUtils::GetRiemannSolverFactory().
-                                       RegisterCreatorFunction("APEUpwind", APEUpwindSolver::create,
-                                               "Upwind solver for the APE equation");
+std::string APEUpwindSolver::solverName =
+    SolverUtils::GetRiemannSolverFactory().RegisterCreatorFunction(
+        "APEUpwind", APEUpwindSolver::create,
+        "Upwind solver for the APE equation");
 
-APEUpwindSolver::APEUpwindSolver(const LibUtilities::SessionReaderSharedPtr& pSession) :
-    AcousticSolver(pSession)
+APEUpwindSolver::APEUpwindSolver(
+    const LibUtilities::SessionReaderSharedPtr &pSession)
+    : AcousticSolver(pSession)
 {
-
 }
-
 
 /**
  * @brief Upwind Riemann solver
@@ -168,6 +168,4 @@ void APEUpwindSolver::v_PointSolve(
     }
 }
 
-}
-
-
+} // namespace Nektar

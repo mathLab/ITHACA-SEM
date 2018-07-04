@@ -42,18 +42,17 @@ namespace Nektar
 {
 
 std::string LEELaxFriedrichsSolver::solverName =
-    SolverUtils::GetRiemannSolverFactory().
-    RegisterCreatorFunction("LEELaxFriedrichs", LEELaxFriedrichsSolver::create,
-                            "Lax-Friedrichs Solver for LEE");
-
+    SolverUtils::GetRiemannSolverFactory().RegisterCreatorFunction(
+        "LEELaxFriedrichs", LEELaxFriedrichsSolver::create,
+        "Lax-Friedrichs Solver for LEE");
 
 /**
-*
-*/
-LEELaxFriedrichsSolver::LEELaxFriedrichsSolver(const LibUtilities::SessionReaderSharedPtr& pSession) :
-    LEESolver(pSession)
+ *
+ */
+LEELaxFriedrichsSolver::LEELaxFriedrichsSolver(
+    const LibUtilities::SessionReaderSharedPtr &pSession)
+    : LEESolver(pSession)
 {
-
 }
 
 /**
@@ -123,6 +122,4 @@ void LEELaxFriedrichsSolver::v_PointSolve(
     rhowF = 0.5 * (rhowFL + rhowFR - a_1_max * (rhowR - rhowL));
 }
 
-}
-
-
+} // namespace Nektar

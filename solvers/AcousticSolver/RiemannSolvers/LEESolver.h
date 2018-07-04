@@ -37,9 +37,9 @@
 #ifndef NEKTAR_SOLVERS_LEESOLVER_RIEMANNSOLVERS_LEESOLVER
 #define NEKTAR_SOLVERS_LEESOLVER_RIEMANNSOLVERS_LEESOLVER
 
-#include <SolverUtils/SolverUtilsDeclspec.h>
-#include <SolverUtils/RiemannSolvers/RiemannSolver.h>
 #include <AcousticSolver/RiemannSolvers/AcousticSolver.h>
+#include <SolverUtils/RiemannSolvers/RiemannSolver.h>
+#include <SolverUtils/SolverUtilsDeclspec.h>
 
 using namespace Nektar::SolverUtils;
 
@@ -48,17 +48,15 @@ namespace Nektar
 
 class LEESolver : public AcousticSolver
 {
-    protected:
-        LEESolver(const LibUtilities::SessionReaderSharedPtr& pSession);
+protected:
+    LEESolver(const LibUtilities::SessionReaderSharedPtr &pSession);
 
-        virtual void v_Solve(
-            const int                                         nDim,
-            const Array<OneD, const Array<OneD, NekDouble> > &Fwd,
-            const Array<OneD, const Array<OneD, NekDouble> > &Bwd,
-            Array<OneD,       Array<OneD, NekDouble> > &flux);
-
+    virtual void v_Solve(const int nDim,
+                         const Array<OneD, const Array<OneD, NekDouble>> &Fwd,
+                         const Array<OneD, const Array<OneD, NekDouble>> &Bwd,
+                         Array<OneD, Array<OneD, NekDouble>> &flux);
 };
 
-}
+} // namespace Nektar
 
 #endif

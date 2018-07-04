@@ -66,7 +66,7 @@ void LEE::v_InitObject()
     m_bfNames.push_back("gamma");
 
     // Initialize basefield again
-    m_bf = Array<OneD, Array<OneD, NekDouble> >(m_bfNames.size());
+    m_bf = Array<OneD, Array<OneD, NekDouble>>(m_bfNames.size());
     for (int i = 0; i < m_bf.num_elements(); ++i)
     {
         m_bf[i] = Array<OneD, NekDouble>(GetTotPoints());
@@ -75,7 +75,7 @@ void LEE::v_InitObject()
         ->Evaluate(m_bfNames, m_bf, m_time);
 
     // Define the normal velocity fields
-    m_bfFwdBwd = Array<OneD, Array<OneD, NekDouble> >(2 * m_bfNames.size());
+    m_bfFwdBwd = Array<OneD, Array<OneD, NekDouble>>(2 * m_bfNames.size());
     for (int i = 0; i < m_bfFwdBwd.num_elements(); i++)
     {
         m_bfFwdBwd[i] = Array<OneD, NekDouble>(GetTraceNpoints(), 0.0);
@@ -96,8 +96,8 @@ void LEE::v_InitObject()
     m_riemannSolver = SolverUtils::GetRiemannSolverFactory().CreateInstance(
         riemName, m_session);
     m_riemannSolver->SetVector("N", &LEE::GetNormals, this);
-    m_riemannSolver->SetVector(
-        "basefieldFwdBwd", &LEE::GetBasefieldFwdBwd, this);
+    m_riemannSolver->SetVector("basefieldFwdBwd", &LEE::GetBasefieldFwdBwd,
+                               this);
     m_riemannSolver->SetAuxVec("vecLocs", &LEE::GetVecLocs, this);
 
     // Set up advection operator
@@ -133,9 +133,8 @@ LEE::~LEE()
  * @param physfield   Fields.
  * @param flux        Resulting flux. flux[eq][dir][pt]
  */
-void LEE::GetFluxVector(
-    const Array<OneD, Array<OneD, NekDouble> > &physfield,
-    Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &flux)
+void LEE::GetFluxVector(const Array<OneD, Array<OneD, NekDouble>> &physfield,
+                        Array<OneD, Array<OneD, Array<OneD, NekDouble>>> &flux)
 {
     int nq = physfield[0].num_elements();
 
@@ -143,7 +142,7 @@ void LEE::GetFluxVector(
              "Dimension of flux array and velocity array do not match");
 
     Array<OneD, const NekDouble> c0sq = m_bf[0];
-    Array<OneD, Array<OneD, const NekDouble> > u0(m_spacedim);
+    Array<OneD, Array<OneD, const NekDouble>> u0(m_spacedim);
     for (int i = 0; i < m_spacedim; ++i)
     {
         u0[i] = m_bf[2 + i];
@@ -151,7 +150,7 @@ void LEE::GetFluxVector(
 
     Array<OneD, const NekDouble> p   = physfield[m_ip];
     Array<OneD, const NekDouble> rho = physfield[m_irho];
-    Array<OneD, Array<OneD, const NekDouble> > ru(m_spacedim);
+    Array<OneD, Array<OneD, const NekDouble>> ru(m_spacedim);
     for (int i = 0; i < m_spacedim; ++i)
     {
         ru[i] = physfield[m_iu + i];
@@ -184,19 +183,19 @@ void LEE::GetFluxVector(
             if (i == j)
             {
                 // delta_ij + p
-                Vmath::Vadd(nq, p, 1, flux[m_iu + i][j], 1, flux[m_iu + i][j], 1);
+                Vmath::Vadd(nq, p, 1, flux[m_iu + i][j], 1, flux[m_iu + i][j],
+                            1);
             }
         }
     }
 }
 
-void LEE::v_AddLinTerm(
-    const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-    Array<OneD, Array<OneD, NekDouble> > &outarray)
+void LEE::v_AddLinTerm(const Array<OneD, const Array<OneD, NekDouble>> &inarray,
+                       Array<OneD, Array<OneD, NekDouble>> &outarray)
 {
     int nq = GetTotPoints();
 
-    Array<OneD, Array<OneD, NekDouble> > linTerm(m_spacedim + 2);
+    Array<OneD, Array<OneD, NekDouble>> linTerm(m_spacedim + 2);
     for (int i = 0; i < m_spacedim + 2; ++i)
     {
         if (i == 1)
@@ -219,7 +218,7 @@ void LEE::v_AddLinTerm(
     Vmath::Vmul(nq, c0sq, 1, rho0, 1, p0, 1);
     Vmath::Vdiv(nq, p0, 1, gamma, 1, p0, 1);
 
-    Array<OneD, Array<OneD, const NekDouble> > u0(m_spacedim);
+    Array<OneD, Array<OneD, const NekDouble>> u0(m_spacedim);
     for (int i = 0; i < m_spacedim; ++i)
     {
         u0[i] = m_bf[2 + i];
@@ -228,7 +227,7 @@ void LEE::v_AddLinTerm(
     Array<OneD, const NekDouble> p   = inarray[0];
     Array<OneD, const NekDouble> rho = inarray[1];
 
-    Array<OneD, Array<OneD, const NekDouble> > ru(m_spacedim);
+    Array<OneD, Array<OneD, const NekDouble>> ru(m_spacedim);
     for (int i = 0; i < m_spacedim; ++i)
     {
         ru[i] = inarray[2 + i];
@@ -248,12 +247,12 @@ void LEE::v_AddLinTerm(
             Vmath::Vmul(nq, grad, 1, ru[j], 1, tmp1, 1);
             Vmath::Vdiv(nq, tmp1, 1, rho0, 1, tmp1, 1);
             // p * du0_j/dx_j - ru_j / rho0 * dp0/dx_j
-            m_fields[0]->PhysDeriv(
-                MultiRegions::DirCartesianMap[j], u0[j], grad);
+            m_fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[j], u0[j],
+                                   grad);
             Vmath::Vvtvm(nq, grad, 1, p, 1, tmp1, 1, tmp1, 1);
             // (gamma-1) (p * du0_j/dx_j - ru_j / rho0 * dp0/dx_j)
-            Vmath::Vvtvp(
-                nq, gammaMinOne, 1, tmp1, 1, linTerm[m_ip], 1, linTerm[m_ip], 1);
+            Vmath::Vvtvp(nq, gammaMinOne, 1, tmp1, 1, linTerm[m_ip], 1,
+                         linTerm[m_ip], 1);
         }
     }
 
@@ -267,13 +266,13 @@ void LEE::v_AddLinTerm(
         for (int j = 0; j < m_spacedim; ++j)
         {
             // d u0_i / d x_j
-            m_fields[0]->PhysDeriv(
-                MultiRegions::DirCartesianMap[j], u0[i], grad);
+            m_fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[j], u0[i],
+                                   grad);
             // u0_j * rho + ru_j
             Vmath::Vvtvp(nq, u0[j], 1, rho, 1, ru[j], 1, tmp1, 1);
             // du0_i/dx_j * (u0_j * rho + ru_j)
-            Vmath::Vvtvp(
-                nq, grad, 1, tmp1, 1, linTerm[m_iu + i], 1, linTerm[m_iu + i], 1);
+            Vmath::Vvtvp(nq, grad, 1, tmp1, 1, linTerm[m_iu + i], 1,
+                         linTerm[m_iu + i], 1);
         }
     }
 
@@ -297,11 +296,10 @@ void LEE::v_AddLinTerm(
  * @brief Outflow characteristic boundary conditions for compressible
  * flow problems.
  */
-void LEE::v_RiemannInvariantBC(int bcRegion,
-                               int cnt,
-                               Array<OneD, Array<OneD, NekDouble> > &Fwd,
-                               Array<OneD, Array<OneD, NekDouble> > &BfFwd,
-                               Array<OneD, Array<OneD, NekDouble> > &physarray)
+void LEE::v_RiemannInvariantBC(int bcRegion, int cnt,
+                               Array<OneD, Array<OneD, NekDouble>> &Fwd,
+                               Array<OneD, Array<OneD, NekDouble>> &BfFwd,
+                               Array<OneD, Array<OneD, NekDouble>> &physarray)
 {
     int id1, id2, nBCEdgePts;
     int nVariables = physarray.num_elements();
@@ -323,22 +321,16 @@ void LEE::v_RiemannInvariantBC(int bcRegion,
         Array<OneD, NekDouble> RVn(nBCEdgePts, 0.0);
         for (int i = 0; i < m_spacedim; ++i)
         {
-            Vmath::Vvtvp(nBCEdgePts,
-                         &Fwd[m_iu + i][id2], 1,
-                         &m_traceNormals[i][id2], 1,
-                         &RVn[0], 1,
-                         &RVn[0], 1);
+            Vmath::Vvtvp(nBCEdgePts, &Fwd[m_iu + i][id2], 1,
+                         &m_traceNormals[i][id2], 1, &RVn[0], 1, &RVn[0], 1);
         }
 
         // Calculate (v0.n)
         Array<OneD, NekDouble> RVn0(nBCEdgePts, 0.0);
         for (int i = 0; i < m_spacedim; ++i)
         {
-            Vmath::Vvtvp(nBCEdgePts,
-                         &BfFwd[2 + i][id2], 1,
-                         &m_traceNormals[i][id2], 1,
-                         &RVn0[0], 1,
-                         &RVn0[0], 1);
+            Vmath::Vvtvp(nBCEdgePts, &BfFwd[2 + i][id2], 1,
+                         &m_traceNormals[i][id2], 1, &RVn0[0], 1, &RVn0[0], 1);
         }
 
         for (int i = 0; i < nBCEdgePts; ++i)
@@ -383,7 +375,7 @@ void LEE::v_RiemannInvariantBC(int bcRegion,
             // ru = h4+h5
             Fwd[m_ip][id2 + i]   = c * (h5 - h4);
             Fwd[m_irho][id2 + i] = h1 + (h5 - h4) / c;
-            NekDouble RVnNew    = h4 + h5;
+            NekDouble RVnNew     = h4 + h5;
 
             // adjust velocity pert. according to new value
             // here we just omit the wall parallel velocity components, i.e
@@ -403,9 +395,7 @@ void LEE::v_RiemannInvariantBC(int bcRegion,
         // Copy boundary adjusted values into the boundary expansion
         for (int i = 0; i < nVariables; ++i)
         {
-            Vmath::Vcopy(nBCEdgePts,
-                         &Fwd[i][id2],
-                         1,
+            Vmath::Vcopy(nBCEdgePts, &Fwd[i][id2], 1,
                          &(m_fields[i]
                                ->GetBndCondExpansions()[bcRegion]
                                ->UpdatePhys())[id1],

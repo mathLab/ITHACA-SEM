@@ -36,7 +36,7 @@
 int main()
 {
     std::cout << "The APESolver was removed from Nektar++ in version 5.0.";
-    std::cout <<  " Please use the AcousticSolver instead." << std::endl;
+    std::cout << " Please use the AcousticSolver instead." << std::endl;
 
     return -1;
 }

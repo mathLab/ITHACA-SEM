@@ -37,8 +37,8 @@
 #ifndef NEKTAR_SOLVERS_ACOUSTICSOLVER_RIEMANNSOLVERS_ACOUSTICSOLVER
 #define NEKTAR_SOLVERS_ACOUSTICSOLVER_RIEMANNSOLVERS_ACOUSTICSOLVER
 
-#include <SolverUtils/SolverUtilsDeclspec.h>
 #include <SolverUtils/RiemannSolvers/RiemannSolver.h>
+#include <SolverUtils/SolverUtilsDeclspec.h>
 
 using namespace Nektar::SolverUtils;
 
@@ -47,30 +47,28 @@ namespace Nektar
 
 class AcousticSolver : public RiemannSolver
 {
-    protected:
-        AcousticSolver(
-                const LibUtilities::SessionReaderSharedPtr& pSession);
+protected:
+    AcousticSolver(const LibUtilities::SessionReaderSharedPtr &pSession);
 
-        virtual void v_Solve(
-            const int                                         nDim,
-            const Array<OneD, const Array<OneD, NekDouble> > &Fwd,
-            const Array<OneD, const Array<OneD, NekDouble> > &Bwd,
-            Array<OneD,       Array<OneD, NekDouble> > &flux);
+    virtual void v_Solve(const int nDim,
+                         const Array<OneD, const Array<OneD, NekDouble>> &Fwd,
+                         const Array<OneD, const Array<OneD, NekDouble>> &Bwd,
+                         Array<OneD, Array<OneD, NekDouble>> &flux);
 
-        virtual void v_PointSolve(
-            NekDouble  pL,    NekDouble  rhoL,  NekDouble  uL,  NekDouble  vL,  NekDouble  wL,
-            NekDouble  pR,    NekDouble  rhoR,  NekDouble  uR,  NekDouble  vR,  NekDouble  wR,
-            NekDouble  c0sqL, NekDouble  rho0L, NekDouble  u0L, NekDouble  v0L, NekDouble  w0L,
-            NekDouble  c0sqR, NekDouble  rho0R, NekDouble  u0R, NekDouble  v0R, NekDouble  w0R,
-            NekDouble &pF,    NekDouble &rhoF,  NekDouble &uF,  NekDouble &vF,  NekDouble &wF)
-        {
-            ASSERTL0(false, "This function should be defined by subclasses.");
-        }
+    virtual void v_PointSolve(
+        NekDouble  pL,    NekDouble  rhoL,  NekDouble  uL,  NekDouble  vL,  NekDouble  wL,
+        NekDouble  pR,    NekDouble  rhoR,  NekDouble  uR,  NekDouble  vR,  NekDouble  wR,
+        NekDouble  c0sqL, NekDouble  rho0L, NekDouble  u0L, NekDouble  v0L, NekDouble  w0L,
+        NekDouble  c0sqR, NekDouble  rho0R, NekDouble  u0R, NekDouble  v0R, NekDouble  w0R,
+        NekDouble &pF,    NekDouble &rhoF,  NekDouble &uF,  NekDouble &vF,  NekDouble &wF)
+    {
+        ASSERTL0(false, "This function should be defined by subclasses.");
+    }
 
-        void GetRotBasefield(Array<OneD, Array<OneD, NekDouble> > &bfFwd,
-                             Array<OneD, Array<OneD, NekDouble> > &bfBwd);
+    void GetRotBasefield(Array<OneD, Array<OneD, NekDouble>> &bfFwd,
+                         Array<OneD, Array<OneD, NekDouble>> &bfBwd);
 };
 
-}
+} // namespace Nektar
 
 #endif

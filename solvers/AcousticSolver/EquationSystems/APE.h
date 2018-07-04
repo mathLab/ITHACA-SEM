@@ -39,128 +39,121 @@
 
 #include <boost/random/mersenne_twister.hpp>
 
-#include <SolverUtils/UnsteadySystem.h>
-#include <SolverUtils/AdvectionSystem.h>
 #include <SolverUtils/Advection/Advection.h>
+#include <SolverUtils/AdvectionSystem.h>
+#include <SolverUtils/Core/Coupling.h>
 #include <SolverUtils/Forcing/Forcing.h>
 #include <SolverUtils/RiemannSolvers/RiemannSolver.h>
-#include <SolverUtils/Core/Coupling.h>
+#include <SolverUtils/UnsteadySystem.h>
 
 using namespace Nektar::SolverUtils;
 
 namespace Nektar
-{     
+{
 
 class APE : public AdvectionSystem
 {
-    public:
+public:
+    friend class MemoryManager<APE>;
 
-        friend class MemoryManager<APE>;
+    /// Creates an instance of this class
+    static EquationSystemSharedPtr create(
+        const LibUtilities::SessionReaderSharedPtr &pSession,
+        const SpatialDomains::MeshGraphSharedPtr &pGraph)
+    {
+        EquationSystemSharedPtr p =
+            MemoryManager<APE>::AllocateSharedPtr(pSession, pGraph);
+        p->InitObject();
+        return p;
+    }
+    /// Name of class
+    static std::string className;
 
-        /// Creates an instance of this class
-        static EquationSystemSharedPtr create(
-            const LibUtilities::SessionReaderSharedPtr& pSession,
-            const SpatialDomains::MeshGraphSharedPtr& pGraph)
-        {
-            EquationSystemSharedPtr p = MemoryManager<APE>
-                ::AllocateSharedPtr(pSession, pGraph);
-            p->InitObject();
-            return p;
-        }
-        /// Name of class
-        static std::string className;
+    /// Destructor
+    virtual ~APE();
 
-        /// Destructor
-        virtual ~APE();
+protected:
+    /// indices of the fields
+    int m_ip, m_irho, m_iu;
+    /// we are dealing with a conservative formualtion
+    bool m_conservative;
+    SolverUtils::CouplingSharedPtr m_coupling;
+    SolverUtils::AdvectionSharedPtr m_advection;
+    std::vector<SolverUtils::ForcingSharedPtr> m_forcing;
+    SolverUtils::RiemannSolverSharedPtr m_riemannSolver;
+    Array<OneD, Array<OneD, NekDouble>> m_bfFwdBwd;
+    Array<OneD, Array<OneD, NekDouble>> m_vecLocs;
+    Array<OneD, Array<OneD, NekDouble>> m_bf;
+    std::vector<std::string> m_bfNames;
 
-    protected:
+    /// Initialises UnsteadySystem class members.
+    APE(const LibUtilities::SessionReaderSharedPtr &pSession,
+        const SpatialDomains::MeshGraphSharedPtr &pGraph);
 
-        /// indices of the fields
-        int                                             m_ip, m_irho, m_iu;
-        /// we are dealing with a conservative formualtion
-        bool                                            m_conservative;
-        SolverUtils::CouplingSharedPtr                  m_coupling;
-        SolverUtils::AdvectionSharedPtr                 m_advection;
-        std::vector<SolverUtils::ForcingSharedPtr>      m_forcing;
-        SolverUtils::RiemannSolverSharedPtr             m_riemannSolver;
-        Array<OneD, Array<OneD, NekDouble> >            m_bfFwdBwd;
-        Array<OneD, Array<OneD, NekDouble> >            m_vecLocs;
-        Array<OneD, Array<OneD, NekDouble> >            m_bf;
-        std::vector<std::string>                        m_bfNames;
+    virtual void v_InitObject();
 
-        /// Initialises UnsteadySystem class members.
-        APE(const LibUtilities::SessionReaderSharedPtr& pSession,
-            const SpatialDomains::MeshGraphSharedPtr& pGraph);
+    void DoOdeRhs(const Array<OneD, const Array<OneD, NekDouble>> &inarray,
+                  Array<OneD, Array<OneD, NekDouble>> &outarray,
+                  const NekDouble time);
 
-        virtual void v_InitObject();
+    void DoOdeProjection(
+        const Array<OneD, const Array<OneD, NekDouble>> &inarray,
+        Array<OneD, Array<OneD, NekDouble>> &outarray, const NekDouble time);
 
-        void DoOdeRhs(const Array<OneD,  const  Array<OneD, NekDouble> > &inarray,
-                            Array<OneD,  Array<OneD, NekDouble> > &outarray,
-                      const NekDouble time);
+    void GetFluxVector(const Array<OneD, Array<OneD, NekDouble>> &physfield,
+                       Array<OneD, Array<OneD, Array<OneD, NekDouble>>> &flux);
 
-        void DoOdeProjection(const Array<OneD,  const  Array<OneD, NekDouble> > &inarray,
-                                   Array<OneD,  Array<OneD, NekDouble> > &outarray,
-                             const NekDouble time);
+    virtual void v_AddLinTerm(
+        const Array<OneD, const Array<OneD, NekDouble>> &inarray,
+        Array<OneD, Array<OneD, NekDouble>> &outarray)
+    {
+    }
 
-        void GetFluxVector(
-                const Array<OneD, Array<OneD, NekDouble> > &physfield,
-                Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &flux);
+    virtual bool v_PreIntegrate(int step);
 
-        virtual void v_AddLinTerm(
-        const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-              Array<OneD,       Array<OneD, NekDouble> > &outarray)
-        {}
+    virtual void v_Output();
 
-        virtual bool v_PreIntegrate(int step);
+    virtual Array<OneD, NekDouble> v_GetMaxStdVelocity();
 
-        virtual void v_Output();
+    virtual void v_ExtraFldOutput(
+        std::vector<Array<OneD, NekDouble>> &fieldcoeffs,
+        std::vector<std::string> &variables);
 
-        virtual Array<OneD, NekDouble> v_GetMaxStdVelocity();
+    const Array<OneD, const Array<OneD, NekDouble>> &GetNormals();
 
-        virtual void v_ExtraFldOutput(std::vector<Array<OneD, NekDouble> > &fieldcoeffs,
-                                      std::vector<std::string>             &variables);
+    const Array<OneD, const Array<OneD, NekDouble>> &GetVecLocs();
 
-        const Array<OneD, const Array<OneD, NekDouble> > &GetNormals();
+    const Array<OneD, const Array<OneD, NekDouble>> &GetBasefieldFwdBwd();
 
-        const Array<OneD, const Array<OneD, NekDouble> > &GetVecLocs();
+private:
+    std::map<int, boost::mt19937> m_rng;
+    NekDouble m_whiteNoiseBC_lastUpdate;
+    NekDouble m_whiteNoiseBC_p;
 
-        const Array<OneD, const Array<OneD, NekDouble> > &GetBasefieldFwdBwd();
+    NekDouble GetCFLEstimate();
 
+    void SetBoundaryConditions(Array<OneD, Array<OneD, NekDouble>> &physarray,
+                               NekDouble time);
 
-    private:
+    virtual void v_WallBC(int bcRegion, int cnt,
+                          Array<OneD, Array<OneD, NekDouble>> &Fwd,
+                          Array<OneD, Array<OneD, NekDouble>> &physarray);
 
-        std::map<int, boost::mt19937>                   m_rng;
-        NekDouble                                       m_whiteNoiseBC_lastUpdate;
-        NekDouble                                       m_whiteNoiseBC_p;
+    virtual void v_RiemannInvariantBC(
+        int bcRegion, int cnt, Array<OneD, Array<OneD, NekDouble>> &Fwd,
+        Array<OneD, Array<OneD, NekDouble>> &BfFwd,
+        Array<OneD, Array<OneD, NekDouble>> &physarray);
 
-        NekDouble GetCFLEstimate();
+    virtual void v_WhiteNoiseBC(int bcRegion, int cnt,
+                                Array<OneD, Array<OneD, NekDouble>> &Fwd,
+                                Array<OneD, Array<OneD, NekDouble>> &BfFwd,
+                                Array<OneD, Array<OneD, NekDouble>> &physarray);
 
-        void SetBoundaryConditions(Array<OneD, Array<OneD, NekDouble> > &physarray,
-                                   NekDouble time);
+    void CopyBoundaryTrace(const Array<OneD, NekDouble> &Fwd,
+                           Array<OneD, NekDouble> &Bwd);
 
-        virtual void v_WallBC(int bcRegion,
-                    int cnt,
-                    Array<OneD, Array<OneD, NekDouble> > &Fwd,
-                    Array<OneD, Array<OneD, NekDouble> > &physarray);
-
-        virtual void v_RiemannInvariantBC(int bcRegion,
-                                int cnt,
-                                Array<OneD, Array<OneD, NekDouble> > &Fwd,
-                                Array<OneD, Array<OneD, NekDouble> > &BfFwd,
-                                Array<OneD, Array<OneD, NekDouble> > &physarray);
-
-        virtual void v_WhiteNoiseBC(int bcRegion,
-                        int cnt,
-                        Array<OneD, Array<OneD, NekDouble> > &Fwd,
-                        Array<OneD, Array<OneD, NekDouble> > &BfFwd,
-                        Array<OneD, Array<OneD, NekDouble> > &physarray);
-
-        void CopyBoundaryTrace(const Array<OneD, NekDouble>&Fwd,
-                                     Array<OneD, NekDouble>&Bwd);
-
-        void UpdateBasefieldFwdBwd();
+    void UpdateBasefieldFwdBwd();
 };
-}
+} // namespace Nektar
 
-#endif 
-
+#endif

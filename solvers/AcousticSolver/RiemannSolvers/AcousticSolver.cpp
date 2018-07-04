@@ -42,40 +42,37 @@ namespace Nektar
 {
 
 /**
-*
-*/
+ *
+ */
 AcousticSolver::AcousticSolver(
-    const LibUtilities::SessionReaderSharedPtr& pSession) :
-    RiemannSolver(pSession)
+    const LibUtilities::SessionReaderSharedPtr &pSession)
+    : RiemannSolver(pSession)
 {
     m_requiresRotation = true;
 }
 
-
 /**
-*
-*/
+ *
+ */
 void AcousticSolver::v_Solve(
-    const int                                         nDim,
-    const Array<OneD, const Array<OneD, NekDouble> > &Fwd,
-    const Array<OneD, const Array<OneD, NekDouble> > &Bwd,
-          Array<OneD,       Array<OneD, NekDouble> > &flux)
+    const int nDim, const Array<OneD, const Array<OneD, NekDouble>> &Fwd,
+    const Array<OneD, const Array<OneD, NekDouble>> &Bwd,
+    Array<OneD, Array<OneD, NekDouble>> &flux)
 {
     int nTracePts = Fwd[0].num_elements();
 
-    Array< OneD, Array< OneD, NekDouble > > bfFwd(nDim+2);
-    Array< OneD, Array< OneD, NekDouble > > bfBwd(nDim+2);
+    Array<OneD, Array<OneD, NekDouble>> bfFwd(nDim + 2);
+    Array<OneD, Array<OneD, NekDouble>> bfBwd(nDim + 2);
     for (int i = 0; i < nDim + 2; i++)
     {
         bfFwd[i] = Array<OneD, NekDouble>(nTracePts);
         bfBwd[i] = Array<OneD, NekDouble>(nTracePts);
     }
 
-
     GetRotBasefield(bfFwd, bfBwd);
 
     int expDim = nDim;
-    NekDouble vF, wF,  rhoF;
+    NekDouble vF, wF, rhoF;
 
     if (expDim == 1)
     {
@@ -115,25 +112,23 @@ void AcousticSolver::v_Solve(
     }
 }
 
-
 /**
-*
-*/
-void AcousticSolver::GetRotBasefield(
-    Array<OneD, Array<OneD, NekDouble> > &bfFwd,
-    Array<OneD, Array<OneD, NekDouble> > &bfBwd)
+ *
+ */
+void AcousticSolver::GetRotBasefield(Array<OneD, Array<OneD, NekDouble>> &bfFwd,
+                                     Array<OneD, Array<OneD, NekDouble>> &bfBwd)
 {
     ASSERTL1(CheckVectors("N"), "N not defined.");
     ASSERTL1(CheckVectors("basefieldFwdBwd"), "basefieldFwdBwd not defined.");
-    const Array<OneD, const Array<OneD, NekDouble> > normals = m_vectors["N"]();
-    const Array<OneD, const Array<OneD, NekDouble> > basefieldFwdBwd =
+    const Array<OneD, const Array<OneD, NekDouble>> normals = m_vectors["N"]();
+    const Array<OneD, const Array<OneD, NekDouble>> basefieldFwdBwd =
         m_vectors["basefieldFwdBwd"]();
 
     int nBF  = basefieldFwdBwd.num_elements() / 2;
     int nDim = normals.num_elements();
 
-    Array<OneD, Array<OneD, NekDouble> > basefieldFwd(nBF);
-    Array<OneD, Array<OneD, NekDouble> > basefieldBwd(nBF);
+    Array<OneD, Array<OneD, NekDouble>> basefieldFwd(nBF);
+    Array<OneD, Array<OneD, NekDouble>> basefieldBwd(nBF);
 
     for (int i = 0; i < nBF; i++)
     {
@@ -142,7 +137,7 @@ void AcousticSolver::GetRotBasefield(
         basefieldBwd[i] = basefieldFwdBwd[j];
     }
 
-    Array<OneD, Array<OneD, NekDouble> > baseVecLocs(1);
+    Array<OneD, Array<OneD, NekDouble>> baseVecLocs(1);
     baseVecLocs[0] = Array<OneD, NekDouble>(nDim);
     for (int i = 0; i < nDim; ++i)
     {
@@ -152,4 +147,4 @@ void AcousticSolver::GetRotBasefield(
     rotateToNormal(basefieldBwd, normals, baseVecLocs, bfBwd);
 }
 
-}
+} // namespace Nektar

@@ -43,14 +43,14 @@ namespace Nektar
 
 std::string LEEUpwindSolver::solverName =
     SolverUtils::GetRiemannSolverFactory().RegisterCreatorFunction(
-        "LEEUpwind",
-        LEEUpwindSolver::create,
-        "Upwind Solver for LEE");
+        "LEEUpwind", LEEUpwindSolver::create, "Upwind Solver for LEE");
 
 /**
-*
-*/
-LEEUpwindSolver::LEEUpwindSolver(const LibUtilities::SessionReaderSharedPtr& pSession) : LEESolver(pSession)
+ *
+ */
+LEEUpwindSolver::LEEUpwindSolver(
+    const LibUtilities::SessionReaderSharedPtr &pSession)
+    : LEESolver(pSession)
 {
 }
 
@@ -149,4 +149,4 @@ void LEEUpwindSolver::v_PointSolve(
         rhouF = rhouF + 0.5 * (c0R + u0R) * (rhouR * c0R + pR) / c0R;
     }
 }
-}
+} // namespace Nektar

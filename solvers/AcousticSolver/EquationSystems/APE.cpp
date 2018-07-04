@@ -36,8 +36,8 @@
 
 #include <iostream>
 
-#include <boost/random/variate_generator.hpp>
 #include <boost/random/normal_distribution.hpp>
+#include <boost/random/variate_generator.hpp>
 
 #include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
 
@@ -48,18 +48,14 @@ using namespace std;
 namespace Nektar
 {
 string APE::className = GetEquationSystemFactory().RegisterCreatorFunction(
-            "APE", APE::create,
-            "APE1/APE4 (Acoustic Perturbation Equations)");
+    "APE", APE::create, "APE1/APE4 (Acoustic Perturbation Equations)");
 
-
-APE::APE(
-    const LibUtilities::SessionReaderSharedPtr& pSession,
-    const SpatialDomains::MeshGraphSharedPtr& pGraph)
-    : UnsteadySystem(pSession, pGraph),
-      AdvectionSystem(pSession, pGraph), m_ip(0), m_irho(-1), m_iu(1), m_conservative(false)
+APE::APE(const LibUtilities::SessionReaderSharedPtr &pSession,
+         const SpatialDomains::MeshGraphSharedPtr &pGraph)
+    : UnsteadySystem(pSession, pGraph), AdvectionSystem(pSession, pGraph),
+      m_ip(0), m_irho(-1), m_iu(1), m_conservative(false)
 {
 }
-
 
 /**
  * @brief Initialization object for the APE class.
@@ -81,15 +77,16 @@ void APE::v_InitObject()
     m_bfNames.resize(m_spacedim + 2);
 
     // Initialize basefield
-    m_bf = Array<OneD, Array<OneD, NekDouble> >(m_bfNames.size());
+    m_bf = Array<OneD, Array<OneD, NekDouble>>(m_bfNames.size());
     for (int i = 0; i < m_bf.num_elements(); ++i)
     {
         m_bf[i] = Array<OneD, NekDouble>(GetTotPoints());
     }
-    GetFunction("Baseflow", m_fields[0], true)->Evaluate(m_bfNames, m_bf, m_time);
+    GetFunction("Baseflow", m_fields[0], true)
+        ->Evaluate(m_bfNames, m_bf, m_time);
 
     // Define the normal velocity fields
-    m_bfFwdBwd = Array<OneD, Array<OneD, NekDouble> > (2*m_bfNames.size());
+    m_bfFwdBwd = Array<OneD, Array<OneD, NekDouble>>(2 * m_bfNames.size());
     for (int i = 0; i < m_bfFwdBwd.num_elements(); i++)
     {
         m_bfFwdBwd[i] = Array<OneD, NekDouble>(GetTraceNpoints(), 0.0);
@@ -102,7 +99,7 @@ void APE::v_InitObject()
     m_homoInitialFwd = false;
 
     // Set up locations of velocity and base velocity vectors.
-    m_vecLocs = Array<OneD, Array<OneD, NekDouble> >(1);
+    m_vecLocs    = Array<OneD, Array<OneD, NekDouble>>(1);
     m_vecLocs[0] = Array<OneD, NekDouble>(m_spacedim);
     for (int i = 0; i < m_spacedim; ++i)
     {
@@ -123,23 +120,24 @@ void APE::v_InitObject()
         riemName = "APELaxFriedrichs";
     }
     m_riemannSolver = SolverUtils::GetRiemannSolverFactory().CreateInstance(
-                          riemName, m_session);
-    m_riemannSolver->SetVector("N",         &APE::GetNormals,   this);
-    m_riemannSolver->SetVector("basefieldFwdBwd", &APE::GetBasefieldFwdBwd, this);
-    m_riemannSolver->SetAuxVec("vecLocs",   &APE::GetVecLocs,   this);
+        riemName, m_session);
+    m_riemannSolver->SetVector("N", &APE::GetNormals, this);
+    m_riemannSolver->SetVector("basefieldFwdBwd", &APE::GetBasefieldFwdBwd,
+                               this);
+    m_riemannSolver->SetAuxVec("vecLocs", &APE::GetVecLocs, this);
 
     // Set up advection operator
     string advName;
     m_session->LoadSolverInfo("AdvectionType", advName, "WeakDG");
-    m_advection = SolverUtils::GetAdvectionFactory()
-                  .CreateInstance(advName, advName);
+    m_advection =
+        SolverUtils::GetAdvectionFactory().CreateInstance(advName, advName);
     m_advection->SetFluxVector(&APE::GetFluxVector, this);
     m_advection->SetRiemannSolver(m_riemannSolver);
     m_advection->InitObject(m_session, m_fields);
 
     if (m_explicitAdvection)
     {
-        m_ode.DefineOdeRhs(&APE::DoOdeRhs,        this);
+        m_ode.DefineOdeRhs(&APE::DoOdeRhs, this);
         m_ode.DefineProjection(&APE::DoOdeProjection, this);
     }
     else
@@ -149,7 +147,7 @@ void APE::v_InitObject()
 
     if (m_session->DefinesElement("Nektar/Coupling"))
     {
-        TiXmlElement* vCoupling = m_session->GetElement("Nektar/Coupling");
+        TiXmlElement *vCoupling = m_session->GetElement("Nektar/Coupling");
 
         ASSERTL0(vCoupling->Attribute("TYPE"),
                  "Missing TYPE attribute in Coupling");
@@ -161,16 +159,14 @@ void APE::v_InitObject()
     }
 
     m_whiteNoiseBC_lastUpdate = -1.0;
-    m_whiteNoiseBC_p = 0.0;
+    m_whiteNoiseBC_p          = 0.0;
 }
-
 
 /**
  * @brief Destructor for APE class.
  */
 APE::~APE()
 {
-    
 }
 
 /**
@@ -179,16 +175,15 @@ APE::~APE()
  * @param physfield   Fields.
  * @param flux        Resulting flux. flux[eq][dir][pt]
  */
-void APE::GetFluxVector(
-        const Array<OneD, Array<OneD, NekDouble> > &physfield,
-        Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &flux)
+void APE::GetFluxVector(const Array<OneD, Array<OneD, NekDouble>> &physfield,
+                        Array<OneD, Array<OneD, Array<OneD, NekDouble>>> &flux)
 {
     int nq = physfield[0].num_elements();
     Array<OneD, NekDouble> tmp1(nq);
     Array<OneD, NekDouble> tmp2(nq);
 
     ASSERTL1(flux[0].num_elements() == m_spacedim,
-                 "Dimension of flux array and velocity array do not match");
+             "Dimension of flux array and velocity array do not match");
 
     // F_{adv,p',j} = \bar{rho}  \bar{c^2} u'_j + p' \bar{u}_j
     for (int j = 0; j < m_spacedim; ++j)
@@ -197,10 +192,10 @@ void APE::GetFluxVector(
 
         // construct \bar{rho}  \bar{c^2} u'_j
         Vmath::Vmul(nq, m_bf[0], 1, m_bf[1], 1, tmp1, 1);
-        Vmath::Vmul(nq, tmp1, 1, physfield[j+1], 1, tmp1, 1);
+        Vmath::Vmul(nq, tmp1, 1, physfield[j + 1], 1, tmp1, 1);
 
         // construct p' \bar{u}_j term
-        Vmath::Vmul(nq, physfield[0], 1, m_bf[j+2], 1, tmp2, 1);
+        Vmath::Vmul(nq, physfield[0], 1, m_bf[j + 2], 1, tmp2, 1);
 
         // add both terms
         Vmath::Vadd(nq, tmp1, 1, tmp2, 1, flux[0][j], 1);
@@ -225,7 +220,8 @@ void APE::GetFluxVector(
                 Vmath::Zero(nq, tmp1, 1);
                 for (int k = 0; k < m_spacedim; ++k)
                 {
-                    Vmath::Vvtvp(nq, physfield[k + 1], 1, m_bf[k + 2 ], 1, tmp1, 1, tmp1, 1);
+                    Vmath::Vvtvp(nq, physfield[k + 1], 1, m_bf[k + 2], 1, tmp1,
+                                 1, tmp1, 1);
                 }
 
                 // add terms
@@ -235,13 +231,13 @@ void APE::GetFluxVector(
     }
 }
 
-
 /**
  * @brief v_PreIntegrate
  */
 bool APE::v_PreIntegrate(int step)
 {
-    GetFunction("Baseflow", m_fields[0], true)->Evaluate(m_bfNames, m_bf, m_time);
+    GetFunction("Baseflow", m_fields[0], true)
+        ->Evaluate(m_bfNames, m_bf, m_time);
 
     if (m_coupling)
     {
@@ -251,11 +247,12 @@ bool APE::v_PreIntegrate(int step)
             numForceFields += x->GetForces().num_elements();
         }
         vector<string> varNames;
-        Array<OneD, Array<OneD, NekDouble> > phys(m_fields.num_elements() + m_bfNames.size() + numForceFields);
+        Array<OneD, Array<OneD, NekDouble>> phys(
+            m_fields.num_elements() + m_bfNames.size() + numForceFields);
         for (int i = 0; i < m_fields.num_elements(); ++i)
         {
             varNames.push_back(m_session->GetVariable(i));
-            phys[i]   = m_fields[i]->UpdatePhys();
+            phys[i] = m_fields[i]->UpdatePhys();
         }
         for (int i = 0; i < m_bfNames.size(); ++i)
         {
@@ -268,9 +265,10 @@ bool APE::v_PreIntegrate(int step)
         {
             for (int i = 0; i < x->GetForces().num_elements(); ++i)
             {
-                phys[m_fields.num_elements() + m_bfNames.size() + f] = x->GetForces()[i];
-                varNames.push_back("F_" + boost::lexical_cast<string>(f) +
-                                    "_" + m_session->GetVariable(i));
+                phys[m_fields.num_elements() + m_bfNames.size() + f] =
+                    x->GetForces()[i];
+                varNames.push_back("F_" + boost::lexical_cast<string>(f) + "_" +
+                                   m_session->GetVariable(i));
             }
             f++;
         }
@@ -282,7 +280,6 @@ bool APE::v_PreIntegrate(int step)
     return AdvectionSystem::v_PreIntegrate(step);
 }
 
-
 void APE::v_Output()
 {
     if (m_coupling)
@@ -293,19 +290,18 @@ void APE::v_Output()
     AdvectionSystem::v_Output();
 }
 
-
 /**
  * @brief Compute the right-hand side.
  */
-void APE::DoOdeRhs(const Array<OneD, const Array<OneD, NekDouble> >&inarray,
-                         Array<OneD,       Array<OneD, NekDouble> >&outarray,
+void APE::DoOdeRhs(const Array<OneD, const Array<OneD, NekDouble>> &inarray,
+                   Array<OneD, Array<OneD, NekDouble>> &outarray,
                    const NekDouble time)
 {
     int nVariables = inarray.num_elements();
-    int nq = GetTotPoints();
+    int nq         = GetTotPoints();
 
     // WeakDG does not use advVel, so we only provide a dummy array
-    Array<OneD, Array<OneD, NekDouble> > advVel(m_spacedim);
+    Array<OneD, Array<OneD, NekDouble>> advVel(m_spacedim);
     m_advection->Advect(nVariables, m_fields, advVel, inarray, outarray, time);
 
     // Negate the LHS terms
@@ -322,17 +318,16 @@ void APE::DoOdeRhs(const Array<OneD, const Array<OneD, NekDouble> >&inarray,
     }
 }
 
-
 /**
  * @brief Compute the projection and call the method for imposing the
  * boundary conditions in case of discontinuous projection.
  */
-void APE::DoOdeProjection(const Array<OneD, const Array<OneD, NekDouble> >&inarray,
-                                Array<OneD,       Array<OneD, NekDouble> >&outarray,
-                          const NekDouble time)
+void APE::DoOdeProjection(
+    const Array<OneD, const Array<OneD, NekDouble>> &inarray,
+    Array<OneD, Array<OneD, NekDouble>> &outarray, const NekDouble time)
 {
     int nvariables = inarray.num_elements();
-    int nq = m_fields[0]->GetNpoints();
+    int nq         = m_fields[0]->GetNpoints();
 
     // deep copy
     for (int i = 0; i < nvariables; ++i)
@@ -345,11 +340,10 @@ void APE::DoOdeProjection(const Array<OneD, const Array<OneD, NekDouble> >&inarr
     SetBoundaryConditions(outarray, time);
 }
 
-
 /**
  * @brief Apply the Boundary Conditions to the APE equations.
  */
-void APE::SetBoundaryConditions(Array<OneD, Array<OneD, NekDouble> > &inarray,
+void APE::SetBoundaryConditions(Array<OneD, Array<OneD, NekDouble>> &inarray,
                                 NekDouble time)
 {
     std::string varName;
@@ -359,13 +353,13 @@ void APE::SetBoundaryConditions(Array<OneD, Array<OneD, NekDouble> > &inarray,
 
     // Extract trace for boundaries. Needs to be done on all processors to avoid
     // deadlock.
-    Array<OneD, Array<OneD, NekDouble> > Fwd(nvariables);
+    Array<OneD, Array<OneD, NekDouble>> Fwd(nvariables);
     for (int i = 0; i < nvariables; ++i)
     {
         Fwd[i] = Array<OneD, NekDouble>(nTracePts);
         m_fields[i]->ExtractTracePhys(inarray[i], Fwd[i]);
     }
-    Array<OneD, Array<OneD, NekDouble> > bfFwd = GetBasefieldFwdBwd();
+    Array<OneD, Array<OneD, NekDouble>> bfFwd = GetBasefieldFwdBwd();
 
     // loop over Boundary Regions
     for (int n = 0; n < m_fields[0]->GetBndConditions().num_elements(); ++n)
@@ -416,13 +410,12 @@ void APE::SetBoundaryConditions(Array<OneD, Array<OneD, NekDouble> > &inarray,
     }
 }
 
-
 /**
  * @brief Wall boundary conditions for the APE equations.
  */
 void APE::v_WallBC(int bcRegion, int cnt,
-                 Array<OneD, Array<OneD, NekDouble> > &Fwd,
-                 Array<OneD, Array<OneD, NekDouble> > &physarray)
+                   Array<OneD, Array<OneD, NekDouble>> &Fwd,
+                   Array<OneD, Array<OneD, NekDouble>> &physarray)
 {
     int nVariables = physarray.num_elements();
 
@@ -435,10 +428,12 @@ void APE::v_WallBC(int bcRegion, int cnt,
 
     for (int e = 0; e < eMax; ++e)
     {
-        nBCEdgePts = m_fields[0]->GetBndCondExpansions()[bcRegion]->
-                GetExp(e)->GetTotPoints();
+        nBCEdgePts = m_fields[0]
+                         ->GetBndCondExpansions()[bcRegion]
+                         ->GetExp(e)
+                         ->GetTotPoints();
         id1 = m_fields[0]->GetBndCondExpansions()[bcRegion]->GetPhys_Offset(e);
-        id2 = m_fields[0]->GetTrace()->GetPhys_Offset(traceBndMap[cnt+e]);
+        id2 = m_fields[0]->GetTrace()->GetPhys_Offset(traceBndMap[cnt + e]);
 
         // For 2D/3D, define: v* = v - 2(v.n)n
         Array<OneD, NekDouble> tmp(nBCEdgePts, 0.0);
@@ -446,11 +441,8 @@ void APE::v_WallBC(int bcRegion, int cnt,
         // Calculate (v.n)
         for (int i = 0; i < m_spacedim; ++i)
         {
-            Vmath::Vvtvp(nBCEdgePts,
-                         &Fwd[m_iu+i][id2], 1,
-                         &m_traceNormals[i][id2], 1,
-                         &tmp[0], 1,
-                         &tmp[0], 1);
+            Vmath::Vvtvp(nBCEdgePts, &Fwd[m_iu + i][id2], 1,
+                         &m_traceNormals[i][id2], 1, &tmp[0], 1, &tmp[0], 1);
         }
 
         // Calculate 2.0(v.n)
@@ -459,33 +451,30 @@ void APE::v_WallBC(int bcRegion, int cnt,
         // Calculate v* = v - 2.0(v.n)n
         for (int i = 0; i < m_spacedim; ++i)
         {
-            Vmath::Vvtvp(nBCEdgePts,
-                         &tmp[0], 1,
-                         &m_traceNormals[i][id2], 1,
-                         &Fwd[m_iu+i][id2], 1,
-                         &Fwd[m_iu+i][id2], 1);
+            Vmath::Vvtvp(nBCEdgePts, &tmp[0], 1, &m_traceNormals[i][id2], 1,
+                         &Fwd[m_iu + i][id2], 1, &Fwd[m_iu + i][id2], 1);
         }
 
         // Copy boundary adjusted values into the boundary expansion
         for (int i = 0; i < nVariables; ++i)
         {
-            Vmath::Vcopy(nBCEdgePts,
-                         &Fwd[i][id2], 1,
-                         &(m_fields[i]->GetBndCondExpansions()[bcRegion]->UpdatePhys())[id1], 1);
+            Vmath::Vcopy(nBCEdgePts, &Fwd[i][id2], 1,
+                         &(m_fields[i]
+                               ->GetBndCondExpansions()[bcRegion]
+                               ->UpdatePhys())[id1],
+                         1);
         }
     }
 }
-
 
 /**
  * @brief Outflow characteristic boundary conditions for compressible
  * flow problems.
  */
-void APE::v_RiemannInvariantBC(int bcRegion,
-                             int cnt,
-                             Array<OneD, Array<OneD, NekDouble> > &Fwd,
-                             Array<OneD, Array<OneD, NekDouble> > &BfFwd,
-                             Array<OneD, Array<OneD, NekDouble> > &physarray)
+void APE::v_RiemannInvariantBC(int bcRegion, int cnt,
+                               Array<OneD, Array<OneD, NekDouble>> &Fwd,
+                               Array<OneD, Array<OneD, NekDouble>> &BfFwd,
+                               Array<OneD, Array<OneD, NekDouble>> &physarray)
 {
     int id1, id2, nBCEdgePts;
     int nVariables = physarray.num_elements();
@@ -507,22 +496,16 @@ void APE::v_RiemannInvariantBC(int bcRegion,
         Array<OneD, NekDouble> Vn(nBCEdgePts, 0.0);
         for (int i = 0; i < m_spacedim; ++i)
         {
-            Vmath::Vvtvp(nBCEdgePts,
-                         &Fwd[m_iu + i][id2], 1,
-                         &m_traceNormals[i][id2], 1,
-                         &Vn[0], 1,
-                         &Vn[0], 1);
+            Vmath::Vvtvp(nBCEdgePts, &Fwd[m_iu + i][id2], 1,
+                         &m_traceNormals[i][id2], 1, &Vn[0], 1, &Vn[0], 1);
         }
 
         // Calculate (v0.n)
         Array<OneD, NekDouble> Vn0(nBCEdgePts, 0.0);
         for (int i = 0; i < m_spacedim; ++i)
         {
-            Vmath::Vvtvp(nBCEdgePts,
-                         &BfFwd[2 + i][id2], 1,
-                         &m_traceNormals[i][id2], 1,
-                         &Vn0[0], 1,
-                         &Vn0[0], 1);
+            Vmath::Vvtvp(nBCEdgePts, &BfFwd[2 + i][id2], 1,
+                         &m_traceNormals[i][id2], 1, &Vn0[0], 1, &Vn0[0], 1);
         }
 
         for (int i = 0; i < nBCEdgePts; ++i)
@@ -536,7 +519,8 @@ void APE::v_RiemannInvariantBC(int bcRegion,
             if (Vn0[i] - c > 0)
             {
                 // u/2 - p/(2*rho0*sqr(c0sq))
-                h1 = Vn[i]/2 - Fwd[m_ip][id2 + i] / (2 * BfFwd[1][id2 + i] * c);
+                h1 = Vn[i] / 2 -
+                     Fwd[m_ip][id2 + i] / (2 * BfFwd[1][id2 + i] * c);
             }
             // incoming
             else
@@ -548,7 +532,8 @@ void APE::v_RiemannInvariantBC(int bcRegion,
             if (Vn0[i] + c > 0)
             {
                 // u/2 + p/(2*rho0*sqr(c0sq))
-                h2 = Vn[i]/2 + Fwd[m_ip][id2 + i] / (2 * BfFwd[1][id2 + i] * c);
+                h2 = Vn[i] / 2 +
+                     Fwd[m_ip][id2 + i] / (2 * BfFwd[1][id2 + i] * c);
             }
             // incoming
             else
@@ -574,24 +559,22 @@ void APE::v_RiemannInvariantBC(int bcRegion,
         // Copy boundary adjusted values into the boundary expansion
         for (int i = 0; i < nVariables; ++i)
         {
-            Vmath::Vcopy(nBCEdgePts,
-                         &Fwd[i][id2], 1,
+            Vmath::Vcopy(nBCEdgePts, &Fwd[i][id2], 1,
                          &(m_fields[i]
                                ->GetBndCondExpansions()[bcRegion]
-                               ->UpdatePhys())[id1], 1);
+                               ->UpdatePhys())[id1],
+                         1);
         }
     }
 }
 
-
 /**
  * @brief Wall boundary conditions for the APE equations.
  */
-void APE::v_WhiteNoiseBC(int bcRegion,
-                       int cnt,
-                       Array<OneD, Array<OneD, NekDouble> > &Fwd,
-                       Array<OneD, Array<OneD, NekDouble> > &BfFwd,
-                       Array<OneD, Array<OneD, NekDouble> > &physarray)
+void APE::v_WhiteNoiseBC(int bcRegion, int cnt,
+                         Array<OneD, Array<OneD, NekDouble>> &Fwd,
+                         Array<OneD, Array<OneD, NekDouble>> &BfFwd,
+                         Array<OneD, Array<OneD, NekDouble>> &physarray)
 {
     int id1, id2, nBCEdgePts;
     int nVariables = physarray.num_elements();
@@ -636,7 +619,7 @@ void APE::v_WhiteNoiseBC(int bcRegion,
         id1 = m_fields[0]->GetBndCondExpansions()[bcRegion]->GetPhys_Offset(e);
         id2 = m_fields[0]->GetTrace()->GetPhys_Offset(traceBndMap[cnt + e]);
 
-        Array<OneD, Array<OneD, NekDouble> > tmp(nVariables);
+        Array<OneD, Array<OneD, NekDouble>> tmp(nVariables);
         for (int i = 0; i < nVariables; ++i)
         {
             tmp[i] = Array<OneD, NekDouble>(nBCEdgePts, 0.0);
@@ -650,7 +633,9 @@ void APE::v_WhiteNoiseBC(int bcRegion,
             for (int i = 0; i < nBCEdgePts; ++i)
             {
                 // density perturbation
-                tmp[m_irho][i] = m_whiteNoiseBC_p * BfFwd[m_spacedim+2][id2 + i] / BfFwd[0][id2 + i];
+                tmp[m_irho][i] = m_whiteNoiseBC_p *
+                                 BfFwd[m_spacedim + 2][id2 + i] /
+                                 BfFwd[0][id2 + i];
 
                 // velocity perturbation
                 NekDouble ru = m_whiteNoiseBC_p / sqrt(BfFwd[0][id2 + i]);
@@ -665,7 +650,8 @@ void APE::v_WhiteNoiseBC(int bcRegion,
             for (int i = 0; i < nBCEdgePts; ++i)
             {
                 // velocity perturbation
-                NekDouble u = m_whiteNoiseBC_p / (sqrt(BfFwd[0][id2 + i]) * BfFwd[1][id2 + i]);
+                NekDouble u = m_whiteNoiseBC_p /
+                              (sqrt(BfFwd[0][id2 + i]) * BfFwd[1][id2 + i]);
 
                 for (int j = 0; j < m_spacedim; ++j)
                 {
@@ -677,15 +663,14 @@ void APE::v_WhiteNoiseBC(int bcRegion,
         // Copy boundary adjusted values into the boundary expansion
         for (int i = 0; i < nVariables; ++i)
         {
-            Vmath::Vcopy(nBCEdgePts,
-                         &tmp[i][0], 1,
+            Vmath::Vcopy(nBCEdgePts, &tmp[i][0], 1,
                          &(m_fields[i]
                                ->GetBndCondExpansions()[bcRegion]
-                               ->UpdatePhys())[id1], 1);
+                               ->UpdatePhys())[id1],
+                         1);
         }
     }
 }
-
 
 /**
  * @brief Compute the advection velocity in the standard space
@@ -699,8 +684,8 @@ Array<OneD, NekDouble> APE::v_GetMaxStdVelocity(void)
 
     Array<OneD, NekDouble> stdV(nElm, 0.0);
 
-    Array<OneD, Array<OneD, NekDouble> > stdVelocity(m_spacedim);
-    Array<OneD, Array<OneD, NekDouble> > velocity(m_spacedim);
+    Array<OneD, Array<OneD, NekDouble>> stdVelocity(m_spacedim);
+    Array<OneD, Array<OneD, NekDouble>> velocity(m_spacedim);
     LibUtilities::PointsKeyVector ptsKeys;
 
     int cnt = 0;
@@ -711,9 +696,12 @@ Array<OneD, NekDouble> APE::v_GetMaxStdVelocity(void)
 
         // Possible bug: not multiply by jacobian??
         const SpatialDomains::GeomFactorsSharedPtr metricInfo =
-                m_fields[0]->GetExp(el)->GetGeom()->GetMetricInfo();
+            m_fields[0]->GetExp(el)->GetGeom()->GetMetricInfo();
         const Array<TwoD, const NekDouble> &gmat =
-                m_fields[0]->GetExp(el)->GetGeom()->GetMetricInfo()
+            m_fields[0]
+                ->GetExp(el)
+                ->GetGeom()
+                ->GetMetricInfo()
                 ->GetDerivFactors(ptsKeys);
 
         int nq = m_fields[0]->GetExp(el)->GetTotPoints();
@@ -727,8 +715,8 @@ Array<OneD, NekDouble> APE::v_GetMaxStdVelocity(void)
             {
                 // The total advection velocity is v+c, so we need to scale c by
                 // adding it before we do the transformation.
-                NekDouble c = sqrt(m_bf[0][cnt+j]);
-                velocity[i][j] = m_bf[i+2][cnt+j] + c;
+                NekDouble c    = sqrt(m_bf[0][cnt + j]);
+                velocity[i][j] = m_bf[i + 2][cnt + j] + c;
             }
         }
 
@@ -742,7 +730,7 @@ Array<OneD, NekDouble> APE::v_GetMaxStdVelocity(void)
                 for (int j = 1; j < m_spacedim; ++j)
                 {
                     Vmath::Vvtvp(nq, gmat[m_spacedim * j + i], 1, velocity[j],
-                            1, stdVelocity[i], 1, stdVelocity[i], 1);
+                                 1, stdVelocity[i], 1, stdVelocity[i], 1);
                 }
             }
         }
@@ -754,7 +742,7 @@ Array<OneD, NekDouble> APE::v_GetMaxStdVelocity(void)
                 for (int j = 1; j < m_spacedim; ++j)
                 {
                     Vmath::Svtvp(nq, gmat[m_spacedim * j + i][0], velocity[j],
-                            1, stdVelocity[i], 1, stdVelocity[i], 1);
+                                 1, stdVelocity[i], 1, stdVelocity[i], 1);
                 }
             }
         }
@@ -781,10 +769,8 @@ Array<OneD, NekDouble> APE::v_GetMaxStdVelocity(void)
     return stdV;
 }
 
-
-void APE::v_ExtraFldOutput(
-    std::vector<Array<OneD, NekDouble> > &fieldcoeffs,
-    std::vector<std::string>             &variables)
+void APE::v_ExtraFldOutput(std::vector<Array<OneD, NekDouble>> &fieldcoeffs,
+                           std::vector<std::string> &variables)
 {
     for (int i = 0; i < m_bfNames.size(); i++)
     {
@@ -799,8 +785,8 @@ void APE::v_ExtraFldOutput(
     {
         for (int i = 0; i < x->GetForces().num_elements(); ++i)
         {
-            variables.push_back("F_" + boost::lexical_cast<string>(f) +
-                                "_" + m_session->GetVariable(i));
+            variables.push_back("F_" + boost::lexical_cast<string>(f) + "_" +
+                                m_session->GetVariable(i));
             Array<OneD, NekDouble> tmpC(GetNcoeffs());
             m_fields[0]->FwdTrans(x->GetForces()[i], tmpC);
             fieldcoeffs.push_back(tmpC);
@@ -809,33 +795,30 @@ void APE::v_ExtraFldOutput(
     }
 }
 
-
 /**
  * @brief Get the normal vectors.
  */
-const Array<OneD, const Array<OneD, NekDouble> > &APE::GetNormals()
+const Array<OneD, const Array<OneD, NekDouble>> &APE::GetNormals()
 {
     return m_traceNormals;
 }
 
-
 /**
- * @brief Get the locations of the components of the directed fields within the fields array.
+ * @brief Get the locations of the components of the directed fields within the
+ * fields array.
  */
-const Array<OneD, const Array<OneD, NekDouble> > &APE::GetVecLocs()
+const Array<OneD, const Array<OneD, NekDouble>> &APE::GetVecLocs()
 {
     return m_vecLocs;
 }
 
-
 /**
  * @brief Get the baseflow field.
  */
-const Array<OneD, const Array<OneD, NekDouble> > &APE::GetBasefieldFwdBwd()
+const Array<OneD, const Array<OneD, NekDouble>> &APE::GetBasefieldFwdBwd()
 {
     return m_bfFwdBwd;
 }
-
 
 void APE::UpdateBasefieldFwdBwd()
 {
@@ -847,15 +830,13 @@ void APE::UpdateBasefieldFwdBwd()
     }
 }
 
-
 void APE::CopyBoundaryTrace(const Array<OneD, NekDouble> &Fwd,
-                                  Array<OneD, NekDouble> &Bwd)
+                            Array<OneD, NekDouble> &Bwd)
 {
     int cnt = 0;
     // loop over Boundary Regions
     for (int bcRegion = 0;
-         bcRegion < m_fields[0]->GetBndConditions().num_elements();
-         ++bcRegion)
+         bcRegion < m_fields[0]->GetBndConditions().num_elements(); ++bcRegion)
     {
 
         // Copy the forward trace of the field to the backward trace
@@ -880,6 +861,4 @@ void APE::CopyBoundaryTrace(const Array<OneD, NekDouble> &Fwd,
     }
 }
 
-
-} //end of namespace
-
+} // namespace Nektar

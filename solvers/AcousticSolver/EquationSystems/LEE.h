@@ -71,23 +71,19 @@ protected:
         const SpatialDomains::MeshGraphSharedPtr &pGraph);
 
     virtual void v_AddLinTerm(
-        const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-              Array<OneD,       Array<OneD, NekDouble> > &outarray);
+        const Array<OneD, const Array<OneD, NekDouble>> &inarray,
+        Array<OneD, Array<OneD, NekDouble>> &outarray);
 
     virtual void v_InitObject();
 
-    void GetFluxVector(
-        const Array<OneD, Array<OneD, NekDouble> > &physfield,
-        Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &flux);
+    void GetFluxVector(const Array<OneD, Array<OneD, NekDouble>> &physfield,
+                       Array<OneD, Array<OneD, Array<OneD, NekDouble>>> &flux);
 
 private:
-
     virtual void v_RiemannInvariantBC(
-        int bcRegion,
-        int cnt,
-        Array<OneD, Array<OneD, NekDouble> > &Fwd,
-        Array<OneD, Array<OneD, NekDouble> > &BfFwd,
-        Array<OneD, Array<OneD, NekDouble> > &physarray);
+        int bcRegion, int cnt, Array<OneD, Array<OneD, NekDouble>> &Fwd,
+        Array<OneD, Array<OneD, NekDouble>> &BfFwd,
+        Array<OneD, Array<OneD, NekDouble>> &physarray);
 };
 } // namespace Nektar
 

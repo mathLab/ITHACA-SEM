@@ -37,8 +37,8 @@
 #ifndef NEKTAR_SOLVERS_ACOUSTICSOLVER_RIEMANNSOLVERS_LAXFRIEDRICHSSOLVER
 #define NEKTAR_SOLVERS_ACOUSTICSOLVER_RIEMANNSOLVERS_LAXFRIEDRICHSSOLVER
 
-#include <SolverUtils/SolverUtilsDeclspec.h>
 #include <AcousticSolver/RiemannSolvers/AcousticSolver.h>
+#include <SolverUtils/SolverUtilsDeclspec.h>
 
 using namespace Nektar::SolverUtils;
 
@@ -47,24 +47,26 @@ namespace Nektar
 
 class APELaxFriedrichsSolver : public AcousticSolver
 {
-    public:
-        static RiemannSolverSharedPtr create(const LibUtilities::SessionReaderSharedPtr& pSession)
-        {
-            return RiemannSolverSharedPtr(new APELaxFriedrichsSolver(pSession));
-        }
+public:
+    static RiemannSolverSharedPtr create(
+        const LibUtilities::SessionReaderSharedPtr &pSession)
+    {
+        return RiemannSolverSharedPtr(new APELaxFriedrichsSolver(pSession));
+    }
 
-        static std::string solverName;
+    static std::string solverName;
 
-    protected:
-        APELaxFriedrichsSolver(const LibUtilities::SessionReaderSharedPtr& pSession);
+protected:
+    APELaxFriedrichsSolver(
+        const LibUtilities::SessionReaderSharedPtr &pSession);
 
-        virtual void v_PointSolve(
-            NekDouble  pL,    NekDouble  rhoL,  NekDouble  uL,  NekDouble  vL,  NekDouble  wL,
-            NekDouble  pR,    NekDouble  rhoR,  NekDouble  uR,  NekDouble  vR,  NekDouble  wR,
-            NekDouble  c0sqL, NekDouble  rho0L, NekDouble  u0L, NekDouble  v0L, NekDouble  w0L,
-            NekDouble  c0sqR, NekDouble  rho0R, NekDouble  u0R, NekDouble  v0R, NekDouble  w0R,
-            NekDouble &pF,    NekDouble &rhoF,  NekDouble &uF,  NekDouble &vF,  NekDouble &wF);
+    virtual void v_PointSolve(
+        NekDouble  pL,    NekDouble  rhoL,  NekDouble  uL,  NekDouble  vL,  NekDouble  wL,
+        NekDouble  pR,    NekDouble  rhoR,  NekDouble  uR,  NekDouble  vR,  NekDouble  wR,
+        NekDouble  c0sqL, NekDouble  rho0L, NekDouble  u0L, NekDouble  v0L, NekDouble  w0L,
+        NekDouble  c0sqR, NekDouble  rho0R, NekDouble  u0R, NekDouble  v0R, NekDouble  w0R,
+        NekDouble &pF,    NekDouble &rhoF,  NekDouble &uF,  NekDouble &vF,  NekDouble &wF);
 };
 
-}
+} // namespace Nektar
 #endif

@@ -124,6 +124,9 @@ v5.0.0
 **Documentation**:
 - Added the developer-guide repository as a submodule (!751)
 
+**Tester**
+- Fix build with boost 1.67 (!947)
+
 v4.4.2
 ------
 **Library**

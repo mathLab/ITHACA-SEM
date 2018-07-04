@@ -76,7 +76,7 @@ class APE : public AdvectionSystem
     protected:
 
         /// indices of the fields
-        int                                             _ip, _irho, _iu;
+        int                                             m_ip, m_irho, m_iu;
         /// we are dealing with a conservative formualtion
         bool                                            m_conservative;
         SolverUtils::CouplingSharedPtr                  m_coupling;

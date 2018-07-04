@@ -60,9 +60,9 @@ LEE::LEE(const LibUtilities::SessionReaderSharedPtr &pSession,
          const SpatialDomains::MeshGraphSharedPtr &pGraph)
     : UnsteadySystem(pSession, pGraph), APE(pSession, pGraph)
 {
-    _ip   = 0;
-    _irho = 1;
-    _iu   = 2;
+    m_ip   = 0;
+    m_irho = 1;
+    m_iu   = 2;
 
     m_conservative = true;
 }
@@ -160,12 +160,12 @@ void LEE::GetFluxVector(
         u0[i] = m_bf[2 + i];
     }
 
-    Array<OneD, const NekDouble> p   = physfield[_ip];
-    Array<OneD, const NekDouble> rho = physfield[_irho];
+    Array<OneD, const NekDouble> p   = physfield[m_ip];
+    Array<OneD, const NekDouble> rho = physfield[m_irho];
     Array<OneD, Array<OneD, const NekDouble> > ru(m_spacedim);
     for (int i = 0; i < m_spacedim; ++i)
     {
-        ru[i] = physfield[_iu + i];
+        ru[i] = physfield[m_iu + i];
     }
 
     // F_{adv,p',j} = c0^2 * ru_j + u0_j * p
@@ -189,13 +189,13 @@ void LEE::GetFluxVector(
         for (int j = 0; j < m_spacedim; ++j)
         {
             // ru_i * u0_j
-            Vmath::Vmul(nq, ru[i], 1, u0[j], 1, flux[_iu + i][j], 1);
+            Vmath::Vmul(nq, ru[i], 1, u0[j], 1, flux[m_iu + i][j], 1);
 
             // kronecker delta
             if (i == j)
             {
                 // delta_ij + p
-                Vmath::Vadd(nq, p, 1, flux[_iu + i][j], 1, flux[_iu + i][j], 1);
+                Vmath::Vadd(nq, p, 1, flux[m_iu + i][j], 1, flux[m_iu + i][j], 1);
             }
         }
     }
@@ -250,7 +250,7 @@ void LEE::v_AddLinTerm(
 
     // p
     {
-        Vmath::Zero(nq, linTerm[_ip], 1);
+        Vmath::Zero(nq, linTerm[m_ip], 1);
         // (1-gamma) ( ru_j / rho0 * dp0/dx_j - p * du0_j/dx_j )
         for (int j = 0; j < m_spacedim; ++j)
         {
@@ -264,7 +264,7 @@ void LEE::v_AddLinTerm(
             Vmath::Vvtvm(nq, grad, 1, p, 1, tmp1, 1, tmp1, 1);
             // (gamma-1) (p * du0_j/dx_j - ru_j / rho0 * dp0/dx_j)
             Vmath::Vvtvp(
-                nq, gammaMinOne, 1, tmp1, 1, linTerm[_ip], 1, linTerm[_ip], 1);
+                nq, gammaMinOne, 1, tmp1, 1, linTerm[m_ip], 1, linTerm[m_ip], 1);
         }
     }
 
@@ -273,7 +273,7 @@ void LEE::v_AddLinTerm(
     // ru_i
     for (int i = 0; i < m_spacedim; ++i)
     {
-        Vmath::Zero(nq, linTerm[_iu + i], 1);
+        Vmath::Zero(nq, linTerm[m_iu + i], 1);
         // du0_i/dx_j * (u0_j * rho + ru_j)
         for (int j = 0; j < m_spacedim; ++j)
         {
@@ -284,7 +284,7 @@ void LEE::v_AddLinTerm(
             Vmath::Vvtvp(nq, u0[j], 1, rho, 1, ru[j], 1, tmp1, 1);
             // du0_i/dx_j * (u0_j * rho + ru_j)
             Vmath::Vvtvp(
-                nq, grad, 1, tmp1, 1, linTerm[_iu + i], 1, linTerm[_iu + i], 1);
+                nq, grad, 1, tmp1, 1, linTerm[m_iu + i], 1, linTerm[m_iu + i], 1);
         }
     }
 
@@ -335,7 +335,7 @@ void LEE::v_RiemannInvariantBC(int bcRegion,
         for (int i = 0; i < m_spacedim; ++i)
         {
             Vmath::Vvtvp(nBCEdgePts,
-                         &Fwd[_iu + i][id2], 1,
+                         &Fwd[m_iu + i][id2], 1,
                          &m_traceNormals[i][id2], 1,
                          &RVn[0], 1,
                          &RVn[0], 1);
@@ -361,7 +361,7 @@ void LEE::v_RiemannInvariantBC(int bcRegion,
             if (RVn0[i] > 0)
             {
                 // rho - p / c^2
-                h1 = Fwd[_irho][id2 + i] - Fwd[_ip][id2 + i] / (c * c);
+                h1 = Fwd[m_irho][id2 + i] - Fwd[m_ip][id2 + i] / (c * c);
             }
             else
             {
@@ -371,7 +371,7 @@ void LEE::v_RiemannInvariantBC(int bcRegion,
             if (RVn0[i] - c > 0)
             {
                 // ru / 2 - p / (2*c)
-                h4 = RVn[i] / 2 - Fwd[_ip][id2 + i] / (2 * c);
+                h4 = RVn[i] / 2 - Fwd[m_ip][id2 + i] / (2 * c);
             }
             else
             {
@@ -381,7 +381,7 @@ void LEE::v_RiemannInvariantBC(int bcRegion,
             if (RVn0[i] + c > 0)
             {
                 // ru / 2 + p / (2*c)
-                h5 = RVn[i] / 2 + Fwd[_ip][id2 + i] / (2 * c);
+                h5 = RVn[i] / 2 + Fwd[m_ip][id2 + i] / (2 * c);
             }
             else
             {
@@ -392,8 +392,8 @@ void LEE::v_RiemannInvariantBC(int bcRegion,
             // p = c0*(h5-h4)
             // rho = h1 + (h5-h4)/c0
             // ru = h4+h5
-            Fwd[_ip][id2 + i]   = c * (h5 - h4);
-            Fwd[_irho][id2 + i] = h1 + (h5 - h4) / c;
+            Fwd[m_ip][id2 + i]   = c * (h5 - h4);
+            Fwd[m_irho][id2 + i] = h1 + (h5 - h4) / c;
             NekDouble RVnNew    = h4 + h5;
 
             // adjust velocity pert. according to new value
@@ -407,7 +407,7 @@ void LEE::v_RiemannInvariantBC(int bcRegion,
             // for mixed in/outflow boundaries and at the boundaries edges.
             for (int j = 0; j < m_spacedim; ++j)
             {
-                Fwd[_iu + j][id2 + i] = RVnNew * m_traceNormals[j][id2 + i];
+                Fwd[m_iu + j][id2 + i] = RVnNew * m_traceNormals[j][id2 + i];
             }
         }
 

@@ -62,7 +62,7 @@ APE::APE(
     const LibUtilities::SessionReaderSharedPtr& pSession,
     const SpatialDomains::MeshGraphSharedPtr& pGraph)
     : UnsteadySystem(pSession, pGraph),
-      AdvectionSystem(pSession, pGraph), _ip(0), _irho(-1), _iu(1), m_conservative(false)
+      AdvectionSystem(pSession, pGraph), m_ip(0), m_irho(-1), m_iu(1), m_conservative(false)
 {
 }
 
@@ -116,7 +116,7 @@ void APE::v_InitObject()
     for (int i = 0; i < m_spacedim; ++i)
     {
         // u', v', w'
-        m_vecLocs[0][i] = _iu + i;
+        m_vecLocs[0][i] = m_iu + i;
     }
 
     string riemName;
@@ -454,7 +454,7 @@ void APE::v_WallBC(int bcRegion, int cnt,
         for (int i = 0; i < m_spacedim; ++i)
         {
             Vmath::Vvtvp(nBCEdgePts,
-                         &Fwd[_iu+i][id2], 1,
+                         &Fwd[m_iu+i][id2], 1,
                          &m_traceNormals[i][id2], 1,
                          &tmp[0], 1,
                          &tmp[0], 1);
@@ -469,8 +469,8 @@ void APE::v_WallBC(int bcRegion, int cnt,
             Vmath::Vvtvp(nBCEdgePts,
                          &tmp[0], 1,
                          &m_traceNormals[i][id2], 1,
-                         &Fwd[_iu+i][id2], 1,
-                         &Fwd[_iu+i][id2], 1);
+                         &Fwd[m_iu+i][id2], 1,
+                         &Fwd[m_iu+i][id2], 1);
         }
 
         // Copy boundary adjusted values into the boundary expansion
@@ -515,7 +515,7 @@ void APE::v_RiemannInvariantBC(int bcRegion,
         for (int i = 0; i < m_spacedim; ++i)
         {
             Vmath::Vvtvp(nBCEdgePts,
-                         &Fwd[_iu + i][id2], 1,
+                         &Fwd[m_iu + i][id2], 1,
                          &m_traceNormals[i][id2], 1,
                          &Vn[0], 1,
                          &Vn[0], 1);
@@ -543,7 +543,7 @@ void APE::v_RiemannInvariantBC(int bcRegion,
             if (Vn0[i] - c > 0)
             {
                 // u/2 - p/(2*rho0*sqr(c0sq))
-                h1 = Vn[i]/2 - Fwd[_ip][id2 + i] / (2 * BfFwd[1][id2 + i] * c);
+                h1 = Vn[i]/2 - Fwd[m_ip][id2 + i] / (2 * BfFwd[1][id2 + i] * c);
             }
             // incoming
             else
@@ -555,7 +555,7 @@ void APE::v_RiemannInvariantBC(int bcRegion,
             if (Vn0[i] + c > 0)
             {
                 // u/2 + p/(2*rho0*sqr(c0sq))
-                h2 = Vn[i]/2 + Fwd[_ip][id2 + i] / (2 * BfFwd[1][id2 + i] * c);
+                h2 = Vn[i]/2 + Fwd[m_ip][id2 + i] / (2 * BfFwd[1][id2 + i] * c);
             }
             // incoming
             else
@@ -565,15 +565,15 @@ void APE::v_RiemannInvariantBC(int bcRegion,
 
             // compute primitive variables
             // p = rho0*sqr(c0sq) * (h2 - h1)
-            Fwd[_ip][id2 + i] = BfFwd[1][id2 + i] * c * (h2 - h1);
+            Fwd[m_ip][id2 + i] = BfFwd[1][id2 + i] * c * (h2 - h1);
             // u = h1 + h2
             NekDouble VnNew = h1 + h2;
 
             // adjust velocity pert. according to new value
             for (int j = 0; j < m_spacedim; ++j)
             {
-                Fwd[_iu + j][id2 + i] =
-                    Fwd[_iu + j][id2 + i] +
+                Fwd[m_iu + j][id2 + i] =
+                    Fwd[m_iu + j][id2 + i] +
                     (VnNew - Vn[i]) * m_traceNormals[j][id2 + i];
             }
         }
@@ -650,20 +650,20 @@ void APE::v_WhiteNoiseBC(int bcRegion,
         }
 
         // pressure perturbation
-        Vmath::Fill(nBCEdgePts, m_whiteNoiseBC_p, &tmp[_ip][0], 1);
+        Vmath::Fill(nBCEdgePts, m_whiteNoiseBC_p, &tmp[m_ip][0], 1);
 
         if (m_conservative)
         {
             for (int i = 0; i < nBCEdgePts; ++i)
             {
                 // density perturbation
-                tmp[_irho][i] = m_whiteNoiseBC_p * BfFwd[m_spacedim+2][id2 + i] / BfFwd[0][id2 + i];
+                tmp[m_irho][i] = m_whiteNoiseBC_p * BfFwd[m_spacedim+2][id2 + i] / BfFwd[0][id2 + i];
 
                 // velocity perturbation
                 NekDouble ru = m_whiteNoiseBC_p / sqrt(BfFwd[0][id2 + i]);
                 for (int j = 0; j < m_spacedim; ++j)
                 {
-                    tmp[_iu + j][i] = -1.0 * ru * m_traceNormals[j][id2 + i];
+                    tmp[m_iu + j][i] = -1.0 * ru * m_traceNormals[j][id2 + i];
                 }
             }
         }
@@ -676,7 +676,7 @@ void APE::v_WhiteNoiseBC(int bcRegion,
 
                 for (int j = 0; j < m_spacedim; ++j)
                 {
-                    tmp[_iu + j][i] = -1.0 * u * m_traceNormals[j][id2 + i];
+                    tmp[m_iu + j][i] = -1.0 * u * m_traceNormals[j][id2 + i];
                 }
             }
         }

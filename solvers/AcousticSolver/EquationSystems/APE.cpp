@@ -40,14 +40,8 @@
 #include <boost/random/normal_distribution.hpp>
 
 #include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
-#include <AcousticSolver/EquationSystems/APE.h>
-#include <LocalRegions/TriExp.h>
-#include <LocalRegions/QuadExp.h>
-#include <LocalRegions/HexExp.h>
 
-#include <MultiRegions/ContField1D.h>
-#include <MultiRegions/ContField2D.h>
-#include <MultiRegions/ContField3D.h>
+#include <AcousticSolver/EquationSystems/APE.h>
 
 using namespace std;
 

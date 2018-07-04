@@ -36,18 +36,7 @@
 
 #include <iostream>
 
-#include <boost/random/normal_distribution.hpp>
-#include <boost/random/variate_generator.hpp>
-
 #include <AcousticSolver/EquationSystems/LEE.h>
-#include <LocalRegions/HexExp.h>
-#include <LocalRegions/QuadExp.h>
-#include <LocalRegions/TriExp.h>
-#include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
-
-#include <LocalRegions/HexExp.h>
-#include <LocalRegions/QuadExp.h>
-#include <LocalRegions/TriExp.h>
 
 using namespace std;
 

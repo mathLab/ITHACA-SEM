@@ -100,6 +100,7 @@ v5.0.0
 - Add Lambda 2 vortex detection criteria (!882)
 - Add module for modifying/adding fields from expressions (!889, !903)
 - Add module for evaluating the mean of variables on the domain (!894)
+- Add module for counting the total number of DOF (!948)
 
 **IncNavierStokesSolver**
 - Replace steady-state check based on difference of norms by check based on

@@ -52,6 +52,7 @@ ModuleKey OutputCADfix::className = GetModuleFactory().RegisterCreatorFunction(
 OutputCADfix::OutputCADfix(MeshSharedPtr m) : OutputModule(m)
 {
     m_config["from"] = ConfigOption(false, "", "FBM file to load");
+    m_config["order"] = ConfigOption(false, "1", "Enforce a polynomial order");
 }
 
 OutputCADfix::~OutputCADfix()
@@ -92,34 +93,38 @@ void OutputCADfix::Process()
     m_model        = m_cad->GetCFIModel();
     NekDouble scal = m_cad->GetScaling();
 
-    /*
-    // Force order 2
-    m_mesh->MakeOrder(2, LibUtilities::ePolyEvenlySpaced);
+    int order = m_config["from"].as<int>();
+    order = order == 2 ? 2 : 1;
 
-    // Add edge- and face-interior nodes to vertex set.
-    for (auto &eIt : m_mesh->m_edgeSet)
+    if (order == 2)
     {
-        m_mesh->m_vertexSet.insert(eIt->m_edgeNodes.begin(),
-                                   eIt->m_edgeNodes.end());
-    }
+        // Force order 2
+        m_mesh->MakeOrder(2, LibUtilities::ePolyEvenlySpaced);
 
-    for (auto &fIt : m_mesh->m_faceSet)
-    {
-        m_mesh->m_vertexSet.insert(fIt->m_faceNodes.begin(),
-                                   fIt->m_faceNodes.end());
-    }
-
-    // Do second pass over elements for volume nodes.
-    for (int d = 1; d <= 3; ++d)
-    {
-        for (int i = 0; i < m_mesh->m_element[d].size(); ++i)
+        // Add edge- and face-interior nodes to vertex set.
+        for (auto &eIt : m_mesh->m_edgeSet)
         {
-            ElementSharedPtr e            = m_mesh->m_element[d][i];
-            vector<NodeSharedPtr> volList = e->GetVolumeNodes();
-            m_mesh->m_vertexSet.insert(volList.begin(), volList.end());
+            m_mesh->m_vertexSet.insert(eIt->m_edgeNodes.begin(),
+                                    eIt->m_edgeNodes.end());
+        }
+
+        for (auto &fIt : m_mesh->m_faceSet)
+        {
+            m_mesh->m_vertexSet.insert(fIt->m_faceNodes.begin(),
+                                    fIt->m_faceNodes.end());
+        }
+
+        // Do second pass over elements for volume nodes.
+        for (int d = 1; d <= 3; ++d)
+        {
+            for (int i = 0; i < m_mesh->m_element[d].size(); ++i)
+            {
+                ElementSharedPtr e            = m_mesh->m_element[d][i];
+                vector<NodeSharedPtr> volList = e->GetVolumeNodes();
+                m_mesh->m_vertexSet.insert(volList.begin(), volList.end());
+            }
         }
     }
-    */
 
     // Find main body
     cfi::Body *body;
@@ -215,11 +220,11 @@ void OutputCADfix::Process()
 
         if (el->GetTag() == "H")
         {
-            type = CFI_SUBTYPE_HE8;
+            type = order == 1 ? CFI_SUBTYPE_HE8 : CFI_SUBTYPE_HE27;
         }
         else if (el->GetTag() == "R")
         {
-            type = CFI_SUBTYPE_PE6;
+            type = order == 1 ? CFI_SUBTYPE_PE6 : CFI_SUBTYPE_PE18;
 
             // Nodes need re-ordering
             vector<NodeSharedPtr> newNekNodes;
@@ -234,7 +239,7 @@ void OutputCADfix::Process()
         }
         else if (el->GetTag() == "A")
         {
-            type = CFI_SUBTYPE_TE4;
+            type = order == 1 ? CFI_SUBTYPE_TE4 : CFI_SUBTYPE_TE10;
         }
         else
         {

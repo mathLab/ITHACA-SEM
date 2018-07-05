@@ -145,7 +145,7 @@ void OutputCADfix::Process()
     map<NodeSharedPtr, cfi::Node *> newMap;
 
     // Write out nodes
-    for (auto &it : m_mesh->m_vertexSet)
+    for (auto &it : m_mesh->m_node)
     {
         newMap[it] = m_model->createOrphanFenode(
             0, it->m_x / scal, it->m_y / scal, it->m_z / scal);
@@ -216,11 +216,25 @@ void OutputCADfix::Process()
     {
         vector<cfi::Node *> cfiNodes;
         vector<NodeSharedPtr> nekNodes = el->GetVertexList();
+        vector<EdgeSharedPtr> nekEdges = el->GetEdgeList();
+        vector<FaceSharedPtr> nekFaces = el->GetFaceList();
+        vector<NodeSharedPtr> nekVNodes = el->GetVolumeNodes();
         int type;
 
         if (el->GetTag() == "H")
         {
             type = order == 1 ? CFI_SUBTYPE_HE8 : CFI_SUBTYPE_HE27;
+
+            if (order == 2)
+            {
+                // Edges need re-ordering
+                // Swapping edges 4->7 with 8->11
+                swap_ranges(nekEdges.begin() + 4, nekEdges.begin() + 8, nekEdges.begin() + 8)
+
+                // Faces need re-ordering
+                // Moving face 0 to second to last
+                swap_ranges(nekFaces.begin(), nekFaces.end() - 1, nekFaces.begin() + 1)
+            }
         }
         else if (el->GetTag() == "R")
         {
@@ -234,8 +248,27 @@ void OutputCADfix::Process()
             newNekNodes.push_back(nekNodes[3]);
             newNekNodes.push_back(nekNodes[5]);
             newNekNodes.push_back(nekNodes[2]);
-
             nekNodes.swap(newNekNodes);
+
+            // Edges need re-ordering
+            vector<EdgeSharedPtr> newNekEdges;
+            newNekEdges.push_back(nekEdges[4]);
+            newNekEdges.push_back(nekEdges[5]);
+            newNekEdges.push_back(nekEdges[0]);
+            newNekEdges.push_back(nekEdges[7]);
+            newNekEdges.push_back(nekEdges[6]);
+            newNekEdges.push_back(nekEdges[2]);
+            newNekEdges.push_back(nekEdges[3]);
+            newNekEdges.push_back(nekEdges[8]);
+            newNekEdges.push_back(nekEdges[1]);
+            nekEdges.swap(newNekEdges);
+
+            // Faces need re-ordering
+            vector<FaceSharedPtr> newNekFaces;
+            newNekFaces.push_back(nekFaces[4]);
+            newNekFaces.push_back(nekFaces[2]);
+            newNekFaces.push_back(nekFaces[0]);
+            nekFaces.swap(newNekFaces);
         }
         else if (el->GetTag() == "A")
         {
@@ -252,45 +285,26 @@ void OutputCADfix::Process()
             cfiNodes.push_back(newMap[node]);
         }
 
-        /*
-        // Assuming it's a tet
-        int type = CFI_SUBTYPE_TE10;
-
-        for (auto &node : el->GetVertexList())
+        if (order == 2)
         {
-            cfiNodes.push_back(newMap[node]);
-        }
-
-        for (auto &edge : el->GetEdgeList())
-        {
-            cfiNodes.push_back(newMap[edge->m_edgeNodes[0]]);
-        }
-
-        if (el->GetTag() != "A")
-        {
-            // Now assuming it's a prism
-            type = CFI_SUBTYPE_PE18;
-
-            for (auto &face : el->GetFaceList())
+            for (auto &edge : nekEdges)
             {
+                cfiNodes.push_back(newMap[edge->m_edgeNodes[0]]);
+            }
+            for (auto &face : nekFaces)
+            {
+                // Could be a triangular face without a face node
                 if (face->m_faceNodes.size())
                 {
                     cfiNodes.push_back(newMap[face->m_faceNodes[0]]);
                 }
             }
-
-            if (el->GetTag() != "R")
+            // Could be an element without a volume node
+            if (nekVNodes.size())
             {
-                // It's definitely a hex now
-                type = CFI_SUBTYPE_HE27;
-
-                for (auto &node : el->GetVolumeNodes())
-                {
-                    cfiNodes.push_back(newMap[node]);
-                }
+                cfiNodes.push_back(newMap[nekVNodes[0]]);
             }
         }
-        */
 
         m_model->createOrphanElement(0, cfi::EntitySubtype(type), cfiNodes);
     }

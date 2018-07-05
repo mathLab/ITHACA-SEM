@@ -73,7 +73,7 @@ public:
 
     virtual ModulePriority GetModulePriority()
     {
-        return eOutput;
+        return eModifyExp;
     }
 
 };

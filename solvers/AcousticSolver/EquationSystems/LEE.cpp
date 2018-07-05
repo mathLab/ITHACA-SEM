@@ -105,7 +105,7 @@ void LEE::v_InitObject()
     m_session->LoadSolverInfo("AdvectionType", advName, "WeakDG");
     m_advection =
         SolverUtils::GetAdvectionFactory().CreateInstance(advName, advName);
-    m_advection->SetFluxVector(&LEE::GetFluxVector, this);
+    m_advection->SetFluxVector(&LEE::v_GetFluxVector, this);
     m_advection->SetRiemannSolver(m_riemannSolver);
     m_advection->InitObject(m_session, m_fields);
 
@@ -133,8 +133,9 @@ LEE::~LEE()
  * @param physfield   Fields.
  * @param flux        Resulting flux. flux[eq][dir][pt]
  */
-void LEE::GetFluxVector(const Array<OneD, Array<OneD, NekDouble>> &physfield,
-                        Array<OneD, Array<OneD, Array<OneD, NekDouble>>> &flux)
+void LEE::v_GetFluxVector(
+    const Array<OneD, Array<OneD, NekDouble>> &physfield,
+    Array<OneD, Array<OneD, Array<OneD, NekDouble>>> &flux)
 {
     int nq = physfield[0].num_elements();
 

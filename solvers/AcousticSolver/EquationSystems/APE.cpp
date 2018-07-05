@@ -103,7 +103,7 @@ void APE::v_InitObject()
     m_session->LoadSolverInfo("AdvectionType", advName, "WeakDG");
     m_advection =
         SolverUtils::GetAdvectionFactory().CreateInstance(advName, advName);
-    m_advection->SetFluxVector(&APE::GetFluxVector, this);
+    m_advection->SetFluxVector(&APE::v_GetFluxVector, this);
     m_advection->SetRiemannSolver(m_riemannSolver);
     m_advection->InitObject(m_session, m_fields);
 
@@ -131,8 +131,9 @@ APE::~APE()
  * @param physfield   Fields.
  * @param flux        Resulting flux. flux[eq][dir][pt]
  */
-void APE::GetFluxVector(const Array<OneD, Array<OneD, NekDouble>> &physfield,
-                        Array<OneD, Array<OneD, Array<OneD, NekDouble>>> &flux)
+void APE::v_GetFluxVector(
+    const Array<OneD, Array<OneD, NekDouble>> &physfield,
+    Array<OneD, Array<OneD, Array<OneD, NekDouble>>> &flux)
 {
     int nq = physfield[0].num_elements();
     Array<OneD, NekDouble> tmp1(nq);

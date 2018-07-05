@@ -72,8 +72,9 @@ protected:
 
     virtual void v_InitObject();
 
-    void GetFluxVector(const Array<OneD, Array<OneD, NekDouble>> &physfield,
-                       Array<OneD, Array<OneD, Array<OneD, NekDouble>>> &flux);
+    virtual void v_GetFluxVector(
+        const Array<OneD, Array<OneD, NekDouble>> &physfield,
+        Array<OneD, Array<OneD, Array<OneD, NekDouble>>> &flux);
 
 private:
     virtual void v_RiemannInvariantBC(

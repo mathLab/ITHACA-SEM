@@ -93,7 +93,7 @@ void OutputCADfix::Process()
     m_model        = m_cad->GetCFIModel();
     NekDouble scal = m_cad->GetScaling();
 
-    int order = m_config["from"].as<int>();
+    int order = m_config["order"].as<int>();
     order = order == 2 ? 2 : 1;
 
     if (order == 2)
@@ -145,7 +145,7 @@ void OutputCADfix::Process()
     map<NodeSharedPtr, cfi::Node *> newMap;
 
     // Write out nodes
-    for (auto &it : m_mesh->m_node)
+    for (auto &it : m_mesh->m_vertexSet)
     {
         newMap[it] = m_model->createOrphanFenode(
             0, it->m_x / scal, it->m_y / scal, it->m_z / scal);
@@ -229,11 +229,11 @@ void OutputCADfix::Process()
             {
                 // Edges need re-ordering
                 // Swapping edges 4->7 with 8->11
-                swap_ranges(nekEdges.begin() + 4, nekEdges.begin() + 8, nekEdges.begin() + 8)
+                swap_ranges(nekEdges.begin() + 4, nekEdges.begin() + 8, nekEdges.begin() + 8);
 
                 // Faces need re-ordering
                 // Moving face 0 to second to last
-                swap_ranges(nekFaces.begin(), nekFaces.end() - 1, nekFaces.begin() + 1)
+                swap_ranges(nekFaces.begin(), nekFaces.end() - 1, nekFaces.begin() + 1);
             }
         }
         else if (el->GetTag() == "R")

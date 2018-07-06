@@ -1466,6 +1466,33 @@ namespace Nektar
                 }
             }
         }
+
+	// do need to write the forcing vectors
+          ofstream myfilef0 ("forcing0.txt");
+	  if (myfilef0.is_open())
+	  {
+		for (int counter_row = 0; counter_row < forcing[0].num_elements(); ++counter_row)
+		{
+				myfilef0 << std::setprecision(17) << forcing[0][counter_row] << " ";
+//				cout << "writing " << collected_trajectory_f1[counter_timesteps][counter_velocity] << " ";
+			myfilef0 << "\n";
+		}
+                myfilef0.close();
+	  }
+	  else cout << "Unable to open file";
+
+          ofstream myfilef1 ("forcing1.txt");
+	  if (myfilef1.is_open())
+	  {
+		for (int counter_row = 0; counter_row < forcing[1].num_elements(); ++counter_row)
+		{
+				myfilef1 << std::setprecision(17) << forcing[1][counter_row] << " ";
+//				cout << "writing " << collected_trajectory_f1[counter_timesteps][counter_velocity] << " ";
+			myfilef1 << "\n";
+		}
+                myfilef1.close();
+	  }
+	  else cout << "Unable to open file";
         
         // Assemble f_bnd and f_int
         cnt = cnt1 = 0;
@@ -1646,6 +1673,9 @@ namespace Nektar
         
         for(k = 0; k < nvel; ++k)
         {
+
+
+
             const Array<OneD, SpatialDomains::BoundaryConditionShPtr> bndConds = fields[k]->GetBndConditions();
             Array<OneD, const MultiRegions::ExpListSharedPtr> bndCondExp;
             if(m_HomogeneousType == eHomogeneous1D) 
@@ -1657,10 +1687,49 @@ namespace Nektar
                 bndCondExp = m_fields[k]->GetBndCondExpansions();
             }
             
+     		ofstream myfile_bnd_cond_elem ("bnd_cond_elem.txt");
+		if (myfile_bnd_cond_elem.is_open())
+	  	{
+			myfile_bnd_cond_elem << std::setprecision(17) << bndCondExp.num_elements() << "\n";
+                	myfile_bnd_cond_elem.close();
+	  	}
+	  	else cout << "Unable to open file"; 
+
             for(i = 0; i < bndCondExp.num_elements(); ++i)
             {
                 const Array<OneD, const NekDouble > bndCondCoeffs = bndCondExp[i]->GetCoeffs();
-                cnt = 0;
+
+		std::stringstream sstm;
+		sstm << "bndcond_k" << k << "_i_" << i << ".txt";
+		std::string result = sstm.str();
+		const char* rr = result.c_str();
+
+//		std::string outname_txt = "bndcond_k" + std::to_string(k) + "_i_" + std::to_string(i) + ".txt";
+//		const char* outname_t = outname_txt.c_str();
+		const char* outname_t = rr;
+
+       
+     		ofstream myfile_t (outname_t);
+		if (myfile_t.is_open())
+	  	{
+			for(int count_bnd = 0; count_bnd < bndCondCoeffs.num_elements(); count_bnd++)
+			{
+				myfile_t << std::setprecision(17) << bndCondCoeffs[count_bnd] << "\n";
+			}
+                	myfile_t.close();
+	  	}
+	  	else cout << "Unable to open file"; 
+
+
+//		cout << "i " << i << endl;
+//		for(int count_bnd = 0; count_bnd < bndCondCoeffs.num_elements(); count_bnd++)
+//		{
+//			cout << "bndCondCoeffs[count_bnd] " << bndCondCoeffs[count_bnd] << endl;
+//		}
+ 
+
+
+               cnt = 0;
                 for(n = 0; n < nz_loc; ++n)
                 {
                     if(bndConds[i]->GetBoundaryConditionType() 
@@ -1692,6 +1761,18 @@ namespace Nektar
             }
         }
         
+//	cout <<	"m_locToGloMap[mode]->GetNumGlobalDirBndCoeffs() " << m_locToGloMap[mode]->GetNumGlobalDirBndCoeffs() << endl;
+//	cout <<	"m_locToGloMap[mode]->GetNumGlobalCoeffs() " << m_locToGloMap[mode]->GetNumGlobalCoeffs() << endl;
+
+          ofstream myfiledirbnd ("NumGlobalDirBndCoeffs.txt");
+	  if (myfiledirbnd.is_open())
+	  {
+		myfiledirbnd << std::setprecision(17) << m_locToGloMap[mode]->GetNumGlobalDirBndCoeffs();
+                myfiledirbnd.close();
+	  }
+	  else cout << "Unable to open file";   
+
+
         m_mat[mode].m_CoupledBndSys->Solve(fh_bnd,bnd,m_locToGloMap[mode]);
         
         // unpack pressure and velocity boundary systems. 
@@ -1891,7 +1972,8 @@ namespace Nektar
             break;
         case eSteadyOseen:
             {
-                Array<OneD, Array<OneD, NekDouble> > AdvField(m_velocity.num_elements());
+
+		Array<OneD, Array<OneD, NekDouble> > AdvField(m_velocity.num_elements());
                 for(int i = 0; i < m_velocity.num_elements(); ++i)
                 {
                     AdvField[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),0.0);
@@ -1909,6 +1991,7 @@ namespace Nektar
                 EvaluateFunction(fieldStr,AdvField,"AdvectionVelocity");
                 
                 SetUpCoupledMatrix(0.0,AdvField,false);
+
             }
             break;
         case eSteadyNavierStokes:
@@ -2090,7 +2173,7 @@ namespace Nektar
 //		cout << "cgi: " << counter_global_index << " value " << glo_fieldcoeffs[counter_global_index] << endl;
 	}
 
-          ofstream myfilegdp ("glo_dof_phys.txt");
+          ofstream myfilegdp ("phys_glo_dof.txt");
 	  if (myfilegdp.is_open())
 	  {
 		for (int i_global_dofs1 = 0; i_global_dofs1 < first_ngc_index; i_global_dofs1++)
@@ -2102,6 +2185,99 @@ namespace Nektar
 			myfilegdp << "\n";
 		}
                 myfilegdp.close();
+	  }
+	  else cout << "Unable to open file"; 
+
+        Array<OneD, Array<OneD, NekDouble> > glo_coll_fieldcoeffs_gdp(m_fields[0]->GetNpoints());
+	for(int counter_glo_index = 0; counter_glo_index < first_ngc_index; counter_glo_index++)
+	{
+	        Array<OneD, NekDouble> phys_fieldcoeffs(m_fields[0]->GetNpoints(), 0.0);
+	        Array<OneD, NekDouble> loc_fieldcoeffs(m_fields[0]->GetNcoeffs(), 0.0);
+	        Array<OneD, NekDouble> glo_fieldcoeffs(first_ngc_index, 0.0);
+		glo_fieldcoeffs[counter_glo_index] = 1.0;
+                m_fields[0]->GlobalToLocal(glo_fieldcoeffs, loc_fieldcoeffs);
+		m_fields[0]->BwdTrans_IterPerExp(loc_fieldcoeffs, phys_fieldcoeffs);
+		
+		glo_coll_fieldcoeffs_gdp[counter_glo_index] = phys_fieldcoeffs;
+//		cout << "cgi: " << counter_global_index << " value " << glo_fieldcoeffs[counter_global_index] << endl;
+	}
+
+          ofstream myfilegdpr ("glo_dof_phys.txt");
+	  if (myfilegdpr.is_open())
+	  {
+		for (int i_global_dofs1 = 0; i_global_dofs1 < first_ngc_index; i_global_dofs1++)
+		{
+			for (int i_phys_dofs2 = 0; i_phys_dofs2 < m_fields[0]->GetNpoints(); i_phys_dofs2++)
+			{
+				myfilegdpr << std::setprecision(17) << glo_coll_fieldcoeffs_gdp[i_global_dofs1][i_phys_dofs2] << "\t";
+			}
+			myfilegdpr << "\n";
+		}
+                myfilegdpr.close();
+	  }
+	  else cout << "Unable to open file"; 
+
+	// compute the dof correction
+
+        Array<OneD, Array<OneD, NekDouble> > glo_coll_fieldcoeffs_dof_corr(m_fields[0]->GetNpoints());
+	for(int counter_glo_index = 0; counter_glo_index < first_ngc_index; counter_glo_index++)
+	{
+	        Array<OneD, NekDouble> phys_fieldcoeffs(m_fields[0]->GetNpoints(), 0.0);
+	        Array<OneD, NekDouble> loc_fieldcoeffs(m_fields[0]->GetNcoeffs(), 0.0);
+	        Array<OneD, NekDouble> glo_fieldcoeffs(first_ngc_index, 0.0);
+		glo_fieldcoeffs[counter_glo_index] = 1.0;
+                m_fields[0]->GlobalToLocal(glo_fieldcoeffs, loc_fieldcoeffs);
+		m_fields[0]->BwdTrans(loc_fieldcoeffs, phys_fieldcoeffs);
+                m_fields[0]->FwdTrans_IterPerExp(phys_fieldcoeffs, loc_fieldcoeffs);
+		m_fields[0]->LocalToGlobal(loc_fieldcoeffs, glo_fieldcoeffs);
+		glo_coll_fieldcoeffs_dof_corr[counter_glo_index] = glo_fieldcoeffs;
+//		cout << "cgi: " << counter_global_index << " value " << glo_fieldcoeffs[counter_global_index] << endl;
+	}
+
+          ofstream myfilegdprdc ("glo_dof_corr.txt");
+	  if (myfilegdprdc.is_open())
+	  {
+		for (int i_global_dofs1 = 0; i_global_dofs1 < first_ngc_index; i_global_dofs1++)
+		{
+			for (int i_phys_dofs2 = 0; i_phys_dofs2 < first_ngc_index; i_phys_dofs2++)
+			{
+				myfilegdprdc << std::setprecision(17) << glo_coll_fieldcoeffs_dof_corr[i_global_dofs1][i_phys_dofs2] << "\t";
+			}
+			myfilegdprdc << "\n";
+		}
+                myfilegdprdc.close();
+	  }
+	  else cout << "Unable to open file"; 
+
+
+
+
+
+	// construct a LocalGloMapA 
+
+        Array<OneD, Array<OneD, NekDouble> > glo_coll_fieldcoeffsA(m_fields[0]->GetNcoeffs());
+	for(int counter_loc_index = 0; counter_loc_index < m_fields[0]->GetNcoeffs(); counter_loc_index++)
+	{
+	        Array<OneD, NekDouble> loc_fieldcoeffs(m_fields[0]->GetNcoeffs(), 0.0);
+	        Array<OneD, NekDouble> glo_fieldcoeffs(first_ngc_index, 0.0);
+		loc_fieldcoeffs[counter_loc_index] = 1.0;
+		m_fields[0]->LocalToGlobal(loc_fieldcoeffs, glo_fieldcoeffs);
+		glo_coll_fieldcoeffsA[counter_loc_index] = glo_fieldcoeffs;
+//		cout << "cgi: " << counter_global_index << " value " << glo_fieldcoeffs[counter_global_index] << endl;
+	}
+
+          ofstream myfilegdpA ("LocGloMapMatA.txt");
+	  if (myfilegdpA.is_open())
+	  {
+		for (int i_global_dofs1 = 0; i_global_dofs1 < first_ngc_index; i_global_dofs1++)
+		{
+			for (int i_phys_dofs2 = 0; i_phys_dofs2 < m_fields[0]->GetNcoeffs(); i_phys_dofs2++)
+			{
+				myfilegdpA << std::setprecision(17) << glo_coll_fieldcoeffsA[i_phys_dofs2][i_global_dofs1] << "\t";
+			}
+			myfilegdpA << "\n";
+		}
+                myfilegdpA.close();
 	  }
 	  else cout << "Unable to open file"; 
 
@@ -2128,6 +2304,9 @@ namespace Nektar
                 myfile_t.close();
 	  }
 	  else cout << "Unable to open file"; 
+
+
+
 
 
 //	const std::vector< std::string > filnam = m_session->GetFilenames();

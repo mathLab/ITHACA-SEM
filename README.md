@@ -16,11 +16,11 @@
 Example session files for Nektar++ are provided in the ITHACA_Test_cases subfolder.
 
 ### 2. Authors and contributors
-**ITHACA-SEM** is currently developed and mantained at [SISSA mathLab](http://mathlab.sissa.it/) by [Dr. Martin Hess](mailto:mhess@sissa.it) under the supervision of [Prof. Gianluigi Rozza](mailto:gianluigi.rozza@sissa.it)
+**ITHACA-SEM** is currently developed and mantained at [SISSA mathLab](http://mathlab.sissa.it/) by [Dr. Martin Hess](mailto:mhess@sissa.it) under the supervision of [Prof. Gianluigi Rozza](mailto:gianluigi.rozza@sissa.it).
 
 Contact us by email for further information or questions about **ITHACA-SEM**.
  **ITHACA-SEM** is at an early development stage, so contributions improving either the code or the documentation are welcome.
 
 
 ### 3. License
-**ITHACA-FV** is freely available under the MIT license
+**ITHACA-SEM** is freely available under the MIT license.

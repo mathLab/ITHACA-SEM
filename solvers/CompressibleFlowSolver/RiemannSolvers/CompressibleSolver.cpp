@@ -93,8 +93,6 @@ namespace Nektar
                             flux[0][i], flux[1][i], flux[2][i], rhovf, flux[3][i]);
                     }
                 }
-
-
                 
                 if (nvariables > expDim+2)
                 {

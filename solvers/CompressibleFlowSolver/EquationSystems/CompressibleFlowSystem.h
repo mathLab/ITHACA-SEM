@@ -52,7 +52,6 @@ namespace Nektar
     /**
      *
      */
-
     class CompressibleFlowSystem: public SolverUtils::AdvectionSystem
     {
     public:

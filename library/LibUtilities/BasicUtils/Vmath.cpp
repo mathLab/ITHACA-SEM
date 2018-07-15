@@ -611,6 +611,7 @@ namespace Vmath
                                 const Nektar::NekDouble* y, int incy,
                                       Nektar::NekDouble* z, int incz);
 
+
     /// \brief  Vstvpp (scalar times vector plus vector plus vector):
     // z = v*w + x*y
     template<class T> void Vstvpp(int n,

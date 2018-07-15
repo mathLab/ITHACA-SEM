@@ -346,7 +346,6 @@ namespace Nektar
                     }
                     m_fields[m_intVariables[i]]->SetPhysState(false);
                 }
-                
                 // Perform any solver-specific post-integration steps
                 if (v_PostIntegrate(step))
                 {
@@ -434,7 +433,6 @@ namespace Nektar
                 ++step;
                 ++stepCounter;
             }
-
             // Print out summary statistics
             if (m_session->GetComm()->GetRank() == 0)
             {

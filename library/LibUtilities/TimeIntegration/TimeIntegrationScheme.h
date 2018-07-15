@@ -220,6 +220,7 @@ namespace Nektar
                     std::placeholders::_3, std::placeholders::_4);
             }
             
+
             inline void DoOdeRhs(InArrayType     &inarray, 
                                  OutArrayType    &outarray, 
                                  const NekDouble time) const
@@ -260,6 +261,7 @@ namespace Nektar
                 ASSERTL1(m_functors2[0],"ImplicitSolve should be defined for this time integration scheme");
                 m_functors2[0](inarray,outarray,time,lambda);
             }
+
 
         protected:
             FunctorType1Array m_functors1;

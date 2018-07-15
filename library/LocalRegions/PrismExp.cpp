@@ -1145,6 +1145,7 @@ namespace Nektar
                     }
                     break;
                 }
+                
                 case StdRegions::eInvMass:
                 {
                     if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)

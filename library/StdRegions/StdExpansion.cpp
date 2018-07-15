@@ -1840,6 +1840,5 @@ namespace Nektar
             out = (*intmat) * in;
         }
 
-
     }//end namespace
 }//end namespace

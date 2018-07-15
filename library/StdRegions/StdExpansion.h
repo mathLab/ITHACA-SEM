@@ -532,7 +532,6 @@ namespace Nektar
             {
                 v_BwdTrans (inarray, outarray);
             }
-          
 
             /**
              * @brief This function performs the Forward transformation from
@@ -661,8 +660,6 @@ namespace Nektar
             {
                 v_IProductWRTDerivBase(dir,inarray, outarray);
             }
-
-            
 
             /// \brief Get the element id of this expansion when used
             /// in a list by returning value of #m_elmt_id

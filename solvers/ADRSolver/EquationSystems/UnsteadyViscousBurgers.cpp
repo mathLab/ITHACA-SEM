@@ -379,7 +379,6 @@ namespace Nektar
             m_fields[i]->BwdTrans(m_fields[i]->GetCoeffs(), outarray[i]);
         }
     }
-
     
     /**
      * @brief Return the flux vector for the advection part.

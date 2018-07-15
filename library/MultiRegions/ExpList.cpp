@@ -419,6 +419,7 @@ namespace Nektar
             }
         }
 
+
         /**
          * The operation is evaluated locally for every element by the function
          * StdRegions#StdExpansion#IProductWRTDerivBase.

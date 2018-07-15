@@ -31,7 +31,6 @@ GlobalLinSysDirectFull.cpp
 GlobalLinSysDirectStaticCond.cpp
 GlobalLinSysIterative.cpp
 GlobalLinSysIterativeFull.cpp
-GlobalLinSysIterativeSolver.cpp
 GlobalLinSysIterativeStaticCond.cpp
 GlobalLinSysStaticCond.cpp
 GlobalMatrix.cpp
@@ -73,7 +72,6 @@ GlobalLinSysDirectFull.h
 GlobalLinSysDirectStaticCond.h
 GlobalLinSysIterative.h
 GlobalLinSysIterativeFull.h
-GlobalLinSysIterativeSolver.h
 GlobalLinSysIterativeStaticCond.h
 GlobalLinSysStaticCond.h
 GlobalMatrix.h

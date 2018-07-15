@@ -1409,7 +1409,6 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
                         MemoryManager<DNekScalMat>::AllocateSharedPtr(fac,mat);
                 }
                     break;
-                
             default:
                 NEKERROR(ErrorUtil::efatal, "Matrix creation not defined");
                 break;

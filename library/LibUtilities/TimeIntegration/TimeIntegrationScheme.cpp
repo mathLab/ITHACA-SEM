@@ -32,12 +32,12 @@
 // Description: implementation of time integration key class
 //
 ///////////////////////////////////////////////////////////////////////////////
-#include <iostream>
 #include <iomanip>
-#include <math.h>
 #include <LibUtilities/TimeIntegration/TimeIntegrationScheme.h>
 #include <LibUtilities/BasicUtils/VmathArray.hpp>
 #include <LibUtilities/BasicConst/NektarUnivConsts.hpp>
+#include <iostream>
+#include <math.h>
 
 namespace Nektar
 {
@@ -1543,12 +1543,6 @@ namespace Nektar
                     }
                     
                     op.DoImplicitSolve(m_tmp, m_Y, m_T, A(i,i)*timestep);
-                    
-                    // cout <<" m_Y flow field:#################################"<<endl;
-                    // for(int j=0; j<m_Y[0].num_elements(); ++j)
-                    // {
-                    //     cout <<scientific<<setw(17)<<setprecision(13)<<m_Y[0][j]<<endl;
-                    // }
 
                     for(k = 0; k < m_nvar; k++)
                     {

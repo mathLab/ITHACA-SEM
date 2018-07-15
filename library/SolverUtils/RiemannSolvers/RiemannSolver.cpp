@@ -143,16 +143,7 @@ namespace Nektar
 
 
         /**
-         * @brief Perform the Riemann solve given the forwards and backwards
-         * spaces.
-         * 
-         * This routine calls the virtual function #v_Solve to perform the
-         * Riemann solve. If the flag #m_requiresRotation is set, then the
-         * velocity field is rotated to the normal direction to perform
-         * dimensional splitting, and the resulting fluxes are rotated back to
-         * the Cartesian directions before being returned. For the Rotation to
-         * work, the normal vectors "N" and the location of the vector
-         * components in Fwd "vecLocs"must be set via the SetAuxVec() method.
+         * @brief Calculate the flux jacobian of Fwd and Bwd
          * 
          * @param Fwd   Forwards trace space.
          * @param Bwd   Backwards trace space.

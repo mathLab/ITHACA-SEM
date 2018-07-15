@@ -185,14 +185,6 @@ namespace Vmath
                                     const T* y, int incy,
                                           T* z, int incz);
 
-    /// \brief  Vvpts ( (vector plus vector) times scalar):
-    // z = alpha*(x +y)
-    template<class T> LIB_UTILITIES_EXPORT void Vvpts (int n,
-                                    const T* x, int incx,
-                                    const T* y, int incy,
-                                    const T alpha,
-                                          T* z, int incz);
-
     /// \brief  Vstvpp (scalar times vector plus vector plus vector): 
     // z = v*w + x*y
     template<class T> LIB_UTILITIES_EXPORT void Vstvpp(int n,

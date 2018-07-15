@@ -1944,7 +1944,7 @@ namespace Nektar
                     returnval =
                         MemoryManager<DNekScalMat>::AllocateSharedPtr(one, R);
                 }
-                    break;
+                break;
             default:
                 {
                     NekDouble        one = 1.0;

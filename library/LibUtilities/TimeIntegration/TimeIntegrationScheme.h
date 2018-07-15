@@ -167,20 +167,16 @@ namespace Nektar
             
             typedef std::function< void (InArrayType&, OutArrayType&, const NekDouble) >                  FunctorType1;
             typedef std::function< void (InArrayType&, OutArrayType&, const NekDouble, const NekDouble) > FunctorType2;
-            typedef std::function< void (InArrayType&, OutArrayType&, InArrayType&, const NekDouble, const NekDouble) > FunctorType3;
 
             typedef const FunctorType1& ConstFunctorType1Ref;
             typedef const FunctorType2& ConstFunctorType2Ref;
-            typedef const FunctorType3& ConstFunctorType3Ref;
 
             typedef Array<OneD, FunctorType1> FunctorType1Array;
             typedef Array<OneD, FunctorType2> FunctorType2Array;
-            typedef Array<OneD, FunctorType3> FunctorType3Array;
             
             TimeIntegrationSchemeOperators(void):
             m_functors1(4),
-            m_functors2(1),
-            m_functors3(1)
+            m_functors2(1)
             {
             }
 
@@ -223,18 +219,6 @@ namespace Nektar
                     func, obj, std::placeholders::_1, std::placeholders::_2,
                     std::placeholders::_3, std::placeholders::_4);
             }
-
-            template<typename FuncPointerT, typename ObjectPointerT> 
-                void DefineWhollyImplicitSolve(FuncPointerT func, ObjectPointerT obj)
-            {
-                m_functors3[1] =  std::bind(
-                    func, obj, std::placeholders::_1, std::placeholders::_2,
-                    std::placeholders::_3, std::placeholders::_4, std::placeholders::_5);
-            }
-
-
-
-
             
             inline void DoOdeRhs(InArrayType     &inarray, 
                                  OutArrayType    &outarray, 
@@ -277,23 +261,9 @@ namespace Nektar
                 m_functors2[0](inarray,outarray,time,lambda);
             }
 
-            inline void DoWhollyImplicitSolve(InArrayType     &inarray, 
-                                        OutArrayType    &inoutarray, 
-                                        InArrayType     &inrhs, 
-                                        const NekDouble time, 
-                                        const NekDouble lambda) const
-            {
-                ASSERTL1(m_functors3[1],"ImplicitSolve should be defined for this time integration scheme");
-                m_functors3[1](inarray,inoutarray,inrhs,time,lambda);
-            }
-
-            
-
-
         protected:
             FunctorType1Array m_functors1;
             FunctorType2Array m_functors2;
-            FunctorType3Array m_functors3;
 
         private:
 

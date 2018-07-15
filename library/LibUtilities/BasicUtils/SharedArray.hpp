@@ -155,7 +155,6 @@ namespace Nektar
                 ASSERTL0(m_size <= rhs.num_elements(), "Requested size is larger than input array size.");
             }
 
-
             /// \brief Creates a reference to rhs.
             Array(const Array<OneD, const DataType>& rhs) :
                 m_size(rhs.m_size),
@@ -167,43 +166,8 @@ namespace Nektar
                 *m_count += 1;
             }
 
-            /* /// TODO: BEST TO DEFINE A DERIVED 
-            /// \brief specail creator to creat a 2D array like Array<OneD, Array<OneD, NekDouble>>
-            /// \ it specially provides a m_Data2Dto1D, which is 
-            /// \ a transform from Array<OneD, Array<OneD, NekDouble>> to Array<OneD, NekDouble>
-            /// \dim1Size       the dimension of the outer array
-            ///                  
-            /// \dim2SizeList   The .
-            /// This constructor creates an array that references rhs.
-            /// Any changes to rhs will be reflected in this array.
-            /// The memory for the array will only be deallocated when
-            /// both rhs and this array have gone out of scope.
-            Array(unsigned int dim1Size, unsigned int *dim2SizeList) :
-                m_size( dim1Size ),
-                m_capacity( dim1Size ),
-                m_data( nullptr ),
-                m_count( nullptr ),
-                m_offset( 0 )
-            {
-                //ASSERTL0((DataType==Array<OneD, NekDouble>),"Specially of Array<OneD, Array<OneD, NekDouble>>")
-                int ntotal=0;
-                for (int i = 0; i < dim1Size; i++)
-                {
-                    ntotal += dim2SizeList[i];
-                }
-
-                m_Data2Dto1D = DataType(ntotal);
-
-                m_data        = Array<OneD, DataType>(dim1Size);
-
-                ntotal=0;
-                for (int i = 0; i < dim1Size; i++)
-                {
-                    m_data[i] = m_Data2Dto1D+ntotal;
-                    ntotal += dim2SizeList[i];
-                }
-            } */
-
+             /// TODO: BEST TO DEFINE A DERIVED 2D array, which share the same memory with 1D array
+            
             ~Array()
             {
                 if( m_count == nullptr )
@@ -307,9 +271,6 @@ namespace Nektar
             unsigned int m_size;
             unsigned int m_capacity;
             DataType* m_data;
-
-            
-            //DataType* m_Data2Dto1D;
 
             // m_count points to an integer used as a reference count to this array's data (m_data).
             // Previously, the reference count was stored in the first 4 bytes of the m_data array.

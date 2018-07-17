@@ -180,15 +180,15 @@ namespace Nektar
 
         typedef std::shared_ptr<RobinBCInfo> RobinBCInfoSharedPtr;
 
-        typedef struct _PeriodicEntity
+        struct PeriodicEntity
         {
-            _PeriodicEntity(
+            PeriodicEntity(
                 const int                     id,
                 const StdRegions::Orientation orient,
                 const bool                    isLocal) :
                 id(id), orient(orient), isLocal(isLocal) {}
 
-            _PeriodicEntity() {}
+            PeriodicEntity() {}
             
             /// Geometry ID of entity.
             int id;
@@ -196,20 +196,20 @@ namespace Nektar
             StdRegions::Orientation orient;
             /// Flag specifying if this entity is local to this partition.
             bool isLocal;
-        } PeriodicEntity;
+        };
 
         typedef std::map<int, std::vector<PeriodicEntity> > PeriodicMap;
         static PeriodicMap NullPeriodicMap;
 
-        typedef struct _RotPeriodicInfo
+        struct RotPeriodicInfo
         {
-            _RotPeriodicInfo(
+            RotPeriodicInfo(
                              const int       dir,
                              const NekDouble angle,
                              const NekDouble tol) :
                 m_dir(dir), m_angle(angle), m_tol(tol) {}
 
-            _RotPeriodicInfo() {}
+            RotPeriodicInfo() {}
             
             /// Axis of rotation. 0 = 'x', 1 = 'y', 2 = 'z'
             int m_dir; 
@@ -217,7 +217,7 @@ namespace Nektar
             NekDouble m_angle;
             /// Tolerance to rotation is considered identical
             NekDouble m_tol;
-        } RotPeriodicInfo;
+        }; 
 
     }// end of namespace
 }// end of namespace

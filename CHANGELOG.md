@@ -12,6 +12,7 @@ v5.0.0
 - Use chrono in Timer (!807)
 - Fix caching of FUNCTION tags that read from file and provide the same
   functionality in FUNCTIONs defined for forcings (!759)
+- Transition to C++11 (!795, !847)
 - Add patch to tinyxml to fix size_t vs int bug (!820)
 - Add ARPACK thirdparty build capabilities (!828)
 - Added native support for csv files in addititon to pts (!760, !835, !906)
@@ -38,7 +39,7 @@ v5.0.0
 - Added in sum factorisation version for pyramid expnasions and orthogonal
   expansion in pyramids (!750)
 - Switch MeshGraph to use factory pattern and add HDF5 geometry support (!900,
-  !904)
+  !904, !941)
 - Restructure the low energy preconditioner to handle pyramidic and variable
   p expansions (!920)
 - Remove requirement for modmetis, switch to SCOTCH by default (!899)
@@ -53,7 +54,8 @@ v5.0.0
 - Fix ability to have periodic boundary conditions that are aligned by a 
   rotation rather than just a translation (!933)
 - Added a coupling interface to exchange data between solvers at run time
-  and a DummySolver to test the implementations (!853 !931)
+  and a DummySolver to test the implementations (!853, !931)
+- Fix compilation issue with newer Boost versions and clang (!940)
 
 **NekMesh**:
 - Add feature to read basic 2D geo files as CAD (!731)
@@ -84,6 +86,7 @@ v5.0.0
 - Order nodes in Gmsh output (!912)
 - Fix manifold face curvature nodes (!913)
 - Fix writing 1D surfaces (!930)
+- Fix surface string parsin in BL splitting (!937)
 
 **FieldConvert**:
 - Add input module for Semtex field files (!777)
@@ -99,6 +102,7 @@ v5.0.0
 - Add Lambda 2 vortex detection criteria (!882)
 - Add module for modifying/adding fields from expressions (!889, !903)
 - Add module for evaluating the mean of variables on the domain (!894)
+- Add module for counting the total number of DOF (!948)
 
 **IncNavierStokesSolver**
 - Replace steady-state check based on difference of norms by check based on

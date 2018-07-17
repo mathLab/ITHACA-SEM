@@ -319,7 +319,17 @@ void TriGeom::v_FillGeom()
                 const int offset = 3 + i * (nEdgePts - 2);
                 NekDouble maxDist = 0.0;
 
-                if (m_eorient[i] == StdRegions::eForwards)
+                // Account for different ordering of nodal coordinates
+                // vs. Cartesian ordering of element.
+                StdRegions::Orientation orient = m_eorient[i];
+
+                if (i == 2)
+                {
+                    orient = orient == StdRegions::eForwards ?
+                        StdRegions::eBackwards : StdRegions::eForwards;
+                }
+
+                if (orient == StdRegions::eForwards)
                 {
                     for (j = 0; j < nEdgePts - 2; ++j)
                     {

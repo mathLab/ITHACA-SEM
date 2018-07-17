@@ -197,7 +197,7 @@ void ProcessBL::BoundaryLayer2D()
     if (surf.size() > 0)
     {
         vector<unsigned int> surfs;
-        ParseUtils::GenerateVector(surf, surfs);
+        ParseUtils::GenerateSeqVector(surf, surfs);
         sort(surfs.begin(), surfs.end());
 
         // If surface is defined, process list of elements to find those

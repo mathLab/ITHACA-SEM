@@ -1,5 +1,6 @@
 # Main library sub-directories, required by all of Nektar++.
-SUBDIRS(LibUtilities LocalRegions SpatialDomains StdRegions)
+SUBDIRS(LibUtilities LocalRegions SpatialDomains StdRegions Collections
+        MultiRegions)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/library)
 
 IF (NEKTAR_BUILD_UNIT_TESTS)
@@ -23,5 +24,5 @@ IF (NEKTAR_UTILITY_NEKMESH)
 ENDIF()
 
 IF (NEKTAR_UTILITY_FIELDCONVERT OR NEKTAR_BUILD_SOLVERS)
-    SUBDIRS(Collections MultiRegions GlobalMapping FieldUtils)
+    SUBDIRS(GlobalMapping FieldUtils)
 ENDIF()

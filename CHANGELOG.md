@@ -54,6 +54,8 @@ v5.0.0
 - Added a coupling interface to exchange data between solvers at run time
   and a DummySolver to test the implementations (!853, !931)
 - Fix compilation issue with newer Boost versions and clang (!940)
+- If only `NEKTAR_BUILD_LIBRARY` is enabled, only libraries up to and including
+  `MultiRegions` will be built by default (!945)
 
 **NekMesh**:
 - Add feature to read basic 2D geo files as CAD (!731)

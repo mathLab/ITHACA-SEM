@@ -11,7 +11,7 @@
         <I PROPERTY="FilterWidth" VALUE="10E-3" />
         <I PROPERTY="NotLocMethod" VALUE="Extrapolate" />
         <I PROPERTY="SendSteps" VALUE="1" />
-        <I PROPERTY="SendVariables" VALUE="u0S,v0S" />
+        <I PROPERTY="SendVariables" VALUE="u0S,v0S,F_0_u0S" />
         <I PROPERTY="SendMethod" VALUE="NEARESTNEIGHBOUR" />
     </COUPLING>
     <CONDITIONS>
@@ -42,7 +42,19 @@
             <E VAR="u0S" VALUE="10*x*y*z*t"/>
             <E VAR="v0S" VALUE="-10*x*y*z*t"/>
         </FUNCTION>
+        <FUNCTION NAME="CouplingSource">
+            <E VAR="u0S" VALUE="10"/>
+            <E VAR="v0S" VALUE="11"/>
+            <E VAR="u0R" VALUE="20"/>
+            <E VAR="v0R" VALUE="21"/>
+        </FUNCTION>
     </CONDITIONS>
+    <FORCING>
+        <FORCE TYPE="Field">
+            <FIELDFORCE> CouplingSource </FIELDFORCE>
+            <FIELDFORCETIMEFCN> 1.0 </FIELDFORCETIMEFCN>
+        </FORCE>
+    </FORCING>
 </NEKTAR>
 
 

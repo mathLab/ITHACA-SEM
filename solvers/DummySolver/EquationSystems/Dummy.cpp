@@ -188,6 +188,50 @@ void Dummy::v_Output()
     }
 
     UnsteadySystem::v_Output();
+
+    int f = 0;
+    for (auto &x : m_forcing)
+    {
+        for (int i = 0; i < x->GetForces().num_elements(); ++i)
+        {
+//             phys[m_fields.num_elements() + f + i] = x->GetForces()[i];
+//             varNames.push_back("F_" + boost::lexical_cast<string>(f) + "_" +
+//                                 m_session->GetVariable(i));
+
+            int npts = GetTotPoints();
+
+            NekDouble l2err   = 0.0;
+            NekDouble linferr = 0.0;
+            for (int j = 0; j < npts; ++j)
+            {
+                l2err  += x->GetForces()[i][j] * x->GetForces()[i][j];
+                linferr = max(linferr, fabs(x->GetForces()[i][j]));
+            }
+
+            m_comm->AllReduce(l2err, LibUtilities::ReduceSum);
+            m_comm->AllReduce(npts, LibUtilities::ReduceSum);
+            m_comm->AllReduce(linferr, LibUtilities::ReduceMax);
+
+            l2err /= npts;
+            l2err = sqrt(l2err);
+
+            if (m_comm->TreatAsRankZero())
+            {
+                cout << "L 2 error (variable "
+                    << "F_" + boost::lexical_cast<string>(f) + "_" + m_session->GetVariable(i) << ") : " << l2err
+                    << endl;
+
+                cout << "L inf error (variable "
+                    << "F_" + boost::lexical_cast<string>(f) + "_" + m_session->GetVariable(i) << ") : " << linferr
+                    << endl;
+            }
+        }
+        f++;
+    }
+
+
+
+
 }
 
 /**

@@ -194,17 +194,13 @@ void Dummy::v_Output()
     {
         for (int i = 0; i < x->GetForces().num_elements(); ++i)
         {
-//             phys[m_fields.num_elements() + f + i] = x->GetForces()[i];
-//             varNames.push_back("F_" + boost::lexical_cast<string>(f) + "_" +
-//                                 m_session->GetVariable(i));
-
             int npts = GetTotPoints();
 
             NekDouble l2err   = 0.0;
             NekDouble linferr = 0.0;
             for (int j = 0; j < npts; ++j)
             {
-                l2err  += x->GetForces()[i][j] * x->GetForces()[i][j];
+                l2err += x->GetForces()[i][j] * x->GetForces()[i][j];
                 linferr = max(linferr, fabs(x->GetForces()[i][j]));
             }
 
@@ -218,20 +214,18 @@ void Dummy::v_Output()
             if (m_comm->TreatAsRankZero())
             {
                 cout << "L 2 error (variable "
-                    << "F_" + boost::lexical_cast<string>(f) + "_" + m_session->GetVariable(i) << ") : " << l2err
-                    << endl;
+                     << "F_" + boost::lexical_cast<string>(f) + "_" +
+                            m_session->GetVariable(i)
+                     << ") : " << l2err << endl;
 
                 cout << "L inf error (variable "
-                    << "F_" + boost::lexical_cast<string>(f) + "_" + m_session->GetVariable(i) << ") : " << linferr
-                    << endl;
+                     << "F_" + boost::lexical_cast<string>(f) + "_" +
+                            m_session->GetVariable(i)
+                     << ") : " << linferr << endl;
             }
         }
         f++;
     }
-
-
-
-
 }
 
 /**

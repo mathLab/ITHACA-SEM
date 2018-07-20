@@ -957,6 +957,7 @@ namespace Nektar
 
         if(m_inArrayNorm<0.0)
         {
+            m_inArrayNorm = 0.0;
             for(int i = 0; i < nvariables; i++)
             {
                 m_inArrayNorm += Vmath::Dot(npoints,inarray[i],inarray[i]);

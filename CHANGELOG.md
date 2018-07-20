@@ -52,7 +52,7 @@ v5.0.0
 - Fix naming issue of duplicate Unit tests (!924) 
 - Fix warnings about missing virtual destructors in abstract classes (!932)
 - Added a coupling interface to exchange data between solvers at run time
-  and a DummySolver to test the implementations (!853, !931)
+  and a DummySolver to test the implementations (!853, !931, !950)
 - Fix compilation issue with newer Boost versions and clang (!940)
 
 **NekMesh**:

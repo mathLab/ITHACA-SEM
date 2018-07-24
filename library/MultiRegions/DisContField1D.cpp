@@ -1267,27 +1267,6 @@ namespace Nektar
                 }
             }
 
-            cnt = 0;
-            // Copy Dirichlet boundary conditions into trace space
-            for (i = 0; i < m_bndCondExpansions.num_elements(); ++i)
-            {
-                if (m_bndConditions[i]->GetBoundaryConditionType() ==
-                    SpatialDomains::eDirichlet)
-                {
-                    id = m_traceMap->GetBndCondIDToGlobalTraceID(i);
-
-                    BndSol[id] = m_bndCondExpansions[i]->GetCoeff(0);
-                }
-                else if (m_bndConditions[i]->GetBoundaryConditionType() ==
-                             SpatialDomains::eNeumann ||
-                         m_bndConditions[i]->GetBoundaryConditionType() ==
-                             SpatialDomains::eRobin)
-                {
-                    id = m_traceMap->GetBndCondIDToGlobalTraceID(i);
-                    BndRhs[id] += m_bndCondExpansions[i]->GetCoeff(0);
-                }
-            }
-
             //----------------------------------
             // Solve trace problem
             //----------------------------------

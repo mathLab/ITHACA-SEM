@@ -1885,7 +1885,7 @@ namespace Nektar
                     }
 
                     // Set up extra dirichlet degrees of freedom where
-                    // only one vertex in an element (not a edge of
+                    // only one vertex in an element (not an edge of
                     // face) in a partition is touching a boundary
                     for(k = 0; k < bndExp->GetNverts(); k++)
                     {
@@ -1909,9 +1909,10 @@ namespace Nektar
                                     break;
                                 }
                             }
-                            ASSERTL1(v == exp->GetNverts(),
-                                     "Failed to find vert id in extraDirDof setup");
 
+                            ASSERTL1(v != exp->GetNverts(),
+                                     "Failed to find vert id in extraDirDof setup");
+                            
                             int bloc = bndCondExp[i]->GetCoeff_Offset(j) +
                                 bndExp->GetVertexMap(k);
                             int eloc = locExp.GetCoeff_Offset(eid) +
@@ -1948,7 +1949,7 @@ namespace Nektar
                                 if(exp->GetGeom()->GetEid(e) == meshEdgeId)
                                     break;
                             }
-                            ASSERTL1(e == exp->GetNedges(),
+                            ASSERTL1(e != exp->GetNedges(),
                                      "Failed to find edge id in extraDirDof setup");
 
                             
@@ -2073,7 +2074,7 @@ namespace Nektar
             {
                 for (i = 0; i < Tit.second.size(); ++i)
                 {
-                    valence[std::get<1>(Tit.second[i])] = 1.0;
+                    valence[m_localToGlobalMap[std::get<1>(Tit.second[i])]] = 1.0;
                 }
             }
 
@@ -2085,7 +2086,7 @@ namespace Nektar
                 for (i = 0; i < Tit.second.size(); ++i)
                 {
                     std::get<2>(Tit.second.at(i)) /=
-                        valence[std::get<1>(Tit.second.at(i))];
+                        valence[m_localToGlobalMap[std::get<1>(Tit.second.at(i))]];
                 }
             }
 

@@ -132,7 +132,7 @@ void ProcessInterpPointDataToFld::Process(po::variables_map &vm)
     ASSERTL0(coord_id <= fieldPts->GetDim() - 1,
              "interpcoord is bigger than the Pts files dimension");
 
-    Interpolator interp(eNoMethod, coord_id);
+    Interpolator interp(LibUtilities::eNoMethod, coord_id);
 
     if (m_f->m_verbose && m_f->m_comm->TreatAsRankZero())
     {

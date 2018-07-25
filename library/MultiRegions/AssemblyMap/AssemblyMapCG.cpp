@@ -1878,7 +1878,7 @@ namespace Nektar
                             CoeffOnDirTrace.insert(locid);
                         
                             // store the local id and sign from global id
-                            // back to lcoal space;
+                            // back to local space;
                             GloDirBndCoeffToLocalCoeff[gloid] =
                                 pair<int,NekDouble> (locid,sign);
                         }
@@ -2013,12 +2013,14 @@ namespace Nektar
                         {
                             if(GloDirBndCoeffToLocalCoeff.count(gloid))
                             {
-                                int locid = GloDirBndCoeffToLocalCoeff[gloid].first;
-                                NekDouble sign = GloDirBndCoeffToLocalCoeff[gloid].second;
+                                int locid = GloDirBndCoeffToLocalCoeff[gloid].
+                                    first;
+                                NekDouble sign = 1.0;
                                 
                                 if(m_signChange)
                                 {
-                                    sign *= m_localToGlobalSign[k];
+                                    sign = m_localToGlobalSign[locid]*
+                                    m_localToGlobalSign[k];
                                 }
 
                                 ExtraDirDof  DirDofs(k,locid,sign);

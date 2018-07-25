@@ -31,6 +31,7 @@ ADD_NEKTAR_TEST(naca0012_bnd_equispacedoutput)
 ADD_NEKTAR_TEST(smallmesh_isocontour)
 ADD_NEKTAR_TEST(kovas2)
 ADD_NEKTAR_TEST(chan3D_interppointdatatofld)
+ADD_NEKTAR_TEST(chan3D_interppointdatatofld_interpcoord)
 ADD_NEKTAR_TEST(chan3D_ptsTocsv)
 ADD_NEKTAR_TEST(chan3D_csvTopts)
 

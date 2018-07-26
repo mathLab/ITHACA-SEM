@@ -51,6 +51,8 @@ v5.0.0
   alignment (!921)
 - Fix naming issue of duplicate Unit tests (!924) 
 - Fix warnings about missing virtual destructors in abstract classes (!932)
+- Fix ability to have periodic boundary conditions that are aligned by a 
+  rotation rather than just a translation (!933)
 - Added a coupling interface to exchange data between solvers at run time
   and a DummySolver to test the implementations (!853, !931)
 - Fix compilation issue with newer Boost versions and clang (!940)

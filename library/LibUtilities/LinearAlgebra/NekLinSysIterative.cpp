@@ -36,7 +36,7 @@
 #include <LibUtilities/LinearAlgebra/NekLinSysIterative.h>
 #include <LibUtilities/BasicUtils/Timer.h>
 
-//#define DEBUG_MPI
+#define DEBUG_MPI
 
 
 using namespace std;
@@ -52,7 +52,7 @@ namespace Nektar
     /// Constructor for full direct matrix solve.
     NekLinSysIterative::NekLinSysIterative(
                 const LibUtilities::SessionReaderSharedPtr &pSession,
-                LibUtilities::CommSharedPtr vComm)
+                const std::weak_ptr<MultiRegions::ExpList> &pExpList)
     {
         m_maxrestart        =   2;
         m_maxstorage        =   30;
@@ -67,6 +67,9 @@ namespace Nektar
         std::vector<std::string>  variables(1);
         variables[0] =  pSession->GetVariable(0);
         string variable = variables[0];
+
+        m_Comm              =   pExpList.lock()->GetComm()->GetRowComm();
+
 
         
         /* if(pSession->DefinesGlobalSysSolnInfo(variable, "IterativeMethod"))
@@ -429,6 +432,8 @@ namespace Nektar
         // {
         //     cout << "   i=  "<<i<<"     r0="<< tmp2[i]<<endl;
         // }
+        // int ntmmmmmp = 0;
+        // cin >> ntmmmmmp;
 
         Vmath::Smul(nNonDir,sqrt(m_prec_factor),tmp2,1,tmp2,1);
 

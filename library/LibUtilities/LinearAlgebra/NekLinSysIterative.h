@@ -47,6 +47,7 @@
 #include <LibUtilities/Communication/Comm.h>
 #include <LibUtilities/LinearAlgebra/NekVector.hpp>
 #include <LibUtilities/LinearAlgebra/NekMatrix.hpp>
+#include <MultiRegions/ExpList.h>
 
 namespace Nektar
 {
@@ -151,16 +152,16 @@ namespace Nektar
          */
         LIB_UTILITIES_EXPORT static NekLinSysIterativeSharedPtr CreateInstance(
                 const LibUtilities::SessionReaderSharedPtr &pSession,
-                LibUtilities::CommSharedPtr vComm)
+                const std::weak_ptr<MultiRegions::ExpList> &pExpList)
         {
             NekLinSysIterativeSharedPtr p = MemoryManager<
-                NekLinSysIterative>::AllocateSharedPtr(pSession, vComm);
+                NekLinSysIterative>::AllocateSharedPtr(pSession, pExpList);
             return p;
         }
         /// Constructor for full direct matrix solve.
          NekLinSysIterative(
                 const LibUtilities::SessionReaderSharedPtr &pSession,
-                LibUtilities::CommSharedPtr vComm);
+                const std::weak_ptr<MultiRegions::ExpList> &pExpList);
          ~NekLinSysIterative();
         
         inline void setLinSysOperators(LinSysOperators &in)

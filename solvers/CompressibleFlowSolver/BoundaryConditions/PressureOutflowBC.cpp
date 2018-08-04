@@ -108,7 +108,7 @@ void PressureOutflowBC::v_Apply(
         id2 = m_fields[0]->GetTrace()->GetPhys_Offset(traceBndMap[m_offset+e]);
 
         // Get internal energy
-        Array<OneD, NekDouble> pressure (npts, m_pInf);
+        Array<OneD, NekDouble> pressure (npts, m_pOut);
         Array<OneD, NekDouble> rho      (npts, Fwd[0]+id2);
         Array<OneD, NekDouble> e(npts);
         m_varConv->GetEFromRhoP(rho, pressure, e);

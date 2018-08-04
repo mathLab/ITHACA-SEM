@@ -95,6 +95,7 @@ class CFSBndCond
         NekDouble m_gamma;
         NekDouble m_rhoInf;
         NekDouble m_pInf;
+        NekDouble m_pOut;
         Array<OneD, NekDouble> m_velInf;
 
         /// Id of the boundary region

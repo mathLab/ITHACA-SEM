@@ -281,7 +281,7 @@ namespace Nektar
                         doCheckTime    = true;
                     }
                 }
-
+                
                 if (m_TimeIncrementFactor>1.0)
                 {
                     NekDouble timeincrementFactor = m_TimeIncrementFactor;

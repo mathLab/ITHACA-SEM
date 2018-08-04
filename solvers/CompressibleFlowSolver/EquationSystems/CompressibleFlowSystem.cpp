@@ -955,19 +955,26 @@ namespace Nektar
         unsigned int npoints     = inarray[0].num_elements();
         unsigned int ntotal      = nvariables*npoints;
 
+        LibUtilities::CommSharedPtr v_Comm  = m_fields[0]->GetComm()->GetRowComm();
+
+        unsigned int ntotalGlobal     = ntotal;
+        v_Comm->AllReduce(ntotalGlobal, Nektar::LibUtilities::ReduceSum);
+
         if(m_inArrayNorm<0.0)
         {
+            m_inArrayNorm = 0.0;
             for(int i = 0; i < nvariables; i++)
             {
                 m_inArrayNorm += Vmath::Dot(npoints,inarray[i],inarray[i]);
             }
+            v_Comm->AllReduce(m_inArrayNorm, Nektar::LibUtilities::ReduceSum);
             cout << "m_inArrayNorm    = "<<m_inArrayNorm<<endl;
         }
 
         NekDouble resnorm;
         NekDouble LinSysTol = 0.0;
         NekDouble tolrnc    = m_NewtonIteTol;
-        NekDouble tol2      = m_inArrayNorm*tolrnc*tolrnc*ntotal;
+        NekDouble tol2      = m_inArrayNorm*tolrnc*tolrnc*ntotalGlobal;
 
         m_PrecMatVars = Array<OneD, Array<OneD, DNekBlkMatSharedPtr> >(nvariables);
         for(int i = 0; i < nvariables; i++)
@@ -996,8 +1003,9 @@ namespace Nektar
         // v_Comm is based on the explist used may be different(m_tracemap or m_locToGloMap) for diffrent
         // should generate GlobalLinSys first and get the v_Comm from GlobalLinSys. here just give it a m_Comm no parallel support yet!!
         //const std::weak_ptr<ExpList> 
-        LibUtilities::CommSharedPtr v_Comm  = m_fields[0]->GetComm()->GetRowComm();
-        NekLinSysIterative linsol(m_session,v_Comm);
+        std::shared_ptr<MultiRegions::ExpList> vExpList = m_fields[0]->GetSharedThisPtr();
+
+        NekLinSysIterative linsol(m_session,vExpList);
         m_LinSysOprtors.DefineMatrixMultiply(&CompressibleFlowSystem::MatrixMultiply_MatrixFree_coeff, this);
         m_LinSysOprtors.DefinePrecond(&CompressibleFlowSystem::preconditioner_BlkSOR_coeff, this);
         // m_LinSysOprtors.DefinePrecond(&CompressibleFlowSystem::preconditioner_BlkDiag, this);
@@ -1040,6 +1048,9 @@ namespace Nektar
             // NonlinSysRes_1D and m_SysEquatResid_k share the same storage
             resnorm = Vmath::Dot(ntotal,NonlinSysRes_1D,NonlinSysRes_1D);
 
+            v_Comm->AllReduce(resnorm, Nektar::LibUtilities::ReduceSum);
+
+
             if (resnorm<tol2)
             {
                 // at least one Newton Iteration 
@@ -1060,6 +1071,7 @@ namespace Nektar
             //TODO: currently  NonlinSysRes is 2D array and SolveLinearSystem needs 1D array
             LinSysTol = 0.01*sqrt(resnorm);
             NtotDoOdeRHS  +=   linsol.SolveLinearSystem(ntotal,NonlinSysRes_1D,dsol_1D,0,LinSysTol);
+            // cout << "NtotDoOdeRHS    = "<<NtotDoOdeRHS<<endl;
 
             // LinSysEPS  =   linsol.SolveLinearSystem(ntotal,NonlinSysRes_1D,dsol_1D,0);
             for(int i = 0; i < nvariables; i++)
@@ -1126,8 +1138,13 @@ namespace Nektar
 
         AddMatNSBlkDiag_boundary(inarray,gmtxarray,TraceJac);
         MultiplyElmtInvMass_PlusSource(gmtxarray,m_TimeIntegLambda);
-        // Cout2DArrayBlkMat(gmtxarray);
         ElmtVarInvMtrx(gmtxarray);
+        // if(m_session->GetComm()->GetRank()==0)
+        // {
+        //     Cout2DArrayBlkMat(gmtxarray);
+        // }
+        // int ntmmmmmp = 0;
+        // cin >> ntmmmmmp;
     }
 
     void CompressibleFlowSystem::MultiplyElmtInvMass_PlusSource(Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray,const NekDouble dtlamda)
@@ -1376,6 +1393,7 @@ namespace Nektar
             }
         }
 
+
         // Calculate advection
         DoAdvection_coeff(inarray, outarray, time, Fwd, Bwd);
         // Negate results
@@ -1488,7 +1506,8 @@ namespace Nektar
 
         if (m_shockCaptureType != "Off")
         {
-            m_artificialDiffusion->DoArtificialDiffusion(inarray, outarray);
+            // m_artificialDiffusion->DoArtificialDiffusion(inarray, outarray);
+            m_artificialDiffusion->DoArtificialDiffusion_coeff(inarray, outarray);
         }
     }
 

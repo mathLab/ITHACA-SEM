@@ -76,6 +76,11 @@ class ArtificialDiffusion
             const Array<OneD, const Array<OneD, NekDouble> > &inarray,
             Array<OneD,       Array<OneD, NekDouble> > &outarray);
 
+        /// Apply the artificial diffusion
+        void DoArtificialDiffusion_coeff(
+            const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+            Array<OneD,       Array<OneD, NekDouble> > &outarray);
+
         /// Calculate the artificial viscosity
         void GetArtificialViscosity(
             const Array<OneD, Array<OneD, NekDouble> > &physfield,
@@ -98,6 +103,10 @@ class ArtificialDiffusion
                 const int spacedim);
 
         virtual void v_DoArtificialDiffusion(
+            const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+            Array<OneD,       Array<OneD, NekDouble> > &outarray);
+        
+        virtual void v_DoArtificialDiffusion_coeff(
             const Array<OneD, const Array<OneD, NekDouble> > &inarray,
             Array<OneD,       Array<OneD, NekDouble> > &outarray);
 

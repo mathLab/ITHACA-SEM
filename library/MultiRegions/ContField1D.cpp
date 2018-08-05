@@ -191,13 +191,10 @@ namespace Nektar
          *
          * @param   inarray     Discrete \f$f(x)\f$.
          * @param   outarray    Storage for result.
-         * @param   coeffstate
          */
         void ContField1D::FwdTrans(const Array<OneD, const NekDouble> &inarray,
-                                   Array<OneD,       NekDouble> &outarray,
-                                   CoeffState coeffstate)
+                                   Array<OneD,       NekDouble> &outarray)
         {
-            ASSERTL0(coeffstate != eGlobal,"Using coeffstate is not longer a valid option");
 
             // Inner product of forcing
             Array<OneD,NekDouble> wsp(m_ncoeffs);
@@ -227,11 +224,8 @@ namespace Nektar
          */
         void ContField1D::BwdTrans(
                                 const Array<OneD, const NekDouble>  &inarray,
-                                Array<OneD,       NekDouble>  &outarray,
-                                CoeffState coeffstate)
+                                Array<OneD,       NekDouble>  &outarray)
         {
-
-            ASSERTL0(coeffstate != eGlobal,"Using coeffstate is not longer a valid option");
 
             BwdTrans_IterPerExp(inarray,outarray);
         }
@@ -242,11 +236,8 @@ namespace Nektar
          */
         void ContField1D::MultiplyByInvMassMatrix(
                                 const Array<OneD, const NekDouble> &inarray,
-                                      Array<OneD,       NekDouble> &outarray,
-                                CoeffState coeffstate)
+                                Array<OneD,       NekDouble> &outarray)
         {
-            ASSERTL0(coeffstate != eGlobal,"Using coeffstate is not longer a valid option");
-
             GlobalLinSysKey key(StdRegions::eMass, m_locToGloMap);
             GlobalSolve(key,inarray,outarray);
         }
@@ -373,36 +364,24 @@ namespace Nektar
          */
         void ContField1D::IProductWRTBase(
                                 const Array<OneD, const NekDouble> &inarray,
-                                Array<OneD,       NekDouble> &outarray,
-                                CoeffState coeffstate)
+                                Array<OneD,       NekDouble> &outarray)
         {
-            if(coeffstate == eGlobal)
-            {
-                Array<OneD, NekDouble> wsp(m_ncoeffs);
-                IProductWRTBase_IterPerExp(inarray,wsp);
-                Assemble(wsp,outarray);
-            }
-            else
-            {
-                IProductWRTBase_IterPerExp(inarray,outarray);
-            }
+            IProductWRTBase_IterPerExp(inarray,outarray);
         }
 		
         
         void ContField1D::v_FwdTrans(
                                 const Array<OneD, const NekDouble> &inarray,
-                                      Array<OneD,       NekDouble> &outarray,
-                                CoeffState coeffstate)
+                                Array<OneD,       NekDouble> &outarray)
         {
-            FwdTrans(inarray,outarray,coeffstate);
+            FwdTrans(inarray,outarray);
         }
 
         void ContField1D::v_MultiplyByInvMassMatrix(
                                 const Array<OneD, const NekDouble> &inarray,
-                                Array<OneD,       NekDouble> &outarray,
-                                CoeffState coeffstate)
+                                Array<OneD,       NekDouble> &outarray)
         {
-            MultiplyByInvMassMatrix(inarray,outarray,coeffstate);
+            MultiplyByInvMassMatrix(inarray,outarray);
         }
 
         void ContField1D::v_ImposeDirichletConditions(Array<OneD,NekDouble>& outarray)
@@ -525,7 +504,6 @@ namespace Nektar
          * @param   lambda      Parameter value.
          * @param   Sigma       Coefficients of lambda.
          * @param   varcoeff    Variable diffusivity coefficients.
-         * @param   coeffstate 
          * @param   dirForcing  Dirichlet Forcing.
          */
         void ContField1D::v_HelmSolve(
@@ -583,18 +561,16 @@ namespace Nektar
 
         void ContField1D::v_BwdTrans(
                                 const Array<OneD, const NekDouble> &inarray,
-                                      Array<OneD,       NekDouble> &outarray,
-                                CoeffState coeffstate)
+                                Array<OneD,       NekDouble> &outarray)
         {
-            BwdTrans(inarray,outarray,coeffstate);
+            BwdTrans(inarray,outarray);
         }
 
         void ContField1D::v_IProductWRTBase(
                                 const Array<OneD, const NekDouble>   &inarray,
-                                      Array<OneD,       NekDouble>   &outarray,
-                                CoeffState coeffstate)
-        {
-            IProductWRTBase(inarray,outarray,coeffstate);
+                                Array<OneD,       NekDouble>   &outarray)
+                                        {
+            IProductWRTBase(inarray,outarray);
         }
 
         /**
@@ -616,21 +592,9 @@ namespace Nektar
         void ContField1D::v_GeneralMatrixOp(
                                 const GlobalMatrixKey                &gkey,
                                 const Array<OneD,const NekDouble>    &inarray,
-                                      Array<OneD,      NekDouble>    &outarray,
-                                CoeffState coeffstate)
+                                Array<OneD,      NekDouble>    &outarray)
         {
-            if(coeffstate == eGlobal)
-            {
-                Array<OneD,NekDouble> tmp1(2*m_ncoeffs);
-                Array<OneD,NekDouble> tmp2(tmp1+m_ncoeffs);
-                GlobalToLocal(inarray,tmp1);
-                GeneralMatrixOp_IterPerExp(gkey,tmp1,tmp2);
-                Assemble(tmp2,outarray);
-            }
-            else
-            {
-                GeneralMatrixOp_IterPerExp(gkey,inarray,outarray);
-            }
+            GeneralMatrixOp_IterPerExp(gkey,inarray,outarray);
         }
 
 

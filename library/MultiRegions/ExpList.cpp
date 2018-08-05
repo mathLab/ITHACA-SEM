@@ -105,7 +105,6 @@ namespace Nektar
                       ::AllocateSharedPtr()),
             m_coeff_offset(),
             m_phys_offset(),
-            m_blockMat(MemoryManager<BlockMatrixMap>::AllocateSharedPtr()),
             m_WaveSpace(false)
         {
             SetExpType(eNoType);
@@ -131,7 +130,6 @@ namespace Nektar
                       ::AllocateSharedPtr()),
             m_coeff_offset(),
             m_phys_offset(),
-            m_blockMat(MemoryManager<BlockMatrixMap>::AllocateSharedPtr()),
             m_WaveSpace(false)
         {
             SetExpType(eNoType);
@@ -158,7 +156,6 @@ namespace Nektar
                       ::AllocateSharedPtr()),
             m_coeff_offset(),
             m_phys_offset(),
-            m_blockMat(MemoryManager<BlockMatrixMap>::AllocateSharedPtr()),
             m_WaveSpace(false)
         {
             SetExpType(eNoType);
@@ -184,7 +181,6 @@ namespace Nektar
                       ::AllocateSharedPtr()),
             m_coeff_offset(),
             m_phys_offset(),
-            m_blockMat(MemoryManager<BlockMatrixMap>::AllocateSharedPtr()),
             m_WaveSpace(false)
         {
             SetExpType(eNoType);
@@ -221,8 +217,6 @@ namespace Nektar
             m_coll_phys_offset(in.m_coll_phys_offset),
             m_coeff_offset(in.m_coeff_offset),
             m_phys_offset(in.m_phys_offset),
-            m_globalOptParam(in.m_globalOptParam),
-            m_blockMat(in.m_blockMat),
             m_WaveSpace(false)
         {
             SetExpType(eNoType);
@@ -948,58 +942,36 @@ namespace Nektar
                                                  const Array<OneD,const NekDouble> &inarray,
                                                  Array<OneD,      NekDouble> &outarray)
         {
-            const Array<OneD, const bool>  doBlockMatOp
-                        = m_globalOptParam->DoBlockMatOp(gkey.GetMatrixType());
-            const Array<OneD, const int> num_elmts
-                        = m_globalOptParam->GetShapeNumElements();
-
             Array<OneD,NekDouble> tmp_outarray;
             int cnt = 0;
             int eid;
-            for(int n = 0; n < num_elmts.num_elements(); ++n)
+            int i;
+            int nvarcoeffs = gkey.GetNVarCoeffs();
+                
+            for(i= 0; i < (*m_exp).size(); ++i)
             {
-                if(doBlockMatOp[n])
+                // need to be initialised with zero size for non
+                // variable coefficient case
+                StdRegions::VarCoeffMap varcoeffs;
+                
+                eid = cnt++;
+                if(nvarcoeffs>0)
                 {
-                    const LibUtilities::ShapeType vType
-                                    = m_globalOptParam->GetShapeList()[n];
-                    const MultiRegions::GlobalMatrixKey vKey(gkey, vType);
-                    if (cnt < m_coeff_offset.num_elements())
+                    for (auto &x : gkey.GetVarCoeffs())
                     {
-                        eid = cnt; 
-                        MultiplyByBlockMatrix(vKey,inarray + m_coeff_offset[eid],
-                                              tmp_outarray = outarray + m_coeff_offset[eid]);
-                        cnt += num_elmts[n];
+                        varcoeffs[x.first] = x.second + m_phys_offset[eid];
                     }
                 }
-                else
-                {
-                    int i;
-                    int nvarcoeffs = gkey.GetNVarCoeffs();
-
-                    for(i= 0; i < num_elmts[n]; ++i)
-                    {
-                        // need to be initialised with zero size for non variable coefficient case
-                        StdRegions::VarCoeffMap varcoeffs;
-
-                        eid = cnt++;
-                        if(nvarcoeffs>0)
-                        {
-                            for (auto &x : gkey.GetVarCoeffs())
-                            {
-                                varcoeffs[x.first] = x.second + m_phys_offset[eid];
-                            }
-                        }
-
-                        StdRegions::StdMatrixKey mkey(gkey.GetMatrixType(),
-                                                      (*m_exp)[eid]->DetShapeType(),
-                                                      *((*m_exp)[eid]),
-                                                      gkey.GetConstFactors(),varcoeffs);
-
-                        (*m_exp)[eid]->GeneralMatrixOp(inarray + m_coeff_offset[eid],
-                                                       tmp_outarray = outarray+m_coeff_offset[eid],
-                                                       mkey);
-                    }
-                }
+                
+                StdRegions::StdMatrixKey mkey(gkey.GetMatrixType(),
+                                              (*m_exp)[eid]->DetShapeType(),
+                                              *((*m_exp)[eid]),
+                                              gkey.GetConstFactors(),varcoeffs);
+                
+                (*m_exp)[eid]->GeneralMatrixOp(inarray + m_coeff_offset[eid],
+                                               tmp_outarray = outarray+
+                                               m_coeff_offset[eid],
+                                               mkey);
             }
         }
 
@@ -2543,8 +2515,7 @@ namespace Nektar
 
         void ExpList::v_MultiplyByInvMassMatrix(
                                 const Array<OneD,const NekDouble> &inarray,
-                                Array<OneD,      NekDouble> &outarray,
-                                CoeffState coeffstate)
+                                Array<OneD,      NekDouble> &outarray)
         {
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
@@ -2568,7 +2539,6 @@ namespace Nektar
                        const Array<OneD, const NekDouble> &inarray,
                        Array<OneD, NekDouble> &outarray,
                        const NekDouble lambda,
-                       CoeffState coeffstate,
                        const Array<OneD, const NekDouble>&  dirForcing)
         {
             ASSERTL0(false,
@@ -2580,7 +2550,6 @@ namespace Nektar
                        const Array<OneD, const NekDouble> &inarray,
                        Array<OneD, NekDouble> &outarray,
                        const NekDouble lambda,
-                       CoeffState coeffstate,
                        const Array<OneD, const NekDouble>&  dirForcing)
         {
             ASSERTL0(false,
@@ -2589,7 +2558,6 @@ namespace Nektar
 
         void ExpList::v_HomogeneousFwdTrans(const Array<OneD, const NekDouble> &inarray,
                                             Array<OneD, NekDouble> &outarray,
-                                            CoeffState coeffstate,
                                             bool Shuff,
                                             bool UnShuff)
         {
@@ -2599,7 +2567,6 @@ namespace Nektar
 
         void ExpList::v_HomogeneousBwdTrans(const Array<OneD, const NekDouble> &inarray,
                                             Array<OneD, NekDouble> &outarray,
-                                            CoeffState coeffstate,
                                             bool Shuff,
                                             bool UnShuff)
         {
@@ -2609,8 +2576,7 @@ namespace Nektar
 
         void ExpList::v_DealiasedProd(const Array<OneD, NekDouble> &inarray1,
                                       const Array<OneD, NekDouble> &inarray2,
-                                      Array<OneD, NekDouble> &outarray,
-                                      CoeffState coeffstate)
+                                      Array<OneD, NekDouble> &outarray)
         {
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
@@ -2619,8 +2585,7 @@ namespace Nektar
         void ExpList::v_DealiasedDotProd(
                         const Array<OneD, Array<OneD, NekDouble> > &inarray1,
                         const Array<OneD, Array<OneD, NekDouble> > &inarray2,
-                        Array<OneD, Array<OneD, NekDouble> > &outarray,
-                        CoeffState coeffstate)
+                        Array<OneD, Array<OneD, NekDouble> > &outarray)
         {
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
@@ -2743,23 +2708,20 @@ namespace Nektar
 
 
         void ExpList::v_BwdTrans(const Array<OneD, const NekDouble> &inarray,
-                                 Array<OneD,       NekDouble> &outarray,
-                                 CoeffState coeffstate)
+                                 Array<OneD,       NekDouble> &outarray)
         {
             v_BwdTrans_IterPerExp(inarray,outarray);
         }
 
         void ExpList::v_FwdTrans(const Array<OneD, const NekDouble> &inarray,
-                                 Array<OneD,       NekDouble> &outarray,
-                                 CoeffState coeffstate)
+                                 Array<OneD,       NekDouble> &outarray)
         {
             v_FwdTrans_IterPerExp(inarray,outarray);
         }
 
         void ExpList::v_IProductWRTBase(
                                 const Array<OneD, const NekDouble> &inarray,
-                                Array<OneD,       NekDouble> &outarray,
-                                CoeffState coeffstate)
+                                Array<OneD,       NekDouble> &outarray)
         {
             Array<OneD,NekDouble>  tmp;
             for (int i = 0; i < m_collections.size(); ++i)
@@ -2774,8 +2736,7 @@ namespace Nektar
         void ExpList::v_GeneralMatrixOp(
                                         const GlobalMatrixKey             &gkey,
                                         const Array<OneD,const NekDouble> &inarray,
-                                        Array<OneD,      NekDouble> &outarray,
-                                        CoeffState coeffstate)
+                                        Array<OneD,      NekDouble> &outarray)
         {
             GeneralMatrixOp_IterPerExp(gkey,inarray,outarray);
         }
@@ -3031,14 +2992,6 @@ namespace Nektar
                      "This method is not defined or valid for this class type");
         }
         
-        /**
-         */
-        void ExpList::v_ReadGlobalOptimizationParameters()
-        {
-            ASSERTL0(false,
-                     "This method is not defined or valid for this class type");
-        }
-
         /**
          */
         const Array<OneD,const SpatialDomains::BoundaryConditionShPtr>

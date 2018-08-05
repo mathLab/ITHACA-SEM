@@ -144,9 +144,6 @@ namespace Nektar
             // Setup default optimisation information
             nel = GetExpSize();
 
-            m_globalOptParam = MemoryManager<NekOptimize::GlobalOptParam>::
-                                AllocateSharedPtr(nel);
-
             SetCoeffPhys();
 
             // Do not set up BCs if default variable

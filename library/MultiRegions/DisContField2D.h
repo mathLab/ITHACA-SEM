@@ -238,8 +238,7 @@ namespace Nektar
             virtual void v_GeneralMatrixOp(
                 const GlobalMatrixKey             &gkey,
                 const Array<OneD,const NekDouble> &inarray,
-                      Array<OneD,      NekDouble> &outarray,
-                CoeffState                         coeffstate = eLocal);
+                Array<OneD,      NekDouble> &outarray);
             virtual void v_GetBoundaryToElmtMap(
                 Array<OneD, int> &ElmtID,
                 Array<OneD, int> &EdgeID);

@@ -182,11 +182,8 @@ namespace Nektar
          */
         void ContField3D::v_BwdTrans(
                                 const Array<OneD, const NekDouble> &inarray,
-                                      Array<OneD,       NekDouble> &outarray,
-                                     CoeffState coeffstate)
+                                Array<OneD,       NekDouble> &outarray)
         {
-            ASSERTL0(coeffstate != eGlobal,"Using coeffstate is not longer a valid option");
-
             BwdTrans_IterPerExp(inarray,outarray);
         }
 
@@ -207,21 +204,15 @@ namespace Nektar
          *                      points in its array #m_phys.
          */
         void ContField3D::v_IProductWRTBase(const Array<OneD, const NekDouble> &inarray,
-                                            Array<OneD, NekDouble> &outarray,
-                                            CoeffState coeffstate)
+                                            Array<OneD, NekDouble> &outarray)
         {
-            ASSERTL0(coeffstate != eGlobal,"coeffstate is no longer a valid option");
-            
             IProductWRTBase_IterPerExp(inarray,outarray);
         }
       
       
       void ContField3D::v_FwdTrans(const Array<OneD, const NekDouble> &inarray,
-                                   Array<OneD,       NekDouble> &outarray,
-                                   CoeffState coeffstate)
+                                   Array<OneD,       NekDouble> &outarray)
       {
-          ASSERTL0(coeffstate != eGlobal,"coeffstate is no longer a valid option");
-          
           // Inner product of forcing
           Array<OneD,NekDouble> wsp(m_ncoeffs);
           IProductWRTBase(inarray,wsp);
@@ -235,52 +226,13 @@ namespace Nektar
       
       void ContField3D::v_MultiplyByInvMassMatrix(
                                           const Array<OneD, const NekDouble> &inarray,
-                                          Array<OneD,       NekDouble> &outarray,
-                                          CoeffState coeffstate)
+                                          Array<OneD,       NekDouble> &outarray)
           
       {
-          ASSERTL0(coeffstate != eGlobal,"Using coeffstate is not longer a valid option");
-
           GlobalLinSysKey key(StdRegions::eMass,m_locToGloMap);
           GlobalSolve(key,inarray,outarray);
       }
       
-
-#if 0  // possibly this could be deleted
-      void ContField3D::GenerateDirBndCondForcing(const GlobalLinSysKey &key,
-                                                  Array<OneD, NekDouble> &inout,
-                                                  Array<OneD, NekDouble> &outarray)
-      {
-          int bndcnt=0;
-          const Array<OneD,const int>& map = m_locToGloMap->GetBndCondCoeffsToGlobalCoeffsMap();
-          NekDouble sign;
-          
-          for(int i = 0; i < m_bndCondExpansions.num_elements(); ++i)
-          {
-              if(m_bndConditions[i]->GetBoundaryConditionType() == SpatialDomains::eDirichlet)
-              {
-                  const Array<OneD,const NekDouble>& coeffs = m_bndCondExpansions[i]->GetCoeffs();
-                  for(int j = 0; j < (m_bndCondExpansions[i])->GetNcoeffs(); ++j)
-                  {
-                      sign = m_locToGloMap->GetBndCondCoeffsToGlobalCoeffsSign(bndcnt);
-                      if(sign)
-                      {
-                          inout[map[bndcnt++]] = sign * coeffs[j];
-                      }
-                      else
-                      {
-                          bndcnt++;
-                      }
-                  }
-              }
-              else
-              {
-                  bndcnt += m_bndCondExpansions[i]->GetNcoeffs();
-              }
-            }
-          GeneralMatrixOp(key,inout,outarray,eGlobal);
-      }
-#endif      
 
       // Note inout contains initial guess and final output.
       void ContField3D::GlobalSolve(
@@ -606,32 +558,9 @@ namespace Nektar
       void ContField3D::v_GeneralMatrixOp(
           const GlobalMatrixKey             &gkey,
           const Array<OneD,const NekDouble> &inarray,
-                Array<OneD,      NekDouble> &outarray,
-          CoeffState                         coeffstate)
+          Array<OneD,      NekDouble> &outarray)
       {
-          if(coeffstate == eGlobal)
-          {
-              bool doGlobalOp = m_globalOptParam->DoGlobalMatOp(gkey.GetMatrixType());
-              
-              if(doGlobalOp)
-              {
-                  GlobalMatrixSharedPtr mat = GetGlobalMatrix(gkey);
-                  mat->Multiply(inarray,outarray);
-                  m_locToGloMap->UniversalAssemble(outarray);
-              }
-              else
-              {
-                  Array<OneD,NekDouble> tmp1(2*m_ncoeffs);
-                  Array<OneD,NekDouble> tmp2(tmp1+m_ncoeffs);
-                  GlobalToLocal(inarray,tmp1);
-                  GeneralMatrixOp_IterPerExp(gkey,tmp1,tmp2);
-                  Assemble(tmp2,outarray);
-              }
-          }
-          else
-          {
-              GeneralMatrixOp_IterPerExp(gkey,inarray,outarray);
-          }
+          GeneralMatrixOp_IterPerExp(gkey,inarray,outarray);
       }
 
     /**
@@ -641,7 +570,6 @@ namespace Nektar
     * @param   inarray     Forcing function.
     * @param   outarray    Result.
     * @param   lambda      reaction coefficient
-    * @param   coeffstate  State of Coefficients, Local or Global
     * @param   dirForcing  Dirichlet Forcing.
     */
     // could combine this with HelmholtzCG.
@@ -650,7 +578,6 @@ namespace Nektar
         const Array<OneD, const NekDouble> &inarray,
         Array<OneD, NekDouble> &outarray,
         const NekDouble lambda,
-        CoeffState coeffstate,
         const Array<OneD, const NekDouble> &dirForcing)
     {
         // Inner product of forcing

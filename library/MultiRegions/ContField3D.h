@@ -83,11 +83,6 @@ namespace Nektar
             inline const Array<OneD,const MultiRegions::ExpListSharedPtr>
                     &GetBndCondExp();
 
-            MULTI_REGIONS_EXPORT void GenerateDirBndCondForcing(
-                    const GlobalLinSysKey &key,
-                    Array<OneD, NekDouble> &inout,
-                    Array<OneD, NekDouble> &outarray);
-
             inline void Assemble();
 
             inline void Assemble(
@@ -117,21 +112,18 @@ namespace Nektar
             /// element expansion.
             virtual void v_BwdTrans(
                     const Array<OneD, const NekDouble> &inarray,
-                    Array<OneD,       NekDouble> &outarray,
-                    CoeffState coeffstate = eLocal);
+                    Array<OneD,       NekDouble> &outarray);
 
             /// Calculates the inner product of a function
             /// \f$f(\boldsymbol{x})\f$ with respect to all <em>global</em>
             /// expansion modes \f$\phi_n^e(\boldsymbol{x})\f$.
             virtual void v_IProductWRTBase(
                     const Array<OneD, const NekDouble> &inarray,
-                    Array<OneD,       NekDouble> &outarray,
-                    CoeffState coeffstate = eLocal);
+                    Array<OneD,       NekDouble> &outarray);
 
             virtual void v_FwdTrans(
                     const Array<OneD, const NekDouble> &inarray,
-                    Array<OneD,       NekDouble> &outarray,
-                    CoeffState coeffstate);
+                    Array<OneD,       NekDouble> &outarray);
 
             
         private:
@@ -175,8 +167,7 @@ namespace Nektar
 
             virtual void v_MultiplyByInvMassMatrix(
                     const Array<OneD, const NekDouble> &inarray,
-                          Array<OneD,       NekDouble> &outarray,
-                    CoeffState coeffstate);
+                    Array<OneD,       NekDouble> &outarray);
 
             virtual void v_HelmSolve(
                     const Array<OneD, const NekDouble> &inarray,
@@ -190,8 +181,7 @@ namespace Nektar
             virtual void v_GeneralMatrixOp(
                     const GlobalMatrixKey             &gkey,
                     const Array<OneD,const NekDouble> &inarray,
-                    Array<OneD,      NekDouble> &outarray,
-                    CoeffState coeffstate);
+                    Array<OneD,      NekDouble> &outarray);
 
             // Solve the linear advection problem assuming that m_coeffs
             // vector contains an intial estimate for solution
@@ -200,7 +190,6 @@ namespace Nektar
                     const Array<OneD, const NekDouble> &inarray,
                     Array<OneD, NekDouble> &outarray,
                     const NekDouble lambda,
-                    CoeffState coeffstate = eLocal,
                     const Array<OneD, const NekDouble> &dirForcing = NullNekDouble1DArray);
             
             virtual void v_ClearGlobalLinSysManager(void);

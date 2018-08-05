@@ -1045,56 +1045,6 @@ namespace Nektar
                 }
                 else
                 {
-#if 0           
-                    DNekMatSharedPtr             m_Ixm;
-                    LibUtilities::BasisSharedPtr BASE;
-                    const LibUtilities::PointsKey
-                            BS_p(e_ncoeffs,LibUtilities::eGaussGaussLegendre);
-                    const LibUtilities::BasisKey
-                            BS_k(LibUtilities::eGauss_Lagrange,e_ncoeffs,BS_p);
-                    
-                    BASE  = LibUtilities::BasisManager()[BS_k];
-                    
-                    Array<OneD, NekDouble> coords(3, 0.0);
-                    
-                    int j;
-                    
-                    for(p = 0; p < 2; ++p)
-                    {
-                        NekDouble vertnorm = 0.0;
-                        for (int i=0; i<((*m_exp)[n]->
-                             GetVertexNormal(p)).num_elements(); i++)
-                        {
-                            vertnorm += ((*m_exp)[n]->GetVertexNormal(p))[i][0];
-                            coords[0] = vertnorm ;
-                        }
-                        
-                        t_offset = GetTrace()->GetPhys_Offset(n+p);
-                        
-                        if (vertnorm >= 0.0)
-                        {
-                            m_Ixm = BASE->GetI(coords);
-                            
-                            
-                            for (j = 0; j < e_ncoeffs; j++)
-                            {
-                                outarray[offset + j]  +=
-                                    (m_Ixm->GetPtr())[j] * Fn[t_offset];
-                            }
-                        }
-                        
-                        if (vertnorm < 0.0)
-                        {
-                            m_Ixm = BASE->GetI(coords);
-                            
-                            for (j = 0; j < e_ncoeffs; j++)
-                            {
-                                outarray[offset + j] -=
-                                    (m_Ixm->GetPtr())[j] * Fn[t_offset];
-                            }
-                        }
-                    }
-#else
                     int j;
                     static DNekMatSharedPtr   m_Ixm, m_Ixp;
                     static int sav_ncoeffs = 0;
@@ -1154,7 +1104,6 @@ namespace Nektar
                                 (m_Ixp->GetPtr())[j] * Fn[t_offset];
                         }
                     }
-#endif
                 }
             }
         }

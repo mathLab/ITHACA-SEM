@@ -142,7 +142,11 @@ namespace Nektar
             bool dirForcCalculated = (bool) pDirForcing.num_elements();
             int nDirDofs  = pLocToGloMap->GetNumGlobalDirBndCoeffs();
             int nGlobDofs = pLocToGloMap->GetNumGlobalCoeffs();
-            Array<OneD, NekDouble> tmp(nGlobDofs), tmp2;
+            int nLocDofs  = pLocToGloMap->GetNumLocalCoeffs();
+
+            m_locToGloMap = pLocToGloMap; // required for DoMatrixMultiply
+            
+            Array<OneD, NekDouble> tmp(nLocDofs), tmp2;
 
             int nDirTotal = nDirDofs;
             m_expList.lock()->GetComm()->GetRowComm()->AllReduce(
@@ -162,12 +166,18 @@ namespace Nektar
                 {
                     // Calculate the dirichlet forcing and substract it
                     // from the rhs
+                    Array<OneD, NekDouble> tmp1(nLocDofs);
+
+                    pLocToGloMap->GlobalToLocal(pOutput, tmp1);
+
                     m_expList.lock()->GeneralMatrixOp(
-                        m_linSysKey, pOutput, tmp, eGlobal);
+                        m_linSysKey, tmp1, tmp);
+                    
+                    pLocToGloMap->Assemble(tmp,tmp1);
 
                     Vmath::Vsub(nGlobDofs, 
                                 pInput.get(), 1,
-                                tmp.get(),    1,
+                                tmp1.get(),    1,
                                 tmp.get(),    1);
                 }
 
@@ -195,9 +205,19 @@ namespace Nektar
         {
             std::shared_ptr<MultiRegions::ExpList> expList = m_expList.lock();
 
+            int nLocDofs = m_locToGloMap->GetNumLocalCoeffs();
+            
+            Array<OneD, NekDouble> tmp  (nLocDofs);
+            Array<OneD, NekDouble> tmp1 (nLocDofs);
+
+            m_locToGloMap->GlobalToLocal(input,tmp);
+            
             // Perform matrix-vector operation A*d_i
-            expList->GeneralMatrixOp(
-                m_linSysKey, input, output, eGlobal);
+            expList->GeneralMatrixOp(m_linSysKey, tmp,tmp1);
+
+            m_locToGloMap->Assemble(tmp1,output);
+            
         }
+        
     }
 }

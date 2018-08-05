@@ -114,7 +114,10 @@ namespace Nektar
             bool dirForcCalculated = (bool) pDirForcing.num_elements();
             int nDirDofs  = pLocToGloMap->GetNumGlobalDirBndCoeffs();
             int nGlobDofs = pLocToGloMap->GetNumGlobalCoeffs();
-            Array<OneD, NekDouble> tmp(nGlobDofs);
+
+            int nLocDofs = pLocToGloMap->GetNumLocalCoeffs();
+            
+            Array<OneD, NekDouble> tmp(nLocDofs);
             
             if(nDirDofs)
             {
@@ -129,13 +132,20 @@ namespace Nektar
                 else
                 {
 		    Vmath::Zero(nGlobDofs-nDirDofs, &pOutput[nDirDofs], 1);
+
+                    Array<OneD, NekDouble> tmp1(nLocDofs);
+
+                    pLocToGloMap->GlobalToLocal(pOutput, tmp1);
+
                     // Calculate Dirichlet forcing and subtract it from the rhs
                     m_expList.lock()->GeneralMatrixOp(
-                        m_linSysKey, pOutput, tmp, eGlobal);
+                        m_linSysKey, tmp1, tmp);
                     
+                    pLocToGloMap->Assemble(tmp,tmp1);
+
                     Vmath::Vsub(nGlobDofs, 
                                 pInput.get(), 1,
-                                tmp.get(),    1,
+                                tmp1.get(),    1,
                                 tmp.get(),    1);
                 }
 

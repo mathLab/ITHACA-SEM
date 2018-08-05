@@ -155,7 +155,7 @@ namespace Nektar
                     // Calculate the dirichlet forcing B_b (== X_b) and
                     // substract it from the rhs
                     expList->GeneralMatrixOp(
-                        m_linSysKey, pOutput, tmp, eGlobal);
+                        m_linSysKey, pOutput, tmp);
 
                     Vmath::Vsub(nGlobDofs, pInput.get(), 1,
                                            tmp.get(),    1,
@@ -194,7 +194,7 @@ namespace Nektar
             std::shared_ptr<MultiRegions::ExpList> expList = m_expList.lock();
             // Perform matrix-vector operation A*d_i
             expList->GeneralMatrixOp(m_linSysKey,
-                                     pInput, pOutput, eGlobal);
+                                     pInput, pOutput);
 
             // Apply robin boundary conditions to the solution.
             if(m_robinBCInfo.size() > 0)

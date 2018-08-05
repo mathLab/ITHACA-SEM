@@ -100,15 +100,9 @@ namespace Nektar
         {
             SetExpType(e1D);
             
-            // Setup Default optimisation information.
-            int nel = GetExpSize();
-            m_globalOptParam = MemoryManager<NekOptimize::GlobalOptParam>
-                ::AllocateSharedPtr(nel);
-
             // Allocate storage for data and populate element offset lists.
             SetCoeffPhysOffsets();
 
-            ReadGlobalOptimizationParameters();
             CreateCollections(ImpType);
         }
 
@@ -162,18 +156,12 @@ namespace Nektar
                 }
             }
 
-            // Setup Default optimisation information.
-            int nel = GetExpSize();
-            m_globalOptParam = MemoryManager<NekOptimize::GlobalOptParam>
-                ::AllocateSharedPtr(nel);
-
             // Allocate storage for data and populate element offset lists.
             SetCoeffPhysOffsets();
 
             m_coeffs = Array<OneD, NekDouble>(m_ncoeffs,0.0);
             m_phys   = Array<OneD, NekDouble>(m_npoints,0.0);
 
-            ReadGlobalOptimizationParameters();
             CreateCollections(ImpType);
         }
 
@@ -239,11 +227,6 @@ namespace Nektar
                 }
             }
 
-            // Setup Default optimisation information.
-            int nel = GetExpSize();
-            m_globalOptParam = MemoryManager<NekOptimize::GlobalOptParam>
-                ::AllocateSharedPtr(nel);
-
             // set up offset arrays.
             SetCoeffPhysOffsets();
 
@@ -254,7 +237,6 @@ namespace Nektar
                 m_phys   = Array<OneD, NekDouble>(m_npoints,0.0);
             }
 
-            ReadGlobalOptimizationParameters();
             CreateCollections(ImpType);
         }
 
@@ -347,11 +329,6 @@ namespace Nektar
                 }
             }
 
-            // Setup Default optimisation information.
-            int nel = GetExpSize();
-            m_globalOptParam = MemoryManager<NekOptimize::GlobalOptParam>
-                ::AllocateSharedPtr(nel);
-
             // set up offset arrays.
             SetCoeffPhysOffsets();
 
@@ -362,7 +339,6 @@ namespace Nektar
                 m_phys   = Array<OneD, NekDouble>(m_npoints,0.0);
             }
 
-            ReadGlobalOptimizationParameters();
             CreateCollections(ImpType);
         }
 
@@ -431,11 +407,6 @@ namespace Nektar
                 }
 
             }
-
-            // Setup Default optimisation information.
-            int nel = GetExpSize();
-            m_globalOptParam = MemoryManager<NekOptimize::GlobalOptParam>
-                ::AllocateSharedPtr(nel);
 
             // Allocate storage for data and populate element offset lists.
             SetCoeffPhysOffsets();
@@ -676,11 +647,6 @@ namespace Nektar
                 seg->SetElmtId(elmtid++);
                 (*m_exp).push_back(seg);
             }
-
-            // Setup Default optimisation information.
-            int nel = GetExpSize();
-            m_globalOptParam = MemoryManager<NekOptimize::GlobalOptParam>
-                ::AllocateSharedPtr(nel);
 
             // Set up offset information and array sizes
             SetCoeffPhysOffsets();
@@ -1145,20 +1111,6 @@ namespace Nektar
                 }
             }
         }
-
-        /**
-         *
-         */
-        void ExpList1D::v_ReadGlobalOptimizationParameters()
-        {
-//            Array<OneD, int> NumShape(1,0);
-//            NumShape[0] = GetExpSize();
-//
-//            int one = 1;
-//            m_globalOptParam = MemoryManager<NekOptimize::GlobalOptParam>
-//                ::AllocateSharedPtr(m_session,one,NumShape);
-        }
-
 
         /**
          * Writes out the header for a <PIECE> VTK XML segment describing the

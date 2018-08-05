@@ -231,12 +231,6 @@ namespace Nektar
         void GlobalLinSysIterativeStaticCond::v_AssembleSchurComplement(
             const AssemblyMapSharedPtr pLocToGloMap)
         {
-            int i,j,n,cnt,gid1,gid2;
-            NekDouble sign1,sign2;
-
-            bool doGlobalOp = m_expList.lock()->GetGlobalOptParam()->
-                DoGlobalMatOp(m_linSysKey.GetMatrixType());
-
             // Set up unique map
             v_UniqueMap();
 
@@ -249,71 +243,7 @@ namespace Nektar
                 m_precon->BuildPreconditioner();
             }
 
-            if (!doGlobalOp)
-            {
-                PrepareLocalSchurComplement();
-                return;
-            }
-
-            int nBndDofs  = pLocToGloMap->GetNumGlobalBndCoeffs();
-            int NumDirBCs = pLocToGloMap->GetNumGlobalDirBndCoeffs();
-            unsigned int rows = nBndDofs - NumDirBCs;
-            unsigned int cols = nBndDofs - NumDirBCs;
-
-            // COO sparse storage to assist in assembly
-            COOMatType gmat_coo;
-
-            // Get the matrix storage structure
-            // (whether to store only one triangular part, if symmetric)
-            MatrixStorage matStorage = eFULL;
-
-            // assemble globally
-            DNekScalMatSharedPtr loc_mat;
-            int loc_lda;
-            for(n = cnt = 0; n < m_schurCompl->GetNumberOfBlockRows(); ++n)
-            {
-                loc_mat = m_schurCompl->GetBlock(n,n);
-                loc_lda = loc_mat->GetRows();
-
-                // Set up  Matrix;
-                for(i = 0; i < loc_lda; ++i)
-                {
-                    gid1  = pLocToGloMap->GetLocalToGlobalBndMap (cnt + i)
-                                                                    - NumDirBCs;
-                    sign1 = pLocToGloMap->GetLocalToGlobalBndSign(cnt + i);
-
-                    if(gid1 >= 0)
-                    {
-                        for(j = 0; j < loc_lda; ++j)
-                        {
-                            gid2  = pLocToGloMap->GetLocalToGlobalBndMap(cnt+j)
-                                                                 - NumDirBCs;
-                            sign2 = pLocToGloMap->GetLocalToGlobalBndSign(cnt+j);
-
-                            if (gid2 >= 0)
-                            {
-                                gmat_coo[std::make_pair(gid1,gid2)] +=
-                                    sign1*sign2*(*loc_mat)(i,j);
-                            }
-                        }
-                    }
-                }
-                cnt += loc_lda;
-            }
-
-            DNekSmvBsrDiagBlkMat::SparseStorageSharedPtrVector
-                sparseStorage (1);
-
-            BCOMatType partMat;
-            convertCooToBco(rows, cols, 1, gmat_coo, partMat);
-
-            sparseStorage[0] =
-                 MemoryManager<DNekSmvBsrDiagBlkMat::StorageType>::
-                    AllocateSharedPtr(rows, cols, 1, partMat, matStorage );
-
-            // Create block diagonal matrix
-            m_sparseSchurCompl = MemoryManager<DNekSmvBsrDiagBlkMat>::
-                                            AllocateSharedPtr(sparseStorage);
+            PrepareLocalSchurComplement();
         }
 
 
@@ -481,19 +411,8 @@ namespace Nektar
         {
             int nLocal = m_locToGloMap->GetNumLocalBndCoeffs();
             int nDir = m_locToGloMap->GetNumGlobalDirBndCoeffs();
-            bool doGlobalOp = m_expList.lock()->GetGlobalOptParam()->
-                    DoGlobalMatOp(m_linSysKey.GetMatrixType());
 
-            if(doGlobalOp)
-            {
-                // Do matrix multiply globally
-                Array<OneD, NekDouble> in  = pInput  + nDir;
-                Array<OneD, NekDouble> out = pOutput + nDir;
-
-                m_sparseSchurCompl->Multiply(in,out);
-                m_locToGloMap->UniversalAssembleBnd(pOutput, nDir);
-            }
-            else if (m_sparseSchurCompl)
+            if (m_sparseSchurCompl)
             {
                 // Do matrix multiply locally using block-diagonal sparse matrix
                 Array<OneD, NekDouble> tmp = m_wsp + nLocal;

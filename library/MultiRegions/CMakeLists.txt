@@ -35,7 +35,6 @@ GlobalLinSysIterativeStaticCond.cpp
 GlobalLinSysStaticCond.cpp
 GlobalMatrix.cpp
 GlobalMatrixKey.cpp
-GlobalOptimizationParameters.cpp
 Preconditioner.cpp
 PreconditionerDiagonal.cpp
 PreconditionerLowEnergy.cpp
@@ -76,7 +75,6 @@ GlobalLinSysIterativeStaticCond.h
 GlobalLinSysStaticCond.h
 GlobalMatrix.h
 GlobalMatrixKey.h
-GlobalOptimizationParameters.h
 MultiRegions.hpp
 MultiRegionsDeclspec.h
 Preconditioner.h

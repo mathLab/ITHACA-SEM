@@ -71,8 +71,6 @@ namespace Nektar
             
             // Setup Default optimisation information.
             int nel = GetExpSize();
-            m_globalOptParam = MemoryManager<NekOptimize::GlobalOptParam>
-                ::AllocateSharedPtr(nel);
 
             SetCoeffPhysOffsets();
 
@@ -83,7 +81,6 @@ namespace Nektar
                 m_phys   = Array<OneD, NekDouble>(m_npoints,0.0);
              }
 
-            ReadGlobalOptimizationParameters();
             CreateCollections(ImpType);
         }
 
@@ -174,8 +171,6 @@ namespace Nektar
 
             // Setup Default optimisation information.
             int nel = GetExpSize();
-            m_globalOptParam = MemoryManager<NekOptimize::GlobalOptParam>
-                ::AllocateSharedPtr(nel);
 
             SetCoeffPhysOffsets();
 
@@ -183,7 +178,6 @@ namespace Nektar
             m_coeffs = Array<OneD, NekDouble>(m_ncoeffs,0.0);
             m_phys   = Array<OneD, NekDouble>(m_npoints,0.0);
 
-            ReadGlobalOptimizationParameters();
             CreateCollections(ImpType);
         }
 
@@ -306,8 +300,6 @@ namespace Nektar
 
             // Setup Default optimisation information.
             int nel = GetExpSize();
-            m_globalOptParam = MemoryManager<NekOptimize::GlobalOptParam>
-                ::AllocateSharedPtr(nel);
 
             SetCoeffPhysOffsets();
 
@@ -315,7 +307,6 @@ namespace Nektar
             m_coeffs = Array<OneD, NekDouble>(m_ncoeffs,0.0);
             m_phys   = Array<OneD, NekDouble>(m_npoints,0.0);
 
-            ReadGlobalOptimizationParameters();
             CreateCollections(ImpType);
         }
 
@@ -440,8 +431,6 @@ namespace Nektar
 
             // Setup Default optimisation information.
             int nel = GetExpSize();
-            m_globalOptParam = MemoryManager<NekOptimize::GlobalOptParam>
-                ::AllocateSharedPtr(nel);
 
             SetCoeffPhysOffsets();
 
@@ -450,29 +439,6 @@ namespace Nektar
             m_phys   = Array<OneD, NekDouble>(m_npoints,0.0);
 
             CreateCollections(ImpType);
-        }
-
-        void ExpList3D::v_ReadGlobalOptimizationParameters()
-        {
-            Array<OneD, int> NumShape(4,0);
-
-            for(int i = 0; i < GetExpSize(); ++i)
-            {
-                switch ((*m_exp)[i]->DetShapeType())
-                {
-                    case LibUtilities::eTetrahedron:  NumShape[0]++; break;
-                    case LibUtilities::ePyramid:      NumShape[1]++; break;
-                    case LibUtilities::ePrism:        NumShape[2]++; break;
-                    case LibUtilities::eHexahedron:   NumShape[3]++; break;
-                    default:
-                        ASSERTL0(false, "Unknown expansion type.");
-                        break;
-                }
-            }
-
-            int three = 3;
-            m_globalOptParam = MemoryManager<NekOptimize::GlobalOptParam>
-                ::AllocateSharedPtr(m_session,three,NumShape);
         }
 
         void ExpList3D::v_WriteVtkPieceHeader(std::ostream &outfile, int expansion, int istrip)

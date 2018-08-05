@@ -128,9 +128,6 @@ namespace Nektar
             // Setup Default optimisation information. 
             nel = GetExpSize();
 
-            m_globalOptParam = MemoryManager<NekOptimize::GlobalOptParam>
-                ::AllocateSharedPtr(nel);
-            
             SetCoeffPhys();
 
             SetupBoundaryConditions(HomoBasis_y,HomoBasis_z,lhom_y,lhom_z,bcs);

@@ -2367,8 +2367,7 @@ using namespace std;
         void DisContField3D::v_GeneralMatrixOp(
                const GlobalMatrixKey             &gkey,
                const Array<OneD,const NekDouble> &inarray,
-                     Array<OneD,      NekDouble> &outarray,
-               CoeffState coeffstate)
+               Array<OneD,      NekDouble> &outarray)
         {
             int     LocBndCoeffs = m_traceMap->GetNumLocalBndCoeffs();
             Array<OneD, NekDouble> loc_lambda(LocBndCoeffs);

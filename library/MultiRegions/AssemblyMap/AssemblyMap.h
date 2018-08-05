@@ -94,6 +94,8 @@ namespace Nektar
 
             MULTI_REGIONS_EXPORT const Array<OneD, NekDouble>& GetLocalToGlobalSign() const;
 
+            MULTI_REGIONS_EXPORT Gs::gs_data * GetDirBndGsh();
+            
             MULTI_REGIONS_EXPORT void LocalToGlobal(
                     const Array<OneD, const NekDouble>& loc,
                     Array<OneD,       NekDouble>& global,
@@ -385,7 +387,9 @@ namespace Nektar
 
             Gs::gs_data * m_gsh;
             Gs::gs_data * m_bndGsh;
-
+            /// gs gatehr communication to impose Dirhichlet BCs. 
+            Gs::gs_data * m_dirBndGsh; 
+            
             /// The level of recursion in the case of multi-level static
             /// condensation.
             int m_staticCondLevel;

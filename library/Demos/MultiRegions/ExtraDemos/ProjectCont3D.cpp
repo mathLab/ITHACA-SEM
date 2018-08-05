@@ -104,12 +104,12 @@ int main(int argc, char *argv[])
 
     //---------------------------------------------
     // Project onto Expansion
-    Exp->FwdTrans(Fce->GetPhys(), Exp->UpdateCoeffs(), MultiRegions::eGlobal);    
+    Exp->FwdTrans(Fce->GetPhys(), Exp->UpdateCoeffs());    
     //---------------------------------------------
 
     //-------------------------------------------
     // Backward Transform Solution to get projected values
-    Exp->BwdTrans(Exp->GetCoeffs(), Exp->UpdatePhys(), MultiRegions::eGlobal);
+    Exp->BwdTrans(Exp->GetCoeffs(), Exp->UpdatePhys());
     //-------------------------------------------
 
     //----------------------------------------------

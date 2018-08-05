@@ -462,6 +462,7 @@ namespace Nektar
             // Continue until convergence
             while (true)
             {
+
                 if(k >= m_maxiter)
                 {
                     if (m_root)

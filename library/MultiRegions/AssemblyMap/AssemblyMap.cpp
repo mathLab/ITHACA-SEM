@@ -721,6 +721,11 @@ namespace Nektar
             return v_GetLocalToGlobalSign();
         }
 
+        Gs::gs_data * AssemblyMap::GetDirBndGsh()
+        {
+            return m_dirBndGsh;
+        }
+        
         void AssemblyMap::LocalToGlobal(
                 const Array<OneD, const NekDouble>& loc,
                 Array<OneD,       NekDouble>& global,

@@ -518,7 +518,7 @@ namespace Nektar
             {
                 Array<OneD, NekDouble> rhs(contNcoeffs);
                 Array<OneD, NekDouble> global(contNcoeffs);
-                
+
                 // assemble rhs
                 Assemble(locrhs,rhs);
 
@@ -619,30 +619,6 @@ namespace Nektar
             int i,j;
             int bndcnt=0;
 
-#if 0   /*!!!! This needs sorting for new strategy !!!! */
-            
-            // Fill in Dirichlet coefficients that are to be sent to
-            // other processors.  This code block uses a
-            // tuple<int,int.NekDouble> which stores the local id of
-            // coefficent the global id of the data location and the
-            // inverse of the values of the data (arising from
-            // periodic boundary conditiosn)
-            map<int, vector<ExtraDirDof> > &extraDirDofs =
-                m_locToGloMap->GetExtraDirDofs();
-
-            for (auto &it : extraDirDofs)
-            {
-                for (i = 0; i < it.second.size(); ++i)
-                {
-                    outarray[std::get<1>(it.second.at(i))] =
-                        m_bndCondExpansions[it.first]->GetCoeffs()[
-                            std::get<0>(it.second.at(i))]*std::get<2>(it.second.at(i));
-                }
-            }
-
-            m_locToGloMap->UniversalAssembleBnd(tmp);
-#endif
-
 
             Array<OneD, NekDouble> sign = m_locToGloMap->
                 GetBndCondCoeffsToLocalCoeffsSign();
@@ -674,10 +650,11 @@ namespace Nektar
                 }
                 bndcnt += m_bndCondExpansions[i]->GetNcoeffs();
             }
-
             
-            set<ExtraDirDof> &copyLocalDirDofs = m_locToGloMap->GetCopyLocalDirDofs();
+            Gs::Gather(outarray, Gs::gs_amax, m_locToGloMap->GetDirBndGsh());
 
+
+            set<ExtraDirDof> &copyLocalDirDofs = m_locToGloMap->GetCopyLocalDirDofs();
             for (auto &it : copyLocalDirDofs)
             {
                 outarray[std::get<0>(it)] =

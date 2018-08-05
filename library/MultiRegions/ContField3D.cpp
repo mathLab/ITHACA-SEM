@@ -307,7 +307,7 @@ namespace Nektar
                 
               // put input in global space
               LocalToGlobal(inout,global);
-              
+
               GlobalLinSysSharedPtr LinSys = GetGlobalLinSys(key);
               LinSys->Solve(rhs,global,m_locToGloMap,dirForcing);
 
@@ -398,6 +398,23 @@ namespace Nektar
                 bndcnt += m_bndCondExpansions[i]->GetNcoeffs();
             }
 
+            // communicate local Dirichlet coeffsthat are just
+            // touching a dirichlet boundary on another partition
+            set<int> &ParallelDirBndSign = m_locToGloMap->GetParallelDirBndSign();
+
+            for (auto &it : ParallelDirBndSign)
+            {
+                outarray[it] *= -1;
+            }
+                
+            Gs::Gather(outarray, Gs::gs_amax, m_locToGloMap->GetDirBndGsh());
+
+            for (auto &it : ParallelDirBndSign)
+            {
+                outarray[it] *= -1;
+            }
+
+            // sort local dirichlet coeffs that are just touching a dirichlet boundary 
             set<ExtraDirDof> &copyLocalDirDofs = m_locToGloMap->GetCopyLocalDirDofs();
 
             for (auto &it : copyLocalDirDofs)
@@ -405,7 +422,16 @@ namespace Nektar
                 outarray[std::get<0>(it)] =
                     outarray[std::get<1>(it)]*std::get<2>(it);
             }
-            
+
+            string outname;
+            outname = "locdebug" + boost::lexical_cast<string>(m_comm->GetRank()); 
+            ofstream file;
+            file.open(outname.c_str());
+
+            for(int n = 0;  n < outarray.num_elements(); ++n)
+            {
+                file << outarray[n] << endl;
+            }
       }          
       
       void ContField3D::v_FillBndCondFromField(void)

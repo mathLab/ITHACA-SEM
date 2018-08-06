@@ -53,8 +53,9 @@ namespace SolverUtils
                                 "Field Forcing");
 
     ForcingBody::ForcingBody(
-            const LibUtilities::SessionReaderSharedPtr& pSession)
-        : Forcing(pSession),
+            const LibUtilities::SessionReaderSharedPtr &pSession,
+            const std::weak_ptr<EquationSystem>      &pEquation)
+        : Forcing(pSession, pEquation),
           m_hasTimeFcnScaling(false)
     {
     }

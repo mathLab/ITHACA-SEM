@@ -28,7 +28,6 @@ IF( NEKTAR_SOLVER_INCNAVIERSTOKES )
         ./AdvectionTerms/SkewSymmetricAdvection.cpp
         ./AdvectionTerms/AlternateSkewAdvection.cpp
         ./AdvectionTerms/NoAdvection.cpp
-        ./Filters/FilterEnergy.cpp
         ./Filters/FilterReynoldsStresses.cpp
         ./Filters/FilterMovingBody.cpp
         ./Forcing/ForcingMovingBody.cpp
@@ -117,7 +116,8 @@ IF( NEKTAR_SOLVER_INCNAVIERSTOKES )
     ADD_NEKTAR_TEST(CylFlow_adaptiveP LENGTHY)
     ADD_NEKTAR_TEST(CylFlow_Mov_mapping)
     ADD_NEKTAR_TEST(PPF_R10000_ModifiedArnoldi_Shift) 
-    ADD_NEKTAR_TEST(PPF_R15000_ModifiedArnoldi_Shift) 
+    ADD_NEKTAR_TEST(PPF_R15000_ModifiedArnoldi_Shift)
+    ADD_NEKTAR_TEST(ChanFlow_m8_Flowrate)
 
     IF (NEKTAR_USE_SCOTCH)
         # This tests exhibits sensitivity to the choice of DirectStaticCond
@@ -166,6 +166,12 @@ IF( NEKTAR_SOLVER_INCNAVIERSTOKES )
         ADD_NEKTAR_TEST(Tet_channel_m8_par)
         ADD_NEKTAR_TEST(Tet_channel_m8_iter_ml_par LENGTHY)
         ADD_NEKTAR_TEST(bfs_tg_par LENGTHY)
+
+        ADD_NEKTAR_TEST(ChanFlow_m8_Flowrate_par)
+        ADD_NEKTAR_TEST(ChanFlow_3DH1D_Flowrate_MVM)
+        ADD_NEKTAR_TEST(ChanFlow_3DH1D_Flowrate_MVM_hybrid)
+        ADD_NEKTAR_TEST(Hex_channel_m3_Flowrate)
+
         IF (NEKTAR_USE_PETSC)
             ADD_NEKTAR_TEST(Tet_channel_m8_petsc_sc_par LENGTHY)
         ENDIF (NEKTAR_USE_PETSC)

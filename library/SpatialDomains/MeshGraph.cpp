@@ -1417,6 +1417,7 @@ void MeshGraph::SetExpansionsToEvenlySpacedPoints(int npoints)
                 {
                     npts = bkeyold.GetNumModes();
                 }
+                npts = max(npts, 2);
 
                 const LibUtilities::PointsKey pkey(
                     npts, LibUtilities::ePolyEvenlySpaced);

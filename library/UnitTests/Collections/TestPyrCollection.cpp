@@ -723,6 +723,9 @@ namespace Nektar
             double epsilon = 1.0e-8;
             for(int i = 0; i < diff1.num_elements(); ++i)
             {
+                // clamp values below 1e-14 to zero 
+                diff1[i] = (fabs(diff1[i]) < 1e-14)? 0.0: diff1[i];
+                diff2[i] = (fabs(diff2[i]) < 1e-14)? 0.0: diff2[i];
                 BOOST_CHECK_CLOSE(diff1[i],diff2[i], epsilon);
             }
         }
@@ -891,6 +894,9 @@ namespace Nektar
             double epsilon = 1.0e-8;
             for(int i = 0; i < diff1.num_elements(); ++i)
             {
+                // clamp values below 1e-14 to zero 
+                diff1[i] = (fabs(diff1[i]) < 1e-14)? 0.0: diff1[i];
+                diff2[i] = (fabs(diff2[i]) < 1e-14)? 0.0: diff2[i];
                 BOOST_CHECK_CLOSE(diff1[i],diff2[i], epsilon);
             }
         }

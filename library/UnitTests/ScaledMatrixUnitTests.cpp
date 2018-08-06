@@ -66,7 +66,7 @@ namespace Nektar
             
         }
         
-        BOOST_AUTO_TEST_CASE(TestElementAccess)
+        BOOST_AUTO_TEST_CASE(TestElementAccessScaledMatrix)
         {
             typedef NekMatrix<double> OwnedType;
             double d[] = {1.0, 5.0, 9.0,

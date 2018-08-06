@@ -269,6 +269,7 @@ void InputNekpp::Process()
             {
                 EdgeSharedPtr edg = eIdMap[geomIt->GetGlobalID()];
                 E->SetVolumeNodes(edg->m_edgeNodes);
+                E->SetCurveType(edg->m_curveType);
             }
 
             if (dim > 1)
@@ -286,6 +287,7 @@ void InputNekpp::Process()
                 {
                     FaceSharedPtr fac = fIdMap[geomIt->GetGlobalID()];
                     E->SetVolumeNodes(fac->m_faceNodes);
+                    E->SetCurveType(fac->m_curveType);
                 }
             }
 

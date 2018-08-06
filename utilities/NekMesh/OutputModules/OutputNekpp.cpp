@@ -383,7 +383,7 @@ void OutputNekpp::TransferCurves(MeshGraphSharedPtr graph)
             for(int i = 0; i < ns.size(); i++)
             {
                 PointGeomSharedPtr vert = MemoryManager<PointGeom>::AllocateSharedPtr(
-                    m_mesh->m_expDim, edgecnt, ns[i]->m_x, ns[i]->m_y, ns[i]->m_z);
+                    m_mesh->m_spaceDim, edgecnt, ns[i]->m_x, ns[i]->m_y, ns[i]->m_z);
                 curve->m_points.push_back(vert);
             }
 
@@ -407,7 +407,7 @@ void OutputNekpp::TransferCurves(MeshGraphSharedPtr graph)
             for(int i = 0; i < ns.size(); i++)
             {
                 PointGeomSharedPtr vert = MemoryManager<PointGeom>::AllocateSharedPtr(
-                    m_mesh->m_expDim, facecnt, ns[i]->m_x, ns[i]->m_y, ns[i]->m_z);
+                    m_mesh->m_spaceDim, facecnt, ns[i]->m_x, ns[i]->m_y, ns[i]->m_z);
                 curve->m_points.push_back(vert);
             }
 
@@ -433,7 +433,7 @@ void OutputNekpp::TransferCurves(MeshGraphSharedPtr graph)
                 for(int i = 0; i < ns.size(); i++)
                 {
                     PointGeomSharedPtr vert = MemoryManager<PointGeom>::AllocateSharedPtr(
-                        m_mesh->m_expDim, facecnt, ns[i]->m_x, ns[i]->m_y, ns[i]->m_z);
+                        m_mesh->m_spaceDim, facecnt, ns[i]->m_x, ns[i]->m_y, ns[i]->m_z);
                     curve->m_points.push_back(vert);
                 }
 

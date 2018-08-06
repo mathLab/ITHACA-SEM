@@ -1003,9 +1003,9 @@ namespace Nektar
         // v_Comm is based on the explist used may be different(m_tracemap or m_locToGloMap) for diffrent
         // should generate GlobalLinSys first and get the v_Comm from GlobalLinSys. here just give it a m_Comm no parallel support yet!!
         //const std::weak_ptr<ExpList> 
-        std::shared_ptr<MultiRegions::ExpList> vExpList = m_fields[0]->GetSharedThisPtr();
+        // std::shared_ptr<MultiRegions::ExpList> vExpList = m_fields[0]->GetSharedThisPtr();
 
-        NekLinSysIterative linsol(m_session,vExpList);
+        NekLinSysIterative linsol(m_session,v_Comm);
         m_LinSysOprtors.DefineMatrixMultiply(&CompressibleFlowSystem::MatrixMultiply_MatrixFree_coeff, this);
         m_LinSysOprtors.DefinePrecond(&CompressibleFlowSystem::preconditioner_BlkSOR_coeff, this);
         // m_LinSysOprtors.DefinePrecond(&CompressibleFlowSystem::preconditioner_BlkDiag, this);

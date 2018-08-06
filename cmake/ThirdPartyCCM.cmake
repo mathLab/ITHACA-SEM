@@ -11,8 +11,8 @@ OPTION(NEKTAR_USE_CCM
 IF(NEKTAR_USE_CCM)
 
 # First search for system ccmioL installs. Hint /usr/local 
-FIND_PATH   (CCMIO_INCLUDE_DIR ccmio.h PATHS /usr/local/include)
-FIND_LIBRARY(CCMIO_LIBRARY NAMES "ccmio" PATHS /usr/local/lib)
+FIND_PATH   (CCMIO_INCLUDE_DIR ccmio.h PATHS /usr/local/include ${CCM_DIR} PATH_SUFFIXES libccmio)
+FIND_LIBRARY(CCMIO_LIBRARY NAMES "ccmio" PATHS /usr/local/lib ${CCM_DIR} PATH_SUFFIXES lib)
 
 # If we have our library then don't build CCMIO.
 IF (CCMIO_INCLUDE_DIR AND CCMIO_LIBRARY)

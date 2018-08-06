@@ -815,6 +815,15 @@ void MeshGraphHDF5::ReadCurveMap(
         ++cnt;
     }
 
+    // Check to see whether any processor will read anything
+    auto toRead = newIds.size();
+    m_session->GetComm()->AllReduce(toRead, LibUtilities::ReduceSum);
+
+    if (toRead == 0)
+    {
+        return;
+    }
+
     // Now read curve map and read data.
     vector<int> curveInfo;
     curveSpace->SetSelection(curveSel.size() / 2, curveSel);

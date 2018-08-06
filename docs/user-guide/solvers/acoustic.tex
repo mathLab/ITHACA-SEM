@@ -64,7 +64,7 @@ By default, the source term vector $\boldsymbol{W}$ is zero and has to be specif
 
 
 \subsection{Acoustic Perturbation Equations}
-The acoustic perturbation equations (APE-1/APE-4) proposed by Ewert and Shroeder \cite{EwSc03} assure stable aeroacoustic simulations.
+The acoustic perturbation equations (APE-1/APE-4) proposed by Ewert and Schroeder \cite{EwSc03} assure stable aeroacoustic simulations.
 These equations are similar to the LEE, but account for acoustic perturbations exclusively.
 The AcousticSolver implements the APE-1/4 type operator:
 \begin{subequations}
@@ -183,7 +183,7 @@ Under this section it is possible to set the parameters of the simulation.
     \item \inltt{TimeIntegrationMethod} is the time-integration scheme we want to use. 
     Note that only an explicit discretisation is supported:
     \item \inltt{UpwindType} is the numerical interface flux (i.e. Riemann solver) 
-    we want to use for the advection operator:
+    we want to use for the advection operator (see \cite{La18} for the implemented formulations):
     \begin{itemize}
         \item \inltt{Upwind};
         \item \inltt{LaxFriedrichs}; 
@@ -221,7 +221,7 @@ The LEE use a conservative formulation and introduce the additional density pert
 
 \subsection{Boundary Conditions}
 
-In addition to plain Dirichlet and Neumann boundary conditions, the AcousticSolver features a slip-wall boundray condition, a non-reflecting boundary and a white noise boundary condition.
+In addition to plain Dirichlet and Neumann boundary conditions, the AcousticSolver features a slip-wall boundary condition, a non-reflecting boundary and a white noise boundary condition.
 \begin{itemize}
 \item Rigid (Slip-) Wall Boundary Condition, e.g. for APE:
 \begin{lstlisting}[style=XmlStyle]

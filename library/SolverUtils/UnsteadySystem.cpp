@@ -319,18 +319,25 @@ namespace Nektar
                     !((step+1) % m_infosteps))
                 {
                     cout << "Steps: " << setw(8)  << left << step+1 << " "
-                         << "Time: "  << setw(12) << left << m_time;
+                         << "Time: "  << setw(8) << left << m_time;
 
                     if (m_cflSafetyFactor||m_TimeIncrementFactor>1.0)
                     {
-                        cout << " Time-step: " << setw(12)
+                        cout << " Time-step: " << setw(8)
                              << left << m_timestep;
                     }
 
                     stringstream ss;
                     ss << cpuTime << "s";
                     cout << " CPU Time: " << setw(8) << left
-                         << ss.str() << endl;
+                         << ss.str();
+
+                    int nwidthcolm = 8;
+                    cout <<std::right<<" INT Time: " 
+                         <<std::scientific<<std::setw(nwidthcolm)
+                         <<std::setprecision(nwidthcolm-6)
+                        << intTime<<"s"<<endl;
+                    
                     cpuTime = 0.0;
                 }
 

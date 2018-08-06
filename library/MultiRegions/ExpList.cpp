@@ -105,6 +105,7 @@ namespace Nektar
                       ::AllocateSharedPtr()),
             m_coeff_offset(),
             m_phys_offset(),
+            m_blockMat(MemoryManager<BlockMatrixMap>::AllocateSharedPtr()),
             m_WaveSpace(false)
         {
             SetExpType(eNoType);
@@ -130,6 +131,7 @@ namespace Nektar
                       ::AllocateSharedPtr()),
             m_coeff_offset(),
             m_phys_offset(),
+            m_blockMat(MemoryManager<BlockMatrixMap>::AllocateSharedPtr()),
             m_WaveSpace(false)
         {
             SetExpType(eNoType);
@@ -156,6 +158,7 @@ namespace Nektar
                       ::AllocateSharedPtr()),
             m_coeff_offset(),
             m_phys_offset(),
+            m_blockMat(MemoryManager<BlockMatrixMap>::AllocateSharedPtr()),
             m_WaveSpace(false)
         {
             SetExpType(eNoType);
@@ -181,6 +184,7 @@ namespace Nektar
                       ::AllocateSharedPtr()),
             m_coeff_offset(),
             m_phys_offset(),
+            m_blockMat(MemoryManager<BlockMatrixMap>::AllocateSharedPtr()),
             m_WaveSpace(false)
         {
             SetExpType(eNoType);
@@ -217,6 +221,7 @@ namespace Nektar
             m_coll_phys_offset(in.m_coll_phys_offset),
             m_coeff_offset(in.m_coeff_offset),
             m_phys_offset(in.m_phys_offset),
+            m_blockMat(in.m_blockMat),
             m_WaveSpace(false)
         {
             SetExpType(eNoType);

@@ -506,6 +506,8 @@ void FaceMesh::Smoothing()
 
 void FaceMesh::DiagonalSwap()
 {
+    bool manifold = m_mesh->m_expDim == 2 && m_mesh->m_spaceDim == 3;
+    
     map<int, int> idealConnec;
     map<int, int> actualConnec;
     map<int, vector<EdgeSharedPtr> > nodetoedge;
@@ -812,7 +814,7 @@ void FaceMesh::DiagonalSwap()
                 t2.push_back(C);
                 t2.push_back(D);
 
-                ElmtConfig conf(LibUtilities::eTriangle, 1, false, false);
+                ElmtConfig conf(LibUtilities::eTriangle, 1, false, false, !manifold);
                 vector<int> tags = tri1->GetTagList();
 
                 int id1 = tri1->GetId();
@@ -906,9 +908,11 @@ void FaceMesh::BuildLocalMesh()
     putting them into m_mesh
     */
 
+    bool manifold = m_mesh->m_expDim == 2 && m_mesh->m_spaceDim == 3;
+
     for (int i = 0; i < m_connec.size(); i++)
     {
-        ElmtConfig conf(LibUtilities::eTriangle, 1, false, false);
+        ElmtConfig conf(LibUtilities::eTriangle, 1, false, false, !manifold);
 
         vector<int> tags;
         tags.push_back(m_compId);

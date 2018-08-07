@@ -100,29 +100,29 @@ void OutputCADfix::Process()
     {
         // Force order 2
         m_mesh->MakeOrder(2, LibUtilities::ePolyEvenlySpaced);
+    }
 
-        // Add edge- and face-interior nodes to vertex set.
-        for (auto &eIt : m_mesh->m_edgeSet)
-        {
-            m_mesh->m_vertexSet.insert(eIt->m_edgeNodes.begin(),
-                                    eIt->m_edgeNodes.end());
-        }
+    // Add edge- and face-interior nodes to vertex set.
+    for (auto &eIt : m_mesh->m_edgeSet)
+    {
+        m_mesh->m_vertexSet.insert(eIt->m_edgeNodes.begin(),
+                                eIt->m_edgeNodes.end());
+    }
 
-        for (auto &fIt : m_mesh->m_faceSet)
-        {
-            m_mesh->m_vertexSet.insert(fIt->m_faceNodes.begin(),
-                                    fIt->m_faceNodes.end());
-        }
+    for (auto &fIt : m_mesh->m_faceSet)
+    {
+        m_mesh->m_vertexSet.insert(fIt->m_faceNodes.begin(),
+                                fIt->m_faceNodes.end());
+    }
 
-        // Do second pass over elements for volume nodes.
-        for (int d = 1; d <= 3; ++d)
+    // Do second pass over elements for volume nodes.
+    for (int d = 1; d <= 3; ++d)
+    {
+        for (int i = 0; i < m_mesh->m_element[d].size(); ++i)
         {
-            for (int i = 0; i < m_mesh->m_element[d].size(); ++i)
-            {
-                ElementSharedPtr e            = m_mesh->m_element[d][i];
-                vector<NodeSharedPtr> volList = e->GetVolumeNodes();
-                m_mesh->m_vertexSet.insert(volList.begin(), volList.end());
-            }
+            ElementSharedPtr e            = m_mesh->m_element[d][i];
+            vector<NodeSharedPtr> volList = e->GetVolumeNodes();
+            m_mesh->m_vertexSet.insert(volList.begin(), volList.end());
         }
     }
 

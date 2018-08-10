@@ -43,13 +43,19 @@ IF (NEKTAR_BUILD_PYTHON)
     LIST(GET BOOST_PYTHON_VERSION 1 BOOST_PYTHON_VERSION_MINOR)
     SET(TMP_BOOST_LIST ${NEEDED_BOOST_LIBS})
 
+    # If we're using multi-threaded, the existing library likely has a '-mt'
+    # suffix so we need to append this too.
+    IF (Boost_SYSTEM_LIBRARY MATCHES "-mt")
+        SET(BOOST_LIB_SUFFIX "-mt")
+    ENDIF()
+
     # Try to find Boost::Python
     FIND_LIBRARY(BOOST_PYTHON_LIB
-        NAMES boost_python-py${BOOST_PYTHON_VERSION_MAJOR}${BOOST_PYTHON_VERSION_MINOR}
-        boost_python${BOOST_PYTHON_VERSION_MAJOR}${BOOST_PYTHON_VERSION_MINOR}
-        boost_python-py${BOOST_PYTHON_VERSION_MAJOR}
-        boost_python${BOOST_PYTHON_VERSION_MAJOR}
-        boost_python
+        NAMES boost_python-py${BOOST_PYTHON_VERSION_MAJOR}${BOOST_PYTHON_VERSION_MINOR}${BOOST_LIB_SUFFIX}
+        boost_python${BOOST_PYTHON_VERSION_MAJOR}${BOOST_PYTHON_VERSION_MINOR}${BOOST_LIB_SUFFIX}
+        boost_python-py${BOOST_PYTHON_VERSION_MAJOR}${BOOST_LIB_SUFFIX}
+        boost_python${BOOST_PYTHON_VERSION_MAJOR}${BOOST_LIB_SUFFIX}
+        boost_python${BOOST_LIB_SUFFIX}
         PATHS ${Boost_LIBRARY_DIRS})
 
     IF (NOT BOOST_PYTHON_LIB)
@@ -60,11 +66,11 @@ IF (NEKTAR_BUILD_PYTHON)
 
     # Try to find Boost.NumPy
     FIND_LIBRARY(BOOST_NUMPY_LIB
-        NAMES boost_numpy-py${BOOST_PYTHON_VERSION_MAJOR}${BOOST_PYTHON_VERSION_MINOR}
-        boost_numpy${BOOST_PYTHON_VERSION_MAJOR}${BOOST_PYTHON_VERSION_MINOR}
-        boost_numpy-py${BOOST_PYTHON_VERSION_MAJOR}
-        boost_numpy${BOOST_PYTHON_VERSION_MAJOR}
-        boost_numpy
+        NAMES boost_numpy-py${BOOST_PYTHON_VERSION_MAJOR}${BOOST_PYTHON_VERSION_MINOR}${BOOST_LIB_SUFFIX}
+        boost_numpy${BOOST_PYTHON_VERSION_MAJOR}${BOOST_PYTHON_VERSION_MINOR}${BOOST_LIB_SUFFIX}
+        boost_numpy-py${BOOST_PYTHON_VERSION_MAJOR}${BOOST_LIB_SUFFIX}
+        boost_numpy${BOOST_PYTHON_VERSION_MAJOR}${BOOST_LIB_SUFFIX}
+        boost_numpy${BOOST_LIB_SUFFIX}
         PATHS ${Boost_LIBRARY_DIRS})
 
     # If we can't find it, pull it from git and compile it

@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: ProcessPerAlign.h
+//  File: ProcessDOF.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,37 +29,53 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Reorder composites to align periodic boundaries.
+//  Description: Outputs the number of DOF.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef UTILITIES_NEKMESH_PROCESSPERALIGN
-#define UTILITIES_NEKMESH_PROCESSPERALIGN
+#ifndef FIELDUTILS_PROCESSDOF
+#define FIELDUTILS_PROCESSDOF
 
-#include <NekMeshUtils/Module/Module.h>
+#include "../Module.h"
 
 namespace Nektar
 {
-namespace Utilities
+namespace FieldUtils
 {
-
-class ProcessPerAlign : public NekMeshUtils::ProcessModule
+/**
+ * @brief This processing module calculates the number of DOF.
+ */
+class ProcessDOF : public ProcessModule
 {
 public:
     /// Creates an instance of this class
-    static std::shared_ptr<Module> create(NekMeshUtils::MeshSharedPtr m)
+    static std::shared_ptr<Module> create(FieldSharedPtr f)
     {
-        return MemoryManager<ProcessPerAlign>::AllocateSharedPtr(m);
+        return MemoryManager<ProcessDOF>::AllocateSharedPtr(f);
     }
-    static NekMeshUtils::ModuleKey className;
+    static ModuleKey className;
 
-    ProcessPerAlign(NekMeshUtils::MeshSharedPtr m);
-    virtual ~ProcessPerAlign();
+    ProcessDOF(FieldSharedPtr f);
+    virtual ~ProcessDOF();
 
     /// Write mesh to output file.
-    virtual void Process();
+    virtual void Process(po::variables_map &vm);
 
-private:
+    virtual std::string GetModuleName()
+    {
+        return "ProcessDOF";
+    }
+
+    virtual std::string GetModuleDescription()
+    {
+        return "Calculating number of DOF";
+    }
+
+    virtual ModulePriority GetModulePriority()
+    {
+        return eModifyExp;
+    }
+
 };
 }
 }

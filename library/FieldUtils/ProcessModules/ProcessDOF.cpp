@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: ProcessPerAlign.h
+//  File: ProcessDOF.cpp
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,39 +29,45 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Reorder composites to align periodic boundaries.
+//  Description: Outputs the number of DOF.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef UTILITIES_NEKMESH_PROCESSPERALIGN
-#define UTILITIES_NEKMESH_PROCESSPERALIGN
+#include <iostream>
+#include <string>
+using namespace std;
 
-#include <NekMeshUtils/Module/Module.h>
+#include "ProcessDOF.h"
 
 namespace Nektar
 {
-namespace Utilities
+namespace FieldUtils
 {
 
-class ProcessPerAlign : public NekMeshUtils::ProcessModule
+ModuleKey ProcessDOF::className =
+    GetModuleFactory().RegisterCreatorFunction(
+        ModuleKey(eProcessModule, "dof"),
+        ProcessDOF::create,
+        "Computes number of DOF.");
+
+ProcessDOF::ProcessDOF(FieldSharedPtr f) : ProcessModule(f)
 {
-public:
-    /// Creates an instance of this class
-    static std::shared_ptr<Module> create(NekMeshUtils::MeshSharedPtr m)
+}
+
+ProcessDOF::~ProcessDOF()
+{
+}
+
+void ProcessDOF::Process(po::variables_map &vm)
+{
+    int nDOF = m_f->m_exp[0]->GetNcoeffs();
+    m_f->m_comm->AllReduce(nDOF, LibUtilities::ReduceSum);
+
+    if (m_f->m_comm->GetRank() == 0)
     {
-        return MemoryManager<ProcessPerAlign>::AllocateSharedPtr(m);
+        cout << "Total number of DOF: " << nDOF << endl;
     }
-    static NekMeshUtils::ModuleKey className;
 
-    ProcessPerAlign(NekMeshUtils::MeshSharedPtr m);
-    virtual ~ProcessPerAlign();
-
-    /// Write mesh to output file.
-    virtual void Process();
-
-private:
-};
 }
 }
-
-#endif
+}

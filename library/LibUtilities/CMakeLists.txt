@@ -15,6 +15,7 @@ SET(BasicUtilsHeaders
     ./BasicUtils/FieldIOXml.h
     ./BasicUtils/FileSystem.h
     ./BasicUtils/ErrorUtil.hpp
+    ./BasicUtils/Interpolator.h
     ./BasicUtils/HashUtils.hpp
     ./BasicUtils/NekManager.hpp
     ./BasicUtils/NekFactory.hpp
@@ -44,6 +45,7 @@ SET(BasicUtilsSources
     ./BasicUtils/FieldIO.cpp
     ./BasicUtils/FieldIOXml.cpp
     ./BasicUtils/FileSystem.cpp
+    ./BasicUtils/Interpolator.cpp
     ./BasicUtils/ParseUtils.cpp
     ./BasicUtils/PtsField.cpp
     ./BasicUtils/PtsIO.cpp

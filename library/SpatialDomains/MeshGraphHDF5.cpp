@@ -154,6 +154,8 @@ inline void UniqueValues(std::unordered_set<int> &unique,
  */
 void MeshGraphHDF5::PartitionMesh(LibUtilities::SessionReaderSharedPtr session)
 {
+    Timer all;
+    all.Start();
     int err;
     LibUtilities::CommSharedPtr comm = session->GetComm();
     int rank = comm->GetRank(), nproc = comm->GetSize();
@@ -576,6 +578,8 @@ void MeshGraphHDF5::PartitionMesh(LibUtilities::SessionReaderSharedPtr session)
         t.Stop();
         if (rank == 0) cout << "construct 3D: " << t.TimePerTest(1) << endl;
     }
+    all.Stop();
+    if (rank == 0) cout << "total time: " << all.TimePerTest(1) << endl;
 }
 
 template<class T, typename DataType> void MeshGraphHDF5::ConstructGeomObject(
@@ -863,7 +867,7 @@ void MeshGraphHDF5::ReadCurveMap(
         curveMap[newIds[i]] = curve;
     }
 
-    cout << "read " << curveInfo.size() << " " << curveSel.size() << endl;
+    //cout << "read " << curveInfo.size() << " " << curveSel.size() << endl;
 
     curveInfo.clear();
 

@@ -61,7 +61,7 @@ namespace Nektar
             : ExpListHomogeneous1D(pSession,HomoBasis,lhom,useFFT,dealiasing)
         {
             SetExpType(e2DH1D);
-            int i, n, cnt, nel;
+            int i, n, cnt;
 
             ASSERTL1(m_planes.num_elements() == planes.num_elements(),
                      "Size of basis number of points and number"

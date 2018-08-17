@@ -66,14 +66,13 @@ namespace Nektar
         protected:
             virtual DNekScalBlkMatSharedPtr v_PreSolve(
                 int                   scLevel,
-                NekVector<NekDouble> &F_GlobBnd)
+                Array<OneD,NekDouble> &F_bnd)
             {
                 return m_schurCompl;
             }
 
             virtual void v_BasisFwdTransform(
-                Array<OneD, NekDouble>& pInOut,
-                int offset)
+                Array<OneD, NekDouble>& pInOut)
             {
 
             }

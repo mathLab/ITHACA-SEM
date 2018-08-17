@@ -407,11 +407,12 @@ namespace Nektar
             // Find the process rank with the minimum boundary vertex ID
             int maxIdx = Vmath::Imax(n, bcminvertid, 1);
 
-            // If the system is singular, the process with the maximum number of
-            // BCs will set a Dirichlet vertex to make system non-singular.
-            // Note: we find the process with maximum boundary regions to ensure
-            // we do not try to set a Dirichlet vertex on a partition with no
-            // intersection with the boundary.
+            // If the system is singular, the process with the maximum
+            // number of BCs will set a Dirichlet vertex to make
+            // system non-singular.  Note: we find the process with
+            // maximum boundary regions to ensure we do not try to set
+            // a Dirichlet vertex on a partition with no intersection
+            // with the boundary.
             meshVertId = 0;
 
             if (m_systemSingular && checkIfSystemSingular && maxIdx == p)
@@ -1593,6 +1594,9 @@ namespace Nektar
             m_numGlobalDirBndCoeffs = graphVertOffset[firstNonDirGraphVertId];
             m_localToGlobalMap      = Array<OneD, int>(m_numLocalCoeffs,-1);
             m_localToGlobalBndMap   = Array<OneD, int>(m_numLocalBndCoeffs,-1);
+            m_localToLocalBndMap    = Array<OneD, int>(m_numLocalBndCoeffs,-1);
+            m_localToLocalIntMap    = Array<OneD, int>(m_numLocalCoeffs-
+                                                       m_numLocalBndCoeffs,-1);
             m_bndCondCoeffsToLocalCoeffsMap  = Array<OneD, int>
                 (m_numLocalBndCondCoeffs,-1);
             
@@ -1632,10 +1636,32 @@ namespace Nektar
             cnt = 0;
 
             // Loop over all the elements in the domain
+            int cntbdry = 0; 
+            int cntint  = 0; 
             for(i = 0; i < locExpVector.size(); ++i)
             {
                 exp = locExpVector[i];
                 cnt = locExp.GetCoeff_Offset(i);
+
+                int nbdry = exp->NumBndryCoeffs();
+                int nint  = exp->GetNcoeffs() - nbdry;
+
+                Array<OneD,unsigned int> bmap(nbdry);
+                Array<OneD,unsigned int> imap(nint);
+
+                exp->GetBoundaryMap(bmap);
+                exp->GetInteriorMap(imap);
+
+                for(j = 0; j < nbdry; ++j)
+                {
+                    m_localToLocalBndMap[cntbdry++] = cnt + bmap[j];
+                }
+
+                for(j = 0; j < nint; ++j)
+                {
+                    m_localToLocalIntMap[cntint++] = cnt + imap[j];
+                }
+
                 for(j = 0; j < exp->GetNverts(); ++j)
                 {
                     meshVertId = exp->GetGeom()->GetVid(j);
@@ -2285,7 +2311,7 @@ namespace Nektar
             vCommRow->AllReduce(nFace, LibUtilities::ReduceSum);
             vCommRow->AllReduce(maxEdgeDof, LibUtilities::ReduceMax);
             vCommRow->AllReduce(maxFaceDof, LibUtilities::ReduceMax);
-            vCommRow->AllReduce(maxIntDof, LibUtilities::ReduceMax);
+            vCommRow->AllReduce(maxIntDof,  LibUtilities::ReduceMax);
 
             // Assemble global to universal mapping for this process
             for(i = 0; i < locExpVector.size(); ++i)
@@ -2674,7 +2700,7 @@ namespace Nektar
             Array<OneD, const NekDouble> local;
             if(global.data() == loc.data())
             {
-                local = Array<OneD, NekDouble>(loc.num_elements(),loc.data());
+                local = Array<OneD, NekDouble>(m_numLocalCoeffs,loc.data());
             }
             else
             {
@@ -2698,6 +2724,7 @@ namespace Nektar
             }
         }
 
+
         void AssemblyMapCG::v_LocalToGlobal(
                     const NekVector<NekDouble>& loc,
                     NekVector<      NekDouble>& global,
@@ -2713,7 +2740,7 @@ namespace Nektar
             Array<OneD, const NekDouble> glo;
             if(global.data() == loc.data())
             {
-                glo = Array<OneD, NekDouble>(global.num_elements(),global.data());
+                glo = Array<OneD, NekDouble>(m_numGlobalCoeffs,global.data());
             }
             else
             {
@@ -2745,13 +2772,12 @@ namespace Nektar
             Array<OneD, const NekDouble> local;
             if(global.data() == loc.data())
             {
-                local = Array<OneD, NekDouble>(loc.num_elements(),loc.data());
+                local = Array<OneD, NekDouble>(m_numLocalCoeffs,loc.data());
             }
             else
             {
                 local = loc; // create reference
             }
-            //ASSERTL1(loc.get() != global.get(),"Local and Global Arrays cannot be the same");
 
             Vmath::Zero(m_numGlobalCoeffs, global.get(), 1);
 

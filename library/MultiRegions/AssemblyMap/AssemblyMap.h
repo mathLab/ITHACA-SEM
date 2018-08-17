@@ -221,6 +221,38 @@ namespace Nektar
                     const Array<OneD, const NekDouble>& loc,
                     Array<OneD,NekDouble>& global)  const;
 
+            MULTI_REGIONS_EXPORT void LocalToLocalBnd(
+                    const NekVector<NekDouble>& local,
+                    NekVector<NekDouble>& locbnd) const;
+
+            MULTI_REGIONS_EXPORT void LocalToLocalBnd(
+                    const Array<OneD, const NekDouble>& local,
+                    Array<OneD,NekDouble>& locbnd)  const;
+
+            MULTI_REGIONS_EXPORT void LocalToLocalInt(
+                    const NekVector<NekDouble>& local,
+                    NekVector<NekDouble>& locint) const;
+
+            MULTI_REGIONS_EXPORT void LocalToLocalInt(
+                    const Array<OneD, const NekDouble>& local,
+                    Array<OneD,NekDouble>& locint)  const;
+
+            MULTI_REGIONS_EXPORT void LocalBndToLocal(
+                    const NekVector<NekDouble>& locbnd,
+                    NekVector<NekDouble>& local) const;
+
+            MULTI_REGIONS_EXPORT void LocalBndToLocal(
+                    const Array<OneD, const NekDouble>& locbnd,
+                    Array<OneD,NekDouble>& local)  const;
+
+            MULTI_REGIONS_EXPORT void LocalIntToLocal(
+                    const NekVector<NekDouble>& locbnd,
+                    NekVector<NekDouble>& local) const;
+
+            MULTI_REGIONS_EXPORT void LocalIntToLocal(
+                    const Array<OneD, const NekDouble>& locbnd,
+                    Array<OneD,NekDouble>& local)  const;
+
             MULTI_REGIONS_EXPORT void AssembleBnd(const NekVector<NekDouble>& loc,
                     NekVector<NekDouble>& global, int offset) const;
 
@@ -305,6 +337,17 @@ namespace Nektar
                 return m_lowestStaticCondLevel;
             }
 
+            MULTI_REGIONS_EXPORT void PatchLocalToGlobal(
+                               const Array<OneD, const NekDouble>& loc,
+                               Array<OneD,       NekDouble>& global) const;
+
+            MULTI_REGIONS_EXPORT void PatchGlobalToLocal(
+                               const Array<OneD, const NekDouble>& global,
+                               Array<OneD,       NekDouble>& loc) const;
+                        
+            MULTI_REGIONS_EXPORT void PatchAssemble(
+                    const Array<OneD, const NekDouble> &loc,
+                    Array<OneD,       NekDouble> &global) const;
         protected:
             /// Session object
             LibUtilities::SessionReaderSharedPtr m_session;
@@ -355,6 +398,10 @@ namespace Nektar
             Array<OneD,int>       m_localToGlobalBndMap;
             /// Integer sign of local boundary coeffs to global space
             Array<OneD,NekDouble> m_localToGlobalBndSign;
+            /// Integer map of local boundary coeffs to local boundary space
+            Array<OneD,int>       m_localToLocalBndMap;
+            /// Integer map of local boundary coeffs to local interior space
+            Array<OneD,int>       m_localToLocalIntMap;
             /// Integer map of bnd cond coeffs to global coefficients
             Array<OneD,int>       m_bndCondCoeffsToLocalCoeffsMap;
             /// Integer map of bnd cond coeffs to global coefficients

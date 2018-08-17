@@ -251,6 +251,7 @@ namespace Nektar
           // STEP 2: CALCULATE THE HOMOGENEOUS COEFFICIENTS
           if(contNcoeffs - NumDirBcs > 0)
           {
+#if 0
               Array<OneD, NekDouble> rhs(contNcoeffs);
               Array<OneD, NekDouble> global(contNcoeffs);
               
@@ -265,6 +266,10 @@ namespace Nektar
 
               // put output in local space
               GlobalToLocal(global,inout);
+#else
+                GlobalLinSysSharedPtr LinSys = GetGlobalLinSys(key);
+                LinSys->Solve(locrhs,inout,m_locToGloMap,dirForcing);
+#endif
           }
       }
       

@@ -1143,7 +1143,7 @@ namespace Nektar
             //----------------------------------
             int GloBndDofs = m_traceMap->GetNumGlobalBndCoeffs();
             int NumDirBCs  = m_traceMap->GetNumLocalDirBndCoeffs();
-            int e_ncoeffs,id;
+            int e_ncoeffs;
 
             GlobalMatrixKey HDGLamToUKey(
                 StdRegions::eHybridDGLamToU,

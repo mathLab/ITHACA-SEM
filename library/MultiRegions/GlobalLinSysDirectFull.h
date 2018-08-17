@@ -75,8 +75,8 @@ namespace Nektar
         private:
             /// Solve the linear system for given input and output vectors
             /// using a specified local to global map.
-            virtual void v_Solve( const Array<OneD, const NekDouble> &in,
-                              Array<OneD,       NekDouble> &out,
+            virtual void v_Solve( const Array<OneD, const NekDouble> &pLocInput,
+                              Array<OneD,       NekDouble> &pLocalOutput,
                         const AssemblyMapSharedPtr &locToGloMap,
                         const Array<OneD, const NekDouble> &dirForcing
                                                         = NullNekDouble1DArray);

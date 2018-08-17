@@ -286,7 +286,7 @@ namespace Nektar
 
         DNekScalBlkMatSharedPtr GlobalLinSysPETScStaticCond::v_PreSolve(
             int                     scLevel,
-            NekVector<NekDouble>   &F_GlobBnd)
+            Array<OneD, NekDouble>   &F_bnd)
         {
             if (scLevel == 0)
             {
@@ -307,10 +307,9 @@ namespace Nektar
         }
 
         void GlobalLinSysPETScStaticCond::v_BasisFwdTransform(
-            Array<OneD, NekDouble>& pInOut,
-            int                     offset)
+            Array<OneD, NekDouble>& pInOut)
         {
-            m_precon->DoTransformToLowEnergy(pInOut, offset);
+            m_precon->DoTransformToLowEnergy(pInOut);
         }
 
         void GlobalLinSysPETScStaticCond::v_BasisBwdTransform(

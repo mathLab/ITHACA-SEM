@@ -122,18 +122,7 @@ namespace Nektar
         /**
          * \brief Transform from original basis to low energy basis
          */ 
-        void Preconditioner::v_DoTransformToLowEnergy(
-            Array<OneD, NekDouble>& pInOut,
-            int offset)
-        {
-	}
-
-        /**
-         * \brief Transform from original basis to low energy basis
-         */ 
-        void Preconditioner::v_DoTransformToLowEnergy(
-            const Array<OneD, NekDouble> &pInOut,
-                  Array<OneD, NekDouble> &pOutput)
+        void Preconditioner::v_DoTransformToLowEnergy(Array<OneD, NekDouble>& pInOut)
         {
 	}
 

@@ -80,8 +80,7 @@ namespace Nektar
             virtual void v_InitObject();
 
             virtual void v_DoTransformToLowEnergy(
-                Array<OneD, NekDouble>& pInOut,
-                int offset);
+               Array<OneD, NekDouble>& pInOut);
 
             virtual void v_DoTransformFromLowEnergy(
                 Array<OneD, NekDouble>& pInput);

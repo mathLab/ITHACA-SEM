@@ -82,10 +82,9 @@ namespace Nektar
          *
          */
         void PreconditionerLinearWithLowEnergy::v_DoTransformToLowEnergy(
-            Array<OneD, NekDouble>& pInOut,
-            int offset)
+             Array<OneD, NekDouble>& pInOut)
         {
-            m_lowEnergyPrecon->DoTransformToLowEnergy(pInOut,offset);
+            m_lowEnergyPrecon->DoTransformToLowEnergy(pInOut);
         }
 
         /**

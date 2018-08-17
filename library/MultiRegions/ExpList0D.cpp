@@ -181,11 +181,6 @@ namespace Nektar
 			 }
             }
 		 
-		 
-			
-            // Setup Default optimisation information.
-            int nel = GetExpSize();
-
             // Set up offset information and array sizes
             SetCoeffPhysOffsets();
 			

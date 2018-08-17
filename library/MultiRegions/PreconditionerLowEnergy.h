@@ -86,7 +86,6 @@ namespace Nektar
             
             Array<OneD, NekDouble>  m_locToGloSignMult;
             Array<OneD, NekDouble>  m_multiplicity;
-            Array<OneD, int>        m_map;
 
             bool m_signChange;
             
@@ -157,13 +156,8 @@ namespace Nektar
                 Array<OneD, NekDouble>& pOutput);
 
             virtual void v_DoTransformToLowEnergy(
-                Array<OneD, NekDouble>& pInOut,
-                int offset);
+                Array<OneD, NekDouble>& pInOut);
 
-            virtual void v_DoTransformToLowEnergy(
-                const Array<OneD, NekDouble>& pInput,
-                Array<OneD, NekDouble>& pOutput);
-            
             virtual void v_DoTransformFromLowEnergy(
                 Array<OneD, NekDouble>& pInOut);
 

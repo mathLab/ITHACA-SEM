@@ -69,9 +69,6 @@ namespace Nektar
         {
             SetExpType(e3D);
             
-            // Setup Default optimisation information.
-            int nel = GetExpSize();
-
             SetCoeffPhysOffsets();
 
             if (DeclareCoeffPhysArrays)
@@ -168,9 +165,6 @@ namespace Nektar
                 }
 
             }
-
-            // Setup Default optimisation information.
-            int nel = GetExpSize();
 
             SetCoeffPhysOffsets();
 
@@ -297,9 +291,6 @@ namespace Nektar
                 }
 
             }
-
-            // Setup Default optimisation information.
-            int nel = GetExpSize();
 
             SetCoeffPhysOffsets();
 
@@ -428,9 +419,6 @@ namespace Nektar
                 }
 
             }
-
-            // Setup Default optimisation information.
-            int nel = GetExpSize();
 
             SetCoeffPhysOffsets();
 

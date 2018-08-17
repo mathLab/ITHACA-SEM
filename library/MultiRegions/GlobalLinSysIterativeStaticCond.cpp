@@ -410,7 +410,6 @@ namespace Nektar
                       Array<OneD, NekDouble>& pOutput)
         {
             int nLocal = m_locToGloMap->GetNumLocalBndCoeffs();
-            int nDir = m_locToGloMap->GetNumGlobalDirBndCoeffs();
 
             if (m_sparseSchurCompl)
             {
@@ -445,8 +444,8 @@ namespace Nektar
         }
 
         DNekScalBlkMatSharedPtr GlobalLinSysIterativeStaticCond::v_PreSolve(
-            int                     scLevel,
-            NekVector<NekDouble>   &F_GlobBnd)
+            int                      scLevel,
+            Array<OneD, NekDouble>   &F_bnd)
         {
             if (scLevel == 0)
             {
@@ -458,7 +457,32 @@ namespace Nektar
                     m_precon->BuildPreconditioner();
                 }
                 
-                Set_Rhs_Magnitude(F_GlobBnd);
+                int nLocBndDofs   = m_locToGloMap->GetNumLocalBndCoeffs();
+
+                //Set_Rhs_Magnitude - version using local array
+
+                Array<OneD, NekDouble> vExchange(1, 0.0);
+
+                vExchange[0] += Blas::Ddot(nLocBndDofs, F_bnd,1,F_bnd,1);
+                
+                m_expList.lock()->GetComm()->GetRowComm()->AllReduce(
+                vExchange, Nektar::LibUtilities::ReduceSum);
+
+                // To ensure that very different rhs values are not being
+                // used in subsequent solvers such as the velocit solve in
+                // INC NS. If this works we then need to work out a better
+                // way to control this.
+                NekDouble new_rhs_mag = (vExchange[0] > 1e-6)? vExchange[0] : 1.0;
+                
+                if(m_rhs_magnitude == NekConstants::kNekUnsetDouble)
+                {
+                    m_rhs_magnitude = new_rhs_mag;
+                }
+                else
+                {
+                    m_rhs_magnitude = (m_rhs_mag_sm*(m_rhs_magnitude) + 
+                                       (1.0-m_rhs_mag_sm)*new_rhs_mag); 
+                }
 
                 return m_S1Blk;
             }
@@ -473,10 +497,9 @@ namespace Nektar
         }
 
         void GlobalLinSysIterativeStaticCond::v_BasisFwdTransform(
-            Array<OneD, NekDouble>& pInOut,
-            int                     offset)
+                                     Array<OneD, NekDouble>& pInOut)
         {
-            m_precon->DoTransformToLowEnergy(pInOut, offset);            
+            m_precon->DoTransformToLowEnergy(pInOut);            
         }
 
         void GlobalLinSysIterativeStaticCond::v_BasisBwdTransform(

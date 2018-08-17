@@ -104,9 +104,6 @@ namespace Nektar
         {
             SetExpType(e2D);
             
-            // Setup Default optimisation information.
-            int nel = GetExpSize();
-
             // set up offset arrays.
             SetCoeffPhysOffsets();
 
@@ -217,9 +214,6 @@ namespace Nektar
                 (*m_exp)[i]->SetElmtId(i);
             }
 
-            // Setup Default optimisation information.
-            int nel = GetExpSize();
-
             // set up offset arrays.
             SetCoeffPhysOffsets();
 
@@ -328,9 +322,6 @@ namespace Nektar
                 }
 
             }
-
-            // Setup Default optimisation information.
-            int nel = GetExpSize();
 
             // set up offset arrays.
             SetCoeffPhysOffsets();
@@ -444,9 +435,6 @@ namespace Nektar
                 }
 
             }
-
-            // Setup Default optimisation information.
-            int nel = GetExpSize();
 
             // Set up m_coeffs, m_phys and offset arrays.
             SetCoeffPhysOffsets();
@@ -755,9 +743,6 @@ namespace Nektar
                     (*m_exp).push_back(FaceTriExp);
                 }
             }
-
-            // Setup Default optimisation information.
-            int nel = GetExpSize();
 
             // Set up offset information and array sizes
             SetCoeffPhysOffsets();

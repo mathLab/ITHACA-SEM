@@ -33,6 +33,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <cctype> // Looks unnecessary, but fixes compiler error on Mavericks.
+
 #include <boost/version.hpp>
 
 #ifdef BOOST_HAS_NUMPY

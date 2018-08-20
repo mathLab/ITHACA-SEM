@@ -33,8 +33,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <LibUtilities/Python/NekPyConfig.hpp>
 #include <MultiRegions/ExpList2D.h>
+#include <LibUtilities/Python/NekPyConfig.hpp>
 
 using namespace Nektar;
 using namespace Nektar::MultiRegions;

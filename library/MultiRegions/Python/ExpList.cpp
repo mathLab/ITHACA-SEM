@@ -33,8 +33,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <LibUtilities/Python/NekPyConfig.hpp>
 #include <MultiRegions/ExpList.h>
+#include <LibUtilities/Python/NekPyConfig.hpp>
 
 #include <fstream>
 

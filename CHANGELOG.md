@@ -89,6 +89,7 @@ v5.0.0
 - Fix manifold face curvature nodes (!913)
 - Fix writing 1D surfaces (!930)
 - Fix surface string parsin in BL splitting (!937)
+- Enable use of distributed packages for triangle and TetGen (!953)
 
 **FieldConvert**:
 - Add input module for Semtex field files (!777)

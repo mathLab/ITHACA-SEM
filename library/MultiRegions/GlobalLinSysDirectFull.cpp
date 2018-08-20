@@ -115,7 +115,7 @@ namespace Nektar
 
             int nDirDofs  = pLocToGloMap->GetNumGlobalDirBndCoeffs();
             int nGlobDofs = pLocToGloMap->GetNumGlobalCoeffs();
-            int nLocDofs = pLocToGloMap->GetNumLocalCoeffs();
+            int nLocDofs  = pLocToGloMap->GetNumLocalCoeffs();
             
             Array<OneD, NekDouble> tmp (nLocDofs);
             Array<OneD, NekDouble> tmp1(nLocDofs);

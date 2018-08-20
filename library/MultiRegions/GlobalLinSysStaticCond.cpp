@@ -133,13 +133,14 @@ namespace Nektar
             F        = m_wsp + nLocBndDofs;
             V_locbnd = m_wsp + 2*nLocBndDofs;
             F_int    = m_wsp + 3*nLocBndDofs; 
+
             pLocToGloMap->LocalToLocalBnd(pLocInput,F);
+            pLocToGloMap->LocalToLocalBnd(pLocOutput,V_locbnd);
 
             // set up normalisation factor for right hand side on first SC level
             DNekScalBlkMatSharedPtr sc = v_PreSolve(scLevel, F);
 
             // Gather boundary expansison into locbnd 
-            pLocToGloMap->LocalToLocalBnd(pLocOutput,V_locbnd);
             NekVector<NekDouble> V_LocBnd(nLocBndDofs,V_locbnd,eWrapper);
             NekVector<NekDouble> F_Bnd(nLocBndDofs,F_bnd,eWrapper);
             NekVector<NekDouble> F_Int(nIntDofs, F_int,eWrapper);
@@ -153,7 +154,8 @@ namespace Nektar
                 DNekScalBlkMat &SchurCompl = *sc;
 
                 // include dirichlet boundary forcing
-                F_Bnd = BinvD*F_Int + SchurCompl*V_LocBnd;
+                F_Bnd = BinvD*F_Int + SchurCompl*V_LocBnd;  
+
             }
             else if(atLastLevel)
             {
@@ -169,65 +171,28 @@ namespace Nektar
                 DiagonalBlockFullScalMatrixMultiply( F_Bnd, BinvD, F_Int);
             }
 
-#if 0
-            if(atLastLevel)
-            {
-                Array<OneD, NekDouble> F_tmp(nLocBndDofs,0.0);
-                Array<OneD, NekDouble> F_bnd_tmp(nLocBndDofs,0.0);
-
-                pLocToGloMap->AssembleBnd(F, F_tmp, nDirBndDofs);
-                pLocToGloMap->AssembleBnd(F_bnd, F_bnd_tmp,nDirBndDofs);
-                cout << "Finished tmp assemble" << endl;
-            }
-#endif
-
             Vmath::Vsub(nLocBndDofs, &F[0],1, &F_Bnd[0], 1, &F_Bnd[0],1);
             
-            
-#if 0 
-            // For parallel multi-level static condensation some
-            // processors may have different levels to others. This
-            // routine receives contributions to partition vertices from
-            // those lower levels, whilst not sending anything to the
-            // other partitions, and includes them in the modified right
-            // hand side vector.
-            int lcLevel = pLocToGloMap->GetLowestStaticCondLevel();
-            if(atLastLevel && scLevel < lcLevel)
-            {
-                // If this level is not the lowest level across all
-                // processes, we must do dummy communication for the
-                // remaining levels
-                Array<OneD, NekDouble> tmp(nGlobBndDofs);
-                for (int i = scLevel; i < lcLevel; ++i)
-                {
-                    Vmath::Fill(nGlobBndDofs, 0.0, tmp, 1);
-                    pLocToGloMap->UniversalAssembleBnd(tmp);
-                    Vmath::Vcopy(nGlobHomBndDofs,
-                                 tmp.get()+nDirBndDofs,          1,
-                                 V_GlobHomBndTmp.GetPtr().get(), 1);
-                    Subtract( F_HomBnd, F_HomBnd, V_GlobHomBndTmp);
-                }
-            }
-#endif
-
             // solve boundary system
             if(atLastLevel)
             {
                 Array<OneD, NekDouble> F_hom, pert(nGlobBndDofs,0.0);
 
+                // Transform to new basis if required 
                 v_BasisFwdTransform(F_bnd);
-                
-                pLocToGloMap->AssembleBnd(F_bnd, F_hom = F + nDirBndDofs, nDirBndDofs);
+
+                pLocToGloMap->AssembleBnd(F_bnd, F);
 
                 // Solve for difference from initial solution given inout;
-                SolveLinearSystem(nGlobBndDofs, F, pert, pLocToGloMap, nDirBndDofs);
+                SolveLinearSystem(nGlobBndDofs, F, pert, pLocToGloMap,
+                                  nDirBndDofs);
                     
                 Array<OneD, NekDouble> outloc = F_bnd; 
                 pLocToGloMap->GlobalToLocalBnd(pert,outloc);
 
                 // Transform back to original basis
-                v_BasisBwdTransform(outloc);
-                
+                v_CoeffsBwdTransform(outloc);
+
                 // Add back initial conditions onto difference
                 Vmath::Vadd(nLocBndDofs, V_locbnd, 1, outloc, 1, V_locbnd,1);
 
@@ -283,8 +248,9 @@ namespace Nektar
                 const std::shared_ptr<AssemblyMap>& pLocToGloMap)
         {
             int nLocalBnd = m_locToGloMap->GetNumLocalBndCoeffs();
+            int nIntDofs = m_locToGloMap->GetNumLocalCoeffs() - nLocalBnd; 
             m_wsp = Array<OneD, NekDouble>
-                    (4*nLocalBnd, 0.0);
+                    (3*nLocalBnd+nIntDofs, 0.0);
 
             if (pLocToGloMap->AtLastLevel())
             {

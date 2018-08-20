@@ -1004,9 +1004,9 @@ namespace Nektar
         }
 
         const Array<OneD,const int>&
-                    AssemblyMap::GetBndCondCoeffsToGlobalTraceMap()
+                AssemblyMap::GetBndCondCoeffsToLocalTraceMap()
         {
-            return m_bndCondCoeffsToGlobalTraceMap;
+            return m_bndCondCoeffsToLocalTraceMap;
         }
 
 

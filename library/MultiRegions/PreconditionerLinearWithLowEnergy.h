@@ -79,15 +79,24 @@ namespace Nektar
 
             virtual void v_InitObject();
 
-            virtual void v_DoTransformToLowEnergy(
-               Array<OneD, NekDouble>& pInOut);
+            virtual void v_DoTransformBasisToLowEnergy(
+                Array<OneD, NekDouble>& pInOut);
 
-            virtual void v_DoTransformFromLowEnergy(
-                Array<OneD, NekDouble>& pInput);
+            virtual void v_DoTransformCoeffsFromLowEnergy(
+                Array<OneD, NekDouble>& pInOut);
+
+            virtual void v_DoTransformCoeffsToLowEnergy(
+                const Array<OneD, NekDouble>& pInput,
+                Array<OneD, NekDouble>& pOutput);
+
+            virtual void v_DoTransformBasisFromLowEnergy(
+                const Array<OneD, NekDouble>& pInput,
+                Array<OneD, NekDouble>& pOutput);
+
 
             virtual DNekScalMatSharedPtr
                 v_TransformedSchurCompl(int n, int offset,
-                                        const std::shared_ptr<DNekScalMat > &loc_mat);
+                const std::shared_ptr<DNekScalMat > &loc_mat);
 
             virtual void v_DoPreconditioner(                
                       const Array<OneD, NekDouble>& pInput,

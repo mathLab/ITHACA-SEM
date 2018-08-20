@@ -499,15 +499,22 @@ namespace Nektar
         void GlobalLinSysIterativeStaticCond::v_BasisFwdTransform(
                                      Array<OneD, NekDouble>& pInOut)
         {
-            m_precon->DoTransformToLowEnergy(pInOut);            
+            m_precon->DoTransformBasisToLowEnergy(pInOut);            
         }
 
-        void GlobalLinSysIterativeStaticCond::v_BasisBwdTransform(
+        void GlobalLinSysIterativeStaticCond::v_CoeffsBwdTransform(
             Array<OneD, NekDouble>& pInOut)
         {
-	    m_precon->DoTransformFromLowEnergy(pInOut);
+	    m_precon->DoTransformCoeffsFromLowEnergy(pInOut);
         }
 
+        void GlobalLinSysIterativeStaticCond::v_CoeffsFwdTransform(
+            const Array<OneD, NekDouble>& pInput,
+            Array<OneD, NekDouble>& pOutput)
+        {
+	    m_precon->DoTransformCoeffsToLowEnergy(pInput,pOutput);
+        }
+        
         GlobalLinSysStaticCondSharedPtr GlobalLinSysIterativeStaticCond::v_Recurse(
             const GlobalLinSysKey                &mkey,
             const std::weak_ptr<ExpList>         &pExpList,

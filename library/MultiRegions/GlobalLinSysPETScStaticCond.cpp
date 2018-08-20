@@ -307,15 +307,22 @@ namespace Nektar
         }
 
         void GlobalLinSysPETScStaticCond::v_BasisFwdTransform(
-            Array<OneD, NekDouble>& pInOut)
+                                     Array<OneD, NekDouble>& pInOut)
         {
-            m_precon->DoTransformToLowEnergy(pInOut);
+            m_precon->DoTransformBasisToLowEnergy(pInOut);            
         }
 
-        void GlobalLinSysPETScStaticCond::v_BasisBwdTransform(
+        void GlobalLinSysPETScStaticCond::v_CoeffsBwdTransform(
             Array<OneD, NekDouble>& pInOut)
         {
-            m_precon->DoTransformFromLowEnergy(pInOut);
+	    m_precon->DoTransformCoeffsFromLowEnergy(pInOut);
+        }
+
+        void GlobalLinSysPETScStaticCond::v_CoeffsFwdTransform(
+            const Array<OneD, NekDouble>& pInput,
+            Array<OneD, NekDouble>& pOutput)
+        {
+	    m_precon->DoTransformCoeffsToLowEnergy(pInput,pOutput);
         }
 
         /**

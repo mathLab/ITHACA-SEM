@@ -208,7 +208,7 @@ namespace Nektar
             int trace_id, trace_id1;
             int dirOffset = 0;
 
-            // make trace trace renumbering map where first solved trace starts
+            // make trace renumbering map where first solved trace starts
             // at 0 so we can set up graph.
             for(i = 0; i < nTraceExp; ++i)
             {
@@ -318,20 +318,18 @@ namespace Nektar
             }
 
             // Now have trace edges Gid position
-
             cnt = 0;
             for(i = 0; i < nel; ++i)
             {
-                eid = i;
-                exp = expList[eid];
+                exp = expList[i];
 
                 for(j = 0; j < exp->GetNtrace(); ++j)
                 {
-                    traceGeom = m_elmtToTrace[eid][j]->GetGeom();
+                    traceGeom = m_elmtToTrace[i][j]->GetGeom();
                     id        = traceGeom->GetGlobalID();
                     gid       = traceElmtGid[meshTraceId.find(id)->second];
 
-                    const int nDim = expList[eid]->GetNumBases();
+                    const int nDim = expList[i]->GetNumBases();
 
                     if (nDim == 1)
                     {
@@ -340,9 +338,9 @@ namespace Nektar
                     }
                     else if (nDim == 2)
                     {
-                        order_e = expList[eid]->GetEdgeNcoeffs(j);
+                        order_e = expList[i]->GetEdgeNcoeffs(j);
                     
-                        if(expList[eid]->GetEorient(j) == StdRegions::eForwards)
+                        if(expList[i]->GetEorient(j) == StdRegions::eForwards)
                         {
                             for(k = 0; k < order_e; ++k)
                             {
@@ -351,7 +349,7 @@ namespace Nektar
                         }
                         else
                         {
-                            switch(m_elmtToTrace[eid][j]->GetBasisType(0))
+                            switch(m_elmtToTrace[i][j]->GetBasisType(0))
                             {
                                 case LibUtilities::eModified_A:
                                 {
@@ -397,7 +395,7 @@ namespace Nektar
                     }
                     else if (nDim == 3)
                     {
-                        order_e = expList[eid]->GetFaceNcoeffs(j);
+                        order_e = expList[i]->GetFaceNcoeffs(j);
 
                         std::map<int, int> orientMap;
 
@@ -406,12 +404,12 @@ namespace Nektar
                         Array<OneD, unsigned int> elmMap2 (order_e);
                         Array<OneD,          int> elmSign2(order_e);
 
-                        StdRegions::Orientation fo = expList[eid]->GetForient(j);
+                        StdRegions::Orientation fo = expList[i]->GetForient(j);
 
                         // Construct mapping which will permute global IDs
                         // according to face orientations.
-                        expList[eid]->GetFaceToElementMap(j,fo,elmMap1,elmSign1);
-                        expList[eid]->GetFaceToElementMap(
+                        expList[i]->GetFaceToElementMap(j,fo,elmMap1,elmSign1);
+                        expList[i]->GetFaceToElementMap(
                             j,StdRegions::eDir1FwdDir1_Dir2FwdDir2,elmMap2,elmSign2);
 
                         for (k = 0; k < elmMap1.num_elements(); ++k)
@@ -443,8 +441,25 @@ namespace Nektar
                 }
             }
 
-          // set up m_bndCondCoeffsToGlobalCoeffsMap to align with map
-            cnt = 0;
+            // set up identify map for lcoal to lcoal 
+            m_localToLocalBndMap    = Array<OneD,int>(m_numLocalBndCoeffs);
+
+            //local to bnd map is just a copy 
+            for(i = 0; i < m_numLocalBndCoeffs; ++i)
+            {
+                m_localToLocalBndMap[i] = i;
+            }
+
+
+            m_numGlobalBndCoeffs = trace->GetNcoeffs();
+            m_numGlobalCoeffs    = m_numGlobalBndCoeffs;
+
+            CalculateBndSystemBandWidth();
+
+            // set up m_bndCondCoeffsToLocalTraceMap 
+            // Number of boundary expansions
+            int nbndexp = 0, bndOffset, bndTotal = 0, traceOffset;
+            cnt = 0; 
             for(i = 0; i < nbnd; ++i)
             {
                 if (bndCond[i]->GetBoundaryConditionType() ==
@@ -453,47 +468,13 @@ namespace Nektar
                     continue;
                 }
                 cnt += bndCondExp[i]->GetNcoeffs();
-            }
-
-            m_bndCondCoeffsToGlobalTraceMap = Array<OneD, int>(cnt);
-
-            // Number of boundary expansions
-            int nbndexp = 0, bndOffset, bndTotal = 0;
-            for(cnt = i = 0; i < nbnd; ++i)
-            {
-                if (bndCond[i]->GetBoundaryConditionType() ==
-                    SpatialDomains::ePeriodic)
-                {
-                    continue;
-                }
-
-                for(j = 0; j < bndCondExp[i]->GetExpSize(); ++j)
-                {
-                    bndExp    = bndCondExp[i]->GetExp(j);
-                    id        = bndExp->GetGeom()->GetGlobalID();
-                    gid       = traceElmtGid[meshTraceId.find(id)->second];
-                    bndOffset = bndCondExp[i]->GetCoeff_Offset(j) + bndTotal;
-
-                    // Since boundary information is defined to be aligned with
-                    // the geometry just use forward/forward (both coordinate
-                    // directions) defintiion for gid's
-                    for(k = 0; k < bndExp->GetNcoeffs(); ++k)
-                    {
-                        m_bndCondCoeffsToGlobalTraceMap[bndOffset+k] = gid + k;
-                    }
-                }
-
                 nbndexp  += bndCondExp[i]->GetExpSize();
-                bndTotal += bndCondExp[i]->GetNcoeffs();
             }
-
-            m_numGlobalBndCoeffs = trace->GetNcoeffs();
-            m_numGlobalCoeffs    = m_numGlobalBndCoeffs;
-
-            CalculateBndSystemBandWidth();
+            
+            m_bndCondCoeffsToLocalTraceMap = Array<OneD, int>(cnt); 
+            m_bndCondIDToGlobalTraceID = Array<OneD, int>(nbndexp);
 
             cnt = 0;
-            m_bndCondIDToGlobalTraceID = Array<OneD, int>(nbndexp);
             for(i = 0; i < bndCondExp.num_elements(); ++i)
             {
                 if (bndCond[i]->GetBoundaryConditionType() ==
@@ -505,13 +486,42 @@ namespace Nektar
                 for(j = 0; j < bndCondExp[i]->GetExpSize(); ++j)
                 {
                     bndExp    = bndCondExp[i]->GetExp(j);
-                    traceGeom = bndExp->GetGeom();
-                    id        = traceGeom->GetGlobalID();
-                    m_bndCondIDToGlobalTraceID[cnt++] =
-                        meshTraceId.find(id)->second;
+                    id        = bndExp->GetGeom()->GetGlobalID();
+
+                    int meshId = meshTraceId.find(id)->second;
+                    m_bndCondIDToGlobalTraceID[cnt++] = meshId;
+
+                    // initialy set up map with global bnd location
+                    // and then use the localToGlobalBndMap to invert
+                    // since this is a one to one mapping on boundaries
+                    traceOffset = traceElmtGid[meshId];
+                    bndOffset   = bndCondExp[i]->GetCoeff_Offset(j) + bndTotal;
+
+
+                    for(k = 0; k < bndExp->GetNcoeffs(); ++k)
+                    {
+                        m_bndCondCoeffsToLocalTraceMap[bndOffset+k] =
+                            traceOffset + k;
+                    }
                 }
+                bndTotal += bndCondExp[i]->GetNcoeffs();
             }
 
+            // generate an inverse local to global bnd map;
+            map<int,int> invLocToGloMap;
+            for(i = 0; i < nbndry; ++i)
+            {
+                invLocToGloMap[m_localToGlobalBndMap[i]] = i;
+            }
+
+            // reset bndCondCoeffToLocalTraceMap to hold local rather
+            // than global reference
+            for(i = 0; i < m_bndCondCoeffsToLocalTraceMap.num_elements(); ++i)
+            {
+                m_bndCondCoeffsToLocalTraceMap[i] =
+                    invLocToGloMap[m_bndCondCoeffsToLocalTraceMap[i]];
+            }
+            
             // Now set up mapping from global coefficients to universal.
             ExpListSharedPtr tr = std::dynamic_pointer_cast<ExpList>(trace);
             SetUpUniversalDGMap   (locExp);
@@ -980,7 +990,7 @@ namespace Nektar
                     Array<OneD,       NekDouble>& global,
                     bool useComm ) const
         {
-            AssembleBnd(loc,global);
+            LocalBndToGlobal(loc,global);
         }
 
         void AssemblyMapDG::v_LocalToGlobal(
@@ -988,7 +998,7 @@ namespace Nektar
                     NekVector<      NekDouble>& global,
                     bool useComm) const
         {
-            AssembleBnd(loc,global);
+            LocalBndToGlobal(loc,global);
         }
 
         void AssemblyMapDG::v_GlobalToLocal(

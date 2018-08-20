@@ -130,8 +130,11 @@ namespace Nektar
                 Array<OneD, NekDouble>  &F_bnd);
             virtual void v_BasisFwdTransform(
                 Array<OneD, NekDouble>& pInOut);
-            virtual void v_BasisBwdTransform(
+            virtual void v_CoeffsBwdTransform(
                 Array<OneD, NekDouble>& pInOut);
+            virtual void v_CoeffsFwdTransform(
+                const Array<OneD, NekDouble>& pInput,
+                Array<OneD, NekDouble>& pOutput);
 
         private:
             DNekScalBlkMatSharedPtr                  m_S1Blk;

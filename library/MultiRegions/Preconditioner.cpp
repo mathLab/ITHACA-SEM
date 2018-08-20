@@ -122,33 +122,32 @@ namespace Nektar
         /**
          * \brief Transform from original basis to low energy basis
          */ 
-        void Preconditioner::v_DoTransformToLowEnergy(Array<OneD, NekDouble>& pInOut)
+        void Preconditioner::v_DoTransformBasisToLowEnergy(
+                             Array<OneD, NekDouble>& pInOut)
         {
 	}
 
         /**
-         * \brief Transform from low energy basis to orignal basis
+         * \brief Transform from low energy coeffs to orignal basis
          */ 
-        void Preconditioner::v_DoTransformFromLowEnergy(
-            Array<OneD, NekDouble>& pInput)
+        void Preconditioner::v_DoTransformCoeffsFromLowEnergy(
+            Array<OneD, NekDouble>& pInOut)
         {
-            Vmath::Smul(pInput.num_elements(), 1.0, pInput, 1, pInput, 1);
 	}
 
         /**
          * \brief Multiply by the block inverse transformation matrix
          */ 
-        void Preconditioner::v_DoMultiplybyInverseTransformationMatrix(
+        void Preconditioner::v_DoTransformCoeffsToLowEnergy(
             const Array<OneD, NekDouble> &pInput,
                   Array<OneD, NekDouble> &pOutput)
         {
-            NEKERROR(ErrorUtil::efatal,"Method does not exist" );
 	}
 
         /**
          * \brief Multiply by the block transposed inverse transformation matrix
          */ 
-        void Preconditioner::v_DoMultiplybyInverseTransposedTransformationMatrix(
+        void Preconditioner::v_DoTransformBasisFromLowEnergy(
             const Array<OneD, NekDouble> &pInput,
                   Array<OneD, NekDouble> &pOutput)
         {

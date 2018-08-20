@@ -77,8 +77,15 @@ namespace Nektar
 
             }
 
-            virtual void v_BasisBwdTransform(
+            virtual void v_CoeffsBwdTransform(
                 Array<OneD, NekDouble>& pInOut)
+            {
+                
+            }
+
+            virtual void v_CoeffsFwdTransform(
+                const Array<OneD, NekDouble>& pInput,
+                Array<OneD, NekDouble>& pOutput)
             {
                 
             }

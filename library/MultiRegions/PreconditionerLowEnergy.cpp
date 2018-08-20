@@ -97,8 +97,8 @@ namespace Nektar
             //Set up block transformation matrix
             SetupBlockTransformationMatrix();
 
-            //Sets up multiplicity map for transformation from global to local
-            CreateMultiplicityMap();
+            //Sets up variable p mask 
+            CreateVariablePMask();
 	}
         
 
@@ -656,13 +656,13 @@ namespace Nektar
                 {
                     if(m_signChange)
                     {
-                        mask1 = (m_locToGloSignMult[cnt+i] == 0.0)? 0.0:1.0;
+                        mask1 = (m_variablePmask[cnt+i] == 0.0)? 0.0:1.0;
                     }
                     for(int j = 0; j < nCoeffs; ++j)
                     {
                         if(m_signChange)
                         {
-                            mask2 = (m_locToGloSignMult[cnt+j] == 0.0)? 0.0:1.0;
+                            mask2 = (m_variablePmask[cnt+j] == 0.0)? 0.0:1.0;
                         }
                         val = S(i,j)*mask1*mask2;
                         Sloc.SetValue(i,j,val);
@@ -1067,13 +1067,14 @@ namespace Nektar
         }
 
         /**
-         * \brief Transform the solution vector vector to low energy.
+         * \brief Transform the basis  vector to low energy space
          *
          * As the conjugate gradient system is solved for the low energy basis,
          * the solution vector \f$\mathbf{x}\f$ must be transformed to the low
          * energy basis i.e. \f$\overline{\mathbf{x}}=\mathbf{R}\mathbf{x}\f$.
          */
-        void PreconditionerLowEnergy::v_DoTransformToLowEnergy(Array<OneD, NekDouble>& pInOut)
+        void PreconditionerLowEnergy::v_DoTransformBasisToLowEnergy
+                 (Array<OneD, NekDouble>& pInOut)
         {
             int nLocBndDofs        = m_locToGloMap->GetNumLocalBndCoeffs();
 
@@ -1082,7 +1083,11 @@ namespace Nektar
 
             Array<OneD, NekDouble> pLocalIn(nLocBndDofs,pInOut.get());
 
-	    //Multiply by the block transformation matrix
+            //Apply mask in case of variable P
+            Vmath::Vmul(nLocBndDofs,pLocalIn, 1, m_variablePmask,1,
+                        pLocalIn,1);
+
+            //Multiply by the block transformation matrix
 	    int cnt = 0; 
 	    int cnt1 = 0;
 	    for(int i = 0; i < m_sameBlock.size(); ++i)
@@ -1099,15 +1104,16 @@ namespace Nektar
         }
         
         /**
-         * \brief transform the solution vector from low energy back to the
-         * original basis.
+         * \brief transform the solution coeffiicents from low energy
+         * back to the original coefficient space.
          *
          * After the conjugate gradient routine the output vector is in the low
          * energy basis and must be trasnformed back to the original basis in
          * order to get the correct solution out. the solution vector
          * i.e. \f$\mathbf{x}=\mathbf{R^{T}}\mathbf{\overline{x}}\f$.
          */
-        void PreconditionerLowEnergy::v_DoTransformFromLowEnergy(Array<OneD, NekDouble>& pInOut)
+        void PreconditionerLowEnergy::v_DoTransformCoeffsFromLowEnergy(
+                              Array<OneD, NekDouble>& pInOut)
         {
             int nLocBndDofs        = m_locToGloMap->GetNumLocalBndCoeffs();
 
@@ -1132,48 +1138,35 @@ namespace Nektar
 			    0.0, pInOut.get() + cnt, nbndcoeffs);
 		cnt  += nbndcoeffs*nexp;
 		cnt1 += nexp;
+
 	    }
+
+            Vmath::Vmul(nLocBndDofs,pInOut, 1, m_variablePmask,1,
+                        pInOut,1);
         }
 
         /**
          * \brief Multiply by the block inverse transformation matrix
+         * This transforms the bassi from Low Energy to original basis
+         *
+         * Note; not typically required
          */ 
-        void PreconditionerLowEnergy::v_DoMultiplybyInverseTransformationMatrix(
-                                                                                const Array<OneD, NekDouble>& pInput,
-                                                                                Array<OneD, NekDouble>& pOutput)
+        
+        void PreconditionerLowEnergy::v_DoTransformBasisFormLowEnergy(
+                const Array<OneD, NekDouble>& pInput,
+                Array<OneD, NekDouble>& pOutput)
         {
-            int nGlobBndDofs       = m_locToGloMap->GetNumGlobalBndCoeffs();
-            int nDirBndDofs        = m_locToGloMap->GetNumGlobalDirBndCoeffs();
-            int nGlobHomBndDofs    = nGlobBndDofs - nDirBndDofs;
             int nLocBndDofs        = m_locToGloMap->GetNumLocalBndCoeffs();
 
-            ASSERTL1(pInput.num_elements() >= nGlobHomBndDofs,
-                     "Input array is greater than the nGlobHomBndDofs");
-            ASSERTL1(pOutput.num_elements() >= nGlobHomBndDofs,
-                     "Output array is greater than the nGlobHomBndDofs");
+            ASSERTL1(pInput.num_elements() >= nLocBndDofs,
+                     "Input array is smaller than nLocBndDofs");
+            ASSERTL1(pOutput.num_elements() >= nLocBndDofs,
+                     "Output array is smaller than nLocBndDofs");
 
-            //vectors of length number of non-dirichlet boundary dofs
-            NekVector<NekDouble> F_GlobBnd(nGlobHomBndDofs,pInput,eWrapper);
-            NekVector<NekDouble> F_HomBnd(nGlobHomBndDofs,pOutput,
-                                          eWrapper);
             //Block inverse transformation matrix
             DNekBlkMat &invR = *m_InvRBlk;
 
-            Array<OneD, NekDouble> pLocal(nLocBndDofs, 0.0);
-            NekVector<NekDouble> F_LocBnd(nLocBndDofs,pLocal,eWrapper);
-            Array<OneD, int> map = m_locToGloMap->GetLocalToGlobalBndMap();
-            Array<OneD, NekDouble> pLocalIn(nLocBndDofs, 0.0);
-
-            // Allocated array of size number of global boundary dofs and copy
-            // the input array to the tmp array offset by Dirichlet boundary
-            // conditions.
-            Array<OneD,NekDouble> tmp(nGlobBndDofs,0.0);
-            Vmath::Vcopy(nGlobHomBndDofs, pInput.get(), 1, tmp.get() + nDirBndDofs, 1);
-
-            //Global boundary dofs (with zeroed dirichlet values) to
-            //local boundary dofs
-            Vmath::Gathr(map.num_elements(), m_locToGloSignMult.get(),
-                         tmp.get(), map.get(), pLocalIn.get());
+            Array<OneD, NekDouble> pLocalIn(nLocBndDofs, pInput.get());
 
             //Multiply by the inverse transformation matrix
 	    int cnt = 0; 
@@ -1185,48 +1178,35 @@ namespace Nektar
 		Blas::Dgemm('N','N', nbndcoeffs, nexp, nbndcoeffs,
 			    1.0, &(invR.GetBlock(cnt1,cnt1)->GetPtr()[0]),
                             nbndcoeffs,pLocalIn.get() + cnt,  nbndcoeffs, 
-			    0.0, pLocal.get() + cnt, nbndcoeffs);
+			    0.0, pOutput.get() + cnt, nbndcoeffs);
 		cnt  += nbndcoeffs*nexp;
 		cnt1 += nexp;
 	    }
-            
-
-            //Assemble local boundary to global non-dirichlet boundary
-            m_locToGloMap->AssembleBnd(F_LocBnd,F_HomBnd,nDirBndDofs);
-
 	}
 
         /**
-         * \brief Multiply by the block tranposed inverse transformation matrix
+         * \brief Multiply by the block tranposed inverse
+         * transformation matrix (R^T)^{-1} which is equivlaent to
+         * transforming coefficients to LowEnergy space
+         *
+         * In JCP 2001 paper on low energy this is seen as (C^T)^{-1}
          */ 
-        void PreconditionerLowEnergy::v_DoMultiplybyInverseTransposedTransformationMatrix(
-                                                                                          const Array<OneD, NekDouble>& pInput,
-                                                                                          Array<OneD, NekDouble>& pOutput)
+        void PreconditionerLowEnergy::v_DoTransformCoeffsToLowEnergy(
+                        const Array<OneD, NekDouble>& pInput,
+                        Array<OneD, NekDouble>& pOutput)
         {
-            int nGlobBndDofs       = m_locToGloMap->GetNumGlobalBndCoeffs();
-            int nDirBndDofs        = m_locToGloMap->GetNumGlobalDirBndCoeffs();
-            int nGlobHomBndDofs    = nGlobBndDofs - nDirBndDofs;
             int nLocBndDofs        = m_locToGloMap->GetNumLocalBndCoeffs();
 
-            ASSERTL1(pInput.num_elements() >= nGlobHomBndDofs,
-                     "Input array is greater than the nGlobHomBndDofs");
-            ASSERTL1(pOutput.num_elements() >= nGlobHomBndDofs,
-                     "Output array is greater than the nGlobHomBndDofs");
+            ASSERTL1(pInput.num_elements() >= nLocBndDofs,
+                     "Input array is less than nLocBndDofs");
+            ASSERTL1(pOutput.num_elements() >= nLocBndDofs,
+                     "Output array is less than nLocBndDofs");
 
-            //vectors of length number of non-dirichlet boundary dofs
-            NekVector<NekDouble> F_GlobBnd(nGlobHomBndDofs,pInput,eWrapper);
-            NekVector<NekDouble> F_HomBnd(nGlobHomBndDofs,pOutput,
-                                          eWrapper);
+
             //Block inverse transformation matrix
             DNekBlkMat &invR = *m_InvRBlk;
 
-            Array<OneD, NekDouble> pLocalIn(nLocBndDofs, 0.0);
-            NekVector<NekDouble> F_LocBnd(nLocBndDofs,pLocalIn,eWrapper);
-            Array<OneD, int> map = m_locToGloMap->GetLocalToGlobalBndMap();
-            Array<OneD, NekDouble> pLocal(nLocBndDofs, 0.0);
-
-            m_locToGloMap->GlobalToLocalBnd(pInput,pLocalIn, nDirBndDofs);
-
+            Array<OneD, NekDouble> pLocalIn(nLocBndDofs, pInput.get());
 
             //Multiply by the transpose of block transformation matrix
 	    int cnt = 0; 
@@ -1238,15 +1218,10 @@ namespace Nektar
 		Blas::Dgemm('T','N', nbndcoeffs, nexp, nbndcoeffs,
 			    1.0, &(invR.GetBlock(cnt1,cnt1)->GetPtr()[0]),
                             nbndcoeffs,pLocalIn.get() + cnt,  nbndcoeffs, 
-			    0.0, pLocal.get() + cnt, nbndcoeffs);
+			    0.0, pOutput.get() + cnt, nbndcoeffs);
 		cnt  += nbndcoeffs*nexp;
 		cnt1 += nexp;
 	    }
-
-            
-            m_locToGloMap->AssembleBnd(pLocal,pOutput, nDirBndDofs);
-
-            Vmath::Vmul(nGlobHomBndDofs,pOutput,1,m_multiplicity,1,pOutput,1);
 	}
 
 
@@ -1282,23 +1257,14 @@ namespace Nektar
             DNekMat Sloc(nbnd,nbnd);
             
             // For variable p we need to just use the active modes 
-            NekDouble mask1 = 1.0;
-            NekDouble mask2 = 1.0;
             NekDouble val;
             
             for(int i = 0; i < nbnd; ++i)
             {
-                if(m_signChange)
-                {
-                    mask1 = (m_locToGloSignMult[bndoffset+i] == 0.0)? 0.0:1.0;
-                }
                 for(int j = 0; j < nbnd; ++j)
                 {
-                    if(m_signChange)
-                    {
-                        mask2 = (m_locToGloSignMult[bndoffset+j] == 0.0)? 0.0:1.0;
-                    }
-                    val = S1(i,j)*mask1*mask2;
+                    val = S1(i,j)*m_variablePmask[bndoffset+i]*
+                        m_variablePmask[bndoffset+j];
                     Sloc.SetValue(i,j,val);
                 }
             }
@@ -1317,74 +1283,29 @@ namespace Nektar
         /**
          * Create the inverse multiplicity map.
          */
-        void PreconditionerLowEnergy::CreateMultiplicityMap(void)
+        void PreconditionerLowEnergy::CreateVariablePMask(void)
         {
-            unsigned int nGlobalBnd = m_locToGloMap->GetNumGlobalBndCoeffs();
             unsigned int nEntries   = m_locToGloMap->GetNumLocalBndCoeffs();
             unsigned int i;
             
-            const Array<OneD, const int> &vMap
-                = m_locToGloMap->GetLocalToGlobalBndMap();
-
             const Array< OneD, const NekDouble > &sign 
                 = m_locToGloMap->GetLocalToGlobalBndSign();
 
             m_signChange=m_locToGloMap->GetSignChange();
 
-            // Count the multiplicity of each global DOF on this process
-            Array<OneD, NekDouble> vCounts(nGlobalBnd, 0.0);
-            if(m_signChange)
-            {
-                for (i = 0; i < nEntries; ++i)
-                {
-                    if(fabs(sign[i]) > 0.0)
-                    {
-                        vCounts[vMap[i]] += 1.0;
-                    }
-                    else // set zero modes to 1 so inverse below does not cause problems
-                    {
-                        vCounts[vMap[i]] = 1.0;
-                    }
-                }
-            }
-            else
-            {
-                for (i = 0; i < nEntries; ++i)
-                {
-                    vCounts[vMap[i]] += 1.0;
-                }
-            }
-                
-            // Get universal multiplicity by globally assembling counts
-            m_locToGloMap->UniversalAssembleBnd(vCounts);
-
             // Construct a map of 1/multiplicity
-            m_locToGloSignMult = Array<OneD, NekDouble>(nEntries);
+            m_variablePmask = Array<OneD, NekDouble>(nEntries);
             for (i = 0; i < nEntries; ++i)
             {
                 if(m_signChange)
                 {
-                    m_locToGloSignMult[i] = sign[i]*1.0/vCounts[vMap[i]];
+                    m_variablePmask[i] = fabs(sign[i]);
                 }
                 else
                 {
-                    m_locToGloSignMult[i] = 1.0/vCounts[vMap[i]];
+                    m_variablePmask[i] = 1.0; 
                 }
             }
-            
-            int nDirBnd     = m_locToGloMap->GetNumGlobalDirBndCoeffs();
-            int nGlobHomBnd = nGlobalBnd - nDirBnd;
-            int nLocBnd     = m_locToGloMap->GetNumLocalBndCoeffs();
-
-            //Set up multiplicity array for inverse transposed transformation matrix
-            Array<OneD,NekDouble> tmp(nGlobHomBnd,1.0);
-            m_multiplicity = Array<OneD,NekDouble>(nGlobHomBnd,1.0);
-            Array<OneD,NekDouble> loc(nLocBnd,1.0);
-
-            m_locToGloMap->GlobalToLocalBnd(tmp,loc, nDirBnd);
-            m_locToGloMap->AssembleBnd(loc,m_multiplicity, nDirBnd);
-            Vmath::Sdiv(nGlobHomBnd,1.0,m_multiplicity,1,m_multiplicity,1);
-
         }
 
         /**

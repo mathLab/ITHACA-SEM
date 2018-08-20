@@ -81,21 +81,41 @@ namespace Nektar
         /**
          *
          */
-        void PreconditionerLinearWithLowEnergy::v_DoTransformToLowEnergy(
+        void PreconditionerLinearWithLowEnergy::v_DoTransformBasisToLowEnergy(
              Array<OneD, NekDouble>& pInOut)
         {
-            m_lowEnergyPrecon->DoTransformToLowEnergy(pInOut);
+            m_lowEnergyPrecon->DoTransformBasisToLowEnergy(pInOut);
         }
 
         /**
          *
          */
-        void PreconditionerLinearWithLowEnergy::v_DoTransformFromLowEnergy(
+        void PreconditionerLinearWithLowEnergy::v_DoTransformCoeffsFromLowEnergy(
             Array<OneD, NekDouble>& pInput)
         {
-            m_lowEnergyPrecon->DoTransformFromLowEnergy(pInput);
+            m_lowEnergyPrecon->DoTransformCoeffsFromLowEnergy(pInput);
         }
 
+        /**
+         *
+         */
+        void PreconditionerLinearWithLowEnergy::v_DoTransformCoeffsToLowEnergy(
+               const Array<OneD, NekDouble>& pInput,
+               Array<OneD, NekDouble>& pOutput)
+        {
+            m_lowEnergyPrecon->DoTransformCoeffsToLowEnergy(pInput,pOutput);
+        }
+
+        /**
+         *
+         */
+        void PreconditionerLinearWithLowEnergy::v_DoTransformBasisFromLowEnergy(
+               const Array<OneD, NekDouble>& pInput,
+               Array<OneD, NekDouble>& pOutput)
+        {
+            m_lowEnergyPrecon->DoTransformBasisFromLowEnergy(pInput,pOutput);
+        }
+        
 
         DNekScalMatSharedPtr PreconditionerLinearWithLowEnergy::
         v_TransformedSchurCompl(int n, int offset,
@@ -134,12 +154,13 @@ namespace Nektar
             m_lowEnergyPrecon->DoPreconditioner(pInput, OutputLowEnergy);
 
             //Transform input from low energy to original basis
-            m_lowEnergyPrecon->DoMultiplybyInverseTransformationMatrix(pInput, InputLinear);
+            //m_lowEnergyPrecon->DoMultiplybyInverseTransformationMatrix(pInput, InputLinear);
+            m_lowEnergyPrecon->DoTransformBasisFromLowEnergy(pInput, InputLinear);
 
             //Apply linear space preconditioner
             m_linSpacePrecon->DoPreconditionerWithNonVertOutput(InputLinear, OutputLinear, tmp);
 
-            m_lowEnergyPrecon->DoMultiplybyInverseTransposedTransformationMatrix(OutputLinear,pOutput);
+            m_lowEnergyPrecon->DoTransformCoeffsToLowEnergy(OutputLinear,pOutput);
 
             Vmath::Vadd(nGlobal,pOutput,1,OutputLowEnergy,1,pOutput,1);
         }

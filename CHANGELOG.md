@@ -163,6 +163,7 @@ v4.4.2
 
 **FieldConvert**
 - Allow passing input name with trailing separator (!879)
+- Fix the interpcoord option  of the interppointdatatofld module (!952)
 
 **Utilities**
 - Fix VtkToPng to account for deprecated VTK API for VTK version > 8.1 (!925)

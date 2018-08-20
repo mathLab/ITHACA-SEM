@@ -123,11 +123,6 @@ void Interpolator::CalcWeights(const LibUtilities::PtsFieldSharedPtr ptsInField,
             m_weights   = Array<TwoD, float>(nOutPts, 3, 0.0);
             m_neighInds = Array<TwoD, unsigned int>(nOutPts, 3, (unsigned int) 0);
 
-            if (m_ptsInField->GetDim() == 1)
-            {
-                m_coordId = 0;
-            }
-
             for (int i = 0; i < nOutPts; ++i)
             {
                 Array<OneD, NekDouble> tmp(m_dim, 0.0);

@@ -78,7 +78,6 @@ protected:
         const Array<OneD, Array<OneD, NekDouble> > &pBwd = NullNekDoubleArrayofArray);
 
 private:
-    MultiRegions::CoeffState m_CoeffState;
     bool m_homogen_dealiasing;
     bool m_SingleMode;
     bool m_HalfMode;

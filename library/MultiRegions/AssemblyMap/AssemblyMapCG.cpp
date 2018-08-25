@@ -110,6 +110,15 @@ namespace Nektar
 
             for(i = 0; i < bndCondExp.num_elements(); i++)
             {
+
+                m_numLocalBndCondCoeffs += bndCondExp[i]->GetNcoeffs();
+
+                if (bndConditions[0][i]->GetBoundaryConditionType() ==
+                       SpatialDomains::ePeriodic)
+                {
+                    continue;
+                }
+
                 // Check to see if any value on boundary has Dirichlet
                 // value.  note this is a vector to manage coupled
                 // solver but for scalar will just be a vector of size 11
@@ -142,7 +151,7 @@ namespace Nektar
                     }
                 }
 
-                // If all boundaries are Dirichlet fill iin graph
+                // If all boundaries are Dirichlet fill in graph
                 if(cnt == bndConditions.num_elements())
                 {
                     for(j = 0; j < bndCondExp[i]->GetNumElmts(); j++)
@@ -177,8 +186,6 @@ namespace Nektar
                         m_numLocalDirBndCoeffs += bndExp->GetNcoeffs();
                     }
                 }
-
-                m_numLocalBndCondCoeffs += bndCondExp[i]->GetNcoeffs();
             }
 
             // Number of dirichlet edges and faces (not considering periodic

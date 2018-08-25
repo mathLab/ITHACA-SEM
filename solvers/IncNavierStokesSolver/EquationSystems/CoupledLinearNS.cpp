@@ -2048,7 +2048,7 @@ namespace Nektar
         
         //  Set Weak BC into f_bnd and Dirichlet Dofs in bnd
         const Array<OneD,const int>& bndmap
-        = m_locToGloMap[mode]->GetBndCondCoeffsToGlobalCoeffsMap();
+            = m_locToGloMap[mode]->GetBndCondIDToGlobalTraceID();
         
         // Forcing function with weak boundary conditions and
         // Dirichlet conditions
@@ -2119,7 +2119,8 @@ namespace Nektar
             {
                 for(k = 0; k < nbnd; ++k)
                 {
-                    f_bnd[cnt+k] = loctoglosign[offset+j*nbnd+k]*bnd[loctoglomap[offset + j*nbnd + k]];
+                    f_bnd[cnt+k] = loctoglosign[offset+j*nbnd+k]*
+                        bnd[loctoglomap[offset + j*nbnd + k]];
                 }
                 cnt += nbnd;
             }

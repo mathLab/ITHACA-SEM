@@ -121,102 +121,108 @@ namespace Nektar
             int nDirBndDofs  = pLocToGloMap->GetNumGlobalDirBndCoeffs();
             int nIntDofs     = nGlobDofs - nGlobBndDofs;
 
-            if((nGlobBndDofs-nDirBndDofs) == 0)
+            if((nGlobDofs-nDirBndDofs) == 0)
             {
                 return; //nothing to solve; 
             }
             
-            Array<OneD, NekDouble> F, F_bnd,F_int, V_locbnd; 
+            Array<OneD, NekDouble> F_bnd, F_bnd1, F_int, V_bnd; 
             Array<OneD, NekDouble> tmp;
 
-            F_bnd    = m_wsp;
-            F        = m_wsp + nLocBndDofs;
-            V_locbnd = m_wsp + 2*nLocBndDofs;
-            F_int    = m_wsp + 3*nLocBndDofs; 
+            F_bnd  = m_wsp;
+            F_bnd1 = m_wsp + nLocBndDofs;
+            V_bnd  = m_wsp + 2*nLocBndDofs;
+            F_int  = m_wsp + 3*nLocBndDofs; 
 
-            pLocToGloMap->LocalToLocalBnd(pLocInput,F);
-            pLocToGloMap->LocalToLocalBnd(pLocOutput,V_locbnd);
+            pLocToGloMap->LocalToLocalBnd(pLocOutput,V_bnd);
 
-            // set up normalisation factor for right hand side on first SC level
-            DNekScalBlkMatSharedPtr sc = v_PreSolve(scLevel, F);
-
-            // Gather boundary expansison into locbnd 
-            NekVector<NekDouble> V_LocBnd(nLocBndDofs,V_locbnd,eWrapper);
-            NekVector<NekDouble> F_Bnd(nLocBndDofs,F_bnd,eWrapper);
             NekVector<NekDouble> F_Int(nIntDofs, F_int,eWrapper);
+            NekVector<NekDouble> V_Bnd(nLocBndDofs,V_bnd,eWrapper);
+
+            if(nIntDofs)
+            {
+                m_locToGloMap->LocalToLocalInt(pLocInput,F_int);
+            }
+
+            if(nGlobBndDofs-nDirBndDofs)
+            {
+                pLocToGloMap->LocalToLocalBnd(pLocInput,F_bnd);
+                // set up normalisation factor for right hand side on first SC level
+                DNekScalBlkMatSharedPtr sc = v_PreSolve(scLevel, F_bnd);
                 
-            // construct boundary forcing
-            if( nIntDofs  && atLastLevel)
-            {
-                m_locToGloMap->LocalToLocalInt(pLocInput,F_int);
-
-                DNekScalBlkMat &BinvD      = *m_BinvD;
-                DNekScalBlkMat &SchurCompl = *sc;
-
-                // include dirichlet boundary forcing
-                F_Bnd = BinvD*F_Int + SchurCompl*V_LocBnd;  
-
-            }
-            else if(atLastLevel)
-            {
-                // include dirichlet boundary forcing
-                DNekScalBlkMat &SchurCompl = *sc;
-                F_Bnd = SchurCompl*V_LocBnd;
-            }
-            else
-            {
-                m_locToGloMap->LocalToLocalInt(pLocInput,F_int);
-
-                DNekScalBlkMat &BinvD      = *m_BinvD;
-                DiagonalBlockFullScalMatrixMultiply( F_Bnd, BinvD, F_Int);
-            }
-
-            Vmath::Vsub(nLocBndDofs, &F[0],1, &F_Bnd[0], 1, &F_Bnd[0],1);
-            
-            // solve boundary system
-            if(atLastLevel)
-            {
-                Array<OneD, NekDouble> F_hom, pert(nGlobBndDofs,0.0);
-
-                // Transform to new basis if required 
-                v_BasisFwdTransform(F_bnd);
-
-                pLocToGloMap->AssembleBnd(F_bnd, F);
-
-                // Solve for difference from initial solution given inout;
-                SolveLinearSystem(nGlobBndDofs, F, pert, pLocToGloMap,
-                                  nDirBndDofs);
+                // Gather boundary expansison into locbnd 
+                NekVector<NekDouble> F_Bnd(nLocBndDofs,F_bnd1,eWrapper);
+                
+                // construct boundary forcing
+                if( nIntDofs)
+                {
+                    DNekScalBlkMat &BinvD      = *m_BinvD;
                     
-                Array<OneD, NekDouble> outloc = F_bnd; 
-                pLocToGloMap->GlobalToLocalBnd(pert,outloc);
-
-                // Transform back to original basis
-                v_CoeffsBwdTransform(outloc);
-
-                // Add back initial conditions onto difference
-                Vmath::Vadd(nLocBndDofs, V_locbnd, 1, outloc, 1, V_locbnd,1);
-
-                // put final bnd solution back in output array
-                m_locToGloMap->LocalBndToLocal(V_locbnd,pLocOutput);
-            }
-            else
-            {
-                // Process next level of recursion. 
-                AssemblyMapSharedPtr nextLevLocToGloMap = pLocToGloMap->
-                    GetNextLevelLocalToGlobalMap();
+                    if(atLastLevel)
+                    {
+                        DNekScalBlkMat &SchurCompl = *sc;
+                        // include dirichlet boundary forcing
+                        F_Bnd = BinvD*F_Int + SchurCompl*V_Bnd;
+                    }
+                    else
+                    {
+                        DiagonalBlockFullScalMatrixMultiply(F_Bnd, BinvD, F_Int);
+                    }
+                    
+                    Vmath::Vsub(nLocBndDofs, F_bnd,1, F_bnd1, 1, F_bnd,1);
+                }
+                else if(atLastLevel)
+                {
+                    // include dirichlet boundary forcing
+                    DNekScalBlkMat &SchurCompl = *sc;
+                    F_Bnd = SchurCompl*V_Bnd;
+                    
+                    Vmath::Vsub(nLocBndDofs, F_bnd,1, F_bnd1, 1, F_bnd,1);
+                }
                 
-                // partially assemble F_bnd for next level and
-                // reshuffle V_locbnd
-                nextLevLocToGloMap->PatchAssemble     (F_bnd,F_bnd);
-                nextLevLocToGloMap->PatchLocalToGlobal(V_locbnd,V_locbnd);
-                
-                m_recursiveSchurCompl->Solve(F_bnd,V_locbnd, nextLevLocToGloMap);
-
-                // unpack V_locbnd
-                nextLevLocToGloMap->PatchGlobalToLocal(V_locbnd,V_locbnd);
-
-                // place V_locbnd in output array
-                m_locToGloMap->LocalBndToLocal(V_locbnd, pLocOutput);
+                if(atLastLevel) // solve boundary system
+                {
+                    Array<OneD, NekDouble> F_hom, pert(nGlobBndDofs,0.0);
+                    
+                    // Transform to new basis if required 
+                    v_BasisFwdTransform(F_bnd);
+                    
+                    pLocToGloMap->AssembleBnd(F_bnd, F_bnd1);
+                    
+                    // Solve for difference from initial solution given inout;
+                    SolveLinearSystem(nGlobBndDofs, F_bnd1, pert, pLocToGloMap,
+                                      nDirBndDofs);
+                    
+                    Array<OneD, NekDouble> outloc = F_bnd; 
+                    pLocToGloMap->GlobalToLocalBnd(pert,outloc);
+                    
+                    // Transform back to original basis
+                    v_CoeffsBwdTransform(outloc);
+                    
+                    // Add back initial conditions onto difference
+                    Vmath::Vadd(nLocBndDofs, V_bnd, 1, outloc, 1, V_bnd,1);
+                    
+                    // put final bnd solution back in output array
+                    m_locToGloMap->LocalBndToLocal(V_bnd,pLocOutput);
+                }
+                else // Process next level of recursion for multi level SC
+                {
+                    AssemblyMapSharedPtr nextLevLocToGloMap = pLocToGloMap->
+                        GetNextLevelLocalToGlobalMap();
+                    
+                    // partially assemble F for next level and
+                    // reshuffle V_bnd
+                    nextLevLocToGloMap->PatchAssemble     (F_bnd,F_bnd);
+                    nextLevLocToGloMap->PatchLocalToGlobal(V_bnd,V_bnd);
+                    
+                    m_recursiveSchurCompl->Solve(F_bnd,V_bnd, nextLevLocToGloMap);
+                    
+                    // unpack V_bnd
+                    nextLevLocToGloMap->PatchGlobalToLocal(V_bnd,V_bnd);
+                    
+                    // place V_bnd in output array
+                    m_locToGloMap->LocalBndToLocal(V_bnd, pLocOutput);
+                }
             }
 
             // solve interior system
@@ -229,7 +235,7 @@ namespace Nektar
                 DNekScalBlkMat &invD  = *m_invD;
                 DNekScalBlkMat &C     = *m_C;
                     
-                F_Int = F_Int - C*V_LocBnd;
+                F_Int = F_Int - C*V_Bnd;
                 
                 Multiply(V_Int, invD, F_Int);
                 

@@ -84,6 +84,7 @@ namespace Nektar
             void SetNewLevelMap(Array<OneD, const unsigned int> numLocalBndCondPerPatch,
                                 Array<OneD, const unsigned int> numLocalIntCondPerPatch);
 
+
             inline Array<OneD, const int> GetPatchId() const 
             {
                 return m_patchId;

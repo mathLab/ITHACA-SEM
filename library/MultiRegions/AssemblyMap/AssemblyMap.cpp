@@ -343,6 +343,7 @@ namespace Nektar
             m_numGlobalCoeffs       = multiLevelGraph->GetNumGlobalDofs(newLevel) +
                 m_numGlobalDirBndCoeffs;
             m_localToGlobalBndMap   = Array<OneD,int>(m_numLocalBndCoeffs);
+
             m_localToLocalBndMap    = Array<OneD,int>(m_numLocalBndCoeffs);
             m_localToLocalIntMap    = Array<OneD,int>(m_numLocalCoeffs-m_numLocalBndCoeffs);
 
@@ -454,6 +455,7 @@ namespace Nektar
             // set up local to local mapping from previous to new level 
             m_patchMapFromPrevLevel->SetNewLevelMap(m_numLocalBndCoeffsPerPatch,
                                                     m_numLocalIntCoeffsPerPatch);
+
 
             CalculateBndSystemBandWidth();
 
@@ -1174,13 +1176,6 @@ namespace Nektar
             }
         }
 
-        void AssemblyMap::LocalToLocalBnd(
-                                          const NekVector<NekDouble>& local,
-                                          NekVector<NekDouble>& locbnd) const
-        {
-            LocalToLocalBnd(local.GetPtr(), locbnd.GetPtr());
-        }
-
 
         void AssemblyMap::LocalToLocalBnd(
                                           const Array<OneD, const NekDouble>& local,
@@ -1193,13 +1188,6 @@ namespace Nektar
         }
 
         void AssemblyMap::LocalToLocalInt(
-                                          const NekVector<NekDouble>& local,
-                                          NekVector<NekDouble>& locint) const
-        {
-            LocalToLocalInt(local.GetPtr(), locint.GetPtr());
-        }
-
-        void AssemblyMap::LocalToLocalInt(
                                           const Array<OneD, const NekDouble>& local,
                                           Array<OneD,NekDouble>& locint) const
         {
@@ -1207,13 +1195,6 @@ namespace Nektar
             ASSERTL1(local.num_elements() >= m_numLocalCoeffs,"Local vector is not of correct dimension");
 
             Vmath::Gathr(m_numLocalCoeffs-m_numLocalBndCoeffs, local.get(), m_localToLocalIntMap.get(), locint.get());
-        }
-
-        void AssemblyMap::LocalBndToLocal(
-                                          const NekVector<NekDouble>& locbnd,
-                                          NekVector<NekDouble>& local) const
-        {
-            LocalBndToLocal(locbnd.GetPtr(), local.GetPtr());
         }
 
 
@@ -1227,15 +1208,6 @@ namespace Nektar
             Vmath::Scatr(m_numLocalBndCoeffs, locbnd.get(), m_localToLocalBndMap.get(), local.get());
         }
 
-
-        void AssemblyMap::LocalIntToLocal(
-                                          const NekVector<NekDouble>& locint,
-                                          NekVector<NekDouble>& local) const
-        {
-            LocalIntToLocal(locint.GetPtr(), local.GetPtr());
-        }
-
-
         void AssemblyMap::LocalIntToLocal(
                                           const Array<OneD, const NekDouble>& locint,
                                           Array<OneD,NekDouble>& local) const
@@ -1245,6 +1217,7 @@ namespace Nektar
 
             Vmath::Scatr(m_numLocalCoeffs-m_numLocalBndCoeffs, locint.get(), m_localToLocalIntMap.get(), local.get());
         }
+
 
         void AssemblyMap::AssembleBnd(
                     const NekVector<NekDouble>& loc,

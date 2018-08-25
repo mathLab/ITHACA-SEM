@@ -706,7 +706,7 @@ void LinearElasticSystem::v_DoSolve()
         const Array<OneD, const MultiRegions::ExpListSharedPtr> &bndCondExp
             = m_fields[nv]->GetBndCondExpansions();
         const Array<OneD, const int> &bndMap
-            = m_assemblyMap->GetBndCondCoeffsToGlobalCoeffsMap();
+            = m_assemblyMap->GetBndCondIDToGlobalTraceID();
 
         for (i = 0; i < bndCondExp.num_elements(); ++i)
         {

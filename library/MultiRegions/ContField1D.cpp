@@ -392,29 +392,17 @@ namespace Nektar
 
         void ContField1D::v_ImposeDirichletConditions(Array<OneD,NekDouble>& outarray)
         {
-            int i,j;
-            int bndcnt=0;
-
-            Array<OneD, NekDouble> sign = m_locToGloMap->
-                GetBndCondCoeffsToLocalCoeffsSign();
             const Array<OneD, const int> map= m_locToGloMap->
                 GetBndCondCoeffsToLocalCoeffsMap();
             
-            for(i = 0; i < m_bndCondExpansions.num_elements(); ++i)
+            for(int i = 0; i < m_bndCondExpansions.num_elements(); ++i)
             {
                 if(m_bndConditions[i]->GetBoundaryConditionType() ==
                    SpatialDomains::eDirichlet)
                 {
-                    const Array<OneD, NekDouble> bndcoeff =
-                        (m_bndCondExpansions[i])->GetCoeffs(); 
-
-                    for(j = 0; j < (m_bndCondExpansions[i])->GetNcoeffs(); j++)
-                    {
-                        outarray[map[bndcnt+j]] = bndcoeff[bndcnt + j]; 
-                    }
+                    outarray[map[i]] = m_bndCondExpansions[i]->GetCoeffs(0);
                 }
                 
-                bndcnt += m_bndCondExpansions[i]->GetNcoeffs();
             }
         }
 

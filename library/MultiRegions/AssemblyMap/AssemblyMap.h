@@ -222,32 +222,16 @@ namespace Nektar
                     Array<OneD,NekDouble>& global)  const;
 
             MULTI_REGIONS_EXPORT void LocalToLocalBnd(
-                    const NekVector<NekDouble>& local,
-                    NekVector<NekDouble>& locbnd) const;
-
-            MULTI_REGIONS_EXPORT void LocalToLocalBnd(
                     const Array<OneD, const NekDouble>& local,
                     Array<OneD,NekDouble>& locbnd)  const;
-
-            MULTI_REGIONS_EXPORT void LocalToLocalInt(
-                    const NekVector<NekDouble>& local,
-                    NekVector<NekDouble>& locint) const;
 
             MULTI_REGIONS_EXPORT void LocalToLocalInt(
                     const Array<OneD, const NekDouble>& local,
                     Array<OneD,NekDouble>& locint)  const;
 
             MULTI_REGIONS_EXPORT void LocalBndToLocal(
-                    const NekVector<NekDouble>& locbnd,
-                    NekVector<NekDouble>& local) const;
-
-            MULTI_REGIONS_EXPORT void LocalBndToLocal(
                     const Array<OneD, const NekDouble>& locbnd,
                     Array<OneD,NekDouble>& local)  const;
-
-            MULTI_REGIONS_EXPORT void LocalIntToLocal(
-                    const NekVector<NekDouble>& locbnd,
-                    NekVector<NekDouble>& local) const;
 
             MULTI_REGIONS_EXPORT void LocalIntToLocal(
                     const Array<OneD, const NekDouble>& locbnd,

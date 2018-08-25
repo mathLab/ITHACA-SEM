@@ -34,6 +34,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <LibUtilities/BasicUtils/VDmathArray.hpp>
+#include <MultiRegions/PreconditionerLowEnergy.h>
 #include <MultiRegions/PreconditionerLinearWithLowEnergy.h>
 #include <MultiRegions/GlobalMatrixKey.h>
 #include <LocalRegions/MatrixKey.h>
@@ -153,14 +154,22 @@ namespace Nektar
             //Apply Low Energy preconditioner
             m_lowEnergyPrecon->DoPreconditioner(pInput, OutputLowEnergy);
 
+            PreconditionerLowEnergySharedPtr lowEnergyPrecon =
+                std::dynamic_pointer_cast<PreconditionerLowEnergy>
+                (m_lowEnergyPrecon); 
+            
             //Transform input from low energy to original basis
-            //m_lowEnergyPrecon->DoMultiplybyInverseTransformationMatrix(pInput, InputLinear);
-            m_lowEnergyPrecon->DoTransformBasisFromLowEnergy(pInput, InputLinear);
+            //Really ony require this for linear modes
+            lowEnergyPrecon->DoTransformBasisFromLowEnergyHomGlobal
+                (pInput,InputLinear);
 
             //Apply linear space preconditioner
-            m_linSpacePrecon->DoPreconditionerWithNonVertOutput(InputLinear, OutputLinear, tmp);
+            m_linSpacePrecon->DoPreconditionerWithNonVertOutput
+                (InputLinear, OutputLinear, tmp);
 
-            m_lowEnergyPrecon->DoTransformCoeffsToLowEnergy(OutputLinear,pOutput);
+            // transform coefficients back to low energy space
+            lowEnergyPrecon->DoTransformCoeffsToLowEnergyHomGlobal
+                (OutputLinear,pOutput);
 
             Vmath::Vadd(nGlobal,pOutput,1,OutputLowEnergy,1,pOutput,1);
         }

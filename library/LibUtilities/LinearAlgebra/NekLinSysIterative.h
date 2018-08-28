@@ -151,7 +151,7 @@ namespace Nektar
          */
         LIB_UTILITIES_EXPORT static NekLinSysIterativeSharedPtr CreateInstance(
                 const LibUtilities::SessionReaderSharedPtr &pSession,
-                LibUtilities::CommSharedPtr vComm)
+                const LibUtilities::CommSharedPtr &vComm)
         {
             NekLinSysIterativeSharedPtr p = MemoryManager<
                 NekLinSysIterative>::AllocateSharedPtr(pSession, vComm);
@@ -160,7 +160,7 @@ namespace Nektar
         /// Constructor for full direct matrix solve.
          NekLinSysIterative(
                 const LibUtilities::SessionReaderSharedPtr &pSession,
-                LibUtilities::CommSharedPtr vComm);
+                const LibUtilities::CommSharedPtr &vComm);
          ~NekLinSysIterative();
         
         inline void setLinSysOperators(LinSysOperators &in)

@@ -999,6 +999,8 @@ namespace Nektar
             Vmath::Vcopy(npoints,inarray[i],1,m_TimeIntegtSol_k[i],1);
         }
 
+
+
         // TODO: 
         // v_Comm is based on the explist used may be different(m_tracemap or m_locToGloMap) for diffrent
         // should generate GlobalLinSys first and get the v_Comm from GlobalLinSys. here just give it a m_Comm no parallel support yet!!
@@ -1007,8 +1009,9 @@ namespace Nektar
 
         NekLinSysIterative linsol(m_session,v_Comm);
         m_LinSysOprtors.DefineMatrixMultiply(&CompressibleFlowSystem::MatrixMultiply_MatrixFree_coeff, this);
-        m_LinSysOprtors.DefinePrecond(&CompressibleFlowSystem::preconditioner_BlkSOR_coeff, this);
+        // m_LinSysOprtors.DefinePrecond(&CompressibleFlowSystem::preconditioner_BlkSOR_coeff, this);
         // m_LinSysOprtors.DefinePrecond(&CompressibleFlowSystem::preconditioner_BlkDiag, this);
+        m_LinSysOprtors.DefinePrecond(&CompressibleFlowSystem::preconditioner, this);
         linsol.setLinSysOperators(m_LinSysOprtors);
 
         // NonlinSysEvaluator_coeff(m_TimeIntegtSol_k,m_SysEquatResid_k);
@@ -1039,11 +1042,23 @@ namespace Nektar
         
 
         converged = false;
-        int nwidthcolm = 10;
+        int nwidthcolm = 25;
         int NtotDoOdeRHS = 0;
         for (int k = 0; k < MaxNonlinIte; k++)
         {
             NonlinSysEvaluator_coeff(m_TimeIntegtSol_k,m_SysEquatResid_k);
+                for (int i = 0; i < nvariables; i++)
+                {
+                    for(int j = 0;j<npoints;j++ )
+                    {
+                        cout <<std::scientific<<std::setw(nwidthcolm)<<std::setprecision(nwidthcolm-8)
+                            << "   m_TimeIntegtSol_k["<<i<<"]["<<j<<"]=    "<< m_TimeIntegtSol_k[i][j]
+                            << "   m_SysEquatResid_k["<<i<<"]["<<j<<"]=    "<< m_SysEquatResid_k[i][j]
+                            << endl;
+                    }
+                }
+                cin >> nwidthcolm;
+
             NtotDoOdeRHS++;
             // NonlinSysRes_1D and m_SysEquatResid_k share the same storage
             resnorm = Vmath::Dot(ntotal,NonlinSysRes_1D,NonlinSysRes_1D);
@@ -1319,14 +1334,35 @@ namespace Nektar
             tmp = inarray + i*npoints;
             Vmath::Svtvp(npoints,eps,tmp,1,m_TimeIntegtSol_k[i],1,solplus[i],1);
         }
+        
+        
         NonlinSysEvaluator_coeff(solplus,resplus);
+
+            int nwidthcolm = 25;
+        
+            
+           
 
         for (int i = 0; i < nvariables; i++)
         {
             tmp = out + i*npoints;
             Vmath::Vsub(npoints,&resplus[i][0],1,&m_SysEquatResid_k[i][0],1,&tmp[0],1);
+            
+            for(int j = 0;j<npoints;j++ )
+            {
+                cout <<std::scientific<<std::setw(nwidthcolm)<<std::setprecision(nwidthcolm-8)
+                     << "   resplus["<<i<<"]["<<j<<"]=    "<< resplus[i][j]
+                     << "   m_SysEquatResid_k["<<i<<"]["<<j<<"]=    "<< m_SysEquatResid_k[i][j]
+                     << "   tmp["<<j<<"]=    "<< tmp[j]
+                     << endl;
+            }
             Vmath::Smul(npoints, oeps ,&tmp[0],1,&tmp[0],1);
+
         }
+
+            int iiii=0;
+            cin >> iiii;
+       
         return;
     }
 
@@ -1352,6 +1388,19 @@ namespace Nektar
 
         DoOdeProjection(inpnts,inpnts,m_BndEvaluateTime);
         DoOdeRhs_coeff(inpnts,out,m_BndEvaluateTime);
+            int nwidthcolm = 25;
+            for (int i = 0; i < nvariables; i++)
+                {
+                    for(int j = 0;j<npoints;j++ )
+                    {
+                        cout <<std::scientific<<std::setw(nwidthcolm)<<std::setprecision(nwidthcolm-8)
+                            << "   m_TimeIntegtSol_k["<<i<<"]["<<j<<"]=    "<< m_TimeIntegtSol_k[i][j]
+                            << "   m_SysEquatResid_k["<<i<<"]["<<j<<"]=    "<< m_SysEquatResid_k[i][j]
+                            << endl;
+                    }
+                }
+                cin >> nwidthcolm;
+
         
         for (int i = 0; i < nvariable; i++)
         {

@@ -172,28 +172,6 @@ namespace Nektar
         m_prec_factor = factor;
         int niterations = DoGMRES(nGlobal, pInput, pOutput, nDir);
 
-        int nwidthcolm = 18;
-        if(m_verbose)
-        {
-            cout <<std::right<<" -> m_tolerance: " << m_tolerance << endl;
-            cout <<std::right<<" -> m_prec_factor: " << m_prec_factor << endl;
-            cout <<std::right<<" -> niterations: " << niterations << endl;
-            cout <<std::right<<" -> DoGMRES pInput: " << endl;
-            for(int i = 0;i<pInput.num_elements();i++ )
-            {
-                cout << "pInput[ "<<i<<" ]=    "<<std::scientific<<std::setw(nwidthcolm)<<std::setprecision(nwidthcolm-8)<< pInput[i]<<endl;
-            }
-            
-            
-            cout <<std::right<<" -> DoGMRES pOutput: " << endl;
-            for(int i = 0;i<pOutput.num_elements();i++ )
-            {
-                cout << "pOutput[ "<<i<<" ]=    "<<std::scientific<<std::setw(nwidthcolm)<<std::setprecision(nwidthcolm-8)<< pOutput[i]<<endl;
-            }
-        }
-
-        int iiii=0;
-        cin >> iiii;
         /* //IterativeMethodType pType = eGMRES;
         switch(1)
         {
@@ -325,7 +303,6 @@ namespace Nektar
         const int                          nDir)
     {
 
-        int nwidthcolm = 20;
         int nNonDir = nGlobal - nDir;
 
         // Allocate array storage of coefficients
@@ -463,11 +440,7 @@ namespace Nektar
         // {
         //     cout << "   i=  "<<i<<"     r0="<< tmp2[i]<<endl;
         // }
-
-        
         eps     =   eps*m_prec_factor;
-
-        
         eta[0] = sqrt(eps);
 
         // If input residual is less than tolerance skip solve.
@@ -516,18 +489,7 @@ namespace Nektar
             starttem = id_start[idtem];
             endtem = id_end[idtem];
 
-            for(int i = 0; i<nd+2; i++ )
-            {
-                    cout << "hes[ "<<nd<<" ]["<<i<<" ]=    "<<std::scientific<<std::setw(nwidthcolm)<<std::setprecision(nwidthcolm-8)<< hes[nd][i]<<endl;
-            }
-
             DoArnoldi(starttem, endtem, nGlobal, nDir, V_total, Vsingle1, Vsingle2, hsingle1);
-
-            for(int i = 0; i<nd+2; i++ )
-            {
-                    cout << "hes[ "<<nd<<" ]["<<i<<" ]=    "<<std::scientific<<std::setw(nwidthcolm)<<std::setprecision(nwidthcolm-8)<< hes[nd][i]<<endl;
-            }
-            cin >> m_prec_factor;
 
             if(starttem > 0)
             {
@@ -575,23 +537,6 @@ namespace Nektar
             Vmath::Svtvp(nNonDir, beta, &V_total[i][0] + nDir, 1, &pOutput[0] + nDir, 1, &pOutput[0] + nDir, 1);
         }
 
-        if(m_verbose)
-        {
-            for(int i = 0;i<nswp;i++ )
-            {
-                for(int j = 0;j<nswp+1;j++ )
-                {
-                    cout << "hes[ "<<i<<" ]"<<j<<" ]=    "<<std::scientific<<std::setw(nwidthcolm)<<std::setprecision(nwidthcolm-8)<< hes[i][j]<<endl;
-                }
-            }
-            
-            
-        }
-
-        int iiii=0;
-        cin >> iiii;
-
-
         return eps;
     }
 
@@ -627,23 +572,6 @@ namespace Nektar
         Array<OneD, NekDouble> w(nGlobal, 0.0);
 
         m_oprtor.DoMatrixMultiply(Vsingle1, w);
-
-        int nwidthcolm = 20;
-        if(m_verbose)
-        {
-            for(int i = 0;i<Vsingle1.num_elements();i++ )
-            {
-                cout << "Vsingle1["<<i<<"]=    "<<std::scientific<<std::setw(nwidthcolm)<<std::setprecision(nwidthcolm-8)<< Vsingle1[i]<<endl;
-            }
-
-            for(int i = 0;i<Vsingle1.num_elements();i++ )
-            {
-                cout << "wwwwwwww["<<i<<"]=    "<<std::scientific<<std::setw(nwidthcolm)<<std::setprecision(nwidthcolm-8)<< w[i]<<endl;
-            }
-            int iiii=0;
-            cin >> iiii;
-        }
-
 
         tmp1 = w + nDir;
         tmp2 = w + nDir;

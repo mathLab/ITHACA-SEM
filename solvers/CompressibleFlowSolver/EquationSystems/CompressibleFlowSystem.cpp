@@ -1047,18 +1047,7 @@ namespace Nektar
         for (int k = 0; k < MaxNonlinIte; k++)
         {
             NonlinSysEvaluator_coeff(m_TimeIntegtSol_k,m_SysEquatResid_k);
-                for (int i = 0; i < nvariables; i++)
-                {
-                    for(int j = 0;j<npoints;j++ )
-                    {
-                        cout <<std::scientific<<std::setw(nwidthcolm)<<std::setprecision(nwidthcolm-8)
-                            << "   m_TimeIntegtSol_k["<<i<<"]["<<j<<"]=    "<< m_TimeIntegtSol_k[i][j]
-                            << "   m_SysEquatResid_k["<<i<<"]["<<j<<"]=    "<< m_SysEquatResid_k[i][j]
-                            << endl;
-                    }
-                }
-                cin >> nwidthcolm;
-
+                
             NtotDoOdeRHS++;
             // NonlinSysRes_1D and m_SysEquatResid_k share the same storage
             resnorm = Vmath::Dot(ntotal,NonlinSysRes_1D,NonlinSysRes_1D);
@@ -1335,33 +1324,16 @@ namespace Nektar
             Vmath::Svtvp(npoints,eps,tmp,1,m_TimeIntegtSol_k[i],1,solplus[i],1);
         }
         
-        
         NonlinSysEvaluator_coeff(solplus,resplus);
-
-            int nwidthcolm = 25;
-        
-            
-           
 
         for (int i = 0; i < nvariables; i++)
         {
             tmp = out + i*npoints;
             Vmath::Vsub(npoints,&resplus[i][0],1,&m_SysEquatResid_k[i][0],1,&tmp[0],1);
             
-            for(int j = 0;j<npoints;j++ )
-            {
-                cout <<std::scientific<<std::setw(nwidthcolm)<<std::setprecision(nwidthcolm-8)
-                     << "   resplus["<<i<<"]["<<j<<"]=    "<< resplus[i][j]
-                     << "   m_SysEquatResid_k["<<i<<"]["<<j<<"]=    "<< m_SysEquatResid_k[i][j]
-                     << "   tmp["<<j<<"]=    "<< tmp[j]
-                     << endl;
-            }
             Vmath::Smul(npoints, oeps ,&tmp[0],1,&tmp[0],1);
 
         }
-
-            int iiii=0;
-            cin >> iiii;
        
         return;
     }
@@ -1388,19 +1360,6 @@ namespace Nektar
 
         DoOdeProjection(inpnts,inpnts,m_BndEvaluateTime);
         DoOdeRhs_coeff(inpnts,out,m_BndEvaluateTime);
-            int nwidthcolm = 25;
-            for (int i = 0; i < nvariables; i++)
-                {
-                    for(int j = 0;j<npoints;j++ )
-                    {
-                        cout <<std::scientific<<std::setw(nwidthcolm)<<std::setprecision(nwidthcolm-8)
-                            << "   m_TimeIntegtSol_k["<<i<<"]["<<j<<"]=    "<< m_TimeIntegtSol_k[i][j]
-                            << "   m_SysEquatResid_k["<<i<<"]["<<j<<"]=    "<< m_SysEquatResid_k[i][j]
-                            << endl;
-                    }
-                }
-                cin >> nwidthcolm;
-
         
         for (int i = 0; i < nvariable; i++)
         {

@@ -747,30 +747,7 @@ namespace Nektar
         int nFields = nvariables;
         int nPts    = nTracePts;
         
-        // estimate the magnitude of each flow variables 
-        Array<OneD, NekDouble>  magnitdEstimat(nFields,0.0);
-        for(int i = 0; i < nFields; i++)
-        {
-            for(int j=0;j<nPts;j++)
-            {
-                magnitdEstimat[i]   +=   Fwd[i][j]*Fwd[i][j] ;
-            }
-        }
-        for(int i = 2; i < nFields-1; i++)
-        {
-            magnitdEstimat[1]   +=   magnitdEstimat[i] ;
-        }
-        for(int i = 2; i < nFields-1; i++)
-        {
-            magnitdEstimat[i]   =   magnitdEstimat[1] ;
-        }
-        NekDouble ototpnts = 1.0/(nPts);
-        for(int i = 0; i < nFields; i++)
-        {
-            magnitdEstimat[i] = sqrt(magnitdEstimat[i]*ototpnts);
-        }
-
-        
+             
         // Allocate temporary variables
         Array<OneD,       Array<OneD, NekDouble> >  plusFwd(nFields),plusBwd(nFields);
         Array<OneD,       Array<OneD, NekDouble> >  plusflux(nFields),Jacvect(nFields);
@@ -794,7 +771,7 @@ namespace Nektar
         // Fwd Jacobian
         for(int i = 0; i < nFields; i++)
         {
-            NekDouble epsvar = eps*magnitdEstimat[i];
+            NekDouble epsvar = eps*m_magnitdEstimat[i];
             NekDouble oepsvar   =   1.0/epsvar;
             Vmath::Sadd(nPts,epsvar,Fwd[i],1,plusFwd[i],1);
             
@@ -857,7 +834,7 @@ namespace Nektar
 
         for(int i = 0; i < nFields; i++)
         {
-            NekDouble epsvar = eps*magnitdEstimat[i];
+            NekDouble epsvar = eps*m_magnitdEstimat[i];
             NekDouble oepsvar   =   1.0/epsvar;
 
             Vmath::Sadd(nPts,epsvar,Bwd[i],1,plusBwd[i],1);
@@ -963,12 +940,45 @@ namespace Nektar
         if(m_inArrayNorm<0.0)
         {
             m_inArrayNorm = 0.0;
+
+            // estimate the magnitude of each flow variables 
+            m_magnitdEstimat = Array<OneD, NekDouble>  (nvariables,0.0);
+
             for(int i = 0; i < nvariables; i++)
             {
-                m_inArrayNorm += Vmath::Dot(npoints,inarray[i],inarray[i]);
+                m_magnitdEstimat[i] = Vmath::Dot(npoints,inarray[i],inarray[i]);
             }
-            v_Comm->AllReduce(m_inArrayNorm, Nektar::LibUtilities::ReduceSum);
-            cout << "m_inArrayNorm    = "<<m_inArrayNorm<<endl;
+            v_Comm->AllReduce(m_magnitdEstimat, Nektar::LibUtilities::ReduceSum);
+
+            
+            NekDouble ototpnts = 1.0/(ntotalGlobal/nvariables);
+
+            for(int i = 0; i < nvariables; i++)
+            {
+                m_inArrayNorm += m_magnitdEstimat[i];
+            }
+
+            for(int i = 2; i < nvariables-1; i++)
+            {
+                m_magnitdEstimat[1]   +=   m_magnitdEstimat[i] ;
+            }
+            for(int i = 2; i < nvariables-1; i++)
+            {
+                m_magnitdEstimat[i]   =   m_magnitdEstimat[1] ;
+            }
+            
+            for(int i = 0; i < nvariables; i++)
+            {
+                m_magnitdEstimat[i] = sqrt(m_magnitdEstimat[i]*ototpnts);
+            }
+            if(m_session->GetComm()->GetRank()==0)
+            {
+                for(int i = 0; i < nvariables; i++)
+                {
+                    cout << "m_magnitdEstimat["<<i<<"]    = "<<m_magnitdEstimat[i]<<endl;
+                }
+                cout << "m_inArrayNorm    = "<<m_inArrayNorm<<endl;
+            }
         }
 
         NekDouble resnorm;
@@ -1010,8 +1020,8 @@ namespace Nektar
         NekLinSysIterative linsol(m_session,v_Comm);
         m_LinSysOprtors.DefineMatrixMultiply(&CompressibleFlowSystem::MatrixMultiply_MatrixFree_coeff, this);
         // m_LinSysOprtors.DefinePrecond(&CompressibleFlowSystem::preconditioner_BlkSOR_coeff, this);
-        // m_LinSysOprtors.DefinePrecond(&CompressibleFlowSystem::preconditioner_BlkDiag, this);
-        m_LinSysOprtors.DefinePrecond(&CompressibleFlowSystem::preconditioner, this);
+        m_LinSysOprtors.DefinePrecond(&CompressibleFlowSystem::preconditioner_BlkDiag, this);
+        // m_LinSysOprtors.DefinePrecond(&CompressibleFlowSystem::preconditioner, this);
         linsol.setLinSysOperators(m_LinSysOprtors);
 
         // NonlinSysEvaluator_coeff(m_TimeIntegtSol_k,m_SysEquatResid_k);
@@ -1135,12 +1145,29 @@ namespace Nektar
                                             Array<OneD, DNekBlkMatSharedPtr > &TraceJac)
     {
         // DoOdeProjection(inarray,inarray,m_BndEvaluateTime);
+        int nrankOutput = 0;
 
         Fill2DArrayOfBlkDiagonalMat(gmtxarray,0.0);
         // Cout2DArrayBlkMat(gmtxarray);
         AddMatNSBlkDiag_volume(inarray,gmtxarray);
 
+
         AddMatNSBlkDiag_boundary(inarray,gmtxarray,TraceJac);
+            
+            // if(m_session->GetComm()->GetRank()==nrankOutput)
+            // {
+            //     cout <<endl<< "&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&"<<endl<<"TraceJac:rank= "<<nrankOutput<<endl;
+            //     Cout1DArrayBlkMat(TraceJac,28);
+            // }
+            
+            
+            // if(m_session->GetComm()->GetRank()==nrankOutput)
+            // {
+            //     cout <<endl<< "&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&"<<endl<<"gmtxarray:rank= "<<nrankOutput<<endl;
+            //     Cout2DArrayBlkMat(gmtxarray,28);
+            // }
+            
+            
         MultiplyElmtInvMass_PlusSource(gmtxarray,m_TimeIntegLambda);
         ElmtVarInvMtrx(gmtxarray);
         // if(m_session->GetComm()->GetRank()==0)
@@ -2258,6 +2285,18 @@ namespace Nektar
     }
 
 
+    void CompressibleFlowSystem::Cout1DArrayBlkMat(Array<OneD, DNekBlkMatSharedPtr> &gmtxarray,const unsigned int nwidthcolm)
+    {
+        int nvar1 = gmtxarray.num_elements();
+
+        
+        for(int i = 0; i < nvar1; i++)
+        {
+            cout<<endl<<"£$£$£$£$£$£$££$£$£$$$£$££$$£$££$£$$££££$$£$£$£$£$£$£$££$£$$"<<endl<< "Cout2DArrayBlkMat i= "<<i<<endl;
+            CoutBlkMat(gmtxarray[i],nwidthcolm);
+        }
+    }
+    
     void CompressibleFlowSystem::Cout2DArrayBlkMat(Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray,const unsigned int nwidthcolm)
     {
         int nvar1 = gmtxarray.num_elements();

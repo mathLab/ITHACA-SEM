@@ -62,13 +62,17 @@ namespace Nektar
         m_rhs_magnitude     =   1.0;
         m_prec_factor       =   1.0;
         m_rhs_mag_sm        =   1.0;
-        m_root              =   true;
         m_verbose           =   true;
+        m_root              =   false;
         std::vector<std::string>  variables(1);
         variables[0] =  pSession->GetVariable(0);
         string variable = variables[0];
 
         m_Comm              =   vComm;
+        if (0==m_Comm->GetRank())
+        {
+            m_root              =   true;
+        }
         
         /* if(pSession->DefinesGlobalSysSolnInfo(variable, "IterativeMethod"))
         {
@@ -303,6 +307,7 @@ namespace Nektar
         const int                          nDir)
     {
 
+        int nwidthcolm = 28;
         int nNonDir = nGlobal - nDir;
 
         // Allocate array storage of coefficients
@@ -379,17 +384,25 @@ namespace Nektar
         tmp1 = r0 + nDir;
         tmp2 = r0 + nDir;
         // m_precon->DoPreconditioner(tmp1, tmp2);
-        // cout << "before precond r0:     lkjfdaaaaaaaaaaaaaaaaaaaaaaaaaaaaas;jfasfjoiajfioawjfioaejfiojaiewjifjaiew "<<endl;
-        // for(int i = 0; i < r0.num_elements(); i++)
+        // if (1==m_Comm->GetRank())
         // {
-        //     cout << "   i=  "<<i<<"     r0="<< r0[i]<<endl;
+        //     cout << "before precond r0:     lkjfdaaaaaaaaaaaaaaaaaaaaaaaaaaaaas;jfasfjoiajfioawjfioaejfiojaiewjifjaiew "<<endl;
+        //     for(int i = 0; i < r0.num_elements(); i++)
+        //     {
+        //         cout << "   i=  "<<i<<"     r0="<< r0[i]<<endl;
+        //     }
         // }
+        
 
         m_oprtor.DoPrecond(tmp1, tmp2);
-        // cout << "After precond r0:     lkjfdaaaaaaaaaaaaaaaaaaaaaaaaaaaaas;jfasfjoiajfioawjfioaejfiojaiewjifjaiew "<<endl;
-        // for(int i = 0; i < r0.num_elements(); i++)
+        
+        // if (1==m_Comm->GetRank())
         // {
-        //     cout << "   i=  "<<i<<"     r0="<< r0[i]<<endl;
+        //     cout << "After precond r0:     lkjfdaaaaaaaaaaaaaaaaaaaaaaaaaaaaas;jfasfjoiajfioawjfioaejfiojaiewjifjaiew "<<endl;
+        //     for(int i = 0; i < r0.num_elements(); i++)
+        //     {
+        //         cout << "   i=  "<<i<<"     r0="<< r0[i]<<endl;
+        //     }
         // }
         tmp2 = r0 + nDir;
 
@@ -442,6 +455,17 @@ namespace Nektar
         // }
         eps     =   eps*m_prec_factor;
         eta[0] = sqrt(eps);
+
+        // cout <<std::right<<std::scientific<<std::setw(nwidthcolm)<<std::setprecision(nwidthcolm-8)
+        //      << "   m_prec_factor=  "<<m_prec_factor<<endl
+        //      << "   m_tolerance=    "<<m_tolerance<<endl
+        //      << "   m_rhs_magnitude="<<m_rhs_magnitude<<endl
+        //      << "   eps=            "<<eps<<endl;
+
+
+        // int tmpcin;
+        // cin >>tmpcin;
+
 
         // If input residual is less than tolerance skip solve.
         // if (eps * m_prec_factor < m_tolerance * m_tolerance * m_rhs_magnitude)

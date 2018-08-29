@@ -113,6 +113,9 @@ namespace Nektar
 
             Array<OneD, DNekBlkMatSharedPtr > m_TraceJac;
 
+            /// estimate the magnitude of each conserved varibles
+            Array<OneD, NekDouble>                          m_magnitdEstimat;
+
             NekDouble   m_inArrayNorm=-1.0;
 
             int m_TotLinItePrecondMat=600;

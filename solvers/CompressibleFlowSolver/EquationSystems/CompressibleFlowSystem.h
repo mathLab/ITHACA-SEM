@@ -167,6 +167,10 @@ namespace Nektar
             DNekMatSharedPtr &loc_matNvar,
             const unsigned int nwidthcolm=12);
 
+        void Cout1DArrayBlkMat(
+            Array<OneD, DNekBlkMatSharedPtr> &gmtxarray,
+            const unsigned int nwidthcolm=12);
+        
         void Cout2DArrayBlkMat(
             Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray,
             const unsigned int nwidthcolm=12);

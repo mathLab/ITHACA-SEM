@@ -463,6 +463,16 @@ namespace Nektar
                     explist->GetMatIpwrtbWeightBwd(JacFwd,mtxPerVar);
                     // explist->GetMatIpwrtBase(JacFwd,mtxPerVar);
 
+                    // int nrankOutput = 1;
+                    // if(explist->GetComm()->GetRank()==nrankOutput)
+                    // {
+                    //     cout <<endl<< "&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&"<<endl<<"JacFwd,mtxPerVar:rank= "<<nrankOutput<<endl;
+                    //     for(int  nelmt = 0; nelmt < ntotElmt; nelmt++)
+                    //     {
+                    //         cout << "elemt= "<<nelmt<< (*mtxPerVar[nelmt])<<endl;
+                    //     }
+                    // }
+
                     for(int  nelmt = 0; nelmt < ntotElmt; nelmt++)
                     {
                         nElmtCoef       = elmtcoef[nelmt];

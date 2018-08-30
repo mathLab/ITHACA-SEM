@@ -812,7 +812,8 @@ void FaceMesh::DiagonalSwap()
                 t2.push_back(C);
                 t2.push_back(D);
 
-                ElmtConfig conf(LibUtilities::eTriangle, 1, false, false);
+                ElmtConfig conf(LibUtilities::eTriangle, 1, false, false,
+                                m_mesh->m_spaceDim != 3);
                 vector<int> tags = tri1->GetTagList();
 
                 int id1 = tri1->GetId();
@@ -908,7 +909,8 @@ void FaceMesh::BuildLocalMesh()
 
     for (int i = 0; i < m_connec.size(); i++)
     {
-        ElmtConfig conf(LibUtilities::eTriangle, 1, false, false);
+        ElmtConfig conf(LibUtilities::eTriangle, 1, false, false,
+                        m_mesh->m_spaceDim != 3);
 
         vector<int> tags;
         tags.push_back(m_compId);

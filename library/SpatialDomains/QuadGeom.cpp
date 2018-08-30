@@ -159,7 +159,7 @@ StdRegions::Orientation QuadGeom::GetFaceOrientation(
         
         for (i = 0; i < 4; ++i)
         {
-            rotPt.rotate((*face1[i]), dir, angle);
+            rotPt.Rotate((*face1[i]), dir, angle);
             for (j = 0; j < 4; ++j)
             {
                 if (rotPt.dist(*face2[j]) < tol)

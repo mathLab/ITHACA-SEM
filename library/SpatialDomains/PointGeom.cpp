@@ -138,7 +138,7 @@ void PointGeom::Mult(PointGeom &a, PointGeom &b)
 }
 
 /// \brief _this  = rotation of a by angle 'angle' around axis dir
-void PointGeom::rotate(PointGeom& a, int dir, NekDouble angle)
+void PointGeom::Rotate(PointGeom& a, int dir, NekDouble angle)
 {
     switch(dir)
     {

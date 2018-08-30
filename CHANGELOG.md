@@ -51,10 +51,17 @@ v5.0.0
   alignment (!921)
 - Fix naming issue of duplicate Unit tests (!924) 
 - Fix warnings about missing virtual destructors in abstract classes (!932)
+<<<<<<< HEAD
 - Fix ability to have periodic boundary conditions that are aligned by a rotation rather than just a translation (!933)
+=======
+- Fix ability to have periodic boundary conditions that are aligned by a 
+  rotation rather than just a translation (!933)
+>>>>>>> master
 - Added a coupling interface to exchange data between solvers at run time
   and a DummySolver to test the implementations (!853, !931)
 - Fix compilation issue with newer Boost versions and clang (!940)
+- If only `NEKTAR_BUILD_LIBRARY` is enabled, only libraries up to and including
+  `MultiRegions` will be built by default (!945)
 
 **NekMesh**:
 - Add feature to read basic 2D geo files as CAD (!731)
@@ -126,6 +133,9 @@ v5.0.0
 **Documentation**:
 - Added the developer-guide repository as a submodule (!751)
 
+**Tester**
+- Fix build with boost 1.67 (!947)
+
 v4.4.2
 ------
 **Library**
@@ -157,6 +167,7 @@ v4.4.2
 
 **FieldConvert**
 - Allow passing input name with trailing separator (!879)
+- Fix the interpcoord option  of the interppointdatatofld module (!952)
 
 **Utilities**
 - Fix VtkToPng to account for deprecated VTK API for VTK version > 8.1 (!925)

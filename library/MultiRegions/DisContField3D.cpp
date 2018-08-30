@@ -748,8 +748,7 @@ using namespace std;
                 }
 
                 // check to see if boundary is rotationally aligned
-                if(boost::iequals(locBCond->GetUserDefined(),"NoUserDefined")
-                   == false)
+                if(boost::icontains(locBCond->GetUserDefined(),"Rotated"))
                 {
                     vector<string> tmpstr;
                     
@@ -760,21 +759,35 @@ using namespace std;
                     {
                         ASSERTL1(tmpstr.size() > 2,
                                  "Expected Rotated user defined string to "
-                                 "contain direction and rotation anlge "
+                                 "contain direction and rotation angle "
                                  "and optionally a tolerance, "
                                  "i.e. Rotated:dir:PI/2:1e-6");
 
+
+                        ASSERTL1((tmpstr[1] == "x")||(tmpstr[1] == "y")
+                                  ||(tmpstr[1] == "z"), "Rotated Dir is "
+                                  "not specified as x,y or z");
+                        
                         RotPeriodicInfo RotInfo;
                         RotInfo.m_dir = (tmpstr[1] == "x")? 0:
                             (tmpstr[1] == "y")? 1:2;
 
                         LibUtilities::AnalyticExpressionEvaluator strEval;
-                        int ExprId = strEval.DefineFunction(" ", tmpstr[2]);
+                        int ExprId = strEval.DefineFunction("", tmpstr[2]);
                         RotInfo.m_angle = strEval.Evaluate(ExprId);
 
                         if(tmpstr.size() == 4)
                         {
-                            RotInfo.m_tol = boost::lexical_cast<NekDouble>(tmpstr[3]);
+                            try {
+                                RotInfo.m_tol = boost::lexical_cast
+                                    <NekDouble>(tmpstr[3]);
+                            }
+                            catch (...) {
+                                NEKERROR(ErrorUtil::efatal,
+                                         "failed to cast tolerance input "
+                                         "to a double value in Rotated"
+                                         "boundary information");
+                             }
                         }
                         else
                         {
@@ -1745,7 +1758,7 @@ using namespace std;
                         
                         SpatialDomains::PointGeom r;
 
-                        r.rotate(v[0],dir,angle);
+                        r.Rotate(v[0],dir,angle);
                         
                         if(r.dist(w[0])< tol)
                         {
@@ -1753,7 +1766,7 @@ using namespace std;
                         }
                         else
                         {
-                            r.rotate(v[1],dir,angle);
+                            r.Rotate(v[1],dir,angle);
                             if(r.dist(w[0]) < tol)
                             {
                                 vMap[0] = 1;

@@ -40,6 +40,7 @@
 #include <LibUtilities/BasicUtils/Timer.h>
 #include <LocalRegions/MatrixKey.h>
 #include <MultiRegions/GlobalLinSysDirectStaticCond.h>
+#include <MultiRegions/ContField2D.h>
 
 using namespace std;
 
@@ -456,9 +457,6 @@ namespace Nektar
         DNekScalBlkMatSharedPtr pDh = MemoryManager<DNekScalBlkMat>
         ::AllocateSharedPtr(nsize_p_m1,nsize_p_m1,blkmatStorage);
         
-        
-        LibUtilities::Timer timer;
-        timer.Start();
         for(n = 0; n < nel; ++n)
         {
             eid = n;
@@ -659,7 +657,7 @@ namespace Nektar
                 // space
                 
                 DNekScalMat &HelmMat = *(locExp->as<LocalRegions::Expansion>()
-                                               ->GetLocMatrix(helmkey));
+                                         ->GetLocMatrix(helmkey));
                 DNekScalMatSharedPtr MassMat;
                 
                 Array<OneD, const NekDouble> HelmMat_data = HelmMat.GetOwnedMatrix()->GetPtr();
@@ -672,7 +670,7 @@ namespace Nektar
                                                     locExp->DetShapeType(),
                                                     *locExp);
                     MassMat = locExp->as<LocalRegions::Expansion>()
-                                    ->GetLocMatrix(masskey);
+                        ->GetLocMatrix(masskey);
                 }
                 
                 Array<OneD, NekDouble> Advtmp;
@@ -797,13 +795,13 @@ namespace Nektar
                                 for(j = 0; j < nbmap; ++j)
                                 {
                                     Ah_data[j+2*nv*nbmap + (i+(2*nv+1)*nbmap)*AhRows] +=
-                                    coeffs[bmap[j]];
+                                        coeffs[bmap[j]];
                                 }
                                 
                                 for(j = 0; j < nimap; ++j)
                                 {
                                     C_data[i+(2*nv+1)*nbmap + (j+2*nv*nimap)*nbndry] += 
-                                    coeffs[imap[j]];
+                                        coeffs[imap[j]];
                                 }
                             }
                             
@@ -814,13 +812,13 @@ namespace Nektar
                                 for(j = 0; j < nbmap; ++j)
                                 {
                                     Ah_data[j+(2*nv+1)*nbmap + (i+2*nv*nbmap)*AhRows] +=
-                                    coeffs[bmap[j]];
+                                        coeffs[bmap[j]];
                                 }
                                 
                                 for(j = 0; j < nimap; ++j)
                                 {
                                     C_data[i+2*nv*nbmap + (j+(2*nv+1)*nimap)*nbndry] += 
-                                    coeffs[imap[j]];
+                                        coeffs[imap[j]];
                                 }
                             }
                         }
@@ -840,13 +838,13 @@ namespace Nektar
                                     for(j = 0; j < nbmap; ++j)
                                     {
                                         Ah_data[j+nv*nbmap + (i+nv*nbmap)*AhRows] +=
-                                        coeffs[bmap[j]];
+                                            coeffs[bmap[j]];
                                     }
                                     
                                     for(j = 0; j < nimap; ++j)
                                     {
                                         C_data[i+nv*nbmap + (j+nv*nimap)*nbndry] += 
-                                        coeffs[imap[j]];
+                                            coeffs[imap[j]];
                                     }
                                 }
                                 
@@ -876,15 +874,15 @@ namespace Nektar
                                     for(j = 0; j < nbmap; ++j)
                                     {
                                         Ah_data[j+(k*nz_loc+n1)*nbmap + 
-                                        (i+(nv*nz_loc+n1)*nbmap)*AhRows] +=
-                                        coeffs[bmap[j]];
+                                                (i+(nv*nz_loc+n1)*nbmap)*AhRows] +=
+                                            coeffs[bmap[j]];
                                     }
                                     
                                     for(j = 0; j < nimap; ++j)
                                     {
                                         C_data[i+(nv*nz_loc+n1)*nbmap + 
-                                        (j+(k*nz_loc+n1)*nimap)*nbndry] += 
-                                        coeffs[imap[j]];
+                                               (j+(k*nz_loc+n1)*nimap)*nbndry] += 
+                                            coeffs[imap[j]];
                                     }
                                 }
                             }                            
@@ -969,13 +967,13 @@ namespace Nektar
                                 for(j = 0; j < nbmap; ++j)
                                 {
                                     B_data[j+2*nv*nbmap + (i+(2*nv+1)*nimap)*nbndry] += 
-                                    coeffs[bmap[j]];
+                                        coeffs[bmap[j]];
                                 }
                                 
                                 for(j = 0; j < nimap; ++j)
                                 {
                                     D_data[j+2*nv*nimap + (i+(2*nv+1)*nimap)*nint] += 
-                                    coeffs[imap[j]];
+                                        coeffs[imap[j]];
                                 }
                             }
                             Vmath::Neg(ncoeffs,coeffs,1);
@@ -985,13 +983,13 @@ namespace Nektar
                                 for(j = 0; j < nbmap; ++j)
                                 {
                                     B_data[j+(2*nv+1)*nbmap + (i+2*nv*nimap)*nbndry] += 
-                                    coeffs[bmap[j]];
+                                        coeffs[bmap[j]];
                                 }
                                 
                                 for(j = 0; j < nimap; ++j)
                                 {
                                     D_data[j+(2*nv+1)*nimap + (i+2*nv*nimap)*nint] += 
-                                    coeffs[imap[j]];
+                                        coeffs[imap[j]];
                                 }
                             }
                             
@@ -1014,13 +1012,13 @@ namespace Nektar
                                     for(j = 0; j < nbmap; ++j)
                                     {
                                         B_data[j+nv*nbmap + (i+nv*nimap)*nbndry] +=
-                                        coeffs[bmap[j]];
+                                            coeffs[bmap[j]];
                                     }
                                     
                                     for(j = 0; j < nimap; ++j)
                                     {
                                         D_data[j+nv*nimap + (i+nv*nimap)*nint] += 
-                                        coeffs[imap[j]];
+                                            coeffs[imap[j]];
                                     }
                                 }
                                 // copy into column major storage. 
@@ -1050,15 +1048,15 @@ namespace Nektar
                                     for(j = 0; j < nbmap; ++j)
                                     {
                                         B_data[j+(k*nz_loc+n1)*nbmap + 
-                                        (i+(nv*nz_loc+n1)*nimap)*nbndry] += 
-                                        coeffs[bmap[j]];
+                                               (i+(nv*nz_loc+n1)*nimap)*nbndry] += 
+                                            coeffs[bmap[j]];
                                     }
                                     
                                     for(j = 0; j < nimap; ++j)
                                     {
                                         D_data[j+(k*nz_loc+n1)*nimap +  
-                                        (i+(nv*nz_loc+n1)*nimap)*nint] += 
-                                        coeffs[imap[j]];
+                                               (i+(nv*nz_loc+n1)*nimap)*nint] += 
+                                            coeffs[imap[j]];
                                     }
                                 }
                             }
@@ -1122,7 +1120,7 @@ namespace Nektar
                             //(*Dh)(i+n1*(psize-1),j+n2*(psize-1)) = 
                             //-DintCinvDTint(i+1+n1*psize,j+1+n2*psize);
                             Dh_data[(i+n1*(psize-1)) + (j+n2*(psize-1))*Dh->GetRows()] = 
-                            -DintCinvDTint(i+1+n1*psize,j+1+n2*psize);
+                                -DintCinvDTint(i+1+n1*psize,j+1+n2*psize);
                         }
                     }                    
                 }
@@ -1142,7 +1140,7 @@ namespace Nektar
                 for(n2 = 0; n2 < nz_loc; ++n2)
                 {
                     (*Ah)(nsize_bndry_p1[n]-nz_loc+n1,nsize_bndry_p1[n]-nz_loc+n2) = 
-                    -DintCinvDTint(n1*psize,n2*psize);
+                        -DintCinvDTint(n1*psize,n2*psize);
                 }
             }
             
@@ -1185,11 +1183,8 @@ namespace Nektar
             pCh->SetBlock(n,n,loc_mat = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,Ch));
             pDh->SetBlock(n,n,loc_mat = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,Dh));    
         }
-        timer.Stop();
-        cout << "Matrix Setup Costs: " << timer.TimePerTest(1) << endl;
         
-        
-        timer.Start();
+
         // Set up global coupled boundary solver. 
         // This is a key to define the solution matrix type
         // currently we are giving it a argument of eLInearAdvectionReaction 
@@ -1197,8 +1192,6 @@ namespace Nektar
         MultiRegions::GlobalLinSysKey key(StdRegions::eLinearAdvectionReaction,locToGloMap);
         mat.m_CoupledBndSys = MemoryManager<MultiRegions::GlobalLinSysDirectStaticCond>::AllocateSharedPtr(key,m_fields[0],pAh,pBh,pCh,pDh,locToGloMap);
         mat.m_CoupledBndSys->Initialise(locToGloMap);
-        timer.Stop();
-        cout << "Multilevel condensation: " << timer.TimePerTest(1) << endl;
     }
     
     void CoupledLinearNS::v_GenerateSummary(SolverUtils::SummaryList& s)
@@ -1210,25 +1203,25 @@ namespace Nektar
     {
         switch(m_equationType)
         {
-            case eUnsteadyStokes:
-            case eUnsteadyNavierStokes:
+        case eUnsteadyStokes:
+        case eUnsteadyNavierStokes:
             {
                 
-//                LibUtilities::TimeIntegrationMethod intMethod;
-//                std::string TimeIntStr = m_session->GetSolverInfo("TIMEINTEGRATIONMETHOD");
-//                int i;
-//                for(i = 0; i < (int) LibUtilities::SIZE_TimeIntegrationMethod; ++i)
-//                {
-//                    if(boost::iequals(LibUtilities::TimeIntegrationMethodMap[i],TimeIntStr))
-//                    {
-//                        intMethod = (LibUtilities::TimeIntegrationMethod)i;
-//                        break;
-//                    }
-//                }
-//
-//                ASSERTL0(i != (int) LibUtilities::SIZE_TimeIntegrationMethod, "Invalid time integration type.");
-//
-//                m_integrationScheme = LibUtilities::GetTimeIntegrationWrapperFactory().CreateInstance(LibUtilities::TimeIntegrationMethodMap[intMethod]);
+                //                LibUtilities::TimeIntegrationMethod intMethod;
+                //                std::string TimeIntStr = m_session->GetSolverInfo("TIMEINTEGRATIONMETHOD");
+                //                int i;
+                //                for(i = 0; i < (int) LibUtilities::SIZE_TimeIntegrationMethod; ++i)
+                //                {
+                //                    if(boost::iequals(LibUtilities::TimeIntegrationMethodMap[i],TimeIntStr))
+                //                    {
+                //                        intMethod = (LibUtilities::TimeIntegrationMethod)i;
+                //                        break;
+                //                    }
+                //                }
+                //
+                //                ASSERTL0(i != (int) LibUtilities::SIZE_TimeIntegrationMethod, "Invalid time integration type.");
+                //
+                //                m_integrationScheme = LibUtilities::GetTimeIntegrationWrapperFactory().CreateInstance(LibUtilities::TimeIntegrationMethodMap[intMethod]);
                 
                 // Could defind this from IncNavierStokes class? 
                 m_ode.DefineOdeRhs(&CoupledLinearNS::EvaluateAdvection, this);
@@ -1303,14 +1296,6 @@ namespace Nektar
                 else //We solve the Stokes Problem
                 {
                     
-                    /*Array<OneD, Array<OneD, NekDouble> >ZERO(m_velocity.num_elements());
-                     *					
-                     *					for(int i = 0; i < m_velocity.num_elements(); ++i)
-                     *					{				
-                     *						ZERO[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),0.0);
-                     *						m_fields[m_velocity[i]]->FwdTrans(ZERO[i], m_fields[m_velocity[i]]->UpdateCoeffs());
-                     }*/
-                    
                     SetUpCoupledMatrix(0.0);						
                     m_initialStep = true;
                     m_counter=1;
@@ -1377,10 +1362,7 @@ namespace Nektar
         // Matrix solution
         if(fabs(lambda_store - lambda) > 1e-10)
         {
-            cout << "Setting up Stokes matrix problem [.";
-            fflush(stdout);
             SetUpCoupledMatrix(lambda);
-            cout << "]" << endl;
             lambda_store = lambda;
         }
         
@@ -1432,19 +1414,19 @@ namespace Nektar
     {
         switch(m_equationType)
         {
-            case eUnsteadyStokes:
-            case eUnsteadyNavierStokes:
-                //AdvanceInTime(m_steps);
-                UnsteadySystem::v_DoSolve();
-                break;
-            case eSteadyStokes:
-            case eSteadyOseen:
-            case eSteadyLinearisedNS:
+        case eUnsteadyStokes:
+        case eUnsteadyNavierStokes:
+            //AdvanceInTime(m_steps);
+            UnsteadySystem::v_DoSolve();
+            break;
+        case eSteadyStokes:
+        case eSteadyOseen:
+        case eSteadyLinearisedNS:
             {
                 Solve();				
                 break;
             }
-            case eSteadyNavierStokes:
+        case eSteadyNavierStokes:
             {	
                 LibUtilities::Timer Generaltimer;
                 Generaltimer.Start();
@@ -1485,9 +1467,9 @@ namespace Nektar
                 
                 break;
             }
-            case eNoEquationType:
-            default:
-                ASSERTL0(false,"Unknown or undefined equation type for CoupledLinearNS");
+        case eNoEquationType:
+        default:
+            ASSERTL0(false,"Unknown or undefined equation type for CoupledLinearNS");
         }
     }
     
@@ -1640,7 +1622,6 @@ namespace Nektar
                 ASSERTL0(0, "The Newton method has failed... \n");
             }
             
-            
             cout << "\n";
             m_counter++;
         }	
@@ -1693,10 +1674,13 @@ namespace Nektar
             m_fields[m_velocity[i]]->BwdTrans_IterPerExp(m_fields[m_velocity[i]]->GetCoeffs(), u_star[i]);
             
             //u_star(k+1) = u_N(k) + DeltaKinvis *  u_star(k)
-            Vmath::Smul(u_star[i].num_elements(), m_kinvis, u_star[i], 1, u_star[i], 1);
-            Vmath::Vadd(u_star[i].num_elements(), u_star[i], 1, u_N[i], 1, u_star[i], 1);
+            Vmath::Smul(u_star[i].num_elements(), m_kinvis,
+                        u_star[i], 1, u_star[i], 1);
+            Vmath::Vadd(u_star[i].num_elements(), u_star[i], 1,
+                        u_N[i], 1, u_star[i], 1);
             
-            m_fields[m_velocity[i]]->FwdTrans(u_star[i], m_fields[m_velocity[i]]->UpdateCoeffs());
+            m_fields[m_velocity[i]]->FwdTrans(u_star[i],
+                                              m_fields[m_velocity[i]]->UpdateCoeffs());
         }
         
         m_kinvis -= m_kinvis*m_KinvisPercentage/100;
@@ -1805,7 +1789,7 @@ namespace Nektar
             
             // Put new expansion into list. 
             SpatialDomains::ExpansionShPtr expansionElementShPtr =
-            MemoryManager<SpatialDomains::Expansion>::AllocateSharedPtr(expMapIter.second->m_geomShPtr, BasisVec);
+                MemoryManager<SpatialDomains::Expansion>::AllocateSharedPtr(expMapIter.second->m_geomShPtr, BasisVec);
             (*returnval)[expMapIter.first] = expansionElementShPtr;
         }
         
@@ -1885,6 +1869,14 @@ namespace Nektar
         Array<OneD,  MultiRegions::ExpListSharedPtr> vel_fields(m_velocity.num_elements());
         Array<OneD, Array<OneD, NekDouble> > force(m_velocity.num_elements());
         
+        // Impose Dirichlet conditions on velocity fields
+        for(i = 0; i < m_velocity.num_elements(); ++i)
+        {
+            Vmath::Zero(m_fields[i]->GetNcoeffs(), m_fields[i]->UpdateCoeffs(),1);
+            m_fields[i]->ImposeDirichletConditions(m_fields[i]->UpdateCoeffs());
+        }
+
+        
         if(m_HomogeneousType == eHomogeneous1D)
         {
             int ncoeffsplane = m_fields[m_velocity[0]]->GetPlane(0)->GetNcoeffs();
@@ -1918,9 +1910,12 @@ namespace Nektar
         }
     }
     
-    void CoupledLinearNS::SolveLinearNS(const Array<OneD, Array<OneD, NekDouble> > &forcing,  Array<OneD, MultiRegions::ExpListSharedPtr> &fields, MultiRegions::ExpListSharedPtr &pressure,  const int mode)
+    void CoupledLinearNS::SolveLinearNS(
+                                        Array<OneD, Array<OneD, NekDouble> > &forcing,
+                                        Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
+                                        MultiRegions::ExpListSharedPtr &pressure,  const int mode)
     {
-        int i,j,k,n,eid,cnt,cnt1;
+        int i,j,k,n,cnt,cnt1;
         int nbnd,nint,offset;
         int nvel = m_velocity.num_elements();
         int nel  = fields[0]->GetNumElmts();
@@ -1949,45 +1944,116 @@ namespace Nektar
                 nz_loc = 1;
                 if(m_HomogeneousType == eHomogeneous1D)
                 {
+                    Array<OneD, NekDouble> tmp;
                     // Zero fields to set complex mode to zero;
                     for(i = 0; i < fields.num_elements(); ++i)
                     {
-                        Vmath::Zero(2*fields[i]->GetNcoeffs(),fields[i]->UpdateCoeffs(),1);
+                        Vmath::Zero(nplanecoeffs,tmp = fields[i]->UpdateCoeffs()+nplanecoeffs,1);
                     }
                     Vmath::Zero(2*pressure->GetNcoeffs(),pressure->UpdateCoeffs(),1);
                 }
             }
         }
         
-        // Assemble f_bnd and f_int
+        for(k = 0; k < nvel; ++k)
+        {
+            MultiRegions::ContField2DSharedPtr cfield =
+                std::dynamic_pointer_cast<MultiRegions::ContField2D>(fields[k]);
+
+            Array<OneD, NekDouble> sign = cfield->GetLocalToGlobalMap()->
+                GetBndCondCoeffsToLocalCoeffsSign();
+            const Array<OneD, const int> map= cfield->GetLocalToGlobalMap()->
+                GetBndCondCoeffsToLocalCoeffsMap();
+            
+            // Add weak boundary conditions to forcing
+            const Array<OneD, SpatialDomains::BoundaryConditionShPtr>
+                bndConds = fields[k]->GetBndConditions();
+            Array<OneD, const MultiRegions::ExpListSharedPtr> bndCondExp;
+
+            if(m_HomogeneousType == eHomogeneous1D) 
+            {
+                bndCondExp = m_fields[k]->GetPlane(2*mode)->GetBndCondExpansions();
+            }
+            else
+            {
+                bndCondExp = m_fields[k]->GetBndCondExpansions();
+            }
+            
+            for(n = 0; n < nz_loc; ++n)
+            {
+                int bndcnt = 0;
+                for(i = 0; i < bndCondExp.num_elements(); ++i)
+                {
+                    const Array<OneD, const NekDouble > bndcoeffs =
+                        bndCondExp[i]->GetCoeffs();
+                    
+                    cnt = 0;
+                    if(bndConds[i]->GetBoundaryConditionType() ==
+                       SpatialDomains::eNeumann ||
+                       bndConds[i]->GetBoundaryConditionType() ==
+                       SpatialDomains::eRobin)
+                    {
+                        if(m_locToGloMap[mode]->GetSignChange())
+                        {
+                            for(j = 0; j < (bndCondExp[i])->GetNcoeffs(); j++)
+                            {
+                                forcing[k][n*nplanecoeffs + map[bndcnt+j]] += sign[bndcnt+j] *
+                                    bndcoeffs[j]; 
+                            }
+                        }
+                        else
+                        {
+                            for(j = 0; j < (bndCondExp[i])->GetNcoeffs(); j++)
+                            {
+                                forcing[k][n*nplanecoeffs + map[bndcnt+j]] += bndcoeffs[j]; 
+                            }
+                        }                    
+                    }
+                    
+                    bndcnt += bndCondExp[i]->GetNcoeffs();
+                }
+            }
+        }
+        
+        Array<OneD, NekDouble > bnd (m_locToGloMap[mode]->GetNumLocalCoeffs(),0.0);
+
+        // Construct f_bnd and f_int and fill in bnd from inarray
+        // (with Dirichlet BCs imposed)
+        int bndoffset = 0;
         cnt = cnt1 = 0;
         for(i = 0; i < nel; ++i) // loop over elements
         {
-            eid = i;
-            fields[m_velocity[0]]->GetExp(eid)->GetBoundaryMap(bmap);
-            fields[m_velocity[0]]->GetExp(eid)->GetInteriorMap(imap);
+            fields[m_velocity[0]]->GetExp(i)->GetBoundaryMap(bmap);
+            fields[m_velocity[0]]->GetExp(i)->GetInteriorMap(imap);
             nbnd   = bmap.num_elements();
             nint   = imap.num_elements();
-            offset = fields[m_velocity[0]]->GetCoeff_Offset(eid);
-            
+            offset = fields[m_velocity[0]]->GetCoeff_Offset(i);
+
             for(j = 0; j < nvel; ++j) // loop over velocity fields 
             {
+                Array<OneD, NekDouble> incoeffs = fields[j]->UpdateCoeffs();
+
                 for(n = 0; n < nz_loc; ++n)
                 {
                     for(k = 0; k < nbnd; ++k)
                     {
                         f_bnd[cnt+k] = forcing[j][n*nplanecoeffs + 
-                        offset+bmap[k]];
+                                                  offset+bmap[k]];
+
+                        bnd[bndoffset + (n + j*nz_loc)*nbnd + k] =
+                            incoeffs[n*nplanecoeffs + offset + bmap[k]];
                     }
                     for(k = 0; k < nint; ++k)
                     {
                         f_int[cnt1+k] = forcing[j][n*nplanecoeffs + 
                         offset+imap[k]];
                     }
+
                     cnt  += nbnd;
                     cnt1 += nint;
                 }
             }
+            bndoffset += nvel*nz_loc*nbnd + nz_loc*(pressure->GetExp(i)->GetNcoeffs()); 
         }
         
         Array<OneD, NekDouble > f_p(m_mat[mode].m_D_int->GetRows());
@@ -2000,107 +2066,42 @@ namespace Nektar
         F_p = (*m_mat[mode].m_D_int) * F_p_tmp;
         
         // construct inner forcing 
-        Array<OneD, NekDouble > bnd   (m_locToGloMap[mode]->GetNumGlobalCoeffs(),0.0);
-        Array<OneD, NekDouble > fh_bnd(m_locToGloMap[mode]->GetNumGlobalCoeffs(),0.0);
-        
-        const Array<OneD,const int>& loctoglomap
-        = m_locToGloMap[mode]->GetLocalToGlobalMap();
-        const Array<OneD,const NekDouble>& loctoglosign
-        = m_locToGloMap[mode]->GetLocalToGlobalSign();
+        Array<OneD, NekDouble > fh_bnd(m_locToGloMap[mode]->GetNumLocalCoeffs(),0.0);
         
         offset = cnt = 0; 
         for(i = 0; i < nel; ++i)
         {
-            eid  = i;
-            nbnd = nz_loc*fields[0]->GetExp(eid)->NumBndryCoeffs(); 
+            nbnd = nz_loc*fields[0]->GetExp(i)->NumBndryCoeffs(); 
             
             for(j = 0; j < nvel; ++j)
             {
                 for(k = 0; k < nbnd; ++k)
                 {
-                    fh_bnd[loctoglomap[offset+j*nbnd+k]] += 
-                    loctoglosign[offset+j*nbnd+k]*f_bnd[cnt+k];
+                    fh_bnd[offset + j*nbnd + k] = 
+                        f_bnd[cnt+k];
                 }
                 cnt += nbnd;
             }
             
-            nint    = pressure->GetExp(eid)->GetNcoeffs();
+            nint    = pressure->GetExp(i)->GetNcoeffs();
             offset += nvel*nbnd + nint*nz_loc; 
         }
         
         offset = cnt1 = 0; 
         for(i = 0; i <  nel; ++i)
         {
-            eid  = i;
-            nbnd = nz_loc*fields[0]->GetExp(eid)->NumBndryCoeffs(); 
-            nint = pressure->GetExp(eid)->GetNcoeffs(); 
+            nbnd = nz_loc*fields[0]->GetExp(i)->NumBndryCoeffs(); 
+            nint = pressure->GetExp(i)->GetNcoeffs(); 
             
             for(n = 0; n < nz_loc; ++n)
             {
                 for(j = 0; j < nint; ++j)
                 {
-                    fh_bnd[loctoglomap[offset + nvel*nbnd + n*nint+j]] = f_p[cnt1+j];
+                    fh_bnd[offset + nvel*nbnd + n*nint+j] = f_p[cnt1+j];
                 }
                 cnt1   += nint;
             }
             offset += nvel*nbnd + nz_loc*nint; 
-        }
-        
-        //  Set Weak BC into f_bnd and Dirichlet Dofs in bnd
-        const Array<OneD,const int>& bndmap
-            = m_locToGloMap[mode]->GetBndCondIDToGlobalTraceID();
-        
-        // Forcing function with weak boundary conditions and
-        // Dirichlet conditions
-        int bndcnt=0;
-        
-        for(k = 0; k < nvel; ++k)
-        {
-            const Array<OneD, SpatialDomains::BoundaryConditionShPtr> bndConds = fields[k]->GetBndConditions();
-            Array<OneD, const MultiRegions::ExpListSharedPtr> bndCondExp;
-            if(m_HomogeneousType == eHomogeneous1D) 
-            {
-                bndCondExp = m_fields[k]->GetPlane(2*mode)->GetBndCondExpansions();
-            }
-            else
-            {
-                bndCondExp = m_fields[k]->GetBndCondExpansions();
-            }
-            
-            for(i = 0; i < bndCondExp.num_elements(); ++i)
-            {
-                const Array<OneD, const NekDouble > bndCondCoeffs = bndCondExp[i]->GetCoeffs();
-                cnt = 0;
-                for(n = 0; n < nz_loc; ++n)
-                {
-                    if(bndConds[i]->GetBoundaryConditionType() 
-                        == SpatialDomains::eDirichlet)
-                    {
-                        for(j = 0; j < (bndCondExp[i])->GetNcoeffs(); j++)
-                        {
-                            if (m_equationType == eSteadyNavierStokes && m_initialStep == false)
-                            {
-                                //This condition set all the Dirichlet BC at 0 after
-                                //the initial step of the Newton method
-                                bnd[bndmap[bndcnt++]] = 0;
-                            }
-                            else
-                            {
-                                bnd[bndmap[bndcnt++]] = bndCondCoeffs[cnt++];
-                            }
-                        }
-                    }
-                    else if (bndConds[i]->GetBoundaryConditionType() 
-                                        != SpatialDomains::ePeriodic)
-                    {                    
-                        for(j = 0; j < (bndCondExp[i])->GetNcoeffs(); j++)
-                        {
-                            fh_bnd[bndmap[bndcnt++]]
-                            += bndCondCoeffs[cnt++];
-                        }
-                    }
-                }
-            }
         }
         
         m_mat[mode].m_CoupledBndSys->Solve(fh_bnd,bnd,m_locToGloMap[mode]);
@@ -2109,18 +2110,16 @@ namespace Nektar
         offset = cnt = 0; 
         int totpcoeffs = pressure->GetNcoeffs();
         Array<OneD, NekDouble> p_coeffs = pressure->UpdateCoeffs();
-        for(i = 0; i <  nel; ++i)
+        for(i = 0; i < nel; ++i)
         {
-            eid  = i;
-            nbnd = nz_loc*fields[0]->GetExp(eid)->NumBndryCoeffs(); 
-            nint = pressure->GetExp(eid)->GetNcoeffs(); 
+            nbnd = nz_loc*fields[0]->GetExp(i)->NumBndryCoeffs(); 
+            nint = pressure->GetExp(i)->GetNcoeffs(); 
             
             for(j = 0; j < nvel; ++j)
             {
                 for(k = 0; k < nbnd; ++k)
                 {
-                    f_bnd[cnt+k] = loctoglosign[offset+j*nbnd+k]*
-                        bnd[loctoglomap[offset + j*nbnd + k]];
+                    f_bnd[cnt+k] = bnd[offset + j*nbnd + k];
                 }
                 cnt += nbnd;
             }
@@ -2132,19 +2131,17 @@ namespace Nektar
         offset = cnt = cnt1 = 0;
         for(i = 0; i < nel; ++i)
         {
-            eid  = i;
-            nint = pressure->GetExp(eid)->GetNcoeffs(); 
-            nbnd = fields[0]->GetExp(eid)->NumBndryCoeffs(); 
-            cnt1 = pressure->GetCoeff_Offset(eid);
+            nint = pressure->GetExp(i)->GetNcoeffs(); 
+            nbnd = fields[0]->GetExp(i)->NumBndryCoeffs(); 
+            cnt1 = pressure->GetCoeff_Offset(i);
             
             for(n = 0; n < nz_loc; ++n)
             {
                 for(j = 0; j < nint; ++j)
                 {
                     p_coeffs[n*totpcoeffs + cnt1+j] = 
-                    f_p[cnt+j] = bnd[loctoglomap[offset + 
-                    (nvel*nz_loc)*nbnd + 
-                    n*nint + j]];
+                        f_p[cnt+j] = bnd[offset +
+                                          nvel*nz_loc*nbnd + n*nint + j];
                 }
                 cnt += nint;
             }
@@ -2161,12 +2158,11 @@ namespace Nektar
         cnt = cnt1 = 0;
         for(i = 0; i < nel; ++i) // loop over elements
         {
-            eid  = i;
-            fields[0]->GetExp(eid)->GetBoundaryMap(bmap);
-            fields[0]->GetExp(eid)->GetInteriorMap(imap);
+            fields[0]->GetExp(i)->GetBoundaryMap(bmap);
+            fields[0]->GetExp(i)->GetInteriorMap(imap);
             nbnd   = bmap.num_elements();
             nint   = imap.num_elements();
-            offset = fields[0]->GetCoeff_Offset(eid);
+            offset = fields[0]->GetCoeff_Offset(i);
             
             for(j = 0; j < nvel; ++j) // loop over velocity fields 
             {
@@ -2175,15 +2171,13 @@ namespace Nektar
                     for(k = 0; k < nbnd; ++k)
                     {
                         fields[j]->SetCoeff(n*nplanecoeffs + 
-                        offset+bmap[k],
-                        f_bnd[cnt+k]);
+                        offset+bmap[k],f_bnd[cnt+k]);
                     }
                     
                     for(k = 0; k < nint; ++k)
                     {
                         fields[j]->SetCoeff(n*nplanecoeffs + 
-                        offset+imap[k],
-                        f_int[cnt1+k]);
+                        offset+imap[k],f_int[cnt1+k]);
                     }
                     cnt  += nbnd;
                     cnt1 += nint;

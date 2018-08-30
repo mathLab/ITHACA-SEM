@@ -558,9 +558,6 @@ namespace Nektar
         m_localToGlobalMap    = Array<OneD, int>(m_numLocalCoeffs,-1);
         m_localToGlobalBndMap = Array<OneD, int>(m_numLocalBndCoeffs,-1);
         m_bndCondIDToGlobalTraceID = Array<OneD, int>(nLocBndCondDofs,-1);
-        m_localToLocalBndMap    = Array<OneD, int>(m_numLocalBndCoeffs,-1);
-        m_localToLocalIntMap    = Array<OneD, int>(m_numLocalCoeffs-
-                                                   m_numLocalBndCoeffs,-1);
 
 
         // Set default sign array.
@@ -577,6 +574,32 @@ namespace Nektar
         {
             m_numLocalBndCoeffsPerPatch[i] = (unsigned int) nz_loc*(nvel*locExpVector[i]->NumBndryCoeffs() + 1);
             m_numLocalIntCoeffsPerPatch[i] = (unsigned int) nz_loc*(pressure->GetExp(i)->GetNcoeffs()-1);
+        }
+
+        // Set up local to local bnd and local int maps
+        m_localToLocalBndMap    = Array<OneD, int>(m_numLocalBndCoeffs,-1);
+        m_localToLocalIntMap    = Array<OneD, int>(m_numLocalCoeffs-
+                                                   m_numLocalBndCoeffs,-1);
+
+        int bndcnt = 0;
+        int intcnt = 0;
+        cnt = 0; 
+        for(i = 0; i < nel; ++i)
+        {
+            for(j = 0; j < nz_loc*(nvel*locExpVector[i]->NumBndryCoeffs()); ++j)
+            {
+                m_localToLocalBndMap[bndcnt++]  = cnt++;
+            }
+
+            for(n = 0; n < nz_loc; ++n)
+            {
+                m_localToLocalBndMap[bndcnt++]  = cnt++;
+                for(j = 1; j < pressure->GetExp(i)->GetNcoeffs(); ++j)
+                {
+                    m_localToLocalIntMap[intcnt++]  = cnt++;
+                }
+            }
+
         }
 
         /**
@@ -714,7 +737,6 @@ namespace Nektar
                         for(k = 0; k < 2; k++)
                         {
                             meshVertId = (bndSegExp->GetGeom1D())->GetVid(k);
-                            // This needs sorting !!!!!!!
                             m_bndCondIDToGlobalTraceID[cnt+
                                          bndSegExp->GetVertexMap(k)] =
                                graphVertOffset[ReorderedGraphVertId[0]

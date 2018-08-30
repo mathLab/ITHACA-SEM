@@ -85,15 +85,15 @@ Expansion ratio fixed to 15.4 or 6
             </REGION>
         </BOUNDARYCONDITIONS>
 
-        <!--  <FUNCTION NAME="InitialConditions">
-            <E VAR="u" VALUE="y" />
-            <E VAR="v" VALUE="0" />
-        </FUNCTION>  -->
+        <FUNCTION NAME="InitialConditions">
+          <!--     <E VAR="u" VALUE="0" />
+            <E VAR="v" VALUE="0" /> -->
+        </FUNCTION> 
 
         <FUNCTION NAME="AdvectionVelocity">
-            <!--  <E VAR="u" VALUE="0" />
-            <E VAR="v" VALUE="0" /> -->
-	    <F FILE="poi_lower_p00725.fld" /> 
+           <E VAR="u" VALUE="0" />
+            <E VAR="v" VALUE="0" />
+	    <!-- <F FILE="poi_lower_p00725.fld" />  -->
 	    <!--  <F FILE="Oseen_p0075.fld" /> -->
         </FUNCTION>
 

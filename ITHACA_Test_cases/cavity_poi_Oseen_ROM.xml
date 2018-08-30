@@ -89,9 +89,9 @@ Aspect ratio fixed to 4
         </FUNCTION>
 
         <FUNCTION NAME="AdvectionVelocity">
-            <!--  <E VAR="u" VALUE="0" /> -->
-            <!--  <E VAR="v" VALUE="0" /> -->
-	    <F FILE="poi_50e3_twoR.fld" />
+            <E VAR="u" VALUE="0" /> 
+            <E VAR="v" VALUE="0" /> 
+	    <!-- <F FILE="poi_50e3_twoR.fld" />-->
 	    <!--  <F FILE="Oseen_p0075.fld" /> -->
         </FUNCTION>
 

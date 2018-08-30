@@ -144,48 +144,41 @@ namespace Nektar
                 m_locToGloMap->LocalToLocalInt(pLocInput,F_int);
             }
 
+            // Boundary system solution
             if(nGlobBndDofs-nDirBndDofs)
             {
                 pLocToGloMap->LocalToLocalBnd(pLocInput,F_bnd);
                 // set up normalisation factor for right hand side on first SC level
-                DNekScalBlkMatSharedPtr sc = v_PreSolve(scLevel, F_bnd);
-                
+                v_PreSolve(scLevel, F_bnd);
+
                 // Gather boundary expansison into locbnd 
                 NekVector<NekDouble> F_Bnd(nLocBndDofs,F_bnd1,eWrapper);
                 
                 // construct boundary forcing
-                if( nIntDofs)
+                if(nIntDofs)
                 {
                     DNekScalBlkMat &BinvD      = *m_BinvD;
                     
-                    if(atLastLevel)
-                    {
-                        DNekScalBlkMat &SchurCompl = *sc;
-                        // include dirichlet boundary forcing
-                        F_Bnd = BinvD*F_Int + SchurCompl*V_Bnd;
-                    }
-                    else
-                    {
-                        DiagonalBlockFullScalMatrixMultiply(F_Bnd, BinvD, F_Int);
-                    }
-                    
-                    Vmath::Vsub(nLocBndDofs, F_bnd,1, F_bnd1, 1, F_bnd,1);
+                    F_Bnd = BinvD*F_Int; 
+
+                    Vmath::Vsub(nLocBndDofs, F_bnd,1, F_bnd1,1, F_bnd,1);
                 }
-                else if(atLastLevel)
+
+                if(atLastLevel)
                 {
-                    // include dirichlet boundary forcing
-                    DNekScalBlkMat &SchurCompl = *sc;
-                    F_Bnd = SchurCompl*V_Bnd;
-                    
-                    Vmath::Vsub(nLocBndDofs, F_bnd,1, F_bnd1, 1, F_bnd,1);
-                }
-                
-                if(atLastLevel) // solve boundary system
-                {
-                    Array<OneD, NekDouble> F_hom, pert(nGlobBndDofs,0.0);
-                    
                     // Transform to new basis if required 
                     v_BasisFwdTransform(F_bnd);
+
+                    DNekScalBlkMat &SchurCompl = *m_schurCompl;
+
+                    v_CoeffsFwdTransform(V_bnd,V_bnd);
+                        
+                    // subtract dirichlet boundary forcing
+                    F_Bnd = SchurCompl*V_Bnd;
+
+                    Vmath::Vsub(nLocBndDofs, F_bnd,1, F_bnd1, 1, F_bnd,1);
+
+                    Array<OneD, NekDouble> F_hom, pert(nGlobBndDofs,0.0);
                     
                     pLocToGloMap->AssembleBnd(F_bnd, F_bnd1);
                     
@@ -196,12 +189,12 @@ namespace Nektar
                     Array<OneD, NekDouble> outloc = F_bnd; 
                     pLocToGloMap->GlobalToLocalBnd(pert,outloc);
                     
-                    // Transform back to original basis
-                    v_CoeffsBwdTransform(outloc);
-                    
                     // Add back initial conditions onto difference
                     Vmath::Vadd(nLocBndDofs, V_bnd, 1, outloc, 1, V_bnd,1);
-                    
+
+                    // Transform back to original basis
+                    v_CoeffsBwdTransform(V_bnd);
+
                     // put final bnd solution back in output array
                     m_locToGloMap->LocalBndToLocal(V_bnd,pLocOutput);
                 }

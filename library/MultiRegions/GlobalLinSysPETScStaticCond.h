@@ -94,8 +94,6 @@ namespace Nektar
             MULTI_REGIONS_EXPORT virtual ~GlobalLinSysPETScStaticCond();
 
         protected:
-            DNekScalBlkMatSharedPtr                  m_S1Blk;
-
             virtual void v_InitObject();
 
             /// Assemble the Schur complement matrix.
@@ -105,9 +103,9 @@ namespace Nektar
                 const Array<OneD, const NekDouble> &input,
                       Array<OneD,       NekDouble> &output);
             virtual DNekScalBlkMatSharedPtr v_GetStaticCondBlock(unsigned int n);
-            virtual DNekScalBlkMatSharedPtr v_PreSolve(
-                int                     scLevel,
-                Array<OneD, NekDouble>  &F_bBnd);
+            virtual void v_PreSolve(int                     scLevel,
+                                    Array<OneD, NekDouble>  &F_bBnd);
+
             virtual void v_BasisFwdTransform(
                 Array<OneD, NekDouble>& pInOut);
             virtual void v_CoeffsBwdTransform(

@@ -948,34 +948,30 @@ namespace Nektar
                                                  Array<OneD,      NekDouble> &outarray)
         {
             Array<OneD,NekDouble> tmp_outarray;
-            int cnt = 0;
-            int eid;
-            int i;
             int nvarcoeffs = gkey.GetNVarCoeffs();
                 
-            for(i= 0; i < (*m_exp).size(); ++i)
+            for(int i= 0; i < (*m_exp).size(); ++i)
             {
                 // need to be initialised with zero size for non
                 // variable coefficient case
                 StdRegions::VarCoeffMap varcoeffs;
                 
-                eid = cnt++;
                 if(nvarcoeffs>0)
                 {
                     for (auto &x : gkey.GetVarCoeffs())
                     {
-                        varcoeffs[x.first] = x.second + m_phys_offset[eid];
+                        varcoeffs[x.first] = x.second + m_phys_offset[i];
                     }
                 }
                 
                 StdRegions::StdMatrixKey mkey(gkey.GetMatrixType(),
-                                              (*m_exp)[eid]->DetShapeType(),
-                                              *((*m_exp)[eid]),
+                                              (*m_exp)[i]->DetShapeType(),
+                                              *((*m_exp)[i]),
                                               gkey.GetConstFactors(),varcoeffs);
                 
-                (*m_exp)[eid]->GeneralMatrixOp(inarray + m_coeff_offset[eid],
+                (*m_exp)[i]->GeneralMatrixOp(inarray + m_coeff_offset[i],
                                                tmp_outarray = outarray+
-                                               m_coeff_offset[eid],
+                                               m_coeff_offset[i],
                                                mkey);
             }
         }

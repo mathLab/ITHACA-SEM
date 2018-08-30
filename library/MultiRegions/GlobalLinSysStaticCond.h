@@ -64,11 +64,9 @@ namespace Nektar
             virtual ~GlobalLinSysStaticCond();
 
         protected:
-            virtual DNekScalBlkMatSharedPtr v_PreSolve(
-                int                   scLevel,
-                Array<OneD,NekDouble> &F_bnd)
+            virtual void v_PreSolve(int                   scLevel,
+                                    Array<OneD,NekDouble> &F_bnd)
             {
-                return m_schurCompl;
             }
 
             virtual void v_BasisFwdTransform(

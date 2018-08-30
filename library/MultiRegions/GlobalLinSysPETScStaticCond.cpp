@@ -149,16 +149,6 @@ namespace Nektar
             const Array<OneD,const unsigned int>& nbdry_size
                     = m_locToGloMap->GetNumLocalBndCoeffsPerPatch();
 
-            m_S1Blk = MemoryManager<DNekScalBlkMat>
-                ::AllocateSharedPtr(nbdry_size, nbdry_size, blkmatStorage);
-
-            // Preserve original matrix in m_S1Blk
-            for (n = 0; n < n_exp; ++n)
-            {
-                DNekScalMatSharedPtr mat = m_schurCompl->GetBlock(n, n);
-                m_S1Blk->SetBlock(n, n, mat);
-            }
-
             // Build preconditioner
             m_precon->BuildPreconditioner();
 
@@ -169,7 +159,7 @@ namespace Nektar
                 if (m_linSysKey.GetMatrixType() !=
                         StdRegions::eHybridDGHelmBndLam)
                 {
-                    DNekScalMatSharedPtr mat = m_S1Blk->GetBlock(n, n);
+                    DNekScalMatSharedPtr mat = m_schurCompl->GetBlock(n, n);
                     DNekScalMatSharedPtr t = m_precon->TransformedSchurCompl(
                                                              n, cnt, mat);
                     m_schurCompl->SetBlock(n, n, t);
@@ -271,8 +261,7 @@ namespace Nektar
         {
             DNekScalBlkMatSharedPtr schurComplBlock;
             int  scLevel           = m_locToGloMap->GetStaticCondLevel();
-            DNekScalBlkMatSharedPtr sc = scLevel == 0 ? m_S1Blk : m_schurCompl;
-            DNekScalMatSharedPtr    localMat = sc->GetBlock(n,n);
+            DNekScalMatSharedPtr    localMat = m_schurCompl->GetBlock(n,n);
             unsigned int nbdry    = localMat->GetRows();
             unsigned int nblks    = 1;
             unsigned int esize[1] = {nbdry};
@@ -284,7 +273,7 @@ namespace Nektar
             return schurComplBlock;
         }
 
-        DNekScalBlkMatSharedPtr GlobalLinSysPETScStaticCond::v_PreSolve(
+        void GlobalLinSysPETScStaticCond::v_PreSolve(
             int                     scLevel,
             Array<OneD, NekDouble>   &F_bnd)
         {
@@ -297,15 +286,11 @@ namespace Nektar
                     m_precon = CreatePrecon(m_locToGloMap);
                     m_precon->BuildPreconditioner();
                 }
+            }
 
-                return m_S1Blk;
-            }
-            else
-            {
-                return m_schurCompl;
-            }
+
         }
-
+        
         void GlobalLinSysPETScStaticCond::v_BasisFwdTransform(
                                      Array<OneD, NekDouble>& pInOut)
         {

@@ -122,9 +122,16 @@ v5.0.0
 - Fix compressible solver with NUMMODES=1 (!868)
 - Introduce equations of state to account for real gas effects (!880)
 
-**APESolver:**
+**AcousticSolver:**
 - Added two new boundary conditions to the APE system: RiemannInvariantBC
   and WhiteNoise (!782)
+- Store base flow fields in a discontinuous projection (!918)
+- Enabled 1D cases (!918)
+- The APE system now uses u_i, c^2 and rho as base flow fields (!918)
+- Added the Linearized Euler Equations (LEE) (!918)
+
+**APESolver:**
+- APESolver was replaced with AcousticSolver (!918)
 
 **Documentation**:
 - Added the developer-guide repository as a submodule (!751)

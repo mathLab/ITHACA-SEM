@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<NEKTAR>
+ <POINTS DIM="1" FIELDS="p">
+    -1.0   1.0E5
+    -0.75  1.1E5
+    -0.5   1.2E5
+    -0.25  1.3E5
+     0.25  1.4E5
+     0.5   1.5E5
+     0.75  1.6E5
+     1.0  1.7E5
+ </POINTS>
+</NEKTAR>

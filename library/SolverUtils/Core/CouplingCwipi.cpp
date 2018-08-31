@@ -437,10 +437,10 @@ void CouplingCwipi::SetupSendInterpolation()
     LibUtilities::PtsFieldSharedPtr distPts =
         MemoryManager<LibUtilities::PtsField>::AllocateSharedPtr(3, dist);
 
-    FieldUtils::InterpMethod method = FieldUtils::eNearestNeighbour;
+    LibUtilities::InterpMethod method = LibUtilities::eNearestNeighbour;
     if (boost::to_upper_copy(m_config["SENDMETHOD"]) == "SHEPARD")
     {
-        method = FieldUtils::eShepard;
+        method = LibUtilities::eShepard;
     }
     m_sendInterpolator =
         MemoryManager<FieldUtils::Interpolator>::AllocateSharedPtr(method);
@@ -1042,7 +1042,7 @@ void CouplingCwipi::ExtrapolateFields(
         {
             m_extrapInterpolator =
                 MemoryManager<FieldUtils::Interpolator>::AllocateSharedPtr(
-                    FieldUtils::eNearestNeighbour);
+                    LibUtilities::eNearestNeighbour);
             m_extrapInterpolator->CalcWeights(locatedPts, notlocPts);
             m_extrapInterpolator->PrintStatistics();
         }

@@ -50,8 +50,8 @@ namespace Nektar
         /// Constructor for full direct matrix solve.
         GlobalLinSysIterative::GlobalLinSysIterative(
                 const GlobalLinSysKey &pKey,
-                const boost::weak_ptr<ExpList> &pExpList,
-                const boost::shared_ptr<AssemblyMap>
+                const std::weak_ptr<ExpList> &pExpList,
+                const std::shared_ptr<AssemblyMap>
                 &pLocToGloMap)
                 : GlobalLinSys(pKey, pExpList, pLocToGloMap),
                   m_rhs_magnitude(NekConstants::kNekUnsetDouble),
@@ -517,6 +517,7 @@ namespace Nektar
                 eps     = vExchange[2];
 
                 m_totalIterations++;
+
                 // test if norm is within tolerance
                 if (eps < m_tolerance * m_tolerance * m_rhs_magnitude)
                 {

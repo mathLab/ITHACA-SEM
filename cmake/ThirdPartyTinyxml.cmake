@@ -20,33 +20,59 @@ ELSE()
     SET(BUILD_TINYXML ON)
 ENDIF ()
 
-OPTION(THIRDPARTY_BUILD_TINYXML 
+OPTION(THIRDPARTY_BUILD_TINYXML
     "Build TinyXML library from ThirdParty." ${BUILD_TINYXML})
 
 IF (THIRDPARTY_BUILD_TINYXML)
     INCLUDE(ExternalProject)
-    EXTERNALPROJECT_ADD(
-        tinyxml-2.6.2
-        PREFIX ${TPSRC}
-        URL ${TPURL}/tinyxml_2_6_2.tar.bz2
-        URL_MD5 240beaeb45f63b154c9801eef7561eac
-        STAMP_DIR ${TPBUILD}/stamp
-        DOWNLOAD_DIR ${TPSRC}
-        SOURCE_DIR ${TPSRC}/tinyxml-2.6.2
-        BINARY_DIR ${TPBUILD}/tinyxml-2.6.2
-        TMP_DIR ${TPBUILD}/tinyxml-2.6.2-tmp
-        INSTALL_DIR ${TPDIST}
-        CONFIGURE_COMMAND ${CMAKE_COMMAND}
-            -G ${CMAKE_GENERATOR}
-            -DCMAKE_C_COMPILER:FILEPATH=${CMAKE_C_COMPILER}
-            -DCMAKE_CXX_COMPILER:FILEPATH=${CMAKE_CXX_COMPILER}
-            -DCMAKE_INSTALL_PREFIX:PATH=${TPDIST}
-            -DCMAKE_CXX_FLAGS:STRING=-DTIXML_USE_STL
-            ${TPSRC}/tinyxml-2.6.2
-        )
 
-    THIRDPARTY_LIBRARY(TINYXML_LIBRARY STATIC tinyxml
-        DESCRIPTION "TinyXML library")
+    find_program(HAS_PATCH patch)
+
+    IF(HAS_PATCH)
+        EXTERNALPROJECT_ADD(
+            tinyxml-2.6.2
+            PREFIX ${TPSRC}
+            URL ${TPURL}/tinyxml_2_6_2.tar.bz2
+            URL_MD5 240beaeb45f63b154c9801eef7561eac
+            STAMP_DIR ${TPBUILD}/stamp
+            DOWNLOAD_DIR ${TPSRC}
+            SOURCE_DIR ${TPSRC}/tinyxml-2.6.2
+            BINARY_DIR ${TPBUILD}/tinyxml-2.6.2
+            TMP_DIR ${TPBUILD}/tinyxml-2.6.2-tmp
+            INSTALL_DIR ${TPDIST}
+            PATCH_COMMAND patch -d ${TPSRC}/tinyxml-2.6.2 < ${CMAKE_SOURCE_DIR}/cmake/scripts/tinyxml.patch
+            CONFIGURE_COMMAND ${CMAKE_COMMAND}
+                -G ${CMAKE_GENERATOR}
+                -DCMAKE_C_COMPILER:FILEPATH=${CMAKE_C_COMPILER}
+                -DCMAKE_CXX_COMPILER:FILEPATH=${CMAKE_CXX_COMPILER}
+                -DCMAKE_INSTALL_PREFIX:PATH=${TPDIST}
+                -DCMAKE_CXX_FLAGS:STRING=-DTIXML_USE_STL
+                ${TPSRC}/tinyxml-2.6.2
+            )
+    ELSE()
+        MESSAGE(STATUS "patch utility not found, cannot apply patch to tinyxml, Nektar++ will still function")
+        EXTERNALPROJECT_ADD(
+            tinyxml-2.6.2
+            PREFIX ${TPSRC}
+            URL ${TPURL}/tinyxml_2_6_2.tar.bz2
+            URL_MD5 240beaeb45f63b154c9801eef7561eac
+            STAMP_DIR ${TPBUILD}/stamp
+            DOWNLOAD_DIR ${TPSRC}
+            SOURCE_DIR ${TPSRC}/tinyxml-2.6.2
+            BINARY_DIR ${TPBUILD}/tinyxml-2.6.2
+            TMP_DIR ${TPBUILD}/tinyxml-2.6.2-tmp
+            INSTALL_DIR ${TPDIST}
+            CONFIGURE_COMMAND ${CMAKE_COMMAND}
+                -G ${CMAKE_GENERATOR}
+                -DCMAKE_C_COMPILER:FILEPATH=${CMAKE_C_COMPILER}
+                -DCMAKE_CXX_COMPILER:FILEPATH=${CMAKE_CXX_COMPILER}
+                -DCMAKE_INSTALL_PREFIX:PATH=${TPDIST}
+                -DCMAKE_CXX_FLAGS:STRING=-DTIXML_USE_STL
+                ${TPSRC}/tinyxml-2.6.2
+            )
+    ENDIF()
+
+    THIRDPARTY_LIBRARY(TINYXML_LIBRARY STATIC tinyxml DESCRIPTION "TinyXML library")
     SET(TINYXML_INCLUDE_DIR ${TPDIST}/include CACHE FILEPATH
         "TinyXML include" FORCE)
     MESSAGE(STATUS "Build TinyXML: ${TINYXML_LIBRARY}")
@@ -61,3 +87,4 @@ INCLUDE_DIRECTORIES(${TINYXML_INCLUDE_DIR})
 
 MARK_AS_ADVANCED(TINYXML_INCLUDE_DIR)
 MARK_AS_ADVANCED(TINYXML_LIBRARY)
+MARK_AS_ADVANCED(TINYXML_CONFIG_INCLUDE_DIR)

@@ -307,7 +307,13 @@ namespace Nektar
             {
                 fill(signarray.get(), signarray.get()+nEdgeCoeffs, 1);
             }
-            
+
+            Orientation orient = edgeOrient;
+            if (eid == 2)
+            {
+                orient = orient == eForwards ? eBackwards : eForwards;
+            }
+
             maparray[0] = eid;
             maparray[1] = eid == 2 ? 0 : eid+1;
             for (int i = 2; i < nEdgeCoeffs; i++)
@@ -315,7 +321,7 @@ namespace Nektar
                 maparray[i] = eid*(nEdgeCoeffs-2)+1+i; 
             }  
 
-            if (edgeOrient == eBackwards)
+            if (orient == eBackwards)
             {
                 reverse(maparray.get(), maparray.get()+nEdgeCoeffs);
             }
@@ -353,13 +359,19 @@ namespace Nektar
             {
                 fill(signarray.get(), signarray.get()+nEdgeIntCoeffs, 1);
             }
-            
+
+            Orientation orient = edgeOrient;
+            if (eid == 2)
+            {
+                orient = orient == eForwards ? eBackwards : eForwards;
+            }
+
             for (int i = 0; i < nEdgeIntCoeffs; i++)
             {
                 maparray[i] = eid*nEdgeIntCoeffs+3+i; 
             }  
 
-            if (edgeOrient == eBackwards)
+            if (orient == eBackwards)
             {
                 reverse(maparray.get(), maparray.get()+nEdgeIntCoeffs);
             }

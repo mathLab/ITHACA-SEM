@@ -36,8 +36,6 @@
 #include <MultiRegions/ContField3D.h>
 #include <MultiRegions/AssemblyMap/AssemblyMapCG.h>
 
-#include <LibUtilities/BasicUtils/DBUtils.hpp>
-
 using namespace std;
 
 namespace Nektar
@@ -50,8 +48,9 @@ namespace Nektar
             m_locToGloMap(),
             m_globalMat(),
             m_globalLinSysManager(
-                    boost::bind(&ContField3D::GenGlobalLinSys, this, _1),
-                    std::string("GlobalLinSys"))
+                std::bind(
+                    &ContField3D::GenGlobalLinSys, this, std::placeholders::_1),
+                std::string("GlobalLinSys"))
         {
         }
 
@@ -81,11 +80,11 @@ namespace Nektar
                                  const std::string &variable,
                                  const bool CheckIfSingularSystem,
                                  const Collections::ImplementationType ImpType):
-            DisContField3D(pSession,graph3D,variable,false,ImpType),
+                DisContField3D(pSession,graph3D,variable,false,ImpType),
                 m_globalMat(MemoryManager<GlobalMatrixMap>::AllocateSharedPtr()),
                 m_globalLinSysManager(
-                        boost::bind(&ContField3D::GenGlobalLinSys, this, _1),
-                        std::string("GlobalLinSys"))
+                    std::bind(&ContField3D::GenGlobalLinSys, this,  std::placeholders::_1),
+                    std::string("GlobalLinSys"))
         {
             m_locToGloMap = MemoryManager<AssemblyMapCG>::AllocateSharedPtr(
                 m_session,m_ncoeffs,*this,m_bndCondExpansions,m_bndConditions,
@@ -128,8 +127,9 @@ namespace Nektar
                                  const bool CheckIfSingularSystem):
 	    DisContField3D(In,graph3D,variable,false),
             m_globalMat   (MemoryManager<GlobalMatrixMap>::AllocateSharedPtr()),
-            m_globalLinSysManager(boost::bind(&ContField3D::GenGlobalLinSys, this, _1),
-                                  std::string("GlobalLinSys"))
+            m_globalLinSysManager(
+                std::bind(&ContField3D::GenGlobalLinSys, this,  std::placeholders::_1),
+                std::string("GlobalLinSys"))
 
         {
             if(!SameTypeOfBoundaryConditions(In) || CheckIfSingularSystem)
@@ -412,7 +412,7 @@ namespace Nektar
                    "attached to key");
           
             GlobalMatrixSharedPtr glo_matrix;
-            GlobalMatrixMap::iterator matrixIter = m_globalMat->find(mkey);
+            auto matrixIter = m_globalMat->find(mkey);
             
             if(matrixIter == m_globalMat->end())
             {
@@ -448,14 +448,14 @@ namespace Nektar
           // periodic boundary conditiosn)
           map<int, vector<ExtraDirDof> > &extraDirDofs =
               m_locToGloMap->GetExtraDirDofs();
-          map<int, vector<ExtraDirDof> >::iterator it;
-          for (it = extraDirDofs.begin(); it != extraDirDofs.end(); ++it)
+
+          for (auto &it : extraDirDofs)
           {
-              for (i = 0; i < it->second.size(); ++i)
+              for (i = 0; i < it.second.size(); ++i)
               {
-                  tmp[it->second.at(i).get<1>()] = 
-                      m_bndCondExpansions[it->first]->GetCoeffs()[
-                           it->second.at(i).get<0>()]*it->second.at(i).get<2>();
+                  tmp[std::get<1>(it.second.at(i))] =
+                      m_bndCondExpansions[it.first]->GetCoeffs()[
+                          std::get<0>(it.second.at(i))]*std::get<2>(it.second.at(i));
               }
           }
 
@@ -483,7 +483,8 @@ namespace Nektar
                       }
                   }
               }
-              else
+              else if (m_bndConditions[i]->GetBoundaryConditionType() !=
+                     SpatialDomains::ePeriodic)
               {
                   bndcnt += m_bndCondExpansions[i]->GetNcoeffs();
               }
@@ -580,6 +581,7 @@ namespace Nektar
                                     const FlagList &flags,
                                     const StdRegions::ConstFactorMap &factors,
                                     const StdRegions::VarCoeffMap &varcoeff,
+                                    const MultiRegions::VarFactorsMap &varfactors,
                                     const Array<OneD, const NekDouble> &dirForcing,
                                     const bool PhysSpaceForcing)
       {
@@ -606,7 +608,8 @@ namespace Nektar
           Array<OneD, NekDouble> gamma(contNcoeffs, 0.0);
           for(i = 0; i < m_bndCondExpansions.num_elements(); ++i)
           {
-              if(m_bndConditions[i]->GetBoundaryConditionType() != SpatialDomains::eDirichlet)
+              if(m_bndConditions[i]->GetBoundaryConditionType() == SpatialDomains::eNeumann ||
+                 m_bndConditions[i]->GetBoundaryConditionType() == SpatialDomains::eRobin)
               {
                   for(j = 0; j < (m_bndCondExpansions[i])->GetNcoeffs(); j++)
                   {
@@ -615,7 +618,7 @@ namespace Nektar
                           sign * (m_bndCondExpansions[i]->GetCoeffs())[j];
                   }
               }
-              else
+              else if (m_bndConditions[i]->GetBoundaryConditionType() != SpatialDomains::ePeriodic)
               {
                   bndcnt += m_bndCondExpansions[i]->GetNcoeffs();
               }
@@ -626,7 +629,7 @@ namespace Nektar
           Vmath::Vadd(contNcoeffs, wsp, 1, gamma, 1, wsp, 1);
           
           // Solve the system
-          GlobalLinSysKey key(StdRegions::eHelmholtz, m_locToGloMap, factors,varcoeff);
+          GlobalLinSysKey key(StdRegions::eHelmholtz, m_locToGloMap, factors,varcoeff,varfactors);
           
           if(flags.isSet(eUseGlobal))
           {
@@ -754,7 +757,7 @@ namespace Nektar
                    "To use method must have a AssemblyMap "
                    "attached to key");
           
-          GlobalMatrixMap::iterator matrixIter = m_globalMat->find(gkey);
+          auto matrixIter = m_globalMat->find(gkey);
           
           if(matrixIter == m_globalMat->end())
           {

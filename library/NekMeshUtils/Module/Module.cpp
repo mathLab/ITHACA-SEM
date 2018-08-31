@@ -235,7 +235,7 @@ void Module::ProcessEdges(bool ReprocessEdges)
         NodeSharedPtr v0 = elmt->GetVertex(0);
         NodeSharedPtr v1 = elmt->GetVertex(1);
         vector<NodeSharedPtr> edgeNodes;
-        EdgeSharedPtr E = boost::shared_ptr<Edge>(
+        EdgeSharedPtr E = std::shared_ptr<Edge>(
             new Edge(v0, v1, edgeNodes, elmt->GetConf().m_edgeCurveType));
 
         EdgeSet::iterator it = m_mesh->m_edgeSet.find(E);
@@ -326,7 +326,7 @@ void Module::ProcessFaces(bool ReprocessFaces)
         vector<NodeSharedPtr> vertices = elmt->GetVertexList();
         vector<NodeSharedPtr> faceNodes;
         vector<EdgeSharedPtr> edgeList = elmt->GetEdgeList();
-        FaceSharedPtr F = boost::shared_ptr<Face>(
+        FaceSharedPtr F = std::shared_ptr<Face>(
             new Face(vertices, faceNodes, edgeList,
                      elmt->GetConf().m_faceCurveType));
 
@@ -418,7 +418,7 @@ void Module::ProcessComposites()
 
             if (it == m_mesh->m_composite.end())
             {
-                CompositeSharedPtr tmp = boost::shared_ptr<Composite>(
+                CompositeSharedPtr tmp = std::shared_ptr<Composite>(
                                                     new Composite());
                 pair<CompositeMap::iterator, bool> testIns;
                 tmp->m_id  = tagid;
@@ -536,8 +536,8 @@ void Module::ReorderPrisms(PerMap &perFaces)
 
     // facesDone tracks face IDs inside prisms which have already been
     // aligned.
-    boost::unordered_set<int> facesDone;
-    boost::unordered_set<int>::iterator fIt[2], fIt2;
+    std::unordered_set<int> facesDone;
+    std::unordered_set<int>::iterator fIt[2], fIt2;
 
     // Loop over prisms until we've found all lines of prisms.
     while (prismsDone.size() > 0)
@@ -855,7 +855,14 @@ void Module::RegisterConfig(string key, string val)
     }
     else
     {
-        it->second.value = val;
+        if(val.size() == 0)
+        {
+            it->second.value = it->second.defValue;
+        }
+        else
+        {
+            it->second.value = val;
+        }
     }
 }
 

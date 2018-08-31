@@ -74,8 +74,8 @@ namespace Nektar
          */
         GlobalLinSysStaticCond::GlobalLinSysStaticCond(
             const GlobalLinSysKey                &pKey,
-            const boost::weak_ptr<ExpList>       &pExpList,
-            const boost::shared_ptr<AssemblyMap> &pLocToGloMap)
+            const std::weak_ptr<ExpList>         &pExpList,
+            const std::shared_ptr<AssemblyMap>   &pLocToGloMap)
                 : GlobalLinSys(pKey, pExpList, pLocToGloMap),
                   m_locToGloMap (pLocToGloMap)
         {
@@ -179,7 +179,7 @@ namespace Nektar
                 Subtract(F_HomBnd, F_HomBnd, V_GlobHomBndTmp);
 
                 // Transform from original basis to low energy
-                v_BasisTransform(F, nDirBndDofs);
+                v_BasisFwdTransform(F, nDirBndDofs);
 
                 // For parallel multi-level static condensation some
                 // processors may have different levels to others. This
@@ -215,7 +215,7 @@ namespace Nektar
                         nGlobBndDofs, F, pert, pLocToGloMap, nDirBndDofs);
 
                     // Transform back to original basis
-                    v_BasisInvTransform(pert);
+                    v_BasisBwdTransform(pert);
 
                     // Add back initial conditions onto difference
                     Vmath::Vadd(nGlobHomBndDofs,&out[nDirBndDofs],1,
@@ -262,7 +262,7 @@ namespace Nektar
          * @param   pLocToGloMap    Local to global mapping.
          */
         void GlobalLinSysStaticCond::v_Initialise(
-                const boost::shared_ptr<AssemblyMap>& pLocToGloMap)
+                const std::shared_ptr<AssemblyMap>& pLocToGloMap)
         {
             int nLocalBnd = m_locToGloMap->GetNumLocalBndCoeffs();
             int nGlobal = m_locToGloMap->GetNumGlobalCoeffs();
@@ -296,7 +296,7 @@ namespace Nektar
          * @param
          */
         void GlobalLinSysStaticCond::SetupTopLevel(
-                const boost::shared_ptr<AssemblyMap>& pLocToGloMap)
+                const std::shared_ptr<AssemblyMap>& pLocToGloMap)
         {
             int n;
             int n_exp = m_expList.lock()->GetNumElmts();

@@ -55,56 +55,6 @@ public:
     {
     }
 
-    /**
-     * @brief Generate a Nektar++ string describing the composite.
-     *
-     * The list of composites may include individual element IDs or ranges of
-     * element IDs.
-     */
-    NEKMESHUTILS_EXPORT std::string GetXmlString(bool doSort = true)
-    {
-        std::stringstream st;
-        std::vector<ElementSharedPtr>::iterator it;
-        bool range = false;
-        int vId    = m_items[0]->GetId();
-        int prevId = vId;
-
-        st << " " << m_tag << "[" << vId;
-
-        for (it = m_items.begin() + 1; it != m_items.end(); ++it)
-        {
-            // store previous element ID and get current one
-            prevId = vId;
-            vId    = (*it)->GetId();
-
-            // continue an already started range
-            if (prevId > -1 && vId == prevId + 1)
-            {
-                range = true;
-                // if this is the last element, it's the end of a range, so
-                // write
-                if (*it == m_items.back())
-                {
-                    st << "-" << vId;
-                }
-                continue;
-            }
-
-            // terminate a range, if present
-            if (range)
-            {
-                st << "-" << prevId;
-                range = false;
-            }
-
-            // write what will be either a single entry or start of new range
-            st << "," << vId;
-        }
-        // terminate
-        st << "] ";
-        return st.str();
-    }
-
     /// ID of composite.
     unsigned int m_id;
     /// Element type tag.
@@ -118,7 +68,7 @@ public:
 };
 
 /// Shared pointer to a composite.
-typedef boost::shared_ptr<Composite> CompositeSharedPtr;
+typedef std::shared_ptr<Composite> CompositeSharedPtr;
 /// Container of composites; key is the composite id, value is the
 /// composite.
 typedef std::map<unsigned int, CompositeSharedPtr> CompositeMap;

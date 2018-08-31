@@ -45,10 +45,7 @@ ENDIF (NEKTAR_USE_VTK)
 IF (NEKTAR_USE_MESHGEN)
     SET(NekMeshSources ${NekMeshSources}
             ProcessModules/ProcessVarOpti/NodeOptiCAD.cpp
-            ProcessModules/ProcessVarOpti/ProcessVarOpti.cpp
-            ProcessModules/ProcessVarOpti/PreProcessing.cpp
-            ProcessModules/ProcessVarOpti/NodeOpti.cpp
-            ProcessModules/ProcessVarOpti/ElUtil.cpp
+            ProcessModules/ProcessProjectCAD.cpp
             InputModules/InputMCF.cpp)
 ENDIF (NEKTAR_USE_MESHGEN)
 
@@ -56,7 +53,7 @@ ENDIF (NEKTAR_USE_MESHGEN)
 # LocalRegions.
 ADD_UTILITIES_EXECUTABLE(NekMesh COMPONENT nekmesh
     SOURCES ${NekMeshSources}
-    DEPENDS NekMeshUtils FieldUtils)
+    DEPENDS NekMeshUtils LocalRegions)
 
 IF (NEKTAR_USE_CCM)
    TARGET_LINK_LIBRARIES(NekMesh LINK_PRIVATE ${CCMIO_LIBRARIES})
@@ -84,6 +81,7 @@ ADD_NEKTAR_TEST(Gmsh/CubePrism)
 ADD_NEKTAR_TEST(Gmsh/CubePrismLinear)
 ADD_NEKTAR_TEST(Gmsh/CubeTet)
 ADD_NEKTAR_TEST(Gmsh/CubeTetLinear)
+ADD_NEKTAR_TEST(Gmsh/CylinderRotPer2D)
 ADD_NEKTAR_TEST(Gmsh/SquareQuad)
 ADD_NEKTAR_TEST(Gmsh/SquareQuadLinear)
 ADD_NEKTAR_TEST(Gmsh/SquareTri)

@@ -55,14 +55,11 @@ ModuleKey OutputGmsh::className =
 
 OutputGmsh::OutputGmsh(MeshSharedPtr m) : OutputModule(m)
 {
-    map<unsigned int, ElmtConfig> igelmap = InputGmsh::GenElmMap();
-    map<unsigned int, ElmtConfig>::iterator it;
-
     // Populate #InputGmsh::elmMap and use this to construct an
     // inverse mapping from %ElmtConfig to Gmsh ID.
-    for (it = igelmap.begin(); it != igelmap.end(); ++it)
+    for (auto &it : InputGmsh::GenElmMap())
     {
-        elmMap[it->second] = it->first;
+        elmMap[it.second] = it.first;
     }
 
     m_config["order"] = ConfigOption(false, "-1", "Enforce a polynomial order");
@@ -89,8 +86,7 @@ void OutputGmsh::Process()
         cout << "OutputGmsh: Writing file..." << endl;
     }
 
-    boost::unordered_map<int, vector<int> > orderingMap;
-    boost::unordered_map<int, vector<int> >::iterator oIt;
+    std::unordered_map<int, vector<int> > orderingMap;
 
     // Open the file stream.
     OpenStream();
@@ -135,19 +131,16 @@ void OutputGmsh::Process()
     m_mesh->MakeOrder(order, LibUtilities::ePolyEvenlySpaced);
 
     // Add edge- and face-interior nodes to vertex set.
-    EdgeSet::iterator eIt;
-    FaceSet::iterator fIt;
-
-    for (eIt = m_mesh->m_edgeSet.begin(); eIt != m_mesh->m_edgeSet.end(); ++eIt)
+    for (auto &eIt : m_mesh->m_edgeSet)
     {
-        m_mesh->m_vertexSet.insert((*eIt)->m_edgeNodes.begin(),
-                                   (*eIt)->m_edgeNodes.end());
+        m_mesh->m_vertexSet.insert(eIt->m_edgeNodes.begin(),
+                                   eIt->m_edgeNodes.end());
     }
 
-    for (fIt = m_mesh->m_faceSet.begin(); fIt != m_mesh->m_faceSet.end(); ++fIt)
+    for (auto &fIt : m_mesh->m_faceSet)
     {
-        m_mesh->m_vertexSet.insert((*fIt)->m_faceNodes.begin(),
-                                   (*fIt)->m_faceNodes.end());
+        m_mesh->m_vertexSet.insert(fIt->m_faceNodes.begin(),
+                                   fIt->m_faceNodes.end());
     }
 
     // Do second pass over elements for volume nodes.
@@ -162,18 +155,20 @@ void OutputGmsh::Process()
     }
 
     // Create ordered set of nodes - not required but looks nicer.
-    std::set<NodeSharedPtr>::iterator it;
-    std::set<NodeSharedPtr> tmp(m_mesh->m_vertexSet.begin(),
-                                m_mesh->m_vertexSet.end());
+    map<int, NodeSharedPtr> tmp;
+    for (const auto &it : m_mesh->m_vertexSet)
+    {
+        tmp[it->GetID() + 1] = it;
+    }
 
     // Write out nodes section.
     m_mshFile << "$Nodes" << endl << m_mesh->m_vertexSet.size() << endl;
 
-    for (it = tmp.begin(); it != tmp.end(); ++it)
+    for (auto &it : tmp)
     {
-        m_mshFile << (*it)->m_id+1 << " " << scientific << setprecision(10)
-                  << (*it)->m_x << " " << (*it)->m_y << " " << (*it)->m_z
-                  << endl;
+        m_mshFile << it.first << " " << scientific << setprecision(10)
+                  << it.second->m_x << " " << it.second->m_y << " "
+                  << it.second->m_z << endl;
     }
 
     m_mshFile << "$EndNodes" << endl;
@@ -290,7 +285,7 @@ void OutputGmsh::Process()
 
             // Construct inverse of input reordering. First try to find it in
             // our cache.
-            oIt = orderingMap.find(elmtType);
+            auto oIt = orderingMap.find(elmtType);
 
             // If it's not created, then create it.
             if (oIt == orderingMap.end())

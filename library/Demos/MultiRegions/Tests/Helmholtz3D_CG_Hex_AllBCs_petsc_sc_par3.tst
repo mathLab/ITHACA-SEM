@@ -2,7 +2,7 @@
 <test>
     <description>Helmholtz 3D CG, hexes, mixed BCs, PETSc sc, par(3)</description>
     <executable>Helmholtz3D</executable>
-    <parameters>--use-metis -I GlobalSysSoln=PETScStaticCond Helmholtz3D_Hex_AllBCs_P6.xml</parameters>
+    <parameters>--use-scotch -I GlobalSysSoln=PETScStaticCond Helmholtz3D_Hex_AllBCs_P6.xml</parameters>
     <processes>3</processes>
     <files>
         <file description="Session File">Helmholtz3D_Hex_AllBCs_P6.xml</file>
@@ -12,7 +12,7 @@
             <value tolerance="1e-12">0.000416575</value>
         </metric>
         <metric type="Linf" id="2">
-            <value tolerance="1e-12">0.000871589</value>
+            <value tolerance="1e-8">0.000871589</value>
         </metric>
     </metrics>
 </test>

@@ -59,22 +59,23 @@ std::string FilterBenchmark::className =
  * @param       pParams     Parameters of filter
  */
 FilterBenchmark::FilterBenchmark(
-        const LibUtilities::SessionReaderSharedPtr &pSession,
+        const LibUtilities::SessionReaderSharedPtr         &pSession,
+        const std::weak_ptr<SolverUtils::EquationSystem> &pEquation,
         const ParamMap &pParams)
-    : Filter(pSession)
+    : Filter(pSession, pEquation)
 {
-    ParamMap::const_iterator it;
-
     // ThresholdValue
-    it = pParams.find("ThresholdValue");
+    auto it = pParams.find("ThresholdValue");
     ASSERTL0(it != pParams.end(), "Missing parameter 'ThresholdValue'.");
-    LibUtilities::Equation equ1(m_session, it->second);
+    LibUtilities::Equation equ1(
+        m_session->GetExpressionEvaluator(), it->second);
     m_thresholdValue = floor(equ1.Evaluate());
 
     // InitialValue
     it = pParams.find("InitialValue");
     ASSERTL0(it != pParams.end(), "Missing parameter 'InitialValue'.");
-    LibUtilities::Equation equ2(m_session, it->second);
+    LibUtilities::Equation equ2(
+        m_session->GetExpressionEvaluator(), it->second);
     m_initialValue = floor(equ2.Evaluate());
 
     // OutputFile
@@ -87,7 +88,8 @@ FilterBenchmark::FilterBenchmark(
     it = pParams.find("StartTime");
     if (it != pParams.end())
     {
-        LibUtilities::Equation equ(m_session, it->second);
+        LibUtilities::Equation equ(
+            m_session->GetExpressionEvaluator(), it->second);
         m_startTime = floor(equ.Evaluate());
     }
 

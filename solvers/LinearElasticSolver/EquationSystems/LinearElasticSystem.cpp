@@ -127,8 +127,9 @@ inline DNekMat MappingIdealToRef(SpatialDomains::GeometrySharedPtr geom)
  * @brief Default constructor.
  */
 LinearElasticSystem::LinearElasticSystem(
-    const LibUtilities::SessionReaderSharedPtr& pSession)
-    : EquationSystem(pSession)
+    const LibUtilities::SessionReaderSharedPtr& pSession,
+    const SpatialDomains::MeshGraphSharedPtr &pGraph)
+    : EquationSystem(pSession, pGraph)
 {
 }
 
@@ -158,7 +159,7 @@ void LinearElasticSystem::v_InitObject()
     // fields together.
     if (nVel == 2)
     {
-        MultiRegions::ContField2DSharedPtr u = boost::dynamic_pointer_cast<
+        MultiRegions::ContField2DSharedPtr u = std::dynamic_pointer_cast<
             MultiRegions::ContField2D>(m_fields[0]);
         m_assemblyMap = MemoryManager<CoupledAssemblyMap>
             ::AllocateSharedPtr(m_session,
@@ -170,7 +171,7 @@ void LinearElasticSystem::v_InitObject()
 
     if (nVel == 3)
     {
-        MultiRegions::ContField3DSharedPtr u = boost::dynamic_pointer_cast<
+        MultiRegions::ContField3DSharedPtr u = std::dynamic_pointer_cast<
             MultiRegions::ContField3D>(m_fields[0]);
         m_assemblyMap = MemoryManager<CoupledAssemblyMap>
             ::AllocateSharedPtr(m_session,
@@ -676,7 +677,6 @@ void LinearElasticSystem::v_DoSolve()
     // ContField2D::v_ImposeDirichletConditions for more detail.
     map<int, vector<MultiRegions::ExtraDirDof> > &extraDirDofs =
         m_assemblyMap->GetExtraDirDofs();
-    map<int, vector<MultiRegions::ExtraDirDof> >::iterator it;
 
     for (nv = 0; nv < nVel; ++nv)
     {
@@ -684,13 +684,13 @@ void LinearElasticSystem::v_DoSolve()
             = m_fields[nv]->GetBndCondExpansions();
 
         // First try to do parallel stuff
-        for (it = extraDirDofs.begin(); it != extraDirDofs.end(); ++it)
+        for (auto &it : extraDirDofs)
         {
-            for (i = 0; i < it->second.size(); ++i)
+            for (i = 0; i < it.second.size(); ++i)
             {
-                inout[it->second.at(i).get<1>()*nVel + nv] =
-                    bndCondExp[it->first]->GetCoeffs()[
-                        it->second.at(i).get<0>()]*it->second.at(i).get<2>();
+                inout[std::get<1>(it.second.at(i))*nVel + nv] =
+                    bndCondExp[it.first]->GetCoeffs()[
+                        std::get<0>(it.second.at(i))]*std::get<2>(it.second.at(i));
             }
         }
     }

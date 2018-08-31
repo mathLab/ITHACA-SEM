@@ -61,7 +61,7 @@ namespace Nektar
 	 */
 
          PreconditionerDiagonal::PreconditionerDiagonal(
-                         const boost::shared_ptr<GlobalLinSys> &plinsys,
+                         const std::shared_ptr<GlobalLinSys> &plinsys,
 	                 const AssemblyMapSharedPtr &pLocToGloMap)
            : Preconditioner(plinsys, pLocToGloMap),
              m_preconType(pLocToGloMap->GetPreconType())
@@ -99,10 +99,10 @@ namespace Nektar
          */
          void PreconditionerDiagonal::DiagonalPreconditionerSum()
          {
-             boost::shared_ptr<MultiRegions::ExpList> expList = 
+             std::shared_ptr<MultiRegions::ExpList> expList = 
                  ((m_linsys.lock())->GetLocMat()).lock();
 
-             StdRegions::StdExpansionSharedPtr locExpansion;
+             LocalRegions::ExpansionSharedPtr locExpansion;
 
              int i,j,n,cnt,gid1,gid2;
              NekDouble sign1,sign2,value;
@@ -123,15 +123,16 @@ namespace Nektar
 
                  for(i = 0; i < loc_row; ++i)
                  {
-                     gid1 = m_locToGloMap->GetLocalToGlobalMap(cnt + i) - nDir;
-                     sign1 =  m_locToGloMap->GetLocalToGlobalSign(cnt + i);
+                     gid1  = m_locToGloMap->GetLocalToGlobalMap(cnt+i)-nDir;
+                     sign1 = m_locToGloMap->GetLocalToGlobalSign(cnt+i);
+
                      if(gid1 >= 0)
                      {
                          for(j = 0; j < loc_row; ++j)
                          {
-                             gid2 = m_locToGloMap->GetLocalToGlobalMap(cnt + j)
-                                                                    - nDir;
-                             sign2 = m_locToGloMap->GetLocalToGlobalSign(cnt + j);
+                             gid2  = m_locToGloMap->GetLocalToGlobalMap(cnt+j)
+                                 - nDir;
+                             sign2 = m_locToGloMap->GetLocalToGlobalSign(cnt+j);
                              if(gid2 == gid1)
                              {
                                  // When global matrix is symmetric,
@@ -213,7 +214,7 @@ namespace Nektar
 	 * gradient matrix solver.
 	 */
          PreconditionerNull::PreconditionerNull(
-                         const boost::shared_ptr<GlobalLinSys> &plinsys,
+                         const std::shared_ptr<GlobalLinSys> &plinsys,
 	                 const AssemblyMapSharedPtr &pLocToGloMap)
            : Preconditioner(plinsys, pLocToGloMap),
              m_preconType(pLocToGloMap->GetPreconType())

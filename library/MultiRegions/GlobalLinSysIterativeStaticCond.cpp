@@ -109,8 +109,8 @@ namespace Nektar
          */
         GlobalLinSysIterativeStaticCond::GlobalLinSysIterativeStaticCond(
             const GlobalLinSysKey                &pKey,
-            const boost::weak_ptr<ExpList>       &pExpList,
-            const boost::shared_ptr<AssemblyMap> &pLocToGloMap)
+            const std::weak_ptr<ExpList>         &pExpList,
+            const std::shared_ptr<AssemblyMap>   &pLocToGloMap)
             : GlobalLinSys          (pKey, pExpList, pLocToGloMap),
               GlobalLinSysIterative (pKey, pExpList, pLocToGloMap),
               GlobalLinSysStaticCond(pKey, pExpList, pLocToGloMap)
@@ -131,12 +131,12 @@ namespace Nektar
          */
         GlobalLinSysIterativeStaticCond::GlobalLinSysIterativeStaticCond(
             const GlobalLinSysKey                &pKey,
-            const boost::weak_ptr<ExpList>       &pExpList,
+            const std::weak_ptr<ExpList>         &pExpList,
             const DNekScalBlkMatSharedPtr         pSchurCompl,
             const DNekScalBlkMatSharedPtr         pBinvD,
             const DNekScalBlkMatSharedPtr         pC,
             const DNekScalBlkMatSharedPtr         pInvD,
-            const boost::shared_ptr<AssemblyMap> &pLocToGloMap,
+            const std::shared_ptr<AssemblyMap>   &pLocToGloMap,
             const PreconditionerSharedPtr         pPrecon)
             : GlobalLinSys          (pKey, pExpList, pLocToGloMap),
               GlobalLinSysIterative (pKey, pExpList, pLocToGloMap),
@@ -165,7 +165,7 @@ namespace Nektar
             const Array<OneD,const unsigned int>& nbdry_size
                     = m_locToGloMap->GetNumLocalBndCoeffsPerPatch();
 
-            m_S1Blk      = MemoryManager<DNekScalBlkMat>
+            m_S1Blk = MemoryManager<DNekScalBlkMat>
                 ::AllocateSharedPtr(nbdry_size, nbdry_size, blkmatStorage);
 
             // Preserve original matrix in m_S1Blk
@@ -179,14 +179,17 @@ namespace Nektar
             m_precon->BuildPreconditioner();
 
             // Do transform of Schur complement matrix
+            int cnt = 0; 
             for (n = 0; n < n_exp; ++n)
             {
                 if (m_linSysKey.GetMatrixType() !=
                         StdRegions::eHybridDGHelmBndLam)
                 {
                     DNekScalMatSharedPtr mat = m_S1Blk->GetBlock(n, n);
-                    DNekScalMatSharedPtr t = m_precon->TransformedSchurCompl(n, mat);
+                    DNekScalMatSharedPtr t = m_precon->TransformedSchurCompl(
+                                                n, cnt, mat);
                     m_schurCompl->SetBlock(n, n, t);
+                    cnt += mat->GetRows();
                 }
             }
 
@@ -550,27 +553,27 @@ namespace Nektar
             }
         }
 
-        void GlobalLinSysIterativeStaticCond::v_BasisTransform(
+        void GlobalLinSysIterativeStaticCond::v_BasisFwdTransform(
             Array<OneD, NekDouble>& pInOut,
             int                     offset)
         {
-            m_precon->DoTransformToLowEnergy(pInOut, offset);
+            m_precon->DoTransformToLowEnergy(pInOut, offset);            
         }
 
-        void GlobalLinSysIterativeStaticCond::v_BasisInvTransform(
+        void GlobalLinSysIterativeStaticCond::v_BasisBwdTransform(
             Array<OneD, NekDouble>& pInOut)
         {
-            m_precon->DoTransformFromLowEnergy(pInOut);
+	    m_precon->DoTransformFromLowEnergy(pInOut);
         }
 
         GlobalLinSysStaticCondSharedPtr GlobalLinSysIterativeStaticCond::v_Recurse(
             const GlobalLinSysKey                &mkey,
-            const boost::weak_ptr<ExpList>       &pExpList,
+            const std::weak_ptr<ExpList>         &pExpList,
             const DNekScalBlkMatSharedPtr         pSchurCompl,
             const DNekScalBlkMatSharedPtr         pBinvD,
             const DNekScalBlkMatSharedPtr         pC,
             const DNekScalBlkMatSharedPtr         pInvD,
-            const boost::shared_ptr<AssemblyMap> &l2gMap)
+            const std::shared_ptr<AssemblyMap>   &l2gMap)
         {
             GlobalLinSysIterativeStaticCondSharedPtr sys = MemoryManager<
                 GlobalLinSysIterativeStaticCond>::AllocateSharedPtr(

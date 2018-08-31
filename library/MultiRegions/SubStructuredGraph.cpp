@@ -35,20 +35,32 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <MultiRegions/SubStructuredGraph.h>
-#include <LibUtilities/BasicUtils/Metis.hpp>
 #include <LibUtilities/BasicUtils/VmathArray.hpp>
 
 #include <iostream>
+#include <iomanip>
 #include <algorithm>
 #include <boost/config.hpp>
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/cuthill_mckee_ordering.hpp>
 #include <boost/graph/properties.hpp>
 #include <boost/graph/bandwidth.hpp>
+#include <boost/algorithm/string/replace.hpp>
 
 using std::max;
 using std::cout;
 using std::endl;
+
+#ifdef NEKTAR_USE_SCOTCH
+#include <scotch.h>
+
+#define SCOTCH_CALL(scotchFunc, args)                                   \
+    {                                                                   \
+        ASSERTL0(scotchFunc args == 0,                                  \
+                 std::string("Error in Scotch calling function ")       \
+                 + std::string(#scotchFunc));                           \
+    }
+#endif
 
 namespace Nektar
 {
@@ -85,76 +97,6 @@ namespace Nektar
             m_sign    [n] = sign;
         }
         
-        MultiLevelBisectedGraph::MultiLevelBisectedGraph(
-            const Array<OneD, const int> sepTree) :
-            m_BndDofs           (),
-            m_leftDaughterGraph (),
-            m_rightDaughterGraph()
-        {
-            static int offset = -5;
-            offset += 5;
-
-            int recurLevel    = sepTree[offset+0];
-            int nLeftIntDofs  = sepTree[offset+2];
-            int nRightIntDofs = sepTree[offset+3];
-            int nBndDofs      = sepTree[offset+4];
-
-            bool daughtersConstructed[2] = {false,false};
-            
-            if ((offset + 5) < sepTree.num_elements())
-            {
-                while (sepTree[offset+5] > recurLevel) 
-                {         
-                    switch (sepTree[offset+6])
-                    {
-                        case 1:
-                        {
-                            m_leftDaughterGraph = MemoryManager<
-                                MultiLevelBisectedGraph>::AllocateSharedPtr(
-                                    sepTree);
-                            daughtersConstructed[0] = true;
-                            break;
-                        }
-                        case 2:
-                        {
-                            m_rightDaughterGraph = MemoryManager<
-                                MultiLevelBisectedGraph>::AllocateSharedPtr(
-                                    sepTree);
-                            daughtersConstructed[1] = true;
-                            break;
-                        }
-                        default:
-                        {
-                            NEKERROR(ErrorUtil::efatal,"Invalid branch id");
-                        }
-                    }
-                    if ((offset + 5) >= sepTree.num_elements())
-                    {
-                        break;
-                    }
-                }
-            }
-
-            m_BndDofs = MemoryManager<SubGraph>::AllocateSharedPtr(nBndDofs);
-                
-            if (!daughtersConstructed[0] && nLeftIntDofs)
-            {
-                m_leftDaughterGraph = MemoryManager<
-                    MultiLevelBisectedGraph>::AllocateSharedPtr(nLeftIntDofs);
-            }
-            
-            if (!daughtersConstructed[1] && nRightIntDofs)
-            {
-                m_rightDaughterGraph = MemoryManager<
-                    MultiLevelBisectedGraph>::AllocateSharedPtr(nRightIntDofs);
-            }
-
-            if (recurLevel == 1)
-            {
-                offset = -5;
-            }
-        }
-
         MultiLevelBisectedGraph::MultiLevelBisectedGraph(
             MultiLevelBisectedGraphSharedPtr oldLevel,
             const int                        nPartition)
@@ -410,52 +352,25 @@ namespace Nektar
         }
 
         BottomUpSubStructuredGraph::BottomUpSubStructuredGraph(
-            const Array<OneD, const int> septree,
-            const int                    nPartition) :
-            m_IntBlocks(),
-            m_daughterGraph()
-        {
-            // First, create a top-down graph structure based upon the separator
-            // tree. This is easier as separation tree is also structured
-            // following a top-down approach
-            MultiLevelBisectedGraphSharedPtr topDownGraph = 
-                MemoryManager<MultiLevelBisectedGraph>::AllocateSharedPtr(
-                    septree);
-            
-            if (nPartition > 0)
-            {
-                topDownGraph = MemoryManager<MultiLevelBisectedGraph>::
-                    AllocateSharedPtr(topDownGraph, nPartition);
-            }
-            
-            // set the global numbering of the top-down graph
-            topDownGraph->SetGlobalNumberingOffset();
-
-            topDownGraph->CutEmptyLeaves();
-
-            // Secondly, recursively construct the subgraphs of the bottom up
-            // point of view 1. Collect all the leaves of the topdown graph this
-            // will be the first level of the bottom up graph
-            topDownGraph->CollectLeaves(m_IntBlocks);
-            
-            // 2. Reduce the topdown graph by cutting the leaves (this will
-            //    allow a recursive approach)
-            int ncuts = topDownGraph->CutLeaves();
-            
-            // 3. If there were leaves to cut, proceed recursively
-            if (ncuts)
-            {
-                m_daughterGraph = MemoryManager<BottomUpSubStructuredGraph>::
-                    AllocateSharedPtr(topDownGraph);
-            }
-        }
-
-        BottomUpSubStructuredGraph::BottomUpSubStructuredGraph(
-            const MultiLevelBisectedGraphSharedPtr& graph) :
+            MultiLevelBisectedGraphSharedPtr graph,
+            int nPartition,
+            bool globaloffset) :
             m_IntBlocks    (),
             m_daughterGraph()
         {
             int ncuts;
+
+            if (nPartition > 0)
+            {
+                graph = MemoryManager<MultiLevelBisectedGraph>::
+                    AllocateSharedPtr(graph, nPartition);
+            }
+
+            if (globaloffset)
+            {
+                graph->SetGlobalNumberingOffset();
+            }
+
             graph->CutEmptyLeaves();
             graph->CollectLeaves(m_IntBlocks);
             ncuts = graph->CutLeaves();
@@ -528,7 +443,7 @@ namespace Nektar
             Array<OneD, int> &perm, 
             Array<OneD, int> &iperm) const
         {
-            int nDofs = GetTotDofs();            
+            int nDofs = GetTotDofs();
             
             // Step 1: make a permutation array that goes from the current
             // reordering in the bottom-up graph to an ordering where the
@@ -830,10 +745,6 @@ namespace Nektar
                 boost::setS, boost::vecS, boost::undirectedS> BoostGraph;
             typedef boost::graph_traits<BoostGraph>::vertex_descriptor
                 BoostVertex;
-            typedef boost::graph_traits<BoostGraph>::vertex_iterator
-                BoostVertexIterator;
-            typedef boost::graph_traits<BoostGraph>::adjacency_iterator
-                BoostAdjacencyIterator;
         }
 
         void CuthillMckeeReordering(const BoostGraph& graph,
@@ -867,6 +778,10 @@ namespace Nektar
             std::set<int>                        partVerts,
             int                                  mdswitch)
         {
+#ifndef NEKTAR_USE_SCOTCH
+            ASSERTL0(false, "Multi-level static condensation requires Nektar++"
+                            " to be built with SCOTCH.");
+#else
             int nGraphVerts = boost::num_vertices(graph);
             int nGraphEdges = boost::num_edges   (graph);
 
@@ -874,45 +789,27 @@ namespace Nektar
                      iperm.num_elements() >= nGraphVerts,
                      "Non-matching dimensions");
 
-            // We will now use METIS to reorder the graph.  For the purpose of
-            // multi-level static condensation, we will use a METIS routine that
-            // partitions the graph recursively using a multi-level bisection
-            // algorithm.  The name of this routine is METIS_NodeND and it was
-            // originally designed to reorder the DOFs in a matrix in order to
-            // minimise the fill-in when applying a factorisation technique
-            // (such as Cholesky).  However, this reordering of DOFs also seems
-            // to be perfectly suited in the context of multilevel
-            // substructering. Therefore, we will use this metis routine instead
-            // of the more well-known graph-partitioning routines. However, as
-            // the standard metis implementation of METIS_NodeND only gives the
-            // resulting re-ordering as an output, we we will use an modified
-            // version of this routine that also returns information about the
-            // structure of the multi-level bisected partitioning.
-
-            // This modified implementation has been written by W. GAO and
-            // collaborators and it additionally returns the separator tree
-            // compared to the standard implementation.
-
-            // The name of this modified routine AS_METIS_NodeND (where AS
-            // stands for automated substructering) More information can be
-            // found in the paper:
-            //
-            //   W. Gao, S. Li Xiaoye, C. Yang and Z. Bai
-            //   'An implementation and evaluation of the AMLS method 
-            //   for sparse eigenvalue problems'
-            //   - ACM Trans. Math. Softw. 34, 4, Article 20 (July 2008)
-            
+            // We will now use Scotch to reorder the graph.  For the purpose of
+            // multi-level static condensation, we will use a Scotch routine
+            // that partitions the graph recursively using a multi-level nested
+            // bisection algorithm.  The name of this routine is
+            // SCOTCH_graphOrder and it was originally designed to reorder the
+            // DOFs in a matrix in order to minimise the fill-in when applying a
+            // factorisation technique (such as Cholesky).  However, this
+            // reordering of DOFs also seems to be perfectly suited in the
+            // context of multilevel substructuring. Therefore, we will use this
+            // Scotch routine instead of the more well-known graph-partitioning
+            // routines.
             if(nGraphEdges)
             {
+                //
                 // Step 1: Convert boost graph to a graph in adjncy-list format
-                // as required by METIS
-                int acnt = 0;
-                int vcnt = 0;
-                int i, cnt;
+                // as required by Scotch.
+                //
+                int acnt = 0, vcnt = 0, i, cnt;
                 int nPartition    = partVerts.size();
                 int nNonPartition = nGraphVerts - partVerts.size();
-                BoostVertexIterator    vertit, vertit_end;
-                BoostAdjacencyIterator adjvertit, adjvertit_end;
+
                 Array<OneD, int> xadj(nNonPartition+1,0);
                 Array<OneD, int> adjncy(2*nGraphEdges);
                 Array<OneD, int> initial_perm(nGraphVerts);
@@ -920,10 +817,9 @@ namespace Nektar
                 Array<OneD, int> perm_tmp (nNonPartition);
                 Array<OneD, int> iperm_tmp(nNonPartition);
 
-                std::set<int>::iterator it;
-                
-                // First reorder vertices so that partition nodes are at the
-                // end. This allows METIS to partition the interior nodes.
+                // Perform an initial reordering of the vertices, so that
+                // partition nodes are at the end. This allows Scotch to
+                // partition the interior nodes from values starting at zero.
                 for (i = cnt = 0; i < nGraphVerts; ++i)
                 {
                     if (partVerts.count(i) == 0)
@@ -943,21 +839,22 @@ namespace Nektar
                 }
 
                 // Apply this reordering to the graph.
-                boost::property_map<BoostGraph, boost::vertex_index_t>::type 
+                boost::property_map<BoostGraph, boost::vertex_index_t>::type
                     index = get(boost::vertex_index, graph);
-                
-                for (boost::tie(vertit, vertit_end) = boost::vertices(graph); 
-                     vertit != vertit_end; ++vertit) 
+
+                // Now construct the adjaceny list using
+                // boost::adjacent_vertices.
+                auto verts = boost::vertices(graph);
+                for (auto vertit = verts.first; vertit != verts.second; ++vertit)
                 {
                     if (partVerts.count(index[*vertit]) > 0)
                     {
                         continue;
                     }
-                    
-                    for (boost::tie(adjvertit, adjvertit_end) = 
-                             boost::adjacent_vertices(*vertit,graph);
-                         adjvertit != adjvertit_end;
-                         ++adjvertit) 
+
+                    auto adjverts = boost::adjacent_vertices(*vertit,graph);
+                    for (auto adjvertit = adjverts.first;
+                         adjvertit != adjverts.second; ++adjvertit)
                     {
                         if (partVerts.count(index[*adjvertit]) > 0)
                         {
@@ -967,42 +864,138 @@ namespace Nektar
                     }
                     xadj[++vcnt] = acnt;
                 }
-                
-                // Step 2: use metis to reorder the dofs. We do not know on
-                // forehand the size of the separator tree that METIS will
-                // return, so we just assume a really big value and try with
-                // that
-                int sizeSeparatorTree = nGraphVerts*10;
-                Array<OneD,int> septreeTmp(sizeSeparatorTree,-1);  
-                
-                // The separator tree returned by metis has the following
-                // structure: It is a one dimensional array and information per
-                // level is contained per 5 elements:
+
                 //
-                // m_septree[i*5 + 0]: the level of recursion (top-level = 1)
-                // m_septree[i*5 + 1]: is this substructure a left or right
-                //                     branch? 1 = left branch, 2 = right branch
-                // m_septree[i*5 + 2]: the number of 'interior' DOFs in left 
-                //                     branch
-                // m_septree[i*5 + 3]: the number of 'interior' DOFs in right 
-                //                     branch
-                // m_septree[i*5 + 4]: the number of 'boundary' DOFs     
-                
-                // Now try to call Call METIS.
-                try
+                // Step 2: pass the graph to Scotch and perform the nested
+                // dissection to obtain a separator tree.
+                //
+
+                // Pass the adjaceny graph into Scotch.
+                SCOTCH_Graph scGraph;
+                SCOTCH_CALL(SCOTCH_graphBuild,
+                            (&scGraph, 0, nNonPartition, &xadj[0], &xadj[1],
+                             NULL, NULL, xadj[nNonPartition], &adjncy[0], NULL));
+
+                // This horrible looking string defines the Scotch graph
+                // reordering strategy, which essentially does a nested
+                // dissection + compression. We take this almost directly from
+                // the SCOTCH_stratGraphOrderBuild function (defined in
+                // library_graph_order.c), but by specifying the string
+                // manually, we can replace the subdivision strategy to allow us
+                // to control the number of vertices used to determine whether
+                // to perform another dissection using the mdswitch
+                // parameter. The below is essentially equivalent to calling
+                // SCOTCH_stratGraphOrderBuild with the flags
+                // SCOTCH_STRATLEAFSIMPLE and SCOTCH_STRATSEPASIMPLE to make
+                // sure leaf nodes do not have any reordering applied to them.
+                std::string strat_str =
+                    "c{rat=0.7,cpr=n{sep=/(<TSTS>)?m{rat=0.7,vert=100,low="
+                    "h{pass=10},asc=b{width=3,bnd=f{bal=<BBAL>},"
+                    "org=(|h{pass=10})f{bal=<BBAL>}}}<SEPA>;,"
+                    "ole=<OLEA>,ose=<OSEP>},unc=n{sep=/(<TSTS>)?m{rat=0.7,"
+                    "vert=100,low=h{pass=10},asc=b{width=3,bnd=f{bal=<BBAL>},"
+                    "org=(|h{pass=10})f{bal=<BBAL>}}}<SEPA>;"
+                    ",ole=<OLEA>,ose=<OSEP>}}";
+
+                // Replace flags in the string with appropriate values.
+                boost::replace_all(
+                    strat_str, "<SEPA>", "|m{rat=0.7,vert=100,low=h{pass=10},"
+                    "asc=b{width=3,bnd=f{bal=<BBAL>},"
+                    "org=(|h{pass=10})f{bal=<BBAL>}}}");
+                boost::replace_all(strat_str, "<OSEP>", "s");
+                boost::replace_all(strat_str, "<OLEA>", "s");
+                boost::replace_all(strat_str, "<BBAL>", "0.1");
+                boost::replace_all(
+                    strat_str, "<TSTS>",
+                    "vert>"+boost::lexical_cast<std::string>(mdswitch));
+
+                // Set up the re-ordering strategy.
+                SCOTCH_Strat strat;
+                SCOTCH_CALL(SCOTCH_stratInit, (&strat));
+                SCOTCH_CALL(SCOTCH_stratGraphOrder, (&strat, strat_str.c_str()));
+
+                // As output, Scotch will give us the total number of 'blocks'
+                // (i.e. the separators and all of the leaves), the separator
+                // tree as a mapping of block to parent block, and the range of
+                // indices that is contained within each block. Reordering of
+                // the vertices goes from largest index (at the top level) to
+                // smallest (at the bottom level). The precise ordering is given
+                // in the Scotch user guide.
+                //
+                // Note that we pass in iperm into the 'permtab' field of
+                // graphOrder and 'perm' into the 'peritab' field; this is
+                // because our definition of the permutation is the opposite of
+                // what's defined in Scotch (this is leftover from a previous
+                // implementation that used Metis).
+                Array<OneD, int> treetab(nNonPartition);
+                Array<OneD, int> rangtab(nNonPartition + 1);
+                int cblknbr = 0;
+                SCOTCH_CALL(SCOTCH_graphOrder,
+                            (&scGraph, &strat, &iperm_tmp[0], &perm_tmp[0],
+                             &cblknbr, &rangtab[0], &treetab[0]));
+
+                // We're now done with Scotch: clean up the created structures.
+                SCOTCH_graphExit(&scGraph);
+                SCOTCH_stratExit(&strat);
+
+                //
+                // Step 3: create a MultiLevelBisectedGraph by reading the
+                // separator tree we obtained from Scotch.
+                //
+
+                // Setup root block, which lies at the end of the blocks
+                // described in treetab[].
+                std::vector<MultiLevelBisectedGraphSharedPtr> graphs(cblknbr);
+
+                // The strategy now is to traverse backwards over the blocks
+                // described in treetab to set up the levels of the top-down
+                // graph. rangtab allows us to calculate how many degrees of
+                // freedom lie in the separator.
+                for (i = cblknbr-1; i >= 0; --i)
                 {
-                    Metis::as_onmetis(
-                        nNonPartition,xadj,adjncy,perm_tmp,iperm_tmp,
-                        septreeTmp, mdswitch);
+                    // Set up this block.
+                    graphs[i] = MemoryManager<MultiLevelBisectedGraph>
+                        ::AllocateSharedPtr(rangtab[i+1] - rangtab[i]);
+
+                    // If we're the root block (treetab[i] == -1) we don't need
+                    // to do anything, go onto the next block.
+                    if (treetab[i] == -1)
+                    {
+                        continue;
+                    }
+
+                    // Now use treetab[i] to figure out the parent block.  We
+                    // have to be a bit careful in setting left/right daughters
+                    // here. The left daughter's degrees of freedom are ordered
+                    // _first_ in the iperm/perm arrays returned from Scotch,
+                    // but if there is both a left and right daughter, we'll
+                    // come across the right daughter first because the
+                    // separators are being traversed backwards. In this case we
+                    // therefore need to set the left daughter graph to be the
+                    // right daughter and re-set the left daughter.
+                    MultiLevelBisectedGraphSharedPtr tmp = graphs[treetab[i]];
+                    int nDaughter = tmp->GetNdaughterGraphs();
+
+                    if (nDaughter == 0)
+                    {
+                        tmp->SetLeftDaughterGraph(graphs[i]);
+                    }
+                    else if (nDaughter == 1)
+                    {
+                        tmp->SetRightDaughterGraph(tmp->GetLeftDaughterGraph());
+                        tmp->SetLeftDaughterGraph(graphs[i]);
+                    }
+                    else
+                    {
+                        // This should never be possible, but let's be pedantic
+                        // and check anyway.
+                        ASSERTL1(false, "Error in constructing Scotch graph for"
+                                        " multi-level static condensation");
+                    }
                 }
-                catch(...)
-                {
-                    NEKERROR(ErrorUtil::efatal,
-                             "Error in calling metis (the size of the separator"
-                             " tree might not be sufficient)");
-                }
-                
-                // Change permutations from METIS to account for initial offset.
+
+                // Change permutations from Scotch to account for initial offset
+                // in case we had partition vertices.
                 for (i = 0; i < nGraphVerts; ++i)
                 {
                     if (partVerts.count(i) == 0)
@@ -1011,40 +1004,38 @@ namespace Nektar
                         perm[iperm[i]] = i;
                     }
                 }
-                
-                for (i = nNonPartition, it = partVerts.begin(); 
-                     it != partVerts.end(); ++it, ++i)
+
+                auto it = partVerts.begin(), it2 = partVerts.end();
+                for (i = nNonPartition; it != it2; ++it, ++i)
                 {
                     perm [i]   = *it;
                     iperm[*it] = i;
                 }
-                
+
                 for (i = 0; i < nGraphVerts; ++i)
                 {
-                    ASSERTL0(perm[iperm[i]] == i, 
-                             "Perm error " + boost::lexical_cast<std::string>(i));
+                    ASSERTL1(perm[iperm[i]] == i, "Perm error "
+                             + boost::lexical_cast<std::string>(i));
                 }
-                
-                // Post-process the separator tree
-                int trueSizeSepTree = 0;
-                for (i = 0; septreeTmp[i] != -1; i++)
-                {
-                    trueSizeSepTree++;
-                }
-                Array<OneD,int> septree(trueSizeSepTree);
-                Vmath::Vcopy(trueSizeSepTree,septreeTmp,1,septree,1);
-                
-                // Based upon the separator tree, where are going to set up an
-                // object of the class BottomUpSubStructuredGraph. The
-                // constructor will read the separatortree and will interprete
-                // the information from a bottom-up point of view.
+
+                // Check that our degree of freedom count in the constructed
+                // graph is the same as the number of degrees of freedom that we
+                // were given in the function input.
+                ASSERTL0(graphs.back()->GetTotDofs() == nNonPartition,
+                         "Error in constructing Scotch graph for multi-level"
+                         " static condensation.");
+
+                //
+                // Step 4: Set up the bottom-up graph from the top-down graph,
+                // and reorder the permutation from Scotch.
+                //
                 substructgraph = MemoryManager<BottomUpSubStructuredGraph>::
-                    AllocateSharedPtr(septree, nPartition);
-                
-                // Important, we cannot simply use the ordering given by metis
+                    AllocateSharedPtr(graphs.back(), nPartition, true);
+
+                // Important: we cannot simply use the ordering given by Scotch
                 // as it does not order the different blocks as we would like
                 // it. Therefore, we use following command to re-order them
-                // again in the context of the bottom-up substructering. As a
+                // again in the context of the bottom-up substructuring. As a
                 // result, we will now obtain an ordering where the interior
                 // degrees of freedom of the first (=bottom) level will be
                 // ordered last (block by block ofcoarse). The interior degrees
@@ -1054,7 +1045,7 @@ namespace Nektar
                 // non-recursively) will be ordered first (after the Dirichlet
                 // Dofs that is).  (this way, we actually follow the same idea
                 // and convention in the standard (non-multi-level) static
-                // condensation approach)
+                // condensation approach).
                 substructgraph->UpdateBottomUpReordering(perm,iperm);
             }
             else
@@ -1069,6 +1060,7 @@ namespace Nektar
                 substructgraph = MemoryManager<BottomUpSubStructuredGraph>::
                     AllocateSharedPtr(nGraphVerts);
             }
+#endif
         }
 
         void NoReordering(const BoostGraph& graph,

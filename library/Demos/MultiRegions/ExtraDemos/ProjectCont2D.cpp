@@ -4,7 +4,7 @@
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <MultiRegions/ContField2D.h>
-#include <SpatialDomains/MeshGraph2D.h>
+#include <SpatialDomains/MeshGraph.h>
 
 using namespace std;
 using namespace Nektar;
@@ -30,7 +30,7 @@ int main(int argc, char *argv[])
 
     //----------------------------------------------
     // Read in mesh from input file
-    SpatialDomains::MeshGraphSharedPtr graph2D = MemoryManager<SpatialDomains::MeshGraph2D>::AllocateSharedPtr(vSession);
+    SpatialDomains::MeshGraphSharedPtr graph2D = SpatialDomains::MeshGraph::Read(vSession);
     //----------------------------------------------
 
     //----------------------------------------------

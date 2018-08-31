@@ -33,7 +33,6 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <boost/version.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/algorithm/string.hpp>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
@@ -48,11 +47,8 @@ namespace Nektar
             : m_cmdoptions(pVm)
     {
         // Process test file format.
-#if BOOST_VERSION > 104200
         m_doc = new TiXmlDocument(pFilename.string().c_str());
-#else
-        m_doc = new TiXmlDocument(pFilename.file_string().c_str());
-#endif
+
         bool loadOkay = m_doc->LoadFile();
 
         ASSERTL0(loadOkay, "Failed to load test definition file: "
@@ -80,6 +76,11 @@ namespace Nektar
     const std::string& TestData::GetParameters() const
     {
         return m_parameters;
+    }
+
+    const std::string& TestData::GetCommand() const
+    {
+        return m_command;
     }
 
     const unsigned int& TestData::GetNProcesses() const
@@ -164,6 +165,16 @@ namespace Nektar
         if (tmp->GetText())
         {
             m_parameters = string(tmp->GetText());
+        }
+
+        tmp = testElement->FirstChildElement("command");
+        if (tmp)
+        {
+            m_command = string(tmp->GetText());
+        }
+        else
+        {
+            m_command = "";
         }
 
         // Find parallel processes tah.

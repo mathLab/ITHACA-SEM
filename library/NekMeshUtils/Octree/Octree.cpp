@@ -38,7 +38,7 @@
 #include <NekMeshUtils/CADSystem/CADSurf.h>
 #include <NekMeshUtils/Module/Module.h>
 
-#include <LibUtilities/BasicUtils/ParseUtils.hpp>
+#include <LibUtilities/BasicUtils/ParseUtils.h>
 #include <LibUtilities/BasicUtils/Progressbar.hpp>
 
 #include <boost/algorithm/string.hpp>
@@ -201,7 +201,7 @@ NekDouble Octree::GetMinDelta()
 
 void Octree::WriteOctree(string nm)
 {
-    MeshSharedPtr oct = boost::shared_ptr<Mesh>(new Mesh());
+    MeshSharedPtr oct = std::shared_ptr<Mesh>(new Mesh());
     oct->m_expDim     = 3;
     oct->m_spaceDim   = 3;
     oct->m_nummode    = 2;
@@ -215,37 +215,37 @@ void Octree::WriteOctree(string nm)
 
         vector<NodeSharedPtr> ns(8);
 
-        ns[0] = boost::shared_ptr<Node>(new Node(0, m_octants[i]->FX(eBack),
-                                                 m_octants[i]->FX(eDown),
-                                                 m_octants[i]->FX(eRight)));
+        ns[0] = std::shared_ptr<Node>(new Node(0, m_octants[i]->FX(eBack),
+                                               m_octants[i]->FX(eDown),
+                                               m_octants[i]->FX(eRight)));
 
-        ns[1] = boost::shared_ptr<Node>(new Node(0, m_octants[i]->FX(eForward),
-                                                 m_octants[i]->FX(eDown),
-                                                 m_octants[i]->FX(eRight)));
+        ns[1] = std::shared_ptr<Node>(new Node(0, m_octants[i]->FX(eForward),
+                                               m_octants[i]->FX(eDown),
+                                               m_octants[i]->FX(eRight)));
 
-        ns[2] = boost::shared_ptr<Node>(new Node(0, m_octants[i]->FX(eForward),
-                                                 m_octants[i]->FX(eUp),
-                                                 m_octants[i]->FX(eRight)));
+        ns[2] = std::shared_ptr<Node>(new Node(0, m_octants[i]->FX(eForward),
+                                               m_octants[i]->FX(eUp),
+                                               m_octants[i]->FX(eRight)));
 
-        ns[3] = boost::shared_ptr<Node>(new Node(0, m_octants[i]->FX(eBack),
-                                                 m_octants[i]->FX(eUp),
-                                                 m_octants[i]->FX(eRight)));
+        ns[3] = std::shared_ptr<Node>(new Node(0, m_octants[i]->FX(eBack),
+                                               m_octants[i]->FX(eUp),
+                                               m_octants[i]->FX(eRight)));
 
-        ns[4] = boost::shared_ptr<Node>(new Node(0, m_octants[i]->FX(eBack),
-                                                 m_octants[i]->FX(eDown),
-                                                 m_octants[i]->FX(eLeft)));
+        ns[4] = std::shared_ptr<Node>(new Node(0, m_octants[i]->FX(eBack),
+                                               m_octants[i]->FX(eDown),
+                                               m_octants[i]->FX(eLeft)));
 
-        ns[5] = boost::shared_ptr<Node>(new Node(0, m_octants[i]->FX(eForward),
-                                                 m_octants[i]->FX(eDown),
-                                                 m_octants[i]->FX(eLeft)));
+        ns[5] = std::shared_ptr<Node>(new Node(0, m_octants[i]->FX(eForward),
+                                               m_octants[i]->FX(eDown),
+                                               m_octants[i]->FX(eLeft)));
 
-        ns[6] = boost::shared_ptr<Node>(new Node(0, m_octants[i]->FX(eForward),
-                                                 m_octants[i]->FX(eUp),
-                                                 m_octants[i]->FX(eLeft)));
+        ns[6] = std::shared_ptr<Node>(new Node(0, m_octants[i]->FX(eForward),
+                                               m_octants[i]->FX(eUp),
+                                               m_octants[i]->FX(eLeft)));
 
-        ns[7] = boost::shared_ptr<Node>(new Node(0, m_octants[i]->FX(eBack),
-                                                 m_octants[i]->FX(eUp),
-                                                 m_octants[i]->FX(eLeft)));
+        ns[7] = std::shared_ptr<Node>(new Node(0, m_octants[i]->FX(eBack),
+                                               m_octants[i]->FX(eUp),
+                                               m_octants[i]->FX(eLeft)));
 
         vector<int> tags;
         tags.push_back(0);
@@ -836,14 +836,25 @@ int Octree::CountElemt()
 
 void Octree::CompileSourcePointList()
 {
-
+    int totalEnt = m_mesh->m_cad->GetNumSurf();
+    int preEnt = 0;
     if(m_mesh->m_cad->Is2D())
     {
+        totalEnt += m_mesh->m_cad->GetNumCurve();
+        preEnt += m_mesh->m_cad->GetNumCurve();
         for (int i = 1; i <= m_mesh->m_cad->GetNumCurve(); i++)
         {
+            if (m_mesh->m_verbose)
+            {
+                LibUtilities::PrintProgressbar(i, totalEnt,
+                                               "\tCompiling source points");
+            }
+
             CADCurveSharedPtr curve = m_mesh->m_cad->GetCurve(i);
             Array<OneD, NekDouble> bds = curve->GetBounds();
-            int samples  = 100;
+            //this works assuming the curves are not distorted
+            int samples  = ceil(curve->Length(bds[0],bds[1]) / m_minDelta) * 2;
+            samples = max(40, samples);
             NekDouble dt = (bds[1] - bds[0]) / (samples + 1);
             for (int j = 1; j < samples - 1; j++) // dont want first and last point
             {
@@ -891,7 +902,7 @@ void Octree::CompileSourcePointList()
     {
         if (m_mesh->m_verbose)
         {
-            LibUtilities::PrintProgressbar(i, m_mesh->m_cad->GetNumSurf(),
+            LibUtilities::PrintProgressbar(preEnt + i, totalEnt,
                                            "\tCompiling source points");
         }
 
@@ -959,8 +970,10 @@ void Octree::CompileSourcePointList()
 
         // these are the acutal number of sample points in each parametric
         // direction
-        int nu = ceil(DeltaU / m_minDelta) * 40 * 2;
-        int nv = ceil(DeltaV / m_minDelta) * 40 * 2;
+        int nu = ceil(DeltaU * 40 / m_minDelta) * 2;
+        int nv = ceil(DeltaV * 40 / m_minDelta) * 2;
+        nu = max(40, nu);
+        nv = max(40, nv);
 
         for (int j = 0; j < nu; j++)
         {
@@ -1031,7 +1044,7 @@ void Octree::CompileSourcePointList()
         for (int i = 0; i < lines.size(); i++)
         {
             vector<NekDouble> data;
-            ParseUtils::GenerateUnOrderedVector(lines[i].c_str(), data);
+            ParseUtils::GenerateVector(lines[i], data);
 
             Array<OneD, NekDouble> x1(3), x2(3);
 
@@ -1056,7 +1069,7 @@ void Octree::CompileSourcePointList()
                     if(m_SPList[i]->GetType() == ePBoundary)
                     {
                         BPointSharedPtr bp =
-                            boost::dynamic_pointer_cast<BPoint>
+                            std::dynamic_pointer_cast<BPoint>
                                                             (m_SPList[i]);
 
                         m_SPList[i] = bp->ChangeType();

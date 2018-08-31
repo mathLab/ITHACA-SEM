@@ -142,7 +142,7 @@ namespace Nektar
         /// @Todo error checking
         inline NekDouble GlobalMatrixKey::GetConstFactor(const StdRegions::ConstFactorType &factor) const
         {
-            StdRegions::ConstFactorMap::const_iterator found = m_constFactors.find(factor);
+            auto found = m_constFactors.find(factor);
             return (*found).second;
         }
 
@@ -159,7 +159,7 @@ namespace Nektar
 
         inline const Array<OneD, const NekDouble> & GlobalMatrixKey::GetVarCoeff(const StdRegions::VarCoeffType &coeff) const
         {
-            StdRegions::VarCoeffMap::const_iterator found = m_varCoeffs.find(coeff);
+            auto found = m_varCoeffs.find(coeff);
             return (*found).second;
         }
 

@@ -46,15 +46,13 @@ namespace Nektar
     namespace LocalRegions
     {
         class Expansion3D;
-        typedef boost::shared_ptr<Expansion3D> Expansion3DSharedPtr;
-        typedef boost::weak_ptr<Expansion3D>   Expansion3DWeakPtr;
+        typedef std::shared_ptr<Expansion3D> Expansion3DSharedPtr;
+        typedef std::weak_ptr<Expansion3D>   Expansion3DWeakPtr;
 
         class Expansion2D;
-        typedef boost::shared_ptr<Expansion2D> Expansion2DSharedPtr;
-        typedef boost::weak_ptr<Expansion2D>   Expansion2DWeakPtr;
+        typedef std::shared_ptr<Expansion2D> Expansion2DSharedPtr;
+        typedef std::weak_ptr<Expansion2D>   Expansion2DWeakPtr;
         typedef std::vector< Expansion2DSharedPtr > Expansion2DVector;
-        typedef std::vector< Expansion2DSharedPtr >::iterator
-            Expansion2DVectorIter;
 
         class Expansion2D: virtual public Expansion,
             virtual public StdRegions::StdExpansion2D
@@ -196,6 +194,8 @@ namespace Nektar
                 const int edge) const;
             const StdRegions::NormalVector &v_GetSurfaceNormal(
                 const int id) const;
+            virtual NekDouble v_VectorFlux(
+                const Array<OneD, Array<OneD, NekDouble > > &vec);
         };
 
         inline Expansion1DSharedPtr Expansion2D::GetEdgeExp(
@@ -268,7 +268,7 @@ namespace Nektar
         inline SpatialDomains::Geometry2DSharedPtr
             Expansion2D::GetGeom2D() const
         {
-            return boost::dynamic_pointer_cast<SpatialDomains::
+            return std::dynamic_pointer_cast<SpatialDomains::
                 Geometry2D>(m_geom);
         }
     } //end of namespace

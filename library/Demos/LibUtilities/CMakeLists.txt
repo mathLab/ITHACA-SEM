@@ -1,5 +1,3 @@
-ADD_NEKTAR_EXECUTABLE(PartitionAnalyse
-    COMPONENT demos DEPENDS LibUtilities SOURCES PartitionAnalyse.cpp)
 ADD_NEKTAR_EXECUTABLE(FoundationDemo
     COMPONENT demos DEPENDS LibUtilities SOURCES FoundationDemo.cpp)
 ADD_NEKTAR_EXECUTABLE(NodalDemo
@@ -21,3 +19,11 @@ ADD_NEKTAR_TEST(NodalDemo_Prism_Interp_P7)
 ADD_NEKTAR_TEST(NodalDemo_Tet_Deriv_P8)
 ADD_NEKTAR_TEST(NodalDemo_Tet_Integral_P6)
 ADD_NEKTAR_TEST(NodalDemo_Tet_Interp_P7)
+ADD_NEKTAR_TEST(TimeIntegrationDemoIMEXGear)
+ADD_NEKTAR_TEST(TimeIntegrationDemoIMEXOrder1)
+ADD_NEKTAR_TEST(TimeIntegrationDemoIMEXOrder2)
+ADD_NEKTAR_TEST(TimeIntegrationDemoIMEXOrder3)
+ADD_NEKTAR_TEST(TimeIntegrationDemoDIRKIMEXOrder2)
+ADD_NEKTAR_TEST(TimeIntegrationDemoDIRKIMEXOrder3)
+ADD_NEKTAR_TEST(TimeIntegrationDemoCNAB)
+ADD_NEKTAR_TEST(TimeIntegrationDemoMCNAB)

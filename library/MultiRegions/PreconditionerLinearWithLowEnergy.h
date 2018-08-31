@@ -44,16 +44,15 @@ namespace Nektar
     namespace MultiRegions
     {
         class PreconditionerLinearWithLowEnergy;
-        typedef boost::shared_ptr<PreconditionerLinearWithLowEnergy>  PreconditionerLinearWithLowEnergySharedPtr;
+        typedef std::shared_ptr<PreconditionerLinearWithLowEnergy>  PreconditionerLinearWithLowEnergySharedPtr;
 
         class PreconditionerLinearWithLowEnergy: public Preconditioner
 	{
         public:
             /// Creates an instance of this class
             static PreconditionerSharedPtr create(
-                        const boost::shared_ptr<GlobalLinSys> &plinsys,
-                        const boost::shared_ptr<AssemblyMap>
-                                                               &pLocToGloMap)
+                        const std::shared_ptr<GlobalLinSys> &plinsys,
+                        const std::shared_ptr<AssemblyMap> &pLocToGloMap)
             {
 	        PreconditionerSharedPtr p = MemoryManager<PreconditionerLinearWithLowEnergy>::AllocateSharedPtr(plinsys,pLocToGloMap);
 	        p->InitObject();
@@ -64,14 +63,14 @@ namespace Nektar
             static std::string className;
 
             MULTI_REGIONS_EXPORT PreconditionerLinearWithLowEnergy(
-                         const boost::shared_ptr<GlobalLinSys> &plinsys,
+                         const std::shared_ptr<GlobalLinSys> &plinsys,
 	                 const AssemblyMapSharedPtr &pLocToGloMap);
 
             MULTI_REGIONS_EXPORT
             virtual ~PreconditionerLinearWithLowEnergy() {}
 
 	protected:
-            //const boost::weak_ptr<GlobalLinSys>         m_linsys;
+            //const std::weak_ptr<GlobalLinSys>         m_linsys;
 
             PreconditionerSharedPtr m_linSpacePrecon;
             PreconditionerSharedPtr m_lowEnergyPrecon;
@@ -88,7 +87,8 @@ namespace Nektar
                 Array<OneD, NekDouble>& pInput);
 
             virtual DNekScalMatSharedPtr
-                v_TransformedSchurCompl(int offset, const boost::shared_ptr<DNekScalMat > &loc_mat);
+                v_TransformedSchurCompl(int n, int offset,
+                                        const std::shared_ptr<DNekScalMat > &loc_mat);
 
             virtual void v_DoPreconditioner(                
                       const Array<OneD, NekDouble>& pInput,

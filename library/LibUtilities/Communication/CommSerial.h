@@ -49,7 +49,7 @@ namespace LibUtilities
 class CommSerial;
 
 /// Pointer to a Communicator object.
-typedef boost::shared_ptr<CommSerial> CommSerialSharedPtr;
+typedef std::shared_ptr<CommSerial> CommSerialSharedPtr;
 
 /// A global linear system.
 class CommSerial : public Comm
@@ -96,6 +96,18 @@ protected:
         void *sendbuf, int sendcounts[], int sensdispls[],
         CommDataType sendtype, void *recvbuf, int recvcounts[], int rdispls[],
         CommDataType recvtype);
+    LIB_UTILITIES_EXPORT virtual void v_AllGather(void *sendbuf, int sendcount,
+                                                  CommDataType sendtype,
+                                                  void *recvbuf, int recvcount,
+                                                  CommDataType recvtype);
+    LIB_UTILITIES_EXPORT virtual void v_AllGatherv(void *sendbuf, int sendcount,
+                                                   CommDataType sendtype,
+                                                   void *recvbuf, int recvcounts[],
+                                                   int rdispls[],
+                                                   CommDataType recvtype);
+    LIB_UTILITIES_EXPORT virtual void v_AllGatherv(void *recvbuf, int recvcounts[],
+                                                   int rdispls[],
+                                                   CommDataType recvtype);
     LIB_UTILITIES_EXPORT virtual void v_Bcast(void *buffer, int count,
                                               CommDataType dt, int root);
     LIB_UTILITIES_EXPORT virtual void v_Exscan(

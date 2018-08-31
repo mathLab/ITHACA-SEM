@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File GlobalLinSys.cpp
+// File GlobalLinSysPETScStaticCond.cpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -88,8 +88,8 @@ namespace Nektar
          */
         GlobalLinSysPETScStaticCond::GlobalLinSysPETScStaticCond(
                      const GlobalLinSysKey                &pKey,
-                     const boost::weak_ptr<ExpList>       &pExpList,
-                     const boost::shared_ptr<AssemblyMap> &pLocToGloMap)
+                     const std::weak_ptr<ExpList>         &pExpList,
+                     const std::shared_ptr<AssemblyMap>   &pLocToGloMap)
             : GlobalLinSys          (pKey, pExpList, pLocToGloMap),
               GlobalLinSysPETSc     (pKey, pExpList, pLocToGloMap),
               GlobalLinSysStaticCond(pKey, pExpList, pLocToGloMap)
@@ -109,12 +109,12 @@ namespace Nektar
          */
         GlobalLinSysPETScStaticCond::GlobalLinSysPETScStaticCond(
                      const GlobalLinSysKey                &pKey,
-                     const boost::weak_ptr<ExpList>       &pExpList,
+                     const std::weak_ptr<ExpList>         &pExpList,
                      const DNekScalBlkMatSharedPtr         pSchurCompl,
                      const DNekScalBlkMatSharedPtr         pBinvD,
                      const DNekScalBlkMatSharedPtr         pC,
                      const DNekScalBlkMatSharedPtr         pInvD,
-                     const boost::shared_ptr<AssemblyMap> &pLocToGloMap,
+                     const std::shared_ptr<AssemblyMap>   &pLocToGloMap,
                      const PreconditionerSharedPtr         pPrecon)
             : GlobalLinSys          (pKey, pExpList, pLocToGloMap),
               GlobalLinSysPETSc     (pKey, pExpList, pLocToGloMap),
@@ -163,14 +163,17 @@ namespace Nektar
             m_precon->BuildPreconditioner();
 
             // Do transform of Schur complement matrix
+            int cnt = 0;
             for (n = 0; n < n_exp; ++n)
             {
                 if (m_linSysKey.GetMatrixType() !=
                         StdRegions::eHybridDGHelmBndLam)
                 {
                     DNekScalMatSharedPtr mat = m_S1Blk->GetBlock(n, n);
-                    DNekScalMatSharedPtr t = m_precon->TransformedSchurCompl(n, mat);
+                    DNekScalMatSharedPtr t = m_precon->TransformedSchurCompl(
+                                                             n, cnt, mat);
                     m_schurCompl->SetBlock(n, n, t);
+                    cnt += mat->GetRows();
                 }
             }
 
@@ -303,14 +306,14 @@ namespace Nektar
             }
         }
 
-        void GlobalLinSysPETScStaticCond::v_BasisTransform(
+        void GlobalLinSysPETScStaticCond::v_BasisFwdTransform(
             Array<OneD, NekDouble>& pInOut,
             int                     offset)
         {
             m_precon->DoTransformToLowEnergy(pInOut, offset);
         }
 
-        void GlobalLinSysPETScStaticCond::v_BasisInvTransform(
+        void GlobalLinSysPETScStaticCond::v_BasisBwdTransform(
             Array<OneD, NekDouble>& pInOut)
         {
             m_precon->DoTransformFromLowEnergy(pInOut);
@@ -342,12 +345,12 @@ namespace Nektar
 
         GlobalLinSysStaticCondSharedPtr GlobalLinSysPETScStaticCond::v_Recurse(
             const GlobalLinSysKey                &mkey,
-            const boost::weak_ptr<ExpList>       &pExpList,
+            const std::weak_ptr<ExpList>         &pExpList,
             const DNekScalBlkMatSharedPtr         pSchurCompl,
             const DNekScalBlkMatSharedPtr         pBinvD,
             const DNekScalBlkMatSharedPtr         pC,
             const DNekScalBlkMatSharedPtr         pInvD,
-            const boost::shared_ptr<AssemblyMap> &l2gMap)
+            const std::shared_ptr<AssemblyMap>   &l2gMap)
         {
             GlobalLinSysPETScStaticCondSharedPtr sys = MemoryManager<
                 GlobalLinSysPETScStaticCond>::AllocateSharedPtr(

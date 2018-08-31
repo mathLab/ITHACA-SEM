@@ -50,9 +50,10 @@ std::string FilterCellHistoryPoints::className
  *
  */
 FilterCellHistoryPoints::FilterCellHistoryPoints(
-    const LibUtilities::SessionReaderSharedPtr &pSession,
+    const LibUtilities::SessionReaderSharedPtr         &pSession,
+    const std::weak_ptr<SolverUtils::EquationSystem> &pEquation,
     const ParamMap &pParams) :
-    FilterHistoryPoints(pSession, pParams)
+    FilterHistoryPoints(pSession, pEquation, pParams)
 {
 }
 
@@ -86,9 +87,6 @@ void FilterCellHistoryPoints::v_Update(
     LibUtilities::CommSharedPtr vComm = pFields[0]->GetComm();
     Array<OneD, NekDouble> data(numPoints*numFields, 0.0);
     Array<OneD, NekDouble> gloCoord(3, 0.0);
-    std::list<std::pair<SpatialDomains::PointGeomSharedPtr,
-                        Array<OneD, NekDouble> > >::iterator x;
-
     Array<OneD, NekDouble> physvals;
     Array<OneD, NekDouble> locCoord;
     int expId;
@@ -97,39 +95,36 @@ void FilterCellHistoryPoints::v_Update(
     // Pull out data values field by field
     for (j = 0; j < numFields; ++j)
     {
+        k = 0;
         if(m_isHomogeneous1D)
         {
-            for (k = 0, x = m_historyList.begin(); x != m_historyList.end();
-                 ++x, ++k)
+            for (auto &x : m_historyList)
             {
-                locCoord = (*x).second;
-                expId    = (*x).first->GetVid();
+                locCoord = x.second;
+                expId    = x.first->GetVid();
                 nppp     = pFields[0]->GetPlane(0)->GetTotPoints();
 
                 physvals = m_cell->GetCellSolution(j) + m_outputPlane*nppp
                             + pFields[j]->GetPhys_Offset(expId);
 
                 // interpolate point can do with zero plane methods
-                data[m_historyLocalPointMap[k]*numFields+j]
+                data[m_historyLocalPointMap[k++]*numFields+j]
                     = pFields[0]->GetExp(expId)->StdPhysEvaluate(
                                                     locCoord,physvals);
-
             }
         }
         else
         {
-            for (k = 0, x = m_historyList.begin();
-                 x != m_historyList.end();
-                 ++x, ++k)
+            for (auto &x : m_historyList)
             {
-                locCoord = (*x).second;
-                expId    = (*x).first->GetVid();
+                locCoord = x.second;
+                expId    = x.first->GetVid();
 
                 physvals = m_cell->GetCellSolution(j)
                             + pFields[0]->GetPhys_Offset(expId);
 
                 // interpolate point
-                data[m_historyLocalPointMap[k]*numFields+j]
+                data[m_historyLocalPointMap[k++]*numFields+j]
                     = pFields[0]->GetExp(expId)->StdPhysEvaluate(
                                                     locCoord,physvals);
             }

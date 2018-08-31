@@ -50,14 +50,13 @@ std::string FilterElectrogram::className =
  *
  */
 FilterElectrogram::FilterElectrogram(
-        const LibUtilities::SessionReaderSharedPtr &pSession,
+        const LibUtilities::SessionReaderSharedPtr         &pSession,
+        const std::weak_ptr<SolverUtils::EquationSystem> &pEquation,
         const ParamMap &pParams)
-    : Filter(pSession)
+    : Filter(pSession, pEquation)
 {
-    ParamMap::const_iterator it;
-
     // OutputFile
-    it = pParams.find("OutputFile");
+    auto it = pParams.find("OutputFile");
     if (it == pParams.end())
     {
         m_outputFile = m_session->GetSessionName();
@@ -81,7 +80,8 @@ FilterElectrogram::FilterElectrogram(
     }
     else
     {
-        LibUtilities::Equation equ(m_session, it->second);
+        LibUtilities::Equation equ(
+            m_session->GetExpressionEvaluator(), it->second);
         m_outputFrequency = floor(equ.Evaluate());
     }
 

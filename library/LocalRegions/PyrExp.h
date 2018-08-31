@@ -128,6 +128,13 @@ namespace Nektar
                       Array<OneD,       NekDouble> &coords_2,
                       Array<OneD,       NekDouble> &coords_3);
 
+            LOCAL_REGIONS_EXPORT virtual void v_ExtractDataToCoeffs(
+                const NekDouble *data,
+                const std::vector<unsigned int > &nummodes,
+                const int mode_offset,
+                NekDouble * coeffs,
+                std::vector<LibUtilities::BasisType> &fromType);
+
             LOCAL_REGIONS_EXPORT virtual NekDouble v_PhysEvaluate(
                 const Array<OneD, const NekDouble>& coord,
                 const Array<OneD, const NekDouble>& physvals);
@@ -178,10 +185,8 @@ namespace Nektar
                       Array<OneD,       NekDouble> &wsp);
         };
 
-        // type defines for use of PyrExp in a boost vector
-        typedef boost::shared_ptr<PyrExp> PyrExpSharedPtr;
+        typedef std::shared_ptr<PyrExp> PyrExpSharedPtr;
         typedef std::vector<PyrExpSharedPtr> PyrExpVector;
-        typedef std::vector<PyrExpSharedPtr>::iterator PyrExpVectorIter;
     } //end of namespace
 } //end of namespace
 

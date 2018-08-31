@@ -15,6 +15,8 @@ SET(NEKMESHUTILS_SOURCES
     MeshElements/Hexahedron.cpp
     CADSystem/CADSystem.cpp
     CADSystem/CADSurf.cpp
+    CADSystem/CADVert.cpp
+    CADSystem/CADCurve.cpp
     CADSystem/ProcessLoadCAD.cpp
     )
 
@@ -34,7 +36,6 @@ IF(NEKTAR_USE_MESHGEN)
         VolumeMeshing/TetMeshing/TetMesh.cpp
         VolumeMeshing/BLMeshing/BLMesh.cpp
         Optimisation/BGFS-B.cpp
-        Triangle/Triangle.cpp
         CADSystem/OCE/CADSystemOCE.cpp
         CADSystem/OCE/CADVertOCE.cpp
         CADSystem/OCE/CADCurveOCE.cpp
@@ -93,8 +94,24 @@ IF(NEKTAR_USE_MESHGEN)
         CADSystem/OCE/CADSurfOCE.h
         Optimisation/BGFS-B.h
         Optimisation/OptimiseObj.h
-        Triangle/Triangle.h
-        2DGenerator/2DGenerator.h
+#        2DGenerator/2DGenerator.h
+    )
+ENDIF()
+
+IF(NEKTAR_USE_CFI)
+    SET(NEKMESHUTILS_HEADERS ${NEKMESHUTILS_HEADERS}
+        CADSystem/CFI/CADSystemCFI.h
+        CADSystem/CFI/CADVertCFI.h
+        CADSystem/CFI/CADCurveCFI.h
+        CADSystem/CFI/CADSurfCFI.h
+        CFIMesh/CFIMesh.h
+    )
+    SET(NEKMESHUTILS_SOURCES ${NEKMESHUTILS_SOURCES}
+        CADSystem/CFI/CADSystemCFI.cpp
+        CADSystem/CFI/CADVertCFI.cpp
+        CADSystem/CFI/CADCurveCFI.cpp
+        CADSystem/CFI/CADSurfCFI.cpp
+        CFIMesh/CFIMesh.cpp
     )
 ENDIF()
 
@@ -109,13 +126,15 @@ ADD_NEKTAR_LIBRARY(NekMeshUtils
 
 IF(NEKTAR_USE_MESHGEN)
     TARGET_LINK_LIBRARIES(NekMeshUtils LINK_PRIVATE ${TETGEN_LIBRARY})
+    TARGET_LINK_LIBRARIES(NekMeshUtils LINK_PRIVATE ${TRIANGLE_LIBRARY})
     TARGET_LINK_LIBRARIES(NekMeshUtils LINK_PRIVATE ${OCC_LIBRARIES})
 
-    ADD_DEPENDENCIES(NekMeshUtils oce-0.17 tetgen-1.5)
-ENDIF()
+    ADD_DEPENDENCIES(NekMeshUtils oce-0.17 tetgen-1.5 triangle-1.6)
 
-IF(NEKTAR_USE_CFI)
-    TARGET_LINK_LIBRARIES(NekMeshUtils LINK_PRIVATE ${CFI_LIBRARY})
+    IF(NEKTAR_USE_CFI)
+	TARGET_LINK_LIBRARIES(NekMeshUtils LINK_PRIVATE ${CFI_LIBRARY_API})
+	TARGET_LINK_LIBRARIES(NekMeshUtils LINK_PRIVATE ${CFI_LIBRARY_CXX})
+    ENDIF()
 ENDIF()
 
 INSTALL(DIRECTORY ./

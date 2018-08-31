@@ -175,20 +175,20 @@ namespace Nektar
 
             int m_robinID; /// id of which edge/face is robin condition
             Array< OneD, const NekDouble > m_robinPrimitiveCoeffs;
-            boost::shared_ptr<RobinBCInfo> next;
+            std::shared_ptr<RobinBCInfo> next;
         };
 
-        typedef boost::shared_ptr<RobinBCInfo> RobinBCInfoSharedPtr;
+        typedef std::shared_ptr<RobinBCInfo> RobinBCInfoSharedPtr;
 
-        typedef struct _PeriodicEntity
+        struct PeriodicEntity
         {
-            _PeriodicEntity(
+            PeriodicEntity(
                 const int                     id,
                 const StdRegions::Orientation orient,
                 const bool                    isLocal) :
                 id(id), orient(orient), isLocal(isLocal) {}
 
-            _PeriodicEntity() {}
+            PeriodicEntity() {}
             
             /// Geometry ID of entity.
             int id;
@@ -196,10 +196,29 @@ namespace Nektar
             StdRegions::Orientation orient;
             /// Flag specifying if this entity is local to this partition.
             bool isLocal;
-        } PeriodicEntity;
+        };
 
         typedef std::map<int, std::vector<PeriodicEntity> > PeriodicMap;
         static PeriodicMap NullPeriodicMap;
+
+        struct RotPeriodicInfo
+        {
+            RotPeriodicInfo(
+                             const int       dir,
+                             const NekDouble angle,
+                             const NekDouble tol) :
+                m_dir(dir), m_angle(angle), m_tol(tol) {}
+
+            RotPeriodicInfo() {}
+            
+            /// Axis of rotation. 0 = 'x', 1 = 'y', 2 = 'z'
+            int m_dir; 
+            /// Angle of rotation in radians
+            NekDouble m_angle;
+            /// Tolerance to rotation is considered identical
+            NekDouble m_tol;
+        }; 
+
     }// end of namespace
 }// end of namespace
 

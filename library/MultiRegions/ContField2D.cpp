@@ -90,8 +90,8 @@ namespace Nektar
             m_locToGloMap(),
             m_globalMat(),
             m_globalLinSysManager(
-                    boost::bind(&ContField2D::GenGlobalLinSys, this, _1),
-                    std::string("GlobalLinSys"))
+                std::bind(&ContField2D::GenGlobalLinSys, this, std::placeholders::_1),
+                std::string("GlobalLinSys"))
         {
         }
 
@@ -127,8 +127,8 @@ namespace Nektar
             DisContField2D(pSession,graph2D,variable,false,DeclareCoeffPhysArrays,ImpType),
             m_globalMat(MemoryManager<GlobalMatrixMap>::AllocateSharedPtr()),
             m_globalLinSysManager(
-                    boost::bind(&ContField2D::GenGlobalLinSys, this, _1),
-                    std::string("GlobalLinSys"))
+                std::bind(&ContField2D::GenGlobalLinSys, this, std::placeholders::_1),
+                std::string("GlobalLinSys"))
         {
             m_locToGloMap = MemoryManager<AssemblyMapCG>
                 ::AllocateSharedPtr(m_session,m_ncoeffs,*this,
@@ -177,8 +177,8 @@ namespace Nektar
             DisContField2D(In,graph2D,variable,false,DeclareCoeffPhysArrays),
             m_globalMat   (MemoryManager<GlobalMatrixMap>::AllocateSharedPtr()),
             m_globalLinSysManager(
-                    boost::bind(&ContField2D::GenGlobalLinSys, this, _1),
-                    std::string("GlobalLinSys"))
+                std::bind(&ContField2D::GenGlobalLinSys, this, std::placeholders::_1),
+                std::string("GlobalLinSys"))
         {
             if(!SameTypeOfBoundaryConditions(In) || CheckIfSingularSystem)
             {
@@ -570,7 +570,7 @@ namespace Nektar
                      "attached to key");
 
             GlobalMatrixSharedPtr glo_matrix;
-            GlobalMatrixMap::iterator matrixIter = m_globalMat->find(mkey);
+            auto matrixIter = m_globalMat->find(mkey);
 
             if(matrixIter == m_globalMat->end())
             {
@@ -656,14 +656,14 @@ namespace Nektar
             // periodic boundary conditiosn)
             map<int, vector<ExtraDirDof> > &extraDirDofs =
                 m_locToGloMap->GetExtraDirDofs();
-            map<int, vector<ExtraDirDof> >::iterator it;
-            for (it = extraDirDofs.begin(); it != extraDirDofs.end(); ++it)
+
+            for (auto &it : extraDirDofs)
             {
-                for (i = 0; i < it->second.size(); ++i)
+                for (i = 0; i < it.second.size(); ++i)
                 {
-                    tmp[it->second.at(i).get<1>()] = 
-                        m_bndCondExpansions[it->first]->GetCoeffs()[
-                            it->second.at(i).get<0>()]*it->second.at(i).get<2>(); 
+                    tmp[std::get<1>(it.second.at(i))] =
+                        m_bndCondExpansions[it.first]->GetCoeffs()[
+                            std::get<0>(it.second.at(i))]*std::get<2>(it.second.at(i));
                 }
             }
             m_locToGloMap->UniversalAssembleBnd(tmp);
@@ -683,7 +683,8 @@ namespace Nektar
                         tmp[bndMap[bndcnt++]] = sign * coeffs[j];
                     }
                 }
-                else
+                else if(m_bndConditions[i]->GetBoundaryConditionType() !=
+                        SpatialDomains::ePeriodic)
                 {
                     bndcnt += m_bndCondExpansions[i]->GetNcoeffs();
                 }
@@ -874,6 +875,7 @@ namespace Nektar
                 const FlagList &flags,
                 const StdRegions::ConstFactorMap &factors,
                 const StdRegions::VarCoeffMap &varcoeff,
+                const MultiRegions::VarFactorsMap &varfactors,
                 const Array<OneD, const NekDouble> &dirForcing,
                 const bool PhysSpaceForcing)
 
@@ -900,10 +902,11 @@ namespace Nektar
             int i,j;
             int bndcnt=0;
             Array<OneD, NekDouble> gamma(contNcoeffs, 0.0);
-			
+
             for(i = 0; i < m_bndCondExpansions.num_elements(); ++i)
             {
-                if(m_bndConditions[i]->GetBoundaryConditionType() != SpatialDomains::eDirichlet)
+                if(m_bndConditions[i]->GetBoundaryConditionType() == SpatialDomains::eNeumann ||
+                   m_bndConditions[i]->GetBoundaryConditionType() == SpatialDomains::eRobin)
                 {
                     for(j = 0; j < (m_bndCondExpansions[i])->GetNcoeffs(); j++)
                     {
@@ -912,7 +915,7 @@ namespace Nektar
                             += (m_bndCondExpansions[i]->GetCoeffs())[j];
                     }
                 }
-                else
+                else if (m_bndConditions[i]->GetBoundaryConditionType() != SpatialDomains::ePeriodic)
                 {
                     bndcnt += m_bndCondExpansions[i]->GetNcoeffs();
                 }
@@ -923,7 +926,7 @@ namespace Nektar
             // Add weak boundary conditions to forcing
             Vmath::Vadd(contNcoeffs, wsp, 1, gamma, 1, wsp, 1);
 
-            GlobalLinSysKey key(StdRegions::eHelmholtz,m_locToGloMap,factors,varcoeff);
+            GlobalLinSysKey key(StdRegions::eHelmholtz,m_locToGloMap,factors,varcoeff,varfactors);
             
             if(flags.isSet(eUseGlobal))
             {

@@ -48,9 +48,10 @@ namespace Nektar
                 UnsteadyViscousBurgers::create);
     
     UnsteadyViscousBurgers::UnsteadyViscousBurgers(
-            const LibUtilities::SessionReaderSharedPtr& pSession)
-        : UnsteadySystem(pSession),
-          AdvectionSystem(pSession),
+        const LibUtilities::SessionReaderSharedPtr& pSession,
+        const SpatialDomains::MeshGraphSharedPtr& pGraph)
+        : UnsteadySystem(pSession, pGraph),
+          AdvectionSystem(pSession, pGraph),
           m_varCoeffLap(StdRegions::NullVarCoeffMap)
     {
         m_planeNumber = 0;
@@ -102,7 +103,7 @@ namespace Nektar
                                            GetFluxVectorAdv, this);
                 m_session->LoadSolverInfo("UpwindType", riemName, "Upwind");
                 m_riemannSolver = SolverUtils::GetRiemannSolverFactory().
-                    CreateInstance(riemName);
+                    CreateInstance(riemName, m_session);
                 m_advObject->SetRiemannSolver(m_riemannSolver);
                 m_advObject->InitObject      (m_session, m_fields);
                 
@@ -155,8 +156,8 @@ namespace Nektar
         }
         
         // Forcing terms
-        m_forcing = SolverUtils::Forcing::Load(m_session, m_fields,
-                                               m_fields.num_elements());
+        m_forcing = SolverUtils::Forcing::Load(m_session, shared_from_this(),
+                                    m_fields, m_fields.num_elements());
         
         m_ode.DefineImplicitSolve (&UnsteadyViscousBurgers::DoImplicitSolve, this);
         m_ode.DefineOdeRhs        (&UnsteadyViscousBurgers::DoOdeRhs,        this);
@@ -256,11 +257,10 @@ namespace Nektar
         }
         
         // Add forcing terms
-        std::vector<SolverUtils::ForcingSharedPtr>::const_iterator x;
-        for (x = m_forcing.begin(); x != m_forcing.end(); ++x)
+        for (auto &x : m_forcing)
         {
             // set up non-linear terms
-            (*x)->Apply(m_fields, inarray, outarray, time);
+            x->Apply(m_fields, inarray, outarray, time);
         }
     }
     

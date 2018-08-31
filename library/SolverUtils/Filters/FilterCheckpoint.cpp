@@ -45,13 +45,12 @@ std::string FilterCheckpoint::className =
 
 FilterCheckpoint::FilterCheckpoint(
     const LibUtilities::SessionReaderSharedPtr &pSession,
+    const std::weak_ptr<EquationSystem>      &pEquation,
     const ParamMap &pParams) :
-    Filter(pSession)
+    Filter(pSession, pEquation)
 {
-    ParamMap::const_iterator it;
-
     // OutputFile
-    it = pParams.find("OutputFile");
+    auto it = pParams.find("OutputFile");
     if (it == pParams.end())
     {
         m_outputFile = m_session->GetSessionName();
@@ -65,7 +64,7 @@ FilterCheckpoint::FilterCheckpoint(
     // OutputFrequency
     it = pParams.find("OutputFrequency");
     ASSERTL0(it != pParams.end(), "Missing parameter 'OutputFrequency'.");
-    LibUtilities::Equation equ(m_session, it->second);
+    LibUtilities::Equation equ(m_session->GetExpressionEvaluator(), it->second);
     m_outputFrequency = round(equ.Evaluate());
 
     m_fld = LibUtilities::FieldIO::CreateDefault(pSession);

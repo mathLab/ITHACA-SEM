@@ -57,8 +57,8 @@ namespace Nektar
             /// Creates an instance of this class
             static GlobalLinSysSharedPtr create(
                 const GlobalLinSysKey                &pLinSysKey,
-                const boost::weak_ptr<ExpList>       &pExpList,
-                const boost::shared_ptr<AssemblyMap> &pLocToGloMap)
+                const std::weak_ptr<ExpList>         &pExpList,
+                const std::shared_ptr<AssemblyMap>   &pLocToGloMap)
             {
                 return MemoryManager<GlobalLinSysPETScFull>
                     ::AllocateSharedPtr(pLinSysKey, pExpList, pLocToGloMap);
@@ -70,8 +70,8 @@ namespace Nektar
             /// Constructor for full direct matrix solve.
             MULTI_REGIONS_EXPORT GlobalLinSysPETScFull(
                 const GlobalLinSysKey                &pLinSysKey,
-                const boost::weak_ptr<ExpList>       &pExpList,
-                const boost::shared_ptr<AssemblyMap> &pLocToGloMap);
+                const std::weak_ptr<ExpList>         &pExpList,
+                const std::shared_ptr<AssemblyMap>   &pLocToGloMap);
 
             MULTI_REGIONS_EXPORT virtual ~GlobalLinSysPETScFull();
 

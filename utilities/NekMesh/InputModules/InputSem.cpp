@@ -85,7 +85,6 @@ void InputSem::Process()
     }
 
     // Read through input file and populate the section map.
-    map<string, streampos>::iterator it;
     string fileContents, line, word;
     stringstream ss, ssFile;
     streampos linePos;
@@ -112,11 +111,11 @@ void InputSem::Process()
 
         // Iterate over all tokens and see if section exists on this
         // line.
-        for (it = sectionMap.begin(); it != sectionMap.end(); ++it)
+        for (auto &it : sectionMap)
         {
-            if (word == "<" + it->first || word == "<" + it->first + ">")
+            if (word == "<" + it.first || word == "<" + it.first + ">")
             {
-                sectionMap[it->first] = linePos;
+                sectionMap[it.first] = linePos;
             }
         }
     }
@@ -204,7 +203,7 @@ void InputSem::Process()
         }
         id -= 1; // counter starts at 0
         m_mesh->m_node.push_back(
-            boost::shared_ptr<Node>(new Node(id, x, y, z)));
+            std::shared_ptr<Node>(new Node(id, x, y, z)));
         ++i;
     }
 
@@ -387,7 +386,7 @@ void InputSem::Process()
                     double x = hoXData[offset + j * stride];
                     double y = hoYData[offset + j * stride];
                     NodeSharedPtr n =
-                        boost::shared_ptr<Node>(new Node(nodeId, x, y, 0.0));
+                        std::shared_ptr<Node>(new Node(nodeId, x, y, 0.0));
                     edgeNodes.push_back(n);
                 }
             }
@@ -401,7 +400,7 @@ void InputSem::Process()
                     double x = hoXData[offset + k];
                     double y = hoYData[offset + k];
                     NodeSharedPtr n =
-                        boost::shared_ptr<Node>(new Node(nodeId, x, y, 0.0));
+                        std::shared_ptr<Node>(new Node(nodeId, x, y, 0.0));
                     edgeNodes.push_back(n);
                 }
             }

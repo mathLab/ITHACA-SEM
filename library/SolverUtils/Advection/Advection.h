@@ -37,7 +37,7 @@
 #define NEKTAR_SOLVERUTILS_ADVECTION
 
 #include <string>
-#include <boost/function.hpp>
+#include <functional>
 
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
@@ -53,7 +53,7 @@ namespace SolverUtils
 /// Defines a callback function which evaluates the flux vector \f$ F(u)
 /// \f$ in a conservative advection of the form \f$ \nabla\cdot F(u)
 /// \f$.
-typedef boost::function<void (
+typedef std::function<void (
     const Array<OneD, Array<OneD, NekDouble> >&,
     Array<OneD, Array<OneD, Array<OneD, NekDouble> > >&)>
     AdvectionFluxVecCB;
@@ -69,6 +69,10 @@ typedef boost::function<void (
 class Advection
 {
 public:
+
+    SOLVER_UTILS_EXPORT virtual ~Advection()
+    {};
+
     /// Interface function to initialise the advection object.
     SOLVER_UTILS_EXPORT void InitObject(
         LibUtilities::SessionReaderSharedPtr               pSession,
@@ -89,13 +93,14 @@ public:
      * @brief Set the flux vector callback function.
      *
      * This routine is a utility function to avoid the explicit use of
-     * boost::bind. A function and object can be passed to this function
+     * std::bind. A function and object can be passed to this function
      * instead.
      */
     template<typename FuncPointerT, typename ObjectPointerT>
     void SetFluxVector(FuncPointerT func, ObjectPointerT obj)
     {
-        m_fluxVector = boost::bind(func, obj, _1, _2);
+        m_fluxVector = std::bind(
+            func, obj, std::placeholders::_1, std::placeholders::_2);
     }
 
     /**
@@ -162,7 +167,7 @@ protected:
 };
 
 /// A shared pointer to an Advection object.
-typedef boost::shared_ptr<Advection> AdvectionSharedPtr;
+typedef std::shared_ptr<Advection> AdvectionSharedPtr;
 
 /// Datatype of the NekFactory used to instantiate classes derived
 /// from the Advection class.

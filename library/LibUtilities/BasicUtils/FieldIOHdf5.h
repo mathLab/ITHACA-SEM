@@ -48,7 +48,7 @@ namespace LibUtilities
 namespace H5
 {
 class Group;
-typedef boost::shared_ptr<Group> GroupSharedPtr;
+typedef std::shared_ptr<Group> GroupSharedPtr;
 }
 
 /**
@@ -86,7 +86,7 @@ private:
     /// HDF5 document.
     H5::FileSharedPtr doc;
 };
-typedef boost::shared_ptr<H5DataSource> H5DataSourceSharedPtr;
+typedef std::shared_ptr<H5DataSource> H5DataSourceSharedPtr;
 
 /**
  * @class Simple class for writing hierarchical data using HDF5.
@@ -114,7 +114,7 @@ private:
     /// HDF5 group for this tag.
     H5::GroupSharedPtr m_Group;
 };
-typedef boost::shared_ptr<H5TagWriter> H5TagWriterSharedPtr;
+typedef std::shared_ptr<H5TagWriter> H5TagWriterSharedPtr;
 
 /**
  * @class Class for operating on HDF5-based FLD files.

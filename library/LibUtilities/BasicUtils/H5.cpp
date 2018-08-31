@@ -34,7 +34,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include <LibUtilities/BasicUtils/H5.h>
-#include <boost/make_shared.hpp>
+#include <LibUtilities/Foundations/BasisType.h>
 
 #ifdef NEKTAR_USE_MPI
 #include <LibUtilities/Communication/CommMpi.h>
@@ -194,7 +194,7 @@ void PList::SetDxMpioIndependent()
 }
 void PList::SetMpio(CommSharedPtr comm)
 {
-    CommMpiSharedPtr mpi_comm = boost::dynamic_pointer_cast<CommMpi>(comm);
+    CommMpiSharedPtr mpi_comm = std::dynamic_pointer_cast<CommMpi>(comm);
     ASSERTL0(mpi_comm, "Can't convert communicator to MPI communicator.")
     // TODO: accept hints
     MPI_Info info = MPI_INFO_NULL;
@@ -263,11 +263,23 @@ DataSetSharedPtr CanHaveGroupsDataSets::OpenDataSet(
     return ans;
 }
 
+bool CanHaveGroupsDataSets::ContainsDataSet(std::string nm)
+{
+    for(auto it = begin(); it != end(); ++it)
+    {
+        if(it.GetName() == nm)
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
 CanHaveGroupsDataSets::LinkIterator CanHaveGroupsDataSets::begin()
 {
     // Have to use dynamic because of virtual inheritance
     CanHaveGroupsDataSetsSharedPtr thisSh =
-        boost::dynamic_pointer_cast<CanHaveGroupsDataSets>(shared_from_this());
+        std::dynamic_pointer_cast<CanHaveGroupsDataSets>(shared_from_this());
     return CanHaveGroupsDataSets::LinkIterator(thisSh);
 }
 
@@ -275,7 +287,7 @@ CanHaveGroupsDataSets::LinkIterator CanHaveGroupsDataSets::end()
 {
     // Have to use dynamic because of virtual inheritance
     CanHaveGroupsDataSetsSharedPtr thisSh =
-        boost::dynamic_pointer_cast<CanHaveGroupsDataSets>(shared_from_this());
+        std::dynamic_pointer_cast<CanHaveGroupsDataSets>(shared_from_this());
     return CanHaveGroupsDataSets::LinkIterator(thisSh, GetNumElements());
 }
 
@@ -339,14 +351,14 @@ CanHaveAttributes::AttrIterator CanHaveAttributes::attr_begin()
 {
     // Have to use dynamic because of virtual inheritance
     CanHaveAttributesSharedPtr thisSh =
-        boost::dynamic_pointer_cast<CanHaveAttributes>(shared_from_this());
+        std::dynamic_pointer_cast<CanHaveAttributes>(shared_from_this());
     return CanHaveAttributes::AttrIterator(thisSh);
 }
 CanHaveAttributes::AttrIterator CanHaveAttributes::attr_end()
 {
     // Have to use dynamic because of virtual inheritance
     CanHaveAttributesSharedPtr thisSh =
-        boost::dynamic_pointer_cast<CanHaveAttributes>(shared_from_this());
+        std::dynamic_pointer_cast<CanHaveAttributes>(shared_from_this());
     return CanHaveAttributes::AttrIterator(thisSh, GetNumAttr());
 }
 
@@ -458,6 +470,19 @@ hsize_t DataSpace::GetSize()
     return H5Sget_simple_extent_npoints(m_Id);
 }
 
+std::vector<hsize_t> DataSpace::GetDims()
+{
+    std::vector<hsize_t> ret;
+    int ndims = H5Sget_simple_extent_ndims(m_Id);
+    hsize_t dims[ndims];
+    H5Sget_simple_extent_dims(m_Id, dims, NULL);
+    for(int i = 0; i < ndims; i++)
+    {
+        ret.push_back(dims[i]);
+    }
+    return ret;
+}
+
 DataType::DataType(hid_t id) : Object(id)
 {
 }
@@ -471,6 +496,12 @@ DataTypeSharedPtr DataType::String(size_t len)
     }
     H5_CALL(H5Tset_size, (ans->GetId(), len));
     return ans;
+}
+
+void CompoundDataType::Close()
+{
+    H5_CALL(H5Tclose, (m_Id));
+    m_Id = H5I_INVALID_HID;
 }
 
 void DataType::Close()
@@ -490,6 +521,16 @@ DataTypeSharedPtr DataType::Copy() const
 DataTypeSharedPtr PredefinedDataType::CS1()
 {
     return DataTypeSharedPtr(new PredefinedDataType(H5T_C_S1));
+}
+
+CompoundDataTypeSharedPtr CompoundDataType::Create(size_t sz)
+{
+    return std::shared_ptr<CompoundDataType>(
+        new CompoundDataType(H5Tcreate(H5T_COMPOUND, sz)));
+}
+
+CompoundDataType::CompoundDataType(hid_t id) : DataType(id)
+{
 }
 
 PredefinedDataType::PredefinedDataType(hid_t id) : DataType(id)
@@ -516,6 +557,9 @@ template <>
 const hid_t DataTypeTraits<unsigned long long>::NativeType = H5T_NATIVE_ULLONG;
 
 template <> const hid_t DataTypeTraits<double>::NativeType = H5T_NATIVE_DOUBLE;
+
+template <> const hid_t DataTypeTraits<BasisType>::NativeType = H5T_NATIVE_INT;
+
 
 AttributeSharedPtr Attribute::Create(hid_t parent, const std::string &name,
                                      DataTypeSharedPtr type,
@@ -603,6 +647,18 @@ hsize_t Group::GetNumElements()
     H5G_info_t info;
     H5_CALL(H5Gget_info, (m_Id, &info));
     return info.nlinks;
+}
+
+std::vector<std::string> Group::GetElementNames()
+{
+    std::vector<std::string> ret;
+    for(int i = 0; i < GetNumElements(); i++)
+    {
+        char name[50];
+        H5Gget_objname_by_idx(m_Id, (size_t)i, name, 50 );
+        ret.push_back(std::string(name));
+    }
+    return ret;
 }
 
 DataSet::DataSet(hid_t id) : Object(id)

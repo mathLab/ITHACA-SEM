@@ -41,7 +41,6 @@
 #include <MultiRegions/GlobalLinSys.h>
 #include <MultiRegions/ExpList3DHomogeneous1D.h>
 #include <MultiRegions/ExpList2D.h>
-#include <boost/shared_ptr.hpp>
 #include <LibUtilities/LinearAlgebra/NekTypeDefs.hpp>
 //#include <MultiRegions/GlobalLinSysDirectStaticCond.h>
 
@@ -93,9 +92,10 @@ namespace Nektar
         
         /// Creates an instance of this class
         static SolverUtils::EquationSystemSharedPtr create(
-            const LibUtilities::SessionReaderSharedPtr& pSession)
+            const LibUtilities::SessionReaderSharedPtr& pSession,
+            const SpatialDomains::MeshGraphSharedPtr &pGraph)
         {
-            SolverUtils::EquationSystemSharedPtr p = MemoryManager<CoupledLinearNS>::AllocateSharedPtr(pSession);
+            SolverUtils::EquationSystemSharedPtr p = MemoryManager<CoupledLinearNS>::AllocateSharedPtr(pSession, pGraph);
             p->InitObject();
             return p;
         }
@@ -161,7 +161,8 @@ namespace Nektar
         Array<OneD, CoupledLocalToGlobalC0ContMapSharedPtr> m_locToGloMap;
         
     protected:
-        CoupledLinearNS(const LibUtilities::SessionReaderSharedPtr &pSesssion);
+        CoupledLinearNS(const LibUtilities::SessionReaderSharedPtr &pSesssion,
+                        const SpatialDomains::MeshGraphSharedPtr &pGraph);
         
         virtual void v_InitObject();
         
@@ -223,9 +224,3 @@ namespace Nektar
 } //end of namespace
 
 #endif //COUPLEDSTOKESSCHEME_H
-
-/**
- * $Log:$
- *
- **/
-

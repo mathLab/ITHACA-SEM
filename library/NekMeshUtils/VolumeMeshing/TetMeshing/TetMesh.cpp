@@ -126,7 +126,7 @@ void TetMesh::Mesh()
     tetgen->GetNewPoints(ctbefore, newp);
     for (int i = 0; i < newp.size(); i++)
     {
-        NodeSharedPtr n = boost::shared_ptr<Node>(
+        NodeSharedPtr n = std::shared_ptr<Node>(
             new Node(ctbefore + i, newp[i][0], newp[i][1], newp[i][2]));
         IdToNode[ctbefore + i] = n;
     }

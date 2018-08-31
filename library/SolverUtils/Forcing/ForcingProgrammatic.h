@@ -52,7 +52,7 @@ namespace SolverUtils
     class ForcingProgrammatic;
 
     /// A shared pointer to an EquationSystem object
-    SOLVER_UTILS_EXPORT typedef boost::shared_ptr<ForcingProgrammatic> ForcingProgrammaticSharedPtr;
+    SOLVER_UTILS_EXPORT typedef std::shared_ptr<ForcingProgrammatic> ForcingProgrammaticSharedPtr;
 
     class ForcingProgrammatic : public Forcing
     {
@@ -62,13 +62,14 @@ namespace SolverUtils
 
             /// Creates an instance of this class
             SOLVER_UTILS_EXPORT static ForcingSharedPtr create(
-                    const LibUtilities::SessionReaderSharedPtr& pSession,
+                    const LibUtilities::SessionReaderSharedPtr &pSession,
+                    const std::weak_ptr<EquationSystem>      &pEquation,
                     const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields,
                     const unsigned int& pNumForcingFields,
                     const TiXmlElement* pForce)
             {
                 ForcingSharedPtr p = MemoryManager<ForcingProgrammatic>::
-                                                AllocateSharedPtr(pSession);
+                                        AllocateSharedPtr(pSession, pEquation);
                 p->InitObject(pFields, pNumForcingFields, pForce);
                 return p;
             }
@@ -92,7 +93,9 @@ namespace SolverUtils
                     const NekDouble &time);
 
         private:
-            ForcingProgrammatic(const LibUtilities::SessionReaderSharedPtr& pSession);
+            ForcingProgrammatic(
+                    const LibUtilities::SessionReaderSharedPtr &pSession,
+                    const std::weak_ptr<EquationSystem>      &pEquation);
             virtual ~ForcingProgrammatic(void){};
 
     };

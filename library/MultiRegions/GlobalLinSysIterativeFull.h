@@ -51,8 +51,8 @@ namespace Nektar
             /// Creates an instance of this class
             static GlobalLinSysSharedPtr create(
                     const GlobalLinSysKey &pLinSysKey,
-                    const boost::weak_ptr<ExpList> &pExpList,
-                    const boost::shared_ptr<AssemblyMap>
+                    const std::weak_ptr<ExpList> &pExpList,
+                    const std::shared_ptr<AssemblyMap>
                                                            &pLocToGloMap)
             {
                 return MemoryManager<GlobalLinSysIterativeFull>
@@ -65,15 +65,15 @@ namespace Nektar
             /// Constructor for full direct matrix solve.
             MULTI_REGIONS_EXPORT GlobalLinSysIterativeFull(
                     const GlobalLinSysKey &pLinSysKey,
-                    const boost::weak_ptr<ExpList> &pExpList,
-                    const boost::shared_ptr<AssemblyMap>
+                    const std::weak_ptr<ExpList> &pExpList,
+                    const std::shared_ptr<AssemblyMap>
                                                            &pLocToGloMap);
 
             MULTI_REGIONS_EXPORT virtual ~GlobalLinSysIterativeFull();
 
         private:
             // Local to global map.
-            boost::shared_ptr<AssemblyMap>     m_locToGloMap;
+            std::shared_ptr<AssemblyMap>     m_locToGloMap;
 
             /// Solve the linear system for given input and output vectors
             /// using a specified local to global map.

@@ -52,7 +52,7 @@ namespace Nektar
             DisContField3DHomogeneous2D (In,false)
         {
             
-            ContField1DSharedPtr zero_line = boost::dynamic_pointer_cast<ContField1D> (In.m_lines[0]);
+            ContField1DSharedPtr zero_line = std::dynamic_pointer_cast<ContField1D> (In.m_lines[0]);
             
             for(int n = 0; n < m_lines.num_elements(); ++n)
             {
@@ -161,6 +161,7 @@ namespace Nektar
                 const FlagList &flags,
                 const StdRegions::ConstFactorMap &factors,
                 const StdRegions::VarCoeffMap &varcoeff,
+                const MultiRegions::VarFactorsMap &varfactors,
                 const Array<OneD, const NekDouble> &dirForcing,
                 const bool PhysSpaceForcing)
         {
@@ -202,7 +203,8 @@ namespace Nektar
                     wfce = (PhysSpaceForcing)? fce+cnt:fce+cnt1;
                     m_lines[l]->HelmSolve(wfce,
                               e_out = outarray + cnt1,
-                              flags, new_factors, varcoeff, dirForcing,
+                              flags, new_factors, varcoeff, varfactors,
+                              dirForcing,
                               PhysSpaceForcing);
                     
                     cnt  += m_lines[l]->GetTotPoints();

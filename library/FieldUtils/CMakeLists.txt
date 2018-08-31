@@ -17,6 +17,7 @@ SET(FieldUtilsHeaders
     OutputModules/OutputPts.h
     OutputModules/OutputXml.h
     ProcessModules/ProcessAddCompositeID.h
+    ProcessModules/ProcessFieldFromString.h
     ProcessModules/ProcessAddFld.h
     ProcessModules/ProcessBoundaryExtract.h
     ProcessModules/ProcessCombineAvg.h
@@ -24,6 +25,7 @@ SET(FieldUtilsHeaders
     ProcessModules/ProcessCreateExp.h
     ProcessModules/ProcessDeform.h
     ProcessModules/ProcessDisplacement.h
+    ProcessModules/ProcessDOF.h
     ProcessModules/ProcessEquiSpacedOutput.h
     ProcessModules/ProcessGrad.h
     ProcessModules/ProcessHomogeneousPlane.h
@@ -35,8 +37,10 @@ SET(FieldUtilsHeaders
     ProcessModules/ProcessInterpPtsToPts.h
     ProcessModules/ProcessIsoContour.h
     ProcessModules/ProcessJacobianEnergy.h
+    ProcessModules/ProcessL2Criterion.h
     ProcessModules/ProcessMapping.h
     ProcessModules/ProcessNumModes.h
+    ProcessModules/ProcessMean.h
     ProcessModules/ProcessMeanMode.h
     ProcessModules/ProcessPointDataToFld.h
     ProcessModules/ProcessPrintFldNorms.h
@@ -70,6 +74,7 @@ SET(FieldUtilsSources
     OutputModules/OutputPts.cpp
     OutputModules/OutputXml.cpp
     ProcessModules/ProcessAddCompositeID.cpp
+    ProcessModules/ProcessFieldFromString.cpp
     ProcessModules/ProcessAddFld.cpp
     ProcessModules/ProcessBoundaryExtract.cpp
     ProcessModules/ProcessCombineAvg.cpp
@@ -77,6 +82,7 @@ SET(FieldUtilsSources
     ProcessModules/ProcessCreateExp.cpp
     ProcessModules/ProcessDeform.cpp
     ProcessModules/ProcessDisplacement.cpp
+    ProcessModules/ProcessDOF.cpp
     ProcessModules/ProcessEquiSpacedOutput.cpp
     ProcessModules/ProcessGrad.cpp
     ProcessModules/ProcessHomogeneousPlane.cpp
@@ -88,8 +94,10 @@ SET(FieldUtilsSources
     ProcessModules/ProcessInterpPtsToPts.cpp
     ProcessModules/ProcessIsoContour.cpp
     ProcessModules/ProcessJacobianEnergy.cpp
+    ProcessModules/ProcessL2Criterion.cpp
     ProcessModules/ProcessMapping.cpp
     ProcessModules/ProcessNumModes.cpp
+    ProcessModules/ProcessMean.cpp
     ProcessModules/ProcessMeanMode.cpp
     ProcessModules/ProcessPointDataToFld.cpp
     ProcessModules/ProcessPrintFldNorms.cpp

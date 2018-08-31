@@ -21,6 +21,7 @@ int main(int argc, char *argv[])
     }
 
     LibUtilities::SessionReaderSharedPtr session;
+    SpatialDomains::MeshGraphSharedPtr graph;
     string vDriverModule;
     DriverSharedPtr drv;  
     try
@@ -28,9 +29,12 @@ int main(int argc, char *argv[])
         // Create session reader.
         session = LibUtilities::SessionReader::CreateInstance(argc, argv);
         
+        // Create MeshGraph.
+        graph = SpatialDomains::MeshGraph::Read(session);
+
         // Create driver
         session->LoadSolverInfo("Driver", vDriverModule, "Standard");
-        drv = GetDriverFactory().CreateInstance(vDriverModule, session);
+        drv = GetDriverFactory().CreateInstance(vDriverModule, session, graph);
 
 
         EquationSystemSharedPtr EqSys = drv->GetEqu()[0];
@@ -51,8 +55,8 @@ int main(int argc, char *argv[])
             NonLinear[i] = Array<OneD, NekDouble> (nphys);
         }
 
-        boost::shared_ptr<NavierStokesAdvection> A
-            = boost::dynamic_pointer_cast<NavierStokesAdvection>(IncNav->GetAdvObject());
+        std::shared_ptr<NavierStokesAdvection> A
+            = std::dynamic_pointer_cast<NavierStokesAdvection>(IncNav->GetAdvObject());
 
         if (!A)
         {

@@ -40,8 +40,7 @@
 #include <SpatialDomains/Geometry.h>
 #include <SpatialDomains/GeomFactors.h>
 #include <LocalRegions/LocalRegionsDeclspec.h>
-#include <boost/shared_ptr.hpp>
-#include <boost/weak_ptr.hpp>
+#include <memory>
 #include <vector>
 #include <map>
 
@@ -64,11 +63,9 @@ namespace Nektar
             eMetricQuadrature
         };
 
-        // type defines for use of PrismExp in a boost vector
-        typedef boost::shared_ptr<Expansion> ExpansionSharedPtr;
-        typedef boost::weak_ptr<Expansion> ExpansionWeakPtr;
+        typedef std::shared_ptr<Expansion> ExpansionSharedPtr;
+        typedef std::weak_ptr<Expansion> ExpansionWeakPtr;
         typedef std::vector< ExpansionSharedPtr > ExpansionVector;
-        typedef std::vector< ExpansionSharedPtr >::iterator ExpansionVectorIter;
         typedef std::map<MetricType, Array<OneD, NekDouble> > MetricMap;
 
         class Expansion : virtual public StdRegions::StdExpansion
@@ -88,8 +85,7 @@ namespace Nektar
 
                 LOCAL_REGIONS_EXPORT void Reset();
 
-                LOCAL_REGIONS_EXPORT virtual const
-                    SpatialDomains::GeomFactorsSharedPtr& v_GetMetricInfo() const;
+                LOCAL_REGIONS_EXPORT const SpatialDomains::GeomFactorsSharedPtr& GetMetricInfo() const;
 
                 LOCAL_REGIONS_EXPORT DNekMatSharedPtr BuildTransformationMatrix(
                     const DNekScalMatSharedPtr &r_bnd, 
@@ -105,18 +101,18 @@ namespace Nektar
                     std::vector<LibUtilities::BasisType> &fromType);
                 LOCAL_REGIONS_EXPORT void AddEdgeNormBoundaryInt(
                     const int                           edge,
-                    const boost::shared_ptr<Expansion> &EdgeExp,
+                    const std::shared_ptr<Expansion>   &EdgeExp,
                     const Array<OneD, const NekDouble> &Fx,
                     const Array<OneD, const NekDouble> &Fy,
                           Array<OneD,       NekDouble> &outarray);
                 LOCAL_REGIONS_EXPORT void AddEdgeNormBoundaryInt(
                     const int                           edge,
-                    const boost::shared_ptr<Expansion> &EdgeExp,
+                    const std::shared_ptr<Expansion>   &EdgeExp,
                     const Array<OneD, const NekDouble> &Fn,
                           Array<OneD,       NekDouble> &outarray);
                 LOCAL_REGIONS_EXPORT void AddFaceNormBoundaryInt(
                     const int                           face,
-                    const boost::shared_ptr<Expansion> &FaceExp,
+                    const std::shared_ptr<Expansion>   &FaceExp,
                     const Array<OneD, const NekDouble> &Fn,
                           Array<OneD,       NekDouble> &outarray);
                 LOCAL_REGIONS_EXPORT void DGDeriv(
@@ -125,6 +121,8 @@ namespace Nektar
                           Array<OneD, ExpansionSharedPtr>      &EdgeExp,
                           Array<OneD, Array<OneD, NekDouble> > &coeffs,
                           Array<OneD,             NekDouble>   &outarray);
+                LOCAL_REGIONS_EXPORT NekDouble VectorFlux(
+                    const Array<OneD, Array<OneD, NekDouble > > &vec);
 
             protected:
                 SpatialDomains::GeometrySharedPtr  m_geom;
@@ -160,18 +158,18 @@ namespace Nektar
                     std::vector<LibUtilities::BasisType> &fromType);
                 virtual void v_AddEdgeNormBoundaryInt(
                     const int                           edge,
-                    const boost::shared_ptr<Expansion> &EdgeExp,
+                    const std::shared_ptr<Expansion>   &EdgeExp,
                     const Array<OneD, const NekDouble> &Fx,
                     const Array<OneD, const NekDouble> &Fy,
                           Array<OneD,       NekDouble> &outarray);
                 virtual void v_AddEdgeNormBoundaryInt(
                     const int                           edge,
-                    const boost::shared_ptr<Expansion> &EdgeExp,
+                    const std::shared_ptr<Expansion>   &EdgeExp,
                     const Array<OneD, const NekDouble> &Fn,
                           Array<OneD,       NekDouble> &outarray);
                 virtual void v_AddFaceNormBoundaryInt(
                     const int                           face,
-                    const boost::shared_ptr<Expansion> &FaceExp,
+                    const std::shared_ptr<Expansion>   &FaceExp,
                     const Array<OneD, const NekDouble> &Fn,
                           Array<OneD,       NekDouble> &outarray);
                 virtual void v_DGDeriv(
@@ -180,6 +178,8 @@ namespace Nektar
                           Array<OneD, ExpansionSharedPtr>      &EdgeExp,
                           Array<OneD, Array<OneD, NekDouble> > &coeffs,
                           Array<OneD,             NekDouble>   &outarray);
+                virtual NekDouble v_VectorFlux(
+                    const Array<OneD, Array<OneD, NekDouble > > &vec);
 
             private:
 

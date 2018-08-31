@@ -6,6 +6,7 @@
 //
 // The MIT License
 //
+// Copyright (c) 2016 Kilian Lackhove
 // Copyright (c) 2006 Division of Applied Mathematics, Brown University (USA),
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
@@ -35,6 +36,9 @@
 
 #include <SolverUtils/Forcing/ForcingAbsorption.h>
 
+#include <LibUtilities/BasicUtils/Equation.h>
+#include <LibUtilities/BasicUtils/ParseUtils.h>
+
 using namespace std;
 
 namespace Nektar
@@ -47,8 +51,10 @@ namespace SolverUtils
                                                         ForcingAbsorption::create,
                                                         "Forcing Absorption");
 
-    ForcingAbsorption::ForcingAbsorption(const LibUtilities::SessionReaderSharedPtr& pSession)
-            : Forcing(pSession),
+    ForcingAbsorption::ForcingAbsorption(
+            const LibUtilities::SessionReaderSharedPtr &pSession,
+            const std::weak_ptr<EquationSystem>      &pEquation)
+            : Forcing(pSession, pEquation),
               m_hasRefFlow(false),	
               m_hasRefFlowTime(false)
     {
@@ -60,41 +66,26 @@ namespace SolverUtils
             const TiXmlElement* pForce)
     {
         m_NumVariable = pNumForcingFields;
-        int npts       = pFields[0]->GetTotPoints();
+        int npts      = pFields[0]->GetTotPoints();
 
-        const TiXmlElement* funcNameElmt;
-        funcNameElmt = pForce->FirstChildElement("COEFF");
-        ASSERTL0(funcNameElmt, "Requires COEFF tag, specifying function "
-                               "name which prescribes absorption layer coefficient.");
+        CalcAbsorption(pFields, pForce);
 
-        string funcName = funcNameElmt->GetText();
-        ASSERTL0(m_session->DefinesFunction(funcName),
-                 "Function '" + funcName + "' not defined.");
-
-        std::string s_FieldStr;
-        m_Absorption  = Array<OneD, Array<OneD, NekDouble> > (m_NumVariable);
-        m_Forcing = Array<OneD, Array<OneD, NekDouble> > (m_NumVariable);
+        m_Forcing = Array<OneD, Array<OneD, NekDouble> >(m_NumVariable);
         for (int i = 0; i < m_NumVariable; ++i)
         {
-            s_FieldStr = m_session->GetVariable(i);
-            ASSERTL0(m_session->DefinesFunction(funcName, s_FieldStr),
-                     "Variable '" + s_FieldStr + "' not defined.");
-            m_Absorption[i]  = Array<OneD, NekDouble> (npts, 0.0);
-            m_Forcing[i] = Array<OneD, NekDouble> (npts, 0.0);
-            GetFunction(pFields, m_session, funcName)->Evaluate(s_FieldStr, m_Absorption[i]);
+            m_Forcing[i] = Array<OneD, NekDouble>(npts, 0.0);
         }
 
-        funcNameElmt = pForce->FirstChildElement("REFFLOW");
+        const TiXmlElement* funcNameElmt = pForce->FirstChildElement("REFFLOW");
         if (funcNameElmt)
         {
             string funcName = funcNameElmt->GetText();
             ASSERTL0(m_session->DefinesFunction(funcName),
                      "Function '" + funcName + "' not defined.");
-
             m_Refflow = Array<OneD, Array<OneD, NekDouble> > (m_NumVariable);
             for (int i = 0; i < m_NumVariable; ++i)
             {
-                s_FieldStr = m_session->GetVariable(i);
+                std::string s_FieldStr = m_session->GetVariable(i);
                 ASSERTL0(m_session->DefinesFunction(funcName, s_FieldStr),
                          "Variable '" + s_FieldStr + "' not defined.");
                 m_Refflow[i] = Array<OneD, NekDouble> (npts, 0.0);
@@ -102,14 +93,138 @@ namespace SolverUtils
             }
             m_hasRefFlow = true;
         }
-   
+
         funcNameElmt = pForce->FirstChildElement("REFFLOWTIME");
         if (funcNameElmt)
         {
             m_funcNameTime = funcNameElmt->GetText();
             m_hasRefFlowTime = true;
         }
+    }
 
+    void ForcingAbsorption::CalcAbsorption(
+        const Nektar::Array<Nektar::OneD, Nektar::MultiRegions::ExpListSharedPtr>
+            &pFields,
+        const TiXmlElement *pForce)
+    {
+        const TiXmlElement *funcNameElmt = pForce->FirstChildElement("COEFF");
+        ASSERTL0(funcNameElmt,
+                "Requires COEFF tag, specifying function "
+                "name which prescribes absorption layer coefficient.");
+        string funcName = funcNameElmt->GetText();
+        ASSERTL0(m_session->DefinesFunction(funcName),
+                "Function '" + funcName + "' not defined.");
+
+        int npts = pFields[0]->GetTotPoints();
+
+        m_Absorption = Array<OneD, Array<OneD, NekDouble> >(m_NumVariable);
+        for (int i = 0; i < m_NumVariable; ++i)
+        {
+            m_Absorption[i] = Array<OneD, NekDouble>(npts, 0.0);
+        }
+
+        funcNameElmt = pForce->FirstChildElement("BOUNDARYREGIONS");
+        if (funcNameElmt)
+        {
+            ASSERTL0(ParseUtils::GenerateVector(funcNameElmt->GetText(),
+                                                    m_bRegions),
+                    "Unable to process list of BOUNDARYREGIONS in Absorption "
+                    "Forcing: " +
+                        std::string(funcNameElmt->GetText()));
+
+            // alter m_bRegions so that it contains the boundaryRegions of this rank
+            std::vector<unsigned int>  localBRegions;
+            SpatialDomains::BoundaryConditions bcs(m_session, pFields[0]->GetGraph());
+            SpatialDomains::BoundaryRegionCollection regions = bcs.GetBoundaryRegions();
+            SpatialDomains::BoundaryRegionCollection::iterator it1;
+            int n = 0;
+            for (it1 = regions.begin(); it1 != regions.end(); ++it1)
+            {
+                if (std::find(m_bRegions.begin(), m_bRegions.end(), it1->first) != m_bRegions.end())
+                {
+                    localBRegions.push_back(n);
+                }
+                n++;
+            }
+            m_bRegions = localBRegions;
+
+            if (m_bRegions.size() == 0)
+            {
+                return;
+            }
+
+            std::vector<Array<OneD, const NekDouble> > points;
+
+            Array<OneD, Array<OneD, NekDouble> > x(3);
+            for (int i = 0; i < 3; i++)
+            {
+                x[i] = Array<OneD, NekDouble>(npts, 0.0);
+            }
+            pFields[0]->GetCoords(x[0], x[1], x[2]);
+            for (int i = 0; i < 3; i++)
+            {
+                points.push_back(x[i]);
+            }
+
+            Array<OneD, NekDouble> t(npts, 0.0);
+            points.push_back(t);
+
+            Array<OneD, NekDouble> r(npts, 0.0);
+            std::vector<unsigned int>::iterator it;
+            std::vector<BPointPair> inPoints;
+            Array<OneD, Array<OneD, NekDouble> > b(3);
+            for (it = m_bRegions.begin(); it != m_bRegions.end(); ++it)
+            {
+                int bpts = pFields[0]->GetBndCondExpansions()[*it]->GetNpoints();
+                for (int i = 0; i < 3; i++)
+                {
+                    b[i] = Array<OneD, NekDouble>(bpts, 0.0);
+                }
+                pFields[0]->GetBndCondExpansions()[*it]->GetCoords(
+                    b[0], b[1], b[2]);
+                for (int i = 0;
+                    i < pFields[0]->GetBndCondExpansions()[*it]->GetNpoints();
+                    ++i)
+                {
+                    inPoints.push_back(
+                        BPointPair(BPoint(b[0][i], b[1][i], b[2][i]), i));
+                }
+            }
+            m_rtree = MemoryManager<BRTree>::AllocateSharedPtr();
+            m_rtree->insert(inPoints.begin(), inPoints.end());
+
+            for (int i = 0; i < npts; ++i)
+            {
+                std::vector<BPointPair> result;
+                BPoint sPoint(x[0][i], x[1][i], x[2][i]);
+                m_rtree->query(bgi::nearest(sPoint, 1), std::back_inserter(result));
+                r[i] = bg::distance(sPoint, result[0].first);
+            }
+            points.push_back(r);
+
+            std::string s_FieldStr;
+            for (int i = 0; i < m_NumVariable; ++i)
+            {
+                s_FieldStr = m_session->GetVariable(i);
+                ASSERTL0(m_session->DefinesFunction(funcName, s_FieldStr),
+                        "Variable '" + s_FieldStr + "' not defined.");
+
+                LibUtilities::EquationSharedPtr ffunc =
+                    m_session->GetFunction(funcName, s_FieldStr);
+                ASSERTL0(ffunc->GetVlist() == "x y z t r",
+                        "EVARS of " + funcName + " must be 'r'");
+
+                ffunc->Evaluate(points, m_Absorption[i]);
+            }
+        }
+        else
+        {
+            for (int i = 0; i < m_NumVariable; ++i)
+            {
+                std::string s_FieldStr = m_session->GetVariable(i);
+                GetFunction(pFields, m_session, funcName)->Evaluate(s_FieldStr, m_Absorption[i]);
+            }
+        }
     }
 
     void ForcingAbsorption::v_Apply(

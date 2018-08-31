@@ -53,11 +53,11 @@ namespace Nektar
             Expansion     (geom),
             Expansion2D   (geom),
             m_matrixManager(
-                    boost::bind(&TriExp::CreateMatrix, this, _1),
-                    std::string("TriExpMatrix")),
+                std::bind(&TriExp::CreateMatrix, this, std::placeholders::_1),
+                std::string("TriExpMatrix")),
             m_staticCondMatrixManager(
-                    boost::bind(&TriExp::CreateStaticCondMatrix, this, _1),
-                    std::string("TriExpStaticCondMatrix"))
+                std::bind(&TriExp::CreateStaticCondMatrix, this, std::placeholders::_1),
+                std::string("TriExpStaticCondMatrix"))
         {
         }
 
@@ -102,7 +102,6 @@ namespace Nektar
             ival = StdTriExp::v_Integral(tmp);
             return ival;
         }
-		
 
         void TriExp::v_PhysDeriv(const Array<OneD, const NekDouble> & inarray,
                                Array<OneD,NekDouble> &out_d0,
@@ -271,6 +270,12 @@ namespace Nektar
 
             fill(outarray.get(), outarray.get()+m_ncoeffs, 0.0 );
 
+            if(nmodes[0] == 1 && nmodes[1] == 1)
+            {
+                outarray[0] = inarray[0];
+                return;
+            }
+
             Array<OneD, NekDouble> physEdge[3];
             Array<OneD, NekDouble> coeffEdge[3];
             for(i = 0; i < 3; i++)
@@ -320,7 +325,7 @@ namespace Nektar
             NekDouble sign;
             // define an orientation to get EdgeToElmtMapping from Cartesian data 
             StdRegions::Orientation orient[3] = {StdRegions::eForwards,StdRegions::eForwards,
-                                                 StdRegions::eBackwards};
+                                                 StdRegions::eForwards};
 
             for(i = 0; i < 3; i++)
             {
@@ -706,14 +711,17 @@ namespace Nektar
             }
         }
 
-        void TriExp::v_GetEdgePhysVals(const int edge, const StdRegions::StdExpansionSharedPtr &EdgeExp,
-                                     const Array<OneD, const NekDouble> &inarray,
-                                     Array<OneD,NekDouble> &outarray)
+        void TriExp::v_GetEdgePhysVals(
+            const int                                edge,
+            const StdRegions::StdExpansionSharedPtr &EdgeExp,
+            const Array<OneD, const NekDouble>      &inarray,
+            Array<OneD, NekDouble>                  &outarray)
         {
             int nquad0 = m_base[0]->GetNumPoints();
             int nquad1 = m_base[1]->GetNumPoints();
 
-            // get points in Cartesian orientation
+            // Extract in Cartesian direction because we have to deal with
+            // e.g. Gauss-Radau points.
             switch(edge)
             {
             case 0:
@@ -731,6 +739,10 @@ namespace Nektar
                 break;
             }
 
+            ASSERTL1(EdgeExp->GetBasis(0)->GetPointsType()
+                         == LibUtilities::eGaussLobattoLegendre,
+                     "Edge expansion should be GLL");
+
             // Interpolate if required
             if(m_base[edge?1:0]->GetPointsKey() != EdgeExp->GetBasis(0)->GetPointsKey())
             {
@@ -743,9 +755,16 @@ namespace Nektar
                                        EdgeExp->GetBasis(0)->GetPointsKey(),
                                        outarray);
             }
-            
+
+            StdRegions::Orientation orient = GetEorient(edge);
+            if (edge == 2)
+            {
+                orient = orient == StdRegions::eForwards ?
+                    StdRegions::eBackwards : StdRegions::eForwards;
+            }
+
             //Reverse data if necessary
-            if(GetCartesianEorient(edge) == StdRegions::eBackwards)
+            if(orient == StdRegions::eBackwards)
             {
                 Vmath::Reverse(EdgeExp->GetNumPoints(0),&outarray[0],1,
                                &outarray[0],1);
@@ -815,7 +834,18 @@ namespace Nektar
         {
             int i;
             const SpatialDomains::GeomFactorsSharedPtr & geomFactors = GetGeom()->GetMetricInfo();
+
             LibUtilities::PointsKeyVector ptsKeys = GetPointsKeys();
+            for(i = 0; i < ptsKeys.size(); ++i)
+            {
+                // Need at least 2 points for computing normals
+                if (ptsKeys[i].GetNumPoints() == 1)
+                {
+                    LibUtilities::PointsKey pKey(2, ptsKeys[i].GetPointsType());
+                    ptsKeys[i] = pKey;
+                }
+            }
+
             const SpatialDomains::GeomType type = geomFactors->GetGtype();
             const Array<TwoD, const NekDouble> & df = geomFactors->GetDerivFactors(ptsKeys);
             const Array<OneD, const NekDouble> & jac  = geomFactors->GetJac(ptsKeys);
@@ -930,7 +960,7 @@ namespace Nektar
 
                 // interpolate Jacobian and invert
                 LibUtilities::Interp1D(from_key,jac,m_base[0]->GetPointsKey(),work);
-                Vmath::Sdiv(nq,1.0,&work[0],1,&work[0],1);
+                Vmath::Sdiv(nqe,1.0,&work[0],1,&work[0],1);
 
                 // interpolate
                 for(i = 0; i < GetCoordim(); ++i)
@@ -952,16 +982,6 @@ namespace Nektar
                 for(i = 0; i < GetCoordim(); ++i)
                 {
                     Vmath::Vmul(nqe,normal[i],1,work,1,normal[i],1);
-                }
-
-                // Reverse direction so that points are in
-                // anticlockwise direction if edge >=2
-                if(edge >= 2)
-                {
-                    for(i = 0; i < GetCoordim(); ++i)
-                    {
-                        Vmath::Reverse(nqe,normal[i],1, normal[i],1);
-                    }
                 }
             }
             if(GetGeom()->GetEorient(edge) == StdRegions::eBackwards)
@@ -1025,13 +1045,6 @@ namespace Nektar
         {
             return GetGeom2D()->GetEorient(edge);
         }
-
-
-        StdRegions::Orientation TriExp::v_GetCartesianEorient(int edge)
-        {
-            return GetGeom2D()->GetCartesianEorient(edge);
-        }
-
 
         const LibUtilities::BasisSharedPtr& TriExp::v_GetBasis(int dir) const
             {

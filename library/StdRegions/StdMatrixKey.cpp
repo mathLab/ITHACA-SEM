@@ -34,8 +34,8 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <StdRegions/StdMatrixKey.h>
-#include <boost/functional/hash.hpp>
 #include <StdRegions/StdExpansion.h>
+#include <LibUtilities/BasicUtils/HashUtils.hpp>
 
 using namespace std;
 
@@ -60,10 +60,10 @@ namespace Nektar
         {
             // Create hash
             int i = 0;
-            for (VarCoeffMap::const_iterator x = varCoeffMap.begin(); x != varCoeffMap.end(); ++x)
+            for (auto &x : varCoeffMap)
             {
-                m_varcoeff_hashes[i] = boost::hash_range(x->second.begin(), x->second.begin() + stdExpansion.GetTotPoints());
-                boost::hash_combine(m_varcoeff_hashes[i], (int)x->first);
+                m_varcoeff_hashes[i] = hash_range(x.second.begin(), x.second.begin() + stdExpansion.GetTotPoints());
+                hash_combine(m_varcoeff_hashes[i], (int)x.first);
                 i++;
             }
         }
@@ -120,7 +120,19 @@ namespace Nektar
             {
                 return false;
             }
-            
+
+            if( LibUtilities::ShapeTypeDimMap[lhs.m_shapeType] <
+                LibUtilities::ShapeTypeDimMap[rhs.m_shapeType])
+            {
+                return true;
+            }
+
+            if( LibUtilities::ShapeTypeDimMap[lhs.m_shapeType] >
+                LibUtilities::ShapeTypeDimMap[rhs.m_shapeType])
+            {
+                return false;
+            }
+
             for(unsigned int i = 0; i < LibUtilities::ShapeTypeDimMap[lhs.m_shapeType]; ++i)
             {
                 if(lhs.m_base[i].get() < rhs.m_base[i].get())
@@ -142,10 +154,9 @@ namespace Nektar
             {
                 return false;
             }
-            else 
+            else
             {
-                ConstFactorMap::const_iterator x, y;
-                for(x = lhs.m_factors.begin(), y = rhs.m_factors.begin();
+                for(auto x = lhs.m_factors.begin(), y = rhs.m_factors.begin();
                     x != lhs.m_factors.end(); ++x, ++y)
                 {
                     if (x->second < y->second)
@@ -220,15 +231,9 @@ namespace Nektar
             }
             else
             {
-                ConstFactorMap::const_iterator x, y;
-                for(x = lhs.m_factors.begin(), y = rhs.m_factors.begin();
-                        x != lhs.m_factors.end(); ++x, ++y)
-                {
-                    if (x->second != y->second)
-                    {
-                        return false;
-                    }
-                }
+                return lhs.m_factors.size() == rhs.m_factors.size() &&
+                    std::equal(lhs.m_factors.begin(), lhs.m_factors.end(),
+                               rhs.m_factors.begin());
             }
 
             if(lhs.m_nodalPointsType != rhs.m_nodalPointsType)
@@ -249,17 +254,16 @@ namespace Nektar
                 }
             }
 
-            VarCoeffMap::const_iterator x;
-            for (x = lhs.m_varcoeffs.begin(); x != lhs.m_varcoeffs.end(); ++x)
+            for (auto &x : lhs.m_varcoeffs)
             {
-                VarCoeffMap::const_iterator y;
+                auto y = rhs.m_varcoeffs.find(x.first);
                 // Check var coeff is found
-                if ((y = rhs.m_varcoeffs.find(x->first)) == rhs.m_varcoeffs.end())
+                if (y == rhs.m_varcoeffs.end())
                 {
                     return false;
                 }
 
-                if (x->second != y->second)
+                if (x.second != y->second)
                 {
                     return false;
                 }
@@ -284,20 +288,18 @@ namespace Nektar
             if(rhs.GetConstFactors().size())
             {
                 os << "Constants: " << endl;
-                ConstFactorMap::const_iterator x;
-                for(x = rhs.GetConstFactors().begin(); x != rhs.GetConstFactors().end(); ++x)
+                for(auto &x : rhs.GetConstFactors())
                 {
-                    os << "\t value " << ConstFactorTypeMap[x->first] <<" : " << x->second << endl;
+                    os << "\t value " << ConstFactorTypeMap[x.first] <<" : " << x.second << endl;
                 }
             }
             if(rhs.GetVarCoeffs().size())
             {
                 os << "Variable coefficients: " << endl;
-                VarCoeffMap::const_iterator x;
                 unsigned int i = 0;
-                for (x = rhs.GetVarCoeffs().begin(); x != rhs.GetVarCoeffs().end(); ++x)
+                for (auto &x : rhs.GetVarCoeffs())
                 {
-                    os << "\t Coeff defined: " << VarCoeffTypeMap[x->first] << endl;
+                    os << "\t Coeff defined: " << VarCoeffTypeMap[x.first] << endl;
                     os << "\t Hash:          " << rhs.GetVarCoeffHashes()[i++] << endl;
                 }
             }

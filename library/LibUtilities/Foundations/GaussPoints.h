@@ -40,8 +40,6 @@
 #include <LibUtilities/Foundations/Foundations.hpp>
 #include <LibUtilities/Foundations/Points.h>
 #include <LibUtilities/LinearAlgebra/NekMatrixFwd.hpp>
-#include <boost/shared_ptr.hpp>
-#include <boost/bind.hpp>
 
 namespace Nektar
 {
@@ -54,102 +52,103 @@ namespace Nektar
             {
             }            
 
-            LIB_UTILITIES_EXPORT static boost::shared_ptr< Points<NekDouble> > Create(const PointsKey &pkey);
+            LIB_UTILITIES_EXPORT static std::shared_ptr< Points<NekDouble> > Create(const PointsKey &pkey);
 
-            LIB_UTILITIES_EXPORT boost::shared_ptr< NekMatrix<NekDouble> > CreateMatrix(const PointsKey &pkey);
+            LIB_UTILITIES_EXPORT std::shared_ptr< NekMatrix<NekDouble> > CreateMatrix(const PointsKey &pkey);
 
-            LIB_UTILITIES_EXPORT const boost::shared_ptr<NekMatrix<NekDouble> > GetI(const PointsKey &pkey);
-            LIB_UTILITIES_EXPORT const boost::shared_ptr<NekMatrix<NekDouble> > GetI(const Array<OneD, const NekDouble>& x);
-            LIB_UTILITIES_EXPORT const boost::shared_ptr<NekMatrix<NekDouble> > GetI(unsigned int numpoints, const Array<OneD, const NekDouble>& x);
+            LIB_UTILITIES_EXPORT const std::shared_ptr<NekMatrix<NekDouble> > GetI(const PointsKey &pkey);
+            LIB_UTILITIES_EXPORT const std::shared_ptr<NekMatrix<NekDouble> > GetI(const Array<OneD, const NekDouble>& x);
+            LIB_UTILITIES_EXPORT const std::shared_ptr<NekMatrix<NekDouble> > GetI(unsigned int numpoints, const Array<OneD, const NekDouble>& x);
 
-            LIB_UTILITIES_EXPORT boost::shared_ptr< NekMatrix<NekDouble> > CreateGPMatrix(const PointsKey &pkey);
+            LIB_UTILITIES_EXPORT std::shared_ptr< NekMatrix<NekDouble> > CreateGPMatrix(const PointsKey &pkey);
             
-            LIB_UTILITIES_EXPORT const boost::shared_ptr<NekMatrix<NekDouble> > GetGalerkinProjection(const PointsKey &pkey);
+            LIB_UTILITIES_EXPORT const std::shared_ptr<NekMatrix<NekDouble> > GetGalerkinProjection(const PointsKey &pkey);
             
 
 
             GaussPoints(const PointsKey &pkey):PointsBaseType(pkey)
             {
+                namespace pl = std::placeholders;
                 m_InterpManager.RegisterCreator(PointsKey(0, eGaussGaussLegendre),
-                    boost::bind(&GaussPoints::CreateMatrix, this, _1));
+                    std::bind(&GaussPoints::CreateMatrix, this, pl::_1));
                 m_InterpManager.RegisterCreator(PointsKey(0, eGaussRadauMLegendre),
-                    boost::bind(&GaussPoints::CreateMatrix, this, _1));
+                    std::bind(&GaussPoints::CreateMatrix, this, pl::_1));
                 m_InterpManager.RegisterCreator(PointsKey(0, eGaussRadauPLegendre),
-                    boost::bind(&GaussPoints::CreateMatrix, this, _1));
+                    std::bind(&GaussPoints::CreateMatrix, this, pl::_1));
                 m_InterpManager.RegisterCreator(PointsKey(0, eGaussLobattoLegendre),
-                    boost::bind(&GaussPoints::CreateMatrix, this, _1));
+                    std::bind(&GaussPoints::CreateMatrix, this, pl::_1));
                 m_InterpManager.RegisterCreator(PointsKey(0, eGaussGaussChebyshev),
-                    boost::bind(&GaussPoints::CreateMatrix, this, _1));
+                    std::bind(&GaussPoints::CreateMatrix, this, pl::_1));
                 m_InterpManager.RegisterCreator(PointsKey(0, eGaussRadauMChebyshev),
-                    boost::bind(&GaussPoints::CreateMatrix, this, _1));
+                    std::bind(&GaussPoints::CreateMatrix, this, pl::_1));
                 m_InterpManager.RegisterCreator(PointsKey(0, eGaussRadauPChebyshev),
-                    boost::bind(&GaussPoints::CreateMatrix, this, _1));
+                    std::bind(&GaussPoints::CreateMatrix, this, pl::_1));
                 m_InterpManager.RegisterCreator(PointsKey(0, eGaussLobattoChebyshev),
-                    boost::bind(&GaussPoints::CreateMatrix, this, _1));
+                    std::bind(&GaussPoints::CreateMatrix, this, pl::_1));
                 m_InterpManager.RegisterCreator(PointsKey(0, eGaussRadauMAlpha0Beta1),
-                    boost::bind(&GaussPoints::CreateMatrix, this, _1));
+                    std::bind(&GaussPoints::CreateMatrix, this, pl::_1));
                 m_InterpManager.RegisterCreator(PointsKey(0, eGaussRadauMAlpha0Beta2),
-                    boost::bind(&GaussPoints::CreateMatrix, this, _1));
+                    std::bind(&GaussPoints::CreateMatrix, this, pl::_1));
                 m_InterpManager.RegisterCreator(PointsKey(0, eGaussRadauMAlpha1Beta0),
-                    boost::bind(&GaussPoints::CreateMatrix, this, _1));
+                    std::bind(&GaussPoints::CreateMatrix, this, pl::_1));
                 m_InterpManager.RegisterCreator(PointsKey(0, eGaussRadauMAlpha2Beta0),
-                    boost::bind(&GaussPoints::CreateMatrix, this, _1));
+                    std::bind(&GaussPoints::CreateMatrix, this, pl::_1));
                 m_InterpManager.RegisterCreator(PointsKey(0, eGaussKronrodLegendre),
-                    boost::bind(&GaussPoints::CreateMatrix, this, _1));
+                    std::bind(&GaussPoints::CreateMatrix, this, pl::_1));
                 m_InterpManager.RegisterCreator(PointsKey(0, eGaussRadauKronrodMLegendre),
-                    boost::bind(&GaussPoints::CreateMatrix, this, _1));
+                    std::bind(&GaussPoints::CreateMatrix, this, pl::_1));
                 m_InterpManager.RegisterCreator(PointsKey(0, eGaussRadauKronrodMAlpha1Beta0),
-                    boost::bind(&GaussPoints::CreateMatrix, this, _1));
+                    std::bind(&GaussPoints::CreateMatrix, this, pl::_1));
                 m_InterpManager.RegisterCreator(PointsKey(0, eGaussLobattoKronrodLegendre),
-                    boost::bind(&GaussPoints::CreateMatrix, this, _1));
+                    std::bind(&GaussPoints::CreateMatrix, this, pl::_1));
                 m_InterpManager.RegisterCreator(PointsKey(0, eFourierEvenlySpaced),
-                    boost::bind(&GaussPoints::CreateMatrix, this, _1));
+                    std::bind(&GaussPoints::CreateMatrix, this, pl::_1));
                 m_InterpManager.RegisterCreator(PointsKey(0, ePolyEvenlySpaced),
-                    boost::bind(&GaussPoints::CreateMatrix, this, _1));
+                    std::bind(&GaussPoints::CreateMatrix, this, pl::_1));
 		m_InterpManager.RegisterCreator(PointsKey(0, eBoundaryLayerPoints),
-                    boost::bind(&GaussPoints::CreateMatrix, this, _1));            
+                    std::bind(&GaussPoints::CreateMatrix, this, pl::_1));            
 		m_InterpManager.RegisterCreator(PointsKey(0, eBoundaryLayerPointsRev),
-                    boost::bind(&GaussPoints::CreateMatrix, this, _1));            
+                    std::bind(&GaussPoints::CreateMatrix, this, pl::_1));            
                 m_GalerkinProjectionManager.RegisterCreator(PointsKey(0, eGaussGaussLegendre),
-                   boost::bind(&GaussPoints::CreateGPMatrix, this, _1));
+                   std::bind(&GaussPoints::CreateGPMatrix, this, pl::_1));
                 m_GalerkinProjectionManager.RegisterCreator(PointsKey(0, eGaussRadauMLegendre),
-                    boost::bind(&GaussPoints::CreateGPMatrix, this, _1));
+                    std::bind(&GaussPoints::CreateGPMatrix, this, pl::_1));
                 m_GalerkinProjectionManager.RegisterCreator(PointsKey(0, eGaussRadauPLegendre),
-                    boost::bind(&GaussPoints::CreateGPMatrix, this, _1));
+                    std::bind(&GaussPoints::CreateGPMatrix, this, pl::_1));
                 m_GalerkinProjectionManager.RegisterCreator(PointsKey(0, eGaussLobattoLegendre),
-                    boost::bind(&GaussPoints::CreateGPMatrix, this, _1));
+                    std::bind(&GaussPoints::CreateGPMatrix, this, pl::_1));
                 m_GalerkinProjectionManager.RegisterCreator(PointsKey(0, eGaussGaussChebyshev),
-                    boost::bind(&GaussPoints::CreateGPMatrix, this, _1));
+                    std::bind(&GaussPoints::CreateGPMatrix, this, pl::_1));
                 m_GalerkinProjectionManager.RegisterCreator(PointsKey(0, eGaussRadauMChebyshev),
-                    boost::bind(&GaussPoints::CreateGPMatrix, this, _1));
+                    std::bind(&GaussPoints::CreateGPMatrix, this, pl::_1));
                 m_GalerkinProjectionManager.RegisterCreator(PointsKey(0, eGaussRadauPChebyshev),
-                    boost::bind(&GaussPoints::CreateGPMatrix, this, _1));
+                    std::bind(&GaussPoints::CreateGPMatrix, this, pl::_1));
                 m_GalerkinProjectionManager.RegisterCreator(PointsKey(0, eGaussLobattoChebyshev),
-                    boost::bind(&GaussPoints::CreateGPMatrix, this, _1));
+                    std::bind(&GaussPoints::CreateGPMatrix, this, pl::_1));
                 m_GalerkinProjectionManager.RegisterCreator(PointsKey(0, eGaussRadauMAlpha0Beta1),
-                    boost::bind(&GaussPoints::CreateGPMatrix, this, _1));
+                    std::bind(&GaussPoints::CreateGPMatrix, this, pl::_1));
                 m_GalerkinProjectionManager.RegisterCreator(PointsKey(0, eGaussRadauMAlpha0Beta2),
-                    boost::bind(&GaussPoints::CreateGPMatrix, this, _1));
+                    std::bind(&GaussPoints::CreateGPMatrix, this, pl::_1));
                 m_GalerkinProjectionManager.RegisterCreator(PointsKey(0, eGaussRadauMAlpha1Beta0),
-                    boost::bind(&GaussPoints::CreateGPMatrix, this, _1));
+                    std::bind(&GaussPoints::CreateGPMatrix, this, pl::_1));
                 m_GalerkinProjectionManager.RegisterCreator(PointsKey(0, eGaussRadauMAlpha2Beta0),
-                    boost::bind(&GaussPoints::CreateGPMatrix, this, _1));
+                    std::bind(&GaussPoints::CreateGPMatrix, this, pl::_1));
                 m_GalerkinProjectionManager.RegisterCreator(PointsKey(0, eGaussKronrodLegendre),
-                    boost::bind(&GaussPoints::CreateGPMatrix, this, _1));
+                    std::bind(&GaussPoints::CreateGPMatrix, this, pl::_1));
                 m_GalerkinProjectionManager.RegisterCreator(PointsKey(0, eGaussRadauKronrodMLegendre),
-                    boost::bind(&GaussPoints::CreateGPMatrix, this, _1));
+                    std::bind(&GaussPoints::CreateGPMatrix, this, pl::_1));
                 m_GalerkinProjectionManager.RegisterCreator(PointsKey(0, eGaussRadauKronrodMAlpha1Beta0),
-                    boost::bind(&GaussPoints::CreateGPMatrix, this, _1));
+                    std::bind(&GaussPoints::CreateGPMatrix, this, pl::_1));
                 m_GalerkinProjectionManager.RegisterCreator(PointsKey(0, eGaussLobattoKronrodLegendre),
-                    boost::bind(&GaussPoints::CreateGPMatrix, this, _1));
+                    std::bind(&GaussPoints::CreateGPMatrix, this, pl::_1));
                 m_GalerkinProjectionManager.RegisterCreator(PointsKey(0, eFourierEvenlySpaced),
-                    boost::bind(&GaussPoints::CreateGPMatrix, this, _1));
+                    std::bind(&GaussPoints::CreateGPMatrix, this, pl::_1));
                 m_GalerkinProjectionManager.RegisterCreator(PointsKey(0, ePolyEvenlySpaced),
-                    boost::bind(&GaussPoints::CreateGPMatrix, this, _1));
+                    std::bind(&GaussPoints::CreateGPMatrix, this, pl::_1));
 		m_GalerkinProjectionManager.RegisterCreator(PointsKey(0, eBoundaryLayerPoints),
-                    boost::bind(&GaussPoints::CreateGPMatrix, this, _1));
+                    std::bind(&GaussPoints::CreateGPMatrix, this, pl::_1));
 		m_GalerkinProjectionManager.RegisterCreator(PointsKey(0, eBoundaryLayerPointsRev),
-                    boost::bind(&GaussPoints::CreateGPMatrix, this, _1));
+                    std::bind(&GaussPoints::CreateGPMatrix, this, pl::_1));
             }
 
 
@@ -166,7 +165,7 @@ namespace Nektar
             void CalculateInterpMatrix(unsigned int npts, const Array<OneD, const NekDouble>& xpoints, Array<OneD, NekDouble>& interp);
 
 
-            boost::shared_ptr<NekMatrix<NekDouble> > CalculateGalerkinProjectionMatrix(const PointsKey &pkey);
+            std::shared_ptr<NekMatrix<NekDouble> > CalculateGalerkinProjectionMatrix(const PointsKey &pkey);
 
 
 	    /// functions used by the Kronrod points

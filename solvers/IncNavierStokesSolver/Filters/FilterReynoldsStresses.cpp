@@ -65,11 +65,23 @@ std::string FilterReynoldsStresses::className =
  * or the time constant \f$ \tau \f$ must be prescribed.
  */
 FilterReynoldsStresses::FilterReynoldsStresses(
-    const LibUtilities::SessionReaderSharedPtr &pSession,
+    const LibUtilities::SessionReaderSharedPtr         &pSession,
+    const std::weak_ptr<SolverUtils::EquationSystem> &pEquation,
     const std::map<std::string, std::string> &pParams)
-    : FilterFieldConvert(pSession, pParams)
+    : FilterFieldConvert(pSession, pEquation, pParams)
 {
-    ParamMap::const_iterator it;
+    // Load sampling frequency
+    auto it = pParams.find("SampleFrequency");
+    if (it == pParams.end())
+    {
+        m_sampleFrequency = 1;
+    }
+    else
+    {
+        LibUtilities::Equation equ(
+            m_session->GetExpressionEvaluator(), it->second);
+        m_sampleFrequency = round(equ.Evaluate());
+    }
 
     // Check if should use moving average
     it = pParams.find("MovingAverage");
@@ -101,7 +113,8 @@ FilterReynoldsStresses::FilterReynoldsStresses(
         else
         {
             // Load time constant
-            LibUtilities::Equation equ(m_session, it->second);
+            LibUtilities::Equation equ(
+                m_session->GetExpressionEvaluator(), it->second);
             NekDouble tau = equ.Evaluate();
             // Load delta T between samples
             NekDouble dT;
@@ -113,7 +126,8 @@ FilterReynoldsStresses::FilterReynoldsStresses(
     }
     else
     {
-        LibUtilities::Equation equ(m_session, it->second);
+        LibUtilities::Equation equ(
+            m_session->GetExpressionEvaluator(), it->second);
         m_alpha = equ.Evaluate();
         // Check if tau was also defined
         it = pParams.find("tau");
@@ -203,6 +217,7 @@ void FilterReynoldsStresses::v_FillVariablesName(
 
 void FilterReynoldsStresses::v_ProcessSample(
     const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
+          std::vector<Array<OneD, NekDouble> > &fieldcoeffs,
     const NekDouble &time)
 {
     int i, j, n;

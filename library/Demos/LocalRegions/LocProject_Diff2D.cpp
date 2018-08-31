@@ -41,7 +41,6 @@ int main(int argc, char *argv[])
     StdRegions::StdExpansion2D *E = NULL;
     Array<OneD, NekDouble> sol,x,y,dx,dy;
     Array<OneD, NekDouble> coords(8);
-    StdRegions::Orientation edgeDir = StdRegions::eForwards;
 
 
     if((argc != 16)&&(argc != 14))
@@ -120,7 +119,7 @@ int main(int argc, char *argv[])
             NEKERROR(ErrorUtil::efatal,
                      "Basis 1 cannot be of type Ortho_B or Modified_B");
         }
-        
+
             break;
     case LibUtilities::eQuadrilateral:
         if((btype1 == LibUtilities::eOrtho_B)||(btype1 == LibUtilities::eOrtho_C)||
@@ -129,7 +128,7 @@ int main(int argc, char *argv[])
             NEKERROR(ErrorUtil::efatal,
                      "Basis 1 is for 2 or 3D expansions");
         }
-        
+
         if((btype2 == LibUtilities::eOrtho_B)||(btype2 == LibUtilities::eOrtho_C)||
            (btype2 == LibUtilities::eModified_B)||(btype2 == LibUtilities::eModified_C))
         {
@@ -141,8 +140,8 @@ int main(int argc, char *argv[])
         ASSERTL0(false, "Not a 2D expansion.");
         break;
     }
-    
-    
+
+
     order1 =   atoi(argv[4]);
     order2 =   atoi(argv[5]);
     nq1    =   atoi(argv[6]);
@@ -165,7 +164,7 @@ int main(int argc, char *argv[])
 
     if(btype2 != LibUtilities::eFourier)
     {
-        if (regionshape == LibUtilities::eTriangle) 
+        if (regionshape == LibUtilities::eTriangle)
         {
             Qtype2 = LibUtilities::eGaussRadauMAlpha1Beta0;
         }
@@ -186,7 +185,7 @@ int main(int argc, char *argv[])
     {
     case LibUtilities::eTriangle:
         {
-            
+
             coords[0]    =   atof(argv[8]);
             coords[1]    =   atof(argv[9]);
             coords[2]    =   atof(argv[10]);
@@ -203,20 +202,17 @@ int main(int argc, char *argv[])
             verts[0] = MemoryManager<SpatialDomains::PointGeom>::AllocateSharedPtr(two,zero,coords[0],coords[1],dZero);
             verts[1] = MemoryManager<SpatialDomains::PointGeom>::AllocateSharedPtr(two,one,coords[2],coords[3],dZero);
             verts[2] = MemoryManager<SpatialDomains::PointGeom>::AllocateSharedPtr(two,two,coords[4],coords[5],dZero);
+            SpatialDomains::PointGeomSharedPtr verta[2] = {verts[0],verts[1]};
+            SpatialDomains::PointGeomSharedPtr vertb[2] = {verts[1],verts[2]};
+            SpatialDomains::PointGeomSharedPtr vertc[2] = {verts[2],verts[0]};
 
             // Set up Edges
             SpatialDomains::SegGeomSharedPtr edges[3];
-            edges[0] = MemoryManager<SpatialDomains::SegGeom>::AllocateSharedPtr(zero,verts[0],verts[1]);
-            edges[1] = MemoryManager<SpatialDomains::SegGeom>::AllocateSharedPtr(one,verts[1],verts[2]);
-            edges[2] = MemoryManager<SpatialDomains::SegGeom>::AllocateSharedPtr(two,verts[2],verts[0]);
+            edges[0] = MemoryManager<SpatialDomains::SegGeom>::AllocateSharedPtr(zero,2,verta);
+            edges[1] = MemoryManager<SpatialDomains::SegGeom>::AllocateSharedPtr(one,2,vertb);
+            edges[2] = MemoryManager<SpatialDomains::SegGeom>::AllocateSharedPtr(two,2,vertc);
 
-            StdRegions::Orientation eorient[3];
-            eorient[0] = edgeDir;
-            eorient[1] = edgeDir;
-            eorient[2] = edgeDir;
-
-            SpatialDomains::TriGeomSharedPtr geom = MemoryManager<SpatialDomains::TriGeom>::AllocateSharedPtr(zero,verts,edges,eorient);
-            geom->SetOwnData();
+            SpatialDomains::TriGeomSharedPtr geom = MemoryManager<SpatialDomains::TriGeom>::AllocateSharedPtr(zero,edges);
 
             const LibUtilities::PointsKey Pkey1(nq1,Qtype1);
             const LibUtilities::PointsKey Pkey2(nq2,Qtype2);
@@ -255,7 +251,7 @@ int main(int argc, char *argv[])
                 coords[5]    =   atof(argv[13]);
                 coords[6]    =   atof(argv[14]);
                 coords[7]    =   atof(argv[15]);
-                
+
                 // Set up coordinates
                 const int zero=0;
                 const int one=1;
@@ -267,34 +263,32 @@ int main(int argc, char *argv[])
                 verts[1] = MemoryManager<SpatialDomains::PointGeom>::AllocateSharedPtr(two,one,coords[2],coords[3],dZero);
                 verts[2] = MemoryManager<SpatialDomains::PointGeom>::AllocateSharedPtr(two,two,coords[4],coords[5],dZero);
                 verts[3] = MemoryManager<SpatialDomains::PointGeom>::AllocateSharedPtr(two,three,coords[6],coords[7],dZero);
-                
+                SpatialDomains::PointGeomSharedPtr verta[2] = {verts[0],verts[1]};
+                SpatialDomains::PointGeomSharedPtr vertb[2] = {verts[1],verts[2]};
+                SpatialDomains::PointGeomSharedPtr vertc[2] = {verts[2],verts[3]};
+                SpatialDomains::PointGeomSharedPtr vertd[2] = {verts[3],verts[0]};
+
                 // Set up Edges
                 SpatialDomains::SegGeomSharedPtr edges[4];
-                edges[0] = MemoryManager<SpatialDomains::SegGeom>::AllocateSharedPtr(zero,verts[0],verts[1]);
-                edges[1] = MemoryManager<SpatialDomains::SegGeom>::AllocateSharedPtr(one,verts[1],verts[2]);
-                edges[2] = MemoryManager<SpatialDomains::SegGeom>::AllocateSharedPtr(two,verts[2],verts[3]);
-                edges[3] = MemoryManager<SpatialDomains::SegGeom>::AllocateSharedPtr(three,verts[3],verts[0]);
-                
-                StdRegions::Orientation eorient[4];
-                eorient[0] = edgeDir;
-                eorient[1] = edgeDir;
-                eorient[2] = edgeDir;
-                eorient[3] = edgeDir;
-                
-                SpatialDomains::QuadGeomSharedPtr geom = MemoryManager<SpatialDomains::QuadGeom>::AllocateSharedPtr(zero,verts,edges,eorient);
-                geom->SetOwnData();
-                
+                edges[0] = MemoryManager<SpatialDomains::SegGeom>::AllocateSharedPtr(zero,2,verta);
+                edges[1] = MemoryManager<SpatialDomains::SegGeom>::AllocateSharedPtr(one,2,vertb);
+                edges[2] = MemoryManager<SpatialDomains::SegGeom>::AllocateSharedPtr(two,2,vertc);
+                edges[3] = MemoryManager<SpatialDomains::SegGeom>::AllocateSharedPtr(three,2,vertd);
+
+
+                SpatialDomains::QuadGeomSharedPtr geom = MemoryManager<SpatialDomains::QuadGeom>::AllocateSharedPtr(zero,edges);
+
                 const LibUtilities::PointsKey Pkey1(nq1,Qtype1);
                 const LibUtilities::PointsKey Pkey2(nq2,Qtype2);
                 const LibUtilities::BasisKey  Bkey1(btype1,order1,Pkey1);
                 const LibUtilities::BasisKey  Bkey2(btype2,order2,Pkey2);
-                
+
                 E = new LocalRegions::QuadExp(Bkey1,Bkey2,geom);
-                
+
                 //----------------------------------------------
                 // Define solution to be projected
                 E->GetCoords(x,y);
-                
+
                 for(i = 0; i < nq1*nq2; ++i)
                 {
                     sol[i]  = Quad_sol(x[i],y[i],order1,order2,btype1,btype2);
@@ -306,14 +300,14 @@ int main(int argc, char *argv[])
         ASSERTL0(false, "Not a 2D expansion.");
         break;
     }
-    
-    
+
+
     //--------------------------------------------
     // Take the numerical derivative of the solution and add together in sol
     E->PhysDeriv(sol,dx,dy);
     Vmath::Vadd(nq1*nq2,dx,1,dy,1,sol,1);
     //---------------------------------------------
-    
+
     //---------------------------------------------
     // Project onto Expansion
     Array<OneD, NekDouble> coeffs(E->GetNcoeffs());

@@ -100,7 +100,7 @@ void OutputModule::OpenStream()
  */
 void Module::RegisterConfig(string key, string val)
 {
-    map<string, ConfigOption>::iterator it = m_config.find(key);
+    auto it = m_config.find(key);
     if (it == m_config.end())
     {
         cerr << "WARNING: Unrecognised config option " << key
@@ -109,7 +109,7 @@ void Module::RegisterConfig(string key, string val)
 
     it->second.m_beenSet = true;
 
-    if (it->second.m_isBool)
+    if (it->second.m_isBool && val=="")
     {
         it->second.m_value = "1";
     }
@@ -124,17 +124,15 @@ void Module::RegisterConfig(string key, string val)
  */
 void Module::PrintConfig()
 {
-    map<string, ConfigOption>::iterator it;
-
     if (m_config.size() == 0)
     {
         cerr << "No configuration options for this module." << endl;
         return;
     }
 
-    for (it = m_config.begin(); it != m_config.end(); ++it)
+    for (auto &it : m_config)
     {
-        cerr << setw(10) << it->first << ": " << it->second.m_desc << endl;
+        cerr << setw(10) << it.first << ": " << it.second.m_desc << endl;
     }
 }
 
@@ -144,13 +142,11 @@ void Module::PrintConfig()
  */
 void Module::SetDefaults()
 {
-    map<string, ConfigOption>::iterator it;
-
-    for (it = m_config.begin(); it != m_config.end(); ++it)
+    for (auto &it : m_config)
     {
-        if (!it->second.m_beenSet)
+        if (!it.second.m_beenSet)
         {
-            it->second.m_value = it->second.m_defValue;
+            it.second.m_value = it.second.m_defValue;
         }
     }
 }

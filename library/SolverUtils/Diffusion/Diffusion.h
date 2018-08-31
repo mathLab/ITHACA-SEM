@@ -37,7 +37,7 @@
 #define NEKTAR_SOLVERUTILS_DIFFUSION
 
 #include <string>
-#include <boost/function.hpp>
+#include <functional>
 
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
@@ -50,20 +50,20 @@ namespace Nektar
 {
     namespace SolverUtils
     {
-        typedef boost::function<void (
+        typedef std::function<void (
             const int, 
             const int, 
             const Array<OneD, Array<OneD, NekDouble> >&,
                   Array<OneD, Array<OneD, NekDouble> >&,
                   Array<OneD, Array<OneD, NekDouble> >&)> DiffusionFluxVecCB;
         
-        typedef boost::function<void (
+        typedef std::function<void (
             const Array<OneD, Array<OneD, NekDouble> >&,
                   Array<OneD, Array<OneD, Array<OneD, NekDouble> > >&,
                   Array<OneD, Array<OneD, Array<OneD, NekDouble> > >&)> 
                                             DiffusionFluxVecCBNS;
         
-        typedef boost::function<void (
+        typedef std::function<void (
             const Array<OneD, Array<OneD, NekDouble> >&,
                   Array<OneD,             NekDouble  >&)>
                                             DiffusionArtificialDiffusion;
@@ -71,6 +71,10 @@ namespace Nektar
         class Diffusion
         {
         public:
+
+            SOLVER_UTILS_EXPORT virtual ~Diffusion()
+            {};
+
             SOLVER_UTILS_EXPORT void InitObject(
                 LibUtilities::SessionReaderSharedPtr              pSession,
                 Array<OneD, MultiRegions::ExpListSharedPtr>       pFields);
@@ -90,7 +94,10 @@ namespace Nektar
             template<typename FuncPointerT, typename ObjectPointerT> 
             void SetFluxVector(FuncPointerT func, ObjectPointerT obj)
             {
-                m_fluxVector = boost::bind(func, obj, _1, _2, _3, _4, _5);
+                m_fluxVector = std::bind(
+                    func, obj, std::placeholders::_1, std::placeholders::_2,
+                    std::placeholders::_3, std::placeholders::_4,
+                    std::placeholders::_5);
             }
             
             void SetFluxVectorVec(DiffusionFluxVecCB fluxVector)
@@ -101,13 +108,16 @@ namespace Nektar
             template<typename FuncPointerT, typename ObjectPointerT> 
             void SetFluxVectorNS(FuncPointerT func, ObjectPointerT obj)
             {
-                m_fluxVectorNS = boost::bind(func, obj, _1, _2, _3);
+                m_fluxVectorNS = std::bind(
+                    func, obj, std::placeholders::_1, std::placeholders::_2,
+                    std::placeholders::_3);
             }
 
             template<typename FuncPointerT, typename ObjectPointerT>
             void SetArtificialDiffusionVector(FuncPointerT func, ObjectPointerT obj)
             {
-                m_ArtificialDiffusionVector = boost::bind(func, obj, _1, _2);
+                m_ArtificialDiffusionVector = std::bind(
+                    func, obj, std::placeholders::_1, std::placeholders::_2);
             }
 
             void SetFluxVectorNS(DiffusionFluxVecCBNS fluxVector)
@@ -159,7 +169,7 @@ namespace Nektar
         }; 
         
         /// A shared pointer to an EquationSystem object
-        typedef boost::shared_ptr<Diffusion> DiffusionSharedPtr;
+        typedef std::shared_ptr<Diffusion> DiffusionSharedPtr;
         
         /// Datatype of the NekFactory used to instantiate classes derived
         /// from the Diffusion class.

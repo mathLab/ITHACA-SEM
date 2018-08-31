@@ -68,7 +68,7 @@ namespace Nektar
             //----------------------------
             LOCAL_REGIONS_EXPORT virtual NekDouble v_Integral(
                     const Array<OneD, const NekDouble>& inarray);
-			
+
             //-----------------------------
             // Differentiation Methods
             //-----------------------------
@@ -194,8 +194,6 @@ namespace Nektar
             LOCAL_REGIONS_EXPORT virtual void v_ComputeVertexNormal(
                  const int vertex);
 
-            LOCAL_REGIONS_EXPORT virtual StdRegions::Orientation v_GetPorient(int point);
-
             LOCAL_REGIONS_EXPORT virtual SpatialDomains::GeomType  v_MetricInfoType();
 
             LOCAL_REGIONS_EXPORT virtual void v_ExtractDataToCoeffs(
@@ -266,12 +264,8 @@ namespace Nektar
 
         };
 
-        // type defines for use of SegExp in a boost vector
-        typedef boost::shared_ptr<SegExp>      SegExpSharedPtr;
+        typedef std::shared_ptr<SegExp>      SegExpSharedPtr;
         typedef std::vector< SegExpSharedPtr > SegExpVector;
-        typedef std::vector< SegExpSharedPtr >::iterator SegExpVectorIter;
-
-
     } //end of namespace
 } //end of namespace
 

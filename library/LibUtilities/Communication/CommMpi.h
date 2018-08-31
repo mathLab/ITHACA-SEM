@@ -55,7 +55,7 @@ namespace LibUtilities
 class CommMpi;
 
 /// Pointer to a Communicator object.
-typedef boost::shared_ptr<CommMpi> CommMpiSharedPtr;
+typedef std::shared_ptr<CommMpi> CommMpiSharedPtr;
 
 /// A global linear system.
 class CommMpi : public Comm
@@ -76,6 +76,15 @@ public:
     MPI_Comm GetComm();
 
 protected:
+
+    MPI_Comm m_comm;
+    int m_rank;
+
+    CommMpi(MPI_Comm pComm);
+
+    CommMpi()
+    {};
+
     virtual void v_Finalise();
     virtual int v_GetRank();
     virtual void v_Block();
@@ -91,12 +100,18 @@ protected:
     virtual void v_AllReduce(void *buf, int count, CommDataType dt,
                              enum ReduceOperator pOp);
     virtual void v_AlltoAll(void *sendbuf, int sendcount, CommDataType sendtype,
-                            void *recvbuf, int recvcount,
-                            CommDataType recvtype);
+                            void *recvbuf, int recvcount, CommDataType recvtype);
     virtual void v_AlltoAllv(void *sendbuf, int sendcounts[], int sensdispls[],
                              CommDataType sendtype, void *recvbuf,
                              int recvcounts[], int rdispls[],
                              CommDataType recvtype);
+    virtual void v_AllGather(void *sendbuf, int sendcount, CommDataType sendtype,
+                             void *recvbuf, int recvcount, CommDataType recvtype);
+    virtual void v_AllGatherv(void *sendbuf, int sendcount, CommDataType sendtype,
+                              void *recvbuf, int recvcounts[], int rdispls[],
+                              CommDataType recvtype);
+    virtual void v_AllGatherv(void *recvbuf, int recvcounts[], int rdispls[],
+                              CommDataType recvtype);
     virtual void v_Bcast(void *buffer, int count, CommDataType dt, int root);
     virtual void v_Exscan(Array<OneD, unsigned long long> &pData,
                           const enum ReduceOperator pOp,
@@ -109,16 +124,13 @@ protected:
                            void *recvbuf, int recvcount, CommDataType recvtype,
                            int root);
 
+
     virtual void v_SplitComm(int pRows, int pColumns);
     virtual CommSharedPtr v_CommCreateIf(int flag);
 
-private:
-    MPI_Comm m_comm;
-    int m_rank;
-
-    CommMpi(MPI_Comm pComm);
 };
 }
 }
+
 
 #endif

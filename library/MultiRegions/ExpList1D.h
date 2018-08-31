@@ -50,11 +50,9 @@ namespace Nektar
         class ExpList1D;
 
         /// Shared pointer to an ExpList1D object.
-        typedef boost::shared_ptr<ExpList1D>      ExpList1DSharedPtr;
+        typedef std::shared_ptr<ExpList1D>      ExpList1DSharedPtr;
         /// Vector of pointers to ExpList1D objects.
         typedef std::vector<ExpList1DSharedPtr>   ExpList1DVector;
-        /// Iterator for the vector of ExpList1D pointers.
-        typedef std::vector<ExpList1DSharedPtr>::iterator ExpList1DVectorIter;
 
         /// This class is the abstraction of a one-dimensional multi-elemental
         /// expansions which is merely a collection of local expansions.
@@ -117,10 +115,11 @@ namespace Nektar
                 const SpatialDomains::MeshGraphSharedPtr &graph2D,
                 const bool DeclareCoeffPhysArrays = true,
                 const std::string variable = "DefaultVar",
+                const LibUtilities::CommSharedPtr comm
+                                                = LibUtilities::CommSharedPtr(),
                 const Collections::ImplementationType ImpType
-                                             = Collections::eNoImpType);  
-			
-			
+                                                     = Collections::eNoImpType);
+
             MULTI_REGIONS_EXPORT ExpList1D(
                 const LibUtilities::SessionReaderSharedPtr &pSession,
                 const SpatialDomains::CompositeMap &domain,
@@ -199,9 +198,6 @@ namespace Nektar
 
             virtual void v_WriteVtkPieceHeader(std::ostream &outfile, int expansion, int istrip);
 
-            int m_firstIntEl;
-            
-            Array<OneD, NekDouble> m_normSign;
         };
 
         /// Empty ExpList1D object.

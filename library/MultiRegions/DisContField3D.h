@@ -93,6 +93,11 @@ namespace Nektar
             Array<OneD, int> m_BCtoElmMap;
             Array<OneD, int> m_BCtoFaceMap;
 
+            MULTI_REGIONS_EXPORT inline const LocTraceToTraceMapSharedPtr &GetlocTraceToTraceMap()
+            {
+                return m_locTraceToTraceMap;
+            }
+
         protected:
             /**
              * @brief An object which contains the discretised boundary

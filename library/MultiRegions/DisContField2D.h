@@ -99,6 +99,11 @@ namespace Nektar
             Array<OneD, int> m_BCtoElmMap;
             Array<OneD, int> m_BCtoEdgMap;
 
+            MULTI_REGIONS_EXPORT inline const LocTraceToTraceMapSharedPtr &GetlocTraceToTraceMap()
+            {
+                return m_locTraceToTraceMap;
+            }
+
         protected:
 
             Array<OneD, LibUtilities::BasisSharedPtr> m_base; /**< Bases needed for the expansion */

@@ -201,6 +201,10 @@ public:
         const Array<OneD, const NekDouble> &trace,
         Array<OneD, NekDouble> &field);
 
+    MULTI_REGIONS_EXPORT void AddTraceCoeffsToFieldCoeffs_output(
+        const Array<OneD, const NekDouble> &trace,
+        Array<OneD, NekDouble> &field);
+
     MULTI_REGIONS_EXPORT void AddTraceCoeffsToFieldCoeffs(
         const int dir,
         const Array<OneD, const NekDouble> &race,
@@ -221,6 +225,57 @@ public:
     {
         return m_nLocTracePts;
     }
+
+    /**
+     * @brief Return the number of `forward' local trace coeffs.
+     */
+    MULTI_REGIONS_EXPORT inline int GetNFwdCoeffs()
+    {
+        return m_nTraceCoeffs[0];
+    }
+
+    /**
+     * @brief Return the number of `forward' local trace coeffs.
+     */
+    MULTI_REGIONS_EXPORT inline int GetNBwdCoeffs()
+    {
+        return m_nTraceCoeffs[1];
+    }
+
+    //const Array<OneD, const Array<OneD, const int> > with a const in front of int can not compile but const Array<OneD, const int> can 
+    MULTI_REGIONS_EXPORT inline const Array<OneD, const Array<OneD, int> > &Get_traceCoeffsToElmtMap()
+    {
+        return m_traceCoeffsToElmtMap;
+    }
+
+    MULTI_REGIONS_EXPORT inline const Array<OneD, const Array<OneD, int> > &Get_traceCoeffsToElmtSign()
+    {
+        return m_traceCoeffsToElmtSign;
+    }
+
+    MULTI_REGIONS_EXPORT inline const Array<OneD, const Array<OneD, int> > &Get_traceCoeffsToElmtTrace()
+    {
+        return m_traceCoeffsToElmtTrace;
+    }
+
+
+    MULTI_REGIONS_EXPORT inline const Array<OneD, const int> &Get_traceCoeffsToElmtMap(const int nindex)
+    {
+        return m_traceCoeffsToElmtMap[nindex];
+    }
+
+    MULTI_REGIONS_EXPORT inline const Array<OneD, const int> &Get_traceCoeffsToElmtSign(const int nindex)
+    {
+        return m_traceCoeffsToElmtSign[nindex];
+    }
+
+    MULTI_REGIONS_EXPORT inline const Array<OneD, const int> &Get_traceCoeffsToElmtTrace(const int nindex)
+    {
+        return m_traceCoeffsToElmtTrace[nindex];
+    }
+
+
+
 
 private:
     /// The number of forward trace points. A local trace element is `forward'

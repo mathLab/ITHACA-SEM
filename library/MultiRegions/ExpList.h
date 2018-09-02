@@ -1007,9 +1007,19 @@ namespace Nektar
                 const   Array<OneD, const  Array<OneD, NekDouble> >&inarray,
                 Array<OneD, DNekMatSharedPtr> &mtxPerVar);
 
-            const DNekScalBlkMatSharedPtr& GetBlockMatrix(
+            MULTI_REGIONS_EXPORT const DNekScalBlkMatSharedPtr& GetBlockMatrix(
                 const GlobalMatrixKey &gkey);
 
+            MULTI_REGIONS_EXPORT inline const Array<OneD,const pair<int,int> > &GetCoeffsToElmt()
+            {
+                return m_coeffsToElmt;
+            }
+
+            MULTI_REGIONS_EXPORT inline const Array<OneD,const pair<int,int> > &GetPointsToElmt()
+            {
+                return m_pointsToElmt;
+            }
+                
         protected:
             /// Definition of the total number of degrees of freedom and
             /// quadrature points and offsets to access data
@@ -1105,6 +1115,12 @@ namespace Nektar
 
             /// Offset of elemental data into the array #m_phys
             Array<OneD, int>  m_phys_offset;
+
+            /// m_coeffs to elemental value map
+            Array<OneD,pair<int,int> >  m_coeffsToElmt;
+
+            /// m_phys to elemental value map
+            Array<OneD,pair<int,int> >  m_pointsToElmt;
 
             NekOptimize::GlobalOptParamSharedPtr m_globalOptParam;
 

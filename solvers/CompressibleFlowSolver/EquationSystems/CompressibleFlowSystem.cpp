@@ -1038,6 +1038,7 @@ namespace Nektar
             }
 
             DoOdeProjection(inpnts,intmp,m_BndEvaluateTime);
+            NonlinSysEvaluator_coeff(m_TimeIntegtSol_k,m_SysEquatResid_k);
             GetpreconditionerNSBlkDiag_coeff(intmp,m_PrecMatVars,m_TraceJac);
             // cout << "m_TotLinItePrecondMat  =   "<<m_TotLinItePrecondMat<<endl;
             // m_TotLinItePrecondMat = 0;
@@ -1151,21 +1152,27 @@ namespace Nektar
         // Cout2DArrayBlkMat(gmtxarray);
         AddMatNSBlkDiag_volume(inarray,gmtxarray);
 
+            if(m_session->GetComm()->GetRank()==nrankOutput)
+            {
+                cout <<endl<< "&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&"<<endl<<"gmtxarray:rank= "<<nrankOutput<<endl;
+                Cout2DArrayBlkMat(gmtxarray,28);
+            }
+
 
         AddMatNSBlkDiag_boundary(inarray,gmtxarray,TraceJac);
             
-            // if(m_session->GetComm()->GetRank()==nrankOutput)
-            // {
-            //     cout <<endl<< "&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&"<<endl<<"TraceJac:rank= "<<nrankOutput<<endl;
-            //     Cout1DArrayBlkMat(TraceJac,28);
-            // }
+            if(m_session->GetComm()->GetRank()==nrankOutput)
+            {
+                cout <<endl<< "&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&"<<endl<<"TraceJac:rank= "<<nrankOutput<<endl;
+                Cout1DArrayBlkMat(TraceJac,28);
+            }
             
             
-            // if(m_session->GetComm()->GetRank()==nrankOutput)
-            // {
-            //     cout <<endl<< "&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&"<<endl<<"gmtxarray:rank= "<<nrankOutput<<endl;
-            //     Cout2DArrayBlkMat(gmtxarray,28);
-            // }
+            if(m_session->GetComm()->GetRank()==nrankOutput)
+            {
+                cout <<endl<< "&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&"<<endl<<"gmtxarray:rank= "<<nrankOutput<<endl;
+                Cout2DArrayBlkMat(gmtxarray,28);
+            }
             
             
         MultiplyElmtInvMass_PlusSource(gmtxarray,m_TimeIntegLambda);
@@ -1174,8 +1181,8 @@ namespace Nektar
         // {
         //     Cout2DArrayBlkMat(gmtxarray);
         // }
-        // int ntmmmmmp = 0;
-        // cin >> ntmmmmmp;
+        int tmpcin = 0;
+        cin >> tmpcin;
     }
 
     void CompressibleFlowSystem::MultiplyElmtInvMass_PlusSource(Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray,const NekDouble dtlamda)
@@ -1432,6 +1439,47 @@ namespace Nektar
         // Calculate advection
         DoAdvection_coeff(inarray, outarray, time, Fwd, Bwd);
         // Negate results
+
+
+        // int nrankOutput= 0;
+
+        // if(m_session->GetComm()->GetRank()==nrankOutput)
+        // {
+        //     int nwidthcolm = 28;
+        //     cout << "elmtLeftSign  elmtLeftSign   elmtLeftSign"<<std::scientific<<std::setw(nwidthcolm)<<std::setprecision(nwidthcolm-8)<<endl;
+        //     int gid=-1;
+
+        //     // explist->GetExp(i)->GetGeom()->GetGlobalID()
+        //     cout <<endl<< "&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&"<<endl<<"GetFwdBwdTracePhys:rank= "<<nrankOutput<<endl;
+        //     for(int  i = 0; i < Fwd[0].num_elements(); i++)
+        //     {
+        //         cout << "elemt= "<<i<< "elemtGID= "<<gid<<endl;
+        //         for(int  n = 0; n < nvariables; n++)
+        //         {
+        //             cout <<"FWd"<< Fwd[n][i]<<endl;
+        //         }
+        //     }
+        //     for(int  i = 0; i < Bwd[0].num_elements(); i++)
+        //     {
+        //         cout << "elemt= "<<i<< "elemtGID= "<<gid<<endl;
+        //         for(int  n = 0; n < nvariables; n++)
+        //         {
+        //             cout <<"Bwd"<< Bwd[n][i]<<endl;
+        //         }
+        //     }
+
+        //     for(int  i = 0; i < inarray[0].num_elements(); i++)
+        //     {
+        //         cout << "elemt= "<<i<< "elemtGID= "<<gid<<endl;
+        //         for(int  n = 0; n < nvariables; n++)
+        //         {
+        //             cout <<"inarray"<< inarray[n][i]<<endl;
+        //         }
+        //     }
+            
+        // }
+        // int tmpcin=-1;
+        // cin >> tmpcin;
         
         for (i = 0; i < nvariables; ++i)
         {

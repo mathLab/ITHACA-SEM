@@ -258,8 +258,34 @@ namespace Nektar
             {
                 m_coeff_offset[i]   = m_ncoeffs;
                 m_phys_offset [i]   = m_npoints;
+                
                 m_ncoeffs += (*m_exp)[i]->GetNcoeffs();
                 m_npoints += (*m_exp)[i]->GetTotPoints();
+            }
+
+            m_coeffsToElmt   =   Array<OneD,pair<int,int> >(m_ncoeffs);
+            m_pointsToElmt   =   Array<OneD,pair<int,int> >(m_npoints);
+
+
+            for(i = 0; i < m_exp->size(); ++i)
+            {
+                int coeffs_offset   =   m_coeff_offset[i];
+                int points_offset   =   m_phys_offset [i];
+
+                int loccoeffs = (*m_exp)[i]->GetNcoeffs();
+                int locpoints = (*m_exp)[i]->GetTotPoints();
+                
+                for(int j = 0; j < loccoeffs; ++j)
+                {
+                    m_coeffsToElmt[coeffs_offset+j].first =   i;
+                    m_coeffsToElmt[coeffs_offset+j].second =   j;
+                }
+
+                for(int j = 0; j < locpoints; ++j)
+                {
+                    m_coeffsToElmt[points_offset+j].first =   i;
+                    m_coeffsToElmt[points_offset+j].second =   j;
+                }
             }
         }
 

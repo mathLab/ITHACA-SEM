@@ -1222,6 +1222,22 @@ void LocTraceToTraceMap::AddTraceCoeffsToFieldCoeffs(
     }
 }
 
+
+void LocTraceToTraceMap::AddTraceCoeffsToFieldCoeffs_output(
+    const Array<OneD, const NekDouble> &trace, Array<OneD, NekDouble> &field)
+{
+    int nvals = m_nTraceCoeffs[0] + m_nTraceCoeffs[1];
+    for (int i = 0; i < nvals; ++i)
+    {
+        field[m_traceCoeffsToElmtMap[0][i]] +=
+            m_traceCoeffsToElmtSign[0][i] *
+            trace[m_traceCoeffsToElmtTrace[0][i]];
+
+        cout <<" i = "<<i<<" ToElmtMap= "<<m_traceCoeffsToElmtMap[0][i]<<" ToElmtSign= "<<m_traceCoeffsToElmtSign[0][i]<<" ToElmtTrace= "<<m_traceCoeffsToElmtTrace[0][i]<<" traceValue= "<<trace[m_traceCoeffsToElmtTrace[0][i]]<<endl;
+        
+    }
+}
+
 /**
  * @brief Add contributions from backwards or forwards oriented trace
  * coefficients to the elemental field storage.

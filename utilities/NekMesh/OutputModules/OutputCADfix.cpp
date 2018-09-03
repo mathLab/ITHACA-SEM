@@ -255,7 +255,7 @@ void OutputCADfix::Process()
 
                 // Faces need re-ordering
                 // Moving face 0 to second to last
-                swap_ranges(nekFaces.begin(), nekFaces.begin() + 5, nekFaces.begin() + 1);
+                swap_ranges(nekFaces.begin(), nekFaces.begin() + 4, nekFaces.begin() + 1);
             }
         }
         else if (el->GetTag() == "R")

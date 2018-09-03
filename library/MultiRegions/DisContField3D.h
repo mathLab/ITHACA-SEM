@@ -93,11 +93,6 @@ namespace Nektar
             Array<OneD, int> m_BCtoElmMap;
             Array<OneD, int> m_BCtoFaceMap;
 
-            MULTI_REGIONS_EXPORT inline const LocTraceToTraceMapSharedPtr &GetlocTraceToTraceMap()
-            {
-                return m_locTraceToTraceMap;
-            }
-
         protected:
             /**
              * @brief An object which contains the discretised boundary
@@ -274,6 +269,11 @@ namespace Nektar
                 const NekDouble   x3_in   = NekConstants::kNekUnsetDouble);
 
             virtual std::map<int, RobinBCInfoSharedPtr> v_GetRobinBCInfo();
+
+            virtual const LocTraceToTraceMapSharedPtr &v_GetlocTraceToTraceMap()
+            {
+                return m_locTraceToTraceMap;
+            }
         };
 
         typedef std::shared_ptr<DisContField3D> DisContField3DSharedPtr;

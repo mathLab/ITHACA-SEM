@@ -332,22 +332,20 @@ namespace Nektar
             Array<OneD, int > LAdjExpid(ntotElmt);
             Array<OneD, int > RAdjExpid(ntotElmt);
             Array<OneD, bool> RAdjflag(ntotElmt,false);
-            Array<OneD, bool> Ldone(ntotElmt,false);
-            Array<OneD, bool> Rdone(ntotElmt,false);
 
             Array<OneD, Array<OneD,unsigned int > > elmtLeftMap(ntotElmt);
             Array<OneD, Array<OneD,int          > > elmtLeftSign(ntotElmt);
             Array<OneD, Array<OneD,unsigned int > > elmtRightMap(ntotElmt);
             Array<OneD, Array<OneD,int          > > elmtRightSign(ntotElmt);
 
-            Array<OneD, int > LAdjExpid0(ntotElmt);
-            Array<OneD, int > RAdjExpid0(ntotElmt);
-            Array<OneD, bool> RAdjflag0(ntotElmt,false);
 
-            Array<OneD, Array<OneD,unsigned int > > elmtLeftMap0(ntotElmt);
-            Array<OneD, Array<OneD,int          > > elmtLeftSign0(ntotElmt);
-            Array<OneD, Array<OneD,unsigned int > > elmtRightMap0(ntotElmt);
-            Array<OneD, Array<OneD,int          > > elmtRightSign0(ntotElmt);
+
+            const Array<OneD, const Array<OneD, int >> LRAdjExpid;
+            const Array<OneD, const Array<OneD, bool>> LRAdjflag;
+
+            const Array<OneD, const Array<OneD, Array<OneD, int > > > elmtLRMap;
+            const Array<OneD, const Array<OneD, Array<OneD, int > > > elmtLRSign;
+
             // std::shared_ptr<LocalRegions::Expansion2DSharedPtr>    LAdjExp,RAdjExp;
             // int LAdjExpid, RAdjExpid;
 
@@ -373,10 +371,7 @@ namespace Nektar
                         LAdjExpid[nelmt]    =   ntmp;
                         orient  =   LAdjExp->v_GetEorient(LAdjBndid);
                         LAdjExp->GetEdgeToElementMap(LAdjBndid,orient,elmtLeftMap[nelmt],elmtLeftSign[nelmt]);
-                                                        // if(explist->GetComm()->GetRank()==nrankOutput)
-                                                        // {
-                                                        //         cout <<endl<< "&&&&&&&&&&&&&&&&&&&&&&&&&&***********************&&&&&&&&&&&&&&&&&&&"<<endl<<"JacFwd,mtxPerVar:rank= "<<nrankOutput<<endl;
-                                                        // }
+
                         if (RAdjBndid>-1) 
                         {
                             RAdjflag[nelmt] = true;
@@ -386,131 +381,79 @@ namespace Nektar
                             RAdjExp->GetEdgeToElementMap(RAdjBndid,orient,elmtRightMap[nelmt],elmtRightSign[nelmt]);
              
                         }
-
-                                    if(explist->GetComm()->GetRank()==nrankOutput)
-                                    {
-                                        int gid=-1;
-
-                                        // explist->GetExp(i)->GetGeom()->GetGlobalID()
-                                        cout <<endl<< "&&&&&&&&&&&&&&&&&&&&&&&&&&***********************&&&&&&&&&&&&&&&&&&&"<<endl<<"JacFwd,mtxPerVar:rank= "<<nrankOutput<<endl;
-                                        gid = explist->GetExp(nelmt)->GetGeom()->GetGlobalID();
-                                        cout << "elemt= "<<nelmt<< "elemtGID= "<<gid<<endl
-                                             << "LAdjBndid = "<< LAdjBndid <<endl
-                                             << "RAdjBndid = "<< RAdjBndid <<endl
-                                             << "LAdjExpid[nelmt] = "<< LAdjExpid[nelmt] <<endl
-                                             << "RAdjExpid[nelmt] = "<< RAdjExpid[nelmt] <<endl;
-
-                                        cout << "elmtLeftMap[nelmt]= "<<endl;
-                                        for(int i = 0; i < elmtLeftMap[nelmt].num_elements(); i++)
-                                        {
-                                            cout << elmtLeftMap[nelmt][i]<<endl;
-                                        }
-                                        cout << "elmtLeftSign[nelmt]= "<<endl;
-                                        for(int i = 0; i < elmtLeftSign[nelmt].num_elements(); i++)
-                                        {
-                                            cout << elmtLeftSign[nelmt][i]<<endl;
-                                        }
-                                        cout << "elmtRightMap[nelmt]= "<<endl;
-                                        for(int i = 0; i < elmtRightMap[nelmt].num_elements(); i++)
-                                        {
-                                            cout << elmtRightMap[nelmt][i]<<endl;
-                                        }
-                                        cout << "elmtRightSign[nelmt]= "<<endl;
-                                        for(int i = 0; i < elmtRightSign[nelmt].num_elements(); i++)
-                                        {
-                                            cout << elmtRightSign[nelmt][i]<<endl;
-                                        }
-                                    }
-                    }
-
-
-                    for(int  nelmt = 0; nelmt < ntotElmt; nelmt++)
-                    {
-                        LAdjExpid0[nelmt]           = LAdjExpid[nelmt];
-                        RAdjExpid0[nelmt]           = RAdjExpid[nelmt];
-                        elmtLeftMap0[nelmt]         = elmtLeftMap[nelmt];
-                        elmtLeftSign0[nelmt]        = elmtLeftSign[nelmt];
-                        elmtRightMap0[nelmt]        = elmtRightMap[nelmt];
-                        elmtRightSign0[nelmt]       = elmtRightSign[nelmt];
-                        RAdjflag0[nelmt]            = RAdjflag[nelmt];
-
-
-                        // LAdjExpid[nelmt]           = -100;
-                        // RAdjExpid[nelmt]           = -100;
-                        // elmtLeftMap[nelmt]         = 100;
-                        // elmtLeftSign[nelmt]        = -100;
-                        // elmtRightMap[nelmt]        = 100;
-                        // elmtRightSign[nelmt]       = -100;
-                        // RAdjflag[nelmt]            = false;
                     }
 
                     const MultiRegions::LocTraceToTraceMapSharedPtr locTraceToTraceMap = pFields[0]->GetlocTraceToTraceMap();
-                    const Array<OneD,const pair<int,int> > field_coeffToElmt  =   pFields[0]->GetCoeffsToElmt();
-                    const Array<OneD,const pair<int,int> > trace_coeffToElmt  =   explist->GetCoeffsToElmt();
 
-                    const Array<OneD, const Array<OneD, int>> traceCoeffsToElmtMap,traceCoeffsToElmtSign,traceCoeffsToElmtTrace;
-                    traceCoeffsToElmtMap    = locTraceToTraceMap->Get_traceCoeffsToElmtMap();
-                    traceCoeffsToElmtSign   = locTraceToTraceMap->Get_traceCoeffsToElmtSign();
-                    traceCoeffsToElmtTrace  = locTraceToTraceMap->Get_traceCoeffsToElmtTrace();
+                    
+                    LRAdjExpid  =   locTraceToTraceMap->GetLeftRightAdjacentExpId();
+                    LRAdjflag   =   locTraceToTraceMap->GetLeftRightAdjacentExpFlag();
 
-                    int nFwdCoeffs = locTraceToTraceMap->GetNFwdCoeffs();
-                    int nBwdCoeffs = locTraceToTraceMap->GetNBwdCoeffs();
+                    elmtLRMap   =   locTraceToTraceMap->GetTraceceffToLeftRightExpcoeffMap();
+                    elmtLRSign  =   locTraceToTraceMap->GetTraceceffToLeftRightExpcoeffSign();
 
 
 
-
-                    int lr = 0;
-                    for(int  ncoeff = 0; ncoeff < nFwdCoeffs; ncoeff++)
-                    {
-                        int IDField =   traceCoeffsToElmtMap[lr][ncoeff];
-                        int IDTrace =   traceCoeffsToElmtTrace[lr][ncoeff];
-
-                        int nelmt   = trace_coeffToElmt[IDTrace].first;
-
-                        if(Ldone[nelmt]!=true)
+                        if(explist->GetComm()->GetRank()==nrankOutput)
                         {
-                            ntmp      = field_coeffToElmt[IDField].first;
-                            int LAdjBndid = field_coeffToElmt[IDField].second;
-                            LAdjExpid[nelmt] = ntmp;
-                            LocalRegions::Expansion2DSharedPtr  LAdjExp      =   pFields[0]->GetExp(ntmp);
-                            orient  =   LAdjExp->v_GetEorient(LAdjBndid);
-                            LAdjExp->GetEdgeToElementMap(LAdjBndid,orient,elmtLeftMap[nelmt],elmtLeftSign[nelmt]);
+                            for(int  nelmt = 0; nelmt < ntotElmt; nelmt++)
+                            {
+                                int gid=-1;
 
-                            Ldone[nelmt]=true;
+                                // explist->GetExp(i)->GetGeom()->GetGlobalID()
+                                cout <<endl<< "&&&&&&&&&&&&&&&&&&&&&&&&&&***********************&&&&&&&&&&&&&&&&&&&"<<endl<<"JacFwd,mtxPerVar:rank= "<<nrankOutput<<endl;
+                                gid = explist->GetExp(nelmt)->GetGeom()->GetGlobalID();
+                                cout << "elemt= "<<nelmt<< "elemtGID= "<<gid<<endl
+                                        << "LAdjflag = "<< true <<"new"<<LRAdjflag[0][nelmt]<<endl
+                                        << "RAdjflag = "<< RAdjflag[nelmt] <<"new"<<LRAdjflag[1][nelmt]<<endl
+                                        << "LAdjExpid[nelmt] = "<< LAdjExpid[nelmt]<< "new = "<< LRAdjExpid[0][nelmt] <<endl
+                                        << "RAdjExpid[nelmt] = "<< RAdjExpid[nelmt]<< "new = "<< LRAdjExpid[1][nelmt] <<endl;
+
+                                cout << "elmtLeftMap[nelmt]= "<<endl;
+                                for(int i = 0; i < elmtLeftMap[nelmt].num_elements(); i++)
+                                {
+                                    cout << elmtLeftMap[nelmt][i]<<endl;
+                                }
+
+                                for(int i = 0; i < elmtLRMap[0][nelmt].num_elements(); i++)
+                                {
+                                    cout << "new"<< elmtLRMap[0][nelmt][i]<<endl;
+                                }
+                                
+                                cout << "elmtLeftSign[nelmt]= "<<endl;
+                                for(int i = 0; i < elmtLeftSign[nelmt].num_elements(); i++)
+                                {
+                                    cout << elmtLeftSign[nelmt][i]<<endl;
+                                }
+                                for(int i = 0; i < elmtLRSign[0][nelmt].num_elements(); i++)
+                                {
+                                    cout << "new"<< elmtLRSign[0][nelmt][i]<<endl;
+                                }
+
+
+                                cout << "elmtRightMap[nelmt]= "<<endl;
+                                for(int i = 0; i < elmtRightMap[nelmt].num_elements(); i++)
+                                {
+                                    cout << elmtRightMap[nelmt][i]<<endl;
+                                }
+                                for(int i = 0; i < elmtLRMap[1][nelmt].num_elements(); i++)
+                                {
+                                    cout <<"new"<< elmtLRMap[1][nelmt][i]<<endl;
+                                }
+
+                                cout << "elmtRightSign[nelmt]= "<<endl;
+                                for(int i = 0; i < elmtRightSign[nelmt].num_elements(); i++)
+                                {
+                                    cout << elmtRightSign[nelmt][i]<<endl;
+                                }
+                                for(int i = 0; i < elmtLRSign[1][nelmt].num_elements(); i++)
+                                {
+                                    cout <<"new"<< elmtLRSign[1][nelmt][i]<<endl;
+                                }
+                            }
                         }
-                        
-                    }
-
-
-                    for(int  nelmt = 0; nelmt < ntotElmt; nelmt++)
-                    {
-
-                        LocalRegions::Expansion1DSharedPtr traceEl =
-                            explist->GetExp(nelmt)->as<LocalRegions::Expansion1D>();
-                        LocalRegions::Expansion2DSharedPtr  LAdjExp      =   traceEl->GetLeftAdjacentElementExp();
-                        LocalRegions::Expansion2DSharedPtr  RAdjExp      =   traceEl->GetRightAdjacentElementExp();
-
-                        int LAdjBndid    =   traceEl->GetLeftAdjacentElementEdge();
-                        int RAdjBndid    =   traceEl->GetRightAdjacentElementEdge();
-
-                        ntmp    =   LAdjExp->GetElmtId();
-                        LAdjExpid[nelmt]    =   ntmp;
-                        orient  =   LAdjExp->v_GetEorient(LAdjBndid);
-                        LAdjExp->GetEdgeToElementMap(LAdjBndid,orient,elmtLeftMap[nelmt],elmtLeftSign[nelmt]);
-                                                        // if(explist->GetComm()->GetRank()==nrankOutput)
-                                                        // {
-                                                        //         cout <<endl<< "&&&&&&&&&&&&&&&&&&&&&&&&&&***********************&&&&&&&&&&&&&&&&&&&"<<endl<<"JacFwd,mtxPerVar:rank= "<<nrankOutput<<endl;
-                                                        // }
-                        if (RAdjBndid>-1) 
-                        {
-                            RAdjflag[nelmt] = true;
-                            ntmp    =   RAdjExp->GetElmtId();
-                            RAdjExpid[nelmt]    =   ntmp;
-                            orient  =   RAdjExp->v_GetEorient(RAdjBndid);
-                            RAdjExp->GetEdgeToElementMap(RAdjBndid,orient,elmtRightMap[nelmt],elmtRightSign[nelmt]);
-             
-                        }
-                    }
+                        int tmpcin;
+                        cin >> tmpcin;
 
                     break;
                 case 3:

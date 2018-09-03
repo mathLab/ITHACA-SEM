@@ -3549,6 +3549,12 @@ namespace Nektar
             }
       
         }
+        const LocTraceToTraceMapSharedPtr &ExpList::v_GetlocTraceToTraceMap()
+        {
+            ASSERTL0(false, "v_GetlocTraceToTraceMap not coded");
+            const LocTraceToTraceMapSharedPtr result;
+            return result;
+        }
 
     } //end of namespace
 } //end of namespace

@@ -427,6 +427,7 @@ void LocTraceToTraceMap::Setup2D(
             }
         }
     }
+    TracelocToElmtlocCoeffMap(locExp,trace);
 }
 
 /**
@@ -838,6 +839,82 @@ void LocTraceToTraceMap::Setup3D(
             }
         }
     }
+
+    TracelocToElmtlocCoeffMap(locExp,trace);
+}
+
+
+
+/**
+ * @brief Set up member variables for a two-dimensional problem.
+ *
+ * @param locExp         Expansion list of 2D elements
+ * @param trace          Expansion list of the one-dimensional trace.
+ * @param elmtToTrace    Mapping from elemental edges to trace.
+ * @param leftAdjacents  Vector of bools denoting forwards-oriented traces.
+ */
+void LocTraceToTraceMap::TracelocToElmtlocCoeffMap(
+    const ExpList &locExp,
+    const ExpListSharedPtr &trace)
+{
+    cout << "TracelocToElmtlocCoeffMap:start"<<endl;
+    const std::shared_ptr<LocalRegions::ExpansionVector> exptrac =
+        trace->GetExp();
+    int ntrace    = exptrac->size();
+
+    Array<OneD, Array<OneD, int >> LRAdjExpid(2);
+    Array<OneD, Array<OneD, bool>> LRAdjflag(2);
+
+    Array<OneD, Array<OneD, Array<OneD,          int > > > elmtLRMap(2);
+    Array<OneD, Array<OneD, Array<OneD,          int > > > elmtLRSign(2);
+
+    for(int lr =0; lr<2;lr++)
+    {
+        LRAdjExpid[lr]  =   Array<OneD, int >(ntrace,0);
+        LRAdjflag[lr]   =   Array<OneD, bool>(ntrace,false);
+        elmtLRMap[lr]   =   Array<OneD, Array<OneD, int > >(ntrace);
+        elmtLRSign[lr]  =   Array<OneD, Array<OneD, int > >(ntrace);
+        for(int i =0; i<ntrace;i++)
+        {
+            int ncoeff  =   trace->GetNcoeffs(i);
+            elmtLRMap[lr][i]      =   Array<OneD, int >(ncoeff,0);
+            elmtLRSign[lr][i]     =   Array<OneD, int >(ncoeff,0);
+        }
+    }
+    
+    const Array<OneD,const pair<int,int> > field_coeffToElmt  =   locExp.GetCoeffsToElmt();
+    const Array<OneD,const pair<int,int> > trace_coeffToElmt  =   trace->GetCoeffsToElmt();
+
+    for(int lr =0; lr<2;lr++)
+    {
+        int ntotcoeffs = m_nTraceCoeffs[lr];
+        for(int  i = 0; i < ntotcoeffs; i++)
+        {
+            int ncoeffField =   m_traceCoeffsToElmtMap[lr][i];
+            int ncoeffTrace =   m_traceCoeffsToElmtTrace[lr][i];
+            int sign        =   m_traceCoeffsToElmtSign[lr][i];
+
+            int ntraceelmt   = trace_coeffToElmt[ncoeffTrace].first;
+            int ntracelocN   = trace_coeffToElmt[ncoeffTrace].second;
+
+            int nfieldelmt   = field_coeffToElmt[ncoeffField].first;
+            int nfieldlocN   = field_coeffToElmt[ncoeffField].second;
+
+
+            LRAdjflag[lr][ntraceelmt]    =   true;
+            LRAdjExpid[lr][ntraceelmt]   =   nfieldelmt;
+
+
+            elmtLRMap[lr][ntraceelmt][ntracelocN]  =   nfieldlocN;
+            elmtLRSign[lr][ntraceelmt][ntracelocN]  =   sign;
+        }
+    }
+    m_LeftRightAdjacentExpId                = LRAdjExpid;
+    m_LeftRightAdjacentExpFlag              = LRAdjflag;
+    m_TraceceffToLeftRightExpcoeffMap       = elmtLRMap;
+    m_TraceceffToLeftRightExpcoeffSign      = elmtLRSign;
+
+    cout << "TracelocToElmtlocCoeffMap:end"<<endl;
 }
 
 /**

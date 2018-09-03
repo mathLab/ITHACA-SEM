@@ -44,6 +44,7 @@
 #include <Collections/Collection.h>
 #include <MultiRegions/MultiRegionsDeclspec.h>
 #include <MultiRegions/MultiRegions.hpp>
+#include <MultiRegions/AssemblyMap/LocTraceToTraceMap.h>
 #include <MultiRegions/GlobalMatrix.h>
 #include <MultiRegions/GlobalMatrixKey.h>
 #include <MultiRegions/GlobalLinSysKey.h>
@@ -1019,6 +1020,11 @@ namespace Nektar
             {
                 return m_pointsToElmt;
             }
+
+            MULTI_REGIONS_EXPORT inline const LocTraceToTraceMapSharedPtr &GetlocTraceToTraceMap()
+            {
+                return v_GetlocTraceToTraceMap();
+            }
                 
         protected:
             /// Definition of the total number of degrees of freedom and
@@ -1522,8 +1528,11 @@ namespace Nektar
                             BoundaryConditionCollection& collection,
                             unsigned int index, const std::string& variable);
 
-        
+            
         private:
+
+            virtual const LocTraceToTraceMapSharedPtr &v_GetlocTraceToTraceMap();
+
             virtual const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &v_GetBndConditions();
             
             virtual Array<OneD, SpatialDomains::BoundaryConditionShPtr>

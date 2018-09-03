@@ -274,8 +274,25 @@ public:
         return m_traceCoeffsToElmtTrace[nindex];
     }
 
+    MULTI_REGIONS_EXPORT inline const Array<OneD, const Array<OneD, bool>>  &GetLeftRightAdjacentExpFlag()
+    {
+        return m_LeftRightAdjacentExpFlag;
+    }
 
+    MULTI_REGIONS_EXPORT inline const Array<OneD, const Array<OneD, int >>   &GetLeftRightAdjacentExpId()
+    {
+        return m_LeftRightAdjacentExpId;
+    }
 
+    MULTI_REGIONS_EXPORT inline const Array<OneD, const Array<OneD, Array<OneD, int > > >  &GetTraceceffToLeftRightExpcoeffMap()
+    {
+        return m_TraceceffToLeftRightExpcoeffMap;
+    }
+
+    MULTI_REGIONS_EXPORT inline const Array<OneD, const Array<OneD, Array<OneD, int > > > &GetTraceceffToLeftRightExpcoeffSign()
+    {
+        return m_TraceceffToLeftRightExpcoeffSign;
+    }
 
 private:
     /// The number of forward trace points. A local trace element is `forward'
@@ -323,6 +340,23 @@ private:
     /// Sign array for mapping from forwards/backwards trace coefficients to
     /// local trace storage.
     Array<OneD, Array<OneD, int> > m_traceCoeffsToElmtSign;
+
+
+    // flag indicates whether the Expasion that are the left&right adjacent to current trace exists 
+    Array<OneD, Array<OneD, bool>> m_LeftRightAdjacentExpFlag;
+    
+    // the Expasion id that are the left&right adjacent to current trace 
+    Array<OneD, Array<OneD, int >> m_LeftRightAdjacentExpId;
+    
+
+    // the map of every coeff from current trace to the left&right adjacent expasion coeffs 
+    Array<OneD, Array<OneD, Array<OneD, int > > > m_TraceceffToLeftRightExpcoeffMap;
+    // the sign of every coeff from current trace to the left&right adjacent expasion coeffs 
+    Array<OneD, Array<OneD, Array<OneD,int  > > > m_TraceceffToLeftRightExpcoeffSign;
+
+    void LocTraceToTraceMap::TracelocToElmtlocCoeffMap(
+        const ExpList &locExp,
+        const ExpListSharedPtr &trace);
 };
 
 typedef std::shared_ptr<LocTraceToTraceMap> LocTraceToTraceMapSharedPtr;

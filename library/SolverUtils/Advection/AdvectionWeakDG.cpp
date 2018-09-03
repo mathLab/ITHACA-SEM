@@ -39,6 +39,7 @@
 #include <LocalRegions/Expansion2D.h>
 #include <LocalRegions/Expansion1D.h>
 #include <LocalRegions/Expansion0D.h>
+#include <MultiRegions/AssemblyMap/LocTraceToTraceMap.h>
 #include <iostream>
 #include <iomanip>
 #include <math.h>
@@ -298,7 +299,6 @@ namespace Nektar
             Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray)
         {
                                         int nrankOutput = 0;
-            MultiRegions::ExpListSharedPtr explistfield = pFields[0]->GetExp();
             MultiRegions::ExpListSharedPtr explist = pFields[0]->GetTrace();
             std::shared_ptr<LocalRegions::ExpansionVector> pexp= explist->GetExp();
             int ntotElmt            = (*pexp).size();
@@ -332,6 +332,8 @@ namespace Nektar
             Array<OneD, int > LAdjExpid(ntotElmt);
             Array<OneD, int > RAdjExpid(ntotElmt);
             Array<OneD, bool> RAdjflag(ntotElmt,false);
+            Array<OneD, bool> Ldone(ntotElmt,false);
+            Array<OneD, bool> Rdone(ntotElmt,false);
 
             Array<OneD, Array<OneD,unsigned int > > elmtLeftMap(ntotElmt);
             Array<OneD, Array<OneD,int          > > elmtLeftSign(ntotElmt);
@@ -424,17 +426,26 @@ namespace Nektar
 
                     for(int  nelmt = 0; nelmt < ntotElmt; nelmt++)
                     {
-                        LAdjExpid0[nelmt]           = RAdjExpid[nelmt];
+                        LAdjExpid0[nelmt]           = LAdjExpid[nelmt];
                         RAdjExpid0[nelmt]           = RAdjExpid[nelmt];
-                        RAdjflag0[nelmt]            = RAdjflag[nelmt];
                         elmtLeftMap0[nelmt]         = elmtLeftMap[nelmt];
                         elmtLeftSign0[nelmt]        = elmtLeftSign[nelmt];
                         elmtRightMap0[nelmt]        = elmtRightMap[nelmt];
                         elmtRightSign0[nelmt]       = elmtRightSign[nelmt];
+                        RAdjflag0[nelmt]            = RAdjflag[nelmt];
+
+
+                        // LAdjExpid[nelmt]           = -100;
+                        // RAdjExpid[nelmt]           = -100;
+                        // elmtLeftMap[nelmt]         = 100;
+                        // elmtLeftSign[nelmt]        = -100;
+                        // elmtRightMap[nelmt]        = 100;
+                        // elmtRightSign[nelmt]       = -100;
+                        // RAdjflag[nelmt]            = false;
                     }
 
-                    const LocTraceToTraceMapSharedPtr locTraceToTraceMap = explistfield->GetlocTraceToTraceMap();
-                    const Array<OneD,const pair<int,int> > field_coeffToElmt  =   explistfield->GetCoeffsToElmt();
+                    const MultiRegions::LocTraceToTraceMapSharedPtr locTraceToTraceMap = pFields[0]->GetlocTraceToTraceMap();
+                    const Array<OneD,const pair<int,int> > field_coeffToElmt  =   pFields[0]->GetCoeffsToElmt();
                     const Array<OneD,const pair<int,int> > trace_coeffToElmt  =   explist->GetCoeffsToElmt();
 
                     const Array<OneD, const Array<OneD, int>> traceCoeffsToElmtMap,traceCoeffsToElmtSign,traceCoeffsToElmtTrace;
@@ -445,21 +456,28 @@ namespace Nektar
                     int nFwdCoeffs = locTraceToTraceMap->GetNFwdCoeffs();
                     int nBwdCoeffs = locTraceToTraceMap->GetNBwdCoeffs();
 
+
+
+
                     int lr = 0;
                     for(int  ncoeff = 0; ncoeff < nFwdCoeffs; ncoeff++)
                     {
                         int IDField =   traceCoeffsToElmtMap[lr][ncoeff];
                         int IDTrace =   traceCoeffsToElmtTrace[lr][ncoeff];
 
-                        int nelmt   = IDTrace;
+                        int nelmt   = trace_coeffToElmt[IDTrace].first;
 
-                        ntmp      = coeffToElmt[IDField].first;
-                        LAdjBndid = coeffToElmt[IDField].second;
-                        LAdjExpid[nelmt] = ntmp;
-                        LocalRegions::Expansion2DSharedPtr  LAdjExp      =   explistfield->GetExp(ntmp);
-                        orient  =   LAdjExp->v_GetEorient(LAdjBndid);
-                        LAdjExp->GetEdgeToElementMap(LAdjBndid,orient,elmtLeftMap[nelmt],elmtLeftSign[nelmt]);
+                        if(Ldone[nelmt]!=true)
+                        {
+                            ntmp      = field_coeffToElmt[IDField].first;
+                            int LAdjBndid = field_coeffToElmt[IDField].second;
+                            LAdjExpid[nelmt] = ntmp;
+                            LocalRegions::Expansion2DSharedPtr  LAdjExp      =   pFields[0]->GetExp(ntmp);
+                            orient  =   LAdjExp->v_GetEorient(LAdjBndid);
+                            LAdjExp->GetEdgeToElementMap(LAdjBndid,orient,elmtLeftMap[nelmt],elmtLeftSign[nelmt]);
 
+                            Ldone[nelmt]=true;
+                        }
                         
                     }
 

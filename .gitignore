@@ -5,6 +5,7 @@
 build
 buildDebug
 builds
+buildsDebug
 ThirdParty
 # Ignore .DS_Store sometimes created by OS X.
 .DS_Store

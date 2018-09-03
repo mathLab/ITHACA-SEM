@@ -201,10 +201,6 @@ public:
         const Array<OneD, const NekDouble> &trace,
         Array<OneD, NekDouble> &field);
 
-    MULTI_REGIONS_EXPORT void AddTraceCoeffsToFieldCoeffs_output(
-        const Array<OneD, const NekDouble> &trace,
-        Array<OneD, NekDouble> &field);
-
     MULTI_REGIONS_EXPORT void AddTraceCoeffsToFieldCoeffs(
         const int dir,
         const Array<OneD, const NekDouble> &race,

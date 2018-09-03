@@ -934,6 +934,12 @@ namespace Nektar
 
         LibUtilities::CommSharedPtr v_Comm  = m_fields[0]->GetComm()->GetRowComm();
 
+        bool l_root=false;
+        if(0==v_Comm->GetRank())
+        {
+            l_root =true;
+        }
+
         unsigned int ntotalGlobal     = ntotal;
         v_Comm->AllReduce(ntotalGlobal, Nektar::LibUtilities::ReduceSum);
 
@@ -1009,8 +1015,6 @@ namespace Nektar
             Vmath::Vcopy(npoints,inarray[i],1,m_TimeIntegtSol_k[i],1);
         }
 
-
-
         // TODO: 
         // v_Comm is based on the explist used may be different(m_tracemap or m_locToGloMap) for diffrent
         // should generate GlobalLinSys first and get the v_Comm from GlobalLinSys. here just give it a m_Comm no parallel support yet!!
@@ -1019,8 +1023,8 @@ namespace Nektar
 
         NekLinSysIterative linsol(m_session,v_Comm);
         m_LinSysOprtors.DefineMatrixMultiply(&CompressibleFlowSystem::MatrixMultiply_MatrixFree_coeff, this);
-        // m_LinSysOprtors.DefinePrecond(&CompressibleFlowSystem::preconditioner_BlkSOR_coeff, this);
-        m_LinSysOprtors.DefinePrecond(&CompressibleFlowSystem::preconditioner_BlkDiag, this);
+        m_LinSysOprtors.DefinePrecond(&CompressibleFlowSystem::preconditioner_BlkSOR_coeff, this);
+        // m_LinSysOprtors.DefinePrecond(&CompressibleFlowSystem::preconditioner_BlkDiag, this);
         // m_LinSysOprtors.DefinePrecond(&CompressibleFlowSystem::preconditioner, this);
         linsol.setLinSysOperators(m_LinSysOprtors);
 
@@ -1038,7 +1042,6 @@ namespace Nektar
             }
 
             DoOdeProjection(inpnts,intmp,m_BndEvaluateTime);
-            NonlinSysEvaluator_coeff(m_TimeIntegtSol_k,m_SysEquatResid_k);
             GetpreconditionerNSBlkDiag_coeff(intmp,m_PrecMatVars,m_TraceJac);
             // cout << "m_TotLinItePrecondMat  =   "<<m_TotLinItePrecondMat<<endl;
             // m_TotLinItePrecondMat = 0;
@@ -1058,7 +1061,6 @@ namespace Nektar
         for (int k = 0; k < MaxNonlinIte; k++)
         {
             NonlinSysEvaluator_coeff(m_TimeIntegtSol_k,m_SysEquatResid_k);
-                
             NtotDoOdeRHS++;
             // NonlinSysRes_1D and m_SysEquatResid_k share the same storage
             resnorm = Vmath::Dot(ntotal,NonlinSysRes_1D,NonlinSysRes_1D);
@@ -1073,7 +1075,7 @@ namespace Nektar
                 if(k>0)
                 {
                     /// TODO: m_root
-                    if(l_verbose)
+                    if(l_verbose&&l_root)
                     {
                         cout <<std::right<<" * Newton-Its converged (RES^2=" <<std::scientific<<std::setw(nwidthcolm)<<std::setprecision(nwidthcolm-8)
                             << resnorm<<" with "<<setw(3)<<k<<" Non-Its"<<" and "<<setw(4)<<NtotDoOdeRHS<<" Lin-Its)"<<endl;
@@ -1145,35 +1147,11 @@ namespace Nektar
                                             Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray,
                                             Array<OneD, DNekBlkMatSharedPtr > &TraceJac)
     {
-        // DoOdeProjection(inarray,inarray,m_BndEvaluateTime);
-        int nrankOutput = 1000000000000000000000000;
-
         Fill2DArrayOfBlkDiagonalMat(gmtxarray,0.0);
         // Cout2DArrayBlkMat(gmtxarray);
         AddMatNSBlkDiag_volume(inarray,gmtxarray);
 
-            if(m_session->GetComm()->GetRank()==nrankOutput)
-            {
-                cout <<endl<< "&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&"<<endl<<"gmtxarray:rank= "<<nrankOutput<<endl;
-                Cout2DArrayBlkMat(gmtxarray,28);
-            }
-
-
         AddMatNSBlkDiag_boundary(inarray,gmtxarray,TraceJac);
-            
-            if(m_session->GetComm()->GetRank()==nrankOutput)
-            {
-                cout <<endl<< "&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&"<<endl<<"TraceJac:rank= "<<nrankOutput<<endl;
-                Cout1DArrayBlkMat(TraceJac,28);
-            }
-            
-            
-            if(m_session->GetComm()->GetRank()==nrankOutput)
-            {
-                cout <<endl<< "&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&"<<endl<<"gmtxarray:rank= "<<nrankOutput<<endl;
-                Cout2DArrayBlkMat(gmtxarray,28);
-            }
-            
             
         MultiplyElmtInvMass_PlusSource(gmtxarray,m_TimeIntegLambda);
         ElmtVarInvMtrx(gmtxarray);
@@ -1364,9 +1342,7 @@ namespace Nektar
         {
             tmp = out + i*npoints;
             Vmath::Vsub(npoints,&resplus[i][0],1,&m_SysEquatResid_k[i][0],1,&tmp[0],1);
-            
             Vmath::Smul(npoints, oeps ,&tmp[0],1,&tmp[0],1);
-
         }
        
         return;
@@ -1439,47 +1415,6 @@ namespace Nektar
         // Calculate advection
         DoAdvection_coeff(inarray, outarray, time, Fwd, Bwd);
         // Negate results
-
-
-        // int nrankOutput= 0;
-
-        // if(m_session->GetComm()->GetRank()==nrankOutput)
-        // {
-        //     int nwidthcolm = 28;
-        //     cout << "elmtLeftSign  elmtLeftSign   elmtLeftSign"<<std::scientific<<std::setw(nwidthcolm)<<std::setprecision(nwidthcolm-8)<<endl;
-        //     int gid=-1;
-
-        //     // explist->GetExp(i)->GetGeom()->GetGlobalID()
-        //     cout <<endl<< "&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&"<<endl<<"GetFwdBwdTracePhys:rank= "<<nrankOutput<<endl;
-        //     for(int  i = 0; i < Fwd[0].num_elements(); i++)
-        //     {
-        //         cout << "elemt= "<<i<< "elemtGID= "<<gid<<endl;
-        //         for(int  n = 0; n < nvariables; n++)
-        //         {
-        //             cout <<"FWd"<< Fwd[n][i]<<endl;
-        //         }
-        //     }
-        //     for(int  i = 0; i < Bwd[0].num_elements(); i++)
-        //     {
-        //         cout << "elemt= "<<i<< "elemtGID= "<<gid<<endl;
-        //         for(int  n = 0; n < nvariables; n++)
-        //         {
-        //             cout <<"Bwd"<< Bwd[n][i]<<endl;
-        //         }
-        //     }
-
-        //     for(int  i = 0; i < inarray[0].num_elements(); i++)
-        //     {
-        //         cout << "elemt= "<<i<< "elemtGID= "<<gid<<endl;
-        //         for(int  n = 0; n < nvariables; n++)
-        //         {
-        //             cout <<"inarray"<< inarray[n][i]<<endl;
-        //         }
-        //     }
-            
-        // }
-        // int tmpcin=-1;
-        // cin >> tmpcin;
         
         for (i = 0; i < nvariables; ++i)
         {

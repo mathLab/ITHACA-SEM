@@ -1635,26 +1635,8 @@ namespace Nektar
                 Array<OneD, NekDouble> Fcoeffs(m_trace->GetNcoeffs());
                 m_trace->IProductWRTBase(Fn, Fcoeffs);
 
-                        // const Array<OneD, const Array<OneD, int>> traceCoeffsToElmtMap,traceCoeffsToElmtSign,traceCoeffsToElmtTrace;
-                        // traceCoeffsToElmtMap = m_locTraceToTraceMap->Get_traceCoeffsToElmtMap();
-                        // traceCoeffsToElmtSign = m_locTraceToTraceMap->Get_traceCoeffsToElmtSign();
-                        // traceCoeffsToElmtTrace = m_locTraceToTraceMap->Get_traceCoeffsToElmtTrace();
-
-                        int nrankOutput= 1000000000000000000000000000;
-                        if(GetComm()->GetRank()==nrankOutput)
-                        {
-                            m_locTraceToTraceMap->AddTraceCoeffsToFieldCoeffs_output(Fcoeffs,
-                                                               outarray);
-                        }
-                        else
-                        {
-                        m_locTraceToTraceMap->AddTraceCoeffsToFieldCoeffs(Fcoeffs,
-                                                               outarray);
-                        }
-                        // int tmpcin=-1;
-                        // cin >> tmpcin;
-            
-                
+                m_locTraceToTraceMap->AddTraceCoeffsToFieldCoeffs(Fcoeffs,
+                                                        outarray);
             }
             else
             {

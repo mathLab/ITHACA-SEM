@@ -307,7 +307,6 @@ namespace Nektar
         const int                          nDir)
     {
 
-        int nwidthcolm = 28;
         int nNonDir = nGlobal - nDir;
 
         // Allocate array storage of coefficients
@@ -456,15 +455,7 @@ namespace Nektar
         eps     =   eps*m_prec_factor;
         eta[0] = sqrt(eps);
 
-        // cout <<std::right<<std::scientific<<std::setw(nwidthcolm)<<std::setprecision(nwidthcolm-8)
-        //      << "   m_prec_factor=  "<<m_prec_factor<<endl
-        //      << "   m_tolerance=    "<<m_tolerance<<endl
-        //      << "   m_rhs_magnitude="<<m_rhs_magnitude<<endl
-        //      << "   eps=            "<<eps<<endl;
 
-
-        // int tmpcin;
-        // cin >>tmpcin;
 
 
         // If input residual is less than tolerance skip solve.

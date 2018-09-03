@@ -298,7 +298,7 @@ namespace Nektar
             const Array<OneD, DNekBlkMatSharedPtr>            &TraceJac,
             Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray)
         {
-                                        int nrankOutput = 0;
+                                        int nrankOutput = 10000000000000000000;
             MultiRegions::ExpListSharedPtr explist = pFields[0]->GetTrace();
             std::shared_ptr<LocalRegions::ExpansionVector> pexp= explist->GetExp();
             int ntotElmt            = (*pexp).size();
@@ -357,6 +357,7 @@ namespace Nektar
                     ASSERTL0(false,"GetSpaceDimension==1 not coded yet");
                     break;
                 case 2:
+                case 3:
                     for(int  nelmt = 0; nelmt < ntotElmt; nelmt++)
                     {
                         LocalRegions::Expansion1DSharedPtr traceEl =
@@ -393,6 +394,28 @@ namespace Nektar
                     elmtLRSign  =   locTraceToTraceMap->GetTraceceffToLeftRightExpcoeffSign();
 
 
+                    for(int  nelmt = 0; nelmt < ntotElmt; nelmt++)
+                    {
+                        
+                        LAdjExpid[nelmt]    =   LRAdjExpid[0][nelmt];
+                        RAdjExpid[nelmt]    =   LRAdjExpid[1][nelmt];
+
+                        LAdjflag[nelmt]    =   LRAdjflag[0][nelmt];
+                        RAdjflag[nelmt]    =   LRAdjflag[1][nelmt];
+
+                        for(int i = 0; i < elmtLRMap[0][nelmt].num_elements(); i++)
+                        {
+                            elmtLeftMap[nelmt][i]   =   elmtLRMap[0][nelmt][i];
+                            elmtRightMap[nelmt][i]  =   elmtLRMap[1][nelmt][i];
+                            elmtLeftSign[nelmt][i]   =   elmtLRSign[0][nelmt][i];
+                            elmtRightSign[nelmt][i]  =   elmtLRSign[1][nelmt][i];
+                        }
+                    }
+
+
+
+
+
 
                         if(explist->GetComm()->GetRank()==nrankOutput)
                         {
@@ -419,7 +442,7 @@ namespace Nektar
                                 {
                                     cout << "new"<< elmtLRMap[0][nelmt][i]<<endl;
                                 }
-                                
+
                                 cout << "elmtLeftSign[nelmt]= "<<endl;
                                 for(int i = 0; i < elmtLeftSign[nelmt].num_elements(); i++)
                                 {
@@ -452,13 +475,9 @@ namespace Nektar
                                 }
                             }
                         }
-                        int tmpcin;
-                        cin >> tmpcin;
+                        // int tmpcin;
+                        // cin >> tmpcin;
 
-                    break;
-                case 3:
-                    ASSERTL0(false,"GetSpaceDimension==3 not coded yet");
-                    
                     break;
                 default:
                     ASSERTL0(false,"Trace SpaceDimension>2")
@@ -534,42 +553,46 @@ namespace Nektar
 
                     for(int  nelmt = 0; nelmt < ntotElmt; nelmt++)
                     {
-                        nElmtCoef       = elmtcoef[nelmt];
-                        nElmtPnt        = elmtpnts[nelmt];
-
-                        ElmtMat         = mtxPerVar[nelmt];
-                        // std::cout   <<std::endl<<"*********************************"<<std::endl<<"element :   "<<nelmt<<std::endl;
-                        // std::cout   <<(*ElmtMat)<<endl;
-                       
-                        tmpGmtx         = gmtxarray[m][n]->GetBlock(LAdjExpid[nelmt],LAdjExpid[nelmt]);
-
-                        if(explist->GetComm()->GetRank()==nrankOutput)
+                        if(LAdjflag[nelmt])
                         {
-                            int gid = explist->GetExp(nelmt)->GetGeom()->GetGlobalID();
-                            cout << "LAdjExpid[nelmt] = "<<LAdjExpid[nelmt]<<"gid= "<<gid;
-                            
-                        }
+                            nElmtCoef       = elmtcoef[nelmt];
+                            nElmtPnt        = elmtpnts[nelmt];
 
-                        for(int ncl = 0; ncl < nElmtCoef; ncl++)
-                        {
-                            int nclAdjExp = elmtLeftMap[nelmt][ncl];
+                            ElmtMat         = mtxPerVar[nelmt];
+                            // std::cout   <<std::endl<<"*********************************"<<std::endl<<"element :   "<<nelmt<<std::endl;
+                            // std::cout   <<(*ElmtMat)<<endl;
+                        
+                            tmpGmtx         = gmtxarray[m][n]->GetBlock(LAdjExpid[nelmt],LAdjExpid[nelmt]);
 
-                            for(int nrw = 0; nrw < nElmtCoef; nrw++)
+                            if(explist->GetComm()->GetRank()==nrankOutput)
                             {
-                                int nrwAdjExp = elmtLeftMap[nelmt][nrw];
-                                tmp   =   (*tmpGmtx)(nrwAdjExp,nclAdjExp);
-                                tmp   -=  elmtLeftSign[nelmt][ncl]*elmtLeftSign[nelmt][nrw]*(*ElmtMat)(nrw,ncl);
-                                // tmp   -=  elmtLeftSign[nelmt][nrw]*(*ElmtMat)(nrw,ncl);
-                                        if(explist->GetComm()->GetRank()==nrankOutput)
-                                        {
-                                                // cout << "elemt= "<<nelmt<< " ncl= "<<ncl<< " nrw= "<<nrw<<" (*ElmtMat)(nrw,ncl)= "<<(*ElmtMat)(nrw,ncl)<<" tmp= "<<tmp<<" (*tmpGmtx)("<<nrwAdjExp<<","<<nclAdjExp<<")= "<<(*tmpGmtx)(nrwAdjExp,nclAdjExp)<<endl;
-                                                cout << "elemt= "<<nelmt<< " nclAdjExp= "<<nclAdjExp<< " nrwAdjExp= "<<nrwAdjExp<<" (*ElmtMat)(nrw,ncl)= "<<(*ElmtMat)(nrw,ncl)<<endl;
-                                        }
-                                tmpGmtx->SetValue(nrwAdjExp,nclAdjExp,tmp);
-                                        // if(explist->GetComm()->GetRank()==nrankOutput)
-                                        // {
-                                        //         cout << "elemt= "<<nelmt<< " ncl= "<<ncl<< " nrw= "<<nrw<<"  "<<elmtLeftSign[nelmt][ncl]<<"  "<<elmtLeftSign[nelmt][nrw]<<endl;
-                                        // }
+                                int gid = explist->GetExp(nelmt)->GetGeom()->GetGlobalID();
+                                cout << "LAdjExpid[nelmt] = "<<LAdjExpid[nelmt]<<"gid= "<<gid;
+                                
+                            }
+
+                            for(int ncl = 0; ncl < nElmtCoef; ncl++)
+                            {
+                                int nclAdjExp = elmtLeftMap[nelmt][ncl];
+
+                                for(int nrw = 0; nrw < nElmtCoef; nrw++)
+                                {
+                                    int nrwAdjExp = elmtLeftMap[nelmt][nrw];
+                                    tmp   =   (*tmpGmtx)(nrwAdjExp,nclAdjExp);
+                                    // tmp   -=  elmtLeftSign[nelmt][ncl]*elmtLeftSign[nelmt][nrw]*(*ElmtMat)(nrw,ncl);
+                                    tmp   -=  (*ElmtMat)(nrw,ncl);
+                                    // tmp   -=  elmtLeftSign[nelmt][nrw]*(*ElmtMat)(nrw,ncl);
+                                            if(explist->GetComm()->GetRank()==nrankOutput)
+                                            {
+                                                    // cout << "elemt= "<<nelmt<< " ncl= "<<ncl<< " nrw= "<<nrw<<" (*ElmtMat)(nrw,ncl)= "<<(*ElmtMat)(nrw,ncl)<<" tmp= "<<tmp<<" (*tmpGmtx)("<<nrwAdjExp<<","<<nclAdjExp<<")= "<<(*tmpGmtx)(nrwAdjExp,nclAdjExp)<<endl;
+                                                    cout << "elemt= "<<nelmt<< " nclAdjExp= "<<nclAdjExp<< " nrwAdjExp= "<<nrwAdjExp<<" (*ElmtMat)(nrw,ncl)= "<<(*ElmtMat)(nrw,ncl)<<endl;
+                                            }
+                                    tmpGmtx->SetValue(nrwAdjExp,nclAdjExp,tmp);
+                                            // if(explist->GetComm()->GetRank()==nrankOutput)
+                                            // {
+                                            //         cout << "elemt= "<<nelmt<< " ncl= "<<ncl<< " nrw= "<<nrw<<"  "<<elmtLeftSign[nelmt][ncl]<<"  "<<elmtLeftSign[nelmt][nrw]<<endl;
+                                            // }
+                                }
                             }
                         }
                     }
@@ -622,7 +645,8 @@ namespace Nektar
                                 {
                                     int nrwAdjExp = elmtRightMap[nelmt][nrw];
                                     tmp   =   (*tmpGmtx)(nrwAdjExp,nclAdjExp);
-                                    tmp   +=  elmtRightSign[nelmt][ncl]*elmtRightSign[nelmt][nrw]*(*ElmtMat)(nrw,ncl);
+                                    // tmp   +=  elmtRightSign[nelmt][ncl]*elmtRightSign[nelmt][nrw]*(*ElmtMat)(nrw,ncl);
+                                    tmp   +=  (*ElmtMat)(nrw,ncl);
                                         if(explist->GetComm()->GetRank()==nrankOutput)
                                         {
                                                 // cout << "elemt= "<<nelmt<< " ncl= "<<ncl<< " nrw= "<<nrw<<" (*ElmtMat)(nrw,ncl) "<<(*ElmtMat)(nrw,ncl)<<" tmp "<<tmp<<endl;
@@ -637,8 +661,8 @@ namespace Nektar
                         }
                     }
 
-                                        int tmpcin=-1;
-                                        cin >> tmpcin;
+                                        // int tmpcin=-1;
+                                        // cin >> tmpcin;
                 }
             }
         }

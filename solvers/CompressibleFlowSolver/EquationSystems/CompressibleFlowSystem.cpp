@@ -1146,7 +1146,7 @@ namespace Nektar
                                             Array<OneD, DNekBlkMatSharedPtr > &TraceJac)
     {
         // DoOdeProjection(inarray,inarray,m_BndEvaluateTime);
-        int nrankOutput = 0;
+        int nrankOutput = 1000000000000000000000000;
 
         Fill2DArrayOfBlkDiagonalMat(gmtxarray,0.0);
         // Cout2DArrayBlkMat(gmtxarray);
@@ -1181,8 +1181,8 @@ namespace Nektar
         // {
         //     Cout2DArrayBlkMat(gmtxarray);
         // }
-        int tmpcin = 0;
-        cin >> tmpcin;
+        // int tmpcin = 0;
+        // cin >> tmpcin;
     }
 
     void CompressibleFlowSystem::MultiplyElmtInvMass_PlusSource(Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray,const NekDouble dtlamda)

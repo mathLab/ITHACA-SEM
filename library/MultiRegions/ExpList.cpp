@@ -283,8 +283,8 @@ namespace Nektar
 
                 for(int j = 0; j < locpoints; ++j)
                 {
-                    m_coeffsToElmt[points_offset+j].first =   i;
-                    m_coeffsToElmt[points_offset+j].second =   j;
+                    m_pointsToElmt[points_offset+j].first =   i;
+                    m_pointsToElmt[points_offset+j].second =   j;
                 }
             }
         }

@@ -1640,7 +1640,7 @@ namespace Nektar
                         // traceCoeffsToElmtSign = m_locTraceToTraceMap->Get_traceCoeffsToElmtSign();
                         // traceCoeffsToElmtTrace = m_locTraceToTraceMap->Get_traceCoeffsToElmtTrace();
 
-                        int nrankOutput= 0;
+                        int nrankOutput= 1000000000000000000000000000;
                         if(GetComm()->GetRank()==nrankOutput)
                         {
                             m_locTraceToTraceMap->AddTraceCoeffsToFieldCoeffs_output(Fcoeffs,
@@ -1651,8 +1651,8 @@ namespace Nektar
                         m_locTraceToTraceMap->AddTraceCoeffsToFieldCoeffs(Fcoeffs,
                                                                outarray);
                         }
-                        int tmpcin=-1;
-                        cin >> tmpcin;
+                        // int tmpcin=-1;
+                        // cin >> tmpcin;
             
                 
             }

@@ -94,13 +94,35 @@ void OutputCADfix::Process()
     NekDouble scal = m_cad->GetScaling();
 
     int order = m_config["order"].as<int>();
-    order = order == 2 ? 2 : 1;
 
-    if (order == 2)
+    if (order != -1)
     {
-        // Force order 2
-        m_mesh->MakeOrder(2, LibUtilities::ePolyEvenlySpaced);
+        if (m_mesh->m_verbose)
+        {
+            cout << "Making mesh of order " << order << endl;
+        }
     }
+    else
+    {
+        // Do first pass over elements of expansion dimension to determine
+        // which elements need completion.
+        for (int i = 0; i < m_mesh->m_element[m_mesh->m_expDim].size(); ++i)
+        {
+            ElementSharedPtr e = m_mesh->m_element[m_mesh->m_expDim][i];
+            if (e->GetMaxOrder() > order)
+            {
+                order = e->GetMaxOrder();
+            }
+        }
+    }
+
+    // Convert this mesh into a high-order mesh of uniform order.
+    if (m_mesh->m_verbose)
+    {
+        cout << "Mesh order of " << order << " detected" << endl;
+    }
+
+    m_mesh->MakeOrder(order, LibUtilities::ePolyEvenlySpaced);
 
     // Add edge- and face-interior nodes to vertex set.
     for (auto &eIt : m_mesh->m_edgeSet)
@@ -223,9 +245,9 @@ void OutputCADfix::Process()
 
         if (el->GetTag() == "H")
         {
-            type = order == 1 ? CFI_SUBTYPE_HE8 : CFI_SUBTYPE_HE27;
+            type = order % 2 ? CFI_SUBTYPE_HE8 : CFI_SUBTYPE_HE27;
 
-            if (order == 2)
+            if (!(order % 2))
             {
                 // Edges need re-ordering
                 // Swapping edges 4->7 with 8->11
@@ -238,7 +260,7 @@ void OutputCADfix::Process()
         }
         else if (el->GetTag() == "R")
         {
-            type = order == 1 ? CFI_SUBTYPE_PE6 : CFI_SUBTYPE_PE18;
+            type = order % 2 ? CFI_SUBTYPE_PE6 : CFI_SUBTYPE_PE18;
 
             // Nodes need re-ordering
             vector<NodeSharedPtr> newNekNodes;
@@ -272,7 +294,7 @@ void OutputCADfix::Process()
         }
         else if (el->GetTag() == "A")
         {
-            type = order == 1 ? CFI_SUBTYPE_TE4 : CFI_SUBTYPE_TE10;
+            type = order % 2 ? CFI_SUBTYPE_TE4 : CFI_SUBTYPE_TE10;
         }
         else
         {
@@ -285,7 +307,7 @@ void OutputCADfix::Process()
             cfiNodes.push_back(newMap[node]);
         }
 
-        if (order == 2)
+        if (!(order % 2))
         {
             for (auto &edge : nekEdges)
             {

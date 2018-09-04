@@ -12,6 +12,8 @@ IF (NEKTAR_BUILD_PYTHON)
     FIND_PACKAGE(PythonLibsNew REQUIRED)
     INCLUDE_DIRECTORIES(SYSTEM ${PYTHON_INCLUDE_DIRS})
 
+    ADD_DEFINITIONS(-DWITH_PYTHON)
+
     # Include headers from root directory for config file.
 
     # Try to find Boost.NumPy

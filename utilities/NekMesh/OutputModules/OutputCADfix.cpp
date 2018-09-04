@@ -318,14 +318,14 @@ void OutputCADfix::Process()
             for (auto &face : nekFaces)
             {
                 // Could be a triangular face without a face node
-                if (face->m_faceNodes.size())
+                if (face->m_edgeList.size() == 4)
                 {
                     cfiNodes.push_back(
                         newMap[face->m_faceNodes[pow(order - 1, 2) / 2]]);
                 }
             }
             // Could be an element without a volume node
-            if (nekVNodes.size())
+            if (el->GetTag() == "H")
             {
                 cfiNodes.push_back(newMap[nekVNodes[pow(order - 1, 3) / 2]]);
             }

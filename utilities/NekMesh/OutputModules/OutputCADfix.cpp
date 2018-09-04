@@ -51,7 +51,7 @@ ModuleKey OutputCADfix::className = GetModuleFactory().RegisterCreatorFunction(
 
 OutputCADfix::OutputCADfix(MeshSharedPtr m) : OutputModule(m)
 {
-    m_config["from"] = ConfigOption(false, "", "FBM file to load");
+    m_config["from"]  = ConfigOption(false, "", "FBM file to load");
     m_config["order"] = ConfigOption(false, "1", "Enforce a polynomial order");
 }
 
@@ -128,13 +128,13 @@ void OutputCADfix::Process()
     for (auto &eIt : m_mesh->m_edgeSet)
     {
         m_mesh->m_vertexSet.insert(eIt->m_edgeNodes.begin(),
-                                eIt->m_edgeNodes.end());
+                                   eIt->m_edgeNodes.end());
     }
 
     for (auto &fIt : m_mesh->m_faceSet)
     {
         m_mesh->m_vertexSet.insert(fIt->m_faceNodes.begin(),
-                                fIt->m_faceNodes.end());
+                                   fIt->m_faceNodes.end());
     }
 
     // Do second pass over elements for volume nodes.
@@ -237,9 +237,9 @@ void OutputCADfix::Process()
     for (auto &el : m_mesh->m_element[3])
     {
         vector<cfi::Node *> cfiNodes;
-        vector<NodeSharedPtr> nekNodes = el->GetVertexList();
-        vector<EdgeSharedPtr> nekEdges = el->GetEdgeList();
-        vector<FaceSharedPtr> nekFaces = el->GetFaceList();
+        vector<NodeSharedPtr> nekNodes  = el->GetVertexList();
+        vector<EdgeSharedPtr> nekEdges  = el->GetEdgeList();
+        vector<FaceSharedPtr> nekFaces  = el->GetFaceList();
         vector<NodeSharedPtr> nekVNodes = el->GetVolumeNodes();
         int type;
 
@@ -251,11 +251,13 @@ void OutputCADfix::Process()
             {
                 // Edges need re-ordering
                 // Swapping edges 4->7 with 8->11
-                swap_ranges(nekEdges.begin() + 4, nekEdges.begin() + 8, nekEdges.begin() + 8);
+                swap_ranges(nekEdges.begin() + 4, nekEdges.begin() + 8,
+                            nekEdges.begin() + 8);
 
                 // Faces need re-ordering
                 // Moving face 0 to second to last
-                swap_ranges(nekFaces.begin(), nekFaces.begin() + 4, nekFaces.begin() + 1);
+                swap_ranges(nekFaces.begin(), nekFaces.begin() + 4,
+                            nekFaces.begin() + 1);
             }
         }
         else if (el->GetTag() == "R")
@@ -311,20 +313,21 @@ void OutputCADfix::Process()
         {
             for (auto &edge : nekEdges)
             {
-                cfiNodes.push_back(newMap[edge->m_edgeNodes[0]]);
+                cfiNodes.push_back(newMap[edge->m_edgeNodes[(order - 1) / 2]]);
             }
             for (auto &face : nekFaces)
             {
                 // Could be a triangular face without a face node
                 if (face->m_faceNodes.size())
                 {
-                    cfiNodes.push_back(newMap[face->m_faceNodes[0]]);
+                    cfiNodes.push_back(
+                        newMap[face->m_faceNodes[pow(order - 1, 2) / 2]]);
                 }
             }
             // Could be an element without a volume node
             if (nekVNodes.size())
             {
-                cfiNodes.push_back(newMap[nekVNodes[0]]);
+                cfiNodes.push_back(newMap[nekVNodes[pow(order - 1, 3) / 2]]);
             }
         }
 

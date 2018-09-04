@@ -618,11 +618,6 @@ namespace Nektar
                 BaseType(dim1Size, data, memory_pointer, python_decrement)
             {
             }
-            #else
-            Array(unsigned int dim1Size, DataType* data) :
-                BaseType(dim1Size, data)
-            {
-            }
             #endif
 
             Array<OneD, DataType>& operator=(const Array<OneD, DataType>& rhs)

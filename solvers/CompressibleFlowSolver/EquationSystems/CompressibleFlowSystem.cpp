@@ -394,7 +394,7 @@ namespace Nektar
             const Array<OneD, NekDouble> &inarray,
                   Array<OneD, NekDouble> &outarray)
     {
-        const int nSORTot   =   4;
+        int nSORTot   =   m_JFNKPrecondStep;
         const NekDouble SORParam        =   1.0;
         const NekDouble OmSORParam      =   1.0-SORParam;
         

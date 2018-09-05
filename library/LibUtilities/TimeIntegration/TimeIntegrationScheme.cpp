@@ -32,7 +32,6 @@
 // Description: implementation of time integration key class
 //
 ///////////////////////////////////////////////////////////////////////////////
-#include <iomanip>
 #include <LibUtilities/TimeIntegration/TimeIntegrationScheme.h>
 #include <LibUtilities/BasicUtils/VmathArray.hpp>
 #include <LibUtilities/BasicConst/NektarUnivConsts.hpp>

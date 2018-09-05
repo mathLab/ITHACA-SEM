@@ -363,6 +363,8 @@ class Interpolator;
 
             /// Time step size
             int                                         m_TotLinItePerStepSET;
+            /// preconditioning steps
+            int                                         m_JFNKPrecondStep;
             /// Number of checkpoints written so far
             int                                         m_nchk;
             /// Number of steps to take.

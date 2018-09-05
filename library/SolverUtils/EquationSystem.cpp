@@ -657,6 +657,7 @@ namespace Nektar
             m_session->LoadParameter("FinTime",       m_fintime,    0);
             m_session->LoadParameter("TotLinItePerStep",       m_TotLinItePerStepSET,    200);
             m_session->LoadParameter("NewtonIteTol",       m_NewtonIteTol,    1.0E-8);
+            m_session->LoadParameter("JFNKPrecondStep",       m_JFNKPrecondStep,    5);
             m_session->LoadParameter("TimeIncrementFactor",       m_TimeIncrementFactor,    1.0);
             
             m_session->LoadParameter("NumQuadPointsError",

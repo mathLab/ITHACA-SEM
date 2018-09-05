@@ -239,53 +239,58 @@ public:
     }
 
     //const Array<OneD, const Array<OneD, const int> > with a const in front of int can not compile but const Array<OneD, const int> can 
-    MULTI_REGIONS_EXPORT inline const Array<OneD, const Array<OneD, int> > &Get_traceCoeffsToElmtMap()
+    MULTI_REGIONS_EXPORT inline const Array<OneD, const Array<OneD, int> > &Get_traceCoeffsToElmtMap() const
     {
         return m_traceCoeffsToElmtMap;
     }
 
-    MULTI_REGIONS_EXPORT inline const Array<OneD, const Array<OneD, int> > &Get_traceCoeffsToElmtSign()
+    MULTI_REGIONS_EXPORT inline const Array<OneD, const Array<OneD, int> > &Get_traceCoeffsToElmtSign() const
     {
         return m_traceCoeffsToElmtSign;
     }
 
-    MULTI_REGIONS_EXPORT inline const Array<OneD, const Array<OneD, int> > &Get_traceCoeffsToElmtTrace()
+    MULTI_REGIONS_EXPORT inline const Array<OneD, const Array<OneD, int> > &Get_traceCoeffsToElmtTrace() const
     {
         return m_traceCoeffsToElmtTrace;
     }
 
 
-    MULTI_REGIONS_EXPORT inline const Array<OneD, const int> &Get_traceCoeffsToElmtMap(const int nindex)
+    MULTI_REGIONS_EXPORT inline const Array<OneD, const int> &Get_traceCoeffsToElmtMap(const int nindex) const
     {
         return m_traceCoeffsToElmtMap[nindex];
     }
 
-    MULTI_REGIONS_EXPORT inline const Array<OneD, const int> &Get_traceCoeffsToElmtSign(const int nindex)
+    MULTI_REGIONS_EXPORT inline const Array<OneD, const int> &Get_traceCoeffsToElmtSign(const int nindex) const 
     {
         return m_traceCoeffsToElmtSign[nindex];
     }
 
-    MULTI_REGIONS_EXPORT inline const Array<OneD, const int> &Get_traceCoeffsToElmtTrace(const int nindex)
+    MULTI_REGIONS_EXPORT inline const Array<OneD, const int> &Get_traceCoeffsToElmtTrace(const int nindex) const
     {
         return m_traceCoeffsToElmtTrace[nindex];
     }
 
-    MULTI_REGIONS_EXPORT inline const Array<OneD, const Array<OneD, bool>>  &GetLeftRightAdjacentExpFlag()
+    MULTI_REGIONS_EXPORT inline const Array<OneD, const Array<OneD, bool>>  &GetLeftRightAdjacentExpFlag() const
     {
         return m_LeftRightAdjacentExpFlag;
     }
 
-    MULTI_REGIONS_EXPORT inline const Array<OneD, const Array<OneD, int >>   &GetLeftRightAdjacentExpId()
+    MULTI_REGIONS_EXPORT inline const Array<OneD, const Array<OneD, int >>   &GetLeftRightAdjacentExpId() const 
     {
         return m_LeftRightAdjacentExpId;
     }
 
-    MULTI_REGIONS_EXPORT inline const Array<OneD, const Array<OneD, Array<OneD, int > > >  &GetTraceceffToLeftRightExpcoeffMap()
+    // MULTI_REGIONS_EXPORT inline const Array<OneD, const int >>   &GetLeftRightAdjacentExpId(const int lr) const 
+    // {
+    //     return m_LeftRightAdjacentExpId[lr];
+    // }
+
+    MULTI_REGIONS_EXPORT inline const Array<OneD, const Array<OneD, Array<OneD, int > > >  &GetTraceceffToLeftRightExpcoeffMap() const
     {
         return m_TraceceffToLeftRightExpcoeffMap;
     }
 
-    MULTI_REGIONS_EXPORT inline const Array<OneD, const Array<OneD, Array<OneD, int > > > &GetTraceceffToLeftRightExpcoeffSign()
+    MULTI_REGIONS_EXPORT inline const Array<OneD, const Array<OneD, Array<OneD, int > > > &GetTraceceffToLeftRightExpcoeffSign() const
     {
         return m_TraceceffToLeftRightExpcoeffSign;
     }
@@ -350,7 +355,7 @@ private:
     // the sign of every coeff from current trace to the left&right adjacent expasion coeffs 
     Array<OneD, Array<OneD, Array<OneD,int  > > > m_TraceceffToLeftRightExpcoeffSign;
 
-    void LocTraceToTraceMap::TracelocToElmtlocCoeffMap(
+    void TracelocToElmtlocCoeffMap(
         const ExpList &locExp,
         const ExpListSharedPtr &trace);
 };

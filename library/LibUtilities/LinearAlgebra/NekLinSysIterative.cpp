@@ -619,32 +619,34 @@ namespace Nektar
         }
         // end of Modified Gram-Schmidt
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        // Classical Gram-Schmidt
-        // int number = endtem - starttem;
-        // Array<OneD,NekDouble> vExchangeArray(number, 0.0);
-        // numbertem=0;
-        // for (int i = starttem; i < endtem; ++i)
-        // {
-        //     vExchangeArray[numbertem] =
-        //         Vmath::Dot2(nNonDir, &w[0] + nDir, &V_local[i][0] + nDir,
-        //                     &m_map[0] + nDir);
-        //     numbertem = numbertem + 1;
-        // }
+//         //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//         // Classical Gram-Schmidt
+//         int number = endtem - starttem;
+//         Array<OneD,NekDouble> vExchangeArray(number, 0.0);
+//         numbertem=0;
+//         for (int i = starttem; i < endtem; ++i)
+//         {
+//             vExchangeArray[numbertem] =
+//                 Vmath::Dot2(nNonDir, &w[0] + nDir, &V_local[i][0] + nDir,
+//                             &m_map[0] + nDir);
+//             numbertem = numbertem + 1;
+//         }
 
-        // m_Comm->AllReduce(vExchangeArray,  LibUtilities::ReduceSum);
+// #ifdef DEBUG_MPI
+//         m_Comm->AllReduce(vExchangeArray,  LibUtilities::ReduceSum);
+// #endif // DEBUG
 
-        // numbertem = 0;
-        // for (int i = starttem; i < endtem; ++i)
-        // {
-        //     hsingle[i] = vExchangeArray[numbertem];
-        //     beta       = -1.0 * vExchangeArray[numbertem];
-        //     Vmath::Svtvp(nNonDir, beta, &V_local[i][0] + nDir, 1,
-        //                  &w[0] + nDir, 1, &w[0] + nDir, 1);
-        //     numbertem = numbertem + 1;
-        // }
-        // end of Classical Gram-Schmidt
-        //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//         numbertem = 0;
+//         for (int i = starttem; i < endtem; ++i)
+//         {
+//             hsingle[i] = vExchangeArray[numbertem];
+//             beta       = -1.0 * vExchangeArray[numbertem];
+//             Vmath::Svtvp(nNonDir, beta, &V_local[i][0] + nDir, 1,
+//                          &w[0] + nDir, 1, &w[0] + nDir, 1);
+//             numbertem = numbertem + 1;
+//         }
+//         // end of Classical Gram-Schmidt
+//         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
         // calculate the L2 norm and normalize
         vExchange = Vmath::Dot2(nNonDir,

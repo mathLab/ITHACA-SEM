@@ -172,6 +172,10 @@ namespace Nektar
                 const Array<OneD,const NekDouble> &field,
                       Array<OneD,      NekDouble> &Fwd,
                       Array<OneD,      NekDouble> &Bwd);
+            virtual void v_GetFwdBwdTracePhys_singlethread(
+                const Array<OneD,const NekDouble> &field,
+                      Array<OneD,      NekDouble> &Fwd,
+                      Array<OneD,      NekDouble> &Bwd);
             virtual const std::vector<bool> &v_GetLeftAdjacentFaces(void) const;
             virtual void v_ExtractTracePhys(
                       Array<OneD,       NekDouble> &outarray);
@@ -270,7 +274,7 @@ namespace Nektar
 
             virtual std::map<int, RobinBCInfoSharedPtr> v_GetRobinBCInfo();
 
-            virtual const LocTraceToTraceMapSharedPtr &v_GetlocTraceToTraceMap()
+            virtual const LocTraceToTraceMapSharedPtr &v_GetlocTraceToTraceMap() const
             {
                 return m_locTraceToTraceMap;
             }

@@ -480,14 +480,40 @@ namespace Nektar
         Array<OneD, Array<OneD, NekDouble> > FwdFlux  (nvariables);
         Array<OneD, Array<OneD, NekDouble> > BwdFlux  (nvariables);
 
+        // for(int i = 0; i < nvariables; ++i)
+        // {
+        //     Fwd[i]          = Array<OneD, NekDouble>(nTracePts, -100000000000.0);
+        //     Bwd[i]          = Array<OneD, NekDouble>(nTracePts, -100000000000.0);
+        //     FwdFlux[i]      = Array<OneD, NekDouble>(nTracePts, 0.0);
+        //     BwdFlux[i]      = Array<OneD, NekDouble>(nTracePts, 0.0);
+        //     m_fields[i]->GetFwdBwdTracePhys_singlethread(outpnts[i], Fwd[i], Bwd[i]);
+        //     // m_fields[i]->GetFwdBwdTracePhys(outpnts[i], Fwd[i], Bwd[i]);
+        // }
+
+        // for(int j=0;j<nTracePts;j++)
+        // {
+        //     if(Bwd[0][j]<-1000000.0)
+        //     {
+        //         for(int i = 0; i < nvariables; ++i)
+        //         {
+        //             Bwd[i][j] = Fwd[i][j];
+        //         }
+
+        //     }
+        // }
+
+
         for(int i = 0; i < nvariables; ++i)
         {
             Fwd[i]          = Array<OneD, NekDouble>(nTracePts, 0.0);
             Bwd[i]          = Array<OneD, NekDouble>(nTracePts, 0.0);
             FwdFlux[i]      = Array<OneD, NekDouble>(nTracePts, 0.0);
             BwdFlux[i]      = Array<OneD, NekDouble>(nTracePts, 0.0);
+            // m_fields[i]->GetFwdBwdTracePhys_singlethread(outpnts[i], Fwd[i], Bwd[i]);
             m_fields[i]->GetFwdBwdTracePhys(outpnts[i], Fwd[i], Bwd[i]);
         }
+
+            // m_fields[i]->GetFwdBwdTracePhys(outpnts[i], Fwd[i], Bwd[i]);
         
         NekVector<NekDouble> VFwd(nvariables),VBwd(nvariables);
         NekVector<NekDouble> VFlux(nvariables);
@@ -977,7 +1003,7 @@ namespace Nektar
             {
                 m_magnitdEstimat[i] = sqrt(m_magnitdEstimat[i]*ototpnts);
             }
-            if(m_session->GetComm()->GetRank()==0)
+            if(0==m_session->GetComm()->GetRank())
             {
                 for(int i = 0; i < nvariables; i++)
                 {

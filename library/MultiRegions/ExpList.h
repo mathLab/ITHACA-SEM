@@ -784,6 +784,11 @@ namespace Nektar
                       Array<OneD,NekDouble> &Fwd,
                       Array<OneD,NekDouble> &Bwd);
 
+            inline void GetFwdBwdTracePhys_singlethread(
+                const Array<OneD,const NekDouble> &field,
+                      Array<OneD,NekDouble> &Fwd,
+                      Array<OneD,NekDouble> &Bwd);
+
             inline void FillBwdWITHBound(
                   const Array<OneD, const NekDouble> &Fwd,
                         Array<OneD,       NekDouble> &Bwd);
@@ -1011,17 +1016,17 @@ namespace Nektar
             MULTI_REGIONS_EXPORT const DNekScalBlkMatSharedPtr& GetBlockMatrix(
                 const GlobalMatrixKey &gkey);
 
-            MULTI_REGIONS_EXPORT inline const Array<OneD,const pair<int,int> > &GetCoeffsToElmt()
+            MULTI_REGIONS_EXPORT inline const Array<OneD,const pair<int,int> > &GetCoeffsToElmt() const
             {
                 return m_coeffsToElmt;
             }
 
-            MULTI_REGIONS_EXPORT inline const Array<OneD,const pair<int,int> > &GetPointsToElmt()
+            MULTI_REGIONS_EXPORT inline const Array<OneD,const pair<int,int> > &GetPointsToElmt() const
             {
                 return m_pointsToElmt;
             }
 
-            MULTI_REGIONS_EXPORT inline const LocTraceToTraceMapSharedPtr &GetlocTraceToTraceMap()
+            MULTI_REGIONS_EXPORT inline const LocTraceToTraceMapSharedPtr &GetlocTraceToTraceMap() const
             {
                 return v_GetlocTraceToTraceMap();
             }
@@ -1249,6 +1254,10 @@ namespace Nektar
                 Array<OneD,NekDouble> &Bwd);
 
             virtual void v_GetFwdBwdTracePhys(
+                const Array<OneD,const NekDouble>  &field,
+                      Array<OneD,NekDouble> &Fwd,
+                      Array<OneD,NekDouble> &Bwd);
+            virtual void v_GetFwdBwdTracePhys_singlethread(
                 const Array<OneD,const NekDouble>  &field,
                       Array<OneD,NekDouble> &Fwd,
                       Array<OneD,NekDouble> &Bwd);
@@ -1531,7 +1540,7 @@ namespace Nektar
             
         private:
 
-            virtual const LocTraceToTraceMapSharedPtr &v_GetlocTraceToTraceMap();
+            virtual const LocTraceToTraceMapSharedPtr &v_GetlocTraceToTraceMap() const;
 
             virtual const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &v_GetBndConditions();
             
@@ -2316,6 +2325,14 @@ namespace Nektar
                   Array<OneD,NekDouble> &Bwd)
         {
             v_GetFwdBwdTracePhys(field,Fwd,Bwd);
+        }
+
+        inline void ExpList::GetFwdBwdTracePhys_singlethread(
+            const Array<OneD,const NekDouble>  &field,
+                  Array<OneD,NekDouble> &Fwd,
+                  Array<OneD,NekDouble> &Bwd)
+        {
+            v_GetFwdBwdTracePhys_singlethread(field,Fwd,Bwd);
         }
 
         inline void ExpList::FillBwdWITHBound(

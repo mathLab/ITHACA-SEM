@@ -335,27 +335,35 @@ namespace Nektar
             Array<OneD, Array<OneD,unsigned int > > elmtRightMap(ntotElmt);
             Array<OneD, Array<OneD,int          > > elmtRightSign(ntotElmt);
 
-            const Array<OneD, const Array<OneD, int >> LRAdjExpid;
-            const Array<OneD, const Array<OneD, bool>> LRAdjflag;
+            // const Array<OneD, const Array<OneD, int >> LRAdjExpid;
+            // const Array<OneD, const Array<OneD, bool>> LRAdjflag;
 
-            const Array<OneD, const Array<OneD, Array<OneD, int > > > elmtLRMap;
-            const Array<OneD, const Array<OneD, Array<OneD, int > > > elmtLRSign;
+            // const Array<OneD, const Array<OneD, Array<OneD, int > > > elmtLRMap;
+            // const Array<OneD, const Array<OneD, Array<OneD, int > > > elmtLRSign;
 
             int ntmp=0;
 
             switch(explist->GetGraph()->GetSpaceDimension())
             {
                 case 1:
+                {
                     ASSERTL0(false,"GetSpaceDimension==1 not coded yet");
                     break;
+                }
                 case 2:
                 case 3:
+                {
                     const MultiRegions::LocTraceToTraceMapSharedPtr locTraceToTraceMap = pFields[0]->GetlocTraceToTraceMap();
-                    LRAdjExpid  =   locTraceToTraceMap->GetLeftRightAdjacentExpId();
-                    LRAdjflag   =   locTraceToTraceMap->GetLeftRightAdjacentExpFlag();
+                    
+                    const Array<OneD, const Array<OneD, int >> LRAdjExpid  =   locTraceToTraceMap->GetLeftRightAdjacentExpId();
+                    // for(int lr=0;lr<2;lr++)
+                    // {
 
-                    elmtLRMap   =   locTraceToTraceMap->GetTraceceffToLeftRightExpcoeffMap();
-                    elmtLRSign  =   locTraceToTraceMap->GetTraceceffToLeftRightExpcoeffSign();
+                    // }
+                    const Array<OneD, const Array<OneD, bool>> LRAdjflag   =   locTraceToTraceMap->GetLeftRightAdjacentExpFlag();
+
+                    const Array<OneD, const Array<OneD, Array<OneD, int > > > elmtLRMap   =   locTraceToTraceMap->GetTraceceffToLeftRightExpcoeffMap();
+                    const Array<OneD, const Array<OneD, Array<OneD, int > > > elmtLRSign  =   locTraceToTraceMap->GetTraceceffToLeftRightExpcoeffSign();
 
                     for(int  nelmt = 0; nelmt < ntotElmt; nelmt++)
                     {
@@ -384,11 +392,13 @@ namespace Nektar
                             elmtRightSign[nelmt][i]  =   elmtLRSign[1][nelmt][i];
                         }
                     }
-
                     break;
+                }
                 default:
-                    ASSERTL0(false,"Trace SpaceDimension>2")
+                {
+                    ASSERTL0(false,"Trace SpaceDimension>2");
                     break;
+                }
             }
 
             DNekMatSharedPtr FtmpMat,BtmpMat;

@@ -185,6 +185,10 @@ namespace Nektar
                 const Array<OneD, const NekDouble> &field,
                       Array<OneD,       NekDouble> &Fwd,
                       Array<OneD,       NekDouble> &Bwd);
+            virtual void v_GetFwdBwdTracePhys_singlethread(
+                const Array<OneD, const NekDouble> &field,
+                      Array<OneD,       NekDouble> &Fwd,
+                      Array<OneD,       NekDouble> &Bwd);
             virtual void v_ExtractTracePhys(
                       Array<OneD,       NekDouble> &outarray);
             virtual void v_ExtractTracePhys(

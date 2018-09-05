@@ -2579,6 +2579,15 @@ namespace Nektar
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
         }
+
+        void ExpList::v_GetFwdBwdTracePhys_singlethread(
+                                const Array<OneD,const NekDouble>  &field,
+                                      Array<OneD,NekDouble> &Fwd,
+                                      Array<OneD,NekDouble> &Bwd)
+        {
+            ASSERTL0(false,
+                     "This method is not defined or valid for this class type");
+        }
         
         const vector<bool> &ExpList::v_GetLeftAdjacentFaces(void) const
         {
@@ -3549,7 +3558,7 @@ namespace Nektar
             }
       
         }
-        const LocTraceToTraceMapSharedPtr &ExpList::v_GetlocTraceToTraceMap()
+        const LocTraceToTraceMapSharedPtr &ExpList::v_GetlocTraceToTraceMap() const
         {
             ASSERTL0(false, "v_GetlocTraceToTraceMap not coded");
             const LocTraceToTraceMapSharedPtr result;

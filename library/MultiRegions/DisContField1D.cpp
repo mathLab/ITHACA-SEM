@@ -952,6 +952,103 @@ namespace Nektar
             m_traceMap->UniversalTraceAssemble(Bwd);
 
         }
+
+
+        void DisContField1D::v_GetFwdBwdTracePhys_singlethread(
+            const Array<OneD, const NekDouble> &field,
+            Array<OneD,       NekDouble> &Fwd,
+            Array<OneD,       NekDouble> &Bwd)
+        {
+            // Counter variables
+            int  n, v;
+            
+            // Number of elements
+            int nElements = GetExpSize(); 
+            
+            // Initial index of each element
+            int phys_offset;
+            
+            Array<OneD, Array<OneD, LocalRegions::ExpansionSharedPtr> >
+                &elmtToTrace = m_traceMap->GetElmtToTrace();
+
+            // Set forward and backard state to zero
+            Vmath::Zero(Fwd.num_elements(), Fwd, 1);
+            Vmath::Zero(Bwd.num_elements(), Bwd, 1);
+			
+            int cnt;
+
+            // Loop on the elements
+            for (cnt = n = 0; n < nElements; ++n)
+            {
+                // Set the offset of each element
+                phys_offset = GetPhys_Offset(n);
+
+                for(v = 0; v < 2; ++v, ++cnt)
+                {
+                    int offset = m_trace->GetPhys_Offset(elmtToTrace[n][v]->GetElmtId());
+                    
+                    if (m_leftAdjacentVerts[cnt])
+                    {
+                        (*m_exp)[n]->GetVertexPhysVals(v, field + phys_offset,
+                                                       Fwd[offset]);
+                    }
+                    else
+                    {
+                        (*m_exp)[n]->GetVertexPhysVals(v, field + phys_offset,
+                                                       Bwd[offset]);
+                    }
+                }
+            }
+            
+            // Fill boundary conditions into missing elements.
+            int id = 0;
+            
+            for(cnt = n = 0; n < m_bndCondExpansions.num_elements(); ++n)
+            {	
+                if (m_bndConditions[n]->GetBoundaryConditionType() == 
+                        SpatialDomains::eDirichlet)
+                {
+                    id  = m_trace->GetPhys_Offset(m_traceMap->GetBndCondTraceToGlobalTraceMap(cnt));
+                    Bwd[id] = m_bndCondExpansions[n]->GetPhys()[0]; //this is not getting the correct value?
+                    cnt++;
+                }
+                else if (m_bndConditions[n]->GetBoundaryConditionType() == 
+                         SpatialDomains::eNeumann || 
+                         m_bndConditions[n]->GetBoundaryConditionType() == 
+                         SpatialDomains::eRobin)
+                {
+                    ASSERTL0((m_bndCondExpansions[n]->GetPhys())[0]==0.0,
+                             "Method not set up for non-zero Neumann "
+                             "boundary condition");
+                    id  = m_trace->GetPhys_Offset(m_traceMap->GetBndCondTraceToGlobalTraceMap(cnt));
+                    Bwd[id] = Fwd[id];
+                    
+                    cnt++;
+                }
+                else if (m_bndConditions[n]->GetBoundaryConditionType() ==
+                         SpatialDomains::eNotDefined)
+                {
+                    // Do nothing
+                }
+                else if (m_bndConditions[n]->GetBoundaryConditionType() !=
+                         SpatialDomains::ePeriodic)
+                {
+                    ASSERTL0(false,
+                             "Method not set up for this boundary condition.");
+                }
+            }
+            
+            // Copy any periodic boundary conditions.
+            for (n = 0; n < m_periodicFwdCopy.size(); ++n)
+            {
+                Bwd[m_periodicBwdCopy[n]] = Fwd[m_periodicFwdCopy[n]];
+            }
+
+            // Do parallel exchange for forwards/backwards spaces.
+            // m_traceMap->UniversalTraceAssemble(Fwd);
+            // m_traceMap->UniversalTraceAssemble(Bwd);
+
+        }
         
 	
         void DisContField1D::v_ExtractTracePhys(

@@ -207,6 +207,10 @@ namespace Nektar
                 const Array<OneD, const NekDouble> &field,
                       Array<OneD,       NekDouble> &Fwd,
                       Array<OneD,       NekDouble> &Bwd);
+            virtual void v_GetFwdBwdTracePhys_singlethread(
+                const Array<OneD, const NekDouble> &field,
+                      Array<OneD,       NekDouble> &Fwd,
+                      Array<OneD,       NekDouble> &Bwd);
             virtual void v_GetFwdBwdTracePhys(
                       Array<OneD,       NekDouble> &Fwd,
                       Array<OneD,       NekDouble> &Bwd);
@@ -311,7 +315,7 @@ namespace Nektar
                 const Array<OneD, const NekDouble> &BwdFlux, 
                     Array<OneD,       NekDouble> &outarray);
 
-            virtual const LocTraceToTraceMapSharedPtr &v_GetlocTraceToTraceMap()
+            virtual const LocTraceToTraceMapSharedPtr &v_GetlocTraceToTraceMap() const
             {
                 return m_locTraceToTraceMap;
             }

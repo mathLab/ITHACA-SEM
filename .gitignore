@@ -4,6 +4,7 @@
 # Ignore builds and ThirdParty directories
 build
 buildDebug
+build_master
 builds
 buildsDebug
 ThirdParty

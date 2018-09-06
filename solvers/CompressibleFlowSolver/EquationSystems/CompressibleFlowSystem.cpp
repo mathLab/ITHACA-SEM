@@ -544,6 +544,70 @@ namespace Nektar
             }  
         }
 
+
+
+        // // Store forwards/backwards space along trace space
+        // Array<OneD, Array<OneD, NekDouble> > Fwd0        (nvariables);
+        // Array<OneD, Array<OneD, NekDouble> > Bwd0        (nvariables);
+        // Array<OneD, Array<OneD, NekDouble> > FwdFlux0  (nvariables);
+        // Array<OneD, Array<OneD, NekDouble> > BwdFlux0  (nvariables);
+
+        // for(int i = 0; i < nvariables; ++i)
+        // {
+        //     Fwd0[i]          = Array<OneD, NekDouble>(nTracePts, 0.0);
+        //     Bwd0[i]          = Array<OneD, NekDouble>(nTracePts, 0.0);
+        //     FwdFlux0[i]      = Array<OneD, NekDouble>(nTracePts, 0.0);
+        //     BwdFlux0[i]      = Array<OneD, NekDouble>(nTracePts, 0.0);
+        //     m_fields[i]->GetFwdBwdTracePhys_singlethread(outpnts[i], Fwd0[i], Bwd0[i]);
+        //     // m_fields[i]->GetFwdBwdTracePhys(outpnts[i], Fwd[i], Bwd[i]);
+        // }
+
+        // for(int n = 0; n < nTracePts; ++n)
+        // {
+        //     for(int i = 0; i < nvariables; ++i)
+        //     {
+        //         VFwd[i] =   Fwd0[i][n];
+        //         VBwd[i] =   Bwd0[i][n];
+        //     }   
+        //     PJacFwd =  m_TraceJac[0]->GetBlock(n,n); 
+        //     PJacBwd =  m_TraceJac[1]->GetBlock(n,n); 
+
+        //     VFlux   =   (*PJacFwd)*VFwd;
+
+        //     for(int i = 0; i < nvariables; ++i)
+        //     {
+        //         FwdFlux0[i][n] =   VFlux[i];
+        //     }  
+
+        //     VFlux   =   (*PJacBwd)*VBwd;
+
+        //     for(int i = 0; i < nvariables; ++i)
+        //     {
+        //         BwdFlux0[i][n] =   VFlux[i];
+        //     }  
+        // }
+
+        // if(0==m_session->GetComm()->GetRank())
+        // {
+        //     int nwidthcolm = 20;
+        //     for(int n = 0; n < nTracePts; ++n)
+        //     {
+        //         cout <<endl<<" /*///////*/*/*/*********************/*/*/*/**/*/*/**///**/*//******/*= "<<endl;
+        //         cout <<std::right <<std::scientific<<std::setw(nwidthcolm)<<std::setprecision(nwidthcolm-8)
+        //             <<" nTracePts= " <<n<<endl;
+        //         for(int i = 0; i < nvariables; ++i)
+        //         {
+        //             cout    << "delt    = "<<abs(Fwd[i][n]      - Fwd0[i][n]    )   << "    Fwd    = "<<Fwd[i][n]       << "    Fwd0    = "<<Fwd0[i][n]     <<endl
+        //                     << "delt    = "<<abs(Bwd[i][n]      - Bwd0[i][n]    )   << "    Bwd    = "<<Bwd[i][n]       << "    Bwd0    = "<<Bwd0[i][n]     <<endl
+        //                     << "delt    = "<<abs(FwdFlux[i][n]  - FwdFlux0[i][n])   << "    FwdFlux= "<<FwdFlux[i][n]   << "    FwdFlux0= "<<FwdFlux0[i][n] <<endl
+        //                     << "delt    = "<<abs(BwdFlux[i][n]  - BwdFlux0[i][n])   << "    BwdFlux= "<<BwdFlux[i][n]   << "    BwdFlux0= "<<BwdFlux0[i][n] <<endl;
+        //         }
+        //     }
+        // }
+
+        // int tmpcin;
+        // cin >> tmpcin;
+
         // Evaulate <\phi, \hat{F}\cdot n> - OutField[i]
         for(int i = 0; i < nvariables; ++i)
         {
@@ -953,10 +1017,11 @@ namespace Nektar
         m_BndEvaluateTime   = time;
         bool l_verbose      = m_session->DefinesCmdLineArgument("verbose");
         bool converged      = false;
-        const unsigned int MaxNonlinIte =   20;
+        const unsigned int MaxNonlinIte =   100;
         unsigned int nvariables  = inarray.num_elements();
         unsigned int npoints     = inarray[0].num_elements();
         unsigned int ntotal      = nvariables*npoints;
+        unsigned int nElements = m_fields[0]->GetExpSize();
 
         LibUtilities::CommSharedPtr v_Comm  = m_fields[0]->GetComm()->GetRowComm();
 
@@ -1015,7 +1080,7 @@ namespace Nektar
 
         NekDouble resnorm;
         NekDouble LinSysTol = 0.0;
-        NekDouble tolrnc    = m_NewtonIteTol;
+        NekDouble tolrnc    = m_NewtonAbsoluteIteTol;
         NekDouble tol2      = m_inArrayNorm*tolrnc*tolrnc*ntotalGlobal;
 
         m_PrecMatVars = Array<OneD, Array<OneD, DNekBlkMatSharedPtr> >(nvariables);
@@ -1040,6 +1105,15 @@ namespace Nektar
         {
             Vmath::Vcopy(npoints,inarray[i],1,m_TimeIntegtSol_k[i],1);
         }
+
+        Array<OneD, NekDouble> tstep (nElements, 0.0);
+        NekDouble tmpcfl    = m_cflSafetyFactor;
+        m_cflSafetyFactor   = m_cflLocTimestep;
+        GetElmtTimeStep(inpnts, tstep);
+        m_cflSafetyFactor   = tmpcfl;
+
+        m_locTimeStep = tstep;
+
 
         // TODO: 
         // v_Comm is based on the explist used may be different(m_tracemap or m_locToGloMap) for diffrent
@@ -1084,6 +1158,9 @@ namespace Nektar
         converged = false;
         int nwidthcolm = 25;
         int NtotDoOdeRHS = 0;
+        NekDouble resnorm0 = 0.0;
+        NekDouble resratio = 1.0;
+        NekDouble ratioTol = m_NewtonRelativeIteTol;
         for (int k = 0; k < MaxNonlinIte; k++)
         {
             NonlinSysEvaluator_coeff(m_TimeIntegtSol_k,m_SysEquatResid_k);
@@ -1093,26 +1170,38 @@ namespace Nektar
 
             v_Comm->AllReduce(resnorm, Nektar::LibUtilities::ReduceSum);
 
+            if(0==k)
+            {
+                resnorm0 = resnorm;
+                resratio = 1.0;
+            }
+            else
+            {
+                resratio = resnorm/resnorm0;
+            }
 
-            if (resnorm<tol2)
+
+
+            if ((resnorm<tol2&&resratio<0.5)||resratio<ratioTol)
             {
                 // at least one Newton Iteration 
                 // or else the flow field will not update 
-                if(k>0)
-                {
+                // if(k>0)
+                // {
                     /// TODO: m_root
                     if(l_verbose&&l_root)
                     {
                         cout <<std::right<<" * Newton-Its converged (RES^2=" <<std::scientific<<std::setw(nwidthcolm)<<std::setprecision(nwidthcolm-8)
-                            << resnorm<<" with "<<setw(3)<<k<<" Non-Its"<<" and "<<setw(4)<<NtotDoOdeRHS<<" Lin-Its)"<<endl;
+                            << resnorm<<" with "<<setw(3)<<k<<" Non-Its"<<" and "<<setw(4)<<NtotDoOdeRHS<<" Lin-Its)"<<" ratio: "<<resratio<<endl;
                     }
                     converged = true;
                     break;
-                }
+                // }
             }
 
             //TODO: currently  NonlinSysRes is 2D array and SolveLinearSystem needs 1D array
-            LinSysTol = 0.01*sqrt(resnorm);
+            LinSysTol = sqrt(0.01*sqrt(ratioTol)*resnorm);
+            // LinSysTol = 0.005*sqrt(resnorm)*(k+1);
             NtotDoOdeRHS  +=   linsol.SolveLinearSystem(ntotal,NonlinSysRes_1D,dsol_1D,0,LinSysTol);
             // cout << "NtotDoOdeRHS    = "<<NtotDoOdeRHS<<endl;
 
@@ -1250,14 +1339,17 @@ namespace Nektar
         {
             for(int  nelmt = 0; nelmt < ntotElmt; nelmt++)
             {
+
+                NekDouble fac         = m_timestep/m_locTimeStep[nelmt];
                 tmpGmtx =   gmtxarray[m][m]->GetBlock(nelmt,nelmt);
                 nElmtCoef            = elmtcoef[nelmt];
                 for(int ncl = 0; ncl < nElmtCoef; ncl++)
                 {
-                    (*tmpGmtx)(ncl,ncl)   += 1.0;
+                    (*tmpGmtx)(ncl,ncl)   += (1.0+fac);
                 }
             }
         }
+
         return;
     }
 
@@ -1373,6 +1465,44 @@ namespace Nektar
        
         return;
     }
+
+    void CompressibleFlowSystem::MatrixMultiply_MatrixFree_coeff_dualtimestep(
+                                                 const  Array<OneD, NekDouble> &inarray,
+                                                        Array<OneD, NekDouble >&out)
+    {
+        
+
+        MatrixMultiply_MatrixFree_coeff(inarray,out);
+
+        int nElements = m_fields[0]->GetExpSize();
+        int nelmtcoeffs,offset,varoffset;
+        NekDouble fac;
+        Array<OneD, NekDouble> tmp;
+        Array<OneD, NekDouble> tmpinn;
+        Array<OneD, NekDouble> tmpout;
+        unsigned int nvariables = m_TimeIntegtSol_n.num_elements();
+        unsigned int ntotcoeffs = m_TimeIntegtSol_n[0].num_elements();
+
+        
+        for(int i = 0; i < nvariables; ++i)
+        {
+            varoffset = i*ntotcoeffs;
+
+            tmpinn = inarray + varoffset;
+            tmpout = out + varoffset;
+            // Loop over elements
+            for(int n = 0; n < nElements; ++n)
+            {
+                nelmtcoeffs = m_fields[0]->GetExp(n)->GetNcoeffs();
+                offset      = m_fields[0]->GetCoeff_Offset(n);
+                fac         = m_timestep/m_locTimeStep[n];
+                tmp         = tmpout + offset;
+                Vmath::Svtvp(nelmtcoeffs,fac,tmpinn+offset,1,tmp,1,tmp,1);
+            }
+        }
+        return;
+    }
+
 
 
     void CompressibleFlowSystem::NonlinSysEvaluator_coeff(

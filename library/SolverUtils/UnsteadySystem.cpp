@@ -181,6 +181,11 @@ namespace Nektar
                     TimeStability = 1.0;
                     break;
                 }
+                case LibUtilities::eDIRKOrder3:
+                {
+                    TimeStability = 1.0;
+                    break;
+                }
                 default:
                 {
                     ASSERTL0(

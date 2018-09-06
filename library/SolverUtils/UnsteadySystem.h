@@ -116,6 +116,9 @@ namespace Nektar
             /// estimate the magnitude of each conserved varibles
             Array<OneD, NekDouble>                          m_magnitdEstimat;
 
+            /// local time step(notice only for jfnk other see m_cflSafetyFactor)
+            Array<OneD, NekDouble>                          m_locTimeStep;
+
             NekDouble   m_inArrayNorm=-1.0;
 
             int m_TotLinItePrecondMat=600;

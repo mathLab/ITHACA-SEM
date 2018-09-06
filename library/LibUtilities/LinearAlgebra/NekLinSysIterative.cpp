@@ -54,7 +54,7 @@ namespace Nektar
                 const LibUtilities::SessionReaderSharedPtr &pSession,
                 const LibUtilities::CommSharedPtr &vComm)
     {
-        m_maxrestart        =   2;
+        m_maxrestart        =   1;
         m_maxstorage        =   30;
         m_maxhesband        =   30;
         m_maxiter           =   60;
@@ -62,7 +62,7 @@ namespace Nektar
         m_rhs_magnitude     =   1.0;
         m_prec_factor       =   1.0;
         m_rhs_mag_sm        =   1.0;
-        m_verbose           =   true;
+        m_verbose           =   false;
         m_root              =   false;
         std::vector<std::string>  variables(1);
         variables[0] =  pSession->GetVariable(0);
@@ -73,6 +73,7 @@ namespace Nektar
         {
             m_root              =   true;
         }
+        m_verbose   =   pSession->DefinesCmdLineArgument("verbose");
         
         /* if(pSession->DefinesGlobalSysSolnInfo(variable, "IterativeMethod"))
         {
@@ -107,7 +108,7 @@ namespace Nektar
         {
             pSession->LoadParameter("MaxIterations",
                                     m_maxiter,
-                                    5000);
+                                    49);
         }
         if(pSession->DefinesGlobalSysSolnInfo(variable,
                                               "MaxStorage"))
@@ -120,7 +121,7 @@ namespace Nektar
         {
             pSession->LoadParameter("MaxStorage",
                                     m_maxstorage,
-                                    50);
+                                    30);
         }
         if(pSession->DefinesGlobalSysSolnInfo(variable , 
                                               "MaxHesband"))
@@ -133,7 +134,7 @@ namespace Nektar
         {
             pSession->LoadParameter("MaxHesband",
                                     m_maxhesband,
-                                    0);
+                                    50000000000);
         }
         /* if(pSession->DefinesGlobalSysSolnInfo(variable,"SuccessiveRHS"))
         {
@@ -147,10 +148,10 @@ namespace Nektar
                                     m_successiveRHS,0);
         } */
 
-        m_maxrestart        =   1;
-        m_maxstorage        =   50;
-        m_maxhesband        =   50;
-        m_maxiter           =   49;
+        // m_maxrestart        =   1;
+        // m_maxstorage        =   50;
+        // m_maxhesband        =   50;
+        m_maxiter           =   m_maxstorage*m_maxrestart-1;
 
     }
 
@@ -281,15 +282,16 @@ namespace Nektar
 
         if(m_root)
         {
-                    cout << "       GMRES iterations made = " << m_totalIterations
+                    cout <<std::scientific<<std::setw(nwidthcolm)<<std::setprecision(nwidthcolm-8) 
+                         << "       GMRES iterations made = " << m_totalIterations
                          << " using tolerance of "  << m_tolerance
                          // << " (error = " << sqrt(eps / m_rhs_magnitude)
                          << " (error = " << sqrt(eps * m_prec_factor / m_rhs_magnitude) << ")" 
-                         << ", rhs_mag = " << sqrt(m_rhs_magnitude) << ")"<<endl;
+                        //  << ", rhs_mag = " << sqrt(m_rhs_magnitude) << ")"
+                         <<" WARNING: Exceeded maxIt"<<endl;
         }
         // ROOTONLY_NEKERROR(ErrorUtil::efatal,
         //                   "Exceeded maximum number of iterations");
-        cout <<"            WARNING: GMRES Exceeded maximum number of iterations"<<endl;
         return m_totalIterations;
 
     }

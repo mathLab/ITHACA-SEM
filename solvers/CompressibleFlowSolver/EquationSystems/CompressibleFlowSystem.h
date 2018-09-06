@@ -206,6 +206,10 @@ namespace Nektar
             const  Array<OneD, NekDouble> &inarray,
                    Array<OneD, NekDouble >&out);
 
+        void MatrixMultiply_MatrixFree_coeff_dualtimestep(
+            const  Array<OneD, NekDouble> &inarray,
+                   Array<OneD, NekDouble >&out);
+
         void DebugNumCalJac_coeff(
             Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray);
             

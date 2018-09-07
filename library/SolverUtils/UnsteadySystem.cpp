@@ -109,6 +109,8 @@ namespace Nektar
                 // Load generic input parameters
                 m_session->LoadParameter("IO_InfoSteps", m_infosteps, 0);
                 m_session->LoadParameter("CFL", m_cflSafetyFactor, 0.0);
+                m_session->LoadParameter("CFL_End", m_CFLEnd, 0.0);
+                m_session->LoadParameter("CFLGrowth", m_CFLGrowth, 1.0);
 
                 // Ensure that there is no conflict of parameters
                 if(m_cflSafetyFactor > 0.0)
@@ -125,6 +127,14 @@ namespace Nektar
                 {
                     ASSERTL0(m_timestep != 0.0,
                              "Need to set either TimeStep or CFL");
+                }
+
+                // Ensure that there is no conflict of parameters
+                if(m_CFLGrowth > 1.0)
+                {
+                    // Check final condition
+                    ASSERTL0(m_CFLEnd >= m_cflSafetyFactor,
+                             "m_CFLEnd >= m_cflSafetyFactor required");
                 }
 
                 // Set up time to be dumped in field information
@@ -268,6 +278,11 @@ namespace Nektar
             while (step   < m_steps ||
                    m_time < m_fintime - NekConstants::kNekZeroTol)
             {
+                if(m_CFLGrowth > 1.0&&m_cflSafetyFactor<m_CFLEnd)
+                {
+                    m_cflSafetyFactor = min(m_CFLEnd,m_CFLGrowth*m_cflSafetyFactor);
+                }
+                
                 if (m_cflSafetyFactor)
                 {
                     m_timestep = GetTimeStep(fields);
@@ -320,28 +335,29 @@ namespace Nektar
                 cpuTime += elapsed;
 		
                 // Write out status information
+                int nwidthcolm = 8;
                 if (m_session->GetComm()->GetRank() == 0 && 
                     !((step+1) % m_infosteps))
                 {
-                    cout << "Steps: " << setw(8)  << left << step+1 << " "
+                    cout <<right<<scientific<<setw(nwidthcolm)<<setprecision(nwidthcolm-6)
+                         << "Steps: " << setw(8)  << left << step+1 << " "
                          << "Time: "  << setw(8) << left << m_time;
 
                     if (m_cflSafetyFactor||m_TimeIncrementFactor>1.0)
                     {
-                        cout << " Time-step: " << setw(8)
-                             << left << m_timestep;
+                        cout <<right<<scientific<<setw(nwidthcolm)<<setprecision(nwidthcolm-6)
+                             << " CFL: " << m_cflSafetyFactor
+                             << " Time-step: " << m_timestep;
                     }
 
                     stringstream ss;
                     ss << cpuTime << "s";
-                    cout << " CPU Time: " << setw(8) << left
+                    cout <<right<<scientific<<setw(nwidthcolm)<<setprecision(nwidthcolm-6)
+                         << " CPU Time: " << left
                          << ss.str();
 
-                    int nwidthcolm = 8;
-                    cout <<std::right<<" INT Time: " 
-                         <<std::scientific<<std::setw(nwidthcolm)
-                         <<std::setprecision(nwidthcolm-6)
-                        << intTime<<"s"<<endl;
+                    cout <<right<<scientific<<setw(nwidthcolm)<<setprecision(nwidthcolm-6)
+                         <<" INT Time: "<< intTime<<"s"<<endl;
                     
                     cpuTime = 0.0;
                 }

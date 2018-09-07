@@ -1033,6 +1033,7 @@ namespace Nektar
 
         unsigned int ntotalGlobal     = ntotal;
         v_Comm->AllReduce(ntotalGlobal, Nektar::LibUtilities::ReduceSum);
+        NekDouble ototalGlobal  = nvariables/NekDouble(ntotalGlobal); 
 
         if(m_inArrayNorm<0.0)
         {
@@ -1068,7 +1069,7 @@ namespace Nektar
             {
                 m_magnitdEstimat[i] = sqrt(m_magnitdEstimat[i]*ototpnts);
             }
-            if(0==m_session->GetComm()->GetRank())
+            if(0==m_session->GetComm()->GetRank()&&l_verbose)
             {
                 for(int i = 0; i < nvariables; i++)
                 {
@@ -1156,7 +1157,7 @@ namespace Nektar
         
 
         converged = false;
-        int nwidthcolm = 25;
+        int nwidthcolm = 8;
         int NtotDoOdeRHS = 0;
         NekDouble resnorm0 = 0.0;
         NekDouble resratio = 1.0;
@@ -1191,8 +1192,10 @@ namespace Nektar
                     /// TODO: m_root
                     if(l_verbose&&l_root)
                     {
-                        cout <<std::right<<" * Newton-Its converged (RES^2=" <<std::scientific<<std::setw(nwidthcolm)<<std::setprecision(nwidthcolm-8)
-                            << resnorm<<" with "<<setw(3)<<k<<" Non-Its"<<" and "<<setw(4)<<NtotDoOdeRHS<<" Lin-Its)"<<" ratio: "<<resratio<<endl;
+                        cout <<right<<scientific<<setw(nwidthcolm)<<setprecision(nwidthcolm-6)
+                             <<" * Newton-Its converged (RES=" 
+                             << sqrt(resnorm*ototalGlobal)<<" AbsoluteError="<< sqrt(resnorm*ototalGlobal/m_inArrayNorm)
+                             <<" with "<<setw(3)<<k<<" Non-Its"<<" and "<<setw(4)<<NtotDoOdeRHS<<" Lin-Its)"<<" ratio: "<<resratio<<endl;
                     }
                     converged = true;
                     break;
@@ -1200,7 +1203,8 @@ namespace Nektar
             }
 
             //TODO: currently  NonlinSysRes is 2D array and SolveLinearSystem needs 1D array
-            LinSysTol = sqrt(0.01*sqrt(ratioTol)*resnorm);
+            // LinSysTol = sqrt(0.01*sqrt(ratioTol)*resnorm);
+            LinSysTol = 1.0E-5*sqrt(resnorm);
             // LinSysTol = 0.005*sqrt(resnorm)*(k+1);
             NtotDoOdeRHS  +=   linsol.SolveLinearSystem(ntotal,NonlinSysRes_1D,dsol_1D,0,LinSysTol);
             // cout << "NtotDoOdeRHS    = "<<NtotDoOdeRHS<<endl;

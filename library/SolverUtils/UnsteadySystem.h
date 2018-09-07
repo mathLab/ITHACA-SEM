@@ -55,8 +55,13 @@ namespace Nektar
             SOLVER_UTILS_EXPORT NekDouble GetTimeStep(
                 const Array<OneD, const Array<OneD, NekDouble> > &inarray);
 
-            /// CFL safety factor (comprise between 0 to 1).
+            /// CFL safety factor (comprise between 0 to 1)(may be larger than 1 for implicit solvers).
             NekDouble m_cflSafetyFactor;
+            /// CFL growth rate
+            NekDouble m_CFLGrowth;
+            /// maximun cfl in cfl growth
+            NekDouble m_CFLEnd;
+            
 
         protected:
             /// Number of time steps between outputting status information.

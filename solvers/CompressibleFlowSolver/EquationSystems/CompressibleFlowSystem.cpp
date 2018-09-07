@@ -1183,7 +1183,7 @@ namespace Nektar
 
 
 
-            if ((resnorm<tol2&&resratio<0.5)||resratio<ratioTol)
+            if (resnorm<tol2&&resratio<ratioTol)
             {
                 // at least one Newton Iteration 
                 // or else the flow field will not update 

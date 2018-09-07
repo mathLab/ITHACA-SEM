@@ -682,8 +682,8 @@ namespace Nektar
             // when no time accuracy needed
             if(m_JFNKTimeAccurate<1)
             {
-                m_NewtonAbsoluteIteTol = 1.0E-6;
-                m_NewtonRelativeIteTol = 0.1;
+                m_NewtonAbsoluteIteTol = 1.0E-5;
+                m_NewtonRelativeIteTol = 0.01;
             }
 
             cout <<m_JFNKTimeAccurate<<" "<<m_NewtonAbsoluteIteTol<<" "<<m_NewtonRelativeIteTol<<endl;

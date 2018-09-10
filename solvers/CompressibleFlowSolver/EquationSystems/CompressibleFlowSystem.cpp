@@ -1246,8 +1246,8 @@ namespace Nektar
         // m_TimeIntegtSol_k   =   nullptr;
         // m_TimeIntegtSol_n   =   nullptr;
         // m_SysEquatResid_k   =   nullptr;
-        ASSERTL0((converged),"Nonlinear system solver not converge in CompressibleFlowSystem::DoImplicitSolve ")
-        return;
+        ASSERTL0((converged),"Nonlinear system solver not converge in CompressibleFlowSystem::DoImplicitSolve ");
+        // return;
     }
 
     void CompressibleFlowSystem::AllocatePrecondBlkDiag_coeff(Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray)

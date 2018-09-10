@@ -1032,8 +1032,10 @@ namespace Nektar
         }
 
         unsigned int ntotalGlobal     = ntotal;
+        unsigned int ntotalDOF        = ntotal/nvariables;
         v_Comm->AllReduce(ntotalGlobal, Nektar::LibUtilities::ReduceSum);
-        NekDouble ototalGlobal  = nvariables/NekDouble(ntotalGlobal); 
+        NekDouble ototalGlobal  = 1.0/ntotalGlobal; 
+        NekDouble ototalDOF     = 1.0/ntotalDOF; 
 
         if(m_inArrayNorm<0.0)
         {
@@ -1049,7 +1051,7 @@ namespace Nektar
             v_Comm->AllReduce(m_magnitdEstimat, Nektar::LibUtilities::ReduceSum);
 
             
-            NekDouble ototpnts = 1.0/(ntotalGlobal/nvariables);
+            // NekDouble ototpnts = 1.0/(ntotalGlobal/nvariables);
 
             for(int i = 0; i < nvariables; i++)
             {
@@ -1067,7 +1069,7 @@ namespace Nektar
             
             for(int i = 0; i < nvariables; i++)
             {
-                m_magnitdEstimat[i] = sqrt(m_magnitdEstimat[i]*ototpnts);
+                m_magnitdEstimat[i] = sqrt(m_magnitdEstimat[i]*ototalDOF);
             }
             if(0==m_session->GetComm()->GetRank()&&l_verbose)
             {
@@ -1079,10 +1081,17 @@ namespace Nektar
             }
         }
 
-        NekDouble resnorm;
+
         NekDouble LinSysTol = 0.0;
         NekDouble tolrnc    = m_NewtonAbsoluteIteTol;
-        NekDouble tol2      = m_inArrayNorm*tolrnc*tolrnc*ntotalGlobal;
+        NekDouble tol2      = m_inArrayNorm*tolrnc*tolrnc*ntotalDOF;
+        NekDouble tol2Max   = sqrt(m_inArrayNorm*ototalDOF*tolrnc);
+        // NekDouble ratioTol = m_NewtonRelativeIteTol;
+        NekDouble ratioTol = tolrnc;
+        //TODO: if steady state the dt should change according to resnorm/m_inArrayNorm
+        // so that quadrature convergence rate may be achieved
+        // at this situation && may be better in convergence critiria
+        NekDouble tol2Ratio = ratioTol*ratioTol*ntotalDOF;
 
         m_PrecMatVars = Array<OneD, Array<OneD, DNekBlkMatSharedPtr> >(nvariables);
         for(int i = 0; i < nvariables; i++)
@@ -1160,11 +1169,13 @@ namespace Nektar
         int nwidthcolm = 8;
         int NtotDoOdeRHS = 0;
         NekDouble resnorm0 = 0.0;
+        NekDouble resnorm  = 0.0;
+        NekDouble resmaxm  = 0.0;
         NekDouble resratio = 1.0;
-        NekDouble ratioTol = m_NewtonRelativeIteTol;
         for (int k = 0; k < MaxNonlinIte; k++)
         {
             NonlinSysEvaluator_coeff(m_TimeIntegtSol_k,m_SysEquatResid_k);
+            // NonlinSysEvaluator_coeff_out(m_TimeIntegtSol_k,m_SysEquatResid_k);
             NtotDoOdeRHS++;
             // NonlinSysRes_1D and m_SysEquatResid_k share the same storage
             resnorm = Vmath::Dot(ntotal,NonlinSysRes_1D,NonlinSysRes_1D);
@@ -1181,25 +1192,37 @@ namespace Nektar
                 resratio = resnorm/resnorm0;
             }
 
-
-
-            if (resnorm<tol2&&resratio<ratioTol)
+            if (resnorm<tol2||resratio<tol2Ratio)
             {
-                // at least one Newton Iteration 
-                // or else the flow field will not update 
-                // if(k>0)
-                // {
-                    /// TODO: m_root
-                    if(l_verbose&&l_root)
+                // this works when resnorm0<<m_inArrayNorm ie. close to converge
+                if(resratio<0.1)
+                {
+                    resmaxm = 0.0;
+                    for(int i=0;i<ntotal;i++)
                     {
-                        cout <<right<<scientific<<setw(nwidthcolm)<<setprecision(nwidthcolm-6)
-                             <<" * Newton-Its converged (RES=" 
-                             << sqrt(resnorm*ototalGlobal)<<" AbsoluteError="<< sqrt(resnorm*ototalGlobal/m_inArrayNorm)
-                             <<" with "<<setw(3)<<k<<" Non-Its"<<" and "<<setw(4)<<NtotDoOdeRHS<<" Lin-Its)"<<" ratio: "<<resratio<<endl;
+                        resmaxm = max(resmaxm,abs(NonlinSysRes_1D[i]));
                     }
-                    converged = true;
-                    break;
-                // }
+                    v_Comm->AllReduce(resmaxm, Nektar::LibUtilities::ReduceMax);
+                    if(resmaxm<tol2Max)
+                    {
+                    // at least one Newton Iteration 
+                    // or else the flow field will not update 
+                    // if(k>0)
+                    // {
+                        /// TODO: m_root
+                        if(l_verbose&&l_root)
+                        {
+                            cout <<right<<scientific<<setw(nwidthcolm)<<setprecision(nwidthcolm-6)
+                                <<" * Newton-Its converged (RES=" 
+                                << sqrt(resnorm)<<" ResPerDOF/Q="<< sqrt(resnorm/m_inArrayNorm*ototalDOF)
+                                <<" ResMax/Q="<< resmaxm*sqrt(ntotalDOF/m_inArrayNorm)<<" ResPerDOF/(DtRHS): "<<sqrt(resratio*ototalDOF)
+                                <<" with "<<setw(3)<<k<<" Non-Its"<<" and "<<setw(4)<<NtotDoOdeRHS<<" Lin-Its)"<<endl;
+                        }
+                        converged = true;
+                        break;
+                    // }
+                    }
+                }
             }
 
             //TODO: currently  NonlinSysRes is 2D array and SolveLinearSystem needs 1D array
@@ -1530,7 +1553,7 @@ namespace Nektar
 
         DoOdeProjection(inpnts,inpnts,m_BndEvaluateTime);
         DoOdeRhs_coeff(inpnts,out,m_BndEvaluateTime);
-        
+
         for (int i = 0; i < nvariable; i++)
         {
             Vmath::Svtvp(ncoeffs,m_TimeIntegLambda,out[i],1,sol_n[i],1,out[i],1);
@@ -1538,6 +1561,51 @@ namespace Nektar
         }
         return;
     }
+
+
+    void CompressibleFlowSystem::NonlinSysEvaluator_coeff_out(
+                                                       Array<OneD, Array<OneD, NekDouble> > &inarray,
+                                                       Array<OneD, Array<OneD, NekDouble> > &out)
+    {
+        Array<OneD, Array<OneD, NekDouble> > sol_n;
+        sol_n                  = m_TimeIntegtSol_n;
+        //inforc = m_TimeIntegForce;
+        unsigned int nvariable  = inarray.num_elements();
+        unsigned int ncoeffs    = inarray[0].num_elements();
+        unsigned int npoints    = m_fields[0]->GetNpoints();
+
+        Array<OneD, Array<OneD, NekDouble> > inpnts(nvariable);
+
+        for(int i = 0; i < nvariable; i++)
+        {
+            inpnts[i]   =   Array<OneD, NekDouble>(npoints,0.0);
+            m_fields[i]->BwdTrans(inarray[i], inpnts[i]);
+        }
+
+        DoOdeProjection(inpnts,inpnts,m_BndEvaluateTime);
+        DoOdeRhs_coeff(inpnts,out,m_BndEvaluateTime);
+
+
+        LibUtilities::CommSharedPtr v_Comm  = m_fields[0]->GetComm()->GetRowComm();
+        NekDouble resnorm = 0.0;
+        for(int i = 0; i < nvariable; i++)
+        {
+            resnorm += Vmath::Dot(ncoeffs,out[i],out[i]);
+        }
+        v_Comm->AllReduce(resnorm, Nektar::LibUtilities::ReduceSum);
+        if(0==m_session->GetComm()->GetRank())
+        {
+            cout << "        m_TimeIntegLambda= "<<m_TimeIntegLambda<<" DtRhs^2= "<<m_TimeIntegLambda*m_TimeIntegLambda*resnorm<<endl;
+        }
+
+        for (int i = 0; i < nvariable; i++)
+        {
+            Vmath::Svtvp(ncoeffs,m_TimeIntegLambda,out[i],1,sol_n[i],1,out[i],1);
+            Vmath::Vsub(ncoeffs,inarray[i],1,out[i],1,out[i],1);
+        }
+        return;
+    }
+
 
     /**
      * @brief Compute the right-hand side.

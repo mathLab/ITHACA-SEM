@@ -222,6 +222,10 @@ namespace Nektar
                 Array<OneD, Array<OneD, NekDouble> > &inarray,
                 Array<OneD, Array<OneD, NekDouble> > &out);
 
+        void NonlinSysEvaluator_coeff_out(
+                Array<OneD, Array<OneD, NekDouble> > &inarray,
+                Array<OneD, Array<OneD, NekDouble> > &out);
+
         void NonlinSysEvaluator_coeff_bnd(
                 Array<OneD, Array<OneD, NekDouble> > &inarray,
                 Array<OneD, Array<OneD, NekDouble> > &out);

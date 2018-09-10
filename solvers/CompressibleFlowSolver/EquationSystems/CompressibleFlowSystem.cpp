@@ -1032,8 +1032,8 @@ namespace Nektar
         }
 
         unsigned int ntotalGlobal     = ntotal;
-        unsigned int ntotalDOF        = ntotal/nvariables;
         v_Comm->AllReduce(ntotalGlobal, Nektar::LibUtilities::ReduceSum);
+        unsigned int ntotalDOF        = ntotalGlobal/nvariables;
         NekDouble ototalGlobal  = 1.0/ntotalGlobal; 
         NekDouble ototalDOF     = 1.0/ntotalDOF; 
 
@@ -1247,7 +1247,6 @@ namespace Nektar
         // m_TimeIntegtSol_n   =   nullptr;
         // m_SysEquatResid_k   =   nullptr;
         ASSERTL0((converged),"Nonlinear system solver not converge in CompressibleFlowSystem::DoImplicitSolve ");
-        // return;
     }
 
     void CompressibleFlowSystem::AllocatePrecondBlkDiag_coeff(Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray)

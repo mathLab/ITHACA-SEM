@@ -10,7 +10,9 @@ def get_refcount(coords_address):
 	return ctypes.c_long.from_address(coords_address).value
 
 def main():
-	session_name = ["memory-test-python-to-c-address.py", "newsquare_2x2.xml"]
+	session_name = ["NekPy_ReferenceTest_PythonDeleteFirst.py", "newsquare_2x2.xml"]
+	expected_test_outcome = [1, 2, 1, 3.469446951953614e-17]
+	actual_test_outcome = []
 
 	session = SessionReader.CreateInstance(session_name)
 	graph = MeshGraph.Read(session)
@@ -26,20 +28,29 @@ def main():
 
 	print("Retrieved coordinates.")
 	print("Reference count for expansion coordinates: %d\n" % get_refcount(coords_address))
+	actual_test_outcome.append(get_refcount(coords_address))
 
 	print("Setting PhysArray (exp.SetPhysArray())...")
 	exp.SetPhysArray(coords) 
 	print("exp.SetPhysArray() completed.")
 	print("Reference count for expansion coordinates: %d\n" % get_refcount(coords_address))
+	actual_test_outcome.append(get_refcount(coords_address))
 	
 	print("Deleting coordinates in Python...")
 	del coords
 	gc.collect()
 	print("Coordinates deleted in Python.")
 	print("Reference count for expansion coordinates: %d\n" % get_refcount(coords_address))
+	actual_test_outcome.append(get_refcount(coords_address))
 
 	print("Attempting to calculate the integral...")
 	print("Integral calculated to be: %r" % exp.PhysIntegral())
+	actual_test_outcome.append(exp.PhysIntegral())
+
+	if actual_test_outcome == expected_test_outcome:
+		print("Test successful!")
+	else:
+		print("Test unsuccessful")
 
 if __name__ == '__main__':
     main()

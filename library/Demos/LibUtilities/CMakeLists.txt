@@ -27,3 +27,11 @@ ADD_NEKTAR_TEST(TimeIntegrationDemoDIRKIMEXOrder2)
 ADD_NEKTAR_TEST(TimeIntegrationDemoDIRKIMEXOrder3)
 ADD_NEKTAR_TEST(TimeIntegrationDemoCNAB)
 ADD_NEKTAR_TEST(TimeIntegrationDemoMCNAB)
+
+IF(NEKTAR_BUILD_PYTHON)
+	ADD_NEKPY_EXECUTABLE(NekPy_ReferenceTest_CppDeleteFirst.py NekPy_ReferenceTest_CppDeleteFirst.py)
+	ADD_NEKPY_EXECUTABLE(NekPy_ReferenceTest_PythonDeleteFirst.py NekPy_ReferenceTest_PythonDeleteFirst.py)
+
+	ADD_NEKTAR_TEST(NekPy_ReferenceTest_CppDeleteFirst)
+	ADD_NEKTAR_TEST(NekPy_ReferenceTest_PythonDeleteFirst)
+ENDIF()

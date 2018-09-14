@@ -371,23 +371,14 @@ namespace Nektar
                 outarray[it] *= -1;
             }
 
-            // sort local dirichlet coeffs that are just touching a dirichlet boundary 
+            // sort local dirichlet coeffs that are just touching a
+            // dirichlet boundary
             set<ExtraDirDof> &copyLocalDirDofs = m_locToGloMap->GetCopyLocalDirDofs();
 
             for (auto &it : copyLocalDirDofs)
             {
                 outarray[std::get<0>(it)] =
                     outarray[std::get<1>(it)]*std::get<2>(it);
-            }
-
-            string outname;
-            outname = "locdebug" + boost::lexical_cast<string>(m_comm->GetRank()); 
-            ofstream file;
-            file.open(outname.c_str());
-
-            for(int n = 0;  n < outarray.num_elements(); ++n)
-            {
-                file << outarray[n] << endl;
             }
       }          
       

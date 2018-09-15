@@ -15,11 +15,18 @@ def main():
 	coords = exp.GetCoords()
 	coords = coords[0]
 
-	coords_data_address = coords.ctypes.data
-	print "The memory address of data is: {}\n".format(hex(coords_data_address))
+	coords_data_address = hex(coords.ctypes.data)
+
+	print "The memory address of data is: {}\n".format(coords_data_address)
 
 	exp.SetPhysArray(coords)
-	print exp.GetPhysAddress()
+	phys_data_address = exp.GetPhysAddress()
+	print "The memory address of array data is: {}\n".format(phys_data_address)
+
+	if coords_data_address == phys_data_address:
+		print("Test successful!")
+	else:
+		print("Test unsuccessful")
 
 if __name__ == '__main__':
     main()

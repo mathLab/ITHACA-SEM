@@ -45,6 +45,11 @@
 #include <boost/assign/list_of.hpp>
 #include <boost/multi_array.hpp>
 
+#ifdef WITH_PYTHON
+#include <sstream>
+#include <string>
+#endif
+
 namespace Nektar
 {
     class LinearSystem;
@@ -307,8 +312,17 @@ namespace Nektar
             /// \brief Returns the array's reference counter.
             unsigned int GetCount() const { return m_count; }
 
-            /// \brief Prints out the memory address of m_data.
-            void GetDataAddress() { std::cout << "m_data memory address is: " << m_data << std::endl; }
+            /// \brief Prints the memory address of m_data.
+            #ifdef WITH_PYTHON
+            std::string GetDataAddress() 
+            { 
+                const void * address = static_cast<const void*>(m_data);
+                std::stringstream ss;
+                ss << address;  
+                std::string name = ss.str(); 
+                return name;
+            }
+            #endif
 
             /// \brief Returns true is this array and rhs overlap.
             bool Overlaps(const Array<OneD, const DataType>& rhs) const

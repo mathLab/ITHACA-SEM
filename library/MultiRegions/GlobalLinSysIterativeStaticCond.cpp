@@ -444,6 +444,16 @@ namespace Nektar
                     m_precon->BuildPreconditioner();
                 }
                 
+#if 1 // to be consistent with original 
+
+                int nGloBndDofs = m_locToGloMap->GetNumGlobalBndCoeffs();
+                Array<OneD, NekDouble> F_gloBnd(nGloBndDofs);
+                NekVector<NekDouble> F_GloBnd(nGloBndDofs,F_gloBnd,eWrapper);
+                
+                m_locToGloMap->AssembleBnd(F_bnd,F_gloBnd);
+                Set_Rhs_Magnitude(F_GloBnd);
+                
+#else
                 int nLocBndDofs   = m_locToGloMap->GetNumLocalBndCoeffs();
 
                 //Set_Rhs_Magnitude - version using local array
@@ -451,7 +461,6 @@ namespace Nektar
                 Array<OneD, NekDouble> vExchange(1, 0.0);
 
                 vExchange[0] += Blas::Ddot(nLocBndDofs, F_bnd,1,F_bnd,1);
-                
                 m_expList.lock()->GetComm()->GetRowComm()->AllReduce(
                 vExchange, Nektar::LibUtilities::ReduceSum);
 
@@ -470,6 +479,7 @@ namespace Nektar
                     m_rhs_magnitude = (m_rhs_mag_sm*(m_rhs_magnitude) + 
                                        (1.0-m_rhs_mag_sm)*new_rhs_mag); 
                 }
+#endif
             }
             else
             {
@@ -477,7 +487,6 @@ namespace Nektar
                 // vector value with no weighting
                 m_rhs_magnitude = NekConstants::kNekUnsetDouble;
             }
-
         }
         
         void GlobalLinSysIterativeStaticCond::v_BasisFwdTransform(

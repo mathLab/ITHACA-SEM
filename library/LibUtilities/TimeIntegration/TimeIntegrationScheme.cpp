@@ -607,6 +607,64 @@ namespace Nektar
                     m_timeLevelOffset[0] = 0;
                 }
                 break;
+            case eDIRKOrder4Stage6:
+                {
+                    // See Kennedey&Carpenter 2016, Table 16
+                    m_numsteps = 1;
+                    m_numstages = 6;
+
+                    m_A = Array<OneD, Array<TwoD,NekDouble> >(1);
+                    m_B = Array<OneD, Array<TwoD,NekDouble> >(1);
+
+                    m_A[0] = Array<TwoD,NekDouble>(m_numstages,m_numstages,0.0);
+                    m_B[0] = Array<TwoD,NekDouble>(m_numsteps, m_numstages,0.0);
+                    m_U    = Array<TwoD,NekDouble>(m_numstages,m_numsteps, 1.0);
+                    m_V    = Array<TwoD,NekDouble>(m_numsteps, m_numsteps, 1.0);
+
+                    NekDouble lambda = 1.0/4.0;
+                    const NekDouble ConstSqrt2  = sqrt(2.0);
+
+                    m_A[0][0][0] = 0.0;
+                    m_A[0][1][0] = lambda;
+                    m_A[0][2][0] = (1.0-ConstSqrt2)/8.0;
+                    m_A[0][3][0] = (5.0-7.0*ConstSqrt2)/64.0;
+                    m_A[0][4][0] = (-13796.0-54539*ConstSqrt2)/125000.0;
+                    m_A[0][5][0] = (1181.0-987.0*ConstSqrt2)/ 13782.0;
+
+                    m_A[0][1][1] = m_A[0][1][0];
+                    m_A[0][2][1] = m_A[0][2][0];
+                    m_A[0][3][1] = m_A[0][3][0];
+                    m_A[0][4][1] = m_A[0][4][0];
+                    m_A[0][5][1] = m_A[0][5][0];
+
+                    m_A[0][2][2] = lambda;
+                    m_A[0][3][2] = 7.0*(1.0+ConstSqrt2)/32.0;
+                    m_A[0][4][2] = (506605.0+132109.0*ConstSqrt2)/437500.0;
+                    m_A[0][5][2] = 47.0*(-267.0+1783.0*ConstSqrt2)/273343.0;
+
+                    m_A[0][3][3] = lambda;
+                    m_A[0][4][3] = 166.0*(-97.0+376.0*ConstSqrt2)/109375.0;
+                    m_A[0][5][3] = -16.0*(-22922.0+3525.0*ConstSqrt2)/571953.0;
+
+                    m_A[0][4][4] = lambda;
+                    m_A[0][5][4] = -15625.0*(97.0+376.0*ConstSqrt2)/90749876.0;
+
+                    m_A[0][5][5] = lambda;
+
+                    m_B[0][0][0] = m_A[0][5][0];
+                    m_B[0][0][1] = m_A[0][5][1];
+                    m_B[0][0][2] = m_A[0][5][2];
+                    m_B[0][0][3] = m_A[0][5][3];
+                    m_B[0][0][4] = m_A[0][5][4];
+                    m_B[0][0][5] = m_A[0][5][5];
+
+                    m_schemeType = eDiagonallyImplicit;
+                    m_numMultiStepValues = 1;
+                    m_numMultiStepDerivs = 0;
+                    m_timeLevelOffset = Array<OneD,unsigned int>(m_numsteps);
+                    m_timeLevelOffset[0] = 0;
+                }
+                break;
             case eIMEXdirk_2_3_2:
                 {
                     m_numsteps  = 1;
@@ -1528,25 +1586,34 @@ namespace Nektar
                 // Calculate the stage derivative based upon the stage value
                 if(type == eDiagonallyImplicit)
                 {
-                    if(m_numstages==1)
+                    if( (i==0) && m_firstStageEqualsOldSolution )
                     {
-                        m_T= t_old[0]+timestep;
+                        // cout << "(i==0) && m_firstStageEqualsOldSolution "<<i<<endl;
+                        op.DoProjection(m_Y,m_Y,m_T);
+                        op.DoOdeRhs(m_Y, m_F[i], m_T);        
                     }
-                    else 
+                    else
                     {
-                        m_T= t_old[0];
-                        for(int j=0; j<=i; ++j)
+                        if(m_numstages==1)
                         {
-                            m_T += A(i,j)*timestep;
+                            m_T= t_old[0]+timestep;
                         }
-                    }
-                    
-                    op.DoImplicitSolve(m_tmp, m_Y, m_T, A(i,i)*timestep);
+                        else 
+                        {
+                            m_T= t_old[0];
+                            for(int j=0; j<=i; ++j)
+                            {
+                                m_T += A(i,j)*timestep;
+                            }
+                        }
+                        
+                        op.DoImplicitSolve(m_tmp, m_Y, m_T, A(i,i)*timestep);
 
-                    for(k = 0; k < m_nvar; k++)
-                    {
-                        Vmath::Vsub(m_npoints,m_Y[k],1,m_tmp[k],1,m_F[i][k],1);
-                        Vmath::Smul(m_npoints,1.0/(A(i,i)*timestep),m_F[i][k],1,m_F[i][k],1);
+                        for(k = 0; k < m_nvar; k++)
+                        {
+                            Vmath::Vsub(m_npoints,m_Y[k],1,m_tmp[k],1,m_F[i][k],1);
+                            Vmath::Smul(m_npoints,1.0/(A(i,i)*timestep),m_F[i][k],1,m_F[i][k],1);
+                        }
                     }
                 }
                 else if(type == eIMEX)
@@ -1588,7 +1655,7 @@ namespace Nektar
                     op.DoOdeRhs(m_Y, m_F[i], m_T);        
                 }
             }
-            
+
             // Next, the solution vector y at the new time level will
             // be calculated.
             //

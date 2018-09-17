@@ -173,7 +173,7 @@ namespace Nektar
         const NekDouble  factor)
     {
         m_map =  Array<OneD,      int>(nGlobal,1);
-        m_tolerance = max(tol,1.0E-10);
+        m_tolerance = max(tol,1.0E-16);
         m_prec_factor = factor;
         int niterations = DoGMRES(nGlobal, pInput, pOutput, nDir);
 
@@ -280,7 +280,7 @@ namespace Nektar
         }
 
 
-        if(m_root)
+        if(m_root&&m_verbose)
         {
                     cout <<std::scientific<<std::setw(nwidthcolm)<<std::setprecision(nwidthcolm-8) 
                          << "       GMRES iterations made = " << m_totalIterations

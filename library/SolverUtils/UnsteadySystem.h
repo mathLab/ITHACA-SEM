@@ -103,7 +103,7 @@ namespace Nektar
             NekDouble                                       m_BndEvaluateTime;
 
             /// coefff of spacial derivatives(rhs or m_F in GLM) in calculating the residual of the whole equation(used in unsteady time integrations)
-            NekDouble                                       m_TimeIntegLambda;
+            NekDouble                                       m_TimeIntegLambda=0.0;
 
             ///Solution of The kth iteration in the Newton method(Nonlinear iteration)
             Array<OneD,       Array<OneD, NekDouble> >      m_TimeIntegtSol_k;

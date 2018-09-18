@@ -1013,8 +1013,9 @@ namespace Nektar
     {
         m_TimeIntegtSol_n   = inarray;
         m_TimeIntegtSol_k   = out;
-        m_TimeIntegLambda   = lambda;
         m_BndEvaluateTime   = time;
+        NekDouble lamda_old = m_TimeIntegLambda;
+        m_TimeIntegLambda   = lambda;
         bool l_verbose      = m_session->DefinesCmdLineArgument("verbose");
         bool converged      = false;
         const unsigned int MaxNonlinIte =   100;
@@ -1142,8 +1143,8 @@ namespace Nektar
         // DebugNumCalJac_coeff(m_PrecMatVars);
         // ElmtVarInvMtrx_coeff(m_PrecMatVars);
 
-        // if(m_TotLinItePrecondMat>0)
-        // {
+        if(m_TotLinItePrecondMat>0&&lamda_old==m_TimeIntegLambda)
+        {
             int nphspnt = inpnts[0].num_elements();
             Array<OneD, Array<OneD, NekDouble> > intmp(nvariables);
             for(int i = 0; i < nvariables; i++)
@@ -1161,7 +1162,7 @@ namespace Nektar
             {
                 intmp[i]    =   Array<OneD, NekDouble>(1,0.0);
             }
-        // }
+        }
 
         
 

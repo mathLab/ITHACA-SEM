@@ -44,4 +44,6 @@ void export_StdSegExp()
     py::class_<StdSegExp, py::bases<StdExpansion>,
                std::shared_ptr<StdSegExp> >(
                    "StdSegExp", py::init<const LibUtilities::BasisKey&>());
+
+    NEKPY_SHPTR_FIX(StdSegExp, StdExpansion);
 }

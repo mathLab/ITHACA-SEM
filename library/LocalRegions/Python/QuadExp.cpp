@@ -46,4 +46,8 @@ void export_QuadExp()
                    "QuadExp", py::init<const LibUtilities::BasisKey&,
                    const LibUtilities::BasisKey&,
                    const SpatialDomains::QuadGeomSharedPtr &>());
+
+    NEKPY_SHPTR_FIX(QuadExp, Expansion);
+    NEKPY_SHPTR_FIX(QuadExp, StdRegions::StdQuadExp);
+    NEKPY_SHPTR_FIX(QuadExp, StdRegions::StdExpansion);
 }

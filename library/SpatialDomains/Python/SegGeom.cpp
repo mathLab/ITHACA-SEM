@@ -39,8 +39,30 @@
 using namespace Nektar;
 using namespace Nektar::SpatialDomains;
 
+SegGeomSharedPtr SegGeom_Init(int id, int coordim, py::list &segments)
+{
+    std::vector<PointGeomSharedPtr> segVec;
+
+    for (int i = 0; i < py::len(segments); ++i)
+    {
+        segVec.push_back(py::extract<PointGeomSharedPtr>(segments[i]));
+    }
+
+    SegGeomSharedPtr seg = std::make_shared<SegGeom>(id, coordim, &segVec[0]);
+
+    return seg;
+}
+
 void export_SegGeom()
 {
     py::class_<SegGeom, py::bases<Geometry1D>, std::shared_ptr<SegGeom> >(
-        "SegGeom", py::init<>());
+        "SegGeom", py::init<>())
+        .def("__init__", py::make_constructor(
+                 &SegGeom_Init, py::default_call_policies(), (
+                     py::arg("id"), py::arg("coordim"),
+                     py::arg("segments")=py::list())));
+        //.def(py::init<int, int, py::optional<CurveSharedPtr>)
+
+    NEKPY_SHPTR_FIX(SegGeom, Geometry1D);
+    NEKPY_SHPTR_FIX(SegGeom, Geometry);
 }

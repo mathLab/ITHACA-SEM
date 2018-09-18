@@ -300,6 +300,12 @@ namespace Nektar
 
                 fill(outarray.get(), outarray.get()+m_ncoeffs, 0.0 );
 
+                if(nmodes[0] == 1 && nmodes[1] == 1)
+                {
+                    outarray[0] = inarray[0];
+                    return;
+                }
+
                 Array<OneD, NekDouble> physEdge[4];
                 Array<OneD, NekDouble> coeffEdge[4];
                 StdRegions::Orientation orient[4];
@@ -1194,7 +1200,18 @@ namespace Nektar
             const SpatialDomains::GeomFactorsSharedPtr & geomFactors =
             GetGeom()->GetMetricInfo();
             SpatialDomains::GeomType type = geomFactors->GetGtype();
+
             LibUtilities::PointsKeyVector ptsKeys = GetPointsKeys();
+            for(i = 0; i < ptsKeys.size(); ++i)
+            {
+                // Need at least 2 points for computing normals
+                if (ptsKeys[i].GetNumPoints() == 1)
+                {
+                    LibUtilities::PointsKey pKey(2, ptsKeys[i].GetPointsType());
+                    ptsKeys[i] = pKey;
+                }
+            }
+
             const Array<TwoD, const NekDouble> & df = geomFactors->GetDerivFactors(ptsKeys);
             const Array<OneD, const NekDouble> & jac  = geomFactors->GetJac(ptsKeys);
             int nqe;
@@ -1425,7 +1442,7 @@ namespace Nektar
                 // interpolate Jacobian and invert
                 LibUtilities::Interp1D(
                     from_key,jac, m_base[0]->GetPointsKey(), work);
-                Vmath::Sdiv(nq,1.0,&work[0],1,&work[0],1);
+                Vmath::Sdiv(nqe,1.0,&work[0],1,&work[0],1);
                 
                 // interpolate
                 for (i = 0; i < GetCoordim(); ++i)

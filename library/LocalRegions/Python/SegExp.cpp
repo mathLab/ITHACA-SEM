@@ -45,4 +45,8 @@ void export_SegExp()
                std::shared_ptr<SegExp> >(
                    "SegExp", py::init<const LibUtilities::BasisKey&,
                    const SpatialDomains::Geometry1DSharedPtr &>());
+
+    NEKPY_SHPTR_FIX(SegExp, Expansion);
+    NEKPY_SHPTR_FIX(SegExp, StdRegions::StdSegExp);
+    NEKPY_SHPTR_FIX(SegExp, StdRegions::StdExpansion);
 }

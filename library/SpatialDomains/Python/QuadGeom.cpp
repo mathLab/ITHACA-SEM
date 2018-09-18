@@ -43,4 +43,7 @@ void export_QuadGeom()
 {
     py::class_<QuadGeom, py::bases<Geometry2D>, std::shared_ptr<QuadGeom> >(
         "QuadGeom", py::init<>());
+
+    NEKPY_SHPTR_FIX(QuadGeom, Geometry2D);
+    NEKPY_SHPTR_FIX(QuadGeom, Geometry);
 }

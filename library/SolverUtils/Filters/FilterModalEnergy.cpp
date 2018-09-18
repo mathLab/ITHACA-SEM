@@ -52,8 +52,9 @@ std::string FilterModalEnergy::className = GetFilterFactory().
  */
 FilterModalEnergy::FilterModalEnergy(
     const LibUtilities::SessionReaderSharedPtr &pSession,
+    const std::weak_ptr<EquationSystem>      &pEquation,
     const ParamMap &pParams) :
-    Filter(pSession)
+    Filter(pSession, pEquation)
 {
     // OutputFile
     auto it = pParams.find("OutputFile");

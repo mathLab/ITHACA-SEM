@@ -43,4 +43,7 @@ void export_TriGeom()
 {
     py::class_<TriGeom, py::bases<Geometry2D>, std::shared_ptr<TriGeom> >(
         "TriGeom", py::init<>());
+
+    NEKPY_SHPTR_FIX(TriGeom, Geometry2D);
+    NEKPY_SHPTR_FIX(TriGeom, Geometry);
 }

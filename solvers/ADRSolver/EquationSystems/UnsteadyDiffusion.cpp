@@ -252,22 +252,19 @@ namespace Nektar
             Vmath::Smul(npoints, 
                         -factors[StdRegions::eFactorLambda], 
                         inarray[i], 1, 
-                        m_fields[i]->UpdatePhys(), 1);
+                        outarray[i], 1);
             
             // Solve a system of equations with Helmholtz solver
-            m_fields[i]->HelmSolve(m_fields[i]->GetPhys(),
-                                   m_fields[i]->UpdateCoeffs(), 
+            m_fields[i]->HelmSolve(outarray[i],
+                                   m_fields[i]->UpdateCoeffs(),
                                    NullFlagList, 
                                    factors, 
                                    m_varcoeff);
             
-            m_fields[i]->BwdTrans(m_fields[i]->GetCoeffs(), 
-                                  m_fields[i]->UpdatePhys());
+            m_fields[i]->BwdTrans(m_fields[i]->GetCoeffs(),
+                                  outarray[i]);
             
             m_fields[i]->SetPhysState(false);
-            
-            // The solution is Y[i]
-            outarray[i] = m_fields[i]->GetPhys();
         }
     }
     

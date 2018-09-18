@@ -56,3 +56,7 @@ ADD_NEKTAR_TEST(StdProject_Diff3D_Hex_Mod_P6_Q7)
 ADD_NEKTAR_TEST(StdProject_Diff3D_Hex_Lagrange_P6_Q7)
 ADD_NEKTAR_TEST(StdProject_Diff3D_Hex_Legendre_P6_Q7)
 ADD_NEKTAR_TEST(StdProject_Diff3D_Hex_Chebyshev_P6_Q7)
+
+IF (NEKTAR_BUILD_PYTHON)
+   SUBDIRS(Python)
+ENDIF()

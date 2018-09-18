@@ -47,7 +47,6 @@
 
 namespace Nektar
 {
-
 namespace SpatialDomains
 {
 
@@ -76,9 +75,12 @@ public:
     SPATIAL_DOMAINS_EXPORT static const int kNverts = 3;
 
     SPATIAL_DOMAINS_EXPORT static StdRegions::Orientation GetFaceOrientation(
-        const TriGeom &face1, const TriGeom &face2);
+                           const TriGeom &face1, const TriGeom &face2,
+                           bool doRot, int dir, NekDouble angle, NekDouble tol);
+    
     SPATIAL_DOMAINS_EXPORT static StdRegions::Orientation GetFaceOrientation(
-        const PointGeomVector &face1, const PointGeomVector &face2);
+              const PointGeomVector &face1, const PointGeomVector &face2,
+              bool doRot, int dir, NekDouble angle, NekDouble tol);
 
 protected:
     SPATIAL_DOMAINS_EXPORT virtual NekDouble v_GetCoord(

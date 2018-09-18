@@ -271,7 +271,7 @@ MACRO(ADD_NEKPY_LIBRARY name)
     # Add target link libraries.
     TARGET_LINK_LIBRARIES(_${name}
         ${Boost_SYSTEM_LIBRARY}
-        ${Boost_PYTHON_LIBRARY}
+        ${BOOST_PYTHON_LIB}
         ${BOOST_NUMPY_LIB}
         ${PYTHON_LIBRARIES}
         ${name})

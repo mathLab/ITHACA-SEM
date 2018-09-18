@@ -50,14 +50,15 @@ class ForcingAxiSymmetric : public SolverUtils::Forcing
 
         /// Creates an instance of this class
         static SolverUtils::ForcingSharedPtr create(
-                const LibUtilities::SessionReaderSharedPtr& pSession,
+                const LibUtilities::SessionReaderSharedPtr         &pSession,
+                const std::weak_ptr<SolverUtils::EquationSystem> &pEquation,
                 const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields,
                 const unsigned int& pNumForcingFields,
                 const TiXmlElement* pForce)
         {
             SolverUtils::ForcingSharedPtr p =
                                     MemoryManager<ForcingAxiSymmetric>::
-                                            AllocateSharedPtr(pSession);
+                                        AllocateSharedPtr(pSession, pEquation);
             p->InitObject(pFields, pNumForcingFields, pForce);
             return p;
         }
@@ -80,7 +81,8 @@ class ForcingAxiSymmetric : public SolverUtils::Forcing
     private:
 
         ForcingAxiSymmetric(
-            const LibUtilities::SessionReaderSharedPtr& pSession);
+                const LibUtilities::SessionReaderSharedPtr         &pSession,
+                const std::weak_ptr<SolverUtils::EquationSystem> &pEquation);
 
         Array<OneD, NekDouble>               m_geomFactor;
         VariableConverterSharedPtr           m_varConv;

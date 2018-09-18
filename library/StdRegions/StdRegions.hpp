@@ -191,7 +191,7 @@ namespace Nektar
             "PreconLinearSpaceMass",
             "InterpGauss",
             "GaussDG",
-            "PhysInterpToEquiSpaced"
+            "PhysInterpToEquiSpaced",
             "EquiSpacedToCoeffs"
         };
 
@@ -238,7 +238,8 @@ namespace Nektar
                 eFactorSVVDGKerDiffCoeff,
                 eFactorGaussVertex,
                 eFactorGaussEdge,
-                eFactorConst
+                eFactorConst,
+                SIZE_ConstFactorType
             };
 
         const char* const ConstFactorTypeMap[] = {

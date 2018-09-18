@@ -45,4 +45,6 @@ void export_StdTriExp()
                std::shared_ptr<StdTriExp> >(
                    "StdTriExp", py::init<const LibUtilities::BasisKey&,
                    const LibUtilities::BasisKey&>());
+
+    NEKPY_SHPTR_FIX(StdTriExp, StdExpansion);
 }

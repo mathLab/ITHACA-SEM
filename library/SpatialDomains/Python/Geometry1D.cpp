@@ -44,4 +44,6 @@ void export_Geometry1D()
     py::class_<Geometry1D, py::bases<Geometry>, std::shared_ptr<Geometry1D>,
                boost::noncopyable>(
                    "Geometry1D", py::no_init);
+
+    NEKPY_SHPTR_FIX(Geometry1D, Geometry);
 }

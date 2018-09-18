@@ -228,7 +228,7 @@ int main(int argc, char *argv[])
 
         if (file.IsPythonTest())
         {
-            command += "PYTHONPATH=\"@BUILD_PATH\" ";
+            command += "PYTHONPATH=\"@CMAKE_BINARY_DIR@\" ";
             command += "@PYTHON_EXECUTABLE@ ";
         }
 
@@ -236,6 +236,12 @@ int main(int argc, char *argv[])
         command += " ";
         command += file.GetParameters();
         command += " 1>output.out 2>output.err";
+
+        // override command if specified
+        if (file.GetCommand() != "")
+        {
+            command = file.GetCommand();
+        }
 
         status = 0;
         string line;

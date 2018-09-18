@@ -50,7 +50,7 @@ ENDIF()
 
 IF( ${CMAKE_SYSTEM} MATCHES "Darwin-*")
   SET_TARGET_PROPERTIES(Tester
-    PROPERTIES LINK_FLAGS "-Wl,-undefined,dynamic_lookup -Wl,-rpath,${CMAKE_INSTALL_PREFIX}/${LIB_DIR} -Wl,-rpath,${Boost_LIBRARY_DIRS}")
+    PROPERTIES LINK_FLAGS "-Wl,-undefined,dynamic_lookup -Wl,-rpath,${Boost_LIBRARY_DIRS}")
 ENDIF( ${CMAKE_SYSTEM} MATCHES "Darwin-*")
 
 SET_TARGET_PROPERTIES(Tester

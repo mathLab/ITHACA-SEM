@@ -1,11 +1,12 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File FilterEnergy.h
+// File DummySolver.cpp
 //
 // For more information, please see: http://www.nektar.info
 //
 // The MIT License
 //
+// Copyright (c) 2016 Kilian Lackhove
 // Copyright (c) 2006 Division of Applied Mathematics, Brown University (USA),
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
@@ -29,49 +30,51 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Outputs solution fields during time-stepping.
+// Description: Dummy1/Dummy4 (Acoustic Perturbation Equations) framework solver
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_COMPRESSIBLEFLOWSOLVER_FILTERS_FILTERENERGY_H
-#define NEKTAR_COMPRESSIBLEFLOWSOLVER_FILTERS_FILTERENERGY_H
+#include <LibUtilities/BasicUtils/SessionReader.h>
+#include <SolverUtils/Driver.h>
 
-#include <SolverUtils/Filters/FilterEnergyBase.h>
+using namespace std;
+using namespace Nektar;
+using namespace Nektar::SolverUtils;
 
-namespace Nektar
+int main(int argc, char *argv[])
 {
+    LibUtilities::SessionReaderSharedPtr session;
+    SpatialDomains::MeshGraphSharedPtr graph;
+    string vDriverModule;
+    DriverSharedPtr drv;
 
-class FilterEnergy : public SolverUtils::FilterEnergyBase
-{
-public:
-    friend class MemoryManager<FilterEnergy>;
+    try
+    {
+        // Create session reader.
+        session = LibUtilities::SessionReader::CreateInstance(argc, argv);
 
-    /// Creates an instance of this class
-    static SolverUtils::FilterSharedPtr create(
-        const LibUtilities::SessionReaderSharedPtr &pSession,
-        const ParamMap &pParams) {
-        SolverUtils::FilterSharedPtr p = MemoryManager<FilterEnergy>
-                                        ::AllocateSharedPtr(pSession, pParams);
-        return p;
+        // Create MeshGraph.
+        graph = SpatialDomains::MeshGraph::Read(session);
+
+        // Create driver
+        session->LoadSolverInfo("Driver", vDriverModule, "Standard");
+        drv = GetDriverFactory().CreateInstance(vDriverModule, session, graph);
+        session->SetSolverInfo("EqType", "Dummy");
+
+        // Execute driver
+        drv->Execute();
+
+        // Finalise session
+        session->Finalise();
+    }
+    catch (const std::runtime_error &e)
+    {
+        return 1;
+    }
+    catch (const std::string &eStr)
+    {
+        cout << "Error: " << eStr << endl;
     }
 
-    ///Name of the class
-    static std::string className;
-
-    SOLVER_UTILS_EXPORT FilterEnergy(
-        const LibUtilities::SessionReaderSharedPtr &pSession,
-        const ParamMap &pParams);
-    SOLVER_UTILS_EXPORT ~FilterEnergy();
-
-protected:
-    virtual void v_GetVelocity(
-        const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
-        const int i,
-        Array<OneD, NekDouble> &velocity);
-    virtual Array<OneD, NekDouble> v_GetDensity(
-        const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields);
-};
-
+    return 0;
 }
-
-#endif /* NEKTAR_SOLVERUTILS_FILTERS_FILTERCHECKPOINT_H */

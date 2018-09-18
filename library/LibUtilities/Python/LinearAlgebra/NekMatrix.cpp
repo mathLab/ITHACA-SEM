@@ -75,8 +75,8 @@ struct NekMatrixToPython
 #else
         py::object capsule(
             py::handle<>(PyCapsule_New(
-                             (void *)new std::shared_ptr<NekMatrix<T, StandardMatrixTag>>(mat),
-                             (PyCapsule_Destructor)&CapsuleDestructor<T, StandardMatrixTag>)));
+                             (void *)new std::shared_ptr<NekMatrix<T, StandardMatrixTag>>(mat), NULL,
+                             (PyCapsule_Destructor)&NekMatrixCapsuleDestructor<T, StandardMatrixTag>)));
 #endif
 
         int nRows = mat->GetRows(), nCols = mat->GetColumns();

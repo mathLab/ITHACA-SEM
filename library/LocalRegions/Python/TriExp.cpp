@@ -46,4 +46,8 @@ void export_TriExp()
                    "TriExp", py::init<const LibUtilities::BasisKey&,
                    const LibUtilities::BasisKey&,
                    const SpatialDomains::TriGeomSharedPtr &>());
+
+    NEKPY_SHPTR_FIX(TriExp, Expansion);
+    NEKPY_SHPTR_FIX(TriExp, StdRegions::StdTriExp);
+    NEKPY_SHPTR_FIX(TriExp, StdRegions::StdExpansion);
 }

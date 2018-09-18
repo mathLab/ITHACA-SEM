@@ -145,7 +145,12 @@ else()
     # Probably this needs to be more involved. It would be nice if the config
     # information the python interpreter itself gave us were more complete.
     find_library(PYTHON_LIBRARY
-        NAMES "python${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR}"
+        NAMES
+          python${PYTHON_VERSION_MAJOR}${PYTHON_VERSION_MINOR}
+          python${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR}mu
+          python${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR}m
+          python${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR}u
+          python${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR}
         PATHS ${_PYTHON_LIBS_SEARCH}
         NO_SYSTEM_ENVIRONMENT_PATH)
 endif()
@@ -153,6 +158,16 @@ endif()
 # For backward compatibility, set PYTHON_INCLUDE_PATH, but make it internal.
 SET(PYTHON_INCLUDE_PATH "${PYTHON_INCLUDE_DIR}" CACHE INTERNAL
           "Path to where Python.h is found (deprecated)")
+
+# Added setting of PYTHONLIBS_VERSION_STRING from latest FindPythonLibs since
+# this is required by ThirdPartyBoost
+if(PYTHON_INCLUDE_DIR AND EXISTS "${PYTHON_INCLUDE_DIR}/patchlevel.h")
+  file(STRINGS "${PYTHON_INCLUDE_DIR}/patchlevel.h" python_version_str
+       REGEX "^#define[ \t]+PY_VERSION[ \t]+\"[^\"]+\"")
+  string(REGEX REPLACE "^#define[ \t]+PY_VERSION[ \t]+\"([^\"]+)\".*" "\\1"
+                       PYTHONLIBS_VERSION_STRING "${python_version_str}")
+  unset(python_version_str)
+endif()
 
 MARK_AS_ADVANCED(
   PYTHON_LIBRARY
@@ -174,7 +189,6 @@ SET(PYTHON_DEBUG_LIBRARIES "${PYTHON_DEBUG_LIBRARY}")
 find_package_message(PYTHON
     "Found PythonLibs: ${PYTHON_LIBRARY}"
     "${PYTHON_EXECUTABLE}${PYTHON_VERSION}")
-
 
 # PYTHON_ADD_MODULE(<name> src1 src2 ... srcN) is used to build modules for python.
 FUNCTION(PYTHON_ADD_MODULE _NAME )

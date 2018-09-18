@@ -12,10 +12,12 @@ v5.0.0
 - Use chrono in Timer (!807)
 - Fix caching of FUNCTION tags that read from file and provide the same
   functionality in FUNCTIONs defined for forcings (!759)
+- Transition to C++11 (!795, !847)
 - Add patch to tinyxml to fix size_t vs int bug (!820)
 - Add ARPACK thirdparty build capabilities (!828)
 - Added native support for csv files in addititon to pts (!760, !835, !906)
 - Utilize LAPACK_DIR env variable to find the native blas/lapack install (!827)
+- Extend AeroForces filter to compressible flows (!815)
 - Remove StdExpansion use from MultiRegion (use Expansions instead). (!831)
 - Move steady state check and CFL output from solvers to SolverUtils (!832)
 - Remove DG advection implementation from EquationSystem (!832)
@@ -37,7 +39,7 @@ v5.0.0
 - Added in sum factorisation version for pyramid expnasions and orthogonal
   expansion in pyramids (!750)
 - Switch MeshGraph to use factory pattern and add HDF5 geometry support (!900,
-  !904)
+  !904, !941)
 - Restructure the low energy preconditioner to handle pyramidic and variable
   p expansions (!920)
 - Remove requirement for modmetis, switch to SCOTCH by default (!899)
@@ -47,7 +49,16 @@ v5.0.0
   WeightPartitions was used in parallel (!923)
 - Removed instance count from beginning of Array storage to improve memory
   alignment (!921)
-	
+- Fix naming issue of duplicate Unit tests (!924) 
+- Fix warnings about missing virtual destructors in abstract classes (!932)
+- Fix ability to have periodic boundary conditions that are aligned by a 
+  rotation rather than just a translation (!933)
+- Added a coupling interface to exchange data between solvers at run time
+  and a DummySolver to test the implementations (!853, !931)
+- Fix compilation issue with newer Boost versions and clang (!940)
+- If only `NEKTAR_BUILD_LIBRARY` is enabled, only libraries up to and including
+  `MultiRegions` will be built by default (!945)
+
 **NekMesh**:
 - Add feature to read basic 2D geo files as CAD (!731)
 - Add periodic boundary condition meshing in 2D (!733)
@@ -76,6 +87,8 @@ v5.0.0
 - Support CFI combined lines (!917)
 - Order nodes in Gmsh output (!912)
 - Fix manifold face curvature nodes (!913)
+- Fix writing 1D surfaces (!930)
+- Fix surface string parsin in BL splitting (!937)
 
 **FieldConvert**:
 - Add input module for Semtex field files (!777)
@@ -91,12 +104,14 @@ v5.0.0
 - Add Lambda 2 vortex detection criteria (!882)
 - Add module for modifying/adding fields from expressions (!889, !903)
 - Add module for evaluating the mean of variables on the domain (!894)
+- Add module for counting the total number of DOF (!948)
 
 **IncNavierStokesSolver**
 - Replace steady-state check based on difference of norms by check based on
   norm of the difference, to be consistent with the compressible solver (!832)
 - Updated SVV to allow for the DGKernel extension (!851)
 - Pre-calculate Time invariant portion of Womersley Solution (!814)
+- Fix for independent setting of SVV in Homogeneous direction (!936)
 
 **CompressibleFlowSolver**
 - Add 3D regression tests (!567)
@@ -104,6 +119,7 @@ v5.0.0
 - Allow performing axi-symmetric Euler and NS simulations (!771, !866)
 - Add ability to use an exponential filtering for stabilization with
   seg, quad and hex elements (!771, !862)
+- Fix compressible solver with NUMMODES=1 (!868)
 - Introduce equations of state to account for real gas effects (!880)
 
 **APESolver:**
@@ -128,6 +144,9 @@ v4.4.2
 - Updated PETSc to 3.7.7 (!916)
 - Fix typcase to an integer which set Lz < 1 to zero when postprocess hdf5 output (!9922)
 
+**IncNavierStokesSolver**
+- Add a test for imaginary shift to be only used with Homogenous and SingleMode on. (!928)
+
 **NekMesh**
 - Fix missing periodic boundary meshing and boundary layer mesh adjustment
   configurations in 2D (!859)
@@ -137,9 +156,13 @@ v4.4.2
 - Fix sign of the viscous term in the velocity correction scheme equations in
   the user guide (!856)
 - Fixed anonymous clone URL (!909)
+- Add information on the limitations of Imaginary Shift for stability. (!928)
 
 **FieldConvert**
 - Allow passing input name with trailing separator (!879)
+
+**Utilities**
+- Fix VtkToPng to account for deprecated VTK API for VTK version > 8.1 (!925)
 
 v4.4.1
 ------

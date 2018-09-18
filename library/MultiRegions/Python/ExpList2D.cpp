@@ -33,8 +33,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <LibUtilities/Python/NekPyConfig.hpp>
 #include <MultiRegions/ExpList2D.h>
+#include <LibUtilities/Python/NekPyConfig.hpp>
 
 using namespace Nektar;
 using namespace Nektar::MultiRegions;
@@ -46,4 +46,6 @@ void export_ExpList2D()
                    "ExpList2D", py::init<
                    const LibUtilities::SessionReaderSharedPtr &,
                    const SpatialDomains::MeshGraphSharedPtr &>());
+
+    NEKPY_SHPTR_FIX(ExpList2D, ExpList);
 }

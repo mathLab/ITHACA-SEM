@@ -22,7 +22,8 @@
 # For details see the accompanying COPYING-CMAKE-SCRIPTS file.
 #
 
-cmake_policy(VERSION 3.3)
+# Possibly dangerous but seems to work on most older CMake versions.
+# cmake_policy(VERSION 3.3)
 
 set(PETSC_VALID_COMPONENTS
   C

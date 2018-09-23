@@ -160,10 +160,6 @@ namespace Nektar
             // Setup Block Matrix systems
             int n, n_exp = m_expList.lock()->GetNumElmts();
 
-            MatrixStorage blkmatStorage = eDIAGONAL;
-            const Array<OneD,const unsigned int>& nbdry_size
-                    = m_locToGloMap->GetNumLocalBndCoeffsPerPatch();
-
             // Build preconditioner
             m_precon->BuildPreconditioner();
 

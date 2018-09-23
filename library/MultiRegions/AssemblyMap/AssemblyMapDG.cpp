@@ -988,17 +988,9 @@ namespace Nektar
         void AssemblyMapDG::v_LocalToGlobal(
                     const Array<OneD, const NekDouble>& loc,
                     Array<OneD,       NekDouble>& global,
-                    bool useComm ) const
+                    bool UseComm ) const
         {
-            LocalBndToGlobal(loc,global);
-        }
-
-        void AssemblyMapDG::v_LocalToGlobal(
-                    const NekVector<NekDouble>& loc,
-                    NekVector<      NekDouble>& global,
-                    bool useComm) const
-        {
-            LocalBndToGlobal(loc,global);
+            LocalBndToGlobal(loc,global,UseComm);
         }
 
         void AssemblyMapDG::v_GlobalToLocal(

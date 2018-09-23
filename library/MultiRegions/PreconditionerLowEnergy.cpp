@@ -1174,31 +1174,6 @@ namespace Nektar
 	    }
 	}
 
-        void PreconditionerLowEnergy::DoTransformBasisFromLowEnergyHomGlobal(
-                const Array<OneD, NekDouble>& pInput,
-                Array<OneD, NekDouble>& pOutput)
-        {
-            int nGlobBndDofs       = m_locToGloMap->GetNumGlobalBndCoeffs();
-            int nDirBndDofs        = m_locToGloMap->GetNumGlobalDirBndCoeffs();
-            int nGlobHomBndDofs    = nGlobBndDofs - nDirBndDofs;
-            int nLocBndDofs        = m_locToGloMap->GetNumLocalBndCoeffs();
-
-            ASSERTL1(pInput.get() != pOutput.get(),
-                     "Input and output vectors cannot be the same");
-            
-            Array<OneD, NekDouble> local(nLocBndDofs);
-                         
-            Vmath::Vmul(nGlobHomBndDofs,m_invMultiplicity,1,
-                        pInput,1,pOutput,1);
-
-            m_locToGloMap->GlobalToLocalBnd(pOutput,local,nDirBndDofs);
-            
-            v_DoTransformBasisFromLowEnergy(local,local);
-
-            m_locToGloMap->AssembleBnd(local,pOutput,nDirBndDofs);
-
-        }
-        
         /**
          * \brief Multiply by the block tranposed inverse
          * transformation matrix (R^T)^{-1} which is equivlaent to
@@ -1238,23 +1213,6 @@ namespace Nektar
 		cnt1 += nexp;
 	    }
 	}
-
-        void PreconditionerLowEnergy::DoTransformCoeffsToLowEnergyHomGlobal(
-                const Array<OneD, NekDouble>& pInput,
-                Array<OneD, NekDouble>& pOutput)
-        {
-            int nDirBndDofs        = m_locToGloMap->GetNumGlobalDirBndCoeffs();
-            int nLocBndDofs        = m_locToGloMap->GetNumLocalBndCoeffs();
-
-            Array<OneD, NekDouble> local(nLocBndDofs);
-
-            m_locToGloMap->GlobalToLocalBnd(pInput,local,nDirBndDofs);
-
-            v_DoTransformCoeffsToLowEnergy(local,local);
-
-            m_locToGloMap->LocalBndToGlobal(local,pOutput,nDirBndDofs);
-
-        }
 
         /**
          * \brief Set up the transformed block  matrix system
@@ -1337,19 +1295,6 @@ namespace Nektar
                     m_variablePmask[i] = 1.0; 
                 }
             }
-
-            int nGlobalBnd = m_locToGloMap->GetNumGlobalBndCoeffs();
-            int nDirBnd    = m_locToGloMap->GetNumGlobalDirBndCoeffs();
-            int nGlobHomBnd = nGlobalBnd - nDirBnd;
-            
-            //Set up multiplicity array for inverse transposed transformation matrix
-            Array<OneD,NekDouble> tmp(nGlobHomBnd,1.0);
-            m_invMultiplicity = Array<OneD,NekDouble>(nGlobHomBnd);
-            Array<OneD,NekDouble> loc(nLocBnd,1.0);
-
-            m_locToGloMap->GlobalToLocalBnd(tmp,loc, nDirBnd);
-            m_locToGloMap->AssembleBnd(loc,m_invMultiplicity, nDirBnd);
-            Vmath::Sdiv(nGlobHomBnd,1.0,m_invMultiplicity,1,m_invMultiplicity,1);
         }
 
         /**

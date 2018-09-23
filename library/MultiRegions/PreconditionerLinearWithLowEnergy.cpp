@@ -77,6 +77,17 @@ namespace Nektar
         {
             m_linSpacePrecon = GetPreconFactory().CreateInstance("FullLinearSpace",m_linsys.lock(),m_locToGloMap);
             m_lowEnergyPrecon = GetPreconFactory().CreateInstance("LowEnergyBlock",m_linsys.lock(),m_locToGloMap);
+
+            //Set up multiplicity array for inverse transposed transformation matrix
+            int nDirBnd     = m_locToGloMap->GetNumGlobalDirBndCoeffs();
+            int nGlobHomBnd = m_locToGloMap->GetNumGlobalBndCoeffs() - nDirBnd;
+            int nLocBnd     = m_locToGloMap->GetNumLocalBndCoeffs();
+
+            m_invMultiplicity = Array<OneD,NekDouble>(nGlobHomBnd);
+            Array<OneD,NekDouble> loc(nLocBnd,1.0);
+
+            m_locToGloMap->AssembleBnd(loc,m_invMultiplicity, nDirBnd);
+            Vmath::Sdiv(nGlobHomBnd,1.0,m_invMultiplicity,1,m_invMultiplicity,1);
         }
 
         /**
@@ -144,34 +155,39 @@ namespace Nektar
             const Array<OneD, NekDouble>& pInput,
             Array<OneD, NekDouble>& pOutput)
         {
-            int nGlobal = pInput.num_elements();
+            int nDirBndDofs     = m_locToGloMap->GetNumGlobalDirBndCoeffs();
+            int nGlobHomBndDofs = m_locToGloMap->GetNumGlobalBndCoeffs() - nDirBndDofs;
+            int nLocBndDofs     = m_locToGloMap->GetNumLocalBndCoeffs();
 
-            Array<OneD, NekDouble> OutputLowEnergy(nGlobal, 0.0);
-            Array<OneD, NekDouble> tmp(nGlobal, 0.0);
-            Array<OneD, NekDouble> OutputLinear(nGlobal, 0.0);
-            Array<OneD, NekDouble> InputLinear(nGlobal, 0.0);
+            Array<OneD, NekDouble> tmp(nGlobHomBndDofs, 0.0);
 
-            //Apply Low Energy preconditioner
-            m_lowEnergyPrecon->DoPreconditioner(pInput, OutputLowEnergy);
+            Array<OneD, NekDouble> InputLinear(nGlobHomBndDofs);
+            Array<OneD, NekDouble> OutputLowEnergy(nGlobHomBndDofs);
+            Array<OneD, NekDouble> OutputLinear(nGlobHomBndDofs);
+            Array<OneD, NekDouble> local(nLocBndDofs);
 
-            PreconditionerLowEnergySharedPtr lowEnergyPrecon =
-                std::dynamic_pointer_cast<PreconditionerLowEnergy>
-                (m_lowEnergyPrecon); 
-            
+
             //Transform input from low energy to original basis
-            //Really ony require this for linear modes
-            lowEnergyPrecon->DoTransformBasisFromLowEnergyHomGlobal
-                (pInput,InputLinear);
+            Vmath::Vmul(nGlobHomBndDofs,m_invMultiplicity,1,
+                        pInput,1,OutputLinear,1);
+            m_locToGloMap->GlobalToLocalBnd(OutputLinear,local,nDirBndDofs);
+            m_lowEnergyPrecon->DoTransformBasisFromLowEnergy(local,local);
+            m_locToGloMap->AssembleBnd(local,InputLinear,nDirBndDofs);
 
             //Apply linear space preconditioner
             m_linSpacePrecon->DoPreconditionerWithNonVertOutput
                 (InputLinear, OutputLinear, tmp);
 
             // transform coefficients back to low energy space
-            lowEnergyPrecon->DoTransformCoeffsToLowEnergyHomGlobal
-                (OutputLinear,pOutput);
+            m_locToGloMap->GlobalToLocalBnd(OutputLinear,local,nDirBndDofs);
+            m_lowEnergyPrecon->DoTransformCoeffsToLowEnergy(local,local);
+            m_locToGloMap->LocalBndToGlobal(local,pOutput,nDirBndDofs,false);
 
-            Vmath::Vadd(nGlobal,pOutput,1,OutputLowEnergy,1,pOutput,1);
+            //Apply Low Energy preconditioner
+            m_lowEnergyPrecon->DoPreconditioner(pInput, OutputLowEnergy);
+
+            ASSERTL1(pOutput.num_elements() >= nGlobHomBndDofs, "Output array is not correct");
+            Vmath::Vadd(nGlobHomBndDofs,pOutput,1,OutputLowEnergy,1,pOutput,1);
         }
 
     }

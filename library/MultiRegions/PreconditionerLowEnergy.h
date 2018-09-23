@@ -74,15 +74,6 @@ namespace Nektar
             MULTI_REGIONS_EXPORT
                 virtual ~PreconditionerLowEnergy() {}
 
-
-            void DoTransformBasisFromLowEnergyHomGlobal(
-                const Array<OneD, NekDouble>& pInput,
-                Array<OneD, NekDouble>& pOutput);
-
-            void DoTransformCoeffsToLowEnergyHomGlobal(
-                const Array<OneD, NekDouble>& pInput,
-                Array<OneD, NekDouble>& pOutput);
-
 	protected:
 
             const std::weak_ptr<GlobalLinSys> m_linsys;
@@ -94,7 +85,6 @@ namespace Nektar
 
             
             Array<OneD, NekDouble>  m_variablePmask;
-            Array<OneD, NekDouble>  m_invMultiplicity;
 
             bool m_signChange;
             

@@ -75,6 +75,7 @@ namespace Nektar
             PreconditionerSharedPtr m_linSpacePrecon;
             PreconditionerSharedPtr m_lowEnergyPrecon;
 
+            Array<OneD, NekDouble>  m_invMultiplicity;
 	private:
 
             virtual void v_InitObject();

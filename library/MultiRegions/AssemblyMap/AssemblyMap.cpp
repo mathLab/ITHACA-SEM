@@ -1119,18 +1119,9 @@ namespace Nektar
         }
 
         void AssemblyMap::LocalBndToGlobal(
-                    const NekVector<NekDouble>& loc,
-                    NekVector<NekDouble>& global,
-                    int offset) const
-        {
-            LocalBndToGlobal(loc.GetPtr(), global.GetPtr(), offset);
-        }
-
-
-        void AssemblyMap::LocalBndToGlobal(
                     const Array<OneD, const NekDouble>& loc,
                     Array<OneD,NekDouble>& global,
-                    int offset) const
+                    int offset, bool UseComm) const
         {
             ASSERTL1(loc.num_elements() >= m_numLocalBndCoeffs,"Local vector is not of correct dimension");
             ASSERTL1(global.num_elements() >= m_numGlobalBndCoeffs-offset,"Global vector is not of correct dimension");
@@ -1147,21 +1138,17 @@ namespace Nektar
                 Vmath::Scatr(m_numLocalBndCoeffs, loc.get(), m_localToGlobalBndMap.get(), tmp.get());
             }
 
-            UniversalAssembleBnd(tmp);
+            // Ensure each propessor has unique value with a max gather. 
+            if(UseComm)
+            {
+                Gs::Gather(tmp, Gs::gs_max, m_bndGsh);
+            }
             Vmath::Vcopy(m_numGlobalBndCoeffs-offset, tmp.get()+offset, 1, global.get(), 1);
         }
         
         void AssemblyMap::LocalBndToGlobal(
-                    const NekVector<NekDouble>& loc,
-                    NekVector<NekDouble>& global) const
-        {
-            LocalBndToGlobal(loc.GetPtr(), global.GetPtr());
-        }
-
-
-        void AssemblyMap::LocalBndToGlobal(
                     const Array<OneD, const NekDouble>& loc,
-                    Array<OneD,NekDouble>& global)  const
+                    Array<OneD,NekDouble>& global, bool UseComm)  const
         {
             ASSERTL1(loc.num_elements() >= m_numLocalBndCoeffs,"Local vector is not of correct dimension");
             ASSERTL1(global.num_elements() >= m_numGlobalBndCoeffs,"Global vector is not of correct dimension");
@@ -1173,6 +1160,10 @@ namespace Nektar
             else
             {
                 Vmath::Scatr(m_numLocalBndCoeffs, loc.get(), m_localToGlobalBndMap.get(), global.get());
+            }
+            if(UseComm)
+            {
+                Gs::Gather(global, Gs::gs_max, m_bndGsh);
             }
         }
 

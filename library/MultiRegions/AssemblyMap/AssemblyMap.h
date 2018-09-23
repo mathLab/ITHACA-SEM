@@ -204,22 +204,13 @@ namespace Nektar
                     Array<OneD,NekDouble>& loc) const;
 
             MULTI_REGIONS_EXPORT void LocalBndToGlobal(
-                    const NekVector<NekDouble>& loc,
-                    NekVector<NekDouble>& global,
-                    int offset) const;
-
-            MULTI_REGIONS_EXPORT void LocalBndToGlobal(
-                    const NekVector<NekDouble>& loc,
-                    NekVector<NekDouble>& global) const;
-
-            MULTI_REGIONS_EXPORT void LocalBndToGlobal(
                     const Array<OneD, const NekDouble>& loc,
                     Array<OneD,NekDouble>& global,
-                    int offset) const;
+                    int offset, bool UseComm = true) const;
 
             MULTI_REGIONS_EXPORT void LocalBndToGlobal(
                     const Array<OneD, const NekDouble>& loc,
-                    Array<OneD,NekDouble>& global)  const;
+                    Array<OneD,NekDouble>& global, bool UseComm = true)  const;
 
             MULTI_REGIONS_EXPORT void LocalToLocalBnd(
                     const Array<OneD, const NekDouble>& local,

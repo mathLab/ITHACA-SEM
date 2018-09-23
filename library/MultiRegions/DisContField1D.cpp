@@ -1183,7 +1183,6 @@ namespace Nektar
 
             // Copy Dirichlet boundary conditions and weak forcing
             // into trace space
-            int locid;
             cnt = 0;
             for(i = 0; i < m_bndCondExpansions.num_elements(); ++i)
             {

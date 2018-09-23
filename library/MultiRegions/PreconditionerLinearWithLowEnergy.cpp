@@ -83,9 +83,13 @@ namespace Nektar
             int nGlobHomBnd = m_locToGloMap->GetNumGlobalBndCoeffs() - nDirBnd;
             int nLocBnd     = m_locToGloMap->GetNumLocalBndCoeffs();
 
-            m_invMultiplicity = Array<OneD,NekDouble>(nGlobHomBnd);
-            Array<OneD,NekDouble> loc(nLocBnd,1.0);
+            m_invMultiplicity = Array<OneD,NekDouble>(nGlobHomBnd,1.0);
+            Array<OneD,NekDouble> loc(nLocBnd);
 
+            // need to scatter from global array to handle sign changes
+            m_locToGloMap->GlobalToLocalBnd(m_invMultiplicity, loc, nDirBnd);
+
+            // Now assemble values back together to get multiplocotu
             m_locToGloMap->AssembleBnd(loc,m_invMultiplicity, nDirBnd);
             Vmath::Sdiv(nGlobHomBnd,1.0,m_invMultiplicity,1,m_invMultiplicity,1);
         }

@@ -253,17 +253,14 @@ int main(int argc, char *argv[])
 
     //----------------------------------------------
     // Helmholtz solution taking physical forcing
-    FlagList flags;
-    flags.set(eUseGlobal, true);
     StdRegions::ConstFactorMap factors;
     factors[StdRegions::eFactorLambda] = lambda;
-    Exp->HelmSolve(Fce->GetPhys(), Exp->UpdateCoeffs(),flags,factors);
+    Exp->HelmSolve(Fce->GetPhys(), Exp->UpdateCoeffs(),NullFlagList,factors);
     //----------------------------------------------
 
     //----------------------------------------------
     // Backward Transform Solution to get solved values at 
-    Exp->BwdTrans(Exp->GetCoeffs(), Exp->UpdatePhys(),
-            MultiRegions::eGlobal);
+    Exp->BwdTrans(Exp->GetCoeffs(), Exp->UpdatePhys());
     //----------------------------------------------
     //end of full solve timing
     timer.Stop();
@@ -272,7 +269,8 @@ int main(int argc, char *argv[])
     //----------------------------------------------
     // See if there is an exact solution, if so 
     // evaluate and plot errors
-    LibUtilities::EquationSharedPtr ex_sol = vSession->GetFunction("ExactSolution",0);
+    LibUtilities::EquationSharedPtr ex_sol = vSession->
+        GetFunction("ExactSolution",0);
 
     //----------------------------------------------
     // evaluate exact solution 
@@ -345,9 +343,8 @@ int main(int argc, char *argv[])
     // We first do a single run in order to estimate the number of calls 
     // we are going to make
     timer.Start();
-    Exp->HelmSolve(Fce->GetPhys(), Exp->UpdateCoeffs(),flags,factors);
-    Exp->BwdTrans (Exp->GetCoeffs(),Exp->UpdatePhys(),
-            MultiRegions::eGlobal);
+    Exp->HelmSolve(Fce->GetPhys(), Exp->UpdateCoeffs(),NullFlagList,factors);
+    Exp->BwdTrans (Exp->GetCoeffs(),Exp->UpdatePhys());
     timer.Stop();
     exeTime = timer.TimePerTest(1);
 
@@ -360,9 +357,8 @@ int main(int argc, char *argv[])
     timer.Start();
     for(i = 0; i < NumCalls; ++i)
     {
-        Exp->HelmSolve(Fce->GetPhys(), Exp->UpdateCoeffs(),flags,factors);
-        Exp->BwdTrans (Exp->GetCoeffs(),Exp->UpdatePhys(),
-                MultiRegions::eGlobal);
+        Exp->HelmSolve(Fce->GetPhys(), Exp->UpdateCoeffs(),NullFlagList,factors);
+        Exp->BwdTrans (Exp->GetCoeffs(),Exp->UpdatePhys());
     }
     timer.Stop();
     exeTime = timer.TimePerTest(1);

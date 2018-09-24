@@ -89,7 +89,7 @@ namespace Nektar
             // need to scatter from global array to handle sign changes
             m_locToGloMap->GlobalToLocalBnd(m_invMultiplicity, loc, nDirBnd);
 
-            // Now assemble values back together to get multiplocotu
+            // Now assemble values back together to get multiplicity
             m_locToGloMap->AssembleBnd(loc,m_invMultiplicity, nDirBnd);
             Vmath::Sdiv(nGlobHomBnd,1.0,m_invMultiplicity,1,m_invMultiplicity,1);
         }

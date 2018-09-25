@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <test>
-    <description>Gmsh high-order quad square, order 8</description>
+    <description>Gmsh (v2.2) high-order quad square, order 8</description>
     <executable>NekMesh</executable>
-    <parameters>-m jac:list SquareQuad.msh SquareQuad.xml:xml:test</parameters>
+    <parameters>-m jac:list SquareQuad_2_2.msh SquareQuad_2_2.xml:xml:test</parameters>
     <files>
-        <file description="Input File">SquareQuad.msh</file>
+        <file description="Input File">SquareQuad_2_2.msh</file>
     </files>
     <metrics>
         <metric type="regex" id="1">

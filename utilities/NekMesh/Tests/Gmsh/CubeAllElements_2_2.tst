@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <test>
-    <description>Gmsh linear mesh of cube, all elements</description>
+    <description>Gmsh (v2.2) linear mesh of cube, all elements</description>
     <executable>NekMesh</executable>
-    <parameters>-m jac:list CubeAllElements.msh CubeAllElements.xml:xml:test</parameters>
+    <parameters>-m jac:list CubeAllElements_2_2.msh CubeAllElements_2_2.xml:xml:test</parameters>
     <files>
-        <file description="Input File">CubeAllElements.msh</file>
+        <file description="Input File">CubeAllElements_2_2.msh</file>
     </files>
     <metrics>
         <metric type="regex" id="1">

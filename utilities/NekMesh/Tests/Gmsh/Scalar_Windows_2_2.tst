@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <test>
-    <description>Gmsh box with scalar surface deformation and hex boundary layer splitting</description>
+    <description>Gmsh (v2.2) box with scalar surface deformation and hex boundary layer splitting</description>
     <executable>NekMesh</executable>
-    <parameters>-m scalar:surf=1:scalar=exp(-x*x-y*y):nq=7 -m bl:nq=7:layers=7:r=2.5 -m jac:list Scalar.msh Scalar.xml:xml:test</parameters>
+    <parameters>-m scalar:surf=1:scalar=exp(-x*x-y*y):nq=7 -m bl:nq=7:layers=7:r=2.5 -m jac:list Scalar_2_2.msh Scalar_2_2.xml:xml:test</parameters>
     <files>
-        <file description="Input File">Scalar.msh</file>
+        <file description="Input File">Scalar_2_2.msh</file>
     </files>
     <metrics>
         <metric type="regex" id="1">

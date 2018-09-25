@@ -89,6 +89,7 @@ v5.0.0
 - Fix manifold face curvature nodes (!913)
 - Fix writing 1D surfaces (!930)
 - Fix surface string parsin in BL splitting (!937)
+- Add support for Gmsh 4.0 mesh file format (!964)
 
 **FieldConvert**:
 - Add input module for Semtex field files (!777)

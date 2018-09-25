@@ -2,9 +2,9 @@
 <test>
     <description>Gmsh (v2.2) tri mesh with rotated periodic boundary using peralign</description>
     <executable>NekMesh</executable>
-    <parameters>-m jac:list -m peralign:rot="-PI/3.0":dir=z:tol=1e-6:surf1=5:surf2=4 CylinderRotPer2D_2_2.msh CylinderRotPer2D_2_2.xml:xml:test</parameters>
+    <parameters>-m jac:list -m peralign:rot="-PI/3.0":dir=z:tol=1e-6:surf1=5:surf2=4 CylinderRotPer2D.msh CylinderRotPer2D.xml:xml:test</parameters>
     <files>
-        <file description="Input File">CylinderRotPer2D_2_2.msh</file>
+        <file description="Input File">CylinderRotPer2D.msh</file>
     </files>
     <metrics>
         <metric type="regex" id="1">

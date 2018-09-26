@@ -14,7 +14,7 @@
 	    <value variable="p" tolerance="1e-12">2.0521e-05</value>
         </metric>
         <metric type="Linf" id="2">
-            <value variable="u" tolerance="1e-12">7.40058e-06</value>
+            <value variable="u" tolerance="1e-11">7.40058e-06</value>
             <value variable="v" tolerance="1e-12">2.2922e-06</value>
             <value variable="w" tolerance="1e-12">1.94939e-06</value>
 	    <value variable="p" tolerance="1e-12">6.07939e-05</value>

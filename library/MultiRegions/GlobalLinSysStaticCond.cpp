@@ -148,6 +148,8 @@ namespace Nektar
             if(nGlobBndDofs-nDirBndDofs)
             {
                 pLocToGloMap->LocalToLocalBnd(pLocInput,F_bnd);
+
+
                 // set up normalisation factor for right hand side on first SC level
                 v_PreSolve(scLevel, F_bnd);
 
@@ -162,7 +164,9 @@ namespace Nektar
                     F_Bnd = BinvD*F_Int; 
 
                     Vmath::Vsub(nLocBndDofs, F_bnd,1, F_bnd1,1, F_bnd,1);
-                }
+
+
+               }
 
                 if(atLastLevel)
                 {

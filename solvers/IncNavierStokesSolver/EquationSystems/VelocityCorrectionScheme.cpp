@@ -659,6 +659,12 @@ namespace Nektar
             {
                 Vmath::Svtvp(physTot, m_alpha, m_flowrateStokes[i], 1,
                              outarray[i], 1, outarray[i], 1);
+                //Enusre coeff space is updated for next time step
+                m_fields[i]->FwdTrans_IterPerExp(outarray[i],
+                                                 m_fields[i]->UpdateCoeffs());
+                // Impsoe symmetry of flow on coeff space (good to enfore periodicity). 
+                m_fields[i]->LocalToGlobal();
+                m_fields[i]->GlobalToLocal();
             }
         }
     }

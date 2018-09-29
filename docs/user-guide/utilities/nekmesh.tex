@@ -227,7 +227,7 @@ where it exists. The table below indicates support currently implemented.
     \toprule
     \textbf{Format} & \textbf{Extension} & \textbf{High-order} & \textbf{Notes}\\
     \midrule
-    Gmsh & \texttt{msh} & \cmark & Only reads nodes, elements and physical groups (which are mapped to composites).\\
+    Gmsh & \texttt{msh} & \cmark & Only reads nodes, elements and physical groups (which are mapped to composites). File format versions 2.x and 4.x currently supported.\\
     Nektar & \texttt{rea} & \cmark & Reads elements, fluid boundary conditions. Most curve types are unsupported: high-order information must be defined in an accompanying .hsf file. \\
     Nektar++ & \texttt{xml} & \cmark & Fully supported. \\
     PLY & \texttt{ply} & \xmark & Reads only the ASCII format.. \\

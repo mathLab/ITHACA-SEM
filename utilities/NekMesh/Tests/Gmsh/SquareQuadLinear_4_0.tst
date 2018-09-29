@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <test>
-    <description>Gmsh linear tri square, order 9 output</description>
+    <description>Gmsh (v4.0) linear mesh with order 7 output</description>
     <executable>NekMesh</executable>
-    <parameters>-m jac:list SquareTriLinear.msh SquareTri.xml:xml:test:order=9</parameters>
+    <parameters>-m jac:list SquareQuadLinear_4_0.msh SquareQuad_4_0.xml:xml:test:order=7</parameters>
     <files>
-        <file description="Input File">SquareTriLinear.msh</file>
+        <file description="Input File">SquareQuadLinear_4_0.msh</file>
     </files>
     <metrics>
         <metric type="regex" id="1">

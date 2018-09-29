@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <test>
-    <description>Gmsh high-order hex cube</description>
+    <description>Gmsh (v2.2) high-order prism cube, order 2</description>
     <executable>NekMesh</executable>
-    <parameters>-m jac:list CubeHex.msh CubeHex.xml:xml:test</parameters>
+    <parameters>-m jac:list CubePrism_2_2.msh CubePrism_2_2.xml:xml:test</parameters>
     <files>
-        <file description="Input File">CubeHex.msh</file>
+        <file description="Input File">CubePrism_2_2.msh</file>
     </files>
     <metrics>
         <metric type="regex" id="1">

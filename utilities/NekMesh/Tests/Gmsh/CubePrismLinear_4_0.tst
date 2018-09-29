@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <test>
-    <description>Gmsh (v2.2) tri mesh with rotated periodic boundary using peralign</description>
+    <description>Gmsh (v4.0) linear prism with order 4 output</description>
     <executable>NekMesh</executable>
-    <parameters>-m jac:list -m peralign:rot="-PI/3.0":dir=z:tol=1e-6:surf1=5:surf2=4 CylinderRotPer2D.msh CylinderRotPer2D.xml:xml:test</parameters>
+    <parameters>-m jac:list CubePrism_4_0.msh CubePrism_4_0.xml:xml:test:order=4</parameters>
     <files>
-        <file description="Input File">CylinderRotPer2D.msh</file>
+        <file description="Input File">CubePrism_4_0.msh</file>
     </files>
     <metrics>
         <metric type="regex" id="1">

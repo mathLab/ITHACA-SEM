@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <test>
-    <description>Gmsh (v2.2) tri mesh with rotated periodic boundary using peralign</description>
+    <description>Gmsh (v2.2) tet cube, convert to order 9</description>
     <executable>NekMesh</executable>
-    <parameters>-m jac:list -m peralign:rot="-PI/3.0":dir=z:tol=1e-6:surf1=5:surf2=4 CylinderRotPer2D.msh CylinderRotPer2D.xml:xml:test</parameters>
+    <parameters>-m jac:list CubeTetLinear_2_2.msh CubeTet_2_2.xml:xml:order=9:test</parameters>
     <files>
-        <file description="Input File">CylinderRotPer2D.msh</file>
+        <file description="Input File">CubeTetLinear_2_2.msh</file>
     </files>
     <metrics>
         <metric type="regex" id="1">

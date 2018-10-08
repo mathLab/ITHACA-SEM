@@ -159,7 +159,7 @@ First we need to define the variables under the section \inltt{VARIABLES}.
 </VARIABLES>
 \end{lstlisting}
 
-The composites that we want to apply out boundary conditions then need to be defined in the \inltt{BOUNDARYREIONS}, for example if we had three composites (C[1], C[4] and C[8]) that correspond to three vertices of the computational mesh we would define:
+The composites that we want to apply out boundary conditions then need to be defined in the \inltt{BOUNDARYREGIONS}, for example if we had three composites (C[1], C[4] and C[8]) that correspond to three vertices of the computational mesh we would define:
 \begin{lstlisting}[style=XmlStyle]        
 <BOUNDARYREGIONS>
   <B ID="0"> C[1] </B>
@@ -172,7 +172,8 @@ Finally we can specify the boundary conditions on the regions specified under \i
 
 The Pulse Wave Solver comes with a number of boundary conditions that are unique to this solver. Boundary conditions must be provided for both the area and velocity at the inlets and outlets of the domain. Examples of the different boundary conditions will be provided in the following.
 
-\paragraph{Inlet boundary condition:~} Typically at the inlet of the domain a flow profile (\inltt{Q-inflow}) is specified through a \inltt{USERDEFINEDTYPE} boundary conditioning . An example inlet condition for the parent artery of the previously bifurcation example is
+\paragraph{Inlet boundary condition:~} The inlet condition may be specified algebraically in four different ways: as an area variation (\inltt{A-inflow}); a velocity profile (\inltt{U-inflow}); a volume flux (\inltt{Q-inflow}); or by prescribing the forward characteristic (\inltt{TimeDependent}). When prescribing a volume flux, it must be specified in the input file via the area, as illustrated below. Note that $u = 1.0$.
+
 \begin{lstlisting}[style=XmlStyle]
 <REGION REF="0">
 	<D VAR="A" USERDEFINEDTYPE="Q-inflow" VALUE="(7.112e-4)*(sin(7.854*t) 

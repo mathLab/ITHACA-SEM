@@ -543,9 +543,12 @@ using namespace std;
                 }
             }
 
-             m_locTraceToTraceMap = MemoryManager<LocTraceToTraceMap>::
+            m_locTraceToTraceMap = MemoryManager<LocTraceToTraceMap>::
                 AllocateSharedPtr(*this, m_trace, elmtToTrace,
                                   m_leftAdjacentFaces);
+
+            m_locTraceToTraceMap->SetTracephysToLeftRightExpphysMap(GetTracephysToLeftRightExpphysMap());
+            
 
          }
 

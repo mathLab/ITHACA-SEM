@@ -1143,8 +1143,8 @@ namespace Nektar
         // DebugNumCalJac_coeff(m_PrecMatVars);
         // ElmtVarInvMtrx_coeff(m_PrecMatVars);
 
-        if(m_TotLinItePrecondMat>0&&lamda_old==m_TimeIntegLambda)
-        {
+        // if(m_TotLinItePrecondMat>0&&lamda_old==m_TimeIntegLambda)
+        // {
             int nphspnt = inpnts[0].num_elements();
             Array<OneD, Array<OneD, NekDouble> > intmp(nvariables);
             for(int i = 0; i < nvariables; i++)
@@ -1153,6 +1153,34 @@ namespace Nektar
             }
 
             DoOdeProjection(inpnts,intmp,m_BndEvaluateTime);
+        //     if()
+        //     {
+        //         GetPhysMapTrace2Fields();
+        // //         int i;
+        // // int nvariables = inarray.num_elements();
+        // // int nTracePts  = GetTraceTotPoints();
+        // // int ncoeffs    = GetNcoeffs();
+
+        // // // Store forwards/backwards space along trace space
+        // // Array<OneD, Array<OneD, NekDouble> > Fwd    (nvariables);
+        // // Array<OneD, Array<OneD, NekDouble> > Bwd    (nvariables);
+
+        // // if (m_HomogeneousType == eHomogeneous1D)
+        // // {
+        // //     Fwd = NullNekDoubleArrayofArray;
+        // //     Bwd = NullNekDoubleArrayofArray;
+        // // }
+        // // else
+        // // {
+        // //     for(i = 0; i < nvariables; ++i)
+        // //     {
+        // //         Fwd[i]     = Array<OneD, NekDouble>(nTracePts, 0.0);
+        // //         Bwd[i]     = Array<OneD, NekDouble>(nTracePts, 0.0);
+        // //         m_fields[i]->GetFwdBwdTracePhys(inarray[i], Fwd[i], Bwd[i]);
+        // //     }
+        // // }
+
+        //     }
             GetpreconditionerNSBlkDiag_coeff(intmp,m_PrecMatVars,m_TraceJac);
             // cout << "m_TotLinItePrecondMat  =   "<<m_TotLinItePrecondMat<<endl;
             // m_TotLinItePrecondMat = 0;
@@ -1162,7 +1190,7 @@ namespace Nektar
             {
                 intmp[i]    =   Array<OneD, NekDouble>(1,0.0);
             }
-        }
+        // }
 
         
 

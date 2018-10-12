@@ -984,6 +984,14 @@ namespace Nektar
             {
                 return v_GetPlane(n);
             }
+
+            void AddTraceJacToElmtJac(
+                const Array<OneD, const DNekMatSharedPtr>  &FwdMat,
+                const Array<OneD, const DNekMatSharedPtr>  &BwdMat,
+                Array<OneD, DNekMatSharedPtr>  &fieldMat)
+            {
+                v_AddTraceJacToElmtJac(FwdMat,BwdMat,fieldMat);
+            }
            
             //expansion type
             ExpansionType m_expType;
@@ -1030,6 +1038,8 @@ namespace Nektar
             {
                 return v_GetlocTraceToTraceMap();
             }
+
+            Array<OneD, Array<OneD, Array<OneD, int > > > & GetTracephysToLeftRightExpphysMap();
                 
         protected:
             /// Definition of the total number of degrees of freedom and
@@ -1523,6 +1533,11 @@ namespace Nektar
                       Array<OneD, NekDouble> &outarray);
 
             virtual void v_ClearGlobalLinSysManager(void);
+
+            virtual void v_AddTraceJacToElmtJac(
+                const Array<OneD, const DNekMatSharedPtr>  &FwdMat,
+                const Array<OneD, const DNekMatSharedPtr>  &BwdMat,
+                Array<OneD, DNekMatSharedPtr>  &fieldMat);
 
             void ExtractFileBCs(const std::string                &fileName,
                                 LibUtilities::CommSharedPtr       comm,

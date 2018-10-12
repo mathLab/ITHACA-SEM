@@ -295,6 +295,12 @@ public:
         return m_TraceceffToLeftRightExpcoeffSign;
     }
 
+    MULTI_REGIONS_EXPORT inline void SetTracephysToLeftRightExpphysMap(Array<OneD, Array<OneD, Array<OneD, int > > > & inarray)
+    {
+        m_TracephysToLeftRightExpphysMap = inarray;
+    }
+    
+
 private:
     /// The number of forward trace points. A local trace element is `forward'
     /// if it is the side selected for the global trace.
@@ -354,6 +360,12 @@ private:
     Array<OneD, Array<OneD, Array<OneD, int > > > m_TraceceffToLeftRightExpcoeffMap;
     // the sign of every coeff from current trace to the left&right adjacent expasion coeffs 
     Array<OneD, Array<OneD, Array<OneD,int  > > > m_TraceceffToLeftRightExpcoeffSign;
+
+
+    // the map of every phys from current trace to the left&right adjacent expasion phys 
+    // This map is only used when no interpolation is needed in getting GetFwdBwdTracePhys   
+    // If interpolations is needed it should be determined as the InnerProduct of m_fieldToLocTraceMap matrix and interpolation matrix    
+    Array<OneD, Array<OneD, Array<OneD, int > > > m_TracephysToLeftRightExpphysMap;
 
     void TracelocToElmtlocCoeffMap(
         const ExpList &locExp,

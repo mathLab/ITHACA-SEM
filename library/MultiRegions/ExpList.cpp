@@ -3565,6 +3565,73 @@ namespace Nektar
             return result;
         }
 
+
+        void ExpList::v_AddTraceJacToElmtJac(
+                const Array<OneD, const DNekMatSharedPtr>  &FwdMat,
+                const Array<OneD, const DNekMatSharedPtr>  &BwdMat,
+                Array<OneD, DNekMatSharedPtr>  &fieldMat)
+        {
+            ASSERTL0(false,
+                     "This method is not defined or valid for this class type");
+        }
+
+        Array<OneD, Array<OneD, Array<OneD, int > > > & ExpList::GetTracephysToLeftRightExpphysMap()
+        {
+            
+            int nfieldPts  = GetTotPoints();
+            int ntotElmt   = (*m_exp).size();
+
+            ExpListSharedPtr traceExplist = GetTrace();
+            std::shared_ptr<LocalRegions::ExpansionVector> ptraceExp= traceExplist->GetExp();
+            int ntotTrace  = (*ptraceExp).size();
+            int nTracePts  = traceExplist->GetTotPoints();
+
+            // Basis definition on each element
+            LibUtilities::BasisSharedPtr basis = (*m_exp)[0]->GetBasis(0);
+            
+            // set up the m_TracephysToLeftRightExpphysMap 
+            Array<OneD, Array<OneD, NekDouble> > mapFwdBwd(2);
+            mapFwdBwd[0]    =   Array<OneD, NekDouble >(nTracePts,0.0);
+            mapFwdBwd[1]    =   Array<OneD, NekDouble >(nTracePts,0.0);
+            Array<OneD, NekDouble > mapfield(nfieldPts,0.0);
+
+
+            for(int nelmt=0;nelmt<ntotElmt;nelmt++)
+            {
+                int nElmtPnt            = (*m_exp)[nelmt]->GetTotPoints();
+                int noffset             = GetPhys_Offset(nelmt);
+
+                for(int npnt=0;npnt<nElmtPnt;npnt++)
+                {
+                    mapfield[noffset+npnt]  =   NekDouble(npnt);
+                }
+            }
+            GetFwdBwdTracePhys(mapfield, mapFwdBwd[0], mapFwdBwd[1]);
+
+
+            Array<OneD, Array<OneD, Array<OneD, int > > > T2Emap(2);
+            for(int nlr=0;  nlr<2;  nlr++)
+            {
+                T2Emap[nlr] =   Array<OneD, Array<OneD, int > >(ntotTrace);
+
+                for(int ntrace=0;    ntrace<ntotTrace; ntrace++)
+                {
+                    int nTracPnt            = (*ptraceExp)[ntrace]->GetTotPoints();
+                    int noffset             = traceExplist->GetPhys_Offset(ntrace);
+
+                    T2Emap[nlr][ntrace]      =   Array<OneD, int >(nTracPnt,0);
+                    
+                    for(int npnt=0; npnt<nTracPnt;  npnt++)
+                    {
+                        T2Emap[nlr][ntrace][npnt] =    round(mapFwdBwd[nlr][noffset+npnt]);
+                    }
+                }
+            }
+
+        }
+
+        
+
     } //end of namespace
 } //end of namespace
 

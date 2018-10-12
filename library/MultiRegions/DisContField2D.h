@@ -319,6 +319,10 @@ namespace Nektar
             {
                 return m_locTraceToTraceMap;
             }
+            virtual void v_AddTraceJacToElmtJac(
+                const Array<OneD, const DNekMatSharedPtr>  &FwdMat,
+                const Array<OneD, const DNekMatSharedPtr>  &BwdMat,
+                Array<OneD, DNekMatSharedPtr>  &fieldMat);
 
         };
         

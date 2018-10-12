@@ -52,6 +52,14 @@ namespace Nektar
 
             static std::string type;
 
+            void CalcJacobTraceInteg(
+                const Array<OneD, MultiRegions::ExpListSharedPtr>   &pFields,
+                const int                                         m,
+                const int                                         n,
+                const Array<OneD, const DNekBlkMatSharedPtr>    & TraceJac,
+                Array<OneD, DNekMatSharedPtr>                   & TraceJacFwd,
+                Array<OneD, DNekMatSharedPtr>                   & TraceJacBwd);
+
         protected:
             AdvectionWeakDG();
 
@@ -91,6 +99,14 @@ namespace Nektar
                 const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
                 const Array<OneD, DNekBlkMatSharedPtr>            &TraceJac,
                 Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray);
+
+            virtual void v_AddTraceJac2Mat_new(
+                const int                                           nConvectiveFields,
+                const int                                           nSpaceDim,
+                const Array<OneD, MultiRegions::ExpListSharedPtr>   &pFields,
+                const Array<OneD, DNekBlkMatSharedPtr>              &TraceJacCons,
+                Array<OneD, Array<OneD, DNekBlkMatSharedPtr> >      &gmtxarray,
+                const Array<OneD, DNekBlkMatSharedPtr>              &TraceJacGrad);
 
             virtual void v_NumCalRiemFluxJac(
                 const int                                         nConvectiveFields,

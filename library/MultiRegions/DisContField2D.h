@@ -319,11 +319,6 @@ namespace Nektar
             {
                 return m_locTraceToTraceMap;
             }
-            virtual void v_AddTraceJacToElmtJac(
-                const Array<OneD, const DNekMatSharedPtr>  &FwdMat,
-                const Array<OneD, const DNekMatSharedPtr>  &BwdMat,
-                Array<OneD, DNekMatSharedPtr>  &fieldMat);
-
         };
         
         typedef std::shared_ptr<DisContField2D>   DisContField2DSharedPtr;

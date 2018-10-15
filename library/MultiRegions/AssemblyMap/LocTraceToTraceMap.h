@@ -295,11 +295,15 @@ public:
         return m_TraceceffToLeftRightExpcoeffSign;
     }
 
-    MULTI_REGIONS_EXPORT inline void SetTracephysToLeftRightExpphysMap(Array<OneD, Array<OneD, Array<OneD, int > > > & inarray)
+    MULTI_REGIONS_EXPORT inline void SetTracephysToLeftRightExpphysMap(const Array<OneD, const Array<OneD, Array<OneD, int > > > & inarray)
     {
         m_TracephysToLeftRightExpphysMap = inarray;
     }
-    
+
+    MULTI_REGIONS_EXPORT inline const Array<OneD, const Array<OneD, Array<OneD, int > > > &GetTracephysToLeftRightExpphysMap() const
+    {
+        return m_TracephysToLeftRightExpphysMap;
+    }
 
 private:
     /// The number of forward trace points. A local trace element is `forward'

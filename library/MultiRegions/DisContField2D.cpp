@@ -577,9 +577,7 @@ namespace Nektar
                 AllocateSharedPtr(*this, m_trace, elmtToTrace,
                                   m_leftAdjacentEdges);
 
-            m_locTraceToTraceMap->SetTracephysToLeftRightExpphysMap(GetTracephysToLeftRightExpphysMap());
-
-            
+            m_locTraceToTraceMap->SetTracephysToLeftRightExpphysMap(CalcuTracephysToLeftRightExpphysMap());
         }
         
         /**
@@ -2611,26 +2609,5 @@ namespace Nektar
                 }
             }
         }
-
-        /**
-         * @brief inverse process of v_GetFwdBwdTracePhys. Given Trace integration of Fwd and Bwd Jacobian,
-         * with dimension NtotalTrace*TraceCoef*TracePhys. 
-         * return Elemental Jacobian matrix with dimension NtotalElement*ElementCoef*ElementPhys.
-         *
-         *
-         * @param field is a NekDouble array which contains the 2D data
-         *              from which we wish to extract the backward and
-         *              forward orientated trace/edge arrays.
-         * @param Fwd   The resulting forwards space.
-         * @param Bwd   The resulting backwards space.
-         */
-        void DisContField2D::v_AddTraceJacToElmtJac(
-            const Array<OneD, const DNekMatSharedPtr>  &FwdMat,
-            const Array<OneD, const DNekMatSharedPtr>  &BwdMat,
-            Array<OneD, DNekMatSharedPtr>  &fieldMat)
-        {
-            
-        }
-          
     } // end of namespace
 } //end of namespace

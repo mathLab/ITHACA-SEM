@@ -152,6 +152,15 @@ namespace Nektar
             MULTI_REGIONS_EXPORT const Array<OneD,int>
                 EvalBasisNumModesMaxPerExp(void) const;
 
+            MULTI_REGIONS_EXPORT void AddRightIPTPhysDerivBase(
+                const    int                                    dir,
+                const    Array<OneD, const DNekMatSharedPtr>    ElmtJacQuad,
+                         Array<OneD,       DNekMatSharedPtr>    ElmtJacCoef);
+
+            MULTI_REGIONS_EXPORT void AddRightIPTBaseMatrix(
+                const    Array<OneD, const DNekMatSharedPtr>    ElmtJacQuad,
+                         Array<OneD,       DNekMatSharedPtr>    ElmtJacCoef);
+
             /// Returns the total number of quadrature points #m_npoints
             /// \f$=Q_{\mathrm{tot}}\f$.
             inline int GetTotPoints(void) const;
@@ -984,14 +993,11 @@ namespace Nektar
             {
                 return v_GetPlane(n);
             }
-
+             
             void AddTraceJacToElmtJac(
                 const Array<OneD, const DNekMatSharedPtr>  &FwdMat,
                 const Array<OneD, const DNekMatSharedPtr>  &BwdMat,
-                Array<OneD, DNekMatSharedPtr>  &fieldMat)
-            {
-                v_AddTraceJacToElmtJac(FwdMat,BwdMat,fieldMat);
-            }
+                Array<OneD, DNekMatSharedPtr>  &fieldMat);
            
             //expansion type
             ExpansionType m_expType;
@@ -1039,7 +1045,7 @@ namespace Nektar
                 return v_GetlocTraceToTraceMap();
             }
 
-            Array<OneD, Array<OneD, Array<OneD, int > > > & GetTracephysToLeftRightExpphysMap();
+            Array<OneD, Array<OneD, Array<OneD, int > > > CalcuTracephysToLeftRightExpphysMap();
                 
         protected:
             /// Definition of the total number of degrees of freedom and
@@ -1534,10 +1540,6 @@ namespace Nektar
 
             virtual void v_ClearGlobalLinSysManager(void);
 
-            virtual void v_AddTraceJacToElmtJac(
-                const Array<OneD, const DNekMatSharedPtr>  &FwdMat,
-                const Array<OneD, const DNekMatSharedPtr>  &BwdMat,
-                Array<OneD, DNekMatSharedPtr>  &fieldMat);
 
             void ExtractFileBCs(const std::string                &fileName,
                                 LibUtilities::CommSharedPtr       comm,
@@ -1929,8 +1931,8 @@ namespace Nektar
                   Array<OneD, NekDouble> &out_d)
         {
             v_PhysDeriv(edir, inarray,out_d);
-        }        
-    
+        }   
+
         inline void ExpList::CurlCurl(
                 Array<OneD, Array<OneD, NekDouble> > &Vel,
                 Array<OneD, Array<OneD, NekDouble> > &Q)

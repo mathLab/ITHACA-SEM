@@ -503,6 +503,82 @@ namespace Nektar
                 break;
             }
         }
+        
+        void ExpList::AddRightIPTPhysDerivBase(
+                const    int                                    dir,
+                const    Array<OneD, const DNekMatSharedPtr>    ElmtJacQuad,
+                         Array<OneD,       DNekMatSharedPtr>    ElmtJacCoef)
+        {
+            int    nelmt;
+            int    nelmtcoef, nelmtpnts,nelmtcoef0, nelmtpnts0;
+
+            nelmtcoef  = GetNcoeffs(0);
+            nelmtpnts  = GetTotPoints(0);
+
+            Array<OneD,NekDouble> innarray(nelmtpnts,0.0);
+            Array<OneD,NekDouble> outarray(nelmtcoef,0.0);
+
+            DNekMatSharedPtr tmpMatQ,tmpMatC;
+
+            nelmtcoef0 = nelmtcoef;
+            nelmtpnts0 = nelmtpnts;
+
+            for(nelmt = 0; nelmt < (*m_exp).size(); ++nelmt)
+            {
+                nelmtcoef  = GetNcoeffs(nelmt);
+                nelmtpnts  = GetTotPoints(nelmt);
+
+                tmpMatQ     = ElmtJacQuad[nelmt];
+                tmpMatC     = ElmtJacCoef[nelmt];
+                
+                if(nelmtcoef!=nelmtcoef0)
+                {
+                    innarray = Array<OneD,NekDouble> (nelmtcoef,0.0);
+                    nelmtcoef0 = nelmtcoef;
+                }
+
+                if(nelmtpnts!=nelmtpnts0)
+                {
+                    innarray = Array<OneD,NekDouble> (nelmtpnts,0.0);
+                    nelmtpnts0 = nelmtpnts;
+                }
+
+                for(int np=0; np<nelmtcoef;np++)
+                {
+                    for(int nq=0; nq<nelmtpnts;nq++)
+                    {
+                        innarray[nq]    =   (*tmpMatQ)(np,nq);
+                    }
+                    // (*m_exp)[nelmt]->IProductWRTDerivBase(dir,inarray+m_phys_offset[i],
+                    (*m_exp)[nelmt]->RightIPTPhysDerivBase(dir,innarray,outarray);
+
+                    for(int np1=0; np1<nelmtcoef;np1++)
+                    {
+                        (*tmpMatC)(np,np1)   +=   outarray[np1];
+                    }
+                }
+            }
+        }
+
+        void ExpList::AddRightIPTBaseMatrix(
+                const    Array<OneD, const DNekMatSharedPtr>    ElmtJacQuad,
+                         Array<OneD,       DNekMatSharedPtr>    ElmtJacCoef)
+        {
+            DNekMatSharedPtr tmpMatQ,tmpMatC;
+
+            for(int nelmt = 0; nelmt < (*m_exp).size(); ++nelmt)
+            {
+                tmpMatQ     = ElmtJacQuad[nelmt];
+                tmpMatC     = ElmtJacCoef[nelmt];
+
+                StdRegions::StdMatrixKey matkey(StdRegions::eBwdTrans,
+                                            (*m_exp)[nelmt]->DetShapeType(),
+                                             *((*m_exp)[nelmt]));
+                DNekMatSharedPtr BwdTransMat =  (*m_exp)[nelmt]->GetStdMatrix(matkey);
+
+                (*tmpMatC)  =  (*tmpMatC) + (*tmpMatQ)*(*BwdTransMat);  
+            }
+        }
         /**
          * Given a function \f$f(\boldsymbol{x})\f$ evaluated at
          * the quadrature points, this function calculates the
@@ -3435,9 +3511,6 @@ namespace Nektar
                     tmpCoef     =   Array<OneD, NekDouble>(nElmtCoef,0.0);
                 }
 
-                // ElmtMat = mtxPerVar[nelmt];
-                
-
                 StdRegions::StdMatrixKey matkey(StdRegions::eBwdTrans,
                                             (*m_exp)[nelmt]->DetShapeType(),
                                              *((*m_exp)[nelmt]));
@@ -3448,16 +3521,12 @@ namespace Nektar
                     for(int npnt = 0; npnt < nElmtPnt; npnt++)
                     {
                         tmpPhys[npnt]   =   inarray[nelmt][npnt]*(*BwdTransMat)(npnt,ncl);
-                        // cout<< "    tmpPhys["<<npnt<<"] =   "<<tmpPhys[npnt];
-                        // cout<< "    inarray["<<nelmt<<"]"<<"["<<npnt<<"] =   "<<inarray[nelmt][npnt];
-                        // cout<< "    BwdTransMat["<<npnt<<"]["<<ncl<<"] =   "<<(*BwdTransMat)(npnt,ncl)<<endl;
                     }
 
                     (*m_exp)[nelmt]->IProductWRTBase(tmpPhys,tmpCoef);
 
                     for(int nrw = 0; nrw < nElmtCoef; nrw++)
                     {
-                        // cout<< "    tmpCoef["<<nrw<<"] =   "<<tmpCoef[nrw]<<endl;
                         (*mtxPerVar[nelmt])(nrw,ncl)   =   tmpCoef[nrw];
                     }
                 }
@@ -3487,7 +3556,6 @@ namespace Nektar
                     tmpPhys     =   Array<OneD, NekDouble>(nElmtPnt,0.0);
                     tmpCoef     =   Array<OneD, NekDouble>(nElmtCoef,0.0);
                 }
-
                                 
                 for(int ncl = 0; ncl < nElmtPnt; ncl++)
                 {
@@ -3504,6 +3572,7 @@ namespace Nektar
             }
         }
 
+        // TODO: Reduce cost by getting Bwd Matrix directly
         void ExpList::GetMatIpwrtBase(
                                         const   Array<OneD, const  Array<OneD, NekDouble> >&inarray,
                                         Array<OneD, DNekMatSharedPtr> &mtxPerVar)
@@ -3511,10 +3580,6 @@ namespace Nektar
             int ntotElmt            = (*m_exp).size();
             int nElmtPnt            = (*m_exp)[0]->GetTotPoints();
             int nElmtCoef           = (*m_exp)[0]->GetNcoeffs();
-            // int nCoefVar            =   nElmtCoef*nConvectiveFields;
-
-            // NekDouble tmp;
-            // DNekMatSharedPtr        ElmtMat ;
 
             Array<OneD, NekDouble>  tmpCoef(nElmtCoef,0.0);
             Array<OneD, NekDouble>  tmpPhys(nElmtPnt,0.0);
@@ -3524,27 +3589,17 @@ namespace Nektar
                 nElmtCoef           = (*m_exp)[nelmt]->GetNcoeffs();
                 nElmtPnt            = (*m_exp)[nelmt]->GetTotPoints();
 
-                if (tmpPhys.num_elements()!=nElmtPnt||tmpCoef.num_elements()!=nElmtCoef) 
+                if (tmpPhys.num_elements()!=nElmtPnt) 
                 {
                     tmpPhys     =   Array<OneD, NekDouble>(nElmtPnt,0.0);
+                }
+                if (tmpCoef.num_elements()!=nElmtCoef) 
+                {
                     tmpCoef     =   Array<OneD, NekDouble>(nElmtCoef,0.0);
                 }
-
-                // ElmtMat = mtxPerVar[nelmt];
-                
-
-                // StdRegions::StdMatrixKey matkey(StdRegions::eBwdTrans,
-                //                             (*m_exp)[nelmt]->DetShapeType(),
-                //                              *((*m_exp)[nelmt]));
-                // DNekMatSharedPtr BwdTransMat =  (*m_exp)[nelmt]->GetStdMatrix(matkey);
-
                 
                 for(int ncl = 0; ncl < nElmtPnt; ncl++)
                 {
-                    // for(int npnt = 0; npnt < nElmtPnt; npnt++)
-                    // {
-                    //     tmpPhys[npnt]   =   inarray[nelmt][npnt]*(*BwdTransMat)(npnt,ncl);
-                    // }
                     tmpPhys[ncl]   =   inarray[nelmt][ncl];
 
                     (*m_exp)[nelmt]->IProductWRTBase(tmpPhys,tmpCoef);
@@ -3556,8 +3611,8 @@ namespace Nektar
                     tmpPhys[ncl]   =   0.0; // to maintain all the other columes are zero.
                 }
             }
-      
         }
+
         const LocTraceToTraceMapSharedPtr &ExpList::v_GetlocTraceToTraceMap() const
         {
             ASSERTL0(false, "v_GetlocTraceToTraceMap not coded");
@@ -3565,19 +3620,87 @@ namespace Nektar
             return result;
         }
 
-
-        void ExpList::v_AddTraceJacToElmtJac(
+        /**
+         * @brief inverse process of v_GetFwdBwdTracePhys. Given Trace integration of Fwd and Bwd Jacobian,
+         * with dimension NtotalTrace*TraceCoef*TracePhys. 
+         * return Elemental Jacobian matrix with dimension NtotalElement*ElementCoef*ElementPhys.
+         *
+         *
+         * @param field is a NekDouble array which contains the 2D data
+         *              from which we wish to extract the backward and
+         *              forward orientated trace/edge arrays.
+         * @param Fwd   The resulting forwards space.
+         * @param Bwd   The resulting backwards space.
+         */
+        void ExpList::AddTraceJacToElmtJac(
                 const Array<OneD, const DNekMatSharedPtr>  &FwdMat,
                 const Array<OneD, const DNekMatSharedPtr>  &BwdMat,
                 Array<OneD, DNekMatSharedPtr>  &fieldMat)
         {
-            ASSERTL0(false,
-                     "This method is not defined or valid for this class type");
+
+            MultiRegions::ExpListSharedPtr tracelist = GetTrace();
+            std::shared_ptr<LocalRegions::ExpansionVector> traceExp= tracelist->GetExp();
+            int ntotTrac            = (*traceExp).size();
+            int nTracPnt,nTracCoef,noffset,pntoffset;
+
+            std::shared_ptr<LocalRegions::ExpansionVector> fieldExp= GetExp();
+            int ntotElmt            = (*fieldExp).size();
+            int nElmtPnt,nElmtCoef,nElmtoffset,Elmtpntoffset;
+
+            NekDouble tmp;
+            DNekMatSharedPtr                    ElmtMat;
+            Array<OneD, DNekMatSharedPtr>       TracFBMat(2);
+            int nclAdjExp,nrwAdjExp;
+
+            const MultiRegions::LocTraceToTraceMapSharedPtr locTraceToTraceMap = GetlocTraceToTraceMap();
+            
+            const Array<OneD, const Array<OneD, int >> LRAdjExpid  =   locTraceToTraceMap->GetLeftRightAdjacentExpId();
+            const Array<OneD, const Array<OneD, bool>> LRAdjflag   =   locTraceToTraceMap->GetLeftRightAdjacentExpFlag();
+            const Array<OneD, const Array<OneD, Array<OneD, int > > > elmtLRMap   =   locTraceToTraceMap->GetTraceceffToLeftRightExpcoeffMap();
+            const Array<OneD, const Array<OneD, Array<OneD, int > > > elmtLRSign  =   locTraceToTraceMap->GetTraceceffToLeftRightExpcoeffSign();
+
+            // only for cases without interpolation!!!!
+            // TODO: to code cases with interpolation, may need a matrix not only a map.
+            const Array<OneD, const Array<OneD, Array<OneD, int > > > Trac2ElmtphysMap  =   locTraceToTraceMap->GetTracephysToLeftRightExpphysMap();
+
+            int nlr = 0;
+            NekDouble sign = 1.0;
+            for(int  ntrace = 0; ntrace < ntotTrac; ntrace++)
+            {
+                nTracCoef       = (*traceExp)[ntrace]->GetNcoeffs();
+                nTracPnt        = (*traceExp)[ntrace]->GetTotPoints();
+
+                TracFBMat[0]    = FwdMat[ntrace]; 
+                TracFBMat[1]    = BwdMat[ntrace]; 
+
+                for(int  nlr = 0; nlr < 2; nlr++)
+                {
+                    if(LRAdjflag[nlr][ntrace])
+                    {
+                        sign    = 2.0*NekDouble(nlr)-1.0;
+
+                        ElmtMat        = fieldMat[LRAdjExpid[nlr][ntrace]];
+
+                        for(int ncl = 0; ncl < nTracPnt; ncl++)
+                        {
+                            nclAdjExp = Trac2ElmtphysMap[nlr][ntrace][ncl];
+
+                            for(int nrw = 0; nrw < nTracCoef; nrw++)
+                            {
+                                nrwAdjExp = elmtLRMap[nlr][ntrace][nrw];
+
+                                tmp   =   (*ElmtMat)(nrwAdjExp,nclAdjExp);
+                                tmp   +=  sign*(*TracFBMat[nlr])(nrw,ncl);
+                                ElmtMat->SetValue(nrwAdjExp,nclAdjExp,tmp);
+                            }
+                        }
+                    }
+                }
+            }
         }
 
-        Array<OneD, Array<OneD, Array<OneD, int > > > & ExpList::GetTracephysToLeftRightExpphysMap()
+        Array<OneD, Array<OneD, Array<OneD, int > > > ExpList::CalcuTracephysToLeftRightExpphysMap()
         {
-            
             int nfieldPts  = GetTotPoints();
             int ntotElmt   = (*m_exp).size();
 
@@ -3586,8 +3709,8 @@ namespace Nektar
             int ntotTrace  = (*ptraceExp).size();
             int nTracePts  = traceExplist->GetTotPoints();
 
-            // Basis definition on each element
-            LibUtilities::BasisSharedPtr basis = (*m_exp)[0]->GetBasis(0);
+            // Basis definition on each element may need to determine whether interpolations are used 
+            // LibUtilities::BasisSharedPtr basis = (*m_exp)[0]->GetBasis(0);
             
             // set up the m_TracephysToLeftRightExpphysMap 
             Array<OneD, Array<OneD, NekDouble> > mapFwdBwd(2);
@@ -3608,6 +3731,15 @@ namespace Nektar
             }
             GetFwdBwdTracePhys(mapfield, mapFwdBwd[0], mapFwdBwd[1]);
 
+            NekDouble   dtmp    = 0.0;
+            int         ntmp    = 0;
+
+            // to make sure the GetFwdBwdTracePhys only uses directly copy
+            // if there are interpolations mapFwdBwd are usually not integer anymore
+            // TODO: this check is not strict, to develop cases with interpolations.
+            bool nointerpolationflag = true; 
+
+            const Array<OneD, const Array<OneD, bool>> LRAdjflag   =   GetlocTraceToTraceMap()->GetLeftRightAdjacentExpFlag();
 
             Array<OneD, Array<OneD, Array<OneD, int > > > T2Emap(2);
             for(int nlr=0;  nlr<2;  nlr++)
@@ -3620,18 +3752,25 @@ namespace Nektar
                     int noffset             = traceExplist->GetPhys_Offset(ntrace);
 
                     T2Emap[nlr][ntrace]      =   Array<OneD, int >(nTracPnt,0);
-                    
-                    for(int npnt=0; npnt<nTracPnt;  npnt++)
+                    if(LRAdjflag[nlr][ntrace])
                     {
-                        T2Emap[nlr][ntrace][npnt] =    round(mapFwdBwd[nlr][noffset+npnt]);
+                        for(int npnt=0; npnt<nTracPnt;  npnt++)
+                        {
+                            dtmp            =     mapFwdBwd[nlr][noffset+npnt];
+                            ntmp            =     round(dtmp);
+                            T2Emap[nlr][ntrace][npnt] =    ntmp;
+
+                            if(abs(dtmp-NekDouble(ntmp))>1.0E-10)
+                            {
+                                nointerpolationflag = false;
+                            }
+                        }
                     }
                 }
             }
-
+            ASSERTL0(nointerpolationflag,"GetFwdBwdTracePhys may have interpolations, not coded");
+            return T2Emap;
         }
-
-        
-
     } //end of namespace
 } //end of namespace
 

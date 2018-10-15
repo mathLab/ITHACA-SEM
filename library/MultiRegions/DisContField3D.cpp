@@ -547,7 +547,7 @@ using namespace std;
                 AllocateSharedPtr(*this, m_trace, elmtToTrace,
                                   m_leftAdjacentFaces);
 
-            m_locTraceToTraceMap->SetTracephysToLeftRightExpphysMap(GetTracephysToLeftRightExpphysMap());
+            m_locTraceToTraceMap->SetTracephysToLeftRightExpphysMap(CalcuTracephysToLeftRightExpphysMap());
             
 
          }

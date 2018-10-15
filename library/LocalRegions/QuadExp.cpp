@@ -434,7 +434,14 @@ namespace Nektar
             IProductWRTDerivBase_SumFac(dir,inarray,outarray);
         }
 
-
+        void QuadExp::v_RightIPTPhysDerivBase(
+            const int dir,
+            const Array<OneD, const NekDouble>& inarray,
+                  Array<OneD, NekDouble> & outarray)
+        {
+            RightIPTPhysDerivBase_SumFac(dir,inarray,outarray);
+        }
+        
         void QuadExp::v_IProductWRTBase_SumFac(
             const Array<OneD, const NekDouble>& inarray,
             Array<OneD, NekDouble> &outarray,
@@ -536,6 +543,62 @@ namespace Nektar
             Vmath::Vadd(m_ncoeffs, tmp3, 1, outarray, 1, outarray, 1);
         }
 
+        
+
+        void QuadExp::v_RightIPTPhysDerivBase_SumFac(
+            const int dir,
+            const Array<OneD, const NekDouble>& inarray,
+                  Array<OneD, NekDouble> & outarray)
+        {
+            ASSERTL1((dir==0) || (dir==1) || (dir==2),
+                     "Invalid direction.");
+            ASSERTL1((dir==2) ? (m_geom->GetCoordim() ==3):true,
+                     "Invalid direction.");
+
+            int    nquad0  = m_base[0]->GetNumPoints();
+            int    nquad1  = m_base[1]->GetNumPoints();
+            int    nqtot   = nquad0*nquad1;
+            int    nmodes0 = m_base[0]->GetNumModes();
+
+            const Array<TwoD, const NekDouble>& df = m_metricinfo->GetDerivFactors(GetPointsKeys());
+
+            Array<OneD, NekDouble> tmp1(2*nqtot+m_ncoeffs+nmodes0*nquad1);
+            Array<OneD, NekDouble> tmp2(tmp1 +   nqtot);
+            Array<OneD, NekDouble> tmp3(tmp1 + 2*nqtot);
+            Array<OneD, NekDouble> tmp4(tmp1 + 2*nqtot+m_ncoeffs);
+
+            if (m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
+            {
+                Vmath::Vmul(nqtot,
+                            &df[2*dir][0], 1,
+                            inarray.get(), 1,
+                            tmp1.get(), 1);
+                Vmath::Vmul(nqtot,
+                            &df[2*dir+1][0], 1,
+                            inarray.get(), 1,
+                            tmp2.get(),1);
+            }
+            else
+            {
+                Vmath::Smul(nqtot,
+                            df[2*dir][0], inarray.get(), 1,
+                            tmp1.get(), 1);
+                Vmath::Smul(nqtot,
+                            df[2*dir+1][0], inarray.get(), 1,
+                            tmp2.get(), 1);
+            }
+
+            // MultiplyByQuadratureMetric(tmp1,tmp1);
+            // MultiplyByQuadratureMetric(tmp2,tmp2);
+
+            IProductWRTBase_SumFacKernel(
+                m_base[0]->GetDbdata(), m_base[1]->GetBdata(),
+                tmp1, tmp3, tmp4, false, true);
+            IProductWRTBase_SumFacKernel(
+                m_base[0]->GetBdata() , m_base[1]->GetDbdata(),
+                tmp2, outarray, tmp4, true, false);
+            Vmath::Vadd(m_ncoeffs, tmp3, 1, outarray, 1, outarray, 1);
+        }
 
         void QuadExp::v_IProductWRTDerivBase_MatOp(
             const int dir,

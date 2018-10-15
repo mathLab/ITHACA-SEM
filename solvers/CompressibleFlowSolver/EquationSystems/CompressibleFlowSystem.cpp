@@ -730,6 +730,16 @@ namespace Nektar
         int nvariables = inarray.num_elements();
         GetTraceJac(inarray,TraceJac);
         m_advObject->AddTraceJac2Mat(nvariables,m_fields, TraceJac,gmtxarray);
+
+        // Cout2DArrayBlkMat(gmtxarray);
+        // Fill2DArrayOfBlkDiagonalMat(gmtxarray,0.0);
+        // cout <<endl<< "*****************************************"<<endl;
+        // cout <<"New one"<<endl;
+        int nSpaceDim = m_graph->GetSpaceDimension();
+        m_advObject->AddTraceJac2Mat_new(nvariables,nSpaceDim,m_fields, TraceJac,gmtxarray);
+
+        // Cout2DArrayBlkMat(gmtxarray);
+        // cout <<endl<< "￥￥￥￥￥￥￥￥￥￥￥￥￥￥￥￥￥￥￥￥￥￥￥￥￥￥￥"<<endl;
     }
 
     void CompressibleFlowSystem::GetTraceJac(

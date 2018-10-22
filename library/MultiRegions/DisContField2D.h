@@ -207,11 +207,19 @@ namespace Nektar
                 const Array<OneD, const NekDouble> &field,
                       Array<OneD,       NekDouble> &Fwd,
                       Array<OneD,       NekDouble> &Bwd);
-            virtual void v_GetFwdBwdTracePhys_singlethread(
+            virtual void v_GetFwdBwdTracePhys_serial(
+                const Array<OneD, const NekDouble> &field,
+                      Array<OneD,       NekDouble> &Fwd,
+                      Array<OneD,       NekDouble> &Bwd);
+            virtual void v_GetFwdBwdTracePhysInterior(
                 const Array<OneD, const NekDouble> &field,
                       Array<OneD,       NekDouble> &Fwd,
                       Array<OneD,       NekDouble> &Bwd);
             virtual void v_GetFwdBwdTracePhys(
+                      Array<OneD,       NekDouble> &Fwd,
+                      Array<OneD,       NekDouble> &Bwd);
+            virtual void v_GetFwdBwdTracePhysDeriv(
+                const Array<OneD, const NekDouble> &field,
                       Array<OneD,       NekDouble> &Fwd,
                       Array<OneD,       NekDouble> &Bwd);
             virtual void v_AddTraceIntegral(
@@ -308,6 +316,9 @@ namespace Nektar
             virtual std::map<int, RobinBCInfoSharedPtr> v_GetRobinBCInfo();
 
             virtual void v_FillBwdWITHBound(
+                const Array<OneD, const NekDouble> &Fwd,
+                      Array<OneD,       NekDouble> &Bwd);
+            virtual void v_FillBwdWITHBoundDeriv(
                 const Array<OneD, const NekDouble> &Fwd,
                       Array<OneD,       NekDouble> &Bwd);
             virtual void v_AddTraceIntegral2OffDiag(

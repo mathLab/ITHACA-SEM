@@ -71,6 +71,16 @@ namespace Nektar
     NekDouble                           m_Cp;
     NekDouble                           m_Prandtl;
 
+    void GetViscousFluxVectorConservVar(
+        const int                                                       nConvectiveFields,
+        const int                                                       nDim,
+        const Array<OneD, Array<OneD, NekDouble> >                      &inarray,
+        const Array<OneD, Array<OneD, Array<OneD, NekDouble> > >        &qfields,
+            Array<OneD, Array<OneD, Array<OneD, NekDouble> > >          &outarray,
+            Array< OneD, int >                                          &nonZeroIndex,    
+        const Array<OneD, Array<OneD, NekDouble> >                      &normal,           
+        const Array<OneD, Array<OneD, NekDouble> >                      &ArtifDiffFactor);
+    
     NavierStokesCFE(const LibUtilities::SessionReaderSharedPtr& pSession,
                     const SpatialDomains::MeshGraphSharedPtr& pGraph);
 

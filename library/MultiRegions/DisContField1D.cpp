@@ -954,7 +954,7 @@ namespace Nektar
         }
 
 
-        void DisContField1D::v_GetFwdBwdTracePhys_singlethread(
+        void DisContField1D::v_GetFwdBwdTracePhys_serial(
             const Array<OneD, const NekDouble> &field,
             Array<OneD,       NekDouble> &Fwd,
             Array<OneD,       NekDouble> &Bwd)

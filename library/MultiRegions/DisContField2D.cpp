@@ -1343,7 +1343,7 @@ namespace Nektar
                   Array<OneD,       NekDouble> &Fwd,
                   Array<OneD,       NekDouble> &Bwd)
         {
-            DisContField2D::v_GetFwdBwdTracePhys_singlethread(field, Fwd, Bwd);
+            DisContField2D::v_GetFwdBwdTracePhys_serial(field, Fwd, Bwd);
             
             // Do parallel exchange for forwards/backwards spaces.
             m_traceMap->UniversalTraceAssemble(Fwd);
@@ -1373,7 +1373,7 @@ namespace Nektar
         /**
          * @brief This is v_GetFwdBwdTracePhys without parallel communication
          */
-        void DisContField2D::v_GetFwdBwdTracePhys_singlethread(
+        void DisContField2D::v_GetFwdBwdTracePhys_serial(
             const Array<OneD, const NekDouble> &field,
                   Array<OneD,       NekDouble> &Fwd,
                   Array<OneD,       NekDouble> &Bwd)

@@ -2656,7 +2656,25 @@ namespace Nektar
                      "This method is not defined or valid for this class type");
         }
 
-        void ExpList::v_GetFwdBwdTracePhys_singlethread(
+        void ExpList::v_GetFwdBwdTracePhysDeriv(
+                                const Array<OneD,const NekDouble>  &field,
+                                      Array<OneD,NekDouble> &Fwd,
+                                      Array<OneD,NekDouble> &Bwd)
+        {
+            ASSERTL0(false,
+                     "This method is not defined or valid for this class type");
+        }
+
+        void ExpList::v_GetFwdBwdTracePhys_serial(
+                                const Array<OneD,const NekDouble>  &field,
+                                      Array<OneD,NekDouble> &Fwd,
+                                      Array<OneD,NekDouble> &Bwd)
+        {
+            ASSERTL0(false,
+                     "This method is not defined or valid for this class type");
+        }
+
+        void ExpList::v_GetFwdBwdTracePhysInterior(
                                 const Array<OneD,const NekDouble>  &field,
                                       Array<OneD,NekDouble> &Fwd,
                                       Array<OneD,NekDouble> &Bwd)
@@ -3192,6 +3210,13 @@ namespace Nektar
                   Array<OneD,       NekDouble> &Bwd)
         {
             ASSERTL0(false,"v_FillBwdWITHBound not defined");
+        }
+
+        void ExpList::v_FillBwdWITHBoundDeriv(
+            const Array<OneD, const NekDouble> &Fwd,
+                  Array<OneD,       NekDouble> &Bwd)
+        {
+            ASSERTL0(false,"v_FillBwdWITHBoundDeriv not defined");
         }
 
         void ExpList::v_AddTraceIntegral2OffDiag(
@@ -3772,7 +3797,7 @@ namespace Nektar
             return T2Emap;
         }
 
-        NekDouble getPenaltyFactor(
+        void ExpList::GetPenaltyFactor(
             Array<OneD, NekDouble > factor) 
         {
             
@@ -3793,10 +3818,12 @@ namespace Nektar
 
             Array<OneD, NekDouble > factorFwdBwd(2,0.0);
 
+            NekDouble spaceDim    =   NekDouble( GetCoordim(0) );
+
             for(int ntrace = 0; ntrace < ntotTrac; ++ntrace)
             {
-                noffset     = (*traceExp)->GetPhys_Offset(ntrace);
-                nTracPnt    = (*traceExp)->GetTotPoints(ntrace);
+                noffset     = tracelist->GetPhys_Offset(ntrace);
+                nTracPnt    = tracelist->GetTotPoints(ntrace);
 
                 factorFwdBwd[0] =   0.0;
                 factorFwdBwd[1] =   0.0;
@@ -3805,8 +3832,9 @@ namespace Nektar
                 {
                     if(LRAdjflag[nlr][ntrace])
                     {
-                        numModes        = (*fieldExp)->GetNumModes(LRAdjExpid[nlr][ntrace]);  
-                        factorFwdBwd[nlr]   =   1.0 * numModes * (numModes + 1.0);
+                        int numModes        = GetNcoeffs(LRAdjExpid[nlr][ntrace]);  
+                        NekDouble numModesdir     = pow(NekDouble(numModes),(1.0/spaceDim));
+                        factorFwdBwd[nlr]   =   1.0 * numModesdir * (numModesdir + 1.0);
                     }
                 }
 

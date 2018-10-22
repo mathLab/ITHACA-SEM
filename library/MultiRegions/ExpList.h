@@ -793,12 +793,20 @@ namespace Nektar
                       Array<OneD,NekDouble> &Fwd,
                       Array<OneD,NekDouble> &Bwd);
 
-            inline void GetFwdBwdTracePhys_singlethread(
+            inline void GetFwdBwdTracePhys_serial(
+                const Array<OneD,const NekDouble> &field,
+                      Array<OneD,NekDouble> &Fwd,
+                      Array<OneD,NekDouble> &Bwd);
+            inline void GetFwdBwdTracePhysDeriv(
                 const Array<OneD,const NekDouble> &field,
                       Array<OneD,NekDouble> &Fwd,
                       Array<OneD,NekDouble> &Bwd);
 
             inline void FillBwdWITHBound(
+                  const Array<OneD, const NekDouble> &Fwd,
+                        Array<OneD,       NekDouble> &Bwd);
+            
+            inline void FillBwdWITHBoundDeriv(
                   const Array<OneD, const NekDouble> &Fwd,
                         Array<OneD,       NekDouble> &Bwd);
 
@@ -1046,6 +1054,9 @@ namespace Nektar
             }
 
             Array<OneD, Array<OneD, Array<OneD, int > > > CalcuTracephysToLeftRightExpphysMap();
+
+            MULTI_REGIONS_EXPORT void GetPenaltyFactor(
+                    Array<OneD, NekDouble > factor);
                 
         protected:
             /// Definition of the total number of degrees of freedom and
@@ -1273,11 +1284,26 @@ namespace Nektar
                 const Array<OneD,const NekDouble>  &field,
                       Array<OneD,NekDouble> &Fwd,
                       Array<OneD,NekDouble> &Bwd);
-            virtual void v_GetFwdBwdTracePhys_singlethread(
+
+            virtual void v_GetFwdBwdTracePhysDeriv(
                 const Array<OneD,const NekDouble>  &field,
                       Array<OneD,NekDouble> &Fwd,
                       Array<OneD,NekDouble> &Bwd);
+
+            virtual void v_GetFwdBwdTracePhys_serial(
+                const Array<OneD,const NekDouble>  &field,
+                      Array<OneD,NekDouble> &Fwd,
+                      Array<OneD,NekDouble> &Bwd);
+            virtual void v_GetFwdBwdTracePhysInterior(
+                const Array<OneD,const NekDouble>  &field,
+                      Array<OneD,NekDouble> &Fwd,
+                      Array<OneD,NekDouble> &Bwd);
+                      
             virtual void v_FillBwdWITHBound(
+                const Array<OneD, const NekDouble> &Fwd,
+                      Array<OneD,       NekDouble> &Bwd);
+            
+            virtual void v_FillBwdWITHBoundDeriv(
                 const Array<OneD, const NekDouble> &Fwd,
                       Array<OneD,       NekDouble> &Bwd);
 
@@ -2344,12 +2370,12 @@ namespace Nektar
             v_GetFwdBwdTracePhys(field,Fwd,Bwd);
         }
 
-        inline void ExpList::GetFwdBwdTracePhys_singlethread(
+        inline void ExpList::GetFwdBwdTracePhys_serial(
             const Array<OneD,const NekDouble>  &field,
                   Array<OneD,NekDouble> &Fwd,
                   Array<OneD,NekDouble> &Bwd)
         {
-            v_GetFwdBwdTracePhys_singlethread(field,Fwd,Bwd);
+            v_GetFwdBwdTracePhys_serial(field,Fwd,Bwd);
         }
 
         inline void ExpList::FillBwdWITHBound(
@@ -2359,7 +2385,12 @@ namespace Nektar
             v_FillBwdWITHBound(Fwd,Bwd);
         }
 
-        
+        inline void ExpList::FillBwdWITHBoundDeriv(
+            const Array<OneD, const NekDouble> &Fwd,
+                  Array<OneD,       NekDouble> &Bwd)
+        {
+            v_FillBwdWITHBoundDeriv(Fwd,Bwd);
+        }
 
         inline const std::vector<bool> &ExpList::GetLeftAdjacentFaces(void) const
         {

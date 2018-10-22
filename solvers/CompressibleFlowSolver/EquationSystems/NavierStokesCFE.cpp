@@ -501,4 +501,32 @@ namespace Nektar
             }
         }
     }
+
+    /**
+     * @brief Return the flux vector for the LDG diffusion problem.
+     * \todo Complete the viscous flux vector
+     */
+    void NavierStokesCFE::GetViscousFluxVectorConservVar(
+        const int                                                       nConvectiveFields,
+        const int                                                       nDim,
+        const Array<OneD, Array<OneD, NekDouble> >                      &inarray,
+        const Array<OneD, Array<OneD, Array<OneD, NekDouble> > >        &qfields,
+            Array<OneD, Array<OneD, Array<OneD, NekDouble> > >          &outarray,
+            Array< OneD, int >                                          &nonZeroIndex,    
+        const Array<OneD, Array<OneD, NekDouble> >                      &normal,           
+        const Array<OneD, Array<OneD, NekDouble> >                      &ArtifDiffFactor)
+    {
+        int n_nonZero   =   nConvectiveFields-1;
+        if(NullNekDoubleArrayofArray!=ArtifDiffFactor)
+        {
+            n_nonZero   =   nConvectiveFields;
+        }
+        nonZeroIndex = Array< OneD, int > (n_nonZero,0);
+        for(int i=1;i<n_nonZero+1; i++)
+        {
+            nonZeroIndex[n_nonZero-i] =   nConvectiveFields-i;
+        }
+
+        
+    }
 }

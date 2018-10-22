@@ -1768,7 +1768,7 @@ using namespace std;
             m_traceMap->UniversalTraceAssemble(Bwd);
         }
 
-        void DisContField3D::v_GetFwdBwdTracePhys_singlethread(
+        void DisContField3D::v_GetFwdBwdTracePhys_serial(
                                           const Array<OneD, const NekDouble> &field,
                   Array<OneD,       NekDouble> &Fwd,
                   Array<OneD,       NekDouble> &Bwd)

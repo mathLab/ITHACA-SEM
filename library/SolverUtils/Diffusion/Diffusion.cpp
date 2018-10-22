@@ -74,6 +74,18 @@ namespace Nektar
             v_Diffuse_coeff(nConvectiveFields, fields, inarray, outarray, pFwd, pBwd);
         }
 
+        void DiffusionFlux(
+            const int                                                       nConvectiveFields,
+            const int                                                       nDim,
+            const Array<OneD, Array<OneD, NekDouble> >                      &inarray,
+            const Array<OneD, Array<OneD, Array<OneD, NekDouble> > >        &qfields,
+                Array<OneD, Array<OneD, Array<OneD, NekDouble> > >          &outarray,
+                Array< OneD, int >                                          &nonZeroIndex,    
+            const Array<OneD, Array<OneD, NekDouble> >                      &normal,           
+            const Array<OneD, Array<OneD, NekDouble> >                      &ArtifDiffFactor)
+        {
+        }
+
         void Diffusion::v_Diffuse_coeff(
             const int nConvectiveFields,
             const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,

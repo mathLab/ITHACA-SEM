@@ -80,34 +80,6 @@ namespace Nektar
                 const Array<OneD, Array<OneD, NekDouble> > &pFwd = NullNekDoubleArrayofArray,
                 const Array<OneD, Array<OneD, NekDouble> > &pBwd = NullNekDoubleArrayofArray);
             
-            // virtual void v_NumFluxforScalar(
-            //     const Array<OneD, MultiRegions::ExpListSharedPtr>       &fields,
-            //     const Array<OneD, Array<OneD, NekDouble> >              &ufield,
-            //           Array<OneD, Array<OneD, Array<OneD, NekDouble> > >&uflux,
-            //     const Array<OneD, Array<OneD, NekDouble> > &pFwd = NullNekDoubleArrayofArray,
-            //     const Array<OneD, Array<OneD, NekDouble> > &pBwd = NullNekDoubleArrayofArray);
-            
-            virtual void v_WeakPenaltyforScalar(
-                const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
-                const int                                          var,
-                const Array<OneD, const NekDouble>                &ufield,
-                const Array<OneD, const NekDouble>                &uplus,
-                      Array<OneD,       NekDouble>                &penaltyflux);
-            
-            virtual void v_NumFluxforVector(
-                const Array<OneD, MultiRegions::ExpListSharedPtr>       &fields,
-                const Array<OneD, Array<OneD, NekDouble> >              &ufield,
-                      Array<OneD, Array<OneD, Array<OneD, NekDouble> > >&qfield,
-                      Array<OneD, Array<OneD, NekDouble> >              &qflux);
-            
-            virtual void v_WeakPenaltyforVector(
-                const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
-                const int                                          var,
-                const int                                          dir,
-                const Array<OneD, const NekDouble>                &qfield,
-                const Array<OneD, const NekDouble>                &qtemp,
-                      Array<OneD,       NekDouble>                &penaltyflux,
-                NekDouble                                          C11);
         }; 
     }
 }

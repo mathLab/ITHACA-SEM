@@ -486,7 +486,7 @@ namespace Nektar
         //     Bwd[i]          = Array<OneD, NekDouble>(nTracePts, -100000000000.0);
         //     FwdFlux[i]      = Array<OneD, NekDouble>(nTracePts, 0.0);
         //     BwdFlux[i]      = Array<OneD, NekDouble>(nTracePts, 0.0);
-        //     m_fields[i]->GetFwdBwdTracePhys_singlethread(outpnts[i], Fwd[i], Bwd[i]);
+        //     m_fields[i]->GetFwdBwdTracePhys_serial(outpnts[i], Fwd[i], Bwd[i]);
         //     // m_fields[i]->GetFwdBwdTracePhys(outpnts[i], Fwd[i], Bwd[i]);
         // }
 
@@ -509,7 +509,7 @@ namespace Nektar
             Bwd[i]          = Array<OneD, NekDouble>(nTracePts, 0.0);
             FwdFlux[i]      = Array<OneD, NekDouble>(nTracePts, 0.0);
             BwdFlux[i]      = Array<OneD, NekDouble>(nTracePts, 0.0);
-            // m_fields[i]->GetFwdBwdTracePhys_singlethread(outpnts[i], Fwd[i], Bwd[i]);
+            // m_fields[i]->GetFwdBwdTracePhys_serial(outpnts[i], Fwd[i], Bwd[i]);
             m_fields[i]->GetFwdBwdTracePhys(outpnts[i], Fwd[i], Bwd[i]);
         }
 
@@ -558,7 +558,7 @@ namespace Nektar
         //     Bwd0[i]          = Array<OneD, NekDouble>(nTracePts, 0.0);
         //     FwdFlux0[i]      = Array<OneD, NekDouble>(nTracePts, 0.0);
         //     BwdFlux0[i]      = Array<OneD, NekDouble>(nTracePts, 0.0);
-        //     m_fields[i]->GetFwdBwdTracePhys_singlethread(outpnts[i], Fwd0[i], Bwd0[i]);
+        //     m_fields[i]->GetFwdBwdTracePhys_serial(outpnts[i], Fwd0[i], Bwd0[i]);
         //     // m_fields[i]->GetFwdBwdTracePhys(outpnts[i], Fwd[i], Bwd[i]);
         // }
 

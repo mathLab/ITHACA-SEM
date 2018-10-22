@@ -391,6 +391,7 @@ namespace Nektar
 
         /**
          * @param   keyTgt      Target point distributions.
+         * FOR 1D: Jac =(partial x/ partial xi); factor = Jac =(partial xi/ partial x)
          * @returns             Derivative factors evaluated at the target
          *                      point distributions.
          */

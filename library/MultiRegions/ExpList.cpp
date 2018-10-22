@@ -3771,6 +3771,52 @@ namespace Nektar
             ASSERTL0(nointerpolationflag,"GetFwdBwdTracePhys may have interpolations, not coded");
             return T2Emap;
         }
+
+        NekDouble getPenaltyFactor(
+            Array<OneD, NekDouble > factor) 
+        {
+            
+            const MultiRegions::LocTraceToTraceMapSharedPtr locTraceToTraceMap = GetlocTraceToTraceMap();
+            
+            const Array<OneD, const Array<OneD, int >> LRAdjExpid  =   locTraceToTraceMap->GetLeftRightAdjacentExpId();
+            const Array<OneD, const Array<OneD, bool>> LRAdjflag   =   locTraceToTraceMap->GetLeftRightAdjacentExpFlag();
+
+            MultiRegions::ExpListSharedPtr tracelist = GetTrace();
+            std::shared_ptr<LocalRegions::ExpansionVector> traceExp= tracelist->GetExp();
+            int ntotTrac            = (*traceExp).size();
+            int nTracPnt,nTracCoef,noffset,pntoffset;
+
+
+            std::shared_ptr<LocalRegions::ExpansionVector> fieldExp= GetExp();
+            int ntotElmt            = (*fieldExp).size();
+            int nElmtPnt,nElmtCoef,nElmtoffset,Elmtpntoffset;
+
+            Array<OneD, NekDouble > factorFwdBwd(2,0.0);
+
+            for(int ntrace = 0; ntrace < ntotTrac; ++ntrace)
+            {
+                noffset     = (*traceExp)->GetPhys_Offset(ntrace);
+                nTracPnt    = (*traceExp)->GetTotPoints(ntrace);
+
+                factorFwdBwd[0] =   0.0;
+                factorFwdBwd[1] =   0.0;
+                
+                for(int  nlr = 0; nlr < 2; nlr++)
+                {
+                    if(LRAdjflag[nlr][ntrace])
+                    {
+                        numModes        = (*fieldExp)->GetNumModes(LRAdjExpid[nlr][ntrace]);  
+                        factorFwdBwd[nlr]   =   1.0 * numModes * (numModes + 1.0);
+                    }
+                }
+
+                for(int np = 0; np < nTracPnt; ++np)
+                {
+                    factor[noffset+np]    =   max(factorFwdBwd[0],factorFwdBwd[1]);
+                }
+            }
+        }
+
     } //end of namespace
 } //end of namespace
 

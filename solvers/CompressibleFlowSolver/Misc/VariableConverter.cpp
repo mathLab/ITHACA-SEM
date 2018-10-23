@@ -418,4 +418,25 @@ void VariableConverter::GetRhoFromPT(const Array<OneD, NekDouble> &pressure,
         rho[i] = m_eos->GetRhoFromPT(pressure[i], temperature[i]);
     }
 }
+
+
+////////////////////////////////////////////////////////////////////////////
+void VariableConverter::Getmu(NekDouble &temperature, NekDouble &mu)
+{
+    NekDouble mu_star = m_mu;
+    NekDouble T_star  = m_pInf / (m_rhoInf * m_gasConstant);
+    NekDouble ratio;
+    ratio = temperature / T_star;
+    mu    = mu_star * ratio * sqrt(ratio) * (T_star + 110.0) /
+         (temperature + 110.0);
+
+}
+
+NekDouble VariableConverter::GetGasconstant()
+{
+    return m_gasConstant;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
 }

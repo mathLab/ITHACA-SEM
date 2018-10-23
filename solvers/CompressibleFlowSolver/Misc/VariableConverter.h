@@ -95,6 +95,15 @@ public:
                       const Array<OneD, NekDouble> &temperature,
                       Array<OneD, NekDouble> &rho);
 
+    /////////////////////////////////////////////////////////////////
+    /** Get point dynamic viscosity
+ */
+    void Getmu(NekDouble &temperature, NekDouble &mu);
+
+    NekDouble GetGasconstant();
+
+    ////////////////////////////////////////////////////////////////
+
     EquationOfStateSharedPtr Geteos()
     {
         return m_eos;

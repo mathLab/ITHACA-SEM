@@ -2665,6 +2665,15 @@ namespace Nektar
                      "This method is not defined or valid for this class type");
         }
 
+        void ExpList::v_GetFwdBwdTracePhysNoBndFill(
+                                const Array<OneD,const NekDouble>  &field,
+                                      Array<OneD,NekDouble> &Fwd,
+                                      Array<OneD,NekDouble> &Bwd)
+        {
+            ASSERTL0(false,
+                     "This method is not defined or valid for this class type");
+        }
+
         void ExpList::v_GetFwdBwdTracePhys_serial(
                                 const Array<OneD,const NekDouble>  &field,
                                       Array<OneD,NekDouble> &Fwd,
@@ -2681,6 +2690,14 @@ namespace Nektar
         {
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
+        }
+
+        const Array<OneD, const Array<OneD, std::shared_ptr<ExpList> > >
+                &ExpList::v_GetBndCondExpansionsDeriv()
+        {
+            ASSERTL0(false,
+                     "This method is not defined or valid for this class type");
+            // return;
         }
         
         const vector<bool> &ExpList::v_GetLeftAdjacentFaces(void) const
@@ -3666,11 +3683,10 @@ namespace Nektar
             MultiRegions::ExpListSharedPtr tracelist = GetTrace();
             std::shared_ptr<LocalRegions::ExpansionVector> traceExp= tracelist->GetExp();
             int ntotTrac            = (*traceExp).size();
-            int nTracPnt,nTracCoef,noffset,pntoffset;
+            int nTracPnt,nTracCoef,noffset;
 
             std::shared_ptr<LocalRegions::ExpansionVector> fieldExp= GetExp();
             int ntotElmt            = (*fieldExp).size();
-            int nElmtPnt,nElmtCoef,nElmtoffset,Elmtpntoffset;
 
             NekDouble tmp;
             DNekMatSharedPtr                    ElmtMat;
@@ -3698,7 +3714,7 @@ namespace Nektar
                 TracFBMat[0]    = FwdMat[ntrace]; 
                 TracFBMat[1]    = BwdMat[ntrace]; 
 
-                for(int  nlr = 0; nlr < 2; nlr++)
+                for(nlr = 0; nlr < 2; nlr++)
                 {
                     if(LRAdjflag[nlr][ntrace])
                     {
@@ -3809,12 +3825,11 @@ namespace Nektar
             MultiRegions::ExpListSharedPtr tracelist = GetTrace();
             std::shared_ptr<LocalRegions::ExpansionVector> traceExp= tracelist->GetExp();
             int ntotTrac            = (*traceExp).size();
-            int nTracPnt,nTracCoef,noffset,pntoffset;
+            int nTracPnt,noffset;
 
 
             std::shared_ptr<LocalRegions::ExpansionVector> fieldExp= GetExp();
             int ntotElmt            = (*fieldExp).size();
-            int nElmtPnt,nElmtCoef,nElmtoffset,Elmtpntoffset;
 
             Array<OneD, NekDouble > factorFwdBwd(2,0.0);
 

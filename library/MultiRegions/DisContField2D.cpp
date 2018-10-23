@@ -63,26 +63,28 @@ namespace Nektar
         DisContField2D::DisContField2D(void)
         : ExpList2D          (),
           m_bndCondExpansions(),
+          m_bndCondExpansionsDeriv(),
           m_bndConditions    (),
           m_trace            (NullExpListSharedPtr)
         {
         }
 
         DisContField2D::DisContField2D(
-            const DisContField2D &In, 
-            const bool            DeclareCoeffPhysArrays)
-            : ExpList2D            (In,DeclareCoeffPhysArrays),
-              m_bndCondExpansions  (In.m_bndCondExpansions),
-              m_bndConditions      (In.m_bndConditions),
-              m_globalBndMat       (In.m_globalBndMat),
-              m_traceMap           (In.m_traceMap),
-              m_locTraceToTraceMap (In.m_locTraceToTraceMap),
-              m_boundaryEdges      (In.m_boundaryEdges),
-              m_periodicVerts      (In.m_periodicVerts),
-              m_periodicEdges      (In.m_periodicEdges),
-              m_periodicFwdCopy    (In.m_periodicFwdCopy),
-              m_periodicBwdCopy    (In.m_periodicBwdCopy),
-              m_leftAdjacentEdges  (In.m_leftAdjacentEdges)
+            const DisContField2D        &In, 
+            const bool                  DeclareCoeffPhysArrays)
+            : ExpList2D                 (In,DeclareCoeffPhysArrays),
+              m_bndCondExpansions       (In.m_bndCondExpansions),
+              m_bndCondExpansionsDeriv  (In.m_bndCondExpansionsDeriv),
+              m_bndConditions           (In.m_bndConditions),
+              m_globalBndMat            (In.m_globalBndMat),
+              m_traceMap                (In.m_traceMap),
+              m_locTraceToTraceMap      (In.m_locTraceToTraceMap),
+              m_boundaryEdges           (In.m_boundaryEdges),
+              m_periodicVerts           (In.m_periodicVerts),
+              m_periodicEdges           (In.m_periodicEdges),
+              m_periodicFwdCopy         (In.m_periodicFwdCopy),
+              m_periodicBwdCopy         (In.m_periodicBwdCopy),
+              m_leftAdjacentEdges       (In.m_leftAdjacentEdges)
         {
             if (In.m_trace)
             {
@@ -106,6 +108,7 @@ namespace Nektar
             : ExpList2D(pSession, graph2D, DeclareCoeffPhysArrays, variable,
                         ImpType),
               m_bndCondExpansions(),
+              m_bndCondExpansionsDeriv(),
               m_bndConditions(),
               m_trace(NullExpListSharedPtr),
               m_periodicVerts(),
@@ -650,6 +653,10 @@ namespace Nektar
             m_bndConditions     =
                 Array<OneD, SpatialDomains::BoundaryConditionShPtr>(bregions.size());
 
+            int spaceDim = graph2D->GetSpaceDimension();
+            m_bndCondExpansionsDeriv =
+                Array<OneD, Array<OneD, MultiRegions::ExpListSharedPtr> >(bregions.size());
+
             for (auto &it : bregions)
             {
                 bc = GetBoundaryCondition(bconditions, it.first, variable);
@@ -661,6 +668,16 @@ namespace Nektar
 
                 m_bndCondExpansions[cnt]  = locExpList;
                 m_bndConditions[cnt]      = bc;
+
+                m_bndCondExpansionsDeriv[cnt] = Array<OneD, MultiRegions::ExpListSharedPtr> (spaceDim);
+                for(int i = 0; i<spaceDim;i++)
+                {
+                    locExpList = MemoryManager<MultiRegions::ExpList1D>
+                        ::AllocateSharedPtr(m_session, *(it.second), graph2D,
+                                            DeclareCoeffPhysArrays, variable,
+                                            bc->GetComm());
+                    m_bndCondExpansionsDeriv[cnt][i]  = locExpList;
+                }
 
                 std::string type = m_bndConditions[cnt]->GetUserDefined();
 
@@ -1350,7 +1367,17 @@ namespace Nektar
             m_traceMap->UniversalTraceAssemble(Bwd);
         }
 
+        void DisContField2D::v_GetFwdBwdTracePhysNoBndFill(
+            const Array<OneD, const NekDouble> &field,
+                  Array<OneD,       NekDouble> &Fwd,
+                  Array<OneD,       NekDouble> &Bwd)
+        {
+            DisContField2D::v_GetFwdBwdTracePhysInterior(field, Fwd, Bwd);
 
+            // Do parallel exchange for forwards/backwards spaces.
+            m_traceMap->UniversalTraceAssemble(Fwd);
+            m_traceMap->UniversalTraceAssemble(Bwd);
+        }
 
         /**
          * @brief This subrountine is the v_GetFwdBwdTracePhys for PhysDeriv(Physic Deviratives)
@@ -1522,8 +1549,9 @@ namespace Nektar
             }            
         }
 
-
+        
         /**
+         * TODO: NOT CODED YET
          * @brief Fill the Bwd based on corresponding boundary conditions for derivatives.
          * NOTE: periodic boundary is considered interior traces and is not treated here.
          */

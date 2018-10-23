@@ -74,6 +74,32 @@ namespace Nektar
             v_Diffuse_coeff(nConvectiveFields, fields, inarray, outarray, pFwd, pBwd);
         }
 
+        void Diffusion::Diffuse(
+            const int nConvectiveFields,
+            const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
+            const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+                  Array<OneD, Array<OneD, NekDouble> >        &outarray,
+            NekDouble                                           time,
+            const Array<OneD, Array<OneD, NekDouble> >        &pFwd,
+            const Array<OneD, Array<OneD, NekDouble> >        &pBwd)
+        {
+            m_time  =    time;
+            v_Diffuse(nConvectiveFields, fields, inarray, outarray, pFwd, pBwd);
+        }
+
+        void Diffusion::Diffuse_coeff(
+            const int nConvectiveFields,
+            const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
+            const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+                  Array<OneD, Array<OneD, NekDouble> >        &outarray,
+            NekDouble                                           time,
+            const Array<OneD, Array<OneD, NekDouble> >        &pFwd,
+            const Array<OneD, Array<OneD, NekDouble> >        &pBwd)
+        {
+            m_time  =    time;
+            v_Diffuse_coeff(nConvectiveFields, fields, inarray, outarray, pFwd, pBwd);
+        }
+
         void DiffusionFlux(
             const int                                                       nConvectiveFields,
             const int                                                       nDim,

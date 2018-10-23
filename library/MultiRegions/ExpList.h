@@ -733,7 +733,10 @@ namespace Nektar
             // functions associated with DisContField
             inline const Array<OneD, const  std::shared_ptr<ExpList> >
                 &GetBndCondExpansions();
-            
+
+            inline const Array<OneD, const Array<OneD, std::shared_ptr<ExpList> > >
+                &GetBndCondExpansionsDeriv();
+      
             inline std::shared_ptr<ExpList> &UpdateBndCondExpansion(int i);
             
             inline void Upwind(
@@ -798,6 +801,11 @@ namespace Nektar
                       Array<OneD,NekDouble> &Fwd,
                       Array<OneD,NekDouble> &Bwd);
             inline void GetFwdBwdTracePhysDeriv(
+                const Array<OneD,const NekDouble> &field,
+                      Array<OneD,NekDouble> &Fwd,
+                      Array<OneD,NekDouble> &Bwd);
+            
+            inline void GetFwdBwdTracePhysNoBndFill(
                 const Array<OneD,const NekDouble> &field,
                       Array<OneD,NekDouble> &Fwd,
                       Array<OneD,NekDouble> &Bwd);
@@ -1227,6 +1235,9 @@ namespace Nektar
             virtual const Array<OneD,const std::shared_ptr<ExpList> >
                 &v_GetBndCondExpansions(void);
 
+            virtual const Array<OneD, const Array<OneD, std::shared_ptr<ExpList> > >
+                &v_GetBndCondExpansionsDeriv();
+
             virtual std::shared_ptr<ExpList> &v_UpdateBndCondExpansion(int i);
             
             virtual void v_Upwind(
@@ -1286,6 +1297,11 @@ namespace Nektar
                       Array<OneD,NekDouble> &Bwd);
 
             virtual void v_GetFwdBwdTracePhysDeriv(
+                const Array<OneD,const NekDouble>  &field,
+                      Array<OneD,NekDouble> &Fwd,
+                      Array<OneD,NekDouble> &Bwd);
+
+            virtual void v_GetFwdBwdTracePhysNoBndFill(
                 const Array<OneD,const NekDouble>  &field,
                       Array<OneD,NekDouble> &Fwd,
                       Array<OneD,NekDouble> &Bwd);
@@ -2270,6 +2286,12 @@ namespace Nektar
             &ExpList::GetBndCondExpansions()
         {
             return v_GetBndCondExpansions();
+        }
+
+        inline const Array<OneD, const Array<OneD, std::shared_ptr<ExpList> > >
+            &ExpList::GetBndCondExpansionsDeriv()
+        {
+            return v_GetBndCondExpansionsDeriv();
         }
         
         inline std::shared_ptr<ExpList>  &ExpList::UpdateBndCondExpansion(int i)

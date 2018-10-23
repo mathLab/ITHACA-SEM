@@ -112,6 +112,8 @@ namespace Nektar
              * entry corresponds to a point on a single boundary region.
              */
             Array<OneD,MultiRegions::ExpListSharedPtr>      m_bndCondExpansions;
+            
+            Array<OneD, Array<OneD,MultiRegions::ExpListSharedPtr> > m_bndCondExpansionsDeriv;
 
             /// An array which contains the information about the boundary
             /// condition on the different boundary regions.
@@ -226,6 +228,12 @@ namespace Nektar
                 &v_GetBndCondExpansions()
             {
                 return m_bndCondExpansions;
+            }
+
+            virtual const Array<OneD, const Array<OneD, MultiRegions::ExpListSharedPtr> >
+                &v_GetBndCondExpansionsDeriv()
+            {
+                return m_bndCondExpansionsDeriv;
             }
 
             virtual const Array<OneD,const SpatialDomains::BoundaryConditionShPtr>

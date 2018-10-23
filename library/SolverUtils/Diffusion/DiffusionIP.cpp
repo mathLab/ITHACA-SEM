@@ -136,6 +136,8 @@ namespace Nektar
                 m_fields[i]->PhysDeriv(inarray[i], qtmp[0], qtmp[1], qtmp[2]);
             }
 
+            // SetBoundaryConditionsDeriv(inarray,qfield,m_time,pFwd);
+
             Array<OneD, NekDouble> muvar        =   NullNekDouble1DArray;
             Array<OneD, NekDouble> FwdMuVar     =   NullNekDouble1DArray;
             Array<OneD, NekDouble> BwdMuVar     =   NullNekDouble1DArray;
@@ -149,8 +151,8 @@ namespace Nektar
                 BwdMuVar =  Array<OneD, NekDouble>(nTracePts, 0.0);
 
                 // TODO: CHECK !!
-                fields[0]->GetFwdBwdTracePhysInterior(muvar,FwdMuVar,BwdMuVar);
-                fields[0]->FillBwdWITHBoundZero(FwdMuVar,BwdMuVar);
+                fields[0]->GetFwdBwdTracePhysNoBndFill(muvar,FwdMuVar,BwdMuVar);
+                // fields[0]->FillBwdWITHBoundZero(FwdMuVar,BwdMuVar);
 
                 for(k = 0; k < nTracePts; ++k)
                 {

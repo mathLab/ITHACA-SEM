@@ -122,18 +122,18 @@ namespace Nektar
                 }
             }
 
-            Array< Array<OneD, NekDouble> > qtmp(3);
-            for(int nd=0; nd<3, nd++)
+            Array<OneD, Array<OneD, NekDouble> > qtmp(3);
+            for(int nd=0; nd<3; nd++)
             {
                 qtmp[nd]    =   NullNekDouble1DArray;
             }
             for(int i = 0; i < nConvectiveFields; ++i)
             {
-                for(int nd=0; nd<nDim, nd++)
+                for(int nd=0; nd<nDim; nd++)
                 {
                     qtmp[nd]    =   qfield[nd][i];
                 }
-                m_fields[i]->PhysDeriv(inarray[i], qtmp[0], qtmp[1], qtmp[2]);
+                fields[i]->PhysDeriv(inarray[i], qtmp[0], qtmp[1], qtmp[2]);
             }
 
             Array<OneD, Array<OneD, NekDouble> > tmparray2D;
@@ -202,7 +202,6 @@ namespace Nektar
             }
             // release qfield, elmtFlux and muvar;
             muvar   =   NullNekDouble1DArray;
-            Array<OneD, Array<OneD, Array<OneD, NekDouble> > > qfield(nDim);
             for (j = 0; j < nDim; ++j)
             {
                 qfield[j]       = NullNekDoubleArrayofArray;
@@ -224,12 +223,12 @@ namespace Nektar
                 for (i = 0; i < nConvectiveFields; ++i)
                 {
                     Fwd       =    solution_jump[i];  
-                    Bwd       =    solution_Aver[i]
+                    Bwd       =    solution_Aver[i];
                     fields[i]->GetFwdBwdTracePhys(inarray[i], Fwd, Bwd);
                     for (int nt = 0; nt < nTracePts; ++nt)
                     {
                         solution_jump[i][nt]   =   Fwd[nt] - Bwd[nt];  
-                        solution_Aver[i][nt]   =   0.5*solution_jump[nt] + Bwd[nt];  
+                        solution_Aver[i][nt]   =   0.5*solution_jump[i][nt] + Bwd[nt];  
                     }
                 }
             }
@@ -242,7 +241,7 @@ namespace Nektar
                     for (int nt = 0; nt < nTracePts; ++nt)
                     {
                         solution_jump[i][nt]   =   Fwd[nt] - Bwd[nt];  
-                        solution_Aver[i][nt]   =   0.5*solution_jump[nt] + Bwd[nt];  
+                        solution_Aver[i][nt]   =   0.5*solution_jump[i][nt] + Bwd[nt];  
                     }
                 }
             }
@@ -250,7 +249,7 @@ namespace Nektar
             Bwd   =   NullNekDouble1DArray;
 
             Array<OneD, NekDouble>  PenaltyFactor(nTracePts,0.0);
-            GetPenaltyFactor(PenaltyFactor);
+            GetPenaltyFactor(fields,PenaltyFactor);
             for (i = 0; i < nConvectiveFields; ++i)
             {
                 Vmath::Vmul(nTracePts,solution_jump[i],1, PenaltyFactor,1,solution_jump[i],1);
@@ -275,7 +274,7 @@ namespace Nektar
             }
 
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > > traceflux(1);
-            traceflux[0]    =   Array<OneD, Array<OneD, NekDouble> > traceflux(nConvectiveFields);
+            traceflux[0]    =   Array<OneD, Array<OneD, NekDouble> > (nConvectiveFields);
             for (int j = 0; j < nConvectiveFields; ++j)
             {
                 traceflux[0][j]   = Array<OneD, NekDouble>(nTracePts, 0.0);
@@ -285,7 +284,7 @@ namespace Nektar
             for(i = 0; i < nonZeroIndex.num_elements(); ++i)
             {
                 int j = nonZeroIndex[i];
-                fields[j]->AddTraceIntegral     (traceflux[j], outarray[j]);
+                fields[j]->AddTraceIntegral     (traceflux[0][j], outarray[j]);
                 fields[j]->MultiplyByElmtInvMass(outarray[j], outarray[j]);
             }
         }
@@ -311,7 +310,7 @@ namespace Nektar
 
             Array<OneD, NekDouble > factorFwdBwd(2,0.0);
 
-            NekDouble spaceDim    =   NekDouble( GetCoordim(0) );
+            NekDouble spaceDim    =   NekDouble( fields[0]->GetCoordim(0) );
 
             for(int ntrace = 0; ntrace < ntotTrac; ++ntrace)
             {

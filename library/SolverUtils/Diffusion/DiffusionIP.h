@@ -60,7 +60,7 @@ namespace Nektar
             Array<OneD, Array<OneD, NekDouble> >              m_traceNormals;
             LibUtilities::SessionReaderSharedPtr              m_session;
 
-            void DiffusionIP::GetPenaltyFactor(
+            void GetPenaltyFactor(
                 const Array<OneD, MultiRegions::ExpListSharedPtr>   &fields,
                 Array<OneD, NekDouble >                             factor); 
 

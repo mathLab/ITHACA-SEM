@@ -82,8 +82,8 @@ namespace Nektar
             const Array<OneD, const Array<OneD, NekDouble> >                    &,
             const Array<OneD, const Array<OneD, Array<OneD, NekDouble> > >      &,
             NekDouble                                                            ,
-            Array<OneD, Array<OneD, NekDouble> >                                &,
-            Array<OneD, Array<OneD, Array<OneD, NekDouble> > >                  &)> FunctorDerivBndCond;
+            const Array<OneD, const Array<OneD, NekDouble> >                    &,
+                  Array<OneD, Array<OneD, Array<OneD, NekDouble> > >            &)> FunctorDerivBndCond;
         
         /**
          * Parameter list meaning:
@@ -105,7 +105,7 @@ namespace Nektar
                   Array<OneD, Array<OneD, Array<OneD, NekDouble> > >        &,
                   Array< OneD, int >                                        &,    
             const Array<OneD, Array<OneD, NekDouble> >                      &,           
-            const Array<OneD, Array<OneD, NekDouble> >                      &)> DiffusionFluxVec;
+            const Array<OneD, NekDouble>                                    &)> DiffusionFluxVec;
 
         class Diffusion
         {

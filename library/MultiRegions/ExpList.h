@@ -2397,6 +2397,22 @@ namespace Nektar
             v_GetFwdBwdTracePhys_serial(field,Fwd,Bwd);
         }
 
+        inline void ExpList::GetFwdBwdTracePhysNoBndFill(
+            const Array<OneD,const NekDouble>  &field,
+                  Array<OneD,NekDouble> &Fwd,
+                  Array<OneD,NekDouble> &Bwd)
+        {
+            v_GetFwdBwdTracePhysNoBndFill(field,Fwd,Bwd);
+        }
+
+        inline void ExpList::GetFwdBwdTracePhysDeriv(
+            const Array<OneD,const NekDouble>  &field,
+                  Array<OneD,NekDouble> &Fwd,
+                  Array<OneD,NekDouble> &Bwd)
+        {
+            v_GetFwdBwdTracePhysDeriv(field,Fwd,Bwd);
+        }
+
         inline void ExpList::FillBwdWITHBound(
             const Array<OneD, const NekDouble> &Fwd,
                   Array<OneD,       NekDouble> &Bwd)

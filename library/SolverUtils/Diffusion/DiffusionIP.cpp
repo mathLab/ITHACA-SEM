@@ -65,9 +65,11 @@ namespace Nektar
             m_traceNormals = Array<OneD, Array<OneD, NekDouble> >(nDim);
             for(i = 0; i < nDim; ++i)
             {
-                m_traceNormals[i] = Array<OneD, NekDouble> (nTracePts);
+                m_traceNormals[i] = Array<OneD, NekDouble> (nTracePts,0.0);
             }
             pFields[0]->GetTrace()->GetNormals(m_traceNormals);
+            // m_traceNormDirctnElmtLength =   Array<OneD, NekDouble> (nTracePts,0.0);
+            // pFields[0]->GetTrace()->GetNormals(m_traceNormals,m_traceNormDirctnElmtLength);
         }
         
         void DiffusionIP::v_Diffuse(

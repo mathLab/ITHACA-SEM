@@ -914,6 +914,12 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
                 normal[i] = Array<OneD, NekDouble>(nqe);
             }
 
+
+            int nqb = nqe;
+            int nbnd= vertex;
+            m_ElmtBndNormalDirctnElmtLength[nbnd] = Array<OneD, NekDouble>(nqb,0.0);
+            Array<OneD, NekDouble>  &length = m_ElmtBndNormalDirctnElmtLength[nbnd];
+
             // Regular geometry case
             if ((type == SpatialDomains::eRegular) ||
                 (type == SpatialDomains::eMovingRegular))
@@ -945,7 +951,11 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
                 {
                     vert += normal[i][0]*normal[i][0];
                 }
-                vert = 1.0/sqrt(vert);
+                vert = sqrt(vert);
+
+                Vmath::Fill(nqb,vert,length,1);
+
+                vert = 1.0/vert;
                 for (i = 0; i < vCoordDim; ++i)
                 {
                     Vmath::Smul(nqe, vert, normal[i], 1, normal[i], 1);

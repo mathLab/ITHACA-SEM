@@ -581,6 +581,9 @@ namespace Nektar
                                   m_leftAdjacentEdges);
 
             m_locTraceToTraceMap->SetTracephysToLeftRightExpphysMap(CalcuTracephysToLeftRightExpphysMap());
+
+            // set up the trace normal direction element length.
+            // SetupElmtLengthTraceNormal();
         }
         
         /**

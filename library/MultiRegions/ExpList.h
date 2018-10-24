@@ -2396,6 +2396,13 @@ namespace Nektar
         {
             v_GetFwdBwdTracePhys_serial(field,Fwd,Bwd);
         }
+        inline void ExpList::GetNormals(
+            Array<OneD, Array<OneD, NekDouble> > &normals,
+            Array<OneD, NekDouble>               &lengths)
+        {
+            v_GetNormals(normals,lengths);
+        }
+
 
         inline void ExpList::GetFwdBwdTracePhysNoBndFill(
             const Array<OneD,const NekDouble>  &field,
@@ -2504,7 +2511,8 @@ namespace Nektar
             v_GeneralMatrixOp(gkey,inarray,outarray,coeffstate);
         }
 
-
+        // Get the normal vector of element boundaries
+        // Also Get the element length in the each element boundary(Vertex, edge or face) normal direction
         inline void ExpList::SetUpPhysNormals()
         {
             v_SetUpPhysNormals();

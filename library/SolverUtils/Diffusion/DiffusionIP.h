@@ -55,10 +55,14 @@ namespace Nektar
         protected:
             DiffusionIP();
    		
-	    std::string                          m_shockCaptureType;
+            std::string                          m_shockCaptureType;
 	         
             Array<OneD, Array<OneD, NekDouble> >              m_traceNormals;
             LibUtilities::SessionReaderSharedPtr              m_session;
+
+            void DiffusionIP::GetPenaltyFactor(
+                const Array<OneD, MultiRegions::ExpListSharedPtr>   &fields,
+                Array<OneD, NekDouble >                             factor); 
 
             virtual void v_InitObject(
                 LibUtilities::SessionReaderSharedPtr               pSession,

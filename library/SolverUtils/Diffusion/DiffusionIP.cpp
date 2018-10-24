@@ -136,7 +136,12 @@ namespace Nektar
                 m_fields[i]->PhysDeriv(inarray[i], qtmp[0], qtmp[1], qtmp[2]);
             }
 
-            // SetBoundaryConditionsDeriv(inarray,qfield,m_time,pFwd);
+            Array<OneD, Array<OneD, NekDouble> > tmparray2D;
+            Array<OneD, Array<OneD, Array<OneD, NekDouble> > > tmparray3D;
+            tmparray2D = NullNekDoubleArrayofArray;
+            tmparray3D = NullNekDoubleArrayofArrayofArray;
+
+            m_FunctorDerivBndCond(inarray,qfield,m_time,pFwd,tmparray3D);
 
             Array<OneD, NekDouble> muvar        =   NullNekDouble1DArray;
             Array<OneD, NekDouble> FwdMuVar     =   NullNekDouble1DArray;
@@ -150,9 +155,8 @@ namespace Nektar
                 FwdMuVar =  Array<OneD, NekDouble>(nTracePts, 0.0);
                 BwdMuVar =  Array<OneD, NekDouble>(nTracePts, 0.0);
 
-                // TODO: CHECK !!
+                // BwdMuvar is left to be 0.0 according to DiffusionLDG.cpp
                 fields[0]->GetFwdBwdTracePhysNoBndFill(muvar,FwdMuVar,BwdMuVar);
-                // fields[0]->FillBwdWITHBoundZero(FwdMuVar,BwdMuVar);
 
                 for(k = 0; k < nTracePts; ++k)
                 {
@@ -175,7 +179,7 @@ namespace Nektar
                 {
                     numDeriv[nd][i]    = Array<OneD, NekDouble>(nTracePts,0.0);
                     Fwd =  numDeriv[nd][i]; 
-                    Vmath::Fill(nTracePts, 1.0, Bwd,1);
+                    Vmath::Fill(nTracePts, 0.0, Bwd,1);
                     fields[i]->GetFwdBwdTracePhysDeriv(qfield[nd][i], Fwd, Bwd);
                     for (int nt = 0; nt < nTracePts; ++nt)
                     {
@@ -183,18 +187,20 @@ namespace Nektar
                     }
                 }
             }
-            // release storage
+            // release storage and avoid multi-pointer to same data.
+            Fwd   =   NullNekDouble1DArray;
             Bwd   =   NullNekDouble1DArray;
             Array< OneD, int > nonZeroIndex;
-            DiffusionFlux(nConvectiveFields,nDim,inarray,qfield, elmtFlux,nonZeroIndex,muvar);
-            // volume intergration 
+            // TODO: qfield AND elmtFlux share storage????
+            m_Diffusionflux(nConvectiveFields,nDim,inarray,qfield, elmtFlux,nonZeroIndex,tmparray2D,muvar);
+            // volume intergration: the nonZeroIndex indicates which flux is nonzero
             for(i = 0; i < nonZeroIndex.num_elements(); ++i)
             {
                 int j = nonZeroIndex[i];
                 fields[j]->IProductWRTDerivBase(elmtFlux[j],outarray[j]);
                 Vmath::Neg                      (nCoeffs, outarray[j], 1);
             }
-            // release qfield and muvar;
+            // release qfield, elmtFlux and muvar;
             muvar   =   NullNekDouble1DArray;
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > > qfield(nDim);
             for (j = 0; j < nDim; ++j)
@@ -229,8 +235,6 @@ namespace Nektar
             }
             else
             {
-                Fwd   =   NullNekDouble1DArray;
-                Bwd   =   NullNekDouble1DArray;
                 for (i = 0; i < nConvectiveFields; ++i)
                 {
                     Fwd  = pFwd[i];
@@ -242,6 +246,8 @@ namespace Nektar
                     }
                 }
             }
+            Fwd   =   NullNekDouble1DArray;
+            Bwd   =   NullNekDouble1DArray;
 
             Array<OneD, NekDouble>  PenaltyFactor(nTracePts,0.0);
             GetPenaltyFactor(PenaltyFactor);
@@ -275,12 +281,60 @@ namespace Nektar
                 traceflux[0][j]   = Array<OneD, NekDouble>(nTracePts, 0.0);
             }
             // Calculate normal viscous flux
-            DiffusionFlux(nConvectiveFields,nDim,solution_Aver,numDeriv,traceflux,nonZeroIndex,MuVarTrace,m_traceNormals);
+            m_Diffusionflux(nConvectiveFields,nDim,solution_Aver,numDeriv,traceflux,nonZeroIndex,m_traceNormals,MuVarTrace);
             for(i = 0; i < nonZeroIndex.num_elements(); ++i)
             {
                 int j = nonZeroIndex[i];
                 fields[j]->AddTraceIntegral     (traceflux[j], outarray[j]);
                 fields[j]->MultiplyByElmtInvMass(outarray[j], outarray[j]);
+            }
+        }
+
+        void DiffusionIP::GetPenaltyFactor(
+            const Array<OneD, MultiRegions::ExpListSharedPtr>   &fields,
+            Array<OneD, NekDouble >                             factor) 
+        {
+            
+            const MultiRegions::LocTraceToTraceMapSharedPtr locTraceToTraceMap = fields[0]->GetlocTraceToTraceMap();
+            
+            const Array<OneD, const Array<OneD, int >> LRAdjExpid  =   locTraceToTraceMap->GetLeftRightAdjacentExpId();
+            const Array<OneD, const Array<OneD, bool>> LRAdjflag   =   locTraceToTraceMap->GetLeftRightAdjacentExpFlag();
+
+            MultiRegions::ExpListSharedPtr tracelist = fields[0]->GetTrace();
+            std::shared_ptr<LocalRegions::ExpansionVector> traceExp= tracelist->GetExp();
+            int ntotTrac            = (*traceExp).size();
+            int nTracPnt,noffset;
+
+
+            std::shared_ptr<LocalRegions::ExpansionVector> fieldExp= fields[0]->GetExp();
+            int ntotElmt            = (*fieldExp).size();
+
+            Array<OneD, NekDouble > factorFwdBwd(2,0.0);
+
+            NekDouble spaceDim    =   NekDouble( GetCoordim(0) );
+
+            for(int ntrace = 0; ntrace < ntotTrac; ++ntrace)
+            {
+                noffset     = tracelist->GetPhys_Offset(ntrace);
+                nTracPnt    = tracelist->GetTotPoints(ntrace);
+
+                factorFwdBwd[0] =   0.0;
+                factorFwdBwd[1] =   0.0;
+                
+                for(int  nlr = 0; nlr < 2; nlr++)
+                {
+                    if(LRAdjflag[nlr][ntrace])
+                    {
+                        int numModes        = fields[0]->GetNcoeffs(LRAdjExpid[nlr][ntrace]);  
+                        NekDouble numModesdir     = pow(NekDouble(numModes),(1.0/spaceDim));
+                        factorFwdBwd[nlr]   =   1.0 * numModesdir * (numModesdir + 1.0);
+                    }
+                }
+
+                for(int np = 0; np < nTracPnt; ++np)
+                {
+                    factor[noffset+np]    =   max(factorFwdBwd[0],factorFwdBwd[1]);
+                }
             }
         }
     }

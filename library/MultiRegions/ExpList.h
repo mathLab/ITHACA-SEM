@@ -1063,9 +1063,6 @@ namespace Nektar
 
             Array<OneD, Array<OneD, Array<OneD, int > > > CalcuTracephysToLeftRightExpphysMap();
 
-            MULTI_REGIONS_EXPORT void GetPenaltyFactor(
-                    Array<OneD, NekDouble > factor);
-                
         protected:
             /// Definition of the total number of degrees of freedom and
             /// quadrature points and offsets to access data

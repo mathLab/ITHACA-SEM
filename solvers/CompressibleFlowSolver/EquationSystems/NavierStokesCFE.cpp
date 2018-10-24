@@ -511,8 +511,8 @@ namespace Nektar
         const int                                                       nDim,
         const Array<OneD, Array<OneD, NekDouble> >                      &inarray,
         const Array<OneD, Array<OneD, Array<OneD, NekDouble> > >        &qfields,
-            Array<OneD, Array<OneD, Array<OneD, NekDouble> > >          &outarray,
-            Array< OneD, int >                                          &nonZeroIndex,    
+              Array<OneD, Array<OneD, Array<OneD, NekDouble> > >        &outarray,
+              Array< OneD, int >                                        &nonZeroIndex,    
         const Array<OneD, Array<OneD, NekDouble> >                      &normal,           
         const Array<OneD, Array<OneD, NekDouble> >                      &ArtifDiffFactor)
     {

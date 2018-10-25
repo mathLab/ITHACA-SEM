@@ -125,14 +125,15 @@ void VariableConverter::GetEnthalpy(
  * @param velocity   Velocity field.
  */
 void VariableConverter::GetVelocityVector(
-    const Array<OneD, Array<OneD, NekDouble>> &physfield,
-    Array<OneD, Array<OneD, NekDouble>> &velocity)
+    const Array<OneD, Array<OneD, NekDouble> >  &physfield,
+    const int                                   noffset,
+          Array<OneD, Array<OneD, NekDouble> >  &velocity)
 {
     const int nPts = physfield[0].num_elements();
 
     for (int i = 0; i < m_spacedim; ++i)
     {
-        Vmath::Vdiv(nPts, physfield[1 + i], 1, physfield[0], 1, velocity[i], 1);
+        Vmath::Vdiv(nPts, physfield[1 + i], 1, physfield[0], 1, velocity[noffset+i], 1);
     }
 }
 
@@ -419,24 +420,82 @@ void VariableConverter::GetRhoFromPT(const Array<OneD, NekDouble> &pressure,
     }
 }
 
+// void VariableConverter::GetPrimVarFromConsVar(
+//     const Array<OneD, const Array<OneD, NekDouble> > &conserv,
+//           Array<OneD,       Array<OneD, NekDouble> > &primary)
+// {
+//     int nvaraibles = conserv.num_elements();
+//     int nPts       = conserv[0].num_elements();
 
-////////////////////////////////////////////////////////////////////////////
-void VariableConverter::Getmu(NekDouble &temperature, NekDouble &mu)
-{
-    NekDouble mu_star = m_mu;
-    NekDouble T_star  = m_pInf / (m_rhoInf * m_gasConstant);
-    NekDouble ratio;
-    ratio = temperature / T_star;
-    mu    = mu_star * ratio * sqrt(ratio) * (T_star + 110.0) /
-         (temperature + 110.0);
+//     Vmath::Vcopy(nPts,conserv[0],1,primary[0],1);
 
-}
+//     GetVelocityVector(conserv,1,primary);
+
+//     GetPressure(conserv,primary[nvaraibles-1]);
+// }
 
 NekDouble VariableConverter::GetGasconstant()
 {
     return m_gasConstant;
 }
 
+// /**
+//  * @brief Transfer conservative variable derivatives to primal variables derivatives
+//  * NOTE:: primal variables derivatives indicate derivatives of : velocities and tempreture
+//  */
+// void VariableConverter::GetPrimDervFromConsDerv(
+//     const Array<OneD, const Array<OneD, NekDouble> >                        &conserv,
+//     const Array<OneD, const Array<OneD, const Array<OneD, NekDouble> > >    &consDerv,
+//     const Array<OneD, const Array<OneD, NekDouble> >                        &primary,
+//           Array<OneD,       Array<OneD,       Array<OneD, NekDouble> >      &primDerv)
+// {
+//     // m_spacedim
+//     int nvaraibles = conserv.num_elements();
+//     int nPts       = conserv[0].num_elements();
 
-///////////////////////////////////////////////////////////////////////////
+//     Array<OneD,NekDouble> orho1(nPts,0.0);
+//     Array<OneD,NekDouble> orho2(nPts,0.0);
+//     Vmath::Sdiv(nPts,1.0,&inarray[0][0],1,&orho1[0],1);
+//     Vmath::Vmul(nPts,&orho1[0],1,&orho1[0],1,&orho2[0],1);
+//     for(int i=0;i<nDim;i++)
+//     {
+//         for(int j=0;j<m_spacedim;j++)
+//         {
+//             GetPrimDervFromConsDerv(consDerv[i][j+1],orho1,consDerv[i][0],primary[j+1],primDerv[i][j])
+//         }
+//     }
+
+//     //Construct dT_dx,dT_dy,dT_dz
+//     for(int i=0;i<nDim;i++)
+//     {
+//         Vmath::Vmul(nPts,&qfields[i][0][0],1,&E[0],1,&tmp[0],1);
+//         Vmath::Vsub(nPts,&qfields[i][nConvectiveFields-1][0],1,&tmp[0],1,&physderivatives[i][nScalars-1][0],1);
+//         Vmath::Vmul(nPts,&orho1[0],1,&physderivatives[i][nScalars-1][0],1,&physderivatives[i][nScalars-1][0],1);
+
+//         for(int j=0;j<nScalars-1;j++)
+//         {
+//             Vmath::Vmul(nPts,&physfield[j][0],1,&physderivatives[i][j][0],1,&tmp[0],1);
+//             Vmath::Vsub(nPts,&physderivatives[i][nScalars-1][0],1,&tmp[0],1,&physderivatives[i][nScalars-1][0],1);
+//         }
+//         Vmath::Smul(nPts,oCv,&physderivatives[i][nScalars-1][0],1,&physderivatives[i][nScalars-1][0],1);
+//     }
+// }
+
+// /**
+//  * @brief Get partial(a)/partial(x) from partial(a*b)/partial(x), partial(b)/partial(x), a and 1/b
+//  */
+// void VariableConverter::Get_ADerv_From_ABDerv(
+//     const Array<OneD, NekDouble>        &Pab,
+//     const Array<OneD, NekDouble>        &ob,
+//     const Array<OneD, NekDouble>        &Pb,
+//     const Array<OneD, NekDouble>        &a,
+//           Array<OneD, NekDouble>        &Pa)
+// {
+//     int nPts       = a.num_elements();
+//     Vmath::Vmul(nPts,&a[0]   ,1,&Pb[0],1,&Pa[0],1);
+//     Vmath::Vsub(nPts,&Pab[0] ,1,&Pa[0],1,&Pa[0],1);
+//     Vmath::Vmul(nPts,&ob[0]  ,1,&Pa[0],1,&Pa[0],1);
+// }
+
+
 }

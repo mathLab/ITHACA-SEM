@@ -64,6 +64,7 @@ using namespace std;
          DisContField3D::DisContField3D() :
              ExpList3D             (),
              m_bndCondExpansions   (),
+             m_bndCondExpansionsDeriv(),
              m_bndConditions       (),
              m_trace(NullExpListSharedPtr)
          {
@@ -81,6 +82,7 @@ using namespace std;
              const Collections::ImplementationType       ImpType):
              ExpList3D          (pSession, graph3D, variable, ImpType),
                m_bndCondExpansions(),
+               m_bndCondExpansionsDeriv(),
                m_bndConditions    (),
                m_trace(NullExpListSharedPtr)
          {
@@ -620,6 +622,10 @@ using namespace std;
             m_bndConditions     =
                 Array<OneD,SpatialDomains::BoundaryConditionShPtr>(bregions.size());
 
+            int spaceDim = graph3D->GetSpaceDimension();
+            m_bndCondExpansionsDeriv =
+                Array<OneD, Array<OneD, MultiRegions::ExpListSharedPtr> >(bregions.size());
+
             // list Dirichlet boundaries first
             for (auto &it : bregions)
             {
@@ -637,6 +643,16 @@ using namespace std;
                 }
 
                 m_bndCondExpansions[cnt]  = locExpList;
+
+                m_bndCondExpansionsDeriv[cnt] = Array<OneD, MultiRegions::ExpListSharedPtr> (spaceDim);
+                for(int i = 0; i<spaceDim;i++)
+                {
+                    locExpList = MemoryManager<MultiRegions::ExpList2D>
+                        ::AllocateSharedPtr(m_session, *(it.second),
+                                            graph3D, variable, locBCond->GetComm());
+                    m_bndCondExpansionsDeriv[cnt][i]  = locExpList;
+                }
+
                 m_bndConditions[cnt++]    = locBCond;
             }
         }

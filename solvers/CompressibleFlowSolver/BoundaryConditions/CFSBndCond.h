@@ -79,6 +79,13 @@ class CFSBndCond
             Array<OneD, Array<OneD, NekDouble> >               &physarray,
             const NekDouble                                    &time = 0);
 
+        void ApplyDeriv(
+            const Array<OneD, const Array<OneD, NekDouble> >                    &Fwd,
+            const Array<OneD, const Array<OneD, NekDouble> >                    &physarray,
+            const Array<OneD, const Array<OneD, Array<OneD, NekDouble> > >      &DervFwd,
+            const Array<OneD, const Array<OneD, Array<OneD, NekDouble> > >      &dervarray,
+            NekDouble                                                           time = 0);
+
     protected:
         /// Session reader
         LibUtilities::SessionReaderSharedPtr m_session;
@@ -116,6 +123,12 @@ class CFSBndCond
             Array<OneD, Array<OneD, NekDouble> >               &physarray,
             const NekDouble                                    &time)=0;
 
+        virtual void v_ApplyDeriv(
+            const Array<OneD, const Array<OneD, NekDouble> >                    &Fwd,
+            const Array<OneD, const Array<OneD, NekDouble> >                    &physarray,
+            const Array<OneD, const Array<OneD, Array<OneD, NekDouble> > >      &DervFwd,
+            const Array<OneD, const Array<OneD, Array<OneD, NekDouble> > >      &dervarray,
+            NekDouble                                                           time);
 };
 }
 

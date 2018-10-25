@@ -67,7 +67,46 @@ namespace Nektar
             const Array<OneD, Array<OneD, NekDouble> >&,
                   Array<OneD,             NekDouble  >&)>
                                             DiffusionArtificialDiffusion;
+
+        /**
+         * Parameter list meaning:
+         *  1rd: field conservative variables
+         *  2th: Devrivatives of field conservative varialbes
+         *  3rd: the current time for time-dependent boundary
+         *  4th: Fwd of field conservative variables        optional
+         *  5th: Fwd of Devrivatives(2nd)                   optional 
+         * 
+         * a null pointer need to be passed for optional parameters
+         */
+        typedef std::function<void (
+            const Array<OneD, const Array<OneD, NekDouble> >                    &,
+            const Array<OneD, const Array<OneD, Array<OneD, NekDouble> > >      &,
+            NekDouble                                                            ,
+            const Array<OneD, const Array<OneD, NekDouble> >                    &,
+                  Array<OneD, Array<OneD, Array<OneD, NekDouble> > >            &)> FunctorDerivBndCond;
         
+        /**
+         * Parameter list meaning:
+         *  1st: nvariables
+         *  2nd: nspaceDimension
+         *  3rd: field conservative variables
+         *  4th: Devrivatives of field conservative varialbes
+         *  5th: nonzero flux index array,          optional
+         *  6th: normal vectors                     optional 
+         *  7th: aritificial diffusion facotres     optional
+         * 
+         * a null pointer need to be passed for optional parameters
+         */
+        typedef std::function<void (
+            const int                                                       ,
+            const int                                                       ,
+            const Array<OneD, Array<OneD, NekDouble> >                      &,
+            const Array<OneD, Array<OneD, Array<OneD, NekDouble> > >        &,
+                  Array<OneD, Array<OneD, Array<OneD, NekDouble> > >        &,
+                  Array< OneD, int >                                        &,    
+            const Array<OneD, Array<OneD, NekDouble> >                      &,           
+            const Array<OneD, NekDouble>                                    &)> DiffusionFluxVec;
+
         class Diffusion
         {
         public:
@@ -88,6 +127,24 @@ namespace Nektar
                 const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                     Array<OneD, Array<OneD, NekDouble> >        &outarray,
+                const Array<OneD, Array<OneD, NekDouble> >        &pFwd= NullNekDoubleArrayofArray,
+                const Array<OneD, Array<OneD, NekDouble> >        &pBwd= NullNekDoubleArrayofArray);
+
+            SOLVER_UTILS_EXPORT void Diffuse(
+                const int nConvectiveFields,
+                const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
+                const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+                      Array<OneD, Array<OneD, NekDouble> >        &outarray,
+                NekDouble                                           time,
+                const Array<OneD, Array<OneD, NekDouble> > &pFwd = NullNekDoubleArrayofArray,
+                const Array<OneD, Array<OneD, NekDouble> > &pBwd = NullNekDoubleArrayofArray);
+
+            SOLVER_UTILS_EXPORT void Diffuse_coeff(
+                const int nConvectiveFields,
+                const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
+                const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+                    Array<OneD, Array<OneD, NekDouble> >        &outarray,
+                NekDouble                                           time,
                 const Array<OneD, Array<OneD, NekDouble> >        &pFwd= NullNekDoubleArrayofArray,
                 const Array<OneD, Array<OneD, NekDouble> >        &pBwd= NullNekDoubleArrayofArray);
             
@@ -129,15 +186,15 @@ namespace Nektar
                 m_fluxVectorNS = fluxVector;
             }
 
-            void DiffusionFlux(
-                const int                                                       nConvectiveFields,
-                const int                                                       nDim,
-                const Array<OneD, Array<OneD, NekDouble> >                      &inarray,
-                const Array<OneD, Array<OneD, Array<OneD, NekDouble> > >        &qfields,
-                    Array<OneD, Array<OneD, NekDouble> >                        &outarray,
-                    Array< OneD, int >                                          &nonZeroIndex       = NullInt1DArray,
-                const Array<OneD, Array<OneD, NekDouble> >                      &normal             = NullNekDoubleArrayofArray,
-                const Array<OneD, Array<OneD, NekDouble> >                      &ArtifDiffFactor    = NullNekDoubleArrayofArray);
+            void SetDiffusionFluxVec(DiffusionFluxVec flux)
+            {
+                m_Diffusionflux =   flux;
+            }
+
+            void SetFunctorDerivBndCond(FunctorDerivBndCond DerivBndCond)
+            {
+                m_FunctorDerivBndCond = DerivBndCond;
+            }
 
             inline void SetHomoDerivs(Array<OneD, Array<OneD, NekDouble> > &deriv)
             {
@@ -153,6 +210,10 @@ namespace Nektar
             DiffusionFluxVecCB              m_fluxVector;
             DiffusionFluxVecCBNS            m_fluxVectorNS;
             DiffusionArtificialDiffusion    m_ArtificialDiffusionVector;
+            DiffusionFluxVec                m_Diffusionflux;
+            FunctorDerivBndCond             m_FunctorDerivBndCond;
+
+            NekDouble                       m_time=0.0;
 
             virtual void v_InitObject(
                 LibUtilities::SessionReaderSharedPtr              pSession,

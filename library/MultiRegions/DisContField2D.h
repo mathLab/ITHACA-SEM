@@ -139,6 +139,12 @@ namespace Nektar
              * are stored as the coefficients of the one-dimensional expansion.
              */
             Array<OneD,MultiRegions::ExpListSharedPtr> m_bndCondExpansions;
+
+            /**
+             * @brief Similar to m_bndCondExpansions, but for the flow variable derivatives.
+             * For setting boundary conditions for Diffusion fluxes in a weak sense.
+             */
+            Array<OneD, Array<OneD,MultiRegions::ExpListSharedPtr> > m_bndCondExpansionsDeriv;
             
             /**
              * @brief An array which contains the information about
@@ -222,6 +228,10 @@ namespace Nektar
                 const Array<OneD, const NekDouble> &field,
                       Array<OneD,       NekDouble> &Fwd,
                       Array<OneD,       NekDouble> &Bwd);
+            virtual void v_GetFwdBwdTracePhysNoBndFill(
+                const Array<OneD, const NekDouble> &field,
+                      Array<OneD,       NekDouble> &Fwd,
+                      Array<OneD,       NekDouble> &Bwd);
             virtual void v_AddTraceIntegral(
                 const Array<OneD, const NekDouble> &Fx,
                 const Array<OneD, const NekDouble> &Fy,
@@ -286,6 +296,12 @@ namespace Nektar
                 &v_GetBndCondExpansions()
             {
                 return m_bndCondExpansions;
+            }
+
+            virtual const Array<OneD, const Array<OneD, MultiRegions::ExpListSharedPtr> >
+                &v_GetBndCondExpansionsDeriv()
+            {
+                return m_bndCondExpansionsDeriv;
             }
 
             virtual const 

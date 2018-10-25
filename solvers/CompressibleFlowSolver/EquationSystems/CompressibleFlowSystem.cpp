@@ -241,6 +241,8 @@ namespace Nektar
         int npoints    = GetNpoints();
         int nTracePts  = GetTraceTotPoints();
 
+        m_BndEvaluateTime   = time;
+
         // Store forwards/backwards space along trace space
         Array<OneD, Array<OneD, NekDouble> > Fwd    (nvariables);
         Array<OneD, Array<OneD, NekDouble> > Bwd    (nvariables);
@@ -1815,6 +1817,61 @@ namespace Nektar
             for (auto &x : m_bndConds)
             {
                 x->Apply(Fwd, physarray, time);
+            }
+        }
+    }
+
+    void CompressibleFlowSystem::SetBoundaryConditionsDeriv(
+            const Array<OneD, const Array<OneD, NekDouble> >                    &physarray,
+            const Array<OneD, const Array<OneD, Array<OneD, NekDouble> > >      &dervarray,
+            NekDouble                                                           time,
+            Array<OneD, Array<OneD, NekDouble> >                                &pFwd,
+            Array<OneD, Array<OneD, Array<OneD, NekDouble> > >                  &pDervFwd)
+    {
+        int nTracePts  = GetTraceTotPoints();
+        int nvariables = physarray.num_elements();
+
+        Array<OneD, Array<OneD, NekDouble> > Fwd;
+        if(NullNekDoubleArrayofArray==pFwd)
+        {
+            Fwd = Array<OneD, Array<OneD, NekDouble> >(nvariables);
+            for (int i = 0; i < nvariables; ++i)
+            {
+                Fwd[i] = Array<OneD, NekDouble>(nTracePts);
+                m_fields[i]->ExtractTracePhys(physarray[i], Fwd[i]);
+            }
+        }
+        else
+        {
+            Fwd = pFwd;
+        }
+
+        Array<OneD, Array<OneD, Array<OneD, NekDouble> > > DervFwd;
+        if(NullNekDoubleArrayofArrayofArray==pDervFwd)
+        {
+            int nDim      = m_fields[0]->GetCoordim(0);
+            DervFwd =   Array<OneD, Array<OneD, Array<OneD, NekDouble> > >(nDim);
+            for (int nd = 0; nd < nDim; ++nd)
+            {
+                DervFwd[nd]     =   Array<OneD, Array<OneD, NekDouble> > (nvariables);
+                for (int i = 0; i < nvariables; ++i)
+                {
+                    DervFwd[nd][i]    = Array<OneD, NekDouble>(nTracePts,0.0);
+                    m_fields[i]->ExtractTracePhys(dervarray[nd][i], DervFwd[nd][i]);
+                }
+            }
+        }
+        else
+        {
+            DervFwd = pDervFwd;
+        }
+
+        if (m_bndConds.size())
+        {
+            // Loop over user-defined boundary conditions
+            for (auto &x : m_bndConds)
+            {
+                x->ApplyDeriv(Fwd, physarray, DervFwd, dervarray, time);
             }
         }
     }

@@ -58,6 +58,7 @@ namespace Nektar
         DisContField1D::DisContField1D():
             ExpList1D(),
             m_bndCondExpansions(),
+            m_bndCondExpansionsDeriv(),
             m_bndConditions()
         {
         }
@@ -83,6 +84,7 @@ namespace Nektar
             const Collections::ImplementationType ImpType)
             : ExpList1D(pSession,graph1D,true, ImpType),
               m_bndCondExpansions(),
+              m_bndCondExpansionsDeriv(),
               m_bndConditions()
         {
             if (variable.compare("DefaultVar") != 0)

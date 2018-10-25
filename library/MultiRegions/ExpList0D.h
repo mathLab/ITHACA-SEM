@@ -96,6 +96,9 @@ namespace Nektar
             virtual void v_GetNormals(
                 Array<OneD, Array<OneD, NekDouble> > &normals);
 
+            virtual void v_GetElmtNormalLength(
+                Array<OneD, NekDouble>  &lengths);
+
         private:
         };
 

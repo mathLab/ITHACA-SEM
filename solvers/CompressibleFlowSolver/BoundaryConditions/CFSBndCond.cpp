@@ -93,4 +93,77 @@ void CFSBndCond::Apply(
     v_Apply(Fwd, physarray, time);
 }
 
+/**
+ * @ brief apply boundaryconditions for flow field derivatives
+ * Currently only the ExtrapOrder0BC are used for all boundaries 
+ * according to Cheng, Yang, Liu, JCP 327 (2016)484-502
+ * @param   bcRegion      id of the boundary region
+ * @param   cnt           
+ * @param   Fwd    
+ * @param   physarray
+ * @param   time
+ */
+void CFSBndCond::ApplyDeriv(
+        const Array<OneD, const Array<OneD, NekDouble> >                    &Fwd,
+        const Array<OneD, const Array<OneD, NekDouble> >                    &physarray,
+        const Array<OneD, const Array<OneD, Array<OneD, NekDouble> > >      &DervFwd,
+        const Array<OneD, const Array<OneD, Array<OneD, NekDouble> > >      &dervarray,
+        NekDouble                                                           time)
+{
+    v_ApplyDeriv(Fwd, physarray, DervFwd, dervarray, time);
+}
+
+void CFSBndCond::v_ApplyDeriv(
+        const Array<OneD, const Array<OneD, NekDouble> >                    &Fwd,
+        const Array<OneD, const Array<OneD, NekDouble> >                    &physarray,
+        const Array<OneD, const Array<OneD, Array<OneD, NekDouble> > >      &DervFwd,
+        const Array<OneD, const Array<OneD, Array<OneD, NekDouble> > >      &dervarray,
+        NekDouble                                                           time)
+{
+    int i, j;
+    int e, pnt;
+    int id1, id2, nBCEdgePts;
+    int nVariables = physarray.num_elements();
+    int nDimensions = m_spacedim;
+
+    const Array<OneD, const int> &traceBndMap
+        = m_fields[0]->GetTraceBndMap();
+
+    int eMax;
+
+    eMax = m_fields[0]->GetBndCondExpansions()[m_bcRegion]->GetExpSize();
+
+    // Loop on m_bcRegions
+    for (e = 0; e < eMax; ++e)
+    {
+        nBCEdgePts = m_fields[0]->GetBndCondExpansions()[m_bcRegion]->
+            GetExp(e)->GetTotPoints();
+        id1 = m_fields[0]->GetBndCondExpansions()[m_bcRegion]->
+            GetPhys_Offset(e) ;
+        id2 = m_fields[0]->GetTrace()->GetPhys_Offset(traceBndMap[m_offset+e]);
+
+        // Loop on points of m_bcRegion 'e'
+        for (i = 0; i < nBCEdgePts; i++)
+        {
+            pnt = id2+i;
+
+            // Setting up bcs for density and velocities
+            for (int nd = 0; nd <nDimensions; ++nd)
+            {
+                for (j = 0; j <=nDimensions; ++j)
+                {
+                    (m_fields[j]->GetBndCondExpansionsDeriv()[m_bcRegion][nd]->
+                    UpdatePhys())[id1+i] = DervFwd[nd][j][pnt];
+                }
+
+                // Setting up bcs for energy
+                (m_fields[nVariables-1]->GetBndCondExpansionsDeriv()[m_bcRegion][nd]->
+                    UpdatePhys())[id1+i] = DervFwd[nd][nVariables-1][pnt];
+
+            }
+            
+        }
+    }
+}
+
 }

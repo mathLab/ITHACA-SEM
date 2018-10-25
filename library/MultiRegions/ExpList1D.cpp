@@ -1067,17 +1067,17 @@ namespace Nektar
                 e_npoints  = (*m_exp)[i]->GetNumPoints(0);
                 
                 locnormals = loc_elmt->GetEdgeNormal(edgeNumber);
-		int e_nmodes   = loc_exp->GetBasis(0)->GetNumModes();
+                int e_nmodes   = loc_exp->GetBasis(0)->GetNumModes();
                 int loc_nmodes = loc_elmt->GetBasis(0)->GetNumModes();
 
                 if (e_nmodes != loc_nmodes)
                 {
-		    if (loc_exp->GetRightAdjacentElementEdge() >= 0)
+                    if (loc_exp->GetRightAdjacentElementEdge() >= 0)
                     {
-		        LocalRegions::Expansion2DSharedPtr loc_elmt =
+                        LocalRegions::Expansion2DSharedPtr loc_elmt =
                                        loc_exp->GetRightAdjacentElementExp();
 
-			int EdgeNumber = loc_exp->GetRightAdjacentElementEdge();
+                        int EdgeNumber = loc_exp->GetRightAdjacentElementEdge();
                         // Serial case: right element is connected so we can
                         // just grab that normal.
                         locnormals = loc_elmt->GetEdgeNormal(EdgeNumber);
@@ -1143,6 +1143,78 @@ namespace Nektar
                         }
                     }
                 }
+            }
+        }
+
+        /**
+         * For each local element, copy the element length in boundary normal direction stored in the element list
+         * into the array \a normals.
+         */
+        void ExpList1D::v_GetElmtNormalLength(
+            Array<OneD, NekDouble>               &lengths)
+        {
+            int i,j,k,e_npoints,offset;
+
+            Array<OneD,NekDouble> locLeng;
+            Array<OneD,NekDouble> lengintp;
+            Array<OneD,NekDouble> lengAdd;
+            Array<OneD,int      > LRbndnumbs(2);
+            Array<OneD,LocalRegions::Expansion2DSharedPtr> LRelmts(2);
+            LocalRegions::Expansion2DSharedPtr loc_elmt;
+            LocalRegions::Expansion1DSharedPtr loc_exp;
+            int e_npoints0  =   -1; 
+            for (i = 0; i < m_exp->size(); ++i)
+            {
+                loc_exp = (*m_exp)[i]->as<LocalRegions::Expansion1D>();
+                offset = m_phys_offset[i];
+                
+                int e_nmodes   = loc_exp->GetBasis(0)->GetNumModes();
+                e_npoints  = (*m_exp)[i]->GetNumPoints(0);
+                if(e_npoints0<e_npoints)
+                {
+                    lengintp = Array<OneD, NekDouble>(e_npoints,0.0);
+                    e_npoints0 = e_npoints;
+                }
+                
+                LRelmts[0] = loc_exp->GetLeftAdjacentElementExp();
+                LRelmts[1] = loc_exp->GetRightAdjacentElementExp();
+
+                LRbndnumbs[0]   =   loc_exp->GetLeftAdjacentElementEdge();
+                LRbndnumbs[1]   =   loc_exp->GetRightAdjacentElementEdge();
+                for(int nlr=0;nlr<2;nlr++)
+                {
+                    Vmath::Zero(e_npoints0,lengintp,1);
+                    lengAdd     =   lengintp;
+                    int bndNumber = LRbndnumbs[nlr];
+                    loc_elmt = LRelmts[nlr];
+                    if(bndNumber>=0)
+                    {
+                        locLeng         = loc_elmt->GetElmtBndNormalDirctnElmtLength(bndNumber);
+                        lengAdd  =   locLeng;
+
+                        int loc_nmodes  = loc_elmt->GetBasis(0)->GetNumModes();
+
+                        if (e_nmodes != loc_nmodes)
+                        {
+                            // Parallel case: need to interpolate.
+                            LibUtilities::PointsKey to_key =
+                                loc_exp->GetBasis(0)->GetPointsKey();
+                            LibUtilities::PointsKey from_key =
+                                loc_elmt->GetBasis(0)->GetPointsKey();
+                            LibUtilities::Interp1D(from_key,
+                                                locLeng,
+                                                to_key,
+                                                lengintp);
+                            lengAdd     =   lengintp;
+                        }
+                    }
+                    // Process each point in the expansion.
+                    for (j = 0; j < e_npoints; ++j)
+                    {
+                        lengths[offset + j] += lengAdd[j];
+                    }
+                }
+                Vmath::Smul(e_npoints,0.5,&lengths[offset],1,&lengths[offset],1);
             }
         }
 

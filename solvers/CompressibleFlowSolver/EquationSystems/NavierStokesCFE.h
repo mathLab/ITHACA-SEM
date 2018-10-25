@@ -69,6 +69,7 @@ namespace Nektar
     NekDouble                           m_mu;
     NekDouble                           m_thermalConductivity;
     NekDouble                           m_Cp;
+    NekDouble                           m_Cv;
     NekDouble                           m_Prandtl;
 
     void GetViscousFluxVectorConservVar(
@@ -105,6 +106,116 @@ namespace Nektar
         const Array<OneD, Array<OneD, NekDouble> >         &physfield,
         Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &derivatives,
         Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &viscousTensor);
+
+    ////////////////////////////////////////////////////////////////////////////
+    //New Copy
+    void GetViscousFluxVectorConservVar(
+        const int                                                       nConvectiveFields,
+        const int                                                       nDim,
+        const Array<OneD, Array<OneD, NekDouble> >                      &inarray,
+        const Array<OneD, Array<OneD, Array<OneD, NekDouble> > >        &qfields,
+            Array<OneD, Array<OneD, Array<OneD, NekDouble> > >          &outarray,
+            Array< OneD, int >                                          &nonZeroIndex,    
+        const Array<OneD, Array<OneD, NekDouble> >                      &normal = NullNekDoubleArrayofArray,           
+        const Array<OneD, Array<OneD, NekDouble> >                      &ArtifDiffFactor = NullNekDoubleArrayofArray);
+ 
+    /**
+     * @brief return part of viscous Jacobian: 
+     * \todo flux derived with Qx=[drho_dx,drhou_dx,drhov_dx,drhoE_dx] 
+     * Input:
+     * normals:Point normals
+     * U=[rho,rhou,rhov,rhoE]
+     * Output: 2D 3*4 Matrix (flux with rho is zero)
+     */
+    void GetdFlux_dQx_2D( 
+        const Array<OneD, NekDouble> &normals,
+        const NekDouble &mu,
+        const Array<OneD, NekDouble> &U, 
+        DNekMatSharedPtr &OutputMatrix );
+    
+    /**
+     * @brief return part of viscous Jacobian: 
+     * \todo flux derived with Qx=[drho_dy,drhou_dy,drhov_dy,drhoE_dy] 
+     * Input:
+     * normals:Point normals
+     * U=[rho,rhou,rhov,rhoE]
+     * Output: 2D 3*4 Matrix (flux with rho is zero)
+     */
+    void GetdFlux_dQy_2D( 
+        const Array<OneD, NekDouble> &normals,
+        const NekDouble &mu,
+        const Array<OneD, NekDouble> &U,
+        DNekMatSharedPtr &OutputMatrix );
+
+    /**
+     * @brief return part of viscous Jacobian derived with Qx=[drho_dx,drhou_dx,drhov_dx,drhow_dx,drhoE_dx]
+     * Input:
+     * normals:Point normals
+     * U=[rho,rhou,rhov,rhow,rhoE]
+     * dir: means whether derive with
+     * Qx=[drho_dx,drhou_dx,drhov_dx,drhow_dx,drhoE_dx]
+     * Output: 3D 4*5 Matrix (flux about rho is zero) 
+     * OutputMatrix(dir=0)= dF_dQx;
+     */
+    void GetdFlux_dQx_3D( 
+        const Array<OneD, NekDouble> &normals,
+        const NekDouble &mu,
+        const Array<OneD, NekDouble> &U, 
+        DNekMatSharedPtr &OutputMatrix );
+
+    /**
+     * @brief return part of viscous Jacobian derived with Qy=[drho_dy,drhou_dy,drhov_dy,drhow_dy,drhoE_dy]
+     * Input:
+     * normals:Point normals
+     * U=[rho,rhou,rhov,rhow,rhoE]
+     * dir: means whether derive with
+     * Qy=[drho_dy,drhou_dy,drhov_dy,drhow_dy,drhoE_dy]
+     * Output: 3D 4*5 Matrix (flux about rho is zero) 
+     * OutputMatrix(dir=1)= dF_dQy;
+     */
+    void GetdFlux_dQy_3D( 
+        const Array<OneD, NekDouble> &normals,
+        const NekDouble &mu,
+        const Array<OneD, NekDouble> &U, 
+        DNekMatSharedPtr &OutputMatrix );
+
+    
+    /**
+     * @brief return part of viscous Jacobian derived with Qz=[drho_dz,drhou_dz,drhov_dz,drhow_dz,drhoE_dz]
+     * Input:
+     * normals:Point normals
+     * U=[rho,rhou,rhov,rhow,rhoE]
+     * dir: means whether derive with
+     * Qz=[drho_dz,drhou_dz,drhov_dz,drhow_dz,drhoE_dz]
+     * Output: 3D 4*5 Matrix (flux about rho is zero) 
+     * OutputMatrix(dir=2)= dF_dQz;
+     */
+    void GetdFlux_dQz_3D( 
+        const Array<OneD, NekDouble> &normals,
+        const NekDouble &mu,
+        const Array<OneD, NekDouble> &U, 
+        DNekMatSharedPtr &OutputMatrix );
+
+
+    /**
+     * @brief return part of viscous Jacobian 
+     * Input:
+     * normals:Point normals
+     * mu: dynamicviscosity
+     * dmu_dT: mu's derivative with T using Sutherland's law
+     * U=[rho,rhou,rhov,rhoE]
+     * Output: 3*4 Matrix (the flux about rho is zero)
+     * OutputMatrix dFLux_dU,  the matrix sign is consistent with SIPG
+    */
+    void GetdFlux_dU_2D(
+        const Array<OneD, NekDouble> &normals, NekDouble &mu, NekDouble &dmu_dT,
+        const Array<OneD, NekDouble> &U,
+        const Array<OneD, Array<OneD, NekDouble>> &qfield, 
+        DNekMatSharedPtr &OutputMatrix);
+        
+
+
+
 
     /////////////////////////////////////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////////
@@ -163,15 +274,15 @@ namespace Nektar
 
 
     
-    void GetViscousFluxVectorConservVar(
-        const int                                                       nConvectiveFields,
-        const int                                                       nDim,
-        const Array<OneD, Array<OneD, NekDouble> >                      &inarray,
-        const Array<OneD, Array<OneD, Array<OneD, NekDouble> > >        &qfields,
-            Array<OneD, Array<OneD, Array<OneD, NekDouble> > >          &outarray,
-            Array< OneD, int >                                          &nonZeroIndex,    
-        const Array<OneD, Array<OneD, NekDouble> >                      &normal = NullNekDoubleArrayofArray,           
-        const Array<OneD, Array<OneD, NekDouble> >                      &ArtifDiffFactor = NullNekDoubleArrayofArray);
+    // void GetViscousFluxVectorConservVar(
+    //     const int                                                       nConvectiveFields,
+    //     const int                                                       nDim,
+    //     const Array<OneD, Array<OneD, NekDouble> >                      &inarray,
+    //     const Array<OneD, Array<OneD, Array<OneD, NekDouble> > >        &qfields,
+    //         Array<OneD, Array<OneD, Array<OneD, NekDouble> > >          &outarray,
+    //         Array< OneD, int >                                          &nonZeroIndex,    
+    //     const Array<OneD, Array<OneD, NekDouble> >                      &normal = NullNekDoubleArrayofArray,           
+    //     const Array<OneD, Array<OneD, NekDouble> >                      &ArtifDiffFactor = NullNekDoubleArrayofArray);
 
     //End Copy
     /////////////////////////////////////////////////////////////////////////////////

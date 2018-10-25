@@ -375,6 +375,14 @@ namespace Nektar
             NEKERROR(ErrorUtil::efatal, "This function is only valid for LocalRegions");
             return 0.0;
         }
+
+        const Array<OneD, const NekDouble > &Expansion::GetElmtBndNormalDirctnElmtLength(const int nbnd) const
+        {
+            auto x = m_ElmtBndNormalDirctnElmtLength.find(nbnd);
+            ASSERTL0 (x != m_ElmtBndNormalDirctnElmtLength.end(),
+                      "m_ElmtBndNormalDirctnElmtLength normal not computed.");
+            return x->second;
+        }
     } //end of namespace
 } //end of namespace
 

@@ -68,8 +68,8 @@ namespace Nektar
                 m_traceNormals[i] = Array<OneD, NekDouble> (nTracePts,0.0);
             }
             pFields[0]->GetTrace()->GetNormals(m_traceNormals);
-            // m_traceNormDirctnElmtLength =   Array<OneD, NekDouble> (nTracePts,0.0);
-            // pFields[0]->GetTrace()->GetNormals(m_traceNormals,m_traceNormDirctnElmtLength);
+            m_traceNormDirctnElmtLength =   Array<OneD, NekDouble> (nTracePts,0.0);
+            pFields[0]->GetTrace()->GetElmtNormalLength(m_traceNormDirctnElmtLength);
         }
         
         void DiffusionIP::v_Diffuse(
@@ -257,14 +257,9 @@ namespace Nektar
                 Vmath::Vmul(nTracePts,solution_jump[i],1, PenaltyFactor,1,solution_jump[i],1);
             }
 
-            Array<OneD, NekDouble> ElmtLength;
-            ElmtLength  =   PenaltyFactor; 
-            PenaltyFactor = NullNekDouble1DArray;
-            Vmath::Fill(nTracePts, 1.0, ElmtLength,1);
-            // getElmtLength(ElmtLength);
             for (i = 0; i < nConvectiveFields; ++i)
             {
-                Vmath::Vdiv(nTracePts,solution_jump[i],1, ElmtLength,1,solution_jump[i],1);
+                Vmath::Vdiv(nTracePts,solution_jump[i],1, m_traceNormDirctnElmtLength,1,solution_jump[i],1);
             }
 
             for (int nd = 0; nd < nDim; ++nd)

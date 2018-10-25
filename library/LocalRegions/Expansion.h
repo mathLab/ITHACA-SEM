@@ -124,6 +124,8 @@ namespace Nektar
                 LOCAL_REGIONS_EXPORT NekDouble VectorFlux(
                     const Array<OneD, Array<OneD, NekDouble > > &vec);
 
+                LOCAL_REGIONS_EXPORT const Array<OneD, const NekDouble > &GetElmtBndNormalDirctnElmtLength(const int nbnd) const;
+
             protected:
                 SpatialDomains::GeometrySharedPtr  m_geom;
                 SpatialDomains::GeomFactorsSharedPtr m_metricinfo;

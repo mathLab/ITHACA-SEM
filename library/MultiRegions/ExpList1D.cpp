@@ -1146,23 +1146,18 @@ namespace Nektar
             }
         }
 
-
         /**
-         * For each local element, copy the normals stored in the element list
+         * For each local element, copy the element length in boundary normal direction stored in the element list
          * into the array \a normals.
-         * @param   normals     Multidimensional array in which to copy normals
-         *                      to. Must have dimension equal to or larger than
-         *                      the spatial dimension of the elements.
          */
-        void ExpList1D::v_GetElmtNormalLengthNormals(
-            Array<OneD, Array<OneD, NekDouble> > &normals,
+        void ExpList1D::v_GetElmtNormalLength(
             Array<OneD, NekDouble>               &lengths)
         {
             int i,j,k,e_npoints,offset;
 
             Array<OneD,NekDouble> locLeng;
-            Array<OneD,NekDouble> lengtmp;
-            Array<OneD,NekDouble> lengfin;
+            Array<OneD,NekDouble> lengintp;
+            Array<OneD,NekDouble> lengAdd;
             Array<OneD,int      > LRbndnumbs(2);
             Array<OneD,LocalRegions::Expansion2DSharedPtr> LRelmts(2);
             LocalRegions::Expansion2DSharedPtr loc_elmt;
@@ -1171,12 +1166,13 @@ namespace Nektar
             for (i = 0; i < m_exp->size(); ++i)
             {
                 loc_exp = (*m_exp)[i]->as<LocalRegions::Expansion1D>();
+                offset = m_phys_offset[i];
+                
                 int e_nmodes   = loc_exp->GetBasis(0)->GetNumModes();
-                // Get the number of points and normals for this expansion.
                 e_npoints  = (*m_exp)[i]->GetNumPoints(0);
                 if(e_npoints0<e_npoints)
                 {
-                    lengtmp = Array<OneD, NekDouble>(e_npoints,0.0);
+                    lengintp = Array<OneD, NekDouble>(e_npoints,0.0);
                     e_npoints0 = e_npoints;
                 }
                 
@@ -1187,15 +1183,16 @@ namespace Nektar
                 LRbndnumbs[1]   =   loc_exp->GetRightAdjacentElementEdge();
                 for(int nlr=0;nlr<2;nlr++)
                 {
-                    Vmath::Zero(e_npoints0,lengtmp,1);
-                    int edgeNumber = LRbndnumbs[nlr];
+                    Vmath::Zero(e_npoints0,lengintp,1);
+                    lengAdd     =   lengintp;
+                    int bndNumber = LRbndnumbs[nlr];
                     loc_elmt = LRelmts[nlr];
-                    if(edgeNumber>=0)
+                    if(bndNumber>=0)
                     {
-                        locLeng         = loc_elmt->GetElmtBndNormalDirctnElmtLength(edgeNumber);
-                        int loc_nmodes  = loc_elmt->GetBasis(0)->GetNumModes();
+                        locLeng         = loc_elmt->GetElmtBndNormalDirctnElmtLength(bndNumber);
+                        lengAdd  =   locLeng;
 
-                        lengfin  =   locLeng;
+                        int loc_nmodes  = loc_elmt->GetBasis(0)->GetNumModes();
 
                         if (e_nmodes != loc_nmodes)
                         {
@@ -1207,18 +1204,17 @@ namespace Nektar
                             LibUtilities::Interp1D(from_key,
                                                 locLeng,
                                                 to_key,
-                                                lengtmp);
-                            lengfin     =   lengtmp;
-                        }
-
-                        offset = m_phys_offset[i];
-                        // Process each point in the expansion.
-                        for (j = 0; j < e_npoints; ++j)
-                        {
-                            lengths[offset + j] = lengfin[j];
+                                                lengintp);
+                            lengAdd     =   lengintp;
                         }
                     }
+                    // Process each point in the expansion.
+                    for (j = 0; j < e_npoints; ++j)
+                    {
+                        lengths[offset + j] += lengAdd[j];
+                    }
                 }
+                Vmath::Smul(e_npoints,0.5,&lengths[offset],1,&lengths[offset],1);
             }
         }
 

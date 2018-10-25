@@ -100,11 +100,16 @@ namespace Nektar
             m_diffusion->SetFluxVectorNS(
                 &NavierStokesCFE::v_GetViscousFluxVectorDeAlias,
                 this);
+            // m_diffusion->SetFluxVectorNS(&NavierStokesCFE::
+            //                               v_GetViscousFluxVector, this);
+            // WARNINGL0()
         }
         else
         {
             m_diffusion->SetFluxVectorNS(&NavierStokesCFE::
                                           v_GetViscousFluxVector, this);
+            // m_diffusion->SetFluxVectorNS(&NavierStokesCFE::
+            //                               v_GetViscousFluxVector, this);
         }
 
         // Concluding initialisation of diffusion operator

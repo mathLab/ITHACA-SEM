@@ -763,6 +763,8 @@ namespace Nektar
 
             inline void GetNormals(Array<OneD, Array<OneD, NekDouble> > &normals);
 
+            inline void GetElmtNormalLength(Array<OneD, NekDouble>  &lengths);
+
             inline void AddTraceIntegral(
                 const Array<OneD, const NekDouble> &Fx,
                 const Array<OneD, const NekDouble> &Fy,
@@ -1257,6 +1259,9 @@ namespace Nektar
 
             virtual void v_GetNormals(
                 Array<OneD, Array<OneD, NekDouble> > &normals);
+
+            virtual void v_GetElmtNormalLength(
+                Array<OneD, NekDouble>  &lengths);
 
             virtual void v_AddTraceIntegral(
                 const Array<OneD, const NekDouble> &Fx,
@@ -2335,6 +2340,12 @@ namespace Nektar
             v_GetNormals(normals);
         }
 
+        inline void ExpList::GetElmtNormalLength(
+            Array<OneD, NekDouble>  &lengths)
+        {
+            v_GetElmtNormalLength(lengths);
+        }
+
         inline void ExpList::AddTraceIntegral(
             const Array<OneD, const NekDouble> &Fx,
             const Array<OneD, const NekDouble> &Fy,
@@ -2396,13 +2407,6 @@ namespace Nektar
         {
             v_GetFwdBwdTracePhys_serial(field,Fwd,Bwd);
         }
-        inline void ExpList::GetNormals(
-            Array<OneD, Array<OneD, NekDouble> > &normals,
-            Array<OneD, NekDouble>               &lengths)
-        {
-            v_GetNormals(normals,lengths);
-        }
-
 
         inline void ExpList::GetFwdBwdTracePhysNoBndFill(
             const Array<OneD,const NekDouble>  &field,

@@ -2606,6 +2606,13 @@ namespace Nektar
                      "This method is not defined or valid for this class type");
         }
 
+        void ExpList::v_GetElmtNormalLength(
+            Array<OneD, NekDouble>  &lengths)
+        {
+            ASSERTL0(false,
+                     "This method is not defined or valid for this class type");
+        }
+
         void ExpList::v_AddTraceIntegral(
                                 const Array<OneD, const NekDouble> &Fx,
                                 const Array<OneD, const NekDouble> &Fy,

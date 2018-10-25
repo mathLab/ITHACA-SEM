@@ -1031,10 +1031,10 @@ namespace Nektar
         NekDouble qx=-gamma*mu/Pr*(orho1*dU4_dx-U[3]*orho2*dU1_dx-u*(orho1*dU2_dx-U[1]*orho2*dU1_dx)-v*(orho1*dU3_dx-U[2]*orho2*dU1_dx));
         NekDouble qy=-gamma*mu/Pr*(orho1*dU4_dy-U[3]*orho2*dU1_dy-u*(orho1*dU2_dy-U[1]*orho2*dU1_dy)-v*(orho1*dU3_dy-U[2]*orho2*dU1_dy));
         NekDouble qn=qx*nx+qy*ny;
-        Array<OneD,NekDouble> tmp(4,0.0);
-        tmp[1]=snx;
-        tmp[2]=sny;
-        tmp[3]=snv-qn/mu;
+        Array<OneD,NekDouble> tmp(3,0.0);
+        tmp[0]=snx;
+        tmp[1]=sny;
+        tmp[2]=snv-qn/mu;
         Array<OneD,NekDouble> dT_dU (4,0.0);
         dT_dU[0]=oCv*(-orho2*U4+orho3*U2*U2+orho3*U3*U3);
         dT_dU[1]=-oCv*orho2*U2;   

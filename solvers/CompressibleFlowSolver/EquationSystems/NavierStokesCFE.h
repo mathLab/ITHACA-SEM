@@ -109,57 +109,57 @@ namespace Nektar
     /////////////////////////////////////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////////
     //Begin Copy
-       void GetViscousFlux(
-       const int nDim,
-       const Array<OneD,NekDouble> &normals,
-       const Array<OneD,NekDouble> &U,
-       const Array<OneD,Array<OneD,NekDouble>> &Sigma,
-       Array<OneD,NekDouble> flux);
+//        void GetViscousFlux(
+//        const int nDim,
+//        const Array<OneD,NekDouble> &normals,
+//        const Array<OneD,NekDouble> &U,
+//        const Array<OneD,Array<OneD,NekDouble>> &Sigma,
+//        Array<OneD,NekDouble> flux);
 
-    /* Get Quasi viscous flux 
-    Input is normals
-    U=[rho,rhou,rhov,rhoE]
-    Sigma=[drho_dx,drhou_dx,drhov_dx,drhoE_dx]
-    [drho_dy,drhou_dy,drhov_dy,drhoE_dy]
-    */
-   void GetViscousFlux2D(
-       const Array<OneD,NekDouble> &normals,
-       const Array<OneD,NekDouble> &U,
-       const Array<OneD,Array<OneD,NekDouble>> &Sigma,
-       Array<OneD,NekDouble> flux
-   );
-
-
-    /* Get the derivative of flux with conservative variables U=[rho,rhou,rhov,rhoE]
-    for 2D, it is two (3*4) matrices
-    */
-    void GetdFlux_dSigma2D( 
-    const Array<OneD, NekDouble> &normals,
-    const Array<OneD, NekDouble> &U, int dir,
-    DNekMatSharedPtr &OutputMatrix );
-
-     /* Get Quasi viscous flux 
-    Input is normals
-    U=[rho,rhou,rhov,rhow,rhoE]
-    Sigma=[drho_dx,drhou_dx,drhov_dx,drhow_dx,drhoE_dx]
-    [drho_dy,drhou_dy,drhov_dy,drhow_dy,drhoE_dy]
-    [drho_dz,drhou_dz,drhov_dz,drhow_dz,drhoE_dz]
-    */
-   void GetViscousFlux3D(
-       const Array<OneD,NekDouble> &normals,
-       const Array<OneD,NekDouble> &U,
-       const Array<OneD,Array<OneD,NekDouble>> &Sigma,
-       Array<OneD,NekDouble> flux
-   );
+//     /* Get Quasi viscous flux 
+//     Input is normals
+//     U=[rho,rhou,rhov,rhoE]
+//     Sigma=[drho_dx,drhou_dx,drhov_dx,drhoE_dx]
+//     [drho_dy,drhou_dy,drhov_dy,drhoE_dy]
+//     */
+//    void GetViscousFlux2D(
+//        const Array<OneD,NekDouble> &normals,
+//        const Array<OneD,NekDouble> &U,
+//        const Array<OneD,Array<OneD,NekDouble>> &Sigma,
+//        Array<OneD,NekDouble> flux
+//    );
 
 
-    /* Get the derivative of flux with conservative variables U=[rho,rhou,rhov,rhow,rhoE]
-    for 3D, it is two (4*5) matrices
-    */
-    void GetdFlux_dSigma3D( 
-    const Array<OneD, NekDouble> &normals,
-    const Array<OneD, NekDouble> &U, int dir,
-    DNekMatSharedPtr &OutputMatrix );
+//     /* Get the derivative of flux with conservative variables U=[rho,rhou,rhov,rhoE]
+//     for 2D, it is two (3*4) matrices
+//     */
+//     void GetdFlux_dSigma2D( 
+//     const Array<OneD, NekDouble> &normals,
+//     const Array<OneD, NekDouble> &U, int dir,
+//     DNekMatSharedPtr &OutputMatrix );
+
+//      /* Get Quasi viscous flux 
+//     Input is normals
+//     U=[rho,rhou,rhov,rhow,rhoE]
+//     Sigma=[drho_dx,drhou_dx,drhov_dx,drhow_dx,drhoE_dx]
+//     [drho_dy,drhou_dy,drhov_dy,drhow_dy,drhoE_dy]
+//     [drho_dz,drhou_dz,drhov_dz,drhow_dz,drhoE_dz]
+//     */
+//    void GetViscousFlux3D(
+//        const Array<OneD,NekDouble> &normals,
+//        const Array<OneD,NekDouble> &U,
+//        const Array<OneD,Array<OneD,NekDouble>> &Sigma,
+//        Array<OneD,NekDouble> flux
+//    );
+
+
+//     /* Get the derivative of flux with conservative variables U=[rho,rhou,rhov,rhow,rhoE]
+//     for 3D, it is two (4*5) matrices
+//     */
+//     void GetdFlux_dSigma3D( 
+//     const Array<OneD, NekDouble> &normals,
+//     const Array<OneD, NekDouble> &U, int dir,
+//     DNekMatSharedPtr &OutputMatrix );
 
 
     

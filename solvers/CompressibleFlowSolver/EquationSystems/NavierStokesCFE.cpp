@@ -509,389 +509,389 @@ namespace Nektar
      * @brief Return the flux vector for the IP diffusion problem.
      * \todo Complete the viscous flux vector
      */
-    void NavierStokesCFE::GetViscousFluxVectorConservVar(
-        const int                                                       nConvectiveFields,
-        const int                                                       nDim,
-        const Array<OneD, Array<OneD, NekDouble> >                      &inarray,
-        const Array<OneD, Array<OneD, Array<OneD, NekDouble> > >        &qfields,
-            Array<OneD, Array<OneD, Array<OneD, NekDouble> > >          &outarray,
-            Array< OneD, int >                                          &nonZeroIndex,    
-        const Array<OneD, Array<OneD, NekDouble> >                      &normal = NullNekDoubleArrayofArray,           
-        const Array<OneD, Array<OneD, NekDouble> >                      &ArtifDiffFactor = NullNekDoubleArrayofArray)
-    {
-        //can be nPoints/nTracePoints
-        int nPts=inarray[0].num_elements();
-        int n_nonZero   =   nConvectiveFields-1;
-        //??
-        if(NullNekDoubleArrayofArray!=ArtifDiffFactor)
-        {
-            n_nonZero   =   nConvectiveFields;
-        }
-        nonZeroIndex = Array< OneD, int > (n_nonZero,0);
-        for(int i=1;i<n_nonZero+1; i++)
-        {
-            nonZeroIndex[n_nonZero-i] =   nConvectiveFields-i;
-        }
+//     void NavierStokesCFE::GetViscousFluxVectorConservVar(
+//         const int                                                       nConvectiveFields,
+//         const int                                                       nDim,
+//         const Array<OneD, Array<OneD, NekDouble> >                      &inarray,
+//         const Array<OneD, Array<OneD, Array<OneD, NekDouble> > >        &qfields,
+//             Array<OneD, Array<OneD, Array<OneD, NekDouble> > >          &outarray,
+//             Array< OneD, int >                                          &nonZeroIndex,    
+//         const Array<OneD, Array<OneD, NekDouble> >                      &normal = NullNekDoubleArrayofArray,           
+//         const Array<OneD, Array<OneD, NekDouble> >                      &ArtifDiffFactor = NullNekDoubleArrayofArray)
+//     {
+//         //can be nPoints/nTracePoints
+//         int nPts=inarray[0].num_elements();
+//         int n_nonZero   =   nConvectiveFields-1;
+//         //??
+//         if(NullNekDoubleArrayofArray!=ArtifDiffFactor)
+//         {
+//             n_nonZero   =   nConvectiveFields;
+//         }
+//         nonZeroIndex = Array< OneD, int > (n_nonZero,0);
+//         for(int i=1;i<n_nonZero+1; i++)
+//         {
+//             nonZeroIndex[n_nonZero-i] =   nConvectiveFields-i;
+//         }
 
-        Array<OneD,NekDouble> inarrayPoint (nConvectiveFields,0.0);
-        Array<OneD,Array<OneD,NekDouble>> qfieldsPoint (nDim);
-        //flux about density is zero
-        Array<OneD,NekDouble> fluxPoint (n_nonZero,0.0);
-        Array<OneD,NekDouble> normalSurfacePoint(nDim,0.0);
-        Array<OneD,Array<OneD,NekDouble>> normalVolumePoint (nDim);
-        for(int i=0; i<nDim;i++)
-        {
-            qfieldsPoint[i]=Array<OneD,NekDouble> (nConvectiveFields,0.0);
-            normalVolumePoint[i]=Array<OneD,NekDouble> (nDim,0.0);
-        }
-        for(int i=0;i<nDim;i++)
-        {
-            normalVolumePoint[i][i]=1.0;
-        }
+//         Array<OneD,NekDouble> inarrayPoint (nConvectiveFields,0.0);
+//         Array<OneD,Array<OneD,NekDouble>> qfieldsPoint (nDim);
+//         //flux about density is zero
+//         Array<OneD,NekDouble> fluxPoint (n_nonZero,0.0);
+//         Array<OneD,NekDouble> normalSurfacePoint(nDim,0.0);
+//         Array<OneD,Array<OneD,NekDouble>> normalVolumePoint (nDim);
+//         for(int i=0; i<nDim;i++)
+//         {
+//             qfieldsPoint[i]=Array<OneD,NekDouble> (nConvectiveFields,0.0);
+//             normalVolumePoint[i]=Array<OneD,NekDouble> (nDim,0.0);
+//         }
+//         for(int i=0;i<nDim;i++)
+//         {
+//             normalVolumePoint[i][i]=1.0;
+//         }
 
-        for(int k=0;k<nPts;k++)
-        {
+//         for(int k=0;k<nPts;k++)
+//         {
             
-            for(int i=0;i<nConvectiveFields;i++)
-            {
-                inarrayPoint[i]=inarray[i][k];
-                for(int j=0;j<nDim;j++)
-                {
-                    qfieldsPoint[j][i]=qfields[j][i][k];
-                }
-            }
+//             for(int i=0;i<nConvectiveFields;i++)
+//             {
+//                 inarrayPoint[i]=inarray[i][k];
+//                 for(int j=0;j<nDim;j++)
+//                 {
+//                     qfieldsPoint[j][i]=qfields[j][i][k];
+//                 }
+//             }
 
-            // if not defined normal, then return volume flux
-            if(NullNekDoubleArrayofArray==normal)
-            {
-                //VolumeFlux needs viscous flux at x,y,z independently
-                for(int i=0;i<nDim;i++)
-                {
-                      GetViscousFlux(nDim,normalVolumePoint[i],inarrayPoint,qfieldsPoint,fluxPoint);
-                      for(int j=0;j<n_nonZero;j++)
-                      {
-                           outarray[i][nonZeroIndex[j]][k]=fluxPoint[j]; 
-                      }
+//             // if not defined normal, then return volume flux
+//             if(NullNekDoubleArrayofArray==normal)
+//             {
+//                 //VolumeFlux needs viscous flux at x,y,z independently
+//                 for(int i=0;i<nDim;i++)
+//                 {
+//                       GetViscousFlux(nDim,normalVolumePoint[i],inarrayPoint,qfieldsPoint,fluxPoint);
+//                       for(int j=0;j<n_nonZero;j++)
+//                       {
+//                            outarray[i][nonZeroIndex[j]][k]=fluxPoint[j]; 
+//                       }
                      
-                }
+//                 }
 
-            }
-            else
-            {   
-                //SurfaceFlux just needs flux projected at normal direction, the flux is stored at outarray[0]
-                for(int i=0;i<nDim;i++)
-                {
-                    normalSurfacePoint[i]=normal[i][k];
-                }
+//             }
+//             else
+//             {   
+//                 //SurfaceFlux just needs flux projected at normal direction, the flux is stored at outarray[0]
+//                 for(int i=0;i<nDim;i++)
+//                 {
+//                     normalSurfacePoint[i]=normal[i][k];
+//                 }
 
-                GetViscousFlux(nDim,normalSurfacePoint,inarrayPoint,qfieldsPoint,fluxPoint);
-                for(int i=0;i<n_nonZero;i++)
-                {
-                    outarray[0][nonZeroIndex[i]][k]=fluxPoint[i];
-                }
-            }
+//                 GetViscousFlux(nDim,normalSurfacePoint,inarrayPoint,qfieldsPoint,fluxPoint);
+//                 for(int i=0;i<n_nonZero;i++)
+//                 {
+//                     outarray[0][nonZeroIndex[i]][k]=fluxPoint[i];
+//                 }
+//             }
 
           
-        }
+//         }
 
         
-    }
+//     }
 
 
-   /* Get Quasi viscous flux 
-    Input is normals
-    U=[rho,rhou,rhov,rhow,rhoE]
-    Sigma=
-    [drho_dx,drhou_dx,drhov_dx,drhow_dx,drhoE_dx]
-    [drho_dy,drhou_dy,drhov_dy,drhow_dy,drhoE_dy]
-    Output is quasi viscous flux G=dF_dSigmax*Sigmax+dF_dSigmay*Sigmay+dF_dSigmaz*Sigmaz
-    */
-    void NavierStokesCFE::GetViscousFlux(
-       const int nDim,
-       const Array<OneD,NekDouble> &normals,
-       const Array<OneD,NekDouble> &U,
-       const Array<OneD,Array<OneD,NekDouble>> &Sigma,
-       Array<OneD,NekDouble> flux)
-    {
-    switch(nDim)
-    {
-        case 1:    
-        {
-            ASSERTL0(false, "1D does not considered here in IP.");
-        }
-        break;
-        case 2:  //2D
-        {
-            GetViscousFlux2D(normals,U,Sigma,flux);
-        }
-        break;
-        case 3:
-        {
-             GetViscousFlux3D(normals,U,Sigma,flux);
-        }
-        break;
-    }
+//    /* Get Quasi viscous flux 
+//     Input is normals
+//     U=[rho,rhou,rhov,rhow,rhoE]
+//     Sigma=
+//     [drho_dx,drhou_dx,drhov_dx,drhow_dx,drhoE_dx]
+//     [drho_dy,drhou_dy,drhov_dy,drhow_dy,drhoE_dy]
+//     Output is quasi viscous flux G=dF_dSigmax*Sigmax+dF_dSigmay*Sigmay+dF_dSigmaz*Sigmaz
+//     */
+//     void NavierStokesCFE::GetViscousFlux(
+//        const int nDim,
+//        const Array<OneD,NekDouble> &normals,
+//        const Array<OneD,NekDouble> &U,
+//        const Array<OneD,Array<OneD,NekDouble>> &Sigma,
+//        Array<OneD,NekDouble> flux)
+//     {
+//     switch(nDim)
+//     {
+//         case 1:    
+//         {
+//             ASSERTL0(false, "1D does not considered here in IP.");
+//         }
+//         break;
+//         case 2:  //2D
+//         {
+//             GetViscousFlux2D(normals,U,Sigma,flux);
+//         }
+//         break;
+//         case 3:
+//         {
+//              GetViscousFlux3D(normals,U,Sigma,flux);
+//         }
+//         break;
+//     }
 
-    }
+//     }
     
-      /* Get Quasi viscous flux 
-    Input is normals
-    U=[rho,rhou,rhov,rhoE]
-    Sigma=
-    [drho_dx,drhou_dx,drhov_dx,drhoE_dx]
-    [drho_dy,drhou_dy,drhov_dy,drhoE_dy]
-    Output is quasi viscous flux G=dF_dSigmax*Sigmax+dF_dSigmay*Sigmay
-    */
-   void NavierStokesCFE::GetViscousFlux2D(
-       const Array<OneD,NekDouble> &normals,
-       const Array<OneD,NekDouble> &U,
-       const Array<OneD,Array<OneD,NekDouble>> &Sigma,
-       Array<OneD,NekDouble> flux
-   )
-   {
-        DNekMatSharedPtr dF_dSigmax= MemoryManager<DNekMat>::AllocateSharedPtr(3, 4,0.0, eFULL);
-        DNekMatSharedPtr dF_dSigmay= MemoryManager<DNekMat>::AllocateSharedPtr(3, 4,0.0, eFULL);
-        DNekVec VSigmax (Sigma[0],eCopy);
-        DNekVec VSigmay (Sigma[1],eCopy);
-        DNekVec Vflux (flux,eWrapper);
-        GetdFlux_dSigma2D(normals,U, 0,dF_dSigmax);
-        GetdFlux_dSigma2D(normals,U, 1,dF_dSigmay);
-        Vflux=(*dF_dSigmax)*VSigmax+(*dF_dSigmay)*VSigmay;
+//       /* Get Quasi viscous flux 
+//     Input is normals
+//     U=[rho,rhou,rhov,rhoE]
+//     Sigma=
+//     [drho_dx,drhou_dx,drhov_dx,drhoE_dx]
+//     [drho_dy,drhou_dy,drhov_dy,drhoE_dy]
+//     Output is quasi viscous flux G=dF_dSigmax*Sigmax+dF_dSigmay*Sigmay
+//     */
+//    void NavierStokesCFE::GetViscousFlux2D(
+//        const Array<OneD,NekDouble> &normals,
+//        const Array<OneD,NekDouble> &U,
+//        const Array<OneD,Array<OneD,NekDouble>> &Sigma,
+//        Array<OneD,NekDouble> flux
+//    )
+//    {
+//         DNekMatSharedPtr dF_dSigmax= MemoryManager<DNekMat>::AllocateSharedPtr(3, 4,0.0, eFULL);
+//         DNekMatSharedPtr dF_dSigmay= MemoryManager<DNekMat>::AllocateSharedPtr(3, 4,0.0, eFULL);
+//         DNekVec VSigmax (Sigma[0],eCopy);
+//         DNekVec VSigmay (Sigma[1],eCopy);
+//         DNekVec Vflux (flux,eWrapper);
+//         GetdFlux_dSigma2D(normals,U, 0,dF_dSigmax);
+//         GetdFlux_dSigma2D(normals,U, 1,dF_dSigmay);
+//         Vflux=(*dF_dSigmax)*VSigmax+(*dF_dSigmay)*VSigmay;
 
-   }
+//    }
 
 
-    /* Get the derivative of flux with respect to Sigma_x,Sigma_y (the derivative of conservative variables)
-    Input is  U=[rho,rhou,rhov,rhoE]
-    for 2D, it is two (3*4) matrices
-    */
-    void NavierStokesCFE::GetdFlux_dSigma2D( 
-     const Array<OneD, NekDouble> &normals,
-     const Array<OneD, NekDouble> &U, int dir,
-    DNekMatSharedPtr &OutputMatrix )
-    {
-        NekDouble nx=normals[0];
-        NekDouble ny=normals[1];
-        NekDouble rho=U[0];
-        NekDouble u=U[1]/U[0];
-        NekDouble v=U[2]/U[0];
-        NekDouble E=U[3]/U[0];
-        NekDouble q2=u*u+v*v;
-        NekDouble e=E-0.5*q2;
-        NekDouble R =m_varConv->GetGasconstant();
-        NekDouble gamma=m_gamma;
-        NekDouble Cp=gamma / (gamma - 1.0) *R;
-        NekDouble Cv=1.0/(gamma-1)*R;
-        NekDouble T=e/Cv;
-        NekDouble mu;
-        m_varConv->Getmu(T, mu);
-        //q_x=-kappa*dT_dx;
-        NekDouble kappa=m_thermalConductivity;
-        NekDouble Pr= Cp *mu / kappa;
-        //To notice, here is positive, which is consistent with 
-        //"SYMMETRIC INTERIOR PENALTY DG METHODS FOR THE COMPRESSIBLE NAVIER-STOKES EQUATIONS"
-        //But opposite to "I Do like CFD"
-        NekDouble tmp=mu/rho;
+//     /* Get the derivative of flux with respect to Sigma_x,Sigma_y (the derivative of conservative variables)
+//     Input is  U=[rho,rhou,rhov,rhoE]
+//     for 2D, it is two (3*4) matrices
+//     */
+//     void NavierStokesCFE::GetdFlux_dSigma2D( 
+//      const Array<OneD, NekDouble> &normals,
+//      const Array<OneD, NekDouble> &U, int dir,
+//     DNekMatSharedPtr &OutputMatrix )
+//     {
+//         NekDouble nx=normals[0];
+//         NekDouble ny=normals[1];
+//         NekDouble rho=U[0];
+//         NekDouble u=U[1]/U[0];
+//         NekDouble v=U[2]/U[0];
+//         NekDouble E=U[3]/U[0];
+//         NekDouble q2=u*u+v*v;
+//         NekDouble e=E-0.5*q2;
+//         NekDouble R =m_varConv->GetGasconstant();
+//         NekDouble gamma=m_gamma;
+//         NekDouble Cp=gamma / (gamma - 1.0) *R;
+//         NekDouble Cv=1.0/(gamma-1)*R;
+//         NekDouble T=e/Cv;
+//         NekDouble mu;
+//         m_varConv->Getmu(T, mu);
+//         //q_x=-kappa*dT_dx;
+//         NekDouble kappa=m_thermalConductivity;
+//         NekDouble Pr= Cp *mu / kappa;
+//         //To notice, here is positive, which is consistent with 
+//         //"SYMMETRIC INTERIOR PENALTY DG METHODS FOR THE COMPRESSIBLE NAVIER-STOKES EQUATIONS"
+//         //But opposite to "I Do like CFD"
+//         NekDouble tmp=mu/rho;
 
-           switch (dir)
-            {
-                case 0:
-                {
+//            switch (dir)
+//             {
+//                 case 0:
+//                 {
 
-                    (*OutputMatrix)(0,0)=tmp*(-4.0/3.0*u*nx-v*ny);
-                    (*OutputMatrix)(0,1)=tmp*(4.0/3.0*nx);
-                    (*OutputMatrix)(0,2)=tmp*ny;
-                    (*OutputMatrix)(0,3)=0.0;
-                    (*OutputMatrix)(1,0)=tmp*(-v*nx+2.0/3.0*u*ny);
-                    (*OutputMatrix)(1,1)=tmp*(-2.0/3.0*ny);
-                    (*OutputMatrix)(1,2)=tmp*nx;
-                    (*OutputMatrix)(1,3)=0.0;
-                    (*OutputMatrix)(2,0)=(4.0/3.0*u*u+v*v+gamma/Pr*(E-q2))*nx+1.0/3.0*u*v*ny;
-                    (*OutputMatrix)(2,0)=-tmp*(*OutputMatrix)(2,0);
-                    (*OutputMatrix)(2,1)=(4.0/3.0-gamma/Pr)*u*nx-2.0/3.0*v*ny;
-                    (*OutputMatrix)(2,1)=tmp*(*OutputMatrix)(2,1);
-                    (*OutputMatrix)(2,2)=(1-gamma/Pr)*v*nx+u*ny;
-                    (*OutputMatrix)(2,2)=tmp*(*OutputMatrix)(2,2);
-                    (*OutputMatrix)(2,3)=tmp*gamma/Pr*nx;
-                    break;
-                }
-                case 1:
-                {
+//                     (*OutputMatrix)(0,0)=tmp*(-4.0/3.0*u*nx-v*ny);
+//                     (*OutputMatrix)(0,1)=tmp*(4.0/3.0*nx);
+//                     (*OutputMatrix)(0,2)=tmp*ny;
+//                     (*OutputMatrix)(0,3)=0.0;
+//                     (*OutputMatrix)(1,0)=tmp*(-v*nx+2.0/3.0*u*ny);
+//                     (*OutputMatrix)(1,1)=tmp*(-2.0/3.0*ny);
+//                     (*OutputMatrix)(1,2)=tmp*nx;
+//                     (*OutputMatrix)(1,3)=0.0;
+//                     (*OutputMatrix)(2,0)=(4.0/3.0*u*u+v*v+gamma/Pr*(E-q2))*nx+1.0/3.0*u*v*ny;
+//                     (*OutputMatrix)(2,0)=-tmp*(*OutputMatrix)(2,0);
+//                     (*OutputMatrix)(2,1)=(4.0/3.0-gamma/Pr)*u*nx-2.0/3.0*v*ny;
+//                     (*OutputMatrix)(2,1)=tmp*(*OutputMatrix)(2,1);
+//                     (*OutputMatrix)(2,2)=(1-gamma/Pr)*v*nx+u*ny;
+//                     (*OutputMatrix)(2,2)=tmp*(*OutputMatrix)(2,2);
+//                     (*OutputMatrix)(2,3)=tmp*gamma/Pr*nx;
+//                     break;
+//                 }
+//                 case 1:
+//                 {
 
-                    (*OutputMatrix)(0,0)=tmp*(2.0/3.0*v*nx-u*ny);
-                    (*OutputMatrix)(0,1)=tmp*ny;
-                    (*OutputMatrix)(0,2)=tmp*(-2.0/3.0)*nx;
-                    (*OutputMatrix)(0,3)=0.0;
-                    (*OutputMatrix)(1,0)=tmp*(-u*nx-4.0/3.0*v*ny);
-                    (*OutputMatrix)(1,1)=tmp*nx;
-                    (*OutputMatrix)(1,2)=tmp*(4.0/3.0*ny);
-                    (*OutputMatrix)(1,3)=0.0;
-                    (*OutputMatrix)(2,0)=1.0/3.0*u*v*nx+(4.0/3.0*v*v+u*u+gamma/Pr*(E-q2))*ny;
-                    (*OutputMatrix)(2,0)=-tmp*(*OutputMatrix)(2,0);
-                    (*OutputMatrix)(2,1)=(1-gamma/Pr)*u*ny+v*nx;
-                    (*OutputMatrix)(2,1)=tmp*(*OutputMatrix)(2,1);
-                    (*OutputMatrix)(2,2)=(4.0/3.0-gamma/Pr)*v*ny-2.0/3.0*u*nx;
-                    (*OutputMatrix)(2,2)=tmp*(*OutputMatrix)(2,2);
-                    (*OutputMatrix)(2,3)=tmp*gamma/Pr*ny;
+//                     (*OutputMatrix)(0,0)=tmp*(2.0/3.0*v*nx-u*ny);
+//                     (*OutputMatrix)(0,1)=tmp*ny;
+//                     (*OutputMatrix)(0,2)=tmp*(-2.0/3.0)*nx;
+//                     (*OutputMatrix)(0,3)=0.0;
+//                     (*OutputMatrix)(1,0)=tmp*(-u*nx-4.0/3.0*v*ny);
+//                     (*OutputMatrix)(1,1)=tmp*nx;
+//                     (*OutputMatrix)(1,2)=tmp*(4.0/3.0*ny);
+//                     (*OutputMatrix)(1,3)=0.0;
+//                     (*OutputMatrix)(2,0)=1.0/3.0*u*v*nx+(4.0/3.0*v*v+u*u+gamma/Pr*(E-q2))*ny;
+//                     (*OutputMatrix)(2,0)=-tmp*(*OutputMatrix)(2,0);
+//                     (*OutputMatrix)(2,1)=(1-gamma/Pr)*u*ny+v*nx;
+//                     (*OutputMatrix)(2,1)=tmp*(*OutputMatrix)(2,1);
+//                     (*OutputMatrix)(2,2)=(4.0/3.0-gamma/Pr)*v*ny-2.0/3.0*u*nx;
+//                     (*OutputMatrix)(2,2)=tmp*(*OutputMatrix)(2,2);
+//                     (*OutputMatrix)(2,3)=tmp*gamma/Pr*ny;
                    
-                    break;
-                }
-                default:
-                    ASSERTL0(false, "It is 2D.");
-            }
-    }
+//                     break;
+//                 }
+//                 default:
+//                     ASSERTL0(false, "It is 2D.");
+//             }
+//     }
 
 
-      /* Get Quasi viscous flux 
-    Input is normals
-    U=[rho,rhou,rhov,rhow,rhoE]
-    Sigma=[drho_dx,drhou_dx,drhov_dx,drhow_dx,drhoE_dx]
-    [drho_dy,drhou_dy,drhov_dy,drhow_dy,drhoE_dy]
-    [drho_dz,drhou_dz,drhov_dz,drhow_dz,drhoE_dz]
-    */
-   void NavierStokesCFE::GetViscousFlux3D(
-       const Array<OneD,NekDouble> &normals,
-       const Array<OneD,NekDouble> &U,
-       const Array<OneD,Array<OneD,NekDouble>> &Sigma,
-       Array<OneD,NekDouble> flux
-   )
-   {
-        DNekMatSharedPtr dF_dSigmax= MemoryManager<DNekMat>::AllocateSharedPtr(4, 5,0.0, eFULL);
-        DNekMatSharedPtr dF_dSigmay= MemoryManager<DNekMat>::AllocateSharedPtr(4, 5,0.0, eFULL);
-        DNekMatSharedPtr dF_dSigmaz= MemoryManager<DNekMat>::AllocateSharedPtr(4, 5,0.0, eFULL);
-        DNekVec VSigmax (Sigma[0],eCopy);
-        DNekVec VSigmay (Sigma[1],eCopy);
-        DNekVec VSigmaz (Sigma[2],eCopy);
-        DNekVec Vflux (flux,eWrapper);
-        GetdFlux_dSigma3D(normals,U, 0,dF_dSigmax);
-        GetdFlux_dSigma3D(normals,U, 1,dF_dSigmay);
-        GetdFlux_dSigma3D(normals,U, 2,dF_dSigmaz);
-        Vflux=(*dF_dSigmax)*VSigmax+(*dF_dSigmay)*VSigmay+(*dF_dSigmaz)*VSigmaz;
+//       /* Get Quasi viscous flux 
+//     Input is normals
+//     U=[rho,rhou,rhov,rhow,rhoE]
+//     Sigma=[drho_dx,drhou_dx,drhov_dx,drhow_dx,drhoE_dx]
+//     [drho_dy,drhou_dy,drhov_dy,drhow_dy,drhoE_dy]
+//     [drho_dz,drhou_dz,drhov_dz,drhow_dz,drhoE_dz]
+//     */
+//    void NavierStokesCFE::GetViscousFlux3D(
+//        const Array<OneD,NekDouble> &normals,
+//        const Array<OneD,NekDouble> &U,
+//        const Array<OneD,Array<OneD,NekDouble>> &Sigma,
+//        Array<OneD,NekDouble> flux
+//    )
+//    {
+//         DNekMatSharedPtr dF_dSigmax= MemoryManager<DNekMat>::AllocateSharedPtr(4, 5,0.0, eFULL);
+//         DNekMatSharedPtr dF_dSigmay= MemoryManager<DNekMat>::AllocateSharedPtr(4, 5,0.0, eFULL);
+//         DNekMatSharedPtr dF_dSigmaz= MemoryManager<DNekMat>::AllocateSharedPtr(4, 5,0.0, eFULL);
+//         DNekVec VSigmax (Sigma[0],eCopy);
+//         DNekVec VSigmay (Sigma[1],eCopy);
+//         DNekVec VSigmaz (Sigma[2],eCopy);
+//         DNekVec Vflux (flux,eWrapper);
+//         GetdFlux_dSigma3D(normals,U, 0,dF_dSigmax);
+//         GetdFlux_dSigma3D(normals,U, 1,dF_dSigmay);
+//         GetdFlux_dSigma3D(normals,U, 2,dF_dSigmaz);
+//         Vflux=(*dF_dSigmax)*VSigmax+(*dF_dSigmay)*VSigmay+(*dF_dSigmaz)*VSigmaz;
 
 
-   }
+//    }
 
 
-    /* Get the derivative of flux with conservative variables U=[rho,rhou,rhov,rhow,rhoE]
-    for 3D, it is two (4*5) matrices
-    */
-    void NavierStokesCFE::GetdFlux_dSigma3D( 
-    const Array<OneD, NekDouble> &normals,
-    const Array<OneD, NekDouble> &U, int dir,
-    DNekMatSharedPtr &OutputMatrix )
-    {
-        NekDouble nx=normals[0];
-        NekDouble ny=normals[1];
-        NekDouble nz=normals[2];
-        NekDouble rho=U[0];
-        NekDouble u=U[1]/U[0];
-        NekDouble v=U[2]/U[0];
-        NekDouble w=U[3]/U[0];
-        NekDouble E=U[4]/U[0];
-        NekDouble q2=u*u+v*v+w*w;
-        NekDouble e=E-0.5*q2;
-        NekDouble R =m_varConv->GetGasconstant();
-        NekDouble gamma=m_gamma;
-        NekDouble Cp=gamma / (gamma - 1.0) *R;
-        NekDouble Cv=1.0/(gamma-1)*R;
-        NekDouble T=e/Cv;
-        NekDouble mu;
-        m_varConv->Getmu(T, mu);
-        //q_x=-kappa*dT_dx;
-        NekDouble kappa=m_thermalConductivity;
-        NekDouble Pr= Cp *mu / kappa;
-        //To notice, here is positive, which is consistent with 
-        //"SYMMETRIC INTERIOR PENALTY DG METHODS FOR THE COMPRESSIBLE NAVIER-STOKES EQUATIONS"
-        //But opposite to "I do like CFD"
-        NekDouble tmp=mu/rho;
-        NekDouble tmpx=tmp*nx;
-        NekDouble tmpy=tmp*ny;
-        NekDouble tmpz=tmp*nz;
+//     /* Get the derivative of flux with conservative variables U=[rho,rhou,rhov,rhow,rhoE]
+//     for 3D, it is two (4*5) matrices
+//     */
+//     void NavierStokesCFE::GetdFlux_dSigma3D( 
+//     const Array<OneD, NekDouble> &normals,
+//     const Array<OneD, NekDouble> &U, int dir,
+//     DNekMatSharedPtr &OutputMatrix )
+//     {
+//         NekDouble nx=normals[0];
+//         NekDouble ny=normals[1];
+//         NekDouble nz=normals[2];
+//         NekDouble rho=U[0];
+//         NekDouble u=U[1]/U[0];
+//         NekDouble v=U[2]/U[0];
+//         NekDouble w=U[3]/U[0];
+//         NekDouble E=U[4]/U[0];
+//         NekDouble q2=u*u+v*v+w*w;
+//         NekDouble e=E-0.5*q2;
+//         NekDouble R =m_varConv->GetGasconstant();
+//         NekDouble gamma=m_gamma;
+//         NekDouble Cp=gamma / (gamma - 1.0) *R;
+//         NekDouble Cv=1.0/(gamma-1)*R;
+//         NekDouble T=e/Cv;
+//         NekDouble mu;
+//         m_varConv->Getmu(T, mu);
+//         //q_x=-kappa*dT_dx;
+//         NekDouble kappa=m_thermalConductivity;
+//         NekDouble Pr= Cp *mu / kappa;
+//         //To notice, here is positive, which is consistent with 
+//         //"SYMMETRIC INTERIOR PENALTY DG METHODS FOR THE COMPRESSIBLE NAVIER-STOKES EQUATIONS"
+//         //But opposite to "I do like CFD"
+//         NekDouble tmp=mu/rho;
+//         NekDouble tmpx=tmp*nx;
+//         NekDouble tmpy=tmp*ny;
+//         NekDouble tmpz=tmp*nz;
 
-           switch (dir)
-            {
-                case 0:
-                {
+//            switch (dir)
+//             {
+//                 case 0:
+//                 {
 
-                    (*OutputMatrix)(0,0)=tmpx*(-4.0/3.0*u)+tmpy*(-v)+tmpz*(-w);
-                    (*OutputMatrix)(0,1)=tmpx*(4.0/3.0);
-                    (*OutputMatrix)(0,2)=tmpy;
-                    (*OutputMatrix)(0,3)=tmpz;
-                    (*OutputMatrix)(0,4)=0.0;
-                    (*OutputMatrix)(1,0)=tmpx*(-v)+tmpy*(2./3.*u);
-                    (*OutputMatrix)(1,1)=tmpy*(-2./3.);
-                    (*OutputMatrix)(1,2)=tmpx;
-                    (*OutputMatrix)(1,3)=0.0;
-                    (*OutputMatrix)(1,4)=0.0;
-                    (*OutputMatrix)(2,0)=tmpx*(-w)+tmpz*(2./3.*u);
-                    (*OutputMatrix)(2,1)=tmpz*(-2./3);
-                    (*OutputMatrix)(2,2)=0.0;
-                    (*OutputMatrix)(2,3)=tmpx;
-                    (*OutputMatrix)(2,4)=0.0;
-                    (*OutputMatrix)(3,0)=-tmpx*(4./3.*u*u+v*v+w*w+gamma/Pr*(E-q2))+tmpy*(-1./3.*u*v)+tmpz*(-1./3.*u*w);
-                    (*OutputMatrix)(3,1)=tmpx*(4./3.-gamma/Pr)*u+tmpy*(-2./3.*v)+tmpz*(-2./3.*w);
-                    (*OutputMatrix)(3,2)=tmpx*(1.0-gamma/Pr)*v+tmpy*u;
-                    (*OutputMatrix)(3,3)=tmpx*(1.0-gamma/Pr)*w+tmpz*u;
-                    (*OutputMatrix)(3,4)=tmpx*gamma/Pr;
+//                     (*OutputMatrix)(0,0)=tmpx*(-4.0/3.0*u)+tmpy*(-v)+tmpz*(-w);
+//                     (*OutputMatrix)(0,1)=tmpx*(4.0/3.0);
+//                     (*OutputMatrix)(0,2)=tmpy;
+//                     (*OutputMatrix)(0,3)=tmpz;
+//                     (*OutputMatrix)(0,4)=0.0;
+//                     (*OutputMatrix)(1,0)=tmpx*(-v)+tmpy*(2./3.*u);
+//                     (*OutputMatrix)(1,1)=tmpy*(-2./3.);
+//                     (*OutputMatrix)(1,2)=tmpx;
+//                     (*OutputMatrix)(1,3)=0.0;
+//                     (*OutputMatrix)(1,4)=0.0;
+//                     (*OutputMatrix)(2,0)=tmpx*(-w)+tmpz*(2./3.*u);
+//                     (*OutputMatrix)(2,1)=tmpz*(-2./3);
+//                     (*OutputMatrix)(2,2)=0.0;
+//                     (*OutputMatrix)(2,3)=tmpx;
+//                     (*OutputMatrix)(2,4)=0.0;
+//                     (*OutputMatrix)(3,0)=-tmpx*(4./3.*u*u+v*v+w*w+gamma/Pr*(E-q2))+tmpy*(-1./3.*u*v)+tmpz*(-1./3.*u*w);
+//                     (*OutputMatrix)(3,1)=tmpx*(4./3.-gamma/Pr)*u+tmpy*(-2./3.*v)+tmpz*(-2./3.*w);
+//                     (*OutputMatrix)(3,2)=tmpx*(1.0-gamma/Pr)*v+tmpy*u;
+//                     (*OutputMatrix)(3,3)=tmpx*(1.0-gamma/Pr)*w+tmpz*u;
+//                     (*OutputMatrix)(3,4)=tmpx*gamma/Pr;
 
-                    break;
-                }
-                case 1:
-                {
+//                     break;
+//                 }
+//                 case 1:
+//                 {
 
-                    (*OutputMatrix)(0,0)=tmpx*(2./3.*v)+tmpy*(-u);
-                    (*OutputMatrix)(0,1)=tmpy;
-                    (*OutputMatrix)(0,2)=tmpx*(-2./3.);
-                    (*OutputMatrix)(0,3)=0.0;
-                    (*OutputMatrix)(0,4)=0.0;
-                    (*OutputMatrix)(1,0)=tmpx*(-u)+tmpy*(-4./3.*v)+tmpz*(-w);
-                    (*OutputMatrix)(1,1)=tmpx;
-                    (*OutputMatrix)(1,2)=tmpy*(4./3.);
-                    (*OutputMatrix)(1,3)=tmpz;
-                    (*OutputMatrix)(1,4)=0.0;
-                    (*OutputMatrix)(2,0)=tmpy*(-w)+tmpz*(2./3.*v);
-                    (*OutputMatrix)(2,1)=0.0;
-                    (*OutputMatrix)(2,2)=tmpz*(-2./3.);
-                    (*OutputMatrix)(2,3)=tmpy;
-                    (*OutputMatrix)(2,4)=0.0;
-                    (*OutputMatrix)(3,0)=tmpx*(-1./3.*u*v)-tmpy*(u*u+4./3.*v*v+w*w+gamma/Pr*(E-q2))+tmpz*(-1./3.*v*w);
-                    (*OutputMatrix)(3,1)=tmpx*v+tmpy*(1-gamma/Pr)*u;
-                    (*OutputMatrix)(3,2)=tmpx*(-2./3.*u)+tmpy*(4./3.-gamma/Pr)*v+tmpz*(-2./3.*w);
-                    (*OutputMatrix)(3,3)=tmpy*(1-gamma/Pr)*w+tmpz*v;
-                    (*OutputMatrix)(3,4)=tmpy*gamma/Pr;
+//                     (*OutputMatrix)(0,0)=tmpx*(2./3.*v)+tmpy*(-u);
+//                     (*OutputMatrix)(0,1)=tmpy;
+//                     (*OutputMatrix)(0,2)=tmpx*(-2./3.);
+//                     (*OutputMatrix)(0,3)=0.0;
+//                     (*OutputMatrix)(0,4)=0.0;
+//                     (*OutputMatrix)(1,0)=tmpx*(-u)+tmpy*(-4./3.*v)+tmpz*(-w);
+//                     (*OutputMatrix)(1,1)=tmpx;
+//                     (*OutputMatrix)(1,2)=tmpy*(4./3.);
+//                     (*OutputMatrix)(1,3)=tmpz;
+//                     (*OutputMatrix)(1,4)=0.0;
+//                     (*OutputMatrix)(2,0)=tmpy*(-w)+tmpz*(2./3.*v);
+//                     (*OutputMatrix)(2,1)=0.0;
+//                     (*OutputMatrix)(2,2)=tmpz*(-2./3.);
+//                     (*OutputMatrix)(2,3)=tmpy;
+//                     (*OutputMatrix)(2,4)=0.0;
+//                     (*OutputMatrix)(3,0)=tmpx*(-1./3.*u*v)-tmpy*(u*u+4./3.*v*v+w*w+gamma/Pr*(E-q2))+tmpz*(-1./3.*v*w);
+//                     (*OutputMatrix)(3,1)=tmpx*v+tmpy*(1-gamma/Pr)*u;
+//                     (*OutputMatrix)(3,2)=tmpx*(-2./3.*u)+tmpy*(4./3.-gamma/Pr)*v+tmpz*(-2./3.*w);
+//                     (*OutputMatrix)(3,3)=tmpy*(1-gamma/Pr)*w+tmpz*v;
+//                     (*OutputMatrix)(3,4)=tmpy*gamma/Pr;
                    
-                    break;
-                }
-                case 2:
-                {
-                    (*OutputMatrix)(0,0)=tmpx*(2./3.*w)+tmpz*(-u);
-                    (*OutputMatrix)(0,1)=tmpz;
-                    (*OutputMatrix)(0,2)=0.0;
-                    (*OutputMatrix)(0,3)=tmpx*(-2./3.);
-                    (*OutputMatrix)(0,4)=0.0;
-                    (*OutputMatrix)(1,0)=tmpy*(2./3.*w)+tmpz*(-v);
-                    (*OutputMatrix)(1,1)=0.0;
-                    (*OutputMatrix)(1,2)=tmpz;
-                    (*OutputMatrix)(1,3)=tmpy*(-2./3.);
-                    (*OutputMatrix)(1,4)=0.0;
-                    (*OutputMatrix)(2,0)=tmpx*(-u)+tmpy*(-v)+tmpz*(-4./3.*w);
-                    (*OutputMatrix)(2,1)=tmpx;
-                    (*OutputMatrix)(2,2)=tmpy;
-                    (*OutputMatrix)(2,3)=tmpz*(4./3.);
-                    (*OutputMatrix)(2,4)=0.0;
-                    (*OutputMatrix)(3,0)=tmpx*(-1./3.*u*w)+tmpy*(-1./3.*v*w)-tmpz*(u*u+v*v+4./3.*w*w+gamma/Pr*(E-q2));
-                    (*OutputMatrix)(3,1)=tmpx*w+tmpz*(1-gamma/Pr)*u;
-                    (*OutputMatrix)(3,2)=tmpy*w+tmpz*(1-gamma/Pr)*v;
-                    (*OutputMatrix)(3,3)=tmpx*(-2./3.*u)+tmpy*(-2./3.*v)+tmpz*(4./3.-gamma/Pr)*w;
-                    (*OutputMatrix)(3,4)=tmpz*gamma/Pr;
+//                     break;
+//                 }
+//                 case 2:
+//                 {
+//                     (*OutputMatrix)(0,0)=tmpx*(2./3.*w)+tmpz*(-u);
+//                     (*OutputMatrix)(0,1)=tmpz;
+//                     (*OutputMatrix)(0,2)=0.0;
+//                     (*OutputMatrix)(0,3)=tmpx*(-2./3.);
+//                     (*OutputMatrix)(0,4)=0.0;
+//                     (*OutputMatrix)(1,0)=tmpy*(2./3.*w)+tmpz*(-v);
+//                     (*OutputMatrix)(1,1)=0.0;
+//                     (*OutputMatrix)(1,2)=tmpz;
+//                     (*OutputMatrix)(1,3)=tmpy*(-2./3.);
+//                     (*OutputMatrix)(1,4)=0.0;
+//                     (*OutputMatrix)(2,0)=tmpx*(-u)+tmpy*(-v)+tmpz*(-4./3.*w);
+//                     (*OutputMatrix)(2,1)=tmpx;
+//                     (*OutputMatrix)(2,2)=tmpy;
+//                     (*OutputMatrix)(2,3)=tmpz*(4./3.);
+//                     (*OutputMatrix)(2,4)=0.0;
+//                     (*OutputMatrix)(3,0)=tmpx*(-1./3.*u*w)+tmpy*(-1./3.*v*w)-tmpz*(u*u+v*v+4./3.*w*w+gamma/Pr*(E-q2));
+//                     (*OutputMatrix)(3,1)=tmpx*w+tmpz*(1-gamma/Pr)*u;
+//                     (*OutputMatrix)(3,2)=tmpy*w+tmpz*(1-gamma/Pr)*v;
+//                     (*OutputMatrix)(3,3)=tmpx*(-2./3.*u)+tmpy*(-2./3.*v)+tmpz*(4./3.-gamma/Pr)*w;
+//                     (*OutputMatrix)(3,4)=tmpz*gamma/Pr;
                    
-                    break;
-                }
-                default:
-                    ASSERTL0(false, "It is 3D.");
-            }
+//                     break;
+//                 }
+//                 default:
+//                     ASSERTL0(false, "It is 3D.");
+//             }
 
-    }
+//     }
 
 
     //End Copy

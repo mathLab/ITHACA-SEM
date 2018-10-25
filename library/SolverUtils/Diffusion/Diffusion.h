@@ -83,7 +83,7 @@ namespace Nektar
             const Array<OneD, const Array<OneD, Array<OneD, NekDouble> > >      &,
             NekDouble                                                            ,
             const Array<OneD, const Array<OneD, NekDouble> >                    &,
-                  Array<OneD, Array<OneD, Array<OneD, NekDouble> > >            &)> FunctorDerivBndCond;
+            const Array<OneD, const Array<OneD, Array<OneD, NekDouble> > >      &)> FunctorDerivBndCond;
         
         /**
          * Parameter list meaning:
@@ -105,7 +105,7 @@ namespace Nektar
                   Array<OneD, Array<OneD, Array<OneD, NekDouble> > >        &,
                   Array< OneD, int >                                        &,    
             const Array<OneD, Array<OneD, NekDouble> >                      &,           
-            const Array<OneD, NekDouble>                                    &)> DiffusionFluxVec;
+            const Array<OneD, NekDouble>                                    &)> DiffusionFluxCons;
 
         class Diffusion
         {
@@ -186,9 +186,28 @@ namespace Nektar
                 m_fluxVectorNS = fluxVector;
             }
 
-            void SetDiffusionFluxVec(DiffusionFluxVec flux)
+            template<typename FuncPointerT, typename ObjectPointerT>
+            void SetDiffusionFluxCons(FuncPointerT func, ObjectPointerT obj)
             {
-                m_Diffusionflux =   flux;
+                m_FunctorDiffusionfluxCons = std::bind(
+                    func, obj, std::placeholders::_1, std::placeholders::_2,
+                               std::placeholders::_3, std::placeholders::_4,
+                               std::placeholders::_5, std::placeholders::_6,
+                               std::placeholders::_7, std::placeholders::_8);
+            }
+            
+            void SetDiffusionFluxCons(DiffusionFluxCons flux)
+            {
+                m_FunctorDiffusionfluxCons =   flux;
+            }
+
+            template<typename FuncPointerT, typename ObjectPointerT>
+            void SetFunctorDerivBndCond(FuncPointerT func, ObjectPointerT obj)
+            {
+                m_FunctorDerivBndCond = std::bind(
+                    func, obj, std::placeholders::_1, std::placeholders::_2,
+                               std::placeholders::_3, std::placeholders::_4,
+                               std::placeholders::_5);
             }
 
             void SetFunctorDerivBndCond(FunctorDerivBndCond DerivBndCond)
@@ -210,7 +229,7 @@ namespace Nektar
             DiffusionFluxVecCB              m_fluxVector;
             DiffusionFluxVecCBNS            m_fluxVectorNS;
             DiffusionArtificialDiffusion    m_ArtificialDiffusionVector;
-            DiffusionFluxVec                m_Diffusionflux;
+            DiffusionFluxCons               m_FunctorDiffusionfluxCons;
             FunctorDerivBndCond             m_FunctorDerivBndCond;
 
             NekDouble                       m_time=0.0;

@@ -78,11 +78,11 @@ namespace Nektar
         const Array<OneD, Array<OneD, NekDouble> >                      &inarray,
         const Array<OneD, Array<OneD, Array<OneD, NekDouble> > >        &qfields,
               Array<OneD, Array<OneD, Array<OneD, NekDouble> > >        &outarray,
-              Array< OneD, int >                                        &nonZeroIndex   =   NullInt1DArray,    
-        const Array<OneD, Array<OneD, NekDouble> >                      &normal         =   NullNekDoubleArrayofArray,           
-        const Array<OneD, NekDouble>                                    &ArtifDiffFactor=   NullNekDouble1DArray);
+              Array< OneD, int >                                        &nonZeroIndex       =   NullInt1DArray,    
+        const Array<OneD, Array<OneD, NekDouble> >                      &normal             =   NullNekDoubleArrayofArray,           
+        const Array<OneD, NekDouble>                                    &ArtifDiffFactor    =   NullNekDouble1DArray);
     
-    void GetViscousFluxVectorConservVar(
+    void GetViscousFluxConsToPrim(
         const Array<OneD, Array<OneD, NekDouble> >                      &inarray,
         const Array<OneD, Array<OneD, Array<OneD, NekDouble> > >        &qfields,
               Array<OneD, Array<OneD, Array<OneD, NekDouble> > >        &outarray);
@@ -112,18 +112,7 @@ namespace Nektar
         Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &derivatives,
         Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &viscousTensor);
 
-    ////////////////////////////////////////////////////////////////////////////
-    //New Copy
-    void GetViscousFluxVectorConservVar(
-        const int                                                       nConvectiveFields,
-        const int                                                       nDim,
-        const Array<OneD, Array<OneD, NekDouble> >                      &inarray,
-        const Array<OneD, Array<OneD, Array<OneD, NekDouble> > >        &qfields,
-            Array<OneD, Array<OneD, Array<OneD, NekDouble> > >          &outarray,
-            Array< OneD, int >                                          &nonZeroIndex,    
-        const Array<OneD, Array<OneD, NekDouble> >                      &normal = NullNekDoubleArrayofArray,           
-        const Array<OneD, Array<OneD, NekDouble> >                      &ArtifDiffFactor = NullNekDoubleArrayofArray);
- 
+    
     /**
      * @brief return part of viscous Jacobian: 
      * \todo flux derived with Qx=[drho_dx,drhou_dx,drhov_dx,drhoE_dx] 
@@ -213,85 +202,12 @@ namespace Nektar
      * OutputMatrix dFLux_dU,  the matrix sign is consistent with SIPG
     */
     void GetdFlux_dU_2D(
-        const Array<OneD, NekDouble> &normals, NekDouble &mu, NekDouble &dmu_dT,
-        const Array<OneD, NekDouble> &U,
-        const Array<OneD, Array<OneD, NekDouble>> &qfield, 
-        DNekMatSharedPtr &OutputMatrix);
-        
-
-
-
-
-    /////////////////////////////////////////////////////////////////////////////////
-    ////////////////////////////////////////////////////////////////////////////////
-    //Begin Copy
-//        void GetViscousFlux(
-//        const int nDim,
-//        const Array<OneD,NekDouble> &normals,
-//        const Array<OneD,NekDouble> &U,
-//        const Array<OneD,Array<OneD,NekDouble>> &Sigma,
-//        Array<OneD,NekDouble> flux);
-
-//     /* Get Quasi viscous flux 
-//     Input is normals
-//     U=[rho,rhou,rhov,rhoE]
-//     Sigma=[drho_dx,drhou_dx,drhov_dx,drhoE_dx]
-//     [drho_dy,drhou_dy,drhov_dy,drhoE_dy]
-//     */
-//    void GetViscousFlux2D(
-//        const Array<OneD,NekDouble> &normals,
-//        const Array<OneD,NekDouble> &U,
-//        const Array<OneD,Array<OneD,NekDouble>> &Sigma,
-//        Array<OneD,NekDouble> flux
-//    );
-
-
-//     /* Get the derivative of flux with conservative variables U=[rho,rhou,rhov,rhoE]
-//     for 2D, it is two (3*4) matrices
-//     */
-//     void GetdFlux_dSigma2D( 
-//     const Array<OneD, NekDouble> &normals,
-//     const Array<OneD, NekDouble> &U, int dir,
-//     DNekMatSharedPtr &OutputMatrix );
-
-//      /* Get Quasi viscous flux 
-//     Input is normals
-//     U=[rho,rhou,rhov,rhow,rhoE]
-//     Sigma=[drho_dx,drhou_dx,drhov_dx,drhow_dx,drhoE_dx]
-//     [drho_dy,drhou_dy,drhov_dy,drhow_dy,drhoE_dy]
-//     [drho_dz,drhou_dz,drhov_dz,drhow_dz,drhoE_dz]
-//     */
-//    void GetViscousFlux3D(
-//        const Array<OneD,NekDouble> &normals,
-//        const Array<OneD,NekDouble> &U,
-//        const Array<OneD,Array<OneD,NekDouble>> &Sigma,
-//        Array<OneD,NekDouble> flux
-//    );
-
-
-//     /* Get the derivative of flux with conservative variables U=[rho,rhou,rhov,rhow,rhoE]
-//     for 3D, it is two (4*5) matrices
-//     */
-//     void GetdFlux_dSigma3D( 
-//     const Array<OneD, NekDouble> &normals,
-//     const Array<OneD, NekDouble> &U, int dir,
-//     DNekMatSharedPtr &OutputMatrix );
-
-
-    
-    // void GetViscousFluxVectorConservVar(
-    //     const int                                                       nConvectiveFields,
-    //     const int                                                       nDim,
-    //     const Array<OneD, Array<OneD, NekDouble> >                      &inarray,
-    //     const Array<OneD, Array<OneD, Array<OneD, NekDouble> > >        &qfields,
-    //         Array<OneD, Array<OneD, Array<OneD, NekDouble> > >          &outarray,
-    //         Array< OneD, int >                                          &nonZeroIndex,    
-    //     const Array<OneD, Array<OneD, NekDouble> >                      &normal = NullNekDoubleArrayofArray,           
-    //     const Array<OneD, Array<OneD, NekDouble> >                      &ArtifDiffFactor = NullNekDoubleArrayofArray);
-
-    //End Copy
-    /////////////////////////////////////////////////////////////////////////////////
-    ////////////////////////////////////////////////////////////////////////////////
+        const Array<OneD, NekDouble>                        &normals, 
+        const NekDouble                                     mu, 
+        const NekDouble                                     dmu_dT,
+        const Array<OneD, NekDouble>                        &U,
+        const Array<OneD, const Array<OneD, NekDouble> >    &qfield,
+              DNekMatSharedPtr                              &OutputMatrix);
   };
 }
 #endif

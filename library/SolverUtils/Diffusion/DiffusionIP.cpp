@@ -194,12 +194,19 @@ namespace Nektar
             Bwd   =   NullNekDouble1DArray;
             Array< OneD, int > nonZeroIndex;
             // TODO: qfield AND elmtFlux share storage????
-            m_Diffusionflux(nConvectiveFields,nDim,inarray,qfield, elmtFlux,nonZeroIndex,tmparray2D,muvar);
+            m_FunctorDiffusionfluxCons(nConvectiveFields,nDim,inarray,qfield, elmtFlux,nonZeroIndex,tmparray2D,muvar);
+            
+            
+            Array<OneD, Array<OneD, NekDouble> > tmpFluxIprdct(nDim);
             // volume intergration: the nonZeroIndex indicates which flux is nonzero
             for(i = 0; i < nonZeroIndex.num_elements(); ++i)
             {
                 int j = nonZeroIndex[i];
-                fields[j]->IProductWRTDerivBase(elmtFlux[j],outarray[j]);
+                for (int k = 0; k < nDim; ++k)
+                {
+                    tmpFluxIprdct[k] = elmtFlux[k][j];
+                }
+                fields[j]->IProductWRTDerivBase(tmpFluxIprdct,outarray[j]);
                 Vmath::Neg                      (nCoeffs, outarray[j], 1);
             }
             // release qfield, elmtFlux and muvar;
@@ -277,7 +284,7 @@ namespace Nektar
                 traceflux[0][j]   = Array<OneD, NekDouble>(nTracePts, 0.0);
             }
             // Calculate normal viscous flux
-            m_Diffusionflux(nConvectiveFields,nDim,solution_Aver,numDeriv,traceflux,nonZeroIndex,m_traceNormals,MuVarTrace);
+            m_FunctorDiffusionfluxCons(nConvectiveFields,nDim,solution_Aver,numDeriv,traceflux,nonZeroIndex,m_traceNormals,MuVarTrace);
             for(i = 0; i < nonZeroIndex.num_elements(); ++i)
             {
                 int j = nonZeroIndex[i];

@@ -1789,12 +1789,7 @@ namespace Nektar
             const Array<OneD, Array<OneD, NekDouble> >   &pBwd)
     {
         v_DoDiffusion_coeff(inarray, outarray, pFwd, pBwd);
-
-        if (m_shockCaptureType != "Off")
-        {
-            // m_artificialDiffusion->DoArtificialDiffusion(inarray, outarray);
-            m_artificialDiffusion->DoArtificialDiffusion_coeff(inarray, outarray);
-        }
+        
     }
 
     void CompressibleFlowSystem::SetBoundaryConditions(
@@ -1825,14 +1820,18 @@ namespace Nektar
             const Array<OneD, const Array<OneD, NekDouble> >                    &physarray,
             const Array<OneD, const Array<OneD, Array<OneD, NekDouble> > >      &dervarray,
             NekDouble                                                           time,
-            Array<OneD, Array<OneD, NekDouble> >                                &pFwd,
-            Array<OneD, Array<OneD, Array<OneD, NekDouble> > >                  &pDervFwd)
+            const Array<OneD, const Array<OneD, NekDouble> >                    &pFwd,
+            const Array<OneD, const Array<OneD, Array<OneD, NekDouble> > >      &pDervFwd)
     {
         int nTracePts  = GetTraceTotPoints();
         int nvariables = physarray.num_elements();
 
         Array<OneD, Array<OneD, NekDouble> > Fwd;
-        if(NullNekDoubleArrayofArray==pFwd)
+        if(pFwd.num_elements())
+        {
+            Fwd = pFwd;
+        }
+        else
         {
             Fwd = Array<OneD, Array<OneD, NekDouble> >(nvariables);
             for (int i = 0; i < nvariables; ++i)
@@ -1841,13 +1840,13 @@ namespace Nektar
                 m_fields[i]->ExtractTracePhys(physarray[i], Fwd[i]);
             }
         }
-        else
-        {
-            Fwd = pFwd;
-        }
 
         Array<OneD, Array<OneD, Array<OneD, NekDouble> > > DervFwd;
-        if(NullNekDoubleArrayofArrayofArray==pDervFwd)
+        if(pDervFwd.num_elements())
+        {
+            DervFwd = pDervFwd;
+        }
+        else
         {
             int nDim      = m_fields[0]->GetCoordim(0);
             DervFwd =   Array<OneD, Array<OneD, Array<OneD, NekDouble> > >(nDim);
@@ -1860,10 +1859,6 @@ namespace Nektar
                     m_fields[i]->ExtractTracePhys(dervarray[nd][i], DervFwd[nd][i]);
                 }
             }
-        }
-        else
-        {
-            DervFwd = pDervFwd;
         }
 
         if (m_bndConds.size())

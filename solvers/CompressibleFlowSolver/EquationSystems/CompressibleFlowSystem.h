@@ -291,8 +291,8 @@ namespace Nektar
             const Array<OneD, const Array<OneD, NekDouble> >                    &physarray,
             const Array<OneD, const Array<OneD, Array<OneD, NekDouble> > >      &dervarray,
             NekDouble                                                           time,
-            Array<OneD, Array<OneD, NekDouble> >                                &pFwd       = NullNekDoubleArrayofArray,
-            Array<OneD, Array<OneD, Array<OneD, NekDouble> > >                  &pDervFwd   = NullNekDoubleArrayofArrayofArray);
+            const Array<OneD, const Array<OneD, NekDouble> >                    &pFwd       = NullNekDoubleArrayofArray,
+            const Array<OneD, const Array<OneD, Array<OneD, NekDouble> > >      &pDervFwd   = NullNekDoubleArrayofArrayofArray);
 
         void GetElmtTimeStep(
             const Array<OneD, const Array<OneD, NekDouble> > &inarray,

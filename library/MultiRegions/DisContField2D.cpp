@@ -1566,51 +1566,7 @@ namespace Nektar
 
             // Fill boundary conditions into missing elements
             int id1, id2 = 0;
-            
-            for (cnt = n = 0; n < m_bndCondExpansions.num_elements(); ++n)
-            {
-                if (m_bndConditions[n]->GetBoundaryConditionType() == 
-                        SpatialDomains::eDirichlet)
-                {
-                    for (e = 0; e < m_bndCondExpansions[n]->GetExpSize(); ++e)
-                    {
-                        npts = m_bndCondExpansions[n]->GetExp(e)->GetNumPoints(0);
-                        id1 = m_bndCondExpansions[n]->GetPhys_Offset(e);
-                        id2 = m_trace->GetPhys_Offset(m_traceMap->
-                                        GetBndCondTraceToGlobalTraceMap(cnt+e));
-                        Vmath::Vcopy(npts,
-                            &(m_bndCondExpansions[n]->GetPhys())[id1], 1,
-                            &Bwd[id2],                                 1);
-                    }
-                    
-                    cnt += e;
-                }
-                else if (m_bndConditions[n]->GetBoundaryConditionType() == 
-                             SpatialDomains::eNeumann || 
-                         m_bndConditions[n]->GetBoundaryConditionType() == 
-                             SpatialDomains::eRobin)
-                {
-                    for(e = 0; e < m_bndCondExpansions[n]->GetExpSize(); ++e)
-                    {
-                        npts = m_bndCondExpansions[n]->GetExp(e)->GetNumPoints(0);
-                        id1  = m_bndCondExpansions[n]->GetPhys_Offset(e);
-                        ASSERTL0((m_bndCondExpansions[n]->GetPhys())[id1]==0.0,
-                                 "Method not set up for non-zero Neumann "
-                                 "boundary condition");
-                        id2  = m_trace->GetPhys_Offset(
-                            m_traceMap->GetBndCondTraceToGlobalTraceMap(cnt+e));
-                        Vmath::Vcopy(npts, &Fwd[id2], 1, &Bwd[id2], 1);
-                    }
-                    
-                    cnt += e;
-                }
-                else if (m_bndConditions[n]->GetBoundaryConditionType() !=
-                             SpatialDomains::ePeriodic)
-                {
-                    ASSERTL0(false,
-                             "Method not set up for this boundary condition.");
-                }
-            }            
+              
         }
         
         
@@ -1993,6 +1949,10 @@ namespace Nektar
             for (int n = 0; n < m_bndCondExpansions.num_elements(); ++n)
             {
                 m_bndCondExpansions[n]->Reset();
+                for(int i= 0; i< m_bndCondExpansionsDeriv[n].num_elements();i++)
+                {
+                    m_bndCondExpansionsDeriv[n][i]->Reset();
+                }
             }
         }
 

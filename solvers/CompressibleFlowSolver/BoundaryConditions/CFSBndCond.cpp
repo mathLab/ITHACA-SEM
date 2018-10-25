@@ -161,7 +161,6 @@ void CFSBndCond::v_ApplyDeriv(
                     UpdatePhys())[id1+i] = DervFwd[nd][nVariables-1][pnt];
 
             }
-            
         }
     }
 }

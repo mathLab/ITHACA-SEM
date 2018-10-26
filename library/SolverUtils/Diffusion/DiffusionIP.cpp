@@ -193,10 +193,31 @@ namespace Nektar
             Fwd   =   NullNekDouble1DArray;
             Bwd   =   NullNekDouble1DArray;
             Array< OneD, int > nonZeroIndex;
+
+            // for (int nd = 0; nd < nDim; ++nd)
+            // {
+            //     for (int j = 0; j < nConvectiveFields; ++j)
+            //     {
+            //         for (int i = 0; i < nTracePts; ++i)
+            //         {
+            //             cout<< "qfield["<<nd<<"]["<<j<<"]["<<i<<"]= "<<qfield[nd][j][i]<<endl;
+            //         }
+            //     }
+            // }
+
             // TODO: qfield AND elmtFlux share storage????
             m_FunctorDiffusionfluxCons(nConvectiveFields,nDim,inarray,qfield, elmtFlux,nonZeroIndex,tmparray2D,muvar);
             
-            
+            // for (int nd = 0; nd < nDim; ++nd)
+            // {
+            //     for (int j = 0; j < nConvectiveFields; ++j)
+            //     {
+            //         for (int i = 0; i < nTracePts; ++i)
+            //         {
+            //             cout<< "elmtFlux["<<nd<<"]["<<j<<"]["<<i<<"]= "<<elmtFlux[nd][j][i]<<endl;
+            //         }
+            //     }
+            // }
             Array<OneD, Array<OneD, NekDouble> > tmpFluxIprdct(nDim);
             // volume intergration: the nonZeroIndex indicates which flux is nonzero
             for(i = 0; i < nonZeroIndex.num_elements(); ++i)
@@ -254,6 +275,12 @@ namespace Nektar
                     }
                 }
             }
+
+            // for (i = 0; i < nConvectiveFields; ++i)
+            // {
+            //     Vmath::Neg(nTracePts,solution_jump[i],1);
+            // }
+
             Fwd   =   NullNekDouble1DArray;
             Bwd   =   NullNekDouble1DArray;
 
@@ -268,6 +295,17 @@ namespace Nektar
             {
                 Vmath::Vdiv(nTracePts,solution_jump[i],1, m_traceNormDirctnElmtLength,1,solution_jump[i],1);
             }
+
+            // for (int nd = 0; nd < nDim; ++nd)
+            // {
+                // for (int j = 0; j < nConvectiveFields; ++j)
+                // {
+                //     for (int i = 0; i < nTracePts; ++i)
+                //     {
+                //         cout<< "solution_jump["<<j<<"]["<<i<<"]= "<<solution_jump[j][i]<<endl;
+                //     }
+                // }
+            // }
 
             for (int nd = 0; nd < nDim; ++nd)
             {
@@ -285,12 +323,23 @@ namespace Nektar
             }
             // Calculate normal viscous flux
             m_FunctorDiffusionfluxCons(nConvectiveFields,nDim,solution_Aver,numDeriv,traceflux,nonZeroIndex,m_traceNormals,MuVarTrace);
+
+            //  for (int j = 0; j < nConvectiveFields; ++j)
+            // {
+            //     for (int i = 0; i < nTracePts; ++i)
+            //     {
+            //         cout<< "traceflux[0]["<<j<<"]["<<i<<"]= "<<traceflux[0][j][i]<<endl;
+            //     }
+            // }
+
             for(i = 0; i < nonZeroIndex.num_elements(); ++i)
             {
                 int j = nonZeroIndex[i];
                 fields[j]->AddTraceIntegral     (traceflux[0][j], outarray[j]);
                 fields[j]->MultiplyByElmtInvMass(outarray[j], outarray[j]);
             }
+
+            // int ndebug = 0;
         }
 
         void DiffusionIP::GetPenaltyFactor(

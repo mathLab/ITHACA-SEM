@@ -68,6 +68,7 @@ namespace Nektar
         NekDouble gasConstant;
         m_session->LoadParameter ("GasConstant",   gasConstant,   287.058);
         m_Cp      = m_gamma / (m_gamma - 1.0) * gasConstant;
+        m_Cv      = m_Cp   /  m_gamma;
 
         // Viscosity
         m_session->LoadSolverInfo("ViscosityType", m_ViscosityType, "Constant");
@@ -131,62 +132,91 @@ namespace Nektar
         int nTracePts  = GetTraceTotPoints();
 
         Array<OneD, Array<OneD, NekDouble> > outarrayDiff(nvariables);
-
-        Array<OneD, Array<OneD, NekDouble> > inarrayDiff(nvariables-1);
-        Array<OneD, Array<OneD, NekDouble> > inFwd(nvariables-1);
-        Array<OneD, Array<OneD, NekDouble> > inBwd(nvariables-1);
-
         for (i = 0; i < nvariables; ++i)
         {
             outarrayDiff[i] = Array<OneD, NekDouble>(npoints);
         }
 
-        for (i = 0; i < nvariables-1; ++i)
+
+        string diffName;
+        m_session->LoadSolverInfo("DiffusionType", diffName, "LDGNS");
+        if("LDGNS"==diffName)
         {
-            inarrayDiff[i] = Array<OneD, NekDouble>(npoints);
-            inFwd[i]       = Array<OneD, NekDouble>(nTracePts);
-            inBwd[i]       = Array<OneD, NekDouble>(nTracePts);
+            Array<OneD, Array<OneD, NekDouble> > inarrayDiff(nvariables-1);
+            Array<OneD, Array<OneD, NekDouble> > inFwd(nvariables-1);
+            Array<OneD, Array<OneD, NekDouble> > inBwd(nvariables-1);
+
+            for (i = 0; i < nvariables-1; ++i)
+            {
+                inarrayDiff[i] = Array<OneD, NekDouble>(npoints);
+                inFwd[i]       = Array<OneD, NekDouble>(nTracePts);
+                inBwd[i]       = Array<OneD, NekDouble>(nTracePts);
+            }
+
+            // Extract pressure
+            //    (use inarrayDiff[0] as a temporary storage for the pressure)
+            m_varConv->GetPressure(inarray, inarrayDiff[0]);
+
+            // Extract temperature
+            m_varConv->GetTemperature(inarray, inarrayDiff[nvariables-2]);
+
+            // Extract velocities
+            m_varConv->GetVelocityVector(inarray, inarrayDiff);
+
+            // Repeat calculation for trace space
+            if (pFwd == NullNekDoubleArrayofArray || 
+                pBwd == NullNekDoubleArrayofArray)
+            {
+                inFwd = NullNekDoubleArrayofArray;
+                inBwd = NullNekDoubleArrayofArray;
+            }
+            else
+            {
+                m_varConv->GetPressure(pFwd,    inFwd[0]);
+                m_varConv->GetPressure(pBwd,    inBwd[0]);
+
+                m_varConv->GetTemperature(pFwd, inFwd[nvariables-2]);
+                m_varConv->GetTemperature(pBwd, inBwd[nvariables-2]);
+
+                m_varConv->GetVelocityVector(pFwd, inFwd);
+                m_varConv->GetVelocityVector(pBwd, inBwd);
+            }
+
+            // Diffusion term in physical rhs form
+            m_diffusion->Diffuse(nvariables, m_fields, inarrayDiff, outarrayDiff,
+                                inFwd, inBwd);
+
+            for (i = 0; i < nvariables; ++i)
+            {
+                Vmath::Vadd(npoints,
+                            outarrayDiff[i], 1,
+                            outarray[i], 1,
+                            outarray[i], 1);
+            }
+            if (m_shockCaptureType != "Off")
+            {
+                m_artificialDiffusion->DoArtificialDiffusion(inarray, outarray);
+            }
         }
-
-        // Extract pressure
-        //    (use inarrayDiff[0] as a temporary storage for the pressure)
-        m_varConv->GetPressure(inarray, inarrayDiff[0]);
-
-        // Extract temperature
-        m_varConv->GetTemperature(inarray, inarrayDiff[nvariables-2]);
-
-        // Extract velocities
-        m_varConv->GetVelocityVector(inarray, inarrayDiff);
-
-        // Repeat calculation for trace space
-        if (pFwd == NullNekDoubleArrayofArray || 
-            pBwd == NullNekDoubleArrayofArray)
+        else if("InteriorPenalty"==diffName)
         {
-            inFwd = NullNekDoubleArrayofArray;
-            inBwd = NullNekDoubleArrayofArray;
+            if(m_BndEvaluateTime<0.0)
+            {
+                ASSERTL0(false, "m_BndEvaluateTime not setup");
+            }
+            m_diffusion->Diffuse_coeff(nvariables, m_fields, inarray, outarrayDiff,m_BndEvaluateTime,
+                                pFwd, pBwd);
+            for (i = 0; i < nvariables; ++i)
+            {
+                Vmath::Vadd(npoints,
+                            outarrayDiff[i], 1,
+                            outarray[i], 1,
+                            outarray[i], 1);
+            }
         }
         else
         {
-            m_varConv->GetPressure(pFwd,    inFwd[0]);
-            m_varConv->GetPressure(pBwd,    inBwd[0]);
-
-            m_varConv->GetTemperature(pFwd, inFwd[nvariables-2]);
-            m_varConv->GetTemperature(pBwd, inBwd[nvariables-2]);
-
-            m_varConv->GetVelocityVector(pFwd, inFwd);
-            m_varConv->GetVelocityVector(pBwd, inBwd);
-        }
-
-        // Diffusion term in physical rhs form
-        m_diffusion->Diffuse(nvariables, m_fields, inarrayDiff, outarrayDiff,
-                             inFwd, inBwd);
-
-        for (i = 0; i < nvariables; ++i)
-        {
-            Vmath::Vadd(npoints,
-                        outarrayDiff[i], 1,
-                        outarray[i], 1,
-                        outarray[i], 1);
+            ASSERTL0(false, "diffusion type not coded");
         }
     }
 
@@ -617,8 +647,27 @@ namespace Nektar
             }
             Vmath::Smul(nPts,oCv,&physderivatives[i][nScalars-1][0],1,&physderivatives[i][nScalars-1][0],1);
         }
+        
+        // for (int j = 0; j < nScalars; ++j)
+        // {
+        //     for (int i = 0; i < nPts; ++i)
+        //     {
+        //         cout<< "physfield["<<j<<"]["<<i<<"]= "<<physfield[j][i]<<endl;
+        //     }
+        // }
 
-         v_GetViscousFluxVector(physfield, physderivatives,outarray);
+        // for (int nd = 0; nd < nDim; ++nd)
+        // {
+        //     for (int j = 0; j < nScalars; ++j)
+        //     {
+        //         for (int i = 0; i < nPts; ++i)
+        //         {
+        //             cout<< "physderivatives["<<nd<<"]["<<j<<"]["<<i<<"]= "<<physderivatives[nd][j][i]<<endl;
+        //         }
+        //     }
+        // }
+
+        v_GetViscousFluxVector(physfield, physderivatives,outarray);
     }
 
     /**

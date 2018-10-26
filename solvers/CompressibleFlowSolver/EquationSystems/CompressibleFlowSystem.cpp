@@ -1771,11 +1771,6 @@ namespace Nektar
             const Array<OneD, Array<OneD, NekDouble> >   &pBwd)
     {
         v_DoDiffusion(inarray, outarray, pFwd, pBwd);
-
-        if (m_shockCaptureType != "Off")
-        {
-            m_artificialDiffusion->DoArtificialDiffusion(inarray, outarray);
-        }
     }
 
 

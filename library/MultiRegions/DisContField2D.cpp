@@ -1387,13 +1387,14 @@ namespace Nektar
          * The difference lies in the boundary treatment.
          */
         void DisContField2D::v_GetFwdBwdTracePhysDeriv(
+            const int                          Dir,
             const Array<OneD, const NekDouble> &field,
                   Array<OneD,       NekDouble> &Fwd,
                   Array<OneD,       NekDouble> &Bwd)
         {
             DisContField2D::v_GetFwdBwdTracePhysInterior(field, Fwd, Bwd);
             
-            DisContField2D::v_FillBwdWITHBoundDeriv(Fwd,Bwd);
+            DisContField2D::v_FillBwdWITHBoundDeriv(Dir,Fwd,Bwd);
 
             // Do parallel exchange for forwards/backwards spaces.
             m_traceMap->UniversalTraceAssemble(Fwd);
@@ -1559,6 +1560,7 @@ namespace Nektar
          * NOTE: periodic boundary is considered interior traces and is not treated here.
          */
         void DisContField2D::v_FillBwdWITHBoundDeriv(
+            const int                          Dir,
             const Array<OneD, const NekDouble> &Fwd,
                   Array<OneD,       NekDouble> &Bwd)
         {
@@ -1566,7 +1568,52 @@ namespace Nektar
 
             // Fill boundary conditions into missing elements
             int id1, id2 = 0;
-              
+            
+            for (cnt = n = 0; n < m_bndCondExpansions.num_elements(); ++n)
+            {
+                if (m_bndConditions[n]->GetBoundaryConditionType() == 
+                        SpatialDomains::eDirichlet)
+                {
+                    for (e = 0; e < m_bndCondExpansions[n]->GetExpSize(); ++e)
+                    {
+                        npts = m_bndCondExpansions[n]->GetExp(e)->GetNumPoints(0);
+                        id1 = m_bndCondExpansions[n]->GetPhys_Offset(e);
+                        id2 = m_trace->GetPhys_Offset(m_traceMap->
+                                        GetBndCondTraceToGlobalTraceMap(cnt+e));
+                        Vmath::Vcopy(npts,
+                            &(m_bndCondExpansionsDeriv[n][Dir]->GetPhys())[id1], 1,
+                            &Bwd[id2],                                 1);
+                        
+                    }
+                    
+                    cnt += e;
+                }
+                else if (m_bndConditions[n]->GetBoundaryConditionType() == 
+                             SpatialDomains::eNeumann || 
+                         m_bndConditions[n]->GetBoundaryConditionType() == 
+                             SpatialDomains::eRobin)
+                {
+                    for (e = 0; e < m_bndCondExpansions[n]->GetExpSize(); ++e)
+                    {
+                        npts = m_bndCondExpansions[n]->GetExp(e)->GetNumPoints(0);
+                        id1 = m_bndCondExpansions[n]->GetPhys_Offset(e);
+                        id2 = m_trace->GetPhys_Offset(m_traceMap->
+                                        GetBndCondTraceToGlobalTraceMap(cnt+e));
+                        Vmath::Vcopy(npts,
+                            &(m_bndCondExpansionsDeriv[n][Dir]->GetPhys())[id1], 1,
+                            &Bwd[id2],                                 1);
+                        
+                    }
+                    
+                    cnt += e;
+                }
+                else if (m_bndConditions[n]->GetBoundaryConditionType() !=
+                             SpatialDomains::ePeriodic)
+                {
+                    ASSERTL0(false,
+                             "Method not set up for this boundary condition.");
+                }
+            }       
         }
         
         

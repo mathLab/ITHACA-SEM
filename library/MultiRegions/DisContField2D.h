@@ -225,6 +225,7 @@ namespace Nektar
                       Array<OneD,       NekDouble> &Fwd,
                       Array<OneD,       NekDouble> &Bwd);
             virtual void v_GetFwdBwdTracePhysDeriv(
+                const int                          Dir,
                 const Array<OneD, const NekDouble> &field,
                       Array<OneD,       NekDouble> &Fwd,
                       Array<OneD,       NekDouble> &Bwd);
@@ -335,6 +336,7 @@ namespace Nektar
                 const Array<OneD, const NekDouble> &Fwd,
                       Array<OneD,       NekDouble> &Bwd);
             virtual void v_FillBwdWITHBoundDeriv(
+                const int                          Dir,
                 const Array<OneD, const NekDouble> &Fwd,
                       Array<OneD,       NekDouble> &Bwd);
             virtual void v_AddTraceIntegral2OffDiag(

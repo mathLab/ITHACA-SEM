@@ -803,6 +803,7 @@ namespace Nektar
                       Array<OneD,NekDouble> &Fwd,
                       Array<OneD,NekDouble> &Bwd);
             inline void GetFwdBwdTracePhysDeriv(
+                const int                          Dir,
                 const Array<OneD,const NekDouble> &field,
                       Array<OneD,NekDouble> &Fwd,
                       Array<OneD,NekDouble> &Bwd);
@@ -813,12 +814,13 @@ namespace Nektar
                       Array<OneD,NekDouble> &Bwd);
 
             inline void FillBwdWITHBound(
-                  const Array<OneD, const NekDouble> &Fwd,
-                        Array<OneD,       NekDouble> &Bwd);
+                const Array<OneD, const NekDouble> &Fwd,
+                      Array<OneD,       NekDouble> &Bwd);
             
             inline void FillBwdWITHBoundDeriv(
-                  const Array<OneD, const NekDouble> &Fwd,
-                        Array<OneD,       NekDouble> &Bwd);
+                const int                          Dir,
+                const Array<OneD, const NekDouble> &Fwd,
+                      Array<OneD,       NekDouble> &Bwd);
 
             inline const std::vector<bool> &GetLeftAdjacentFaces(void) const;
             
@@ -1299,6 +1301,7 @@ namespace Nektar
                       Array<OneD,NekDouble> &Bwd);
 
             virtual void v_GetFwdBwdTracePhysDeriv(
+                const int                          Dir,
                 const Array<OneD,const NekDouble>  &field,
                       Array<OneD,NekDouble> &Fwd,
                       Array<OneD,NekDouble> &Bwd);
@@ -1322,6 +1325,7 @@ namespace Nektar
                       Array<OneD,       NekDouble> &Bwd);
             
             virtual void v_FillBwdWITHBoundDeriv(
+                const int                          Dir,
                 const Array<OneD, const NekDouble> &Fwd,
                       Array<OneD,       NekDouble> &Bwd);
 
@@ -2417,11 +2421,12 @@ namespace Nektar
         }
 
         inline void ExpList::GetFwdBwdTracePhysDeriv(
+            const int                          Dir,
             const Array<OneD,const NekDouble>  &field,
                   Array<OneD,NekDouble> &Fwd,
                   Array<OneD,NekDouble> &Bwd)
         {
-            v_GetFwdBwdTracePhysDeriv(field,Fwd,Bwd);
+            v_GetFwdBwdTracePhysDeriv(Dir,field,Fwd,Bwd);
         }
 
         inline void ExpList::FillBwdWITHBound(
@@ -2432,10 +2437,11 @@ namespace Nektar
         }
 
         inline void ExpList::FillBwdWITHBoundDeriv(
+            const int                          Dir,
             const Array<OneD, const NekDouble> &Fwd,
                   Array<OneD,       NekDouble> &Bwd)
         {
-            v_FillBwdWITHBoundDeriv(Fwd,Bwd);
+            v_FillBwdWITHBoundDeriv(Dir,Fwd,Bwd);
         }
 
         inline const std::vector<bool> &ExpList::GetLeftAdjacentFaces(void) const

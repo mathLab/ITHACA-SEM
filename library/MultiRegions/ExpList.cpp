@@ -2664,6 +2664,7 @@ namespace Nektar
         }
 
         void ExpList::v_GetFwdBwdTracePhysDeriv(
+                                const int                          Dir,
                                 const Array<OneD,const NekDouble>  &field,
                                       Array<OneD,NekDouble> &Fwd,
                                       Array<OneD,NekDouble> &Bwd)
@@ -3237,6 +3238,7 @@ namespace Nektar
         }
 
         void ExpList::v_FillBwdWITHBoundDeriv(
+            const int                          Dir,
             const Array<OneD, const NekDouble> &Fwd,
                   Array<OneD,       NekDouble> &Bwd)
         {

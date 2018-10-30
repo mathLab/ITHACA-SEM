@@ -464,13 +464,6 @@ namespace Nektar
                 ++stepCounter;
             }
 
-//Debug
-int nelmtoutput = 119;
-int offset = m_fields[0]->GetPhys_Offset(nelmtoutput);
-int nwidthcolm = 25;
-cout    <<std::scientific<<std::setw(nwidthcolm)<<std::setprecision(nwidthcolm-8)  
-        << " m_fields at element 119=  "<< m_fields[0]->GetPhys()[offset]<<endl;
-
             // Print out summary statistics
             if (m_session->GetComm()->GetRank() == 0)
             {
@@ -718,10 +711,10 @@ cout    <<std::scientific<<std::setw(nwidthcolm)<<std::setprecision(nwidthcolm-8
 
                 NekDouble h = m_fields[0]->GetExp(i)->Integral(unit);
                 h = pow(h,(NekDouble) (1.0/nvel))/((NekDouble) nmodes);
-
-                Vmath::Smul(nq,h,varcoeff+offset,1,tmp = varcoeff+offset,1);
-            }
-
+Integration
+Integrationet,1,tmp = varcoeff+offset,1);
+Integration
+Integration
             // set up map with eVarCoffLaplacian key
             varCoeffMap[StdRegions::eVarCoeffLaplacian] = varcoeff;
         }

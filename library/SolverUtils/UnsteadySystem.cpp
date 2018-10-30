@@ -711,10 +711,10 @@ namespace Nektar
 
                 NekDouble h = m_fields[0]->GetExp(i)->Integral(unit);
                 h = pow(h,(NekDouble) (1.0/nvel))/((NekDouble) nmodes);
-Integration
-Integrationet,1,tmp = varcoeff+offset,1);
-Integration
-Integration
+
+                Vmath::Smul(nq,h,varcoeff+offset,1,tmp = varcoeff+offset,1);
+            }
+
             // set up map with eVarCoffLaplacian key
             varCoeffMap[StdRegions::eVarCoeffLaplacian] = varcoeff;
         }

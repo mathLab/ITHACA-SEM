@@ -463,6 +463,14 @@ namespace Nektar
                 ++step;
                 ++stepCounter;
             }
+
+//Debug
+int nelmtoutput = 119;
+int offset = m_fields[0]->GetPhys_Offset(nelmtoutput);
+int nwidthcolm = 25;
+cout    <<std::scientific<<std::setw(nwidthcolm)<<std::setprecision(nwidthcolm-8)  
+        << " m_fields at element 119=  "<< m_fields[0]->GetPhys()[offset]<<endl;
+
             // Print out summary statistics
             if (m_session->GetComm()->GetRank() == 0)
             {

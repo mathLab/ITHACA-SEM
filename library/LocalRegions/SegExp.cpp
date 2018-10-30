@@ -951,11 +951,10 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
                 {
                     vert += normal[i][0]*normal[i][0];
                 }
-                vert = sqrt(vert);
+                vert = 1.0/sqrt(vert);
 
                 Vmath::Fill(nqb,vert,length,1);
 
-                vert = 1.0/vert;
                 for (i = 0; i < vCoordDim; ++i)
                 {
                     Vmath::Smul(nqe, vert, normal[i], 1, normal[i], 1);

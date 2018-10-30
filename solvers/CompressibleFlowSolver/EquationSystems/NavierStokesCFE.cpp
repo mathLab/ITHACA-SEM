@@ -134,7 +134,7 @@ namespace Nektar
         Array<OneD, Array<OneD, NekDouble> > outarrayDiff(nvariables);
         for (i = 0; i < nvariables; ++i)
         {
-            outarrayDiff[i] = Array<OneD, NekDouble>(npoints);
+            outarrayDiff[i] = Array<OneD, NekDouble>(npoints,0.0);
         }
 
 
@@ -204,7 +204,7 @@ namespace Nektar
             {
                 ASSERTL0(false, "m_BndEvaluateTime not setup");
             }
-            m_diffusion->Diffuse_coeff(nvariables, m_fields, inarray, outarrayDiff,m_BndEvaluateTime,
+            m_diffusion->Diffuse(nvariables, m_fields, inarray, outarrayDiff,m_BndEvaluateTime,
                                 pFwd, pBwd);
             for (i = 0; i < nvariables; ++i)
             {
@@ -647,25 +647,6 @@ namespace Nektar
             }
             Vmath::Smul(nPts,oCv,&physderivatives[i][nScalars-1][0],1,&physderivatives[i][nScalars-1][0],1);
         }
-        
-        // for (int j = 0; j < nScalars; ++j)
-        // {
-        //     for (int i = 0; i < nPts; ++i)
-        //     {
-        //         cout<< "physfield["<<j<<"]["<<i<<"]= "<<physfield[j][i]<<endl;
-        //     }
-        // }
-
-        // for (int nd = 0; nd < nDim; ++nd)
-        // {
-        //     for (int j = 0; j < nScalars; ++j)
-        //     {
-        //         for (int i = 0; i < nPts; ++i)
-        //         {
-        //             cout<< "physderivatives["<<nd<<"]["<<j<<"]["<<i<<"]= "<<physderivatives[nd][j][i]<<endl;
-        //         }
-        //     }
-        // }
 
         v_GetViscousFluxVector(physfield, physderivatives,outarray);
     }

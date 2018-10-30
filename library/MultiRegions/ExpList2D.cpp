@@ -1189,7 +1189,6 @@ namespace Nektar
                         lengths[offset + j] += lengintp[j];
                     }
                 }
-                Vmath::Smul(e_npoints,0.5,&lengths[offset],1,&lengths[offset],1);
             }
         }
 

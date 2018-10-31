@@ -51,6 +51,13 @@ namespace Nektar
             }
             
             static std::string type;
+
+            void ConsVarAve(
+                const int                                           nConvectiveFields,
+                const int                                           npnts,
+                const Array<OneD, const Array<OneD, NekDouble> >    &vFwd,
+                const Array<OneD, const Array<OneD, NekDouble> >    &vBwd,
+                      Array<OneD,       Array<OneD, NekDouble> >    &ave); 
             
         protected:
             DiffusionIP();

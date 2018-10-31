@@ -339,6 +339,9 @@ namespace Nektar
                 const int                          Dir,
                 const Array<OneD, const NekDouble> &Fwd,
                       Array<OneD,       NekDouble> &Bwd);
+            virtual void v_PeriodicBwdCopy(
+                const Array<OneD, const NekDouble> &Fwd,
+                      Array<OneD,       NekDouble> &Bwd);
             virtual void v_AddTraceIntegral2OffDiag(
                 const Array<OneD, const NekDouble> &FwdFlux, 
                 const Array<OneD, const NekDouble> &BwdFlux, 

@@ -3245,6 +3245,13 @@ namespace Nektar
             ASSERTL0(false,"v_FillBwdWITHBoundDeriv not defined");
         }
 
+        void ExpList::v_PeriodicBwdCopy(
+                const Array<OneD, const NekDouble> &Fwd,
+                      Array<OneD,       NekDouble> &Bwd)
+        {
+            ASSERTL0(false,"v_PeriodicBwdCopy not defined");
+        }
+
         void ExpList::v_AddTraceIntegral2OffDiag(
                 const Array<OneD, const NekDouble> &FwdFlux, 
                 const Array<OneD, const NekDouble> &BwdFlux, 

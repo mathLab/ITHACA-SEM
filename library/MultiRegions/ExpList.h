@@ -822,6 +822,10 @@ namespace Nektar
                 const Array<OneD, const NekDouble> &Fwd,
                       Array<OneD,       NekDouble> &Bwd);
 
+            inline void PeriodicBwdCopy(
+                const Array<OneD, const NekDouble> &Fwd,
+                      Array<OneD,       NekDouble> &Bwd);
+
             inline const std::vector<bool> &GetLeftAdjacentFaces(void) const;
             
             inline void ExtractTracePhys(Array<OneD,NekDouble> &outarray);
@@ -1326,6 +1330,10 @@ namespace Nektar
             
             virtual void v_FillBwdWITHBoundDeriv(
                 const int                          Dir,
+                const Array<OneD, const NekDouble> &Fwd,
+                      Array<OneD,       NekDouble> &Bwd);
+
+            virtual void v_PeriodicBwdCopy(
                 const Array<OneD, const NekDouble> &Fwd,
                       Array<OneD,       NekDouble> &Bwd);
 
@@ -2442,6 +2450,13 @@ namespace Nektar
                   Array<OneD,       NekDouble> &Bwd)
         {
             v_FillBwdWITHBoundDeriv(Dir,Fwd,Bwd);
+        }
+
+        inline void ExpList::PeriodicBwdCopy(
+                const Array<OneD, const NekDouble> &Fwd,
+                      Array<OneD,       NekDouble> &Bwd)
+        {
+            v_PeriodicBwdCopy(Fwd,Bwd);
         }
 
         inline const std::vector<bool> &ExpList::GetLeftAdjacentFaces(void) const

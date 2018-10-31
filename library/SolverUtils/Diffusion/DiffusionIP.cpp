@@ -70,6 +70,11 @@ namespace Nektar
             pFields[0]->GetTrace()->GetNormals(m_traceNormals);
             m_traceNormDirctnElmtLength =   Array<OneD, NekDouble> (nTracePts,0.0);
             pFields[0]->GetTrace()->GetElmtNormalLength(m_traceNormDirctnElmtLength);
+
+            // TODO:: to check parallel case
+            Array<OneD, NekDouble> lengthstmp(nTracePts,0.0);
+            pFields[0]->PeriodicBwdCopy(m_traceNormDirctnElmtLength,lengthstmp);
+            Vmath::Vadd(nTracePts,lengthstmp,1,m_traceNormDirctnElmtLength,1,m_traceNormDirctnElmtLength,1);
         }
         
         void DiffusionIP::v_Diffuse(
@@ -109,9 +114,6 @@ namespace Nektar
             int nPts      = fields[0]->GetTotPoints();
             int nCoeffs   = fields[0]->GetNcoeffs();
             int nTracePts = fields[0]->GetTrace()->GetTotPoints();
-
-//Debug
-Vmath::Fill(nTracePts,0.625,m_traceNormDirctnElmtLength,1);
 
             Array<OneD, Array<OneD, NekDouble> > tmparray2D;
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > > tmparray3D;
@@ -199,20 +201,29 @@ Vmath::Fill(nTracePts,0.625,m_traceNormDirctnElmtLength,1);
                 {
                     fields[i]->PhysDeriv(qfield[nd1][i], qtmp[0], qtmp[1], qtmp[2]);
 
-                    for(int nd2=0; nd2<nDim; nd2++)
+                    // for(int nd2=0; nd2<nDim; nd2++)
+                    // {
+                    //     Vmath::Fill(nTracePts, 0.0, Bwd,1);
+                    //     fields[i]->GetFwdBwdTracePhysNoBndFill(elmt2ndDerv[nd2], Fwd, Bwd);
+                    //     Vmath::Vsub(nTracePts,Bwd,1,Fwd,1,Fwd,1);
+                    //     Vmath::Smul(nTracePts,PenaltyFactor2,Fwd,1,Fwd,1);
+                    //     Vmath::Vmul(nTracePts,m_traceNormDirctnElmtLength,1,Fwd,1,Fwd,1);
+                    //     // Vmath::Vvtvp(nTracePts,m_traceNormals[nd2],1,Fwd,1,numDeriv[nd1][i],1,numDeriv[nd1][i],1);
+                    //     Vmath::Vvtvp(nTracePts,m_traceNormals[nd1],1,Fwd,1,numDeriv[nd2][i],1,numDeriv[nd2][i],1);
+                    // }
+
+                    for(int nd2=nd1; nd2<nDim; nd2++)
                     {
                         Vmath::Fill(nTracePts, 0.0, Bwd,1);
                         fields[i]->GetFwdBwdTracePhysNoBndFill(elmt2ndDerv[nd2], Fwd, Bwd);
-                        // Vmath::Vsub(nTracePts,Fwd,1,Bwd,1,Fwd,1);
                         Vmath::Vsub(nTracePts,Bwd,1,Fwd,1,Fwd,1);
                         Vmath::Smul(nTracePts,PenaltyFactor2,Fwd,1,Fwd,1);
                         Vmath::Vmul(nTracePts,m_traceNormDirctnElmtLength,1,Fwd,1,Fwd,1);
                         Vmath::Vvtvp(nTracePts,m_traceNormals[nd2],1,Fwd,1,numDeriv[nd1][i],1,numDeriv[nd1][i],1);
-                        // Vmath::Vvtvp(nTracePts,m_traceNormals[nd1],1,Fwd,1,numDeriv[nd2][i],1,numDeriv[nd2][i],1);
-                        // if(nd2!=nd1)
-                        // {
-                        //     Vmath::Vvtvp(nTracePts,m_traceNormals[nd1],1,Fwd,1,numDeriv[nd2][i],1,numDeriv[nd2][i],1);
-                        // }
+                        if(nd2!=nd1)
+                        {
+                            Vmath::Vvtvp(nTracePts,m_traceNormals[nd1],1,Fwd,1,numDeriv[nd2][i],1,numDeriv[nd2][i],1);
+                        }
                     }
                 }
             }
@@ -286,49 +297,28 @@ Vmath::Fill(nTracePts,0.625,m_traceNormDirctnElmtLength,1);
                 }
             }
 
-            // NekDouble LinternalEngy =0.0;
-            // NekDouble RinternalEngy =0.0;
-            // NekDouble orho          = 0.0;
-            // for (i = 0; i < nConvectiveFields-1; ++i)
-            // {
-            //     for (int nt = 0; nt < nTracePts; ++nt)
-            //     {
-            //         solution_Aver[i][nt]   =   0.5*(vFwd[i][nt] + vBwd[i][nt]);  
-            //     }
-            // }
-            // i = nConvectiveFields-1;
-            // for (int nt = 0; nt < nTracePts; ++nt)
-            // {
-            //     LinternalEngy = vFwd[i][nt];
-            //     orho          = 0.5/vFwd[0][nt];
-            //     for(int j=1;j<nConvectiveFields-1;j++)
-            //     {
-            //         LinternalEngy -= vFwd[j][nt]*vFwd[j][nt]*orho;
-            //     }
 
-            //     RinternalEngy = vBwd[i][nt];
-            //     orho          = 0.5/vBwd[0][nt];
-            //     for(int j=1;j<nConvectiveFields-1;j++)
-            //     {
-            //         RinternalEngy -= vBwd[j][nt]*vBwd[j][nt]*orho;
-            //     }
-                
-            //     solution_Aver[i][nt]   =   0.5*(LinternalEngy + RinternalEngy);  
-            //     orho          = 0.5/solution_Aver[0][nt];
-            //     for(int j=1;j<nConvectiveFields-1;j++)
-            //     {
-            //         solution_Aver[i][nt] += solution_Aver[j][nt]*solution_Aver[j][nt]*orho;
-            //     }
-            // }
+            ConsVarAve(nConvectiveFields,nTracePts,vFwd,vBwd,solution_Aver);
+            // note: here the jump is ave-Fwd because solution_Aver is the target value near wall
+            // but Bwd is the target near farfield boundary (not very accurate here)
+            // inconsistent in Bwd boundary meaning
             for (i = 0; i < nConvectiveFields; ++i)
             {
-                for (int nt = 0; nt < nTracePts; ++nt)
-                {
-                    // solution_jump[i][nt]   =   vFwd[i][nt] - vBwd[i][nt];  
-                    solution_jump[i][nt]   =   vBwd[i][nt] - vFwd[i][nt];  
-                    solution_Aver[i][nt]   =   0.5*(vBwd[i][nt] + vFwd[i][nt]);  
-                }
+                Vmath::Vsub(nTracePts,solution_Aver[i],1,vFwd[i],1,solution_jump[i],1);
             }
+
+// //debug
+// for (int i = 0; i < nConvectiveFields; ++i)
+// {
+//     for (int j = 0; j < nTracePts; ++j)
+//     {
+//         cout <<"    vFwd            ["<<i<<"]["<<j<<"]= "<<vFwd[i][j];
+//         cout <<"    vBwd            ["<<i<<"]["<<j<<"]= "<<vBwd[i][j];
+//         cout <<"    solution_Aver   ["<<i<<"]["<<j<<"]= "<<solution_Aver[i][j];
+//         cout <<"    solution_jump   ["<<i<<"]["<<j<<"]= "<<solution_jump[i][j];
+//         cout <<endl;
+//     }
+// }
 
             Array<OneD, NekDouble>  jumpTmp         =   Fwd;
             Array<OneD, NekDouble>  PenaltyFactor   =   Bwd;
@@ -413,6 +403,56 @@ Vmath::Fill(nTracePts,0.625,m_traceNormDirctnElmtLength,1);
 //debug
 factor[noffset+np]    =   2.0;
                 }
+            }
+        }
+
+
+        void DiffusionIP::ConsVarAve(
+            const int                                           nConvectiveFields,
+            const int                                           npnts,
+            const Array<OneD, const Array<OneD, NekDouble> >    &vFwd,
+            const Array<OneD, const Array<OneD, NekDouble> >    &vBwd,
+                  Array<OneD,       Array<OneD, NekDouble> >    &ave) 
+        {
+            NekDouble LinternalEngy =0.0;
+            NekDouble RinternalEngy =0.0;
+            NekDouble AinternalEngy =0.0;
+            for (int i = 0; i < nConvectiveFields-1; ++i)
+            {
+                for (int nt = 0; nt < npnts; ++nt)
+                {
+                    ave[i][nt]   =   0.5*(vFwd[i][nt] + vBwd[i][nt]);  
+                }
+            }
+            
+            int nengy = nConvectiveFields-1;
+            int nvelst    = 1;
+            int nveled    = nengy;
+            for (int nt = 0; nt < npnts; ++nt)
+            {
+                LinternalEngy =0.0;
+                for(int j=nvelst;j<nveled;j++)
+                {
+                    LinternalEngy += vFwd[j][nt]*vFwd[j][nt];
+                }
+                LinternalEngy *= -0.5/vFwd[0][nt];
+                LinternalEngy += vFwd[nengy][nt];
+
+                RinternalEngy =0.0;
+                for(int j=nvelst;j<nveled;j++)
+                {
+                    RinternalEngy += vBwd[j][nt]*vBwd[j][nt];
+                }
+                RinternalEngy *= -0.5/vBwd[0][nt];
+                RinternalEngy += vBwd[nengy][nt];
+
+                AinternalEngy =0.0;
+                ave[nengy][nt] = 0.5*(LinternalEngy + RinternalEngy);
+                for(int j=nvelst;j<nveled;j++)
+                {
+                    AinternalEngy += ave[j][nt]*ave[j][nt];
+                }
+                ave[nengy][nt] += AinternalEngy*(0.5/ave[0][nt]);
             }
         }
     }

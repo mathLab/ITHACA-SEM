@@ -1487,8 +1487,16 @@ namespace Nektar
                     }
                 }
             }
-            // Copy any periodic boundary conditions.
-            for (n = 0; n < m_periodicFwdCopy.size(); ++n)
+            DisContField2D::v_PeriodicBwdCopy(Fwd,Bwd);
+        }
+
+
+        // Copy any periodic boundary conditions.
+        void DisContField2D::v_PeriodicBwdCopy(
+                const Array<OneD, const NekDouble> &Fwd,
+                      Array<OneD,       NekDouble> &Bwd)
+        {
+            for (int n = 0; n < m_periodicFwdCopy.size(); ++n)
             {
                 Bwd[m_periodicBwdCopy[n]] = Fwd[m_periodicFwdCopy[n]];
             }

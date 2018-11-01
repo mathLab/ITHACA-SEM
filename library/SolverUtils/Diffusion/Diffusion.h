@@ -107,6 +107,15 @@ namespace Nektar
             const Array<OneD, Array<OneD, NekDouble> >                      &,           
             const Array<OneD, NekDouble>                                    &)> DiffusionFluxCons;
 
+        /**
+         * Parameter list meaning:
+         *  1st: nvariables
+         *  2rd: trace conservative variables
+         */
+        typedef std::function<void (
+            const int                                                       ,
+                  Array<OneD,       Array<OneD, NekDouble> >                &)> SpecialBndTreat;
+
         class Diffusion
         {
         public:
@@ -210,6 +219,13 @@ namespace Nektar
                                std::placeholders::_5);
             }
 
+            template<typename FuncPointerT, typename ObjectPointerT>
+            void SetSpecialBndTreat(FuncPointerT func, ObjectPointerT obj)
+            {
+                m_SpecialBndTreat = std::bind(
+                    func, obj, std::placeholders::_1, std::placeholders::_2);
+            }
+
             void SetFunctorDerivBndCond(FunctorDerivBndCond DerivBndCond)
             {
                 m_FunctorDerivBndCond = DerivBndCond;
@@ -231,6 +247,7 @@ namespace Nektar
             DiffusionArtificialDiffusion    m_ArtificialDiffusionVector;
             DiffusionFluxCons               m_FunctorDiffusionfluxCons;
             FunctorDerivBndCond             m_FunctorDerivBndCond;
+            SpecialBndTreat                 m_SpecialBndTreat;
 
             NekDouble                       m_time=0.0;
 

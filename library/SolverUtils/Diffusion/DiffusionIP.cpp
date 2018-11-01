@@ -55,7 +55,7 @@ namespace Nektar
             m_session = pSession;
 
             m_session->LoadSolverInfo("ShockCaptureType",
-                                  m_shockCaptureType,    "Off");		
+                                  m_shockCaptureType,    "Off");	
 
             // Setting up the normals
             int i;
@@ -109,7 +109,7 @@ namespace Nektar
         {
             const NekDouble PenaltyFactor2 = 1.0/12.0;
 
-            int nBndEdgePts, i, j, k, e;
+            int i, j;
             int nDim      = fields[0]->GetCoordim(0);
             int nPts      = fields[0]->GetTotPoints();
             int nCoeffs   = fields[0]->GetNcoeffs();
@@ -297,29 +297,19 @@ namespace Nektar
                 }
             }
 
-
+            // TODO:    Direchlet boundary are not that accurate using this solution_Aver
             ConsVarAve(nConvectiveFields,nTracePts,vFwd,vBwd,solution_Aver);
-            // note: here the jump is ave-Fwd because solution_Aver is the target value near wall
-            // but Bwd is the target near farfield boundary (not very accurate here)
-            // inconsistent in Bwd boundary meaning
-            for (i = 0; i < nConvectiveFields; ++i)
+
+            m_SpecialBndTreat(nConvectiveFields,solution_Aver);
+
+            // note: here the jump is 2.0*(aver-vFwd) 
+            //       because Viscous wall use a symmetry boundary not the target one   
+            for (int i = 0; i < nConvectiveFields; ++i)
             {
                 Vmath::Vsub(nTracePts,solution_Aver[i],1,vFwd[i],1,solution_jump[i],1);
+                Vmath::Smul(nTracePts,2.0,solution_jump[i],1,solution_jump[i],1);
             }
-
-// //debug
-// for (int i = 0; i < nConvectiveFields; ++i)
-// {
-//     for (int j = 0; j < nTracePts; ++j)
-//     {
-//         cout <<"    vFwd            ["<<i<<"]["<<j<<"]= "<<vFwd[i][j];
-//         cout <<"    vBwd            ["<<i<<"]["<<j<<"]= "<<vBwd[i][j];
-//         cout <<"    solution_Aver   ["<<i<<"]["<<j<<"]= "<<solution_Aver[i][j];
-//         cout <<"    solution_jump   ["<<i<<"]["<<j<<"]= "<<solution_jump[i][j];
-//         cout <<endl;
-//     }
-// }
-
+            
             Array<OneD, NekDouble>  jumpTmp         =   Fwd;
             Array<OneD, NekDouble>  PenaltyFactor   =   Bwd;
             Fwd     =   NullNekDouble1DArray;
@@ -327,7 +317,6 @@ namespace Nektar
             GetPenaltyFactor(fields,PenaltyFactor);
             for (i = 0; i < nConvectiveFields; ++i)
             {
-// Vmath::Smul(nTracePts,PenaltyFactor2,solution_jump[i],1,jumpTmp,1);
                 Vmath::Vmul(nTracePts,solution_jump[i],1, PenaltyFactor,1,jumpTmp,1);
                 Vmath::Vdiv(nTracePts,jumpTmp,1, m_traceNormDirctnElmtLength,1,jumpTmp,1);
                 for (int nd = 0; nd < nDim; ++nd)
@@ -358,7 +347,7 @@ namespace Nektar
 
         void DiffusionIP::GetPenaltyFactor(
             const Array<OneD, MultiRegions::ExpListSharedPtr>   &fields,
-            Array<OneD, NekDouble >                             factor) 
+                  Array<OneD, NekDouble >                       factor)
         {
             MultiRegions::ExpListSharedPtr tracelist = fields[0]->GetTrace();
             std::shared_ptr<LocalRegions::ExpansionVector> traceExp= tracelist->GetExp();
@@ -373,7 +362,6 @@ namespace Nektar
 
 
             std::shared_ptr<LocalRegions::ExpansionVector> fieldExp= fields[0]->GetExp();
-            int ntotElmt            = (*fieldExp).size();
 
             Array<OneD, NekDouble > factorFwdBwd(2,0.0);
 
@@ -412,7 +400,7 @@ factor[noffset+np]    =   2.0;
             const int                                           npnts,
             const Array<OneD, const Array<OneD, NekDouble> >    &vFwd,
             const Array<OneD, const Array<OneD, NekDouble> >    &vBwd,
-                  Array<OneD,       Array<OneD, NekDouble> >    &ave) 
+                  Array<OneD,       Array<OneD, NekDouble> >    &aver)
         {
             NekDouble LinternalEngy =0.0;
             NekDouble RinternalEngy =0.0;
@@ -421,7 +409,7 @@ factor[noffset+np]    =   2.0;
             {
                 for (int nt = 0; nt < npnts; ++nt)
                 {
-                    ave[i][nt]   =   0.5*(vFwd[i][nt] + vBwd[i][nt]);  
+                    aver[i][nt]   =   0.5*(vFwd[i][nt] + vBwd[i][nt]);  
                 }
             }
             
@@ -447,12 +435,12 @@ factor[noffset+np]    =   2.0;
                 RinternalEngy += vBwd[nengy][nt];
 
                 AinternalEngy =0.0;
-                ave[nengy][nt] = 0.5*(LinternalEngy + RinternalEngy);
+                aver[nengy][nt] = 0.5*(LinternalEngy + RinternalEngy);
                 for(int j=nvelst;j<nveled;j++)
                 {
-                    AinternalEngy += ave[j][nt]*ave[j][nt];
+                    AinternalEngy += aver[j][nt]*aver[j][nt];
                 }
-                ave[nengy][nt] += AinternalEngy*(0.5/ave[0][nt]);
+                aver[nengy][nt] += AinternalEngy*(0.5/aver[0][nt]);
             }
         }
     }

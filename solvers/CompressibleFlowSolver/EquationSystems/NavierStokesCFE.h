@@ -37,6 +37,7 @@
 #define NEKTAR_SOLVERS_COMPRESSIBLEFLOWSOLVER_EQUATIONSYSTEMS_NAVIERSTOKESCFE_H
 
 #include <CompressibleFlowSolver/EquationSystems/CompressibleFlowSystem.h>
+#include <CompressibleFlowSolver/Misc/EquationOfState.h>
 
 namespace Nektar
 {
@@ -72,6 +73,10 @@ namespace Nektar
     NekDouble                           m_Cv;
     NekDouble                           m_Prandtl;
 
+    NekDouble                            m_Twall;
+    /// Equation of system for computing temperature
+    EquationOfStateSharedPtr             m_eos;
+
     void GetViscousFluxVectorConservVar(
         const int                                                       nConvectiveFields,
         const int                                                       nDim,
@@ -86,6 +91,10 @@ namespace Nektar
         const Array<OneD, Array<OneD, NekDouble> >                      &inarray,
         const Array<OneD, Array<OneD, Array<OneD, NekDouble> > >        &qfields,
               Array<OneD, Array<OneD, Array<OneD, NekDouble> > >        &outarray);
+    
+    void SpecialBndTreat(
+        const int                                           nConvectiveFields,
+              Array<OneD,       Array<OneD, NekDouble> >    &consvar);
     
     NavierStokesCFE(const LibUtilities::SessionReaderSharedPtr& pSession,
                     const SpatialDomains::MeshGraphSharedPtr& pGraph);

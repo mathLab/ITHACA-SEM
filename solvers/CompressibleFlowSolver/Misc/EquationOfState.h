@@ -101,6 +101,9 @@ public:
     /// Obtain the density from P and T
     NekDouble GetRhoFromPT(const NekDouble &p, const NekDouble &T);
 
+     /// Calculate the enthalpy
+    NekDouble GetInternalEnergy(const NekDouble &T);
+
 protected:
     NekDouble m_gamma;
     NekDouble m_gasConstant;
@@ -133,6 +136,8 @@ protected:
                                      const NekDouble &p) = 0;
                                      
     virtual NekDouble v_GetEnthalpy(const NekDouble &T);
+
+    virtual NekDouble v_GetInternalEnergy(const NekDouble &T);
 };
 }
 

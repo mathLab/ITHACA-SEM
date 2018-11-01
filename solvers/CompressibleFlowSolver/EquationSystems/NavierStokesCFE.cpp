@@ -70,6 +70,15 @@ namespace Nektar
         m_Cp      = m_gamma / (m_gamma - 1.0) * gasConstant;
         m_Cv      = m_Cp   /  m_gamma;
 
+        m_session->LoadParameter ("Twall", m_Twall, 300.15);
+
+        // Create equation of state object
+        std::string eosType;
+        m_session->LoadSolverInfo("EquationOfState",
+                                  eosType, "IdealGas");
+        m_eos = GetEquationOfStateFactory()
+                                .CreateInstance(eosType, m_session);
+
         // Viscosity
         m_session->LoadSolverInfo("ViscosityType", m_ViscosityType, "Constant");
         m_session->LoadParameter ("mu",            m_mu,            1.78e-05);
@@ -105,6 +114,9 @@ namespace Nektar
                 &NavierStokesCFE::GetViscousFluxVectorConservVar, this);
             m_diffusion->SetFunctorDerivBndCond(
                 &NavierStokesCFE::SetBoundaryConditionsDeriv, this);
+            
+            m_diffusion->SetSpecialBndTreat(
+                &NavierStokesCFE::SpecialBndTreat, this);
         }
         else
         {
@@ -114,6 +126,9 @@ namespace Nektar
                 &NavierStokesCFE::GetViscousFluxVectorConservVar, this);
             m_diffusion->SetFunctorDerivBndCond(
                 &NavierStokesCFE::SetBoundaryConditionsDeriv, this);
+
+            m_diffusion->SetSpecialBndTreat(
+                &NavierStokesCFE::SpecialBndTreat, this);
         }
 
         // Concluding initialisation of diffusion operator
@@ -737,6 +752,86 @@ namespace Nektar
         for(int i=1;i<n_nonZero+1; i++)
         {
             nonZeroIndex[n_nonZero-i] =   nConvectiveFields-i;
+        }
+    }
+
+
+        /**
+     * @brief For very special treatment. For general boundaries it should do nothing
+     * TODO: check WallViscous Boundary and Twall setting and remove the special treatment here
+     *
+     */
+    void NavierStokesCFE::SpecialBndTreat(
+        const int                                           nConvectiveFields,
+              Array<OneD,       Array<OneD, NekDouble> >    &consvar)
+    {            
+        int ndens       = 0;
+        int nengy       = nConvectiveFields-1;
+        int nvelst      = ndens + 1;
+        int nveled      = nengy;
+        
+        int cnt;
+        int j, e;
+        int id2;
+
+        int nBndEdgePts, nBndEdges, nBndRegions;
+
+        NekDouble InternalEnergy  =   m_eos->GetInternalEnergy(m_Twall);
+        
+        Array<OneD, NekDouble> wallTotEngy;
+        int nLengthArray    =0;
+
+        // Compute boundary conditions  for Energy
+        cnt = 0;
+        nBndRegions = m_fields[nengy]->
+        GetBndCondExpansions().num_elements();
+        for (j = 0; j < nBndRegions; ++j)
+        {
+            if (m_fields[nengy]->GetBndConditions()[j]->
+                GetBoundaryConditionType() ==
+                SpatialDomains::ePeriodic)
+            {
+                continue;
+            }
+
+            nBndEdges = m_fields[nengy]->
+            GetBndCondExpansions()[j]->GetExpSize();
+            for (e = 0; e < nBndEdges; ++e)
+            {
+                nBndEdgePts = m_fields[nengy]->
+                GetBndCondExpansions()[j]->GetExp(e)->GetTotPoints();
+
+                id2 = m_fields[0]->GetTrace()->
+                GetPhys_Offset(m_fields[0]->GetTraceMap()->
+                            GetBndCondTraceToGlobalTraceMap(cnt++));
+
+                // Imposing Temperature Twall at the wall 
+                if (boost::iequals(m_fields[nengy]->GetBndConditions()[j]->
+                    GetUserDefined(),"WallViscous"))
+                {
+                    if(nBndEdgePts>nLengthArray)
+                    {
+                        wallTotEngy     =   Array<OneD, NekDouble> (nBndEdgePts,0.0);
+                        nLengthArray    =   nBndEdgePts;
+                    }
+                    else
+                    {
+                        Vmath::Fill(nLengthArray,0.0,wallTotEngy,1);
+                    }
+
+                    for(int k=nvelst;k<nveled;k++)
+                    {
+                        Vmath::Vvtvp(nBndEdgePts,&consvar[k][id2],1,&consvar[k][id2],1,&wallTotEngy[0],1,&wallTotEngy[0],1);
+                    }
+                    Vmath::Vdiv(nBndEdgePts,&wallTotEngy[0],1,&consvar[ndens][id2],1,&wallTotEngy[0],1);
+                    Vmath::Svtvp(nBndEdgePts,InternalEnergy,&consvar[ndens][id2],1,&wallTotEngy[0],1,&wallTotEngy[0],1);
+                    
+
+                    Vmath::Vcopy(nBndEdgePts, 
+                                &wallTotEngy[0], 1, 
+                                &consvar[nengy][id2], 1);
+                }                    
+            }
         }
     }
 

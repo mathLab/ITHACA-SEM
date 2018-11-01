@@ -261,7 +261,7 @@ namespace Nektar
                 m_fields[i]->GetFwdBwdTracePhys(inarray[i], Fwd[i], Bwd[i]);
             }
         }
-        
+
         // Calculate advection
         DoAdvection(inarray, outarray, time, Fwd, Bwd);
 

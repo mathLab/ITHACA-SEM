@@ -57,7 +57,7 @@ namespace Nektar
                 const int                                           npnts,
                 const Array<OneD, const Array<OneD, NekDouble> >    &vFwd,
                 const Array<OneD, const Array<OneD, NekDouble> >    &vBwd,
-                      Array<OneD,       Array<OneD, NekDouble> >    &ave); 
+                      Array<OneD,       Array<OneD, NekDouble> >    &aver); 
             
         protected:
             DiffusionIP();

@@ -608,7 +608,9 @@ namespace Nektar
                                GetBndCondTraceToGlobalTraceMap(cnt++));
 
                 // Imposing Temperature Twall at the wall 
-                if (boost::iequals(fields[i]->GetBndConditions()[j]->
+                // The original code is "fields[i]->", in which i depends on results of previous loop
+                // never do that!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                if (boost::iequals(fields[nScalars]->GetBndConditions()[j]->
                     GetUserDefined(),"WallViscous"))
                 {                        
                     Vmath::Vcopy(nBndEdgePts, 

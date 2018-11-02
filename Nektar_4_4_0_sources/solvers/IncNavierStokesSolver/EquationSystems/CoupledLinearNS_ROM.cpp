@@ -337,6 +337,90 @@ namespace Nektar
 	}
 	else std::cout << "Unable to open file";
 
+	std::stringstream sstm_IP_d0;
+	sstm_IP_d0 << "IP_d0.txt";
+	std::string result_IP_d0 = sstm_IP_d0.str();
+//        std::ofstream myfile_IP (result_IP);
+        std::ofstream myfile_IP_d0 ("IP_d0.txt");
+	if (myfile_IP_d0.is_open())
+	{
+		for(int n = 0; n < nel; ++n)
+		{
+			int eid = n;
+	                StdRegions::StdExpansionSharedPtr locExp = m_fields[m_velocity[0]]->GetExp(eid);
+	                int ncoeffs = m_fields[m_velocity[0]]->GetExp(eid)->GetNcoeffs();
+	                int nphys   = m_fields[m_velocity[0]]->GetExp(eid)->GetTotPoints();
+		        int pqsize  = m_pressure->GetExp(eid)->GetTotPoints();
+                        Array<OneD, NekDouble> deriv  (pqsize);
+        		Array<OneD, NekDouble> coeffs(ncoeffs);
+		        Array<OneD, NekDouble> phys  (nphys);
+
+			for(int counter_phys = 0; counter_phys < nphys; ++counter_phys)
+			{
+
+				Vmath::Zero(nphys,phys,1);
+		                phys[ counter_phys ] = 1.0;
+		                locExp->IProductWRTDerivBase(0, phys,coeffs);
+	
+				for(int counter_ncoeffs = 0; counter_ncoeffs < ncoeffs; ++counter_ncoeffs)         
+				{
+					myfile_IP_d0 << std::setprecision(17) << coeffs[counter_ncoeffs] << " ";
+				}
+				myfile_IP_d0 << endl;
+	
+			}
+			myfile_IP_d0 << endl;
+
+
+        
+		}
+	        myfile_IP_d0.close();
+	}
+	else std::cout << "Unable to open file";
+
+
+	std::stringstream sstm_IP_d1;
+	sstm_IP_d1 << "IP_d1.txt";
+	std::string result_IP_d1 = sstm_IP_d1.str();
+//        std::ofstream myfile_IP (result_IP);
+        std::ofstream myfile_IP_d1 ("IP_d1.txt");
+	if (myfile_IP_d1.is_open())
+	{
+		for(int n = 0; n < nel; ++n)
+		{
+			int eid = n;
+	                StdRegions::StdExpansionSharedPtr locExp = m_fields[m_velocity[0]]->GetExp(eid);
+	                int ncoeffs = m_fields[m_velocity[0]]->GetExp(eid)->GetNcoeffs();
+	                int nphys   = m_fields[m_velocity[0]]->GetExp(eid)->GetTotPoints();
+		        int pqsize  = m_pressure->GetExp(eid)->GetTotPoints();
+                        Array<OneD, NekDouble> deriv  (pqsize);
+        		Array<OneD, NekDouble> coeffs(ncoeffs);
+		        Array<OneD, NekDouble> phys  (nphys);
+
+			for(int counter_phys = 0; counter_phys < nphys; ++counter_phys)
+			{
+
+				Vmath::Zero(nphys,phys,1);
+		                phys[ counter_phys ] = 1.0;
+		                locExp->IProductWRTDerivBase(1, phys,coeffs);
+	
+				for(int counter_ncoeffs = 0; counter_ncoeffs < ncoeffs; ++counter_ncoeffs)         
+				{
+					myfile_IP_d1 << std::setprecision(17) << coeffs[counter_ncoeffs] << " ";
+				}
+				myfile_IP_d1 << endl;
+	
+			}
+			myfile_IP_d1 << endl;
+
+
+        
+		}
+	        myfile_IP_d1.close();
+	}
+	else std::cout << "Unable to open file";
+
+
 	//  m_pressure->GetExp(eid)->IProductWRTBase(deriv,pcoeffs);
 
 	std::stringstream sstm_IPp;
@@ -562,6 +646,11 @@ namespace Nektar
             nsize_int  [n] = (nvel*m_fields[m_velocity[0]]->GetExp(eid)->GetNcoeffs()*nz_loc - nsize_bndry[n]);
             nsize_p[n] = m_pressure->GetExp(eid)->GetNcoeffs()*nz_loc;
             nsize_p_m1[n] = nsize_p[n]-nz_loc;
+      /*      std::cout << "nsize_bndry[n] " << nsize_bndry[n] << std::endl;
+            std::cout << "nsize_bndry_p1[n] " << nsize_bndry_p1[n] << std::endl;
+            std::cout << "nsize_int[n] " << nsize_int[n] << std::endl;
+            std::cout << "nsize_p[n] " << nsize_p[n] << std::endl;
+            std::cout << "nsize_p_m1[n] " << nsize_p_m1[n] << std::endl; */
         }
         
         MatrixStorage blkmatStorage = eDIAGONAL;
@@ -596,6 +685,10 @@ namespace Nektar
             eid = m_fields[m_velocity[0]]->GetOffset_Elmt_Id(n);
             nbndry = nsize_bndry[n];
             nint   = nsize_int[n];
+              
+	 //       cout << "nint: " << nint << endl;
+	 //       cout << "nbndry: " << nbndry << endl;
+
             k = nsize_bndry_p1[n];
             DNekMatSharedPtr Ah = MemoryManager<DNekMat>::AllocateSharedPtr(k,k,zero);
             Array<OneD, NekDouble> Ah_data = Ah->GetPtr();
@@ -615,16 +708,31 @@ namespace Nektar
             locExp->GetInteriorMap(imap);
             StdRegions::ConstFactorMap factors;
             factors[StdRegions::eFactorLambda] = lambda/m_kinvis;
+/*            LocalRegions::MatrixKey helmkey(StdRegions::eHelmholtz,
+                                            locExp->DetShapeType(),
+                                            *locExp,
+                                            factors);
+*/
+
             LocalRegions::MatrixKey helmkey(StdRegions::eHelmholtz,
                                             locExp->DetShapeType(),
                                             *locExp,
                                             factors);
-            
+
+
+/*            LocalRegions::MatrixKey helmkey(StdRegions::eLaplacian,
+                                            locExp->DetShapeType(),
+                                            *locExp,
+                                            factors);
+
+  */          
             
             int ncoeffs = m_fields[m_velocity[0]]->GetExp(eid)->GetNcoeffs();
             int nphys   = m_fields[m_velocity[0]]->GetExp(eid)->GetTotPoints();
             int nbmap = bmap.num_elements();
             int nimap = imap.num_elements(); 
+
+	 //   std::cout << "nimap " << nimap  << std::endl;
             
             Array<OneD, NekDouble> coeffs(ncoeffs);
             Array<OneD, NekDouble> phys  (nphys);
@@ -790,11 +898,200 @@ namespace Nektar
                 // the same time resusing differential of velocity
                 // space
                 
-                DNekScalMat &HelmMat = *(locExp->as<LocalRegions::Expansion>()
+	        LocalRegions::MatrixKey helmkey_l00(StdRegions::eLaplacian00,
+                                            locExp->DetShapeType(),
+                                            *locExp,
+                                            factors);
+
+
+		DNekScalMat &HelmMat = *(locExp->as<LocalRegions::Expansion>()
+                                               ->GetLocMatrix(helmkey_l00));
+
+                Array<OneD, const NekDouble> HelmMat_data = HelmMat.GetOwnedMatrix()->GetPtr();
+              
+
+		std::stringstream sstm_l00;
+		sstm_l00 << "Lapl00_" << n << ".txt";
+		std::string result_l00 = sstm_l00.str();
+		const char* rr_l00 = result_l00.c_str();
+
+        	  std::ofstream myfileHM_l00 (rr_l00);
+		  if (myfileHM_l00.is_open())
+		  {
+		    for (int i = 0; i < HelmMat_data.num_elements(); i++)
+		    {
+
+			    {
+				myfileHM_l00 << std::setprecision(17) << HelmMat_data[i] << " ";
+			    }
+
+		    }
+        	        myfileHM_l00.close();
+		  }
+		  else std::cout << "Unable to open file";
+
+
+
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+	        LocalRegions::MatrixKey helmkey_l11(StdRegions::eLaplacian11,
+                                            locExp->DetShapeType(),
+                                            *locExp,
+                                            factors);
+
+
+		HelmMat = *(locExp->as<LocalRegions::Expansion>()
+                                               ->GetLocMatrix(helmkey_l11));
+
+              
+                HelmMat_data = HelmMat.GetOwnedMatrix()->GetPtr();
+                
+
+		std::stringstream sstm_l11;
+		sstm_l11 << "Lapl11_" << n << ".txt";
+		std::string result_l11 = sstm_l11.str();
+		const char* rr_l11 = result_l11.c_str();
+
+        	  std::ofstream myfileHM_l11 (rr_l11);
+		  if (myfileHM_l11.is_open())
+		  {
+		    for (int i = 0; i < HelmMat_data.num_elements(); i++)
+		    {
+
+			    {
+				myfileHM_l11 << std::setprecision(17) << HelmMat_data[i] << " ";
+			    }
+
+		    }
+        	        myfileHM_l11.close();
+		  }
+		  else std::cout << "Unable to open file";
+
+////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+	        LocalRegions::MatrixKey helmkey_l01(StdRegions::eLaplacian01,
+                                            locExp->DetShapeType(),
+                                            *locExp,
+                                            factors);
+
+
+		HelmMat = *(locExp->as<LocalRegions::Expansion>()
+                                               ->GetLocMatrix(helmkey_l01));
+
+              
+                HelmMat_data = HelmMat.GetOwnedMatrix()->GetPtr();
+                
+
+		std::stringstream sstm_l01;
+		sstm_l01 << "Lapl01_" << n << ".txt";
+		std::string result_l01 = sstm_l01.str();
+		const char* rr_l01 = result_l01.c_str();
+
+        	  std::ofstream myfileHM_l01 (rr_l01);
+		  if (myfileHM_l01.is_open())
+		  {
+		    for (int i = 0; i < HelmMat_data.num_elements(); i++)
+		    {
+
+			    {
+				myfileHM_l01 << std::setprecision(17) << HelmMat_data[i] << " ";
+			    }
+
+		    }
+        	        myfileHM_l01.close();
+		  }
+		  else std::cout << "Unable to open file";
+
+////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+/*	        LocalRegions::MatrixKey helmkey_w0(StdRegions::eWeakDeriv0,
+                                            locExp->DetShapeType(),
+                                            *locExp,
+                                            factors);
+
+
+		HelmMat = *(locExp->as<LocalRegions::Expansion>()
+                                               ->GetLocMatrix(helmkey_w0));
+
+              
+                HelmMat_data = HelmMat.GetOwnedMatrix()->GetPtr();
+                
+
+		std::stringstream sstm_w0;
+		sstm_w0 << "w0_" << n << ".txt";
+		std::string result_w0 = sstm_w0.str();
+		const char* rr_w0 = result_w0.c_str();
+
+        	  std::ofstream myfileHM_w0 (rr_w0);
+		  if (myfileHM_w0.is_open())
+		  {
+		    for (int i = 0; i < HelmMat_data.num_elements(); i++)
+		    {
+
+			    {
+				myfileHM_w0 << std::setprecision(17) << HelmMat_data[i] << " ";
+			    }
+
+		    }
+        	        myfileHM_w0.close();
+		  }
+		  else std::cout << "Unable to open file";
+*/
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+/*	        LocalRegions::MatrixKey helmkey_w1(StdRegions::eWeakDeriv1,
+                                            locExp->DetShapeType(),
+                                            *locExp,
+                                            factors);
+
+
+		HelmMat = *(locExp->as<LocalRegions::Expansion>()
+                                               ->GetLocMatrix(helmkey_w1));
+
+              
+                HelmMat_data = HelmMat.GetOwnedMatrix()->GetPtr();
+                
+
+		std::stringstream sstm_w1;
+		sstm_w1 << "w1_" << n << ".txt";
+		std::string result_w1 = sstm_w1.str();
+		const char* rr_w1 = result_w1.c_str();
+
+        	  std::ofstream myfileHM_w1 (rr_w1);
+		  if (myfileHM_w1.is_open())
+		  {
+		    for (int i = 0; i < HelmMat_data.num_elements(); i++)
+		    {
+
+			    {
+				myfileHM_w1 << std::setprecision(17) << HelmMat_data[i] << " ";
+			    }
+
+		    }
+        	        myfileHM_w1.close();
+		  }
+		  else std::cout << "Unable to open file";
+*/
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+                HelmMat = *(locExp->as<LocalRegions::Expansion>()
                                                ->GetLocMatrix(helmkey));
+
                 DNekScalMatSharedPtr MassMat;
                 
-                Array<OneD, const NekDouble> HelmMat_data = HelmMat.GetOwnedMatrix()->GetPtr();
+                HelmMat_data = HelmMat.GetOwnedMatrix()->GetPtr();
                 NekDouble HelmMatScale = HelmMat.Scale();
                 int HelmMatRows = HelmMat.GetRows();
                 
@@ -866,6 +1163,9 @@ namespace Nektar
                 }
                 
                 
+//	        cout << "nbmap: " << nbmap << endl;
+//	        cout << "nbndry: " << nbndry << endl;
+
                 for(i = 0; i < nbmap; ++i)
                 {
                     
@@ -1064,6 +1364,7 @@ namespace Nektar
                         for(j = 0; j < nimap; ++j)
                         {
                             D_data[i+k*nimap + (j+k*nimap)*nint] += m_kinvis*HelmMatScale*HelmMat_data[imap[i]+HelmMatRows*imap[j]];
+		//	    cout << "writing D_data at location " << i+k*nimap + (j+k*nimap)*nint << " the value " << m_kinvis*HelmMatScale*HelmMat_data[imap[i]+HelmMatRows*imap[j]] << endl;
                         }
                     }
                     
@@ -1175,6 +1476,7 @@ namespace Nektar
                                     {
                                         D_data[j+nv*nimap + (i+nv*nimap)*nint] += 
                                         coeffs[imap[j]];
+	    //                            cout << "writing D_data advec at location " << j+nv*nimap + (i+nv*nimap)*nint << " the value " << coeffs[imap[j]] << endl;
                                     }
                                 }
                                 // copy into column major storage. 
@@ -1221,6 +1523,18 @@ namespace Nektar
                 }
                 
                 
+            for(int n1 = 0; n1 < D->GetColumns(); ++n1)
+            {
+                for(int n2 = 0; n2 < D->GetRows(); ++n2)
+                {
+                    
+  //                  cout << "D->GetRows() " << D->GetRows() << std::endl ;
+  //                  cout << "D->GetColumns() " << D->GetColumns() << std::endl ;
+//		    cout << "(*D)(n1,n2) " << (*D)(n1,n2) << std::endl ;
+
+                }
+            }
+
                 D->Invert();
                 (*B) = (*B)*(*D);
                 
@@ -1332,6 +1646,20 @@ namespace Nektar
                         Bh->GetRawPtr(), Bh->GetRows(), Ch->GetRawPtr(), Ch->GetRows(), 
                         1.0, Ah->GetRawPtr(), Ah->GetRows());
             
+            
+	    for(int n1 = 0; n1 < Ah->GetColumns(); ++n1)
+            {
+                for(int n2 = 0; n2 < Ah->GetRows(); ++n2)
+                {
+                    
+  //                  cout << "D->GetRows() " << D->GetRows() << std::endl ;
+  //                  cout << "D->GetColumns() " << D->GetColumns() << std::endl ;
+//		    if (n == 5) { cout << "(*Ah)(n1,n2) " << (*Ah)(n1,n2) << std::endl ; }
+
+                }
+            }
+
+
             // Set matrices for later inversion. Probably do not need to be 
             // attached to class
             pAh->SetBlock(n,n,loc_mat = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,Ah));
@@ -1772,9 +2100,22 @@ namespace Nektar
 	  }
 	  else cout << "Unable to open file";   
 
-
+	cout << "fh_bnd.num_elements() " << fh_bnd.num_elements() << std::endl;   
+	cout << "bnd.num_elements() " << bnd.num_elements() << std::endl;  
+	
+	for(i = 0; i <  fh_bnd.num_elements(); ++i)
+	{
+//		cout << "bnd[i] " << i << " " << bnd[i] << std::endl;   
+	}
         m_mat[mode].m_CoupledBndSys->Solve(fh_bnd,bnd,m_locToGloMap[mode]);
+
+/*	for(i = 0; i <  fh_bnd.num_elements(); ++i)
+	{
+		cout << "bnd[i] " << i << " " << bnd[i] << std::endl;   
+	}
         
+*/
+
         // unpack pressure and velocity boundary systems. 
         offset = cnt = 0; 
         int totpcoeffs = pressure->GetNcoeffs();
@@ -1790,12 +2131,24 @@ namespace Nektar
                 for(k = 0; k < nbnd; ++k)
                 {
                     f_bnd[cnt+k] = loctoglosign[offset+j*nbnd+k]*bnd[loctoglomap[offset + j*nbnd + k]];
+/*		    cout << "writing " << loctoglosign[offset+j*nbnd+k]*bnd[loctoglomap[offset + j*nbnd + k]] << " to " << cnt+k << std::endl;
+		    cout << "loctoglosign[offset+j*nbnd+k] " << loctoglosign[offset+j*nbnd+k] << " loctoglomap[offset + j*nbnd + k] " << loctoglomap[offset + j*nbnd + k] << std::endl;
+		    cout << "nvel " << nvel << std::endl;
+		    cout << "nint " << nint << std::endl;
+		    cout << "nbnd " << nbnd << std::endl;
+		    cout << "nz_loc " << nz_loc << std::endl; */
                 }
                 cnt += nbnd;
             }
             offset += nvel*nbnd + nint*nz_loc;
         }
         
+/*	for(i = 0; i <  f_bnd.num_elements(); ++i)
+	{
+		cout << "f_bnd[i] " << i << " " << f_bnd[i] << std::endl;   
+	}
+*/
+
         pressure->SetPhysState(false);
         
         offset = cnt = cnt1 = 0;
@@ -1805,6 +2158,10 @@ namespace Nektar
             nint = pressure->GetExp(eid)->GetNcoeffs(); 
             nbnd = fields[0]->GetExp(eid)->NumBndryCoeffs(); 
             cnt1 = pressure->GetCoeff_Offset(eid);
+
+//	    cout << "nint " << nint << std::endl;
+//	    cout << "nbnd " << nbnd << std::endl;
+//	    cout << "cnt1 " << cnt1 << std::endl;
             
             for(n = 0; n < nz_loc; ++n)
             {
@@ -1820,6 +2177,12 @@ namespace Nektar
             offset += (nvel*nbnd + nint)*nz_loc;
         }
         
+/*	for(i = 0; i <  f_p.num_elements(); ++i)
+	{
+		cout << "f_p[i] " << i << " " << f_p[i] << std::endl;   
+	}
+*/
+
         // Back solve first level of static condensation for interior
         // velocity space and store in F_int
         F_int = F_int + Transpose(*m_mat[mode].m_D_int)*F_p
@@ -1837,6 +2200,9 @@ namespace Nektar
             nint   = imap.num_elements();
             offset = fields[0]->GetCoeff_Offset(eid);
             
+	//    cout << "offset " << offset << std::endl;
+	//    cout << "nint " << nint << std::endl;
+
             for(j = 0; j < nvel; ++j) // loop over velocity fields 
             {
                 for(n = 0; n < nz_loc; ++n)

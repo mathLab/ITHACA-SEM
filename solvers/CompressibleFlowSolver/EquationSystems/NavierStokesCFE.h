@@ -77,6 +77,9 @@ namespace Nektar
     /// Equation of system for computing temperature
     EquationOfStateSharedPtr             m_eos;
 
+    NavierStokesCFE(const LibUtilities::SessionReaderSharedPtr& pSession,
+                    const SpatialDomains::MeshGraphSharedPtr& pGraph);
+    
     void GetViscousFluxVectorConservVar(
         const int                                                       nConvectiveFields,
         const int                                                       nDim,
@@ -95,9 +98,10 @@ namespace Nektar
     void SpecialBndTreat(
         const int                                           nConvectiveFields,
               Array<OneD,       Array<OneD, NekDouble> >    &consvar);
-    
-    NavierStokesCFE(const LibUtilities::SessionReaderSharedPtr& pSession,
-                    const SpatialDomains::MeshGraphSharedPtr& pGraph);
+
+    void GetArtificialViscosity(
+        const Array<OneD, Array<OneD, NekDouble> >&inarray,
+              Array<OneD,             NekDouble  >&muav);
 
     virtual void v_InitObject();
 

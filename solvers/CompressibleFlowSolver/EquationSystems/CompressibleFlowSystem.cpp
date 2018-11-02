@@ -1031,10 +1031,10 @@ namespace Nektar
         bool l_verbose      = m_session->DefinesCmdLineArgument("verbose");
         bool converged      = false;
         const unsigned int MaxNonlinIte =   100;
-        unsigned int nvariables  = inarray.num_elements();
-        unsigned int npoints     = inarray[0].num_elements();
-        unsigned int ntotal      = nvariables*npoints;
-        unsigned int nElements = m_fields[0]->GetExpSize();
+        unsigned int nvariables     = inarray.num_elements();
+        unsigned int npoints        = inarray[0].num_elements();
+        unsigned int ntotal         = nvariables*npoints;
+        unsigned int nElements      = m_fields[0]->GetExpSize();
 
         LibUtilities::CommSharedPtr v_Comm  = m_fields[0]->GetComm()->GetRowComm();
 
@@ -1129,13 +1129,16 @@ namespace Nektar
             Vmath::Vcopy(npoints,inarray[i],1,m_TimeIntegtSol_k[i],1);
         }
 
-        Array<OneD, NekDouble> tstep (nElements, 0.0);
-        NekDouble tmpcfl    = m_cflSafetyFactor;
-        m_cflSafetyFactor   = m_cflLocTimestep;
-        GetElmtTimeStep(inpnts, tstep);
-        m_cflSafetyFactor   = tmpcfl;
+        if(m_cflLocTimestep>0.0)
+        {
+            Array<OneD, NekDouble> tstep (nElements, 0.0);
+            NekDouble tmpcfl    = m_cflSafetyFactor;
+            m_cflSafetyFactor   = m_cflLocTimestep;
+            GetElmtTimeStep(inpnts, tstep);
+            m_cflSafetyFactor   = tmpcfl;
 
-        m_locTimeStep = tstep;
+            m_locTimeStep = tstep;
+        }
 
 
         // TODO: 
@@ -1330,13 +1333,17 @@ namespace Nektar
                                             Array<OneD, DNekBlkMatSharedPtr > &TraceJac)
     {
         Fill2DArrayOfBlkDiagonalMat(gmtxarray,0.0);
-        // Cout2DArrayBlkMat(gmtxarray);
         AddMatNSBlkDiag_volume(inarray,gmtxarray);
 
         AddMatNSBlkDiag_boundary(inarray,gmtxarray,TraceJac);
             
         MultiplyElmtInvMass_PlusSource(gmtxarray,m_TimeIntegLambda);
         ElmtVarInvMtrx(gmtxarray);
+//Debug
+// Cout2DArrayBlkMat(gmtxarray);
+// Cout1DArrayBlkMat(TraceJac);
+// int ndebug;
+
         // if(m_session->GetComm()->GetRank()==0)
         // {
         //     Cout2DArrayBlkMat(gmtxarray);
@@ -1402,17 +1409,21 @@ namespace Nektar
             }
         }
 
+        Array<OneD, NekDouble> pseudotimefactor(ntotElmt,0.0);
+        if(m_cflLocTimestep>0.0)
+        {
+            Vmath::Sdiv(ntotElmt,m_timestep,m_locTimeStep,1,pseudotimefactor,1);
+        }
+
         for(int m = 0; m < nConvectiveFields; m++)
         {
             for(int  nelmt = 0; nelmt < ntotElmt; nelmt++)
             {
-
-                NekDouble fac         = m_timestep/m_locTimeStep[nelmt];
                 tmpGmtx =   gmtxarray[m][m]->GetBlock(nelmt,nelmt);
                 nElmtCoef            = elmtcoef[nelmt];
                 for(int ncl = 0; ncl < nElmtCoef; ncl++)
                 {
-                    (*tmpGmtx)(ncl,ncl)   += (1.0+fac);
+                    (*tmpGmtx)(ncl,ncl)   += (1.0+pseudotimefactor[nelmt]);
                 }
             }
         }
@@ -1541,30 +1552,37 @@ namespace Nektar
 
         MatrixMultiply_MatrixFree_coeff(inarray,out);
 
-        int nElements = m_fields[0]->GetExpSize();
-        int nelmtcoeffs,offset,varoffset;
-        NekDouble fac;
-        Array<OneD, NekDouble> tmp;
-        Array<OneD, NekDouble> tmpinn;
-        Array<OneD, NekDouble> tmpout;
-        unsigned int nvariables = m_TimeIntegtSol_n.num_elements();
-        unsigned int ntotcoeffs = m_TimeIntegtSol_n[0].num_elements();
-
-        
-        for(int i = 0; i < nvariables; ++i)
+        if(m_cflLocTimestep>0.0)
         {
-            varoffset = i*ntotcoeffs;
+            int nElements = m_fields[0]->GetExpSize();
+            int nelmtcoeffs,offset,varoffset;
+            NekDouble fac;
+            Array<OneD, NekDouble> tmp;
+            Array<OneD, NekDouble> tmpinn;
+            Array<OneD, NekDouble> tmpout;
+            unsigned int nvariables = m_TimeIntegtSol_n.num_elements();
+            unsigned int ntotcoeffs = m_TimeIntegtSol_n[0].num_elements();
 
-            tmpinn = inarray + varoffset;
-            tmpout = out + varoffset;
-            // Loop over elements
-            for(int n = 0; n < nElements; ++n)
+            Array<OneD, NekDouble> pseudotimefactor(nElements,0.0);
+            
+            Vmath::Sdiv(nElements,m_timestep,m_locTimeStep,1,pseudotimefactor,1);
+            
+            
+            for(int i = 0; i < nvariables; ++i)
             {
-                nelmtcoeffs = m_fields[0]->GetExp(n)->GetNcoeffs();
-                offset      = m_fields[0]->GetCoeff_Offset(n);
-                fac         = m_timestep/m_locTimeStep[n];
-                tmp         = tmpout + offset;
-                Vmath::Svtvp(nelmtcoeffs,fac,tmpinn+offset,1,tmp,1,tmp,1);
+                varoffset = i*ntotcoeffs;
+
+                tmpinn = inarray + varoffset;
+                tmpout = out + varoffset;
+                // Loop over elements
+                for(int n = 0; n < nElements; ++n)
+                {
+                    nelmtcoeffs = m_fields[0]->GetExp(n)->GetNcoeffs();
+                    offset      = m_fields[0]->GetCoeff_Offset(n);
+                    fac         = pseudotimefactor[n];
+                    tmp         = tmpout + offset;
+                    Vmath::Svtvp(nelmtcoeffs,fac,tmpinn+offset,1,tmp,1,tmp,1);
+                }
             }
         }
         return;

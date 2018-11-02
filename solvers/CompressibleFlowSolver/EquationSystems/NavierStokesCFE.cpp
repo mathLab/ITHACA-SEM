@@ -117,6 +117,9 @@ namespace Nektar
             
             m_diffusion->SetSpecialBndTreat(
                 &NavierStokesCFE::SpecialBndTreat, this);
+
+            m_diffusion->SetArtificialDiffusionVector(
+                &NavierStokesCFE::GetArtificialViscosity, this);
         }
         else
         {
@@ -129,6 +132,9 @@ namespace Nektar
 
             m_diffusion->SetSpecialBndTreat(
                 &NavierStokesCFE::SpecialBndTreat, this);
+
+            m_diffusion->SetArtificialDiffusionVector(
+                &NavierStokesCFE::GetArtificialViscosity, this);
         }
 
         // Concluding initialisation of diffusion operator
@@ -251,7 +257,7 @@ namespace Nektar
         Array<OneD, Array<OneD, NekDouble> > outarrayDiff(nvariables);
         for (i = 0; i < nvariables; ++i)
         {
-            outarrayDiff[i] = Array<OneD, NekDouble>(ncoeffs);
+            outarrayDiff[i] = Array<OneD, NekDouble>(ncoeffs,0.0);
         }
 
         string diffName;
@@ -313,7 +319,6 @@ namespace Nektar
             // m_diffusion->v_Diffuse_coeff(inarray, outarray, pFwd, pBwd);
             if (m_shockCaptureType != "Off")
             {
-                // m_artificialDiffusion->DoArtificialDiffusion(inarray, outarray);
                 m_artificialDiffusion->DoArtificialDiffusion_coeff(inarray, outarray);
             }
         }
@@ -756,7 +761,7 @@ namespace Nektar
     }
 
 
-        /**
+    /**
      * @brief For very special treatment. For general boundaries it should do nothing
      * TODO: check WallViscous Boundary and Twall setting and remove the special treatment here
      *
@@ -1283,5 +1288,12 @@ namespace Nektar
         (*OutputMatrix)(2,1)=(*OutputMatrix)(2,1)-dqx_dU2-dqy_dU2;
         (*OutputMatrix)(2,2)=(*OutputMatrix)(2,2)-dqx_dU3-dqy_dU3;
         (*OutputMatrix)(2,3)=(*OutputMatrix)(2,3)-dqx_dU4-dqy_dU4;
+    }
+
+    void NavierStokesCFE::GetArtificialViscosity(
+        const Array<OneD, Array<OneD, NekDouble> >&inarray,
+              Array<OneD,             NekDouble  >&muav)
+    {            
+        m_artificialDiffusion->GetArtificialViscosity(inarray,muav);
     }
 }

@@ -164,15 +164,29 @@ namespace Nektar
                 muvar       =   Array<OneD, NekDouble>(nPts, 0.0);
                 m_ArtificialDiffusionVector(inarray, muvar);
 
+                // for(int i=0;i<nPts;i++)
+                // {
+                //     if(muvar[i]>0.0)
+                //     {
+                //         cout << "   muvar["<<i<<"]= "<<muvar[i]<<endl;
+                //     }
+                // }
+
                 // BwdMuvar is left to be 0.0 according to DiffusionLDG.cpp
                 fields[0]->GetFwdBwdTracePhysNoBndFill(muvar,Fwd,Bwd);
 
                 for(int k = 0; k < nTracePts; ++k)
                 {
                     MuVarTrace[k] = 0.5 * (Fwd[k] + Bwd[k]) ;
+                    // if(MuVarTrace[k]>0.0)
+                    // {
+                    //     cout << "   MuVarTrace["<<k<<"]= "<<MuVarTrace[k]<<endl;
+                    // }
                 }
             }
             
+            // int ndebug=0;
+            // cin >>ndebug;
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > >    numDeriv(nDim);
             for (int nd = 0; nd < nDim; ++nd)
             {

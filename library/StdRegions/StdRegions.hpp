@@ -144,6 +144,9 @@ namespace Nektar
             eGaussDG,
             ePhysInterpToEquiSpaced,
             eEquiSpacedToCoeffs,
+            // eStdPhysDeriv0,
+            // eStdPhysDeriv1,
+            // eStdPhysDeriv2,
             SIZE_MatrixType
         };
 
@@ -191,8 +194,11 @@ namespace Nektar
             "PreconLinearSpaceMass",
             "InterpGauss",
             "GaussDG",
-            "PhysInterpToEquiSpaced"
-            "EquiSpacedToCoeffs"
+            "PhysInterpToEquiSpaced",
+            "EquiSpacedToCoeffs",
+            // "StdPhysDeriv0",
+            // "StdPhysDeriv1",
+            // "StdPhysDeriv2"
         };
 
         enum VarCoeffType

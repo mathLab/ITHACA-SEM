@@ -1196,6 +1196,21 @@ namespace Nektar
                 v_LocCoordToLocCollapsed(xi,eta);
             }
 
+            // /**
+            //  * \brief Convert local cartesian coordinate \a xi into local
+            //  * collapsed coordinates \a eta
+            //  **/
+            // void StdEmt2ElmtRotate(
+            //     const Array<OneD, const NekDouble>  &stdphy0,
+            //     const Array<OneD, const NekDouble>  &stdphy1,
+            //     const Array<OneD, const NekDouble>  &stdphy2,
+            //           Array<OneD,NekDouble>         &outphy0     =   NullNekDouble1DArray,
+            //           Array<OneD,NekDouble>         &outphy1     =   NullNekDouble1DArray,
+            //           Array<OneD,NekDouble>         &outphy2     =   NullNekDouble1DArray)
+            // {
+            //     v_StdEmt2ElmtRotate(stdphy0,stdphy1,stdphy2,outphy0,outphy1,outphy2);
+            // }
+
             /// \brief Get the element id of this expansion when used
             /// in a list by returning value of #m_elmt_id
             STD_REGIONS_EXPORT virtual int v_GetElmtId();
@@ -1227,6 +1242,15 @@ namespace Nektar
             STD_REGIONS_EXPORT virtual StdRegions::Orientation v_GetForient(int face);
 
             STD_REGIONS_EXPORT virtual StdRegions::Orientation v_GetEorient(int edge);
+
+
+            // STD_REGIONS_EXPORT virtual void v_StdEmt2ElmtRotate(
+            //     const Array<OneD, const NekDouble>  &stdphy0,
+            //     const Array<OneD, const NekDouble>  &stdphy1,
+            //     const Array<OneD, const NekDouble>  &stdphy2,
+            //           Array<OneD,NekDouble>         &outphy0,
+            //           Array<OneD,NekDouble>         &outphy1,
+            //           Array<OneD,NekDouble>         &outphy2);
 
             /** \brief Function to evaluate the discrete \f$ L_\infty\f$
              *  error \f$ |\epsilon|_\infty = \max |u - u_{exact}|\f$ where \f$

@@ -190,6 +190,30 @@ void VariableConverter::GetDynamicViscosity(
     }
 }
 
+/**
+ * @brief Compute the dynamic viscosity using the Sutherland's law
+ * \f$ \mu = \mu_star * (T / T_star)^3/2 * (T_star + 110) / (T + 110) \f$,
+ * where:   \mu_star = 1.7894 * 10^-5 Kg / (m * s)
+ *          T_star   = 288.15 K
+ *
+ * @param physfield    Input physical field.
+ * @param mu           The resulting dynamic viscosity.
+ */
+void VariableConverter::GetDmuDT(
+    const Array<OneD, const NekDouble>  &temperature, 
+    const Array<OneD, const NekDouble>  &mu, 
+          Array<OneD, NekDouble>        &DmuDT)
+{
+    const int nPts      = temperature.num_elements();
+    NekDouble tmp       = 0.0;
+
+    for (int i = 0; i < nPts; ++i)
+    {
+        tmp         = 110.0/(temperature[i]*(temperature[i]+110.0));
+        DmuDT[i]    = mu[i]*tmp;
+    }
+}
+
 void VariableConverter::GetAbsoluteVelocity(
     const Array<OneD, const Array<OneD, NekDouble>> &physfield,
     Array<OneD, NekDouble> &Vtot)

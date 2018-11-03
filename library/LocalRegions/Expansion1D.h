@@ -116,6 +116,14 @@ namespace Nektar
 
                 virtual bool v_VertexNormalNegated(const int vertex);
 
+                // virtual void v_StdEmt2ElmtRotate(
+                //     const Array<OneD, const NekDouble>  &stdphy0,
+                //     const Array<OneD, const NekDouble>  &stdphy1,
+                //     const Array<OneD, const NekDouble>  &stdphy2,
+                //           Array<OneD,NekDouble>         &outphy0,
+                //           Array<OneD,NekDouble>         &outphy1,
+                //           Array<OneD,NekDouble>         &outphy2);
+
             private:
                 Expansion2DWeakPtr m_elementLeft;
                 Expansion2DWeakPtr m_elementRight;

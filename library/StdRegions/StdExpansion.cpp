@@ -481,6 +481,63 @@ namespace Nektar
                     // invert matrix
                     returnval->Invert();
 
+            //     }
+            //     break;
+            // case eStdPhysDeriv0:
+            //     {
+            //         int ndir = 0;
+            //         int nq = GetTotPoints();
+            //         Array<OneD, NekDouble> tmpin(nq,0.0);
+            //         Array<OneD, NekDouble> tmpout(nq,0.0);
+
+            //         returnval = MemoryManager<DNekMat>::AllocateSharedPtr(nq,nq);
+
+            //         for(int i = 0; i < nq; ++i)
+            //         {
+            //             tmpin[i]    =   1.0;
+            //             PhysDeriv(ndir,tmpin,tmpout);
+            //             tmpin[i]    =   0.0;
+            //             Vmath::Vcopy(nq,tmpout.get(),1,
+            //                          returnval->GetRawPtr()+i*nq,1);
+            //         }
+            //     }
+            //     break;
+            // case eStdPhysDeriv1:
+            //     {
+            //         int ndir = 1;
+            //         int nq = GetTotPoints();
+            //         Array<OneD, NekDouble> tmpin(nq,0.0);
+            //         Array<OneD, NekDouble> tmpout(nq,0.0);
+
+            //         returnval = MemoryManager<DNekMat>::AllocateSharedPtr(nq,nq);
+
+            //         for(int i = 0; i < nq; ++i)
+            //         {
+            //             tmpin[i]    =   1.0;
+            //             PhysDeriv(ndir,tmpin,tmpout);
+            //             tmpin[i]    =   0.0;
+            //             Vmath::Vcopy(nq,tmpout.get(),1,
+            //                          returnval->GetRawPtr()+i*nq,1);
+            //         }
+            //     }
+            //     break;
+            // case eStdPhysDeriv2:
+            //     {
+            //         int ndir = 2;
+            //         int nq = GetTotPoints();
+            //         Array<OneD, NekDouble> tmpin(nq,0.0);
+            //         Array<OneD, NekDouble> tmpout(nq,0.0);
+
+            //         returnval = MemoryManager<DNekMat>::AllocateSharedPtr(nq,nq);
+
+            //         for(int i = 0; i < nq; ++i)
+            //         {
+            //             tmpin[i]    =   1.0;
+            //             PhysDeriv(ndir,tmpin,tmpout);
+            //             tmpin[i]    =   0.0;
+            //             Vmath::Vcopy(nq,tmpout.get(),1,
+            //                          returnval->GetRawPtr()+i*nq,1);
+            //         }
                 }
                 break;
             case eMass:
@@ -1852,6 +1909,17 @@ namespace Nektar
             NekVector<NekDouble> in (m_ncoeffs, inarray, eWrapper);
             NekVector<NekDouble> out(m_ncoeffs, outarray,eWrapper);
             out = (*intmat) * in;
+        }
+
+        void StdExpansion::v_StdEmt2ElmtRotate(
+                const Array<OneD, const NekDouble>  &stdphy0,
+                const Array<OneD, const NekDouble>  &stdphy1,
+                const Array<OneD, const NekDouble>  &stdphy2,
+                      Array<OneD,NekDouble>         &outphy0,
+                      Array<OneD,NekDouble>         &outphy1,
+                      Array<OneD,NekDouble>         &outpys2)
+        {
+            ASSERTL0(false,"v_StdeEmt2ElmtRotate not defined");
         }
 
     }//end namespace

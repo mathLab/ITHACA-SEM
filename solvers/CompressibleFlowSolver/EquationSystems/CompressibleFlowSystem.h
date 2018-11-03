@@ -272,13 +272,24 @@ namespace Nektar
             const Array<OneD, Array<OneD, NekDouble> >               &physfield,
                   Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &flux);
         
-        Array<OneD, Array<OneD, DNekMatSharedPtr> > 
-            GetFluxVectorJacDirctn(const int nDirctn,
-                         const Array<OneD, const Array<OneD, NekDouble> >&inarray);
+        void GetFluxVectorJacDirctn(
+            const int nDirctn,
+            const Array<OneD, const Array<OneD, NekDouble> >   &inarray
+                  Array<OneD, Array<OneD, DNekMatSharedPtr> >  &ElmtJac);
         void GetFluxVectorJacPoint(
             const Array<OneD, NekDouble>                &conservVar, 
             const Array<OneD, NekDouble>                &normals, 
                  DNekMatSharedPtr                       &fluxJac);
+        void GetDiffusionFluxJacDirctn(
+            const int nDirctn,
+            const Array<OneD, const Array<OneD, NekDouble> >                &inarray,
+            const Array<OneD, const Array<OneD, Array<OneD, NekDouble>> >   &qfields,
+                  Array<OneD, Array<OneD, DNekMatSharedPtr> >               &ElmtJac);
+        void GetDiffusionFluxJacPoint(
+            const Array<OneD, NekDouble>                        &conservVar, 
+            const Array<OneD, const Array<OneD, NekDouble> >    &conseDeriv, 
+            const Array<OneD, NekDouble>                        &normals, 
+                 DNekMatSharedPtr                               &fluxJac);
         void GetFluxVectorDeAlias(
             const Array<OneD, Array<OneD, NekDouble> >         &physfield,
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &flux);

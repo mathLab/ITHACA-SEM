@@ -103,6 +103,10 @@ public:
     void GetRhoFromPT(const Array<OneD, NekDouble> &pressure,
                       const Array<OneD, NekDouble> &temperature,
                       Array<OneD, NekDouble> &rho);
+    void GetDmuDT(
+        const Array<OneD, const NekDouble>  &temperature, 
+        const Array<OneD, const NekDouble>  &mu, 
+              Array<OneD, NekDouble>        &DmuDT);
 
     NekDouble GetGasconstant();
 

@@ -569,6 +569,7 @@ namespace Nektar
 
                     if(TracePntJacGradflag)
                     {
+                        // TODO: only 1 BJac is stored here because BJac = - FJac
                         PntJac = TracePntJacGrad;
 
                         for(int ndir = 0; ndir < nSpaceDim; ndir++)

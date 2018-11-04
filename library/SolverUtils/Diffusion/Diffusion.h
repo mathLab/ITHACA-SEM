@@ -160,6 +160,46 @@ namespace Nektar
             SOLVER_UTILS_EXPORT void FluxVec(
                     Array<OneD, Array<OneD, Array<OneD, NekDouble> > >
                                                                 &fluxvector);
+
+            void CalTraceNumFlux(
+                const int                                                           nConvectiveFields,
+                const int                                                           nDim,
+                const int                                                           nPts,
+                const int                                                           nTracePts,
+                const NekDouble                                                     PenaltyFactor2,
+                const Array<OneD, MultiRegions::ExpListSharedPtr>                   &fields,
+                const Array<OneD, Array<OneD, NekDouble> >                          &inarray,
+                const Array<OneD, const Array<OneD, Array<OneD, NekDouble> > >      &qfield,
+                const Array<OneD, Array<OneD, NekDouble> >                          &vFwd,
+                const Array<OneD, Array<OneD, NekDouble> >                          &vBwd,
+                const Array<OneD, NekDouble >                                       &MuVarTrace,
+                      Array<OneD, int >                                             &nonZeroIndex,
+                      Array<OneD, Array<OneD, Array<OneD, NekDouble> > >            &traceflux)
+            {
+                v_CalTraceNumFlux(nConvectiveFields,nDim,nPts,nTracePts,PenaltyFactor2,
+                                    fields,inarray,qfield,vFwd,vBwd,MuVarTrace,nonZeroIndex,traceflux);
+            }
+            
+            void physFieldDeriv(
+                const int                                                   nConvectiveFields,
+                const Array<OneD, MultiRegions::ExpListSharedPtr>           &fields,
+                const Array<OneD, Array<OneD, NekDouble> >                  &inarray,
+                const Array<OneD, Array<OneD, NekDouble> >                  &pFwd,
+                const Array<OneD, Array<OneD, NekDouble> >                  &pBwd,
+                      Array<OneD, Array<OneD, Array<OneD, NekDouble> > >    &qfield)
+            {
+                v_physFieldDeriv(nConvectiveFields,fields,inarray,pFwd,pBwd,qfield);
+            }
+            void AddVolumDerivJac2Mat( 
+                const int                                               nConvectiveFields,
+                const Array<OneD, MultiRegions::ExpListSharedPtr>       &pFields,
+                const Array<OneD, const Array<OneD, DNekMatSharedPtr> > &ElmtJac,
+                const int                                               nfluxDir, 
+                const int                                               nDervDir, 
+                      Array<OneD, Array<OneD, DNekBlkMatSharedPtr> >    &gmtxarray)
+            {
+                v_AddVolumDerivJac2Mat(nConvectiveFields,pFields,ElmtJac,nfluxDir,nDervDir,gmtxarray);
+            }
             
             template<typename FuncPointerT, typename ObjectPointerT> 
             void SetFluxVector(FuncPointerT func, ObjectPointerT obj)
@@ -240,6 +280,27 @@ namespace Nektar
             {
                 return v_GetFluxTensor();
             }
+            void GetAVmu(
+                const Array<OneD, MultiRegions::ExpListSharedPtr>           &fields,
+                const Array<OneD, Array<OneD, NekDouble> >                  &inarray,
+                      Array<OneD, NekDouble >                               &muvar,
+                      Array<OneD, NekDouble >                               &MuVarTrace);
+
+            void ConsVarAveJump(
+                const int                                           nConvectiveFields,
+                const int                                           npnts,
+                const Array<OneD, const Array<OneD, NekDouble> >    &vFwd,
+                const Array<OneD, const Array<OneD, NekDouble> >    &vBwd,
+                      Array<OneD,       Array<OneD, NekDouble> >    &aver,
+                      Array<OneD,       Array<OneD, NekDouble> >    &jump)
+            {
+                v_ConsVarAveJump(nConvectiveFields,npnts,vFwd,vBwd,aver,jump);
+            }
+
+            const Array<OneD, const Array<OneD, NekDouble> > &GetTraceNormal()
+            {
+                return v_GetTraceNormal();
+            }
             
         protected:
             DiffusionFluxVecCB              m_fluxVector;
@@ -273,6 +334,49 @@ namespace Nektar
                       Array<OneD, Array<OneD, NekDouble> >        &outarray,
                 const Array<OneD, Array<OneD, NekDouble> > &pFwd = NullNekDoubleArrayofArray,
                 const Array<OneD, Array<OneD, NekDouble> > &pBwd = NullNekDoubleArrayofArray);
+            virtual void v_Diffuse_coeffOld(
+                const int                                           nConvective,
+                const Array<OneD, MultiRegions::ExpListSharedPtr>   &fields,
+                const Array<OneD, Array<OneD, NekDouble> >          &inarray,
+                      Array<OneD, Array<OneD, NekDouble> >          &outarray,
+                const Array<OneD, Array<OneD, NekDouble> >          &pFwd ,
+                const Array<OneD, Array<OneD, NekDouble> >          &pBwd );
+            virtual void v_CalTraceNumFlux(
+                const int                                                           nConvectiveFields,
+                const int                                                           nDim,
+                const int                                                           nPts,
+                const int                                                           nTracePts,
+                const NekDouble                                                     PenaltyFactor2,
+                const Array<OneD, MultiRegions::ExpListSharedPtr>                   &fields,
+                const Array<OneD, Array<OneD, NekDouble> >                          &inarray,
+                const Array<OneD, const Array<OneD, Array<OneD, NekDouble> > >      &qfield,
+                const Array<OneD, Array<OneD, NekDouble> >                          &vFwd,
+                const Array<OneD, Array<OneD, NekDouble> >                          &vBwd,
+                const Array<OneD, NekDouble >                                       &MuVarTrace,
+                      Array<OneD, int >                                             &nonZeroIndex,
+                      Array<OneD, Array<OneD, Array<OneD, NekDouble> > >            &traceflux);
+            
+            virtual void v_physFieldDeriv(
+                const int                                                   nConvectiveFields,
+                const Array<OneD, MultiRegions::ExpListSharedPtr>           &fields,
+                const Array<OneD, Array<OneD, NekDouble> >                  &inarray,
+                const Array<OneD, Array<OneD, NekDouble> >                  &pFwd,
+                const Array<OneD, Array<OneD, NekDouble> >                  &pBwd,
+                      Array<OneD, Array<OneD, Array<OneD, NekDouble> > >    &qfield);
+            virtual void v_AddVolumDerivJac2Mat( 
+                const int                                               nConvectiveFields,
+                const Array<OneD, MultiRegions::ExpListSharedPtr>       &pFields,
+                const Array<OneD, const Array<OneD, DNekMatSharedPtr> > &ElmtJac,
+                const int                                               nfluxDir, 
+                const int                                               nDervDir, 
+                      Array<OneD, Array<OneD, DNekBlkMatSharedPtr> >    &gmtxarray);
+            virtual void v_ConsVarAveJump(
+                const int                                           nConvectiveFields,
+                const int                                           npnts,
+                const Array<OneD, const Array<OneD, NekDouble> >    &vFwd,
+                const Array<OneD, const Array<OneD, NekDouble> >    &vBwd,
+                      Array<OneD,       Array<OneD, NekDouble> >    &aver,
+                      Array<OneD,       Array<OneD, NekDouble> >    &jump);
 
             virtual void v_SetHomoDerivs(
                 Array<OneD, Array<OneD, NekDouble> > &deriv)
@@ -285,6 +389,8 @@ namespace Nektar
                 static Array<OneD, Array<OneD, Array<OneD, NekDouble> > > tmp;
                 return tmp;
             }
+
+            virtual const Array<OneD, const Array<OneD, NekDouble> > &v_GetTraceNormal();
         }; 
         
         /// A shared pointer to an EquationSystem object

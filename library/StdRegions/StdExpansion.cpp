@@ -1911,16 +1911,16 @@ namespace Nektar
             out = (*intmat) * in;
         }
 
-        void StdExpansion::v_StdEmt2ElmtRotate(
-                const Array<OneD, const NekDouble>  &stdphy0,
-                const Array<OneD, const NekDouble>  &stdphy1,
-                const Array<OneD, const NekDouble>  &stdphy2,
-                      Array<OneD,NekDouble>         &outphy0,
-                      Array<OneD,NekDouble>         &outphy1,
-                      Array<OneD,NekDouble>         &outpys2)
-        {
-            ASSERTL0(false,"v_StdeEmt2ElmtRotate not defined");
-        }
+        // void StdExpansion::v_StdEmt2ElmtRotate(
+        //         const Array<OneD, const NekDouble>  &stdphy0,
+        //         const Array<OneD, const NekDouble>  &stdphy1,
+        //         const Array<OneD, const NekDouble>  &stdphy2,
+        //               Array<OneD,NekDouble>         &outphy0,
+        //               Array<OneD,NekDouble>         &outphy1,
+        //               Array<OneD,NekDouble>         &outpys2)
+        // {
+        //     ASSERTL0(false,"v_StdeEmt2ElmtRotate not defined");
+        // }
 
     }//end namespace
 }//end namespace

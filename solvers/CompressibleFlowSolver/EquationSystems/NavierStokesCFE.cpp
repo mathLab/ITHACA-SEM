@@ -118,8 +118,11 @@ namespace Nektar
             m_diffusion->SetSpecialBndTreat(
                 &NavierStokesCFE::SpecialBndTreat, this);
 
-            m_diffusion->SetArtificialDiffusionVector(
-                &NavierStokesCFE::GetArtificialViscosity, this);
+            if (m_shockCaptureType != "Off")
+            {
+                m_diffusion->SetArtificialDiffusionVector(
+                    &NavierStokesCFE::GetArtificialViscosity, this);
+            }
         }
         else
         {
@@ -133,8 +136,11 @@ namespace Nektar
             m_diffusion->SetSpecialBndTreat(
                 &NavierStokesCFE::SpecialBndTreat, this);
 
-            m_diffusion->SetArtificialDiffusionVector(
-                &NavierStokesCFE::GetArtificialViscosity, this);
+            if (m_shockCaptureType != "Off")
+            {
+                m_diffusion->SetArtificialDiffusionVector(
+                    &NavierStokesCFE::GetArtificialViscosity, this);
+            }
         }
 
         // Concluding initialisation of diffusion operator
@@ -1292,8 +1298,8 @@ namespace Nektar
     }
 
     void NavierStokesCFE::GetArtificialViscosity(
-        const Array<OneD, Array<OneD, NekDouble> >&inarray,
-              Array<OneD,             NekDouble  >&muav)
+        const Array<OneD, Array<OneD, NekDouble> >  &inarray,
+              Array<OneD,             NekDouble  >  &muav)
     {            
         m_artificialDiffusion->GetArtificialViscosity(inarray,muav);
     }
@@ -1302,7 +1308,7 @@ namespace Nektar
         const int                                                       nDirctn,
         const Array<OneD, const Array<OneD, NekDouble> >                &inarray,
         const Array<OneD, const Array<OneD, Array<OneD, NekDouble>> >   &qfields,
-              Array<OneD, Array<OneD, DNekMatSharedPtr> >               &ElmtJac);
+              Array<OneD, Array<OneD, DNekMatSharedPtr> >               &ElmtJac)
     {
         int nConvectiveFields   = inarray.num_elements();
         std::shared_ptr<LocalRegions::ExpansionVector> expvect =    m_fields[0]->GetExp();
@@ -1397,7 +1403,7 @@ namespace Nektar
     }
 
     // TODO: currently only for 2D
-    void NavierStokesCFE::GetDiffusionFluxJacPoint(
+    void NavierStokesCFE::v_GetDiffusionFluxJacPoint(
             const int                                           nelmt,
             const Array<OneD, NekDouble>                        &conservVar, 
             const Array<OneD, const Array<OneD, NekDouble> >    &conseDeriv, 
@@ -1406,30 +1412,22 @@ namespace Nektar
             const Array<OneD, NekDouble>                        &normals, 
                  DNekMatSharedPtr                               &fluxJac)
     {
-        GetdFlux_dU_2D(normals,mu,DmuDT,conservVar,conseDeriv,PointFJac);
+        GetdFlux_dU_2D(normals,mu,DmuDT,conservVar,conseDeriv,fluxJac);
     }
 
     void NavierStokesCFE::v_GetFluxDerivJacDirctn(
-        const int                                                       nfluxDir,
+        const MultiRegions::ExpListSharedPtr                            &explist,
+        const Array<OneD, const Array<OneD, NekDouble> >                &normals,
         const int                                                       nDervDir,
         const Array<OneD, const Array<OneD, NekDouble> >                &inarray,
-              Array<OneD, Array<OneD, DNekMatSharedPtr> >               &ElmtJac);
+              Array<OneD, Array<OneD, DNekMatSharedPtr> >               &ElmtJac)
     {
         int nConvectiveFields   = inarray.num_elements();
-        std::shared_ptr<LocalRegions::ExpansionVector> expvect =    m_fields[0]->GetExp();
+        std::shared_ptr<LocalRegions::ExpansionVector> expvect =    explist->GetExp();
         int ntotElmt            = (*expvect).size();
-        int nPts            = m_fields[0]->GetTotPoints();
+        int nPts                = explist->GetTotPoints();
         int nSpaceDim           = m_graph->GetSpaceDimension();  
-        Array<OneD, NekDouble> normals;
-        Array<OneD, Array<OneD, NekDouble> > normal3D(3);
-        for(int i = 0; i < 3; i++)
-        {
-            normal3D[i] = Array<OneD, NekDouble>(3,0.0);
-        }
-        normal3D[0][0] = 1.0;
-        normal3D[1][1] = 1.0;
-        normal3D[2][2] = 1.0;
-        normals =   normal3D[nDirctn];
+        
 //Debug
 if(!ElmtJac.num_elements())
 {
@@ -1464,9 +1462,11 @@ if(!ElmtJac.num_elements())
         Array<OneD, NekDouble> locmu;
         Array<OneD, NekDouble> pointVar(nConvectiveFields,0.0);
         Array<OneD, Array<OneD, NekDouble> > locVars(nConvectiveFields);
+        Array<OneD, NekDouble> pointnormals(nSpaceDim,0.0);
+        Array<OneD, Array<OneD, NekDouble> > locnormal(nSpaceDim);
 
         DNekMatSharedPtr PointFJac = MemoryManager<DNekMat>
-                                ::AllocateSharedPtr(nvariables, nvariables);
+                                ::AllocateSharedPtr(nConvectiveFields, nConvectiveFields);
 
         switch (nDervDir)
         {
@@ -1482,6 +1482,11 @@ if(!ElmtJac.num_elements())
                         locVars[j] = inarray[j]+noffest;
                     }
 
+                    for(int j = 0; j < nSpaceDim; j++)
+                    {   
+                        locnormal[j] = normals[j]+noffest;
+                    }
+
                     locmu       =   mu      + noffest;
                     for(int npnt = 0; npnt < nElmtPnt; npnt++)
                     {
@@ -1489,10 +1494,14 @@ if(!ElmtJac.num_elements())
                         {
                             pointVar[j] = locVars[j][npnt];
                         }
+                        for(int j = 0; j < nSpaceDim; j++)
+                        {   
+                            pointnormals[j] = locnormal[j][npnt];
+                        }
 
                         pointmu     = locmu[npnt];
 
-                        GetdFlux_dQx_2D(normals,pointmu,pointVar,PointFJac);
+                        GetdFlux_dQx_2D(pointnormals,pointmu,pointVar,PointFJac);
                         (*ElmtJac[nelmt][npnt]) =   (*PointFJac);
                     }
                 }
@@ -1510,6 +1519,11 @@ if(!ElmtJac.num_elements())
                         locVars[j] = inarray[j]+noffest;
                     }
 
+                    for(int j = 0; j < nSpaceDim; j++)
+                    {   
+                        locnormal[j] = normals[j]+noffest;
+                    }
+
                     locmu       =   mu      + noffest;
                     for(int npnt = 0; npnt < nElmtPnt; npnt++)
                     {
@@ -1517,10 +1531,14 @@ if(!ElmtJac.num_elements())
                         {
                             pointVar[j] = locVars[j][npnt];
                         }
+                        for(int j = 0; j < nSpaceDim; j++)
+                        {   
+                            pointnormals[j] = locnormal[j][npnt];
+                        }
 
                         pointmu     = locmu[npnt];
-
-                        GetdFlux_dQy_2D(normals,pointmu,pointVar,PointFJac);
+                        
+                        GetdFlux_dQy_2D(pointnormals,pointmu,pointVar,PointFJac);
                         (*ElmtJac[nelmt][npnt]) =   (*PointFJac);
                     }
                 }
@@ -1533,5 +1551,28 @@ if(!ElmtJac.num_elements())
             }
         }
         return;
+    }
+
+    void NavierStokesCFE::v_CalphysDeriv(
+            const Array<OneD, const Array<OneD, NekDouble> >                &inarray,
+                  Array<OneD,       Array<OneD, Array<OneD, NekDouble> > >  &qfield)
+    {
+        int nConvectiveFields = m_fields.num_elements();
+        int npoints           = GetTotPoints();
+        const Array<OneD, Array<OneD, NekDouble> >                  pFwd;
+        const Array<OneD, Array<OneD, NekDouble> >                  pBwd;
+        if(!qfield.num_elements())
+        {
+            qfield  =   Array<OneD,       Array<OneD, Array<OneD, NekDouble> > >(m_spacedim);
+            for(int i = 0; i< m_spacedim; i++)
+            {
+                qfield[i]   =   Array<OneD, Array<OneD, NekDouble> >(nConvectiveFields);
+                for(int j = 0; j< nConvectiveFields; j++)
+                {
+                    qfield[i][j]   =   Array<OneD, NekDouble>(npoints,0.0);
+                }
+            }
+        }
+        m_diffusion->physFieldDeriv(nConvectiveFields,m_fields,inarray,pFwd,pBwd,qfield);
     }
 }

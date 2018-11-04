@@ -139,10 +139,11 @@ public:
     }
 
     SOLVER_UTILS_EXPORT void AddVolumJac2Mat( 
-        const int nConvectiveFields,
-        const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
-        const   Array<OneD, const  Array<OneD, DNekMatSharedPtr> >&ElmtJac,
-        const int nDirctn, Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray)
+        const int                                                           nConvectiveFields,
+        const Array<OneD, MultiRegions::ExpListSharedPtr>                   &pFields,
+        const   Array<OneD, const  Array<OneD, DNekMatSharedPtr> >          &ElmtJac,
+        const int                                                           nDirctn,
+              Array<OneD, Array<OneD, DNekBlkMatSharedPtr> >                &gmtxarray)
     {
         v_AddVolumJac2Mat(nConvectiveFields,pFields,ElmtJac,nDirctn,gmtxarray);
     }

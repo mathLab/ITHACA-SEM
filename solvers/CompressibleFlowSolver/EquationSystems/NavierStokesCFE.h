@@ -100,8 +100,8 @@ namespace Nektar
               Array<OneD,       Array<OneD, NekDouble> >    &consvar);
 
     void GetArtificialViscosity(
-        const Array<OneD, Array<OneD, NekDouble> >&inarray,
-              Array<OneD,             NekDouble  >&muav);
+        const Array<OneD, Array<OneD, NekDouble> >  &inarray,
+              Array<OneD,             NekDouble  >  &muav);
 
     virtual void v_InitObject();
 
@@ -125,6 +125,31 @@ namespace Nektar
         Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &derivatives,
         Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &viscousTensor);
 
+    virtual void v_AddDiffusionFluxJacDirctn(
+        const int                                                       nDirctn,
+        const Array<OneD, const Array<OneD, NekDouble> >                &inarray,
+        const Array<OneD, const Array<OneD, Array<OneD, NekDouble>> >   &qfields,
+              Array<OneD, Array<OneD, DNekMatSharedPtr> >               &ElmtJac);
+
+    virtual void v_GetFluxDerivJacDirctn(
+        const MultiRegions::ExpListSharedPtr                            &explist,
+        const Array<OneD, const Array<OneD, NekDouble> >                &normals,
+        const int                                                       nDervDir,
+        const Array<OneD, const Array<OneD, NekDouble> >                &inarray,
+              Array<OneD, Array<OneD, DNekMatSharedPtr> >               &ElmtJac);
+              
+    virtual void v_GetDiffusionFluxJacPoint(
+            const int                                           nelmt,
+            const Array<OneD, NekDouble>                        &conservVar, 
+            const Array<OneD, const Array<OneD, NekDouble> >    &conseDeriv, 
+            const NekDouble                                     mu,
+            const NekDouble                                     DmuDT,
+            const Array<OneD, NekDouble>                        &normals, 
+                  DNekMatSharedPtr                              &fluxJac);
+
+    virtual void v_CalphysDeriv(
+            const Array<OneD, const Array<OneD, NekDouble> >                &inarray,
+                  Array<OneD,       Array<OneD, Array<OneD, NekDouble> > >  &qfield);
     
     /**
      * @brief return part of viscous Jacobian: 

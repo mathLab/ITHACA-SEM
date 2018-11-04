@@ -58,7 +58,7 @@ namespace Nektar
                 const Array<OneD, const Array<OneD, NekDouble> >    &vFwd,
                 const Array<OneD, const Array<OneD, NekDouble> >    &vBwd,
                       Array<OneD,       Array<OneD, NekDouble> >    &aver); 
-            
+
         protected:
             DiffusionIP();
    		
@@ -71,6 +71,16 @@ namespace Nektar
             void GetPenaltyFactor(
                 const Array<OneD, MultiRegions::ExpListSharedPtr>   &fields,
                 Array<OneD, NekDouble >                             factor); 
+
+            void Add2ndDeriv2Trace(
+                const int                                                           nConvectiveFields,
+                const int                                                           nDim,
+                const int                                                           nPts,
+                const int                                                           nTracePts,
+                const NekDouble                                                     PenaltyFactor2,
+                const Array<OneD, MultiRegions::ExpListSharedPtr>                   &fields,
+                const Array<OneD, const Array<OneD, Array<OneD, NekDouble> > >      &qfield,
+                      Array<OneD, Array<OneD, Array<OneD, NekDouble> > >            &numDeriv);
 
             virtual void v_InitObject(
                 LibUtilities::SessionReaderSharedPtr               pSession,
@@ -91,6 +101,56 @@ namespace Nektar
                       Array<OneD, Array<OneD, NekDouble> >        &outarray,
                 const Array<OneD, Array<OneD, NekDouble> > &pFwd = NullNekDoubleArrayofArray,
                 const Array<OneD, Array<OneD, NekDouble> > &pBwd = NullNekDoubleArrayofArray);
+
+            virtual void v_Diffuse_coeffOld(
+                const int                                          nConvective,
+                const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
+                const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+                      Array<OneD, Array<OneD, NekDouble> >        &outarray,
+                const Array<OneD, Array<OneD, NekDouble> > &pFwd = NullNekDoubleArrayofArray,
+                const Array<OneD, Array<OneD, NekDouble> > &pBwd = NullNekDoubleArrayofArray);
+            virtual void v_CalTraceNumFlux(
+                const int                                                           nConvectiveFields,
+                const int                                                           nDim,
+                const int                                                           nPts,
+                const int                                                           nTracePts,
+                const NekDouble                                                     PenaltyFactor2,
+                const Array<OneD, MultiRegions::ExpListSharedPtr>                   &fields,
+                const Array<OneD, Array<OneD, NekDouble> >                          &inarray,
+                const Array<OneD, const Array<OneD, Array<OneD, NekDouble> > >      &qfield,
+                const Array<OneD, Array<OneD, NekDouble> >                          &vFwd,
+                const Array<OneD, Array<OneD, NekDouble> >                          &vBwd,
+                const Array<OneD, NekDouble >                                       &MuVarTrace,
+                      Array<OneD, int >                                             &nonZeroIndex,
+                      Array<OneD, Array<OneD, Array<OneD, NekDouble> > >            &traceflux);
+            
+            virtual void v_physFieldDeriv(
+                const int                                                   nConvectiveFields,
+                const Array<OneD, MultiRegions::ExpListSharedPtr>           &fields,
+                const Array<OneD, Array<OneD, NekDouble> >                  &inarray,
+                const Array<OneD, Array<OneD, NekDouble> >                  &pFwd,
+                const Array<OneD, Array<OneD, NekDouble> >                  &pBwd,
+                      Array<OneD, Array<OneD, Array<OneD, NekDouble> > >    &qfield);
+            virtual void v_AddVolumDerivJac2Mat( 
+                const int                                               nConvectiveFields,
+                const Array<OneD, MultiRegions::ExpListSharedPtr>       &pFields,
+                const Array<OneD, const Array<OneD, DNekMatSharedPtr> > &ElmtJac,
+                const int                                               nfluxDir, 
+                const int                                               nDervDir, 
+                      Array<OneD, Array<OneD, DNekBlkMatSharedPtr> >    &gmtxarray);
+
+            virtual void v_ConsVarAveJump(
+                const int                                           nConvectiveFields,
+                const int                                           npnts,
+                const Array<OneD, const Array<OneD, NekDouble> >    &vFwd,
+                const Array<OneD, const Array<OneD, NekDouble> >    &vBwd,
+                      Array<OneD,       Array<OneD, NekDouble> >    &aver,
+                      Array<OneD,       Array<OneD, NekDouble> >    &jump);
+
+            virtual const Array<OneD, const Array<OneD, NekDouble> > &v_GetTraceNormal()
+            {
+                return m_traceNormals;
+            }
             
         }; 
     }

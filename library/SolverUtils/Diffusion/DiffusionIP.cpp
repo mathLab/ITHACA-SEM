@@ -458,12 +458,13 @@ factor[noffset+np]    =   2.0;
             }
         }
 
-        void DiffusionIP::v_AddVolumDerivJac2Mat( const int nConvectiveFields,
-                                        const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
-                                        const   Array<OneD, const  Array<OneD, DNekMatSharedPtr> >&ElmtJac,
-                                        const int nfluxDir, 
-                                        const int nDervDir, 
-                                        Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray)
+        void DiffusionIP::v_AddVolumDerivJac2Mat( 
+            const int                                               nConvectiveFields,
+            const Array<OneD, MultiRegions::ExpListSharedPtr>       &pFields,
+            const Array<OneD, const Array<OneD, DNekMatSharedPtr> > &ElmtJac,
+            const int                                               nfluxDir, 
+            const int                                               nDervDir, 
+                  Array<OneD, Array<OneD, DNekBlkMatSharedPtr> >    &gmtxarray)
         {
             MultiRegions::ExpListSharedPtr explist = pFields[0];
                 std::shared_ptr<LocalRegions::ExpansionVector> pexp = explist->GetExp();
@@ -503,7 +504,7 @@ factor[noffset+np]    =   2.0;
 
                     // explist->GetMatIpwrtdbWeightBwd(JacArray,nDirctn,mtxPerVar);
                     explist->GetMatIpwrtDeriveBase(JacArray,nfluxDir,mtxPerVar);
-                    explist->AddRightIPTPhysDerivBase(mtxPerVar,nDervDir);
+                    explist->AddRightIPTPhysDerivBase(nDervDir,mtxPerVar,mtxPerVar);
 
                     for(int  nelmt = 0; nelmt < ntotElmt; nelmt++)
                     {

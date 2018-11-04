@@ -1319,25 +1319,10 @@ namespace Nektar
         normal3D[1][1] = 1.0;
         normal3D[2][2] = 1.0;
         normals =   normal3D[nDirctn];
-//Debug
-if(!ElmtJac.num_elements())
-{
-    ElmtJac =   Array<OneD, Array<OneD, DNekMatSharedPtr> > (ntotElmt);
-    for(int  nelmt = 0; nelmt < ntotElmt; nelmt++)
-    {
-        int nElmtPnt            = (*expvect)[nelmt]->GetTotPoints();
-        ElmtJac[nelmt] =   Array<OneD, DNekMatSharedPtr>(nElmtPnt);
-        for(int npnt = 0; npnt < nElmtPnt; npnt++)
-        {
-            ElmtJac[nelmt][npnt] = MemoryManager<DNekMat>
-                ::AllocateSharedPtr(nConvectiveFields, nConvectiveFields);
-        }
-    }
-}
+
         // Auxiliary variables
         Array<OneD, NekDouble > mu                 (nPts, 0.0);
         Array<OneD, NekDouble > DmuDT              (nPts, 0.0);
-        Array<OneD, NekDouble > thermalConductivity(nPts, 0.0);
 
         // Variable viscosity through the Sutherland's law
         if (m_ViscosityType == "Variable")
@@ -1346,14 +1331,10 @@ if(!ElmtJac.num_elements())
             m_varConv->GetTemperature(inarray,temperature);
             m_varConv->GetDynamicViscosity(temperature, mu);
             m_varConv->GetDmuDT(temperature,mu,DmuDT);
-            NekDouble tRa = m_Cp / m_Prandtl;
-            Vmath::Smul(nPts, tRa, mu, 1, thermalConductivity, 1);
         }
         else
         {
             Vmath::Fill(nPts, m_mu, mu, 1);
-            Vmath::Fill(nPts, m_thermalConductivity,
-                        thermalConductivity, 1);
         }
 
         NekDouble pointmu       = 0.0;
@@ -1371,11 +1352,10 @@ if(!ElmtJac.num_elements())
         }
 
         DNekMatSharedPtr PointFJac = MemoryManager<DNekMat>
-                                ::AllocateSharedPtr(nvariables, nvariables);
+                                ::AllocateSharedPtr(nConvectiveFields, nConvectiveFields);
 
         for(int  nelmt = 0; nelmt < ntotElmt; nelmt++)
         {
-            // nElmtCoef           = (*expvect)[nelmt]->GetNcoeffs();
             int nElmtPnt            = (*expvect)[nelmt]->GetTotPoints();
             int noffest             = GetPhys_Offset(nelmt);
                  
@@ -1414,11 +1394,10 @@ if(!ElmtJac.num_elements())
                 (*ElmtJac[nelmt][npnt]) =   (*ElmtJac[nelmt][npnt]) +   (*PointFJac);
             }
         }
-        return;
     }
 
     // TODO: currently only for 2D
-    void NavierStokesCFE::v_GetDiffusionFluxJacPoint(
+    void NavierStokesCFE::GetDiffusionFluxJacPoint(
             const int                                           nelmt,
             const Array<OneD, NekDouble>                        &conservVar, 
             const Array<OneD, const Array<OneD, NekDouble> >    &conseDeriv, 
@@ -1555,17 +1534,4 @@ if(!ElmtJac.num_elements())
         }
         return;
     }
-
-    // TODO: currently only for 2D
-    void NavierStokesCFE::v_GetFluxDerivJacDirctn(
-            const int                                           nelmt,
-            const Array<OneD, NekDouble>                        &conservVar, 
-            const Array<OneD, const Array<OneD, NekDouble> >    &conseDeriv, 
-            const NekDouble                                     mu,
-            const NekDouble                                     DmuDT,
-            const Array<OneD, NekDouble>                        &normals, 
-                 DNekMatSharedPtr                               &fluxJac)
-    {
-    }
-
 }

@@ -711,10 +711,7 @@ namespace Nektar
         int nSpaceDim = m_graph->GetSpaceDimension();
         int nvariable = inarray.num_elements();
 
-
-
         Array<OneD, Array<OneD, DNekMatSharedPtr> > ElmtJac;
-
         
         for(int nfluxDir = 0; nfluxDir < nSpaceDim; nfluxDir++)
         {
@@ -740,7 +737,8 @@ namespace Nektar
                                         Array<OneD, DNekBlkMatSharedPtr > &TraceJac)
     {
         int nvariables = inarray.num_elements();
-        GetTraceJac(inarray,TraceJac);
+        GetTraceJac(inarray,TraceJac,TraceJac);
+        // GetTraceJacVar(inarray,TraceJac);
 // Fill2DArrayOfBlkDiagonalMat(gmtxarray,0.0);
 //         m_advObject->AddTraceJac2Mat(nvariables,m_fields, TraceJac,gmtxarray);
 
@@ -750,6 +748,8 @@ namespace Nektar
 // cout <<"New one"<<endl;
         int nSpaceDim = m_graph->GetSpaceDimension();
         m_advObject->AddTraceJac2Mat_new(nvariables,nSpaceDim,m_fields, TraceJac,gmtxarray);
+
+        // GetTraceJacDeriv();
 
 // Cout2DArrayBlkMat(gmtxarray);
 // cout <<endl<< "￥￥￥￥￥￥￥￥￥￥￥￥￥￥￥￥￥￥￥￥￥￥￥￥￥￥￥"<<endl;
@@ -816,8 +816,8 @@ namespace Nektar
         const NekDouble                                   &time,
         const Array<OneD, Array<OneD, NekDouble> >        &Fwd,
         const Array<OneD, Array<OneD, NekDouble> >        &Bwd,
-        DNekBlkMatSharedPtr &FJac,
-        DNekBlkMatSharedPtr &BJac)
+        DNekBlkMatSharedPtr                               &FJac,
+        DNekBlkMatSharedPtr                               &BJac)
     {
         int nvariables = inarray.num_elements();
         int npoints    = GetNpoints();

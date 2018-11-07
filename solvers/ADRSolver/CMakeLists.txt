@@ -16,11 +16,17 @@ IF( NEKTAR_SOLVER_ADR )
         ./EquationSystems/SteadyAdvectionDiffusion.cpp
         ./EquationSystems/SteadyAdvectionDiffusionReaction.cpp
         ./EquationSystems/UnsteadyAdvection.cpp
+        ./EquationSystems/MMFAdvection.cpp
         ./EquationSystems/UnsteadyDiffusion.cpp
         ./EquationSystems/UnsteadyAdvectionDiffusion.cpp
         ./EquationSystems/UnsteadyInviscidBurger.cpp
         ./EquationSystems/UnsteadyViscousBurgers.cpp
         ./EquationSystems/EigenValuesAdvection.cpp)
+
+    #MMF advection 
+    ADD_NEKTAR_TEST        (TestMMFAdvPlane)
+    ADD_NEKTAR_TEST        (TestMMFAdvCube)
+    ADD_NEKTAR_TEST        (TestMMFAdvSphere)
 
     # 1D discontinuous advection (weak DG/flux reconstruction)
     ADD_NEKTAR_TEST(Advection1D_FRDG_GLL_LAGRANGE_SEM LENGTHY)

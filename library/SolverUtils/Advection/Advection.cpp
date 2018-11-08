@@ -84,6 +84,81 @@ void Advection::Advect(
             pOutarray, pTime, pFwd, pBwd);
 }
 
+/**
+ * @param   nConvectiveFields   Number of velocity components.
+ * @param   pFields             Expansion lists for scalar fields.
+ * @param   pAdvVel             Advection velocity.
+ * @param   pInarray            Scalar data to advect.
+ * @param   pVolumeFlux         Advected Volume flux.
+ * @param   pTime               Simulation time.
+ */
+void Advection::AdvectVolumeFlux(
+    const int nConvectiveFields,
+    const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
+    const Array<OneD, Array<OneD, NekDouble>> &pAdvVel,
+    const Array<OneD, Array<OneD, NekDouble>> &pInarray,
+    Array<OneD, Array<OneD, Array<OneD, NekDouble>>> &pVolumeFlux,
+    const NekDouble &pTime,
+    const Array<OneD, Array<OneD, NekDouble>> &pFwd,
+    const Array<OneD, Array<OneD, NekDouble>> &pBwd)
+{
+    v_AdvectVolumeFlux(nConvectiveFields, pFields, pAdvVel, pInarray, pVolumeFlux,
+                   pTime, pFwd, pBwd);
+}
+
+// Check if the function is supported
+// To notice, the const pFwd and pBwd are not initialized, need to be
+// initialized in children class
+void Advection::v_AdvectVolumeFlux(
+    const int nConvectiveFields,
+    const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
+    const Array<OneD, Array<OneD, NekDouble>> &pAdvVel,
+    const Array<OneD, Array<OneD, NekDouble>> &pInarray,
+    Array<OneD, Array<OneD, Array<OneD, NekDouble>>> &pVolumeFlux,
+    const NekDouble &pTime,
+    const Array<OneD, Array<OneD, NekDouble>> &pFwd,
+    const Array<OneD, Array<OneD, NekDouble>> &pBwd)
+{
+    ASSERTL0(false, "Not defined for AdvectVolumeFlux.");
+}
+
+/**
+ * @param   nConvectiveFields   Number of velocity components.
+ * @param   pFields             Expansion lists for scalar fields.
+ * @param   pAdvVel             Advection velocity.
+ * @param   pInarray            Scalar data to advect.
+ * @param   pSurfaceFlux         Advected Surface flux.
+ * @param   pTime               Simulation time.
+ */
+void Advection::AdvectTraceFlux(
+    const int nConvectiveFields,
+    const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
+    const Array<OneD, Array<OneD, NekDouble>> &pAdvVel,
+    const Array<OneD, Array<OneD, NekDouble>> &pInarray,
+    Array<OneD, Array<OneD, NekDouble>> &pTraceFlux,
+    const NekDouble &pTime,
+    const Array<OneD, Array<OneD, NekDouble>> &pFwd,
+    const Array<OneD, Array<OneD, NekDouble>> &pBwd)
+{
+    v_AdvectTraceFlux(nConvectiveFields, pFields, pAdvVel, pInarray, 
+                  pTraceFlux, pTime, pFwd, pBwd);
+}
+
+// Check if the function is supported
+// To notice, the const pFwd and pBwd are not initialized, need to be
+// initialized in children class
+void Advection::v_AdvectTraceFlux(
+    const int nConvectiveFields,
+    const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
+    const Array<OneD, Array<OneD, NekDouble>> &pAdvVel,
+    const Array<OneD, Array<OneD, NekDouble>> &pInarray,
+    Array<OneD, Array<OneD, NekDouble>> &pTraceFlux,
+    const NekDouble &pTime,
+    const Array<OneD, Array<OneD, NekDouble>> &pFwd,
+    const Array<OneD, Array<OneD, NekDouble>> &pBwd)
+{
+    ASSERTL0(false, "Not defined for AdvectTraceFlux.");
+}
 
 /**
  * This function should be overridden in derived classes to initialise the

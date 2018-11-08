@@ -62,5 +62,53 @@ namespace Nektar
         {
             v_Diffuse(nConvectiveFields, fields, inarray, outarray, pFwd, pBwd);
         }
+
+         void Diffusion::DiffuseVolumeFlux(
+            const int nConvectiveFields,
+            const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
+            const Array<OneD, Array<OneD, NekDouble>> &inarray,
+            Array<OneD, Array<OneD, Array<OneD, NekDouble> > >&VolumeFlux,
+            const Array<OneD, Array<OneD, NekDouble>> &pFwd,
+            const Array<OneD, Array<OneD, NekDouble>> &pBwd)
+        {
+            v_DiffuseVolumeFlux(nConvectiveFields, fields, inarray,VolumeFlux,pFwd, pBwd);
+        }
+
+        // No multiply(check if diffsionVolume difined)
+        void Diffusion::v_DiffuseVolumeFlux(
+            const int nConvectiveFields,
+            const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
+            const Array<OneD, Array<OneD, NekDouble>> &inarray,
+            Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &VolumeFlux,
+            const Array<OneD, Array<OneD, NekDouble>> &pFwd,
+            const Array<OneD, Array<OneD, NekDouble>> &pBwd)
+        {
+            ASSERTL0(false, "Not defined for function DiffuseVolumeFLux.");
+        }
+
+        void Diffusion::DiffuseTraceFlux(
+            const int nConvectiveFields,
+            const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
+            const Array<OneD, Array<OneD, NekDouble>> &inarray,
+            Array<OneD, Array<OneD, NekDouble> > &TraceFlux,
+            const Array<OneD, Array<OneD, NekDouble>> &pFwd,
+            const Array<OneD, Array<OneD, NekDouble>> &pBwd)
+        {
+            v_DiffuseTraceFlux(nConvectiveFields, fields, inarray,TraceFlux,pFwd, pBwd);
+        }
+
+        // No multiply(check if diffsionTraceFlux difined)
+        void Diffusion::v_DiffuseTraceFlux(
+            const int nConvectiveFields,
+            const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
+            const Array<OneD, Array<OneD, NekDouble>> &inarray,
+            Array<OneD, Array<OneD, NekDouble> >  &TraceFlux,
+            const Array<OneD, Array<OneD, NekDouble>> &pFwd,
+            const Array<OneD, Array<OneD, NekDouble>> &pBwd)
+        {
+            ASSERTL0(false, "Not defined for function DiffuseVolumeFLux.");
+        }
+
+    
     }
 }

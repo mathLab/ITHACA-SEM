@@ -83,6 +83,24 @@ namespace Nektar
                 const Array<OneD, Array<OneD, NekDouble> > &pFwd = NullNekDoubleArrayofArray,
                 const Array<OneD, Array<OneD, NekDouble> > &pBwd = NullNekDoubleArrayofArray);
             
+            // Diffusion Volume FLux
+            SOLVER_UTILS_EXPORT void DiffuseVolumeFlux(
+                const int nConvectiveFields,
+                const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
+                const Array<OneD, Array<OneD, NekDouble>> &inarray,
+                Array<OneD, Array<OneD, Array<OneD, NekDouble>>> &VolumeFlux,
+                const Array<OneD, Array<OneD, NekDouble>> &pFwd =NullNekDoubleArrayofArray,
+                const Array<OneD, Array<OneD, NekDouble>> &pBwd =NullNekDoubleArrayofArray);
+            
+            // Diffusion term Trace Flux
+            SOLVER_UTILS_EXPORT void DiffuseTraceFlux(
+                const int nConvectiveFields,
+                const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
+                const Array<OneD, Array<OneD, NekDouble>> &inarray,
+                Array<OneD, Array<OneD, NekDouble>> &TraceFlux,
+                const Array<OneD, Array<OneD, NekDouble>> &pFwd =NullNekDoubleArrayofArray,
+                const Array<OneD, Array<OneD, NekDouble>> &pBwd =NullNekDoubleArrayofArray);
+
             SOLVER_UTILS_EXPORT void FluxVec(
                     Array<OneD, Array<OneD, Array<OneD, NekDouble> > >
                                                                 &fluxvector);
@@ -151,6 +169,24 @@ namespace Nektar
                 const Array<OneD, Array<OneD, NekDouble> > &pFwd = NullNekDoubleArrayofArray,
                 const Array<OneD, Array<OneD, NekDouble> > &pBwd = NullNekDoubleArrayofArray)=0;
 
+            // Diffusion Volume Flux
+            virtual void v_DiffuseVolumeFlux(
+                const int nConvectiveFields,
+                const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
+                const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+                      Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &VolumeFlux,
+                const Array<OneD, Array<OneD, NekDouble> > &pFwd = NullNekDoubleArrayofArray,
+                const Array<OneD, Array<OneD, NekDouble> > &pBwd = NullNekDoubleArrayofArray);
+            
+             // Diffusion term Trace Flux
+            virtual void v_DiffuseTraceFlux(
+                const int nConvectiveFields,
+                const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
+                const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+                      Array<OneD, Array<OneD, NekDouble> >        &TraceFlux,
+                const Array<OneD, Array<OneD, NekDouble> > &pFwd = NullNekDoubleArrayofArray,
+                const Array<OneD, Array<OneD, NekDouble> > &pBwd = NullNekDoubleArrayofArray);
+            
             virtual void v_SetHomoDerivs(
                 Array<OneD, Array<OneD, NekDouble> > &deriv)
             {

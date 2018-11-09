@@ -202,12 +202,16 @@ namespace Nektar
         Array<OneD, Array<OneD, NekDouble>> inBwd(nvariables - 1);
         Array<OneD,Array<OneD, Array<OneD, NekDouble>>> inarrayDiffderivative(nDim);
 
-        for (int i = 0; i < nvariables; i++)
+        for (int i = 0; i < nvariables; ++i)
+        {
+            outarrayDiff[i] = Array<OneD, NekDouble>(npoints);
+        }
+
+        for (int i = 0; i < nvariables-1; ++i)
         {
             inarrayDiff[i] = Array<OneD, NekDouble>(npoints);
             inFwd[i]       = Array<OneD, NekDouble>(nTracePts);
             inBwd[i]       = Array<OneD, NekDouble>(nTracePts);
-            outarrayDiff[i] = Array<OneD, NekDouble>(npoints);
         }
 
         for (int i = 0; i < nDim; i++)

@@ -230,10 +230,11 @@ namespace Nektar
               Array<OneD,       Array<OneD, NekDouble> > &outarray,
         const NekDouble                                   time)
     {
-        int i;
         int nvariables = inarray.num_elements();
+        int nDim       = m_fields[0]->GetCoordim(0);
         int npoints    = GetNpoints();
         int nTracePts  = GetTraceTotPoints();
+        int nCoeffs    = m_fields[0]->GetNcoeffs();
 
         // Store forwards/backwards space along trace space
         Array<OneD, Array<OneD, NekDouble> > Fwd    (nvariables);
@@ -246,26 +247,108 @@ namespace Nektar
         }
         else
         {
-            for(i = 0; i < nvariables; ++i)
+            for(int i = 0; i < nvariables; ++i)
             {
                 Fwd[i]     = Array<OneD, NekDouble>(nTracePts, 0.0);
                 Bwd[i]     = Array<OneD, NekDouble>(nTracePts, 0.0);
                 m_fields[i]->GetFwdBwdTracePhys(inarray[i], Fwd[i], Bwd[i]);
             }
         }
+        
 
-        // Calculate advection
-        DoAdvection(inarray, outarray, time, Fwd, Bwd);
-
-        // Negate results
-        for (i = 0; i < nvariables; ++i)
+        string advName, diffName;
+        m_session->LoadSolverInfo("AdvectionType", advName, "WeakDG");
+	    m_session->LoadSolverInfo("DiffusionType", diffName, "LDGNS");
+        if(advName=="WeakDG" && diffName=="LDGNS")
         {
-            Vmath::Neg(npoints, outarray[i], 1);
+            Array<OneD, Array<OneD, Array<OneD, NekDouble>>> VolumeFlux1(nvariables);
+            Array<OneD, Array<OneD, Array<OneD, NekDouble>>> VolumeFlux2(nDim);
+            Array<OneD, Array<OneD, NekDouble>> SurfaceFlux1(nvariables);
+            Array<OneD, Array<OneD, NekDouble>> SurfaceFlux2(nvariables);
+            Array<OneD, Array<OneD, Array<OneD, NekDouble>>> VolumeOutput(nvariables);
+            Array<OneD, Array<OneD, NekDouble>> SurfaceOutput(nvariables);
+           
+            for (int i = 0; i < nvariables; ++i)
+            {
+                VolumeFlux1[i] = Array<OneD, Array<OneD, NekDouble>>(nDim);
+                VolumeOutput[i] = Array<OneD, Array<OneD, NekDouble>>(nDim);
+                for (int j= 0; j < nDim; ++j)
+                {
+                    VolumeFlux1[i][j] = Array<OneD, NekDouble>(npoints,0.0);
+                    VolumeOutput[i][j]= Array<OneD, NekDouble>(npoints, 0.0);
+                }
+            }
+            for (int j = 0; j < nDim; ++j)
+            {
+                VolumeFlux2[j] = Array<OneD, Array<OneD, NekDouble>>(nvariables);
+                for (int i = 0; i < nvariables; ++i)
+                {
+                    VolumeFlux2[j][i] = Array<OneD, NekDouble>(npoints,0.0);
+                }
+            }
+            for (int i = 0; i < nvariables; ++i)
+            {
+                SurfaceFlux1[i]  = Array<OneD, NekDouble>(nTracePts, 0.0);
+                SurfaceFlux2[i]  = Array<OneD, NekDouble>(nTracePts, 0.0);
+                SurfaceOutput[i] = Array<OneD, NekDouble>(nTracePts, 0.0);
+            }
+
+            Array<OneD, Array<OneD, NekDouble>> advVel(m_spacedim);
+
+            m_advObject->AdvectVolumeFlux(nvariables, m_fields, advVel, inarray, VolumeFlux1, time, Fwd, Bwd);
+            m_advObject->AdvectTraceFlux(nvariables, m_fields, advVel, inarray,SurfaceFlux1, time, Fwd, Bwd);
+            v_DoDiffusionFlux(inarray, VolumeFlux2, SurfaceFlux2, Fwd, Bwd);
+
+
+            //To do, Artificial Diffusion need to implement
+            // if (m_shockCaptureType != "Off")
+            // {
+            //     m_artificialDiffusion->DoArtificialDiffusionNoMul(inarray, VolumeFlux2,SurfaceFlux2);
+            // }
+
+            // Add Surface and Volume Integral together
+            Array<OneD, NekDouble> tmp(nCoeffs, 0.0);
+            for (int i = 0; i < nvariables; ++i)
+            {
+                // Add Volume integral
+                for (int j = 0; j < nDim; ++j)
+                {
+                    // Advection term needs to be negative
+                    // Add Advection and Diffusion part
+                    Vmath::Vsub(npoints, &VolumeFlux2[j][i][0], 1,
+                                &VolumeFlux1[i][j][0], 1, &VolumeOutput[i][j][0], 1);
+                }
+                m_fields[i]->IProductWRTDerivBase(VolumeOutput[i], tmp);
+
+                Vmath::Neg(nCoeffs, &tmp[0], 1);
+                // Add Surface integral
+                // Advection term needs to be negative
+                // Add Advection and Diffusion part
+                Vmath::Vsub(nTracePts, &SurfaceFlux2[i][0], 1, &SurfaceFlux1[i][0], 1,
+                            &SurfaceOutput[i][0], 1);
+                m_fields[i]->AddTraceIntegral(SurfaceOutput[i], tmp);
+                m_fields[i]->MultiplyByElmtInvMass(tmp, tmp);
+                m_fields[i]->BwdTrans(tmp, outarray[i]);
         }
 
-        // Add diffusion terms
-        DoDiffusion(inarray, outarray, Fwd, Bwd);
+        }
+        else
+        {
+            //Oringinal CompressibleFlowSolver
+            // Calculate advection
+            DoAdvection(inarray, outarray, time, Fwd, Bwd);
 
+            // Negate results
+            for (int i = 0; i < nvariables; ++i)
+            {
+                Vmath::Neg(npoints, outarray[i], 1);
+            }
+
+            // Add diffusion terms
+            DoDiffusion(inarray, outarray, Fwd, Bwd);
+
+        }
+      
         // Add forcing terms
         for (auto &x : m_forcing)
         {
@@ -288,7 +371,7 @@ namespace Nektar
                 nq     = m_fields[0]->GetExp(n)->GetTotPoints();
                 offset = m_fields[0]->GetPhys_Offset(n);
                 fac    = tstep[n] / m_timestep;
-                for(i = 0; i < nvariables; ++i)
+                for(int i = 0; i < nvariables; ++i)
                 {
                     Vmath::Smul(nq, fac, outarray[i] + offset, 1,
                                          tmp = outarray[i] + offset, 1);

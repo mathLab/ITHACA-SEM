@@ -207,8 +207,15 @@ namespace Nektar
         }
     }
 
-    
-    void DiffusionLDGNS::DiffuseCalculateDerivative(
+     /**
+     * @brief Calculate  LDG First Order derivatives
+     * @param inarray 2D [u,v,T]
+     * @param inarrayderivative 2D [du_dx,dv_dx,dT_dx],[du_dy,dv_dy,dT_dy]
+     * The equations that need a diffusion operator are those related 
+     * with the velocities and with the energy.
+     *
+     */
+    void DiffusionLDGNS::v_DiffuseCalculateDerivative(
         const int                                         nConvectiveFields,
         const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
         const Array<OneD, Array<OneD, NekDouble> >        &inarray,
@@ -218,6 +225,7 @@ namespace Nektar
     {
         int nDim      = fields[0]->GetCoordim(0);
         int nScalars  = inarray.num_elements();
+        int nPts      = fields[0]->GetTotPoints();
         int nCoeffs   = fields[0]->GetNcoeffs();
         int nTracePts = fields[0]->GetTrace()->GetTotPoints();
 
@@ -226,7 +234,8 @@ namespace Nektar
 
         Array<OneD, Array<OneD, Array<OneD, NekDouble> > > 
                                                 numericalFluxO1(m_spaceDim);
-
+        
+                                            
         for (int j = 0; j < m_spaceDim; ++j)
         {
             numericalFluxO1[j] = Array<OneD, Array<OneD, NekDouble> >(
@@ -269,14 +278,10 @@ namespace Nektar
 
 
      /**
-     * @brief Calculate weak DG Diffusion in the LDG form for the 
-     * Navier-Stokes (NS) equations:
-     * To Do, change inarrayderivative to const Array, needs to change related functor definition.
-     * \f$ \langle\psi, \hat{u}\cdot n\rangle 
-     *   - \langle\nabla\psi \cdot u\rangle
-     *     \langle\phi, \hat{q}\cdot n\rangle - 
-     *     (\nabla \phi \cdot q) \rangle \f$
-     *
+     * @brief Calculate LDG Diffusion Volume Flux 
+     * @param inarray 2D [u,v,T]
+     * @param inarrayderivative 2D [du_dx,dv_dx,dT_dx],[du_dy,dv_dy,dT_dy]
+     * @param VolumeFlux volumeflxu integrant
      * The equations that need a diffusion operator are those related 
      * with the velocities and with the energy.
      *
@@ -300,20 +305,23 @@ namespace Nektar
         //     }
         // }
 
-        m_fluxVectorNS(inarray, inarrayderivative, m_viscTensor);
+        int nScalars  = inarray.num_elements();
+        int nPts      = fields[0]->GetTotPoints();
+
+        // Initialisation viscous tensor
+        // ASSERTL0(VolumeFlux.num_elements()==m_spaceDim,'Array dimension of VolumeFlux is wrong');
+        // ASSERTL0(VolumeFlux[0].num_elements()==(nScalars+1),'Primitive variables used should be one smaller than nConvectiveVariables');
+
+        m_fluxVectorNS(inarray, inarrayderivative, VolumeFlux);
 
     }
 
 
      /**
-     * @brief Calculate weak DG Diffusion in the LDG form for the 
-     * Navier-Stokes (NS) equations:
-     *
-     * \f$ \langle\psi, \hat{u}\cdot n\rangle 
-     *   - \langle\nabla\psi \cdot u\rangle
-     *     \langle\phi, \hat{q}\cdot n\rangle - 
-     *     (\nabla \phi \cdot q) \rangle \f$
-     *
+     * @brief Calculate LDG Diffusion Trace Flux
+     * @param inarray 2D [u,v,T]
+     * @param inarrayderivative 2D [du_dx,dv_dx,dT_dx],[du_dy,dv_dy,dT_dy]
+     * @param VolumeFlux volumeflxu integrant
      * The equations that need a diffusion operator are those related 
      * with the velocities and with the energy.
      *
@@ -323,6 +331,7 @@ namespace Nektar
         const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
         const Array<OneD, Array<OneD, NekDouble> >        &inarray,
               Array<OneD,Array<OneD, Array<OneD, NekDouble> > >       &inarrayderivative,
+              Array<OneD, Array<OneD, Array<OneD, NekDouble> > >       &VolumeFlux,
               Array<OneD, Array<OneD, NekDouble> >        &TraceFlux,
         const Array<OneD, Array<OneD, NekDouble> >        &pFwd,
         const Array<OneD, Array<OneD, NekDouble> >        &pBwd)
@@ -340,7 +349,7 @@ namespace Nektar
 
         // Compute u from q_{\eta} and q_{\xi}
         // Obtain numerical fluxes
-        v_NumericalFluxO2(fields, inarray, m_viscTensor, TraceFlux);
+        v_NumericalFluxO2(fields, inarray, VolumeFlux, TraceFlux);
 
     }
 

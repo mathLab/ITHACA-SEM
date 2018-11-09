@@ -174,6 +174,16 @@ namespace Nektar
             // Do nothing by default
         }
 
+        virtual void v_DoDiffusionFlux(
+            const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+            Array<OneD, Array<OneD, Array<OneD, NekDouble>>> &VolumeFlux,
+            Array<OneD, Array<OneD, NekDouble>> &SurfaceFlux,
+            const Array<OneD, Array<OneD, NekDouble> >       &pFwd,
+            const Array<OneD, Array<OneD, NekDouble> >       &pBwd)
+        {
+            // Do nothing by default
+        }
+
         virtual Array<OneD, NekDouble> v_GetMaxStdVelocity();
     };
 }

@@ -256,7 +256,7 @@ namespace Nektar
         }
         
         //Only test solver use the reduced coddes
-        if(m_Weak)
+        if(m_ImproveEfficiency)
         {
             Array<OneD, Array<OneD, Array<OneD, NekDouble>>> VolumeFlux1(nvariables);
             Array<OneD, Array<OneD, Array<OneD, NekDouble>>> VolumeFlux2(nDim);
@@ -291,11 +291,11 @@ namespace Nektar
             v_DoDiffusionFlux(inarray, VolumeFlux2, SurfaceFlux2, Fwd, Bwd);
 
 
-            //To do, Artificial Diffusion need to implement
-            // if (m_shockCaptureType != "Off")
-            // {
-            //     m_artificialDiffusion->DoArtificialDiffusionNoMul(inarray, VolumeFlux2,SurfaceFlux2);
-            // }
+            //Artificial Diffusion need to implement
+            if (m_shockCaptureType != "Off")
+            {
+                m_artificialDiffusion->DoArtificialDiffusionFlux(inarray, VolumeFlux2,SurfaceFlux2);
+            }
 
             // Add Surface and Volume Integral together
             Array<OneD, NekDouble> tmp(nCoeffs, 0.0);

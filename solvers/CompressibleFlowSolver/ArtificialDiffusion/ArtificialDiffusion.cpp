@@ -103,6 +103,76 @@ void ArtificialDiffusion::v_DoArtificialDiffusion(
     }
 }
 
+void ArtificialDiffusion::DoArtificialDiffusionFlux(
+            const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+            Array<OneD, Array<OneD, Array<OneD, NekDouble>>> &VolumeArray,
+                  Array<OneD, Array<OneD, NekDouble>>        &SurfaceArray)
+{
+    v_DoArtificialDiffusionFlux(inarray, VolumeArray,SurfaceArray);
+}
+
+/**
+ *
+ */
+//To DO, need to judge whether conservative/primal derivatives!
+void ArtificialDiffusion::v_DoArtificialDiffusionFlux(
+    const Array<OneD, const Array<OneD, NekDouble>> &inarray,
+    Array<OneD, Array<OneD, Array<OneD, NekDouble>>>&VolumeFlux,
+    Array<OneD, Array<OneD, NekDouble>>             &SurfaceFlux)
+{
+    int nvariables = inarray.num_elements();
+    int npoints    = m_fields[0]->GetNpoints();
+    int nTracePts  = m_fields[0]->GetTrace()->GetTotPoints();
+    int nDim       = m_fields[0]->GetCoordim(0);
+
+    Array<OneD, Array<OneD, Array<OneD, NekDouble>>> VolumeDiff(nDim);
+    Array<OneD, Array<OneD, NekDouble>> SurfaceDiff(nvariables);
+     Array<OneD,Array<OneD, Array<OneD, NekDouble>>> inarrayDiffderivative(nDim);
+    
+    for (int j = 0; j < nDim; ++j)
+    {
+        VolumeDiff[j] = Array<OneD, Array<OneD, NekDouble>>(nvariables);
+        for (int i = 0; i < nvariables; ++i)
+        {
+            VolumeDiff[j][i] = Array<OneD, NekDouble>(npoints, 0.0);
+        }
+    }
+    for (int i = 0; i < nvariables; ++i)
+    {
+        SurfaceDiff[i] = Array<OneD, NekDouble>(nTracePts, 0.0);
+    }
+
+    for (int i = 0; i < nDim; i++)
+    {
+        inarrayDiffderivative[i]=Array<OneD, Array<OneD, NekDouble>> (nvariables-1);
+        for(int j=0;j<nvariables;j++)
+        {
+            inarrayDiffderivative[i][j]=Array<OneD, NekDouble>(npoints);
+        }
+    }
+
+    // Diffusion term in physical rhs form
+    // To notice, needs to firstly calculate volumeflux, traceflux uses it.
+    m_diffusion->DiffuseCalculateDerivative(nvariables,m_fields,inarray,inarrayDiffderivative);
+    m_diffusion->DiffuseVolumeFlux(nvariables, m_fields, inarray,inarrayDiffderivative, VolumeFlux);
+    m_diffusion->DiffuseTraceFlux(nvariables, m_fields, inarray,inarrayDiffderivative,VolumeFlux,SurfaceFlux);
+
+    for (int j = 0; j < nDim; ++j)
+    {
+        for (int i = 0; i < nvariables; ++i)
+        {
+            Vmath::Vadd(npoints, &VolumeDiff[j][i][0], 1, &VolumeFlux[j][i][0], 1,
+                        &VolumeFlux[j][i][0], 1);
+        }
+    }
+    for (int i = 0; i < nvariables; ++i)
+    {
+        Vmath::Vadd(nTracePts, &SurfaceDiff[i][0], 1, &SurfaceFlux[i][0], 1,
+                   &SurfaceFlux[i][0], 1);
+    }
+
+}
+
 /**
  *
  */

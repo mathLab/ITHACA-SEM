@@ -68,7 +68,7 @@ namespace Nektar
         {
             m_viscousForcing[i] = Array<OneD, NekDouble>(npoints, 0.0);
         }
-        m_Weak = false;
+        m_ImproveEfficiency= false;
     }
 
     void NavierStokesCFEAxisym::v_DoDiffusion(

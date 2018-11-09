@@ -115,7 +115,7 @@ namespace Nektar
 	    m_session->LoadSolverInfo("DiffusionType", diffName, "LDGNS");
         if(advName=="WeakDG" && diffName=="LDGNS")
         {
-            m_Weak=true;
+            m_ImproveEfficiency=true;
         }
     }
 

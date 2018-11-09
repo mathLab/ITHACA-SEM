@@ -325,7 +325,7 @@ class Interpolator;
 
         protected:
             /// Temparary factor to determine whether strong/weak
-            bool                                       m_Weak;
+            bool                                       m_ImproveEfficiency;
             /// Communicator
             LibUtilities::CommSharedPtr                 m_comm;
             /// The session reader

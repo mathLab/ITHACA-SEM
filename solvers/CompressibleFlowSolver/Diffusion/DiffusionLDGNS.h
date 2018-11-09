@@ -82,6 +82,14 @@ namespace Nektar
             const Array<OneD, Array<OneD, NekDouble> > &pFwd = NullNekDoubleArrayofArray,
             const Array<OneD, Array<OneD, NekDouble> > &pBwd = NullNekDoubleArrayofArray);
 
+        void DiffuseCalculateDerivative(
+            const int                                          nConvective,
+            const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
+            const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+                  Array<OneD,Array<OneD, Array<OneD, NekDouble> > >       &inarrayderivative,
+            const Array<OneD, Array<OneD, NekDouble> > &pFwd = NullNekDoubleArrayofArray,
+            const Array<OneD, Array<OneD, NekDouble> > &pBwd = NullNekDoubleArrayofArray);
+
         virtual void v_DiffuseVolumeFlux(
             const int                                          nConvective,
             const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,

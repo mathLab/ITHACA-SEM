@@ -207,11 +207,11 @@ namespace Nektar
          *                            time integration class.
          */
         void AdvectionWeakDG::v_AdvectVolumeFlux(
-            const int nConvectiveFields,
+            const int                                         nConvectiveFields,
             const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
-            const Array<OneD, Array<OneD, NekDouble>> &advVel,
-            const Array<OneD, Array<OneD, NekDouble>> &inarray,
-            Array<OneD, Array<OneD, Array<OneD, NekDouble>>> &VolumeFlux,
+            const Array<OneD, Array<OneD, NekDouble>>         &advVel,
+            const Array<OneD, Array<OneD, NekDouble>>         &inarray,
+            Array<OneD, Array<OneD, Array<OneD, NekDouble>>>  &VolumeFlux,
             const NekDouble &time)
         {
             int nPointsTot      = fields[0]->GetTotPoints();
@@ -234,14 +234,14 @@ namespace Nektar
          *                            time integration class.
          */
         void AdvectionWeakDG::v_AdvectTraceFlux(
-            const int nConvectiveFields,
+            const int                                         nConvectiveFields,
             const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
-            const Array<OneD, Array<OneD, NekDouble>> &advVel,
-            const Array<OneD, Array<OneD, NekDouble>> &inarray,
-            Array<OneD, Array<OneD, NekDouble>> &TraceFlux, 
-            const NekDouble &time,
-            const Array<OneD, Array<OneD, NekDouble>> &pFwd,
-            const Array<OneD, Array<OneD, NekDouble>> &pBwd)
+            const Array<OneD, Array<OneD, NekDouble>>         &advVel,
+            const Array<OneD, Array<OneD, NekDouble>>         &inarray,
+                  Array<OneD, Array<OneD, NekDouble>>         &TraceFlux, 
+            const NekDouble                                   &time,
+            const Array<OneD, Array<OneD, NekDouble>>         &pFwd,
+            const Array<OneD, Array<OneD, NekDouble>>         &pBwd)
         {
             int nPointsTot      = fields[0]->GetTotPoints();
             int nCoeffs         = fields[0]->GetNcoeffs();

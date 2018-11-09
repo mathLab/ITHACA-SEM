@@ -219,7 +219,7 @@ namespace Nektar
         const int                                         nConvectiveFields,
         const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
         const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-              Array<OneD,Array<OneD, Array<OneD, NekDouble> > >       &inarrayderivative,
+        Array<OneD,Array<OneD, Array<OneD, NekDouble> > > &inarrayderivative,
         const Array<OneD, Array<OneD, NekDouble> >        &pFwd,
         const Array<OneD, Array<OneD, NekDouble> >        &pBwd)
     {
@@ -231,11 +231,8 @@ namespace Nektar
 
         Array<OneD, NekDouble>               tmp1(nCoeffs);
         Array<OneD, Array<OneD, NekDouble> > tmp2(nConvectiveFields);
-
-        Array<OneD, Array<OneD, Array<OneD, NekDouble> > > 
-                                                numericalFluxO1(m_spaceDim);
-        
-                                            
+        Array<OneD, Array<OneD, Array<OneD, NekDouble> > > numericalFluxO1(m_spaceDim);
+                                                   
         for (int j = 0; j < m_spaceDim; ++j)
         {
             numericalFluxO1[j] = Array<OneD, Array<OneD, NekDouble> >(
@@ -290,8 +287,8 @@ namespace Nektar
         const int                                         nConvectiveFields,
         const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
         const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-              Array<OneD,Array<OneD, Array<OneD, NekDouble> > >       &inarrayderivative,
-              Array<OneD, Array<OneD, Array<OneD, NekDouble> > >       &VolumeFlux)
+        Array<OneD,Array<OneD, Array<OneD, NekDouble> > > &inarrayderivative,
+        Array<OneD, Array<OneD, Array<OneD, NekDouble> > >&VolumeFlux)
     {
         //?Homogeneous? Need to change here to inarrayderivative
         //For 3D Homogeneous 1D only take derivatives in 3rd direction
@@ -328,9 +325,9 @@ namespace Nektar
         const int                                         nConvectiveFields,
         const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
         const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-              Array<OneD,Array<OneD, Array<OneD, NekDouble> > >       &inarrayderivative,
-              Array<OneD, Array<OneD, Array<OneD, NekDouble> > >       &VolumeFlux,
-              Array<OneD, Array<OneD, NekDouble> >        &TraceFlux,
+        Array<OneD,Array<OneD, Array<OneD, NekDouble> > > &inarrayderivative,
+        Array<OneD, Array<OneD, Array<OneD, NekDouble> > >&VolumeFlux,
+        Array<OneD, Array<OneD, NekDouble> >              &TraceFlux,
         const Array<OneD, Array<OneD, NekDouble> >        &pFwd,
         const Array<OneD, Array<OneD, NekDouble> >        &pBwd)
     {

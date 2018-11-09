@@ -60,32 +60,32 @@ namespace Nektar
                 Array<OneD, MultiRegions::ExpListSharedPtr>        pFields);
 
             virtual void v_Advect(
-                const int                                          nConvective,
+                const int                                         nConvective,
                 const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
                 const Array<OneD, Array<OneD, NekDouble> >        &advVel,
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                       Array<OneD, Array<OneD, NekDouble> >        &outarray,
                 const NekDouble                                   &time,
-                const Array<OneD, Array<OneD, NekDouble> > &pFwd = NullNekDoubleArrayofArray,
-                const Array<OneD, Array<OneD, NekDouble> > &pBwd = NullNekDoubleArrayofArray);
+                const Array<OneD, Array<OneD, NekDouble> >        &pFwd = NullNekDoubleArrayofArray,
+                const Array<OneD, Array<OneD, NekDouble> >        &pBwd = NullNekDoubleArrayofArray);
 
              virtual void v_AdvectVolumeFlux(
-                const int nConvective,
+                const int                                         nConvective,
                 const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
-                const Array<OneD, Array<OneD, NekDouble>> &advVel,
-                const Array<OneD, Array<OneD, NekDouble>> &inarray,
-                Array<OneD, Array<OneD, Array<OneD, NekDouble>>> &VolumeFlux,
-                const NekDouble &time);
+                const Array<OneD, Array<OneD, NekDouble>>         &advVel,
+                const Array<OneD, Array<OneD, NekDouble>>         &inarray,
+                Array<OneD, Array<OneD, Array<OneD, NekDouble>>>  &VolumeFlux,
+                const NekDouble                                   &time);
 
              virtual void v_AdvectTraceFlux(
                 const int nConvective,
                 const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
-                const Array<OneD, Array<OneD, NekDouble>> &advVel,
-                const Array<OneD, Array<OneD, NekDouble>> &inarray,
-                Array<OneD, Array<OneD, NekDouble>> &TraceFlux, 
-                const NekDouble &time,
-                const Array<OneD, Array<OneD, NekDouble>> &pFwd =NullNekDoubleArrayofArray,
-                const Array<OneD, Array<OneD, NekDouble>> &pBwd =NullNekDoubleArrayofArray);
+                const Array<OneD, Array<OneD, NekDouble>>         &advVel,
+                const Array<OneD, Array<OneD, NekDouble>>         &inarray,
+                      Array<OneD, Array<OneD, NekDouble>>         &TraceFlux, 
+                const NekDouble                                   &time,
+                const Array<OneD, Array<OneD, NekDouble>>         &pFwd =NullNekDoubleArrayofArray,
+                const Array<OneD, Array<OneD, NekDouble>>         &pBwd =NullNekDoubleArrayofArray);
         };
     }
 }

@@ -64,33 +64,33 @@ namespace Nektar
         }
 
         void Diffusion::DiffuseCalculateDerivative(
-            const int nConvectiveFields,
+            const int                                         nConvectiveFields,
             const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
-            const Array<OneD, Array<OneD, NekDouble>> &inarray,
-            Array<OneD,Array<OneD, Array<OneD, NekDouble> > >       &inarrayderivative,
-            const Array<OneD, Array<OneD, NekDouble>> &pFwd,
-            const Array<OneD, Array<OneD, NekDouble>> &pBwd)
+            const Array<OneD, Array<OneD, NekDouble>>         &inarray,
+            Array<OneD,Array<OneD, Array<OneD, NekDouble> > > &inarrayderivative,
+            const Array<OneD, Array<OneD, NekDouble>>         &pFwd,
+            const Array<OneD, Array<OneD, NekDouble>>         &pBwd)
         {
             v_DiffuseCalculateDerivative(nConvectiveFields, fields, inarray,inarrayderivative,pFwd, pBwd);
         }
 
         // No multiply(check if diffsionVolume difined)
         void Diffusion::v_DiffuseCalculateDerivative(
-            const int nConvectiveFields,
+            const int                                         nConvectiveFields,
             const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
-            const Array<OneD, Array<OneD, NekDouble>> &inarray,
-            Array<OneD,Array<OneD, Array<OneD, NekDouble> > >       &inarrayderivative,
-            const Array<OneD, Array<OneD, NekDouble>> &pFwd,
-            const Array<OneD, Array<OneD, NekDouble>> &pBwd)
+            const Array<OneD, Array<OneD, NekDouble>>         &inarray,
+            Array<OneD,Array<OneD, Array<OneD, NekDouble> > > &inarrayderivative,
+            const Array<OneD, Array<OneD, NekDouble>>         &pFwd,
+            const Array<OneD, Array<OneD, NekDouble>>         &pBwd)
         {
             ASSERTL0(false, "Not defined for function DiffuseVolumeFLux.");
         }
 
          void Diffusion::DiffuseVolumeFlux(
-            const int nConvectiveFields,
+            const int                                         nConvectiveFields,
             const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
-            const Array<OneD, Array<OneD, NekDouble>> &inarray,
-            Array<OneD,Array<OneD, Array<OneD, NekDouble> > >       &inarrayderivative,
+            const Array<OneD, Array<OneD, NekDouble>>         &inarray,
+            Array<OneD,Array<OneD, Array<OneD, NekDouble> > > &inarrayderivative,
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > >&VolumeFlux)
         {
             v_DiffuseVolumeFlux(nConvectiveFields, fields, inarray,inarrayderivative,VolumeFlux);
@@ -98,38 +98,38 @@ namespace Nektar
 
         // No multiply(check if diffsionVolume difined)
         void Diffusion::v_DiffuseVolumeFlux(
-            const int nConvectiveFields,
+            const int                                         nConvectiveFields,
             const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
-            const Array<OneD, Array<OneD, NekDouble>> &inarray,
-            Array<OneD,Array<OneD, Array<OneD, NekDouble> > >       &inarrayderivative,
-            Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &VolumeFlux)
+            const Array<OneD, Array<OneD, NekDouble>>         &inarray,
+            Array<OneD,Array<OneD, Array<OneD, NekDouble> > > &inarrayderivative,
+            Array<OneD, Array<OneD, Array<OneD, NekDouble> > >&VolumeFlux)
         {
             ASSERTL0(false, "Not defined for function DiffuseVolumeFLux.");
         }
 
         void Diffusion::DiffuseTraceFlux(
-            const int nConvectiveFields,
+            const int                                         nConvectiveFields,
             const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
-            const Array<OneD, Array<OneD, NekDouble>> &inarray,
-            Array<OneD,Array<OneD, Array<OneD, NekDouble> > >       &inarrayderivative,
-            Array<OneD, Array<OneD, Array<OneD, NekDouble> > >       &VolumeFlux,
-            Array<OneD, Array<OneD, NekDouble> > &TraceFlux,
-            const Array<OneD, Array<OneD, NekDouble>> &pFwd,
-            const Array<OneD, Array<OneD, NekDouble>> &pBwd)
+            const Array<OneD, Array<OneD, NekDouble>>         &inarray,
+            Array<OneD,Array<OneD, Array<OneD, NekDouble> > > &inarrayderivative,
+            Array<OneD, Array<OneD, Array<OneD, NekDouble> > >&VolumeFlux,
+                  Array<OneD, Array<OneD, NekDouble> >        &TraceFlux,
+            const Array<OneD, Array<OneD, NekDouble>>         &pFwd,
+            const Array<OneD, Array<OneD, NekDouble>>         &pBwd)
         {
             v_DiffuseTraceFlux(nConvectiveFields, fields, inarray,inarrayderivative,VolumeFlux,TraceFlux,pFwd, pBwd);
         }
 
         // No multiply(check if diffsionTraceFlux difined)
         void Diffusion::v_DiffuseTraceFlux(
-            const int nConvectiveFields,
+            const int                                         nConvectiveFields,
             const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
-            const Array<OneD, Array<OneD, NekDouble>> &inarray,
-            Array<OneD,Array<OneD, Array<OneD, NekDouble> > >       &inarrayderivative,
-            Array<OneD, Array<OneD, Array<OneD, NekDouble> > >       &VolumeFlux,
-            Array<OneD, Array<OneD, NekDouble> >  &TraceFlux,
-            const Array<OneD, Array<OneD, NekDouble>> &pFwd,
-            const Array<OneD, Array<OneD, NekDouble>> &pBwd)
+            const Array<OneD, Array<OneD, NekDouble>>         &inarray,
+            Array<OneD,Array<OneD, Array<OneD, NekDouble> > > &inarrayderivative,
+            Array<OneD, Array<OneD, Array<OneD, NekDouble> > >&VolumeFlux,
+            Array<OneD, Array<OneD, NekDouble> >              &TraceFlux,
+            const Array<OneD, Array<OneD, NekDouble>>         &pFwd,
+            const Array<OneD, Array<OneD, NekDouble>>         &pBwd)
         {
             ASSERTL0(false, "Not defined function DiffuseTraceFLux.");
         }

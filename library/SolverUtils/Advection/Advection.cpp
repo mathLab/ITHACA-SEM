@@ -93,12 +93,12 @@ void Advection::Advect(
  * @param   pTime               Simulation time.
  */
 void Advection::AdvectVolumeFlux(
-    const int nConvectiveFields,
+    const int                                         nConvectiveFields,
     const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
-    const Array<OneD, Array<OneD, NekDouble>> &pAdvVel,
-    const Array<OneD, Array<OneD, NekDouble>> &pInarray,
-    Array<OneD, Array<OneD, Array<OneD, NekDouble>>> &pVolumeFlux,
-    const NekDouble &pTime)
+    const Array<OneD, Array<OneD, NekDouble>>         &pAdvVel,
+    const Array<OneD, Array<OneD, NekDouble>>         &pInarray,
+    Array<OneD, Array<OneD, Array<OneD, NekDouble>>>  &pVolumeFlux,
+    const NekDouble                                   &pTime)
 {
     v_AdvectVolumeFlux(nConvectiveFields, pFields, pAdvVel, pInarray, pVolumeFlux,
                    pTime);
@@ -110,10 +110,10 @@ void Advection::AdvectVolumeFlux(
 void Advection::v_AdvectVolumeFlux(
     const int nConvectiveFields,
     const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
-    const Array<OneD, Array<OneD, NekDouble>> &pAdvVel,
-    const Array<OneD, Array<OneD, NekDouble>> &pInarray,
-    Array<OneD, Array<OneD, Array<OneD, NekDouble>>> &pVolumeFlux,
-    const NekDouble &pTime)
+    const Array<OneD, Array<OneD, NekDouble>>         &pAdvVel,
+    const Array<OneD, Array<OneD, NekDouble>>         &pInarray,
+    Array<OneD, Array<OneD, Array<OneD, NekDouble>>>  &pVolumeFlux,
+    const NekDouble                                   &pTime)
 {
     ASSERTL0(false, "Not defined for AdvectVolumeFlux.");
 }
@@ -129,12 +129,12 @@ void Advection::v_AdvectVolumeFlux(
 void Advection::AdvectTraceFlux(
     const int nConvectiveFields,
     const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
-    const Array<OneD, Array<OneD, NekDouble>> &pAdvVel,
-    const Array<OneD, Array<OneD, NekDouble>> &pInarray,
-    Array<OneD, Array<OneD, NekDouble>> &pTraceFlux,
-    const NekDouble &pTime,
-    const Array<OneD, Array<OneD, NekDouble>> &pFwd,
-    const Array<OneD, Array<OneD, NekDouble>> &pBwd)
+    const Array<OneD, Array<OneD, NekDouble>>         &pAdvVel,
+    const Array<OneD, Array<OneD, NekDouble>>         &pInarray,
+    Array<OneD, Array<OneD, NekDouble>>               &pTraceFlux,
+    const NekDouble                                   &pTime,
+    const Array<OneD, Array<OneD, NekDouble>>         &pFwd,
+    const Array<OneD, Array<OneD, NekDouble>>         &pBwd)
 {
     v_AdvectTraceFlux(nConvectiveFields, pFields, pAdvVel, pInarray, 
                   pTraceFlux, pTime, pFwd, pBwd);
@@ -146,12 +146,12 @@ void Advection::AdvectTraceFlux(
 void Advection::v_AdvectTraceFlux(
     const int nConvectiveFields,
     const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
-    const Array<OneD, Array<OneD, NekDouble>> &pAdvVel,
-    const Array<OneD, Array<OneD, NekDouble>> &pInarray,
-    Array<OneD, Array<OneD, NekDouble>> &pTraceFlux,
-    const NekDouble &pTime,
-    const Array<OneD, Array<OneD, NekDouble>> &pFwd,
-    const Array<OneD, Array<OneD, NekDouble>> &pBwd)
+    const Array<OneD, Array<OneD, NekDouble>>         &pAdvVel,
+    const Array<OneD, Array<OneD, NekDouble>>         &pInarray,
+    Array<OneD, Array<OneD, NekDouble>>               &pTraceFlux,
+    const NekDouble                                   &pTime,
+    const Array<OneD, Array<OneD, NekDouble>>         &pFwd,
+    const Array<OneD, Array<OneD, NekDouble>>         &pBwd)
 {
     ASSERTL0(false, "Not defined for AdvectTraceFlux.");
 }

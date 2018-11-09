@@ -193,10 +193,10 @@ namespace Nektar
 
      void NavierStokesCFE::v_DoDiffusionFlux(
         const Array<OneD, const Array<OneD, NekDouble>> &inarray,
-        Array<OneD, Array<OneD, Array<OneD, NekDouble>>> &VolumeFlux,
-        Array<OneD, Array<OneD, NekDouble>> &SurfaceFlux,
-        const Array<OneD, Array<OneD, NekDouble>> &pFwd,
-        const Array<OneD, Array<OneD, NekDouble>> &pBwd)
+        Array<OneD, Array<OneD, Array<OneD, NekDouble>>>&VolumeFlux,
+        Array<OneD, Array<OneD, NekDouble>>             &SurfaceFlux,
+        const Array<OneD, Array<OneD, NekDouble>>       &pFwd,
+        const Array<OneD, Array<OneD, NekDouble>>       &pBwd)
     {
         int nDim= m_fields[0]->GetCoordim(0);
         int nvariables = inarray.num_elements();

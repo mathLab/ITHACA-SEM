@@ -91,7 +91,7 @@ public:
         const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
         const Array<OneD, Array<OneD, NekDouble> >        &advVel,
         const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-        Array<OneD, Array<OneD, Array<OneD, NekDouble>>> &VolumeFlux,
+        Array<OneD, Array<OneD, Array<OneD, NekDouble>>>  &VolumeFlux,
         const NekDouble                                   &time);
 
     /// Interface function to advect the Trace field.
@@ -100,10 +100,10 @@ public:
         const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
         const Array<OneD, Array<OneD, NekDouble> >        &advVel,
         const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-        Array<OneD, Array<OneD, NekDouble>> &TraceFlux,
+        Array<OneD, Array<OneD, NekDouble>>               &TraceFlux,
         const NekDouble                                   &time,
-        const Array<OneD, Array<OneD, NekDouble> > &pFwd = NullNekDoubleArrayofArray,
-        const Array<OneD, Array<OneD, NekDouble> > &pBwd = NullNekDoubleArrayofArray);
+        const Array<OneD, Array<OneD, NekDouble> >        &pFwd = NullNekDoubleArrayofArray,
+        const Array<OneD, Array<OneD, NekDouble> >        &pBwd = NullNekDoubleArrayofArray);
 
     /**
      * @brief Set the flux vector callback function.
@@ -178,11 +178,11 @@ protected:
     
     /// Advects Volume Flux.
     SOLVER_UTILS_EXPORT virtual void v_AdvectVolumeFlux(
-        const int nConvectiveFields,
+        const                                             int nConvectiveFields,
         const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
         const Array<OneD, Array<OneD, NekDouble> >        &advVel,
         const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-        Array<OneD, Array<OneD, Array<OneD, NekDouble>>> &pVolumeFlux,
+        Array<OneD, Array<OneD, Array<OneD, NekDouble>>>  &pVolumeFlux,
         const NekDouble                                   &time);
     
     /// Advects Trace Flux.
@@ -191,10 +191,10 @@ protected:
         const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
         const Array<OneD, Array<OneD, NekDouble> >        &advVel,
         const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-        Array<OneD, Array<OneD, NekDouble>> &pTraceFlux,
+        Array<OneD, Array<OneD, NekDouble>>               &pTraceFlux,
         const NekDouble                                   &time,
-        const Array<OneD, Array<OneD, NekDouble> > &pFwd = NullNekDoubleArrayofArray,
-        const Array<OneD, Array<OneD, NekDouble> > &pBwd = NullNekDoubleArrayofArray);
+        const Array<OneD, Array<OneD, NekDouble> >        &pFwd = NullNekDoubleArrayofArray,
+        const Array<OneD, Array<OneD, NekDouble> >        &pBwd = NullNekDoubleArrayofArray);
 
     /// Overrides the base flow used during linearised advection
     SOLVER_UTILS_EXPORT virtual void v_SetBaseFlow(

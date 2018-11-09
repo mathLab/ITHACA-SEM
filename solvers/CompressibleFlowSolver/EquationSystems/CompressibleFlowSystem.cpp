@@ -258,22 +258,17 @@ namespace Nektar
         //Only test solver use the reduced coddes
         if(m_Weak)
         {
-            ASSERTL0(m_Weak!=0,"Only compressible NavierStokes solver using AdvectionWeakDG and DiffusionWeakDG can use this code");
             Array<OneD, Array<OneD, Array<OneD, NekDouble>>> VolumeFlux1(nvariables);
             Array<OneD, Array<OneD, Array<OneD, NekDouble>>> VolumeFlux2(nDim);
             Array<OneD, Array<OneD, NekDouble>> SurfaceFlux1(nvariables);
             Array<OneD, Array<OneD, NekDouble>> SurfaceFlux2(nvariables);
-            Array<OneD, Array<OneD, Array<OneD, NekDouble>>> VolumeOutput(nvariables);
-            Array<OneD, Array<OneD, NekDouble>> SurfaceOutput(nvariables);
            
             for (int i = 0; i < nvariables; ++i)
             {
                 VolumeFlux1[i] = Array<OneD, Array<OneD, NekDouble>>(nDim);
-                VolumeOutput[i] = Array<OneD, Array<OneD, NekDouble>>(nDim);
                 for (int j= 0; j < nDim; ++j)
                 {
                     VolumeFlux1[i][j] = Array<OneD, NekDouble>(npoints,0.0);
-                    VolumeOutput[i][j]= Array<OneD, NekDouble>(npoints, 0.0);
                 }
             }
             for (int j = 0; j < nDim; ++j)
@@ -288,11 +283,9 @@ namespace Nektar
             {
                 SurfaceFlux1[i]  = Array<OneD, NekDouble>(nTracePts, 0.0);
                 SurfaceFlux2[i]  = Array<OneD, NekDouble>(nTracePts, 0.0);
-                SurfaceOutput[i] = Array<OneD, NekDouble>(nTracePts, 0.0);
             }
 
             Array<OneD, Array<OneD, NekDouble>> advVel(m_spacedim);
-
             m_advObject->AdvectVolumeFlux(nvariables, m_fields, advVel, inarray, VolumeFlux1, time, Fwd, Bwd);
             m_advObject->AdvectTraceFlux(nvariables, m_fields, advVel, inarray,SurfaceFlux1, time, Fwd, Bwd);
             v_DoDiffusionFlux(inarray, VolumeFlux2, SurfaceFlux2, Fwd, Bwd);
@@ -314,17 +307,17 @@ namespace Nektar
                     // Advection term needs to be negative
                     // Add Advection and Diffusion part
                     Vmath::Vsub(npoints, &VolumeFlux2[j][i][0], 1,
-                                &VolumeFlux1[i][j][0], 1, &VolumeOutput[i][j][0], 1);
+                                &VolumeFlux1[i][j][0], 1, &VolumeFlux1[i][j][0], 1);
                 }
-                m_fields[i]->IProductWRTDerivBase(VolumeOutput[i], tmp);
+                m_fields[i]->IProductWRTDerivBase(VolumeFlux1[i], tmp);
 
                 Vmath::Neg(nCoeffs, &tmp[0], 1);
                 // Add Surface integral
                 // Advection term needs to be negative
                 // Add Advection and Diffusion part
                 Vmath::Vsub(nTracePts, &SurfaceFlux2[i][0], 1, &SurfaceFlux1[i][0], 1,
-                            &SurfaceOutput[i][0], 1);
-                m_fields[i]->AddTraceIntegral(SurfaceOutput[i], tmp);
+                            &SurfaceFlux1[i][0], 1);
+                m_fields[i]->AddTraceIntegral(SurfaceFlux1[i], tmp);
                 m_fields[i]->MultiplyByElmtInvMass(tmp, tmp);
                 m_fields[i]->BwdTrans(tmp, outarray[i]);
         }

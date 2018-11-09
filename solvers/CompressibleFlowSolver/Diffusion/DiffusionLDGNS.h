@@ -86,7 +86,7 @@ namespace Nektar
             const int                                          nConvective,
             const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
             const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-            const Array<OneD,Array<OneD, Array<OneD, NekDouble> > >       &inarrayderivative,
+                  Array<OneD,Array<OneD, Array<OneD, NekDouble> > >       &inarrayderivative,
                   Array<OneD, Array<OneD, Array<OneD, NekDouble> > >        &VolumeFlux,
             const Array<OneD, Array<OneD, NekDouble> > &pFwd = NullNekDoubleArrayofArray,
             const Array<OneD, Array<OneD, NekDouble> > &pBwd = NullNekDoubleArrayofArray);
@@ -95,7 +95,7 @@ namespace Nektar
             const int                                          nConvective,
             const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
             const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-            const Array<OneD,Array<OneD, Array<OneD, NekDouble> > >       &inarrayderivative,
+                  Array<OneD,Array<OneD, Array<OneD, NekDouble> > >       &inarrayderivative,
                   Array<OneD, Array<OneD, NekDouble> >        &TraceFlux,
             const Array<OneD, Array<OneD, NekDouble> > &pFwd = NullNekDoubleArrayofArray,
             const Array<OneD, Array<OneD, NekDouble> > &pBwd = NullNekDoubleArrayofArray);

@@ -67,11 +67,12 @@ namespace Nektar
             const int nConvectiveFields,
             const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
             const Array<OneD, Array<OneD, NekDouble>> &inarray,
+            Array<OneD,Array<OneD, Array<OneD, NekDouble> > >       &inarrayderivative,
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > >&VolumeFlux,
             const Array<OneD, Array<OneD, NekDouble>> &pFwd,
             const Array<OneD, Array<OneD, NekDouble>> &pBwd)
         {
-            v_DiffuseVolumeFlux(nConvectiveFields, fields, inarray,VolumeFlux,pFwd, pBwd);
+            v_DiffuseVolumeFlux(nConvectiveFields, fields, inarray,inarrayderivative,VolumeFlux,pFwd, pBwd);
         }
 
         // No multiply(check if diffsionVolume difined)
@@ -79,6 +80,7 @@ namespace Nektar
             const int nConvectiveFields,
             const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
             const Array<OneD, Array<OneD, NekDouble>> &inarray,
+            Array<OneD,Array<OneD, Array<OneD, NekDouble> > >       &inarrayderivative,
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &VolumeFlux,
             const Array<OneD, Array<OneD, NekDouble>> &pFwd,
             const Array<OneD, Array<OneD, NekDouble>> &pBwd)
@@ -90,11 +92,12 @@ namespace Nektar
             const int nConvectiveFields,
             const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
             const Array<OneD, Array<OneD, NekDouble>> &inarray,
+            Array<OneD,Array<OneD, Array<OneD, NekDouble> > >       &inarrayderivative,
             Array<OneD, Array<OneD, NekDouble> > &TraceFlux,
             const Array<OneD, Array<OneD, NekDouble>> &pFwd,
             const Array<OneD, Array<OneD, NekDouble>> &pBwd)
         {
-            v_DiffuseTraceFlux(nConvectiveFields, fields, inarray,TraceFlux,pFwd, pBwd);
+            v_DiffuseTraceFlux(nConvectiveFields, fields, inarray,inarrayderivative,TraceFlux,pFwd, pBwd);
         }
 
         // No multiply(check if diffsionTraceFlux difined)
@@ -102,6 +105,7 @@ namespace Nektar
             const int nConvectiveFields,
             const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
             const Array<OneD, Array<OneD, NekDouble>> &inarray,
+            Array<OneD,Array<OneD, Array<OneD, NekDouble> > >       &inarrayderivative,
             Array<OneD, Array<OneD, NekDouble> >  &TraceFlux,
             const Array<OneD, Array<OneD, NekDouble>> &pFwd,
             const Array<OneD, Array<OneD, NekDouble>> &pBwd)

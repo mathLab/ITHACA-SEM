@@ -286,7 +286,7 @@ namespace Nektar
             }
 
             Array<OneD, Array<OneD, NekDouble>> advVel(m_spacedim);
-            m_advObject->AdvectVolumeFlux(nvariables, m_fields, advVel, inarray, VolumeFlux1, time, Fwd, Bwd);
+            m_advObject->AdvectVolumeFlux(nvariables, m_fields, advVel, inarray, VolumeFlux1, time);
             m_advObject->AdvectTraceFlux(nvariables, m_fields, advVel, inarray,SurfaceFlux1, time, Fwd, Bwd);
             v_DoDiffusionFlux(inarray, VolumeFlux2, SurfaceFlux2, Fwd, Bwd);
 

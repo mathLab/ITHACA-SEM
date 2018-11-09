@@ -98,12 +98,10 @@ void Advection::AdvectVolumeFlux(
     const Array<OneD, Array<OneD, NekDouble>> &pAdvVel,
     const Array<OneD, Array<OneD, NekDouble>> &pInarray,
     Array<OneD, Array<OneD, Array<OneD, NekDouble>>> &pVolumeFlux,
-    const NekDouble &pTime,
-    const Array<OneD, Array<OneD, NekDouble>> &pFwd,
-    const Array<OneD, Array<OneD, NekDouble>> &pBwd)
+    const NekDouble &pTime)
 {
     v_AdvectVolumeFlux(nConvectiveFields, pFields, pAdvVel, pInarray, pVolumeFlux,
-                   pTime, pFwd, pBwd);
+                   pTime);
 }
 
 // Check if the function is supported
@@ -115,9 +113,7 @@ void Advection::v_AdvectVolumeFlux(
     const Array<OneD, Array<OneD, NekDouble>> &pAdvVel,
     const Array<OneD, Array<OneD, NekDouble>> &pInarray,
     Array<OneD, Array<OneD, Array<OneD, NekDouble>>> &pVolumeFlux,
-    const NekDouble &pTime,
-    const Array<OneD, Array<OneD, NekDouble>> &pFwd,
-    const Array<OneD, Array<OneD, NekDouble>> &pBwd)
+    const NekDouble &pTime)
 {
     ASSERTL0(false, "Not defined for AdvectVolumeFlux.");
 }

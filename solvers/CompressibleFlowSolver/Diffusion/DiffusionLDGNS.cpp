@@ -291,9 +291,7 @@ namespace Nektar
         const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
         const Array<OneD, Array<OneD, NekDouble> >        &inarray,
               Array<OneD,Array<OneD, Array<OneD, NekDouble> > >       &inarrayderivative,
-              Array<OneD, Array<OneD, Array<OneD, NekDouble> > >       &VolumeFlux,
-        const Array<OneD, Array<OneD, NekDouble> >        &pFwd,
-        const Array<OneD, Array<OneD, NekDouble> >        &pBwd)
+              Array<OneD, Array<OneD, Array<OneD, NekDouble> > >       &VolumeFlux)
     {
         //?Homogeneous? Need to change here to inarrayderivative
         //For 3D Homogeneous 1D only take derivatives in 3rd direction

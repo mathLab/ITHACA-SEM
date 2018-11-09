@@ -91,11 +91,9 @@ namespace Nektar
             const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
             const Array<OneD, Array<OneD, NekDouble>> &inarray,
             Array<OneD,Array<OneD, Array<OneD, NekDouble> > >       &inarrayderivative,
-            Array<OneD, Array<OneD, Array<OneD, NekDouble> > >&VolumeFlux,
-            const Array<OneD, Array<OneD, NekDouble>> &pFwd,
-            const Array<OneD, Array<OneD, NekDouble>> &pBwd)
+            Array<OneD, Array<OneD, Array<OneD, NekDouble> > >&VolumeFlux)
         {
-            v_DiffuseVolumeFlux(nConvectiveFields, fields, inarray,inarrayderivative,VolumeFlux,pFwd, pBwd);
+            v_DiffuseVolumeFlux(nConvectiveFields, fields, inarray,inarrayderivative,VolumeFlux);
         }
 
         // No multiply(check if diffsionVolume difined)
@@ -104,9 +102,7 @@ namespace Nektar
             const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
             const Array<OneD, Array<OneD, NekDouble>> &inarray,
             Array<OneD,Array<OneD, Array<OneD, NekDouble> > >       &inarrayderivative,
-            Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &VolumeFlux,
-            const Array<OneD, Array<OneD, NekDouble>> &pFwd,
-            const Array<OneD, Array<OneD, NekDouble>> &pBwd)
+            Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &VolumeFlux)
         {
             ASSERTL0(false, "Not defined for function DiffuseVolumeFLux.");
         }

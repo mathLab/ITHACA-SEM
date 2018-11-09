@@ -92,9 +92,7 @@ public:
         const Array<OneD, Array<OneD, NekDouble> >        &advVel,
         const Array<OneD, Array<OneD, NekDouble> >        &inarray,
         Array<OneD, Array<OneD, Array<OneD, NekDouble>>> &VolumeFlux,
-        const NekDouble                                   &time,
-        const Array<OneD, Array<OneD, NekDouble> > &pFwd = NullNekDoubleArrayofArray,
-        const Array<OneD, Array<OneD, NekDouble> > &pBwd = NullNekDoubleArrayofArray);
+        const NekDouble                                   &time);
 
     /// Interface function to advect the Trace field.
     SOLVER_UTILS_EXPORT void AdvectTraceFlux(
@@ -185,9 +183,7 @@ protected:
         const Array<OneD, Array<OneD, NekDouble> >        &advVel,
         const Array<OneD, Array<OneD, NekDouble> >        &inarray,
         Array<OneD, Array<OneD, Array<OneD, NekDouble>>> &pVolumeFlux,
-        const NekDouble                                   &time,
-        const Array<OneD, Array<OneD, NekDouble> > &pFwd = NullNekDoubleArrayofArray,
-        const Array<OneD, Array<OneD, NekDouble> > &pBwd = NullNekDoubleArrayofArray);
+        const NekDouble                                   &time);
     
     /// Advects Trace Flux.
     SOLVER_UTILS_EXPORT virtual void v_AdvectTraceFlux(

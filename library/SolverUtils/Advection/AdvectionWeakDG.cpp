@@ -165,7 +165,7 @@ namespace Nektar
                 }
             }
 
-            v_AdvectVolumeFlux(nConvectiveFields,fields,advVel,inarray,fluxvector,time,pFwd,pBwd);
+            v_AdvectVolumeFlux(nConvectiveFields,fields,advVel,inarray,fluxvector,time);
             
             Array<OneD, Array<OneD, NekDouble> > tmp(nConvectiveFields);
             // Get the advection part (without numerical flux)
@@ -212,9 +212,7 @@ namespace Nektar
             const Array<OneD, Array<OneD, NekDouble>> &advVel,
             const Array<OneD, Array<OneD, NekDouble>> &inarray,
             Array<OneD, Array<OneD, Array<OneD, NekDouble>>> &VolumeFlux,
-            const NekDouble &time,
-            const Array<OneD, Array<OneD, NekDouble>> &pFwd,
-            const Array<OneD, Array<OneD, NekDouble>> &pBwd)
+            const NekDouble &time)
         {
             int nPointsTot      = fields[0]->GetTotPoints();
             int nCoeffs         = fields[0]->GetNcoeffs();

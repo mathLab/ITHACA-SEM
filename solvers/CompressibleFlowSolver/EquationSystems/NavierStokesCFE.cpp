@@ -262,7 +262,7 @@ namespace Nektar
         // Diffusion term in physical rhs form
         // To notice, needs to firstly calculate volumeflux, traceflux uses it.
         m_diffusion->DiffuseCalculateDerivative(nvariables,m_fields,inarrayDiff,inarrayDiffderivative,inFwd,inBwd);
-        m_diffusion->DiffuseVolumeFlux(nvariables, m_fields, inarrayDiff,inarrayDiffderivative, VolumeFlux, inFwd, inBwd);
+        m_diffusion->DiffuseVolumeFlux(nvariables, m_fields, inarrayDiff,inarrayDiffderivative, VolumeFlux);
         m_diffusion->DiffuseTraceFlux(nvariables, m_fields, inarrayDiff,inarrayDiffderivative,VolumeFlux,SurfaceFlux, inFwd, inBwd);
 
     }

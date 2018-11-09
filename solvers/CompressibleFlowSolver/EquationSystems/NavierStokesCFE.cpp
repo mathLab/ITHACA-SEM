@@ -89,7 +89,7 @@ namespace Nektar
             m_thermalConductivity = m_Cp * m_mu / m_Prandtl;
         }
 
-        string diffName;
+        string diffName, advName;
         m_session->LoadSolverInfo("DiffusionType", diffName, "LDGNS");
 
         m_diffusion = SolverUtils::GetDiffusionFactory()
@@ -109,6 +109,14 @@ namespace Nektar
 
         // Concluding initialisation of diffusion operator
         m_diffusion->InitObject         (m_session, m_fields);
+        
+        //Only NavierStokes equation and using weakDG,LDGNS can temparary use the codes
+        m_session->LoadSolverInfo("AdvectionType", advName, "WeakDG");
+	    m_session->LoadSolverInfo("DiffusionType", diffName, "LDGNS");
+        if(advName=="WeakDG" && diffName=="LDGNS")
+        {
+            m_Weak=true;
+        }
     }
 
     void NavierStokesCFE::v_DoDiffusion(

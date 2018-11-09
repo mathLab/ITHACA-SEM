@@ -255,12 +255,10 @@ namespace Nektar
             }
         }
         
-
-        string advName, diffName;
-        m_session->LoadSolverInfo("AdvectionType", advName, "WeakDG");
-	    m_session->LoadSolverInfo("DiffusionType", diffName, "LDGNS");
-        if(advName=="WeakDG" && diffName=="LDGNS")
+        //Only test solver use the reduced coddes
+        if(m_Weak)
         {
+            ASSERTL0(m_Weak!=0,"Only compressible NavierStokes solver using AdvectionWeakDG and DiffusionWeakDG can use this code");
             Array<OneD, Array<OneD, Array<OneD, NekDouble>>> VolumeFlux1(nvariables);
             Array<OneD, Array<OneD, Array<OneD, NekDouble>>> VolumeFlux2(nDim);
             Array<OneD, Array<OneD, NekDouble>> SurfaceFlux1(nvariables);

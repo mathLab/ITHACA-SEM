@@ -123,7 +123,7 @@ void Advection::v_AdvectVolumeFlux(
  * @param   pFields             Expansion lists for scalar fields.
  * @param   pAdvVel             Advection velocity.
  * @param   pInarray            Scalar data to advect.
- * @param   pSurfaceFlux         Advected Surface flux.
+ * @param   pTraceFlux        Advected Trace flux.
  * @param   pTime               Simulation time.
  */
 void Advection::AdvectTraceFlux(

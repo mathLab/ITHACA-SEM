@@ -113,7 +113,7 @@ namespace Nektar
         //Only NavierStokes equation and using weakDG,LDGNS can temparary use the codes
         m_session->LoadSolverInfo("AdvectionType", advName, "WeakDG");
 	    m_session->LoadSolverInfo("DiffusionType", diffName, "LDGNS");
-        if(advName=="WeakDG" && diffName=="LDGNS")
+        if(advName=="WeakDG" && ((diffName=="LDGNS")||(diffName=="InteriorPenalty")))
         {
             m_ImproveEfficiency=true;
         }
@@ -191,10 +191,10 @@ namespace Nektar
     }
 
 
-     void NavierStokesCFE::v_DoDiffusionFlux(
+    void NavierStokesCFE::v_DoDiffusionFlux(
         const Array<OneD, const Array<OneD, NekDouble>> &inarray,
         Array<OneD, Array<OneD, Array<OneD, NekDouble>>>&VolumeFlux,
-        Array<OneD, Array<OneD, NekDouble>>             &SurfaceFlux,
+        Array<OneD, Array<OneD, NekDouble>>             &TraceFlux,
         const Array<OneD, Array<OneD, NekDouble>>       &pFwd,
         const Array<OneD, Array<OneD, NekDouble>>       &pBwd)
     {
@@ -204,66 +204,85 @@ namespace Nektar
         int nTracePts  = GetTraceTotPoints();
 
         Array<OneD, Array<OneD, NekDouble>> outarrayDiff(nvariables);
-
-        Array<OneD, Array<OneD, NekDouble>> inarrayDiff(nvariables - 1);
-        Array<OneD, Array<OneD, NekDouble>> inFwd(nvariables - 1);
-        Array<OneD, Array<OneD, NekDouble>> inBwd(nvariables - 1);
-        Array<OneD,Array<OneD, Array<OneD, NekDouble>>> inarrayDiffderivative(nDim);
-
         for (int i = 0; i < nvariables; ++i)
         {
             outarrayDiff[i] = Array<OneD, NekDouble>(npoints);
         }
-
-        for (int i = 0; i < nvariables-1; ++i)
+        
+        string diffName;
+        m_session->LoadSolverInfo("DiffusionType", diffName, "LDGNS");
+        if("LDGNS"==diffName)
         {
-            inarrayDiff[i] = Array<OneD, NekDouble>(npoints);
-            inFwd[i]       = Array<OneD, NekDouble>(nTracePts);
-            inBwd[i]       = Array<OneD, NekDouble>(nTracePts);
-        }
+            Array<OneD, Array<OneD, NekDouble>> inarrayDiff;
+            Array<OneD, Array<OneD, NekDouble>> inFwd;
+            Array<OneD, Array<OneD, NekDouble>> inBwd;
+            Array<OneD,Array<OneD, Array<OneD, NekDouble>>> inarrayDiffderivative(nDim);
+            
+            //Allocate memory
+            inarrayDiff=Array<OneD, Array<OneD, NekDouble>> (nvariables - 1);
+            inFwd=Array<OneD, Array<OneD, NekDouble>>(nvariables - 1);
+            inBwd=Array<OneD, Array<OneD, NekDouble>> (nvariables - 1);
+            inarrayDiffderivative=Array<OneD,Array<OneD, Array<OneD, NekDouble>>> (nDim);
 
-        for (int i = 0; i < nDim; i++)
-        {
-            inarrayDiffderivative[i]=Array<OneD, Array<OneD, NekDouble>> (nvariables-1);
-            for(int j=0;j<nvariables-1;j++)
+            for (int i = 0; i < nvariables-1; ++i)
             {
-                inarrayDiffderivative[i][j]=Array<OneD, NekDouble>(npoints);
+                inarrayDiff[i] = Array<OneD, NekDouble>(npoints);
+                inFwd[i]       = Array<OneD, NekDouble>(nTracePts);
+                inBwd[i]       = Array<OneD, NekDouble>(nTracePts);
             }
+
+            for (int i = 0; i < nDim; i++)
+            {
+                inarrayDiffderivative[i]=Array<OneD, Array<OneD, NekDouble>> (nvariables-1);
+                for(int j=0;j<nvariables-1;j++)
+                {
+                    inarrayDiffderivative[i][j]=Array<OneD, NekDouble>(npoints);
+                }
+            }
+
+            // Extract pressure
+            //    (use inarrayDiff[0] as a temporary storage for the pressure)
+            m_varConv->GetPressure(inarray, inarrayDiff[0]);
+
+            // Extract temperature
+            m_varConv->GetTemperature(inarray, inarrayDiff[nvariables - 2]);
+
+            // Extract velocities
+            m_varConv->GetVelocityVector(inarray, inarrayDiff);
+
+            // Repeat calculation for trace space
+            if (pFwd == NullNekDoubleArrayofArray || pBwd == NullNekDoubleArrayofArray)
+            {
+                inFwd = NullNekDoubleArrayofArray;
+                inBwd = NullNekDoubleArrayofArray;
+            }
+            else
+            {
+                m_varConv->GetPressure(pFwd, inFwd[0]);
+                m_varConv->GetPressure(pBwd, inBwd[0]);
+
+                m_varConv->GetTemperature(pFwd, inFwd[nvariables - 2]);
+                m_varConv->GetTemperature(pBwd, inBwd[nvariables - 2]);
+
+                m_varConv->GetVelocityVector(pFwd, inFwd);
+                m_varConv->GetVelocityVector(pBwd, inBwd);
+            }
+
+            // Diffusion term in physical rhs form
+            // To notice, needs to firstly calculate volumeflux, traceflux uses it.
+            m_diffusion->DiffuseCalculateDerivative(nvariables,m_fields,inarrayDiff,inarrayDiffderivative,inFwd,inBwd);
+            m_diffusion->DiffuseVolumeFlux(nvariables, m_fields, inarrayDiff,inarrayDiffderivative, VolumeFlux);
+            m_diffusion->DiffuseTraceFlux(nvariables, m_fields, inarrayDiff,inarrayDiffderivative,VolumeFlux,TraceFlux, inFwd, inBwd);
+
         }
-
-        // Extract pressure
-        //    (use inarrayDiff[0] as a temporary storage for the pressure)
-        m_varConv->GetPressure(inarray, inarrayDiff[0]);
-
-        // Extract temperature
-        m_varConv->GetTemperature(inarray, inarrayDiff[nvariables - 2]);
-
-        // Extract velocities
-        m_varConv->GetVelocityVector(inarray, inarrayDiff);
-
-        // Repeat calculation for trace space
-        if (pFwd == NullNekDoubleArrayofArray || pBwd == NullNekDoubleArrayofArray)
+        else if("InteriorPenalty"==diffName)
         {
-            inFwd = NullNekDoubleArrayofArray;
-            inBwd = NullNekDoubleArrayofArray;
+
         }
         else
         {
-            m_varConv->GetPressure(pFwd, inFwd[0]);
-            m_varConv->GetPressure(pBwd, inBwd[0]);
-
-            m_varConv->GetTemperature(pFwd, inFwd[nvariables - 2]);
-            m_varConv->GetTemperature(pBwd, inBwd[nvariables - 2]);
-
-            m_varConv->GetVelocityVector(pFwd, inFwd);
-            m_varConv->GetVelocityVector(pBwd, inBwd);
+            ASSERTL0(false, "diffusion type not coded");
         }
-
-        // Diffusion term in physical rhs form
-        // To notice, needs to firstly calculate volumeflux, traceflux uses it.
-        m_diffusion->DiffuseCalculateDerivative(nvariables,m_fields,inarrayDiff,inarrayDiffderivative,inFwd,inBwd);
-        m_diffusion->DiffuseVolumeFlux(nvariables, m_fields, inarrayDiff,inarrayDiffderivative, VolumeFlux);
-        m_diffusion->DiffuseTraceFlux(nvariables, m_fields, inarrayDiff,inarrayDiffderivative,VolumeFlux,SurfaceFlux, inFwd, inBwd);
 
     }
 

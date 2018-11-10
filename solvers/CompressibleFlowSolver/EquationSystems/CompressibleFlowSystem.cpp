@@ -225,7 +225,7 @@ namespace Nektar
     /**
      * @brief Compute the right-hand side.
      */
-    void CompressibleFlowSystem::DoOdeRhs(
+void CompressibleFlowSystem::DoOdeRhs(
         const Array<OneD, const Array<OneD, NekDouble> > &inarray,
               Array<OneD,       Array<OneD, NekDouble> > &outarray,
         const NekDouble                                   time)
@@ -260,8 +260,8 @@ namespace Nektar
         {
             Array<OneD, Array<OneD, Array<OneD, NekDouble>>> VolumeFlux1(nvariables);
             Array<OneD, Array<OneD, Array<OneD, NekDouble>>> VolumeFlux2(nDim);
-            Array<OneD, Array<OneD, NekDouble>> SurfaceFlux1(nvariables);
-            Array<OneD, Array<OneD, NekDouble>> SurfaceFlux2(nvariables);
+            Array<OneD, Array<OneD, NekDouble>> TraceFlux1(nvariables);
+            Array<OneD, Array<OneD, NekDouble>> TraceFlux2(nvariables);
            
             for (int i = 0; i < nvariables; ++i)
             {
@@ -281,23 +281,23 @@ namespace Nektar
             }
             for (int i = 0; i < nvariables; ++i)
             {
-                SurfaceFlux1[i]  = Array<OneD, NekDouble>(nTracePts, 0.0);
-                SurfaceFlux2[i]  = Array<OneD, NekDouble>(nTracePts, 0.0);
+                TraceFlux1[i]  = Array<OneD, NekDouble>(nTracePts, 0.0);
+                TraceFlux2[i]  = Array<OneD, NekDouble>(nTracePts, 0.0);
             }
 
             Array<OneD, Array<OneD, NekDouble>> advVel(m_spacedim);
             m_advObject->AdvectVolumeFlux(nvariables, m_fields, advVel, inarray, VolumeFlux1, time);
-            m_advObject->AdvectTraceFlux(nvariables, m_fields, advVel, inarray,SurfaceFlux1, time, Fwd, Bwd);
-            v_DoDiffusionFlux(inarray, VolumeFlux2, SurfaceFlux2, Fwd, Bwd);
+            m_advObject->AdvectTraceFlux(nvariables, m_fields, advVel, inarray,TraceFlux1, time, Fwd, Bwd);
+            v_DoDiffusionFlux(inarray, VolumeFlux2, TraceFlux2, Fwd, Bwd);
 
 
             //Artificial Diffusion need to implement
             if (m_shockCaptureType != "Off")
             {
-                m_artificialDiffusion->DoArtificialDiffusionFlux(inarray, VolumeFlux2,SurfaceFlux2);
+                m_artificialDiffusion->DoArtificialDiffusionFlux(inarray, VolumeFlux2,TraceFlux2);
             }
 
-            // Add Surface and Volume Integral together
+            // Add Trace and Volume Integral together
             Array<OneD, NekDouble> tmp(nCoeffs, 0.0);
             for (int i = 0; i < nvariables; ++i)
             {
@@ -312,12 +312,12 @@ namespace Nektar
                 m_fields[i]->IProductWRTDerivBase(VolumeFlux1[i], tmp);
 
                 Vmath::Neg(nCoeffs, &tmp[0], 1);
-                // Add Surface integral
+                // Add Trace integral
                 // Advection term needs to be negative
                 // Add Advection and Diffusion part
-                Vmath::Vsub(nTracePts, &SurfaceFlux2[i][0], 1, &SurfaceFlux1[i][0], 1,
-                            &SurfaceFlux1[i][0], 1);
-                m_fields[i]->AddTraceIntegral(SurfaceFlux1[i], tmp);
+                Vmath::Vsub(nTracePts, &TraceFlux2[i][0], 1, &TraceFlux1[i][0], 1,
+                            &TraceFlux1[i][0], 1);
+                m_fields[i]->AddTraceIntegral(TraceFlux1[i], tmp);
                 m_fields[i]->MultiplyByElmtInvMass(tmp, tmp);
                 m_fields[i]->BwdTrans(tmp, outarray[i]);
         }

@@ -85,7 +85,7 @@ namespace Nektar
     virtual void v_DoDiffusionFlux(
             const Array<OneD, const Array<OneD, NekDouble> > &inarray,
             Array<OneD, Array<OneD, Array<OneD, NekDouble>>> &VolumeFlux,
-            Array<OneD, Array<OneD, NekDouble>>              &SurfaceFlux,
+            Array<OneD, Array<OneD, NekDouble>>              &TraceFlux,
             const Array<OneD, Array<OneD, NekDouble> >       &pFwd,
             const Array<OneD, Array<OneD, NekDouble> >       &pBwd);
 

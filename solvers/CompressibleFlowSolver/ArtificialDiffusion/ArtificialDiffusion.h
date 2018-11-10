@@ -109,7 +109,7 @@ class ArtificialDiffusion
         virtual void v_DoArtificialDiffusionFlux(
             const Array<OneD, const Array<OneD, NekDouble>> &inarray,
             Array<OneD, Array<OneD, Array<OneD, NekDouble>>>&VolumeFlux,
-            Array<OneD, Array<OneD, NekDouble>>             &SurfaceFlux);
+            Array<OneD, Array<OneD, NekDouble>>             &TraceFlux);
 
         virtual void v_GetArtificialViscosity(
             const Array<OneD, Array<OneD, NekDouble> > &physfield,

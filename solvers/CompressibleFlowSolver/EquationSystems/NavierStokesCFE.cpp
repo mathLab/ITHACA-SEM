@@ -1358,7 +1358,7 @@ namespace Nektar
         }
 
         DNekMatSharedPtr PointFJac = MemoryManager<DNekMat>
-                                ::AllocateSharedPtr(nConvectiveFields, nConvectiveFields);
+                                ::AllocateSharedPtr(nConvectiveFields-1, nConvectiveFields);
 
         for(int  nelmt = 0; nelmt < ntotElmt; nelmt++)
         {
@@ -1397,7 +1397,13 @@ namespace Nektar
                 pointDmuDT  = locDmuDT[npnt];
 
                 GetDiffusionFluxJacPoint(nelmt,pointVar,pointDerv,pointmu,pointDmuDT,normals,PointFJac);
-                (*ElmtJac[nelmt][npnt]) =   (*ElmtJac[nelmt][npnt]) +   (*PointFJac);
+                for (int i =0; i < nConvectiveFields-1; i++)
+                {
+                    for (int j =0; j < nConvectiveFields; j++)
+                    {
+                        (*ElmtJac[nelmt][npnt])(i+1,j) +=  (*PointFJac)(i,j);
+                    }
+                }
             }
         }
     }
@@ -1466,7 +1472,7 @@ if(!ElmtJac.num_elements())
         Array<OneD, Array<OneD, NekDouble> > locnormal(nSpaceDim);
 
         DNekMatSharedPtr PointFJac = MemoryManager<DNekMat>
-                                ::AllocateSharedPtr(nConvectiveFields, nConvectiveFields);
+                                ::AllocateSharedPtr(nConvectiveFields-1, nConvectiveFields);
 
         switch (nDervDir)
         {
@@ -1502,7 +1508,14 @@ if(!ElmtJac.num_elements())
                         pointmu     = locmu[npnt];
 
                         GetdFlux_dQx_2D(pointnormals,pointmu,pointVar,PointFJac);
-                        (*ElmtJac[nelmt][npnt]) =   (*PointFJac);
+                        for (int i =0; i < nConvectiveFields-1; i++)
+                        {
+                            for (int j =0; j < nConvectiveFields; j++)
+                            {
+                                (*ElmtJac[nelmt][npnt])(i+1,j) =  (*PointFJac)(i,j);
+                            }
+                        }
+                        // (*ElmtJac[nelmt][npnt]) =   (*PointFJac);
                     }
                 }
                 break;
@@ -1539,7 +1552,14 @@ if(!ElmtJac.num_elements())
                         pointmu     = locmu[npnt];
                         
                         GetdFlux_dQy_2D(pointnormals,pointmu,pointVar,PointFJac);
-                        (*ElmtJac[nelmt][npnt]) =   (*PointFJac);
+                        for (int i =0; i < nConvectiveFields-1; i++)
+                        {
+                            for (int j =0; j < nConvectiveFields; j++)
+                            {
+                                (*ElmtJac[nelmt][npnt])(i+1,j) =  (*PointFJac)(i,j);
+                            }
+                        }
+                        // (*ElmtJac[nelmt][npnt]) =   (*PointFJac);
                     }
                 }
                 break;

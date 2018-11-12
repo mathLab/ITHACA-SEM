@@ -85,7 +85,7 @@ namespace Nektar
             const Array<OneD, Array<OneD, NekDouble> >        &pFwd,
             const Array<OneD, Array<OneD, NekDouble> >        &pBwd)
         {
-            
+
             int nCoeffs   = fields[0]->GetNcoeffs();
             Array<OneD, Array<OneD, NekDouble> > tmp(nConvectiveFields);
             for (int i = 0; i < nConvectiveFields; ++i)
@@ -173,7 +173,7 @@ namespace Nektar
             Array<OneD, NekDouble> MuVarTrace   =   NullNekDouble1DArray;
             if (m_ArtificialDiffusionVector)
             {
-                
+
                 MuVarTrace  =   Array<OneD, NekDouble>(nTracePts, 0.0);
                 muvar       =   Array<OneD, NekDouble>(nPts, 0.0);
                 GetAVmu(fields,inarray,muvar,MuVarTrace);
@@ -215,9 +215,6 @@ namespace Nektar
             for(i = 0; i < nonZeroIndex.num_elements(); ++i)
             {
                 int j = nonZeroIndex[i];
-
-//Debug
-// Vmath::Fill(nTracePts,0.0,traceflux[0][j],1);
 
                 fields[j]->AddTraceIntegral     (traceflux[0][j], outarray[j]);
                 fields[j]->SetPhysState         (false);
@@ -443,7 +440,7 @@ namespace Nektar
                 {
                     factor[noffset+np]    =   max(factorFwdBwd[0],factorFwdBwd[1]);
 //debug
-factor[noffset+np]    =   2.0;
+factor[noffset+np]    =   4.0;
                 }
             }
         }

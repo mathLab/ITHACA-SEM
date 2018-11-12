@@ -725,8 +725,24 @@ namespace Nektar
         for(int nfluxDir = 0; nfluxDir < nSpaceDim; nfluxDir++)
         {
             GetFluxVectorJacDirctn(nfluxDir,inarray, ElmtJac);
+//Debug
+// for(int i =0; i<ElmtJac.num_elements(); i++ )
+// {
+//     for(int j =0; j<ElmtJac[0].num_elements(); j++ )
+//     {
+//         CoutStandardMat(ElmtJac[i][j]);
+//     }
+// }
             //TODO:
             AddDiffusionFluxJacDirctn(nfluxDir,inarray,qfield, ElmtJac);
+//Debug
+// for(int i =0; i<ElmtJac.num_elements(); i++ )
+// {
+//     for(int j =0; j<ElmtJac[0].num_elements(); j++ )
+//     {
+//         CoutStandardMat(ElmtJac[i][j]);
+//     }
+// }
 
             m_advObject->AddVolumJac2Mat(nvariable,m_fields,ElmtJac,nfluxDir,gmtxarray);
         }
@@ -1316,8 +1332,13 @@ namespace Nektar
         // m_LinSysOprtors.DefinePrecond(&CompressibleFlowSystem::preconditioner, this);
         linsol.setLinSysOperators(m_LinSysOprtors);
 
-        // NonlinSysEvaluator_coeff(m_TimeIntegtSol_k,m_SysEquatResid_k);
-        // DebugNumCalJac_coeff(m_PrecMatVars);
+//Debug
+//         NonlinSysEvaluator_coeff(m_TimeIntegtSol_k,m_SysEquatResid_k);
+// Fill2DArrayOfBlkDiagonalMat(m_PrecMatVars,0.0);
+//         DebugNumCalJac_coeff(m_PrecMatVars);
+
+// Cout2DArrayBlkMat(m_PrecMatVars);
+
         // ElmtVarInvMtrx_coeff(m_PrecMatVars);
 
         // if(m_TotLinItePrecondMat>0&&lamda_old==m_TimeIntegLambda)
@@ -1501,6 +1522,8 @@ namespace Nektar
         
         Fill2DArrayOfBlkDiagonalMat(gmtxarray,0.0);
         AddMatNSBlkDiag_volume(inarray,qfield,gmtxarray);
+//Debug
+// Cout2DArrayBlkMat(gmtxarray);
 
         AddMatNSBlkDiag_boundary(inarray,qfield,gmtxarray,TraceJac,TraceJacDeriv);
             
@@ -1715,8 +1738,6 @@ namespace Nektar
                                                  const  Array<OneD, NekDouble> &inarray,
                                                         Array<OneD, NekDouble >&out)
     {
-        
-
         MatrixMultiply_MatrixFree_coeff(inarray,out);
 
         if(m_cflLocTimestep>0.0)
@@ -1733,7 +1754,6 @@ namespace Nektar
             Array<OneD, NekDouble> pseudotimefactor(nElements,0.0);
             
             Vmath::Sdiv(nElements,m_timestep,m_locTimeStep,1,pseudotimefactor,1);
-            
             
             for(int i = 0; i < nvariables; ++i)
             {
@@ -1864,7 +1884,6 @@ namespace Nektar
             }
         }
 
-
         // Calculate advection
         DoAdvection_coeff(inarray, outarray, time, Fwd, Bwd);
         // Negate results
@@ -1879,34 +1898,35 @@ namespace Nektar
         DoDiffusion_coeff(inarray, outarray, Fwd, Bwd);
 
         // Add forcing terms
-        // for (auto &x : m_forcing)
-        // {
-        //     x->Apply(m_fields, inarray, outarray, time);
-        // }
+        for (auto &x : m_forcing)
+        {
+            ASSERTL0(false,"forcing not coded for DoOdeRhs_coeff");
+            x->Apply(m_fields, inarray, outarray, time);
+        }
 
-        // if (m_useLocalTimeStep)
-        // {
-        //     int nElements = m_fields[0]->GetExpSize();
-        //     int nq, offset;
-        //     NekDouble fac;
-        //     Array<OneD, NekDouble> tmp;
+        if (m_useLocalTimeStep)
+        {
+            int nElements = m_fields[0]->GetExpSize();
+            int nq, offset;
+            NekDouble fac;
+            Array<OneD, NekDouble> tmp;
 
-        //     Array<OneD, NekDouble> tstep (nElements, 0.0);
-        //     GetElmtTimeStep(inarray, tstep);
+            Array<OneD, NekDouble> tstep (nElements, 0.0);
+            GetElmtTimeStep(inarray, tstep);
 
-        //     // Loop over elements
-        //     for(int n = 0; n < nElements; ++n)
-        //     {
-        //         nq     = m_fields[0]->GetExp(n)->GetTotPoints();
-        //         offset = m_fields[0]->GetPhys_Offset(n);
-        //         fac    = tstep[n] / m_timestep;
-        //         for(i = 0; i < nvariables; ++i)
-        //         {
-        //             Vmath::Smul(nq, fac, outarray[i] + offset, 1,
-        //                                  tmp = outarray[i] + offset, 1);
-        //         }
-        //     }
-        // }
+            // Loop over elements
+            for(int n = 0; n < nElements; ++n)
+            {
+                nq     = m_fields[0]->GetExp(n)->GetTotPoints();
+                offset = m_fields[0]->GetPhys_Offset(n);
+                fac    = tstep[n] / m_timestep;
+                for(i = 0; i < nvariables; ++i)
+                {
+                    Vmath::Smul(nq, fac, outarray[i] + offset, 1,
+                                         tmp = outarray[i] + offset, 1);
+                }
+            }
+        }
     }
 
     /**
@@ -1925,8 +1945,6 @@ namespace Nektar
         m_advObject->Advect_coeff(nvariables, m_fields, advVel, inarray,
                             outarray, time, pFwd, pBwd);
     }
-
-
 #endif
     /**
      * @brief Compute the advection terms for the right-hand side

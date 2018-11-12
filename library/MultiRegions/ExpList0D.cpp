@@ -69,8 +69,8 @@ namespace Nektar
             m_npoints = 1;
             
             // Set up m_coeffs, m_phys.
-            m_coeffs = Array<OneD, NekDouble>(m_ncoeffs);
-            m_phys   = Array<OneD, NekDouble>(m_npoints);
+            m_coeffs = Array<OneD, NekDouble>(m_ncoeffs,0.0);
+            m_phys   = Array<OneD, NekDouble>(m_npoints,0.0);
 
             LocalRegions::PointExpSharedPtr Point = MemoryManager<LocalRegions::PointExp>::AllocateSharedPtr(geom);
             (*m_exp).push_back(Point);
@@ -193,8 +193,8 @@ namespace Nektar
             // Set up m_coeffs, m_phys.
             if(DeclareCoeffPhysArrays)
             {
-                m_coeffs = Array<OneD, NekDouble>(m_ncoeffs);
-                m_phys   = Array<OneD, NekDouble>(m_npoints);
+                m_coeffs = Array<OneD, NekDouble>(m_ncoeffs,0.0);
+                m_phys   = Array<OneD, NekDouble>(m_npoints,0.0);
             }
         }
 		

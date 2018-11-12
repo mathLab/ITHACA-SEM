@@ -1393,7 +1393,7 @@ namespace Nektar
                   Array<OneD,       NekDouble> &Bwd)
         {
             DisContField2D::v_GetFwdBwdTracePhysInterior(field, Fwd, Bwd);
-            
+
             DisContField2D::v_FillBwdWITHBoundDeriv(Dir,Fwd,Bwd);
 
             // Do parallel exchange for forwards/backwards spaces.
@@ -1591,7 +1591,7 @@ namespace Nektar
                         Vmath::Vcopy(npts,
                             &(m_bndCondExpansionsDeriv[n][Dir]->GetPhys())[id1], 1,
                             &Bwd[id2],                                 1);
-                        
+
                     }
                     
                     cnt += e;
@@ -1610,7 +1610,7 @@ namespace Nektar
                         Vmath::Vcopy(npts,
                             &(m_bndCondExpansionsDeriv[n][Dir]->GetPhys())[id1], 1,
                             &Bwd[id2],                                 1);
-                        
+
                     }
                     
                     cnt += e;

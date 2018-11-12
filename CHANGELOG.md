@@ -51,17 +51,14 @@ v5.0.0
   alignment (!921)
 - Fix naming issue of duplicate Unit tests (!924) 
 - Fix warnings about missing virtual destructors in abstract classes (!932)
-<<<<<<< HEAD
-- Fix ability to have periodic boundary conditions that are aligned by a rotation rather than just a translation (!933)
-=======
 - Fix ability to have periodic boundary conditions that are aligned by a 
   rotation rather than just a translation (!933)
->>>>>>> master
 - Added a coupling interface to exchange data between solvers at run time
   and a DummySolver to test the implementations (!853, !931)
 - Fix compilation issue with newer Boost versions and clang (!940)
 - If only `NEKTAR_BUILD_LIBRARY` is enabled, only libraries up to and including
   `MultiRegions` will be built by default (!945)
+- Restructure library to use local coefficient storage down to the GlobalLinSys level. Removed GlobalCeoffs functionality (!963)
 
 **NekMesh**:
 - Add feature to read basic 2D geo files as CAD (!731)

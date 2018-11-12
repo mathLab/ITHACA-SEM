@@ -369,14 +369,14 @@ void ProcessWSS::GetViscosity(
             Vmath::Smul(npoints, cv_inv, energy, 1, temperature, 1 );
 
             // Variable viscosity through the Sutherland's law
+            const NekDouble C = .38175;
             NekDouble mu_star = m_mu;
             NekDouble T_star  = m_pInf / (m_rhoInf * m_gasConstant);
             NekDouble ratio;
             for (int i = 0; i < npoints; ++i)
             {
                 ratio = temperature[i] / T_star;
-                mu[i] = mu_star * ratio * sqrt(ratio) *
-                    (T_star + 110.0) / (temperature[i] + 110.0);
+                mu[i] = mu_star * ratio * sqrt(ratio) * (1 + C) / (ratio + C);
             }
         }
         else

@@ -155,6 +155,12 @@ namespace Nektar
 
                 for (i = 0; i < nBndRegions; ++i)
                 {
+                    if (fields[0]->GetBndConditions()[i]->GetBoundaryConditionType()
+                        == SpatialDomains::ePeriodic)
+                    {
+                        continue;
+                    }
+
                     // Number of boundary expansion related to that region
                     int nBndEdges = fields[0]->
                         GetBndCondExpansions()[i]->GetExpSize();
@@ -265,9 +271,11 @@ namespace Nektar
                 // if Vn >= 0, uflux = uFwd at Neumann, i.e.,
                 // edge::eForward, if V*n<0 <=> V*n_F<0, pick uflux = uFwd
                 // edge::eBackward, if V*n<0 <=> V*n_B>=0, pick uflux = uFwd
+                Array<OneD, NekDouble > uplus(nTracePts);
+                fields[i]->ExtractTracePhys(ufield[i], uplus);
                 if(fields[0]->GetBndCondExpansions().num_elements())
                 {
-                    v_WeakPenaltyforScalar(fields, i, ufield[i], fluxtemp);
+                    v_WeakPenaltyforScalar(fields, i, ufield[i], uplus, fluxtemp);
                 }
 
                 for (j = 0; j < nDim; ++j)
@@ -296,6 +304,7 @@ namespace Nektar
             const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
             const int                                          var,
             const Array<OneD, const NekDouble>                &ufield,
+            const Array<OneD, const NekDouble>                &uplus,
                   Array<OneD,       NekDouble>                &penaltyflux)
         {
             int i, e, id1, id2;
@@ -304,10 +313,7 @@ namespace Nektar
             int nBndEdgePts, nBndEdges;
             int cnt         = 0;
             int nBndRegions = fields[var]->GetBndCondExpansions().num_elements();
-            int nTracePts   = fields[0]->GetTrace()->GetTotPoints();
-            Array<OneD, NekDouble > uplus(nTracePts);
 
-            fields[var]->ExtractTracePhys(ufield, uplus);
             for (i = 0; i < nBndRegions; ++i)
             {
                 // Number of boundary expansion related to that region
@@ -434,11 +440,14 @@ namespace Nektar
                                 qfluxtemp, 1, 
                                 qfluxtemp, 1);
                     
+                    Array<OneD, NekDouble > qtemp(nTracePts);
+                    fields[i]->ExtractTracePhys(qfield[j][i], qtemp);
+
                     // Imposing weak boundary condition with flux
                     if (fields[0]->GetBndCondExpansions().num_elements())
                     {
                         v_WeakPenaltyforVector(fields, i, j, 
-                                               qfield[j][i], 
+                                               qfield[j][i], qtemp,
                                                qfluxtemp, C11);
                     }
                     
@@ -465,15 +474,13 @@ namespace Nektar
             const int                                          var,
             const int                                          dir,
             const Array<OneD, const NekDouble>                &qfield,
+            const Array<OneD, const NekDouble>                &qtemp,
                   Array<OneD,       NekDouble>                &penaltyflux,
             NekDouble                                          C11)
         {
             int i, e, id1, id2;
             int nBndEdges, nBndEdgePts;
             int nBndRegions = fields[var]->GetBndCondExpansions().num_elements();
-            int nTracePts   = fields[0]->GetTrace()->GetTotPoints();
-
-            Array<OneD, NekDouble > qtemp(nTracePts);
             int cnt = 0;
 
             /*
@@ -485,8 +492,6 @@ namespace Nektar
             }
             fields[0]->GetTrace()->GetNormals(m_traceNormals);
             */
-            
-            fields[var]->ExtractTracePhys(qfield, qtemp);
             
             for (i = 0; i < nBndRegions; ++i)
             {

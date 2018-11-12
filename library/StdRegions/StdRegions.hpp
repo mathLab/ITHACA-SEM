@@ -137,9 +137,7 @@ namespace Nektar
             eHybridDGLamToU,
             eFwdTrans,
             ePreconR,
-            ePreconRT,
             ePreconRMass,
-            ePreconRTMass,
             ePreconLinearSpace,
             ePreconLinearSpaceMass,
             eInterpGauss,
@@ -188,11 +186,13 @@ namespace Nektar
             "HybridDGLamToU",
             "FwdTrans",
             "PreconR",
-            "PreconRT",
+            "PreconRMass",
             "PreconLinearSpace",
+            "PreconLinearSpaceMass",
             "InterpGauss",
             "GaussDG",
             "PhysInterpToEquiSpaced"
+            "EquiSpacedToCoeffs"
         };
 
         enum VarCoeffType

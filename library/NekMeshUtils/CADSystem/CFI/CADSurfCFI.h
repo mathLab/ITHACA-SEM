@@ -90,6 +90,11 @@ public:
         return false;
     }
 
+    cfi::Face *GetCfiPointer()
+    {
+        return m_cfiSurface;
+    }
+
 private:
     /// Function which tests the the value of uv used is within the surface
     void Test(Array<OneD, NekDouble> uv)

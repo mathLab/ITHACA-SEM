@@ -63,12 +63,12 @@ namespace Nektar
             }
             else
             {
-                NekDouble a = 2.0 * (1.0-r) / (1.0 - pow(r,(double)npts));
+                NekDouble a = 2.0 * (1.0-r) / (1.0 - pow(r,(double)(npts-1)));
                 m_points[0][0] = -1.0;
                 
                 for (unsigned int i = 1; i < npts; ++i)
                 {
-                    m_points[0][i] = m_points[0][i-1] + a*pow(r,(double)i);
+                    m_points[0][i] = m_points[0][i-1] + a*pow(r,(double)(i-1));
                 }
 
                 m_points[0][npts-1] = 1.0;

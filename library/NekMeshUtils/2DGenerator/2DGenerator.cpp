@@ -37,6 +37,8 @@
 
 #include <NekMeshUtils/2DGenerator/2DGenerator.h>
 
+#include <NekMeshUtils/Octree/Octree.h>
+
 #include <LibUtilities/BasicUtils/ParseUtils.h>
 #include <LibUtilities/BasicUtils/Progressbar.hpp>
 
@@ -67,6 +69,10 @@ Generator2D::Generator2D(MeshSharedPtr m) : ProcessModule(m)
     m_config["smoothbl"] =
         ConfigOption(true, "0", "Smooth the BL normal directions to avoid "
                                 "(nearly) intersecting normals");
+    m_config["spaceoutbl"] = ConfigOption(
+        false, "0.5", "Threshold to space out BL according to Delta");
+    m_config["nospaceoutsurf"] =
+        ConfigOption(false, "", "Surfaces where spacing out shouldn't be used");
 }
 
 Generator2D::~Generator2D()
@@ -366,10 +372,12 @@ void Generator2D::MakeBL(int faceid)
     NekDouble divider     = m_config["bltadjust"].as<NekDouble>();
     bool adjustEverywhere = m_config["adjustblteverywhere"].beenSet;
     bool smoothbl         = m_config["smoothbl"].beenSet;
+    bool spaceoutbl       = m_config["spaceoutbl"].beenSet;
+    NekDouble spaceoutthr = m_config["spaceoutbl"].as<NekDouble>();
 
     if (divider < 2.0)
     {
-        WARNINGL1(false, "BndLayerAdjustment too low, corrected to 2.0");
+        WARNINGL0(false, "BndLayerAdjustment too low, corrected to 2.0");
         divider = 2.0;
     }
 
@@ -469,10 +477,9 @@ void Generator2D::MakeBL(int faceid)
                 NekDouble u = (*q - *p).curl(r).m_z / d;
 
                 // Check for intersection of the infinite continuation of one
-                // normal
-                // with the other. A tolerance of 0.5 times the length of the
-                // normal
-                // is used. Could maybe be decreased to a less aggressive value.
+                // normal with the other. A tolerance of 0.5 times the length of
+                // thenormalis used. Could maybe be decreased to a less
+                // aggressive value.
                 if ((-0.5 < t && t <= 1.5) || (-0.5 < u && u <= 1.5))
                 {
                     dist[p] = sqrt(r.abs2());
@@ -522,6 +529,276 @@ void Generator2D::MakeBL(int faceid)
             else
             {
                 cout << "\t\tNormals smoothed. Algorithm didn't converge after "
+                     << count << " iterations." << endl;
+            }
+        }
+    }
+
+    // Space out the outter BL nodes to better fit the local required Delta
+    if (spaceoutbl)
+    {
+        if (spaceoutthr < 0.0 || spaceoutthr > 1.0)
+        {
+            WARNINGL0(false, "The boundary layer space out threshold should be "
+                             "between 0 and 1. It will now be adjusted to "
+                             "0.5.");
+            spaceoutthr = 0.5;
+        }
+
+        vector<unsigned int> nospaceoutsurf;
+        ParseUtils::GenerateSeqVector(m_config["nospaceoutsurf"].as<string>(),
+                                      nospaceoutsurf);
+
+        // List of connected nodes at need spacing out
+        vector<deque<NodeSharedPtr>> nodesToMove;
+
+        int count = 0;
+
+        // This will supposedly spread the number of nodes to be moved until
+        // sufficient space is found
+        do
+        {
+            nodesToMove.clear();
+
+            // Find which nodes need to be spaced out
+            for (const auto &ie : m_blEdges)
+            {
+                auto it = find(nospaceoutsurf.begin(), nospaceoutsurf.end(),
+                               ie->m_parentCAD->GetId());
+                if (it != nospaceoutsurf.end())
+                {
+                    continue;
+                }
+
+                NodeSharedPtr n1 = nodeNormals[ie->m_n1];
+                NodeSharedPtr n2 = nodeNormals[ie->m_n2];
+
+                NekDouble targetD =
+                    m_mesh->m_octree->Query(((*n1 + *n2) / 2.0).GetLoc());
+                NekDouble realD = sqrt((*n1 - *n2).abs2());
+
+                // Add nodes if condition fulfilled
+                if (realD < spaceoutthr * targetD)
+                {
+                    bool connected = false;
+
+                    for (auto &il : nodesToMove)
+                    {
+                        if (il.front() == n1)
+                        {
+                            il.push_front(n2);
+                            connected = true;
+                            break;
+                        }
+                        if (il.front() == n2)
+                        {
+                            il.push_front(n1);
+                            connected = true;
+                            break;
+                        }
+                        if (il.back() == n1)
+                        {
+                            il.push_back(n2);
+                            connected = true;
+                            break;
+                        }
+                        if (il.back() == n2)
+                        {
+                            il.push_back(n1);
+                            connected = true;
+                            break;
+                        }
+                    }
+
+                    // Create new set of connected nodes if necessary
+                    if (!connected)
+                    {
+                        deque<NodeSharedPtr> newList;
+                        newList.push_back(n1);
+                        newList.push_back(n2);
+
+                        nodesToMove.push_back(newList);
+                    }
+                }
+            }
+
+            for (int i = 0;; ++i)
+            {
+                // Reconnect sets of connected nodes together if need be. Done
+                // once before ad once after expanding the set by one node to
+                // find extra space.
+                for (int i1 = 0; i1 < nodesToMove.size(); ++i1)
+                {
+                    NodeSharedPtr n11 = nodesToMove[i1].front();
+                    NodeSharedPtr n12 = nodesToMove[i1].back();
+
+                    for (int i2 = i1 + 1; i2 < nodesToMove.size(); ++i2)
+                    {
+                        NodeSharedPtr n21 = nodesToMove[i2].front();
+                        NodeSharedPtr n22 = nodesToMove[i2].back();
+
+                        if (n11 == n21 || n11 == n22 || n12 == n21 ||
+                            n12 == n22)
+                        {
+                            if (n11 == n21 || n12 == n22)
+                            {
+                                reverse(nodesToMove[i2].begin(),
+                                        nodesToMove[i2].end());
+                                n21 = nodesToMove[i2].front();
+                                n22 = nodesToMove[i2].back();
+                            }
+
+                            if (n11 == n22)
+                            {
+                                nodesToMove[i1].insert(nodesToMove[i1].begin(),
+                                                       nodesToMove[i2].begin(),
+                                                       nodesToMove[i2].end() -
+                                                           1);
+                            }
+                            else
+                            {
+                                nodesToMove[i1].insert(nodesToMove[i1].end(),
+                                                       nodesToMove[i2].begin() +
+                                                           1,
+                                                       nodesToMove[i2].end());
+                            }
+
+                            nodesToMove.erase(nodesToMove.begin() + i2);
+                            continue;
+                        }
+                    }
+                }
+
+                if (i >= 1)
+                {
+                    break;
+                }
+
+                set<EdgeSharedPtr> addedEdges;
+
+                // Expand each set of connected nodes by one node to allow for
+                // extra space
+                for (auto &il : nodesToMove)
+                {
+                    NodeSharedPtr n11 = *(il.begin() + 0);
+                    NodeSharedPtr n12 = *(il.begin() + 1);
+
+                    NodeSharedPtr n13 = *(il.rbegin() + 1);
+                    NodeSharedPtr n14 = *(il.rbegin() + 0);
+
+                    for (const auto &ie : m_blEdges)
+                    {
+                        auto it =
+                            find(nospaceoutsurf.begin(), nospaceoutsurf.end(),
+                                 ie->m_parentCAD->GetId());
+                        if (addedEdges.count(ie) || it != nospaceoutsurf.end())
+                        {
+                            continue;
+                        }
+
+                        NodeSharedPtr n21 = nodeNormals[ie->m_n1];
+                        NodeSharedPtr n22 = nodeNormals[ie->m_n2];
+
+                        NodeSharedPtr frontPush, backPush;
+
+                        if (n11)
+                        {
+                            if (n11 == n21 && n12 != n22)
+                            {
+                                frontPush = n22;
+                            }
+                            else if (n11 == n22 && n12 != n21)
+                            {
+                                frontPush = n21;
+                            }
+
+                            if (frontPush)
+                            {
+                                il.push_front(frontPush);
+                                n11.reset();
+                                addedEdges.insert(ie);
+                            }
+                        }
+                        if (n14 && !frontPush)
+                        {
+                            if (n14 == n21 && n13 != n22)
+                            {
+                                backPush = n22;
+                            }
+                            if (n14 == n22 && n13 != n21)
+                            {
+                                backPush = n21;
+                            }
+
+                            if (backPush)
+                            {
+                                il.push_back(backPush);
+                                n14.reset();
+                                addedEdges.insert(ie);
+                            }
+                        }
+
+                        if (!n11 && !n14)
+                        {
+                            break;
+                        }
+                    }
+                }
+            }
+
+            // Actual spacing out of the nodes. Done by simple linear
+            // interpolation between the 2 end nodes. Weights come from the
+            // required Delta or each edge.
+            for (const auto &il : nodesToMove)
+            {
+                NodeSharedPtr ni = il.front();
+                NodeSharedPtr nf = il.back();
+
+                vector<NekDouble> deltas;
+                NekDouble total = 0.0;
+
+                for (int i = 0; i < il.size() - 1; ++i)
+                {
+                    NodeSharedPtr n1 = il[i];
+                    NodeSharedPtr n2 = il[i + 1];
+
+                    deltas.push_back(
+                        m_mesh->m_octree->Query(((*n1 + *n2) / 2.0).GetLoc()));
+                    total += deltas.back();
+                }
+
+                for (auto &id : deltas)
+                {
+                    id /= total;
+                }
+
+                NekDouble runningTotal = 0.0;
+
+                for (int i = 1; i < il.size() - 1; ++i)
+                {
+                    runningTotal += deltas[i - 1];
+                    Array<OneD, NekDouble> loc =
+                        (*ni * (1.0 - runningTotal) + *nf * runningTotal)
+                            .GetLoc();
+
+                    Array<OneD, NekDouble> uv =
+                        m_mesh->m_cad->GetSurf(faceid)->locuv(loc);
+
+                    il[i]->Move(loc, faceid, uv);
+                }
+            }
+        } while (nodesToMove.size() && count++ < 50);
+
+        if (m_mesh->m_verbose)
+        {
+            if (count < 50)
+            {
+                cout << "\t\tBL spaced out in " << count << " iterations."
+                     << endl;
+            }
+            else
+            {
+                cout << "\t\tBL spaced out. Algorithm didn't converge after "
                      << count << " iterations." << endl;
             }
         }

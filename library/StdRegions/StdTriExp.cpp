@@ -1005,7 +1005,7 @@ namespace Nektar
                         maparray[i] = i;
                     }
 
-                    if(edgeOrient==eForwards)
+                    if(edgeOrient==eBackwards)
                     {
                         swap( maparray[0] , maparray[1] );
 
@@ -1167,7 +1167,7 @@ namespace Nektar
                         maparray[i] = 2+i;
                     }
 
-                    if(edgeOrient==eForwards)
+                    if(edgeOrient==eBackwards)
                     {
                         for(i = 1; i < nEdgeIntCoeffs; i+=2)
                         {
@@ -1390,7 +1390,6 @@ namespace Nektar
             int qb = m_base[1]->GetNumPoints();
             int nmodes_a = m_base[0]->GetNumModes();
             int nmodes_b = m_base[1]->GetNumModes();
-            int nmodes = min(nmodes_a,nmodes_b);
 
             // Declare orthogonal basis.
             LibUtilities::PointsKey pa(qa,m_base[0]->GetPointsType());
@@ -1427,7 +1426,6 @@ namespace Nektar
             }
             else if(mkey.ConstFactorExists(eFactorSVVDGKerDiffCoeff)) // Rodrigo/mansoor's DG kernel
             {
-                NekDouble cutoff = mkey.GetConstFactor(eFactorSVVCutoffRatio); 
                 NekDouble  SvvDiffCoeff  =
                     mkey.GetConstFactor(eFactorSVVDGKerDiffCoeff)*
                     mkey.GetConstFactor(eFactorSVVDiffCoeff);

@@ -1,5 +1,3 @@
-ADD_NEKTAR_EXECUTABLE(PartitionAnalyse
-    COMPONENT demos DEPENDS LibUtilities SOURCES PartitionAnalyse.cpp)
 ADD_NEKTAR_EXECUTABLE(FoundationDemo
     COMPONENT demos DEPENDS LibUtilities SOURCES FoundationDemo.cpp)
 ADD_NEKTAR_EXECUTABLE(NodalDemo

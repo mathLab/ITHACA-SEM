@@ -214,7 +214,7 @@ and Chryssostomidis \cite{DoKa14}. In this paper they suggest to
 impose a pressure Dirichlet outflow condition of the form
 
 \begin{equation}
- p^{n+1}= \nu \nabla\mathbf{u}^{*,n+1}\cdot \mathbf{n}-\frac{1}{2}
+ p^{n+1}= \nu \mathbf{n} \cdot \nabla\mathbf{u}^{*,n+1}\cdot \mathbf{n}-\frac{1}{2}
  \mid \mathbf{u}^{*,n+1} \mid^2 S_o(\mathbf{n}\cdot
  \mathbf{u}^{*,n+1})+\mathbf{f}_b^{n+1}\cdot \mathbf{n}
 \end{equation}
@@ -411,7 +411,7 @@ viscosity, which arise for non-Newtonian flows, with only minor
 modifications.
 
 We consider the weak form of the Stokes problem for the velocity field
-$boldsymbol{u}=[u,v]^{T}$ and the pressure field $p$:
+$\boldsymbol{u}=[u,v]^{T}$ and the pressure field $p$:
 
 \begin{subequations}
 \begin{equation}
@@ -1165,8 +1165,9 @@ The following parameters can be specified in the \texttt{PARAMETERS} section of 
 \item \inltt{Re}: sets the Reynolds number
 \item \inltt{Kinvis}: sets the kinematic viscosity $\nu$.
 \item \inltt{kdim}: sets the dimension of the Krylov subspace $\kappa$. Can be used in: \inltt{ModifiedArnoldi} and \inltt{Arpack}. Default value: 16.
-\item \inltt{evtol}: sets the tolerance of the eigenvalues. Can be used in: \item \inltt{imagShift}: provide an imaginary shift to the direct sovler eigenvalue problem by the specified value. 
-ltt{ModifiedArnoldi} and \inltt{Arpack}. Default value: $10^{-6}$.
+\item \inltt{evtol}: sets the tolerance of the eigenvalues. Can be used in: \item \inltt{imagShift}:
+provide an imaginary shift to the direct solver eigenvalue problem by the specified value.
+\inltt{ModifiedArnoldi} and \inltt{Arpack}. Default value: $0.0$. Works only with \inltt{Homogeneous} set to \inltt{1D} and inltt{ModeType} set to \inltt{SingleMode}.
 \item \inltt{nits}: sets the maximum number of iterations. Can be used in: \inltt{ModifiedArnoldi} and \inltt{Arpack}. Default value: 500.
 \item \inltt{LZ}:  sets the length in the spanswise direction $L_z$. Can be used in \inltt{Homogeneous} set to \inltt{1D}. Default value: 1.
 \item \inltt{HomModesZ}: sets the number of planes in the homogeneous directions. Can be used in \inltt{Homogeneous} set to \inltt{1D} and \inltt{ModeType} set to \inltt{MultipleModes}.
@@ -1517,6 +1518,91 @@ This leads to small grid spacing required to resolve all physical scales associa
 (the ratio of resolution required for transport to Navier Stokes equation scales with $Sc^{3/4}$, where $Sc$ is the
 Schmidt number = kinematic viscosity/diffusion coefficient). Hence, small diffusion coefficient might lead to spurious
 oscillations if the mesh spacing is not small enough.
+
+\section{Imposing a constant flowrate}
+
+In some simulations, it may be desirable to drive the flow by fixing a value of
+the volumetric flux through a boundary surface. A common use case for this is a
+channel flow, where the inflow and outflow are treated using periodic boundary
+conditions, requiring a use of either a body force or a flowrate condition to
+drive the flow. Often, the use of a body force is sufficient, but in some cases
+(e.g. transitional or turbulent simulations), it may be difficult to determine
+the correct body force to use in order to attain a specific Reynolds number. The
+incompressible solver supports the use of an alternative forcing whereby the
+volumetric flux,
+%
+\[
+  Q(\mathbf{u}) = \frac{1}{\mu(R)} \int_R \mathbf{u}\cdot d\mathbf{s},
+\]
+%
+through a user-defined surface $R$ of area $\mu(R)$ is kept constant. This is
+supported for standard two- and three-dimensional simulations, where $R$ is a
+boundary region, as well as three-dimensional homogeneous simulations. In the
+latter case, the forcing can be imposed either in the homogeneous direction (in
+the $x-y$ plane) or perpendicular to it (in the $z$ direction).
+
+The flowrate correction works by taking each timestep's velocity field
+$\mathbf{u}^{n}$, and computing a scalar $\alpha$ so that the corrected flow
+%
+\[
+  \tilde{\mathbf{u}}^n = \mathbf{u}^n + \alpha\mathbf{u}_s
+\]
+has the desired flowrate. Here, $\mathbf{u}_s$ is a linear Stokes solution that
+is calculated once at the start of the simulation, so that the condition is not
+expensive to implement.
+
+To enable flowrate corrections, three things must be defined in the session
+file:
+
+\begin{itemize}
+  \item The \inltt{Flowrate} parameter in the parameters section, which defines
+  the desired value of the volumetric flux $Q(\mathbf{u})$ through the reference
+  region. To set $Q = 1$ we would therefore define:
+\begin{lstlisting}[style=XMLStyle]
+<PARAMETERS>
+  <P> Flowrate = 1.0 </P>
+</PARAMETERS>
+\end{lstlisting}
+  \item A boundary condition must be tagged with the \inltt{Flowrate}
+  user-defined type to define the reference region $R$. For example, a 2D
+  channel flow with periodic boundary conditions might use the following
+  arrangement:
+\begin{lstlisting}[style=XMLStyle]
+<BOUNDARYCONDITIONS>
+  <REGION REF="0">
+    <P VAR="u" VALUE="[1]" USERDEFINEDTYPE="Flowrate" />
+    <P VAR="v" VALUE="[1]" USERDEFINEDTYPE="Flowrate" />
+    <P VAR="p" VALUE="[1]" USERDEFINEDTYPE="Flowrate" />
+  </REGION>
+  <REGION REF="1">
+    <P VAR="u" VALUE="[0]" />
+    <P VAR="v" VALUE="[0]" />
+    <P VAR="p" VALUE="[0]" />
+  </REGION>
+</BOUNDARYCONDITIONS>
+\end{lstlisting}
+  \item a \inltt{FlowrateForce} function with components \inltt{ForceX},
+  \inltt{ForceY} and \inltt{ForceZ} that defines the direction in which the
+  forcing will be applied. This should be a unit vector (i.e. of magnitude 1)
+  and constant (i.e. not dependent on $x$, $y$, $z$ or $t$). As an example, to
+  impose a force in the $x$-direction we specify:
+\begin{lstlisting}[style=XMLStyle]
+<FUNCTION NAME="FlowrateForce">
+  <E VAR="ForceX" VALUE="1.0" />
+  <E VAR="ForceY" VALUE="0.0" />
+  <E VAR="ForceZ" VALUE="0.0" />
+</FUNCTION>
+\end{lstlisting}
+\end{itemize}
+
+Note that in homogeneous simulations where the forcing is in the $z$-direction,
+only the \inltt{Flowrate} parameter is required and the reference area $R$ is
+taken to be the homogeneous plane.
+
+Optionally, the \inltt{IO\_FlowSteps} parameter can be defined. If set to a
+non-zero integer, this produces a file \inltt{session.prs} which records the
+value of $\alpha$ used in the flowrate correction, every \inltt{IO\_FlowSteps}
+steps.
 
 \section{Examples}
 

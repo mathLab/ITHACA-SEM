@@ -52,9 +52,11 @@ namespace Nektar
 
         /// Creates an instance of this class
         static SolverUtils::EquationSystemSharedPtr create(
-            const LibUtilities::SessionReaderSharedPtr& pSession)
+            const LibUtilities::SessionReaderSharedPtr& pSession,
+            const SpatialDomains::MeshGraphSharedPtr& pGraph)
         {
-            return MemoryManager<ShallowWaterSystem>::AllocateSharedPtr(pSession);
+            return MemoryManager<ShallowWaterSystem>::AllocateSharedPtr(
+                pSession, pGraph);
         }
 	
         /// Name of class
@@ -84,7 +86,8 @@ namespace Nektar
 	// Location of velocity vector.
     Array<OneD, Array<OneD, NekDouble> >            m_vecLocs;
         /// Initialises UnsteadySystem class members.
-        ShallowWaterSystem(const LibUtilities::SessionReaderSharedPtr& pSession);
+        ShallowWaterSystem(const LibUtilities::SessionReaderSharedPtr& pSession,
+                           const SpatialDomains::MeshGraphSharedPtr& pGraph);
 
         virtual void v_InitObject();
 

@@ -54,10 +54,10 @@ std::string FilterMovingBody::className = SolverUtils::GetFilterFactory().
  *
  */
 FilterMovingBody::FilterMovingBody(
-        const LibUtilities::SessionReaderSharedPtr &pSession,
+        const LibUtilities::SessionReaderSharedPtr         &pSession,
+        const std::weak_ptr<SolverUtils::EquationSystem> &pEquation,
         const ParamMap &pParams)
-    : Filter(pSession),
-      m_session(pSession)
+    : Filter(pSession, pEquation)
 {
     // OutputFile
     auto it = pParams.find("OutputFile");
@@ -92,7 +92,8 @@ FilterMovingBody::FilterMovingBody(
     }
     else
     {
-        LibUtilities::Equation equ(m_session, it->second);
+        LibUtilities::Equation equ(
+            m_session->GetExpressionEvaluator(), it->second);
         m_outputFrequency = round(equ.Evaluate());
     }
 

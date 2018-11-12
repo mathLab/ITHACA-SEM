@@ -6,7 +6,7 @@
 //
 // The MIT License
 //
-// Copyright (c) 2015 Kilian Lackhove
+// Copyright (c) 2017 Kilian Lackhove
 // Copyright (c) 2006 Division of Applied Mathematics, Brown University (USA),
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
@@ -36,6 +36,9 @@
 
 #include <iostream>
 
+#include <boost/random/variate_generator.hpp>
+#include <boost/random/normal_distribution.hpp>
+
 #include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
 #include <APESolver/EquationSystems/APE.h>
 #include <LocalRegions/TriExp.h>
@@ -56,9 +59,10 @@ string APE::className = GetEquationSystemFactory().RegisterCreatorFunction(
 
 
 APE::APE(
-        const LibUtilities::SessionReaderSharedPtr& pSession)
-    : UnsteadySystem(pSession),
-      AdvectionSystem(pSession)
+    const LibUtilities::SessionReaderSharedPtr& pSession,
+    const SpatialDomains::MeshGraphSharedPtr& pGraph)
+    : UnsteadySystem(pSession, pGraph),
+      AdvectionSystem(pSession, pGraph)
 {
 }
 
@@ -138,7 +142,8 @@ void APE::v_InitObject()
     }
     GetFunction("Baseflow", m_bfField, true)->Evaluate(m_bfNames, m_bf, m_time);
 
-    m_forcing = SolverUtils::Forcing::Load(m_session, m_fields, m_spacedim + 1);
+    m_forcing = SolverUtils::Forcing::Load(m_session, shared_from_this(),
+                                           m_fields, m_spacedim + 1);
 
     // Do not forwards transform initial condition
     m_homoInitialFwd = false;
@@ -146,10 +151,10 @@ void APE::v_InitObject()
     // Define the normal velocity fields
     if (m_fields[0]->GetTrace())
     {
-        m_traceBasefield = Array<OneD, Array<OneD, NekDouble> > (m_spacedim + 2);
-        for (int i = 0; i < m_spacedim + 2; i++)
+        m_bfTrace = Array<OneD, Array<OneD, NekDouble> > (m_spacedim + 2);
+        for (int i = 0; i < m_spacedim + 2; ++i)
         {
-            m_traceBasefield[i] = Array<OneD, NekDouble>(GetTraceNpoints());
+            m_bfTrace[i] = Array<OneD, NekDouble>(GetTraceNpoints(), 0.0);
         }
     }
 
@@ -165,11 +170,11 @@ void APE::v_InitObject()
     string riemName;
     m_session->LoadSolverInfo("UpwindType", riemName, "APEUpwind");
     m_riemannSolver = SolverUtils::GetRiemannSolverFactory().CreateInstance(
-                          riemName);
+                          riemName, m_session);
     m_riemannSolver->SetVector("N",         &APE::GetNormals,   this);
-    m_riemannSolver->SetVector("basefield", &APE::GetBasefield, this);
+    m_riemannSolver->SetVector("basefield", &APE::GetBfTrace,   this);
     m_riemannSolver->SetAuxVec("vecLocs",   &APE::GetVecLocs,   this);
-    m_riemannSolver->SetParam("Gamma",     &APE::GetGamma,     this);
+    m_riemannSolver->SetParam("Gamma",      &APE::GetGamma,     this);
 
     // Set up advection operator
     string advName;
@@ -189,6 +194,22 @@ void APE::v_InitObject()
     {
         ASSERTL0(false, "Implicit APE not set up.");
     }
+
+    if (m_session->DefinesElement("Nektar/Coupling"))
+    {
+        TiXmlElement* vCoupling = m_session->GetElement("Nektar/Coupling");
+
+        ASSERTL0(vCoupling->Attribute("TYPE"),
+                 "Missing TYPE attribute in Coupling");
+        string vType = vCoupling->Attribute("TYPE");
+        ASSERTL0(!vType.empty(),
+                 "TYPE attribute must be non-empty in Coupling");
+
+        m_coupling = GetCouplingFactory().CreateInstance(vType, m_fields[0]);
+    }
+
+    m_whiteNoiseBC_lastUpdate = -1.0;
+    m_whiteNoiseBC_p = 0.0;
 }
 
 
@@ -271,6 +292,7 @@ bool APE::v_PreIntegrate(int step)
     GetFunction("Baseflow", m_bfField, true)->Evaluate(m_bfNames, m_bf, m_time);
 
     Array<OneD, NekDouble> tmpC(GetNcoeffs());
+    int numForceFields = 0;
     for (auto &x : m_forcing)
     {
         for (int i = 0; i < x->GetForces().num_elements(); ++i)
@@ -280,6 +302,8 @@ bool APE::v_PreIntegrate(int step)
             m_bfField->LocalToGlobal(tmpC, tmpC);
             m_bfField->GlobalToLocal(tmpC, tmpC);
             m_bfField->BwdTrans(tmpC, x->UpdateForces()[i]);
+
+            numForceFields++;
         }
     }
 
@@ -293,8 +317,51 @@ bool APE::v_PreIntegrate(int step)
         m_bfField->BwdTrans(tmpC, m_bf[i]);
     }
 
+    if (m_coupling)
+    {
+        vector<string> varNames;
+        Array<OneD, Array<OneD, NekDouble> > phys(m_fields.num_elements() + m_bfNames.size() + numForceFields);
+        for (int i = 0; i < m_fields.num_elements(); ++i)
+        {
+            varNames.push_back(m_session->GetVariable(i));
+            phys[i]   = m_fields[i]->UpdatePhys();
+        }
+        for (int i = 0; i < m_bfNames.size(); ++i)
+        {
+            varNames.push_back(m_bfNames[i]);
+            phys[m_fields.num_elements() + i] = m_bf[i];
+        }
+
+        int f = 0;
+        for (auto &x : m_forcing)
+        {
+            for (int i = 0; i < x->GetForces().num_elements(); ++i)
+            {
+                phys[m_fields.num_elements() + m_bfNames.size() + f] = x->GetForces()[i];
+                varNames.push_back("F_" + boost::lexical_cast<string>(f) +
+                                    "_" + m_session->GetVariable(i));
+            }
+            f++;
+        }
+
+        m_coupling->Send(step, m_time, phys, varNames);
+        m_coupling->Receive(step, m_time, phys, varNames);
+    }
+
     return AdvectionSystem::v_PreIntegrate(step);
 }
+
+
+void APE::v_Output()
+{
+    if (m_coupling)
+    {
+        m_coupling->Finalize();
+    }
+
+    AdvectionSystem::v_Output();
+}
+
 
 /**
  * @brief Compute the right-hand side.
@@ -363,18 +430,45 @@ void APE::SetBoundaryConditions(Array<OneD, Array<OneD, NekDouble> > &inarray,
         Fwd[i] = Array<OneD, NekDouble>(nTracePts);
         m_fields[i]->ExtractTracePhys(inarray[i], Fwd[i]);
     }
+    Array<OneD, Array<OneD, NekDouble> > bfFwd = GetBfTrace();
 
     // loop over Boundary Regions
-    for(int n = 0; n < m_fields[0]->GetBndConditions().num_elements(); ++n)
+    for (int n = 0; n < m_fields[0]->GetBndConditions().num_elements(); ++n)
     {
-        // Wall Boundary Condition
-        if (boost::iequals(m_fields[0]->GetBndConditions()[n]->GetUserDefined(),"Wall"))
-        {
-            WallBC(n, cnt, Fwd, inarray);
-        }
+        std::string userDefStr =
+            m_fields[0]->GetBndConditions()[n]->GetUserDefined();
 
-        // Time Dependent Boundary Condition (specified in meshfile)
-        if (m_fields[0]->GetBndConditions()[n]->IsTimeDependent())
+        if (!userDefStr.empty())
+        {
+            // Wall Boundary Condition
+            if (boost::iequals(userDefStr, "Wall"))
+            {
+                WallBC(n, cnt, Fwd, inarray);
+            }
+            else if (boost::iequals(userDefStr, "WhiteNoise"))
+            {
+                WhiteNoiseBC(n, cnt, Fwd, bfFwd, inarray);
+            }
+            else if (boost::iequals(userDefStr, "RiemannInvariantBC"))
+            {
+                RiemannInvariantBC(n, cnt, Fwd, bfFwd, inarray);
+            }
+            else if (boost::iequals(userDefStr, "TimeDependent"))
+            {
+                for (int i = 0; i < nvariables; ++i)
+                {
+                    varName = m_session->GetVariable(i);
+                    m_fields[i]->EvaluateBoundaryConditions(time, varName);
+                }
+            }
+            else
+            {
+                string errmsg = "Unrecognised boundary condition: ";
+                errmsg += userDefStr;
+                ASSERTL0(false, errmsg.c_str());
+            }
+        }
+        else
         {
             for (int i = 0; i < nvariables; ++i)
             {
@@ -382,7 +476,8 @@ void APE::SetBoundaryConditions(Array<OneD, Array<OneD, NekDouble> > &inarray,
                 m_fields[i]->EvaluateBoundaryConditions(time, varName);
             }
         }
-        cnt +=m_fields[0]->GetBndCondExpansions()[n]->GetExpSize();
+
+        cnt += m_fields[0]->GetBndCondExpansions()[n]->GetExpSize();
     }
 }
 
@@ -442,6 +537,200 @@ void APE::WallBC(int bcRegion, int cnt,
             Vmath::Vcopy(nBCEdgePts,
                          &Fwd[i][id2], 1,
                          &(m_fields[i]->GetBndCondExpansions()[bcRegion]->UpdatePhys())[id1], 1);
+        }
+    }
+}
+
+
+/**
+ * @brief Outflow characteristic boundary conditions for compressible
+ * flow problems.
+ */
+void APE::RiemannInvariantBC(int bcRegion,
+                             int cnt,
+                             Array<OneD, Array<OneD, NekDouble> > &Fwd,
+                             Array<OneD, Array<OneD, NekDouble> > &BfFwd,
+                             Array<OneD, Array<OneD, NekDouble> > &physarray)
+{
+    int id1, id2, nBCEdgePts;
+    int nVariables = physarray.num_elements();
+
+    const Array<OneD, const int> &traceBndMap = m_fields[0]->GetTraceBndMap();
+
+    int eMax = m_fields[0]->GetBndCondExpansions()[bcRegion]->GetExpSize();
+
+    for (int e = 0; e < eMax; ++e)
+    {
+        nBCEdgePts = m_fields[0]
+                         ->GetBndCondExpansions()[bcRegion]
+                         ->GetExp(e)
+                         ->GetTotPoints();
+        id1 = m_fields[0]->GetBndCondExpansions()[bcRegion]->GetPhys_Offset(e);
+        id2 = m_fields[0]->GetTrace()->GetPhys_Offset(traceBndMap[cnt + e]);
+
+        // Calculate (v.n)
+        Array<OneD, NekDouble> Vn(nBCEdgePts, 0.0);
+        for (int i = 0; i < m_spacedim; ++i)
+        {
+            Vmath::Vvtvp(nBCEdgePts,
+                         &Fwd[1 + i][id2], 1,
+                         &m_traceNormals[i][id2], 1,
+                         &Vn[0], 1,
+                         &Vn[0], 1);
+        }
+
+        // Calculate (v0.n)
+        Array<OneD, NekDouble> Vn0(nBCEdgePts, 0.0);
+        for (int i = 0; i < m_spacedim; ++i)
+        {
+            Vmath::Vvtvp(nBCEdgePts,
+                         &BfFwd[2 + i][id2], 1,
+                         &m_traceNormals[i][id2], 1,
+                         &Vn0[0], 1,
+                         &Vn0[0], 1);
+        }
+
+        for (int i = 0; i < nBCEdgePts; ++i)
+        {
+            NekDouble c = sqrt(m_gamma * BfFwd[0][id2 + i] / BfFwd[1][id2 + i]);
+
+            NekDouble l0 = Vn0[i] + c;
+            NekDouble l1 = Vn0[i] - c;
+
+            NekDouble h0, h1;
+
+            // outgoing
+            if (l0 > 0)
+            {
+                // p/2 + u*c*rho0/2
+                h0 = Fwd[0][id2 + i] / 2 + Vn[i] * c * BfFwd[1][id2 + i] / 2;
+            }
+            // incoming
+            else
+            {
+                h0 = 0.0;
+            }
+
+            // outgoing
+            if (l1 > 0)
+            {
+                // p/2 - u*c*rho0/2
+                h1 = Fwd[0][id2 + i] / 2 - Vn[i] * c * BfFwd[1][id2 + i] / 2;
+            }
+            // incoming
+            else
+            {
+                h1 = 0.0;
+            }
+
+            // compute primitive variables
+            // p = h0 + h1
+            // u = ( h0 - h1) / (c*rho0)
+            Fwd[0][id2 + i] = h0 + h1;
+            NekDouble VnNew = (h0 - h1) / (c * BfFwd[1][id2 + i]);
+
+            // adjust velocity pert. according to new value
+            for (int j = 0; j < m_spacedim; ++j)
+            {
+                Fwd[1 + j][id2 + i] =
+                    Fwd[1 + j][id2 + i] +
+                    (VnNew - Vn[i]) * m_traceNormals[j][id2 + i];
+            }
+        }
+
+        // Copy boundary adjusted values into the boundary expansion
+        for (int i = 0; i < nVariables; ++i)
+        {
+            Vmath::Vcopy(nBCEdgePts,
+                         &Fwd[i][id2], 1,
+                         &(m_fields[i]
+                               ->GetBndCondExpansions()[bcRegion]
+                               ->UpdatePhys())[id1], 1);
+        }
+    }
+}
+
+
+/**
+ * @brief Wall boundary conditions for the APE equations.
+ */
+void APE::WhiteNoiseBC(int bcRegion,
+                       int cnt,
+                       Array<OneD, Array<OneD, NekDouble> > &Fwd,
+                       Array<OneD, Array<OneD, NekDouble> > &BfFwd,
+                       Array<OneD, Array<OneD, NekDouble> > &physarray)
+{
+    int id1, id2, nBCEdgePts;
+    int nVariables = physarray.num_elements();
+
+    const Array<OneD, const int> &traceBndMap = m_fields[0]->GetTraceBndMap();
+
+    if (m_rng.count(bcRegion) == 0)
+    {
+        m_rng[bcRegion] = boost::mt19937(bcRegion);
+    }
+
+    ASSERTL0(
+        m_fields[0]->GetBndConditions()[bcRegion]->GetBoundaryConditionType() ==
+            SpatialDomains::eDirichlet,
+        "WhiteNoise BCs must be Dirichlet type BCs");
+
+    LibUtilities::Equation cond =
+        std::static_pointer_cast<SpatialDomains::DirichletBoundaryCondition>(
+            m_fields[0]->GetBndConditions()[bcRegion])
+            ->m_dirichletCondition;
+    NekDouble sigma = cond.Evaluate();
+
+    ASSERTL0(sigma > NekConstants::kNekZeroTol,
+             "sigma must be greater than zero");
+
+    // random velocity perturbation
+    if (m_whiteNoiseBC_lastUpdate < m_time)
+    {
+        m_whiteNoiseBC_lastUpdate = m_time;
+
+        boost::normal_distribution<> dist(0, sigma);
+        m_whiteNoiseBC_p = dist(m_rng[bcRegion]);
+    }
+
+    int eMax = m_fields[0]->GetBndCondExpansions()[bcRegion]->GetExpSize();
+    for (int e = 0; e < eMax; ++e)
+    {
+        nBCEdgePts = m_fields[0]
+                         ->GetBndCondExpansions()[bcRegion]
+                         ->GetExp(e)
+                         ->GetTotPoints();
+        id1 = m_fields[0]->GetBndCondExpansions()[bcRegion]->GetPhys_Offset(e);
+        id2 = m_fields[0]->GetTrace()->GetPhys_Offset(traceBndMap[cnt + e]);
+
+        Array<OneD, Array<OneD, NekDouble> > tmp(nVariables);
+        for (int i = 0; i < nVariables; ++i)
+        {
+            tmp[i] = Array<OneD, NekDouble>(nBCEdgePts, 0.0);
+        }
+
+        // pressure perturbation
+        Vmath::Fill(nBCEdgePts, m_whiteNoiseBC_p, &tmp[0][0], 1);
+
+        // velocity perturbation
+        for (int i = 0; i < nBCEdgePts; ++i)
+        {
+            NekDouble u = m_whiteNoiseBC_p /
+                          sqrt(m_gamma * BfFwd[0][id2 + i] * BfFwd[1][id2 + i]);
+            for (int j = 0; j < m_spacedim; ++j)
+            {
+                tmp[1 + j][i] = -1.0 * u * m_traceNormals[j][id2 + i];
+            }
+        }
+
+        // Copy boundary adjusted values into the boundary expansion
+        for (int i = 0; i < nVariables; ++i)
+        {
+            Vmath::Vcopy(nBCEdgePts,
+                         &tmp[i][0], 1,
+                         &(m_fields[i]
+                               ->GetBndCondExpansions()[bcRegion]
+                               ->UpdatePhys())[id1], 1);
         }
     }
 }
@@ -602,13 +891,13 @@ const Array<OneD, const Array<OneD, NekDouble> > &APE::GetVecLocs()
 /**
  * @brief Get the baseflow field.
  */
-const Array<OneD, const Array<OneD, NekDouble> > &APE::GetBasefield()
+const Array<OneD, const Array<OneD, NekDouble> > &APE::GetBfTrace()
 {
     for (int i = 0; i < m_spacedim + 2; i++)
     {
-        m_fields[0]->ExtractTracePhys(m_bf[i], m_traceBasefield[i]);
+        m_fields[0]->ExtractTracePhys(m_bf[i], m_bfTrace[i]);
     }
-    return m_traceBasefield;
+    return m_bfTrace;
 }
 
 

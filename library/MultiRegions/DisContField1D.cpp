@@ -37,7 +37,7 @@
 #include <MultiRegions/DisContField1D.h>
 #include <StdRegions/StdSegExp.h>
 #include <LibUtilities/Foundations/ManagerAccess.h>
-#include <SpatialDomains/MeshGraph1D.h>
+#include <SpatialDomains/MeshGraph.h>
 
 using namespace std;
 
@@ -132,10 +132,6 @@ namespace Nektar
             {
                 return;
             }
-            
-            SpatialDomains::MeshGraph1DSharedPtr graph1D = 
-                std::dynamic_pointer_cast<SpatialDomains::MeshGraph1D>(
-                    m_graph);
 
             m_globalBndMat = MemoryManager<GlobalLinSysMap>::AllocateSharedPtr();
 
@@ -143,13 +139,13 @@ namespace Nektar
                 AllocateSharedPtr(
                     m_bndCondExpansions,
                     m_bndConditions,
-                    *m_exp,graph1D,
+                    *m_exp,m_graph,
                     m_periodicVerts);
 
             m_trace = std::dynamic_pointer_cast<ExpList>(trace);
 
             m_traceMap = MemoryManager<AssemblyMapDG>::
-                AllocateSharedPtr(m_session, graph1D, trace, *this,
+                AllocateSharedPtr(m_session, m_graph, trace, *this,
                                   m_bndCondExpansions, m_bndConditions, 
                                   m_periodicVerts, variable);
 
@@ -229,10 +225,6 @@ namespace Nektar
                         m_boundaryVerts.insert(
                             m_traceMap->GetBndCondTraceToGlobalTraceMap(cnt+e));
                     }
-                }
-                else
-                {
-                    ASSERTL0(false,"Periodic verts need setting up");
                 }
                 cnt += m_bndCondExpansions[n]->GetExpSize();
             }
@@ -381,7 +373,7 @@ namespace Nektar
                 {
                     // can assume that all regions only contain one point in 1D
                     // Really do not need loop above
-                    int id = (*(bregionIt.second))[0]->GetGlobalID();
+                    int id = bregionIt.second->m_geomVec[0]->GetGlobalID();
                     GeometryToRegionsMap[id] = it.first;
                 }
             }
@@ -391,15 +383,15 @@ namespace Nektar
             // Now find out which points in domain have only one vertex
             for(auto &domIt : domain)
             {
-                SpatialDomains::Composite geomvector = domIt.second; 
-                for(int i = 0; i < geomvector->size(); ++i)
+                SpatialDomains::CompositeSharedPtr geomvector = domIt.second; 
+                for(int i = 0; i < geomvector->m_geomVec.size(); ++i)
                 {
                     for(int j = 0; j < 2; ++j)
                     {
-                        int vid = (*geomvector)[i]->GetVid(j); 
+                        int vid = geomvector->m_geomVec[i]->GetVid(j);
                         if(EndOfDomain.count(vid) == 0)
                         {
-                            EndOfDomain[vid] = (*geomvector)[i]->GetVertex(j);
+                            EndOfDomain[vid] = geomvector->m_geomVec[i]->GetVertex(j);
                         }
                         else
                         {
@@ -442,8 +434,10 @@ namespace Nektar
                     SpatialDomains::BoundaryRegionShPtr breg(MemoryManager<SpatialDomains::BoundaryRegion>::AllocateSharedPtr());
                     
                     // Set up Composite (GemetryVector) to contain vertex and put into bRegion 
-                    SpatialDomains::Composite gvec(MemoryManager<SpatialDomains::GeometryVector>::AllocateSharedPtr());
-                    gvec->push_back(regIt.second);
+                    SpatialDomains::CompositeSharedPtr gvec =
+                        MemoryManager<SpatialDomains::Composite>
+                        ::AllocateSharedPtr();
+                    gvec->m_geomVec.push_back(regIt.second);
                     (*breg)[regIt.first] = gvec;
 
                     returnval->AddBoundaryRegions(bregions.size()+numNewBc,breg);
@@ -486,7 +480,7 @@ namespace Nektar
             {
                 SpatialDomains::BoundaryConditionsSharedPtr DomBCs = GetDomainBCs(domain,Allbcs,variable);
 
-                GenerateBoundaryConditionExpansion(graph1D,*DomBCs,variable);
+                GenerateBoundaryConditionExpansion(m_graph,*DomBCs,variable);
                 EvaluateBoundaryConditions(0.0, variable);
                 ApplyGeomInfo();
                 FindPeriodicVertices(*DomBCs,variable);
@@ -558,19 +552,15 @@ namespace Nektar
             {
                 const SpatialDomains::BoundaryConditionShPtr boundaryCondition =
                     GetBoundaryCondition(bconditions, it.first, variable);
-                if (boundaryCondition->GetBoundaryConditionType() !=
-                    SpatialDomains::ePeriodic )
+                SpatialDomains::BoundaryRegion::iterator bregionIt;
+                for (auto &bregionIt : *(it.second))
                 {
-                    for (auto &bregionIt : *it.second)
-                    {
-                        cnt += bregionIt.second->size();
-                    }
+                    cnt += bregionIt.second->m_geomVec.size();
                 }
             }
 
             m_bndCondExpansions
                     = Array<OneD,MultiRegions::ExpListSharedPtr>(cnt);
-
             m_bndConditions
                     = Array<OneD,SpatialDomains::BoundaryConditionShPtr>(cnt);
 
@@ -597,9 +587,6 @@ namespace Nektar
             const SpatialDomains::BoundaryConditionCollection &bconditions
                     = bcs.GetBoundaryConditions();
 
-            SpatialDomains::MeshGraph1DSharedPtr graph1D
-                = std::dynamic_pointer_cast<
-                    SpatialDomains::MeshGraph1D>(m_graph);
             LibUtilities::CommSharedPtr vComm =
                 m_session->GetComm()->GetRowComm();
 
@@ -620,8 +607,7 @@ namespace Nektar
                 {
                     continue;
                 }
-                                
-                int id = (*(it.second->begin()->second))[0]->GetGlobalID();
+                int id = it.second->begin()->second->m_geomVec[0]->GetGlobalID();
 
                 BregionToVertMap[it.first] = id;
             }
@@ -733,28 +719,24 @@ namespace Nektar
             {
                 locBCond = GetBoundaryCondition(bconditions, it.first, variable);
 
-                if (locBCond->GetBoundaryConditionType() !=
-                    SpatialDomains::ePeriodic)
+                for (auto &bregionIt : *(it.second))
                 {
-                    for (auto &bregionIt : *it.second)
+                    for (k = 0; k < bregionIt.second->m_geomVec.size(); k++)
                     {
-                        for (k = 0; k < bregionIt.second->size(); k++)
+                        if((vert = std::dynamic_pointer_cast
+                            <SpatialDomains::PointGeom>(
+                                bregionIt.second->m_geomVec[k])))
                         {
-                            if((vert = std::dynamic_pointer_cast
-                                    <SpatialDomains::PointGeom>(
-                                        (*bregionIt.second)[k])))
-                            {
-                                locPointExp
-                                    = MemoryManager<MultiRegions::ExpList0D>
-                                        ::AllocateSharedPtr(vert);
-                                bndCondExpansions[cnt]  = locPointExp;
-                                bndConditions[cnt++]    = locBCond;
-                            }
-                            else
-                            {
-                                ASSERTL0(false,
-                                    "dynamic cast to a vertex failed");
-                            }
+                            locPointExp
+                                = MemoryManager<MultiRegions::ExpList0D>
+                                ::AllocateSharedPtr(vert);
+                            bndCondExpansions[cnt]  = locPointExp;
+                            bndConditions[cnt++]    = locBCond;
+                        }
+                        else
+                        {
+                            ASSERTL0(false,
+                                     "dynamic cast to a vertex failed");
                         }
                     }
                 }
@@ -1269,7 +1251,10 @@ namespace Nektar
                     id = m_traceMap->GetBndCondCoeffsToGlobalCoeffsMap(i);
                     BndSol[id] = m_bndCondExpansions[i]->GetCoeff(0);
                 }
-                else
+                else if (m_bndConditions[i]->GetBoundaryConditionType() ==
+                             SpatialDomains::eNeumann ||
+                         m_bndConditions[i]->GetBoundaryConditionType() ==
+                             SpatialDomains::eRobin)
                 {
                     id = m_traceMap->GetBndCondCoeffsToGlobalCoeffsMap(i);
                     BndRhs[id] += m_bndCondExpansions[i]->GetCoeff(0);
@@ -1365,6 +1350,11 @@ namespace Nektar
                              ::RobinBoundaryCondition>(m_bndConditions[i])
                              ->m_robinFunction).Evaluate(x0[0],x1[0],x2[0],time));
                         
+                    }
+                    else if (m_bndConditions[i]->GetBoundaryConditionType()
+                            == SpatialDomains::ePeriodic)
+                    {
+                        continue;
                     }
                     else if (m_bndConditions[i]->GetBoundaryConditionType()
                              == SpatialDomains::eNotDefined)

@@ -48,8 +48,10 @@ namespace Nektar
             return instance;
         }
 
-        Forcing::Forcing(const LibUtilities::SessionReaderSharedPtr& pSession)
-                : m_session(pSession)
+        Forcing::Forcing(
+            const LibUtilities::SessionReaderSharedPtr &pSession,
+            const std::weak_ptr<EquationSystem>      &pEquation)
+                : m_session(pSession), m_equ(pEquation)
         {
 
         }
@@ -82,9 +84,10 @@ namespace Nektar
          *
          */
         vector<ForcingSharedPtr> Forcing::Load(
-                            const LibUtilities::SessionReaderSharedPtr& pSession,
-                            const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields,
-                            const unsigned int& pNumForcingFields)
+                    const LibUtilities::SessionReaderSharedPtr &pSession,
+                    const std::weak_ptr<EquationSystem>      &pEquation,
+                    const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields,
+                    const unsigned int& pNumForcingFields)
         {
             vector<ForcingSharedPtr> vForceList;
 
@@ -108,8 +111,8 @@ namespace Nektar
                     string vType = vForce->Attribute("TYPE");
 
                     vForceList.push_back(GetForcingFactory().CreateInstance(
-                                            vType, pSession, pFields,
-                                            vNumForcingFields, vForce));
+                                        vType, pSession, pEquation, pFields,
+                                        vNumForcingFields, vForce));
                     vForce = vForce->NextSiblingElement("FORCE");
                 }
             }

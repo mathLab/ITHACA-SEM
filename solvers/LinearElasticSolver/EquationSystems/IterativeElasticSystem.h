@@ -56,10 +56,11 @@ public:
 
     /// Creates an instance of this class
     static EquationSystemSharedPtr create(
-        const LibUtilities::SessionReaderSharedPtr& pSession)
+        const LibUtilities::SessionReaderSharedPtr& pSession,
+        const SpatialDomains::MeshGraphSharedPtr &pGraph)
     {
         EquationSystemSharedPtr p = MemoryManager<
-            IterativeElasticSystem>::AllocateSharedPtr(pSession);
+            IterativeElasticSystem>::AllocateSharedPtr(pSession, pGraph);
         p->InitObject();
         return p;
     }
@@ -78,7 +79,8 @@ protected:
     std::vector<int> m_toDeform;
 
     IterativeElasticSystem(
-        const LibUtilities::SessionReaderSharedPtr& pSession);
+        const LibUtilities::SessionReaderSharedPtr& pSession,
+        const SpatialDomains::MeshGraphSharedPtr &pGraph);
 
     virtual void v_InitObject();
     virtual void v_GenerateSummary(SolverUtils::SummaryList& s);

@@ -171,6 +171,9 @@ void VariableConverter::GetMach(Array<OneD, Array<OneD, NekDouble>> &physfield,
  *          T_star   = 288.15 K
  *          C        = 110. / 288.15
  *
+ * WARNING, if this routine is modified the same must be done in the
+ * FieldConvert utility ProcessWSS.cpp (this class should be restructured).
+ *
  * @param physfield    Input physical field.
  * @param mu           The resulting dynamic viscosity.
  */

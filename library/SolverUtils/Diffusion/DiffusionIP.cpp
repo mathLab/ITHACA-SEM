@@ -92,7 +92,6 @@ namespace Nektar
                 }
                 ASSERTL0(norm<1.0E-11,"different BWD for different variable not coded yet");
             }
-            // cin >> ndebug;
         }
         
         void DiffusionIP::v_Diffuse(
@@ -373,7 +372,7 @@ namespace Nektar
                         for(int nd2=nd1; nd2<nDim; nd2++)
                         {
                             Vmath::Fill(nTracePts, 0.0, Bwd,1);
-                            fields[i]->GetFwdBwdTracePhysNoBndFill(elmt2ndDerv[nd2], Fwd, Bwd);
+                            fields[i]->GetFwdBwdTracePhysDeriv(nd2,elmt2ndDerv[nd2], Fwd, Bwd);
                             Vmath::Vsub(nTracePts,Bwd,1,Fwd,1,Fwd,1);
                             Vmath::Smul(nTracePts,PenaltyFactor2,Fwd,1,Fwd,1);
                             Vmath::Vmul(nTracePts,m_traceNormDirctnElmtLength,1,Fwd,1,Fwd,1);

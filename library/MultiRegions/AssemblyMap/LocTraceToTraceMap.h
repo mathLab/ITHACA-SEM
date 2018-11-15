@@ -305,6 +305,16 @@ public:
         return m_TracephysToLeftRightExpphysMap;
     }
 
+    MULTI_REGIONS_EXPORT inline void SetflagTracephysToLeftRightExpphysMap(const bool in)
+    {
+        m_flagTracephysToLeftRightExpphysMap = in;
+    }
+
+    MULTI_REGIONS_EXPORT inline bool GetflagTracephysToLeftRightExpphysMap()
+    {
+        return m_flagTracephysToLeftRightExpphysMap;
+    }
+
 private:
     /// The number of forward trace points. A local trace element is `forward'
     /// if it is the side selected for the global trace.
@@ -369,7 +379,8 @@ private:
     // the map of every phys from current trace to the left&right adjacent expasion phys 
     // This map is only used when no interpolation is needed in getting GetFwdBwdTracePhys   
     // If interpolations is needed it should be determined as the InnerProduct of m_fieldToLocTraceMap matrix and interpolation matrix    
-    Array<OneD, Array<OneD, Array<OneD, int > > > m_TracephysToLeftRightExpphysMap;
+    Array<OneD, Array<OneD, Array<OneD, int > > >   m_TracephysToLeftRightExpphysMap;
+    bool                                            m_flagTracephysToLeftRightExpphysMap;
 
     void TracelocToElmtlocCoeffMap(
         const ExpList &locExp,

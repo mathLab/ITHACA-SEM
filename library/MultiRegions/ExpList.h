@@ -1079,7 +1079,9 @@ namespace Nektar
                 return v_GetlocTraceToTraceMap();
             }
 
-            Array<OneD, Array<OneD, Array<OneD, int > > > CalcuTracephysToLeftRightExpphysMap();
+            void CalcuTracephysToLeftRightExpphysMap(
+                    bool                                            &flag,
+                    Array<OneD, Array<OneD, Array<OneD, int > > >   &T2Emap);
 
         protected:
             /// Definition of the total number of degrees of freedom and

@@ -3749,6 +3749,8 @@ namespace Nektar
             // TODO: to code cases with interpolation, may need a matrix not only a map.
             const Array<OneD, const Array<OneD, Array<OneD, int > > > Trac2ElmtphysMap  =   locTraceToTraceMap->GetTracephysToLeftRightExpphysMap();
 
+            ASSERTL0(locTraceToTraceMap->GetflagTracephysToLeftRightExpphysMap(),"GetFwdBwdTracePhys may have interpolations, not coded");
+
             int nlr = 0;
             NekDouble sign = 1.0;
             for(int  ntrace = 0; ntrace < ntotTrac; ntrace++)
@@ -3785,7 +3787,9 @@ namespace Nektar
             }
         }
 
-        Array<OneD, Array<OneD, Array<OneD, int > > > ExpList::CalcuTracephysToLeftRightExpphysMap()
+        void ExpList::CalcuTracephysToLeftRightExpphysMap(
+                    bool                                            &flag,
+                    Array<OneD, Array<OneD, Array<OneD, int > > >   &T2Emap)
         {
             int nfieldPts  = GetTotPoints();
             int ntotElmt   = (*m_exp).size();
@@ -3823,11 +3827,11 @@ namespace Nektar
             // to make sure the GetFwdBwdTracePhys only uses directly copy
             // if there are interpolations mapFwdBwd are usually not integer anymore
             // TODO: this check is not strict, to develop cases with interpolations.
-            bool nointerpolationflag = true; 
+            flag = true; 
 
             const Array<OneD, const Array<OneD, bool>> LRAdjflag   =   GetlocTraceToTraceMap()->GetLeftRightAdjacentExpFlag();
 
-            Array<OneD, Array<OneD, Array<OneD, int > > > T2Emap(2);
+            T2Emap  =   Array<OneD, Array<OneD, Array<OneD, int > > > (2);
             for(int nlr=0;  nlr<2;  nlr++)
             {
                 T2Emap[nlr] =   Array<OneD, Array<OneD, int > >(ntotTrace);
@@ -3848,14 +3852,12 @@ namespace Nektar
 
                             if(abs(dtmp-NekDouble(ntmp))>1.0E-10)
                             {
-                                nointerpolationflag = false;
+                                flag = false;
                             }
                         }
                     }
                 }
             }
-            ASSERTL0(nointerpolationflag,"GetFwdBwdTracePhys may have interpolations, not coded");
-            return T2Emap;
         }
     } //end of namespace
 } //end of namespace

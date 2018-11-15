@@ -734,8 +734,13 @@ namespace Nektar
             inline const Array<OneD, const  std::shared_ptr<ExpList> >
                 &GetBndCondExpansions();
 
+            inline const Array<OneD,const NekDouble>
+                &GetBndCondBwdWeight();
+
+            inline void SetBndCondBwdWeight(const int index, const NekDouble value);
+
             inline const Array<OneD, const Array<OneD, std::shared_ptr<ExpList> > >
-                &GetBndCondExpansionsDeriv();
+                &GetDerivBndCondExpansions();
       
             inline std::shared_ptr<ExpList> &UpdateBndCondExpansion(int i);
             
@@ -764,6 +769,8 @@ namespace Nektar
             inline void GetNormals(Array<OneD, Array<OneD, NekDouble> > &normals);
 
             inline void GetElmtNormalLength(Array<OneD, NekDouble>  &lengths);
+
+            void GetBwdWeight(Array<OneD, NekDouble>  &weight);
 
             inline void AddTraceIntegral(
                 const Array<OneD, const NekDouble> &Fx,
@@ -821,6 +828,9 @@ namespace Nektar
                 const int                          Dir,
                 const Array<OneD, const NekDouble> &Fwd,
                       Array<OneD,       NekDouble> &Bwd);
+
+            inline void FillBwdWITHBwdWeight(
+                      Array<OneD,       NekDouble> &weight);
 
             inline void PeriodicBwdCopy(
                 const Array<OneD, const NekDouble> &Fwd,
@@ -1240,8 +1250,13 @@ namespace Nektar
             virtual const Array<OneD,const std::shared_ptr<ExpList> >
                 &v_GetBndCondExpansions(void);
 
+            virtual const Array<OneD,const NekDouble>
+                &v_GetBndCondBwdWeight();
+
+            virtual void v_SetBndCondBwdWeight(const int index, const NekDouble value);
+
             virtual const Array<OneD, const Array<OneD, std::shared_ptr<ExpList> > >
-                &v_GetBndCondExpansionsDeriv();
+                &v_GetDerivBndCondExpansions();
 
             virtual std::shared_ptr<ExpList> &v_UpdateBndCondExpansion(int i);
             
@@ -1332,6 +1347,9 @@ namespace Nektar
                 const int                          Dir,
                 const Array<OneD, const NekDouble> &Fwd,
                       Array<OneD,       NekDouble> &Bwd);
+            
+            virtual void v_FillBwdWITHBwdWeight(
+                      Array<OneD,       NekDouble> &weight);
 
             virtual void v_PeriodicBwdCopy(
                 const Array<OneD, const NekDouble> &Fwd,
@@ -2302,10 +2320,22 @@ namespace Nektar
             return v_GetBndCondExpansions();
         }
 
-        inline const Array<OneD, const Array<OneD, std::shared_ptr<ExpList> > >
-            &ExpList::GetBndCondExpansionsDeriv()
+        // functions associated with DisContField
+        inline const Array<OneD, const  NekDouble >
+            &ExpList::GetBndCondBwdWeight()
         {
-            return v_GetBndCondExpansionsDeriv();
+            return v_GetBndCondBwdWeight();
+        }
+
+        inline void ExpList::SetBndCondBwdWeight(const int index, const NekDouble value)
+        {
+            v_SetBndCondBwdWeight(index, value);
+        }
+
+        inline const Array<OneD, const Array<OneD, std::shared_ptr<ExpList> > >
+            &ExpList::GetDerivBndCondExpansions()
+        {
+            return v_GetDerivBndCondExpansions();
         }
         
         inline std::shared_ptr<ExpList>  &ExpList::UpdateBndCondExpansion(int i)
@@ -2357,7 +2387,7 @@ namespace Nektar
         {
             v_GetElmtNormalLength(lengths);
         }
-
+        
         inline void ExpList::AddTraceIntegral(
             const Array<OneD, const NekDouble> &Fx,
             const Array<OneD, const NekDouble> &Fy,
@@ -2450,6 +2480,12 @@ namespace Nektar
                   Array<OneD,       NekDouble> &Bwd)
         {
             v_FillBwdWITHBoundDeriv(Dir,Fwd,Bwd);
+        }
+
+        inline void ExpList::FillBwdWITHBwdWeight(
+                  Array<OneD,       NekDouble> &Bwd)
+        {
+            v_FillBwdWITHBwdWeight(Bwd);
         }
 
         inline void ExpList::PeriodicBwdCopy(

@@ -152,16 +152,32 @@ void CFSBndCond::v_ApplyDeriv(
             {
                 for (j = 0; j <=nDimensions; ++j)
                 {
-                    (m_fields[j]->GetBndCondExpansionsDeriv()[m_bcRegion][nd]->
+                    (m_fields[j]->GetDerivBndCondExpansions()[m_bcRegion][nd]->
                     UpdatePhys())[id1+i] = DervFwd[nd][j][pnt];
                 }
 
                 // Setting up bcs for energy
-                (m_fields[nVariables-1]->GetBndCondExpansionsDeriv()[m_bcRegion][nd]->
+                (m_fields[nVariables-1]->GetDerivBndCondExpansions()[m_bcRegion][nd]->
                     UpdatePhys())[id1+i] = DervFwd[nd][nVariables-1][pnt];
 
             }
         }
+    }
+}
+
+/**
+ * @ brief Newly added bc should specify this virtual function
+ * if the Bwd/value in m_bndCondExpansions is the target value like Direchlet bc weight should be 1.0.
+ * if some average Fwd and Bwd/value in m_bndCondExpansions 
+ * is the target value like WallViscousBC weight should be 0.5.
+ */
+void CFSBndCond::v_ApplyBwdWeight()
+{
+    NekDouble   weight  =   1.0;
+    int nVariables = m_fields.num_elements();
+    for(int i=0;i<nVariables;i++)
+    {
+        m_fields[i]->SetBndCondBwdWeight(m_bcRegion,weight);
     }
 }
 

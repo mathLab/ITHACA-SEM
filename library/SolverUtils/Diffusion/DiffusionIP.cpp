@@ -60,6 +60,7 @@ namespace Nektar
             // Setting up the normals
             int i;
             int nDim = pFields[0]->GetCoordim(0);
+            int nVariable = pFields.num_elements();
             int nTracePts = pFields[0]->GetTrace()->GetTotPoints();
             
             m_traceNormals = Array<OneD, Array<OneD, NekDouble> >(nDim);
@@ -75,6 +76,23 @@ namespace Nektar
             Array<OneD, NekDouble> lengthstmp(nTracePts,0.0);
             pFields[0]->PeriodicBwdCopy(m_traceNormDirctnElmtLength,lengthstmp);
             Vmath::Vadd(nTracePts,lengthstmp,1,m_traceNormDirctnElmtLength,1,m_traceNormDirctnElmtLength,1);
+
+            m_tracBwdWeight  =   Array<OneD, NekDouble> (nTracePts,0.0);
+            pFields[0]->GetBwdWeight(m_tracBwdWeight);
+            Array<OneD, NekDouble> tmpBwdWeight(nTracePts,0.0);
+            for(int i =1; i<nVariable;i++)
+            {
+                pFields[i]->GetBwdWeight(tmpBwdWeight);
+                Vmath::Vsub(nTracePts,tmpBwdWeight,1,m_tracBwdWeight,1,tmpBwdWeight,1);
+                Vmath::Vabs(nTracePts,tmpBwdWeight,1,tmpBwdWeight,1);
+                NekDouble norm = 0.0;
+                for(int j = 0; j<nTracePts; j++)
+                {
+                    norm += tmpBwdWeight[j];
+                }
+                ASSERTL0(norm<1.0E-11,"different BWD for different variable not coded yet");
+            }
+            // cin >> ndebug;
         }
         
         void DiffusionIP::v_Diffuse(
@@ -477,12 +495,18 @@ factor[noffset+np]    =   4.0;
             NekDouble LinternalEngy =0.0;
             NekDouble RinternalEngy =0.0;
             NekDouble AinternalEngy =0.0;
+
+            Array<OneD, NekDouble> Fweight (npnts,1.0);
+            Array<OneD, NekDouble> Bweight;
+
+            Bweight = m_tracBwdWeight;
+
+            Vmath::Vsub(npnts,Fweight,1,Bweight,1,Fweight,1);
+
             for (int i = 0; i < nConvectiveFields-1; ++i)
             {
-                for (int nt = 0; nt < npnts; ++nt)
-                {
-                    aver[i][nt]   =   0.5*(vFwd[i][nt] + vBwd[i][nt]);  
-                }
+                Vmath::Vmul (npnts,Fweight,1,vFwd[i],1,aver[i],1);
+                Vmath::Vvtvp(npnts,Bweight,1,vBwd[i],1,aver[i],1,aver[i],1);
             }
             
             int nengy = nConvectiveFields-1;
@@ -507,7 +531,7 @@ factor[noffset+np]    =   4.0;
                 RinternalEngy += vBwd[nengy][nt];
 
                 AinternalEngy =0.0;
-                aver[nengy][nt] = 0.5*(LinternalEngy + RinternalEngy);
+                aver[nengy][nt] = Fweight[nt]*LinternalEngy + Bweight[nt]*RinternalEngy;
                 for(int j=nvelst;j<nveled;j++)
                 {
                     AinternalEngy += aver[j][nt]*aver[j][nt];

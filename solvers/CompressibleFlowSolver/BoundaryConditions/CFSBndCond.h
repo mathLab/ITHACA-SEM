@@ -85,6 +85,10 @@ class CFSBndCond
             const Array<OneD, const Array<OneD, Array<OneD, NekDouble> > >      &DervFwd,
             const Array<OneD, const Array<OneD, Array<OneD, NekDouble> > >      &dervarray,
             NekDouble                                                           time = 0);
+        void ApplyBwdWeight()
+        {
+            v_ApplyBwdWeight();
+        }
 
     protected:
         /// Session reader
@@ -129,6 +133,8 @@ class CFSBndCond
             const Array<OneD, const Array<OneD, Array<OneD, NekDouble> > >      &DervFwd,
             const Array<OneD, const Array<OneD, Array<OneD, NekDouble> > >      &dervarray,
             NekDouble                                                           time);
+
+        virtual void v_ApplyBwdWeight();
 };
 }
 

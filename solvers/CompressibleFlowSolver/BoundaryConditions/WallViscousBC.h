@@ -74,6 +74,8 @@ class WallViscousBC : public CFSBndCond
             Array<OneD, Array<OneD, NekDouble> >               &Fwd,
             Array<OneD, Array<OneD, NekDouble> >               &physarray,
             const NekDouble                                    &time);
+            
+        virtual void v_ApplyBwdWeight();
 
     private:
         WallViscousBC(const LibUtilities::SessionReaderSharedPtr& pSession,

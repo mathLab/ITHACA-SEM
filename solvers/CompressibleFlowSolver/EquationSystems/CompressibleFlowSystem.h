@@ -319,6 +319,8 @@ namespace Nektar
         void SetBoundaryConditions(
             Array<OneD, Array<OneD, NekDouble> >             &physarray,
             NekDouble                                         time);
+        
+        void SetBoundaryConditionsBwdWeight();
 
         void SetBoundaryConditionsDeriv(
             const Array<OneD, const Array<OneD, NekDouble> >                    &physarray,

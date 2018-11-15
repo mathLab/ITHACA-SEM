@@ -106,7 +106,9 @@ namespace Nektar
              */
             Array<OneD,MultiRegions::ExpListSharedPtr> m_bndCondExpansions;
 
-            Array<OneD, Array<OneD,MultiRegions::ExpListSharedPtr> > m_bndCondExpansionsDeriv;
+            Array<OneD,NekDouble> m_BndCondBwdWeight;
+
+            Array<OneD, Array<OneD,MultiRegions::ExpListSharedPtr> > m_DerivBndCondExpansions;
 
             /**
              * @brief An array which contains the information about
@@ -249,10 +251,21 @@ namespace Nektar
                 return m_bndCondExpansions;
             }
 
-            virtual const Array<OneD, const Array<OneD, MultiRegions::ExpListSharedPtr> >
-                &v_GetBndCondExpansionsDeriv()
+            virtual const Array<OneD,const NekDouble>
+                &v_GetBndCondBwdWeight()
             {
-                return m_bndCondExpansionsDeriv;
+                return m_BndCondBwdWeight;
+            }
+
+            virtual void v_SetBndCondBwdWeight(const int index, const NekDouble value)
+            {
+                m_BndCondBwdWeight[index]   =   value;
+            }
+
+            virtual const Array<OneD, const Array<OneD, MultiRegions::ExpListSharedPtr> >
+                &v_GetDerivBndCondExpansions()
+            {
+                return m_DerivBndCondExpansions;
             }
 
             virtual const 

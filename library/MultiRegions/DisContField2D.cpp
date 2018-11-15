@@ -63,7 +63,8 @@ namespace Nektar
         DisContField2D::DisContField2D(void)
         : ExpList2D          (),
           m_bndCondExpansions(),
-          m_bndCondExpansionsDeriv(),
+          m_BndCondBwdWeight(),
+          m_DerivBndCondExpansions(),
           m_bndConditions    (),
           m_trace            (NullExpListSharedPtr)
         {
@@ -74,7 +75,8 @@ namespace Nektar
             const bool                  DeclareCoeffPhysArrays)
             : ExpList2D                 (In,DeclareCoeffPhysArrays),
               m_bndCondExpansions       (In.m_bndCondExpansions),
-              m_bndCondExpansionsDeriv  (In.m_bndCondExpansionsDeriv),
+              m_BndCondBwdWeight        (In.m_BndCondBwdWeight),
+              m_DerivBndCondExpansions  (In.m_DerivBndCondExpansions),
               m_bndConditions           (In.m_bndConditions),
               m_globalBndMat            (In.m_globalBndMat),
               m_traceMap                (In.m_traceMap),
@@ -108,7 +110,8 @@ namespace Nektar
             : ExpList2D(pSession, graph2D, DeclareCoeffPhysArrays, variable,
                         ImpType),
               m_bndCondExpansions(),
-              m_bndCondExpansionsDeriv(),
+              m_BndCondBwdWeight(),
+              m_DerivBndCondExpansions(),
               m_bndConditions(),
               m_trace(NullExpListSharedPtr),
               m_periodicVerts(),
@@ -656,8 +659,10 @@ namespace Nektar
             m_bndConditions     =
                 Array<OneD, SpatialDomains::BoundaryConditionShPtr>(bregions.size());
 
+            m_BndCondBwdWeight  =   Array<OneD, NekDouble>(bregions.size(),0.0);
+
             int spaceDim = graph2D->GetSpaceDimension();
-            m_bndCondExpansionsDeriv =
+            m_DerivBndCondExpansions =
                 Array<OneD, Array<OneD, MultiRegions::ExpListSharedPtr> >(bregions.size());
 
             for (auto &it : bregions)
@@ -672,14 +677,14 @@ namespace Nektar
                 m_bndCondExpansions[cnt]  = locExpList;
                 m_bndConditions[cnt]      = bc;
 
-                m_bndCondExpansionsDeriv[cnt] = Array<OneD, MultiRegions::ExpListSharedPtr> (spaceDim);
+                m_DerivBndCondExpansions[cnt] = Array<OneD, MultiRegions::ExpListSharedPtr> (spaceDim);
                 for(int i = 0; i<spaceDim;i++)
                 {
                     locExpList = MemoryManager<MultiRegions::ExpList1D>
                         ::AllocateSharedPtr(m_session, *(it.second), graph2D,
                                             DeclareCoeffPhysArrays, variable,
                                             bc->GetComm());
-                    m_bndCondExpansionsDeriv[cnt][i]  = locExpList;
+                    m_DerivBndCondExpansions[cnt][i]  = locExpList;
                 }
 
                 std::string type = m_bndConditions[cnt]->GetUserDefined();
@@ -1563,7 +1568,6 @@ namespace Nektar
 
         
         /**
-         * TODO: NOT CODED YET
          * @brief Fill the Bwd based on corresponding boundary conditions for derivatives.
          * NOTE: periodic boundary is considered interior traces and is not treated here.
          */
@@ -1588,9 +1592,67 @@ namespace Nektar
                         id1 = m_bndCondExpansions[n]->GetPhys_Offset(e);
                         id2 = m_trace->GetPhys_Offset(m_traceMap->
                                         GetBndCondTraceToGlobalTraceMap(cnt+e));
-                        Vmath::Vcopy(npts,
-                            &(m_bndCondExpansionsDeriv[n][Dir]->GetPhys())[id1], 1,
-                            &Bwd[id2],                                 1);
+                        // Vmath::Vcopy(npts,
+                        //     &(m_DerivBndCondExpansions[n][Dir]->GetPhys())[id1], 1,
+                        //     &Bwd[id2],                                 1);
+                        Vmath::Vcopy(npts,&Fwd[id2],1,&Bwd[id2],1);
+                    }
+                    
+                    cnt += e;
+                }
+                else if (m_bndConditions[n]->GetBoundaryConditionType() == 
+                             SpatialDomains::eNeumann || 
+                         m_bndConditions[n]->GetBoundaryConditionType() == 
+                             SpatialDomains::eRobin)
+                {
+                    for (e = 0; e < m_bndCondExpansions[n]->GetExpSize(); ++e)
+                    {
+                        npts = m_bndCondExpansions[n]->GetExp(e)->GetNumPoints(0);
+                        id1 = m_bndCondExpansions[n]->GetPhys_Offset(e);
+                        id2 = m_trace->GetPhys_Offset(m_traceMap->
+                                        GetBndCondTraceToGlobalTraceMap(cnt+e));
+                        // Vmath::Vcopy(npts,
+                        //     &(m_DerivBndCondExpansions[n][Dir]->GetPhys())[id1], 1,
+                        //     &Bwd[id2],                                 1);
+                        Vmath::Vcopy(npts,&Fwd[id2],1,&Bwd[id2],1);
+                    }
+                    
+                    cnt += e;
+                }
+                else if (m_bndConditions[n]->GetBoundaryConditionType() !=
+                             SpatialDomains::ePeriodic)
+                {
+                    ASSERTL0(false,
+                             "Method not set up for this boundary condition.");
+                }
+            }       
+        }
+
+        /**
+         * @brief Fill the weight with m_BndCondBwdWeight.
+         * NOTE: periodic boundary is considered interior traces and is not treated here.
+         */
+        void DisContField2D::v_FillBwdWITHBwdWeight(
+                  Array<OneD,       NekDouble> &weight)
+        {
+            int cnt, n, e, npts;
+
+            // Fill boundary conditions into missing elements
+            int id1, id2 = 0;
+            
+            for (cnt = n = 0; n < m_bndCondExpansions.num_elements(); ++n)
+            {
+
+                if (m_bndConditions[n]->GetBoundaryConditionType() == 
+                        SpatialDomains::eDirichlet)
+                {
+                    for (e = 0; e < m_bndCondExpansions[n]->GetExpSize(); ++e)
+                    {
+                        npts = m_bndCondExpansions[n]->GetExp(e)->GetNumPoints(0);
+                        id1 = m_bndCondExpansions[n]->GetPhys_Offset(e);
+                        id2 = m_trace->GetPhys_Offset(m_traceMap->
+                                        GetBndCondTraceToGlobalTraceMap(cnt+e));
+                        Vmath::Fill(npts,m_BndCondBwdWeight[n], &weight[id2],1);
 
                     }
                     
@@ -1607,10 +1669,7 @@ namespace Nektar
                         id1 = m_bndCondExpansions[n]->GetPhys_Offset(e);
                         id2 = m_trace->GetPhys_Offset(m_traceMap->
                                         GetBndCondTraceToGlobalTraceMap(cnt+e));
-                        Vmath::Vcopy(npts,
-                            &(m_bndCondExpansionsDeriv[n][Dir]->GetPhys())[id1], 1,
-                            &Bwd[id2],                                 1);
-
+                        Vmath::Fill(npts,m_BndCondBwdWeight[n], &weight[id2],1);
                     }
                     
                     cnt += e;
@@ -2004,9 +2063,10 @@ namespace Nektar
             for (int n = 0; n < m_bndCondExpansions.num_elements(); ++n)
             {
                 m_bndCondExpansions[n]->Reset();
-                for(int i= 0; i< m_bndCondExpansionsDeriv[n].num_elements();i++)
+                m_BndCondBwdWeight[n]   =   0.0;
+                for(int i= 0; i< m_DerivBndCondExpansions[n].num_elements();i++)
                 {
-                    m_bndCondExpansionsDeriv[n][i]->Reset();
+                    m_DerivBndCondExpansions[n][i]->Reset();
                 }
             }
         }
@@ -2486,6 +2546,7 @@ namespace Nektar
                 if (time == 0.0 || 
                     m_bndConditions[i]->IsTimeDependent())
                 {
+                    m_BndCondBwdWeight[i]   =   1.0;
                     locExpList = m_bndCondExpansions[i];
                     npoints    = locExpList->GetNpoints();
                     Array<OneD, NekDouble> x0(npoints, 0.0);

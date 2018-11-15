@@ -65,6 +65,7 @@ namespace Nektar
             std::string                          m_shockCaptureType;
 	         
             Array<OneD, Array<OneD, NekDouble> >              m_traceNormals;
+            Array<OneD, NekDouble>                            m_tracBwdWeight;
             Array<OneD, NekDouble>                            m_traceNormDirctnElmtLength;
             LibUtilities::SessionReaderSharedPtr              m_session;
 

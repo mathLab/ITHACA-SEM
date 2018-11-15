@@ -140,6 +140,8 @@ namespace Nektar
             
             //ASSERTL0(false, "Implicit CFS not set up.");
         }
+
+        SetBoundaryConditionsBwdWeight();
     }
 
     /**
@@ -2009,6 +2011,18 @@ namespace Nektar
             for (auto &x : m_bndConds)
             {
                 x->Apply(Fwd, physarray, time);
+            }
+        }
+    }
+
+    void CompressibleFlowSystem::SetBoundaryConditionsBwdWeight()
+    {
+        if (m_bndConds.size())
+        {
+            // Loop over user-defined boundary conditions
+            for (auto &x : m_bndConds)
+            {
+                x->ApplyBwdWeight();
             }
         }
     }

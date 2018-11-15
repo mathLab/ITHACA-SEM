@@ -2540,6 +2540,16 @@ namespace Nektar
             }
         }
 
+        void ExpList::GetBwdWeight(Array<OneD, NekDouble>  &weight)
+        {
+            int nTracePts = weight.num_elements();
+            // average for interior traces
+            for(int i = 0; i < nTracePts; ++i)
+            {
+                weight[i]       =   0.5;
+            }
+            FillBwdWITHBwdWeight(weight);
+        }
 
         const Array<OneD,const std::shared_ptr<ExpList> >
                                         &ExpList::v_GetBndCondExpansions(void)
@@ -2700,8 +2710,21 @@ namespace Nektar
                      "This method is not defined or valid for this class type");
         }
 
+        const Array<OneD,const NekDouble>
+                &ExpList::v_GetBndCondBwdWeight()
+        {
+            ASSERTL0(false,
+                     "v_GetBndCondBwdWeight is not defined or valid for this class type");
+        }
+
+        void ExpList::v_SetBndCondBwdWeight(const int index, const NekDouble value)
+        {
+            ASSERTL0(false,
+                     "v_setBndCondBwdWeight is not defined or valid for this class type");
+        }
+
         const Array<OneD, const Array<OneD, std::shared_ptr<ExpList> > >
-                &ExpList::v_GetBndCondExpansionsDeriv()
+                &ExpList::v_GetDerivBndCondExpansions()
         {
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
@@ -3243,6 +3266,12 @@ namespace Nektar
                   Array<OneD,       NekDouble> &Bwd)
         {
             ASSERTL0(false,"v_FillBwdWITHBoundDeriv not defined");
+        }
+
+        void ExpList::v_FillBwdWITHBwdWeight(
+                  Array<OneD,       NekDouble> &weight)
+        {
+            ASSERTL0(false,"v_FillBwdWITHBwdWeight not defined");
         }
 
         void ExpList::v_PeriodicBwdCopy(

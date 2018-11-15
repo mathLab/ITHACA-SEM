@@ -141,10 +141,23 @@ namespace Nektar
             Array<OneD,MultiRegions::ExpListSharedPtr> m_bndCondExpansions;
 
             /**
+             * @brief A Double to determine the weight of Bwd trace value when averaging 
+             *        the Fwd and Bwd in diffusion flux calculation.
+             *
+             * It is necessary because for some boundaries the Bwd itself is the target value,
+             * while for other boundaries some average of Fwd and Bwd is the target value.
+             * Using this parameter they can be treated uniformly.
+             * This array stores a Double value for each variable for each ExpListSharedPtr, which 
+             * assumes that for each ExpListSharedPtr the same kind of boundary treatment is used.
+             *  
+             */
+            Array<OneD,NekDouble> m_BndCondBwdWeight;
+
+            /**
              * @brief Similar to m_bndCondExpansions, but for the flow variable derivatives.
              * For setting boundary conditions for Diffusion fluxes in a weak sense.
              */
-            Array<OneD, Array<OneD,MultiRegions::ExpListSharedPtr> > m_bndCondExpansionsDeriv;
+            Array<OneD, Array<OneD,MultiRegions::ExpListSharedPtr> > m_DerivBndCondExpansions;
             
             /**
              * @brief An array which contains the information about
@@ -299,10 +312,21 @@ namespace Nektar
                 return m_bndCondExpansions;
             }
 
-            virtual const Array<OneD, const Array<OneD, MultiRegions::ExpListSharedPtr> >
-                &v_GetBndCondExpansionsDeriv()
+            virtual const Array<OneD,const NekDouble>
+                &v_GetBndCondBwdWeight()
             {
-                return m_bndCondExpansionsDeriv;
+                return m_BndCondBwdWeight;
+            }
+
+            virtual void v_SetBndCondBwdWeight(const int index, const NekDouble value)
+            {
+                m_BndCondBwdWeight[index]   =   value;
+            }
+
+            virtual const Array<OneD, const Array<OneD, MultiRegions::ExpListSharedPtr> >
+                &v_GetDerivBndCondExpansions()
+            {
+                return m_DerivBndCondExpansions;
             }
 
             virtual const 
@@ -339,6 +363,8 @@ namespace Nektar
                 const int                          Dir,
                 const Array<OneD, const NekDouble> &Fwd,
                       Array<OneD,       NekDouble> &Bwd);
+            virtual void v_FillBwdWITHBwdWeight(
+                      Array<OneD,       NekDouble> &weight);
             virtual void v_PeriodicBwdCopy(
                 const Array<OneD, const NekDouble> &Fwd,
                       Array<OneD,       NekDouble> &Bwd);

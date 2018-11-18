@@ -144,7 +144,7 @@ namespace Nektar
             Array<OneD, NekDouble> tmp (nLocDofs);
             Array<OneD, NekDouble> tmp1(nLocDofs);
 
-            Array<OneD, NekDouble> global(nGlobDofs); 
+            Array<OneD, NekDouble> global(nGlobDofs,0.0); 
 
             if(nDirTotal)
             {
@@ -252,7 +252,7 @@ namespace Nektar
             }
 
             // put back in global coeffs 
-            m_locToGloMap->LocalToGlobal(OutputLoc, pOutput);
+            m_locToGloMap->Assemble(OutputLoc, pOutput);
         }
 
         /**

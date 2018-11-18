@@ -139,6 +139,7 @@ namespace Nektar
                     const AssemblyMapSharedPtr &pLocToGloMap,
                     const Array<OneD, const NekDouble>  &pDirForcing)
         {
+            std::shared_ptr<MultiRegions::ExpList> expList = m_expList.lock();
             bool dirForcCalculated = (bool) pDirForcing.num_elements();
 
             int nDirDofs  = pLocToGloMap->GetNumGlobalDirBndCoeffs();
@@ -151,7 +152,7 @@ namespace Nektar
             Array<OneD, NekDouble> tmp1(nLocDofs);
             Array<OneD, NekDouble> global(nGlobDofs,0.0);
 
-            m_expList.lock()->GetComm()->GetRowComm()->AllReduce(
+            expList->GetComm()->GetRowComm()->AllReduce(
                 nDirDofs, LibUtilities::ReduceSum);
             
             if(nDirDofs)
@@ -169,8 +170,29 @@ namespace Nektar
                 {
                     // Calculate the dirichlet forcing and substract it
                     // from the rhs
-                    m_expList.lock()->GeneralMatrixOp(
+                    expList->GeneralMatrixOp(
                                  m_linSysKey, pLocOutput, tmp);
+
+                    // Apply robin boundary conditions to the solution.
+                    for(auto &r : m_robinBCInfo) // add robin mass matrix
+                    {
+                        RobinBCInfoSharedPtr rBC;
+                        Array<OneD, NekDouble> tmploc;
+                        
+                        int n  = r.first;
+                        
+                        int offset = expList->GetCoeff_Offset(n);
+                        LocalRegions::ExpansionSharedPtr vExp = expList->GetExp(n);
+                        
+                        // add local matrix contribution
+                        for(rBC = r.second;rBC; rBC = rBC->next)
+                        {
+                            vExp->AddRobinEdgeContribution(rBC->m_robinID,
+                                                           rBC->m_robinPrimitiveCoeffs,
+                                                           pLocOutput + offset,
+                                                           tmploc = tmp + offset);
+                        }
+                    }
 
                     Vmath::Vsub(nLocDofs, pLocInput, 1, tmp, 1, tmp1, 1);
                 }

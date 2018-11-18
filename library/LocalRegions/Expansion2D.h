@@ -169,6 +169,7 @@ namespace Nektar
             virtual void v_AddRobinEdgeContribution(
                 const int edgeid,
                 const Array<OneD, const NekDouble> &primCoeffs,
+                const Array<OneD, NekDouble> &Incoeffs,
                 Array<OneD, NekDouble> &coeffs);
 
             virtual DNekMatSharedPtr v_BuildVertexMatrix(

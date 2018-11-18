@@ -1266,7 +1266,10 @@ namespace Nektar
                      "specific element types");
         }
 
-        void StdExpansion::v_AddRobinEdgeContribution(const int edgeid, const Array<OneD, const NekDouble > &primCoeffs, Array<OneD, NekDouble> &coeffs)
+        void StdExpansion::v_AddRobinEdgeContribution(const int edgeid,
+                                        const Array<OneD, const NekDouble > &primCoeffs,
+                                        const Array<OneD, NekDouble> &incoeffs,
+                                        Array<OneD, NekDouble> &coeffs)
         {
             NEKERROR(ErrorUtil::efatal, "This function is only valid for "
                      "specific element types");

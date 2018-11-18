@@ -123,6 +123,8 @@ namespace Nektar
             
             if(nDirDofs)
             {
+                std::shared_ptr<MultiRegions::ExpList> expList = m_expList.lock();
+
                 // calculate the dirichlet forcing
                 if(dirForcCalculated) 
                 {
@@ -136,9 +138,28 @@ namespace Nektar
                 {
 
                     // Calculate Dirichlet forcing and subtract it from the rhs
-                    m_expList.lock()->GeneralMatrixOp
-                        (m_linSysKey, pLocOutput, tmp);
+                    expList->GeneralMatrixOp(m_linSysKey, pLocOutput, tmp);
 
+                    // Iterate over all the elements computing Robin BCs where
+                    // necessary
+                    for(auto &r : m_robinBCInfo) // add robin mass matrix
+                    {
+                        RobinBCInfoSharedPtr rBC;
+                        Array<OneD, NekDouble> tmploc;
+
+                        int n  = r.first;
+                        int offset = expList->GetCoeff_Offset(n);
+                            
+                        LocalRegions::ExpansionSharedPtr vExp = expList->GetExp(n);
+                        // add local matrix contribution
+                        for(rBC = r.second;rBC; rBC = rBC->next)
+                        {
+                            vExp->AddRobinEdgeContribution(rBC->m_robinID,
+                                                           rBC->m_robinPrimitiveCoeffs,
+                                                           pLocOutput + offset,
+                                                           tmploc = tmp + offset);
+                        }
+                    }
                     Vmath::Vsub(nLocDofs, pLocInput, 1, tmp, 1, tmp1, 1);
                 }
                     

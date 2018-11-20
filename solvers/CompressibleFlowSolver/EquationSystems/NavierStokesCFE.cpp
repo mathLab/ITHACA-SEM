@@ -888,21 +888,21 @@ namespace Nektar
         NekDouble tmp=mu/rho;
 
         // TODO: replace repeated divid by multiply
-        (*OutputMatrix)(0,0)=tmp*(2.0/3.0*v*nx-u*ny);
-        (*OutputMatrix)(0,1)=tmp*ny;
-        (*OutputMatrix)(0,2)=tmp*(-2.0/3.0)*nx;
+        (*OutputMatrix)(0,0)=tmp*(-4.0/3.0*u*nx-v*ny);
+        (*OutputMatrix)(0,1)=tmp*(4.0/3.0*nx);
+        (*OutputMatrix)(0,2)=tmp*ny;
         (*OutputMatrix)(0,3)=0.0;
-        (*OutputMatrix)(1,0)=tmp*(-u*nx-4.0/3.0*v*ny);
-        (*OutputMatrix)(1,1)=tmp*nx;
-        (*OutputMatrix)(1,2)=tmp*(4.0/3.0*ny);
+        (*OutputMatrix)(1,0)=tmp*(-v*nx+2.0/3.0*u*ny);
+        (*OutputMatrix)(1,1)=tmp*(-2.0/3.0*ny);
+        (*OutputMatrix)(1,2)=tmp*nx;
         (*OutputMatrix)(1,3)=0.0;
-        (*OutputMatrix)(2,0)=1.0/3.0*u*v*nx+(4.0/3.0*v*v+u*u+gamma/Pr*(E-q2))*ny;
+        (*OutputMatrix)(2,0)=(4.0/3.0*u*u+v*v+gamma/Pr*(E-q2))*nx+1.0/3.0*u*v*ny;
         (*OutputMatrix)(2,0)=-tmp*(*OutputMatrix)(2,0);
-        (*OutputMatrix)(3,1)=(1-gamma/Pr)*u*ny+v*nx;
+        (*OutputMatrix)(2,1)=(4.0/3.0-gamma/Pr)*u*nx-2.0/3.0*v*ny;
         (*OutputMatrix)(2,1)=tmp*(*OutputMatrix)(2,1);
-        (*OutputMatrix)(2,2)=(4.0/3.0-gamma/Pr)*v*ny-2.0/3.0*u*nx;
-        (*OutputMatrix)(2,2)=tmp*(*OutputMatrix)(3,2);
-        (*OutputMatrix)(2,3)=tmp*gamma/Pr*ny;
+        (*OutputMatrix)(2,2)=(1-gamma/Pr)*v*nx+u*ny;
+        (*OutputMatrix)(2,2)=tmp*(*OutputMatrix)(2,2);
+        (*OutputMatrix)(2,3)=tmp*gamma/Pr*nx;
     }
 
      /**

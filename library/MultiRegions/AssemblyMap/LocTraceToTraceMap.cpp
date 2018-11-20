@@ -930,6 +930,22 @@ void LocTraceToTraceMap::LocTracesFromField(
                  faces);
 }
 
+
+/**
+ */
+void LocTraceToTraceMap::AddLocTracesToField(
+    const Array<OneD, const NekDouble>  &faces, 
+    Array<OneD, NekDouble>              &field)
+{
+    int nfield  =   field.num_elements();
+    Array<OneD, NekDouble> tmp(nfield,0.0);
+    Vmath::Scatr(m_fieldToLocTraceMap.num_elements(),
+                 faces,
+                 m_fieldToLocTraceMap,
+                 tmp);
+    Vmath::Vadd(nfield,tmp,1,field,1,field,1);
+}
+
 /**
  * @brief Gather the forwards-oriented local traces in physical space from field
  * using #m_fieldToLocTraceMap.
@@ -1043,6 +1059,117 @@ void LocTraceToTraceMap::InterpLocEdgesToTrace(
                  tmp.get(),
                  m_LocTraceToTraceMap[dir].get(),
                  edges.get());
+}
+
+
+/**
+ * @brief Right inner product with localedgetoTrace Interpolation Matrix.
+ * 
+ *
+ * @param dir       Selects forwards (0) or backwards (1) direction.
+ * @param locfaces  Local trace edge storage.
+ * @param faces     Global trace edge storage
+ */
+void LocTraceToTraceMap::RightIPTWLocEdgesToTraceInterpMat(
+    const int                           dir,
+    const Array<OneD, const NekDouble>  &edges,
+    Array<OneD, NekDouble>              &locedges)
+{
+    ASSERTL1(dir < 2,
+             "option dir out of range, "
+             " dir=0 is fwd, dir=1 is bwd");
+
+    int cnt  = 0;
+    int cnt1 = 0;
+
+    // tmp space assuming forward map is of size of trace
+    Array<OneD, NekDouble> tmp(m_nTracePts);
+    Vmath::Gathr(m_LocTraceToTraceMap[dir].num_elements(),
+                 edges.get(),
+                 m_LocTraceToTraceMap[dir].get(),
+                 tmp.get());
+
+    for (int i = 0; i < m_interpTrace[dir].num_elements(); ++i)
+    {
+        // Check if there are edges to interpolate
+        if (m_interpNfaces[dir][i])
+        {
+            // Get to/from points
+            LibUtilities::PointsKey fromPointsKey0 =
+                std::get<0>(m_interpPoints[dir][i]);
+            LibUtilities::PointsKey toPointsKey0 =
+                std::get<2>(m_interpPoints[dir][i]);
+
+            int fnp    = fromPointsKey0.GetNumPoints();
+            int tnp    = toPointsKey0.GetNumPoints();
+            int nedges = m_interpNfaces[dir][i];
+
+            // Do interpolation here if required
+            switch (m_interpTrace[dir][i])
+            {
+                case eNoInterp: // Just copy
+                {
+                    Vmath::Vcopy(nedges * fnp,
+                                 tmp.get() + cnt1,
+                                 1,
+                                 locedges.get() + cnt,
+                                 1);
+                }
+                break;
+                case eInterpDir0:
+                {
+                    DNekMatSharedPtr I0 = m_interpTraceI0[dir][i];
+                    Blas::Dgemm('T',
+                                'N',
+                                fnp,
+                                nedges,
+                                tnp,
+                                1.0,
+                                I0->GetPtr().get(),
+                                tnp,
+                                tmp.get() + cnt1,
+                                tnp,
+                                0.0,
+                                locedges.get() + cnt,
+                                fnp);
+                }
+                break;
+                case eInterpEndPtDir0:
+                {
+                    Array<OneD, NekDouble> I0 = m_interpEndPtI0[dir][i];
+
+                    for (int k = 0; k < nedges; ++k)
+                    {
+                        Vmath::Vcopy(fnp,
+                                     &tmp[cnt1 + k * tnp],
+                                     1,
+                                     &locedges[cnt + k * fnp],
+                                     1);
+
+                        Vmath::Svtvp(fnp,tmp[cnt1 + k * tnp + tnp - 1],&I0[0], 1,locedges.get() + cnt + k * fnp, 1,locedges.get() + cnt + k * fnp, 1);
+                        // Vmath::Vcopy(fnp,
+                        //              &locedges[cnt + k * fnp],
+                        //              1,
+                        //              &tmp[cnt1 + k * tnp],
+                        //              1);
+
+                        // tmp[cnt1 + k * tnp + tnp - 1] = Blas::Ddot(
+                        //     fnp, locedges.get() + cnt + k * fnp, 1, &I0[0], 1);
+                    }
+                }
+                break;
+                default:
+                    ASSERTL0(false,
+                             "Invalid interpolation type for 2D elements");
+                    break;
+            }
+
+            cnt += nedges * fnp;
+            cnt1 += nedges * tnp;
+        }
+    }
+
+    
 }
 
 /**

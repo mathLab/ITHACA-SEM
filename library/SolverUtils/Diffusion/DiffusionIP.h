@@ -58,6 +58,14 @@ namespace Nektar
                 const Array<OneD, const Array<OneD, NekDouble> >    &vFwd,
                 const Array<OneD, const Array<OneD, NekDouble> >    &vBwd,
                       Array<OneD,       Array<OneD, NekDouble> >    &aver); 
+            void CalTraceSymFlux(
+                const int                                                           nConvectiveFields,
+                const int                                                           nDim,
+                const Array<OneD, MultiRegions::ExpListSharedPtr>                   &fields,
+                const Array<OneD, Array<OneD, NekDouble> >                          &solution_Aver,
+                      Array<OneD, Array<OneD, NekDouble> >                          &solution_jump,
+                      Array<OneD, int >                                             &nonZeroIndexsymm,
+                      Array<OneD, Array<OneD, Array<OneD, NekDouble> > >            &traceSymflux);
 
         protected:
             DiffusionIP();
@@ -72,6 +80,15 @@ namespace Nektar
             void GetPenaltyFactor(
                 const Array<OneD, MultiRegions::ExpListSharedPtr>   &fields,
                 Array<OneD, NekDouble >                             factor); 
+
+            void AddSymmFluxIntegral(
+                const int                                                           nConvectiveFields,
+                const int                                                           nDim,
+                const int                                                           nPts,
+                const int                                                           nTracePts,
+                const Array<OneD, MultiRegions::ExpListSharedPtr>                   &fields,
+                const Array<OneD, Array<OneD, Array<OneD, NekDouble> > >            &tracflux,
+                      Array<OneD, Array<OneD, NekDouble> >                          &outarray);
 
             void Add2ndDeriv2Trace(
                 const int                                                           nConvectiveFields,
@@ -122,8 +139,10 @@ namespace Nektar
                 const Array<OneD, Array<OneD, NekDouble> >                          &vFwd,
                 const Array<OneD, Array<OneD, NekDouble> >                          &vBwd,
                 const Array<OneD, NekDouble >                                       &MuVarTrace,
-                      Array<OneD, int >                                             &nonZeroIndex,
-                      Array<OneD, Array<OneD, Array<OneD, NekDouble> > >            &traceflux);
+                      Array<OneD, int >                                             &nonZeroIndexflux,
+                      Array<OneD, Array<OneD, Array<OneD, NekDouble> > >            &traceflux,
+                      Array<OneD, Array<OneD, NekDouble> >                          &solution_Aver,
+                      Array<OneD, Array<OneD, NekDouble> >                          &solution_jump);
             
             virtual void v_physFieldDeriv(
                 const int                                                   nConvectiveFields,

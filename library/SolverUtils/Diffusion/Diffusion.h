@@ -110,6 +110,27 @@ namespace Nektar
         /**
          * Parameter list meaning:
          *  1st: nvariables
+         *  2nd: nspaceDimension
+         *  3rd: trace conservative variables for Diffusion Flux Jacobian
+         *  4th: trace conservative variables( usually the jump of trace value)
+         *  5th: trace symmetric flux
+         *  6th: nonzero flux index array,          optional
+         *  7th: normal vectors                     optional 
+         * 
+         * a null pointer need to be passed for optional parameters
+         */
+        typedef std::function<void (
+            const int                                                       ,
+            const int                                                       ,
+            const Array<OneD, Array<OneD, NekDouble> >                      &,
+            const Array<OneD, Array<OneD, NekDouble > >                     &,
+                  Array<OneD, Array<OneD, Array<OneD, NekDouble> > >        &,
+                  Array< OneD, int >                                        &,    
+            const Array<OneD, Array<OneD, NekDouble> >                      &)> DiffusionSymmFluxCons;
+
+        /**
+         * Parameter list meaning:
+         *  1st: nvariables
          *  2rd: trace conservative variables
          */
         typedef std::function<void (
@@ -173,11 +194,14 @@ namespace Nektar
                 const Array<OneD, Array<OneD, NekDouble> >                          &vFwd,
                 const Array<OneD, Array<OneD, NekDouble> >                          &vBwd,
                 const Array<OneD, NekDouble >                                       &MuVarTrace,
-                      Array<OneD, int >                                             &nonZeroIndex,
-                      Array<OneD, Array<OneD, Array<OneD, NekDouble> > >            &traceflux)
+                      Array<OneD, int >                                             &nonZeroIndexflux,
+                      Array<OneD, Array<OneD, Array<OneD, NekDouble> > >            &traceflux,
+                      Array<OneD, Array<OneD, NekDouble> >                          &solution_Aver,
+                      Array<OneD, Array<OneD, NekDouble> >                          &solution_jump)
             {
                 v_CalTraceNumFlux(nConvectiveFields,nDim,nPts,nTracePts,PenaltyFactor2,
-                                    fields,inarray,qfield,vFwd,vBwd,MuVarTrace,nonZeroIndex,traceflux);
+                                    fields,inarray,qfield,vFwd,vBwd,MuVarTrace,
+                                    nonZeroIndexflux,traceflux,solution_Aver,solution_jump);
             }
             
             void physFieldDeriv(
@@ -266,6 +290,16 @@ namespace Nektar
                     func, obj, std::placeholders::_1, std::placeholders::_2);
             }
 
+            template<typename FuncPointerT, typename ObjectPointerT>
+            void SetDiffusionSymmFluxCons(FuncPointerT func, ObjectPointerT obj)
+            {
+                m_FunctorSymmetricfluxCons = std::bind(
+                    func, obj, std::placeholders::_1, std::placeholders::_2,
+                               std::placeholders::_3, std::placeholders::_4,
+                               std::placeholders::_5, std::placeholders::_6,
+                               std::placeholders::_7);
+            }
+
             void SetFunctorDerivBndCond(FunctorDerivBndCond DerivBndCond)
             {
                 m_FunctorDerivBndCond = DerivBndCond;
@@ -309,6 +343,7 @@ namespace Nektar
             DiffusionFluxCons               m_FunctorDiffusionfluxCons;
             FunctorDerivBndCond             m_FunctorDerivBndCond;
             SpecialBndTreat                 m_SpecialBndTreat;
+            DiffusionSymmFluxCons           m_FunctorSymmetricfluxCons;
 
             NekDouble                       m_time=0.0;
 
@@ -353,8 +388,10 @@ namespace Nektar
                 const Array<OneD, Array<OneD, NekDouble> >                          &vFwd,
                 const Array<OneD, Array<OneD, NekDouble> >                          &vBwd,
                 const Array<OneD, NekDouble >                                       &MuVarTrace,
-                      Array<OneD, int >                                             &nonZeroIndex,
-                      Array<OneD, Array<OneD, Array<OneD, NekDouble> > >            &traceflux);
+                      Array<OneD, int >                                             &nonZeroIndexflux,
+                      Array<OneD, Array<OneD, Array<OneD, NekDouble> > >            &traceflux,
+                      Array<OneD, Array<OneD, NekDouble> >                          &solution_Aver,
+                      Array<OneD, Array<OneD, NekDouble> >                          &solution_jump);
             
             virtual void v_physFieldDeriv(
                 const int                                                   nConvectiveFields,

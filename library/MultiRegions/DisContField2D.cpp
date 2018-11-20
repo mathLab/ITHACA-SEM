@@ -1500,6 +1500,37 @@ namespace Nektar
         }
 
 
+        /**
+         */
+        void DisContField2D::v_AddTraceQuadPhysToField(
+            const Array<OneD, const NekDouble> &Fwd,
+            const Array<OneD, const NekDouble> &Bwd,
+                  Array<OneD,       NekDouble> &field)
+        {
+            int cnt, n, e, npts, phys_offset;
+
+            // Basis definition on each element
+            LibUtilities::BasisSharedPtr basis = (*m_exp)[0]->GetBasis(0);
+            if (basis->GetBasisType() != LibUtilities::eGauss_Lagrange)
+            {
+                Array<OneD, NekDouble> edgevals(m_locTraceToTraceMap->
+                                               GetNLocTracePts(),0.0);
+
+                Array<OneD, NekDouble> invals = edgevals + m_locTraceToTraceMap->
+                                                        GetNFwdLocTracePts();
+                m_locTraceToTraceMap->RightIPTWLocEdgesToTraceInterpMat(1, Bwd, invals);
+                
+                m_locTraceToTraceMap->RightIPTWLocEdgesToTraceInterpMat(0, Fwd, edgevals);
+
+                m_locTraceToTraceMap->AddLocTracesToField(edgevals,field);
+            }
+            else
+            {
+                ASSERTL0(false, "v_AddTraceQuadPhysToField not coded for eGauss_Lagrange");                
+            }
+        }
+
+
         // Copy any periodic boundary conditions.
         void DisContField2D::v_PeriodicBwdCopy(
                 const Array<OneD, const NekDouble> &Fwd,

@@ -151,6 +151,11 @@ namespace Nektar
             /// basis order over all elements.
             MULTI_REGIONS_EXPORT const Array<OneD,int>
                 EvalBasisNumModesMaxPerExp(void) const;
+            
+            MULTI_REGIONS_EXPORT void AddRightIPTPhysDerivBase(
+                const    int                                    dir,
+                const    Array<OneD, const NekDouble >          &inarray,
+                         Array<OneD,       NekDouble >          &outarray);
 
             MULTI_REGIONS_EXPORT void AddRightIPTPhysDerivBase(
                 const    int                                    dir,
@@ -219,6 +224,10 @@ namespace Nektar
             MULTI_REGIONS_EXPORT NekDouble PhysIntegral(
                 const Array<OneD,
                 const NekDouble> &inarray);
+
+            MULTI_REGIONS_EXPORT void MultiplyByQuadratureMetric(
+                const Array<OneD, const NekDouble>  &inarray,
+                Array<OneD, NekDouble>              &outarray);
 
             /// This function calculates the inner product of a function
             /// \f$f(\boldsymbol{x})\f$ with respect to all \emph{local}
@@ -820,6 +829,11 @@ namespace Nektar
                       Array<OneD,NekDouble> &Fwd,
                       Array<OneD,NekDouble> &Bwd);
 
+            inline void AddTraceQuadPhysToField(
+                const Array<OneD, const NekDouble>  &Fwd,
+                const Array<OneD, const NekDouble>  &Bwd,
+                Array<OneD,       NekDouble>        &field);
+
             inline void FillBwdWITHBound(
                 const Array<OneD, const NekDouble> &Fwd,
                       Array<OneD,       NekDouble> &Bwd);
@@ -1340,6 +1354,11 @@ namespace Nektar
                 const Array<OneD,const NekDouble>  &field,
                       Array<OneD,NekDouble> &Fwd,
                       Array<OneD,NekDouble> &Bwd);
+            
+            virtual void v_AddTraceQuadPhysToField(
+                const Array<OneD, const NekDouble>  &Fwd,
+                const Array<OneD, const NekDouble>  &Bwd,
+                Array<OneD,       NekDouble>        &field);
                       
             virtual void v_FillBwdWITHBound(
                 const Array<OneD, const NekDouble> &Fwd,
@@ -2467,6 +2486,14 @@ namespace Nektar
                   Array<OneD,NekDouble> &Bwd)
         {
             v_GetFwdBwdTracePhysDeriv(Dir,field,Fwd,Bwd);
+        }
+
+        inline void ExpList::AddTraceQuadPhysToField(
+                const Array<OneD, const NekDouble>  &Fwd,
+                const Array<OneD, const NekDouble>  &Bwd,
+                Array<OneD,       NekDouble>        &field)
+        {
+            v_AddTraceQuadPhysToField(Fwd,Bwd,field);
         }
 
         inline void ExpList::FillBwdWITHBound(

@@ -391,6 +391,24 @@ namespace Nektar
             out = (*blockmat)*in;
         }
 
+        /**
+         * multiply the metric jacobi and quadrature weights
+         *
+         */
+        void ExpList::MultiplyByQuadratureMetric(
+                const Array<OneD, const NekDouble>  &inarray,
+                Array<OneD, NekDouble>              &outarray)
+        {
+            int    i;
+
+            Array<OneD,NekDouble> e_outarray;
+
+            for(i = 0; i < (*m_exp).size(); ++i)
+            {
+                (*m_exp)[i]->MultiplyByQuadratureMetric(inarray+m_phys_offset[i],
+                                                  e_outarray = outarray+m_phys_offset[i]);
+            }
+        }
 
         /**
          * The operation is evaluated locally for every element by the function
@@ -501,6 +519,31 @@ namespace Nektar
             default:
                 ASSERTL0(false,"Dimension of inarray not correct");
                 break;
+            }
+        }
+        
+        void ExpList::AddRightIPTPhysDerivBase(
+                const    int                                    dir,
+                const    Array<OneD, const NekDouble >          &inarray,
+                         Array<OneD,       NekDouble >          &outarray)
+        {
+            Array<OneD,NekDouble> outtmp;
+            int nelmtcoef  = GetNcoeffs(0);
+            int nelmtcoef0 = nelmtcoef;
+            Array<OneD,NekDouble> e_outarray(nelmtcoef,0.0);
+
+            for(int i = 0; i < (*m_exp).size(); ++i)
+            {
+                nelmtcoef  = GetNcoeffs(i);
+                if(nelmtcoef>nelmtcoef0)
+                {
+                    e_outarray  =   Array<OneD,NekDouble> (nelmtcoef,0.0);
+                    nelmtcoef0 = nelmtcoef;
+                }
+                (*m_exp)[i]->RightIPTPhysDerivBase(dir,inarray+m_phys_offset[i],
+                                                  e_outarray);
+                outtmp = outarray   +   m_coeff_offset[i];
+                Vmath::Vadd(nelmtcoef,e_outarray,1,outtmp,1,outtmp,1);
             }
         }
         
@@ -2708,6 +2751,15 @@ namespace Nektar
         {
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
+        }
+
+        void ExpList::v_AddTraceQuadPhysToField(
+                const Array<OneD, const NekDouble>  &Fwd,
+                const Array<OneD, const NekDouble>  &Bwd,
+                Array<OneD,       NekDouble>        &field)
+        {
+            ASSERTL0(false,
+                     "v_AddTraceQuadPhysToField is not defined or valid for this class type");
         }
 
         const Array<OneD,const NekDouble>

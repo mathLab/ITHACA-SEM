@@ -369,6 +369,18 @@ namespace Nektar
             v_GetFluxDerivJacDirctn(explist,normals,nDervDir,inarray,ElmtJac);
         }
 
+        void GetViscousSymmtrFluxConservVar(
+            const int                                                       nConvectiveFields,
+            const int                                                       nSpaceDim,
+            const Array<OneD, Array<OneD, NekDouble> >                      &inaverg,
+            const Array<OneD, Array<OneD, NekDouble > >                     &inarray,
+            Array<OneD, Array<OneD, Array<OneD, NekDouble> > >              &outarray,
+            Array< OneD, int >                                              &nonZeroIndex,    
+            const Array<OneD, Array<OneD, NekDouble> >                      &normals)
+        {
+            v_GetViscousSymmtrFluxConservVar(nConvectiveFields,nSpaceDim,inaverg,inarray,outarray,nonZeroIndex,normals);
+        }
+
         void CalVisFluxDerivJac(
             const int                                                       nConvectiveFields,
             const Array<OneD, Array<OneD, NekDouble> >                      &inarray,
@@ -433,6 +445,14 @@ namespace Nektar
             const int                                                       nDervDir,
             const Array<OneD, const Array<OneD, NekDouble> >                &inarray,
                   Array<OneD, Array<OneD, DNekMatSharedPtr> >               &ElmtJac);
+        virtual void v_GetViscousSymmtrFluxConservVar(
+            const int                                                       nConvectiveFields,
+            const int                                                       nSpaceDim,
+            const Array<OneD, Array<OneD, NekDouble> >                      &inaverg,
+            const Array<OneD, Array<OneD, NekDouble > >                     &inarray,
+            Array<OneD, Array<OneD, Array<OneD, NekDouble> > >              &outarray,
+            Array< OneD, int >                                              &nonZeroIndex,    
+            const Array<OneD, Array<OneD, NekDouble> >                      &normals);
         virtual void v_GetDiffusionFluxJacPoint(
             const int                                           nelmt,
             const Array<OneD, NekDouble>                        &conservVar, 

@@ -118,6 +118,9 @@ namespace Nektar
             m_diffusion->SetSpecialBndTreat(
                 &NavierStokesCFE::SpecialBndTreat, this);
 
+            m_diffusion->SetDiffusionSymmFluxCons(
+                &NavierStokesCFE::v_GetViscousSymmtrFluxConservVar, this);
+
             if (m_shockCaptureType != "Off")
             {
                 m_diffusion->SetArtificialDiffusionVector(
@@ -135,6 +138,9 @@ namespace Nektar
 
             m_diffusion->SetSpecialBndTreat(
                 &NavierStokesCFE::SpecialBndTreat, this);
+
+            m_diffusion->SetDiffusionSymmFluxCons(
+                &NavierStokesCFE::v_GetViscousSymmtrFluxConservVar, this);
 
             if (m_shockCaptureType != "Off")
             {
@@ -1560,6 +1566,135 @@ if(!ElmtJac.num_elements())
                             }
                         }
                         // (*ElmtJac[nelmt][npnt]) =   (*PointFJac);
+                    }
+                }
+                break;
+            }
+            default:
+            {
+                ASSERTL0(false, "only for 2D");
+                break;
+            }
+        }
+        return;
+    }
+
+    void NavierStokesCFE::v_GetViscousSymmtrFluxConservVar(
+        const int                                                       nConvectiveFields,
+        const int                                                       nSpaceDim,
+        const Array<OneD, Array<OneD, NekDouble> >                      &inaverg,
+        const Array<OneD, Array<OneD, NekDouble > >                     &inarray,
+        Array<OneD, Array<OneD, Array<OneD, NekDouble> > >              &outarray,
+        Array< OneD, int >                                              &nonZeroIndex,    
+        const Array<OneD, Array<OneD, NekDouble> >                      &normals)
+    {
+        nonZeroIndex = Array< OneD, int >(nConvectiveFields,0);
+        for(int i=0;i<nConvectiveFields;i++)
+        {
+            nonZeroIndex[i] =   i;
+        }
+        for(int nd = 0; nd< nSpaceDim; nd++)
+        {
+            GetViscousSymmtrFluxConservVarDrctn(nConvectiveFields,nSpaceDim,normals,nd,inaverg,inarray,outarray[nd]);
+        }
+       
+    }
+    
+    void NavierStokesCFE::GetViscousSymmtrFluxConservVarDrctn(
+        const int                                                       nConvectiveFields,
+        const int                                                       nSpaceDim,
+        const Array<OneD, const Array<OneD, NekDouble> >                &normals,
+        const int                                                       nDervDir,
+        const Array<OneD, const Array<OneD, NekDouble> >                &inaverg,
+        const Array<OneD, const Array<OneD, NekDouble> >                &inarray,
+              Array<OneD, Array<OneD, NekDouble> >                      &outarray)
+    {
+        int nPts                = inarray[nConvectiveFields-1].num_elements();
+
+        // Auxiliary variables
+        Array<OneD, NekDouble > mu                 (nPts, 0.0);
+
+        // Variable viscosity through the Sutherland's law
+        if (m_ViscosityType == "Variable")
+        {
+            Array<OneD, NekDouble > temperature        (nPts, 0.0);
+            m_varConv->GetTemperature(inarray,temperature);
+            m_varConv->GetDynamicViscosity(temperature, mu);
+        }
+        else
+        {
+            Vmath::Fill(nPts, m_mu, mu, 1);
+        }
+
+        NekDouble pointmu       = 0.0;
+        Array<OneD, NekDouble> pointAve(nConvectiveFields,0.0);
+        Array<OneD, NekDouble> pointnormals(nSpaceDim,0.0);
+
+        DNekMatSharedPtr PointFJac = MemoryManager<DNekMat>
+                                ::AllocateSharedPtr(nConvectiveFields-1, nConvectiveFields);
+        
+        DNekMatSharedPtr inMat  = MemoryManager<DNekMat>
+                                ::AllocateSharedPtr(1, nConvectiveFields-1);
+        DNekMatSharedPtr outMat = MemoryManager<DNekMat>
+                                ::AllocateSharedPtr(1, nConvectiveFields);
+
+        switch (nDervDir)
+        {
+            case 0:
+            {
+                for(int npnt = 0; npnt < nPts; npnt++)
+                {
+                    for(int j = 0; j < nConvectiveFields; j++)
+                    {
+                        pointAve[j] = inaverg[j][npnt];
+                    }
+                    for(int j = 0; j < nSpaceDim; j++)
+                    {   
+                        pointnormals[j] = normals[j][npnt];
+                    }
+
+                    pointmu     = mu[npnt];
+
+                    GetdFlux_dQx_2D(pointnormals,pointmu,pointAve,PointFJac);
+
+                    for(int j = 1; j < nConvectiveFields; j++)
+                    {
+                        (*inMat)(0,j-1) = inarray[j][npnt];
+                    }
+                    (*outMat)   =   (*inMat)*(*PointFJac);
+                    for(int j = 0; j < nConvectiveFields; j++)
+                    {
+                        outarray[j][npnt]   =   (*outMat)(0,j);
+                    }
+                }
+                break;
+            }
+            case 1:
+            {
+                for(int npnt = 0; npnt < nPts; npnt++)
+                {
+                    for(int j = 0; j < nConvectiveFields; j++)
+                    {
+                        pointAve[j] = inaverg[j][npnt];
+                    }
+                    
+                    for(int j = 0; j < nSpaceDim; j++)
+                    {   
+                        pointnormals[j] = normals[j][npnt];
+                    }
+
+                    pointmu     = mu[npnt];
+
+                    GetdFlux_dQy_2D(pointnormals,pointmu,pointAve,PointFJac);
+
+                    for(int j = 1; j < nConvectiveFields; j++)
+                    {
+                        (*inMat)(0,j-1) = inarray[j][npnt];
+                    }
+                    (*outMat)   =   (*inMat)*(*PointFJac);
+                    for(int j = 0; j < nConvectiveFields; j++)
+                    {
+                        outarray[j][npnt]   =   (*outMat)(0,j);
                     }
                 }
                 break;

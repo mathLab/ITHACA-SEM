@@ -186,12 +186,18 @@ public:
     MULTI_REGIONS_EXPORT void FwdLocTracesFromField(
         const Array<OneD, const NekDouble> &field,
         Array<OneD, NekDouble> faces);
+    MULTI_REGIONS_EXPORT void AddLocTracesToField(
+        const Array<OneD, const NekDouble>  &faces, 
+        Array<OneD, NekDouble>              &field);
 
     MULTI_REGIONS_EXPORT void InterpLocEdgesToTrace(
         const int dir,
         const Array<OneD, const NekDouble> &locfaces,
         Array<OneD, NekDouble> edges);
-
+    MULTI_REGIONS_EXPORT void RightIPTWLocEdgesToTraceInterpMat(
+        const int                           dir,
+        const Array<OneD, const NekDouble>  &edges,
+        Array<OneD, NekDouble>              &locedges);
     MULTI_REGIONS_EXPORT void InterpLocFacesToTrace(
         const int dir,
         const Array<OneD, const NekDouble> &locfaces,

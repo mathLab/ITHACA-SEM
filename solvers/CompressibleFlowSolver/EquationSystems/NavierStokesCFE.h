@@ -102,6 +102,15 @@ namespace Nektar
     void GetArtificialViscosity(
         const Array<OneD, Array<OneD, NekDouble> >  &inarray,
               Array<OneD,             NekDouble  >  &muav);
+    
+    void GetViscousSymmtrFluxConservVarDrctn(
+        const int                                                       nConvectiveFields,
+        const int                                                       nSpaceDim,
+        const Array<OneD, const Array<OneD, NekDouble> >                &normals,
+        const int                                                       nDervDir,
+        const Array<OneD, const Array<OneD, NekDouble> >                &inaverg,
+        const Array<OneD, const Array<OneD, NekDouble> >                &inarray,
+              Array<OneD, Array<OneD, NekDouble> >                      &outarray);
 
     virtual void v_InitObject();
 
@@ -137,7 +146,7 @@ namespace Nektar
         const int                                                       nDervDir,
         const Array<OneD, const Array<OneD, NekDouble> >                &inarray,
               Array<OneD, Array<OneD, DNekMatSharedPtr> >               &ElmtJac);
-              
+    
     virtual void v_GetDiffusionFluxJacPoint(
             const int                                           nelmt,
             const Array<OneD, NekDouble>                        &conservVar, 
@@ -150,6 +159,15 @@ namespace Nektar
     virtual void v_CalphysDeriv(
             const Array<OneD, const Array<OneD, NekDouble> >                &inarray,
                   Array<OneD,       Array<OneD, Array<OneD, NekDouble> > >  &qfield);
+
+    virtual void v_GetViscousSymmtrFluxConservVar(
+            const int                                                       nConvectiveFields,
+            const int                                                       nSpaceDim,
+            const Array<OneD, Array<OneD, NekDouble> >                      &inaverg,
+            const Array<OneD, Array<OneD, NekDouble > >                     &inarray,
+            Array<OneD, Array<OneD, Array<OneD, NekDouble> > >              &outarray,
+            Array< OneD, int >                                              &nonZeroIndex,    
+            const Array<OneD, Array<OneD, NekDouble> >                      &normals);
     
     /**
      * @brief return part of viscous Jacobian: 

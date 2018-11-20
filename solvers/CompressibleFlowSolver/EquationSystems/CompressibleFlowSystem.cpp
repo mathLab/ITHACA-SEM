@@ -1155,9 +1155,9 @@ namespace Nektar
         {
             visflux[0][i]  =    Array<OneD, NekDouble>(nTracePts,0.0);
         }
-
-        m_diffusion->CalTraceNumFlux(nConvectiveFields,nDim,nPts,nTracePts,PenaltyFactor2,
-                        fields,inarray,qfield,vFwd,vBwd,MuVarTrace,nonZeroIndex,visflux);
+        //TODO:  UPDATE
+        // m_diffusion->CalTraceNumFlux(nConvectiveFields,nDim,nPts,nTracePts,PenaltyFactor2,
+        //                 fields,inarray,qfield,vFwd,vBwd,MuVarTrace,nonZeroIndex,visflux);
         for(int i = 0; i < nConvectiveFields; i++)
         {
             Vmath::Vsub(nTracePts,traceflux[i],1,visflux[0][i],1,traceflux[i],1);
@@ -2937,7 +2937,19 @@ namespace Nektar
             const Array<OneD, const Array<OneD, NekDouble> >                &inarray,
                   Array<OneD, Array<OneD, DNekMatSharedPtr> >               &ElmtJac)
     {
-        ASSERTL0(false, "not coded");
+        ASSERTL0(false, "v_GetFluxDerivJacDirctn not coded");
+    }
+
+    void CompressibleFlowSystem::v_GetViscousSymmtrFluxConservVar(
+            const int                                                       nConvectiveFields,
+            const int                                                       nSpaceDim,
+            const Array<OneD, Array<OneD, NekDouble> >                      &inaverg,
+            const Array<OneD, Array<OneD, NekDouble > >                     &inarray,
+            Array<OneD, Array<OneD, Array<OneD, NekDouble> > >              &outarray,
+            Array< OneD, int >                                              &nonZeroIndex,    
+            const Array<OneD, Array<OneD, NekDouble> >                      &normals)
+    {
+        ASSERTL0(false, "v_GetViscousSymmtrFluxConservVar not coded");
     }
     void CompressibleFlowSystem::v_GetDiffusionFluxJacPoint(
             const int                                           nelmt,

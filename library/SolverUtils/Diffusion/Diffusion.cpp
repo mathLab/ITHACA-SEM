@@ -154,8 +154,10 @@ namespace Nektar
             const Array<OneD, Array<OneD, NekDouble> >                          &vFwd,
             const Array<OneD, Array<OneD, NekDouble> >                          &vBwd,
             const Array<OneD, NekDouble >                                       &MuVarTrace,
-                  Array<OneD, int >                                             &nonZeroIndex,
-                  Array<OneD, Array<OneD, Array<OneD, NekDouble> > >            &traceflux)
+                  Array<OneD, int >                                             &nonZeroIndexflux,
+                  Array<OneD, Array<OneD, Array<OneD, NekDouble> > >            &traceflux,
+                  Array<OneD, Array<OneD, NekDouble> >                          &solution_Aver,
+                  Array<OneD, Array<OneD, NekDouble> >                          &solution_jump)
         {
             ASSERTL0(false," not defined");
         }

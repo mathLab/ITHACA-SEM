@@ -253,6 +253,17 @@ namespace Nektar
                 Array<OneD, int > nonZeroIndexSymm;
                 CalTraceSymFlux(nConvectiveFields,nDim,fields,solution_Aver,solution_jump,
                             nonZeroIndexSymm,traceSymflux);
+//Debug
+// for (int nd = 0; nd < nDim; ++nd)
+// {
+//     for (int j = 0; j < nConvectiveFields; ++j)
+//     {
+//         for (int k = 0; k < nTracePts; ++k)
+//         {
+//             cout<< "traceSymflux["<<nd<<"]["<<j<<"]["<<k<<"]= "<<traceSymflux[nd][j][k]<<endl;
+//         }
+//     }
+// }
 
                 for (int i = 0; i < nConvectiveFields; ++i)
                 {
@@ -260,7 +271,21 @@ namespace Nektar
                     solution_jump[i]    =   NullNekDouble1DArray;
                 }
 
-                AddSymmFluxIntegral(nConvectiveFields,nDim,nPts,nTracePts,fields,traceSymflux,outarray);
+// //Debug
+// for (int j = 0; j < nConvectiveFields; ++j)
+// {
+//     Vmath::Zero(nCoeffs,outarray[j],1);
+// }
+
+                AddSymmFluxIntegral(nConvectiveFields,nDim,nPts,nTracePts,fields,traceSymflux,nonZeroIndexSymm,outarray);
+//Debug
+// for (int j = 0; j < nConvectiveFields; ++j)
+// {
+//     for (int k = 0; k < nCoeffs; ++k)
+//     {
+//         cout<< "outarray["<<j<<"]["<<k<<"]= "<<outarray[j][k]<<endl;
+//     }
+// }
             }
 
             for (int i = 0; i < nConvectiveFields; ++i)
@@ -269,14 +294,26 @@ namespace Nektar
                 solution_jump[i]    =   NullNekDouble1DArray;
             }
 
+// //Debug
+// for (int j = 0; j < nConvectiveFields; ++j)
+// {
+//     Vmath::Zero(nCoeffs,outarray[j],1);
+// }
+
+
             for(i = 0; i < nonZeroIndex.num_elements(); ++i)
             {
                 int j = nonZeroIndex[i];
 
                 fields[j]->AddTraceIntegral     (traceflux[0][j], outarray[j]);
+    // for (int k = 0; k < nCoeffs; ++k)
+    // {
+    //     cout<< "outarray["<<j<<"]["<<k<<"]= "<<outarray[j][k]<<endl;
+    // }
                 fields[j]->SetPhysState         (false);
                 fields[j]->MultiplyByElmtInvMass(outarray[j], outarray[j]);
             }
+            // int ndebug;
         }
 
         void DiffusionIP::v_CalTraceNumFlux(
@@ -361,14 +398,39 @@ namespace Nektar
                   Array<OneD, Array<OneD, Array<OneD, NekDouble> > >            &traceSymflux)
         {
             int nTracePts = solution_jump[nConvectiveFields-1].num_elements();
+// //Debug
+// for (int j = 0; j < nConvectiveFields; ++j)
+// {
+//     for (int k = 0; k < nTracePts; ++k)
+//     {
+//         cout<< "solution_jump["<<j<<"]["<<k<<"]= "<<solution_jump[j][k]<<endl;
+//     }
+// }
+            
+// //Debug
+// for (int j = 0; j < nConvectiveFields; ++j)
+// {
+//     for (int k = 0; k < nTracePts; ++k)
+//     {
+//         cout<< "solution_jump["<<j<<"]["<<k<<"]= "<<solution_jump[j][k]<<endl;
+//     }
+// }
             for (int i = 0; i < nConvectiveFields; ++i)
             {
                 Vmath::Smul(nTracePts,0.5,solution_jump[i],1,solution_jump[i],1);
-                MultiRegions::ExpListSharedPtr tracelist = fields[i]->GetTrace();
-                tracelist->MultiplyByQuadratureMetric(solution_jump[i],solution_jump[i]);
             }
             
             m_FunctorSymmetricfluxCons(nConvectiveFields,nDim,solution_Aver,solution_jump,traceSymflux,nonZeroIndexsymm,m_traceNormals);
+
+            
+            for (int i = 0; i < nConvectiveFields; ++i)
+            {
+                MultiRegions::ExpListSharedPtr tracelist = fields[i]->GetTrace();
+                for(int nd=0;nd<nDim;nd++)
+                {
+                    tracelist->MultiplyByQuadratureMetric(traceSymflux[nd][i],traceSymflux[nd][i]);
+                }
+            }
         }
 
         void DiffusionIP::Add2ndDeriv2Trace(
@@ -445,14 +507,19 @@ namespace Nektar
             const int                                                           nPts,
             const int                                                           nTracePts,
             const Array<OneD, MultiRegions::ExpListSharedPtr>                   &fields,
-            const Array<OneD, Array<OneD, Array<OneD, NekDouble> > >            &tracflux,
+            const Array<OneD, const Array<OneD, Array<OneD, NekDouble> > >      &tracflux,
+            const Array<OneD, const int >                                       &nonZeroIndex,
                   Array<OneD, Array<OneD, NekDouble> >                          &outarray)
         {
+            // cout << "AddSymmFluxIntegral::nonZeroIndex.num_elements()    ="<<nonZeroIndex.num_elements()<<endl;
+            //TODO:: to combine AddRightIPTPhysDerivBase of different directions in saving cpu time
             Array<OneD, NekDouble> tmpfield(nPts,0.0);
+            int nv = 0;
             for(int nd=0;nd<nDim;nd++)
             {
-                for(int nv=0;nv<nConvectiveFields;nv++)
+                for(int j=0;j<nonZeroIndex.num_elements();j++)
                 {
+                    nv  =   nonZeroIndex[j];
                     Vmath::Zero(nPts,tmpfield,1);
                     fields[nv]->AddTraceQuadPhysToField(tracflux[nd][nv],tracflux[nd][nv],tmpfield);
                     fields[nv]->AddRightIPTPhysDerivBase(nd,tmpfield,outarray[nv]);

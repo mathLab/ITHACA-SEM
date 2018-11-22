@@ -87,7 +87,8 @@ namespace Nektar
                 const int                                                           nPts,
                 const int                                                           nTracePts,
                 const Array<OneD, MultiRegions::ExpListSharedPtr>                   &fields,
-                const Array<OneD, Array<OneD, Array<OneD, NekDouble> > >            &tracflux,
+                const Array<OneD, const Array<OneD, Array<OneD, NekDouble> > >      &tracflux,
+                const Array<OneD, const int >                                       &nonZeroIndex,
                       Array<OneD, Array<OneD, NekDouble> >                          &outarray);
 
             void Add2ndDeriv2Trace(

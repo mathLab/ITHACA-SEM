@@ -1588,10 +1588,10 @@ if(!ElmtJac.num_elements())
         Array< OneD, int >                                              &nonZeroIndex,    
         const Array<OneD, Array<OneD, NekDouble> >                      &normals)
     {
-        nonZeroIndex = Array< OneD, int >(nConvectiveFields,0);
-        for(int i=0;i<nConvectiveFields;i++)
+        nonZeroIndex = Array<OneD, int>(nConvectiveFields-1,0);
+        for(int i=0;i<nConvectiveFields-1;i++)
         {
-            nonZeroIndex[i] =   i;
+            nonZeroIndex[i] =   i+1;
         }
         for(int nd = 0; nd< nSpaceDim; nd++)
         {
@@ -1606,19 +1606,26 @@ if(!ElmtJac.num_elements())
         const Array<OneD, const Array<OneD, NekDouble> >                &normals,
         const int                                                       nDervDir,
         const Array<OneD, const Array<OneD, NekDouble> >                &inaverg,
-        const Array<OneD, const Array<OneD, NekDouble> >                &inarray,
+        const Array<OneD, const Array<OneD, NekDouble> >                &injumpp,
               Array<OneD, Array<OneD, NekDouble> >                      &outarray)
     {
-        int nPts                = inarray[nConvectiveFields-1].num_elements();
+        int nPts                = inaverg[nConvectiveFields-1].num_elements();
 
         // Auxiliary variables
         Array<OneD, NekDouble > mu                 (nPts, 0.0);
+        Array<OneD, Array<OneD, NekDouble > > dirnormal  (2);
+        for(int i=0;i<2;i++)
+        {
+            dirnormal[i]   = Array<OneD, NekDouble > (2, 0.0);
+        }
+        dirnormal[0][0]  =   1.0;
+        dirnormal[1][1]  =   1.0;
 
         // Variable viscosity through the Sutherland's law
         if (m_ViscosityType == "Variable")
         {
             Array<OneD, NekDouble > temperature        (nPts, 0.0);
-            m_varConv->GetTemperature(inarray,temperature);
+            m_varConv->GetTemperature(inaverg,temperature);
             m_varConv->GetDynamicViscosity(temperature, mu);
         }
         else
@@ -1630,82 +1637,45 @@ if(!ElmtJac.num_elements())
         Array<OneD, NekDouble> pointAve(nConvectiveFields,0.0);
         Array<OneD, NekDouble> pointnormals(nSpaceDim,0.0);
 
-        DNekMatSharedPtr PointFJac = MemoryManager<DNekMat>
+        DNekMatSharedPtr Jac0 = MemoryManager<DNekMat>
                                 ::AllocateSharedPtr(nConvectiveFields-1, nConvectiveFields);
+        DNekMatSharedPtr Jac1  = MemoryManager<DNekMat>
+                                ::AllocateSharedPtr(nConvectiveFields-1, nConvectiveFields);
+
+        DNekMatSharedPtr jump  = MemoryManager<DNekMat>
+                                ::AllocateSharedPtr(nConvectiveFields, 1);
+        DNekMatSharedPtr flux  = MemoryManager<DNekMat>
+                                ::AllocateSharedPtr(nConvectiveFields-1,1);
         
-        DNekMatSharedPtr inMat  = MemoryManager<DNekMat>
-                                ::AllocateSharedPtr(1, nConvectiveFields-1);
-        DNekMatSharedPtr outMat = MemoryManager<DNekMat>
-                                ::AllocateSharedPtr(1, nConvectiveFields);
-
-        switch (nDervDir)
+        for(int npnt = 0; npnt < nPts; npnt++)
         {
-            case 0:
+            for(int j = 0; j < nConvectiveFields; j++)
             {
-                for(int npnt = 0; npnt < nPts; npnt++)
-                {
-                    for(int j = 0; j < nConvectiveFields; j++)
-                    {
-                        pointAve[j] = inaverg[j][npnt];
-                    }
-                    for(int j = 0; j < nSpaceDim; j++)
-                    {   
-                        pointnormals[j] = normals[j][npnt];
-                    }
-
-                    pointmu     = mu[npnt];
-
-                    GetdFlux_dQx_2D(pointnormals,pointmu,pointAve,PointFJac);
-
-                    for(int j = 1; j < nConvectiveFields; j++)
-                    {
-                        (*inMat)(0,j-1) = inarray[j][npnt];
-                    }
-                    (*outMat)   =   (*inMat)*(*PointFJac);
-                    for(int j = 0; j < nConvectiveFields; j++)
-                    {
-                        outarray[j][npnt]   =   (*outMat)(0,j);
-                    }
-                }
-                break;
+                pointAve[j] = inaverg[j][npnt];
             }
-            case 1:
-            {
-                for(int npnt = 0; npnt < nPts; npnt++)
-                {
-                    for(int j = 0; j < nConvectiveFields; j++)
-                    {
-                        pointAve[j] = inaverg[j][npnt];
-                    }
-                    
-                    for(int j = 0; j < nSpaceDim; j++)
-                    {   
-                        pointnormals[j] = normals[j][npnt];
-                    }
-
-                    pointmu     = mu[npnt];
-
-                    GetdFlux_dQy_2D(pointnormals,pointmu,pointAve,PointFJac);
-
-                    for(int j = 1; j < nConvectiveFields; j++)
-                    {
-                        (*inMat)(0,j-1) = inarray[j][npnt];
-                    }
-                    (*outMat)   =   (*inMat)*(*PointFJac);
-                    for(int j = 0; j < nConvectiveFields; j++)
-                    {
-                        outarray[j][npnt]   =   (*outMat)(0,j);
-                    }
-                }
-                break;
+            for(int j = 0; j < nSpaceDim; j++)
+            {   
+                pointnormals[j] = normals[j][npnt];
             }
-            default:
+            for(int j = 0; j < nConvectiveFields; j++)
+            {   
+                (*jump)(j,0) = injumpp[j][npnt];
+            }
+
+            pointmu     = mu[npnt];
+
+            GetdFlux_dQx_2D(dirnormal[nDervDir],pointmu,pointAve,Jac0);
+            GetdFlux_dQy_2D(dirnormal[nDervDir],pointmu,pointAve,Jac1);
+
+            (*Jac0) = (*Jac0)*normals[0][npnt] + (*Jac1)*normals[1][npnt];
+            (*flux) =   (*Jac0)*(*jump);
+
+            outarray[0][npnt]   =   0.0;
+            for(int i = 0; i < nConvectiveFields-1; i++)
             {
-                ASSERTL0(false, "only for 2D");
-                break;
+                outarray[i+1][npnt]  = (*flux)(i,0);
             }
         }
-        return;
     }
 
     void NavierStokesCFE::v_CalphysDeriv(

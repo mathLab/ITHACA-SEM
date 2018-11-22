@@ -70,7 +70,8 @@ namespace Nektar
         protected:
             DiffusionIP();
    		
-            std::string                          m_shockCaptureType;
+            std::string                             m_shockCaptureType;
+            NekDouble                               m_IPDebugParameter;
 	         
             Array<OneD, Array<OneD, NekDouble> >              m_traceNormals;
             Array<OneD, NekDouble>                            m_tracBwdWeight;

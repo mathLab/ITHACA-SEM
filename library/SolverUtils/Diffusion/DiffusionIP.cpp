@@ -57,6 +57,9 @@ namespace Nektar
             m_session->LoadSolverInfo("ShockCaptureType",
                                   m_shockCaptureType,    "Off");	
 
+            m_session->LoadParameter("IPDebugParameter",
+                                  m_IPDebugParameter,   -0.5);	
+
             // Setting up the normals
             int i;
             int nDim = pFields[0]->GetCoordim(0);
@@ -417,7 +420,7 @@ namespace Nektar
 // }
             for (int i = 0; i < nConvectiveFields; ++i)
             {
-                Vmath::Smul(nTracePts,0.5,solution_jump[i],1,solution_jump[i],1);
+                Vmath::Smul(nTracePts,m_IPDebugParameter,solution_jump[i],1,solution_jump[i],1);
             }
             
             m_FunctorSymmetricfluxCons(nConvectiveFields,nDim,solution_Aver,solution_jump,traceSymflux,nonZeroIndexsymm,m_traceNormals);

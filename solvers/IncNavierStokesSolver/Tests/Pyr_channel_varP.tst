@@ -17,7 +17,7 @@
             <value variable="u" tolerance="1e-12">0</value>
             <value variable="v" tolerance="1e-12">0</value>
             <value variable="w" tolerance="1e-12">0</value>
-        <value variable="p" tolerance="5e-12">0</value>
+        <value variable="p" tolerance="6e-12">0</value>
         </metric>
     </metrics>
 </test>

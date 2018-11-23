@@ -208,7 +208,25 @@ namespace Nektar
             eVarCoeffD12,
             eVarCoeffVelX,
             eVarCoeffVelY,
-            eVarCoeffVelZ
+            eVarCoeffVelZ,
+            eVarCoeffMF1x,
+            eVarCoeffMF1y,
+            eVarCoeffMF1z,
+            eVarCoeffMF1Div,
+            eVarCoeffMF1Mag,
+            eVarCoeffMF2x,
+            eVarCoeffMF2y,
+            eVarCoeffMF2z,
+            eVarCoeffMF2Div,
+            eVarCoeffMF2Mag,
+            eVarCoeffMF3x,
+            eVarCoeffMF3y,
+            eVarCoeffMF3z,
+            eVarCoeffMF3Div,
+            eVarCoeffMF3Mag,
+            eVarCoeffMF,
+            eVarCoeffMFDiv,
+            eVarCoeffGmat
         };
 
         const char* const VarCoeffTypeMap[] = {
@@ -222,7 +240,25 @@ namespace Nektar
             "VarCoeffD02",
             "VarCoeffD12",
             "VarCoeffVelX",
-            "VarCoeffVelY"
+            "VarCoeffVelY",
+            "VarCoeffMF1x",
+            "VarCoeffMF1y",
+            "VarCoeffMF1z",
+            "VarCoeffMF1Div",
+            "VarCoeffMF1Mag",
+            "VarCoeffMF2x",
+            "VarCoeffMF2y",
+            "VarCoeffMF2z",
+            "VarCoeffMF2Div",
+            "VarCoeffMF2Mag",
+            "VarCoeffMF3x",
+            "VarCoeffMF3y",
+            "VarCoeffMF3z",
+            "VarCoeffMF3Div",
+            "VarCoeffMF3Mag",
+            "VarCoeffMF",
+            "VarCoeffMFDiv",
+            "VarCoeffGmat"
         };
         typedef std::map<StdRegions::VarCoeffType, Array<OneD, NekDouble> > VarCoeffMap;
         static VarCoeffMap NullVarCoeffMap;

@@ -758,7 +758,7 @@ void MMFMaxwell::v_DoSolve()
                     id2 = m_fields[0]->GetTrace()->GetPhys_Offset(
                         m_fields[0]
                             ->GetTraceMap()
-                            ->GetBndCondCoeffsToGlobalCoeffsMap(cnt + e));
+                            ->GetBndCondIDToGlobalTraceID(cnt + e));
 
                     Vmath::Vcopy(npts, &E1Fwd[id2], 1, &E1Fwdloc[0], 1);
                     Vmath::Vcopy(npts, &E2Fwd[id2], 1, &E2Fwdloc[0], 1);
@@ -1947,8 +1947,7 @@ void MMFMaxwell::Printout_SurfaceCurrent(
     for (int e = 0; e < totbdryexp; ++e)
     {
         id2 = m_fields[0]->GetTrace()->GetPhys_Offset(
-            m_fields[0]->GetTraceMap()->GetBndCondCoeffsToGlobalCoeffsMap(cnt +
-                                                                          e));
+            m_fields[0]->GetTraceMap()->GetBndCondIDToGlobalTraceID(cnt + e));
 
         Vmath::Vcopy(npts, &phiFwd[id2], 1, &Jphi[e * npts], 1);
         Vmath::Vcopy(npts, &radFwd[id2], 1, &Jrad[e * npts], 1);

@@ -76,6 +76,22 @@ private:
     static std::vector<int> PrismReordering(NekMeshUtils::ElmtConfig conf);
     static std::vector<int> TetReordering  (NekMeshUtils::ElmtConfig conf);
     static std::vector<int> LineReordering (NekMeshUtils::ElmtConfig conf);
+
+    // Gmsh file version
+    int m_version;
+    // Previous id for contiguousness
+    int m_prevId;
+    // Id map if non-contiguous
+    map<int, int> m_idMap;
+    // Highest tag number
+    int m_maxTagId;
+    // This map takes each element ID and maps it to a permutation map
+    // that is required to take Gmsh element node orderings and map them
+    // to Nektar++ orderings.
+    std::unordered_map<int, vector<int>> m_orderingMap;
+
+    void ReadNextNode();
+    void ReadNextElement(int tag = 0, int elm_type = 0);
 };
 }
 }

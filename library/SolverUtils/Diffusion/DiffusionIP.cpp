@@ -60,6 +60,9 @@ namespace Nektar
             m_session->LoadParameter("IPDebugParameter",
                                   m_IPDebugParameter,   -0.5);	
 
+            m_session->LoadParameter("IPPenaltyFactor2",
+                                  m_IPPenaltyFactor2,   1.0/12.0);	
+
             // Setting up the normals
             int i;
             int nDim = pFields[0]->GetCoordim(0);
@@ -127,7 +130,7 @@ namespace Nektar
             const Array<OneD, Array<OneD, NekDouble> >        &pFwd,
             const Array<OneD, Array<OneD, NekDouble> >        &pBwd)
         {
-            const NekDouble PenaltyFactor2  =   1.0/12.0;
+            const NekDouble PenaltyFactor2  =  m_IPPenaltyFactor2;
             int i, j;
             int nDim      = fields[0]->GetCoordim(0);
             int nPts      = fields[0]->GetTotPoints();
@@ -240,8 +243,7 @@ namespace Nektar
             CalTraceNumFlux(nConvectiveFields,nDim,nPts,nTracePts,PenaltyFactor2,
                             fields,inarray,qfield,vFwd,vBwd,MuVarTrace,nonZeroIndex,traceflux,solution_Aver,solution_jump);
 
-            bool flagSymmtFlux =    true;
-            if(flagSymmtFlux)
+            if(abs(m_IPDebugParameter)>1.0E-12)
             {
                 Array<OneD, Array<OneD, Array<OneD, NekDouble> > > traceSymflux(nDim);
                 for (int nd = 0; nd < nDim; ++nd)
@@ -256,17 +258,6 @@ namespace Nektar
                 Array<OneD, int > nonZeroIndexSymm;
                 CalTraceSymFlux(nConvectiveFields,nDim,fields,solution_Aver,solution_jump,
                             nonZeroIndexSymm,traceSymflux);
-//Debug
-// for (int nd = 0; nd < nDim; ++nd)
-// {
-//     for (int j = 0; j < nConvectiveFields; ++j)
-//     {
-//         for (int k = 0; k < nTracePts; ++k)
-//         {
-//             cout<< "traceSymflux["<<nd<<"]["<<j<<"]["<<k<<"]= "<<traceSymflux[nd][j][k]<<endl;
-//         }
-//     }
-// }
 
                 for (int i = 0; i < nConvectiveFields; ++i)
                 {
@@ -274,21 +265,8 @@ namespace Nektar
                     solution_jump[i]    =   NullNekDouble1DArray;
                 }
 
-// //Debug
-// for (int j = 0; j < nConvectiveFields; ++j)
-// {
-//     Vmath::Zero(nCoeffs,outarray[j],1);
-// }
 
                 AddSymmFluxIntegral(nConvectiveFields,nDim,nPts,nTracePts,fields,nonZeroIndexSymm,traceSymflux,outarray);
-//Debug
-// for (int j = 0; j < nConvectiveFields; ++j)
-// {
-//     for (int k = 0; k < nCoeffs; ++k)
-//     {
-//         cout<< "outarray["<<j<<"]["<<k<<"]= "<<outarray[j][k]<<endl;
-//     }
-// }
             }
 
             for (int i = 0; i < nConvectiveFields; ++i)
@@ -297,26 +275,14 @@ namespace Nektar
                 solution_jump[i]    =   NullNekDouble1DArray;
             }
 
-// //Debug
-// for (int j = 0; j < nConvectiveFields; ++j)
-// {
-//     Vmath::Zero(nCoeffs,outarray[j],1);
-// }
-
-
             for(i = 0; i < nonZeroIndex.num_elements(); ++i)
             {
                 int j = nonZeroIndex[i];
 
                 fields[j]->AddTraceIntegral     (traceflux[0][j], outarray[j]);
-    // for (int k = 0; k < nCoeffs; ++k)
-    // {
-    //     cout<< "outarray["<<j<<"]["<<k<<"]= "<<outarray[j][k]<<endl;
-    // }
                 fields[j]->SetPhysState         (false);
                 fields[j]->MultiplyByElmtInvMass(outarray[j], outarray[j]);
             }
-            // int ndebug;
         }
 
         void DiffusionIP::v_CalTraceNumFlux(
@@ -351,8 +317,11 @@ namespace Nektar
 
             Array<OneD, NekDouble> Fwd(nTracePts,0.0);
             Array<OneD, NekDouble> Bwd(nTracePts,0.0);
-            
-            Add2ndDeriv2Trace(nConvectiveFields,nDim,nPts,nTracePts,PenaltyFactor2,fields,qfield,numDeriv);
+
+            if(abs(PenaltyFactor2)>1.0E-12)
+            {
+                Add2ndDeriv2Trace(nConvectiveFields,nDim,nPts,nTracePts,PenaltyFactor2,fields,qfield,numDeriv);
+            }
 
             for (int nd = 0; nd < nDim; ++nd)
             {

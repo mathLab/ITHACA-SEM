@@ -72,6 +72,7 @@ namespace Nektar
    		
             std::string                             m_shockCaptureType;
             NekDouble                               m_IPDebugParameter;
+            NekDouble                               m_IPPenaltyFactor2;
 	         
             Array<OneD, Array<OneD, NekDouble> >              m_traceNormals;
             Array<OneD, NekDouble>                            m_tracBwdWeight;

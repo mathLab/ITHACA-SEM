@@ -264,6 +264,26 @@ namespace Nektar
         const Array<OneD, NekDouble>                        &U,
         const Array<OneD, const Array<OneD, NekDouble> >    &qfield,
               DNekMatSharedPtr                              &OutputMatrix);
+    void GetdF1_dQx_2DIPWIn( 
+        const NekDouble                 &mu,
+        const Array<OneD, NekDouble>    &U, 
+        const Array<OneD, NekDouble>    &inarray, 
+        Array<OneD, NekDouble>          &outarray);
+    void GetdF2_dQx_2DIPWIn( 
+        const NekDouble                 &mu,
+        const Array<OneD, NekDouble>    &U, 
+        const Array<OneD, NekDouble>    &inarray, 
+        Array<OneD, NekDouble>          &outarray);
+    void GetdF1_dQy_2DIPWIn( 
+        const NekDouble                 &mu,
+        const Array<OneD, NekDouble>    &U, 
+        const Array<OneD, NekDouble>    &inarray, 
+        Array<OneD, NekDouble>          &outarray);
+    void GetdF2_dQy_2DIPWIn( 
+        const NekDouble                 &mu,
+        const Array<OneD, NekDouble>    &U, 
+        const Array<OneD, NekDouble>    &inarray, 
+        Array<OneD, NekDouble>          &outarray);
   };
 }
 #endif

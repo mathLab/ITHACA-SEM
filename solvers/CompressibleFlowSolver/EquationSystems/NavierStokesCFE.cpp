@@ -852,6 +852,188 @@ namespace Nektar
         }
     }
 
+    void NavierStokesCFE::GetdF1_dQx_2DIPWIn( 
+        const NekDouble                 &mu,
+        const Array<OneD, NekDouble>    &U, 
+        const Array<OneD, NekDouble>    &inarray, 
+        Array<OneD, NekDouble>          &outarray)
+    {
+        NekDouble rho=U[0];
+        NekDouble orho=1.0/rho;
+        NekDouble u=U[1]*orho;
+        NekDouble v=U[2]*orho;
+        NekDouble E=U[3]*orho;
+        NekDouble u2    =   u*u;
+        NekDouble v2    =   v*v;
+        NekDouble q2=u2+v2;
+        NekDouble e=E-0.5*q2;
+        NekDouble R =m_varConv->GetGasconstant();
+        NekDouble gamma=m_gamma;
+        NekDouble ogama1 = 1.0/(gamma - 1.0);
+        NekDouble Cp=gamma *ogama1  *R;
+        NekDouble Cv=ogama1*R;
+        NekDouble T=e/Cv;
+        //q_x=-kappa*dT_dx;
+        NekDouble kappa=m_thermalConductivity;
+        NekDouble oPr= kappa/(Cp *mu);
+        NekDouble gamaoPr   =   gamma*oPr;
+        //To notice, here is positive, which is consistent with 
+        //"SYMMETRIC INTERIOR PENALTY DG METHODS FOR THE COMPRESSIBLE NAVIER-STOKES EQUATIONS"
+        //But opposite to "I Do like CFD"
+        NekDouble tmp=mu*orho;
+
+        const NekDouble OneThird    = 1.0/3.0;
+        const NekDouble TwoThird    = 2.0*OneThird;
+        const NekDouble FourThird   = 4.0*OneThird;
+
+        Vmath::Zero(outarray.num_elements(),outarray,1);
+        // TODO: replace repeated divid by multiply
+        outarray[1] +=  tmp*(-FourThird*u)*inarray[0];
+        outarray[1] +=  tmp*(FourThird)*inarray[1];
+        outarray[2] +=  tmp*(-v)*inarray[0];
+        outarray[2] +=  tmp*inarray[2];
+        outarray[3] +=  -tmp*(FourThird*u2+v2+gamaoPr*(E-q2))*inarray[0];
+        outarray[3] +=  tmp*(FourThird-gamaoPr)*u*inarray[1];
+        outarray[3] +=  tmp*(1.0-gamaoPr)*v*inarray[2];
+        outarray[3] +=  tmp*gamaoPr*inarray[3];
+    }
+
+    void NavierStokesCFE::GetdF2_dQx_2DIPWIn( 
+        const NekDouble                 &mu,
+        const Array<OneD, NekDouble>    &U, 
+        const Array<OneD, NekDouble>    &inarray, 
+        Array<OneD, NekDouble>          &outarray)
+    {
+        NekDouble rho=U[0];
+        NekDouble orho=1.0/rho;
+        NekDouble u=U[1]*orho;
+        NekDouble v=U[2]*orho;
+        NekDouble E=U[3]*orho;
+        NekDouble u2    =   u*u;
+        NekDouble v2    =   v*v;
+        NekDouble q2=u2+v2;
+        NekDouble e=E-0.5*q2;
+        NekDouble R =m_varConv->GetGasconstant();
+        NekDouble gamma=m_gamma;
+        NekDouble ogama1 = 1.0/(gamma - 1.0);
+        NekDouble Cp=gamma *ogama1  *R;
+        NekDouble Cv=ogama1*R;
+        NekDouble T=e/Cv;
+        //q_x=-kappa*dT_dx;
+        NekDouble kappa=m_thermalConductivity;
+        NekDouble oPr= kappa/(Cp *mu);
+        NekDouble gamaoPr   =   gamma*oPr;
+        //To notice, here is positive, which is consistent with 
+        //"SYMMETRIC INTERIOR PENALTY DG METHODS FOR THE COMPRESSIBLE NAVIER-STOKES EQUATIONS"
+        //But opposite to "I Do like CFD"
+        NekDouble tmp=mu*orho;
+
+        const NekDouble OneThird    = 1.0/3.0;
+        const NekDouble TwoThird    = 2.0*OneThird;
+        const NekDouble FourThird   = 4.0*OneThird;
+
+        Vmath::Zero(outarray.num_elements(),outarray,1);
+        // TODO: replace repeated divid by multiply
+        outarray[1] +=  tmp*(-v)*inarray[0];
+        outarray[1] +=  tmp*inarray[2];
+        outarray[2] +=  tmp*(TwoThird*u)*inarray[0];
+        outarray[2] +=  tmp*(-TwoThird)*inarray[1];
+        outarray[3] +=  -tmp*OneThird*u*v*inarray[0];
+        outarray[3] +=  -tmp*TwoThird*v*inarray[1];
+        outarray[3] +=  tmp*u*inarray[2];
+    }
+
+    void NavierStokesCFE::GetdF1_dQy_2DIPWIn( 
+        const NekDouble                 &mu,
+        const Array<OneD, NekDouble>    &U, 
+        const Array<OneD, NekDouble>    &inarray, 
+        Array<OneD, NekDouble>          &outarray)
+    {
+        NekDouble rho=U[0];
+        NekDouble orho=1.0/rho;
+        NekDouble u=U[1]*orho;
+        NekDouble v=U[2]*orho;
+        NekDouble E=U[3]*orho;
+        NekDouble u2    =   u*u;
+        NekDouble v2    =   v*v;
+        NekDouble q2=u2+v2;
+        NekDouble e=E-0.5*q2;
+        NekDouble R =m_varConv->GetGasconstant();
+        NekDouble gamma=m_gamma;
+        NekDouble ogama1 = 1.0/(gamma - 1.0);
+        NekDouble Cp=gamma *ogama1  *R;
+        NekDouble Cv=ogama1*R;
+        NekDouble T=e/Cv;
+        //q_x=-kappa*dT_dx;
+        NekDouble kappa=m_thermalConductivity;
+        NekDouble oPr= kappa/(Cp *mu);
+        NekDouble gamaoPr   =   gamma*oPr;
+        //To notice, here is positive, which is consistent with 
+        //"SYMMETRIC INTERIOR PENALTY DG METHODS FOR THE COMPRESSIBLE NAVIER-STOKES EQUATIONS"
+        //But opposite to "I Do like CFD"
+        NekDouble tmp=mu*orho;
+
+        const NekDouble OneThird    = 1.0/3.0;
+        const NekDouble TwoThird    = 2.0*OneThird;
+        const NekDouble FourThird   = 4.0*OneThird;
+
+        Vmath::Zero(outarray.num_elements(),outarray,1);
+           
+        outarray[1] +=  tmp*(TwoThird*v)*inarray[0];
+        outarray[1] +=  tmp*(-TwoThird)*inarray[2];
+        outarray[2] +=  tmp*(-u)*inarray[0];
+        outarray[2] +=  tmp*inarray[1];
+        outarray[3] +=  -tmp*OneThird*u*v*inarray[0];
+        outarray[3] +=  tmp*v*inarray[1];
+        outarray[3] +=  -tmp*TwoThird*u*inarray[2];
+    }
+
+    void NavierStokesCFE::GetdF2_dQy_2DIPWIn( 
+        const NekDouble                 &mu,
+        const Array<OneD, NekDouble>    &U, 
+        const Array<OneD, NekDouble>    &inarray, 
+        Array<OneD, NekDouble>          &outarray)
+    {
+        NekDouble rho=U[0];
+        NekDouble orho=1.0/rho;
+        NekDouble u=U[1]*orho;
+        NekDouble v=U[2]*orho;
+        NekDouble E=U[3]*orho;
+        NekDouble u2    =   u*u;
+        NekDouble v2    =   v*v;
+        NekDouble q2=u2+v2;
+        NekDouble e=E-0.5*q2;
+        NekDouble R =m_varConv->GetGasconstant();
+        NekDouble gamma=m_gamma;
+        NekDouble ogama1 = 1.0/(gamma - 1.0);
+        NekDouble Cp=gamma *ogama1  *R;
+        NekDouble Cv=ogama1*R;
+        NekDouble T=e/Cv;
+        //q_x=-kappa*dT_dx;
+        NekDouble kappa=m_thermalConductivity;
+        NekDouble oPr= kappa/(Cp *mu);
+        NekDouble gamaoPr   =   gamma*oPr;
+        //To notice, here is positive, which is consistent with 
+        //"SYMMETRIC INTERIOR PENALTY DG METHODS FOR THE COMPRESSIBLE NAVIER-STOKES EQUATIONS"
+        //But opposite to "I Do like CFD"
+        NekDouble tmp=mu*orho;
+
+        const NekDouble OneThird    = 1.0/3.0;
+        const NekDouble TwoThird    = 2.0*OneThird;
+        const NekDouble FourThird   = 4.0*OneThird;
+
+        Vmath::Zero(outarray.num_elements(),outarray,1);
+           
+        outarray[1] +=  tmp*(-u)*inarray[0];
+        outarray[1] +=  tmp*inarray[1];
+        outarray[2] +=  tmp*(-FourThird*v)*inarray[0];
+        outarray[2] +=  tmp*FourThird*inarray[2];
+        outarray[3] +=  -tmp*(FourThird*v2+u2+gamaoPr*(E-q2))*inarray[0];
+        outarray[3] +=  tmp*(1-gamaoPr)*u*inarray[1];
+        outarray[3] +=  tmp*(FourThird-gamaoPr)*v*inarray[2];
+        outarray[3] +=  tmp*gamaoPr*inarray[3];
+    }
+
     /**
      * @brief return part of viscous Jacobian: 
      * \todo flux derived with Qx=[drho_dx,drhou_dx,drhov_dx,drhoE_dx] 
@@ -1635,45 +1817,62 @@ if(!ElmtJac.num_elements())
 
         NekDouble pointmu       = 0.0;
         Array<OneD, NekDouble> pointAve(nConvectiveFields,0.0);
-        Array<OneD, NekDouble> pointnormals(nSpaceDim,0.0);
+        Array<OneD, NekDouble> pointin(nConvectiveFields,0.0);
+        Array<OneD, NekDouble> out1(nConvectiveFields,0.0);
+        Array<OneD, NekDouble> out2(nConvectiveFields,0.0);
 
-        DNekMatSharedPtr Jac0 = MemoryManager<DNekMat>
-                                ::AllocateSharedPtr(nConvectiveFields-1, nConvectiveFields);
-        DNekMatSharedPtr Jac1  = MemoryManager<DNekMat>
-                                ::AllocateSharedPtr(nConvectiveFields-1, nConvectiveFields);
-
-        DNekMatSharedPtr jump  = MemoryManager<DNekMat>
-                                ::AllocateSharedPtr(nConvectiveFields, 1);
-        DNekMatSharedPtr flux  = MemoryManager<DNekMat>
-                                ::AllocateSharedPtr(nConvectiveFields-1,1);
-        
-        for(int npnt = 0; npnt < nPts; npnt++)
+        switch (nDervDir)
         {
-            for(int j = 0; j < nConvectiveFields; j++)
+            case 0:
             {
-                pointAve[j] = inaverg[j][npnt];
+                for(int npnt = 0; npnt < nPts; npnt++)
+                {
+                    for(int j = 0; j < nConvectiveFields; j++)
+                    {
+                        pointAve[j] = inaverg[j][npnt];
+                        pointin[j]  = injumpp[j][npnt];
+                    }
+
+                    pointmu     = mu[npnt];
+
+                    GetdF1_dQx_2DIPWIn(pointmu,pointAve,pointin,out1);
+                    GetdF1_dQy_2DIPWIn(pointmu,pointAve,pointin,out2);
+
+                    for(int i = 1; i < nConvectiveFields; i++)
+                    {
+                        outarray[i][npnt]  = out1[i]*normals[0][npnt]
+                                            +out2[i]*normals[1][npnt];
+                    }
+                }
+                break;
             }
-            for(int j = 0; j < nSpaceDim; j++)
-            {   
-                pointnormals[j] = normals[j][npnt];
-            }
-            for(int j = 0; j < nConvectiveFields; j++)
-            {   
-                (*jump)(j,0) = injumpp[j][npnt];
-            }
-
-            pointmu     = mu[npnt];
-
-            GetdFlux_dQx_2D(dirnormal[nDervDir],pointmu,pointAve,Jac0);
-            GetdFlux_dQy_2D(dirnormal[nDervDir],pointmu,pointAve,Jac1);
-
-            (*Jac0) = (*Jac0)*normals[0][npnt] + (*Jac1)*normals[1][npnt];
-            (*flux) =   (*Jac0)*(*jump);
-
-            outarray[0][npnt]   =   0.0;
-            for(int i = 0; i < nConvectiveFields-1; i++)
+            case 1:
             {
-                outarray[i+1][npnt]  = (*flux)(i,0);
+                for(int npnt = 0; npnt < nPts; npnt++)
+                {
+                    for(int j = 0; j < nConvectiveFields; j++)
+                    {
+                        pointAve[j] = inaverg[j][npnt];
+                        pointin[j]  = injumpp[j][npnt];
+                    }
+
+                    pointmu     = mu[npnt];
+
+                    GetdF2_dQx_2DIPWIn(pointmu,pointAve,pointin,out1);
+                    GetdF2_dQy_2DIPWIn(pointmu,pointAve,pointin,out2);
+
+                    for(int i = 1; i < nConvectiveFields; i++)
+                    {
+                        outarray[i][npnt]  = out1[i]*normals[0][npnt]
+                                            +out2[i]*normals[1][npnt];
+                    }
+                }
+                break;
+            }
+            default:
+            {
+                ASSERTL0(false,"GetViscousSymmtrFluxConservVarDrctn not coded yet");
+                break;
             }
         }
     }

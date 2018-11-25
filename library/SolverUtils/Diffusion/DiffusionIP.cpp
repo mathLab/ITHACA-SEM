@@ -280,7 +280,7 @@ namespace Nektar
 //     Vmath::Zero(nCoeffs,outarray[j],1);
 // }
 
-                AddSymmFluxIntegral(nConvectiveFields,nDim,nPts,nTracePts,fields,traceSymflux,nonZeroIndexSymm,outarray);
+                AddSymmFluxIntegral(nConvectiveFields,nDim,nPts,nTracePts,fields,nonZeroIndexSymm,traceSymflux,outarray);
 //Debug
 // for (int j = 0; j < nConvectiveFields; ++j)
 // {
@@ -510,23 +510,30 @@ namespace Nektar
             const int                                                           nPts,
             const int                                                           nTracePts,
             const Array<OneD, MultiRegions::ExpListSharedPtr>                   &fields,
-            const Array<OneD, const Array<OneD, Array<OneD, NekDouble> > >      &tracflux,
             const Array<OneD, const int >                                       &nonZeroIndex,
+                  Array<OneD, Array<OneD, Array<OneD, NekDouble> > >            &tracflux,
                   Array<OneD, Array<OneD, NekDouble> >                          &outarray)
         {
-            // cout << "AddSymmFluxIntegral::nonZeroIndex.num_elements()    ="<<nonZeroIndex.num_elements()<<endl;
-            //TODO:: to combine AddRightIPTPhysDerivBase of different directions in saving cpu time
-            Array<OneD, NekDouble> tmpfield(nPts,0.0);
-            int nv = 0;
-            for(int nd=0;nd<nDim;nd++)
+            int nCoeffs =   outarray[nConvectiveFields-1].num_elements();
+            Array<OneD, NekDouble > tmpCoeff(nCoeffs,0.0);
+            Array<OneD, Array<OneD, NekDouble> > tmpfield(nDim);
+            for(int i = 0;i<nDim;i++)
             {
-                for(int j=0;j<nonZeroIndex.num_elements();j++)
+                tmpfield[i]    =   Array<OneD, NekDouble>(nPts,0.0);
+            }
+            int nv = 0;
+            for(int j=0;j<nonZeroIndex.num_elements();j++)
+            {
+                nv  =   nonZeroIndex[j];
+                for(int nd=0;nd<nDim;nd++)
                 {
-                    nv  =   nonZeroIndex[j];
-                    Vmath::Zero(nPts,tmpfield,1);
-                    fields[nv]->AddTraceQuadPhysToField(tracflux[nd][nv],tracflux[nd][nv],tmpfield);
-                    fields[nv]->AddRightIPTPhysDerivBase(nd,tmpfield,outarray[nv]);
+                    Vmath::Zero(nPts,tmpfield[nd],1);
+
+                    fields[nv]->AddTraceQuadPhysToField(tracflux[nd][nv],tracflux[nd][nv],tmpfield[nd]);
+                    fields[nv]->DividByQuadratureMetric(tmpfield[nd],tmpfield[nd]);
                 }
+                fields[nv]->IProductWRTDerivBase(tmpfield,tmpCoeff);
+                Vmath::Vadd(nCoeffs,tmpCoeff,1,outarray[nv],1,outarray[nv],1);
             }
         }
         

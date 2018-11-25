@@ -410,6 +410,26 @@ namespace Nektar
             }
         }
 
+
+        /**
+         * multiply the metric jacobi and quadrature weights
+         *
+         */
+        void ExpList::DividByQuadratureMetric(
+                const Array<OneD, const NekDouble>  &inarray,
+                Array<OneD, NekDouble>              &outarray)
+        {
+            int    i;
+
+            Array<OneD,NekDouble> e_outarray;
+
+            for(i = 0; i < (*m_exp).size(); ++i)
+            {
+                (*m_exp)[i]->DividByQuadratureMetric(inarray+m_phys_offset[i],
+                                                  e_outarray = outarray+m_phys_offset[i]);
+            }
+        }
+
         /**
          * The operation is evaluated locally for every element by the function
          * StdRegions#StdExpansion#IProductWRTBase.

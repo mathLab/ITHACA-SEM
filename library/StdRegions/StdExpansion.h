@@ -958,6 +958,13 @@ namespace Nektar
                 v_MultiplyByQuadratureMetric(inarray, outarray);
             }
 
+            void DividByQuadratureMetric(
+                    const Array<OneD, const NekDouble> &inarray,
+                          Array<OneD, NekDouble> &outarray)
+            {
+                v_DividByQuadratureMetric(inarray, outarray);
+            }
+
             void MultiplyByStdQuadratureMetric(
                     const Array<OneD, const NekDouble> &inarray,
                           Array<OneD, NekDouble> & outarray)
@@ -1821,7 +1828,15 @@ namespace Nektar
                     const Array<OneD, const NekDouble> &inarray,
                     Array<OneD, NekDouble> &outarray);
 
+            STD_REGIONS_EXPORT virtual void v_DividByQuadratureMetric(
+                    const Array<OneD, const NekDouble> &inarray,
+                    Array<OneD, NekDouble> &outarray);
+
             STD_REGIONS_EXPORT virtual void v_MultiplyByStdQuadratureMetric(
+                    const Array<OneD, const NekDouble> &inarray,
+                    Array<OneD, NekDouble> &outarray);
+
+            STD_REGIONS_EXPORT virtual void v_DividByStdQuadratureMetric(
                     const Array<OneD, const NekDouble> &inarray,
                     Array<OneD, NekDouble> &outarray);
 

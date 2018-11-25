@@ -1053,6 +1053,54 @@ namespace Nektar
             // m_traceMap->UniversalTraceAssemble(Bwd);
 
         }
+
+
+        /**
+         */
+        // void DisContField1D::v_AddTraceQuadPhysToField(
+        //     const Array<OneD, const NekDouble> &Fwd,
+        //     const Array<OneD, const NekDouble> &Bwd,
+        //           Array<OneD,       NekDouble> &field)
+        // {
+        //     // Counter variables
+        //     int  n, v;
+            
+        //     // Number of elements
+        //     int nElements = GetExpSize(); 
+            
+        //     // Initial index of each element
+        //     int phys_offset;
+            
+        //     Array<OneD, Array<OneD, LocalRegions::ExpansionSharedPtr> >
+        //         &elmtToTrace = m_traceMap->GetElmtToTrace();
+
+        //     int cnt;
+        //     // Loop on the elements
+        //     for (cnt = n = 0; n < nElements; ++n)
+        //     {
+        //         // Set the offset of each element
+        //         phys_offset = GetPhys_Offset(n);
+
+        //         for(v = 0; v < 2; ++v, ++cnt)
+        //         {
+        //             int offset = m_trace->GetPhys_Offset(elmtToTrace[n][v]->GetElmtId());
+                    
+        //             if (m_leftAdjacentVerts[cnt])
+        //             {
+        //                 (*m_exp)[n]->GetVertexPhysVals(v, field + phys_offset,
+        //                                                Fwd[offset]);
+        //                 (*m_exp)[n]->SetVertexPhysVals(v,Fwd[offset], field + phys_offset);
+        //             }
+        //             else
+        //             {
+        //                 (*m_exp)[n]->GetVertexPhysVals(v, field + phys_offset,
+        //                                                Bwd[offset]);
+
+        //                 (*m_exp)[n]->SetVertexPhysVals(v, Bwd[offset],field + phys_offset);
+        //             }
+        //         }
+        //     }
+        // }
         
 	
         void DisContField1D::v_ExtractTracePhys(

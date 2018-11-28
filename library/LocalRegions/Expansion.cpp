@@ -202,6 +202,7 @@ namespace Nektar
         }
 
 
+        //TODO: CHECK WHETHER IT IS POSSIBLE TO ADD A eMetricQuadratureReciprocal
         void Expansion::v_DividByQuadratureMetric(const Array<OneD, const NekDouble>& inarray,
                                                  Array<OneD, NekDouble> &outarray)
         {

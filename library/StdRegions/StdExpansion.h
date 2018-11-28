@@ -661,13 +661,6 @@ namespace Nektar
                 v_IProductWRTDerivBase(dir,inarray, outarray);
             }
 
-            void   RightIPTPhysDerivBase(const int dir,
-                                        const Array<OneD, const NekDouble>& inarray,
-                                        Array<OneD, NekDouble> &outarray)
-            {
-                v_RightIPTPhysDerivBase(dir,inarray, outarray);
-            }
-
             void   RightIPTBaseMatrix(const int dir,
                                         const Array<OneD, const NekDouble>& inarray,
                                         Array<OneD, NekDouble> &outarray);
@@ -1518,13 +1511,6 @@ namespace Nektar
                 v_IProductWRTDerivBase_SumFac(dir,inarray,outarray);
             }
 
-            void RightIPTPhysDerivBase_SumFac(const int dir,
-                                             const Array<OneD, const NekDouble>& inarray,
-                                             Array<OneD, NekDouble> &outarray)
-            {
-                v_RightIPTPhysDerivBase_SumFac(dir,inarray,outarray);
-            }
-
             // The term _MatFree denotes that the action of the MatrixOperation
             // is done withouth actually using the matrix (which then needs to be stored/calculated).
             // Although this does not strictly mean that no matrix operations are involved in the
@@ -1692,10 +1678,6 @@ namespace Nektar
                                                    const Array<OneD, const NekDouble>& inarray,
                                                    Array<OneD, NekDouble> &outarray);
 
-            STD_REGIONS_EXPORT virtual void  v_RightIPTPhysDerivBase(const int dir,
-                                        const Array<OneD, const NekDouble>& inarray,
-                                        Array<OneD, NekDouble> &outarray);
-                                        
             STD_REGIONS_EXPORT virtual void v_FwdTrans_BndConstrained(const Array<OneD, const NekDouble>& inarray,
                                                    Array<OneD, NekDouble> &outarray);
 
@@ -1849,9 +1831,6 @@ namespace Nektar
             STD_REGIONS_EXPORT virtual void v_IProductWRTDerivBase_SumFac(const int dir,
                                                        const Array<OneD, const NekDouble>& inarray,
                                                        Array<OneD, NekDouble> &outarray);
-            STD_REGIONS_EXPORT virtual void v_RightIPTPhysDerivBase_SumFac(const int dir,
-                                             const Array<OneD, const NekDouble>& inarray,
-                                             Array<OneD, NekDouble> &outarray);
 
             STD_REGIONS_EXPORT virtual void v_MassMatrixOp(const Array<OneD, const NekDouble> &inarray,
                                         Array<OneD,NekDouble> &outarray,

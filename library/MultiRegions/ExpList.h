@@ -154,11 +154,6 @@ namespace Nektar
             
             MULTI_REGIONS_EXPORT void AddRightIPTPhysDerivBase(
                 const    int                                    dir,
-                const    Array<OneD, const NekDouble >          &inarray,
-                         Array<OneD,       NekDouble >          &outarray);
-
-            MULTI_REGIONS_EXPORT void AddRightIPTPhysDerivBase(
-                const    int                                    dir,
                 const    Array<OneD, const DNekMatSharedPtr>    ElmtJacQuad,
                          Array<OneD,       DNekMatSharedPtr>    ElmtJacCoef);
 

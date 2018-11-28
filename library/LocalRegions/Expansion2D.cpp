@@ -1447,50 +1447,5 @@ namespace Nektar
 
             return StdExpansion::Integral(Fn);
         }
-
-        // void Expansion2D::StdEmt2ElmtRotate(
-        //     const Array<OneD, const NekDouble>  &stdphy0,
-        //     const Array<OneD, const NekDouble>  &stdphy1,
-        //           Array<OneD,NekDouble>         &outphy0,
-        //           Array<OneD,NekDouble>         &outphy1)
-        // {
-        //     ASSERTL0(0!=stdphy0.num_elements(),"need stdDiff0");
-        //     ASSERTL0(0!=stdphy1.num_elements(),"need stdDiff0");
-        //     int    nquad0 = m_base[0]->GetNumPoints();
-        //     int    nquad1 = m_base[1]->GetNumPoints();
-        //     int     nqtot = nquad0*nquad1;
-        //     const Array<TwoD, const NekDouble>& df = m_metricinfo->GetDerivFactors(GetPointsKeys());
-
-        //     if (m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
-        //     {
-        //         if (outphy0.num_elements())
-        //         {
-        //             Vmath::Vmul  (nqtot, df[0], 1, stdphy0, 1, outphy0, 1);
-        //             Vmath::Vvtvp (nqtot, df[1], 1, stdphy1, 1, outphy0, 1, 
-        //             					 outphy0,1);
-        //         }
-
-        //         if(outphy1.num_elements())
-        //         {
-        //             Vmath::Vmul  (nqtot,df[2],1,stdphy0,1, outphy1, 1);
-        //             Vmath::Vvtvp (nqtot,df[3],1,stdphy1,1, outphy1, 1, outphy1,1);
-        //         }
-        //     }
-        //     else // regular geometry
-        //     {
-        //         if (outphy0.num_elements())
-        //         {
-        //             Vmath::Smul (nqtot, df[0][0], stdphy0, 1, outphy0, 1);
-        //             Blas::Daxpy (nqtot, df[1][0], stdphy1, 1, outphy0, 1);
-        //         }
-
-        //         if (outphy1.num_elements())
-        //         {
-        //             Vmath::Smul (nqtot, df[2][0], stdphy0, 1, outphy1, 1);
-        //             Blas::Daxpy (nqtot, df[3][0], stdphy1, 1, outphy1, 1);
-        //         }
-        //     }
-        // }
-
     }
 }

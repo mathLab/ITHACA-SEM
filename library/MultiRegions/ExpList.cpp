@@ -544,31 +544,6 @@ namespace Nektar
         
         void ExpList::AddRightIPTPhysDerivBase(
                 const    int                                    dir,
-                const    Array<OneD, const NekDouble >          &inarray,
-                         Array<OneD,       NekDouble >          &outarray)
-        {
-            Array<OneD,NekDouble> outtmp;
-            int nelmtcoef  = GetNcoeffs(0);
-            int nelmtcoef0 = nelmtcoef;
-            Array<OneD,NekDouble> e_outarray(nelmtcoef,0.0);
-
-            for(int i = 0; i < (*m_exp).size(); ++i)
-            {
-                nelmtcoef  = GetNcoeffs(i);
-                if(nelmtcoef>nelmtcoef0)
-                {
-                    e_outarray  =   Array<OneD,NekDouble> (nelmtcoef,0.0);
-                    nelmtcoef0 = nelmtcoef;
-                }
-                (*m_exp)[i]->RightIPTPhysDerivBase(dir,inarray+m_phys_offset[i],
-                                                  e_outarray);
-                outtmp = outarray   +   m_coeff_offset[i];
-                Vmath::Vadd(nelmtcoef,e_outarray,1,outtmp,1,outtmp,1);
-            }
-        }
-        
-        void ExpList::AddRightIPTPhysDerivBase(
-                const    int                                    dir,
                 const    Array<OneD, const DNekMatSharedPtr>    ElmtJacQuad,
                          Array<OneD,       DNekMatSharedPtr>    ElmtJacCoef)
         {
@@ -613,7 +588,9 @@ namespace Nektar
                         innarray[nq]    =   (*tmpMatQ)(np,nq);
                     }
                     // (*m_exp)[nelmt]->IProductWRTDerivBase(dir,inarray+m_phys_offset[i],
-                    (*m_exp)[nelmt]->RightIPTPhysDerivBase(dir,innarray,outarray);
+                    // (*m_exp)[nelmt]->RightIPTPhysDerivBase(dir,innarray,outarray);
+                    (*m_exp)[nelmt]->DividByQuadratureMetric(innarray,innarray);
+                    (*m_exp)[nelmt]->IProductWRTDerivBase(dir,innarray,outarray);
 
                     for(int np1=0; np1<nelmtcoef;np1++)
                     {

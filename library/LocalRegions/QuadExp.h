@@ -114,10 +114,6 @@ namespace Nektar
                         const int dir,
                         const Array<OneD, const NekDouble> &inarray,
                               Array<OneD,       NekDouble> &outarray);
-            LOCAL_REGIONS_EXPORT virtual void v_RightIPTPhysDerivBase(
-                        const int dir,
-                        const Array<OneD, const NekDouble> &inarray,
-                              Array<OneD,       NekDouble> &outarray);
             LOCAL_REGIONS_EXPORT virtual void v_IProductWRTBase_SumFac(
                         const Array<OneD, const NekDouble> &inarray,
                         Array<OneD,       NekDouble> &outarray,
@@ -126,10 +122,6 @@ namespace Nektar
                         const Array<OneD, const NekDouble> &inarray,
                               Array<OneD,       NekDouble> &outarray);
             LOCAL_REGIONS_EXPORT virtual void v_IProductWRTDerivBase_SumFac(
-                        const int dir,
-                        const Array<OneD, const NekDouble> &inarray,
-                              Array<OneD,       NekDouble> &outarray);
-            LOCAL_REGIONS_EXPORT virtual void v_RightIPTPhysDerivBase_SumFac(
                         const int dir,
                         const Array<OneD, const NekDouble> &inarray,
                               Array<OneD,       NekDouble> &outarray);

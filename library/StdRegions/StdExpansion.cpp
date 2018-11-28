@@ -480,64 +480,6 @@ namespace Nektar
                     }
                     // invert matrix
                     returnval->Invert();
-
-            //     }
-            //     break;
-            // case eStdPhysDeriv0:
-            //     {
-            //         int ndir = 0;
-            //         int nq = GetTotPoints();
-            //         Array<OneD, NekDouble> tmpin(nq,0.0);
-            //         Array<OneD, NekDouble> tmpout(nq,0.0);
-
-            //         returnval = MemoryManager<DNekMat>::AllocateSharedPtr(nq,nq);
-
-            //         for(int i = 0; i < nq; ++i)
-            //         {
-            //             tmpin[i]    =   1.0;
-            //             PhysDeriv(ndir,tmpin,tmpout);
-            //             tmpin[i]    =   0.0;
-            //             Vmath::Vcopy(nq,tmpout.get(),1,
-            //                          returnval->GetRawPtr()+i*nq,1);
-            //         }
-            //     }
-            //     break;
-            // case eStdPhysDeriv1:
-            //     {
-            //         int ndir = 1;
-            //         int nq = GetTotPoints();
-            //         Array<OneD, NekDouble> tmpin(nq,0.0);
-            //         Array<OneD, NekDouble> tmpout(nq,0.0);
-
-            //         returnval = MemoryManager<DNekMat>::AllocateSharedPtr(nq,nq);
-
-            //         for(int i = 0; i < nq; ++i)
-            //         {
-            //             tmpin[i]    =   1.0;
-            //             PhysDeriv(ndir,tmpin,tmpout);
-            //             tmpin[i]    =   0.0;
-            //             Vmath::Vcopy(nq,tmpout.get(),1,
-            //                          returnval->GetRawPtr()+i*nq,1);
-            //         }
-            //     }
-            //     break;
-            // case eStdPhysDeriv2:
-            //     {
-            //         int ndir = 2;
-            //         int nq = GetTotPoints();
-            //         Array<OneD, NekDouble> tmpin(nq,0.0);
-            //         Array<OneD, NekDouble> tmpout(nq,0.0);
-
-            //         returnval = MemoryManager<DNekMat>::AllocateSharedPtr(nq,nq);
-
-            //         for(int i = 0; i < nq; ++i)
-            //         {
-            //             tmpin[i]    =   1.0;
-            //             PhysDeriv(ndir,tmpin,tmpout);
-            //             tmpin[i]    =   0.0;
-            //             Vmath::Vcopy(nq,tmpout.get(),1,
-            //                          returnval->GetRawPtr()+i*nq,1);
-            //         }
                 }
                 break;
             case eMass:
@@ -1289,13 +1231,6 @@ namespace Nektar
             NEKERROR(ErrorUtil::efatal, "This method has not been defined");
         }
 
-        void  StdExpansion::v_RightIPTPhysDerivBase (const int dir,
-                                                    const Array<OneD, const NekDouble>& inarray,
-                                                    Array<OneD, NekDouble> &outarray)
-        {
-            NEKERROR(ErrorUtil::efatal, "This method has not been defined");
-        }
-
         /**
          *
          */
@@ -1610,13 +1545,6 @@ namespace Nektar
             }
 
             void StdExpansion::v_IProductWRTDerivBase_SumFac(const int dir,
-                                                       const Array<OneD, const NekDouble>& inarray,
-                                                       Array<OneD, NekDouble> &outarray)
-            {
-                NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape" );
-            }
-
-            void StdExpansion::v_RightIPTPhysDerivBase_SumFac(const int dir,
                                                        const Array<OneD, const NekDouble>& inarray,
                                                        Array<OneD, NekDouble> &outarray)
             {

@@ -58,7 +58,7 @@ namespace Nektar
                                   m_shockCaptureType,    "Off");	
 
             m_session->LoadParameter("IPDebugParameter",
-                                  m_IPDebugParameter,   -0.5);	
+                                  m_IPDebugParameter,   0.5);	
 
             m_session->LoadParameter("IPPenaltyFactor2",
                                   m_IPPenaltyFactor2,   1.0/12.0);	

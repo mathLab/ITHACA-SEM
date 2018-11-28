@@ -174,14 +174,6 @@ namespace Nektar
             virtual DNekMatSharedPtr v_BuildVertexMatrix(
                 const DNekScalMatSharedPtr &r_bnd); 
 
-            // virtual void v_StdEmt2ElmtRotate(
-            //     const Array<OneD, const NekDouble>  &stdphy0,
-            //     const Array<OneD, const NekDouble>  &stdphy1,
-            //     const Array<OneD, const NekDouble>  &stdphy2,
-            //           Array<OneD,NekDouble>         &outphy0,
-            //           Array<OneD,NekDouble>         &outphy1,
-            //           Array<OneD,NekDouble>         &outphy2);
-
             void GetPhysEdgeVarCoeffsFromElement(
                 const int edge,
                 ExpansionSharedPtr &EdgeExp,

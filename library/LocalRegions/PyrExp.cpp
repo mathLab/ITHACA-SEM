@@ -991,7 +991,6 @@ namespace Nektar
                 
                 Vmath::Vcopy(nqb,work,1,length,1);
 
-
                 for(i = 0; i < GetCoordim(); ++i)
                 {
                     Vmath::Vmul(nq_face,normal[i],1,work,1,normal[i],1);

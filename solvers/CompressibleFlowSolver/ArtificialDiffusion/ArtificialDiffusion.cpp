@@ -115,7 +115,7 @@ void ArtificialDiffusion::DoArtificialDiffusionFlux(
  *
  */
 //To DO, need to judge whether conservative/primal derivatives!
-//To Do, SmoothCapture has not been modified because it includes force.
+//To Do, SmoothCapture has not been modified because it includes  force.
 void ArtificialDiffusion::v_DoArtificialDiffusionFlux(
     const Array<OneD, const Array<OneD, NekDouble>> &inarray,
     Array<OneD, Array<OneD, Array<OneD, NekDouble>>>&VolumeFlux,

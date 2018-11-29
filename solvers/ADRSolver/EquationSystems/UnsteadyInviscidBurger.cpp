@@ -267,6 +267,7 @@ namespace Nektar
                 break;
         }
     }
+    
     /**
      * @brief Return the flux vector for the inviscid Burger equation.
      * 

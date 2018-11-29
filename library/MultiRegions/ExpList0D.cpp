@@ -296,22 +296,6 @@ namespace Nektar
                     {
                         locLeng         = loc_elmt->GetElmtBndNormalDirctnElmtLength(bndNumber);
                         lengAdd  =   locLeng;
-
-                        // int loc_nmodes  = loc_elmt->GetBasis(0)->GetNumModes();
-
-                        // if (e_nmodes != loc_nmodes)
-                        // {
-                        //     // Parallel case: need to interpolate.
-                        //     LibUtilities::PointsKey to_key =
-                        //         loc_exp->GetBasis(0)->GetPointsKey();
-                        //     LibUtilities::PointsKey from_key =
-                        //         loc_elmt->GetBasis(0)->GetPointsKey();
-                        //     LibUtilities::Interp1D(from_key,
-                        //                         locLeng,
-                        //                         to_key,
-                        //                         lengintp);
-                        //     lengAdd     =   lengintp;
-                        // }
                     }
                     // Process each point in the expansion.
                     for (j = 0; j < e_npoints; ++j)

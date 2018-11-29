@@ -89,6 +89,7 @@ namespace Nektar
             const Array<OneD,  const  Array<OneD, NekDouble> > &inarray,
                   Array<OneD,         Array<OneD, NekDouble> > &outarray,
             const NekDouble time);
+            
         /// Get the normal velocity
         Array<OneD, NekDouble> &GetNormalVelocity();
 

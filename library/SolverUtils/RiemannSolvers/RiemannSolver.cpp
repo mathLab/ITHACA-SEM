@@ -129,7 +129,6 @@ namespace Nektar
 
                 rotateToNormal  (Fwd, normals, vecLocs, m_rotStorage[0]);
                 rotateToNormal  (Bwd, normals, vecLocs, m_rotStorage[1]);
-
                 v_Solve         (nDim, m_rotStorage[0], m_rotStorage[1],
                                        m_rotStorage[2]);
                 rotateFromNormal(m_rotStorage[2], normals, vecLocs, flux);

@@ -480,6 +480,7 @@ namespace Nektar
                     }
                     // invert matrix
                     returnval->Invert();
+
                 }
                 break;
             case eMass:
@@ -1466,6 +1467,14 @@ namespace Nektar
                 NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape or library" );
             }
 
+            void StdExpansion::v_AddVertexPhysVals(
+                const int                 vertex,
+                const NekDouble           &inarray,
+                Array<OneD, NekDouble>   &outarray)
+            {
+                NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape or library" );
+            }
+
             void StdExpansion::v_GetEdgeInterpVals(const int edge,const Array<OneD, const NekDouble> &inarray,Array<OneD,NekDouble> &outarray)
             {
                 NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape or library" );
@@ -1853,17 +1862,5 @@ namespace Nektar
             NekVector<NekDouble> out(m_ncoeffs, outarray,eWrapper);
             out = (*intmat) * in;
         }
-
-        // void StdExpansion::v_StdEmt2ElmtRotate(
-        //         const Array<OneD, const NekDouble>  &stdphy0,
-        //         const Array<OneD, const NekDouble>  &stdphy1,
-        //         const Array<OneD, const NekDouble>  &stdphy2,
-        //               Array<OneD,NekDouble>         &outphy0,
-        //               Array<OneD,NekDouble>         &outphy1,
-        //               Array<OneD,NekDouble>         &outpys2)
-        // {
-        //     ASSERTL0(false,"v_StdeEmt2ElmtRotate not defined");
-        // }
-
     }//end namespace
 }//end namespace

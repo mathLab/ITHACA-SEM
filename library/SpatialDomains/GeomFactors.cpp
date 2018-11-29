@@ -197,6 +197,7 @@ namespace Nektar
                 Array<OneD, NekDouble> tmp(nqtot_map);
                 // Transform from coefficient space to physical space
                 m_xmap->BwdTrans(m_coords[i], tmp);
+                
                 // Allocate storage and take the derivative (calculated at the
                 // points as specified in 'Coords')
                 for (j = 0; j < m_expDim; ++j)

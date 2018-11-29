@@ -193,6 +193,23 @@ namespace Nektar
                 const Array<OneD, const NekDouble> &field,
                       Array<OneD,       NekDouble> &Fwd,
                       Array<OneD,       NekDouble> &Bwd);
+            virtual void v_GetFwdBwdTracePhysInterior(
+                const Array<OneD, const NekDouble> &field,
+                      Array<OneD,       NekDouble> &Fwd,
+                      Array<OneD,       NekDouble> &Bwd);
+            virtual void v_GetFwdBwdTracePhysDeriv(
+                const int                          Dir,
+                const Array<OneD, const NekDouble> &field,
+                      Array<OneD,       NekDouble> &Fwd,
+                      Array<OneD,       NekDouble> &Bwd);
+            virtual void v_GetFwdBwdTracePhysNoBndFill(
+                const Array<OneD, const NekDouble> &field,
+                      Array<OneD,       NekDouble> &Fwd,
+                      Array<OneD,       NekDouble> &Bwd);
+            virtual void v_AddTraceQuadPhysToField(
+                const Array<OneD, const NekDouble> &Fwd,
+                const Array<OneD, const NekDouble> &Bwd,
+                    Array<OneD,       NekDouble> &field);
             virtual void v_ExtractTracePhys(
                       Array<OneD,       NekDouble> &outarray);
             virtual void v_ExtractTracePhys(
@@ -249,6 +266,30 @@ namespace Nektar
             {
                 return m_DerivBndCondExpansions;
             }
+
+            virtual void v_FillBwdWITHBound(
+                const Array<OneD, const NekDouble> &Fwd,
+                      Array<OneD,       NekDouble> &Bwd);
+            virtual void v_FillBwdWITHBoundDeriv(
+                const int                          Dir,
+                const Array<OneD, const NekDouble> &Fwd,
+                      Array<OneD,       NekDouble> &Bwd);
+            virtual void v_FillBwdWITHBwdWeight(
+                      Array<OneD,       NekDouble> &weight);
+            virtual void v_PeriodicBwdCopy(
+                const Array<OneD, const NekDouble> &Fwd,
+                      Array<OneD,       NekDouble> &Bwd);
+
+            //TODO: TO CHECK WHETHER IT IS NEEDED HERE.
+            // virtual void v_AddTraceIntegral2OffDiag(
+            //     const Array<OneD, const NekDouble> &FwdFlux, 
+            //     const Array<OneD, const NekDouble> &BwdFlux, 
+            //         Array<OneD,       NekDouble> &outarray);
+
+            // virtual const LocTraceToTraceMapSharedPtr &v_GetlocTraceToTraceMap() const
+            // {
+            //     return m_locTraceToTraceMap;
+            // }
 
             virtual const Array<OneD,const SpatialDomains::BoundaryConditionShPtr>
                 &v_GetBndConditions()

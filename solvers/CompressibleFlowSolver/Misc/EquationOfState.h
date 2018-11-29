@@ -122,7 +122,6 @@ protected:
     virtual NekDouble v_GetEntropy(const NekDouble &rho,
                                    const NekDouble &e) = 0;
 
-
     virtual NekDouble v_GetDPDrho_e(const NekDouble &rho,
                                     const NekDouble &e) = 0;
 

@@ -303,6 +303,4 @@ void Advection::v_NumCalRiemFluxJac(
         }
 
 }
-
-
 }

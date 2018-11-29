@@ -1147,14 +1147,6 @@ void LocTraceToTraceMap::RightIPTWLocEdgesToTraceInterpMat(
                                      1);
 
                         Vmath::Svtvp(fnp,tmp[cnt1 + k * tnp + tnp - 1],&I0[0], 1,locedges.get() + cnt + k * fnp, 1,locedges.get() + cnt + k * fnp, 1);
-                        // Vmath::Vcopy(fnp,
-                        //              &locedges[cnt + k * fnp],
-                        //              1,
-                        //              &tmp[cnt1 + k * tnp],
-                        //              1);
-
-                        // tmp[cnt1 + k * tnp + tnp - 1] = Blas::Ddot(
-                        //     fnp, locedges.get() + cnt + k * fnp, 1, &I0[0], 1);
                     }
                 }
                 break;
@@ -1422,7 +1414,6 @@ void LocTraceToTraceMap::AddTraceCoeffsToFieldCoeffs(
             trace[m_traceCoeffsToElmtTrace[0][i]];
     }
 }
-
 
 /**
  * @brief Add contributions from backwards or forwards oriented trace

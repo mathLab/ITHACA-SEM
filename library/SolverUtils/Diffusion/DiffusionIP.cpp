@@ -63,6 +63,9 @@ namespace Nektar
             m_session->LoadParameter("IPPenaltyFactor2",
                                   m_IPPenaltyFactor2,   1.0/12.0);	
 
+            cout << "m_IPDebugParameter= "<< m_IPDebugParameter<<endl;
+            cout << "m_IPPenaltyFactor2= "<< m_IPPenaltyFactor2<<endl;
+
             // Setting up the normals
             int i;
             int nDim = pFields[0]->GetCoordim(0);

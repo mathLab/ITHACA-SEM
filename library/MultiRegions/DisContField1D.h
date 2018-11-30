@@ -182,30 +182,6 @@ namespace Nektar
             virtual void v_AddTraceIntegral(
                 const Array<OneD, const NekDouble> &Fn,
                       Array<OneD,       NekDouble> &outarray);
-            virtual void v_GetFwdBwdTracePhys(
-                      Array<OneD,       NekDouble> &Fwd,
-                      Array<OneD,       NekDouble> &Bwd);
-            virtual void v_GetFwdBwdTracePhys(
-                const Array<OneD, const NekDouble> &field,
-                      Array<OneD,       NekDouble> &Fwd,
-                      Array<OneD,       NekDouble> &Bwd);
-            virtual void v_GetFwdBwdTracePhys_serial(
-                const Array<OneD, const NekDouble> &field,
-                      Array<OneD,       NekDouble> &Fwd,
-                      Array<OneD,       NekDouble> &Bwd);
-            virtual void v_GetFwdBwdTracePhysInterior(
-                const Array<OneD, const NekDouble> &field,
-                      Array<OneD,       NekDouble> &Fwd,
-                      Array<OneD,       NekDouble> &Bwd);
-            virtual void v_GetFwdBwdTracePhysDeriv(
-                const int                          Dir,
-                const Array<OneD, const NekDouble> &field,
-                      Array<OneD,       NekDouble> &Fwd,
-                      Array<OneD,       NekDouble> &Bwd);
-            virtual void v_GetFwdBwdTracePhysNoBndFill(
-                const Array<OneD, const NekDouble> &field,
-                      Array<OneD,       NekDouble> &Fwd,
-                      Array<OneD,       NekDouble> &Bwd);
             virtual void v_AddTraceQuadPhysToField(
                 const Array<OneD, const NekDouble> &Fwd,
                 const Array<OneD, const NekDouble> &Bwd,
@@ -249,48 +225,6 @@ namespace Nektar
                 return m_bndCondExpansions;
             }
 
-            virtual const Array<OneD,const NekDouble>
-                &v_GetBndCondBwdWeight()
-            {
-                return m_BndCondBwdWeight;
-            }
-
-            virtual void v_SetBndCondBwdWeight(const int index, const NekDouble value)
-            {
-                m_BndCondBwdWeight[index]   =   value;
-            }
-
-
-            virtual const Array<OneD, const Array<OneD, MultiRegions::ExpListSharedPtr> >
-                &v_GetDerivBndCondExpansions()
-            {
-                return m_DerivBndCondExpansions;
-            }
-
-            virtual void v_FillBwdWITHBound(
-                const Array<OneD, const NekDouble> &Fwd,
-                      Array<OneD,       NekDouble> &Bwd);
-            virtual void v_FillBwdWITHBoundDeriv(
-                const int                          Dir,
-                const Array<OneD, const NekDouble> &Fwd,
-                      Array<OneD,       NekDouble> &Bwd);
-            virtual void v_FillBwdWITHBwdWeight(
-                      Array<OneD,       NekDouble> &weight);
-            virtual void v_PeriodicBwdCopy(
-                const Array<OneD, const NekDouble> &Fwd,
-                      Array<OneD,       NekDouble> &Bwd);
-
-            //TODO: TO CHECK WHETHER IT IS NEEDED HERE.
-            // virtual void v_AddTraceIntegral2OffDiag(
-            //     const Array<OneD, const NekDouble> &FwdFlux, 
-            //     const Array<OneD, const NekDouble> &BwdFlux, 
-            //         Array<OneD,       NekDouble> &outarray);
-
-            // virtual const LocTraceToTraceMapSharedPtr &v_GetlocTraceToTraceMap() const
-            // {
-            //     return m_locTraceToTraceMap;
-            // }
-
             virtual const Array<OneD,const SpatialDomains::BoundaryConditionShPtr>
                 &v_GetBndConditions()
             {
@@ -333,7 +267,107 @@ namespace Nektar
                     const MultiRegions::VarFactorsMap &varfactors,
                     const Array<OneD, const NekDouble> &dirForcing,
                     const bool PhysSpaceForcing);
+            
+            virtual void v_FillBwdWITHBound(
+                const Array<OneD, const NekDouble> &Fwd,
+                      Array<OneD,       NekDouble> &Bwd);
+            virtual void v_FillBwdWITHBoundDeriv(
+                const int                          Dir,
+                const Array<OneD, const NekDouble> &Fwd,
+                      Array<OneD,       NekDouble> &Bwd);
+            virtual void v_FillBwdWITHBwdWeight(
+                      Array<OneD,       NekDouble> &weight);
+            
+            virtual void v_GetFwdBwdTracePhys(
+                Array<OneD, NekDouble> &Fwd,
+                Array<OneD, NekDouble> &Bwd)
+            {
+                v_GetFwdBwdTracePhys(m_phys, Fwd, Bwd);
+            }
+            
+            virtual void v_GetFwdBwdTracePhys(
+                const Array<OneD, const NekDouble> &field,
+                    Array<OneD,       NekDouble> &Fwd,
+                    Array<OneD,       NekDouble> &Bwd)
+            {
+                v_GetFwdBwdTracePhys_serial(field, Fwd, Bwd);
+                m_traceMap->UniversalTraceAssemble(Fwd);
+                m_traceMap->UniversalTraceAssemble(Bwd);
+            }
 
+            virtual void v_GetFwdBwdTracePhysNoBndFill(
+                const Array<OneD, const NekDouble> &field,
+                    Array<OneD,       NekDouble> &Fwd,
+                    Array<OneD,       NekDouble> &Bwd)
+            {
+                v_GetFwdBwdTracePhysInterior(field, Fwd, Bwd);
+                m_traceMap->UniversalTraceAssemble(Fwd);
+                m_traceMap->UniversalTraceAssemble(Bwd);
+            }
+
+            virtual void v_GetFwdBwdTracePhysDeriv(
+                const int                          Dir,
+                const Array<OneD, const NekDouble> &field,
+                    Array<OneD,       NekDouble> &Fwd,
+                    Array<OneD,       NekDouble> &Bwd)
+            {
+                v_GetFwdBwdTracePhysInterior(field, Fwd, Bwd);
+                v_FillBwdWITHBoundDeriv(Dir,Fwd,Bwd);
+                m_traceMap->UniversalTraceAssemble(Fwd);
+                m_traceMap->UniversalTraceAssemble(Bwd);
+            }
+
+            virtual void v_GetFwdBwdTracePhys_serial(
+                const Array<OneD, const NekDouble> &field,
+                    Array<OneD,       NekDouble> &Fwd,
+                    Array<OneD,       NekDouble> &Bwd)
+            {
+                v_GetFwdBwdTracePhysInterior(field, Fwd, Bwd);
+                v_FillBwdWITHBound(Fwd,Bwd);
+            }
+
+            virtual void v_GetFwdBwdTracePhysInterior(
+                const Array<OneD, const NekDouble> &field,
+                      Array<OneD,       NekDouble> &Fwd,
+                      Array<OneD,       NekDouble> &Bwd);
+
+            virtual void v_PeriodicBwdCopy(
+                const Array<OneD, const NekDouble> &Fwd,
+                      Array<OneD,       NekDouble> &Bwd)
+            {
+                for (int n = 0; n < m_periodicFwdCopy.size(); ++n)
+                {
+                    Bwd[m_periodicBwdCopy[n]] = Fwd[m_periodicFwdCopy[n]];
+                }
+            }
+
+            virtual const Array<OneD,const NekDouble>
+                &v_GetBndCondBwdWeight()
+            {
+                return m_BndCondBwdWeight;
+            }
+
+            virtual void v_SetBndCondBwdWeight(const int index, const NekDouble value)
+            {
+                m_BndCondBwdWeight[index]   =   value;
+            }
+
+            virtual const Array<OneD, const Array<OneD, MultiRegions::ExpListSharedPtr> >
+                &v_GetDerivBndCondExpansions()
+            {
+                return m_DerivBndCondExpansions;
+            }
+
+            //TODO: TO CHECK WHETHER IT IS NEEDED HERE.
+            // virtual void v_AddTraceIntegral2OffDiag(
+            //     const Array<OneD, const NekDouble> &FwdFlux, 
+            //     const Array<OneD, const NekDouble> &BwdFlux, 
+            //         Array<OneD,       NekDouble> &outarray);
+
+            // virtual const LocTraceToTraceMapSharedPtr &v_GetlocTraceToTraceMap() const
+            // {
+            //     return m_locTraceToTraceMap;
+            // }
         private:
             void SetUpDG(const std::string &variable);
             

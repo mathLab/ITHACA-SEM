@@ -828,11 +828,11 @@ namespace Nektar
          * @param   Fwd     Forward state.
          * @param   Bwd     Backward state.
          */
-        void DisContField1D::v_GetFwdBwdTracePhys(Array<OneD, NekDouble> &Fwd,
-                                                  Array<OneD, NekDouble> &Bwd)
-        {
-            v_GetFwdBwdTracePhys(m_phys,Fwd,Bwd);
-        }
+        // void DisContField1D::v_GetFwdBwdTracePhys(Array<OneD, NekDouble> &Fwd,
+        //                                           Array<OneD, NekDouble> &Bwd)
+        // {
+        //     v_GetFwdBwdTracePhys(m_phys,Fwd,Bwd);
+        // }
         
         
         /**
@@ -860,62 +860,6 @@ namespace Nektar
          * @param Fwd   The resulting forwards space.
          * @param Bwd   The resulting backwards space.
          */
-
-        void DisContField1D::v_GetFwdBwdTracePhys(
-            const Array<OneD, const NekDouble> &field,
-                  Array<OneD,       NekDouble> &Fwd,
-                  Array<OneD,       NekDouble> &Bwd)
-        {
-            DisContField1D::v_GetFwdBwdTracePhys_serial(field, Fwd, Bwd);
-            
-            // Do parallel exchange for forwards/backwards spaces.
-            m_traceMap->UniversalTraceAssemble(Fwd);
-            m_traceMap->UniversalTraceAssemble(Bwd);
-        }
-
-        void DisContField1D::v_GetFwdBwdTracePhysNoBndFill(
-            const Array<OneD, const NekDouble> &field,
-                  Array<OneD,       NekDouble> &Fwd,
-                  Array<OneD,       NekDouble> &Bwd)
-        {
-            DisContField1D::v_GetFwdBwdTracePhysInterior(field, Fwd, Bwd);
-
-            // Do parallel exchange for forwards/backwards spaces.
-            m_traceMap->UniversalTraceAssemble(Fwd);
-            m_traceMap->UniversalTraceAssemble(Bwd);
-        }
-
-        /**
-         * @brief This subrountine is the v_GetFwdBwdTracePhys for PhysDeriv(Physic Deviratives)
-         * The difference lies in the boundary treatment.
-         */
-        void DisContField1D::v_GetFwdBwdTracePhysDeriv(
-            const int                          Dir,
-            const Array<OneD, const NekDouble> &field,
-                  Array<OneD,       NekDouble> &Fwd,
-                  Array<OneD,       NekDouble> &Bwd)
-        {
-            DisContField1D::v_GetFwdBwdTracePhysInterior(field, Fwd, Bwd);
-
-            DisContField1D::v_FillBwdWITHBoundDeriv(Dir,Fwd,Bwd);
-
-            // Do parallel exchange for forwards/backwards spaces.
-            m_traceMap->UniversalTraceAssemble(Fwd);
-            m_traceMap->UniversalTraceAssemble(Bwd);
-        }
-
-        /**
-         * @brief This is v_GetFwdBwdTracePhys without parallel communication
-         */
-        void DisContField1D::v_GetFwdBwdTracePhys_serial(
-            const Array<OneD, const NekDouble> &field,
-                  Array<OneD,       NekDouble> &Fwd,
-                  Array<OneD,       NekDouble> &Bwd)
-        {
-            DisContField1D::v_GetFwdBwdTracePhysInterior(field, Fwd, Bwd);
-            
-            DisContField1D::v_FillBwdWITHBound(Fwd,Bwd);
-        }
 
         void DisContField1D::v_GetFwdBwdTracePhysInterior(
             const Array<OneD, const NekDouble> &field,
@@ -965,16 +909,6 @@ namespace Nektar
             DisContField1D::v_PeriodicBwdCopy(Fwd,Bwd);
         }
 
-        // Copy any periodic boundary conditions.
-        void DisContField1D::v_PeriodicBwdCopy(
-                const Array<OneD, const NekDouble> &Fwd,
-                      Array<OneD,       NekDouble> &Bwd)
-        {
-            for (int n = 0; n < m_periodicFwdCopy.size(); ++n)
-            {
-                Bwd[m_periodicBwdCopy[n]] = Fwd[m_periodicFwdCopy[n]];
-            }
-        }
 
         void DisContField1D::v_FillBwdWITHBound(
             const Array<OneD, const NekDouble> &Fwd,

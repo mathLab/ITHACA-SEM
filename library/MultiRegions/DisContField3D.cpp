@@ -1696,18 +1696,12 @@ using namespace std;
          *
          * \return Updates a NekDouble array \a Fwd and \a Bwd
          */
-        void DisContField3D::v_GetFwdBwdTracePhys(Array<OneD, NekDouble> &Fwd,
-                                                  Array<OneD, NekDouble> &Bwd)
-        {
-            v_GetFwdBwdTracePhys(m_phys, Fwd, Bwd);
-        }
-
-        void DisContField3D::v_GetFwdBwdTracePhys(
-                                          const Array<OneD, const NekDouble> &field,
+        void DisContField3D::v_GetFwdBwdTracePhysInterior(
+            const Array<OneD, const NekDouble> &field,
                   Array<OneD,       NekDouble> &Fwd,
                   Array<OneD,       NekDouble> &Bwd)
         {
-            int n, cnt, npts, e;
+            // int n, cnt, npts, e;
 
             // Zero vectors.
             Vmath::Zero(Fwd.num_elements(), Fwd, 1);
@@ -1721,7 +1715,39 @@ using namespace std;
             Array<OneD, NekDouble> invals = facevals + m_locTraceToTraceMap->
                                                         GetNFwdLocTracePts();
             m_locTraceToTraceMap->InterpLocFacesToTrace(1, invals, Bwd);
+
+            DisContField3D::v_PeriodicBwdCopy(Fwd,Bwd);
+        }
+
+
+        /**
+         */
+        void DisContField3D::v_AddTraceQuadPhysToField(
+            const Array<OneD, const NekDouble> &Fwd,
+            const Array<OneD, const NekDouble> &Bwd,
+                  Array<OneD,       NekDouble> &field)
+        {
+            Array<OneD, NekDouble> facevals(m_locTraceToTraceMap->
+                                            GetNLocTracePts(),0.0);
+
+            Array<OneD, NekDouble> invals = facevals + m_locTraceToTraceMap->
+                                                    GetNFwdLocTracePts();
+            m_locTraceToTraceMap->RightIPTWLocFacesToTraceInterpMat(1, Bwd, invals);
             
+            m_locTraceToTraceMap->RightIPTWLocFacesToTraceInterpMat(0, Fwd, facevals);
+
+            m_locTraceToTraceMap->AddLocTracesToField(facevals,field);
+        }
+
+        /**
+         * @brief Fill the Bwd based on corresponding boundary conditions.
+         * NOTE: periodic boundary is considered interior traces and is not treated here.
+         */
+        void DisContField3D::v_FillBwdWITHBound(
+            const Array<OneD, const NekDouble> &Fwd,
+                  Array<OneD,       NekDouble> &Bwd)
+        {
+            int cnt, n, e, npts, phys_offset;
             // Fill boundary conditions into missing elements
             int id1, id2 = 0;
             cnt = 0;
@@ -1778,38 +1804,18 @@ using namespace std;
                              "and Robin conditions.");
                 }
             }
-            
-            // Copy any periodic boundary conditions.
-            for (n = 0; n < m_periodicFwdCopy.size(); ++n)
-            {
-                Bwd[m_periodicBwdCopy[n]] = Fwd[m_periodicFwdCopy[n]];
-            }
-            
-            // Do parallel exchange for forwards/backwards spaces.
-            m_traceMap->UniversalTraceAssemble(Fwd);
-            m_traceMap->UniversalTraceAssemble(Bwd);
         }
 
-        void DisContField3D::v_GetFwdBwdTracePhys_serial(
-                                          const Array<OneD, const NekDouble> &field,
-                  Array<OneD,       NekDouble> &Fwd,
+        /**
+         * @brief Fill the Bwd based on corresponding boundary conditions for derivatives.
+         * NOTE: periodic boundary is considered interior traces and is not treated here.
+         */
+        void DisContField3D::v_FillBwdWITHBoundDeriv(
+            const int                          Dir,
+            const Array<OneD, const NekDouble> &Fwd,
                   Array<OneD,       NekDouble> &Bwd)
         {
-            int n, cnt, npts, e;
-
-            // Zero vectors.
-            Vmath::Zero(Fwd.num_elements(), Fwd, 1);
-            Vmath::Zero(Bwd.num_elements(), Bwd, 1);
-             
-            Array<OneD, NekDouble> facevals(m_locTraceToTraceMap->
-                                            GetNLocTracePts());
-            m_locTraceToTraceMap->LocTracesFromField(field,facevals);
-            m_locTraceToTraceMap->InterpLocFacesToTrace(0, facevals, Fwd);
-            
-            Array<OneD, NekDouble> invals = facevals + m_locTraceToTraceMap->
-                                                        GetNFwdLocTracePts();
-            m_locTraceToTraceMap->InterpLocFacesToTrace(1, invals, Bwd);
-            
+            int cnt, n, e, npts, phys_offset;
             // Fill boundary conditions into missing elements
             int id1, id2 = 0;
             cnt = 0;
@@ -1825,9 +1831,10 @@ using namespace std;
                         id1  = m_bndCondExpansions[n]->GetPhys_Offset(e);
                         id2  = m_trace->GetPhys_Offset(
                             m_traceMap->GetBndCondTraceToGlobalTraceMap(cnt+e));
-                        Vmath::Vcopy(npts,
-                            &(m_bndCondExpansions[n]->GetPhys())[id1], 1,
-                            &Bwd[id2],                                 1);
+                        // Vmath::Vcopy(npts,
+                        //     &(m_bndCondExpansions[n]->GetPhys())[id1], 1,
+                        //     &Bwd[id2],                                 1);
+                        Vmath::Vcopy(npts,&Fwd[id2],1,&Bwd[id2],1);
                     }
 
                     cnt += e;
@@ -1866,16 +1873,75 @@ using namespace std;
                              "and Robin conditions.");
                 }
             }
+        }
+
+        /**
+         * @brief Fill the weight with m_BndCondBwdWeight.
+         * NOTE: periodic boundary is considered interior traces and is not treated here.
+         */
+        void DisContField3D::v_FillBwdWITHBwdWeight(
+                  Array<OneD,       NekDouble> &weight)
+        {
+            int cnt, n, e, npts, phys_offset;
+            // Fill boundary conditions into missing elements
+            int id1, id2 = 0;
+            cnt = 0;
             
-            // Copy any periodic boundary conditions.
-            for (n = 0; n < m_periodicFwdCopy.size(); ++n)
+            for(n = 0; n < m_bndCondExpansions.num_elements(); ++n)
             {
-                Bwd[m_periodicBwdCopy[n]] = Fwd[m_periodicFwdCopy[n]];
+                if(m_bndConditions[n]->GetBoundaryConditionType() == 
+                       SpatialDomains::eDirichlet)
+                {
+                    for(e = 0; e < m_bndCondExpansions[n]->GetExpSize(); ++e)
+                    {
+                        npts = m_bndCondExpansions[n]->GetExp(e)->GetTotPoints();
+                        id1  = m_bndCondExpansions[n]->GetPhys_Offset(e);
+                        id2  = m_trace->GetPhys_Offset(
+                            m_traceMap->GetBndCondTraceToGlobalTraceMap(cnt+e));
+                        // Vmath::Vcopy(npts,
+                        //     &(m_bndCondExpansions[n]->GetPhys())[id1], 1,
+                        //     &Bwd[id2],                                 1);
+                        // Vmath::Vcopy(npts,&Fwd[id2],1,&Bwd[id2],1);
+                        Vmath::Fill(npts,m_BndCondBwdWeight[n], &weight[id2],1);
+                    }
+
+                    cnt += e;
+                }
+                else if (m_bndConditions[n]->GetBoundaryConditionType() == 
+                             SpatialDomains::eNeumann || 
+                         m_bndConditions[n]->GetBoundaryConditionType() == 
+                             SpatialDomains::eRobin)
+                {
+                    for(e = 0; e < m_bndCondExpansions[n]->GetExpSize(); ++e)
+                    {
+                        npts = m_bndCondExpansions[n]->GetExp(e)->GetTotPoints();
+                        id1  = m_bndCondExpansions[n]->GetPhys_Offset(e);
+                        id2  = m_trace->GetPhys_Offset(
+                            m_traceMap->GetBndCondTraceToGlobalTraceMap(cnt+e));
+                        
+                        // Turning this off since we can have non-zero
+                        //Neumann in mixed CG-DG method
+                        //ASSERTL1((m_bndCondExpansions[n]->GetPhys())[id1]
+                        //== 0.0, "method not set up for non-zero
+                        //Neumann " "boundary condition");
+                        
+                        // Vmath::Vcopy(npts,&Fwd[id2],1,&Bwd[id2],1);
+                        Vmath::Fill(npts,m_BndCondBwdWeight[n], &weight[id2],1);
+                    }
+
+                    cnt += e;
+                }
+                else if (m_bndConditions[n]->GetBoundaryConditionType() ==
+                             SpatialDomains::ePeriodic)
+                {
+                    continue;
+                }
+                else
+                {
+                    ASSERTL0(false, "Method only set up for Dirichlet, Neumann "
+                             "and Robin conditions.");
+                }
             }
-            
-            // Do parallel exchange for forwards/backwards spaces.
-            // m_traceMap->UniversalTraceAssemble(Fwd);
-            // m_traceMap->UniversalTraceAssemble(Bwd);
         }
 
          const vector<bool> &DisContField3D::v_GetLeftAdjacentFaces(void) const

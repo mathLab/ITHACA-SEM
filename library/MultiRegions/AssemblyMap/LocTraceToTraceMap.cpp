@@ -1160,8 +1160,6 @@ void LocTraceToTraceMap::RightIPTWLocEdgesToTraceInterpMat(
             cnt1 += nedges * tnp;
         }
     }
-
-    
 }
 
 /**
@@ -1224,6 +1222,8 @@ void LocTraceToTraceMap::InterpLocFacesToTrace(
                 case eInterpDir0:
                 {
                     DNekMatSharedPtr I0 = m_interpTraceI0[dir][i];
+                    // TODO: CHECK WHETHER a loop is missing here!!!
+                    //for (int j = 0; j < m_interpNfaces[dir][i]; ++j)
                     Blas::Dgemm('N',
                                 'N',
                                 tnp0,
@@ -1315,6 +1315,7 @@ void LocTraceToTraceMap::InterpLocFacesToTrace(
                 {
                     DNekMatSharedPtr I0 = m_interpTraceI0[dir][i];
                     DNekMatSharedPtr I1 = m_interpTraceI1[dir][i];
+                    // TODO:: WSP seems fnp0 times larger than needed
                     Array<OneD, NekDouble> wsp(m_interpNfaces[dir][i] * fnp0 *
                                                tnp1 * fnp0);
 
@@ -1394,6 +1395,325 @@ void LocTraceToTraceMap::InterpLocFacesToTrace(
                  tmp.get(),
                  m_LocTraceToTraceMap[dir].get(),
                  faces.get());
+}
+
+
+/**
+ * @brief Right inner product with localedgetoTrace Interpolation Matrix.
+ * 
+ *
+ * @param dir       Selects forwards (0) or backwards (1) direction.
+ * @param locfaces  Local trace edge storage.
+ * @param faces     Global trace edge storage
+ */
+void LocTraceToTraceMap::RightIPTWLocFacesToTraceInterpMat(
+    const int                           dir,
+    const Array<OneD, const NekDouble>  &traces,
+    Array<OneD, NekDouble>              &loctraces)
+{
+    ASSERTL1(dir < 2,
+             "option dir out of range, "
+             " dir=0 is fwd, dir=1 is bwd");
+
+    int cnt  = 0;
+    int cnt1 = 0;
+
+    // tmp space assuming forward map is of size of trace
+    Array<OneD, NekDouble> tmp(m_nTracePts);
+    Vmath::Gathr(m_LocTraceToTraceMap[dir].num_elements(),
+                 traces.get(),
+                 m_LocTraceToTraceMap[dir].get(),
+                 tmp.get());
+
+    for (int i = 0; i < m_interpTrace[dir].num_elements(); ++i)
+    {
+        // Check if there are elementboundaries to interpolate
+        if (m_interpNfaces[dir][i])
+        {
+            // Get to/from points
+            LibUtilities::PointsKey fromPointsKey0 =
+                std::get<0>(m_interpPoints[dir][i]);
+            LibUtilities::PointsKey fromPointsKey1 =
+                std::get<1>(m_interpPoints[dir][i]);
+            LibUtilities::PointsKey toPointsKey0 =
+                std::get<2>(m_interpPoints[dir][i]);
+            LibUtilities::PointsKey toPointsKey1 =
+                std::get<3>(m_interpPoints[dir][i]);
+
+            int fnp0         = fromPointsKey0.GetNumPoints();
+            int fnp1         = fromPointsKey1.GetNumPoints();
+            int tnp0         = toPointsKey0.GetNumPoints();
+            int tnp1         = toPointsKey1.GetNumPoints();
+            int nfromfacepts = m_interpNfaces[dir][i] * fnp0 * fnp1;
+
+            // Do interpolation here if required
+            switch (m_interpTrace[dir][i])
+            {
+                case eNoInterp: // Just copy
+                {
+                    Vmath::Vcopy(nfromfacepts,
+                                 tmp.get() + cnt1,
+                                 1,
+                                 loctraces.get() + cnt,
+                                 1);
+                }
+                break;
+                case eInterpDir0:
+                {
+                    DNekMatSharedPtr I0 = m_interpTraceI0[dir][i];
+                    Blas::Dgemm('T',
+                                'N',
+                                fnp0,
+                                tnp1,
+                                tnp0,
+                                1.0,
+                                I0->GetPtr().get(),
+                                tnp0,
+                                tmp.get() + cnt1,
+                                tnp0,
+                                0.0,
+                                loctraces.get() + cnt,
+                                fnp0);
+                }
+                break;
+                case eInterpEndPtDir0:
+                {
+                    int nfaces = m_interpNfaces[dir][i];
+                    for (int k = 0; k < fnp0; ++k)
+                    {
+                        Vmath::Vcopy(nfaces * fnp1,
+                                     tmp.get() + cnt1 + k,
+                                     tnp0,
+                                     loctraces.get() + cnt + k,
+                                     fnp0);
+                    }
+                    Array<OneD, NekDouble> I0 = m_interpEndPtI0[dir][i];
+                    // Blas::Dgemv('T',
+                    //             fnp0,
+                    //             tnp1 * m_interpNfaces[dir][i],
+                    //             1.0,
+                    //             tmp.get() + cnt1,
+                    //             tnp0,
+                    //             I0.get(),
+                    //             1,
+                    //             0.0,
+                    //             tmp.get() + cnt1 + tnp0 - 1,
+                    //             tnp0);
+                    for(int k = 0; k< tnp1 * m_interpNfaces[dir][i]; k++)
+                    {
+                        Vmath::Svtvp(fnp0,tmp[cnt1 + tnp0-1+k*tnp0],&I0[0],1,&loctraces[cnt],1,&loctraces[cnt],1);
+                    }
+                }
+                break;
+                case eInterpDir1:
+                {
+                    DNekMatSharedPtr I1 = m_interpTraceI1[dir][i];
+                    // for (int j = 0; j < m_interpNfaces[dir][i]; ++j)
+                    // {
+                    //     Blas::Dgemm('N',
+                    //                 'T',
+                    //                 tnp0,
+                    //                 tnp1,
+                    //                 fnp1,
+                    //                 1.0,
+                    //                 locfaces.get() + cnt + j * fnp0 * fnp1,
+                    //                 tnp0,
+                    //                 I1->GetPtr().get(),
+                    //                 tnp1,
+                    //                 0.0,
+                    //                 tmp.get() + cnt1 + j * tnp0 * tnp1,
+                    //                 tnp0);
+                    // }
+
+                    for (int j = 0; j < m_interpNfaces[dir][i]; ++j)
+                    {
+                        Blas::Dgemm('N',
+                                    'N',
+                                    tnp0,
+                                    fnp1,
+                                    tnp1,
+                                    1.0,
+                                    tmp.get() + cnt1 + j * tnp0 * tnp1,
+                                    tnp0,
+                                    I1->GetPtr().get(),
+                                    tnp1,
+                                    0.0,
+                                    loctraces.get() + cnt + j * fnp0 * fnp1,
+                                    tnp0);
+                    }
+                }
+                break;
+                case eInterpEndPtDir1:
+                {
+                    Array<OneD, NekDouble> I1 = m_interpEndPtI1[dir][i];
+                    // for (int j = 0; j < m_interpNfaces[dir][i]; ++j)
+                    // {
+                    //     // copy all points
+                    //     Vmath::Vcopy(fnp0 * fnp1,
+                    //                  locfaces.get() + cnt + j * fnp0 * fnp1,
+                    //                  1,
+                    //                  tmp.get() + cnt1 + j * tnp0 * tnp1,
+                    //                  1);
+
+                    //     // interpolate end points
+                    //     for (int k = 0; k < tnp0; ++k)
+                    //     {
+                    //         tmp[cnt1 + k + (j + 1) * tnp0 * tnp1 - tnp0] =
+                    //             Blas::Ddot(fnp1,
+                    //                        locfaces.get() + cnt +
+                    //                            j * fnp0 * fnp1 + k,
+                    //                        fnp0,
+                    //                        &I1[0],
+                    //                        1);
+                    //     }
+                    // }
+                    for (int j = 0; j < m_interpNfaces[dir][i]; ++j)
+                    {
+                        Vmath::Vcopy(fnp0 * fnp1,
+                                     tmp.get() + cnt1 + j * tnp0 * tnp1,
+                                     1,
+                                     loctraces.get() + cnt + j * fnp0 * fnp1,
+                                     1);
+
+                        for(int k = 0; k< tnp1; k++)
+                        {
+                            Vmath::Svtvp(fnp0,I1[k],&tmp[cnt1 + (j + 1) * tnp0 * tnp1 - tnp0],1,&loctraces[cnt+k*fnp0],1,&loctraces[cnt+k*fnp0],1);
+                        }
+                    }
+
+                }
+                break;
+                case eInterpBothDirs:
+                {
+                    DNekMatSharedPtr I0 = m_interpTraceI0[dir][i];
+                    DNekMatSharedPtr I1 = m_interpTraceI1[dir][i];
+                    // Array<OneD, NekDouble> wsp(m_interpNfaces[dir][i] * fnp0 *
+                    //                            tnp1 * fnp0);
+
+                    Array<OneD, NekDouble> wsp(m_interpNfaces[dir][i] * fnp0 * tnp1);
+
+                    // for (int j = 0; j < m_interpNfaces[dir][i]; ++j)
+                    // {
+                    //     Blas::Dgemm('N',
+                    //                 'T',
+                    //                 fnp0,
+                    //                 tnp1,
+                    //                 fnp1,
+                    //                 1.0,
+                    //                 locfaces.get() + cnt + j * fnp0 * fnp1,
+                    //                 fnp0,
+                    //                 I1->GetPtr().get(),
+                    //                 tnp1,
+                    //                 0.0,
+                    //                 wsp.get() + j * fnp0 * tnp1,
+                    //                 fnp0);
+                    // }
+                    // Blas::Dgemm('N',
+                    //             'N',
+                    //             tnp0,
+                    //             tnp1 * m_interpNfaces[dir][i],
+                    //             fnp0,
+                    //             1.0,
+                    //             I0->GetPtr().get(),
+                    //             tnp0,
+                    //             wsp.get(),
+                    //             fnp0,
+                    //             0.0,
+                    //             tmp.get() + cnt1,
+                    //             tnp0);
+
+                    Blas::Dgemm('T',
+                                'N',
+                                fnp0,
+                                tnp1 * m_interpNfaces[dir][i],
+                                tnp0,
+                                1.0,
+                                I0->GetPtr().get(),
+                                tnp0,
+                                tmp.get() + cnt1,
+                                tnp0,
+                                0.0,
+                                wsp.get(),
+                                fnp0);
+                    for (int j = 0; j < m_interpNfaces[dir][i]; ++j)
+                    {
+                        Blas::Dgemm('N',
+                                    'N',
+                                    fnp0,
+                                    fnp1,
+                                    tnp1,
+                                    1.0,
+                                    wsp.get() + j * fnp0 * tnp1,
+                                    fnp0,
+                                    I1->GetPtr().get(),
+                                    tnp1,
+                                    0.0,
+                                    loctraces.get() + cnt + j * fnp0 * fnp1,
+                                    fnp0);
+                    }
+                }
+                break;
+                case eInterpEndPtDir0InterpDir1:
+                {
+                    DNekMatSharedPtr I1 = m_interpTraceI1[dir][i];
+
+                    // for (int j = 0; j < m_interpNfaces[dir][i]; ++j)
+                    // {
+                    //     Blas::Dgemm('N',
+                    //                 'T',
+                    //                 fnp0,
+                    //                 tnp1,
+                    //                 fnp1,
+                    //                 1.0,
+                    //                 locfaces.get() + cnt + j * fnp0 * fnp1,
+                    //                 fnp0,
+                    //                 I1->GetPtr().get(),
+                    //                 tnp1,
+                    //                 0.0,
+                    //                 tmp.get() + cnt1 + j * tnp0 * tnp1,
+                    //                 tnp0);
+                    // }
+
+                    for (int j = 0; j < m_interpNfaces[dir][i]; ++j)
+                    {
+                        Blas::Dgemm('N',
+                                    'N',
+                                    fnp0,
+                                    fnp1,
+                                    tnp1,
+                                    1.0,
+                                    tmp.get() + cnt1 + j * tnp0 * tnp1,
+                                    tnp0,
+                                    I1->GetPtr().get(),
+                                    tnp1,
+                                    0.0,
+                                    loctraces.get() + cnt + j * fnp0 * fnp1,
+                                    fnp0);
+                    }
+                    
+                    Array<OneD, NekDouble> I0 = m_interpEndPtI0[dir][i];
+                    // Blas::Dgemv('T',
+                    //             fnp0,
+                    //             tnp1 * m_interpNfaces[dir][i],
+                    //             1.0,
+                    //             tmp.get() + cnt1,
+                    //             tnp0,
+                    //             I0.get(),
+                    //             1,
+                    //             0.0,
+                    //             tmp.get() + cnt1 + tnp0 - 1,
+                    //             tnp0);
+                    for(int k = 0; k< tnp1 * m_interpNfaces[dir][i]; k++)
+                    {
+                        Vmath::Svtvp(fnp0,tmp[cnt1 + tnp0-1+k*tnp0],&I0[0],1,&loctraces[cnt],1,&loctraces[cnt],1);
+                    }
+                }
+                break;
+            }
+            cnt += nfromfacepts;
+            cnt1 += m_interpNfaces[dir][i] * tnp0 * tnp1;
+        }
+    }
 }
 
 /**

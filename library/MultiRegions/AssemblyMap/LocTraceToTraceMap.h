@@ -202,6 +202,10 @@ public:
         const int dir,
         const Array<OneD, const NekDouble> &locfaces,
         Array<OneD, NekDouble> faces);
+    MULTI_REGIONS_EXPORT void RightIPTWLocFacesToTraceInterpMat(
+        const int                           dir,
+        const Array<OneD, const NekDouble>  &traces,
+        Array<OneD, NekDouble>              &loctraces);
 
     MULTI_REGIONS_EXPORT void AddTraceCoeffsToFieldCoeffs(
         const Array<OneD, const NekDouble> &trace,

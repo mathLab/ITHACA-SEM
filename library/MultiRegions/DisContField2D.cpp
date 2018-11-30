@@ -1335,12 +1335,12 @@ namespace Nektar
         // trace solution from the field contained in m_phys, where
         // the Weak dirichlet boundary conditions are listed in the
         // outer part of the vecotr
-        void DisContField2D::v_GetFwdBwdTracePhys(
-            Array<OneD, NekDouble> &Fwd,
-            Array<OneD, NekDouble> &Bwd)
-        {
-            v_GetFwdBwdTracePhys(m_phys, Fwd, Bwd);
-        }
+        // void DisContField2D::v_GetFwdBwdTracePhys(
+        //     Array<OneD, NekDouble> &Fwd,
+        //     Array<OneD, NekDouble> &Bwd)
+        // {
+        //     v_GetFwdBwdTracePhys(m_phys, Fwd, Bwd);
+        // }
 
         /**
          * @brief This method extracts the "forward" and "backward" trace data
@@ -1366,72 +1366,6 @@ namespace Nektar
          *              forward orientated trace/edge arrays.
          * @param Fwd   The resulting forwards space.
          * @param Bwd   The resulting backwards space.
-         */
-        void DisContField2D::v_GetFwdBwdTracePhys(
-            const Array<OneD, const NekDouble> &field,
-                  Array<OneD,       NekDouble> &Fwd,
-                  Array<OneD,       NekDouble> &Bwd)
-        {
-            DisContField2D::v_GetFwdBwdTracePhys_serial(field, Fwd, Bwd);
-            
-            // Do parallel exchange for forwards/backwards spaces.
-            m_traceMap->UniversalTraceAssemble(Fwd);
-            m_traceMap->UniversalTraceAssemble(Bwd);
-        }
-
-        void DisContField2D::v_GetFwdBwdTracePhysNoBndFill(
-            const Array<OneD, const NekDouble> &field,
-                  Array<OneD,       NekDouble> &Fwd,
-                  Array<OneD,       NekDouble> &Bwd)
-        {
-            DisContField2D::v_GetFwdBwdTracePhysInterior(field, Fwd, Bwd);
-
-            // Do parallel exchange for forwards/backwards spaces.
-            m_traceMap->UniversalTraceAssemble(Fwd);
-            m_traceMap->UniversalTraceAssemble(Bwd);
-        }
-
-        /**
-         * @brief This subrountine is the v_GetFwdBwdTracePhys for PhysDeriv(Physic Deviratives)
-         * The difference lies in the boundary treatment.
-         */
-        void DisContField2D::v_GetFwdBwdTracePhysDeriv(
-            const int                          Dir,
-            const Array<OneD, const NekDouble> &field,
-                  Array<OneD,       NekDouble> &Fwd,
-                  Array<OneD,       NekDouble> &Bwd)
-        {
-            DisContField2D::v_GetFwdBwdTracePhysInterior(field, Fwd, Bwd);
-
-            DisContField2D::v_FillBwdWITHBoundDeriv(Dir,Fwd,Bwd);
-
-            // Do parallel exchange for forwards/backwards spaces.
-            m_traceMap->UniversalTraceAssemble(Fwd);
-            m_traceMap->UniversalTraceAssemble(Bwd);
-        }
-
-        /**
-         * @brief This is v_GetFwdBwdTracePhys without parallel communication
-         */
-        void DisContField2D::v_GetFwdBwdTracePhys_serial(
-            const Array<OneD, const NekDouble> &field,
-                  Array<OneD,       NekDouble> &Fwd,
-                  Array<OneD,       NekDouble> &Bwd)
-        {
-            DisContField2D::v_GetFwdBwdTracePhysInterior(field, Fwd, Bwd);
-            
-            DisContField2D::v_FillBwdWITHBound(Fwd,Bwd);
-
-            // Do parallel exchange for forwards/backwards spaces.
-            // m_traceMap->UniversalTraceAssemble(Fwd);
-            // m_traceMap->UniversalTraceAssemble(Bwd);
-        }
-
-
-        /**
-         * @brief This is the subrountine of v_GetFwdBwdTracePhys for Interior traces. 
-         * In another word it does not consider boundary treatment and parallel communication.
-         * NOTE: periodic boundary is considered interior traces here.
          */
         void DisContField2D::v_GetFwdBwdTracePhysInterior(
             const Array<OneD, const NekDouble> &field,
@@ -1527,18 +1461,6 @@ namespace Nektar
             else
             {
                 ASSERTL0(false, "v_AddTraceQuadPhysToField not coded for eGauss_Lagrange");                
-            }
-        }
-
-
-        // Copy any periodic boundary conditions.
-        void DisContField2D::v_PeriodicBwdCopy(
-                const Array<OneD, const NekDouble> &Fwd,
-                      Array<OneD,       NekDouble> &Bwd)
-        {
-            for (int n = 0; n < m_periodicFwdCopy.size(); ++n)
-            {
-                Bwd[m_periodicBwdCopy[n]] = Fwd[m_periodicFwdCopy[n]];
             }
         }
 

@@ -36,8 +36,6 @@
 #include <CompressibleFlowSolver/RiemannSolvers/CompressibleSolver.h>
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 #include <LibUtilities/LinearAlgebra/NekTypeDefs.hpp>
-//#include <LocalRegions/MatrixKey.h>
-
 
 namespace Nektar
 {
@@ -208,7 +206,6 @@ namespace Nektar
             BJac->SetBlock(i, i, PointBJac);
         }
     }
-   
 
     NekDouble CompressibleSolver::GetRoeSoundSpeed(
         NekDouble rhoL, NekDouble pL, NekDouble eL, NekDouble HL, NekDouble srL,

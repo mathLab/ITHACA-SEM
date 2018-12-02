@@ -74,8 +74,6 @@ class WallBC : public CFSBndCond
             Array<OneD, Array<OneD, NekDouble> >               &physarray,
             const NekDouble                                    &time);
 
-        virtual void v_ApplyBwdWeight();
-        
     private:
         WallBC(const LibUtilities::SessionReaderSharedPtr& pSession,
                const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields,

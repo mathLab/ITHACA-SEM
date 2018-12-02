@@ -58,6 +58,7 @@ WallViscousBC::WallViscousBC(const LibUtilities::SessionReaderSharedPtr& pSessio
            const int cnt)
     : CFSBndCond(pSession, pFields, pTraceNormals, pSpaceDim, bcRegion, cnt)
 {
+    m_diffusionAveWeight = 0.5;
 }
 
 void WallViscousBC::v_Apply(
@@ -100,15 +101,4 @@ void WallViscousBC::v_Apply(
         }
     }
 }
-
-void WallViscousBC::v_ApplyBwdWeight()
-{
-    NekDouble   weight  =   0.5;
-    int nVariables = m_fields.num_elements();
-    for(int i=0;i<nVariables;i++)
-    {
-        m_fields[i]->SetBndCondBwdWeight(m_bcRegion,weight);
-    }
-}
-
 }

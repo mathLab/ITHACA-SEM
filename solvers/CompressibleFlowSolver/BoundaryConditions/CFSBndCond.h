@@ -102,6 +102,9 @@ class CFSBndCond
         /// Auxiliary object to convert variables
         VariableConverterSharedPtr           m_varConv;
 
+        //
+        NekDouble m_diffusionAveWeight;
+
         /// Parameters of the flow
         NekDouble m_gamma;
         NekDouble m_rhoInf;

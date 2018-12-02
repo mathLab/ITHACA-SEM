@@ -76,6 +76,8 @@ CFSBndCond::CFSBndCond(const LibUtilities::SessionReaderSharedPtr& pSession,
     // Create auxiliary object to convert variables
     m_varConv = MemoryManager<VariableConverter>::AllocateSharedPtr(
                 m_session, m_spacedim);
+    
+    m_diffusionAveWeight = 1.0;
 }
 
 /**
@@ -173,7 +175,7 @@ void CFSBndCond::v_ApplyDeriv(
  */
 void CFSBndCond::v_ApplyBwdWeight()
 {
-    NekDouble   weight  =   1.0;
+    NekDouble   weight  =   m_diffusionAveWeight;
     int nVariables = m_fields.num_elements();
     for(int i=0;i<nVariables;i++)
     {

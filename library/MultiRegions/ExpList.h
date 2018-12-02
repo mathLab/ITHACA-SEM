@@ -1217,8 +1217,6 @@ namespace Nektar
 
             void GetElmt_id(const GlobalMatrixKey &gkey,map<int,int> &elmt_id);
             
-
-
             void MultiplyByBlockMatrix(
                 const GlobalMatrixKey             &gkey,
                 const Array<OneD,const NekDouble> &inarray,
@@ -1634,7 +1632,6 @@ namespace Nektar
 
             virtual void v_ClearGlobalLinSysManager(void);
 
-
             void ExtractFileBCs(const std::string                &fileName,
                                 LibUtilities::CommSharedPtr       comm,
                                 const std::string                &varName,
@@ -1648,7 +1645,6 @@ namespace Nektar
                             BoundaryConditionCollection& collection,
                             unsigned int index, const std::string& variable);
 
-            
         private:
 
             virtual const LocTraceToTraceMapSharedPtr &v_GetlocTraceToTraceMap() const;
@@ -2430,7 +2426,6 @@ namespace Nektar
         {
             v_AddTraceIntegral2OffDiag(FwdFlux,BwdFlux,outarray);
         }
-
 
         inline void ExpList::CalcTraceJacMatIntegral(
             const Array<OneD, const NekDouble> &Fn,

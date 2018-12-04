@@ -317,6 +317,16 @@ namespace Nektar
                 m_traceMap->UniversalTraceAssemble(Bwd);
             }
 
+            virtual void v_GetFwdBwdTracePhysDeriv_serial(
+                const int                          Dir,
+                const Array<OneD, const NekDouble> &field,
+                    Array<OneD,       NekDouble> &Fwd,
+                    Array<OneD,       NekDouble> &Bwd)
+            {
+                v_GetFwdBwdTracePhysInterior(field, Fwd, Bwd);
+                v_FillBwdWITHBoundDeriv(Dir,Fwd,Bwd);
+            }
+
             virtual void v_GetFwdBwdTracePhys_serial(
                 const Array<OneD, const NekDouble> &field,
                     Array<OneD,       NekDouble> &Fwd,

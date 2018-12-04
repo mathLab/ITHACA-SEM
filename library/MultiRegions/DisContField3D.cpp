@@ -2153,6 +2153,7 @@ using namespace std;
             // Reset boundary condition expansions.
             for (int n = 0; n < m_bndCondExpansions.num_elements(); ++n)
             {
+                m_BndCondBwdWeight[n]   =   0.0;
                 m_bndCondExpansions[n]->Reset();
             }
         }
@@ -2605,6 +2606,7 @@ using namespace std;
             {
                 if (time == 0.0 || m_bndConditions[i]->IsTimeDependent())
                 {
+                    m_BndCondBwdWeight[i]   =   1.0;
                     locExpList = m_bndCondExpansions[i];
                     npoints    = locExpList->GetNpoints();
                     

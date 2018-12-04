@@ -568,6 +568,8 @@ namespace Nektar
             m_bndConditions
                     = Array<OneD,SpatialDomains::BoundaryConditionShPtr>(cnt);
 
+            m_BndCondBwdWeight  =   Array<OneD, NekDouble>(bregions.size(),0.0);
+
             SetBoundaryConditionExpansion(graph1D,bcs,variable,
                                            m_bndCondExpansions,
                                            m_bndConditions);
@@ -1457,6 +1459,7 @@ namespace Nektar
             {
                 if (time == 0.0 || m_bndConditions[i]->IsTimeDependent())
                 {
+                    m_BndCondBwdWeight[i]   =   1.0;
                     m_bndCondExpansions[i]->GetCoords(x0, x1, x2);
                     
                     if (x2_in != NekConstants::kNekUnsetDouble && x3_in !=
@@ -1623,6 +1626,7 @@ namespace Nektar
             // Reset boundary condition expansions.
             for (int n = 0; n < m_bndCondExpansions.num_elements(); ++n)
             {
+                m_BndCondBwdWeight[n]   =   0.0;
                 m_bndCondExpansions[n]->Reset();
             }
         }

@@ -58,13 +58,10 @@ namespace Nektar
                                   m_shockCaptureType,    "Off");	
 
             m_session->LoadParameter("IPDebugParameter",
-                                  m_IPDebugParameter,   0.5);	
+                                  m_IPDebugParameter,   0.0);	//0.5
 
             m_session->LoadParameter("IPPenaltyFactor2",
-                                  m_IPPenaltyFactor2,   1.0/12.0);	
-
-            cout << "m_IPDebugParameter= "<< m_IPDebugParameter<<endl;
-            cout << "m_IPPenaltyFactor2= "<< m_IPPenaltyFactor2<<endl;
+                                  m_IPPenaltyFactor2,   0.0); // 1.0/12.0	
 
             // Setting up the normals
             int i;
@@ -208,7 +205,7 @@ namespace Nektar
             Array<OneD, int > nonZeroIndex;
             // TODO: qfield AND elmtFlux share storage????
             m_FunctorDiffusionfluxCons(nConvectiveFields,nDim,inarray,qfield, elmtFlux,nonZeroIndex,tmparray2D,muvar);
-            
+
             Array<OneD, Array<OneD, NekDouble> > tmpFluxIprdct(nDim);
             // volume intergration: the nonZeroIndex indicates which flux is nonzero
             for(i = 0; i < nonZeroIndex.num_elements(); ++i)
@@ -418,58 +415,55 @@ namespace Nektar
             const Array<OneD, const Array<OneD, Array<OneD, NekDouble> > >      &qfield,
                   Array<OneD, Array<OneD, Array<OneD, NekDouble> > >            &numDeriv)
         {
-            if(PenaltyFactor2>0.0)
+            // const NekDouble PenaltyFactor2 = 1.0/12.0;
+            Array<OneD, NekDouble> Fwd(nTracePts,0.0);
+            Array<OneD, NekDouble> Bwd(nTracePts,0.0);
+
+            Array<OneD, Array<OneD, NekDouble> > elmt2ndDerv(nDim);
+            for(int nd1=0; nd1<nDim; nd1++)
             {
-                const NekDouble PenaltyFactor2 = 1.0/12.0;
-                Array<OneD, NekDouble> Fwd(nTracePts,0.0);
-                Array<OneD, NekDouble> Bwd(nTracePts,0.0);
+                elmt2ndDerv[nd1]    =   Array<OneD, NekDouble>(nPts,0.0);
+            }
 
-                Array<OneD, Array<OneD, NekDouble> > elmt2ndDerv(nDim);
-                for(int nd1=0; nd1<nDim; nd1++)
-                {
-                    elmt2ndDerv[nd1]    =   Array<OneD, NekDouble>(nPts,0.0);
-                }
+            Array<OneD, Array<OneD, NekDouble> > qtmp(3);
+            for(int nd=0; nd<3; nd++)
+            {
+                qtmp[nd]    =   NullNekDouble1DArray;
+            }
+            for(int nd2=0; nd2<nDim; nd2++)
+            {
+                qtmp[nd2]    =   elmt2ndDerv[nd2];
+            }
 
-                Array<OneD, Array<OneD, NekDouble> > qtmp(3);
-                for(int nd=0; nd<3; nd++)
+            // the derivatives are assumed to be exchangable  
+            for(int nd1=0; nd1<nDim; nd1++)
+            {
+                for(int i = 0; i < nConvectiveFields; ++i)
                 {
-                    qtmp[nd]    =   NullNekDouble1DArray;
-                }
-                for(int nd2=0; nd2<nDim; nd2++)
-                {
-                    qtmp[nd2]    =   elmt2ndDerv[nd2];
-                }
+                    fields[i]->PhysDeriv(qfield[nd1][i], qtmp[0], qtmp[1], qtmp[2]);
 
-                // the derivatives are assumed to be exchangable  
-                for(int nd1=0; nd1<nDim; nd1++)
-                {
-                    for(int i = 0; i < nConvectiveFields; ++i)
+                    // for(int nd2=0; nd2<nDim; nd2++)
+                    // {
+                    //     Vmath::Fill(nTracePts, 0.0, Bwd,1);
+                    //     fields[i]->GetFwdBwdTracePhysNoBndFill(elmt2ndDerv[nd2], Fwd, Bwd);
+                    //     Vmath::Vsub(nTracePts,Bwd,1,Fwd,1,Fwd,1);
+                    //     Vmath::Smul(nTracePts,PenaltyFactor2,Fwd,1,Fwd,1);
+                    //     Vmath::Vmul(nTracePts,m_traceNormDirctnElmtLength,1,Fwd,1,Fwd,1);
+                    //     // Vmath::Vvtvp(nTracePts,m_traceNormals[nd2],1,Fwd,1,numDeriv[nd1][i],1,numDeriv[nd1][i],1);
+                    //     Vmath::Vvtvp(nTracePts,m_traceNormals[nd1],1,Fwd,1,numDeriv[nd2][i],1,numDeriv[nd2][i],1);
+                    // }
+
+                    for(int nd2=nd1; nd2<nDim; nd2++)
                     {
-                        fields[i]->PhysDeriv(qfield[nd1][i], qtmp[0], qtmp[1], qtmp[2]);
-
-                        // for(int nd2=0; nd2<nDim; nd2++)
-                        // {
-                        //     Vmath::Fill(nTracePts, 0.0, Bwd,1);
-                        //     fields[i]->GetFwdBwdTracePhysNoBndFill(elmt2ndDerv[nd2], Fwd, Bwd);
-                        //     Vmath::Vsub(nTracePts,Bwd,1,Fwd,1,Fwd,1);
-                        //     Vmath::Smul(nTracePts,PenaltyFactor2,Fwd,1,Fwd,1);
-                        //     Vmath::Vmul(nTracePts,m_traceNormDirctnElmtLength,1,Fwd,1,Fwd,1);
-                        //     // Vmath::Vvtvp(nTracePts,m_traceNormals[nd2],1,Fwd,1,numDeriv[nd1][i],1,numDeriv[nd1][i],1);
-                        //     Vmath::Vvtvp(nTracePts,m_traceNormals[nd1],1,Fwd,1,numDeriv[nd2][i],1,numDeriv[nd2][i],1);
-                        // }
-
-                        for(int nd2=nd1; nd2<nDim; nd2++)
+                        Vmath::Fill(nTracePts, 0.0, Bwd,1);
+                        fields[i]->GetFwdBwdTracePhysDeriv(nd2,elmt2ndDerv[nd2], Fwd, Bwd);
+                        Vmath::Vsub(nTracePts,Bwd,1,Fwd,1,Fwd,1);
+                        Vmath::Smul(nTracePts,PenaltyFactor2,Fwd,1,Fwd,1);
+                        Vmath::Vmul(nTracePts,m_traceNormDirctnElmtLength,1,Fwd,1,Fwd,1);
+                        Vmath::Vvtvp(nTracePts,m_traceNormals[nd2],1,Fwd,1,numDeriv[nd1][i],1,numDeriv[nd1][i],1);
+                        if(nd2!=nd1)
                         {
-                            Vmath::Fill(nTracePts, 0.0, Bwd,1);
-                            fields[i]->GetFwdBwdTracePhysDeriv(nd2,elmt2ndDerv[nd2], Fwd, Bwd);
-                            Vmath::Vsub(nTracePts,Bwd,1,Fwd,1,Fwd,1);
-                            Vmath::Smul(nTracePts,PenaltyFactor2,Fwd,1,Fwd,1);
-                            Vmath::Vmul(nTracePts,m_traceNormDirctnElmtLength,1,Fwd,1,Fwd,1);
-                            Vmath::Vvtvp(nTracePts,m_traceNormals[nd2],1,Fwd,1,numDeriv[nd1][i],1,numDeriv[nd1][i],1);
-                            if(nd2!=nd1)
-                            {
-                                Vmath::Vvtvp(nTracePts,m_traceNormals[nd1],1,Fwd,1,numDeriv[nd2][i],1,numDeriv[nd2][i],1);
-                            }
+                            Vmath::Vvtvp(nTracePts,m_traceNormals[nd1],1,Fwd,1,numDeriv[nd2][i],1,numDeriv[nd2][i],1);
                         }
                     }
                 }

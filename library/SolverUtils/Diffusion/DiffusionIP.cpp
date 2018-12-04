@@ -302,61 +302,66 @@ namespace Nektar
                   Array<OneD, Array<OneD, NekDouble> >                          &solution_Aver,
                   Array<OneD, Array<OneD, NekDouble> >                          &solution_jump)
         {
-            Array<OneD, Array<OneD, Array<OneD, NekDouble> > >    numDeriv(nDim);
-            for (int nd = 0; nd < nDim; ++nd)
-            {
-                numDeriv[nd]     =   Array<OneD, Array<OneD, NekDouble> > (nConvectiveFields);
-                for (int i = 0; i < nConvectiveFields; ++i)
-                {
-                    numDeriv[nd][i]    = Array<OneD, NekDouble>(nTracePts,0.0);
-                }
-            }
+            CalTraceNumFlux_ReduceComm(
+                nConvectiveFields, nDim, nPts, nTracePts, PenaltyFactor2,
+                fields, inarray, qfield, vFwd, vBwd, MuVarTrace,
+                nonZeroIndexflux, traceflux, solution_Aver, solution_jump);
+            
+            // Array<OneD, Array<OneD, Array<OneD, NekDouble> > >    numDeriv(nDim);
+            // for (int nd = 0; nd < nDim; ++nd)
+            // {
+            //     numDeriv[nd]     =   Array<OneD, Array<OneD, NekDouble> > (nConvectiveFields);
+            //     for (int i = 0; i < nConvectiveFields; ++i)
+            //     {
+            //         numDeriv[nd][i]    = Array<OneD, NekDouble>(nTracePts,0.0);
+            //     }
+            // }
 
-            Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  tmparray3D = NullNekDoubleArrayofArrayofArray;
-            m_FunctorDerivBndCond(inarray,qfield,m_time,vFwd,tmparray3D);
+            // Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  tmparray3D = NullNekDoubleArrayofArrayofArray;
+            // m_FunctorDerivBndCond(inarray,qfield,m_time,vFwd,tmparray3D);
 
-            Array<OneD, NekDouble> Fwd(nTracePts,0.0);
-            Array<OneD, NekDouble> Bwd(nTracePts,0.0);
+            // Array<OneD, NekDouble> Fwd(nTracePts,0.0);
+            // Array<OneD, NekDouble> Bwd(nTracePts,0.0);
 
-            if(abs(PenaltyFactor2)>1.0E-12)
-            {
-                Add2ndDeriv2Trace(nConvectiveFields,nDim,nPts,nTracePts,PenaltyFactor2,fields,qfield,numDeriv);
-            }
+            // if(abs(PenaltyFactor2)>1.0E-12)
+            // {
+            //     Add2ndDeriv2Trace(nConvectiveFields,nDim,nPts,nTracePts,PenaltyFactor2,fields,qfield,numDeriv);
+            // }
 
-            for (int nd = 0; nd < nDim; ++nd)
-            {
-                for (int i = 0; i < nConvectiveFields; ++i)
-                {
-                    Vmath::Fill(nTracePts, 0.0, Bwd,1);
-                    fields[i]->GetFwdBwdTracePhysDeriv(nd,qfield[nd][i], Fwd, Bwd);
-                    for (int nt = 0; nt < nTracePts; ++nt)
-                    {
-                        numDeriv[nd][i][nt] +=   0.5*( Fwd[nt] + Bwd[nt] );  
-                    }
-                }
-            }
+            // for (int nd = 0; nd < nDim; ++nd)
+            // {
+            //     for (int i = 0; i < nConvectiveFields; ++i)
+            //     {
+            //         Vmath::Fill(nTracePts, 0.0, Bwd,1);
+            //         fields[i]->GetFwdBwdTracePhysDeriv(nd,qfield[nd][i], Fwd, Bwd);
+            //         for (int nt = 0; nt < nTracePts; ++nt)
+            //         {
+            //             numDeriv[nd][i][nt] +=   0.5*( Fwd[nt] + Bwd[nt] );  
+            //         }
+            //     }
+            // }
         
-            ConsVarAveJump(nConvectiveFields,nTracePts,vFwd,vBwd,solution_Aver,solution_jump);
+            // ConsVarAveJump(nConvectiveFields,nTracePts,vFwd,vBwd,solution_Aver,solution_jump);
 
-            Array<OneD, NekDouble>  jumpTmp         =   Fwd;
-            Array<OneD, NekDouble>  PenaltyFactor   =   Bwd;
-            Fwd     =   NullNekDouble1DArray;
-            Bwd     =   NullNekDouble1DArray;
-            GetPenaltyFactor(fields,PenaltyFactor);
-            for (int i = 0; i < nConvectiveFields; ++i)
-            {
-                Vmath::Vmul(nTracePts,solution_jump[i],1, PenaltyFactor,1,jumpTmp,1);
-                Vmath::Vdiv(nTracePts,jumpTmp,1, m_traceNormDirctnElmtLength,1,jumpTmp,1);
-                for (int nd = 0; nd < nDim; ++nd)
-                {
-                    Vmath::Vvtvp(nTracePts, m_traceNormals[nd],1,jumpTmp,1, numDeriv[nd][i],1, numDeriv[nd][i],1);
-                }
-            }
-            jumpTmp         =   NullNekDouble1DArray;
-            PenaltyFactor   =   NullNekDouble1DArray;
+            // Array<OneD, NekDouble>  jumpTmp         =   Fwd;
+            // Array<OneD, NekDouble>  PenaltyFactor   =   Bwd;
+            // Fwd     =   NullNekDouble1DArray;
+            // Bwd     =   NullNekDouble1DArray;
+            // GetPenaltyFactor(fields,PenaltyFactor);
+            // for (int i = 0; i < nConvectiveFields; ++i)
+            // {
+            //     Vmath::Vmul(nTracePts,solution_jump[i],1, PenaltyFactor,1,jumpTmp,1);
+            //     Vmath::Vdiv(nTracePts,jumpTmp,1, m_traceNormDirctnElmtLength,1,jumpTmp,1);
+            //     for (int nd = 0; nd < nDim; ++nd)
+            //     {
+            //         Vmath::Vvtvp(nTracePts, m_traceNormals[nd],1,jumpTmp,1, numDeriv[nd][i],1, numDeriv[nd][i],1);
+            //     }
+            // }
+            // jumpTmp         =   NullNekDouble1DArray;
+            // PenaltyFactor   =   NullNekDouble1DArray;
 
-            // Calculate normal viscous flux
-            m_FunctorDiffusionfluxCons(nConvectiveFields,nDim,solution_Aver,numDeriv,traceflux,nonZeroIndexflux,m_traceNormals,MuVarTrace);
+            // // Calculate normal viscous flux
+            // m_FunctorDiffusionfluxCons(nConvectiveFields,nDim,solution_Aver,numDeriv,traceflux,nonZeroIndexflux,m_traceNormals,MuVarTrace);
         }
 
 
@@ -717,6 +722,156 @@ factor[noffset+np]    =   4.0;
                             {
                                 tmp   =   (*tmpGmtx)(nrw,ncl) + (*ElmtMat)(nrw,ncl);
                                 tmpGmtx->SetValue(nrw,ncl,tmp);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        void DiffusionIP::CalTraceNumFlux_ReduceComm(
+            const int                                                           nConvectiveFields,
+            const int                                                           nDim,
+            const int                                                           nPts,
+            const int                                                           nTracePts,
+            const NekDouble                                                     PenaltyFactor2,
+            const Array<OneD, MultiRegions::ExpListSharedPtr>                   &fields,
+            const Array<OneD, Array<OneD, NekDouble> >                          &inarray,
+            const Array<OneD, const Array<OneD, Array<OneD, NekDouble> > >      &qfield,
+            const Array<OneD, Array<OneD, NekDouble> >                          &vFwd,
+            const Array<OneD, Array<OneD, NekDouble> >                          &vBwd,
+            const Array<OneD, NekDouble >                                       &MuVarTrace,
+                  Array<OneD, int >                                             &nonZeroIndexflux,
+                  Array<OneD, Array<OneD, Array<OneD, NekDouble> > >            &traceflux,
+                  Array<OneD, Array<OneD, NekDouble> >                          &solution_Aver,
+                  Array<OneD, Array<OneD, NekDouble> >                          &solution_jump)
+        {
+            const MultiRegions::AssemblyMapDGSharedPtr                      TraceMap=fields[0]->GetTraceMap();
+
+            Array<OneD, Array<OneD, Array<OneD, NekDouble> > >    numDerivBwd(nDim);
+            //Fwd is also used for final numerical results
+            Array<OneD, Array<OneD, Array<OneD, NekDouble> > >    numDerivFwd(nDim);
+            for (int nd = 0; nd < nDim; ++nd)
+            {
+                numDerivBwd[nd]     =   Array<OneD, Array<OneD, NekDouble> > (nConvectiveFields);
+                numDerivFwd[nd]     =   Array<OneD, Array<OneD, NekDouble> > (nConvectiveFields);
+                for (int i = 0; i < nConvectiveFields; ++i)
+                {
+                    numDerivBwd[nd][i]    = Array<OneD, NekDouble>(nTracePts,0.0);
+                    numDerivFwd[nd][i]    = Array<OneD, NekDouble>(nTracePts,0.0);
+                }
+            }
+
+            Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  tmparray3D = NullNekDoubleArrayofArrayofArray;
+            m_FunctorDerivBndCond(inarray,qfield,m_time,vFwd,tmparray3D);
+
+            Array<OneD, NekDouble> Fwd(nTracePts,0.0);
+            Array<OneD, NekDouble> Bwd(nTracePts,0.0);
+
+            if(abs(PenaltyFactor2)>1.0E-12)
+            {
+                Add2ndDeriv2Trace_ReduceComm(nConvectiveFields,nDim,nPts,nTracePts,PenaltyFactor2,fields,qfield,numDerivFwd,numDerivBwd);
+            }
+
+            for (int nd = 0; nd < nDim; ++nd)
+            {
+                for (int i = 0; i < nConvectiveFields; ++i)
+                {
+                    Vmath::Zero(nTracePts, Bwd,1);
+                    Vmath::Zero(nTracePts, Fwd,1);
+                    fields[i]->GetFwdBwdTracePhysDeriv_serial(nd,qfield[nd][i], Fwd, Bwd);
+                    for (int nt = 0; nt < nTracePts; ++nt)
+                    {
+                        numDerivBwd[nd][i][nt] +=   0.5*Bwd[nt];
+                        numDerivFwd[nd][i][nt] +=   0.5*Fwd[nt]; 
+                    }
+                    TraceMap->UniversalTraceAssemble(numDerivBwd[nd][i]);
+                    TraceMap->UniversalTraceAssemble(numDerivFwd[nd][i]);
+                    Vmath::Vadd(nTracePts,numDerivFwd[nd][i],1,numDerivBwd[nd][i],1,numDerivFwd[nd][i],1);
+                }
+            }
+        
+            ConsVarAveJump(nConvectiveFields,nTracePts,vFwd,vBwd,solution_Aver,solution_jump);
+
+            Array<OneD, NekDouble>  jumpTmp         =   Fwd;
+            Array<OneD, NekDouble>  PenaltyFactor   =   Bwd;
+            Fwd     =   NullNekDouble1DArray;
+            Bwd     =   NullNekDouble1DArray;
+            GetPenaltyFactor(fields,PenaltyFactor);
+            for (int i = 0; i < nConvectiveFields; ++i)
+            {
+                Vmath::Vmul(nTracePts,solution_jump[i],1, PenaltyFactor,1,jumpTmp,1);
+                Vmath::Vdiv(nTracePts,jumpTmp,1, m_traceNormDirctnElmtLength,1,jumpTmp,1);
+                for (int nd = 0; nd < nDim; ++nd)
+                {
+                    Vmath::Vvtvp(nTracePts, m_traceNormals[nd],1,jumpTmp,1, numDerivFwd[nd][i],1, numDerivFwd[nd][i],1);
+                }
+            }
+            jumpTmp         =   NullNekDouble1DArray;
+            PenaltyFactor   =   NullNekDouble1DArray;
+
+            // Calculate normal viscous flux
+            m_FunctorDiffusionfluxCons(nConvectiveFields,nDim,solution_Aver,numDerivFwd,traceflux,nonZeroIndexflux,m_traceNormals,MuVarTrace);
+        }
+
+        
+        void DiffusionIP::Add2ndDeriv2Trace_ReduceComm(
+            const int                                                           nConvectiveFields,
+            const int                                                           nDim,
+            const int                                                           nPts,
+            const int                                                           nTracePts,
+            const NekDouble                                                     PenaltyFactor2,
+            const Array<OneD, MultiRegions::ExpListSharedPtr>                   &fields,
+            const Array<OneD, const Array<OneD, Array<OneD, NekDouble> > >      &qfield,
+                  Array<OneD, Array<OneD, Array<OneD, NekDouble> > >            &numDerivFwd,
+                  Array<OneD, Array<OneD, Array<OneD, NekDouble> > >            &numDerivBwd)
+        {
+            if(PenaltyFactor2>0.0)
+            {
+                const NekDouble PenaltyFactor2 = 1.0/12.0;
+                Array<OneD, NekDouble> Fwd(nTracePts,0.0);
+                Array<OneD, NekDouble> Bwd(nTracePts,0.0);
+                Array<OneD,NekDouble>  tmp(nTracePts,0.0);
+
+                Array<OneD, Array<OneD, NekDouble> > elmt2ndDerv(nDim);
+                for(int nd1=0; nd1<nDim; nd1++)
+                {
+                    elmt2ndDerv[nd1]    =   Array<OneD, NekDouble>(nPts,0.0);
+                }
+
+                Array<OneD, Array<OneD, NekDouble> > qtmp(3);
+                for(int nd=0; nd<3; nd++)
+                {
+                    qtmp[nd]    =   NullNekDouble1DArray;
+                }
+                for(int nd2=0; nd2<nDim; nd2++)
+                {
+                    qtmp[nd2]    =   elmt2ndDerv[nd2];
+                }
+
+                Vmath::Smul(nTracePts,PenaltyFactor2,m_traceNormDirctnElmtLength,1,tmp,1);
+                // the derivatives are assumed to be exchangable  
+                for(int nd1=0; nd1<nDim; nd1++)
+                {
+                    for(int i = 0; i < nConvectiveFields; ++i)
+                    {
+                        fields[i]->PhysDeriv(qfield[nd1][i], qtmp[0], qtmp[1], qtmp[2]);
+
+                        for(int nd2=nd1; nd2<nDim; nd2++)
+                        {
+                            Vmath::Zero(nTracePts,Bwd,1);
+                            fields[i]->GetFwdBwdTracePhysDeriv_serial(nd2,elmt2ndDerv[nd2], Fwd, Bwd);
+                            Vmath::Vmul(nTracePts,tmp,1,Bwd,1,Bwd,1);
+                            Vmath::Vvtvp(nTracePts,m_traceNormals[nd2],1,Bwd,1,numDerivBwd[nd1][i],1,numDerivBwd[nd1][i],1);
+                            Vmath::Vmul(nTracePts,tmp,1,Fwd,1,Fwd,1);
+                            Vmath::Vvtvm(nTracePts,m_traceNormals[nd2],1,Fwd,1,numDerivFwd[nd1][i],1,numDerivFwd[nd1][i],1);
+                            Vmath::Neg(nTracePts,numDerivFwd[nd1][i],1);
+
+                            if(nd2!=nd1)
+                            {
+                                Vmath::Vvtvp(nTracePts,m_traceNormals[nd1],1,Bwd,1,numDerivBwd[nd2][i],1,numDerivBwd[nd2][i],1);
+                                Vmath::Vvtvm(nTracePts,m_traceNormals[nd1],1,Fwd,1,numDerivFwd[nd2][i],1,numDerivFwd[nd2][i],1);
+                                Vmath::Neg(nTracePts,numDerivFwd[nd2][i],1);
                             }
                         }
                     }

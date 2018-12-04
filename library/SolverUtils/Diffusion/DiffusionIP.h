@@ -167,6 +167,34 @@ namespace Nektar
             {
                 return m_traceNormals;
             }
+
+            void CalTraceNumFlux_ReduceComm(
+                const int                                                           nConvectiveFields,
+                const int                                                           nDim,
+                const int                                                           nPts,
+                const int                                                           nTracePts,
+                const NekDouble                                                     PenaltyFactor2,
+                const Array<OneD, MultiRegions::ExpListSharedPtr>                   &fields,
+                const Array<OneD, Array<OneD, NekDouble> >                          &inarray,
+                const Array<OneD, const Array<OneD, Array<OneD, NekDouble> > >      &qfield,
+                const Array<OneD, Array<OneD, NekDouble> >                          &vFwd,
+                const Array<OneD, Array<OneD, NekDouble> >                          &vBwd,
+                const Array<OneD, NekDouble >                                       &MuVarTrace,
+                      Array<OneD, int >                                             &nonZeroIndexflux,
+                      Array<OneD, Array<OneD, Array<OneD, NekDouble> > >            &traceflux,
+                      Array<OneD, Array<OneD, NekDouble> >                          &solution_Aver,
+                      Array<OneD, Array<OneD, NekDouble> >                          &solution_jump);
+            
+           void Add2ndDeriv2Trace_ReduceComm(
+                const int                                                           nConvectiveFields,
+                const int                                                           nDim,
+                const int                                                           nPts,
+                const int                                                           nTracePts,
+                const NekDouble                                                     PenaltyFactor2,
+                const Array<OneD, MultiRegions::ExpListSharedPtr>                   &fields,
+                const Array<OneD, const Array<OneD, Array<OneD, NekDouble> > >      &qfield,
+                    Array<OneD, Array<OneD, Array<OneD, NekDouble> > >              &numDerivFwd,
+                    Array<OneD, Array<OneD, Array<OneD, NekDouble> > >              &numDerivBwd);
             
         }; 
     }

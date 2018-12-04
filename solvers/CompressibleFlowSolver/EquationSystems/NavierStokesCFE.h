@@ -284,6 +284,16 @@ namespace Nektar
         const Array<OneD, NekDouble>    &U, 
         const Array<OneD, NekDouble>    &inarray, 
         Array<OneD, NekDouble>          &outarray);
+
+    void GetViscousSymmtrFluxConservVarDrctnVector(
+        const int                                                       nConvectiveFields,
+        const int                                                       nSpaceDim,
+        const Array<OneD, const Array<OneD, NekDouble> >                &normals,
+        const int                                                       FluxDirection,
+        const Array<OneD, const Array<OneD, NekDouble> >                &inaverg,
+        const Array<OneD, const Array<OneD, NekDouble> >                &injumpp,
+              Array<OneD, Array<OneD, NekDouble> >                      &outarray);
+    
   };
 }
 #endif

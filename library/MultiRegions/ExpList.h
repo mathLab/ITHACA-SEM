@@ -817,7 +817,14 @@ namespace Nektar
                 const Array<OneD,const NekDouble> &field,
                       Array<OneD,NekDouble> &Fwd,
                       Array<OneD,NekDouble> &Bwd);
+
             inline void GetFwdBwdTracePhysDeriv(
+                const int                          Dir,
+                const Array<OneD,const NekDouble> &field,
+                      Array<OneD,NekDouble> &Fwd,
+                      Array<OneD,NekDouble> &Bwd);
+            
+            inline void GetFwdBwdTracePhysDeriv_serial(
                 const int                          Dir,
                 const Array<OneD,const NekDouble> &field,
                       Array<OneD,NekDouble> &Fwd,
@@ -1333,6 +1340,12 @@ namespace Nektar
                       Array<OneD,NekDouble> &Bwd);
 
             virtual void v_GetFwdBwdTracePhysDeriv(
+                const int                          Dir,
+                const Array<OneD,const NekDouble>  &field,
+                      Array<OneD,NekDouble> &Fwd,
+                      Array<OneD,NekDouble> &Bwd);
+            
+            virtual void v_GetFwdBwdTracePhysDeriv_serial(
                 const int                          Dir,
                 const Array<OneD,const NekDouble>  &field,
                       Array<OneD,NekDouble> &Fwd,
@@ -2480,6 +2493,15 @@ namespace Nektar
                   Array<OneD,NekDouble> &Bwd)
         {
             v_GetFwdBwdTracePhysDeriv(Dir,field,Fwd,Bwd);
+        }
+
+        inline void ExpList::GetFwdBwdTracePhysDeriv_serial(
+            const int                          Dir,
+            const Array<OneD,const NekDouble>  &field,
+                  Array<OneD,NekDouble> &Fwd,
+                  Array<OneD,NekDouble> &Bwd)
+        {
+            v_GetFwdBwdTracePhysDeriv_serial(Dir,field,Fwd,Bwd);
         }
 
         inline void ExpList::AddTraceQuadPhysToField(

@@ -148,7 +148,6 @@ namespace Nektar
             int n;
             for(n = 0; n < SIZE_OptimizeOperationType; n++)
             {
-                                
                 TiXmlElement* operationType = paramList->FirstChildElement(
                                       OptimizationOperationTypeMap[n]);
 

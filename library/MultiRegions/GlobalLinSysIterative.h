@@ -69,7 +69,9 @@ namespace Nektar
                 const AssemblyMapSharedPtr &locToGloMap,
                 const int pNumDir);
 
-            /// Actual iterative solve-GMRS
+            /// A seperated version is placed in LinearAlgebra/NekLinSysIterative
+            /// which is much easier to call seperately
+            /// TODO: to replace GMRES with LinearAlgebra/NekLinSysIterative
             void DoGMRES(
                 const int pNumRows,
                 const Array<OneD, const NekDouble> &pInput,
@@ -135,9 +137,6 @@ namespace Nektar
                 const AssemblyMapSharedPtr &locToGloMap,
                 const int pNumDir);
 
-
-
-
             void Set_Rhs_Magnitude(const NekVector<NekDouble> &pIn);
 
             virtual void v_UniqueMap() = 0;
@@ -152,7 +151,6 @@ namespace Nektar
                 const int nGlobal,
                 const Array<OneD, const NekDouble> &in,
                 const int nDir);
-
 
             /// Solve the matrix system
             virtual void v_SolveLinearSystem(

@@ -34,15 +34,8 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <SolverUtils/Advection/AdvectionWeakDG.h>
-#include <LocalRegions/MatrixKey.h>
-#include <LocalRegions/Expansion3D.h>
-#include <LocalRegions/Expansion2D.h>
-#include <LocalRegions/Expansion1D.h>
-#include <LocalRegions/Expansion0D.h>
-#include <MultiRegions/AssemblyMap/LocTraceToTraceMap.h>
 #include <iostream>
 #include <iomanip>
-#include <math.h>
 
 namespace Nektar
 {
@@ -105,7 +98,6 @@ namespace Nektar
                 fields[i]->BwdTrans             (tmp[i], outarray[i]);
             }
         }
-
 
         void AdvectionWeakDG::v_Advect_coeff(
             const int                                         nConvectiveFields,
@@ -332,7 +324,6 @@ namespace Nektar
             }
         }
 
-
         void AdvectionWeakDG::CalcJacobTraceInteg(
             const Array<OneD, MultiRegions::ExpListSharedPtr>   &pFields,
             const int                                         m,
@@ -496,9 +487,6 @@ namespace Nektar
                 {
                     plusfield[i][j] =    Fwd[i][j]  +   epsvar;
                 }
-
-
-                
 
                 m_riemann->Solve(m_spaceDim, plusfield, Bwd, plusflux);
 

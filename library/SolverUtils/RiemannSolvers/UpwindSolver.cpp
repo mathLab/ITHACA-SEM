@@ -102,7 +102,6 @@ namespace Nektar
             }
         }
 
-
         void UpwindSolver::v_CalcFluxJacobian(
             const int                                         nDim,
             const Array<OneD, const Array<OneD, NekDouble> > &Fwd,

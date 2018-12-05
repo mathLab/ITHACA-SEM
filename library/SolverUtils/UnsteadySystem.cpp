@@ -337,7 +337,7 @@ namespace Nektar
                 cpuTime += elapsed;
 		
                 // Write out status information
-                int nwidthcolm = 8;
+                int nwidthcolm = 15;
                 if (m_session->GetComm()->GetRank() == 0 && 
                     !((step+1) % m_infosteps))
                 {

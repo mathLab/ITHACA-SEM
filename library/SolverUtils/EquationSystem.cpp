@@ -663,7 +663,6 @@ namespace Nektar
             m_session->LoadParameter("TimeIncrementFactor",       m_TimeIncrementFactor,    1.0);
             m_session->LoadParameter("cflLocTimestep",       m_cflLocTimestep,    -5.0);
             
-            
             m_session->LoadParameter("NumQuadPointsError",
                                      m_NumQuadPointsError, 0);
 

@@ -270,7 +270,6 @@ namespace Nektar
                     solution_jump[i]    =   NullNekDouble1DArray;
                 }
 
-
                 AddSymmFluxIntegral(nConvectiveFields,nDim,nPts,nTracePts,fields,nonZeroIndexSymm,traceSymflux,outarray);
             }
 
@@ -332,7 +331,6 @@ namespace Nektar
             
             m_FunctorSymmetricfluxCons(nConvectiveFields,nDim,solution_Aver,solution_jump,traceSymflux,nonZeroIndexsymm,m_traceNormals);
 
-            
             for (int i = 0; i < nConvectiveFields; ++i)
             {
                 MultiRegions::ExpListSharedPtr tracelist = fields[i]->GetTrace();
@@ -465,7 +463,6 @@ namespace Nektar
                 fields[i]->PhysDeriv(inarray[i], qtmp[0], qtmp[1], qtmp[2]);
             }
         }
-        
 
         void DiffusionIP::GetPenaltyFactor(
             const Array<OneD, MultiRegions::ExpListSharedPtr>   &fields,
@@ -480,8 +477,6 @@ namespace Nektar
             
             const Array<OneD, const Array<OneD, int >> LRAdjExpid  =   locTraceToTraceMap->GetLeftRightAdjacentExpId();
             const Array<OneD, const Array<OneD, bool>> LRAdjflag   =   locTraceToTraceMap->GetLeftRightAdjacentExpFlag();
-
-
 
             std::shared_ptr<LocalRegions::ExpansionVector> fieldExp= fields[0]->GetExp();
 
@@ -529,13 +524,12 @@ namespace Nektar
                   Array<OneD,       Array<OneD, NekDouble> >    &aver,
                   Array<OneD,       Array<OneD, NekDouble> >    &jump)
         {
-            // TODO:    Direchlet boundary are not that accurate using this solution_Aver
             ConsVarAve(nConvectiveFields,npnts,vFwd,vBwd,aver);
 
             m_SpecialBndTreat(nConvectiveFields,aver);
 
             // note: here the jump is 2.0*(aver-vFwd) 
-            //       because Viscous wall use a symmetry boundary not the target one   
+            //       because Viscous wall use a symmetry value as the Bwd, not the target one   
             for (int i = 0; i < nConvectiveFields; ++i)
             {
                 Vmath::Vsub(npnts,aver[i],1,vFwd[i],1,jump[i],1);

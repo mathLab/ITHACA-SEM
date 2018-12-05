@@ -77,9 +77,13 @@ namespace Nektar
             Array<OneD, Array<OneD, NekDouble> >              m_traceNormals;
             Array<OneD, NekDouble>                            m_tracBwdWeight;
             Array<OneD, NekDouble>                            m_traceNormDirctnElmtLength;
+            Array<OneD, NekDouble>                            m_traceNormDirctnElmtLengthRecip;
             LibUtilities::SessionReaderSharedPtr              m_session;
 
             void GetPenaltyFactor(
+                const Array<OneD, MultiRegions::ExpListSharedPtr>   &fields,
+                Array<OneD, NekDouble >                             factor); 
+            void GetPenaltyFactor_const(
                 const Array<OneD, MultiRegions::ExpListSharedPtr>   &fields,
                 Array<OneD, NekDouble >                             factor); 
 

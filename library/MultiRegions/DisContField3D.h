@@ -310,8 +310,8 @@ namespace Nektar
                     Array<OneD,       NekDouble> &Fwd,
                     Array<OneD,       NekDouble> &Bwd)
             {
-                v_GetFwdBwdTracePhysInterior(field, Fwd, Bwd);
-                v_FillBwdWITHBoundDeriv(Dir,Fwd,Bwd);
+                v_GetFwdBwdTracePhysDeriv_serial(Dir,field, Fwd, Bwd);
+                
                 m_traceMap->UniversalTraceAssemble(Fwd);
                 m_traceMap->UniversalTraceAssemble(Bwd);
             }

@@ -412,8 +412,6 @@ class Interpolator;
             /// Map to identify relevant solver info to dump in output fields
             LinSysOperators                             m_LinSysOprtors;
 
-            
-
             /// Number of Quadrature points used to work out the error
             int  m_NumQuadPointsError;
             

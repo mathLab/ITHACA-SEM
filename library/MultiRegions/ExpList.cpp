@@ -258,7 +258,6 @@ namespace Nektar
             {
                 m_coeff_offset[i]   = m_ncoeffs;
                 m_phys_offset [i]   = m_npoints;
-                
                 m_ncoeffs += (*m_exp)[i]->GetNcoeffs();
                 m_npoints += (*m_exp)[i]->GetTotPoints();
             }
@@ -1071,32 +1070,32 @@ namespace Nektar
         }
 
 
-        void ExpList::GetElmt_id(const GlobalMatrixKey &gkey,map<int,int> &elmt_id)
-        {
-            int i;
-            int n_exp = 0;
-            LibUtilities::ShapeType ShapeType = gkey.GetShapeType();
+        // void ExpList::GetElmt_id(const GlobalMatrixKey &gkey,map<int,int> &elmt_id)
+        // {
+        //     int i;
+        //     int n_exp = 0;
+        //     LibUtilities::ShapeType ShapeType = gkey.GetShapeType();
 
-            if(ShapeType != LibUtilities::eNoShapeType)
-            {
-                for(i = 0 ; i < (*m_exp).size(); ++i)
-                {
-                    if((*m_exp)[i]->DetShapeType()
-                       == ShapeType)
-                    {
-                        elmt_id[n_exp++] = i;
-                    }
-                }
-            }
-            else
-            {
-                n_exp = (*m_exp).size();
-                for(i = 0; i < n_exp; ++i)
-                {
-                    elmt_id[i] = i;
-                }
-            }
-        }
+        //     if(ShapeType != LibUtilities::eNoShapeType)
+        //     {
+        //         for(i = 0 ; i < (*m_exp).size(); ++i)
+        //         {
+        //             if((*m_exp)[i]->DetShapeType()
+        //                == ShapeType)
+        //             {
+        //                 elmt_id[n_exp++] = i;
+        //             }
+        //         }
+        //     }
+        //     else
+        //     {
+        //         n_exp = (*m_exp).size();
+        //         for(i = 0; i < n_exp; ++i)
+        //         {
+        //             elmt_id[i] = i;
+        //         }
+        //     }
+        // }
 
         const DNekScalBlkMatSharedPtr& ExpList::GetBlockMatrix(
                                                                const GlobalMatrixKey &gkey)
@@ -3340,12 +3339,12 @@ namespace Nektar
             ASSERTL0(false,"v_PeriodicBwdCopy not defined");
         }
 
-        void ExpList::v_AddTraceIntegral2OffDiag(
+        void ExpList::v_AddTraceIntegralToOffDiag(
                 const Array<OneD, const NekDouble> &FwdFlux, 
                 const Array<OneD, const NekDouble> &BwdFlux, 
                       Array<OneD,       NekDouble> &outarray)
         {
-            ASSERTL0(false,"AddTraceIntegral2OffDiag not defined");
+            ASSERTL0(false,"AddTraceIntegralToOffDiag not defined");
         }
             
 

@@ -1331,17 +1331,6 @@ namespace Nektar
             return fwd;
         }
             
-        // Construct the two trace vectors of the inner and outer
-        // trace solution from the field contained in m_phys, where
-        // the Weak dirichlet boundary conditions are listed in the
-        // outer part of the vecotr
-        // void DisContField2D::v_GetFwdBwdTracePhys(
-        //     Array<OneD, NekDouble> &Fwd,
-        //     Array<OneD, NekDouble> &Bwd)
-        // {
-        //     v_GetFwdBwdTracePhys(m_phys, Fwd, Bwd);
-        // }
-
         /**
          * @brief This method extracts the "forward" and "backward" trace data
          * from the array @a field and puts the data into output vectors @a Fwd
@@ -1787,7 +1776,7 @@ namespace Nektar
             }
         }
 
-        void DisContField2D::v_AddTraceIntegral2OffDiag(
+        void DisContField2D::v_AddTraceIntegralToOffDiag(
             const Array<OneD, const NekDouble> &FwdFlux, 
             const Array<OneD, const NekDouble> &BwdFlux, 
                   Array<OneD,       NekDouble> &outarray)
@@ -1805,7 +1794,7 @@ namespace Nektar
             }
             else
             {
-                ASSERTL0(false,"v_AddTraceIntegral2OffDiag not coded for eGauss_Lagrange");
+                ASSERTL0(false,"v_AddTraceIntegralToOffDiag not coded for eGauss_Lagrange");
             }
         }
 

@@ -826,18 +826,6 @@ namespace Nektar
         }
 
         /**
-         * Generate the forward or backward state for each trace point.
-         * @param   Fwd     Forward state.
-         * @param   Bwd     Backward state.
-         */
-        // void DisContField1D::v_GetFwdBwdTracePhys(Array<OneD, NekDouble> &Fwd,
-        //                                           Array<OneD, NekDouble> &Bwd)
-        // {
-        //     v_GetFwdBwdTracePhys(m_phys,Fwd,Bwd);
-        // }
-        
-        
-        /**
          * @brief This method extracts the "forward" and "backward" trace data
          * from the array @a field and puts the data into output vectors @a Fwd
          * and @a Bwd.

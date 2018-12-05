@@ -425,7 +425,7 @@ namespace Nektar
                 return m_locTraceToTraceMap;
             }
 
-            virtual void v_AddTraceIntegral2OffDiag(
+            virtual void v_AddTraceIntegralToOffDiag(
                 const Array<OneD, const NekDouble> &FwdFlux, 
                 const Array<OneD, const NekDouble> &BwdFlux, 
                     Array<OneD,       NekDouble> &outarray);

@@ -151,7 +151,7 @@ namespace Nektar
                 const Array<OneD, Array<OneD, NekDouble> >                  &pFwd,
                 const Array<OneD, Array<OneD, NekDouble> >                  &pBwd,
                       Array<OneD, Array<OneD, Array<OneD, NekDouble> > >    &qfield);
-            virtual void v_AddVolumDerivJac2Mat( 
+            virtual void v_AddVolumDerivJacToMat( 
                 const int                                               nConvectiveFields,
                 const Array<OneD, MultiRegions::ExpListSharedPtr>       &pFields,
                 const Array<OneD, const Array<OneD, DNekMatSharedPtr> > &ElmtJac,

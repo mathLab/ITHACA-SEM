@@ -4,9 +4,7 @@
 # Ignore builds and ThirdParty directories
 build
 buildDebug
-build_master
 builds
-buildsDebug
 ThirdParty
 # Ignore .DS_Store sometimes created by OS X.
 .DS_Store

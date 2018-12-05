@@ -617,7 +617,7 @@ namespace Nektar
         {
             Vmath::Fill(nCoeffs,0.0,outarray[i],1);
             // Vmath::Neg                                  (nCoeffs, outarray[i], 1);
-            m_fields[i]->AddTraceIntegral2OffDiag       (FwdFlux[i],BwdFlux[i], outarray[i]);
+            m_fields[i]->AddTraceIntegralToOffDiag       (FwdFlux[i],BwdFlux[i], outarray[i]);
             m_fields[i]->MultiplyByElmtInvMass          (outarray[i], outarray[i]);
         }
 
@@ -746,7 +746,7 @@ namespace Nektar
 //     }
 // }
 
-            m_advObject->AddVolumJac2Mat(nvariable,m_fields,ElmtJac,nfluxDir,gmtxarray);
+            m_advObject->AddVolumJacToMat(nvariable,m_fields,ElmtJac,nfluxDir,gmtxarray);
         }
         for(int nfluxDir = 0; nfluxDir < nSpaceDim; nfluxDir++)
         {
@@ -755,7 +755,7 @@ namespace Nektar
             {
                 GetFluxDerivJacDirctn(m_fields[0],normal3D,nDervDir,inarray,ElmtJac);
 
-                m_diffusion->AddVolumDerivJac2Mat(nvariable,m_fields,ElmtJac,nfluxDir,nDervDir,gmtxarray);
+                m_diffusion->AddVolumDerivJacToMat(nvariable,m_fields,ElmtJac,nfluxDir,nDervDir,gmtxarray);
             }
             Vmath::Fill(npoints,0.0,normal3D[nfluxDir],1);
         }
@@ -771,21 +771,9 @@ namespace Nektar
     {
         int nvariables = inarray.num_elements();
         GetTraceJac(inarray,qfield,TraceJac,TraceJacDeriv);
-        // GetTraceJacDeriv(inarray,);
-// Fill2DArrayOfBlkDiagonalMat(gmtxarray,0.0);
-//         m_advObject->AddTraceJac2Mat(nvariables,m_fields, TraceJac,gmtxarray);
-
-// Cout2DArrayBlkMat(gmtxarray);
-// Fill2DArrayOfBlkDiagonalMat(gmtxarray,0.0);
-// cout <<endl<< "*****************************************"<<endl;
-// cout <<"New one"<<endl;
         int nSpaceDim = m_graph->GetSpaceDimension();
-        m_advObject->AddTraceJac2Mat_new(nvariables,nSpaceDim,m_fields, TraceJac,gmtxarray,TraceJacDeriv);
-
+        m_advObject->AddTraceJacToMat(nvariables,nSpaceDim,m_fields, TraceJac,gmtxarray,TraceJacDeriv);
         // GetTraceJacDeriv();
-
-// Cout2DArrayBlkMat(gmtxarray);
-// cout <<endl<< "￥￥￥￥￥￥￥￥￥￥￥￥￥￥￥￥￥￥￥￥￥￥￥￥￥￥￥"<<endl;
     }
 
     void CompressibleFlowSystem::GetTraceJac(

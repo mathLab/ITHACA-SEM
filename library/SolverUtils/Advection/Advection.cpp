@@ -154,18 +154,7 @@ void Advection::Advect_coeff(
             pOutarray, pTime, pFwd, pBwd);
 }
 
-
-void Advection::v_AddTraceJac2Mat(
-    const int                                          nConvectiveFields,
-    const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
-    const Array<OneD, DNekBlkMatSharedPtr>            &TraceJac,
-    Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray)
-{
-    ASSERTL0(false,"v_AddTraceJac2Mat NOT SPECIFIED");
-    return;
-}
-
-void Advection::v_AddTraceJac2Mat_new(
+void Advection::v_AddTraceJacToMat(
             const int                                           nConvectiveFields,
             const int                                           nSpaceDim,
             const Array<OneD, MultiRegions::ExpListSharedPtr>   &pFields,
@@ -173,18 +162,18 @@ void Advection::v_AddTraceJac2Mat_new(
             Array<OneD, Array<OneD, DNekBlkMatSharedPtr> >      &gmtxarray,
             const Array<OneD, DNekBlkMatSharedPtr>              &TraceJacGrad)
 {
-    ASSERTL0(false,"v_AddTraceJac2Mat_new NOT SPECIFIED");
+    ASSERTL0(false,"v_AddTraceJacToMat NOT SPECIFIED");
     return;
 }
 
 
-void Advection::v_AddVolumJac2Mat( const int nConvectiveFields,
+void Advection::v_AddVolumJacToMat( const int nConvectiveFields,
                                 const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
                                 const   Array<OneD, const  Array<OneD, DNekMatSharedPtr> >&ElmtJac,
                                 const int nDirctn, 
                                 Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray)
 {
-    ASSERTL0(false,"v_AddVolumJac2Mat NOT SPECIFIED");
+    ASSERTL0(false,"v_AddVolumJacToMat NOT SPECIFIED");
     return;
 }
 
@@ -230,7 +219,6 @@ void Advection::CalcTraceJac(
    
     m_riemann->CalcFluxJacobian(m_spaceDim, Fwd, Bwd, FJac,BJac);
 }
-
 
 /**
  * This function should be overridden in derived classes to initialise the

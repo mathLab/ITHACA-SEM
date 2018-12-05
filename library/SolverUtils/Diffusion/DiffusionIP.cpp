@@ -598,7 +598,7 @@ namespace Nektar
             }
         }
 
-        void DiffusionIP::v_AddVolumDerivJac2Mat( 
+        void DiffusionIP::v_AddVolumDerivJacToMat( 
             const int                                               nConvectiveFields,
             const Array<OneD, MultiRegions::ExpListSharedPtr>       &pFields,
             const Array<OneD, const Array<OneD, DNekMatSharedPtr> > &ElmtJac,

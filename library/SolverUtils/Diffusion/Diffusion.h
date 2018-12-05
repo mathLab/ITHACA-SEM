@@ -214,7 +214,7 @@ namespace Nektar
             {
                 v_physFieldDeriv(nConvectiveFields,fields,inarray,pFwd,pBwd,qfield);
             }
-            void AddVolumDerivJac2Mat( 
+            void AddVolumDerivJacToMat( 
                 const int                                               nConvectiveFields,
                 const Array<OneD, MultiRegions::ExpListSharedPtr>       &pFields,
                 const Array<OneD, const Array<OneD, DNekMatSharedPtr> > &ElmtJac,
@@ -222,7 +222,7 @@ namespace Nektar
                 const int                                               nDervDir, 
                       Array<OneD, Array<OneD, DNekBlkMatSharedPtr> >    &gmtxarray)
             {
-                v_AddVolumDerivJac2Mat(nConvectiveFields,pFields,ElmtJac,nfluxDir,nDervDir,gmtxarray);
+                v_AddVolumDerivJacToMat(nConvectiveFields,pFields,ElmtJac,nfluxDir,nDervDir,gmtxarray);
             }
             
             template<typename FuncPointerT, typename ObjectPointerT> 
@@ -394,7 +394,7 @@ namespace Nektar
                 const Array<OneD, Array<OneD, NekDouble> >                  &pFwd,
                 const Array<OneD, Array<OneD, NekDouble> >                  &pBwd,
                       Array<OneD, Array<OneD, Array<OneD, NekDouble> > >    &qfield);
-            virtual void v_AddVolumDerivJac2Mat( 
+            virtual void v_AddVolumDerivJacToMat( 
                 const int                                               nConvectiveFields,
                 const Array<OneD, MultiRegions::ExpListSharedPtr>       &pFields,
                 const Array<OneD, const Array<OneD, DNekMatSharedPtr> > &ElmtJac,

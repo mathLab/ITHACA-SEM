@@ -789,7 +789,7 @@ namespace Nektar
                 const Array<OneD, const NekDouble> &Fn,
                       Array<OneD, NekDouble> &outarray);
 
-            inline void AddTraceIntegral2OffDiag(
+            inline void AddTraceIntegralToOffDiag(
                 const Array<OneD, const NekDouble> &FwdFlux, 
                 const Array<OneD, const NekDouble> &BwdFlux, 
                       Array<OneD,       NekDouble> &outarray);
@@ -1222,7 +1222,7 @@ namespace Nektar
             const DNekScalBlkMatSharedPtr GenBlockMatrix(
                 const GlobalMatrixKey &gkey);
 
-            void GetElmt_id(const GlobalMatrixKey &gkey,map<int,int> &elmt_id);
+            // void GetElmt_id(const GlobalMatrixKey &gkey,map<int,int> &elmt_id);
             
             void MultiplyByBlockMatrix(
                 const GlobalMatrixKey             &gkey,
@@ -1313,7 +1313,7 @@ namespace Nektar
                 const Array<OneD, const NekDouble> &Fn,
                       Array<OneD, NekDouble> &outarray);
 
-            virtual void v_AddTraceIntegral2OffDiag(
+            virtual void v_AddTraceIntegralToOffDiag(
                 const Array<OneD, const NekDouble> &FwdFlux, 
                 const Array<OneD, const NekDouble> &BwdFlux, 
                       Array<OneD,       NekDouble> &outarray);
@@ -2432,12 +2432,12 @@ namespace Nektar
             v_AddTraceIntegral(Fn,outarray);
         }
 
-        inline void ExpList::AddTraceIntegral2OffDiag(
+        inline void ExpList::AddTraceIntegralToOffDiag(
                 const Array<OneD, const NekDouble> &FwdFlux, 
                 const Array<OneD, const NekDouble> &BwdFlux, 
                       Array<OneD,       NekDouble> &outarray)
         {
-            v_AddTraceIntegral2OffDiag(FwdFlux,BwdFlux,outarray);
+            v_AddTraceIntegralToOffDiag(FwdFlux,BwdFlux,outarray);
         }
 
         inline void ExpList::CalcTraceJacMatIntegral(

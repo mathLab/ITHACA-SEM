@@ -368,7 +368,7 @@ namespace Nektar
             }
 
             //TODO: TO CHECK WHETHER IT IS NEEDED HERE.
-            // virtual void v_AddTraceIntegral2OffDiag(
+            // virtual void v_AddTraceIntegralToOffDiag(
             //     const Array<OneD, const NekDouble> &FwdFlux, 
             //     const Array<OneD, const NekDouble> &BwdFlux, 
             //         Array<OneD,       NekDouble> &outarray);

@@ -646,8 +646,8 @@ namespace Nektar
                 v_IProductWRTBase(base, inarray, outarray, coll_check);
             }
 
-            void ElmtAddMatNSBlkDiag_volume( const Array<OneD, const Array<OneD, NekDouble> >&inarray,
-                                        DNekScalBlkMatSharedPtr gmtx);
+            // void ElmtAddMatNSBlkDiag_volume( const Array<OneD, const Array<OneD, NekDouble> >&inarray,
+            //                             DNekScalBlkMatSharedPtr gmtx);
                                         
             void IProductWRTDerivBaseElmt(const int nElmt, const int dir,
                                            const Array<OneD, const NekDouble> &inarray,

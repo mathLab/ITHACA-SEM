@@ -438,14 +438,14 @@ namespace Nektar
             m_totalIterations = 0;
 
             // If input residual is less than tolerance skip solve.
-            if  (eps * m_prec_factor < m_tolerance * m_tolerance * m_rhs_magnitude)
+            if (eps < m_tolerance * m_tolerance * m_rhs_magnitude)
             {
                 if (m_verbose && m_root)
                 {
-                    cout << "CG iterations made = " << m_totalIterations
-                         << " using tolerance of "  << m_tolerance
-                         << " (error = " << sqrt(eps / m_rhs_magnitude)
-                         << ", rhs_mag = " << sqrt(m_rhs_magnitude) <<  ")"
+                    cout << "CG iterations made = " << m_totalIterations 
+                         << " using tolerance of "  << m_tolerance 
+                         << " (error = " << sqrt(eps/m_rhs_magnitude) 
+                         << ", rhs_mag = " << sqrt(m_rhs_magnitude) <<  ")" 
                          << endl;
                 }
                 return;

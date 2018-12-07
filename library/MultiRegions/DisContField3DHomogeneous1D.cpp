@@ -47,6 +47,7 @@ namespace Nektar
         DisContField3DHomogeneous1D::DisContField3DHomogeneous1D(void)
         : ExpList3DHomogeneous1D(),
           m_bndCondExpansions(),
+          m_BndCondBwdWeight(),
           m_bndConditions()
         {
         }
@@ -59,6 +60,7 @@ namespace Nektar
             const bool                                  dealiasing):
             ExpList3DHomogeneous1D(pSession,HomoBasis,lhom,useFFT,dealiasing),
               m_bndCondExpansions(),
+              m_BndCondBwdWeight(),
               m_bndConditions()
         {
         }
@@ -68,6 +70,7 @@ namespace Nektar
             const bool                         DeclarePlanesSetCoeffPhys)
             : ExpList3DHomogeneous1D (In,false),
               m_bndCondExpansions    (In.m_bndCondExpansions),
+              m_BndCondBwdWeight     (In.m_BndCondBwdWeight),
               m_bndConditions        (In.m_bndConditions)
         {
             if (DeclarePlanesSetCoeffPhys)
@@ -98,6 +101,7 @@ namespace Nektar
             ExpList3DHomogeneous1D(pSession, HomoBasis, lhom, useFFT,
                                    dealiasing),
               m_bndCondExpansions(),
+              m_BndCondBwdWeight(),
               m_bndConditions()
         {
             int i, n, nel;
@@ -184,6 +188,8 @@ namespace Nektar
                 bregions.size());
             m_bndConditions = m_planes[0]->UpdateBndConditions();
 
+            m_BndCondBwdWeight   = Array<OneD,NekDouble>(bregions.size(),0.0);
+
             int nplanes = m_planes.num_elements();
             Array<OneD, MultiRegions::ExpListSharedPtr>
                 PlanesBndCondExp(nplanes);
@@ -235,6 +241,7 @@ namespace Nektar
                 if (time == 0.0 ||
                     m_bndConditions[n]->IsTimeDependent() )
                 {
+                    m_BndCondBwdWeight[n]   =   1.0;
                     m_bndCondExpansions[n]->HomogeneousFwdTrans(
                         m_bndCondExpansions[n]->GetCoeffs(),
                         m_bndCondExpansions[n]->UpdateCoeffs());

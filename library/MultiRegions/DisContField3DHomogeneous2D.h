@@ -117,6 +117,8 @@ namespace Nektar
         protected:
            
             Array<OneD,MultiRegions::ExpListSharedPtr>          m_bndCondExpansions;
+            
+            Array<OneD, NekDouble >                      m_BndCondBwdWeight;
 
             Array<OneD,SpatialDomains::BoundaryConditionShPtr>  m_bndConditions;
 			
@@ -157,6 +159,11 @@ namespace Nektar
             virtual std::shared_ptr<ExpList> &v_UpdateBndCondExpansion(int i);
 			
 			virtual Array<OneD, SpatialDomains::BoundaryConditionShPtr>& v_UpdateBndConditions();
+
+            virtual void v_SetBndCondBwdWeight(const int index, const NekDouble value)
+            {
+                m_BndCondBwdWeight[index]   =   value;
+            }
         };
 
         typedef std::shared_ptr<DisContField3DHomogeneous2D>  

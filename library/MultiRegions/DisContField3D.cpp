@@ -551,11 +551,11 @@ using namespace std;
                 AllocateSharedPtr(*this, m_trace, elmtToTrace,
                                   m_leftAdjacentFaces);
 
-            Array<OneD, Array<OneD, Array<OneD, int > > >   map;
-            bool flag;
-            CalcuTracephysToLeftRightExpphysMap(flag,map);
-            m_locTraceToTraceMap->SetTracephysToLeftRightExpphysMap(map);
-            m_locTraceToTraceMap->SetflagTracephysToLeftRightExpphysMap(flag);
+            // Array<OneD, Array<OneD, Array<OneD, int > > >   map;
+            // bool flag;
+            // CalcuTracephysToLeftRightExpphysMap(flag,map);
+            // m_locTraceToTraceMap->SetTracephysToLeftRightExpphysMap(map);
+            // m_locTraceToTraceMap->SetflagTracephysToLeftRightExpphysMap(flag);
          }
 
         /**

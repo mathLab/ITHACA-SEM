@@ -104,6 +104,10 @@ namespace Nektar
 
         m_diffusion = SolverUtils::GetDiffusionFactory()
                                     .CreateInstance(diffName, diffName);
+        if("InteriorPenalty"==diffName)
+        {
+            SetBoundaryConditionsBwdWeight();
+        }
 
         if (m_specHP_dealiasing)
         {
@@ -173,7 +177,23 @@ namespace Nektar
 
         string diffName;
         m_session->LoadSolverInfo("DiffusionType", diffName, "LDGNS");
-        if("LDGNS"==diffName)
+        if("InteriorPenalty"==diffName)
+        {
+            if(m_BndEvaluateTime<0.0)
+            {
+                ASSERTL0(false, "m_BndEvaluateTime not setup");
+            }
+            m_diffusion->Diffuse(nvariables, m_fields, inarray, outarrayDiff,m_BndEvaluateTime,
+                                pFwd, pBwd);
+            for (i = 0; i < nvariables; ++i)
+            {
+                Vmath::Vadd(npoints,
+                            outarrayDiff[i], 1,
+                            outarray[i], 1,
+                            outarray[i], 1);
+            }
+        }
+        else
         {
             Array<OneD, Array<OneD, NekDouble> > inarrayDiff(nvariables-1);
             Array<OneD, Array<OneD, NekDouble> > inFwd(nvariables-1);
@@ -231,26 +251,6 @@ namespace Nektar
                 m_artificialDiffusion->DoArtificialDiffusion(inarray, outarray);
             }
         }
-        else if("InteriorPenalty"==diffName)
-        {
-            if(m_BndEvaluateTime<0.0)
-            {
-                ASSERTL0(false, "m_BndEvaluateTime not setup");
-            }
-            m_diffusion->Diffuse(nvariables, m_fields, inarray, outarrayDiff,m_BndEvaluateTime,
-                                pFwd, pBwd);
-            for (i = 0; i < nvariables; ++i)
-            {
-                Vmath::Vadd(npoints,
-                            outarrayDiff[i], 1,
-                            outarray[i], 1,
-                            outarray[i], 1);
-            }
-        }
-        else
-        {
-            ASSERTL0(false, "diffusion type not coded");
-        }
     }
 
 
@@ -274,7 +274,23 @@ namespace Nektar
 
         string diffName;
         m_session->LoadSolverInfo("DiffusionType", diffName, "LDGNS");
-        if("LDGNS"==diffName)
+        if("InteriorPenalty"==diffName)
+        {
+            if(m_BndEvaluateTime<0.0)
+            {
+                ASSERTL0(false, "m_BndEvaluateTime not setup");
+            }
+            m_diffusion->Diffuse_coeff(nvariables, m_fields, inarray, outarrayDiff,m_BndEvaluateTime,
+                                pFwd, pBwd);
+            for (i = 0; i < nvariables; ++i)
+            {
+                Vmath::Vadd(ncoeffs,
+                            outarrayDiff[i], 1,
+                            outarray[i], 1,
+                            outarray[i], 1);
+            }
+        }
+        else
         {
             Array<OneD, Array<OneD, NekDouble> > inarrayDiff(nvariables-1);
             Array<OneD, Array<OneD, NekDouble> > inFwd(nvariables-1);
@@ -333,26 +349,6 @@ namespace Nektar
             {
                 m_artificialDiffusion->DoArtificialDiffusion_coeff(inarray, outarray);
             }
-        }
-        else if("InteriorPenalty"==diffName)
-        {
-            if(m_BndEvaluateTime<0.0)
-            {
-                ASSERTL0(false, "m_BndEvaluateTime not setup");
-            }
-            m_diffusion->Diffuse_coeff(nvariables, m_fields, inarray, outarrayDiff,m_BndEvaluateTime,
-                                pFwd, pBwd);
-            for (i = 0; i < nvariables; ++i)
-            {
-                Vmath::Vadd(ncoeffs,
-                            outarrayDiff[i], 1,
-                            outarray[i], 1,
-                            outarray[i], 1);
-            }
-        }
-        else
-        {
-            ASSERTL0(false, "diffusion type not coded");
         }
     }
 

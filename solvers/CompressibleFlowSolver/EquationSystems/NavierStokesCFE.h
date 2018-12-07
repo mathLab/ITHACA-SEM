@@ -290,6 +290,7 @@ namespace Nektar
         const int                                                       nSpaceDim,
         const Array<OneD, const Array<OneD, NekDouble> >                &normals,
         const int                                                       FluxDirection,
+        const int                                                       DerivDirection,
         const Array<OneD, const Array<OneD, NekDouble> >                &inaverg,
         const Array<OneD, const Array<OneD, NekDouble> >                &injumpp,
               Array<OneD, Array<OneD, NekDouble> >                      &outarray);

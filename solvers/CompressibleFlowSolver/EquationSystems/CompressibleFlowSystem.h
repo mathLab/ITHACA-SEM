@@ -111,7 +111,9 @@ namespace Nektar
             const Array<OneD, const Array<OneD, NekDouble> > &inarray,
                   Array<OneD,       Array<OneD, NekDouble> > &outarray,
             const NekDouble                                   time);
-        
+
+// #define DEMO_IMPLICITSOLVER_JFNK_COEFF
+#ifdef DEMO_IMPLICITSOLVER_JFNK_COEFF
         void preconditioner(
             const Array<OneD, NekDouble> &inarray,
                   Array<OneD, NekDouble >&out);
@@ -187,9 +189,6 @@ namespace Nektar
             Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray,
             const NekDouble valu);
 
-#define DEMO_IMPLICITSOLVER_JFNK_COEFF
-#ifdef DEMO_IMPLICITSOLVER_JFNK_COEFF
-
         void DoImplicitSolve_phy2coeff(
             const Array<OneD, const Array<OneD, NekDouble> >&inarray,
                 Array<OneD,       Array<OneD, NekDouble> >&out,
@@ -225,7 +224,6 @@ namespace Nektar
         void DebugNumCalElmtJac_coeff(
             Array<OneD, Array<OneD, DNekMatSharedPtr> > &ElmtPrecMatVars,
             const int nelmt);
-
         
         void NonlinSysEvaluator_coeff(
                 Array<OneD, Array<OneD, NekDouble> > &inarray,
@@ -235,10 +233,9 @@ namespace Nektar
                 Array<OneD, Array<OneD, NekDouble> > &inarray,
                 Array<OneD, Array<OneD, NekDouble> > &out);
 
-        void NonlinSysEvaluator_coeff_bnd(
-                Array<OneD, Array<OneD, NekDouble> > &inarray,
-                Array<OneD, Array<OneD, NekDouble> > &out);
-        
+        // void NonlinSysEvaluator_coeff_bnd(
+        //         Array<OneD, Array<OneD, NekDouble> > &inarray,
+        //         Array<OneD, Array<OneD, NekDouble> > &out);
 
         void DoOdeRhs_coeff(
             const Array<OneD, const Array<OneD, NekDouble> > &inarray,
@@ -255,8 +252,40 @@ namespace Nektar
 
         void MultiplyElmtInvMass_PlusSource(
             Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray,const NekDouble dtlamda);
-        
 
+        void GetFluxVectorJacDirctn(
+            const int                                           nDirctn,
+            const Array<OneD, const Array<OneD, NekDouble> >    &inarray,
+                  Array<OneD, Array<OneD, DNekMatSharedPtr> >   &ElmtJac);
+        void GetFluxVectorJacPoint(
+            const Array<OneD, NekDouble>                &conservVar, 
+            const Array<OneD, NekDouble>                &normals, 
+                 DNekMatSharedPtr                       &fluxJac);
+        
+        void CalTraceNumericalFlux(
+            const int                                                           nConvectiveFields,
+            const int                                                           nDim,
+            const int                                                           nPts,
+            const int                                                           nTracePts,
+            const NekDouble                                                     PenaltyFactor2,
+            const Array<OneD, MultiRegions::ExpListSharedPtr>                   &fields,
+            const Array<OneD, Array<OneD, NekDouble> >                          &AdvVel,
+            const Array<OneD, Array<OneD, NekDouble> >                          &inarray,
+            const NekDouble                                                     time,
+            const Array<OneD, const Array<OneD, Array<OneD, NekDouble> > >      &qfield,
+            const Array<OneD, Array<OneD, NekDouble> >                          &vFwd,
+            const Array<OneD, Array<OneD, NekDouble> >                          &vBwd,
+            const Array<OneD, NekDouble >                                       &MuVarTrace,
+                  Array<OneD, int >                                             &nonZeroIndex,
+                  Array<OneD, Array<OneD, NekDouble> >                          &traceflux);
+
+        void CalVisFluxDerivJac(
+            const int                                                       nConvectiveFields,
+            const Array<OneD, Array<OneD, NekDouble> >                      &inarray,
+            const Array<OneD, Array<OneD, NekDouble> >                      &Fwd,
+            const Array<OneD, Array<OneD, NekDouble> >                      &Bwd,
+            DNekBlkMatSharedPtr                                             &BJac);
+        
 #endif
 
         void DoAdvection(
@@ -288,14 +317,6 @@ namespace Nektar
             const Array<OneD, Array<OneD, NekDouble> >               &physfield,
                   Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &flux);
         
-        void GetFluxVectorJacDirctn(
-            const int                                           nDirctn,
-            const Array<OneD, const Array<OneD, NekDouble> >    &inarray,
-                  Array<OneD, Array<OneD, DNekMatSharedPtr> >   &ElmtJac);
-        void GetFluxVectorJacPoint(
-            const Array<OneD, NekDouble>                &conservVar, 
-            const Array<OneD, NekDouble>                &normals, 
-                 DNekMatSharedPtr                       &fluxJac);
         void GetDiffusionFluxJacDirctn(
             const int nDirctn,
             const Array<OneD, const Array<OneD, NekDouble> >                &inarray,
@@ -333,23 +354,6 @@ namespace Nektar
             const Array<OneD, const Array<OneD, NekDouble> > &inarray,
                   Array<OneD, NekDouble> &tstep);
 
-        void CalTraceNumericalFlux(
-            const int                                                           nConvectiveFields,
-            const int                                                           nDim,
-            const int                                                           nPts,
-            const int                                                           nTracePts,
-            const NekDouble                                                     PenaltyFactor2,
-            const Array<OneD, MultiRegions::ExpListSharedPtr>                   &fields,
-            const Array<OneD, Array<OneD, NekDouble> >                          &AdvVel,
-            const Array<OneD, Array<OneD, NekDouble> >                          &inarray,
-            const NekDouble                                                     time,
-            const Array<OneD, const Array<OneD, Array<OneD, NekDouble> > >      &qfield,
-            const Array<OneD, Array<OneD, NekDouble> >                          &vFwd,
-            const Array<OneD, Array<OneD, NekDouble> >                          &vBwd,
-            const Array<OneD, NekDouble >                                       &MuVarTrace,
-                  Array<OneD, int >                                             &nonZeroIndex,
-                  Array<OneD, Array<OneD, NekDouble> >                          &traceflux);
-
         void AddDiffusionFluxJacDirctn(
             const int                                                       nDirctn,
             const Array<OneD, const Array<OneD, NekDouble> >                &inarray,
@@ -380,13 +384,6 @@ namespace Nektar
         {
             v_GetViscousSymmtrFluxConservVar(nConvectiveFields,nSpaceDim,inaverg,inarray,outarray,nonZeroIndex,normals);
         }
-
-        void CalVisFluxDerivJac(
-            const int                                                       nConvectiveFields,
-            const Array<OneD, Array<OneD, NekDouble> >                      &inarray,
-            const Array<OneD, Array<OneD, NekDouble> >                      &Fwd,
-            const Array<OneD, Array<OneD, NekDouble> >                      &Bwd,
-            DNekBlkMatSharedPtr                                             &BJac);
 
         virtual NekDouble v_GetTimeStep(
             const Array<OneD, const Array<OneD, NekDouble> > &inarray);
@@ -420,7 +417,10 @@ namespace Nektar
             const Array<OneD, Array<OneD, NekDouble> >       &pFwd,
             const Array<OneD, Array<OneD, NekDouble> >       &pBwd)
         {
-            // Do nothing by default
+            if (m_shockCaptureType != "Off")
+            {
+                m_artificialDiffusion->DoArtificialDiffusion(inarray, outarray);
+            }
         }
 
         virtual void v_DoDiffusion_coeff(

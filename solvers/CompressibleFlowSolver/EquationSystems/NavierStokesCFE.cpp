@@ -174,7 +174,6 @@ namespace Nektar
             outarrayDiff[i] = Array<OneD, NekDouble>(npoints,0.0);
         }
 
-
         string diffName;
         m_session->LoadSolverInfo("DiffusionType", diffName, "LDGNS");
         if("InteriorPenalty"==diffName)
@@ -1766,19 +1765,37 @@ if(!ElmtJac.num_elements())
         Array< OneD, int >                                              &nonZeroIndex,    
         const Array<OneD, Array<OneD, NekDouble> >                      &normals)
     {
+        int nPts                = inaverg[nConvectiveFields-1].num_elements();
+
         nonZeroIndex = Array<OneD, int>(nConvectiveFields-1,0);
         for(int i=0;i<nConvectiveFields-1;i++)
         {
             nonZeroIndex[i] =   i+1;
         }
+
+        // for(int nd = 0; nd< nSpaceDim; nd++)
+        // {
+        //     GetViscousSymmtrFluxConservVarDrctn(nConvectiveFields,nSpaceDim,normals,nd,inaverg,inarray,outarray[nd]);
+        // }
+
+        Array<OneD, Array<OneD, NekDouble> > outtmp( nConvectiveFields );
+        for(int i=0;i<nConvectiveFields;i++)
+        {
+            outtmp[i] =   Array<OneD, NekDouble> (nPts, 0.0);
+        }
         for(int nd = 0; nd< nSpaceDim; nd++)
         {
-            // GetViscousSymmtrFluxConservVarDrctn(nConvectiveFields,nSpaceDim,normals,nd,inaverg,inarray,outarray[nd]);
-            
-            GetViscousSymmtrFluxConservVarDrctnVector(nConvectiveFields,nSpaceDim,normals,nd,inaverg,inarray,outarray[nd]);
-            
+            for(int nderiv =0; nderiv<nSpaceDim;nderiv++)
+            {
+                GetViscousSymmtrFluxConservVarDrctnVector(nConvectiveFields,nSpaceDim,normals,nd,nderiv,inaverg,inarray,outtmp);
+
+                for(int i=0;i<nConvectiveFields;i++)
+                {
+                    Vmath::Vvtvp(nPts,&outtmp[i][0],1,&normals[nderiv][0],1,&outarray[nd][i][0],1,&outarray[nd][i][0],1);
+                    // Vmath::Zero(nPts,&outtmp[i][0],1);
+                }
+            }
         }
-       
     }
     
     void NavierStokesCFE::GetViscousSymmtrFluxConservVarDrctn(
@@ -1904,6 +1921,7 @@ if(!ElmtJac.num_elements())
         const int                                                       nSpaceDim,
         const Array<OneD, const Array<OneD, NekDouble> >                &normals,
         const int                                                       FluxDirection,
+        const int                                                       DerivDirection,
         const Array<OneD, const Array<OneD, NekDouble> >                &inaverg,
         const Array<OneD, const Array<OneD, NekDouble> >                &injumpp,
               Array<OneD, Array<OneD, NekDouble> >                      &outarray)
@@ -1933,11 +1951,11 @@ if(!ElmtJac.num_elements())
         }
 
         NekDouble pointmu       = 0.0;
-        Array<OneD,Array<OneD, NekDouble>> outtmp (nConvectiveFields);
+        Array<OneD,Array<OneD, NekDouble>> outtmp = outarray;
         for(int i=0; i<nConvectiveFields;i++)
         {
             Vmath::Zero(nPts,&outarray[i][0],1);
-            outtmp[i]=Array<OneD,NekDouble> (nPts,0.0);
+            // outtmp[i]=Array<OneD,NekDouble> (nPts,0.0);
         }
 
         Array<OneD,Array<OneD,NekDouble>> u(nDim);
@@ -1976,70 +1994,71 @@ if(!ElmtJac.num_elements())
         Vmath::Vmul(nPts,&mu[0],1,&orho[0],1,&tmp[0],1);
 
 
-        for(int k=0;k<nDim;k++)
+        int k = DerivDirection;
+        // for(int k=0;k<nDim;k++)
+        // {
+        int MapDirection=k;
+        int MapDirection_plus_one=MapDirection+1;
+        if(MapDirection==FluxDirection)
         {
-            int MapDirection=k;
-            int MapDirection_plus_one=MapDirection+1;
-            if(MapDirection==FluxDirection)
-            {
-                Vmath::Svtvp(nPts,OneThird,&u2[FluxDirection][0],1,&q2[0],1,&tmp1[0],1);
-                Vmath::Svtvp(nPts,gammaoPr,&E_minus_q2[0],1,&tmp1[0],1,&tmp1[0],1);
-                Vmath::Vmul(nPts,&tmp1[0],1,&injumpp[0][0],1,&tmp1[0],1);
-                //orho is tmperary array
-                Vmath::Svtvm(nPts,gammaoPr,&injumpp[nDim_plus_one][0],1,&tmp1[0],1,&orho[0],1);
+            Vmath::Svtvp(nPts,OneThird,&u2[FluxDirection][0],1,&q2[0],1,&tmp1[0],1);
+            Vmath::Svtvp(nPts,gammaoPr,&E_minus_q2[0],1,&tmp1[0],1,&tmp1[0],1);
+            Vmath::Vmul(nPts,&tmp1[0],1,&injumpp[0][0],1,&tmp1[0],1);
+            //orho is tmperary array
+            Vmath::Svtvm(nPts,gammaoPr,&injumpp[nDim_plus_one][0],1,&tmp1[0],1,&orho[0],1);
 
-                for(int i=0;i<nDim;i++)
+            for(int i=0;i<nDim;i++)
+            {
+                int i_plus_one=i+1;
+                //flux[rhou,rhov,rhow]
+                Vmath::Vvtvm(nPts,&u[i][0],1,&injumpp[0][0],1,&injumpp[i_plus_one][0],1,&outtmp[i_plus_one][0],1);
+                Vmath::Neg(nPts,&outtmp[i_plus_one][0],1);
+                Vmath::Vmul(nPts,&tmp[0],1,&outtmp[i_plus_one][0],1,&outtmp[i_plus_one][0],1);
+                //flux rhoE
+                Vmath::Smul(nPts,one_minus_gammaoPr,&u[i][0],1,&tmp1[0],1);
+                Vmath::Vvtvp(nPts,&tmp1[0],1,&injumpp[i_plus_one][0],1,&outtmp[nDim_plus_one][0],1,&outtmp[nDim_plus_one][0],1);
+
+                if(i==FluxDirection)
                 {
-                	int i_plus_one=i+1;
-                    //flux[rhou,rhov,rhow]
-                	Vmath::Vvtvm(nPts,&u[i][0],1,&injumpp[0][0],1,&injumpp[i_plus_one][0],1,&outtmp[i_plus_one][0],1);
-                	Vmath::Neg(nPts,&outtmp[i_plus_one][0],1);
-                	Vmath::Vmul(nPts,&tmp[0],1,&outtmp[i_plus_one][0],1,&outtmp[i_plus_one][0],1);
-                    //flux rhoE
-                	Vmath::Smul(nPts,one_minus_gammaoPr,&u[i][0],1,&tmp1[0],1);
-                	Vmath::Vvtvp(nPts,&tmp1[0],1,&injumpp[i_plus_one][0],1,&outtmp[nDim_plus_one][0],1,&outtmp[nDim_plus_one][0],1);
-
-                	if(i==FluxDirection)
-                	{
-                		Vmath::Smul(nPts,FourThird,&outtmp[i_plus_one][0],1,&outtmp[i_plus_one][0],1);
-                        Vmath::Smul(nPts,OneThird,&u[FluxDirection][0],1,&tmp1[0],1);
-                		Vmath::Vvtvp(nPts,&tmp1[0],1,&injumpp[FluxDirection_plus_one][0],1,&outtmp[nDim_plus_one][0],1,&outtmp[nDim_plus_one][0],1);
-                	}
+                    Vmath::Smul(nPts,FourThird,&outtmp[i_plus_one][0],1,&outtmp[i_plus_one][0],1);
+                    Vmath::Smul(nPts,OneThird,&u[FluxDirection][0],1,&tmp1[0],1);
+                    Vmath::Vvtvp(nPts,&tmp1[0],1,&injumpp[FluxDirection_plus_one][0],1,&outtmp[nDim_plus_one][0],1,&outtmp[nDim_plus_one][0],1);
                 }
-                Vmath::Vadd(nPts,&orho[0],1,&outtmp[nDim_plus_one][0],1,&outtmp[nDim_plus_one][0],1);
-                Vmath::Vmul(nPts,&tmp[0],1,&outtmp[nDim_plus_one][0],1,&outtmp[nDim_plus_one][0],1);
-   
             }
-            else
-            {
-            	Vmath::Vvtvm(nPts,&u[MapDirection][0],1,&injumpp[0][0],1,&injumpp[MapDirection_plus_one][0],1,&tmp1[0],1);
-            	Vmath::Smul(nPts,TwoThird,&tmp1[0],1,&tmp1[0],1);
-            	Vmath::Vmul(nPts,&tmp[0],1,&tmp1[0],1,&outtmp[FluxDirection_plus_one][0],1);
+            Vmath::Vadd(nPts,&orho[0],1,&outtmp[nDim_plus_one][0],1,&outtmp[nDim_plus_one][0],1);
+            Vmath::Vmul(nPts,&tmp[0],1,&outtmp[nDim_plus_one][0],1,&outtmp[nDim_plus_one][0],1);
 
-            	Vmath::Vvtvm(nPts,&u[FluxDirection][0],1,&injumpp[0][0],1,&injumpp[FluxDirection_plus_one][0],1,&tmp1[0],1);
-            	Vmath::Neg(nPts,&tmp1[0],1);
-            	Vmath::Vmul(nPts,&tmp[0],1,&tmp1[0],1,&outtmp[MapDirection_plus_one][0],1);
+        }
+        else
+        {
+            Vmath::Vvtvm(nPts,&u[MapDirection][0],1,&injumpp[0][0],1,&injumpp[MapDirection_plus_one][0],1,&tmp1[0],1);
+            Vmath::Smul(nPts,TwoThird,&tmp1[0],1,&tmp1[0],1);
+            Vmath::Vmul(nPts,&tmp[0],1,&tmp1[0],1,&outtmp[FluxDirection_plus_one][0],1);
 
-                Vmath::Smul(nPts,OneThird,&u[FluxDirection][0],1,&tmp1[0],1);
-                Vmath::Vmul(nPts,&tmp1[0],1,&u[MapDirection][0],1,&tmp1[0],1);
-                Vmath::Vmul(nPts,&tmp1[0],1,&injumpp[0][0],1,&tmp1[0],1);
-                //previous orho as a tmperary memory because it is non-used any more
-                Vmath::Smul(nPts,TwoThird,&u[FluxDirection][0],1,&orho[0],1);
-                Vmath::Vmul(nPts,&orho[0],1,&injumpp[MapDirection_plus_one][0],1,&orho[0],1);
-                Vmath::Vadd(nPts,&tmp1[0],1,&orho[0],1,&tmp1[0],1);
-                Vmath::Neg(nPts,&tmp1[0],1);
-                Vmath::Vvtvp(nPts,&u[MapDirection][0],1,&injumpp[FluxDirection_plus_one][0],1,&tmp1[0],1,&tmp1[0],1);
-                Vmath::Vmul(nPts,&tmp[0],1,&tmp1[0],1,&outtmp[nDim_plus_one][0],1);
-            	
-            }
+            Vmath::Vvtvm(nPts,&u[FluxDirection][0],1,&injumpp[0][0],1,&injumpp[FluxDirection_plus_one][0],1,&tmp1[0],1);
+            Vmath::Neg(nPts,&tmp1[0],1);
+            Vmath::Vmul(nPts,&tmp[0],1,&tmp1[0],1,&outtmp[MapDirection_plus_one][0],1);
 
-            for(int i=0;i<nConvectiveFields;i++)
-            {
-                Vmath::Vvtvp(nPts,&outtmp[i][0],1,&normals[k][0],1,&outarray[i][0],1,&outarray[i][0],1);
-                Vmath::Zero(nPts,&outtmp[i][0],1);
-            }
+            Vmath::Smul(nPts,OneThird,&u[FluxDirection][0],1,&tmp1[0],1);
+            Vmath::Vmul(nPts,&tmp1[0],1,&u[MapDirection][0],1,&tmp1[0],1);
+            Vmath::Vmul(nPts,&tmp1[0],1,&injumpp[0][0],1,&tmp1[0],1);
+            //previous orho as a tmperary memory because it is non-used any more
+            Vmath::Smul(nPts,TwoThird,&u[FluxDirection][0],1,&orho[0],1);
+            Vmath::Vmul(nPts,&orho[0],1,&injumpp[MapDirection_plus_one][0],1,&orho[0],1);
+            Vmath::Vadd(nPts,&tmp1[0],1,&orho[0],1,&tmp1[0],1);
+            Vmath::Neg(nPts,&tmp1[0],1);
+            Vmath::Vvtvp(nPts,&u[MapDirection][0],1,&injumpp[FluxDirection_plus_one][0],1,&tmp1[0],1,&tmp1[0],1);
+            Vmath::Vmul(nPts,&tmp[0],1,&tmp1[0],1,&outtmp[nDim_plus_one][0],1);
             
-        }   
+        }
+
+            // for(int i=0;i<nConvectiveFields;i++)
+            // {
+            //     Vmath::Vvtvp(nPts,&outtmp[i][0],1,&normals[k][0],1,&outarray[i][0],1,&outarray[i][0],1);
+            //     Vmath::Zero(nPts,&outtmp[i][0],1);
+            // }
+            
+        // }   
     }
 
 }

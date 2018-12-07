@@ -132,13 +132,17 @@ namespace Nektar
         }
         else
         {   
+#ifdef DEMO_IMPLICITSOLVER_JFNK_COEFF
+
             m_ode.DefineOdeRhs    (&CompressibleFlowSystem::DoOdeRhs, this);
             m_ode.DefineProjection(&CompressibleFlowSystem::DoOdeProjection, this);
             // m_ode.DefineImplicitSolve    (&CompressibleFlowSystem::DoImplicitSolve, this);
             m_ode.DefineImplicitSolve    (&CompressibleFlowSystem::DoImplicitSolve_phy2coeff, this);
+#else
             
             
-            //ASSERTL0(false, "Implicit CFS not set up.");
+            ASSERTL0(false, "Implicit CFS not set up.");
+#endif
         }
 
         SetBoundaryConditionsBwdWeight();
@@ -350,6 +354,8 @@ namespace Nektar
                 break;
         }
     }
+
+#ifdef DEMO_IMPLICITSOLVER_JFNK_COEFF
 
     void CompressibleFlowSystem::preconditioner(
                                                  const Array<OneD, NekDouble> &inarray,
@@ -1153,7 +1159,6 @@ namespace Nektar
 
     }
 
-#ifdef DEMO_IMPLICITSOLVER_JFNK_COEFF
 
     void CompressibleFlowSystem::DoImplicitSolve_phy2coeff(
                                                  const Array<OneD, const Array<OneD, NekDouble> >&inpnts,
@@ -1935,200 +1940,118 @@ namespace Nektar
         m_advObject->Advect_coeff(nvariables, m_fields, advVel, inarray,
                             outarray, time, pFwd, pBwd);
     }
-#endif
-    /**
-     * @brief Compute the advection terms for the right-hand side
-     */
-    void CompressibleFlowSystem::DoAdvection(
-        const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-              Array<OneD,       Array<OneD, NekDouble> > &outarray,
-        const NekDouble                                   time,
-        const Array<OneD, Array<OneD, NekDouble> >       &pFwd,
-        const Array<OneD, Array<OneD, NekDouble> >       &pBwd)
+
+
+    void CompressibleFlowSystem::Cout1DArrayBlkMat(Array<OneD, DNekBlkMatSharedPtr> &gmtxarray,const unsigned int nwidthcolm)
     {
-        int nvariables = inarray.num_elements();
-        Array<OneD, Array<OneD, NekDouble> > advVel(m_spacedim);
+        int nvar1 = gmtxarray.num_elements();
 
-        m_advObject->Advect(nvariables, m_fields, advVel, inarray,
-                            outarray, time, pFwd, pBwd);
+        
+        for(int i = 0; i < nvar1; i++)
+        {
+            cout<<endl<<"£$£$£$£$£$£$££$£$£$$$£$££$$£$££$£$$££££$$£$£$£$£$£$£$££$£$$"<<endl<< "Cout2DArrayBlkMat i= "<<i<<endl;
+            CoutBlkMat(gmtxarray[i],nwidthcolm);
+        }
     }
-
     
-    /**
-     * @brief Add the diffusions terms to the right-hand side
-     */
-    void CompressibleFlowSystem::DoDiffusion(
-        const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-              Array<OneD,       Array<OneD, NekDouble> > &outarray,
-            const Array<OneD, Array<OneD, NekDouble> >   &pFwd,
-            const Array<OneD, Array<OneD, NekDouble> >   &pBwd)
+    void CompressibleFlowSystem::Cout2DArrayBlkMat(Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray,const unsigned int nwidthcolm)
     {
-        v_DoDiffusion(inarray, outarray, pFwd, pBwd);
-    }
+        int nvar1 = gmtxarray.num_elements();
+        int nvar2 = gmtxarray[0].num_elements();
 
-
-    /**
-     * @brief Add the diffusions terms to the right-hand side
-     */
-    void CompressibleFlowSystem::DoDiffusion_coeff(
-        const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-              Array<OneD,       Array<OneD, NekDouble> > &outarray,
-            const Array<OneD, Array<OneD, NekDouble> >   &pFwd,
-            const Array<OneD, Array<OneD, NekDouble> >   &pBwd)
-    {
-        v_DoDiffusion_coeff(inarray, outarray, pFwd, pBwd);
-    }
-
-    void CompressibleFlowSystem::SetBoundaryConditions(
-            Array<OneD, Array<OneD, NekDouble> >             &physarray,
-            NekDouble                                         time)
-    {
-        int nTracePts  = GetTraceTotPoints();
-        int nvariables = physarray.num_elements();
-
-        Array<OneD, Array<OneD, NekDouble> > Fwd(nvariables);
-        for (int i = 0; i < nvariables; ++i)
+        
+        for(int i = 0; i < nvar1; i++)
         {
-            Fwd[i] = Array<OneD, NekDouble>(nTracePts);
-            m_fields[i]->ExtractTracePhys(physarray[i], Fwd[i]);
-        }
-
-        if (m_bndConds.size())
-        {
-            // Loop over user-defined boundary conditions
-            for (auto &x : m_bndConds)
+            for(int j = 0; j < nvar2; j++)
             {
-                x->Apply(Fwd, physarray, time);
+                cout<<endl<<"£$£$£$£$£$£$££$£$£$$$£$££$$£$££$£$$££££$$£$£$£$£$£$£$££$£$$"<<endl<< "Cout2DArrayBlkMat i= "<<i<<" j=  "<<j<<endl;
+                CoutBlkMat(gmtxarray[i][j],nwidthcolm);
             }
         }
     }
 
-    void CompressibleFlowSystem::SetBoundaryConditionsBwdWeight()
+    void CompressibleFlowSystem::CoutBlkMat(DNekBlkMatSharedPtr &gmtx,const unsigned int nwidthcolm)
     {
-        if (m_bndConds.size())
+        DNekMatSharedPtr    loc_matNvar;
+
+        Array<OneD, unsigned int> rowSizes;
+        Array<OneD, unsigned int> colSizes;
+        gmtx->GetBlockSizes(rowSizes,colSizes);
+
+        int nelmts  = rowSizes.num_elements();
+        
+        // int noffset = 0;
+        for(int i = 0; i < nelmts; ++i)
         {
-            // Loop over user-defined boundary conditions
-            for (auto &x : m_bndConds)
+            loc_matNvar =   gmtx->GetBlock(i,i);
+            std::cout   <<std::endl<<"*********************************"<<std::endl<<"element :   "<<i<<std::endl;
+            CoutStandardMat(loc_matNvar,nwidthcolm);
+        }
+        return;
+    }
+
+
+    void CompressibleFlowSystem::CoutStandardMat(DNekMatSharedPtr &loc_matNvar,const unsigned int nwidthcolm)
+    {
+        int nrows = loc_matNvar->GetRows();
+        int ncols = loc_matNvar->GetColumns();
+        NekDouble tmp=0.0;
+        std::cout   <<"ROW="<<std::setw(3)<<-1<<" ";
+        for(int k = 0; k < ncols; k++)
+        {
+            std::cout   <<"   COL="<<std::setw(nwidthcolm-7)<<k;
+        }
+        std::cout   << endl;
+
+        for(int j = 0; j < nrows; j++)
+        {
+            std::cout   <<"ROW="<<std::setw(3)<<j<<" ";
+            for(int k = 0; k < ncols; k++)
             {
-                x->ApplyBwdWeight();
+                tmp =   (*loc_matNvar)(j,k);
+                std::cout   <<std::scientific<<std::setw(nwidthcolm)<<std::setprecision(nwidthcolm-8)<<tmp;
             }
+            std::cout   << endl;
         }
     }
 
-    void CompressibleFlowSystem::SetBoundaryConditionsDeriv(
-            const Array<OneD, const Array<OneD, NekDouble> >                    &physarray,
-            const Array<OneD, const Array<OneD, Array<OneD, NekDouble> > >      &dervarray,
-            NekDouble                                                           time,
-            const Array<OneD, const Array<OneD, NekDouble> >                    &pFwd,
-            const Array<OneD, const Array<OneD, Array<OneD, NekDouble> > >      &pDervFwd)
+    void CompressibleFlowSystem::Fill2DArrayOfBlkDiagonalMat(Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray,const NekDouble valu)
     {
-        int nTracePts  = GetTraceTotPoints();
-        int nvariables = physarray.num_elements();
+        
+        int n1d = gmtxarray.num_elements();
+        int n2d = gmtxarray[0].num_elements();
 
-        Array<OneD, Array<OneD, NekDouble> > Fwd;
-        if(pFwd.num_elements())
-        {
-            Fwd = pFwd;
-        }
-        else
-        {
-            Fwd = Array<OneD, Array<OneD, NekDouble> >(nvariables);
-            for (int i = 0; i < nvariables; ++i)
-            {
-                Fwd[i] = Array<OneD, NekDouble>(nTracePts);
-                m_fields[i]->ExtractTracePhys(physarray[i], Fwd[i]);
-            }
-        }
+        Array<OneD, unsigned int> rowSizes;
+        Array<OneD, unsigned int> colSizes;
 
-        Array<OneD, Array<OneD, Array<OneD, NekDouble> > > DervFwd;
-        if(pDervFwd.num_elements())
+        DNekMatSharedPtr    loc_matNvar;
+
+        for(int n1 = 0; n1 < n1d; ++n1)
         {
-            DervFwd = pDervFwd;
-        }
-        else
-        {
-            int nDim      = m_fields[0]->GetCoordim(0);
-            DervFwd =   Array<OneD, Array<OneD, Array<OneD, NekDouble> > >(nDim);
-            for (int nd = 0; nd < nDim; ++nd)
+            for(int n2 = 0; n2 < n2d; ++n2)
             {
-                DervFwd[nd]     =   Array<OneD, Array<OneD, NekDouble> > (nvariables);
-                for (int i = 0; i < nvariables; ++i)
+                
+                gmtxarray[n1][n2]->GetBlockSizes(rowSizes,colSizes);
+                int nelmts  = rowSizes.num_elements();
+
+                for(int i = 0; i < nelmts; ++i)
                 {
-                    DervFwd[nd][i]    = Array<OneD, NekDouble>(nTracePts,0.0);
-                    m_fields[i]->ExtractTracePhys(dervarray[nd][i], DervFwd[nd][i]);
+                    loc_matNvar =   gmtxarray[n1][n2]->GetBlock(i,i);
+
+                    int nrows = loc_matNvar->GetRows();
+                    int ncols = loc_matNvar->GetColumns();
+
+                    for(int j = 0; j < nrows; j++)
+                    {
+                        for(int k = 0; k < ncols; k++)
+                        {
+                            (*loc_matNvar)(j,k)=valu;
+                        }
+                    }
                 }
             }
         }
 
-        if (m_bndConds.size())
-        {
-            // Loop over user-defined boundary conditions
-            for (auto &x : m_bndConds)
-            {
-                x->ApplyDeriv(Fwd, physarray, DervFwd, dervarray, time);
-            }
-        }
-    }
-
-    /**
-     * @brief Return the flux vector for the compressible Euler equations.
-     *
-     * @param physfield   Fields.
-     * @param flux        Resulting flux.
-     */
-    void CompressibleFlowSystem::GetFluxVector(
-        const Array<OneD, Array<OneD, NekDouble> >               &physfield,
-              Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &flux)
-    {
-        int i, j;
-        int nq = physfield[0].num_elements();
-        int nVariables = m_fields.num_elements();
-
-        Array<OneD, NekDouble> pressure(nq);
-        Array<OneD, Array<OneD, NekDouble> > velocity(m_spacedim);
-
-        // Flux vector for the rho equation
-        for (i = 0; i < m_spacedim; ++i)
-        {
-            velocity[i] = Array<OneD, NekDouble>(nq);
-            Vmath::Vcopy(nq, physfield[i+1], 1, flux[0][i], 1);
-        }
-
-        m_varConv->GetVelocityVector(physfield, velocity);
-        m_varConv->GetPressure(physfield, pressure);
-
-        // Flux vector for the velocity fields
-        for (i = 0; i < m_spacedim; ++i)
-        {
-            for (j = 0; j < m_spacedim; ++j)
-            {
-                Vmath::Vmul(nq, velocity[j], 1, physfield[i+1], 1,
-                            flux[i+1][j], 1);
-            }
-
-            // Add pressure to appropriate field
-            Vmath::Vadd(nq, flux[i+1][i], 1, pressure, 1, flux[i+1][i], 1);
-        }
-
-        // Flux vector for energy.
-        Vmath::Vadd(nq, physfield[m_spacedim+1], 1, pressure, 1,
-                    pressure, 1);
-
-        for (j = 0; j < m_spacedim; ++j)
-        {
-            Vmath::Vmul(nq, velocity[j], 1, pressure, 1,
-                        flux[m_spacedim+1][j], 1);
-        }
-
-        // For the smooth viscosity model
-        if (nVariables == m_spacedim+3)
-        {
-            // Add a zero row for the advective fluxes
-            for (j = 0; j < m_spacedim; ++j)
-            {
-                Vmath::Zero(nq, flux[m_spacedim+2][j], 1);
-            }
-        }
     }
 
     void CompressibleFlowSystem::GetFluxVectorJacDirctn(
@@ -2366,6 +2289,200 @@ namespace Nektar
             (*FJac)(nsf+4,nsf+3) = -c5*vz + d5*nza;
             (*FJac)(nsf+4,nsf+4) = c5 + l1;
 
+    }
+#endif
+    /**
+     * @brief Compute the advection terms for the right-hand side
+     */
+    void CompressibleFlowSystem::DoAdvection(
+        const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+              Array<OneD,       Array<OneD, NekDouble> > &outarray,
+        const NekDouble                                   time,
+        const Array<OneD, Array<OneD, NekDouble> >       &pFwd,
+        const Array<OneD, Array<OneD, NekDouble> >       &pBwd)
+    {
+        int nvariables = inarray.num_elements();
+        Array<OneD, Array<OneD, NekDouble> > advVel(m_spacedim);
+
+        m_advObject->Advect(nvariables, m_fields, advVel, inarray,
+                            outarray, time, pFwd, pBwd);
+    }
+    
+    /**
+     * @brief Add the diffusions terms to the right-hand side
+     */
+    void CompressibleFlowSystem::DoDiffusion(
+        const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+              Array<OneD,       Array<OneD, NekDouble> > &outarray,
+            const Array<OneD, Array<OneD, NekDouble> >   &pFwd,
+            const Array<OneD, Array<OneD, NekDouble> >   &pBwd)
+    {
+        v_DoDiffusion(inarray, outarray, pFwd, pBwd);
+    }
+
+
+    /**
+     * @brief Add the diffusions terms to the right-hand side
+     */
+    void CompressibleFlowSystem::DoDiffusion_coeff(
+        const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+              Array<OneD,       Array<OneD, NekDouble> > &outarray,
+            const Array<OneD, Array<OneD, NekDouble> >   &pFwd,
+            const Array<OneD, Array<OneD, NekDouble> >   &pBwd)
+    {
+        v_DoDiffusion_coeff(inarray, outarray, pFwd, pBwd);
+    }
+
+    void CompressibleFlowSystem::SetBoundaryConditions(
+            Array<OneD, Array<OneD, NekDouble> >             &physarray,
+            NekDouble                                         time)
+    {
+        int nTracePts  = GetTraceTotPoints();
+        int nvariables = physarray.num_elements();
+
+        Array<OneD, Array<OneD, NekDouble> > Fwd(nvariables);
+        for (int i = 0; i < nvariables; ++i)
+        {
+            Fwd[i] = Array<OneD, NekDouble>(nTracePts);
+            m_fields[i]->ExtractTracePhys(physarray[i], Fwd[i]);
+        }
+
+        if (m_bndConds.size())
+        {
+            // Loop over user-defined boundary conditions
+            for (auto &x : m_bndConds)
+            {
+                x->Apply(Fwd, physarray, time);
+            }
+        }
+    }
+
+    void CompressibleFlowSystem::SetBoundaryConditionsBwdWeight()
+    {
+        if (m_bndConds.size())
+        {
+            // Loop over user-defined boundary conditions
+            for (auto &x : m_bndConds)
+            {
+                x->ApplyBwdWeight();
+            }
+        }
+    }
+
+    void CompressibleFlowSystem::SetBoundaryConditionsDeriv(
+            const Array<OneD, const Array<OneD, NekDouble> >                    &physarray,
+            const Array<OneD, const Array<OneD, Array<OneD, NekDouble> > >      &dervarray,
+            NekDouble                                                           time,
+            const Array<OneD, const Array<OneD, NekDouble> >                    &pFwd,
+            const Array<OneD, const Array<OneD, Array<OneD, NekDouble> > >      &pDervFwd)
+    {
+        int nTracePts  = GetTraceTotPoints();
+        int nvariables = physarray.num_elements();
+
+        Array<OneD, Array<OneD, NekDouble> > Fwd;
+        if(pFwd.num_elements())
+        {
+            Fwd = pFwd;
+        }
+        else
+        {
+            Fwd = Array<OneD, Array<OneD, NekDouble> >(nvariables);
+            for (int i = 0; i < nvariables; ++i)
+            {
+                Fwd[i] = Array<OneD, NekDouble>(nTracePts);
+                m_fields[i]->ExtractTracePhys(physarray[i], Fwd[i]);
+            }
+        }
+
+        Array<OneD, Array<OneD, Array<OneD, NekDouble> > > DervFwd;
+        if(pDervFwd.num_elements())
+        {
+            DervFwd = pDervFwd;
+        }
+        else
+        {
+            int nDim      = m_fields[0]->GetCoordim(0);
+            DervFwd =   Array<OneD, Array<OneD, Array<OneD, NekDouble> > >(nDim);
+            for (int nd = 0; nd < nDim; ++nd)
+            {
+                DervFwd[nd]     =   Array<OneD, Array<OneD, NekDouble> > (nvariables);
+                for (int i = 0; i < nvariables; ++i)
+                {
+                    DervFwd[nd][i]    = Array<OneD, NekDouble>(nTracePts,0.0);
+                    m_fields[i]->ExtractTracePhys(dervarray[nd][i], DervFwd[nd][i]);
+                }
+            }
+        }
+
+        if (m_bndConds.size())
+        {
+            // Loop over user-defined boundary conditions
+            for (auto &x : m_bndConds)
+            {
+                x->ApplyDeriv(Fwd, physarray, DervFwd, dervarray, time);
+            }
+        }
+    }
+
+    /**
+     * @brief Return the flux vector for the compressible Euler equations.
+     *
+     * @param physfield   Fields.
+     * @param flux        Resulting flux.
+     */
+    void CompressibleFlowSystem::GetFluxVector(
+        const Array<OneD, Array<OneD, NekDouble> >               &physfield,
+              Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &flux)
+    {
+        int i, j;
+        int nq = physfield[0].num_elements();
+        int nVariables = m_fields.num_elements();
+
+        Array<OneD, NekDouble> pressure(nq);
+        Array<OneD, Array<OneD, NekDouble> > velocity(m_spacedim);
+
+        // Flux vector for the rho equation
+        for (i = 0; i < m_spacedim; ++i)
+        {
+            velocity[i] = Array<OneD, NekDouble>(nq);
+            Vmath::Vcopy(nq, physfield[i+1], 1, flux[0][i], 1);
+        }
+
+        m_varConv->GetVelocityVector(physfield, velocity);
+        m_varConv->GetPressure(physfield, pressure);
+
+        // Flux vector for the velocity fields
+        for (i = 0; i < m_spacedim; ++i)
+        {
+            for (j = 0; j < m_spacedim; ++j)
+            {
+                Vmath::Vmul(nq, velocity[j], 1, physfield[i+1], 1,
+                            flux[i+1][j], 1);
+            }
+
+            // Add pressure to appropriate field
+            Vmath::Vadd(nq, flux[i+1][i], 1, pressure, 1, flux[i+1][i], 1);
+        }
+
+        // Flux vector for energy.
+        Vmath::Vadd(nq, physfield[m_spacedim+1], 1, pressure, 1,
+                    pressure, 1);
+
+        for (j = 0; j < m_spacedim; ++j)
+        {
+            Vmath::Vmul(nq, velocity[j], 1, pressure, 1,
+                        flux[m_spacedim+1][j], 1);
+        }
+
+        // For the smooth viscosity model
+        if (nVariables == m_spacedim+3)
+        {
+            // Add a zero row for the advective fluxes
+            for (j = 0; j < m_spacedim; ++j)
+            {
+                Vmath::Zero(nq, flux[m_spacedim+2][j], 1);
+            }
+        }
     }
 
     /**
@@ -2796,128 +2913,6 @@ namespace Nektar
         }
     }
 
-
-    void CompressibleFlowSystem::Cout1DArrayBlkMat(Array<OneD, DNekBlkMatSharedPtr> &gmtxarray,const unsigned int nwidthcolm)
-    {
-        int nvar1 = gmtxarray.num_elements();
-
-        
-        for(int i = 0; i < nvar1; i++)
-        {
-            cout<<endl<<"£$£$£$£$£$£$££$£$£$$$£$££$$£$££$£$$££££$$£$£$£$£$£$£$££$£$$"<<endl<< "Cout2DArrayBlkMat i= "<<i<<endl;
-            CoutBlkMat(gmtxarray[i],nwidthcolm);
-        }
-    }
-    
-    void CompressibleFlowSystem::Cout2DArrayBlkMat(Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray,const unsigned int nwidthcolm)
-    {
-        int nvar1 = gmtxarray.num_elements();
-        int nvar2 = gmtxarray[0].num_elements();
-
-        
-        for(int i = 0; i < nvar1; i++)
-        {
-            for(int j = 0; j < nvar2; j++)
-            {
-                cout<<endl<<"£$£$£$£$£$£$££$£$£$$$£$££$$£$££$£$$££££$$£$£$£$£$£$£$££$£$$"<<endl<< "Cout2DArrayBlkMat i= "<<i<<" j=  "<<j<<endl;
-                CoutBlkMat(gmtxarray[i][j],nwidthcolm);
-            }
-        }
-    }
-
-    void CompressibleFlowSystem::CoutBlkMat(DNekBlkMatSharedPtr &gmtx,const unsigned int nwidthcolm)
-    {
-        DNekMatSharedPtr    loc_matNvar;
-
-        Array<OneD, unsigned int> rowSizes;
-        Array<OneD, unsigned int> colSizes;
-        gmtx->GetBlockSizes(rowSizes,colSizes);
-
-        int nelmts  = rowSizes.num_elements();
-        
-        // int noffset = 0;
-        for(int i = 0; i < nelmts; ++i)
-        {
-            loc_matNvar =   gmtx->GetBlock(i,i);
-            std::cout   <<std::endl<<"*********************************"<<std::endl<<"element :   "<<i<<std::endl;
-            CoutStandardMat(loc_matNvar,nwidthcolm);
-        }
-        return;
-    }
-
-
-    void CompressibleFlowSystem::CoutStandardMat(DNekMatSharedPtr &loc_matNvar,const unsigned int nwidthcolm)
-    {
-        int nrows = loc_matNvar->GetRows();
-        int ncols = loc_matNvar->GetColumns();
-        NekDouble tmp=0.0;
-        std::cout   <<"ROW="<<std::setw(3)<<-1<<" ";
-        for(int k = 0; k < ncols; k++)
-        {
-            std::cout   <<"   COL="<<std::setw(nwidthcolm-7)<<k;
-        }
-        std::cout   << endl;
-
-        for(int j = 0; j < nrows; j++)
-        {
-            std::cout   <<"ROW="<<std::setw(3)<<j<<" ";
-            for(int k = 0; k < ncols; k++)
-            {
-                tmp =   (*loc_matNvar)(j,k);
-                std::cout   <<std::scientific<<std::setw(nwidthcolm)<<std::setprecision(nwidthcolm-8)<<tmp;
-            }
-            std::cout   << endl;
-        }
-    }
-
-    void CompressibleFlowSystem::Fill2DArrayOfBlkDiagonalMat(Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray,const NekDouble valu)
-    {
-        
-        int n1d = gmtxarray.num_elements();
-        int n2d = gmtxarray[0].num_elements();
-
-        Array<OneD, unsigned int> rowSizes;
-        Array<OneD, unsigned int> colSizes;
-
-        DNekMatSharedPtr    loc_matNvar;
-
-        for(int n1 = 0; n1 < n1d; ++n1)
-        {
-            for(int n2 = 0; n2 < n2d; ++n2)
-            {
-                
-                gmtxarray[n1][n2]->GetBlockSizes(rowSizes,colSizes);
-                int nelmts  = rowSizes.num_elements();
-
-                for(int i = 0; i < nelmts; ++i)
-                {
-                    loc_matNvar =   gmtxarray[n1][n2]->GetBlock(i,i);
-
-                    int nrows = loc_matNvar->GetRows();
-                    int ncols = loc_matNvar->GetColumns();
-
-                    for(int j = 0; j < nrows; j++)
-                    {
-                        for(int k = 0; k < ncols; k++)
-                        {
-                            (*loc_matNvar)(j,k)=valu;
-                        }
-                    }
-                }
-            }
-        }
-
-    }
-
-    void CompressibleFlowSystem::v_AddDiffusionFluxJacDirctn(
-            const int                                                       nDirctn,
-            const Array<OneD, const Array<OneD, NekDouble> >                &inarray,
-            const Array<OneD, const Array<OneD, Array<OneD, NekDouble>> >   &qfields,
-                  Array<OneD, Array<OneD, DNekMatSharedPtr> >               &ElmtJac)
-    {
-        ASSERTL0(false, "not coded");
-    }
-
     void CompressibleFlowSystem::v_GetFluxDerivJacDirctn(
             const MultiRegions::ExpListSharedPtr                            &explist,
             const Array<OneD, const Array<OneD, NekDouble> >                &normals,
@@ -2947,6 +2942,15 @@ namespace Nektar
             const NekDouble                                     DmuDT,
             const Array<OneD, NekDouble>                        &normals, 
                   DNekMatSharedPtr                              &fluxJac)
+    {
+        ASSERTL0(false, "not coded");
+    }
+
+    void CompressibleFlowSystem::v_AddDiffusionFluxJacDirctn(
+            const int                                                       nDirctn,
+            const Array<OneD, const Array<OneD, NekDouble> >                &inarray,
+            const Array<OneD, const Array<OneD, Array<OneD, NekDouble>> >   &qfields,
+                  Array<OneD, Array<OneD, DNekMatSharedPtr> >               &ElmtJac)
     {
         ASSERTL0(false, "not coded");
     }

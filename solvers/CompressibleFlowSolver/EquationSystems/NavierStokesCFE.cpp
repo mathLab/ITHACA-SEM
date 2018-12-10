@@ -1986,13 +1986,8 @@ if(!ElmtJac.num_elements())
         Vmath::Vsub(nPts,&E_minus_q2[0],1,&q2[0],1,&E_minus_q2[0],1);
         Vmath::Vmul(nPts,&mu[0],1,&orho[0],1,&tmp[0],1);
 
-
-        int k = DerivDirection;
-        // for(int k=0;k<nDim;k++)
-        // {
-        int MapDirection=k;
-        int MapDirection_plus_one=MapDirection+1;
-        if(MapDirection==FluxDirection)
+        int DerivDirection_plus_one=DerivDirection+1;
+        if(DerivDirection==FluxDirection)
         {
             Vmath::Svtvp(nPts,OneThird,&u2[FluxDirection][0],1,&q2[0],1,&tmp1[0],1);
             Vmath::Svtvp(nPts,gammaoPr,&E_minus_q2[0],1,&tmp1[0],1,&tmp1[0],1);
@@ -2024,34 +2019,27 @@ if(!ElmtJac.num_elements())
         }
         else
         {
-            Vmath::Vvtvm(nPts,&u[MapDirection][0],1,&injumpp[0][0],1,&injumpp[MapDirection_plus_one][0],1,&tmp1[0],1);
+            Vmath::Vvtvm(nPts,&u[DerivDirection][0],1,&injumpp[0][0],1,&injumpp[DerivDirection_plus_one][0],1,&tmp1[0],1);
             Vmath::Smul(nPts,TwoThird,&tmp1[0],1,&tmp1[0],1);
             Vmath::Vmul(nPts,&tmp[0],1,&tmp1[0],1,&outtmp[FluxDirection_plus_one][0],1);
 
             Vmath::Vvtvm(nPts,&u[FluxDirection][0],1,&injumpp[0][0],1,&injumpp[FluxDirection_plus_one][0],1,&tmp1[0],1);
             Vmath::Neg(nPts,&tmp1[0],1);
-            Vmath::Vmul(nPts,&tmp[0],1,&tmp1[0],1,&outtmp[MapDirection_plus_one][0],1);
+            Vmath::Vmul(nPts,&tmp[0],1,&tmp1[0],1,&outtmp[DerivDirection_plus_one][0],1);
 
             Vmath::Smul(nPts,OneThird,&u[FluxDirection][0],1,&tmp1[0],1);
-            Vmath::Vmul(nPts,&tmp1[0],1,&u[MapDirection][0],1,&tmp1[0],1);
+            Vmath::Vmul(nPts,&tmp1[0],1,&u[DerivDirection][0],1,&tmp1[0],1);
             Vmath::Vmul(nPts,&tmp1[0],1,&injumpp[0][0],1,&tmp1[0],1);
             //previous orho as a tmperary memory because it is non-used any more
             Vmath::Smul(nPts,TwoThird,&u[FluxDirection][0],1,&orho[0],1);
-            Vmath::Vmul(nPts,&orho[0],1,&injumpp[MapDirection_plus_one][0],1,&orho[0],1);
+            Vmath::Vmul(nPts,&orho[0],1,&injumpp[DerivDirection_plus_one][0],1,&orho[0],1);
             Vmath::Vadd(nPts,&tmp1[0],1,&orho[0],1,&tmp1[0],1);
             Vmath::Neg(nPts,&tmp1[0],1);
-            Vmath::Vvtvp(nPts,&u[MapDirection][0],1,&injumpp[FluxDirection_plus_one][0],1,&tmp1[0],1,&tmp1[0],1);
+            Vmath::Vvtvp(nPts,&u[DerivDirection][0],1,&injumpp[FluxDirection_plus_one][0],1,&tmp1[0],1,&tmp1[0],1);
             Vmath::Vmul(nPts,&tmp[0],1,&tmp1[0],1,&outtmp[nDim_plus_one][0],1);
             
         }
-
-            // for(int i=0;i<nConvectiveFields;i++)
-            // {
-            //     Vmath::Vvtvp(nPts,&outtmp[i][0],1,&normals[k][0],1,&outarray[i][0],1,&outarray[i][0],1);
-            //     Vmath::Zero(nPts,&outtmp[i][0],1);
-            // }
-            
-        // }   
+ 
     }
 
 }

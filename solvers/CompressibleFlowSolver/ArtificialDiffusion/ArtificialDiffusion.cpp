@@ -103,14 +103,6 @@ void ArtificialDiffusion::v_DoArtificialDiffusion(
     }
 }
 
-void ArtificialDiffusion::DoArtificialDiffusionFlux(
-            const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-            Array<OneD, Array<OneD, Array<OneD, NekDouble>>> &VolumeFlux,
-                  Array<OneD, Array<OneD, NekDouble>>        &TraceFlux)
-{
-    v_DoArtificialDiffusionFlux(inarray, VolumeFlux,TraceFlux);
-}
-
 /**
  *
  */
@@ -133,23 +125,16 @@ void ArtificialDiffusion::v_DoArtificialDiffusionFlux(
     for (int j = 0; j < nDim; ++j)
     {
         VolumeDiff[j] = Array<OneD, Array<OneD, NekDouble>>(nvariables);
+        inarrayDiffderivative[j]=Array<OneD, Array<OneD, NekDouble>> (nvariables);
         for (int i = 0; i < nvariables; ++i)
         {
             VolumeDiff[j][i] = Array<OneD, NekDouble>(npoints, 0.0);
+            inarrayDiffderivative[j][i]=Array<OneD, NekDouble>(npoints,0.0);
         }
     }
     for (int i = 0; i < nvariables; ++i)
     {
         TraceDiff[i] = Array<OneD, NekDouble>(nTracePts, 0.0);
-    }
-
-    for (int i = 0; i < nDim; i++)
-    {
-        inarrayDiffderivative[i]=Array<OneD, Array<OneD, NekDouble>> (nvariables-1);
-        for(int j=0;j<nvariables;j++)
-        {
-            inarrayDiffderivative[i][j]=Array<OneD, NekDouble>(npoints);
-        }
     }
 
     // Diffusion term in physical rhs form

@@ -134,6 +134,28 @@ namespace Nektar
         {
             ASSERTL0(false, "Implicit CFS not set up.");
         }
+
+        string advName;
+        m_session->LoadSolverInfo("AdvectionType", advName, "WeakDG");
+	    // m_session->LoadSolverInfo("useUnifiedWeakIntegration", m_useUnifiedWeakIntegration, false);   
+        // m_session->LoadParameter("useUnifiedWeakIntegration", m_useUnifiedWeakIntegration, false);
+        m_session->MatchSolverInfo(
+            "useUnifiedWeakIntegration", "True", m_useUnifiedWeakIntegration, false);
+        if(m_useUnifiedWeakIntegration)
+        {
+            if(advName=="WeakDG" && m_shockCaptureType!="Smooth"&&(eNotHomogeneous == m_HomogeneousType))
+            {
+
+            }
+            else
+            {
+                m_useUnifiedWeakIntegration=false;
+                if(m_session->DefinesCmdLineArgument("verbose"))
+                {
+                    WARNINGL0(false, "useUnifiedWeakIntegration not coded for these parameters of Advection");
+                }
+            }
+        }
     }
 
     /**
@@ -256,7 +278,7 @@ void CompressibleFlowSystem::DoOdeRhs(
         }
         
         //Only test solver use the reduced coddes
-        if(m_ImproveEfficiency)
+        if(m_useUnifiedWeakIntegration)
         {
             Array<OneD, Array<OneD, Array<OneD, NekDouble>>> VolumeFlux1(nvariables);
             Array<OneD, Array<OneD, Array<OneD, NekDouble>>> VolumeFlux2(nDim);

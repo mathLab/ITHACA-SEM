@@ -113,9 +113,19 @@ namespace Nektar
         //Only NavierStokes equation and using weakDG,LDGNS can temparary use the codes
         m_session->LoadSolverInfo("AdvectionType", advName, "WeakDG");
 	    m_session->LoadSolverInfo("DiffusionType", diffName, "LDGNS");
-        if(advName=="WeakDG" && ((diffName=="LDGNS")||(diffName=="InteriorPenalty"))&& m_shockCaptureType!="Smooth")
+        if(m_useUnifiedWeakIntegration)
         {
-            m_ImproveEfficiency=true;
+            if(advName=="WeakDG" && ((diffName=="LDGNS")||(diffName=="InteriorPenalty")))
+            {
+            }
+            else
+            {
+                m_useUnifiedWeakIntegration=false;
+                if(m_session->DefinesCmdLineArgument("verbose"))
+                {
+                    WARNINGL0(false, "useUnifiedWeakIntegration not coded for these parameters of Diffusion");
+                }
+            }
         }
     }
 
@@ -206,12 +216,16 @@ namespace Nektar
         Array<OneD, Array<OneD, NekDouble>> outarrayDiff(nvariables);
         for (int i = 0; i < nvariables; ++i)
         {
-            outarrayDiff[i] = Array<OneD, NekDouble>(npoints);
+            outarrayDiff[i] = Array<OneD, NekDouble>(npoints,0.0);
         }
         
         string diffName;
         m_session->LoadSolverInfo("DiffusionType", diffName, "LDGNS");
-        if("LDGNS"==diffName)
+        if("InteriorPenalty"==diffName)
+        {
+
+        }
+        else
         {
             Array<OneD, Array<OneD, NekDouble>> inarrayDiff;
             Array<OneD, Array<OneD, NekDouble>> inFwd;
@@ -273,17 +287,7 @@ namespace Nektar
             m_diffusion->DiffuseCalculateDerivative(nvariables,m_fields,inarrayDiff,inarrayDiffderivative,inFwd,inBwd);
             m_diffusion->DiffuseVolumeFlux(nvariables, m_fields, inarrayDiff,inarrayDiffderivative, VolumeFlux);
             m_diffusion->DiffuseTraceFlux(nvariables, m_fields, inarrayDiff,inarrayDiffderivative,VolumeFlux,TraceFlux, inFwd, inBwd);
-
         }
-        else if("InteriorPenalty"==diffName)
-        {
-
-        }
-        else
-        {
-            ASSERTL0(false, "diffusion type not coded");
-        }
-
     }
 
     /**

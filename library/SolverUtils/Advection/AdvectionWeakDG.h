@@ -70,12 +70,15 @@ namespace Nektar
                 const Array<OneD, Array<OneD, NekDouble> >        &pBwd = NullNekDoubleArrayofArray);
 
              virtual void v_AdvectVolumeFlux(
-                const int                                         nConvective,
+                const int                                         nConvectiveFields,
                 const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
                 const Array<OneD, Array<OneD, NekDouble>>         &advVel,
                 const Array<OneD, Array<OneD, NekDouble>>         &inarray,
                 Array<OneD, Array<OneD, Array<OneD, NekDouble>>>  &VolumeFlux,
-                const NekDouble                                   &time);
+                const NekDouble &time)
+            {
+                m_fluxVector(inarray, VolumeFlux);
+            }
 
              virtual void v_AdvectTraceFlux(
                 const int nConvective,

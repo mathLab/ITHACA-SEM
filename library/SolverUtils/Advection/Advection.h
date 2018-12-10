@@ -87,23 +87,31 @@ public:
     
     /// Interface function to advect the Volume field.
     SOLVER_UTILS_EXPORT void AdvectVolumeFlux(
-        const int nConvectiveFields,
-        const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
-        const Array<OneD, Array<OneD, NekDouble> >        &advVel,
-        const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-        Array<OneD, Array<OneD, Array<OneD, NekDouble>>>  &VolumeFlux,
-        const NekDouble                                   &time);
+        const int                                         nConvectiveFields,
+        const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
+        const Array<OneD, Array<OneD, NekDouble>>         &pAdvVel,
+        const Array<OneD, Array<OneD, NekDouble>>         &pInarray,
+        Array<OneD, Array<OneD, Array<OneD, NekDouble>>>  &pVolumeFlux,
+        const NekDouble                                   &pTime)
+    {
+        v_AdvectVolumeFlux(nConvectiveFields, pFields, pAdvVel, pInarray, pVolumeFlux,
+                   pTime);
+    }
 
     /// Interface function to advect the Trace field.
     SOLVER_UTILS_EXPORT void AdvectTraceFlux(
-        const int nConvectiveFields,
-        const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
-        const Array<OneD, Array<OneD, NekDouble> >        &advVel,
-        const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-        Array<OneD, Array<OneD, NekDouble>>               &TraceFlux,
-        const NekDouble                                   &time,
-        const Array<OneD, Array<OneD, NekDouble> >        &pFwd = NullNekDoubleArrayofArray,
-        const Array<OneD, Array<OneD, NekDouble> >        &pBwd = NullNekDoubleArrayofArray);
+        const int                                         nConvectiveFields,
+        const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
+        const Array<OneD, Array<OneD, NekDouble>>         &pAdvVel,
+        const Array<OneD, Array<OneD, NekDouble>>         &pInarray,
+        Array<OneD, Array<OneD, NekDouble>>               &pTraceFlux,
+        const NekDouble                                   &pTime,
+        const Array<OneD, Array<OneD, NekDouble>>         &pFwd = NullNekDoubleArrayofArray,
+        const Array<OneD, Array<OneD, NekDouble>>         &pBwd = NullNekDoubleArrayofArray)
+    {
+        v_AdvectTraceFlux(nConvectiveFields, pFields, pAdvVel, pInarray, 
+                  pTraceFlux, pTime, pFwd, pBwd);
+    }
 
     /**
      * @brief Set the flux vector callback function.

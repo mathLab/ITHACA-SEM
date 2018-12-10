@@ -78,8 +78,11 @@ class ArtificialDiffusion
         
         void DoArtificialDiffusionFlux(
             const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-            Array<OneD, Array<OneD, Array<OneD, NekDouble>>> &VolumeArray,
-                  Array<OneD, Array<OneD, NekDouble>>        &SurfaceArray);
+            Array<OneD, Array<OneD, Array<OneD, NekDouble>>> &VolumeFlux,
+                  Array<OneD, Array<OneD, NekDouble>>        &TraceFlux)
+        {
+            v_DoArtificialDiffusionFlux(inarray, VolumeFlux,TraceFlux);
+        }
 
         /// Calculate the artificial viscosity
         void GetArtificialViscosity(

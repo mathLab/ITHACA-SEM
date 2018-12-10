@@ -273,7 +273,6 @@ namespace Nektar
 
     }
 
-
      /**
      * @brief Calculate LDG Diffusion Volume Flux 
      * @param inarray 2D [u,v,T]
@@ -331,7 +330,6 @@ namespace Nektar
         const Array<OneD, Array<OneD, NekDouble> >        &pFwd,
         const Array<OneD, Array<OneD, NekDouble> >        &pBwd)
     {
-        
         ////?Homogeneous? Need to change here to inarrayderivative
         // For 3D Homogeneous 1D only take derivatives in 3rd direction
         // if (m_diffDim == 1)
@@ -345,7 +343,6 @@ namespace Nektar
         // Compute u from q_{\eta} and q_{\xi}
         // Obtain numerical fluxes
         v_NumericalFluxO2(fields, inarray, VolumeFlux, TraceFlux);
-
     }
 
 

@@ -1930,13 +1930,6 @@ if(!ElmtJac.num_elements())
         int nDim=m_spacedim;
         // Auxiliary variables
         Array<OneD, NekDouble > mu                 (nPts, 0.0);
-        Array<OneD, Array<OneD, NekDouble > > dirnormal  (2);
-        for(int i=0;i<2;i++)
-        {
-            dirnormal[i]   = Array<OneD, NekDouble > (2, 0.0);
-        }
-        dirnormal[0][0]  =   1.0;
-        dirnormal[1][1]  =   1.0;
 
         // Variable viscosity through the Sutherland's law
         if (m_ViscosityType == "Variable")

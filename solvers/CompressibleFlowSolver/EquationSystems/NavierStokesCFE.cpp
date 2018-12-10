@@ -113,7 +113,7 @@ namespace Nektar
         //Only NavierStokes equation and using weakDG,LDGNS can temparary use the codes
         m_session->LoadSolverInfo("AdvectionType", advName, "WeakDG");
 	    m_session->LoadSolverInfo("DiffusionType", diffName, "LDGNS");
-        if(advName=="WeakDG" && ((diffName=="LDGNS")||(diffName=="InteriorPenalty")))
+        if(advName=="WeakDG" && ((diffName=="LDGNS")||(diffName=="InteriorPenalty"))&& m_shockCaptureType!="Smooth")
         {
             m_ImproveEfficiency=true;
         }

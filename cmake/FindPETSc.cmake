@@ -22,18 +22,18 @@
 # For details see the accompanying COPYING-CMAKE-SCRIPTS file.
 #
 
-cmake_policy(VERSION 3.3)
-
 set(PETSC_VALID_COMPONENTS
   C
   CXX)
 
 if(NOT PETSc_FIND_COMPONENTS)
   get_property (_enabled_langs GLOBAL PROPERTY ENABLED_LANGUAGES)
-  if ("C" IN_LIST _enabled_langs)
-    set(PETSC_LANGUAGE_BINDINGS "C")
-  else ()
+
+  list(FIND _enabled_langs "C" _index)
+  if (${_index} EQUAL -1)
     set(PETSC_LANGUAGE_BINDINGS "CXX")
+  else()
+    set(PETSC_LANGUAGE_BINDINGS "C")
   endif ()
 else()
   # Right now, this is designed for compatability with the --with-clanguage option, so

@@ -84,53 +84,35 @@ void Advection::Advect(
             pOutarray, pTime, pFwd, pBwd);
 }
 
-
-void Advection::NumericalFlux(
-    const int                                          nConvectiveFields,
-    const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
-    const Array<OneD, Array<OneD, NekDouble> >        &pAdvVel,
-    const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-    Array<OneD, Array<OneD, NekDouble> >              &numflux,
-    const NekDouble                                   &pTime,
-    const Array<OneD, Array<OneD, NekDouble> >        &pFwd,
-    const Array<OneD, Array<OneD, NekDouble> >        &pBwd)
+// Check if the function is supported
+// To notice, the const pFwd and pBwd are not initialized, need to be
+// initialized in children class
+void Advection::v_AdvectVolumeFlux(
+    const int nConvectiveFields,
+    const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
+    const Array<OneD, Array<OneD, NekDouble>>         &pAdvVel,
+    const Array<OneD, Array<OneD, NekDouble>>         &pInarray,
+    Array<OneD, Array<OneD, Array<OneD, NekDouble>>>  &pVolumeFlux,
+    const NekDouble                                   &pTime)
 {
-    int nTracePointsTot = fields[0]->GetTrace()->GetTotPoints();
-    // Store forwards/backwards space along trace space
-    Array<OneD, Array<OneD, NekDouble> > Fwd    (nConvectiveFields);
-    Array<OneD, Array<OneD, NekDouble> > Bwd    (nConvectiveFields);
-
-    if (pFwd == NullNekDoubleArrayofArray ||
-        pBwd == NullNekDoubleArrayofArray)
-    {
-        for(int i = 0; i < nConvectiveFields; ++i)
-        {
-            Fwd[i]     = Array<OneD, NekDouble>(nTracePointsTot, 0.0);
-            Bwd[i]     = Array<OneD, NekDouble>(nTracePointsTot, 0.0);
-            fields[i]->GetFwdBwdTracePhys(inarray[i], Fwd[i], Bwd[i]);
-        }
-    }
-    else
-    {
-        for(int i = 0; i < nConvectiveFields; ++i)
-        {
-            Fwd[i]     = pFwd[i];
-            Bwd[i]     = pBwd[i];
-        }
-    }
-
-    if (numflux == NullNekDoubleArrayofArray)
-    {
-        Array<OneD, Array<OneD, NekDouble> > numflux    (nConvectiveFields);
-        for(int i = 0; i < nConvectiveFields; ++i)
-        {
-            numflux[i] = Array<OneD, NekDouble>(nTracePointsTot, 0.0);
-        }
-    }
-
-    m_riemann->Solve(m_spaceDim, Fwd, Bwd, numflux);
+    ASSERTL0(false, "Not defined for AdvectVolumeFlux.");
 }
 
+// Check if the function is supported
+// To notice, the const pFwd and pBwd are not initialized, need to be
+// initialized in children class
+void Advection::v_AdvectTraceFlux(
+    const int nConvectiveFields,
+    const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
+    const Array<OneD, Array<OneD, NekDouble>>         &pAdvVel,
+    const Array<OneD, Array<OneD, NekDouble>>         &pInarray,
+    Array<OneD, Array<OneD, NekDouble>>               &pTraceFlux,
+    const NekDouble                                   &pTime,
+    const Array<OneD, Array<OneD, NekDouble>>         &pFwd,
+    const Array<OneD, Array<OneD, NekDouble>>         &pBwd)
+{
+    ASSERTL0(false, "Not defined for AdvectTraceFlux.");
+}
 
 /**
  * @param   nConvectiveFields   Number of velocity components.

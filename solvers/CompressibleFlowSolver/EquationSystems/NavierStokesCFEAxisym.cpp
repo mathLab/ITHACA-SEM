@@ -68,6 +68,14 @@ namespace Nektar
         {
             m_viscousForcing[i] = Array<OneD, NekDouble>(npoints, 0.0);
         }
+        if(m_useUnifiedWeakIntegration)
+        {
+            m_useUnifiedWeakIntegration= false;
+            if(m_session->DefinesCmdLineArgument("verbose"))
+            {
+                WARNINGL0(false, "UnifiedWeakIntegration not coded for NavierStokesCFEAxisym");
+            }
+        }
     }
 
     void NavierStokesCFEAxisym::v_DoDiffusion(

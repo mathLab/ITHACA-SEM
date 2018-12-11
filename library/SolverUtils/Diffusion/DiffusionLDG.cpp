@@ -110,43 +110,130 @@ namespace Nektar
             
             Array<OneD, NekDouble>  tmp(nCoeffs);
 
-            Array<OneD, Array<OneD, Array<OneD, NekDouble> > > flux  (nDim);
+            Array<OneD, Array<OneD, Array<OneD, NekDouble> > > volumeFlux;
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > > qfield(nDim);
-
             for (j = 0; j < nDim; ++j)
             {
-                qfield[j] = 
-                    Array<OneD, Array<OneD, NekDouble> >(nConvectiveFields);
-                flux[j]   = 
-                    Array<OneD, Array<OneD, NekDouble> >(nConvectiveFields);
-                
+                qfield[j] = Array<OneD, Array<OneD, NekDouble> >(nConvectiveFields);
                 for (i = 0; i < nConvectiveFields; ++i)
                 {
                     qfield[j][i] = Array<OneD, NekDouble>(nPts, 0.0);
+                }
+            }
+
+            Array<OneD, Array<OneD, NekDouble > > traceflux(nConvectiveFields);
+            for (int i = 0; i < nConvectiveFields; ++i)
+            {
+                traceflux[i] = Array<OneD, NekDouble>(nTracePts, 0.0);
+            }
+
+            DiffuseCalculateDerivative(nConvectiveFields,fields,inarray,qfield,pFwd,pBwd);
+            DiffuseVolumeFlux(nConvectiveFields,fields,inarray,qfield,volumeFlux);
+            DiffuseTraceFlux(nConvectiveFields,fields,inarray,qfield,volumeFlux,traceflux,pFwd,pBwd);
+
+            Array<OneD, Array<OneD, NekDouble> > qdbase(nDim);
+
+            for (i = 0; i < nConvectiveFields; ++i)
+            {
+                for (j = 0; j < nDim; ++j)
+                {
+                    qdbase[j] = qfield[j][i];
+                }
+                fields[i]->IProductWRTDerivBase(qdbase,tmp);
+
+                // Evaulate  <\phi, \hat{F}\cdot n> - outarray[i]
+                Vmath::Neg                      (nCoeffs, tmp, 1);
+                fields[i]->AddTraceIntegral     (traceflux[i], tmp);
+                fields[i]->SetPhysState         (false);
+                fields[i]->MultiplyByElmtInvMass(tmp, outarray[i]);
+            }
+        }
+
+        void DiffusionLDG::v_DiffuseCalculateDerivative(
+            const int                                         nConvectiveFields,
+            const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
+            const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+            Array<OneD,Array<OneD, Array<OneD, NekDouble> > > &inarrayderivative,
+            const Array<OneD, Array<OneD, NekDouble> >        &pFwd,
+            const Array<OneD, Array<OneD, NekDouble> >        &pBwd)
+        {
+            int nDim      = fields[0]->GetCoordim(0);
+            int nCoeffs   = fields[0]->GetNcoeffs();
+            int nTracePts = fields[0]->GetTrace()->GetTotPoints();
+
+            Array<OneD, NekDouble>  tmp(nCoeffs);
+            Array<OneD, Array<OneD, Array<OneD, NekDouble> > > flux  (nDim);
+            for (int j = 0; j < nDim; ++j)
+            {
+                flux[j]   = Array<OneD, Array<OneD, NekDouble> >(nConvectiveFields);
+                for (int i = 0; i < nConvectiveFields; ++i)
+                {
                     flux[j][i]   = Array<OneD, NekDouble>(nTracePts, 0.0);
                 }
             }
 
-            // Compute q_{\eta} and q_{\xi}
-            // Obtain numerical fluxes
-
             v_NumFluxforScalar(fields, inarray, flux, pFwd, pBwd);
 
-            for (j = 0; j < nDim; ++j)
+            for (int j = 0; j < nDim; ++j)
             {
-                for (i = 0; i < nConvectiveFields; ++i)
+                for (int i = 0; i < nConvectiveFields; ++i)
                 {
                     fields[i]->IProductWRTDerivBase(j, inarray[i], tmp);
                     Vmath::Neg                      (nCoeffs, tmp, 1);
                     fields[i]->AddTraceIntegral     (flux[j][i], tmp);
                     fields[i]->SetPhysState         (false);
                     fields[i]->MultiplyByElmtInvMass(tmp, tmp);
-                    fields[i]->BwdTrans             (tmp, qfield[j][i]);
+                    fields[i]->BwdTrans             (tmp, inarrayderivative[j][i]);
                 }
             }
+        }
+
+        void DiffusionLDG::v_DiffuseVolumeFlux(
+            const int                                           nConvectiveFields,
+            const Array<OneD, MultiRegions::ExpListSharedPtr>   &fields,
+            const Array<OneD, Array<OneD, NekDouble>>           &inarray,
+            Array<OneD,Array<OneD, Array<OneD, NekDouble> > >   &inarrayderivative,
+            Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &VolumeFlux,
+            Array< OneD, int >                                  &nonZeroIndex) 
+        {
+            if(VolumeFlux.num_elements())
+            {
+                int nDim    =   inarrayderivative.num_elements();
+                int nPts    =   inarray[nConvectiveFields-1].num_elements();
+                for (int j = 0; j < nDim; ++j)
+                {
+                    for (int i = 0; i < nConvectiveFields; ++i)
+                    {
+                        Vmath::Vcopy(nPts,inarrayderivative[j][i],1,VolumeFlux[j][i],1);
+                    }
+                }
+            }
+            else
+            {
+                VolumeFlux = inarrayderivative;
+            }
+        }
+
+        void DiffusionLDG::v_DiffuseTraceFlux(
+            const int                                           nConvectiveFields,
+            const Array<OneD, MultiRegions::ExpListSharedPtr>   &fields,
+            const Array<OneD, Array<OneD, NekDouble>>           &inarray,
+            Array<OneD,Array<OneD, Array<OneD, NekDouble> > >   &qfield,
+            Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &VolumeFlux,
+            Array<OneD, Array<OneD, NekDouble> >                &TraceFlux,
+            const Array<OneD, Array<OneD, NekDouble>>           &pFwd,
+            const Array<OneD, Array<OneD, NekDouble>>           &pBwd,
+            Array< OneD, int >                                  &nonZeroIndex)
+        {
+            
+            int i,j,k,e;
+            int nBndEdgePts;
+            int nDim        =   qfield.num_elements();
+            int nPts        =   inarray[nConvectiveFields-1].num_elements();
+            int nTracePts   =   TraceFlux[nConvectiveFields-1].num_elements();
             // Compute u from q_{\eta} and q_{\xi}
             // Obtain numerical fluxes
-            v_NumFluxforVector(fields, inarray, qfield, flux[0]);
+            v_NumFluxforVector(fields, inarray, qfield, TraceFlux);
 
             if (m_ArtificialDiffusionVector)
             {
@@ -164,7 +251,7 @@ namespace Nektar
                 {
                     for (i = 0; i < numConvFields; ++i)
                     {
-                        Vmath::Vmul(nPts,qfield[j][i],1,muvar,1,qfield[j][i],1);
+                        Vmath::Vmul(nPts,VolumeFlux[j][i],1,muvar,1,VolumeFlux[j][i],1);
                     }
                 }
 
@@ -211,27 +298,9 @@ namespace Nektar
                 {
                     for(k = 0; k < nTracePts; ++k)
                     {
-                        flux[0][i][k] =
-                            0.5 * (FwdMuVar[k] + BwdMuVar[k]) * flux[0][i][k];
+                        TraceFlux[i][k] = 0.5 * (FwdMuVar[k] + BwdMuVar[k]) * TraceFlux[i][k];
                     }
                 }
-            }
-
-            Array<OneD, Array<OneD, NekDouble> > qdbase(nDim);
-
-            for (i = 0; i < nConvectiveFields; ++i)
-            {
-                for (j = 0; j < nDim; ++j)
-                {
-                    qdbase[j] = qfield[j][i];
-                }
-                fields[i]->IProductWRTDerivBase(qdbase,tmp);
-
-                // Evaulate  <\phi, \hat{F}\cdot n> - outarray[i]
-                Vmath::Neg                      (nCoeffs, tmp, 1);
-                fields[i]->AddTraceIntegral     (flux[0][i], tmp);
-                fields[i]->SetPhysState         (false);
-                fields[i]->MultiplyByElmtInvMass(tmp, outarray[i]);
             }
         }
         

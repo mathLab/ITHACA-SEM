@@ -229,6 +229,144 @@ namespace Nektar
         }
     }
 
+     /**
+     * @brief Calculate  LDG First Order derivatives
+     * @param inarray 2D [u,v,T]
+     * @param inarrayderivative 2D [du_dx,dv_dx,dT_dx],[du_dy,dv_dy,dT_dy]
+     * The equations that need a diffusion operator are those related 
+     * with the velocities and with the energy.
+     *
+     */
+    void DiffusionLDGNS::v_DiffuseCalculateDerivative(
+        const int                                         nConvectiveFields,
+        const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
+        const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+        Array<OneD,Array<OneD, Array<OneD, NekDouble> > > &inarrayderivative,
+        const Array<OneD, Array<OneD, NekDouble> >        &pFwd,
+        const Array<OneD, Array<OneD, NekDouble> >        &pBwd)
+    {
+        int nDim      = fields[0]->GetCoordim(0);
+        int nScalars  = inarray.num_elements();
+        int nPts      = fields[0]->GetTotPoints();
+        int nCoeffs   = fields[0]->GetNcoeffs();
+        int nTracePts = fields[0]->GetTrace()->GetTotPoints();
+
+        Array<OneD, NekDouble>               tmp1(nCoeffs);
+        Array<OneD, Array<OneD, NekDouble> > tmp2(nConvectiveFields);
+        Array<OneD, Array<OneD, Array<OneD, NekDouble> > > numericalFluxO1(m_spaceDim);
+                                                   
+        for (int j = 0; j < m_spaceDim; ++j)
+        {
+            numericalFluxO1[j] = Array<OneD, Array<OneD, NekDouble> >(nScalars);
+
+            for (int i = 0; i < nScalars; ++i)
+            {
+                numericalFluxO1[j][i] = Array<OneD, NekDouble>(nTracePts, 0.0);
+            }
+        }
+
+        // Compute the numerical fluxes for the first order derivatives
+        v_NumericalFluxO1(fields, inarray, numericalFluxO1, pFwd, pBwd);
+
+        for (int j = 0; j < nDim; ++j)
+        {
+            for (int i = 0; i < nScalars; ++i)
+            {
+                fields[i]->IProductWRTDerivBase (j, inarray[i], tmp1);
+                Vmath::Neg                      (nCoeffs, tmp1, 1);
+                fields[i]->AddTraceIntegral     (numericalFluxO1[j][i], tmp1);
+                fields[i]->SetPhysState         (false);
+                fields[i]->MultiplyByElmtInvMass(tmp1, tmp1);
+                fields[i]->BwdTrans             (tmp1, inarrayderivative[j][i]);
+            }
+        }
+
+        // For 3D Homogeneous 1D only take derivatives in 3rd direction
+        if (m_diffDim == 1)
+        {
+            for (int i = 0; i < nScalars; ++i)
+            {
+                inarrayderivative[2][i] = m_homoDerivs[i];
+            }
+        }
+    }
+
+     /**
+     * @brief Calculate LDG Diffusion Volume Flux 
+     * @param inarray 2D [u,v,T]
+     * @param inarrayderivative 2D [du_dx,dv_dx,dT_dx],[du_dy,dv_dy,dT_dy]
+     * @param VolumeFlux volumeflxu integrant
+     * The equations that need a diffusion operator are those related 
+     * with the velocities and with the energy.
+     *
+     */
+    void DiffusionLDGNS::v_DiffuseVolumeFlux(
+        const int                                           nConvectiveFields,
+        const Array<OneD, MultiRegions::ExpListSharedPtr>   &fields,
+        const Array<OneD, Array<OneD, NekDouble>>           &inarray,
+        Array<OneD,Array<OneD, Array<OneD, NekDouble> > >   &inarrayderivative,
+        Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &VolumeFlux,
+        Array< OneD, int >                                  &nonZeroIndex) 
+    {
+        //?Homogeneous? Need to change here to inarrayderivative
+        //For 3D Homogeneous 1D only take derivatives in 3rd direction
+        // if (m_diffDim == 1)
+        // {
+        //     for (i = 0; i < nScalars; ++i)
+        //     {
+        //         derivativesO1[2][i] = m_homoDerivs[i];
+        //     }
+        // }
+
+        int nScalars  = inarray.num_elements();
+        int nPts      = fields[0]->GetTotPoints();
+
+        // Initialisation viscous tensor
+        // ASSERTL0(VolumeFlux.num_elements()==m_spaceDim,'Array dimension of VolumeFlux is wrong');
+        // ASSERTL0(VolumeFlux[0].num_elements()==(nScalars+1),'Primitive variables used should be one smaller than nConvectiveVariables');
+
+        m_fluxVectorNS(inarray, inarrayderivative, VolumeFlux);
+
+    }
+
+
+     /**
+     * @brief Calculate LDG Diffusion Trace Flux
+     * @param inarray 2D [u,v,T]
+     * @param inarrayderivative 2D [du_dx,dv_dx,dT_dx],[du_dy,dv_dy,dT_dy]
+     * @param VolumeFlux volumeflxu integrant
+     * The equations that need a diffusion operator are those related 
+     * with the velocities and with the energy.
+     *
+     */
+    void DiffusionLDGNS::v_DiffuseTraceFlux(
+        const int                                           nConvectiveFields,
+        const Array<OneD, MultiRegions::ExpListSharedPtr>   &fields,
+        const Array<OneD, Array<OneD, NekDouble>>           &inarray,
+        Array<OneD,Array<OneD, Array<OneD, NekDouble> > >   &inarrayderivative,
+        Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &VolumeFlux,
+        Array<OneD, Array<OneD, NekDouble> >                &TraceFlux,
+        const Array<OneD, Array<OneD, NekDouble>>           &pFwd,
+        const Array<OneD, Array<OneD, NekDouble>>           &pBwd,
+        Array< OneD, int >                                  &nonZeroIndex)
+    {
+        ////?Homogeneous? Need to change here to inarrayderivative
+        // For 3D Homogeneous 1D only take derivatives in 3rd direction
+        // if (m_diffDim == 1)
+        // {
+        //     for (i = 0; i < nScalars; ++i)
+        //     {
+        //         derivativesO1[2][i] = m_homoDerivs[i];
+        //     }
+        // }
+
+        // Compute u from q_{\eta} and q_{\xi}
+        // Obtain numerical fluxes
+        v_NumericalFluxO2(fields, inarray, VolumeFlux, TraceFlux);
+    }
+
+
+
     /**
      * @brief Builds the numerical flux for the 1st order derivatives
      *

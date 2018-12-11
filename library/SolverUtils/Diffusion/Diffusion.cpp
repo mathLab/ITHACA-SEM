@@ -152,16 +152,6 @@ namespace Nektar
             ASSERTL0(false," not defined");
         }
         
-        void Diffusion::v_physFieldDeriv(
-            const int                                                   nConvectiveFields,
-            const Array<OneD, MultiRegions::ExpListSharedPtr>           &fields,
-            const Array<OneD, Array<OneD, NekDouble> >                  &inarray,
-            const Array<OneD, Array<OneD, NekDouble> >                  &pFwd,
-            const Array<OneD, Array<OneD, NekDouble> >                  &pBwd,
-                  Array<OneD, Array<OneD, Array<OneD, NekDouble> > >    &qfield)
-        {
-            ASSERTL0(false," not defined");
-        }
         void Diffusion::v_AddVolumDerivJacToMat( 
             const int                                               nConvectiveFields,
             const Array<OneD, MultiRegions::ExpListSharedPtr>       &pFields,
@@ -187,6 +177,45 @@ namespace Nektar
                       Array<OneD,       Array<OneD, NekDouble> >    &jump)
         {
             ASSERTL0(false," not defined");
+        }
+        
+        // No multiply(check if diffsionVolume difined)
+        void Diffusion::v_DiffuseCalculateDerivative(
+            const int                                         nConvectiveFields,
+            const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
+            const Array<OneD, Array<OneD, NekDouble>>         &inarray,
+            Array<OneD,Array<OneD, Array<OneD, NekDouble> > > &inarrayderivative,
+            const Array<OneD, Array<OneD, NekDouble>>         &pFwd,
+            const Array<OneD, Array<OneD, NekDouble>>         &pBwd)
+        {
+            ASSERTL0(false, "Not defined for function DiffuseVolumeFLux.");
+        }
+
+        // No multiply(check if diffsionVolume difined)
+        void Diffusion::v_DiffuseVolumeFlux(
+            const int                                           nConvectiveFields,
+            const Array<OneD, MultiRegions::ExpListSharedPtr>   &fields,
+            const Array<OneD, Array<OneD, NekDouble>>           &inarray,
+            Array<OneD,Array<OneD, Array<OneD, NekDouble> > >   &inarrayderivative,
+            Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &VolumeFlux,
+            Array< OneD, int >                                  &nonZeroIndex)       
+        {
+            ASSERTL0(false, "Not defined for function DiffuseVolumeFLux.");
+        }
+
+        // No multiply(check if diffsionTraceFlux difined)
+        void Diffusion::v_DiffuseTraceFlux(
+            const int                                           nConvectiveFields,
+            const Array<OneD, MultiRegions::ExpListSharedPtr>   &fields,
+            const Array<OneD, Array<OneD, NekDouble>>           &inarray,
+            Array<OneD,Array<OneD, Array<OneD, NekDouble> > >   &inarrayderivative,
+            Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &VolumeFlux,
+            Array<OneD, Array<OneD, NekDouble> >                &TraceFlux,
+            const Array<OneD, Array<OneD, NekDouble>>           &pFwd,
+            const Array<OneD, Array<OneD, NekDouble>>           &pBwd,
+            Array< OneD, int >                                  &nonZeroIndex)     
+        {
+            ASSERTL0(false, "Not defined function DiffuseTraceFLux.");
         }
     }
 }

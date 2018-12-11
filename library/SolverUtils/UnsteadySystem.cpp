@@ -216,6 +216,8 @@ namespace Nektar
         void UnsteadySystem::v_DoSolve()
         {
             ASSERTL0(m_intScheme != 0, "No time integration scheme.");
+            
+            int nwidthcolm = 10;
 
             int i = 1;
             int nvariables = 0;
@@ -337,7 +339,6 @@ namespace Nektar
                 cpuTime += elapsed;
 		
                 // Write out status information
-                int nwidthcolm = 15;
                 if (m_session->GetComm()->GetRank() == 0 && 
                     !((step+1) % m_infosteps))
                 {
@@ -468,13 +469,15 @@ namespace Nektar
             {
                 if (m_cflSafetyFactor > 0.0)
                 {
-                    cout << "CFL safety factor : " << m_cflSafetyFactor << endl
+                    cout <<right<<scientific<<setw(nwidthcolm)<<setprecision(nwidthcolm-6)
+                         << "CFL safety factor : " << m_cflSafetyFactor << endl
                          << "CFL time-step     : " << m_timestep        << endl;
                 }
 
                 if (m_session->GetSolverInfo("Driver") != "SteadyState")
                 {
-                    cout << "Time-integration  : " << intTime  << "s"   << endl;
+                    cout <<right<<scientific<<setw(nwidthcolm)<<setprecision(nwidthcolm-6)
+                         << "Time-integration  : " << intTime  << "s"   << endl;
                 }
             }
             

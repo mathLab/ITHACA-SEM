@@ -84,16 +84,34 @@ public:
         const NekDouble                                   &time,
         const Array<OneD, Array<OneD, NekDouble> > &pFwd = NullNekDoubleArrayofArray,
         const Array<OneD, Array<OneD, NekDouble> > &pBwd = NullNekDoubleArrayofArray);
+    
+    /// Interface function to advect the Volume field.
+    SOLVER_UTILS_EXPORT void AdvectVolumeFlux(
+        const int                                         nConvectiveFields,
+        const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
+        const Array<OneD, Array<OneD, NekDouble>>         &pAdvVel,
+        const Array<OneD, Array<OneD, NekDouble>>         &pInarray,
+        Array<OneD, Array<OneD, Array<OneD, NekDouble>>>  &pVolumeFlux,
+        const NekDouble                                   &pTime)
+    {
+        v_AdvectVolumeFlux(nConvectiveFields, pFields, pAdvVel, pInarray, pVolumeFlux,
+                   pTime);
+    }
 
-    SOLVER_UTILS_EXPORT void NumericalFlux(
-        const int                                          nConvectiveFields,
-        const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
-        const Array<OneD, Array<OneD, NekDouble> >        &pAdvVel,
-        const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-        Array<OneD, Array<OneD, NekDouble> >              &numflux,
+    /// Interface function to advect the Trace field.
+    SOLVER_UTILS_EXPORT void AdvectTraceFlux(
+        const int                                         nConvectiveFields,
+        const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
+        const Array<OneD, Array<OneD, NekDouble>>         &pAdvVel,
+        const Array<OneD, Array<OneD, NekDouble>>         &pInarray,
+        Array<OneD, Array<OneD, NekDouble>>               &pTraceFlux,
         const NekDouble                                   &pTime,
-        const Array<OneD, Array<OneD, NekDouble> >        &pFwd,
-        const Array<OneD, Array<OneD, NekDouble> >        &pBwd);
+        const Array<OneD, Array<OneD, NekDouble>>         &pFwd = NullNekDoubleArrayofArray,
+        const Array<OneD, Array<OneD, NekDouble>>         &pBwd = NullNekDoubleArrayofArray)
+    {
+        v_AdvectTraceFlux(nConvectiveFields, pFields, pAdvVel, pInarray, 
+                  pTraceFlux, pTime, pFwd, pBwd);
+    }
     
     SOLVER_UTILS_EXPORT void Advect_coeff(
         const int nConvectiveFields,
@@ -218,6 +236,26 @@ protected:
         const NekDouble                                   &time,
         const Array<OneD, Array<OneD, NekDouble> > &pFwd = NullNekDoubleArrayofArray,
         const Array<OneD, Array<OneD, NekDouble> > &pBwd = NullNekDoubleArrayofArray)=0;
+    
+    /// Advects Volume Flux.
+    SOLVER_UTILS_EXPORT virtual void v_AdvectVolumeFlux(
+        const                                             int nConvectiveFields,
+        const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
+        const Array<OneD, Array<OneD, NekDouble> >        &advVel,
+        const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+        Array<OneD, Array<OneD, Array<OneD, NekDouble>>>  &pVolumeFlux,
+        const NekDouble                                   &time);
+    
+    /// Advects Trace Flux.
+    SOLVER_UTILS_EXPORT virtual void v_AdvectTraceFlux(
+        const int nConvectiveFields,
+        const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
+        const Array<OneD, Array<OneD, NekDouble> >        &advVel,
+        const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+        Array<OneD, Array<OneD, NekDouble>>               &pTraceFlux,
+        const NekDouble                                   &time,
+        const Array<OneD, Array<OneD, NekDouble> >        &pFwd = NullNekDoubleArrayofArray,
+        const Array<OneD, Array<OneD, NekDouble> >        &pBwd = NullNekDoubleArrayofArray);
 
     SOLVER_UTILS_EXPORT virtual void v_Advect_coeff(
         const int nConvectiveFields,

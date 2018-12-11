@@ -99,7 +99,7 @@ namespace Nektar
             m_thermalConductivity = m_Cp * m_mu / m_Prandtl;
         }
 
-        string diffName;
+        string diffName, advName;
         m_session->LoadSolverInfo("DiffusionType", diffName, "LDGNS");
 
         m_diffusion = SolverUtils::GetDiffusionFactory()
@@ -155,6 +155,24 @@ namespace Nektar
 
         // Concluding initialisation of diffusion operator
         m_diffusion->InitObject         (m_session, m_fields);
+        
+        //Only NavierStokes equation and using weakDG,LDGNS can temparary use the codes
+        m_session->LoadSolverInfo("AdvectionType", advName, "WeakDG");
+	    m_session->LoadSolverInfo("DiffusionType", diffName, "LDGNS");
+        if(m_useUnifiedWeakIntegration)
+        {
+            if(advName=="WeakDG" && ((diffName=="LDGNS")||(diffName=="InteriorPenalty")))
+            {
+            }
+            else
+            {
+                m_useUnifiedWeakIntegration=false;
+                if(m_session->DefinesCmdLineArgument("verbose"))
+                {
+                    WARNINGL0(false, "useUnifiedWeakIntegration not coded for these parameters of Diffusion");
+                }
+            }
+        }
     }
 
     void NavierStokesCFE::v_DoDiffusion(
@@ -347,6 +365,113 @@ namespace Nektar
             if (m_shockCaptureType != "Off")
             {
                 m_artificialDiffusion->DoArtificialDiffusion_coeff(inarray, outarray);
+            }
+        }
+    }
+
+
+    void NavierStokesCFE::v_DoDiffusionFlux(
+        const Array<OneD, const Array<OneD, NekDouble>> &inarray,
+        Array<OneD, Array<OneD, Array<OneD, NekDouble>>>&VolumeFlux,
+        Array<OneD, Array<OneD, NekDouble>>             &TraceFlux,
+        const Array<OneD, Array<OneD, NekDouble>>       &pFwd,
+        const Array<OneD, Array<OneD, NekDouble>>       &pBwd)
+    {
+        int nDim= m_fields[0]->GetCoordim(0);
+        int nvariables = inarray.num_elements();
+        int npoints    = GetNpoints();
+        int nTracePts  = GetTraceTotPoints();
+
+        Array<OneD, Array<OneD, NekDouble>> outarrayDiff(nvariables);
+        for (int i = 0; i < nvariables; ++i)
+        {
+            outarrayDiff[i] = Array<OneD, NekDouble>(npoints,0.0);
+        }
+        
+        string diffName;
+        m_session->LoadSolverInfo("DiffusionType", diffName, "LDGNS");
+        if("InteriorPenalty"==diffName)
+        {
+            Array<OneD,Array<OneD, Array<OneD, NekDouble>>> inarrayDiffderivative(nDim);
+            for (int i = 0; i < nDim; i++)
+            {
+                inarrayDiffderivative[i]=Array<OneD, Array<OneD, NekDouble>> (nvariables);
+                for(int j=0;j<nvariables;j++)
+                {
+                    inarrayDiffderivative[i][j]=Array<OneD, NekDouble>(npoints,0.0);
+                }
+            }
+            m_diffusion->DiffuseCalculateDerivative(nvariables,m_fields,inarray,inarrayDiffderivative,pFwd,pBwd);
+            m_diffusion->DiffuseVolumeFlux(nvariables, m_fields, inarray,inarrayDiffderivative, VolumeFlux);
+            m_diffusion->DiffuseTraceFlux(nvariables, m_fields, inarray,inarrayDiffderivative,VolumeFlux,TraceFlux,pFwd,pBwd);
+        }
+        else
+        {
+            Array<OneD, Array<OneD, NekDouble>> inarrayDiff;
+            Array<OneD, Array<OneD, NekDouble>> inFwd;
+            Array<OneD, Array<OneD, NekDouble>> inBwd;
+            Array<OneD,Array<OneD, Array<OneD, NekDouble>>> inarrayDiffderivative(nDim);
+            
+            //Allocate memory
+            inarrayDiff=Array<OneD, Array<OneD, NekDouble>> (nvariables - 1);
+            inFwd=Array<OneD, Array<OneD, NekDouble>>(nvariables - 1);
+            inBwd=Array<OneD, Array<OneD, NekDouble>> (nvariables - 1);
+            inarrayDiffderivative=Array<OneD,Array<OneD, Array<OneD, NekDouble>>> (nDim);
+
+            for (int i = 0; i < nvariables-1; ++i)
+            {
+                inarrayDiff[i] = Array<OneD, NekDouble>(npoints,0.0);
+                inFwd[i]       = Array<OneD, NekDouble>(nTracePts,0.0);
+                inBwd[i]       = Array<OneD, NekDouble>(nTracePts,0.0);
+            }
+
+            for (int i = 0; i < nDim; i++)
+            {
+                inarrayDiffderivative[i]=Array<OneD, Array<OneD, NekDouble>> (nvariables-1);
+                for(int j=0;j<nvariables-1;j++)
+                {
+                    inarrayDiffderivative[i][j]=Array<OneD, NekDouble>(npoints,0.0);
+                }
+            }
+
+            // Extract pressure
+            //    (use inarrayDiff[0] as a temporary storage for the pressure)
+            m_varConv->GetPressure(inarray, inarrayDiff[0]);
+
+            // Extract temperature
+            m_varConv->GetTemperature(inarray, inarrayDiff[nvariables - 2]);
+
+            // Extract velocities
+            m_varConv->GetVelocityVector(inarray, inarrayDiff);
+
+            // Repeat calculation for trace space
+            if (pFwd == NullNekDoubleArrayofArray || pBwd == NullNekDoubleArrayofArray)
+            {
+                inFwd = NullNekDoubleArrayofArray;
+                inBwd = NullNekDoubleArrayofArray;
+            }
+            else
+            {
+                m_varConv->GetPressure(pFwd, inFwd[0]);
+                m_varConv->GetPressure(pBwd, inBwd[0]);
+
+                m_varConv->GetTemperature(pFwd, inFwd[nvariables - 2]);
+                m_varConv->GetTemperature(pBwd, inBwd[nvariables - 2]);
+
+                m_varConv->GetVelocityVector(pFwd, inFwd);
+                m_varConv->GetVelocityVector(pBwd, inBwd);
+            }
+
+            // Diffusion term in physical rhs form
+            // To notice, needs to firstly calculate volumeflux, traceflux uses it.
+            m_diffusion->DiffuseCalculateDerivative(nvariables,m_fields,inarrayDiff,inarrayDiffderivative,inFwd,inBwd);
+            m_diffusion->DiffuseVolumeFlux(nvariables, m_fields, inarrayDiff,inarrayDiffderivative, VolumeFlux);
+            m_diffusion->DiffuseTraceFlux(nvariables, m_fields, inarrayDiff,inarrayDiffderivative,VolumeFlux,TraceFlux, inFwd, inBwd);
+
+            //Artificial Diffusion need to implement
+            if (m_shockCaptureType != "Off")
+            {
+                m_artificialDiffusion->DoArtificialDiffusionFlux(inarray, VolumeFlux,TraceFlux);
             }
         }
     }
@@ -1913,7 +2038,7 @@ if(!ElmtJac.num_elements())
                 }
             }
         }
-        m_diffusion->physFieldDeriv(nConvectiveFields,m_fields,inarray,pFwd,pBwd,qfield);
+        m_diffusion->DiffuseCalculateDerivative(nConvectiveFields,m_fields,inarray,qfield,pFwd,pBwd);
     }
 
      void NavierStokesCFE::GetViscousSymmtrFluxConservVarDrctnVector(

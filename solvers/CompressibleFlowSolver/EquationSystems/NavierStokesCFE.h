@@ -124,6 +124,13 @@ namespace Nektar
                Array<OneD,       Array<OneD, NekDouble> > &outarray,
             const Array<OneD, Array<OneD, NekDouble> >   &pFwd,
             const Array<OneD, Array<OneD, NekDouble> >   &pBwd);
+    
+    virtual void v_DoDiffusionFlux(
+            const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+            Array<OneD, Array<OneD, Array<OneD, NekDouble>>> &VolumeFlux,
+            Array<OneD, Array<OneD, NekDouble>>              &TraceFlux,
+            const Array<OneD, Array<OneD, NekDouble> >       &pFwd,
+            const Array<OneD, Array<OneD, NekDouble> >       &pBwd);
 
     virtual void v_GetViscousFluxVector(
         const Array<OneD, Array<OneD, NekDouble> >         &physfield,

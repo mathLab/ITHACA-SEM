@@ -135,8 +135,10 @@ namespace Nektar
         {
             m_diffusion->SetFluxVectorNS(&NavierStokesCFE::
                                           v_GetViscousFluxVector, this);
+            // m_diffusion->SetDiffusionFluxCons(
+            //     &NavierStokesCFE::GetViscousFluxVectorConservVar, this);
             m_diffusion->SetDiffusionFluxCons(
-                &NavierStokesCFE::GetViscousFluxVectorConservVar, this);
+                &NavierStokesCFE::GetViscousFluxVectorConservVarVector, this);
             m_diffusion->SetFunctorDerivBndCond(
                 &NavierStokesCFE::SetBoundaryConditionsDeriv, this);
 
@@ -1766,18 +1768,11 @@ if(!ElmtJac.num_elements())
         const Array<OneD, Array<OneD, NekDouble> >                      &normals)
     {
         int nPts                = inaverg[nConvectiveFields-1].num_elements();
-
         nonZeroIndex = Array<OneD, int>(nConvectiveFields-1,0);
         for(int i=0;i<nConvectiveFields-1;i++)
         {
             nonZeroIndex[i] =   i+1;
         }
-
-        // for(int nd = 0; nd< nSpaceDim; nd++)
-        // {
-        //     GetViscousSymmtrFluxConservVarDrctn(nConvectiveFields,nSpaceDim,normals,nd,inaverg,inarray,outarray[nd]);
-        // }
-
         Array<OneD, Array<OneD, NekDouble> > outtmp( nConvectiveFields );
         for(int i=0;i<nConvectiveFields;i++)
         {
@@ -1787,12 +1782,11 @@ if(!ElmtJac.num_elements())
         {
             for(int nderiv =0; nderiv<nSpaceDim;nderiv++)
             {
-                GetViscousSymmtrFluxConservVarDrctnVector(nConvectiveFields,nSpaceDim,normals,nd,nderiv,inaverg,inarray,outtmp);
+                GetViscousSymmtrFluxConservVarDrctnVector(nConvectiveFields,nSpaceDim,nd,nderiv,inaverg,inarray,outtmp);
 
                 for(int i=0;i<nConvectiveFields;i++)
                 {
                     Vmath::Vvtvp(nPts,&outtmp[i][0],1,&normals[nderiv][0],1,&outarray[nd][i][0],1,&outarray[nd][i][0],1);
-                    // Vmath::Zero(nPts,&outtmp[i][0],1);
                 }
             }
         }
@@ -1916,10 +1910,126 @@ if(!ElmtJac.num_elements())
         m_diffusion->physFieldDeriv(nConvectiveFields,m_fields,inarray,pFwd,pBwd,qfield);
     }
 
+      /**
+     * @brief Return the flux vector for the IP diffusion problem.
+     * \todo Complete the viscous flux vector
+     */
+    void NavierStokesCFE::GetViscousFluxVectorConservVarVector(
+        const int                                                       nConvectiveFields,
+        const int                                                       nDim,
+        const Array<OneD, Array<OneD, NekDouble> >                      &inarray,
+        const Array<OneD, Array<OneD, Array<OneD, NekDouble> > >        &qfields,
+              Array<OneD, Array<OneD, Array<OneD, NekDouble> > >        &outarray,
+              Array< OneD, int >                                        &nonZeroIndex,    
+        const Array<OneD, Array<OneD, NekDouble> >                      &normal,         
+        const Array<OneD, NekDouble>                                    &ArtifDiffFactor)
+    {
+        int nPts=inarray[0].num_elements();
+        int n_nonZero   =   nConvectiveFields-1;
+        Array<OneD, Array<OneD, Array<OneD, NekDouble> > > fluxVec;
+        Array<OneD,Array<OneD,NekDouble>> outtmp(nConvectiveFields);
+
+        for(int i=0; i<nConvectiveFields;i++)
+        {
+            outtmp[i]=Array<OneD,NekDouble>(nPts,0.0);
+        }
+
+        for(int i=0; i< outarray.num_elements(); i++)
+        {
+            for(int j=0; j< nConvectiveFields; j++)
+            {
+                Vmath::Zero(nPts,outarray[i][j],1);
+            }
+        }
+
+        if(normal.num_elements())
+        {
+            fluxVec =   Array<OneD, Array<OneD, Array<OneD, NekDouble> > >(nDim);
+
+            for(int i=0; i< nDim; i++)
+            {
+                fluxVec[i]  =   Array<OneD, Array<OneD, NekDouble> >(nConvectiveFields);
+
+                for(int j=0; j< nConvectiveFields; j++)
+                {
+                    fluxVec[i][j]  =   Array<OneD, NekDouble>(nPts,0.0);
+                }
+            }
+
+            for(int nd=0;nd<nDim;nd++)
+            {
+                for(int nderiv=0;nderiv<nDim;nderiv++)
+                {
+                    GetViscousSymmtrFluxConservVarDrctnVector(nConvectiveFields,nDim,nd,nderiv,inarray,qfields[nderiv],outtmp);
+
+                    for(int j=0;j<nConvectiveFields;j++)
+                    {
+                        Vmath::Vadd(nPts,&outtmp[j][0],1,&fluxVec[nd][j][0],1,&fluxVec[nd][j][0],1);
+                    }
+                }
+
+                for(int j=0;j<nConvectiveFields;j++)
+                {
+                    Vmath::Vvtvp(nPts,&normal[nd][0],1,&fluxVec[nd][j][0],1,&outarray[0][j][0],1,&outarray[0][j][0],1);
+                }
+            }
+        }
+        else
+        {
+            fluxVec = outarray;
+
+            for(int nd=0;nd<nDim;nd++)
+            {
+                for(int nderiv=0;nderiv<nDim;nderiv++)
+                {
+                    GetViscousSymmtrFluxConservVarDrctnVector(nConvectiveFields,nDim,nd,nderiv,inarray,qfields[nderiv],outtmp);
+
+                    for(int j=0;j<nConvectiveFields;j++)
+                    {
+                        Vmath::Vadd(nPts,&outtmp[j][0],1,&fluxVec[nd][j][0],1,&fluxVec[nd][j][0],1);
+                    }
+                }
+            }
+        }
+
+        if(ArtifDiffFactor.num_elements())
+        {
+            n_nonZero   =   nConvectiveFields;
+            
+            if(normal.num_elements())
+            {
+                Array<OneD, NekDouble> tmparray(nPts,0.0);
+                for(int i=0; i< nDim; i++)
+                {
+                    Vmath::Vmul(nPts,ArtifDiffFactor,1,normal[i],1,tmparray,1);
+                    for(int j=0; j< nConvectiveFields; j++)
+                    {
+                        Vmath::Vvtvp(nPts,tmparray,1,qfields[i][j],1,outarray[0][j],1,outarray[0][j],1);
+                    }
+                }
+            }
+            else
+            {
+                for(int i=0; i< nDim; i++)
+                {
+                    for(int j=0; j< nConvectiveFields; j++)
+                    {
+                        Vmath::Vvtvp(nPts,ArtifDiffFactor,1,qfields[i][j],1,outarray[i][j],1,outarray[i][j],1);
+                    }
+                }
+            }
+        }
+
+        nonZeroIndex = Array< OneD, int > (n_nonZero,0);
+        for(int i=1;i<n_nonZero+1; i++)
+        {
+            nonZeroIndex[n_nonZero-i] =   nConvectiveFields-i;
+        }
+    }
+
      void NavierStokesCFE::GetViscousSymmtrFluxConservVarDrctnVector(
         const int                                                       nConvectiveFields,
         const int                                                       nSpaceDim,
-        const Array<OneD, const Array<OneD, NekDouble> >                &normals,
         const int                                                       FluxDirection,
         const int                                                       DerivDirection,
         const Array<OneD, const Array<OneD, NekDouble> >                &inaverg,
@@ -1943,7 +2053,6 @@ if(!ElmtJac.num_elements())
             Vmath::Fill(nPts, m_mu, mu, 1);
         }
 
-        NekDouble pointmu       = 0.0;
         Array<OneD,Array<OneD, NekDouble>> outtmp = outarray;
         for(int i=0; i<nConvectiveFields;i++)
         {

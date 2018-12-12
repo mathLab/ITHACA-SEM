@@ -351,6 +351,8 @@ namespace Nektar
                 m_fields[i]->MultiplyByElmtInvMass(tmp, tmp);
                 m_fields[i]->BwdTrans(tmp, outarray[i]);
             }
+
+            // AddDiffusionSymmFluxToPhys(inarray, VolumeFlux2, outarray, Fwd, Bwd);
         }
         else
         {
@@ -1239,7 +1241,7 @@ namespace Nektar
             visflux[0][i]  =    Array<OneD, NekDouble>(nTracePts,0.0);
         }
         //TODO:  UPDATE
-        // m_diffusion->CalTraceNumFlux(nConvectiveFields,nDim,nPts,nTracePts,PenaltyFactor2,
+        // m_diffusion->DiffuseTraceFlux(nConvectiveFields,nDim,nPts,nTracePts,PenaltyFactor2,
         //                 fields,inarray,qfield,vFwd,vBwd,MuVarTrace,nonZeroIndex,visflux);
         for(int i = 0; i < nConvectiveFields; i++)
         {
@@ -2407,7 +2409,6 @@ namespace Nektar
         v_DoDiffusion(inarray, outarray, pFwd, pBwd);
     }
 
-
     /**
      * @brief Add the diffusions terms to the right-hand side
      */
@@ -3000,16 +3001,6 @@ namespace Nektar
         }
     }
 
-    void CompressibleFlowSystem::v_GetFluxDerivJacDirctn(
-            const MultiRegions::ExpListSharedPtr                            &explist,
-            const Array<OneD, const Array<OneD, NekDouble> >                &normals,
-            const int                                                       nDervDir,
-            const Array<OneD, const Array<OneD, NekDouble> >                &inarray,
-                  Array<OneD, Array<OneD, DNekMatSharedPtr> >               &ElmtJac)
-    {
-        ASSERTL0(false, "v_GetFluxDerivJacDirctn not coded");
-    }
-
     void CompressibleFlowSystem::v_GetViscousSymmtrFluxConservVar(
             const int                                                       nConvectiveFields,
             const int                                                       nSpaceDim,
@@ -3021,6 +3012,17 @@ namespace Nektar
     {
         ASSERTL0(false, "v_GetViscousSymmtrFluxConservVar not coded");
     }
+#ifdef DEMO_IMPLICITSOLVER_JFNK_COEFF
+    void CompressibleFlowSystem::v_GetFluxDerivJacDirctn(
+            const MultiRegions::ExpListSharedPtr                            &explist,
+            const Array<OneD, const Array<OneD, NekDouble> >                &normals,
+            const int                                                       nDervDir,
+            const Array<OneD, const Array<OneD, NekDouble> >                &inarray,
+                  Array<OneD, Array<OneD, DNekMatSharedPtr> >               &ElmtJac)
+    {
+        ASSERTL0(false, "v_GetFluxDerivJacDirctn not coded");
+    }
+
     void CompressibleFlowSystem::v_GetDiffusionFluxJacPoint(
             const int                                           nelmt,
             const Array<OneD, NekDouble>                        &conservVar, 
@@ -3041,5 +3043,6 @@ namespace Nektar
     {
         ASSERTL0(false, "not coded");
     }
+#endif
 
 }

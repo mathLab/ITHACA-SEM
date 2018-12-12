@@ -367,16 +367,6 @@ namespace Nektar
                 return m_DerivBndCondExpansions;
             }
 
-            //TODO: TO CHECK WHETHER IT IS NEEDED HERE.
-            // virtual void v_AddTraceIntegralToOffDiag(
-            //     const Array<OneD, const NekDouble> &FwdFlux, 
-            //     const Array<OneD, const NekDouble> &BwdFlux, 
-            //         Array<OneD,       NekDouble> &outarray);
-
-            // virtual const LocTraceToTraceMapSharedPtr &v_GetlocTraceToTraceMap() const
-            // {
-            //     return m_locTraceToTraceMap;
-            // }
         private:
             void SetUpDG(const std::string &variable);
             

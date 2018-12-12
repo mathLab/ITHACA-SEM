@@ -217,42 +217,35 @@ namespace Nektar
                 v_DiffuseTraceFlux(nConvectiveFields, fields, inarray,inarrayderivative,VolumeFlux,TraceFlux,pFwd, pBwd,nonZeroIndex);
             }
 
+            SOLVER_UTILS_EXPORT void AddDiffusionSymmFluxToCoeff(
+                const int                                           nConvectiveFields,
+                const Array<OneD, MultiRegions::ExpListSharedPtr>   &fields,
+                const Array<OneD, Array<OneD, NekDouble> >          &inarray,
+                Array<OneD,Array<OneD, Array<OneD, NekDouble> > >   &qfield,
+                Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &VolumeFlux,
+                Array<OneD, Array<OneD, NekDouble> >                &outarray,
+                const Array<OneD, Array<OneD, NekDouble> >          &pFwd,
+                const Array<OneD, Array<OneD, NekDouble> >          &pBwd)
+            {
+                v_AddDiffusionSymmFluxToCoeff(nConvectiveFields,fields,inarray,qfield,VolumeFlux,outarray,pFwd,pBwd);
+            }
+
+            SOLVER_UTILS_EXPORT void AddDiffusionSymmFluxToPhys(
+                const int                                           nConvectiveFields,
+                const Array<OneD, MultiRegions::ExpListSharedPtr>   &fields,
+                const Array<OneD, Array<OneD, NekDouble> >          &inarray,
+                Array<OneD,Array<OneD, Array<OneD, NekDouble> > >   &qfield,
+                Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &VolumeFlux,
+                Array<OneD, Array<OneD, NekDouble> >                &outarray,
+                const Array<OneD, Array<OneD, NekDouble> >          &pFwd,
+                const Array<OneD, Array<OneD, NekDouble> >          &pBwd)
+            {
+                v_AddDiffusionSymmFluxToPhys(nConvectiveFields,fields,inarray,qfield,VolumeFlux,outarray,pFwd,pBwd);
+            }
+
             SOLVER_UTILS_EXPORT void FluxVec(
                     Array<OneD, Array<OneD, Array<OneD, NekDouble> > >
                                                                 &fluxvector);
-
-            void CalTraceNumFlux(
-                const int                                                           nConvectiveFields,
-                const int                                                           nDim,
-                const int                                                           nPts,
-                const int                                                           nTracePts,
-                const NekDouble                                                     PenaltyFactor2,
-                const Array<OneD, MultiRegions::ExpListSharedPtr>                   &fields,
-                const Array<OneD, Array<OneD, NekDouble> >                          &inarray,
-                const Array<OneD, const Array<OneD, Array<OneD, NekDouble> > >      &qfield,
-                const Array<OneD, Array<OneD, NekDouble> >                          &vFwd,
-                const Array<OneD, Array<OneD, NekDouble> >                          &vBwd,
-                const Array<OneD, NekDouble >                                       &MuVarTrace,
-                      Array<OneD, int >                                             &nonZeroIndexflux,
-                      Array<OneD, Array<OneD, Array<OneD, NekDouble> > >            &traceflux,
-                      Array<OneD, Array<OneD, NekDouble> >                          &solution_Aver,
-                      Array<OneD, Array<OneD, NekDouble> >                          &solution_jump)
-            {
-                v_CalTraceNumFlux(nConvectiveFields,nDim,nPts,nTracePts,PenaltyFactor2,
-                                    fields,inarray,qfield,vFwd,vBwd,MuVarTrace,
-                                    nonZeroIndexflux,traceflux,solution_Aver,solution_jump);
-            }
-            
-            void AddVolumDerivJacToMat( 
-                const int                                               nConvectiveFields,
-                const Array<OneD, MultiRegions::ExpListSharedPtr>       &pFields,
-                const Array<OneD, const Array<OneD, DNekMatSharedPtr> > &ElmtJac,
-                const int                                               nfluxDir, 
-                const int                                               nDervDir, 
-                      Array<OneD, Array<OneD, DNekBlkMatSharedPtr> >    &gmtxarray)
-            {
-                v_AddVolumDerivJacToMat(nConvectiveFields,pFields,ElmtJac,nfluxDir,nDervDir,gmtxarray);
-            }
             
             template<typename FuncPointerT, typename ObjectPointerT> 
             void SetFluxVector(FuncPointerT func, ObjectPointerT obj)
@@ -364,6 +357,19 @@ namespace Nektar
             {
                 return v_GetTraceNormal();
             }
+
+#ifdef DEMO_IMPLICITSOLVER_JFNK_COEFF
+            void AddVolumDerivJacToMat( 
+                const int                                               nConvectiveFields,
+                const Array<OneD, MultiRegions::ExpListSharedPtr>       &pFields,
+                const Array<OneD, const Array<OneD, DNekMatSharedPtr> > &ElmtJac,
+                const int                                               nfluxDir, 
+                const int                                               nDervDir, 
+                      Array<OneD, Array<OneD, DNekBlkMatSharedPtr> >    &gmtxarray)
+            {
+                v_AddVolumDerivJacToMat(nConvectiveFields,pFields,ElmtJac,nfluxDir,nDervDir,gmtxarray);
+            }
+#endif
             
         protected:
             DiffusionFluxVecCB              m_fluxVector;
@@ -399,30 +405,6 @@ namespace Nektar
                 const Array<OneD, Array<OneD, NekDouble> > &pFwd = NullNekDoubleArrayofArray,
                 const Array<OneD, Array<OneD, NekDouble> > &pBwd = NullNekDoubleArrayofArray);
         
-            virtual void v_CalTraceNumFlux(
-                const int                                                           nConvectiveFields,
-                const int                                                           nDim,
-                const int                                                           nPts,
-                const int                                                           nTracePts,
-                const NekDouble                                                     PenaltyFactor2,
-                const Array<OneD, MultiRegions::ExpListSharedPtr>                   &fields,
-                const Array<OneD, Array<OneD, NekDouble> >                          &inarray,
-                const Array<OneD, const Array<OneD, Array<OneD, NekDouble> > >      &qfield,
-                const Array<OneD, Array<OneD, NekDouble> >                          &vFwd,
-                const Array<OneD, Array<OneD, NekDouble> >                          &vBwd,
-                const Array<OneD, NekDouble >                                       &MuVarTrace,
-                      Array<OneD, int >                                             &nonZeroIndexflux,
-                      Array<OneD, Array<OneD, Array<OneD, NekDouble> > >            &traceflux,
-                      Array<OneD, Array<OneD, NekDouble> >                          &solution_Aver,
-                      Array<OneD, Array<OneD, NekDouble> >                          &solution_jump);
-            
-            virtual void v_AddVolumDerivJacToMat( 
-                const int                                               nConvectiveFields,
-                const Array<OneD, MultiRegions::ExpListSharedPtr>       &pFields,
-                const Array<OneD, const Array<OneD, DNekMatSharedPtr> > &ElmtJac,
-                const int                                               nfluxDir, 
-                const int                                               nDervDir, 
-                      Array<OneD, Array<OneD, DNekBlkMatSharedPtr> >    &gmtxarray);
             virtual void v_ConsVarAveJump(
                 const int                                           nConvectiveFields,
                 const int                                           npnts,
@@ -460,6 +442,31 @@ namespace Nektar
                 const Array<OneD, Array<OneD, NekDouble>>           &pFwd,
                 const Array<OneD, Array<OneD, NekDouble>>           &pBwd,
                 Array< OneD, int >                                  &nonZeroIndex);
+
+            virtual void v_AddDiffusionSymmFluxToCoeff(
+                const int                                           nConvectiveFields,
+                const Array<OneD, MultiRegions::ExpListSharedPtr>   &fields,
+                const Array<OneD, Array<OneD, NekDouble> >          &inarray,
+                Array<OneD,Array<OneD, Array<OneD, NekDouble> > >   &qfield,
+                Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &VolumeFlux,
+                Array<OneD, Array<OneD, NekDouble> >                &outarray,
+                const Array<OneD, Array<OneD, NekDouble> >          &pFwd,
+                const Array<OneD, Array<OneD, NekDouble> >          &pBwd)
+            {
+
+            }
+            virtual void v_AddDiffusionSymmFluxToPhys(
+                const int                                           nConvectiveFields,
+                const Array<OneD, MultiRegions::ExpListSharedPtr>   &fields,
+                const Array<OneD, Array<OneD, NekDouble> >          &inarray,
+                Array<OneD,Array<OneD, Array<OneD, NekDouble> > >   &qfield,
+                Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &VolumeFlux,
+                Array<OneD, Array<OneD, NekDouble> >                &outarray,
+                const Array<OneD, Array<OneD, NekDouble> >          &pFwd,
+                const Array<OneD, Array<OneD, NekDouble> >          &pBwd)
+            {
+
+            }
             
             virtual void v_SetHomoDerivs(
                 Array<OneD, Array<OneD, NekDouble> > &deriv)
@@ -474,6 +481,16 @@ namespace Nektar
             }
 
             virtual const Array<OneD, const Array<OneD, NekDouble> > &v_GetTraceNormal();
+
+#ifdef DEMO_IMPLICITSOLVER_JFNK_COEFF
+            virtual void v_AddVolumDerivJacToMat( 
+                const int                                               nConvectiveFields,
+                const Array<OneD, MultiRegions::ExpListSharedPtr>       &pFields,
+                const Array<OneD, const Array<OneD, DNekMatSharedPtr> > &ElmtJac,
+                const int                                               nfluxDir, 
+                const int                                               nDervDir, 
+                      Array<OneD, Array<OneD, DNekBlkMatSharedPtr> >    &gmtxarray);
+#endif
         }; 
         
         /// A shared pointer to an EquationSystem object

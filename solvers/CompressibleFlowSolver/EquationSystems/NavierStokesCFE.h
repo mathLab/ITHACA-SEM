@@ -102,6 +102,15 @@ namespace Nektar
     void GetArtificialViscosity(
         const Array<OneD, Array<OneD, NekDouble> >  &inarray,
               Array<OneD,             NekDouble  >  &muav);
+
+    void GetViscousFluxBilinearForm(
+        const int                                                       nConvectiveFields,
+        const int                                                       nSpaceDim,
+        const int                                                       FluxDirection,
+        const int                                                       DerivDirection,
+        const Array<OneD, const Array<OneD, NekDouble> >                &inaverg,
+        const Array<OneD, const Array<OneD, NekDouble> >                &injumpp,
+              Array<OneD, Array<OneD, NekDouble> >                      &outarray);
     
     virtual void v_InitObject();
 
@@ -132,7 +141,18 @@ namespace Nektar
         Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &derivatives,
         Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &viscousTensor);
 
-    virtual void v_AddDiffusionFluxJacDirctn(
+    
+    virtual void v_GetViscousSymmtrFluxConservVar(
+            const int                                                       nConvectiveFields,
+            const int                                                       nSpaceDim,
+            const Array<OneD, Array<OneD, NekDouble> >                      &inaverg,
+            const Array<OneD, Array<OneD, NekDouble > >                     &inarray,
+            Array<OneD, Array<OneD, Array<OneD, NekDouble> > >              &outarray,
+            Array< OneD, int >                                              &nonZeroIndex,    
+            const Array<OneD, Array<OneD, NekDouble> >                      &normals);
+    
+#ifdef DEMO_IMPLICITSOLVER_JFNK_COEFF
+  virtual void v_AddDiffusionFluxJacDirctn(
         const int                                                       nDirctn,
         const Array<OneD, const Array<OneD, NekDouble> >                &inarray,
         const Array<OneD, const Array<OneD, Array<OneD, NekDouble>> >   &qfields,
@@ -157,16 +177,7 @@ namespace Nektar
     virtual void v_CalphysDeriv(
             const Array<OneD, const Array<OneD, NekDouble> >                &inarray,
                   Array<OneD,       Array<OneD, Array<OneD, NekDouble> > >  &qfield);
-
-    virtual void v_GetViscousSymmtrFluxConservVar(
-            const int                                                       nConvectiveFields,
-            const int                                                       nSpaceDim,
-            const Array<OneD, Array<OneD, NekDouble> >                      &inaverg,
-            const Array<OneD, Array<OneD, NekDouble > >                     &inarray,
-            Array<OneD, Array<OneD, Array<OneD, NekDouble> > >              &outarray,
-            Array< OneD, int >                                              &nonZeroIndex,    
-            const Array<OneD, Array<OneD, NekDouble> >                      &normals);
-    
+  
     /**
      * @brief return part of viscous Jacobian: 
      * \todo flux derived with Qx=[drho_dx,drhou_dx,drhov_dx,drhoE_dx] 
@@ -262,15 +273,8 @@ namespace Nektar
         const Array<OneD, NekDouble>                        &U,
         const Array<OneD, const Array<OneD, NekDouble> >    &qfield,
               DNekMatSharedPtr                              &OutputMatrix);
-
-    void GetViscousFluxBilinearForm(
-        const int                                                       nConvectiveFields,
-        const int                                                       nSpaceDim,
-        const int                                                       FluxDirection,
-        const int                                                       DerivDirection,
-        const Array<OneD, const Array<OneD, NekDouble> >                &inaverg,
-        const Array<OneD, const Array<OneD, NekDouble> >                &injumpp,
-              Array<OneD, Array<OneD, NekDouble> >                      &outarray);
+#endif
+    
   };
 }
 #endif

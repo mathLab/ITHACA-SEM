@@ -1054,11 +1054,11 @@ namespace Nektar
                 return v_GetlocTraceToTraceMap();
             }
 
+#ifdef DEMO_IMPLICITSOLVER_JFNK_COEFF
             void CalcuTracephysToLeftRightExpphysMap(
                     bool                                            &flag,
                     Array<OneD, Array<OneD, Array<OneD, int > > >   &T2Emap);
 
-#ifdef DEMO_IMPLICITSOLVER_JFNK_COEFF
             void AddTraceJacToElmtJac(
                 const Array<OneD, const DNekMatSharedPtr>  &FwdMat,
                 const Array<OneD, const DNekMatSharedPtr>  &BwdMat,

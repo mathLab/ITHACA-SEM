@@ -424,6 +424,7 @@ namespace Nektar
             }
 
 #ifdef DEMO_IMPLICITSOLVER_JFNK_COEFF
+
             virtual void v_AddTraceIntegralToOffDiag(
                 const Array<OneD, const NekDouble> &FwdFlux, 
                 const Array<OneD, const NekDouble> &BwdFlux, 

@@ -369,7 +369,6 @@ namespace Nektar
         }
     }
 
-
     void NavierStokesCFE::v_DoDiffusionFlux(
         const Array<OneD, const Array<OneD, NekDouble>> &inarray,
         Array<OneD, Array<OneD, Array<OneD, NekDouble>>>&VolumeFlux,
@@ -989,6 +988,173 @@ namespace Nektar
         }
     }
 
+    void NavierStokesCFE::GetArtificialViscosity(
+        const Array<OneD, Array<OneD, NekDouble> >  &inarray,
+              Array<OneD,             NekDouble  >  &muav)
+    {            
+        m_artificialDiffusion->GetArtificialViscosity(inarray,muav);
+    }
+
+    void NavierStokesCFE::v_GetViscousSymmtrFluxConservVar(
+        const int                                                       nConvectiveFields,
+        const int                                                       nSpaceDim,
+        const Array<OneD, Array<OneD, NekDouble> >                      &inaverg,
+        const Array<OneD, Array<OneD, NekDouble > >                     &inarray,
+        Array<OneD, Array<OneD, Array<OneD, NekDouble> > >              &outarray,
+        Array< OneD, int >                                              &nonZeroIndex,    
+        const Array<OneD, Array<OneD, NekDouble> >                      &normals)
+    {
+        int nPts                = inaverg[nConvectiveFields-1].num_elements();
+        nonZeroIndex = Array<OneD, int>(nConvectiveFields-1,0);
+        for(int i=0;i<nConvectiveFields-1;i++)
+        {
+            nonZeroIndex[i] =   i+1;
+        }
+        Array<OneD, Array<OneD, NekDouble> > outtmp( nConvectiveFields );
+        for(int i=0;i<nConvectiveFields;i++)
+        {
+            outtmp[i] =   Array<OneD, NekDouble> (nPts, 0.0);
+        }
+        for(int nd = 0; nd< nSpaceDim; nd++)
+        {
+            for(int nderiv =0; nderiv<nSpaceDim;nderiv++)
+            {
+                GetViscousFluxBilinearForm(nConvectiveFields,nSpaceDim,nd,nderiv,inaverg,inarray,outtmp);
+
+                for(int i=0;i<nConvectiveFields;i++)
+                {
+                    Vmath::Vvtvp(nPts,&outtmp[i][0],1,&normals[nderiv][0],1,&outarray[nd][i][0],1,&outarray[nd][i][0],1);
+                }
+            }
+        }
+    }
+    void NavierStokesCFE::GetViscousFluxBilinearForm(
+        const int                                                       nConvectiveFields,
+        const int                                                       nSpaceDim,
+        const int                                                       FluxDirection,
+        const int                                                       DerivDirection,
+        const Array<OneD, const Array<OneD, NekDouble> >                &inaverg,
+        const Array<OneD, const Array<OneD, NekDouble> >                &injumpp,
+              Array<OneD, Array<OneD, NekDouble> >                      &outarray)
+    {
+        int nPts                = inaverg[nConvectiveFields-1].num_elements();
+        int nDim=m_spacedim;
+        // Auxiliary variables
+        Array<OneD, NekDouble > mu                 (nPts, 0.0);
+
+        // Variable viscosity through the Sutherland's law
+        if (m_ViscosityType == "Variable")
+        {
+            Array<OneD, NekDouble > temperature        (nPts, 0.0);
+            m_varConv->GetTemperature(inaverg,temperature);
+            m_varConv->GetDynamicViscosity(temperature, mu);
+        }
+        else
+        {
+            Vmath::Fill(nPts, m_mu, mu, 1);
+        }
+
+        Array<OneD,Array<OneD, NekDouble>> outtmp = outarray;
+        for(int i=0; i<nConvectiveFields;i++)
+        {
+            Vmath::Zero(nPts,&outarray[i][0],1);
+            // outtmp[i]=Array<OneD,NekDouble> (nPts,0.0);
+        }
+
+        //TODO: to get primary variable outside.(even in the beginning of DoODERhs)
+        Array<OneD,Array<OneD,NekDouble>> u(nDim);
+        Array<OneD,Array<OneD,NekDouble>> u2(nDim);
+        for(int i=0;i<nDim;i++)
+        {
+            u[i]=Array<OneD,NekDouble> (nPts,0.0);
+            u2[i]=Array<OneD,NekDouble> (nPts,0.0);
+        }
+        Array<OneD,NekDouble> q2(nPts,0.0);
+        Array<OneD,NekDouble> E_minus_q2(nPts,0.0);
+        Array<OneD,NekDouble> orho(nPts,0.0);
+        Array<OneD,NekDouble>tmp(nPts,0.0);
+        Array<OneD,NekDouble>tmp1(nPts,0.0);
+
+        //Constants
+        int nDim_plus_one=nDim+1;
+        int FluxDirection_plus_one=FluxDirection+1;
+        NekDouble gamma=m_gamma;
+        NekDouble Pr=m_Prandtl;
+        NekDouble gammaoPr=gamma/Pr;
+        NekDouble one_minus_gammaoPr=1.0-gammaoPr;
+        const NekDouble OneThird=1./3.;
+        const NekDouble TwoThird=2.*OneThird;
+        const NekDouble FourThird=4.*OneThird;
+
+        Vmath::Sdiv(nPts,1.0,&inaverg[0][0],1,&orho[0],1);
+        for(int i=0;i<nDim;i++)
+        {
+            Vmath::Vmul(nPts,&inaverg[i+1][0],1,&orho[0],1,&u[i][0],1);
+            Vmath::Vmul(nPts,&u[i][0],1,&u[i][0],1,&u2[i][0],1);
+            Vmath::Vadd(nPts,&q2[0],1,&u2[i][0],1,&q2[0],1);
+        }
+        Vmath::Vmul(nPts,&inaverg[nDim_plus_one][0],1,&orho[0],1,&E_minus_q2[0],1);
+        Vmath::Vsub(nPts,&E_minus_q2[0],1,&q2[0],1,&E_minus_q2[0],1);
+        Vmath::Vmul(nPts,&mu[0],1,&orho[0],1,&tmp[0],1);
+
+        int DerivDirection_plus_one=DerivDirection+1;
+        if(DerivDirection==FluxDirection)
+        {
+            Vmath::Svtvp(nPts,OneThird,&u2[FluxDirection][0],1,&q2[0],1,&tmp1[0],1);
+            Vmath::Svtvp(nPts,gammaoPr,&E_minus_q2[0],1,&tmp1[0],1,&tmp1[0],1);
+            Vmath::Vmul(nPts,&tmp1[0],1,&injumpp[0][0],1,&tmp1[0],1);
+            //orho is tmperary array
+            Vmath::Svtvm(nPts,gammaoPr,&injumpp[nDim_plus_one][0],1,&tmp1[0],1,&orho[0],1);
+
+            for(int i=0;i<nDim;i++)
+            {
+                int i_plus_one=i+1;
+                //flux[rhou,rhov,rhow]
+                Vmath::Vvtvm(nPts,&u[i][0],1,&injumpp[0][0],1,&injumpp[i_plus_one][0],1,&outtmp[i_plus_one][0],1);
+                Vmath::Neg(nPts,&outtmp[i_plus_one][0],1);
+                Vmath::Vmul(nPts,&tmp[0],1,&outtmp[i_plus_one][0],1,&outtmp[i_plus_one][0],1);
+                //flux rhoE
+                Vmath::Smul(nPts,one_minus_gammaoPr,&u[i][0],1,&tmp1[0],1);
+                Vmath::Vvtvp(nPts,&tmp1[0],1,&injumpp[i_plus_one][0],1,&outtmp[nDim_plus_one][0],1,&outtmp[nDim_plus_one][0],1);
+
+                if(i==FluxDirection)
+                {
+                    Vmath::Smul(nPts,FourThird,&outtmp[i_plus_one][0],1,&outtmp[i_plus_one][0],1);
+                    Vmath::Smul(nPts,OneThird,&u[FluxDirection][0],1,&tmp1[0],1);
+                    Vmath::Vvtvp(nPts,&tmp1[0],1,&injumpp[FluxDirection_plus_one][0],1,&outtmp[nDim_plus_one][0],1,&outtmp[nDim_plus_one][0],1);
+                }
+            }
+            Vmath::Vadd(nPts,&orho[0],1,&outtmp[nDim_plus_one][0],1,&outtmp[nDim_plus_one][0],1);
+            Vmath::Vmul(nPts,&tmp[0],1,&outtmp[nDim_plus_one][0],1,&outtmp[nDim_plus_one][0],1);
+
+        }
+        else
+        {
+            Vmath::Vvtvm(nPts,&u[DerivDirection][0],1,&injumpp[0][0],1,&injumpp[DerivDirection_plus_one][0],1,&tmp1[0],1);
+            Vmath::Smul(nPts,TwoThird,&tmp1[0],1,&tmp1[0],1);
+            Vmath::Vmul(nPts,&tmp[0],1,&tmp1[0],1,&outtmp[FluxDirection_plus_one][0],1);
+
+            Vmath::Vvtvm(nPts,&u[FluxDirection][0],1,&injumpp[0][0],1,&injumpp[FluxDirection_plus_one][0],1,&tmp1[0],1);
+            Vmath::Neg(nPts,&tmp1[0],1);
+            Vmath::Vmul(nPts,&tmp[0],1,&tmp1[0],1,&outtmp[DerivDirection_plus_one][0],1);
+
+            Vmath::Smul(nPts,OneThird,&u[FluxDirection][0],1,&tmp1[0],1);
+            Vmath::Vmul(nPts,&tmp1[0],1,&u[DerivDirection][0],1,&tmp1[0],1);
+            Vmath::Vmul(nPts,&tmp1[0],1,&injumpp[0][0],1,&tmp1[0],1);
+            //previous orho as a tmperary memory because it is non-used any more
+            Vmath::Smul(nPts,TwoThird,&u[FluxDirection][0],1,&orho[0],1);
+            Vmath::Vmul(nPts,&orho[0],1,&injumpp[DerivDirection_plus_one][0],1,&orho[0],1);
+            Vmath::Vadd(nPts,&tmp1[0],1,&orho[0],1,&tmp1[0],1);
+            Vmath::Neg(nPts,&tmp1[0],1);
+            Vmath::Vvtvp(nPts,&u[DerivDirection][0],1,&injumpp[FluxDirection_plus_one][0],1,&tmp1[0],1,&tmp1[0],1);
+            Vmath::Vmul(nPts,&tmp[0],1,&tmp1[0],1,&outtmp[nDim_plus_one][0],1);
+            
+        }
+ 
+    }
+
+#ifdef DEMO_IMPLICITSOLVER_JFNK_COEFF
+
     /**
      * @brief return part of viscous Jacobian: 
      * \todo flux derived with Qx=[drho_dx,drhou_dx,drhov_dx,drhoE_dx] 
@@ -1440,13 +1606,6 @@ namespace Nektar
         (*OutputMatrix)(2,3)=(*OutputMatrix)(2,3)-dqx_dU4-dqy_dU4;
     }
 
-    void NavierStokesCFE::GetArtificialViscosity(
-        const Array<OneD, Array<OneD, NekDouble> >  &inarray,
-              Array<OneD,             NekDouble  >  &muav)
-    {            
-        m_artificialDiffusion->GetArtificialViscosity(inarray,muav);
-    }
-
     void NavierStokesCFE::v_AddDiffusionFluxJacDirctn(
         const int                                                       nDirctn,
         const Array<OneD, const Array<OneD, NekDouble> >                &inarray,
@@ -1577,21 +1736,21 @@ namespace Nektar
         int nPts                = explist->GetTotPoints();
         int nSpaceDim           = m_graph->GetSpaceDimension();  
         
-//Debug
-if(!ElmtJac.num_elements())
-{
-    ElmtJac =   Array<OneD, Array<OneD, DNekMatSharedPtr> > (ntotElmt);
-    for(int  nelmt = 0; nelmt < ntotElmt; nelmt++)
-    {
-        int nElmtPnt            = (*expvect)[nelmt]->GetTotPoints();
-        ElmtJac[nelmt] =   Array<OneD, DNekMatSharedPtr>(nElmtPnt);
-        for(int npnt = 0; npnt < nElmtPnt; npnt++)
+        //Debug
+        if(!ElmtJac.num_elements())
         {
-            ElmtJac[nelmt][npnt] = MemoryManager<DNekMat>
-                ::AllocateSharedPtr(nConvectiveFields, nConvectiveFields);
+            ElmtJac =   Array<OneD, Array<OneD, DNekMatSharedPtr> > (ntotElmt);
+            for(int  nelmt = 0; nelmt < ntotElmt; nelmt++)
+            {
+                int nElmtPnt            = (*expvect)[nelmt]->GetTotPoints();
+                ElmtJac[nelmt] =   Array<OneD, DNekMatSharedPtr>(nElmtPnt);
+                for(int npnt = 0; npnt < nElmtPnt; npnt++)
+                {
+                    ElmtJac[nelmt][npnt] = MemoryManager<DNekMat>
+                        ::AllocateSharedPtr(nConvectiveFields, nConvectiveFields);
+                }
+            }
         }
-    }
-}
         // Auxiliary variables
         Array<OneD, NekDouble > mu                 (nPts, 0.0);
 
@@ -1715,40 +1874,6 @@ if(!ElmtJac.num_elements())
         }
         return;
     }
-
-    void NavierStokesCFE::v_GetViscousSymmtrFluxConservVar(
-        const int                                                       nConvectiveFields,
-        const int                                                       nSpaceDim,
-        const Array<OneD, Array<OneD, NekDouble> >                      &inaverg,
-        const Array<OneD, Array<OneD, NekDouble > >                     &inarray,
-        Array<OneD, Array<OneD, Array<OneD, NekDouble> > >              &outarray,
-        Array< OneD, int >                                              &nonZeroIndex,    
-        const Array<OneD, Array<OneD, NekDouble> >                      &normals)
-    {
-        int nPts                = inaverg[nConvectiveFields-1].num_elements();
-        nonZeroIndex = Array<OneD, int>(nConvectiveFields-1,0);
-        for(int i=0;i<nConvectiveFields-1;i++)
-        {
-            nonZeroIndex[i] =   i+1;
-        }
-        Array<OneD, Array<OneD, NekDouble> > outtmp( nConvectiveFields );
-        for(int i=0;i<nConvectiveFields;i++)
-        {
-            outtmp[i] =   Array<OneD, NekDouble> (nPts, 0.0);
-        }
-        for(int nd = 0; nd< nSpaceDim; nd++)
-        {
-            for(int nderiv =0; nderiv<nSpaceDim;nderiv++)
-            {
-                GetViscousFluxBilinearForm(nConvectiveFields,nSpaceDim,nd,nderiv,inaverg,inarray,outtmp);
-
-                for(int i=0;i<nConvectiveFields;i++)
-                {
-                    Vmath::Vvtvp(nPts,&outtmp[i][0],1,&normals[nderiv][0],1,&outarray[nd][i][0],1,&outarray[nd][i][0],1);
-                }
-            }
-        }
-    }
     
     void NavierStokesCFE::v_CalphysDeriv(
             const Array<OneD, const Array<OneD, NekDouble> >                &inarray,
@@ -1772,130 +1897,6 @@ if(!ElmtJac.num_elements())
         }
         m_diffusion->DiffuseCalculateDerivative(nConvectiveFields,m_fields,inarray,qfield,pFwd,pBwd);
     }
-
-     void NavierStokesCFE::GetViscousFluxBilinearForm(
-        const int                                                       nConvectiveFields,
-        const int                                                       nSpaceDim,
-        const int                                                       FluxDirection,
-        const int                                                       DerivDirection,
-        const Array<OneD, const Array<OneD, NekDouble> >                &inaverg,
-        const Array<OneD, const Array<OneD, NekDouble> >                &injumpp,
-              Array<OneD, Array<OneD, NekDouble> >                      &outarray)
-    {
-        int nPts                = inaverg[nConvectiveFields-1].num_elements();
-        int nDim=m_spacedim;
-        // Auxiliary variables
-        Array<OneD, NekDouble > mu                 (nPts, 0.0);
-
-        // Variable viscosity through the Sutherland's law
-        if (m_ViscosityType == "Variable")
-        {
-            Array<OneD, NekDouble > temperature        (nPts, 0.0);
-            m_varConv->GetTemperature(inaverg,temperature);
-            m_varConv->GetDynamicViscosity(temperature, mu);
-        }
-        else
-        {
-            Vmath::Fill(nPts, m_mu, mu, 1);
-        }
-
-        Array<OneD,Array<OneD, NekDouble>> outtmp = outarray;
-        for(int i=0; i<nConvectiveFields;i++)
-        {
-            Vmath::Zero(nPts,&outarray[i][0],1);
-            // outtmp[i]=Array<OneD,NekDouble> (nPts,0.0);
-        }
-
-        //TODO: to get primary variable outside.(even in the beginning of DoODERhs)
-        Array<OneD,Array<OneD,NekDouble>> u(nDim);
-        Array<OneD,Array<OneD,NekDouble>> u2(nDim);
-        for(int i=0;i<nDim;i++)
-        {
-            u[i]=Array<OneD,NekDouble> (nPts,0.0);
-            u2[i]=Array<OneD,NekDouble> (nPts,0.0);
-        }
-        Array<OneD,NekDouble> q2(nPts,0.0);
-        Array<OneD,NekDouble> E_minus_q2(nPts,0.0);
-        Array<OneD,NekDouble> orho(nPts,0.0);
-        Array<OneD,NekDouble>tmp(nPts,0.0);
-        Array<OneD,NekDouble>tmp1(nPts,0.0);
-
-        //Constants
-        int nDim_plus_one=nDim+1;
-        int FluxDirection_plus_one=FluxDirection+1;
-        NekDouble gamma=m_gamma;
-        NekDouble Pr=m_Prandtl;
-        NekDouble gammaoPr=gamma/Pr;
-        NekDouble one_minus_gammaoPr=1.0-gammaoPr;
-        const NekDouble OneThird=1./3.;
-        const NekDouble TwoThird=2.*OneThird;
-        const NekDouble FourThird=4.*OneThird;
-
-        Vmath::Sdiv(nPts,1.0,&inaverg[0][0],1,&orho[0],1);
-        for(int i=0;i<nDim;i++)
-        {
-            Vmath::Vmul(nPts,&inaverg[i+1][0],1,&orho[0],1,&u[i][0],1);
-            Vmath::Vmul(nPts,&u[i][0],1,&u[i][0],1,&u2[i][0],1);
-            Vmath::Vadd(nPts,&q2[0],1,&u2[i][0],1,&q2[0],1);
-        }
-        Vmath::Vmul(nPts,&inaverg[nDim_plus_one][0],1,&orho[0],1,&E_minus_q2[0],1);
-        Vmath::Vsub(nPts,&E_minus_q2[0],1,&q2[0],1,&E_minus_q2[0],1);
-        Vmath::Vmul(nPts,&mu[0],1,&orho[0],1,&tmp[0],1);
-
-        int DerivDirection_plus_one=DerivDirection+1;
-        if(DerivDirection==FluxDirection)
-        {
-            Vmath::Svtvp(nPts,OneThird,&u2[FluxDirection][0],1,&q2[0],1,&tmp1[0],1);
-            Vmath::Svtvp(nPts,gammaoPr,&E_minus_q2[0],1,&tmp1[0],1,&tmp1[0],1);
-            Vmath::Vmul(nPts,&tmp1[0],1,&injumpp[0][0],1,&tmp1[0],1);
-            //orho is tmperary array
-            Vmath::Svtvm(nPts,gammaoPr,&injumpp[nDim_plus_one][0],1,&tmp1[0],1,&orho[0],1);
-
-            for(int i=0;i<nDim;i++)
-            {
-                int i_plus_one=i+1;
-                //flux[rhou,rhov,rhow]
-                Vmath::Vvtvm(nPts,&u[i][0],1,&injumpp[0][0],1,&injumpp[i_plus_one][0],1,&outtmp[i_plus_one][0],1);
-                Vmath::Neg(nPts,&outtmp[i_plus_one][0],1);
-                Vmath::Vmul(nPts,&tmp[0],1,&outtmp[i_plus_one][0],1,&outtmp[i_plus_one][0],1);
-                //flux rhoE
-                Vmath::Smul(nPts,one_minus_gammaoPr,&u[i][0],1,&tmp1[0],1);
-                Vmath::Vvtvp(nPts,&tmp1[0],1,&injumpp[i_plus_one][0],1,&outtmp[nDim_plus_one][0],1,&outtmp[nDim_plus_one][0],1);
-
-                if(i==FluxDirection)
-                {
-                    Vmath::Smul(nPts,FourThird,&outtmp[i_plus_one][0],1,&outtmp[i_plus_one][0],1);
-                    Vmath::Smul(nPts,OneThird,&u[FluxDirection][0],1,&tmp1[0],1);
-                    Vmath::Vvtvp(nPts,&tmp1[0],1,&injumpp[FluxDirection_plus_one][0],1,&outtmp[nDim_plus_one][0],1,&outtmp[nDim_plus_one][0],1);
-                }
-            }
-            Vmath::Vadd(nPts,&orho[0],1,&outtmp[nDim_plus_one][0],1,&outtmp[nDim_plus_one][0],1);
-            Vmath::Vmul(nPts,&tmp[0],1,&outtmp[nDim_plus_one][0],1,&outtmp[nDim_plus_one][0],1);
-
-        }
-        else
-        {
-            Vmath::Vvtvm(nPts,&u[DerivDirection][0],1,&injumpp[0][0],1,&injumpp[DerivDirection_plus_one][0],1,&tmp1[0],1);
-            Vmath::Smul(nPts,TwoThird,&tmp1[0],1,&tmp1[0],1);
-            Vmath::Vmul(nPts,&tmp[0],1,&tmp1[0],1,&outtmp[FluxDirection_plus_one][0],1);
-
-            Vmath::Vvtvm(nPts,&u[FluxDirection][0],1,&injumpp[0][0],1,&injumpp[FluxDirection_plus_one][0],1,&tmp1[0],1);
-            Vmath::Neg(nPts,&tmp1[0],1);
-            Vmath::Vmul(nPts,&tmp[0],1,&tmp1[0],1,&outtmp[DerivDirection_plus_one][0],1);
-
-            Vmath::Smul(nPts,OneThird,&u[FluxDirection][0],1,&tmp1[0],1);
-            Vmath::Vmul(nPts,&tmp1[0],1,&u[DerivDirection][0],1,&tmp1[0],1);
-            Vmath::Vmul(nPts,&tmp1[0],1,&injumpp[0][0],1,&tmp1[0],1);
-            //previous orho as a tmperary memory because it is non-used any more
-            Vmath::Smul(nPts,TwoThird,&u[FluxDirection][0],1,&orho[0],1);
-            Vmath::Vmul(nPts,&orho[0],1,&injumpp[DerivDirection_plus_one][0],1,&orho[0],1);
-            Vmath::Vadd(nPts,&tmp1[0],1,&orho[0],1,&tmp1[0],1);
-            Vmath::Neg(nPts,&tmp1[0],1);
-            Vmath::Vvtvp(nPts,&u[DerivDirection][0],1,&injumpp[FluxDirection_plus_one][0],1,&tmp1[0],1,&tmp1[0],1);
-            Vmath::Vmul(nPts,&tmp[0],1,&tmp1[0],1,&outtmp[nDim_plus_one][0],1);
-            
-        }
- 
-    }
+#endif
 
 }

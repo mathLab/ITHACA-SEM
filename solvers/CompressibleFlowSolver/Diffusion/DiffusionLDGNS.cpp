@@ -139,51 +139,21 @@ namespace Nektar
         Array<OneD, Array<OneD, NekDouble> > tmp2(nConvectiveFields);
 
         Array<OneD, Array<OneD, Array<OneD, NekDouble> > > 
-                                                numericalFluxO1(m_spaceDim);
-        Array<OneD, Array<OneD, Array<OneD, NekDouble> > > 
                                                 derivativesO1(m_spaceDim);
 
         for (j = 0; j < m_spaceDim; ++j)
         {
-            numericalFluxO1[j] = Array<OneD, Array<OneD, NekDouble> >(
-                                                                nScalars);
             derivativesO1[j]   = Array<OneD, Array<OneD, NekDouble> >(
                                                                 nScalars);
 
             for (i = 0; i < nScalars; ++i)
             {
-                numericalFluxO1[j][i] = Array<OneD, NekDouble>(
-                                                            nTracePts, 0.0);
                 derivativesO1[j][i]   = Array<OneD, NekDouble>(nPts, 0.0);
             }
         }
 
-        // Compute the numerical fluxes for the first order derivatives
-        v_NumericalFluxO1(fields, inarray, numericalFluxO1, pFwd, pBwd);
-
-        for (j = 0; j < nDim; ++j)
-        {
-            for (i = 0; i < nScalars; ++i)
-            {
-                fields[i]->IProductWRTDerivBase (j, inarray[i], tmp1);
-                Vmath::Neg                      (nCoeffs, tmp1, 1);
-                fields[i]->AddTraceIntegral     (numericalFluxO1[j][i], 
-                                                 tmp1);
-                fields[i]->SetPhysState         (false);
-                fields[i]->MultiplyByElmtInvMass(tmp1, tmp1);
-                fields[i]->BwdTrans             (tmp1, derivativesO1[j][i]);
-            }
-        }
-
-        // For 3D Homogeneous 1D only take derivatives in 3rd direction
-        if (m_diffDim == 1)
-        {
-            for (i = 0; i < nScalars; ++i)
-            {
-                derivativesO1[2][i] = m_homoDerivs[i];
-            }
-        }
-
+        DiffuseCalculateDerivative(nConvectiveFields,fields,inarray,derivativesO1,pFwd,pBwd);
+        
         // Initialisation viscous tensor
         m_viscTensor = Array<OneD, Array<OneD, Array<OneD, NekDouble> > >
                                                                (m_spaceDim);
@@ -204,11 +174,12 @@ namespace Nektar
             viscousFlux[i] = Array<OneD, NekDouble>(nTracePts, 0.0);
         }
 
-        m_fluxVectorNS(inarray, derivativesO1, m_viscTensor);
+        DiffuseVolumeFlux(nConvectiveFields,fields,inarray,derivativesO1,m_viscTensor);
 
         // Compute u from q_{\eta} and q_{\xi}
         // Obtain numerical fluxes
-        v_NumericalFluxO2(fields, inarray, m_viscTensor, viscousFlux);
+        DiffuseTraceFlux(nConvectiveFields,fields,inarray,derivativesO1,m_viscTensor,viscousFlux,pFwd,pBwd);
+        // v_NumericalFluxO2(fields, inarray, m_viscTensor, viscousFlux);
 
         for (i = 0; i < nConvectiveFields; ++i)
         {
@@ -363,8 +334,6 @@ namespace Nektar
         // Obtain numerical fluxes
         v_NumericalFluxO2(fields, inarray, VolumeFlux, TraceFlux);
     }
-
-
 
     /**
      * @brief Builds the numerical flux for the 1st order derivatives

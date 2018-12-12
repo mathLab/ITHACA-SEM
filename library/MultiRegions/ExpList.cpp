@@ -3494,7 +3494,7 @@ namespace Nektar
             return result;
         }
 
-        
+#ifdef DEMO_IMPLICITSOLVER_JFNK_COEFF
         void ExpList::CalcuTracephysToLeftRightExpphysMap(
                     bool                                            &flag,
                     Array<OneD, Array<OneD, Array<OneD, int > > >   &T2Emap)
@@ -3568,7 +3568,6 @@ namespace Nektar
             }
         }
 
-#ifdef DEMO_IMPLICITSOLVER_JFNK_COEFF
         void ExpList::v_AddTraceIntegralToOffDiag(
                 const Array<OneD, const NekDouble> &FwdFlux, 
                 const Array<OneD, const NekDouble> &BwdFlux, 

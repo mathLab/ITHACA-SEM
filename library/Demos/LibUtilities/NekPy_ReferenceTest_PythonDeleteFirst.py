@@ -20,22 +20,22 @@ def main():
 
 	print("Loaded session: %s" % session.GetSessionName())
 	print("Loaded MeshGraph of dimension: %d\n" % graph.GetMeshDimension())
-	
+
 	print("Retrieving coordinates...")
 	coords = exp.GetCoords()
 	coords = coords[0]
-	coords_address = id(coords)	
+	coords_address = id(coords)
 
 	print("Retrieved coordinates.")
 	print("Reference count for expansion coordinates: %d\n" % get_refcount(coords_address))
 	actual_test_outcome.append(get_refcount(coords_address))
 
 	print("Setting PhysArray (exp.SetPhysArray())...")
-	exp.SetPhysArray(coords) 
+	exp.SetPhysArray(coords)
 	print("exp.SetPhysArray() completed.")
 	print("Reference count for expansion coordinates: %d\n" % get_refcount(coords_address))
 	actual_test_outcome.append(get_refcount(coords_address))
-	
+
 	print("Deleting coordinates in Python...")
 	del coords
 	gc.collect()

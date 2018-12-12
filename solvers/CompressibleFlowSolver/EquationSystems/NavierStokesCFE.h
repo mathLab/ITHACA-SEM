@@ -90,7 +90,7 @@ namespace Nektar
         const Array<OneD, Array<OneD, NekDouble> >                      &normal             =   NullNekDoubleArrayofArray,           
         const Array<OneD, NekDouble>                                    &ArtifDiffFactor    =   NullNekDouble1DArray);
     
-    void GetViscousFluxConsToPrim(
+    void GetPrimDerivFromConsDeriv(
         const Array<OneD, Array<OneD, NekDouble> >                      &inarray,
         const Array<OneD, Array<OneD, Array<OneD, NekDouble> > >        &qfields,
               Array<OneD, Array<OneD, Array<OneD, NekDouble> > >        &outarray);
@@ -103,15 +103,6 @@ namespace Nektar
         const Array<OneD, Array<OneD, NekDouble> >  &inarray,
               Array<OneD,             NekDouble  >  &muav);
     
-    void GetViscousSymmtrFluxConservVarDrctn(
-        const int                                                       nConvectiveFields,
-        const int                                                       nSpaceDim,
-        const Array<OneD, const Array<OneD, NekDouble> >                &normals,
-        const int                                                       nDervDir,
-        const Array<OneD, const Array<OneD, NekDouble> >                &inaverg,
-        const Array<OneD, const Array<OneD, NekDouble> >                &inarray,
-              Array<OneD, Array<OneD, NekDouble> >                      &outarray);
-
     virtual void v_InitObject();
 
     virtual void v_DoDiffusion(
@@ -271,37 +262,15 @@ namespace Nektar
         const Array<OneD, NekDouble>                        &U,
         const Array<OneD, const Array<OneD, NekDouble> >    &qfield,
               DNekMatSharedPtr                              &OutputMatrix);
-    void GetdF1_dQx_2DIPWIn( 
-        const NekDouble                 &mu,
-        const Array<OneD, NekDouble>    &U, 
-        const Array<OneD, NekDouble>    &inarray, 
-        Array<OneD, NekDouble>          &outarray);
-    void GetdF2_dQx_2DIPWIn( 
-        const NekDouble                 &mu,
-        const Array<OneD, NekDouble>    &U, 
-        const Array<OneD, NekDouble>    &inarray, 
-        Array<OneD, NekDouble>          &outarray);
-    void GetdF1_dQy_2DIPWIn( 
-        const NekDouble                 &mu,
-        const Array<OneD, NekDouble>    &U, 
-        const Array<OneD, NekDouble>    &inarray, 
-        Array<OneD, NekDouble>          &outarray);
-    void GetdF2_dQy_2DIPWIn( 
-        const NekDouble                 &mu,
-        const Array<OneD, NekDouble>    &U, 
-        const Array<OneD, NekDouble>    &inarray, 
-        Array<OneD, NekDouble>          &outarray);
 
-    void GetViscousSymmtrFluxConservVarDrctnVector(
+    void GetViscousFluxBilinearForm(
         const int                                                       nConvectiveFields,
         const int                                                       nSpaceDim,
-        const Array<OneD, const Array<OneD, NekDouble> >                &normals,
         const int                                                       FluxDirection,
         const int                                                       DerivDirection,
         const Array<OneD, const Array<OneD, NekDouble> >                &inaverg,
         const Array<OneD, const Array<OneD, NekDouble> >                &injumpp,
               Array<OneD, Array<OneD, NekDouble> >                      &outarray);
-    
   };
 }
 #endif

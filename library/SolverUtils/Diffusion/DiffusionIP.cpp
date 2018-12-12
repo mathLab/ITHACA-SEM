@@ -402,7 +402,7 @@ namespace Nektar
             }
         }
 
-        void DiffusionIP::Add2ndDeriv2Trace(
+        void DiffusionIP::AddSecondDerivTOTrace(
             const int                                                           nConvectiveFields,
             const int                                                           nDim,
             const int                                                           nPts,
@@ -738,7 +738,7 @@ namespace Nektar
 
             if(abs(PenaltyFactor2)>1.0E-12)
             {
-                Add2ndDeriv2Trace_ReduceComm(nConvectiveFields,nDim,nPts,nTracePts,PenaltyFactor2,fields,qfield,numDerivFwd,numDerivBwd);
+                AddSecondDerivTOTrace_ReduceComm(nConvectiveFields,nDim,nPts,nTracePts,PenaltyFactor2,fields,qfield,numDerivFwd,numDerivBwd);
             }
 
             for (int nd = 0; nd < nDim; ++nd)
@@ -778,7 +778,7 @@ namespace Nektar
             m_FunctorDiffusionfluxCons(nConvectiveFields,nDim,solution_Aver,numDerivFwd,traceflux,nonZeroIndexflux,m_traceNormals,MuVarTrace);
         }
         
-        void DiffusionIP::Add2ndDeriv2Trace_ReduceComm(
+        void DiffusionIP::AddSecondDerivTOTrace_ReduceComm(
             const int                                                           nConvectiveFields,
             const int                                                           nDim,
             const int                                                           nPts,

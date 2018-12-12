@@ -78,8 +78,8 @@ namespace Nektar
             const int nConvectiveFields,
             const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
             const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-                  Array<OneD, Array<OneD, NekDouble> >        &outarray,
-            NekDouble                                           time,
+            Array<OneD, Array<OneD, NekDouble> >              &outarray,
+            NekDouble                                         time,
             const Array<OneD, Array<OneD, NekDouble> >        &pFwd,
             const Array<OneD, Array<OneD, NekDouble> >        &pBwd)
         {
@@ -91,8 +91,8 @@ namespace Nektar
             const int nConvectiveFields,
             const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
             const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-                  Array<OneD, Array<OneD, NekDouble> >        &outarray,
-            NekDouble                                           time,
+            Array<OneD, Array<OneD, NekDouble> >              &outarray,
+            NekDouble                                         time,
             const Array<OneD, Array<OneD, NekDouble> >        &pFwd,
             const Array<OneD, Array<OneD, NekDouble> >        &pBwd)
         {

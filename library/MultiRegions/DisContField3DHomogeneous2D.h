@@ -118,7 +118,7 @@ namespace Nektar
            
             Array<OneD,MultiRegions::ExpListSharedPtr>          m_bndCondExpansions;
             
-            Array<OneD, NekDouble >                      m_BndCondBwdWeight;
+            Array<OneD, NekDouble >                             m_BndCondBwdWeight;
 
             Array<OneD,SpatialDomains::BoundaryConditionShPtr>  m_bndConditions;
 			

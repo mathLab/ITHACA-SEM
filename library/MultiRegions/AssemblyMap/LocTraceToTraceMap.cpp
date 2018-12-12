@@ -930,7 +930,6 @@ void LocTraceToTraceMap::LocTracesFromField(
                  faces);
 }
 
-
 /**
  */
 void LocTraceToTraceMap::AddLocTracesToField(
@@ -1060,7 +1059,6 @@ void LocTraceToTraceMap::InterpLocEdgesToTrace(
                  m_LocTraceToTraceMap[dir].get(),
                  edges.get());
 }
-
 
 /**
  * @brief Right inner product with localedgetoTrace Interpolation Matrix.
@@ -1397,7 +1395,6 @@ void LocTraceToTraceMap::InterpLocFacesToTrace(
                  faces.get());
 }
 
-
 /**
  * @brief Right inner product with localedgetoTrace Interpolation Matrix.
  * 
@@ -1488,17 +1485,6 @@ void LocTraceToTraceMap::RightIPTWLocFacesToTraceInterpMat(
                                      fnp0);
                     }
                     Array<OneD, NekDouble> I0 = m_interpEndPtI0[dir][i];
-                    // Blas::Dgemv('T',
-                    //             fnp0,
-                    //             tnp1 * m_interpNfaces[dir][i],
-                    //             1.0,
-                    //             tmp.get() + cnt1,
-                    //             tnp0,
-                    //             I0.get(),
-                    //             1,
-                    //             0.0,
-                    //             tmp.get() + cnt1 + tnp0 - 1,
-                    //             tnp0);
                     for(int k = 0; k< tnp1 * m_interpNfaces[dir][i]; k++)
                     {
                         Vmath::Svtvp(fnp0,tmp[cnt1 + tnp0-1+k*tnp0],&I0[0],1,&loctraces[cnt],1,&loctraces[cnt],1);
@@ -1508,22 +1494,6 @@ void LocTraceToTraceMap::RightIPTWLocFacesToTraceInterpMat(
                 case eInterpDir1:
                 {
                     DNekMatSharedPtr I1 = m_interpTraceI1[dir][i];
-                    // for (int j = 0; j < m_interpNfaces[dir][i]; ++j)
-                    // {
-                    //     Blas::Dgemm('N',
-                    //                 'T',
-                    //                 tnp0,
-                    //                 tnp1,
-                    //                 fnp1,
-                    //                 1.0,
-                    //                 locfaces.get() + cnt + j * fnp0 * fnp1,
-                    //                 tnp0,
-                    //                 I1->GetPtr().get(),
-                    //                 tnp1,
-                    //                 0.0,
-                    //                 tmp.get() + cnt1 + j * tnp0 * tnp1,
-                    //                 tnp0);
-                    // }
 
                     for (int j = 0; j < m_interpNfaces[dir][i]; ++j)
                     {
@@ -1546,27 +1516,6 @@ void LocTraceToTraceMap::RightIPTWLocFacesToTraceInterpMat(
                 case eInterpEndPtDir1:
                 {
                     Array<OneD, NekDouble> I1 = m_interpEndPtI1[dir][i];
-                    // for (int j = 0; j < m_interpNfaces[dir][i]; ++j)
-                    // {
-                    //     // copy all points
-                    //     Vmath::Vcopy(fnp0 * fnp1,
-                    //                  locfaces.get() + cnt + j * fnp0 * fnp1,
-                    //                  1,
-                    //                  tmp.get() + cnt1 + j * tnp0 * tnp1,
-                    //                  1);
-
-                    //     // interpolate end points
-                    //     for (int k = 0; k < tnp0; ++k)
-                    //     {
-                    //         tmp[cnt1 + k + (j + 1) * tnp0 * tnp1 - tnp0] =
-                    //             Blas::Ddot(fnp1,
-                    //                        locfaces.get() + cnt +
-                    //                            j * fnp0 * fnp1 + k,
-                    //                        fnp0,
-                    //                        &I1[0],
-                    //                        1);
-                    //     }
-                    // }
                     for (int j = 0; j < m_interpNfaces[dir][i]; ++j)
                     {
                         Vmath::Vcopy(fnp0 * fnp1,
@@ -1587,40 +1536,8 @@ void LocTraceToTraceMap::RightIPTWLocFacesToTraceInterpMat(
                 {
                     DNekMatSharedPtr I0 = m_interpTraceI0[dir][i];
                     DNekMatSharedPtr I1 = m_interpTraceI1[dir][i];
-                    // Array<OneD, NekDouble> wsp(m_interpNfaces[dir][i] * fnp0 *
-                    //                            tnp1 * fnp0);
 
                     Array<OneD, NekDouble> wsp(m_interpNfaces[dir][i] * fnp0 * tnp1);
-
-                    // for (int j = 0; j < m_interpNfaces[dir][i]; ++j)
-                    // {
-                    //     Blas::Dgemm('N',
-                    //                 'T',
-                    //                 fnp0,
-                    //                 tnp1,
-                    //                 fnp1,
-                    //                 1.0,
-                    //                 locfaces.get() + cnt + j * fnp0 * fnp1,
-                    //                 fnp0,
-                    //                 I1->GetPtr().get(),
-                    //                 tnp1,
-                    //                 0.0,
-                    //                 wsp.get() + j * fnp0 * tnp1,
-                    //                 fnp0);
-                    // }
-                    // Blas::Dgemm('N',
-                    //             'N',
-                    //             tnp0,
-                    //             tnp1 * m_interpNfaces[dir][i],
-                    //             fnp0,
-                    //             1.0,
-                    //             I0->GetPtr().get(),
-                    //             tnp0,
-                    //             wsp.get(),
-                    //             fnp0,
-                    //             0.0,
-                    //             tmp.get() + cnt1,
-                    //             tnp0);
 
                     Blas::Dgemm('T',
                                 'N',
@@ -1657,23 +1574,6 @@ void LocTraceToTraceMap::RightIPTWLocFacesToTraceInterpMat(
                 {
                     DNekMatSharedPtr I1 = m_interpTraceI1[dir][i];
 
-                    // for (int j = 0; j < m_interpNfaces[dir][i]; ++j)
-                    // {
-                    //     Blas::Dgemm('N',
-                    //                 'T',
-                    //                 fnp0,
-                    //                 tnp1,
-                    //                 fnp1,
-                    //                 1.0,
-                    //                 locfaces.get() + cnt + j * fnp0 * fnp1,
-                    //                 fnp0,
-                    //                 I1->GetPtr().get(),
-                    //                 tnp1,
-                    //                 0.0,
-                    //                 tmp.get() + cnt1 + j * tnp0 * tnp1,
-                    //                 tnp0);
-                    // }
-
                     for (int j = 0; j < m_interpNfaces[dir][i]; ++j)
                     {
                         Blas::Dgemm('N',
@@ -1692,17 +1592,6 @@ void LocTraceToTraceMap::RightIPTWLocFacesToTraceInterpMat(
                     }
                     
                     Array<OneD, NekDouble> I0 = m_interpEndPtI0[dir][i];
-                    // Blas::Dgemv('T',
-                    //             fnp0,
-                    //             tnp1 * m_interpNfaces[dir][i],
-                    //             1.0,
-                    //             tmp.get() + cnt1,
-                    //             tnp0,
-                    //             I0.get(),
-                    //             1,
-                    //             0.0,
-                    //             tmp.get() + cnt1 + tnp0 - 1,
-                    //             tnp0);
                     for(int k = 0; k< tnp1 * m_interpNfaces[dir][i]; k++)
                     {
                         Vmath::Svtvp(fnp0,tmp[cnt1 + tnp0-1+k*tnp0],&I0[0],1,&loctraces[cnt],1,&loctraces[cnt],1);

@@ -32,7 +32,6 @@
 // Description: GlobalLinSysIterative header
 //
 ///////////////////////////////////////////////////////////////////////////////
-
 #ifndef NEKTAR_LIB_MULTIREGIONS_GLOBALLINSYSITERATIVE_H
 #define NEKTAR_LIB_MULTIREGIONS_GLOBALLINSYSITERATIVE_H
 

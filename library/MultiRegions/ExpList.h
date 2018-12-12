@@ -1081,9 +1081,6 @@ namespace Nektar
                 const   Array<OneD, const  Array<OneD, NekDouble> >&inarray,
                 Array<OneD, DNekMatSharedPtr> &mtxPerVar);
 
-            MULTI_REGIONS_EXPORT const DNekScalBlkMatSharedPtr& GetBlockMatrix(
-                const GlobalMatrixKey &gkey);
-
             MULTI_REGIONS_EXPORT inline const Array<OneD,const pair<int,int> > &GetCoeffsToElmt() const
             {
                 return m_coeffsToElmt;
@@ -1223,7 +1220,9 @@ namespace Nektar
                 const GlobalMatrixKey &gkey);
 
             // void GetElmt_id(const GlobalMatrixKey &gkey,map<int,int> &elmt_id);
-            
+            const DNekScalBlkMatSharedPtr& GetBlockMatrix(
+                const GlobalMatrixKey &gkey);  
+
             void MultiplyByBlockMatrix(
                 const GlobalMatrixKey             &gkey,
                 const Array<OneD,const NekDouble> &inarray,
@@ -1323,8 +1322,6 @@ namespace Nektar
                 const Array<OneD, const NekDouble> &Fn,
                       Array<OneD, NekDouble> &outarray);
 
-                      
-            
             virtual void v_AddFwdBwdTraceIntegral(
                 const Array<OneD, const NekDouble> &Fwd,
                 const Array<OneD, const NekDouble> &Bwd,

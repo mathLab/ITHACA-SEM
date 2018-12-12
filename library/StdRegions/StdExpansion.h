@@ -646,13 +646,9 @@ namespace Nektar
                 v_IProductWRTBase(base, inarray, outarray, coll_check);
             }
 
-            // void ElmtAddMatNSBlkDiag_volume( const Array<OneD, const Array<OneD, NekDouble> >&inarray,
-            //                             DNekScalBlkMatSharedPtr gmtx);
-                                        
             void IProductWRTDerivBaseElmt(const int nElmt, const int dir,
                                            const Array<OneD, const NekDouble> &inarray,
                                            Array<OneD, NekDouble> &outarray);
-
 
             void   IProductWRTDerivBase(const int dir,
                                         const Array<OneD, const NekDouble>& inarray,
@@ -661,9 +657,9 @@ namespace Nektar
                 v_IProductWRTDerivBase(dir,inarray, outarray);
             }
 
-            void   RightIPTBaseMatrix(const int dir,
-                                        const Array<OneD, const NekDouble>& inarray,
-                                        Array<OneD, NekDouble> &outarray);
+            // void   RightIPTBaseMatrix(const int dir,
+            //                             const Array<OneD, const NekDouble>& inarray,
+            //                             Array<OneD, NekDouble> &outarray);
 
             /// \brief Get the element id of this expansion when used
             /// in a list by returning value of #m_elmt_id

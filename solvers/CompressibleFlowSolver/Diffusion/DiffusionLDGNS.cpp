@@ -119,7 +119,7 @@ namespace Nektar
         }
     }
 
-
+    // TODO:: REPLACED
     void DiffusionLDGNS::v_Diffuse_coeff(
         const int                                         nConvectiveFields,
         const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
@@ -225,7 +225,6 @@ namespace Nektar
             fields[i]->AddTraceIntegral     (viscousFlux[i], tmp2[i]);
             fields[i]->SetPhysState         (false);
             fields[i]->MultiplyByElmtInvMass(tmp2[i], outarray[i]);
-            // fields[i]->BwdTrans             (tmp2[i], outarray[i]);
         }
     }
 

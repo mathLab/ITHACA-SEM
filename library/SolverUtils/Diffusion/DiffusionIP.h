@@ -100,7 +100,7 @@ namespace Nektar
                       Array<OneD, Array<OneD, Array<OneD, NekDouble> > >            &tracflux,
                       Array<OneD, Array<OneD, NekDouble> >                          &outarray);
 
-            void Add2ndDeriv2Trace(
+            void AddSecondDerivTOTrace(
                 const int                                                           nConvectiveFields,
                 const int                                                           nDim,
                 const int                                                           nPts,
@@ -223,7 +223,7 @@ namespace Nektar
                       Array<OneD, Array<OneD, NekDouble> >                          &solution_Aver,
                       Array<OneD, Array<OneD, NekDouble> >                          &solution_jump);
             
-           void Add2ndDeriv2Trace_ReduceComm(
+           void AddSecondDerivTOTrace_ReduceComm(
                 const int                                                           nConvectiveFields,
                 const int                                                           nDim,
                 const int                                                           nPts,

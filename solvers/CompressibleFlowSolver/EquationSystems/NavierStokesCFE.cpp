@@ -135,10 +135,8 @@ namespace Nektar
         {
             m_diffusion->SetFluxVectorNS(&NavierStokesCFE::
                                           v_GetViscousFluxVector, this);
-            // m_diffusion->SetDiffusionFluxCons(
-            //     &NavierStokesCFE::GetViscousFluxVectorConservVar, this);
             m_diffusion->SetDiffusionFluxCons(
-                &NavierStokesCFE::GetViscousFluxVectorConservVarVector, this);
+                &NavierStokesCFE::GetViscousFluxVectorConservVar, this);
             m_diffusion->SetFunctorDerivBndCond(
                 &NavierStokesCFE::SetBoundaryConditionsDeriv, this);
 
@@ -602,12 +600,12 @@ namespace Nektar
 
     /**
      * @brief Return the flux vector for the IP diffusion problem.
-     * \todo Complete the viscous flux vector
+     * \TODO:: RECODE USING VARIABLE CONVERTORS
      */
-    void NavierStokesCFE::GetViscousFluxConsToPrim(
+    void NavierStokesCFE::GetPrimDerivFromConsDeriv(
         const Array<OneD, Array<OneD, NekDouble> >                      &inarray,
         const Array<OneD, Array<OneD, Array<OneD, NekDouble> > >        &qfields,
-              Array<OneD, Array<OneD, Array<OneD, NekDouble> > >        &outarray)
+              Array<OneD, Array<OneD, Array<OneD, NekDouble> > >        &physderivatives)
     {
         //can be nPoints/nTracePoints
         int nPts                = inarray[0].num_elements();
@@ -616,18 +614,9 @@ namespace Nektar
         Array<OneD,NekDouble> tmp(nPts,0.0);
         int nScalars=nConvectiveFields-1;
         Array<OneD,Array<OneD,NekDouble>> physfield(nScalars);
-        Array<OneD,Array<OneD,Array<OneD,NekDouble>>> physderivatives(nDim);
         for(int i=0;i<nScalars;i++)
         {
             physfield[i]=Array<OneD,NekDouble> (nPts,0.0);
-        }
-        for(int i=0;i<nDim;i++)
-        {
-            physderivatives[i]=Array<OneD,Array<OneD,NekDouble>> (nScalars);
-            for(int j=0;j<nScalars;j++)
-            {
-                physderivatives[i][j]=Array<OneD,NekDouble>(nPts,0.0);
-            }
         }
 
         //Transfer conservative variables to primal variables u,v,w
@@ -676,11 +665,9 @@ namespace Nektar
             }
             Vmath::Smul(nPts,oCv,&physderivatives[i][nScalars-1][0],1,&physderivatives[i][nScalars-1][0],1);
         }
-
-        v_GetViscousFluxVector(physfield, physderivatives,outarray);
     }
 
-    /**
+      /**
      * @brief Return the flux vector for the IP diffusion problem.
      * \todo Complete the viscous flux vector
      */
@@ -697,6 +684,12 @@ namespace Nektar
         int nPts=inarray[0].num_elements();
         int n_nonZero   =   nConvectiveFields-1;
         Array<OneD, Array<OneD, Array<OneD, NekDouble> > > fluxVec;
+        Array<OneD,Array<OneD,NekDouble>> outtmp(nConvectiveFields);
+
+        for(int i=0; i<nConvectiveFields;i++)
+        {
+            outtmp[i]=Array<OneD,NekDouble>(nPts,0.0);
+        }
 
         for(int i=0; i< outarray.num_elements(); i++)
         {
@@ -709,29 +702,51 @@ namespace Nektar
         if(normal.num_elements())
         {
             fluxVec =   Array<OneD, Array<OneD, Array<OneD, NekDouble> > >(nDim);
+
             for(int i=0; i< nDim; i++)
             {
                 fluxVec[i]  =   Array<OneD, Array<OneD, NekDouble> >(nConvectiveFields);
+
                 for(int j=0; j< nConvectiveFields; j++)
                 {
                     fluxVec[i][j]  =   Array<OneD, NekDouble>(nPts,0.0);
                 }
             }
 
-            GetViscousFluxConsToPrim(inarray,qfields,fluxVec);
-
-            for(int j=0; j< nConvectiveFields; j++)
+            for(int nd=0;nd<nDim;nd++)
             {
-                for(int i=0; i< nDim; i++)
+                for(int nderiv=0;nderiv<nDim;nderiv++)
                 {
-                    Vmath::Vvtvp(nPts,normal[i],1,fluxVec[i][j],1,outarray[0][j],1,outarray[0][j],1);
+                    GetViscousFluxBilinearForm(nConvectiveFields,nDim,nd,nderiv,inarray,qfields[nderiv],outtmp);
+
+                    for(int j=0;j<nConvectiveFields;j++)
+                    {
+                        Vmath::Vadd(nPts,&outtmp[j][0],1,&fluxVec[nd][j][0],1,&fluxVec[nd][j][0],1);
+                    }
+                }
+
+                for(int j=0;j<nConvectiveFields;j++)
+                {
+                    Vmath::Vvtvp(nPts,&normal[nd][0],1,&fluxVec[nd][j][0],1,&outarray[0][j][0],1,&outarray[0][j][0],1);
                 }
             }
         }
         else
         {
             fluxVec = outarray;
-            GetViscousFluxConsToPrim(inarray,qfields,fluxVec);
+
+            for(int nd=0;nd<nDim;nd++)
+            {
+                for(int nderiv=0;nderiv<nDim;nderiv++)
+                {
+                    GetViscousFluxBilinearForm(nConvectiveFields,nDim,nd,nderiv,inarray,qfields[nderiv],outtmp);
+
+                    for(int j=0;j<nConvectiveFields;j++)
+                    {
+                        Vmath::Vadd(nPts,&outtmp[j][0],1,&fluxVec[nd][j][0],1,&fluxVec[nd][j][0],1);
+                    }
+                }
+            }
         }
 
         if(ArtifDiffFactor.num_elements())
@@ -847,188 +862,6 @@ namespace Nektar
                 }                    
             }
         }
-    }
-
-    void NavierStokesCFE::GetdF1_dQx_2DIPWIn( 
-        const NekDouble                 &mu,
-        const Array<OneD, NekDouble>    &U, 
-        const Array<OneD, NekDouble>    &inarray, 
-        Array<OneD, NekDouble>          &outarray)
-    {
-        NekDouble rho=U[0];
-        NekDouble orho=1.0/rho;
-        NekDouble u=U[1]*orho;
-        NekDouble v=U[2]*orho;
-        NekDouble E=U[3]*orho;
-        NekDouble u2    =   u*u;
-        NekDouble v2    =   v*v;
-        NekDouble q2=u2+v2;
-        NekDouble e=E-0.5*q2;
-        NekDouble R =m_varConv->GetGasconstant();
-        NekDouble gamma=m_gamma;
-        NekDouble ogama1 = 1.0/(gamma - 1.0);
-        NekDouble Cp=gamma *ogama1  *R;
-        NekDouble Cv=ogama1*R;
-        NekDouble T=e/Cv;
-        //q_x=-kappa*dT_dx;
-        NekDouble kappa=m_thermalConductivity;
-        NekDouble oPr= kappa/(Cp *mu);
-        NekDouble gamaoPr   =   gamma*oPr;
-        //To notice, here is positive, which is consistent with 
-        //"SYMMETRIC INTERIOR PENALTY DG METHODS FOR THE COMPRESSIBLE NAVIER-STOKES EQUATIONS"
-        //But opposite to "I Do like CFD"
-        NekDouble tmp=mu*orho;
-
-        const NekDouble OneThird    = 1.0/3.0;
-        const NekDouble TwoThird    = 2.0*OneThird;
-        const NekDouble FourThird   = 4.0*OneThird;
-
-        Vmath::Zero(outarray.num_elements(),outarray,1);
-        // TODO: replace repeated divid by multiply
-        outarray[1] +=  tmp*(-FourThird*u)*inarray[0];
-        outarray[1] +=  tmp*(FourThird)*inarray[1];
-        outarray[2] +=  tmp*(-v)*inarray[0];
-        outarray[2] +=  tmp*inarray[2];
-        outarray[3] +=  -tmp*(FourThird*u2+v2+gamaoPr*(E-q2))*inarray[0];
-        outarray[3] +=  tmp*(FourThird-gamaoPr)*u*inarray[1];
-        outarray[3] +=  tmp*(1.0-gamaoPr)*v*inarray[2];
-        outarray[3] +=  tmp*gamaoPr*inarray[3];
-    }
-
-    void NavierStokesCFE::GetdF2_dQx_2DIPWIn( 
-        const NekDouble                 &mu,
-        const Array<OneD, NekDouble>    &U, 
-        const Array<OneD, NekDouble>    &inarray, 
-        Array<OneD, NekDouble>          &outarray)
-    {
-        NekDouble rho=U[0];
-        NekDouble orho=1.0/rho;
-        NekDouble u=U[1]*orho;
-        NekDouble v=U[2]*orho;
-        NekDouble E=U[3]*orho;
-        NekDouble u2    =   u*u;
-        NekDouble v2    =   v*v;
-        NekDouble q2=u2+v2;
-        NekDouble e=E-0.5*q2;
-        NekDouble R =m_varConv->GetGasconstant();
-        NekDouble gamma=m_gamma;
-        NekDouble ogama1 = 1.0/(gamma - 1.0);
-        NekDouble Cp=gamma *ogama1  *R;
-        NekDouble Cv=ogama1*R;
-        NekDouble T=e/Cv;
-        //q_x=-kappa*dT_dx;
-        NekDouble kappa=m_thermalConductivity;
-        NekDouble oPr= kappa/(Cp *mu);
-        NekDouble gamaoPr   =   gamma*oPr;
-        //To notice, here is positive, which is consistent with 
-        //"SYMMETRIC INTERIOR PENALTY DG METHODS FOR THE COMPRESSIBLE NAVIER-STOKES EQUATIONS"
-        //But opposite to "I Do like CFD"
-        NekDouble tmp=mu*orho;
-
-        const NekDouble OneThird    = 1.0/3.0;
-        const NekDouble TwoThird    = 2.0*OneThird;
-        const NekDouble FourThird   = 4.0*OneThird;
-
-        Vmath::Zero(outarray.num_elements(),outarray,1);
-        // TODO: replace repeated divid by multiply
-        outarray[1] +=  tmp*(-v)*inarray[0];
-        outarray[1] +=  tmp*inarray[2];
-        outarray[2] +=  tmp*(TwoThird*u)*inarray[0];
-        outarray[2] +=  tmp*(-TwoThird)*inarray[1];
-        outarray[3] +=  -tmp*OneThird*u*v*inarray[0];
-        outarray[3] +=  -tmp*TwoThird*v*inarray[1];
-        outarray[3] +=  tmp*u*inarray[2];
-    }
-
-    void NavierStokesCFE::GetdF1_dQy_2DIPWIn( 
-        const NekDouble                 &mu,
-        const Array<OneD, NekDouble>    &U, 
-        const Array<OneD, NekDouble>    &inarray, 
-        Array<OneD, NekDouble>          &outarray)
-    {
-        NekDouble rho=U[0];
-        NekDouble orho=1.0/rho;
-        NekDouble u=U[1]*orho;
-        NekDouble v=U[2]*orho;
-        NekDouble E=U[3]*orho;
-        NekDouble u2    =   u*u;
-        NekDouble v2    =   v*v;
-        NekDouble q2=u2+v2;
-        NekDouble e=E-0.5*q2;
-        NekDouble R =m_varConv->GetGasconstant();
-        NekDouble gamma=m_gamma;
-        NekDouble ogama1 = 1.0/(gamma - 1.0);
-        NekDouble Cp=gamma *ogama1  *R;
-        NekDouble Cv=ogama1*R;
-        NekDouble T=e/Cv;
-        //q_x=-kappa*dT_dx;
-        NekDouble kappa=m_thermalConductivity;
-        NekDouble oPr= kappa/(Cp *mu);
-        NekDouble gamaoPr   =   gamma*oPr;
-        //To notice, here is positive, which is consistent with 
-        //"SYMMETRIC INTERIOR PENALTY DG METHODS FOR THE COMPRESSIBLE NAVIER-STOKES EQUATIONS"
-        //But opposite to "I Do like CFD"
-        NekDouble tmp=mu*orho;
-
-        const NekDouble OneThird    = 1.0/3.0;
-        const NekDouble TwoThird    = 2.0*OneThird;
-        const NekDouble FourThird   = 4.0*OneThird;
-
-        Vmath::Zero(outarray.num_elements(),outarray,1);
-           
-        outarray[1] +=  tmp*(TwoThird*v)*inarray[0];
-        outarray[1] +=  tmp*(-TwoThird)*inarray[2];
-        outarray[2] +=  tmp*(-u)*inarray[0];
-        outarray[2] +=  tmp*inarray[1];
-        outarray[3] +=  -tmp*OneThird*u*v*inarray[0];
-        outarray[3] +=  tmp*v*inarray[1];
-        outarray[3] +=  -tmp*TwoThird*u*inarray[2];
-    }
-
-    void NavierStokesCFE::GetdF2_dQy_2DIPWIn( 
-        const NekDouble                 &mu,
-        const Array<OneD, NekDouble>    &U, 
-        const Array<OneD, NekDouble>    &inarray, 
-        Array<OneD, NekDouble>          &outarray)
-    {
-        NekDouble rho=U[0];
-        NekDouble orho=1.0/rho;
-        NekDouble u=U[1]*orho;
-        NekDouble v=U[2]*orho;
-        NekDouble E=U[3]*orho;
-        NekDouble u2    =   u*u;
-        NekDouble v2    =   v*v;
-        NekDouble q2=u2+v2;
-        NekDouble e=E-0.5*q2;
-        NekDouble R =m_varConv->GetGasconstant();
-        NekDouble gamma=m_gamma;
-        NekDouble ogama1 = 1.0/(gamma - 1.0);
-        NekDouble Cp=gamma *ogama1  *R;
-        NekDouble Cv=ogama1*R;
-        NekDouble T=e/Cv;
-        //q_x=-kappa*dT_dx;
-        NekDouble kappa=m_thermalConductivity;
-        NekDouble oPr= kappa/(Cp *mu);
-        NekDouble gamaoPr   =   gamma*oPr;
-        //To notice, here is positive, which is consistent with 
-        //"SYMMETRIC INTERIOR PENALTY DG METHODS FOR THE COMPRESSIBLE NAVIER-STOKES EQUATIONS"
-        //But opposite to "I Do like CFD"
-        NekDouble tmp=mu*orho;
-
-        const NekDouble OneThird    = 1.0/3.0;
-        const NekDouble TwoThird    = 2.0*OneThird;
-        const NekDouble FourThird   = 4.0*OneThird;
-
-        Vmath::Zero(outarray.num_elements(),outarray,1);
-           
-        outarray[1] +=  tmp*(-u)*inarray[0];
-        outarray[1] +=  tmp*inarray[1];
-        outarray[2] +=  tmp*(-FourThird*v)*inarray[0];
-        outarray[2] +=  tmp*FourThird*inarray[2];
-        outarray[3] +=  -tmp*(FourThird*v2+u2+gamaoPr*(E-q2))*inarray[0];
-        outarray[3] +=  tmp*(1-gamaoPr)*u*inarray[1];
-        outarray[3] +=  tmp*(FourThird-gamaoPr)*v*inarray[2];
-        outarray[3] +=  tmp*gamaoPr*inarray[3];
     }
 
     /**
@@ -1782,7 +1615,7 @@ if(!ElmtJac.num_elements())
         {
             for(int nderiv =0; nderiv<nSpaceDim;nderiv++)
             {
-                GetViscousSymmtrFluxConservVarDrctnVector(nConvectiveFields,nSpaceDim,nd,nderiv,inaverg,inarray,outtmp);
+                GetViscousFluxBilinearForm(nConvectiveFields,nSpaceDim,nd,nderiv,inaverg,inarray,outtmp);
 
                 for(int i=0;i<nConvectiveFields;i++)
                 {
@@ -1792,101 +1625,6 @@ if(!ElmtJac.num_elements())
         }
     }
     
-    void NavierStokesCFE::GetViscousSymmtrFluxConservVarDrctn(
-        const int                                                       nConvectiveFields,
-        const int                                                       nSpaceDim,
-        const Array<OneD, const Array<OneD, NekDouble> >                &normals,
-        const int                                                       nDervDir,
-        const Array<OneD, const Array<OneD, NekDouble> >                &inaverg,
-        const Array<OneD, const Array<OneD, NekDouble> >                &injumpp,
-              Array<OneD, Array<OneD, NekDouble> >                      &outarray)
-    {
-        int nPts                = inaverg[nConvectiveFields-1].num_elements();
-
-        // Auxiliary variables
-        Array<OneD, NekDouble > mu                 (nPts, 0.0);
-        Array<OneD, Array<OneD, NekDouble > > dirnormal  (2);
-        for(int i=0;i<2;i++)
-        {
-            dirnormal[i]   = Array<OneD, NekDouble > (2, 0.0);
-        }
-        dirnormal[0][0]  =   1.0;
-        dirnormal[1][1]  =   1.0;
-
-        // Variable viscosity through the Sutherland's law
-        if (m_ViscosityType == "Variable")
-        {
-            Array<OneD, NekDouble > temperature        (nPts, 0.0);
-            m_varConv->GetTemperature(inaverg,temperature);
-            m_varConv->GetDynamicViscosity(temperature, mu);
-        }
-        else
-        {
-            Vmath::Fill(nPts, m_mu, mu, 1);
-        }
-
-        NekDouble pointmu       = 0.0;
-        Array<OneD, NekDouble> pointAve(nConvectiveFields,0.0);
-        Array<OneD, NekDouble> pointin(nConvectiveFields,0.0);
-        Array<OneD, NekDouble> out1(nConvectiveFields,0.0);
-        Array<OneD, NekDouble> out2(nConvectiveFields,0.0);
-
-        switch (nDervDir)
-        {
-            case 0:
-            {
-                for(int npnt = 0; npnt < nPts; npnt++)
-                {
-                    for(int j = 0; j < nConvectiveFields; j++)
-                    {
-                        pointAve[j] = inaverg[j][npnt];
-                        pointin[j]  = injumpp[j][npnt];
-                    }
-
-                    pointmu     = mu[npnt];
-
-                    GetdF1_dQx_2DIPWIn(pointmu,pointAve,pointin,out1);
-                    GetdF1_dQy_2DIPWIn(pointmu,pointAve,pointin,out2);
-
-                    for(int i = 1; i < nConvectiveFields; i++)
-                    {
-                        outarray[i][npnt]  = out1[i]*normals[0][npnt]
-                                            +out2[i]*normals[1][npnt];
-                    }
-                }
-                break;
-            }
-            case 1:
-            {
-                for(int npnt = 0; npnt < nPts; npnt++)
-                {
-                    for(int j = 0; j < nConvectiveFields; j++)
-                    {
-                        pointAve[j] = inaverg[j][npnt];
-                        pointin[j]  = injumpp[j][npnt];
-                    }
-
-                    pointmu     = mu[npnt];
-
-                    GetdF2_dQx_2DIPWIn(pointmu,pointAve,pointin,out1);
-                    GetdF2_dQy_2DIPWIn(pointmu,pointAve,pointin,out2);
-
-                    for(int i = 1; i < nConvectiveFields; i++)
-                    {
-                        outarray[i][npnt]  = out1[i]*normals[0][npnt]
-                            +out2[i]*normals[1][npnt];
-                    }
-                }
-                break;
-            }
-            default:
-            {
-                ASSERTL0(false,"GetViscousSymmtrFluxConservVarDrctn not coded yet");
-                break;
-            }
-        }
-    }
-
     void NavierStokesCFE::v_CalphysDeriv(
             const Array<OneD, const Array<OneD, NekDouble> >                &inarray,
                   Array<OneD,       Array<OneD, Array<OneD, NekDouble> > >  &qfield)
@@ -1910,124 +1648,7 @@ if(!ElmtJac.num_elements())
         m_diffusion->physFieldDeriv(nConvectiveFields,m_fields,inarray,pFwd,pBwd,qfield);
     }
 
-      /**
-     * @brief Return the flux vector for the IP diffusion problem.
-     * \todo Complete the viscous flux vector
-     */
-    void NavierStokesCFE::GetViscousFluxVectorConservVarVector(
-        const int                                                       nConvectiveFields,
-        const int                                                       nDim,
-        const Array<OneD, Array<OneD, NekDouble> >                      &inarray,
-        const Array<OneD, Array<OneD, Array<OneD, NekDouble> > >        &qfields,
-              Array<OneD, Array<OneD, Array<OneD, NekDouble> > >        &outarray,
-              Array< OneD, int >                                        &nonZeroIndex,    
-        const Array<OneD, Array<OneD, NekDouble> >                      &normal,         
-        const Array<OneD, NekDouble>                                    &ArtifDiffFactor)
-    {
-        int nPts=inarray[0].num_elements();
-        int n_nonZero   =   nConvectiveFields-1;
-        Array<OneD, Array<OneD, Array<OneD, NekDouble> > > fluxVec;
-        Array<OneD,Array<OneD,NekDouble>> outtmp(nConvectiveFields);
-
-        for(int i=0; i<nConvectiveFields;i++)
-        {
-            outtmp[i]=Array<OneD,NekDouble>(nPts,0.0);
-        }
-
-        for(int i=0; i< outarray.num_elements(); i++)
-        {
-            for(int j=0; j< nConvectiveFields; j++)
-            {
-                Vmath::Zero(nPts,outarray[i][j],1);
-            }
-        }
-
-        if(normal.num_elements())
-        {
-            fluxVec =   Array<OneD, Array<OneD, Array<OneD, NekDouble> > >(nDim);
-
-            for(int i=0; i< nDim; i++)
-            {
-                fluxVec[i]  =   Array<OneD, Array<OneD, NekDouble> >(nConvectiveFields);
-
-                for(int j=0; j< nConvectiveFields; j++)
-                {
-                    fluxVec[i][j]  =   Array<OneD, NekDouble>(nPts,0.0);
-                }
-            }
-
-            for(int nd=0;nd<nDim;nd++)
-            {
-                for(int nderiv=0;nderiv<nDim;nderiv++)
-                {
-                    GetViscousSymmtrFluxConservVarDrctnVector(nConvectiveFields,nDim,nd,nderiv,inarray,qfields[nderiv],outtmp);
-
-                    for(int j=0;j<nConvectiveFields;j++)
-                    {
-                        Vmath::Vadd(nPts,&outtmp[j][0],1,&fluxVec[nd][j][0],1,&fluxVec[nd][j][0],1);
-                    }
-                }
-
-                for(int j=0;j<nConvectiveFields;j++)
-                {
-                    Vmath::Vvtvp(nPts,&normal[nd][0],1,&fluxVec[nd][j][0],1,&outarray[0][j][0],1,&outarray[0][j][0],1);
-                }
-            }
-        }
-        else
-        {
-            fluxVec = outarray;
-
-            for(int nd=0;nd<nDim;nd++)
-            {
-                for(int nderiv=0;nderiv<nDim;nderiv++)
-                {
-                    GetViscousSymmtrFluxConservVarDrctnVector(nConvectiveFields,nDim,nd,nderiv,inarray,qfields[nderiv],outtmp);
-
-                    for(int j=0;j<nConvectiveFields;j++)
-                    {
-                        Vmath::Vadd(nPts,&outtmp[j][0],1,&fluxVec[nd][j][0],1,&fluxVec[nd][j][0],1);
-                    }
-                }
-            }
-        }
-
-        if(ArtifDiffFactor.num_elements())
-        {
-            n_nonZero   =   nConvectiveFields;
-            
-            if(normal.num_elements())
-            {
-                Array<OneD, NekDouble> tmparray(nPts,0.0);
-                for(int i=0; i< nDim; i++)
-                {
-                    Vmath::Vmul(nPts,ArtifDiffFactor,1,normal[i],1,tmparray,1);
-                    for(int j=0; j< nConvectiveFields; j++)
-                    {
-                        Vmath::Vvtvp(nPts,tmparray,1,qfields[i][j],1,outarray[0][j],1,outarray[0][j],1);
-                    }
-                }
-            }
-            else
-            {
-                for(int i=0; i< nDim; i++)
-                {
-                    for(int j=0; j< nConvectiveFields; j++)
-                    {
-                        Vmath::Vvtvp(nPts,ArtifDiffFactor,1,qfields[i][j],1,outarray[i][j],1,outarray[i][j],1);
-                    }
-                }
-            }
-        }
-
-        nonZeroIndex = Array< OneD, int > (n_nonZero,0);
-        for(int i=1;i<n_nonZero+1; i++)
-        {
-            nonZeroIndex[n_nonZero-i] =   nConvectiveFields-i;
-        }
-    }
-
-     void NavierStokesCFE::GetViscousSymmtrFluxConservVarDrctnVector(
+     void NavierStokesCFE::GetViscousFluxBilinearForm(
         const int                                                       nConvectiveFields,
         const int                                                       nSpaceDim,
         const int                                                       FluxDirection,
@@ -2060,6 +1681,7 @@ if(!ElmtJac.num_elements())
             // outtmp[i]=Array<OneD,NekDouble> (nPts,0.0);
         }
 
+        //TODO: to get primary variable outside.(even in the beginning of DoODERhs)
         Array<OneD,Array<OneD,NekDouble>> u(nDim);
         Array<OneD,Array<OneD,NekDouble>> u2(nDim);
         for(int i=0;i<nDim;i++)

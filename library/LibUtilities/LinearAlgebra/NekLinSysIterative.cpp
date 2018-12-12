@@ -36,9 +36,6 @@
 #include <LibUtilities/LinearAlgebra/NekLinSysIterative.h>
 #include <LibUtilities/BasicUtils/Timer.h>
 
-#define DEBUG_MPI
-
-
 using namespace std;
 
 namespace Nektar
@@ -413,9 +410,7 @@ namespace Nektar
                                    &r0[0] + nDir,
                                    &r0[0] + nDir,
                                    &m_map[0] + nDir);
-#ifdef DEBUG_MPI
-            m_Comm->AllReduce(vExchange, LibUtilities::ReduceSum);
-#endif // DEBUG
+        m_Comm->AllReduce(vExchange, LibUtilities::ReduceSum);
         eps = vExchange;
 
 
@@ -430,9 +425,7 @@ namespace Nektar
                                            &pInput[0] + nDir,
                                            &pInput[0] + nDir,
                                            &m_map[0] + nDir);
-#ifdef DEBUG_MPI
                 m_Comm->AllReduce(vExchange, LibUtilities::ReduceSum);
-#endif // DEBUG
                 m_prec_factor = vExchange / eps;
                 // m_prec_factor = 1.0;
 
@@ -608,9 +601,7 @@ namespace Nektar
                                     &w[0] + nDir,
                                     &V_local[numbertem][0] + nDir,
                                     &m_map[0] + nDir);
-#ifdef DEBUG_MPI
             m_Comm->AllReduce(vExchange, LibUtilities::ReduceSum);
-#endif // DEBUG
 
             hsingle[i] = vExchange;
 
@@ -656,10 +647,7 @@ namespace Nektar
                                 &w[0] + nDir,
                                 &m_map[0] + nDir);
 
-#ifdef DEBUG_MPI
-            m_Comm->AllReduce(vExchange, LibUtilities::ReduceSum);
-#endif // DEBUG
-
+        m_Comm->AllReduce(vExchange, LibUtilities::ReduceSum);
 
         hsingle[endtem] = sqrt(vExchange);
 
@@ -764,10 +752,7 @@ namespace Nektar
             vExchange[0] = Vmath::Dot2(pIn.GetDimension(),
                                        &pIn[0], &pIn[0], &m_map[0]);
         }
-#ifdef DEBUG_MPI
-            m_Comm->AllReduce(vExchange, LibUtilities::ReduceSum);
-#endif // DEBUG
-    
+        m_Comm->AllReduce(vExchange, LibUtilities::ReduceSum);
 
         // To ensure that very different rhs values are not being
         // used in subsequent solvers such as the velocit solve in

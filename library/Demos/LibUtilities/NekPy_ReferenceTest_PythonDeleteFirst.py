@@ -43,6 +43,8 @@ def main():
 	print("Reference count for expansion coordinates: %d\n" % get_refcount(coords_address))
 	actual_test_outcome.append(get_refcount(coords_address))
 
+        exp.SetPhysState(True)
+
 	print("Attempting to calculate the integral...")
 	print("Integral calculated to be: %r" % exp.PhysIntegral())
 	actual_test_outcome.append(exp.PhysIntegral())

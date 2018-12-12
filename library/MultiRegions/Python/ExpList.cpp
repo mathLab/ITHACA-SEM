@@ -183,6 +183,8 @@ void export_ExpList()
         .def("SetPhysArray", &ExpList_SetPhysArray)
         .def("SetPhys", &ExpList_SetPhys)
         .def("GetPhys", &ExpList_GetPhys)
+        .def("SetPhysState", &ExpList::SetPhysState)
+        .def("GetPhysState", &ExpList::GetPhysState)
         .def("PhysIntegral", &ExpList_PhysIntegral)
         .def("GetPhysAddress", &ExpList::GetPhysAddress)
         ;

@@ -102,6 +102,7 @@ namespace Nektar
             /// at which time to evaluate the boundary conditions(used in unsteady time integrations)
             NekDouble                                       m_BndEvaluateTime;
 
+#ifdef DEMO_IMPLICITSOLVER_JFNK_COEFF
             /// coefff of spacial derivatives(rhs or m_F in GLM) in calculating the residual of the whole equation(used in unsteady time integrations)
             NekDouble                                       m_TimeIntegLambda=0.0;
 
@@ -132,8 +133,7 @@ namespace Nektar
 
             int m_TotLinItePerStep=600;
 
-            
-
+#endif
             /// Initialises UnsteadySystem class members.
             SOLVER_UTILS_EXPORT UnsteadySystem(
                 const LibUtilities::SessionReaderSharedPtr& pSession,

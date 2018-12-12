@@ -102,6 +102,7 @@ namespace Nektar
             }
         }
 
+#ifdef DEMO_IMPLICITSOLVER_JFNK_COEFF
         void UpwindSolver::v_CalcFluxJacobian(
             const int                                         nDim,
             const Array<OneD, const Array<OneD, NekDouble> > &Fwd,
@@ -159,5 +160,6 @@ namespace Nektar
                 }
             }
         }
+#endif
     }
 }

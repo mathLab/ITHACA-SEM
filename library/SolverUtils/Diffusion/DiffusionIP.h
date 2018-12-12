@@ -185,14 +185,7 @@ namespace Nektar
                 const Array<OneD, Array<OneD, NekDouble> >                  &pFwd,
                 const Array<OneD, Array<OneD, NekDouble> >                  &pBwd);
 
-            virtual void v_AddVolumDerivJacToMat( 
-                const int                                               nConvectiveFields,
-                const Array<OneD, MultiRegions::ExpListSharedPtr>       &pFields,
-                const Array<OneD, const Array<OneD, DNekMatSharedPtr> > &ElmtJac,
-                const int                                               nfluxDir, 
-                const int                                               nDervDir, 
-                      Array<OneD, Array<OneD, DNekBlkMatSharedPtr> >    &gmtxarray);
-
+            
             virtual void v_ConsVarAveJump(
                 const int                                           nConvectiveFields,
                 const int                                           npnts,
@@ -233,7 +226,17 @@ namespace Nektar
                 const Array<OneD, const Array<OneD, Array<OneD, NekDouble> > >      &qfield,
                     Array<OneD, Array<OneD, Array<OneD, NekDouble> > >              &numDerivFwd,
                     Array<OneD, Array<OneD, Array<OneD, NekDouble> > >              &numDerivBwd);
+
+#ifdef DEMO_IMPLICITSOLVER_JFNK_COEFF
+            virtual void v_AddVolumDerivJacToMat( 
+                const int                                               nConvectiveFields,
+                const Array<OneD, MultiRegions::ExpListSharedPtr>       &pFields,
+                const Array<OneD, const Array<OneD, DNekMatSharedPtr> > &ElmtJac,
+                const int                                               nfluxDir, 
+                const int                                               nDervDir, 
+                      Array<OneD, Array<OneD, DNekBlkMatSharedPtr> >    &gmtxarray);
             
+#endif
         }; 
     }
 }

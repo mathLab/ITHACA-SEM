@@ -131,6 +131,78 @@ namespace Nektar
         }
     }
 
+    NekDouble CompressibleSolver::GetRoeSoundSpeed(
+        NekDouble rhoL, NekDouble pL, NekDouble eL, NekDouble HL, NekDouble srL,
+        NekDouble rhoR, NekDouble pR, NekDouble eR, NekDouble HR, NekDouble srR,
+        NekDouble HRoe, NekDouble URoe2, NekDouble srLR)
+    {
+        static NekDouble gamma = m_params["gamma"]();
+        NekDouble cRoe;
+        if(m_idealGas)
+        {
+            cRoe = sqrt((gamma - 1.0)*(HRoe - 0.5 * URoe2));
+        }
+        else
+        {
+            // Calculate static enthalpy of left and right states
+            NekDouble hL = eL + pL/rhoL;
+            NekDouble hR = eR + pR/rhoR;
+
+            // Get partial derivatives of P(rho,e)
+            NekDouble dpdeL   = m_eos->GetDPDe_rho(rhoL,eL);
+            NekDouble dpdeR   = m_eos->GetDPDe_rho(rhoR,eR);
+            NekDouble dpdrhoL = m_eos->GetDPDrho_e(rhoL,eL);
+            NekDouble dpdrhoR = m_eos->GetDPDrho_e(rhoR,eR);
+
+            // Evaluate chi and kappa parameters
+            NekDouble chiL    = dpdrhoL - eL / rhoL * dpdeL;
+            NekDouble kappaL  = dpdeL / rhoL;
+            NekDouble chiR    = dpdrhoR - eR / rhoR * dpdeR;
+            NekDouble kappaR  = dpdeR / rhoR;
+
+            //
+            // Calculate interface speed of sound using procedure from
+            //    Vinokur, M.; Montagné, J.-L. "Generalized Flux-Vector
+            //    Splitting and Roe Average for an Equilibrium Real Gas",
+            //    JCP (1990).
+            //
+
+            // Calculate averages
+            NekDouble avgChi    = 0.5 * (chiL      + chiR);
+            NekDouble avgKappa  = 0.5 * (kappaL    + kappaR);
+            NekDouble avgKappaH = 0.5 * (kappaL*hL + kappaR*hR);
+
+            // Calculate jumps
+            NekDouble deltaP    = pR      - pL;
+            NekDouble deltaRho  = rhoR    - rhoL;
+            NekDouble deltaRhoe = rhoR*eR - rhoL*eL;
+
+            // Evaluate dP: equation (64) from Vinokur-Montagné
+            NekDouble dP = deltaP - avgChi * deltaRho - avgKappa * deltaRhoe;
+            // s (eq 66)
+            NekDouble s  = avgChi + avgKappaH;
+            // D (eq 65)
+            NekDouble D  = (s*deltaRho)*(s*deltaRho) + deltaP*deltaP;
+            // chiRoe and kappaRoe (eq 66)
+            NekDouble chiRoe, kappaRoe;
+            NekDouble fac = D - deltaP*deltaRho;
+            if( abs(fac) > NekConstants::kNekZeroTol)
+            {
+                chiRoe   = (D*avgChi + s*s*deltaRho*dP) / fac;
+                kappaRoe = D*avgKappa / fac;
+            }
+            else
+            {
+                chiRoe = avgChi;
+                kappaRoe = avgKappa;
+            }
+            // Speed of sound (eq 53)
+            cRoe = sqrt( chiRoe + kappaRoe*(HRoe - 0.5 * URoe2));
+        }
+        return cRoe;
+    }
+
+#ifdef DEMO_IMPLICITSOLVER_JFNK_COEFF
     void CompressibleSolver::v_CalcFluxJacobian(
         const int                                         nDim,
         const Array<OneD, const Array<OneD, NekDouble> > &Fwd,
@@ -206,76 +278,5 @@ namespace Nektar
             BJac->SetBlock(i, i, PointBJac);
         }
     }
-
-    NekDouble CompressibleSolver::GetRoeSoundSpeed(
-        NekDouble rhoL, NekDouble pL, NekDouble eL, NekDouble HL, NekDouble srL,
-        NekDouble rhoR, NekDouble pR, NekDouble eR, NekDouble HR, NekDouble srR,
-        NekDouble HRoe, NekDouble URoe2, NekDouble srLR)
-    {
-        static NekDouble gamma = m_params["gamma"]();
-        NekDouble cRoe;
-        if(m_idealGas)
-        {
-            cRoe = sqrt((gamma - 1.0)*(HRoe - 0.5 * URoe2));
-        }
-        else
-        {
-            // Calculate static enthalpy of left and right states
-            NekDouble hL = eL + pL/rhoL;
-            NekDouble hR = eR + pR/rhoR;
-
-            // Get partial derivatives of P(rho,e)
-            NekDouble dpdeL   = m_eos->GetDPDe_rho(rhoL,eL);
-            NekDouble dpdeR   = m_eos->GetDPDe_rho(rhoR,eR);
-            NekDouble dpdrhoL = m_eos->GetDPDrho_e(rhoL,eL);
-            NekDouble dpdrhoR = m_eos->GetDPDrho_e(rhoR,eR);
-
-            // Evaluate chi and kappa parameters
-            NekDouble chiL    = dpdrhoL - eL / rhoL * dpdeL;
-            NekDouble kappaL  = dpdeL / rhoL;
-            NekDouble chiR    = dpdrhoR - eR / rhoR * dpdeR;
-            NekDouble kappaR  = dpdeR / rhoR;
-
-            //
-            // Calculate interface speed of sound using procedure from
-            //    Vinokur, M.; Montagné, J.-L. "Generalized Flux-Vector
-            //    Splitting and Roe Average for an Equilibrium Real Gas",
-            //    JCP (1990).
-            //
-
-            // Calculate averages
-            NekDouble avgChi    = 0.5 * (chiL      + chiR);
-            NekDouble avgKappa  = 0.5 * (kappaL    + kappaR);
-            NekDouble avgKappaH = 0.5 * (kappaL*hL + kappaR*hR);
-
-            // Calculate jumps
-            NekDouble deltaP    = pR      - pL;
-            NekDouble deltaRho  = rhoR    - rhoL;
-            NekDouble deltaRhoe = rhoR*eR - rhoL*eL;
-
-            // Evaluate dP: equation (64) from Vinokur-Montagné
-            NekDouble dP = deltaP - avgChi * deltaRho - avgKappa * deltaRhoe;
-            // s (eq 66)
-            NekDouble s  = avgChi + avgKappaH;
-            // D (eq 65)
-            NekDouble D  = (s*deltaRho)*(s*deltaRho) + deltaP*deltaP;
-            // chiRoe and kappaRoe (eq 66)
-            NekDouble chiRoe, kappaRoe;
-            NekDouble fac = D - deltaP*deltaRho;
-            if( abs(fac) > NekConstants::kNekZeroTol)
-            {
-                chiRoe   = (D*avgChi + s*s*deltaRho*dP) / fac;
-                kappaRoe = D*avgKappa / fac;
-            }
-            else
-            {
-                chiRoe = avgChi;
-                kappaRoe = avgKappa;
-            }
-            // Speed of sound (eq 53)
-            cRoe = sqrt( chiRoe + kappaRoe*(HRoe - 0.5 * URoe2));
-        }
-        return cRoe;
-    }
-
+#endif
 }

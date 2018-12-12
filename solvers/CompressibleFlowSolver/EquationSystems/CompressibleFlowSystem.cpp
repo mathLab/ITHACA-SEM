@@ -1229,7 +1229,7 @@ namespace Nektar
                   Array<OneD, int >                                             &nonZeroIndex,
                   Array<OneD, Array<OneD, NekDouble> >                          &traceflux)
     {
-        m_advObject->NumericalFlux(nConvectiveFields, m_fields, AdvVel, inarray, traceflux,
+        m_advObject->AdvectTraceFlux(nConvectiveFields, m_fields, AdvVel, inarray, traceflux,
                         m_BndEvaluateTime,vFwd, vBwd);
 
         Array<OneD, Array<OneD, Array<OneD, NekDouble> > > visflux(1);
@@ -1970,7 +1970,7 @@ namespace Nektar
         DoAdvection_coeff(inarray, outarray, time, Fwd, Bwd);
         // Negate results
         
-        for (i = 0; i < nvariables; ++i)
+        for (int i = 0; i < nvariables; ++i)
         {
             Vmath::Neg(ncoeffs, outarray[i], 1);
         }

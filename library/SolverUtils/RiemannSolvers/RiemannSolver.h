@@ -66,13 +66,6 @@ namespace Nektar
                 const Array<OneD, const Array<OneD, NekDouble> > &Bwd,
                       Array<OneD,       Array<OneD, NekDouble> > &flux);
 
-            SOLVER_UTILS_EXPORT void CalcFluxJacobian(
-            const int                                         nDim,
-            const Array<OneD, const Array<OneD, NekDouble> > &Fwd,
-            const Array<OneD, const Array<OneD, NekDouble> > &Bwd,
-                  DNekBlkMatSharedPtr                        &FJac,
-                  DNekBlkMatSharedPtr                        &BJac);
-
             template<typename FuncPointerT, typename ObjectPointerT>
             void SetScalar(std::string    name,
                            FuncPointerT   func,
@@ -145,6 +138,15 @@ namespace Nektar
 
             int m_spacedim;
 
+#ifdef DEMO_IMPLICITSOLVER_JFNK_COEFF
+            SOLVER_UTILS_EXPORT void CalcFluxJacobian(
+            const int                                         nDim,
+            const Array<OneD, const Array<OneD, NekDouble> > &Fwd,
+            const Array<OneD, const Array<OneD, NekDouble> > &Bwd,
+                  DNekBlkMatSharedPtr                        &FJac,
+                  DNekBlkMatSharedPtr                        &BJac);
+#endif
+
         protected:
             /// Indicates whether the Riemann solver requires a rotation to be
             /// applied to the velocity fields.
@@ -196,6 +198,7 @@ namespace Nektar
             SOLVER_UTILS_EXPORT bool CheckAuxVec  (std::string name);
 
 
+#ifdef DEMO_IMPLICITSOLVER_JFNK_COEFF
             virtual void v_CalcFluxJacobian(
             const int                                         nDim,
             const Array<OneD, const Array<OneD, NekDouble> > &Fwd,
@@ -203,6 +206,7 @@ namespace Nektar
             const Array<OneD, const Array<OneD, NekDouble> > &normals,
                   DNekBlkMatSharedPtr                        &FJac,
                   DNekBlkMatSharedPtr                        &BJac);
+#endif
 
         };
 

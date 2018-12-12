@@ -194,6 +194,7 @@ public:
         const int dir,
         const Array<OneD, const NekDouble> &locfaces,
         Array<OneD, NekDouble> edges);
+
     MULTI_REGIONS_EXPORT void RightIPTWLocEdgesToTraceInterpMat(
         const int                           dir,
         const Array<OneD, const NekDouble>  &edges,
@@ -202,6 +203,7 @@ public:
         const int dir,
         const Array<OneD, const NekDouble> &locfaces,
         Array<OneD, NekDouble> faces);
+        
     MULTI_REGIONS_EXPORT void RightIPTWLocFacesToTraceInterpMat(
         const int                           dir,
         const Array<OneD, const NekDouble>  &traces,

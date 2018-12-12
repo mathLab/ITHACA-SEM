@@ -306,6 +306,7 @@ namespace Nektar
                     }
                 }
                 
+#ifdef DEMO_IMPLICITSOLVER_JFNK_COEFF
                 if (m_TimeIncrementFactor>1.0)
                 {
                     NekDouble timeincrementFactor = m_TimeIncrementFactor;
@@ -320,6 +321,8 @@ namespace Nektar
                         m_timestep = m_fintime - m_time;
                     }
                 }
+                m_TotLinItePerStep =0;
+#endif
                 
                 // Perform any solver-specific pre-integration steps
                 timer.Start();
@@ -328,7 +331,6 @@ namespace Nektar
                     break;
                 }
 
-                m_TotLinItePerStep =0;
                 fields = m_intScheme->TimeIntegrate(
                     stepCounter, m_timestep, m_intSoln, m_ode);
                 timer.Stop();
@@ -346,7 +348,11 @@ namespace Nektar
                          << "Steps: " << setw(8)  << left << step+1 << " "
                          << "Time: "  << setw(8) << left << m_time;
 
+#ifdef DEMO_IMPLICITSOLVER_JFNK_COEFF
                     if (m_cflSafetyFactor||m_TimeIncrementFactor>1.0)
+#else
+                    if (m_cflSafetyFactor)
+#endif
                     {
                         cout <<right<<scientific<<setw(nwidthcolm)<<setprecision(nwidthcolm-6)
                              << " CFL: " << m_cflSafetyFactor

@@ -152,15 +152,6 @@ namespace Nektar
             MULTI_REGIONS_EXPORT const Array<OneD,int>
                 EvalBasisNumModesMaxPerExp(void) const;
             
-            MULTI_REGIONS_EXPORT void AddRightIPTPhysDerivBase(
-                const    int                                    dir,
-                const    Array<OneD, const DNekMatSharedPtr>    ElmtJacQuad,
-                         Array<OneD,       DNekMatSharedPtr>    ElmtJacCoef);
-
-            MULTI_REGIONS_EXPORT void AddRightIPTBaseMatrix(
-                const    Array<OneD, const DNekMatSharedPtr>    ElmtJacQuad,
-                         Array<OneD,       DNekMatSharedPtr>    ElmtJacCoef);
-
             /// Returns the total number of quadrature points #m_npoints
             /// \f$=Q_{\mathrm{tot}}\f$.
             inline int GetTotPoints(void) const;
@@ -789,16 +780,6 @@ namespace Nektar
                 const Array<OneD, const NekDouble> &Fn,
                       Array<OneD, NekDouble> &outarray);
 
-            inline void AddTraceIntegralToOffDiag(
-                const Array<OneD, const NekDouble> &FwdFlux, 
-                const Array<OneD, const NekDouble> &BwdFlux, 
-                      Array<OneD,       NekDouble> &outarray);
-        
-            
-            inline void CalcTraceJacMatIntegral(
-                const Array<OneD, const NekDouble> &Fn,
-                      Array<OneD, NekDouble> &outarray);
-
             inline void AddFwdBwdTraceIntegral(
                 const Array<OneD, const NekDouble> &Fwd,
                 const Array<OneD, const NekDouble> &Bwd,
@@ -1048,11 +1029,6 @@ namespace Nektar
                 return v_GetPlane(n);
             }
              
-            void AddTraceJacToElmtJac(
-                const Array<OneD, const DNekMatSharedPtr>  &FwdMat,
-                const Array<OneD, const DNekMatSharedPtr>  &BwdMat,
-                Array<OneD, DNekMatSharedPtr>  &fieldMat);
-           
             //expansion type
             ExpansionType m_expType;
 
@@ -1061,6 +1037,32 @@ namespace Nektar
                                                     = Collections::eNoImpType);
 
             MULTI_REGIONS_EXPORT void ClearGlobalLinSysManager(void);
+
+            
+            MULTI_REGIONS_EXPORT inline const Array<OneD,const pair<int,int> > &GetCoeffsToElmt() const
+            {
+                return m_coeffsToElmt;
+            }
+
+            MULTI_REGIONS_EXPORT inline const Array<OneD,const pair<int,int> > &GetPointsToElmt() const
+            {
+                return m_pointsToElmt;
+            }
+
+            MULTI_REGIONS_EXPORT inline const LocTraceToTraceMapSharedPtr &GetlocTraceToTraceMap() const
+            {
+                return v_GetlocTraceToTraceMap();
+            }
+
+            void CalcuTracephysToLeftRightExpphysMap(
+                    bool                                            &flag,
+                    Array<OneD, Array<OneD, Array<OneD, int > > >   &T2Emap);
+
+#ifdef DEMO_IMPLICITSOLVER_JFNK_COEFF
+            void AddTraceJacToElmtJac(
+                const Array<OneD, const DNekMatSharedPtr>  &FwdMat,
+                const Array<OneD, const DNekMatSharedPtr>  &BwdMat,
+                Array<OneD, DNekMatSharedPtr>  &fieldMat);
 
             MULTI_REGIONS_EXPORT void GetMatIpwrtdbWeightBwd(
                 const   Array<OneD, const  Array<OneD, NekDouble> >&inarray,
@@ -1081,24 +1083,31 @@ namespace Nektar
                 const   Array<OneD, const  Array<OneD, NekDouble> >&inarray,
                 Array<OneD, DNekMatSharedPtr> &mtxPerVar);
 
-            MULTI_REGIONS_EXPORT inline const Array<OneD,const pair<int,int> > &GetCoeffsToElmt() const
+            inline void AddTraceIntegralToOffDiag(
+                const Array<OneD, const NekDouble> &FwdFlux, 
+                const Array<OneD, const NekDouble> &BwdFlux, 
+                      Array<OneD,       NekDouble> &outarray)
             {
-                return m_coeffsToElmt;
+                v_AddTraceIntegralToOffDiag(FwdFlux,BwdFlux,outarray);
             }
 
-            MULTI_REGIONS_EXPORT inline const Array<OneD,const pair<int,int> > &GetPointsToElmt() const
+            inline void CalcTraceJacMatIntegral(
+                const Array<OneD, const NekDouble> &Fn,
+                Array<OneD, NekDouble> &outarray)
             {
-                return m_pointsToElmt;
+                v_CalcTraceJacMatIntegral(Fn,outarray);
             }
 
-            MULTI_REGIONS_EXPORT inline const LocTraceToTraceMapSharedPtr &GetlocTraceToTraceMap() const
-            {
-                return v_GetlocTraceToTraceMap();
-            }
+            MULTI_REGIONS_EXPORT void AddRightIPTPhysDerivBase(
+                const    int                                    dir,
+                const    Array<OneD, const DNekMatSharedPtr>    ElmtJacQuad,
+                         Array<OneD,       DNekMatSharedPtr>    ElmtJacCoef);
 
-            void CalcuTracephysToLeftRightExpphysMap(
-                    bool                                            &flag,
-                    Array<OneD, Array<OneD, Array<OneD, int > > >   &T2Emap);
+            MULTI_REGIONS_EXPORT void AddRightIPTBaseMatrix(
+                const    Array<OneD, const DNekMatSharedPtr>    ElmtJacQuad,
+                         Array<OneD,       DNekMatSharedPtr>    ElmtJacCoef);
+
+#endif
 
         protected:
             /// Definition of the total number of degrees of freedom and
@@ -1309,16 +1318,6 @@ namespace Nektar
                       Array<OneD, NekDouble> &outarray);
 
             virtual void v_AddTraceIntegral(
-                const Array<OneD, const NekDouble> &Fn,
-                      Array<OneD, NekDouble> &outarray);
-
-            virtual void v_AddTraceIntegralToOffDiag(
-                const Array<OneD, const NekDouble> &FwdFlux, 
-                const Array<OneD, const NekDouble> &BwdFlux, 
-                      Array<OneD,       NekDouble> &outarray);
-        
-
-            virtual void v_CalcTraceJacMatIntegral(
                 const Array<OneD, const NekDouble> &Fn,
                       Array<OneD, NekDouble> &outarray);
 
@@ -1695,6 +1694,17 @@ namespace Nektar
 
 
             virtual std::shared_ptr<ExpList> &v_GetPlane(int n);
+#ifdef DEMO_IMPLICITSOLVER_JFNK_COEFF
+            virtual void v_AddTraceIntegralToOffDiag(
+                const Array<OneD, const NekDouble> &FwdFlux, 
+                const Array<OneD, const NekDouble> &BwdFlux, 
+                      Array<OneD,       NekDouble> &outarray);
+        
+
+            virtual void v_CalcTraceJacMatIntegral(
+                const Array<OneD, const NekDouble> &Fn,
+                      Array<OneD, NekDouble> &outarray);
+#endif
         };
 
 
@@ -2427,21 +2437,6 @@ namespace Nektar
             Array<OneD, NekDouble> &outarray)
         {
             v_AddTraceIntegral(Fn,outarray);
-        }
-
-        inline void ExpList::AddTraceIntegralToOffDiag(
-                const Array<OneD, const NekDouble> &FwdFlux, 
-                const Array<OneD, const NekDouble> &BwdFlux, 
-                      Array<OneD,       NekDouble> &outarray)
-        {
-            v_AddTraceIntegralToOffDiag(FwdFlux,BwdFlux,outarray);
-        }
-
-        inline void ExpList::CalcTraceJacMatIntegral(
-            const Array<OneD, const NekDouble> &Fn,
-            Array<OneD, NekDouble> &outarray)
-        {
-            v_CalcTraceJacMatIntegral(Fn,outarray);
         }
 
         inline void ExpList::AddFwdBwdTraceIntegral(

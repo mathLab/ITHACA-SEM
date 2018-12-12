@@ -655,14 +655,6 @@ namespace Nektar
             m_session->LoadParameter("IO_CheckSteps", m_checksteps, 0);
             m_session->LoadParameter("IO_CheckTime",  m_checktime,  0.0);
             m_session->LoadParameter("FinTime",       m_fintime,    0);
-            m_session->LoadParameter("TotLinItePerStep",       m_TotLinItePerStepSET,    200);
-            m_session->LoadParameter("NewtonAbsoluteIteTol",       m_NewtonAbsoluteIteTol,    1.0E-10);
-            m_session->LoadParameter("NewtonRelativeIteTol",       m_NewtonRelativeIteTol,    1.0E-500);
-            m_session->LoadParameter("JFNKTimeAccurate",       m_JFNKTimeAccurate,    1);
-            m_session->LoadParameter("JFNKPrecondStep",       m_JFNKPrecondStep,    5);
-            m_session->LoadParameter("TimeIncrementFactor",       m_TimeIncrementFactor,    1.0);
-            m_session->LoadParameter("cflLocTimestep",       m_cflLocTimestep,    -5.0);
-            
             m_session->LoadParameter("NumQuadPointsError",
                                      m_NumQuadPointsError, 0);
 
@@ -672,6 +664,14 @@ namespace Nektar
                      (m_checktime == 0.0 && m_checksteps >  0),
                      "Only one of IO_CheckTime and IO_CheckSteps "
                      "should be set!");
+#ifdef DEMO_IMPLICITSOLVER_JFNK_COEFF
+            m_session->LoadParameter("cflLocTimestep",       m_cflLocTimestep,    -5.0);
+            m_session->LoadParameter("TimeIncrementFactor",       m_TimeIncrementFactor,    1.0);
+            m_session->LoadParameter("TotLinItePerStep",       m_TotLinItePerStepSET,    200);
+            m_session->LoadParameter("NewtonAbsoluteIteTol",       m_NewtonAbsoluteIteTol,    1.0E-10);
+            m_session->LoadParameter("NewtonRelativeIteTol",       m_NewtonRelativeIteTol,    1.0E-500);
+            m_session->LoadParameter("JFNKTimeAccurate",       m_JFNKTimeAccurate,    1);
+            m_session->LoadParameter("JFNKPrecondStep",       m_JFNKPrecondStep,    5);
             if(m_NewtonRelativeIteTol>0.1)
             {
                 WARNINGL0(false,"m_NewtonRelativeIteTol>0.1");
@@ -686,7 +686,7 @@ namespace Nektar
             }
 
             cout <<m_JFNKTimeAccurate<<" "<<m_NewtonAbsoluteIteTol<<" "<<m_NewtonRelativeIteTol<<endl;
-
+#endif
 
             m_nchk = 0;
 

@@ -65,6 +65,7 @@ namespace Nektar
                 const Array<OneD, const Array<OneD, NekDouble> > &Bwd,
                       Array<OneD,       Array<OneD, NekDouble> > &flux);
                       
+#ifdef DEMO_IMPLICITSOLVER_JFNK_COEFF
             virtual void v_CalcFluxJacobian(
                 const int                                         nDim,
                 const Array<OneD, const Array<OneD, NekDouble> > &Fwd,
@@ -72,6 +73,7 @@ namespace Nektar
                 const Array<OneD, const Array<OneD, NekDouble> > &normals,
                     DNekBlkMatSharedPtr                        &FJac,
                     DNekBlkMatSharedPtr                        &BJac);
+#endif
         }; 
     }
 }

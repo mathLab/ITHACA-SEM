@@ -88,6 +88,7 @@ namespace Nektar
             NekDouble rhoR, NekDouble pR, NekDouble eR, NekDouble HR, NekDouble srR,
             NekDouble HRoe, NekDouble URoe2, NekDouble srLR);
 
+#ifdef DEMO_IMPLICITSOLVER_JFNK_COEFF
         virtual void v_CalcFluxJacobian(
             const int                                         nDim,
             const Array<OneD, const Array<OneD, NekDouble> > &Fwd,
@@ -105,6 +106,7 @@ namespace Nektar
         {
             ASSERTL0(false, "v_PointFluxJacobian This function should be defined by subclasses.");
         }
+#endif 
     };
 }
 

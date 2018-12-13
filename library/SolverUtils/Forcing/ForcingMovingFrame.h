@@ -86,10 +86,10 @@ namespace SolverUtils
                     const NekDouble &time);
 
         private:
-            std::string                     m_funcName;
-            bool                            m_hasTimeFcnScaling;
-            LibUtilities::EquationSharedPtr m_timeFcnEqn;
-            bool                            m_transform;
+            std::string                         m_funcName;
+            bool                                m_transform;
+            Array<OneD, Array<OneD, NekDouble>> m_gradient;
+            NekInt                              m_spacedim;
 
             ForcingMovingFrame(
                 const LibUtilities::SessionReaderSharedPtr &pSession,

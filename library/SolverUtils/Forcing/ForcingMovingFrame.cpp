@@ -44,9 +44,9 @@ namespace SolverUtils
 {
 
     std::string ForcingMovingFrame::classNameBody = GetForcingFactory().
-        RegisterCreatorFunction("Body",
+        RegisterCreatorFunction("MovingFrame",
                                 ForcingMovingFrame::create,
-                                "Body Forcing");
+                                "Moving Frame");
     std::string ForcingMovingFrame::classNameField = GetForcingFactory().
         RegisterCreatorFunction("Field",
                                 ForcingMovingFrame::create,
@@ -55,8 +55,7 @@ namespace SolverUtils
     ForcingMovingFrame::ForcingMovingFrame(
             const LibUtilities::SessionReaderSharedPtr &pSession,
             const std::weak_ptr<EquationSystem>      &pEquation)
-        : Forcing(pSession, pEquation),
-          m_hasTimeFcnScaling(false)
+        : Forcing(pSession, pEquation)
     {
     }
 
@@ -67,18 +66,15 @@ namespace SolverUtils
     {
         m_NumVariable = pNumForcingFields;
 
-        const TiXmlElement* funcNameElmt = pForce->FirstChildElement("BODYFORCE");
+        const TiXmlElement* funcNameElmt = pForce->FirstChildElement("FRAMEVELOCITY");
         if(!funcNameElmt)
         {
-            funcNameElmt = pForce->FirstChildElement("FIELDFORCE");
-
-            ASSERTL0(funcNameElmt, "Requires BODYFORCE or FIELDFORCE tag "
-                     "specifying function name which prescribes body force.");
+            ASSERTL0(funcNameElmt, "Requires FRAMEVELOCITY tag "
+                     "specifying function name which prescribes velocity of the moving frame.");
         }
 
         m_funcName = funcNameElmt->GetText();
-        ASSERTL0(m_session->DefinesFunction(m_funcName),
-                 "Function '" + m_funcName + "' not defined.");
+        ASSERTL0(m_session->DefinesFunction(m_funcName), "Function '" + m_funcName + "' not defined.");
 
         bool singleMode, halfMode;
         m_session->MatchSolverInfo("ModeType","SingleMode",singleMode,false);
@@ -87,80 +83,46 @@ namespace SolverUtils
                            pFields[0]->GetExpType() == MultiRegions::e3DH2D;
         m_transform = (singleMode || halfMode || homogeneous);
 
-        // Time function is optional
-        funcNameElmt = pForce->FirstChildElement("BODYFORCETIMEFCN");
-        if(!funcNameElmt)
-        {
-            funcNameElmt = pForce->FirstChildElement("FIELDFORCETIMEFCN");
-        }
-
-        // Load time function if specified
-        if(funcNameElmt)
-        {
-            std::string funcNameTime = funcNameElmt->GetText();
-
-            ASSERTL0(!funcNameTime.empty(),
-                     "Expression must be given in BODYFORCETIMEFCN or "
-                     "FIELDFORCETIMEFCN.");
-
-            m_session->SubstituteExpressions(funcNameTime);
-            m_timeFcnEqn = MemoryManager<LibUtilities::Equation>
-                ::AllocateSharedPtr(m_session->GetExpressionEvaluator(),funcNameTime);
-
-            m_hasTimeFcnScaling = true;
-        }
-
         m_Forcing = Array<OneD, Array<OneD, NekDouble> > (m_NumVariable);
         for (int i = 0; i < m_NumVariable; ++i)
         {
             m_Forcing[i] = Array<OneD, NekDouble> (pFields[0]->GetTotPoints(), 0.0);
         }
 
-
-        Update(pFields, 0.0);
-    }
-
-    void ForcingMovingFrame::CalculateGradient(const Array< OneD, MultiRegions::ExpListSharedPtr > &pFields)
-    {
-        auto nfields = m_NumVariable;
-
+        //allocate space for gradient
         // Skip in case of empty partition
         if (pFields[0]->GetNumElmts() == 0)
         {
             return;
         }
 
-        int i, s;
-        int expdim   = pFields[0]->GetGraph()->GetMeshDimension();
+        int expdim = pFields[0]->GetGraph()->GetMeshDimension();
         bool isH1d;
         bool isH2d;
         m_session->MatchSolverInfo("Homogeneous", "1D", isH1d, false);
         m_session->MatchSolverInfo("Homogeneous", "2D", isH2d, false);
-        int spacedim = expdim + (isH1d ? 1 : 0) + (isH2d ? 2 : 0); // is there a better way?
+        m_spacedim = expdim + (isH1d ? 1 : 0) + (isH2d ? 2 : 0); // is there a better way?
 
         int npoints = pFields[0]->GetNpoints();
 
-        Array<OneD, Array<OneD, NekDouble>> grad(spacedim * spacedim);
+        m_gradient = Array<OneD, Array<OneD, NekDouble>>(m_spacedim * m_spacedim);
 
-        int nstrips;
-        m_session->LoadParameter("Strip_Z", nstrips, 1);
-
-        for (i = 0; i < spacedim * spacedim; ++i)
+        for (int i = 0; i < m_spacedim * m_spacedim; ++i)
         {
-            grad[i] = Array<OneD, NekDouble>(npoints);
+            m_gradient[i] = Array<OneD, NekDouble>(npoints);
         }
 
-        MultiRegions::ExpListSharedPtr Exp;
-
-        for (s = 0; s < nstrips; ++s) // homogeneous strip varient
+        for(int i=0; i<npoints; ++i)
         {
-            for (i = 0; i < spacedim; ++i) {
-                pFields[s * nfields + i]->PhysDeriv(
-                        pFields[s * nfields + i]->GetPhys(), grad[i * spacedim],
-                        grad[i * spacedim + 1], grad[i * spacedim + 2]);
-            }
-
+            cout << pFields[0]->GetPhys()[i] << " " << pFields[1]->GetPhys()[i] << endl;
         }
+
+        Update(pFields, 0.0);
+    }
+
+    void ForcingMovingFrame::CalculateGradient(const Array< OneD, MultiRegions::ExpListSharedPtr > &pFields)
+    {
+
     }
 
 
@@ -168,6 +130,7 @@ namespace SolverUtils
             const Array< OneD, MultiRegions::ExpListSharedPtr > &pFields,
             const NekDouble &time)
     {
+        CalculateGradient( pFields );
         for (int i = 0; i < m_NumVariable; ++i)
         {
             std::string  s_FieldStr   = m_session->GetVariable(i);
@@ -196,29 +159,12 @@ namespace SolverUtils
             Array<OneD, Array<OneD, NekDouble> > &outarray,
             const NekDouble &time)
     {
-        if(m_hasTimeFcnScaling)
+        Update(fields, time);
+
+        for (int i = 0; i < m_NumVariable; i++)
         {
-            Array<OneD, NekDouble>  TimeFcn(1);
-
-            for (int i = 0; i < m_NumVariable; i++)
-            {
-                EvaluateTimeFunction(time, m_timeFcnEqn, TimeFcn);
-
-                Vmath::Svtvp(outarray[i].num_elements(), TimeFcn[0],
-                             m_Forcing[i], 1,
-                             outarray[i],  1,
-                             outarray[i],  1);
-            }
-        }
-        else
-        {
-            Update(fields, time);
-
-            for (int i = 0; i < m_NumVariable; i++)
-            {
-                Vmath::Vadd(outarray[i].num_elements(), outarray[i], 1,
-                            m_Forcing[i], 1, outarray[i], 1);
-            }
+            Vmath::Vadd(outarray[i].num_elements(), outarray[i], 1,
+                        m_Forcing[i], 1, outarray[i], 1);
         }
     }
 

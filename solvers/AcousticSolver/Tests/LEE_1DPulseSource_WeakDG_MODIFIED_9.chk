@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<NEKTAR>
+    <Metadata>
+        <Provenance>
+            <GitBranch>refs/heads/feature/AcousticSolver</GitBranch>
+            <GitSHA1>6a09988b8c7e8984604a5e12a8cb58761aee436e</GitSHA1>
+            <Hostname>hack</Hostname>
+            <NektarVersion>4.5.0</NektarVersion>
+            <Timestamp>04-Jul-2018 15:10:59</Timestamp>
+        </Provenance>
+        <ChkFileNum>9</ChkFileNum>
+        <SessionName0>LEE_1DPulseSource_WeakDG_MODIFIED.xml</SessionName0>
+        <Time>0.00045000000000000053</Time>
+    </Metadata>
+    <ELEMENTS FIELDS="p,rho,rhou,c0sq,rho0,u0,gamma,F_0_p,F_0_rho,F_0_rhou" SHAPE="Segment" BASIS="Modified_A" NUMMODESPERDIR="UNIORDER:4" ID="0-9" COMPRESSED="B64Z-LittleEndian" BITSIZE="64">eJztUmtQlFUY/hCHNkC5DBtLDLrctAiVCDQMvnOIIcJxYhPlMm1C3ARBLoJxG5olYkLGMAgUgnS5SoIzGwgDy+53viXF0iEXBbQYgRgoWRC5CDEDuMl3Dj/6RTPFP94f+848zznPeZ5nv899o8SZx03A7smqtpyntii+3rHTAtqDM73TxayDF2BTy+SyMScUpJrJWY6oBsPtI5UVcc2ozTND7DFUjth98wZBRg3AwH/Cz7XLCE455mqjssxZtWMaSJubRVJ5SsxCtxFsrctCIYVucO+0ZWDjj7NgeLQROj8xg1Xn3EIM492g5FZzdHHLHPo2sWWUTeRD4UsebjYDu9hhgteQc3WET9TjeFhDdB+Sd+7NYH12jNNndYkviRP22U/8SbE/4E5ySRJxzu9JPgpy+cDJB7iXG4dwTw+TcT+13Vw/KPri1pvlxbr0wUtp/oEZrzC2sU9POfxlTu+44ryjqNyVZjX6S+PVQmbrew0TNg0ldMucRiBtrWVC94fKHy8UMBKdN85qeypp3wDvuF/nKJD1XCfhyS88NKyt9AwuHGEWn7vUH5mkgIG+qi/jgDXo0BlMD/5wJwh1Gk0ef9cYnDPNfueDl62BTNRdVlrkihIax7+5NWSMRNULP8Xz7VETwUvJOZNrmGerOB6YE10zLX7Hm+iLsD46THxB4jOT+JvG/mi1N85FjeCcH5N8QhcuH532Be4lpRT3FOuA+zlyieuHqVfmyp1N85nTvU6WTZPf0fl1vgFXxi4zBQecaeVNBSNpfdOHOdhE12pS0mPDrZDBscjgQ+I9QFzzZ898Lh9IBJJm2YIJkqVm+zjsO4sMm6/FTLYUgbeZ7dHXI5LAa1cjV77m5SOzImZqSCxHbwWcsleHXwZUm1Lt75qProtSBV6qdkSFtd5PGgwDtdu3KPvUXYg9+VseW5oNqHAORyw+BxowDyjCb8O6QITfAd3HOH0E27F+PfYFKAvOJ6CwP2RM/OXgXAD+wOVkOo5y+ZCgGufza+F6YQoR1xNdHMj1Q/vvwf0IUm9YJYUvQx7ZFDfGzK4kH/F8mCG98inGLQkvfMGq+xVymVWSD/+PZ8r17vMJbkC2Dj7AHB4paNNYLHlsNL/R+R7Y6WWXeM2BMbIxTykHtC/mbp/iPsF/JxvrN7bfJfx69wcI/ohsLR73VR1KMOa+0fxG56M25z/NiajVWQCRZBNYuW3198Ks+0cEjyFbSOH/Z3q1/5gVxXr31/CEf/DGytvcZ6JWbDS/0fni7fYWTuUJwPzpqmmTYG/0ZWWy5OLxo8BUt/zZGR0RUCx55r+fPAwax/kdPXZ8tqnQ2ijksS1MWRR+5XJHAKWpmbLS85/AO+0zWzqtr7JB5cwjv95WWGGmuVBmUQ0lXf59+ica2HtxBekRvbqq5Ff3r+hJeJ7SRc/XFXmDMCJqJQQO6apqJ87vHuq3VsX/bFPixvBUlP5OmQtvma0geCg5Z3ob8xDzcE0Xknciib4E67OdxJeM+BQRf1Lsj60juWRrOUm+RJyP1ZBePiM9pZN+zHA/6P//ojdnc/79/A3GzxNm</ELEMENTS>
+</NEKTAR>

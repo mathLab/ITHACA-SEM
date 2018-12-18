@@ -108,6 +108,7 @@ v5.0.0
 - Add module for evaluating the mean of variables on the domain (!894)
 - Add module for counting the total number of DOF (!948)
 - Fixed wss module for compressible flows (!958)
+- Add module for removing fields from .fld files (!978)
 
 **IncNavierStokesSolver**
 - Replace steady-state check based on difference of norms by check based on

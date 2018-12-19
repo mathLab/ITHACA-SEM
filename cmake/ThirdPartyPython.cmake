@@ -124,9 +124,12 @@ IF (NEKTAR_BUILD_PYTHON)
 
     FILE(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/NekPy)
     FILE(WRITE ${CMAKE_BINARY_DIR}/NekPy/__init__.py "# Adjust dlopen flags to avoid OpenMPI issues
-import DLFCN as dl
-import sys
-sys.setdlopenflags(dl.RTLD_NOW|dl.RTLD_GLOBAL)")
+try:
+    import DLFCN as dl
+    import sys
+    sys.setdlopenflags(dl.RTLD_NOW|dl.RTLD_GLOBAL)
+except ImportError:
+    pass")
 
     MARK_AS_ADVANCED(BOOST_PYTHON_LIB)
     MARK_AS_ADVANCED(BOOST_NUMPY_LIB)

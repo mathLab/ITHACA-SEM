@@ -15,7 +15,7 @@ def main():
 	coords = exp.GetCoords()
 	coords = coords[0]
 
-	coords_data_address = hex(coords.ctypes.data)
+	coords_data_address = str(hex(coords.ctypes.data)).rstrip('L')
 
 	print "The memory address of data is: {}\n".format(coords_data_address)
 

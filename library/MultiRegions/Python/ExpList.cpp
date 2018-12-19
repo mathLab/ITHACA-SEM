@@ -37,6 +37,8 @@
 #include <LibUtilities/Python/NekPyConfig.hpp>
 
 #include <fstream>
+#include <sstream>
+#include <string>
 
 using namespace Nektar;
 using namespace Nektar::StdRegions;
@@ -162,6 +164,13 @@ NekDouble ExpList_PhysIntegral(ExpListSharedPtr exp)
     return exp->PhysIntegral();
 }
 
+std::string ExpList_GetPhysAddress(ExpListSharedPtr exp)
+{
+    std::stringstream ss;
+    ss << static_cast<const void*>(&(exp->GetPhys()[0]));
+    return ss.str();
+}
+
 void export_ExpList()
 {
     py::class_<ExpList,
@@ -186,6 +195,6 @@ void export_ExpList()
         .def("SetPhysState", &ExpList::SetPhysState)
         .def("GetPhysState", &ExpList::GetPhysState)
         .def("PhysIntegral", &ExpList_PhysIntegral)
-        .def("GetPhysAddress", &ExpList::GetPhysAddress)
+        .def("GetPhysAddress", &ExpList_GetPhysAddress)
         ;
 }

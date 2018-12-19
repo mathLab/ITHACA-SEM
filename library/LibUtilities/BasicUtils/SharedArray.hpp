@@ -45,11 +45,6 @@
 #include <boost/assign/list_of.hpp>
 #include <boost/multi_array.hpp>
 
-#ifdef WITH_PYTHON
-#include <sstream>
-#include <string>
-#endif
-
 namespace Nektar
 {
     class LinearSystem;
@@ -77,10 +72,10 @@ namespace Nektar
         public:
             /// \brief Creates an empty array.
             Array() :
-                #ifdef WITH_PYTHON
+#ifdef WITH_PYTHON
                 m_memory_pointer( nullptr ),
                 m_python_decrement( nullptr ),
-                #endif
+#endif
                 m_size( 0 ),
                 m_capacity( 0 ),
                 m_data( nullptr ),
@@ -96,10 +91,10 @@ namespace Nektar
             /// uninitialized.  If it is any other type, each element is initialized with DataType's default
             /// constructor.
             explicit Array(unsigned int dim1Size) :
-                #ifdef WITH_PYTHON
+#ifdef WITH_PYTHON
                 m_memory_pointer( nullptr ),
                 m_python_decrement( nullptr ),
-                #endif
+#endif
                 m_size( dim1Size ),
                 m_capacity( dim1Size ),
                 m_data( nullptr ),
@@ -120,10 +115,10 @@ namespace Nektar
             /// element.  Otherwise, the DataType's copy constructor
             /// is used to initialize each element.
             Array(unsigned int dim1Size, const DataType& initValue) :
-                #ifdef WITH_PYTHON
+#ifdef WITH_PYTHON
                 m_memory_pointer( nullptr ),
                 m_python_decrement( nullptr ),
-                #endif
+#endif
                 m_size( dim1Size ),
                 m_capacity( dim1Size ),
                 m_data( nullptr ),
@@ -142,10 +137,10 @@ namespace Nektar
             /// directly into the underlying storage.  Otherwise, the DataType's copy constructor
             /// is used to copy each element.
             Array(unsigned int dim1Size, const DataType* data) :
-                #ifdef WITH_PYTHON
+#ifdef WITH_PYTHON
                 m_memory_pointer( nullptr ),
                 m_python_decrement( nullptr ),
-                #endif
+#endif
                 m_size( dim1Size ),
                 m_capacity( dim1Size ),
                 m_data( nullptr ),
@@ -166,10 +161,10 @@ namespace Nektar
             /// The memory for the array will only be deallocated when
             /// both rhs and this array have gone out of scope.
             Array(unsigned int dim1Size, const Array<OneD, const DataType>& rhs) :
-                #ifdef WITH_PYTHON
+#ifdef WITH_PYTHON
                 m_memory_pointer(rhs.m_memory_pointer),
                 m_python_decrement(rhs.m_python_decrement),
-                #endif
+#endif
                 m_size(dim1Size),
                 m_capacity(rhs.m_capacity),
                 m_data(rhs.m_data),
@@ -180,7 +175,7 @@ namespace Nektar
                 ASSERTL0(m_size <= rhs.num_elements(), "Requested size is larger than input array size.");
             }
 
-            #ifdef WITH_PYTHON
+#ifdef WITH_PYTHON
             /// \brief Creates a 1D array a copies data into it.
             /// \param dim1Size the array's size.
             /// \param data The data to reference.
@@ -198,14 +193,14 @@ namespace Nektar
                 m_count = new unsigned int(); 
                 *m_count = 1;
             }
-            #endif
+#endif
 
             /// \brief Creates a reference to rhs.
             Array(const Array<OneD, const DataType>& rhs) :
-                #ifdef WITH_PYTHON
+#ifdef WITH_PYTHON
                 m_memory_pointer(rhs.m_memory_pointer),
                 m_python_decrement(rhs.m_python_decrement),
-                #endif
+#endif
                 m_size(rhs.m_size),
                 m_capacity(rhs.m_capacity),
                 m_data(rhs.m_data),
@@ -225,7 +220,7 @@ namespace Nektar
                 *m_count -= 1;
                 if( *m_count == 0 )
                 {
-                    #ifdef WITH_PYTHON
+#ifdef WITH_PYTHON
                     if (m_memory_pointer == nullptr)
                     {
                         ArrayDestructionPolicy<DataType>::Destroy( m_data, m_capacity );
@@ -233,13 +228,13 @@ namespace Nektar
                     }
                     else
                     {
-                        m_python_decrement(m_data);
+                        m_python_decrement(m_memory_pointer);
                     }
-                    #else
+#else
                     ArrayDestructionPolicy<DataType>::Destroy( m_data, m_capacity );
                     MemoryManager<DataType>::RawDeallocate( m_data, m_capacity );
-                    #endif
-                  
+#endif
+
                     delete m_count; // Clean up the memory used for the reference count.
                 }
             }
@@ -250,8 +245,7 @@ namespace Nektar
                 *m_count -= 1;
                 if( *m_count == 0 )
                 {
-                    
-                    #ifdef WITH_PYTHON
+#ifdef WITH_PYTHON
                     if (m_memory_pointer == nullptr)
                     {
                         ArrayDestructionPolicy<DataType>::Destroy( m_data, m_capacity );
@@ -259,12 +253,12 @@ namespace Nektar
                     }
                     else
                     {
-                        m_python_decrement(m_data);
+                        m_python_decrement(m_memory_pointer);
                     }
-                    #else
+#else
                     ArrayDestructionPolicy<DataType>::Destroy( m_data, m_capacity );
                     MemoryManager<DataType>::RawDeallocate( m_data, m_capacity );
-                    #endif
+#endif
                     delete m_count; // Clean up the memory used for the reference count.
                 }
 
@@ -274,10 +268,10 @@ namespace Nektar
                 *m_count += 1;
                 m_offset = rhs.m_offset;
                 m_size = rhs.m_size;
-                #ifdef WITH_PYTHON
-                    m_memory_pointer = rhs.m_memory_pointer;
-                    m_python_decrement = rhs.m_python_decrement;
-                #endif
+#ifdef WITH_PYTHON
+                m_memory_pointer = rhs.m_memory_pointer;
+                m_python_decrement = rhs.m_python_decrement;
+#endif
                 return *this;
             }
 
@@ -311,18 +305,6 @@ namespace Nektar
 
             /// \brief Returns the array's reference counter.
             unsigned int GetCount() const { return m_count; }
-
-            /// \brief Prints the memory address of m_data.
-            #ifdef WITH_PYTHON
-            std::string GetDataAddress() 
-            { 
-                const void * address = static_cast<const void*>(m_data);
-                std::stringstream ss;
-                ss << address;  
-                std::string name = ss.str(); 
-                return name;
-            }
-            #endif
 
             /// \brief Returns true is this array and rhs overlap.
             bool Overlaps(const Array<OneD, const DataType>& rhs) const
@@ -360,13 +342,13 @@ namespace Nektar
 
         protected:
 
-            #ifdef WITH_PYTHON
-                // m_memory_pointer holds a pointer to the array.
-                void* m_memory_pointer;
-                // m_python_decrement holds a pointer to a function decrementing the reference
-                // counter in Python memory manager.
-                void (*m_python_decrement)(void *);
-            #endif
+#ifdef WITH_PYTHON
+            // m_memory_pointer holds a pointer to the array.
+            void* m_memory_pointer;
+            // m_python_decrement holds a pointer to a function decrementing the reference
+            // counter in Python memory manager.
+            void (*m_python_decrement)(void *);
+#endif
 
             unsigned int m_size;
             unsigned int m_capacity;
@@ -627,12 +609,12 @@ namespace Nektar
             {
             }
 
-            #ifdef WITH_PYTHON
+#ifdef WITH_PYTHON
             Array(unsigned int dim1Size, DataType* data, void* memory_pointer, void (*python_decrement)(void *)) :
                 BaseType(dim1Size, data, memory_pointer, python_decrement)
             {
             }
-            #endif
+#endif
 
             Array<OneD, DataType>& operator=(const Array<OneD, DataType>& rhs)
             {

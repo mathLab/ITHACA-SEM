@@ -75,11 +75,13 @@ struct OneDArrayToPython
                              new Array<OneD, T>(arr), 0,
                              (PyCapsule_Destructor)&CapsuleDestructor<T>)));
 #endif
-        return py::incref(
+        PyObject *tmp = py::incref(
             np::from_data(
                 arr.data(), np::dtype::get_builtin<T>(),
                 py::make_tuple(arr.num_elements()), py::make_tuple(sizeof(T)),
                 capsule).ptr());
+
+        return tmp;
     }
 };
 
@@ -124,8 +126,9 @@ struct PythonToOneDArray
 
     static void decrement(void *objPtr) 
     {
-        PyObject *pyObjPtr = (PyObject *)objPtr;
-        Py_XDECREF(pyObjPtr);
+        //PyObject *pyObjPtr = (PyObject *)objPtr;
+        //Py_DECREF(pyObjPtr);
+        py::decref((PyObject *)objPtr);
     }
 
     static void construct(
@@ -145,7 +148,7 @@ struct PythonToOneDArray
         void *memory_pointer = objPtr;
         using nonconst_t = typename std::remove_const<T>::type;
         new (storage) Array<OneD, T>(array.shape(0), (nonconst_t *)array.get_data(), memory_pointer, &decrement);
-        Py_XINCREF(objPtr);
+        py::incref(objPtr);
     }
 
 };

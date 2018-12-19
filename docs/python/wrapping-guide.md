@@ -75,7 +75,8 @@ the different classes into different files, because it is not possible to call
 `BOOST_PYTHON_MODULE` more than once. These functions are defined in
 appropriately named files, for example:
 
-- `export_Basis()` lives in the file `NekPy/LibUtilities/Foundations/Basis.cpp`
+- `export_Basis()` lives in the file
+  `library/LibUtilities/Python/Foundations/Basis.cpp`
 - This corresponds to the Nektar++ file
   `library/LibUtilities/Foundations/Basis.cpp` and the classes defined therein.
 
@@ -197,9 +198,10 @@ these as parameters and return arrays very easily. However bear in mind the
 following caveats:
 
 - NumPy arrays created from Array objects will share their memory, so that
-  changing the C++ array changes the contents of the NumPy array. However, due
-  to limitations of the Array class, the converse is _not true_: Arrays are
-  always copies of NumPy arrays.
+  changing the C++ array changes the contents of the NumPy array. Likewise, C++
+  arrays created from NumPy arrays will share memory. Reference counting and
+  capsules are used to ensure that memory should be persistent whilst the arrays
+  are in use, either within Python or C++.
 - Many functions in Nektar++ return Arrays through argument parameters. In
   Python this is a very unnatural way to write functions. For example:
   ```python
@@ -212,7 +214,7 @@ following caveats:
   Use thin wrappers to overcome this problem. For examples of how to do this,
   particularly in returning tuples, consult the `StdRegions/StdExpansion.cpp`
   wrapper.
-- `TwoD` and `ThreeD` arrays are not supported.
+- `TwoD` and `ThreeD` arrays are not presently supported.
 
 ## Inheritance
 

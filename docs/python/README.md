@@ -6,8 +6,8 @@ _experimental_ and _incomplete_.** You should not rely on their current
 structure and API remaining unchanged.
 
 Currently, representative classes from the `LibUtilities`, `StdRegions`,
-`SpatialDomains` and `LocalRegions` libraries have been wrapped in order to show
-the proof-of-concept.
+`SpatialDomains`, `LocalRegions` and `MultiRegions` libraries have been wrapped
+in order to show the proof-of-concept.
 
 # Features and functionality
 
@@ -29,45 +29,43 @@ fx       = np.sin(x) * np.cos(y)
 proj     = quadExp.FwdTrans(fx)
 ```
 
-`NekPy` uses the `Boost.NumPy` library, contained in Boost 1.63+, to
-automatically convert C++ `Array<OneD, >` objects to and from the commonly-used
-`numpy.ndarray` object, which makes the integration more seamless between Python
-and C++.
+This example shows how to create a `StdQuadExp` and perform a rudimentary
+forwards transform using the `NekPy` wrappers.
+
+`NekPy` additionally uses the `Boost.NumPy` library, contained in Boost 1.63+,
+to automatically convert C++ `Array<OneD, T>` objects to and from the
+commonly-used `numpy.ndarray` object, which makes the integration more seamless
+between Python and C++.
 
 # How do I wrap things?
 
 `Boost.Python` is a pretty comprehensive package and an extended discussion is
-really beyond the scope of this project. See `doc/wrapping-guide.md` for some
-basic concepts and frequently-encountered issues.
+really beyond the scope of this project. See [the wrapping
+guide](wrapping-guide.md) for some basic concepts and frequently-encountered
+issues.
 
 # Compiling
 
 NekPy has the following list of requirements:
 
 - Boost with Python support
-- Nektar++ `master` branch compiled from source (i.e. not from packages)
-- Python 2.7+ (note that examples rely on Python 2.7)
-- NumPy
+- Python 2.7+
+- NumPy, installed either from your package manager or through `pip`.
 
 Most of these can be installed using package managers on various operating
 systems, as we describe below. We also have a requirement on the `Boost.NumPy`
 package, which is available in boost 1.63 or later. If this isn't found on your
 system, it will be automatically downloaded and compiled.
 
-## Compiling and installing Nektar++
+## Compiling and installing Nektar++ with NekPy support
 
-Nektar++ should be compiled as per the user guide instructions and installed
-into a directory which we will refer to as `$NEKDIR`. By default this is the
-`dist` directory inside the Nektar++ build directory.
+Nektar++ should be compiled as per the user guide instructions. To build the
+`NekPy` wrapper, you should ensure that the `NEKTAR_BUILD_PYTHON` option is
+enabled.
 
-Note that Nektar++ must, at a minimum, be compiled with `NEKTAR_BUILD_LIBRARY`,
-`NEKTAR_BUILD_UTILITIES` , `NEKTAR_BUILD_SOLVERS` and `NEKTAR_BUILD_PYTHON`. 
-This will automatically download and install `Boost.NumPy` if required. Note 
-that all solvers may be disabled as long as the `NEKTAR_BUILD_SOLVERS` option is set. 
+### macOS
 
-## macOS
-
-### Homebrew 
+#### Homebrew 
 Users of Homebrew should make sure their installation is up-to-date with `brew
 upgrade`. Then run
 
@@ -81,7 +79,7 @@ To install the NumPy package, use the `pip` package manager:
 pip install numpy
 ```
 
-### MacPorts
+#### MacPorts
 
 Users of MacPorts should sure their installation is up-to-date with `sudo port
 selfupdate && sudo port upgrade outdated`. Then run
@@ -92,7 +90,7 @@ sudo port select --set python python27
 ```
 
 
-## Linux: Ubuntu/Debian
+### Linux: Ubuntu/Debian
 
 Users of Debian and Ubuntu Linux systems should sure their installation is
 up-to-date with `sudo apt-get update && sudo apt-get upgrade`
@@ -101,9 +99,9 @@ up-to-date with `sudo apt-get update && sudo apt-get upgrade`
 sudo apt-get install libboost-python-dev python-numpy
 ```
 
-## Compiling the wrappers
+## Installing the wrappers
 
-Run the following command in `$NEKDIR\build` directory to install the Python package
+Run the following command in `$NEKDIR/build` directory to install the Python package
 for the current user:
 
 ```
@@ -120,7 +118,7 @@ make nekpy-install-system
 # Using the bindings
 
 By default, the bindings will install into the `dist` directory, along with a
-number of examples that are stored in the `$NEKDIR\library\Demos\Python` directory. To 
+number of examples that are stored in the `$NEKDIR/library/Demos/Python` directory. To 
 test your installation, you can for example run one of these (e.g. `python Basis.py`) or
 launch an interactive session:
 
@@ -137,7 +135,7 @@ Type "help", "copyright", "credits" or "license" for more information.
 
 ## Examples
 
-A number of examples of the wrappers can be found in the `$NEKDIR\library\Demos\Python` 
+A number of examples of the wrappers can be found in the `$NEKDIR/library/Demos/Python` 
 directory, along with a sample mesh `newsquare_2x2.xml`:
 
 - `SessionReader.py` is the simplest example and shows how to construct a
@@ -151,5 +149,5 @@ directory, along with a sample mesh `newsquare_2x2.xml`:
   quadrilateral elements. Run it as `python MeshGraph.py newsquare_2x2.xml`.
 
 If you want to modify the source files, it's advisable to edit them in the
-`$NEKDIR\library\Demos\Python` directory and re-run `make install`, otherwise local 
+`$NEKDIR/library/Demos/Python` directory and re-run `make install`, otherwise local 
 changes will be overwritten by the next `make install`.

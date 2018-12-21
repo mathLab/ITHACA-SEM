@@ -54,27 +54,14 @@ PressureOutflowFileBC::PressureOutflowFileBC(
            const int cnt)
     : CFSBndCond(pSession, pFields, pTraceNormals, pSpaceDim, bcRegion, cnt)
 {
-    int nvariables = m_fields.num_elements();
-    // Loop over Boundary Regions for PressureOutflowFileBC
-
-    Array<OneD, Array<OneD, NekDouble> > tmpStorage(nvariables);
-
     int numBCPts = m_fields[0]->
         GetBndCondExpansions()[m_bcRegion]->GetNpoints();
     m_pressureStorage = Array<OneD, NekDouble>(numBCPts, 0.0);
-    for (int i = 0; i < nvariables; ++i)
-    {
-        tmpStorage[i] = Array<OneD, NekDouble>(numBCPts, 0.0);
-
-        Vmath::Vcopy(
-            numBCPts,
-            m_fields[i]->GetBndCondExpansions()[m_bcRegion]->GetPhys(), 1,
-            tmpStorage[i], 1);
-    }
 
     // Get Pressure
-    m_pressureStorage = Array<OneD, NekDouble> (numBCPts, 0.0);
-    m_varConv->GetPressure(tmpStorage, m_pressureStorage);
+    Vmath::Vcopy(numBCPts,
+        m_fields[m_spacedim+1]->GetBndCondExpansions()[m_bcRegion]->GetPhys(), 1,
+        m_pressureStorage, 1);
 }
 
 void PressureOutflowFileBC::v_Apply(
@@ -87,8 +74,7 @@ void PressureOutflowFileBC::v_Apply(
     int nVariables = physarray.num_elements();
     int nDimensions = m_spacedim;
 
-    const Array<OneD, const int> &traceBndMap
-        = m_fields[0]->GetTraceBndMap();
+    const Array<OneD, const int> &traceBndMap = m_fields[0]->GetTraceBndMap();
 
     // Computing the normal velocity for characteristics coming
     // from inside the computational domain
@@ -126,8 +112,15 @@ void PressureOutflowFileBC::v_Apply(
         // Get internal energy
         Array<OneD, NekDouble> pressure (npts, m_pressureStorage+id1);
         Array<OneD, NekDouble> rho      (npts, Fwd[0]+id2);
-        Array<OneD, NekDouble> e(npts);
-        m_varConv->GetEFromRhoP(rho, pressure, e);
+        Array<OneD, NekDouble> eInt(npts);
+        m_varConv->GetEFromRhoP(rho, pressure, eInt);
+
+        cout << "pressure\t" << pressure[0] << endl;
+        cout << "rho\t" << rho[0] << endl;
+        cout << "e\t" << e << endl;
+        cout << "---------------" << endl;
+
+
         // Loop on points of m_bcRegion 'e'
         for (i = 0; i < npts; i++)
         {
@@ -143,7 +136,7 @@ void PressureOutflowFileBC::v_Apply(
                     Ek += 0.5 * (Fwd[j][pnt] * Fwd[j][pnt]) / Fwd[0][pnt];
                 }
 
-                rhoeb = Fwd[0][pnt] * e[i] + Ek;
+                rhoeb = Fwd[0][pnt] * eInt[i] + Ek;
 
                 // Partial extrapolation for subsonic cases
                 for (j = 0; j < nVariables-1; ++j)

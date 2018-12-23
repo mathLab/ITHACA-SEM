@@ -38,6 +38,7 @@
 
 #include <LibUtilities/Communication/Comm.h>
 #include <LibUtilities/BasicUtils/SessionReader.h>
+#include <LibUtilities/BasicUtils/ShapeType.hpp>
 #include <SpatialDomains/SpatialDomainsDeclspec.h>
 #include <SpatialDomains/MeshEntities.hpp>
 #include <boost/graph/adjacency_list.hpp>
@@ -50,16 +51,13 @@ namespace Nektar
 namespace SpatialDomains
 {
 class MeshPartition;
-class MeshGraph;
-typedef std::shared_ptr<MeshGraph> MeshGraphSharedPtr;
-typedef std::map<int, std::vector<unsigned int>> CompositeOrdering;
-typedef std::map<int, std::vector<unsigned int>> BndRegionOrdering;
 
 /// Datatype of the NekFactory used to instantiate classes derived from
 /// the EquationSystem class.
 typedef LibUtilities::NekFactory<std::string, MeshPartition,
                                  const LibUtilities::SessionReaderSharedPtr,
-                                 const MeshGraphSharedPtr>
+                                 int, std::map<int, MeshEntity>,
+                                 CompositeMap>
     MeshPartitionFactory;
 
 SPATIAL_DOMAINS_EXPORT MeshPartitionFactory &GetMeshPartitionFactory();
@@ -69,32 +67,23 @@ class MeshPartition
 
 public:
     MeshPartition(const LibUtilities::SessionReaderSharedPtr session,
-                  const MeshGraphSharedPtr meshGraph);
+                  int                                        meshDim,
+                  std::map<int, MeshEntity>                  element,
+                  CompositeMap                               compMap);
     virtual ~MeshPartition();
 
     SPATIAL_DOMAINS_EXPORT void PartitionMesh(
         int  nParts,
         bool shared      = false,
         bool overlapping = false);
-    SPATIAL_DOMAINS_EXPORT void WriteLocalPartition();
-    SPATIAL_DOMAINS_EXPORT void WriteAllPartitions();
 
     SPATIAL_DOMAINS_EXPORT void PrintPartInfo(std::ostream &out);
-    SPATIAL_DOMAINS_EXPORT CompositeOrdering GetCompositeOrdering();
-    SPATIAL_DOMAINS_EXPORT BndRegionOrdering GetBndRegionOrdering();
 
     SPATIAL_DOMAINS_EXPORT void GetElementIDs(
         const int                  procid,
         std::vector<unsigned int> &tmp);
 
 private:
-    struct MeshEntity
-    {
-        int id;
-        char type;
-        std::vector<unsigned int> list;
-    };
-
     typedef std::vector<unsigned int> MultiWeight;
 
     // Element in a mesh
@@ -135,20 +124,20 @@ private:
     typedef std::vector<unsigned int> NumModes;
     typedef std::map<std::string, NumModes> NummodesPerField;
 
+    LibUtilities::SessionReaderSharedPtr m_session;
+
     int m_dim;
     int m_numFields;
 
     std::map<int, MeshEntity> m_elements;
-
-    LibUtilities::SessionReaderSharedPtr m_session;
-    MeshGraphSharedPtr m_meshgraph;
+    CompositeMap m_compMap;
 
     // hierarchial mapping: elmt id -> field name -> integer list
     // of directional nummodes described by expansion type clause.
     std::map<int, NummodesPerField> m_expansions;
 
     // map of each elements shape
-    std::map<int, char> m_shape;
+    std::map<int, LibUtilities::ShapeType> m_shape;
 
     std::map<std::string, int> m_fieldNameToId;
     std::map<int, MultiWeight> m_vertWeights;
@@ -170,7 +159,6 @@ private:
     void WeightElements();
     void CreateGraph();
     void PartitionGraph(int nParts, bool overlapping = false);
-    void TransferElements();
 
     virtual void PartitionGraphImpl(int &nVerts, int &nVertConds,
                                     Nektar::Array<Nektar::OneD, int> &xadj,
@@ -182,9 +170,10 @@ private:
                                     Nektar::Array<Nektar::OneD, int> &part) = 0;
 
     void CheckPartitions(int nParts, Array<OneD, int> &pPart);
-    int CalculateElementWeight(char elmtType, bool bndWeight, int na, int nb,
-                               int nc);
-    int CalculateEdgeWeight(char elmtType, int na, int nb, int nc);
+    int CalculateElementWeight(LibUtilities::ShapeType elmtType, bool bndWeight,
+                               int na, int nb, int nc);
+    int CalculateEdgeWeight(LibUtilities::ShapeType elmtType,
+                            int na, int nb, int nc);
 };
 
 typedef std::shared_ptr<MeshPartition> MeshPartitionSharedPtr;

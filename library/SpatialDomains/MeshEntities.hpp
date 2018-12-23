@@ -38,6 +38,7 @@
 
 #include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
 #include <LibUtilities/Foundations/PointsType.h>
+
 namespace Nektar
 {
     namespace SpatialDomains
@@ -135,7 +136,22 @@ namespace Nektar
             std::vector<MeshVertex> pts;
         };
 
+        struct MeshEntity
+        {
+            int id;
+            //LibUtilities::ShapeType shape;
+            std::vector<unsigned int> list;
+        };
 
+
+    class Geometry;
+    struct Composite
+    {
+        std::vector<std::shared_ptr<Geometry>> m_geomVec;
+    };
+
+    typedef std::shared_ptr<Composite> CompositeSharedPtr;
+    typedef std::map<int, CompositeSharedPtr> CompositeMap;
     }
 }
 #endif

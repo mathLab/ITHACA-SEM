@@ -129,7 +129,8 @@ void MeshGraphXml::PartitionMesh(
             int nParts;
             MeshPartitionSharedPtr partitioner =
                 GetMeshPartitionFactory().CreateInstance(
-                    partitionerName, session, shared_from_this());
+                    partitionerName, session, m_meshDimension,
+                    CreateMeshEntities(), m_meshComposites);
 
             if (session->DefinesCmdLineArgument("part-only"))
             {
@@ -142,9 +143,19 @@ void MeshGraphXml::PartitionMesh(
                 partitioner->PartitionMesh(nParts, true, true);
             }
 
-            partitioner->WriteAllPartitions();
-            m_compOrder = partitioner->GetCompositeOrdering();
-            m_bndRegOrder = partitioner->GetBndRegionOrdering();
+            vector<set<unsigned int>> elmtIDs;
+            vector<unsigned int> parts(nParts);
+            for (int i = 0; i < nParts; ++i)
+            {
+                vector<unsigned int> elIDs;
+                set<unsigned int> tmp;
+                partitioner->GetElementIDs(i, elIDs);
+                tmp.insert(elIDs.begin(), elIDs.end());
+                elmtIDs.push_back(tmp);
+                parts[i] = i;
+            }
+
+            this->WriteXMLGeometry(m_session->GetSessionName(), elmtIDs, parts);
 
             if (isRoot && session->DefinesCmdLineArgument("part-info"))
             {
@@ -169,15 +180,33 @@ void MeshGraphXml::PartitionMesh(
                     // Read 'lite' geometry information
                     ReadGeometry(NullDomainRangeShPtr, false);
 
+                    // Store composite ordering and boundary information.
+                    m_compOrder = CreateCompositeOrdering();
+
                     // Create mesh partitioner.
                     MeshPartitionSharedPtr partitioner =
                         GetMeshPartitionFactory().CreateInstance(
-                            partitionerName, session, shared_from_this());
+                            partitionerName, session, m_meshDimension,
+                            CreateMeshEntities(), m_meshComposites);
 
                     partitioner->PartitionMesh(nParts, true);
-                    partitioner->WriteAllPartitions();
-                    m_compOrder = partitioner->GetCompositeOrdering();
-                    m_bndRegOrder = partitioner->GetBndRegionOrdering();
+
+                    vector<set<unsigned int>> elmtIDs;
+                    vector<unsigned int> parts(nParts);
+                    for (int i = 0; i < nParts; ++i)
+                    {
+                        vector<unsigned int> elIDs;
+                        set<unsigned int> tmp;
+                        partitioner->GetElementIDs(i, elIDs);
+                        tmp.insert(elIDs.begin(), elIDs.end());
+                        elmtIDs.push_back(tmp);
+                        parts[i] = i;
+                    }
+
+                    // Call WriteGeometry to write out partition files. This
+                    // will populate m_bndRegOrder.
+                    this->WriteXMLGeometry(
+                        m_session->GetSessionName(), elmtIDs, parts);
 
                     // Communicate orderings to the other processors.
 
@@ -271,17 +300,24 @@ void MeshGraphXml::PartitionMesh(
                 m_session->InitSession();
                 ReadGeometry(NullDomainRangeShPtr, false);
 
+                m_compOrder = CreateCompositeOrdering();
+
                 // Partitioner now operates in parallel. Each process receives
                 // partitioning over interconnect and writes its own session
                 // file to the working directory.
                 MeshPartitionSharedPtr partitioner =
                     GetMeshPartitionFactory().CreateInstance(
-                        partitionerName, session, shared_from_this());
+                        partitionerName, session, m_meshDimension,
+                        CreateMeshEntities(), m_meshComposites);
 
                 partitioner->PartitionMesh(nParts, false);
-                partitioner->WriteLocalPartition();
-                m_compOrder = partitioner->GetCompositeOrdering();
-                m_bndRegOrder = partitioner->GetBndRegionOrdering();
+
+                vector<unsigned int> parts(1), tmp;
+                parts[0] = commMesh->GetRank();
+                vector<set<unsigned int>> elIDs(1);
+                partitioner->GetElementIDs(parts[0], tmp);
+                elIDs[0].insert(tmp.begin(), tmp.end());
+                this->WriteXMLGeometry(session->GetSessionName(), elIDs, parts);
 
                 if (m_session->DefinesCmdLineArgument("part-info") && isRoot)
                 {
@@ -2771,9 +2807,9 @@ void MeshGraphXml::WriteGeometry(
     doc.SaveFile(outfilename);
 }
 
-void MeshGraphXml::WriteGeometry(std::string outname,
-                                 vector<set<unsigned int>> elements,
-                                 vector<unsigned int> partitions)
+void MeshGraphXml::WriteXMLGeometry(std::string outname,
+                                    vector<set<unsigned int>> elements,
+                                    vector<unsigned int> partitions)
 {
     // so in theory this function is used by the mesh partitioner
     // giving instructions on how to write out a paritioned mesh.
@@ -3187,5 +3223,118 @@ void MeshGraphXml::WriteGeometry(std::string outname,
         doc.SaveFile(LibUtilities::PortablePath(fullpath));
     }
 }
+
+std::map<int, MeshEntity> MeshGraphXml::CreateMeshEntities()
+{
+    std::map<int, MeshEntity> elements;
+    switch (m_meshDimension)
+    {
+        case 1:
+        {
+            for (auto &i : m_segGeoms)
+            {
+                MeshEntity e;
+                e.id = i.first;
+                e.list.push_back(i.second->GetVertex(0)->GetGlobalID());
+                e.list.push_back(i.second->GetVertex(1)->GetGlobalID());
+                elements[e.id] = e;
+            }
+        }
+        break;
+        case 2:
+        {
+            for (auto &i : m_triGeoms)
+            {
+                MeshEntity e;
+                e.id = i.first;
+                e.list.push_back(i.second->GetEdge(0)->GetGlobalID());
+                e.list.push_back(i.second->GetEdge(1)->GetGlobalID());
+                e.list.push_back(i.second->GetEdge(2)->GetGlobalID());
+                elements[e.id] = e;
+            }
+            for (auto &i : m_quadGeoms)
+            {
+                MeshEntity e;
+                e.id = i.first;
+                e.list.push_back(i.second->GetEdge(0)->GetGlobalID());
+                e.list.push_back(i.second->GetEdge(1)->GetGlobalID());
+                e.list.push_back(i.second->GetEdge(2)->GetGlobalID());
+                e.list.push_back(i.second->GetEdge(3)->GetGlobalID());
+                elements[e.id] = e;
+            }
+        }
+        break;
+        case 3:
+        {
+            for (auto &i : m_tetGeoms)
+            {
+                MeshEntity e;
+                e.id = i.first;
+                e.list.push_back(i.second->GetFace(0)->GetGlobalID());
+                e.list.push_back(i.second->GetFace(1)->GetGlobalID());
+                e.list.push_back(i.second->GetFace(2)->GetGlobalID());
+                e.list.push_back(i.second->GetFace(3)->GetGlobalID());
+                elements[e.id] = e;
+            }
+            for (auto &i : m_pyrGeoms)
+            {
+                MeshEntity e;
+                e.id = i.first;
+                e.list.push_back(i.second->GetFace(0)->GetGlobalID());
+                e.list.push_back(i.second->GetFace(1)->GetGlobalID());
+                e.list.push_back(i.second->GetFace(2)->GetGlobalID());
+                e.list.push_back(i.second->GetFace(3)->GetGlobalID());
+                e.list.push_back(i.second->GetFace(4)->GetGlobalID());
+                elements[e.id] = e;
+            }
+            for (auto &i : m_prismGeoms)
+            {
+                MeshEntity e;
+                e.id = i.first;
+                e.list.push_back(i.second->GetFace(0)->GetGlobalID());
+                e.list.push_back(i.second->GetFace(1)->GetGlobalID());
+                e.list.push_back(i.second->GetFace(2)->GetGlobalID());
+                e.list.push_back(i.second->GetFace(3)->GetGlobalID());
+                e.list.push_back(i.second->GetFace(4)->GetGlobalID());
+                elements[e.id] = e;
+            }
+            for (auto &i : m_hexGeoms)
+            {
+                MeshEntity e;
+                e.id = i.first;
+                e.list.push_back(i.second->GetFace(0)->GetGlobalID());
+                e.list.push_back(i.second->GetFace(1)->GetGlobalID());
+                e.list.push_back(i.second->GetFace(2)->GetGlobalID());
+                e.list.push_back(i.second->GetFace(3)->GetGlobalID());
+                e.list.push_back(i.second->GetFace(4)->GetGlobalID());
+                e.list.push_back(i.second->GetFace(5)->GetGlobalID());
+                elements[e.id] = e;
+            }
+        }
+        break;
+    }
+
+    std::cout << "Creating: " << elements.size() << std::endl;
+
+    return elements;
+}
+
+CompositeOrdering MeshGraphXml::CreateCompositeOrdering()
+{
+    CompositeOrdering ret;
+
+    for (auto &c : m_meshComposites)
+    {
+        std::vector<unsigned int> ids;
+        for (auto &elmt : c.second->m_geomVec)
+        {
+            ids.push_back(elmt->GetGlobalID());
+        }
+        ret[c.first] = ids;
+    }
+
+    return ret;
+}
+
 }
 }

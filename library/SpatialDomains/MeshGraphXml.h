@@ -37,7 +37,7 @@
 #ifndef NEKTAR_SPATIALDOMAINS_MGXML_H
 #define NEKTAR_SPATIALDOMAINS_MGXML_H
 
-#include "MeshGraph.h"
+#include <SpatialDomains/MeshGraph.h>
 
 namespace Nektar
 {
@@ -61,7 +61,7 @@ public:
         const LibUtilities::FieldMetaDataMap &metadata
                                          = LibUtilities::NullFieldMetaDataMap);
 
-    SPATIAL_DOMAINS_EXPORT virtual void WriteGeometry(
+    SPATIAL_DOMAINS_EXPORT void WriteXMLGeometry(
         std::string outname,
         std::vector<std::set<unsigned int>> elements,
         std::vector<unsigned int> partitions);
@@ -121,6 +121,10 @@ protected:
     void WriteComposites(TiXmlElement *geomTag, CompositeMap &comps);
     void WriteDomain(TiXmlElement *geomTag, vector<CompositeMap> &domain);
     void WriteDefaultExpansion(TiXmlElement *root);
+
+    std::map<int, MeshEntity> CreateMeshEntities();
+
+    CompositeOrdering CreateCompositeOrdering();
 };
 
 } // end of namespace

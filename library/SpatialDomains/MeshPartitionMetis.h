@@ -49,10 +49,12 @@ public:
     /// Creates an instance of this class
     static MeshPartitionSharedPtr create(
         const LibUtilities::SessionReaderSharedPtr session,
-        const MeshGraphSharedPtr meshGraph)
+        int                                        meshDim,
+        std::map<int, MeshEntity>                  element,
+        CompositeMap                               compMap);
     {
         return MemoryManager<MeshPartitionMetis>::AllocateSharedPtr(
-            session, meshGraph);
+            session, meshDim, element, compMap);
     }
 
     /// Name of class
@@ -60,7 +62,9 @@ public:
     static std::string cmdSwitch;
 
     MeshPartitionMetis(const LibUtilities::SessionReaderSharedPtr session,
-                       const MeshGraphSharedPtr meshGraph);
+                       int                                        meshDim,
+                       std::map<int, MeshEntity>                  element,
+                       CompositeMap                               compMap);
     virtual ~MeshPartitionMetis();
 
 private:

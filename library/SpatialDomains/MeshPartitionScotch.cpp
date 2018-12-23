@@ -52,8 +52,10 @@ namespace SpatialDomains
 
     MeshPartitionScotch::MeshPartitionScotch(
         const LibUtilities::SessionReaderSharedPtr session,
-        const MeshGraphSharedPtr meshGraph)
-        : MeshPartition(session, meshGraph)
+        int                                        meshDim,
+        std::map<int, MeshEntity>                  element,
+        CompositeMap                               compMap)
+        : MeshPartition(session, meshDim, element, compMap)
     {
     }
 

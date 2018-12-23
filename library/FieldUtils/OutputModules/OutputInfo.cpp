@@ -121,9 +121,10 @@ void OutputInfo::Process(po::variables_map &vm)
         SpatialDomains::GetMeshGraphFactory().CreateInstance(
             vSession->GetGeometryType());
 
+    /*
     SpatialDomains::MeshPartitionSharedPtr vMeshPartition =
         SpatialDomains::GetMeshPartitionFactory().CreateInstance(
-            vPartitionerName, vSession, mesh);
+            vPartitionerName, vSession, mesh->GetComposites());
     mesh->ReadGeometry(SpatialDomains::NullDomainRangeShPtr, false);
 
     vMeshPartition->PartitionMesh(nparts, true);
@@ -154,6 +155,7 @@ void OutputInfo::Process(po::variables_map &vm)
         std::static_pointer_cast<LibUtilities::FieldIOXml>(
             LibUtilities::GetFieldIOFactory().CreateInstance("Xml", c, true));
     fldXml->WriteMultiFldFileIDs(filename, filenames, ElementIDs);
+    */
 }
 }
 }

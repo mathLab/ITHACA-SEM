@@ -248,13 +248,6 @@ void MeshGraphHDF5::PartitionMesh(LibUtilities::SessionReaderSharedPtr session)
                     make_tuple("prism", 5, LibUtilities::ePrism),
                     make_tuple("hex", 6, LibUtilities::eHexahedron) };
 
-    struct MeshEntity
-    {
-        int id;
-        LibUtilities::ShapeType shape;
-        std::vector<int> facets;
-    };
-
     // Read IDs for partitioning purposes
     std::vector<MeshEntity> elmts;
     std::vector<int> ids;
@@ -291,8 +284,8 @@ void MeshGraphHDF5::PartitionMesh(LibUtilities::SessionReaderSharedPtr session)
         {
             MeshEntity e;
             e.id = tmpIds[i];
-            e.shape = std::get<2>(it);
-            e.facets = std::vector<int>(
+            //e.shape = std::get<2>(it);
+            e.list = std::vector<unsigned int>(
                 &tmpElmts[cnt], &tmpElmts[cnt+nGeomData]);
             elmts.push_back(e);
             cnt += nGeomData;
@@ -336,7 +329,7 @@ void MeshGraphHDF5::PartitionMesh(LibUtilities::SessionReaderSharedPtr session)
         graph[vert] = el;
 
         // Check for existing connections.
-        for (auto &eId : elmt.facets)
+        for (auto &eId : elmt.list)
         {
             auto edgeIt = graphEdges.find(eId);
             if (edgeIt != graphEdges.end())
@@ -364,7 +357,7 @@ void MeshGraphHDF5::PartitionMesh(LibUtilities::SessionReaderSharedPtr session)
         MeshEntity elmt = elmts[i];
 
         // Check for connections to local elements.
-        for (auto &eId : elmt.facets)
+        for (auto &eId : elmt.list)
         {
             auto edgeIt = graphEdges.find(eId);
             if (edgeIt != graphEdges.end())

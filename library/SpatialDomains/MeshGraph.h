@@ -41,6 +41,7 @@
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <LibUtilities/BasicUtils/FieldIO.h>
 
+#include <SpatialDomains/MeshEntities.hpp>
 #include <SpatialDomains/HexGeom.h>
 #include <SpatialDomains/PrismGeom.h>
 #include <SpatialDomains/PyrGeom.h>
@@ -102,14 +103,6 @@ const std::string kExpansionTypeStr[] = {"NOTYPE",
                                          "CHEBYSHEV-FOURIER",
                                          "FOURIER-MODIFIED"};
 
-struct Composite
-{
-    std::vector<GeometrySharedPtr> m_geomVec;
-};
-
-typedef std::shared_ptr<Composite> CompositeSharedPtr;
-typedef std::map<int, CompositeSharedPtr> CompositeMap;
-
 typedef std::map<int, std::vector<unsigned int>> CompositeOrdering;
 typedef std::map<int, std::vector<unsigned int>> BndRegionOrdering;
 
@@ -161,7 +154,7 @@ class MeshGraph;
 typedef std::shared_ptr<MeshGraph> MeshGraphSharedPtr;
 
 /// Base class for a spectral/hp element mesh.
-class MeshGraph : public std::enable_shared_from_this<MeshGraph>
+class MeshGraph
 {
 public:
     SPATIAL_DOMAINS_EXPORT MeshGraph()
@@ -178,11 +171,6 @@ public:
         bool defaultExp = false,
         const LibUtilities::FieldMetaDataMap &metadata
                                      = LibUtilities::NullFieldMetaDataMap) = 0;
-
-    SPATIAL_DOMAINS_EXPORT virtual void WriteGeometry(
-        std::string outname,
-        std::vector<std::set<unsigned int>> elements,
-        std::vector<unsigned int> partitions) = 0;
 
     void Empty(int dim, int space)
     {

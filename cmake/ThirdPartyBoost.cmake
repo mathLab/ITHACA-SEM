@@ -8,12 +8,15 @@
 
 #If the user has not set BOOST_ROOT, look in a couple common places first.
 MESSAGE(STATUS "Searching for Boost:")
+
+# Minimum version and boost libraries required
 SET(MIN_VER "1.56.0")
 SET(NEEDED_BOOST_LIBS thread iostreams filesystem system program_options regex)
+
 SET(Boost_NO_BOOST_CMAKE ON)
 IF( BOOST_ROOT )
     SET(Boost_NO_SYSTEM_PATHS ON)
-    FIND_PACKAGE( Boost ${MIN_VER} COMPONENTS ${NEEDED_BOOST_LIBS})
+    FIND_PACKAGE( Boost ${MIN_VER} QUIET COMPONENTS ${NEEDED_BOOST_LIBS})
 ELSE ()
     SET(TEST_ENV1 $ENV{BOOST_HOME})
     SET(TEST_ENV2 $ENV{BOOST_DIR})
@@ -34,7 +37,7 @@ ENDIF()
 # Check what we found and determine if we need to build boost
 FOREACH(FOUND_VAR ${NEEDED_BOOST_LIBS})
     STRING(TOUPPER ${FOUND_VAR} FOUND_VAR_UPPER)
-    IF (Boost_${FOUND_VAR_UPPER}_FOUND )
+    IF (Boost_${FOUND_VAR_UPPER}_FOUND)
         MESSAGE(STATUS "-- Found Boost ${FOUND_VAR} library: "
                 "${Boost_${FOUND_VAR_UPPER}_LIBRARY}")
     ELSE ()

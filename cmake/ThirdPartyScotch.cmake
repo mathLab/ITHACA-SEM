@@ -71,8 +71,8 @@ IF (NEKTAR_USE_SCOTCH)
                 ${SCOTCH_SRC}/Make.inc/${SCOTCH_MAKE}
                 ${SCOTCH_SRC}/Makefile.inc
             BUILD_COMMAND $(MAKE) -C ${SCOTCH_SRC}
-                "CFLAGS=${SCOTCH_CFLAGS}"
-                "LDFLAGS=${SCOTCH_LDFLAGS}"
+                "CFLAGS=-I${TPDIST}/include ${SCOTCH_CFLAGS}"
+                "LDFLAGS=-L${TPDIST}/lib ${SCOTCH_LDFLAGS}"
                 "CLIBFLAGS=-fPIC" scotch
             INSTALL_COMMAND $(MAKE) -C ${SCOTCH_SRC}
                 prefix=${TPDIST} install

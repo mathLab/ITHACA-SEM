@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-//  File: ProcessFieldFromString.cpp
+//  File: ProcessRemoveField.cpp
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,8 +29,7 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Modify an existing or add a new field from a string based on
-//  existing variable
+//  Description: Remove a variable
 //
 ///////////////////////////////////////////////////////////////////////////////
 #include <iostream>
@@ -64,7 +63,6 @@ ProcessRemoveField::~ProcessRemoveField(void)
 
 void ProcessRemoveField::Process(po::variables_map &vm)
 {
-
     // Obtain field names to be removed
     string fieldNames = m_config["fieldname"].as<string>();
     vector<string> fieldName;
@@ -76,27 +74,15 @@ void ProcessRemoveField::Process(po::variables_map &vm)
     // Remove fields specified
     for (int i = 0; i < fieldName.size(); ++i)
     {
-        // Get number of fields
-        int nFields = m_f->m_variables.size();
-
         // check if field exists
         auto it = std::find(m_f->m_variables.begin(), m_f->m_variables.end(),
                             fieldName[i]);
         ASSERTL0(it != m_f->m_variables.end(), "Field does not exist");
 
-        int fieldID;
-        fieldID = std::distance(m_f->m_variables.begin(), it);
+        int fieldID = std::distance(m_f->m_variables.begin(), it);
 
-        m_f->m_variables.erase(m_f->m_variables.begin() + fieldID);
-
-        // All fields after the removed one are shifted
-        if (fieldID != nFields)
-        {
-            for (int ind = fieldID; ind < nFields - 1; ++ind)
-            {
-                m_f->m_exp[ind] = m_f->m_exp[ind + 1];
-            }
-        }
+        m_f->m_variables.erase(it);
+        m_f->m_exp.erase(m_f->m_exp.begin() + fieldID);
 
         cout << "Field " << fieldName[i] << " has been erased" << endl;
     }

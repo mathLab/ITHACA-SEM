@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-//  File: ProcessFieldFromString.h
+//  File: ProcessRemoveField.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,7 +29,7 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Generate new field from string based on existing fields
+//  Description: Remove a variable
 //
 ////////////////////////////////////////////////////////////////////////////////
 

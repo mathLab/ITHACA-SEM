@@ -118,6 +118,10 @@ IF(NEKTAR_USE_MESHGEN)
     ADD_NEKTAR_TEST(MeshGen/t106c)
     ADD_NEKTAR_TEST(MeshGen/t106step)
     ADD_NEKTAR_TEST(MeshGen/rev LENGTHY)
+
+    IF(NEKTAR_USE_CCM)              
+        ADD_NEKTAR_TEST(StarCCM/Ahmed_body)
+    ENDIF() 
 ENDIF()
 
 # varopti tests

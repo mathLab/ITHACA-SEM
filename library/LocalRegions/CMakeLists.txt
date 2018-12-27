@@ -49,5 +49,9 @@ ADD_NEKTAR_LIBRARY(LocalRegions
     SUMMARY "Nektar++ LocalRegions library"
     DESCRIPTION "This library provides physical space expansions on the various supported regions.")
 
+IF (NEKTAR_BUILD_PYTHON)
+    SUBDIRS(Python)
+ENDIF()
+
 INSTALL(DIRECTORY ./ DESTINATION ${NEKTAR_INCLUDE_DIR}/LocalRegions
     COMPONENT dev FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp")

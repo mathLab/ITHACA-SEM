@@ -144,7 +144,7 @@ void CsvIO::v_ImportFieldData(const std::string inFile, PtsFieldSharedPtr& ptsFi
     {
         tok.assign(line);
 
-        ASSERTL0(distance(tok.begin(), tok.end()) == totvars,
+        ASSERTL0(std::distance(tok.begin(), tok.end()) == totvars,
                  "wrong number of columns in line: " + line);
 
         for (auto &it : tok)

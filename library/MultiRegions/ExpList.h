@@ -102,14 +102,14 @@ namespace Nektar
         {
         public:
             /// The default constructor.
-            MULTI_REGIONS_EXPORT ExpList();
+            MULTI_REGIONS_EXPORT ExpList(const ExpansionType Type = eNoType);
             
             /// The default constructor.
-            MULTI_REGIONS_EXPORT ExpList(
+            MULTI_REGIONS_EXPORT ExpList(const ExpansionType Type,
                     const LibUtilities::SessionReaderSharedPtr &pSession);
 
             /// The default constructor.
-            MULTI_REGIONS_EXPORT ExpList(
+            MULTI_REGIONS_EXPORT ExpList(const ExpansionType Type,
                     const LibUtilities::SessionReaderSharedPtr &pSession,
                     const SpatialDomains::MeshGraphSharedPtr &pGraph);
             
@@ -875,13 +875,10 @@ namespace Nektar
                 return v_GetFieldDefinitions();
             }
 
-
             void GetFieldDefinitions(std::vector<LibUtilities::FieldDefinitionsSharedPtr> &fielddef)
             {
                 v_GetFieldDefinitions(fielddef);
             }
-
-
 
             /// Append the element data listed in elements
             /// fielddef->m_ElementIDs onto fielddata
@@ -973,9 +970,6 @@ namespace Nektar
                 return v_GetPlane(n);
             }
            
-            //expansion type
-            ExpansionType m_expType;
-
             MULTI_REGIONS_EXPORT void CreateCollections(
                     Collections::ImplementationType ImpType
                                                     = Collections::eNoImpType);
@@ -983,6 +977,9 @@ namespace Nektar
             MULTI_REGIONS_EXPORT void ClearGlobalLinSysManager(void);
 
         protected:
+            /// Exapnsion type
+            ExpansionType m_expType;
+
             /// Definition of the total number of degrees of freedom and
             /// quadrature points and offsets to access data
             void SetCoeffPhysOffsets();

@@ -44,7 +44,7 @@ namespace Nektar
     {
         // Forward declaration for typedefs
         ExpList1DHomogeneous2D::ExpList1DHomogeneous2D():
-            ExpListHomogeneous2D()
+            ExpListHomogeneous2D(eNoType)
         {
         }
 
@@ -57,7 +57,7 @@ namespace Nektar
                                                        const bool useFFT,
                                                        const bool dealiasing,
                                                        const Array<OneD, ExpListSharedPtr> &points):
-            ExpListHomogeneous2D(pSession,HomoBasis_y,HomoBasis_z,lhom_y,lhom_z,useFFT,dealiasing)
+            ExpListHomogeneous2D(eNoType, pSession,HomoBasis_y,HomoBasis_z,lhom_y,lhom_z,useFFT,dealiasing)
         {
             int n;
 

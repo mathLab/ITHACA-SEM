@@ -51,14 +51,12 @@ namespace Nektar
     namespace MultiRegions
     {
 
-        ExpList3D::ExpList3D(): ExpList()
+        ExpList3D::ExpList3D(): ExpList(e3D)
         {
-            SetExpType(e3D);
         }
 
         ExpList3D::ExpList3D(const ExpList3D &In): ExpList(In)
         {
-            SetExpType(e3D);
         }
         
         ExpList3D::ExpList3D(const ExpList3D &In,
@@ -67,7 +65,7 @@ namespace Nektar
                 const Collections::ImplementationType ImpType):
             ExpList(In, eIDs, DeclareCoeffPhysArrays)
         {
-            SetExpType(e3D);
+
             
             SetCoeffPhysOffsets();
 
@@ -96,9 +94,8 @@ namespace Nektar
                              const SpatialDomains::MeshGraphSharedPtr &graph3D,
                              const LibUtilities::PointsType TetNb,
                              const Collections::ImplementationType ImpType):
-            ExpList(pSession,graph3D)
+            ExpList(e3D, pSession,graph3D)
         {
-            SetExpType(e3D);
 
             LocalRegions::TetExpSharedPtr tet;
             LocalRegions::HexExpSharedPtr hex;
@@ -191,10 +188,8 @@ namespace Nektar
                              const SpatialDomains::MeshGraphSharedPtr &graph3D,
                              const std::string  &variable,
                              const Collections::ImplementationType ImpType):
-            ExpList(pSession,graph3D)
+            ExpList(e3D, pSession,graph3D)
         {
-            SetExpType(e3D);
-
             int elmtid = 0;
             LocalRegions::TetExpSharedPtr   tet;
             LocalRegions::HexExpSharedPtr   hex;
@@ -317,10 +312,8 @@ namespace Nektar
          */
         ExpList3D::ExpList3D(const SpatialDomains::ExpansionMap &expansions,
                              const Collections::ImplementationType ImpType):
-            ExpList()
+            ExpList(e3D)
         {
-            SetExpType(e3D);
-
             int elmtid = 0;
             LocalRegions::TetExpSharedPtr tet;
             LocalRegions::HexExpSharedPtr hex;

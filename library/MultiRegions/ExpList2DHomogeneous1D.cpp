@@ -45,9 +45,8 @@ namespace Nektar
     {
         // Forward declaration for typedefs
         ExpList2DHomogeneous1D::ExpList2DHomogeneous1D():
-            ExpListHomogeneous1D()
+            ExpListHomogeneous1D(e2DH1D)
         {
-            SetExpType(e2DH1D);
         }
 
         // Constructor for ExpList2DHomogeneous1D to act as a Explist2D field
@@ -58,9 +57,9 @@ namespace Nektar
             const bool                                  useFFT,
             const bool                                  dealiasing,
             const Array<OneD, ExpListSharedPtr>        &planes)
-            : ExpListHomogeneous1D(pSession,HomoBasis,lhom,useFFT,dealiasing)
+            : ExpListHomogeneous1D(e2DH1D,pSession,HomoBasis,
+                                   lhom,useFFT,dealiasing)
         {
-            SetExpType(e2DH1D);
             int i, n, cnt;
 
             ASSERTL1(m_planes.num_elements() == planes.num_elements(),
@@ -93,9 +92,9 @@ namespace Nektar
             const bool dealiasing,
             const SpatialDomains::MeshGraphSharedPtr &graph1D,
             const Collections::ImplementationType ImpType):
-            ExpListHomogeneous1D(pSession,HomoBasis,lhom,useFFT,dealiasing)
+            ExpListHomogeneous1D(e2DH1D, pSession,HomoBasis,
+                                 lhom,useFFT,dealiasing)
         {
-            SetExpType(e2DH1D);
             int n, j, nel;
             ExpList1DSharedPtr plane_zero;
 
@@ -133,7 +132,6 @@ namespace Nektar
             const ExpList2DHomogeneous1D &In):
             ExpListHomogeneous1D(In)
         {
-            SetExpType(e2DH1D);
             ExpList1DSharedPtr zero_plane =
                 std::dynamic_pointer_cast<ExpList1D> (In.m_planes[0]);
 

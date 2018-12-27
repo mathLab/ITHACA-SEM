@@ -74,9 +74,8 @@ namespace Nektar
          * constructor.
          */
         ExpList1D::ExpList1D():
-            ExpList()
+            ExpList(e1D)
         {
-            SetExpType(e1D);
         }
 
 
@@ -86,7 +85,6 @@ namespace Nektar
         ExpList1D::ExpList1D(const ExpList1D &In, const bool DeclareCoeffPhysArrays):
             ExpList(In,DeclareCoeffPhysArrays)
         {
-            SetExpType(e1D);
         }
         
         /**
@@ -98,8 +96,6 @@ namespace Nektar
                              const Collections::ImplementationType ImpType):
             ExpList(In, eIDs, DeclareCoeffPhysArrays)
         {
-            SetExpType(e1D);
-            
             // Allocate storage for data and populate element offset lists.
             SetCoeffPhysOffsets();
 
@@ -126,10 +122,8 @@ namespace Nektar
                              const LibUtilities::BasisKey &Ba,
                              const SpatialDomains::MeshGraphSharedPtr &graph1D,
                              const Collections::ImplementationType ImpType):
-            ExpList(pSession,graph1D)
+            ExpList(e1D, pSession,graph1D)
         {
-            SetExpType(e1D);
-
             int id=0;
             LocalRegions::SegExpSharedPtr seg;
             SpatialDomains::SegGeomSharedPtr SegmentGeom;
@@ -190,10 +184,8 @@ namespace Nektar
                 const SpatialDomains::MeshGraphSharedPtr &graph1D,
                              const bool DeclareCoeffPhysArrays,
                              const Collections::ImplementationType ImpType):
-            ExpList(pSession,graph1D)
+            ExpList(e1D, pSession,graph1D)
         {
-            SetExpType(e1D);
-
             int id=0;
             LocalRegions::SegExpSharedPtr seg;
             SpatialDomains::SegGeomSharedPtr SegmentGeom;
@@ -270,7 +262,7 @@ namespace Nektar
                              const std::string var,
                              bool SetToOneSpaceDimension,
                              const Collections::ImplementationType ImpType):
-            ExpList(pSession,graph1D)
+            ExpList(e1D, pSession,graph1D)
         {
             int j,id=0;
             LocalRegions::SegExpSharedPtr seg;
@@ -363,10 +355,8 @@ namespace Nektar
                              const std::string variable,
                              const LibUtilities::CommSharedPtr comm,
                              const Collections::ImplementationType ImpType)
-            : ExpList(pSession,graph2D)
+            : ExpList(e1D, pSession,graph2D)
         {
-            SetExpType(e1D);
-
             m_graph = graph2D;
 
             if (comm)
@@ -447,7 +437,7 @@ namespace Nektar
             const bool DeclareCoeffPhysArrays,
             const std::string variable,
             const Collections::ImplementationType ImpType):
-            ExpList(pSession,graph2D)
+            ExpList(e1D, pSession,graph2D)
         {
             int i, j, id, elmtid = 0;
             set<int> edgesDone;
@@ -458,8 +448,6 @@ namespace Nektar
             LocalRegions::SegExpSharedPtr       seg_tmp;
             LocalRegions::Expansion1DSharedPtr  exp1D;
             LocalRegions::Expansion2DSharedPtr  exp2D;
-
-            SetExpType(e1D);
 
             map<int,int> EdgeDone;
             map<int,int> NormalSet;

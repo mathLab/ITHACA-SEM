@@ -45,9 +45,8 @@ namespace Nektar
     {
         // Forward declaration for typedefs
         ExpList3DHomogeneous2D::ExpList3DHomogeneous2D():
-            ExpListHomogeneous2D()
+            ExpListHomogeneous2D(e3DH2D)
         {
-            SetExpType(e3DH2D);
         }
 
         ExpList3DHomogeneous2D::ExpList3DHomogeneous2D(
@@ -59,9 +58,8 @@ namespace Nektar
                        const bool useFFT,
                        const bool dealiasing,
                        const Collections::ImplementationType ImpType):
-            ExpListHomogeneous2D(pSession,HomoBasis_y,HomoBasis_z,lhom_y,lhom_z,useFFT,dealiasing)
+            ExpListHomogeneous2D(e3DH2D,pSession,HomoBasis_y,HomoBasis_z,lhom_y,lhom_z,useFFT,dealiasing)
         {
-            SetExpType(e3DH2D);
         }
 
         // Constructor for ExpList3DHomogeneous2D to act as a Explist1D field
@@ -75,10 +73,8 @@ namespace Nektar
                     const bool dealiasing,
                     const SpatialDomains::MeshGraphSharedPtr &graph1D,
                     const Collections::ImplementationType ImpType):
-            ExpListHomogeneous2D(pSession,HomoBasis_y,HomoBasis_z,lhom_y,lhom_z,useFFT,dealiasing)
+            ExpListHomogeneous2D(e3DH2D, pSession,HomoBasis_y,HomoBasis_z,lhom_y,lhom_z,useFFT,dealiasing)
         {
-            SetExpType(e3DH2D);
-
             int n,j,nel;
             bool False = false;
             ExpList1DSharedPtr line_zero;
@@ -120,8 +116,6 @@ namespace Nektar
                             const bool DeclareLinesSetCoeffPhys):
             ExpListHomogeneous2D(In)
         {
-            SetExpType(e3DH2D);
-
             if(DeclareLinesSetCoeffPhys)
             {
                 bool False = false;
@@ -146,8 +140,6 @@ namespace Nektar
                        const Collections::ImplementationType ImpType):
             ExpListHomogeneous2D(In, eIDs)
         {
-            SetExpType(e3DH2D);
-
             if(DeclareLinesSetCoeffPhys)
             {
                 bool False = false;

@@ -66,9 +66,8 @@ namespace Nektar
          *
          */
         ExpList2D::ExpList2D():
-            ExpList()
+            ExpList(e2D)
         {
-            SetExpType(e2D);
         }
 
 
@@ -88,7 +87,6 @@ namespace Nektar
             const bool DeclareCoeffPhysArrays):
             ExpList(In,DeclareCoeffPhysArrays)
         {
-            SetExpType(e2D);
         }
         
         /**
@@ -102,8 +100,6 @@ namespace Nektar
             const Collections::ImplementationType ImpType):
             ExpList(In,eIDs,DeclareCoeffPhysArrays)
         {
-            SetExpType(e2D);
-            
             // set up offset arrays.
             SetCoeffPhysOffsets();
 
@@ -129,10 +125,8 @@ namespace Nektar
                 const bool DeclareCoeffPhysArrays,
                 const std::string &var,
                 const Collections::ImplementationType ImpType):
-            ExpList(pSession,graph2D)
+            ExpList(e2D, pSession,graph2D)
         {
-            SetExpType(e2D);
-
             int elmtid=0;
             LocalRegions::TriExpSharedPtr      tri;
             LocalRegions::NodalTriExpSharedPtr Ntri;
@@ -247,10 +241,8 @@ namespace Nektar
             const SpatialDomains::ExpansionMap &expansions,
             const bool DeclareCoeffPhysArrays,
             const Collections::ImplementationType ImpType):
-            ExpList(pSession)
+            ExpList(e2D,pSession)
         {
-            SetExpType(e2D);
-
             int elmtid=0;
             LocalRegions::TriExpSharedPtr      tri;
             LocalRegions::NodalTriExpSharedPtr Ntri;
@@ -371,9 +363,8 @@ namespace Nektar
             const SpatialDomains::MeshGraphSharedPtr &graph2D,
             const LibUtilities::PointsType TriNb,
             const Collections::ImplementationType ImpType):
-            ExpList(pSession, graph2D)
+            ExpList(e2D,pSession, graph2D)
         {
-            SetExpType(e2D);
 
             int elmtid=0;
             LocalRegions::TriExpSharedPtr tri;
@@ -470,10 +461,8 @@ namespace Nektar
             const bool DeclareCoeffPhysArrays, 
             const std::string variable,
             const Collections::ImplementationType ImpType):            
-            ExpList(pSession, graph3D)
+            ExpList(e2D, pSession, graph3D)
         {
-            SetExpType(e2D);
-
             int i, j, id, elmtid=0;
             set<int> facesDone;
 
@@ -775,10 +764,8 @@ namespace Nektar
             const std::string variable,
             const LibUtilities::CommSharedPtr comm,
             const Collections::ImplementationType ImpType)
-            : ExpList(pSession, graph3D)
+            : ExpList(e2D, pSession, graph3D)
          {
-             SetExpType(e2D);
-
              if (comm)
              {
                  m_comm = comm;

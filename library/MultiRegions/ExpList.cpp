@@ -92,7 +92,8 @@ namespace Nektar
          * populated by a derived class (namely one of MultiRegions#ExpList1D,
          * MultiRegions#ExpList2D or MultiRegions#ExpList3D).
          */
-        ExpList::ExpList():
+        ExpList::ExpList(const ExpansionType type):
+            m_expType(type),
             m_comm(),
             m_session(),
             m_graph(),
@@ -108,7 +109,6 @@ namespace Nektar
             m_blockMat(MemoryManager<BlockMatrixMap>::AllocateSharedPtr()),
             m_WaveSpace(false)
         {
-            SetExpType(eNoType);
         }
 
 
@@ -117,8 +117,9 @@ namespace Nektar
          * populated by a derived class (namely one of MultiRegions#ExpList1D,
          * MultiRegions#ExpList2D or MultiRegions#ExpList3D).
          */
-        ExpList::ExpList(
+        ExpList::ExpList(const ExpansionType type,
                 const LibUtilities::SessionReaderSharedPtr &pSession):
+            m_expType(type),
             m_comm(pSession->GetComm()),
             m_session(pSession),
             m_graph(),
@@ -134,7 +135,6 @@ namespace Nektar
             m_blockMat(MemoryManager<BlockMatrixMap>::AllocateSharedPtr()),
             m_WaveSpace(false)
         {
-            SetExpType(eNoType);
         }
 
 
@@ -143,9 +143,10 @@ namespace Nektar
          * populated by a derived class (namely one of MultiRegions#ExpList1D,
          * MultiRegions#ExpList2D or MultiRegions#ExpList3D).
          */
-        ExpList::ExpList(
-                const LibUtilities::SessionReaderSharedPtr &pSession,
-                const SpatialDomains::MeshGraphSharedPtr &pGraph):
+        ExpList::ExpList(const ExpansionType type,
+                         const LibUtilities::SessionReaderSharedPtr &pSession,
+                         const SpatialDomains::MeshGraphSharedPtr &pGraph):
+            m_expType(type),
             m_comm(pSession->GetComm()),
             m_session(pSession),
             m_graph(pGraph),
@@ -161,7 +162,6 @@ namespace Nektar
             m_blockMat(MemoryManager<BlockMatrixMap>::AllocateSharedPtr()),
             m_WaveSpace(false)
         {
-            SetExpType(eNoType);
         }
         
         /**
@@ -172,6 +172,7 @@ namespace Nektar
         ExpList::ExpList(const ExpList &in, 
                          const std::vector<unsigned int> &eIDs,
                          const bool DeclareCoeffPhysArrays):
+            m_expType(in.m_expType),
             m_comm(in.m_comm),
             m_session(in.m_session),
             m_graph(in.m_graph),
@@ -187,7 +188,6 @@ namespace Nektar
             m_blockMat(MemoryManager<BlockMatrixMap>::AllocateSharedPtr()),
             m_WaveSpace(false)
         {
-            SetExpType(eNoType);
             
             for (int i=0; i < eIDs.size(); ++i)
             {
@@ -209,6 +209,7 @@ namespace Nektar
          * @param   in              Source expansion list.
          */
         ExpList::ExpList(const ExpList &in, const bool DeclareCoeffPhysArrays):
+            m_expType(in.m_expType),
             m_comm(in.m_comm),
             m_session(in.m_session),
             m_graph(in.m_graph),
@@ -224,8 +225,6 @@ namespace Nektar
             m_blockMat(in.m_blockMat),
             m_WaveSpace(false)
         {
-            SetExpType(eNoType);
-
             if(DeclareCoeffPhysArrays)
             {
                 m_coeffs = Array<OneD, NekDouble>(m_ncoeffs, 0.0);
@@ -268,14 +267,6 @@ namespace Nektar
         ExpansionType ExpList::GetExpType(void)
         {
             return m_expType;
-        }
-
-        /**
-         *
-         */
-        void ExpList::SetExpType(ExpansionType Type)
-        {
-            m_expType = Type;
         }
 
         ExpList::~ExpList()

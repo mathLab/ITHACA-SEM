@@ -45,9 +45,8 @@ namespace Nektar
     {
         // Forward declaration for typedefs
         ExpList3DHomogeneous1D::ExpList3DHomogeneous1D():
-            ExpListHomogeneous1D()
+            ExpListHomogeneous1D(e3DH1D)
         {
-            SetExpType(e3DH1D);
         }
 
         ExpList3DHomogeneous1D::ExpList3DHomogeneous1D(
@@ -56,9 +55,9 @@ namespace Nektar
             const NekDouble lhom,
             const bool useFFT,
             const bool dealiasing):
-            ExpListHomogeneous1D(pSession,HomoBasis,lhom,useFFT,dealiasing)
+            ExpListHomogeneous1D(e3DH1D, pSession,HomoBasis,
+                                 lhom,useFFT,dealiasing)
         {
-            SetExpType(e3DH1D);
         }
 
         // Constructor for ExpList3DHomogeneous1D to act as a Explist2D field
@@ -71,10 +70,9 @@ namespace Nektar
             const SpatialDomains::MeshGraphSharedPtr &graph2D,
             const std::string &var,
             const Collections::ImplementationType ImpType):
-            ExpListHomogeneous1D(pSession,HomoBasis,lhom,useFFT,dealiasing)
+            ExpListHomogeneous1D(e3DH1D, pSession,HomoBasis,
+                                 lhom,useFFT,dealiasing)
         {
-            SetExpType(e3DH1D);
-
             GenExpList3DHomogeneous1D(graph2D->GetExpansions(var),ImpType);
         }
         
@@ -87,10 +85,9 @@ namespace Nektar
             const bool dealiasing,
             const SpatialDomains::ExpansionMap  &expansions,
             const Collections::ImplementationType ImpType): 
-            ExpListHomogeneous1D(pSession,HomoBasis,lhom,useFFT,dealiasing)
+            ExpListHomogeneous1D(e3DH1D, pSession,HomoBasis,
+                                 lhom,useFFT,dealiasing)
         {
-            SetExpType(e3DH1D);
-            
             GenExpList3DHomogeneous1D(expansions,ImpType);
         }
 
@@ -132,8 +129,6 @@ namespace Nektar
         ExpList3DHomogeneous1D::ExpList3DHomogeneous1D(const ExpList3DHomogeneous1D &In, bool DeclarePlanesSetCoeffPhys):
             ExpListHomogeneous1D(In)
         {
-            SetExpType(e3DH1D);
-
             if(DeclarePlanesSetCoeffPhys)
             {
                 bool False = false;
@@ -159,8 +154,6 @@ namespace Nektar
                         const Collections::ImplementationType ImpType):
             ExpListHomogeneous1D(In, eIDs)
         {
-            SetExpType(e3DH1D);
-
             if(DeclarePlanesSetCoeffPhys)
             {
                 bool False = false;

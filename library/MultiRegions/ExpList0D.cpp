@@ -47,9 +47,8 @@ namespace Nektar
          * Default constructor ExpList0D object.
          */
         ExpList0D::ExpList0D():
-            ExpList()
+            ExpList(e0D)
         {
-            SetExpType(e0D);
         }
 
         /**
@@ -58,13 +57,11 @@ namespace Nektar
         ExpList0D::ExpList0D(const ExpList0D &In, bool DeclareCoeffPhysArrays):
             ExpList(In,DeclareCoeffPhysArrays)
         {
-            SetExpType(e0D);
         }
 		
         ExpList0D::ExpList0D(const SpatialDomains::PointGeomSharedPtr &geom):
-            ExpList()
+            ExpList(e0D)
         {
-            SetExpType(e0D);
             m_ncoeffs = 1;
             m_npoints = 1;
             
@@ -102,10 +99,8 @@ namespace Nektar
             const SpatialDomains::MeshGraphSharedPtr  &graph1D,
             const PeriodicMap                         &periodicVerts,
             const bool                                 DeclareCoeffPhysArrays)
-            : ExpList()
+            : ExpList(e0D)
         {
-            SetExpType(e0D);            
-
             int i, j, id, elmtid=0;
             map<int,int> EdgeDone;
             map<int,int> NormalSet;

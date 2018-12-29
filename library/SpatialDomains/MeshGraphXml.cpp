@@ -127,10 +127,12 @@ void MeshGraphXml::PartitionMesh(
 
             // Number of partitions is specified by the parameter.
             int nParts;
+            auto comp = CreateCompositeDescriptor();
+
             MeshPartitionSharedPtr partitioner =
                 GetMeshPartitionFactory().CreateInstance(
                     partitionerName, session, m_meshDimension,
-                    CreateMeshEntities(), m_meshComposites);
+                    CreateMeshEntities(), comp);
 
             if (session->DefinesCmdLineArgument("part-only"))
             {
@@ -182,12 +184,13 @@ void MeshGraphXml::PartitionMesh(
 
                     // Store composite ordering and boundary information.
                     m_compOrder = CreateCompositeOrdering();
+                    auto comp = CreateCompositeDescriptor();
 
                     // Create mesh partitioner.
                     MeshPartitionSharedPtr partitioner =
                         GetMeshPartitionFactory().CreateInstance(
                             partitionerName, session, m_meshDimension,
-                            CreateMeshEntities(), m_meshComposites);
+                            CreateMeshEntities(), comp);
 
                     partitioner->PartitionMesh(nParts, true);
 
@@ -301,6 +304,7 @@ void MeshGraphXml::PartitionMesh(
                 ReadGeometry(NullDomainRangeShPtr, false);
 
                 m_compOrder = CreateCompositeOrdering();
+                auto comp = CreateCompositeDescriptor();
 
                 // Partitioner now operates in parallel. Each process receives
                 // partitioning over interconnect and writes its own session
@@ -308,7 +312,7 @@ void MeshGraphXml::PartitionMesh(
                 MeshPartitionSharedPtr partitioner =
                     GetMeshPartitionFactory().CreateInstance(
                         partitionerName, session, m_meshDimension,
-                        CreateMeshEntities(), m_meshComposites);
+                        CreateMeshEntities(), comp);
 
                 partitioner->PartitionMesh(nParts, false);
 
@@ -3314,9 +3318,28 @@ std::map<int, MeshEntity> MeshGraphXml::CreateMeshEntities()
         break;
     }
 
-    std::cout << "Creating: " << elements.size() << std::endl;
-
     return elements;
+}
+
+CompositeDescriptor MeshGraphXml::CreateCompositeDescriptor()
+{
+    CompositeDescriptor ret;
+
+    for (auto &comp : m_meshComposites)
+    {
+        std::pair<LibUtilities::ShapeType, vector<int>> tmp;
+        tmp.first = comp.second->m_geomVec[0]->GetShapeType();
+
+        tmp.second.resize(comp.second->m_geomVec.size());
+        for (size_t i = 0; i < tmp.second.size(); ++i)
+        {
+            tmp.second[i] = comp.second->m_geomVec[i]->GetGlobalID();
+        }
+
+        ret[comp.first] = tmp;
+    }
+
+    return ret;
 }
 
 CompositeOrdering MeshGraphXml::CreateCompositeOrdering()

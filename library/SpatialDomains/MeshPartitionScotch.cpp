@@ -54,7 +54,7 @@ namespace SpatialDomains
         const LibUtilities::SessionReaderSharedPtr session,
         int                                        meshDim,
         std::map<int, MeshEntity>                  element,
-        CompositeMap                               compMap)
+        CompositeDescriptor                        compMap)
         : MeshPartition(session, meshDim, element, compMap)
     {
     }

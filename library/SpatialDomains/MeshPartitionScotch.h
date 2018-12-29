@@ -53,7 +53,7 @@ namespace SpatialDomains
                 const LibUtilities::SessionReaderSharedPtr session,
                 int                                        meshDim,
                 std::map<int, MeshEntity>                  element,
-                CompositeMap                               compMap)
+                CompositeDescriptor                        compMap)
             {
                 return MemoryManager<MeshPartitionScotch>
                     ::AllocateSharedPtr(session, meshDim, element, compMap);
@@ -67,7 +67,7 @@ namespace SpatialDomains
                 const LibUtilities::SessionReaderSharedPtr session,
                 int                                        meshDim,
                 std::map<int, MeshEntity>                  element,
-                CompositeMap                               compMap);
+                CompositeDescriptor                        compMap);
             virtual ~MeshPartitionScotch();
 
         private:

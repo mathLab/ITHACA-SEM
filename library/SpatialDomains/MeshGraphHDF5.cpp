@@ -36,7 +36,6 @@
 
 #include "MeshGraphHDF5.h"
 
-#include <LibUtilities/Communication/CommMpi.h>
 #include <LibUtilities/BasicUtils/ParseUtils.h>
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/algorithm/string.hpp>
@@ -44,16 +43,9 @@
 #include <type_traits>
 
 #include <tinyxml.h>
-#include <ptscotch.h>
+
 using namespace std;
 using namespace Nektar::LibUtilities;
-
-#define SCOTCH_CALL(scotchFunc, args)                                   \
-    {                                                                   \
-        ASSERTL0(scotchFunc args == 0,                                  \
-                 std::string("Error in Scotch calling function ")       \
-                 + std::string(#scotchFunc));                           \
-    }
 
 namespace Nektar
 {
@@ -154,6 +146,7 @@ inline void UniqueValues(std::unordered_set<int> &unique,
  */
 void MeshGraphHDF5::PartitionMesh(LibUtilities::SessionReaderSharedPtr session)
 {
+#if 0
     Timer all;
     all.Start();
     int err;
@@ -300,14 +293,6 @@ void MeshGraphHDF5::PartitionMesh(LibUtilities::SessionReaderSharedPtr session)
         std::cout << "initial read: " << t.TimePerTest(1) << std::endl;;
     }
 
-    typedef boost::adjacency_list<
-        boost::setS, boost::vecS, boost::undirectedS, int,
-        boost::property<boost::edge_index_t, unsigned int>>
-        BoostGraph;
-
-    BoostGraph graph;
-    std::unordered_map<int, int> graphEdges;
-
     // Check to see we have at least as many processors as elements.
     size_t numElmt = elmts.size();
     ASSERTL0(nproc <= numElmt,
@@ -317,33 +302,23 @@ void MeshGraphHDF5::PartitionMesh(LibUtilities::SessionReaderSharedPtr session)
     auto elRange = SplitWork(numElmt, rank, nproc);
 
     t.Start();
-    // Read all vertices.
+
+    // Construct map of element entities for partitioner.
+    std::map<int, MeshEntity> partElmts;
+    std::unordered_set<int> elmtIDs;
+
     int vcnt = 0;
+
     for (int el = elRange.first; el < elRange.first + elRange.second;
          ++el, ++vcnt)
     {
         MeshEntity elmt = elmts[el];
-
-        // Create graph vertex.
-        auto vert = boost::add_vertex(graph);
-        graph[vert] = el;
-
-        // Check for existing connections.
-        for (auto &eId : elmt.list)
-        {
-            auto edgeIt = graphEdges.find(eId);
-            if (edgeIt != graphEdges.end())
-            {
-                boost::add_edge(vcnt, edgeIt->second, graph);
-            }
-            else
-            {
-                graphEdges[eId] = vcnt;
-            }
-        }
+        elmt.ghost = false;
+        partElmts[el.id] = elmt;
+        elmtIDs.insert(el.id);
     }
 
-    // Now construct ghost vertices for the graph. This could probably be
+    // Now identify ghost vertices for the graph. This could probably be
     // improved.
     int nGhost = 0;
     for (int i = 0; i < numElmt; ++i)
@@ -351,107 +326,98 @@ void MeshGraphHDF5::PartitionMesh(LibUtilities::SessionReaderSharedPtr session)
         // Ignore anything we already read.
         if (i >= elRange.first && i < elRange.first + elRange.second)
         {
+            i += elRange.second - elRange.first - 1;
             continue;
         }
 
         MeshEntity elmt = elmts[i];
+        bool insert = false;
 
         // Check for connections to local elements.
         for (auto &eId : elmt.list)
         {
-            auto edgeIt = graphEdges.find(eId);
-            if (edgeIt != graphEdges.end())
+            auto it = elmtIDs.find(eId);
+            if (it != elmtIDs.end())
             {
-                auto vert = boost::add_vertex(graph);
-                graph[vert] = i;
-
-                boost::add_edge(vcnt, edgeIt->second, graph);
-                ++vcnt;
-                ++nGhost;
+                insert = true;
+                break;
             }
         }
-    }
 
-    // Now construct adjacency graph.
-    int nVert = boost::num_vertices(graph), nLocal = nVert - nGhost;
-    std::vector<int> adjncy, xadj(nLocal + 1);
-
-    xadj[0] = 0;
-    int acnt = 1;
-
-    auto vs = boost::vertices(graph);
-    for (auto vIt = vs.first; vIt != vs.second && acnt <= nLocal; ++vIt, ++acnt)
-    {
-        auto neighbors = boost::adjacent_vertices(*vIt, graph);
-        for (auto nIt = neighbors.first; nIt != neighbors.second; ++nIt)
+        if (insert)
         {
-            adjncy.push_back(graph[*nIt]);
-        }
-        xadj[acnt] = adjncy.size();
-    }
-    t.Stop();
-    if (rank == 0) cout << "setup graph: " << t.TimePerTest(1) << endl;
-
-    t.Start();
-
-    LibUtilities::CommMpiSharedPtr mpiComm = std::static_pointer_cast<
-        LibUtilities::CommMpi>(comm);
-    SCOTCH_Dgraph scGraph;
-    SCOTCH_CALL(SCOTCH_dgraphInit, (&scGraph, mpiComm->GetComm()));
-    SCOTCH_CALL(SCOTCH_dgraphBuild,
-                (&scGraph, 0, nLocal, nLocal, &xadj[0], &xadj[1], NULL,
-                 NULL, adjncy.size(), adjncy.size(), &adjncy[0], NULL, NULL));
-    SCOTCH_CALL(SCOTCH_dgraphCheck, (&scGraph));
-
-    SCOTCH_Strat strat;
-    SCOTCH_CALL(SCOTCH_stratInit, (&strat));
-
-    vector<int> partElmts(nLocal);
-    SCOTCH_CALL(SCOTCH_dgraphPart, (&scGraph, nproc, &strat, &partElmts[0]));
-
-    // Now we need to distribute vertex IDs to all the different processors.
-
-    // Figure out how many vertices we're going to get from each processor.
-    std::vector<int> numToSend(nproc, 0), numToRecv(nproc);
-    std::map<int, std::vector<int>> procMap;
-
-    for (int i = 0; i < nLocal; ++i)
-    {
-        int toProc = partElmts[i];
-        numToSend[toProc]++;
-        procMap[toProc].push_back(elmts[graph[i]].id);
-    }
-
-    comm->AlltoAll(numToSend, numToRecv);
-
-    // Build our offsets
-    vector<int> sendOffsetMap(nproc), recvOffsetMap(nproc);
-
-    sendOffsetMap[0] = 0;
-    recvOffsetMap[0] = 0;
-    for (int i = 1; i < nproc; ++i)
-    {
-        sendOffsetMap[i] = sendOffsetMap[i-1] + numToSend[i-1];
-        recvOffsetMap[i] = recvOffsetMap[i-1] + numToRecv[i-1];
-    }
-
-    // Build data to send
-    int totalSend = Vmath::Vsum(nproc, &numToSend[0], 1);
-    int totalRecv = Vmath::Vsum(nproc, &numToRecv[0], 1);
-
-    vector<int> sendData(totalSend), recvData(totalRecv);
-
-    int cnt = 0;
-    for (auto &verts : procMap)
-    {
-        for (auto &vert : verts.second)
-        {
-            sendData[cnt++] = vert;
+            elmt.ghost = true;
+            partElmts[elmt.id] = elmt;
         }
     }
 
-    comm->AlltoAllv(sendData, numToSend, sendOffsetMap,
-                    recvData, numToRecv, recvOffsetMap);
+    // Create partitioner. Default partitioner to use is PtScotch. Use ParMetis
+    // as default if it is installed. Override default with command-line flags
+    // if they are set.
+    string partitionerName = "PtScotch";
+    if (GetMeshPartitionFactory().ModuleExists("ParMetis"))
+    {
+        partitionerName = "ParMetis";
+    }
+    // if (session->DefinesCmdLineArgument("use-parmetis"))
+    // {
+    //     partitionerName = "ParMetis";
+    // }
+    // if (session->DefinesCmdLineArgument("use-ptscotch"))
+    // {
+    //     partitionerName = "PtScotch";
+    // }
+
+    // MeshPartitionSharedPtr partitioner =
+    //     GetMeshPartitionFactory().CreateInstance(
+    //         partitionerName, session, m_meshDimension,
+    //         partElmts, m_meshComposites);
+
+    // partitioner->PartitionGraph(nproc);
+
+    // // Now we need to distribute vertex IDs to all the different processors.
+
+    // // Figure out how many vertices we're going to get from each processor.
+    // std::vector<int> numToSend(nproc, 0), numToRecv(nproc);
+    // std::map<int, std::vector<int>> procMap;
+
+    // for (int i = 0; i < nLocal; ++i)
+    // {
+    //     int toProc = partElmts[i];
+    //     numToSend[toProc]++;
+    //     procMap[toProc].push_back(elmts[graph[i]].id);
+    // }
+
+    // comm->AlltoAll(numToSend, numToRecv);
+
+    // // Build our offsets
+    // vector<int> sendOffsetMap(nproc), recvOffsetMap(nproc);
+
+    // sendOffsetMap[0] = 0;
+    // recvOffsetMap[0] = 0;
+    // for (int i = 1; i < nproc; ++i)
+    // {
+    //     sendOffsetMap[i] = sendOffsetMap[i-1] + numToSend[i-1];
+    //     recvOffsetMap[i] = recvOffsetMap[i-1] + numToRecv[i-1];
+    // }
+
+    // // Build data to send
+    // int totalSend = Vmath::Vsum(nproc, &numToSend[0], 1);
+    // int totalRecv = Vmath::Vsum(nproc, &numToRecv[0], 1);
+
+    // vector<int> sendData(totalSend), recvData(totalRecv);
+
+    // int cnt = 0;
+    // for (auto &verts : procMap)
+    // {
+    //     for (auto &vert : verts.second)
+    //     {
+    //         sendData[cnt++] = vert;
+    //     }
+    // }
+
+    // comm->AlltoAllv(sendData, numToSend, sendOffsetMap,
+    //                 recvData, numToRecv, recvOffsetMap);
 
     t.Stop();
     if (rank == 0) cout << "partitioning: " << t.TimePerTest(1) << endl;
@@ -573,6 +539,7 @@ void MeshGraphHDF5::PartitionMesh(LibUtilities::SessionReaderSharedPtr session)
     }
     all.Stop();
     if (rank == 0) cout << "total time: " << all.TimePerTest(1) << endl;
+#endif
 }
 
 template<class T, typename DataType> void MeshGraphHDF5::ConstructGeomObject(

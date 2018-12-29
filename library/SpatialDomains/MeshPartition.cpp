@@ -75,25 +75,43 @@ SPATIAL_DOMAINS_EXPORT MeshPartitionFactory &GetMeshPartitionFactory()
 MeshPartition::MeshPartition(const LibUtilities::SessionReaderSharedPtr session,
                              int                                        meshDim,
                              std::map<int, MeshEntity>                  element,
-                             CompositeMap                               compMap)
+                             CompositeDescriptor                        compMap)
     : m_dim(meshDim), m_numFields(0), m_session(session), m_elements(element),
       m_fieldNameToId(), m_comm(session->GetComm()), m_compMap(compMap),
-      m_weightingRequired(false), m_weightBnd(false), m_weightDofs(false)
+      m_weightingRequired(false), m_weightBnd(false), m_weightDofs(false),
+      m_parallel(false)
 {
     // leave the meshpartition method of reading expansions and conditions
     ReadConditions();
     ReadExpansions();
+
+    for (auto elIt = m_elements.cbegin(); elIt != m_elements.cend();)
+    {
+        if (elIt->second.ghost)
+        {
+            m_ghostElmts[elIt->first] = elIt->second;
+            elIt = m_elements.erase(elIt);
+        }
+        else
+        {
+            ++elIt;
+        }
+    }
 }
 
 MeshPartition::~MeshPartition()
 {
 }
 
-void MeshPartition::PartitionMesh(int nParts, bool shared, bool overlapping)
+void MeshPartition::PartitionMesh(
+    int nParts, bool shared, bool overlapping, int nLocal)
 {
     ASSERTL0(m_elements.size() >= nParts,
              "Too few elements for this many processes.");
     m_shared = shared;
+
+    ASSERTL0(!m_parallel || shared,
+             "Parallel partitioning requires shared filesystem.");
 
     if (m_weightingRequired)
     {
@@ -201,11 +219,11 @@ void MeshPartition::ReadExpansions()
             {
                 for (int j = 0; j < fieldName.size(); j++)
                 {
-                    for (int k = 0; k < m_compMap[composite[i]]->m_geomVec.size(); k++)
+                    auto shapeType =  m_compMap[composite[i]].first;
+                    for (auto &elid : m_compMap[composite[i]].second)
                     {
-                        int elid = m_compMap[composite[i]]->m_geomVec[k]->GetGlobalID();
                         m_expansions[elid][fieldName[j]] = nummodes;
-                        m_shape[elid] = m_compMap[composite[i]]->m_geomVec[k]->GetShapeType();
+                        m_shape[elid] = shapeType;
                     }
                 }
             }
@@ -482,33 +500,31 @@ void MeshPartition::CreateGraph()
     // Maps edge/face to first mesh element id.
     // On locating second mesh element id, graph edge is created instead.
     std::map<int, int> vGraphEdges;
-    map<int, MeshEntity>::iterator eIt;
     int vcnt = 0;
 
-    for (eIt = m_elements.begin(); eIt != m_elements.end(); ++eIt, ++vcnt)
+    for (auto &elmt : m_elements)
     {
-        BoostVertex v       = boost::add_vertex(m_graph);
-        m_graph[v].id        = eIt->first;
-        m_graph[v].partition = 0;
+        auto vert               = boost::add_vertex(m_graph);
+        m_graph[vert].id        = elmt.first;
+        m_graph[vert].partition = 0;
 
         if (m_weightingRequired)
         {
-            m_graph[v].weight     = m_vertWeights[eIt->first];
-            m_graph[v].bndWeight  = m_vertBndWeights[eIt->first];
-            m_graph[v].edgeWeight = m_edgeWeights[eIt->first];
+            m_graph[vert].weight     = m_vertWeights[elmt.first];
+            m_graph[vert].bndWeight  = m_vertBndWeights[elmt.first];
+            m_graph[vert].edgeWeight = m_edgeWeights[elmt.first];
         }
 
         // Process element entries and add graph edges
-        for (unsigned j = 0; j < eIt->second.list.size(); ++j)
+        for (auto &eId : elmt.second.list)
         {
-            int eId = eIt->second.list[j];
-
             // Look to see if we've examined this edge/face before
             // If so, we've got both graph vertices so add edge
-            if (vGraphEdges.find(eId) != vGraphEdges.end())
+            auto edgeIt = vGraphEdges.find(eId);
+            if (edgeIt != vGraphEdges.end())
             {
                 BoostEdge e =
-                    boost::add_edge(vcnt, vGraphEdges[eId], m_graph).first;
+                    boost::add_edge(vcnt, edgeIt->second, m_graph).first;
                 m_graph[e].id = vcnt;
             }
             else
@@ -516,8 +532,93 @@ void MeshPartition::CreateGraph()
                 vGraphEdges[eId] = vcnt;
             }
         }
+
+        // Increment counter for graph vertex id.
+        ++vcnt;
+    }
+
+    // Now process ghost elements.
+    for (auto &ghost : m_ghostElmts)
+    {
+        auto vert = boost::add_vertex(m_graph);
+        m_graph[vert].id = ghost.first;
+        m_graph[vert].partition = -1;
+
+        for (auto &facet : ghost.second.list)
+        {
+            auto edgeIt = vGraphEdges.find(facet);
+            if (edgeIt != vGraphEdges.end())
+            {
+                BoostEdge e =
+                    boost::add_edge(vcnt, edgeIt->second, m_graph).first;
+                m_graph[e].id = vcnt;
+            }
+        }
+
+        // Increment counter for graph vertex id.
+        ++vcnt;
     }
 }
+
+/*
+void MeshPartition::PartitionGraphParallel(int nParts)
+{
+    int nVert = boost::num_vertices(m_graph);
+    int nGhost = m_ghostElmt.size();
+    int nLocal = nVert - nGhost;
+
+    std::vector<int> adjncy, adjwgt;
+
+    Array<OneD, int> xadj(nLocal + 1);
+    Array<OneD, int> vwgt(nLocal, 1);
+    Array<OneD, int> vsize(nLocal, 1);
+
+    xadj[0] = 0;
+    int acnt = 1;
+
+    auto vs = boost::vertices(m_graph);
+    for (auto vIt = vs.first; vIt != vs.second && acnt <= nLocal; ++vIt, ++acnt)
+    {
+        auto neighbors = boost::adjacent_vertices(*vIt, m_graph);
+        for (auto nIt = neighbors.first; nIt != neighbors.second; ++nIt)
+        {
+            adjncy.push_back(m_graph[*nIt]);
+            if (m_weightingRequired)
+            {
+                adjwgt.push_back(m_graph[*vIt].edgeWeight[0]);
+            }
+        }
+        xadj[acnt] = adjncy.size();
+
+        if (m_weightingRequired)
+        {
+            int ccnt = 0;
+            if (m_weightDofs)
+            {
+                vwgt[ncon * (acnt - 1) + ccnt] = m_graph[*vIt].weight[0];
+                ccnt++;
+            }
+            if (m_weightBnd)
+            {
+                vwgt[ncon * (acnt - 1) + ccnt] = m_graph[*vIt].bndWeight[0];
+            }
+        }
+    }
+
+    // Possibly support multiple weights in future.
+    int ncon = 1;
+    if (m_weightDofs && m_weightBnd)
+    {
+        ncon = 2;
+    }
+
+    int vol = 0;
+
+    PartitionGraphImpl(
+        nGraphVerts, ncon, xadj, adjncy, vwgt, vsize,
+        adjwgt, nParts, vol, part);
+}
+*/
 
 /**
  * @brief Partition the graph.
@@ -539,6 +640,8 @@ void MeshPartition::PartitionGraph(int nParts, bool overlapping)
     int i;
     int nGraphVerts = boost::num_vertices(m_graph);
     int nGraphEdges = boost::num_edges(m_graph);
+    int nGhost = m_ghostElmts.size();
+    int nLocal = nGraphVerts - nGhost;
 
     int ncon = 1;
     if (m_weightDofs && m_weightBnd)
@@ -550,29 +653,32 @@ void MeshPartition::PartitionGraph(int nParts, bool overlapping)
     BoostAdjacencyIterator adjvertit, adjvertit_end;
     Array<OneD, int> part(nGraphVerts, 0);
 
-    if (m_comm->GetRowComm()->TreatAsRankZero())
+    if (m_comm->GetRowComm()->TreatAsRankZero() || m_parallel)
     {
         int acnt    = 0;
         int vcnt    = 0;
         int nWeight = ncon * nGraphVerts;
 
         Array<OneD, int> xadj(nGraphVerts + 1, 0);
-        Array<OneD, int> adjncy(2 * nGraphEdges);
-        Array<OneD, int> adjwgt(2 * nGraphEdges, 1);
+        vector<int> adjncy_tmp, adjwgt_tmp;
         Array<OneD, int> vwgt(nWeight, 1);
         Array<OneD, int> vsize(nGraphVerts, 1);
 
         for (boost::tie(vertit, vertit_end) = boost::vertices(m_graph);
-             vertit != vertit_end; ++vertit)
+             vertit != vertit_end && acnt <= nLocal; ++vertit, ++acnt)
         {
             for (boost::tie(adjvertit, adjvertit_end) =
                      boost::adjacent_vertices(*vertit, m_graph);
                  adjvertit != adjvertit_end; ++adjvertit)
             {
-                adjncy[acnt++] = *adjvertit;
+                adjncy_tmp.push_back(*adjvertit);
                 if (m_weightingRequired)
                 {
-                    adjwgt[acnt - 1] = m_graph[*vertit].edgeWeight[0];
+                    adjwgt_tmp.push_back(m_graph[*vertit].edgeWeight[0]);
+                }
+                else
+                {
+                    adjwgt_tmp.push_back(1);
                 }
             }
 
@@ -594,6 +700,9 @@ void MeshPartition::PartitionGraph(int nParts, bool overlapping)
             }
         }
 
+        Array<OneD, int> adjncy(adjncy_tmp.size(), &adjncy_tmp[0]);
+        Array<OneD, int> adjwgt(adjwgt_tmp.size(), &adjwgt_tmp[0]);
+
         // Call partitioner to partition graph
         int vol = 0;
 
@@ -612,7 +721,11 @@ void MeshPartition::PartitionGraph(int nParts, bool overlapping)
 
                 // Check the partitioner produced a valid partition and fix if
                 // not.
-                CheckPartitions(nParts, part);
+                if (!m_parallel)
+                {
+                    CheckPartitions(nParts, part);
+                }
+
                 if (!m_shared)
                 {
                     // distribute among columns
@@ -626,7 +739,8 @@ void MeshPartition::PartitionGraph(int nParts, bool overlapping)
             {
                 m_comm->GetColumnComm()->Recv(0, part);
             }
-            if (!m_shared)
+
+            if (!m_shared && !m_parallel)
             {
                 m_comm->GetColumnComm()->Block();
 
@@ -649,41 +763,36 @@ void MeshPartition::PartitionGraph(int nParts, bool overlapping)
         m_comm->GetRowComm()->Recv(0, part);
     }
 
-    // Create boost subgraph for this process's partitions;
+    // Create storage for this (and possibly other) process's partitions.
     m_localPartition.resize(nParts);
-    for (i = 0; i < nParts; ++i)
-    {
-        m_localPartition[i] = m_graph.create_subgraph();
-    }
 
-    // Populate subgraph
+    // Populate subgraph(s)
     i = 0;
     for (boost::tie(vertit, vertit_end) = boost::vertices(m_graph);
          vertit != vertit_end; ++vertit, ++i)
     {
-        m_graph[*vertit].partition = part[i];
-        boost::add_vertex(i, m_localPartition[part[i]]);
+        m_localPartition[part[i]].push_back(m_graph[*vertit].id);
     }
 
-    // If the overlapping option is set (for post-processing purposes),
-    // add vertices that correspond to the neighbouring elements.
-    if (overlapping)
-    {
-        for (boost::tie(vertit, vertit_end) = boost::vertices(m_graph);
-             vertit != vertit_end; ++vertit)
-        {
-            for (boost::tie(adjvertit, adjvertit_end) =
-                     boost::adjacent_vertices(*vertit, m_graph);
-                 adjvertit != adjvertit_end; ++adjvertit)
-            {
-                if (part[*adjvertit] != part[*vertit])
-                {
-                    boost::add_vertex(*adjvertit,
-                                      m_localPartition[part[*vertit]]);
-                }
-            }
-        }
-    }
+    // // If the overlapping option is set (for post-processing purposes),
+    // // add vertices that correspond to the neighbouring elements.
+    // if (overlapping)
+    // {
+    //     for (boost::tie(vertit, vertit_end) = boost::vertices(m_graph);
+    //          vertit != vertit_end; ++vertit)
+    //     {
+    //         for (boost::tie(adjvertit, adjvertit_end) =
+    //                  boost::adjacent_vertices(*vertit, m_graph);
+    //              adjvertit != adjvertit_end; ++adjvertit)
+    //         {
+    //             if (part[*adjvertit] != part[*vertit])
+    //             {
+    //                 boost::add_vertex(*adjvertit,
+    //                                   m_localPartition[part[*vertit]]);
+    //             }
+    //         }
+    //     }
+    // }
 }
 
 void MeshPartition::CheckPartitions(int nParts, Array<OneD, int> &pPart)
@@ -724,13 +833,7 @@ void MeshPartition::GetElementIDs(const int procid,
     ASSERTL0(procid < m_localPartition.size(),
              "procid is less than the number of partitions");
 
-    // Populate lists of elements, edges and vertices required.
-    for (boost::tie(vertit, vertit_end) =
-             boost::vertices(m_localPartition[procid]);
-         vertit != vertit_end; ++vertit)
-    {
-        elmtid.push_back(m_elements[m_localPartition[procid][*vertit].id].id);
-    }
+    elmtid = m_localPartition[procid];
 }
 
 int MeshPartition::CalculateElementWeight(LibUtilities::ShapeType elmtType,

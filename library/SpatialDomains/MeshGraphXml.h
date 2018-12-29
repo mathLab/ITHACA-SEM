@@ -38,6 +38,7 @@
 #define NEKTAR_SPATIALDOMAINS_MGXML_H
 
 #include <SpatialDomains/MeshGraph.h>
+#include <SpatialDomains/MeshPartition.h>
 
 namespace Nektar
 {
@@ -123,7 +124,7 @@ protected:
     void WriteDefaultExpansion(TiXmlElement *root);
 
     std::map<int, MeshEntity> CreateMeshEntities();
-
+    CompositeDescriptor CreateCompositeDescriptor();
     CompositeOrdering CreateCompositeOrdering();
 };
 

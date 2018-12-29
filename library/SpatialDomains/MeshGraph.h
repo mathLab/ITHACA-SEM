@@ -126,6 +126,14 @@ struct DomainRange
 typedef std::shared_ptr<DomainRange> DomainRangeShPtr;
 static DomainRangeShPtr NullDomainRangeShPtr;
 
+struct Composite
+{
+    std::vector<std::shared_ptr<Geometry>> m_geomVec;
+};
+
+typedef std::shared_ptr<Composite> CompositeSharedPtr;
+typedef std::map<int, CompositeSharedPtr> CompositeMap;
+
 struct Expansion
 {
     Expansion(GeometrySharedPtr geomShPtr,
@@ -224,8 +232,8 @@ public:
         return m_meshComposites.find(whichComposite)->second;
     }
 
-    SPATIAL_DOMAINS_EXPORT GeometrySharedPtr
-    GetCompositeItem(int whichComposite, int whichItem);
+    SPATIAL_DOMAINS_EXPORT GeometrySharedPtr GetCompositeItem(
+        int whichComposite, int whichItem);
 
     SPATIAL_DOMAINS_EXPORT void GetCompositeList(
         const std::string &compositeStr,

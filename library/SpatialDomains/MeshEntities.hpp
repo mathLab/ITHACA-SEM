@@ -141,17 +141,8 @@ namespace Nektar
             int id;
             //LibUtilities::ShapeType shape;
             std::vector<unsigned int> list;
+            bool ghost;
         };
-
-
-    class Geometry;
-    struct Composite
-    {
-        std::vector<std::shared_ptr<Geometry>> m_geomVec;
-    };
-
-    typedef std::shared_ptr<Composite> CompositeSharedPtr;
-    typedef std::map<int, CompositeSharedPtr> CompositeMap;
     }
 }
 #endif

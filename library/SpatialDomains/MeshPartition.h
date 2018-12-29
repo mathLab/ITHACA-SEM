@@ -52,12 +52,15 @@ namespace SpatialDomains
 {
 class MeshPartition;
 
+typedef std::map<int, std::pair<LibUtilities::ShapeType, std::vector<int>>>
+CompositeDescriptor;
+
 /// Datatype of the NekFactory used to instantiate classes derived from
 /// the EquationSystem class.
 typedef LibUtilities::NekFactory<std::string, MeshPartition,
                                  const LibUtilities::SessionReaderSharedPtr,
                                  int, std::map<int, MeshEntity>,
-                                 CompositeMap>
+                                 CompositeDescriptor>
     MeshPartitionFactory;
 
 SPATIAL_DOMAINS_EXPORT MeshPartitionFactory &GetMeshPartitionFactory();
@@ -69,13 +72,14 @@ public:
     MeshPartition(const LibUtilities::SessionReaderSharedPtr session,
                   int                                        meshDim,
                   std::map<int, MeshEntity>                  element,
-                  CompositeMap                               compMap);
+                  CompositeDescriptor                        compMap);
     virtual ~MeshPartition();
 
     SPATIAL_DOMAINS_EXPORT void PartitionMesh(
         int  nParts,
         bool shared      = false,
-        bool overlapping = false);
+        bool overlapping = false,
+        int  nLocal      = 0);
 
     SPATIAL_DOMAINS_EXPORT void PrintPartInfo(std::ostream &out);
 
@@ -130,7 +134,8 @@ private:
     int m_numFields;
 
     std::map<int, MeshEntity> m_elements;
-    CompositeMap m_compMap;
+    std::map<int, MeshEntity> m_ghostElmts;
+    CompositeDescriptor m_compMap;
 
     // hierarchial mapping: elmt id -> field name -> integer list
     // of directional nummodes described by expansion type clause.
@@ -145,7 +150,7 @@ private:
     std::map<int, MultiWeight> m_edgeWeights;
 
     BoostSubGraph m_graph;
-    std::vector<BoostSubGraph> m_localPartition;
+    std::vector<vector<unsigned int>> m_localPartition;
 
     LibUtilities::CommSharedPtr m_comm;
 
@@ -153,6 +158,7 @@ private:
     bool m_weightBnd;
     bool m_weightDofs;
     bool m_shared;
+    bool m_parallel;
 
     void ReadExpansions();
     void ReadConditions();

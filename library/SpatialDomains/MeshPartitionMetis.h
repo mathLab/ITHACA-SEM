@@ -51,7 +51,7 @@ public:
         const LibUtilities::SessionReaderSharedPtr session,
         int                                        meshDim,
         std::map<int, MeshEntity>                  element,
-        CompositeMap                               compMap);
+        CompositeDescriptor                        compMap);
     {
         return MemoryManager<MeshPartitionMetis>::AllocateSharedPtr(
             session, meshDim, element, compMap);
@@ -64,7 +64,7 @@ public:
     MeshPartitionMetis(const LibUtilities::SessionReaderSharedPtr session,
                        int                                        meshDim,
                        std::map<int, MeshEntity>                  element,
-                       CompositeMap                               compMap);
+                       CompositeDescriptor                        compMap);
     virtual ~MeshPartitionMetis();
 
 private:

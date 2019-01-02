@@ -226,7 +226,7 @@ void ProcessProjectCAD::Process()
     {
         LibUtilities::PrintProgressbar(i, m_mesh->m_cad->GetNumSurf(), "building surface bboxes", i-1);
         Array<OneD, NekDouble> bx = m_mesh->m_cad->GetSurf(i)->BoundingBox();
-        boxes.push_back(make_pair(box(point(bx[0]*0.001, bx[1]*0.001, bx[2]*0.001), point(bx[3]*0.001, bx[4]*0.001, bx[5]*0.001)), i));
+        boxes.push_back(make_pair(box(point(bx[0], bx[1], bx[2]), point(bx[3], bx[4], bx[5])), i));
     }
     cout << endl;
 

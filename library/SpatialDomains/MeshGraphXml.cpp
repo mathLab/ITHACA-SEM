@@ -3241,6 +3241,7 @@ std::map<int, MeshEntity> MeshGraphXml::CreateMeshEntities()
                 e.id = i.first;
                 e.list.push_back(i.second->GetVertex(0)->GetGlobalID());
                 e.list.push_back(i.second->GetVertex(1)->GetGlobalID());
+                e.ghost = false;
                 elements[e.id] = e;
             }
         }
@@ -3254,6 +3255,7 @@ std::map<int, MeshEntity> MeshGraphXml::CreateMeshEntities()
                 e.list.push_back(i.second->GetEdge(0)->GetGlobalID());
                 e.list.push_back(i.second->GetEdge(1)->GetGlobalID());
                 e.list.push_back(i.second->GetEdge(2)->GetGlobalID());
+                e.ghost = false;
                 elements[e.id] = e;
             }
             for (auto &i : m_quadGeoms)
@@ -3264,6 +3266,7 @@ std::map<int, MeshEntity> MeshGraphXml::CreateMeshEntities()
                 e.list.push_back(i.second->GetEdge(1)->GetGlobalID());
                 e.list.push_back(i.second->GetEdge(2)->GetGlobalID());
                 e.list.push_back(i.second->GetEdge(3)->GetGlobalID());
+                e.ghost = false;
                 elements[e.id] = e;
             }
         }
@@ -3278,6 +3281,7 @@ std::map<int, MeshEntity> MeshGraphXml::CreateMeshEntities()
                 e.list.push_back(i.second->GetFace(1)->GetGlobalID());
                 e.list.push_back(i.second->GetFace(2)->GetGlobalID());
                 e.list.push_back(i.second->GetFace(3)->GetGlobalID());
+                e.ghost = false;
                 elements[e.id] = e;
             }
             for (auto &i : m_pyrGeoms)
@@ -3289,6 +3293,7 @@ std::map<int, MeshEntity> MeshGraphXml::CreateMeshEntities()
                 e.list.push_back(i.second->GetFace(2)->GetGlobalID());
                 e.list.push_back(i.second->GetFace(3)->GetGlobalID());
                 e.list.push_back(i.second->GetFace(4)->GetGlobalID());
+                e.ghost = false;
                 elements[e.id] = e;
             }
             for (auto &i : m_prismGeoms)
@@ -3300,6 +3305,7 @@ std::map<int, MeshEntity> MeshGraphXml::CreateMeshEntities()
                 e.list.push_back(i.second->GetFace(2)->GetGlobalID());
                 e.list.push_back(i.second->GetFace(3)->GetGlobalID());
                 e.list.push_back(i.second->GetFace(4)->GetGlobalID());
+                e.ghost = false;
                 elements[e.id] = e;
             }
             for (auto &i : m_hexGeoms)
@@ -3312,6 +3318,7 @@ std::map<int, MeshEntity> MeshGraphXml::CreateMeshEntities()
                 e.list.push_back(i.second->GetFace(3)->GetGlobalID());
                 e.list.push_back(i.second->GetFace(4)->GetGlobalID());
                 e.list.push_back(i.second->GetFace(5)->GetGlobalID());
+                e.ghost = false;
                 elements[e.id] = e;
             }
         }

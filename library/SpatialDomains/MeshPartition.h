@@ -42,7 +42,6 @@
 #include <SpatialDomains/SpatialDomainsDeclspec.h>
 #include <SpatialDomains/MeshEntities.hpp>
 #include <boost/graph/adjacency_list.hpp>
-#include <boost/graph/subgraph.hpp>
 
 class TiXmlElement;
 
@@ -87,7 +86,7 @@ public:
         const int                  procid,
         std::vector<unsigned int> &tmp);
 
-private:
+protected:
     typedef std::vector<unsigned int> MultiWeight;
 
     // Element in a mesh
@@ -113,9 +112,6 @@ private:
         boost::setS, boost::vecS, boost::undirectedS, GraphVertexProperties,
         boost::property<boost::edge_index_t, unsigned int, GraphEdgeProperties>>
         BoostGraph;
-
-    // Use induced subgraphs to manage the partitions
-    typedef boost::subgraph<BoostGraph> BoostSubGraph;
 
     typedef boost::graph_traits<BoostGraph>::vertex_descriptor BoostVertex;
     typedef boost::graph_traits<BoostGraph>::edge_descriptor BoostEdge;
@@ -149,7 +145,7 @@ private:
     std::map<int, MultiWeight> m_vertBndWeights;
     std::map<int, MultiWeight> m_edgeWeights;
 
-    BoostSubGraph m_graph;
+    BoostGraph m_graph;
     std::vector<vector<unsigned int>> m_localPartition;
 
     LibUtilities::CommSharedPtr m_comm;

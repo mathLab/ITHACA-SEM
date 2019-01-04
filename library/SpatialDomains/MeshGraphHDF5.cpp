@@ -34,15 +34,14 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "MeshGraphHDF5.h"
-
-#include <LibUtilities/BasicUtils/ParseUtils.h>
-#include <boost/graph/adjacency_list.hpp>
+#include <type_traits>
+#include <tinyxml.h>
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
-#include <type_traits>
 
-#include <tinyxml.h>
+#include <LibUtilities/BasicUtils/ParseUtils.h>
+#include <SpatialDomains/MeshPartition.h>
+#include <SpatialDomains/MeshGraphHDF5.h>
 
 using namespace std;
 using namespace Nektar::LibUtilities;
@@ -146,7 +145,6 @@ inline void UniqueValues(std::unordered_set<int> &unique,
  */
 void MeshGraphHDF5::PartitionMesh(LibUtilities::SessionReaderSharedPtr session)
 {
-#if 0
     Timer all;
     all.Start();
     int err;
@@ -314,13 +312,13 @@ void MeshGraphHDF5::PartitionMesh(LibUtilities::SessionReaderSharedPtr session)
     {
         MeshEntity elmt = elmts[el];
         elmt.ghost = false;
-        partElmts[el.id] = elmt;
-        elmtIDs.insert(el.id);
+        partElmts[elmt.id] = elmt;
+        elmtIDs.insert(elmt.id);
     }
 
     // Now identify ghost vertices for the graph. This could probably be
     // improved.
-    int nGhost = 0;
+    int nLocal = vcnt, nGhost = 0;
     for (int i = 0; i < numElmt; ++i)
     {
         // Ignore anything we already read.
@@ -359,76 +357,34 @@ void MeshGraphHDF5::PartitionMesh(LibUtilities::SessionReaderSharedPtr session)
     {
         partitionerName = "ParMetis";
     }
-    // if (session->DefinesCmdLineArgument("use-parmetis"))
-    // {
-    //     partitionerName = "ParMetis";
-    // }
-    // if (session->DefinesCmdLineArgument("use-ptscotch"))
-    // {
-    //     partitionerName = "PtScotch";
-    // }
+    if (session->DefinesCmdLineArgument("use-parmetis"))
+    {
+        partitionerName = "ParMetis";
+    }
+    if (session->DefinesCmdLineArgument("use-ptscotch"))
+    {
+        partitionerName = "PtScotch";
+    }
 
-    // MeshPartitionSharedPtr partitioner =
-    //     GetMeshPartitionFactory().CreateInstance(
-    //         partitionerName, session, m_meshDimension,
-    //         partElmts, m_meshComposites);
+    CompositeDescriptor comp;
+    MeshPartitionSharedPtr partitioner =
+        GetMeshPartitionFactory().CreateInstance(
+            partitionerName, session, m_meshDimension,
+            partElmts, comp);
 
-    // partitioner->PartitionGraph(nproc);
+    partitioner->PartitionMesh(nproc);
 
-    // // Now we need to distribute vertex IDs to all the different processors.
-
-    // // Figure out how many vertices we're going to get from each processor.
-    // std::vector<int> numToSend(nproc, 0), numToRecv(nproc);
-    // std::map<int, std::vector<int>> procMap;
-
-    // for (int i = 0; i < nLocal; ++i)
-    // {
-    //     int toProc = partElmts[i];
-    //     numToSend[toProc]++;
-    //     procMap[toProc].push_back(elmts[graph[i]].id);
-    // }
-
-    // comm->AlltoAll(numToSend, numToRecv);
-
-    // // Build our offsets
-    // vector<int> sendOffsetMap(nproc), recvOffsetMap(nproc);
-
-    // sendOffsetMap[0] = 0;
-    // recvOffsetMap[0] = 0;
-    // for (int i = 1; i < nproc; ++i)
-    // {
-    //     sendOffsetMap[i] = sendOffsetMap[i-1] + numToSend[i-1];
-    //     recvOffsetMap[i] = recvOffsetMap[i-1] + numToRecv[i-1];
-    // }
-
-    // // Build data to send
-    // int totalSend = Vmath::Vsum(nproc, &numToSend[0], 1);
-    // int totalRecv = Vmath::Vsum(nproc, &numToRecv[0], 1);
-
-    // vector<int> sendData(totalSend), recvData(totalRecv);
-
-    // int cnt = 0;
-    // for (auto &verts : procMap)
-    // {
-    //     for (auto &vert : verts.second)
-    //     {
-    //         sendData[cnt++] = vert;
-    //     }
-    // }
-
-    // comm->AlltoAllv(sendData, numToSend, sendOffsetMap,
-    //                 recvData, numToRecv, recvOffsetMap);
+    // Now we need to distribute vertex IDs to all the different processors.
 
     t.Stop();
     if (rank == 0) cout << "partitioning: " << t.TimePerTest(1) << endl;
 
     // Each process now knows which rows of the dataset it needs to read for the
     // elements of dimension m_meshDimension.
+    std::vector<unsigned int> tmp;
     std::unordered_set<int> toRead;
-    t.Start();
-    UniqueValues(toRead, recvData);
-    t.Stop();
-    if (rank == 0) cout << "insert values: " << t.TimePerTest(1) << endl;
+    partitioner->GetElementIDs(comm->GetRank(), tmp);
+    toRead.insert(tmp.begin(), tmp.end());
 
     // Since objects are going to be constructed starting from vertices, we now
     // need to recurse down the geometry facet dimensions to figure out which
@@ -539,7 +495,6 @@ void MeshGraphHDF5::PartitionMesh(LibUtilities::SessionReaderSharedPtr session)
     }
     all.Stop();
     if (rank == 0) cout << "total time: " << all.TimePerTest(1) << endl;
-#endif
 }
 
 template<class T, typename DataType> void MeshGraphHDF5::ConstructGeomObject(

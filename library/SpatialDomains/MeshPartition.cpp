@@ -766,12 +766,74 @@ void MeshPartition::PartitionGraph(int nParts, bool overlapping)
     // Create storage for this (and possibly other) process's partitions.
     m_localPartition.resize(nParts);
 
-    // Populate subgraph(s)
     i = 0;
-    for (boost::tie(vertit, vertit_end) = boost::vertices(m_graph);
-         vertit != vertit_end; ++vertit, ++i)
+
+    // Populate subgraph(s)
+    if (!m_parallel)
     {
-        m_localPartition[part[i]].push_back(m_graph[*vertit].id);
+        for (boost::tie(vertit, vertit_end) = boost::vertices(m_graph);
+             vertit != vertit_end; ++vertit, ++i)
+        {
+            m_localPartition[part[i]].push_back(m_graph[*vertit].id);
+        }
+    }
+    else
+    {
+        // Figure out how many vertices we're going to get from each processor.
+        int nproc = m_comm->GetSize();
+        std::vector<int> numToSend(nproc, 0), numToRecv(nproc);
+        std::map<int, std::vector<int>> procMap;
+
+        for (boost::tie(vertit, vertit_end) = boost::vertices(m_graph);
+             vertit != vertit_end, i < nLocal; ++vertit, ++i)
+        {
+            int toProc = part[i];
+            numToSend[toProc]++;
+            procMap[toProc].push_back(m_graph[*vertit].id);
+        }
+
+        m_comm->AlltoAll(numToSend, numToRecv);
+
+        // Build offsets for all-to-all communication
+        vector<int> sendOffsetMap(nproc), recvOffsetMap(nproc);
+
+        sendOffsetMap[0] = 0;
+        recvOffsetMap[0] = 0;
+        for (int i = 1; i < nproc; ++i)
+        {
+            sendOffsetMap[i] = sendOffsetMap[i-1] + numToSend[i-1];
+            recvOffsetMap[i] = recvOffsetMap[i-1] + numToRecv[i-1];
+        }
+
+        // Build data to send
+        int totalSend = Vmath::Vsum(nproc, &numToSend[0], 1);
+        int totalRecv = Vmath::Vsum(nproc, &numToRecv[0], 1);
+
+        vector<int> sendData(totalSend), recvData(totalRecv);
+
+        int cnt = 0;
+        for (auto &verts : procMap)
+        {
+            for (auto &vert : verts.second)
+            {
+                sendData[cnt++] = vert;
+            }
+        }
+
+        // Send ID map to processors
+        m_comm->AlltoAllv(sendData, numToSend, sendOffsetMap,
+                          recvData, numToRecv, recvOffsetMap);
+
+        // Finally, populate m_localPartition for this processor. Could contain
+        // duplicates so erase those first.
+        std::unordered_set<int> uniqueIDs;
+        for (auto &id : recvData)
+        {
+            uniqueIDs.insert(id);
+        }
+        m_localPartition[m_comm->GetRank()].insert(
+            m_localPartition[m_comm->GetRank()].begin(),
+            uniqueIDs.begin(), uniqueIDs.end());
     }
 
     // // If the overlapping option is set (for post-processing purposes),
@@ -832,6 +894,8 @@ void MeshPartition::GetElementIDs(const int procid,
 
     ASSERTL0(procid < m_localPartition.size(),
              "procid is less than the number of partitions");
+    ASSERTL0((m_parallel && procid == m_comm->GetRank()) || !m_parallel,
+             "Can only get this rank's processor IDs in parallel");
 
     elmtid = m_localPartition[procid];
 }

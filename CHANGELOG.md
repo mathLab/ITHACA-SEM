@@ -49,9 +49,9 @@ v5.0.0
   WeightPartitions was used in parallel (!923)
 - Removed instance count from beginning of Array storage to improve memory
   alignment (!921)
-- Fix naming issue of duplicate Unit tests (!924) 
+- Fix naming issue of duplicate Unit tests (!924)
 - Fix warnings about missing virtual destructors in abstract classes (!932)
-- Fix ability to have periodic boundary conditions that are aligned by a 
+- Fix ability to have periodic boundary conditions that are aligned by a
   rotation rather than just a translation (!933)
 - Added a coupling interface to exchange data between solvers at run time
   and a DummySolver to test the implementations (!853, !931 !973)
@@ -137,6 +137,9 @@ v5.0.0
 
 **APESolver:**
 - APESolver was replaced with AcousticSolver (!918)
+
+**PulseWaveSolver**
+- Added two new boundary conditions: AInflow and UInflow
 
 **Documentation**:
 - Added the developer-guide repository as a submodule (!751)

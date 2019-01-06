@@ -156,7 +156,7 @@ namespace Nektar
          * and adding all the boundary conditions.
          * @param   In          Existing explist1D field .
          */
-         ContField1D::ContField1D(const LibUtilities::SessionReaderSharedPtr &pSession, const ExpList1D & In):
+         ContField1D::ContField1D(const LibUtilities::SessionReaderSharedPtr &pSession, const ExpList & In):
             DisContField1D(In),
             m_locToGloMap(),
             m_globalLinSysManager(

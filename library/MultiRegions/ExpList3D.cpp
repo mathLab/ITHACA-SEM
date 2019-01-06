@@ -63,20 +63,8 @@ namespace Nektar
                 const std::vector<unsigned int> &eIDs,
                 const bool DeclareCoeffPhysArrays,
                 const Collections::ImplementationType ImpType):
-            ExpList(In, eIDs, DeclareCoeffPhysArrays)
+            ExpList(In, eIDs, DeclareCoeffPhysArrays,ImpType)
         {
-
-            
-            SetCoeffPhysOffsets();
-
-            if (DeclareCoeffPhysArrays)
-            {
-                // Set up m_coeffs, m_phys.
-                m_coeffs = Array<OneD, NekDouble>(m_ncoeffs,0.0);
-                m_phys   = Array<OneD, NekDouble>(m_npoints,0.0);
-             }
-
-            CreateCollections(ImpType);
         }
 
         ExpList3D::~ExpList3D()

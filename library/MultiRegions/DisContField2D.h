@@ -133,7 +133,7 @@ namespace Nektar
              * conditions.
              *
              * It is an array of size equal to the number of boundary regions
-             * and consists of entries of the type MultiRegions#ExpList1D. Every
+             * and consists of entries of the type MultiRegions#ExpList. Every
              * entry corresponds to the one-dimensional spectral/hp expansion on
              * a single boundary region.  The values of the boundary conditions
              * are stored as the coefficients of the one-dimensional expansion.

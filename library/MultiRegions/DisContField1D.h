@@ -39,7 +39,7 @@
 
 #include <MultiRegions/MultiRegionsDeclspec.h>
 #include <MultiRegions/MultiRegions.hpp>
-#include <MultiRegions/ExpList1D.h>
+#include <MultiRegions/ExpList.h>
 #include <SpatialDomains/Conditions.h>
 #include <MultiRegions/GlobalLinSys.h>
 #include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
@@ -52,7 +52,7 @@ namespace Nektar
         /// This class is the abstraction of a global discontinuous two-
         /// dimensional spectral/hp element expansion which approximates the
         /// solution of a set of partial differential equations.
-        class DisContField1D: public ExpList1D
+        class DisContField1D: public ExpList
         {
         public:
             /// Default constructor.
@@ -84,8 +84,8 @@ namespace Nektar
             MULTI_REGIONS_EXPORT DisContField1D(const DisContField1D &In);
             
             /// Constructs a 1D discontinuous field based on an existing field.
-	    /// (needed in order to use ContField( const ExpList1D &In) constructor
-            MULTI_REGIONS_EXPORT DisContField1D(const ExpList1D &In);
+	    /// (needed in order to use ContField( const ExpList &In) constructor
+            MULTI_REGIONS_EXPORT DisContField1D(const ExpList &In);
 
             /// Destructor.
             MULTI_REGIONS_EXPORT virtual ~DisContField1D();

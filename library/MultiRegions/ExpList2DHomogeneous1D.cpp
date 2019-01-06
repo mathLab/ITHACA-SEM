@@ -30,12 +30,12 @@
 // DEALINGS IN THE SOFTWARE.
 //
 // Description: An ExpList2D which is homogeneous in 1 direction and so
-// uses much of the functionality from a ExpList1D and its daughters
+// uses much of the functionality from a ExpList and its daughters
 //
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <MultiRegions/ExpList2DHomogeneous1D.h>
-#include <MultiRegions/ExpList1D.h>
+#include <MultiRegions/ExpList.h>
 
 using namespace std;
 
@@ -96,10 +96,10 @@ namespace Nektar
                                  lhom,useFFT,dealiasing)
         {
             int n, j, nel;
-            ExpList1DSharedPtr plane_zero;
+            ExpListSharedPtr plane_zero;
 
             // note that nzplanes can be larger than nzmodes
-            m_planes[0] = plane_zero = MemoryManager<ExpList1D>::
+            m_planes[0] = plane_zero = MemoryManager<ExpList>::
                 AllocateSharedPtr(m_session, graph1D, false, ImpType);
 
             m_exp = MemoryManager<LocalRegions::ExpansionVector>::AllocateSharedPtr();
@@ -113,7 +113,7 @@ namespace Nektar
 
             for (n = 1; n < m_planes.num_elements(); ++n)
             {
-                m_planes[n] = MemoryManager<ExpList1D>::
+                m_planes[n] = MemoryManager<ExpList>::
                     AllocateSharedPtr(*plane_zero, false);
                 for(j = 0; j < nel; ++j)
                 {
@@ -132,12 +132,12 @@ namespace Nektar
             const ExpList2DHomogeneous1D &In):
             ExpListHomogeneous1D(In)
         {
-            ExpList1DSharedPtr zero_plane =
-                std::dynamic_pointer_cast<ExpList1D> (In.m_planes[0]);
+            ExpListSharedPtr zero_plane =
+                std::dynamic_pointer_cast<ExpList> (In.m_planes[0]);
 
             for (int n = 0; n < m_planes.num_elements(); ++n)
             {
-                m_planes[n] = MemoryManager<ExpList1D>::
+                m_planes[n] = MemoryManager<ExpList>::
                     AllocateSharedPtr(*zero_plane, false);
             }
 

@@ -30,12 +30,12 @@
 // DEALINGS IN THE SOFTWARE.
 //
 // Description: An ExpList which is homogeneous in 2 directions and so
-// uses much of the functionality from a ExpList1D and its daughters
+// uses much of the functionality from a ExpList and its daughters
 //
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <MultiRegions/ExpList3DHomogeneous2D.h>
-#include <MultiRegions/ExpList1D.h>
+#include <MultiRegions/ExpList.h>
 
 using namespace std;
 
@@ -62,7 +62,7 @@ namespace Nektar
         {
         }
 
-        // Constructor for ExpList3DHomogeneous2D to act as a Explist1D field
+        // Constructor for ExpList3DHomogeneous2D to act as a Explist field
         ExpList3DHomogeneous2D::ExpList3DHomogeneous2D(
                     const LibUtilities::SessionReaderSharedPtr &pSession,
                     const LibUtilities::BasisKey &HomoBasis_y,
@@ -77,10 +77,10 @@ namespace Nektar
         {
             int n,j,nel;
             bool False = false;
-            ExpList1DSharedPtr line_zero;
+            ExpListSharedPtr line_zero;
 
             //
-            m_lines[0] = line_zero = MemoryManager<ExpList1D>::
+            m_lines[0] = line_zero = MemoryManager<ExpList>::
                 AllocateSharedPtr(m_session,graph1D, False,ImpType);
 
             m_exp = MemoryManager<LocalRegions::ExpansionVector>::
@@ -97,7 +97,7 @@ namespace Nektar
             
             for(n = 1; n < (ny*nz); ++n)
             {
-                m_lines[n] = MemoryManager<ExpList1D>::AllocateSharedPtr(*line_zero,False);
+                m_lines[n] = MemoryManager<ExpList>::AllocateSharedPtr(*line_zero,False);
                 for(j = 0; j < nel; ++j)
                 {
                     (*m_exp).push_back((*m_exp)[j]);
@@ -119,11 +119,11 @@ namespace Nektar
             if(DeclareLinesSetCoeffPhys)
             {
                 bool False = false;
-                ExpList1DSharedPtr zero_line = std::dynamic_pointer_cast<ExpList1D> (In.m_lines[0]);
+                ExpListSharedPtr zero_line = In.m_lines[0];
 
                 for(int n = 0; n < m_lines.num_elements(); ++n)
                 {
-                    m_lines[n] = MemoryManager<ExpList1D>::AllocateSharedPtr(*zero_line,False);
+                    m_lines[n] = MemoryManager<ExpList>::AllocateSharedPtr(*zero_line,False);
                 }
 
                 SetCoeffPhys();
@@ -151,15 +151,16 @@ namespace Nektar
                     eIDsLine.push_back(eIDs[i]);
                 }
                 
-                ExpList1DSharedPtr zero_line_old =
-                        std::dynamic_pointer_cast<ExpList1D> (In.m_lines[0]);
+                ExpListSharedPtr zero_line_old =
+                        std::dynamic_pointer_cast<ExpList> (In.m_lines[0]);
                 
-                ExpList1DSharedPtr zero_line = 
-                    MemoryManager<ExpList1D>::AllocateSharedPtr(*(zero_line_old), eIDsLine, ImpType);
+                ExpListSharedPtr zero_line = 
+                    MemoryManager<ExpList>::AllocateSharedPtr(*(zero_line_old),
+                                                              eIDsLine, ImpType);
 
                 for(int n = 0; n < m_lines.num_elements(); ++n)
                 {
-                    m_lines[n] = MemoryManager<ExpList1D>::AllocateSharedPtr(*zero_line,False);
+                    m_lines[n] = MemoryManager<ExpList>::AllocateSharedPtr(*zero_line,False);
                 }
 
                 SetCoeffPhys();

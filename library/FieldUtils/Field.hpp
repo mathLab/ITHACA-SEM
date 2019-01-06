@@ -236,7 +236,7 @@ struct Field
                 }
                 else
                 {
-                    MultiRegions::ExpList1DSharedPtr Exp1D;
+                    MultiRegions::ExpListSharedPtr Exp1D;
 
                     if (m_declareExpansionAsContField)
                     {
@@ -255,7 +255,7 @@ struct Field
                     }
                     else
                     {
-                        Exp1D = MemoryManager<MultiRegions::ExpList1D>::
+                        Exp1D = MemoryManager<MultiRegions::ExpList>::
                             AllocateSharedPtr(m_session, m_graph,
                                               true,
                                               Collections::eNoCollection);
@@ -540,12 +540,12 @@ struct Field
                     }
                     else
                     {
-                        MultiRegions::ExpList1DSharedPtr tmp2 =
+                        MultiRegions::ExpListSharedPtr tmp2 =
                             std::dynamic_pointer_cast<
-                                MultiRegions::ExpList1D>(m_exp[0]);
+                                MultiRegions::ExpList>(m_exp[0]);
 
                         tmp = MemoryManager<
-                            MultiRegions::ExpList1D>::AllocateSharedPtr(*tmp2);
+                            MultiRegions::ExpList>::AllocateSharedPtr(*tmp2);
                     }
                 }
             }

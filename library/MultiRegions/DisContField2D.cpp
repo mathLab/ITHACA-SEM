@@ -86,9 +86,8 @@ namespace Nektar
         {
             if (In.m_trace)
             {
-                m_trace = MemoryManager<ExpList1D>::AllocateSharedPtr(
-                    *std::dynamic_pointer_cast<ExpList1D>(In.m_trace),
-                    DeclareCoeffPhysArrays);
+                m_trace = MemoryManager<ExpList>::AllocateSharedPtr(
+                                          *In.m_trace,DeclareCoeffPhysArrays);
             }
         }
 
@@ -385,20 +384,17 @@ namespace Nektar
                 return;
             }
             
-            ExpList1DSharedPtr trace;
-
             // Set up matrix map
             m_globalBndMat = MemoryManager<GlobalLinSysMap>::
                 AllocateSharedPtr();
             
             // Set up trace space
-            trace = MemoryManager<ExpList1D>::AllocateSharedPtr(
+            m_trace = MemoryManager<ExpList>::AllocateSharedPtr(
                 m_session, m_bndCondExpansions, m_bndConditions, *m_exp,
                 m_graph, m_periodicEdges);
             
-            m_trace = std::dynamic_pointer_cast<ExpList>(trace);
             m_traceMap = MemoryManager<AssemblyMapDG>::
-                AllocateSharedPtr(m_session, m_graph, trace, *this,
+                AllocateSharedPtr(m_session, m_graph, m_trace, *this,
                                   m_bndCondExpansions, m_bndConditions,
                                   m_periodicEdges,
                                   variable);
@@ -620,7 +616,7 @@ namespace Nektar
          *
          * According to their boundary region, the separate segmental boundary
          * expansions are bundled together in an object of the class
-         * MultiRegions#ExpList1D.  
+         * MultiRegions#ExpList.  
          *
          * \param graph2D   A mesh, containing information about the domain and
          *                  the spectral/hp element expansion.
@@ -637,7 +633,7 @@ namespace Nektar
         {
             int cnt = 0;
             SpatialDomains::BoundaryConditionShPtr             bc;
-            MultiRegions::ExpList1DSharedPtr                   locExpList;
+            MultiRegions::ExpListSharedPtr                    locExpList;
             const SpatialDomains::BoundaryRegionCollection    &bregions =
                 bcs.GetBoundaryRegions();
             const SpatialDomains::BoundaryConditionCollection &bconditions =
@@ -652,7 +648,7 @@ namespace Nektar
             {
                 bc = GetBoundaryCondition(bconditions, it.first, variable);
 
-                locExpList = MemoryManager<MultiRegions::ExpList1D>
+                locExpList = MemoryManager<MultiRegions::ExpList>
                     ::AllocateSharedPtr(m_session, *(it.second), graph2D,
                                         DeclareCoeffPhysArrays, variable,
                                         bc->GetComm());

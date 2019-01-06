@@ -48,6 +48,7 @@
 #include <MultiRegions/GlobalMatrixKey.h>
 #include <MultiRegions/GlobalLinSysKey.h>
 #include <MultiRegions/AssemblyMap/AssemblyMap.h>
+#include <LibUtilities/Kernel/kernel.h>
 #include <tinyxml.h>
 
 namespace Nektar
@@ -55,6 +56,7 @@ namespace Nektar
     namespace MultiRegions
     {
         // Forward declarations
+        class ExpList;
         class GlobalLinSys;
         class AssemblyMapDG;
 
@@ -96,34 +98,96 @@ namespace Nektar
         /// A shared pointer to a BlockMatrixMap.
         typedef std::shared_ptr<BlockMatrixMap> BlockMatrixMapShPtr;
                    
+        /// Shared pointer to an ExpList object.
+        typedef std::shared_ptr<ExpList>      ExpListSharedPtr;
 
         /// Base class for all multi-elemental spectral/hp expansions.
         class ExpList: public std::enable_shared_from_this<ExpList>
         {
         public:
-            /// The default constructor.
-            MULTI_REGIONS_EXPORT ExpList(const ExpansionType Type = eNoType);
+            /// The default constructor using a type
+            MULTI_REGIONS_EXPORT ExpList(
+                const ExpansionType Type = eNoType);
             
-            /// The default constructor.
-            MULTI_REGIONS_EXPORT ExpList(const ExpansionType Type,
-                    const LibUtilities::SessionReaderSharedPtr &pSession);
+            /// The default constructor using a type and session reader
+            MULTI_REGIONS_EXPORT ExpList(
+                const ExpansionType Type,
+                const LibUtilities::SessionReaderSharedPtr &pSession);
 
-            /// The default constructor.
-            MULTI_REGIONS_EXPORT ExpList(const ExpansionType Type,
-                    const LibUtilities::SessionReaderSharedPtr &pSession,
-                    const SpatialDomains::MeshGraphSharedPtr &pGraph);
+            /// The default constructor. using a type, session reader
+            /// and meshgraph
+            MULTI_REGIONS_EXPORT ExpList(
+                const ExpansionType Type,
+                const LibUtilities::SessionReaderSharedPtr &pSession,
+                const SpatialDomains::MeshGraphSharedPtr &pGraph);
             
             /// Constructor copying only elements defined in eIds.
             MULTI_REGIONS_EXPORT ExpList(
                 const ExpList &in,
                 const std::vector<unsigned int> &eIDs,
-                const bool DeclareCoeffPhysArrays = true);
+                const bool DeclareCoeffPhysArrays = true,
+                const Collections::ImplementationType ImpType
+                                             = Collections::eNoImpType);
 
             /// The copy constructor.
             MULTI_REGIONS_EXPORT ExpList(
                 const ExpList &in,
                 const bool DeclareCoeffPhysArrays = true);
 
+            // Constructors related to 1D Expansions
+            
+            /// Generate an ExpList from a meshgraph \a graph1D and session
+            ExpList(const LibUtilities::SessionReaderSharedPtr &pSession,
+                    const SpatialDomains::MeshGraphSharedPtr &graph,
+                    const bool DeclareCoeffPhysArrays = true,
+                    const Collections::ImplementationType ImpType
+                                             = Collections::eNoImpType);
+            
+            /// This constructor sets up a list of local expansions based on an
+            /// input graph1D.
+            ExpList(const LibUtilities::SessionReaderSharedPtr &pSession,
+                    const SpatialDomains::MeshGraphSharedPtr &graph1D,
+                    const SpatialDomains::CompositeMap &domain,
+                    const bool DeclareCoeffPhysArrays = true,
+                    const std::string var = "DefaultVar",
+                    bool SetToOneSpaceDimension = false,
+                    const Collections::ImplementationType ImpType
+                                             = Collections::eNoImpType);
+
+            /// Construct an ExpList1D from a given graph.
+            MULTI_REGIONS_EXPORT ExpList(
+                    const LibUtilities::SessionReaderSharedPtr &pSession,
+                    const LibUtilities::BasisKey &Ba,
+                    const SpatialDomains::MeshGraphSharedPtr &graph1D,
+                    const Collections::ImplementationType ImpType
+                    = Collections::eNoImpType);
+            
+            /// Specialised constructor for Neumann boundary conditions in
+            /// DisContField2D and ContField2D.
+            ExpList(const LibUtilities::SessionReaderSharedPtr &pSession,
+                    const SpatialDomains::CompositeMap &domain,
+                    const SpatialDomains::MeshGraphSharedPtr &graph2D,
+                    const bool DeclareCoeffPhysArrays = true,
+                    const std::string variable = "DefaultVar",
+                    const LibUtilities::CommSharedPtr comm
+                                         = LibUtilities::CommSharedPtr(),
+                    const Collections::ImplementationType ImpType
+                                         = Collections::eNoImpType);
+
+            /// Generate expansions for the trace space expansions used in
+            /// DisContField2D.
+            ExpList(const LibUtilities::SessionReaderSharedPtr &pSession,
+                    const Array<OneD,const ExpListSharedPtr>  &bndConstraint,
+                    const Array<OneD,
+                        const SpatialDomains::BoundaryConditionShPtr>  &bndCond,
+                    const LocalRegions::ExpansionVector &locexp,
+                    const SpatialDomains::MeshGraphSharedPtr &graph2D,
+                    const PeriodicMap &periodicEdges,
+                    const bool DeclareCoeffPhysArrays = true,
+                    const std::string variable = "DefaultVar",
+                    const Collections::ImplementationType ImpType
+                                             = Collections::eNoImpType);
+            
             /// The default destructor.
             MULTI_REGIONS_EXPORT virtual ~ExpList();
             
@@ -976,6 +1040,22 @@ namespace Nektar
 
             MULTI_REGIONS_EXPORT void ClearGlobalLinSysManager(void);
 
+            /// Performs the post-processing on a specified element.
+            MULTI_REGIONS_EXPORT void PostProcess(
+                LibUtilities::KernelSharedPtr kernel,
+                Array<OneD,NekDouble> &inarray,
+                Array<OneD,NekDouble> &outarray,
+                NekDouble h,
+                int elmId = 0);
+
+            /// Evaluates the global spectral/hp expansion at some arbitray set
+            /// of points.
+            MULTI_REGIONS_EXPORT void PeriodicEval(
+                Array<OneD,NekDouble> &inarray1,
+                Array<OneD,NekDouble> &inarray2,
+                NekDouble h, int nmodes,
+                Array<OneD,NekDouble> &outarray);
+
         protected:
             /// Exapnsion type
             ExpansionType m_expType;
@@ -1154,6 +1234,7 @@ namespace Nektar
 
             virtual const Array<OneD, const int> &v_GetTraceBndMap();
 
+            /// Populate \a normals with the normals of all expansions.
             virtual void v_GetNormals(
                 Array<OneD, Array<OneD, NekDouble> > &normals);
 
@@ -1490,11 +1571,9 @@ namespace Nektar
         };
 
 
-        /// Shared pointer to an ExpList object.
-        typedef std::shared_ptr<ExpList>      ExpListSharedPtr;
         /// An empty ExpList object.
         static ExpList NullExpList;
-        static ExpListSharedPtr NullExpListSharedPtr;
+        static ExpListSharedPtr NullExpListSharedPtr;        
 
         // Inline routines follow.
 

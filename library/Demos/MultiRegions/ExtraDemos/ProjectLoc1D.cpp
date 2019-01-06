@@ -1,7 +1,7 @@
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <LibUtilities/Communication/Comm.h>
-#include <MultiRegions/ExpList1D.h>
+#include <MultiRegions/ExpList.h>
 #include <SpatialDomains/MeshGraph.h>
 
 using namespace std;
@@ -17,7 +17,7 @@ int main(int argc, char *argv[])
     LibUtilities::SessionReaderSharedPtr vSession
             = LibUtilities::SessionReader::CreateInstance(argc, argv);
 
-    MultiRegions::ExpList1DSharedPtr Exp,Sol;
+    MultiRegions::ExpListSharedPtr Exp,Sol;
     int i,j;
     int nq;
     int coordim;
@@ -32,7 +32,8 @@ int main(int argc, char *argv[])
     LibUtilities::BasisKey bkey0 = expansions.begin()->second->m_basisKeyVector[0];
     int nmodes = bkey0.GetNumModes();
 
-    Exp = MemoryManager<MultiRegions::ExpList1D>::AllocateSharedPtr(vSession,bkey0,graph1D);
+    Exp = MemoryManager<MultiRegions::ExpList>::AllocateSharedPtr
+        (vSession,bkey0,graph1D);
 
     //----------------------------------------------
     // Define solution to be projected 
@@ -74,8 +75,8 @@ int main(int argc, char *argv[])
     }
 
     //---------------------------------------------
-    // Set up ExpList1D containing the solution 
-    Sol = MemoryManager<MultiRegions::ExpList1D>::AllocateSharedPtr(*Exp);
+    // Set up ExpList containing the solution 
+    Sol = MemoryManager<MultiRegions::ExpList>::AllocateSharedPtr(*Exp);
     Sol->SetPhys(sol);
     //---------------------------------------------
 

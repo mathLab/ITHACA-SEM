@@ -98,12 +98,8 @@ namespace Nektar
             const std::vector<unsigned int> &eIDs,
             const bool DeclareCoeffPhysArrays,
             const Collections::ImplementationType ImpType):
-            ExpList(In,eIDs,DeclareCoeffPhysArrays)
+            ExpList(In,eIDs,DeclareCoeffPhysArrays,ImpType)
         {
-            // set up offset arrays.
-            SetCoeffPhysOffsets();
-
-            CreateCollections(ImpType);
         }
 
 

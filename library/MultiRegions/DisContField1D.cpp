@@ -48,7 +48,7 @@ namespace Nektar
         /**
          * @class DisContField1D
          * This class augments the list of local expansions inherited from
-         * ExpList1D with boundary conditions. Inter-element boundaries are
+         * ExpList with boundary conditions. Inter-element boundaries are
          * handled using an discontinuous Galerkin scheme.
          */
 
@@ -56,7 +56,7 @@ namespace Nektar
          * Constructs an empty expansion list with no boundary conditions.
          */
         DisContField1D::DisContField1D():
-            ExpList1D(),
+            ExpList(),
             m_bndCondExpansions(),
             m_bndConditions()
         {
@@ -81,7 +81,7 @@ namespace Nektar
             const std::string &variable,
             const bool         SetUpJustDG,
             const Collections::ImplementationType ImpType)
-            : ExpList1D(pSession,graph1D,true, ImpType),
+            : ExpList(pSession,graph1D,true, ImpType),
               m_bndCondExpansions(),
               m_bndConditions()
         {
@@ -472,7 +472,7 @@ namespace Nektar
                     const std::string &variable,
                     bool SetToOneSpaceDimension,
                     const Collections::ImplementationType ImpType):
-            ExpList1D(pSession,graph1D,domain, true,variable,SetToOneSpaceDimension,ImpType),
+            ExpList(pSession,graph1D,domain, true,variable,SetToOneSpaceDimension,ImpType),
             m_bndCondExpansions(),
             m_bndConditions()
         {
@@ -494,7 +494,7 @@ namespace Nektar
          * @param   In          Existing DisContField1D object to copy.
          */
         DisContField1D::DisContField1D(const DisContField1D &In):
-            ExpList1D(In),
+            ExpList(In),
             m_bndCondExpansions(In.m_bndCondExpansions),
             m_bndConditions(In.m_bndConditions),
             m_globalBndMat(In.m_globalBndMat),
@@ -510,11 +510,11 @@ namespace Nektar
         
         
         /**
-         * Constructs a field as a copy of an existing explist1D field.
-         * @param   In          Existing ExpList1D object to copy.
+         * Constructs a field as a copy of an existing explist field.
+         * @param   In          Existing ExpList object to copy.
          */
-        DisContField1D::DisContField1D(const ExpList1D &In):
-            ExpList1D(In)
+        DisContField1D::DisContField1D(const ExpList &In):
+            ExpList(In)
 	{
 	}
 
@@ -686,7 +686,7 @@ namespace Nektar
          *                      and the Spectral/hp element expansion.
          * @param   bcs         Information about the boundary conditions.
          * @param   variable    Specifies the field.
-         * @param   bndCondExpansions   Array of ExpList1D objects each
+         * @param   bndCondExpansions   Array of ExpList objects each
          *                      containing a 1D spectral/hp element expansion
          *                      on a single boundary region.
          * @param   bncConditions   Array of BoundaryCondition objects which
@@ -1391,7 +1391,7 @@ namespace Nektar
             
             // Create expansion list
             result = 
-                MemoryManager<ExpList1D>::AllocateSharedPtr
+                MemoryManager<ExpList>::AllocateSharedPtr
                     (*this, eIDs, DeclareCoeffPhysArrays);
             
             // Copy phys and coeffs to new explist

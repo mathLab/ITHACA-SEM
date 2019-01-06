@@ -35,6 +35,7 @@
 
 #include <iomanip>
 #include <MultiRegions/ExpList.h>
+#include <LocalRegions/PointExp.h>
 #include <LocalRegions/SegExp.h>
 #include <LocalRegions/QuadExp.h>
 
@@ -44,7 +45,128 @@ namespace Nektar
 {
 namespace MultiRegions
 {
-    
+
+    //----------------------------------------------------------------------
+    //                        0D Expansion Constructors 
+    //----------------------------------------------------------------------
+    ExpList::ExpList(const SpatialDomains::PointGeomSharedPtr &geom):
+        m_expType(e0D),
+        m_ncoeffs(1),
+        m_npoints(1),
+        m_physState(false),
+        m_exp(MemoryManager<LocalRegions::ExpansionVector>
+              ::AllocateSharedPtr()),
+        m_blockMat(MemoryManager<BlockMatrixMap>::AllocateSharedPtr()),
+        m_WaveSpace(false)
+    {
+        // Set up m_coeffs, m_phys.
+        m_coeffs = Array<OneD, NekDouble>(m_ncoeffs);
+        m_phys   = Array<OneD, NekDouble>(m_npoints);
+        
+        LocalRegions::PointExpSharedPtr Point =
+            MemoryManager<LocalRegions::PointExp>::AllocateSharedPtr(geom);
+        (*m_exp).push_back(Point);
+        
+        SetCoeffPhysOffsets();
+    }
+
+    /**
+     * Store expansions for the trace space expansions used in
+     * DisContField1D.
+     *
+     * @param   bndConstraint   Array of ExpList1D objects each containing a
+     *                      1D spectral/hp element expansion on a single
+     *                      boundary region.
+     * @param   bndCond     Array of BoundaryCondition objects which contain
+     *                      information about the boundary conditions on the
+     *                      different boundary regions.
+     * @param   locexp      Complete domain expansion list.
+     * @param   graph1D     1D mesh corresponding to the expansion list.
+     * @param   periodicVertices   List of periodic Vertices.
+     * @param   UseGenSegExp If true, create general segment expansions
+     *                      instead of just normal segment expansions.
+     */
+    ExpList::ExpList(
+            const Array<OneD, const ExpListSharedPtr> &bndConstraint,
+            const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> 
+                                                      &bndCond,
+            const LocalRegions::ExpansionVector       &locexp,
+            const SpatialDomains::MeshGraphSharedPtr  &graph1D,
+            const PeriodicMap                         &periodicVerts,
+            const bool                                 DeclareCoeffPhysArrays):
+        m_expType(e0D),
+        m_ncoeffs(1),
+        m_npoints(1),
+        m_physState(false),
+        m_exp(MemoryManager<LocalRegions::ExpansionVector>
+              ::AllocateSharedPtr()),
+        m_blockMat(MemoryManager<BlockMatrixMap>::AllocateSharedPtr()),
+        m_WaveSpace(false)
+    {
+        int i, j, id, elmtid=0;
+        map<int,int> EdgeDone;
+        map<int,int> NormalSet;
+        
+        SpatialDomains::PointGeomSharedPtr PointGeom;
+        LocalRegions::PointExpSharedPtr Point;
+        LocalRegions::Expansion1DSharedPtr exp;
+	
+        // First loop over boundary conditions to renumber Dirichlet boundaries
+        for(i = 0; i < bndCond.num_elements(); ++i)
+        {
+            if(bndCond[i]->GetBoundaryConditionType() ==
+               SpatialDomains::eDirichlet)
+            {
+                for(j = 0; j < bndConstraint[i]->GetExpSize(); ++j)
+                {
+                    PointGeom = bndConstraint[i]->GetExp(0)->GetGeom()->
+                        GetVertex(0);
+                    Point = MemoryManager<LocalRegions::PointExp>::
+                        AllocateSharedPtr(PointGeom);
+                    
+                    EdgeDone[PointGeom->GetVid()] = elmtid;
+                    
+                    Point->SetElmtId(elmtid++);
+                    (*m_exp).push_back(Point);
+                }
+            }
+        }
+	
+        // loop over all other edges and fill out other connectivities
+        for(i = 0; i < locexp.size(); ++i)
+        {
+            for(j = 0; j < 2; ++j)
+            {
+                exp = locexp[i]->as<LocalRegions::Expansion1D>();
+                PointGeom = (exp->GetGeom1D())->GetVertex(j);
+                id = PointGeom->GetVid();
+		
+                if(EdgeDone.count(id)==0)
+                {						
+                    Point = MemoryManager<LocalRegions::PointExp>::
+                        AllocateSharedPtr(PointGeom);
+                    EdgeDone[id] = elmtid;
+                    
+                    Point->SetElmtId(elmtid++);
+                    (*m_exp).push_back(Point);
+                }
+            }
+        }
+		 
+        // Set up offset information and array sizes
+        SetCoeffPhysOffsets();
+			
+        // Set up m_coeffs, m_phys.
+        if(DeclareCoeffPhysArrays)
+        {
+            m_coeffs = Array<OneD, NekDouble>(m_ncoeffs);
+            m_phys   = Array<OneD, NekDouble>(m_npoints);
+        }
+    }
+
+    //----------------------------------------------------------------------
+    //                        1D Expansion Constructors 
+    //----------------------------------------------------------------------
     /**
      * Given a mesh \a graph1D, containing information about the domain and
      * the spectral/hp element expansion, this constructor fills the list

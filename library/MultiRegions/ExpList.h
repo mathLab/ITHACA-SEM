@@ -134,6 +134,22 @@ namespace Nektar
                 const ExpList &in,
                 const bool DeclareCoeffPhysArrays = true);
 
+            // Constructors related to 0D Expansions
+            // wrap around LocalRegion::PointExp
+            MULTI_REGIONS_EXPORT ExpList(const SpatialDomains::PointGeomSharedPtr
+                                         &geom);
+
+            /// Specialised constructor for trace expansions (croth)
+            MULTI_REGIONS_EXPORT ExpList(
+                const Array<OneD,const ExpListSharedPtr> &bndConstraint,
+                const Array<OneD,const SpatialDomains
+                            ::BoundaryConditionShPtr>  &bndCond,
+                const LocalRegions::ExpansionVector &locexp,
+                const SpatialDomains::MeshGraphSharedPtr &graph1D,
+                const PeriodicMap                  &periodicVerts,
+                const bool DeclareCoeffPhysArrays = true);
+
+
             // Constructors related to 1D Expansions
             
             /// Generate an ExpList from a meshgraph \a graph1D and session
@@ -800,17 +816,17 @@ namespace Nektar
             inline std::shared_ptr<ExpList> &UpdateBndCondExpansion(int i);
             
             inline void Upwind(
-                const Array<OneD, const Array<OneD,       NekDouble> > &Vec,
-                const Array<OneD,                   const NekDouble>   &Fwd,
-                const Array<OneD,                   const NekDouble>   &Bwd,
-                      Array<OneD,                         NekDouble>   &Upwind);
-
-            inline void Upwind(
                 const Array<OneD, const NekDouble> &Vn,
                 const Array<OneD, const NekDouble> &Fwd,
                 const Array<OneD, const NekDouble> &Bwd,
                       Array<OneD,       NekDouble> &Upwind);
             
+            inline void Upwind(
+                const Array<OneD, const Array<OneD,       NekDouble> > &Vec,
+                const Array<OneD,                   const NekDouble>   &Fwd,
+                const Array<OneD,                   const NekDouble>   &Bwd,
+                      Array<OneD,                         NekDouble>   &Upwind);
+
             /**
              * Return a reference to the trace space associated with this
              * expansion list.

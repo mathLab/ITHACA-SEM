@@ -135,7 +135,7 @@ namespace Nektar
 
             m_globalBndMat = MemoryManager<GlobalLinSysMap>::AllocateSharedPtr();
 
-            ExpList0DSharedPtr trace = MemoryManager<ExpList0D>::
+            ExpListSharedPtr trace = MemoryManager<ExpList>::
                 AllocateSharedPtr(
                     m_bndCondExpansions,
                     m_bndConditions,
@@ -710,7 +710,7 @@ namespace Nektar
             const SpatialDomains::BoundaryConditionCollection &bconditions
                 = bcs.GetBoundaryConditions();
 
-            MultiRegions::ExpList0DSharedPtr         locPointExp;
+            MultiRegions::ExpListSharedPtr           locPointExp;
             SpatialDomains::BoundaryConditionShPtr   locBCond;
             SpatialDomains::PointGeomSharedPtr vert;
 
@@ -728,7 +728,7 @@ namespace Nektar
                                 bregionIt.second->m_geomVec[k])))
                         {
                             locPointExp
-                                = MemoryManager<MultiRegions::ExpList0D>
+                                = MemoryManager<MultiRegions::ExpList>
                                 ::AllocateSharedPtr(vert);
                             bndCondExpansions[cnt]  = locPointExp;
                             bndConditions[cnt++]    = locBCond;

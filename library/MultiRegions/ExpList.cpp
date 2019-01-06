@@ -2617,18 +2617,21 @@ namespace Nektar
             const Array<OneD,                   const NekDouble>   &Bwd,
                   Array<OneD,                         NekDouble>   &Upwind)
         {
-            if(m_expType == e1D)
+            
+            switch(m_expType)
+            {
+            case  e1D:
             {
                 int i,j,k,e_npoints,offset;
                 Array<OneD,NekDouble> normals;
                 NekDouble Vn;
-                
+
                 // Assume whole array is of same coordimate dimension
                 int coordim = GetCoordim(0);
-                
+
                 ASSERTL1(Vec.num_elements() >= coordim,
-                         "Input vector does not have sufficient dimensions to "
-                         "match coordim");
+                     "Input vector does not have sufficient dimensions to "
+                     "match coordim");
                 
                 // Process each expansion
                 for(i = 0; i < m_exp->size(); ++i)
@@ -2662,10 +2665,12 @@ namespace Nektar
                     }
                 }
             }
-            else
+            break;
+            default:
             {
                 ASSERTL0(false,
                          "This method is not defined or valid for this class type");
+            }
             }
         }
 
@@ -2688,7 +2693,26 @@ namespace Nektar
             const Array<OneD, const NekDouble> &Bwd,
                   Array<OneD,       NekDouble> &Upwind)
         {
-            if(m_expType == e1D)
+            switch(m_expType)
+            {
+            case e0D:
+            {
+                // Process each point in the expansion.
+                for(int j = 0; j < Fwd.num_elements(); ++j)
+                {
+                    // Upwind based on one-dimensional velocity.
+                    if(Vn[j] > 0.0)
+                    {
+                        Upwind[j] = Fwd[j];
+                    }
+                    else
+                    {
+                        Upwind[j] = Bwd[j];
+                    }
+                }
+            }
+            break;
+            case e1D:
             {
                 int i,j,e_npoints,offset;
                 Array<OneD,NekDouble> normals;
@@ -2715,10 +2739,12 @@ namespace Nektar
                     }
                 }
             }
-            else
+            break;
+            default:
             {
                 ASSERTL0(false,
                          "This method is not defined or valid for this class type");
+            }
             }
         }
 
@@ -2753,19 +2779,55 @@ namespace Nektar
         void ExpList::v_GetNormals(
             Array<OneD, Array<OneD, NekDouble> > &normals)
         {
-            if(m_expType == e1D)
+            int i,j,k,e_npoints,offset;
+            Array<OneD,Array<OneD,NekDouble> > locnormals;
+
+            // Assume whole array is of same coordinate dimension
+            int coordim = GetCoordim(0);
+
+            ASSERTL1(normals.num_elements() >= coordim,
+                     "Output vector does not have sufficient dimensions to "
+                     "match coordim");
+
+            switch(m_expType)
             {
-                int i,j,k,e_npoints,offset;
-                SpatialDomains::Geometry1DSharedPtr segGeom;
-                Array<OneD,Array<OneD,NekDouble> > locnormals;
-                Array<OneD,Array<OneD,NekDouble> > locnormals2;
-                Array<OneD,Array<OneD,NekDouble> > Norms;
-                // Assume whole array is of same coordinate dimension
-                int coordim = GetCoordim(0);
+            case e0D:
+            {
+                // Process each expansion.
+                for(i = 0; i < m_exp->size(); ++i)
+                {
+                    LocalRegions::Expansion0DSharedPtr loc_exp =
+                        (*m_exp)[i]->as<LocalRegions::Expansion0D>();
+
+                    LocalRegions::Expansion1DSharedPtr loc_elmt =
+                        loc_exp->GetLeftAdjacentElementExp();
                 
-                ASSERTL1(normals.num_elements() >= coordim,
-                         "Output vector does not have sufficient dimensions to "
-                         "match coordim");
+                    // Get the number of points and normals for this expansion.
+                    e_npoints  = 1;
+                    locnormals = loc_elmt->GetVertexNormal(loc_exp->
+                                              GetLeftAdjacentElementVertex());
+				
+                    // Get the physical data offset for this expansion.
+                    offset = m_phys_offset[i];
+                    
+                    // Process each point in the expansion.
+                    for(j = 0; j < e_npoints; ++j)
+                    {
+                        // Process each spatial dimension and copy the values into
+                        // the output array.
+                        for(k = 0; k < coordim; ++k)
+                        {
+                            normals[k][offset] = locnormals[k][0];
+                        }
+                    }
+                }
+            }
+            break;
+            case e1D:
+            {
+                SpatialDomains::Geometry1DSharedPtr segGeom;
+                Array<OneD,Array<OneD,NekDouble> >  locnormals2;
+                Array<OneD,Array<OneD,NekDouble> >  Norms;
                 
                 for (i = 0; i < m_exp->size(); ++i)
                 {
@@ -2780,7 +2842,7 @@ namespace Nektar
                     // Get the number of points and normals for this expansion.
                     e_npoints  = (*m_exp)[i]->GetNumPoints(0);
                     
-                    locnormals = loc_elmt->GetEdgeNormal(edgeNumber);
+                    locnormals     = loc_elmt->GetEdgeNormal(edgeNumber);
                     int e_nmodes   = loc_exp->GetBasis(0)->GetNumModes();
                     int loc_nmodes = loc_elmt->GetBasis(0)->GetNumModes();
                     
@@ -2859,13 +2921,15 @@ namespace Nektar
                     }
                 }
             }
-            else
+            break;
+            default:
             {
                 ASSERTL0(false,
                          "This method is not defined or valid for this class type");
             }
+            }
         }
-
+        
         void ExpList::v_AddTraceIntegral(
                                 const Array<OneD, const NekDouble> &Fx,
                                 const Array<OneD, const NekDouble> &Fy,

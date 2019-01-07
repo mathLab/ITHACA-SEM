@@ -126,6 +126,8 @@ v5.0.0
   seg, quad and hex elements (!771, !862)
 - Fix compressible solver with NUMMODES=1 (!868)
 - Introduce equations of state to account for real gas effects (!880)
+- Modified pressure outlet BCs to allow for the reference static pressure to be
+  set from the VALUE fields (!981)
 
 **AcousticSolver:**
 - Added two new boundary conditions to the APE system: RiemannInvariantBC

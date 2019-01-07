@@ -49,9 +49,9 @@ v5.0.0
   WeightPartitions was used in parallel (!923)
 - Removed instance count from beginning of Array storage to improve memory
   alignment (!921)
-- Fix naming issue of duplicate Unit tests (!924) 
+- Fix naming issue of duplicate Unit tests (!924)
 - Fix warnings about missing virtual destructors in abstract classes (!932)
-- Fix ability to have periodic boundary conditions that are aligned by a 
+- Fix ability to have periodic boundary conditions that are aligned by a
   rotation rather than just a translation (!933)
 - Added a coupling interface to exchange data between solvers at run time
   and a DummySolver to test the implementations (!853, !931)
@@ -125,6 +125,8 @@ v5.0.0
   seg, quad and hex elements (!771, !862)
 - Fix compressible solver with NUMMODES=1 (!868)
 - Introduce equations of state to account for real gas effects (!880)
+- Modified pressure outlet BCs to allow for the reference static pressure to be
+  set from the VALUE fields (!981)
 
 **AcousticSolver:**
 - Added two new boundary conditions to the APE system: RiemannInvariantBC

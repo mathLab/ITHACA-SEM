@@ -59,6 +59,7 @@ v5.0.0
 - If only `NEKTAR_BUILD_LIBRARY` is enabled, only libraries up to and including
   `MultiRegions` will be built by default (!945)
 - Fix missing metadata import from Hdf5 files (!971)
+- Fix missing flags for periodic BC in DiffusionLDG (!985)
 
 **NekMesh**:
 - Add feature to read basic 2D geo files as CAD (!731)

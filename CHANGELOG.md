@@ -49,9 +49,9 @@ v5.0.0
   WeightPartitions was used in parallel (!923)
 - Removed instance count from beginning of Array storage to improve memory
   alignment (!921)
-- Fix naming issue of duplicate Unit tests (!924) 
+- Fix naming issue of duplicate Unit tests (!924)
 - Fix warnings about missing virtual destructors in abstract classes (!932)
-- Fix ability to have periodic boundary conditions that are aligned by a 
+- Fix ability to have periodic boundary conditions that are aligned by a
   rotation rather than just a translation (!933)
 - Added a coupling interface to exchange data between solvers at run time
   and a DummySolver to test the implementations (!853, !931)
@@ -59,6 +59,7 @@ v5.0.0
 - If only `NEKTAR_BUILD_LIBRARY` is enabled, only libraries up to and including
   `MultiRegions` will be built by default (!945)
 - Fix missing metadata import from Hdf5 files (!971)
+- Fix missing flags for periodic BC in DiffusionLDG (!985)
 
 **NekMesh**:
 - Add feature to read basic 2D geo files as CAD (!731)

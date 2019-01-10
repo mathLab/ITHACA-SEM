@@ -90,7 +90,7 @@
    <CONDITIONS>
         <PARAMETERS>
             <!-- Simulation parameters -->
-            <P> TimeStep       = 1e-5               </P> 
+            <P> TimeStep       = 1e-5               </P>
             <P> NumSteps       = 100  </P>
             <P> IO_InfoSteps   = 100                </P>
             <P> IO_CheckSteps  = 0                </P>
@@ -127,7 +127,7 @@
             <P> FilterCutoff   = 0.0      </P>
             <P> FilterExponent = 16      </P>
        </PARAMETERS>
-        
+
         <SOLVERINFO>
             <I PROPERTY="EQTYPE" VALUE="EulerCFE" />
             <I PROPERTY="Projection" VALUE="DisContinuous" />
@@ -156,9 +156,9 @@
                 <D VAR="E" USERDEFINEDTYPE="StagnationInflow" VALUE="pStagIn/(Gamma-1)" />
             </REGION>
             <REGION REF="1">
-                <D VAR="rho" USERDEFINEDTYPE="PressureOutflowFile" VALUE="rhoInf" />
-                <D VAR="rhou" USERDEFINEDTYPE="PressureOutflowFile" VALUE="0" />
-                <D VAR="E" USERDEFINEDTYPE="PressureOutflowFile" VALUE="pOut/(Gamma-1)" />
+                <D VAR="rho" USERDEFINEDTYPE="PressureOutflow" VALUE="0" />
+                <D VAR="rhou" USERDEFINEDTYPE="PressureOutflow" VALUE="0" />
+                <D VAR="E" USERDEFINEDTYPE="PressureOutflow" VALUE="pOut" />
             </REGION>
         </BOUNDARYCONDITIONS>
 

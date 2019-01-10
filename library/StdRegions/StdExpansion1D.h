@@ -72,8 +72,7 @@ namespace Nektar
                           Array<OneD,       NekDouble>& outarray);
 
         protected:
-            std::map<int, NormalVector> m_vertexNormals;
-            
+
             STD_REGIONS_EXPORT virtual NekDouble v_PhysEvaluate(
                     const Array<OneD, const NekDouble>& coords,
                     const Array<OneD, const NekDouble>& physvals);
@@ -101,12 +100,6 @@ namespace Nektar
             {
                 return 0;
             }
-
-            STD_REGIONS_EXPORT virtual void v_SetUpPhysNormals(const int vertex);
-            STD_REGIONS_EXPORT const NormalVector & v_GetSurfaceNormal(
-                    const int id) const;
-
-            STD_REGIONS_EXPORT const NormalVector & v_GetVertexNormal(const int vertex) const;
         };
 
         typedef std::shared_ptr<StdExpansion1D> StdExpansion1DSharedPtr;

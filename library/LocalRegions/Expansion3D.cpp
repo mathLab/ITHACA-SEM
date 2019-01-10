@@ -69,7 +69,7 @@ namespace Nektar
             Array<OneD, NekDouble> tmpcoeff(ncoeffs);
 
             const Array<OneD, const Array<OneD, NekDouble> > &normals
-                = GetFaceNormal(face);
+                = GetTraceNormal(face);
 
             DNekScalMat &invMass = *GetLocMatrix(StdRegions::eInvMass);
 
@@ -262,7 +262,7 @@ namespace Nektar
                 order_f = FaceExp[f]->GetNcoeffs();
                 nquad_f = FaceExp[f]->GetNumPoints(0)*FaceExp[f]->GetNumPoints(1);
 
-                const Array<OneD, const Array<OneD, NekDouble> > &normals = GetFaceNormal(f);
+                const Array<OneD, const Array<OneD, NekDouble> > &normals = GetTraceNormal(f);
                 Array<OneD, NekDouble> faceCoeffs(order_f);
                 Array<OneD, NekDouble> facePhys  (nquad_f);
 
@@ -333,7 +333,8 @@ namespace Nektar
                 order_f = FaceExp[f]->GetNcoeffs();
                 nquad_f = FaceExp[f]->GetNumPoints(0)*FaceExp[f]->GetNumPoints(1);
 
-                const Array<OneD, const Array<OneD, NekDouble> > &normals = GetFaceNormal(f);
+                const Array<OneD, const Array<OneD, NekDouble> > &normals =
+                    GetTraceNormal(f);
                 Array<OneD, NekDouble> facePhys(nquad_f);
                 
                 cnt += order_f;
@@ -654,7 +655,7 @@ namespace Nektar
                         Array<OneD, NekDouble> face_lambda(nface);
 			
                         const Array<OneD, const Array<OneD, NekDouble> > normals
-                            = GetFaceNormal(i);
+                            = GetTraceNormal(i);
 
                         for(j = 0; j < nface; ++j)
                         {
@@ -905,7 +906,7 @@ namespace Nektar
                         {
                             order_f = FaceExp[f]->GetNcoeffs();  
                             nquad_f = FaceExp[f]->GetNumPoints(0)*FaceExp[f]->GetNumPoints(1);    
-                            normals = GetFaceNormal(f);
+                            normals = GetTraceNormal(f);
                             
                             work = Array<OneD,NekDouble>(nquad_f);
                             varcoeff_work = Array<OneD, NekDouble>(nquad_f);
@@ -2090,7 +2091,7 @@ namespace Nektar
             int P1,
             int P2)
         {
-            int n,m,j;
+            int n,j;
             int nFaceCoeffs;
 
             int nBndCoeffs = NumBndryCoeffs();
@@ -2187,6 +2188,10 @@ namespace Nektar
                             cnt1 += locP1-2;
                         }
                     }
+                }
+                break;
+            default:
+                {
                 }
                 break;
             }
@@ -2569,6 +2574,30 @@ namespace Nektar
             }
 
             return nFacecdotMF;
+        }
+
+        const NormalVector &Expansion3D::v_GetTraceNormal(const int face) const
+        {
+            auto x = m_faceNormals.find(face);
+            ASSERTL0 (x != m_faceNormals.end(),
+                      "face normal not computed.");
+            return x->second;
+        }
+
+        void Expansion3D::v_NegateTraceNormal(const int face)
+        {
+            m_negatedNormals[face] = true;
+            for (int i = 0; i < GetCoordim(); ++i)
+            {
+                Vmath::Neg(m_faceNormals[face][i].num_elements(), 
+                           m_faceNormals[face][i], 1);
+            }
+        }
+
+        bool Expansion3D::v_TraceNormalNegated(const int face)
+        {
+            return m_negatedNormals[face];
+
         }
     } //end of namespace
 } //end of namespace

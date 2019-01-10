@@ -65,7 +65,7 @@ namespace Nektar
                      "Routine only set up for two-dimensions");
 
             const Array<OneD, const Array<OneD, NekDouble> > normals
-                                    = GetEdgeNormal(edge);
+                                    = GetTraceNormal(edge);
 
             if (m_requireNeg.size() == 0)
             {
@@ -343,7 +343,7 @@ namespace Nektar
                 nquad_e = EdgeExp[e]->GetNumPoints(0);
 
                 const Array<OneD, const Array<OneD, NekDouble> > &normals
-                    = GetEdgeNormal(e);
+                    = GetTraceNormal(e);
                 Array<OneD, NekDouble> edgeCoeffs(order_e);
                 Array<OneD, NekDouble> edgePhys  (nquad_e);
                 
@@ -413,7 +413,7 @@ namespace Nektar
 
                 Array<OneD, NekDouble> edgePhys(nquad_e);
                 const Array<OneD, const Array<OneD, NekDouble> > &normals
-                    = GetEdgeNormal(e);
+                    = GetTraceNormal(e);
                 
                 EdgeExp[e]->BwdTrans(edgeCoeffs[e], edgePhys);
                 
@@ -527,7 +527,7 @@ namespace Nektar
             Array<OneD, NekDouble> tmpcoeff(ncoeffs);
 
             const Array<OneD, const Array<OneD, NekDouble> > &normals
-                                = GetEdgeNormal(edge);
+                                = GetTraceNormal(edge);
 
             Array<OneD,unsigned int> emap;
             Array<OneD,int> sign;
@@ -1117,7 +1117,7 @@ namespace Nektar
                             order_e = EdgeExp[e]->GetNcoeffs();  
                             nquad_e = EdgeExp[e]->GetNumPoints(0);    
 
-                            normals = GetEdgeNormal(e);
+                            normals = GetTraceNormal(e);
                             edgedir = GetEorient(e);
                             
                             work = Array<OneD,NekDouble>(nquad_e);
@@ -1567,25 +1567,20 @@ namespace Nektar
 
         void Expansion2D::v_SetUpPhysNormals(const int edge)
         {
-            ComputeEdgeNormal(edge);
+            v_ComputeTraceNormal(edge);
         }
 
-        const StdRegions::NormalVector &Expansion2D::v_GetEdgeNormal(const int edge) const
+        const NormalVector &Expansion2D::v_GetTraceNormal(
+                    const int edge) const
         {
-            std::map<int, StdRegions::NormalVector>::const_iterator x;
+            std::map<int, NormalVector>::const_iterator x;
             x = m_edgeNormals.find(edge);
-            ASSERTL0 (x != m_edgeNormals.end(),
+            ASSERTL1 (x != m_edgeNormals.end(),
                         "Edge normal not computed.");
             return x->second;
         }
-
-        const StdRegions::NormalVector &Expansion2D::v_GetSurfaceNormal(
-                const int id) const
-        {
-            return v_GetEdgeNormal(id);
-        }
         
-        void Expansion2D::v_NegateEdgeNormal(const int edge)
+        void Expansion2D::v_NegateTraceNormal(const int edge)
         {
             m_negatedNormals[edge] = true;
             for (int i = 0; i < GetCoordim(); ++i)
@@ -1595,7 +1590,7 @@ namespace Nektar
             }
         }
 
-        bool Expansion2D::v_EdgeNormalNegated(const int edge)
+        bool Expansion2D::v_TraceNormalNegated(const int edge)
         {
             return m_negatedNormals[edge];
         }
@@ -1715,7 +1710,7 @@ namespace Nektar
         {
             const Array<OneD, const Array<OneD, NekDouble> >
                 &normals = GetLeftAdjacentElementExp()->
-                GetFaceNormal(GetLeftAdjacentElementFace());
+                GetTraceNormal(GetLeftAdjacentElementFace());
 
             int nq = GetTotPoints();
             Array<OneD, NekDouble > Fn(nq);

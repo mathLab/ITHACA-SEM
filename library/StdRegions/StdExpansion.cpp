@@ -969,11 +969,6 @@ namespace Nektar
         }
 
         // VIRTUAL INLINE FUNCTIONS FROM HEADER FILE
-        void StdExpansion::SetUpPhysNormals(const int edge)
-        {
-            v_SetUpPhysNormals(edge);
-        }
-
         NekDouble StdExpansion::StdPhysEvaluate(const Array<OneD, const NekDouble> &Lcoord,
                                                 const Array<OneD, const NekDouble> &physvals)
         {
@@ -985,22 +980,6 @@ namespace Nektar
             return m_elmt_id;
         }
 
-        const Array<OneD, const NekDouble>& StdExpansion::v_GetPhysNormals(void)
-        {
-            NEKERROR(ErrorUtil::efatal, "This function is not valid for this class");
-            return NullNekDouble1DArray;
-        }
-
-
-        void StdExpansion::v_SetPhysNormals(Array<OneD, const NekDouble> &normal)
-        {
-            NEKERROR(ErrorUtil::efatal, "This function is not valid for this class");
-        }
-
-        void StdExpansion::v_SetUpPhysNormals(const int edge)
-        {
-            NEKERROR(ErrorUtil::efatal, "This function is not valid for this class");
-        }
 
         int StdExpansion::v_CalcNumberOfCoefficients(const std::vector<unsigned int>  &nummodes, int &modes_offset)
         {
@@ -1091,6 +1070,12 @@ namespace Nektar
         }
 
         int StdExpansion::v_GetNfaces() const
+        {
+            ASSERTL0(false, "This function is needs defining for this shape");
+            return 0;
+        }
+
+        int StdExpansion::v_GetNtraces() const
         {
             ASSERTL0(false, "This function is needs defining for this shape");
             return 0;
@@ -1702,81 +1687,6 @@ namespace Nektar
             HelmholtzMatrixOp_MatFree_GenericImpl(inarray,outarray,mkey);
         }
 
-        const NormalVector & StdExpansion::v_GetEdgeNormal(const int edge) const
-        {
-            ASSERTL0(false, "Cannot get edge normals for this expansion.");
-            static NormalVector result;
-            return result;
-        }
-
-        void StdExpansion::v_ComputeEdgeNormal(const int edge)
-        {
-            ASSERTL0(false, "Cannot compute edge normal for this expansion.");
-        }
-
-        void StdExpansion::v_NegateEdgeNormal(const int edge)
-        {
-            ASSERTL0(false, "Not implemented.");
-        }
-
-        bool StdExpansion::v_EdgeNormalNegated(const int edge)
-        {
-            ASSERTL0(false, "Not implemented.");
-            return false;
-        }
-
-        void StdExpansion::v_ComputeFaceNormal(const int face)
-        {
-            ASSERTL0(false, "Cannot compute face normal for this expansion.");
-        }
-
-        void StdExpansion::v_NegateFaceNormal(const int face)
-        {
-            ASSERTL0(false, "Not implemented.");
-        }
-
-        bool StdExpansion::v_FaceNormalNegated(const int face)
-        {
-            ASSERTL0(false, "Not implemented.");
-            return false;
-        }
-
-        void StdExpansion::v_ComputeVertexNormal(const int vertex)
-        {
-            ASSERTL0(false, "Cannot compute vertex normal for this expansion.");
-        }
-
-        void StdExpansion::v_NegateVertexNormal(const int vertex)
-        {
-            ASSERTL0(false, "Not implemented.");
-        }
-
-        bool StdExpansion::v_VertexNormalNegated(const int vertex)
-        {
-            ASSERTL0(false, "Not implemented.");
-            return false;
-        }
-
-        const NormalVector & StdExpansion::v_GetFaceNormal(const int face) const
-        {
-            ASSERTL0(false, "Cannot get face normals for this expansion.");
-            static NormalVector result;
-            return result;
-        }
-
-        const NormalVector & StdExpansion::v_GetVertexNormal(const int vertex) const
-        {
-            ASSERTL0(false, "Cannot get vertex normals for this expansion.");
-            static NormalVector result;
-            return result;
-        }
-
-        const NormalVector & StdExpansion::v_GetSurfaceNormal(const int id) const
-        {
-            ASSERTL0(false, "Cannot get face normals for this expansion.");
-            static NormalVector result;
-            return result;
-        }
 
         Array<OneD, unsigned int>
         StdExpansion::v_GetEdgeInverseBoundaryMap(int eid)

@@ -206,6 +206,7 @@ namespace Nektar
             //---------------------------
 
             STD_REGIONS_EXPORT virtual int v_GetNverts() const;
+            STD_REGIONS_EXPORT virtual int v_GetNtraces() const;
             STD_REGIONS_EXPORT virtual int v_NumBndryCoeffs() const;
             STD_REGIONS_EXPORT virtual int v_NumDGBndryCoeffs() const;
             STD_REGIONS_EXPORT virtual bool v_IsBoundaryInteriorExpansion();

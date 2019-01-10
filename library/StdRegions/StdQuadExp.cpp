@@ -625,6 +625,11 @@ namespace Nektar
             return 4;
         }
 
+        int StdQuadExp::v_GetNtraces() const
+        {
+            return 4;
+        }
+        
         int StdQuadExp::v_GetEdgeNcoeffs(const int i) const
         {
             ASSERTL2((i >= 0)&&(i <= 3),"edge id is out of range");

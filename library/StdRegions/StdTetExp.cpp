@@ -958,6 +958,11 @@ namespace Nektar
             return 4;
         }
 
+        int StdTetExp::v_GetNtraces() const
+        {
+            return 4;
+        }
+
         LibUtilities::ShapeType StdTetExp::v_DetShapeType() const
         {
             return DetShapeType();

@@ -164,6 +164,7 @@ namespace Nektar
             //---------------------------
             STD_REGIONS_EXPORT virtual int v_GetNverts() const;
             STD_REGIONS_EXPORT virtual int v_GetNedges() const;
+            STD_REGIONS_EXPORT virtual int v_GetNtraces() const;
             STD_REGIONS_EXPORT virtual int v_GetEdgeNcoeffs(const int i) const;
             STD_REGIONS_EXPORT virtual int v_GetEdgeNumPoints(const int i) const;
             STD_REGIONS_EXPORT virtual int v_NumBndryCoeffs() const;

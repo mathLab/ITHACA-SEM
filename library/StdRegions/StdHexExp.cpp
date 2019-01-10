@@ -693,7 +693,11 @@ namespace Nektar
             return 6;
         }
 
-
+        int StdHexExp::v_GetNtraces() const
+        {
+            return 6;
+        }
+        
         LibUtilities::ShapeType StdHexExp::v_DetShapeType() const
         {
             return LibUtilities::eHexahedron;

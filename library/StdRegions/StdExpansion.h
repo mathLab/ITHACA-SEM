@@ -57,7 +57,6 @@ namespace Nektar
         class StdExpansion1D;
         class StdExpansion2D;
 
-        typedef Array<OneD, Array<OneD, NekDouble> > NormalVector;
 
         /** \brief The base class for all shapes
          *
@@ -446,13 +445,9 @@ namespace Nektar
              * For example, a quadrilateral has four edges, so this function
              * would return 4.
              */
-            int GetNtrace() const
+            int GetNtraces() const
             {
-                const int nBase = m_base.num_elements();
-                return
-                    nBase == 1 ? 2 :
-                    nBase == 2 ? GetNedges() :
-                    nBase == 3 ? GetNfaces() : 0;
+                return v_GetNtraces(); 
             }
 
             /** \brief This function returns the shape of the expansion domain
@@ -726,18 +721,7 @@ namespace Nektar
                 return m_IndexMapManager[ikey];
             }
 
-            const Array<OneD, const NekDouble>& GetPhysNormals(void)
-            {
-                return v_GetPhysNormals();
-            }
 
-            void SetPhysNormals(Array<OneD, const NekDouble> &normal)
-            {
-                v_SetPhysNormals(normal);
-            }
-
-            STD_REGIONS_EXPORT virtual void SetUpPhysNormals(const int edge);
-            
             void NormVectorIProductWRTBase(const Array<OneD, const NekDouble> &Fx, Array< OneD, NekDouble> &outarray)
             {
                 v_NormVectorIProductWRTBase(Fx,outarray);
@@ -1196,12 +1180,6 @@ namespace Nektar
             /// in a list by returning value of #m_elmt_id
             STD_REGIONS_EXPORT virtual int v_GetElmtId();
 
-            STD_REGIONS_EXPORT virtual const Array<OneD, const NekDouble>& v_GetPhysNormals(void);
-
-            STD_REGIONS_EXPORT virtual void v_SetPhysNormals(Array<OneD, const NekDouble> &normal);
-
-            STD_REGIONS_EXPORT virtual void v_SetUpPhysNormals(const int edge);
-
             STD_REGIONS_EXPORT virtual int v_CalcNumberOfCoefficients(const std::vector<unsigned int>  &nummodes, int &modes_offset);
 
             STD_REGIONS_EXPORT virtual void v_NormVectorIProductWRTBase(const Array<OneD, const NekDouble> &Fx, Array< OneD, NekDouble> &outarray);
@@ -1267,70 +1245,6 @@ namespace Nektar
              STD_REGIONS_EXPORT NekDouble H1(const Array<OneD, const NekDouble>& phys, const Array<OneD, const NekDouble>& sol = NullNekDouble1DArray);
 
             // I/O routines
-            const NormalVector & GetEdgeNormal(const int edge) const
-            {
-                return v_GetEdgeNormal(edge);
-            }
-
-            void ComputeEdgeNormal(const int edge)
-            {
-                v_ComputeEdgeNormal(edge);
-            }
-
-            void NegateEdgeNormal(const int edge)
-            {
-                v_NegateEdgeNormal(edge);
-            }
-
-            bool EdgeNormalNegated(const int edge)
-            {
-                return v_EdgeNormalNegated(edge);
-            }
-
-            void ComputeFaceNormal(const int face)
-            {
-                v_ComputeFaceNormal(face);
-            }
-
-            void NegateFaceNormal(const int face)
-            {
-                v_NegateFaceNormal(face);
-            }
-
-            bool FaceNormalNegated(const int face)
-            {
-                return v_FaceNormalNegated(face);
-            }
-
-            void ComputeVertexNormal(const int vertex)
-            {
-                v_ComputeVertexNormal(vertex);
-            }
-
-            void NegateVertexNormal(const int vertex)
-            {
-                v_NegateVertexNormal(vertex);
-            }
-
-            bool VertexNormalNegated(const int vertex)
-            {
-                return v_VertexNormalNegated(vertex);
-            }
-
-            const NormalVector & GetFaceNormal(const int face) const
-            {
-                return v_GetFaceNormal(face);
-            }
-
-            const NormalVector & GetVertexNormal(const int vertex) const
-            {
-                return v_GetVertexNormal(vertex);
-            }
-
-            const NormalVector & GetSurfaceNormal(const int id) const
-            {
-                return v_GetSurfaceNormal(id);
-            }
 
             const LibUtilities::PointsKeyVector GetPointsKeys() const
             {
@@ -1579,8 +1493,8 @@ namespace Nektar
             // Virtual functions
             STD_REGIONS_EXPORT virtual int v_GetNverts() const = 0;
             STD_REGIONS_EXPORT virtual int v_GetNedges() const;
-
             STD_REGIONS_EXPORT virtual int v_GetNfaces() const;
+            STD_REGIONS_EXPORT virtual int v_GetNtraces() const;
 
             STD_REGIONS_EXPORT virtual int v_NumBndryCoeffs() const;
 
@@ -1609,11 +1523,14 @@ namespace Nektar
 
             STD_REGIONS_EXPORT virtual int v_GetTraceNcoeffs(const int i) const;
 
-            STD_REGIONS_EXPORT virtual LibUtilities::PointsKey v_GetFacePointsKey(const int i, const int j) const;
+            STD_REGIONS_EXPORT virtual LibUtilities::PointsKey
+                v_GetFacePointsKey(const int i, const int j) const;
 
-            STD_REGIONS_EXPORT virtual LibUtilities::BasisType v_GetEdgeBasisType(const int i) const;
+            STD_REGIONS_EXPORT virtual LibUtilities::BasisType
+                v_GetEdgeBasisType(const int i) const;
 
-            STD_REGIONS_EXPORT virtual const LibUtilities::PointsKey v_GetNodalPointsKey() const;
+            STD_REGIONS_EXPORT virtual const LibUtilities::PointsKey
+                v_GetNodalPointsKey() const;
 
             STD_REGIONS_EXPORT virtual LibUtilities::ShapeType v_DetShapeType() const;
 
@@ -1892,32 +1809,6 @@ namespace Nektar
             STD_REGIONS_EXPORT virtual void v_HelmholtzMatrixOp_MatFree(const Array<OneD, const NekDouble> &inarray,
                                                            Array<OneD,NekDouble> &outarray,
                                                            const StdMatrixKey &mkey);
-
-            STD_REGIONS_EXPORT virtual const NormalVector & v_GetEdgeNormal(const int edge) const;
-
-            STD_REGIONS_EXPORT virtual void v_ComputeEdgeNormal(const int edge);
-
-            STD_REGIONS_EXPORT virtual void v_NegateEdgeNormal(const int edge);
-
-            STD_REGIONS_EXPORT virtual bool v_EdgeNormalNegated(const int edge);
-
-            STD_REGIONS_EXPORT virtual void v_ComputeFaceNormal(const int face);
-
-            STD_REGIONS_EXPORT virtual void v_NegateFaceNormal(const int face);
-
-            STD_REGIONS_EXPORT virtual bool v_FaceNormalNegated(const int face);
-
-            STD_REGIONS_EXPORT virtual const NormalVector & v_GetVertexNormal(const int vertex) const;
-
-            STD_REGIONS_EXPORT virtual void v_ComputeVertexNormal(const int vertex);
-
-            STD_REGIONS_EXPORT virtual void v_NegateVertexNormal(const int vertex);
-
-            STD_REGIONS_EXPORT virtual bool v_VertexNormalNegated(const int vertex);
-
-            STD_REGIONS_EXPORT virtual const NormalVector & v_GetFaceNormal(const int face) const;
-            STD_REGIONS_EXPORT virtual const NormalVector &
-                v_GetSurfaceNormal(const int id) const;
 
             STD_REGIONS_EXPORT virtual Array<OneD, unsigned int>
                 v_GetEdgeInverseBoundaryMap(int eid);

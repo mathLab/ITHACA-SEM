@@ -733,7 +733,7 @@ namespace Nektar
         /**
 	 * \brief Compute the normal of a triangular face
 	 */
-        void TetExp::v_ComputeFaceNormal(const int face)
+        void TetExp::v_ComputeTraceNormal(const int face)
         {
             int i;
             const SpatialDomains::GeomFactorsSharedPtr &geomFactors = 

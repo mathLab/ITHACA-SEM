@@ -52,6 +52,8 @@ namespace Nektar
         class Expansion;
         class MatrixKey;
 
+        typedef Array<OneD, Array<OneD, NekDouble> > NormalVector;
+
         enum MetricType
         {
             eMetricLaplacian00,
@@ -124,7 +126,45 @@ namespace Nektar
                 LOCAL_REGIONS_EXPORT NekDouble VectorFlux(
                     const Array<OneD, Array<OneD, NekDouble > > &vec);
 
-            protected:
+
+                // Elemental Normals routines
+                const NormalVector & GetTraceNormal(const int id) const
+                {
+                    return v_GetTraceNormal(id);
+                }
+
+                void ComputeTraceNormal(const int id)
+                {
+                    v_ComputeTraceNormal(id);
+                }
+
+                void NegateTraceNormal(const int id)
+                {
+                    v_NegateTraceNormal(id);
+                }
+
+                bool TraceNormalNegated(const int id)
+                {
+                    return v_TraceNormalNegated(id);
+                }
+
+
+                const Array<OneD, const NekDouble>& GetPhysNormals(void)
+                {
+                    return v_GetPhysNormals();
+                }
+
+                void SetPhysNormals(Array<OneD, const NekDouble> &normal)
+                {
+                    v_SetPhysNormals(normal);
+                }
+
+                virtual void SetUpPhysNormals(const int edge)
+                {
+                    v_SetUpPhysNormals(edge);
+                }
+
+        protected:
                 SpatialDomains::GeometrySharedPtr  m_geom;
                 SpatialDomains::GeomFactorsSharedPtr m_metricinfo;
                 MetricMap m_metrics;
@@ -201,7 +241,22 @@ namespace Nektar
                 virtual NekDouble v_VectorFlux(
                     const Array<OneD, Array<OneD, NekDouble > > &vec);
 
-            private:
+
+                virtual const NormalVector & v_GetTraceNormal(const int id) const;
+
+                virtual void v_ComputeTraceNormal(const int id);
+
+                virtual void v_NegateTraceNormal (const int id);
+
+                virtual bool v_TraceNormalNegated(const int id);
+                
+                virtual const Array<OneD, const NekDouble>& v_GetPhysNormals(void);
+
+                virtual void v_SetPhysNormals(Array<OneD, const NekDouble> &normal);
+
+                virtual void v_SetUpPhysNormals(const int id);
+                
+        private:
 
         };
     } //end of namespace

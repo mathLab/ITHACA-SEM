@@ -181,7 +181,7 @@ namespace Nektar
             LOCAL_REGIONS_EXPORT virtual void v_GetEdgeQFactors(
                         const int edge,
                         Array<OneD, NekDouble> &outarray);
-            LOCAL_REGIONS_EXPORT virtual void v_ComputeEdgeNormal(
+            LOCAL_REGIONS_EXPORT virtual void v_ComputeTraceNormal(
                         const int edge);
 
 

@@ -943,7 +943,6 @@ namespace Nektar
             }
 
             int nq        = array[0].num_elements();
-            NekDouble Tol = 0.0000000001;
             Array<OneD, NekDouble> norm (nq, 0.0);
 
             // Compute the norm of each vector.

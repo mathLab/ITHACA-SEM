@@ -680,6 +680,11 @@ namespace Nektar
             return 2;
         }
 
+        int StdSegExp::v_GetNtraces() const
+        {
+            return 2;
+        }
+
         int StdSegExp::v_NumBndryCoeffs() const
         {
             return 2;

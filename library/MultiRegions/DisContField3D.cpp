@@ -371,13 +371,13 @@ using namespace std;
                  {
                      if (traceGeomId != min(pIt->second[0].id, traceGeomId))
                      {
-                         traceEl->GetLeftAdjacentElementExp()->NegateFaceNormal(
+                         traceEl->GetLeftAdjacentElementExp()->NegateTraceNormal(
                              traceEl->GetLeftAdjacentElementFace());
                      }
                  }
                  else if (m_traceMap->GetTraceToUniversalMapUnique(offset) < 0)
                  {
-                     traceEl->GetLeftAdjacentElementExp()->NegateFaceNormal(
+                     traceEl->GetLeftAdjacentElementExp()->NegateTraceNormal(
                          traceEl->GetLeftAdjacentElementFace());
                  }
              }

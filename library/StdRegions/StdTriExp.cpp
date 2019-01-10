@@ -742,6 +742,11 @@ namespace Nektar
             return 3;
         }
 
+        int StdTriExp::v_GetNtraces() const
+        {
+            return 3;
+        }
+        
         LibUtilities::ShapeType StdTriExp::v_DetShapeType() const
         {
             return LibUtilities::eTriangle;

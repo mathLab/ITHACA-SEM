@@ -308,20 +308,6 @@ namespace Nektar
 
         }
 
-        const NormalVector & StdExpansion3D::v_GetSurfaceNormal(
-                const int id) const
-        {
-            return v_GetFaceNormal(id);
-        }
-        
-        const NormalVector & StdExpansion3D::v_GetFaceNormal(const int face) const
-        {
-            auto x = m_faceNormals.find(face);
-            ASSERTL0 (x != m_faceNormals.end(),
-                      "face normal not computed.");
-            return x->second;
-        }
-
         NekDouble StdExpansion3D::v_Integral(
             const Array<OneD, const NekDouble>& inarray)
         {
@@ -332,20 +318,6 @@ namespace Nektar
         }
         
         
-        void StdExpansion3D::v_NegateFaceNormal(const int face)
-        {
-            m_negatedNormals[face] = true;
-            for (int i = 0; i < GetCoordim(); ++i)
-            {
-                Vmath::Neg(m_faceNormals[face][i].num_elements(), 
-                           m_faceNormals[face][i], 1);
-            }
-        }
-
-        bool StdExpansion3D::v_FaceNormalNegated(const int face)
-        {
-            return m_negatedNormals[face];
-        }
 
         LibUtilities::BasisKey EvaluateQuadFaceBasisKey(
             const int                     facedir,

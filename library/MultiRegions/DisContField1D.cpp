@@ -38,6 +38,9 @@
 #include <StdRegions/StdSegExp.h>
 #include <LibUtilities/Foundations/ManagerAccess.h>
 #include <SpatialDomains/MeshGraph.h>
+#include <LocalRegions/Expansion0D.h>
+#include <LocalRegions/Expansion1D.h>
+
 
 using namespace std;
 
@@ -201,13 +204,13 @@ namespace Nektar
                 {
                     if (traceGeomId != min(pIt->second[0].id, traceGeomId))
                     {
-                        traceEl->GetLeftAdjacentElementExp()->NegateVertexNormal(
+                        traceEl->GetLeftAdjacentElementExp()->NegateTraceNormal(
                             traceEl->GetLeftAdjacentElementVertex());
                     }
                 }
                 else if (m_traceMap->GetTraceToUniversalMapUnique(offset) < 0)
                 {
-                    traceEl->GetLeftAdjacentElementExp()->NegateVertexNormal(
+                    traceEl->GetLeftAdjacentElementExp()->NegateTraceNormal(
                         traceEl->GetLeftAdjacentElementVertex());
                 }
             }
@@ -806,7 +809,7 @@ namespace Nektar
                         }
 
                         if(vertExp->GetLeftAdjacentElementExp()->
-                            VertexNormalNegated(vertExp->GetLeftAdjacentElementVertex()))
+                            TraceNormalNegated(vertExp->GetLeftAdjacentElementVertex()))
                         {
                             m_negatedFluxNormal[2*i+v] =
                                 (!m_negatedFluxNormal[2*i+v]);

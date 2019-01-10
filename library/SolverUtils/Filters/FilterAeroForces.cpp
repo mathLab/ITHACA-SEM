@@ -603,7 +603,7 @@ void FilterAeroForces::CalculateForces(
         nVel = nVel + 1;
     }
 
-    StdRegions::StdExpansionSharedPtr elmt;
+    LocalRegions::ExpansionSharedPtr elmt;
 
     // Fields used to calculate forces (a single plane for 3DH1D)
     Array<OneD, MultiRegions::ExpListSharedPtr>  
@@ -787,7 +787,7 @@ void FilterAeroForces::CalculateForces(
                                 nbc = bc->GetTotPoints();
 
                                 // Get normals
-                                normals = elmt->GetEdgeNormal(boundary);
+                                normals = elmt->GetTraceNormal(boundary);
 
                                 // Extract values at boundary
                                 Pb = Array<OneD, NekDouble>(nbc,0.0);
@@ -813,7 +813,7 @@ void FilterAeroForces::CalculateForces(
                                 nbc = bc->GetTotPoints();
 
                                 // Get normals
-                                normals = elmt->GetFaceNormal(boundary);
+                                normals = elmt->GetTraceNormal(boundary);
 
                                 // Extract values at boundary
                                 Pb = Array<OneD, NekDouble>(nbc,0.0);
@@ -962,7 +962,7 @@ void FilterAeroForces::CalculateForcesMapping(
         nVel = nVel + 1;
     }
 
-    StdRegions::StdExpansionSharedPtr elmt;
+    LocalRegions::ExpansionSharedPtr elmt;
 
     // Pressure stress tensor 
     //    (global, in a plane, in element and boundary)
@@ -1272,7 +1272,7 @@ void FilterAeroForces::CalculateForcesMapping(
                                 nbc = bc->GetTotPoints();
 
                                 // Get normals
-                                normals = elmt->GetEdgeNormal(boundary);
+                                normals = elmt->GetTraceNormal(boundary);
 
                                 // Extract values at boundary
                                 for(int j = 0; j < nVel*nVel; ++j)
@@ -1313,7 +1313,7 @@ void FilterAeroForces::CalculateForcesMapping(
                                 nbc = bc->GetTotPoints();
 
                                 // Get normals
-                                normals = elmt->GetFaceNormal(boundary);
+                                normals = elmt->GetTraceNormal(boundary);
 
                                 // Extract values at boundary
                                 for(int j = 0; j < nVel*nVel; ++j)

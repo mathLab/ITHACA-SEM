@@ -151,7 +151,7 @@ namespace Nektar
                  const int  face,
                  Array<OneD, int>  &outarray);
 
-            LOCAL_REGIONS_EXPORT void v_ComputeFaceNormal(const int face);
+            LOCAL_REGIONS_EXPORT void v_ComputeTraceNormal(const int face);
 
             //---------------------------------------
             // Operator creation functions

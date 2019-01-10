@@ -191,7 +191,7 @@ namespace Nektar
 
             LOCAL_REGIONS_EXPORT virtual int v_NumDGBndryCoeffs() const;
 
-            LOCAL_REGIONS_EXPORT virtual void v_ComputeVertexNormal(
+            LOCAL_REGIONS_EXPORT virtual void v_ComputeTraceNormal(
                  const int vertex);
 
             LOCAL_REGIONS_EXPORT virtual SpatialDomains::GeomType  v_MetricInfoType();

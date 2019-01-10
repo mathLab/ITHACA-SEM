@@ -699,7 +699,7 @@ namespace Nektar
          * Get the face normals interplated to a points0 x points 0
          * type distribution
          **/ 
-        void PrismExp::v_ComputeFaceNormal(const int face)
+        void PrismExp::v_ComputeTraceNormal(const int face)
         {
             const SpatialDomains::GeomFactorsSharedPtr &geomFactors =
                 GetGeom()->GetMetricInfo();

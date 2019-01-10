@@ -106,6 +106,9 @@ namespace Nektar
                       Array<OneD,       NekDouble>               &outarray);
 
         protected:
+            std::map<int, NormalVector> m_faceNormals;
+            std::map<int, bool> m_negatedNormals;
+
             virtual void v_DGDeriv(
                 const int                            dir,
                 const Array<OneD, const NekDouble>  &incoeffs,
@@ -176,6 +179,15 @@ namespace Nektar
 
             LOCAL_REGIONS_EXPORT virtual DNekMatSharedPtr v_BuildVertexMatrix(
                 const DNekScalMatSharedPtr &r_bnd); 
+
+            LOCAL_REGIONS_EXPORT const virtual NormalVector &v_GetTraceNormal
+                (const int face) const;
+
+            LOCAL_REGIONS_EXPORT virtual void v_NegateTraceNormal(
+                const int face);
+
+            LOCAL_REGIONS_EXPORT virtual bool v_TraceNormalNegated(
+                const int face);
 
             LOCAL_REGIONS_EXPORT void ReOrientTriFacePhysMap(const StdRegions::Orientation orient,
                                                              const int nq0,

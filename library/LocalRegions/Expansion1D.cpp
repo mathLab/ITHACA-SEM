@@ -42,7 +42,17 @@ namespace Nektar
 {
     namespace LocalRegions 
     {
-        void Expansion1D::v_NegateVertexNormal(const int vertex)
+        const NormalVector &Expansion1D::v_GetTraceNormal(
+                    const int edge) const
+        {
+            std::map<int, NormalVector>::const_iterator x;
+            x = m_vertexNormals.find(edge);
+            ASSERTL1 (x != m_vertexNormals.end(),
+                        "Vertex normal not computed.");
+            return x->second;
+        }
+
+        void Expansion1D::v_NegateTraceNormal(const int vertex)
         {
             m_negatedNormals[vertex] = true;
             for (int i = 0; i < GetCoordim(); ++i)
@@ -52,7 +62,7 @@ namespace Nektar
             }
         }
 
-        bool Expansion1D::v_VertexNormalNegated(const int vertex)
+        bool Expansion1D::v_TraceNormalNegated(const int vertex)
         {
             return m_negatedNormals[vertex];
         }
@@ -421,7 +431,7 @@ namespace Nektar
         {
             const Array<OneD, const Array<OneD, NekDouble> >
                 &normals = GetLeftAdjacentElementExp()->
-                GetEdgeNormal(GetLeftAdjacentElementEdge());
+                GetTraceNormal(GetLeftAdjacentElementEdge());
 
             int nq = m_base[0]->GetNumPoints();
             Array<OneD, NekDouble > Fn(nq);

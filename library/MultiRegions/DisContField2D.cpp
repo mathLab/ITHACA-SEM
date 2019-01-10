@@ -443,13 +443,13 @@ namespace Nektar
                 {
                     if (traceGeomId != min(pIt->second[0].id, traceGeomId))
                     {
-                        traceEl->GetLeftAdjacentElementExp()->NegateEdgeNormal(
+                        traceEl->GetLeftAdjacentElementExp()->NegateTraceNormal(
                             traceEl->GetLeftAdjacentElementEdge());
                     }
                 }
                 else if (m_traceMap->GetTraceToUniversalMapUnique(offset) < 0)
                 {
-                    traceEl->GetLeftAdjacentElementExp()->NegateEdgeNormal(
+                    traceEl->GetLeftAdjacentElementExp()->NegateTraceNormal(
                         traceEl->GetLeftAdjacentElementEdge());
                 }
             }

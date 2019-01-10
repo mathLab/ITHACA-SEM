@@ -74,7 +74,8 @@ namespace Nektar
             inline SpatialDomains::Geometry0DSharedPtr GetGeom0D() const;
 
         protected:
-            
+            std::map<int, NormalVector> m_vertexNormals;
+			
         private:
             Expansion1DWeakPtr m_elementLeft;
             Expansion1DWeakPtr m_elementRight;

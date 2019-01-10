@@ -961,7 +961,7 @@ namespace Nektar
 
         }
 
-        void HexExp::v_ComputeFaceNormal(const int face)
+        void HexExp::v_ComputeTraceNormal(const int face)
         {
             int i;
             const SpatialDomains::GeomFactorsSharedPtr & geomFactors =

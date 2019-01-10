@@ -48,7 +48,10 @@
 
 #include <LocalRegions/MatrixKey.h>     // for MatrixKey
 #include <LocalRegions/Expansion.h>     // for Expansion
+#include <LocalRegions/Expansion0D.h>
+#include <LocalRegions/Expansion1D.h>
 #include <LocalRegions/Expansion2D.h>
+#include <LocalRegions/Expansion3D.h>
 #include <LibUtilities/Foundations/Interp.h>
 
 #include <MultiRegions/AssemblyMap/AssemblyMapCG.h>  // for AssemblyMapCG, etc
@@ -620,7 +623,7 @@ namespace Nektar
                                            halfMode, false);
             }
 
-            switch(GetExpType())
+            switch(m_expType)
             {
             case e2D:
                 {
@@ -1863,70 +1866,126 @@ namespace Nektar
 
         void ExpList::v_WriteVtkPieceHeader(std::ostream &outfile, int expansion, int istrip)
         {
-            if(m_expType == e1D)
+            int i,j,k;
+            int nbase = (*m_exp)[expansion]->GetNumBases();
+            int ntot =  (*m_exp)[expansion]->GetTotPoints();
+            int nquad[3];
+
+            int ntotminus = 1; 
+            for(i = 0; i < nbase; ++i)
             {
-                int i,j;
-                int nquad0 = (*m_exp)[expansion]->GetNumPoints(0);
-                int ntot = nquad0;
-                int ntotminus = (nquad0-1);
-                
-                Array<OneD,NekDouble> coords[3];
-                coords[0] = Array<OneD,NekDouble>(ntot, 0.0);
-                coords[1] = Array<OneD,NekDouble>(ntot, 0.0);
-                coords[2] = Array<OneD,NekDouble>(ntot, 0.0);
-                (*m_exp)[expansion]->GetCoords(coords[0],coords[1],coords[2]);
-                
-                outfile << "    <Piece NumberOfPoints=\""
-                        << ntot << "\" NumberOfCells=\""
-                        << ntotminus << "\">" << endl;
-                outfile << "      <Points>" << endl;
-                outfile << "        <DataArray type=\"Float64\" "
+                nquad[i] = (*m_exp)[expansion]->GetNumPoints(i);
+                ntotminus *= (nquad[i]-1);
+            }
+            
+            Array<OneD,NekDouble> coords[3];
+            coords[0] = Array<OneD,NekDouble>(ntot, 0.0);
+            coords[1] = Array<OneD,NekDouble>(ntot, 0.0);
+            coords[2] = Array<OneD,NekDouble>(ntot, 0.0);
+            (*m_exp)[expansion]->GetCoords(coords[0],coords[1],coords[2]);
+            
+            outfile << "    <Piece NumberOfPoints=\""
+                    << ntot << "\" NumberOfCells=\""
+                    << ntotminus << "\">" << endl;
+            outfile << "      <Points>" << endl;
+            outfile << "        <DataArray type=\"Float64\" "
                     << "NumberOfComponents=\"3\" format=\"ascii\">" << endl;
-                outfile << "          ";
-                for (i = 0; i < ntot; ++i)
+            outfile << "          ";
+            for (i = 0; i < ntot; ++i)
+            {
+                for (j = 0; j < 3; ++j)
                 {
-                    for (j = 0; j < 3; ++j)
-                    {
-                        outfile << setprecision(8) << scientific 
-                                << (float)coords[j][i] << " ";
-                    }
-                    outfile << endl;
+                    outfile << setprecision(8) << scientific 
+                            << (float)coords[j][i] << " ";
                 }
                 outfile << endl;
-                outfile << "        </DataArray>" << endl;
-                outfile << "      </Points>" << endl;
-                outfile << "      <Cells>" << endl;
-                outfile << "        <DataArray type=\"Int32\" "
-                        << "Name=\"connectivity\" format=\"ascii\">" << endl;
-                for (i = 0; i < nquad0-1; ++i)
+            }
+            outfile << endl;
+            outfile << "        </DataArray>" << endl;
+            outfile << "      </Points>" << endl;
+            outfile << "      <Cells>" << endl;
+            outfile << "        <DataArray type=\"Int32\" "
+                    << "Name=\"connectivity\" format=\"ascii\">" << endl;
+
+            int ns; // pow(2,dim) for later usage
+            string ostr;
+            switch(m_expType)
+            {
+            case e1D:
+            {
+                ns = 2; 
+                ostr = "3 ";
+                for (i = 0; i < nquad[0]-1; ++i)
                 {
                     outfile << i << " " << i+1 << endl;
                 }
-                outfile << endl;
-                outfile << "        </DataArray>" << endl;
-                outfile << "        <DataArray type=\"Int32\" "
-                    << "Name=\"offsets\" format=\"ascii\">" << endl;
-                for (i = 0; i < ntotminus; ++i)
-                {
-                    outfile << i*2+2 << " ";
-                }
-                outfile << endl;
-                outfile << "        </DataArray>" << endl;
-                outfile << "        <DataArray type=\"UInt8\" "
-                        << "Name=\"types\" format=\"ascii\">" << endl;
-                for (i = 0; i < ntotminus; ++i)
-                {
-                    outfile << "3 ";
-                }
-                outfile << endl;
-                outfile << "        </DataArray>" << endl;
-                outfile << "      </Cells>" << endl;
-                outfile << "      <PointData>" << endl;
             }
-            else
+            break;
+            case e2D:
             {
-                ASSERTL0(false, "Routine not implemented for this expansion.");
+                ns = 4; 
+                ostr = "9 ";
+                for (i = 0; i < nquad[0]-1; ++i)
+                {
+                    for (j = 0; j < nquad[1]-1; ++j)
+                    {
+                        outfile << j*nquad[0] + i << " "
+                                << j*nquad[0] + i + 1 << " "
+                                << (j+1)*nquad[0] + i + 1 << " "
+                                << (j+1)*nquad[0] + i << endl;
+                    }
+                }
             }
+            break;
+            case e3D:
+            {
+                ns = 8;
+                ostr = "12 ";
+                for (i = 0; i < nquad[0]-1; ++i)
+                {
+                    for (j = 0; j < nquad[1]-1; ++j)
+                    {
+                        for (k = 0; k < nquad[2]-1; ++k)
+                        {
+                            outfile << k*nquad[0]*nquad[1] + j*nquad[0] + i << " "
+                                    << k*nquad[0]*nquad[1] + j*nquad[0] + i + 1 << " "
+                                    << k*nquad[0]*nquad[1] + (j+1)*nquad[0] + i + 1 << " "
+                                    << k*nquad[0]*nquad[1] + (j+1)*nquad[0] + i << " "
+                                    << (k+1)*nquad[0]*nquad[1] + j*nquad[0] + i << " "
+                                    << (k+1)*nquad[0]*nquad[1] + j*nquad[0] + i + 1 << " "
+                                    << (k+1)*nquad[0]*nquad[1] + (j+1)*nquad[0] + i + 1 << " "
+                                    << (k+1)*nquad[0]*nquad[1] + (j+1)*nquad[0] + i << " " << endl;
+                        }
+                    }
+                }
+            }
+            break;
+            default:
+                break;
+            }
+                
+
+            outfile << endl;
+            outfile << "        </DataArray>" << endl;
+            outfile << "        <DataArray type=\"Int32\" "
+                    << "Name=\"offsets\" format=\"ascii\">" << endl;
+            for (i = 0; i < ntotminus; ++i)
+            {
+                outfile << i*ns+ns << " ";
+            }
+            outfile << endl;
+            outfile << "        </DataArray>" << endl;
+            outfile << "        <DataArray type=\"UInt8\" "
+                        << "Name=\"types\" format=\"ascii\">" << endl;
+            for (i = 0; i < ntotminus; ++i)
+            {
+                outfile << ostr;
+            }
+            outfile << endl;
+            outfile << "        </DataArray>" << endl;
+            outfile << "      </Cells>" << endl;
+            outfile << "      <PointData>" << endl;
+
         }
 
         void ExpList::WriteVtkPieceFooter(std::ostream &outfile, int expansion)
@@ -2667,16 +2726,15 @@ namespace Nektar
             }
             break;
             default:
-            {
                 ASSERTL0(false,
                          "This method is not defined or valid for this class type");
-            }
+                break;
             }
         }
 
         /**
          * One-dimensional upwind.
-         * \see    ExpList1D::Upwind(
+         * \see    ExpList::Upwind(
          *           const Array<OneD, const Array<OneD, NekDouble> >,
          *           const Array<OneD, const NekDouble>,
          *           const Array<OneD, const NekDouble>,
@@ -2693,58 +2751,24 @@ namespace Nektar
             const Array<OneD, const NekDouble> &Bwd,
                   Array<OneD,       NekDouble> &Upwind)
         {
-            switch(m_expType)
+            ASSERTL1(Vn.num_elements() >= m_npoints,"Vn is not of sufficient length");
+            ASSERTL1(Fwd.num_elements() >= m_npoints,"Fwd is not of sufficient length");
+            ASSERTL1(Bwd.num_elements() >= m_npoints,"Bwd is not of sufficient length");
+            ASSERTL1(Upwind.num_elements() >= m_npoints,
+                     "Upwind is not of sufficient length");
+
+            // Process each point in the expansion.
+            for(int j = 0; j < m_npoints; ++j)
             {
-            case e0D:
-            {
-                // Process each point in the expansion.
-                for(int j = 0; j < Fwd.num_elements(); ++j)
+                // Upwind based on one-dimensional velocity.
+                if(Vn[j] > 0.0)
                 {
-                    // Upwind based on one-dimensional velocity.
-                    if(Vn[j] > 0.0)
-                    {
-                        Upwind[j] = Fwd[j];
-                    }
-                    else
-                    {
-                        Upwind[j] = Bwd[j];
-                    }
+                    Upwind[j] = Fwd[j];
                 }
-            }
-            break;
-            case e1D:
-            {
-                int i,j,e_npoints,offset;
-                Array<OneD,NekDouble> normals;
-                
-                // Process each expansion.
-                for(i = 0; i < m_exp->size(); ++i)
+                else
                 {
-                    // Get the number of points and the data offset.
-                    e_npoints = (*m_exp)[i]->GetNumPoints(0);
-                    offset = m_phys_offset[i];
-                    
-                    // Process each point in the expansion.
-                    for(j = 0; j < e_npoints; ++j)
-                    {
-                        // Upwind based on one-dimensional velocity.
-                        if(Vn[offset + j] > 0.0)
-                        {
-                            Upwind[offset + j] = Fwd[offset + j];
-                        }
-                        else
-                        {
-                            Upwind[offset + j] = Bwd[offset + j];
-                        }
-                    }
+                    Upwind[j] = Bwd[j];
                 }
-            }
-            break;
-            default:
-            {
-                ASSERTL0(false,
-                         "This method is not defined or valid for this class type");
-            }
             }
         }
 
@@ -2768,6 +2792,74 @@ namespace Nektar
         {
             return GetTraceMap()->GetBndCondIDToGlobalTraceID();
         }
+
+        /**
+         * @brief Helper function to re-align face to a given orientation.
+         */
+        void AlignFace(const StdRegions::Orientation       orient,
+                       const int                           nquad1,
+                       const int                           nquad2,
+                       const Array<OneD, const NekDouble> &in,
+                             Array<OneD,       NekDouble> &out)
+        {
+            // Copy transpose.
+            if (orient == StdRegions::eDir1FwdDir2_Dir2FwdDir1 ||
+                orient == StdRegions::eDir1BwdDir2_Dir2FwdDir1 ||
+                orient == StdRegions::eDir1FwdDir2_Dir2BwdDir1 ||
+                orient == StdRegions::eDir1BwdDir2_Dir2BwdDir1)
+            {
+                for (int i = 0; i < nquad2; ++i)
+                {
+                    for (int j = 0; j < nquad1; ++j)
+                    {
+                        out[i*nquad1 + j] = in[j*nquad2 + i];
+                    }
+                }
+            }
+            else
+            {
+                for (int i = 0; i < nquad2; ++i)
+                {
+                    for (int j = 0; j < nquad1; ++j)
+                    {
+                        out[i*nquad1 + j] = in[i*nquad1 + j];
+                    }
+                }
+            }
+
+            if (orient == StdRegions::eDir1BwdDir1_Dir2FwdDir2 ||
+                orient == StdRegions::eDir1BwdDir1_Dir2BwdDir2 ||
+                orient == StdRegions::eDir1BwdDir2_Dir2FwdDir1 ||
+                orient == StdRegions::eDir1BwdDir2_Dir2BwdDir1)
+            {
+                // Reverse x direction
+                for (int i = 0; i < nquad2; ++i)
+                {
+                    for (int j = 0; j < nquad1/2; ++j)
+                    {
+                        swap(out[i*nquad1 + j],
+                             out[i*nquad1 + nquad1-j-1]);
+                    }
+                }
+            }
+
+            if (orient == StdRegions::eDir1FwdDir1_Dir2BwdDir2 ||
+                orient == StdRegions::eDir1BwdDir1_Dir2BwdDir2 ||
+                orient == StdRegions::eDir1FwdDir2_Dir2BwdDir1 ||
+                orient == StdRegions::eDir1BwdDir2_Dir2BwdDir1)
+            {
+                // Reverse y direction
+                for (int j = 0; j < nquad1; ++j)
+                {
+                    for (int i = 0; i < nquad2/2; ++i)
+                    {
+                        swap(out[i*nquad1 + j],
+                             out[(nquad2-i-1)*nquad1 + j]);
+                    }
+                }
+            }
+        }
+
 
         /**
          * For each local element, copy the normals stored in the element list
@@ -2804,7 +2896,7 @@ namespace Nektar
                 
                     // Get the number of points and normals for this expansion.
                     e_npoints  = 1;
-                    locnormals = loc_elmt->GetVertexNormal(loc_exp->
+                    locnormals = loc_elmt->GetTraceNormal(loc_exp->
                                               GetLeftAdjacentElementVertex());
 				
                     // Get the physical data offset for this expansion.
@@ -2842,7 +2934,7 @@ namespace Nektar
                     // Get the number of points and normals for this expansion.
                     e_npoints  = (*m_exp)[i]->GetNumPoints(0);
                     
-                    locnormals     = loc_elmt->GetEdgeNormal(edgeNumber);
+                    locnormals     = loc_elmt->GetTraceNormal(edgeNumber);
                     int e_nmodes   = loc_exp->GetBasis(0)->GetNumModes();
                     int loc_nmodes = loc_elmt->GetBasis(0)->GetNumModes();
                     
@@ -2856,7 +2948,7 @@ namespace Nektar
                             int EdgeNumber = loc_exp->GetRightAdjacentElementEdge();
                             // Serial case: right element is connected so we can
                             // just grab that normal.
-                            locnormals = loc_elmt->GetEdgeNormal(EdgeNumber);
+                            locnormals = loc_elmt->GetTraceNormal(EdgeNumber);
                             
                             offset = m_phys_offset[i];
                             
@@ -2918,6 +3010,70 @@ namespace Nektar
                                 normals[k][offset + j] = locnormals[k][j];
                             }
                         }
+                    }
+                }
+            }
+            break;
+            case e2D:
+            {
+                Array<OneD, NekDouble> tmp;
+                
+                // Process each expansion.
+                for (i = 0; i < m_exp->size(); ++i)
+                {
+                    LocalRegions::Expansion2DSharedPtr traceExp = (*m_exp)[i]->as<
+                        LocalRegions::Expansion2D>();
+                    LocalRegions::Expansion3DSharedPtr exp3D =
+                        traceExp->GetLeftAdjacentElementExp();
+
+                    // Get the number of points and normals for this expansion.
+                    int faceNum = traceExp->GetLeftAdjacentElementFace();
+                    int offset  = m_phys_offset[i];
+                    
+                    const Array<OneD, const Array<OneD, NekDouble> > &locNormals
+                        = exp3D->GetTraceNormal(faceNum);
+
+                    // Project normals from 3D element onto the same orientation as
+                    // the trace expansion.
+                    StdRegions::Orientation orient = exp3D->GetForient(faceNum);
+                    
+
+                    int fromid0,fromid1;
+
+                    if(orient < StdRegions::eDir1FwdDir2_Dir2FwdDir1)
+                    {
+                        fromid0 = 0;
+                        fromid1 = 1;
+                    }
+                    else
+                    {
+                        fromid0 = 1;
+                        fromid1 = 0;
+                    }
+                    
+                    LibUtilities::BasisKey faceBasis0 
+                        = exp3D->DetFaceBasisKey(faceNum, fromid0);
+                    LibUtilities::BasisKey faceBasis1 
+                        = exp3D->DetFaceBasisKey(faceNum, fromid1);
+                    LibUtilities::BasisKey traceBasis0
+                        = traceExp->GetBasis(0)->GetBasisKey();
+                    LibUtilities::BasisKey traceBasis1
+                        = traceExp->GetBasis(1)->GetBasisKey();
+                    
+                    const int faceNq0 = faceBasis0.GetNumPoints();
+                    const int faceNq1 = faceBasis1.GetNumPoints();
+
+                    for (j = 0; j < coordim; ++j)
+                    {
+                        Array<OneD, NekDouble> traceNormals(faceNq0 * faceNq1);
+                        AlignFace(orient, faceNq0, faceNq1,
+                                  locNormals[j], traceNormals);
+                        LibUtilities::Interp2D(faceBasis0.GetPointsKey(),
+                                               faceBasis1.GetPointsKey(),
+                                               traceNormals,
+                                               traceBasis0.GetPointsKey(),
+                                               traceBasis1.GetPointsKey(),
+                                               tmp = normals[j]+offset);
                     }
                 }
             }
@@ -3289,21 +3445,12 @@ namespace Nektar
          */
         void ExpList::v_SetUpPhysNormals()
         {
-            if(m_expType == e1D)
+            for (int i = 0; i < m_exp->size(); ++i)
             {
-                int i, j;
-                for (i = 0; i < m_exp->size(); ++i)
+                for (int j = 0; j < (*m_exp)[i]->GetNtraces(); ++j)
                 {
-                    for (j = 0; j < (*m_exp)[i]->GetNverts(); ++j)
-                    {
-                        (*m_exp)[i]->ComputeVertexNormal(j);
-                    }
+                    (*m_exp)[i]->ComputeTraceNormal(j);
                 }
-            }
-            else
-            {
-                ASSERTL0(false,
-                         "This method is not defined or valid for this class type");
             }
         }
         
@@ -3469,7 +3616,7 @@ namespace Nektar
                 
                 elmt   = GetExp(ElmtID[cnt+n]);
                 const Array<OneD, const Array<OneD, NekDouble> > normalsElmt
-                            = elmt->GetSurfaceNormal(EdgeID[cnt+n]);
+                            = elmt->GetTraceNormal(EdgeID[cnt+n]);
                 // Copy to result
                 for (j = 0; j < coordim; ++j)
                 {

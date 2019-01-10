@@ -128,9 +128,9 @@ namespace Nektar
                 Array<OneD, int>                &idmap);
 
         protected:
-            std::vector<Expansion1DWeakPtr>           m_edgeExp;
+            std::vector<Expansion1DWeakPtr>         m_edgeExp;
             std::vector<bool>                       m_requireNeg;
-            std::map<int, StdRegions::NormalVector> m_edgeNormals;
+            std::map<int, NormalVector>             m_edgeNormals;
             std::map<int, bool>                     m_negatedNormals;
             Expansion3DWeakPtr                      m_elementLeft;
             Expansion3DWeakPtr                      m_elementRight;
@@ -208,13 +208,10 @@ namespace Nektar
 
             Array<OneD, unsigned int> v_GetEdgeInverseBoundaryMap(int eid);
 
-            virtual void v_NegateEdgeNormal (const int edge);
-            virtual bool v_EdgeNormalNegated(const int edge);
+            virtual void v_NegateTraceNormal (const int edge);
+            virtual bool v_TraceNormalNegated(const int edge);
             virtual void v_SetUpPhysNormals (const int edge);
-            const StdRegions::NormalVector &v_GetEdgeNormal(
-                const int edge) const;
-            const StdRegions::NormalVector &v_GetSurfaceNormal(
-                const int id) const;
+            virtual const NormalVector &v_GetTraceNormal(const int edge) const;
             virtual NekDouble v_VectorFlux(
                 const Array<OneD, Array<OneD, NekDouble > > &vec);
         };

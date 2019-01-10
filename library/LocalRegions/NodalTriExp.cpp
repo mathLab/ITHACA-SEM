@@ -706,7 +706,7 @@ namespace Nektar
             return returnval;
         }
 
-        void NodalTriExp::v_ComputeEdgeNormal(const int edge)
+        void NodalTriExp::v_ComputeTraceNormal(const int edge)
         {
             int i;
             const SpatialDomains::GeomFactorsSharedPtr & geomFactors = GetGeom()->GetMetricInfo();

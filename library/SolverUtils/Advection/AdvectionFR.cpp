@@ -1171,7 +1171,7 @@ namespace Nektar
                     
                     // Get the normals of edge e
                     const Array<OneD, const Array<OneD, NekDouble> > &normals = 
-                        fields[0]->GetExp(n)->GetEdgeNormal(e);
+                        fields[0]->GetExp(n)->GetTraceNormal(e);
 
                     // Extract the edge values of flux-x on edge e and order 
                     // them accordingly to the order of the trace space 
@@ -1206,7 +1206,7 @@ namespace Nektar
                                        &fluxJumps[0], 1);
                     }
                     
-                    NekDouble fac = fields[0]->GetExp(n)->EdgeNormalNegated(e) ?
+                    NekDouble fac = fields[0]->GetExp(n)->TraceNormalNegated(e) ?
                         -1.0 : 1.0;
 
                     for (i = 0; i < nEdgePts; ++i)
@@ -1364,7 +1364,7 @@ namespace Nektar
                     
                     // Get the normals of edge e
                     const Array<OneD, const Array<OneD, NekDouble> > &normals =
-                    fields[0]->GetExp(n)->GetEdgeNormal(e);
+                    fields[0]->GetExp(n)->GetTraceNormal(e);
                     
                     // Extract the trasformed normal flux at each edge
                     switch (e)
@@ -1405,7 +1405,7 @@ namespace Nektar
                                 fluxN_R[i] = (m_Q2D_e0[n][i]) * fluxN[i];
                             }
                             
-                            fac = fields[0]->GetExp(n)->EdgeNormalNegated(e) ?
+                            fac = fields[0]->GetExp(n)->TraceNormalNegated(e) ?
                             -1.0 : 1.0;
                             
                             for (i = 0; i < nEdgePts; ++i)
@@ -1471,7 +1471,7 @@ namespace Nektar
                                 fluxN_R[i] = (m_Q2D_e1[n][i]) * fluxN[i];
                             }
                             
-                            fac = fields[0]->GetExp(n)->EdgeNormalNegated(e) ?
+                            fac = fields[0]->GetExp(n)->TraceNormalNegated(e) ?
                             -1.0 : 1.0;
                             
                             for (i = 0; i < nEdgePts; ++i)
@@ -1539,7 +1539,7 @@ namespace Nektar
                                 fluxN_R[i] = (m_Q2D_e2[n][i]) * fluxN[i];
                             }
                             
-                            fac = fields[0]->GetExp(n)->EdgeNormalNegated(e) ?
+                            fac = fields[0]->GetExp(n)->TraceNormalNegated(e) ?
                             -1.0 : 1.0;
                             
                             for (i = 0; i < nEdgePts; ++i)
@@ -1608,7 +1608,7 @@ namespace Nektar
                                 fluxN_R[i] = (m_Q2D_e3[n][i]) * fluxN[i];
                             }
                             
-                            fac = fields[0]->GetExp(n)->EdgeNormalNegated(e) ?
+                            fac = fields[0]->GetExp(n)->TraceNormalNegated(e) ?
                             -1.0 : 1.0;
                             
                             for (i = 0; i < nEdgePts; ++i)

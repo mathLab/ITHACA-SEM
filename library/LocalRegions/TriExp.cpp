@@ -660,7 +660,7 @@ namespace Nektar
             Array<OneD, NekDouble > Fn(nq);
 
             const Array<OneD, const Array<OneD, NekDouble> > &normals = 
-                GetLeftAdjacentElementExp()->GetFaceNormal(
+                GetLeftAdjacentElementExp()->GetTraceNormal(
                     GetLeftAdjacentElementFace());
             
             if (m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
@@ -936,7 +936,7 @@ namespace Nektar
         }
 
 
-        void TriExp::v_ComputeEdgeNormal(const int edge)
+        void TriExp::v_ComputeTraceNormal(const int edge)
         {
             int i;
             const SpatialDomains::GeomFactorsSharedPtr & geomFactors = GetGeom()->GetMetricInfo();

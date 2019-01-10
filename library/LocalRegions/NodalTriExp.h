@@ -377,7 +377,7 @@ namespace Nektar
                 HelmholtzMatrixOp(inarray,outarray,mkey);
             }  
             
-            void v_ComputeEdgeNormal(const int edge);
+            void v_ComputeTraceNormal(const int edge);
         };
     
         typedef std::shared_ptr<NodalTriExp> NodalTriExpSharedPtr;

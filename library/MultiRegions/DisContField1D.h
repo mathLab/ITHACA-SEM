@@ -44,7 +44,6 @@
 #include <MultiRegions/GlobalLinSys.h>
 #include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
 
-
 namespace Nektar
 {
     namespace MultiRegions

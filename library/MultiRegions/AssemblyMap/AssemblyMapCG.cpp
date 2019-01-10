@@ -1826,7 +1826,7 @@ namespace Nektar
             {
                 exp = locExpVector[i];
 
-                for(j = 0; j < exp->GetNtrace(); ++j)
+                for(j = 0; j < exp->GetNtraces(); ++j)
                 {
                     id = exp->GetGeom()->GetTid(j);
                     

@@ -105,7 +105,7 @@ namespace Nektar
             cnt = 0;
             for(i = 0; i < nel; ++i)
             {
-                cnt += expList[i]->GetNtrace();
+                cnt += expList[i]->GetNtraces();
             }
 
             Array<OneD, LocalRegions::ExpansionSharedPtr> tracemap(cnt);
@@ -117,7 +117,7 @@ namespace Nektar
             {
                 m_elmtToTrace[i] = tracemap + cnt;
 
-                for(j = 0; j < expList[i]->GetNtrace(); ++j)
+                for(j = 0; j < expList[i]->GetNtraces(); ++j)
                 {
                     id = expList[i]->GetGeom()->GetTid(j);
 
@@ -132,7 +132,7 @@ namespace Nektar
                     }
                 }
 
-                cnt += expList[i]->GetNtrace();
+                cnt += expList[i]->GetNtraces();
             }
 
             // Set up boundary mapping
@@ -235,7 +235,7 @@ namespace Nektar
             {
                 eid = i;
 
-                for(j = 0; j < expList[eid]->GetNtrace(); ++j)
+                for(j = 0; j < expList[eid]->GetNtraces(); ++j)
                 {
                     // Add trace to boost graph for non-Dirichlet Boundary
                     traceGeom = m_elmtToTrace[eid][j]->GetGeom();
@@ -244,7 +244,7 @@ namespace Nektar
 
                     if(dirTrace.count(id) == 0)
                     {
-                        for(k = j+1; k < expList[eid]->GetNtrace(); ++k)
+                        for(k = j+1; k < expList[eid]->GetNtraces(); ++k)
                         {
                             traceGeom = m_elmtToTrace[eid][k]->GetGeom();
                             id1       = traceGeom->GetGlobalID();
@@ -323,7 +323,7 @@ namespace Nektar
             {
                 exp = expList[i];
 
-                for(j = 0; j < exp->GetNtrace(); ++j)
+                for(j = 0; j < exp->GetNtraces(); ++j)
                 {
                     traceGeom = m_elmtToTrace[i][j]->GetGeom();
                     id        = traceGeom->GetGlobalID();

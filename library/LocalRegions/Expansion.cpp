@@ -539,6 +539,47 @@ namespace Nektar
             NEKERROR(ErrorUtil::efatal, "This function is only valid for LocalRegions");
             return 0.0;
         }
+
+        const NormalVector & Expansion::v_GetTraceNormal(const int id) const
+        {
+            ASSERTL0(false, "Cannot get trace normals for this expansion.");
+            static NormalVector result;
+            return result;
+        }
+
+        void Expansion::v_ComputeTraceNormal(const int id)
+        {
+            ASSERTL0(false, "Cannot compute trace normal for this expansion.");
+        }
+
+        void Expansion::v_NegateTraceNormal(const int id)
+        {
+            ASSERTL0(false, "Not implemented.");
+        }
+
+        bool Expansion::v_TraceNormalNegated(const int id)
+        {
+            ASSERTL0(false, "Not implemented.");
+            return false;
+        }
+
+        const Array<OneD, const NekDouble>& Expansion::v_GetPhysNormals(void)
+        {
+            NEKERROR(ErrorUtil::efatal, "This function is not valid for this class");
+            return NullNekDouble1DArray;
+        }
+
+
+        void Expansion::v_SetPhysNormals(Array<OneD, const NekDouble> &normal)
+        {
+            NEKERROR(ErrorUtil::efatal, "This function is not valid for this class");
+        }
+
+        void Expansion::v_SetUpPhysNormals(const int edge)
+        {
+            NEKERROR(ErrorUtil::efatal, "This function is not valid for this class");
+        }
+        
     } //end of namespace
 } //end of namespace
 

@@ -37,6 +37,7 @@
 #include <MultiRegions/ExpList2DHomogeneous1D.h>
 #include <MultiRegions/DisContField3DHomogeneous1D.h>
 #include <MultiRegions/DisContField2D.h>
+#include <LocalRegions/Expansion1D.h>
 
 
 namespace Nektar
@@ -593,7 +594,7 @@ namespace Nektar
                 
                 elmt   = GetExp(ElmtID[cnt+n]);
                 const Array<OneD, const Array<OneD, NekDouble> > normalsElmt
-                            = elmt->GetSurfaceNormal(EdgeID[cnt+n]);
+                            = elmt->GetTraceNormal(EdgeID[cnt+n]);
                 // Copy to result
                 for (int j = 0; j < expdim; ++j)
                 {

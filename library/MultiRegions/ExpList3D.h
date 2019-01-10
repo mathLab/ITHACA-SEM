@@ -91,14 +91,7 @@ namespace Nektar
             /// Destructor.
             MULTI_REGIONS_EXPORT virtual ~ExpList3D();
 
-        protected:
-
-            /// Set up the normals on each expansion.
-            virtual void v_SetUpPhysNormals();
-
         private:
-
-            virtual void v_WriteVtkPieceHeader(std::ostream &outfile, int expansion, int istrip);
 
             virtual void v_PhysInterp1DScaled(const NekDouble scale, const Array<OneD, NekDouble> &inarray, Array<OneD, NekDouble> &outarray);
 

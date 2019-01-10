@@ -132,25 +132,7 @@ namespace Nektar
             /// Destructor.
             MULTI_REGIONS_EXPORT virtual ~ExpList2D();
 
-        protected:
-            /// Upwind the \a Fwd and \a Bwd states based on the one-
-            /// dimensional normal velocity field given by \a Vn.
-            MULTI_REGIONS_EXPORT void v_Upwind(
-                const Array<OneD, const NekDouble> &Vn,
-                const Array<OneD, const NekDouble> &Fwd,
-                const Array<OneD, const NekDouble> &Bwd,
-                      Array<OneD,       NekDouble> &Upwind);
-            
-            void v_GetNormals(
-                Array<OneD, Array<OneD, NekDouble> > &normals);
-
         private:
-            /// Set up the normals on each expansion.
-            virtual void v_SetUpPhysNormals();
-
-            virtual void v_WriteVtkPieceHeader(
-                        std::ostream &outfile, int expansion, int istrip);
-
             virtual void v_PhysInterp1DScaled(
                 const NekDouble scale,
                 const Array<OneD, NekDouble> &inarray,

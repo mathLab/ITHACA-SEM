@@ -56,6 +56,8 @@ namespace Nektar
 {
     namespace MultiRegions
     {
+        
+#define DEMO_IMPLICITSOLVER_JFNK_COEFF
         // Forward declarations
         class GlobalLinSys;
         class AssemblyMapDG;

@@ -105,6 +105,8 @@ namespace Nektar
 #ifdef DEMO_IMPLICITSOLVER_JFNK_COEFF
             /// coefff of spacial derivatives(rhs or m_F in GLM) in calculating the residual of the whole equation(used in unsteady time integrations)
             NekDouble                                       m_TimeIntegLambda=0.0;
+            
+            NekDouble                                       m_TimeIntegLambdaPrcMat=0.0;
 
             ///Solution of The kth iteration in the Newton method(Nonlinear iteration)
             Array<OneD,       Array<OneD, NekDouble> >      m_TimeIntegtSol_k;
@@ -129,7 +131,8 @@ namespace Nektar
 
             NekDouble   m_inArrayNorm=-1.0;
 
-            int m_TotLinItePrecondMat=600;
+            bool m_CalcuPrecMatFlag     = true;
+            int  m_CalcuPrecMatCounter   = 0;
 
             int m_TotLinItePerStep=600;
 

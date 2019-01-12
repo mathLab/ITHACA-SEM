@@ -667,7 +667,7 @@ namespace Nektar
 #ifdef DEMO_IMPLICITSOLVER_JFNK_COEFF
             m_session->LoadParameter("cflLocTimestep",       m_cflLocTimestep,    -5.0);
             m_session->LoadParameter("TimeIncrementFactor",       m_TimeIncrementFactor,    1.0);
-            m_session->LoadParameter("TotLinItePerStep",       m_TotLinItePerStepSET,    200);
+            m_session->LoadParameter("PrcdMatFreezNumb",       m_PrcdMatFreezNumb,    1);
             m_session->LoadParameter("NewtonAbsoluteIteTol",       m_NewtonAbsoluteIteTol,    1.0E-10);
             m_session->LoadParameter("NewtonRelativeIteTol",       m_NewtonRelativeIteTol,    1.0E-500);
             m_session->LoadParameter("JFNKTimeAccurate",       m_JFNKTimeAccurate,    1);

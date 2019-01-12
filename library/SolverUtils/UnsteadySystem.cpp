@@ -310,18 +310,21 @@ namespace Nektar
                 if (m_TimeIncrementFactor>1.0)
                 {
                     NekDouble timeincrementFactor = m_TimeIncrementFactor;
-                    // cout << "m_TotLinItePerStepSET = "<< m_TotLinItePerStepSET<< endl;
-                    if(m_TotLinItePerStep<m_TotLinItePerStepSET&&m_TotLinItePerStep>0)
-                    {
-                        m_timestep  *=  timeincrementFactor;
-                    }
+                    m_timestep  *=  timeincrementFactor;
 
                     if (m_time + m_timestep > m_fintime && m_fintime > 0.0)
                     {
                         m_timestep = m_fintime - m_time;
                     }
                 }
-                m_TotLinItePerStep =0;
+                if(m_CalcuPrecMatCounter>=m_PrcdMatFreezNumb)
+                {
+
+                    m_CalcuPrecMatFlag      =   true;
+                    m_CalcuPrecMatCounter   =   0;
+                }
+                m_CalcuPrecMatCounter++;
+
 #endif
                 
                 // Perform any solver-specific pre-integration steps

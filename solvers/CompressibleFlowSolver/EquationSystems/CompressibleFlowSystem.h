@@ -112,7 +112,6 @@ namespace Nektar
                   Array<OneD,       Array<OneD, NekDouble> > &outarray,
             const NekDouble                                   time);
 
-// #define DEMO_IMPLICITSOLVER_JFNK_COEFF
 #ifdef DEMO_IMPLICITSOLVER_JFNK_COEFF
         void preconditioner(
             const Array<OneD, NekDouble> &inarray,

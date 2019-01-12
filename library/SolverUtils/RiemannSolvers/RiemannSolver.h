@@ -56,6 +56,8 @@ namespace Nektar
             const Array<OneD, const Array<OneD, NekDouble> >& ()> RSVecFuncType;
         typedef std::function<
             NekDouble ()> RSParamFuncType;
+            
+#define DEMO_IMPLICITSOLVER_JFNK_COEFF
 
         class RiemannSolver
         {

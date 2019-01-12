@@ -138,6 +138,16 @@ namespace Nektar
             m_ode.DefineProjection(&CompressibleFlowSystem::DoOdeProjection, this);
             // m_ode.DefineImplicitSolve    (&CompressibleFlowSystem::DoImplicitSolve, this);
             m_ode.DefineImplicitSolve    (&CompressibleFlowSystem::DoImplicitSolve_phy2coeff, this);
+
+            //TODO: NekLinSysIterative as a member to avoid repeted initialization
+            LibUtilities::CommSharedPtr v_Comm  = m_fields[0]->GetComm()->GetRowComm();
+            m_linsol    = MemoryManager<NekLinSysIterative>::AllocateSharedPtr(m_session,v_Comm); 
+            // m_linsol    =   NekLinSysIterative(m_session,v_Comm);
+            m_LinSysOprtors.DefineMatrixMultiply(&CompressibleFlowSystem::MatrixMultiply_MatrixFree_coeff, this);
+            m_LinSysOprtors.DefinePrecond(&CompressibleFlowSystem::preconditioner_BlkSOR_coeff, this);
+            // m_LinSysOprtors.DefinePrecond(&CompressibleFlowSystem::preconditioner_BlkDiag, this);
+            // m_LinSysOprtors.DefinePrecond(&CompressibleFlowSystem::preconditioner, this);
+            m_linsol->setLinSysOperators(m_LinSysOprtors);
 #else
             
             
@@ -1290,7 +1300,6 @@ namespace Nektar
         m_TimeIntegtSol_n   = inarray;
         m_TimeIntegtSol_k   = out;
         m_BndEvaluateTime   = time;
-        NekDouble lamda_old = m_TimeIntegLambda;
         m_TimeIntegLambda   = lambda;
         bool l_verbose      = m_session->DefinesCmdLineArgument("verbose");
         bool converged      = false;
@@ -1358,16 +1367,17 @@ namespace Nektar
             }
         }
 
-
         NekDouble LinSysTol = 0.0;
         NekDouble tolrnc    = m_NewtonAbsoluteIteTol;
         NekDouble tol2      = m_inArrayNorm*tolrnc*tolrnc*ntotalDOF;
-        NekDouble tol2Max   = sqrt(m_inArrayNorm*ototalDOF*tolrnc);
-        // NekDouble ratioTol = m_NewtonRelativeIteTol;
-        NekDouble ratioTol = tolrnc;
+        NekDouble tol2Max   = sqrt(m_inArrayNorm*ototalDOF)*tolrnc;
+        
         //TODO: if steady state the dt should change according to resnorm/m_inArrayNorm
         // so that quadrature convergence rate may be achieved
         // at this situation && may be better in convergence critiria
+
+        NekDouble ratioTol = m_NewtonRelativeIteTol;
+        // NekDouble ratioTol = tolrnc;
         NekDouble tol2Ratio = ratioTol*ratioTol*ntotalDOF;
 
         m_PrecMatVars = Array<OneD, Array<OneD, DNekBlkMatSharedPtr> >(nvariables);
@@ -1404,19 +1414,13 @@ namespace Nektar
             m_locTimeStep = tstep;
         }
 
-
-        // TODO: 
-        // v_Comm is based on the explist used may be different(m_tracemap or m_locToGloMap) for diffrent
-        // should generate GlobalLinSys first and get the v_Comm from GlobalLinSys. here just give it a m_Comm no parallel support yet!!
-        //const std::weak_ptr<ExpList> 
-        // std::shared_ptr<MultiRegions::ExpList> vExpList = m_fields[0]->GetSharedThisPtr();
-
-        NekLinSysIterative linsol(m_session,v_Comm);
-        m_LinSysOprtors.DefineMatrixMultiply(&CompressibleFlowSystem::MatrixMultiply_MatrixFree_coeff, this);
-        m_LinSysOprtors.DefinePrecond(&CompressibleFlowSystem::preconditioner_BlkSOR_coeff, this);
-        // m_LinSysOprtors.DefinePrecond(&CompressibleFlowSystem::preconditioner_BlkDiag, this);
-        // m_LinSysOprtors.DefinePrecond(&CompressibleFlowSystem::preconditioner, this);
-        linsol.setLinSysOperators(m_LinSysOprtors);
+        // //TODO: NekLinSysIterative as a member to avoid repeted initialization
+        // NekLinSysIterative linsol(m_session,v_Comm);
+        // m_LinSysOprtors.DefineMatrixMultiply(&CompressibleFlowSystem::MatrixMultiply_MatrixFree_coeff, this);
+        // m_LinSysOprtors.DefinePrecond(&CompressibleFlowSystem::preconditioner_BlkSOR_coeff, this);
+        // // m_LinSysOprtors.DefinePrecond(&CompressibleFlowSystem::preconditioner_BlkDiag, this);
+        // // m_LinSysOprtors.DefinePrecond(&CompressibleFlowSystem::preconditioner, this);
+        // linsol.setLinSysOperators(m_LinSysOprtors);
 
 //Debug
 //         NonlinSysEvaluator_coeff(m_TimeIntegtSol_k,m_SysEquatResid_k);
@@ -1427,8 +1431,13 @@ namespace Nektar
 
         // ElmtVarInvMtrx_coeff(m_PrecMatVars);
 
-        // if(m_TotLinItePrecondMat>0&&lamda_old==m_TimeIntegLambda)
-        // {
+        if (m_TimeIntegLambdaPrcMat!=m_TimeIntegLambda)
+        {
+            m_CalcuPrecMatFlag = true;
+            WARNINGL0(false, "m_TimeIntegLambdaPrcMat!=m_TimeIntegLambda)");
+        }
+        if(m_CalcuPrecMatFlag)
+        {
             int nphspnt = inpnts[0].num_elements();
             Array<OneD, Array<OneD, NekDouble> > intmp(nvariables);
             for(int i = 0; i < nvariables; i++)
@@ -1466,17 +1475,17 @@ namespace Nektar
 
         //     }
             GetpreconditionerNSBlkDiag_coeff(intmp,m_PrecMatVars,m_TraceJac,m_TraceJacDeriv);
-            // cout << "m_TotLinItePrecondMat  =   "<<m_TotLinItePrecondMat<<endl;
-            // m_TotLinItePrecondMat = 0;
+            m_CalcuPrecMatFlag = false;
+            m_TimeIntegLambdaPrcMat = m_TimeIntegLambda;
+            // cout << "m_TotNonLinItePrecMat  =   "<<m_TotNonLinItePrecMat<<endl;
+            // m_TotNonLinItePrecMat = 0;
 
             // to free the storage
             for(int i = 0; i < nvariables; i++)
             {
                 intmp[i]    =   Array<OneD, NekDouble>(1,0.0);
             }
-        // }
-
-        
+        }
 
         converged = false;
         int nwidthcolm = 8;
@@ -1542,10 +1551,10 @@ namespace Nektar
             // LinSysTol = sqrt(0.01*sqrt(ratioTol)*resnorm);
             LinSysTol = 1.0E-5*sqrt(resnorm);
             // LinSysTol = 0.005*sqrt(resnorm)*(k+1);
-            NtotDoOdeRHS  +=   linsol.SolveLinearSystem(ntotal,NonlinSysRes_1D,dsol_1D,0,LinSysTol);
+            NtotDoOdeRHS  +=   m_linsol->SolveLinearSystem(ntotal,NonlinSysRes_1D,dsol_1D,0,LinSysTol);
             // cout << "NtotDoOdeRHS    = "<<NtotDoOdeRHS<<endl;
 
-            // LinSysEPS  =   linsol.SolveLinearSystem(ntotal,NonlinSysRes_1D,dsol_1D,0);
+            // LinSysEPS  =   m_linsol->SolveLinearSystem(ntotal,NonlinSysRes_1D,dsol_1D,0);
             for(int i = 0; i < nvariables; i++)
             {
                 Vmath::Vsub(npoints,m_TimeIntegtSol_k[i],1,dsol[i],1,m_TimeIntegtSol_k[i],1);

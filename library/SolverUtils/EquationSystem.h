@@ -367,12 +367,12 @@ class Interpolator;
             NekDouble                                   m_TimeIncrementFactor;
             /// cfl number for local time step(notice only for jfnk other see m_cflSafetyFactor)
             NekDouble                                   m_cflLocTimestep;
-                        
+
             /// two strategies: time accurate or not.
             int                                        m_JFNKTimeAccurate;
+                        
+            int                                         m_PrcdMatFreezNumb;
 
-            /// Time step size
-            int                                         m_TotLinItePerStepSET;
             /// preconditioning steps
             int                                         m_JFNKPrecondStep;
 #endif
@@ -415,6 +415,8 @@ class Interpolator;
 
             /// Map to identify relevant solver info to dump in output fields
             LinSysOperators                             m_LinSysOprtors;
+
+            NekLinSysIterativeSharedPtr                 m_linsol;
 
             /// Number of Quadrature points used to work out the error
             int  m_NumQuadPointsError;

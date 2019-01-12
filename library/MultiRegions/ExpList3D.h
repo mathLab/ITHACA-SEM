@@ -93,10 +93,6 @@ namespace Nektar
 
         private:
 
-            virtual void v_PhysInterp1DScaled(const NekDouble scale, const Array<OneD, NekDouble> &inarray, Array<OneD, NekDouble> &outarray);
-
-            virtual void v_PhysGalerkinProjection1DScaled(const NekDouble scale, const Array<OneD, NekDouble> &inarray, Array<OneD, NekDouble> &outarray);
-
         };
 
         /// Shared pointer to an ExpList3D object.

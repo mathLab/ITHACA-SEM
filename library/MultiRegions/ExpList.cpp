@@ -65,6 +65,8 @@
 #include <LibUtilities/LinearAlgebra/NekMatrix.hpp>
 #include <LibUtilities/Foundations/ManagerAccess.h>  // for PointsManager, etc
 #include <LibUtilities/Polylib/Polylib.h>
+#include <LibUtilities/Foundations/Interp.h>
+#include <LibUtilities/Foundations/PhysGalerkinProject.h>
 
 #include <Collections/CollectionOptimisation.h>
 #include <Collections/Operator.h>
@@ -2180,17 +2182,6 @@ namespace Nektar
         }
 
 
-        void ExpList::v_PhysInterp1DScaled(const NekDouble scale, const Array<OneD, NekDouble> &inarray, Array<OneD, NekDouble> &outarray)
-        {
-            ASSERTL0(false,
-                     "This method is not defined or valid for this class type");
-        }
-
-        void ExpList::v_PhysGalerkinProjection1DScaled(const NekDouble scale, const Array<OneD, NekDouble> &inarray, Array<OneD, NekDouble> &outarray)        {
-            ASSERTL0(false,
-                     "This method is not defined or valid for this class type");
-        }
-        
         void ExpList::v_ClearGlobalLinSysManager(void)
         {
             ASSERTL0(false,
@@ -4045,9 +4036,163 @@ namespace Nektar
                     outarray[j] += inarray1[index]*jacobi_poly[r][j];
                 }
             }
-
         }
 
+        void ExpList::v_PhysInterp1DScaled(
+            const NekDouble scale, 
+            const Array<OneD, NekDouble> &inarray,
+                  Array<OneD, NekDouble> &outarray)
+        {
+            int cnt,cnt1;
+
+            cnt = cnt1 = 0;
+
+            switch(m_expType)
+            {
+            case e2D:
+            {
+                for(int i = 0; i < GetExpSize(); ++i)
+                {
+                    // get new points key
+                    int pt0 = (*m_exp)[i]->GetNumPoints(0);
+                    int pt1 = (*m_exp)[i]->GetNumPoints(1);
+                    int npt0 = (int) pt0*scale;
+                    int npt1 = (int) pt1*scale;
+                    
+                    LibUtilities::PointsKey newPointsKey0(npt0,
+                                                          (*m_exp)[i]->GetPointsType(0));
+                    LibUtilities::PointsKey newPointsKey1(npt1, 
+                                                          (*m_exp)[i]->GetPointsType(1));
+                    
+                    // Interpolate points; 
+                    LibUtilities::Interp2D((*m_exp)[i]->GetBasis(0)->GetPointsKey(),
+                                           (*m_exp)[i]->GetBasis(1)->GetPointsKey(),
+                                           &inarray[cnt],newPointsKey0,
+                                           newPointsKey1,&outarray[cnt1]);
+                    
+                    cnt  += pt0*pt1;
+                    cnt1 += npt0*npt1;
+                }
+            }
+            break;
+            case e3D:
+            {
+                for(int i = 0; i < GetExpSize(); ++i)
+                {
+                    // get new points key
+                    int pt0 = (*m_exp)[i]->GetNumPoints(0);
+                    int pt1 = (*m_exp)[i]->GetNumPoints(1);
+                    int pt2 = (*m_exp)[i]->GetNumPoints(2);
+                    int npt0 = (int) pt0*scale;
+                    int npt1 = (int) pt1*scale;
+                    int npt2 = (int) pt2*scale;
+                    
+                    LibUtilities::PointsKey newPointsKey0(npt0,(*m_exp)[i]->GetPointsType(0));
+                    LibUtilities::PointsKey newPointsKey1(npt1,(*m_exp)[i]->GetPointsType(1));
+                    LibUtilities::PointsKey newPointsKey2(npt2,(*m_exp)[i]->GetPointsType(2));
+                    
+                    // Interpolate points; 
+                    LibUtilities::Interp3D((*m_exp)[i]->GetBasis(0)->GetPointsKey(),
+                                           (*m_exp)[i]->GetBasis(1)->GetPointsKey(),
+                                           (*m_exp)[i]->GetBasis(2)->GetPointsKey(),
+                                           &inarray[cnt], newPointsKey0,
+                                           newPointsKey1, newPointsKey2,
+                                           &outarray[cnt1]);
+                    
+                    cnt  += pt0*pt1*pt2;
+                    cnt1 += npt0*npt1*npt2;
+                }
+            }
+            break;
+            default:
+            {
+                ASSERTL0(false,"This expansion is not set");
+            }
+            break;
+            }
+        }
+        
+        void ExpList::v_PhysGalerkinProjection1DScaled(
+            const NekDouble scale, 
+            const Array<OneD, NekDouble> &inarray, 
+                  Array<OneD, NekDouble> &outarray)
+        {
+            int cnt,cnt1;
+
+            cnt = cnt1 = 0;
+
+            switch(m_expType)
+            {
+            case e2D:
+            {
+                for(int i = 0; i < GetExpSize(); ++i)
+                {
+                    // get new points key
+                    int pt0 = (*m_exp)[i]->GetNumPoints(0);
+                    int pt1 = (*m_exp)[i]->GetNumPoints(1);
+                    int npt0 = (int) pt0*scale;
+                    int npt1 = (int) pt1*scale;
+                    
+                    LibUtilities::PointsKey newPointsKey0(npt0, 
+                                              (*m_exp)[i]->GetPointsType(0));
+                    LibUtilities::PointsKey newPointsKey1(npt1, 
+                                               (*m_exp)[i]->GetPointsType(1));
+                    
+                    // Project points; 
+                    LibUtilities::PhysGalerkinProject2D(newPointsKey0, 
+                                                        newPointsKey1,
+                                                        &inarray[cnt],
+                                       (*m_exp)[i]->GetBasis(0)->GetPointsKey(),
+                                       (*m_exp)[i]->GetBasis(1)->GetPointsKey(),
+                                       &outarray[cnt1]);
+                
+                    cnt  += npt0*npt1;
+                    cnt1 += pt0*pt1;
+                }
+            }
+            break;
+            case e3D:
+            {
+                for(int i = 0; i < GetExpSize(); ++i)
+                {
+                    // get new points key
+                    int pt0 = (*m_exp)[i]->GetNumPoints(0);
+                    int pt1 = (*m_exp)[i]->GetNumPoints(1);
+                    int pt2 = (*m_exp)[i]->GetNumPoints(2);
+                    int npt0 = (int) pt0*scale;
+                    int npt1 = (int) pt1*scale;
+                    int npt2 = (int) pt2*scale;
+                    
+                    LibUtilities::PointsKey newPointsKey0(npt0,
+                                             (*m_exp)[i]->GetPointsType(0));
+                    LibUtilities::PointsKey newPointsKey1(npt1,
+                                             (*m_exp)[i]->GetPointsType(1));
+                    LibUtilities::PointsKey newPointsKey2(npt2,
+                                             (*m_exp)[i]->GetPointsType(2));
+                    
+                    // Project points; 
+                    LibUtilities::PhysGalerkinProject3D(newPointsKey0, 
+                                                        newPointsKey1,
+                                                        newPointsKey2,
+                                                        &inarray[cnt],
+                                       (*m_exp)[i]->GetBasis(0)->GetPointsKey(),
+                                       (*m_exp)[i]->GetBasis(1)->GetPointsKey(),
+                                       (*m_exp)[i]->GetBasis(2)->GetPointsKey(),
+                                       &outarray[cnt1]);
+                
+                    cnt  += npt0*npt1*npt2;
+                    cnt1 += pt0*pt1*pt2;
+                }
+            }
+            break;
+            default:
+            {
+                ASSERTL0(false,"not setup for this expansion");
+            }
+            break;
+            }
+        }
+        
     } //end of namespace
 } //end of namespace
 

@@ -133,15 +133,6 @@ namespace Nektar
             MULTI_REGIONS_EXPORT virtual ~ExpList2D();
 
         private:
-            virtual void v_PhysInterp1DScaled(
-                const NekDouble scale,
-                const Array<OneD, NekDouble> &inarray,
-                      Array<OneD, NekDouble> &outarray);
-
-            virtual void v_PhysGalerkinProjection1DScaled(
-                const NekDouble scale,
-                const Array<OneD, NekDouble> &inarray,
-                      Array<OneD, NekDouble> &outarray);
         };
 
         /// Empty ExpList2D object.

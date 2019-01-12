@@ -169,7 +169,7 @@ namespace Nektar
                         LocalRegions::Expansion1DSharedPtr loc_exp
                             = bndCondExp[j]->GetExp(k)
                                 ->as<LocalRegions::Expansion1D>();
-                        locnorm = loc_exp->GetLeftAdjacentElementExp()->GetEdgeNormal(loc_exp->GetLeftAdjacentElementEdge());
+                        locnorm = loc_exp->GetLeftAdjacentElementExp()->GetTraceNormal(loc_exp->GetLeftAdjacentElementEdge());
                         //locnorm = bndCondExp[j]->GetExp(k)->Get GetMetricInfo()->GetNormal();
 
                         int ndir = locnorm.num_elements();

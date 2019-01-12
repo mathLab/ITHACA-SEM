@@ -232,7 +232,7 @@ void FilterMovingBody::UpdateForce(
     int nt  = pFields[0]->GetNpoints();
     int dim = pFields.num_elements()-1;
 
-    StdRegions::StdExpansionSharedPtr elmt;
+    LocalRegions::ExpansionSharedPtr elmt;
     Array<OneD, int> BoundarytoElmtID;
     Array<OneD, int> BoundarytoTraceID;
     Array<OneD, MultiRegions::ExpListSharedPtr>  BndExp;
@@ -368,7 +368,7 @@ void FilterMovingBody::UpdateForce(
 
                     //normals of the element
                     const Array<OneD, Array<OneD, NekDouble> > &normals
-                                            = elmt->GetEdgeNormal(boundary);
+                        = elmt->GetTraceNormal(boundary);
 
                     //
                     // Compute viscous tractive forces on wall from

@@ -95,6 +95,7 @@ namespace Nektar
 
         C_m  =  1; // picoF
         V_0  = -85;
+        V_fi =  15;
 
         switch (model_variant) {
             case eBR:
@@ -345,13 +346,18 @@ namespace Nektar
         // Temporary variables
         NekDouble J_fi, J_so, J_si, h1, h2, h3, alpha, beta;
 
+        double V;
         // Compute rates for each point in domain
         for (i = 0; i < n; ++i)
         {
+            // *u is dimensional
+            // V is non-dimensional for what follows
+            V = (*u - V_0)/(V_fi - V_0);
+
             // Heavyside functions
-            h1 = (*u < u_c) ? 0.0 : 1.0;
-            h2 = (*u < u_v) ? 0.0 : 1.0;
-            h3 = (*u < u_r) ? 0.0 : 1.0;
+            h1 = (V < u_c) ? 0.0 : 1.0;
+            h2 = (V < u_v) ? 0.0 : 1.0;
+            h3 = (V < u_r) ? 0.0 : 1.0;
 
             // w-gate
             alpha = (1-h1)/tau_w_minus;
@@ -372,18 +378,19 @@ namespace Nektar
             }
 
             // J_fi
-            J_fi = -(*v)*h1*(1 - *u)*(*u - u_fi)/tau_d;
+            J_fi = -(*v)*h1*(1 - V)*(V - u_c)/tau_d;
 
             // J_so
             // added extra (1-k2*v) term from Cherry&Fenton 2004
-            J_so = (*u)*(1-h3)*(1-k2*(*v))/tau_0 +
-                    (isCF3 ? h3*(*u)*(*y)/tau_r : h3/tau_r);
+            J_so = V*(1-h3)*(1-k2*(*v))/tau_0 +
+                    (isCF3 ? h3*V*(*y)/tau_r : h3/tau_r);
 
             // J_si
-            J_si = -(*w)*(1 + tanh(k1*(*u - u_csi)))/(2.0*tau_si);
+            J_si = -(*w)*(1 + tanh(k1*(V - u_csi)))/(2.0*tau_si);
 
             // u
             *u_new = -J_fi - J_so - J_si;
+            *u_new *= C_m*(V_fi - V_0);
 
             ++u, ++v, ++w, ++u_new, ++v_new, ++w_new, ++v_tau, ++w_tau;
         }

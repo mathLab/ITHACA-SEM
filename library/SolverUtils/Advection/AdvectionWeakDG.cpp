@@ -321,7 +321,11 @@ namespace Nektar
                                     ::AllocateSharedPtr(nElmtCoef, nElmtCoef,0.0);
             }
 
+#ifdef DEBUG_VISCOUS_JAC_MAT
             bool TracePntJacGradflag = true;
+#else
+            bool TracePntJacGradflag = false;
+#endif
             if(NullArrayDNekBlkMatSharedPtr==TracePntJacGrad)
             {
                 TracePntJacGradflag = false;

@@ -843,7 +843,9 @@ namespace Nektar
 //     }
 // }
             //TODO:
+#ifdef DEBUG_VISCOUS_JAC_MAT
             AddDiffusionFluxJacDirctn(nfluxDir,inarray,qfield, ElmtJac);
+#endif
 //Debug
 // for(int i =0; i<ElmtJac.num_elements(); i++ )
 // {
@@ -855,6 +857,7 @@ namespace Nektar
 
             m_advObject->AddVolumJacToMat(nvariable,m_fields,ElmtJac,nfluxDir,gmtxarray);
         }
+#ifdef DEBUG_VISCOUS_JAC_MAT
         for(int nfluxDir = 0; nfluxDir < nSpaceDim; nfluxDir++)
         {
             Vmath::Fill(npoints,1.0,normal3D[nfluxDir],1);
@@ -866,6 +869,7 @@ namespace Nektar
             }
             Vmath::Fill(npoints,0.0,normal3D[nfluxDir],1);
         }
+#endif
     }
 
 
@@ -935,6 +939,8 @@ namespace Nektar
         TraceJac    =   Array<OneD, DNekBlkMatSharedPtr>(2);
         TraceJac[0] = FJac;
         TraceJac[1] = BJac;
+#ifdef DEBUG_VISCOUS_JAC_MAT
+        //TODO: FJac&BJac over written?
 
         Array<OneD, unsigned int> n_blks2(nTracePts);
         for(int i=0;i<nTracePts;i++)
@@ -952,6 +958,7 @@ namespace Nektar
         TraceJacDeriv    =   Array<OneD, DNekBlkMatSharedPtr>(1);
         TraceJacDeriv[0] = FJac;
         // TraceJacDeriv[1] = BJac;
+#endif
     }
 
 
@@ -1243,7 +1250,7 @@ namespace Nektar
     {
         m_advObject->AdvectTraceFlux(nConvectiveFields, m_fields, AdvVel, inarray, traceflux,
                         m_BndEvaluateTime,vFwd, vBwd);
-
+#ifdef DEBUG_VISCOUS_JAC_MAT
         Array<OneD, Array<OneD, Array<OneD, NekDouble> > > visflux(1);
         visflux[0]     =   Array<OneD,       Array<OneD, NekDouble> > (nConvectiveFields);
         for(int i = 0; i < nConvectiveFields; i++)
@@ -1257,6 +1264,7 @@ namespace Nektar
         {
             Vmath::Vsub(nTracePts,traceflux[i],1,visflux[0][i],1,traceflux[i],1);
         }
+#endif
 
     }
 
@@ -1380,12 +1388,20 @@ namespace Nektar
         // NekDouble ratioTol = tolrnc;
         NekDouble tol2Ratio = ratioTol*ratioTol*ntotalDOF;
 
-        m_PrecMatVars = Array<OneD, Array<OneD, DNekBlkMatSharedPtr> >(nvariables);
-        for(int i = 0; i < nvariables; i++)
+        if(m_PrecMatVars.num_elements())
         {
-            m_PrecMatVars[i] =  Array<OneD, DNekBlkMatSharedPtr> (nvariables);
+
         }
-        AllocatePrecondBlkDiag_coeff(m_PrecMatVars);
+        else
+        {
+            m_PrecMatVars = Array<OneD, Array<OneD, DNekBlkMatSharedPtr> >(nvariables);
+            for(int i = 0; i < nvariables; i++)
+            {
+                m_PrecMatVars[i] =  Array<OneD, DNekBlkMatSharedPtr> (nvariables);
+            }
+            AllocatePrecondBlkDiag_coeff(m_PrecMatVars);
+        }
+        
 
         Array<OneD, NekDouble> NonlinSysRes_1D(ntotal,0.0),sol_k_1D(ntotal,0.0),dsol_1D(ntotal,0.0);
         Array<OneD,       Array<OneD, NekDouble> > NonlinSysRes(nvariables),dsol(nvariables);
@@ -1430,13 +1446,8 @@ namespace Nektar
 // Cout2DArrayBlkMat(m_PrecMatVars);
 
         // ElmtVarInvMtrx_coeff(m_PrecMatVars);
-
-        if (m_TimeIntegLambdaPrcMat!=m_TimeIntegLambda)
-        {
-            m_CalcuPrecMatFlag = true;
-            WARNINGL0(false, "m_TimeIntegLambdaPrcMat!=m_TimeIntegLambda)");
-        }
-        if(m_CalcuPrecMatFlag)
+        // TODO: auto precondition recompute. use random vector&L1 norm relative error.
+        if(m_CalcuPrecMatFlag||(m_TimeIntegLambdaPrcMat!=m_TimeIntegLambda))
         {
             int nphspnt = inpnts[0].num_elements();
             Array<OneD, Array<OneD, NekDouble> > intmp(nvariables);
@@ -1475,6 +1486,7 @@ namespace Nektar
 
         //     }
             GetpreconditionerNSBlkDiag_coeff(intmp,m_PrecMatVars,m_TraceJac,m_TraceJacDeriv);
+            cout << "GetpreconditionerNSBlkDiag_coeff"<<endl;
             m_CalcuPrecMatFlag = false;
             m_TimeIntegLambdaPrcMat = m_TimeIntegLambda;
             // cout << "m_TotNonLinItePrecMat  =   "<<m_TotNonLinItePrecMat<<endl;
@@ -1514,6 +1526,9 @@ namespace Nektar
                 resratio = resnorm/resnorm0;
             }
 
+            //TODO: To further optimise the criteria. mainly use L1 norm!!
+            // think about the case in which change is limited to small zone.
+            // think about the steady state quadrature convergence requirement
             if (resnorm<tol2||resratio<tol2Ratio)
             {
                 // this works when resnorm0<<m_inArrayNorm ie. close to converge
@@ -1612,14 +1627,15 @@ namespace Nektar
             Array<OneD, DNekBlkMatSharedPtr >                   &TraceJacDeriv)
     {
         Array<OneD, Array<OneD, Array<OneD, NekDouble> > > qfield;
-
+#ifdef DEBUG_VISCOUS_JAC_MAT
         CalphysDeriv(inarray,qfield);
+#endif
         
         Fill2DArrayOfBlkDiagonalMat(gmtxarray,0.0);
         AddMatNSBlkDiag_volume(inarray,qfield,gmtxarray);
 //Debug
 // Cout2DArrayBlkMat(gmtxarray);
-
+// ASSERTL0(false, "stop debug");
         AddMatNSBlkDiag_boundary(inarray,qfield,gmtxarray,TraceJac,TraceJacDeriv);
             
         MultiplyElmtInvMass_PlusSource(gmtxarray,m_TimeIntegLambda);

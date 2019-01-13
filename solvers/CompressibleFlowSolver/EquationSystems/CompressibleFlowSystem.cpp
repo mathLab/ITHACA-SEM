@@ -1308,7 +1308,6 @@ namespace Nektar
         m_BndEvaluateTime   = time;
         m_TimeIntegLambda   = lambda;
         bool l_verbose      = m_session->DefinesCmdLineArgument("verbose");
-        bool converged      = false;
         const unsigned int MaxNonlinIte =   100;
         unsigned int nvariables     = inarray.num_elements();
         unsigned int npoints        = inarray[0].num_elements();
@@ -1376,15 +1375,15 @@ namespace Nektar
         NekDouble LinSysTol = 0.0;
         NekDouble tolrnc    = m_NewtonAbsoluteIteTol;
         NekDouble tol2      = m_inArrayNorm*tolrnc*tolrnc;
-        NekDouble tol2Max   = sqrt(m_inArrayNorm*ototalDOF*tolrnc);
         
         //TODO: if steady state the dt should change according to resnorm/m_inArrayNorm
         // so that quadrature convergence rate may be achieved
         // at this situation && may be better in convergence critiria
 
-        // NekDouble ratioTol = m_NewtonRelativeIteTol;
-        NekDouble ratioTol = tolrnc;
+        NekDouble ratioTol = m_NewtonRelativeIteTol;
+        // NekDouble ratioTol = tolrnc;
         NekDouble tol2Ratio = ratioTol*ratioTol;
+        NekDouble tol2Max   = sqrt(m_inArrayNorm*ototalDOF)*ratioTol;
 
         if(m_PrecMatVars.num_elements())
         {
@@ -1497,7 +1496,8 @@ namespace Nektar
             }
         }
 
-        converged = false;
+        bool converged       = false;
+        bool steady_state    = false;
         int nwidthcolm = 8;
         int NtotDoOdeRHS = 0;
         NekDouble resnorm0 = 0.0;
@@ -1523,40 +1523,42 @@ namespace Nektar
             {
                 resratio = resnorm/resnorm0;
             }
+            if(resnorm0<tol2)
+            {
+                converged = true;
+                steady_state = true;
+                break;
+            }
 
             //TODO: To further optimise the criteria. mainly use L1 norm!!
             // think about the case in which change is limited to small zone.
             // think about the steady state quadrature convergence requirement
-            if (resnorm<tol2||resratio<tol2Ratio)
+            if (resratio<tol2Ratio)
             {
-                // this works when resnorm0<<m_inArrayNorm ie. close to converge
-                if(resratio<0.1)
+                resmaxm = 0.0;
+                for(int i=0;i<ntotal;i++)
                 {
-                    resmaxm = 0.0;
-                    for(int i=0;i<ntotal;i++)
+                    resmaxm = max(resmaxm,abs(NonlinSysRes_1D[i]));
+                }
+                v_Comm->AllReduce(resmaxm, Nektar::LibUtilities::ReduceMax);
+                if(resmaxm<tol2Max)
+                {
+                // at least one Newton Iteration 
+                // or else the flow field will not update 
+                // if(k>0)
+                // {
+                    /// TODO: m_root
+                    if(l_verbose&&l_root)
                     {
-                        resmaxm = max(resmaxm,abs(NonlinSysRes_1D[i]));
+                        cout <<right<<scientific<<setw(nwidthcolm)<<setprecision(nwidthcolm-6)
+                            <<" * Newton-Its converged (RES=" 
+                            << sqrt(resnorm)<<" Res/Q="<< sqrt(resnorm/m_inArrayNorm)
+                            <<" ResMax/QPerDOF="<< resmaxm*sqrt(ntotalDOF/m_inArrayNorm)<<" Res/(DtRHS): "<<sqrt(resratio)
+                            <<" with "<<setw(3)<<k<<" Non-Its"<<" and "<<setw(4)<<NtotDoOdeRHS<<" Lin-Its)"<<endl;
                     }
-                    v_Comm->AllReduce(resmaxm, Nektar::LibUtilities::ReduceMax);
-                    if(resmaxm<tol2Max)
-                    {
-                    // at least one Newton Iteration 
-                    // or else the flow field will not update 
-                    // if(k>0)
-                    // {
-                        /// TODO: m_root
-                        if(l_verbose&&l_root)
-                        {
-                            cout <<right<<scientific<<setw(nwidthcolm)<<setprecision(nwidthcolm-6)
-                                <<" * Newton-Its converged (RES=" 
-                                << sqrt(resnorm)<<" ResPerDOF/Q="<< sqrt(resnorm/m_inArrayNorm*ototalDOF)
-                                <<" ResMax/Q="<< resmaxm*sqrt(ntotalDOF/m_inArrayNorm)<<" ResPerDOF/(DtRHS): "<<sqrt(resratio*ototalDOF)
-                                <<" with "<<setw(3)<<k<<" Non-Its"<<" and "<<setw(4)<<NtotDoOdeRHS<<" Lin-Its)"<<endl;
-                        }
-                        converged = true;
-                        break;
-                    // }
-                    }
+                    converged = true;
+                    break;
+                // }
                 }
             }
 

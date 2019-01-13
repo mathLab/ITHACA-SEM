@@ -149,8 +149,6 @@ namespace Nektar
             // m_LinSysOprtors.DefinePrecond(&CompressibleFlowSystem::preconditioner, this);
             m_linsol->setLinSysOperators(m_LinSysOprtors);
 #else
-            
-            
             ASSERTL0(false, "Implicit CFS not set up.");
 #endif
         }
@@ -1377,16 +1375,16 @@ namespace Nektar
 
         NekDouble LinSysTol = 0.0;
         NekDouble tolrnc    = m_NewtonAbsoluteIteTol;
-        NekDouble tol2      = m_inArrayNorm*tolrnc*tolrnc*ntotalDOF;
-        NekDouble tol2Max   = sqrt(m_inArrayNorm*ototalDOF)*tolrnc;
+        NekDouble tol2      = m_inArrayNorm*tolrnc*tolrnc;
+        NekDouble tol2Max   = sqrt(m_inArrayNorm*ototalDOF*tolrnc);
         
         //TODO: if steady state the dt should change according to resnorm/m_inArrayNorm
         // so that quadrature convergence rate may be achieved
         // at this situation && may be better in convergence critiria
 
-        NekDouble ratioTol = m_NewtonRelativeIteTol;
-        // NekDouble ratioTol = tolrnc;
-        NekDouble tol2Ratio = ratioTol*ratioTol*ntotalDOF;
+        // NekDouble ratioTol = m_NewtonRelativeIteTol;
+        NekDouble ratioTol = tolrnc;
+        NekDouble tol2Ratio = ratioTol*ratioTol;
 
         if(m_PrecMatVars.num_elements())
         {

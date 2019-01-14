@@ -114,7 +114,7 @@ namespace SolverUtils
 
         for(int i=0; i<npoints; ++i)
         {
-            cout << pFields[0]->GetPhys()[i] << " " << pFields[1]->GetPhys()[i] << endl;
+            cout << "aaa" << pFields[0]->GetPhys()[i] << " " << pFields[1]->GetPhys()[i] << endl;
         }
 
         Update(pFields, 0.0);
@@ -122,7 +122,7 @@ namespace SolverUtils
 
     void ForcingMovingFrame::CalculateGradient(const Array< OneD, MultiRegions::ExpListSharedPtr > &pFields)
     {
-
+        // Calculate gradient here and store in this->m_gradient
     }
 
 
@@ -136,8 +136,10 @@ namespace SolverUtils
             std::string  s_FieldStr   = m_session->GetVariable(i);
             ASSERTL0(m_session->DefinesFunction(m_funcName, s_FieldStr),
                      "Variable '" + s_FieldStr + "' not defined.");
+
+            //Here function is evaluated, so here I need to calculate the gradient times u
             GetFunction(pFields, m_session, m_funcName, true)->Evaluate(s_FieldStr, m_Forcing[i], time);
-            cout << m_Forcing[0][10] << " " << m_Forcing[1][10] << endl;
+            cout << "bbb" << m_Forcing[0][10] << " " << m_Forcing[1][10] << endl;
         }
 
         // If singleMode or halfMode, transform the forcing term to be in

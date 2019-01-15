@@ -87,9 +87,10 @@ namespace SolverUtils
 
         private:
             std::string                         m_funcName;
-            bool                                m_transform;
+            Array<OneD, NekDouble>              m_frameVelocity;
             Array<OneD, Array<OneD, NekDouble>> m_gradient;
             NekInt                              m_spacedim;
+            bool                                m_transform;
 
             ForcingMovingFrame(
                 const LibUtilities::SessionReaderSharedPtr &pSession,

@@ -35,6 +35,7 @@
 
 #include <SolverUtils/Forcing/ForcingMovingFrame.h>
 #include <MultiRegions/ExpList.h>
+#include <LibUtilities/BasicUtils/Vmath.hpp>
 
 using namespace std;
 
@@ -65,6 +66,7 @@ namespace SolverUtils
                                    const TiXmlElement* pForce)
     {
         m_NumVariable = pNumForcingFields;
+        int npoints = pFields[0]->GetNpoints();
 
         const TiXmlElement* funcNameElmt = pForce->FirstChildElement("FRAMEVELOCITY");
         if(!funcNameElmt)
@@ -86,7 +88,17 @@ namespace SolverUtils
         m_Forcing = Array<OneD, Array<OneD, NekDouble> > (m_NumVariable);
         for (int i = 0; i < m_NumVariable; ++i)
         {
-            m_Forcing[i] = Array<OneD, NekDouble> (pFields[0]->GetTotPoints(), 0.0);
+            m_Forcing[i] = Array<OneD, NekDouble> (npoints, 0.0);
+        }
+
+        m_frameVelocity = Array<OneD, NekDouble>(m_NumVariable); // Assume as many directions as variables
+        for (int i = 0; i < m_NumVariable; ++i)
+        {
+            std::string  s_FieldStr   = m_session->GetVariable(i);
+            auto ep = m_session->GetFunction(m_funcName, s_FieldStr);
+            ASSERTL0(m_session->DefinesFunction(m_funcName, s_FieldStr),
+                     "Variable '" + s_FieldStr + "' not defined.");
+            m_frameVelocity[i] = ep->Evaluate();
         }
 
         //allocate space for gradient
@@ -101,9 +113,7 @@ namespace SolverUtils
         bool isH2d;
         m_session->MatchSolverInfo("Homogeneous", "1D", isH1d, false);
         m_session->MatchSolverInfo("Homogeneous", "2D", isH2d, false);
-        m_spacedim = expdim + (isH1d ? 1 : 0) + (isH2d ? 2 : 0); // is there a better way?
-
-        int npoints = pFields[0]->GetNpoints();
+        m_spacedim = expdim + (isH1d ? 1 : 0) + (isH2d ? 2 : 0);
 
         m_gradient = Array<OneD, Array<OneD, NekDouble>>(m_spacedim * m_spacedim);
 
@@ -112,17 +122,33 @@ namespace SolverUtils
             m_gradient[i] = Array<OneD, NekDouble>(npoints);
         }
 
-        for(int i=0; i<npoints; ++i)
-        {
-            cout << "aaa" << pFields[0]->GetPhys()[i] << " " << pFields[1]->GetPhys()[i] << endl;
-        }
-
         Update(pFields, 0.0);
     }
 
     void ForcingMovingFrame::CalculateGradient(const Array< OneD, MultiRegions::ExpListSharedPtr > &pFields)
     {
-        // Calculate gradient here and store in this->m_gradient
+        // Evaluate Grad(u)
+        switch(m_spacedim)
+        {
+            case 1:
+                // du/dx
+                pFields[0]->PhysDeriv(pFields[0]->GetPhys(), m_gradient[0]);
+                break;
+            case 2:
+                // du/dx du/dy
+                pFields[0]->PhysDeriv(pFields[0]->GetPhys(), m_gradient[0], m_gradient[1]);
+                // dv/dx dv/dy
+                pFields[1]->PhysDeriv(pFields[1]->GetPhys(), m_gradient[2], m_gradient[3]);
+                break;
+            case 3:
+                //How do I deal with Homogeneous expansion?
+                pFields[0]->PhysDeriv(pFields[0]->GetPhys(), m_gradient[0], m_gradient[1], m_gradient[2]);
+                pFields[1]->PhysDeriv(pFields[1]->GetPhys(), m_gradient[3], m_gradient[4], m_gradient[5]);
+                pFields[2]->PhysDeriv(pFields[2]->GetPhys(), m_gradient[6], m_gradient[7], m_gradient[8]);
+                break;
+            default:
+                ASSERTL0(false,"dimension unknown");
+        }
     }
 
 
@@ -130,16 +156,48 @@ namespace SolverUtils
             const Array< OneD, MultiRegions::ExpListSharedPtr > &pFields,
             const NekDouble &time)
     {
+        int npoints = pFields[0]->GetNpoints();
         CalculateGradient( pFields );
-        for (int i = 0; i < m_NumVariable; ++i)
+        Array<OneD, NekDouble> tmp(npoints, 0.0);
+        switch(m_spacedim)
         {
-            std::string  s_FieldStr   = m_session->GetVariable(i);
-            ASSERTL0(m_session->DefinesFunction(m_funcName, s_FieldStr),
-                     "Variable '" + s_FieldStr + "' not defined.");
-
-            //Here function is evaluated, so here I need to calculate the gradient times u
-            GetFunction(pFields, m_session, m_funcName, true)->Evaluate(s_FieldStr, m_Forcing[i], time);
-            cout << "bbb" << m_Forcing[0][10] << " " << m_Forcing[1][10] << endl;
+            case 1:
+                // - cu * du/dx
+                Vmath::Smul(npoints,-1.0 * m_frameVelocity[0],m_gradient[0],1,m_Forcing[0], 1);
+                break;
+            case 2:
+                // - cu * du/dx - cv * du/dy
+                Vmath::Smul(npoints,-1.0 * m_frameVelocity[0],m_gradient[0],1,m_Forcing[0], 1);
+                Vmath::Smul(npoints,-1.0 * m_frameVelocity[1],m_gradient[1],1,tmp, 1);
+                Vmath::Vadd(npoints, m_Forcing[0], 1, tmp, 1, m_Forcing[0], 1);
+                // - cu * dv/dx - cv * dv/dy
+                Vmath::Smul(npoints,-1.0 * m_frameVelocity[0],m_gradient[2],1,m_Forcing[1], 1);
+                Vmath::Smul(npoints,-1.0 * m_frameVelocity[1],m_gradient[3],1,tmp, 1);
+                Vmath::Vadd(npoints, m_Forcing[1], 1, tmp, 1, m_Forcing[1], 1);
+                break;
+            case 3:
+                //How do I deal with Homogeneous expansion?
+                // - cu * du/dx - cv * du/dy - cz * du/dz
+                Vmath::Smul(npoints,-1.0 * m_frameVelocity[0],m_gradient[0],1,m_Forcing[0], 1);
+                Vmath::Smul(npoints,-1.0 * m_frameVelocity[1],m_gradient[1],1,tmp, 1);
+                Vmath::Vadd(npoints, m_Forcing[0], 1, tmp, 1, m_Forcing[0], 1);
+                Vmath::Smul(npoints,-1.0 * m_frameVelocity[2],m_gradient[2],1,tmp, 1);
+                Vmath::Vadd(npoints, m_Forcing[0], 1, tmp, 1, m_Forcing[0], 1);
+                // - cu * dv/dx - cv * dv/dy  - cz * dv/dz
+                Vmath::Smul(npoints,-1.0 * m_frameVelocity[0],m_gradient[3],1,m_Forcing[1], 1);
+                Vmath::Smul(npoints,-1.0 * m_frameVelocity[1],m_gradient[4],1,tmp, 1);
+                Vmath::Vadd(npoints, m_Forcing[1], 1, tmp, 1, m_Forcing[1], 1);
+                Vmath::Smul(npoints,-1.0 * m_frameVelocity[2],m_gradient[5],1,tmp, 1);
+                Vmath::Vadd(npoints, m_Forcing[1], 1, tmp, 1, m_Forcing[1], 1);
+                // - cu * dw/dx - cv * dw/dy  - cz * dw/dz
+                Vmath::Smul(npoints,-1.0 * m_frameVelocity[0],m_gradient[6],1,m_Forcing[2], 1);
+                Vmath::Smul(npoints,-1.0 * m_frameVelocity[1],m_gradient[7],1,tmp, 1);
+                Vmath::Vadd(npoints, m_Forcing[2], 1, tmp, 1, m_Forcing[2], 1);
+                Vmath::Smul(npoints,-1.0 * m_frameVelocity[2],m_gradient[8],1,tmp, 1);
+                Vmath::Vadd(npoints, m_Forcing[2], 1, tmp, 1, m_Forcing[2], 1);
+                break;
+            default:
+                ASSERTL0(false,"dimension unknown");
         }
 
         // If singleMode or halfMode, transform the forcing term to be in

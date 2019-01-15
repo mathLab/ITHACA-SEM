@@ -184,6 +184,10 @@ namespace Nektar
             Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray,
             const unsigned int nwidthcolm=12);
 
+        void Cout2DArrayStdMat(
+            Array<OneD, Array<OneD, DNekMatSharedPtr> > &gmtxarray,
+            const unsigned int nwidthcolm=12);
+
         void Fill2DArrayOfBlkDiagonalMat(
             Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray,
             const NekDouble valu);
@@ -285,13 +289,13 @@ namespace Nektar
             const Array<OneD, Array<OneD, NekDouble> >                      &Bwd,
             DNekBlkMatSharedPtr                                             &BJac);
 
-        void AddDiffusionFluxJacDirctn(
+        void MinusDiffusionFluxJacDirctn(
             const int                                                       nDirctn,
             const Array<OneD, const Array<OneD, NekDouble> >                &inarray,
             const Array<OneD, const Array<OneD, Array<OneD, NekDouble>> >   &qfields,
                   Array<OneD, Array<OneD, DNekMatSharedPtr> >               &ElmtJac)
         {
-            v_AddDiffusionFluxJacDirctn(nDirctn,inarray, qfields,ElmtJac);
+            v_MinusDiffusionFluxJacDirctn(nDirctn,inarray, qfields,ElmtJac);
         }
 
         void GetFluxDerivJacDirctn(
@@ -466,7 +470,7 @@ namespace Nektar
                   Array<OneD,       Array<OneD, Array<OneD, NekDouble> > >  &qfield)
         {}
 
-        virtual void v_AddDiffusionFluxJacDirctn(
+        virtual void v_MinusDiffusionFluxJacDirctn(
             const int                                                       nDirctn,
             const Array<OneD, const Array<OneD, NekDouble> >                &inarray,
             const Array<OneD, const Array<OneD, Array<OneD, NekDouble>> >   &qfields,

@@ -152,7 +152,7 @@ namespace Nektar
             const Array<OneD, Array<OneD, NekDouble> >                      &normals);
     
 #ifdef DEMO_IMPLICITSOLVER_JFNK_COEFF
-  virtual void v_AddDiffusionFluxJacDirctn(
+  virtual void v_MinusDiffusionFluxJacDirctn(
         const int                                                       nDirctn,
         const Array<OneD, const Array<OneD, NekDouble> >                &inarray,
         const Array<OneD, const Array<OneD, Array<OneD, NekDouble>> >   &qfields,

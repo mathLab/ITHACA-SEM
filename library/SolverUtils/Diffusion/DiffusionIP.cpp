@@ -766,7 +766,7 @@ namespace Nektar
         }
 
 #ifdef DEMO_IMPLICITSOLVER_JFNK_COEFF
-        void DiffusionIP::v_AddVolumDerivJacToMat( 
+        void DiffusionIP::v_MinusVolumDerivJacToMat( 
             const int                                               nConvectiveFields,
             const Array<OneD, MultiRegions::ExpListSharedPtr>       &pFields,
             const Array<OneD, const Array<OneD, DNekMatSharedPtr> > &ElmtJac,
@@ -826,7 +826,7 @@ namespace Nektar
                         {
                             for(int nrw = 0; nrw < nElmtCoef; nrw++)
                             {
-                                tmp   =   (*tmpGmtx)(nrw,ncl) + (*ElmtMat)(nrw,ncl);
+                                tmp   =   (*tmpGmtx)(nrw,ncl) - (*ElmtMat)(nrw,ncl);
                                 tmpGmtx->SetValue(nrw,ncl,tmp);
                             }
                         }

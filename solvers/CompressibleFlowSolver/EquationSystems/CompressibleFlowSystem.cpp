@@ -811,6 +811,7 @@ namespace Nektar
         return;
     }
 
+#define DEBUG_VISCOUS_JAC_MAT
     void CompressibleFlowSystem::AddMatNSBlkDiag_volume(
         const Array<OneD, const Array<OneD, NekDouble> >                &inarray,
         const Array<OneD, const Array<OneD, Array<OneD, NekDouble> > >  &qfield,
@@ -840,21 +841,26 @@ namespace Nektar
 //         CoutStandardMat(ElmtJac[i][j]);
 //     }
 // }
+
+
             //TODO:
 #ifdef DEBUG_VISCOUS_JAC_MAT
-            AddDiffusionFluxJacDirctn(nfluxDir,inarray,qfield, ElmtJac);
+            MinusDiffusionFluxJacDirctn(nfluxDir,inarray,qfield, ElmtJac);
 #endif
-//Debug
-// for(int i =0; i<ElmtJac.num_elements(); i++ )
+
+// std::shared_ptr<LocalRegions::ExpansionVector> expvect =    m_fields[0]->GetExp();
+// int ntotElmt            = (*expvect).size();
+// for(int  nelmt = 0; nelmt < ntotElmt; nelmt++)
 // {
-//     for(int j =0; j<ElmtJac[0].num_elements(); j++ )
+//     int nElmtPnt            = (*expvect)[nelmt]->GetTotPoints();
+//     for(int npnt = 0; npnt < nElmtPnt; npnt++)
 //     {
-//         CoutStandardMat(ElmtJac[i][j]);
+//         (*ElmtJac[nelmt][npnt]) = 0.0;
 //     }
 // }
-
             m_advObject->AddVolumJacToMat(nvariable,m_fields,ElmtJac,nfluxDir,gmtxarray);
         }
+
 #ifdef DEBUG_VISCOUS_JAC_MAT
         for(int nfluxDir = 0; nfluxDir < nSpaceDim; nfluxDir++)
         {
@@ -863,10 +869,15 @@ namespace Nektar
             {
                 GetFluxDerivJacDirctn(m_fields[0],normal3D,nDervDir,inarray,ElmtJac);
 
-                m_diffusion->AddVolumDerivJacToMat(nvariable,m_fields,ElmtJac,nfluxDir,nDervDir,gmtxarray);
+                // cout << "?????????????????????:: "<<endl<<" nfluxDir= "<<nfluxDir<<" nDervDir= "<<nDervDir<<endl;
+                // Cout2DArrayStdMat(ElmtJac);
+
+                m_diffusion->MinusVolumDerivJacToMat(nvariable,m_fields,ElmtJac,nfluxDir,nDervDir,gmtxarray);
             }
             Vmath::Fill(npoints,0.0,normal3D[nfluxDir],1);
         }
+
+        // ASSERTL0(false, "stop debug ElmtJac");
 #endif
     }
 
@@ -1633,10 +1644,14 @@ namespace Nektar
         
         Fill2DArrayOfBlkDiagonalMat(gmtxarray,0.0);
         AddMatNSBlkDiag_volume(inarray,qfield,gmtxarray);
+
 //Debug
+// Fill2DArrayOfBlkDiagonalMat(gmtxarray,0.0);
+        AddMatNSBlkDiag_boundary(inarray,qfield,gmtxarray,TraceJac,TraceJacDeriv);
+
+// //Debug
 // Cout2DArrayBlkMat(gmtxarray);
 // ASSERTL0(false, "stop debug");
-        AddMatNSBlkDiag_boundary(inarray,qfield,gmtxarray,TraceJac,TraceJacDeriv);
             
         MultiplyElmtInvMass_PlusSource(gmtxarray,m_TimeIntegLambda);
         ElmtVarInvMtrx(gmtxarray);
@@ -2068,6 +2083,7 @@ namespace Nektar
         }
     }
     
+    
     void CompressibleFlowSystem::Cout2DArrayBlkMat(Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray,const unsigned int nwidthcolm)
     {
         int nvar1 = gmtxarray.num_elements();
@@ -2083,7 +2099,7 @@ namespace Nektar
             }
         }
     }
-
+    
     void CompressibleFlowSystem::CoutBlkMat(DNekBlkMatSharedPtr &gmtx,const unsigned int nwidthcolm)
     {
         DNekMatSharedPtr    loc_matNvar;
@@ -2104,6 +2120,21 @@ namespace Nektar
         return;
     }
 
+    void CompressibleFlowSystem::Cout2DArrayStdMat(Array<OneD, Array<OneD, DNekMatSharedPtr> > &gmtxarray,const unsigned int nwidthcolm)
+    {
+        int nvar1 = gmtxarray.num_elements();
+        int nvar2 = gmtxarray[0].num_elements();
+
+        
+        for(int i = 0; i < nvar1; i++)
+        {
+            for(int j = 0; j < nvar2; j++)
+            {
+                cout<<endl<<"£$£$£$£$£$£$££$£$£$$$£$££$$£$££$£$$££££$$£$£$£$£$£$£$££$£$$"<<endl<< "Cout2DArrayBlkMat i= "<<i<<" j=  "<<j<<endl;
+                CoutStandardMat(gmtxarray[i][j],nwidthcolm);
+            }
+        }
+    }
 
     void CompressibleFlowSystem::CoutStandardMat(DNekMatSharedPtr &loc_matNvar,const unsigned int nwidthcolm)
     {
@@ -3060,7 +3091,7 @@ namespace Nektar
         ASSERTL0(false, "not coded");
     }
 
-    void CompressibleFlowSystem::v_AddDiffusionFluxJacDirctn(
+    void CompressibleFlowSystem::v_MinusDiffusionFluxJacDirctn(
             const int                                                       nDirctn,
             const Array<OneD, const Array<OneD, NekDouble> >                &inarray,
             const Array<OneD, const Array<OneD, Array<OneD, NekDouble>> >   &qfields,

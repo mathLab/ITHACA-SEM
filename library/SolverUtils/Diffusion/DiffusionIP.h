@@ -232,7 +232,7 @@ namespace Nektar
                     Array<OneD, Array<OneD, Array<OneD, NekDouble> > >              &numDerivBwd);
 
 #ifdef DEMO_IMPLICITSOLVER_JFNK_COEFF
-            virtual void v_AddVolumDerivJacToMat( 
+            virtual void v_MinusVolumDerivJacToMat( 
                 const int                                               nConvectiveFields,
                 const Array<OneD, MultiRegions::ExpListSharedPtr>       &pFields,
                 const Array<OneD, const Array<OneD, DNekMatSharedPtr> > &ElmtJac,

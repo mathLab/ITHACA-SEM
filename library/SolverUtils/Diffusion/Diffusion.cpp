@@ -187,7 +187,7 @@ namespace Nektar
             ASSERTL0(false, "Not defined function DiffuseTraceFLux.");
         }
 #ifdef DEMO_IMPLICITSOLVER_JFNK_COEFF
-        void Diffusion::v_AddVolumDerivJacToMat( 
+        void Diffusion::v_MinusVolumDerivJacToMat( 
             const int                                               nConvectiveFields,
             const Array<OneD, MultiRegions::ExpListSharedPtr>       &pFields,
             const Array<OneD, const Array<OneD, DNekMatSharedPtr> > &ElmtJac,

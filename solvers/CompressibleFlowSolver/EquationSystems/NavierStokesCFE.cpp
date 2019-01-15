@@ -1150,7 +1150,6 @@ namespace Nektar
             Vmath::Vmul(nPts,&tmp[0],1,&tmp1[0],1,&outtmp[nDim_plus_one][0],1);
             
         }
- 
     }
 
 #ifdef DEMO_IMPLICITSOLVER_JFNK_COEFF
@@ -1606,7 +1605,7 @@ namespace Nektar
         (*OutputMatrix)(2,3)=(*OutputMatrix)(2,3)-dqx_dU4-dqy_dU4;
     }
 
-    void NavierStokesCFE::v_AddDiffusionFluxJacDirctn(
+    void NavierStokesCFE::v_MinusDiffusionFluxJacDirctn(
         const int                                                       nDirctn,
         const Array<OneD, const Array<OneD, NekDouble> >                &inarray,
         const Array<OneD, const Array<OneD, Array<OneD, NekDouble>> >   &qfields,
@@ -1703,7 +1702,7 @@ namespace Nektar
                 {
                     for (int j =0; j < nConvectiveFields; j++)
                     {
-                        (*ElmtJac[nelmt][npnt])(i+1,j) +=  (*PointFJac)(i,j);
+                        (*ElmtJac[nelmt][npnt])(i+1,j) -=  (*PointFJac)(i,j);
                     }
                 }
             }

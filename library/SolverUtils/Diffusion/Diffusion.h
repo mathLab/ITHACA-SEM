@@ -357,19 +357,6 @@ namespace Nektar
             {
                 return v_GetTraceNormal();
             }
-
-#ifdef DEMO_IMPLICITSOLVER_JFNK_COEFF
-            void AddVolumDerivJacToMat( 
-                const int                                               nConvectiveFields,
-                const Array<OneD, MultiRegions::ExpListSharedPtr>       &pFields,
-                const Array<OneD, const Array<OneD, DNekMatSharedPtr> > &ElmtJac,
-                const int                                               nfluxDir, 
-                const int                                               nDervDir, 
-                      Array<OneD, Array<OneD, DNekBlkMatSharedPtr> >    &gmtxarray)
-            {
-                v_AddVolumDerivJacToMat(nConvectiveFields,pFields,ElmtJac,nfluxDir,nDervDir,gmtxarray);
-            }
-#endif
             
         protected:
             DiffusionFluxVecCB              m_fluxVector;
@@ -482,15 +469,6 @@ namespace Nektar
 
             virtual const Array<OneD, const Array<OneD, NekDouble> > &v_GetTraceNormal();
 
-#ifdef DEMO_IMPLICITSOLVER_JFNK_COEFF
-            virtual void v_AddVolumDerivJacToMat( 
-                const int                                               nConvectiveFields,
-                const Array<OneD, MultiRegions::ExpListSharedPtr>       &pFields,
-                const Array<OneD, const Array<OneD, DNekMatSharedPtr> > &ElmtJac,
-                const int                                               nfluxDir, 
-                const int                                               nDervDir, 
-                      Array<OneD, Array<OneD, DNekBlkMatSharedPtr> >    &gmtxarray);
-#endif
         }; 
         
         /// A shared pointer to an EquationSystem object

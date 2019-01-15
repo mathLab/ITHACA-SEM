@@ -52,16 +52,6 @@ namespace Nektar
 
             static std::string type;
 
-#ifdef DEMO_IMPLICITSOLVER_JFNK_COEFF
-            void CalcJacobTraceInteg(
-                const Array<OneD, MultiRegions::ExpListSharedPtr>   &pFields,
-                const int                                         m,
-                const int                                         n,
-                const Array<OneD, const DNekBlkMatSharedPtr>    & TraceJac,
-                Array<OneD, DNekMatSharedPtr>                   & TraceJacFwd,
-                Array<OneD, DNekMatSharedPtr>                   & TraceJacBwd);
-#endif
-
         protected:
             AdvectionWeakDG();
 
@@ -111,31 +101,6 @@ namespace Nektar
                 const Array<OneD, Array<OneD, NekDouble>>         &pFwd =NullNekDoubleArrayofArray,
                 const Array<OneD, Array<OneD, NekDouble>>         &pBwd =NullNekDoubleArrayofArray);
 
-#ifdef DEMO_IMPLICITSOLVER_JFNK_COEFF
-            virtual void v_AddVolumJacToMat( const int nConvectiveFields,
-                const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
-                const Array<OneD, const  Array<OneD, DNekMatSharedPtr> >&ElmtJac,
-                const int nDirctn, 
-                Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray);
-
-            virtual void v_AddTraceJacToMat(
-                const int                                           nConvectiveFields,
-                const int                                           nSpaceDim,
-                const Array<OneD, MultiRegions::ExpListSharedPtr>   &pFields,
-                const Array<OneD, DNekBlkMatSharedPtr>              &TraceJacCons,
-                Array<OneD, Array<OneD, DNekBlkMatSharedPtr> >      &gmtxarray,
-                const Array<OneD, DNekBlkMatSharedPtr>              &TraceJacGrad);
-
-            virtual void v_NumCalRiemFluxJac(
-                const int                                         nConvectiveFields,
-                const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
-                const Array<OneD, Array<OneD, NekDouble> >        &AdvVel,
-                const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-                const Array<OneD, Array<OneD, NekDouble> >        &pFwd,
-                const Array<OneD, Array<OneD, NekDouble> >        &pBwd,
-                DNekBlkMatSharedPtr &FJac,
-                DNekBlkMatSharedPtr &BJac);
-#endif
         };
     }
 }

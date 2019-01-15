@@ -359,23 +359,6 @@ class Interpolator;
             /// Time between checkpoints.
             NekDouble                                   m_checktime;
 
-#ifdef DEMO_IMPLICITSOLVER_JFNK_COEFF
-            NekDouble                                   m_NewtonAbsoluteIteTol;
-
-            NekDouble                                   m_NewtonRelativeIteTol;
-
-            NekDouble                                   m_TimeIncrementFactor;
-            /// cfl number for local time step(notice only for jfnk other see m_cflSafetyFactor)
-            NekDouble                                   m_cflLocTimestep;
-                        
-            /// two strategies: time accurate or not.
-            int                                        m_JFNKTimeAccurate;
-
-            /// Time step size
-            int                                         m_TotLinItePerStepSET;
-            /// preconditioning steps
-            int                                         m_JFNKPrecondStep;
-#endif
             /// Number of checkpoints written so far
             int                                         m_nchk;
             /// Number of steps to take.

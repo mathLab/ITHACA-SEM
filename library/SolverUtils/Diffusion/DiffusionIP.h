@@ -231,16 +231,6 @@ namespace Nektar
                     Array<OneD, Array<OneD, Array<OneD, NekDouble> > >              &numDerivFwd,
                     Array<OneD, Array<OneD, Array<OneD, NekDouble> > >              &numDerivBwd);
 
-#ifdef DEMO_IMPLICITSOLVER_JFNK_COEFF
-            virtual void v_AddVolumDerivJacToMat( 
-                const int                                               nConvectiveFields,
-                const Array<OneD, MultiRegions::ExpListSharedPtr>       &pFields,
-                const Array<OneD, const Array<OneD, DNekMatSharedPtr> > &ElmtJac,
-                const int                                               nfluxDir, 
-                const int                                               nDervDir, 
-                      Array<OneD, Array<OneD, DNekBlkMatSharedPtr> >    &gmtxarray);
-            
-#endif
         }; 
     }
 }

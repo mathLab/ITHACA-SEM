@@ -102,38 +102,6 @@ namespace Nektar
             /// at which time to evaluate the boundary conditions(used in unsteady time integrations)
             NekDouble                                       m_BndEvaluateTime;
 
-#ifdef DEMO_IMPLICITSOLVER_JFNK_COEFF
-            /// coefff of spacial derivatives(rhs or m_F in GLM) in calculating the residual of the whole equation(used in unsteady time integrations)
-            NekDouble                                       m_TimeIntegLambda=0.0;
-
-            ///Solution of The kth iteration in the Newton method(Nonlinear iteration)
-            Array<OneD,       Array<OneD, NekDouble> >      m_TimeIntegtSol_k;
-            
-            /// Solution at time step n(input valure from timeintegration)
-            Array<OneD,       Array<OneD, NekDouble> >      m_TimeIntegtSol_n;
-            /// Residual of the nonlinear system at the kth iteration in the Newton method(Nonlinear iteration)
-            /// also the b of linearsys(Ax=b) stored to compute Jacobian_
-            Array<OneD,       Array<OneD, NekDouble> >      m_SysEquatResid_k;
-
-            Array<OneD, Array<OneD, DNekBlkMatSharedPtr> >  m_PrecMatVars;
-
-            Array<OneD, DNekBlkMatSharedPtr > m_TraceJac;
-
-            Array<OneD, DNekBlkMatSharedPtr > m_TraceJacDeriv;
-
-            /// estimate the magnitude of each conserved varibles
-            Array<OneD, NekDouble>                          m_magnitdEstimat;
-
-            /// local time step(notice only for jfnk other see m_cflSafetyFactor)
-            Array<OneD, NekDouble>                          m_locTimeStep;
-
-            NekDouble   m_inArrayNorm=-1.0;
-
-            int m_TotLinItePrecondMat=600;
-
-            int m_TotLinItePerStep=600;
-
-#endif
             /// Initialises UnsteadySystem class members.
             SOLVER_UTILS_EXPORT UnsteadySystem(
                 const LibUtilities::SessionReaderSharedPtr& pSession,

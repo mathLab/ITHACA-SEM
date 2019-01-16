@@ -149,6 +149,19 @@ namespace SolverUtils
             default:
                 ASSERTL0(false,"dimension unknown");
         }
+        /*int npoints = pFields[0]->GetNpoints();
+        auto coords = Array<OneD, Array<OneD, NekDouble>>(2);
+        for (int i = 0; i < 2; ++i)
+        {
+            coords[i] = Array<OneD, NekDouble>(npoints);
+        }
+        pFields[0]->GetCoords(coords[0], coords[1]);
+        for(int i=48; i<=48; ++i)
+        {
+            cout << "---- Node " << i << " x=" <<  coords[0][i] << " y=" <<  coords[1][i] << endl;
+            cout << pFields.num_elements() << " "  << pFields[0]->GetPhys()[i] << " " << pFields[1]->GetPhys()[i] << endl;
+            cout << m_gradient[0][i] << " " << " " << m_gradient[1][i] << " " << m_gradient[2][i] << " " << m_gradient[3][i] << endl;
+        }*/
     }
 
 

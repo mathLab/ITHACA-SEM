@@ -8,9 +8,9 @@
 ## ITHACA-SEM - In real Time Highly Advanced Computational Applications with Spectral Element Methods - Reduced Order Models for Nektar++ ##
 
 ### 0. Introduction
-**ITHACA-SEM** is a python implementation  of several reduced order modelling techniques. **ITHACA-SEM** is designed to work with [**Nektar++ 4.4.0**](www.nektar.info) simulations.
+**ITHACA-SEM** is a C++ implementation  of several reduced order modelling techniques. **ITHACA-SEM** is designed to work with [**Nektar++ 4.4.0**](www.nektar.info) simulations.
 
-**ITHACA-SEM** requires a Nektar++ 4.4.0 installation as well as the python3 library numpy.
+**ITHACA-SEM** requires a Nektar++ 4.4.0 installation.
 
 ### 1. Example
 Example session files for Nektar++ are provided in the ITHACA_Test_cases subfolder.

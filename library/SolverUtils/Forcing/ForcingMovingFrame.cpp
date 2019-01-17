@@ -187,7 +187,8 @@ namespace Nektar
                         pFields[0]->PhysDeriv(tmp, m_gradient[6]);
 
                         // Take d/dy derivative using wave space field
-                        pFields[0]->PhysDeriv(MultiRegions::DirCartesianMap[1], pFields[0]->GetPhys(), tmp);
+                        pFields[0]->PhysDeriv(MultiRegions::DirCartesianMap[1], 
+                                              pFields[0]->GetPhys(), tmp);
                         pFields[0]->HomogeneousBwdTrans(tmp, m_gradient[1]);
                         pFields[0]->PhysDeriv(MultiRegions::DirCartesianMap[1],
                                               pFields[1]->GetPhys(), tmp);

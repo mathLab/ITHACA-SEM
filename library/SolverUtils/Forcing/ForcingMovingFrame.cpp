@@ -29,7 +29,8 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Allows for a moving frame of reference, through adding c * du/dx to the body force, where c is the frame velocity vector
+// Description: Allows for a moving frame of reference, through adding c * du/dx
+// to the body force, where c is the frame velocity vector
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -186,8 +187,7 @@ namespace Nektar
                         pFields[0]->PhysDeriv(tmp, m_gradient[6]);
 
                         // Take d/dy derivative using wave space field
-                        pFields[0]->PhysDeriv(MultiRegions::DirCartesianMap[1],
-                                              pFields[0]->GetPhys(), tmp);
+                        pFields[0]->PhysDeriv(MultiRegions::DirCartesianMap[1], pFields[0]->GetPhys(), tmp);
                         pFields[0]->HomogeneousBwdTrans(tmp, m_gradient[1]);
                         pFields[0]->PhysDeriv(MultiRegions::DirCartesianMap[1],
                                               pFields[1]->GetPhys(), tmp);
@@ -222,19 +222,6 @@ namespace Nektar
                 default:
                     ASSERTL0(false, "dimension unknown");
             }
-
-            /*auto coords = Array<OneD, Array<OneD, NekDouble>>(2);
-            for (int i = 0; i < 2; ++i)
-            {
-                coords[i] = Array<OneD, NekDouble>(npoints);
-            }
-            pFields[0]->GetCoords(coords[0], coords[1]);
-            for(int i=48; i<=48; ++i)
-            {
-                cout << "---- Node " << i << " x=" <<  coords[0][i] << " y=" <<  coords[1][i] << endl;
-                cout << pFields.num_elements() << " "  << pFields[0]->GetPhys()[i] << " " << pFields[1]->GetPhys()[i] << endl;
-                cout << m_gradient[0][i] << " " << " " << m_gradient[1][i] << " " << m_gradient[2][i] << " " << m_gradient[3][i] << endl;
-            }*/
         }
 
 
@@ -318,19 +305,6 @@ namespace Nektar
                     pFields[0]->HomogeneousFwdTrans(m_Forcing[i], m_Forcing[i]);
                 }
             }
-
-            /*auto coords = Array<OneD, Array<OneD, NekDouble>>(2);
-            for (int i = 0; i < 2; ++i)
-            {
-                coords[i] = Array<OneD, NekDouble>(npoints);
-            }
-            pFields[0]->GetCoords(coords[0], coords[1]);
-            for(int i=48; i<=48; ++i)
-            {
-                cout << "---- Node " << i << " x=" <<  coords[0][i] << " y=" <<  coords[1][i] << endl;
-                cout << pFields.num_elements() << " "  << pFields[0]->GetPhys()[i] << " " << pFields[1]->GetPhys()[i] << endl;
-                cout << m_Forcing[0][i] << " " << " " << m_Forcing[1][i] << endl;
-            }*/
         }
 
 

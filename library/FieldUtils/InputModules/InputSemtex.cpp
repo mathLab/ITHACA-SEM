@@ -259,10 +259,11 @@ void InputSemtex::Process(po::variables_map &vm)
                 swap_endian(tmp);
             }
 
+            double* x = &tmp[0];
             for (int k = 0; k < nelmt; ++k)
             {
-                std::copy(&tmp[k * elmtSize], &tmp[(k+1) * elmtSize],
-                          data + k * offset + elSizeJ);
+                std::copy(x, x + elmtSize, data + k * offset + elSizeJ);
+                x += elmtSize;
 
             }
         }

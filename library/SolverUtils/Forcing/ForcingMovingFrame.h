@@ -45,12 +45,9 @@
 #include <SolverUtils/Forcing/Forcing.h>
 
 
-namespace Nektar
-{
-namespace SolverUtils
-{
-    class ForcingMovingFrame : public Forcing
-    {
+namespace Nektar {
+    namespace SolverUtils {
+        class ForcingMovingFrame : public Forcing {
         public:
 
             friend class MemoryManager<ForcingMovingFrame>;
@@ -58,13 +55,12 @@ namespace SolverUtils
             /// Creates an instance of this class
             SOLVER_UTILS_EXPORT static ForcingSharedPtr create(
                     const LibUtilities::SessionReaderSharedPtr &pSession,
-                    const std::weak_ptr<EquationSystem>      &pEquation,
-                    const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields,
-                    const unsigned int& pNumForcingFields,
-                    const TiXmlElement* pForce)
-            {
+                    const std::weak_ptr<EquationSystem> &pEquation,
+                    const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
+                    const unsigned int &pNumForcingFields,
+                    const TiXmlElement *pForce) {
                 ForcingSharedPtr p = MemoryManager<ForcingMovingFrame>::
-                                        AllocateSharedPtr(pSession, pEquation);
+                AllocateSharedPtr(pSession, pEquation);
                 p->InitObject(pFields, pNumForcingFields, pForce);
                 return p;
             }
@@ -75,9 +71,9 @@ namespace SolverUtils
 
         protected:
             SOLVER_UTILS_EXPORT virtual void v_InitObject(
-                    const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields,
-                    const unsigned int& pNumForcingFields,
-                    const TiXmlElement* pForce);
+                    const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
+                    const unsigned int &pNumForcingFields,
+                    const TiXmlElement *pForce);
 
             SOLVER_UTILS_EXPORT virtual void v_Apply(
                     const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
@@ -86,31 +82,32 @@ namespace SolverUtils
                     const NekDouble &time);
 
         private:
-            std::string                         m_funcName;
-            Array<OneD, NekDouble>              m_frameVelocity;
+            std::string m_funcName;
+            Array<OneD, NekDouble> m_frameVelocity;
             Array<OneD, Array<OneD, NekDouble>> m_gradient;
-            NekInt                              m_spacedim;
-            bool                                m_transform;
-            bool                                m_homogen_dealiasing;
-            bool                                m_SingleMode;
-            bool                                m_HalfMode;
+            NekInt m_spacedim;
+            bool m_transform;
+            bool m_homogen_dealiasing;
+            bool m_SingleMode;
+            bool m_HalfMode;
 
 
             ForcingMovingFrame(
-                const LibUtilities::SessionReaderSharedPtr &pSession,
-                const std::weak_ptr<EquationSystem>      &pEquation);
+                    const LibUtilities::SessionReaderSharedPtr &pSession,
+                    const std::weak_ptr<EquationSystem> &pEquation);
 
-            virtual ~ForcingMovingFrame(void){};
+            virtual ~ForcingMovingFrame(void) {};
 
             void CalculateGradient(
-                const Array< OneD, MultiRegions::ExpListSharedPtr > &pFields
-                    );
-            void Update(
-                const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields,
-                const NekDouble &time);
-    };
+                    const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields
+            );
 
-}
+            void Update(
+                    const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
+                    const NekDouble &time);
+        };
+
+    }
 }
 
 #endif

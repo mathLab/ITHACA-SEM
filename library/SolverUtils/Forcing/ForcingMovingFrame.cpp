@@ -65,8 +65,15 @@ namespace SolverUtils
                                    const unsigned int& pNumForcingFields,
                                    const TiXmlElement* pForce)
     {
-        m_NumVariable = pNumForcingFields;
         int npoints = pFields[0]->GetNpoints();
+
+        int expdim = pFields[0]->GetGraph()->GetMeshDimension();
+        bool isH1d;
+        bool isH2d;
+        m_session->MatchSolverInfo("Homogeneous", "1D", isH1d, false);
+        m_session->MatchSolverInfo("Homogeneous", "2D", isH2d, false);
+        m_spacedim = expdim + (isH1d ? 1 : 0) + (isH2d ? 2 : 0);
+        m_NumVariable = m_spacedim;
 
         const TiXmlElement* funcNameElmt = pForce->FirstChildElement("FRAMEVELOCITY");
         if(!funcNameElmt)
@@ -78,21 +85,22 @@ namespace SolverUtils
         m_funcName = funcNameElmt->GetText();
         ASSERTL0(m_session->DefinesFunction(m_funcName), "Function '" + m_funcName + "' not defined.");
 
-        bool singleMode, halfMode;
-        m_session->MatchSolverInfo("ModeType","SingleMode",singleMode,false);
-        m_session->MatchSolverInfo("ModeType","HalfMode",  halfMode,  false);
+        m_session->MatchSolverInfo("ModeType","SingleMode",m_SingleMode,false);
+        m_session->MatchSolverInfo("ModeType","HalfMode",  m_HalfMode,  false);
         bool homogeneous = pFields[0]->GetExpType() == MultiRegions::e3DH1D ||
                            pFields[0]->GetExpType() == MultiRegions::e3DH2D;
-        m_transform = (singleMode || halfMode || homogeneous);
+        m_transform = (m_SingleMode || m_HalfMode || homogeneous);
 
-        m_Forcing = Array<OneD, Array<OneD, NekDouble> > (m_NumVariable);
-        for (int i = 0; i < m_NumVariable; ++i)
+        m_homogen_dealiasing = m_session->DefinesSolverInfo("dealiasing");
+
+        m_Forcing = Array<OneD, Array<OneD, NekDouble> > (m_spacedim); // as many as spacial dim
+        for (int i = 0; i < m_spacedim; ++i)
         {
             m_Forcing[i] = Array<OneD, NekDouble> (npoints, 0.0);
         }
 
-        m_frameVelocity = Array<OneD, NekDouble>(m_NumVariable); // Assume as many directions as variables
-        for (int i = 0; i < m_NumVariable; ++i)
+        m_frameVelocity = Array<OneD, NekDouble>(m_spacedim); // as many as spacial dim
+        for (int i = 0; i < m_spacedim; ++i)
         {
             std::string  s_FieldStr   = m_session->GetVariable(i);
             auto ep = m_session->GetFunction(m_funcName, s_FieldStr);
@@ -101,22 +109,7 @@ namespace SolverUtils
             m_frameVelocity[i] = ep->Evaluate();
         }
 
-        //allocate space for gradient
-        // Skip in case of empty partition
-        if (pFields[0]->GetNumElmts() == 0)
-        {
-            return;
-        }
-
-        int expdim = pFields[0]->GetGraph()->GetMeshDimension();
-        bool isH1d;
-        bool isH2d;
-        m_session->MatchSolverInfo("Homogeneous", "1D", isH1d, false);
-        m_session->MatchSolverInfo("Homogeneous", "2D", isH2d, false);
-        m_spacedim = expdim + (isH1d ? 1 : 0) + (isH2d ? 2 : 0);
-
         m_gradient = Array<OneD, Array<OneD, NekDouble>>(m_spacedim * m_spacedim);
-
         for (int i = 0; i < m_spacedim * m_spacedim; ++i)
         {
             m_gradient[i] = Array<OneD, NekDouble>(npoints);
@@ -127,6 +120,9 @@ namespace SolverUtils
 
     void ForcingMovingFrame::CalculateGradient(const Array< OneD, MultiRegions::ExpListSharedPtr > &pFields)
     {
+        int npoints = pFields[0]->GetNpoints();
+        auto tmp = Array<OneD, NekDouble> (npoints);
+
         // Evaluate Grad(u)
         switch(m_spacedim)
         {
@@ -141,16 +137,67 @@ namespace SolverUtils
                 pFields[1]->PhysDeriv(pFields[1]->GetPhys(), m_gradient[2], m_gradient[3]);
                 break;
             case 3:
-                //How do I deal with Homogeneous expansion?
-                pFields[0]->PhysDeriv(pFields[0]->GetPhys(), m_gradient[0], m_gradient[1], m_gradient[2]);
-                pFields[1]->PhysDeriv(pFields[1]->GetPhys(), m_gradient[3], m_gradient[4], m_gradient[5]);
-                pFields[2]->PhysDeriv(pFields[2]->GetPhys(), m_gradient[6], m_gradient[7], m_gradient[8]);
+                if (pFields[0]->GetWaveSpace() == true && pFields[0]->GetExpType() == MultiRegions::e3DH1D)
+                {
+                    // take d/dx, d/dy  gradients in physical Fourier space
+                    pFields[0]->PhysDeriv(pFields[0]->GetPhys(), m_gradient[0], m_gradient[1]);
+                    pFields[1]->PhysDeriv(pFields[1]->GetPhys(), m_gradient[3], m_gradient[4]);
+
+                    pFields[0]->HomogeneousBwdTrans(pFields[2]->GetPhys(), tmp);
+                    pFields[0]->PhysDeriv(tmp, m_gradient[6], m_gradient[7]);
+
+                    // Take d/dz derivative using wave space field
+                    pFields[0]->PhysDeriv(MultiRegions::DirCartesianMap[2],
+                                          pFields[0]->GetPhys(), tmp);
+                    pFields[0]->HomogeneousBwdTrans(tmp, m_gradient[2]);
+                    pFields[0]->PhysDeriv(MultiRegions::DirCartesianMap[2],
+                                          pFields[1]->GetPhys(), tmp);
+                    pFields[0]->HomogeneousBwdTrans(tmp, m_gradient[5]);
+                    pFields[0]->PhysDeriv(MultiRegions::DirCartesianMap[2],
+                                          pFields[2]->GetPhys(), tmp);
+                    pFields[0]->HomogeneousBwdTrans(tmp, m_gradient[8]);
+                }
+                else if (pFields[0]->GetWaveSpace() == true && pFields[0]->GetExpType() == MultiRegions::e3DH2D)
+                {
+                    // take d/dx,  gradients in physical Fourier space
+                    pFields[0]->PhysDeriv(pFields[0]->GetPhys(), m_gradient[0]);
+                    pFields[1]->PhysDeriv(pFields[1]->GetPhys(), m_gradient[3]);
+
+                    pFields[0]->HomogeneousBwdTrans(pFields[2]->GetPhys(), tmp);
+                    pFields[0]->PhysDeriv(tmp, m_gradient[6]);
+
+                    // Take d/dy derivative using wave space field
+                    pFields[0]->PhysDeriv(MultiRegions::DirCartesianMap[1],
+                                          pFields[0]->GetPhys(), tmp);
+                    pFields[0]->HomogeneousBwdTrans(tmp, m_gradient[1]);
+                    pFields[0]->PhysDeriv(MultiRegions::DirCartesianMap[1],
+                                          pFields[1]->GetPhys(), tmp);
+                    pFields[0]->HomogeneousBwdTrans(tmp, m_gradient[4]);
+                    pFields[0]->PhysDeriv(MultiRegions::DirCartesianMap[1],
+                                          pFields[2]->GetPhys(), tmp);
+                    pFields[0]->HomogeneousBwdTrans(tmp, m_gradient[7]);
+
+                    // Take d/dz derivative using wave space field
+                    pFields[0]->PhysDeriv(MultiRegions::DirCartesianMap[2],
+                                          pFields[0]->GetPhys(), tmp);
+                    pFields[0]->HomogeneousBwdTrans(tmp, m_gradient[2]);
+                    pFields[0]->PhysDeriv(MultiRegions::DirCartesianMap[2],
+                                          pFields[1]->GetPhys(), tmp);
+                    pFields[0]->HomogeneousBwdTrans(tmp, m_gradient[5]);
+                    pFields[0]->PhysDeriv(MultiRegions::DirCartesianMap[2],
+                                          pFields[2]->GetPhys(), tmp);
+                    pFields[0]->HomogeneousBwdTrans(tmp, m_gradient[8]);
+                } else {
+                    pFields[0]->PhysDeriv(pFields[0]->GetPhys(), m_gradient[0], m_gradient[1], m_gradient[2]);
+                    pFields[1]->PhysDeriv(pFields[1]->GetPhys(), m_gradient[3], m_gradient[4], m_gradient[5]);
+                    pFields[2]->PhysDeriv(pFields[2]->GetPhys(), m_gradient[6], m_gradient[7], m_gradient[8]);
+                }
                 break;
             default:
                 ASSERTL0(false,"dimension unknown");
         }
-        /*int npoints = pFields[0]->GetNpoints();
-        auto coords = Array<OneD, Array<OneD, NekDouble>>(2);
+
+        /*auto coords = Array<OneD, Array<OneD, NekDouble>>(2);
         for (int i = 0; i < 2; ++i)
         {
             coords[i] = Array<OneD, NekDouble>(npoints);
@@ -218,11 +265,24 @@ namespace SolverUtils
         // direction
         if (m_transform)
         {
-            for (int i = 0; i < m_NumVariable; ++i)
+            for (int i = 0; i < m_spacedim; ++i)
             {
                 pFields[0]->HomogeneousFwdTrans(m_Forcing[i], m_Forcing[i]);
             }
         }
+
+        /*auto coords = Array<OneD, Array<OneD, NekDouble>>(2);
+        for (int i = 0; i < 2; ++i)
+        {
+            coords[i] = Array<OneD, NekDouble>(npoints);
+        }
+        pFields[0]->GetCoords(coords[0], coords[1]);
+        for(int i=48; i<=48; ++i)
+        {
+            cout << "---- Node " << i << " x=" <<  coords[0][i] << " y=" <<  coords[1][i] << endl;
+            cout << pFields.num_elements() << " "  << pFields[0]->GetPhys()[i] << " " << pFields[1]->GetPhys()[i] << endl;
+            cout << m_Forcing[0][i] << " " << " " << m_Forcing[1][i] << endl;
+        }*/
     }
 
 
@@ -234,7 +294,7 @@ namespace SolverUtils
     {
         Update(fields, time);
 
-        for (int i = 0; i < m_NumVariable; i++)
+        for (int i = 0; i < m_spacedim; i++)
         {
             Vmath::Vadd(outarray[i].num_elements(), outarray[i], 1,
                         m_Forcing[i], 1, outarray[i], 1);

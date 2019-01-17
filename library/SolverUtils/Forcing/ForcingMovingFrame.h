@@ -91,6 +91,10 @@ namespace SolverUtils
             Array<OneD, Array<OneD, NekDouble>> m_gradient;
             NekInt                              m_spacedim;
             bool                                m_transform;
+            bool                                m_homogen_dealiasing;
+            bool                                m_SingleMode;
+            bool                                m_HalfMode;
+
 
             ForcingMovingFrame(
                 const LibUtilities::SessionReaderSharedPtr &pSession,

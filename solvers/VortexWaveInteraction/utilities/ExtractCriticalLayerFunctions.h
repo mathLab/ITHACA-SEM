@@ -37,7 +37,6 @@
 #include <cstdlib>
 
 #include <MultiRegions/ExpList.h>
-#include <MultiRegions/ExpList2D.h>
 
 #ifndef NEKTAR_SOLVERS_EXTRACTCRITICALLAYERFUNCTION
 #define NEKTAR_SOLVERS_EXTRACTCRITICALLAYERFUNCTION

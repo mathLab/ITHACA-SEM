@@ -89,7 +89,7 @@ namespace Nektar
                          const NekDouble lhom, 
                          const bool useFFT,
                          const bool dealiasing,
-                         const SpatialDomains::ExpansionMap &expansions,
+                         const SpatialDomains::ExpansionInfoMap &expansions,
                          const Collections::ImplementationType ImpType
                          = Collections::eNoImpType);
                                     
@@ -155,7 +155,7 @@ namespace Nektar
 
         private:
 
-            MULTI_REGIONS_EXPORT void GenExpList3DHomogeneous1D(const SpatialDomains::ExpansionMap &expansions,  const Collections::ImplementationType ImpType);
+            MULTI_REGIONS_EXPORT void GenExpList3DHomogeneous1D(const SpatialDomains::ExpansionInfoMap &expansions,  const Collections::ImplementationType ImpType);
 
         };
 

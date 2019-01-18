@@ -139,26 +139,18 @@ namespace Nektar
             MULTI_REGIONS_EXPORT ExpList(const SpatialDomains::PointGeomSharedPtr
                                          &geom);
 
-            /// Specialised constructor for trace expansions (croth)
+            /// Specialised constructor for trace expansions
             MULTI_REGIONS_EXPORT ExpList(
                 const Array<OneD,const ExpListSharedPtr> &bndConstraint,
                 const Array<OneD,const SpatialDomains
                             ::BoundaryConditionShPtr>  &bndCond,
                 const LocalRegions::ExpansionVector &locexp,
                 const SpatialDomains::MeshGraphSharedPtr &graph1D,
-                const PeriodicMap                  &periodicVerts,
                 const bool DeclareCoeffPhysArrays = true);
 
 
             // Constructors related to 1D Expansions
-            
-            /// Generate an ExpList from a meshgraph \a graph1D and session
-            ExpList(const LibUtilities::SessionReaderSharedPtr &pSession,
-                    const SpatialDomains::MeshGraphSharedPtr &graph,
-                    const bool DeclareCoeffPhysArrays = true,
-                    const Collections::ImplementationType ImpType
-                                             = Collections::eNoImpType);
-            
+                        
             /// This constructor sets up a list of local expansions based on an
             /// input graph1D.
             ExpList(const LibUtilities::SessionReaderSharedPtr &pSession,
@@ -178,11 +170,24 @@ namespace Nektar
                     const Collections::ImplementationType ImpType
                     = Collections::eNoImpType);
             
+
+            // Constructor for 1D, 2D, 3D 
+            
+            /// Generate an ExpList from a meshgraph \a graph and session
+            ExpList(const LibUtilities::SessionReaderSharedPtr &pSession,
+                    const SpatialDomains::MeshGraphSharedPtr &graph,
+                    const bool DeclareCoeffPhysArrays = true,
+                    const std::string &var = "DefaultVar",
+                    const Collections::ImplementationType ImpType
+                                             = Collections::eNoImpType);
+
+            // Constructor for 1D, 2D
+            
             /// Specialised constructor for Neumann boundary conditions in
-            /// DisContField2D and ContField2D.
+            /// DisContField and ContField.
             ExpList(const LibUtilities::SessionReaderSharedPtr &pSession,
                     const SpatialDomains::CompositeMap &domain,
-                    const SpatialDomains::MeshGraphSharedPtr &graph2D,
+                    const SpatialDomains::MeshGraphSharedPtr &graph,
                     const bool DeclareCoeffPhysArrays = true,
                     const std::string variable = "DefaultVar",
                     const LibUtilities::CommSharedPtr comm
@@ -191,18 +196,60 @@ namespace Nektar
                                          = Collections::eNoImpType);
 
             /// Generate expansions for the trace space expansions used in
-            /// DisContField2D.
+            /// DisContField.
             ExpList(const LibUtilities::SessionReaderSharedPtr &pSession,
                     const Array<OneD,const ExpListSharedPtr>  &bndConstraint,
                     const Array<OneD,
-                        const SpatialDomains::BoundaryConditionShPtr>  &bndCond,
+                    const SpatialDomains::BoundaryConditionShPtr>  &bndCond,
                     const LocalRegions::ExpansionVector &locexp,
-                    const SpatialDomains::MeshGraphSharedPtr &graph2D,
-                    const PeriodicMap &periodicEdges,
+                    const SpatialDomains::MeshGraphSharedPtr &graph,
                     const bool DeclareCoeffPhysArrays = true,
                     const std::string variable = "DefaultVar",
                     const Collections::ImplementationType ImpType
                                              = Collections::eNoImpType);
+
+            /// Sets up a list of local expansions based on an expansion  Map
+            MULTI_REGIONS_EXPORT ExpList(
+                const LibUtilities::SessionReaderSharedPtr &pSession,
+                const SpatialDomains::ExpansionInfoMap &expansions,
+                const bool DeclareCoeffPhysArrays = true,
+                const Collections::ImplementationType ImpType
+                                             = Collections::eNoImpType);
+            
+            /// Sets up a list of local expansions based on an input mesh
+            /// and separately defined basiskeys
+            MULTI_REGIONS_EXPORT ExpList(
+                const LibUtilities::SessionReaderSharedPtr &pSession,
+                const LibUtilities::BasisKey &TriBa,
+                const LibUtilities::BasisKey &TriBb,
+                const LibUtilities::BasisKey &QuadBa,
+                const LibUtilities::BasisKey &QuadBb,
+                const SpatialDomains::MeshGraphSharedPtr &graph2D,
+                const LibUtilities::PointsType
+                TriNb = LibUtilities::SIZE_PointsType,
+                const Collections::ImplementationType ImpType
+                                             = Collections::eNoImpType);
+
+            // 3D Specialised constructors
+            MULTI_REGIONS_EXPORT ExpList(  
+                        const LibUtilities::SessionReaderSharedPtr &pSession,
+                        const LibUtilities::BasisKey &TBa,
+                        const LibUtilities::BasisKey &TBb,
+                        const LibUtilities::BasisKey &TBc,
+                        const LibUtilities::BasisKey &HBa,
+                        const LibUtilities::BasisKey &HBb,
+                        const LibUtilities::BasisKey &HBc,
+                        const SpatialDomains::MeshGraphSharedPtr &graph3D,
+                        const LibUtilities::PointsType TetNb
+                        = LibUtilities::SIZE_PointsType,
+                        const Collections::ImplementationType ImpType
+                        = Collections::eNoImpType);
+
+            /// Sets up a list of local expansions based on an expansion vector
+            MULTI_REGIONS_EXPORT  ExpList(const SpatialDomains::ExpansionInfoMap &expansions,
+                                          const Collections::ImplementationType ImpType
+                                          = Collections::eNoImpType);
+            
             
             /// The default destructor.
             MULTI_REGIONS_EXPORT virtual ~ExpList();
@@ -1078,7 +1125,8 @@ namespace Nektar
 
             /// Definition of the total number of degrees of freedom and
             /// quadrature points and offsets to access data
-            void SetCoeffPhysOffsets();
+            void SetupCoeffPhys(bool DeclareCoeffPhysArrays = true,
+                                bool SetupOffsets = true);
 
             std::shared_ptr<DNekMat> GenGlobalMatrixFull(
                 const GlobalLinSysKey &mkey,

@@ -1,5 +1,5 @@
 #include <SpatialDomains/MeshComponents.h>
-#include <MultiRegions/ExpList0D.h>
+#include <MultiRegions/ExpList.h>
 #include <CardiacEPSolver/CellModels/CellModel.h>
 #include <CardiacEPSolver/Stimuli/Stimulus.h>
 
@@ -29,7 +29,7 @@ int main(int argc, char *argv[])
         // Construct a field consisting of a single vertex
         vPoint = MemoryManager<SpatialDomains::PointGeom>
                         ::AllocateSharedPtr(3, 0, 0.0, 0.0, 0.0);
-        vExp = MemoryManager<MultiRegions::ExpList0D>
+        vExp = MemoryManager<MultiRegions::ExpList>
                         ::AllocateSharedPtr(vPoint);
 
         // Get cell model name and create it

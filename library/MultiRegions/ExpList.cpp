@@ -186,18 +186,10 @@ namespace Nektar
             for (int i=0; i < eIDs.size(); ++i)
             {
                 (*m_exp).push_back( (*(in.m_exp))[eIDs[i]]);
-                m_ncoeffs += (*m_exp)[i]->GetNcoeffs();
-                m_npoints += (*m_exp)[i]->GetTotPoints();
             }
 
-            if(DeclareCoeffPhysArrays)
-            {
-                m_coeffs = Array<OneD, NekDouble>(m_ncoeffs, 0.0);
-                m_phys   = Array<OneD, NekDouble>(m_npoints, 0.0);
-            }
-
-            // Allocate storage for data and populate element offset lists.
-            SetCoeffPhysOffsets();
+            // Set up m_coeffs, m_phys and offset arrays.
+            SetupCoeffPhys(DeclareCoeffPhysArrays);
 
             CreateCollections(ImpType);
         }
@@ -224,13 +216,11 @@ namespace Nektar
             m_blockMat(in.m_blockMat),
             m_WaveSpace(false)
         {
-            if(DeclareCoeffPhysArrays)
-            {
-                m_coeffs = Array<OneD, NekDouble>(m_ncoeffs, 0.0);
-                m_phys   = Array<OneD, NekDouble>(m_npoints, 0.0);
-            }
-        }
 
+            // Set up m_coeffs, m_phys and offset arrays.
+            // use this to keep memory declaration in one place
+            SetupCoeffPhys(DeclareCoeffPhysArrays, false);
+        }
 
         /**
          * Each expansion (local element) is processed in turn to
@@ -240,24 +230,35 @@ namespace Nektar
          * updated to store the data offsets of each element in the
          * #m_coeffs and #m_phys arrays, and the element id that each
          * consecutive block is associated respectively.
+         * Finally we initialise #m_coeffs and #m_phys
          */
-        void ExpList::SetCoeffPhysOffsets()
+        void ExpList::SetupCoeffPhys(bool DeclareCoeffPhysArrays, bool SetupOffsets)
         {
-            int i;
-
-            // Set up offset information and array sizes
-            m_coeff_offset   = Array<OneD,int>(m_exp->size());
-            m_phys_offset    = Array<OneD,int>(m_exp->size());
-
-            m_ncoeffs = m_npoints = 0;
-            
-            for(i = 0; i < m_exp->size(); ++i)
+            if(SetupOffsets)
             {
-                m_coeff_offset[i]   = m_ncoeffs;
-                m_phys_offset [i]   = m_npoints;
-                m_ncoeffs += (*m_exp)[i]->GetNcoeffs();
-                m_npoints += (*m_exp)[i]->GetTotPoints();
+                int i;
+
+                // Set up offset information and array sizes
+                m_coeff_offset   = Array<OneD,int>(m_exp->size());
+                m_phys_offset    = Array<OneD,int>(m_exp->size());
+                
+                m_ncoeffs = m_npoints = 0;
+                
+                for(i = 0; i < m_exp->size(); ++i)
+                {
+                    m_coeff_offset[i]   = m_ncoeffs;
+                    m_phys_offset [i]   = m_npoints;
+                    m_ncoeffs += (*m_exp)[i]->GetNcoeffs();
+                    m_npoints += (*m_exp)[i]->GetTotPoints();
+                }
             }
+
+            if(DeclareCoeffPhysArrays)
+            {
+                m_coeffs = Array<OneD, NekDouble>(m_ncoeffs, 0.0);
+                m_phys   = Array<OneD, NekDouble>(m_npoints, 0.0);
+            }
+
         }
 
         /**

@@ -74,7 +74,8 @@ namespace Nektar
         int  expdim = m_graph->GetMeshDimension();
 
         // Get Expansion list for orthogonal expansion at p-2
-        const SpatialDomains::ExpansionMap &pressure_exp = GenPressureExp(m_graph->GetExpansions("u"));
+        const SpatialDomains::ExpansionInfoMap
+            &pressure_exp = GenPressureExp(m_graph->GetExpansionInfos("u"));
 
         m_nConvectiveFields = m_fields.num_elements();
         if(boost::iequals(m_boundaryConditions->GetVariable(m_nConvectiveFields-1), "p"))
@@ -99,8 +100,8 @@ namespace Nektar
             }
             else
             {
-                //m_pressure2 = MemoryManager<MultiRegions::ContField2D>::AllocateSharedPtr(m_session, pressure_exp);
-                m_pressure = MemoryManager<MultiRegions::ExpList2D>::AllocateSharedPtr(m_session, pressure_exp);
+                m_pressure = MemoryManager<MultiRegions::ExpList>::AllocateSharedPtr
+                    (m_session, pressure_exp);
                 nz = 1;
             }
 
@@ -1764,12 +1765,13 @@ namespace Nektar
     
     
     
-    const SpatialDomains::ExpansionMap &CoupledLinearNS::GenPressureExp(const SpatialDomains::ExpansionMap &VelExp)
+    const SpatialDomains::ExpansionInfoMap
+    &CoupledLinearNS::GenPressureExp(const SpatialDomains::ExpansionInfoMap &VelExp)
     {
         int i;
-        SpatialDomains::ExpansionMapShPtr returnval;
+        SpatialDomains::ExpansionInfoMapShPtr returnval;
         
-        returnval = MemoryManager<SpatialDomains::ExpansionMap>::AllocateSharedPtr();
+        returnval = MemoryManager<SpatialDomains::ExpansionInfoMap>::AllocateSharedPtr();
         
         int nummodes;
         
@@ -1788,13 +1790,14 @@ namespace Nektar
             }
             
             // Put new expansion into list. 
-            SpatialDomains::ExpansionShPtr expansionElementShPtr =
-                MemoryManager<SpatialDomains::Expansion>::AllocateSharedPtr(expMapIter.second->m_geomShPtr, BasisVec);
+            SpatialDomains::ExpansionInfoShPtr expansionElementShPtr =
+                MemoryManager<SpatialDomains::ExpansionInfo>::
+                AllocateSharedPtr(expMapIter.second->m_geomShPtr, BasisVec);
             (*returnval)[expMapIter.first] = expansionElementShPtr;
         }
         
         // Save expansion into graph. 
-        m_graph->SetExpansions("p",returnval);
+        m_graph->SetExpansionInfos("p",returnval);
         
         return *returnval;
     }

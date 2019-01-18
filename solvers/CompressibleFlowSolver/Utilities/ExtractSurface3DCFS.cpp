@@ -41,8 +41,6 @@
 #include <iomanip>
 
 #include <MultiRegions/ExpList.h>
-#include <MultiRegions/ExpList2D.h>
-#include <MultiRegions/ExpList3D.h>
 #include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
 
 #include <MultiRegions/DisContField3D.h>
@@ -186,7 +184,7 @@ int main(int argc, char *argv[])
         }
         pointsType.push_back(ptype);
     }
-    graphShPt->SetExpansions(fieldDef, pointsType);
+    graphShPt->SetExpansionInfos(fieldDef, pointsType);
 
     //--------------------------------------------------------------------------
 
@@ -204,15 +202,15 @@ int main(int argc, char *argv[])
                                                                         vSession->GetVariable(i));
     }
 
-    MultiRegions::ExpList3DSharedPtr Exp3D;
-    Exp3D = MemoryManager<MultiRegions::ExpList3D>
+    MultiRegions::ExpListSharedPtr Exp3D;
+    Exp3D = MemoryManager<MultiRegions::ExpList>
         ::AllocateSharedPtr(vSession, graphShPt);
 
     Exp[0] = Exp3D;
 
     for (i = 1; i < nfields; ++i)
     {
-        Exp[i] = MemoryManager<MultiRegions::ExpList3D>
+        Exp[i] = MemoryManager<MultiRegions::ExpList>
             ::AllocateSharedPtr(*Exp3D);
     }
 

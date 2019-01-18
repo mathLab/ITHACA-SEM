@@ -62,7 +62,7 @@ using namespace std;
           * @brief Default constructor.
           */
          DisContField3D::DisContField3D() :
-             ExpList3D             (),
+             ExpList               (),
              m_bndCondExpansions   (),
              m_bndConditions       (),
              m_trace(NullExpListSharedPtr)
@@ -79,7 +79,7 @@ using namespace std;
              const std::string                          &variable,
              const bool                                  SetUpJustDG,
              const Collections::ImplementationType       ImpType):
-             ExpList3D          (pSession, graph3D, variable, ImpType),
+             ExpList          (pSession, graph3D, true, variable, ImpType),
                m_bndCondExpansions(),
                m_bndConditions    (),
                m_trace(NullExpListSharedPtr)
@@ -138,7 +138,7 @@ using namespace std;
              const SpatialDomains::MeshGraphSharedPtr &graph3D,
              const std::string                        &variable,
              const bool                                SetUpJustDG) 
-             : ExpList3D(In), 
+             : ExpList(In), 
                m_trace(NullExpListSharedPtr)
          {
              SpatialDomains::BoundaryConditions bcs(m_session, graph3D);
@@ -254,7 +254,7 @@ using namespace std;
           *
           */
          DisContField3D::DisContField3D(const DisContField3D &In) :
-             ExpList3D(In),
+             ExpList(In),
              m_bndCondExpansions   (In.m_bndCondExpansions),
              m_bndConditions       (In.m_bndConditions),
              m_globalBndMat        (In.m_globalBndMat),
@@ -310,17 +310,16 @@ using namespace std;
                  return;
              }
 
-             ExpList2DSharedPtr trace;
+             ExpListSharedPtr trace;
 
              // Set up matrix map
              m_globalBndMat = MemoryManager<GlobalLinSysMap>::
                  AllocateSharedPtr();
 
              // Set up Trace space
-             bool UseGenSegExp = true;
-             trace = MemoryManager<ExpList2D>::AllocateSharedPtr(
+             trace = MemoryManager<ExpList>::AllocateSharedPtr(
                  m_session, m_bndCondExpansions, m_bndConditions,
-                 *m_exp, m_graph, m_periodicFaces, UseGenSegExp);
+                 *m_exp, m_graph);
 
              m_trace    = trace;
 
@@ -589,7 +588,7 @@ using namespace std;
         /**
          * According to their boundary region, the separate segmental boundary
          * expansions are bundled together in an object of the class
-         * MultiRegions#ExpList2D.
+         * MultiRegions#ExpList.
          *
          * \param graph3D A mesh, containing information about the domain and
          * the spectral/hp element expansion.
@@ -604,7 +603,7 @@ using namespace std;
             const std::string                        &variable)
         {
             int cnt = 0;
-            MultiRegions::ExpList2DSharedPtr       locExpList;
+            MultiRegions::ExpListSharedPtr       locExpList;
             SpatialDomains::BoundaryConditionShPtr locBCond;
 
             const SpatialDomains::BoundaryRegionCollection    &bregions =
@@ -622,9 +621,9 @@ using namespace std;
             {
                 locBCond = GetBoundaryCondition(
                     bconditions, it.first, variable);
-                locExpList = MemoryManager<MultiRegions::ExpList2D>
+                locExpList = MemoryManager<MultiRegions::ExpList>
                     ::AllocateSharedPtr(m_session, *(it.second),
-                                        graph3D, variable, locBCond->GetComm());
+                                        graph3D, true, variable, locBCond->GetComm());
 
                 // Set up normals on non-Dirichlet boundary conditions
                 if(locBCond->GetBoundaryConditionType() !=
@@ -2182,7 +2181,7 @@ using namespace std;
             
             // Create expansion list
             result = 
-                MemoryManager<ExpList3D>::AllocateSharedPtr
+                MemoryManager<ExpList>::AllocateSharedPtr
                     (*this, eIDs, DeclareCoeffPhysArrays);
             
             // Copy phys and coeffs to new explist

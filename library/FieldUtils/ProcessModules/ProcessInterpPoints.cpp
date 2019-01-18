@@ -157,8 +157,8 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
     fromField->m_graph =
         SpatialDomains::MeshGraph::Read(fromField->m_session, rng);
     // Read in local from field partitions
-    const SpatialDomains::ExpansionMap &expansions =
-        fromField->m_graph->GetExpansions();
+    const SpatialDomains::ExpansionInfoMap &expansions =
+        fromField->m_graph->GetExpansionInfos();
     Array<OneD, int> ElementGIDs(expansions.size());
 
     int i = 0;
@@ -177,7 +177,7 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
     int NumHomogeneousDir = fromField->m_fielddef[0]->m_numHomogeneousDir;
     //----------------------------------------------
     // Set up Expansion information to use mode order from field
-    fromField->m_graph->SetExpansions(fromField->m_fielddef);
+    fromField->m_graph->SetExpansionInfos(fromField->m_fielddef);
     int nfields = fromField->m_fielddef[0]->m_fields.size();
     fromField->m_exp.resize(nfields);
     fromField->m_exp[0] = fromField->SetUpFirstExpList(NumHomogeneousDir, true);

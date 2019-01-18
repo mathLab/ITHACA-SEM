@@ -61,7 +61,7 @@ namespace Nektar
          * @brief Default constructor.
          */
         DisContField2D::DisContField2D(void)
-        : ExpList2D          (),
+        : ExpList            (),
           m_bndCondExpansions(),
           m_bndConditions    (),
           m_trace            (NullExpListSharedPtr)
@@ -71,7 +71,7 @@ namespace Nektar
         DisContField2D::DisContField2D(
             const DisContField2D &In, 
             const bool            DeclareCoeffPhysArrays)
-            : ExpList2D            (In,DeclareCoeffPhysArrays),
+            : ExpList            (In,DeclareCoeffPhysArrays),
               m_bndCondExpansions  (In.m_bndCondExpansions),
               m_bndConditions      (In.m_bndConditions),
               m_globalBndMat       (In.m_globalBndMat),
@@ -102,7 +102,7 @@ namespace Nektar
             const bool                                  SetUpJustDG,
             const bool                                  DeclareCoeffPhysArrays,
             const Collections::ImplementationType       ImpType)
-            : ExpList2D(pSession, graph2D, DeclareCoeffPhysArrays, variable,
+            : ExpList(pSession, graph2D, DeclareCoeffPhysArrays, variable,
                         ImpType),
               m_bndCondExpansions(),
               m_bndConditions(),
@@ -195,7 +195,7 @@ namespace Nektar
             const std::string                        &variable,
             const bool                                SetUpJustDG,
             const bool                                DeclareCoeffPhysArrays):
-            ExpList2D(In,DeclareCoeffPhysArrays),
+            ExpList(In,DeclareCoeffPhysArrays),
               m_trace(NullExpListSharedPtr)
         {
             // Set up boundary conditions for this variable.
@@ -391,7 +391,7 @@ namespace Nektar
             // Set up trace space
             m_trace = MemoryManager<ExpList>::AllocateSharedPtr(
                 m_session, m_bndCondExpansions, m_bndConditions, *m_exp,
-                m_graph, m_periodicEdges);
+                m_graph);
             
             m_traceMap = MemoryManager<AssemblyMapDG>::
                 AllocateSharedPtr(m_session, m_graph, m_trace, *this,
@@ -1739,7 +1739,7 @@ namespace Nektar
             
             // Create expansion list
             result = 
-                MemoryManager<ExpList2D>::AllocateSharedPtr
+                MemoryManager<ExpList>::AllocateSharedPtr
                     (*this, eIDs, DeclareCoeffPhysArrays);
             
             // Copy phys and coeffs to new explist

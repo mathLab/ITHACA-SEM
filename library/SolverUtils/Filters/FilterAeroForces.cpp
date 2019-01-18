@@ -39,8 +39,7 @@
 #include <LocalRegions/Expansion1D.h>
 #include <LocalRegions/Expansion2D.h>
 #include <LocalRegions/Expansion3D.h>
-#include <MultiRegions/ExpList2D.h>     
-#include <MultiRegions/ExpList3D.h>    
+#include <MultiRegions/ExpList.h>     
 #include <MultiRegions/ExpList3DHomogeneous1D.h>
 #include <SolverUtils/Filters/FilterAeroForces.h>
 #include <SolverUtils/Filters/FilterInterfaces.hpp>
@@ -1075,44 +1074,44 @@ void FilterAeroForces::CalculateForcesMapping(
             }
             else
             {
-                MultiRegions::ExpList2DSharedPtr Exp2D;
+                MultiRegions::ExpListSharedPtr Exp2D;
                 Exp2D = std::dynamic_pointer_cast
-                                <MultiRegions::ExpList2D>
+                                <MultiRegions::ExpList>
                                                     (pFields[0]);
                 for(i = 0; i < nVel*nVel; i++)
                 {
-                    grad[i] = MemoryManager<MultiRegions::ExpList2D>::
+                    grad[i] = MemoryManager<MultiRegions::ExpList>::
                                 AllocateSharedPtr(*Exp2D);
 
-                    P[i] = MemoryManager<MultiRegions::ExpList2D>::
+                    P[i] = MemoryManager<MultiRegions::ExpList>::
                                 AllocateSharedPtr(*Exp2D);
 
-                    C[i] = MemoryManager<MultiRegions::ExpList2D>::
+                    C[i] = MemoryManager<MultiRegions::ExpList>::
                                 AllocateSharedPtr(*Exp2D);
                 }
-                Jac = MemoryManager<MultiRegions::ExpList2D>::
+                Jac = MemoryManager<MultiRegions::ExpList>::
                                 AllocateSharedPtr(*Exp2D);
             }
             break;
         }
         case 3:
         {
-            MultiRegions::ExpList3DSharedPtr Exp3D;
+            MultiRegions::ExpListSharedPtr Exp3D;
             Exp3D = std::dynamic_pointer_cast
-                            <MultiRegions::ExpList3D>
+                            <MultiRegions::ExpList>
                                                 (pFields[0]);
             for(i = 0; i < nVel*nVel; i++)
             {
-                grad[i] = MemoryManager<MultiRegions::ExpList3D>::
+                grad[i] = MemoryManager<MultiRegions::ExpList>::
                             AllocateSharedPtr(*Exp3D);
 
-                P[i] = MemoryManager<MultiRegions::ExpList3D>::
+                P[i] = MemoryManager<MultiRegions::ExpList>::
                             AllocateSharedPtr(*Exp3D);
 
-                C[i] = MemoryManager<MultiRegions::ExpList3D>::
+                C[i] = MemoryManager<MultiRegions::ExpList>::
                             AllocateSharedPtr(*Exp3D);
             }
-            Jac = MemoryManager<MultiRegions::ExpList3D>::
+            Jac = MemoryManager<MultiRegions::ExpList>::
                             AllocateSharedPtr(*Exp3D);
 
             break;

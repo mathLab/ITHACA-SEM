@@ -44,8 +44,7 @@
 #include <MultiRegions/ContField3DHomogeneous1D.h>
 #include <MultiRegions/ContField3DHomogeneous2D.h>
 
-#include <MultiRegions/ExpList2D.h>     // for ExpList2D, etc
-#include <MultiRegions/ExpList3D.h>     // for ExpList3D
+#include <MultiRegions/ExpList.h>  
 #include <MultiRegions/ExpList3DHomogeneous1D.h>
 #include <MultiRegions/ExpList3DHomogeneous2D.h>
 
@@ -434,8 +433,8 @@ namespace Nektar
                             for (i = 1; i < m_fields.num_elements(); i++)
                             {
                                 if (m_graph->
-                                      SameExpansions(m_session->GetVariable(0),
-                                                     m_session->GetVariable(i)))
+                                      SameExpansionInfos(m_session->GetVariable(0),
+                                                         m_session->GetVariable(i)))
                                 {
                                     m_fields[i] = MemoryManager<MultiRegions::
                                         ContField2D>::AllocateSharedPtr(
@@ -489,9 +488,8 @@ namespace Nektar
                         m_fields[0] = firstfield;
                         for (i = 1; i < m_fields.num_elements(); i++)
                         {
-                            if(m_graph->SameExpansions(
-                                        m_session->GetVariable(0),
-                                        m_session->GetVariable(i)))
+                            if(m_graph->SameExpansionInfos(m_session->GetVariable(0),
+                                                           m_session->GetVariable(i)))
                             {
                                 m_fields[i] = MemoryManager<MultiRegions
                                     ::ContField3D>::AllocateSharedPtr(
@@ -874,8 +872,8 @@ namespace Nektar
             const LibUtilities::BasisKey  BkeyQ2(
                 LibUtilities::eModified_A, NumModes, PkeyQ2);
 
-            MultiRegions::ExpList2DSharedPtr ErrorExp =
-                MemoryManager<MultiRegions::ExpList2D>::AllocateSharedPtr(
+            MultiRegions::ExpListSharedPtr ErrorExp =
+                MemoryManager<MultiRegions::ExpList>::AllocateSharedPtr(
                         m_session, BkeyT1, BkeyT2, BkeyQ1, BkeyQ2, m_graph);
 
             int ErrorCoordim = ErrorExp->GetCoordim(0);

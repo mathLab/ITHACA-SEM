@@ -84,7 +84,7 @@ namespace Nektar
             const std::string &variable,
             const bool         SetUpJustDG,
             const Collections::ImplementationType ImpType)
-            : ExpList(pSession,graph1D,true, ImpType),
+            : ExpList(pSession,graph1D,true, variable, ImpType),
               m_bndCondExpansions(),
               m_bndConditions()
         {
@@ -142,8 +142,7 @@ namespace Nektar
                 AllocateSharedPtr(
                     m_bndCondExpansions,
                     m_bndConditions,
-                    *m_exp,m_graph,
-                    m_periodicVerts);
+                    *m_exp,m_graph);
 
             m_trace = std::dynamic_pointer_cast<ExpList>(trace);
 

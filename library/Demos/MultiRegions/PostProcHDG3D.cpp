@@ -49,7 +49,7 @@ int main(int argc, char *argv[])
     // Print summary of solution details
     factors[StdRegions::eFactorLambda] = vSession->GetParameter("Lambda");
     factors[StdRegions::eFactorTau] = 1.0;
-    const SpatialDomains::ExpansionMap &expansions = graph3D->GetExpansions();
+    const SpatialDomains::ExpansionInfoMap &expansions = graph3D->GetExpansionInfos();
     LibUtilities::BasisKey bkey0
                             = expansions.begin()->second->m_basisKeyVector[0];
 

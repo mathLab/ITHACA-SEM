@@ -42,11 +42,9 @@
 #include <cmath>
 
 #include <MultiRegions/ExpList.h>
-#include <MultiRegions/ExpList2D.h>
 #include <MultiRegions/ExpList2DHomogeneous1D.h>
 #include <MultiRegions/ExpList3DHomogeneous1D.h>
 #include <MultiRegions/ExpList3DHomogeneous2D.h>
-#include <MultiRegions/ExpList3D.h>
 #include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
 #include <MultiRegions/ContField2D.h>
 #include <MultiRegions/ContField3D.h>
@@ -704,20 +702,20 @@ int main(int argc, char *argv[])
             ::AllocateSharedPtr(vSession, graphShPt, vSession->GetVariable(0));
 
         Array<OneD, MultiRegions::ExpListSharedPtr> Exp(4);
-        MultiRegions::ExpList2DSharedPtr Exp2D_uk;
-        Exp2D_uk = MemoryManager<MultiRegions::ExpList2D>
+        MultiRegions::ExpListSharedPtr Exp2D_uk;
+        Exp2D_uk = MemoryManager<MultiRegions::ExpList>
             ::AllocateSharedPtr(vSession, graphShPt);
 
-        MultiRegions::ExpList2DSharedPtr Exp2D_vk;
-        Exp2D_vk = MemoryManager<MultiRegions::ExpList2D>
+        MultiRegions::ExpListSharedPtr Exp2D_vk;
+        Exp2D_vk = MemoryManager<MultiRegions::ExpList>
             ::AllocateSharedPtr(vSession, graphShPt);
 
-        MultiRegions::ExpList2DSharedPtr Exp2D_rhok;
-        Exp2D_rhok = MemoryManager<MultiRegions::ExpList2D>
+        MultiRegions::ExpListSharedPtr Exp2D_rhok;
+        Exp2D_rhok = MemoryManager<MultiRegions::ExpList>
             ::AllocateSharedPtr(vSession, graphShPt);
 
-        MultiRegions::ExpList2DSharedPtr Exp2D_Tk;
-        Exp2D_Tk = MemoryManager<MultiRegions::ExpList2D>
+        MultiRegions::ExpListSharedPtr Exp2D_Tk;
+        Exp2D_Tk = MemoryManager<MultiRegions::ExpList>
             ::AllocateSharedPtr(vSession, graphShPt);
 
         // Filling the 2D expansion using a recursive algorithm based on the
@@ -802,24 +800,24 @@ int main(int argc, char *argv[])
         w_QuadraturePts = Array<OneD,NekDouble>(nQuadraturePts, 0.0);
         Array<OneD, MultiRegions::ExpListSharedPtr> Exp(5);
 
-        MultiRegions::ExpList3DSharedPtr Exp3D_uk;
-        Exp3D_uk = MemoryManager<MultiRegions::ExpList3D>
+        MultiRegions::ExpListSharedPtr Exp3D_uk;
+        Exp3D_uk = MemoryManager<MultiRegions::ExpList>
             ::AllocateSharedPtr(vSession, graphShPt);
 
-        MultiRegions::ExpList3DSharedPtr Exp3D_vk;
-        Exp3D_vk = MemoryManager<MultiRegions::ExpList3D>
+        MultiRegions::ExpListSharedPtr Exp3D_vk;
+        Exp3D_vk = MemoryManager<MultiRegions::ExpList>
             ::AllocateSharedPtr(vSession, graphShPt);
 
-        MultiRegions::ExpList3DSharedPtr Exp3D_wk;
-        Exp3D_wk = MemoryManager<MultiRegions::ExpList3D>
+        MultiRegions::ExpListSharedPtr Exp3D_wk;
+        Exp3D_wk = MemoryManager<MultiRegions::ExpList>
             ::AllocateSharedPtr(vSession, graphShPt);
 
-        MultiRegions::ExpList3DSharedPtr Exp3D_rhok;
-        Exp3D_rhok = MemoryManager<MultiRegions::ExpList3D>
+        MultiRegions::ExpListSharedPtr Exp3D_rhok;
+        Exp3D_rhok = MemoryManager<MultiRegions::ExpList>
             ::AllocateSharedPtr(vSession, graphShPt);
 
-        MultiRegions::ExpList3DSharedPtr Exp3D_Tk;
-        Exp3D_Tk = MemoryManager<MultiRegions::ExpList3D>
+        MultiRegions::ExpListSharedPtr Exp3D_Tk;
+        Exp3D_Tk = MemoryManager<MultiRegions::ExpList>
             ::AllocateSharedPtr(vSession, graphShPt);
 
         // Filling the 3D expansion using a recursive algorithm based

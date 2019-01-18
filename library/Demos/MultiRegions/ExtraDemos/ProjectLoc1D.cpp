@@ -28,7 +28,7 @@ int main(int argc, char *argv[])
     SpatialDomains::MeshGraphSharedPtr graph1D = SpatialDomains::MeshGraph::Read(vSession);
 
     // Define Expansion
-    const SpatialDomains::ExpansionMap &expansions = graph1D->GetExpansions();
+    const SpatialDomains::ExpansionInfoMap &expansions = graph1D->GetExpansionInfos();
     LibUtilities::BasisKey bkey0 = expansions.begin()->second->m_basisKeyVector[0];
     int nmodes = bkey0.GetNumModes();
 

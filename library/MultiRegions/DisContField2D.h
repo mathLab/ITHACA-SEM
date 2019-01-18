@@ -39,7 +39,7 @@
 
 #include <MultiRegions/MultiRegionsDeclspec.h>
 #include <MultiRegions/MultiRegions.hpp>
-#include <MultiRegions/ExpList2D.h>
+#include <MultiRegions/ExpList.h>
 #include <MultiRegions/GlobalLinSys.h>
 #include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
 #include <MultiRegions/AssemblyMap/LocTraceToTraceMap.h>
@@ -49,7 +49,7 @@ namespace Nektar
 {
     namespace MultiRegions
     {
-        class DisContField2D : public ExpList2D
+        class DisContField2D : public ExpList
         {
         public:
             MULTI_REGIONS_EXPORT DisContField2D();

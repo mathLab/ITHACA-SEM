@@ -36,7 +36,7 @@ int main(int argc, char *argv[])
 
     //----------------------------------------------
     // Print summary of solution details
-    const SpatialDomains::ExpansionMap &expansions = graph3D->GetExpansions();
+    const SpatialDomains::ExpansionInfoMap &expansions = graph3D->GetExpansionInfos();
     LibUtilities::BasisKey bkey
                             = expansions.begin()->second->m_basisKeyVector[0];
     int nmodes =  bkey.GetNumModes();

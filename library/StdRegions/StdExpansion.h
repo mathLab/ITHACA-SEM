@@ -1176,9 +1176,6 @@ namespace Nektar
                 v_LocCoordToLocCollapsed(xi,eta);
             }
 
-            /// \brief Get the element id of this expansion when used
-            /// in a list by returning value of #m_elmt_id
-            STD_REGIONS_EXPORT virtual int v_GetElmtId();
 
             STD_REGIONS_EXPORT virtual int v_CalcNumberOfCoefficients(const std::vector<unsigned int>  &nummodes, int &modes_offset);
 

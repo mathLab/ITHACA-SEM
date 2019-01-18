@@ -41,7 +41,7 @@
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <LibUtilities/BasicUtils/Timer.h>
 #include <LibUtilities/Communication/Comm.h>
-#include <MultiRegions/ExpList3D.h>
+#include <MultiRegions/ExpList.h>
 #include <Collections/Collection.h>
 #include <SpatialDomains/MeshGraph.h>
 
@@ -54,11 +54,10 @@ MultiRegions::ExpListSharedPtr SetupExpList(
     SpatialDomains::MeshGraphSharedPtr   graph,
     Collections::ImplementationType      impType)
 {
-    graph->SetExpansionsToPolyOrder(N);
+    graph->SetExpansionInfosToPolyOrder(N);
 
     MultiRegions::ExpListSharedPtr expList =
-        MemoryManager<MultiRegions::ExpList3D>::AllocateSharedPtr(
-            session, graph);
+        MemoryManager<MultiRegions::ExpList>::AllocateSharedPtr(session, graph);
 
     expList->CreateCollections(impType);
 

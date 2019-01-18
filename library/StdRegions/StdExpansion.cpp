@@ -975,11 +975,6 @@ namespace Nektar
             return v_StdPhysEvaluate(Lcoord,physvals);
         }
 
-        int StdExpansion::v_GetElmtId(void)
-        {
-            return m_elmt_id;
-        }
-
 
         int StdExpansion::v_CalcNumberOfCoefficients(const std::vector<unsigned int>  &nummodes, int &modes_offset)
         {

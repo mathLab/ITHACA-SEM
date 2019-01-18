@@ -38,7 +38,6 @@
 
 #include <MultiRegions/MultiRegionsDeclspec.h>
 #include <MultiRegions/AssemblyMap/AssemblyMap.h>
-#include <MultiRegions/ExpList2D.h>
 #include <MultiRegions/ExpList.h>
 
 namespace Nektar

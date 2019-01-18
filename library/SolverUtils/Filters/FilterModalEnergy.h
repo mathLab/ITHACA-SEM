@@ -44,11 +44,9 @@
 #include <MultiRegions/ContField3DHomogeneous1D.h>
 #include <MultiRegions/ContField3DHomogeneous2D.h>
 
-#include <MultiRegions/ExpList2D.h>     // for ExpList2D, etc
-#include <MultiRegions/ExpList3D.h>     // for ExpList3D
+#include <MultiRegions/ExpList.h>  
 #include <MultiRegions/ExpList3DHomogeneous1D.h>
 #include <MultiRegions/ExpList3DHomogeneous2D.h>
-
 
 namespace Nektar
 {

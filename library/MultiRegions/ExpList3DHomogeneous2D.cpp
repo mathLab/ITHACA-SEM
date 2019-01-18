@@ -81,7 +81,7 @@ namespace Nektar
 
             //
             m_lines[0] = line_zero = MemoryManager<ExpList>::
-                AllocateSharedPtr(m_session,graph1D, False,ImpType);
+                AllocateSharedPtr(m_session,graph1D, false, "DefaultVar", ImpType);
 
             m_exp = MemoryManager<LocalRegions::ExpansionVector>::
                 AllocateSharedPtr();

@@ -257,7 +257,7 @@ struct Field
                     {
                         Exp1D = MemoryManager<MultiRegions::ExpList>::
                             AllocateSharedPtr(m_session, m_graph,
-                                              true,
+                                              true,"DefaultVar",
                                               Collections::eNoCollection);
                     }
 
@@ -265,7 +265,7 @@ struct Field
                 }
             }
             break;
-            case 2:
+        case 2:
             {
                 ASSERTL0(NumHomogeneousDir <= 1,
                          "NumHomogeneousDir is only set up for 1");
@@ -279,7 +279,7 @@ struct Field
                     NekDouble lz;
                     LibUtilities::BasisType  btype;
                     LibUtilities::PointsType ptype =
-                            LibUtilities::eFourierEvenlySpaced;
+                        LibUtilities::eFourierEvenlySpaced;
 
                     if (fldfilegiven)
                     {
@@ -313,7 +313,7 @@ struct Field
                     // Choose points to be at evenly spaced points at
                     // nplanes points
                     const LibUtilities::PointsKey Pkey(
-                        nplanes, ptype);
+                                                       nplanes, ptype);
 
                     const LibUtilities::BasisKey Bkey(btype, nplanes, Pkey);
 
@@ -348,7 +348,7 @@ struct Field
                 }
                 else
                 {
-                    MultiRegions::ExpList2DSharedPtr Exp2D;
+                    MultiRegions::ExpListSharedPtr Exp2D;
 
                     if (m_declareExpansionAsContField)
                     {
@@ -368,7 +368,7 @@ struct Field
                     }
                     else
                     {
-                        Exp2D = MemoryManager<MultiRegions::ExpList2D>::
+                        Exp2D = MemoryManager<MultiRegions::ExpList>::
                             AllocateSharedPtr(m_session, m_graph,
                                               true, 
                                               "DefaultVar",
@@ -379,9 +379,9 @@ struct Field
                 }
             }
             break;
-            case 3:
+        case 3:
             {
-                MultiRegions::ExpList3DSharedPtr Exp3D;
+                MultiRegions::ExpListSharedPtr Exp3D;
 
                 if (m_declareExpansionAsContField)
                 {
@@ -402,9 +402,10 @@ struct Field
                 else
                 {
                     Exp3D = MemoryManager<
-                        MultiRegions::ExpList3D>::AllocateSharedPtr(
+                        MultiRegions::ExpList>::AllocateSharedPtr(
                                                m_session,
                                                m_graph,
+                                               true,
                                                "DefaultVar",
                                                Collections::eNoCollection);
                 }
@@ -678,12 +679,12 @@ struct Field
                     }
                     else
                     {
-                        MultiRegions::ExpList2DSharedPtr tmp2 =
+                        MultiRegions::ExpListSharedPtr tmp2 =
                             std::dynamic_pointer_cast<
-                                MultiRegions::ExpList2D>(m_exp[0]);
+                                MultiRegions::ExpList>(m_exp[0]);
 
                         tmp = MemoryManager<
-                            MultiRegions::ExpList2D>::AllocateSharedPtr(*tmp2);
+                            MultiRegions::ExpList>::AllocateSharedPtr(*tmp2);
                     }
                 }
             }
@@ -726,12 +727,12 @@ struct Field
                 }
                 else
                 {
-                    MultiRegions::ExpList3DSharedPtr tmp2 =
-                        std::dynamic_pointer_cast<MultiRegions::ExpList3D>(
+                    MultiRegions::ExpListSharedPtr tmp2 =
+                        std::dynamic_pointer_cast<MultiRegions::ExpList>(
                             m_exp[0]);
 
                     tmp = MemoryManager<
-                        MultiRegions::ExpList3D>::AllocateSharedPtr(*tmp2);
+                        MultiRegions::ExpList>::AllocateSharedPtr(*tmp2);
                 }
             }
             break;

@@ -872,9 +872,24 @@ namespace Nektar
             const LibUtilities::BasisKey  BkeyQ2(
                 LibUtilities::eModified_A, NumModes, PkeyQ2);
 
+            LibUtilities::BasisKeyVector Tkeys, Qkeys;
+
+            // make a copy of the ExpansionInfoMap
+            SpatialDomains::ExpansionInfoMap NewExpInfo = m_graph->GetExpansionInfos();
+            SpatialDomains::ExpansionInfoMapShPtr ExpInfo=
+                MemoryManager<SpatialDomains::ExpansionInfoMap>::AllocateSharedPtr(NewExpInfo);
+            
+            // reset new graph with new keys
+            Tkeys.push_back(BkeyT1);
+            Tkeys.push_back(BkeyT2);
+            m_graph->ResetExpansionInfoToBasisKey(ExpInfo, LibUtilities::eTriangle, Tkeys);
+            Qkeys.push_back(BkeyQ1);
+            Qkeys.push_back(BkeyQ2);
+            m_graph->ResetExpansionInfoToBasisKey(ExpInfo, LibUtilities::eQuadrilateral, Qkeys);
+                                                           
+
             MultiRegions::ExpListSharedPtr ErrorExp =
-                MemoryManager<MultiRegions::ExpList>::AllocateSharedPtr(
-                        m_session, BkeyT1, BkeyT2, BkeyQ1, BkeyQ2, m_graph);
+                MemoryManager<MultiRegions::ExpList>::AllocateSharedPtr(m_session, NewExpInfo);
 
             int ErrorCoordim = ErrorExp->GetCoordim(0);
             int ErrorNq      = ErrorExp->GetTotPoints();

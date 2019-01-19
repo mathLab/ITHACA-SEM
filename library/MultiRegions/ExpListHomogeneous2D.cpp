@@ -65,13 +65,16 @@ namespace Nektar
                 const NekDouble lhom_z,
                 const bool useFFT,
                 const bool dealiasing):
-            ExpList(type,pSession),
+            ExpList(type),
             m_useFFT(useFFT),
             m_lhom_y(lhom_y),
             m_lhom_z(lhom_z),
             m_homogeneous2DBlockMat(MemoryManager<Homo2DBlockMatrixMap>::AllocateSharedPtr()),
             m_dealiasing(dealiasing)
         {
+            m_session = pSession;
+            m_comm    = pSession->GetComm();
+
             ASSERTL2(HomoBasis_y != LibUtilities::NullBasisKey,
                      "Homogeneous Basis in y direction is a null basis");
             ASSERTL2(HomoBasis_z != LibUtilities::NullBasisKey,

@@ -603,7 +603,7 @@ using namespace std;
             const std::string                        &variable)
         {
             int cnt = 0;
-            MultiRegions::ExpListSharedPtr       locExpList;
+            MultiRegions::ExpListSharedPtr         locExpList;
             SpatialDomains::BoundaryConditionShPtr locBCond;
 
             const SpatialDomains::BoundaryRegionCollection    &bregions =
@@ -614,7 +614,8 @@ using namespace std;
             m_bndCondExpansions =
                 Array<OneD,MultiRegions::ExpListSharedPtr>(bregions.size());
             m_bndConditions     =
-                Array<OneD,SpatialDomains::BoundaryConditionShPtr>(bregions.size());
+                Array<OneD,SpatialDomains::BoundaryConditionShPtr>
+                (bregions.size());
 
             // list Dirichlet boundaries first
             for (auto &it : bregions)
@@ -623,7 +624,8 @@ using namespace std;
                     bconditions, it.first, variable);
                 locExpList = MemoryManager<MultiRegions::ExpList>
                     ::AllocateSharedPtr(m_session, *(it.second),
-                                        graph3D, true, variable, locBCond->GetComm());
+                                        graph3D, true, variable,
+                                        false,locBCond->GetComm());
 
                 // Set up normals on non-Dirichlet boundary conditions
                 if(locBCond->GetBoundaryConditionType() !=

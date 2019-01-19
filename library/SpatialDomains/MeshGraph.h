@@ -133,6 +133,15 @@ struct DomainRange
 typedef std::shared_ptr<DomainRange> DomainRangeShPtr;
 static DomainRangeShPtr NullDomainRangeShPtr;
 
+struct ExpansionInfo;
+
+typedef std::shared_ptr<ExpansionInfo> ExpansionInfoShPtr;
+typedef std::map<int, ExpansionInfoShPtr> ExpansionInfoMap;
+
+typedef std::shared_ptr<ExpansionInfoMap> ExpansionInfoMapShPtr;
+typedef std::map<std::string, ExpansionInfoMapShPtr> ExpansionInfoMapShPtrMap;
+
+
 struct ExpansionInfo
 {
     ExpansionInfo(GeometrySharedPtr geomShPtr,
@@ -141,15 +150,16 @@ struct ExpansionInfo
     {
     }
 
+    ExpansionInfo(ExpansionInfoShPtr ExpInfo)
+        : m_geomShPtr(ExpInfo->m_geomShPtr),
+        m_basisKeyVector(ExpInfo->m_basisKeyVector)
+    {
+    }
+    
     GeometrySharedPtr m_geomShPtr;
     LibUtilities::BasisKeyVector m_basisKeyVector;
 };
 
-typedef std::shared_ptr<ExpansionInfo> ExpansionInfoShPtr;
-typedef std::map<int, ExpansionInfoShPtr> ExpansionInfoMap;
-
-typedef std::shared_ptr<ExpansionInfoMap> ExpansionInfoMapShPtr;
-typedef std::map<std::string, ExpansionInfoMapShPtr> ExpansionInfoMapShPtrMap;
 
 typedef std::map<std::string, std::string> GeomInfoMap;
 typedef std::shared_ptr<std::vector<std::pair<GeometrySharedPtr, int>>>
@@ -300,6 +310,10 @@ public:
     SPATIAL_DOMAINS_EXPORT void SetBasisKey(LibUtilities::ShapeType shape,
                                             LibUtilities::BasisKeyVector &keys,
                                             std::string var = "DefaultVar");
+
+    SPATIAL_DOMAINS_EXPORT void ResetExpansionInfoToBasisKey(ExpansionInfoMapShPtr &expansionMap,
+                                                             LibUtilities::ShapeType shape,
+                                                             LibUtilities::BasisKeyVector &keys);
 
     inline bool SameExpansionInfos(const std::string var1, const std::string var2);
 

@@ -651,7 +651,7 @@ namespace Nektar
                 locExpList = MemoryManager<MultiRegions::ExpList>
                     ::AllocateSharedPtr(m_session, *(it.second), graph2D,
                                         DeclareCoeffPhysArrays, variable,
-                                        bc->GetComm());
+                                        false, bc->GetComm());
 
                 m_bndCondExpansions[cnt]  = locExpList;
                 m_bndConditions[cnt]      = bc;

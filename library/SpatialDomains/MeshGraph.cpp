@@ -1509,7 +1509,13 @@ void MeshGraph::SetBasisKey(LibUtilities::ShapeType shape,
                             LibUtilities::BasisKeyVector &keys, std::string var)
 {
     ExpansionInfoMapShPtr expansionMap = m_expansionMapShPtrMap.find(var)->second;
+    ResetExpansionInfoToBasisKey(expansionMap, shape, keys);
+}
 
+void MeshGraph::ResetExpansionInfoToBasisKey(ExpansionInfoMapShPtr &expansionMap,
+                                             LibUtilities::ShapeType shape,
+                                             LibUtilities::BasisKeyVector &keys)
+{
     for (auto elemIter = expansionMap->begin(); elemIter != expansionMap->end();
          ++elemIter)
     {

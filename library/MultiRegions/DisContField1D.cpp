@@ -136,13 +136,12 @@ namespace Nektar
                 return;
             }
 
-            m_globalBndMat = MemoryManager<GlobalLinSysMap>::AllocateSharedPtr();
+            m_globalBndMat = MemoryManager<GlobalLinSysMap>::
+                AllocateSharedPtr();
 
             ExpListSharedPtr trace = MemoryManager<ExpList>::
-                AllocateSharedPtr(
-                    m_bndCondExpansions,
-                    m_bndConditions,
-                    *m_exp,m_graph);
+                AllocateSharedPtr(m_session, m_bndCondExpansions,
+                                  m_bndConditions,*m_exp,m_graph);
 
             m_trace = std::dynamic_pointer_cast<ExpList>(trace);
 
@@ -474,9 +473,8 @@ namespace Nektar
                     const std::string &variable,
                     bool SetToOneSpaceDimension,
                     const Collections::ImplementationType ImpType):
-            ExpList(pSession,graph1D,domain, true,variable,SetToOneSpaceDimension,ImpType),
-            m_bndCondExpansions(),
-            m_bndConditions()
+            ExpList(pSession,domain,graph1D,true,variable,
+                    SetToOneSpaceDimension, pSession->GetComm(),ImpType)
         {
             if (variable.compare("DefaultVar") != 0)
             {

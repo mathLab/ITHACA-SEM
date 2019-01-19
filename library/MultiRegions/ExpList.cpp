@@ -37,20 +37,16 @@
 #include <LibUtilities/Communication/Comm.h>
 #include <MultiRegions/GlobalLinSys.h>
 
-#include <StdRegions/StdSegExp.h>
-#include <StdRegions/StdTriExp.h>
-#include <StdRegions/StdNodalTriExp.h>
-#include <StdRegions/StdQuadExp.h>
-#include <StdRegions/StdTetExp.h>
-#include <StdRegions/StdPyrExp.h>
-#include <StdRegions/StdPrismExp.h>
-#include <StdRegions/StdHexExp.h>
-
+#include <LocalRegions/PointExp.h>
+#include <LocalRegions/SegExp.h>
+#include <LocalRegions/TriExp.h>
+#include <LocalRegions/QuadExp.h>
+#include <LocalRegions/NodalTriExp.h>
+#include <LocalRegions/HexExp.h>
+#include <LocalRegions/PrismExp.h>
+#include <LocalRegions/PyrExp.h>
+#include <LocalRegions/TetExp.h>
 #include <LocalRegions/MatrixKey.h>     // for MatrixKey
-#include <LocalRegions/Expansion.h>     // for Expansion
-#include <LocalRegions/Expansion0D.h>
-#include <LocalRegions/Expansion1D.h>
-#include <LocalRegions/Expansion2D.h>
 #include <LocalRegions/Expansion3D.h>
 #include <LibUtilities/Foundations/Interp.h>
 
@@ -112,89 +108,10 @@ namespace Nektar
         }
 
 
-        /**
-         * Creates an empty expansion list. The expansion list will typically be
-         * populated by a derived class (namely one of MultiRegions#ExpList1D,
-         * MultiRegions#ExpList2D or MultiRegions#ExpList3D).
-         */
-        ExpList::ExpList(const ExpansionType type,
-                const LibUtilities::SessionReaderSharedPtr &pSession):
-            m_expType(type),
-            m_comm(pSession->GetComm()),
-            m_session(pSession),
-            m_ncoeffs(0),
-            m_npoints(0),
-            m_physState(false),
-            m_exp(MemoryManager<LocalRegions::ExpansionVector>
-                      ::AllocateSharedPtr()),
-            m_blockMat(MemoryManager<BlockMatrixMap>::AllocateSharedPtr()),
-            m_WaveSpace(false)
-        {
-        }
-
-
-        /**
-         * Creates an empty expansion list. The expansion list will typically be
-         * populated by a derived class (namely one of MultiRegions#ExpList1D,
-         * MultiRegions#ExpList2D or MultiRegions#ExpList3D).
-         *
-         * Note this could be depracted when explist is collapsed
-         */
-        ExpList::ExpList(const ExpansionType type,
-                         const LibUtilities::SessionReaderSharedPtr &pSession,
-                         const SpatialDomains::MeshGraphSharedPtr &pGraph):
-            m_expType(type),
-            m_comm(pSession->GetComm()),
-            m_session(pSession),
-            m_graph(pGraph),
-            m_ncoeffs(0),
-            m_npoints(0),
-            m_physState(false),
-            m_exp(MemoryManager<LocalRegions::ExpansionVector>
-                      ::AllocateSharedPtr()),
-            m_blockMat(MemoryManager<BlockMatrixMap>::AllocateSharedPtr()),
-            m_WaveSpace(false)
-        {
-        }
+        /*----------------------------------------------------------------*/
+        /*                       Copy Construtor                           */
+        /*-----------------------------------------------------------------*/
         
-        /**
-         * Copies the eIds elements from an existing expansion list.
-         * @param   in              Source expansion list.
-         * @param   in              elements that will be in the new exp list.
-         */
-        ExpList::ExpList(const ExpList &in, 
-                         const std::vector<unsigned int> &eIDs,
-                         const bool DeclareCoeffPhysArrays,
-                         const Collections::ImplementationType ImpType):
-            m_expType(in.m_expType),
-            m_comm(in.m_comm),
-            m_session(in.m_session),
-            m_graph(in.m_graph),
-            m_ncoeffs(0),
-            m_npoints(0),
-            m_coeffs(),
-            m_phys(),
-            m_physState(false),
-            m_exp(MemoryManager<LocalRegions::ExpansionVector>
-                      ::AllocateSharedPtr()),
-            m_coeff_offset(),
-            m_phys_offset(),
-            m_blockMat(MemoryManager<BlockMatrixMap>::AllocateSharedPtr()),
-            m_WaveSpace(false)
-        {
-            
-            for (int i=0; i < eIDs.size(); ++i)
-            {
-                (*m_exp).push_back( (*(in.m_exp))[eIDs[i]]);
-            }
-
-            // Set up m_coeffs, m_phys and offset arrays.
-            SetupCoeffPhys(DeclareCoeffPhysArrays);
-
-            CreateCollections(ImpType);
-        }
-
-
         /**
          * Copies an existing expansion list.
          * @param   in              Source expansion list.
@@ -223,6 +140,129 @@ namespace Nektar
         }
 
         /**
+         * Copies the eIds elements from an existing expansion list.
+         * @param   in              Source expansion list.
+         * @param   in              elements that will be in the new exp list.
+         */
+        ExpList::ExpList(const ExpList &in, 
+                         const std::vector<unsigned int> &eIDs,
+                         const bool DeclareCoeffPhysArrays,
+                         const Collections::ImplementationType ImpType):
+            m_expType(in.m_expType),
+            m_comm(in.m_comm),
+            m_session(in.m_session),
+            m_graph(in.m_graph),
+            m_physState(false),
+            m_exp(MemoryManager<LocalRegions::ExpansionVector>
+                      ::AllocateSharedPtr()),
+            m_blockMat(MemoryManager<BlockMatrixMap>::AllocateSharedPtr()),
+            m_WaveSpace(false)
+        {
+            
+            for (int i=0; i < eIDs.size(); ++i)
+            {
+                (*m_exp).push_back( (*(in.m_exp))[eIDs[i]]);
+            }
+
+            // Set up m_coeffs, m_phys and offset arrays.
+            SetupCoeffPhys(DeclareCoeffPhysArrays);
+
+            // set up collections
+            CreateCollections(ImpType);
+        }
+
+
+        /**
+         * Given a meshgraph \a graph, containing information about
+         * the domain and the spectral/hp element expansion, this
+         * constructor fills the list of local expansions
+         * \texttt{m_exp} with the proper expansions, calculates the
+         * total number of quadrature points \f$x_i\f$ and local
+         * expansion coefficients \f$\hat{u}^e_n\f$ and allocates
+         * memory for the arrays #m_coeffs and #m_phys.
+         *
+         * @param  pSession    A session within information about expansion
+         *
+         * @param  graph       A meshgraph, containing information about the
+         *                      domain and the spectral/hp element expansion.
+         *
+         * @param DeclareCoeffPhysArrays Declare the coefficient and
+         *                               phys space arrays
+         *
+         * @param  ImpType     Detail about the implementation type to use 
+         *                     in operators
+         */
+        ExpList::ExpList(const LibUtilities::SessionReaderSharedPtr &pSession,
+                         const SpatialDomains::MeshGraphSharedPtr &graph,
+                         const bool DeclareCoeffPhysArrays,
+                         const std::string &var,
+                         const Collections::ImplementationType ImpType):
+            m_comm(pSession->GetComm()),
+            m_session(pSession),
+            m_graph(graph),
+            m_physState(false),
+            m_exp(MemoryManager<LocalRegions::ExpansionVector>
+                  ::AllocateSharedPtr()),
+            m_blockMat(MemoryManager<BlockMatrixMap>::AllocateSharedPtr()),
+            m_WaveSpace(false)
+        {
+            // Retrieve the list of expansions
+            const SpatialDomains::ExpansionInfoMap &expansions
+                = graph->GetExpansionInfos(var);
+            
+            // Initialise Expansionn Vector
+            InitialiseExpVector(expansions);
+            
+            // Setup phys coeff space
+            SetupCoeffPhys(DeclareCoeffPhysArrays);
+            
+            // Initialise collection
+            CreateCollections(ImpType);
+        }
+
+        /**
+         * Given an expansion vector \a expansions, containing
+         * information about the domain and the spectral/hp element
+         * expansion, this constructor fills the list of local
+         * expansions \texttt{m_exp} with the proper expansions,
+         * calculates the total number of quadrature points
+         * \f$\boldsymbol{x}_i\f$ and local expansion coefficients
+         * \f$\hat{u}^e_n\f$ and allocates memory for the arrays
+         * #m_coeffs and #m_phys.
+         *
+         * @param  pSession      A session within information about expansion
+         * @param expansions     A vector containing information about the
+         *                       domain and the spectral/hp element
+         *                       expansion.
+         * @param DeclareCoeffPhysArrays Declare the coefficient and
+         *                               phys space arrays
+         * @param  ImpType       Detail about the implementation type to use 
+         *                       in operators
+         */
+        ExpList::ExpList(const LibUtilities::SessionReaderSharedPtr &pSession,
+                         const SpatialDomains::ExpansionInfoMap &expansions,
+                         const bool DeclareCoeffPhysArrays,
+                         const Collections::ImplementationType ImpType):
+            m_comm(pSession->GetComm()), 
+            m_session(pSession),
+            m_physState(false),
+            m_exp(MemoryManager<LocalRegions::ExpansionVector>
+                  ::AllocateSharedPtr()),
+            m_blockMat(MemoryManager<BlockMatrixMap>::AllocateSharedPtr()),
+            m_WaveSpace(false)
+        {
+            
+            // Initialise expansion vector
+            InitialiseExpVector(expansions);
+            
+            // Set up m_coeffs, m_phys and offset arrays.
+            SetupCoeffPhys(DeclareCoeffPhysArrays);
+
+            // Setup Collection 
+            CreateCollections(ImpType);
+        }
+        
+        /**
          * Each expansion (local element) is processed in turn to
          * determine the number of coefficients and physical data
          * points it contributes to the domain. Twoe arrays,
@@ -232,7 +272,8 @@ namespace Nektar
          * consecutive block is associated respectively.
          * Finally we initialise #m_coeffs and #m_phys
          */
-        void ExpList::SetupCoeffPhys(bool DeclareCoeffPhysArrays, bool SetupOffsets)
+        void ExpList::SetupCoeffPhys(bool DeclareCoeffPhysArrays,
+                                     bool SetupOffsets)
         {
             if(SetupOffsets)
             {
@@ -252,15 +293,166 @@ namespace Nektar
                     m_npoints += (*m_exp)[i]->GetTotPoints();
                 }
             }
-
+            
             if(DeclareCoeffPhysArrays)
             {
                 m_coeffs = Array<OneD, NekDouble>(m_ncoeffs, 0.0);
                 m_phys   = Array<OneD, NekDouble>(m_npoints, 0.0);
             }
-
         }
 
+        void ExpList::InitialiseExpVector( const
+                               SpatialDomains::ExpansionInfoMap &expmap)
+        {
+            
+            SpatialDomains::SegGeomSharedPtr   SegmentGeom;
+            SpatialDomains::TriGeomSharedPtr   TriangleGeom;
+            SpatialDomains::QuadGeomSharedPtr  QuadrilateralGeom;
+            SpatialDomains::TetGeomSharedPtr   TetGeom;
+            SpatialDomains::HexGeomSharedPtr   HexGeom;
+            SpatialDomains::PrismGeomSharedPtr PrismGeom;
+            SpatialDomains::PyrGeomSharedPtr   PyrGeom;
+            
+            int id=0;
+            LocalRegions::ExpansionSharedPtr   exp;
+            
+            m_expType = eNoType;
+            // Process each expansion in the graph
+            for (auto &expIt : expmap)
+            {
+                const SpatialDomains::ExpansionInfoShPtr expInfo = expIt.second;
+                
+                switch(expInfo->m_basisKeyVector.size())
+                {
+                case 1: // Segment Expansions
+                {
+                    ASSERTL1(m_expType == e1D || m_expType == eNoType,
+                             "Cannot mix expansion dimensions in one vector");
+                    m_expType = e1D;
+                    
+                    if ((SegmentGeom = std::dynamic_pointer_cast<
+                         SpatialDomains::SegGeom>(expInfo->m_geomShPtr)))
+                    {
+                        // Retrieve basis key from expansion
+                        LibUtilities::BasisKey bkey=
+                            expInfo->m_basisKeyVector[0];
+                        
+                        exp = MemoryManager<LocalRegions::SegExp>
+                            ::AllocateSharedPtr(bkey, SegmentGeom);
+                    }
+                    else
+                    {
+                        ASSERTL0(false,"dynamic cast to a 1D Geom failed");
+                    }
+                }
+                break;
+                case 2:
+                {
+                    ASSERTL1(m_expType == e2D || m_expType == eNoType,
+                             "Cannot mix expansion dimensions in one vector");
+                    m_expType = e2D;
+                    
+                    LibUtilities::BasisKey Ba = expInfo->m_basisKeyVector[0];
+                    LibUtilities::BasisKey Bb = expInfo->m_basisKeyVector[1];
+                    
+                    if ((TriangleGeom = std::dynamic_pointer_cast<SpatialDomains
+                         ::TriGeom>(expInfo->m_geomShPtr)))
+                    {
+                        
+                        // This is not elegantly implemented needs re-thinking.
+                        if (Ba.GetBasisType() == LibUtilities::eGLL_Lagrange)
+                        {
+                            LibUtilities::BasisKey newBa(LibUtilities::eOrtho_A,
+                                                         Ba.GetNumModes(),
+                                                         Ba.GetPointsKey());
+                            
+                            LibUtilities::PointsType TriNb
+                                = LibUtilities::eNodalTriElec;
+                            exp = MemoryManager<LocalRegions::NodalTriExp>
+                               ::AllocateSharedPtr(newBa,Bb,TriNb,TriangleGeom);
+                        }
+                        else
+                        {
+                            exp = MemoryManager<LocalRegions::TriExp>
+                                ::AllocateSharedPtr(Ba,Bb,TriangleGeom);
+                        }
+                    }
+                    else if ((QuadrilateralGeom = std::dynamic_pointer_cast<
+                              SpatialDomains::QuadGeom>(expInfo->m_geomShPtr)))
+                    {
+                        exp = MemoryManager<LocalRegions::QuadExp>
+                            ::AllocateSharedPtr(Ba,Bb,QuadrilateralGeom);
+                    }
+                    else
+                    {
+                        ASSERTL0(false,"dynamic cast to a 2D Geom failed");
+                    }
+                }
+                break;
+                case 3:
+                {
+                    ASSERTL1(m_expType == e3D || m_expType == eNoType,
+                             "Cannot mix expansion dimensions in one vector");
+                    m_expType = e3D;
+                    
+                    LibUtilities::BasisKey Ba = expInfo->m_basisKeyVector[0];
+                    LibUtilities::BasisKey Bb = expInfo->m_basisKeyVector[1];
+                    LibUtilities::BasisKey Bc = expInfo->m_basisKeyVector[2];
+                    
+                    if((TetGeom = std::dynamic_pointer_cast<
+                        SpatialDomains::TetGeom>(expInfo->m_geomShPtr)))
+                    {
+                        
+                        if(Ba.GetBasisType() == LibUtilities::eGLL_Lagrange ||
+                           Ba.GetBasisType() == LibUtilities::eGauss_Lagrange)
+                        {
+                            ASSERTL0(false,"LocalRegions::NodalTetExp is not "
+                                     "implemented yet");
+                        }
+                        else
+                        {
+                            exp = MemoryManager<LocalRegions::TetExp>
+                                ::AllocateSharedPtr(Ba,Bb,Bc,TetGeom);
+                        }
+                    }
+                    else if((PrismGeom =
+                             std::dynamic_pointer_cast<SpatialDomains
+                             ::PrismGeom>(expInfo->m_geomShPtr)))
+                    {
+                        exp = MemoryManager<LocalRegions::PrismExp>
+                            ::AllocateSharedPtr(Ba,Bb,Bc,PrismGeom);
+                    }
+                    else if((PyrGeom = std::dynamic_pointer_cast<
+                             SpatialDomains::PyrGeom>(expInfo->m_geomShPtr)))
+                    {
+                        
+                        exp = MemoryManager<LocalRegions::PyrExp>
+                            ::AllocateSharedPtr(Ba,Bb,Bc,PyrGeom);
+                    }
+                    else if((HexGeom = std::dynamic_pointer_cast<
+                             SpatialDomains::HexGeom>(expInfo->m_geomShPtr)))
+                    {
+                        exp = MemoryManager<LocalRegions::HexExp>
+                            ::AllocateSharedPtr(Ba,Bb,Bc,HexGeom);
+                    }
+                    else
+                    {
+                        ASSERTL0(false,"dynamic cast to a Geom failed");
+                    }
+                }
+                break;
+                default:
+                    ASSERTL0(false,"Dimension of basis key is greater than 3");
+                }
+                
+                // Assign next id
+                exp->SetElmtId(id++);
+                
+                // Add the expansion
+                (*m_exp).push_back(exp);
+            }
+        }
+        
         /**
          *
          */
@@ -963,7 +1155,8 @@ namespace Nektar
 
             for(i = cnt1 = 0; i < n_exp; ++i)
             {
-                // need to be initialised with zero size for non variable coefficient case
+                // need to be initialised with zero size for non
+                // variable coefficient case
                 StdRegions::VarCoeffMap varcoeffs;
 
                 eid = elmt_id[i];

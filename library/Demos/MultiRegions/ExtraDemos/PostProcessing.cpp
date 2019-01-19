@@ -63,13 +63,13 @@ int main(int argc, char *argv[])
 	/******************* Post-Processing ***********************/
 	// Construct the appropriate post-processed multi-element expansion object
 	int post_order = 2*order;
-	LibUtilities::PointsType pType = base[0]->GetPointsType();
-	LibUtilities::PointsKey  pKey(post_order+1,pType);
-	LibUtilities::BasisKey   upost_bkey(base[0]->GetBasisType(),
-                                            post_order,pKey);
-	MultiRegions::ExpListSharedPtr u_post =
+
+        // reset expansiosn to be of new order 
+        graph1D->SetExpansionInfosToPolyOrder(post_order);
+        
+        MultiRegions::ExpListSharedPtr u_post =
             MemoryManager<MultiRegions::ExpList>::AllocateSharedPtr(vSession,
-                                                         upost_bkey,graph1D);
+                                                                    graph1D);
 
 	// The post-processing for the first element
 	// Step1: Define the element ID on which the post-processing is done

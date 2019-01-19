@@ -33,7 +33,7 @@ int main(int argc, char *argv[])
     int nmodes = bkey0.GetNumModes();
 
     Exp = MemoryManager<MultiRegions::ExpList>::AllocateSharedPtr
-        (vSession,bkey0,graph1D);
+        (vSession,graph1D);
 
     //----------------------------------------------
     // Define solution to be projected 

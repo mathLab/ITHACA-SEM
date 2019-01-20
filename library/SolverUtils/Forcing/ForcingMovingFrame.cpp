@@ -29,7 +29,8 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Allows for a moving frame of reference, through adding c * du/dx to the body force, where c is the frame velocity vector
+// Description: Allows for a moving frame of reference, through adding c * du/dx
+// to the body force, where c is the frame velocity vector
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -41,206 +42,288 @@ using namespace std;
 
 namespace Nektar
 {
-namespace SolverUtils
-{
-
-    std::string ForcingMovingFrame::classNameBody = GetForcingFactory().
-        RegisterCreatorFunction("MovingFrame",
-                                ForcingMovingFrame::create,
-                                "Moving Frame");
-    std::string ForcingMovingFrame::classNameField = GetForcingFactory().
-        RegisterCreatorFunction("Field",
-                                ForcingMovingFrame::create,
-                                "Field Forcing");
-
-    ForcingMovingFrame::ForcingMovingFrame(
-            const LibUtilities::SessionReaderSharedPtr &pSession,
-            const std::weak_ptr<EquationSystem>      &pEquation)
-        : Forcing(pSession, pEquation)
+    namespace SolverUtils
     {
-    }
 
-    void ForcingMovingFrame::v_InitObject(
-                                   const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields,
-                                   const unsigned int& pNumForcingFields,
-                                   const TiXmlElement* pForce)
-    {
-        m_NumVariable = pNumForcingFields;
-        int npoints = pFields[0]->GetNpoints();
+        std::string ForcingMovingFrame::classNameBody = GetForcingFactory().
+                RegisterCreatorFunction("MovingFrame",
+                                        ForcingMovingFrame::create,
+                                        "Moving Frame");
+        std::string ForcingMovingFrame::classNameField = GetForcingFactory().
+                RegisterCreatorFunction("Field",
+                                        ForcingMovingFrame::create,
+                                        "Field Forcing");
 
-        const TiXmlElement* funcNameElmt = pForce->FirstChildElement("FRAMEVELOCITY");
-        if(!funcNameElmt)
+        ForcingMovingFrame::ForcingMovingFrame(
+                const LibUtilities::SessionReaderSharedPtr &pSession,
+                const std::weak_ptr<EquationSystem> &pEquation)
+                : Forcing(pSession, pEquation)
         {
-            ASSERTL0(funcNameElmt, "Requires FRAMEVELOCITY tag "
-                     "specifying function name which prescribes velocity of the moving frame.");
         }
 
-        m_funcName = funcNameElmt->GetText();
-        ASSERTL0(m_session->DefinesFunction(m_funcName), "Function '" + m_funcName + "' not defined.");
-
-        bool singleMode, halfMode;
-        m_session->MatchSolverInfo("ModeType","SingleMode",singleMode,false);
-        m_session->MatchSolverInfo("ModeType","HalfMode",  halfMode,  false);
-        bool homogeneous = pFields[0]->GetExpType() == MultiRegions::e3DH1D ||
-                           pFields[0]->GetExpType() == MultiRegions::e3DH2D;
-        m_transform = (singleMode || halfMode || homogeneous);
-
-        m_Forcing = Array<OneD, Array<OneD, NekDouble> > (m_NumVariable);
-        for (int i = 0; i < m_NumVariable; ++i)
+        void ForcingMovingFrame::v_InitObject(
+                const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
+                const unsigned int &pNumForcingFields,
+                const TiXmlElement *pForce)
         {
-            m_Forcing[i] = Array<OneD, NekDouble> (npoints, 0.0);
-        }
+            int npoints = pFields[0]->GetNpoints();
 
-        m_frameVelocity = Array<OneD, NekDouble>(m_NumVariable); // Assume as many directions as variables
-        for (int i = 0; i < m_NumVariable; ++i)
-        {
-            std::string  s_FieldStr   = m_session->GetVariable(i);
-            auto ep = m_session->GetFunction(m_funcName, s_FieldStr);
-            ASSERTL0(m_session->DefinesFunction(m_funcName, s_FieldStr),
-                     "Variable '" + s_FieldStr + "' not defined.");
-            m_frameVelocity[i] = ep->Evaluate();
-        }
+            int expdim = pFields[0]->GetGraph()->GetMeshDimension();
+            bool isH1d;
+            bool isH2d;
+            m_session->MatchSolverInfo("Homogeneous", "1D", isH1d, false);
+            m_session->MatchSolverInfo("Homogeneous", "2D", isH2d, false);
+            m_spacedim = expdim + (isH1d ? 1 : 0) + (isH2d ? 2 : 0);
+            m_NumVariable = m_spacedim;
 
-        //allocate space for gradient
-        // Skip in case of empty partition
-        if (pFields[0]->GetNumElmts() == 0)
-        {
-            return;
-        }
-
-        int expdim = pFields[0]->GetGraph()->GetMeshDimension();
-        bool isH1d;
-        bool isH2d;
-        m_session->MatchSolverInfo("Homogeneous", "1D", isH1d, false);
-        m_session->MatchSolverInfo("Homogeneous", "2D", isH2d, false);
-        m_spacedim = expdim + (isH1d ? 1 : 0) + (isH2d ? 2 : 0);
-
-        m_gradient = Array<OneD, Array<OneD, NekDouble>>(m_spacedim * m_spacedim);
-
-        for (int i = 0; i < m_spacedim * m_spacedim; ++i)
-        {
-            m_gradient[i] = Array<OneD, NekDouble>(npoints);
-        }
-
-        Update(pFields, 0.0);
-    }
-
-    void ForcingMovingFrame::CalculateGradient(const Array< OneD, MultiRegions::ExpListSharedPtr > &pFields)
-    {
-        // Evaluate Grad(u)
-        switch(m_spacedim)
-        {
-            case 1:
-                // du/dx
-                pFields[0]->PhysDeriv(pFields[0]->GetPhys(), m_gradient[0]);
-                break;
-            case 2:
-                // du/dx du/dy
-                pFields[0]->PhysDeriv(pFields[0]->GetPhys(), m_gradient[0], m_gradient[1]);
-                // dv/dx dv/dy
-                pFields[1]->PhysDeriv(pFields[1]->GetPhys(), m_gradient[2], m_gradient[3]);
-                break;
-            case 3:
-                //How do I deal with Homogeneous expansion?
-                pFields[0]->PhysDeriv(pFields[0]->GetPhys(), m_gradient[0], m_gradient[1], m_gradient[2]);
-                pFields[1]->PhysDeriv(pFields[1]->GetPhys(), m_gradient[3], m_gradient[4], m_gradient[5]);
-                pFields[2]->PhysDeriv(pFields[2]->GetPhys(), m_gradient[6], m_gradient[7], m_gradient[8]);
-                break;
-            default:
-                ASSERTL0(false,"dimension unknown");
-        }
-        /*int npoints = pFields[0]->GetNpoints();
-        auto coords = Array<OneD, Array<OneD, NekDouble>>(2);
-        for (int i = 0; i < 2; ++i)
-        {
-            coords[i] = Array<OneD, NekDouble>(npoints);
-        }
-        pFields[0]->GetCoords(coords[0], coords[1]);
-        for(int i=48; i<=48; ++i)
-        {
-            cout << "---- Node " << i << " x=" <<  coords[0][i] << " y=" <<  coords[1][i] << endl;
-            cout << pFields.num_elements() << " "  << pFields[0]->GetPhys()[i] << " " << pFields[1]->GetPhys()[i] << endl;
-            cout << m_gradient[0][i] << " " << " " << m_gradient[1][i] << " " << m_gradient[2][i] << " " << m_gradient[3][i] << endl;
-        }*/
-    }
-
-
-    void ForcingMovingFrame::Update(
-            const Array< OneD, MultiRegions::ExpListSharedPtr > &pFields,
-            const NekDouble &time)
-    {
-        int npoints = pFields[0]->GetNpoints();
-        CalculateGradient( pFields );
-        Array<OneD, NekDouble> tmp(npoints, 0.0);
-        switch(m_spacedim)
-        {
-            case 1:
-                // - cu * du/dx
-                Vmath::Smul(npoints,-1.0 * m_frameVelocity[0],m_gradient[0],1,m_Forcing[0], 1);
-                break;
-            case 2:
-                // - cu * du/dx - cv * du/dy
-                Vmath::Smul(npoints,-1.0 * m_frameVelocity[0],m_gradient[0],1,m_Forcing[0], 1);
-                Vmath::Smul(npoints,-1.0 * m_frameVelocity[1],m_gradient[1],1,tmp, 1);
-                Vmath::Vadd(npoints, m_Forcing[0], 1, tmp, 1, m_Forcing[0], 1);
-                // - cu * dv/dx - cv * dv/dy
-                Vmath::Smul(npoints,-1.0 * m_frameVelocity[0],m_gradient[2],1,m_Forcing[1], 1);
-                Vmath::Smul(npoints,-1.0 * m_frameVelocity[1],m_gradient[3],1,tmp, 1);
-                Vmath::Vadd(npoints, m_Forcing[1], 1, tmp, 1, m_Forcing[1], 1);
-                break;
-            case 3:
-                //How do I deal with Homogeneous expansion?
-                // - cu * du/dx - cv * du/dy - cz * du/dz
-                Vmath::Smul(npoints,-1.0 * m_frameVelocity[0],m_gradient[0],1,m_Forcing[0], 1);
-                Vmath::Smul(npoints,-1.0 * m_frameVelocity[1],m_gradient[1],1,tmp, 1);
-                Vmath::Vadd(npoints, m_Forcing[0], 1, tmp, 1, m_Forcing[0], 1);
-                Vmath::Smul(npoints,-1.0 * m_frameVelocity[2],m_gradient[2],1,tmp, 1);
-                Vmath::Vadd(npoints, m_Forcing[0], 1, tmp, 1, m_Forcing[0], 1);
-                // - cu * dv/dx - cv * dv/dy  - cz * dv/dz
-                Vmath::Smul(npoints,-1.0 * m_frameVelocity[0],m_gradient[3],1,m_Forcing[1], 1);
-                Vmath::Smul(npoints,-1.0 * m_frameVelocity[1],m_gradient[4],1,tmp, 1);
-                Vmath::Vadd(npoints, m_Forcing[1], 1, tmp, 1, m_Forcing[1], 1);
-                Vmath::Smul(npoints,-1.0 * m_frameVelocity[2],m_gradient[5],1,tmp, 1);
-                Vmath::Vadd(npoints, m_Forcing[1], 1, tmp, 1, m_Forcing[1], 1);
-                // - cu * dw/dx - cv * dw/dy  - cz * dw/dz
-                Vmath::Smul(npoints,-1.0 * m_frameVelocity[0],m_gradient[6],1,m_Forcing[2], 1);
-                Vmath::Smul(npoints,-1.0 * m_frameVelocity[1],m_gradient[7],1,tmp, 1);
-                Vmath::Vadd(npoints, m_Forcing[2], 1, tmp, 1, m_Forcing[2], 1);
-                Vmath::Smul(npoints,-1.0 * m_frameVelocity[2],m_gradient[8],1,tmp, 1);
-                Vmath::Vadd(npoints, m_Forcing[2], 1, tmp, 1, m_Forcing[2], 1);
-                break;
-            default:
-                ASSERTL0(false,"dimension unknown");
-        }
-
-        // If singleMode or halfMode, transform the forcing term to be in
-        // physical space in the plane, but Fourier space in the homogeneous
-        // direction
-        if (m_transform)
-        {
-            for (int i = 0; i < m_NumVariable; ++i)
+            const TiXmlElement *funcNameElmt = pForce->FirstChildElement(
+                    "FRAMEVELOCITY");
+            if (!funcNameElmt)
             {
-                pFields[0]->HomogeneousFwdTrans(m_Forcing[i], m_Forcing[i]);
+                ASSERTL0(funcNameElmt, "Requires FRAMEVELOCITY tag "
+                                       "specifying function name which prescribes velocity of the moving frame.");
+            }
+
+            m_funcName = funcNameElmt->GetText();
+            ASSERTL0(m_session->DefinesFunction(m_funcName),
+                     "Function '" + m_funcName + "' not defined.");
+
+            m_session->MatchSolverInfo("ModeType", "SingleMode", m_SingleMode,
+                                       false);
+            m_session->MatchSolverInfo("ModeType", "HalfMode", m_HalfMode,
+                                       false);
+            bool homogeneous =
+                    pFields[0]->GetExpType() == MultiRegions::e3DH1D ||
+                    pFields[0]->GetExpType() == MultiRegions::e3DH2D;
+            m_transform = (m_SingleMode || m_HalfMode || homogeneous);
+
+            m_homogen_dealiasing = m_session->DefinesSolverInfo("dealiasing");
+
+            m_Forcing = Array<OneD, Array<OneD, NekDouble> >(
+                    m_spacedim); // as many as spacial dim
+            for (int i = 0; i < m_spacedim; ++i)
+            {
+                m_Forcing[i] = Array<OneD, NekDouble>(npoints, 0.0);
+            }
+
+            m_frameVelocity = Array<OneD, NekDouble>(
+                    m_spacedim); // as many as spacial dim
+            for (int i = 0; i < m_spacedim; ++i)
+            {
+                std::string s_FieldStr = m_session->GetVariable(i);
+                auto ep = m_session->GetFunction(m_funcName, s_FieldStr);
+                ASSERTL0(m_session->DefinesFunction(m_funcName, s_FieldStr),
+                         "Variable '" + s_FieldStr + "' not defined.");
+                m_frameVelocity[i] = ep->Evaluate();
+            }
+
+            m_gradient = Array<OneD, Array<OneD, NekDouble>>(
+                    m_spacedim * m_spacedim);
+            for (int i = 0; i < m_spacedim * m_spacedim; ++i)
+            {
+                m_gradient[i] = Array<OneD, NekDouble>(npoints);
+            }
+
+            Update(pFields, 0.0);
+        }
+
+        void ForcingMovingFrame::CalculateGradient(
+                const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields)
+        {
+            int npoints = pFields[0]->GetNpoints();
+            auto tmp = Array<OneD, NekDouble>(npoints);
+
+            // Evaluate Grad(u)
+            switch (m_spacedim)
+            {
+                case 1:
+                    // du/dx
+                    pFields[0]->PhysDeriv(pFields[0]->GetPhys(), m_gradient[0]);
+                    break;
+                case 2:
+                    // du/dx du/dy
+                    pFields[0]->PhysDeriv(pFields[0]->GetPhys(), m_gradient[0],
+                                          m_gradient[1]);
+                    // dv/dx dv/dy
+                    pFields[1]->PhysDeriv(pFields[1]->GetPhys(), m_gradient[2],
+                                          m_gradient[3]);
+                    break;
+                case 3:
+                    if (pFields[0]->GetWaveSpace() == true &&
+                        pFields[0]->GetExpType() == MultiRegions::e3DH1D)
+                    {
+                        // take d/dx, d/dy  gradients in physical Fourier space
+                        pFields[0]->PhysDeriv(pFields[0]->GetPhys(),
+                                              m_gradient[0], m_gradient[1]);
+                        pFields[1]->PhysDeriv(pFields[1]->GetPhys(),
+                                              m_gradient[3], m_gradient[4]);
+
+                        pFields[0]->HomogeneousBwdTrans(pFields[2]->GetPhys(),
+                                                        tmp);
+                        pFields[0]->PhysDeriv(tmp, m_gradient[6],
+                                              m_gradient[7]);
+
+                        // Take d/dz derivative using wave space field
+                        pFields[0]->PhysDeriv(MultiRegions::DirCartesianMap[2],
+                                              pFields[0]->GetPhys(), tmp);
+                        pFields[0]->HomogeneousBwdTrans(tmp, m_gradient[2]);
+                        pFields[0]->PhysDeriv(MultiRegions::DirCartesianMap[2],
+                                              pFields[1]->GetPhys(), tmp);
+                        pFields[0]->HomogeneousBwdTrans(tmp, m_gradient[5]);
+                        pFields[0]->PhysDeriv(MultiRegions::DirCartesianMap[2],
+                                              pFields[2]->GetPhys(), tmp);
+                        pFields[0]->HomogeneousBwdTrans(tmp, m_gradient[8]);
+                    } else if (pFields[0]->GetWaveSpace() == true &&
+                               pFields[0]->GetExpType() == MultiRegions::e3DH2D)
+                    {
+                        // take d/dx,  gradients in physical Fourier space
+                        pFields[0]->PhysDeriv(pFields[0]->GetPhys(),
+                                              m_gradient[0]);
+                        pFields[1]->PhysDeriv(pFields[1]->GetPhys(),
+                                              m_gradient[3]);
+
+                        pFields[0]->HomogeneousBwdTrans(pFields[2]->GetPhys(),
+                                                        tmp);
+                        pFields[0]->PhysDeriv(tmp, m_gradient[6]);
+
+                        // Take d/dy derivative using wave space field
+                        pFields[0]->PhysDeriv(MultiRegions::DirCartesianMap[1], 
+                                              pFields[0]->GetPhys(), tmp);
+                        pFields[0]->HomogeneousBwdTrans(tmp, m_gradient[1]);
+                        pFields[0]->PhysDeriv(MultiRegions::DirCartesianMap[1],
+                                              pFields[1]->GetPhys(), tmp);
+                        pFields[0]->HomogeneousBwdTrans(tmp, m_gradient[4]);
+                        pFields[0]->PhysDeriv(MultiRegions::DirCartesianMap[1],
+                                              pFields[2]->GetPhys(), tmp);
+                        pFields[0]->HomogeneousBwdTrans(tmp, m_gradient[7]);
+
+                        // Take d/dz derivative using wave space field
+                        pFields[0]->PhysDeriv(MultiRegions::DirCartesianMap[2],
+                                              pFields[0]->GetPhys(), tmp);
+                        pFields[0]->HomogeneousBwdTrans(tmp, m_gradient[2]);
+                        pFields[0]->PhysDeriv(MultiRegions::DirCartesianMap[2],
+                                              pFields[1]->GetPhys(), tmp);
+                        pFields[0]->HomogeneousBwdTrans(tmp, m_gradient[5]);
+                        pFields[0]->PhysDeriv(MultiRegions::DirCartesianMap[2],
+                                              pFields[2]->GetPhys(), tmp);
+                        pFields[0]->HomogeneousBwdTrans(tmp, m_gradient[8]);
+                    } else
+                    {
+                        pFields[0]->PhysDeriv(pFields[0]->GetPhys(),
+                                              m_gradient[0], m_gradient[1],
+                                              m_gradient[2]);
+                        pFields[1]->PhysDeriv(pFields[1]->GetPhys(),
+                                              m_gradient[3], m_gradient[4],
+                                              m_gradient[5]);
+                        pFields[2]->PhysDeriv(pFields[2]->GetPhys(),
+                                              m_gradient[6], m_gradient[7],
+                                              m_gradient[8]);
+                    }
+                    break;
+                default:
+                    ASSERTL0(false, "dimension unknown");
             }
         }
-    }
 
 
-    void ForcingMovingFrame::v_Apply(
-            const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
-            const Array<OneD, Array<OneD, NekDouble> > &inarray,
-            Array<OneD, Array<OneD, NekDouble> > &outarray,
-            const NekDouble &time)
-    {
-        Update(fields, time);
-
-        for (int i = 0; i < m_NumVariable; i++)
+        void ForcingMovingFrame::Update(
+                const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
+                const NekDouble &time)
         {
-            Vmath::Vadd(outarray[i].num_elements(), outarray[i], 1,
-                        m_Forcing[i], 1, outarray[i], 1);
-        }
-    }
+            int npoints = pFields[0]->GetNpoints();
+            CalculateGradient(pFields);
+            Array<OneD, NekDouble> tmp(npoints, 0.0);
+            switch (m_spacedim)
+            {
+                case 1:
+                    // - cu * du/dx
+                    Vmath::Smul(npoints, -1.0 * m_frameVelocity[0],
+                                m_gradient[0], 1, m_Forcing[0], 1);
+                    break;
+                case 2:
+                    // - cu * du/dx - cv * du/dy
+                    Vmath::Smul(npoints, -1.0 * m_frameVelocity[0],
+                                m_gradient[0], 1, m_Forcing[0], 1);
+                    Vmath::Smul(npoints, -1.0 * m_frameVelocity[1],
+                                m_gradient[1], 1, tmp, 1);
+                    Vmath::Vadd(npoints, m_Forcing[0], 1, tmp, 1, m_Forcing[0],
+                                1);
+                    // - cu * dv/dx - cv * dv/dy
+                    Vmath::Smul(npoints, -1.0 * m_frameVelocity[0],
+                                m_gradient[2], 1, m_Forcing[1], 1);
+                    Vmath::Smul(npoints, -1.0 * m_frameVelocity[1],
+                                m_gradient[3], 1, tmp, 1);
+                    Vmath::Vadd(npoints, m_Forcing[1], 1, tmp, 1, m_Forcing[1],
+                                1);
+                    break;
+                case 3:
+                    //How do I deal with Homogeneous expansion?
+                    // - cu * du/dx - cv * du/dy - cz * du/dz
+                    Vmath::Smul(npoints, -1.0 * m_frameVelocity[0],
+                                m_gradient[0], 1, m_Forcing[0], 1);
+                    Vmath::Smul(npoints, -1.0 * m_frameVelocity[1],
+                                m_gradient[1], 1, tmp, 1);
+                    Vmath::Vadd(npoints, m_Forcing[0], 1, tmp, 1, m_Forcing[0],
+                                1);
+                    Vmath::Smul(npoints, -1.0 * m_frameVelocity[2],
+                                m_gradient[2], 1, tmp, 1);
+                    Vmath::Vadd(npoints, m_Forcing[0], 1, tmp, 1, m_Forcing[0],
+                                1);
+                    // - cu * dv/dx - cv * dv/dy  - cz * dv/dz
+                    Vmath::Smul(npoints, -1.0 * m_frameVelocity[0],
+                                m_gradient[3], 1, m_Forcing[1], 1);
+                    Vmath::Smul(npoints, -1.0 * m_frameVelocity[1],
+                                m_gradient[4], 1, tmp, 1);
+                    Vmath::Vadd(npoints, m_Forcing[1], 1, tmp, 1, m_Forcing[1],
+                                1);
+                    Vmath::Smul(npoints, -1.0 * m_frameVelocity[2],
+                                m_gradient[5], 1, tmp, 1);
+                    Vmath::Vadd(npoints, m_Forcing[1], 1, tmp, 1, m_Forcing[1],
+                                1);
+                    // - cu * dw/dx - cv * dw/dy  - cz * dw/dz
+                    Vmath::Smul(npoints, -1.0 * m_frameVelocity[0],
+                                m_gradient[6], 1, m_Forcing[2], 1);
+                    Vmath::Smul(npoints, -1.0 * m_frameVelocity[1],
+                                m_gradient[7], 1, tmp, 1);
+                    Vmath::Vadd(npoints, m_Forcing[2], 1, tmp, 1, m_Forcing[2],
+                                1);
+                    Vmath::Smul(npoints, -1.0 * m_frameVelocity[2],
+                                m_gradient[8], 1, tmp, 1);
+                    Vmath::Vadd(npoints, m_Forcing[2], 1, tmp, 1, m_Forcing[2],
+                                1);
+                    break;
+                default:
+                    ASSERTL0(false, "dimension unknown");
+            }
 
-}
+            // If singleMode or halfMode, transform the forcing term to be in
+            // physical space in the plane, but Fourier space in the homogeneous
+            // direction
+            if (m_transform)
+            {
+                for (int i = 0; i < m_spacedim; ++i)
+                {
+                    pFields[0]->HomogeneousFwdTrans(m_Forcing[i], m_Forcing[i]);
+                }
+            }
+        }
+
+
+        void ForcingMovingFrame::v_Apply(
+                const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
+                const Array<OneD, Array<OneD, NekDouble> > &inarray,
+                Array<OneD, Array<OneD, NekDouble> > &outarray,
+                const NekDouble &time)
+        {
+            Update(fields, time);
+
+            for (int i = 0; i < m_spacedim; i++)
+            {
+                Vmath::Vadd(outarray[i].num_elements(), outarray[i], 1,
+                            m_Forcing[i], 1, outarray[i], 1);
+            }
+        }
+
+    }
 }
 

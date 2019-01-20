@@ -80,10 +80,10 @@ namespace Nektar
          */
         DisContField1D::DisContField1D(
             const LibUtilities::SessionReaderSharedPtr &pSession,
-            const SpatialDomains::MeshGraphSharedPtr &graph1D,
-            const std::string &variable,
-            const bool         SetUpJustDG,
-            const Collections::ImplementationType ImpType)
+            const SpatialDomains::MeshGraphSharedPtr   &graph1D,
+            const std::string                          &variable,
+            const bool                                  SetUpJustDG,
+            const Collections::ImplementationType       ImpType)
             : ExpList(pSession,graph1D,true, variable, ImpType),
               m_bndCondExpansions(),
               m_bndConditions()
@@ -467,10 +467,10 @@ namespace Nektar
          */
         DisContField1D::DisContField1D(
                     const LibUtilities::SessionReaderSharedPtr &pSession,
-                    const SpatialDomains::MeshGraphSharedPtr &graph1D,
-                    const SpatialDomains::CompositeMap &domain,
-                    const SpatialDomains::BoundaryConditions &Allbcs, 
-                    const std::string &variable,
+                    const SpatialDomains::MeshGraphSharedPtr   &graph1D,
+                    const SpatialDomains::CompositeMap         &domain,
+                    const SpatialDomains::BoundaryConditions   &Allbcs, 
+                    const std::string                          &variable,
                     bool SetToOneSpaceDimension,
                     const Collections::ImplementationType ImpType):
             ExpList(pSession,domain,graph1D,true,variable,

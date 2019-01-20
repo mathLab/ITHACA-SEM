@@ -594,7 +594,7 @@ namespace MultiRegions
      * @param  pSession     A session within information about expansion
      * @param  domain       A domain, comprising of one or more composite
      *                      regions,
-     * @param  graph2D      A mesh, containing information about the
+     * @param  graph        A mesh, containing information about the
      *                      domain and the spectral/hp element expansion.
      * @param DeclareCoeffPhysArrays Declare the coefficient and
      *                               phys space arrays
@@ -613,7 +613,7 @@ namespace MultiRegions
                      bool SetToOneSpaceDimension,
                      const LibUtilities::CommSharedPtr comm,
                      const Collections::ImplementationType ImpType):
-        m_comm(pSession->GetComm()), 
+        m_comm(comm), 
         m_session(pSession),
         m_graph(graph),
         m_physState(false),
@@ -622,11 +622,6 @@ namespace MultiRegions
         m_blockMat(MemoryManager<BlockMatrixMap>::AllocateSharedPtr()),
         m_WaveSpace(false)
     {
-        if (comm)
-        {
-            m_comm = comm;
-        }
-
         int j, elmtid=0;
         SpatialDomains::SegGeomSharedPtr  SegGeom;
         SpatialDomains::TriGeomSharedPtr  TriGeom;
@@ -635,6 +630,12 @@ namespace MultiRegions
         LocalRegions::ExpansionSharedPtr  exp;
 
         LibUtilities::PointsType TriNb;
+
+        int meshdim = graph->GetMeshDimension();
+
+        // Retrieve the list of expansions (needed of meshdim == 1
+        const SpatialDomains::ExpansionInfoMap &expansions
+            = graph->GetExpansionInfos(variable);
         
         // Retrieve the list of expansions
         // Process each composite region.
@@ -649,8 +650,19 @@ namespace MultiRegions
                     m_expType = e1D;
                     
                     // Retrieve the basis key from the expansion.
-                    LibUtilities::BasisKey bkey = graph->GetEdgeBasisKey(
-                                               SegGeom, variable);
+                    LibUtilities::BasisKey bkey = LibUtilities::NullBasisKey;
+
+                    if(meshdim == 1)
+                    {
+                        auto expIt = expansions.find(SegGeom->GetGlobalID());
+                        ASSERTL0(expIt != expansions.end(),
+                                 "Failed to find basis key");
+                        bkey = expIt->second->m_basisKeyVector[0];
+                    }
+                    else
+                    {
+                        bkey = graph->GetEdgeBasisKey(SegGeom, variable);
+                    }
 
                     if(SetToOneSpaceDimension)
                     {

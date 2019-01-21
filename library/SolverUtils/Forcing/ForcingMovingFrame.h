@@ -85,7 +85,7 @@ namespace Nektar {
         private:
             std::string m_funcName;
             Array<OneD, NekDouble> m_frameVelocity;
-            Array<OneD, Array<OneD, NekDouble>> m_gradient;
+            Array<OneD, Array<OneD, NekDouble>> m_grad;
             NekInt m_spacedim;
             bool m_transform;
             bool m_homogen_dealiasing;

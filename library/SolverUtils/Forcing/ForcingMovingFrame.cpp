@@ -117,11 +117,11 @@ namespace Nektar
                 m_frameVelocity[i] = ep->Evaluate();
             }
 
-            m_gradient = Array<OneD, Array<OneD, NekDouble>>(
+            m_grad = Array<OneD, Array<OneD, NekDouble>>(
                     m_spacedim * m_spacedim);
             for (int i = 0; i < m_spacedim * m_spacedim; ++i)
             {
-                m_gradient[i] = Array<OneD, NekDouble>(npoints);
+                m_grad[i] = Array<OneD, NekDouble>(npoints);
             }
 
             Update(pFields, 0.0);
@@ -138,15 +138,15 @@ namespace Nektar
             {
                 case 1:
                     // du/dx
-                    pFields[0]->PhysDeriv(pFields[0]->GetPhys(), m_gradient[0]);
+                    pFields[0]->PhysDeriv(pFields[0]->GetPhys(), m_grad[0]);
                     break;
                 case 2:
                     // du/dx du/dy
-                    pFields[0]->PhysDeriv(pFields[0]->GetPhys(), m_gradient[0],
-                                          m_gradient[1]);
+                    pFields[0]->PhysDeriv(pFields[0]->GetPhys(), m_grad[0],
+                                          m_grad[1]);
                     // dv/dx dv/dy
-                    pFields[1]->PhysDeriv(pFields[1]->GetPhys(), m_gradient[2],
-                                          m_gradient[3]);
+                    pFields[1]->PhysDeriv(pFields[1]->GetPhys(), m_grad[2],
+                                          m_grad[3]);
                     break;
                 case 3:
                     if (pFields[0]->GetWaveSpace() == true &&
@@ -154,75 +154,76 @@ namespace Nektar
                     {
                         // take d/dx, d/dy  gradients in physical Fourier space
                         pFields[0]->PhysDeriv(pFields[0]->GetPhys(),
-                                              m_gradient[0], m_gradient[1]);
+                                              m_grad[0], m_grad[1]);
                         pFields[1]->PhysDeriv(pFields[1]->GetPhys(),
-                                              m_gradient[3], m_gradient[4]);
+                                              m_grad[3], m_grad[4]);
 
                         pFields[0]->HomogeneousBwdTrans(pFields[2]->GetPhys(),
                                                         tmp);
-                        pFields[0]->PhysDeriv(tmp, m_gradient[6],
-                                              m_gradient[7]);
+                        pFields[0]->PhysDeriv(tmp, m_grad[6],
+                                              m_grad[7]);
 
                         // Take d/dz derivative using wave space field
                         pFields[0]->PhysDeriv(MultiRegions::DirCartesianMap[2],
                                               pFields[0]->GetPhys(), tmp);
-                        pFields[0]->HomogeneousBwdTrans(tmp, m_gradient[2]);
+                        pFields[0]->HomogeneousBwdTrans(tmp, m_grad[2]);
                         pFields[0]->PhysDeriv(MultiRegions::DirCartesianMap[2],
                                               pFields[1]->GetPhys(), tmp);
-                        pFields[0]->HomogeneousBwdTrans(tmp, m_gradient[5]);
+                        pFields[0]->HomogeneousBwdTrans(tmp, m_grad[5]);
                         pFields[0]->PhysDeriv(MultiRegions::DirCartesianMap[2],
                                               pFields[2]->GetPhys(), tmp);
-                        pFields[0]->HomogeneousBwdTrans(tmp, m_gradient[8]);
+                        pFields[0]->HomogeneousBwdTrans(tmp, m_grad[8]);
                     } else if (pFields[0]->GetWaveSpace() == true &&
                                pFields[0]->GetExpType() == MultiRegions::e3DH2D)
                     {
                         // take d/dx,  gradients in physical Fourier space
                         pFields[0]->PhysDeriv(pFields[0]->GetPhys(),
-                                              m_gradient[0]);
+                                              m_grad[0]);
                         pFields[1]->PhysDeriv(pFields[1]->GetPhys(),
-                                              m_gradient[3]);
+                                              m_grad[3]);
 
                         pFields[0]->HomogeneousBwdTrans(pFields[2]->GetPhys(),
                                                         tmp);
-                        pFields[0]->PhysDeriv(tmp, m_gradient[6]);
+                        pFields[0]->PhysDeriv(tmp, m_grad[6]);
 
                         // Take d/dy derivative using wave space field
-                        pFields[0]->PhysDeriv(MultiRegions::DirCartesianMap[1], 
+                        pFields[0]->PhysDeriv(MultiRegions::DirCartesianMap[1],
                                               pFields[0]->GetPhys(), tmp);
-                        pFields[0]->HomogeneousBwdTrans(tmp, m_gradient[1]);
+                        pFields[0]->HomogeneousBwdTrans(tmp, m_grad[1]);
                         pFields[0]->PhysDeriv(MultiRegions::DirCartesianMap[1],
                                               pFields[1]->GetPhys(), tmp);
-                        pFields[0]->HomogeneousBwdTrans(tmp, m_gradient[4]);
+                        pFields[0]->HomogeneousBwdTrans(tmp, m_grad[4]);
                         pFields[0]->PhysDeriv(MultiRegions::DirCartesianMap[1],
                                               pFields[2]->GetPhys(), tmp);
-                        pFields[0]->HomogeneousBwdTrans(tmp, m_gradient[7]);
+                        pFields[0]->HomogeneousBwdTrans(tmp, m_grad[7]);
 
                         // Take d/dz derivative using wave space field
                         pFields[0]->PhysDeriv(MultiRegions::DirCartesianMap[2],
                                               pFields[0]->GetPhys(), tmp);
-                        pFields[0]->HomogeneousBwdTrans(tmp, m_gradient[2]);
+                        pFields[0]->HomogeneousBwdTrans(tmp, m_grad[2]);
                         pFields[0]->PhysDeriv(MultiRegions::DirCartesianMap[2],
                                               pFields[1]->GetPhys(), tmp);
-                        pFields[0]->HomogeneousBwdTrans(tmp, m_gradient[5]);
+                        pFields[0]->HomogeneousBwdTrans(tmp, m_grad[5]);
                         pFields[0]->PhysDeriv(MultiRegions::DirCartesianMap[2],
                                               pFields[2]->GetPhys(), tmp);
-                        pFields[0]->HomogeneousBwdTrans(tmp, m_gradient[8]);
+                        pFields[0]->HomogeneousBwdTrans(tmp, m_grad[8]);
                     } else
                     {
                         pFields[0]->PhysDeriv(pFields[0]->GetPhys(),
-                                              m_gradient[0], m_gradient[1],
-                                              m_gradient[2]);
+                                              m_grad[0], m_grad[1],
+                                              m_grad[2]);
                         pFields[1]->PhysDeriv(pFields[1]->GetPhys(),
-                                              m_gradient[3], m_gradient[4],
-                                              m_gradient[5]);
+                                              m_grad[3], m_grad[4],
+                                              m_grad[5]);
                         pFields[2]->PhysDeriv(pFields[2]->GetPhys(),
-                                              m_gradient[6], m_gradient[7],
-                                              m_gradient[8]);
+                                              m_grad[6], m_grad[7],
+                                              m_grad[8]);
                     }
                     break;
                 default:
                     ASSERTL0(false, "dimension unknown");
             }
+
         }
 
 
@@ -238,21 +239,21 @@ namespace Nektar
                 case 1:
                     // - cu * du/dx
                     Vmath::Smul(npoints, -1.0 * m_frameVelocity[0],
-                                m_gradient[0], 1, m_Forcing[0], 1);
+                                m_grad[0], 1, m_Forcing[0], 1);
                     break;
                 case 2:
                     // - cu * du/dx - cv * du/dy
                     Vmath::Smul(npoints, -1.0 * m_frameVelocity[0],
-                                m_gradient[0], 1, m_Forcing[0], 1);
+                                m_grad[0], 1, m_Forcing[0], 1);
                     Vmath::Smul(npoints, -1.0 * m_frameVelocity[1],
-                                m_gradient[1], 1, tmp, 1);
+                                m_grad[1], 1, tmp, 1);
                     Vmath::Vadd(npoints, m_Forcing[0], 1, tmp, 1, m_Forcing[0],
                                 1);
                     // - cu * dv/dx - cv * dv/dy
                     Vmath::Smul(npoints, -1.0 * m_frameVelocity[0],
-                                m_gradient[2], 1, m_Forcing[1], 1);
+                                m_grad[2], 1, m_Forcing[1], 1);
                     Vmath::Smul(npoints, -1.0 * m_frameVelocity[1],
-                                m_gradient[3], 1, tmp, 1);
+                                m_grad[3], 1, tmp, 1);
                     Vmath::Vadd(npoints, m_Forcing[1], 1, tmp, 1, m_Forcing[1],
                                 1);
                     break;
@@ -260,35 +261,35 @@ namespace Nektar
                     //How do I deal with Homogeneous expansion?
                     // - cu * du/dx - cv * du/dy - cz * du/dz
                     Vmath::Smul(npoints, -1.0 * m_frameVelocity[0],
-                                m_gradient[0], 1, m_Forcing[0], 1);
+                                m_grad[0], 1, m_Forcing[0], 1);
                     Vmath::Smul(npoints, -1.0 * m_frameVelocity[1],
-                                m_gradient[1], 1, tmp, 1);
+                                m_grad[1], 1, tmp, 1);
                     Vmath::Vadd(npoints, m_Forcing[0], 1, tmp, 1, m_Forcing[0],
                                 1);
                     Vmath::Smul(npoints, -1.0 * m_frameVelocity[2],
-                                m_gradient[2], 1, tmp, 1);
+                                m_grad[2], 1, tmp, 1);
                     Vmath::Vadd(npoints, m_Forcing[0], 1, tmp, 1, m_Forcing[0],
                                 1);
                     // - cu * dv/dx - cv * dv/dy  - cz * dv/dz
                     Vmath::Smul(npoints, -1.0 * m_frameVelocity[0],
-                                m_gradient[3], 1, m_Forcing[1], 1);
+                                m_grad[3], 1, m_Forcing[1], 1);
                     Vmath::Smul(npoints, -1.0 * m_frameVelocity[1],
-                                m_gradient[4], 1, tmp, 1);
+                                m_grad[4], 1, tmp, 1);
                     Vmath::Vadd(npoints, m_Forcing[1], 1, tmp, 1, m_Forcing[1],
                                 1);
                     Vmath::Smul(npoints, -1.0 * m_frameVelocity[2],
-                                m_gradient[5], 1, tmp, 1);
+                                m_grad[5], 1, tmp, 1);
                     Vmath::Vadd(npoints, m_Forcing[1], 1, tmp, 1, m_Forcing[1],
                                 1);
                     // - cu * dw/dx - cv * dw/dy  - cz * dw/dz
                     Vmath::Smul(npoints, -1.0 * m_frameVelocity[0],
-                                m_gradient[6], 1, m_Forcing[2], 1);
+                                m_grad[6], 1, m_Forcing[2], 1);
                     Vmath::Smul(npoints, -1.0 * m_frameVelocity[1],
-                                m_gradient[7], 1, tmp, 1);
+                                m_grad[7], 1, tmp, 1);
                     Vmath::Vadd(npoints, m_Forcing[2], 1, tmp, 1, m_Forcing[2],
                                 1);
                     Vmath::Smul(npoints, -1.0 * m_frameVelocity[2],
-                                m_gradient[8], 1, tmp, 1);
+                                m_grad[8], 1, tmp, 1);
                     Vmath::Vadd(npoints, m_Forcing[2], 1, tmp, 1, m_Forcing[2],
                                 1);
                     break;

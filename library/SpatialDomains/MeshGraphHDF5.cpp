@@ -303,7 +303,21 @@ void MeshGraphHDF5::PartitionMesh(LibUtilities::SessionReaderSharedPtr session)
 
     // Construct map of element entities for partitioner.
     std::map<int, MeshEntity> partElmts;
-    std::unordered_set<int> elmtIDs;
+    std::unordered_set<int> facetIDs;
+
+    if (session->GetComm()->GetRank() == 0)
+    {
+        std::cout << "ALL ELEMENTS: " << std::endl;
+        for (auto &el : elmts)
+        {
+            std::cout << el.id << " -> ";
+            for (auto &l : el.list)
+            {
+                std::cout << l << " ";
+            }
+            std::cout << std::endl;
+        }
+    }
 
     int vcnt = 0;
 
@@ -313,7 +327,11 @@ void MeshGraphHDF5::PartitionMesh(LibUtilities::SessionReaderSharedPtr session)
         MeshEntity elmt = elmts[el];
         elmt.ghost = false;
         partElmts[elmt.id] = elmt;
-        elmtIDs.insert(elmt.id);
+
+        for (auto &facet : elmt.list)
+        {
+            facetIDs.insert(facet);
+        }
     }
 
     // Now identify ghost vertices for the graph. This could probably be
@@ -324,7 +342,7 @@ void MeshGraphHDF5::PartitionMesh(LibUtilities::SessionReaderSharedPtr session)
         // Ignore anything we already read.
         if (i >= elRange.first && i < elRange.first + elRange.second)
         {
-            i += elRange.second - elRange.first - 1;
+            //i += elRange.second - elRange.first - 1;
             continue;
         }
 
@@ -334,8 +352,7 @@ void MeshGraphHDF5::PartitionMesh(LibUtilities::SessionReaderSharedPtr session)
         // Check for connections to local elements.
         for (auto &eId : elmt.list)
         {
-            auto it = elmtIDs.find(eId);
-            if (it != elmtIDs.end())
+            if (facetIDs.find(eId) != facetIDs.end())
             {
                 insert = true;
                 break;
@@ -344,10 +361,22 @@ void MeshGraphHDF5::PartitionMesh(LibUtilities::SessionReaderSharedPtr session)
 
         if (insert)
         {
+            std::cout << " RANK " << session->GetComm()->GetRank() << " INSERTING " << elmt.id << std::endl;
             elmt.ghost = true;
             partElmts[elmt.id] = elmt;
         }
+        else
+        {
+            std::cout << " RANK " << session->GetComm()->GetRank() << " IGNORING " << elmt.id << std::endl;
+        }
     }
+
+    std::cout << "hdf5 elements (" << session->GetComm()->GetRank() << ") = ";
+    for (auto &elmt : partElmts)
+    {
+        std::cout << elmt.second.id << "(" << elmt.second.ghost << ") ";
+    }
+    std::cout << std::endl;
 
     // Create partitioner. Default partitioner to use is PtScotch. Use ParMetis
     // as default if it is installed. Override default with command-line flags
@@ -372,7 +401,7 @@ void MeshGraphHDF5::PartitionMesh(LibUtilities::SessionReaderSharedPtr session)
             partitionerName, session, m_meshDimension,
             partElmts, comp);
 
-    partitioner->PartitionMesh(nproc);
+    partitioner->PartitionMesh(nproc, true, false, nLocal);
 
     // Now we need to distribute vertex IDs to all the different processors.
 

@@ -66,6 +66,7 @@ MeshPartitionPtScotch::MeshPartitionPtScotch(
     CompositeDescriptor                        compMap)
     : MeshPartition(session, meshDim, element, compMap)
 {
+    m_parallel = true;
 }
 
 MeshPartitionPtScotch::~MeshPartitionPtScotch()
@@ -80,7 +81,20 @@ void MeshPartitionPtScotch::PartitionGraphImpl(
     Nektar::Array<Nektar::OneD, int> &edgeWgt, int &nparts, int &volume,
     Nektar::Array<Nektar::OneD, int> &part)
 {
-    int nLocal = xadj.num_elements();
+    //std::cout << "local (" << m_comm->GetRank() << ") = " << nLocal << std::endl;
+
+    std::cout << "    xadj (" << m_comm->GetRank() << ") = ";
+    for (auto &a : xadj)
+    {
+        std::cout << a << " ";
+    }
+    std::cout << std::endl;
+    std::cout << "    adjcy (" << m_comm->GetRank() << ") = ";
+    for (auto &a : adjcy)
+    {
+        std::cout << a << " ";
+    }
+    std::cout << std::endl;
 
     LibUtilities::CommMpiSharedPtr mpiComm = std::dynamic_pointer_cast<
         LibUtilities::CommMpi>(m_comm->GetRowComm());
@@ -90,7 +104,7 @@ void MeshPartitionPtScotch::PartitionGraphImpl(
     SCOTCH_Dgraph scGraph;
     SCOTCH_CALL(SCOTCH_dgraphInit, (&scGraph, mpiComm->GetComm()));
     SCOTCH_CALL(SCOTCH_dgraphBuild,
-                (&scGraph, 0, nLocal, nLocal, &xadj[0], &xadj[1], NULL,
+                (&scGraph, 0, nVerts, nVerts, &xadj[0], &xadj[1], NULL,
                  NULL, adjcy.num_elements(), adjcy.num_elements(),
                  &adjcy[0], NULL, NULL));
     SCOTCH_CALL(SCOTCH_dgraphCheck, (&scGraph));

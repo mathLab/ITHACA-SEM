@@ -29,7 +29,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description:
+// Description: Example of using time-integration schemes.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -181,20 +181,25 @@ int main(int argc, char *argv[])
 {
     po::options_description desc("Available options");
     desc.add_options()
-        ("help, h",         "Produce this help message.")
-        ("Npoints, np",     po::value<int>(),
-                            "the number of grid points to be used.")
-        ("Ntimesteps, nt",  po::value<int>(),
-                            "the number of timesteps to be used.")
-        ("NTimeIntegrationMethod, nm",  po::value<int>(),
-                            "TimeIntegrationMethod is a number in the range [1,5]."
-                            "and defines the time-integration method to be used, i.e"
-                            "- 1: 1st order multi-step IMEX scheme (Euler Backwards/Euler Forwards)"
-                            "- 2: 2nd order multi-step IMEX scheme"
-                            "- 3: 3rd order multi-step IMEX scheme"
-                            "- 4: 2nd order multi-stage DIRK IMEX scheme"
-                            "- 5: 3nd order multi-stage DIRK IMEX scheme"
-                            "- 6: 2nd order IMEX Gear (Extrapolated Gear/SBDF-2)");
+        ("help,h",      "Produce this help message.")
+        ("points,p",    po::value<int>(),
+                        "Number of grid points to be used.")
+        ("timesteps,t", po::value<int>(),
+                        "Number of timesteps to be used.")
+        ("method,m",    po::value<int>(),
+                    "TimeIntegrationMethod is a number in the range [1,8].\n"
+                    "It defines the time-integration method to be used:\n"
+                    "- 1: 1st order multi-step IMEX scheme\n"
+                    "     (Euler Backwards/Euler Forwards)\n"
+                    "- 2: 2nd order multi-step IMEX scheme\n"
+                    "- 3: 3rd order multi-step IMEX scheme\n"
+                    "- 4: 2nd order multi-stage DIRK IMEX scheme\n"
+                    "- 5: 3nd order multi-stage DIRK IMEX scheme\n"
+                    "- 6: 2nd order IMEX Gear (Extrapolated Gear/SBDF-2)\n"
+                    "- 7: 2nd order Crank-Nicolson/Adams-Bashforth (CNAB)\n"
+                    "- 8: 2nd order Modified Crank-Nicolson/Adams-Bashforth\n"
+                    "     (MCNAB)"
+        );
     po::variables_map vm;
     try
     {
@@ -209,29 +214,17 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    if (!vm.count("Npoints") || !vm.count("Ntimesteps") || !vm.count("NTimeIntegrationMethod"))
+    if (!vm.count("points") || !vm.count("timesteps") || !vm.count("method")
+            || vm.count("help"))
     {
-        cerr << "Usage: Project1D --Npoints nPoints --Ntimesteps nTimesteps --TimeIntegrationMethod nMethod" << endl;
-        cerr << "Where  - Npoints is the number of grid points to be used" << endl;
-        cerr << "         for the finite difference discretisation" << endl;
-        cerr << "       - Ntimesteps is the number of timesteps to be used" << endl;
-        cerr << "         for the time-integration method" << endl;
-        cerr << "       - TimeIntegrationMethod is a number in the range [1,8]" << endl;
-        cerr << "         and defines the time-integration method to be used, i.e." << endl;
-        cerr << "           - 1: 1st order multi-step IMEX scheme (Euler Backwards/Euler Forwards)" << endl;
-        cerr << "           - 2: 2nd order multi-step IMEX scheme" << endl;
-        cerr << "           - 3: 3rd order multi-step IMEX scheme" << endl;
-        cerr << "           - 4: 2nd order multi-stage DIRK IMEX scheme" << endl;
-        cerr << "           - 5: 3nd order multi-stage DIRK IMEX scheme" << endl;
-        cerr << "           - 6: 2nd order IMEX Gear (Extrapolated Gear/SBDF-2)" << endl;
-        cerr << "           - 7: 2nd order Crank-Nicolson/Adams-Bashforth (CNAB)" << endl;
-        cerr << "           - 8: 2nd order Modified Crank-Nicolson/Adams-Bashforth (MCNAB)" << endl;
+        cout << "Please specify points, timesteps and method." << endl << endl;
+        cout << desc;
         return 1;
     }
 
-    int nPoints = vm["Npoints"].as<int>();
-    int nTimesteps = vm["Ntimesteps"].as<int>();
-    int nMethod = vm["NTimeIntegrationMethod"].as<int>();
+    int nPoints = vm["points"].as<int>();
+    int nTimesteps = vm["timesteps"].as<int>();
+    int nMethod = vm["method"].as<int>();
 
     // Open a file for writing the solution
     ofstream outfile;
@@ -340,16 +333,8 @@ int main(int argc, char *argv[])
         break;
     default :
         {
-            cerr << "The third argument defines the time-integration method to be used" << endl;
-            cerr << "and should be a number in the range [1,6], i.e." << endl;
-            cerr << "  - 1: 1st order multi-step IMEX scheme (Euler Backwards/Euler Forwards)" << endl;
-            cerr << "  - 2: 2nd order multi-step IMEX scheme" << endl;
-            cerr << "  - 3: 3rd order multi-step IMEX scheme" << endl;
-            cerr << "  - 4: 2nd order multi-stage DIRK IMEX scheme" << endl;
-            cerr << "  - 5: 3rd order multi-stage DIRK IMEX scheme" << endl;
-            cerr << "  - 6: 2nd order IMEX Gear (Extrapolated Gear/SBDF-2)" << endl;
-            cerr << "  - 7: 2nd order Crank-Nicolson/Adams-Bashforth (CNAB)" << endl;
-            cerr << "  - 8: 2nd order Modified Crank-Nicolson/Adams-Bashforth (MCNAB)" << endl;
+            cout << "Invalid method." << endl << endl;
+            cout << desc;
             exit(1);
         }
     }

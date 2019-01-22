@@ -186,6 +186,23 @@ namespace Nektar
         {
             ASSERTL0(false, "Not defined function DiffuseTraceFLux.");
         }
+
+        void Diffusion::v_DiffuseTraceFlux(
+                const int                                                       nConvectiveFields,
+                const Array<OneD, MultiRegions::ExpListSharedPtr>               &fields,
+                const Array<OneD, Array<OneD, NekDouble>>                       &inarray,
+                const Array<OneD, const Array<OneD, Array<OneD, NekDouble> > >  &qfield,
+                Array<OneD, Array<OneD, NekDouble> >                            &TraceFlux,
+                const Array<OneD, Array<OneD, NekDouble>>                       &pFwd,
+                const Array<OneD, Array<OneD, NekDouble>>                       &pBwd,
+                const Array<OneD, NekDouble>                                    &MuAVTrace,
+                Array< OneD, int >                                              &nonZeroIndex  ,
+                const Array<OneD, Array<OneD, NekDouble>>                       &Aver          ,
+                const Array<OneD, Array<OneD, NekDouble>>                       &Jump          )
+            {
+                ASSERTL0(false, "Not defined function DiffuseTraceFLux.");
+            }
+        
 #ifdef DEMO_IMPLICITSOLVER_JFNK_COEFF
         void Diffusion::v_MinusVolumDerivJacToMat( 
             const int                                               nConvectiveFields,

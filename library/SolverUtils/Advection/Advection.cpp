@@ -207,12 +207,13 @@ void Advection::v_Advect_coeff(
         }
 
     void Advection::v_AddTraceJacToMat(
-                const int                                           nConvectiveFields,
-                const int                                           nSpaceDim,
-                const Array<OneD, MultiRegions::ExpListSharedPtr>   &pFields,
-                const Array<OneD, DNekBlkMatSharedPtr>              &TraceJacCons,
-                Array<OneD, Array<OneD, DNekBlkMatSharedPtr> >      &gmtxarray,
-                const Array<OneD, DNekBlkMatSharedPtr>              &TraceJacGrad)
+        const int                                           nConvectiveFields,
+        const int                                           nSpaceDim,
+        const Array<OneD, MultiRegions::ExpListSharedPtr>   &pFields,
+        const Array<OneD, DNekBlkMatSharedPtr>              &TracePntJacCons,
+        Array<OneD, Array<OneD, DNekBlkMatSharedPtr> >      &gmtxarray,
+        const Array<OneD, DNekBlkMatSharedPtr>              &TracePntJacGrad        ,
+        const Array<OneD, Array<OneD, NekDouble> >          &TracePntJacGradSign    )
     {
         ASSERTL0(false,"v_AddTraceJacToMat NOT SPECIFIED");
         return;

@@ -3794,45 +3794,49 @@ namespace Nektar
             const Array<OneD, const Array<OneD, Array<OneD, int > > > elmtLRMap   =   locTraceToTraceMap->GetTraceceffToLeftRightExpcoeffMap();
             const Array<OneD, const Array<OneD, Array<OneD, int > > > elmtLRSign  =   locTraceToTraceMap->GetTraceceffToLeftRightExpcoeffSign();
 
-            // only for cases without interpolation!!!!
-            // TODO: to code cases with interpolation, may need a matrix not only a map.
-            const Array<OneD, const Array<OneD, Array<OneD, int > > > Trac2ElmtphysMap  =   locTraceToTraceMap->GetTracephysToLeftRightExpphysMap();
-
-            ASSERTL0(locTraceToTraceMap->GetflagTracephysToLeftRightExpphysMap(),"GetFwdBwdTracePhys may have interpolations, not coded");
-
-            int nlr = 0;
-            NekDouble sign = 1.0;
-            for(int  ntrace = 0; ntrace < ntotTrac; ntrace++)
+            if(locTraceToTraceMap->GetflagTracephysToLeftRightExpphysMap())
             {
-                nTracCoef       = (*traceExp)[ntrace]->GetNcoeffs();
-                nTracPnt        = (*traceExp)[ntrace]->GetTotPoints();
+                const Array<OneD, const Array<OneD, Array<OneD, int > > > Trac2ElmtphysMap  =   locTraceToTraceMap->GetTracephysToLeftRightExpphysMap();
 
-                TracFBMat[0]    = FwdMat[ntrace]; 
-                TracFBMat[1]    = BwdMat[ntrace]; 
-
-                for(nlr = 0; nlr < 2; nlr++)
+                int nlr = 0;
+                NekDouble sign = 1.0;
+                for(int  ntrace = 0; ntrace < ntotTrac; ntrace++)
                 {
-                    if(LRAdjflag[nlr][ntrace])
+                    nTracCoef       = (*traceExp)[ntrace]->GetNcoeffs();
+                    nTracPnt        = (*traceExp)[ntrace]->GetTotPoints();
+
+                    TracFBMat[0]    = FwdMat[ntrace]; 
+                    TracFBMat[1]    = BwdMat[ntrace]; 
+
+                    for(nlr = 0; nlr < 2; nlr++)
                     {
-                        sign    = 2.0*NekDouble(nlr)-1.0;
-
-                        ElmtMat        = fieldMat[LRAdjExpid[nlr][ntrace]];
-
-                        for(int ncl = 0; ncl < nTracPnt; ncl++)
+                        if(LRAdjflag[nlr][ntrace])
                         {
-                            nclAdjExp = Trac2ElmtphysMap[nlr][ntrace][ncl];
+                            sign    = 2.0*NekDouble(nlr)-1.0;
 
-                            for(int nrw = 0; nrw < nTracCoef; nrw++)
+                            ElmtMat        = fieldMat[LRAdjExpid[nlr][ntrace]];
+
+                            for(int ncl = 0; ncl < nTracPnt; ncl++)
                             {
-                                nrwAdjExp = elmtLRMap[nlr][ntrace][nrw];
+                                nclAdjExp = Trac2ElmtphysMap[nlr][ntrace][ncl];
 
-                                tmp   =   (*ElmtMat)(nrwAdjExp,nclAdjExp);
-                                tmp   +=  sign*(*TracFBMat[nlr])(nrw,ncl);
-                                ElmtMat->SetValue(nrwAdjExp,nclAdjExp,tmp);
+                                for(int nrw = 0; nrw < nTracCoef; nrw++)
+                                {
+                                    nrwAdjExp = elmtLRMap[nlr][ntrace][nrw];
+
+                                    tmp   =   (*ElmtMat)(nrwAdjExp,nclAdjExp);
+                                    tmp   +=  sign*(*TracFBMat[nlr])(nrw,ncl);
+                                    ElmtMat->SetValue(nrwAdjExp,nclAdjExp,tmp);
+                                }
                             }
                         }
                     }
                 }
+            }
+            else
+            {
+                ASSERTL0(false,"GetFwdBwdTracePhys may have interpolations, not coded");
+                // AddTraceQuadPhysToField(tracflux[nd][nv],tracflux[nd][nv],tmpfield[nd]);
             }
         }
 

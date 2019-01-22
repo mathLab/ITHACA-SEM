@@ -123,6 +123,8 @@ namespace Nektar
 
             Array<OneD, DNekBlkMatSharedPtr > m_TraceJacDeriv;
 
+            Array<OneD,       Array<OneD, NekDouble> >      m_TraceJacDerivSign;
+
             /// estimate the magnitude of each conserved varibles
             Array<OneD, NekDouble>                          m_magnitdEstimat;
 

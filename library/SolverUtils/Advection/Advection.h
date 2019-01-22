@@ -184,11 +184,12 @@ public:
             const int                                           nConvectiveFields,
             const int                                           nSpaceDim,
             const Array<OneD, MultiRegions::ExpListSharedPtr>   &pFields,
-            const Array<OneD, DNekBlkMatSharedPtr>              &TraceJacCons,
+            const Array<OneD, DNekBlkMatSharedPtr>              &TracePntJacCons,
             Array<OneD, Array<OneD, DNekBlkMatSharedPtr> >      &gmtxarray,
-            const Array<OneD, DNekBlkMatSharedPtr>              &TraceJacGrad=NullArrayDNekBlkMatSharedPtr)
+            const Array<OneD, DNekBlkMatSharedPtr>              &TracePntJacGrad        = NullArrayDNekBlkMatSharedPtr,
+            const Array<OneD, Array<OneD, NekDouble> >          &TracePntJacGradSign    = NullNekDoubleArrayofArray)
     {
-        v_AddTraceJacToMat(nConvectiveFields,nSpaceDim, pFields, TraceJacCons, gmtxarray,TraceJacGrad);
+        v_AddTraceJacToMat(nConvectiveFields,nSpaceDim, pFields, TracePntJacCons, gmtxarray,TracePntJacGrad,TracePntJacGradSign);
     }
 
     SOLVER_UTILS_EXPORT void AddVolumJacToMat( 
@@ -286,12 +287,13 @@ protected:
         Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray);
     
     SOLVER_UTILS_EXPORT virtual void v_AddTraceJacToMat(
-                const int                                           nConvectiveFields,
-                const int                                           nSpaceDim,
-                const Array<OneD, MultiRegions::ExpListSharedPtr>   &pFields,
-                const Array<OneD, DNekBlkMatSharedPtr>              &TraceJacCons,
-                Array<OneD, Array<OneD, DNekBlkMatSharedPtr> >      &gmtxarray,
-                const Array<OneD, DNekBlkMatSharedPtr>              &TraceJacGrad);
+        const int                                           nConvectiveFields,
+        const int                                           nSpaceDim,
+        const Array<OneD, MultiRegions::ExpListSharedPtr>   &pFields,
+        const Array<OneD, DNekBlkMatSharedPtr>              &TracePntJacCons,
+        Array<OneD, Array<OneD, DNekBlkMatSharedPtr> >      &gmtxarray,
+        const Array<OneD, DNekBlkMatSharedPtr>              &TracePntJacGrad        ,
+        const Array<OneD, Array<OneD, NekDouble> >          &TracePntJacGradSign    );
 
     SOLVER_UTILS_EXPORT virtual  void v_NumCalRiemFluxJac( 
         const int                                          nConvectiveFields,

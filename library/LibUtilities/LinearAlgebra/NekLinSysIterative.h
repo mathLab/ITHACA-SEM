@@ -167,7 +167,6 @@ namespace Nektar
         {
             m_oprtor = LinSysOperators(in);
         }
-
             
         int SolveLinearSystem(
             const int nGlobal,
@@ -211,6 +210,9 @@ namespace Nektar
         /// verbose
         bool                                        m_verbose;
 
+        bool                                        m_flag_LeftPrecond   = false;
+        bool                                        m_flag_RightPrecond  = true;
+
         /// Storage for solutions to previous linear problems
         boost::circular_buffer<Array<OneD, NekDouble> > m_prevLinSol;
         /// Total counter of previous solutions
@@ -235,7 +237,6 @@ namespace Nektar
             const int nGlobal,
             const Array<OneD, const NekDouble> &in,
             const int nDir);
-        
         
         /// Actual iterative gmres solver for one restart
         NekDouble DoGmresRestart(

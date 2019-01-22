@@ -319,6 +319,52 @@ namespace Nektar
                 nonZeroIndex, traceflux3D, m_traceAver, m_traceJump);
         }
 
+        void DiffusionIP::v_DiffuseTraceFlux(
+            const int                                                       nConvectiveFields,
+            const Array<OneD, MultiRegions::ExpListSharedPtr>               &fields,
+            const Array<OneD, Array<OneD, NekDouble>>                       &inarray,
+            const Array<OneD, const Array<OneD, Array<OneD, NekDouble> > >  &qfield,
+            Array<OneD, Array<OneD, NekDouble> >                            &TraceFlux,
+            const Array<OneD, Array<OneD, NekDouble>>                       &pFwd,
+            const Array<OneD, Array<OneD, NekDouble>>                       &pBwd,
+            const Array<OneD, NekDouble>                                    &MuAVTrace,
+            Array< OneD, int >                                              &nonZeroIndex  ,
+            const Array<OneD, Array<OneD, NekDouble>>                       &Aver          ,
+            const Array<OneD, Array<OneD, NekDouble>>                       &Jump          )
+        {
+            int nDim      = fields[0]->GetCoordim(0);
+            int nPts      = fields[0]->GetTotPoints();
+            // int nCoeffs   = fields[0]->GetNcoeffs();
+            int nTracePts = fields[0]->GetTrace()->GetTotPoints();
+
+            Array<OneD, Array<OneD, Array<OneD, NekDouble > > > traceflux3D(1);
+            traceflux3D[0]  =   TraceFlux;
+
+            Array<OneD, Array<OneD, NekDouble> >           pAver;
+            Array<OneD, Array<OneD, NekDouble> >           pJump;
+            if((Aver.num_elements()&&Jump.num_elements()))
+            {
+                pAver = Aver;
+                pJump = Jump;
+            }
+            else
+            {
+                pAver   =   Array<OneD, Array<OneD, NekDouble> > (nConvectiveFields);
+                pJump   =   Array<OneD, Array<OneD, NekDouble> > (nConvectiveFields);
+                for(int i = 0;i<nConvectiveFields;i++)
+                {
+                    pAver[i]    =   Array<OneD, NekDouble> (nTracePts,0.0);
+                    pJump[i]    =   Array<OneD, NekDouble> (nTracePts,0.0);
+                }
+                // ConsVarAveJump(nConvectiveFields,nTracePts,pFwd,pBwd,pAver,pJump);
+            }
+
+            CalTraceNumFlux_ReduceComm(
+                nConvectiveFields, nDim, nPts, nTracePts, m_IP2ndDervCoeff,
+                fields, inarray, qfield, pFwd, pBwd, m_MuVarTrace,
+                nonZeroIndex, traceflux3D, pAver, pJump);
+        }
+
         void DiffusionIP::v_AddDiffusionSymmFluxToCoeff(
             const int                                           nConvectiveFields,
             const Array<OneD, MultiRegions::ExpListSharedPtr>   &fields,

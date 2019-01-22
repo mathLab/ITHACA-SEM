@@ -55,11 +55,12 @@ namespace Nektar
 #ifdef DEMO_IMPLICITSOLVER_JFNK_COEFF
             void CalcJacobTraceInteg(
                 const Array<OneD, MultiRegions::ExpListSharedPtr>   &pFields,
-                const int                                         m,
-                const int                                         n,
-                const Array<OneD, const DNekBlkMatSharedPtr>    & TraceJac,
-                Array<OneD, DNekMatSharedPtr>                   & TraceJacFwd,
-                Array<OneD, DNekMatSharedPtr>                   & TraceJacBwd);
+                const int                                             m,
+                const int                                             n,
+                const Array<OneD, const DNekBlkMatSharedPtr>        & PntJac,
+                const Array<OneD, const Array<OneD, NekDouble> >    & PntJacSign,
+                Array<OneD, DNekMatSharedPtr>                       & TraceJacFwd,
+                Array<OneD, DNekMatSharedPtr>                       & TraceJacBwd);
 #endif
 
         protected:
@@ -122,9 +123,10 @@ namespace Nektar
                 const int                                           nConvectiveFields,
                 const int                                           nSpaceDim,
                 const Array<OneD, MultiRegions::ExpListSharedPtr>   &pFields,
-                const Array<OneD, DNekBlkMatSharedPtr>              &TraceJacCons,
+                const Array<OneD, DNekBlkMatSharedPtr>              &TracePntJacCons,
                 Array<OneD, Array<OneD, DNekBlkMatSharedPtr> >      &gmtxarray,
-                const Array<OneD, DNekBlkMatSharedPtr>              &TraceJacGrad);
+                const Array<OneD, DNekBlkMatSharedPtr>              &TracePntJacGrad        ,
+                const Array<OneD, Array<OneD, NekDouble> >          &TracePntJacGradSign    );
 
             virtual void v_NumCalRiemFluxJac(
                 const int                                         nConvectiveFields,

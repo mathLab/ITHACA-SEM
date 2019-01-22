@@ -161,6 +161,18 @@ namespace Nektar
                 const Array<OneD, Array<OneD, NekDouble>>           &pFwd,
                 const Array<OneD, Array<OneD, NekDouble>>           &pBwd,
                 Array< OneD, int >                                  &nonZeroIndex);
+            void v_DiffuseTraceFlux(
+                const int                                                       nConvectiveFields,
+                const Array<OneD, MultiRegions::ExpListSharedPtr>               &fields,
+                const Array<OneD, Array<OneD, NekDouble>>                       &inarray,
+                const Array<OneD, const Array<OneD, Array<OneD, NekDouble> > >  &qfield,
+                Array<OneD, Array<OneD, NekDouble> >                            &TraceFlux,
+                const Array<OneD, Array<OneD, NekDouble>>                       &pFwd,
+                const Array<OneD, Array<OneD, NekDouble>>                       &pBwd,
+                const Array<OneD, NekDouble>                                    &MuAVTrace,
+                Array< OneD, int >                                              &nonZeroIndex  ,
+                const Array<OneD, Array<OneD, NekDouble>>                       &Aver          ,
+                const Array<OneD, Array<OneD, NekDouble>>                       &Jump          );
             virtual void v_AddDiffusionSymmFluxToCoeff(
                 const int                                           nConvectiveFields,
                 const Array<OneD, MultiRegions::ExpListSharedPtr>   &fields,

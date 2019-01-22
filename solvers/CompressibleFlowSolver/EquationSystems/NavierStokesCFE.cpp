@@ -1782,7 +1782,7 @@ namespace Nektar
                 for(int  nelmt = 0; nelmt < ntotElmt; nelmt++)
                 {
                     int nElmtPnt            = (*expvect)[nelmt]->GetTotPoints();
-                    int noffest             = GetPhys_Offset(nelmt);
+                    int noffest             = explist->GetPhys_Offset(nelmt);
                         
                     for(int j = 0; j < nConvectiveFields; j++)
                     {   
@@ -1826,7 +1826,7 @@ namespace Nektar
                 for(int  nelmt = 0; nelmt < ntotElmt; nelmt++)
                 {
                     int nElmtPnt            = (*expvect)[nelmt]->GetTotPoints();
-                    int noffest             = GetPhys_Offset(nelmt);
+                    int noffest             = explist->GetPhys_Offset(nelmt);
                         
                     for(int j = 0; j < nConvectiveFields; j++)
                     {   

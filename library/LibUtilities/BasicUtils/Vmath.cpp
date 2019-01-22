@@ -311,7 +311,7 @@ namespace Vmath
     template  LIB_UTILITIES_EXPORT void Vadd( int n, const Nektar::NekDouble *x, const int incx, const Nektar::NekDouble *y,
                               const int incy,  Nektar::NekDouble *z, const int incz);
 
-    /// \brief Add vector y = alpha + x
+    /// \brief Add vector y = alpha - x
     template<class T>  void Sadd( int n, const T alpha, const T *x,
                   const int incx, T *y, const int incy)
     {
@@ -368,6 +368,34 @@ namespace Vmath
 
     template  LIB_UTILITIES_EXPORT void Vsub( int n, const Nektar::NekDouble *x, const int incx, const Nektar::NekDouble *y,
                               const int incy,  Nektar::NekDouble *z, const int incz);
+
+    /// \brief Add vector y = alpha + x
+    template<class T>  void Ssub( int n, const T alpha, const T *x,
+                  const int incx, T *y, const int incy)
+    {
+        ++n;
+        if (incx == 1 && incy == 1)
+        {
+            while( --n )
+            {
+                *y = alpha - (*x);
+                ++x;
+                ++y;
+            }
+        }
+        else
+        {
+            while( --n )
+            {
+                *y = alpha - (*x);
+                x += incx;
+                y += incy;
+            }
+        }
+    }
+
+    template LIB_UTILITIES_EXPORT void Ssub( int n, const Nektar::NekDouble alpha, const Nektar::NekDouble *x,
+              const int incx, Nektar::NekDouble *y, const int incy);
 
     /// \brief Zero vector
     template<class T>  void Zero(int n, T *x, const int incx)

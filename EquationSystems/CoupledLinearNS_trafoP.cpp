@@ -2159,6 +2159,24 @@ namespace Nektar
         - Transpose(*m_mat[mode].m_Btilde)*F_bnd;
         F_int = (*m_mat[mode].m_Cinv)*F_int;
         
+	curr_f_bnd = Eigen::VectorXd::Zero(f_bnd.num_elements());
+	for (int i_phys_dof = 0; i_phys_dof < f_bnd.num_elements(); i_phys_dof++)
+	{
+		curr_f_bnd(i_phys_dof) = f_bnd[i_phys_dof]; 
+	}
+	curr_f_p = Eigen::VectorXd::Zero(f_p.num_elements()); 
+	for (int i_phys_dof = 0; i_phys_dof < f_p.num_elements(); i_phys_dof++)
+	{
+		curr_f_p(i_phys_dof) = f_p[i_phys_dof]; 
+	}
+	curr_f_int = Eigen::VectorXd::Zero(f_int.num_elements()); 
+	for (int i_phys_dof = 0; i_phys_dof < f_int.num_elements(); i_phys_dof++)
+	{
+		curr_f_int(i_phys_dof) = f_int[i_phys_dof]; 
+	}
+
+
+
         // Unpack solution from Bnd and F_int to v_coeffs 
         cnt = cnt1 = 0;
         for(i = 0; i < nel; ++i) // loop over elements
@@ -2179,6 +2197,7 @@ namespace Nektar
                         fields[j]->SetCoeff(n*nplanecoeffs + 
                         offset+bmap[k],
                         f_bnd[cnt+k]);
+	//		cout << "at SolveLinearNS, writing f_bnd " << f_bnd[cnt+k] << endl;
                     }
                     
                     for(k = 0; k < nint; ++k)
@@ -2199,6 +2218,28 @@ namespace Nektar
         }
     }
     
+
+    void CoupledLinearNS_trafoP::DoInitialiseAdv(Array<OneD, NekDouble> myAdvField_x, Array<OneD, NekDouble> myAdvField_y)
+    {
+	// only covers case eSteadyOseen
+
+	Array<OneD, Array<OneD, NekDouble> > myAdvField(2);
+	myAdvField[0] = myAdvField_x;
+	myAdvField[1] = myAdvField_y;
+
+        std::vector<std::string> fieldStr;
+        for(int i = 0; i < m_velocity.num_elements(); ++i)
+        {
+             fieldStr.push_back(m_boundaryConditions->GetVariable(m_velocity[i]));
+        }
+//	cout << "fieldStr[0] " << fieldStr[0] << endl;
+//        EvaluateFunction(fieldStr,AdvField,"AdvectionVelocity"); // defined in EquationSystem
+
+        SetUpCoupledMatrix(0.0, myAdvField, false);
+
+    }
+
+
     void CoupledLinearNS_trafoP::v_Output(void)
     {    
         std::vector<Array<OneD, NekDouble> > fieldcoeffs(m_fields.num_elements()+1);

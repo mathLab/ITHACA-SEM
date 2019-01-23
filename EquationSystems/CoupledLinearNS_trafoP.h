@@ -42,6 +42,7 @@
 #include <MultiRegions/ExpList2D.h>
 #include <boost/shared_ptr.hpp>
 #include <LibUtilities/LinearAlgebra/NekTypeDefs.hpp>
+#include "../Eigen/Dense"
 //#include <MultiRegions/GlobalLinSysDirectStaticCond.h>
 
 namespace Nektar
@@ -121,9 +122,17 @@ namespace Nektar
         Array<OneD, Array<OneD, NekDouble> > m_ForcingTerm_Coeffs;
         
         Array<OneD, CoupledLocalToGlobalC0ContMapSharedPtr> m_locToGloMap;
-        
-    protected:
+
         CoupledLinearNS_trafoP(const LibUtilities::SessionReaderSharedPtr &pSesssion);
+        
+        void DoInitialiseAdv(Array<OneD, NekDouble> myAdvField_x, Array<OneD, NekDouble> myAdvField_y);
+
+	Eigen::VectorXd curr_f_bnd;
+	Eigen::VectorXd curr_f_p;
+	Eigen::VectorXd curr_f_int;
+
+    protected:
+
         
         virtual void v_InitObject();
         

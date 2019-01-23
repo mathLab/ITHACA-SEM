@@ -38,6 +38,7 @@
 #include "EquationSystems/VelocityCorrectionScheme.h"
 #include "Eigen/Dense"
 #include "EquationSystems/CoupledLinearNS_TT.h"
+#include "EquationSystems/CoupledLinearNS_trafoP.h"
 
 //#include <MultiRegions/ExpList2D.h>
 
@@ -80,7 +81,17 @@ int main(int argc, char *argv[])
 //	cout << "boost::lexical_cast<std::string>(m_kinvis) " << boost::lexical_cast<std::string>(m_kinvis) << endl; 
 
         // Execute driver
-        drv->Execute();
+// 	drv->Execute();
+
+	m_equ[0]->InitObject();
+	m_equ[0]->DoInitialise();
+	m_equ[0]->DoSolve();
+	m_equ[0]->Output();
+	cout << "m_equ[0]->GetNvariables() " << m_equ[0]->GetNvariables() << endl;
+	Array<OneD, NekDouble> exactsoln(m_equ[0]->GetTotPoints(), 0.0);
+	m_equ[0]->EvaluateExactSolution(0, exactsoln, m_equ[0]->GetFinalTime());
+	m_equ[0]->EvaluateExactSolution(1, exactsoln, m_equ[0]->GetFinalTime());
+
         // Finalise communications
         session->Finalise();
 
@@ -89,6 +100,9 @@ int main(int argc, char *argv[])
 	cout << "m_fields[0]->GetNpoints() " << m_fields[0]->GetNpoints() << endl;  // is this number of phys ??
 	cout << "m_fields[0]->GetTotPoints() " << m_fields[0]->GetTotPoints() << endl;
 	cout << "m_fields[0]->GetPhysState() " << m_fields[0]->GetPhysState() << endl;
+
+	// map the loc field to the phys field
+	m_fields[0]->BwdTrans(m_fields[0]->GetCoeffs(), m_fields[0]->UpdatePhys()); // needed if going with the equation system 
 
 	Array<OneD, NekDouble> out_field_0_x(m_equ[0]->GetNpoints(), 0.0);
 	Array<OneD, NekDouble> out_field_0_y(m_equ[0]->GetNpoints(), 0.0);
@@ -113,7 +127,14 @@ int main(int argc, char *argv[])
 	cout << "o collected_snapshots_x[0] " << csx0_o.norm() << endl;
 	cout << "oo collected_snapshots_x[0] " << csx0_oo.norm() << endl;
 
-
+	Array<OneD, NekDouble> loc_out_field_0_x(m_fields[0]->GetNcoeffs(), 0.0);
+	loc_out_field_0_x = m_fields[0]->GetCoeffs();
+	Eigen::VectorXd lof0x(loc_out_field_0_x.num_elements());
+	for( int i = 0; i < loc_out_field_0_x.num_elements(); ++i)
+	{
+		lof0x(i) = loc_out_field_0_x[i];
+	}
+	cout << "norm of the loc field " << lof0x.norm() << endl;
 
 
 
@@ -282,20 +303,27 @@ int main(int argc, char *argv[])
 	// importante: need to set an appropriate advection field, i.e., the snapshot 'itself' quasi so-to-speak
 
 	// getting the correct AdvField requires to go from local -> phys // can already capture the phys
-	CoupledLinearNS_TT myCLNS_trafo(session);
+	CoupledLinearNS_trafoP myCLNS_trafo(session);
 	if (session->DefinesParameter("Kinvis"))
 	{
 		double testp = session->GetParameter("Kinvis");
 		cout << "testp " << testp << endl;
 	}
-	myCLNS_trafo.InitObject();
-	myCLNS_trafo.DoInitialiseAdv(collected_snapshots_x[0], collected_snapshots_y[0]); // replaces .DoInitialise();
 
+
+	myCLNS_trafo.InitObject();
+	myCLNS_trafo.DoInitialiseAdv(collected_snapshots_x[2], collected_snapshots_y[2]); // replaces .DoInitialise();
+//	myCLNS_trafo.DoInitialise();
 	myCLNS_trafo.DoSolve();
 	myCLNS_trafo.Output();
 
+
 	// now can get the phys as well as bnd / p / int solution :)
 	Array<OneD, MultiRegions::ExpListSharedPtr> m_fields_t = myCLNS_trafo.UpdateFields();
+
+	// map the loc field to the phys field
+	m_fields_t[0]->BwdTrans(m_fields_t[0]->GetCoeffs(), m_fields_t[0]->UpdatePhys()); // needed if going with the equation system 
+
 
 	Array<OneD, NekDouble> out_field_trafo_x(m_equ[0]->GetNpoints(), 0.0);
 	Array<OneD, NekDouble> out_field_trafo_x2(m_equ[0]->GetNpoints(), 0.0);
@@ -321,11 +349,324 @@ int main(int argc, char *argv[])
 	cout << "trafo collected_snapshots_x[0] " << csx0_trafo.norm() << endl;
 	cout << "trafo2 collected_snapshots_x[0] " << csx0_trafo2.norm() << endl;
 
-	Eigen::VectorXd trafo_f_bnd = myCLNS_trafo.curr_f_bnd;
-	Eigen::VectorXd trafo_f_p = myCLNS_trafo.curr_f_p;
-	Eigen::VectorXd trafo_f_int = myCLNS_trafo.curr_f_int;
+//	Eigen::VectorXd trafo_f_bnd = myCLNS_trafo.curr_f_bnd;
+//	Eigen::VectorXd trafo_f_p = myCLNS_trafo.curr_f_p;
+//	Eigen::VectorXd trafo_f_int = myCLNS_trafo.curr_f_int;
+
+	// do a full order looping
+	int no_of_loops = -1;
+	for ( int iter = 0; iter < no_of_loops; ++iter)
+	{
+//		myCLNS_trafo.InitObject();
+		myCLNS_trafo.DoInitialiseAdv(out_field_trafo_x, out_field_trafo_y); // replaces .DoInitialise();
+//		myCLNS_trafo.DoInitialise();
+		myCLNS_trafo.DoSolve();
+		myCLNS_trafo.Output();
+
+		m_fields_t = myCLNS_trafo.UpdateFields();
+		m_fields_t[0]->BwdTrans(m_fields_t[0]->GetCoeffs(), m_fields_t[0]->UpdatePhys()); 
+		myCLNS_trafo.CopyFromPhysField(0, out_field_trafo_x); 
+		myCLNS_trafo.CopyFromPhysField(1, out_field_trafo_y);
+		for( int i = 0; i < collected_snapshots_x[0].num_elements(); ++i)
+		{
+			csx0_trafo(i) = out_field_trafo_x[i];
+			csy0_trafo(i) = out_field_trafo_y[i];
+		}
+
+		cout << "trafo collected_snapshots_x[0] " << csx0_trafo.norm() << endl;
+
+	}
+
+	// do the bnd / p / int transform
+	int no_snaps = snapshots_to_be_collected_aka_Nmax;
+	Eigen::MatrixXd c_f_bnd( myCLNS_trafo.curr_f_bnd.size() , no_snaps );
+	Eigen::MatrixXd c_f_p( myCLNS_trafo.curr_f_p.size() , no_snaps );
+	Eigen::MatrixXd c_f_int( myCLNS_trafo.curr_f_int.size() , no_snaps );
+	for(int trafo_iter = 0; trafo_iter < no_snaps; trafo_iter++)
+	{
+		myCLNS_trafo.InitObject();
+		myCLNS_trafo.DoInitialiseAdv(collected_snapshots_x[trafo_iter], collected_snapshots_y[trafo_iter]); // replaces .DoInitialise();
+		myCLNS_trafo.DoSolve();
+		myCLNS_trafo.Output();
+	
+		c_f_bnd.col(trafo_iter) = myCLNS_trafo.curr_f_bnd;
+		c_f_p.col(trafo_iter) = myCLNS_trafo.curr_f_p;
+		c_f_int.col(trafo_iter) = myCLNS_trafo.curr_f_int;
+		
+
+	}
+
+
 
 	// deal with the Dirichlet BC
+	// can this be simplified when not doing the bnd / p / int separation ?
+	// can be seen a 2-step procedure, non_adv and adv separately
+
+	// identifiy the D-BC dofs --- can do this by checking the c_f_bnd dofs
+	int no_dbc_in_loc = 0;
+	int no_not_dbc_in_loc = 0;
+	std::set<int> elem_loc_dbc;
+	set<int> elem_not_loc_dbc;
+	for ( int index_c_f_bnd = 0; index_c_f_bnd < c_f_bnd.rows(); index_c_f_bnd++ )
+	{
+		if (c_f_bnd(index_c_f_bnd,0) == c_f_bnd(index_c_f_bnd,1))
+		{
+			no_dbc_in_loc++;
+			elem_loc_dbc.insert(index_c_f_bnd);
+		}
+		else
+		{
+			no_not_dbc_in_loc++;
+			elem_not_loc_dbc.insert(index_c_f_bnd);
+		}
+	}
+
+	cout << "no_dbc_in_loc " << no_dbc_in_loc << endl;
+	cout << "elem_loc_dbc.size() " << elem_loc_dbc.size() << endl;
+
+	cout << "no_not_dbc_in_loc " << no_not_dbc_in_loc << endl;
+	cout << "elem_not_loc_dbc.size() " << elem_not_loc_dbc.size() << endl;
+
+	// do a all = bnd/p/int POD
+
+
+	Eigen::MatrixXd c_f_all( myCLNS_trafo.curr_f_bnd.size()+myCLNS_trafo.curr_f_p.size()+myCLNS_trafo.curr_f_int.size() , no_snaps );
+	c_f_all.block(0,0,c_f_bnd.rows(),c_f_bnd.cols()) = c_f_bnd;
+	c_f_all.block(c_f_bnd.rows(),0,c_f_p.rows(),c_f_p.cols()) = c_f_p;
+	c_f_all.block(c_f_bnd.rows()+c_f_p.rows(),0,c_f_int.rows(),c_f_int.cols()) = c_f_int;
+
+	Eigen::BDCSVD<Eigen::MatrixXd> svd_c_f_all(c_f_all, Eigen::ComputeThinU);
+	cout << svd_c_f_all.singularValues() << endl << endl;
+	Eigen::MatrixXd c_f_all_PODmodes = svd_c_f_all.matrixU();
+	// limit thyself to the 99.99%
+
+
+
+	// do the MM multiplication
+	Array<OneD, CoupledLocalToGlobalC0ContMapSharedPtr> locToGloMap = myCLNS_trafo.m_locToGloMap;
+        const Array<OneD,const int>& loctoglobndmap = locToGloMap[0]->GetLocalToGlobalBndMap();
+        const Array<OneD,const NekDouble>& loctoglobndsign = locToGloMap[0]->GetLocalToGlobalBndSign();
+
+	// original python code
+/*	M_trafo_no_pp_incl_dbc = np.zeros([ num_elem*nsize_bndry , nBndDofs ])
+	for curr_elem in range(0, num_elem):
+		cnt = curr_elem*nsize_bndry_p1
+		cnt_no_pp = curr_elem*nsize_bndry
+		for i in range(0, nsize_bndry_p1):
+			gid1 = int(LocGloBndMap[cnt + i])
+			sign1 = int(LocGloBndSign[cnt + i])
+			if (gid1 >= 0):
+				if (i < nsize_bndry):
+					M_trafo_no_pp_incl_dbc[ cnt_no_pp + i, gid1 ] = sign1
+*/
+
+	int nBndDofs = locToGloMap[0]->GetNumGlobalBndCoeffs();  // number of global bnd dofs
+	Eigen::MatrixXd Mtrafo(myCLNS.RB_A.rows(), nBndDofs);
+        int  nel  = m_fields[0]->GetNumElmts(); // number of spectral elements
+	cout << "nel " << nel << endl;
+	cout << "Mtrafo.rows() " << Mtrafo.rows() << endl;
+	cout << "Mtrafo.cols() " << Mtrafo.cols() << endl;
+	cout << "loctoglobndmap.num_elements() " << loctoglobndmap.num_elements() << endl;
+	int nsize_bndry_p1 = loctoglobndmap.num_elements() / nel;
+	int nsize_bndry = nsize_bndry_p1-1;
+//	cout << "loctoglobndmap.num_elements() / nel -1 " << loctoglobndmap.num_elements() / nel -1 << endl;
+
+	for (int curr_elem = 0; curr_elem < nel; curr_elem++)
+	{
+		int cnt = curr_elem*nsize_bndry_p1;
+		int cnt_no_pp = curr_elem*nsize_bndry;
+		for ( int index_ele = 0; index_ele < nsize_bndry_p1; index_ele++ )
+		{
+			int gid1 = loctoglobndmap[cnt+index_ele];
+			int sign1 = loctoglobndsign[cnt+index_ele];
+			if ((gid1 >= 0) && (index_ele < nsize_bndry))
+			{
+//				cout << "cnt_no_pp + index_ele " << cnt_no_pp + index_ele << endl;
+//				cout << "gid1 " << gid1 << endl;
+				Mtrafo(cnt_no_pp + index_ele, gid1) = sign1;
+			}
+		}
+	}
+
+	// do the MtM multiplication or try with an all-M approach
+	Eigen::MatrixXd MtM(myCLNS.RB_A.rows(), myCLNS.RB_A.rows());
+	MtM = Mtrafo * Mtrafo.transpose();
+	// assume have all the local sub-matrices in myCLNS
+	// to break the bnd/p/int, could just form two matrices, "no_adv" and "adv", whereby "adv" has the trilinear projection
+	// better initialise to zero
+	Eigen::MatrixXd no_adv_matrix = Eigen::MatrixXd::Zero(myCLNS.RB_A.rows() + myCLNS.RB_Dbnd.rows() + myCLNS.RB_C.cols(), myCLNS.RB_A.cols() + myCLNS.RB_Dbnd.rows() + myCLNS.RB_B.cols() );
+	cout << "no_adv_matrix.rows() " << no_adv_matrix.rows() << endl;
+	cout << "no_adv_matrix.cols() " << no_adv_matrix.cols() << endl;
+	// write Eigen::MatrixXd no_adv_matrix blockwise 
+	no_adv_matrix.block(0, 0, myCLNS.RB_A.rows(), myCLNS.RB_A.cols()) = MtM * myCLNS.RB_A_no_adv;
+	no_adv_matrix.block(0, myCLNS.RB_A.cols(), myCLNS.RB_Dbnd.cols(), myCLNS.RB_Dbnd.rows()) = -MtM * myCLNS.RB_Dbnd.transpose();
+	no_adv_matrix.block(0, myCLNS.RB_A.cols() + myCLNS.RB_Dbnd.rows(), myCLNS.RB_B.rows(), myCLNS.RB_B.cols()) = MtM * myCLNS.RB_B_no_adv;
+	no_adv_matrix.block(myCLNS.RB_A.rows(), 0, myCLNS.RB_Dbnd.rows(), myCLNS.RB_Dbnd.cols()) = -myCLNS.RB_Dbnd;
+	no_adv_matrix.block(myCLNS.RB_A.rows(), myCLNS.RB_A.cols() + myCLNS.RB_Dbnd.rows(), myCLNS.RB_Dint.rows(), myCLNS.RB_Dint.cols()) = -myCLNS.RB_Dint;	
+	no_adv_matrix.block(myCLNS.RB_A.rows() + myCLNS.RB_Dbnd.rows(), 0, myCLNS.RB_C.cols(), myCLNS.RB_C.rows()) = myCLNS.RB_C_no_adv.transpose();
+	no_adv_matrix.block(myCLNS.RB_A.rows() + myCLNS.RB_Dbnd.rows(), myCLNS.RB_A.cols(), myCLNS.RB_Dint.cols(), myCLNS.RB_Dint.rows()) = -myCLNS.RB_Dint.transpose();
+	no_adv_matrix.block(myCLNS.RB_A.rows() + myCLNS.RB_Dbnd.rows(), myCLNS.RB_A.cols() + myCLNS.RB_Dbnd.rows(), myCLNS.RB_D.rows(), myCLNS.RB_D.cols()) = myCLNS.RB_D_no_adv;
+
+
+	// get the D-BC to the other side
+	// remove from the c_f_all block the D_BC and put seperately
+/*	cout << "the elements of elem_loc_dbc: ";
+	for (std::set<int>::iterator it=elem_loc_dbc.begin(); it!=elem_loc_dbc.end(); ++it)
+	{
+		cout << " " << *it << endl;
+		cout << "c_f_all @ iter " << c_f_all.row(*it) << endl;
+		cout << "c_f_all_PODmodes @ iter " << c_f_all_PODmodes.row(*it) << endl;
+
+	}
+*/
+//	cout << "all of c_f_all" << endl;
+//	cout << c_f_all;
+
+	Eigen::MatrixXd c_f_all_PODmodes_wo_dbc(c_f_all_PODmodes.rows() - no_dbc_in_loc, c_f_all_PODmodes.cols());
+	Eigen::VectorXd f_bnd_dbc(no_dbc_in_loc);
+	Eigen::VectorXd f_bnd_dbc_full_size(c_f_all_PODmodes.rows());
+	int counter_all = 0;
+	int counter_dbc = 0;
+	for (int index=0; index < c_f_all_PODmodes.rows(); ++index)
+	{
+//		cout << index << endl;
+
+		if (!elem_loc_dbc.count(index))
+		{
+			f_bnd_dbc_full_size(index) = 0;
+			c_f_all_PODmodes_wo_dbc.row(counter_all) = c_f_all_PODmodes.row(index);
+			counter_all++;
+//			cout << " counter all " << counter_all << endl;
+		}
+		else
+		{
+			f_bnd_dbc_full_size(index) = c_f_all_PODmodes(index,0);
+			f_bnd_dbc(counter_dbc) = c_f_all_PODmodes(index,0);
+			counter_dbc++;
+//			cout << " counter dbc " << counter_dbc << endl;
+//			cout << " no_dbc_in_loc " << no_dbc_in_loc << endl;
+		}
+
+	}
+
+	// compute add_to rhs
+	Eigen::VectorXd add_to_rhs(c_f_all_PODmodes.rows()); // probably need this for adv and non-adv
+	add_to_rhs = no_adv_matrix * f_bnd_dbc_full_size;   
+	// also implement the removal of dbc dof
+	// the set of to-be-removed cols and rows is elem_loc_dbc
+	Eigen::MatrixXd no_adv_matrix_simplified = Eigen::MatrixXd::Zero(no_adv_matrix.rows() - no_dbc_in_loc, no_adv_matrix.cols() - no_dbc_in_loc);
+	// a naive algorithm (should test the timing here on a "real-world" example)
+	int counter_row_simplified = 0;
+	int counter_col_simplified = 0;
+	for (int row_index=0; row_index < no_adv_matrix.rows(); ++row_index)
+	{
+		for (int col_index=0; col_index < no_adv_matrix.cols(); ++col_index)
+		{
+			if ((!elem_loc_dbc.count(row_index)) && (!elem_loc_dbc.count(col_index)))
+			{
+				no_adv_matrix_simplified(counter_row_simplified, counter_col_simplified) = no_adv_matrix(row_index, col_index);
+				counter_col_simplified++;
+			}
+			
+		}
+		counter_col_simplified = 0;
+		if (!elem_loc_dbc.count(row_index))
+		{
+			counter_row_simplified++;
+		}
+		
+	}
+
+//	singular:       cout << "no_adv_matrix.eigenvalues() " << no_adv_matrix.eigenvalues() << endl;
+//	singular:	cout << "no_adv_matrix_simplified.eigenvalues() " << no_adv_matrix_simplified.eigenvalues() << endl;
+	
+	
+
+
+	// deal with the advection projection
+	// first build the full advection matrix and then multiply with D-BC, add to right-hand-side and then remove the dbc dof
+	// also need to have nicely orthonormalized (iteratively) basis vectors...
+	// need to have every RB basis vector in phys for that, i.e., after the svd misch-masch
+	// probably can use a separate object for that
+	
+	// first a mapping bnd / int --> loc
+        // Unpack solution from Bnd and F_int to v_coeffs 
+	
+	int curr_trafo_iter = 0;
+	Eigen::VectorXd f_bnd = c_f_all_PODmodes.block(0, curr_trafo_iter, myCLNS_trafo.curr_f_bnd.size(), 1);
+	Eigen::VectorXd f_int = c_f_all_PODmodes.block(myCLNS_trafo.curr_f_bnd.size()+myCLNS_trafo.curr_f_p.size(), curr_trafo_iter, myCLNS_trafo.curr_f_int.size(), 1);
+	Array<OneD, MultiRegions::ExpListSharedPtr> fields = myCLNS.UpdateFields(); // I think this messes up the content of myCLNS local field, b.c. of pointer
+        Array<OneD, unsigned int> bmap, imap; 
+        int cnt = 0;
+	int cnt1 = 0;
+	int nvel = 2;
+//	cout  << "  " << myCLNS_trafo.m_singleMode << endl; would need to implement a "getter" function
+        int nz_loc = 1;
+        int  nplanecoeffs = fields[0]->GetNcoeffs();
+        for(int i = 0; i < nel; ++i) // loop over elements
+        {
+            int eid  = i;
+            fields[0]->GetExp(eid)->GetBoundaryMap(bmap);
+            fields[0]->GetExp(eid)->GetInteriorMap(imap);
+            int nbnd   = bmap.num_elements();
+            int nint   = imap.num_elements();
+            int offset = fields[0]->GetCoeff_Offset(eid);
+            
+            for(int j = 0; j < nvel; ++j) // loop over velocity fields 
+            {
+                for(int n = 0; n < nz_loc; ++n)
+                {
+                    for(int k = 0; k < nbnd; ++k)
+                    {
+                        fields[j]->SetCoeff(n*nplanecoeffs + offset+bmap[k], f_bnd(cnt+k)); // could also just go through some "custom" Eigen Matrix
+                    }
+                    
+                    for(int k = 0; k < nint; ++k)
+                    {
+                        fields[j]->SetCoeff(n*nplanecoeffs + offset+imap[k], f_int(cnt1+k));
+                    }
+                    cnt  += nbnd;
+                    cnt1 += nint;
+                }
+            }
+        }
+
+
+	// then map the loc field to the phys field m_fields[0]->BwdTrans(m_fields[0]->GetCoeffs(), m_fields[0]->UpdatePhys()); // needed if going with the equation system 
+	Array<OneD, double> PhysBaseVec_x;
+	Array<OneD, double> PhysBaseVec_y;
+	fields[0]->BwdTrans(fields[0]->GetCoeffs(), PhysBaseVec_x);
+	fields[1]->BwdTrans(fields[1]->GetCoeffs(), PhysBaseVec_y);		
+
+
+	// do create the projected adv matrices
+	int RBsize = 3;
+//	Eigen::MatrixXd c_f_bnd( myCLNS_trafo.curr_f_bnd.size() , no_snaps );
+//	Eigen::MatrixXd c_f_p( myCLNS_trafo.curr_f_p.size() , no_snaps );
+//	Eigen::MatrixXd c_f_int( myCLNS_trafo.curr_f_int.size() , no_snaps );
+	for(int trafo_iter = 0; trafo_iter < no_snaps; trafo_iter++)
+	{
+		myCLNS.InitObject();
+		myCLNS.DoInitialiseAdv(PhysBaseVec_x, PhysBaseVec_y); // call with parameter in phys state
+		myCLNS.DoSolve();
+		myCLNS.Output();
+
+
+	
+	//	c_f_bnd.col(trafo_iter) = myCLNS_trafo.curr_f_bnd;
+	//	c_f_p.col(trafo_iter) = myCLNS_trafo.curr_f_p;
+	//	c_f_int.col(trafo_iter) = myCLNS_trafo.curr_f_int;
+
+		// wtf to do: gather the 
+		
+
+	}
+
+
+	// then should be good for the online solve - in regard to the Q_a term, keep the all structure
+	
+
+
 	// have an online solve
 
         session->Finalise();

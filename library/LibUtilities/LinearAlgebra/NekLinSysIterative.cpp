@@ -76,7 +76,7 @@ namespace Nektar
             "flag_LeftPrecond", "True", m_flag_LeftPrecond, false);
         pSession->MatchSolverInfo(
             "flag_RightPrecond", "False", m_flag_RightPrecond, true);
-        
+
         /* if(pSession->DefinesGlobalSysSolnInfo(variable, "IterativeMethod"))
         {
             std::string iterater = pSession->GetGlobalSysSolnInfo(variable,
@@ -100,17 +100,17 @@ namespace Nektar
                                     NekConstants::kNekIterativeTol);
         }
         if(pSession->DefinesGlobalSysSolnInfo(variable,
-                                              "MaxIterations"))
+                                              "MaxRestart"))
         {
-            m_maxiter = boost::lexical_cast<int>(
+            m_maxrestart = boost::lexical_cast<int>(
                     pSession->GetGlobalSysSolnInfo(variable,
-                            "MaxIterations").c_str());
+                            "MaxRestart").c_str());
         }
         else
         {
-            pSession->LoadParameter("MaxIterations",
-                                    m_maxiter,
-                                    49);
+            pSession->LoadParameter("MaxRestart",
+                                    m_maxrestart,
+                                    1);
         }
         if(pSession->DefinesGlobalSysSolnInfo(variable,
                                               "MaxStorage"))
@@ -263,20 +263,7 @@ namespace Nektar
 
             if(m_converged)
             {
-                if (m_verbose && m_root)
-                {
-                    // cout << "Gmres(" << m_maxstorage << "), bandwidth(" << m_maxhesband << "): " << endl;
-                    cout <<std::scientific<<std::setw(nwidthcolm)<<std::setprecision(nwidthcolm-8) 
-                         << "       GMRES iterations made = " << m_totalIterations
-                         << " using tolerance of "  << m_tolerance
-                         // << " (error = " << sqrt(eps / m_rhs_magnitude)
-                         << " (error = " << sqrt(eps * m_prec_factor / m_rhs_magnitude) << ")" <<endl;
-                        //  << "       WITH (eps = " << eps << ")"
-                        //  << ", (rhs_mag = " << m_rhs_magnitude << ")"
-                        //  << ", (prec_factor = " << m_prec_factor << ")"<<endl;
-                }
-
-                return m_totalIterations;
+                break;
             }
             restarted = true;
         }
@@ -284,13 +271,30 @@ namespace Nektar
 
         if(m_root&&m_verbose)
         {
-                    cout <<std::scientific<<std::setw(nwidthcolm)<<std::setprecision(nwidthcolm-8) 
-                         << "       GMRES iterations made = " << m_totalIterations
-                         << " using tolerance of "  << m_tolerance
-                         // << " (error = " << sqrt(eps / m_rhs_magnitude)
-                         << " (error = " << sqrt(eps * m_prec_factor / m_rhs_magnitude) << ")" 
-                        //  << ", rhs_mag = " << sqrt(m_rhs_magnitude) << ")"
-                         <<" WARNING: Exceeded maxIt"<<endl;
+            Array<OneD, NekDouble> r0(nGlobal, 0.0);
+            m_oprtor.DoMatrixMultiply(pOutput, r0);
+            Vmath::Svtvp(nNonDir, -1.0, &r0[0] + nDir, 1, &pInput[0] + nDir, 1, &r0[0] + nDir, 1);
+            NekDouble vExchange    = Vmath::Dot2(nNonDir,
+                                        &r0[0] + nDir,
+                                        &r0[0] + nDir,
+                                        &m_map[0] + nDir);
+            m_Comm->AllReduce(vExchange, LibUtilities::ReduceSum);
+            NekDouble eps1 = vExchange;
+            
+            cout <<std::scientific<<std::setw(nwidthcolm)<<std::setprecision(nwidthcolm-8) 
+                    << "       GMRES iterations made = " << m_totalIterations
+                    << " using tolerance of "  << m_tolerance
+                    << " (error = " << sqrt(eps * m_prec_factor / m_rhs_magnitude) << ")" 
+                    << " WITH (GMRES eps = " << eps << " REAL eps= "<<eps1<<")";
+
+            if(m_converged)
+            {
+                cout <<" CONVERGED"<<endl;
+            }
+            else
+            {
+                cout <<" WARNING: Exceeded maxIt"<<endl;
+            }
         }
         // ROOTONLY_NEKERROR(ErrorUtil::efatal,
         //                   "Exceeded maximum number of iterations");
@@ -487,11 +491,11 @@ namespace Nektar
             Vmath::Vcopy(m_maxstorage + 1, &hsingle1[0], 1, &hsingle2[0], 1);
             DoGivensRotation(starttem, endtem, nGlobal, nDir, cs, sn, hsingle2, eta);
 
+            eps = eta[nd + 1] * eta[nd + 1];
             // This Gmres merge truncted Gmres to accelerate.
             // If truncted, cannot jump out because the last term of eta is not residual
             if((!truncted) || (nd < m_maxhesband))
             {
-                eps = eta[nd + 1] * eta[nd + 1];
                 // if (eps * m_prec_factor < m_tolerance * m_tolerance * m_rhs_magnitude )
                 if (eps < m_tolerance * m_tolerance * m_rhs_magnitude )
                 {

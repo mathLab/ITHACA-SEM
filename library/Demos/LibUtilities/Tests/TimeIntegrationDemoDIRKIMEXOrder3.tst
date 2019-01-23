@@ -2,7 +2,7 @@
 <test>
     <description>Test for time integration schemes</description>
     <executable>TimeIntegrationDemo</executable>
-    <parameters>--Npoints 100 --Ntimesteps 100 --NTimeIntegrationMethod 5</parameters>
+    <parameters>--points 100 --timesteps 100 --method 5</parameters>
     <metrics>
         <metric type="L2" id="1">
             <value tolerance="1e-12">0.061634</value>

@@ -176,8 +176,9 @@ void export_ExpList()
     py::class_<ExpList,
                std::shared_ptr<ExpList>,
                boost::noncopyable>(
-                   "ExpList", py::no_init)
-
+                   "ExpList", py::init<
+		    const LibUtilities::SessionReaderSharedPtr &,
+		    const SpatialDomains::MeshGraphSharedPtr &>())
         .def("GetNpoints", &ExpList::GetNpoints)
         .def("GetNcoeffs", &ExpList_GetNcoeffs)
         .def("GetExp", &ExpList_GetExp)

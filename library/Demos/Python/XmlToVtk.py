@@ -1,16 +1,16 @@
 from NekPy.LibUtilities import SessionReader
 from NekPy.SpatialDomains import MeshGraph
-from NekPy.MultiRegions import ExpList2D
+from NekPy.MultiRegions import ExpList
 import sys
 
 if len(sys.argv) < 3:
     print("Usage: python XmlToVtk.py input1.xml input2.xml ... output.vtu")
     exit(1)
 
-# Load up session and create ExpList2D
+# Load up session and create ExpList
 session = SessionReader.CreateInstance(sys.argv[:-1])
 graph = MeshGraph.Read(session)
-exp = ExpList2D(session, graph)
+exp = ExpList(session, graph)
 
 print("Loaded %s with %d elements" % (session.GetSessionName(), exp.GetExpSize()))
 

@@ -597,6 +597,8 @@ int main(int argc, char *argv[])
 	Eigen::VectorXd f_int = c_f_all_PODmodes.block(myCLNS_trafo.curr_f_bnd.size()+myCLNS_trafo.curr_f_p.size(), curr_trafo_iter, myCLNS_trafo.curr_f_int.size(), 1);
 	Array<OneD, MultiRegions::ExpListSharedPtr> fields = myCLNS.UpdateFields(); // I think this messes up the content of myCLNS local field, b.c. of pointer
         Array<OneD, unsigned int> bmap, imap; 
+	Array<OneD, double> field_0(m_equ[0]->GetNcoeffs());
+	Array<OneD, double> field_1(m_equ[0]->GetNcoeffs());
         int cnt = 0;
 	int cnt1 = 0;
 	int nvel = 2;
@@ -619,11 +621,27 @@ int main(int argc, char *argv[])
                     for(int k = 0; k < nbnd; ++k)
                     {
                         fields[j]->SetCoeff(n*nplanecoeffs + offset+bmap[k], f_bnd(cnt+k)); // could also just go through some "custom" Eigen Matrix
+			if (j==0)
+			{
+				field_0[n*nplanecoeffs + offset+bmap[k]] = f_bnd(cnt+k);
+			}
+			if (j==1)
+			{
+				field_1[n*nplanecoeffs + offset+bmap[k]] = f_bnd(cnt+k);
+			}
                     }
                     
                     for(int k = 0; k < nint; ++k)
                     {
                         fields[j]->SetCoeff(n*nplanecoeffs + offset+imap[k], f_int(cnt1+k));
+			if (j==0)
+			{
+				field_0[n*nplanecoeffs + offset+imap[k]] = f_int(cnt1+k);
+			}
+			if (j==1)
+			{
+				field_1[n*nplanecoeffs + offset+imap[k]] = f_int(cnt1+k);
+			}
                     }
                     cnt  += nbnd;
                     cnt1 += nint;
@@ -633,32 +651,95 @@ int main(int argc, char *argv[])
 
 
 	// then map the loc field to the phys field m_fields[0]->BwdTrans(m_fields[0]->GetCoeffs(), m_fields[0]->UpdatePhys()); // needed if going with the equation system 
-	Array<OneD, double> PhysBaseVec_x;
-	Array<OneD, double> PhysBaseVec_y;
-	fields[0]->BwdTrans(fields[0]->GetCoeffs(), PhysBaseVec_x);
-	fields[1]->BwdTrans(fields[1]->GetCoeffs(), PhysBaseVec_y);		
+	Array<OneD, double> PhysBaseVec_x(myCLNS.GetNpoints(),0.0);
+	Array<OneD, double> PhysBaseVec_y(myCLNS.GetNpoints(),0.0);
+	Array<OneD, double> PhysBase_zero(myCLNS.GetNpoints(),0.0);
+//	fields[0]->BwdTrans(fields[0]->GetCoeffs(), PhysBaseVec_x);
+//	fields[1]->BwdTrans(fields[1]->GetCoeffs(), PhysBaseVec_y);		
+
+	fields[0]->BwdTrans(field_0, PhysBaseVec_x);
+	fields[0]->BwdTrans(field_1, PhysBaseVec_y);
+
+	cout << "PhysBaseVec_x.num_elements() " << PhysBaseVec_x.num_elements() << endl;
+
+	// orthonormalize the phys basis
+
 
 
 	// do create the projected adv matrices
-	int RBsize = 3;
+	int RBsize = 1; // initially have just one for test purposes
 //	Eigen::MatrixXd c_f_bnd( myCLNS_trafo.curr_f_bnd.size() , no_snaps );
 //	Eigen::MatrixXd c_f_p( myCLNS_trafo.curr_f_p.size() , no_snaps );
 //	Eigen::MatrixXd c_f_int( myCLNS_trafo.curr_f_int.size() , no_snaps );
-	for(int trafo_iter = 0; trafo_iter < no_snaps; trafo_iter++)
+	for(int trafo_iter = 0; trafo_iter < RBsize; trafo_iter++)
 	{
 		myCLNS.InitObject();
-		myCLNS.DoInitialiseAdv(PhysBaseVec_x, PhysBaseVec_y); // call with parameter in phys state
-		myCLNS.DoSolve();
-		myCLNS.Output();
+		myCLNS.DoInitialiseAdv(PhysBaseVec_x, PhysBase_zero); // call with parameter in phys state
+		myCLNS.DoSolve(); // do I need this here ?
+		myCLNS.Output();  // do I need this here ?
 
+		
 
 	
 	//	c_f_bnd.col(trafo_iter) = myCLNS_trafo.curr_f_bnd;
 	//	c_f_p.col(trafo_iter) = myCLNS_trafo.curr_f_p;
 	//	c_f_int.col(trafo_iter) = myCLNS_trafo.curr_f_int;
 
-		// wtf to do: gather the 
+		// collect the advection matrices
+		// separate into rhs and lhs part
+		// save in projected form for each RB basis function
+
+		Eigen::MatrixXd adv_matrix = Eigen::MatrixXd::Zero(myCLNS.RB_A.rows() + myCLNS.RB_Dbnd.rows() + myCLNS.RB_C.cols(), myCLNS.RB_A.cols() + myCLNS.RB_Dbnd.rows() + myCLNS.RB_B.cols() );
+		cout << "adv_matrix.rows() " << adv_matrix.rows() << endl;
+		cout << "adv_matrix.cols() " << adv_matrix.cols() << endl;
+		// write Eigen::MatrixXd no_adv_matrix blockwise 
+		adv_matrix.block(0, 0, myCLNS.RB_A.rows(), myCLNS.RB_A.cols()) = MtM * myCLNS.RB_A_adv;
+		adv_matrix.block(0, myCLNS.RB_A.cols(), myCLNS.RB_Dbnd.cols(), myCLNS.RB_Dbnd.rows()) = -MtM * myCLNS.RB_Dbnd.transpose();
+		adv_matrix.block(0, myCLNS.RB_A.cols() + myCLNS.RB_Dbnd.rows(), myCLNS.RB_B.rows(), myCLNS.RB_B.cols()) = MtM * myCLNS.RB_B_adv;
+		adv_matrix.block(myCLNS.RB_A.rows(), 0, myCLNS.RB_Dbnd.rows(), myCLNS.RB_Dbnd.cols()) = -myCLNS.RB_Dbnd;
+		adv_matrix.block(myCLNS.RB_A.rows(), myCLNS.RB_A.cols() + myCLNS.RB_Dbnd.rows(), myCLNS.RB_Dint.rows(), myCLNS.RB_Dint.cols()) = -myCLNS.RB_Dint;	
+		adv_matrix.block(myCLNS.RB_A.rows() + myCLNS.RB_Dbnd.rows(), 0, myCLNS.RB_C.cols(), myCLNS.RB_C.rows()) = myCLNS.RB_C_adv.transpose();
+		adv_matrix.block(myCLNS.RB_A.rows() + myCLNS.RB_Dbnd.rows(), myCLNS.RB_A.cols(), myCLNS.RB_Dint.cols(), myCLNS.RB_Dint.rows()) = -myCLNS.RB_Dint.transpose();
+		adv_matrix.block(myCLNS.RB_A.rows() + myCLNS.RB_Dbnd.rows(), myCLNS.RB_A.cols() + myCLNS.RB_Dbnd.rows(), myCLNS.RB_D.rows(), myCLNS.RB_D.cols()) = myCLNS.RB_D_adv;
 		
+		// compute add_to rhs
+		Eigen::VectorXd add_to_rhs_adv(c_f_all_PODmodes.rows()); // probably need this for adv and non-adv
+		add_to_rhs_adv = adv_matrix * f_bnd_dbc_full_size;   
+
+		// also implement the removal of dbc dof
+		// the set of to-be-removed cols and rows is elem_loc_dbc
+		Eigen::MatrixXd adv_matrix_simplified = Eigen::MatrixXd::Zero(adv_matrix.rows() - no_dbc_in_loc, adv_matrix.cols() - no_dbc_in_loc);
+		Eigen::VectorXd adv_rhs_add = Eigen::VectorXd::Zero(adv_matrix.rows() - no_dbc_in_loc);
+		// a naive algorithm (should test the timing here on a "real-world" example)
+		int counter_row_simplified = 0;
+		int counter_col_simplified = 0;
+		for (int row_index=0; row_index < no_adv_matrix.rows(); ++row_index)
+		{
+			for (int col_index=0; col_index < no_adv_matrix.cols(); ++col_index)
+			{
+				if ((!elem_loc_dbc.count(row_index)) && (!elem_loc_dbc.count(col_index)))
+				{
+					adv_matrix_simplified(counter_row_simplified, counter_col_simplified) = adv_matrix(row_index, col_index);
+					counter_col_simplified++;
+				}
+				
+			}
+			counter_col_simplified = 0;
+			if (!elem_loc_dbc.count(row_index))
+			{
+				adv_rhs_add(counter_row_simplified) = add_to_rhs_adv(row_index);
+				counter_row_simplified++;
+			}
+		
+		}
+
+		// generate projected form 
+		// using Ritz-Galerkin without any supremizers
+		// the projector is 'c_f_all_PODmodes_wo_dbc'
+		Eigen::MatrixXd adv_mat_proj = c_f_all_PODmodes_wo_dbc.transpose() * adv_matrix_simplified * c_f_all_PODmodes_wo_dbc;
+		cout << "adv_mat_proj.rows() " << adv_mat_proj.rows() << endl;
+		cout << "adv_mat_proj.cols() " << adv_mat_proj.cols() << endl;
+
 
 	}
 
@@ -668,6 +749,30 @@ int main(int argc, char *argv[])
 
 
 	// have an online solve
+
+
+
+	// some IO checks
+	cout << "session->DefinesFunction(InitialConditions) " << session->DefinesFunction("InitialConditions") << endl;
+	cout << "session->DefinesFunction(TestSnap1) " << session->DefinesFunction("TestSnap1") << endl;
+	cout << "session->DefinesFunction(\"AdvectionVelocity\") " << session->DefinesFunction("AdvectionVelocity") << endl;
+
+//	int nvel = 2;
+        Array<OneD, Array<OneD, NekDouble> > test_load_snapshot(nvel); // for a 2D problem
+        for(int i = 0; i < nvel; ++i)
+        {
+            test_load_snapshot[i] = Array<OneD, NekDouble> (myCLNS.GetNpoints(),0.0);
+        }
+                
+               
+        std::vector<std::string> fieldStr;
+        for(int i = 0; i < nvel; ++i)
+        {
+           fieldStr.push_back(session->GetVariable(i));
+           cout << "session->GetVariable(i) " << session->GetVariable(i) << endl;
+        }
+        myCLNS.EvaluateFunction(fieldStr, test_load_snapshot, "TestSnap1");
+
 
         session->Finalise();
 

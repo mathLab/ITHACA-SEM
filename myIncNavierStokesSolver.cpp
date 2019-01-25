@@ -56,14 +56,63 @@ int main(int argc, char *argv[])
     {
         // Create session reader.
         session = LibUtilities::SessionReader::CreateInstance(argc, argv);
-
-	int snapshots_to_be_collected_aka_Nmax = 3;        
-
-        // Create driver
         session->LoadSolverInfo("Driver", vDriverModule, "Standard");
 	cout << "vDriverModule " << vDriverModule << endl;
+        // Create driver
+        drv = GetDriverFactory().CreateInstance(vDriverModule, session);  // why is that necessary?
+
+	int snapshots_to_be_collected_aka_Nmax = 4;        
+
+	CoupledLinearNS_TT babyCLNS(session);
+	babyCLNS.InitObject();
+//	babyCLNS.DoInitialise();
+
+	// some IO checks
+	cout << "session->DefinesFunction(InitialConditions) " << session->DefinesFunction("InitialConditions") << endl;
+	cout << "session->DefinesFunction(TestSnap1) " << session->DefinesFunction("TestSnap1") << endl;
+	cout << "session->DefinesFunction(TestSnap2) " << session->DefinesFunction("TestSnap2") << endl;
+	cout << "session->DefinesFunction(TestSnap3) " << session->DefinesFunction("TestSnap3") << endl;
+	cout << "session->DefinesFunction(TestSnap4) " << session->DefinesFunction("TestSnap4") << endl;
+	cout << "session->DefinesFunction(TestSnap5) " << session->DefinesFunction("TestSnap5") << endl;
+	cout << "session->DefinesFunction(\"AdvectionVelocity\") " << session->DefinesFunction("AdvectionVelocity") << endl;
+
+	int nvelo = 2;
+        Array<OneD, Array<OneD, NekDouble> > test_load_snapshot(nvelo); // for a 2D problem
+	Array<OneD, Array<OneD, NekDouble> > snapshot_collection(snapshots_to_be_collected_aka_Nmax);
+	Array<OneD, Array<OneD, NekDouble> > snapshot_x_collection(snapshots_to_be_collected_aka_Nmax);
+	Array<OneD, Array<OneD, NekDouble> > snapshot_y_collection(snapshots_to_be_collected_aka_Nmax);
+	// probably also need this as EigenMatrix
+
+        for(int i = 0; i < nvelo; ++i)
+        {
+            test_load_snapshot[i] = Array<OneD, NekDouble> (babyCLNS.GetNpoints(), 0.0);  // number of phys points
+        }
+               
+        std::vector<std::string> fieldStr;
+        for(int i = 0; i < nvelo; ++i)
+        {
+           fieldStr.push_back(session->GetVariable(i));
+           cout << "session->GetVariable(i) " << session->GetVariable(i) << endl;
+        }
+        babyCLNS.EvaluateFunction(fieldStr, test_load_snapshot, "TestSnap1");
+	snapshot_x_collection[0] = test_load_snapshot[0];
+	snapshot_y_collection[0] = test_load_snapshot[1];
+        babyCLNS.EvaluateFunction(fieldStr, test_load_snapshot, "TestSnap2");
+	snapshot_x_collection[1] = test_load_snapshot[0];
+	snapshot_y_collection[1] = test_load_snapshot[1];
+        babyCLNS.EvaluateFunction(fieldStr, test_load_snapshot, "TestSnap3");
+	snapshot_x_collection[2] = test_load_snapshot[0];
+	snapshot_y_collection[2] = test_load_snapshot[1];
+        babyCLNS.EvaluateFunction(fieldStr, test_load_snapshot, "TestSnap4");
+	snapshot_x_collection[3] = test_load_snapshot[0];
+	snapshot_y_collection[3] = test_load_snapshot[1];
+
+
 	session->SetSolverInfo("SolverType", "CoupledLinearisedNS_trafoP");
-        drv = GetDriverFactory().CreateInstance(vDriverModule, session);
+
+
+	return 0;
+
 
 	cout <<	"session->DefinesParameter(Kinvis_max) " << session->DefinesParameter("Kinvis_max") << endl;
 	if (session->DefinesParameter("Kinvis_max"))
@@ -739,39 +788,27 @@ int main(int argc, char *argv[])
 		Eigen::MatrixXd adv_mat_proj = c_f_all_PODmodes_wo_dbc.transpose() * adv_matrix_simplified * c_f_all_PODmodes_wo_dbc;
 		cout << "adv_mat_proj.rows() " << adv_mat_proj.rows() << endl;
 		cout << "adv_mat_proj.cols() " << adv_mat_proj.cols() << endl;
+		Eigen::VectorXd adv_rhs_proj = c_f_all_PODmodes_wo_dbc.transpose() * adv_rhs_add;
+
 
 
 	}
 
 
 	// then should be good for the online solve - in regard to the Q_a term, keep the all structure
-	
+	// so what do I need? 
+	// since at this point, I have all the projected parameter-independent parts,
+	// collect the parameter-dependent matrices 
 
+	// steps to do in particolare
+	// given a current iterate, look at the projection coefficients
+	// form the sum of the advection term with the projection coefficients
+	// \nu dependent are the non-advection, non-pressure terms, so need to differentiate those
 
 	// have an online solve
 
 
 
-	// some IO checks
-	cout << "session->DefinesFunction(InitialConditions) " << session->DefinesFunction("InitialConditions") << endl;
-	cout << "session->DefinesFunction(TestSnap1) " << session->DefinesFunction("TestSnap1") << endl;
-	cout << "session->DefinesFunction(\"AdvectionVelocity\") " << session->DefinesFunction("AdvectionVelocity") << endl;
-
-//	int nvel = 2;
-        Array<OneD, Array<OneD, NekDouble> > test_load_snapshot(nvel); // for a 2D problem
-        for(int i = 0; i < nvel; ++i)
-        {
-            test_load_snapshot[i] = Array<OneD, NekDouble> (myCLNS.GetNpoints(),0.0);
-        }
-                
-               
-        std::vector<std::string> fieldStr;
-        for(int i = 0; i < nvel; ++i)
-        {
-           fieldStr.push_back(session->GetVariable(i));
-           cout << "session->GetVariable(i) " << session->GetVariable(i) << endl;
-        }
-        myCLNS.EvaluateFunction(fieldStr, test_load_snapshot, "TestSnap1");
 
 
         session->Finalise();

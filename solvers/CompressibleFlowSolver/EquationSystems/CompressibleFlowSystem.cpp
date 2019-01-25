@@ -1542,7 +1542,7 @@ namespace Nektar
                     if(l_verbose&&l_root)
                     {
                         cout <<right<<scientific<<setw(nwidthcolm)<<setprecision(nwidthcolm-6)
-                            <<" * Newton-Its converged (RES=" 
+                            <<"     * Newton-Its converged (RES=" 
                             << sqrt(resnorm)<<" Res/Q="<< sqrt(resnorm/m_inArrayNorm)
                             <<" ResMax/QPerDOF="<< resmaxm*sqrt(ntotalDOF/m_inArrayNorm)<<" Res/(DtRHS): "<<sqrt(resratio)
                             <<" with "<<setw(3)<<k<<" Non-Its"<<" and "<<setw(4)<<NtotDoOdeRHS<<" Lin-Its)"<<endl;
@@ -1555,7 +1555,7 @@ namespace Nektar
 
             //TODO: currently  NonlinSysRes is 2D array and SolveLinearSystem needs 1D array
             // LinSysTol = sqrt(0.01*sqrt(ratioTol)*resnorm);
-            LinSysTol = 1.0E-5*sqrt(resnorm);
+            LinSysTol = m_GMRESRelativeIteTol*sqrt(resnorm);
             // LinSysTol = 0.005*sqrt(resnorm)*(k+1);
             NtotDoOdeRHS  +=   m_linsol->SolveLinearSystem(ntotal,NonlinSysRes_1D,dsol_1D,0,LinSysTol);
             // cout << "NtotDoOdeRHS    = "<<NtotDoOdeRHS<<endl;

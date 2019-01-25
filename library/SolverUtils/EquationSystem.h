@@ -364,6 +364,8 @@ class Interpolator;
 
             NekDouble                                   m_NewtonRelativeIteTol;
 
+            NekDouble                                   m_GMRESRelativeIteTol;
+
             NekDouble                                   m_TimeIncrementFactor;
             /// cfl number for local time step(notice only for jfnk other see m_cflSafetyFactor)
             NekDouble                                   m_cflLocTimestep;

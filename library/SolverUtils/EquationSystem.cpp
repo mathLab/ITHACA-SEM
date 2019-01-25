@@ -669,7 +669,8 @@ namespace Nektar
             m_session->LoadParameter("TimeIncrementFactor",       m_TimeIncrementFactor,    1.0);
             m_session->LoadParameter("PrcdMatFreezNumb",       m_PrcdMatFreezNumb,    1);
             m_session->LoadParameter("NewtonAbsoluteIteTol",       m_NewtonAbsoluteIteTol,    1.0E-12);
-            m_session->LoadParameter("NewtonRelativeIteTol",       m_NewtonRelativeIteTol,    1.0E-1);
+            m_session->LoadParameter("NewtonRelativeIteTol",       m_NewtonRelativeIteTol,    1.0E-2);
+            m_session->LoadParameter("GMRESRelativeIteTol",       m_GMRESRelativeIteTol,    1.0E-2);
             m_session->LoadParameter("JFNKTimeAccurate",       m_JFNKTimeAccurate,    1);
             m_session->LoadParameter("JFNKPrecondStep",       m_JFNKPrecondStep,    5);
             if(m_NewtonRelativeIteTol>0.1)

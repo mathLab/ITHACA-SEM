@@ -54,7 +54,7 @@ namespace Nektar
         m_maxrestart        =   1;
         m_maxstorage        =   30;
         m_maxhesband        =   30;
-        m_maxiter           =   60;
+        // m_maxiter           =   60;
         m_tolerance         =   1.0E-15;
         m_rhs_magnitude     =   1.0;
         m_prec_factor       =   1.0;
@@ -153,7 +153,7 @@ namespace Nektar
         // m_maxrestart        =   1;
         // m_maxstorage        =   50;
         // m_maxhesband        =   50;
-        m_maxiter           =   m_maxstorage*m_maxrestart-1;
+        // m_maxiter           =   m_maxstorage*m_maxrestart-1;
 
     }
 
@@ -242,7 +242,7 @@ namespace Nektar
 
 
         // m_maxstorage = 5;
-        m_maxrestart = m_maxiter / m_maxstorage + 1;
+        // m_maxrestart = m_maxiter / m_maxstorage + 1;
         // default truncted Gmres(m) closed
         // m_maxhesband = 0;
         if(m_maxhesband > 0)
@@ -269,7 +269,7 @@ namespace Nektar
         }
 
 
-        if(m_root&&m_verbose)
+        if(m_verbose)
         {
             Array<OneD, NekDouble> r0(nGlobal, 0.0);
             m_oprtor.DoMatrixMultiply(pOutput, r0);
@@ -280,20 +280,24 @@ namespace Nektar
                                         &m_map[0] + nDir);
             m_Comm->AllReduce(vExchange, LibUtilities::ReduceSum);
             NekDouble eps1 = vExchange;
-            
-            cout <<std::scientific<<std::setw(nwidthcolm)<<std::setprecision(nwidthcolm-8) 
-                    << "       GMRES iterations made = " << m_totalIterations
-                    << " using tolerance of "  << m_tolerance
-                    << " (error = " << sqrt(eps * m_prec_factor / m_rhs_magnitude) << ")" 
-                    << " WITH (GMRES eps = " << eps << " REAL eps= "<<eps1<<")";
 
-            if(m_converged)
+            if (m_root)
             {
-                cout <<" CONVERGED"<<endl;
-            }
-            else
-            {
-                cout <<" WARNING: Exceeded maxIt"<<endl;
+                cout <<std::scientific<<std::setw(nwidthcolm)<<std::setprecision(nwidthcolm-8) 
+                        << "       GMRES iterations made = " << m_totalIterations
+                        << " using tolerance of "  << m_tolerance
+                        << " (error = " << sqrt(eps * m_prec_factor / m_rhs_magnitude) << ")";
+                
+                cout << " WITH (GMRES eps = " << eps << " REAL eps= "<<eps1<<")";
+
+                if(m_converged)
+                {
+                    cout <<" CONVERGED"<<endl;
+                }
+                else
+                {
+                    cout <<" WARNING: Exceeded maxIt"<<endl;
+                }
             }
         }
         // ROOTONLY_NEKERROR(ErrorUtil::efatal,

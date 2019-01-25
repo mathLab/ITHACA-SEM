@@ -186,7 +186,7 @@ namespace Nektar
         /// maximum bandwidth of Hessenburg matrix if use truncted Gmres(m)
         int                                         m_maxhesband;
         /// maximum iterations (for gmres m_maxiter =  m_maxrestart*m_maxdirction)
-        int                                         m_maxiter;
+        // int                                         m_maxiter;
         /// Tolerance of iterative solver.
         NekDouble                                   m_tolerance;
         /// dot product of rhs to normalise stopping criterion

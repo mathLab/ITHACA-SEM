@@ -97,11 +97,12 @@
         </FUNCTION>  
 
 	<FUNCTION NAME="TestSnap1">
-	      <F FILE="test_1st/Channel_1p5_sol0p5.fld" />
+<!--	      <F FILE="test_1st/Channel_1p5_sol0p1.fld" /> -->
+	      <F FILE="test_1st/Channel_1p5_TT.fld" />
 	</FUNCTION>  
 
 	<FUNCTION NAME="TestSnap2">
-	      <F FILE="test_1st/Channel_1p5_sol0p1.fld" />
+	      <F FILE="test_1st/Channel_1p5_sol0p5.fld" />
 	</FUNCTION>  
 
 	<FUNCTION NAME="TestSnap3">

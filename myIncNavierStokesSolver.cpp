@@ -61,7 +61,20 @@ int main(int argc, char *argv[])
         // Create driver
         drv = GetDriverFactory().CreateInstance(vDriverModule, session);  // why is that necessary?
 
-	int snapshots_to_be_collected_aka_Nmax = 4;        
+	int snapshots_to_be_collected_aka_Nmax = 4;  
+	int Nmax = snapshots_to_be_collected_aka_Nmax;
+	Array<OneD, NekDouble> param_vector(snapshots_to_be_collected_aka_Nmax);
+	// = [0.1 0.5 1 10];
+	
+	param_vector[0] = 0.1;
+	param_vector[1] = 0.5;
+	param_vector[2] = 1;
+	param_vector[3] = 10;
+	
+	for (int i = 0; i<Nmax; i++)
+	{
+		cout << "param_vector[i] " << param_vector[i] << endl;   
+	}
 
 	CoupledLinearNS_TT babyCLNS(session);
 	babyCLNS.InitObject();
@@ -77,7 +90,10 @@ int main(int argc, char *argv[])
 	cout << "session->DefinesFunction(\"AdvectionVelocity\") " << session->DefinesFunction("AdvectionVelocity") << endl;
 
 	int nvelo = 2;
-        Array<OneD, Array<OneD, NekDouble> > test_load_snapshot(nvelo); // for a 2D problem
+        Array<OneD, Array<OneD, NekDouble> > test_load_snapshot1(nvelo); // for a 2D problem
+        Array<OneD, Array<OneD, NekDouble> > test_load_snapshot2(nvelo); // for a 2D problem
+        Array<OneD, Array<OneD, NekDouble> > test_load_snapshot3(nvelo); // for a 2D problem
+        Array<OneD, Array<OneD, NekDouble> > test_load_snapshot4(nvelo); // for a 2D problem
 	Array<OneD, Array<OneD, NekDouble> > snapshot_collection(snapshots_to_be_collected_aka_Nmax);
 	Array<OneD, Array<OneD, NekDouble> > snapshot_x_collection(snapshots_to_be_collected_aka_Nmax);
 	Array<OneD, Array<OneD, NekDouble> > snapshot_y_collection(snapshots_to_be_collected_aka_Nmax);
@@ -85,7 +101,10 @@ int main(int argc, char *argv[])
 
         for(int i = 0; i < nvelo; ++i)
         {
-            test_load_snapshot[i] = Array<OneD, NekDouble> (babyCLNS.GetNpoints(), 0.0);  // number of phys points
+            test_load_snapshot1[i] = Array<OneD, NekDouble> (babyCLNS.GetNpoints(), 0.0);  // number of phys points
+            test_load_snapshot2[i] = Array<OneD, NekDouble> (babyCLNS.GetNpoints(), 0.0);  // number of phys points
+            test_load_snapshot3[i] = Array<OneD, NekDouble> (babyCLNS.GetNpoints(), 0.0);  // number of phys points
+            test_load_snapshot4[i] = Array<OneD, NekDouble> (babyCLNS.GetNpoints(), 0.0);  // number of phys points
         }
                
         std::vector<std::string> fieldStr;
@@ -94,24 +113,173 @@ int main(int argc, char *argv[])
            fieldStr.push_back(session->GetVariable(i));
            cout << "session->GetVariable(i) " << session->GetVariable(i) << endl;
         }
-        babyCLNS.EvaluateFunction(fieldStr, test_load_snapshot, "TestSnap1");
-	snapshot_x_collection[0] = test_load_snapshot[0];
-	snapshot_y_collection[0] = test_load_snapshot[1];
-        babyCLNS.EvaluateFunction(fieldStr, test_load_snapshot, "TestSnap2");
-	snapshot_x_collection[1] = test_load_snapshot[0];
-	snapshot_y_collection[1] = test_load_snapshot[1];
-        babyCLNS.EvaluateFunction(fieldStr, test_load_snapshot, "TestSnap3");
-	snapshot_x_collection[2] = test_load_snapshot[0];
-	snapshot_y_collection[2] = test_load_snapshot[1];
-        babyCLNS.EvaluateFunction(fieldStr, test_load_snapshot, "TestSnap4");
-	snapshot_x_collection[3] = test_load_snapshot[0];
-	snapshot_y_collection[3] = test_load_snapshot[1];
+        babyCLNS.EvaluateFunction(fieldStr, test_load_snapshot1, "TestSnap1");
+	snapshot_x_collection[0] = test_load_snapshot1[0];
+	snapshot_y_collection[0] = test_load_snapshot1[1];
+        babyCLNS.EvaluateFunction(fieldStr, test_load_snapshot2, "TestSnap2");
+	snapshot_x_collection[1] = test_load_snapshot2[0];
+	snapshot_y_collection[1] = test_load_snapshot2[1];
+        babyCLNS.EvaluateFunction(fieldStr, test_load_snapshot3, "TestSnap3");
+	snapshot_x_collection[2] = test_load_snapshot3[0];
+	snapshot_y_collection[2] = test_load_snapshot3[1];
+        babyCLNS.EvaluateFunction(fieldStr, test_load_snapshot4, "TestSnap4");
+	snapshot_x_collection[3] = test_load_snapshot4[0];
+	snapshot_y_collection[3] = test_load_snapshot4[1];
 
+
+	// trafo the snapshots and see if they have really converged
+	// so I need to capture the bnd / p / int as well as the local / global / phys
+	// Domanda: how to change the k_invis for an already declared class -- Risposta: use Getter and Setter functions (to be implemented - done)
 
 	session->SetSolverInfo("SolverType", "CoupledLinearisedNS_trafoP");
+	CoupledLinearNS_trafoP babyCLNS_trafo(session);
+	babyCLNS_trafo.InitObject();
+
+	for (int i=0; i<Nmax; i++)
+	{
+		babyCLNS_trafo.Set_m_kinvis( param_vector[i] );	
+		cout << "babyCLNS_trafo.Get_m_kinvis " << babyCLNS_trafo.Get_m_kinvis() << endl;
+	//	babyCLNS_trafo.DoInitialise();
+		babyCLNS_trafo.DoInitialiseAdv(snapshot_x_collection[i], snapshot_y_collection[i]); // replaces .DoInitialise();
+		babyCLNS_trafo.DoSolve();
+
+		// compare the accuracy
+		Array<OneD, MultiRegions::ExpListSharedPtr> m_fields_t = babyCLNS_trafo.UpdateFields();
+		m_fields_t[0]->BwdTrans(m_fields_t[0]->GetCoeffs(), m_fields_t[0]->UpdatePhys());
+		m_fields_t[1]->BwdTrans(m_fields_t[1]->GetCoeffs(), m_fields_t[1]->UpdatePhys());
+		Array<OneD, NekDouble> out_field_trafo_x(babyCLNS_trafo.GetNpoints(), 0.0);
+		Array<OneD, NekDouble> out_field_trafo_y(babyCLNS_trafo.GetNpoints(), 0.0);
+
+		Eigen::VectorXd csx0_trafo(babyCLNS_trafo.GetNpoints());
+		Eigen::VectorXd csy0_trafo(babyCLNS_trafo.GetNpoints());
+		Eigen::VectorXd csx0(babyCLNS_trafo.GetNpoints());
+		Eigen::VectorXd csy0(babyCLNS_trafo.GetNpoints());
 
 
+		babyCLNS_trafo.CopyFromPhysField(0, out_field_trafo_x); 
+		babyCLNS_trafo.CopyFromPhysField(1, out_field_trafo_y);
+		for( int index_conv = 0; index_conv < babyCLNS_trafo.GetNpoints(); ++index_conv)
+		{
+			csx0_trafo(index_conv) = out_field_trafo_x[index_conv];
+			csy0_trafo(index_conv) = out_field_trafo_y[index_conv];
+			csx0(index_conv) = snapshot_x_collection[i][index_conv];
+			csy0(index_conv) = snapshot_y_collection[i][index_conv];
+		}
+
+		cout << "csx0.norm() " << csx0.norm() << endl;
+		cout << "csx0_trafo.norm() " << csx0_trafo.norm() << endl;
+		cout << "csy0.norm() " << csy0.norm() << endl;
+		cout << "csy0_trafo.norm() " << csy0_trafo.norm() << endl;
+		
+
+		Eigen::VectorXd trafo_f_bnd = babyCLNS_trafo.curr_f_bnd;
+		Eigen::VectorXd trafo_f_p = babyCLNS_trafo.curr_f_p;
+		Eigen::VectorXd trafo_f_int = babyCLNS_trafo.curr_f_int;
+
+
+	}
+
+
+
+
+
+/*	if (session->DefinesParameter("Kinvis"))
+	{
+		double testp = session->GetParameter("Kinvis");
+		cout << "testp " << testp << endl;
+	}
+*/
+
+	// now can get the phys as well as bnd / p / int solution :)
+/*	Array<OneD, MultiRegions::ExpListSharedPtr> m_fields_t = myCLNS_trafo.UpdateFields();
+
+	// map the loc field to the phys field
+	m_fields_t[0]->BwdTrans(m_fields_t[0]->GetCoeffs(), m_fields_t[0]->UpdatePhys()); // needed if going with the equation system 
+
+
+	Array<OneD, NekDouble> out_field_trafo_x(m_equ[0]->GetNpoints(), 0.0);
+	Array<OneD, NekDouble> out_field_trafo_x2(m_equ[0]->GetNpoints(), 0.0);
+	Array<OneD, NekDouble> out_field_trafo_y(m_equ[0]->GetNpoints(), 0.0);
+	myCLNS_trafo.CopyFromPhysField(0, out_field_trafo_x); 
+	myCLNS_trafo.CopyFromPhysField(1, out_field_trafo_y);
+	out_field_trafo_x2 = m_fields_t[0]->UpdatePhys();
+	// compare input and output
+	Eigen::VectorXd csx0(collected_snapshots_x[0].num_elements());
+	Eigen::VectorXd csx0_trafo(collected_snapshots_x[0].num_elements());
+	Eigen::VectorXd csx0_trafo2(collected_snapshots_x[0].num_elements());
+	Eigen::VectorXd csy0(collected_snapshots_x[0].num_elements());
+	Eigen::VectorXd csy0_trafo(collected_snapshots_x[0].num_elements());
+	for( int i = 0; i < collected_snapshots_x[0].num_elements(); ++i)
+	{
+		csx0(i) = collected_snapshots_x[0][i];
+		csx0_trafo(i) = out_field_trafo_x[i];
+		csx0_trafo2(i) = out_field_trafo_x2[i];
+		csy0(i) = collected_snapshots_y[0][i];
+		csy0_trafo(i) = out_field_trafo_y[i];
+	}
+	cout << "collected_snapshots_x[0] " << csx0.norm() << endl;
+	cout << "trafo collected_snapshots_x[0] " << csx0_trafo.norm() << endl;
+	cout << "trafo2 collected_snapshots_x[0] " << csx0_trafo2.norm() << endl;
+
+//	Eigen::VectorXd trafo_f_bnd = myCLNS_trafo.curr_f_bnd;
+//	Eigen::VectorXd trafo_f_p = myCLNS_trafo.curr_f_p;
+//	Eigen::VectorXd trafo_f_int = myCLNS_trafo.curr_f_int;
+
+	// do a full order looping
+	int no_of_loops = -1;
+	for ( int iter = 0; iter < no_of_loops; ++iter)
+	{
+//		myCLNS_trafo.InitObject();
+		myCLNS_trafo.DoInitialiseAdv(out_field_trafo_x, out_field_trafo_y); // replaces .DoInitialise();
+//		myCLNS_trafo.DoInitialise();
+		myCLNS_trafo.DoSolve();
+		myCLNS_trafo.Output();
+
+		m_fields_t = myCLNS_trafo.UpdateFields();
+		m_fields_t[0]->BwdTrans(m_fields_t[0]->GetCoeffs(), m_fields_t[0]->UpdatePhys()); 
+		myCLNS_trafo.CopyFromPhysField(0, out_field_trafo_x); 
+		myCLNS_trafo.CopyFromPhysField(1, out_field_trafo_y);
+		for( int i = 0; i < collected_snapshots_x[0].num_elements(); ++i)
+		{
+			csx0_trafo(i) = out_field_trafo_x[i];
+			csy0_trafo(i) = out_field_trafo_y[i];
+		}
+
+		cout << "trafo collected_snapshots_x[0] " << csx0_trafo.norm() << endl;
+
+	}
+
+	// do the bnd / p / int transform
+	int no_snaps = snapshots_to_be_collected_aka_Nmax;
+	Eigen::MatrixXd c_f_bnd( myCLNS_trafo.curr_f_bnd.size() , no_snaps );
+	Eigen::MatrixXd c_f_p( myCLNS_trafo.curr_f_p.size() , no_snaps );
+	Eigen::MatrixXd c_f_int( myCLNS_trafo.curr_f_int.size() , no_snaps );
+	for(int trafo_iter = 0; trafo_iter < no_snaps; trafo_iter++)
+	{
+		myCLNS_trafo.InitObject();
+		myCLNS_trafo.DoInitialiseAdv(collected_snapshots_x[trafo_iter], collected_snapshots_y[trafo_iter]); // replaces .DoInitialise();
+		myCLNS_trafo.DoSolve();
+		myCLNS_trafo.Output();
+	
+		c_f_bnd.col(trafo_iter) = myCLNS_trafo.curr_f_bnd;
+		c_f_p.col(trafo_iter) = myCLNS_trafo.curr_f_p;
+		c_f_int.col(trafo_iter) = myCLNS_trafo.curr_f_int;
+		
+
+	}
+*/
+
+
+
+
+
+
+
+	// la fine:   /////////////////////////////
 	return 0;
+
+
+
 
 
 	cout <<	"session->DefinesParameter(Kinvis_max) " << session->DefinesParameter("Kinvis_max") << endl;

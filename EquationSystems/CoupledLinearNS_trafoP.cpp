@@ -1426,6 +1426,17 @@ namespace Nektar
             
         }
     }
+
+    NekDouble CoupledLinearNS_trafoP::Get_m_kinvis(void)
+    {
+	return m_kinvis;
+    }
+
+    void CoupledLinearNS_trafoP::Set_m_kinvis(NekDouble input)
+    {
+	m_kinvis = input;
+    }
+
     
     void CoupledLinearNS_trafoP::v_DoSolve(void)
     {

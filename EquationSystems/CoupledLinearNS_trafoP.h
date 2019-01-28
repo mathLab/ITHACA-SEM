@@ -131,6 +131,9 @@ namespace Nektar
 	Eigen::VectorXd curr_f_p;
 	Eigen::VectorXd curr_f_int;
 
+	NekDouble Get_m_kinvis(void);
+	void Set_m_kinvis(NekDouble);
+
     protected:
 
         

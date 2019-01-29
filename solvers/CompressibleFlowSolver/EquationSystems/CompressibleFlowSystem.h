@@ -310,6 +310,15 @@ namespace Nektar
         {
             v_GetFluxDerivJacDirctn(explist,normals,nDervDir,inarray,ElmtJac);
         }
+        // void GetFluxDerivJacDirctn(
+        //     const MultiRegions::ExpListSharedPtr                            &explist,
+        //     const int                                                       nFluxDir,
+        //     const int                                                       nDervDir,
+        //     const Array<OneD, const Array<OneD, NekDouble> >                &inarray,
+        //           Array<OneD, Array<OneD, DNekMatSharedPtr> >               &ElmtJac)
+        // {
+        //     v_GetFluxDerivJacDirctn(explist,nFluxDir,nDervDir,inarray,ElmtJac);
+        // }
         void CalphysDeriv(
             const Array<OneD, const Array<OneD, NekDouble> >                &inarray,
                   Array<OneD,       Array<OneD, Array<OneD, NekDouble> > >  &qfield)
@@ -484,6 +493,13 @@ namespace Nektar
             const int                                                       nDervDir,
             const Array<OneD, const Array<OneD, NekDouble> >                &inarray,
                   Array<OneD, Array<OneD, DNekMatSharedPtr> >               &ElmtJac);
+
+        // virtual void v_GetFluxDerivJacDirctn(
+        //     const MultiRegions::ExpListSharedPtr                            &explist,
+        //     const int                                                       nFluxDir,
+        //     const int                                                       nDervDir,
+        //     const Array<OneD, const Array<OneD, NekDouble> >                &inarray,
+        //           Array<OneD, Array<OneD, DNekMatSharedPtr> >               &ElmtJac);
 #endif
     };
 }

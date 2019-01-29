@@ -191,6 +191,7 @@ namespace Nektar
                     TimeStability = 1.0;
                     break;
                 }
+                case LibUtilities::eBackwardEuler:
                 case LibUtilities::eDIRKOrder2:
                 case LibUtilities::eDIRKOrder3:
                 case LibUtilities::eDIRKOrder4Stage6:

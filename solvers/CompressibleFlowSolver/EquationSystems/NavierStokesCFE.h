@@ -165,6 +165,13 @@ namespace Nektar
         const Array<OneD, const Array<OneD, NekDouble> >                &inarray,
               Array<OneD, Array<OneD, DNekMatSharedPtr> >               &ElmtJac);
     
+    // virtual void v_GetFluxDerivJacDirctn(
+    //     const MultiRegions::ExpListSharedPtr                            &explist,
+    //     const int                                                       nFluxDir,
+    //     const int                                                       nDervDir,
+    //     const Array<OneD, const Array<OneD, NekDouble> >                &inarray,
+    //           Array<OneD, Array<OneD, DNekMatSharedPtr> >               &ElmtJac);
+    
     virtual void v_GetDiffusionFluxJacPoint(
             const int                                           nelmt,
             const Array<OneD, NekDouble>                        &conservVar, 

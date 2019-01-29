@@ -829,6 +829,7 @@ namespace Nektar
             DNekMatSharedPtr        tmpGmtx,ElmtMat;
 
             Array<OneD, DNekMatSharedPtr>  mtxPerVar(ntotElmt);
+            Array<OneD, DNekMatSharedPtr>  mtxPerVarCoeff(ntotElmt);
             Array<OneD, Array<OneD, NekDouble> > JacArray(ntotElmt);
             Array<OneD, int > elmtpnts(ntotElmt);
             Array<OneD, int > elmtcoef(ntotElmt);
@@ -840,6 +841,10 @@ namespace Nektar
                 elmtcoef[nelmt]     =   nElmtCoef;
                 mtxPerVar[nelmt]    =MemoryManager<DNekMat>
                                     ::AllocateSharedPtr(nElmtCoef, nElmtPnt);
+                (*mtxPerVar[nelmt])    = 0.0;       
+                mtxPerVarCoeff[nelmt]    =MemoryManager<DNekMat>
+                                    ::AllocateSharedPtr(nElmtCoef, nElmtCoef);
+                (*mtxPerVarCoeff[nelmt])   =   0.0;
                 JacArray[nelmt]    =Array<OneD, NekDouble>(nElmtPnt,0.0);
             }
 
@@ -856,9 +861,13 @@ namespace Nektar
                         }
                     }
 
+                    for(int  nelmt = 0; nelmt < ntotElmt; nelmt++)
+                    {
+                        (*mtxPerVarCoeff[nelmt])   =   0.0;
+                    }
                     // explist->GetMatIpwrtdbWeightBwd(JacArray,nDirctn,mtxPerVar);
                     explist->GetMatIpwrtDeriveBase(JacArray,nfluxDir,mtxPerVar);
-                    explist->AddRightIPTPhysDerivBase(nDervDir,mtxPerVar,mtxPerVar);
+                    explist->AddRightIPTPhysDerivBase(nDervDir,mtxPerVar,mtxPerVarCoeff);
 
                     for(int  nelmt = 0; nelmt < ntotElmt; nelmt++)
                     {
@@ -866,7 +875,7 @@ namespace Nektar
                         nElmtPnt        = elmtpnts[nelmt];
 
                         tmpGmtx         = gmtxarray[m][n]->GetBlock(nelmt,nelmt);
-                        ElmtMat         = mtxPerVar[nelmt];
+                        ElmtMat         = mtxPerVarCoeff[nelmt];
 
                         for(int ncl = 0; ncl < nElmtCoef; ncl++)
                         {

@@ -237,6 +237,13 @@ namespace Nektar
                 JacArray[nelmt]    =Array<OneD, NekDouble>(nElmtPnt,0.0);
             }
 
+            Array<OneD, DNekMatSharedPtr>  mtxPerVarCoeff(ntotElmt);
+            for(int  nelmt = 0; nelmt < ntotElmt; nelmt++)
+            {
+                mtxPerVarCoeff[nelmt]    =MemoryManager<DNekMat>
+                                    ::AllocateSharedPtr(nElmtCoef, nElmtCoef);
+            }
+
             for(int m = 0; m < nConvectiveFields; m++)
             {
                 for(int n = 0; n < nConvectiveFields; n++)
@@ -250,8 +257,13 @@ namespace Nektar
                         }
                     }
 
-                    explist->GetMatIpwrtdbWeightBwd(JacArray,nDirctn,mtxPerVar);
-                    // explist->GetMatIpwrtDeriveBase(JacArray,nDirctn,mtxPerVar);
+                    for(int  nelmt = 0; nelmt < ntotElmt; nelmt++)
+                    {
+                        (*mtxPerVarCoeff[nelmt])   =   0.0;
+                    }
+                    // explist->GetMatIpwrtdbWeightBwd(JacArray,nDirctn,mtxPerVar);
+                    explist->GetMatIpwrtDeriveBase(JacArray,nDirctn,mtxPerVar);
+                    explist->AddRightIPTBaseMatrix(mtxPerVar,mtxPerVarCoeff);
 
                     for(int  nelmt = 0; nelmt < ntotElmt; nelmt++)
                     {
@@ -259,7 +271,7 @@ namespace Nektar
                         nElmtPnt        = elmtpnts[nelmt];
 
                         tmpGmtx         = gmtxarray[m][n]->GetBlock(nelmt,nelmt);
-                        ElmtMat         = mtxPerVar[nelmt];
+                        ElmtMat         = mtxPerVarCoeff[nelmt];
 
                         for(int ncl = 0; ncl < nElmtCoef; ncl++)
                         {

@@ -3678,8 +3678,9 @@ namespace Nektar
         }
 
         void ExpList::GetMatIpwrtDeriveBase(
-                                        const   Array<OneD, const  Array<OneD, NekDouble> >&inarray,
-                                        const int nDirctn, Array<OneD, DNekMatSharedPtr> &mtxPerVar)
+            const Array<OneD, const  Array<OneD, NekDouble> >   &inarray,
+            const int                                           nDirctn, 
+            Array<OneD, DNekMatSharedPtr>                       &mtxPerVar)
         {
             int ntotElmt            = (*m_exp).size();
             int nElmtPnt            = (*m_exp)[0]->GetTotPoints();

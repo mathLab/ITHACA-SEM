@@ -758,6 +758,11 @@ namespace Nektar
                         m_errFile << setw(26) << m_session->GetVariables()[i];
                     }
 
+                    for (int i = 0; i < m_fields.num_elements(); ++i)
+                    {
+                        m_errFile << setw(26) << (std::string("RHS_")+m_session->GetVariables()[i]);
+                    }
+
                     m_errFile << endl;
                 }
             }
@@ -774,6 +779,7 @@ namespace Nektar
 
             // Holds L2 errors.
             Array<OneD, NekDouble> L2       (nFields);
+            Array<OneD, NekDouble> RHSL2    (nFields);
             Array<OneD, NekDouble> residual (nFields);
             Array<OneD, NekDouble> reference(nFields);
 
@@ -794,11 +800,13 @@ namespace Nektar
             m_comm->AllReduce(residual , LibUtilities::ReduceSum);
             m_comm->AllReduce(reference, LibUtilities::ReduceSum);
 
+            NekDouble otimestep =   1.0/m_timestep;
             // L2 error
             for (int i = 0; i < nFields; ++i)
             {
                 reference[i] = (reference[i] == 0) ? 1 : reference[i];
                 L2[i] = sqrt(residual[i] / reference[i]);
+                RHSL2[i] = L2[i]*otimestep;
             }
 
             if (m_comm->GetRank() == 0 && ((step+1) % m_infosteps == 0))
@@ -812,6 +820,12 @@ namespace Nektar
                     m_errFile << " " << boost::format("%25.19e") % L2[i];
                 }
 
+                // Output residuals
+                for (int i = 0; i < nFields; ++i)
+                {
+                    m_errFile << " " << boost::format("%25.19e") % RHSL2[i];
+                }
+
                 m_errFile << endl;
             }
 
@@ -821,7 +835,8 @@ namespace Nektar
             if (m_session->DefinesCmdLineArgument("verbose") &&
                 m_comm->GetRank() == 0 && ((step+1) % m_infosteps == 0))
             {
-                cout << "-- Maximum L^2 residual: " << maxL2 << endl;
+                cout << "-- Maximum L^2 residual: " << maxL2
+                     << " RHSL^2 res: " << maxL2*otimestep << endl;
             }
 
             if (maxL2 <= m_steadyStateTol)

@@ -1535,11 +1535,11 @@ namespace Nektar
                 // if(k>0)
                 // {
                     /// TODO: m_root
-                    // if(m_cflLocTimestep>0.0)
-                    // {
-                    //     m_cflLocTimestep *= pow(ratioSteps,0.35);
-                    // }
-                    // m_cflSafetyFactor *= pow(ratioSteps,0.35);
+                    if(m_cflLocTimestep>0.0)
+                    {
+                        m_cflLocTimestep *= pow(ratioSteps,0.35);
+                    }
+                    m_cflSafetyFactor *= pow(ratioSteps,0.35);
                     if(l_verbose&&l_root)
                     {
                         cout <<right<<scientific<<setw(nwidthcolm)<<setprecision(nwidthcolm-6)

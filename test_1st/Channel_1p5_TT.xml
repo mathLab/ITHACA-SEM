@@ -15,7 +15,7 @@
             <!-- <I PROPERTY="MappingImplicitPressure" VALUE="TRUE"/> -->
             <!-- <I PROPERTY="EQTYPE" VALUE="SteadyStokes" /> -->
             <I PROPERTY="EQTYPE" VALUE="SteadyOseen" />
-	    <I PROPERTY="SolverType" VALUE="CoupledLinearisedNS_TT" />
+	    <I PROPERTY="SolverType" VALUE="CoupledLinearisedNS" />
 	    <!-- <I PROPERTY="GlobalSysSoln" VALUE="DirectFull" /> -->
             <!--  <I PROPERTY="Driver" VALUE="SteadyState" />  doing some pseudo-time integration to compute steady state-->
 	    <!-- <I PROPERTY="MappingImplicitPressure" VALUE="TRUE"/>  Default = FALSE -->
@@ -35,7 +35,7 @@
             <P> NumSteps = 1e6      </P>
             <P> IO_CheckSteps = 1000       </P>
             <P> IO_InfoSteps = 1000       </P>
-            <P> Kinvis = 1       </P>
+            <P> Kinvis = 10       </P>
             <P> Kinvis_max = 123       </P>
             <!-- <P> Kinvis = .01       </P> -->
             <P> A             = 0.65               </P>
@@ -97,20 +97,19 @@
         </FUNCTION>  
 
 	<FUNCTION NAME="TestSnap1">
-<!--	      <F FILE="test_1st/Channel_1p5_sol0p1.fld" /> -->
-	      <F FILE="test_1st/Channel_1p5_TT_sol0p1.fld" />
+	      <F FILE="test_1st/Channel_1p5_sol0p1.fld" />
 	</FUNCTION>  
 
 	<FUNCTION NAME="TestSnap2">
-	      <F FILE="test_1st/Channel_1p5_TT_sol0p5.fld" />
+	      <F FILE="test_1st/Channel_1p5_sol0p5.fld" />
 	</FUNCTION>  
 
 	<FUNCTION NAME="TestSnap3">
-	      <F FILE="test_1st/Channel_1p5_TT_sol1.fld" />
+	      <F FILE="test_1st/Channel_1p5_sol1.fld" />
 	</FUNCTION>  
 
 	<FUNCTION NAME="TestSnap4">
-	      <F FILE="test_1st/Channel_1p5_TT_sol10.fld" />
+	      <F FILE="test_1st/Channel_1p5_sol10.fld" />
 	</FUNCTION>  
 
         <FUNCTION NAME="Mapping">
@@ -129,7 +128,7 @@
 	</FORCE>    
                     
     <FUNCTION NAME="AdvectionVelocity">
-      <F FILE="Channel_1p5.fld" />
+      <F FILE="Channel_1p5_TT.fld" />
     </FUNCTION> 
 
     </CONDITIONS>

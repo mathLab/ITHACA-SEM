@@ -1898,7 +1898,6 @@ namespace Nektar
 	cout << "RB_D_no_adv.norm() " << RB_D_no_adv.norm() << endl;
 	cout << "(RB_D - RB_D_adv - RB_D_no_adv).norm() " << (RB_D - RB_D_adv - RB_D_no_adv).norm() << endl;
 
-
 //        cout << RB_D << endl;
 //        cout << RB_D_adv << endl;
 //        cout << RB_D_no_adv << endl;

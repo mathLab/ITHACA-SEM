@@ -80,6 +80,7 @@ namespace Nektar
     private:
         NekDouble C_m;
         NekDouble V_0;
+        NekDouble V_fi;
         NekDouble u_fi;
         NekDouble u_c;
         NekDouble u_v;

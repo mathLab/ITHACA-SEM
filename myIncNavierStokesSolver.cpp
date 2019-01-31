@@ -209,7 +209,7 @@ int main(int argc, char *argv[])
 	cout << svd_collect_f_all.singularValues() << endl << endl;
 	Eigen::MatrixXd collect_f_all_PODmodes = svd_collect_f_all.matrixU();
 
-	// here probably limit to something like 99.99 persent of PODenergy, this will set RBsize
+	// here probably limit to something like 99.99 percent of PODenergy, this will set RBsize
 	int RBsize = Nmax; // the case of using all
 
 
@@ -568,7 +568,11 @@ int main(int argc, char *argv[])
 	// orthonormalize the phys basis
 	// iterative modified Gram-Schmidt would be nice
 
-	babyCLNS.Output();
+//	babyCLNS.Output();
+//	babyCLNS_trafo.Output();
+
+//	babyCLNS.InitObject();
+//	babyCLNS.DoInitialise();
 
 	// do this better with eigen-like data-structures
 	Eigen::MatrixXd eigen_phys_basis_x(curr_PhysBaseVec_x.num_elements(), RBsize);
@@ -589,6 +593,12 @@ int main(int argc, char *argv[])
 
 	// do the orthonormalization in-place on eigen_phys_basis
 	// beware of aliasing!
+
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////// causes the segfault at the end /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	Eigen::VectorXd curr_col = eigen_phys_basis_x.col(0);
 	double norm_curr_col = curr_col.norm();
 	eigen_phys_basis_x.col(0) = curr_col / norm_curr_col;
@@ -615,16 +625,24 @@ int main(int argc, char *argv[])
 
 	Array<OneD, Array<OneD, double> > orth_PhysBaseVec_x(RBsize); // or do I want it as an Eigen-matrix
 	Array<OneD, Array<OneD, double> > orth_PhysBaseVec_y(RBsize);
-	for (int index_phys_base=0; index_phys_base<curr_PhysBaseVec_x.num_elements(); index_phys_base++)
+	Array<OneD, double> curr_iter_x(curr_PhysBaseVec_x.num_elements());
+	Array<OneD, double> curr_iter_y(curr_PhysBaseVec_x.num_elements());
+	for (int index_RBsize=0; index_RBsize<RBsize; index_RBsize++)
 	{
-		for (int index_RBsize=0; index_RBsize<RBsize; index_RBsize++)
+		for (int index_phys_base=0; index_phys_base<curr_PhysBaseVec_x.num_elements(); index_phys_base++)	
 		{
-			orth_PhysBaseVec_x[index_RBsize][index_phys_base] = eigen_phys_basis_x(index_phys_base,index_RBsize);
-			orth_PhysBaseVec_y[index_RBsize][index_phys_base] = eigen_phys_basis_y(index_phys_base,index_RBsize);			
+			curr_iter_x[index_phys_base] = eigen_phys_basis_x(index_phys_base,index_RBsize);
+			curr_iter_y[index_phys_base] = eigen_phys_basis_y(index_phys_base,index_RBsize);			
 		}
+		orth_PhysBaseVec_x[index_RBsize] = curr_iter_x;
+		orth_PhysBaseVec_y[index_RBsize] = curr_iter_y;			
+
 	}
 
 
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// 	babyCLNS.DoInitialise();
 
 	// python code
 /*	phys_basis_x[:,0] = phys_basis_x[:,0] / np.linalg.norm(phys_basis_x[:,0])
@@ -732,7 +750,15 @@ int main(int argc, char *argv[])
 //	babyCLNS2.DoInitialise();
 //	babyCLNS2.DoSolve();
 
-/*
+
+	// need to collect all the projected adv matrices
+	// have in total for lhs and rhs: RBsize*2 (because of x and y seperately)
+	// also need to do the MtM mults, already there :)
+	Array<OneD, Eigen::MatrixXd> adv_mats_proj_x(RBsize);
+	Array<OneD, Eigen::MatrixXd> adv_mats_proj_y(RBsize);
+	Array<OneD, Eigen::VectorXd> adv_vec_proj_x(RBsize);
+	Array<OneD, Eigen::VectorXd> adv_vec_proj_y(RBsize);
+
 
 	for(int trafo_iter = 0; trafo_iter < RBsize; trafo_iter++)
 	{
@@ -809,9 +835,65 @@ int main(int argc, char *argv[])
 		cout << "adv_mat_proj.cols() " << adv_mat_proj.cols() << endl;
 		Eigen::VectorXd adv_rhs_proj = c_f_all_PODmodes_wo_dbc.transpose() * adv_rhs_add;
 
+		adv_mats_proj_x[trafo_iter] = adv_mat_proj;
+		adv_vec_proj_x[trafo_iter] = adv_rhs_proj;
 
+		babyCLNS.DoInitialiseAdv(PhysBase_zero , curr_PhysBaseVec_y ); // call with parameter in phys state
+		adv_matrix.block(0, 0, babyCLNS.RB_A.rows(), babyCLNS.RB_A.cols()) = MtM * babyCLNS.RB_A_adv;
+		adv_matrix.block(0, babyCLNS.RB_A.cols(), babyCLNS.RB_Dbnd.cols(), babyCLNS.RB_Dbnd.rows()) = -MtM * babyCLNS.RB_Dbnd.transpose();
+		adv_matrix.block(0, babyCLNS.RB_A.cols() + babyCLNS.RB_Dbnd.rows(), babyCLNS.RB_B.rows(), babyCLNS.RB_B.cols()) = MtM * babyCLNS.RB_B_adv;
+		adv_matrix.block(babyCLNS.RB_A.rows(), 0, babyCLNS.RB_Dbnd.rows(), babyCLNS.RB_Dbnd.cols()) = -babyCLNS.RB_Dbnd;
+		adv_matrix.block(babyCLNS.RB_A.rows(), babyCLNS.RB_A.cols() + babyCLNS.RB_Dbnd.rows(), babyCLNS.RB_Dint.rows(), babyCLNS.RB_Dint.cols()) = -babyCLNS.RB_Dint;	
+		adv_matrix.block(babyCLNS.RB_A.rows() + babyCLNS.RB_Dbnd.rows(), 0, babyCLNS.RB_C.cols(), babyCLNS.RB_C.rows()) = babyCLNS.RB_C_adv.transpose();
+		adv_matrix.block(babyCLNS.RB_A.rows() + babyCLNS.RB_Dbnd.rows(), babyCLNS.RB_A.cols(), babyCLNS.RB_Dint.cols(), babyCLNS.RB_Dint.rows()) = -babyCLNS.RB_Dint.transpose();
+		adv_matrix.block(babyCLNS.RB_A.rows() + babyCLNS.RB_Dbnd.rows(), babyCLNS.RB_A.cols() + babyCLNS.RB_Dbnd.rows(), babyCLNS.RB_D.rows(), babyCLNS.RB_D.cols()) = babyCLNS.RB_D_adv;
+		add_to_rhs_adv = adv_matrix * f_bnd_dbc_full_size;   
+		counter_row_simplified = 0;
+		counter_col_simplified = 0;
+		for (int row_index=0; row_index < no_adv_matrix.rows(); ++row_index)
+		{
+			for (int col_index=0; col_index < no_adv_matrix.cols(); ++col_index)
+			{
+				if ((!elem_loc_dbc.count(row_index)) && (!elem_loc_dbc.count(col_index)))
+				{
+					adv_matrix_simplified(counter_row_simplified, counter_col_simplified) = adv_matrix(row_index, col_index);
+					counter_col_simplified++;
+				}
+				
+			}
+			counter_col_simplified = 0;
+			if (!elem_loc_dbc.count(row_index))
+			{
+				adv_rhs_add(counter_row_simplified) = add_to_rhs_adv(row_index);
+				counter_row_simplified++;
+			}
+		
+		}
+		adv_mat_proj = c_f_all_PODmodes_wo_dbc.transpose() * adv_matrix_simplified * c_f_all_PODmodes_wo_dbc;
+		adv_rhs_proj = c_f_all_PODmodes_wo_dbc.transpose() * adv_rhs_add;
+		adv_mats_proj_y[trafo_iter] = adv_mat_proj;
+		adv_vec_proj_y[trafo_iter] = adv_rhs_proj;
 
 	}
+
+	// do a bunch of check-ups to get an idea if all is good so far
+	// primo: verify with the full order model all the snapshot data -- is this even possible?
+	// should it give zero without the f_bnd_dbc ?
+
+	// have the no_adv_matrix at the reference \nu = 1
+	cout << "no_adv_matrix.rows() " << no_adv_matrix.rows() << endl;
+	cout << "no_adv_matrix.cols() " << no_adv_matrix.cols() << endl;
+
+	// have the snapshot in bnd / p / int format
+	//	Eigen::MatrixXd collect_f_all( babyCLNS_trafo.curr_f_bnd.size()+babyCLNS_trafo.curr_f_p.size()+babyCLNS_trafo.curr_f_int.size() , Nmax );
+
+	// have the adv_matrix corresponding to the snapshot 
+	//	Array<OneD, Array<OneD, NekDouble> > snapshot_x_collection(snapshots_to_be_collected_aka_Nmax);
+	//	Array<OneD, Array<OneD, NekDouble> > snapshot_y_collection(snapshots_to_be_collected_aka_Nmax);
+
+	// have the full_dbc_vector for prior subtraction
+	//	Eigen::VectorXd f_bnd_dbc_full_size(collect_f_all_PODmodes.rows());
+
 
 
 	// then should be good for the online solve - in regard to the Q_a term, keep the all structure
@@ -827,13 +909,13 @@ int main(int argc, char *argv[])
 	// have an online solve
 
 
-	babyCLNS.DoSolve(); // do I need this here ?
-	babyCLNS.Output();  // do I need this here ?
+//	babyCLNS.DoSolve(); // do I need this here ?
+//	babyCLNS.Output();  // do I need this here ?
 
 
         session->Finalise();
-        session2->Finalise();
-*/
+//        session2->Finalise();
+
 
 	// la fine:   /////////////////////////////
 	return 0;

@@ -424,7 +424,7 @@ namespace Nektar
 
 	//  m_pressure->GetExp(eid)->IProductWRTBase(deriv,pcoeffs);
 
-	std::stringstream sstm_IPp;
+/*	std::stringstream sstm_IPp;
 	sstm_IPp << "IPp.txt";
 	std::string result_IPp = sstm_IPp.str();
 //        std::ofstream myfile_IPp (result_IPp);
@@ -467,16 +467,16 @@ namespace Nektar
 
 	        	int nbmap = bmap.num_elements();
 		        int nimap = imap.num_elements(); 
-        
+        */
 
 
-		std::stringstream sstmb;
-		sstmb << "bmap_" << n << ".txt";
-		std::string resultb = sstmb.str();
+//		std::stringstream sstmb;
+//		sstmb << "bmap_" << n << ".txt";
+//		std::string resultb = sstmb.str();
 
 
 //          std::ofstream myfile_bmap (resultb);
-          std::ofstream myfile_bmap ("bmap.txt");
+/*          std::ofstream myfile_bmap ("bmap.txt");
 	  if (myfile_bmap.is_open())
 	  {
 	    for (int i = 0; i < nbmap; i++)
@@ -494,11 +494,11 @@ namespace Nektar
 		std::stringstream sstmi;
 		sstmi << "imap_" << n << ".txt";
 		std::string resulti = sstmi.str();
-
+*/
 //	    std::cout << "saving current imap " << resulti << std::endl;
 
 //          std::ofstream myfile_imap (resulti);
-          std::ofstream myfile_imap ("imap.txt");
+/*          std::ofstream myfile_imap ("imap.txt");
 	  if (myfile_imap.is_open())
 	  {
 	    for (int i = 0; i < nimap; i++)
@@ -512,7 +512,7 @@ namespace Nektar
                 myfile_imap.close();
 	  }
 	  else std::cout << "Unable to open file";
-
+*/
       //      StdRegions::ConstFactorMap factors;
       //      factors[StdRegions::eFactorLambda] = lambda/m_kinvis;
       //      LocalRegions::MatrixKey helmkey(StdRegions::eHelmholtz,
@@ -522,12 +522,12 @@ namespace Nektar
 
       //          DNekScalMat &HelmMat = *(locExp->as<LocalRegions::Expansion>()
       //                                         ->GetLocMatrix(helmkey));
-
+/*
 		}
 	        myfile_IPp.close();
 	}
 	else std::cout << "Unable to open file";
-
+*/
     }
 
     void CoupledLinearNS_TT::SetUpCoupledMatrix(const NekDouble lambda,  const Array< OneD, Array< OneD, NekDouble > > &Advfield, bool IsLinearNSEquation)
@@ -954,7 +954,7 @@ namespace Nektar
                 Array<OneD, const NekDouble> HelmMat_data = HelmMat.GetOwnedMatrix()->GetPtr();
               
 
-		std::stringstream sstm_l00;
+/*		std::stringstream sstm_l00;
 		sstm_l00 << "Lapl00_" << n << ".txt";
 		std::string result_l00 = sstm_l00.str();
 		const char* rr_l00 = result_l00.c_str();
@@ -974,13 +974,13 @@ namespace Nektar
 		  }
 		  else std::cout << "Unable to open file";
 
-
+*/
 
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-
+/*
 	        LocalRegions::MatrixKey helmkey_l11(StdRegions::eLaplacian11,
                                             locExp->DetShapeType(),
                                             *locExp,
@@ -1013,10 +1013,10 @@ namespace Nektar
         	        myfileHM_l11.close();
 		  }
 		  else std::cout << "Unable to open file";
-
+*/
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-
+/*
 	        LocalRegions::MatrixKey helmkey_l01(StdRegions::eLaplacian01,
                                             locExp->DetShapeType(),
                                             *locExp,
@@ -1049,7 +1049,7 @@ namespace Nektar
         	        myfileHM_l01.close();
 		  }
 		  else std::cout << "Unable to open file";
-
+*/
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
 

@@ -50,7 +50,7 @@ namespace Nektar
                                                     "Phenomenological Model.");
 
     // Register cell model variants
-    std::string FentonKarma::lookupIds[10] = {
+    std::string FentonKarma::lookupIds[24] = {
             LibUtilities::SessionReader::RegisterEnumValue("CellModelVariant",
                     "BR",   FentonKarma::eBR),
             LibUtilities::SessionReader::RegisterEnumValue("CellModelVariant",
@@ -70,7 +70,35 @@ namespace Nektar
             LibUtilities::SessionReader::RegisterEnumValue("CellModelVariant",
                     "CF3a",  FentonKarma::eCF3a),
             LibUtilities::SessionReader::RegisterEnumValue("CellModelVariant",
-                    "CF3b",  FentonKarma::eCF3b)
+                    "CF3b",  FentonKarma::eCF3b),
+            LibUtilities::SessionReader::RegisterEnumValue("CellModelVariant",
+                    "Fenton2",  FentonKarma::eFenton2),
+            LibUtilities::SessionReader::RegisterEnumValue("CellModelVariant",
+                    "Fenton4",  FentonKarma::eFenton4),
+            LibUtilities::SessionReader::RegisterEnumValue("CellModelVariant",
+                    "Fenton5",  FentonKarma::eFenton5),
+            LibUtilities::SessionReader::RegisterEnumValue("CellModelVariant",
+                    "Fenton6",  FentonKarma::eFenton6),
+            LibUtilities::SessionReader::RegisterEnumValue("CellModelVariant",
+                    "Fenton7",  FentonKarma::eFenton7),
+            LibUtilities::SessionReader::RegisterEnumValue("CellModelVariant",
+                    "Fenton8",  FentonKarma::eFenton8),
+            LibUtilities::SessionReader::RegisterEnumValue("CellModelVariant",
+                    "Fenton9",  FentonKarma::eFenton9),
+            LibUtilities::SessionReader::RegisterEnumValue("CellModelVariant",
+                    "Lawson",  FentonKarma::eLawson),
+            LibUtilities::SessionReader::RegisterEnumValue("CellModelVariant",
+                    "Fenton1a",  FentonKarma::eFenton1a),
+            LibUtilities::SessionReader::RegisterEnumValue("CellModelVariant",
+                    "Fenton1b",  FentonKarma::eFenton1b),
+            LibUtilities::SessionReader::RegisterEnumValue("CellModelVariant",
+                    "Fenton1c",  FentonKarma::eFenton1c),
+            LibUtilities::SessionReader::RegisterEnumValue("CellModelVariant",
+                    "Fenton1d",  FentonKarma::eFenton1d),
+            LibUtilities::SessionReader::RegisterEnumValue("CellModelVariant",
+                    "Fenton1e",  FentonKarma::eFenton1e),
+            LibUtilities::SessionReader::RegisterEnumValue("CellModelVariant",
+                    "CAF",  FentonKarma::eCAF)
     };
 
     // Register default variant

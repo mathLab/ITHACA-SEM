@@ -113,7 +113,21 @@ namespace Nektar
             eCF2b,
             eCF2c,
             eCF3a,
-            eCF3b
+            eCF3b,
+            eFenton2,
+            eFenton4,
+            eFenton5,
+            eFenton6,
+            eFenton7,
+            eFenton8,
+            eFenton9,
+            eLawson,
+            eFenton1a,
+            eFenton1b,
+            eFenton1c,
+            eFenton1d,
+            eFenton1e,
+            eCAF
         };
         enum Variants model_variant;
 

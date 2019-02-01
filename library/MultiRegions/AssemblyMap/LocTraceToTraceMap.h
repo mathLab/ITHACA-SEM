@@ -269,6 +269,16 @@ public:
         return m_TracephysToLeftRightExpphysMap;
     }
 
+    MULTI_REGIONS_EXPORT inline const Array<OneD, int > &GetElemNeighbsNumb() const
+    {
+        return m_ElemNeighbsNumb;
+    }
+
+    MULTI_REGIONS_EXPORT inline const Array<OneD, const Array<OneD, int > > &GetElemNeighbsId() const
+    {
+        return m_ElemNeighbsId;
+    }
+
     MULTI_REGIONS_EXPORT inline void SetflagTracephysToLeftRightExpphysMap(const bool in)
     {
         m_flagTracephysToLeftRightExpphysMap = in;
@@ -346,7 +356,16 @@ private:
     Array<OneD, Array<OneD, Array<OneD, int > > >   m_TracephysToLeftRightExpphysMap;
     bool                                            m_flagTracephysToLeftRightExpphysMap;
 
+    // store the number of neighbor elements for each element
+    Array<OneD, int >                               m_ElemNeighbsNumb;
+    // store the id of neighbor elements for each element
+    Array<OneD, Array<OneD, int > >                 m_ElemNeighbsId;
+
     void TracelocToElmtlocCoeffMap(
+        const ExpList &locExp,
+        const ExpListSharedPtr &trace);
+
+    void FindElemNeighbs(
         const ExpList &locExp,
         const ExpListSharedPtr &trace);
 };

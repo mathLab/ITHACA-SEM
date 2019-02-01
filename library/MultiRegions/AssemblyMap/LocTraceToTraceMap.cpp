@@ -428,6 +428,7 @@ void LocTraceToTraceMap::Setup2D(
         }
     }
     TracelocToElmtlocCoeffMap(locExp,trace);
+    FindElemNeighbs(locExp,trace);
 }
 
 /**
@@ -841,6 +842,7 @@ void LocTraceToTraceMap::Setup3D(
     }
 
     TracelocToElmtlocCoeffMap(locExp,trace);
+    FindElemNeighbs(locExp,trace);
 }
 
 
@@ -863,10 +865,8 @@ void LocTraceToTraceMap::TracelocToElmtlocCoeffMap(
 
     Array<OneD, Array<OneD, int >> LRAdjExpid(2);
     Array<OneD, Array<OneD, bool>> LRAdjflag(2);
-
     Array<OneD, Array<OneD, Array<OneD,          int > > > elmtLRMap(2);
     Array<OneD, Array<OneD, Array<OneD,          int > > > elmtLRSign(2);
-
     for(int lr =0; lr<2;lr++)
     {
         LRAdjExpid[lr]  =   Array<OneD, int >(ntrace,0);
@@ -884,6 +884,7 @@ void LocTraceToTraceMap::TracelocToElmtlocCoeffMap(
     const Array<OneD,const pair<int,int> > field_coeffToElmt  =   locExp.GetCoeffsToElmt();
     const Array<OneD,const pair<int,int> > trace_coeffToElmt  =   trace->GetCoeffsToElmt();
 
+
     for(int lr =0; lr<2;lr++)
     {
         int ntotcoeffs = m_nTraceCoeffs[lr];
@@ -899,10 +900,8 @@ void LocTraceToTraceMap::TracelocToElmtlocCoeffMap(
             int nfieldelmt   = field_coeffToElmt[ncoeffField].first;
             int nfieldlocN   = field_coeffToElmt[ncoeffField].second;
 
-
             LRAdjflag[lr][ntraceelmt]    =   true;
             LRAdjExpid[lr][ntraceelmt]   =   nfieldelmt;
-
 
             elmtLRMap[lr][ntraceelmt][ntracelocN]  =   nfieldlocN;
             elmtLRSign[lr][ntraceelmt][ntracelocN]  =   sign;
@@ -912,6 +911,116 @@ void LocTraceToTraceMap::TracelocToElmtlocCoeffMap(
     m_LeftRightAdjacentExpFlag              = LRAdjflag;
     m_TraceceffToLeftRightExpcoeffMap       = elmtLRMap;
     m_TraceceffToLeftRightExpcoeffSign      = elmtLRSign;
+}
+
+void LocTraceToTraceMap::FindElemNeighbs(
+    const ExpList &locExp,
+    const ExpListSharedPtr &trace)
+{
+    const std::shared_ptr<LocalRegions::ExpansionVector> exptrac =
+        trace->GetExp();
+    int ntrace    = exptrac->size();
+
+    const std::shared_ptr<LocalRegions::ExpansionVector> exp =
+        locExp.GetExp();
+    int nexp    = exp->size();
+
+    Array<OneD, Array<OneD, int >> LRAdjExpid(2);
+    Array<OneD, Array<OneD, bool>> LRAdjflag(2);
+    LRAdjExpid  =   m_LeftRightAdjacentExpId  ;
+    LRAdjflag   =   m_LeftRightAdjacentExpFlag;
+
+    std::set< std::pair<int, int> > neighborSet;
+    int ntmp0,ntmp1;
+    for(int  nt = 0; nt < ntrace; nt++)
+    {
+        if(LRAdjflag[0][nt]&&LRAdjflag[1][nt])
+        {
+            ntmp0   =   LRAdjExpid[0][nt];
+            ntmp1   =   LRAdjExpid[1][nt];
+            if(ntmp0==ntmp1)
+            {
+                ASSERTL0(false, " ntmp0==ntmp1, trace inside a element?? ");
+            }
+
+            std::set< std::pair<int, int> >::iterator it = neighborSet.begin();
+            neighborSet.insert(it, std::make_pair(ntmp0,ntmp1)); 
+            neighborSet.insert(it, std::make_pair(ntmp1,ntmp0));
+        }
+    }
+
+    Array<OneD, int > ElemIndex(nexp,0);
+    for (std::set< std::pair<int, int> >::iterator it=neighborSet.begin(); it!=neighborSet.end(); ++it)
+    {
+        int ncurrent   =  it->first;
+        ElemIndex[ncurrent]++;
+    }
+
+    Array<OneD, Array<OneD, int > > ElemNeighbsId(nexp);
+    Array<OneD, Array<OneD, int > > tmpId(nexp);
+    Array<OneD, int > ElemNeighbsNumb(nexp,-1);
+    Vmath::Vcopy(nexp,ElemIndex,1,ElemNeighbsNumb,1);
+    for(int  ne = 0; ne < nexp; ne++)
+    {
+        int neighb  =   ElemNeighbsNumb[ne];
+        ElemNeighbsId[ne]   =   Array<OneD, int >(neighb,-1);
+        tmpId[ne]           =   Array<OneD, int >(neighb,-1);
+    }
+
+    for(int  ne = 0; ne < nexp; ne++)
+    {
+        ElemIndex[ne]   =   0;
+    }
+    for (std::set< std::pair<int, int> >::iterator it=neighborSet.begin(); it!=neighborSet.end(); ++it)
+    {
+        int ncurrent   =  it->first;
+        int neighbor   =  it->second;
+        // cout << " it->first= "<<it->first<<" it->second= "<<it->second<<endl;
+        ElemNeighbsId[ncurrent][ ElemIndex[ncurrent] ]    = neighbor;
+        ElemIndex[ncurrent]++;
+    }
+
+    // pickout repeated indexes
+    for(int  ne = 0; ne < nexp; ne++)
+    {
+        ElemIndex[ne]   =   0;
+        for(int nb =0; nb<ElemNeighbsNumb[ne]; nb++)
+        {
+            int neighbId =  ElemNeighbsId[ne][nb];
+            bool found = false;
+            for(int nc =0; nc<ElemIndex[ne]; nc++)
+            {
+                if(ElemNeighbsId[ne][nb]==tmpId[ne][nc])
+                {
+                    found = true;
+                }
+            }
+            if(!found)
+            {
+                tmpId[ne][ ElemIndex[ne] ] = neighbId;
+                ElemIndex[ne]++;
+            }
+        }
+    }
+    ElemNeighbsNumb = ElemIndex;
+    for(int  ne = 0; ne < nexp; ne++)
+    {
+        int neighb = ElemNeighbsNumb[ne];
+        ElemNeighbsId[ne]   =   Array<OneD, int >(neighb,-1);
+        Vmath::Vcopy(neighb,tmpId[ne],1,ElemNeighbsId[ne],1);
+    }
+    
+    // check errors
+    for(int  ne = 0; ne < nexp; ne++)
+    {
+        for(int nb =0; nb<ElemNeighbsNumb[ne]; nb++)
+        {
+            ASSERTL0( (ElemNeighbsId[ne][nb]>=0)&&(ElemNeighbsId[ne][nb]<=nexp)," element id <0 or >number of total elements")
+        }
+    }
+
+    m_ElemNeighbsNumb = ElemNeighbsNumb;
+    m_ElemNeighbsId   = ElemNeighbsId;
 }
 
 /**

@@ -1157,7 +1157,7 @@ namespace Nektar
                 int npoints = locExp->GetTotPoints();
                 
 
-		std::stringstream sstm;
+	/*	std::stringstream sstm;
 		sstm << "HelmMat_" << n << ".txt";
 		std::string result = sstm.str();
 		const char* rr = result.c_str();
@@ -1176,7 +1176,7 @@ namespace Nektar
         	        myfileHM.close();
 		  }
 		  else std::cout << "Unable to open file";
-
+*/
 
                 // Calculate derivative of base flow 
                 if(IsLinearNSEquation)
@@ -1881,6 +1881,7 @@ namespace Nektar
 
 //	cout << D_all << endl;
 
+	cout << "current m_kinvis " << m_kinvis << endl;
 	cout << "RB_A.norm() " << RB_A.norm() << endl;
 	cout << "RB_A_adv.norm() " << RB_A_adv.norm() << endl;
 	cout << "RB_A_no_adv.norm() " << RB_A_no_adv.norm() << endl;

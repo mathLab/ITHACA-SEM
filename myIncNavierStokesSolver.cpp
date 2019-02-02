@@ -37,6 +37,7 @@
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include "EquationSystems/VelocityCorrectionScheme.h"
 #include "Eigen/Dense"
+#include "Eigen/SVD"
 #include "EquationSystems/CoupledLinearNS_TT.h"
 #include "EquationSystems/CoupledLinearNS_trafoP.h"
 
@@ -444,8 +445,8 @@ int main(int argc, char *argv[])
 		}
 		else
 		{
-			f_bnd_dbc_full_size(index) = collect_f_all_PODmodes(index,0);
-			f_bnd_dbc(counter_dbc) = collect_f_all_PODmodes(index,0);
+			f_bnd_dbc_full_size(index) = collect_f_all(index,0);
+			f_bnd_dbc(counter_dbc) = collect_f_all(index,0);
 			counter_dbc++;
 //			cout << " counter dbc " << counter_dbc << endl;
 //			cout << " no_dbc_in_loc " << no_dbc_in_loc << endl;
@@ -886,15 +887,140 @@ int main(int argc, char *argv[])
 
 	// have the snapshot in bnd / p / int format
 	//	Eigen::MatrixXd collect_f_all( babyCLNS_trafo.curr_f_bnd.size()+babyCLNS_trafo.curr_f_p.size()+babyCLNS_trafo.curr_f_int.size() , Nmax );
+	cout << "collect_f_all.rows() " << collect_f_all.rows() << endl;
+	cout << "collect_f_all.cols() " << collect_f_all.cols() << endl;
 
 	// have the adv_matrix corresponding to the snapshot 
 	//	Array<OneD, Array<OneD, NekDouble> > snapshot_x_collection(snapshots_to_be_collected_aka_Nmax);
 	//	Array<OneD, Array<OneD, NekDouble> > snapshot_y_collection(snapshots_to_be_collected_aka_Nmax);
+	cout << "snapshot_x_collection.num_elements() " << snapshot_x_collection.num_elements() << endl;
+	cout << "snapshot_x_collection[0].num_elements() " << snapshot_x_collection[0].num_elements() << endl;
 
 	// have the full_dbc_vector for prior subtraction
 	//	Eigen::VectorXd f_bnd_dbc_full_size(collect_f_all_PODmodes.rows());
+	cout << "f_bnd_dbc_full_size.rows() " << f_bnd_dbc_full_size.rows() << endl;
+	cout << "f_bnd_dbc_full_size.cols() " << f_bnd_dbc_full_size.cols() << endl;
 
+	// the \nu = 1 case is the third snapshot
+	int check_index = 2;
+	// gen the adv mat
+	babyCLNS.InitObject();
+	babyCLNS.DoInitialiseAdv(snapshot_x_collection[check_index], snapshot_y_collection[check_index]); 
+	Eigen::MatrixXd adv_matrix = Eigen::MatrixXd::Zero(babyCLNS.RB_A.rows() + babyCLNS.RB_Dbnd.rows() + babyCLNS.RB_C.cols(), babyCLNS.RB_A.cols() + babyCLNS.RB_Dbnd.rows() + babyCLNS.RB_B.cols() );
+	Eigen::MatrixXd mat_totale = Eigen::MatrixXd::Zero(babyCLNS.RB_A.rows() + babyCLNS.RB_Dbnd.rows() + babyCLNS.RB_C.cols(), babyCLNS.RB_A.cols() + babyCLNS.RB_Dbnd.rows() + babyCLNS.RB_B.cols() );
+	adv_matrix.block(0, 0, babyCLNS.RB_A.rows(), babyCLNS.RB_A.cols()) = MtM * babyCLNS.RB_A_adv;
+	adv_matrix.block(0, babyCLNS.RB_A.cols(), babyCLNS.RB_Dbnd.cols(), babyCLNS.RB_Dbnd.rows()) = -MtM * babyCLNS.RB_Dbnd.transpose();
+	adv_matrix.block(0, babyCLNS.RB_A.cols() + babyCLNS.RB_Dbnd.rows(), babyCLNS.RB_B.rows(), babyCLNS.RB_B.cols()) = MtM * babyCLNS.RB_B_adv;
+	adv_matrix.block(babyCLNS.RB_A.rows(), 0, babyCLNS.RB_Dbnd.rows(), babyCLNS.RB_Dbnd.cols()) = -babyCLNS.RB_Dbnd;
+	adv_matrix.block(babyCLNS.RB_A.rows(), babyCLNS.RB_A.cols() + babyCLNS.RB_Dbnd.rows(), babyCLNS.RB_Dint.rows(), babyCLNS.RB_Dint.cols()) = -babyCLNS.RB_Dint;	
+	adv_matrix.block(babyCLNS.RB_A.rows() + babyCLNS.RB_Dbnd.rows(), 0, babyCLNS.RB_C.cols(), babyCLNS.RB_C.rows()) = babyCLNS.RB_C_adv.transpose();
+	adv_matrix.block(babyCLNS.RB_A.rows() + babyCLNS.RB_Dbnd.rows(), babyCLNS.RB_A.cols(), babyCLNS.RB_Dint.cols(), babyCLNS.RB_Dint.rows()) = -babyCLNS.RB_Dint.transpose();
+	adv_matrix.block(babyCLNS.RB_A.rows() + babyCLNS.RB_Dbnd.rows(), babyCLNS.RB_A.cols() + babyCLNS.RB_Dbnd.rows(), babyCLNS.RB_D.rows(), babyCLNS.RB_D.cols()) = babyCLNS.RB_D_adv;
 
+	mat_totale.block(0, 0, babyCLNS.RB_A.rows(), babyCLNS.RB_A.cols()) = MtM * babyCLNS.RB_A;
+	mat_totale.block(0, babyCLNS.RB_A.cols(), babyCLNS.RB_Dbnd.cols(), babyCLNS.RB_Dbnd.rows()) = -MtM * babyCLNS.RB_Dbnd.transpose();
+	mat_totale.block(0, babyCLNS.RB_A.cols() + babyCLNS.RB_Dbnd.rows(), babyCLNS.RB_B.rows(), babyCLNS.RB_B.cols()) = MtM * babyCLNS.RB_B;
+	mat_totale.block(babyCLNS.RB_A.rows(), 0, babyCLNS.RB_Dbnd.rows(), babyCLNS.RB_Dbnd.cols()) = -babyCLNS.RB_Dbnd;
+	mat_totale.block(babyCLNS.RB_A.rows(), babyCLNS.RB_A.cols() + babyCLNS.RB_Dbnd.rows(), babyCLNS.RB_Dint.rows(), babyCLNS.RB_Dint.cols()) = -babyCLNS.RB_Dint;	
+	mat_totale.block(babyCLNS.RB_A.rows() + babyCLNS.RB_Dbnd.rows(), 0, babyCLNS.RB_C.cols(), babyCLNS.RB_C.rows()) = babyCLNS.RB_C.transpose();
+	mat_totale.block(babyCLNS.RB_A.rows() + babyCLNS.RB_Dbnd.rows(), babyCLNS.RB_A.cols(), babyCLNS.RB_Dint.cols(), babyCLNS.RB_Dint.rows()) = -babyCLNS.RB_Dint.transpose();
+	mat_totale.block(babyCLNS.RB_A.rows() + babyCLNS.RB_Dbnd.rows(), babyCLNS.RB_A.cols() + babyCLNS.RB_Dbnd.rows(), babyCLNS.RB_D.rows(), babyCLNS.RB_D.cols()) = babyCLNS.RB_D;
+
+	cout << "adv_matrix.rows() " << adv_matrix.rows() << endl;
+	cout << "adv_matrix.cols() " << adv_matrix.cols() << endl;
+
+	Eigen::VectorXd snap_minus_dbc = collect_f_all.col(check_index) - f_bnd_dbc_full_size;
+	Eigen::MatrixXd mat_totale2 = no_adv_matrix + adv_matrix;
+	// might need to zero the dbc rows and cols
+	for (int index=0; index < collect_f_all_PODmodes.rows(); ++index)
+	{
+		if (elem_loc_dbc.count(index))
+		{
+//			mat_totale.col(index) = Eigen::VectorXd::Zero(f_bnd_dbc_full_size.rows());
+//			mat_totale.row(index) = Eigen::VectorXd::Zero(f_bnd_dbc_full_size.rows());
+		}
+	}
+	Eigen::VectorXd zero_check = mat_totale * collect_f_all.col(check_index);
+	Eigen::VectorXd zero_check2 = mat_totale * snap_minus_dbc;
+	Eigen::VectorXd zero_check_dbc = mat_totale * f_bnd_dbc_full_size;
+	Eigen::MatrixXd mat_compare = Eigen::MatrixXd::Zero(f_bnd_dbc_full_size.rows(),3);
+	mat_compare.col(0) = zero_check;
+	mat_compare.col(1) = zero_check2;
+//	mat_compare.col(2) = zero_check_dbc;
+//	cout << mat_compare << endl;
+	// BUT: need to look at it under the "action of M", i.e., Mtrafo  -- maybe cannot use the MtM approach when writing the matrix ?????
+	cout << "Mtrafo.rows() " << Mtrafo.rows() << endl; // it is an eigen matrix
+	cout << "Mtrafo.cols() " << Mtrafo.cols() << endl;	
+	Eigen::VectorXd check_more = zero_check.head(Mtrafo.rows());
+	Eigen::VectorXd check_more_result = Mtrafo.transpose() * check_more;
+//	cout << check_more_result << endl;
+	
+	// why not work -- try in the projected world
+	// using directly the snapshots from collect_f_all as projection
+	// use zero_check_dbc as r-h-s
+	Eigen::MatrixXd mat_totale_proj = collect_f_all.transpose() * mat_totale * collect_f_all;
+	Eigen::VectorXd r_h_s_proj = collect_f_all.transpose() *  zero_check_dbc;
+	Eigen::VectorXd solve_test = mat_totale_proj.colPivHouseholderQr().solve(r_h_s_proj);
+//	cout << "solve_test " << solve_test << endl;
+	Eigen::VectorXd reproj_solve_test = collect_f_all * solve_test;
+//	cout << "(reproj_solve_test-collect_f_all.col(check_index)).norm() " << (reproj_solve_test-collect_f_all.col(check_index)).norm() << endl;
+	mat_compare.col(0) = collect_f_all.col(check_index);
+	mat_compare.col(1) = reproj_solve_test;
+//	cout << mat_compare << endl;
+
+	// better check with the divided mats
+	// be sure to have the proper mat_totale of a fixed snapshot point!
+	// is the zero_check_dbc   :: add_to_rhs = mat_totale * f_bnd_dbc_full_size;   
+	counter_row_simplified = 0;
+	counter_col_simplified = 0;
+	Eigen::MatrixXd mat_totale_simplified = Eigen::MatrixXd::Zero(adv_matrix.rows() - no_dbc_in_loc, adv_matrix.cols() - no_dbc_in_loc);
+	Eigen::VectorXd adv_rhs_add = Eigen::VectorXd::Zero(adv_matrix.rows() - no_dbc_in_loc);
+	for (int row_index=0; row_index < no_adv_matrix.rows(); ++row_index)
+	{
+		for (int col_index=0; col_index < no_adv_matrix.cols(); ++col_index)
+		{
+			if ((!elem_loc_dbc.count(row_index)) && (!elem_loc_dbc.count(col_index)))
+			{
+				mat_totale_simplified(counter_row_simplified, counter_col_simplified) = mat_totale(row_index, col_index);
+				counter_col_simplified++;
+			}
+		}
+		counter_col_simplified = 0;
+		if (!elem_loc_dbc.count(row_index))
+		{
+			adv_rhs_add(counter_row_simplified) = zero_check_dbc(row_index);
+			counter_row_simplified++;
+		}
+	}
+	Eigen::MatrixXd mat_proj = c_f_all_PODmodes_wo_dbc.transpose() * mat_totale_simplified * c_f_all_PODmodes_wo_dbc;
+	Eigen::VectorXd rhs_proj = c_f_all_PODmodes_wo_dbc.transpose() * adv_rhs_add;
+	solve_test = mat_proj.colPivHouseholderQr().solve(rhs_proj);
+	cout << "solve_test " << solve_test << endl;
+	Eigen::VectorXd agg_reproj_solve_test = c_f_all_PODmodes_wo_dbc * solve_test;
+	//cout << agg_reproj_solve_test << endl;
+	mat_compare.col(0) = collect_f_all.col(check_index);
+	mat_compare.block(0,1,agg_reproj_solve_test.rows() ,1) = agg_reproj_solve_test; // sembra abbastanza bene
+	// cout << mat_compare << endl;
+	// reconstruct the full one :)
+	Eigen::VectorXd reconstruct_solution = Eigen::VectorXd::Zero(adv_matrix.rows());
+	int counter_wo_dbc = 0;
+	for (int row_index=0; row_index < no_adv_matrix.rows(); ++row_index)
+	{
+		if (!elem_loc_dbc.count(row_index))
+		{
+			reconstruct_solution(row_index) = agg_reproj_solve_test(counter_wo_dbc);
+			counter_wo_dbc++;
+		}
+		else
+		{
+			reconstruct_solution(row_index) = -f_bnd_dbc_full_size(row_index);
+		}
+	}
+	mat_compare.col(0) = collect_f_all.col(check_index);
+	mat_compare.col(1) = reconstruct_solution; // sembra abbastanza bene
+	mat_compare.col(2) = mat_compare.col(1) + mat_compare.col(0);
+	cout << mat_compare << endl;
+	cout << "relative error norm: " << mat_compare.col(2).norm() / mat_compare.col(0).norm() << endl;
 
 	// then should be good for the online solve - in regard to the Q_a term, keep the all structure
 	// so what do I need? 

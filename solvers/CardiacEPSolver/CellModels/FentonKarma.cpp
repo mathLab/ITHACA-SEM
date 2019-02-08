@@ -310,6 +310,258 @@ namespace Nektar
                 k1           = 60;
                 k2           = 0;
                 break;
+            case eFenton2:
+                g_fi_max     = 4;
+                tau_r        = 190;
+                tau_si       = 100000;
+                tau_0        = 10;
+                tau_v_plus   = 10;
+                tau_v1_minus = 10;
+                tau_v2_minus = 10;
+                tau_w_plus   = 100000;
+                tau_w_minus  = 100000;
+                u_c          = 0.13;
+                u_v          = 100;
+                u_r          = u_c;
+                u_fi         = u_c;
+                u_csi        = 100;
+                k1           = 10;
+                k2           = 0;
+                break;
+            case eFenton4:
+                g_fi_max     = 2.46;
+                tau_r        = 34;
+                tau_si       = 26.5;
+                tau_0        = 9;
+                tau_v_plus   = 3.33;
+                tau_v1_minus = 5;
+                tau_v2_minus = 15.6;
+                tau_w_plus   = 350;
+                tau_w_minus  = 80;
+                u_c          = 0.15;
+                u_v          = 0.04;
+                u_r          = u_c;
+                u_fi         = u_c;
+                u_csi        = 0.45;
+                k1           = 15;
+                k2           = 0;
+                break;
+            case eFenton5:
+                g_fi_max     = 2.76;
+                tau_r        = 33.33;
+                tau_si       = 29;
+                tau_0        = 5;
+                tau_v_plus   = 3.33;
+                tau_v1_minus = 2;
+                tau_v2_minus = 12;
+                tau_w_plus   = 1000;
+                tau_w_minus  = 100;
+                u_c          = 0.13;
+                u_v          = 0.14;
+                u_r          = u_c;
+                u_fi         = u_c;
+                u_csi        = 0.70;
+                k1           = 15;
+                k2           = 0;
+                break;
+            case eFenton6:
+                g_fi_max     = 2.53;
+                tau_r        = 33.33;
+                tau_si       = 29;
+                tau_0        = 9;
+                tau_v_plus   = 3.33;
+                tau_v1_minus = 8;
+                tau_v2_minus = 9;
+                tau_w_plus   = 250;
+                tau_w_minus  = 60;
+                u_c          = 0.13;
+                u_v          = 0.04;
+                u_r          = u_c;
+                u_fi         = u_c;
+                u_csi        = 0.50;
+                k1           = 15;
+                k2           = 0;
+                break;
+            case eFenton7:
+                g_fi_max     = 4;
+                tau_r        = 100;
+                tau_si       = 100000;
+                tau_0        = 12;
+                tau_v_plus   = 10;
+                tau_v1_minus = 7;
+                tau_v2_minus = 7;
+                tau_w_plus   = 100000;
+                tau_w_minus  = 100000;
+                u_c          = 0.13;
+                u_v          = 100;
+                u_r          = u_c;
+                u_fi         = u_c;
+                u_csi        = 100;
+                k1           = 10;
+                k2           = 0;
+                break;
+            case eFenton8:
+                g_fi_max     = 2.2;
+                tau_r        = 33.25;
+                tau_si       = 29;
+                tau_0        = 12.5;
+                tau_v_plus   = 13.03;
+                tau_v1_minus = 1250;
+                tau_v2_minus = 19.6;
+                tau_w_plus   = 800;
+                tau_w_minus  = 40;
+                u_c          = 0.13;
+                u_v          = 0.04;
+                u_r          = u_c;
+                u_fi         = u_c;
+                u_csi        = 0.85;
+                k1           = 10;
+                k2           = 0;
+                break;
+            case eFenton9:
+                g_fi_max     = 4;
+                tau_r        = 28;
+                tau_si       = 29;
+                tau_0        = 12.5;
+                tau_v_plus   = 3.33;
+                tau_v1_minus = 2;
+                tau_v2_minus = 15;
+                tau_w_plus   = 670;
+                tau_w_minus  = 61;
+                u_c          = 0.13;
+                u_v          = 0.05;
+                u_r          = u_c;
+                u_fi         = u_c;
+                u_csi        = 0.45;
+                k1           = 10;
+                k2           = 0;
+                break;
+            case eLawson:
+                g_fi_max     = 3;
+                tau_r        = 1/0.02;
+                tau_si       = 1/0.0223;
+                tau_0        = 1/0.12;
+                tau_v_plus   = 3.33;
+                tau_v1_minus = 1000;
+                tau_v2_minus = 19.6;
+                tau_w_plus   = 667;
+                tau_w_minus  = 11;
+                u_c          = 0.13;
+                u_v          = 0.055;
+                u_r          = u_c;
+                u_fi         = u_c;
+                u_csi        = 0.85;
+                k1           = 10;
+                k2           = 0;
+                break;
+            case eFenton1a:
+                g_fi_max     = 1/0.41; //2.44
+                tau_r        = 50;
+                tau_si       = 45;
+                tau_0        = 1/0.12; //8.33
+                tau_v_plus   = 3.33;
+                tau_v1_minus = 1000;
+                tau_v2_minus = 19.6;
+                tau_w_plus   = 667;
+                tau_w_minus  = 11;
+                u_c          = 0.13;
+                u_v          = 0.055;
+                u_r          = u_c;
+                u_fi         = u_c;
+                u_csi        = 0.85;
+                k1           = 10;
+                k2           = 0;
+                break;
+            case eFenton1b:
+                g_fi_max     = 1/0.392; //2.55
+                tau_r        = 50;
+                tau_si       = 45;
+                tau_0        = 1/0.12; //8.33
+                tau_v_plus   = 3.33;
+                tau_v1_minus = 1000;
+                tau_v2_minus = 19.6;
+                tau_w_plus   = 667;
+                tau_w_minus  = 11;
+                u_c          = 0.13;
+                u_v          = 0.055;
+                u_r          = u_c;
+                u_fi         = u_c;
+                u_csi        = 0.85;
+                k1           = 10;
+                k2           = 0;
+                break;
+            case eFenton1c:
+                g_fi_max     = 1/0.381; //2.62
+                tau_r        = 50;
+                tau_si       = 45;
+                tau_0        = 1/0.12; //8.33
+                tau_v_plus   = 3.33;
+                tau_v1_minus = 1000;
+                tau_v2_minus = 19.6;
+                tau_w_plus   = 667;
+                tau_w_minus  = 11;
+                u_c          = 0.13;
+                u_v          = 0.055;
+                u_r          = u_c;
+                u_fi         = u_c;
+                u_csi        = 0.85;
+                k1           = 10;
+                k2           = 0;
+                break;
+            case eFenton1d:
+                g_fi_max     = 1/0.36; //2.77
+                tau_r        = 50;
+                tau_si       = 45;
+                tau_0        = 1/0.12; //8.33
+                tau_v_plus   = 3.33;
+                tau_v1_minus = 1000;
+                tau_v2_minus = 19.6;
+                tau_w_plus   = 667;
+                tau_w_minus  = 11;
+                u_c          = 0.13;
+                u_v          = 0.055;
+                u_r          = u_c;
+                u_fi         = u_c;
+                u_csi        = 0.85;
+                k1           = 10;
+                k2           = 0;
+                break;
+            case eFenton1e:
+                g_fi_max     = 4;
+                tau_r        = 50;
+                tau_si       = 45;
+                tau_0        = 1/0.12; //8.33
+                tau_v_plus   = 3.33;
+                tau_v1_minus = 1000;
+                tau_v2_minus = 19.6;
+                tau_w_plus   = 667;
+                tau_w_minus  = 11;
+                u_c          = 0.13;
+                u_v          = 0.055;
+                u_r          = u_c;
+                u_fi         = u_c;
+                u_csi        = 0.85;
+                k1           = 10;
+                k2           = 0;
+                break;
+            case eCAF:
+                g_fi_max     = 8;
+                tau_r        = 70;
+                tau_si       = 114;
+                tau_0        = 32.5; //8.33
+                tau_v_plus   = 5.75;
+                tau_v1_minus = 60;
+                tau_v2_minus = 82.5;
+                tau_w_plus   = 300;
+                tau_w_minus  = 400;
+                u_c          = 0.16;
+                u_v          = 0.04;
+                u_r          = u_c;
+                u_fi         = u_c;
+                u_csi        = 0.85;
+                k1           = 10;
+                k2           = 0;
+                break;
         }
 
         tau_d  = C_m/g_fi_max;

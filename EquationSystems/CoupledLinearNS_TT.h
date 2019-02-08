@@ -89,7 +89,13 @@ namespace Nektar
 
         Array<OneD, Array<OneD, NekDouble> > PODmodes;
         Eigen::MatrixXd RB;
+	Eigen::MatrixXd Get_no_advection_matrix(void);
+	Eigen::MatrixXd Get_no_advection_matrix_ABCD(void);
+	Eigen::MatrixXd Get_no_advection_matrix_pressure(void);
+	Eigen::MatrixXd Get_advection_matrix(void);
+	Eigen::MatrixXd Get_complete_matrix(void);
 
+        Eigen::MatrixXd MtM;
         Eigen::MatrixXd RB_A;
         Eigen::MatrixXd RB_A_adv;
         Eigen::MatrixXd RB_A_no_adv;
@@ -114,6 +120,11 @@ namespace Nektar
 	CoupledLinearNS_TT(const LibUtilities::SessionReaderSharedPtr &pSesssion);
 
         void DoInitialiseAdv(Array<OneD, NekDouble> myAdvField_x, Array<OneD, NekDouble> myAdvField_y);
+        Eigen::MatrixXd remove_cols_and_rows(Eigen::MatrixXd the_matrix, std::set<int> elements_to_be_removed);
+        Eigen::VectorXd remove_rows(Eigen::VectorXd the_vector, std::set<int> elements_to_be_removed);
+
+	NekDouble Get_m_kinvis(void);
+	void Set_m_kinvis(NekDouble);
 
     protected:
         

@@ -37,7 +37,7 @@
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include "EquationSystems/VelocityCorrectionScheme.h"
 #include "Eigen/Dense"
-#include "Eigen/SVD"
+#include "Eigen/Core"
 #include "EquationSystems/CoupledLinearNS_TT.h"
 #include "EquationSystems/CoupledLinearNS_trafoP.h"
 
@@ -62,7 +62,7 @@ int main(int argc, char *argv[])
 //	session2 = LibUtilities::SessionReader::CreateInstance(argc, argv);
         session->LoadSolverInfo("Driver", vDriverModule, "Standard");
 //        session2->LoadSolverInfo("Driver", vDriverModule, "Standard");
-	cout << "vDriverModule " << vDriverModule << endl;
+//	cout << "vDriverModule " << vDriverModule << endl;
         // Create driver
         drv = GetDriverFactory().CreateInstance(vDriverModule, session);  // why is that necessary?
 //        drv2 = GetDriverFactory().CreateInstance(vDriverModule, session2);  // why is that necessary?
@@ -79,7 +79,7 @@ int main(int argc, char *argv[])
 	
 	for (int i = 0; i<Nmax; i++)
 	{
-		cout << "param_vector[i] " << param_vector[i] << endl;   
+//		cout << "param_vector[i] " << param_vector[i] << endl;   
 	}
 
 	CoupledLinearNS_TT babyCLNS(session);
@@ -90,13 +90,13 @@ int main(int argc, char *argv[])
 //	babyCLNS2.DoInitialise();
 
 	// some IO checks
-	cout << "session->DefinesFunction(InitialConditions) " << session->DefinesFunction("InitialConditions") << endl;
-	cout << "session->DefinesFunction(TestSnap1) " << session->DefinesFunction("TestSnap1") << endl;
-	cout << "session->DefinesFunction(TestSnap2) " << session->DefinesFunction("TestSnap2") << endl;
-	cout << "session->DefinesFunction(TestSnap3) " << session->DefinesFunction("TestSnap3") << endl;
-	cout << "session->DefinesFunction(TestSnap4) " << session->DefinesFunction("TestSnap4") << endl;
-	cout << "session->DefinesFunction(TestSnap5) " << session->DefinesFunction("TestSnap5") << endl;
-	cout << "session->DefinesFunction(\"AdvectionVelocity\") " << session->DefinesFunction("AdvectionVelocity") << endl;
+//	cout << "session->DefinesFunction(InitialConditions) " << session->DefinesFunction("InitialConditions") << endl;
+//	cout << "session->DefinesFunction(TestSnap1) " << session->DefinesFunction("TestSnap1") << endl;
+//	cout << "session->DefinesFunction(TestSnap2) " << session->DefinesFunction("TestSnap2") << endl;
+//	cout << "session->DefinesFunction(TestSnap3) " << session->DefinesFunction("TestSnap3") << endl;
+//	cout << "session->DefinesFunction(TestSnap4) " << session->DefinesFunction("TestSnap4") << endl;
+//	cout << "session->DefinesFunction(TestSnap5) " << session->DefinesFunction("TestSnap5") << endl;
+//	cout << "session->DefinesFunction(\"AdvectionVelocity\") " << session->DefinesFunction("AdvectionVelocity") << endl;
 
 	int nvelo = 2;
         Array<OneD, Array<OneD, NekDouble> > test_load_snapshot1(nvelo); // for a 2D problem
@@ -120,7 +120,7 @@ int main(int argc, char *argv[])
         for(int i = 0; i < nvelo; ++i)
         {
            fieldStr.push_back(session->GetVariable(i));
-           cout << "session->GetVariable(i) " << session->GetVariable(i) << endl;
+//           cout << "session->GetVariable(i) " << session->GetVariable(i) << endl;
         }
         babyCLNS.EvaluateFunction(fieldStr, test_load_snapshot1, "TestSnap1");
 	snapshot_x_collection[0] = test_load_snapshot1[0];
@@ -157,7 +157,7 @@ int main(int argc, char *argv[])
 	for (int i=0; i<Nmax; i++)
 	{
 		babyCLNS_trafo.Set_m_kinvis( param_vector[i] );	
-		cout << "babyCLNS_trafo.Get_m_kinvis " << babyCLNS_trafo.Get_m_kinvis() << endl;
+//		cout << "babyCLNS_trafo.Get_m_kinvis " << babyCLNS_trafo.Get_m_kinvis() << endl;
 	//	babyCLNS_trafo.DoInitialise();
 		babyCLNS_trafo.DoInitialiseAdv(snapshot_x_collection[i], snapshot_y_collection[i]); // replaces .DoInitialise();
 		babyCLNS_trafo.DoSolve();
@@ -185,10 +185,10 @@ int main(int argc, char *argv[])
 			csy0(index_conv) = snapshot_y_collection[i][index_conv];
 		}
 
-		cout << "csx0.norm() " << csx0.norm() << endl;
-		cout << "csx0_trafo.norm() " << csx0_trafo.norm() << endl;
-		cout << "csy0.norm() " << csy0.norm() << endl;
-		cout << "csy0_trafo.norm() " << csy0_trafo.norm() << endl;
+//		cout << "csx0.norm() " << csx0.norm() << endl;
+//		cout << "csx0_trafo.norm() " << csx0_trafo.norm() << endl;
+//		cout << "csy0.norm() " << csy0.norm() << endl;
+//		cout << "csy0_trafo.norm() " << csy0_trafo.norm() << endl;
 		
 
 		Eigen::VectorXd trafo_f_bnd = babyCLNS_trafo.curr_f_bnd;
@@ -207,7 +207,7 @@ int main(int argc, char *argv[])
 	collect_f_all.block(collect_f_bnd.rows()+collect_f_p.rows(),0,collect_f_int.rows(),collect_f_int.cols()) = collect_f_int;
 
 	Eigen::BDCSVD<Eigen::MatrixXd> svd_collect_f_all(collect_f_all, Eigen::ComputeThinU);
-	cout << svd_collect_f_all.singularValues() << endl << endl;
+	cout << "svd_collect_f_all.singularValues() " << svd_collect_f_all.singularValues() << endl << endl;
 	Eigen::MatrixXd collect_f_all_PODmodes = svd_collect_f_all.matrixU();
 
 	// here probably limit to something like 99.99 percent of PODenergy, this will set RBsize
@@ -322,11 +322,11 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	cout << "no_dbc_in_loc " << no_dbc_in_loc << endl;
-	cout << "elem_loc_dbc.size() " << elem_loc_dbc.size() << endl;
+//	cout << "no_dbc_in_loc " << no_dbc_in_loc << endl;
+//	cout << "elem_loc_dbc.size() " << elem_loc_dbc.size() << endl;
 
-	cout << "no_not_dbc_in_loc " << no_not_dbc_in_loc << endl;
-	cout << "elem_not_loc_dbc.size() " << elem_not_loc_dbc.size() << endl;
+//	cout << "no_not_dbc_in_loc " << no_not_dbc_in_loc << endl;
+//	cout << "elem_not_loc_dbc.size() " << elem_not_loc_dbc.size() << endl;
 
 
 
@@ -369,9 +369,9 @@ int main(int argc, char *argv[])
 	Eigen::MatrixXd Mtrafo(babyCLNS.RB_A.rows(), nBndDofs);
 	Array<OneD, MultiRegions::ExpListSharedPtr> m_fields = babyCLNS.UpdateFields();
         int  nel  = m_fields[0]->GetNumElmts(); // number of spectral elements
-	cout << "nel " << nel << endl;
-	cout << "Mtrafo.rows() " << Mtrafo.rows() << endl;
-	cout << "Mtrafo.cols() " << Mtrafo.cols() << endl;
+//	cout << "nel " << nel << endl;
+//	cout << "Mtrafo.rows() " << Mtrafo.rows() << endl;
+//	cout << "Mtrafo.cols() " << Mtrafo.cols() << endl;
 	int nsize_bndry_p1 = loctoglobndmap.num_elements() / nel;
 	int nsize_bndry = nsize_bndry_p1-1;
 //	cout << "loctoglobndmap.num_elements() / nel -1 " << loctoglobndmap.num_elements() / nel -1 << endl;
@@ -396,12 +396,13 @@ int main(int argc, char *argv[])
 	// do the MtM multiplication or try with an all-M approach
 	Eigen::MatrixXd MtM(babyCLNS.RB_A.rows(), babyCLNS.RB_A.rows());
 	MtM = Mtrafo * Mtrafo.transpose();
+	babyCLNS.MtM = MtM;
 	// assume have all the local sub-matrices in myCLNS
 	// to break the bnd/p/int, could just form two matrices, "no_adv" and "adv", whereby "adv" has the trilinear projection
 	// better initialise to zero
 	Eigen::MatrixXd no_adv_matrix = Eigen::MatrixXd::Zero(babyCLNS.RB_A.rows() + babyCLNS.RB_Dbnd.rows() + babyCLNS.RB_C.cols(), babyCLNS.RB_A.cols() + babyCLNS.RB_Dbnd.rows() + babyCLNS.RB_B.cols() );
-	cout << "no_adv_matrix.rows() " << no_adv_matrix.rows() << endl;
-	cout << "no_adv_matrix.cols() " << no_adv_matrix.cols() << endl;
+//	cout << "no_adv_matrix.rows() " << no_adv_matrix.rows() << endl;
+//	cout << "no_adv_matrix.cols() " << no_adv_matrix.cols() << endl;
 	// write Eigen::MatrixXd no_adv_matrix blockwise 
 	no_adv_matrix.block(0, 0, babyCLNS.RB_A.rows(), babyCLNS.RB_A.cols()) = MtM * babyCLNS.RB_A_no_adv;
 	no_adv_matrix.block(0, babyCLNS.RB_A.cols(), babyCLNS.RB_Dbnd.cols(), babyCLNS.RB_Dbnd.rows()) = -MtM * babyCLNS.RB_Dbnd.transpose();
@@ -485,8 +486,7 @@ int main(int argc, char *argv[])
 //	singular:       cout << "no_adv_matrix.eigenvalues() " << no_adv_matrix.eigenvalues() << endl;
 //	singular:	cout << "no_adv_matrix_simplified.eigenvalues() " << no_adv_matrix_simplified.eigenvalues() << endl;
 	
-	Array<OneD, double> curr_PhysBaseVec_x(babyCLNS.GetNpoints(), 0.0);
-	Array<OneD, double> curr_PhysBaseVec_y(babyCLNS.GetNpoints(), 0.0);
+
 	Array<OneD, double> PhysBase_zero(babyCLNS.GetNpoints(), 0.0);
 
 	Array<OneD, Array<OneD, double> > PhysBaseVec_x(RBsize); // or do I want it as an Eigen-matrix
@@ -507,10 +507,13 @@ int main(int argc, char *argv[])
 	{
 		Eigen::VectorXd f_bnd = collect_f_all_PODmodes.block(0, curr_trafo_iter, babyCLNS_trafo.curr_f_bnd.size(), 1);
 		Eigen::VectorXd f_int = collect_f_all_PODmodes.block(babyCLNS_trafo.curr_f_bnd.size()+babyCLNS_trafo.curr_f_p.size(), curr_trafo_iter, babyCLNS_trafo.curr_f_int.size(), 1);
+//		cout << "f_int " << f_int << endl;
 		Array<OneD, MultiRegions::ExpListSharedPtr> fields = babyCLNS.UpdateFields(); 
 	        Array<OneD, unsigned int> bmap, imap; 
 		Array<OneD, double> field_0(babyCLNS.GetNcoeffs());
 		Array<OneD, double> field_1(babyCLNS.GetNcoeffs());
+		Array<OneD, double> curr_PhysBaseVec_x(babyCLNS.GetNpoints(), 0.0);
+		Array<OneD, double> curr_PhysBaseVec_y(babyCLNS.GetNpoints(), 0.0);
 	        int cnt = 0;
 		int cnt1 = 0;
 		int nvel = 2;
@@ -559,8 +562,13 @@ int main(int argc, char *argv[])
 	                }
 	            }
 	        }
-		fields[0]->BwdTrans(field_0, curr_PhysBaseVec_x);
-		fields[0]->BwdTrans(field_1, curr_PhysBaseVec_y);
+//		fields[0]->BwdTrans_IterPerExp(field_0, curr_PhysBaseVec_x);
+//		fields[0]->BwdTrans_IterPerExp(field_1, curr_PhysBaseVec_y);
+		Array<OneD, double> test_nn = fields[0]->GetCoeffs();
+//		cout << test_nn[323] << endl;
+		fields[0]->BwdTrans_IterPerExp(fields[0]->GetCoeffs(), curr_PhysBaseVec_x);
+//		cout << curr_PhysBaseVec_x[babyCLNS.GetNpoints()-1] << endl;
+		fields[1]->BwdTrans_IterPerExp(fields[1]->GetCoeffs(), curr_PhysBaseVec_y);
 		PhysBaseVec_x[curr_trafo_iter] = curr_PhysBaseVec_x;
 		PhysBaseVec_y[curr_trafo_iter] = curr_PhysBaseVec_y;
 		
@@ -576,9 +584,10 @@ int main(int argc, char *argv[])
 //	babyCLNS.DoInitialise();
 
 	// do this better with eigen-like data-structures
-	Eigen::MatrixXd eigen_phys_basis_x(curr_PhysBaseVec_x.num_elements(), RBsize);
-	Eigen::MatrixXd eigen_phys_basis_y(curr_PhysBaseVec_y.num_elements(), RBsize);
-	for (int index_phys_base=0; index_phys_base<curr_PhysBaseVec_x.num_elements(); index_phys_base++)
+
+	Eigen::MatrixXd eigen_phys_basis_x(babyCLNS.GetNpoints(), RBsize);
+	Eigen::MatrixXd eigen_phys_basis_y(babyCLNS.GetNpoints(), RBsize);
+	for (int index_phys_base=0; index_phys_base<babyCLNS.GetNpoints(); index_phys_base++)
 	{
 		for (int index_RBsize=0; index_RBsize<RBsize; index_RBsize++)
 		{
@@ -595,7 +604,10 @@ int main(int argc, char *argv[])
 	// do the orthonormalization in-place on eigen_phys_basis
 	// beware of aliasing!
 
-
+//	cout << eigen_phys_basis_x << endl;
+//	cout << "eigen_phys_basis_x.rows() " << eigen_phys_basis_x.rows() << endl;
+//	cout << "eigen_phys_basis_x.cols() " << eigen_phys_basis_x.cols() << endl;
+//	cout << "babyCLNS.GetNpoints() " << babyCLNS.GetNpoints() << endl;
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////// causes the segfault at the end /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -612,9 +624,23 @@ int main(int argc, char *argv[])
 	{
 		curr_col = eigen_phys_basis_x.col(orth_iter);
 		Eigen::MatrixXd leftmostCols = eigen_phys_basis_x.leftCols(orth_iter);
+//		cout << "leftmostCols.rows() " << leftmostCols.rows() << endl;
+//		cout << "leftmostCols.cols() " << leftmostCols.cols() << endl;
+//		cout << "curr_col.norm() " << curr_col.norm() << endl;
+//		cout << "leftmostCols.norm() " << leftmostCols.norm() << endl;
 		orthogonal_complement = curr_col - leftmostCols * leftmostCols.transpose() * curr_col;
+		// now the orthogonal complement should be orthogonal to the leftmostCols
+//		cout << "orthogonal_complement.transpose() * leftmostCols " << (orthogonal_complement.transpose() * leftmostCols) << endl;
+//		cout << "orthogonal_complement.norm() " << (orthogonal_complement.norm()) << endl;
 		norm_curr_col = orthogonal_complement.norm();
 		eigen_phys_basis_x.col(orth_iter) = orthogonal_complement / norm_curr_col;
+//		eigen_phys_basis_x.col(orth_iter) = orthogonal_complement;
+//		cout << "eigen_phys_basis_x.col(orth_iter).transpose() * leftmostCols " << (eigen_phys_basis_x.col(orth_iter).transpose() * leftmostCols) << endl;
+		
+		
+//		cout << "eigen_phys_basis_x.transpose() * eigen_phys_basis_x " << eigen_phys_basis_x.transpose() * eigen_phys_basis_x << endl;
+
+
 		curr_col = eigen_phys_basis_y.col(orth_iter);
 		leftmostCols = eigen_phys_basis_y.leftCols(orth_iter);
 		orthogonal_complement = curr_col - leftmostCols * leftmostCols.transpose() * curr_col;
@@ -622,15 +648,17 @@ int main(int argc, char *argv[])
 		eigen_phys_basis_y.col(orth_iter) = orthogonal_complement / norm_curr_col;
 	}
 
+
 	// move it back to Nektar array
 
-	Array<OneD, Array<OneD, double> > orth_PhysBaseVec_x(RBsize); // or do I want it as an Eigen-matrix
+	Array<OneD, Array<OneD, double> > orth_PhysBaseVec_x(RBsize); // also have it as an Eigen-matrix: eigen_phys_basis_ x/y
 	Array<OneD, Array<OneD, double> > orth_PhysBaseVec_y(RBsize);
-	Array<OneD, double> curr_iter_x(curr_PhysBaseVec_x.num_elements());
-	Array<OneD, double> curr_iter_y(curr_PhysBaseVec_x.num_elements());
 	for (int index_RBsize=0; index_RBsize<RBsize; index_RBsize++)
 	{
-		for (int index_phys_base=0; index_phys_base<curr_PhysBaseVec_x.num_elements(); index_phys_base++)	
+		Array<OneD, double> curr_iter_x(babyCLNS.GetNpoints());
+		Array<OneD, double> curr_iter_y(babyCLNS.GetNpoints());
+
+		for (int index_phys_base=0; index_phys_base<babyCLNS.GetNpoints(); index_phys_base++)	
 		{
 			curr_iter_x[index_phys_base] = eigen_phys_basis_x(index_phys_base,index_RBsize);
 			curr_iter_y[index_phys_base] = eigen_phys_basis_y(index_phys_base,index_RBsize);			
@@ -640,7 +668,8 @@ int main(int argc, char *argv[])
 
 	}
 
-
+//	cout << "orth_PhysBaseVec_x[0][123] " << orth_PhysBaseVec_x[0][523] << endl;
+//	cout << "orth_PhysBaseVec_x[1][123] " << orth_PhysBaseVec_x[1][523] << endl;
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // 	babyCLNS.DoInitialise();
@@ -763,10 +792,8 @@ int main(int argc, char *argv[])
 
 	for(int trafo_iter = 0; trafo_iter < RBsize; trafo_iter++)
 	{
-		cout << "Hulloh!" << endl;
-		curr_PhysBaseVec_x = orth_PhysBaseVec_x[trafo_iter];
-		curr_PhysBaseVec_y = orth_PhysBaseVec_y[trafo_iter];
-		cout << "Hulloh!" << endl;
+		Array<OneD, double> curr_PhysBaseVec_x = orth_PhysBaseVec_x[trafo_iter];
+		Array<OneD, double> curr_PhysBaseVec_y = orth_PhysBaseVec_y[trafo_iter];
 		
 		babyCLNS.InitObject();
 //		babyCLNS.DoInitialise();
@@ -782,13 +809,11 @@ int main(int argc, char *argv[])
 		// separate into rhs and lhs part
 		// save in projected form for each RB basis function
 
-		cout << "Hulloh!" << endl;
-
 		Eigen::MatrixXd adv_matrix = Eigen::MatrixXd::Zero(babyCLNS.RB_A.rows() + babyCLNS.RB_Dbnd.rows() + babyCLNS.RB_C.cols(), babyCLNS.RB_A.cols() + babyCLNS.RB_Dbnd.rows() + babyCLNS.RB_B.cols() );
-		cout << "adv_matrix.rows() " << adv_matrix.rows() << endl;
-		cout << "adv_matrix.cols() " << adv_matrix.cols() << endl;
+//		cout << "adv_matrix.rows() " << adv_matrix.rows() << endl;
+//		cout << "adv_matrix.cols() " << adv_matrix.cols() << endl;
 		// write Eigen::MatrixXd no_adv_matrix blockwise 
-		adv_matrix.block(0, 0, babyCLNS.RB_A.rows(), babyCLNS.RB_A.cols()) = MtM * babyCLNS.RB_A_adv;
+/*		adv_matrix.block(0, 0, babyCLNS.RB_A.rows(), babyCLNS.RB_A.cols()) = MtM * babyCLNS.RB_A_adv;
 		adv_matrix.block(0, babyCLNS.RB_A.cols(), babyCLNS.RB_Dbnd.cols(), babyCLNS.RB_Dbnd.rows()) = -MtM * babyCLNS.RB_Dbnd.transpose();
 		adv_matrix.block(0, babyCLNS.RB_A.cols() + babyCLNS.RB_Dbnd.rows(), babyCLNS.RB_B.rows(), babyCLNS.RB_B.cols()) = MtM * babyCLNS.RB_B_adv;
 		adv_matrix.block(babyCLNS.RB_A.rows(), 0, babyCLNS.RB_Dbnd.rows(), babyCLNS.RB_Dbnd.cols()) = -babyCLNS.RB_Dbnd;
@@ -796,6 +821,8 @@ int main(int argc, char *argv[])
 		adv_matrix.block(babyCLNS.RB_A.rows() + babyCLNS.RB_Dbnd.rows(), 0, babyCLNS.RB_C.cols(), babyCLNS.RB_C.rows()) = babyCLNS.RB_C_adv.transpose();
 		adv_matrix.block(babyCLNS.RB_A.rows() + babyCLNS.RB_Dbnd.rows(), babyCLNS.RB_A.cols(), babyCLNS.RB_Dint.cols(), babyCLNS.RB_Dint.rows()) = -babyCLNS.RB_Dint.transpose();
 		adv_matrix.block(babyCLNS.RB_A.rows() + babyCLNS.RB_Dbnd.rows(), babyCLNS.RB_A.cols() + babyCLNS.RB_Dbnd.rows(), babyCLNS.RB_D.rows(), babyCLNS.RB_D.cols()) = babyCLNS.RB_D_adv;
+*/
+		adv_matrix = babyCLNS.Get_advection_matrix();
 		
 		// compute add_to rhs
 		Eigen::VectorXd add_to_rhs_adv(collect_f_all_PODmodes.rows()); // probably need this for adv and non-adv
@@ -832,15 +859,17 @@ int main(int argc, char *argv[])
 		// using Ritz-Galerkin without any supremizers
 		// the projector is 'c_f_all_PODmodes_wo_dbc'
 		Eigen::MatrixXd adv_mat_proj = c_f_all_PODmodes_wo_dbc.transpose() * adv_matrix_simplified * c_f_all_PODmodes_wo_dbc;
-		cout << "adv_mat_proj.rows() " << adv_mat_proj.rows() << endl;
-		cout << "adv_mat_proj.cols() " << adv_mat_proj.cols() << endl;
+//		cout << "adv_mat_proj.rows() " << adv_mat_proj.rows() << endl;
+//		cout << "adv_mat_proj.cols() " << adv_mat_proj.cols() << endl;
 		Eigen::VectorXd adv_rhs_proj = c_f_all_PODmodes_wo_dbc.transpose() * adv_rhs_add;
 
+
+//		cout << "checking Mat to be saved: " << adv_mat_proj << endl;
 		adv_mats_proj_x[trafo_iter] = adv_mat_proj;
 		adv_vec_proj_x[trafo_iter] = adv_rhs_proj;
 
 		babyCLNS.DoInitialiseAdv(PhysBase_zero , curr_PhysBaseVec_y ); // call with parameter in phys state
-		adv_matrix.block(0, 0, babyCLNS.RB_A.rows(), babyCLNS.RB_A.cols()) = MtM * babyCLNS.RB_A_adv;
+/*		adv_matrix.block(0, 0, babyCLNS.RB_A.rows(), babyCLNS.RB_A.cols()) = MtM * babyCLNS.RB_A_adv;
 		adv_matrix.block(0, babyCLNS.RB_A.cols(), babyCLNS.RB_Dbnd.cols(), babyCLNS.RB_Dbnd.rows()) = -MtM * babyCLNS.RB_Dbnd.transpose();
 		adv_matrix.block(0, babyCLNS.RB_A.cols() + babyCLNS.RB_Dbnd.rows(), babyCLNS.RB_B.rows(), babyCLNS.RB_B.cols()) = MtM * babyCLNS.RB_B_adv;
 		adv_matrix.block(babyCLNS.RB_A.rows(), 0, babyCLNS.RB_Dbnd.rows(), babyCLNS.RB_Dbnd.cols()) = -babyCLNS.RB_Dbnd;
@@ -848,6 +877,8 @@ int main(int argc, char *argv[])
 		adv_matrix.block(babyCLNS.RB_A.rows() + babyCLNS.RB_Dbnd.rows(), 0, babyCLNS.RB_C.cols(), babyCLNS.RB_C.rows()) = babyCLNS.RB_C_adv.transpose();
 		adv_matrix.block(babyCLNS.RB_A.rows() + babyCLNS.RB_Dbnd.rows(), babyCLNS.RB_A.cols(), babyCLNS.RB_Dint.cols(), babyCLNS.RB_Dint.rows()) = -babyCLNS.RB_Dint.transpose();
 		adv_matrix.block(babyCLNS.RB_A.rows() + babyCLNS.RB_Dbnd.rows(), babyCLNS.RB_A.cols() + babyCLNS.RB_Dbnd.rows(), babyCLNS.RB_D.rows(), babyCLNS.RB_D.cols()) = babyCLNS.RB_D_adv;
+*/
+		adv_matrix = babyCLNS.Get_advection_matrix();
 		add_to_rhs_adv = adv_matrix * f_bnd_dbc_full_size;   
 		counter_row_simplified = 0;
 		counter_col_simplified = 0;
@@ -882,29 +913,34 @@ int main(int argc, char *argv[])
 	// should it give zero without the f_bnd_dbc ?
 
 	// have the no_adv_matrix at the reference \nu = 1
-	cout << "no_adv_matrix.rows() " << no_adv_matrix.rows() << endl;
-	cout << "no_adv_matrix.cols() " << no_adv_matrix.cols() << endl;
+//	cout << "no_adv_matrix.rows() " << no_adv_matrix.rows() << endl;
+//	cout << "no_adv_matrix.cols() " << no_adv_matrix.cols() << endl;
 
 	// have the snapshot in bnd / p / int format
 	//	Eigen::MatrixXd collect_f_all( babyCLNS_trafo.curr_f_bnd.size()+babyCLNS_trafo.curr_f_p.size()+babyCLNS_trafo.curr_f_int.size() , Nmax );
-	cout << "collect_f_all.rows() " << collect_f_all.rows() << endl;
-	cout << "collect_f_all.cols() " << collect_f_all.cols() << endl;
+//	cout << "collect_f_all.rows() " << collect_f_all.rows() << endl;
+//	cout << "collect_f_all.cols() " << collect_f_all.cols() << endl;
 
 	// have the adv_matrix corresponding to the snapshot 
 	//	Array<OneD, Array<OneD, NekDouble> > snapshot_x_collection(snapshots_to_be_collected_aka_Nmax);
 	//	Array<OneD, Array<OneD, NekDouble> > snapshot_y_collection(snapshots_to_be_collected_aka_Nmax);
-	cout << "snapshot_x_collection.num_elements() " << snapshot_x_collection.num_elements() << endl;
-	cout << "snapshot_x_collection[0].num_elements() " << snapshot_x_collection[0].num_elements() << endl;
+//	cout << "snapshot_x_collection.num_elements() " << snapshot_x_collection.num_elements() << endl;
+//	cout << "snapshot_x_collection[0].num_elements() " << snapshot_x_collection[0].num_elements() << endl;
 
 	// have the full_dbc_vector for prior subtraction
 	//	Eigen::VectorXd f_bnd_dbc_full_size(collect_f_all_PODmodes.rows());
-	cout << "f_bnd_dbc_full_size.rows() " << f_bnd_dbc_full_size.rows() << endl;
-	cout << "f_bnd_dbc_full_size.cols() " << f_bnd_dbc_full_size.cols() << endl;
+//	cout << "f_bnd_dbc_full_size.rows() " << f_bnd_dbc_full_size.rows() << endl;
+//	cout << "f_bnd_dbc_full_size.cols() " << f_bnd_dbc_full_size.cols() << endl;
 
 	// the \nu = 1 case is the third snapshot
-	int check_index = 2;
+	//int check_index = 2;
+	int check_index = 3;
+	double current_nu = param_vector[check_index];
+	babyCLNS.Set_m_kinvis( current_nu );	
+//	cout << "babyCLNS.Get_m_kinvis " << babyCLNS.Get_m_kinvis() << endl;
+
 	// gen the adv mat
-	babyCLNS.InitObject();
+//	babyCLNS.InitObject();
 	babyCLNS.DoInitialiseAdv(snapshot_x_collection[check_index], snapshot_y_collection[check_index]); 
 	Eigen::MatrixXd adv_matrix = Eigen::MatrixXd::Zero(babyCLNS.RB_A.rows() + babyCLNS.RB_Dbnd.rows() + babyCLNS.RB_C.cols(), babyCLNS.RB_A.cols() + babyCLNS.RB_Dbnd.rows() + babyCLNS.RB_B.cols() );
 	Eigen::MatrixXd mat_totale = Eigen::MatrixXd::Zero(babyCLNS.RB_A.rows() + babyCLNS.RB_Dbnd.rows() + babyCLNS.RB_C.cols(), babyCLNS.RB_A.cols() + babyCLNS.RB_Dbnd.rows() + babyCLNS.RB_B.cols() );
@@ -926,8 +962,8 @@ int main(int argc, char *argv[])
 	mat_totale.block(babyCLNS.RB_A.rows() + babyCLNS.RB_Dbnd.rows(), babyCLNS.RB_A.cols(), babyCLNS.RB_Dint.cols(), babyCLNS.RB_Dint.rows()) = -babyCLNS.RB_Dint.transpose();
 	mat_totale.block(babyCLNS.RB_A.rows() + babyCLNS.RB_Dbnd.rows(), babyCLNS.RB_A.cols() + babyCLNS.RB_Dbnd.rows(), babyCLNS.RB_D.rows(), babyCLNS.RB_D.cols()) = babyCLNS.RB_D;
 
-	cout << "adv_matrix.rows() " << adv_matrix.rows() << endl;
-	cout << "adv_matrix.cols() " << adv_matrix.cols() << endl;
+//	cout << "adv_matrix.rows() " << adv_matrix.rows() << endl;
+//	cout << "adv_matrix.cols() " << adv_matrix.cols() << endl;
 
 	Eigen::VectorXd snap_minus_dbc = collect_f_all.col(check_index) - f_bnd_dbc_full_size;
 	Eigen::MatrixXd mat_totale2 = no_adv_matrix + adv_matrix;
@@ -949,8 +985,8 @@ int main(int argc, char *argv[])
 //	mat_compare.col(2) = zero_check_dbc;
 //	cout << mat_compare << endl;
 	// BUT: need to look at it under the "action of M", i.e., Mtrafo  -- maybe cannot use the MtM approach when writing the matrix ?????
-	cout << "Mtrafo.rows() " << Mtrafo.rows() << endl; // it is an eigen matrix
-	cout << "Mtrafo.cols() " << Mtrafo.cols() << endl;	
+//	cout << "Mtrafo.rows() " << Mtrafo.rows() << endl; // it is an eigen matrix
+//	cout << "Mtrafo.cols() " << Mtrafo.cols() << endl;	
 	Eigen::VectorXd check_more = zero_check.head(Mtrafo.rows());
 	Eigen::VectorXd check_more_result = Mtrafo.transpose() * check_more;
 //	cout << check_more_result << endl;
@@ -995,7 +1031,7 @@ int main(int argc, char *argv[])
 	Eigen::MatrixXd mat_proj = c_f_all_PODmodes_wo_dbc.transpose() * mat_totale_simplified * c_f_all_PODmodes_wo_dbc;
 	Eigen::VectorXd rhs_proj = c_f_all_PODmodes_wo_dbc.transpose() * adv_rhs_add;
 	solve_test = mat_proj.colPivHouseholderQr().solve(rhs_proj);
-	cout << "solve_test " << solve_test << endl;
+//	cout << "solve_test " << solve_test << endl;
 	Eigen::VectorXd agg_reproj_solve_test = c_f_all_PODmodes_wo_dbc * solve_test;
 	//cout << agg_reproj_solve_test << endl;
 	mat_compare.col(0) = collect_f_all.col(check_index);
@@ -1019,13 +1055,16 @@ int main(int argc, char *argv[])
 	mat_compare.col(0) = collect_f_all.col(check_index);
 	mat_compare.col(1) = reconstruct_solution; // sembra abbastanza bene
 	mat_compare.col(2) = mat_compare.col(1) + mat_compare.col(0);
-	cout << mat_compare << endl;
-	cout << "relative error norm: " << mat_compare.col(2).norm() / mat_compare.col(0).norm() << endl;
+	//cout << mat_compare << endl;
+//	cout << "relative error norm: " << mat_compare.col(2).norm() / mat_compare.col(0).norm() << endl;
+	
+
 
 	// then should be good for the online solve - in regard to the Q_a term, keep the all structure
 	// so what do I need? 
 	// since at this point, I have all the projected parameter-independent parts,
 	// collect the parameter-dependent matrices 
+
 
 	// steps to do in particolare
 	// given a current iterate, look at the projection coefficients
@@ -1033,6 +1072,299 @@ int main(int argc, char *argv[])
 	// \nu dependent are the non-advection, non-pressure terms, so need to differentiate those
 
 	// have an online solve
+	// use the affine decomposition
+	// for the matrix side, use the \nu-independent part re-use wise 
+	// do the looping for all snapshot locations (need some more data to verify intermediate locations)
+	int number_of_param_locations = 4;
+	int current_index = 0;
+	current_nu = param_vector[current_index];
+	babyCLNS.Set_m_kinvis( current_nu );	
+//	cout << "babyCLNS.Get_m_kinvis " << babyCLNS.Get_m_kinvis() << endl;
+	babyCLNS.DoInitialiseAdv(snapshot_x_collection[check_index], snapshot_y_collection[check_index]);
+//	have these functions:
+//	Eigen::MatrixXd Get_no_advection_matrix(void);
+//	Eigen::MatrixXd Get_advection_matrix(void);
+//	Eigen::MatrixXd Get_complete_matrix(void);
+	Eigen::MatrixXd no_adv_matrix1 = babyCLNS.Get_no_advection_matrix();
+	Eigen::MatrixXd no_adv_matrix1_ABCD = babyCLNS.Get_no_advection_matrix_ABCD();
+	Eigen::MatrixXd adv_matrix1 = babyCLNS.Get_advection_matrix();
+	Eigen::MatrixXd matrix1 = babyCLNS.Get_complete_matrix();
+
+	current_index = 2;
+	current_nu = param_vector[current_index];
+	babyCLNS.Set_m_kinvis( current_nu );	
+//	cout << "babyCLNS.Get_m_kinvis " << babyCLNS.Get_m_kinvis() << endl;
+//	babyCLNS.DoInitialiseAdv(snapshot_x_collection[current_index], snapshot_y_collection[current_index]);
+	// only checking the x-recovery a.t.m.
+	babyCLNS.DoInitialiseAdv(snapshot_x_collection[current_index], PhysBase_zero);
+	Eigen::MatrixXd no_adv_matrix2 = babyCLNS.Get_no_advection_matrix();
+	Eigen::MatrixXd no_adv_matrix2_ABCD = babyCLNS.Get_no_advection_matrix_ABCD();
+	Eigen::MatrixXd adv_matrix2 = babyCLNS.Get_advection_matrix();
+	Eigen::MatrixXd matrix2 = babyCLNS.Get_complete_matrix();
+
+	// the no_adv matrices should be the same
+	
+	// need to treat the Dint and Dbnd independently
+//	cout << "(100*no_adv_matrix1_ABCD).norm() " << (100*no_adv_matrix1_ABCD).norm() << endl;
+//	cout << "no_adv_matrix2_ABCD.norm() " << no_adv_matrix2_ABCD.norm() << endl;
+//	cout << "(no_adv_matrix1_ABCD*100 - no_adv_matrix2_ABCD).norm() " << (no_adv_matrix1_ABCD*100 - no_adv_matrix2_ABCD).norm() << endl;
+
+	// assume no body force for now
+	// choose/sceglie a reference parameter configuration
+	// the two no_adv terms are clear
+	// how about the adv ones?  -- compute all the mats corresponding to all phys x/y bases and do the dbc kicking, then project
+	// these things have been created as:
+	// Array<OneD, Eigen::MatrixXd> adv_mats_proj_x(RBsize);
+	// Array<OneD, Eigen::MatrixXd> adv_mats_proj_y(RBsize);
+	// Array<OneD, Eigen::VectorXd> adv_vec_proj_x(RBsize);
+	// Array<OneD, Eigen::VectorXd> adv_vec_proj_y(RBsize);
+	// thus: project the current iterate onto the phys basis space:
+	// in this case, init with a snapshot:
+	// need to project snapshot_x_collection[check_index], snapshot_y_collection[check_index]
+	// all involved are in phys so, should be no big deal, can also check the projection accuracy
+	// probably need the init snapshot as an Eigen::VectorXd
+	Eigen::VectorXd current_snapshot_x(babyCLNS.GetNpoints());
+	Eigen::VectorXd current_snapshot_y(babyCLNS.GetNpoints());
+	// or try the map functionality
+	// maybe works only for matrices	Eigen::VectorXd mapped_current_snapshot_x = Eigen::Map<Eigen::VectorXd>(snapshot_x_collection[check_index],babyCLNS.GetNpoints());
+
+	for (int i = 0; i < babyCLNS.GetNpoints(); ++i)
+	{
+		current_snapshot_x(i) = snapshot_x_collection[current_index][i];
+		current_snapshot_y(i) = snapshot_y_collection[current_index][i];
+	}
+	// could do this in a function:	eigen_phys_basis_ x/y	
+/*	cout << "current_snapshot_x.rows() " << current_snapshot_x.rows() << endl;
+	cout << "current_snapshot_x.cols() " << current_snapshot_x.cols() << endl;
+	cout << "current_snapshot_y.rows() " << current_snapshot_y.rows() << endl;
+	cout << "current_snapshot_y.cols() " << current_snapshot_y.cols() << endl;
+	cout << "eigen_phys_basis_x.rows() " << eigen_phys_basis_x.rows() << endl;
+	cout << "eigen_phys_basis_x.cols() " << eigen_phys_basis_x.cols() << endl;
+	cout << "eigen_phys_basis_y.rows() " << eigen_phys_basis_y.rows() << endl;
+	cout << "eigen_phys_basis_y.cols() " << eigen_phys_basis_y.cols() << endl;
+*/
+	Eigen::VectorXd curr_x_proj = eigen_phys_basis_x.transpose() * current_snapshot_x;
+	Eigen::VectorXd curr_y_proj = eigen_phys_basis_y.transpose() * current_snapshot_y;
+//	cout << "curr_x_proj " << curr_x_proj << endl;
+//	cout << "curr_y_proj " << curr_y_proj << endl;
+
+//	cout << "eigen_phys_basis_x.transpose() * eigen_phys_basis_x " << eigen_phys_basis_x.transpose() * eigen_phys_basis_x << endl;
+//	cout << "eigen_phys_basis_y.transpose() * eigen_phys_basis_y " << eigen_phys_basis_y.transpose() * eigen_phys_basis_y << endl;
+
+	// check the accuracy of the recovered (affine-wise) projected advection matrix
+	// how about the adv ones?  -- compute all the mats corresponding to all phys x/y bases and do the dbc kicking, then project
+	// these things have been created as:
+	// Array<OneD, Eigen::MatrixXd> adv_mats_proj_x(RBsize);
+	// Array<OneD, Eigen::MatrixXd> adv_mats_proj_y(RBsize);
+	// Array<OneD, Eigen::VectorXd> adv_vec_proj_x(RBsize);
+	// Array<OneD, Eigen::VectorXd> adv_vec_proj_y(RBsize);
+	Eigen::MatrixXd recovered_affine_adv_mat_proj_x = Eigen::MatrixXd::Zero(RBsize, RBsize);
+	for (int i = 0; i < RBsize; ++i)
+	{
+		recovered_affine_adv_mat_proj_x += adv_mats_proj_x[i] * curr_x_proj[i];
+//		cout << "adv_mats_proj_x[i] " << adv_mats_proj_x[i] << endl;
+	}
+//	cout << "recovered_affine_adv_mat_proj_x " << recovered_affine_adv_mat_proj_x << endl;
+	// compare this to a projected adv_matrix2 
+	// have to generate the zero_check_dbc beforehand 	Eigen::VectorXd zero_check_dbc = mat_totale * f_bnd_dbc_full_size;
+	// do functionalise this!!
+	counter_row_simplified = 0;
+	counter_col_simplified = 0;
+	mat_totale_simplified = Eigen::MatrixXd::Zero(adv_matrix.rows() - no_dbc_in_loc, adv_matrix.cols() - no_dbc_in_loc);
+	adv_rhs_add = Eigen::VectorXd::Zero(adv_matrix.rows() - no_dbc_in_loc);
+	for (int row_index=0; row_index < no_adv_matrix.rows(); ++row_index)
+	{
+		for (int col_index=0; col_index < no_adv_matrix.cols(); ++col_index)
+		{
+			if ((!elem_loc_dbc.count(row_index)) && (!elem_loc_dbc.count(col_index)))
+			{
+				mat_totale_simplified(counter_row_simplified, counter_col_simplified) = adv_matrix2(row_index, col_index);
+				counter_col_simplified++;
+			}
+		}
+		counter_col_simplified = 0;
+		if (!elem_loc_dbc.count(row_index))
+		{
+//			adv_rhs_add(counter_row_simplified) = zero_check_dbc(row_index); have to generate the zero_check_dbc beforehand
+			counter_row_simplified++;
+		}
+	}
+	mat_proj = c_f_all_PODmodes_wo_dbc.transpose() * mat_totale_simplified * c_f_all_PODmodes_wo_dbc;
+//	Eigen::VectorXd rhs_proj = c_f_all_PODmodes_wo_dbc.transpose() * adv_rhs_add;
+//	cout << "mat_proj " << mat_proj << endl;
+
+// 	now check the y-part
+	Eigen::MatrixXd recovered_affine_adv_mat_proj_y = Eigen::MatrixXd::Zero(RBsize, RBsize);
+	for (int i = 0; i < RBsize; ++i)
+	{
+		recovered_affine_adv_mat_proj_y += adv_mats_proj_y[i] * curr_y_proj[i];
+//		cout << "adv_mats_proj_x[i] " << adv_mats_proj_x[i] << endl;
+	}
+//	cout << "recovered_affine_adv_mat_proj_y " << recovered_affine_adv_mat_proj_y << endl;
+
+	babyCLNS.DoInitialiseAdv(PhysBase_zero, snapshot_y_collection[current_index]);
+	Eigen::MatrixXd adv_matrix3 = babyCLNS.Get_advection_matrix();
+	counter_row_simplified = 0;
+	counter_col_simplified = 0;
+	mat_totale_simplified = Eigen::MatrixXd::Zero(adv_matrix.rows() - no_dbc_in_loc, adv_matrix.cols() - no_dbc_in_loc);
+	adv_rhs_add = Eigen::VectorXd::Zero(adv_matrix.rows() - no_dbc_in_loc);
+	for (int row_index=0; row_index < no_adv_matrix.rows(); ++row_index)
+	{
+		for (int col_index=0; col_index < no_adv_matrix.cols(); ++col_index)
+		{
+			if ((!elem_loc_dbc.count(row_index)) && (!elem_loc_dbc.count(col_index)))
+			{
+				mat_totale_simplified(counter_row_simplified, counter_col_simplified) = adv_matrix3(row_index, col_index);
+				counter_col_simplified++;
+			}
+		}
+		counter_col_simplified = 0;
+		if (!elem_loc_dbc.count(row_index))
+		{
+			counter_row_simplified++;
+		}
+	}
+	mat_proj = c_f_all_PODmodes_wo_dbc.transpose() * mat_totale_simplified * c_f_all_PODmodes_wo_dbc;
+//	cout << "mat_proj " << mat_proj << endl;
+
+//	part totale
+	babyCLNS.DoInitialiseAdv(snapshot_x_collection[current_index], snapshot_y_collection[current_index]);
+	Eigen::MatrixXd adv_matrix4 = babyCLNS.Get_advection_matrix();
+/*	counter_row_simplified = 0;
+	counter_col_simplified = 0;
+	mat_totale_simplified = Eigen::MatrixXd::Zero(adv_matrix.rows() - no_dbc_in_loc, adv_matrix.cols() - no_dbc_in_loc);
+	adv_rhs_add = Eigen::VectorXd::Zero(adv_matrix.rows() - no_dbc_in_loc);
+	for (int row_index=0; row_index < no_adv_matrix.rows(); ++row_index)
+	{
+		for (int col_index=0; col_index < no_adv_matrix.cols(); ++col_index)
+		{
+			if ((!elem_loc_dbc.count(row_index)) && (!elem_loc_dbc.count(col_index)))
+			{
+				mat_totale_simplified(counter_row_simplified, counter_col_simplified) = adv_matrix4(row_index, col_index);
+				counter_col_simplified++;
+			}
+		}
+		counter_col_simplified = 0;
+		if (!elem_loc_dbc.count(row_index))
+		{
+			counter_row_simplified++;
+		}
+	}
+*/
+	mat_totale_simplified = babyCLNS.remove_cols_and_rows(adv_matrix4, elem_loc_dbc);
+
+	mat_proj = c_f_all_PODmodes_wo_dbc.transpose() * mat_totale_simplified * c_f_all_PODmodes_wo_dbc;
+//	cout << "mat_proj " << mat_proj << endl;
+
+	Eigen::MatrixXd recovered_affine_adv_mat_proj_xy = Eigen::MatrixXd::Zero(RBsize, RBsize);
+	for (int i = 0; i < RBsize; ++i)
+	{
+		recovered_affine_adv_mat_proj_xy += adv_mats_proj_x[i] * curr_x_proj[i] + adv_mats_proj_y[i] * curr_y_proj[i];
+//		cout << "adv_mats_proj_x[i] " << adv_mats_proj_x[i] << endl;
+	}
+//	cout << "recovered_affine_adv_mat_proj_xy " << recovered_affine_adv_mat_proj_xy << endl;
+
+
+//	get it all together:
+	current_index = 2; // i.e., \nu = 1
+	current_nu = param_vector[current_index];
+	babyCLNS.Set_m_kinvis( current_nu );
+	babyCLNS.DoInitialiseAdv(snapshot_x_collection[current_index], snapshot_y_collection[current_index]);
+	Eigen::MatrixXd test_complete_matrix = babyCLNS.Get_complete_matrix();
+	mat_totale_simplified = babyCLNS.remove_cols_and_rows(test_complete_matrix, elem_loc_dbc);
+	mat_proj = c_f_all_PODmodes_wo_dbc.transpose() * mat_totale_simplified * c_f_all_PODmodes_wo_dbc;
+//	cout << "non-affine mat_proj " << mat_proj << endl;
+	// can re-use recovered_affine_adv_mat_proj_xy
+	// two more terms const one depending pressure and \nu one
+	Eigen::MatrixXd the_const_one = babyCLNS.Get_no_advection_matrix_pressure();
+	Eigen::MatrixXd the_ABCD_one = babyCLNS.Get_no_advection_matrix_ABCD();
+	Eigen::MatrixXd the_const_one_simplified = babyCLNS.remove_cols_and_rows(the_const_one, elem_loc_dbc);
+	Eigen::MatrixXd the_ABCD_one_simplified = babyCLNS.remove_cols_and_rows(the_ABCD_one, elem_loc_dbc);
+	Eigen::MatrixXd the_const_one_proj = c_f_all_PODmodes_wo_dbc.transpose() * the_const_one_simplified * c_f_all_PODmodes_wo_dbc;
+	Eigen::MatrixXd the_ABCD_one_proj = c_f_all_PODmodes_wo_dbc.transpose() * the_ABCD_one_simplified * c_f_all_PODmodes_wo_dbc;
+//	cout << "affine mat_proj " << recovered_affine_adv_mat_proj_xy + the_const_one_proj + the_ABCD_one_proj << endl;	
+	Eigen::VectorXd the_ABCD_one_rhs = the_ABCD_one * f_bnd_dbc_full_size;
+	Eigen::VectorXd the_const_one_rhs = the_const_one * f_bnd_dbc_full_size;
+	Eigen::VectorXd the_ABCD_one_rhs_simplified = babyCLNS.remove_rows(the_ABCD_one_rhs, elem_loc_dbc);
+	Eigen::VectorXd the_const_one_rhs_simplified = babyCLNS.remove_rows(the_const_one_rhs, elem_loc_dbc);
+	Eigen::VectorXd the_ABCD_one_rhs_proj = c_f_all_PODmodes_wo_dbc.transpose() * the_ABCD_one_rhs_simplified;
+	Eigen::VectorXd the_const_one_rhs_proj = c_f_all_PODmodes_wo_dbc.transpose() * the_const_one_rhs_simplified;
+
+
+	// start sweeping 
+	for (int iter_index = 0; iter_index < Nmax; ++iter_index)
+	{
+		current_index = iter_index;
+		current_nu = param_vector[current_index];
+		babyCLNS.Set_m_kinvis( current_nu );
+		babyCLNS.DoInitialiseAdv(snapshot_x_collection[current_index], snapshot_y_collection[current_index]);
+		Eigen::MatrixXd test_complete_matrix = babyCLNS.Get_complete_matrix();
+//		Eigen::MatrixXd test_complete_matrix = babyCLNS.Get_advection_matrix();
+		mat_totale_simplified = babyCLNS.remove_cols_and_rows(test_complete_matrix, elem_loc_dbc);
+		mat_proj = c_f_all_PODmodes_wo_dbc.transpose() * mat_totale_simplified * c_f_all_PODmodes_wo_dbc;
+//		cout << "sweep non-affine mat_proj " << mat_proj << endl;
+		Eigen::VectorXd test_complete_dbc = test_complete_matrix * f_bnd_dbc_full_size;
+		Eigen::VectorXd test_complete_dbc_simplified = babyCLNS.remove_rows(test_complete_dbc, elem_loc_dbc);
+		Eigen::VectorXd rhs_proj = c_f_all_PODmodes_wo_dbc.transpose() * test_complete_dbc_simplified;
+//		cout << "sweep non-affine rhs_proj " << rhs_proj << endl;
+		Eigen::VectorXd solve_non_affine = mat_proj.colPivHouseholderQr().solve(rhs_proj);
+//		cout << "solve_non_affine " << solve_non_affine << endl;
+
+		// affine part
+		Eigen::VectorXd c_snapshot_x(babyCLNS.GetNpoints());
+		Eigen::VectorXd c_snapshot_y(babyCLNS.GetNpoints());
+		for (int i = 0; i < babyCLNS.GetNpoints(); ++i)
+		{
+			c_snapshot_x(i) = snapshot_x_collection[current_index][i];
+			c_snapshot_y(i) = snapshot_y_collection[current_index][i];
+		}
+		curr_x_proj = eigen_phys_basis_x.transpose() * c_snapshot_x;
+		curr_y_proj = eigen_phys_basis_y.transpose() * c_snapshot_y;
+		recovered_affine_adv_mat_proj_xy = Eigen::MatrixXd::Zero(RBsize, RBsize);
+		for (int i = 0; i < RBsize; ++i)
+		{
+			recovered_affine_adv_mat_proj_xy += adv_mats_proj_x[i] * curr_x_proj[i] + adv_mats_proj_y[i] * curr_y_proj[i];
+		}
+//		Eigen::MatrixXd affine_mat_proj = recovered_affine_adv_mat_proj_xy;
+		Eigen::MatrixXd affine_mat_proj = the_const_one_proj + current_nu * the_ABCD_one_proj + recovered_affine_adv_mat_proj_xy;
+//		cout << "sweep affine mat_proj " << affine_mat_proj << endl;
+
+		// do deal with the right-hand-side
+		// central correlation: 	Eigen::VectorXd zero_check_dbc = mat_totale * f_bnd_dbc_full_size;
+		// already have computed:	Array<OneD, Eigen::VectorXd> adv_vec_proj_x(RBsize); 	Array<OneD, Eigen::VectorXd> adv_vec_proj_y(RBsize);
+		Eigen::VectorXd recovered_affine_adv_rhs_proj_xy = Eigen::VectorXd::Zero(RBsize); 
+		for (int i = 0; i < RBsize; ++i)
+		{
+			recovered_affine_adv_rhs_proj_xy += adv_vec_proj_x[i] * curr_x_proj[i] + adv_vec_proj_y[i] * curr_y_proj[i];
+		}		
+//		cout << "sweep affine rhs_proj " << the_const_one_rhs_proj + current_nu * the_ABCD_one_rhs_proj + recovered_affine_adv_rhs_proj_xy << endl;
+		Eigen::VectorXd solve_affine = affine_mat_proj.colPivHouseholderQr().solve(the_const_one_rhs_proj + current_nu * the_ABCD_one_rhs_proj + recovered_affine_adv_rhs_proj_xy);
+		cout << "solve_affine " << solve_affine << endl;
+		Eigen::VectorXd repro_solve_affine = c_f_all_PODmodes_wo_dbc * solve_affine;
+		Eigen::VectorXd reconstruct_solution = Eigen::VectorXd::Zero(adv_matrix.rows());
+		int counter_wo_dbc = 0;
+		for (int row_index=0; row_index < no_adv_matrix.rows(); ++row_index)
+		{
+			if (!elem_loc_dbc.count(row_index))
+			{
+				reconstruct_solution(row_index) = repro_solve_affine(counter_wo_dbc);
+				counter_wo_dbc++;
+			}
+			else
+			{
+				reconstruct_solution(row_index) = -f_bnd_dbc_full_size(row_index);
+			}
+		}
+		mat_compare.col(0) = collect_f_all.col(current_index);
+		mat_compare.col(1) = reconstruct_solution; // sembra abbastanza bene
+		mat_compare.col(2) = mat_compare.col(1) + mat_compare.col(0);
+		//cout << mat_compare << endl;
+		cout << "relative error norm: " << mat_compare.col(2).norm() / mat_compare.col(0).norm() << endl;
+
+	}
+
+
+
 
 
 //	babyCLNS.DoSolve(); // do I need this here ?

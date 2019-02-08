@@ -173,7 +173,7 @@ namespace Nektar
 //        int n_vel  = m_fields.num_elements();
 
 
-	std::stringstream sstm_bwdtrans;
+/*	std::stringstream sstm_bwdtrans;
 	sstm_bwdtrans << "bwdtrans.txt";
 	std::string result_bwdtrans = sstm_bwdtrans.str();
 //      std::ofstream myfile_bwdtrans (result_bwdtrans);
@@ -211,13 +211,13 @@ namespace Nektar
 	        myfile_bwdtrans.close();
 	}
 	else std::cout << "Unable to open file";
-
+*/
 	std::stringstream sstm_cartmap0;
 	sstm_cartmap0 << "cartmap0.txt";
 //	std::string result_cartmap0 = sstm_cartmap0.str();
 //	std::basic_string<char, std::char_traits<char>, std::allocator<char> > result_cartmap0 = sstm_cartmap0.str();
 //        std::ofstream myfile_cartmap0 (result_cartmap0);
-        std::ofstream myfile_cartmap0 ("cartmap0.txt");
+  /*      std::ofstream myfile_cartmap0 ("cartmap0.txt");
 	if (myfile_cartmap0.is_open())
 	{
 		for(int n = 0; n < nel; ++n)
@@ -294,10 +294,10 @@ namespace Nektar
 	        myfile_cartmap1.close();
 	}
 	else std::cout << "Unable to open file";
-
+*/
         // locExp->IProductWRTBase(tmpphys,coeffs);                                for all tmpphys
 
-	std::stringstream sstm_IP;
+/*	std::stringstream sstm_IP;
 	sstm_IP << "IP.txt";
 	std::string result_IP = sstm_IP.str();
 //        std::ofstream myfile_IP (result_IP);
@@ -337,8 +337,8 @@ namespace Nektar
 	        myfile_IP.close();
 	}
 	else std::cout << "Unable to open file";
-
-	std::stringstream sstm_IP_d0;
+*/
+/*	std::stringstream sstm_IP_d0;
 	sstm_IP_d0 << "IP_d0.txt";
 	std::string result_IP_d0 = sstm_IP_d0.str();
 //        std::ofstream myfile_IP (result_IP);
@@ -420,7 +420,7 @@ namespace Nektar
 	        myfile_IP_d1.close();
 	}
 	else std::cout << "Unable to open file";
-
+*/
 
 	//  m_pressure->GetExp(eid)->IProductWRTBase(deriv,pcoeffs);
 
@@ -1860,7 +1860,7 @@ namespace Nektar
             pDh->SetBlock(n,n,loc_mat = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,Dh));    
         }
         timer.Stop();
-        cout << "Matrix Setup Costs: " << timer.TimePerTest(1) << endl;
+//        cout << "Matrix Setup Costs: " << timer.TimePerTest(1) << endl;
         
 	// end of the loop over the spectral elements
             
@@ -1881,7 +1881,7 @@ namespace Nektar
 
 //	cout << D_all << endl;
 
-	cout << "current m_kinvis " << m_kinvis << endl;
+/*	cout << "current m_kinvis " << m_kinvis << endl;
 	cout << "RB_A.norm() " << RB_A.norm() << endl;
 	cout << "RB_A_adv.norm() " << RB_A_adv.norm() << endl;
 	cout << "RB_A_no_adv.norm() " << RB_A_no_adv.norm() << endl;
@@ -1898,7 +1898,7 @@ namespace Nektar
 	cout << "RB_D_adv.norm() " << RB_D_adv.norm() << endl;
 	cout << "RB_D_no_adv.norm() " << RB_D_no_adv.norm() << endl;
 	cout << "(RB_D - RB_D_adv - RB_D_no_adv).norm() " << (RB_D - RB_D_adv - RB_D_no_adv).norm() << endl;
-
+*/
 //        cout << RB_D << endl;
 //        cout << RB_D_adv << endl;
 //        cout << RB_D_no_adv << endl;
@@ -1912,7 +1912,7 @@ namespace Nektar
         mat.m_CoupledBndSys = MemoryManager<MultiRegions::GlobalLinSysDirectStaticCond>::AllocateSharedPtr(key,m_fields[0],pAh,pBh,pCh,pDh,locToGloMap);
         mat.m_CoupledBndSys->Initialise(locToGloMap);
         timer.Stop();
-        cout << "Multilevel condensation: " << timer.TimePerTest(1) << endl;
+//        cout << "Multilevel condensation: " << timer.TimePerTest(1) << endl;
     }
 
 
@@ -2028,7 +2028,7 @@ namespace Nektar
         }
 
 	// do need to write the forcing vectors
-          ofstream myfilef0 ("forcing0.txt");
+  /*        ofstream myfilef0 ("forcing0.txt");
 	  if (myfilef0.is_open())
 	  {
 		for (int counter_row = 0; counter_row < forcing[0].num_elements(); ++counter_row)
@@ -2053,7 +2053,8 @@ namespace Nektar
                 myfilef1.close();
 	  }
 	  else cout << "Unable to open file";
-        
+*/        
+
         // Assemble f_bnd and f_int
         cnt = cnt1 = 0;
         for(i = 0; i < nel; ++i) // loop over elements
@@ -2103,7 +2104,7 @@ namespace Nektar
         const Array<OneD,const NekDouble>& loctoglosign
         = m_locToGloMap[mode]->GetLocalToGlobalSign();
         
-          ofstream myfile1LocGloMap ("LocGloMap.txt");
+/*          ofstream myfile1LocGloMap ("LocGloMap.txt");
 	  if (myfile1LocGloMap.is_open())
 	  {
 		for (int counter = 0; counter < loctoglomap.num_elements(); ++counter)
@@ -2155,7 +2156,7 @@ namespace Nektar
                 myfile2LocGloBndSign.close();
 	  }
 	  else cout << "Unable to open file";
-
+*/
    /*         Array<OneD, Array<OneD, NekDouble> > glo_dof_to_phys_collector(number_of_global_dofs);
             Array<OneD, Array<OneD, NekDouble> > phys_to_glo_dof_collector(m_fields[0]->GetNpoints());
             Array<OneD, Array<OneD, NekDouble> > glo_dof_to_phys_collector_p(number_of_global_dofs);
@@ -2214,7 +2215,7 @@ namespace Nektar
         const Array<OneD,const int>& bndmap
         = m_locToGloMap[mode]->GetBndCondCoeffsToGlobalCoeffsMap();
         
-          ofstream myfilebndmap ("BndCondCoeffsToGlobalCoeffsMap.txt");
+/*          ofstream myfilebndmap ("BndCondCoeffsToGlobalCoeffsMap.txt");
 	  if (myfilebndmap.is_open())
 	  {
 		for (int counter = 0; counter < bndmap.num_elements(); ++counter)
@@ -2226,7 +2227,7 @@ namespace Nektar
                 myfilebndmap.close();
 	  }
 	  else cout << "Unable to open file";   
-
+*/
         // Forcing function with weak boundary conditions and
         // Dirichlet conditions
         int bndcnt=0;
@@ -2247,14 +2248,14 @@ namespace Nektar
                 bndCondExp = m_fields[k]->GetBndCondExpansions();
             }
             
-     		ofstream myfile_bnd_cond_elem ("bnd_cond_elem.txt");
+/*     		ofstream myfile_bnd_cond_elem ("bnd_cond_elem.txt");
 		if (myfile_bnd_cond_elem.is_open())
 	  	{
 			myfile_bnd_cond_elem << std::setprecision(17) << bndCondExp.num_elements() << "\n";
                 	myfile_bnd_cond_elem.close();
 	  	}
 	  	else cout << "Unable to open file"; 
-
+*/
             for(i = 0; i < bndCondExp.num_elements(); ++i)
             {
                 const Array<OneD, const NekDouble > bndCondCoeffs = bndCondExp[i]->GetCoeffs();
@@ -2269,7 +2270,7 @@ namespace Nektar
 		const char* outname_t = rr;
 
        
-     		ofstream myfile_t (outname_t);
+/*     		ofstream myfile_t (outname_t);
 		if (myfile_t.is_open())
 	  	{
 			for(int count_bnd = 0; count_bnd < bndCondCoeffs.num_elements(); count_bnd++)
@@ -2279,7 +2280,7 @@ namespace Nektar
                 	myfile_t.close();
 	  	}
 	  	else cout << "Unable to open file"; 
-
+*/
 
 //		cout << "i " << i << endl;
 //		for(int count_bnd = 0; count_bnd < bndCondCoeffs.num_elements(); count_bnd++)
@@ -2324,16 +2325,17 @@ namespace Nektar
 //	cout <<	"m_locToGloMap[mode]->GetNumGlobalDirBndCoeffs() " << m_locToGloMap[mode]->GetNumGlobalDirBndCoeffs() << endl;
 //	cout <<	"m_locToGloMap[mode]->GetNumGlobalCoeffs() " << m_locToGloMap[mode]->GetNumGlobalCoeffs() << endl;
 
-          ofstream myfiledirbnd ("NumGlobalDirBndCoeffs.txt");
+/*          ofstream myfiledirbnd ("NumGlobalDirBndCoeffs.txt");
 	  if (myfiledirbnd.is_open())
 	  {
 		myfiledirbnd << std::setprecision(17) << m_locToGloMap[mode]->GetNumGlobalDirBndCoeffs();
                 myfiledirbnd.close();
 	  }
 	  else cout << "Unable to open file";   
+*/
 
-	cout << "fh_bnd.num_elements() " << fh_bnd.num_elements() << std::endl;   
-	cout << "bnd.num_elements() " << bnd.num_elements() << std::endl;  
+//	cout << "fh_bnd.num_elements() " << fh_bnd.num_elements() << std::endl;   
+//	cout << "bnd.num_elements() " << bnd.num_elements() << std::endl;  
 	
 	for(i = 0; i <  fh_bnd.num_elements(); ++i)
 	{
@@ -2423,7 +2425,7 @@ namespace Nektar
 
 	// --- writing the fields in loc format from here on, so what i want is also the f_bnd, f_p, f_int
 //	curr_f_bnd = f_bnd;
-	cout << "f_bnd.num_elements() " << f_bnd.num_elements() << endl;
+/*	cout << "f_bnd.num_elements() " << f_bnd.num_elements() << endl;
 	cout << "f_p.num_elements() " << f_p.num_elements() << endl;
 	cout << "f_int.num_elements() " << f_int.num_elements() << endl;
 
@@ -2439,7 +2441,7 @@ namespace Nektar
 	cout << "RB_Dbnd.rows() " << RB_Dbnd.rows() << endl;
 	cout << "RB_Dint.cols() " << RB_Dint.cols() << endl;
 	cout << "RB_Dint.rows() " << RB_Dint.rows() << endl;
-
+*/
 
 	curr_f_bnd = Eigen::VectorXd::Zero(f_bnd.num_elements());
 	for (int i_phys_dof = 0; i_phys_dof < f_bnd.num_elements(); i_phys_dof++)
@@ -2490,6 +2492,118 @@ namespace Nektar
             fields[j]->SetPhysState(false);
         }
     }
+
+    NekDouble CoupledLinearNS_TT::Get_m_kinvis(void)
+    {
+	return m_kinvis;
+    }
+
+    void CoupledLinearNS_TT::Set_m_kinvis(NekDouble input)
+    {
+	m_kinvis = input;
+    }
+
+    Eigen::MatrixXd CoupledLinearNS_TT::Get_no_advection_matrix(void)
+    {
+	Eigen::MatrixXd no_adv_matrix = Eigen::MatrixXd::Zero(RB_A.rows() + RB_Dbnd.rows() + RB_C.cols(), RB_A.cols() + RB_Dbnd.rows() + RB_B.cols() );
+	no_adv_matrix.block(0, 0, RB_A.rows(), RB_A.cols()) = MtM * RB_A_no_adv;
+	no_adv_matrix.block(0, RB_A.cols(), RB_Dbnd.cols(), RB_Dbnd.rows()) = -MtM * RB_Dbnd.transpose();
+	no_adv_matrix.block(0, RB_A.cols() + RB_Dbnd.rows(), RB_B.rows(), RB_B.cols()) = MtM * RB_B_no_adv;
+	no_adv_matrix.block(RB_A.rows(), 0, RB_Dbnd.rows(), RB_Dbnd.cols()) = -RB_Dbnd;
+	no_adv_matrix.block(RB_A.rows(), RB_A.cols() + RB_Dbnd.rows(), RB_Dint.rows(), RB_Dint.cols()) = -RB_Dint;	
+	no_adv_matrix.block(RB_A.rows() + RB_Dbnd.rows(), 0, RB_C.cols(), RB_C.rows()) = RB_C_no_adv.transpose();
+	no_adv_matrix.block(RB_A.rows() + RB_Dbnd.rows(), RB_A.cols(), RB_Dint.cols(), RB_Dint.rows()) = -RB_Dint.transpose();
+	no_adv_matrix.block(RB_A.rows() + RB_Dbnd.rows(), RB_A.cols() + RB_Dbnd.rows(), RB_D.rows(), RB_D.cols()) = RB_D_no_adv;
+	return no_adv_matrix;
+    }
+
+    Eigen::MatrixXd CoupledLinearNS_TT::Get_no_advection_matrix_pressure(void)
+    {
+	Eigen::MatrixXd no_adv_matrix = Eigen::MatrixXd::Zero(RB_A.rows() + RB_Dbnd.rows() + RB_C.cols(), RB_A.cols() + RB_Dbnd.rows() + RB_B.cols() );
+	no_adv_matrix.block(0, RB_A.cols(), RB_Dbnd.cols(), RB_Dbnd.rows()) = -MtM * RB_Dbnd.transpose();
+	no_adv_matrix.block(RB_A.rows(), 0, RB_Dbnd.rows(), RB_Dbnd.cols()) = -RB_Dbnd;
+	no_adv_matrix.block(RB_A.rows(), RB_A.cols() + RB_Dbnd.rows(), RB_Dint.rows(), RB_Dint.cols()) = -RB_Dint;	
+	no_adv_matrix.block(RB_A.rows() + RB_Dbnd.rows(), RB_A.cols(), RB_Dint.cols(), RB_Dint.rows()) = -RB_Dint.transpose();
+	return no_adv_matrix;
+    }
+
+    Eigen::MatrixXd CoupledLinearNS_TT::Get_no_advection_matrix_ABCD(void)
+    {
+	Eigen::MatrixXd no_adv_matrix = Eigen::MatrixXd::Zero(RB_A.rows() + RB_Dbnd.rows() + RB_C.cols(), RB_A.cols() + RB_Dbnd.rows() + RB_B.cols() );
+	no_adv_matrix.block(0, 0, RB_A.rows(), RB_A.cols()) = MtM * RB_A_no_adv;
+	no_adv_matrix.block(0, RB_A.cols() + RB_Dbnd.rows(), RB_B.rows(), RB_B.cols()) = MtM * RB_B_no_adv;
+	no_adv_matrix.block(RB_A.rows() + RB_Dbnd.rows(), 0, RB_C.cols(), RB_C.rows()) = RB_C_no_adv.transpose();
+	no_adv_matrix.block(RB_A.rows() + RB_Dbnd.rows(), RB_A.cols() + RB_Dbnd.rows(), RB_D.rows(), RB_D.cols()) = RB_D_no_adv;
+	return no_adv_matrix;
+    }
+	
+    Eigen::MatrixXd CoupledLinearNS_TT::Get_advection_matrix(void)
+    {
+	Eigen::MatrixXd adv_matrix = Eigen::MatrixXd::Zero(RB_A.rows() + RB_Dbnd.rows() + RB_C.cols(), RB_A.cols() + RB_Dbnd.rows() + RB_B.cols() );
+	adv_matrix.block(0, 0, RB_A.rows(), RB_A.cols()) = MtM * RB_A_adv;
+//	adv_matrix.block(0, RB_A.cols(), RB_Dbnd.cols(), RB_Dbnd.rows()) = -MtM * RB_Dbnd.transpose();
+	adv_matrix.block(0, RB_A.cols() + RB_Dbnd.rows(), RB_B.rows(), RB_B.cols()) = MtM * RB_B_adv;
+//	adv_matrix.block(RB_A.rows(), 0, RB_Dbnd.rows(), RB_Dbnd.cols()) = -RB_Dbnd;
+//	adv_matrix.block(RB_A.rows(), RB_A.cols() + RB_Dbnd.rows(), RB_Dint.rows(), RB_Dint.cols()) = -RB_Dint;	
+	adv_matrix.block(RB_A.rows() + RB_Dbnd.rows(), 0, RB_C.cols(), RB_C.rows()) = RB_C_adv.transpose();
+//	adv_matrix.block(RB_A.rows() + RB_Dbnd.rows(), RB_A.cols(), RB_Dint.cols(), RB_Dint.rows()) = -RB_Dint.transpose();
+	adv_matrix.block(RB_A.rows() + RB_Dbnd.rows(), RB_A.cols() + RB_Dbnd.rows(), RB_D.rows(), RB_D.cols()) = RB_D_adv;
+	return adv_matrix;
+    }	
+
+    Eigen::MatrixXd CoupledLinearNS_TT::Get_complete_matrix(void)
+    {
+	Eigen::MatrixXd matrix = Eigen::MatrixXd::Zero(RB_A.rows() + RB_Dbnd.rows() + RB_C.cols(), RB_A.cols() + RB_Dbnd.rows() + RB_B.cols() );
+	matrix.block(0, 0, RB_A.rows(), RB_A.cols()) = MtM * RB_A;
+	matrix.block(0, RB_A.cols(), RB_Dbnd.cols(), RB_Dbnd.rows()) = -MtM * RB_Dbnd.transpose();
+	matrix.block(0, RB_A.cols() + RB_Dbnd.rows(), RB_B.rows(), RB_B.cols()) = MtM * RB_B;
+	matrix.block(RB_A.rows(), 0, RB_Dbnd.rows(), RB_Dbnd.cols()) = -RB_Dbnd;
+	matrix.block(RB_A.rows(), RB_A.cols() + RB_Dbnd.rows(), RB_Dint.rows(), RB_Dint.cols()) = -RB_Dint;	
+	matrix.block(RB_A.rows() + RB_Dbnd.rows(), 0, RB_C.cols(), RB_C.rows()) = RB_C.transpose();
+	matrix.block(RB_A.rows() + RB_Dbnd.rows(), RB_A.cols(), RB_Dint.cols(), RB_Dint.rows()) = -RB_Dint.transpose();
+	matrix.block(RB_A.rows() + RB_Dbnd.rows(), RB_A.cols() + RB_Dbnd.rows(), RB_D.rows(), RB_D.cols()) = RB_D;
+	return matrix;
+    }
+
+    Eigen::MatrixXd CoupledLinearNS_TT::remove_cols_and_rows(Eigen::MatrixXd the_matrix, std::set<int> elements_to_be_removed)
+    {
+	Eigen::MatrixXd simplified_matrix = Eigen::MatrixXd::Zero(the_matrix.rows() - elements_to_be_removed.size(), the_matrix.cols() - elements_to_be_removed.size());
+	int counter_row_simplified = 0;
+	int counter_col_simplified = 0;
+	for (int row_index=0; row_index < the_matrix.rows(); ++row_index)
+	{
+		if (!elements_to_be_removed.count(row_index))
+		{
+			for (int col_index=0; col_index < the_matrix.cols(); ++col_index)
+			{
+				if (!elements_to_be_removed.count(col_index))
+				{
+					simplified_matrix(counter_row_simplified, counter_col_simplified) = the_matrix(row_index, col_index);
+					counter_col_simplified++;
+				}			
+			}
+			counter_col_simplified = 0;
+			counter_row_simplified++;
+		}		
+	}
+	return simplified_matrix;
+    }
+
+    Eigen::VectorXd CoupledLinearNS_TT::remove_rows(Eigen::VectorXd the_vector, std::set<int> elements_to_be_removed)
+    {
+	Eigen::VectorXd simplified_vector = Eigen::VectorXd::Zero(the_vector.rows() - elements_to_be_removed.size());
+	int counter_row_simplified = 0;
+	for (int row_index=0; row_index < the_vector.rows(); ++row_index)
+	{
+		if (!elements_to_be_removed.count(row_index))
+		{
+			simplified_vector(counter_row_simplified) = the_vector(row_index);
+			counter_row_simplified++;
+		}		
+	}
+	return simplified_vector;
+    }
+
 
 	// since this function is virtual it actually can be instantiated here
     void CoupledLinearNS_TT::v_DoSolve(void)
@@ -2634,13 +2748,13 @@ namespace Nektar
                     fieldStr.push_back(m_boundaryConditions->GetVariable(m_velocity[i]));
                 }
 
-		cout << "fieldStr[0] " << fieldStr[0] << endl;
-		cout << "fieldStr.size() " << fieldStr.size() << endl;
+//		cout << "fieldStr[0] " << fieldStr[0] << endl;
+//		cout << "fieldStr.size() " << fieldStr.size() << endl;
 
                 EvaluateFunction(fieldStr,AdvField,"AdvectionVelocity"); // defined in EquationSystem
 
-		cout << "AdvField.num_elements() " << AdvField.num_elements() << endl;
-		cout << "AdvField[0].num_elements() " << AdvField[0].num_elements() << endl;                                
+//		cout << "AdvField.num_elements() " << AdvField.num_elements() << endl;
+//		cout << "AdvField[0].num_elements() " << AdvField[0].num_elements() << endl;                                
 
 //		DefineRBspace();
 

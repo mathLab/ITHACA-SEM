@@ -1184,7 +1184,7 @@ namespace Nektar
             pDh->SetBlock(n,n,loc_mat = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,Dh));    
         }
         timer.Stop();
-        cout << "Matrix Setup Costs: " << timer.TimePerTest(1) << endl;
+//        cout << "Matrix Setup Costs: " << timer.TimePerTest(1) << endl;
         
         
         timer.Start();
@@ -1196,7 +1196,7 @@ namespace Nektar
         mat.m_CoupledBndSys = MemoryManager<MultiRegions::GlobalLinSysDirectStaticCond>::AllocateSharedPtr(key,m_fields[0],pAh,pBh,pCh,pDh,locToGloMap);
         mat.m_CoupledBndSys->Initialise(locToGloMap);
         timer.Stop();
-        cout << "Multilevel condensation: " << timer.TimePerTest(1) << endl;
+//        cout << "Multilevel condensation: " << timer.TimePerTest(1) << endl;
     }
     
     void CoupledLinearNS_trafoP::v_GenerateSummary(SolverUtils::SummaryList& s)
@@ -1515,7 +1515,7 @@ namespace Nektar
     void CoupledLinearNS_trafoP::Solve(void)
     {
 
-	cout << "Ciao from trafoP::Solve function" << endl;
+//	cout << "Ciao from trafoP::Solve function" << endl;
 
         const unsigned int ncmpt = m_velocity.num_elements();
         Array<OneD, Array<OneD, NekDouble> > forcing_phys(ncmpt);

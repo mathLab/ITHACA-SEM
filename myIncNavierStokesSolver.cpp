@@ -50,22 +50,16 @@ using namespace Nektar::SolverUtils;
 int main(int argc, char *argv[])
 {
     LibUtilities::SessionReaderSharedPtr session;
-//    LibUtilities::SessionReaderSharedPtr session2;
     string vDriverModule;
     DriverSharedPtr drv;
- //   DriverSharedPtr drv2;
   
     try
     {
         // Create session reader.
         session = LibUtilities::SessionReader::CreateInstance(argc, argv);
-//	session2 = LibUtilities::SessionReader::CreateInstance(argc, argv);
         session->LoadSolverInfo("Driver", vDriverModule, "Standard");
-//        session2->LoadSolverInfo("Driver", vDriverModule, "Standard");
-//	cout << "vDriverModule " << vDriverModule << endl;
         // Create driver
         drv = GetDriverFactory().CreateInstance(vDriverModule, session);  // why is that necessary?
-//        drv2 = GetDriverFactory().CreateInstance(vDriverModule, session2);  // why is that necessary?
 
 	int snapshots_to_be_collected_aka_Nmax = 4;  
 	int Nmax = snapshots_to_be_collected_aka_Nmax;

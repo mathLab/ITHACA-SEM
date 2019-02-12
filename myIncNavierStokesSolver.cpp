@@ -71,23 +71,13 @@ int main(int argc, char *argv[])
 	param_vector[2] = 1;
 	param_vector[3] = 10;
 	
-	for (int i = 0; i<Nmax; i++)
-	{
+//	for (int i = 0; i<Nmax; i++)
+//	{
 //		cout << "param_vector[i] " << param_vector[i] << endl;   
-	}
+//	}
 
 	CoupledLinearNS_TT babyCLNS(session);
 	babyCLNS.InitObject();
-
-
-	// some IO checks
-//	cout << "session->DefinesFunction(InitialConditions) " << session->DefinesFunction("InitialConditions") << endl;
-//	cout << "session->DefinesFunction(TestSnap1) " << session->DefinesFunction("TestSnap1") << endl;
-//	cout << "session->DefinesFunction(TestSnap2) " << session->DefinesFunction("TestSnap2") << endl;
-//	cout << "session->DefinesFunction(TestSnap3) " << session->DefinesFunction("TestSnap3") << endl;
-//	cout << "session->DefinesFunction(TestSnap4) " << session->DefinesFunction("TestSnap4") << endl;
-//	cout << "session->DefinesFunction(TestSnap5) " << session->DefinesFunction("TestSnap5") << endl;
-//	cout << "session->DefinesFunction(\"AdvectionVelocity\") " << session->DefinesFunction("AdvectionVelocity") << endl;
 
 	int nvelo = 2;
         Array<OneD, Array<OneD, NekDouble> > test_load_snapshot1(nvelo); // for a 2D problem

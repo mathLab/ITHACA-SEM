@@ -97,19 +97,19 @@
         </FUNCTION>  
 
 	<FUNCTION NAME="TestSnap1">
-	      <F FILE="test_1st/Channel_1p5_sol0p1.fld" />
+	      <F FILE="Channel_1p5_TT_sol0p1.fld" />
 	</FUNCTION>  
 
 	<FUNCTION NAME="TestSnap2">
-	      <F FILE="test_1st/Channel_1p5_sol0p5.fld" />
+	      <F FILE="Channel_1p5_TT_sol0p5.fld" />
 	</FUNCTION>  
 
 	<FUNCTION NAME="TestSnap3">
-	      <F FILE="test_1st/Channel_1p5_sol1.fld" />
+	      <F FILE="Channel_1p5_TT_sol1.fld" />
 	</FUNCTION>  
 
 	<FUNCTION NAME="TestSnap4">
-	      <F FILE="test_1st/Channel_1p5_sol10.fld" />
+	      <F FILE="Channel_1p5_TT_sol10.fld" />
 	</FUNCTION>  
 
         <FUNCTION NAME="Mapping">
@@ -128,7 +128,9 @@
 	</FORCE>    
                     
     <FUNCTION NAME="AdvectionVelocity">
-      <F FILE="Channel_1p5_TT.fld" />
+    <!--  <F FILE="Channel_1p5_TT.fld" /> -->
+      <E VAR="u" VALUE="0" />
+      <E VAR="v" VALUE="0" />
     </FUNCTION> 
 
     </CONDITIONS>

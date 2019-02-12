@@ -85,9 +85,6 @@ int main(int argc, char *argv[])
 	CoupledLinearNS_TT babyCLNS(session);
 	babyCLNS.InitObject();
 
-//	CoupledLinearNS_TT babyCLNS2(session2);
-//	babyCLNS2.InitObject();
-//	babyCLNS2.DoInitialise();
 
 	// some IO checks
 //	cout << "session->DefinesFunction(InitialConditions) " << session->DefinesFunction("InitialConditions") << endl;

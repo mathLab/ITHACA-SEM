@@ -296,13 +296,6 @@ int main(int argc, char *argv[])
     //Declaration of other variables needed
     vector<PointsType> pointstype(3, eNoPointsType);
     StdExpansion *E = nullptr;
-    Array<OneD, NekDouble> z;
-    Array<OneD, NekDouble> x;
-    Array<OneD, NekDouble> y;
-    Array<OneD, NekDouble> dz;
-    Array<OneD, NekDouble> dx;
-    Array<OneD, NekDouble> dy;
-    Array<OneD, NekDouble> sol;
 
     //Assign points type according to basis type selection
     for (int i = 0; i < dimension; ++i)
@@ -337,75 +330,88 @@ int main(int argc, char *argv[])
             }
         }
     }
-    const PointsKey pkey1(points[0], pointstype[0]);
-    const PointsKey pkey2(points[1], pointstype[1]);
-    const PointsKey pkey3(points[2], pointstype[2]);
-    const BasisKey bkey1(btype[0], order[0], pkey1);
-    const BasisKey bkey2(btype[1], order[1], pkey2);
-    const BasisKey bkey3(btype[2], order[2], pkey3);
+
+    vector<PointsKey> pkey;
+    vector<BasisKey> bkey;
+    for (int i = 0; i < 3; ++i)
+    {
+        pkey.push_back(PointsKey(points[i], pointstype[i]));
+        bkey.push_back(BasisKey(btype[i], order[i], pkey[i]));
+    }
 
     switch (stype)
     {
         case ePoint:
         {
-            E = new StdPointExp(bkey1);
+            E = new StdPointExp(bkey[0]);
             break;
         }
         case eSegment:
         {
-            E = new StdSegExp(bkey1);
+            E = new StdSegExp(bkey[0]);
             break;
         }
         case eTriangle:
         {
-            E = nodaltype != eNoPointsType ? new StdNodalTriExp(bkey1, bkey2,
+            E = nodaltype != eNoPointsType ? new StdNodalTriExp(bkey[0],
+                                                                bkey[1],
                                                                 nodaltype)
-                                           : new StdTriExp(bkey1, bkey2);
+                                           : new StdTriExp(bkey[0], bkey[1]);
             break;
         }
         case eQuadrilateral:
         {
-            E = new StdQuadExp(bkey1, bkey2);
+            E = new StdQuadExp(bkey[0], bkey[1]);
             break;
         }
         case eTetrahedron:
         {
-            E = nodaltype != eNoPointsType ? new StdNodalTetExp(bkey1, bkey2,
-                                                                bkey3,
+            E = nodaltype != eNoPointsType ? new StdNodalTetExp(bkey[0],
+                                                                bkey[1],
+                                                                bkey[2],
                                                                 nodaltype)
-                                           : new StdTetExp(bkey1, bkey2, bkey3);
+                                           : new StdTetExp(bkey[0], bkey[1],
+                                                           bkey[2]);
             break;
         }
         case ePyramid:
         {
-            E = new StdPyrExp(bkey1, bkey2, bkey3);
+            E = new StdPyrExp(bkey[0], bkey[1], bkey[2]);
             break;
         }
         case ePrism:
         {
-            E = nodaltype != eNoPointsType ? new StdNodalPrismExp(bkey1, bkey2,
-                                                                  bkey3,
+            E = nodaltype != eNoPointsType ? new StdNodalPrismExp(bkey[0],
+                                                                  bkey[1],
+                                                                  bkey[2],
                                                                   nodaltype)
-                                           : new StdPrismExp(bkey1, bkey2,
-                                                             bkey3);
+                                           : new StdPrismExp(bkey[0], bkey[1],
+                                                             bkey[2]);
             break;
         }
         case eHexahedron:
         {
-            E = new StdHexExp(bkey1, bkey2, bkey3);
+            E = new StdHexExp(bkey[0], bkey[1], bkey[2]);
             break;
         }
         default:
             break;
     }
 
-    x = Array<OneD, NekDouble>((unsigned) E->GetTotPoints());
-    y = Array<OneD, NekDouble>((unsigned) E->GetTotPoints());
-    z = Array<OneD, NekDouble>((unsigned) E->GetTotPoints());
-    dx = Array<OneD, NekDouble>((unsigned) E->GetTotPoints());
-    dy = Array<OneD, NekDouble>((unsigned) E->GetTotPoints());
-    dz = Array<OneD, NekDouble>((unsigned) E->GetTotPoints());
-    sol = Array<OneD, NekDouble>((unsigned) E->GetTotPoints());
+    Array<OneD, NekDouble> x = Array<OneD, NekDouble>(
+            (unsigned) E->GetTotPoints());
+    Array<OneD, NekDouble> y = Array<OneD, NekDouble>(
+            (unsigned) E->GetTotPoints());
+    Array<OneD, NekDouble> z = Array<OneD, NekDouble>(
+            (unsigned) E->GetTotPoints());
+    Array<OneD, NekDouble> dx = Array<OneD, NekDouble>(
+            (unsigned) E->GetTotPoints());
+    Array<OneD, NekDouble> dy = Array<OneD, NekDouble>(
+            (unsigned) E->GetTotPoints());
+    Array<OneD, NekDouble> dz = Array<OneD, NekDouble>(
+            (unsigned) E->GetTotPoints());
+    Array<OneD, NekDouble> sol = Array<OneD, NekDouble>(
+            (unsigned) E->GetTotPoints());
 
     switch (dimension)
     {

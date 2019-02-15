@@ -383,7 +383,7 @@ void OutputNekpp::TransferCurves(MeshGraphSharedPtr graph)
             for(int i = 0; i < ns.size(); i++)
             {
                 PointGeomSharedPtr vert = MemoryManager<PointGeom>::AllocateSharedPtr(
-                    m_mesh->m_expDim, edgecnt, ns[i]->m_x, ns[i]->m_y, ns[i]->m_z);
+                    m_mesh->m_spaceDim, edgecnt, ns[i]->m_x, ns[i]->m_y, ns[i]->m_z);
                 curve->m_points.push_back(vert);
             }
 
@@ -400,19 +400,55 @@ void OutputNekpp::TransferCurves(MeshGraphSharedPtr graph)
     {
         if(it->m_faceNodes.size() > 0)
         {
-            CurveSharedPtr curve = MemoryManager<Curve>::AllocateSharedPtr(it->m_id,
-                                            it->m_curveType);
+            CurveSharedPtr curve =
+                MemoryManager<Curve>::AllocateSharedPtr(it->m_id,
+                                                        it->m_curveType);
             vector<NodeSharedPtr> ns;
             it->GetCurvedNodes(ns);
             for(int i = 0; i < ns.size(); i++)
             {
-                PointGeomSharedPtr vert = MemoryManager<PointGeom>::AllocateSharedPtr(
-                    m_mesh->m_expDim, facecnt, ns[i]->m_x, ns[i]->m_y, ns[i]->m_z);
+                PointGeomSharedPtr vert =
+                    MemoryManager<PointGeom>::AllocateSharedPtr
+                    (m_mesh->m_spaceDim, facecnt, ns[i]->m_x, ns[i]->m_y,
+                     ns[i]->m_z);
                 curve->m_points.push_back(vert);
             }
-
+            
             faces[it->m_id] = curve;
             facecnt++;
+        }
+    }
+
+    if(m_mesh->m_expDim == 2 && m_mesh->m_spaceDim == 3)
+    {
+        //manifold case
+        for(int e = 0; e < m_mesh->m_element[2].size(); e++)
+        {
+            ElementSharedPtr el = m_mesh->m_element[2][e];
+
+            if(el->GetFaceCount() > 0) // needed for extract surf case
+            {
+                vector<NodeSharedPtr> ns;
+                el->GetCurvedNodes(ns);
+                if(ns.size() > 4)
+                {
+                    CurveSharedPtr curve =
+                        MemoryManager<Curve>::AllocateSharedPtr
+                        (el->GetId(), el->GetCurveType());
+                    
+                    for(int i = 0; i < ns.size(); i++)
+                    {
+                        PointGeomSharedPtr vert =
+                            MemoryManager<PointGeom>::AllocateSharedPtr
+                            (m_mesh->m_spaceDim, facecnt, ns[i]->m_x, ns[i]->m_y,
+                             ns[i]->m_z);
+                        curve->m_points.push_back(vert);
+                    }
+                    
+                    faces[el->GetId()] = curve;
+                    facecnt++;
+                }
+            }
         }
     }
 }

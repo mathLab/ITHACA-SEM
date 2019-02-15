@@ -93,13 +93,30 @@ namespace Nektar
         Array<OneD, Array<OneD, NekDouble> > m_ForcingTerm;
         Array<OneD, Array<OneD, NekDouble> > m_ForcingTerm_Coeffs;
 
-        Array<OneD, Array<OneD, NekDouble> > PODmodes;
+        Eigen::MatrixXd PODmodes;
+	Eigen::MatrixXd collect_f_all;
         Eigen::MatrixXd RB;
 	Eigen::MatrixXd Get_no_advection_matrix(void);
 	Eigen::MatrixXd Get_no_advection_matrix_ABCD(void);
 	Eigen::MatrixXd Get_no_advection_matrix_pressure(void);
 	Eigen::MatrixXd Get_advection_matrix(void);
 	Eigen::MatrixXd Get_complete_matrix(void);
+	Eigen::MatrixXd curr_xy_projected;
+
+	Array<OneD, Array<OneD, double> > PhysBaseVec_x;
+	Array<OneD, Array<OneD, double> > PhysBaseVec_y;
+	Eigen::MatrixXd eigen_phys_basis_x;
+	Eigen::MatrixXd eigen_phys_basis_y;
+	Array<OneD, Array<OneD, double> > orth_PhysBaseVec_x;
+	Array<OneD, Array<OneD, double> > orth_PhysBaseVec_y;
+        void gen_phys_base_vecs();
+
+	Array<OneD, Eigen::MatrixXd> adv_mats_proj_x;
+	Array<OneD, Eigen::MatrixXd> adv_mats_proj_y;
+	Array<OneD, Eigen::VectorXd> adv_vec_proj_x;
+	Array<OneD, Eigen::VectorXd> adv_vec_proj_y;
+	void gen_proj_adv_terms();
+	
 
         Eigen::MatrixXd MtM;
         Eigen::MatrixXd RB_A;
@@ -117,10 +134,28 @@ namespace Nektar
         Eigen::MatrixXd RB_Dbnd;
         Eigen::MatrixXd RB_Dint;
 
+	Eigen::MatrixXd the_const_one;
+	Eigen::MatrixXd the_ABCD_one;
+	Eigen::MatrixXd the_const_one_simplified;
+	Eigen::MatrixXd the_ABCD_one_simplified;
+	Eigen::MatrixXd the_const_one_proj;
+	Eigen::MatrixXd the_ABCD_one_proj;
+	Eigen::VectorXd the_ABCD_one_rhs;
+	Eigen::VectorXd the_const_one_rhs;
+	Eigen::VectorXd the_ABCD_one_rhs_simplified;
+	Eigen::VectorXd the_const_one_rhs_simplified;
+	Eigen::VectorXd the_ABCD_one_rhs_proj;
+	Eigen::VectorXd the_const_one_rhs_proj;
+	Eigen::MatrixXd gen_affine_mat_proj(double);
+	Eigen::VectorXd gen_affine_vec_proj(double);
+
+	int RBsize;
 	int no_dbc_in_loc;
 	int no_not_dbc_in_loc;
 	std::set<int> elem_loc_dbc;
 	std::set<int> elem_not_loc_dbc;
+	Eigen::VectorXd f_bnd_dbc;
+	Eigen::VectorXd f_bnd_dbc_full_size;
 
 	Eigen::VectorXd curr_f_bnd;
 	Eigen::VectorXd curr_f_p;
@@ -131,7 +166,10 @@ namespace Nektar
         
 	CoupledLinearNS_TT(const LibUtilities::SessionReaderSharedPtr &pSesssion);
 
+	void gen_reference_matrices();
         void setDBC(Eigen::MatrixXd collect_f_all);
+	Eigen::MatrixXd project_onto_basis(Array<OneD, NekDouble> snapshot_x, Array<OneD, NekDouble> snapshot_y);
+
         void set_MtM();
         void DoInitialiseAdv(Array<OneD, NekDouble> myAdvField_x, Array<OneD, NekDouble> myAdvField_y);
         Eigen::MatrixXd remove_cols_and_rows(Eigen::MatrixXd the_matrix, std::set<int> elements_to_be_removed);

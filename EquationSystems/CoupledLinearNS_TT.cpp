@@ -2912,6 +2912,178 @@ namespace Nektar
 		}
 	}
 	MtM = Mtrafo * Mtrafo.transpose();
+
+	f_bnd_dbc = Eigen::VectorXd::Zero(no_dbc_in_loc);
+	f_bnd_dbc_full_size = Eigen::VectorXd::Zero(PODmodes.rows());
+	RB = Eigen::MatrixXd::Zero(PODmodes.rows() - no_dbc_in_loc, PODmodes.cols());
+	int counter_all = 0;
+	int counter_dbc = 0;
+	for (int index=0; index < PODmodes.rows(); ++index)
+	{
+		if (!elem_loc_dbc.count(index))
+		{
+			RB.row(counter_all) = PODmodes.row(index);
+			f_bnd_dbc_full_size(index) = 0;
+			counter_all++;
+		}
+		else
+		{
+			f_bnd_dbc_full_size(index) = collect_f_all(index,0);
+			f_bnd_dbc(counter_dbc) = collect_f_all(index,0);
+			counter_dbc++;
+		}
+	}
+
+    }
+
+    void CoupledLinearNS_TT::gen_phys_base_vecs()
+    {
+	int RBsize = RB.cols();
+	PhysBaseVec_x = Array<OneD, Array<OneD, double> > (RBsize); 
+	PhysBaseVec_y = Array<OneD, Array<OneD, double> > (RBsize);
+	
+	for (int curr_trafo_iter=0; curr_trafo_iter < RBsize; curr_trafo_iter++)
+	{
+		Eigen::VectorXd f_bnd = PODmodes.block(0, curr_trafo_iter, curr_f_bnd.size(), 1);
+		Eigen::VectorXd f_int = PODmodes.block(curr_f_bnd.size()+curr_f_p.size(), curr_trafo_iter, curr_f_int.size(), 1);
+		Array<OneD, MultiRegions::ExpListSharedPtr> fields = UpdateFields(); 
+	        Array<OneD, unsigned int> bmap, imap; 
+		Array<OneD, double> field_0(GetNcoeffs());
+		Array<OneD, double> field_1(GetNcoeffs());
+		Array<OneD, double> curr_PhysBaseVec_x(GetNpoints(), 0.0);
+		Array<OneD, double> curr_PhysBaseVec_y(GetNpoints(), 0.0);
+	        int cnt = 0;
+		int cnt1 = 0;
+		int nvel = 2;
+	        int nz_loc = 1;
+	        int  nplanecoeffs = fields[0]->GetNcoeffs();
+		int  nel  = m_fields[0]->GetNumElmts();
+	        for(int i = 0; i < nel; ++i) 
+	        {
+	            int eid  = i;
+	            fields[0]->GetExp(eid)->GetBoundaryMap(bmap);
+	            fields[0]->GetExp(eid)->GetInteriorMap(imap);
+	            int nbnd   = bmap.num_elements();
+	            int nint   = imap.num_elements();
+	            int offset = fields[0]->GetCoeff_Offset(eid);
+	            
+	            for(int j = 0; j < nvel; ++j)
+	            {
+	                for(int n = 0; n < nz_loc; ++n)
+	                {
+	                    for(int k = 0; k < nbnd; ++k)
+	                    {
+	                        fields[j]->SetCoeff(n*nplanecoeffs + offset+bmap[k], f_bnd(cnt+k));
+	                    }
+	                    
+	                    for(int k = 0; k < nint; ++k)
+	                    {
+	                        fields[j]->SetCoeff(n*nplanecoeffs + offset+imap[k], f_int(cnt1+k));
+	                    }
+	                    cnt  += nbnd;
+	                    cnt1 += nint;
+	                }
+	            }
+	        }
+		Array<OneD, double> test_nn = fields[0]->GetCoeffs();
+		fields[0]->BwdTrans_IterPerExp(fields[0]->GetCoeffs(), curr_PhysBaseVec_x);
+		fields[1]->BwdTrans_IterPerExp(fields[1]->GetCoeffs(), curr_PhysBaseVec_y);
+		PhysBaseVec_x[curr_trafo_iter] = curr_PhysBaseVec_x;
+		PhysBaseVec_y[curr_trafo_iter] = curr_PhysBaseVec_y;
+		
+	}
+
+	eigen_phys_basis_x = Eigen::MatrixXd::Zero(GetNpoints(), RBsize);
+	eigen_phys_basis_y = Eigen::MatrixXd::Zero(GetNpoints(), RBsize);
+	for (int index_phys_base=0; index_phys_base<GetNpoints(); index_phys_base++)
+	{
+		for (int index_RBsize=0; index_RBsize<RBsize; index_RBsize++)
+		{
+			eigen_phys_basis_x(index_phys_base,index_RBsize) = PhysBaseVec_x[index_RBsize][index_phys_base];
+			eigen_phys_basis_y(index_phys_base,index_RBsize) = PhysBaseVec_y[index_RBsize][index_phys_base];
+		}
+	}
+
+	Eigen::VectorXd curr_col = eigen_phys_basis_x.col(0);
+	double norm_curr_col = curr_col.norm();
+	eigen_phys_basis_x.col(0) = curr_col / norm_curr_col;
+	curr_col = eigen_phys_basis_y.col(0);
+	norm_curr_col = curr_col.norm();
+	eigen_phys_basis_y.col(0) = curr_col / norm_curr_col;
+	Eigen::VectorXd orthogonal_complement;
+	
+	for (int orth_iter=1; orth_iter<RBsize; orth_iter++)
+	{
+		curr_col = eigen_phys_basis_x.col(orth_iter);
+		Eigen::MatrixXd leftmostCols = eigen_phys_basis_x.leftCols(orth_iter);
+		orthogonal_complement = curr_col - leftmostCols * leftmostCols.transpose() * curr_col;
+		norm_curr_col = orthogonal_complement.norm();
+		eigen_phys_basis_x.col(orth_iter) = orthogonal_complement / norm_curr_col;
+		curr_col = eigen_phys_basis_y.col(orth_iter);
+		leftmostCols = eigen_phys_basis_y.leftCols(orth_iter);
+		orthogonal_complement = curr_col - leftmostCols * leftmostCols.transpose() * curr_col;
+		norm_curr_col = orthogonal_complement.norm();
+		eigen_phys_basis_y.col(orth_iter) = orthogonal_complement / norm_curr_col;
+	}
+
+	orth_PhysBaseVec_x = Array<OneD, Array<OneD, double> > (RBsize); 
+	orth_PhysBaseVec_y = Array<OneD, Array<OneD, double> > (RBsize); 
+	for (int index_RBsize=0; index_RBsize<RBsize; index_RBsize++)
+	{
+		Array<OneD, double> curr_iter_x(GetNpoints());
+		Array<OneD, double> curr_iter_y(GetNpoints());
+		for (int index_phys_base=0; index_phys_base<GetNpoints(); index_phys_base++)	
+		{
+			curr_iter_x[index_phys_base] = eigen_phys_basis_x(index_phys_base,index_RBsize);
+			curr_iter_y[index_phys_base] = eigen_phys_basis_y(index_phys_base,index_RBsize);			
+		}
+		orth_PhysBaseVec_x[index_RBsize] = curr_iter_x;
+		orth_PhysBaseVec_y[index_RBsize] = curr_iter_y;			
+	}
+    }
+
+    void CoupledLinearNS_TT::gen_proj_adv_terms()
+    {
+	RBsize = RB.cols();
+	adv_mats_proj_x = Array<OneD, Eigen::MatrixXd > (RBsize);
+	adv_mats_proj_y = Array<OneD, Eigen::MatrixXd > (RBsize);
+	adv_vec_proj_x = Array<OneD, Eigen::VectorXd > (RBsize);
+	adv_vec_proj_y = Array<OneD, Eigen::VectorXd > (RBsize);
+	Array<OneD, double> PhysBase_zero(GetNpoints(), 0.0);
+	for(int trafo_iter = 0; trafo_iter < RBsize; trafo_iter++)
+	{
+		Array<OneD, double> curr_PhysBaseVec_x = orth_PhysBaseVec_x[trafo_iter];
+		Array<OneD, double> curr_PhysBaseVec_y = orth_PhysBaseVec_y[trafo_iter];
+		
+		InitObject();
+		DoInitialiseAdv(curr_PhysBaseVec_x, PhysBase_zero); // call with parameter in phys state
+		Eigen::MatrixXd adv_matrix = Eigen::MatrixXd::Zero(RB_A.rows() + RB_Dbnd.rows() + RB_C.cols(), RB_A.cols() + RB_Dbnd.rows() + RB_B.cols() );
+		adv_matrix = Get_advection_matrix();
+		
+		Eigen::VectorXd add_to_rhs_adv(PODmodes.rows()); // probably need this for adv and non-adv
+		add_to_rhs_adv = adv_matrix * f_bnd_dbc_full_size;   
+
+		Eigen::MatrixXd adv_matrix_simplified = remove_cols_and_rows(adv_matrix, elem_loc_dbc);
+		Eigen::VectorXd adv_rhs_add = remove_rows(add_to_rhs_adv, elem_loc_dbc);
+		Eigen::MatrixXd adv_mat_proj = RB.transpose() * adv_matrix_simplified * RB;
+		Eigen::VectorXd adv_rhs_proj = RB.transpose() * adv_rhs_add;
+
+		adv_mats_proj_x[trafo_iter] = adv_mat_proj;
+		adv_vec_proj_x[trafo_iter] = adv_rhs_proj;
+
+		DoInitialiseAdv(PhysBase_zero , curr_PhysBaseVec_y ); // call with parameter in phys state
+
+		adv_matrix = Get_advection_matrix();
+		add_to_rhs_adv = adv_matrix * f_bnd_dbc_full_size;   
+		adv_matrix_simplified = remove_cols_and_rows(adv_matrix, elem_loc_dbc);
+		adv_rhs_add = remove_rows(add_to_rhs_adv, elem_loc_dbc);
+		adv_mat_proj = RB.transpose() * adv_matrix_simplified * RB;
+		adv_rhs_proj = RB.transpose() * adv_rhs_add;
+		adv_mats_proj_y[trafo_iter] = adv_mat_proj;
+		adv_vec_proj_y[trafo_iter] = adv_rhs_proj;
+
+	}
+
     }
 
 
@@ -2971,6 +3143,66 @@ namespace Nektar
 	collect_f_all.block(collect_f_bnd.rows()+collect_f_p.rows(),0,collect_f_int.rows(),collect_f_int.cols()) = collect_f_int;
 
 	return collect_f_all;
+    }
+
+    Eigen::MatrixXd CoupledLinearNS_TT::project_onto_basis( Array<OneD, NekDouble> snapshot_x, Array<OneD, NekDouble> snapshot_y)
+    {
+	Eigen::VectorXd c_snapshot_x(GetNpoints());
+	Eigen::VectorXd c_snapshot_y(GetNpoints());
+	for (int i = 0; i < GetNpoints(); ++i)
+	{
+		c_snapshot_x(i) = snapshot_x[i];
+		c_snapshot_y(i) = snapshot_y[i];
+	}
+	Eigen::VectorXd curr_x_proj = eigen_phys_basis_x.transpose() * c_snapshot_x;
+	Eigen::VectorXd curr_y_proj = eigen_phys_basis_y.transpose() * c_snapshot_y;
+	curr_xy_projected = Eigen::MatrixXd::Zero(curr_x_proj.rows(), 2);
+	curr_xy_projected.col(0) = curr_x_proj;
+	curr_xy_projected.col(1) = curr_y_proj;
+
+	return curr_xy_projected;
+
+    }
+
+    Eigen::MatrixXd CoupledLinearNS_TT::gen_affine_mat_proj(double current_nu)
+    {
+	Eigen::MatrixXd recovered_affine_adv_mat_proj_xy = Eigen::MatrixXd::Zero(RBsize, RBsize);
+	for (int i = 0; i < RBsize; ++i)
+	{
+		recovered_affine_adv_mat_proj_xy += adv_mats_proj_x[i] * curr_xy_projected(i,0) + adv_mats_proj_y[i] * curr_xy_projected(i,1);
+	}
+	Eigen::MatrixXd affine_mat_proj = the_const_one_proj + current_nu * the_ABCD_one_proj + recovered_affine_adv_mat_proj_xy;
+	return affine_mat_proj;
+    }
+
+    Eigen::VectorXd CoupledLinearNS_TT::gen_affine_vec_proj(double current_nu)
+    {
+	Eigen::VectorXd recovered_affine_adv_rhs_proj_xy = Eigen::VectorXd::Zero(RBsize); 
+	for (int i = 0; i < RBsize; ++i)
+	{
+		recovered_affine_adv_rhs_proj_xy += adv_vec_proj_x[i] * curr_xy_projected(i,0) + adv_vec_proj_y[i] * curr_xy_projected(i,1);
+	}	
+	return the_const_one_rhs_proj + current_nu * the_ABCD_one_rhs_proj + recovered_affine_adv_rhs_proj_xy;
+    }
+
+    void CoupledLinearNS_TT::gen_reference_matrices()
+    {
+	double current_nu = 1;
+	int current_index = 2;
+	Set_m_kinvis( current_nu );
+	DoInitialiseAdv(snapshot_x_collection[current_index], snapshot_y_collection[current_index]);
+	the_const_one = Get_no_advection_matrix_pressure();
+	the_ABCD_one = Get_no_advection_matrix_ABCD();
+	the_const_one_simplified = remove_cols_and_rows(the_const_one, elem_loc_dbc);
+	the_ABCD_one_simplified = remove_cols_and_rows(the_ABCD_one, elem_loc_dbc);
+	the_const_one_proj = RB.transpose() * the_const_one_simplified * RB;
+	the_ABCD_one_proj = RB.transpose() * the_ABCD_one_simplified * RB;
+	the_ABCD_one_rhs = the_ABCD_one * f_bnd_dbc_full_size;
+	the_const_one_rhs = the_const_one * f_bnd_dbc_full_size;
+	the_ABCD_one_rhs_simplified = remove_rows(the_ABCD_one_rhs, elem_loc_dbc);
+	the_const_one_rhs_simplified = remove_rows(the_const_one_rhs, elem_loc_dbc);
+	the_ABCD_one_rhs_proj = RB.transpose() * the_ABCD_one_rhs_simplified;
+	the_const_one_rhs_proj = RB.transpose() * the_const_one_rhs_simplified;
     }
 
 

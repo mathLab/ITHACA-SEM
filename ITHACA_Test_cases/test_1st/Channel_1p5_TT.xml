@@ -15,7 +15,7 @@
             <!-- <I PROPERTY="MappingImplicitPressure" VALUE="TRUE"/> -->
             <!-- <I PROPERTY="EQTYPE" VALUE="SteadyStokes" /> -->
             <I PROPERTY="EQTYPE" VALUE="SteadyOseen" />
-	    <I PROPERTY="SolverType" VALUE="CoupledLinearisedNS" />
+	    <I PROPERTY="SolverType" VALUE="CoupledLinearisedNS_TT" />
 	    <!-- <I PROPERTY="GlobalSysSoln" VALUE="DirectFull" /> -->
             <!--  <I PROPERTY="Driver" VALUE="SteadyState" />  doing some pseudo-time integration to compute steady state-->
 	    <!-- <I PROPERTY="MappingImplicitPressure" VALUE="TRUE"/>  Default = FALSE -->
@@ -37,7 +37,8 @@
             <P> IO_InfoSteps = 1000       </P>
             <P> Kinvis = 10       </P>
             <P> Kinvis_max = 123       </P>
-            <!-- <P> Kinvis = .01       </P> -->
+            <P> load_snapshot_data_from_files = 1       </P>
+            <P> number_of_snapshots = 4       </P>
             <P> A             = 0.65               </P>
             <P> omega         = 2*PI*f               </P>
             <P> MappingPressureTolerance  = 1e-5               </P>

@@ -78,11 +78,17 @@ namespace Nektar
                                 const Array< OneD, Array<OneD, NekDouble>  > &Advfield = NullNekDoubleArrayofArray, 
                                 bool IsLinearNSEquation = true);
 
+        Array<OneD, CoupledLocalToGlobalC0ContMapSharedPtr> m_locToGloMap;
+
 	void DefineRBspace(Eigen::MatrixXd RB_via_POD);
 
 	Eigen::VectorXd trafoSnapshot(Eigen::VectorXd RB_via_POD, double kInvis);
 
 	void trafoSnapshot_simple(Eigen::MatrixXd RB_via_POD);
+
+        Eigen::MatrixXd DoTrafo(Array<OneD, Array<OneD, NekDouble> > snapshot_x_collection, Array<OneD, Array<OneD, NekDouble> > snapshot_y_collection, Array<OneD, NekDouble> param_vector);
+
+	void load_snapshots(int number_of_snapshots);
         
         Array<OneD, Array<OneD, NekDouble> > m_ForcingTerm;
         Array<OneD, Array<OneD, NekDouble> > m_ForcingTerm_Coeffs;
@@ -111,14 +117,22 @@ namespace Nektar
         Eigen::MatrixXd RB_Dbnd;
         Eigen::MatrixXd RB_Dint;
 
+	int no_dbc_in_loc;
+	int no_not_dbc_in_loc;
+	std::set<int> elem_loc_dbc;
+	std::set<int> elem_not_loc_dbc;
+
 	Eigen::VectorXd curr_f_bnd;
 	Eigen::VectorXd curr_f_p;
 	Eigen::VectorXd curr_f_int;
-        
-        Array<OneD, CoupledLocalToGlobalC0ContMapSharedPtr> m_locToGloMap;
 
+	Array<OneD, Array<OneD, NekDouble> > snapshot_x_collection;
+	Array<OneD, Array<OneD, NekDouble> > snapshot_y_collection;
+        
 	CoupledLinearNS_TT(const LibUtilities::SessionReaderSharedPtr &pSesssion);
 
+        void setDBC(Eigen::MatrixXd collect_f_all);
+        void set_MtM();
         void DoInitialiseAdv(Array<OneD, NekDouble> myAdvField_x, Array<OneD, NekDouble> myAdvField_y);
         Eigen::MatrixXd remove_cols_and_rows(Eigen::MatrixXd the_matrix, std::set<int> elements_to_be_removed);
         Eigen::VectorXd remove_rows(Eigen::VectorXd the_vector, std::set<int> elements_to_be_removed);

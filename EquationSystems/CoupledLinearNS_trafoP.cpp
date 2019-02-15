@@ -1437,6 +1437,64 @@ namespace Nektar
 	m_kinvis = input;
     }
 
+    Eigen::MatrixXd CoupledLinearNS_trafoP::DoTrafo(Array<OneD, Array<OneD, NekDouble> > snapshot_x_collection, Array<OneD, Array<OneD, NekDouble> > snapshot_y_collection, Array<OneD, NekDouble> param_vector)
+    {
+	int Nmax = param_vector.num_elements();
+	DoInitialise();
+	DoSolve();
+	Eigen::MatrixXd collect_f_bnd( curr_f_bnd.size() , Nmax );
+	Eigen::MatrixXd collect_f_p( curr_f_p.size() , Nmax );
+	Eigen::MatrixXd collect_f_int( curr_f_int.size() , Nmax );
+	for (int i=0; i<Nmax; i++)
+	{
+		Set_m_kinvis( param_vector[i] );	
+//		cout << "CLNS_trafo.Get_m_kinvis " << CLNS_trafo.Get_m_kinvis() << endl;
+	//	CLNS_trafo.DoInitialise();
+		DoInitialiseAdv(snapshot_x_collection[i], snapshot_y_collection[i]); // replaces .DoInitialise();
+		DoSolve();
+
+		// compare the accuracy
+		Array<OneD, MultiRegions::ExpListSharedPtr> m_fields_t = UpdateFields();
+		m_fields_t[0]->BwdTrans(m_fields_t[0]->GetCoeffs(), m_fields_t[0]->UpdatePhys());
+		m_fields_t[1]->BwdTrans(m_fields_t[1]->GetCoeffs(), m_fields_t[1]->UpdatePhys());
+		Array<OneD, NekDouble> out_field_trafo_x(GetNpoints(), 0.0);
+		Array<OneD, NekDouble> out_field_trafo_y(GetNpoints(), 0.0);
+
+		Eigen::VectorXd csx0_trafo(GetNpoints());
+		Eigen::VectorXd csy0_trafo(GetNpoints());
+		Eigen::VectorXd csx0(GetNpoints());
+		Eigen::VectorXd csy0(GetNpoints());
+
+		CopyFromPhysField(0, out_field_trafo_x); 
+		CopyFromPhysField(1, out_field_trafo_y);
+		for( int index_conv = 0; index_conv < GetNpoints(); ++index_conv)
+		{
+			csx0_trafo(index_conv) = out_field_trafo_x[index_conv];
+			csy0_trafo(index_conv) = out_field_trafo_y[index_conv];
+			csx0(index_conv) = snapshot_x_collection[i][index_conv];
+			csy0(index_conv) = snapshot_y_collection[i][index_conv];
+		}
+
+		cout << "csx0.norm() " << csx0.norm() << endl;
+		cout << "csx0_trafo.norm() " << csx0_trafo.norm() << endl;
+		cout << "csy0.norm() " << csy0.norm() << endl;
+		cout << "csy0_trafo.norm() " << csy0_trafo.norm() << endl;
+		
+		Eigen::VectorXd trafo_f_bnd = curr_f_bnd;
+		Eigen::VectorXd trafo_f_p = curr_f_p;
+		Eigen::VectorXd trafo_f_int = curr_f_int;
+
+		collect_f_bnd.col(i) = trafo_f_bnd;
+		collect_f_p.col(i) = trafo_f_p;
+		collect_f_int.col(i) = trafo_f_int;
+	}
+	Eigen::MatrixXd collect_f_all( curr_f_bnd.size()+curr_f_p.size()+curr_f_int.size() , Nmax );
+	collect_f_all.block(0,0,collect_f_bnd.rows(),collect_f_bnd.cols()) = collect_f_bnd;
+	collect_f_all.block(collect_f_bnd.rows(),0,collect_f_p.rows(),collect_f_p.cols()) = collect_f_p;
+	collect_f_all.block(collect_f_bnd.rows()+collect_f_p.rows(),0,collect_f_int.rows(),collect_f_int.cols()) = collect_f_int;
+
+	return collect_f_all;
+    }
     
     void CoupledLinearNS_trafoP::v_DoSolve(void)
     {

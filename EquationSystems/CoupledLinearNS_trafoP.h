@@ -126,6 +126,7 @@ namespace Nektar
         CoupledLinearNS_trafoP(const LibUtilities::SessionReaderSharedPtr &pSesssion);
         
         void DoInitialiseAdv(Array<OneD, NekDouble> myAdvField_x, Array<OneD, NekDouble> myAdvField_y);
+        Eigen::MatrixXd DoTrafo(Array<OneD, Array<OneD, NekDouble> > snapshot_x_collection, Array<OneD, Array<OneD, NekDouble> > snapshot_y_collection, Array<OneD, NekDouble> param_vector);
 
 	Eigen::VectorXd curr_f_bnd;
 	Eigen::VectorXd curr_f_p;

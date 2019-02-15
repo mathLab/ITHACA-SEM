@@ -2448,6 +2448,16 @@ namespace Nektar
 	{
 		curr_f_bnd(i_phys_dof) = f_bnd[i_phys_dof]; 
 	}
+	curr_f_p = Eigen::VectorXd::Zero(f_p.num_elements()); 
+	for (int i_phys_dof = 0; i_phys_dof < f_p.num_elements(); i_phys_dof++)
+	{
+		curr_f_p(i_phys_dof) = f_p[i_phys_dof]; 
+	}
+	curr_f_int = Eigen::VectorXd::Zero(f_int.num_elements()); 
+	for (int i_phys_dof = 0; i_phys_dof < f_int.num_elements(); i_phys_dof++)
+	{
+		curr_f_int(i_phys_dof) = f_int[i_phys_dof]; 
+	}
 
         
         // Unpack solution from Bnd and F_int to v_coeffs 
@@ -2692,6 +2702,25 @@ namespace Nektar
 
     }
 
+    void CoupledLinearNS_TT::setDBC(Eigen::MatrixXd collect_f_all)
+    {
+	no_dbc_in_loc = 0;
+	no_not_dbc_in_loc = 0;
+	for ( int index_c_f_bnd = 0; index_c_f_bnd < curr_f_bnd.size(); index_c_f_bnd++ )
+	{
+		if (collect_f_all(index_c_f_bnd,0) == collect_f_all(index_c_f_bnd,1))
+		{
+			no_dbc_in_loc++;
+			elem_loc_dbc.insert(index_c_f_bnd);
+		}
+		else
+		{
+			no_not_dbc_in_loc++;
+			elem_not_loc_dbc.insert(index_c_f_bnd);
+		}
+	}
+    }
+
     void CoupledLinearNS_TT::v_DoInitialise(void)
     {
         switch(m_equationType)
@@ -2856,6 +2885,145 @@ namespace Nektar
 
 
 	return RB_via_POD;
+    }
+
+    void CoupledLinearNS_TT::set_MtM()
+    {
+	int nBndDofs = m_locToGloMap[0]->GetNumGlobalBndCoeffs();  // number of global bnd dofs
+        const Array<OneD,const int>& loctoglobndmap = m_locToGloMap[0]->GetLocalToGlobalBndMap();
+        const Array<OneD,const NekDouble>& loctoglobndsign = m_locToGloMap[0]->GetLocalToGlobalBndSign();
+	Eigen::MatrixXd Mtrafo(RB_A.rows(), nBndDofs);
+	Array<OneD, MultiRegions::ExpListSharedPtr> m_fields = UpdateFields();
+        int  nel  = m_fields[0]->GetNumElmts(); // number of spectral elements
+	int nsize_bndry_p1 = loctoglobndmap.num_elements() / nel;
+	int nsize_bndry = nsize_bndry_p1-1;
+	for (int curr_elem = 0; curr_elem < nel; curr_elem++)
+	{
+		int cnt = curr_elem*nsize_bndry_p1;
+		int cnt_no_pp = curr_elem*nsize_bndry;
+		for ( int index_ele = 0; index_ele < nsize_bndry_p1; index_ele++ )
+		{
+			int gid1 = loctoglobndmap[cnt+index_ele];
+			int sign1 = loctoglobndsign[cnt+index_ele];
+			if ((gid1 >= 0) && (index_ele < nsize_bndry))
+			{
+				Mtrafo(cnt_no_pp + index_ele, gid1) = sign1;
+			}
+		}
+	}
+	MtM = Mtrafo * Mtrafo.transpose();
+    }
+
+
+    Eigen::MatrixXd CoupledLinearNS_TT::DoTrafo(Array<OneD, Array<OneD, NekDouble> > snapshot_x_collection, Array<OneD, Array<OneD, NekDouble> > snapshot_y_collection, Array<OneD, NekDouble> param_vector)
+    {
+	int Nmax = param_vector.num_elements();
+	Eigen::MatrixXd collect_f_bnd( curr_f_bnd.size() , Nmax );
+	Eigen::MatrixXd collect_f_p( curr_f_p.size() , Nmax );
+	Eigen::MatrixXd collect_f_int( curr_f_int.size() , Nmax );
+	for (int i=0; i<Nmax; i++)
+	{
+		Set_m_kinvis( param_vector[i] );	
+//		cout << "CLNS_trafo.Get_m_kinvis " << CLNS_trafo.Get_m_kinvis() << endl;
+	//	CLNS_trafo.DoInitialise();
+		DoInitialiseAdv(snapshot_x_collection[i], snapshot_y_collection[i]); // replaces .DoInitialise();
+		DoSolve();
+
+		// compare the accuracy
+		Array<OneD, MultiRegions::ExpListSharedPtr> m_fields_t = UpdateFields();
+		m_fields_t[0]->BwdTrans(m_fields_t[0]->GetCoeffs(), m_fields_t[0]->UpdatePhys());
+		m_fields_t[1]->BwdTrans(m_fields_t[1]->GetCoeffs(), m_fields_t[1]->UpdatePhys());
+		Array<OneD, NekDouble> out_field_trafo_x(GetNpoints(), 0.0);
+		Array<OneD, NekDouble> out_field_trafo_y(GetNpoints(), 0.0);
+
+		Eigen::VectorXd csx0_trafo(GetNpoints());
+		Eigen::VectorXd csy0_trafo(GetNpoints());
+		Eigen::VectorXd csx0(GetNpoints());
+		Eigen::VectorXd csy0(GetNpoints());
+
+		CopyFromPhysField(0, out_field_trafo_x); 
+		CopyFromPhysField(1, out_field_trafo_y);
+		for( int index_conv = 0; index_conv < GetNpoints(); ++index_conv)
+		{
+			csx0_trafo(index_conv) = out_field_trafo_x[index_conv];
+			csy0_trafo(index_conv) = out_field_trafo_y[index_conv];
+			csx0(index_conv) = snapshot_x_collection[i][index_conv];
+			csy0(index_conv) = snapshot_y_collection[i][index_conv];
+		}
+
+		cout << "csx0.norm() " << csx0.norm() << endl;
+		cout << "csx0_trafo.norm() " << csx0_trafo.norm() << endl;
+		cout << "csy0.norm() " << csy0.norm() << endl;
+		cout << "csy0_trafo.norm() " << csy0_trafo.norm() << endl;
+		
+		Eigen::VectorXd trafo_f_bnd = curr_f_bnd;
+		Eigen::VectorXd trafo_f_p = curr_f_p;
+		Eigen::VectorXd trafo_f_int = curr_f_int;
+
+		collect_f_bnd.col(i) = trafo_f_bnd;
+		collect_f_p.col(i) = trafo_f_p;
+		collect_f_int.col(i) = trafo_f_int;
+
+	}
+	Eigen::MatrixXd collect_f_all( curr_f_bnd.size()+curr_f_p.size()+curr_f_int.size() , Nmax );
+	collect_f_all.block(0,0,collect_f_bnd.rows(),collect_f_bnd.cols()) = collect_f_bnd;
+	collect_f_all.block(collect_f_bnd.rows(),0,collect_f_p.rows(),collect_f_p.cols()) = collect_f_p;
+	collect_f_all.block(collect_f_bnd.rows()+collect_f_p.rows(),0,collect_f_int.rows(),collect_f_int.cols()) = collect_f_int;
+
+	return collect_f_all;
+    }
+
+
+    void CoupledLinearNS_TT::load_snapshots(int number_of_snapshots)
+    {
+	// fill the fields snapshot_x_collection and snapshot_y_collection
+
+	int nvelo = 2;
+        Array<OneD, Array<OneD, NekDouble> > test_load_snapshot(nvelo); // for a 2D problem
+
+        for(int i = 0; i < nvelo; ++i)
+        {
+            test_load_snapshot[i] = Array<OneD, NekDouble> (GetNpoints(), 0.0);  // number of phys points
+        }
+               
+        std::vector<std::string> fieldStr;
+        for(int i = 0; i < nvelo; ++i)
+        {
+           fieldStr.push_back(m_session->GetVariable(i));
+//           cout << "session->GetVariable(i) " << session->GetVariable(i) << endl;
+        }
+
+	snapshot_x_collection = Array<OneD, Array<OneD, NekDouble> > (number_of_snapshots);
+	snapshot_y_collection = Array<OneD, Array<OneD, NekDouble> > (number_of_snapshots);
+
+
+
+
+        for(int i = 0; i < number_of_snapshots; ++i)
+        {
+		// generate the correct string
+		std::stringstream sstm;
+		sstm << "TestSnap" << i+1;
+		std::string result = sstm.str();
+		const char* rr = result.c_str();
+
+	        EvaluateFunction(fieldStr, test_load_snapshot, result);
+//		cout << "tls " << test_load_snapshot[0][1235] << endl;
+		snapshot_x_collection[i] = Array<OneD, NekDouble> (GetNpoints(), 0.0);
+		snapshot_y_collection[i] = Array<OneD, NekDouble> (GetNpoints(), 0.0);
+		for (int j=0; j < GetNpoints(); ++j)
+		{
+			snapshot_x_collection[i][j] = test_load_snapshot[0][j];
+			snapshot_y_collection[i][j] = test_load_snapshot[1][j];
+		}
+		// snapshot_x_collection[i] = test_load_snapshot[0];
+		// snapshot_y_collection[i] = test_load_snapshot[1];
+
+        }
+	
+
+
+
     }
 
     void CoupledLinearNS_TT::trafoSnapshot_simple(Eigen::MatrixXd RB_in)

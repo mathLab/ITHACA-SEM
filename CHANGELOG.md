@@ -92,6 +92,7 @@ v5.0.0
 - Fix surface string parsin in BL splitting (!937)
 - Fix issue with MLSC after Scotch conversion (!943)
 - Add support for Gmsh 4.0 mesh file format (!964)
+- Fix surface extraction, added regression test (!994)
 
 **FieldConvert**:
 - Add input module for Semtex field files (!777)

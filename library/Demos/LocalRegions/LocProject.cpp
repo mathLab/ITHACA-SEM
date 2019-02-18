@@ -1,29 +1,15 @@
 #include <iostream>
-#include <cstdlib>
-
 #include <boost/program_options.hpp>
 #include <boost/algorithm/string.hpp>
 
 #include <LocalRegions/SegExp.h>
-#include <SpatialDomains/SegGeom.h>
-
-#include <StdRegions/StdExpansion2D.h>
-#include <LocalRegions/QuadExp.h>
 #include <LocalRegions/TriExp.h>
 #include <LocalRegions/NodalTriExp.h>
-
-#include <StdRegions/StdExpansion3D.h>
+#include <LocalRegions/QuadExp.h>
 #include <LocalRegions/HexExp.h>
 #include <LocalRegions/PrismExp.h>
 #include <LocalRegions/PyrExp.h>
 #include <LocalRegions/TetExp.h>
-#include <LocalRegions/NodalTetExp.h>
-
-
-#include <LibUtilities/Foundations/Foundations.hpp>
-#include <LibUtilities/Foundations/Basis.h>
-
-#include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
 
 using namespace std;
 using namespace Nektar;
@@ -68,9 +54,6 @@ NekDouble Hex_Dsol(NekDouble x, NekDouble y, NekDouble z, int order1,
 
 GeometrySharedPtr CreateGeom(vector<double> coords, ShapeType stype);
 
-\
-
-
 //Modification to deal with exact solution for diff. Return 1 if integer < 0.
 static double pow_loc(const double val, const int i)
 {
@@ -113,20 +96,18 @@ int main(int argc, char *argv[])
         po::store(po::parse_command_line(argc, argv, desc), vm);
         if (vm.count("help"))
         {
-            cout << desc << endl << "All valid selections for nodal "
-                                    "type, -n [ --nodal-type ], are:" << endl;
-            for (int i = 22; i < SIZE_PointsType; ++i) //starts at nodal points
+            cout << desc;
+            cout << endl << "All nodal types, -n [ --nodal ], are:" << endl;
+            for (int i = 22; i < SIZE_PointsType; ++i)
             {
                 cout << kPointsTypeStr[i] << endl;
             };
-            cout << endl << "All valid selections for shape "
-                            "type, -s [ --shape ], are:" << endl;
-            for (int i = 1; i < SIZE_ShapeType; ++i)
+            cout << endl << "All shape types, -s [ --shape ], are:" << endl;
+            for (int i = 2; i < SIZE_ShapeType; ++i)
             {
                 cout << ShapeTypeMap[i] << endl;
             };
-            cout << endl << "All valid selections for basis type, -b "
-                            "[ --basis ], are:" << endl;
+            cout << endl << "All basis types, -b [ --basis ], are:" << endl;
             for (int i = 1; i < SIZE_BasisType; ++i)
             {
                 cout << BasisTypeMap[i] << endl;
@@ -148,7 +129,7 @@ int main(int argc, char *argv[])
     vector<BasisType> btype(3, eNoBasisType);
     if (vm.count("nodal"))
     {
-        for (int i = 22; i < SIZE_PointsType; ++i) // starts at nodal points
+        for (int i = 1; i < SIZE_PointsType; ++i) // starts at nodal points
         {
             if (boost::iequals(kPointsTypeStr[i], ntype))
             {
@@ -286,7 +267,6 @@ int main(int argc, char *argv[])
         }
     }
 
-
     vector<PointsType> pointstype(3, eNoPointsType);
     StdExpansion *E = nullptr;
 
@@ -326,7 +306,7 @@ int main(int argc, char *argv[])
 
     vector<PointsKey> pkey;
     vector<BasisKey> bkey;
-    for (int i = 0; i < 3; ++i)
+    for (int i = 0; i < dimension; ++i)
     {
         pkey.push_back(PointsKey(points[i], pointstype[i]));
         bkey.push_back(BasisKey(btype[i], order[i], pkey[i]));
@@ -570,7 +550,6 @@ int main(int argc, char *argv[])
                 }
                 break;
             }
-
             case eHexahedron:
             {
                 for (int i = 0; i < E->GetTotPoints(); ++i)
@@ -680,7 +659,11 @@ GeometrySharedPtr CreateGeom(vector<double> coords,
 
     int dimension = ShapeTypeDimMap[shapeType];
     ASSERTL0(coords.size() == dimension * numVerts[shapeType],
-             "The number of coordinates supplied should match the shape type.");
+             ("The number of coordinates supplied should match the shape type, "
+              "you supplied " + to_string(coords.size() / dimension) + " and "
+                                                                       "shape type " +
+              ShapeTypeMap[shapeType] + " requires " +
+              to_string(numVerts[shapeType])));
 
 
     PointGeomSharedPtr verts[numVerts[shapeType]];
@@ -704,7 +687,7 @@ GeometrySharedPtr CreateGeom(vector<double> coords,
                                                                   &tmp[0]));
     }
 
-    if (shapeType == eSegment)
+    if (dimension == 1)
     {
         return edges[0];
     }
@@ -730,7 +713,7 @@ GeometrySharedPtr CreateGeom(vector<double> coords,
 
     }
 
-    if (shapeType == eTriangle || shapeType == eQuadrilateral)
+    if (dimension == 2)
     {
         return faces[0];
     }
@@ -743,11 +726,16 @@ GeometrySharedPtr CreateGeom(vector<double> coords,
         {
             tmp.push_back(faces[volDef[shapeType][i][j]]);
         }
+
         if (shapeType == eTetrahedron)
         {
-            TriGeomSharedPtr tmpTri = dynamic_pointer_cast<TriGeom>(tmp[0]);
+            vector<TriGeomSharedPtr> tmp2;
+            for (int j = 0; j < tmp.size(); ++j)
+            {
+                tmp2.push_back(dynamic_pointer_cast<TriGeom>(tmp[j]));
+            }
             volumes.push_back(
-                    MemoryManager<TetGeom>::AllocateSharedPtr(0, &tmpTri));
+                    MemoryManager<TetGeom>::AllocateSharedPtr(0, &tmp2[0]));
         }
         else if (shapeType == ePyramid)
         {
@@ -761,9 +749,13 @@ GeometrySharedPtr CreateGeom(vector<double> coords,
         }
         else if (shapeType == eHexahedron)
         {
-            QuadGeomSharedPtr tmpQuad = dynamic_pointer_cast<QuadGeom>(tmp[0]);
+            vector<QuadGeomSharedPtr> tmp2;
+            for (int j = 0; j < tmp.size(); ++j)
+            {
+                tmp2.push_back(dynamic_pointer_cast<QuadGeom>(tmp[j]));
+            }
             volumes.push_back(
-                    MemoryManager<HexGeom>::AllocateSharedPtr(0, &tmpQuad));
+                    MemoryManager<HexGeom>::AllocateSharedPtr(0, &tmp2[0]));
         }
     }
 

@@ -1,5 +1,4 @@
 #include <iostream>
-
 #include <boost/program_options.hpp>
 #include <boost/algorithm/string.hpp>
 
@@ -333,7 +332,7 @@ int main(int argc, char *argv[])
 
     vector<PointsKey> pkey;
     vector<BasisKey> bkey;
-    for (int i = 0; i < 3; ++i)
+    for (int i = 0; i < dimension; ++i)
     {
         pkey.push_back(PointsKey(points[i], pointstype[i]));
         bkey.push_back(BasisKey(btype[i], order[i], pkey[i]));

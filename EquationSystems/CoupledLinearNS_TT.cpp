@@ -3180,9 +3180,28 @@ namespace Nektar
 	Eigen::VectorXd recovered_affine_adv_rhs_proj_xy = Eigen::VectorXd::Zero(RBsize); 
 	for (int i = 0; i < RBsize; ++i)
 	{
-		recovered_affine_adv_rhs_proj_xy += adv_vec_proj_x[i] * curr_xy_projected(i,0) + adv_vec_proj_y[i] * curr_xy_projected(i,1);
+		recovered_affine_adv_rhs_proj_xy -= adv_vec_proj_x[i] * curr_xy_projected(i,0) + adv_vec_proj_y[i] * curr_xy_projected(i,1);
 	}	
-	return the_const_one_rhs_proj + current_nu * the_ABCD_one_rhs_proj + recovered_affine_adv_rhs_proj_xy;
+	return -the_const_one_rhs_proj - current_nu * the_ABCD_one_rhs_proj + recovered_affine_adv_rhs_proj_xy;
+    }
+
+    Eigen::VectorXd CoupledLinearNS_TT::reconstruct_solution_w_dbc(Eigen::VectorXd reprojected_solve)
+    {
+	Eigen::VectorXd reconstruct_solution = Eigen::VectorXd::Zero(f_bnd_dbc_full_size.rows());
+	int counter_wo_dbc = 0;
+	for (int row_index=0; row_index < f_bnd_dbc_full_size.rows(); ++row_index)
+	{
+		if (!elem_loc_dbc.count(row_index))
+		{
+			reconstruct_solution(row_index) = reprojected_solve(counter_wo_dbc);
+			counter_wo_dbc++;
+		}
+		else
+		{
+			reconstruct_solution(row_index) = f_bnd_dbc_full_size(row_index);
+		}
+	}
+	return reconstruct_solution;
     }
 
     void CoupledLinearNS_TT::gen_reference_matrices()

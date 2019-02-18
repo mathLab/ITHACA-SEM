@@ -156,23 +156,10 @@ int main(int argc, char *argv[])
 		Eigen::VectorXd solve_affine = affine_mat_proj.colPivHouseholderQr().solve(affine_vec_proj);
 		cout << "solve_affine " << solve_affine << endl;
 		Eigen::VectorXd repro_solve_affine = c_f_all_PODmodes_wo_dbc * solve_affine;
-		Eigen::VectorXd reconstruct_solution = Eigen::VectorXd::Zero(f_bnd_dbc_full_size.rows());
-		int counter_wo_dbc = 0;
-		for (int row_index=0; row_index < f_bnd_dbc_full_size.rows(); ++row_index)
-		{
-			if (!elem_loc_dbc.count(row_index))
-			{
-				reconstruct_solution(row_index) = repro_solve_affine(counter_wo_dbc);
-				counter_wo_dbc++;
-			}
-			else
-			{
-				reconstruct_solution(row_index) = -f_bnd_dbc_full_size(row_index);
-			}
-		}
+		Eigen::VectorXd reconstruct_solution = CLNS.reconstruct_solution_w_dbc(repro_solve_affine);
 		mat_compare.col(0) = collect_f_all.col(current_index);
 		mat_compare.col(1) = reconstruct_solution; // sembra abbastanza bene
-		mat_compare.col(2) = mat_compare.col(1) + mat_compare.col(0);
+		mat_compare.col(2) = mat_compare.col(1) - mat_compare.col(0);
 //		cout << mat_compare << endl;
 		cout << "relative error norm: " << mat_compare.col(2).norm() / mat_compare.col(0).norm() << endl;
 

@@ -387,7 +387,6 @@ int main(int argc, char *argv[])
 
     switch (dimension)
     {
-        case 0:
         case 1:
         {
             E->GetCoords(z);
@@ -661,8 +660,7 @@ GeometrySharedPtr CreateGeom(vector<double> coords,
     ASSERTL0(coords.size() == dimension * numVerts[shapeType],
              ("The number of coordinates supplied should match the shape type, "
               "you supplied " + to_string(coords.size() / dimension) + " and "
-                                                                       "shape type " +
-              ShapeTypeMap[shapeType] + " requires " +
+              "shape type " + ShapeTypeMap[shapeType] + " requires " +
               to_string(numVerts[shapeType])));
 
 

@@ -83,7 +83,7 @@ int main(int argc, char *argv[])
                      ->required(),
              "Number of quadrature points, separate by spaces for "
              "higher dimensions.")
-            ("coords,c", po::value<vector<double>>(&coords)->multitoken()
+            ("coords,c", po::value<vector<NekDouble>>(&coords)->multitoken()
                      ->required(),
              "Coordinates, separate by spaces for higher dimensions with "
              "grouping by vertex i.e. 'x1 y1 z1 x2 y2 z2 x3 y3 z3 ...")
@@ -570,10 +570,10 @@ int main(int argc, char *argv[])
     return 0;
 }
 
-GeometrySharedPtr CreateGeom(vector<double> coords,
+GeometrySharedPtr CreateGeom(vector<NekDouble> coords,
                              LibUtilities::ShapeType shapeType)
 {
-    map<ShapeType, vector<vector<int>>> edgeDef, faceDef, volDef;
+    map<ShapeType, vector<vector<int>>> edgeDef, faceDef;
 
     edgeDef[eSegment] = {{0, 1}};
     edgeDef[eTriangle] = {{0, 1},
@@ -642,10 +642,11 @@ GeometrySharedPtr CreateGeom(vector<double> coords,
                              {1, 5, 4},
                              {2, 5, 3}};
 
-    volDef[eHexahedron] = {{0, 1, 2, 3, 4, 5}};
-    volDef[ePrism] = {{0, 1, 2, 3, 4}};
-    volDef[ePyramid] = {{0, 1, 2, 3, 4}};
-    volDef[eTetrahedron] = {{0, 1, 2, 3}};
+    map<ShapeType, vector<int>> volDef;
+    volDef[eHexahedron] = {0, 1, 2, 3, 4, 5};
+    volDef[ePrism] = {0, 1, 2, 3, 4};
+    volDef[ePyramid] = {0, 1, 2, 3, 4};
+    volDef[eTetrahedron] = {0, 1, 2, 3};
 
     map<ShapeType, int> numVerts;
     numVerts[eSegment] = 2;
@@ -660,19 +661,35 @@ GeometrySharedPtr CreateGeom(vector<double> coords,
     ASSERTL0(coords.size() == dimension * numVerts[shapeType],
              ("The number of coordinates supplied should match the shape type, "
               "you supplied " + to_string(coords.size() / dimension) + " and "
-              "shape type " + ShapeTypeMap[shapeType] + " requires " +
+                                                                       "shape type " +
+              ShapeTypeMap[shapeType] + " requires " +
               to_string(numVerts[shapeType])));
 
-
-    PointGeomSharedPtr verts[numVerts[shapeType]];
+    //Set up vector of vertices
+    vector<PointGeomSharedPtr> verts(numVerts[shapeType]);
     for (int i = 0; i < numVerts[shapeType]; ++i)
     {
-        verts[i] = MemoryManager<PointGeom>::
-        AllocateSharedPtr(dimension, i, coords[dimension * i],
-                          coords[dimension * i + 1],
-                          coords[dimension * i + 2]);
+        if (dimension == 1)
+        {
+            verts[i] = MemoryManager<PointGeom>::
+            AllocateSharedPtr(dimension, i, coords[dimension * i], 0, 0);
+        }
+        if (dimension == 2)
+        {
+            verts[i] = MemoryManager<PointGeom>::
+            AllocateSharedPtr(dimension, i, coords[dimension * i],
+                              coords[dimension * i + 1], 0);
+        }
+        if (dimension == 3)
+        {
+            verts[i] = MemoryManager<PointGeom>::
+            AllocateSharedPtr(dimension, i, coords[dimension * i],
+                              coords[dimension * i + 1],
+                              coords[dimension * i + 2]);
+        }
     }
 
+    //Set up vector of edges
     vector<SegGeomSharedPtr> edges;
     for (int i = 0; i < edgeDef[shapeType].size(); ++i)
     {
@@ -690,6 +707,7 @@ GeometrySharedPtr CreateGeom(vector<double> coords,
         return edges[0];
     }
 
+    //Set up vector of faces
     vector<Geometry2DSharedPtr> faces;
     for (int i = 0; i < faceDef[shapeType].size(); ++i)
     {
@@ -716,48 +734,48 @@ GeometrySharedPtr CreateGeom(vector<double> coords,
         return faces[0];
     }
 
-    vector<Geometry3DSharedPtr> volumes;
+    //Set up volume
+    Geometry3DSharedPtr volume;
+    vector<Geometry2DSharedPtr> tmp;
     for (int i = 0; i < volDef[shapeType].size(); ++i)
     {
-        vector<Geometry2DSharedPtr> tmp;
-        for (int j = 0; j < volDef[shapeType][i].size(); ++j)
-        {
-            tmp.push_back(faces[volDef[shapeType][i][j]]);
-        }
-
-        if (shapeType == eTetrahedron)
+        tmp.push_back(faces[volDef[shapeType][i]]);
+    }
+    switch (shapeType)
+    {
+        case eTetrahedron:
         {
             vector<TriGeomSharedPtr> tmp2;
-            for (int j = 0; j < tmp.size(); ++j)
+            for (int i = 0; i < tmp.size(); ++i)
             {
-                tmp2.push_back(dynamic_pointer_cast<TriGeom>(tmp[j]));
+                tmp2.push_back(dynamic_pointer_cast<TriGeom>(tmp[i]));
             }
-            volumes.push_back(
-                    MemoryManager<TetGeom>::AllocateSharedPtr(0, &tmp2[0]));
+            volume = MemoryManager<TetGeom>::AllocateSharedPtr(0, &tmp2[0]);
+            break;
         }
-        else if (shapeType == ePyramid)
+        case ePyramid:
         {
-            volumes.push_back(
-                    MemoryManager<PyrGeom>::AllocateSharedPtr(0, &tmp[0]));
+            volume = MemoryManager<PyrGeom>::AllocateSharedPtr(0, &tmp[0]);
+            break;
         }
-        else if (shapeType == ePrism)
+        case ePrism:
         {
-            volumes.push_back(
-                    MemoryManager<PrismGeom>::AllocateSharedPtr(0, &tmp[0]));
+            volume = MemoryManager<PrismGeom>::AllocateSharedPtr(0, &tmp[0]);
+            break;
         }
-        else if (shapeType == eHexahedron)
+        case eHexahedron:
         {
             vector<QuadGeomSharedPtr> tmp2;
-            for (int j = 0; j < tmp.size(); ++j)
+            for (int i = 0; i < tmp.size(); ++i)
             {
-                tmp2.push_back(dynamic_pointer_cast<QuadGeom>(tmp[j]));
+                tmp2.push_back(dynamic_pointer_cast<QuadGeom>(tmp[i]));
             }
-            volumes.push_back(
-                    MemoryManager<HexGeom>::AllocateSharedPtr(0, &tmp2[0]));
+            volume = MemoryManager<HexGeom>::AllocateSharedPtr(0, &tmp2[0]);
+            break;
         }
     }
 
-    return volumes[0];
+    return volume;
 }
 
 

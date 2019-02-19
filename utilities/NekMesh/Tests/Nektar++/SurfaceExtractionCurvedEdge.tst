@@ -2,9 +2,9 @@
 <test>
     <description>Extraction of curved surface</description>
     <executable>NekMesh</executable>
-    <parameters>-m jac:list -m extract:surf=3 SurfaceExtraction.xml Surf3.xml:xml:test</parameters>
+    <parameters>-m jac:list -m extract:surf=3 SurfaceExtractionCurvedEdge.xml Surf3.xml:xml:test</parameters>
     <files>
-        <file description="Input File">SurfaceExtraction.xml</file>
+        <file description="Input File">SurfaceExtractionCurvedEdge.xml</file>
     </files>
     <metrics>
         <metric type="regex" id="1">

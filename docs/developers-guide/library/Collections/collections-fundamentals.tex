@@ -1,0 +1,33 @@
+%
+\section{The Fundamentals Behind Collections}
+
+The concept of ``collections'' is that there are many operations that we (conceptually) accomplish on an element-by-element basis that can be aggregated together into a single operation.  The
+basic idea is that whenever you see a piece of code that consists of a loop in which, in the body of the loop, you are accomplishing the same operation (e.g. function evaluation) based upon 
+an input variable tied to the loop index -- you may be able to make the operation a ``collection''.  For instance, consider if you were given the following snippet of code in Matlab notation:
+\vspace{-5mm}
+\begin{verbatim}
+     do j = 1:N,
+          y(j) = dot(a,x(:,j))
+     end
+\end{verbatim}
+
+\noindent where $y$ is a row vector of length $N$, $x$ is an $M \times N$ matrix and $a$ is a row vector of length $M$.  Note that in this code snipped, the
+vector $a$ remains constant; only the vector $x$ involved in the dot product is changing based upon the index (i.e. selecting a column of the array).  
+From linear algebra, you might recognize this as the way we accomplish the product of a row vector with a matrix -- we march through the matrix accomplishing
+dot products.  Although these two things are equivalent mathematically, they are not equivalent computationally {\em from the perspective of computational efficiency}.   Most linear algebra operations within {\nek} are done using BLAS -- Basic Linear Algebra Subroutines -- a collection of specialized routines
+for accomplishing Level 1 (single loop), Level 2 (double nested loop) and Level 3 (triple nested loop) operations.  A dot product is an example of a Level 1
+BLAS operation;  A matrix-vector multiplication is an example of a Level 2 BLAS operation; and finally a matrix-matrix multiplication is an example of a Level 3
+BLAS operation.  The general rule of thumb is that as you move up the levels, the operations can be made more efficient (using various algorithmic 
+reorganization and memory layout strategies).  Hence when you see a loop over Level 1 BLAS calls (like in the above piece of code), you should always
+ask yourself if this could be transformed into a Level 2 BLAS call.  Since the vector $a$ is not changing, this piece of code should be replaced with an
+appropriate vector-matrix multiply.
+
+As seen in StdRegions and LocalRegions, we often conceptually thing of many of our basic building block operations as being elemental.  We have 
+elemental basis matrices, local stiffness matrices, etc.  Although it is correct to implement operations as an iterator over elements in which you accomplish
+an action like evaluation (done by taking a basis evaluation matrix times a coefficient vector), this operation can be made more efficient by ganging all these
+elemental operations together into a {\em collection}.  
+
+As mentioned earlier, one of the caveats of this approach is that you must assume some level of consistency of the operation.  For instance, in the case of physical evaluations, you must assume that a collection consists of elements that are all of the same time, have the same basis number and ordering, and are evaluated at the same set of points -- otherwise the operation cannot be expressed as a single (basis) matrix multiplied by a matrix whose columns consist of the modes
+of all the elements who have joined the collective operation.
+
+As will be seen in the data structure and algorithms sections of this discussion, these assumptions lead us to two fundamental types of collections:  collections that live at the StdRegions level (i.e. collection operations that act on a group of elements as represented in reference space) and collections that live at the LocalRegions level (i.e. collection operations that act on a group of elements as represented in world space).

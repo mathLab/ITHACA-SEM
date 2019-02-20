@@ -2,7 +2,7 @@
 <test>
     <description>Extraction of curved surface</description>
     <executable>NekMesh</executable>
-    <parameters>-m jac:list -m extract:surf=2,3,4 SurfaceExtractionCurvedFace.xml SurfCF.xml:xml:test</parameters>
+    <parameters>-m jac:list -m extract:surf=2,3 SurfaceExtractionCurvedFace.xml SurfCF.xml:xml:test</parameters>
     <files>
         <file description="Input File">SurfaceExtractionCurvedFace.xml</file>
     </files>

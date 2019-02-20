@@ -116,7 +116,10 @@ namespace Nektar
 	Array<OneD, Eigen::VectorXd> adv_vec_proj_x;
 	Array<OneD, Eigen::VectorXd> adv_vec_proj_y;
 	void gen_proj_adv_terms();
-	
+	void offline_phase();
+	void online_phase();
+	Array<OneD, NekDouble> param_vector;
+	int Nmax;
 
         Eigen::MatrixXd MtM;
         Eigen::MatrixXd RB_A;

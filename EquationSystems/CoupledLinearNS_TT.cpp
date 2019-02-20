@@ -37,6 +37,7 @@
 
 #include <LibUtilities/TimeIntegration/TimeIntegrationWrapper.h>
 #include "CoupledLinearNS_TT.h"
+#include "CoupledLinearNS_trafoP.h"
 #include <LibUtilities/BasicUtils/Timer.h>
 #include <LocalRegions/MatrixKey.h>
 #include <MultiRegions/GlobalLinSysDirectStaticCond.h>
@@ -2912,7 +2913,6 @@ namespace Nektar
 		}
 	}
 	MtM = Mtrafo * Mtrafo.transpose();
-
 	f_bnd_dbc = Eigen::VectorXd::Zero(no_dbc_in_loc);
 	f_bnd_dbc_full_size = Eigen::VectorXd::Zero(PODmodes.rows());
 	RB = Eigen::MatrixXd::Zero(PODmodes.rows() - no_dbc_in_loc, PODmodes.cols());
@@ -3162,6 +3162,74 @@ namespace Nektar
 
 	return curr_xy_projected;
 
+    }
+
+    void CoupledLinearNS_TT::online_phase()
+    {
+	Eigen::MatrixXd mat_compare = Eigen::MatrixXd::Zero(f_bnd_dbc_full_size.rows(), 3);
+	// start sweeping 
+	for (int iter_index = 0; iter_index < Nmax; ++iter_index)
+	{
+		int current_index = iter_index;
+		double current_nu = param_vector[current_index];
+		Eigen::MatrixXd curr_xy_proj = project_onto_basis(snapshot_x_collection[current_index], snapshot_y_collection[current_index]);
+
+		Eigen::MatrixXd affine_mat_proj = gen_affine_mat_proj(current_nu);
+		Eigen::VectorXd affine_vec_proj = gen_affine_vec_proj(current_nu);
+
+		Eigen::VectorXd solve_affine = affine_mat_proj.colPivHouseholderQr().solve(affine_vec_proj);
+		cout << "solve_affine " << solve_affine << endl;
+		Eigen::VectorXd repro_solve_affine = RB * solve_affine;
+		Eigen::VectorXd reconstruct_solution = reconstruct_solution_w_dbc(repro_solve_affine);
+		mat_compare.col(0) = collect_f_all.col(current_index);
+		mat_compare.col(1) = reconstruct_solution; // sembra abbastanza bene
+		mat_compare.col(2) = mat_compare.col(1) - mat_compare.col(0);
+//		cout << mat_compare << endl;
+		cout << "relative error norm: " << mat_compare.col(2).norm() / mat_compare.col(0).norm() << endl;
+
+	}
+
+    }
+	
+    void CoupledLinearNS_TT::offline_phase()
+    {
+	int load_snapshot_data_from_files = m_session->GetParameter("load_snapshot_data_from_files");
+	int number_of_snapshots = m_session->GetParameter("number_of_snapshots");
+	Nmax = number_of_snapshots;
+//	Array<OneD, NekDouble> param_vector(Nmax);
+	param_vector = Array<OneD, NekDouble> (Nmax);
+	// = [0.1 0.5 1 10];
+	param_vector[0] = 0.1; // should also wander to the xml file
+	param_vector[1] = 0.5;
+	param_vector[2] = 1;
+	param_vector[3] = 10;
+	InitObject();
+	load_snapshots(number_of_snapshots);
+	DoInitialise(); 
+	DoSolve();
+	m_session->SetSolverInfo("SolverType", "CoupledLinearisedNS_trafoP");
+	CoupledLinearNS_trafoP babyCLNS_trafo(m_session);
+	babyCLNS_trafo.InitObject();
+	//Eigen::MatrixXd collect_f_all = babyCLNS_trafo.DoTrafo(snapshot_x_collection, snapshot_y_collection, param_vector);
+	collect_f_all = babyCLNS_trafo.DoTrafo(snapshot_x_collection, snapshot_y_collection, param_vector);
+	Eigen::BDCSVD<Eigen::MatrixXd> svd_collect_f_all(collect_f_all, Eigen::ComputeThinU);
+	cout << "svd_collect_f_all.singularValues() " << svd_collect_f_all.singularValues() << endl << endl;
+	Eigen::MatrixXd collect_f_all_PODmodes = svd_collect_f_all.matrixU();
+	// here probably limit to something like 99.99 percent of PODenergy, this will set RBsize
+	int RBsize = Nmax; // the case of using all
+	setDBC(collect_f_all);
+	Array<OneD, MultiRegions::ExpListSharedPtr> m_fields = UpdateFields();
+        int  nel  = m_fields[0]->GetNumElmts(); // number of spectral elements
+	PODmodes = Eigen::MatrixXd::Zero(collect_f_all_PODmodes.rows(), collect_f_all_PODmodes.cols()); ;
+	PODmodes = collect_f_all_PODmodes;
+	set_MtM();
+	//Eigen::VectorXd f_bnd_dbc_full_size = CLNS.f_bnd_dbc_full_size;
+	// c_f_all_PODmodes_wo_dbc becomes CLNS.RB
+	Eigen::MatrixXd c_f_all_PODmodes_wo_dbc = RB;
+	Array<OneD, double> PhysBase_zero(GetNpoints(), 0.0);
+	gen_phys_base_vecs();
+	gen_proj_adv_terms();
+	gen_reference_matrices();
     }
 
     Eigen::MatrixXd CoupledLinearNS_TT::gen_affine_mat_proj(double current_nu)

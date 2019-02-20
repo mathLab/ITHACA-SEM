@@ -413,7 +413,7 @@ void OutputNekpp::TransferCurves(MeshGraphSharedPtr graph)
                      ns[i]->m_z);
                 curve->m_points.push_back(vert);
             }
-            
+
             faces[it->m_id] = curve;
             facecnt++;
         }
@@ -426,7 +426,7 @@ void OutputNekpp::TransferCurves(MeshGraphSharedPtr graph)
         {
             ElementSharedPtr el = m_mesh->m_element[2][e];
 
-            if(el->GetFaceCount() > 0) // needed for extract surf case
+            if(el->GetVolumeNodes().size() > 0) // needed for extract surf case
             {
                 vector<NodeSharedPtr> ns;
                 el->GetCurvedNodes(ns);
@@ -435,7 +435,7 @@ void OutputNekpp::TransferCurves(MeshGraphSharedPtr graph)
                     CurveSharedPtr curve =
                         MemoryManager<Curve>::AllocateSharedPtr
                         (el->GetId(), el->GetCurveType());
-                    
+
                     for(int i = 0; i < ns.size(); i++)
                     {
                         PointGeomSharedPtr vert =
@@ -444,7 +444,7 @@ void OutputNekpp::TransferCurves(MeshGraphSharedPtr graph)
                              ns[i]->m_z);
                         curve->m_points.push_back(vert);
                     }
-                    
+
                     faces[el->GetId()] = curve;
                     facecnt++;
                 }

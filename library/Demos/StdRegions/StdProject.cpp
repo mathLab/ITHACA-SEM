@@ -1,3 +1,38 @@
+///////////////////////////////////////////////////////////////////////////////
+//
+// File: NodalDemo.cpp
+//
+// For more information, please see: http://www.nektar.info
+//
+// The MIT License
+//
+// Copyright (c) 2006 Division of Applied Mathematics, Brown University (USA),
+// Department of Aeronautics, Imperial College London (UK), and Scientific
+// Computing and Imaging Institute, University of Utah (USA).
+//
+// License for the specific language governing rights and limitations under
+// Permission is hereby granted, free of charge, to any person obtaining a
+// copy of this software and associated documentation files (the "Software"),
+// to deal in the Software without restriction, including without limitation
+// the rights to use, copy, modify, merge, publish, distribute, sublicense,
+// and/or sell copies of the Software, and to permit persons to whom the
+// Software is furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included
+// in all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+// THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+// DEALINGS IN THE SOFTWARE.
+//
+// Description: Demo for testing functionality of LocProject
+//
+///////////////////////////////////////////////////////////////////////////////
+
 #include <iostream>
 #include <boost/program_options.hpp>
 #include <boost/algorithm/string.hpp>
@@ -21,39 +56,8 @@ using namespace Nektar::StdRegions;
 
 namespace po = boost::program_options;
 
-NekDouble Point_sol(NekDouble z, int order1, BasisType btype1);
-
-NekDouble Seg_sol(NekDouble z, int order1, BasisType btype1);
-
-NekDouble Tri_sol(NekDouble x, NekDouble y, int order1, int order2);
-
-NekDouble Quad_sol(NekDouble x, NekDouble y, int order1, int order2,
-                   BasisType btype1, BasisType btype2);
-
-NekDouble Tet_sol(NekDouble x, NekDouble y, NekDouble z, int order1, int order2,
-                  int order3);
-
-NekDouble Prism_sol(NekDouble x, NekDouble y, NekDouble z, int order1,
-                    int order2, int order3);
-
-NekDouble Hex_sol(NekDouble x, NekDouble y, NekDouble z, int order1,
-                  int order2, int order3);
-
-NekDouble Seg_Dsol(NekDouble z, int order1, BasisType btype1);
-
-NekDouble Tri_Dsol(NekDouble x, NekDouble y, int order1, int order2);
-
-NekDouble Quad_Dsol(NekDouble x, NekDouble y, int order1, int order2,
-                    BasisType btype1, BasisType btype2);
-
-NekDouble Tet_Dsol(NekDouble x, NekDouble y, NekDouble z,
-                   int order1, int order2, int order3);
-
-NekDouble Prism_Dsol(NekDouble x, NekDouble y, NekDouble z,
-                     int order1, int order2, int order3);
-
-NekDouble Hex_Dsol(NekDouble x, NekDouble y, NekDouble z, int order1,
-                   int order2, int order3);
+NekDouble Shape_sol(NekDouble x, NekDouble y, NekDouble z, vector<int> order,
+                    vector<BasisType> btype, ShapeType stype, bool diff);
 
 //Modification to deal with exact solution for diff. Return 1 if integer < 0.
 static double pow_loc(const double val, const int i)
@@ -65,7 +69,7 @@ int main(int argc, char *argv[])
 {
     string shape, ntype;
     vector<string> basis(3, "NoBasisType");
-    vector<int> order(3, 0), points(3, 0);
+    vector<int> order, points;
     po::options_description desc("Available options");
     desc.add_options()("help,h",
                        "Produce this help message and list "
@@ -92,20 +96,18 @@ int main(int argc, char *argv[])
         po::store(po::parse_command_line(argc, argv, desc), vm);
         if (vm.count("help"))
         {
-            cout << desc << endl << "All valid selections for nodal "
-                                    "type, -n [ --nodal-type ], are:" << endl;
-            for (int i = 22; i < SIZE_PointsType; ++i) //starts at nodal points
+            cout << desc;
+            cout << endl << "All nodal types, -n [ --nodal ], are:" << endl;
+            for (int i = 22; i < SIZE_PointsType; ++i)
             {
                 cout << kPointsTypeStr[i] << endl;
             };
-            cout << endl << "All valid selections for shape "
-                            "type, -s [ --shape ], are:" << endl;
+            cout << endl << "All shape types, -s [ --shape ], are:" << endl;
             for (int i = 1; i < SIZE_ShapeType; ++i)
             {
                 cout << ShapeTypeMap[i] << endl;
             };
-            cout << endl << "All valid selections for basis type, -b "
-                            "[ --basis ], are:" << endl;
+            cout << endl << "All basis types, -b [ --basis ], are:" << endl;
             for (int i = 1; i < SIZE_BasisType; ++i)
             {
                 cout << BasisTypeMap[i] << endl;
@@ -417,7 +419,7 @@ int main(int argc, char *argv[])
         case 0:
         case 1:
         {
-            E->GetCoords(z);
+            E->GetCoords(x);
             break;
         }
 
@@ -436,77 +438,10 @@ int main(int argc, char *argv[])
             break;
     }
 
-    switch (stype)
+    //get solution array
+    for (int i = 0; i < E->GetTotPoints(); ++i)
     {
-        case ePoint:
-        {
-            for (int i = 0; i < E->GetTotPoints(); ++i)
-            {
-                sol[i] = Point_sol(z[i], order[0], btype[0]);
-            }
-            break;
-        }
-
-        case eSegment:
-        {
-            for (int i = 0; i < E->GetTotPoints(); ++i)
-            {
-                sol[i] = Seg_sol(z[i], order[0], btype[0]);
-            }
-            break;
-        }
-
-        case eTriangle:
-        {
-            for (int i = 0; i < E->GetTotPoints(); ++i)
-            {
-                sol[i] = Tri_sol(x[i], y[i], order[0], order[1]);
-            }
-            break;
-        }
-
-        case eQuadrilateral:
-        {
-            for (int i = 0; i < E->GetTotPoints(); ++i)
-            {
-                sol[i] = Quad_sol(x[i], y[i], order[0], order[1], btype[0],
-                                  btype[1]);
-            }
-            break;
-        }
-
-        case eTetrahedron:
-        case ePyramid:
-        {
-            for (int i = 0; i < E->GetTotPoints(); ++i)
-            {
-                sol[i] = Tet_sol(x[i], y[i], z[i], order[0], order[1],
-                                 order[2]);
-            }
-            break;
-        }
-
-        case ePrism:
-        {
-            for (int i = 0; i < E->GetTotPoints(); ++i)
-            {
-                sol[i] = Prism_sol(x[i], y[i], z[i], order[0], order[1],
-                                   order[2]);
-            }
-            break;
-        }
-
-        case eHexahedron:
-        {
-            for (int i = 0; i < E->GetTotPoints(); ++i)
-            {
-                sol[i] = Hex_sol(x[i], y[i], z[i], order[0], order[1],
-                                 order[2]);
-            }
-            break;
-        }
-        default:
-            break;
+        sol[i] = Shape_sol(x[i], y[i], z[i], order, btype, stype, 0);
     }
 
     Array<OneD, NekDouble> phys((unsigned) E->GetTotPoints());
@@ -539,88 +474,11 @@ int main(int argc, char *argv[])
 
     if (vm.count("diff"))
     {
-        switch (stype)
+        for (int i = 0; i < E->GetTotPoints(); ++i)
         {
-            case eSegment:
-            {
-                for (int i = 0; i < E->GetTotPoints(); ++i)
-                {
-                    sol[i] = Seg_Dsol(z[i], order[0], btype[0]);
-                }
-                break;
-            }
-            case eTriangle:
-            {
-                for (int i = 0; i < E->GetTotPoints(); ++i)
-                {
-                    sol[i] = Tri_Dsol(x[i], y[i], order[0], order[1]);
-                }
-                break;
-            }
-            case eQuadrilateral:
-            {
-                for (int i = 0; i < E->GetTotPoints(); ++i)
-                {
-                    sol[i] = Quad_Dsol(x[i], y[i], order[0], order[1], btype[0],
-                                       btype[1]);
-                }
-                break;
-            }
-            case ePyramid:
-            case eTetrahedron:
-            {
-                for (int i = 0; i < E->GetTotPoints(); ++i)
-                {
-                    sol[i] = Tet_Dsol(x[i], y[i], z[i], order[0], order[1],
-                                      order[2]);
-                }
-                break;
-            }
-
-            case ePrism:
-            {
-                for (int i = 0; i < E->GetTotPoints(); ++i)
-                {
-                    sol[i] = Prism_Dsol(x[i], y[i], z[i], order[0], order[1],
-                                        order[2]);
-                }
-                break;
-            }
-
-            case eHexahedron:
-            {
-                for (int i = 0; i < E->GetTotPoints(); ++i)
-                {
-                    sol[i] = Hex_Dsol(x[i], y[i], z[i], order[0], order[1],
-                                      order[2]);
-                }
-                break;
-            }
-            default:
-                break;
+            sol[i] = Shape_sol(x[i], y[i], z[i], order, btype, stype, 1);
         }
     }
-
-
-    //Print selected settings
-    cout << (vm.count("diff") ? "Standard project of differential for "
-                              : "Standard project for ");
-    cout << dimension << "D " << ShapeTypeMap[stype] << " with ";
-    for (int i = 0; i < dimension; ++i)
-    {
-        cout << BasisTypeMap[btype[i]] << " ";
-    }
-    cout << "of order ";
-    for (int i = 0; i < dimension; ++i)
-    {
-        cout << order[i] << " ";
-    }
-    cout << "with # points ";
-    for (int i = 0; i < dimension; ++i)
-    {
-        cout << points[i] << " ";
-    }
-    cout << "\b." << endl;
 
     //Calculate L_inf & L_2 error
     cout << "L infinity error: \t" << E->Linf(phys, sol) << endl;
@@ -636,38 +494,7 @@ int main(int argc, char *argv[])
         t[0] = -0.5;
         t[1] = -0.25;
         t[2] = -0.3;
-
-        switch (stype)
-        {
-            case ePoint:
-                sol[0] = Point_sol(t[0], order[0], btype[0]);
-                break;
-            case eSegment:
-                sol[0] = Seg_sol(t[0], order[0], btype[0]);
-                break;
-            case eTriangle:
-                sol[0] = Tri_sol(t[0], t[1], order[0], order[1]);
-                break;
-            case eQuadrilateral:
-                sol[0] = Quad_sol(t[0], t[1], order[0], order[1], btype[0],
-                                  btype[1]);
-                break;
-            case eTetrahedron:
-            case ePyramid:
-                sol[0] = Tet_sol(t[0], t[1], t[2], order[0], order[1],
-                                 order[2]);
-                break;
-            case ePrism:
-                sol[0] = Prism_sol(t[0], t[1], t[2], order[0], order[1],
-                                   order[2]);
-                break;
-            case eHexahedron:
-                sol[0] = Hex_sol(t[0], t[1], t[2], order[0], order[1],
-                                 order[2]);
-                break;
-            default:
-                break;
-        }
+        sol[0] = Shape_sol(t[0], t[1], t[2], order, btype, stype, 0);
 
         NekDouble nsol = E->PhysEvaluate(t, phys);
 
@@ -682,165 +509,154 @@ int main(int argc, char *argv[])
     return 0;
 }
 
-NekDouble Point_sol(NekDouble z, int order1, BasisType btype1)
+NekDouble Shape_sol(NekDouble x, NekDouble y, NekDouble z, vector<int> order,
+                    vector<BasisType> btype, ShapeType stype, bool diff)
 {
+    map<ShapeType, function<int(int &, vector<int> &)>> shapeConstraint2;
+    shapeConstraint2[eSegment] = [](int &k, vector<int> &order) { return 1; };
+    shapeConstraint2[eTriangle] = [](int &k, vector<int> &order) {
+        return order[1] - k; };
+    shapeConstraint2[eQuadrilateral] = [](int &k, vector<int> &order) {
+        return order[1]; };
+    shapeConstraint2[eTetrahedron] = [](int &k, vector<int> &order) {
+        return order[1] - k; };
+    shapeConstraint2[ePyramid] = [](int &k, vector<int> &order) {
+        return order[1] - k; };
+    shapeConstraint2[ePrism] = [](int &k, vector<int> &order) {
+        return order[1]; };
+    shapeConstraint2[eHexahedron] = [](int &k, vector<int> &order) {
+        return order[1]; };
+
+    map<ShapeType, function<int(int &, int &,
+                                vector<int> &order)>> shapeConstraint3;
+    shapeConstraint3[eSegment] = [](int &k, int &l,
+                                    vector<int> &order) { return 1; };
+    shapeConstraint3[eTriangle] = [](int &k, int &l,
+                                     vector<int> &order) { return 1; };
+    shapeConstraint3[eQuadrilateral] = [](int &k, int &l,
+                                          vector<int> &order) { return 1; };
+    shapeConstraint3[eTetrahedron] = [](int &k, int &l, vector<int> &order) {
+        return order[2] - k - l; };
+    shapeConstraint3[ePyramid] = [](int &k, int &l, vector<int> &order) {
+        return order[2] - k - l; };
+    shapeConstraint3[ePrism] = [](int &k, int &l, vector<int> &order) {
+        return order[2] - k; };
+    shapeConstraint3[eHexahedron] = [](int &k, int &l, vector<int> &order) {
+        return order[2]; };
+
     NekDouble sol = 0.0;
-    if (btype1 == eFourier)
+    if (!diff)
     {
-        for (int l = 0; l < order1 / 2 - 1; ++l)
+        if (btype[0] == eFourier && stype == ePoint)
         {
-            sol += sin(l * M_PI * z) + cos(l * M_PI * z);
-        }
-    }
-    else if (btype1 == eFourierSingleMode)
-    {
-        sol += 0.45 * sin(M_PI * z) + 0.25 * cos(M_PI * z);
-    }
-    else if (btype1 == eFourierHalfModeRe)
-    {
-        sol += 0.45 * cos(M_PI * z);
-    }
-    else if (btype1 == eFourierHalfModeIm)
-    {
-        sol += 0.25 * sin(M_PI * z);
-    }
-    else
-    {
-        for (int l = 0; l < order1; ++l)
-        {
-            sol += pow_loc(z, l);
-        }
-    }
-
-    return sol;
-}
-
-NekDouble Seg_sol(NekDouble z, int order1, BasisType btype1)
-{
-    NekDouble sol = 0.0;
-    if (btype1 == eFourier)
-    {
-        for (int l = 0; l < order1 / 2 - 1; ++l)
-        {
-            sol += sin(l * M_PI * z) + cos(l * M_PI * z);
-        }
-    }
-    else if (btype1 == eFourierSingleMode)
-    {
-        sol += 0.25 * sin(M_PI * z) + 0.25 * cos(M_PI * z);
-    }
-    else
-    {
-        for (int l = 0; l < order1; ++l)
-        {
-            sol += pow_loc(z, l);
-        }
-    }
-
-    return sol;
-}
-
-NekDouble Tri_sol(NekDouble x, NekDouble y, int order1, int order2)
-{
-    NekDouble sol = 0.0;
-    for (int k = 0; k < order1; ++k)
-    {
-        for (int l = 0; l < order2 - k; ++l)
-        {
-            sol += pow_loc(x, k) * pow_loc(y, l);
-        }
-    }
-
-    return sol;
-}
-
-NekDouble
-Quad_sol(NekDouble x, NekDouble y, int order1, int order2, BasisType btype1,
-         BasisType btype2)
-{
-    NekDouble sol = 0.0;
-    if (btype1 == eFourier)
-    {
-        if (btype2 == eFourier)
-        {
-            for (int k = 0; k < order1 / 2; ++k)
+            for (int k = 0; k < order[0] / 2 - 1; ++k)
             {
-                for (int l = 0; l < order2 / 2; ++l)
+                sol += sin(k * M_PI * x) + cos(k * M_PI * x);
+            }
+        }
+        else if (btype[0] == eFourierSingleMode && stype == ePoint)
+        {
+            sol += 0.45 * sin(M_PI * x) + 0.25 * cos(M_PI * x);
+        }
+        else if (btype[0] == eFourierHalfModeRe && stype == ePoint)
+        {
+            sol += 0.45 * cos(M_PI * x);
+        }
+        else if (btype[0] == eFourierHalfModeIm && stype == ePoint)
+        {
+            sol += 0.25 * sin(M_PI * x);
+        }
+        else if (btype[0] == eFourier && stype == eSegment)
+        {
+            for (int k = 0; k < order[0] / 2 - 1; ++k)
+            {
+                sol += sin(k * M_PI * x) + cos(k * M_PI * x);
+            }
+        }
+        else if (btype[0] == eFourierSingleMode && stype == eSegment)
+        {
+            sol += 0.25 * sin(M_PI * x) + 0.25 * cos(M_PI * x);
+        }
+        else if (btype[0] == eFourier && stype == eQuadrilateral)
+        {
+            if (btype[1] == eFourier)
+            {
+                for (int k = 0; k < order[0] / 2; ++k)
                 {
-                    sol += sin(k * M_PI * x) * sin(l * M_PI * y) +
-                           sin(k * M_PI * x) * cos(l * M_PI * y) +
-                           cos(k * M_PI * x) * sin(l * M_PI * y) +
-                           cos(k * M_PI * x) * cos(l * M_PI * y);
+                    for (int l = 0; l < order[1] / 2; ++l)
+                    {
+                        sol += sin(k * M_PI * x) * sin(l * M_PI * y) +
+                               sin(k * M_PI * x) * cos(l * M_PI * y) +
+                               cos(k * M_PI * x) * sin(l * M_PI * y) +
+                               cos(k * M_PI * x) * cos(l * M_PI * y);
+                    }
+                }
+            }
+            else if (btype[1] == eFourierSingleMode)
+            {
+                for (int k = 0; k < order[0] / 2; ++k)
+                {
+                    sol += sin(k * M_PI * x) * sin(M_PI * y) +
+                           sin(k * M_PI * x) * cos(M_PI * y) +
+                           cos(k * M_PI * x) * sin(M_PI * y) +
+                           cos(k * M_PI * x) * cos(M_PI * y);
+                }
+            }
+            else
+            {
+                for (int k = 0; k < order[0] / 2; ++k)
+                {
+                    for (int l = 0; l < order[1]; ++l)
+                    {
+                        sol += sin(k * M_PI * x) * pow_loc(y, l) +
+                               cos(k * M_PI * x) * pow_loc(y, l);
+                    }
                 }
             }
         }
-        else if (btype2 == eFourierSingleMode)
+        else if (btype[0] == eFourierSingleMode && stype == eQuadrilateral)
         {
-            for (int k = 0; k < order1 / 2; ++k)
+            if (btype[1] == eFourier)
             {
-                sol += sin(k * M_PI * x) * sin(M_PI * y) +
-                       sin(k * M_PI * x) * cos(M_PI * y) +
-                       cos(k * M_PI * x) * sin(M_PI * y) +
-                       cos(k * M_PI * x) * cos(M_PI * y);
-            }
-        }
-        else
-        {
-            for (int k = 0; k < order1 / 2; ++k)
-            {
-                for (int l = 0; l < order2; ++l)
+                for (int l = 0; l < order[1] / 2; ++l)
                 {
-                    sol += sin(k * M_PI * x) * pow_loc(y, l) +
-                           cos(k * M_PI * x) * pow_loc(y, l);
+                    sol += sin(M_PI * x) * sin(l * M_PI * y) +
+                           sin(M_PI * x) * cos(l * M_PI * y) +
+                           cos(M_PI * x) * sin(l * M_PI * y) +
+                           cos(M_PI * x) * cos(l * M_PI * y);
+                }
+
+            }
+            else if (btype[1] == eFourierSingleMode)
+            {
+                sol += sin(M_PI * x) * sin(M_PI * y) +
+                       sin(M_PI * x) * cos(M_PI * y) +
+                       cos(M_PI * x) * sin(M_PI * y) +
+                       cos(M_PI * x) * cos(M_PI * y);
+            }
+            else
+            {
+                for (int l = 0; l < order[1]; ++l)
+                {
+                    sol += sin(M_PI * x) * pow_loc(y, l) +
+                           cos(M_PI * x) * pow_loc(y, l);
                 }
             }
         }
-    }
-    else if (btype1 == eFourierSingleMode)
-    {
-        if (btype2 == eFourier)
+        else if (btype[1] == eFourier && stype == eQuadrilateral)
         {
-            for (int l = 0; l < order2 / 2; ++l)
+            for (int k = 0; k < order[0]; ++k)
             {
-                sol += sin(M_PI * x) * sin(l * M_PI * y) +
-                       sin(M_PI * x) * cos(l * M_PI * y) +
-                       cos(M_PI * x) * sin(l * M_PI * y) +
-                       cos(M_PI * x) * cos(l * M_PI * y);
-            }
-
-        }
-        else if (btype2 == eFourierSingleMode)
-        {
-            sol += sin(M_PI * x) * sin(M_PI * y) +
-                   sin(M_PI * x) * cos(M_PI * y) +
-                   cos(M_PI * x) * sin(M_PI * y) +
-                   cos(M_PI * x) * cos(M_PI * y);
-        }
-        else
-        {
-            for (int l = 0; l < order2; ++l)
-            {
-                sol += sin(M_PI * x) * pow_loc(y, l) +
-                       cos(M_PI * x) * pow_loc(y, l);
-            }
-        }
-    }
-    else
-    {
-        if (btype2 == eFourier)
-        {
-            for (int k = 0; k < order1; ++k)
-            {
-                for (int l = 0; l < order2 / 2; ++l)
+                for (int l = 0; l < order[1] / 2; ++l)
                 {
                     sol += sin(l * M_PI * y) * pow_loc(x, k) +
                            cos(l * M_PI * y) * pow_loc(x, k);
                 }
             }
         }
-        else if (btype2 == eFourierSingleMode)
+        else if (btype[1] == eFourierSingleMode && stype == eQuadrilateral)
         {
-            for (int k = 0; k < order1; ++k)
+            for (int k = 0; k < order[0]; ++k)
             {
                 sol += sin(M_PI * y) * pow_loc(x, k) +
                        cos(M_PI * y) * pow_loc(x, k);
@@ -848,135 +664,35 @@ Quad_sol(NekDouble x, NekDouble y, int order1, int order2, BasisType btype1,
         }
         else
         {
-            for (int k = 0; k < order1; ++k)
+            for (int k = 0;
+                 k < order[0]; ++k) //ShapeConstraint 1 is always < order1
             {
-                for (int l = 0; l < order2; ++l)
+                for (int l = 0; l < shapeConstraint2[stype](k, order); ++l)
                 {
-                    sol += pow_loc(x, k) * pow_loc(y, l);
+                    for (int m = 0;
+                         m < shapeConstraint3[stype](k, l, order); ++m)
+                    {
+                        sol += pow_loc(x, k) * pow_loc(y, l) * pow_loc(z, m);
+                    }
                 }
             }
         }
     }
-    return sol;
-}
-
-NekDouble Tet_sol(NekDouble x, NekDouble y, NekDouble z, int order1, int order2,
-                  int order3)
-{
-    NekDouble sol = 0.0;
-    for (int k = 0; k < order1; ++k)
+    else if (diff)
     {
-        for (int l = 0; l < order2 - k; ++l)
+        if (btype[0] == eFourier && stype == eSegment)
         {
-            for (int m = 0; m < order3 - k - l; ++m)
+            for (int k = 0; k < order[0] / 2 - 1; ++k)
             {
-                sol += pow_loc(x, k) * pow_loc(y, l) * pow_loc(z, m);
+                sol += k * M_PI * (cos(k * M_PI * z) - sin(k * M_PI * z));
             }
         }
-    }
-
-    return sol;
-}
-
-NekDouble Prism_sol(NekDouble x, NekDouble y, NekDouble z,
-                    int order1, int order2, int order3)
-{
-    NekDouble sol = 0;
-    for (int k = 0; k < order1; ++k)
-    {
-        for (int l = 0; l < order2; ++l)
+        else if (btype[0] != eFourier && btype[1] == eFourier &&
+                 stype == eQuadrilateral)
         {
-            for (int m = 0; m < order3 - k; ++m)
+            for (int k = 0; k < order[0]; ++k)
             {
-                sol += pow_loc(x, k) * pow_loc(y, l) * pow_loc(z, m);
-            }
-        }
-    }
-
-    return sol;
-}
-
-NekDouble Hex_sol(NekDouble x, NekDouble y, NekDouble z,
-                  int order1, int order2, int order3)
-{
-    NekDouble sol = 0.0;
-    for (int k = 0; k < order1; ++k)
-    {
-        for (int l = 0; l < order2; ++l)
-        {
-            for (int m = 0; m < order3; ++m)
-            {
-                sol += pow_loc(x, k) * pow_loc(y, l) * pow_loc(z, m);
-            }
-        }
-    }
-
-    return sol;
-}
-
-NekDouble Seg_Dsol(NekDouble z, int order1, BasisType btype1)
-{
-    NekDouble sol = 0.0;
-    if (btype1 != eFourier)
-    {
-        for (int k = 0; k < order1; ++k)
-        {
-            sol += k * pow_loc(z, k - 1);
-        }
-    }
-    else
-    {
-        for (int k = 0; k < order1 / 2 - 1; ++k)
-        {
-            sol += k * M_PI * (cos(k * M_PI * z) - sin(k * M_PI * z));
-        }
-    }
-    return sol;
-}
-
-NekDouble Tri_Dsol(NekDouble x, NekDouble y, int order1, int order2)
-{
-    int l, k;
-    NekDouble sol = 0;
-
-    for (k = 0; k < order1; ++k)
-    {
-        for (l = 0; l < order2 - k; ++l)
-        {
-            sol += k * pow_loc(x, k - 1) * pow_loc(y, l) +
-                   l * pow_loc(x, k) * pow_loc(y, l - 1);
-        }
-    }
-
-    return sol;
-}
-
-NekDouble Quad_Dsol(NekDouble x, NekDouble y, int order1, int order2,
-                    LibUtilities::BasisType btype1,
-                    LibUtilities::BasisType btype2)
-{
-
-    int k, l;
-    NekDouble sol = 0;
-
-    if (btype1 != LibUtilities::eFourier)
-    {
-        if (btype2 != LibUtilities::eFourier)
-        {
-            for (k = 0; k < order1; ++k)
-            {
-                for (l = 0; l < order2; ++l)
-                {
-                    sol += k * pow_loc(x, k - 1) * pow_loc(y, l)
-                           + l * pow_loc(x, k) * pow_loc(y, l - 1);
-                }
-            }
-        }
-        else
-        {
-            for (k = 0; k < order1; ++k)
-            {
-                for (l = 0; l < order2 / 2; ++l)
+                for (int l = 0; l < order[1] / 2; ++l)
                 {
                     sol += k * pow_loc(x, k - 1) * sin(M_PI * l * y)
                            + M_PI * l * pow_loc(x, k) * cos(M_PI * l * y) +
@@ -985,14 +701,12 @@ NekDouble Quad_Dsol(NekDouble x, NekDouble y, int order1, int order2,
                 }
             }
         }
-    }
-    else
-    {
-        if (btype2 != LibUtilities::eFourier)
+        else if (btype[0] == eFourier && btype[1] != eFourier &&
+                 stype == eQuadrilateral)
         {
-            for (k = 0; k < order1 / 2; ++k)
+            for (int k = 0; k < order[0] / 2; ++k)
             {
-                for (l = 0; l < order2; ++l)
+                for (int l = 0; l < order[1]; ++l)
                 {
                     sol += M_PI * k * cos(M_PI * k * x) * pow_loc(y, l)
                            + l * sin(M_PI * k * x) * pow_loc(y, l - 1) +
@@ -1001,11 +715,12 @@ NekDouble Quad_Dsol(NekDouble x, NekDouble y, int order1, int order2,
                 }
             }
         }
-        else
+        else if (btype[0] == eFourier && btype[1] == eFourier &&
+                 stype == eQuadrilateral)
         {
-            for (k = 0; k < order1 / 2; ++k)
+            for (int k = 0; k < order[0] / 2; ++k)
             {
-                for (l = 0; l < order2 / 2; ++l)
+                for (int l = 0; l < order[1] / 2; ++l)
                 {
                     sol += M_PI * k * cos(M_PI * k * x) * sin(M_PI * l * y)
                            + M_PI * l * sin(M_PI * k * x) * cos(M_PI * l * y)
@@ -1018,69 +733,31 @@ NekDouble Quad_Dsol(NekDouble x, NekDouble y, int order1, int order2,
                 }
             }
         }
-    }
-
-    return sol;
-}
-
-NekDouble Tet_Dsol(NekDouble x, NekDouble y, NekDouble z,
-                   int order1, int order2, int order3)
-{
-    NekDouble sol = 0;
-    for (int k = 0; k < order1; ++k)
-    {
-        for (int l = 0; l < order2 - k; ++l)
+        else
         {
-            for (int m = 0; m < order3 - k - l; ++m)
+            NekDouble a;
+            for (int k = 0;
+                 k < order[0]; ++k) //ShapeConstraint 1 is always < order1
             {
-                sol += k * pow_loc(x, k - 1) * pow_loc(y, l) * pow_loc(z, m)
-                       + pow_loc(x, k) * l * pow_loc(y, l - 1) * pow_loc(z, m)
-                       + pow_loc(x, k) * pow_loc(y, l) * m * pow_loc(z, m - 1);
+                for (int l = 0; l < shapeConstraint2[stype](k, order); ++l)
+                {
+                    for (int m = 0;
+                         m < shapeConstraint3[stype](k, l, order); ++m)
+                    {
+                        a = k * pow_loc(x, k - 1) * pow_loc(y, l) *
+                            pow_loc(z, m);
+                        sol += a;
+                        a = l * pow_loc(x, k) * pow_loc(y, l - 1) *
+                            pow_loc(z, m);
+                        sol += a;
+                        a = m * pow_loc(x, k) * pow_loc(y, l) *
+                            pow_loc(z, m - 1);
+                        sol += a;
+                    }
+                }
             }
         }
     }
-    return sol;
-}
 
-NekDouble Prism_Dsol(NekDouble x, NekDouble y, NekDouble z,
-                     int order1, int order2, int order3)
-{
-    NekDouble sol = 0;
-    for (int k = 0; k < order1; ++k)
-    {
-        for (int l = 0; l < order2; ++l)
-        {
-            for (int m = 0; m < order3 - k; ++m)
-            {
-                sol += k * pow_loc(x, k - 1) * pow_loc(y, l) * pow_loc(z, m)
-                       + pow_loc(x, k) * l * pow_loc(y, l - 1) * pow_loc(z, m)
-                       + pow_loc(x, k) * pow_loc(y, l) * m * pow_loc(z, m - 1);
-            }
-        }
-    }
-    return sol;
-}
-
-NekDouble Hex_Dsol(NekDouble x, NekDouble y, NekDouble z,
-                   int order1, int order2, int order3)
-{
-    NekDouble sol = 0.0;
-    NekDouble a;
-
-    for (int i = 0; i < order1; ++i)
-    {
-        for (int j = 0; j < order2; ++j)
-        {
-            for (int k = 0; k < order3; ++k)
-            {
-                a = i * pow_loc(x, i - 1) * pow_loc(y, j) * pow_loc(z, k);
-                sol += a;
-                a = j * pow_loc(x, i) * pow_loc(y, j - 1) * pow_loc(z, k);
-                sol += a;
-                a = k * pow_loc(x, i) * pow_loc(y, j) * pow_loc(z, k - 1);
-                sol += a;
-            }
-        }
-    }
     return sol;
 }

@@ -37,7 +37,7 @@
             <P> IO_InfoSteps = 1000       </P>
             <P> Kinvis = 10       </P>
             <P> Kinvis_max = 123       </P>
-            <P> load_snapshot_data_from_files = 1       </P>
+            <P> load_snapshot_data_from_files = 0       </P>
             <P> number_of_snapshots = 4       </P>
             <P> param0 = 0.1       </P>
             <P> param1 = 0.5       </P>

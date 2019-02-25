@@ -3196,16 +3196,36 @@ namespace Nektar
 	int load_snapshot_data_from_files = m_session->GetParameter("load_snapshot_data_from_files");
 	int number_of_snapshots = m_session->GetParameter("number_of_snapshots");
 	double POD_tolerance = m_session->GetParameter("POD_tolerance");
+	ref_param_index = m_session->GetParameter("ref_param_index");
+	ref_param_nu = m_session->GetParameter("ref_param_nu");
 	Nmax = number_of_snapshots;
 //	Array<OneD, NekDouble> param_vector(Nmax);
 	param_vector = Array<OneD, NekDouble> (Nmax);
 	// = [0.1 0.5 1 10];
-	param_vector[0] = 0.1; // should also wander to the xml file
+/*	param_vector[0] = 0.1; // should also wander to the xml file
 	param_vector[1] = 0.5;
 	param_vector[2] = 1;
-	param_vector[3] = 10;
+	param_vector[3] = 10;*/
+        for(int i = 0; i < number_of_snapshots; ++i)
+        {
+		// generate the correct string
+		std::stringstream sstm;
+		sstm << "param" << i;
+		std::string result = sstm.str();
+//		const char* rr = result.c_str();
+//		double dvalue;
+	        param_vector[i] = m_session->GetParameter(result);
+		//param_vector[i] = dvalue;
+        }
 	InitObject();
-	load_snapshots(number_of_snapshots);
+	if ( load_snapshot_data_from_files )
+	{
+		load_snapshots(number_of_snapshots);
+	}
+	else
+	{
+
+	}
 	DoInitialise(); 
 	DoSolve();
 	m_session->SetSolverInfo("SolverType", "CoupledLinearisedNS_trafoP");
@@ -3296,8 +3316,8 @@ namespace Nektar
 
     void CoupledLinearNS_TT::gen_reference_matrices()
     {
-	double current_nu = 1;
-	int current_index = 2;
+	double current_nu = ref_param_nu;
+	int current_index = ref_param_index;
 	Set_m_kinvis( current_nu );
 	DoInitialiseAdv(snapshot_x_collection[current_index], snapshot_y_collection[current_index]);
 	the_const_one = Get_no_advection_matrix_pressure();

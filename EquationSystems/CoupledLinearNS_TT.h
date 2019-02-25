@@ -169,6 +169,10 @@ namespace Nektar
         
 	CoupledLinearNS_TT(const LibUtilities::SessionReaderSharedPtr &pSesssion);
 
+	double ref_param_nu;
+	int ref_param_index;
+
+
 	void gen_reference_matrices();
 	Eigen::VectorXd reconstruct_solution_w_dbc(Eigen::VectorXd);
         void setDBC(Eigen::MatrixXd collect_f_all);

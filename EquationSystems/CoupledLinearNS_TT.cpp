@@ -3220,7 +3220,7 @@ namespace Nektar
 	Eigen::VectorXd rel_singular_values = singular_values / singular_values.sum();
 	cout << "relative singular value percents: " << rel_singular_values << endl;
 	// determine RBsize corresponding to the chosen POD_tolerance
-	RBsize = Nmax; // the case of using all POD modes
+	RBsize = 1; // the case of using all POD modes
 	Eigen::VectorXd cum_rel_singular_values = Eigen::VectorXd::Zero(singular_values.rows());
 	for (int i = 0; i < singular_values.rows(); ++i)
 	{
@@ -3228,25 +3228,27 @@ namespace Nektar
 		if (cum_rel_singular_values(i) < POD_tolerance)
 		{
 			RBsize = i+2;
-		}
-		
+		}		
 	}
 	cout << "cumulative relative singular value percentages: " << cum_rel_singular_values << endl;
 	cout << "RBsize: " << RBsize << endl;
 	
 
 
-	Eigen::MatrixXd collect_f_all_PODmodes = svd_collect_f_all.matrixU();
+	Eigen::MatrixXd collect_f_all_PODmodes = svd_collect_f_all.matrixU(); // this is a local variable...
 	// here probably limit to something like 99.99 percent of PODenergy, this will set RBsize
-	setDBC(collect_f_all);
+	setDBC(collect_f_all); // agnostic to RBsize
 	Array<OneD, MultiRegions::ExpListSharedPtr> m_fields = UpdateFields();
         int  nel  = m_fields[0]->GetNumElmts(); // number of spectral elements
-	PODmodes = Eigen::MatrixXd::Zero(collect_f_all_PODmodes.rows(), collect_f_all_PODmodes.cols()); 
-	PODmodes = collect_f_all_PODmodes;
+//	PODmodes = Eigen::MatrixXd::Zero(collect_f_all_PODmodes.rows(), collect_f_all_PODmodes.cols());
+	PODmodes = Eigen::MatrixXd::Zero(collect_f_all_PODmodes.rows(), RBsize);  
+	PODmodes = collect_f_all_PODmodes.leftCols(RBsize);
 	set_MtM();
 	//Eigen::VectorXd f_bnd_dbc_full_size = CLNS.f_bnd_dbc_full_size;
 	// c_f_all_PODmodes_wo_dbc becomes CLNS.RB
 	Eigen::MatrixXd c_f_all_PODmodes_wo_dbc = RB;
+	cout << "c_f_all_PODmodes_wo_dbc.rows() " << c_f_all_PODmodes_wo_dbc.rows() << endl;
+	cout << "c_f_all_PODmodes_wo_dbc.cols() " << c_f_all_PODmodes_wo_dbc.cols() << endl;
 	gen_phys_base_vecs();
 	gen_proj_adv_terms();
 	gen_reference_matrices();

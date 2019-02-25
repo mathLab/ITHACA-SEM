@@ -120,6 +120,7 @@ namespace Nektar
 	void online_phase();
 	Array<OneD, NekDouble> param_vector;
 	int Nmax;
+	int RBsize;
 
         Eigen::MatrixXd MtM;
         Eigen::MatrixXd RB_A;
@@ -152,7 +153,6 @@ namespace Nektar
 	Eigen::MatrixXd gen_affine_mat_proj(double);
 	Eigen::VectorXd gen_affine_vec_proj(double);
 
-	int RBsize;
 	int no_dbc_in_loc;
 	int no_not_dbc_in_loc;
 	std::set<int> elem_loc_dbc;

@@ -39,6 +39,7 @@
             <P> Kinvis_max = 123       </P>
             <P> load_snapshot_data_from_files = 1       </P>
             <P> number_of_snapshots = 4       </P>
+            <P> POD_tolerance = .99       </P>
             <P> A             = 0.65               </P>
             <P> omega         = 2*PI*f               </P>
             <P> MappingPressureTolerance  = 1e-5               </P>

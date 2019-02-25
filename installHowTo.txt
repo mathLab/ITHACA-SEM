@@ -1,0 +1,24 @@
+
+
+Install HowTo for ITHACA-SEM
+
+github repository: https://github.com/mathLab/ITHACA-SEM
+contact: mhess@sissa.it
+
+1.) clone the repository 
+git clone git@github.com:mathLab/ITHACA-SEM.git
+
+2.) change directory
+cd ITHACA-SEM
+
+3.) run cmake 
+cmake .
+
+4.) make the project
+make
+
+5.) run ITHACA_SEM on a test example 
+cd ITHACA_Test_cases/test_1st/
+ ../../ITHACASEM Channel_1p5_TT.xml 
+
+

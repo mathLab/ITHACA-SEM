@@ -3195,6 +3195,7 @@ namespace Nektar
     {
 	int load_snapshot_data_from_files = m_session->GetParameter("load_snapshot_data_from_files");
 	int number_of_snapshots = m_session->GetParameter("number_of_snapshots");
+	double POD_tolerance = m_session->GetParameter("POD_tolerance");
 	Nmax = number_of_snapshots;
 //	Array<OneD, NekDouble> param_vector(Nmax);
 	param_vector = Array<OneD, NekDouble> (Nmax);
@@ -3214,19 +3215,38 @@ namespace Nektar
 	collect_f_all = babyCLNS_trafo.DoTrafo(snapshot_x_collection, snapshot_y_collection, param_vector);
 	Eigen::BDCSVD<Eigen::MatrixXd> svd_collect_f_all(collect_f_all, Eigen::ComputeThinU);
 	cout << "svd_collect_f_all.singularValues() " << svd_collect_f_all.singularValues() << endl << endl;
+	Eigen::VectorXd singular_values = svd_collect_f_all.singularValues();
+	cout << "sum singular values " << singular_values.sum() << endl << endl;
+	Eigen::VectorXd rel_singular_values = singular_values / singular_values.sum();
+	cout << "relative singular value percents: " << rel_singular_values << endl;
+	// determine RBsize corresponding to the chosen POD_tolerance
+	RBsize = Nmax; // the case of using all POD modes
+	Eigen::VectorXd cum_rel_singular_values = Eigen::VectorXd::Zero(singular_values.rows());
+	for (int i = 0; i < singular_values.rows(); ++i)
+	{
+		cum_rel_singular_values(i) = singular_values.head(i+1).sum() / singular_values.sum();
+		if (cum_rel_singular_values(i) < POD_tolerance)
+		{
+			RBsize = i+2;
+		}
+		
+	}
+	cout << "cumulative relative singular value percentages: " << cum_rel_singular_values << endl;
+	cout << "RBsize: " << RBsize << endl;
+	
+
+
 	Eigen::MatrixXd collect_f_all_PODmodes = svd_collect_f_all.matrixU();
 	// here probably limit to something like 99.99 percent of PODenergy, this will set RBsize
-	int RBsize = Nmax; // the case of using all
 	setDBC(collect_f_all);
 	Array<OneD, MultiRegions::ExpListSharedPtr> m_fields = UpdateFields();
         int  nel  = m_fields[0]->GetNumElmts(); // number of spectral elements
-	PODmodes = Eigen::MatrixXd::Zero(collect_f_all_PODmodes.rows(), collect_f_all_PODmodes.cols()); ;
+	PODmodes = Eigen::MatrixXd::Zero(collect_f_all_PODmodes.rows(), collect_f_all_PODmodes.cols()); 
 	PODmodes = collect_f_all_PODmodes;
 	set_MtM();
 	//Eigen::VectorXd f_bnd_dbc_full_size = CLNS.f_bnd_dbc_full_size;
 	// c_f_all_PODmodes_wo_dbc becomes CLNS.RB
 	Eigen::MatrixXd c_f_all_PODmodes_wo_dbc = RB;
-	Array<OneD, double> PhysBase_zero(GetNpoints(), 0.0);
 	gen_phys_base_vecs();
 	gen_proj_adv_terms();
 	gen_reference_matrices();

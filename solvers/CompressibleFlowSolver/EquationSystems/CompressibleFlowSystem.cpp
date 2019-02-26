@@ -1307,7 +1307,7 @@ namespace Nektar
         m_BndEvaluateTime   = time;
         m_TimeIntegLambda   = lambda;
         bool l_verbose      = m_session->DefinesCmdLineArgument("verbose");
-        const unsigned int MaxNonlinIte =   100;
+        const unsigned int MaxNonlinIte =   m_MaxNonlinIte;
         unsigned int nvariables     = inarray.num_elements();
         unsigned int npoints        = inarray[0].num_elements();
         unsigned int ntotal         = nvariables*npoints;

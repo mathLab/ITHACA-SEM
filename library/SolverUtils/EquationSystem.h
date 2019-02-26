@@ -377,6 +377,9 @@ class Interpolator;
 
             /// preconditioning steps
             int                                         m_JFNKPrecondStep;
+
+            int                                         m_MaxNonlinIte;
+            
 #endif
             /// Number of checkpoints written so far
             int                                         m_nchk;

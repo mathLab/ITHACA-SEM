@@ -396,7 +396,7 @@ namespace Nektar
                 // Check for steady-state
                 if (m_steadyStateTol > 0.0 && (!((step+1)%m_steadyStateSteps)) )
                 {
-                    if (CheckSteadyState(step))
+                    if (CheckSteadyState(step,intTime))
                     {
                         if (m_comm->GetRank() == 0)
                         {
@@ -753,6 +753,8 @@ namespace Nektar
                     m_errFile.open(fName.c_str());
                     m_errFile << setw(26) << left << "# Time";
 
+                    m_errFile << setw(26) << left << "CPU_Time";
+
                     for (int i = 0; i < m_fields.num_elements(); ++i)
                     {
                         m_errFile << setw(26) << m_session->GetVariables()[i];
@@ -773,6 +775,11 @@ namespace Nektar
         * observing residuals to a user-defined tolerance.
         */
         bool UnsteadySystem::CheckSteadyState(int step)
+        {
+            return CheckSteadyState(step,0.0);
+        }
+
+        bool UnsteadySystem::CheckSteadyState(int step, NekDouble totCPUTime)
         {
             const int nPoints = GetTotPoints();
             const int nFields = m_fields.num_elements();
@@ -813,6 +820,8 @@ namespace Nektar
             {
                 // Output time
                 m_errFile << boost::format("%25.19e") % m_time;
+
+                m_errFile << " "<< boost::format("%25.19e") % totCPUTime;
 
                 // Output residuals
                 for (int i = 0; i < nFields; ++i)

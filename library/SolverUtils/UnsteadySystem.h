@@ -191,6 +191,7 @@ namespace Nektar
             void InitializeSteadyState();
 
             bool CheckSteadyState(int step);
+            bool CheckSteadyState(int step, NekDouble totCPUTime);
         };
         
     }

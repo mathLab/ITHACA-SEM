@@ -3224,7 +3224,7 @@ namespace Nektar
 	}
 	else
 	{
-
+		compute_snapshots(number_of_snapshots);
 	}
 	DoInitialise(); 
 	DoSolve();
@@ -3335,6 +3335,30 @@ namespace Nektar
     }
 
 
+    void CoupledLinearNS_TT::compute_snapshots(int number_of_snapshots)
+    {
+	CoupledLinearNS_trafoP babyCLNS_trafo(m_session);
+	babyCLNS_trafo.InitObject();
+	//Eigen::MatrixXd collect_f_all = babyCLNS_trafo.DoTrafo(snapshot_x_collection, snapshot_y_collection, param_vector);
+	Array<OneD, NekDouble> zero_phys_init(GetNpoints(), 0.0);
+	snapshot_x_collection = Array<OneD, Array<OneD, NekDouble> > (number_of_snapshots);
+	snapshot_y_collection = Array<OneD, Array<OneD, NekDouble> > (number_of_snapshots);
+        for(int i = 0; i < number_of_snapshots; ++i)
+	{
+
+		Array<OneD, Array<OneD, NekDouble> > converged_solution = babyCLNS_trafo.DoSolve_at_param(zero_phys_init, zero_phys_init, param_vector[i]);
+		snapshot_x_collection[i] = Array<OneD, NekDouble> (GetNpoints(), 0.0);
+		snapshot_y_collection[i] = Array<OneD, NekDouble> (GetNpoints(), 0.0);
+		for (int j=0; j < GetNpoints(); ++j)
+		{
+			snapshot_x_collection[i][j] = converged_solution[0][j];
+			snapshot_y_collection[i][j] = converged_solution[1][j];
+		}
+	}
+
+
+    }
+
     void CoupledLinearNS_TT::load_snapshots(int number_of_snapshots)
     {
 	// fill the fields snapshot_x_collection and snapshot_y_collection
@@ -3357,9 +3381,6 @@ namespace Nektar
 	snapshot_x_collection = Array<OneD, Array<OneD, NekDouble> > (number_of_snapshots);
 	snapshot_y_collection = Array<OneD, Array<OneD, NekDouble> > (number_of_snapshots);
 
-
-
-
         for(int i = 0; i < number_of_snapshots; ++i)
         {
 		// generate the correct string
@@ -3379,12 +3400,7 @@ namespace Nektar
 		}
 		// snapshot_x_collection[i] = test_load_snapshot[0];
 		// snapshot_y_collection[i] = test_load_snapshot[1];
-
         }
-	
-
-
-
     }
 
     void CoupledLinearNS_TT::trafoSnapshot_simple(Eigen::MatrixXd RB_in)

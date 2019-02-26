@@ -1437,6 +1437,64 @@ namespace Nektar
 	m_kinvis = input;
     }
 
+    Array<OneD, Array<OneD, NekDouble> > CoupledLinearNS_trafoP::DoSolve_at_param(Array<OneD, NekDouble> init_snapshot_x, Array<OneD, NekDouble> init_snapshot_y, NekDouble parameter)
+    {
+//	DoInitialise();
+//	DoSolve();
+	double rel_err = 1.0;
+	while (rel_err > 1e-13)
+	{
+		Set_m_kinvis( parameter );
+		DoInitialiseAdv(init_snapshot_x, init_snapshot_y); // replaces .DoInitialise();
+		DoSolve();
+		// compare the accuracy
+		Array<OneD, MultiRegions::ExpListSharedPtr> m_fields_t = UpdateFields();
+		m_fields_t[0]->BwdTrans(m_fields_t[0]->GetCoeffs(), m_fields_t[0]->UpdatePhys());
+		m_fields_t[1]->BwdTrans(m_fields_t[1]->GetCoeffs(), m_fields_t[1]->UpdatePhys());
+		Array<OneD, NekDouble> out_field_trafo_x(GetNpoints(), 0.0);
+		Array<OneD, NekDouble> out_field_trafo_y(GetNpoints(), 0.0);
+
+		Eigen::VectorXd csx0_trafo(GetNpoints());
+		Eigen::VectorXd csy0_trafo(GetNpoints());
+		Eigen::VectorXd csx0(GetNpoints());
+		Eigen::VectorXd csy0(GetNpoints());
+
+		CopyFromPhysField(0, out_field_trafo_x); 
+		CopyFromPhysField(1, out_field_trafo_y);
+
+		for( int index_conv = 0; index_conv < GetNpoints(); ++index_conv)
+		{
+			csx0_trafo(index_conv) = out_field_trafo_x[index_conv];
+			csy0_trafo(index_conv) = out_field_trafo_y[index_conv];
+			csx0(index_conv) = init_snapshot_x[index_conv];
+			csy0(index_conv) = init_snapshot_y[index_conv];
+		}
+
+//		cout << "csx0.norm() " << csx0.norm() << endl;
+//		cout << "csx0_trafo.norm() " << csx0_trafo.norm() << endl;
+//		cout << "csy0.norm() " << csy0.norm() << endl;
+//		cout << "csy0_trafo.norm() " << csy0_trafo.norm() << endl;
+		rel_err = std::abs(csx0_trafo.norm() - csx0.norm()) / csx0.norm() + std::abs(csy0_trafo.norm() - csy0.norm()) / csy0.norm();
+		cout << "rel_err " << rel_err << endl;
+
+		init_snapshot_x = out_field_trafo_x;
+		init_snapshot_y = out_field_trafo_y;
+	}
+
+
+
+	Array<OneD, Array<OneD, NekDouble> > converged_solution( 2 );
+	converged_solution[0] = Array<OneD, NekDouble>(GetNpoints(), 0.0);
+	converged_solution[1] = Array<OneD, NekDouble>(GetNpoints(), 0.0);
+	converged_solution[0] = init_snapshot_x;
+	converged_solution[1] = init_snapshot_y;
+
+	cout << " curr_f_bnd.size()+curr_f_int.size() " <<  curr_f_bnd.size()+curr_f_int.size() << endl;
+	cout << " GetNcoeffs() " <<  GetNcoeffs() << endl;
+
+	return converged_solution;
+    }
+
     Eigen::MatrixXd CoupledLinearNS_trafoP::DoTrafo(Array<OneD, Array<OneD, NekDouble> > snapshot_x_collection, Array<OneD, Array<OneD, NekDouble> > snapshot_y_collection, Array<OneD, NekDouble> param_vector)
     {
 	int Nmax = param_vector.num_elements();

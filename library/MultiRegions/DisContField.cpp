@@ -248,12 +248,12 @@ namespace Nektar
             }
 
             std::unordered_map<int,pair<int,int> > perTraceToExpMap;
-            for (n = 0; n < m_exp->size(); ++n)
+            for (cnt = n = 0; n < m_exp->size(); ++n)
             {
-                for (int v = 0; v < (*m_exp)[n]->GetNtraces(); ++v)
+                for (int v = 0; v < (*m_exp)[n]->GetNtraces(); ++v, ++cnt)
                 {
-                    auto it = periodicTraces.find(
-                                                  (*m_exp)[n]->GetGeom()->GetTid(v));
+                    auto it = periodicTraces.find
+                        ((*m_exp)[n]->GetGeom()->GetTid(v));
 
                     if (it != periodicTraces.end())
                     {

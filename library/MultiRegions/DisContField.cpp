@@ -1861,69 +1861,193 @@ namespace Nektar
          * @param   bndCondExpansions   List of boundary expansions.
          * @param   bndConditions   Information about the boundary conditions.
          */
-        void DisContField::v_EvaluateBoundaryConditions(
-                                                        const NekDouble   time,
-                                                        const std::string varName,
-                                                        const NekDouble   x2_in,
-                                                        const NekDouble   x3_in)
+        void DisContField::v_EvaluateBoundaryConditions
+                              (const NekDouble   time,
+                               const std::string varName,
+                               const NekDouble   x2_in,
+                               const NekDouble   x3_in)
         {
             int i;
+            int npoints;
 
-            Array<OneD, NekDouble> x0(1);
-            Array<OneD, NekDouble> x1(1);
-            Array<OneD, NekDouble> x2(1);
-
+            MultiRegions::ExpListSharedPtr locExpList;
+            
             for (i = 0; i < m_bndCondExpansions.num_elements(); ++i)
             {
                 if (time == 0.0 || m_bndConditions[i]->IsTimeDependent())
                 {
-                    m_bndCondExpansions[i]->GetCoords(x0, x1, x2);
+                    locExpList = m_bndCondExpansions[i];
+
+                    npoints = locExpList->GetNpoints();
+                    Array<OneD, NekDouble> x0(npoints, 0.0);
+                    Array<OneD, NekDouble> x1(npoints, 0.0);
+                    Array<OneD, NekDouble> x2(npoints, 0.0);
+                    
+                    locExpList->GetCoords(x0, x1, x2);
                     
                     if (x2_in != NekConstants::kNekUnsetDouble && x3_in !=
                         NekConstants::kNekUnsetDouble)
                     {
-                        x1[0] = x2_in;
-                        x2[0] = x3_in;
+                        Vmath::Fill(npoints,x2_in,x1,1);
+                        Vmath::Fill(npoints,x3_in,x2,1);
+                    }
+                    else  if(x2_in != NekConstants::kNekUnsetDouble)
+                    {
+                        Vmath::Fill(npoints,x2_in,x2,1);
                     }
                     
-                    if (m_bndConditions[i]->GetBoundaryConditionType() ==
-                        SpatialDomains::eDirichlet)
+                    // treat 1D expansions separately since we only
+                    // require an evaluation at a point rather than
+                    // any projections or inner products that are not
+                    // available in a PointExp
+                    if(m_expType == e1D) 
                     {
-                        m_bndCondExpansions[i]->SetCoeff(0,
-                                                         (std::static_pointer_cast<SpatialDomains
-                                                          ::DirichletBoundaryCondition>(m_bndConditions[i])
-                                                          ->m_dirichletCondition).Evaluate(x0[0],x1[0],x2[0],time));
-                        m_bndCondExpansions[i]->SetPhys(0,m_bndCondExpansions[i]->GetCoeff(0));
+                        if (m_bndConditions[i]->GetBoundaryConditionType() ==
+                            SpatialDomains::eDirichlet)
+                        {
+                            m_bndCondExpansions[i]->SetCoeff
+                                (0,(std::static_pointer_cast<SpatialDomains
+                                    ::DirichletBoundaryCondition>
+                                    (m_bndConditions[i])
+                                    ->m_dirichletCondition).Evaluate
+                                 (x0[0],x1[0],x2[0],time));
+                            m_bndCondExpansions[i]->SetPhys
+                                (0,m_bndCondExpansions[i]->GetCoeff(0));
+                        }
+                        else if (m_bndConditions[i]->GetBoundaryConditionType()
+                                 == SpatialDomains::eNeumann)
+                        {
+                            m_bndCondExpansions[i]->SetCoeff
+                                (0,(std::static_pointer_cast<SpatialDomains
+                                    ::NeumannBoundaryCondition>
+                                    (m_bndConditions[i])
+                                    ->m_neumannCondition).Evaluate
+                                 (x0[0],x1[0],x2[0],time));
+                        }
+                        else if (m_bndConditions[i]->GetBoundaryConditionType()
+                                 == SpatialDomains::eRobin)
+                        {
+                            m_bndCondExpansions[i]->SetCoeff
+                                (0,(std::static_pointer_cast<SpatialDomains
+                                    ::RobinBoundaryCondition>
+                                    (m_bndConditions[i])
+                                    ->m_robinFunction).Evaluate
+                                 (x0[0],x1[0],x2[0],time));
+                            
+                        }
+                        else if (m_bndConditions[i]->GetBoundaryConditionType()
+                                 == SpatialDomains::ePeriodic)
+                        {
+                            continue;
+                        }
+                        else if (m_bndConditions[i]->GetBoundaryConditionType()
+                                 == SpatialDomains::eNotDefined)
+                        {
+                        }
+                        else
+                        {
+                            ASSERTL0(false,
+                                     "This type of BC not implemented yet");
+                        }
                     }
-                    else if (m_bndConditions[i]->GetBoundaryConditionType()
-                             == SpatialDomains::eNeumann)
+                    else // 2D and 3D versions
                     {
-                        m_bndCondExpansions[i]->SetCoeff(0,
-                                                         (std::static_pointer_cast<SpatialDomains
-                                                          ::NeumannBoundaryCondition>(m_bndConditions[i])
-                                                          ->m_neumannCondition).Evaluate(x0[0],x1[0],x2[0],time));
-                    }
-                    else if (m_bndConditions[i]->GetBoundaryConditionType()
-                             == SpatialDomains::eRobin)
-                    {
-                        m_bndCondExpansions[i]->SetCoeff(0,
-                                                         (std::static_pointer_cast<SpatialDomains
-                                                          ::RobinBoundaryCondition>(m_bndConditions[i])
-                                                          ->m_robinFunction).Evaluate(x0[0],x1[0],x2[0],time));
-                        
-                    }
-                    else if (m_bndConditions[i]->GetBoundaryConditionType()
-                             == SpatialDomains::ePeriodic)
-                    {
-                        continue;
-                    }
-                    else if (m_bndConditions[i]->GetBoundaryConditionType()
-                             == SpatialDomains::eNotDefined)
-                    {
-                    }
-                    else
-                    {
-                        ASSERTL0(false, "This type of BC not implemented yet");
+                        if (m_bndConditions[i]->GetBoundaryConditionType()
+                            == SpatialDomains::eDirichlet)
+                        {
+                            SpatialDomains::DirichletBCShPtr bcPtr
+                                = std::static_pointer_cast<
+                                    SpatialDomains::DirichletBoundaryCondition>
+                                (m_bndConditions[i]);
+                            
+                            string filebcs = bcPtr->m_filename;
+                            
+                            if (filebcs != "")
+                            {
+                                ExtractFileBCs
+                                    (filebcs, bcPtr->GetComm(), varName, locExpList);
+                            }
+                            else
+                            {
+                                LibUtilities::Equation condition = 
+                                    std::static_pointer_cast<
+                                     SpatialDomains::DirichletBoundaryCondition>
+                                    (m_bndConditions[i])->m_dirichletCondition;
+                            
+                                condition.Evaluate(x0, x1, x2, time, 
+                                                   locExpList->UpdatePhys());
+                            }
+                            
+                            locExpList->FwdTrans_BndConstrained
+                                (locExpList->GetPhys(),
+                                 locExpList->UpdateCoeffs());
+                        }
+                        else if (m_bndConditions[i]->GetBoundaryConditionType()
+                                 == SpatialDomains::eNeumann)
+                        {
+                            SpatialDomains::NeumannBCShPtr
+                                bcPtr = std::static_pointer_cast<
+                                    SpatialDomains::NeumannBoundaryCondition>
+                                (m_bndConditions[i]);
+                            string filebcs  = bcPtr->m_filename;
+                            if (filebcs != "")
+                            {
+                                ExtractFileBCs
+                                    (filebcs, bcPtr->GetComm(), varName, locExpList);
+                            }
+                            else
+                            {
+                                LibUtilities::Equation condition =
+                                    std::static_pointer_cast<
+                                     SpatialDomains::NeumannBoundaryCondition>
+                                    (m_bndConditions[i])->m_neumannCondition;
+                                condition.Evaluate(x0, x1, x2, time, 
+                                               locExpList->UpdatePhys());
+                            }
+                            
+                            locExpList->IProductWRTBase(locExpList->GetPhys(),
+                                                   locExpList->UpdateCoeffs());
+                        }
+                        else if (m_bndConditions[i]->GetBoundaryConditionType()
+                                 == SpatialDomains::eRobin)
+                        {
+                            SpatialDomains::RobinBCShPtr
+                                bcPtr = std::static_pointer_cast<
+                                    SpatialDomains::RobinBoundaryCondition>
+                                (m_bndConditions[i]);
+
+                            string filebcs = bcPtr->m_filename;
+                            
+                            if (filebcs != "")
+                            {
+                                ExtractFileBCs
+                                    (filebcs, bcPtr->GetComm(), varName,
+                                     locExpList);
+                            }
+                            else
+                            {
+                                LibUtilities::Equation condition = 
+                                    std::static_pointer_cast<
+                                        SpatialDomains::RobinBoundaryCondition>
+                                    (m_bndConditions[i])->m_robinFunction;
+                                condition.Evaluate(x0, x1, x2, time,
+                                               locExpList->UpdatePhys());
+                            }
+                            
+                            locExpList->IProductWRTBase
+                                (locExpList->GetPhys(),
+                                 locExpList->UpdateCoeffs());
+                        }
+                        else if (m_bndConditions[i]->GetBoundaryConditionType()
+                                 == SpatialDomains::ePeriodic)
+                        {
+                            continue;
+                        }
+                        else
+                        {
+                            ASSERTL0(false,
+                                     "This type of BC not implemented yet");
+                        }
                     }
                 }
             }

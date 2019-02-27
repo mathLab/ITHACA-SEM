@@ -84,7 +84,7 @@ namespace Nektar
          * Constructs an empty 1D continuous field.
          */
         ContField1D::ContField1D():
-            DisContField1D(),
+            DisContField(),
             m_locToGloMap(),
             m_globalLinSysManager(
                 std::bind(&ContField1D::GenGlobalLinSys, this, std::placeholders::_1),
@@ -119,7 +119,7 @@ namespace Nektar
                       const SpatialDomains::MeshGraphSharedPtr &graph1D,
                       const std::string &variable,
                       const Collections::ImplementationType ImpType):
-            DisContField1D(pSession,graph1D,variable,false,ImpType),
+            DisContField(pSession,graph1D,variable,false,true,ImpType),
             m_locToGloMap(),
             m_globalLinSysManager(
                 std::bind(&ContField1D::GenGlobalLinSys, this, std::placeholders::_1),
@@ -143,7 +143,7 @@ namespace Nektar
          * @param   In          Existing continuous field to duplicate.
          */
         ContField1D::ContField1D(const ContField1D &In):
-            DisContField1D(In),
+            DisContField(In),
             m_locToGloMap(In.m_locToGloMap),
             m_globalLinSysManager(
                 std::bind(&ContField1D::GenGlobalLinSys, this, std::placeholders::_1),
@@ -157,7 +157,7 @@ namespace Nektar
          * @param   In          Existing explist1D field .
          */
          ContField1D::ContField1D(const LibUtilities::SessionReaderSharedPtr &pSession, const ExpList & In):
-            DisContField1D(In),
+            DisContField(In),
             m_locToGloMap(),
             m_globalLinSysManager(
                 std::bind(&ContField1D::GenGlobalLinSys, this, std::placeholders::_1),

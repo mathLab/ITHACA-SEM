@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File DisContField1D.h
+// File DisContField.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -43,33 +43,35 @@
 #include <SpatialDomains/Conditions.h>
 #include <MultiRegions/GlobalLinSys.h>
 #include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
+#include <MultiRegions/AssemblyMap/LocTraceToTraceMap.h>
 
 namespace Nektar
 {
     namespace MultiRegions
     {
-        /// This class is the abstraction of a global discontinuous two-
+        /// This class is the abstractio  n of a global discontinuous two-
         /// dimensional spectral/hp element expansion which approximates the
         /// solution of a set of partial differential equations.
-        class DisContField1D: public ExpList
+        class DisContField: public ExpList
         {
         public:
             /// Default constructor.
-            MULTI_REGIONS_EXPORT DisContField1D();
+            MULTI_REGIONS_EXPORT DisContField();
 
             /// Constructs a 1D discontinuous field based on a mesh and boundary
             /// conditions.
-            MULTI_REGIONS_EXPORT DisContField1D(
+            MULTI_REGIONS_EXPORT DisContField(
                 const LibUtilities::SessionReaderSharedPtr& pSession,
-                const SpatialDomains::MeshGraphSharedPtr &graph1D,
+                const SpatialDomains::MeshGraphSharedPtr &graph,
                 const std::string &variable,
                 const bool SetUpJustDG  = true,
+                const bool DeclareCoeffPhysArrays = true, 
                 const Collections::ImplementationType ImpType
                 = Collections::eNoImpType);
             
-            /// Constructor for a DisContField1D from a List of subdomains
+            /// Constructor for a DisContField from a List of subdomains
             /// New Constructor for arterial network 
-            MULTI_REGIONS_EXPORT DisContField1D(
+            MULTI_REGIONS_EXPORT DisContField(
                 const LibUtilities::SessionReaderSharedPtr &pSession,
                 const SpatialDomains::MeshGraphSharedPtr &graph1D,
                 const SpatialDomains::CompositeMap& domain,
@@ -80,14 +82,17 @@ namespace Nektar
                 = Collections::eNoImpType);
 
             /// Constructs a 1D discontinuous field based on an existing field.
-            MULTI_REGIONS_EXPORT DisContField1D(const DisContField1D &In);
+            MULTI_REGIONS_EXPORT DisContField(
+                const DisContField &In,
+                const bool DeclareCoeffPhysArrays = true);
             
-            /// Constructs a 1D discontinuous field based on an existing field.
-	    /// (needed in order to use ContField( const ExpList &In) constructor
-            MULTI_REGIONS_EXPORT DisContField1D(const ExpList &In);
+            /// Constructs a 1D discontinuous field based on an
+	    /// existing field.  (needed in order to use ContField(
+	    /// const ExpList &In) constructor
+            MULTI_REGIONS_EXPORT DisContField(const ExpList &In);
 
             /// Destructor.
-            MULTI_REGIONS_EXPORT virtual ~DisContField1D();
+            MULTI_REGIONS_EXPORT virtual ~DisContField();
             
             /// For a given key, returns the associated global linear system.
             MULTI_REGIONS_EXPORT GlobalLinSysSharedPtr GetGlobalBndLinSys(
@@ -99,21 +104,30 @@ namespace Nektar
             // is negated with respect to the segment normal
             MULTI_REGIONS_EXPORT std::vector<bool> &GetNegatedFluxNormal(void);
 
+            Array<OneD, int> m_BCtoElmMap;
+            Array<OneD, int> m_BCtoTraceMap;
         protected:
             /// The number of boundary segments on which Dirichlet boundary
             /// conditions are imposed.
             int m_numDirBndCondExpansions;
 
-            /// Discretised boundary conditions.
             /**
-             * It is an array of size equal to the number of boundary points
-             * and consists of entries of the type LocalRegions#PointExp. Every
-             * entry corresponds to a point on a single boundary region.
+             * @brief An object which contains the discretised boundary
+             * conditions.
+             *
+             * It is an array of size equal to the number of boundary
+             * regions and consists of entries of the type
+             * MultiRegions#ExpList. Every entry corresponds to the
+             * spectral/hp expansion on a single boundary region.  The
+             * values of the boundary conditions are stored as the
+             * coefficients of the one-dimensional expansion.
              */
-            Array<OneD,MultiRegions::ExpListSharedPtr>      m_bndCondExpansions;
+            Array<OneD,MultiRegions::ExpListSharedPtr>         m_bndCondExpansions;
 
-            /// An array which contains the information about the boundary
-            /// condition on the different boundary regions.
+            /**
+             * @brief An array which contains the information about
+             * the boundary condition on the different boundary regions.
+             */
             Array<OneD,SpatialDomains::BoundaryConditionShPtr> m_bndConditions;
 
             /// Global boundary matrix.
@@ -123,19 +137,22 @@ namespace Nektar
             ExpListSharedPtr                                   m_trace;
 
             /// Local to global DG mapping for trace space.
-            AssemblyMapDGSharedPtr                        m_traceMap;
+            AssemblyMapDGSharedPtr                             m_traceMap;
 
             /**
-             * @brief A set storing the global IDs of any boundary edges.
+             * @brief A set storing the global IDs of any boundary Verts.
              */
-            std::set<int> m_boundaryVerts;
+            std::set<int> m_boundaryTraces;
 
-            
             /**
              * @brief A map which identifies groups of periodic vertices.
              */
             PeriodicMap m_periodicVerts;
 
+            /**
+             * @brief A map which identifies pairs of periodic edges.
+             */
+            PeriodicMap m_periodicEdges;
             
             /**
              * @brief A vector indicating degress of freedom which need to be
@@ -145,24 +162,30 @@ namespace Nektar
             std::vector<int> m_periodicFwdCopy;
             std::vector<int> m_periodicBwdCopy;
 
-
             /*
-             * @brief A map identifying which verts are left- and right-adjacent
-             * for DG.
+             * @brief A map identifying which traces are left- and
+             * right-adjacent for DG.
              */
-            std::vector<bool> m_leftAdjacentVerts;
+            std::vector<bool> m_leftAdjacentTraces;
 
+            /**
+             * Map of local trace (the points at the edge,face of
+             * the element) to the trace space discretisation
+             */
+            LocTraceToTraceMapSharedPtr m_locTraceToTraceMap;
 
             /// Discretises the boundary conditions.
             void GenerateBoundaryConditionExpansion(
                 const SpatialDomains::MeshGraphSharedPtr &graph1D,
                 const SpatialDomains::BoundaryConditions &bcs,
-                const std::string variable);
-            
+                const std::string variable,
+                const bool DeclareCoeffPhysArrays = true);
+                
             
             /// Generate a associative map of periodic vertices in a mesh.
-            void FindPeriodicVertices(const SpatialDomains::BoundaryConditions &bcs,
-                                      const std::string variable);
+            void FindPeriodicTraces
+                (const SpatialDomains::BoundaryConditions &bcs,
+                 const std::string variable);
             
             virtual ExpListSharedPtr &v_GetTrace()
             {
@@ -190,16 +213,8 @@ namespace Nektar
                 const Array<OneD, const NekDouble> &inarray, 
                       Array<OneD,       NekDouble> &outarray);
 
-            /// Populates the list of boundary condition expansions.
-            void SetBoundaryConditionExpansion(
-                const SpatialDomains::MeshGraphSharedPtr &graph1D,
-                const SpatialDomains::BoundaryConditions &bcs,
-                const std::string variable,
-                Array<OneD, MultiRegions::ExpListSharedPtr>
-                    &bndCondExpansions,
-                Array<OneD, SpatialDomains
-                    ::BoundaryConditionShPtr> &bndConditions);
-            
+
+#if 0
             /// Populates the list of boundary condition expansions in multidomain case.
             void SetMultiDomainBoundaryConditionExpansion(
                 const SpatialDomains::MeshGraphSharedPtr &graph1D,
@@ -210,6 +225,7 @@ namespace Nektar
                 Array<OneD, SpatialDomains
                     ::BoundaryConditionShPtr> &bndConditions,
                 int subdomain);
+#endif
             
             void GenerateFieldBnd1D(
                 SpatialDomains::BoundaryConditions &bcs,
@@ -266,19 +282,20 @@ namespace Nektar
                     const Array<OneD, const NekDouble> &dirForcing,
                     const bool PhysSpaceForcing);
 
+            void SetUpDG(const std::string = "DefaultVar");
+            bool IsLeftAdjacentTrace(const int n, const int e);
+
         private:
-            void SetUpDG(const std::string &variable);
-            
-            bool IsLeftAdjacentVertex(const int n, const int e);
 
             std::vector<bool> m_negatedFluxNormal;
 
-            SpatialDomains::BoundaryConditionsSharedPtr GetDomainBCs(const SpatialDomains::CompositeMap &domain,
-                                                                     const SpatialDomains::BoundaryConditions &Allbcs,
-                                                                     const std::string &variable);
+            SpatialDomains::BoundaryConditionsSharedPtr
+                GetDomainBCs(const SpatialDomains::CompositeMap &domain,
+                             const SpatialDomains::BoundaryConditions &Allbcs,
+                             const std::string &variable);
         };
 
-        typedef std::shared_ptr<DisContField1D>   DisContField1DSharedPtr;
+        typedef std::shared_ptr<DisContField>   DisContFieldSharedPtr;
     } //end of namespace
 } //end of namespace
 

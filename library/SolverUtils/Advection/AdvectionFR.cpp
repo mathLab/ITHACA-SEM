@@ -40,7 +40,7 @@
 #include <LibUtilities/Polylib/Polylib.h>
 #include <StdRegions/StdSegExp.h>
 #include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
-#include <MultiRegions/DisContField1D.h>
+#include <MultiRegions/DisContField.h>
 #include <boost/math/special_functions/gamma.hpp>
 #include <LocalRegions/Expansion1D.h>
 #include <LocalRegions/Expansion2D.h>
@@ -1028,7 +1028,7 @@ namespace Nektar
             
             
             vector<bool> negatedFluxNormal =
-                std::static_pointer_cast<MultiRegions::DisContField1D>(
+                std::static_pointer_cast<MultiRegions::DisContField>(
                     fields[0])->GetNegatedFluxNormal();
 
             // Arrays to store the derivatives of the correction flux

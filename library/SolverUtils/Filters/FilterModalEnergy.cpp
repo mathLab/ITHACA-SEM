@@ -602,7 +602,7 @@ void FilterModalEnergy::SetUpBaseFields(
                 for (i = 0 ; i < m_base.num_elements(); i++)
                 {
                     m_base[i] = MemoryManager<MultiRegions::
-                        DisContField1D>::AllocateSharedPtr(
+                        DisContField>::AllocateSharedPtr(
                             m_session, graphShrPtr,
                             m_session->GetVariable(0));
                 }

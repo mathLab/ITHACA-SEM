@@ -38,7 +38,7 @@
 
 
 #include <MultiRegions/MultiRegions.hpp>
-#include <MultiRegions/DisContField1D.h>
+#include <MultiRegions/DisContField.h>
 #include <MultiRegions/GlobalMatrix.h>
 #include <MultiRegions/GlobalLinSys.h>
 #include <SpatialDomains/Conditions.h>
@@ -53,7 +53,7 @@ namespace Nektar
         /// Abstraction of a global continuous one-dimensional spectral/hp
         /// element expansion which approximates the solution of a set of
         /// partial differential equations.
-        class ContField1D: public DisContField1D
+        class ContField1D: public DisContField
         {
         public:
             /// Default constructor.

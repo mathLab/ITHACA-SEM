@@ -627,13 +627,12 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
         {
             int nq = m_base[0]->GetNumPoints();
             Array<OneD, NekDouble > Fn(nq);
-//            cout << "I am segment " << GetGeom()->GetGlobalID() << endl;
-//            cout << "I want edge " << GetLeftAdjacentElementEdge() << endl;
-// @TODO: This routine no longer makes sense as a normal is not unique to an edge
+
+            // @TODO: This routine no longer makes sense as a normal is not unique to an edge
             const Array<OneD, const Array<OneD, NekDouble> >
                  &normals =
                     GetLeftAdjacentElementExp()->
-                        GetTraceNormal(GetLeftAdjacentElementEdge());
+                        GetTraceNormal(GetLeftAdjacentElementTrace());
             Vmath::Vmul (nq, &Fx[0], 1, &normals[0][0], 1, &Fn[0], 1);
             Vmath::Vvtvp(nq, &Fy[0], 1, &normals[1][0], 1, &Fn[0], 1, &Fn[0], 1);
 

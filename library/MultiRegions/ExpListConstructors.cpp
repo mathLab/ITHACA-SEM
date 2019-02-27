@@ -53,7 +53,7 @@ namespace Nektar
 {
 namespace MultiRegions
 {
-
+#if 0 
     //----------------------------------------------------------------------
     //                        0D Expansion Constructors 
     //----------------------------------------------------------------------
@@ -73,7 +73,7 @@ namespace MultiRegions
 
         SetupCoeffPhys();
     }
-
+#endif
 
     /**
      * Store expansions for the trace space expansions used in
@@ -585,11 +585,11 @@ namespace MultiRegions
         }
     }
 
-
     /**
-     * Fills the list of local expansions with the segments from the 2D
-     * mesh specified by \a domain. This CompositeMap contains a list of
-     * Composites which define the Neumann boundary.
+     * Fills the list of local expansions with the trace from the mesh
+     * specified by \a domain. This CompositeMap contains a list of
+     * Composites which define the boundary. It is also used to set up
+     * expansion domains in the 1D Pulse Wave solver. 
      *
      * @param  pSession     A session within information about expansion
      * @param  domain       A domain, comprising of one or more composite
@@ -597,13 +597,15 @@ namespace MultiRegions
      * @param  graph        A mesh, containing information about the
      *                      domain and the spectral/hp element expansion.
      * @param DeclareCoeffPhysArrays Declare the coefficient and
-     *                               phys space arrays
+     *                               phys space arrays. Default is true. 
      * @param  variable     The variable name associated with the expansion
      * @param  SetToOneSpaceDimension Reduce to one space dimension expansion
+     * @param  comm         An optional communicator that can be used with the
+     *                      boundary expansion in case of more global
+     *                      parallel operations. Default to a Null Communicator
      * @param  ImpType      Detail about the implementation type to use 
-     *                      in operators
+     *                      in operators. Default is eNoImpType. 
      *
-     * Note: comm is available thorugh the pSession !!
      */
     ExpList::ExpList(const LibUtilities::SessionReaderSharedPtr &pSession,
                      const SpatialDomains::CompositeMap &domain,
@@ -623,9 +625,10 @@ namespace MultiRegions
         m_WaveSpace(false)
     {
         int j, elmtid=0;
-        SpatialDomains::SegGeomSharedPtr  SegGeom;
-        SpatialDomains::TriGeomSharedPtr  TriGeom;
-        SpatialDomains::QuadGeomSharedPtr QuadGeom;
+        SpatialDomains::PointGeomSharedPtr PtGeom;
+        SpatialDomains::SegGeomSharedPtr   SegGeom;
+        SpatialDomains::TriGeomSharedPtr   TriGeom;
+        SpatialDomains::QuadGeomSharedPtr  QuadGeom;
 
         LocalRegions::ExpansionSharedPtr  exp;
 
@@ -644,7 +647,15 @@ namespace MultiRegions
             // Process each expansion in the region.
             for(j = 0; j < compIt.second->m_geomVec.size(); ++j)
             {
-                if((SegGeom = std::dynamic_pointer_cast<
+                if((PtGeom = std::dynamic_pointer_cast <
+                    SpatialDomains::PointGeom>(compIt.second->m_geomVec[j])))
+                {
+                    m_expType = e0D;
+
+                    exp = MemoryManager<LocalRegions::PointExp>
+                        ::AllocateSharedPtr(PtGeom);
+                }
+                else  if((SegGeom = std::dynamic_pointer_cast<
                     SpatialDomains::SegGeom>(compIt.second->m_geomVec[j])))
                 {
                     m_expType = e1D;
@@ -732,7 +743,10 @@ namespace MultiRegions
         // Set up m_coeffs, m_phys and offset arrays.
         SetupCoeffPhys(DeclareCoeffPhysArrays);
 
-        CreateCollections(ImpType);
+        if(m_expType != e0D)
+        {
+            CreateCollections(ImpType);
+        }
     }
 
 }

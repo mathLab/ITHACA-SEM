@@ -77,6 +77,9 @@ namespace Nektar
                 LOCAL_REGIONS_EXPORT Expansion(const Expansion &pSrc); // copy constructor.
                 LOCAL_REGIONS_EXPORT virtual ~Expansion();
 
+                LOCAL_REGIONS_EXPORT void SetTraceExp(const int traceid, ExpansionSharedPtr &f);                
+                LOCAL_REGIONS_EXPORT ExpansionSharedPtr GetTraceExp(const int traceid);            
+                
                 LOCAL_REGIONS_EXPORT DNekScalMatSharedPtr GetLocMatrix(const LocalRegions::MatrixKey &mkey);
 
                 LOCAL_REGIONS_EXPORT DNekScalMatSharedPtr GetLocMatrix(const StdRegions::MatrixType mtype,
@@ -126,7 +129,18 @@ namespace Nektar
                 LOCAL_REGIONS_EXPORT NekDouble VectorFlux(
                     const Array<OneD, Array<OneD, NekDouble > > &vec);
 
+                inline ExpansionSharedPtr GetLeftAdjacentElementExp() const;
 
+                inline ExpansionSharedPtr GetRightAdjacentElementExp() const;
+
+                inline int GetLeftAdjacentElementTrace() const;
+
+                inline int GetRightAdjacentElementTrace() const;
+
+                inline void SetAdjacentElementExp(
+                    int                traceid,
+                    ExpansionSharedPtr &e);
+                
                 // Elemental Normals routines
                 const NormalVector & GetTraceNormal(const int id) const
                 {
@@ -165,9 +179,14 @@ namespace Nektar
                 }
 
         protected:
-                SpatialDomains::GeometrySharedPtr  m_geom;
+                std::vector<ExpansionWeakPtr>        m_traceExp;
+                SpatialDomains::GeometrySharedPtr    m_geom;
                 SpatialDomains::GeomFactorsSharedPtr m_metricinfo;
                 MetricMap m_metrics;
+                ExpansionWeakPtr m_elementLeft;
+                ExpansionWeakPtr m_elementRight;
+                int              m_elementTraceLeft;
+                int              m_elementTraceRight;
 
                 void ComputeLaplacianMetric();
                 void ComputeQuadratureMetric();
@@ -178,7 +197,7 @@ namespace Nektar
 
                 virtual void v_MultiplyByQuadratureMetric(
                     const Array<OneD, const NekDouble> &inarray,
-                          Array<OneD,       NekDouble> &outarray);
+                    Array<OneD,       NekDouble> &outarray);
 
                 virtual void v_ComputeLaplacianMetric() {};
 
@@ -259,6 +278,73 @@ namespace Nektar
         private:
 
         };
+
+        inline ExpansionSharedPtr Expansion::GetTraceExp(int  traceid)
+        {
+            ASSERTL1(traceid < GetNtraces(), "Trace is out of range.");
+            return m_traceExp[traceid].lock();
+        }
+
+        inline void Expansion::SetTraceExp(
+            const int           traceid,
+            ExpansionSharedPtr &exp)
+        {
+            int nTraces = GetNtraces();
+            ASSERTL1(traceid < nTraces, "Edge out of range.");
+            if (m_traceExp.size() < nTraces)
+            {
+                m_traceExp.resize(nTraces);
+            }
+
+            m_traceExp[traceid] = exp;
+        }
+        
+        inline ExpansionSharedPtr Expansion::
+            GetLeftAdjacentElementExp() const
+        {
+            ASSERTL1(m_elementLeft.lock().get(),
+                     "Left adjacent element not set.");
+            return m_elementLeft.lock();
+        }
+
+        inline ExpansionSharedPtr Expansion::
+            GetRightAdjacentElementExp() const
+        {
+            ASSERTL1(m_elementLeft.lock().get(),
+                     "Right adjacent element not set.");
+            
+            return m_elementRight.lock();
+        }
+
+        inline int Expansion::GetLeftAdjacentElementTrace() const
+        {
+            return m_elementTraceLeft;
+        }
+
+        inline int Expansion::GetRightAdjacentElementTrace() const
+        {
+            return m_elementTraceRight;
+        }
+
+        inline void Expansion::SetAdjacentElementExp(
+            int                 traceid,
+            ExpansionSharedPtr &exp)
+        {
+            if (m_elementLeft.lock().get())
+            {
+                ASSERTL1(!m_elementRight.lock().get(),
+                         "Both adjacent elements already set.");
+                
+                m_elementRight      = exp;
+                m_elementTraceRight = traceid;
+            }
+            else
+            {
+                m_elementLeft      = exp;
+                m_elementTraceLeft = traceid;
+            }
+        }
+
     } //end of namespace
 } //end of namespace
 

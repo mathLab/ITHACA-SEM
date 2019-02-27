@@ -431,7 +431,7 @@ namespace Nektar
         {
             const Array<OneD, const Array<OneD, NekDouble> >
                 &normals = GetLeftAdjacentElementExp()->
-                GetTraceNormal(GetLeftAdjacentElementEdge());
+                GetTraceNormal(GetLeftAdjacentElementTrace());
 
             int nq = m_base[0]->GetNumPoints();
             Array<OneD, NekDouble > Fn(nq);

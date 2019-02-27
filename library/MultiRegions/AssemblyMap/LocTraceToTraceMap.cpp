@@ -243,7 +243,7 @@ void LocTraceToTraceMap::Setup2D(
             LocalRegions::Expansion1DSharedPtr locExp1d =
                 elmtToTrace[n][e]->as<LocalRegions::Expansion1D>();
 
-            if (exp2d->GetEdgeExp(e)->GetRightAdjacentElementExp())
+            if (exp2d->GetTraceExp(e)->GetRightAdjacentElementExp())
             {
                 if (locExp1d->GetRightAdjacentElementExp()
                         ->GetGeom()
@@ -580,12 +580,11 @@ void LocTraceToTraceMap::Setup3D(
 
             int fac = (*exp)[n]->TraceNormalNegated(e) ? -1.0 : 1.0;
 
-            if (exp3d->GetFaceExp(e)->GetRightAdjacentElementExp())
+            if (exp3d->GetTraceExp(e)->GetRightAdjacentElementExp())
             {
-                if (exp3d->GetFaceExp(e)
-                        ->GetRightAdjacentElementExp()
-                        ->GetGeom3D()
-                        ->GetGlobalID() == exp3d->GetGeom3D()->GetGlobalID())
+                if (exp3d->GetTraceExp(e)
+                        ->GetRightAdjacentElementExp()->GetGeom()
+                        ->GetGlobalID() == exp3d->GetGeom()->GetGlobalID())
                 {
                     fac = -1.0;
                 }

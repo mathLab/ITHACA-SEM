@@ -142,12 +142,13 @@ namespace Nektar
             //---------------------------------------------------------
             // Specialised constructors in ExpListConstructor.cpp
             //---------------------------------------------------------
-            
+#if 0 
             /// Specialised constructors for 0D Expansions
             /// Wrapper around LocalRegion::PointExp
             MULTI_REGIONS_EXPORT ExpList(const
                                 SpatialDomains::PointGeomSharedPtr  &geom);
-
+#endif
+            
             /// Generate expansions for the trace space expansions used in
             /// DisContField.
             MULTI_REGIONS_EXPORT ExpList(

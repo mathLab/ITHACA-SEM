@@ -3073,16 +3073,15 @@ namespace Nektar
                 // Process each expansion.
                 for(i = 0; i < m_exp->size(); ++i)
                 {
-                    LocalRegions::Expansion0DSharedPtr loc_exp =
-                        (*m_exp)[i]->as<LocalRegions::Expansion0D>();
+                    LocalRegions::ExpansionSharedPtr loc_exp = (*m_exp)[i];
 
-                    LocalRegions::Expansion1DSharedPtr loc_elmt =
+                    LocalRegions::ExpansionSharedPtr loc_elmt =
                         loc_exp->GetLeftAdjacentElementExp();
                 
                     // Get the number of points and normals for this expansion.
                     e_npoints  = 1;
                     locnormals = loc_elmt->GetTraceNormal(loc_exp->
-                                              GetLeftAdjacentElementVertex());
+                                              GetLeftAdjacentElementTrace());
 				
                     // Get the physical data offset for this expansion.
                     offset = m_phys_offset[i];
@@ -3090,8 +3089,8 @@ namespace Nektar
                     // Process each point in the expansion.
                     for(j = 0; j < e_npoints; ++j)
                     {
-                        // Process each spatial dimension and copy the values into
-                        // the output array.
+                        // Process each spatial dimension and copy the
+                        // values into the output array.
                         for(k = 0; k < coordim; ++k)
                         {
                             normals[k][offset] = locnormals[k][0];
@@ -3108,13 +3107,12 @@ namespace Nektar
                 
                 for (i = 0; i < m_exp->size(); ++i)
                 {
-                    LocalRegions::Expansion1DSharedPtr loc_exp =
-                        (*m_exp)[i]->as<LocalRegions::Expansion1D>();
+                    LocalRegions::ExpansionSharedPtr loc_exp =(*m_exp)[i];
                     
-                    LocalRegions::Expansion2DSharedPtr loc_elmt =
+                    LocalRegions::ExpansionSharedPtr loc_elmt =
                         loc_exp->GetLeftAdjacentElementExp();
                     
-                    int edgeNumber = loc_exp->GetLeftAdjacentElementEdge();
+                    int edgeNumber = loc_exp->GetLeftAdjacentElementTrace();
                     
                     // Get the number of points and normals for this expansion.
                     e_npoints  = (*m_exp)[i]->GetNumPoints(0);
@@ -3125,12 +3123,14 @@ namespace Nektar
                     
                     if (e_nmodes != loc_nmodes)
                     {
-                        if (loc_exp->GetRightAdjacentElementEdge() >= 0)
+                        if (loc_exp->GetRightAdjacentElementTrace() >= 0)
                         {
-                            LocalRegions::Expansion2DSharedPtr loc_elmt =
+                            LocalRegions::ExpansionSharedPtr loc_elmt =
                                 loc_exp->GetRightAdjacentElementExp();
                             
-                            int EdgeNumber = loc_exp->GetRightAdjacentElementEdge();
+                            int EdgeNumber = loc_exp->
+                                GetRightAdjacentElementTrace();
+
                             // Serial case: right element is connected so we can
                             // just grab that normal.
                             locnormals = loc_elmt->GetTraceNormal(EdgeNumber);
@@ -3140,8 +3140,9 @@ namespace Nektar
                             // Process each point in the expansion.
                             for (j = 0; j < e_npoints; ++j)
                             {
-                                // Process each spatial dimension and copy the values
-                                // into the output array.
+                                // Process each spatial dimension and
+                                // copy the values into the output
+                                // array.
                                 for (k = 0; k < coordim; ++k)
                                 {
                                     normals[k][offset + j] = -locnormals[k][j];
@@ -3206,13 +3207,12 @@ namespace Nektar
                 // Process each expansion.
                 for (i = 0; i < m_exp->size(); ++i)
                 {
-                    LocalRegions::Expansion2DSharedPtr traceExp = (*m_exp)[i]->as<
-                        LocalRegions::Expansion2D>();
-                    LocalRegions::Expansion3DSharedPtr exp3D =
+                    LocalRegions::ExpansionSharedPtr traceExp = (*m_exp)[i];
+                    LocalRegions::ExpansionSharedPtr exp3D =
                         traceExp->GetLeftAdjacentElementExp();
 
                     // Get the number of points and normals for this expansion.
-                    int faceNum = traceExp->GetLeftAdjacentElementFace();
+                    int faceNum = traceExp->GetLeftAdjacentElementTrace();
                     int offset  = m_phys_offset[i];
                     
                     const Array<OneD, const Array<OneD, NekDouble> > &locNormals

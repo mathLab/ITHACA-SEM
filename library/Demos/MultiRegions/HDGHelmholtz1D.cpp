@@ -4,7 +4,7 @@
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <LibUtilities/Communication/Comm.h>
-#include <MultiRegions/DisContField1D.h>
+#include <MultiRegions/DisContField.h>
 #include <SpatialDomains/MeshGraph.h>
 
 using namespace std;
@@ -17,7 +17,7 @@ int main(int argc, char *argv[])
 
     LibUtilities::CommSharedPtr vComm = vSession->GetComm();
 
-    MultiRegions::DisContField1DSharedPtr Exp,Fce;
+    MultiRegions::DisContFieldSharedPtr Exp,Fce;
     int     i, nq,  coordim;
     Array<OneD,NekDouble>  fce;
     Array<OneD,NekDouble>  xc0,xc1,xc2;
@@ -46,7 +46,7 @@ int main(int argc, char *argv[])
 
     //----------------------------------------------
     // Define Expansion
-    Exp = MemoryManager<MultiRegions::DisContField1D>::
+    Exp = MemoryManager<MultiRegions::DisContField>::
         AllocateSharedPtr(vSession,graph1D,vSession->GetVariable(0));
     //----------------------------------------------
 
@@ -87,7 +87,7 @@ int main(int argc, char *argv[])
 
     //----------------------------------------------
     // Setup expansion containing the  forcing function
-    Fce = MemoryManager<MultiRegions::DisContField1D>::AllocateSharedPtr(*Exp);
+    Fce = MemoryManager<MultiRegions::DisContField>::AllocateSharedPtr(*Exp);
     Fce->SetPhys(fce);
     //----------------------------------------------
 

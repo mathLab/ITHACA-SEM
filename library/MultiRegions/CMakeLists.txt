@@ -8,7 +8,7 @@ ContField2D.cpp
 ContField3D.cpp
 ContField3DHomogeneous1D.cpp
 ContField3DHomogeneous2D.cpp
-DisContField1D.cpp
+DisContField.cpp
 DisContField2D.cpp
 DisContField3D.cpp
 DisContField3DHomogeneous1D.cpp
@@ -45,7 +45,7 @@ ContField2D.h
 ContField3D.h
 ContField3DHomogeneous1D.h
 ContField3DHomogeneous2D.h
-DisContField1D.h
+DisContField.h
 DisContField2D.h
 DisContField3D.h
 DisContField3DHomogeneous1D.h

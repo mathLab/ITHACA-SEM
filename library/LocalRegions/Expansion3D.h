@@ -62,8 +62,6 @@ namespace Nektar
             LOCAL_REGIONS_EXPORT Expansion3D(SpatialDomains::Geometry3DSharedPtr pGeom): Expansion(pGeom), StdExpansion3D(), m_requireNeg() {}
             LOCAL_REGIONS_EXPORT virtual ~Expansion3D() {}
             
-            LOCAL_REGIONS_EXPORT void SetFaceExp(const int face, Expansion2DSharedPtr &f);                
-            LOCAL_REGIONS_EXPORT Expansion2DSharedPtr GetFaceExp(const int face);            
             LOCAL_REGIONS_EXPORT void SetTraceToGeomOrientation(Array<OneD, NekDouble> &inout);
             LOCAL_REGIONS_EXPORT void SetFaceToGeomOrientation(const int face, Array<OneD, NekDouble> &inout);
             inline void AddHDGHelmholtzFaceTerms(
@@ -202,7 +200,6 @@ namespace Nektar
             // Do not add members here since it may lead to conflicts.
             // Only use this class for member functions
             
-            std::vector<Expansion2DWeakPtr> m_faceExp;
             std::vector<bool> m_requireNeg;
         };
         

@@ -114,15 +114,11 @@ using namespace std;
 
                      for(f = 0; f < locExpList->GetExpSize(); ++f)
                      {
-                         LocalRegions::Expansion3DSharedPtr exp3d
-                            = (*m_exp)[ElmtID[cnt+f]]->
-                                as<LocalRegions::Expansion3D>();
-                         LocalRegions::Expansion2DSharedPtr exp2d
-                            = locExpList->GetExp(f)->
-                                as<LocalRegions::Expansion2D>();
-
-                         exp3d->SetFaceExp(FaceID[cnt+f],exp2d);
-                         exp2d->SetAdjacentElementExp(FaceID[cnt+f],exp3d);
+                         (*m_exp)[ElmtID[cnt+f]]->
+                             SetTraceExp(FaceID[cnt+f],locExpList->GetExp(f));
+                         locExpList->GetExp(f)->
+                             SetAdjacentElementExp(FaceID[cnt+f],
+                                                   (*m_exp)[ElmtID[cnt+f]]);
                      }
                      cnt += m_bndCondExpansions[i]->GetExpSize();
                  }
@@ -169,15 +165,12 @@ using namespace std;
 
                          for(f = 0; f < locExpList->GetExpSize(); ++f)
                          {
-                             LocalRegions::Expansion3DSharedPtr exp3d
-                                 = (*m_exp)[ElmtID[cnt+f]]->
-                                         as<LocalRegions::Expansion3D>();
-                             LocalRegions::Expansion2DSharedPtr exp2d
-                                 = locExpList->GetExp(f)->
-                                         as<LocalRegions::Expansion2D>();
-
-                             exp3d->SetFaceExp(FaceID[cnt+f],exp2d);
-                             exp2d->SetAdjacentElementExp(FaceID[cnt+f],exp3d);
+                             (*m_exp)[ElmtID[cnt+f]]->
+                                 SetTraceExp(FaceID[cnt+f],
+                                             locExpList->GetExp(f));
+                             locExpList->GetExp(f)->
+                                 SetAdjacentElementExp(FaceID[cnt+f],
+                                                       (*m_exp)[ElmtID[cnt+f]]);
                          }
 
                          cnt += m_bndCondExpansions[i]->GetExpSize();
@@ -214,15 +207,12 @@ using namespace std;
 
                          for(f = 0; f < locExpList->GetExpSize(); ++f)
                          {
-                             LocalRegions::Expansion3DSharedPtr exp3d
-                                 = (*m_exp)[ElmtID[cnt+f]]->
-                                         as<LocalRegions::Expansion3D>();
-                             LocalRegions::Expansion2DSharedPtr exp2d
-                                 = locExpList->GetExp(f)->
-                                         as<LocalRegions::Expansion2D>();
-
-                             exp3d->SetFaceExp(FaceID[cnt+f], exp2d);
-                             exp2d->SetAdjacentElementExp(FaceID[cnt+f], exp3d);
+                             (*m_exp)[ElmtID[cnt+f]]->
+                                 SetTraceExp(FaceID[cnt+f],
+                                             locExpList->GetExp(f));
+                             locExpList->GetExp(f)->
+                                 SetAdjacentElementExp(FaceID[cnt+f],
+                                                  (*m_exp)[ElmtID[cnt+f]]);
                          }
 
                          cnt += m_bndCondExpansions[i]->GetExpSize();
@@ -344,12 +334,8 @@ using namespace std;
              {
                  for (int j = 0; j < (*m_exp)[i]->GetNfaces(); ++j)
                  {
-                     LocalRegions::Expansion3DSharedPtr exp3d =
-                             (*m_exp)[i]->as<LocalRegions::Expansion3D>();
-                     LocalRegions::Expansion2DSharedPtr exp2d =
-                             elmtToTrace[i][j]->as<LocalRegions::Expansion2D>();
-                     exp3d->SetFaceExp           (j, exp2d);
-                     exp2d->SetAdjacentElementExp(j, exp3d);
+                     (*m_exp)[i]->SetTraceExp        (j, elmtToTrace[i][j]);
+                     elmtToTrace[i][j]->SetAdjacentElementExp(j, (*m_exp)[i]);
                  }
              }
 
@@ -371,13 +357,13 @@ using namespace std;
                      if (traceGeomId != min(pIt->second[0].id, traceGeomId))
                      {
                          traceEl->GetLeftAdjacentElementExp()->NegateTraceNormal(
-                             traceEl->GetLeftAdjacentElementFace());
+                             traceEl->GetLeftAdjacentElementTrace());
                      }
                  }
                  else if (m_traceMap->GetTraceToUniversalMapUnique(offset) < 0)
                  {
                      traceEl->GetLeftAdjacentElementExp()->NegateTraceNormal(
-                         traceEl->GetLeftAdjacentElementFace());
+                         traceEl->GetLeftAdjacentElementTrace());
                  }
              }
 
@@ -1850,8 +1836,8 @@ using namespace std;
             int offset = m_trace->GetPhys_Offset(traceEl->GetElmtId());
             
             bool fwd = true;
-            if (traceEl->GetLeftAdjacentElementFace () == -1 ||
-                traceEl->GetRightAdjacentElementFace() == -1)
+            if (traceEl->GetLeftAdjacentElementTrace () == -1 ||
+                traceEl->GetRightAdjacentElementTrace() == -1)
             {
                 // Boundary edge (1 connected element). Do nothing in
                 // serial.
@@ -1875,8 +1861,8 @@ using namespace std;
                     }
                 }
             }
-            else if (traceEl->GetLeftAdjacentElementFace () != -1 &&
-                     traceEl->GetRightAdjacentElementFace() != -1)
+            else if (traceEl->GetLeftAdjacentElementTrace () != -1 &&
+                     traceEl->GetRightAdjacentElementTrace() != -1)
             {
                 // Non-boundary edge (2 connected elements).
                 fwd = (traceEl->GetLeftAdjacentElementExp().get() == (*m_exp)[n].get() );

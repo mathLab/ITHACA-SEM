@@ -39,7 +39,7 @@
 
 #include <MultiRegions/MultiRegionsDeclspec.h>
 #include <MultiRegions/MultiRegions.hpp>
-#include <MultiRegions/ExpList.h>
+#include <MultiRegions/DisContField.h>
 #include <MultiRegions/GlobalLinSys.h>
 #include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
 #include <MultiRegions/AssemblyMap/LocTraceToTraceMap.h>
@@ -49,7 +49,7 @@ namespace Nektar
 {
     namespace MultiRegions
     {
-        class DisContField2D : public ExpList
+        class DisContField2D : public DisContField
         {
         public:
             MULTI_REGIONS_EXPORT DisContField2D();
@@ -128,81 +128,17 @@ namespace Nektar
                 return(m_base[dir]->GetBasisType());
             }
 
-            /**
-             * @brief An object which contains the discretised boundary
-             * conditions.
-             *
-             * It is an array of size equal to the number of boundary regions
-             * and consists of entries of the type MultiRegions#ExpList. Every
-             * entry corresponds to the one-dimensional spectral/hp expansion on
-             * a single boundary region.  The values of the boundary conditions
-             * are stored as the coefficients of the one-dimensional expansion.
-             */
-            Array<OneD,MultiRegions::ExpListSharedPtr> m_bndCondExpansions;
-            
-            /**
-             * @brief An array which contains the information about
-             * the boundary condition on the different boundary regions.
-             */
-            Array<OneD,SpatialDomains::BoundaryConditionShPtr> m_bndConditions;
-
-            GlobalLinSysMapShPtr   m_globalBndMat;
-            ExpListSharedPtr       m_trace;
-            AssemblyMapDGSharedPtr m_traceMap;
-            
-            /**
-             * Map of local trace (the points at the face of
-             * the element) to the trace space discretisation
-             */
-            LocTraceToTraceMapSharedPtr m_locTraceToTraceMap;
 
             Array<OneD, Array<OneD, unsigned int> > m_mapEdgeToElmn;
             Array<OneD, Array<OneD, unsigned int> > m_signEdgeToElmn;
             Array<OneD,StdRegions::Orientation>     m_edgedir;
 
-            /**
-             * @brief A set storing the global IDs of any boundary edges.
-             */
-            std::set<int> m_boundaryEdges;
-            
-            /**
-             * @brief A map which identifies groups of periodic vertices.
-             */
-            PeriodicMap m_periodicVerts;
 
-            /**
-             * @brief A map which identifies pairs of periodic edges.
-             */
-            PeriodicMap m_periodicEdges;
-            
-            
-            /**
-             * @brief A vector indicating degress of freedom which need to be
-             * copied from forwards to backwards space in case of a periodic
-             * boundary condition.
-             */
-            std::vector<int> m_periodicFwdCopy;
-            std::vector<int> m_periodicBwdCopy;
-
-            /*
-             * @brief A map identifying which edges are left- and right-adjacent
-             * for DG.
-             */
-            std::vector<bool> m_leftAdjacentEdges;
-
-            void SetUpDG(const std::string  = "DefaultVar");
             bool SameTypeOfBoundaryConditions(const DisContField2D &In);
-            void GenerateBoundaryConditionExpansion(
-                const SpatialDomains::MeshGraphSharedPtr &graph2D,
-                const SpatialDomains::BoundaryConditions &bcs,
-                const std::string                        &variable,
-                const bool DeclareCoeffPhysArrays = true);
             void FindPeriodicEdges(
                 const SpatialDomains::BoundaryConditions &bcs,
                 const std::string                        &variable);
             
-            bool IsLeftAdjacentEdge(const int n, const int e);
-
             virtual void v_GetFwdBwdTracePhys(
                 const Array<OneD, const NekDouble> &field,
                       Array<OneD,       NekDouble> &Fwd,

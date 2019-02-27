@@ -37,7 +37,7 @@
 #include <LocalRegions/Expansion2D.h>
 #include <SolverUtils/Diffusion/DiffusionLFR.h>
 #include <LibUtilities/Polylib/Polylib.h>
-#include <MultiRegions/DisContField1D.h>
+#include <MultiRegions/DisContField.h>
 #include <boost/math/special_functions/gamma.hpp>
 #include <iostream>
 #include <iomanip>
@@ -1483,7 +1483,7 @@ namespace Nektar
             int nSolutionPts = fields[0]->GetTotPoints();
             
             vector<bool> negatedFluxNormal =
-                std::static_pointer_cast<MultiRegions::DisContField1D>(
+                std::static_pointer_cast<MultiRegions::DisContField>(
                     fields[0])->GetNegatedFluxNormal();
 
             // Arrays to store the derivatives of the correction flux

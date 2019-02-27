@@ -661,7 +661,7 @@ namespace Nektar
 
             const Array<OneD, const Array<OneD, NekDouble> > &normals = 
                 GetLeftAdjacentElementExp()->GetTraceNormal(
-                    GetLeftAdjacentElementFace());
+                    GetLeftAdjacentElementTrace());
             
             if (m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
             {

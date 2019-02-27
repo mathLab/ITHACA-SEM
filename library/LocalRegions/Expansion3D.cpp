@@ -55,7 +55,7 @@ namespace Nektar
             const StdRegions::VarCoeffMap     &varcoeffs,
             Array<OneD, NekDouble>            &outarray)
         {
-            ExpansionSharedPtr FaceExp = GetFaceExp(face);
+            ExpansionSharedPtr FaceExp = GetTraceExp(face);
             int i,j,n;
             int nquad_f = FaceExp->GetNumPoints(0)*FaceExp->GetNumPoints(1);
             int order_f = FaceExp->GetNcoeffs();
@@ -579,7 +579,7 @@ namespace Nektar
                     // Add tau*E_l using elemental mass matrices on each edge
                     for(i = 0; i < nfaces; ++i)
                     {
-                        FaceExp = GetFaceExp(i);
+                        FaceExp = GetTraceExp(i);
                         order_f = FaceExp->GetNcoeffs();  
                         StdRegions::IndexMapKey ikey(
                             StdRegions::eFaceToElement, DetShapeType(), 
@@ -650,7 +650,7 @@ namespace Nektar
                     int bndry_cnt = 0;
                     for(i = 0; i < nfaces; ++i)
                     {
-                        FaceExp = GetFaceExp(i);//temporary, need to rewrite AddHDGHelmholtzFaceTerms
+                        FaceExp = GetTraceExp(i);//temporary, need to rewrite AddHDGHelmholtzFaceTerms
                         int nface = GetFaceNcoeffs(i);
                         Array<OneD, NekDouble> face_lambda(nface);
 			
@@ -684,7 +684,7 @@ namespace Nektar
                     //// Set up face expansions from local geom info
                     //for(i = 0; i < nfaces; ++i)
                     //{
-                    //    FaceExp[i] = GetFaceExp(i);
+                    //    FaceExp[i] = GetTraceExp(i);
                     //}
                     //
                     //// for each degree of freedom of the lambda space
@@ -753,7 +753,7 @@ namespace Nektar
                     
                     for(i = 0; i < nfaces; ++i)
                     {
-                        FaceExp[i] = GetFaceExp(i);
+                        FaceExp[i] = GetTraceExp(i);
                     }
 
                     //Weak Derivative matrix 
@@ -890,7 +890,7 @@ namespace Nektar
                     const StdRegions::VarCoeffMap &varcoeffs = mkey.GetVarCoeffs();
                     for(i = 0; i < nfaces; ++i)
                     {
-                        FaceExp[i] = GetFaceExp(i);
+                        FaceExp[i] = GetTraceExp(i);
                     }
 
                     // Set up matrix derived from <mu, Q_lam.n - \tau (U_lam - Lam) > 
@@ -1115,22 +1115,6 @@ namespace Nektar
             return returnval;
         }
 
-        void Expansion3D::SetFaceExp(const int face, Expansion2DSharedPtr &f)
-        {
-            int nFaces = GetNfaces();
-            ASSERTL1(face < nFaces, "Face is out of range.");
-            if (m_faceExp.size() < nFaces)
-            {
-                m_faceExp.resize(nFaces);
-            }
-            m_faceExp[face] = f;
-        }
-        
-        Expansion2DSharedPtr Expansion3D::GetFaceExp(const int face)
-        {
-            return m_faceExp[face].lock();
-        }
-        
         void Expansion3D::v_AddFaceNormBoundaryInt(
             const int                           face,
             const ExpansionSharedPtr           &FaceExp,
@@ -1161,12 +1145,12 @@ namespace Nektar
                         continue;
                     }
                     
-                    Expansion2DSharedPtr faceExp = m_faceExp[i].lock();
+                    ExpansionSharedPtr faceExp = m_traceExp[i].lock();
 
                     if (faceExp->GetRightAdjacentElementExp())
                     {
-                        if (faceExp->GetRightAdjacentElementExp()->GetGeom3D()
-                            ->GetGlobalID() == GetGeom3D()->GetGlobalID())
+                        if (faceExp->GetRightAdjacentElementExp()->GetGeom()
+                            ->GetGlobalID() == GetGeom()->GetGlobalID())
                         {
                             m_requireNeg[i] = true;
                         }
@@ -1319,7 +1303,7 @@ namespace Nektar
 
             int i,j;
             int id1,id2;
-            Expansion2DSharedPtr faceExp = m_faceExp[face].lock();
+            ExpansionSharedPtr faceExp = m_traceExp[face].lock();
             int order_f = faceExp->GetNcoeffs();
          
             Array<OneD, unsigned int> map;

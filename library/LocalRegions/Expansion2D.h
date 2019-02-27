@@ -107,18 +107,6 @@ namespace Nektar
                 const StdRegions::VarCoeffMap      &dirForcing,
                 Array<OneD, NekDouble>             &outarray);
 
-            inline Expansion3DSharedPtr GetLeftAdjacentElementExp() const;
-
-            inline Expansion3DSharedPtr GetRightAdjacentElementExp() const;
-
-            inline int GetLeftAdjacentElementFace() const;
-
-            inline int GetRightAdjacentElementFace() const;
-
-            inline void SetAdjacentElementExp(
-                int                              face,
-                Expansion3DSharedPtr            &f);
-
             inline SpatialDomains::Geometry2DSharedPtr GetGeom2D() const;
             
             LOCAL_REGIONS_EXPORT void ReOrientEdgePhysMap(
@@ -128,14 +116,9 @@ namespace Nektar
                 Array<OneD, int>                &idmap);
 
         protected:
-            std::vector<Expansion1DWeakPtr>         m_edgeExp;
             std::vector<bool>                       m_requireNeg;
             std::map<int, NormalVector>             m_edgeNormals;
             std::map<int, bool>                     m_negatedNormals;
-            Expansion3DWeakPtr                      m_elementLeft;
-            Expansion3DWeakPtr                      m_elementRight;
-            int                                     m_elementFaceLeft;
-            int                                     m_elementFaceRight;
 
             LOCAL_REGIONS_EXPORT virtual Array<OneD, NekDouble> v_GetMF(
                 const int dir,
@@ -216,73 +199,7 @@ namespace Nektar
                 const Array<OneD, Array<OneD, NekDouble > > &vec);
         };
 
-        inline Expansion1DSharedPtr Expansion2D::GetEdgeExp(
-            int edge,
-            bool SetUpNormal)
-        {
-            ASSERTL1(edge < GetNedges(), "Edge out of range.");
-            return m_edgeExp[edge].lock();
-        }
 
-        inline void Expansion2D::SetEdgeExp(
-            const int           edge,
-            Expansion1DSharedPtr &e)
-        {
-            unsigned int nEdges = GetNedges();
-            ASSERTL1(edge < nEdges, "Edge out of range.");
-            if (m_edgeExp.size() < nEdges)
-            {
-                m_edgeExp.resize(nEdges);
-            }
-            m_edgeExp[edge] = e;
-        }
-
-        inline Expansion3DSharedPtr Expansion2D::
-            GetLeftAdjacentElementExp() const
-        {
-            ASSERTL1(m_elementLeft.lock().get(),
-                     "Left adjacent element not set.");
-            return m_elementLeft.lock();
-        }
-        
-        inline Expansion3DSharedPtr Expansion2D::
-            GetRightAdjacentElementExp() const
-        {
-            ASSERTL1(m_elementLeft.lock().get(),
-                     "Right adjacent element not set.");
-            
-            return m_elementRight.lock();
-        }
-
-        inline int Expansion2D::GetLeftAdjacentElementFace() const
-        {
-            return m_elementFaceLeft;
-        }
-
-        inline int Expansion2D::GetRightAdjacentElementFace() const
-        {
-            return m_elementFaceRight;
-        }
-        
-        inline void Expansion2D::SetAdjacentElementExp(
-            int                   face,
-            Expansion3DSharedPtr &f)
-        {
-            if (m_elementLeft.lock().get())
-            {
-                ASSERTL1(!m_elementRight.lock().get(),
-                         "Both adjacent elements already set.");
-                
-                m_elementRight     = f;
-                m_elementFaceRight = face;
-            }
-            else
-            {
-                m_elementLeft      = f;
-                m_elementFaceLeft  = face;
-            }
-        }
-        
         inline SpatialDomains::Geometry2DSharedPtr
             Expansion2D::GetGeom2D() const
         {

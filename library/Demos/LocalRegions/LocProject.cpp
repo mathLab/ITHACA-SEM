@@ -58,7 +58,7 @@ namespace po = boost::program_options;
 NekDouble Shape_sol(NekDouble x, NekDouble y, NekDouble z, vector<int> order,
                     vector<BasisType> btype, ShapeType stype, bool diff);
 
-GeometrySharedPtr CreateGeom(vector<double> coords, ShapeType stype);
+GeometrySharedPtr CreateGeom(vector<double> coords, ShapeType shapeType);
 
 //Modification to deal with exact solution for diff. Return 1 if integer < 0.
 static double pow_loc(const double val, const int i)
@@ -73,27 +73,36 @@ int main(int argc, char *argv[])
     vector<int> order, points;
     vector<double> coords;
     po::options_description desc("Available options");
-    desc.add_options()("help,h",
-                       "Produce this help message and list "
-                       "basis and shape types.")
-            ("nodal,n", po::value<string>(&ntype),
+    desc.add_options()
+            ("help,h",
+             "Produce this help message and list basis and shape types.")
+
+            ("nodal,n",
+             po::value<string>(&ntype),
              "Optional nodal type, autofills shape and basis choices.")
-            ("shape,s", po::value<string>(&shape),
+
+            ("shape,s",
+             po::value<string>(&shape),
              "Region shape to project function on.")
-            ("basis,b", po::value<vector<string >>(&basis)->multitoken(),
+
+            ("basis,b",
+             po::value<vector<string >>(&basis)->multitoken(),
              "Basis type, separate by spaces for higher dimensions.")
-            ("order,o", po::value<vector<int >>(&order)->multitoken()
-                     ->required(),
+
+            ("order,o",
+             po::value<vector<int>>(&order)->multitoken()->required(),
              "Order of basis sets, separate by spaces for higher dimensions.")
-            ("points,p", po::value<vector<int >>(&points)->multitoken()
-                     ->required(),
+
+            ("points,p",
+             po::value<vector<int>>(&points)->multitoken()->required(),
              "Number of quadrature points, separate by spaces for "
              "higher dimensions.")
+
             ("coords,c",
-             po::value<vector<NekDouble >>(&coords)->multitoken()
-                     ->required(),
+             po::value<vector<NekDouble >>(&coords)->multitoken()->required(),
              "Coordinates, separate by spaces for higher dimensions with "
              "grouping by vertex i.e. 'x1 y1 z1 x2 y2 z2 x3 y3 z3 ...")
+
             ("diff,d",
              "Project derivative.");
 
@@ -125,8 +134,7 @@ int main(int argc, char *argv[])
     }
     catch (const exception &e)
     {
-        cerr << "Error: " << e.what() << endl;
-        cerr << desc;
+        cerr << "Error: " << e.what() << endl << desc;
         return 0;
     }
 
@@ -140,7 +148,7 @@ int main(int argc, char *argv[])
         {
             if (boost::iequals(kPointsTypeStr[i], ntype))
             {
-                nodaltype = (PointsType) i;
+                nodaltype = static_cast<PointsType>(i);
                 break;
             }
             ASSERTL0(i != SIZE_PointsType - 1, ("The nodal type '" + ntype +
@@ -170,7 +178,7 @@ int main(int argc, char *argv[])
         {
             if (boost::iequals(ShapeTypeMap[i], shape))
             {
-                stype = (ShapeType) i;
+                stype = static_cast<ShapeType>(i);
                 break;
             }
             ASSERTL0(i != SIZE_ShapeType - 1, ("The shape type '" + shape +
@@ -185,7 +193,7 @@ int main(int argc, char *argv[])
     }
 
     //Check arguments supplied equals dimension
-    int dimension = ShapeTypeDimMap[stype];
+    const int dimension = ShapeTypeDimMap[stype];
     ASSERTL0(order.size() == dimension,
              "Number of orders supplied should match shape dimension");
     ASSERTL0(points.size() == dimension,
@@ -202,7 +210,7 @@ int main(int argc, char *argv[])
             {
                 if (boost::iequals(BasisTypeMap[j], basis[i]))
                 {
-                    btype[i] = (BasisType) j;
+                    btype[i] = static_cast<BasisType>(j);
                     break;
                 }
                 ASSERTL0(j != SIZE_BasisType - 1, ("The basis type '" + basis[i]
@@ -261,14 +269,16 @@ int main(int argc, char *argv[])
 
     for (int i = 0; i < dimension; ++i)
     {
-        for (int j = 0; j < (allowableBasis[stype][i].size()); ++j)
+        const unsigned int basisListLength = allowableBasis[stype][i].size();
+        for (int j = 0; j < basisListLength; ++j)
         {
             if (allowableBasis[stype][i][j] == btype[i])
             {
                 break;
             }
-            ASSERTL0(j != allowableBasis[stype][i].size() - 1,
-                     ("The basis type '" + (string) BasisTypeMap[btype[i]] +
+            ASSERTL0(j != basisListLength - 1,
+                     ("The basis type '" +
+                     static_cast<string>(BasisTypeMap[btype[i]]) +
                       "' is invalid for basis argument " + to_string(i + 1) +
                       " for shape '" + ShapeTypeMap[stype] + "'."))
         }
@@ -316,8 +326,8 @@ int main(int argc, char *argv[])
     vector<BasisKey> bkey;
     for (int i = 0; i < dimension; ++i)
     {
-        pkey.push_back(PointsKey(points[i], pointstype[i]));
-        bkey.push_back(BasisKey(btype[i], order[i], pkey[i]));
+        pkey.emplace_back(PointsKey(points[i], pointstype[i]));
+        bkey.emplace_back(BasisKey(btype[i], order[i], pkey[i]));
     }
 
     GeometrySharedPtr geomFull = CreateGeom(coords, stype);
@@ -326,13 +336,13 @@ int main(int argc, char *argv[])
     {
         case eSegment:
         {
-            SegGeomSharedPtr geom = dynamic_pointer_cast<SegGeom>(geomFull);
+            SegGeomSharedPtr geom = static_pointer_cast<SegGeom>(geomFull);
             E = new SegExp(bkey[0], geom);
             break;
         }
         case eTriangle:
         {
-            TriGeomSharedPtr geom = dynamic_pointer_cast<TriGeom>(geomFull);
+            TriGeomSharedPtr geom = static_pointer_cast<TriGeom>(geomFull);
             if (nodaltype == eNoPointsType)
             {
                 E = new TriExp(bkey[0], bkey[1], geom);
@@ -345,31 +355,31 @@ int main(int argc, char *argv[])
         }
         case eQuadrilateral:
         {
-            QuadGeomSharedPtr geom = dynamic_pointer_cast<QuadGeom>(geomFull);
+            QuadGeomSharedPtr geom = static_pointer_cast<QuadGeom>(geomFull);
             E = new QuadExp(bkey[0], bkey[1], geom);
             break;
         }
         case eTetrahedron:
         {
-            TetGeomSharedPtr geom = dynamic_pointer_cast<TetGeom>(geomFull);
+            TetGeomSharedPtr geom = static_pointer_cast<TetGeom>(geomFull);
             E = new TetExp(bkey[0], bkey[1], bkey[2], geom);
             break;
         }
         case ePyramid:
         {
-            PyrGeomSharedPtr geom = dynamic_pointer_cast<PyrGeom>(geomFull);
+            PyrGeomSharedPtr geom = static_pointer_cast<PyrGeom>(geomFull);
             E = new PyrExp(bkey[0], bkey[1], bkey[2], geom);
             break;
         }
         case ePrism:
         {
-            PrismGeomSharedPtr geom = dynamic_pointer_cast<PrismGeom>(geomFull);
+            PrismGeomSharedPtr geom = static_pointer_cast<PrismGeom>(geomFull);
             E = new PrismExp(bkey[0], bkey[1], bkey[2], geom);
             break;
         }
         case eHexahedron:
         {
-            HexGeomSharedPtr geom = dynamic_pointer_cast<HexGeom>(geomFull);
+            HexGeomSharedPtr geom = static_pointer_cast<HexGeom>(geomFull);
             E = new HexExp(bkey[0], bkey[1], bkey[2], geom);
             break;
         }
@@ -377,21 +387,14 @@ int main(int argc, char *argv[])
             break;
     }
 
-
-    Array<OneD, NekDouble> x = Array<OneD, NekDouble>(
-            (unsigned) E->GetTotPoints());
-    Array<OneD, NekDouble> y = Array<OneD, NekDouble>(
-            (unsigned) E->GetTotPoints());
-    Array<OneD, NekDouble> z = Array<OneD, NekDouble>(
-            (unsigned) E->GetTotPoints());
-    Array<OneD, NekDouble> dx = Array<OneD, NekDouble>(
-            (unsigned) E->GetTotPoints());
-    Array<OneD, NekDouble> dy = Array<OneD, NekDouble>(
-            (unsigned) E->GetTotPoints());
-    Array<OneD, NekDouble> dz = Array<OneD, NekDouble>(
-            (unsigned) E->GetTotPoints());
-    Array<OneD, NekDouble> sol = Array<OneD, NekDouble>(
-            (unsigned) E->GetTotPoints());
+    const auto totPoints = (unsigned) E->GetTotPoints();
+    Array<OneD, NekDouble> x = Array<OneD, NekDouble>(totPoints);
+    Array<OneD, NekDouble> y = Array<OneD, NekDouble>(totPoints);
+    Array<OneD, NekDouble> z = Array<OneD, NekDouble>(totPoints);
+    Array<OneD, NekDouble> dx = Array<OneD, NekDouble>(totPoints);
+    Array<OneD, NekDouble> dy = Array<OneD, NekDouble>(totPoints);
+    Array<OneD, NekDouble> dz = Array<OneD, NekDouble>(totPoints);
+    Array<OneD, NekDouble> sol = Array<OneD, NekDouble>(totPoints);
 
     switch (dimension)
     {
@@ -400,47 +403,49 @@ int main(int argc, char *argv[])
             E->GetCoords(x);
             break;
         }
-
         case 2:
         {
             E->GetCoords(x, y);
             break;
         }
-
         case 3:
         {
             E->GetCoords(x, y, z);
             break;
         }
-        default:
-            break;
     }
 
     //get solution array
-    for (int i = 0; i < E->GetTotPoints(); ++i)
+    for (int i = 0; i < totPoints; ++i)
     {
-        sol[i] = Shape_sol(x[i], y[i], z[i], order, btype, stype, 0);
+        sol[i] = Shape_sol(x[i], y[i], z[i], order, btype, stype, false);
     }
 
-    Array<OneD, NekDouble> phys((unsigned) E->GetTotPoints());
+    Array<OneD, NekDouble> phys(totPoints);
     Array<OneD, NekDouble> coeffs((unsigned) E->GetNcoeffs());
 
     if (vm.count("diff"))
     {
-        if (dimension == 1)
+        switch (dimension)
         {
-            E->PhysDeriv(sol, sol);
-        }
-        else if (dimension == 2)
-        {
-            E->PhysDeriv(sol, dx, dy);
-            Vmath::Vadd(E->GetTotPoints(), dx, 1, dy, 1, sol, 1);
-        }
-        else if (dimension == 3)
-        {
-            E->PhysDeriv(sol, dx, dy, dz);
-            Vmath::Vadd(E->GetTotPoints(), dx, 1, dy, 1, sol, 1);
-            Vmath::Vadd(E->GetTotPoints(), dz, 1, sol, 1, sol, 1);
+            case 1:
+            {
+                E->PhysDeriv(sol, sol);
+                break;
+            }
+            case 2:
+            {
+                E->PhysDeriv(sol, dx, dy);
+                Vmath::Vadd(totPoints, dx, 1, dy, 1, sol, 1);
+                break;
+            }
+            case 3:
+            {
+                E->PhysDeriv(sol, dx, dy, dz);
+                Vmath::Vadd(totPoints, dx, 1, dy, 1, sol, 1);
+                Vmath::Vadd(totPoints, dz, 1, sol, 1, sol, 1);
+                break;
+            }
         }
     }
 
@@ -452,9 +457,9 @@ int main(int argc, char *argv[])
 
     if (vm.count("diff"))
     {
-        for (int i = 0; i < E->GetTotPoints(); ++i)
+        for (int i = 0; i < totPoints; ++i)
         {
-            sol[i] = Shape_sol(x[i], y[i], z[i], order, btype, stype, 1);
+            sol[i] = Shape_sol(x[i], y[i], z[i], order, btype, stype, true);
         }
     }
 
@@ -465,39 +470,37 @@ int main(int argc, char *argv[])
     return 0;
 }
 
-GeometrySharedPtr CreateGeom(vector<NekDouble> coords,
-                             LibUtilities::ShapeType shapeType)
+GeometrySharedPtr CreateGeom(vector<NekDouble> coords, ShapeType shapeType)
 {
-    map<ShapeType, vector<vector<int >>> edgeDef, faceDef;
-
-    edgeDef[eSegment] = {{0, 1}};
-    edgeDef[eTriangle] = {{0, 1}, {1, 2}, {2, 0}};
+    map<ShapeType, vector<vector<unsigned int>>> edgeDef, faceDef;
+    edgeDef[eSegment]       = {{0, 1}};
+    edgeDef[eTriangle]      = {{0, 1}, {1, 2}, {2, 0}};
     edgeDef[eQuadrilateral] = {{0, 1}, {1, 2}, {2, 3}, {3, 0}};
-    edgeDef[eHexahedron] = {{0, 1}, {1, 2}, {3, 2}, {0, 3}, {0, 4}, {1, 5},
-                            {2, 6}, {3, 7}, {4, 5}, {5, 6}, {7, 6}, {4, 7}};
-    edgeDef[ePrism] = {{0, 1}, {1, 2}, {3, 2}, {0, 3}, {0, 4}, {1, 4}, {2, 5},
-                       {3, 5}, {4, 5}};
-    edgeDef[ePyramid] = {{0, 1}, {1, 2}, {3, 2}, {0, 3}, {0, 4}, {1, 4}, {2, 4},
-                         {3, 4}};
-    edgeDef[eTetrahedron] = {{0, 1}, {1, 2}, {0, 2}, {0, 3}, {1, 3}, {2, 3}};
+    edgeDef[eHexahedron]    = {{0, 1}, {1, 2}, {3, 2}, {0, 3}, {0, 4}, {1, 5},
+                               {2, 6}, {3, 7}, {4, 5}, {5, 6}, {7, 6}, {4, 7}};
+    edgeDef[ePrism]         = {{0, 1}, {1, 2}, {3, 2}, {0, 3}, {0, 4}, {1, 4},
+                               {2, 5}, {3, 5}, {4, 5}};
+    edgeDef[ePyramid]       = {{0, 1}, {1, 2}, {3, 2}, {0, 3}, {0, 4}, {1, 4},
+                               {2, 4}, {3, 4}};
+    edgeDef[eTetrahedron]   = {{0, 1}, {1, 2}, {0, 2}, {0, 3}, {1, 3}, {2, 3}};
 
-    faceDef[eTriangle] = {{0, 1, 2}};
+    faceDef[eTriangle]      = {{0, 1, 2}};
     faceDef[eQuadrilateral] = {{0, 1, 2, 3}};
-    faceDef[eHexahedron] = {{0, 1, 2,  3}, {0, 5, 8,  4}, {1, 6, 9,  5},
-                            {2, 7, 10, 6}, {3, 7, 11, 4}, {8, 9, 10, 11}};
-    faceDef[ePrism] = {{0, 1, 2, 3}, {0, 5, 4}, {1, 6, 8, 5}, {2, 6, 7},
-                       {3, 7, 8, 4}};
-    faceDef[ePyramid] = {{0, 1, 2, 3}, {0, 5, 4}, {1, 6, 5}, {2, 6, 7},
-                         {3, 7, 4}};
-    faceDef[eTetrahedron] = {{0, 1, 2}, {0, 4, 3}, {1, 5, 4}, {2, 5, 3}};
+    faceDef[eHexahedron]    = {{0, 1, 2,  3}, {0, 5, 8,  4}, {1, 6, 9,  5},
+                               {2, 7, 10, 6}, {3, 7, 11, 4}, {8, 9, 10, 11}};
+    faceDef[ePrism]         = {{0, 1, 2, 3}, {0, 5, 4}, {1, 6, 8, 5}, {2, 6, 7},
+                               {3, 7, 8, 4}};
+    faceDef[ePyramid]       = {{0, 1, 2, 3}, {0, 5, 4}, {1, 6, 5}, {2, 6, 7},
+                               {3, 7, 4}};
+    faceDef[eTetrahedron]   = {{0, 1, 2}, {0, 4, 3}, {1, 5, 4}, {2, 5, 3}};
 
-    map<ShapeType, vector<int>> volDef;
+    map<ShapeType, vector<unsigned int>> volDef;
     volDef[eHexahedron] = {0, 1, 2, 3, 4, 5};
     volDef[ePrism] = {0, 1, 2, 3, 4};
     volDef[ePyramid] = {0, 1, 2, 3, 4};
     volDef[eTetrahedron] = {0, 1, 2, 3};
 
-    map<ShapeType, int> numVerts;
+    map<ShapeType, unsigned int> numVerts;
     numVerts[eSegment] = 2;
     numVerts[eTriangle] = 3;
     numVerts[eQuadrilateral] = 4;
@@ -519,35 +522,36 @@ GeometrySharedPtr CreateGeom(vector<NekDouble> coords,
     {
         if (dimension == 1)
         {
-            verts[i] = MemoryManager<PointGeom>::
-            AllocateSharedPtr(dimension, i, coords[dimension * i], 0, 0);
+            verts[i] = MemoryManager<PointGeom>::AllocateSharedPtr(
+                    dimension, i, coords[dimension * i], 0, 0);
         }
         if (dimension == 2)
         {
-            verts[i] = MemoryManager<PointGeom>::
-            AllocateSharedPtr(dimension, i, coords[dimension * i],
-                              coords[dimension * i + 1], 0);
+            verts[i] = MemoryManager<PointGeom>::AllocateSharedPtr(
+                    dimension, i, coords[dimension * i],
+                    coords[dimension * i + 1], 0);
         }
         if (dimension == 3)
         {
-            verts[i] = MemoryManager<PointGeom>::
-            AllocateSharedPtr(dimension, i, coords[dimension * i],
-                              coords[dimension * i + 1],
-                              coords[dimension * i + 2]);
+            verts[i] = MemoryManager<PointGeom>::AllocateSharedPtr(
+                    dimension, i, coords[dimension * i],
+                    coords[dimension * i + 1],
+                    coords[dimension * i + 2]);
         }
     }
 
     //Set up vector of edges
-    vector<SegGeomSharedPtr> edges;
-    for (int i = 0; i < edgeDef[shapeType].size(); ++i)
+    const unsigned int numEdges = edgeDef[shapeType].size();
+    vector<SegGeomSharedPtr> edges(numEdges);
+    for (int i = 0; i < numEdges; ++i)
     {
-        vector<PointGeomSharedPtr> tmp;
+        vector<PointGeomSharedPtr> tmp(2);
         for (int j = 0; j < 2; ++j)
         {
-            tmp.push_back(verts[edgeDef[shapeType][i][j]]);
+            tmp[j] = verts[edgeDef[shapeType][i][j]];
         }
-        edges.push_back(MemoryManager<SegGeom>::AllocateSharedPtr(i, dimension,
-                                                                  &tmp[0]));
+        edges[i] = MemoryManager<SegGeom>::AllocateSharedPtr(
+                i, dimension, &tmp[0]);
     }
 
     if (dimension == 1)
@@ -556,23 +560,23 @@ GeometrySharedPtr CreateGeom(vector<NekDouble> coords,
     }
 
     //Set up vector of faces
-    vector<Geometry2DSharedPtr> faces;
-    for (int i = 0; i < faceDef[shapeType].size(); ++i)
+    const unsigned int numFaces = faceDef[shapeType].size();
+    vector<Geometry2DSharedPtr> faces(numFaces);
+    for (int i = 0; i < numFaces; ++i)
     {
-        vector<SegGeomSharedPtr> tmp;
-        for (int j = 0; j < faceDef[shapeType][i].size(); ++j)
+        const unsigned int numEdgesFace = faceDef[shapeType][i].size();
+        vector<SegGeomSharedPtr> tmp(numEdgesFace);
+        for (int j = 0; j < numEdgesFace; ++j)
         {
-            tmp.push_back(edges[faceDef[shapeType][i][j]]);
+            tmp[j] = edges[faceDef[shapeType][i][j]];
         }
-        if (faceDef[shapeType][i].size() == 3)
+        if (numEdgesFace == 3)
         {
-            faces.push_back(
-                    MemoryManager<TriGeom>::AllocateSharedPtr(i, &tmp[0]));
+            faces[i] = MemoryManager<TriGeom>::AllocateSharedPtr(i, &tmp[0]);
         }
         else
         {
-            faces.push_back(
-                    MemoryManager<QuadGeom>::AllocateSharedPtr(i, &tmp[0]));
+            faces[i] = MemoryManager<QuadGeom>::AllocateSharedPtr(i, &tmp[0]);
         }
 
     }
@@ -585,18 +589,19 @@ GeometrySharedPtr CreateGeom(vector<NekDouble> coords,
     //Set up volume
     Geometry3DSharedPtr volume;
     vector<Geometry2DSharedPtr> tmp;
-    for (int i = 0; i < volDef[shapeType].size(); ++i)
+    for (auto volEdge : volDef[shapeType])
     {
-        tmp.push_back(faces[volDef[shapeType][i]]);
+        tmp.emplace_back(faces[volEdge]);
     }
     switch (shapeType)
     {
         case eTetrahedron:
         {
-            vector<TriGeomSharedPtr> tmp2;
-            for (int i = 0; i < tmp.size(); ++i)
+            const unsigned int numVol = tmp.size();
+            vector<TriGeomSharedPtr> tmp2(numVol);
+            for (int i = 0; i < numVol; ++i)
             {
-                tmp2.push_back(dynamic_pointer_cast<TriGeom>(tmp[i]));
+                tmp2[i] = static_pointer_cast<TriGeom>(tmp[i]);
             }
             volume = MemoryManager<TetGeom>::AllocateSharedPtr(0, &tmp2[0]);
             break;
@@ -613,10 +618,11 @@ GeometrySharedPtr CreateGeom(vector<NekDouble> coords,
         }
         case eHexahedron:
         {
-            vector<QuadGeomSharedPtr> tmp2;
-            for (int i = 0; i < tmp.size(); ++i)
+            const unsigned int numVol = tmp.size();
+            vector<QuadGeomSharedPtr> tmp2(numVol);
+            for (int i = 0; i < numVol; ++i)
             {
-                tmp2.push_back(dynamic_pointer_cast<QuadGeom>(tmp[i]));
+                tmp2[i] = static_pointer_cast<QuadGeom>(tmp[i]);
             }
             volume = MemoryManager<HexGeom>::AllocateSharedPtr(0, &tmp2[0]);
             break;
@@ -629,37 +635,38 @@ GeometrySharedPtr CreateGeom(vector<NekDouble> coords,
 NekDouble Shape_sol(NekDouble x, NekDouble y, NekDouble z, vector<int> order,
                     vector<BasisType> btype, ShapeType stype, bool diff)
 {
-    map<ShapeType, function<int(int &, vector<int> &)>> shapeConstraint2;
-    shapeConstraint2[eSegment] = [](int &k, vector<int> &order) { return 1; };
-    shapeConstraint2[eTriangle] = [](int &k, vector<int> &order) {
-                                     return order[1] - k; };
-    shapeConstraint2[eQuadrilateral] = [](int &k, vector<int> &order) {
-                                          return order[1]; };
-    shapeConstraint2[eTetrahedron] = [](int &k, vector<int> &order) {
-                                        return order[1] - k; };
-    shapeConstraint2[ePyramid] = [](int &k, vector<int> &order) {
-                                    return order[1] - k; };
-    shapeConstraint2[ePrism] = [](int &k, vector<int> &order) {
-                                  return order[1]; };
-    shapeConstraint2[eHexahedron] = [](int &k, vector<int> &order) {
-                                       return order[1]; };
+    map<ShapeType, function<int(int, const vector<int> &)>> shapeConstraint2;
+    shapeConstraint2[eSegment] =
+            [](int k, const vector<int> &order) { return 1; };
+    shapeConstraint2[eTriangle] =
+            [](int k, const vector<int> &order) { return order[1] - k; };
+    shapeConstraint2[eQuadrilateral] =
+            [](int k, const vector<int> &order) { return order[1]; };
+    shapeConstraint2[eTetrahedron] =
+            [](int k, const vector<int> &order) { return order[1] - k; };
+    shapeConstraint2[ePyramid] =
+            [](int k, const vector<int> &order) { return order[1] - k; };
+    shapeConstraint2[ePrism] =
+            [](int k, const vector<int> &order) { return order[1]; };
+    shapeConstraint2[eHexahedron] =
+            [](int k, const vector<int> &order) { return order[1]; };
 
-    map<ShapeType, function<int(int &, int &,
-                                vector<int> &order)>> shapeConstraint3;
-    shapeConstraint3[eSegment] = [](int &k, int &l,
-                                    vector<int> &order) { return 1; };
-    shapeConstraint3[eTriangle] = [](int &k, int &l,
-                                     vector<int> &order) { return 1; };
-    shapeConstraint3[eQuadrilateral] = [](int &k, int &l,
-                                          vector<int> &order) { return 1; };
-    shapeConstraint3[eTetrahedron] = [](int &k, int &l, vector<int> &order) {
-                                        return order[2] - k - l; };
-    shapeConstraint3[ePyramid] = [](int &k, int &l, vector<int> &order) {
-                                    return order[2] - k - l; };
-    shapeConstraint3[ePrism] = [](int &k, int &l, vector<int> &order) {
-                                  return order[2] - k; };
-    shapeConstraint3[eHexahedron] = [](int &k, int &l, vector<int> &order) {
-                                       return order[2]; };
+    map<ShapeType, function<int(int, int, const vector<int> &order)>>
+                            shapeConstraint3;
+    shapeConstraint3[eSegment] =
+            [](int k, int l, const vector<int> &order) { return 1; };
+    shapeConstraint3[eTriangle] =
+            [](int k, int l, const vector<int> &order) { return 1; };
+    shapeConstraint3[eQuadrilateral] =
+            [](int k, int l, const vector<int> &order) { return 1; };
+    shapeConstraint3[eTetrahedron] =
+            [](int k, int l, const vector<int> &order) { return order[2] - k - l; };
+    shapeConstraint3[ePyramid] =
+            [](int k, int l, const vector<int> &order) { return order[2] - k - l; };
+    shapeConstraint3[ePrism] =
+            [](int k, int l, const vector<int> &order) { return order[2] - k; };
+    shapeConstraint3[eHexahedron] =
+            [](int k, int l, const vector<int> &order) { return order[2]; };
 
     NekDouble sol = 0.0;
     if (!diff)

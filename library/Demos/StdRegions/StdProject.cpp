@@ -29,7 +29,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Demo for testing functionality of LocProject
+// Description: Demo for testing functionality of StdProject
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -71,23 +71,32 @@ int main(int argc, char *argv[])
     vector<string> basis(3, "NoBasisType");
     vector<int> order, points;
     po::options_description desc("Available options");
-    desc.add_options()("help,h",
-                       "Produce this help message and list "
-                       "basis and shape types.")
-            ("nodal,n", po::value<string>(&ntype),
+    desc.add_options()
+            ("help,h",
+             "Produce this help message and list basis and shape types.")
+
+             ("nodal,n",
+              po::value<string>(&ntype),
              "Optional nodal type, autofills shape and basis choices.")
-            ("shape,s", po::value<string>(&shape),
+
+             ("shape,s",
+              po::value<string>(&shape),
              "Region shape to project function on.")
-            ("basis,b", po::value<vector<string>>(&basis)->multitoken(),
+
+             ("basis,b",
+              po::value<vector<string>>(&basis)->multitoken(),
              "Basis type, separate by spaces for higher dimensions.")
-            ("order,o", po::value<vector<int>>(&order)->multitoken()
-                     ->required(),
+
+             ("order,o",
+              po::value<vector<int>>(&order)->multitoken()->required(),
              "Order of basis sets, separate by spaces for higher dimensions.")
-            ("points,p", po::value<vector<int>>(&points)->multitoken()
-                     ->required(),
+
+             ("points,p",
+              po::value<vector<int>>(&points)->multitoken()->required(),
              "Number of quadrature points, separate by spaces for "
              "higher dimensions.")
-            ("diff,d",
+
+             ("diff,d",
              "Project derivative.");
 
     po::variables_map vm;
@@ -118,8 +127,7 @@ int main(int argc, char *argv[])
     }
     catch (const exception &e)
     {
-        cerr << "Error: " << e.what() << endl;
-        cerr << desc;
+        cerr << "Error: " << e.what() << endl << desc;
         return 0;
     }
 
@@ -133,7 +141,7 @@ int main(int argc, char *argv[])
         {
             if (boost::iequals(kPointsTypeStr[i], ntype))
             {
-                nodaltype = (PointsType) i;
+                nodaltype = static_cast<PointsType>(i);
                 break;
             }
             ASSERTL0(i != SIZE_PointsType - 1, ("The nodal type '" + ntype +
@@ -178,7 +186,7 @@ int main(int argc, char *argv[])
                 break;
             default:
                 ASSERTL0(!nodaltype, ("The nodal type '" + ntype +
-                                      "' is invalid."));
+                                      "' is invalid for StdProject."));
                 break;
         }
     }
@@ -190,7 +198,7 @@ int main(int argc, char *argv[])
         {
             if (boost::iequals(ShapeTypeMap[i], shape))
             {
-                stype = (ShapeType) i;
+                stype = static_cast<ShapeType>(i);
                 break;
             }
             ASSERTL0(i != SIZE_ShapeType - 1, ("The shape type '" + shape +
@@ -205,7 +213,7 @@ int main(int argc, char *argv[])
     }
 
     //Check arguments supplied equals dimension
-    int dimension = ShapeTypeDimMap[stype];
+    const int dimension = (stype == ePoint) ? 1 : ShapeTypeDimMap[stype];
     ASSERTL0(order.size() == dimension,
              "Number of orders supplied should match shape dimension");
     ASSERTL0(points.size() == dimension,
@@ -222,7 +230,7 @@ int main(int argc, char *argv[])
             {
                 if (boost::iequals(BasisTypeMap[j], basis[i]))
                 {
-                    btype[i] = (BasisType) j;
+                    btype[i] = static_cast<BasisType>(j);
                     break;
                 }
                 ASSERTL0(j != SIZE_BasisType - 1, ("The basis type '" + basis[i]
@@ -281,14 +289,16 @@ int main(int argc, char *argv[])
 
     for (int i = 0; i < dimension; ++i)
     {
-        for (int j = 0; j < (allowableBasis[stype][i].size()); ++j)
+        const unsigned int basisListLength = allowableBasis[stype][i].size();
+        for (int j = 0; j < basisListLength; ++j)
         {
             if (allowableBasis[stype][i][j] == btype[i])
             {
                 break;
             }
-            ASSERTL0(j != allowableBasis[stype][i].size() - 1,
-                     ("The basis type '" + (string) BasisTypeMap[btype[i]] +
+            ASSERTL0(j != basisListLength - 1,
+                     ("The basis type '" +
+                     static_cast<string>(BasisTypeMap[btype[i]]) +
                       "' is invalid for basis argument " + to_string(i + 1) +
                       " for shape '" + ShapeTypeMap[stype] + "'."))
         }
@@ -336,8 +346,8 @@ int main(int argc, char *argv[])
     vector<BasisKey> bkey;
     for (int i = 0; i < dimension; ++i)
     {
-        pkey.push_back(PointsKey(points[i], pointstype[i]));
-        bkey.push_back(BasisKey(btype[i], order[i], pkey[i]));
+        pkey.emplace_back(PointsKey(points[i], pointstype[i]));
+        bkey.emplace_back(BasisKey(btype[i], order[i], pkey[i]));
     }
 
     switch (stype)
@@ -399,24 +409,17 @@ int main(int argc, char *argv[])
             break;
     }
 
-    Array<OneD, NekDouble> x = Array<OneD, NekDouble>(
-            (unsigned) E->GetTotPoints());
-    Array<OneD, NekDouble> y = Array<OneD, NekDouble>(
-            (unsigned) E->GetTotPoints());
-    Array<OneD, NekDouble> z = Array<OneD, NekDouble>(
-            (unsigned) E->GetTotPoints());
-    Array<OneD, NekDouble> dx = Array<OneD, NekDouble>(
-            (unsigned) E->GetTotPoints());
-    Array<OneD, NekDouble> dy = Array<OneD, NekDouble>(
-            (unsigned) E->GetTotPoints());
-    Array<OneD, NekDouble> dz = Array<OneD, NekDouble>(
-            (unsigned) E->GetTotPoints());
-    Array<OneD, NekDouble> sol = Array<OneD, NekDouble>(
-            (unsigned) E->GetTotPoints());
+    const auto totPoints = (unsigned) E->GetTotPoints();
+    Array<OneD, NekDouble> x = Array<OneD, NekDouble>(totPoints);
+    Array<OneD, NekDouble> y = Array<OneD, NekDouble>(totPoints);
+    Array<OneD, NekDouble> z = Array<OneD, NekDouble>(totPoints);
+    Array<OneD, NekDouble> dx = Array<OneD, NekDouble>(totPoints);
+    Array<OneD, NekDouble> dy = Array<OneD, NekDouble>(totPoints);
+    Array<OneD, NekDouble> dz = Array<OneD, NekDouble>(totPoints);
+    Array<OneD, NekDouble> sol = Array<OneD, NekDouble>(totPoints);
 
     switch (dimension)
     {
-        case 0:
         case 1:
         {
             E->GetCoords(x);
@@ -439,30 +442,36 @@ int main(int argc, char *argv[])
     }
 
     //get solution array
-    for (int i = 0; i < E->GetTotPoints(); ++i)
+    for (int i = 0; i < totPoints; ++i)
     {
-        sol[i] = Shape_sol(x[i], y[i], z[i], order, btype, stype, 0);
+        sol[i] = Shape_sol(x[i], y[i], z[i], order, btype, stype, false);
     }
 
-    Array<OneD, NekDouble> phys((unsigned) E->GetTotPoints());
+    Array<OneD, NekDouble> phys(totPoints);
     Array<OneD, NekDouble> coeffs((unsigned) E->GetNcoeffs());
 
     if (vm.count("diff"))
     {
-        if (dimension == 1)
+        switch (dimension)
         {
-            E->PhysDeriv(sol, sol);
-        }
-        else if (dimension == 2)
-        {
-            E->PhysDeriv(sol, dx, dy);
-            Vmath::Vadd(E->GetTotPoints(), dx, 1, dy, 1, sol, 1);
-        }
-        else if (dimension == 3)
-        {
-            E->PhysDeriv(sol, dx, dy, dz);
-            Vmath::Vadd(E->GetTotPoints(), dx, 1, dy, 1, sol, 1);
-            Vmath::Vadd(E->GetTotPoints(), dz, 1, sol, 1, sol, 1);
+            case 1:
+            {
+                E->PhysDeriv(sol, sol);
+                break;
+            }
+            case 2:
+            {
+                E->PhysDeriv(sol, dx, dy);
+                Vmath::Vadd(totPoints, dx, 1, dy, 1, sol, 1);
+                break;
+            }
+            case 3:
+            {
+                E->PhysDeriv(sol, dx, dy, dz);
+                Vmath::Vadd(totPoints, dx, 1, dy, 1, sol, 1);
+                Vmath::Vadd(totPoints, dz, 1, sol, 1, sol, 1);
+                break;
+            }
         }
     }
 
@@ -474,9 +483,9 @@ int main(int argc, char *argv[])
 
     if (vm.count("diff"))
     {
-        for (int i = 0; i < E->GetTotPoints(); ++i)
+        for (int i = 0; i < totPoints; ++i)
         {
-            sol[i] = Shape_sol(x[i], y[i], z[i], order, btype, stype, 1);
+            sol[i] = Shape_sol(x[i], y[i], z[i], order, btype, stype, true);
         }
     }
 
@@ -487,14 +496,14 @@ int main(int argc, char *argv[])
         cout << "L 2 error: \t \t \t" << E->L2(phys, sol) << endl;
     }
 
-    if (!vm.count("diff"))
+    if (!vm.count("diff") && stype != ePoint)
     {
         //Evaluate solution at x = y = 0 and print error
         Array<OneD, NekDouble> t = Array<OneD, NekDouble>(3);
         t[0] = -0.5;
         t[1] = -0.25;
         t[2] = -0.3;
-        sol[0] = Shape_sol(t[0], t[1], t[2], order, btype, stype, 0);
+        sol[0] = Shape_sol(t[0], t[1], t[2], order, btype, stype, false);
 
         NekDouble nsol = E->PhysEvaluate(t, phys);
 
@@ -512,61 +521,47 @@ int main(int argc, char *argv[])
 NekDouble Shape_sol(NekDouble x, NekDouble y, NekDouble z, vector<int> order,
                     vector<BasisType> btype, ShapeType stype, bool diff)
 {
-    map<ShapeType, function<int(int &, vector<int> &)>> shapeConstraint2;
-    shapeConstraint2[eSegment] = [](int &k, vector<int> &order) { return 1; };
-    shapeConstraint2[eTriangle] = [](int &k, vector<int> &order) {
-        return order[1] - k; };
-    shapeConstraint2[eQuadrilateral] = [](int &k, vector<int> &order) {
-        return order[1]; };
-    shapeConstraint2[eTetrahedron] = [](int &k, vector<int> &order) {
-        return order[1] - k; };
-    shapeConstraint2[ePyramid] = [](int &k, vector<int> &order) {
-        return order[1] - k; };
-    shapeConstraint2[ePrism] = [](int &k, vector<int> &order) {
-        return order[1]; };
-    shapeConstraint2[eHexahedron] = [](int &k, vector<int> &order) {
-        return order[1]; };
+    map<ShapeType, function<int(int, const vector<int> &)>> shapeConstraint2;
+    shapeConstraint2[ePoint] =
+            [](int k, const vector<int> &order) { return 1; };
+    shapeConstraint2[eSegment] =
+            [](int k, const vector<int> &order) { return 1; };
+    shapeConstraint2[eTriangle] =
+            [](int k, const vector<int> &order) { return order[1] - k; };
+    shapeConstraint2[eQuadrilateral] =
+            [](int k, const vector<int> &order) { return order[1]; };
+    shapeConstraint2[eTetrahedron] =
+            [](int k, const vector<int> &order) { return order[1] - k; };
+    shapeConstraint2[ePyramid] =
+            [](int k, const vector<int> &order) { return order[1] - k; };
+    shapeConstraint2[ePrism] =
+            [](int k, const vector<int> &order) { return order[1]; };
+    shapeConstraint2[eHexahedron] =
+            [](int k, const vector<int> &order) { return order[1]; };
 
-    map<ShapeType, function<int(int &, int &,
-                                vector<int> &order)>> shapeConstraint3;
-    shapeConstraint3[eSegment] = [](int &k, int &l,
-                                    vector<int> &order) { return 1; };
-    shapeConstraint3[eTriangle] = [](int &k, int &l,
-                                     vector<int> &order) { return 1; };
-    shapeConstraint3[eQuadrilateral] = [](int &k, int &l,
-                                          vector<int> &order) { return 1; };
-    shapeConstraint3[eTetrahedron] = [](int &k, int &l, vector<int> &order) {
-        return order[2] - k - l; };
-    shapeConstraint3[ePyramid] = [](int &k, int &l, vector<int> &order) {
-        return order[2] - k - l; };
-    shapeConstraint3[ePrism] = [](int &k, int &l, vector<int> &order) {
-        return order[2] - k; };
-    shapeConstraint3[eHexahedron] = [](int &k, int &l, vector<int> &order) {
-        return order[2]; };
+    map<ShapeType, function<int(int, int, const vector<int> &order)>>
+            shapeConstraint3;
+    shapeConstraint3[ePoint] =
+            [](int k, int l, const vector<int> &order) { return 1; };
+    shapeConstraint3[eSegment] =
+            [](int k, int l, const vector<int> &order) { return 1; };
+    shapeConstraint3[eTriangle] =
+            [](int k, int l, const vector<int> &order) { return 1; };
+    shapeConstraint3[eQuadrilateral] =
+            [](int k, int l, const vector<int> &order) { return 1; };
+    shapeConstraint3[eTetrahedron] =
+            [](int k, int l, const vector<int> &order) { return order[2] - k - l; };
+    shapeConstraint3[ePyramid] =
+            [](int k, int l, const vector<int> &order) { return order[2] - k - l; };
+    shapeConstraint3[ePrism] =
+            [](int k, int l, const vector<int> &order) { return order[2] - k; };
+    shapeConstraint3[eHexahedron] =
+            [](int k, int l, const vector<int> &order) { return order[2]; };
 
     NekDouble sol = 0.0;
     if (!diff)
     {
-        if (btype[0] == eFourier && stype == ePoint)
-        {
-            for (int k = 0; k < order[0] / 2 - 1; ++k)
-            {
-                sol += sin(k * M_PI * x) + cos(k * M_PI * x);
-            }
-        }
-        else if (btype[0] == eFourierSingleMode && stype == ePoint)
-        {
-            sol += 0.45 * sin(M_PI * x) + 0.25 * cos(M_PI * x);
-        }
-        else if (btype[0] == eFourierHalfModeRe && stype == ePoint)
-        {
-            sol += 0.45 * cos(M_PI * x);
-        }
-        else if (btype[0] == eFourierHalfModeIm && stype == ePoint)
-        {
-            sol += 0.25 * sin(M_PI * x);
-        }
-        else if (btype[0] == eFourier && stype == eSegment)
+        if (btype[0] == eFourier && stype == eSegment)
         {
             for (int k = 0; k < order[0] / 2 - 1; ++k)
             {

@@ -219,32 +219,32 @@ namespace Nektar
                 {
                     if (traceGeomId != min(pIt->second[0].id, traceGeomId))
                     {
-                        traceEl->GetLeftAdjacentElementExp()->NegateTraceNormal(
-                                                                                traceEl->GetLeftAdjacentElementTrace());
+                        traceEl->GetLeftAdjacentElementExp()->NegateTraceNormal
+                            (traceEl->GetLeftAdjacentElementTrace());
                     }
                 }
                 else if (m_traceMap->GetTraceToUniversalMapUnique(offset) < 0)
                 {
-                    traceEl->GetLeftAdjacentElementExp()->NegateTraceNormal(
-                                                                            traceEl->GetLeftAdjacentElementTrace());
+                    traceEl->GetLeftAdjacentElementExp()->NegateTraceNormal
+                        (traceEl->GetLeftAdjacentElementTrace());
                 }
             }
 
-            int cnt, n, e;
+            int cnt, n;
 
-            // Identify boundary verts
+            // Identify boundary trace
             for(cnt = 0, n = 0; n < m_bndCondExpansions.num_elements(); ++n)
             {
                 if (m_bndConditions[n]->GetBoundaryConditionType() != 
                     SpatialDomains::ePeriodic)
                 {
-                    for(e = 0; e < m_bndCondExpansions[n]->GetExpSize(); ++e)
+                    for(int v = 0; v < m_bndCondExpansions[n]->GetExpSize(); ++v)
                     {
-                        m_boundaryTraces.insert(
-                                                m_traceMap->GetBndCondIDToGlobalTraceID(cnt+e));
+                        m_boundaryTraces.insert
+                            (m_traceMap->GetBndCondIDToGlobalTraceID(cnt+v));
                     }
+                    cnt += m_bndCondExpansions[n]->GetExpSize();
                 }
-                cnt += m_bndCondExpansions[n]->GetExpSize();
             }
 
             std::unordered_map<int,pair<int,int> > perTraceToExpMap;
@@ -328,7 +328,7 @@ namespace Nektar
                             {
                                 // Calculate relative orientations between trace to
                                 // calculate copying map.
-                                int nquad = elmtToTrace[n][e]->GetNumPoints(0);
+                                int nquad = elmtToTrace[n][v]->GetNumPoints(0);
                             
                                 vector<int> tmpBwd(nquad);
                                 vector<int> tmpFwd(nquad);
@@ -1849,121 +1849,165 @@ namespace Nektar
         (const Array<OneD, const NekDouble> &Fn, 
          Array<OneD,       NekDouble> &outarray)
         {
-            int n,offset, t_offset;
-
-            Array<OneD, Array<OneD, LocalRegions::ExpansionSharedPtr> >
-                &elmtToTrace = m_traceMap->GetElmtToTrace();
-
-            vector<bool> negatedFluxNormal = GetNegatedFluxNormal();
-            
-            for (n = 0; n < GetExpSize(); ++n)
+            if(m_expType == e1D)
             {
-                // Number of coefficients on each element
-                int e_ncoeffs = (*m_exp)[n]->GetNcoeffs();
-                
-                offset = GetCoeff_Offset(n);
-                
-                // Implementation for every points except Gauss points
-                if ((*m_exp)[n]->GetBasis(0)->GetBasisType() !=
-                    LibUtilities::eGauss_Lagrange)
+                int n,offset, t_offset;
+
+                Array<OneD, Array<OneD, LocalRegions::ExpansionSharedPtr> >
+                    &elmtToTrace = m_traceMap->GetElmtToTrace();
+
+                vector<bool> negatedFluxNormal = GetNegatedFluxNormal();
+            
+                for (n = 0; n < GetExpSize(); ++n)
                 {
-                    t_offset = GetTrace()->GetCoeff_Offset(elmtToTrace[n][0]->GetElmtId());
-                    if(negatedFluxNormal[2*n])
-                    {
-                        outarray[offset] -= Fn[t_offset];
-                    }
-                    else
-                    {
-                        outarray[offset] += Fn[t_offset];
-                    }
+                    // Number of coefficients on each element
+                    int e_ncoeffs = (*m_exp)[n]->GetNcoeffs();
                     
-                    t_offset = GetTrace()->GetCoeff_Offset(elmtToTrace[n][1]->GetElmtId());
-
-                    if(negatedFluxNormal[2*n+1])
-                    {
-                        outarray[offset+(*m_exp)[n]->GetVertexMap(1)] -= Fn[t_offset];
-                    }
-                    else
-                    {
-                        outarray[offset+(*m_exp)[n]->GetVertexMap(1)] += Fn[t_offset];
-                    }
-
-                }
-                else
-                {
-                    int j;
-                    static DNekMatSharedPtr   m_Ixm, m_Ixp;
-                    static int sav_ncoeffs = 0;
-                    if(!m_Ixm.get() || e_ncoeffs != sav_ncoeffs)
-                    {
-                        LibUtilities::BasisSharedPtr BASE;
-                        const LibUtilities::PointsKey
-                            BS_p(e_ncoeffs,LibUtilities::eGaussGaussLegendre);
-                        const LibUtilities::BasisKey
-                            BS_k(LibUtilities::eGauss_Lagrange,e_ncoeffs,BS_p);
-                        
-                        BASE  = LibUtilities::BasisManager()[BS_k];
-                        
-                        Array<OneD, NekDouble> coords(1, 0.0);
+                    offset = GetCoeff_Offset(n);
                     
-                        coords[0] = -1.0;
-                        m_Ixm = BASE->GetI(coords); 
-
-                        coords[0] = 1.0;
-                        m_Ixp = BASE->GetI(coords); 
-
-                        sav_ncoeffs = e_ncoeffs; 
-                    }
-                    
-                    t_offset = GetTrace()->GetCoeff_Offset(elmtToTrace[n][0]->GetElmtId());
-                    if(negatedFluxNormal[2*n])
+                    // Implementation for every points except Gauss points
+                    if ((*m_exp)[n]->GetBasis(0)->GetBasisType() !=
+                        LibUtilities::eGauss_Lagrange)
                     {
-                        for (j = 0; j < e_ncoeffs; j++)
+                        t_offset = GetTrace()->GetCoeff_Offset
+                            (elmtToTrace[n][0]->GetElmtId());
+                        if(negatedFluxNormal[2*n])
                         {
-                            outarray[offset + j]  -=
-                                (m_Ixm->GetPtr())[j] * Fn[t_offset];
+                            outarray[offset] -= Fn[t_offset];
                         }
-                    }
-                    else
-                    {
-                        for (j = 0; j < e_ncoeffs; j++)
+                        else
                         {
-                            outarray[offset + j]  +=
-                                (m_Ixm->GetPtr())[j] * Fn[t_offset];
+                            outarray[offset] += Fn[t_offset];
                         }
-                    }
                         
-                    t_offset = GetTrace()->GetCoeff_Offset(elmtToTrace[n][1]->GetElmtId());
-                    if (negatedFluxNormal[2*n+1])
-                    {
-                        for (j = 0; j < e_ncoeffs; j++)
+                        t_offset = GetTrace()->GetCoeff_Offset
+                            (elmtToTrace[n][1]->GetElmtId());
+                        
+                        if(negatedFluxNormal[2*n+1])
                         {
-                            outarray[offset + j] -=
-                                (m_Ixp->GetPtr())[j] * Fn[t_offset];
+                            outarray[offset+(*m_exp)[n]->GetVertexMap(1)] -=
+                                Fn[t_offset];
                         }
+                        else
+                        {
+                            outarray[offset+(*m_exp)[n]->GetVertexMap(1)] +=
+                                Fn[t_offset];
+                        }
+                        
                     }
                     else
                     {
-                        for (j = 0; j < e_ncoeffs; j++)
+                        int j;
+                        static DNekMatSharedPtr   m_Ixm, m_Ixp;
+                        static int sav_ncoeffs = 0;
+                        if(!m_Ixm.get() || e_ncoeffs != sav_ncoeffs)
                         {
-                            outarray[offset + j] +=
-                                (m_Ixp->GetPtr())[j] * Fn[t_offset];
+                            LibUtilities::BasisSharedPtr BASE;
+                            const LibUtilities::PointsKey
+                                BS_p(e_ncoeffs,LibUtilities::eGaussGaussLegendre);
+                            const LibUtilities::BasisKey
+                                BS_k(LibUtilities::eGauss_Lagrange,e_ncoeffs,BS_p);
+                            
+                            BASE  = LibUtilities::BasisManager()[BS_k];
+                            
+                            Array<OneD, NekDouble> coords(1, 0.0);
+                            
+                            coords[0] = -1.0;
+                            m_Ixm = BASE->GetI(coords); 
+                            
+                            coords[0] = 1.0;
+                            m_Ixp = BASE->GetI(coords); 
+                            
+                            sav_ncoeffs = e_ncoeffs; 
+                        }
+                        
+                        t_offset = GetTrace()->GetCoeff_Offset
+                            (elmtToTrace[n][0]->GetElmtId());
+
+                        if(negatedFluxNormal[2*n])
+                        {
+                            for (j = 0; j < e_ncoeffs; j++)
+                            {
+                                outarray[offset + j]  -=
+                                    (m_Ixm->GetPtr())[j] * Fn[t_offset];
+                            }
+                        }
+                        else
+                        {
+                            for (j = 0; j < e_ncoeffs; j++)
+                            {
+                                outarray[offset + j]  +=
+                                    (m_Ixm->GetPtr())[j] * Fn[t_offset];
+                            }
+                        }
+                        
+                        t_offset = GetTrace()->GetCoeff_Offset
+                            (elmtToTrace[n][1]->GetElmtId());
+
+                        if (negatedFluxNormal[2*n+1])
+                        {
+                            for (j = 0; j < e_ncoeffs; j++)
+                            {
+                                outarray[offset + j] -=
+                                    (m_Ixp->GetPtr())[j] * Fn[t_offset];
+                            }
+                        }
+                        else
+                        {
+                            for (j = 0; j < e_ncoeffs; j++)
+                            {
+                                outarray[offset + j] +=
+                                    (m_Ixp->GetPtr())[j] * Fn[t_offset];
+                            }
                         }
                     }
                 }
             }
-        }
+            else // other dimnesions
+            {
+                // Basis definition on each element
+                LibUtilities::BasisSharedPtr basis = (*m_exp)[0]->GetBasis(0);
+                if (basis->GetBasisType() != LibUtilities::eGauss_Lagrange)
+                {
+                    Array<OneD, NekDouble> Fcoeffs(m_trace->GetNcoeffs());
+                    m_trace->IProductWRTBase(Fn, Fcoeffs);
+                    
+                    m_locTraceToTraceMap->AddTraceCoeffsToFieldCoeffs(Fcoeffs,
+                                                                      outarray);
+                }
+                else
+                {
+                    int e, n, offset, t_offset;
+                    Array<OneD, NekDouble> e_outarray;
+                    Array<OneD, Array<OneD, LocalRegions::ExpansionSharedPtr> >
+                        &elmtToTrace = m_traceMap->GetElmtToTrace();
+                    
+                    for(n = 0; n < GetExpSize(); ++n)
+                    {
+                        offset = GetCoeff_Offset(n);
+                        for(e = 0; e < (*m_exp)[n]->GetNedges(); ++e)
+                        {
+                            t_offset = GetTrace()->GetPhys_Offset
+                                (elmtToTrace[n][e]->GetElmtId());
+                            (*m_exp)[n]->AddEdgeNormBoundaryInt
+                                (e, elmtToTrace[n][e],
+                                 Fn+t_offset,
+                                 e_outarray = outarray+offset);
+                        }
+                    }
+                }
+            }
+	}
 	
-	
-        void DisContField::v_HelmSolve(
-                                       const Array<OneD, const NekDouble> &inarray,
-                                       Array<OneD,       NekDouble> &outarray,
-                                       const FlagList &flags,
-                                       const StdRegions::ConstFactorMap &factors,
-                                       const StdRegions::VarCoeffMap &varcoeff,
-                                       const MultiRegions::VarFactorsMap &varfactors,
-                                       const Array<OneD, const NekDouble> &dirForcing,
-                                       const bool PhysSpaceForcing)
+        void DisContField::v_HelmSolve
+              (const Array<OneD, const NekDouble> &inarray,
+               Array<OneD,       NekDouble>       &outarray,
+               const FlagList                     &flags,
+               const StdRegions::ConstFactorMap   &factors,
+               const StdRegions::VarCoeffMap      &varcoeff,
+               const MultiRegions::VarFactorsMap  &varfactors,
+               const Array<OneD, const NekDouble> &dirForcing,
+               const bool                          PhysSpaceForcing)
         {
             int i,n,cnt,nbndry;
             int nexp = GetExpSize();
@@ -2006,6 +2050,7 @@ namespace Nektar
 
             //----------------------------------
             // Evaluate Trace Forcing
+            // Kirby et al, 2010, P23, Step 5.
             //----------------------------------
             // Determing <u_lam,f> terms using HDGLamToU matrix
             for (cnt = n = 0; n < nexp; ++n)
@@ -2026,9 +2071,12 @@ namespace Nektar
 
             Array<OneD, const int> bndCondMap =  
                 m_traceMap->GetBndCondCoeffsToLocalTraceMap();
+            Array<OneD, const NekDouble> Sign = 
+                m_traceMap->GetLocalToGlobalBndSign();
 
             // Copy Dirichlet boundary conditions and weak forcing
             // into trace space
+            int locid;
             cnt = 0;
             for(i = 0; i < m_bndCondExpansions.num_elements(); ++i)
             {
@@ -2038,7 +2086,11 @@ namespace Nektar
                 if(m_bndConditions[i]->GetBoundaryConditionType() ==
                    SpatialDomains::eDirichlet)
                 {
-                    loclambda[bndCondMap[i]] = bndcoeffs[0]; 
+                    for(int j = 0; j < (m_bndCondExpansions[i])->GetNcoeffs(); ++j)
+                    {
+                        locid = bndCondMap[cnt + j];
+                        loclambda[locid] = Sign[locid]*bndcoeffs[j]; 
+                    }
                 }
                 else if (m_bndConditions[i]->GetBoundaryConditionType() ==
                          SpatialDomains::eNeumann ||
@@ -2046,7 +2098,11 @@ namespace Nektar
                          SpatialDomains::eRobin)
                 {
                     //Add weak boundary condition to trace forcing
-                    bndrhs[bndCondMap[i]] += bndcoeffs[0]; 
+                    for(int j = 0; j < (m_bndCondExpansions[i])->GetNcoeffs(); ++j)
+                    {
+                        locid = bndCondMap[cnt + j];
+                        bndrhs[locid] += Sign[locid]*bndcoeffs[j]; 
+                    }
                 }
                 
                 cnt += (m_bndCondExpansions[i])->GetNcoeffs();
@@ -2062,6 +2118,10 @@ namespace Nektar
                                           m_traceMap,factors,varcoeff);
                 GlobalLinSysSharedPtr LinSys = GetGlobalBndLinSys(key);
                 LinSys->Solve(bndrhs,loclambda,m_traceMap);
+
+                // For consistency with previous version put global
+                // solution into m_trace->m_coeffs
+                m_traceMap->LocalToGlobal(loclambda,m_trace->UpdateCoeffs());
             }
 
             //----------------------------------
@@ -2069,7 +2129,7 @@ namespace Nektar
             //----------------------------------
             GlobalMatrixKey invHDGhelmkey(StdRegions::eInvHybridDGHelmholtz,
                                           NullAssemblyMapSharedPtr,
-                                          factors);
+                                          factors, varcoeff);
 
             const DNekScalBlkMatSharedPtr& InvHDGHelm =
                 GetBlockMatrix(invHDGhelmkey);

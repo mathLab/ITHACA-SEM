@@ -30,7 +30,7 @@ int main(int argc, char *argv[])
         vPoint = MemoryManager<SpatialDomains::PointGeom>
                         ::AllocateSharedPtr(3, 0, 0.0, 0.0, 0.0);
         vExp = MemoryManager<MultiRegions::ExpList>
-                        ::AllocateSharedPtr(vPoint);
+            ::AllocateSharedPtr(vPoint);
 
         // Get cell model name and create it
         vSession->LoadSolverInfo("CELLMODEL", vCellModel, "");

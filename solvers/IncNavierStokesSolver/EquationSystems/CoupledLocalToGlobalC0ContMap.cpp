@@ -169,8 +169,8 @@ namespace Nektar
                         LocalRegions::Expansion1DSharedPtr loc_exp
                             = bndCondExp[j]->GetExp(k)
                                 ->as<LocalRegions::Expansion1D>();
-                        locnorm = loc_exp->GetLeftAdjacentElementExp()->GetTraceNormal(loc_exp->GetLeftAdjacentElementEdge());
-                        //locnorm = bndCondExp[j]->GetExp(k)->Get GetMetricInfo()->GetNormal();
+                        locnorm = loc_exp->GetLeftAdjacentElementExp()->
+                            GetTraceNormal(loc_exp->GetLeftAdjacentElementTrace());
 
                         int ndir = locnorm.num_elements();
                         if(i < ndir) // account for Fourier version where n can be larger then ndir

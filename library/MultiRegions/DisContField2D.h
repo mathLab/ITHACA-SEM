@@ -131,31 +131,10 @@ namespace Nektar
             Array<OneD, Array<OneD, unsigned int> > m_signEdgeToElmn;
             Array<OneD,StdRegions::Orientation>     m_edgedir;
 
-            virtual void v_AddTraceIntegral(
-                const Array<OneD, const NekDouble> &Fx,
-                const Array<OneD, const NekDouble> &Fy,
-                      Array<OneD,       NekDouble> &outarray);
-            virtual void v_AddTraceIntegral(
-                const Array<OneD, const NekDouble> &Fn,
-                      Array<OneD,       NekDouble> &outarray);
             virtual void v_AddFwdBwdTraceIntegral(
                 const Array<OneD, const NekDouble> &Fwd, 
                 const Array<OneD, const NekDouble> &Bwd, 
                       Array<OneD,       NekDouble> &outarray);
-            virtual void v_ExtractTracePhys(
-                const Array<OneD, const NekDouble> &inarray, 
-                      Array<OneD,       NekDouble> &outarray);
-            virtual void v_ExtractTracePhys(
-                      Array<OneD,       NekDouble> &outarray);
-            virtual void v_HelmSolve(
-                const Array<OneD, const NekDouble> &inarray,
-                      Array<OneD,       NekDouble> &outarray,
-                const FlagList &flags,
-                const StdRegions::ConstFactorMap   &factors,
-                const StdRegions::VarCoeffMap      &varcoeff,
-                const MultiRegions::VarFactorsMap &varfactors,
-                const Array<OneD, const NekDouble> &dirForcing,
-                const bool  PhysSpaceForcing);
             virtual void v_GeneralMatrixOp(
                 const GlobalMatrixKey             &gkey,
                 const Array<OneD,const NekDouble> &inarray,

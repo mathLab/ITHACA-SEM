@@ -53,7 +53,6 @@ namespace Nektar
 {
 namespace MultiRegions
 {
-#if 0 
     //----------------------------------------------------------------------
     //                        0D Expansion Constructors 
     //----------------------------------------------------------------------
@@ -73,7 +72,7 @@ namespace MultiRegions
 
         SetupCoeffPhys();
     }
-#endif
+
 
     /**
      * Store expansions for the trace space expansions used in

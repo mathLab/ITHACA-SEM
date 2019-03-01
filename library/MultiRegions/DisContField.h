@@ -86,6 +86,13 @@ namespace Nektar
                 const DisContField &In,
                 const bool DeclareCoeffPhysArrays = true);
             
+            MULTI_REGIONS_EXPORT DisContField(
+                const DisContField                       &In,
+                const SpatialDomains::MeshGraphSharedPtr &graph,
+                const std::string                        &variable,
+                const bool SetUpJustDG            = false,
+                const bool DeclareCoeffPhysArrays = true);
+
             /// Constructs a 1D discontinuous field based on an
 	    /// existing field.  (needed in order to use ContField(
 	    /// const ExpList &In) constructor
@@ -98,6 +105,8 @@ namespace Nektar
             MULTI_REGIONS_EXPORT GlobalLinSysSharedPtr GetGlobalBndLinSys(
                 const GlobalLinSysKey &mkey);
 
+            /// Check to see if expansion has the same BCs as In
+            bool SameTypeOfBoundaryConditions(const DisContField &In);
 
             // Return the internal vector which directs whether the normal flux
             // at the trace defined by Left and Right Adjacent elements

@@ -76,9 +76,6 @@ namespace Nektar
 
             MULTI_REGIONS_EXPORT virtual ~DisContField2D();
             
-            MULTI_REGIONS_EXPORT GlobalLinSysSharedPtr GetGlobalBndLinSys(
-                const GlobalLinSysKey &mkey);
-
             MULTI_REGIONS_EXPORT NekDouble L2_DGDeriv(
                 const int                           dir,
                 const Array<OneD, const NekDouble> &soln);
@@ -112,15 +109,16 @@ namespace Nektar
                 return(m_base);
             }
 
-            /** \brief This function returns the type of basis used in the \a dir
-             *  direction
+            /** \brief This function returns the type of basis used in
+             *  the \a dir direction
              *
-             *  The different types of bases implemented in the code are defined
-             *  in the LibUtilities::BasisType enumeration list. As a result, the
-             *  function will return one of the types of this enumeration list.
+             *  The different types of bases implemented in the code
+             *  are defined in the LibUtilities::BasisType enumeration
+             *  list. As a result, the function will return one of the
+             *  types of this enumeration list.
              *
-             *  \param dir the direction
-             *  \return returns the type of basis used in the \a dir direction
+             *  \param dir the direction \return returns the type of
+             *  basis used in the \a dir direction
              */
             inline  LibUtilities::BasisType GetBasisType(const int dir) const
             {
@@ -133,19 +131,6 @@ namespace Nektar
             Array<OneD, Array<OneD, unsigned int> > m_signEdgeToElmn;
             Array<OneD,StdRegions::Orientation>     m_edgedir;
 
-
-            bool SameTypeOfBoundaryConditions(const DisContField2D &In);
-            void FindPeriodicEdges(
-                const SpatialDomains::BoundaryConditions &bcs,
-                const std::string                        &variable);
-            
-            virtual void v_GetFwdBwdTracePhys(
-                const Array<OneD, const NekDouble> &field,
-                      Array<OneD,       NekDouble> &Fwd,
-                      Array<OneD,       NekDouble> &Bwd);
-            virtual void v_GetFwdBwdTracePhys(
-                      Array<OneD,       NekDouble> &Fwd,
-                      Array<OneD,       NekDouble> &Bwd);
             virtual void v_AddTraceIntegral(
                 const Array<OneD, const NekDouble> &Fx,
                 const Array<OneD, const NekDouble> &Fy,
@@ -226,12 +211,6 @@ namespace Nektar
             {
                 return m_bndConditions;
             }
-
-            virtual void v_EvaluateBoundaryConditions(
-                const NekDouble   time    = 0.0,
-                const std::string varName = "",
-                const NekDouble   x2_in   = NekConstants::kNekUnsetDouble,
-                const NekDouble   x3_in   = NekConstants::kNekUnsetDouble);
 
             virtual std::map<int, RobinBCInfoSharedPtr> v_GetRobinBCInfo();
         };

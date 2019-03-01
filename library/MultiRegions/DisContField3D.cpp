@@ -2635,7 +2635,7 @@ using namespace std;
          *   \forall n \f]
          *   As a result, it are the coefficients \f$\boldsymbol{\hat{g}}\f$
          *   that will be stored in the boundary expansion
-         *
+x         *
          * @param   time        The time at which the boundary conditions
          *                      should be evaluated.
          * @param   bndCondExpansions   List of boundary conditions.

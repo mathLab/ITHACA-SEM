@@ -836,12 +836,10 @@ int Octree::CountElemt()
 
 void Octree::CompileSourcePointList()
 {
-    int totalEnt = m_mesh->m_cad->GetNumSurf();
-    int preEnt = 0;
+    int totalEnt = 0;
     if(m_mesh->m_cad->Is2D())
     {
         totalEnt += m_mesh->m_cad->GetNumCurve();
-        preEnt += m_mesh->m_cad->GetNumCurve();
         for (int i = 1; i <= m_mesh->m_cad->GetNumCurve(); i++)
         {
             if (m_mesh->m_verbose)
@@ -849,7 +847,6 @@ void Octree::CompileSourcePointList()
                 LibUtilities::PrintProgressbar(i, totalEnt,
                                                "\tCompiling source points");
             }
-            cout << "Curve ID\t" << i << endl;
 
             CADCurveSharedPtr curve = m_mesh->m_cad->GetCurve(i);
             Array<OneD, NekDouble> bds = curve->GetBounds();
@@ -900,11 +897,12 @@ void Octree::CompileSourcePointList()
     }
     else
     {
-        for (int i = 1; i <= m_mesh->m_cad->GetNumSurf(); i++)
+        totalEnt = m_mesh->m_cad->GetNumSurf();
+        for (int i = 1; i <= totalEnt; i++)
         {
             if (m_mesh->m_verbose)
             {
-                LibUtilities::PrintProgressbar(preEnt + i, totalEnt,
+                LibUtilities::PrintProgressbar(i, totalEnt,
                                                "\tCompiling source points");
             }
 

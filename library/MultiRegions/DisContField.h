@@ -55,6 +55,9 @@ namespace Nektar
         class DisContField: public ExpList
         {
         public:
+            Array<OneD, int> m_BCtoElmMap;
+            Array<OneD, int> m_BCtoTraceMap;
+
             /// Default constructor.
             MULTI_REGIONS_EXPORT DisContField();
 
@@ -113,8 +116,13 @@ namespace Nektar
             // is negated with respect to the segment normal
             MULTI_REGIONS_EXPORT std::vector<bool> &GetNegatedFluxNormal(void);
 
-            Array<OneD, int> m_BCtoElmMap;
-            Array<OneD, int> m_BCtoTraceMap;
+            MULTI_REGIONS_EXPORT NekDouble L2_DGDeriv(
+                const int                           dir,
+                const Array<OneD, const NekDouble> &soln);
+
+            MULTI_REGIONS_EXPORT void EvaluateHDGPostProcessing(
+                Array<OneD, NekDouble> &outarray);
+
         protected:
             /// The number of boundary segments on which Dirichlet boundary
             /// conditions are imposed.
@@ -198,6 +206,11 @@ namespace Nektar
             
             virtual ExpListSharedPtr &v_GetTrace()
             {
+                if(m_trace == NullExpListSharedPtr)
+                {
+                    SetUpDG();
+                }
+
                 return m_trace;
             }
             
@@ -208,6 +221,10 @@ namespace Nektar
             
             virtual void v_AddTraceIntegral(
                 const Array<OneD, const NekDouble> &Fn,
+                      Array<OneD,       NekDouble> &outarray);
+            virtual void v_AddFwdBwdTraceIntegral(
+                const Array<OneD, const NekDouble> &Fwd, 
+                const Array<OneD, const NekDouble> &Bwd, 
                       Array<OneD,       NekDouble> &outarray);
             virtual void v_GetFwdBwdTracePhys(
                       Array<OneD,       NekDouble> &Fwd,
@@ -267,7 +284,7 @@ namespace Nektar
             }
 
             virtual void v_GetBoundaryToElmtMap(
-                Array<OneD,int> &ElmtID, Array<OneD,int> &VertID);
+                Array<OneD,int> &ElmtID, Array<OneD,int> &TraceID);
             virtual void v_GetBndElmtExpansion(int i,
                             std::shared_ptr<ExpList> &result,
                             const bool DeclareCoeffPhysArrays);
@@ -293,6 +310,19 @@ namespace Nektar
 
             void SetUpDG(const std::string = "DefaultVar");
             bool IsLeftAdjacentTrace(const int n, const int e);
+
+            /**
+             * @brief Obtain a copy of the periodic edges and vertices for this
+             * field.
+             */
+            virtual void v_GetPeriodicEntities(
+                PeriodicMap &periodicVerts,
+                PeriodicMap &periodicEdges,
+                PeriodicMap &periodicFaces)
+            {
+                periodicVerts = m_periodicVerts;
+                periodicEdges = m_periodicEdges;
+            }
 
         private:
 

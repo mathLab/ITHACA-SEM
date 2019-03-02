@@ -157,7 +157,7 @@ struct Field
                         m_declareExpansionAsDisContField)
                     {
                         ASSERTL0(false, "ContField2DHomogeneous1D or "
-                                        "DisContField2DHomogenenous1D has "
+                                        "DisContFieldHomogenenous1D has "
                                         "not been implemented");
                     }
 
@@ -360,7 +360,7 @@ struct Field
                     }
                     else if (m_declareExpansionAsDisContField)
                     {
-                        Exp2D = MemoryManager<MultiRegions::DisContField2D>::
+                        Exp2D = MemoryManager<MultiRegions::DisContField>::
                             AllocateSharedPtr(m_session, m_graph,
                                               m_session->GetVariable(0),
                                               true,true,
@@ -474,7 +474,7 @@ struct Field
                     ASSERTL0(!(m_declareExpansionAsContField ||
                                m_declareExpansionAsDisContField),
                              "ContField2DHomogeneous1D or "
-                             "DisContField2DHomogenenous1D has not been "
+                             "DisContFieldHomogenenous1D has not been "
                              "implemented");
 
                     MultiRegions::ExpList2DHomogeneous1DSharedPtr tmp2 =
@@ -664,16 +664,16 @@ struct Field
                     {
                         if (NewField)
                         {
-                            tmp = MemoryManager<MultiRegions::DisContField2D>::
+                            tmp = MemoryManager<MultiRegions::DisContField>::
                                 AllocateSharedPtr(m_session, m_graph, var);
                         }
                         else // call copy constructor
                         {
-                            MultiRegions::DisContField2DSharedPtr tmp2 =
+                            MultiRegions::DisContFieldSharedPtr tmp2 =
                                 std::dynamic_pointer_cast<
-                                    MultiRegions::DisContField2D>(m_exp[0]);
+                                    MultiRegions::DisContField>(m_exp[0]);
 
-                            tmp = MemoryManager<MultiRegions::DisContField2D>::
+                            tmp = MemoryManager<MultiRegions::DisContField>::
                                 AllocateSharedPtr(*tmp2, m_graph, var);
                         }
                     }

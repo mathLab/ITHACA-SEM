@@ -76,35 +76,18 @@ namespace Nektar
 
             MULTI_REGIONS_EXPORT virtual ~DisContField2D();
             
-            MULTI_REGIONS_EXPORT NekDouble L2_DGDeriv(
-                const int                           dir,
-                const Array<OneD, const NekDouble> &soln);
-
-            MULTI_REGIONS_EXPORT void EvaluateHDGPostProcessing(
-                Array<OneD, NekDouble> &outarray);
-            
-            virtual ExpListSharedPtr &v_GetTrace()
-            {
-                if(m_trace == NullExpListSharedPtr)
-                {
-                    SetUpDG();
-                }
-                
-                return m_trace;
-            }
-
-            Array<OneD, int> m_BCtoElmMap;
-            Array<OneD, int> m_BCtoEdgMap;
 
         protected:
 
-            Array<OneD, LibUtilities::BasisSharedPtr> m_base; /**< Bases needed for the expansion */
+            /**< Bases needed for the expansion */
+            Array<OneD, LibUtilities::BasisSharedPtr> m_base; 
 
             /** \brief This function gets the shared point to basis
              *
              *  \return returns the shared pointer to the bases
              */
-            inline const Array<OneD, const LibUtilities::BasisSharedPtr>& GetBase() const
+            inline const Array<OneD, const LibUtilities::BasisSharedPtr>&
+                GetBase() const
             {
                 return(m_base);
             }
@@ -131,67 +114,14 @@ namespace Nektar
             Array<OneD, Array<OneD, unsigned int> > m_signEdgeToElmn;
             Array<OneD,StdRegions::Orientation>     m_edgedir;
 
-            virtual void v_AddFwdBwdTraceIntegral(
-                const Array<OneD, const NekDouble> &Fwd, 
-                const Array<OneD, const NekDouble> &Bwd, 
-                      Array<OneD,       NekDouble> &outarray);
+#if 0 
             virtual void v_GeneralMatrixOp(
                 const GlobalMatrixKey             &gkey,
                 const Array<OneD,const NekDouble> &inarray,
                 Array<OneD,      NekDouble> &outarray);
-            virtual void v_GetBoundaryToElmtMap(
-                Array<OneD, int> &ElmtID,
-                Array<OneD, int> &EdgeID);
-            virtual void v_GetBndElmtExpansion(int i,
-                            std::shared_ptr<ExpList> &result,
-                            const bool DeclareCoeffPhysArrays);
-            virtual void v_Reset();
+#endif
 
-            /**
-             * @brief Obtain a copy of the periodic edges and vertices for this
-             * field.
-             */
-            virtual void v_GetPeriodicEntities(
-                PeriodicMap &periodicVerts,
-                PeriodicMap &periodicEdges,
-                PeriodicMap &periodicFaces)
-            {
-                periodicVerts = m_periodicVerts;
-                periodicEdges = m_periodicEdges;
-            }
 
-            
-            virtual AssemblyMapDGSharedPtr &v_GetTraceMap()
-            {
-                return m_traceMap;
-            }
-
-            virtual const Array<OneD,const MultiRegions::ExpListSharedPtr>
-                &v_GetBndCondExpansions()
-            {
-                return m_bndCondExpansions;
-            }
-
-            virtual const 
-                Array<OneD,const SpatialDomains::BoundaryConditionShPtr>
-                &v_GetBndConditions()
-            {
-                return m_bndConditions;
-            }
-
-            virtual MultiRegions::ExpListSharedPtr 
-                &v_UpdateBndCondExpansion(int i)
-            {
-                return m_bndCondExpansions[i];
-            }
-
-            virtual Array<OneD, SpatialDomains::BoundaryConditionShPtr> 
-                &v_UpdateBndConditions()
-            {
-                return m_bndConditions;
-            }
-
-            virtual std::map<int, RobinBCInfoSharedPtr> v_GetRobinBCInfo();
         };
         
         typedef std::shared_ptr<DisContField2D>   DisContField2DSharedPtr;

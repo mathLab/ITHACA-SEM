@@ -46,7 +46,7 @@
 #include <MultiRegions/ExpList3DHomogeneous2D.h>
 #include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
 
-#include <MultiRegions/DisContField2D.h>
+#include <MultiRegions/DisContField.h>
 #include <LocalRegions/MatrixKey.h>
 #include <LocalRegions/Expansion2D.h>
 #include <LocalRegions/Expansion.h>
@@ -202,7 +202,7 @@ int main(int argc, char *argv[])
     for(i = 0; i < pFields.num_elements(); i++)
     {
         pFields[i] = MemoryManager<
-            MultiRegions::DisContField2D>::AllocateSharedPtr(
+            MultiRegions::DisContField>::AllocateSharedPtr(
                 vSession, graphShPt, vSession->GetVariable(i));
     }
 

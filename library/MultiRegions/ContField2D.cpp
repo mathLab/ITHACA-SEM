@@ -87,7 +87,7 @@ namespace Nektar
          *
          */
         ContField2D::ContField2D():
-            DisContField2D(),
+            DisContField(),
             m_locToGloMap(),
             m_globalMat(),
             m_globalLinSysManager(
@@ -125,7 +125,7 @@ namespace Nektar
                          const bool DeclareCoeffPhysArrays,
                          const bool CheckIfSingularSystem,
                          const Collections::ImplementationType ImpType):
-            DisContField2D(pSession,graph2D,variable,false,DeclareCoeffPhysArrays,ImpType),
+            DisContField(pSession,graph2D,variable,false,DeclareCoeffPhysArrays,ImpType),
             m_globalMat(MemoryManager<GlobalMatrixMap>::AllocateSharedPtr()),
             m_globalLinSysManager(
                 std::bind(&ContField2D::GenGlobalLinSys, this, std::placeholders::_1),
@@ -175,7 +175,7 @@ namespace Nektar
                                  const std::string &variable,
                                  bool DeclareCoeffPhysArrays,
                                  const bool CheckIfSingularSystem):
-            DisContField2D(In,graph2D,variable,false,DeclareCoeffPhysArrays),
+            DisContField(In,graph2D,variable,false,DeclareCoeffPhysArrays),
             m_globalMat   (MemoryManager<GlobalMatrixMap>::AllocateSharedPtr()),
             m_globalLinSysManager(
                 std::bind(&ContField2D::GenGlobalLinSys, this, std::placeholders::_1),
@@ -211,7 +211,7 @@ namespace Nektar
          * and \a m_coeffs should be declared. Default is true
          */
         ContField2D::ContField2D(const ContField2D &In, bool DeclareCoeffPhysArrays):
-            DisContField2D(In,DeclareCoeffPhysArrays),
+            DisContField(In,DeclareCoeffPhysArrays),
             m_locToGloMap(In.m_locToGloMap),
             m_globalMat(In.m_globalMat),
             m_globalLinSysManager(In.m_globalLinSysManager)

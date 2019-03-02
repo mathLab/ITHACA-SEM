@@ -39,7 +39,7 @@
 #include <MultiRegions/MultiRegionsDeclspec.h>
 #include <SpatialDomains/Conditions.h>
 #include <MultiRegions/MultiRegions.hpp>
-#include <MultiRegions/DisContField2D.h>
+#include <MultiRegions/DisContField.h>
 #include <MultiRegions/GlobalMatrix.h>
 #include <MultiRegions/GlobalLinSys.h>
 #include <MultiRegions/AssemblyMap/AssemblyMapCG.h>
@@ -53,7 +53,7 @@ namespace Nektar
         /// This class is the abstraction of a global continuous two-
         /// dimensional spectral/hp element expansion which approximates the
         /// solution of a set of partial differential equations.
-        class ContField2D: public DisContField2D
+        class ContField2D: public DisContField
         {
         public:
             /// The default constructor.

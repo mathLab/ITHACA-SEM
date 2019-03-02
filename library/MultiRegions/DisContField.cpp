@@ -40,6 +40,8 @@
 #include <SpatialDomains/MeshGraph.h>
 #include <LocalRegions/Expansion0D.h>
 #include <LocalRegions/Expansion1D.h>
+#include <LocalRegions/QuadExp.h>   
+#include <LocalRegions/TriExp.h>    
 
 
 using namespace std;
@@ -1142,16 +1144,16 @@ namespace Nektar
                     vertoffset[i] = vertoffset[i-1] + procVerts[i-1];
                 }
 
-                Array<OneD, int> vertIds(nTotVerts, 0);
+                Array<OneD, int> traceIds(nTotVerts, 0);
                 for (i = 0, sIt = allEdges.begin(); sIt != allEdges.end(); ++sIt)
                 {
                     for (j = 0; j < allVerts[sIt->first].size(); ++j)
                     {
-                        vertIds[vertoffset[p] + i++] = allVerts[sIt->first][j];
+                        traceIds[vertoffset[p] + i++] = allVerts[sIt->first][j];
                     }
                 }
                 
-                vComm->AllReduce(vertIds, LibUtilities::ReduceSum);
+                vComm->AllReduce(traceIds, LibUtilities::ReduceSum);
                 
                 // For simplicity's sake create a map of edge id -> orientation.
                 map<int, StdRegions::Orientation> orientMap;
@@ -1186,7 +1188,7 @@ namespace Nektar
                     
                     for (j = 0; j < edgeVerts[i]; ++j)
                     {
-                        verts[j] = vertIds[cnt++];
+                        verts[j] = traceIds[cnt++];
                     }
                     vertMap[edgeIds[i]] = verts;
                 }
@@ -1423,7 +1425,7 @@ namespace Nektar
                     
                     for (j = 0; j < edgeVerts[i]; ++j, ++cnt)
                     {
-                        int vId = vertIds[cnt];
+                        int vId = traceIds[cnt];
                         
                         auto perId = periodicVerts.find(vId);
                         
@@ -1999,6 +2001,67 @@ namespace Nektar
             }
 	}
 	
+        /**
+         * @brief Add trace contributions into elemental coefficient spaces.
+         * 
+         * Given some quantity \f$ \vec{q} \f$, calculate the elemental integral
+         * 
+         * \f[ 
+         * \int_{\Omega^e} \vec{q}, \mathrm{d}S
+         * \f] 
+         * 
+         * and adds this to the coefficient space provided by
+         * outarray. The value of q is determined from the routine
+         * IsLeftAdjacentTrace() which if true we use Fwd else we use
+         * Bwd
+         * 
+         * @see Expansion2D::AddEdgeNormBoundaryInt
+         * 
+         * @param Fwd       The trace quantities associated with left (fwd)
+         *                  adjancent elmt.
+         * @param Bwd       The trace quantities associated with right (bwd)
+         *                  adjacent elet.
+         * @param outarray  Resulting 2D coefficient space.
+         */
+        void DisContField::v_AddFwdBwdTraceIntegral(
+            const Array<OneD, const NekDouble> &Fwd, 
+            const Array<OneD, const NekDouble> &Bwd, 
+                  Array<OneD,       NekDouble> &outarray)
+        {
+
+            ASSERTL0(m_expType != e1D, "This method is not setup or "
+                     "tested for 1D expansion"); 
+            int e,n,offset, t_offset;
+            Array<OneD, NekDouble> e_outarray;
+            Array<OneD, Array<OneD, LocalRegions::ExpansionSharedPtr> >
+                &elmtToTrace = m_traceMap->GetElmtToTrace();
+
+            for (n = 0; n < GetExpSize(); ++n)
+            {
+                offset = GetCoeff_Offset(n);
+                for (e = 0; e < (*m_exp)[n]->GetNedges(); ++e)
+                {
+                    t_offset = GetTrace()->GetPhys_Offset(
+                                            elmtToTrace[n][e]->GetElmtId());
+                    
+                    // Evaluate upwind flux less local edge 
+                    if (IsLeftAdjacentTrace(n, e))
+                    {
+                        (*m_exp)[n]->AddEdgeNormBoundaryInt(
+                        e, elmtToTrace[n][e], Fwd+t_offset,
+                        e_outarray = outarray+offset);
+                    }
+                    else
+                    {
+                        (*m_exp)[n]->AddEdgeNormBoundaryInt(
+                        e, elmtToTrace[n][e], Bwd+t_offset,
+                        e_outarray = outarray+offset);
+                    }
+
+                }
+            }
+        }
+
         void DisContField::v_HelmSolve
               (const Array<OneD, const NekDouble> &inarray,
                Array<OneD,       NekDouble>       &outarray,
@@ -2555,45 +2618,269 @@ namespace Nektar
          */
         map<int, RobinBCInfoSharedPtr> DisContField::v_GetRobinBCInfo(void)
         {
-            int i;
+            int i,cnt;
             map<int, RobinBCInfoSharedPtr> returnval;
-            Array<OneD, int> ElmtID,VertID;
-            GetBoundaryToElmtMap(ElmtID,VertID);
+            Array<OneD, int> ElmtID,EdgeID;
+            GetBoundaryToElmtMap(ElmtID,EdgeID);
 
-            for (i = 0; i < m_bndCondExpansions.num_elements(); ++i)
+            for(cnt = i = 0; i < m_bndCondExpansions.num_elements(); ++i)
             {
-                if (m_bndConditions[i]->GetBoundaryConditionType() ==
-                    SpatialDomains::eRobin)
+                MultiRegions::ExpListSharedPtr locExpList;
+
+                if(m_bndConditions[i]->GetBoundaryConditionType() == 
+                       SpatialDomains::eRobin)
                 {
-                    int elmtid;
+                    int e,elmtid;
+                    Array<OneD, NekDouble> Array_tmp;
 
-                    Array<OneD, NekDouble> x0(1);
-                    Array<OneD, NekDouble> x1(1);
-                    Array<OneD, NekDouble> x2(1);
-                    Array<OneD, NekDouble> coeffphys(1);
-                    
-                    m_bndCondExpansions[i]->GetCoords(x0, x1, x2);
+                    locExpList = m_bndCondExpansions[i];
 
-                    coeffphys[0]  = (std::static_pointer_cast<SpatialDomains
-                         ::RobinBoundaryCondition>(m_bndConditions[i])
-                         ->m_robinPrimitiveCoeff).Evaluate(x0[0],x1[0],x2[0],0.0);
-                        
-                    RobinBCInfoSharedPtr rInfo =
-                        MemoryManager<RobinBCInfo>::
-                            AllocateSharedPtr(VertID[i],coeffphys);
+                    int npoints    = locExpList->GetNpoints();
+                    Array<OneD, NekDouble> x0(npoints, 0.0);
+                    Array<OneD, NekDouble> x1(npoints, 0.0);
+                    Array<OneD, NekDouble> x2(npoints, 0.0);
+                    Array<OneD, NekDouble> coeffphys(npoints);
 
-                    elmtid = ElmtID[i];
-                    // make link list if necessary (not likely in
-                    // 1D but needed in 2D & 3D)
-                    if(returnval.count(elmtid) != 0)
+                    locExpList->GetCoords(x0, x1, x2);
+
+                    LibUtilities::Equation coeffeqn =
+                        std::static_pointer_cast<
+                            SpatialDomains::RobinBoundaryCondition>
+                        (m_bndConditions[i])->m_robinPrimitiveCoeff;
+
+                    // evalaute coefficient 
+                    coeffeqn.Evaluate(x0, x1, x2, 0.0, coeffphys);
+
+                    for(e = 0; e < locExpList->GetExpSize(); ++e)
                     {
-                        rInfo->next = returnval.find(elmtid)->second;
+                        RobinBCInfoSharedPtr rInfo =
+                            MemoryManager<RobinBCInfo>
+                            ::AllocateSharedPtr(
+                                EdgeID[cnt+e],
+                                Array_tmp = coeffphys + 
+                                locExpList->GetPhys_Offset(e));
+                        
+                        elmtid = ElmtID[cnt+e];
+                        // make link list if necessary
+                        if(returnval.count(elmtid) != 0)
+                        {
+                            rInfo->next = returnval.find(elmtid)->second;
+                        }
+                        returnval[elmtid] = rInfo;
                     }
-                    returnval[elmtid] = rInfo;
                 }
+                cnt += m_bndCondExpansions[i]->GetExpSize();
             }
 
             return returnval;
+        }
+
+        /** 
+         * @brief Calculate the \f$ L^2 \f$ error of the \f$ Q_{\rm dir} \f$
+         * derivative using the consistent DG evaluation of \f$ Q_{\rm dir} \f$.
+         * 
+         * The solution provided is of the primative variation at the quadrature
+         * points and the derivative is compared to the discrete derivative at
+         * these points, which is likely to be undesirable unless using a much
+         * higher number of quadrature points than the polynomial order used to
+         * evaluate \f$ Q_{\rm dir} \f$.
+        */
+        NekDouble DisContField::L2_DGDeriv(
+            const int                           dir,
+            const Array<OneD, const NekDouble> &soln)
+        {
+            int    i,e,ncoeff_edge;
+            Array<OneD, const NekDouble> tmp_coeffs;
+            Array<OneD, NekDouble> out_d(m_ncoeffs), out_tmp;
+
+            Array<OneD, Array<OneD, LocalRegions::ExpansionSharedPtr> > 
+                &elmtToTrace = m_traceMap->GetElmtToTrace();
+
+            StdRegions::Orientation edgedir;
+
+            int     cnt;
+            int     LocBndCoeffs = m_traceMap->GetNumLocalBndCoeffs();
+            Array<OneD, NekDouble> loc_lambda(LocBndCoeffs), edge_lambda;
+
+            
+            m_traceMap->GlobalToLocalBnd(m_trace->GetCoeffs(),loc_lambda);
+
+            edge_lambda = loc_lambda;
+            
+            // Calculate Q using standard DG formulation.
+            for(i = cnt = 0; i < GetExpSize(); ++i)
+            {
+                // Probably a better way of setting up lambda than this.
+                // Note cannot use PutCoeffsInToElmts since lambda space
+                // is mapped during the solve.
+                int nEdges = (*m_exp)[i]->GetNedges();
+                Array<OneD, Array<OneD, NekDouble> > edgeCoeffs(nEdges);
+
+                for(e = 0; e < nEdges; ++e)
+                {
+                    edgedir = (*m_exp)[i]->GetEorient(e);
+                    ncoeff_edge = elmtToTrace[i][e]->GetNcoeffs();
+                    edgeCoeffs[e] = Array<OneD, NekDouble>(ncoeff_edge);
+                    Vmath::Vcopy(ncoeff_edge, edge_lambda, 1, edgeCoeffs[e], 1);
+                    elmtToTrace[i][e]->SetCoeffsToOrientation(
+                        edgedir, edgeCoeffs[e], edgeCoeffs[e]);
+                    edge_lambda = edge_lambda + ncoeff_edge;
+                }
+
+                (*m_exp)[i]->DGDeriv(dir,
+                                       tmp_coeffs=m_coeffs+m_coeff_offset[i],
+                                       elmtToTrace[i],
+                                       edgeCoeffs,
+                                       out_tmp = out_d+cnt);
+                cnt  += (*m_exp)[i]->GetNcoeffs();
+            }
+            
+            BwdTrans(out_d,m_phys);
+            Vmath::Vsub(m_npoints,m_phys,1,soln,1,m_phys,1);
+            return L2(m_phys);
+        }
+
+        /**
+         * @brief Evaluate HDG post-processing to increase polynomial order of
+         * solution.
+         * 
+         * This function takes the solution (assumed to be one order lower) in
+         * physical space, and postprocesses at the current polynomial order by
+         * solving the system:
+         * 
+         * \f[
+         * \begin{aligned}
+         *   (\nabla w, \nabla u^*) &= (\nabla w, u), \\
+         *   \langle \nabla u^*, 1 \rangle &= \langle \nabla u, 1 \rangle
+         * \end{aligned}
+         * \f]
+         * 
+         * where \f$ u \f$ corresponds with the current solution as stored
+         * inside #m_coeffs.
+         * 
+         * @param outarray  The resulting field \f$ u^* \f$.
+         */
+        void  DisContField::EvaluateHDGPostProcessing(
+            Array<OneD, NekDouble> &outarray)
+        {
+            int    i,cnt,e,ncoeff_edge;
+            Array<OneD, NekDouble> force, out_tmp, qrhs, qrhs1;
+            Array<OneD, Array< OneD, LocalRegions::ExpansionSharedPtr> > 
+                &elmtToTrace = m_traceMap->GetElmtToTrace();
+
+            StdRegions::Orientation edgedir;
+
+            int     nq_elmt, nm_elmt;
+            int     LocBndCoeffs = m_traceMap->GetNumLocalBndCoeffs();
+            Array<OneD, NekDouble> loc_lambda(LocBndCoeffs), edge_lambda;
+            Array<OneD, NekDouble> tmp_coeffs;
+            m_traceMap->GlobalToLocalBnd(m_trace->GetCoeffs(),loc_lambda);
+
+            edge_lambda = loc_lambda;
+
+            // Calculate Q using standard DG formulation.
+            for(i = cnt = 0; i < GetExpSize(); ++i)
+            {
+                nq_elmt = (*m_exp)[i]->GetTotPoints();
+                nm_elmt = (*m_exp)[i]->GetNcoeffs();
+                qrhs  = Array<OneD, NekDouble>(nq_elmt);
+                qrhs1  = Array<OneD, NekDouble>(nq_elmt);
+                force = Array<OneD, NekDouble>(2*nm_elmt);
+                out_tmp = force + nm_elmt;
+                LocalRegions::ExpansionSharedPtr ppExp;
+
+                int num_points0 = (*m_exp)[i]->GetBasis(0)->GetNumPoints();
+                int num_points1 = (*m_exp)[i]->GetBasis(1)->GetNumPoints();
+                int num_modes0 = (*m_exp)[i]->GetBasis(0)->GetNumModes();
+                int num_modes1 = (*m_exp)[i]->GetBasis(1)->GetNumModes();
+
+                // Probably a better way of setting up lambda than this.  Note
+                // cannot use PutCoeffsInToElmts since lambda space is mapped
+                // during the solve.
+                int nEdges = (*m_exp)[i]->GetNedges();
+                Array<OneD, Array<OneD, NekDouble> > edgeCoeffs(nEdges);
+
+                for(e = 0; e < (*m_exp)[i]->GetNedges(); ++e)
+                {
+                    edgedir = (*m_exp)[i]->GetEorient(e);
+                    ncoeff_edge = elmtToTrace[i][e]->GetNcoeffs();
+                    edgeCoeffs[e] = Array<OneD, NekDouble>(ncoeff_edge);
+                    Vmath::Vcopy(ncoeff_edge, edge_lambda, 1, edgeCoeffs[e], 1);
+                    elmtToTrace[i][e]->SetCoeffsToOrientation(
+                        edgedir, edgeCoeffs[e], edgeCoeffs[e]);
+                    edge_lambda = edge_lambda + ncoeff_edge;
+                }
+
+                //creating orthogonal expansion (checking if we have quads or triangles)
+                LibUtilities::ShapeType shape = (*m_exp)[i]->DetShapeType();
+                switch(shape)
+                {
+                    case LibUtilities::eQuadrilateral:
+                    {
+                        const LibUtilities::PointsKey PkeyQ1(num_points0,LibUtilities::eGaussLobattoLegendre);
+                        const LibUtilities::PointsKey PkeyQ2(num_points1,LibUtilities::eGaussLobattoLegendre);
+                        LibUtilities::BasisKey  BkeyQ1(LibUtilities::eOrtho_A, num_modes0, PkeyQ1);
+                        LibUtilities::BasisKey  BkeyQ2(LibUtilities::eOrtho_A, num_modes1, PkeyQ2);
+                        SpatialDomains::QuadGeomSharedPtr qGeom = std::dynamic_pointer_cast<SpatialDomains::QuadGeom>((*m_exp)[i]->GetGeom());
+                        ppExp = MemoryManager<LocalRegions::QuadExp>::AllocateSharedPtr(BkeyQ1, BkeyQ2, qGeom);
+                    }
+                    break;
+                    case LibUtilities::eTriangle:
+                    {
+                        const LibUtilities::PointsKey PkeyT1(num_points0,LibUtilities::eGaussLobattoLegendre);
+                        const LibUtilities::PointsKey PkeyT2(num_points1,LibUtilities::eGaussRadauMAlpha1Beta0);
+                        LibUtilities::BasisKey  BkeyT1(LibUtilities::eOrtho_A, num_modes0, PkeyT1);
+                        LibUtilities::BasisKey  BkeyT2(LibUtilities::eOrtho_B, num_modes1, PkeyT2);
+                        SpatialDomains::TriGeomSharedPtr tGeom = std::dynamic_pointer_cast<SpatialDomains::TriGeom>((*m_exp)[i]->GetGeom());
+                        ppExp = MemoryManager<LocalRegions::TriExp>::AllocateSharedPtr(BkeyT1, BkeyT2, tGeom);
+                    }
+                    break;
+                    default:
+                        ASSERTL0(false, "Wrong shape type, HDG postprocessing is not implemented");
+                };
+
+               
+                //DGDeriv    
+                // (d/dx w, d/dx q_0)
+                (*m_exp)[i]->DGDeriv(
+                    0,tmp_coeffs = m_coeffs + m_coeff_offset[i],
+                    elmtToTrace[i], edgeCoeffs, out_tmp);
+                (*m_exp)[i]->BwdTrans(out_tmp,qrhs);
+                //(*m_exp)[i]->IProductWRTDerivBase(0,qrhs,force);
+                ppExp->IProductWRTDerivBase(0,qrhs,force);
+
+
+                // + (d/dy w, d/dy q_1)
+                (*m_exp)[i]->DGDeriv(
+                    1,tmp_coeffs = m_coeffs + m_coeff_offset[i],
+                    elmtToTrace[i], edgeCoeffs, out_tmp);
+
+                (*m_exp)[i]->BwdTrans(out_tmp,qrhs);
+                //(*m_exp)[i]->IProductWRTDerivBase(1,qrhs,out_tmp);
+                ppExp->IProductWRTDerivBase(1,qrhs,out_tmp);
+
+                Vmath::Vadd(nm_elmt,force,1,out_tmp,1,force,1);
+
+                // determine force[0] = (1,u)
+                (*m_exp)[i]->BwdTrans(
+                    tmp_coeffs = m_coeffs + m_coeff_offset[i],qrhs);
+                force[0] = (*m_exp)[i]->Integral(qrhs);
+
+                // multiply by inverse Laplacian matrix
+                // get matrix inverse
+                LocalRegions::MatrixKey  lapkey(StdRegions::eInvLaplacianWithUnityMean, ppExp->DetShapeType(), *ppExp);
+                DNekScalMatSharedPtr lapsys = ppExp->GetLocMatrix(lapkey); 
+                
+                NekVector<NekDouble> in (nm_elmt,force,eWrapper);
+                NekVector<NekDouble> out(nm_elmt);
+
+                out = (*lapsys)*in;
+
+                // Transforming back to modified basis
+                Array<OneD, NekDouble> work(nq_elmt);
+                ppExp->BwdTrans(out.GetPtr(), work);
+                (*m_exp)[i]->FwdTrans(work, tmp_coeffs = outarray + m_coeff_offset[i]);
+            }
         }
     } // end of namespace
 } //end of namespace

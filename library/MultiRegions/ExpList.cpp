@@ -1533,28 +1533,38 @@ namespace Nektar
                         gloCoords[0], gloCoords[1], gloCoords[2]);
 
                 std::vector<int> elmts = m_graph->GetElementsContainingPoint(p);
-                cout << "Point: " << gloCoords[0] << ", " << gloCoords[1]
-                     << ", " << gloCoords[2] << endl;
-                cout << "Number of elements found: " << elmts.size() << endl;
-
+//                cout << "Point: " << gloCoords[0] << ", " << gloCoords[1]
+//                     << ", " << gloCoords[2] << endl;
+//                cout << "Number of elements found: " << elmts.size() << endl;
+//                for (int i = 0; i < elmts.size(); ++i) {
+//                    cout << "Element: " << elmts[i] << " of " << GetNumElmts() << endl;
+//                }
                 int min_id  = 0;
                 NekDouble nearpt_min = 1e6;
                 Array<OneD, NekDouble> savLocCoords(locCoords.num_elements());
 
                 // search only those elements whose bounding box overlaps
+/*                std::map<int,int> gidToElmtIdxMap;
+                for (int i = 0; i < (*m_exp).size() ; ++i)
+                {
+                    gidToElmtIdxMap[(*m_exp)[i]->GetGeom()->GetGlobalID()] = i;
+                }
+*/
                 for (int i = 0; i < elmts.size(); ++i)
                 {
-                    if ((*m_exp)[elmts[i]]->GetGeom()->ContainsPoint(gloCoords, 
+//    cout << "Element Gid: " << elmts[i] << ", index: " << m_elmtToExpId[elmts[i]] << endl;
+                    if ((*m_exp)[m_elmtToExpId[elmts[i]]]->GetGeom()->ContainsPoint(gloCoords, 
                                                               locCoords,
                                                               tol, nearpt))
                     {
-                        return i;
+//                        cout << "LocCoords: " << locCoords[0] << ", " << locCoords[1] << ", " << locCoords[2] << endl;
+                        return m_elmtToExpId[elmts[i]];
                     }
                     else
                     {
                         if(nearpt < nearpt_min)
                         {
-                            min_id    = elmts[i];
+                            min_id    = m_elmtToExpId[elmts[i]];
                             nearpt_min = nearpt;
                             Vmath::Vcopy(locCoords.num_elements(),locCoords,1,savLocCoords,1);
                         }

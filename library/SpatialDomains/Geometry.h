@@ -49,11 +49,11 @@
 #include <boost/geometry/geometries/box.hpp>
 namespace bg = boost::geometry;
 namespace bgi = boost::geometry::index;
-typedef bg::model::point<NekDouble, 3, bg::cs::cartesian> point;
 
 namespace Nektar
 {
 
+typedef bg::model::point<NekDouble, 3, bg::cs::cartesian> point;
 
 namespace SpatialDomains
 {
@@ -458,7 +458,7 @@ inline bg::model::box<point> Geometry::GetBoundingBox()
 {
     if (!m_boundingBox)
     {
-        GetBoundingBox();
+        GenBoundingBox();
     }
     return *m_boundingBox;
 }

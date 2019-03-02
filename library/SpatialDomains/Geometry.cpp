@@ -347,20 +347,24 @@ void Geometry::GenBoundingBox()
     NekDouble minx, miny, minz, maxx, maxy, maxz;
     NekDouble x, y, z;
     p->GetCoords(x, y, z);
-    minx = maxx = x;
-    miny = maxy = y;
-    minz = maxz = z;
+    minx = x - NekConstants::kNekZeroTol;
+    maxx = x + NekConstants::kNekZeroTol;
+    miny = y - NekConstants::kNekZeroTol;
+    maxy = y + NekConstants::kNekZeroTol;
+    minz = z - NekConstants::kNekZeroTol;
+    maxz = z + NekConstants::kNekZeroTol;
     for (int i = 1; i < GetNumVerts(); ++i)
     {
         p = GetVertex(i);
         p->GetCoords(x, y, z);
         minx = (x < minx ? x : minx);
         maxx = (x > maxx ? x : maxx);
-        miny = (y < miny ? x : miny);
-        maxy = (y > maxy ? x : maxy);
-        minz = (z < minz ? x : minz);
-        maxz = (z > maxz ? x : maxz);
+        miny = (y < miny ? y : miny);
+        maxy = (y > maxy ? y : maxy);
+        minz = (z < minz ? z : minz);
+        maxz = (z > maxz ? z : maxz);
     }
+
     point pmin(minx, miny, minz);
     point pmax(maxx, maxy, maxz);
     m_boundingBox = bg::model::box<point>(pmin, pmax);

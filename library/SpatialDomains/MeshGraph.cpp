@@ -193,6 +193,11 @@ void MeshGraph::FillBoundingBoxTree()
         box b = x.second->GetBoundingBox();
         m_boundingBoxTree.insert(std::make_pair(b, x.first));
     }
+    for (auto &x : m_quadGeoms) 
+    {
+        box b = x.second->GetBoundingBox();
+        m_boundingBoxTree.insert(std::make_pair(b, x.first));
+    }
 }
 
 void MeshGraph::SetDomainRange(NekDouble xmin, NekDouble xmax, NekDouble ymin,

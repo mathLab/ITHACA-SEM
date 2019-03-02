@@ -337,5 +337,36 @@ void Geometry::v_Setup()
              "This function is only valid for expansion type geometries");
 }
 
+
+/**
+ * @brief Generates the bounding box for the element.
+ */
+void Geometry::GenBoundingBox()
+{
+    PointGeomSharedPtr p = GetVertex(0);
+    NekDouble minx, miny, minz, maxx, maxy, maxz;
+    NekDouble x, y, z;
+    p->GetCoords(x, y, z);
+    minx = maxx = x;
+    miny = maxy = y;
+    minz = maxz = z;
+    for (int i = 1; i < GetNumVerts(); ++i)
+    {
+        p = GetVertex(i);
+        p->GetCoords(x, y, z);
+        minx = (x < minx ? x : minx);
+        maxx = (x > maxx ? x : maxx);
+        miny = (y < miny ? x : miny);
+        maxy = (y > maxy ? x : maxy);
+        minz = (z < minz ? x : minz);
+        maxz = (z > maxz ? x : maxz);
+    }
+    point pmin(minx, miny, minz);
+    point pmax(maxx, maxy, maxz);
+    m_boundingBox = bg::model::box<point>(pmin, pmax);
+}
+
+
+
 }
 }

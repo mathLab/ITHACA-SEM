@@ -1528,53 +1528,38 @@ namespace Nektar
             // non-embedded mesh (point can only match one element)
             else
             {
-                static int start = 0;
+                SpatialDomains::PointGeomSharedPtr p 
+                    = MemoryManager<SpatialDomains::PointGeom>::AllocateSharedPtr(GetExp(0)->GetCoordim(), -1,
+                        gloCoords[0], gloCoords[1], gloCoords[2]);
+
+                std::vector<int> elmts = m_graph->GetElementsContainingPoint(p);
+                cout << "Point: " << gloCoords[0] << ", " << gloCoords[1]
+                     << ", " << gloCoords[2] << endl;
+                cout << "Number of elements found: " << elmts.size() << endl;
+
                 int min_id  = 0;
                 NekDouble nearpt_min = 1e6;
                 Array<OneD, NekDouble> savLocCoords(locCoords.num_elements());
 
-                // restart search from last found value
-                for (int i = start; i < (*m_exp).size(); ++i)
+                // search only those elements whose bounding box overlaps
+                for (int i = 0; i < elmts.size(); ++i)
                 {
-                    if ((*m_exp)[i]->GetGeom()->ContainsPoint(gloCoords, 
+                    if ((*m_exp)[elmts[i]]->GetGeom()->ContainsPoint(gloCoords, 
                                                               locCoords,
                                                               tol, nearpt))
                     {
-                        start = i;
                         return i;
                     }
                     else
                     {
                         if(nearpt < nearpt_min)
                         {
-                            min_id    = i;
+                            min_id    = elmts[i];
                             nearpt_min = nearpt;
                             Vmath::Vcopy(locCoords.num_elements(),locCoords,1,savLocCoords,1);
                         }
                     }
                 }
-
-                for (int i = 0; i < start; ++i)
-                {
-                    if ((*m_exp)[i]->GetGeom()->ContainsPoint(gloCoords, 
-                                                              locCoords,
-                                                              tol, nearpt))
-                    {
-                        start = i;
-                        return i;
-                    }
-                    else
-                    {
-                        if(nearpt < nearpt_min)
-                        {
-                            min_id    = i;
-                            nearpt_min = nearpt;
-                            Vmath::Vcopy(locCoords.num_elements(),
-                                         locCoords,1,savLocCoords,1);
-                        }
-                    }
-                }
-
                 if(returnNearestElmt)
                 {
 

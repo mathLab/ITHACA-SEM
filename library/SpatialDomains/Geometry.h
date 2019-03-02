@@ -44,8 +44,16 @@
 
 #include <unordered_map>
 
+#include <boost/geometry.hpp>
+#include <boost/geometry/geometries/point.hpp>
+#include <boost/geometry/geometries/box.hpp>
+namespace bg = boost::geometry;
+namespace bgi = boost::geometry::index;
+typedef bg::model::point<NekDouble, 3, bg::cs::cartesian> point;
+
 namespace Nektar
 {
+
 
 namespace SpatialDomains
 {
@@ -138,6 +146,8 @@ public:
     //---------------------------------------
     // Point lookups
     //---------------------------------------
+    SPATIAL_DOMAINS_EXPORT inline bg::model::box<point> GetBoundingBox();
+
     SPATIAL_DOMAINS_EXPORT inline bool ContainsPoint(
         const Array<OneD, const NekDouble> &gloCoord,
         NekDouble tol = 0.0);
@@ -192,8 +202,13 @@ protected:
     int                               m_globalID;
     /// Array containing expansion coefficients of @p m_xmap
     Array<OneD, Array<OneD, NekDouble> > m_coeffs;
+    /// Stores the optional bounding box of the element
+    boost::optional<bg::model::box<point>>   m_boundingBox;
+
     /// Handles generation of geometry factors.
     void                              GenGeomFactors();
+    /// Generates the bounding box of the element.
+    void                              GenBoundingBox();
 
     //---------------------------------------
     // Helper functions
@@ -434,6 +449,18 @@ inline const Array<OneD, const NekDouble> &Geometry::GetCoeffs(
 inline void Geometry::FillGeom()
 {
     v_FillGeom();
+}
+
+/**
+ * @brief Returns the bounding box of the element.
+ */
+inline bg::model::box<point> Geometry::GetBoundingBox()
+{
+    if (!m_boundingBox)
+    {
+        GetBoundingBox();
+    }
+    return *m_boundingBox;
 }
 
 /**

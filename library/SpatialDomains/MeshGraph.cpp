@@ -185,6 +185,16 @@ void MeshGraph::FillGraph()
     }
 }
 
+void MeshGraph::FillBoundingBoxTree()
+{
+    m_boundingBoxTree.clear();
+    for (auto &x : m_triGeoms) 
+    {
+        box b = x.second->GetBoundingBox();
+        m_boundingBoxTree.insert(std::make_pair(b, x.first));
+    }
+}
+
 void MeshGraph::SetDomainRange(NekDouble xmin, NekDouble xmax, NekDouble ymin,
                                NekDouble ymax, NekDouble zmin, NekDouble zmax)
 {

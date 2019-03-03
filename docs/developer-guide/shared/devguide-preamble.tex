@@ -232,18 +232,22 @@ openany, % A chapter may start on either a recto or verso page.
 }
 \lstdefinestyle{C++Style}{
   language=C++,
-  basicstyle=\sffamily\footnotesize,
+  basicstyle=\ttfamily\footnotesize,
   numbers=left,
   numberstyle=\tiny,
   numbersep=3pt,
   frame=,
   columns=fullflexible,
   backgroundcolor=\color{black!05},
-  linewidth=0.9\linewidth,
+  linewidth=0.95\linewidth,
   xleftmargin=0.1\linewidth,
   showspaces=false,
   showstringspaces=false,
-  breaklines=true
+  breaklines=true,
+  keywordstyle=\color{blue}\ttfamily,
+  stringstyle=\color{red}\ttfamily,
+  commentstyle=\color{violet}\ttfamily,
+  morecomment=[l][\color{teal}]{\#}
 }
 
 \ifdefined\HCode

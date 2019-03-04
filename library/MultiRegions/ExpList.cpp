@@ -3813,8 +3813,6 @@ namespace Nektar
                     {
                         if(LRAdjflag[nlr][ntrace])
                         {
-                            sign    = 2.0*NekDouble(nlr)-1.0;
-
                             ElmtMat        = fieldMat[LRAdjExpid[nlr][ntrace]];
 
                             for(int ncl = 0; ncl < nTracPnt; ncl++)
@@ -3823,8 +3821,8 @@ namespace Nektar
 
                                 for(int nrw = 0; nrw < nTracCoef; nrw++)
                                 {
+                                    sign=-elmtLRSign[nlr][ntrace][nrw];                                    
                                     nrwAdjExp = elmtLRMap[nlr][ntrace][nrw];
-
                                     tmp   =   (*ElmtMat)(nrwAdjExp,nclAdjExp);
                                     tmp   +=  sign*(*TracFBMat[nlr])(nrw,ncl);
                                     ElmtMat->SetValue(nrwAdjExp,nclAdjExp,tmp);

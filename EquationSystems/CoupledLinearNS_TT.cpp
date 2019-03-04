@@ -2516,63 +2516,160 @@ namespace Nektar
 
     Eigen::MatrixXd CoupledLinearNS_TT::Get_no_advection_matrix(void)
     {
-	Eigen::MatrixXd no_adv_matrix = Eigen::MatrixXd::Zero(RB_A.rows() + RB_Dbnd.rows() + RB_C.cols(), RB_A.cols() + RB_Dbnd.rows() + RB_B.cols() );
-	no_adv_matrix.block(0, 0, RB_A.rows(), RB_A.cols()) = MtM * RB_A_no_adv;
-	no_adv_matrix.block(0, RB_A.cols(), RB_Dbnd.cols(), RB_Dbnd.rows()) = -MtM * RB_Dbnd.transpose();
-	no_adv_matrix.block(0, RB_A.cols() + RB_Dbnd.rows(), RB_B.rows(), RB_B.cols()) = MtM * RB_B_no_adv;
-	no_adv_matrix.block(RB_A.rows(), 0, RB_Dbnd.rows(), RB_Dbnd.cols()) = -RB_Dbnd;
-	no_adv_matrix.block(RB_A.rows(), RB_A.cols() + RB_Dbnd.rows(), RB_Dint.rows(), RB_Dint.cols()) = -RB_Dint;	
-	no_adv_matrix.block(RB_A.rows() + RB_Dbnd.rows(), 0, RB_C.cols(), RB_C.rows()) = RB_C_no_adv.transpose();
-	no_adv_matrix.block(RB_A.rows() + RB_Dbnd.rows(), RB_A.cols(), RB_Dint.cols(), RB_Dint.rows()) = -RB_Dint.transpose();
-	no_adv_matrix.block(RB_A.rows() + RB_Dbnd.rows(), RB_A.cols() + RB_Dbnd.rows(), RB_D.rows(), RB_D.cols()) = RB_D_no_adv;
+	Eigen::MatrixXd no_adv_matrix = Eigen::MatrixXd::Zero(M_truth_size, M_truth_size);
+	switch(globally_connected) {
+		case 0:
+			no_adv_matrix.block(0, 0, RB_A.rows(), RB_A.cols()) = MtM * RB_A_no_adv;
+			no_adv_matrix.block(0, RB_A.cols(), RB_Dbnd.cols(), RB_Dbnd.rows()) = -MtM * RB_Dbnd.transpose();
+			no_adv_matrix.block(0, RB_A.cols() + RB_Dbnd.rows(), RB_B.rows(), RB_B.cols()) = MtM * RB_B_no_adv;
+			no_adv_matrix.block(RB_A.rows(), 0, RB_Dbnd.rows(), RB_Dbnd.cols()) = -RB_Dbnd;
+			no_adv_matrix.block(RB_A.rows(), RB_A.cols() + RB_Dbnd.rows(), RB_Dint.rows(), RB_Dint.cols()) = -RB_Dint;	
+			no_adv_matrix.block(RB_A.rows() + RB_Dbnd.rows(), 0, RB_C.cols(), RB_C.rows()) = RB_C_no_adv.transpose();
+			no_adv_matrix.block(RB_A.rows() + RB_Dbnd.rows(), RB_A.cols(), RB_Dint.cols(), RB_Dint.rows()) = -RB_Dint.transpose();
+			no_adv_matrix.block(RB_A.rows() + RB_Dbnd.rows(), RB_A.cols() + RB_Dbnd.rows(), RB_D.rows(), RB_D.cols()) = RB_D_no_adv;
+			break;
+		case 1:
+			no_adv_matrix.block(0, 0, nBndDofs, nBndDofs) = Mtrafo.transpose() * RB_A_no_adv * Mtrafo;
+			no_adv_matrix.block(0, nBndDofs, nBndDofs, RB_Dbnd.rows()) = -Mtrafo.transpose() * RB_Dbnd.transpose();
+			no_adv_matrix.block(0, nBndDofs + RB_Dbnd.rows(), nBndDofs, RB_B.cols()) = Mtrafo.transpose() * RB_B_no_adv;
+			no_adv_matrix.block(nBndDofs, 0, RB_Dbnd.rows(), nBndDofs) = -RB_Dbnd * Mtrafo;
+			no_adv_matrix.block(nBndDofs, nBndDofs + RB_Dbnd.rows(), RB_Dint.rows(), RB_Dint.cols()) = -RB_Dint;	
+			no_adv_matrix.block(nBndDofs + RB_Dbnd.rows(), 0, RB_C.cols(), nBndDofs) = RB_C_no_adv.transpose() * Mtrafo;
+			no_adv_matrix.block(nBndDofs + RB_Dbnd.rows(), nBndDofs, RB_Dint.cols(), RB_Dint.rows()) = -RB_Dint.transpose();
+			no_adv_matrix.block(nBndDofs + RB_Dbnd.rows(), nBndDofs + RB_Dbnd.rows(), RB_D.rows(), RB_D.cols()) = RB_D_no_adv;
+			break;
+		case 2:
+			no_adv_matrix.block(0, 0, RB_A.rows(), RB_A.cols()) = RB_A_no_adv;
+			no_adv_matrix.block(0, RB_A.cols(), RB_Dbnd.cols(), RB_Dbnd.rows()) = -RB_Dbnd.transpose();
+			no_adv_matrix.block(0, RB_A.cols() + RB_Dbnd.rows(), RB_B.rows(), RB_B.cols()) = RB_B_no_adv;
+			no_adv_matrix.block(RB_A.rows(), 0, RB_Dbnd.rows(), RB_Dbnd.cols()) = -RB_Dbnd;
+			no_adv_matrix.block(RB_A.rows(), RB_A.cols() + RB_Dbnd.rows(), RB_Dint.rows(), RB_Dint.cols()) = -RB_Dint;	
+			no_adv_matrix.block(RB_A.rows() + RB_Dbnd.rows(), 0, RB_C.cols(), RB_C.rows()) = RB_C_no_adv.transpose();
+			no_adv_matrix.block(RB_A.rows() + RB_Dbnd.rows(), RB_A.cols(), RB_Dint.cols(), RB_Dint.rows()) = -RB_Dint.transpose();
+			no_adv_matrix.block(RB_A.rows() + RB_Dbnd.rows(), RB_A.cols() + RB_Dbnd.rows(), RB_D.rows(), RB_D.cols()) = RB_D_no_adv;
+			break;
+	}
 	return no_adv_matrix;
     }
 
     Eigen::MatrixXd CoupledLinearNS_TT::Get_no_advection_matrix_pressure(void)
     {
-	Eigen::MatrixXd no_adv_matrix = Eigen::MatrixXd::Zero(RB_A.rows() + RB_Dbnd.rows() + RB_C.cols(), RB_A.cols() + RB_Dbnd.rows() + RB_B.cols() );
-	no_adv_matrix.block(0, RB_A.cols(), RB_Dbnd.cols(), RB_Dbnd.rows()) = -MtM * RB_Dbnd.transpose();
-	no_adv_matrix.block(RB_A.rows(), 0, RB_Dbnd.rows(), RB_Dbnd.cols()) = -RB_Dbnd;
-	no_adv_matrix.block(RB_A.rows(), RB_A.cols() + RB_Dbnd.rows(), RB_Dint.rows(), RB_Dint.cols()) = -RB_Dint;	
-	no_adv_matrix.block(RB_A.rows() + RB_Dbnd.rows(), RB_A.cols(), RB_Dint.cols(), RB_Dint.rows()) = -RB_Dint.transpose();
+	Eigen::MatrixXd no_adv_matrix = Eigen::MatrixXd::Zero(M_truth_size, M_truth_size);
+	switch(globally_connected) {
+		case 0:
+			no_adv_matrix.block(0, RB_A.cols(), RB_Dbnd.cols(), RB_Dbnd.rows()) = -MtM * RB_Dbnd.transpose();
+			no_adv_matrix.block(RB_A.rows(), 0, RB_Dbnd.rows(), RB_Dbnd.cols()) = -RB_Dbnd;
+			no_adv_matrix.block(RB_A.rows(), RB_A.cols() + RB_Dbnd.rows(), RB_Dint.rows(), RB_Dint.cols()) = -RB_Dint;	
+			no_adv_matrix.block(RB_A.rows() + RB_Dbnd.rows(), RB_A.cols(), RB_Dint.cols(), RB_Dint.rows()) = -RB_Dint.transpose();
+			break;
+		case 1:
+			no_adv_matrix.block(0, nBndDofs, nBndDofs, RB_Dbnd.rows()) = -Mtrafo.transpose() * RB_Dbnd.transpose();
+			no_adv_matrix.block(nBndDofs, 0, RB_Dbnd.rows(), nBndDofs) = -RB_Dbnd * Mtrafo;
+			no_adv_matrix.block(nBndDofs, nBndDofs + RB_Dbnd.rows(), RB_Dint.rows(), RB_Dint.cols()) = -RB_Dint;	
+			no_adv_matrix.block(nBndDofs + RB_Dbnd.rows(), nBndDofs, RB_Dint.cols(), RB_Dint.rows()) = -RB_Dint.transpose();
+			break;
+		case 2:
+			no_adv_matrix.block(0, RB_A.cols(), RB_Dbnd.cols(), RB_Dbnd.rows()) = -RB_Dbnd.transpose();
+			no_adv_matrix.block(RB_A.rows(), 0, RB_Dbnd.rows(), RB_Dbnd.cols()) = -RB_Dbnd;
+			no_adv_matrix.block(RB_A.rows(), RB_A.cols() + RB_Dbnd.rows(), RB_Dint.rows(), RB_Dint.cols()) = -RB_Dint;	
+			no_adv_matrix.block(RB_A.rows() + RB_Dbnd.rows(), RB_A.cols(), RB_Dint.cols(), RB_Dint.rows()) = -RB_Dint.transpose();
+			break;
+	}			
+
+
 	return no_adv_matrix;
+			
     }
 
     Eigen::MatrixXd CoupledLinearNS_TT::Get_no_advection_matrix_ABCD(void)
     {
-	Eigen::MatrixXd no_adv_matrix = Eigen::MatrixXd::Zero(RB_A.rows() + RB_Dbnd.rows() + RB_C.cols(), RB_A.cols() + RB_Dbnd.rows() + RB_B.cols() );
-	no_adv_matrix.block(0, 0, RB_A.rows(), RB_A.cols()) = MtM * RB_A_no_adv;
-	no_adv_matrix.block(0, RB_A.cols() + RB_Dbnd.rows(), RB_B.rows(), RB_B.cols()) = MtM * RB_B_no_adv;
-	no_adv_matrix.block(RB_A.rows() + RB_Dbnd.rows(), 0, RB_C.cols(), RB_C.rows()) = RB_C_no_adv.transpose();
-	no_adv_matrix.block(RB_A.rows() + RB_Dbnd.rows(), RB_A.cols() + RB_Dbnd.rows(), RB_D.rows(), RB_D.cols()) = RB_D_no_adv;
+	Eigen::MatrixXd no_adv_matrix = Eigen::MatrixXd::Zero(M_truth_size, M_truth_size);
+	switch(globally_connected) {
+		case 0:
+			no_adv_matrix.block(0, 0, RB_A.rows(), RB_A.cols()) = MtM * RB_A_no_adv;
+			no_adv_matrix.block(0, RB_A.cols() + RB_Dbnd.rows(), RB_B.rows(), RB_B.cols()) = MtM * RB_B_no_adv;
+			no_adv_matrix.block(RB_A.rows() + RB_Dbnd.rows(), 0, RB_C.cols(), RB_C.rows()) = RB_C_no_adv.transpose();
+			no_adv_matrix.block(RB_A.rows() + RB_Dbnd.rows(), RB_A.cols() + RB_Dbnd.rows(), RB_D.rows(), RB_D.cols()) = RB_D_no_adv;
+			break;
+		case 1:
+			no_adv_matrix.block(0, 0, nBndDofs, nBndDofs) = Mtrafo.transpose() * RB_A_no_adv * Mtrafo;
+			no_adv_matrix.block(0, nBndDofs + RB_Dbnd.rows(), nBndDofs, RB_B.cols()) = Mtrafo.transpose() * RB_B_no_adv;
+			no_adv_matrix.block(nBndDofs + RB_Dbnd.rows(), 0, RB_C.cols(), nBndDofs) = RB_C_no_adv.transpose() * Mtrafo;
+			no_adv_matrix.block(nBndDofs + RB_Dbnd.rows(), nBndDofs + RB_Dbnd.rows(), RB_D.rows(), RB_D.cols()) = RB_D_no_adv;
+			break;
+		case 2:
+			no_adv_matrix.block(0, 0, RB_A.rows(), RB_A.cols()) = RB_A_no_adv;
+			no_adv_matrix.block(0, RB_A.cols() + RB_Dbnd.rows(), RB_B.rows(), RB_B.cols()) = RB_B_no_adv;
+			no_adv_matrix.block(RB_A.rows() + RB_Dbnd.rows(), 0, RB_C.cols(), RB_C.rows()) = RB_C_no_adv.transpose();
+			no_adv_matrix.block(RB_A.rows() + RB_Dbnd.rows(), RB_A.cols() + RB_Dbnd.rows(), RB_D.rows(), RB_D.cols()) = RB_D_no_adv;
+			break;
+	}
+
 	return no_adv_matrix;
     }
 	
     Eigen::MatrixXd CoupledLinearNS_TT::Get_advection_matrix(void)
     {
-	Eigen::MatrixXd adv_matrix = Eigen::MatrixXd::Zero(RB_A.rows() + RB_Dbnd.rows() + RB_C.cols(), RB_A.cols() + RB_Dbnd.rows() + RB_B.cols() );
-	adv_matrix.block(0, 0, RB_A.rows(), RB_A.cols()) = MtM * RB_A_adv;
-//	adv_matrix.block(0, RB_A.cols(), RB_Dbnd.cols(), RB_Dbnd.rows()) = -MtM * RB_Dbnd.transpose();
-	adv_matrix.block(0, RB_A.cols() + RB_Dbnd.rows(), RB_B.rows(), RB_B.cols()) = MtM * RB_B_adv;
-//	adv_matrix.block(RB_A.rows(), 0, RB_Dbnd.rows(), RB_Dbnd.cols()) = -RB_Dbnd;
-//	adv_matrix.block(RB_A.rows(), RB_A.cols() + RB_Dbnd.rows(), RB_Dint.rows(), RB_Dint.cols()) = -RB_Dint;	
-	adv_matrix.block(RB_A.rows() + RB_Dbnd.rows(), 0, RB_C.cols(), RB_C.rows()) = RB_C_adv.transpose();
-//	adv_matrix.block(RB_A.rows() + RB_Dbnd.rows(), RB_A.cols(), RB_Dint.cols(), RB_Dint.rows()) = -RB_Dint.transpose();
-	adv_matrix.block(RB_A.rows() + RB_Dbnd.rows(), RB_A.cols() + RB_Dbnd.rows(), RB_D.rows(), RB_D.cols()) = RB_D_adv;
+	Eigen::MatrixXd adv_matrix = Eigen::MatrixXd::Zero(M_truth_size, M_truth_size);
+	switch(globally_connected) {
+		case 0:
+			adv_matrix.block(0, 0, RB_A.rows(), RB_A.cols()) = MtM * RB_A_adv;
+			adv_matrix.block(0, RB_A.cols() + RB_Dbnd.rows(), RB_B.rows(), RB_B.cols()) = MtM * RB_B_adv;
+			adv_matrix.block(RB_A.rows() + RB_Dbnd.rows(), 0, RB_C.cols(), RB_C.rows()) = RB_C_adv.transpose();
+			adv_matrix.block(RB_A.rows() + RB_Dbnd.rows(), RB_A.cols() + RB_Dbnd.rows(), RB_D.rows(), RB_D.cols()) = RB_D_adv;
+			break;
+		case 1:
+			adv_matrix.block(0, 0, nBndDofs, nBndDofs) = Mtrafo.transpose() * RB_A_adv * Mtrafo;
+			adv_matrix.block(0, nBndDofs + RB_Dbnd.rows(), nBndDofs, RB_B.cols()) = Mtrafo.transpose() * RB_B_adv;
+			adv_matrix.block(nBndDofs + RB_Dbnd.rows(), 0, RB_C.cols(), nBndDofs) = RB_C_adv.transpose() * Mtrafo;
+			adv_matrix.block(nBndDofs + RB_Dbnd.rows(), nBndDofs + RB_Dbnd.rows(), RB_D.rows(), RB_D.cols()) = RB_D_adv;
+			break;
+		case 2:
+			adv_matrix.block(0, 0, RB_A.rows(), RB_A.cols()) = RB_A_adv;
+			adv_matrix.block(0, RB_A.cols() + RB_Dbnd.rows(), RB_B.rows(), RB_B.cols()) = RB_B_adv;
+			adv_matrix.block(RB_A.rows() + RB_Dbnd.rows(), 0, RB_C.cols(), RB_C.rows()) = RB_C_adv.transpose();
+			adv_matrix.block(RB_A.rows() + RB_Dbnd.rows(), RB_A.cols() + RB_Dbnd.rows(), RB_D.rows(), RB_D.cols()) = RB_D_adv;
+			break;
+	}
+
 	return adv_matrix;
     }	
 
     Eigen::MatrixXd CoupledLinearNS_TT::Get_complete_matrix(void)
     {
-	Eigen::MatrixXd matrix = Eigen::MatrixXd::Zero(RB_A.rows() + RB_Dbnd.rows() + RB_C.cols(), RB_A.cols() + RB_Dbnd.rows() + RB_B.cols() );
-	matrix.block(0, 0, RB_A.rows(), RB_A.cols()) = MtM * RB_A;
-	matrix.block(0, RB_A.cols(), RB_Dbnd.cols(), RB_Dbnd.rows()) = -MtM * RB_Dbnd.transpose();
-	matrix.block(0, RB_A.cols() + RB_Dbnd.rows(), RB_B.rows(), RB_B.cols()) = MtM * RB_B;
-	matrix.block(RB_A.rows(), 0, RB_Dbnd.rows(), RB_Dbnd.cols()) = -RB_Dbnd;
-	matrix.block(RB_A.rows(), RB_A.cols() + RB_Dbnd.rows(), RB_Dint.rows(), RB_Dint.cols()) = -RB_Dint;	
-	matrix.block(RB_A.rows() + RB_Dbnd.rows(), 0, RB_C.cols(), RB_C.rows()) = RB_C.transpose();
-	matrix.block(RB_A.rows() + RB_Dbnd.rows(), RB_A.cols(), RB_Dint.cols(), RB_Dint.rows()) = -RB_Dint.transpose();
-	matrix.block(RB_A.rows() + RB_Dbnd.rows(), RB_A.cols() + RB_Dbnd.rows(), RB_D.rows(), RB_D.cols()) = RB_D;
+	Eigen::MatrixXd matrix = Eigen::MatrixXd::Zero(M_truth_size, M_truth_size);
+	switch(globally_connected) {
+		case 0:
+			matrix.block(0, 0, RB_A.rows(), RB_A.cols()) = MtM * RB_A;
+			matrix.block(0, RB_A.cols(), RB_Dbnd.cols(), RB_Dbnd.rows()) = -MtM * RB_Dbnd.transpose();
+			matrix.block(0, RB_A.cols() + RB_Dbnd.rows(), RB_B.rows(), RB_B.cols()) = MtM * RB_B;
+			matrix.block(RB_A.rows(), 0, RB_Dbnd.rows(), RB_Dbnd.cols()) = -RB_Dbnd;
+			matrix.block(RB_A.rows(), RB_A.cols() + RB_Dbnd.rows(), RB_Dint.rows(), RB_Dint.cols()) = -RB_Dint;	
+			matrix.block(RB_A.rows() + RB_Dbnd.rows(), 0, RB_C.cols(), RB_C.rows()) = RB_C.transpose();
+			matrix.block(RB_A.rows() + RB_Dbnd.rows(), RB_A.cols(), RB_Dint.cols(), RB_Dint.rows()) = -RB_Dint.transpose();
+			matrix.block(RB_A.rows() + RB_Dbnd.rows(), RB_A.cols() + RB_Dbnd.rows(), RB_D.rows(), RB_D.cols()) = RB_D;
+			break;
+		case 1:
+			matrix.block(0, 0, nBndDofs, nBndDofs) = Mtrafo.transpose() * RB_A * Mtrafo;
+			matrix.block(0, nBndDofs, nBndDofs, RB_Dbnd.rows()) = -Mtrafo.transpose() * RB_Dbnd.transpose();
+			matrix.block(0, nBndDofs + RB_Dbnd.rows(), nBndDofs, RB_B.cols()) = Mtrafo.transpose() * RB_B;
+			matrix.block(nBndDofs, 0, RB_Dbnd.rows(), nBndDofs) = -RB_Dbnd * Mtrafo;
+			matrix.block(nBndDofs, nBndDofs + RB_Dbnd.rows(), RB_Dint.rows(), RB_Dint.cols()) = -RB_Dint;	
+			matrix.block(nBndDofs + RB_Dbnd.rows(), 0, RB_C.cols(), nBndDofs) = RB_C.transpose() * Mtrafo;
+			matrix.block(nBndDofs + RB_Dbnd.rows(), nBndDofs, RB_Dint.cols(), RB_Dint.rows()) = -RB_Dint.transpose();
+			matrix.block(nBndDofs + RB_Dbnd.rows(), nBndDofs + RB_Dbnd.rows(), RB_D.rows(), RB_D.cols()) = RB_D;
+			break;
+		case 2:
+			matrix.block(0, 0, RB_A.rows(), RB_A.cols()) = RB_A;
+			matrix.block(0, RB_A.cols(), RB_Dbnd.cols(), RB_Dbnd.rows()) = -RB_Dbnd.transpose();
+			matrix.block(0, RB_A.cols() + RB_Dbnd.rows(), RB_B.rows(), RB_B.cols()) = RB_B;
+			matrix.block(RB_A.rows(), 0, RB_Dbnd.rows(), RB_Dbnd.cols()) = -RB_Dbnd;
+			matrix.block(RB_A.rows(), RB_A.cols() + RB_Dbnd.rows(), RB_Dint.rows(), RB_Dint.cols()) = -RB_Dint;	
+			matrix.block(RB_A.rows() + RB_Dbnd.rows(), 0, RB_C.cols(), RB_C.rows()) = RB_C.transpose();
+			matrix.block(RB_A.rows() + RB_Dbnd.rows(), RB_A.cols(), RB_Dint.cols(), RB_Dint.rows()) = -RB_Dint.transpose();
+			matrix.block(RB_A.rows() + RB_Dbnd.rows(), RB_A.cols() + RB_Dbnd.rows(), RB_D.rows(), RB_D.cols()) = RB_D;
+			break;
+	}			
 	return matrix;
     }
 
@@ -2720,6 +2817,75 @@ namespace Nektar
 			elem_not_loc_dbc.insert(index_c_f_bnd);
 		}
 	}
+    }
+
+    void CoupledLinearNS_TT::setDBC_M(Eigen::MatrixXd collect_f_all)
+    {
+	// compute the dofs after Mtrafo multiplication to get global indices instead of local indices
+	// Mtrafo = Eigen::MatrixXd (RB_A.rows(), nBndDofs);
+	M_no_dbc_in_loc = 0;
+	M_no_not_dbc_in_loc = 0;
+	Eigen::VectorXd compare_vec1 = Mtrafo.transpose() * collect_f_all.block( 0, 0, curr_f_bnd.size(), 1);
+	Eigen::VectorXd compare_vec2 = Mtrafo.transpose() * collect_f_all.block( 0, 1, curr_f_bnd.size(), 1);
+	for ( int index_c_f_bnd = 0; index_c_f_bnd < compare_vec1.rows(); index_c_f_bnd++ )
+	{
+		if (compare_vec1(index_c_f_bnd) == compare_vec2(index_c_f_bnd))
+		{
+			M_no_dbc_in_loc++; // is actually no_dbc_in_global
+			M_elem_loc_dbc.insert(index_c_f_bnd);
+		}
+		else
+		{
+			M_no_not_dbc_in_loc++;
+			M_elem_not_loc_dbc.insert(index_c_f_bnd);
+		}
+	}
+	M_truth_size = compare_vec1.rows() + curr_f_p.size() + curr_f_int.size();  // compare_vec1.rows() corresponds to nBndDofs
+	M_truth_size_without_DBC = M_no_not_dbc_in_loc + curr_f_p.size() + curr_f_int.size();
+	M_f_bnd_dbc = Eigen::VectorXd::Zero(M_no_dbc_in_loc);
+	M_f_bnd_dbc_full_size = Eigen::VectorXd::Zero(M_truth_size);
+	M_RB = Eigen::MatrixXd::Zero(M_truth_size_without_DBC, PODmodes.cols());
+	// first multiply the bnd part in PODmodes with Mtrafo
+	Eigen::MatrixXd M_PODmodes_bnd = Mtrafo.transpose() * PODmodes.block( 0, 0, curr_f_bnd.size(), RBsize );
+	Eigen::MatrixXd M_collect_f_all_bnd = Mtrafo.transpose() * collect_f_all.block( 0, 0, curr_f_bnd.size(), Nmax );
+	M_collect_f_all = Eigen::MatrixXd::Zero( M_truth_size , Nmax );
+	int counter_all = 0;
+	int counter_dbc = 0;
+	for (int index=0; index < M_truth_size; ++index)  // take from the M_PODmodes_bnd if index is below compare_vec1.rows(), otherwise from PODmodes
+	{
+		if (!M_elem_loc_dbc.count(index))
+		{
+			if (index < compare_vec1.rows())
+			{
+				M_RB.row(counter_all) = M_PODmodes_bnd.row(index);
+			}
+			else
+			{
+				M_RB.row(counter_all) = PODmodes.row(index);
+			}
+			M_f_bnd_dbc_full_size(index) = 0;
+			counter_all++;
+		}
+		else
+		{
+			M_f_bnd_dbc_full_size(index) = collect_f_all(index,0);
+			M_f_bnd_dbc(counter_dbc) = collect_f_all(index,0);
+			counter_dbc++;
+		}
+		if (index < compare_vec1.rows())
+		{
+			M_collect_f_all.row(index) = M_collect_f_all_bnd.row(index);
+		}
+		else
+		{
+			M_collect_f_all.row(index) = collect_f_all.row(index);
+		}
+
+	}
+	elem_loc_dbc = M_elem_loc_dbc;
+	f_bnd_dbc_full_size = M_f_bnd_dbc_full_size;
+	RB = M_RB; // could be discussed if desired like that...
+	// does not diminish size  collect_f_all = M_collect_f_all; // could be discussed if desired like that...
     }
 
     void CoupledLinearNS_TT::v_DoInitialise(void)
@@ -2890,10 +3056,13 @@ namespace Nektar
 
     void CoupledLinearNS_TT::set_MtM()
     {
-	int nBndDofs = m_locToGloMap[0]->GetNumGlobalBndCoeffs();  // number of global bnd dofs
+	nBndDofs = m_locToGloMap[0]->GetNumGlobalBndCoeffs();  // number of global bnd dofs
         const Array<OneD,const int>& loctoglobndmap = m_locToGloMap[0]->GetLocalToGlobalBndMap();
         const Array<OneD,const NekDouble>& loctoglobndsign = m_locToGloMap[0]->GetLocalToGlobalBndSign();
-	Eigen::MatrixXd Mtrafo(RB_A.rows(), nBndDofs);
+//	Eigen::MatrixXd Mtrafo(RB_A.rows(), nBndDofs);
+	M_truth_size = curr_f_bnd.size() + curr_f_p.size() + curr_f_int.size();  // compare_vec1.rows() corresponds to nBndDofs
+	M_truth_size_without_DBC = no_not_dbc_in_loc + curr_f_p.size() + curr_f_int.size();
+	Mtrafo = Eigen::MatrixXd (RB_A.rows(), nBndDofs);
 	Array<OneD, MultiRegions::ExpListSharedPtr> m_fields = UpdateFields();
         int  nel  = m_fields[0]->GetNumElmts(); // number of spectral elements
 	int nsize_bndry_p1 = loctoglobndmap.num_elements() / nel;
@@ -3054,13 +3223,14 @@ namespace Nektar
 	{
 		Array<OneD, double> curr_PhysBaseVec_x = orth_PhysBaseVec_x[trafo_iter];
 		Array<OneD, double> curr_PhysBaseVec_y = orth_PhysBaseVec_y[trafo_iter];
-		
+
 		InitObject();
+
 		DoInitialiseAdv(curr_PhysBaseVec_x, PhysBase_zero); // call with parameter in phys state
-		Eigen::MatrixXd adv_matrix = Eigen::MatrixXd::Zero(RB_A.rows() + RB_Dbnd.rows() + RB_C.cols(), RB_A.cols() + RB_Dbnd.rows() + RB_B.cols() );
+		// needs to be replaced with a more gen. term		Eigen::MatrixXd adv_matrix = Eigen::MatrixXd::Zero(RB_A.rows() + RB_Dbnd.rows() + RB_C.cols(), RB_A.cols() + RB_Dbnd.rows() + RB_B.cols() );
+		Eigen::MatrixXd adv_matrix;
 		adv_matrix = Get_advection_matrix();
-		
-		Eigen::VectorXd add_to_rhs_adv(PODmodes.rows()); // probably need this for adv and non-adv
+		Eigen::VectorXd add_to_rhs_adv(M_truth_size); // probably need this for adv and non-adv
 		add_to_rhs_adv = adv_matrix * f_bnd_dbc_full_size;   
 
 		Eigen::MatrixXd adv_matrix_simplified = remove_cols_and_rows(adv_matrix, elem_loc_dbc);
@@ -3070,9 +3240,7 @@ namespace Nektar
 
 		adv_mats_proj_x[trafo_iter] = adv_mat_proj;
 		adv_vec_proj_x[trafo_iter] = adv_rhs_proj;
-
 		DoInitialiseAdv(PhysBase_zero , curr_PhysBaseVec_y ); // call with parameter in phys state
-
 		adv_matrix = Get_advection_matrix();
 		add_to_rhs_adv = adv_matrix * f_bnd_dbc_full_size;   
 		adv_matrix_simplified = remove_cols_and_rows(adv_matrix, elem_loc_dbc);
@@ -3081,9 +3249,7 @@ namespace Nektar
 		adv_rhs_proj = RB.transpose() * adv_rhs_add;
 		adv_mats_proj_y[trafo_iter] = adv_mat_proj;
 		adv_vec_proj_y[trafo_iter] = adv_rhs_proj;
-
 	}
-
     }
 
 
@@ -3166,29 +3332,32 @@ namespace Nektar
 
     void CoupledLinearNS_TT::online_phase()
     {
-	Eigen::MatrixXd mat_compare = Eigen::MatrixXd::Zero(f_bnd_dbc_full_size.rows(), 3);
+	Eigen::MatrixXd mat_compare = Eigen::MatrixXd::Zero(f_bnd_dbc_full_size.rows(), 3);  // is of size M_truth_size
 	// start sweeping 
 	for (int iter_index = 0; iter_index < Nmax; ++iter_index)
 	{
 		int current_index = iter_index;
 		double current_nu = param_vector[current_index];
 		Eigen::MatrixXd curr_xy_proj = project_onto_basis(snapshot_x_collection[current_index], snapshot_y_collection[current_index]);
-
 		Eigen::MatrixXd affine_mat_proj = gen_affine_mat_proj(current_nu);
 		Eigen::VectorXd affine_vec_proj = gen_affine_vec_proj(current_nu);
-
 		Eigen::VectorXd solve_affine = affine_mat_proj.colPivHouseholderQr().solve(affine_vec_proj);
 		cout << "solve_affine " << solve_affine << endl;
 		Eigen::VectorXd repro_solve_affine = RB * solve_affine;
 		Eigen::VectorXd reconstruct_solution = reconstruct_solution_w_dbc(repro_solve_affine);
-		mat_compare.col(0) = collect_f_all.col(current_index);
+		if (globally_connected == 1)
+		{
+			mat_compare.col(0) = M_collect_f_all.col(current_index);
+		}
+		else
+		{
+			mat_compare.col(0) = collect_f_all.col(current_index);
+		}
 		mat_compare.col(1) = reconstruct_solution; // sembra abbastanza bene
 		mat_compare.col(2) = mat_compare.col(1) - mat_compare.col(0);
 //		cout << mat_compare << endl;
 		cout << "relative error norm: " << mat_compare.col(2).norm() / mat_compare.col(0).norm() << endl;
-
 	}
-
     }
 	
     void CoupledLinearNS_TT::offline_phase()
@@ -3198,6 +3367,14 @@ namespace Nektar
 	double POD_tolerance = m_session->GetParameter("POD_tolerance");
 	ref_param_index = m_session->GetParameter("ref_param_index");
 	ref_param_nu = m_session->GetParameter("ref_param_nu");
+	if (m_session->DefinesParameter("globally_connected")) // this sets how the truth system global coupling is enforced
+	{
+		globally_connected = m_session->GetParameter("globally_connected");
+	}
+	else
+	{
+		globally_connected = 0;
+	}
 	Nmax = number_of_snapshots;
 //	Array<OneD, NekDouble> param_vector(Nmax);
 	param_vector = Array<OneD, NekDouble> (Nmax);
@@ -3205,7 +3382,7 @@ namespace Nektar
 /*	param_vector[0] = 0.1; // should also wander to the xml file
 	param_vector[1] = 0.5;
 	param_vector[2] = 1;
-	param_vector[3] = 10;*/
+	param_vector[3] = 10;  	*/
         for(int i = 0; i < number_of_snapshots; ++i)
         {
 		// generate the correct string
@@ -3264,14 +3441,26 @@ namespace Nektar
 	PODmodes = Eigen::MatrixXd::Zero(collect_f_all_PODmodes.rows(), RBsize);  
 	PODmodes = collect_f_all_PODmodes.leftCols(RBsize);
 	set_MtM();
+	cout << "RBsize: " << RBsize << endl;
+	if (globally_connected == 1)
+	{
+		setDBC_M(collect_f_all);
+	}
+	cout << "M_no_dbc_in_loc " << M_no_dbc_in_loc << endl;
+	cout << "no_dbc_in_loc " << no_dbc_in_loc << endl;
+	cout << "M_no_not_dbc_in_loc " << M_no_not_dbc_in_loc << endl;
+	cout << "no_not_dbc_in_loc " <<	no_not_dbc_in_loc << endl;
 	//Eigen::VectorXd f_bnd_dbc_full_size = CLNS.f_bnd_dbc_full_size;
 	// c_f_all_PODmodes_wo_dbc becomes CLNS.RB
 	Eigen::MatrixXd c_f_all_PODmodes_wo_dbc = RB;
 	cout << "c_f_all_PODmodes_wo_dbc.rows() " << c_f_all_PODmodes_wo_dbc.rows() << endl;
 	cout << "c_f_all_PODmodes_wo_dbc.cols() " << c_f_all_PODmodes_wo_dbc.cols() << endl;
 	gen_phys_base_vecs();
+	cout << "finished gen_phys_base_vecs " << endl;
 	gen_proj_adv_terms();
+	cout << "finished gen_proj_adv_terms " << endl;
 	gen_reference_matrices();
+	cout << "finished gen_reference_matrices " << endl;
     }
 
     Eigen::MatrixXd CoupledLinearNS_TT::gen_affine_mat_proj(double current_nu)
@@ -3297,7 +3486,7 @@ namespace Nektar
 
     Eigen::VectorXd CoupledLinearNS_TT::reconstruct_solution_w_dbc(Eigen::VectorXd reprojected_solve)
     {
-	Eigen::VectorXd reconstruct_solution = Eigen::VectorXd::Zero(f_bnd_dbc_full_size.rows());
+	Eigen::VectorXd reconstruct_solution = Eigen::VectorXd::Zero(f_bnd_dbc_full_size.rows());  // is of size M_truth_size
 	int counter_wo_dbc = 0;
 	for (int row_index=0; row_index < f_bnd_dbc_full_size.rows(); ++row_index)
 	{
@@ -3332,6 +3521,7 @@ namespace Nektar
 	the_const_one_rhs_simplified = remove_rows(the_const_one_rhs, elem_loc_dbc);
 	the_ABCD_one_rhs_proj = RB.transpose() * the_ABCD_one_rhs_simplified;
 	the_const_one_rhs_proj = RB.transpose() * the_const_one_rhs_simplified;
+	cout << "the_const_one_rhs_proj " << the_const_one_rhs_proj << endl;
     }
 
 

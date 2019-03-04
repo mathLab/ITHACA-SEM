@@ -1475,7 +1475,7 @@ namespace Nektar
 //		cout << "csy0.norm() " << csy0.norm() << endl;
 //		cout << "csy0_trafo.norm() " << csy0_trafo.norm() << endl;
 		rel_err = std::abs(csx0_trafo.norm() - csx0.norm()) / csx0.norm() + std::abs(csy0_trafo.norm() - csy0.norm()) / csy0.norm();
-		cout << "rel_err " << rel_err << endl;
+//		cout << "rel_err " << rel_err << endl;
 
 		init_snapshot_x = out_field_trafo_x;
 		init_snapshot_y = out_field_trafo_y;
@@ -1489,8 +1489,8 @@ namespace Nektar
 	converged_solution[0] = init_snapshot_x;
 	converged_solution[1] = init_snapshot_y;
 
-	cout << " curr_f_bnd.size()+curr_f_int.size() " <<  curr_f_bnd.size()+curr_f_int.size() << endl;
-	cout << " GetNcoeffs() " <<  GetNcoeffs() << endl;
+//	cout << " curr_f_bnd.size()+curr_f_int.size() " <<  curr_f_bnd.size()+curr_f_int.size() << endl;
+//	cout << " GetNcoeffs() " <<  GetNcoeffs() << endl;
 
 	return converged_solution;
     }

@@ -97,6 +97,8 @@ namespace Nektar
         Eigen::MatrixXd PODmodes;
 	Eigen::MatrixXd collect_f_all;
         Eigen::MatrixXd RB;
+        Eigen::MatrixXd M_RB;
+        Eigen::MatrixXd M_collect_f_all;
 	Eigen::MatrixXd Get_no_advection_matrix(void);
 	Eigen::MatrixXd Get_no_advection_matrix_ABCD(void);
 	Eigen::MatrixXd Get_no_advection_matrix_pressure(void);
@@ -122,8 +124,10 @@ namespace Nektar
 	Array<OneD, NekDouble> param_vector;
 	int Nmax;
 	int RBsize;
+	int globally_connected;
 
         Eigen::MatrixXd MtM;
+        Eigen::MatrixXd Mtrafo;
         Eigen::MatrixXd RB_A;
         Eigen::MatrixXd RB_A_adv;
         Eigen::MatrixXd RB_A_no_adv;
@@ -156,10 +160,19 @@ namespace Nektar
 
 	int no_dbc_in_loc;
 	int no_not_dbc_in_loc;
-	std::set<int> elem_loc_dbc;
+	std::set<int> elem_loc_dbc;   // works for all globally connected scenarios
 	std::set<int> elem_not_loc_dbc;
+	int M_no_dbc_in_loc;
+	int M_no_not_dbc_in_loc;
+	std::set<int> M_elem_loc_dbc;
+	std::set<int> M_elem_not_loc_dbc;
 	Eigen::VectorXd f_bnd_dbc;
 	Eigen::VectorXd f_bnd_dbc_full_size;
+	Eigen::VectorXd M_f_bnd_dbc;
+	Eigen::VectorXd M_f_bnd_dbc_full_size;
+	int M_truth_size;               // works for all globally connected scenarios
+	int M_truth_size_without_DBC;   // works for all globally connected scenarios
+	int nBndDofs;
 
 	Eigen::VectorXd curr_f_bnd;
 	Eigen::VectorXd curr_f_p;
@@ -177,6 +190,7 @@ namespace Nektar
 	void gen_reference_matrices();
 	Eigen::VectorXd reconstruct_solution_w_dbc(Eigen::VectorXd);
         void setDBC(Eigen::MatrixXd collect_f_all);
+	void setDBC_M(Eigen::MatrixXd collect_f_all);
 	Eigen::MatrixXd project_onto_basis(Array<OneD, NekDouble> snapshot_x, Array<OneD, NekDouble> snapshot_y);
 
         void set_MtM();

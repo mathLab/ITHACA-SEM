@@ -172,6 +172,11 @@ namespace Nektar
             PeriodicMap m_periodicEdges;
             
             /**
+             * @brief A map which identifies pairs of periodic faces.
+             */
+            PeriodicMap m_periodicFaces;
+
+            /**
              * @brief A vector indicating degress of freedom which need to be
              * copied from forwards to backwards space in case of a periodic
              * boundary condition.
@@ -322,6 +327,7 @@ namespace Nektar
             {
                 periodicVerts = m_periodicVerts;
                 periodicEdges = m_periodicEdges;
+                periodicFaces = m_periodicFaces;
             }
 
         private:

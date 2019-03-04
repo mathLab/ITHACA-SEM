@@ -71,7 +71,7 @@ LocTraceToTraceMap::LocTraceToTraceMap(
     const LocalRegions::ExpansionVector &locExpVector = *(locExp.GetExp());
 
     // Assume that all the elements have same dimension
-    int m_expdim = locExpVector[0]->GetShapeDimension();
+    m_expdim = locExpVector[0]->GetShapeDimension();
 
     // Switch between 1D, 2D and 3D
     switch (m_expdim)
@@ -868,6 +868,26 @@ void LocTraceToTraceMap::FwdLocTracesFromField(
     Vmath::Gathr(m_nFwdLocTracePts, field, m_fieldToLocTraceMap, faces);
 }
 
+
+void LocTraceToTraceMap::InterpLocTracesToTrace(
+    const int dir,
+    const Array<OneD, const NekDouble> &loctraces,
+    Array<OneD, NekDouble> traces)
+{
+    switch(m_expdim)
+    {
+    case 2:
+        InterpLocEdgesToTrace(dir,loctraces,traces);
+        break;
+    case 3:
+        InterpLocFacesToTrace(dir,loctraces,traces);
+        break;
+    default:
+        ASSERTL0(false,"Not set up");
+        break;
+    }
+}
+            
 /**
  * @brief Interpolate local trace edges to global trace edge point distributions
  * where required.

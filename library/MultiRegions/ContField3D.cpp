@@ -80,10 +80,10 @@ namespace Nektar
                                  const std::string &variable,
                                  const bool CheckIfSingularSystem,
                                  const Collections::ImplementationType ImpType):
-                DisContField3D(pSession,graph3D,variable,false,ImpType),
-                m_globalMat(MemoryManager<GlobalMatrixMap>::AllocateSharedPtr()),
-                m_globalLinSysManager(
-                    std::bind(&ContField3D::GenGlobalLinSys, this,  std::placeholders::_1),
+            DisContField3D(pSession,graph3D,variable,false,true,ImpType),
+            m_globalMat(MemoryManager<GlobalMatrixMap>::AllocateSharedPtr()),
+            m_globalLinSysManager
+               (std::bind(&ContField3D::GenGlobalLinSys, this,  std::placeholders::_1),
                     std::string("GlobalLinSys"))
         {
             m_locToGloMap = MemoryManager<AssemblyMapCG>::AllocateSharedPtr(

@@ -187,6 +187,11 @@ public:
         const Array<OneD, const NekDouble> &field,
         Array<OneD, NekDouble> faces);
 
+    MULTI_REGIONS_EXPORT void InterpLocTracesToTrace(
+        const int dir,
+        const Array<OneD, const NekDouble> &loctraces,
+        Array<OneD, NekDouble> traces);
+
     MULTI_REGIONS_EXPORT void InterpLocEdgesToTrace(
         const int dir,
         const Array<OneD, const NekDouble> &locfaces,
@@ -223,6 +228,8 @@ public:
     }
 
 private:
+    /// Expansion Dimension we have setup for trace mapping. 
+    int m_expdim;
     /// The number of forward trace points. A local trace element is `forward'
     /// if it is the side selected for the global trace.
     int m_nFwdLocTracePts;

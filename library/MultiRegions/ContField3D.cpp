@@ -44,7 +44,7 @@ namespace Nektar
   {
 
         ContField3D::ContField3D():
-            DisContField3D(),
+            DisContField(),
             m_locToGloMap(),
             m_globalMat(),
             m_globalLinSysManager(
@@ -80,7 +80,7 @@ namespace Nektar
                                  const std::string &variable,
                                  const bool CheckIfSingularSystem,
                                  const Collections::ImplementationType ImpType):
-            DisContField3D(pSession,graph3D,variable,false,true,ImpType),
+            DisContField(pSession,graph3D,variable,false,true,ImpType),
             m_globalMat(MemoryManager<GlobalMatrixMap>::AllocateSharedPtr()),
             m_globalLinSysManager
                (std::bind(&ContField3D::GenGlobalLinSys, this,  std::placeholders::_1),
@@ -125,7 +125,7 @@ namespace Nektar
                                  const SpatialDomains::MeshGraphSharedPtr &graph3D,
                                  const std::string &variable,
                                  const bool CheckIfSingularSystem):
-	    DisContField3D(In,graph3D,variable,false),
+	    DisContField(In,graph3D,variable,false),
             m_globalMat   (MemoryManager<GlobalMatrixMap>::AllocateSharedPtr()),
             m_globalLinSysManager(
                 std::bind(&ContField3D::GenGlobalLinSys, this,  std::placeholders::_1),
@@ -153,7 +153,7 @@ namespace Nektar
 
 
         ContField3D::ContField3D(const ContField3D &In):
-                DisContField3D(In),
+                DisContField(In),
                 m_locToGloMap(In.m_locToGloMap),
                 m_globalMat(In.m_globalMat),
                 m_globalLinSysManager(In.m_globalLinSysManager)

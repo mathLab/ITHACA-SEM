@@ -38,7 +38,7 @@
 
 #include <MultiRegions/MultiRegionsDeclspec.h>
 #include <MultiRegions/MultiRegions.hpp>
-#include <MultiRegions/DisContField3D.h>
+#include <MultiRegions/DisContField.h>
 #include <MultiRegions/GlobalLinSys.h>
 #include <MultiRegions/GlobalMatrix.h>
 #include <MultiRegions/AssemblyMap/AssemblyMapCG.h>
@@ -48,7 +48,7 @@ namespace Nektar
 {
     namespace MultiRegions
     {
-        class ContField3D: public DisContField3D
+        class ContField3D: public DisContField
         {
         public:
             MULTI_REGIONS_EXPORT ContField3D();

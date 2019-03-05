@@ -393,7 +393,7 @@ struct Field
                 }
                 else if (m_declareExpansionAsDisContField)
                 {
-                    Exp3D = MemoryManager<MultiRegions::DisContField3D>::
+                    Exp3D = MemoryManager<MultiRegions::DisContField>::
                         AllocateSharedPtr(m_session, m_graph,
                                           m_session->GetVariable(0),
                                           true,
@@ -712,16 +712,16 @@ struct Field
                 {
                     if (NewField)
                     {
-                        tmp = MemoryManager<MultiRegions::DisContField3D>::
+                        tmp = MemoryManager<MultiRegions::DisContField>::
                             AllocateSharedPtr(m_session, m_graph, var);
                     }
                     else
                     {
-                        MultiRegions::DisContField3DSharedPtr tmp2 =
+                        MultiRegions::DisContFieldSharedPtr tmp2 =
                             std::dynamic_pointer_cast<
-                                MultiRegions::DisContField3D>(m_exp[0]);
+                                MultiRegions::DisContField>(m_exp[0]);
 
-                        tmp = MemoryManager<MultiRegions::DisContField3D>::
+                        tmp = MemoryManager<MultiRegions::DisContField>::
                             AllocateSharedPtr(*tmp2, m_graph, var);
                     }
                 }

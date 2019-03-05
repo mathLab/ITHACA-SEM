@@ -621,7 +621,7 @@ namespace Nektar
                             for (i = 0; i < m_fields.num_elements(); i++)
                             {
                                 m_fields[i] = MemoryManager<MultiRegions::
-                                    DisContField3D>::AllocateSharedPtr(
+                                    DisContField>::AllocateSharedPtr(
                                         m_session, m_graph,
                                         m_session->GetVariable(i));
                             }

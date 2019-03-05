@@ -43,7 +43,7 @@
 #include <MultiRegions/ExpList.h>
 #include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
 
-#include <MultiRegions/DisContField3D.h>
+#include <MultiRegions/DisContField.h>
 #include <LocalRegions/MatrixKey.h>
 #include <LocalRegions/Expansion3D.h>
 #include <LocalRegions/Expansion.h>
@@ -198,7 +198,7 @@ int main(int argc, char *argv[])
     for(i = 0; i < pFields.num_elements(); i++)
     {
         pFields[i] = MemoryManager<MultiRegions
-                                   ::DisContField3D>::AllocateSharedPtr(vSession, graphShPt,
+                                   ::DisContField>::AllocateSharedPtr(vSession, graphShPt,
                                                                         vSession->GetVariable(i));
     }
 

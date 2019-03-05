@@ -48,8 +48,7 @@
 #include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
 #include <MultiRegions/ContField2D.h>
 #include <MultiRegions/ContField3D.h>
-#include <MultiRegions/DisContField2D.h>
-#include <MultiRegions/DisContField3D.h>
+#include <MultiRegions/DisContField.h>
 
 #include <LocalRegions/MatrixKey.h>
 #include <LocalRegions/Expansion2D.h>

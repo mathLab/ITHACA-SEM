@@ -93,6 +93,7 @@ v5.0.0
 - Fix surface string parsin in BL splitting (!937)
 - Fix issue with MLSC after Scotch conversion (!943)
 - Add support for Gmsh 4.0 mesh file format (!964)
+- Fix surface extraction, added regression test (!994)
 
 **FieldConvert**:
 - Add input module for Semtex field files (!777)
@@ -163,8 +164,9 @@ v4.4.2
 - Fix deadlock in DiffusionLDG (!885)
 - Fix uninitialised coefficients in DirectFull solver (!898)
 - Updated PETSc to 3.7.7 (!916)
-- Fix typecase to an integer which set Lz < 1 to zero when postprocess hdf5 output (!922)
+- Fix typecast to an integer which set Lz < 1 to zero when postprocess hdf5 output (!922)
 - Fix program options errors on Windows in debug mode (!986)
+- Fix potential clobbered output of ModArnoldi EVs when run in parallel (!983)
 
 **IncNavierStokesSolver**
 - Add a test for imaginary shift to be only used with Homogenous and SingleMode on. (!928)

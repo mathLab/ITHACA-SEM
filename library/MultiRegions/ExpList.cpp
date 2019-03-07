@@ -1528,14 +1528,16 @@ namespace Nektar
             // non-embedded mesh (point can only match one element)
             else
             {
+                NekDouble x = (gloCoords.num_elements() > 0 ? gloCoords[0] : 0.0);
+                NekDouble y = (gloCoords.num_elements() > 1 ? gloCoords[1] : 0.0);
+                NekDouble z = (gloCoords.num_elements() > 2 ? gloCoords[2] : 0.0);
                 SpatialDomains::PointGeomSharedPtr p 
-                    = MemoryManager<SpatialDomains::PointGeom>::AllocateSharedPtr(GetExp(0)->GetCoordim(), -1,
-                        gloCoords[0], gloCoords[1], gloCoords[2]);
+                    = MemoryManager<SpatialDomains::PointGeom>::AllocateSharedPtr(
+                            GetExp(0)->GetCoordim(), -1, x, y, z);
 
                 std::vector<int> elmts = m_graph->GetElementsContainingPoint(p);
-//                cout << "Point: " << gloCoords[0] << ", " << gloCoords[1]
-//                     << ", " << gloCoords[2] << endl;
-//                cout << "Number of elements found: " << elmts.size() << endl;
+                cout << "Point: " << x << ", " << y << ", " << z << endl;
+                cout << "Number of elements found: " << elmts.size() << endl;
 //                for (int i = 0; i < elmts.size(); ++i) {
 //                    cout << "Element: " << elmts[i] << " of " << GetNumElmts() << endl;
 //                }
@@ -1552,7 +1554,7 @@ namespace Nektar
 */
                 for (int i = 0; i < elmts.size(); ++i)
                 {
-//    cout << "Element Gid: " << elmts[i] << ", index: " << m_elmtToExpId[elmts[i]] << endl;
+    cout << "Element Gid: " << elmts[i] << ", index: " << m_elmtToExpId[elmts[i]] << endl;
                     if ((*m_exp)[m_elmtToExpId[elmts[i]]]->GetGeom()->ContainsPoint(gloCoords, 
                                                               locCoords,
                                                               tol, nearpt))
@@ -2394,6 +2396,7 @@ namespace Nektar
                 // m_exp list. Otherwise will set to second (complex) expansion
                 for(i = (*m_exp).size()-1; i >= 0; --i)
                 {
+                    cout << "Add entry: map[" << (*m_exp)[i]->GetGeom()->GetGlobalID() << "] = " << i << endl;
                     m_elmtToExpId[(*m_exp)[i]->GetGeom()->GetGlobalID()] = i;
                 }
             }

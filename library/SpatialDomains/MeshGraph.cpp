@@ -198,6 +198,26 @@ void MeshGraph::FillBoundingBoxTree()
         box b = x.second->GetBoundingBox();
         m_boundingBoxTree.insert(std::make_pair(b, x.first));
     }
+    for (auto &x : m_tetGeoms) 
+    {
+        box b = x.second->GetBoundingBox();
+        m_boundingBoxTree.insert(std::make_pair(b, x.first));
+    }
+    for (auto &x : m_prismGeoms) 
+    {
+        box b = x.second->GetBoundingBox();
+        m_boundingBoxTree.insert(std::make_pair(b, x.first));
+    }
+    for (auto &x : m_pyrGeoms) 
+    {
+        box b = x.second->GetBoundingBox();
+        m_boundingBoxTree.insert(std::make_pair(b, x.first));
+    }
+    for (auto &x : m_hexGeoms) 
+    {
+        box b = x.second->GetBoundingBox();
+        m_boundingBoxTree.insert(std::make_pair(b, x.first));
+    }
 }
 
 void MeshGraph::SetDomainRange(NekDouble xmin, NekDouble xmax, NekDouble ymin,

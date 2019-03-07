@@ -1469,65 +1469,6 @@ namespace Nektar
             }
             std::vector<std::pair<int,NekDouble> > elmtIdDist;
 
-            // Manifold case (point may match multiple elements)
-            if (GetExp(0)->GetCoordim() > GetExp(0)->GetShapeDimension())
-            {
-                SpatialDomains::PointGeomSharedPtr v;
-                SpatialDomains::PointGeom w;
-                NekDouble dist = 0.0;
-
-                // Scan all elements and store those which may contain the point
-                for (int i = 0; i < (*m_exp).size(); ++i)
-                {
-                    if ((*m_exp)[i]->GetGeom()->ContainsPoint(gloCoords,
-                                                              locCoords,
-                                                              tol, nearpt))
-                    {
-                        w.SetX(gloCoords[0]);
-                        w.SetY(gloCoords[1]);
-                        w.SetZ(gloCoords[2]);
-
-                        // Find closest vertex
-                        for (int j = 0; j < (*m_exp)[i]->GetNverts(); ++j) {
-                            v = m_graph->GetVertex(
-                                            (*m_exp)[i]->GetGeom()->GetVid(j));
-                            if (j == 0 || dist > v->dist(w))
-                            {
-                                dist = v->dist(w);
-                            }
-                        }
-                        elmtIdDist.push_back(
-                                    std::pair<int, NekDouble>(i, dist));
-                    }
-                }
-
-                // Find nearest element
-                if (!elmtIdDist.empty())
-                {
-                    int         min_id = elmtIdDist[0].first;
-                    NekDouble   min_d  = elmtIdDist[0].second;
-
-                    for (int i = 1; i < elmtIdDist.size(); ++i)
-                    {
-                        if (elmtIdDist[i].second < min_d) {
-                            min_id = elmtIdDist[i].first;
-                            min_d = elmtIdDist[i].second;
-                        }
-                    }
-
-                    // retrieve local coordinate of point
-                    (*m_exp)[min_id]->GetGeom()->GetLocCoords(gloCoords,
-                                                              locCoords);
-                    return min_id;
-                }
-                else
-                {
-                    return -1;
-                }
-            }
-            // non-embedded mesh (point can only match one element)
-            else
-            {
                 NekDouble x = (gloCoords.num_elements() > 0 ? gloCoords[0] : 0.0);
                 NekDouble y = (gloCoords.num_elements() > 1 ? gloCoords[1] : 0.0);
                 NekDouble z = (gloCoords.num_elements() > 2 ? gloCoords[2] : 0.0);
@@ -1536,30 +1477,16 @@ namespace Nektar
                             GetExp(0)->GetCoordim(), -1, x, y, z);
 
                 std::vector<int> elmts = m_graph->GetElementsContainingPoint(p);
-                cout << "Point: " << x << ", " << y << ", " << z << endl;
-                cout << "Number of elements found: " << elmts.size() << endl;
-//                for (int i = 0; i < elmts.size(); ++i) {
-//                    cout << "Element: " << elmts[i] << " of " << GetNumElmts() << endl;
-//                }
                 int min_id  = 0;
                 NekDouble nearpt_min = 1e6;
                 Array<OneD, NekDouble> savLocCoords(locCoords.num_elements());
 
-                // search only those elements whose bounding box overlaps
-/*                std::map<int,int> gidToElmtIdxMap;
-                for (int i = 0; i < (*m_exp).size() ; ++i)
-                {
-                    gidToElmtIdxMap[(*m_exp)[i]->GetGeom()->GetGlobalID()] = i;
-                }
-*/
                 for (int i = 0; i < elmts.size(); ++i)
                 {
-    cout << "Element Gid: " << elmts[i] << ", index: " << m_elmtToExpId[elmts[i]] << endl;
                     if ((*m_exp)[m_elmtToExpId[elmts[i]]]->GetGeom()->ContainsPoint(gloCoords, 
                                                               locCoords,
                                                               tol, nearpt))
                     {
-//                        cout << "LocCoords: " << locCoords[0] << ", " << locCoords[1] << ", " << locCoords[2] << endl;
                         return m_elmtToExpId[elmts[i]];
                     }
                     else
@@ -1584,7 +1511,7 @@ namespace Nektar
                         + ") in element: "
                         + boost::lexical_cast<std::string>(min_id);
                     WARNINGL1(false,msg.c_str());
-                    
+
                     Vmath::Vcopy(locCoords.num_elements(),savLocCoords,1,locCoords,1);
                     return min_id;
                 }
@@ -1592,8 +1519,6 @@ namespace Nektar
                 {
                     return -1;
                 }
-
-            }
         }
 
 

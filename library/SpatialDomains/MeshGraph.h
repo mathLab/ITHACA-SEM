@@ -203,26 +203,9 @@ public:
     SPATIAL_DOMAINS_EXPORT void FillGraph();
 
     SPATIAL_DOMAINS_EXPORT void FillBoundingBoxTree();
-    SPATIAL_DOMAINS_EXPORT std::vector<int> GetElementsContainingPoint(
-            PointGeomSharedPtr p)
-    {
-        if (m_boundingBoxTree.empty())
-        {
-            FillBoundingBoxTree();
-        }
-        NekDouble x, y, z;
-        p->GetCoords(x, y, z);
-        box b(point(x, y, z), point(x, y, z));
-        std::vector<value> vals;
-        m_boundingBoxTree.query(bgi::intersects(b), std::back_inserter(vals));
 
-        std::vector<int> ret(vals.size());
-        for (int i = 0; i < ret.size(); ++i)
-        {
-            ret[i] = vals[i].second;
-        }
-        return ret;
-    }
+    SPATIAL_DOMAINS_EXPORT std::vector<int> GetElementsContainingPoint(
+            PointGeomSharedPtr p);
 
     ////////////////////
     ////////////////////

@@ -220,6 +220,31 @@ void MeshGraph::FillBoundingBoxTree()
     }
 }
 
+std::vector<int> MeshGraph::GetElementsContainingPoint(
+            PointGeomSharedPtr p)
+{
+    if (m_boundingBoxTree.empty())
+    {
+        FillBoundingBoxTree();
+    }
+    NekDouble x, y, z;
+    std::vector<value> vals;
+
+    p->GetCoords(x, y, z);
+    box b(point(x, y, z), point(x, y, z));
+    m_boundingBoxTree.query(bgi::intersects( b ),
+                            std::back_inserter( vals ));
+
+    std::vector<int> ret(vals.size());
+    for (int i = 0; i < vals.size(); ++i)
+    {
+        ret[i] = vals[i].second;
+    }
+    return ret;
+}
+
+
+
 void MeshGraph::SetDomainRange(NekDouble xmin, NekDouble xmax, NekDouble ymin,
                                NekDouble ymax, NekDouble zmin, NekDouble zmax)
 {

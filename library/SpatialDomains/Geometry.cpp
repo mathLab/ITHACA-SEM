@@ -347,12 +347,12 @@ void Geometry::GenBoundingBox()
     NekDouble minx, miny, minz, maxx, maxy, maxz;
     NekDouble x, y, z;
     p->GetCoords(x, y, z);
-    minx = x - NekConstants::kNekZeroTol;
-    maxx = x + NekConstants::kNekZeroTol;
-    miny = y - NekConstants::kNekZeroTol;
-    maxy = y + NekConstants::kNekZeroTol;
-    minz = z - NekConstants::kNekZeroTol;
-    maxz = z + NekConstants::kNekZeroTol;
+    minx = x - NekConstants::kGeomFactorsTol;
+    maxx = x + NekConstants::kGeomFactorsTol;
+    miny = y - NekConstants::kGeomFactorsTol;
+    maxy = y + NekConstants::kGeomFactorsTol;
+    minz = z - NekConstants::kGeomFactorsTol;
+    maxz = z + NekConstants::kGeomFactorsTol;
     for (int i = 1; i < GetNumVerts(); ++i)
     {
         p = GetVertex(i);

@@ -1469,40 +1469,43 @@ namespace Nektar
             }
             std::vector<std::pair<int,NekDouble> > elmtIdDist;
 
-                NekDouble x = (gloCoords.num_elements() > 0 ? gloCoords[0] : 0.0);
-                NekDouble y = (gloCoords.num_elements() > 1 ? gloCoords[1] : 0.0);
-                NekDouble z = (gloCoords.num_elements() > 2 ? gloCoords[2] : 0.0);
-                SpatialDomains::PointGeomSharedPtr p 
-                    = MemoryManager<SpatialDomains::PointGeom>::AllocateSharedPtr(
-                            GetExp(0)->GetCoordim(), -1, x, y, z);
+            NekDouble x = (gloCoords.num_elements() > 0 ? gloCoords[0] : 0.0);
+            NekDouble y = (gloCoords.num_elements() > 1 ? gloCoords[1] : 0.0);
+            NekDouble z = (gloCoords.num_elements() > 2 ? gloCoords[2] : 0.0);
+            SpatialDomains::PointGeomSharedPtr p 
+                = MemoryManager<SpatialDomains::PointGeom>::AllocateSharedPtr(
+                        GetExp(0)->GetCoordim(), -1, x, y, z);
 
-                std::vector<int> elmts = m_graph->GetElementsContainingPoint(p);
-                int min_id  = 0;
-                NekDouble nearpt_min = 1e6;
-                Array<OneD, NekDouble> savLocCoords(locCoords.num_elements());
+            std::vector<int> elmts = m_graph->GetElementsContainingPoint(p);
+            int min_id  = 0;
+            NekDouble nearpt_min = 1e6;
+            Array<OneD, NekDouble> savLocCoords(locCoords.num_elements());
 
-                for (int i = 0; i < elmts.size(); ++i)
+            for (int i = 0; i < elmts.size(); ++i)
+            {
+                if ((*m_exp)[m_elmtToExpId[elmts[i]]]->
+                            GetGeom()->ContainsPoint(gloCoords,
+                                                     locCoords,
+                                                     tol, nearpt))
                 {
-                    if ((*m_exp)[m_elmtToExpId[elmts[i]]]->GetGeom()->ContainsPoint(gloCoords, 
-                                                              locCoords,
-                                                              tol, nearpt))
+                    return m_elmtToExpId[elmts[i]];
+                }
+                else
+                {
+                    if(nearpt < nearpt_min)
                     {
-                        return m_elmtToExpId[elmts[i]];
-                    }
-                    else
-                    {
-                        if(nearpt < nearpt_min)
-                        {
-                            min_id    = m_elmtToExpId[elmts[i]];
-                            nearpt_min = nearpt;
-                            Vmath::Vcopy(locCoords.num_elements(),locCoords,1,savLocCoords,1);
-                        }
+                        min_id    = m_elmtToExpId[elmts[i]];
+                        nearpt_min = nearpt;
+                        Vmath::Vcopy(locCoords.num_elements(),locCoords,    1,
+                                                              savLocCoords, 1);
                     }
                 }
-                if(returnNearestElmt)
-                {
+            }
+            if(returnNearestElmt)
+            {
 
-                    std::string msg = "Failed to find point within element to tolerance of "
+                std::string msg = "Failed to find point within element to "
+                          "tolerance of "
                         + boost::lexical_cast<std::string>(tol)
                         + " using local point ("
                         + boost::lexical_cast<std::string>(locCoords[0]) +","
@@ -1510,15 +1513,16 @@ namespace Nektar
                         + boost::lexical_cast<std::string>(locCoords[1]) 
                         + ") in element: "
                         + boost::lexical_cast<std::string>(min_id);
-                    WARNINGL1(false,msg.c_str());
+                WARNINGL1(false,msg.c_str());
 
-                    Vmath::Vcopy(locCoords.num_elements(),savLocCoords,1,locCoords,1);
-                    return min_id;
-                }
-                else
-                {
-                    return -1;
-                }
+                Vmath::Vcopy(locCoords.num_elements(),savLocCoords, 1,
+                                                      locCoords,    1);
+                return min_id;
+            }
+            else
+            {
+                return -1;
+            }
         }
 
 
@@ -2321,7 +2325,6 @@ namespace Nektar
                 // m_exp list. Otherwise will set to second (complex) expansion
                 for(i = (*m_exp).size()-1; i >= 0; --i)
                 {
-                    cout << "Add entry: map[" << (*m_exp)[i]->GetGeom()->GetGlobalID() << "] = " << i << endl;
                     m_elmtToExpId[(*m_exp)[i]->GetGeom()->GetGlobalID()] = i;
                 }
             }

@@ -110,6 +110,10 @@ private:
         std::map<int, std::shared_ptr<T>> &geomMap, int id,
         DataType *data, CurveSharedPtr curve);
 
+    CompositeDescriptor CreateCompositeDescriptor(
+        std::unordered_map<int, int> &id2row,
+        std::vector<MeshEntity> &elmts);
+
     void WriteCurveMap(CurveMap &curves,
                        std::string dsName,
                        MeshCurvedPts &curvedPts,

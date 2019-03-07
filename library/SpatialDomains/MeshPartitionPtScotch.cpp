@@ -81,21 +81,6 @@ void MeshPartitionPtScotch::PartitionGraphImpl(
     Nektar::Array<Nektar::OneD, int> &edgeWgt, int &nparts, int &volume,
     Nektar::Array<Nektar::OneD, int> &part)
 {
-    //std::cout << "local (" << m_comm->GetRank() << ") = " << nLocal << std::endl;
-
-    std::cout << "    xadj (" << m_comm->GetRank() << ") = ";
-    for (auto &a : xadj)
-    {
-        std::cout << a << " ";
-    }
-    std::cout << std::endl;
-    std::cout << "    adjcy (" << m_comm->GetRank() << ") = ";
-    for (auto &a : adjcy)
-    {
-        std::cout << a << " ";
-    }
-    std::cout << std::endl;
-
     LibUtilities::CommMpiSharedPtr mpiComm = std::dynamic_pointer_cast<
         LibUtilities::CommMpi>(m_comm->GetRowComm());
 

@@ -60,7 +60,6 @@
 #include <boost/graph/adjacency_iterator.hpp>
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/detail/edge.hpp>
-#include <boost/graph/graphviz.hpp>
 
 namespace Nektar
 {
@@ -98,16 +97,6 @@ MeshPartition::MeshPartition(const LibUtilities::SessionReaderSharedPtr session,
             ++elIt;
         }
     }
-
-    std::cout << "elements (" << session->GetComm()->GetRank() << ") = ";
-    for (auto &el : m_elements)
-    {
-        std::cout << el.second.id << " ";
-    }
-    std::cout << std::endl;
-
-    std::cout << "ghost elmts(" << session->GetComm()->GetRank() << ") = "
-              << m_ghostElmts.size() << std::endl;
 }
 
 MeshPartition::~MeshPartition()
@@ -228,10 +217,12 @@ void MeshPartition::ReadExpansions()
             // construct mapping (elmt id, field name) -> nummodes
             for (int i = 0; i < composite.size(); ++i)
             {
+                auto &shapeType = m_compMap[composite[i]].first;
+                auto &elmtIds = m_compMap[composite[i]].second;
+
                 for (int j = 0; j < fieldName.size(); j++)
                 {
-                    auto shapeType =  m_compMap[composite[i]].first;
-                    for (auto &elid : m_compMap[composite[i]].second)
+                    for (auto &elid : elmtIds)
                     {
                         m_expansions[elid][fieldName[j]] = nummodes;
                         m_shape[elid] = shapeType;
@@ -463,9 +454,9 @@ void MeshPartition::WeightElements()
     std::map<int, MeshEntity>::iterator eIt;
     for (eIt = m_elements.begin(); eIt != m_elements.end(); ++eIt)
     {
-        m_vertWeights[eIt->first]    = weight;
-        m_vertBndWeights[eIt->first] = weight;
-        m_edgeWeights[eIt->first]    = weight;
+        m_vertWeights[eIt->second.origId]    = weight;
+        m_vertBndWeights[eIt->second.origId] = weight;
+        m_edgeWeights[eIt->second.origId]    = weight;
     }
 
     for (std::map<int, NummodesPerField>::iterator expIt = m_expansions.begin();
@@ -496,6 +487,13 @@ void MeshPartition::WeightElements()
                 nc = it->second[2];
             }
 
+            // Assume for parallel partitioning that this is just missing from
+            // our partition.
+            if (m_vertWeights.find(elid) == m_vertWeights.end())
+            {
+                continue;
+            }
+
             m_vertWeights[elid][m_fieldNameToId[it->first]] =
                 CalculateElementWeight(m_shape[elid], false, na, nb, nc);
             m_vertBndWeights[elid][m_fieldNameToId[it->first]] =
@@ -521,9 +519,9 @@ void MeshPartition::CreateGraph()
 
         if (m_weightingRequired)
         {
-            m_graph[vert].weight     = m_vertWeights[elmt.first];
-            m_graph[vert].bndWeight  = m_vertBndWeights[elmt.first];
-            m_graph[vert].edgeWeight = m_edgeWeights[elmt.first];
+            m_graph[vert].weight     = m_vertWeights[elmt.second.origId];
+            m_graph[vert].bndWeight  = m_vertBndWeights[elmt.second.origId];
+            m_graph[vert].edgeWeight = m_edgeWeights[elmt.second.origId];
         }
 
         // Process element entries and add graph edges
@@ -569,8 +567,6 @@ void MeshPartition::CreateGraph()
         // Increment counter for graph vertex id.
         ++vcnt;
     }
-
-    //boost::write_graphviz(std::cout, m_graph);
 }
 
 /**
@@ -595,11 +591,6 @@ void MeshPartition::PartitionGraph(int nParts, bool overlapping)
     int nGraphEdges = boost::num_edges(m_graph);
     int nGhost = m_ghostElmts.size();
     int nLocal = nGraphVerts - nGhost;
-
-    std::cout << "stats (" << m_session->GetComm()->GetRank() << ") = " <<
-        nGraphVerts << " " <<nGhost << " " << nLocal << std::endl;
-
-    //std::cout << "NUM VERTS = " << nGraphVerts << std::endl;
 
     int ncon = 1;
     if (m_weightDofs && m_weightBnd)
@@ -797,10 +788,13 @@ void MeshPartition::PartitionGraph(int nParts, bool overlapping)
             uniqueIDs.begin(), uniqueIDs.end());
     }
 
-    // // If the overlapping option is set (for post-processing purposes),
-    // // add vertices that correspond to the neighbouring elements.
+    // If the overlapping option is set (for post-processing purposes),
+    // add vertices that correspond to the neighbouring elements.
     // if (overlapping)
     // {
+    //     ASSERTL0(!m_parallel, "Overlapping partitioning not supported in "
+    //              "parallel execution");
+
     //     for (boost::tie(vertit, vertit_end) = boost::vertices(m_graph);
     //          vertit != vertit_end; ++vertit)
     //     {

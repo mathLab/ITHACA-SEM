@@ -139,7 +139,7 @@ namespace Nektar
         struct MeshEntity
         {
             int id;
-            //LibUtilities::ShapeType shape;
+            int origId;
             std::vector<unsigned int> list;
             bool ghost;
         };

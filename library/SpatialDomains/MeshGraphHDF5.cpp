@@ -243,8 +243,13 @@ void MeshGraphHDF5::PartitionMesh(LibUtilities::SessionReaderSharedPtr session)
     std::vector<MeshEntity> elmts;
     std::vector<int> ids;
 
+    // Map from element ID to 'row' which is a contiguous ordering required for
+    // parallel partitioning.
+    std::unordered_map<int, int> row2id, id2row;
+
     Timer t;
     t.Start();
+    int rowCount = 0;
     for (auto &it : dataSets[m_meshDimension])
     {
         std::string ds = std::get<0>(it);
@@ -271,11 +276,13 @@ void MeshGraphHDF5::PartitionMesh(LibUtilities::SessionReaderSharedPtr session)
 
         const int nGeomData = std::get<1>(it);
 
-        for (int i = 0, cnt = 0; i < tmpIds.size(); ++i)
+        for (int i = 0, cnt = 0; i < tmpIds.size(); ++i, ++rowCount)
         {
             MeshEntity e;
-            e.id = tmpIds[i];
-            //e.shape = std::get<2>(it);
+            row2id[rowCount] = tmpIds[i];
+            id2row[tmpIds[i]] = row2id[rowCount];
+            e.id = rowCount;
+            e.origId = tmpIds[i];
             e.list = std::vector<unsigned int>(
                 &tmpElmts[cnt], &tmpElmts[cnt+nGeomData]);
             elmts.push_back(e);
@@ -305,20 +312,6 @@ void MeshGraphHDF5::PartitionMesh(LibUtilities::SessionReaderSharedPtr session)
     std::map<int, MeshEntity> partElmts;
     std::unordered_set<int> facetIDs;
 
-    if (session->GetComm()->GetRank() == 0)
-    {
-        std::cout << "ALL ELEMENTS: " << std::endl;
-        for (auto &el : elmts)
-        {
-            std::cout << el.id << " -> ";
-            for (auto &l : el.list)
-            {
-                std::cout << l << " ";
-            }
-            std::cout << std::endl;
-        }
-    }
-
     int vcnt = 0;
 
     for (int el = elRange.first; el < elRange.first + elRange.second;
@@ -326,7 +319,7 @@ void MeshGraphHDF5::PartitionMesh(LibUtilities::SessionReaderSharedPtr session)
     {
         MeshEntity elmt = elmts[el];
         elmt.ghost = false;
-        partElmts[elmt.id] = elmt;
+        partElmts[el] = elmt;
 
         for (auto &facet : elmt.list)
         {
@@ -361,22 +354,10 @@ void MeshGraphHDF5::PartitionMesh(LibUtilities::SessionReaderSharedPtr session)
 
         if (insert)
         {
-            std::cout << " RANK " << session->GetComm()->GetRank() << " INSERTING " << elmt.id << std::endl;
             elmt.ghost = true;
             partElmts[elmt.id] = elmt;
         }
-        else
-        {
-            std::cout << " RANK " << session->GetComm()->GetRank() << " IGNORING " << elmt.id << std::endl;
-        }
     }
-
-    std::cout << "hdf5 elements (" << session->GetComm()->GetRank() << ") = ";
-    for (auto &elmt : partElmts)
-    {
-        std::cout << elmt.second.id << "(" << elmt.second.ghost << ") ";
-    }
-    std::cout << std::endl;
 
     // Create partitioner. Default partitioner to use is PtScotch. Use ParMetis
     // as default if it is installed. Override default with command-line flags
@@ -395,11 +376,10 @@ void MeshGraphHDF5::PartitionMesh(LibUtilities::SessionReaderSharedPtr session)
         partitionerName = "PtScotch";
     }
 
-    CompositeDescriptor comp;
     MeshPartitionSharedPtr partitioner =
         GetMeshPartitionFactory().CreateInstance(
             partitionerName, session, m_meshDimension,
-            partElmts, comp);
+            partElmts, CreateCompositeDescriptor(id2row, elmts));
 
     partitioner->PartitionMesh(nproc, true, false, nLocal);
 
@@ -413,7 +393,11 @@ void MeshGraphHDF5::PartitionMesh(LibUtilities::SessionReaderSharedPtr session)
     std::vector<unsigned int> tmp;
     std::unordered_set<int> toRead;
     partitioner->GetElementIDs(comm->GetRank(), tmp);
-    toRead.insert(tmp.begin(), tmp.end());
+
+    for (auto &tmpId : tmp)
+    {
+        toRead.insert(row2id[tmpId]);
+    }
 
     // Since objects are going to be constructed starting from vertices, we now
     // need to recurse down the geometry facet dimensions to figure out which
@@ -998,6 +982,102 @@ void MeshGraphHDF5::ReadComposites()
         }
     }
 }
+
+CompositeDescriptor MeshGraphHDF5::CreateCompositeDescriptor(
+    std::unordered_map<int, int> &id2row,
+    std::vector<MeshEntity> &elmts)
+{
+    CompositeDescriptor ret;
+
+    string nm = "composite";
+
+    H5::DataSetSharedPtr data = m_mesh->OpenDataSet(nm);
+    H5::DataSpaceSharedPtr space = data->GetSpace();
+    vector<hsize_t> dims = space->GetDims();
+
+    vector<string> comps;
+    data->ReadVectorString(comps, space);
+
+    H5::DataSetSharedPtr mdata = m_maps->OpenDataSet(nm);
+    H5::DataSpaceSharedPtr mspace = mdata->GetSpace();
+    vector<hsize_t> mdims = mspace->GetDims();
+
+    vector<int> ids;
+    mdata->Read(ids, mspace);
+
+    for (int i = 0; i < dims[0]; i++)
+    {
+        string compStr = comps[i];
+
+        char type;
+        istringstream strm(compStr);
+
+        strm >> type;
+
+        string::size_type indxBeg = compStr.find_first_of('[') + 1;
+        string::size_type indxEnd = compStr.find_last_of(']') - 1;
+
+        string indxStr = compStr.substr(indxBeg, indxEnd - indxBeg + 1);
+        vector<unsigned int> seqVector;
+        ParseUtils::GenerateSeqVector(indxStr, seqVector);
+
+        LibUtilities::ShapeType shapeType;
+
+        switch (type)
+        {
+            case 'V':
+                shapeType = LibUtilities::ePoint;
+                break;
+            case 'S':
+            case 'E':
+                shapeType = LibUtilities::eSegment;
+                break;
+            case 'Q':
+            case 'F':
+                // Note that for HDF5, the composite descriptor is only used for
+                // partitioning purposes so 'F' tag is not really going to be
+                // critical in this context.
+                shapeType = LibUtilities::eQuadrilateral;
+                break;
+            case 'T':
+                shapeType = LibUtilities::eTriangle;
+                break;
+            case 'A':
+                shapeType = LibUtilities::eTetrahedron;
+                break;
+            case 'P':
+                shapeType = LibUtilities::ePyramid;
+                break;
+            case 'R':
+                shapeType = LibUtilities::ePrism;
+                break;
+            case 'H':
+                shapeType = LibUtilities::eHexahedron;
+                break;
+        }
+
+        std::vector<int> filteredVector;
+        for (auto &compElmt : seqVector)
+        {
+            if (id2row.find(compElmt) == id2row.end())
+            {
+                continue;
+            }
+
+            filteredVector.push_back(compElmt);
+        }
+
+        if (filteredVector.size() == 0)
+        {
+            continue;
+        }
+
+        ret[ids[i]] = std::make_pair(shapeType, filteredVector);
+    }
+
+    return ret;
+}
+
 
 template<class T, typename std::enable_if<T::kDim == 0, int>::type = 0>
 inline NekDouble GetGeomData(std::shared_ptr<T> &geom, int i)

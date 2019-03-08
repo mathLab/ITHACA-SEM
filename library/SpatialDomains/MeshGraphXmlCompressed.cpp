@@ -1032,8 +1032,7 @@ void MeshGraphXmlCompressed::WriteEdges(TiXmlElement *geomTag,
     }
 
     TiXmlElement *edgeTag =
-        new TiXmlElement(m_meshDimension == 1 ? "ELEMENT" : "EDGE");
-    string tag = m_meshDimension == 1 ? "S" : "E";
+        new TiXmlElement(m_meshDimension == 1 ? "S" : "EDGE");
 
     vector<MeshEdge> edgeInfo;
 
@@ -1056,7 +1055,16 @@ void MeshGraphXmlCompressed::WriteEdges(TiXmlElement *geomTag,
 
     edgeTag->LinkEndChild(new TiXmlText(edgeStr));
 
-    geomTag->LinkEndChild(edgeTag);
+    if (m_meshDimension == 1)
+    {
+        TiXmlElement *tmp = new TiXmlElement("ELEMENT");
+        tmp->LinkEndChild(edgeTag);
+        geomTag->LinkEndChild(tmp);
+    }
+    else
+    {
+        geomTag->LinkEndChild(edgeTag);
+    }
 }
 
 void MeshGraphXmlCompressed::WriteTris(TiXmlElement *faceTag, TriGeomMap &tris)
@@ -1333,7 +1341,7 @@ void MeshGraphXmlCompressed::WriteCurves(TiXmlElement *geomTag, CurveMap &edges,
         cinfo.ptid = 0;
         cinfo.ptoffset = ptOffset;
 
-        edgeInfo.push_back(cinfo);
+        faceInfo.push_back(cinfo);
 
         for(int j = 0; j < i.second->m_points.size(); j++)
         {

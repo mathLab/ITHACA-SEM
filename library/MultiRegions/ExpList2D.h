@@ -124,9 +124,11 @@ namespace Nektar
                 const SpatialDomains::CompositeMap &domain,
                 const SpatialDomains::MeshGraphSharedPtr &graph3D,
                 const std::string variable = "DefaultVar",
+                const LibUtilities::CommSharedPtr comm =
+                                                  LibUtilities::CommSharedPtr(),
                 const Collections::ImplementationType ImpType
-                                             = Collections::eNoImpType);
-            
+                                                     = Collections::eNoImpType);
+
             /// Destructor.
             MULTI_REGIONS_EXPORT virtual ~ExpList2D();
 

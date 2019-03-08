@@ -127,10 +127,10 @@ to generate the XML file.
 \end{notebox}
 %
 To validate the mesh visually, we can use a utility such as Paraview or
-VisIt. To do this, run the command
+VisIt. To do this, we can use the \inltt{FieldConvert} command using:
 %
 \begin{lstlisting}[style=BashInputStyle]
-XmlToVtk test.xml
+FieldConvert test.xml test.vtu
 \end{lstlisting}
 %
 which generates an unstructured VTK file \inlsh{test.vtu}.
@@ -227,7 +227,7 @@ where it exists. The table below indicates support currently implemented.
     \toprule
     \textbf{Format} & \textbf{Extension} & \textbf{High-order} & \textbf{Notes}\\
     \midrule
-    Gmsh & \texttt{msh} & \cmark & Only reads nodes, elements and physical groups (which are mapped to composites).\\
+    Gmsh & \texttt{msh} & \cmark & Only reads nodes, elements and physical groups (which are mapped to composites). File format versions 2.x and 4.x currently supported.\\
     Nektar & \texttt{rea} & \cmark & Reads elements, fluid boundary conditions. Most curve types are unsupported: high-order information must be defined in an accompanying .hsf file. \\
     Nektar++ & \texttt{xml} & \cmark & Fully supported. \\
     PLY & \texttt{ply} & \xmark & Reads only the ASCII format.. \\
@@ -420,11 +420,12 @@ When using periodic boundary conditions, the order of the elements within the
 boundary composite determines which element edges are periodic with the
 corresponding boundary composite.
 
-To counteract this issue, \nm has a periodic alignment module which attempts to
-identify pairs of mutually periodic edges. Given two surfaces \inltt{surf1} and
-\inltt{surf2}, which for example correspond to the physical surface IDs
-specified in \gmsh, and an axis which defines the periodicity direction, the
-following command attempts to reorder the composites:
+To facilitate this alignment, \nm has a periodic alignment module
+which attempts to identify pairs of mutually periodic edges. Given two
+surfaces \inltt{surf1} and \inltt{surf2}, which for example correspond
+to the physical surface IDs specified in \gmsh, and an axis which
+defines the periodicity direction, the following command attempts to
+reorder the composites:
 %
 \begin{lstlisting}[style=BashInputStyle]
 NekMesh -m peralign:surf1=11:surf2=12:dir=y \
@@ -439,6 +440,20 @@ face lying on the surface is periodic with another face on the opposing surface,
 that there are the same number of elements on both surfaces, and the
 corresponding edge or face is the same size and shape but translated along the
 appropriate axis.
+
+
+When using periodic boundary conditions that are rotationally aligned the following rotational options should be applied:
+%
+\begin{lstlisting}[style=BashInputStyle]
+NekMesh -m peralign:surf1=11:surf2=12:dir=x:rot=PI/6:tol=1e-6 \
+              Mesh.xml Mesh_aligned.xml
+\end{lstlisting}
+%
+where \inltt{rot} specifies the rotation angle in radians from
+surf1 to surf2 about the axis specified by \inltt{dir} (i.e. the ``x'' axis in
+this example). An optional tolerance \inltt{tol} can also be specified which is
+the tolerance within which the rotation is assumed to be exact. The
+default tolerance is 1e-8.
 
 In 3D, where prismatic or tetrahedral elements are connected to one or both of
 the surfaces, additional logic is needed to guarantee connectivity in the XML

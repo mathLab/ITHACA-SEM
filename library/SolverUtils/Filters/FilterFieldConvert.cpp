@@ -47,8 +47,9 @@ std::string FilterFieldConvert::className =
 
 FilterFieldConvert::FilterFieldConvert(
     const LibUtilities::SessionReaderSharedPtr &pSession,
+    const std::weak_ptr<EquationSystem>      &pEquation,
     const ParamMap &pParams)
-    : Filter(pSession)
+    : Filter(pSession, pEquation)
 {
     // OutputFile
     auto it = pParams.find("OutputFile");
@@ -94,19 +95,6 @@ FilterFieldConvert::FilterFieldConvert(
         }
     }
 
-    // SampleFrequency
-    it = pParams.find("SampleFrequency");
-    if (it == pParams.end())
-    {
-        m_sampleFrequency = 1;
-    }
-    else
-    {
-        LibUtilities::Equation equ(
-            m_session->GetExpressionEvaluator(), it->second);
-        m_sampleFrequency = round(equ.Evaluate());
-    }
-
     // OutputFrequency
     it = pParams.find("OutputFrequency");
     if (it == pParams.end())
@@ -119,6 +107,10 @@ FilterFieldConvert::FilterFieldConvert(
             m_session->GetExpressionEvaluator(), it->second);
         m_outputFrequency = round(equ.Evaluate());
     }
+
+    // The base class can use SampleFrequency = OutputFrequency
+    //    (Derived classes need to override this if needed)
+    m_sampleFrequency = m_outputFrequency;
 
     m_numSamples  = 0;
     m_index       = 0;
@@ -168,13 +160,14 @@ void FilterFieldConvert::v_Initialise(
     // m_variables need to be filled by a derived class
     m_outFields.resize(m_variables.size());
     int nfield;
-    
+
     for (int n = 0; n < m_variables.size(); ++n)
     {
         // if n >= pFields.num_elements() assum we have used n=0 field
         nfield = (n < pFields.num_elements())? n: 0;
 
-        m_outFields[n] = Array<OneD, NekDouble>(pFields[nfield]->GetNcoeffs(), 0.0);
+        m_outFields[n] =
+                Array<OneD, NekDouble>(pFields[nfield]->GetNcoeffs(), 0.0);
     }
     
     m_fieldMetaData["InitialTime"] = boost::lexical_cast<std::string>(time);
@@ -258,6 +251,17 @@ void FilterFieldConvert::v_FillVariablesName(
     {
         m_variables[n] = pFields[n]->GetSession()->GetVariable(n);
     }
+
+    // Need to create a dummy coeffs vector to get extra variables names...
+    vector<Array<OneD, NekDouble> > coeffs(nfield);
+    for (int n = 0; n < nfield; ++n)
+    {
+        coeffs[n] = pFields[n]->GetCoeffs();
+    }
+    // Get extra variables
+    auto equ = m_equ.lock();
+    ASSERTL0(equ, "Weak pointer expired");
+    equ->ExtraFldOutput(coeffs, m_variables);
 }
 
 void FilterFieldConvert::v_Update(
@@ -270,8 +274,20 @@ void FilterFieldConvert::v_Update(
         return;
     }
 
+    // Append extra fields
+    int nfield = pFields.num_elements();
+    vector<Array<OneD, NekDouble> > coeffs(nfield);
+    for (int n = 0; n < nfield; ++n)
+    {
+        coeffs[n] = pFields[n]->GetCoeffs();
+    }
+    vector<std::string> variables = m_variables;
+    auto equ = m_equ.lock();
+    ASSERTL0(equ, "Weak pointer expired");
+    equ->ExtraFldOutput(coeffs, variables);
+
     m_numSamples++;
-    v_ProcessSample(pFields, time);
+    v_ProcessSample(pFields, coeffs, time);
 
     if (m_index % m_outputFrequency == 0)
     {
@@ -290,14 +306,15 @@ void FilterFieldConvert::v_Finalise(
     OutputField(pFields);
 }
 
-void FilterFieldConvert::v_PrepareOutput(
-        const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
-        const NekDouble &time)
+void FilterFieldConvert::v_ProcessSample(
+    const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
+          std::vector<Array<OneD, NekDouble> > &fieldcoeffs,
+    const NekDouble &time)
 {
-    for(int n = 0; n < pFields.num_elements(); ++n)
+    for(int n = 0; n < m_outFields.size(); ++n)
     {
         Vmath::Vcopy(m_outFields[n].num_elements(),
-                    pFields[n]->GetCoeffs(),
+                    fieldcoeffs[n],
                     1,
                     m_outFields[n],
                     1);

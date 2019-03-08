@@ -369,15 +369,16 @@ void MeshPartition::ReadExpansions()
             // construct mapping (elmt id, field name) -> nummodes
             map<int, CompositeSharedPtr> &compMap =
                 m_meshgraph->GetComposites();
-            for (auto &i : compMap)
-            {
+
+	    for (int i = 0; i < composite.size(); ++i)
+	    {
                 for (int j = 0; j < fieldName.size(); j++)
                 {
-                    for (int k = 0; k < i.second->m_geomVec.size(); k++)
+                    for (int k = 0; k < compMap[composite[i]]->m_geomVec.size(); k++)
                     {
-                        int elid = i.second->m_geomVec[k]->GetGlobalID();
+                        int elid = compMap[composite[i]]->m_geomVec[k]->GetGlobalID();
                         m_expansions[elid][fieldName[j]] = nummodes;
-                        m_shape[elid] = i.second->m_geomVec[k]->GetShapeType();
+                        m_shape[elid] = compMap[composite[i]]->m_geomVec[k]->GetShapeType();
                     }
                 }
             }
@@ -806,7 +807,7 @@ void MeshPartition::PartitionGraph(int nParts, bool overlapping)
             }
         }
 
-        // Call Metis and partition graph
+        // Call partitioner to partition graph
         int vol = 0;
 
         try
@@ -818,11 +819,12 @@ void MeshPartition::PartitionGraph(int nParts, bool overlapping)
             // columns
             if (m_comm->GetColumnComm()->GetRank() == 0)
             {
-                // Attempt partitioning using METIS.
+                // Attempt partitioning.
                 PartitionGraphImpl(nGraphVerts, ncon, xadj, adjncy, vwgt, vsize,
                                    adjwgt, nParts, vol, part);
 
-                // Check METIS produced a valid partition and fix if not.
+                // Check the partitioner produced a valid partition and fix if
+                // not.
                 CheckPartitions(nParts, part);
                 if (!m_shared)
                 {
@@ -852,7 +854,7 @@ void MeshPartition::PartitionGraph(int nParts, bool overlapping)
         catch (...)
         {
             NEKERROR(ErrorUtil::efatal,
-                     "Error in calling metis to partition graph.");
+                     "Error in calling graph partitioner.");
         }
     }
     else
@@ -913,11 +915,11 @@ void MeshPartition::CheckPartitions(int nParts, Array<OneD, int> &pPart)
         }
     }
 
-    // If METIS produced an invalid partition, repartition naively.
-    // Elements are assigned to processes in a round-robin fashion.
-    // It is assumed that METIS failure only occurs when the number of
-    // elements is approx. the number of processes, so this approach
-    // should not be too inefficient communication-wise.
+    // If the graph partitioner produced an invalid partition, repartition
+    // naively.  Elements are assigned to processes in a round-robin fashion.
+    // It is assumed that graph partitioner failure only occurs when the number
+    // of elements is approx. the number of processes, so this approach should
+    // not be too inefficient communication-wise.
     if (!valid)
     {
         for (i = 0; i < pPart.num_elements(); ++i)

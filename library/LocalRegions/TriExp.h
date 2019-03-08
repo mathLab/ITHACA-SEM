@@ -72,7 +72,7 @@ namespace Nektar
             //-------------------------------
             LOCAL_REGIONS_EXPORT virtual NekDouble v_Integral(
                             const Array<OneD, const NekDouble> &inarray);
-			
+
             //----------------------------
             // Differentiation Methods
             //----------------------------
@@ -125,6 +125,17 @@ namespace Nektar
 
             LOCAL_REGIONS_EXPORT virtual void v_IProductWRTDerivBase_MatOp(
                             const int dir,
+                            const Array<OneD, const NekDouble>& inarray,
+                                  Array<OneD, NekDouble> & outarray);
+
+            LOCAL_REGIONS_EXPORT virtual void v_IProductWRTDirectionalDerivBase(
+                            const Array<OneD, const NekDouble>& direction,
+                            const Array<OneD, const NekDouble>& inarray,
+                                  Array<OneD, NekDouble> & outarray);
+
+            LOCAL_REGIONS_EXPORT virtual void
+                    v_IProductWRTDirectionalDerivBase_SumFac(
+                            const Array<OneD, const NekDouble>& direction,
                             const Array<OneD, const NekDouble>& inarray,
                                   Array<OneD, NekDouble> & outarray);
 

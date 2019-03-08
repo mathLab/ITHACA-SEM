@@ -227,10 +227,15 @@ namespace Nektar
             /// \f$f(\boldsymbol{x})\f$ with respect to the derivative (in
             /// direction \param dir) of all \emph{local} expansion modes
             /// \f$\phi_n^e(\boldsymbol{x})\f$.
-            MULTI_REGIONS_EXPORT void   IProductWRTDerivBase
-                (const int dir,
-                 const Array<OneD, const NekDouble> &inarray,
-                       Array<OneD,       NekDouble> &outarray);
+            MULTI_REGIONS_EXPORT void   IProductWRTDerivBase(
+                const int dir,
+                const Array<OneD, const NekDouble> &inarray,
+                      Array<OneD,       NekDouble> &outarray);
+
+            MULTI_REGIONS_EXPORT void   IProductWRTDirectionalDerivBase(
+                const Array<OneD, const NekDouble> &direction,
+                const Array<OneD, const NekDouble> &inarray,
+                      Array<OneD,       NekDouble> &outarray);
 
             /// This function calculates the inner product of a function
             /// \f$f(\boldsymbol{x})\f$ with respect to the derivative (in
@@ -449,6 +454,11 @@ namespace Nektar
             /// Set the  #m_coeffs array to inarray
             inline void SetCoeffsArray(Array<OneD, NekDouble> &inarray);
 
+            /// This function returns the dimension of the shape of the
+            /// element \a eid.
+            // inline
+            MULTI_REGIONS_EXPORT int GetShapeDimension();
+            
             /// This function returns (a reference to) the array
             /// \f$\boldsymbol{\hat{u}}_l\f$ (implemented as #m_coeffs)
             /// containing all local expansion coefficients.
@@ -550,6 +560,11 @@ namespace Nektar
             NekDouble Integral (const Array<OneD, const NekDouble> &inarray)
             {
                 return v_Integral(inarray);
+            }
+
+            NekDouble VectorFlux(const Array<OneD, Array<OneD, NekDouble> > &inarray)
+            {
+                return v_VectorFlux(inarray);
             }
 
             /// This function calculates the energy associated with
@@ -715,6 +730,16 @@ namespace Nektar
                 Array<OneD, Array<OneD, NekDouble> > &Vel,
                 Array<OneD, Array<OneD, NekDouble> > &Q);
 
+            inline void PhysDirectionalDeriv(
+                const Array<OneD, const NekDouble> &direction,
+                const Array<OneD, const NekDouble> &inarray,
+                      Array<OneD, NekDouble> &outarray);
+
+            inline void GetMovingFrames(
+                const SpatialDomains::GeomMMF MMFdir,
+                const Array<OneD, const NekDouble> &CircCentre,
+                      Array<OneD, Array<OneD, NekDouble> > &outarray);
+
             // functions associated with DisContField
             inline const Array<OneD, const  std::shared_ptr<ExpList> >
                 &GetBndCondExpansions();
@@ -813,8 +838,8 @@ namespace Nektar
                             const bool DeclareCoeffPhysArrays = true);
             
             inline void ExtractElmtToBndPhys(int i,
-                            Array<OneD, NekDouble> &elmt,
-                            Array<OneD, NekDouble> &boundary);
+                                             const Array<OneD, NekDouble> &elmt,
+                                             Array<OneD, NekDouble> &boundary);
             
             inline void ExtractPhysToBndElmt(int i,
                             const Array<OneD, const NekDouble> &phys,
@@ -924,7 +949,12 @@ namespace Nektar
                 std::vector<NekDouble> &fielddata,
                 std::string &field,
                 Array<OneD, NekDouble> &coeffs);
-            
+
+            MULTI_REGIONS_EXPORT void GenerateElementVector(
+                const int ElementID,
+                const NekDouble scalar1,
+                const NekDouble scalar2,
+                Array<OneD, NekDouble> &outarray);
 
             /// Returns a shared pointer to the current object.
             std::shared_ptr<ExpList> GetSharedThisPtr()
@@ -1300,7 +1330,17 @@ namespace Nektar
             virtual void v_CurlCurl(
                 Array<OneD, Array<OneD, NekDouble> > &Vel,
                 Array<OneD, Array<OneD, NekDouble> > &Q);
-            
+
+            virtual void v_PhysDirectionalDeriv(
+                const Array<OneD, const NekDouble> &direction,
+                const Array<OneD, const NekDouble> &inarray,
+                      Array<OneD, NekDouble> &outarray);
+
+            virtual void v_GetMovingFrames(
+                const SpatialDomains::GeomMMF MMFdir,
+                const Array<OneD, const NekDouble> &CircCentre,
+                      Array<OneD, Array<OneD, NekDouble> > &outarray);
+
             virtual void v_HomogeneousFwdTrans(
                 const Array<OneD, const NekDouble> &inarray,
                       Array<OneD, NekDouble> &outarray,
@@ -1414,6 +1454,8 @@ namespace Nektar
 
             virtual NekDouble v_Integral (
                 const Array<OneD, const NekDouble> &inarray);
+            virtual NekDouble v_VectorFlux (
+                const Array<OneD, Array<OneD, NekDouble> > &inarray);
 
             virtual Array<OneD, const NekDouble> v_HomogeneousEnergy(void);
             virtual LibUtilities::TranspositionSharedPtr v_GetTransposition(void);
@@ -1449,7 +1491,7 @@ namespace Nektar
 
         
         private:
-            virtual const Array<OneD,const SpatialDomains::BoundaryConditionShPtr> &v_GetBndConditions();
+            virtual const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &v_GetBndConditions();
             
             virtual Array<OneD, SpatialDomains::BoundaryConditionShPtr>
                 &v_UpdateBndConditions();
@@ -1792,7 +1834,20 @@ namespace Nektar
         {
             v_GetCoords(coord_0,coord_1,coord_2);
         }
-        
+
+
+        /**
+         *
+         */
+        inline void ExpList::GetMovingFrames(
+            const SpatialDomains::GeomMMF MMFdir,
+            const Array<OneD, const NekDouble> &CircCentre,
+                  Array<OneD, Array<OneD, NekDouble> > &outarray)
+        {
+             v_GetMovingFrames(MMFdir,CircCentre,outarray);
+        }
+
+
         /**
          *
          */
@@ -1822,7 +1877,24 @@ namespace Nektar
         {
             v_PhysDeriv(edir, inarray,out_d);
         }        
-    
+
+
+        /**
+         *
+         */
+        inline void ExpList::PhysDirectionalDeriv(
+            const Array<OneD, const NekDouble> &direction,
+            const Array<OneD, const NekDouble> &inarray,
+                  Array<OneD, NekDouble> &outarray)
+        {
+            v_PhysDirectionalDeriv(direction, inarray, outarray);
+        }
+
+
+        /**
+         *
+         */
+        
         inline void ExpList::CurlCurl(
                 Array<OneD, Array<OneD, NekDouble> > &Vel,
                 Array<OneD, Array<OneD, NekDouble> > &Q)
@@ -1920,7 +1992,16 @@ namespace Nektar
                      "eid is larger than number of elements");
             return (*m_exp)[eid]->GetCoordim();
         }
-        
+
+        /**
+         * @param   eid         The index of the element to be checked.
+         * @return  The dimension of the shape of the specific element.
+         */
+        inline int ExpList::GetShapeDimension()
+        {
+            return (*m_exp)[0]->GetShapeDimension();
+        }
+
         /**
          * @param   i           The index of m_coeffs to be set
          * @param   val         The value which m_coeffs[i] is to be set to.
@@ -2242,7 +2323,6 @@ namespace Nektar
             return v_GetBndConditions();
         }
 
-
         inline Array<OneD, SpatialDomains::BoundaryConditionShPtr>
             &ExpList::UpdateBndConditions()
         {
@@ -2316,8 +2396,8 @@ namespace Nektar
         }
         
         inline void ExpList::ExtractElmtToBndPhys(int i,
-                            Array<OneD, NekDouble> &elmt,
-                            Array<OneD, NekDouble> &boundary)
+                                                  const Array<OneD, NekDouble> &elmt,
+                                                  Array<OneD, NekDouble> &boundary)
         {
             v_ExtractElmtToBndPhys(i, elmt, boundary);
         }

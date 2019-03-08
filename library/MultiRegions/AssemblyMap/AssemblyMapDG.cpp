@@ -139,6 +139,11 @@ namespace Nektar
             cnt = 0;
             for(i = 0; i < nbnd; ++i)
             {
+                if (bndCond[i]->GetBoundaryConditionType() ==
+                        SpatialDomains::ePeriodic)
+                {
+                    continue;
+                }
                 cnt += bndCondExp[i]->GetExpSize();
             }
 
@@ -147,7 +152,6 @@ namespace Nektar
             m_numLocalDirBndCoeffs = 0;
             m_numDirichletBndPhys  = 0;
 
-            cnt = 0;
             for(i = 0; i < bndCondExp.num_elements(); ++i)
             {
                 for(j = 0; j < bndCondExp[i]->GetExpSize(); ++j)
@@ -164,8 +168,6 @@ namespace Nektar
                         dirTrace.insert(id);
                     }
                 }
-
-                cnt += j;
             }
 
             // Set up integer mapping array and sign change for each degree of
@@ -445,6 +447,11 @@ namespace Nektar
             cnt = 0;
             for(i = 0; i < nbnd; ++i)
             {
+                if (bndCond[i]->GetBoundaryConditionType() ==
+                    SpatialDomains::ePeriodic)
+                {
+                    continue;
+                }
                 cnt += bndCondExp[i]->GetNcoeffs();
             }
 
@@ -454,6 +461,12 @@ namespace Nektar
             int nbndexp = 0, bndOffset, bndTotal = 0;
             for(cnt = i = 0; i < nbnd; ++i)
             {
+                if (bndCond[i]->GetBoundaryConditionType() ==
+                    SpatialDomains::ePeriodic)
+                {
+                    continue;
+                }
+
                 for(j = 0; j < bndCondExp[i]->GetExpSize(); ++j)
                 {
                     bndExp    = bndCondExp[i]->GetExp(j);
@@ -483,6 +496,12 @@ namespace Nektar
             m_bndCondTraceToGlobalTraceMap = Array<OneD, int>(nbndexp);
             for(i = 0; i < bndCondExp.num_elements(); ++i)
             {
+                if (bndCond[i]->GetBoundaryConditionType() ==
+                    SpatialDomains::ePeriodic)
+                {
+                    continue;
+                }
+
                 for(j = 0; j < bndCondExp[i]->GetExpSize(); ++j)
                 {
                     bndExp    = bndCondExp[i]->GetExp(j);

@@ -49,8 +49,9 @@ namespace SolverUtils
                                                         "White Noise Forcing");
 
     ForcingNoise::ForcingNoise(
-            const LibUtilities::SessionReaderSharedPtr& pSession)
-        : Forcing(pSession)
+            const LibUtilities::SessionReaderSharedPtr &pSession,
+            const std::weak_ptr<EquationSystem>      &pEquation)
+        : Forcing(pSession, pEquation)
     {
     }
 

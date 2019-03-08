@@ -55,17 +55,20 @@ class FilterMovingBody : public SolverUtils::Filter
 
         /// Creates an instance of this class
         static SolverUtils::FilterSharedPtr create(
-            const LibUtilities::SessionReaderSharedPtr &pSession,
-            const ParamMap &pParams) {
+            const LibUtilities::SessionReaderSharedPtr         &pSession,
+            const std::weak_ptr<SolverUtils::EquationSystem> &pEquation,
+            const ParamMap &pParams)
+        {
             SolverUtils::FilterSharedPtr p = MemoryManager<FilterMovingBody>
-                    ::AllocateSharedPtr(pSession, pParams);
+                    ::AllocateSharedPtr(pSession, pEquation, pParams);
             return p;
         }
 
         static std::string className;
 
         FilterMovingBody(
-            const LibUtilities::SessionReaderSharedPtr &pSession,
+            const LibUtilities::SessionReaderSharedPtr         &pSession,
+            const std::weak_ptr<SolverUtils::EquationSystem> &pEquation,
             const ParamMap &pParams);
         ~FilterMovingBody();
 
@@ -96,8 +99,6 @@ class FilterMovingBody : public SolverUtils::Filter
         virtual bool v_IsTimeDependent();
 
     private:
-        LibUtilities::SessionReaderSharedPtr m_session;
-
         /// ID's of boundary regions where we want the forces
         std::vector<unsigned int>       m_boundaryRegionsIdList;
         /// Determines if a given Boundary Region is in

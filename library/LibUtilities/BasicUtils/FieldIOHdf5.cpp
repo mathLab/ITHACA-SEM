@@ -328,7 +328,7 @@ void FieldIOHdf5::v_Write(const std::string &outFile,
             homoLengths[f].resize(nSubFields);
             for (int sf = 0; sf < nSubFields; ++sf)
             {
-                uint64_t len = fielddefs[f]->m_homogeneousLengths[sf];
+                NekDouble len = fielddefs[f]->m_homogeneousLengths[sf];
                 hashStream << len;
                 homoLengths[f][sf] = len;
             }
@@ -1063,6 +1063,7 @@ void FieldIOHdf5::v_Import(const std::string &infilename,
         }
     }
 
+    ImportHDF5FieldMetaData(dataSource, fieldinfomap);
     m_comm->Block();
 }
 

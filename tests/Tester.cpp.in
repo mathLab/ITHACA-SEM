@@ -198,13 +198,15 @@ int main(int argc, char *argv[])
             fs::copy_file(source, dest);
         }
 
+        // If we're Python, copy script too.
+
         // Construct test command to run. If in debug mode, append "-g"
         // Output from stdout and stderr are directed to the files output.out
         // and output.err, respectively.
 
 #ifdef NEKTAR_TEST_FORCEMPIEXEC
 #else
-	    if (file.GetNProcesses() > 1)
+        if (file.GetNProcesses() > 1)
 #endif
         {
             command += "@MPIEXEC@ @MPIEXEC_NUMPROC_FLAG@ "
@@ -220,13 +222,26 @@ int main(int argc, char *argv[])
         fs::path execPath = startDir / file.GetExecutable();
         if (!fs::exists(execPath))
         {
+            ASSERTL0(!file.IsPythonTest(), "Python script not found.");
             execPath = file.GetExecutable();
+        }
+
+        if (file.IsPythonTest())
+        {
+            command += "PYTHONPATH=\"@CMAKE_BINARY_DIR@\" ";
+            command += "@PYTHON_EXECUTABLE@ ";
         }
 
         command += PortablePath(execPath);
         command += " ";
         command += file.GetParameters();
         command += " 1>output.out 2>output.err";
+
+        // override command if specified
+        if (file.GetCommand() != "")
+        {
+            command = file.GetCommand();
+        }
 
         status = 0;
         string line;

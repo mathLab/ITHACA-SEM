@@ -183,7 +183,12 @@ namespace Nektar
     // loop over Boundary Regions
     for(int bcRegion = 0; bcRegion < m_fields[0]->GetBndConditions().num_elements(); ++bcRegion)
       {	
-	
+        if (m_fields[0]->GetBndConditions()[bcRegion]->GetBoundaryConditionType()
+            == SpatialDomains::ePeriodic)
+        {
+            continue;
+        }
+
 	// Copy the forward trace of the field to the backward trace
         int e, id2, npts;
         

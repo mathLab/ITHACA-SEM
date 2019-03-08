@@ -103,7 +103,7 @@ namespace Nektar
                                            GetFluxVectorAdv, this);
                 m_session->LoadSolverInfo("UpwindType", riemName, "Upwind");
                 m_riemannSolver = SolverUtils::GetRiemannSolverFactory().
-                    CreateInstance(riemName);
+                    CreateInstance(riemName, m_session);
                 m_advObject->SetRiemannSolver(m_riemannSolver);
                 m_advObject->InitObject      (m_session, m_fields);
                 
@@ -156,8 +156,8 @@ namespace Nektar
         }
         
         // Forcing terms
-        m_forcing = SolverUtils::Forcing::Load(m_session, m_fields,
-                                               m_fields.num_elements());
+        m_forcing = SolverUtils::Forcing::Load(m_session, shared_from_this(),
+                                    m_fields, m_fields.num_elements());
         
         m_ode.DefineImplicitSolve (&UnsteadyViscousBurgers::DoImplicitSolve, this);
         m_ode.DefineOdeRhs        (&UnsteadyViscousBurgers::DoOdeRhs,        this);

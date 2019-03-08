@@ -8,14 +8,14 @@
 
 IF (NOT WIN32)
     OPTION(NEKTAR_USE_SCOTCH
-        "Use Scotch library for performing mesh partitioning." OFF)
+        "Use Scotch library for performing mesh partitioning." ON)
 ENDIF(NOT WIN32)
 
 IF (NEKTAR_USE_SCOTCH)
     # First search for system TinyXML installs. Hint /opt/local for MacPorts.
-    FIND_LIBRARY(SCOTCH_LIBRARY    NAMES scotch PATHS /opt/local/lib)
-    FIND_LIBRARY(SCOTCHERR_LIBRARY NAMES scotcherr PATHS /opt/local/lib)
-    FIND_PATH   (SCOTCH_INCLUDE_DIR scotch.h PATHS /opt/local/include)
+    FIND_LIBRARY(SCOTCH_LIBRARY    NAMES scotch PATHS ${MACPORTS_PREFIX}/lib)
+    FIND_LIBRARY(SCOTCHERR_LIBRARY NAMES scotcherr PATHS ${MACPORTS_PREFIX}/lib)
+    FIND_PATH   (SCOTCH_INCLUDE_DIR scotch.h PATHS ${MACPORTS_PREFIX}/include)
 
     IF (SCOTCH_LIBRARY AND SCOTCHERR_LIBRARY AND SCOTCH_INCLUDE_DIR)
         SET(BUILD_SCOTCH OFF)
@@ -26,6 +26,8 @@ IF (NEKTAR_USE_SCOTCH)
     CMAKE_DEPENDENT_OPTION(THIRDPARTY_BUILD_SCOTCH
         "Build Scotch library from ThirdParty" ${BUILD_SCOTCH}
         "NEKTAR_USE_SCOTCH" OFF)
+
+    ADD_DEFINITIONS(-DNEKTAR_USE_SCOTCH)
 
     IF (THIRDPARTY_BUILD_SCOTCH)
         UNSET(FLEX CACHE)
@@ -38,7 +40,7 @@ IF (NEKTAR_USE_SCOTCH)
 
         # Note that scotch is compiled in the source-tree, so we unpack the
         # source code in the ThirdParty builds directory.
-        SET(SCOTCH_SRC ${TPBUILD}/scotch-6.0.0/src)
+        SET(SCOTCH_SRC ${TPBUILD}/scotch-6.0.4/src)
 
         IF (APPLE)
             SET(SCOTCH_MAKE Makefile.inc.i686_mac_darwin8)
@@ -57,23 +59,23 @@ IF (NEKTAR_USE_SCOTCH)
 
         INCLUDE(ExternalProject)
         EXTERNALPROJECT_ADD(
-            scotch-6.0.0
+            scotch-6.0.4
             PREFIX ${TPSRC}
-            URL ${TPURL}/scotch_6.0.0.tar.gz
-            URL_MD5 "ba117428c0a6cd97d0c93e8b872bb3fe"
+            URL ${TPURL}/scotch_6.0.4.tar.gz
+            URL_MD5 "d58b825eb95e1db77efe8c6ff42d329f"
             STAMP_DIR ${TPBUILD}/stamp
             DOWNLOAD_DIR ${TPSRC}
-            SOURCE_DIR ${TPBUILD}/scotch-6.0.0
-            BINARY_DIR ${TPBUILD}/scotch-6.0.0
-            TMP_DIR ${TPBUILD}/scotch-6.0.0-tmp
+            SOURCE_DIR ${TPBUILD}/scotch-6.0.4
+            BINARY_DIR ${TPBUILD}/scotch-6.0.4
+            TMP_DIR ${TPBUILD}/scotch-6.0.4-tmp
             INSTALL_DIR ${TPDIST}
             CONFIGURE_COMMAND rm -f ${SCOTCH_SRC}/Makefile.inc
                 COMMAND ln -s
                 ${SCOTCH_SRC}/Make.inc/${SCOTCH_MAKE}
                 ${SCOTCH_SRC}/Makefile.inc
             BUILD_COMMAND $(MAKE) -C ${SCOTCH_SRC}
-                "CFLAGS=${SCOTCH_CFLAGS}"
-                "LDFLAGS=${SCOTCH_LDFLAGS}"
+                "CFLAGS=-I${TPDIST}/include ${SCOTCH_CFLAGS}"
+                "LDFLAGS=-L${TPDIST}/lib ${SCOTCH_LDFLAGS}"
                 "CLIBFLAGS=-fPIC" scotch
             INSTALL_COMMAND $(MAKE) -C ${SCOTCH_SRC}
                 prefix=${TPDIST} install
@@ -88,7 +90,7 @@ IF (NEKTAR_USE_SCOTCH)
         MESSAGE(STATUS "Build Scotch: ${SCOTCH_LIBRARY}")
         SET(SCOTCH_CONFIG_INCLUDE_DIR ${TPINC})
     ELSE (THIRDPARTY_BUILD_SCOTCH)
-        ADD_CUSTOM_TARGET(scotch-6.0.0 ALL)
+        ADD_CUSTOM_TARGET(scotch-6.0.4 ALL)
         MESSAGE(STATUS "Found Scotch: ${SCOTCH_LIBRARY}")
         SET(SCOTCH_CONFIG_INCLUDE_DIR ${SCOTCH_INCLUDE_DIR})
     ENDIF (THIRDPARTY_BUILD_SCOTCH)

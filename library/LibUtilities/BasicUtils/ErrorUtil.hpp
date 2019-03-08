@@ -93,7 +93,7 @@ namespace ErrorUtil
         // Default rank is zero. If MPI used and initialised, populate with
         // the correct rank. Messages are only printed on rank zero.
         int rank = 0;
-#if defined(NEKTAR_USE_MPI)
+#if defined(NEKTAR_USE_MPI) && !defined(NEKTAR_USE_CWIPI)
         int flag = 0;
         if(DoComm)
         {
@@ -140,7 +140,8 @@ namespace ErrorUtil
                               << std::endl;
                 }
             }
-#if defined(NEKTAR_USE_MPI)
+
+#if defined(NEKTAR_USE_MPI) && !defined(NEKTAR_USE_CWIPI)
             if(DoComm)
             {
                 if (flag)

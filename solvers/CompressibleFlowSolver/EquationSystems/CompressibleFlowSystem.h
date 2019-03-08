@@ -45,13 +45,15 @@
 #include <SolverUtils/AdvectionSystem.h>
 #include <SolverUtils/Diffusion/Diffusion.h>
 #include <SolverUtils/Forcing/Forcing.h>
+#include <SolverUtils/Filters/FilterInterfaces.hpp>
 
 namespace Nektar
 {
     /**
      *
      */
-    class CompressibleFlowSystem: public SolverUtils::AdvectionSystem
+    class CompressibleFlowSystem: public SolverUtils::AdvectionSystem,
+                                  public SolverUtils::FluidInterface
     {
     public:
 
@@ -67,20 +69,29 @@ namespace Nektar
         Array<OneD, NekDouble> GetStabilityLimitVector(
             const Array<OneD,int> &ExpOrder);
 
+        virtual void GetPressure(
+            const Array<OneD, const Array<OneD, NekDouble> > &physfield,
+                  Array<OneD, NekDouble>                     &pressure);
+
+        virtual void GetDensity(
+            const Array<OneD, const Array<OneD, NekDouble> > &physfield,
+                  Array<OneD, NekDouble>                     &density);
+
+        virtual bool HasConstantDensity()
+        {
+            return false;
+        }
+
+        virtual void GetVelocity(
+            const Array<OneD, const Array<OneD, NekDouble> > &physfield,
+                  Array<OneD, Array<OneD, NekDouble> >       &velocity);
+
     protected:
         SolverUtils::DiffusionSharedPtr     m_diffusion;
         ArtificialDiffusionSharedPtr        m_artificialDiffusion;
         Array<OneD, Array<OneD, NekDouble> >m_vecLocs;
         NekDouble                           m_gamma;
-        NekDouble                           m_pInf;
-        NekDouble                           m_rhoInf;
-        NekDouble                           m_UInf;
-        std::string                         m_ViscosityType;
         std::string                         m_shockCaptureType;
-        NekDouble                           m_mu;
-        NekDouble                           m_thermalConductivity;
-        NekDouble                           m_Cp;
-        NekDouble                           m_Prandtl;
 
         // Parameters for exponential filtering
         NekDouble                           m_filterAlpha;
@@ -183,6 +194,7 @@ namespace Nektar
         }
 
         virtual Array<OneD, NekDouble> v_GetMaxStdVelocity();
+
     };
 }
 #endif

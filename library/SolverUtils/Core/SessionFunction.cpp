@@ -188,6 +188,10 @@ void SessionFunction::Evaluate(std::string pFieldName,
             EvaluateFld(pFieldName, pArray, pTime, domain);
         }
     }
+    else
+    {
+        ASSERTL0(false, "unknown eFunctionType");
+    }
 
     if (m_toCache)
     {
@@ -217,11 +221,15 @@ std::string SessionFunction::Describe(std::string pFieldName, const int domain)
         retVal = ffunc->GetExpression();
     }
     else if (vType == LibUtilities::eFunctionTypeFile ||
-             LibUtilities::eFunctionTypeTransientFile)
+             vType == LibUtilities::eFunctionTypeTransientFile)
     {
         std::string filename =
             m_session->GetFunctionFilename(m_name, pFieldName, domain);
         retVal = "from file " + filename;
+    }
+    else
+    {
+        ASSERTL0(false, "unknown eFunctionType");
     }
 
     return retVal;
@@ -470,7 +478,7 @@ void SessionFunction::EvaluatePts(string pFieldName,
     }
     else
     {
-        interp = FieldUtils::Interpolator(Nektar::FieldUtils::eShepard);
+        interp = FieldUtils::Interpolator(LibUtilities::eShepard);
         if (m_session->GetComm()->GetRank() == 0)
         {
             interp.SetProgressCallback(&SessionFunction::PrintProgressbar,

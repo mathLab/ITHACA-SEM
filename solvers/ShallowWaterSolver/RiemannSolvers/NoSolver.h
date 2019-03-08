@@ -43,16 +43,17 @@ namespace Nektar
     class NoSolver : public LinearSWESolver
     {
     public:
-        static RiemannSolverSharedPtr create()
+        static RiemannSolverSharedPtr create(
+            const LibUtilities::SessionReaderSharedPtr& pSession)
         {
             return RiemannSolverSharedPtr(
-                new NoSolver());
+                new NoSolver(pSession));
         }
         
         static std::string solverName;
         
     protected:
-        NoSolver();
+        NoSolver(const LibUtilities::SessionReaderSharedPtr& pSession);
         
     };
 }

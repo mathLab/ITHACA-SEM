@@ -95,6 +95,8 @@ int main(int argc, char* argv[])
             "Specify modules which are to be used.")
         ("useSessionVariables",
             "Use variables defined in session for output")
+        ("useSessionExpansion",
+            "Use expansion defined in session.")
         ("verbose,v",
             "Enable verbose mode.");
 

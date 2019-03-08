@@ -65,5 +65,4 @@ namespace Nektar
     EulerCFE::~EulerCFE()
     {
     }
-
 }

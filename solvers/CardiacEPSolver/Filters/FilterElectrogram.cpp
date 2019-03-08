@@ -50,9 +50,10 @@ std::string FilterElectrogram::className =
  *
  */
 FilterElectrogram::FilterElectrogram(
-        const LibUtilities::SessionReaderSharedPtr &pSession,
+        const LibUtilities::SessionReaderSharedPtr         &pSession,
+        const std::weak_ptr<SolverUtils::EquationSystem> &pEquation,
         const ParamMap &pParams)
-    : Filter(pSession)
+    : Filter(pSession, pEquation)
 {
     // OutputFile
     auto it = pParams.find("OutputFile");

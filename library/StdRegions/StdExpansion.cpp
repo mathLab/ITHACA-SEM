@@ -801,28 +801,32 @@ namespace Nektar
             v_IProductWRTBase(tmp, outarray);
         }
 
-        void StdExpansion::WeakDirectionalDerivMatrixOp_MatFree(const Array<OneD, const NekDouble> &inarray,
-                                                                Array<OneD,NekDouble> &outarray,
-                                                                const StdMatrixKey &mkey)
+        void StdExpansion::WeakDirectionalDerivMatrixOp_MatFree(
+            const Array<OneD, const NekDouble> &inarray,
+                  Array<OneD,NekDouble> &outarray,
+            const StdMatrixKey &mkey)
         {
             int nq = GetTotPoints();
-            //            int varsize = ((mkey.GetVariableCoefficient(0)).num_elements())/dim;
-            Array<OneD, NekDouble> tmp(nq);
+
+            Array<OneD, NekDouble> tmp(nq), Dtmp(nq);
+            Array<OneD, NekDouble> Mtmp(nq), Mout(m_ncoeffs);
 
             v_BwdTrans(inarray,tmp);
-            // For Deformed mesh ==============
-            //            if (varsize==nq)
-            //            {
-            //                v_PhysDirectionalDeriv(tmp,mkey.GetVariableCoefficient(0),tmp);
-            //            }
-            //
-            //            // For Regular mesh ==========
-            //            else
-            //            {
-            //                ASSERTL0(false, "Wrong route");
-            //            }
+            v_PhysDirectionalDeriv(tmp, mkey.GetVarCoeff(eVarCoeffMF), Dtmp);
 
-            v_IProductWRTBase(tmp, outarray);
+            v_IProductWRTBase(Dtmp, outarray);
+
+            // Compte M_{div tv}
+            Vmath::Vmul(nq, &(mkey.GetVarCoeff(eVarCoeffMFDiv))[0], 1,
+                            &tmp[0],                                1,
+                            &Mtmp[0],                               1);
+
+            v_IProductWRTBase(Mtmp, Mout);
+
+            // Add D_tv + M_{div tv}
+            Vmath::Vadd(m_ncoeffs, &Mout[0],     1,
+                                   &outarray[0], 1,
+                                   &outarray[0], 1);
         }
 
         void StdExpansion::MassLevelCurvatureMatrixOp_MatFree(const Array<OneD, const NekDouble> &inarray,
@@ -1232,6 +1236,19 @@ namespace Nektar
             NEKERROR(ErrorUtil::efatal, "This method has not been defined");
         }
 
+
+        /**
+         *
+         */
+        void  StdExpansion::v_IProductWRTDirectionalDerivBase (
+            const Array<OneD, const NekDouble>& direction,
+            const Array<OneD, const NekDouble>& inarray,
+                  Array<OneD, NekDouble> &outarray)
+        {
+            NEKERROR(ErrorUtil::efatal, "This method has not been defined");
+        }
+
+
         /**
          *
          */
@@ -1530,6 +1547,18 @@ namespace Nektar
                 NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape" );
             }
 
+            /**
+             *
+             */
+            void StdExpansion::v_IProductWRTDirectionalDerivBase_SumFac(
+                const Array<OneD, const NekDouble>& direction,
+                const Array<OneD, const NekDouble>& inarray,
+                      Array<OneD, NekDouble> &outarray)
+            {
+                NEKERROR(ErrorUtil::efatal,
+                         "Method does not exist for this shape" );
+            }
+
             void StdExpansion::v_IProductWRTDerivBase_SumFac(const int dir,
                                                        const Array<OneD, const NekDouble>& inarray,
                                                        Array<OneD, NekDouble> &outarray)
@@ -1750,13 +1779,23 @@ namespace Nektar
 
         Array<OneD, unsigned int>
         StdExpansion::v_GetFaceInverseBoundaryMap(int fid,
-                                StdRegions::Orientation faceOrient)
+                                                  StdRegions::Orientation faceOrient,
+                                                  int P1,
+                                                  int P2)
         {
             ASSERTL0(false, "Not implemented.");
             Array<OneD, unsigned int> noinversemap(1);
             return noinversemap;
         }
 
+        void StdExpansion::v_GetInverseBoundaryMaps(
+                    Array<OneD, unsigned int> &vmap,
+                    Array<OneD, Array<OneD, unsigned int> > &emap,
+                    Array<OneD, Array<OneD, unsigned int> > &fmap)
+        {
+            ASSERTL0(false, "Not implemented.");
+        }
+        
         DNekMatSharedPtr
         StdExpansion::v_BuildInverseTransformationMatrix(
             const DNekScalMatSharedPtr & m_transformationmatrix)

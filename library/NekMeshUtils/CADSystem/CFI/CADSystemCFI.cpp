@@ -187,7 +187,31 @@ bool CADSystemCFI::LoadCAD()
             {
                 vector<cfi::Oriented<cfi::TopoEntity *>> *edgeList =
                     face->getChildList();
+
+                // unrolling combined edges
+                vector<cfi::Oriented<cfi::TopoEntity *>> fullEdgeList;
                 for (it2 = edgeList->begin(); it2 != edgeList->end(); it2++)
+                {
+                    cfi::Line *edge = static_cast<cfi::Line *>(it2->entity);
+
+                    if (edge->getTopoSubtype() == cfi::SUBTYPE_COMBINED)
+                    {
+                        vector<cfi::Oriented<cfi::TopoEntity *>> *subEdgeList =
+                            edge->getChildList();
+
+                        for (it3 = subEdgeList->begin();
+                             it3 != subEdgeList->end(); it3++)
+                        {
+                            fullEdgeList.push_back(*it3);
+                        }
+                    }
+                    else
+                    {
+                        fullEdgeList.push_back(*it2);
+                    }
+                }
+
+                for (it2 = fullEdgeList.begin(); it2 != fullEdgeList.end(); it2++)
                 {
                     cfi::Oriented<cfi::TopoEntity *> orientatedEdge = *it2;
                     cfi::Line *edge =
@@ -311,15 +335,45 @@ void CADSystemCFI::AddSurf(int i, cfi::Face *in)
 
     vector<cfi::Oriented<cfi::TopoEntity *>> *edgeList = in->getChildList();
 
+    // unrolling combined edges
+    vector<cfi::Oriented<cfi::TopoEntity *>> fullEdgeList;
+    vector<cfi::Oriented<cfi::TopoEntity *>>::iterator it2, it3;
+    for (it2 = edgeList->begin(); it2 != edgeList->end(); it2++)
+    {
+        cfi::Line *edge = static_cast<cfi::Line *>(it2->entity);
+
+        if (edge->getTopoSubtype() == cfi::SUBTYPE_COMBINED)
+        {
+            vector<cfi::Oriented<cfi::TopoEntity *>> *subEdgeList =
+                edge->getChildList();
+
+            for (it3 = subEdgeList->begin(); it3 != subEdgeList->end(); it3++)
+            {
+                fullEdgeList.push_back(*it3);
+            }
+
+            if (it2->orientation == cfi::ORIENT_NEGATIVE)
+            {
+                reverse(fullEdgeList.begin() + fullEdgeList.size() -
+                            subEdgeList->size(),
+                        fullEdgeList.end());
+            }
+        }
+        else
+        {
+            fullEdgeList.push_back(*it2);
+        }
+    }
+
     vector<EdgeLoopSharedPtr> edgeloops;
     int done = 0;
-    while (done != edgeList->size())
+    while (done != fullEdgeList.size())
     {
         EdgeLoopSharedPtr edgeloop = EdgeLoopSharedPtr(new EdgeLoop);
         string firstVert;
         vector<cfi::Oriented<cfi::TopoEntity *>> *vertList =
-            edgeList->at(done).entity->getChildList();
-        if (edgeList->at(done).orientation == cfi::ORIENT_POSITIVE)
+            fullEdgeList.at(done).entity->getChildList();
+        if (fullEdgeList.at(done).orientation == cfi::ORIENT_POSITIVE)
         {
             firstVert = vertList->at(0).entity->getName();
             edgeloop->edgeo.push_back(CADOrientation::eForwards);
@@ -331,13 +385,13 @@ void CADSystemCFI::AddSurf(int i, cfi::Face *in)
         }
 
         edgeloop->edges.push_back(
-            m_curves[nameToCurveId[edgeList->at(done).entity->getName()]]);
+            m_curves[nameToCurveId[fullEdgeList.at(done).entity->getName()]]);
 
-        for (done++; done < edgeList->size(); done++)
+        for (done++; done < fullEdgeList.size(); done++)
         {
             bool end = false;
-            vertList = edgeList->at(done).entity->getChildList();
-            if (edgeList->at(done).orientation == cfi::ORIENT_POSITIVE)
+            vertList = fullEdgeList.at(done).entity->getChildList();
+            if (fullEdgeList.at(done).orientation == cfi::ORIENT_POSITIVE)
             {
                 if (vertList->at(1).entity->getName() == firstVert)
                 {
@@ -355,7 +409,7 @@ void CADSystemCFI::AddSurf(int i, cfi::Face *in)
             }
 
             edgeloop->edges.push_back(
-                m_curves[nameToCurveId[edgeList->at(done).entity->getName()]]);
+                m_curves[nameToCurveId[fullEdgeList.at(done).entity->getName()]]);
 
             if (end)
             {

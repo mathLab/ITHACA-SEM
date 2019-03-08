@@ -144,7 +144,7 @@ More details regarding the concepts mentioned above is found below. The informat
   files that are being tracked, display differences between the current
   file and the original file, and commit the file.  
   \begin{lstlisting}
-  git add library/LibUtilities/BasicUtils/my\_new\_file.cpp
+  git add library/LibUtilities/BasicUtils/my_new_file.cpp
   git diff --cached
   \end{lstlisting}
 
@@ -179,7 +179,7 @@ trunk, you should make sure that it passes the built-in test suite -
 in addition to any new tests that you have added for your
 updates. To run the test suite, on the command line type:
 \begin{lstlisting}  
-ctest [-j\#]
+ctest [-j#]
 \end{lstlisting}
   
 The \lstinline{-j#} optional argument will run \lstinline{#} tests in parallel
@@ -400,232 +400,7 @@ Function pointers
   \lstinline{f} is later invoked.  
 
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Design Patterns}
-\subsection{Template pattern}
-Additionally, at the top level parent class you will find
-``Function()''.  As an example of this, let us consider a triangle
-element (``TriExp'').  The ``TriExp'' class (eventually) inherits
-from the ``StdExpansion'' class.  The ``StdExpansion'' has the
-``Integral()'' function which is used to provide integration over
-an element.  However, the only thing the
-``StdExpansion::Integral()'' function does is call the (in this case)
-``TriExp::v\_Integral()'' function.  We should also note that while
-``TriExp::v\_Integral()'' does setup work, it then makes use of its parent's
-``StdExpansion2D::v\_Integral()'' function to calculate the final value.
-
-\subsection{Abstract Factory Pattern}
-
-{\nek} makes extensive use of the ``Factory Pattern''.
-``Factories'' are objects used to create (ie: allocate) other objects
-(See the short discussion of ``NekManager'' above).  More
-specifically, a ``Factory'' will create a new object of some
-``sub-class'' type but return a ``base class'' pointer for the new
-object. In general, there are two ways that a ``Factory'' knows what
-specific type of object to generate: 1) The ``Factory'''s build
-function ({\nek} uses the factory function ``CreateInstance()'') is
-passed some information that details what to build; or 2) The factory may
-have some intrinsic knowledge detailing what objects to create. 
-Factory pattenrs provides the following benefits:
-\begin{itemize}
-\item Encourages modularisation of code such that conceptually related
-algorithms are grouped together
-\item Structuring of code such that different implementations of the same
-concept are encapsulated and share a common interface
-\item Users of a factory-instantiated modules need only be concerned with the
- interface and not the details of underlying implementations
-\item Simplifies debugging since code relating to a specific implementation
- resides in a single class
-\item The code is naturally decoupled to reduce header-file dependencies and
- improves compile times
-\item Enables implementations (e.g. relating to third-party libraries) to be
- disabled through the build process (CMake) by not compiling a specific 
- implementation, rather than scattering preprocessing statements throughout the
- code
-\end{itemize}
-
-
-%% Because {\nek} uses many factory types throughout the code base, a
-%% templated version has been implemented to provide the required
-%% functionality for these various factories.  The template code for
-%% this class can be found in:
-
-%% \code{LibUtilities/BasicUtils/NekFactory.hpp} \\
-
-%% An example of the use of a {\nek} factory can be found in: \\
-
-%% \code{library/NekMeshUtils/VolumeMeshing/VolumeMesh.cpp} \\
-
-%% Specifically, in ``VolumeMesh::Process()'' the ``CreateInstance()'' function is used
-%% to create quadrilaterals.
-
-\subsubsection{Using NekFactory}
-The templated NekFactory class implements the factory pattern in Nektar++.
-There are two distinct aspects to creating a factory-instantiated collection of
-classes: defining the public interface, and registering specific
-implementations. Both of these involve adding standard boilerplate code. It is
-assumed that we are writing a code which implements a particular concept or
-functionality within the code, for which there are multiple implementations. The
-reasons for multiple implementations may be very low level such as alternative
-algorithms for solving a linear system, or high level, such as selecting from a
-range of PDEs to solve.
-
-\subsubsection{Creating an interface (base class)}
-A base class must be defined which prescribes an implementation-independent
-interface. In Nektar++, the template method pattern is used, requiring public
-interface functions to be defined which call private virtual implementation
-methods. The latter will be overridden in the specific implementation classes.
-In the base class these virtual methods should be defined as pure virtual, since
-there is no implementation and we will not be instantiating this base class
-explicitly.
-
-As an example we will create a factory for instantiating different
-implementations of some concept \inlsh{MyConcept}, defined in
-\inlsh{MyConcept.h} and \inlsh{MyConcept.cpp}. First in \inlsh{MyConcept.h},
-we need to include the NekFactory header
-
-\begin{lstlisting}[style=C++Style]
-#include <LibUtilities/BasicUtils/NekFactory.hpp>
-\end{lstlisting}
-
-The following code should then be included just before the base class
-declaration (in the same namespace as the class):
-
-\begin{lstlisting}[style=C++Style]
-class MyConcept
-
-// Datatype for the MyConcept factory
-typedef LibUtilities::NekFactory< std::string, MyConcept, 
-            ParamType1,
-            ParamType2 > MyConceptFactory;
-MyConceptFactory& GetMyConceptFactory();
-\end{lstlisting}
-
-The template parameters define the datatype of the key used to retrieve a
-particular implementation (usually a string, enum or custom class such as
-\inlsh{MyConceptKey}, the base class (in our case \inlsh{MyConcept} and a list
-of zero or more parameters which are taken by the constructors of all
-implementations of the type \inlsh{MyConcept} (in our case we have two). Note
-that all implementations must take the same parameter list in their constructors.
-
-The normal definition of our base class then follows:
-
-\begin{lstlisting}[style=C++Style]
-class MyConcept 
-{
-    public:
-        MyConcept(ParamType1 p1, ParamType2 p2);
-        ...
-};
-\end{lstlisting}
-
-We must also define a shared pointer for our base class for use later
-\begin{lstlisting}[style=C++Style]
-typedef boost::shared_ptr<MyConcept> MyConceptShPtr;
-\end{lstlisting}
-
-\subsubsection{Creating a specific implementation (derived class)}
-A class is defined for each specific implementation of a concept. It is these
-specific implementations which are instantiated by the factory.
-
-In our example we will have an implementations called \inlsh{MyConceptImpl1}
-defined in \inlsh{MyConceptImpl1.h} and \inlsh{MyConceptImpl1.cpp}. In the
-header file we include the base class header file
-
-\begin{lstlisting}[style=C++Style]
-#include <Subdir/MyConcept.h>
-\end{lstlisting}
-
-We then define the derived class as normal:
-
-\begin{lstlisting}[style=C++Style]
-class MyConceptImpl1 : public MyConcept
-{
-...
-};
-\end{lstlisting}
-
-In order for the factory to work, it must know
-\begin{itemize}
-\item that {{{MyConceptImpl1}}} exists, and
-\item how to create it.
-\end{itemize}
-
-To allow the factory to create instances of our class we define a function in 
-our class:
-\begin{lstlisting}[style=C++Style]
-/// Creates an instance of this class
-static MyConceptSharedPtr create(
-            ParamType1 p1,
-            ParamType2 p2)
-{
-    return MemoryManager<MyConceptImpl1>::AllocateSharedPtr(p1, p2);
-}
-\end{lstlisting}
-This function simply creates an instance of \inlsh{MyConceptImpl1} using the
-supplied parameters. It must be \inlsh{static} because we are not operating on
-an existing instance and it should return a base class shared pointer (rather 
-than a \inlsh{MyConceptImpl1} shared pointer), since the point of the factory
-is that the calling code does not know about specific implementations.
-
-The last task is to register our implementation with the factory. This is done 
-using the \inlsh{RegisterCreatorFunction} member function of the factory.
-However, we wish this to happen as early on as possible (so we can use the 
-factory straight away) and without needing to explicitly call the function for 
-every implementation at the beginning of our program (since this would again 
-defeat the point of a factory)! The solution is to use the function to 
-initialise a static variable: it will be executed prior to the start of the
-\inlsh{main()} routine, and can be located within the very class it is
-registering, satisfying our code decoupling requirements.
-
-In \inlsh{MyConceptImpl1.h} we define a static variable with the same datatype
-as the key used in our factory (in our case \inlsh{std::string}) 
-\begin{lstlisting}[style=C++Style]
-static std::string className;
-\end{lstlisting}
-The above variable can be \inlsh{private} since it is typically never actually
-used within the code. We then initialise it in \inlsh{MyConceptImpl1.cpp}
-
-\begin{lstlisting}[style=C++Style] 
-string MyConceptImpl1::className
-        = GetMyConceptFactory().RegisterCreatorFunction(
-                                "Impl1", 
-                                MyConceptImpl1::create, 
-                                "First implementation of my concept.");
-\end{lstlisting}
-The first parameter specifies the value of the key which should be used to
-select this implementation. The second parameter is a function pointer to our
-static function used to instantiate our class. The third parameter provides a
-description which can be printed when listing the available MyConcept
-implementations.
-
-\subsubsection{Instantiating classes}
-To create instances of MyConcept implementations elsewhere in the code, we must
-first include the ''base class'' header file
-\begin{lstlisting}[style=C++Style]
-#include <Subdir/MyConcept.h>
-\end{lstlisting}
-Note we do not include the header files for the specific MyConcept 
-implementations anywhere in the code (apart from \inlsh{MyConceptImpl1.cpp}).
-If we modify the implementation, only the implementation itself requires 
-recompiling and the executable relinking.
-
-We create an instance by retrieving the \inlsh{MyConceptFactory} and call the
-\inlsh{CreateInstance} member function of the factory:
-\begin{lstlisting}[style=C++Style]
-ParamType p1 = ...;
-ParamType p2 = ...;
-MyConceptShPtr p = GetMyConceptFactory().CreateInstance( "Impl1", p1, p2 );
-\end{lstlisting}
-
-Note that the class is used through the pointer \inlsh{p}, which is of type
-\inlsh{MyConceptShPtr}, allowing the use of any of the public interface
-functions in the base class (and therefore the specific implementations behind them) to be
-called, but not directly any functions declared solely in a specific
-implementation.
-
-
-\subsection{NekArray}
+\subsection{Memory Pools and NekArray}
 An Array is a thin wrapper around native arrays. Arrays provide all the
 functionality of native arrays, with the additional benefits of automatic use of
 the Nektar++ memory pool, automatic memory allocation and deallocation, bounds
@@ -636,33 +411,228 @@ and data type.
 
 Parameters:
 \begin{itemize}
-\item \inltt{Dim} Must be a type with a static unsigned integer called
-\inltt{Value} that specifies the array's dimensionality. For example
-\begin{lstlisting}[style=C++Style]
-struct TenD {
-    static unsigned int Value = 10;
-};
-\end{lstlisting}
-\item \inltt{DataType} The type of data to store in the array.
+    \item \lstinline{Dim} Must be a type with a static unsigned integer called
+    \lstinline{Value} that specifies the array's dimensionality. For example
+    \begin{lstlisting}
+    struct TenD {
+        static unsigned int Value = 10;
+    };
+    \end{lstlisting}
+    \item \lstinline{DataType} The type of data to store in the array.
 \end{itemize}
 
 It is often useful to create a class member Array that is shared with users of
 the object without letting the users modify the array. To allow this behavior,
-Array<Dim, !DataType> inherits from Array<Dim, const !DataType>. The following
+\lstinline{Array<Dim, DataType>} inherits from 
+\lstinline{Array<Dim, const DataType>}. The following
 example shows what is possible using this approach:
-\begin{lstlisting}[style=C++Style]
- class Sample {
-     public:
-         Array<OneD, const double>& getData() const { return m_data; }
-         void getData(Array<OneD, const double>& out) const { out = m_data; }
+\begin{lstlisting}
+class Sample {
+public:
+    Array<OneD, const double>& getData() const { return m_data; }
+    void getData(Array<OneD, const double>& out) const { out = m_data; }
 
-     private:
-         Array<OneD, double> m_data;
- };
+private:
+    Array<OneD, double> m_data;
+};
 \end{lstlisting}
 In this example, each instance of Sample contains an array. The getData
 method gives the user access to the array values, but does not allow
 modification of those values.
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Design Patterns}
+\subsection{Template pattern}
+\label{s:template-pattern}
+The template pattern is used frequently within {\nek} to provide a common interface to a range of related classes. The base class declares common functionality or algorithms, in the form of public functions, deferring to protected virtual functions where a specific implementation is required for each derived class. This ensures code external to the class hierarchy sees a common interface.
+
+In the top level parent class you will find the interface functions, such as
+\lstinline{Function()}, declared as public members. In some cases, these may implement a generic algorithm common to all classes. In the limit that the function is entirely dependent on the derived class, it may call through to a virtual counterpart, usually named \lstinline{v_Function()}. These functions are usually protected to allow them to be called directly by other classes in the inheritance hierarchy, without exposing them to external classes.
+
+As an example of this, let us consider a triangle
+element (\lstinline{TriExp}).  The \lstinline{TriExp} class (eventually) inherits from the \lstinline{StdExpansion} class.  The \lstinline{StdExpansion} defines the \lstinline{Integral()} function which is used to provide integration over an element.  However, in this case, the implementation is shape-specific. Therefore \lstinline{StdExpansion::Integral()} calls the (in this case) \lstinline{TriExp::v_Integral()} function.  We should also note that while \lstinline{TriExp::v_Integral()} does setup work, it then makes use of its parent's \lstinline{StdExpansion2D::v_Integral()} function to calculate the final value. This is only possible if the \lstinline{v_Integral()} function was declared as protected.
+
+\subsection{Abstract Factory Pattern}
+
+{\nek} makes extensive use of the \emph{Factory Pattern}.
+Factories are used to create (allocate) instances of classes using class-specific creator functions. More
+specifically, a factory will create a new object of some
+sub-class type but return a base class pointer to the new
+object. In general, there are two ways that a factory knows what
+specific type of object to generate: 1) The Factory's build
+function (\lstinline{CreateInstance()}) is
+passed a key that details what to build; or 2) The factory may
+have some intrinsic knowledge detailing what objects to create. The first case is almost exclusively used throughout {\nek}.
+The factory pattern provides the following benefits:
+\begin{itemize}
+\item Encourages modularisation of code such that conceptually related
+algorithms are grouped together;
+\item Structuring of code such that different implementations of the same
+concept are encapsulated and share a common interface;
+\item Users of a factory-instantiated modules need only be concerned with the
+ interface and not the details of underlying implementations;
+\item Simplifies debugging since code relating to a specific implementation
+ resides in a single class;
+\item The code is naturally decoupled to reduce header-file dependencies and
+ improves compile times;
+\item Enables implementations (e.g. relating to third-party libraries) to be
+ disabled through the build process (CMake) by not compiling a specific 
+ implementation, rather than scattering preprocessing statements throughout the
+ code.
+\end{itemize}
+
+
+\subsubsection{Implementing the factory pattern}
+The \lstinline{NekFactory} class implements the factory pattern in Nektar++.
+There are two distinct aspects to creating a factory-instantiated collection of
+classes: defining the public interface, and; registering specific
+implementations. Both of these tasks involve adding mostly standard boilerplate code.
+
+It is assumed that we are writing a code which implements a particular \emph{concept} or
+\emph{capability} within the code, for which there are (potentially) multiple implementations. The
+reasons for multiple implementations may be low level, such as alternative
+algorithms for solving a linear system, or high level, such as selecting from a
+range of PDEs to solve. The \lstinline{NekFactory} can be used in both cases and applied in exactly the same way.
+
+\subsubsection{Creating a concept (base class)}
+A base class must be defined which prescribes an implementation-independent
+interface. In Nektar++, the template method pattern (see Section~\ref{s:template-pattern} above) is used, requiring public
+interface functions to be defined which call through to protected virtual implementation methods. This is because the factory returns the newly created object via a base-class pointer and the objects will almost always be used via this base class pointer. Without a public interface in the base class, much of the benefits and generalisation of code offered by the factory pattern would be lost.
+The virtual functions will be overridden in the specific implementation classes.
+In the base class these virtual methods should normally be defined as pure virtual, since there is typically no implementation and we will never be explicitly instantiating this base class.
+
+As an example we will create a factory for instantiating different
+implementations of some concept \inlsh{MyConcept}, defined in
+\inlsh{MyConcept.h} and \inlsh{MyConcept.cpp}.
+
+First in \inlsh{MyConcept.h}, we need to include the NekFactory header
+\begin{lstlisting}
+#include <LibUtilities/BasicUtils/NekFactory.hpp>
+\end{lstlisting}
+
+The following code should then be included just before the base class
+declaration (within the same namespace as the class):
+\begin{lstlisting}
+class MyConcept
+
+// Datatype for the MyConcept factory
+typedef LibUtilities::NekFactory< std::string, MyConcept, 
+            ParamType1,
+            ParamType2 > MyConceptFactory;
+MyConceptFactory& GetMyConceptFactory();
+\end{lstlisting}
+
+The template parameters to the \lstinline{NekFactory} define the datatype of the key used to retrieve a
+particular implementation (usually a string, enum or custom class such as
+\lstinline{MyConceptKey}), the base class datatype (in our case \lstinline{MyConcept} and a list
+of zero or more parameters which are taken by the constructors of all
+implementations of the type \lstinline{MyConcept} (in our case we have two). Note
+that all implementations must take the same parameter list in their constructors. Since we have not yet declared the base class type \lstinline{MyConcept}, we have forward-declared it above the \lstinline{NekFactory} type definition.
+
+The normal definition of our base class then follows:
+\begin{lstlisting}
+class MyConcept 
+{
+    public:
+        MyConcept(ParamType1 p1, ParamType2 p2);
+        ...
+};
+\end{lstlisting}
+
+We must also define a shared pointer for our base class, which should be declared outside the base class declaration.
+\begin{lstlisting}
+typedef boost::shared_ptr<MyConcept> MyConceptShPtr;
+\end{lstlisting}
+
+
+\subsubsection{Creating a specific implementation (derived class)}
+A new class, derived from the base class above, is defined for each specific implementations of a concept. It is these
+specific implementations which are instantiated by the factory.
+
+In our example we will have an implementations called \lstinline{MyConceptImpl1}
+defined in \inlsh{MyConceptImpl1.h} and \inlsh{MyConceptImpl1.cpp}. In the
+header file we include the base class header file
+\begin{lstlisting}
+#include <MyConcept.h>
+\end{lstlisting}
+
+We then define the derived class as one would normally:
+\begin{lstlisting}
+class MyConceptImpl1 : public MyConcept
+{
+...
+};
+\end{lstlisting}
+
+In order for the factory to work, it must know two things:
+\begin{itemize}
+\item that \lstinline{MyConceptImpl1} exists; and
+\item how to create an instance of it.
+\end{itemize}
+
+To allow the factory to create instances of our class we define a \emph{creator} function in our class, which may have arbitrary name, but is usually called \lstinline{create} out of convention:
+\begin{lstlisting}
+/// Creates an instance of this class
+static MyConceptSharedPtr create(
+            ParamType1 p1,
+            ParamType2 p2)
+{
+    return MemoryManager<MyConceptImpl1>::AllocateSharedPtr(p1, p2);
+}
+\end{lstlisting}
+The example above the \lstinline{create} function simply creates an instance of \inlsh{MyConceptImpl1} using the {\nek} memory manager and the
+supplied parameters. It must be a \lstinline{static} function because we are not operating on any existing instance and it should return a shared pointer to a base class object (rather than a \lstinline{MyConceptImpl1} shared pointer), since the point of the factory is that the calling code does not know about specific implementations. An advantage of having each class providing a creator function is that it allows for \emph{two-stage initialisation} -- for example, initialising base-class variables based on the derived type.
+
+The final task is to register each of our implementations with the factory. This is done 
+using the \lstinline{RegisterCreatorFunction} member function of the \lstinline{NekFactory}.
+However, we wish this to happen as early on as possible (so we can use the 
+factory straight away) and without needing to explicitly call the function for 
+every implementation at the beginning of our program (since this would again 
+defeat the point of a factory)! One solution is to use the function to 
+initialise a static variable: it will force the function to be executed prior to the start of the \lstinline{main()} routine, and can be located within the class it is registering, satisfying our code decoupling requirements.
+
+In \inlsh{MyConceptImpl1.h} we define a static class member variable with the same datatype as the key used in our factory (in our case \lstinline{std::string}) 
+\begin{lstlisting}
+static std::string className;
+\end{lstlisting}
+The above variable can be private since it is typically never actually
+used within the code. We then initialise it in \inlsh{MyConceptImpl1.cpp}
+\begin{lstlisting}
+string MyConceptImpl1::className
+        = GetMyConceptFactory().RegisterCreatorFunction(
+                                "Impl1", 
+                                MyConceptImpl1::create, 
+                                "First implementation of my concept.");
+\end{lstlisting}
+The first parameter specifies the value of the key which should be used to
+select this implementation. The second parameter is a function pointer to the
+static function which should be used by the factory to instantiate our class. The third parameter provides a description which can be printed when listing the available \lstinline{MyConcept} implementations. A specific implementation can be registered with the factory multiple times if there are multiple keys which should instantiate an object of this class.
+
+
+\subsubsection{Instantiating classes}
+To create instances of MyConcept implementations elsewhere in the code, we must
+first include the ''base class'' header file
+\begin{lstlisting}
+#include <MyConcept.h>
+\end{lstlisting}
+Note we do not include the header files for the specific MyConcept 
+implementations anywhere in the code (apart from \inlsh{MyConceptImpl1.cpp}).
+If we modify the implementation, only the implementation itself requires 
+recompilation and the executable relinking.
+
+We create an instance by retrieving the \lstinline{MyConceptFactory} and calling the \lstinline{CreateInstance} member function of the factory, for example,
+\begin{lstlisting}
+ParamType p1 = ...;
+ParamType p2 = ...;
+MyConceptShPtr p = GetMyConceptFactory().CreateInstance( "Impl1", p1, p2 );
+\end{lstlisting}
+
+Note that the instance of the specific implementation is used through the pointer \lstinline{p}, which is of type \lstinline{MyConceptShPtr}, allowing the use of any of the public interface functions in the base class (and therefore the specific implementations behind them) to be
+called, but not directly any functions declared solely in a specific
+implementation.
+
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -677,43 +647,44 @@ are tested to determine whether they are fit for use
 \cite{KFN-testing}.  Unit tests are added to {\nek} through the
 CMake system, and implemented using the Boost test framework.
 As an example, the set of linear algebra unit tests is
-listed in this file: \\
+listed in this file:
 
-.../library/UnitTests/LibUtilities/LinearAlgebra/CMakeLists.txt \\
+\inlsh{.../library/UnitTests/LibUtilities/LinearAlgebra/CMakeLists.txt}
 
-and the actual tests are implemented in this file: \\
+and the actual tests are implemented in this file:
 
-.../library/UnitTests/LibUtilities/LinearAlgebra/TestBandedMatrixOperations.cpp \\
+\inlsh{.../library/UnitTests/LibUtilities/LinearAlgebra/TestBandedMatrixOperations.cpp}
 
-To register a new test, you use ``BOOST\_AUTO\_TEST\_CASE( TestName )'',
+To register a new test, you use \lstinline{BOOST_AUTO_TEST_CASE( TestName )},
 implement the unit test, and test the result using
-``BOOST\_CHECK\_CLOSE(...)'', ``BOOST\_CHECK\_EQUAL(...)'', etc. Unit
-tests are invaluable in maintaining the integrety of the code base and
+\lstinline{BOOST_CHECK_CLOSE(...)}, \lstinline{BOOST_CHECK_EQUAL(...)}, etc. Unit
+tests are invaluable in maintaining the integrity of the code base and
 for localizing, finding, and debugging errors entered into the code. It is
 important to remember a unit test should test very specific
 functionality of the code - in the best case, a single function should be
-tested per unit test. \\
+tested per unit test.
 
 While it is beyond the scope of this document to go into more detail
 on writing unit tests, a good summary of the Boost test system can be
-found here: http://www.boost.org/doc/libs/1\_63\_0/libs/test/doc/html/.
+found here:
+
+\url{http://www.boost.org/doc/libs/1\_63\_0/libs/test/doc/html/}.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Functional (Regression) Tests}
-Functional testing, which in {\nek} we refer to as {\em regression testing},
-is the testing of software components based upon expected
-behavior.  It is not ``white-box'' in that it does not examine how the
-code arrives at a particular answer, but rather in a ``black-box''
+\subsection{Integration, System and Regression Tests}
+Integration testing involves testing ecosystems of components and their interoperability. System testing tests complete applications and regression testing focuses on ensuring previously fixed bugs do not resurface. In {\nek} all of these are often colloquially referred to as {\em regression testing}. It is not \emph{white-box} in that it does not examine how the
+code arrives at a particular answer, but rather in a \emph{black-box}
 fashion tests to see if code when operating on certain data yields the
 predicted response \cite{KFN-testing}.
 
-{\nek} uses a web-enabled ``buildbot'' site to show the results of
-recent test runs on multiple operating systems.  The ``buildbot''
-system can be used to manually instigate a {\nek} system test on a
-development branch of code.  For more information, go to:
+\subsection{Continuous Integration}
+{\nek} uses the \emph{buildbot} continuous integration to perform testing of the code across multiple operating systems.  Builds are automatically instigated when merge requests are opened and subsequently when the associated branches receive additional commits.
 
-\code{http://buildbot.nektar.info}
+For more information, go to:
+
+\url{http://buildbot.nektar.info}
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %\input{prelims/coding-standard.tex}

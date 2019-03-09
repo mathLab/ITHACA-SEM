@@ -278,6 +278,8 @@ namespace Nektar
             NekDouble cpuTime       = 0.0;
             NekDouble elapsed       = 0.0;
 
+            NekDouble tmp_cflSafetyFactor = m_cflSafetyFactor;
+            m_CalcuPrecMatCounter = m_PrcdMatFreezNumb;
 
             m_timestepMax = m_timestep;
             while (step   < m_steps ||
@@ -285,13 +287,23 @@ namespace Nektar
             {
                 if(m_CFLGrowth > 1.0&&m_cflSafetyFactor<m_CFLEnd)
                 {
-                    m_cflSafetyFactor = min(m_CFLEnd,m_CFLGrowth*m_cflSafetyFactor);
+                    tmp_cflSafetyFactor = min(m_CFLEnd,m_CFLGrowth*tmp_cflSafetyFactor);
                 }
-                
-                if (m_cflSafetyFactor)
+
+                if(   (m_CalcuPrecMatCounter>=m_PrcdMatFreezNumb)
+                    ||(m_time + m_timestep > m_fintime && m_fintime > 0.0)
+                    ||(m_checktime && m_time + m_timestep - lastCheckTime >= m_checktime))
                 {
-                    m_timestep = GetTimeStep(fields);
-                    
+
+                    m_CalcuPrecMatFlag      =   true;
+                    m_CalcuPrecMatCounter   =   0;
+                    m_cflSafetyFactor       =   tmp_cflSafetyFactor;
+
+                    if (m_cflSafetyFactor)
+                    {
+                        m_timestep = GetTimeStep(fields);
+                    }
+                        
                     // Ensure that the final timestep finishes at the final
                     // time, or at a prescribed IO_CheckTime.
                     if (m_time + m_timestep > m_fintime && m_fintime > 0.0)
@@ -299,14 +311,15 @@ namespace Nektar
                         m_timestep = m_fintime - m_time;
                     }
                     else if (m_checktime && 
-                             m_time + m_timestep - lastCheckTime >= m_checktime)
+                            m_time + m_timestep - lastCheckTime >= m_checktime)
                     {
                         lastCheckTime += m_checktime;
                         m_timestep     = lastCheckTime - m_time;
                         doCheckTime    = true;
                     }
                 }
-                
+
+                m_CalcuPrecMatCounter++;
 #ifdef DEMO_IMPLICITSOLVER_JFNK_COEFF
                 if (m_TimeIncrementFactor>1.0)
                 {
@@ -318,13 +331,13 @@ namespace Nektar
                         m_timestep = m_fintime - m_time;
                     }
                 }
-                if(m_CalcuPrecMatCounter>=m_PrcdMatFreezNumb)
-                {
+                // if(m_CalcuPrecMatCounter>=m_PrcdMatFreezNumb)
+                // {
 
-                    m_CalcuPrecMatFlag      =   true;
-                    m_CalcuPrecMatCounter   =   0;
-                }
-                m_CalcuPrecMatCounter++;
+                //     m_CalcuPrecMatFlag      =   true;
+                //     m_CalcuPrecMatCounter   =   0;
+                // }
+                // m_CalcuPrecMatCounter++;
 
 #endif
                 

@@ -1538,11 +1538,11 @@ namespace Nektar
                 // if(k>0)
                 // {
                     /// TODO: m_root
-                    if(m_cflLocTimestep>0.0)
-                    {
-                        m_cflLocTimestep *= pow(ratioSteps,0.35);
-                    }
-                    m_cflSafetyFactor *= pow(ratioSteps,0.35);
+                    // if(m_cflLocTimestep>0.0)
+                    // {
+                    //     m_cflLocTimestep *= pow(ratioSteps,0.35);
+                    // }
+                    // m_cflSafetyFactor *= pow(ratioSteps,0.35);
                     
                     converged = true;
                     break;
@@ -1573,8 +1573,8 @@ namespace Nektar
         // m_TimeIntegtSol_n   =   nullptr;
         // m_SysEquatResid_k   =   nullptr;
         // ASSERTL0(converged,"Nonlinear system solver not converge in CompressibleFlowSystem::DoImplicitSolve ");
-        WARNINGL0(converged,"       Nonlinear system solver not converge in CompressibleFlowSystem::DoImplicitSolve ");
-        if(l_verbose&&l_root)
+        WARNINGL0(converged,"     # Nonlinear system solver not converge in CompressibleFlowSystem::DoImplicitSolve ");
+        if((l_verbose||(!converged))&&l_root)
         {
             cout <<right<<scientific<<setw(nwidthcolm)<<setprecision(nwidthcolm-6)
                 <<"     * Newton-Its converged (RES=" 
@@ -1582,8 +1582,8 @@ namespace Nektar
                 <<" ResMax/QPerDOF="<< resmaxm*sqrt(ntotalDOF/m_inArrayNorm)<<" Res/(DtRHS): "<<sqrt(resratio)
                 <<" with "<<setw(3)<<NttlNonlinIte<<" Non-Its"<<" and "<<setw(4)<<NtotDoOdeRHS<<" Lin-Its)"<<endl;
 
-            cout <<right<<scientific<<setw(nwidthcolm)<<setprecision(nwidthcolm-6)
-                    << "       m_cflSafetyFactor=   "<<m_cflSafetyFactor<<endl;
+            // cout <<right<<scientific<<setw(nwidthcolm)<<setprecision(nwidthcolm-6)
+            //         << "       m_cflSafetyFactor=   "<<m_cflSafetyFactor<<endl;
         }
     }
 

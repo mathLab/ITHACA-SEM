@@ -136,7 +136,7 @@ namespace Nektar
             NekDouble   m_inArrayNorm=-1.0;
 
             bool m_CalcuPrecMatFlag     = true;
-            int  m_CalcuPrecMatCounter   = 0;
+            int  m_CalcuPrecMatCounter   = 1E200;
 
             int m_TotLinItePerStep=600;
 

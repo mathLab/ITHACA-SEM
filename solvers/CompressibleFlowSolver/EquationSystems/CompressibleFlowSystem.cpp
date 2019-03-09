@@ -1113,7 +1113,9 @@ namespace Nektar
             Vmath::Vcopy(nTracePts, Bwd[i],1,plusBwd[i],1);
         }
 
+        // NekDouble eps   =   1.0E-6;
         NekDouble eps   =   1.0E-6;
+        
         DNekMatSharedPtr tmpMat;
         // Fwd Jacobian
         for(int i = 0; i < nFields; i++)
@@ -1477,6 +1479,7 @@ namespace Nektar
         NekDouble resmaxm  = 0.0;
         NekDouble resratio = 1.0;
         NekDouble ratioSteps = 1.0;
+        int NttlNonlinIte    = 0;
         for (int k = 0; k < MaxNonlinIte; k++)
         {
             NonlinSysEvaluator_coeff(m_TimeIntegtSol_k,m_SysEquatResid_k);
@@ -1540,17 +1543,7 @@ namespace Nektar
                         m_cflLocTimestep *= pow(ratioSteps,0.35);
                     }
                     m_cflSafetyFactor *= pow(ratioSteps,0.35);
-                    if(l_verbose&&l_root)
-                    {
-                        cout <<right<<scientific<<setw(nwidthcolm)<<setprecision(nwidthcolm-6)
-                            <<"     * Newton-Its converged (RES=" 
-                            << sqrt(resnorm)<<" Res/Q="<< sqrt(resnorm/m_inArrayNorm)
-                            <<" ResMax/QPerDOF="<< resmaxm*sqrt(ntotalDOF/m_inArrayNorm)<<" Res/(DtRHS): "<<sqrt(resratio)
-                            <<" with "<<setw(3)<<k<<" Non-Its"<<" and "<<setw(4)<<NtotDoOdeRHS<<" Lin-Its)"<<endl;
-
-                        cout <<right<<scientific<<setw(nwidthcolm)<<setprecision(nwidthcolm-6)
-                             << "       m_cflSafetyFactor=   "<<m_cflSafetyFactor<<endl;
-                    }
+                    
                     converged = true;
                     break;
                 // }
@@ -1569,6 +1562,7 @@ namespace Nektar
             {
                 Vmath::Vsub(npoints,m_TimeIntegtSol_k[i],1,dsol[i],1,m_TimeIntegtSol_k[i],1);
             }
+            NttlNonlinIte ++;
 
         }
 
@@ -1578,7 +1572,19 @@ namespace Nektar
         // m_TimeIntegtSol_k   =   nullptr;
         // m_TimeIntegtSol_n   =   nullptr;
         // m_SysEquatResid_k   =   nullptr;
-        ASSERTL0((converged),"Nonlinear system solver not converge in CompressibleFlowSystem::DoImplicitSolve ");
+        // ASSERTL0(converged,"Nonlinear system solver not converge in CompressibleFlowSystem::DoImplicitSolve ");
+        WARNINGL0(converged,"       Nonlinear system solver not converge in CompressibleFlowSystem::DoImplicitSolve ");
+        if(l_verbose&&l_root)
+        {
+            cout <<right<<scientific<<setw(nwidthcolm)<<setprecision(nwidthcolm-6)
+                <<"     * Newton-Its converged (RES=" 
+                << sqrt(resnorm)<<" Res/Q="<< sqrt(resnorm/m_inArrayNorm)
+                <<" ResMax/QPerDOF="<< resmaxm*sqrt(ntotalDOF/m_inArrayNorm)<<" Res/(DtRHS): "<<sqrt(resratio)
+                <<" with "<<setw(3)<<NttlNonlinIte<<" Non-Its"<<" and "<<setw(4)<<NtotDoOdeRHS<<" Lin-Its)"<<endl;
+
+            cout <<right<<scientific<<setw(nwidthcolm)<<setprecision(nwidthcolm-6)
+                    << "       m_cflSafetyFactor=   "<<m_cflSafetyFactor<<endl;
+        }
     }
 
     void CompressibleFlowSystem::AllocatePrecondBlkDiag_coeff(Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray)

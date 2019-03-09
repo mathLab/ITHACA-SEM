@@ -37,10 +37,9 @@
 #define NEKTAR_SPATIALDOMAINS_MESHGRAPH_H
 
 #include <unordered_map>
-#include <boost/geometry.hpp>
 
+#include <boost/geometry/index/rtree.hpp>
 namespace bg = boost::geometry;
-namespace bgi = boost::geometry::index;
 
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <LibUtilities/BasicUtils/FieldIO.h>
@@ -161,10 +160,8 @@ typedef std::shared_ptr<std::vector<std::pair<GeometrySharedPtr, int>>>
 
 typedef std::map<std::string, std::string> MeshMetaDataMap;
 
-typedef bg::model::point<NekDouble, 3, bg::cs::cartesian> point;
-typedef bg::model::box<point> box;
-typedef std::pair<box, int> value;
-typedef bgi::rtree< value, bgi::rstar<16, 4> > rtree;
+typedef std::pair<BgBox, int> BgRtreeValue;
+typedef bg::index::rtree< BgRtreeValue, bg::index::rstar<16, 4> > BgRtree;
 
 class MeshGraph;
 typedef std::shared_ptr<MeshGraph> MeshGraphSharedPtr;
@@ -204,7 +201,7 @@ public:
 
     SPATIAL_DOMAINS_EXPORT void FillBoundingBoxTree();
 
-    SPATIAL_DOMAINS_EXPORT std::vector<int> GetElementsContainingPoint(
+    SPATIAL_DOMAINS_EXPORT std::vector<BgRtreeValue> GetElementsContainingPoint(
             PointGeomSharedPtr p);
 
     ////////////////////
@@ -475,7 +472,7 @@ protected:
     CompositeOrdering m_compOrder;
     BndRegionOrdering m_bndRegOrder;
 
-    rtree m_boundingBoxTree;
+    BgRtree m_boundingBoxTree;
 };
 typedef std::shared_ptr<MeshGraph> MeshGraphSharedPtr;
 typedef LibUtilities::NekFactory<std::string, MeshGraph> MeshGraphFactory;

@@ -1476,25 +1476,27 @@ namespace Nektar
                 = MemoryManager<SpatialDomains::PointGeom>::AllocateSharedPtr(
                         GetExp(0)->GetCoordim(), -1, x, y, z);
 
-            std::vector<int> elmts = m_graph->GetElementsContainingPoint(p);
+            std::vector<SpatialDomains::BgRtreeValue> elmts =
+                    m_graph->GetElementsContainingPoint(p);
+
             int min_id  = 0;
             NekDouble nearpt_min = 1e6;
             Array<OneD, NekDouble> savLocCoords(locCoords.num_elements());
 
             for (int i = 0; i < elmts.size(); ++i)
             {
-                if ((*m_exp)[m_elmtToExpId[elmts[i]]]->
+                if ((*m_exp)[m_elmtToExpId[elmts[i].second]]->
                             GetGeom()->ContainsPoint(gloCoords,
                                                      locCoords,
                                                      tol, nearpt))
                 {
-                    return m_elmtToExpId[elmts[i]];
+                    return m_elmtToExpId[elmts[i].second];
                 }
                 else
                 {
                     if(nearpt < nearpt_min)
                     {
-                        min_id    = m_elmtToExpId[elmts[i]];
+                        min_id    = m_elmtToExpId[elmts[i].second];
                         nearpt_min = nearpt;
                         Vmath::Vcopy(locCoords.num_elements(),locCoords,    1,
                                                               savLocCoords, 1);

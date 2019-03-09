@@ -188,59 +188,62 @@ void MeshGraph::FillGraph()
 void MeshGraph::FillBoundingBoxTree()
 {
     m_boundingBoxTree.clear();
+    for (auto &x : m_segGeoms) 
+    {
+        BgBox b = x.second->GetBoundingBox();
+        m_boundingBoxTree.insert(std::make_pair(b, x.first));
+    }
     for (auto &x : m_triGeoms) 
     {
-        box b = x.second->GetBoundingBox();
+        BgBox b = x.second->GetBoundingBox();
         m_boundingBoxTree.insert(std::make_pair(b, x.first));
     }
     for (auto &x : m_quadGeoms) 
     {
-        box b = x.second->GetBoundingBox();
+        BgBox b = x.second->GetBoundingBox();
         m_boundingBoxTree.insert(std::make_pair(b, x.first));
     }
     for (auto &x : m_tetGeoms) 
     {
-        box b = x.second->GetBoundingBox();
+        BgBox b = x.second->GetBoundingBox();
         m_boundingBoxTree.insert(std::make_pair(b, x.first));
     }
     for (auto &x : m_prismGeoms) 
     {
-        box b = x.second->GetBoundingBox();
+        BgBox b = x.second->GetBoundingBox();
         m_boundingBoxTree.insert(std::make_pair(b, x.first));
     }
     for (auto &x : m_pyrGeoms) 
     {
-        box b = x.second->GetBoundingBox();
+        BgBox b = x.second->GetBoundingBox();
         m_boundingBoxTree.insert(std::make_pair(b, x.first));
     }
     for (auto &x : m_hexGeoms) 
     {
-        box b = x.second->GetBoundingBox();
+        BgBox b = x.second->GetBoundingBox();
         m_boundingBoxTree.insert(std::make_pair(b, x.first));
     }
 }
 
-std::vector<int> MeshGraph::GetElementsContainingPoint(
+std::vector<BgRtreeValue> MeshGraph::GetElementsContainingPoint(
             PointGeomSharedPtr p)
 {
     if (m_boundingBoxTree.empty())
     {
         FillBoundingBoxTree();
     }
+
     NekDouble x, y, z;
-    std::vector<value> vals;
+    std::vector<BgRtreeValue> vals;
 
     p->GetCoords(x, y, z);
-    box b(point(x, y, z), point(x, y, z));
-    m_boundingBoxTree.query(bgi::intersects( b ),
+
+    BgBox b( BgPoint(x, y, z), BgPoint(x, y, z) );
+
+    m_boundingBoxTree.query(bg::index::intersects( b ),
                             std::back_inserter( vals ));
 
-    std::vector<int> ret(vals.size());
-    for (int i = 0; i < vals.size(); ++i)
-    {
-        ret[i] = vals[i].second;
-    }
-    return ret;
+    return vals;
 }
 
 

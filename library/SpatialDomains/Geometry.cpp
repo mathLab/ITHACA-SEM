@@ -365,9 +365,9 @@ void Geometry::GenBoundingBox()
         maxz = (z > maxz ? z : maxz);
     }
 
-    point pmin(minx, miny, minz);
-    point pmax(maxx, maxy, maxz);
-    m_boundingBox = bg::model::box<point>(pmin, pmax);
+    BgPoint pmin(minx, miny, minz);
+    BgPoint pmax(maxx, maxy, maxz);
+    m_boundingBox = BgBox(pmin, pmax);
 }
 
 

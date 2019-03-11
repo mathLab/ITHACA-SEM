@@ -89,7 +89,7 @@ void MeshPartitionPtScotch::PartitionGraphImpl(
     SCOTCH_Dgraph scGraph;
     SCOTCH_CALL(SCOTCH_dgraphInit, (&scGraph, mpiComm->GetComm()));
     SCOTCH_CALL(SCOTCH_dgraphBuild,
-                (&scGraph, 0, nVerts, nVerts, &xadj[0], &xadj[1], NULL,
+                (&scGraph, 0, nVerts, nVerts, &xadj[0], &xadj[1], &vertWgt[0],
                  NULL, adjcy.num_elements(), adjcy.num_elements(),
                  &adjcy[0], NULL, NULL));
     SCOTCH_CALL(SCOTCH_dgraphCheck, (&scGraph));

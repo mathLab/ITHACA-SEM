@@ -3376,13 +3376,7 @@ namespace Nektar
 		globally_connected = 0;
 	}
 	Nmax = number_of_snapshots;
-//	Array<OneD, NekDouble> param_vector(Nmax);
 	param_vector = Array<OneD, NekDouble> (Nmax);
-	// = [0.1 0.5 1 10];
-/*	param_vector[0] = 0.1; // should also wander to the xml file
-	param_vector[1] = 0.5;
-	param_vector[2] = 1;
-	param_vector[3] = 10;  	*/
         for(int i = 0; i < number_of_snapshots; ++i)
         {
 		// generate the correct string
@@ -3390,9 +3384,7 @@ namespace Nektar
 		sstm << "param" << i;
 		std::string result = sstm.str();
 //		const char* rr = result.c_str();
-//		double dvalue;
 	        param_vector[i] = m_session->GetParameter(result);
-		//param_vector[i] = dvalue;
         }
 	InitObject();
 	if ( load_snapshot_data_from_files )
@@ -3408,7 +3400,6 @@ namespace Nektar
 	m_session->SetSolverInfo("SolverType", "CoupledLinearisedNS_trafoP");
 	CoupledLinearNS_trafoP babyCLNS_trafo(m_session);
 	babyCLNS_trafo.InitObject();
-	//Eigen::MatrixXd collect_f_all = babyCLNS_trafo.DoTrafo(snapshot_x_collection, snapshot_y_collection, param_vector);
 	collect_f_all = babyCLNS_trafo.DoTrafo(snapshot_x_collection, snapshot_y_collection, param_vector);
 	Eigen::BDCSVD<Eigen::MatrixXd> svd_collect_f_all(collect_f_all, Eigen::ComputeThinU);
 	cout << "svd_collect_f_all.singularValues() " << svd_collect_f_all.singularValues() << endl << endl;
@@ -3529,7 +3520,6 @@ namespace Nektar
     {
 	CoupledLinearNS_trafoP babyCLNS_trafo(m_session);
 	babyCLNS_trafo.InitObject();
-	//Eigen::MatrixXd collect_f_all = babyCLNS_trafo.DoTrafo(snapshot_x_collection, snapshot_y_collection, param_vector);
 	Array<OneD, NekDouble> zero_phys_init(GetNpoints(), 0.0);
 	snapshot_x_collection = Array<OneD, Array<OneD, NekDouble> > (number_of_snapshots);
 	snapshot_y_collection = Array<OneD, Array<OneD, NekDouble> > (number_of_snapshots);
@@ -3565,7 +3555,6 @@ namespace Nektar
         for(int i = 0; i < nvelo; ++i)
         {
            fieldStr.push_back(m_session->GetVariable(i));
-//           cout << "session->GetVariable(i) " << session->GetVariable(i) << endl;
         }
 
 	snapshot_x_collection = Array<OneD, Array<OneD, NekDouble> > (number_of_snapshots);
@@ -3580,7 +3569,6 @@ namespace Nektar
 		const char* rr = result.c_str();
 
 	        EvaluateFunction(fieldStr, test_load_snapshot, result);
-//		cout << "tls " << test_load_snapshot[0][1235] << endl;
 		snapshot_x_collection[i] = Array<OneD, NekDouble> (GetNpoints(), 0.0);
 		snapshot_y_collection[i] = Array<OneD, NekDouble> (GetNpoints(), 0.0);
 		for (int j=0; j < GetNpoints(); ++j)
@@ -3588,38 +3576,19 @@ namespace Nektar
 			snapshot_x_collection[i][j] = test_load_snapshot[0][j];
 			snapshot_y_collection[i][j] = test_load_snapshot[1][j];
 		}
-		// snapshot_x_collection[i] = test_load_snapshot[0];
-		// snapshot_y_collection[i] = test_load_snapshot[1];
         }
     }
 
     void CoupledLinearNS_TT::trafoSnapshot_simple(Eigen::MatrixXd RB_in)
     {
-	cout << "Ciao from void trafoSnapshot_simple(Eigen::MatrixXd RB_in)" << endl;
-	//return RB_via_POD;
+	// moved to CoupledLinearNS_trafoP
     }
 
 
-//   void CoupledLinearNS_TT::DefineRBspace(Array<OneD, Array<OneD, NekDouble> > RBbase)
    void CoupledLinearNS_TT::DefineRBspace(Eigen::MatrixXd RB_in)
     {
-
-	cout << "Ciao from void CoupledLinearNS_TT::DefineRBspace(void)" << endl;
-
-	RB = RB_in;
-
-	cout << "RB.cols() " << RB.cols() << endl;
-	cout << "RB.rows() " << RB.rows() << endl;
+	// unused
 	
-//        RB = Array<OneD, Array<OneD, NekDouble> > (m_velocity.num_elements());
-        
-//        for(int i = 0; i < m_velocity.num_elements(); ++i)
-//        {
-//            RB[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(), i); // a "Spass" init 
-//        }
-
-//	cout << RB[1][2] << endl;
-
     }
 
     void CoupledLinearNS_TT::v_Output(void)
@@ -3634,31 +3603,6 @@ namespace Nektar
             variables[i]   = m_boundaryConditions->GetVariable(i);
         }
 
-
-
-//	cout << "m_pressure->GetPhys() " << m_pressure->GetPhys() << endl;
-//	cout << "m_pressure->GetCoeffs() " << m_pressure->GetCoeffs() << endl;
-
-	// use LocalToGlobal (const Array< OneD, const NekDouble > &inarray, Array< OneD, NekDouble > &outarray, bool useComm=true)
-//        Array<OneD, NekDouble> glo_fieldcoeffs(m_fields[0]->GetNcoeffs(), 0.0);
-
-
-/*	for(int counter_global_num = 6000; counter_global_num < fieldcoeffs[0].num_elements(); counter_global_num++)
-	{
-	        Array<OneD, NekDouble> glo_fieldcoeffs(counter_global_num, 0.0);
-		cout << "cgi: " << counter_global_num << endl;
-		m_fields[0]->LocalToGlobal(fieldcoeffs[0], glo_fieldcoeffs);
-		cout << "cgi: " << counter_global_num << endl;
-
-		try
-		{
-			cout << "cgi: " << counter_global_num << " value " << glo_fieldcoeffs[counter_global_num-2] << " ";
-		}
-	        catch (const std::runtime_error&)
-	        {
-        	//	return 1;
-	        }
-	} */
 
         fieldcoeffs[i] = Array<OneD, NekDouble>(m_fields[0]->GetNcoeffs());  
         // project pressure field to velocity space        

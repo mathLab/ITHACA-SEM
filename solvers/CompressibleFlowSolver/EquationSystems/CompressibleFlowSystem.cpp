@@ -149,6 +149,41 @@ namespace Nektar
             // m_LinSysOprtors.DefinePrecond(&CompressibleFlowSystem::preconditioner_BlkDiag, this);
             // m_LinSysOprtors.DefinePrecond(&CompressibleFlowSystem::preconditioner, this);
             m_linsol->setLinSysOperators(m_LinSysOprtors);
+
+            if (boost::iequals(m_session->GetSolverInfo("PRECONDITIONER"),
+                               "IncompleteLU"))
+            {
+                // m_LinSysOprtors.DefinePrecond(&CompressibleFlowSystem::preconditioner_BlkILU_coeff, this);
+                m_PrecMatStorage    =   eSparse;
+
+                ASSERTL0(false,"IncompleteLU preconditioner not finished yet");
+
+                // DNekSmvBsrMat::SparseStorageSharedPtr sparseStorage =
+                //             MemoryManager<DNekSmvBsrMat::StorageType>::
+                //                     AllocateSharedPtr(
+                //                         brows, bcols, block_size, bcoMat, matStorage );
+
+                // // Create sparse matrix
+                // m_smvbsrmatrix = MemoryManager<DNekSmvBsrMat>::
+                //                         AllocateSharedPtr( sparseStorage );
+
+                // matBytes = m_smvbsrmatrix->GetMemoryFootprint();
+
+            }
+            else 
+            {
+                int nvariables  =   m_fields.num_elements();
+                m_LinSysOprtors.DefinePrecond(&CompressibleFlowSystem::preconditioner_BlkSOR_coeff, this);
+                m_PrecMatStorage    =   eDiagonal;
+            
+                m_PrecMatVars = Array<OneD, Array<OneD, DNekBlkMatSharedPtr> >(nvariables);
+                for(int i = 0; i < nvariables; i++)
+                {
+                    m_PrecMatVars[i] =  Array<OneD, DNekBlkMatSharedPtr> (nvariables);
+                }
+                AllocatePrecondBlkDiag_coeff(m_PrecMatVars);
+            }
+            
 #else
             ASSERTL0(false, "Implicit CFS not set up.");
 #endif
@@ -1385,21 +1420,6 @@ namespace Nektar
         // NekDouble ratioTol = tolrnc;
         NekDouble tol2Ratio = ratioTol*ratioTol;
         NekDouble tol2Max   = sqrt(m_inArrayNorm*ototalDOF)*ratioTol;
-
-        if(m_PrecMatVars.num_elements())
-        {
-
-        }
-        else
-        {
-            m_PrecMatVars = Array<OneD, Array<OneD, DNekBlkMatSharedPtr> >(nvariables);
-            for(int i = 0; i < nvariables; i++)
-            {
-                m_PrecMatVars[i] =  Array<OneD, DNekBlkMatSharedPtr> (nvariables);
-            }
-            AllocatePrecondBlkDiag_coeff(m_PrecMatVars);
-        }
-        
 
         Array<OneD, NekDouble> NonlinSysRes_1D(ntotal,0.0),sol_k_1D(ntotal,0.0),dsol_1D(ntotal,0.0);
         Array<OneD,       Array<OneD, NekDouble> > NonlinSysRes(nvariables),dsol(nvariables);

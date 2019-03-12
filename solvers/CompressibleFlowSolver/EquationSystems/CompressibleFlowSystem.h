@@ -93,6 +93,15 @@ namespace Nektar
         // Forcing term
         std::vector<SolverUtils::ForcingSharedPtr> m_forcing;
 
+        enum PreconditionerType
+        {
+            eNull,    ///< No Solution type specified
+            eDiagonal,
+            eSparse,
+        };
+
+        PreconditionerType                  m_PrecMatStorage;
+
         CompressibleFlowSystem(
             const LibUtilities::SessionReaderSharedPtr& pSession,
             const SpatialDomains::MeshGraphSharedPtr& pGraph);

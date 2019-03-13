@@ -37,6 +37,7 @@
 
 #include <LibUtilities/TimeIntegration/TimeIntegrationWrapper.h>
 #include "CoupledLinearNS_TT.h"
+#include "CoupledLinearNS_trafoP.h"
 #include <LibUtilities/BasicUtils/Timer.h>
 #include <LocalRegions/MatrixKey.h>
 #include <MultiRegions/GlobalLinSysDirectStaticCond.h>
@@ -173,7 +174,7 @@ namespace Nektar
 //        int n_vel  = m_fields.num_elements();
 
 
-	std::stringstream sstm_bwdtrans;
+/*	std::stringstream sstm_bwdtrans;
 	sstm_bwdtrans << "bwdtrans.txt";
 	std::string result_bwdtrans = sstm_bwdtrans.str();
 //      std::ofstream myfile_bwdtrans (result_bwdtrans);
@@ -211,13 +212,13 @@ namespace Nektar
 	        myfile_bwdtrans.close();
 	}
 	else std::cout << "Unable to open file";
-
+*/
 	std::stringstream sstm_cartmap0;
 	sstm_cartmap0 << "cartmap0.txt";
 //	std::string result_cartmap0 = sstm_cartmap0.str();
 //	std::basic_string<char, std::char_traits<char>, std::allocator<char> > result_cartmap0 = sstm_cartmap0.str();
 //        std::ofstream myfile_cartmap0 (result_cartmap0);
-        std::ofstream myfile_cartmap0 ("cartmap0.txt");
+  /*      std::ofstream myfile_cartmap0 ("cartmap0.txt");
 	if (myfile_cartmap0.is_open())
 	{
 		for(int n = 0; n < nel; ++n)
@@ -294,10 +295,10 @@ namespace Nektar
 	        myfile_cartmap1.close();
 	}
 	else std::cout << "Unable to open file";
-
+*/
         // locExp->IProductWRTBase(tmpphys,coeffs);                                for all tmpphys
 
-	std::stringstream sstm_IP;
+/*	std::stringstream sstm_IP;
 	sstm_IP << "IP.txt";
 	std::string result_IP = sstm_IP.str();
 //        std::ofstream myfile_IP (result_IP);
@@ -337,8 +338,8 @@ namespace Nektar
 	        myfile_IP.close();
 	}
 	else std::cout << "Unable to open file";
-
-	std::stringstream sstm_IP_d0;
+*/
+/*	std::stringstream sstm_IP_d0;
 	sstm_IP_d0 << "IP_d0.txt";
 	std::string result_IP_d0 = sstm_IP_d0.str();
 //        std::ofstream myfile_IP (result_IP);
@@ -420,11 +421,11 @@ namespace Nektar
 	        myfile_IP_d1.close();
 	}
 	else std::cout << "Unable to open file";
-
+*/
 
 	//  m_pressure->GetExp(eid)->IProductWRTBase(deriv,pcoeffs);
 
-	std::stringstream sstm_IPp;
+/*	std::stringstream sstm_IPp;
 	sstm_IPp << "IPp.txt";
 	std::string result_IPp = sstm_IPp.str();
 //        std::ofstream myfile_IPp (result_IPp);
@@ -467,16 +468,16 @@ namespace Nektar
 
 	        	int nbmap = bmap.num_elements();
 		        int nimap = imap.num_elements(); 
-        
+        */
 
 
-		std::stringstream sstmb;
-		sstmb << "bmap_" << n << ".txt";
-		std::string resultb = sstmb.str();
+//		std::stringstream sstmb;
+//		sstmb << "bmap_" << n << ".txt";
+//		std::string resultb = sstmb.str();
 
 
 //          std::ofstream myfile_bmap (resultb);
-          std::ofstream myfile_bmap ("bmap.txt");
+/*          std::ofstream myfile_bmap ("bmap.txt");
 	  if (myfile_bmap.is_open())
 	  {
 	    for (int i = 0; i < nbmap; i++)
@@ -494,11 +495,11 @@ namespace Nektar
 		std::stringstream sstmi;
 		sstmi << "imap_" << n << ".txt";
 		std::string resulti = sstmi.str();
-
+*/
 //	    std::cout << "saving current imap " << resulti << std::endl;
 
 //          std::ofstream myfile_imap (resulti);
-          std::ofstream myfile_imap ("imap.txt");
+/*          std::ofstream myfile_imap ("imap.txt");
 	  if (myfile_imap.is_open())
 	  {
 	    for (int i = 0; i < nimap; i++)
@@ -512,7 +513,7 @@ namespace Nektar
                 myfile_imap.close();
 	  }
 	  else std::cout << "Unable to open file";
-
+*/
       //      StdRegions::ConstFactorMap factors;
       //      factors[StdRegions::eFactorLambda] = lambda/m_kinvis;
       //      LocalRegions::MatrixKey helmkey(StdRegions::eHelmholtz,
@@ -522,12 +523,12 @@ namespace Nektar
 
       //          DNekScalMat &HelmMat = *(locExp->as<LocalRegions::Expansion>()
       //                                         ->GetLocMatrix(helmkey));
-
+/*
 		}
 	        myfile_IPp.close();
 	}
 	else std::cout << "Unable to open file";
-
+*/
     }
 
     void CoupledLinearNS_TT::SetUpCoupledMatrix(const NekDouble lambda,  const Array< OneD, Array< OneD, NekDouble > > &Advfield, bool IsLinearNSEquation)
@@ -954,7 +955,7 @@ namespace Nektar
                 Array<OneD, const NekDouble> HelmMat_data = HelmMat.GetOwnedMatrix()->GetPtr();
               
 
-		std::stringstream sstm_l00;
+/*		std::stringstream sstm_l00;
 		sstm_l00 << "Lapl00_" << n << ".txt";
 		std::string result_l00 = sstm_l00.str();
 		const char* rr_l00 = result_l00.c_str();
@@ -974,13 +975,13 @@ namespace Nektar
 		  }
 		  else std::cout << "Unable to open file";
 
-
+*/
 
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-
+/*
 	        LocalRegions::MatrixKey helmkey_l11(StdRegions::eLaplacian11,
                                             locExp->DetShapeType(),
                                             *locExp,
@@ -1013,10 +1014,10 @@ namespace Nektar
         	        myfileHM_l11.close();
 		  }
 		  else std::cout << "Unable to open file";
-
+*/
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-
+/*
 	        LocalRegions::MatrixKey helmkey_l01(StdRegions::eLaplacian01,
                                             locExp->DetShapeType(),
                                             *locExp,
@@ -1049,7 +1050,7 @@ namespace Nektar
         	        myfileHM_l01.close();
 		  }
 		  else std::cout << "Unable to open file";
-
+*/
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
 
@@ -1157,7 +1158,7 @@ namespace Nektar
                 int npoints = locExp->GetTotPoints();
                 
 
-		std::stringstream sstm;
+	/*	std::stringstream sstm;
 		sstm << "HelmMat_" << n << ".txt";
 		std::string result = sstm.str();
 		const char* rr = result.c_str();
@@ -1176,7 +1177,7 @@ namespace Nektar
         	        myfileHM.close();
 		  }
 		  else std::cout << "Unable to open file";
-
+*/
 
                 // Calculate derivative of base flow 
                 if(IsLinearNSEquation)
@@ -1860,7 +1861,7 @@ namespace Nektar
             pDh->SetBlock(n,n,loc_mat = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,Dh));    
         }
         timer.Stop();
-        cout << "Matrix Setup Costs: " << timer.TimePerTest(1) << endl;
+//        cout << "Matrix Setup Costs: " << timer.TimePerTest(1) << endl;
         
 	// end of the loop over the spectral elements
             
@@ -1881,6 +1882,7 @@ namespace Nektar
 
 //	cout << D_all << endl;
 
+/*	cout << "current m_kinvis " << m_kinvis << endl;
 	cout << "RB_A.norm() " << RB_A.norm() << endl;
 	cout << "RB_A_adv.norm() " << RB_A_adv.norm() << endl;
 	cout << "RB_A_no_adv.norm() " << RB_A_no_adv.norm() << endl;
@@ -1897,8 +1899,7 @@ namespace Nektar
 	cout << "RB_D_adv.norm() " << RB_D_adv.norm() << endl;
 	cout << "RB_D_no_adv.norm() " << RB_D_no_adv.norm() << endl;
 	cout << "(RB_D - RB_D_adv - RB_D_no_adv).norm() " << (RB_D - RB_D_adv - RB_D_no_adv).norm() << endl;
-
-
+*/
 //        cout << RB_D << endl;
 //        cout << RB_D_adv << endl;
 //        cout << RB_D_no_adv << endl;
@@ -1912,7 +1913,7 @@ namespace Nektar
         mat.m_CoupledBndSys = MemoryManager<MultiRegions::GlobalLinSysDirectStaticCond>::AllocateSharedPtr(key,m_fields[0],pAh,pBh,pCh,pDh,locToGloMap);
         mat.m_CoupledBndSys->Initialise(locToGloMap);
         timer.Stop();
-        cout << "Multilevel condensation: " << timer.TimePerTest(1) << endl;
+//        cout << "Multilevel condensation: " << timer.TimePerTest(1) << endl;
     }
 
 
@@ -2028,7 +2029,7 @@ namespace Nektar
         }
 
 	// do need to write the forcing vectors
-          ofstream myfilef0 ("forcing0.txt");
+  /*        ofstream myfilef0 ("forcing0.txt");
 	  if (myfilef0.is_open())
 	  {
 		for (int counter_row = 0; counter_row < forcing[0].num_elements(); ++counter_row)
@@ -2053,7 +2054,8 @@ namespace Nektar
                 myfilef1.close();
 	  }
 	  else cout << "Unable to open file";
-        
+*/        
+
         // Assemble f_bnd and f_int
         cnt = cnt1 = 0;
         for(i = 0; i < nel; ++i) // loop over elements
@@ -2103,7 +2105,7 @@ namespace Nektar
         const Array<OneD,const NekDouble>& loctoglosign
         = m_locToGloMap[mode]->GetLocalToGlobalSign();
         
-          ofstream myfile1LocGloMap ("LocGloMap.txt");
+/*          ofstream myfile1LocGloMap ("LocGloMap.txt");
 	  if (myfile1LocGloMap.is_open())
 	  {
 		for (int counter = 0; counter < loctoglomap.num_elements(); ++counter)
@@ -2155,7 +2157,7 @@ namespace Nektar
                 myfile2LocGloBndSign.close();
 	  }
 	  else cout << "Unable to open file";
-
+*/
    /*         Array<OneD, Array<OneD, NekDouble> > glo_dof_to_phys_collector(number_of_global_dofs);
             Array<OneD, Array<OneD, NekDouble> > phys_to_glo_dof_collector(m_fields[0]->GetNpoints());
             Array<OneD, Array<OneD, NekDouble> > glo_dof_to_phys_collector_p(number_of_global_dofs);
@@ -2214,7 +2216,7 @@ namespace Nektar
         const Array<OneD,const int>& bndmap
         = m_locToGloMap[mode]->GetBndCondCoeffsToGlobalCoeffsMap();
         
-          ofstream myfilebndmap ("BndCondCoeffsToGlobalCoeffsMap.txt");
+/*          ofstream myfilebndmap ("BndCondCoeffsToGlobalCoeffsMap.txt");
 	  if (myfilebndmap.is_open())
 	  {
 		for (int counter = 0; counter < bndmap.num_elements(); ++counter)
@@ -2226,7 +2228,7 @@ namespace Nektar
                 myfilebndmap.close();
 	  }
 	  else cout << "Unable to open file";   
-
+*/
         // Forcing function with weak boundary conditions and
         // Dirichlet conditions
         int bndcnt=0;
@@ -2247,14 +2249,14 @@ namespace Nektar
                 bndCondExp = m_fields[k]->GetBndCondExpansions();
             }
             
-     		ofstream myfile_bnd_cond_elem ("bnd_cond_elem.txt");
+/*     		ofstream myfile_bnd_cond_elem ("bnd_cond_elem.txt");
 		if (myfile_bnd_cond_elem.is_open())
 	  	{
 			myfile_bnd_cond_elem << std::setprecision(17) << bndCondExp.num_elements() << "\n";
                 	myfile_bnd_cond_elem.close();
 	  	}
 	  	else cout << "Unable to open file"; 
-
+*/
             for(i = 0; i < bndCondExp.num_elements(); ++i)
             {
                 const Array<OneD, const NekDouble > bndCondCoeffs = bndCondExp[i]->GetCoeffs();
@@ -2269,7 +2271,7 @@ namespace Nektar
 		const char* outname_t = rr;
 
        
-     		ofstream myfile_t (outname_t);
+/*     		ofstream myfile_t (outname_t);
 		if (myfile_t.is_open())
 	  	{
 			for(int count_bnd = 0; count_bnd < bndCondCoeffs.num_elements(); count_bnd++)
@@ -2279,7 +2281,7 @@ namespace Nektar
                 	myfile_t.close();
 	  	}
 	  	else cout << "Unable to open file"; 
-
+*/
 
 //		cout << "i " << i << endl;
 //		for(int count_bnd = 0; count_bnd < bndCondCoeffs.num_elements(); count_bnd++)
@@ -2324,16 +2326,17 @@ namespace Nektar
 //	cout <<	"m_locToGloMap[mode]->GetNumGlobalDirBndCoeffs() " << m_locToGloMap[mode]->GetNumGlobalDirBndCoeffs() << endl;
 //	cout <<	"m_locToGloMap[mode]->GetNumGlobalCoeffs() " << m_locToGloMap[mode]->GetNumGlobalCoeffs() << endl;
 
-          ofstream myfiledirbnd ("NumGlobalDirBndCoeffs.txt");
+/*          ofstream myfiledirbnd ("NumGlobalDirBndCoeffs.txt");
 	  if (myfiledirbnd.is_open())
 	  {
 		myfiledirbnd << std::setprecision(17) << m_locToGloMap[mode]->GetNumGlobalDirBndCoeffs();
                 myfiledirbnd.close();
 	  }
 	  else cout << "Unable to open file";   
+*/
 
-	cout << "fh_bnd.num_elements() " << fh_bnd.num_elements() << std::endl;   
-	cout << "bnd.num_elements() " << bnd.num_elements() << std::endl;  
+//	cout << "fh_bnd.num_elements() " << fh_bnd.num_elements() << std::endl;   
+//	cout << "bnd.num_elements() " << bnd.num_elements() << std::endl;  
 	
 	for(i = 0; i <  fh_bnd.num_elements(); ++i)
 	{
@@ -2423,7 +2426,7 @@ namespace Nektar
 
 	// --- writing the fields in loc format from here on, so what i want is also the f_bnd, f_p, f_int
 //	curr_f_bnd = f_bnd;
-	cout << "f_bnd.num_elements() " << f_bnd.num_elements() << endl;
+/*	cout << "f_bnd.num_elements() " << f_bnd.num_elements() << endl;
 	cout << "f_p.num_elements() " << f_p.num_elements() << endl;
 	cout << "f_int.num_elements() " << f_int.num_elements() << endl;
 
@@ -2439,12 +2442,22 @@ namespace Nektar
 	cout << "RB_Dbnd.rows() " << RB_Dbnd.rows() << endl;
 	cout << "RB_Dint.cols() " << RB_Dint.cols() << endl;
 	cout << "RB_Dint.rows() " << RB_Dint.rows() << endl;
-
+*/
 
 	curr_f_bnd = Eigen::VectorXd::Zero(f_bnd.num_elements());
 	for (int i_phys_dof = 0; i_phys_dof < f_bnd.num_elements(); i_phys_dof++)
 	{
 		curr_f_bnd(i_phys_dof) = f_bnd[i_phys_dof]; 
+	}
+	curr_f_p = Eigen::VectorXd::Zero(f_p.num_elements()); 
+	for (int i_phys_dof = 0; i_phys_dof < f_p.num_elements(); i_phys_dof++)
+	{
+		curr_f_p(i_phys_dof) = f_p[i_phys_dof]; 
+	}
+	curr_f_int = Eigen::VectorXd::Zero(f_int.num_elements()); 
+	for (int i_phys_dof = 0; i_phys_dof < f_int.num_elements(); i_phys_dof++)
+	{
+		curr_f_int(i_phys_dof) = f_int[i_phys_dof]; 
 	}
 
         
@@ -2490,6 +2503,215 @@ namespace Nektar
             fields[j]->SetPhysState(false);
         }
     }
+
+    NekDouble CoupledLinearNS_TT::Get_m_kinvis(void)
+    {
+	return m_kinvis;
+    }
+
+    void CoupledLinearNS_TT::Set_m_kinvis(NekDouble input)
+    {
+	m_kinvis = input;
+    }
+
+    Eigen::MatrixXd CoupledLinearNS_TT::Get_no_advection_matrix(void)
+    {
+	Eigen::MatrixXd no_adv_matrix = Eigen::MatrixXd::Zero(M_truth_size, M_truth_size);
+	switch(globally_connected) {
+		case 0:
+			no_adv_matrix.block(0, 0, RB_A.rows(), RB_A.cols()) = MtM * RB_A_no_adv;
+			no_adv_matrix.block(0, RB_A.cols(), RB_Dbnd.cols(), RB_Dbnd.rows()) = -MtM * RB_Dbnd.transpose();
+			no_adv_matrix.block(0, RB_A.cols() + RB_Dbnd.rows(), RB_B.rows(), RB_B.cols()) = MtM * RB_B_no_adv;
+			no_adv_matrix.block(RB_A.rows(), 0, RB_Dbnd.rows(), RB_Dbnd.cols()) = -RB_Dbnd;
+			no_adv_matrix.block(RB_A.rows(), RB_A.cols() + RB_Dbnd.rows(), RB_Dint.rows(), RB_Dint.cols()) = -RB_Dint;	
+			no_adv_matrix.block(RB_A.rows() + RB_Dbnd.rows(), 0, RB_C.cols(), RB_C.rows()) = RB_C_no_adv.transpose();
+			no_adv_matrix.block(RB_A.rows() + RB_Dbnd.rows(), RB_A.cols(), RB_Dint.cols(), RB_Dint.rows()) = -RB_Dint.transpose();
+			no_adv_matrix.block(RB_A.rows() + RB_Dbnd.rows(), RB_A.cols() + RB_Dbnd.rows(), RB_D.rows(), RB_D.cols()) = RB_D_no_adv;
+			break;
+		case 1:
+			no_adv_matrix.block(0, 0, nBndDofs, nBndDofs) = Mtrafo.transpose() * RB_A_no_adv * Mtrafo;
+			no_adv_matrix.block(0, nBndDofs, nBndDofs, RB_Dbnd.rows()) = -Mtrafo.transpose() * RB_Dbnd.transpose();
+			no_adv_matrix.block(0, nBndDofs + RB_Dbnd.rows(), nBndDofs, RB_B.cols()) = Mtrafo.transpose() * RB_B_no_adv;
+			no_adv_matrix.block(nBndDofs, 0, RB_Dbnd.rows(), nBndDofs) = -RB_Dbnd * Mtrafo;
+			no_adv_matrix.block(nBndDofs, nBndDofs + RB_Dbnd.rows(), RB_Dint.rows(), RB_Dint.cols()) = -RB_Dint;	
+			no_adv_matrix.block(nBndDofs + RB_Dbnd.rows(), 0, RB_C.cols(), nBndDofs) = RB_C_no_adv.transpose() * Mtrafo;
+			no_adv_matrix.block(nBndDofs + RB_Dbnd.rows(), nBndDofs, RB_Dint.cols(), RB_Dint.rows()) = -RB_Dint.transpose();
+			no_adv_matrix.block(nBndDofs + RB_Dbnd.rows(), nBndDofs + RB_Dbnd.rows(), RB_D.rows(), RB_D.cols()) = RB_D_no_adv;
+			break;
+		case 2:
+			no_adv_matrix.block(0, 0, RB_A.rows(), RB_A.cols()) = RB_A_no_adv;
+			no_adv_matrix.block(0, RB_A.cols(), RB_Dbnd.cols(), RB_Dbnd.rows()) = -RB_Dbnd.transpose();
+			no_adv_matrix.block(0, RB_A.cols() + RB_Dbnd.rows(), RB_B.rows(), RB_B.cols()) = RB_B_no_adv;
+			no_adv_matrix.block(RB_A.rows(), 0, RB_Dbnd.rows(), RB_Dbnd.cols()) = -RB_Dbnd;
+			no_adv_matrix.block(RB_A.rows(), RB_A.cols() + RB_Dbnd.rows(), RB_Dint.rows(), RB_Dint.cols()) = -RB_Dint;	
+			no_adv_matrix.block(RB_A.rows() + RB_Dbnd.rows(), 0, RB_C.cols(), RB_C.rows()) = RB_C_no_adv.transpose();
+			no_adv_matrix.block(RB_A.rows() + RB_Dbnd.rows(), RB_A.cols(), RB_Dint.cols(), RB_Dint.rows()) = -RB_Dint.transpose();
+			no_adv_matrix.block(RB_A.rows() + RB_Dbnd.rows(), RB_A.cols() + RB_Dbnd.rows(), RB_D.rows(), RB_D.cols()) = RB_D_no_adv;
+			break;
+	}
+	return no_adv_matrix;
+    }
+
+    Eigen::MatrixXd CoupledLinearNS_TT::Get_no_advection_matrix_pressure(void)
+    {
+	Eigen::MatrixXd no_adv_matrix = Eigen::MatrixXd::Zero(M_truth_size, M_truth_size);
+	switch(globally_connected) {
+		case 0:
+			no_adv_matrix.block(0, RB_A.cols(), RB_Dbnd.cols(), RB_Dbnd.rows()) = -MtM * RB_Dbnd.transpose();
+			no_adv_matrix.block(RB_A.rows(), 0, RB_Dbnd.rows(), RB_Dbnd.cols()) = -RB_Dbnd;
+			no_adv_matrix.block(RB_A.rows(), RB_A.cols() + RB_Dbnd.rows(), RB_Dint.rows(), RB_Dint.cols()) = -RB_Dint;	
+			no_adv_matrix.block(RB_A.rows() + RB_Dbnd.rows(), RB_A.cols(), RB_Dint.cols(), RB_Dint.rows()) = -RB_Dint.transpose();
+			break;
+		case 1:
+			no_adv_matrix.block(0, nBndDofs, nBndDofs, RB_Dbnd.rows()) = -Mtrafo.transpose() * RB_Dbnd.transpose();
+			no_adv_matrix.block(nBndDofs, 0, RB_Dbnd.rows(), nBndDofs) = -RB_Dbnd * Mtrafo;
+			no_adv_matrix.block(nBndDofs, nBndDofs + RB_Dbnd.rows(), RB_Dint.rows(), RB_Dint.cols()) = -RB_Dint;	
+			no_adv_matrix.block(nBndDofs + RB_Dbnd.rows(), nBndDofs, RB_Dint.cols(), RB_Dint.rows()) = -RB_Dint.transpose();
+			break;
+		case 2:
+			no_adv_matrix.block(0, RB_A.cols(), RB_Dbnd.cols(), RB_Dbnd.rows()) = -RB_Dbnd.transpose();
+			no_adv_matrix.block(RB_A.rows(), 0, RB_Dbnd.rows(), RB_Dbnd.cols()) = -RB_Dbnd;
+			no_adv_matrix.block(RB_A.rows(), RB_A.cols() + RB_Dbnd.rows(), RB_Dint.rows(), RB_Dint.cols()) = -RB_Dint;	
+			no_adv_matrix.block(RB_A.rows() + RB_Dbnd.rows(), RB_A.cols(), RB_Dint.cols(), RB_Dint.rows()) = -RB_Dint.transpose();
+			break;
+	}			
+
+
+	return no_adv_matrix;
+			
+    }
+
+    Eigen::MatrixXd CoupledLinearNS_TT::Get_no_advection_matrix_ABCD(void)
+    {
+	Eigen::MatrixXd no_adv_matrix = Eigen::MatrixXd::Zero(M_truth_size, M_truth_size);
+	switch(globally_connected) {
+		case 0:
+			no_adv_matrix.block(0, 0, RB_A.rows(), RB_A.cols()) = MtM * RB_A_no_adv;
+			no_adv_matrix.block(0, RB_A.cols() + RB_Dbnd.rows(), RB_B.rows(), RB_B.cols()) = MtM * RB_B_no_adv;
+			no_adv_matrix.block(RB_A.rows() + RB_Dbnd.rows(), 0, RB_C.cols(), RB_C.rows()) = RB_C_no_adv.transpose();
+			no_adv_matrix.block(RB_A.rows() + RB_Dbnd.rows(), RB_A.cols() + RB_Dbnd.rows(), RB_D.rows(), RB_D.cols()) = RB_D_no_adv;
+			break;
+		case 1:
+			no_adv_matrix.block(0, 0, nBndDofs, nBndDofs) = Mtrafo.transpose() * RB_A_no_adv * Mtrafo;
+			no_adv_matrix.block(0, nBndDofs + RB_Dbnd.rows(), nBndDofs, RB_B.cols()) = Mtrafo.transpose() * RB_B_no_adv;
+			no_adv_matrix.block(nBndDofs + RB_Dbnd.rows(), 0, RB_C.cols(), nBndDofs) = RB_C_no_adv.transpose() * Mtrafo;
+			no_adv_matrix.block(nBndDofs + RB_Dbnd.rows(), nBndDofs + RB_Dbnd.rows(), RB_D.rows(), RB_D.cols()) = RB_D_no_adv;
+			break;
+		case 2:
+			no_adv_matrix.block(0, 0, RB_A.rows(), RB_A.cols()) = RB_A_no_adv;
+			no_adv_matrix.block(0, RB_A.cols() + RB_Dbnd.rows(), RB_B.rows(), RB_B.cols()) = RB_B_no_adv;
+			no_adv_matrix.block(RB_A.rows() + RB_Dbnd.rows(), 0, RB_C.cols(), RB_C.rows()) = RB_C_no_adv.transpose();
+			no_adv_matrix.block(RB_A.rows() + RB_Dbnd.rows(), RB_A.cols() + RB_Dbnd.rows(), RB_D.rows(), RB_D.cols()) = RB_D_no_adv;
+			break;
+	}
+
+	return no_adv_matrix;
+    }
+	
+    Eigen::MatrixXd CoupledLinearNS_TT::Get_advection_matrix(void)
+    {
+	Eigen::MatrixXd adv_matrix = Eigen::MatrixXd::Zero(M_truth_size, M_truth_size);
+	switch(globally_connected) {
+		case 0:
+			adv_matrix.block(0, 0, RB_A.rows(), RB_A.cols()) = MtM * RB_A_adv;
+			adv_matrix.block(0, RB_A.cols() + RB_Dbnd.rows(), RB_B.rows(), RB_B.cols()) = MtM * RB_B_adv;
+			adv_matrix.block(RB_A.rows() + RB_Dbnd.rows(), 0, RB_C.cols(), RB_C.rows()) = RB_C_adv.transpose();
+			adv_matrix.block(RB_A.rows() + RB_Dbnd.rows(), RB_A.cols() + RB_Dbnd.rows(), RB_D.rows(), RB_D.cols()) = RB_D_adv;
+			break;
+		case 1:
+			adv_matrix.block(0, 0, nBndDofs, nBndDofs) = Mtrafo.transpose() * RB_A_adv * Mtrafo;
+			adv_matrix.block(0, nBndDofs + RB_Dbnd.rows(), nBndDofs, RB_B.cols()) = Mtrafo.transpose() * RB_B_adv;
+			adv_matrix.block(nBndDofs + RB_Dbnd.rows(), 0, RB_C.cols(), nBndDofs) = RB_C_adv.transpose() * Mtrafo;
+			adv_matrix.block(nBndDofs + RB_Dbnd.rows(), nBndDofs + RB_Dbnd.rows(), RB_D.rows(), RB_D.cols()) = RB_D_adv;
+			break;
+		case 2:
+			adv_matrix.block(0, 0, RB_A.rows(), RB_A.cols()) = RB_A_adv;
+			adv_matrix.block(0, RB_A.cols() + RB_Dbnd.rows(), RB_B.rows(), RB_B.cols()) = RB_B_adv;
+			adv_matrix.block(RB_A.rows() + RB_Dbnd.rows(), 0, RB_C.cols(), RB_C.rows()) = RB_C_adv.transpose();
+			adv_matrix.block(RB_A.rows() + RB_Dbnd.rows(), RB_A.cols() + RB_Dbnd.rows(), RB_D.rows(), RB_D.cols()) = RB_D_adv;
+			break;
+	}
+
+	return adv_matrix;
+    }	
+
+    Eigen::MatrixXd CoupledLinearNS_TT::Get_complete_matrix(void)
+    {
+	Eigen::MatrixXd matrix = Eigen::MatrixXd::Zero(M_truth_size, M_truth_size);
+	switch(globally_connected) {
+		case 0:
+			matrix.block(0, 0, RB_A.rows(), RB_A.cols()) = MtM * RB_A;
+			matrix.block(0, RB_A.cols(), RB_Dbnd.cols(), RB_Dbnd.rows()) = -MtM * RB_Dbnd.transpose();
+			matrix.block(0, RB_A.cols() + RB_Dbnd.rows(), RB_B.rows(), RB_B.cols()) = MtM * RB_B;
+			matrix.block(RB_A.rows(), 0, RB_Dbnd.rows(), RB_Dbnd.cols()) = -RB_Dbnd;
+			matrix.block(RB_A.rows(), RB_A.cols() + RB_Dbnd.rows(), RB_Dint.rows(), RB_Dint.cols()) = -RB_Dint;	
+			matrix.block(RB_A.rows() + RB_Dbnd.rows(), 0, RB_C.cols(), RB_C.rows()) = RB_C.transpose();
+			matrix.block(RB_A.rows() + RB_Dbnd.rows(), RB_A.cols(), RB_Dint.cols(), RB_Dint.rows()) = -RB_Dint.transpose();
+			matrix.block(RB_A.rows() + RB_Dbnd.rows(), RB_A.cols() + RB_Dbnd.rows(), RB_D.rows(), RB_D.cols()) = RB_D;
+			break;
+		case 1:
+			matrix.block(0, 0, nBndDofs, nBndDofs) = Mtrafo.transpose() * RB_A * Mtrafo;
+			matrix.block(0, nBndDofs, nBndDofs, RB_Dbnd.rows()) = -Mtrafo.transpose() * RB_Dbnd.transpose();
+			matrix.block(0, nBndDofs + RB_Dbnd.rows(), nBndDofs, RB_B.cols()) = Mtrafo.transpose() * RB_B;
+			matrix.block(nBndDofs, 0, RB_Dbnd.rows(), nBndDofs) = -RB_Dbnd * Mtrafo;
+			matrix.block(nBndDofs, nBndDofs + RB_Dbnd.rows(), RB_Dint.rows(), RB_Dint.cols()) = -RB_Dint;	
+			matrix.block(nBndDofs + RB_Dbnd.rows(), 0, RB_C.cols(), nBndDofs) = RB_C.transpose() * Mtrafo;
+			matrix.block(nBndDofs + RB_Dbnd.rows(), nBndDofs, RB_Dint.cols(), RB_Dint.rows()) = -RB_Dint.transpose();
+			matrix.block(nBndDofs + RB_Dbnd.rows(), nBndDofs + RB_Dbnd.rows(), RB_D.rows(), RB_D.cols()) = RB_D;
+			break;
+		case 2:
+			matrix.block(0, 0, RB_A.rows(), RB_A.cols()) = RB_A;
+			matrix.block(0, RB_A.cols(), RB_Dbnd.cols(), RB_Dbnd.rows()) = -RB_Dbnd.transpose();
+			matrix.block(0, RB_A.cols() + RB_Dbnd.rows(), RB_B.rows(), RB_B.cols()) = RB_B;
+			matrix.block(RB_A.rows(), 0, RB_Dbnd.rows(), RB_Dbnd.cols()) = -RB_Dbnd;
+			matrix.block(RB_A.rows(), RB_A.cols() + RB_Dbnd.rows(), RB_Dint.rows(), RB_Dint.cols()) = -RB_Dint;	
+			matrix.block(RB_A.rows() + RB_Dbnd.rows(), 0, RB_C.cols(), RB_C.rows()) = RB_C.transpose();
+			matrix.block(RB_A.rows() + RB_Dbnd.rows(), RB_A.cols(), RB_Dint.cols(), RB_Dint.rows()) = -RB_Dint.transpose();
+			matrix.block(RB_A.rows() + RB_Dbnd.rows(), RB_A.cols() + RB_Dbnd.rows(), RB_D.rows(), RB_D.cols()) = RB_D;
+			break;
+	}			
+	return matrix;
+    }
+
+    Eigen::MatrixXd CoupledLinearNS_TT::remove_cols_and_rows(Eigen::MatrixXd the_matrix, std::set<int> elements_to_be_removed)
+    {
+	Eigen::MatrixXd simplified_matrix = Eigen::MatrixXd::Zero(the_matrix.rows() - elements_to_be_removed.size(), the_matrix.cols() - elements_to_be_removed.size());
+	int counter_row_simplified = 0;
+	int counter_col_simplified = 0;
+	for (int row_index=0; row_index < the_matrix.rows(); ++row_index)
+	{
+		if (!elements_to_be_removed.count(row_index))
+		{
+			for (int col_index=0; col_index < the_matrix.cols(); ++col_index)
+			{
+				if (!elements_to_be_removed.count(col_index))
+				{
+					simplified_matrix(counter_row_simplified, counter_col_simplified) = the_matrix(row_index, col_index);
+					counter_col_simplified++;
+				}			
+			}
+			counter_col_simplified = 0;
+			counter_row_simplified++;
+		}		
+	}
+	return simplified_matrix;
+    }
+
+    Eigen::VectorXd CoupledLinearNS_TT::remove_rows(Eigen::VectorXd the_vector, std::set<int> elements_to_be_removed)
+    {
+	Eigen::VectorXd simplified_vector = Eigen::VectorXd::Zero(the_vector.rows() - elements_to_be_removed.size());
+	int counter_row_simplified = 0;
+	for (int row_index=0; row_index < the_vector.rows(); ++row_index)
+	{
+		if (!elements_to_be_removed.count(row_index))
+		{
+			simplified_vector(counter_row_simplified) = the_vector(row_index);
+			counter_row_simplified++;
+		}		
+	}
+	return simplified_vector;
+    }
+
 
 	// since this function is virtual it actually can be instantiated here
     void CoupledLinearNS_TT::v_DoSolve(void)
@@ -2561,7 +2783,11 @@ namespace Nektar
     void CoupledLinearNS_TT::DoInitialiseAdv(Array<OneD, NekDouble> myAdvField_x, Array<OneD, NekDouble> myAdvField_y)
     {
 	// only covers case eSteadyOseen
-              
+
+	Array<OneD, Array<OneD, NekDouble> > myAdvField(2);
+	myAdvField[0] = myAdvField_x;
+	myAdvField[1] = myAdvField_y;
+
         std::vector<std::string> fieldStr;
         for(int i = 0; i < m_velocity.num_elements(); ++i)
         {
@@ -2570,8 +2796,96 @@ namespace Nektar
 //	cout << "fieldStr[0] " << fieldStr[0] << endl;
 //        EvaluateFunction(fieldStr,AdvField,"AdvectionVelocity"); // defined in EquationSystem
 
-//        SetUpCoupledMatrix(0.0, myAdvField, false);
+        SetUpCoupledMatrix(0.0, myAdvField, false);
 
+    }
+
+    void CoupledLinearNS_TT::setDBC(Eigen::MatrixXd collect_f_all)
+    {
+	no_dbc_in_loc = 0;
+	no_not_dbc_in_loc = 0;
+	for ( int index_c_f_bnd = 0; index_c_f_bnd < curr_f_bnd.size(); index_c_f_bnd++ )
+	{
+		if (collect_f_all(index_c_f_bnd,0) == collect_f_all(index_c_f_bnd,1))
+		{
+			no_dbc_in_loc++;
+			elem_loc_dbc.insert(index_c_f_bnd);
+		}
+		else
+		{
+			no_not_dbc_in_loc++;
+			elem_not_loc_dbc.insert(index_c_f_bnd);
+		}
+	}
+    }
+
+    void CoupledLinearNS_TT::setDBC_M(Eigen::MatrixXd collect_f_all)
+    {
+	// compute the dofs after Mtrafo multiplication to get global indices instead of local indices
+	// Mtrafo = Eigen::MatrixXd (RB_A.rows(), nBndDofs);
+	M_no_dbc_in_loc = 0;
+	M_no_not_dbc_in_loc = 0;
+	Eigen::VectorXd compare_vec1 = Mtrafo.transpose() * collect_f_all.block( 0, 0, curr_f_bnd.size(), 1);
+	Eigen::VectorXd compare_vec2 = Mtrafo.transpose() * collect_f_all.block( 0, 1, curr_f_bnd.size(), 1);
+	for ( int index_c_f_bnd = 0; index_c_f_bnd < compare_vec1.rows(); index_c_f_bnd++ )
+	{
+		if (compare_vec1(index_c_f_bnd) == compare_vec2(index_c_f_bnd))
+		{
+			M_no_dbc_in_loc++; // is actually no_dbc_in_global
+			M_elem_loc_dbc.insert(index_c_f_bnd);
+		}
+		else
+		{
+			M_no_not_dbc_in_loc++;
+			M_elem_not_loc_dbc.insert(index_c_f_bnd);
+		}
+	}
+	M_truth_size = compare_vec1.rows() + curr_f_p.size() + curr_f_int.size();  // compare_vec1.rows() corresponds to nBndDofs
+	M_truth_size_without_DBC = M_no_not_dbc_in_loc + curr_f_p.size() + curr_f_int.size();
+	M_f_bnd_dbc = Eigen::VectorXd::Zero(M_no_dbc_in_loc);
+	M_f_bnd_dbc_full_size = Eigen::VectorXd::Zero(M_truth_size);
+	M_RB = Eigen::MatrixXd::Zero(M_truth_size_without_DBC, PODmodes.cols());
+	// first multiply the bnd part in PODmodes with Mtrafo
+	Eigen::MatrixXd M_PODmodes_bnd = Mtrafo.transpose() * PODmodes.block( 0, 0, curr_f_bnd.size(), RBsize );
+	Eigen::MatrixXd M_collect_f_all_bnd = Mtrafo.transpose() * collect_f_all.block( 0, 0, curr_f_bnd.size(), Nmax );
+	M_collect_f_all = Eigen::MatrixXd::Zero( M_truth_size , Nmax );
+	int counter_all = 0;
+	int counter_dbc = 0;
+	for (int index=0; index < M_truth_size; ++index)  // take from the M_PODmodes_bnd if index is below compare_vec1.rows(), otherwise from PODmodes
+	{
+		if (!M_elem_loc_dbc.count(index))
+		{
+			if (index < compare_vec1.rows())
+			{
+				M_RB.row(counter_all) = M_PODmodes_bnd.row(index);
+			}
+			else
+			{
+				M_RB.row(counter_all) = PODmodes.row(index);
+			}
+			M_f_bnd_dbc_full_size(index) = 0;
+			counter_all++;
+		}
+		else
+		{
+			M_f_bnd_dbc_full_size(index) = collect_f_all(index,0);
+			M_f_bnd_dbc(counter_dbc) = collect_f_all(index,0);
+			counter_dbc++;
+		}
+		if (index < compare_vec1.rows())
+		{
+			M_collect_f_all.row(index) = M_collect_f_all_bnd.row(index);
+		}
+		else
+		{
+			M_collect_f_all.row(index) = collect_f_all.row(index);
+		}
+
+	}
+	elem_loc_dbc = M_elem_loc_dbc;
+	f_bnd_dbc_full_size = M_f_bnd_dbc_full_size;
+	RB = M_RB; // could be discussed if desired like that...
+	// does not diminish size  collect_f_all = M_collect_f_all; // could be discussed if desired like that...
     }
 
     void CoupledLinearNS_TT::v_DoInitialise(void)
@@ -2630,13 +2944,13 @@ namespace Nektar
                     fieldStr.push_back(m_boundaryConditions->GetVariable(m_velocity[i]));
                 }
 
-		cout << "fieldStr[0] " << fieldStr[0] << endl;
-		cout << "fieldStr.size() " << fieldStr.size() << endl;
+//		cout << "fieldStr[0] " << fieldStr[0] << endl;
+//		cout << "fieldStr.size() " << fieldStr.size() << endl;
 
                 EvaluateFunction(fieldStr,AdvField,"AdvectionVelocity"); // defined in EquationSystem
 
-		cout << "AdvField.num_elements() " << AdvField.num_elements() << endl;
-		cout << "AdvField[0].num_elements() " << AdvField[0].num_elements() << endl;                                
+//		cout << "AdvField.num_elements() " << AdvField.num_elements() << endl;
+//		cout << "AdvField[0].num_elements() " << AdvField[0].num_elements() << endl;                                
 
 //		DefineRBspace();
 
@@ -2738,6 +3052,548 @@ namespace Nektar
 
 
 	return RB_via_POD;
+    }
+
+    void CoupledLinearNS_TT::set_MtM()
+    {
+	nBndDofs = m_locToGloMap[0]->GetNumGlobalBndCoeffs();  // number of global bnd dofs
+        const Array<OneD,const int>& loctoglobndmap = m_locToGloMap[0]->GetLocalToGlobalBndMap();
+        const Array<OneD,const NekDouble>& loctoglobndsign = m_locToGloMap[0]->GetLocalToGlobalBndSign();
+//	Eigen::MatrixXd Mtrafo(RB_A.rows(), nBndDofs);
+	M_truth_size = curr_f_bnd.size() + curr_f_p.size() + curr_f_int.size();  // compare_vec1.rows() corresponds to nBndDofs
+	M_truth_size_without_DBC = no_not_dbc_in_loc + curr_f_p.size() + curr_f_int.size();
+	Mtrafo = Eigen::MatrixXd (RB_A.rows(), nBndDofs);
+	Array<OneD, MultiRegions::ExpListSharedPtr> m_fields = UpdateFields();
+        int  nel  = m_fields[0]->GetNumElmts(); // number of spectral elements
+	int nsize_bndry_p1 = loctoglobndmap.num_elements() / nel;
+	int nsize_bndry = nsize_bndry_p1-1;
+	for (int curr_elem = 0; curr_elem < nel; curr_elem++)
+	{
+		int cnt = curr_elem*nsize_bndry_p1;
+		int cnt_no_pp = curr_elem*nsize_bndry;
+		for ( int index_ele = 0; index_ele < nsize_bndry_p1; index_ele++ )
+		{
+			int gid1 = loctoglobndmap[cnt+index_ele];
+			int sign1 = loctoglobndsign[cnt+index_ele];
+			if ((gid1 >= 0) && (index_ele < nsize_bndry))
+			{
+				Mtrafo(cnt_no_pp + index_ele, gid1) = sign1;
+			}
+		}
+	}
+	MtM = Mtrafo * Mtrafo.transpose();
+	f_bnd_dbc = Eigen::VectorXd::Zero(no_dbc_in_loc);
+	f_bnd_dbc_full_size = Eigen::VectorXd::Zero(PODmodes.rows());
+	RB = Eigen::MatrixXd::Zero(PODmodes.rows() - no_dbc_in_loc, PODmodes.cols());
+	int counter_all = 0;
+	int counter_dbc = 0;
+	for (int index=0; index < PODmodes.rows(); ++index)
+	{
+		if (!elem_loc_dbc.count(index))
+		{
+			RB.row(counter_all) = PODmodes.row(index);
+			f_bnd_dbc_full_size(index) = 0;
+			counter_all++;
+		}
+		else
+		{
+			f_bnd_dbc_full_size(index) = collect_f_all(index,0);
+			f_bnd_dbc(counter_dbc) = collect_f_all(index,0);
+			counter_dbc++;
+		}
+	}
+
+    }
+
+    void CoupledLinearNS_TT::gen_phys_base_vecs()
+    {
+	int RBsize = RB.cols();
+	PhysBaseVec_x = Array<OneD, Array<OneD, double> > (RBsize); 
+	PhysBaseVec_y = Array<OneD, Array<OneD, double> > (RBsize);
+	
+	for (int curr_trafo_iter=0; curr_trafo_iter < RBsize; curr_trafo_iter++)
+	{
+		Eigen::VectorXd f_bnd = PODmodes.block(0, curr_trafo_iter, curr_f_bnd.size(), 1);
+		Eigen::VectorXd f_int = PODmodes.block(curr_f_bnd.size()+curr_f_p.size(), curr_trafo_iter, curr_f_int.size(), 1);
+		Array<OneD, MultiRegions::ExpListSharedPtr> fields = UpdateFields(); 
+	        Array<OneD, unsigned int> bmap, imap; 
+		Array<OneD, double> field_0(GetNcoeffs());
+		Array<OneD, double> field_1(GetNcoeffs());
+		Array<OneD, double> curr_PhysBaseVec_x(GetNpoints(), 0.0);
+		Array<OneD, double> curr_PhysBaseVec_y(GetNpoints(), 0.0);
+	        int cnt = 0;
+		int cnt1 = 0;
+		int nvel = 2;
+	        int nz_loc = 1;
+	        int  nplanecoeffs = fields[0]->GetNcoeffs();
+		int  nel  = m_fields[0]->GetNumElmts();
+	        for(int i = 0; i < nel; ++i) 
+	        {
+	            int eid  = i;
+	            fields[0]->GetExp(eid)->GetBoundaryMap(bmap);
+	            fields[0]->GetExp(eid)->GetInteriorMap(imap);
+	            int nbnd   = bmap.num_elements();
+	            int nint   = imap.num_elements();
+	            int offset = fields[0]->GetCoeff_Offset(eid);
+	            
+	            for(int j = 0; j < nvel; ++j)
+	            {
+	                for(int n = 0; n < nz_loc; ++n)
+	                {
+	                    for(int k = 0; k < nbnd; ++k)
+	                    {
+	                        fields[j]->SetCoeff(n*nplanecoeffs + offset+bmap[k], f_bnd(cnt+k));
+	                    }
+	                    
+	                    for(int k = 0; k < nint; ++k)
+	                    {
+	                        fields[j]->SetCoeff(n*nplanecoeffs + offset+imap[k], f_int(cnt1+k));
+	                    }
+	                    cnt  += nbnd;
+	                    cnt1 += nint;
+	                }
+	            }
+	        }
+		Array<OneD, double> test_nn = fields[0]->GetCoeffs();
+		fields[0]->BwdTrans_IterPerExp(fields[0]->GetCoeffs(), curr_PhysBaseVec_x);
+		fields[1]->BwdTrans_IterPerExp(fields[1]->GetCoeffs(), curr_PhysBaseVec_y);
+		PhysBaseVec_x[curr_trafo_iter] = curr_PhysBaseVec_x;
+		PhysBaseVec_y[curr_trafo_iter] = curr_PhysBaseVec_y;
+		
+	}
+
+	eigen_phys_basis_x = Eigen::MatrixXd::Zero(GetNpoints(), RBsize);
+	eigen_phys_basis_y = Eigen::MatrixXd::Zero(GetNpoints(), RBsize);
+	for (int index_phys_base=0; index_phys_base<GetNpoints(); index_phys_base++)
+	{
+		for (int index_RBsize=0; index_RBsize<RBsize; index_RBsize++)
+		{
+			eigen_phys_basis_x(index_phys_base,index_RBsize) = PhysBaseVec_x[index_RBsize][index_phys_base];
+			eigen_phys_basis_y(index_phys_base,index_RBsize) = PhysBaseVec_y[index_RBsize][index_phys_base];
+		}
+	}
+
+	Eigen::VectorXd curr_col = eigen_phys_basis_x.col(0);
+	double norm_curr_col = curr_col.norm();
+	eigen_phys_basis_x.col(0) = curr_col / norm_curr_col;
+	curr_col = eigen_phys_basis_y.col(0);
+	norm_curr_col = curr_col.norm();
+	eigen_phys_basis_y.col(0) = curr_col / norm_curr_col;
+	Eigen::VectorXd orthogonal_complement;
+	
+	for (int orth_iter=1; orth_iter<RBsize; orth_iter++)
+	{
+		curr_col = eigen_phys_basis_x.col(orth_iter);
+		Eigen::MatrixXd leftmostCols = eigen_phys_basis_x.leftCols(orth_iter);
+		orthogonal_complement = curr_col - leftmostCols * leftmostCols.transpose() * curr_col;
+		norm_curr_col = orthogonal_complement.norm();
+		eigen_phys_basis_x.col(orth_iter) = orthogonal_complement / norm_curr_col;
+		curr_col = eigen_phys_basis_y.col(orth_iter);
+		leftmostCols = eigen_phys_basis_y.leftCols(orth_iter);
+		orthogonal_complement = curr_col - leftmostCols * leftmostCols.transpose() * curr_col;
+		norm_curr_col = orthogonal_complement.norm();
+		eigen_phys_basis_y.col(orth_iter) = orthogonal_complement / norm_curr_col;
+	}
+
+	orth_PhysBaseVec_x = Array<OneD, Array<OneD, double> > (RBsize); 
+	orth_PhysBaseVec_y = Array<OneD, Array<OneD, double> > (RBsize); 
+	for (int index_RBsize=0; index_RBsize<RBsize; index_RBsize++)
+	{
+		Array<OneD, double> curr_iter_x(GetNpoints());
+		Array<OneD, double> curr_iter_y(GetNpoints());
+		for (int index_phys_base=0; index_phys_base<GetNpoints(); index_phys_base++)	
+		{
+			curr_iter_x[index_phys_base] = eigen_phys_basis_x(index_phys_base,index_RBsize);
+			curr_iter_y[index_phys_base] = eigen_phys_basis_y(index_phys_base,index_RBsize);			
+		}
+		orth_PhysBaseVec_x[index_RBsize] = curr_iter_x;
+		orth_PhysBaseVec_y[index_RBsize] = curr_iter_y;			
+	}
+    }
+
+    void CoupledLinearNS_TT::gen_proj_adv_terms()
+    {
+	RBsize = RB.cols();
+	adv_mats_proj_x = Array<OneD, Eigen::MatrixXd > (RBsize);
+	adv_mats_proj_y = Array<OneD, Eigen::MatrixXd > (RBsize);
+	adv_vec_proj_x = Array<OneD, Eigen::VectorXd > (RBsize);
+	adv_vec_proj_y = Array<OneD, Eigen::VectorXd > (RBsize);
+	Array<OneD, double> PhysBase_zero(GetNpoints(), 0.0);
+	for(int trafo_iter = 0; trafo_iter < RBsize; trafo_iter++)
+	{
+		Array<OneD, double> curr_PhysBaseVec_x = orth_PhysBaseVec_x[trafo_iter];
+		Array<OneD, double> curr_PhysBaseVec_y = orth_PhysBaseVec_y[trafo_iter];
+
+		InitObject();
+
+		DoInitialiseAdv(curr_PhysBaseVec_x, PhysBase_zero); // call with parameter in phys state
+		// needs to be replaced with a more gen. term		Eigen::MatrixXd adv_matrix = Eigen::MatrixXd::Zero(RB_A.rows() + RB_Dbnd.rows() + RB_C.cols(), RB_A.cols() + RB_Dbnd.rows() + RB_B.cols() );
+		Eigen::MatrixXd adv_matrix;
+		adv_matrix = Get_advection_matrix();
+		Eigen::VectorXd add_to_rhs_adv(M_truth_size); // probably need this for adv and non-adv
+		add_to_rhs_adv = adv_matrix * f_bnd_dbc_full_size;   
+
+		Eigen::MatrixXd adv_matrix_simplified = remove_cols_and_rows(adv_matrix, elem_loc_dbc);
+		Eigen::VectorXd adv_rhs_add = remove_rows(add_to_rhs_adv, elem_loc_dbc);
+		Eigen::MatrixXd adv_mat_proj = RB.transpose() * adv_matrix_simplified * RB;
+		Eigen::VectorXd adv_rhs_proj = RB.transpose() * adv_rhs_add;
+
+		adv_mats_proj_x[trafo_iter] = adv_mat_proj;
+		adv_vec_proj_x[trafo_iter] = adv_rhs_proj;
+		DoInitialiseAdv(PhysBase_zero , curr_PhysBaseVec_y ); // call with parameter in phys state
+		adv_matrix = Get_advection_matrix();
+		add_to_rhs_adv = adv_matrix * f_bnd_dbc_full_size;   
+		adv_matrix_simplified = remove_cols_and_rows(adv_matrix, elem_loc_dbc);
+		adv_rhs_add = remove_rows(add_to_rhs_adv, elem_loc_dbc);
+		adv_mat_proj = RB.transpose() * adv_matrix_simplified * RB;
+		adv_rhs_proj = RB.transpose() * adv_rhs_add;
+		adv_mats_proj_y[trafo_iter] = adv_mat_proj;
+		adv_vec_proj_y[trafo_iter] = adv_rhs_proj;
+	}
+    }
+
+
+    Eigen::MatrixXd CoupledLinearNS_TT::DoTrafo(Array<OneD, Array<OneD, NekDouble> > snapshot_x_collection, Array<OneD, Array<OneD, NekDouble> > snapshot_y_collection, Array<OneD, NekDouble> param_vector)
+    {
+	int Nmax = param_vector.num_elements();
+	Eigen::MatrixXd collect_f_bnd( curr_f_bnd.size() , Nmax );
+	Eigen::MatrixXd collect_f_p( curr_f_p.size() , Nmax );
+	Eigen::MatrixXd collect_f_int( curr_f_int.size() , Nmax );
+	for (int i=0; i<Nmax; i++)
+	{
+		Set_m_kinvis( param_vector[i] );	
+//		cout << "CLNS_trafo.Get_m_kinvis " << CLNS_trafo.Get_m_kinvis() << endl;
+	//	CLNS_trafo.DoInitialise();
+		DoInitialiseAdv(snapshot_x_collection[i], snapshot_y_collection[i]); // replaces .DoInitialise();
+		DoSolve();
+
+		// compare the accuracy
+		Array<OneD, MultiRegions::ExpListSharedPtr> m_fields_t = UpdateFields();
+		m_fields_t[0]->BwdTrans(m_fields_t[0]->GetCoeffs(), m_fields_t[0]->UpdatePhys());
+		m_fields_t[1]->BwdTrans(m_fields_t[1]->GetCoeffs(), m_fields_t[1]->UpdatePhys());
+		Array<OneD, NekDouble> out_field_trafo_x(GetNpoints(), 0.0);
+		Array<OneD, NekDouble> out_field_trafo_y(GetNpoints(), 0.0);
+
+		Eigen::VectorXd csx0_trafo(GetNpoints());
+		Eigen::VectorXd csy0_trafo(GetNpoints());
+		Eigen::VectorXd csx0(GetNpoints());
+		Eigen::VectorXd csy0(GetNpoints());
+
+		CopyFromPhysField(0, out_field_trafo_x); 
+		CopyFromPhysField(1, out_field_trafo_y);
+		for( int index_conv = 0; index_conv < GetNpoints(); ++index_conv)
+		{
+			csx0_trafo(index_conv) = out_field_trafo_x[index_conv];
+			csy0_trafo(index_conv) = out_field_trafo_y[index_conv];
+			csx0(index_conv) = snapshot_x_collection[i][index_conv];
+			csy0(index_conv) = snapshot_y_collection[i][index_conv];
+		}
+
+		cout << "csx0.norm() " << csx0.norm() << endl;
+		cout << "csx0_trafo.norm() " << csx0_trafo.norm() << endl;
+		cout << "csy0.norm() " << csy0.norm() << endl;
+		cout << "csy0_trafo.norm() " << csy0_trafo.norm() << endl;
+		
+		Eigen::VectorXd trafo_f_bnd = curr_f_bnd;
+		Eigen::VectorXd trafo_f_p = curr_f_p;
+		Eigen::VectorXd trafo_f_int = curr_f_int;
+
+		collect_f_bnd.col(i) = trafo_f_bnd;
+		collect_f_p.col(i) = trafo_f_p;
+		collect_f_int.col(i) = trafo_f_int;
+
+	}
+	Eigen::MatrixXd collect_f_all( curr_f_bnd.size()+curr_f_p.size()+curr_f_int.size() , Nmax );
+	collect_f_all.block(0,0,collect_f_bnd.rows(),collect_f_bnd.cols()) = collect_f_bnd;
+	collect_f_all.block(collect_f_bnd.rows(),0,collect_f_p.rows(),collect_f_p.cols()) = collect_f_p;
+	collect_f_all.block(collect_f_bnd.rows()+collect_f_p.rows(),0,collect_f_int.rows(),collect_f_int.cols()) = collect_f_int;
+
+	return collect_f_all;
+    }
+
+    Eigen::MatrixXd CoupledLinearNS_TT::project_onto_basis( Array<OneD, NekDouble> snapshot_x, Array<OneD, NekDouble> snapshot_y)
+    {
+	Eigen::VectorXd c_snapshot_x(GetNpoints());
+	Eigen::VectorXd c_snapshot_y(GetNpoints());
+	for (int i = 0; i < GetNpoints(); ++i)
+	{
+		c_snapshot_x(i) = snapshot_x[i];
+		c_snapshot_y(i) = snapshot_y[i];
+	}
+	Eigen::VectorXd curr_x_proj = eigen_phys_basis_x.transpose() * c_snapshot_x;
+	Eigen::VectorXd curr_y_proj = eigen_phys_basis_y.transpose() * c_snapshot_y;
+	curr_xy_projected = Eigen::MatrixXd::Zero(curr_x_proj.rows(), 2);
+	curr_xy_projected.col(0) = curr_x_proj;
+	curr_xy_projected.col(1) = curr_y_proj;
+
+	return curr_xy_projected;
+
+    }
+
+    void CoupledLinearNS_TT::online_phase()
+    {
+	Eigen::MatrixXd mat_compare = Eigen::MatrixXd::Zero(f_bnd_dbc_full_size.rows(), 3);  // is of size M_truth_size
+	// start sweeping 
+	for (int iter_index = 0; iter_index < Nmax; ++iter_index)
+	{
+		int current_index = iter_index;
+		double current_nu = param_vector[current_index];
+		Eigen::MatrixXd curr_xy_proj = project_onto_basis(snapshot_x_collection[current_index], snapshot_y_collection[current_index]);
+		Eigen::MatrixXd affine_mat_proj = gen_affine_mat_proj(current_nu);
+		Eigen::VectorXd affine_vec_proj = gen_affine_vec_proj(current_nu);
+		Eigen::VectorXd solve_affine = affine_mat_proj.colPivHouseholderQr().solve(affine_vec_proj);
+		cout << "solve_affine " << solve_affine << endl;
+		Eigen::VectorXd repro_solve_affine = RB * solve_affine;
+		Eigen::VectorXd reconstruct_solution = reconstruct_solution_w_dbc(repro_solve_affine);
+		if (globally_connected == 1)
+		{
+			mat_compare.col(0) = M_collect_f_all.col(current_index);
+		}
+		else
+		{
+			mat_compare.col(0) = collect_f_all.col(current_index);
+		}
+		mat_compare.col(1) = reconstruct_solution; // sembra abbastanza bene
+		mat_compare.col(2) = mat_compare.col(1) - mat_compare.col(0);
+//		cout << mat_compare << endl;
+		cout << "relative error norm: " << mat_compare.col(2).norm() / mat_compare.col(0).norm() << endl;
+
+		// here now manipulate m_fields with local dof and then call WriteFld
+
+	}
+    }
+	
+    void CoupledLinearNS_TT::offline_phase()
+    {
+	int load_snapshot_data_from_files = m_session->GetParameter("load_snapshot_data_from_files");
+	int number_of_snapshots = m_session->GetParameter("number_of_snapshots");
+	double POD_tolerance = m_session->GetParameter("POD_tolerance");
+	ref_param_index = m_session->GetParameter("ref_param_index");
+	ref_param_nu = m_session->GetParameter("ref_param_nu");
+	if (m_session->DefinesParameter("globally_connected")) // this sets how the truth system global coupling is enforced
+	{
+		globally_connected = m_session->GetParameter("globally_connected");
+	}
+	else
+	{
+		globally_connected = 0;
+	}
+	Nmax = number_of_snapshots;
+//	Array<OneD, NekDouble> param_vector(Nmax);
+	param_vector = Array<OneD, NekDouble> (Nmax);
+	// = [0.1 0.5 1 10];
+/*	param_vector[0] = 0.1; // should also wander to the xml file
+	param_vector[1] = 0.5;
+	param_vector[2] = 1;
+	param_vector[3] = 10;  	*/
+        for(int i = 0; i < number_of_snapshots; ++i)
+        {
+		// generate the correct string
+		std::stringstream sstm;
+		sstm << "param" << i;
+		std::string result = sstm.str();
+//		const char* rr = result.c_str();
+//		double dvalue;
+	        param_vector[i] = m_session->GetParameter(result);
+		//param_vector[i] = dvalue;
+        }
+	InitObject();
+	if ( load_snapshot_data_from_files )
+	{
+		load_snapshots(number_of_snapshots);
+	}
+	else
+	{
+		compute_snapshots(number_of_snapshots);
+	}
+	DoInitialise(); 
+	DoSolve();
+	m_session->SetSolverInfo("SolverType", "CoupledLinearisedNS_trafoP");
+	CoupledLinearNS_trafoP babyCLNS_trafo(m_session);
+	babyCLNS_trafo.InitObject();
+	//Eigen::MatrixXd collect_f_all = babyCLNS_trafo.DoTrafo(snapshot_x_collection, snapshot_y_collection, param_vector);
+	collect_f_all = babyCLNS_trafo.DoTrafo(snapshot_x_collection, snapshot_y_collection, param_vector);
+	Eigen::BDCSVD<Eigen::MatrixXd> svd_collect_f_all(collect_f_all, Eigen::ComputeThinU);
+	cout << "svd_collect_f_all.singularValues() " << svd_collect_f_all.singularValues() << endl << endl;
+	Eigen::VectorXd singular_values = svd_collect_f_all.singularValues();
+	cout << "sum singular values " << singular_values.sum() << endl << endl;
+	Eigen::VectorXd rel_singular_values = singular_values / singular_values.sum();
+	cout << "relative singular value percents: " << rel_singular_values << endl;
+	// determine RBsize corresponding to the chosen POD_tolerance
+	RBsize = 1; // the case of using all POD modes
+	Eigen::VectorXd cum_rel_singular_values = Eigen::VectorXd::Zero(singular_values.rows());
+	for (int i = 0; i < singular_values.rows(); ++i)
+	{
+		cum_rel_singular_values(i) = singular_values.head(i+1).sum() / singular_values.sum();
+		if (cum_rel_singular_values(i) < POD_tolerance)
+		{
+			RBsize = i+2;
+		}		
+	}
+	cout << "cumulative relative singular value percentages: " << cum_rel_singular_values << endl;
+	cout << "RBsize: " << RBsize << endl;
+	
+
+
+	Eigen::MatrixXd collect_f_all_PODmodes = svd_collect_f_all.matrixU(); // this is a local variable...
+	// here probably limit to something like 99.99 percent of PODenergy, this will set RBsize
+	setDBC(collect_f_all); // agnostic to RBsize
+	Array<OneD, MultiRegions::ExpListSharedPtr> m_fields = UpdateFields();
+        int  nel  = m_fields[0]->GetNumElmts(); // number of spectral elements
+//	PODmodes = Eigen::MatrixXd::Zero(collect_f_all_PODmodes.rows(), collect_f_all_PODmodes.cols());
+	PODmodes = Eigen::MatrixXd::Zero(collect_f_all_PODmodes.rows(), RBsize);  
+	PODmodes = collect_f_all_PODmodes.leftCols(RBsize);
+	set_MtM();
+	cout << "RBsize: " << RBsize << endl;
+	if (globally_connected == 1)
+	{
+		setDBC_M(collect_f_all);
+	}
+	cout << "M_no_dbc_in_loc " << M_no_dbc_in_loc << endl;
+	cout << "no_dbc_in_loc " << no_dbc_in_loc << endl;
+	cout << "M_no_not_dbc_in_loc " << M_no_not_dbc_in_loc << endl;
+	cout << "no_not_dbc_in_loc " <<	no_not_dbc_in_loc << endl;
+	//Eigen::VectorXd f_bnd_dbc_full_size = CLNS.f_bnd_dbc_full_size;
+	// c_f_all_PODmodes_wo_dbc becomes CLNS.RB
+	Eigen::MatrixXd c_f_all_PODmodes_wo_dbc = RB;
+	cout << "c_f_all_PODmodes_wo_dbc.rows() " << c_f_all_PODmodes_wo_dbc.rows() << endl;
+	cout << "c_f_all_PODmodes_wo_dbc.cols() " << c_f_all_PODmodes_wo_dbc.cols() << endl;
+	gen_phys_base_vecs();
+	cout << "finished gen_phys_base_vecs " << endl;
+	gen_proj_adv_terms();
+	cout << "finished gen_proj_adv_terms " << endl;
+	gen_reference_matrices();
+	cout << "finished gen_reference_matrices " << endl;
+    }
+
+    Eigen::MatrixXd CoupledLinearNS_TT::gen_affine_mat_proj(double current_nu)
+    {
+	Eigen::MatrixXd recovered_affine_adv_mat_proj_xy = Eigen::MatrixXd::Zero(RBsize, RBsize);
+	for (int i = 0; i < RBsize; ++i)
+	{
+		recovered_affine_adv_mat_proj_xy += adv_mats_proj_x[i] * curr_xy_projected(i,0) + adv_mats_proj_y[i] * curr_xy_projected(i,1);
+	}
+	Eigen::MatrixXd affine_mat_proj = the_const_one_proj + current_nu * the_ABCD_one_proj + recovered_affine_adv_mat_proj_xy;
+	return affine_mat_proj;
+    }
+
+    Eigen::VectorXd CoupledLinearNS_TT::gen_affine_vec_proj(double current_nu)
+    {
+	Eigen::VectorXd recovered_affine_adv_rhs_proj_xy = Eigen::VectorXd::Zero(RBsize); 
+	for (int i = 0; i < RBsize; ++i)
+	{
+		recovered_affine_adv_rhs_proj_xy -= adv_vec_proj_x[i] * curr_xy_projected(i,0) + adv_vec_proj_y[i] * curr_xy_projected(i,1);
+	}	
+	return -the_const_one_rhs_proj - current_nu * the_ABCD_one_rhs_proj + recovered_affine_adv_rhs_proj_xy;
+    }
+
+    Eigen::VectorXd CoupledLinearNS_TT::reconstruct_solution_w_dbc(Eigen::VectorXd reprojected_solve)
+    {
+	Eigen::VectorXd reconstruct_solution = Eigen::VectorXd::Zero(f_bnd_dbc_full_size.rows());  // is of size M_truth_size
+	int counter_wo_dbc = 0;
+	for (int row_index=0; row_index < f_bnd_dbc_full_size.rows(); ++row_index)
+	{
+		if (!elem_loc_dbc.count(row_index))
+		{
+			reconstruct_solution(row_index) = reprojected_solve(counter_wo_dbc);
+			counter_wo_dbc++;
+		}
+		else
+		{
+			reconstruct_solution(row_index) = f_bnd_dbc_full_size(row_index);
+		}
+	}
+	return reconstruct_solution;
+    }
+
+    void CoupledLinearNS_TT::gen_reference_matrices()
+    {
+	double current_nu = ref_param_nu;
+	int current_index = ref_param_index;
+	Set_m_kinvis( current_nu );
+	DoInitialiseAdv(snapshot_x_collection[current_index], snapshot_y_collection[current_index]);
+	the_const_one = Get_no_advection_matrix_pressure();
+	the_ABCD_one = Get_no_advection_matrix_ABCD();
+	the_const_one_simplified = remove_cols_and_rows(the_const_one, elem_loc_dbc);
+	the_ABCD_one_simplified = remove_cols_and_rows(the_ABCD_one, elem_loc_dbc);
+	the_const_one_proj = RB.transpose() * the_const_one_simplified * RB;
+	the_ABCD_one_proj = RB.transpose() * the_ABCD_one_simplified * RB;
+	the_ABCD_one_rhs = the_ABCD_one * f_bnd_dbc_full_size;
+	the_const_one_rhs = the_const_one * f_bnd_dbc_full_size;
+	the_ABCD_one_rhs_simplified = remove_rows(the_ABCD_one_rhs, elem_loc_dbc);
+	the_const_one_rhs_simplified = remove_rows(the_const_one_rhs, elem_loc_dbc);
+	the_ABCD_one_rhs_proj = RB.transpose() * the_ABCD_one_rhs_simplified;
+	the_const_one_rhs_proj = RB.transpose() * the_const_one_rhs_simplified;
+	cout << "the_const_one_rhs_proj " << the_const_one_rhs_proj << endl;
+    }
+
+
+    void CoupledLinearNS_TT::compute_snapshots(int number_of_snapshots)
+    {
+	CoupledLinearNS_trafoP babyCLNS_trafo(m_session);
+	babyCLNS_trafo.InitObject();
+	//Eigen::MatrixXd collect_f_all = babyCLNS_trafo.DoTrafo(snapshot_x_collection, snapshot_y_collection, param_vector);
+	Array<OneD, NekDouble> zero_phys_init(GetNpoints(), 0.0);
+	snapshot_x_collection = Array<OneD, Array<OneD, NekDouble> > (number_of_snapshots);
+	snapshot_y_collection = Array<OneD, Array<OneD, NekDouble> > (number_of_snapshots);
+        for(int i = 0; i < number_of_snapshots; ++i)
+	{
+
+		Array<OneD, Array<OneD, NekDouble> > converged_solution = babyCLNS_trafo.DoSolve_at_param(zero_phys_init, zero_phys_init, param_vector[i]);
+		snapshot_x_collection[i] = Array<OneD, NekDouble> (GetNpoints(), 0.0);
+		snapshot_y_collection[i] = Array<OneD, NekDouble> (GetNpoints(), 0.0);
+		for (int j=0; j < GetNpoints(); ++j)
+		{
+			snapshot_x_collection[i][j] = converged_solution[0][j];
+			snapshot_y_collection[i][j] = converged_solution[1][j];
+		}
+	}
+
+
+    }
+
+    void CoupledLinearNS_TT::load_snapshots(int number_of_snapshots)
+    {
+	// fill the fields snapshot_x_collection and snapshot_y_collection
+
+	int nvelo = 2;
+        Array<OneD, Array<OneD, NekDouble> > test_load_snapshot(nvelo); // for a 2D problem
+
+        for(int i = 0; i < nvelo; ++i)
+        {
+            test_load_snapshot[i] = Array<OneD, NekDouble> (GetNpoints(), 0.0);  // number of phys points
+        }
+               
+        std::vector<std::string> fieldStr;
+        for(int i = 0; i < nvelo; ++i)
+        {
+           fieldStr.push_back(m_session->GetVariable(i));
+//           cout << "session->GetVariable(i) " << session->GetVariable(i) << endl;
+        }
+
+	snapshot_x_collection = Array<OneD, Array<OneD, NekDouble> > (number_of_snapshots);
+	snapshot_y_collection = Array<OneD, Array<OneD, NekDouble> > (number_of_snapshots);
+
+        for(int i = 0; i < number_of_snapshots; ++i)
+        {
+		// generate the correct string
+		std::stringstream sstm;
+		sstm << "TestSnap" << i+1;
+		std::string result = sstm.str();
+		const char* rr = result.c_str();
+
+	        EvaluateFunction(fieldStr, test_load_snapshot, result);
+//		cout << "tls " << test_load_snapshot[0][1235] << endl;
+		snapshot_x_collection[i] = Array<OneD, NekDouble> (GetNpoints(), 0.0);
+		snapshot_y_collection[i] = Array<OneD, NekDouble> (GetNpoints(), 0.0);
+		for (int j=0; j < GetNpoints(); ++j)
+		{
+			snapshot_x_collection[i][j] = test_load_snapshot[0][j];
+			snapshot_y_collection[i][j] = test_load_snapshot[1][j];
+		}
+		// snapshot_x_collection[i] = test_load_snapshot[0];
+		// snapshot_y_collection[i] = test_load_snapshot[1];
+        }
     }
 
     void CoupledLinearNS_TT::trafoSnapshot_simple(Eigen::MatrixXd RB_in)

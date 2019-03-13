@@ -3364,6 +3364,15 @@ namespace Nektar
     {
 	int load_snapshot_data_from_files = m_session->GetParameter("load_snapshot_data_from_files");
 	int number_of_snapshots = m_session->GetParameter("number_of_snapshots");
+	if (m_session->DefinesParameter("parameter_space_dimension")) 
+	{
+		int parameter_space_dimension = m_session->GetParameter("parameter_space_dimension");	
+	}
+	else
+	{
+		parameter_space_dimension = 1;
+	}
+
 	double POD_tolerance = m_session->GetParameter("POD_tolerance");
 	ref_param_index = m_session->GetParameter("ref_param_index");
 	ref_param_nu = m_session->GetParameter("ref_param_nu");

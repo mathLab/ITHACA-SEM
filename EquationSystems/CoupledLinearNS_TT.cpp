@@ -3394,7 +3394,13 @@ namespace Nektar
       {
       	SetCoef(i,fields[i]);
       }*/
-      WriteFld(m_sessionName+".fld");
+		cout << m_velocity[0] << "ciao";      
+      
+      std::stringstream sstm;
+		sstm << "_" << m_sessionName << i<<".fld";
+		std::string fileName = sstm.str();
+		m_field = reconstruct_solution;
+      WriteFld(fileName);
 
 	}
     }

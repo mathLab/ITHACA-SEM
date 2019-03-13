@@ -3357,6 +3357,9 @@ namespace Nektar
 		mat_compare.col(2) = mat_compare.col(1) - mat_compare.col(0);
 //		cout << mat_compare << endl;
 		cout << "relative error norm: " << mat_compare.col(2).norm() / mat_compare.col(0).norm() << endl;
+
+		// here now manipulate m_fields with local dof and then call WriteFld
+
 	}
     }
 	

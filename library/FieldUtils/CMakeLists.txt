@@ -25,6 +25,7 @@ SET(FieldUtilsHeaders
     ProcessModules/ProcessCreateExp.h
     ProcessModules/ProcessDeform.h
     ProcessModules/ProcessDisplacement.h
+    ProcessModules/ProcessDOF.h
     ProcessModules/ProcessEquiSpacedOutput.h
     ProcessModules/ProcessGrad.h
     ProcessModules/ProcessHomogeneousPlane.h
@@ -43,6 +44,7 @@ SET(FieldUtilsHeaders
     ProcessModules/ProcessMeanMode.h
     ProcessModules/ProcessPointDataToFld.h
     ProcessModules/ProcessPrintFldNorms.h
+    ProcessModules/ProcessRemoveField.h
     ProcessModules/ProcessScaleInFld.h
     ProcessModules/ProcessStreamFunction.h
     ProcessModules/ProcessSurfDistance.h
@@ -81,6 +83,7 @@ SET(FieldUtilsSources
     ProcessModules/ProcessCreateExp.cpp
     ProcessModules/ProcessDeform.cpp
     ProcessModules/ProcessDisplacement.cpp
+    ProcessModules/ProcessDOF.cpp
     ProcessModules/ProcessEquiSpacedOutput.cpp
     ProcessModules/ProcessGrad.cpp
     ProcessModules/ProcessHomogeneousPlane.cpp
@@ -99,6 +102,7 @@ SET(FieldUtilsSources
     ProcessModules/ProcessMeanMode.cpp
     ProcessModules/ProcessPointDataToFld.cpp
     ProcessModules/ProcessPrintFldNorms.cpp
+    ProcessModules/ProcessRemoveField.cpp    
     ProcessModules/ProcessScaleInFld.cpp
     ProcessModules/ProcessVorticity.cpp
     ProcessModules/ProcessScalGrad.cpp

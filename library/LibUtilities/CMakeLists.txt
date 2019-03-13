@@ -15,6 +15,7 @@ SET(BasicUtilsHeaders
     ./BasicUtils/FieldIOXml.h
     ./BasicUtils/FileSystem.h
     ./BasicUtils/ErrorUtil.hpp
+    ./BasicUtils/Interpolator.h
     ./BasicUtils/HashUtils.hpp
     ./BasicUtils/NekManager.hpp
     ./BasicUtils/NekFactory.hpp
@@ -44,6 +45,7 @@ SET(BasicUtilsSources
     ./BasicUtils/FieldIO.cpp
     ./BasicUtils/FieldIOXml.cpp
     ./BasicUtils/FileSystem.cpp
+    ./BasicUtils/Interpolator.cpp
     ./BasicUtils/ParseUtils.cpp
     ./BasicUtils/PtsField.cpp
     ./BasicUtils/PtsIO.cpp
@@ -376,7 +378,7 @@ TARGET_LINK_LIBRARIES(LibUtilities LINK_PUBLIC
     ${Boost_PROGRAM_OPTIONS_LIBRARY}
     ${Boost_FILESYSTEM_LIBRARY}
     ${Boost_SYSTEM_LIBRARY}
-    ${ZLIB_LIBRARIES}
+    optimized ${ZLIB_LIBRARIES} debug ${ZLIB_LIBRARIES_DEBUG}
 )
 
 # TinyXML
@@ -417,6 +419,10 @@ IF( NEKTAR_USE_PETSC )
     TARGET_LINK_LIBRARIES(LibUtilities LINK_PUBLIC ${CMAKE_DL_LIBS})
     ADD_DEPENDENCIES(LibUtilities petsc-3.7.7)
 ENDIF( NEKTAR_USE_PETSC )
+
+IF (NEKTAR_BUILD_PYTHON)
+    SUBDIRS(Python)
+ENDIF()
 
 # HDF5
 IF( NEKTAR_USE_HDF5 )

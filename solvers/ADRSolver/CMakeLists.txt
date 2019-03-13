@@ -16,11 +16,17 @@ IF( NEKTAR_SOLVER_ADR )
         ./EquationSystems/SteadyAdvectionDiffusion.cpp
         ./EquationSystems/SteadyAdvectionDiffusionReaction.cpp
         ./EquationSystems/UnsteadyAdvection.cpp
+        ./EquationSystems/MMFAdvection.cpp
         ./EquationSystems/UnsteadyDiffusion.cpp
         ./EquationSystems/UnsteadyAdvectionDiffusion.cpp
         ./EquationSystems/UnsteadyInviscidBurger.cpp
         ./EquationSystems/UnsteadyViscousBurgers.cpp
         ./EquationSystems/EigenValuesAdvection.cpp)
+
+    #MMF advection 
+    ADD_NEKTAR_TEST        (TestMMFAdvPlane)
+    ADD_NEKTAR_TEST        (TestMMFAdvCube)
+    ADD_NEKTAR_TEST        (TestMMFAdvSphere)
 
     # 1D discontinuous advection (weak DG/flux reconstruction)
     ADD_NEKTAR_TEST(Advection1D_FRDG_GLL_LAGRANGE_SEM LENGTHY)
@@ -75,6 +81,7 @@ IF( NEKTAR_SOLVER_ADR )
     ADD_NEKTAR_TEST(Advection_m12_Order1)
     ADD_NEKTAR_TEST(Advection_m12_Order2)
     ADD_NEKTAR_TEST(Advection_m14_Order4)
+    ADD_NEKTAR_TEST(CylindricalHelmholtz)
 
     # 2D advection diffusion (Imex DG)
     ADD_NEKTAR_TEST(UnsteadyAdvectionDiffusion_2D_ImexDG)
@@ -227,5 +234,6 @@ IF( NEKTAR_SOLVER_ADR )
         IF (NEKTAR_USE_HDF5)
             ADD_NEKTAR_TEST(Advection3D_m12_DG_prism_VarP_hdf)
         ENDIF()
-    ENDIF (NEKTAR_USE_MPI)
+	ADD_NEKTAR_TEST(RotPerBcs3D LENGTHY)        
+ENDIF (NEKTAR_USE_MPI)
 ENDIF( NEKTAR_SOLVER_ADR )

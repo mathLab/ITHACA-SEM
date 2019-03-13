@@ -45,7 +45,6 @@
 
 namespace Nektar
 {
-
 namespace SpatialDomains
 {
 
@@ -68,9 +67,13 @@ public:
 
     /// Get the orientation of face1.
     SPATIAL_DOMAINS_EXPORT static StdRegions::Orientation GetFaceOrientation(
-        const QuadGeom &face1, const QuadGeom &face2);
+                    const QuadGeom &face1, const QuadGeom &face2,
+                    bool doRot = false, int dir = 0, NekDouble angle = 0.0,
+                    NekDouble tol = 1e-8);
     SPATIAL_DOMAINS_EXPORT static StdRegions::Orientation GetFaceOrientation(
-        const PointGeomVector &face1, const PointGeomVector &face2);
+                    const PointGeomVector &face1, const PointGeomVector &face2,
+                    bool doRot = false, int dir = 0, NekDouble angle = 0.0,
+                    NekDouble tol = 1e-8);
 
     SPATIAL_DOMAINS_EXPORT static const int kNverts = 4;
     SPATIAL_DOMAINS_EXPORT static const int kNedges = 4;

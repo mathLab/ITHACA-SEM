@@ -3359,6 +3359,41 @@ namespace Nektar
 		cout << "relative error norm: " << mat_compare.col(2).norm() / mat_compare.col(0).norm() << endl;
 
 		// here now manipulate m_fields with local dof and then call WriteFld
+		// Unpack solution from Bnd and F_int to v_coeffs 
+      cnt = cnt1 = 0;
+      for(i = 0; i < nel; ++i) // loop over elements
+      {
+        eid  = fields[m_velocity[0]]->GetOffset_Elmt_Id(i);
+        fields[0]->GetExp(eid)->GetBoundaryMap(bmap);
+        fields[0]->GetExp(eid)->GetInteriorMap(imap);
+        nbnd   = bmap.num_elements();
+        nint   = imap.num_elements();
+        offset = fields[0]->GetCoeff_Offset(eid);
+        
+        for(j = 0; j < nvel; ++j) // loop over velocity fields 
+        {
+           for(n = 0; n < nz_loc; ++n)
+           {
+               for(k = 0; k < nbnd; ++k)
+		         {  
+                 fields[j]->SetCoeff(n*nplanecoeffs + offset+bmap[k],f_bnd[cnt+k]);
+               }
+             
+               for(k = 0; k < nint; ++k)
+               {
+                  fields[j]->SetCoeff(n*nplanecoeffs + offset+imap[k],f_int[cnt1+k]);
+               }
+               cnt  += nbnd;
+               cnt1 += nint;
+           }
+        }
+      }
+      
+      for(i = 0; i < nel; ++i)
+      {
+      	SetCoef(i,fields[i]);
+      }
+      WriteFld(m_sessionName+".fld");
 
 	}
     }

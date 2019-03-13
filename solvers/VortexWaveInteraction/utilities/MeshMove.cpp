@@ -41,7 +41,7 @@
 //#include <sstream>
 #include <MultiRegions/ExpList.h>
 #include <MultiRegions/ContField1D.h>
-#include <MultiRegions/ContField2D.h>
+#include <MultiRegions/ContField.h>
 #include <LocalRegions/SegExp.h>
 #include <LocalRegions/QuadExp.h>
 #include <LocalRegions/TriExp.h>
@@ -214,7 +214,7 @@ int main(int argc, char *argv[])
     //----------------------------------------------
 
     MultiRegions::ExpListSharedPtr streak;
-    streak = MemoryManager<MultiRegions::ContField2D>
+    streak = MemoryManager<MultiRegions::ContField>
           ::AllocateSharedPtr(vSession, graphShPt, "w",true);
 
     LibUtilities::Import(fieldfile,fielddef,fielddata);

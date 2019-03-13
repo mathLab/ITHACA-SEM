@@ -40,7 +40,7 @@
 #include <LibUtilities/BasicUtils/Timer.h>
 #include <LocalRegions/MatrixKey.h>
 #include <MultiRegions/GlobalLinSysDirectStaticCond.h>
-#include <MultiRegions/ContField2D.h>
+#include <MultiRegions/ContField.h>
 
 using namespace std;
 
@@ -1960,8 +1960,8 @@ namespace Nektar
         
         for(k = 0; k < nvel; ++k)
         {
-            MultiRegions::ContField2DSharedPtr cfield =
-                std::dynamic_pointer_cast<MultiRegions::ContField2D>(fields[k]);
+            MultiRegions::ContFieldSharedPtr cfield =
+                std::dynamic_pointer_cast<MultiRegions::ContField>(fields[k]);
 
             Array<OneD, NekDouble> sign = cfield->GetLocalToGlobalMap()->
                 GetBndCondCoeffsToLocalCoeffsSign();

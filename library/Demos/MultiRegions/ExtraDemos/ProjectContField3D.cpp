@@ -5,7 +5,7 @@
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <LibUtilities/Communication/Comm.h>
 #include <MultiRegions/MultiRegions.hpp>
-#include <MultiRegions/ContField3D.h>
+#include <MultiRegions/ContField.h>
 #include <SpatialDomains/MeshGraph.h>
 
 using namespace std;
@@ -19,14 +19,14 @@ int main(int argc, char *argv[])
     LibUtilities::SessionReaderSharedPtr vSession
                     = LibUtilities::SessionReader::CreateInstance(argc, argv);
 
-    MultiRegions::ContField3DSharedPtr Exp,Fce;
+    MultiRegions::ContFieldSharedPtr Exp,Fce;
     int nq, coordim;
     Array<OneD,NekDouble>  fce; 
     Array<OneD,NekDouble>  xc0,xc1,xc2; 
     
     if(argc != 3)
     {
-        fprintf(stderr,"Usage: ProjectContField3D  meshfile \n");
+        fprintf(stderr,"Usage: ProjectContField  meshfile \n");
         exit(1);
     }
 
@@ -47,7 +47,7 @@ int main(int argc, char *argv[])
    
     //----------------------------------------------
     // Define Expansion 
-    Exp = MemoryManager<MultiRegions::ContField3D>::AllocateSharedPtr(vSession,graph3D,vSession->GetVariable(0));
+    Exp = MemoryManager<MultiRegions::ContField>::AllocateSharedPtr(vSession,graph3D,vSession->GetVariable(0));
     //----------------------------------------------  
     
     //----------------------------------------------
@@ -83,7 +83,7 @@ int main(int argc, char *argv[])
     
     //---------------------------------------------
     // Set up ExpList containing the solution 
-    Fce = MemoryManager<MultiRegions::ContField3D>::AllocateSharedPtr(*Exp);
+    Fce = MemoryManager<MultiRegions::ContField>::AllocateSharedPtr(*Exp);
     Fce->SetPhys(fce);
     //---------------------------------------------
 

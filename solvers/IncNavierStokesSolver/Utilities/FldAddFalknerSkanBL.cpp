@@ -19,7 +19,7 @@
 //! Loading Nektar++ libraries
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 #include <MultiRegions/ExpList.h>
-#include <MultiRegions/ContField2D.h>
+#include <MultiRegions/ContField.h>
 #include <SpatialDomains/MeshGraph.h>
 
 //! STL namespace
@@ -116,8 +116,8 @@ int main(int argc, char *argv[])
     graphShPt = SpatialDomains::MeshGraph::Read(vSession);
 
     //!  Feed our spatial discretisation object
-    MultiRegions::ContField2DSharedPtr Domain;
-    Domain = MemoryManager<MultiRegions::ContField2D>::AllocateSharedPtr(vSession,graphShPt,vSession->GetVariable(0));
+    MultiRegions::ContFieldSharedPtr Domain;
+    Domain = MemoryManager<MultiRegions::ContField>::AllocateSharedPtr(vSession,graphShPt,vSession->GetVariable(0));
 
     //! Get the total number of elements
     int nElements;

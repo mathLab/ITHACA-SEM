@@ -552,8 +552,8 @@ void FilterModalEnergy::SetUpBaseFields(
                 else
                 {
                     i = 0;
-                    MultiRegions::ContField2DSharedPtr firstbase =
-                        MemoryManager<MultiRegions::ContField2D>::
+                    MultiRegions::ContFieldSharedPtr firstbase =
+                        MemoryManager<MultiRegions::ContField>::
                             AllocateSharedPtr(
                                 m_session,graphShrPtr,
                                 m_session->GetVariable(i));
@@ -563,7 +563,7 @@ void FilterModalEnergy::SetUpBaseFields(
                     for (i = 1 ; i < m_base.num_elements(); i++)
                     {
                         m_base[i] = MemoryManager<MultiRegions::
-                            ContField2D>::AllocateSharedPtr(
+                            ContField>::AllocateSharedPtr(
                                 *firstbase, graphShrPtr,
                                 m_session->GetVariable(i));
                     }
@@ -572,15 +572,15 @@ void FilterModalEnergy::SetUpBaseFields(
             break;
             case 3:
             {
-                MultiRegions::ContField3DSharedPtr firstbase =
-                    MemoryManager<MultiRegions::ContField3D>::
+                MultiRegions::ContFieldSharedPtr firstbase =
+                    MemoryManager<MultiRegions::ContField>::
                         AllocateSharedPtr(m_session, graphShrPtr,
                                           m_session->GetVariable(0));
                 m_base[0] = firstbase;
                 for (i = 1 ; i < m_base.num_elements(); i++)
                 {
                     m_base[i] = MemoryManager<MultiRegions::
-                    ContField3D>::AllocateSharedPtr(
+                    ContField>::AllocateSharedPtr(
                         *firstbase, graphShrPtr,
                         m_session->GetVariable(0));
                 }

@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File ContField2D.cpp
+// File ContField.cpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,11 +29,11 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Field definition for 2D domain with boundary conditions
+// Description: Field definition for a continuous domain with boundary conditions
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <MultiRegions/ContField2D.h>
+#include <MultiRegions/ContField.h>
 #include <MultiRegions/AssemblyMap/AssemblyMapCG.h>
 #include <tuple>
 
@@ -44,8 +44,8 @@ namespace Nektar
     namespace MultiRegions
     {
         /**
-         * @class ContField2D
-         * The class #ContField2D is
+         * @class ContField
+         * The class #ContField is
          * able to incorporate the boundary conditions imposed to the problem
          * to be solved. Therefore, the class is equipped with three additional
          * data members:
@@ -86,12 +86,13 @@ namespace Nektar
         /**
          *
          */
-        ContField2D::ContField2D():
+        ContField::ContField():
             DisContField(),
             m_locToGloMap(),
             m_globalMat(),
             m_globalLinSysManager(
-                std::bind(&ContField2D::GenGlobalLinSys, this, std::placeholders::_1),
+                std::bind(&ContField::GenGlobalLinSys, this,
+                          std::placeholders::_1),
                 std::string("GlobalLinSys"))
         {
         }
@@ -118,17 +119,19 @@ namespace Nektar
          * @param   variable    An optional parameter to indicate for which
          *                      variable the field should be constructed.
          */
-        ContField2D::ContField2D(
+        ContField::ContField(
                          const LibUtilities::SessionReaderSharedPtr &pSession,
-                         const SpatialDomains::MeshGraphSharedPtr &graph2D,
+                         const SpatialDomains::MeshGraphSharedPtr &graph,
                          const std::string &variable,
                          const bool DeclareCoeffPhysArrays,
                          const bool CheckIfSingularSystem,
                          const Collections::ImplementationType ImpType):
-            DisContField(pSession,graph2D,variable,false,DeclareCoeffPhysArrays,ImpType),
+            DisContField(pSession,graph,variable,false,
+                         DeclareCoeffPhysArrays,ImpType),
             m_globalMat(MemoryManager<GlobalMatrixMap>::AllocateSharedPtr()),
             m_globalLinSysManager(
-                std::bind(&ContField2D::GenGlobalLinSys, this, std::placeholders::_1),
+                std::bind(&ContField::GenGlobalLinSys, this,
+                          std::placeholders::_1),
                 std::string("GlobalLinSys"))
         {
             m_locToGloMap = MemoryManager<AssemblyMapCG>
@@ -138,7 +141,8 @@ namespace Nektar
                                     CheckIfSingularSystem,
                                     variable,
                                     m_periodicVerts,
-                                    m_periodicEdges);
+                                    m_periodicEdges,
+                                    m_periodicFaces);
 
             if (m_session->DefinesCmdLineArgument("verbose"))
             {
@@ -148,7 +152,7 @@ namespace Nektar
 
 
         /**
-         * Given a mesh \a graph2D, containing information about the domain and
+         * Given a mesh \a graph, containing information about the domain and
          * the spectral/hp element expansion, this constructor fills the list
          * of local expansions #m_exp with the proper expansions, calculates
          * the total number of quadrature points \f$\boldsymbol{x}_i\f$ and
@@ -162,23 +166,23 @@ namespace Nektar
          * bcs, by expressing them in terms of the coefficient of the expansion
          * on the boundary.
          *
-         * @param   In          Existing ContField2D object used to provide the
+         * @param   In          Existing ContField object used to provide the
          *                      local to global mapping information and
          *                      global solution type.
-         * @param   graph2D     A mesh, containing information about the domain
+         * @param   graph     A mesh, containing information about the domain
          *                      and the spectral/hp element expansion.
          * @param   bcs         The boundary conditions.
          * @param   bc_loc
          */
-        ContField2D::ContField2D(const ContField2D &In,
-                                 const SpatialDomains::MeshGraphSharedPtr &graph2D,
+        ContField::ContField(const ContField &In,
+                                 const SpatialDomains::MeshGraphSharedPtr &graph,
                                  const std::string &variable,
                                  bool DeclareCoeffPhysArrays,
                                  const bool CheckIfSingularSystem):
-            DisContField(In,graph2D,variable,false,DeclareCoeffPhysArrays),
+            DisContField(In,graph,variable,false,DeclareCoeffPhysArrays),
             m_globalMat   (MemoryManager<GlobalMatrixMap>::AllocateSharedPtr()),
             m_globalLinSysManager(
-                std::bind(&ContField2D::GenGlobalLinSys, this, std::placeholders::_1),
+                std::bind(&ContField::GenGlobalLinSys, this, std::placeholders::_1),
                 std::string("GlobalLinSys"))
         {
             if(!SameTypeOfBoundaryConditions(In) || CheckIfSingularSystem)
@@ -205,12 +209,12 @@ namespace Nektar
 
 
         /**
-         * Initialises the object as a copy of an existing ContField2D object.
-         * @param   In                       Existing ContField2D object.
+         * Initialises the object as a copy of an existing ContField object.
+         * @param   In                       Existing ContField object.
          * @param DeclareCoeffPhysArrays     bool to declare if \a m_phys
          * and \a m_coeffs should be declared. Default is true
          */
-        ContField2D::ContField2D(const ContField2D &In, bool DeclareCoeffPhysArrays):
+        ContField::ContField(const ContField &In, bool DeclareCoeffPhysArrays):
             DisContField(In,DeclareCoeffPhysArrays),
             m_locToGloMap(In.m_locToGloMap),
             m_globalMat(In.m_globalMat),
@@ -222,7 +226,7 @@ namespace Nektar
         /**
          *
          */
-        ContField2D::~ContField2D()
+        ContField::~ContField()
         {
         }
 
@@ -244,7 +248,7 @@ namespace Nektar
          *                      of \f$f(\boldsymbol{x})\f$ at the quadrature
          *                      points in its array #m_phys.
          */
-        void ContField2D::FwdTrans(const Array<OneD, const NekDouble> &inarray,
+        void ContField::FwdTrans(const Array<OneD, const NekDouble> &inarray,
                                    Array<OneD,       NekDouble> &outarray)
 
         {
@@ -261,7 +265,7 @@ namespace Nektar
         /**
          *
          */
-        void ContField2D::v_SmoothField(Array<OneD,NekDouble> &field)
+        void ContField::v_SmoothField(Array<OneD,NekDouble> &field)
         {
             int Ncoeffs = m_locToGloMap->GetNumLocalCoeffs();
             Array<OneD,NekDouble> tmp1(Ncoeffs);
@@ -280,7 +284,7 @@ namespace Nektar
          * @param   inarray     Input vector @f$\mathbf{x}@f$.
          * @param   outarray    Output vector @f$\mathbf{y}@f$.
          */
-        void ContField2D::MultiplyByInvMassMatrix(
+        void ContField::MultiplyByInvMassMatrix(
                                 const Array<OneD, const NekDouble> &inarray,
                                 Array<OneD,       NekDouble> &outarray)
 
@@ -338,7 +342,7 @@ namespace Nektar
          * @param   time        The time-level at which the coefficients are
          *                      evaluated
          */
-        void ContField2D::LaplaceSolve(
+        void ContField::LaplaceSolve(
                 const Array<OneD, const NekDouble> &inarray,
                       Array<OneD,       NekDouble> &outarray,
                 const Array<OneD, const NekDouble> &dirForcing,
@@ -416,7 +420,7 @@ namespace Nektar
          * @param   Imag        Computed eigenvalues, imag component.
          * @param   Evecs       Computed eigenvectors.
          */
-        void ContField2D::LinearAdvectionEigs(const NekDouble ax,
+        void ContField::LinearAdvectionEigs(const NekDouble ax,
                                               const NekDouble ay,
                                               Array<OneD, NekDouble> &Real,
                                               Array<OneD, NekDouble> &Imag,
@@ -490,7 +494,7 @@ namespace Nektar
          * @param   locrhs      contains the forcing term in local coefficient space
          * @note    inout contains initial guess and final output in local coeffs.
          */
-        void ContField2D::GlobalSolve(
+        void ContField::GlobalSolve(
                                 const GlobalLinSysKey &key,
                                 const Array<OneD, const NekDouble>& locrhs,
                                       Array<OneD,       NekDouble>& inout,
@@ -520,7 +524,7 @@ namespace Nektar
          * @param   mkey        Global matrix key.
          * @returns Assocated global matrix.
          */
-        GlobalMatrixSharedPtr ContField2D::GetGlobalMatrix(
+        GlobalMatrixSharedPtr ContField::GetGlobalMatrix(
                                 const GlobalMatrixKey &mkey)
         {
             ASSERTL1(mkey.LocToGloMapIsDefined(),
@@ -552,13 +556,13 @@ namespace Nektar
          * @param   mkey        This key uniquely defines the requested
          *                      linear system.
          */
-        GlobalLinSysSharedPtr ContField2D::GetGlobalLinSys(
+        GlobalLinSysSharedPtr ContField::GetGlobalLinSys(
                                 const GlobalLinSysKey &mkey)
         {
             return m_globalLinSysManager[mkey];
         }
 
-        GlobalLinSysSharedPtr ContField2D::GenGlobalLinSys(
+        GlobalLinSysSharedPtr ContField::GenGlobalLinSys(
                                 const GlobalLinSysKey &mkey)
         {
             ASSERTL1(mkey.LocToGloMapIsDefined(),
@@ -567,11 +571,10 @@ namespace Nektar
             return ExpList::GenGlobalLinSys(mkey, m_locToGloMap);
         }
 
-
         /**
          *
          */
-        void ContField2D::v_BwdTrans(
+        void ContField::v_BwdTrans(
                                      const Array<OneD, const NekDouble>
                                      &inarray,
                                      Array<OneD,       NekDouble> &outarray)
@@ -583,7 +586,7 @@ namespace Nektar
         /**
          *
          */
-        void ContField2D::v_FwdTrans(
+        void ContField::v_FwdTrans(
                                      const Array<OneD, const NekDouble>
                                      &inarray,
                                      Array<OneD,       NekDouble> &outarray)
@@ -591,7 +594,7 @@ namespace Nektar
             FwdTrans(inarray,outarray);
         }
 
-        void ContField2D::v_ImposeDirichletConditions(Array<OneD,NekDouble>& outarray)
+        void ContField::v_ImposeDirichletConditions(Array<OneD,NekDouble>& outarray)
         {
             int i,j;
             int bndcnt=0;
@@ -628,8 +631,21 @@ namespace Nektar
                 bndcnt += m_bndCondExpansions[i]->GetNcoeffs();
             }
             
+            // communicate local Dirichlet coeffsthat are just
+            // touching a dirichlet boundary on another partition
+            set<int> &ParallelDirBndSign = m_locToGloMap->GetParallelDirBndSign();
+
+            for (auto &it : ParallelDirBndSign)
+            {
+                outarray[it] *= -1;
+            }
+
             Gs::Gather(outarray, Gs::gs_amax, m_locToGloMap->GetDirBndGsh());
 
+            for (auto &it : ParallelDirBndSign)
+            {
+                outarray[it] *= -1;
+            }
 
             set<ExtraDirDof> &copyLocalDirDofs = m_locToGloMap->GetCopyLocalDirDofs();
             for (auto &it : copyLocalDirDofs)
@@ -640,7 +656,7 @@ namespace Nektar
 
         }
 
-        void ContField2D::v_FillBndCondFromField(void)
+        void ContField::v_FillBndCondFromField(void)
         {
             int bndcnt = 0;
 
@@ -673,7 +689,7 @@ namespace Nektar
         }
 
 
-        void ContField2D::v_FillBndCondFromField(const int nreg)
+        void ContField::v_FillBndCondFromField(const int nreg)
         {
             int bndcnt = 0;
 
@@ -736,7 +752,7 @@ namespace Nektar
          * local coefficients \f$\boldsymbol{\hat{u}}_l\f$ will be stored in
          * #m_coeffs.
          */
-        void ContField2D::v_GlobalToLocal(
+        void ContField::v_GlobalToLocal(
             const Array<OneD, const NekDouble> &inarray,
             Array<OneD,NekDouble> &outarray)
         {
@@ -744,7 +760,7 @@ namespace Nektar
         }
 
 
-        void ContField2D::v_GlobalToLocal(void)
+        void ContField::v_GlobalToLocal(void)
         {
             m_locToGloMap->GlobalToLocal(m_coeffs,m_coeffs);
         }
@@ -778,7 +794,7 @@ namespace Nektar
          *          values are consistent over processors
          */
 
-        void ContField2D::v_LocalToGlobal(
+        void ContField::v_LocalToGlobal(
             const Array<OneD, const NekDouble> &inarray,
             Array<OneD,NekDouble> &outarray,
             bool useComm)
@@ -787,7 +803,7 @@ namespace Nektar
         }
 
 
-        void ContField2D::v_LocalToGlobal(bool useComm)
+        void ContField::v_LocalToGlobal(bool useComm)
 
         {
             m_locToGloMap->LocalToGlobal(m_coeffs,m_coeffs, useComm);
@@ -796,7 +812,7 @@ namespace Nektar
         /**
          *
          */
-        void ContField2D::v_MultiplyByInvMassMatrix(
+        void ContField::v_MultiplyByInvMassMatrix(
                                 const Array<OneD, const NekDouble> &inarray,
                                 Array<OneD,       NekDouble> &outarray)
         {
@@ -830,7 +846,7 @@ namespace Nektar
          * @param   factors    The parameter \f$\lambda\f$ of the Helmholtz
          *                      equation is specified through the factors map
          */
-        void ContField2D::v_HelmSolve(
+        void ContField::v_HelmSolve(
                 const Array<OneD, const NekDouble> &inarray,
                       Array<OneD,       NekDouble> &outarray,
                 const FlagList &flags,
@@ -918,7 +934,7 @@ namespace Nektar
          * @param   outarray    The resulting vector of size
          *                      \f$N_{\mathrm{dof}}\f$.
          */
-        void ContField2D::v_GeneralMatrixOp(
+        void ContField::v_GeneralMatrixOp(
                 const GlobalMatrixKey              &gkey,
                 const Array<OneD,const NekDouble>  &inarray,
                 Array<OneD,      NekDouble>  &outarray)
@@ -937,11 +953,12 @@ namespace Nektar
          */
 
         // could combine this with HelmholtzCG.
-        void ContField2D::v_LinearAdvectionDiffusionReactionSolve(const Array<OneD, Array<OneD, NekDouble> > &velocity,
-                                                       const Array<OneD, const NekDouble> &inarray,
-                                                       Array<OneD, NekDouble> &outarray,
-                                                       const NekDouble lambda,
-                                                       const Array<OneD, const NekDouble>& dirForcing)
+        void ContField::v_LinearAdvectionDiffusionReactionSolve
+                (const Array<OneD, Array<OneD, NekDouble> > &velocity,
+                 const Array<OneD, const NekDouble> &inarray,
+                 Array<OneD, NekDouble> &outarray,
+                 const NekDouble lambda,
+                 const Array<OneD, const NekDouble>& dirForcing)
         {
             // Inner product of forcing
             Array<OneD,NekDouble> wsp(m_ncoeffs);
@@ -994,6 +1011,10 @@ namespace Nektar
             StdRegions::VarCoeffMap varcoeffs;
             varcoeffs[StdRegions::eVarCoeffVelX] = velocity[0];
             varcoeffs[StdRegions::eVarCoeffVelY] = velocity[1];
+            if(m_expType == e3D)
+            {
+                varcoeffs[StdRegions::eVarCoeffVelZ] = velocity[2];
+            }
 
             GlobalLinSysKey key(StdRegions::eLinearAdvectionDiffusionReaction,m_locToGloMap,factors,varcoeffs);
 
@@ -1009,7 +1030,7 @@ namespace Nektar
          * @param   lambda      reaction coefficient
          * @param   dirForcing  Dirichlet Forcing.
          */
-        void ContField2D::v_LinearAdvectionReactionSolve(
+        void ContField::v_LinearAdvectionReactionSolve(
                             const Array<OneD, Array<OneD, NekDouble> > &velocity,
                             const Array<OneD, const NekDouble> &inarray,
                             Array<OneD, NekDouble> &outarray,
@@ -1036,7 +1057,7 @@ namespace Nektar
          *
          */
         const Array<OneD,const SpatialDomains::BoundaryConditionShPtr>&
-                                ContField2D::v_GetBndConditions()
+                                ContField::v_GetBndConditions()
         {
             return GetBndConditions();
         }
@@ -1045,7 +1066,7 @@ namespace Nektar
         /**
          * Reset the GlobalLinSys Manager 
          */
-        void ContField2D::v_ClearGlobalLinSysManager(void)
+        void ContField::v_ClearGlobalLinSysManager(void)
         {
             m_globalLinSysManager.ClearManager("GlobalLinSys");
         }

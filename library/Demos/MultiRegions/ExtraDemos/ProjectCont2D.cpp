@@ -3,7 +3,7 @@
 
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 #include <LibUtilities/BasicUtils/SessionReader.h>
-#include <MultiRegions/ContField2D.h>
+#include <MultiRegions/ContField.h>
 #include <SpatialDomains/MeshGraph.h>
 
 using namespace std;
@@ -17,7 +17,7 @@ int main(int argc, char *argv[])
     LibUtilities::SessionReaderSharedPtr vSession
             = LibUtilities::SessionReader::CreateInstance(argc, argv);
 
-    MultiRegions::ContField2DSharedPtr Exp,Fce;
+    MultiRegions::ContFieldSharedPtr Exp,Fce;
     int     i, j, nq,  coordim;
     Array<OneD,NekDouble>  fce; 
     Array<OneD,NekDouble>  xc0,xc1,xc2; 
@@ -49,7 +49,7 @@ int main(int argc, char *argv[])
    
     //----------------------------------------------
     // Define Expansion 
-    Exp = MemoryManager<MultiRegions::ContField2D>::AllocateSharedPtr(vSession,graph2D,vSession->GetVariable(0));
+    Exp = MemoryManager<MultiRegions::ContField>::AllocateSharedPtr(vSession,graph2D,vSession->GetVariable(0));
     //----------------------------------------------  
     
     //----------------------------------------------
@@ -91,8 +91,8 @@ int main(int argc, char *argv[])
     }
     
     //---------------------------------------------
-    // Set up ContField2DD containing the solution 
-    Fce = MemoryManager<MultiRegions::ContField2D>::AllocateSharedPtr(*Exp);
+    // Set up ContFieldD containing the solution 
+    Fce = MemoryManager<MultiRegions::ContField>::AllocateSharedPtr(*Exp);
     Fce->SetPhys(fce);
     //---------------------------------------------
 

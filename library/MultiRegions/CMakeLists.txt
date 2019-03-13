@@ -4,8 +4,7 @@ SET(MULTI_REGIONS_SOURCES
 ./AssemblyMap/AssemblyMapDG.cpp
 ./AssemblyMap/LocTraceToTraceMap.cpp
 ContField1D.cpp
-ContField2D.cpp
-ContField3D.cpp
+ContField.cpp
 ContField3DHomogeneous1D.cpp
 ContField3DHomogeneous2D.cpp
 DisContField.cpp
@@ -39,8 +38,7 @@ SubStructuredGraph.cpp
 
 SET(MULTI_REGIONS_HEADERS
 ContField1D.h
-ContField2D.h
-ContField3D.h
+ContField.h
 ContField3DHomogeneous1D.h
 ContField3DHomogeneous2D.h
 DisContField.h

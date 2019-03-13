@@ -35,7 +35,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <MultiRegions/ContField3DHomogeneous1D.h>
-#include <MultiRegions/ContField2D.h>
+#include <MultiRegions/ContField.h>
 
 namespace Nektar
 {
@@ -53,12 +53,12 @@ namespace Nektar
         {
             
             bool False = false;
-            ContField2DSharedPtr zero_plane =
-                    std::dynamic_pointer_cast<ContField2D> (In.m_planes[0]);
+            ContFieldSharedPtr zero_plane =
+                    std::dynamic_pointer_cast<ContField> (In.m_planes[0]);
             
             for(int n = 0; n < m_planes.num_elements(); ++n)
             {
-                m_planes[n] =   MemoryManager<ContField2D>::
+                m_planes[n] =   MemoryManager<ContField>::
                                         AllocateSharedPtr(*zero_plane,False);
             }
             
@@ -71,17 +71,17 @@ namespace Nektar
                             const std::string                        &variable):
             DisContField3DHomogeneous1D (In, false)
         {
-            ContField2DSharedPtr zero_plane_old =
-                    std::dynamic_pointer_cast<ContField2D> (In.m_planes[0]);
+            ContFieldSharedPtr zero_plane_old =
+                    std::dynamic_pointer_cast<ContField> (In.m_planes[0]);
 
-            ContField2DSharedPtr zero_plane =
-                        MemoryManager<ContField2D>::
+            ContFieldSharedPtr zero_plane =
+                        MemoryManager<ContField>::
                                     AllocateSharedPtr(*zero_plane_old,graph2D,
                                                             variable);
 
             for(int n = 0; n < m_planes.num_elements(); ++n)
             {
-                m_planes[n] =   MemoryManager<ContField2D>::
+                m_planes[n] =   MemoryManager<ContField>::
                                         AllocateSharedPtr(*zero_plane,graph2D,
                                                             variable);
             }
@@ -114,19 +114,19 @@ namespace Nektar
                                         useFFT,dealiasing)
         {
             int i,n,nel;
-            ContField2DSharedPtr plane_zero;
-            ContField2DSharedPtr plane_two;
+            ContFieldSharedPtr plane_zero;
+            ContFieldSharedPtr plane_two;
 
             SpatialDomains::BoundaryConditions bcs(m_session, graph2D);
             m_graph = graph2D;
 
             // Plane zero (k=0 - cos) - singularaty check required for Poisson
             // problems
-            plane_zero = MemoryManager<ContField2D>::AllocateSharedPtr(
+            plane_zero = MemoryManager<ContField>::AllocateSharedPtr(
                                         pSession, graph2D, variable, false,
                                         CheckIfSingularSystem, ImpType);
 
-            plane_two  = MemoryManager<ContField2D>::AllocateSharedPtr(
+            plane_two  = MemoryManager<ContField>::AllocateSharedPtr(
                                         pSession, graph2D, variable, false,
                                         false, ImpType);
 
@@ -139,17 +139,17 @@ namespace Nektar
                 // required for Poisson problems
                 if(m_transposition->GetK(n) == 0)
                 {
-                    m_planes[n] = MemoryManager<ContField2D>
+                    m_planes[n] = MemoryManager<ContField>
                         ::AllocateSharedPtr(*plane_zero, graph2D, variable,
                                                 false, CheckIfSingularSystem);
                 }
                 else
                 {
                     // For k > 0 singularty check not required anymore -
-                    // creating another ContField2D to avoid Assembly Map copy
+                    // creating another ContField to avoid Assembly Map copy
                     // TODO: We may want to deal with it in a more efficient
                     // way in the future.
-                    m_planes[n] = MemoryManager<ContField2D>
+                    m_planes[n] = MemoryManager<ContField>
                             ::AllocateSharedPtr(*plane_two, graph2D, variable,
                                                 false, false);
                 }

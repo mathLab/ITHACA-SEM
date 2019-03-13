@@ -39,7 +39,7 @@
 #include <LibUtilities/BasicUtils/FieldIO.h>
 #include <LibUtilities/TimeIntegration/TimeIntegrationWrapper.h>
 #include <SpatialDomains/MeshGraph.h>
-#include <MultiRegions/ContField2D.h>
+#include <MultiRegions/ContField.h>
 
 using namespace std;
 using namespace Nektar;
@@ -63,7 +63,7 @@ class Diffusion
         LibUtilities::FieldIOSharedPtr                  fld;
         string                                          sessionName;
         SpatialDomains::MeshGraphSharedPtr              graph;
-        MultiRegions::ContField2DSharedPtr              field;
+        MultiRegions::ContFieldSharedPtr              field;
 
         LibUtilities::TimeIntegrationWrapperSharedPtr   IntScheme;
         LibUtilities::TimeIntegrationSolutionSharedPtr  u;
@@ -101,7 +101,7 @@ Diffusion::Diffusion(int argc, char* argv[])
     lambda      = 1.0/delta_t/epsilon;
 
     // Set up the field
-    field       = MemoryManager<MultiRegions::ContField2D>::
+    field       = MemoryManager<MultiRegions::ContField>::
                     AllocateSharedPtr(session, graph, session->GetVariable(0));
 
     fields      = Array<OneD, Array<OneD, NekDouble> >(1);

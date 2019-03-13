@@ -39,8 +39,7 @@
 #include <LocalRegions/MatrixKey.h>
 #include <LibUtilities/BasicUtils/Equation.h>
 #include <MultiRegions/ContField1D.h>
-#include <MultiRegions/ContField2D.h>
-#include <MultiRegions/ContField3D.h>
+#include <MultiRegions/ContField.h>
 #include <MultiRegions/ContField3DHomogeneous1D.h>
 #include <MultiRegions/ContField3DHomogeneous2D.h>
 
@@ -422,9 +421,9 @@ namespace Nektar
                         else
                         {
                             i = 0;
-                            MultiRegions::ContField2DSharedPtr firstfield;
+                            MultiRegions::ContFieldSharedPtr firstfield;
                             firstfield = MemoryManager<MultiRegions::
-                                ContField2D>::AllocateSharedPtr(
+                                ContField>::AllocateSharedPtr(
                                     m_session, m_graph,
                                     m_session->GetVariable(i),
                                     DeclareCoeffPhysArrays,
@@ -437,7 +436,7 @@ namespace Nektar
                                                          m_session->GetVariable(i)))
                                 {
                                     m_fields[i] = MemoryManager<MultiRegions::
-                                        ContField2D>::AllocateSharedPtr(
+                                        ContField>::AllocateSharedPtr(
                                             *firstfield, m_graph,
                                             m_session->GetVariable(i),
                                             DeclareCoeffPhysArrays,
@@ -446,7 +445,7 @@ namespace Nektar
                                 else
                                 {
                                     m_fields[i] = MemoryManager<MultiRegions
-                                        ::ContField2D>::AllocateSharedPtr(
+                                        ::ContField>::AllocateSharedPtr(
                                             m_session, m_graph, 
                                             m_session->GetVariable(i),
                                             DeclareCoeffPhysArrays, 
@@ -479,10 +478,11 @@ namespace Nektar
                 case 3:
                     {
                         i = 0;
-                        MultiRegions::ContField3DSharedPtr firstfield =
-                            MemoryManager<MultiRegions::ContField3D>
+                        MultiRegions::ContFieldSharedPtr firstfield =
+                            MemoryManager<MultiRegions::ContField>
                             ::AllocateSharedPtr(m_session, m_graph, 
                                                 m_session->GetVariable(i),
+                                                DeclareCoeffPhysArrays,
                                                 m_checkIfSystemSingular[i]);
 
                         m_fields[0] = firstfield;
@@ -492,17 +492,19 @@ namespace Nektar
                                                            m_session->GetVariable(i)))
                             {
                                 m_fields[i] = MemoryManager<MultiRegions
-                                    ::ContField3D>::AllocateSharedPtr(
+                                    ::ContField>::AllocateSharedPtr(
                                         *firstfield, m_graph,
                                         m_session->GetVariable(i),
+                                        DeclareCoeffPhysArrays,
                                         m_checkIfSystemSingular[i]);
                             }
                             else
                             {
                                 m_fields[i] = MemoryManager<MultiRegions
-                                    ::ContField3D>::AllocateSharedPtr(
+                                    ::ContField>::AllocateSharedPtr(
                                         m_session, m_graph, 
                                         m_session->GetVariable(i),
+                                        DeclareCoeffPhysArrays,
                                         m_checkIfSystemSingular[i]); 
                             }
                         }

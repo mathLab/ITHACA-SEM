@@ -38,7 +38,7 @@
 
 #include <MultiRegions/MultiRegionsDeclspec.h>
 #include <MultiRegions/MultiRegions.hpp>
-#include <MultiRegions/DisContField.h>
+#include <MultiRegions/ContField.h>
 #include <MultiRegions/GlobalLinSys.h>
 #include <MultiRegions/GlobalMatrix.h>
 #include <MultiRegions/AssemblyMap/AssemblyMapCG.h>
@@ -48,7 +48,7 @@ namespace Nektar
 {
     namespace MultiRegions
     {
-        class ContField3D: public DisContField
+        class ContField3D: public ContField
         {
         public:
             MULTI_REGIONS_EXPORT ContField3D();
@@ -58,6 +58,7 @@ namespace Nektar
                         const LibUtilities::SessionReaderSharedPtr &pSession,
                         const SpatialDomains::MeshGraphSharedPtr &graph3D,
                         const std::string &variable  = "DefaultVar",
+                        const bool DeclareCoeffPhysArrays = true,
                         const bool CheckIfSingularSystem = false,
                         const Collections::ImplementationType ImpType
                         = Collections::eNoImpType);
@@ -70,104 +71,23 @@ namespace Nektar
                         const std::string &variable,
                         const bool CheckIfSingularSystem = false);
 
-            MULTI_REGIONS_EXPORT ContField3D(const ContField3D &In);
+            MULTI_REGIONS_EXPORT ContField3D(const ContField3D &In,
+                                             bool DeclareCoeffPhysArrays = true);
 
             MULTI_REGIONS_EXPORT virtual ~ContField3D();
 
-            inline const Array<OneD,const MultiRegions::ExpListSharedPtr>& GetBndCondExpansions()
-            {
-                return m_bndCondExpansions;
-            }
 
             /// This function return the boundary conditions expansion.
             inline const Array<OneD,const MultiRegions::ExpListSharedPtr>
                     &GetBndCondExp();
 
-            inline void Assemble();
-
-            inline void Assemble(
-                    const Array<OneD, const NekDouble> &inarray,
-                          Array<OneD,NekDouble> &outarray);
-
-            inline const AssemblyMapCGSharedPtr& GetLocalToGlobalMap()
-                                                                        const;
-
             MULTI_REGIONS_EXPORT int GetGlobalMatrixNnz(const GlobalMatrixKey &gkey);
 
 
         protected:
-            AssemblyMapCGSharedPtr m_locToGloMap;
-
-            /// (A shared pointer to) a list which collects all the global
-            /// matrices being assembled, such that they should be constructed
-            /// only once.
-            GlobalMatrixMapShPtr            m_globalMat;
-
-            /// (A shared pointer to) a list which collects all the global
-            /// linear system being assembled, such that they should be
-            /// constructed only once.
-            LibUtilities::NekManager<GlobalLinSysKey, GlobalLinSys> m_globalLinSysManager;
-
-            /// Performs the backward transformation of the spectral/hp
-            /// element expansion.
-            virtual void v_BwdTrans(
-                    const Array<OneD, const NekDouble> &inarray,
-                    Array<OneD,       NekDouble> &outarray);
-
-            /// Calculates the inner product of a function
-            /// \f$f(\boldsymbol{x})\f$ with respect to all <em>global</em>
-            /// expansion modes \f$\phi_n^e(\boldsymbol{x})\f$.
-            virtual void v_IProductWRTBase(
-                    const Array<OneD, const NekDouble> &inarray,
-                    Array<OneD,       NekDouble> &outarray);
-
-            virtual void v_FwdTrans(
-                    const Array<OneD, const NekDouble> &inarray,
-                    Array<OneD,       NekDouble> &outarray);
 
             
         private:
-            GlobalLinSysSharedPtr GetGlobalLinSys(const GlobalLinSysKey &mkey);
-
-            GlobalLinSysSharedPtr GenGlobalLinSys(const GlobalLinSysKey &mkey);
-
-            /// Returns the global matrix specified by \a mkey.
-            GlobalMatrixSharedPtr GetGlobalMatrix(const GlobalMatrixKey &mkey);
-
-
-            void GlobalSolve(const GlobalLinSysKey &key,
-                    const Array<OneD, const NekDouble> &rhs,
-                          Array<OneD,       NekDouble> &inout,
-                    const Array<OneD, const NekDouble> &dirForcing
-                                                     = NullNekDouble1DArray);
-
-            /// Impose the Dirichlet Boundary Conditions on outarray 
-            virtual void v_ImposeDirichletConditions(Array<OneD,NekDouble>& outarray);
-
-            virtual void v_FillBndCondFromField();
-
-            virtual void v_FillBndCondFromField(const int nreg);
-
-            virtual void v_LocalToGlobal(bool useComm);
-
-
-            virtual void v_LocalToGlobal(
-                const Array<OneD, const NekDouble> &inarray,
-                Array<OneD,NekDouble> &outarray,
-                bool useComm);
-
-
-            virtual void v_GlobalToLocal(void);
-
-
-            virtual void v_GlobalToLocal(
-                const Array<OneD, const NekDouble> &inarray,
-                Array<OneD,NekDouble> &outarray);
-
-
-            virtual void v_MultiplyByInvMassMatrix(
-                    const Array<OneD, const NekDouble> &inarray,
-                    Array<OneD,       NekDouble> &outarray);
 
             virtual void v_HelmSolve(
                     const Array<OneD, const NekDouble> &inarray,
@@ -178,49 +98,11 @@ namespace Nektar
                     const MultiRegions::VarFactorsMap &varfactors,
                     const Array<OneD, const NekDouble> &dirForcing,
                     const bool PhysSpaceForcing);
-            virtual void v_GeneralMatrixOp(
-                    const GlobalMatrixKey             &gkey,
-                    const Array<OneD,const NekDouble> &inarray,
-                    Array<OneD,      NekDouble> &outarray);
-
-            // Solve the linear advection problem assuming that m_coeffs
-            // vector contains an intial estimate for solution
-            MULTI_REGIONS_EXPORT virtual void v_LinearAdvectionDiffusionReactionSolve(
-                    const Array<OneD, Array<OneD, NekDouble> > &velocity,
-                    const Array<OneD, const NekDouble> &inarray,
-                    Array<OneD, NekDouble> &outarray,
-                    const NekDouble lambda,
-                    const Array<OneD, const NekDouble> &dirForcing = NullNekDouble1DArray);
-            
-            virtual void v_ClearGlobalLinSysManager(void);
 
         };
         typedef std::shared_ptr<ContField3D>      ContField3DSharedPtr;
 
-        inline const Array<OneD,const MultiRegions::ExpListSharedPtr>
-                &ContField3D::GetBndCondExp()
-        {
-            return m_bndCondExpansions;
-        }
 
-
-        inline void ContField3D::Assemble()
-        {
-            m_locToGloMap->Assemble(m_coeffs, m_coeffs);
-        }
-
-        inline void ContField3D::Assemble(
-                const Array<OneD, const NekDouble> &inarray,
-                Array<OneD,NekDouble> &outarray)
-        {
-            m_locToGloMap->Assemble(inarray, outarray);
-        }
-
-        inline const AssemblyMapCGSharedPtr&
-                ContField3D::GetLocalToGlobalMap() const
-        {
-            return  m_locToGloMap;
-        }
 
 
     } //end of namespace

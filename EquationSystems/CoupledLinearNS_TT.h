@@ -91,6 +91,8 @@ namespace Nektar
 	void load_snapshots(int number_of_snapshots);
 	void compute_snapshots(int number_of_snapshots);
         
+	int parameter_space_dimension;
+
         Array<OneD, Array<OneD, NekDouble> > m_ForcingTerm;
         Array<OneD, Array<OneD, NekDouble> > m_ForcingTerm_Coeffs;
 

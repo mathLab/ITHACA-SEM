@@ -3366,7 +3366,7 @@ namespace Nektar
 	int number_of_snapshots = m_session->GetParameter("number_of_snapshots");
 	if (m_session->DefinesParameter("parameter_space_dimension")) 
 	{
-		int parameter_space_dimension = m_session->GetParameter("parameter_space_dimension");	
+		parameter_space_dimension = m_session->GetParameter("parameter_space_dimension");	
 	}
 	else
 	{

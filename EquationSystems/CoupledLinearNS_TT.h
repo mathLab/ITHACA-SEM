@@ -84,6 +84,8 @@ namespace Nektar
 
 	Eigen::VectorXd trafoSnapshot(Eigen::VectorXd RB_via_POD, double kInvis);
 
+	double Geo_T(double w, int elemT, int index);
+
 	void trafoSnapshot_simple(Eigen::MatrixXd RB_via_POD);
 
         Eigen::MatrixXd DoTrafo(Array<OneD, Array<OneD, NekDouble> > snapshot_x_collection, Array<OneD, Array<OneD, NekDouble> > snapshot_y_collection, Array<OneD, NekDouble> param_vector);
@@ -114,6 +116,8 @@ namespace Nektar
 	Eigen::MatrixXd eigen_phys_basis_y;
 	Array<OneD, Array<OneD, double> > orth_PhysBaseVec_x;
 	Array<OneD, Array<OneD, double> > orth_PhysBaseVec_y;
+	Array<OneD, std::set<int> > elements_trafo;
+//	Array<OneD, Eigen::Matrix2d > elements_trafo_matrix; // put this as a function or find a way with symbolic computation
         void gen_phys_base_vecs();
 
 	Array<OneD, Eigen::MatrixXd> adv_mats_proj_x;
@@ -123,6 +127,8 @@ namespace Nektar
 	void gen_proj_adv_terms();
 	void offline_phase();
 	void online_phase();
+	Array<OneD, NekDouble> param_point;
+	Array<OneD, Array<OneD, NekDouble> > general_param_vector;
 	Array<OneD, NekDouble> param_vector;
 	int Nmax;
 	int RBsize;

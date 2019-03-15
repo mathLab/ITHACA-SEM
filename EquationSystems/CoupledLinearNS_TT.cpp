@@ -3330,6 +3330,11 @@ namespace Nektar
 
     }
 
+    double CoupledLinearNS_TT::Geo_T(double w, int elemT, int index)
+    {
+
+    }
+
     void CoupledLinearNS_TT::online_phase()
     {
 	Eigen::MatrixXd mat_compare = Eigen::MatrixXd::Zero(f_bnd_dbc_full_size.rows(), 3);  // is of size M_truth_size
@@ -3385,16 +3390,152 @@ namespace Nektar
 		globally_connected = 0;
 	}
 	Nmax = number_of_snapshots;
-	param_vector = Array<OneD, NekDouble> (Nmax);
-        for(int i = 0; i < number_of_snapshots; ++i)
-        {
-		// generate the correct string
-		std::stringstream sstm;
-		sstm << "param" << i;
-		std::string result = sstm.str();
-//		const char* rr = result.c_str();
-	        param_vector[i] = m_session->GetParameter(result);
-        }
+	if (parameter_space_dimension == 1)
+	{
+		param_vector = Array<OneD, NekDouble> (Nmax);
+	        for(int i = 0; i < number_of_snapshots; ++i)
+	        {
+			// generate the correct string
+			std::stringstream sstm;
+			sstm << "param" << i;
+			std::string result = sstm.str();
+		//	const char* rr = result.c_str();
+		        param_vector[i] = m_session->GetParameter(result);
+	        }
+	}
+	else if (parameter_space_dimension == 2)
+	{
+		general_param_vector = Array<OneD, Array<OneD, NekDouble> > (Nmax);
+		int number_of_snapshots_dir0 = m_session->GetParameter("number_of_snapshots_dir0");
+		int number_of_snapshots_dir1 = m_session->GetParameter("number_of_snapshots_dir1");
+		Array<OneD, NekDouble> index_vector(parameter_space_dimension, 0.0);
+
+//		for(int i = 0; i < parameter_space_dimension; ++i)
+//		{
+//			cout << "psdiv " << index_vector[i] << endl;
+//		}
+		int i_all = 0;
+//		general_param_vector[i_all] = Array<OneD, NekDouble> (parameter_space_dimension);
+		Array<OneD, NekDouble> parameter_point(parameter_space_dimension, 0.0);
+		for(int i = 0; i < Nmax; ++i)
+		{
+			parameter_point = Array<OneD, NekDouble> (parameter_space_dimension, 0.0);
+			general_param_vector[i] = parameter_point;
+		}
+		for(int i0 = 0; i0 < number_of_snapshots_dir0; ++i0)
+		{
+			// generate the correct string
+			std::stringstream sstm;
+			sstm << "param" << i0 << "_dir0";
+			std::string result = sstm.str();
+		        
+
+			for(int i1 = 0; i1 < number_of_snapshots_dir1; ++i1)
+			{
+				// generate the correct string
+				std::stringstream sstm1;
+				sstm1 << "param" << i1 << "_dir1";
+				std::string result1 = sstm1.str();
+				general_param_vector[i_all][0] = m_session->GetParameter(result);
+			        general_param_vector[i_all][1] = m_session->GetParameter(result1);
+				i_all = i_all + 1;
+//				general_param_vector[i_all] = Array<OneD, NekDouble> (parameter_space_dimension);
+			}
+		}
+		int type_para1 = m_session->GetParameter("type_para1");
+		cout << "type para1 " << type_para1 << endl;
+		int type_para2 = m_session->GetParameter("type_para2");
+		cout << "type para2 " << type_para2 << endl;
+		int number_elem_trafo = m_session->GetParameter("number_elem_trafo");
+
+		elements_trafo = Array<OneD, std::set<int> > (number_elem_trafo);
+//	    <P> elem_1 = {32,30,11,10,9,8,17,16,15,14,25,24,23,22}   	</P>   
+//          <P> elem_2 = {12, 28, 34, 13,21,20,18,19,26,27}   		</P>   
+//	    <P> elem_3 = {29, 31}   	</P>   
+//	    <P> elem_4 = {33, 35}   	</P>   
+//	    <P> elem_5 = {0,1,2,3,4,5,6,7}  
+		elements_trafo[0].insert(32); // of course, this should work automatically
+		elements_trafo[0].insert(30);
+		elements_trafo[0].insert(11);
+		elements_trafo[0].insert(10);
+		elements_trafo[0].insert(9);
+		elements_trafo[0].insert(8);
+		elements_trafo[0].insert(17);
+		elements_trafo[0].insert(16);
+		elements_trafo[0].insert(15);
+		elements_trafo[0].insert(14);
+		elements_trafo[0].insert(25);
+		elements_trafo[0].insert(24);
+		elements_trafo[0].insert(23);
+		elements_trafo[0].insert(22);
+
+		elements_trafo[1].insert(12);
+		elements_trafo[1].insert(28);
+		elements_trafo[1].insert(34);
+		elements_trafo[1].insert(13);
+		elements_trafo[1].insert(21);
+		elements_trafo[1].insert(20);
+		elements_trafo[1].insert(18);
+		elements_trafo[1].insert(19);
+		elements_trafo[1].insert(26);
+		elements_trafo[1].insert(27);
+
+		elements_trafo[2].insert(29);
+		elements_trafo[2].insert(31);
+
+		elements_trafo[3].insert(33);
+		elements_trafo[3].insert(35);
+
+		elements_trafo[4].insert(0);
+		elements_trafo[4].insert(1);
+		elements_trafo[4].insert(2);
+		elements_trafo[4].insert(3);
+		elements_trafo[4].insert(4);
+		elements_trafo[4].insert(5);
+		elements_trafo[4].insert(6);
+		elements_trafo[4].insert(7);
+
+/*	def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
+	if elemT == 0:
+		T = np.matrix([[1, 0], [0, 1/w]])
+	if elemT == 1:
+		T = np.matrix([[1, 0], [0, 2/(3-w)]])
+	if elemT == 2:
+		T = np.matrix([[1, 0], [-(1-w)/2, 1]])
+	if elemT == 3:
+		T = np.matrix([[1, 0], [-(w-1)/2, 1]])
+	if elemT == 4:
+		T = np.matrix([[1, 0], [0, 1]])			
+	if index == 0:
+		return 1/np.linalg.det(T)
+	if index == 1:
+		return T[0,0]
+	if index == 2:
+		return T[0,1]
+	if index == 3:
+		return T[1,0]
+	if index == 4:
+		return T[1,1]	*/
+
+//		elements_trafo_matrix = Array<OneD, Eigen::Matrix2d > (number_elem_trafo); // but how to do this with symbolic computation?
+		 
+
+	}
+	cout << "parameter vector generated" << endl;
+	cout << "general_param_vector.num_elements() " << general_param_vector.num_elements() << endl;
+//	cout << "general_param_vector[0].num_elements() " << general_param_vector[0].num_elements() << endl;
+//	cout << "general_param_vector[1].num_elements() " << general_param_vector[1].num_elements() << endl;
+//	cout << "general_param_vector[2].num_elements() " << general_param_vector[2].num_elements() << endl;
+//	cout << "general_param_vector[19].num_elements() " << general_param_vector[19].num_elements() << endl;
+	for(int i0 = 0; i0 < general_param_vector.num_elements(); ++i0)
+	{
+		for(int i1 = 0; i1 < general_param_vector[i0].num_elements(); ++i1)
+		{
+			cout << "general_param_vector[i0][i1] " << general_param_vector[i0][i1] << endl;
+		}
+	}
+
+
 	InitObject();
 	if ( load_snapshot_data_from_files )
 	{
@@ -3534,7 +3675,6 @@ namespace Nektar
 	snapshot_y_collection = Array<OneD, Array<OneD, NekDouble> > (number_of_snapshots);
         for(int i = 0; i < number_of_snapshots; ++i)
 	{
-
 		Array<OneD, Array<OneD, NekDouble> > converged_solution = babyCLNS_trafo.DoSolve_at_param(zero_phys_init, zero_phys_init, param_vector[i]);
 		snapshot_x_collection[i] = Array<OneD, NekDouble> (GetNpoints(), 0.0);
 		snapshot_y_collection[i] = Array<OneD, NekDouble> (GetNpoints(), 0.0);
@@ -3544,8 +3684,6 @@ namespace Nektar
 			snapshot_y_collection[i][j] = converged_solution[1][j];
 		}
 	}
-
-
     }
 
     void CoupledLinearNS_TT::load_snapshots(int number_of_snapshots)

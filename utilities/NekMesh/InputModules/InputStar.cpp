@@ -105,11 +105,10 @@ void InputStar::SetupElements(void)
     int nComposite = 0;
 
     // Read in Nodes
-    std::vector<NodeSharedPtr> Nodes;
-    ReadNodes(Nodes);
+    ReadNodes(m_mesh->m_node);
     
     // Get list of faces nodes and adjacents elements.
-    map<int, vector<int> > FaceNodes;
+    unordered_map<int, vector<int> > FaceNodes;
     Array<OneD, vector<int> > ElementFaces;
 
     // Read interior faces and set up first part of Element
@@ -136,9 +135,7 @@ void InputStar::SetupElements(void)
     // 3D Zone
     // Reset node ordering so that all prism faces have
     // consistent numbering for singular vertex re-ordering
-    ResetNodes(Nodes, ElementFaces, FaceNodes);
-    
-    m_mesh->m_node = Nodes;
+    ResetNodes(m_mesh->m_node, ElementFaces, FaceNodes);
 
     // create Prisms/Pyramids first
     int nelements = ElementFaces.num_elements();
@@ -150,7 +147,7 @@ void InputStar::SetupElements(void)
         if (ElementFaces[i].size() > 4)
         {
             GenElement3D(
-                Nodes, i, ElementFaces[i], FaceNodes, nComposite, true);
+                m_mesh->m_node, i, ElementFaces[i], FaceNodes, nComposite, true);
             ++cnt;
         }
     }
@@ -165,14 +162,18 @@ void InputStar::SetupElements(void)
         if (ElementFaces[i].size() == 4)
         {
             GenElement3D(
-                Nodes, i, ElementFaces[i], FaceNodes, nComposite, true);
+                m_mesh->m_node, i, ElementFaces[i], FaceNodes, nComposite, true);
             ++cnt;
         }
     }
     cout <<"\t" << cnt << " Tets" << endl;
     nComposite++;
 
-    ProcessVertices();
+    // Insert vertices into map.
+    for (auto &node : m_mesh->m_node)
+    {
+        m_mesh->m_vertexSet.insert(node);
+    }
 
     // Add boundary zones/composites
     for (i = 0; i < BndElementFaces.size(); ++i)
@@ -182,11 +183,10 @@ void InputStar::SetupElements(void)
 
         for (int j = 0; j < BndElementFaces[i].size(); ++j)
         {
-
-            if (FaceNodes.count(BndElementFaces[i][j]))
+            auto it = FaceNodes.find(BndElementFaces[i][j]);
+            if (it != FaceNodes.end())
             {
-                GenElement2D(
-                    Nodes, j, FaceNodes[BndElementFaces[i][j]], nComposite);
+                GenElement2D(m_mesh->m_node, j, it->second, nComposite);
             }
             else
             {
@@ -209,7 +209,7 @@ static void PrismLineFaces(int prismid,
 
 void InputStar::ResetNodes(vector<NodeSharedPtr> &Vnodes,
                            Array<OneD, vector<int> > &ElementFaces,
-                           map<int, vector<int> > &FaceNodes)
+                           unordered_map<int, vector<int> > &FaceNodes)
 {
     int i, j;
     Array<OneD, int> NodeReordering(Vnodes.size(), -1);
@@ -401,11 +401,11 @@ void InputStar::ResetNodes(vector<NodeSharedPtr> &Vnodes,
              "Have not renumbered all nodes");
 
     // Renumbering successfull so reset nodes and faceNodes;
-    for (i = 0; i < FaceNodes.size(); ++i)
+    for (auto &it : FaceNodes)
     {
-        for (j = 0; j < FaceNodes[i].size(); ++j)
+        for (j = 0; j < it.second.size(); ++j)
         {
-            FaceNodes[i][j] = NodeReordering[FaceNodes[i][j]];
+            it.second[j] = NodeReordering[it.second[j]];
         }
     }
 
@@ -496,7 +496,7 @@ void InputStar::GenElement2D(vector<NodeSharedPtr> &VertNodes,
 void InputStar::GenElement3D(vector<NodeSharedPtr> &VertNodes,
                              int i,
                              vector<int> &ElementFaces,
-                             map<int, vector<int> > &FaceNodes,
+                             unordered_map<int, vector<int> > &FaceNodes,
                              int nComposite,
                              bool DoOrient)
 {
@@ -505,9 +505,6 @@ void InputStar::GenElement3D(vector<NodeSharedPtr> &VertNodes,
     Array<OneD, int> Nodes = SortFaceNodes(VertNodes, ElementFaces, FaceNodes);
     int nnodes             = Nodes.num_elements();
     map<LibUtilities::ShapeType, int> domainComposite;
-
-    // Set Nodes  -- Not sure we need this so could
-    // m_mesh->m_node = VertNodes;
 
     // element type
     if (nnodes == 4)
@@ -610,7 +607,7 @@ Array<OneD, int> InputStar::SortEdgeNodes(vector<NodeSharedPtr> &Vnodes,
 
 Array<OneD, int> InputStar::SortFaceNodes(vector<NodeSharedPtr> &Vnodes,
                                           vector<int> &ElementFaces,
-                                          map<int, vector<int> > &FaceNodes)
+                                          unordered_map<int, vector<int> > &FaceNodes)
 {
 
     int i, j;
@@ -623,9 +620,10 @@ Array<OneD, int> InputStar::SortFaceNodes(vector<NodeSharedPtr> &Vnodes,
 
         returnval = Array<OneD, int>(4);
 
-        int indx0 = FaceNodes[ElementFaces[0]][0];
-        int indx1 = FaceNodes[ElementFaces[0]][1];
-        int indx2 = FaceNodes[ElementFaces[0]][2];
+        auto it = FaceNodes.find(ElementFaces[0]);
+        int indx0 = it->second[0];
+        int indx1 = it->second[1];
+        int indx2 = it->second[2];
         int indx3 = -1;
 
         // calculate 0-1,
@@ -636,14 +634,14 @@ Array<OneD, int> InputStar::SortFaceNodes(vector<NodeSharedPtr> &Vnodes,
         // Find fourth node index;
         ASSERTL1(FaceNodes[ElementFaces[1]].size() == 3,
                  "Face is not triangular");
+
+        auto it2 = FaceNodes.find(ElementFaces[1]);
         for (i = 0; i < 3; ++i)
         {
-
-            if ((FaceNodes[ElementFaces[1]][i] != indx0) &&
-                (FaceNodes[ElementFaces[1]][i] != indx1) &&
-                (FaceNodes[ElementFaces[1]][i] != indx2))
+            if ((it2->second[i] != indx0) && (it2->second[i] != indx1) &&
+                (it2->second[i] != indx2))
             {
-                indx3 = FaceNodes[ElementFaces[1]][i];
+                indx3 = it2->second[i];
                 break;
             }
         }
@@ -679,7 +677,8 @@ Array<OneD, int> InputStar::SortFaceNodes(vector<NodeSharedPtr> &Vnodes,
         quadface0 = quadface1 = quadface2 = -1;
         for (i = 0; i < 5; ++i)
         {
-            if (FaceNodes[ElementFaces[i]].size() == 3)
+            auto it = FaceNodes.find(ElementFaces[i]);
+            if (it->second.size() == 3)
             {
                 if (triface0 == -1)
                 {
@@ -700,7 +699,7 @@ Array<OneD, int> InputStar::SortFaceNodes(vector<NodeSharedPtr> &Vnodes,
                 }
             }
 
-            if (FaceNodes[ElementFaces[i]].size() == 4)
+            if (it->second.size() == 4)
             {
                 if (quadface0 == -1)
                 {
@@ -745,12 +744,13 @@ Array<OneD, int> InputStar::SortFaceNodes(vector<NodeSharedPtr> &Vnodes,
         // triangular nodes If they do set these to indx0 and
         // indx1 and if not set it to indx2, indx3
 
+        auto &triface0_vec = FaceNodes.find(ElementFaces[triface0])->second;
+        auto &quadface0_vec = FaceNodes.find(ElementFaces[quadface0])->second;
         for (i = 0; i < 4; ++i)
         {
             for (j = 0; j < 3; ++j)
             {
-                if (FaceNodes[ElementFaces[triface0]][j] ==
-                    FaceNodes[ElementFaces[quadface0]][i])
+                if (triface0_vec[j] == quadface0_vec[i])
                 {
                     break; // same node break
                 }
@@ -760,11 +760,11 @@ Array<OneD, int> InputStar::SortFaceNodes(vector<NodeSharedPtr> &Vnodes,
             {
                 if (indx2 == -1)
                 {
-                    indx2 = FaceNodes[ElementFaces[quadface0]][i];
+                    indx2 = quadface0_vec[i];
                 }
                 else if (indx3 == -1)
                 {
-                    indx3 = FaceNodes[ElementFaces[quadface0]][i];
+                    indx3 = quadface0_vec[i];
                 }
                 else
                 {
@@ -777,11 +777,11 @@ Array<OneD, int> InputStar::SortFaceNodes(vector<NodeSharedPtr> &Vnodes,
             {
                 if (indx0 == -1)
                 {
-                    indx0 = FaceNodes[ElementFaces[quadface0]][i];
+                    indx0 = quadface0_vec[i];
                 }
                 else
                 {
-                    indx1 = FaceNodes[ElementFaces[quadface0]][i];
+                    indx1 = quadface0_vec[i];
                 }
             }
         }
@@ -789,11 +789,10 @@ Array<OneD, int> InputStar::SortFaceNodes(vector<NodeSharedPtr> &Vnodes,
         // Finally check for top vertex
         for (int i = 0; i < 3; ++i)
         {
-            if ((FaceNodes[ElementFaces[triface0]][i] != indx0) &&
-                (FaceNodes[ElementFaces[triface0]][i] != indx1) &&
-                (FaceNodes[ElementFaces[triface0]][i] != indx2))
+            if (triface0_vec[i] != indx0 && triface0_vec[i] != indx1 &&
+                triface0_vec[i] != indx2)
             {
-                indx4 = FaceNodes[ElementFaces[triface0]][i];
+                indx4 = triface0_vec[i];
                 break;
             }
         }
@@ -824,11 +823,12 @@ Array<OneD, int> InputStar::SortFaceNodes(vector<NodeSharedPtr> &Vnodes,
         // faces
         // to define which is indx2 and indx3
 
+        auto &quadface1_vec = FaceNodes.find(ElementFaces[quadface1])->second;
+        auto &quadface2_vec = FaceNodes.find(ElementFaces[quadface2])->second;
         int cnt = 0;
         for (int i = 0; i < 4; ++i)
         {
-            if ((FaceNodes[ElementFaces[quadface1]][i] == returnval[1]) ||
-                (FaceNodes[ElementFaces[quadface1]][i] == indx2))
+            if (quadface1_vec[i] == returnval[1] || quadface1_vec[i] == indx2)
             {
                 cnt++;
             }
@@ -844,8 +844,7 @@ Array<OneD, int> InputStar::SortFaceNodes(vector<NodeSharedPtr> &Vnodes,
             cnt = 0;
             for (int i = 0; i < 4; ++i)
             {
-                if ((FaceNodes[ElementFaces[quadface2]][i] == returnval[1]) ||
-                    (FaceNodes[ElementFaces[quadface2]][i] == indx2))
+                if (quadface2_vec[i] == returnval[1] || quadface2_vec[i] == indx2)
                 {
                     cnt++;
                 }
@@ -867,13 +866,12 @@ Array<OneD, int> InputStar::SortFaceNodes(vector<NodeSharedPtr> &Vnodes,
         if (isPrism == true)
         {
             // finally need to find last vertex from second triangular face.
+            auto &triface1_vec = FaceNodes.find(ElementFaces[triface1])->second;
             for (int i = 0; i < 3; ++i)
             {
-                if ((FaceNodes[ElementFaces[triface1]][i] != indx2) &&
-                    (FaceNodes[ElementFaces[triface1]][i] != indx3) &&
-                    (FaceNodes[ElementFaces[triface1]][i] != indx3))
+                if (triface1_vec[i] != indx2 && triface1_vec[i] != indx3)
                 {
-                    returnval[5] = FaceNodes[ElementFaces[triface1]][i];
+                    returnval[5] = triface1_vec[i];
                     break;
                 }
             }
@@ -967,12 +965,12 @@ void InputStar::ReadNodes(std::vector<NodeSharedPtr> &Nodes)
 
     for (int i = 0; i < nVertices; ++i)
     {
-        Nodes.push_back(std::shared_ptr<Node>(
-            new Node(i, verts[3 * i], verts[3 * i + 1], verts[3 * i + 2])));
+        Nodes.push_back(std::make_shared<Node>(
+                            i, verts[3 * i], verts[3 * i + 1], verts[3 * i + 2]));
     }
 }
 
-void InputStar::ReadInternalFaces(map<int, vector<int> > &FacesNodes,
+void InputStar::ReadInternalFaces(unordered_map<int, vector<int> > &FacesNodes,
                                   Array<OneD, vector<int> > &ElementFaces)
 {
 
@@ -1067,7 +1065,7 @@ void InputStar::ReadInternalFaces(map<int, vector<int> > &FacesNodes,
 }
 
 void InputStar::ReadBoundaryFaces(vector<vector<int> > &BndElementFaces,
-                                  map<int, vector<int> > &FacesNodes,
+                                  unordered_map<int, vector<int> > &FacesNodes,
                                   Array<OneD, vector<int> > &ElementFaces,
                                   vector<string> &Facelabels)
 {

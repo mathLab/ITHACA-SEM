@@ -41,18 +41,12 @@
 #include <string>
 #include <memory>
 
-#include <boost/thread/shared_mutex.hpp>
-#include <boost/thread/locks.hpp>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 
 namespace Nektar
 {
 namespace LibUtilities
 {
-
-// Generate parameter typenames with default type of 'none'
-typedef boost::unique_lock<boost::shared_mutex> WriteLock;
-typedef boost::shared_lock<boost::shared_mutex> ReadLock;
 
 /**
  * @class NekFactory
@@ -127,7 +121,7 @@ public:
     typedef std::map<tKey, ModuleEntry, tPredicator> TMapFactory;
 
 public:
-    NekFactory() : m_mutex() {}
+    NekFactory()  {}
 
     /**
      * @brief Create an instance of the class referred to by \c idKey.
@@ -140,8 +134,6 @@ public:
      */
     tBaseSharedPtr CreateInstance(tKey idKey, tParam... args)
     {
-        ReadLock vReadLock(m_mutex);
-
         // Now try and find the key in the map.
         auto it = getMapFactory()->find(idKey);
 
@@ -150,7 +142,6 @@ public:
         if (it != getMapFactory()->end())
         {
             ModuleEntry *tmp = &(it->second);
-            vReadLock.unlock();
 
             if (tmp->m_func)
             {
@@ -192,8 +183,6 @@ public:
     tKey RegisterCreatorFunction(tKey idKey, CreatorFunction classCreator,
                                  tDescription pDesc = "")
     {
-        WriteLock vWriteLock(m_mutex);
-
         ModuleEntry e(classCreator, pDesc);
         getMapFactory()->insert(std::pair<tKey,ModuleEntry>(idKey, e));
         return idKey;
@@ -205,8 +194,6 @@ public:
      */
     bool ModuleExists(tKey idKey)
     {
-        ReadLock vReadLock(m_mutex);
-
         // Now try and find the key in the map.
         auto it = getMapFactory()->find(idKey);
 
@@ -223,8 +210,6 @@ public:
      */
     void PrintAvailableClasses(std::ostream& pOut = std::cout)
     {
-        ReadLock vReadLock(m_mutex);
-
         pOut << std::endl << "Available classes: " << std::endl;
         for (auto &it : *getMapFactory())
         {
@@ -247,8 +232,6 @@ public:
      */
     tKey GetKey(tDescription pDesc)
     {
-        ReadLock vReadLock(m_mutex);
-
         for (auto &it : *getMapFactory())
         {
             if (it.second.m_desc == pDesc)
@@ -268,8 +251,6 @@ public:
      */
     std::string GetClassDescription(tKey idKey)
     {
-        ReadLock vReadLock(m_mutex);
-
         // Now try and find the key in the map.
         auto it = getMapFactory()->find(idKey);
 
@@ -294,9 +275,6 @@ private:
     NekFactory& operator=(const NekFactory& rhs);
 
     TMapFactory mMapFactory;
-
-    boost::shared_mutex m_mutex;
-
 };
 
 }

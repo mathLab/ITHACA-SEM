@@ -135,8 +135,10 @@ void OutputNekpp::Process()
     graph->Empty(m_mesh->m_expDim, m_mesh->m_spaceDim);
 
     TransferVertices(graph);
-    TransferEdges(graph);
-    TransferFaces(graph);
+
+    std::unordered_map<int, SegGeomSharedPtr> segMap;
+    TransferEdges(graph, segMap);
+    TransferFaces(graph, segMap);
     TransferElements(graph);
     TransferCurves(graph);
     TransferComposites(graph);
@@ -182,7 +184,9 @@ void OutputNekpp::TransferVertices(MeshGraphSharedPtr graph)
     }
 }
 
-void OutputNekpp::TransferEdges(MeshGraphSharedPtr graph)
+void OutputNekpp::TransferEdges(
+    MeshGraphSharedPtr graph,
+    std::unordered_map<int, SegGeomSharedPtr> &edgeMap)
 {
     if (m_mesh->m_expDim >= 2)
     {
@@ -193,12 +197,15 @@ void OutputNekpp::TransferEdges(MeshGraphSharedPtr graph)
                                            graph->GetVertex(it->m_n2->m_id)};
             SegGeomSharedPtr edge = MemoryManager<SegGeom>::AllocateSharedPtr(
                                 it->m_id, m_mesh->m_spaceDim, verts);
-            segMap[it->m_id] = edge;
+            segMap [it->m_id] = edge;
+            edgeMap[it->m_id] = edge;
         }
     }
 }
 
-void OutputNekpp::TransferFaces(MeshGraphSharedPtr graph)
+void OutputNekpp::TransferFaces(
+    MeshGraphSharedPtr graph,
+    std::unordered_map<int, SegGeomSharedPtr> &edgeMap)
 {
     if(m_mesh->m_expDim == 3)
     {
@@ -210,9 +217,9 @@ void OutputNekpp::TransferFaces(MeshGraphSharedPtr graph)
             {
                 SegGeomSharedPtr edges[TriGeom::kNedges] =
                 {
-                    graph->GetSegGeom(it->m_edgeList[0]->m_id),
-                    graph->GetSegGeom(it->m_edgeList[1]->m_id),
-                    graph->GetSegGeom(it->m_edgeList[2]->m_id)
+                    edgeMap[it->m_edgeList[0]->m_id],
+                    edgeMap[it->m_edgeList[1]->m_id],
+                    edgeMap[it->m_edgeList[2]->m_id]
                 };
 
                 TriGeomSharedPtr tri = MemoryManager<TriGeom>::AllocateSharedPtr(it->m_id, edges);
@@ -222,10 +229,10 @@ void OutputNekpp::TransferFaces(MeshGraphSharedPtr graph)
             {
                 SegGeomSharedPtr edges[QuadGeom::kNedges] =
                 {
-                    graph->GetSegGeom(it->m_edgeList[0]->m_id),
-                    graph->GetSegGeom(it->m_edgeList[1]->m_id),
-                    graph->GetSegGeom(it->m_edgeList[2]->m_id),
-                    graph->GetSegGeom(it->m_edgeList[3]->m_id)
+                    edgeMap[it->m_edgeList[0]->m_id],
+                    edgeMap[it->m_edgeList[1]->m_id],
+                    edgeMap[it->m_edgeList[2]->m_id],
+                    edgeMap[it->m_edgeList[3]->m_id]
                 };
 
                 QuadGeomSharedPtr quad = MemoryManager<QuadGeom>::AllocateSharedPtr(it->m_id, edges);

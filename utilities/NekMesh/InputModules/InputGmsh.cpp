@@ -936,7 +936,7 @@ void InputGmsh::Process()
     }
 
     // Process rest of mesh.
-    ProcessVertices();
+    //ProcessVertices();
     ProcessEdges();
     ProcessFaces();
     ProcessElements();

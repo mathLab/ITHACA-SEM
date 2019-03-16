@@ -40,9 +40,6 @@
 #include <memory>
 #include <functional>
 
-#include <boost/thread/shared_mutex.hpp>
-#include <boost/thread/locks.hpp>
-
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 
 namespace Nektar
@@ -50,9 +47,6 @@ namespace Nektar
     namespace LibUtilities
     {
         using namespace std;
-
-        typedef boost::unique_lock<boost::shared_mutex> WriteLock;
-        typedef boost::shared_lock<boost::shared_mutex> ReadLock;
 
         template <typename KeyType>
         struct defOpLessCreator
@@ -116,7 +110,6 @@ namespace Nektar
                 {
                     if (!whichPool.empty())
                     {
-                        ReadLock v_rlock(m_mutex); // reading static members
                         auto iter = m_ValueContainerPool.find(whichPool);
                         if (iter != m_ValueContainerPool.end())
                         {
@@ -125,12 +118,6 @@ namespace Nektar
                         }
                         else
                         {
-                            v_rlock.unlock();
-                            // now writing static members.  Apparently upgrade_lock has less desirable properties
-                            // than just dropping read lock, grabbing write lock.
-                            // write will block until all reads are done, but reads cannot be acquired if write
-                            // lock is blocking.  In this context writes are supposed to be rare.
-                            WriteLock v_wlock(m_mutex);
                             m_values = ValueContainerShPtr(new ValueContainer);
                             m_ValueContainerPool[whichPool] = m_values;
                             if (m_managementEnabledContainerPool.find(whichPool) == m_managementEnabledContainerPool.end())
@@ -235,8 +222,6 @@ namespace Nektar
                 {
                     if (!whichPool.empty())
                     {
-                        WriteLock v_wlock(m_mutex);
-
                         auto x = m_ValueContainerPool.find(whichPool);
                         ASSERTL1(x != m_ValueContainerPool.end(),
                                 "Could not find pool " + whichPool);
@@ -244,8 +229,6 @@ namespace Nektar
                     }
                     else
                     {
-                        WriteLock v_wlock(m_mutex);
-
                         for (auto &x : m_ValueContainerPool)
                         {
                             x.second->clear();
@@ -268,8 +251,6 @@ namespace Nektar
                 {
                     if (!whichPool.empty())
                     {
-                        WriteLock v_wlock(m_mutex);
-
                         auto x = m_managementEnabledContainerPool.find(whichPool);
                         if (x != m_managementEnabledContainerPool.end())
                         {
@@ -286,8 +267,6 @@ namespace Nektar
                 {
                     if (!whichPool.empty())
                     {
-                        WriteLock v_wlock(m_mutex);
-
                         auto x = m_managementEnabledContainerPool.find(whichPool);
                         if (x != m_managementEnabledContainerPool.end())
                         {
@@ -310,12 +289,9 @@ namespace Nektar
                 static FlagContainerPool m_managementEnabledContainerPool;
                 CreateFuncType m_globalCreateFunc;
                 CreateFuncContainer m_keySpecificCreateFuncs;
-                static boost::shared_mutex m_mutex;
         };
         template <typename KeyType, typename ValueT, typename opLessCreator> typename NekManager<KeyType, ValueT, opLessCreator>::ValueContainerPool NekManager<KeyType, ValueT, opLessCreator>::m_ValueContainerPool;
         template <typename KeyType, typename ValueT, typename opLessCreator> typename NekManager<KeyType, ValueT, opLessCreator>::FlagContainerPool NekManager<KeyType, ValueT, opLessCreator>::m_managementEnabledContainerPool;
-        template <typename KeyType, typename ValueT, typename opLessCreator>
-            typename boost::shared_mutex NekManager<KeyType, ValueT, opLessCreator>::m_mutex;
     }
 }
 

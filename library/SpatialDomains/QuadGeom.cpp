@@ -59,31 +59,11 @@ QuadGeom::QuadGeom(const int id,
                    const CurveSharedPtr curve)
     : Geometry2D(edges[0]->GetVertex(0)->GetCoordim(), curve)
 {
-    int j;
-
     m_shapeType = LibUtilities::eQuadrilateral;
     m_globalID = id;
 
     /// Copy the edge shared pointers.
     m_edges.insert(m_edges.begin(), edges, edges + QuadGeom::kNedges);
-    m_eorient.resize(kNedges);
-
-    for (j = 0; j < kNedges; ++j)
-    {
-        m_eorient[j] =
-            SegGeom::GetEdgeOrientation(*edges[j], *edges[(j + 1) % kNedges]);
-        m_verts.push_back(
-            edges[j]->GetVertex(m_eorient[j] == StdRegions::eForwards ? 0 : 1));
-    }
-
-    for (j = 2; j < kNedges; ++j)
-    {
-        m_eorient[j] = m_eorient[j] == StdRegions::eBackwards ?
-            StdRegions::eForwards : StdRegions::eBackwards;
-    }
-
-    m_coordim = edges[0]->GetVertex(0)->GetCoordim();
-    ASSERTL0(m_coordim > 1, "Cannot call function with dim == 1");
 }
 
 QuadGeom::QuadGeom(const QuadGeom &in)
@@ -522,6 +502,23 @@ void QuadGeom::v_Setup()
         {
             m_edges[i]->Setup();
         }
+
+        m_eorient.resize(kNedges);
+
+        for (int j = 0; j < kNedges; ++j)
+        {
+            m_eorient[j] =
+                SegGeom::GetEdgeOrientation(*m_edges[j], *m_edges[(j + 1) % kNedges]);
+            m_verts.push_back(
+                m_edges[j]->GetVertex(m_eorient[j] == StdRegions::eForwards ? 0 : 1));
+        }
+
+        for (int j = 2; j < kNedges; ++j)
+        {
+            m_eorient[j] = m_eorient[j] == StdRegions::eBackwards ?
+                StdRegions::eForwards : StdRegions::eBackwards;
+        }
+
         SetUpXmap();
         SetUpCoeffs(m_xmap->GetNcoeffs());
         m_setupState = true;

@@ -2029,8 +2029,9 @@ namespace Nektar
         // Add forcing terms
         for (auto &x : m_forcing)
         {
-            ASSERTL0(false,"forcing not coded for DoOdeRhs_coeff");
-            x->Apply(m_fields, inarray, outarray, time);
+            // ASSERTL0(false,"forcing not coded for DoOdeRhs_coeff");
+            // x->Apply(m_fields, inarray, outarray, time);
+            x->Apply_coeff(m_fields, inarray, outarray, time);
         }
 
         if (m_useLocalTimeStep)

@@ -86,6 +86,13 @@ namespace SolverUtils
                 Array<OneD, Array<OneD, NekDouble> >              &outarray,
                 const NekDouble                                   &time);
 
+            /// Apply the forcing
+            SOLVER_UTILS_EXPORT void Apply_coeff(
+                const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
+                const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+                Array<OneD, Array<OneD, NekDouble> >              &outarray,
+                const NekDouble                                   &time);
+
             SOLVER_UTILS_EXPORT static std::vector<ForcingSharedPtr> Load(
                         const LibUtilities::SessionReaderSharedPtr& pSession,
                         const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields,
@@ -120,6 +127,12 @@ namespace SolverUtils
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                 Array<OneD, Array<OneD, NekDouble> >        &outarray,
                 const NekDouble &time)=0;
+
+            SOLVER_UTILS_EXPORT virtual void v_Apply_coeff(
+                const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
+                const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+                Array<OneD, Array<OneD, NekDouble> >        &outarray,
+                const NekDouble &time);
 
                 /// Get a SessionFunction by name
             SOLVER_UTILS_EXPORT SessionFunctionSharedPtr GetFunction(

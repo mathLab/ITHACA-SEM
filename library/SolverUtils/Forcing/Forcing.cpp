@@ -77,6 +77,19 @@ namespace Nektar
             v_Apply(fields, inarray, outarray, time);
         }
 
+        /**
+         * @param   fields      Expansion lists corresponding to input arrays
+         * @param   inarray     u^n from previous timestep
+         * @param   outarray    output array to append forcing to
+         */
+        void Forcing::Apply_coeff(
+                const Array<OneD, MultiRegions::ExpListSharedPtr>& fields,
+                const Array<OneD, Array<OneD, NekDouble> >&        inarray,
+                Array<OneD, Array<OneD, NekDouble> >&              outarray,
+                const NekDouble&                                   time)
+        {
+            v_Apply_coeff(fields, inarray, outarray, time);
+        }
 
         /**
          *
@@ -179,6 +192,16 @@ namespace Nektar
                 return SessionFunctionSharedPtr(new SessionFunction(pSession, pFields[0], pName, pCache));
             }
         }
+
+        void Forcing::v_Apply_coeff(
+                const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
+                const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+                Array<OneD, Array<OneD, NekDouble> >        &outarray,
+                const NekDouble &time)
+        {
+                ASSERTL0(false, "v_Apply_coeff not defined");
+        }
+
 
     }
 }

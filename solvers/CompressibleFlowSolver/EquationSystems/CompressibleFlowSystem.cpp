@@ -576,18 +576,34 @@ namespace Nektar
                 outN2d[m]   =   outN    + moffset;
             }
 
-            Vmath::Fill(ntotpnt,0.0,outN,1);
+            Vmath::Zero(ntotpnt,outN,1);
 
             preconditioner_BlkDiag(inarray,outN);
+
+            //TODO:: Duplicate??
             Vmath::Vcopy(ntotpnt,outN,1,outarray,1);
 
             PointerWrapper pwrapp = eWrapper;
             Array<OneD, NekVector<NekDouble> > tmparray(nvariables);
+            //TODO:: Duplicate??
             for(int m = 0; m < nvariables; m++)
             {
                 int moffset = m*npoints;
                 tmparray[m] =  NekVector<NekDouble> (npoints,outN+moffset,pwrapp);
             }
+
+            // if(!qfield.num_elements())
+            // {
+            //     qfield  =   Array<OneD,       Array<OneD, Array<OneD, NekDouble> > >(m_spacedim);
+            //     for(int i = 0; i< m_spacedim; i++)
+            //     {
+            //         qfield[i]   =   Array<OneD, Array<OneD, NekDouble> >(nConvectiveFields);
+            //         for(int j = 0; j< nConvectiveFields; j++)
+            //         {
+            //             qfield[i][j]   =   Array<OneD, NekDouble>(npoints,0.0);
+            //         }
+            //     }
+            // }
 
             for(int nsor = 0; nsor < nSORTot-1; nsor++)
             {

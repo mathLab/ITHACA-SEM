@@ -548,12 +548,11 @@ namespace Nektar
         {
             const NekDouble SORParam        =   m_SORRelaxParam;
             const NekDouble OmSORParam      =   1.0-SORParam;
-            
+
             unsigned int nvariables = m_TimeIntegtSol_n.num_elements();
             unsigned int npoints    = m_TimeIntegtSol_n[0].num_elements();
             unsigned int ntotpnt    = inarray.num_elements();
-            int nTracePts  = GetTraceTotPoints();
-
+            
             ASSERTL0(nvariables*npoints==ntotpnt,"nvariables*npoints==ntotpnt not satisfied in preconditioner_BlkSOR");
 
 
@@ -568,37 +567,34 @@ namespace Nektar
                 rhs =   inarray;
             }
 
+            PointerWrapper pwrapp = eWrapper;
+
             Array<OneD, NekDouble>  outN(ntotpnt,0.0);
             Array<OneD, NekDouble>  outTmp(ntotpnt,0.0);
             Array<OneD, Array<OneD, NekDouble> >rhs2d(nvariables);
             Array<OneD, Array<OneD, NekDouble> >out_2d(nvariables);
             Array<OneD, Array<OneD, NekDouble> >outTmp_2d(nvariables);
-            PointerWrapper pwrapp = eWrapper;
-            Array<OneD, NekVector<NekDouble> > V_outarray(nvariables);
-            Array<OneD, NekVector<NekDouble> > V_outTmp(nvariables);
             for(int m = 0; m < nvariables; m++)
             {
                 int moffset     = m*npoints;
-                rhs2d[m]        = rhs     + moffset;
-                out_2d[m]       = outarray   + moffset;
-                outTmp_2d[m]    = outTmp  + moffset;
-
-                V_outarray[m]   =  NekVector<NekDouble> (npoints,out_2d[m],pwrapp);
-                V_outTmp[m]     =  NekVector<NekDouble> (npoints,outTmp_2d[m],pwrapp);
+                rhs2d[m]        = rhs       + moffset;
+                out_2d[m]       = outarray  + moffset;
+                outTmp_2d[m]    = outTmp    + moffset;
             }
 
             preconditioner_BlkDiag(inarray,outarray);
 
+            int nphysic    = GetNpoints();
+            int nTracePts  = GetTraceTotPoints();
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > > qfield(m_spacedim);
             for(int i = 0; i< m_spacedim; i++)
             {
                 qfield[i]   =   Array<OneD, Array<OneD, NekDouble> >(nvariables);
                 for(int j = 0; j< nvariables; j++)
                 {
-                    qfield[i][j]   =   Array<OneD, NekDouble>(npoints,0.0);
+                    qfield[i][j]   =   Array<OneD, NekDouble>(nphysic,0.0);
                 }
             }
-
             int ntmpTrace = 4+2*m_spacedim;
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > > tmpTrace(ntmpTrace);
             for(int i = 0; i< ntmpTrace; i++)
@@ -610,6 +606,7 @@ namespace Nektar
                 }
             }
 
+            Array<OneD, NekVector<NekDouble> > tmparray(nvariables);
             for(int nsor = 0; nsor < nSORTot-1; nsor++)
             {
                 Vmath::Smul(ntotpnt,OmSORParam,outarray,1,outN,1);
@@ -619,10 +616,13 @@ namespace Nektar
                 Vmath::Zero(ntotpnt,outTmp,1);
                 for(int m = 0; m < nvariables; m++)
                 {
+                    int moffset = m*npoints;
+                    NekVector<NekDouble> out(npoints,outTmp+moffset,eWrapper);
                     for(int n = 0; n < nvariables; n++)
                     {
-                        // tmparray[n] =  NekVector<NekDouble> (npoints,out_2d,pwrapp);
-                        V_outTmp[m] += (*m_PrecMatVars[m][n])*(V_outarray[n]); //SORParam
+                        int noffset = n*npoints;
+                        tmparray[n] =  NekVector<NekDouble> (npoints,outarray+noffset,pwrapp);
+                        out += (*m_PrecMatVars[m][n])*(tmparray[n]); //SORParam
                     }
                 }
                 Vmath::Svtvp(ntotpnt,SORParam,outTmp,1,outN,1,outarray,1);

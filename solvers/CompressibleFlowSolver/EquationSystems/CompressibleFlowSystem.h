@@ -135,9 +135,11 @@ namespace Nektar
         
         void MinusOffDiag2Rhs(
             const int nvariables,
-            const int npoints,
-            const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-                  Array<OneD,       Array<OneD, NekDouble> > &outarray);
+            const int nCoeffs,
+            const Array<OneD, const Array<OneD, NekDouble> >    &inarray,
+                  Array<OneD,       Array<OneD, NekDouble> >    &outarray,
+            Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &qfield,
+            Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &tmpTrace);
 
         void AddMatNSBlkDiag_volume(
             const Array<OneD, const Array<OneD, NekDouble> >                &inarray,

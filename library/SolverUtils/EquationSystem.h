@@ -369,6 +369,8 @@ class Interpolator;
             NekDouble                                   m_TimeIncrementFactor;
             /// cfl number for local time step(notice only for jfnk other see m_cflSafetyFactor)
             NekDouble                                   m_cflLocTimestep;
+            /// In Jacobi iteration the SOR relaxation parameter
+            NekDouble                                   m_SORRelaxParam;
 
             /// two strategies: time accurate or not.
             int                                        m_JFNKTimeAccurate;

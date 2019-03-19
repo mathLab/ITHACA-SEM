@@ -674,10 +674,13 @@ namespace Nektar
             m_session->LoadParameter("JFNKTimeAccurate",            m_JFNKTimeAccurate      ,    1);
             m_session->LoadParameter("JFNKPrecondStep",             m_JFNKPrecondStep       ,    5);
             m_session->LoadParameter("MaxNonlinIte",                m_MaxNonlinIte          ,    10);
-            if(m_NewtonRelativeIteTol>0.1)
+            m_session->LoadParameter("SORRelaxParam",               m_SORRelaxParam         ,    1.0);
+
+            NekDouble minimuxTol    =   0.8;
+            if(m_NewtonRelativeIteTol>minimuxTol)
             {
                 WARNINGL0(false,"m_NewtonRelativeIteTol>0.1");
-                m_NewtonRelativeIteTol = 0.1;
+                m_NewtonRelativeIteTol = minimuxTol;
             }
 
             // when no time accuracy needed

@@ -546,7 +546,7 @@ namespace Nektar
         }
         else
         {
-            const NekDouble SORParam        =   1.0;
+            const NekDouble SORParam        =   m_SORRelaxParam;
             const NekDouble OmSORParam      =   1.0-SORParam;
             
             unsigned int nvariables = m_TimeIntegtSol_n.num_elements();

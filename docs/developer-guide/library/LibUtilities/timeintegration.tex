@@ -23,13 +23,14 @@ General linear methods (GLMs) can be considered as the generalization of a broad
 range of different numerical methods for ordinary differential equations.  They
 were introduced by Butcher and they provide a unified formulation for
 traditional methods such as the Runge-Kutta methods and the linear multi-step
-methods.  From an implementation point of view, this means that all these
+methods such as Adams-Bashforth.  
+From an implementation point of view, this means that all these
 numerical methods can be abstracted in a similar way. As this allows a high
-level of generality, it is chosen in Nektar++ to cast all time integration
+level of generality, it is chosen in {\nek} to cast all time integration
 schemes in the framework of general linear methods.
 
 For background information about general linear methods, please consult
-\cite{Bu06}
+\cite{Bu06}.
 
 \subsection{Introduction}
 The standard initial value problem can written in the form
@@ -38,7 +39,7 @@ The standard initial value problem can written in the form
 \boldsymbol{y}(t_0)=\boldsymbol{y}_0
 \end{align*}
 where $\boldsymbol{y}$ is a vector containing the variable (or an
-array of array contianing the variables).
+array of array containing the variables).
 
 In the formulation of general linear methods, it is more convenient to consider
 the ODE in autonomous form, i.e.
@@ -72,7 +73,7 @@ related by the differential equation:
 
 The matrices $A=[a_{ij}]$, $U=[u_{ij}]$,
 $B=[b_{ij}]$, $V=[v_{ij}]$ are characteristic of a
-specific method. Each scheme can then be uniquely defined by a partioned
+specific method. Each scheme can then be uniquely defined by a partitioned
 $(s+r)\times(s+r)$ matrix
 \begin{align*}
 \left[
@@ -177,8 +178,8 @@ $t^{[n]}$ is also updated
 \end{enumerate}
 \end{itemize}
 
-For a detailed describtion of the formulation and a deeper insight of the
-numerical method see \cite{VoEsBoChKi11}.
+For a detailed description of the formulation and a deeper insight of the
+numerical method see \cite{Vostime}.
 
 
 \subsection{Types of time Integration Schemes}
@@ -203,12 +204,12 @@ considered explicit from an ODE point of view. They are characterised by a lower
   \item \textbf{IMEX schemes}: These schemes support the concept of being able
   to split right hand forcing term into an explicit and implicit component. This is
   useful in advection diffusion type problems where the advection is handled
-  explicity and the diffusion is handled implicit.
+  explicitly and the diffusion is handled implicit.
   \item \textbf{Fully Implicit Methods Methods}: The coefficient matrix has a
   non-zero upper triangular part. The calculation of all stages values is fully coupled.
 \end{itemize}
 
-The aim in Nektar++ is to fully support the first three types of GLMs.
+The aim in {\nek} is to fully support the first three types of GLMs.
 Fully implicit methods are currently not implemented.
 
 \subsection{Usage}
@@ -240,19 +241,23 @@ AdamsBashforthOrder2 & Adams-Bashforth Forward multi-step scheme of order 2\\
 AdamsBashforthOrder3 & Adams-Bashforth Forward multi-step scheme of order 3\\
 AdamsMoultonOrder1   & Adams-Moulton Forward multi-step scheme of order 1\\
 AdamsMoultonOrder2   & Adams-Moulton Forward multi-step scheme of order 2\\
+BDFImplicitOrder1    & BDF multi-step scheme of order 1 (implicit)\\
 BDFImplicitOrder2    & BDF multi-step scheme of order 2 (implicit)\\
-ClassicalRungeKutta4 & Runge-Kutta multi-stage scheme 4th order explicit\\
-RungeKutta2\_ModifiedEuler & Runge-Kutta multi-stage scheme 2nd order explicit\\
-RungeKutta2\_ImprovedEuler & Runge-Kutta multi-stage scheme 2nd order explicit\\
+ClassicalRungeKutta4 & Runge-Kutta multi-stage scheme 4th order explicit (old name)\\
+RungeKutta4 & Runge-Kutta multi-stage scheme 4th order explicit (new name for ClassicalRungeKutta4)\\
+RungeKutta3\_SSP & Nonlinear SSP RungeKutta3 explicit\\
+RungeKutta2\_ImprovedEuler & Improved RungeKutta2 explicit (old name meaning Heun's method)\\
+RungeKutta2\_SSP & Nonlinear SSP RungeKutta2 explicit (surrogate for RungeKutta2\_ImprovedEuler)\\
 ForwardEuler         & Forward-Euler scheme\\
-BackwardEuler        & Backward Euler scheme\\
+BackwardEuler       & Backward Euler scheme\\
 IMEXOrder1           & IMEX 1st order scheme using Euler Backwards Euler
                        Forwards \\
 IMEXOrder2           & IMEX 2nd order scheme using Backward Different Formula \&
                        Extrapolation\\
 IMEXOrder3           & IMEX 3rd order scheme using Backward Different Formula \&
                        Extrapolation\\
-Midpoint             & Midpoint method\\
+Midpoint             & Midpoint method (old name)\\
+RungeKutta2     & Classical RungeKutta2 method (new name for Midpoint)\\
 DIRKOrder2           & Diagonally Implicit Runge-Kutta scheme of order 2\\
 DIRKOrder3           & Diagonally Implicit Runge-Kutta scheme of order 3\\
 CNAB                 & Crank-Nicolson-Adams-Bashforth Order 2 (CNAB)\\
@@ -270,7 +275,7 @@ IMEXdirk\_4\_4\_3    & L-stable, four stage, third order IMEX DIRK(4,4,3)\\
 \end{tabular}
 \end{center}
 
-Nektar++ input file for your problem will ask you just the string corresponding
+{\nek} input file for your problem will ask you just the string corresponding
 the time-stepping scheme you want to use (between quotation marks in the
 previous list), and few parameters to define your integration in time (time-step
 and number of steps or final time). For example:\\
@@ -293,7 +298,7 @@ and number of steps or final time). For example:\\
 
 \subsection{Implementation of a time-dependent problem}
 In order to implement a new solver which takes advantage of the time-integration
-class in Nektar++, two main ingredients are required:
+class in {\nek}, two main ingredients are required:
 \begin{itemize}
 \item A main files in which the time-integration of you ODE's system is
 initialized and performed.
@@ -580,7 +585,7 @@ implement) a proper initialisation strategy for the method.
 
 \subsection{Examples of already implemented time stepping schemes}
 
-Here we show some examples time-stepping shemes implemented in Nektar++, to give an idea of what is required
+Here we show some examples time-stepping schemes implemented in {\nek}, to give an idea of what is required
 to add one of them.
 
 \subsubsection{Forward Euler}
@@ -625,7 +630,7 @@ A & U \\
 \end{array}\right]
 \end{align*}
 
-\subsubsection{2nd order Adams Bashforth}
+\subsubsection{2$^{nd}$ order Adams-Bashforth}
 \begin{align*}
 \left[\begin{array}{c|c}
 A & U \\
@@ -649,7 +654,7 @@ B & V
 \end{array}\right]
 \end{align*}
 
-\subsubsection{1st order IMEX Euler backwards/ Euler Forwards}
+\subsubsection{1$^{st}$ order IMEX Euler-Backward/ Euler-Forward}
 \begin{align*}
 \left[ \begin{array}{cc|c}
 A^{\mathrm{IM}} & A^{\mathrm{EM}} & U \\
@@ -674,7 +679,7 @@ B^{\mathrm{IM}} & B^{\mathrm{EM}} & V
 \end{array}\right]
 \end{align*}
 
-\subsubsection{2nd order IMEX Backward Different Formula \& Extrapolation}
+\subsubsection{2$^{nd}$ order IMEX Backward Different Formula \& Extrapolation}
 \begin{align*}
 \left[ \begin{array}{cc|c}
 A^{\mathrm{IM}} & A^{\mathrm{EM}} & U \\
@@ -752,7 +757,7 @@ The first two rows are normalised so the coefficient on
 $\boldsymbol{y}_n^{[n+1]}$ is one. In the standard formulation it is $11/6$.
 \end{notebox}
 
-\subsubsection{2nd order Adams Moulton}
+\subsubsection{2$^{nd}$ order Adams-Moulton}
 \begin{align*}
   \left[\begin{array}{c|c}
   A & U \\
@@ -776,7 +781,7 @@ $\boldsymbol{y}_n^{[n+1]}$ is one. In the standard formulation it is $11/6$.
   \end{array}\right]
 \end{align*}
 
-\subsubsection{Midpoint method}
+\subsubsection{Midpoint Method}
 \begin{align*}
   \left[\begin{array}{c|c}
   A & U \\
@@ -798,7 +803,7 @@ $\boldsymbol{y}_n^{[n+1]}$ is one. In the standard formulation it is $11/6$.
   \end{array}\right]
 \end{align*}
 
-\subsubsection{RK4: the standard fourth order Runge-Kutta scheme}
+\subsubsection{RK4: the standard fourth-order Runge-Kutta scheme}
 \begin{align*}
   \left[\begin{array}{c|c}
   A & U \\
@@ -822,7 +827,7 @@ $\boldsymbol{y}_n^{[n+1]}$ is one. In the standard formulation it is $11/6$.
   \end{array}\right]
 \end{align*}
 
-\subsubsection{2nd order Diagonally Implicit Runge Kutta (DIRK)}
+\subsubsection{2$^{nd}$ order Diagonally Implicit Runge-Kutta (DIRK)}
 \begin{align*}
   \left[\begin{array}{c|c}
   A & U \\
@@ -844,7 +849,7 @@ $\boldsymbol{y}_n^{[n+1]}$ is one. In the standard formulation it is $11/6$.
   \end{array}\right]
 \end{align*}
 
-\subsubsection{3rd order Diagonally Implicit Runge Kutta (DIRK)}
+\subsubsection{3$^{rd}$ order Diagonally Implicit Runge-Kutta (DIRK)}
 \begin{align*}
   \left[\begin{array}{c|c}
   A & U \\
@@ -871,7 +876,7 @@ with
   \end{array}\right]
 \end{align*}
 
-\subsubsection{3rd order L-stable, three stage IMEX DIRK(3,4,3)}
+\subsubsection{3$^{rd}$ order L-stable, three stage IMEX DIRK(3,4,3)}
 \tiny
 \begin{align*}
   &\left[\begin{array}{cc|c}

@@ -552,6 +552,7 @@ namespace Nektar
             unsigned int nvariables = m_TimeIntegtSol_n.num_elements();
             unsigned int npoints    = m_TimeIntegtSol_n[0].num_elements();
             unsigned int ntotpnt    = inarray.num_elements();
+            int nTracePts  = GetTraceTotPoints();
 
             ASSERTL0(nvariables*npoints==ntotpnt,"nvariables*npoints==ntotpnt not satisfied in preconditioner_BlkSOR");
 
@@ -568,61 +569,63 @@ namespace Nektar
             }
 
             Array<OneD, NekDouble>  outN(ntotpnt,0.0);
-            Array<OneD, Array<OneD, NekDouble> >rhs2d(nvariables),outN2d(nvariables);
-            for(int m = 0; m < nvariables; m++)
-            {
-                int moffset = m*npoints;
-                rhs2d[m]    =   rhs     + moffset;
-                outN2d[m]   =   outN    + moffset;
-            }
-
-            Vmath::Zero(ntotpnt,outN,1);
-
-            preconditioner_BlkDiag(inarray,outN);
-
-            //TODO:: Duplicate??
-            Vmath::Vcopy(ntotpnt,outN,1,outarray,1);
-
+            Array<OneD, NekDouble>  outTmp(ntotpnt,0.0);
+            Array<OneD, Array<OneD, NekDouble> >rhs2d(nvariables);
+            Array<OneD, Array<OneD, NekDouble> >out_2d(nvariables);
+            Array<OneD, Array<OneD, NekDouble> >outTmp_2d(nvariables);
             PointerWrapper pwrapp = eWrapper;
-            Array<OneD, NekVector<NekDouble> > tmparray(nvariables);
-            //TODO:: Duplicate??
+            Array<OneD, NekVector<NekDouble> > V_outarray(nvariables);
+            Array<OneD, NekVector<NekDouble> > V_outTmp(nvariables);
             for(int m = 0; m < nvariables; m++)
             {
-                int moffset = m*npoints;
-                tmparray[m] =  NekVector<NekDouble> (npoints,outN+moffset,pwrapp);
+                int moffset     = m*npoints;
+                rhs2d[m]        = rhs     + moffset;
+                out_2d[m]       = outarray   + moffset;
+                outTmp_2d[m]    = outTmp  + moffset;
+
+                V_outarray[m]   =  NekVector<NekDouble> (npoints,out_2d[m],pwrapp);
+                V_outTmp[m]     =  NekVector<NekDouble> (npoints,outTmp_2d[m],pwrapp);
             }
 
-            // if(!qfield.num_elements())
-            // {
-            //     qfield  =   Array<OneD,       Array<OneD, Array<OneD, NekDouble> > >(m_spacedim);
-            //     for(int i = 0; i< m_spacedim; i++)
-            //     {
-            //         qfield[i]   =   Array<OneD, Array<OneD, NekDouble> >(nConvectiveFields);
-            //         for(int j = 0; j< nConvectiveFields; j++)
-            //         {
-            //             qfield[i][j]   =   Array<OneD, NekDouble>(npoints,0.0);
-            //         }
-            //     }
-            // }
+            preconditioner_BlkDiag(inarray,outarray);
+
+            Array<OneD, Array<OneD, Array<OneD, NekDouble> > > qfield(m_spacedim);
+            for(int i = 0; i< m_spacedim; i++)
+            {
+                qfield[i]   =   Array<OneD, Array<OneD, NekDouble> >(nvariables);
+                for(int j = 0; j< nvariables; j++)
+                {
+                    qfield[i][j]   =   Array<OneD, NekDouble>(npoints,0.0);
+                }
+            }
+
+            int ntmpTrace = 4+2*m_spacedim;
+            Array<OneD, Array<OneD, Array<OneD, NekDouble> > > tmpTrace(ntmpTrace);
+            for(int i = 0; i< ntmpTrace; i++)
+            {
+                tmpTrace[i]   =   Array<OneD, Array<OneD, NekDouble> >(nvariables);
+                for(int j = 0; j< nvariables; j++)
+                {
+                    tmpTrace[i][j]   =   Array<OneD, NekDouble>(nTracePts,0.0);
+                }
+            }
 
             for(int nsor = 0; nsor < nSORTot-1; nsor++)
             {
-                Vmath::Smul(ntotpnt,OmSORParam,outN,1,outarray,1);
+                Vmath::Smul(ntotpnt,OmSORParam,outarray,1,outN,1);
                 
-                MinusOffDiag2Rhs(nvariables,npoints,rhs2d,outN2d);
+                MinusOffDiag2Rhs(nvariables,npoints,rhs2d,out_2d,qfield,tmpTrace);
 
+                Vmath::Zero(ntotpnt,outTmp,1);
                 for(int m = 0; m < nvariables; m++)
                 {
-                    int moffset = m*npoints;
-                    NekVector<NekDouble> out(npoints,outarray+moffset,eWrapper);
                     for(int n = 0; n < nvariables; n++)
                     {
-                        int noffset = n*npoints;
-                        tmparray[n] =  NekVector<NekDouble> (npoints,outN+noffset,pwrapp);
-                        out += (*m_PrecMatVars[m][n])*(tmparray[n]); //SORParam
+                        // tmparray[n] =  NekVector<NekDouble> (npoints,out_2d,pwrapp);
+                        V_outTmp[m] += (*m_PrecMatVars[m][n])*(V_outarray[n]); //SORParam
                     }
                 }
-                Vmath::Vcopy(ntotpnt,outarray,1,outN,1);
+                Vmath::Svtvp(ntotpnt,SORParam,outTmp,1,outN,1,outarray,1);
             }
         }
     }
@@ -631,8 +634,10 @@ namespace Nektar
     void CompressibleFlowSystem::MinusOffDiag2Rhs(
             const int nvariables,
             const int nCoeffs,
-            const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-                  Array<OneD,       Array<OneD, NekDouble> > &outarray)
+            const Array<OneD, const Array<OneD, NekDouble> >    &inarray,
+                  Array<OneD,       Array<OneD, NekDouble> >    &outarray,
+            Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &qfield,
+            Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &tmpTrace)
     {
         int nTracePts  = GetTraceTotPoints();
         int npoints    = GetNpoints();
@@ -646,18 +651,38 @@ namespace Nektar
             m_fields[i]->BwdTrans(outarray[i],outpnts[i]);
         }
 
+        for(int i = 0; i< m_spacedim; i++)
+        {
+            for(int j = 0; j< nConvectiveFields; j++)
+            {
+                Vmath::Zero(npoints,qfield[i][j],1);
+            }
+        }
+        for(int i = 0; i< tmpTrace.num_elements(); i++)
+        {
+            for(int j = 0; j< nConvectiveFields; j++)
+            {
+                Vmath::Zero(nTracePts,tmpTrace[i][j],1);
+            }
+        }
+
         // Store forwards/backwards space along trace space
-        Array<OneD, Array<OneD, NekDouble> > Fwd        (nvariables);
-        Array<OneD, Array<OneD, NekDouble> > Bwd        (nvariables);
-        Array<OneD, Array<OneD, NekDouble> > FwdFlux  (nvariables);
-        Array<OneD, Array<OneD, NekDouble> > BwdFlux  (nvariables);
+        Array<OneD, Array<OneD, NekDouble> > Fwd    ;
+        Array<OneD, Array<OneD, NekDouble> > Bwd    ;
+        Array<OneD, Array<OneD, NekDouble> > FwdFlux;
+        Array<OneD, Array<OneD, NekDouble> > BwdFlux;
+        int indextmpTrace = 0;
+        Fwd     =   tmpTrace[indextmpTrace], indextmpTrace++;
+        Bwd     =   tmpTrace[indextmpTrace], indextmpTrace++;
+        FwdFlux =   tmpTrace[indextmpTrace], indextmpTrace++;
+        BwdFlux =   tmpTrace[indextmpTrace], indextmpTrace++;
        
         for(int i = 0; i < nvariables; ++i)
         {
-            Fwd[i]          = Array<OneD, NekDouble>(nTracePts, 0.0);
-            Bwd[i]          = Array<OneD, NekDouble>(nTracePts, 0.0);
-            FwdFlux[i]      = Array<OneD, NekDouble>(nTracePts, 0.0);
-            BwdFlux[i]      = Array<OneD, NekDouble>(nTracePts, 0.0);
+            // Fwd[i]          = Array<OneD, NekDouble>(nTracePts, 0.0);
+            // Bwd[i]          = Array<OneD, NekDouble>(nTracePts, 0.0);
+            // FwdFlux[i]      = Array<OneD, NekDouble>(nTracePts, 0.0);
+            // BwdFlux[i]      = Array<OneD, NekDouble>(nTracePts, 0.0);
             // m_fields[i]->GetFwdBwdTracePhys_serial(outpnts[i], Fwd[i], Bwd[i]);
             m_fields[i]->GetFwdBwdTracePhys(outpnts[i], Fwd[i], Bwd[i]);
         }
@@ -692,22 +717,24 @@ namespace Nektar
         }
 
 #ifdef DEBUG_VISCOUS_JAC_MAT
-        const MultiRegions::AssemblyMapDGSharedPtr                      TraceMap=m_fields[0]->GetTraceMap();
+        const MultiRegions::AssemblyMapDGSharedPtr      TraceMap=m_fields[0]->GetTraceMap();
 
-        Array<OneD, Array<OneD, Array<OneD, NekDouble> > > qfield;
+        // Array<OneD, Array<OneD, Array<OneD, NekDouble> > > qfield;
         CalphysDeriv(outpnts,qfield);
 
         Array<OneD, Array<OneD, Array<OneD, NekDouble> > >    numDerivBwd(nDim);
         Array<OneD, Array<OneD, Array<OneD, NekDouble> > >    numDerivFwd(nDim);
         for (int nd = 0; nd < nDim; ++nd)
         {
-            numDerivBwd[nd]     =   Array<OneD, Array<OneD, NekDouble> > (nConvectiveFields);
-            numDerivFwd[nd]     =   Array<OneD, Array<OneD, NekDouble> > (nConvectiveFields);
-            for (int i = 0; i < nConvectiveFields; ++i)
-            {
-                numDerivBwd[nd][i]    = Array<OneD, NekDouble>(nTracePts,0.0);
-                numDerivFwd[nd][i]    = Array<OneD, NekDouble>(nTracePts,0.0);
-            }
+            numDerivBwd[nd] =   tmpTrace[indextmpTrace], indextmpTrace++;
+            numDerivFwd[nd] =   tmpTrace[indextmpTrace], indextmpTrace++;
+            // numDerivBwd[nd]     =   Array<OneD, Array<OneD, NekDouble> > (nConvectiveFields);
+            // numDerivFwd[nd]     =   Array<OneD, Array<OneD, NekDouble> > (nConvectiveFields);
+            // for (int i = 0; i < nConvectiveFields; ++i)
+            // {
+            //     numDerivBwd[nd][i]    = Array<OneD, NekDouble>(nTracePts,0.0);
+            //     numDerivFwd[nd][i]    = Array<OneD, NekDouble>(nTracePts,0.0);
+            // }
         }
 
         for (int nd = 0; nd < nDim; ++nd)

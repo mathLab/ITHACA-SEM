@@ -132,12 +132,15 @@ namespace Nektar
         void preconditioner_BlkSOR_coeff(
             const Array<OneD, NekDouble> &inarray,
                   Array<OneD, NekDouble >&outarray);
-        
+
         void MinusOffDiag2Rhs(
             const int nvariables,
             const int nCoeffs,
             const Array<OneD, const Array<OneD, NekDouble> >    &inarray,
                   Array<OneD,       Array<OneD, NekDouble> >    &outarray,
+            bool                                                flagUpdateDervFlux,
+                  Array<OneD,       Array<OneD, NekDouble> >    &FwdFluxDeriv,
+                  Array<OneD,       Array<OneD, NekDouble> >    &BwdFluxDeriv,
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &qfield,
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &tmpTrace);
 

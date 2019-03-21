@@ -203,7 +203,7 @@ namespace Nektar
         void setDBC(Eigen::MatrixXd collect_f_all);
 	void setDBC_M(Eigen::MatrixXd collect_f_all);
 	Eigen::MatrixXd project_onto_basis(Array<OneD, NekDouble> snapshot_x, Array<OneD, NekDouble> snapshot_y);
-	void trafo_current_para(Array<OneD, NekDouble>);
+	void trafo_current_para(Array<OneD, NekDouble>, Array<OneD, NekDouble>, Array<OneD, NekDouble>);
 	int get_curr_elem_pos(int);
 
         void set_MtM();

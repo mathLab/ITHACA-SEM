@@ -3279,17 +3279,19 @@ namespace Nektar
 //		cout << "curr_f_int.size() " << curr_f_int.size() << endl;
 		// identify the geometry one - introduce in the .h some vars keeping the para_type
 		// here now [0] is geometry 'w' and [1] is k_invis
-		trafo_current_para(general_param_vector[i]);
+		trafo_current_para(snapshot_x_collection[i], snapshot_y_collection[i], general_param_vector[i]); // setting collect_f_all, making use of snapshot_x_collection, snapshot_y_collection
 	}
     }
 
-    void CoupledLinearNS_TT::trafo_current_para(Array<OneD, NekDouble> parameter_of_interest)
+    void CoupledLinearNS_TT::trafo_current_para(Array<OneD, NekDouble> snapshot_x, Array<OneD, NekDouble> snapshot_y, Array<OneD, NekDouble> parameter_of_interest)
     {
 
 	double w = parameter_of_interest[0];	
 	double mKinvis = parameter_of_interest[1];
 	StdRegions::StdExpansionSharedPtr locExp;
         Array<OneD, unsigned int> bmap,imap; 
+
+	// verify and transform to bnd / p / int the snapshot data
 
         int nz_loc;
         nz_loc = 1;
@@ -3327,10 +3329,19 @@ namespace Nektar
 
                 int nbmap = bmap.num_elements();
                 int nimap = imap.num_elements();
+		Array<OneD, double> curr_snap_x_part(nphys, 0.0);
+		Array<OneD, double> curr_snap_y_part(nphys, 0.0);
+		for (int i = 0; i < nphys; ++i)
+		{
+			curr_snap_x_part[i] = snapshot_x[curr_elem*nphys + i];
+			curr_snap_y_part[i] = snapshot_y[curr_elem*nphys + i];
+		}
 
 		for (int i = 0; i < nbmap; ++i)
 		{
 			Array<OneD, double> coeffs(ncoeffs, 0.0);
+			Array<OneD, double> adv_x_coeffs(ncoeffs, 0.0);
+			Array<OneD, double> adv_y_coeffs(ncoeffs, 0.0);
 			Array<OneD, double> coeffs_0_0(ncoeffs, 0.0);
 			Array<OneD, double> coeffs_0_1(ncoeffs, 0.0);
 			Array<OneD, double> coeffs_1_0(ncoeffs, 0.0);
@@ -3364,10 +3375,82 @@ namespace Nektar
 				{
 					B_ele_vec[i+k*nbmap + (j+k*nimap)*nsize_bndry] += mKinvis * detT * ( c00*coeffs_0_0[int(imap[j])] + c01*(coeffs_0_1[int(imap[j])] + coeffs_1_0[int(imap[j])]) + c11*coeffs_1_1[int(imap[j])] );
 				}
-			}
+				if (k == 0)
+				{
+					Array<OneD, double> tmpphys_x(nphys, 0.0);
+					std::transform( curr_snap_x_part.begin(), curr_snap_x_part.end(), deriv_0.begin(), tmpphys_x.begin(),  std::multiplies<double>() ); 
+/*					for (int il = 0; il < nphys; ++il)
+					{
+						cout << "curr_snap_x_part[il] " << curr_snap_x_part[il] << endl;
+						cout << "deriv_0[il] " << deriv_0[il] << endl;
+						cout << "tmpphys_x[il] " << tmpphys_x[il] << endl;
+					} */
+					Array<OneD, double> tmpphys_y(nphys, 0.0);
+					std::transform( curr_snap_x_part.begin(), curr_snap_x_part.end(), deriv_1.begin(), tmpphys_y.begin(),  std::multiplies<double>() ); 
+					locExp->IProductWRTBase(tmpphys_x, adv_x_coeffs);
+					locExp->IProductWRTBase(tmpphys_y, adv_y_coeffs);
+					for (int nv = 0; nv < 2; ++nv)
+					{
+						for (int j = 0; j < nbmap; ++j)
+						{
+							Ah_ele_vec[ j+nv*nbmap + (i+nv*nbmap)*Ahrows ] += detT * (Ta * adv_x_coeffs[int(bmap[j])] + Tc * adv_y_coeffs[int(bmap[j])]);
+						}
+						for (int j = 0; j < nimap; ++j)
+						{
+							C_ele_vec[ i+nv*nbmap + (j+nv*nimap)*nsize_bndry ] += detT * (Ta * adv_x_coeffs[int(imap[j])] + Tc * adv_y_coeffs[int(imap[j])]);
+						}
+					}
+			            	int psize   = m_pressure->GetExp(curr_elem)->GetNcoeffs();
+			               	Array<OneD, NekDouble> pcoeffs_x(psize);
+			               	Array<OneD, NekDouble> pcoeffs_y(psize);
+					m_pressure->GetExp(curr_elem)->IProductWRTBase(deriv_0,pcoeffs_x);
+					m_pressure->GetExp(curr_elem)->IProductWRTBase(deriv_1,pcoeffs_y);
+					for (int il = 0; il < nsize_p; ++il)
+					{
+						Dbnd_ele_vec[ (k*nbmap + i)*nsize_p + il ] = detT * (Ta * pcoeffs_x[il] + Tc * pcoeffs_y[il]);
+					}
+				}
+				if (k == 1)
+				{
+					Array<OneD, double> tmpphys_x(nphys, 0.0);
+					std::transform( curr_snap_y_part.begin(), curr_snap_y_part.end(), deriv_0.begin(), tmpphys_x.begin(),  std::multiplies<double>() ); 
+/*					for (int il = 0; il < nphys; ++il)
+					{
+						cout << "curr_snap_x_part[il] " << curr_snap_x_part[il] << endl;
+						cout << "deriv_0[il] " << deriv_0[il] << endl;
+						cout << "tmpphys_x[il] " << tmpphys_x[il] << endl;
+					} */
+					Array<OneD, double> tmpphys_y(nphys, 0.0);
+					std::transform( curr_snap_y_part.begin(), curr_snap_y_part.end(), deriv_1.begin(), tmpphys_y.begin(),  std::multiplies<double>() ); 
+					locExp->IProductWRTBase(tmpphys_x, adv_x_coeffs);
+					locExp->IProductWRTBase(tmpphys_y, adv_y_coeffs);
+					for (int nv = 0; nv < 2; ++nv)
+					{
+						for (int j = 0; j < nbmap; ++j)
+						{
+							Ah_ele_vec[ j+nv*nbmap + (i+nv*nbmap)*Ahrows ] += detT * (Tb * adv_x_coeffs[int(bmap[j])] + Td * adv_y_coeffs[int(bmap[j])]);
+						}
+						for (int j = 0; j < nimap; ++j)
+						{
+							C_ele_vec[ i+nv*nbmap + (j+nv*nimap)*nsize_bndry ] += detT * (Tb * adv_x_coeffs[int(imap[j])] + Td * adv_y_coeffs[int(imap[j])]);
+						}
+					}
+			            	int psize   = m_pressure->GetExp(curr_elem)->GetNcoeffs();
+			               	Array<OneD, NekDouble> pcoeffs_x(psize);
+			               	Array<OneD, NekDouble> pcoeffs_y(psize);
+					m_pressure->GetExp(curr_elem)->IProductWRTBase(deriv_0,pcoeffs_x);
+					m_pressure->GetExp(curr_elem)->IProductWRTBase(deriv_1,pcoeffs_y);
+					for (int il = 0; il < nsize_p; ++il)
+					{
+						Dbnd_ele_vec[ (k*nbmap + i)*nsize_p + il ] = detT * (Tb * pcoeffs_x[il] + Td * pcoeffs_y[il]);
+					}
 
 
-		}
+				}
+			} //for (int k = 0; k < 2; ++k)
+
+
+		} // for (int i = 0; i < nbmap; ++i)
 
  
 	}
@@ -3897,7 +3980,7 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 	}
 	else if (parameter_space_dimension == 2)
 	{
-		do_geo_trafo(); // setting collect_f_all
+		do_geo_trafo(); // setting collect_f_all, making use of snapshot_x_collection, snapshot_y_collection
 	}
 	Eigen::BDCSVD<Eigen::MatrixXd> svd_collect_f_all(collect_f_all, Eigen::ComputeThinU);
 	cout << "svd_collect_f_all.singularValues() " << svd_collect_f_all.singularValues() << endl << endl;

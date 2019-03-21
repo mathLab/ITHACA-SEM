@@ -84,14 +84,17 @@ namespace Nektar
 
 	Eigen::VectorXd trafoSnapshot(Eigen::VectorXd RB_via_POD, double kInvis);
 
-	double Geo_T(double w, int elemT, int index);
+	double Geo_T(double w, int elemT, int index); // array of matrices not suitable since there is no way to be symbolic
 
 	void trafoSnapshot_simple(Eigen::MatrixXd RB_via_POD);
 
         Eigen::MatrixXd DoTrafo(Array<OneD, Array<OneD, NekDouble> > snapshot_x_collection, Array<OneD, Array<OneD, NekDouble> > snapshot_y_collection, Array<OneD, NekDouble> param_vector);
 
 	void load_snapshots(int number_of_snapshots);
+	void load_snapshots_geometry_params();
 	void compute_snapshots(int number_of_snapshots);
+	void compute_snapshots_geometry_params();
+	void do_geo_trafo();
         
 	int parameter_space_dimension;
 
@@ -200,6 +203,8 @@ namespace Nektar
         void setDBC(Eigen::MatrixXd collect_f_all);
 	void setDBC_M(Eigen::MatrixXd collect_f_all);
 	Eigen::MatrixXd project_onto_basis(Array<OneD, NekDouble> snapshot_x, Array<OneD, NekDouble> snapshot_y);
+	void trafo_current_para(Array<OneD, NekDouble>);
+	int get_curr_elem_pos(int);
 
         void set_MtM();
         void DoInitialiseAdv(Array<OneD, NekDouble> myAdvField_x, Array<OneD, NekDouble> myAdvField_y);

@@ -1497,6 +1497,9 @@ namespace Nektar
 
     Eigen::MatrixXd CoupledLinearNS_trafoP::DoTrafo(Array<OneD, Array<OneD, NekDouble> > snapshot_x_collection, Array<OneD, Array<OneD, NekDouble> > snapshot_y_collection, Array<OneD, NekDouble> param_vector)
     {
+
+	cout << "starting the CoupledLinearNS_trafoP::DoTrafo" << endl;
+
 	int Nmax = param_vector.num_elements();
 	DoInitialise();
 	DoSolve();
@@ -1550,6 +1553,8 @@ namespace Nektar
 	collect_f_all.block(0,0,collect_f_bnd.rows(),collect_f_bnd.cols()) = collect_f_bnd;
 	collect_f_all.block(collect_f_bnd.rows(),0,collect_f_p.rows(),collect_f_p.cols()) = collect_f_p;
 	collect_f_all.block(collect_f_bnd.rows()+collect_f_p.rows(),0,collect_f_int.rows(),collect_f_int.cols()) = collect_f_int;
+
+	cout << "finished the CoupledLinearNS_trafoP::DoTrafo" << endl;
 
 	return collect_f_all;
     }

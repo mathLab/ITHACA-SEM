@@ -3252,6 +3252,251 @@ namespace Nektar
 	}
     }
 
+    int CoupledLinearNS_TT::get_curr_elem_pos(int curr_elem)
+    {
+	// find within Array<OneD, std::set<int> > elements_trafo; the current entry
+	for(int i = 0; i < elements_trafo.num_elements(); ++i)
+	{
+		if (elements_trafo[i].count(curr_elem))
+		{
+			return i;
+		}
+	}
+    }
+
+    void CoupledLinearNS_TT::do_geo_trafo()
+    {
+ 
+	Eigen::MatrixXd collect_f_bnd( curr_f_bnd.size() , Nmax );
+	Eigen::MatrixXd collect_f_p( curr_f_p.size() , Nmax );
+	Eigen::MatrixXd collect_f_int( curr_f_int.size() , Nmax );
+        for(int i = 0; i < Nmax; ++i)
+	{
+//		cout << "general_param_vector[i][0] " << general_param_vector[i][0] << endl;
+//		cout << "general_param_vector[i][1] " << general_param_vector[i][1] << endl;
+//		cout << "curr_f_bnd.size() " << curr_f_bnd.size() << endl;
+//		cout << "curr_f_p.size() " << curr_f_p.size() << endl;
+//		cout << "curr_f_int.size() " << curr_f_int.size() << endl;
+		// identify the geometry one - introduce in the .h some vars keeping the para_type
+		// here now [0] is geometry 'w' and [1] is k_invis
+		trafo_current_para(general_param_vector[i]);
+	}
+    }
+
+    void CoupledLinearNS_TT::trafo_current_para(Array<OneD, NekDouble> parameter_of_interest)
+    {
+
+	double w = parameter_of_interest[0];	
+	double mKinvis = parameter_of_interest[1];
+	StdRegions::StdExpansionSharedPtr locExp;
+        Array<OneD, unsigned int> bmap,imap; 
+
+        int nz_loc;
+        nz_loc = 1;
+
+        int  nel  = m_fields[m_velocity[0]]->GetNumElmts();
+        int  nvel   = m_velocity.num_elements();
+        int nsize_bndry = nvel*m_fields[m_velocity[0]]->GetExp(0)->NumBndryCoeffs()*nz_loc;
+        int nsize_bndry_p1 = nsize_bndry+nz_loc;
+        int nsize_int = (nvel*m_fields[m_velocity[0]]->GetExp(0)->GetNcoeffs()*nz_loc - nsize_bndry);
+        int nsize_p = m_pressure->GetExp(0)->GetNcoeffs()*nz_loc;
+        int nsize_p_m1 = nsize_p-nz_loc;
+        int Ahrows = nsize_bndry_p1;
+
+	for (int curr_elem = 0; curr_elem < m_fields[0]->GetNumElmts(); ++curr_elem)
+	{
+		int curr_elem_pos = get_curr_elem_pos(curr_elem);
+		double detT = Geo_T(w, curr_elem_pos, 0);
+		double Ta = Geo_T(w, curr_elem_pos, 1);
+		double Tb = Geo_T(w, curr_elem_pos, 2);
+		double Tc = Geo_T(w, curr_elem_pos, 3);
+		double Td = Geo_T(w, curr_elem_pos, 4);
+		double c00 = Ta*Ta + Tb*Tb;
+		double c01 = Ta*Tc + Tb*Td;
+		double c11 = Tc*Tc + Td*Td;
+                locExp = m_fields[m_velocity[0]]->GetExp(curr_elem);
+                locExp->GetBoundaryMap(bmap);
+                locExp->GetInteriorMap(imap);
+                int ncoeffs = m_fields[m_velocity[0]]->GetExp(curr_elem)->GetNcoeffs();
+                int nphys   = m_fields[m_velocity[0]]->GetExp(curr_elem)->GetTotPoints();
+		int pqsize  = m_pressure->GetExp(curr_elem)->GetTotPoints();
+
+//		cout << "ncoeffs " << ncoeffs << endl;
+//		cout << "nphys " << nphys << endl;
+//		cout << "pqsize " << pqsize << endl;   // pqsize == nphys and ncoeffs == nphys / 2 when?
+
+                int nbmap = bmap.num_elements();
+                int nimap = imap.num_elements();
+
+		for (int i = 0; i < nbmap; ++i)
+		{
+			Array<OneD, double> coeffs(ncoeffs, 0.0);
+			Array<OneD, double> coeffs_0_0(ncoeffs, 0.0);
+			Array<OneD, double> coeffs_0_1(ncoeffs, 0.0);
+			Array<OneD, double> coeffs_1_0(ncoeffs, 0.0);
+			Array<OneD, double> coeffs_1_1(ncoeffs, 0.0);
+			Array<OneD, double> phys(nphys, 0.0);
+			Array<OneD, double> deriv_0(pqsize, 0.0);
+			Array<OneD, double> deriv_1(pqsize, 0.0);
+			Array<OneD, double> Ah_ele_vec(Ahrows*Ahrows, 0.0);
+			Array<OneD, double> B_ele_vec(nsize_bndry*nsize_int, 0.0);
+			Array<OneD, double> C_ele_vec(nsize_bndry*nsize_int, 0.0);
+			Array<OneD, double> D_ele_vec(nsize_int*nsize_int, 0.0);
+			Array<OneD, double> Dbnd_ele_vec(nsize_p*nsize_bndry, 0.0);
+			Array<OneD, double> Dint_ele_vec(nsize_p*nsize_int, 0.0);
+			coeffs[bmap[i]] = 1.0;
+			m_fields[m_velocity[0]]->GetExp(curr_elem)->BwdTrans(coeffs,phys);
+			locExp->PhysDeriv(MultiRegions::DirCartesianMap[0], phys, deriv_0);
+			locExp->PhysDeriv(MultiRegions::DirCartesianMap[1], phys, deriv_1);
+
+			locExp->IProductWRTDerivBase(0, deriv_0, coeffs_0_0);
+			locExp->IProductWRTDerivBase(1, deriv_0, coeffs_0_1);
+			locExp->IProductWRTDerivBase(0, deriv_1, coeffs_1_0);
+			locExp->IProductWRTDerivBase(1, deriv_1, coeffs_1_1);
+
+			for (int k = 0; k < 2; ++k)
+			{
+				for (int j = 0; j < nbmap; ++j)
+				{
+					Ah_ele_vec[ i+k*nbmap + (j+k*nbmap)*Ahrows ] += mKinvis * detT * ( c00*coeffs_0_0[int(bmap[j])] + c01*(coeffs_0_1[int(bmap[j])] + coeffs_1_0[int(bmap[j])]) + c11*coeffs_1_1[int(bmap[j])] );
+				}
+				for (int j = 0; j < nimap; ++j)
+				{
+					B_ele_vec[i+k*nbmap + (j+k*nimap)*nsize_bndry] += mKinvis * detT * ( c00*coeffs_0_0[int(imap[j])] + c01*(coeffs_0_1[int(imap[j])] + coeffs_1_0[int(imap[j])]) + c11*coeffs_1_1[int(imap[j])] );
+				}
+			}
+
+
+		}
+
+ 
+	}
+
+/*
+
+		for i in range(0, nbmap):
+			coeffs = 0*np.arange(ncoeffs*1.0)
+			coeffs[int(bmap[i])] = 1.0
+			phys = np.dot(coeffs, loc_bwd_mat)
+			deriv_0 = np.dot(phys, (loc_cm0))
+			deriv_1 = np.dot(phys, (loc_cm1))
+			coeffs_0_0 = np.dot(deriv_0, loc_IP_d0)
+			coeffs_0_1 = np.dot(deriv_0, loc_IP_d1)
+			coeffs_1_0 = np.dot(deriv_1, loc_IP_d0)
+			coeffs_1_1 = np.dot(deriv_1, loc_IP_d1)
+			for k in range(0, 2):
+				for j in range(0, nbmap):
+					Ah_ele_vec[ i+k*nbmap + (j+k*nbmap)*Ahrows ] += mKinvis * detT * ( c00*coeffs_0_0[int(bmap[j])] + c01*(coeffs_0_1[int(bmap[j])] + coeffs_1_0[int(bmap[j])]) + c11*coeffs_1_1[int(bmap[j])] )
+				for j in range(0, nimap):
+					B_ele_vec[i+k*nbmap + (j+k*nimap)*nsize_bndry] += mKinvis * detT * ( c00*coeffs_0_0[int(imap[j])] + c01*(coeffs_0_1[int(imap[j])] + coeffs_1_0[int(imap[j])]) + c11*coeffs_1_1[int(imap[j])] )
+			for k in range(0, 2):
+				if (k == 0):
+					deriv = np.dot(phys, (loc_cm0))
+					deriv_y = np.dot(phys, (loc_cm1))
+					tmpphys = u_x[(curr_elem*nphys) : (curr_elem*nphys + nphys)] * deriv
+					tmpphys_y = u_x[(curr_elem*nphys) : (curr_elem*nphys + nphys)] * deriv_y
+					coeffs = np.dot(tmpphys, loc_IP)
+					coeffs_y = np.dot(tmpphys_y, loc_IP)
+					for nv in range(0, 2):
+						for j in range(0, nbmap):
+							Ah_ele_vec[ j+nv*nbmap + (i+nv*nbmap)*Ahrows ] += detT * (Ta * coeffs[int(bmap[j])] + Tc * coeffs_y[int(bmap[j])])
+						for j in range(0, nimap):
+							C_ele_vec[ i+nv*nbmap + (j+nv*nimap)*nsize_bndry ] += detT * (Ta * coeffs[int(imap[j])] + Tc * coeffs_y[int(imap[j])])
+					pcoeff = np.dot(deriv, loc_IPp)
+					pcoeff_y = np.dot(deriv_y, loc_IPp)
+					Dbnd_ele_vec[ (k*nbmap + i)*nsize_p : ((k*nbmap + i)*nsize_p + nsize_p) ] = detT * (Ta * pcoeff + Tc * pcoeff_y)
+				if (k == 1):
+					deriv = np.dot(phys, (loc_cm1))
+					tmpphys = u_y[(curr_elem*nphys) : (curr_elem*nphys + nphys)] * deriv
+					coeffs = np.dot(tmpphys, loc_IP)
+					for nv in range(0, 2):
+						for j in range(0, nbmap):
+							Ah_ele_vec[ j+nv*nbmap + (i+nv*nbmap)*Ahrows ] += detT * (Tb * coeffs[int(bmap[j])] + Td * coeffs[int(bmap[j])])
+						for j in range(0, nimap):
+							C_ele_vec[ i+nv*nbmap + (j+nv*nimap)*nsize_bndry ] += detT * (Tb * coeffs[int(imap[j])] + Td * coeffs[int(imap[j])])
+					pcoeff = np.dot(deriv, loc_IPp) 
+					Dbnd_ele_vec[ (k*nbmap + i)*nsize_p : ((k*nbmap + i)*nsize_p + nsize_p) ] = detT * (Tb * pcoeff + Td * pcoeff)
+		for i in range(0, nimap):
+			coeffs = 0*np.arange(ncoeffs*1.0)
+			coeffs[int(imap[i])] = 1.0
+			phys = np.dot(coeffs, loc_bwd_mat)
+			deriv_0 = np.dot(phys, (loc_cm0))
+			deriv_1 = np.dot(phys, (loc_cm1))
+			coeffs_0_0 = np.dot(deriv_0, loc_IP_d0)
+			coeffs_0_1 = np.dot(deriv_0, loc_IP_d1)
+			coeffs_1_0 = np.dot(deriv_1, loc_IP_d0)
+			coeffs_1_1 = np.dot(deriv_1, loc_IP_d1)
+			for k in range(0, 2):
+				for j in range(0, nbmap):
+					C_ele_vec[j+k*nbmap + (i+k*nimap)*nsize_bndry] += mKinvis * detT * ( c00*coeffs_0_0[int(bmap[j])] + c01*(coeffs_0_1[int(bmap[j])] + coeffs_1_0[int(bmap[j])]) + c11*coeffs_1_1[int(bmap[j])] )
+				for j in range(0, nimap):
+					D_ele_vec[i+k*nimap + (j+k*nimap)*nsize_int] += mKinvis * detT * ( c00*coeffs_0_0[int(imap[j])] + c01*(coeffs_0_1[int(imap[j])] + coeffs_1_0[int(imap[j])]) + c11*coeffs_1_1[int(imap[j])] )
+			for k in range(0, 2):
+				if (k == 0):
+					deriv = np.dot(phys, (loc_cm0))
+					deriv_y = np.dot(phys, (loc_cm1))
+					tmpphys = u_x[(curr_elem*nphys) : (curr_elem*nphys + nphys)] * deriv
+					tmpphys_y = u_x[(curr_elem*nphys) : (curr_elem*nphys + nphys)] * deriv_y
+					coeffs = np.dot(tmpphys, loc_IP)
+					coeffs_y = np.dot(tmpphys_y, loc_IP)
+					for nv in range(0, 2):
+						for j in range(0, nbmap):
+							B_ele_vec[ j+nv*nbmap + (i+nv*nimap)*nsize_bndry ] += detT * (Ta * coeffs[int(bmap[j])] + Tc * coeffs_y[int(bmap[j])])
+						for j in range(0, nimap):
+							D_ele_vec[ j+nv*nimap + (i+nv*nimap)*nsize_int ] += detT * (Ta * coeffs[int(imap[j])] + Tc * coeffs_y[int(imap[j])])
+					pcoeff = np.dot(deriv, loc_IPp)
+					pcoeff_y = np.dot(deriv_y, loc_IPp)
+					Dint_ele_vec[ (k*nimap + i)*nsize_p : ((k*nimap + i)*nsize_p + nsize_p) ] = detT * (Ta * pcoeff + Tc * pcoeff_y)
+				if (k == 1):
+					deriv = np.dot(phys, (loc_cm1))
+					tmpphys = u_y[(curr_elem*nphys) : (curr_elem*nphys + nphys)] * deriv
+					coeffs = np.dot(tmpphys, loc_IP)
+					for nv in range(0, 2):
+						for j in range(0, nbmap):
+							B_ele_vec[ j+nv*nbmap + (i+nv*nimap)*nsize_bndry ] += detT * (Tb * coeffs[int(bmap[j])] + Td * coeffs[int(bmap[j])])
+						for j in range(0, nimap):
+							D_ele_vec[ j+nv*nimap + (i+nv*nimap)*nsize_int ] += detT * (Tb * coeffs[int(imap[j])] + Td * coeffs[int(imap[j])])
+					pcoeff = np.dot(deriv, loc_IPp)
+					Dint_ele_vec[ (k*nimap + i)*nsize_p : ((k*nimap + i)*nsize_p + nsize_p) ] = detT * (Tb * pcoeff + Td * pcoeff)
+											
+
+
+*/
+
+/*	for curr_elem in range(0, num_elem):
+		Ah_ele_vec = 0*np.arange(Ahrows*Ahrows*1.0)
+		H1_bnd_ele_vec = 0*np.arange(Ahrows*Ahrows*1.0)
+		B_ele_vec = 0*np.arange(nsize_bndry*nsize_int*1.0)
+		C_ele_vec = 0*np.arange(nsize_bndry*nsize_int*1.0)
+		D_ele_vec = 0*np.arange(nsize_int*nsize_int*1.0)
+		DnoK_ele_vec = 0*np.arange(nsize_int*nsize_int*1.0)
+		Dadv_ele_vec = 0*np.arange(nsize_int*nsize_int*1.0)
+		H1_int_ele_vec = 0*np.arange(nsize_int*nsize_int*1.0)
+		D1_ele_vec = 0*np.arange(nsize_int*nsize_int*1.0)
+		Dbnd_ele_vec = 0*np.arange(nsize_bndry*nsize_p*1.0)
+		Dint_ele_vec = 0*np.arange(nsize_int*nsize_p*1.0)
+		loc_bwd_mat = bwdtrans[(curr_elem*ncoeffs) : (curr_elem*ncoeffs + ncoeffs) ,:]
+		loc_cm0 = cartmap0[(curr_elem*nphys) : (curr_elem*nphys + nphys) ,:]
+		loc_cm1 = cartmap1[(curr_elem*nphys) : (curr_elem*nphys + nphys) ,:]
+		loc_IP = IP[(curr_elem*nphys) : (curr_elem*nphys + nphys) ,:]
+		loc_IP_d0 = IP_d0[(curr_elem*nphys) : (curr_elem*nphys + nphys) ,:]
+		loc_IP_d1 = IP_d1[(curr_elem*nphys) : (curr_elem*nphys + nphys) ,:]
+		loc_IPp = IPp[(curr_elem*nphys) : (curr_elem*nphys + nphys) ,:]
+		HelmMat = HelmMats[curr_elem,:]
+		L00 = Lapl00[curr_elem,:]
+		L11 = Lapl11[curr_elem,:]
+		mimic_L00 = 0*Lapl00[curr_elem,:]
+		curr_elem_pos = get_curr_elem_pos(curr_elem, geo_trafo_list)
+		detT = Geo_T(w, curr_elem_pos, 0)
+		Ta = Geo_T(w, curr_elem_pos, 1)
+		Tb = Geo_T(w, curr_elem_pos, 2)
+		Tc = Geo_T(w, curr_elem_pos, 3)
+		Td = Geo_T(w, curr_elem_pos, 4)
+		c00 = Ta*Ta + Tb*Tb
+		c01 = Ta*Tc + Tb*Td
+		c11 = Tc*Tc + Td*Td			
+*/
+    }
 
     Eigen::MatrixXd CoupledLinearNS_TT::DoTrafo(Array<OneD, Array<OneD, NekDouble> > snapshot_x_collection, Array<OneD, Array<OneD, NekDouble> > snapshot_y_collection, Array<OneD, NekDouble> param_vector)
     {
@@ -3330,10 +3575,85 @@ namespace Nektar
 
     }
 
+
+
     double CoupledLinearNS_TT::Geo_T(double w, int elemT, int index)
     {
+/*
+def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
+	if elemT == 0:
+		T = np.matrix([[1, 0], [0, 1/w]])
+	if elemT == 1:
+		T = np.matrix([[1, 0], [0, 2/(3-w)]])
+	if elemT == 2:
+		T = np.matrix([[1, 0], [-(1-w)/2, 1]])
+	if elemT == 3:
+		T = np.matrix([[1, 0], [-(w-1)/2, 1]])
+	if elemT == 4:
+		T = np.matrix([[1, 0], [0, 1]])			
+	if index == 0:
+		return 1/np.linalg.det(T)
+	if index == 1:
+		return T[0,0]
+	if index == 2:
+		return T[0,1]
+	if index == 3:
+		return T[1,0]
+	if index == 4:
+		return T[1,1]
+
+
+*/
+	Eigen::Matrix2d T;
+	if (elemT == 0) 
+	{
+		T << 1, 0, 0, 1/w;
+	}
+	else if (elemT == 1) 
+	{
+		T << 1, 0, 0, 2/(3-w);
+	}
+	else if (elemT == 2) 
+	{
+		T << 1, 0, -(1-w)/2, 1;
+	}
+	else if (elemT == 3) 
+	{
+		T << 1, 0, -(w-1)/2, 1;
+	}
+	else if (elemT == 4) 
+	{
+		T << 1, 0, 0, 1;
+	}
+
+//	cout << T << endl;
+
+	if (index == 0) 
+	{
+		return (T(0,0)*T(1,1) - T(0,1)*T(1,0)); // det
+	}
+	else if (index == 1) 
+	{
+		return T(0,0);
+	}
+	else if (index == 2) 
+	{
+		return T(0,1);
+	}
+	else if (index == 3) 
+	{
+		return T(1,0);
+	}
+	else if (index == 4) 
+	{
+		return T(1,1);
+	}
+
+	return 0;
+
 
     }
+
 
     void CoupledLinearNS_TT::online_phase()
     {
@@ -3443,9 +3763,9 @@ namespace Nektar
 			}
 		}
 		int type_para1 = m_session->GetParameter("type_para1");
-		cout << "type para1 " << type_para1 << endl;
+//		cout << "type para1 " << type_para1 << endl;
 		int type_para2 = m_session->GetParameter("type_para2");
-		cout << "type para2 " << type_para2 << endl;
+		//cout << "type para2 " << type_para2 << endl;
 		int number_elem_trafo = m_session->GetParameter("number_elem_trafo");
 
 		elements_trafo = Array<OneD, std::set<int> > (number_elem_trafo);
@@ -3521,8 +3841,8 @@ namespace Nektar
 		 
 
 	}
-	cout << "parameter vector generated" << endl;
-	cout << "general_param_vector.num_elements() " << general_param_vector.num_elements() << endl;
+//	cout << "parameter vector generated" << endl;
+//	cout << "general_param_vector.num_elements() " << general_param_vector.num_elements() << endl;
 //	cout << "general_param_vector[0].num_elements() " << general_param_vector[0].num_elements() << endl;
 //	cout << "general_param_vector[1].num_elements() " << general_param_vector[1].num_elements() << endl;
 //	cout << "general_param_vector[2].num_elements() " << general_param_vector[2].num_elements() << endl;
@@ -3531,26 +3851,54 @@ namespace Nektar
 	{
 		for(int i1 = 0; i1 < general_param_vector[i0].num_elements(); ++i1)
 		{
-			cout << "general_param_vector[i0][i1] " << general_param_vector[i0][i1] << endl;
+//			cout << "general_param_vector[i0][i1] " << general_param_vector[i0][i1] << endl;
 		}
 	}
 
+//	cout << Geo_T( 0.2 , 0, 0) << endl;;
 
 	InitObject();
 	if ( load_snapshot_data_from_files )
 	{
-		load_snapshots(number_of_snapshots);
+//		if (parameter_space_dimension == 1)
+//		{
+			load_snapshots(number_of_snapshots);
+//		}
+//		else if (parameter_space_dimension == 2)
+//		{
+//			load_snapshots_geometry_params(); // not needed ?
+//		}
 	}
 	else
 	{
-		compute_snapshots(number_of_snapshots);
+		if (parameter_space_dimension == 1)
+		{
+			compute_snapshots(number_of_snapshots); // use something new for CMAME example
+		}
+		else if (parameter_space_dimension == 2)
+		{
+			compute_snapshots_geometry_params(); // currently not implemented
+		}
 	}
+
+	cout << "snapshots available" << endl;
+
 	DoInitialise(); 
 	DoSolve();
+
+	cout << "DoInitialise and DoSolve done" << endl;
+
 	m_session->SetSolverInfo("SolverType", "CoupledLinearisedNS_trafoP");
-	CoupledLinearNS_trafoP babyCLNS_trafo(m_session);
-	babyCLNS_trafo.InitObject();
-	collect_f_all = babyCLNS_trafo.DoTrafo(snapshot_x_collection, snapshot_y_collection, param_vector);
+	if (parameter_space_dimension == 1)
+	{
+		CoupledLinearNS_trafoP babyCLNS_trafo(m_session);
+		babyCLNS_trafo.InitObject();
+		collect_f_all = babyCLNS_trafo.DoTrafo(snapshot_x_collection, snapshot_y_collection, param_vector);
+	}
+	else if (parameter_space_dimension == 2)
+	{
+		do_geo_trafo(); // setting collect_f_all
+	}
 	Eigen::BDCSVD<Eigen::MatrixXd> svd_collect_f_all(collect_f_all, Eigen::ComputeThinU);
 	cout << "svd_collect_f_all.singularValues() " << svd_collect_f_all.singularValues() << endl << endl;
 	Eigen::VectorXd singular_values = svd_collect_f_all.singularValues();
@@ -3668,6 +4016,7 @@ namespace Nektar
 
     void CoupledLinearNS_TT::compute_snapshots(int number_of_snapshots)
     {
+	cout << "starting compute snapshots" << endl;
 	CoupledLinearNS_trafoP babyCLNS_trafo(m_session);
 	babyCLNS_trafo.InitObject();
 	Array<OneD, NekDouble> zero_phys_init(GetNpoints(), 0.0);
@@ -3684,6 +4033,53 @@ namespace Nektar
 			snapshot_y_collection[i][j] = converged_solution[1][j];
 		}
 	}
+    }
+
+    void CoupledLinearNS_TT::compute_snapshots_geometry_params()
+    {
+	// generate matrices for affine form 
+	// do full order solves using the affine form
+	// can check that against simulations with appropriate .xml
+	// cout << "starting compute geometry snapshots" << endl;
+	// Nmax should be available as the total number of to be computed snapshots
+	Array<OneD, NekDouble> zero_phys_init(GetNpoints(), 0.0);
+	snapshot_x_collection = Array<OneD, Array<OneD, NekDouble> > (Nmax);
+	snapshot_y_collection = Array<OneD, Array<OneD, NekDouble> > (Nmax);
+        for(int i = 0; i < Nmax; ++i)
+	{
+		// what is the current parameter vector ?
+		// cout << "general_param_vector[i][0] " << general_param_vector[i][0] << endl;
+		// cout << "general_param_vector[i][1] " << general_param_vector[i][1] << endl;
+		
+		// assuming the loaded configuration is the reference config...
+		// but then, how to solve this ?? -- do not have a solvable large-scale system ??
+		cout << "Error: compute_snapshots_geometry_params() not implemented :) " << endl;
+	}
+    }
+
+    void CoupledLinearNS_TT::load_snapshots_geometry_params()
+    {
+
+	snapshot_x_collection = Array<OneD, Array<OneD, NekDouble> > (Nmax);
+	snapshot_y_collection = Array<OneD, Array<OneD, NekDouble> > (Nmax);
+        for(int i = 0; i < Nmax; ++i)
+	{
+		cout << "general_param_vector[i][0] " << general_param_vector[i][0] << endl;
+		cout << "general_param_vector[i][1] " << general_param_vector[i][1] << endl;
+		// identify the geometry one - introduce in the .h some vars keeping the para_type
+		// here now [0] is geometry 'w' and [1] is k_invis
+
+
+
+
+	}
+
+
+
+
+
+
+
     }
 
     void CoupledLinearNS_TT::load_snapshots(int number_of_snapshots)

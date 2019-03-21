@@ -39,7 +39,7 @@
             <!-- <P> Kinvis = .01       </P> -->
             <P> parameter_space_dimension = 2      </P>
             <P> parameter_space_tensor_grid = 1    </P>   <!--  like a bool: 0 is no, else is yes  -->
-            <P> load_snapshot_data_from_files = 0       </P>
+            <P> load_snapshot_data_from_files = 1       </P>
             <P> number_of_snapshots = 20       </P>
             <P> ref_param_index = 19       </P>
             <P> ref_param_nu = 1       </P>
@@ -60,7 +60,7 @@
 	    <P> type_para2 = 0   	</P>
 	    <P> number_elem_trafo = 5   </P>
 <!--	    <P> elem_1 = {32,30,11,10,9,8,17,16,15,14,25,24,23,22}   	</P>   -->  <!-- find a nice solution for the element numberings and also the matrices   -->
-<!--        <P> elem_2 = {12, 28, 34, 13,21,20,18,19,26,27}   		</P>   -->
+<!--        <P> elem_2 = {12, 28, 34, 13,21,20,18,19,26,27}   		</P>   -->  <!-- for development purposes, just hard-code the example, as it is convenient to have available in the code later   -->
 <!--	    <P> elem_3 = {29, 31}   	</P>   -->
 <!--	    <P> elem_4 = {33, 35}   	</P>   -->
 <!--	    <P> elem_5 = {0,1,2,3,4,5,6,7}   		</P>   -->
@@ -119,6 +119,90 @@
             <E VAR="u" VALUE="y*(1-y)" />
             <E VAR="v" VALUE="0" />
         </FUNCTION>  
+
+	<FUNCTION NAME="TestSnap1">
+	      <F FILE="xml_channel_narrow_0.fld" />
+	</FUNCTION>  
+
+	<FUNCTION NAME="TestSnap2">
+	      <F FILE="xml_channel_narrow_1.fld" />
+	</FUNCTION>  
+
+	<FUNCTION NAME="TestSnap3">
+	      <F FILE="xml_channel_narrow_2.fld" />
+	</FUNCTION>  
+
+	<FUNCTION NAME="TestSnap4">
+	      <F FILE="xml_channel_narrow_3.fld" />
+	</FUNCTION>  
+
+	<FUNCTION NAME="TestSnap5">
+	      <F FILE="xml_channel_narrow_4.fld" />
+	</FUNCTION>  
+
+	<FUNCTION NAME="TestSnap6">
+	      <F FILE="xml_channel_narrow_5.fld" />
+	</FUNCTION>  
+
+	<FUNCTION NAME="TestSnap7">
+	      <F FILE="xml_channel_narrow_6.fld" />
+	</FUNCTION>  
+
+	<FUNCTION NAME="TestSnap8">
+	      <F FILE="xml_channel_narrow_7.fld" />
+	</FUNCTION>  
+
+
+	<FUNCTION NAME="TestSnap9">
+	      <F FILE="xml_channel_narrow_8.fld" />
+	</FUNCTION>  
+
+	<FUNCTION NAME="TestSnap10">
+	      <F FILE="xml_channel_narrow_9.fld" />
+	</FUNCTION>  
+
+	<FUNCTION NAME="TestSnap11">
+	      <F FILE="xml_channel_narrow_10.fld" />
+	</FUNCTION>  
+
+	<FUNCTION NAME="TestSnap12">
+	      <F FILE="xml_channel_narrow_11.fld" />
+	</FUNCTION>  
+
+
+	<FUNCTION NAME="TestSnap13">
+	      <F FILE="xml_channel_narrow_12.fld" />
+	</FUNCTION>  
+
+	<FUNCTION NAME="TestSnap14">
+	      <F FILE="xml_channel_narrow_13.fld" />
+	</FUNCTION>  
+
+	<FUNCTION NAME="TestSnap15">
+	      <F FILE="xml_channel_narrow_14.fld" />
+	</FUNCTION>  
+
+	<FUNCTION NAME="TestSnap16">
+	      <F FILE="xml_channel_narrow_15.fld" />
+	</FUNCTION>  
+
+
+	<FUNCTION NAME="TestSnap17">
+	      <F FILE="xml_channel_narrow_16.fld" />
+	</FUNCTION>  
+
+	<FUNCTION NAME="TestSnap18">
+	      <F FILE="xml_channel_narrow_17.fld" />
+	</FUNCTION>  
+
+	<FUNCTION NAME="TestSnap19">
+	      <F FILE="xml_channel_narrow_18.fld" />
+	</FUNCTION>  
+
+	<FUNCTION NAME="TestSnap20">
+	      <F FILE="xml_channel_narrow_19.fld" />
+	</FUNCTION>  
+
 
         <FUNCTION NAME="Mapping">
             <E VAR="x" VALUE="x + sin(2*PI*t) * 0.05 * (exp(-( abs(x-0.5) + abs(y-0.5) ) ))" />

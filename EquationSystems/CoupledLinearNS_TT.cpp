@@ -3337,6 +3337,13 @@ namespace Nektar
 			curr_snap_y_part[i] = snapshot_y[curr_elem*nphys + i];
 		}
 
+		Array<OneD, double> Ah_ele_vec(Ahrows*Ahrows, 0.0);
+		Array<OneD, double> B_ele_vec(nsize_bndry*nsize_int, 0.0);
+		Array<OneD, double> C_ele_vec(nsize_bndry*nsize_int, 0.0);
+		Array<OneD, double> D_ele_vec(nsize_int*nsize_int, 0.0);
+		Array<OneD, double> Dbnd_ele_vec(nsize_p*nsize_bndry, 0.0);
+		Array<OneD, double> Dint_ele_vec(nsize_p*nsize_int, 0.0);
+
 		for (int i = 0; i < nbmap; ++i)
 		{
 			Array<OneD, double> coeffs(ncoeffs, 0.0);
@@ -3349,12 +3356,7 @@ namespace Nektar
 			Array<OneD, double> phys(nphys, 0.0);
 			Array<OneD, double> deriv_0(pqsize, 0.0);
 			Array<OneD, double> deriv_1(pqsize, 0.0);
-			Array<OneD, double> Ah_ele_vec(Ahrows*Ahrows, 0.0);
-			Array<OneD, double> B_ele_vec(nsize_bndry*nsize_int, 0.0);
-			Array<OneD, double> C_ele_vec(nsize_bndry*nsize_int, 0.0);
-			Array<OneD, double> D_ele_vec(nsize_int*nsize_int, 0.0);
-			Array<OneD, double> Dbnd_ele_vec(nsize_p*nsize_bndry, 0.0);
-			Array<OneD, double> Dint_ele_vec(nsize_p*nsize_int, 0.0);
+
 			coeffs[bmap[i]] = 1.0;
 			m_fields[m_velocity[0]]->GetExp(curr_elem)->BwdTrans(coeffs,phys);
 			locExp->PhysDeriv(MultiRegions::DirCartesianMap[0], phys, deriv_0);
@@ -3451,54 +3453,35 @@ namespace Nektar
 
 
 		} // for (int i = 0; i < nbmap; ++i)
+		for (int i = 0; i < nimap; ++i)
+		{
+			
+			Array<OneD, double> coeffs(ncoeffs, 0.0);
+			Array<OneD, double> adv_x_coeffs(ncoeffs, 0.0);
+			Array<OneD, double> adv_y_coeffs(ncoeffs, 0.0);
+			Array<OneD, double> coeffs_0_0(ncoeffs, 0.0);
+			Array<OneD, double> coeffs_0_1(ncoeffs, 0.0);
+			Array<OneD, double> coeffs_1_0(ncoeffs, 0.0);
+			Array<OneD, double> coeffs_1_1(ncoeffs, 0.0);
+			Array<OneD, double> phys(nphys, 0.0);
+			Array<OneD, double> deriv_0(pqsize, 0.0);
+			Array<OneD, double> deriv_1(pqsize, 0.0);
+			coeffs[imap[i]] = 1.0;
+			m_fields[m_velocity[0]]->GetExp(curr_elem)->BwdTrans(coeffs,phys);
+			locExp->PhysDeriv(MultiRegions::DirCartesianMap[0], phys, deriv_0);
+			locExp->PhysDeriv(MultiRegions::DirCartesianMap[1], phys, deriv_1);
 
+			locExp->IProductWRTDerivBase(0, deriv_0, coeffs_0_0);
+			locExp->IProductWRTDerivBase(1, deriv_0, coeffs_0_1);
+			locExp->IProductWRTDerivBase(0, deriv_1, coeffs_1_0);
+			locExp->IProductWRTDerivBase(1, deriv_1, coeffs_1_1);
+
+		}
  
 	}
 
 /*
 
-		for i in range(0, nbmap):
-			coeffs = 0*np.arange(ncoeffs*1.0)
-			coeffs[int(bmap[i])] = 1.0
-			phys = np.dot(coeffs, loc_bwd_mat)
-			deriv_0 = np.dot(phys, (loc_cm0))
-			deriv_1 = np.dot(phys, (loc_cm1))
-			coeffs_0_0 = np.dot(deriv_0, loc_IP_d0)
-			coeffs_0_1 = np.dot(deriv_0, loc_IP_d1)
-			coeffs_1_0 = np.dot(deriv_1, loc_IP_d0)
-			coeffs_1_1 = np.dot(deriv_1, loc_IP_d1)
-			for k in range(0, 2):
-				for j in range(0, nbmap):
-					Ah_ele_vec[ i+k*nbmap + (j+k*nbmap)*Ahrows ] += mKinvis * detT * ( c00*coeffs_0_0[int(bmap[j])] + c01*(coeffs_0_1[int(bmap[j])] + coeffs_1_0[int(bmap[j])]) + c11*coeffs_1_1[int(bmap[j])] )
-				for j in range(0, nimap):
-					B_ele_vec[i+k*nbmap + (j+k*nimap)*nsize_bndry] += mKinvis * detT * ( c00*coeffs_0_0[int(imap[j])] + c01*(coeffs_0_1[int(imap[j])] + coeffs_1_0[int(imap[j])]) + c11*coeffs_1_1[int(imap[j])] )
-			for k in range(0, 2):
-				if (k == 0):
-					deriv = np.dot(phys, (loc_cm0))
-					deriv_y = np.dot(phys, (loc_cm1))
-					tmpphys = u_x[(curr_elem*nphys) : (curr_elem*nphys + nphys)] * deriv
-					tmpphys_y = u_x[(curr_elem*nphys) : (curr_elem*nphys + nphys)] * deriv_y
-					coeffs = np.dot(tmpphys, loc_IP)
-					coeffs_y = np.dot(tmpphys_y, loc_IP)
-					for nv in range(0, 2):
-						for j in range(0, nbmap):
-							Ah_ele_vec[ j+nv*nbmap + (i+nv*nbmap)*Ahrows ] += detT * (Ta * coeffs[int(bmap[j])] + Tc * coeffs_y[int(bmap[j])])
-						for j in range(0, nimap):
-							C_ele_vec[ i+nv*nbmap + (j+nv*nimap)*nsize_bndry ] += detT * (Ta * coeffs[int(imap[j])] + Tc * coeffs_y[int(imap[j])])
-					pcoeff = np.dot(deriv, loc_IPp)
-					pcoeff_y = np.dot(deriv_y, loc_IPp)
-					Dbnd_ele_vec[ (k*nbmap + i)*nsize_p : ((k*nbmap + i)*nsize_p + nsize_p) ] = detT * (Ta * pcoeff + Tc * pcoeff_y)
-				if (k == 1):
-					deriv = np.dot(phys, (loc_cm1))
-					tmpphys = u_y[(curr_elem*nphys) : (curr_elem*nphys + nphys)] * deriv
-					coeffs = np.dot(tmpphys, loc_IP)
-					for nv in range(0, 2):
-						for j in range(0, nbmap):
-							Ah_ele_vec[ j+nv*nbmap + (i+nv*nbmap)*Ahrows ] += detT * (Tb * coeffs[int(bmap[j])] + Td * coeffs[int(bmap[j])])
-						for j in range(0, nimap):
-							C_ele_vec[ i+nv*nbmap + (j+nv*nimap)*nsize_bndry ] += detT * (Tb * coeffs[int(imap[j])] + Td * coeffs[int(imap[j])])
-					pcoeff = np.dot(deriv, loc_IPp) 
-					Dbnd_ele_vec[ (k*nbmap + i)*nsize_p : ((k*nbmap + i)*nsize_p + nsize_p) ] = detT * (Tb * pcoeff + Td * pcoeff)
 		for i in range(0, nimap):
 			coeffs = 0*np.arange(ncoeffs*1.0)
 			coeffs[int(imap[i])] = 1.0
@@ -3541,7 +3524,49 @@ namespace Nektar
 							D_ele_vec[ j+nv*nimap + (i+nv*nimap)*nsize_int ] += detT * (Tb * coeffs[int(imap[j])] + Td * coeffs[int(imap[j])])
 					pcoeff = np.dot(deriv, loc_IPp)
 					Dint_ele_vec[ (k*nimap + i)*nsize_p : ((k*nimap + i)*nsize_p + nsize_p) ] = detT * (Tb * pcoeff + Td * pcoeff)
-											
+
+		for i in range(0, nbmap):
+			coeffs = 0*np.arange(ncoeffs*1.0)
+			coeffs[int(bmap[i])] = 1.0
+			phys = np.dot(coeffs, loc_bwd_mat)
+			deriv_0 = np.dot(phys, (loc_cm0))
+			deriv_1 = np.dot(phys, (loc_cm1))
+			coeffs_0_0 = np.dot(deriv_0, loc_IP_d0)
+			coeffs_0_1 = np.dot(deriv_0, loc_IP_d1)
+			coeffs_1_0 = np.dot(deriv_1, loc_IP_d0)
+			coeffs_1_1 = np.dot(deriv_1, loc_IP_d1)
+			for k in range(0, 2):
+				for j in range(0, nbmap):
+					Ah_ele_vec[ i+k*nbmap + (j+k*nbmap)*Ahrows ] += mKinvis * detT * ( c00*coeffs_0_0[int(bmap[j])] + c01*(coeffs_0_1[int(bmap[j])] + coeffs_1_0[int(bmap[j])]) + c11*coeffs_1_1[int(bmap[j])] )
+				for j in range(0, nimap):
+					B_ele_vec[i+k*nbmap + (j+k*nimap)*nsize_bndry] += mKinvis * detT * ( c00*coeffs_0_0[int(imap[j])] + c01*(coeffs_0_1[int(imap[j])] + coeffs_1_0[int(imap[j])]) + c11*coeffs_1_1[int(imap[j])] )
+			for k in range(0, 2):
+				if (k == 0):
+					deriv = np.dot(phys, (loc_cm0))
+					deriv_y = np.dot(phys, (loc_cm1))
+					tmpphys = u_x[(curr_elem*nphys) : (curr_elem*nphys + nphys)] * deriv
+					tmpphys_y = u_x[(curr_elem*nphys) : (curr_elem*nphys + nphys)] * deriv_y
+					coeffs = np.dot(tmpphys, loc_IP)
+					coeffs_y = np.dot(tmpphys_y, loc_IP)
+					for nv in range(0, 2):
+						for j in range(0, nbmap):
+							Ah_ele_vec[ j+nv*nbmap + (i+nv*nbmap)*Ahrows ] += detT * (Ta * coeffs[int(bmap[j])] + Tc * coeffs_y[int(bmap[j])])
+						for j in range(0, nimap):
+							C_ele_vec[ i+nv*nbmap + (j+nv*nimap)*nsize_bndry ] += detT * (Ta * coeffs[int(imap[j])] + Tc * coeffs_y[int(imap[j])])
+					pcoeff = np.dot(deriv, loc_IPp)
+					pcoeff_y = np.dot(deriv_y, loc_IPp)
+					Dbnd_ele_vec[ (k*nbmap + i)*nsize_p : ((k*nbmap + i)*nsize_p + nsize_p) ] = detT * (Ta * pcoeff + Tc * pcoeff_y)
+				if (k == 1):
+					deriv = np.dot(phys, (loc_cm1))
+					tmpphys = u_y[(curr_elem*nphys) : (curr_elem*nphys + nphys)] * deriv
+					coeffs = np.dot(tmpphys, loc_IP)
+					for nv in range(0, 2):
+						for j in range(0, nbmap):
+							Ah_ele_vec[ j+nv*nbmap + (i+nv*nbmap)*Ahrows ] += detT * (Tb * coeffs[int(bmap[j])] + Td * coeffs[int(bmap[j])])
+						for j in range(0, nimap):
+							C_ele_vec[ i+nv*nbmap + (j+nv*nimap)*nsize_bndry ] += detT * (Tb * coeffs[int(imap[j])] + Td * coeffs[int(imap[j])])
+					pcoeff = np.dot(deriv, loc_IPp) 
+					Dbnd_ele_vec[ (k*nbmap + i)*nsize_p : ((k*nbmap + i)*nsize_p + nsize_p) ] = detT * (Tb * pcoeff + Td * pcoeff)											
 
 
 */

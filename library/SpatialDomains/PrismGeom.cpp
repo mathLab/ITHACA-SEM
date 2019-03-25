@@ -67,6 +67,16 @@ PrismGeom::PrismGeom(int id, const Geometry2DSharedPtr faces[])
 
     /// Copy the face shared pointers.
     m_faces.insert(m_faces.begin(), faces, faces + PrismGeom::kNfaces);
+
+    /// Set up orientation vectors with correct amount of elements.
+    m_eorient.resize(kNedges);
+    m_forient.resize(kNfaces);
+
+    /// Set up local objects.
+    SetUpLocalEdges();
+    SetUpLocalVertices();
+    SetUpEdgeOrientation();
+    SetUpFaceOrientation();
 }
 
 PrismGeom::~PrismGeom()
@@ -858,17 +868,6 @@ void PrismGeom::v_Setup()
         {
             m_faces[i]->Setup();
         }
-
-        /// Set up orientation vectors with correct amount of elements.
-        m_eorient.resize(kNedges);
-        m_forient.resize(kNfaces);
-
-        /// Set up local objects.
-        SetUpLocalEdges();
-        SetUpLocalVertices();
-        SetUpEdgeOrientation();
-        SetUpFaceOrientation();
-
         SetUpXmap();
         SetUpCoeffs(m_xmap->GetNcoeffs());
         m_setupState = true;

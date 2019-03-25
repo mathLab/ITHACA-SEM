@@ -55,7 +55,7 @@ Geometry2D::Geometry2D()
 Geometry2D::Geometry2D(const int coordim, CurveSharedPtr curve)
     : Geometry(coordim), m_curve(curve)
 {
-    ASSERTL1(m_coordim > 1,
+    ASSERTL0(m_coordim > 1,
              "Coordinate dimension should be at least 2 for a 2D geometry");
 }
 

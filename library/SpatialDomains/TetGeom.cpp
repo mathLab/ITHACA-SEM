@@ -65,6 +65,15 @@ TetGeom::TetGeom(int id, const TriGeomSharedPtr faces[])
 
     /// Copy the face shared pointers
     m_faces.insert(m_faces.begin(), faces, faces + TetGeom::kNfaces);
+
+    /// Set up orientation vectors with correct amount of elements.
+    m_eorient.resize(kNedges);
+    m_forient.resize(kNfaces);
+
+    SetUpLocalEdges();
+    SetUpLocalVertices();
+    SetUpEdgeOrientation();
+    SetUpFaceOrientation();
 }
 
 TetGeom::~TetGeom()
@@ -736,15 +745,6 @@ void TetGeom::v_Setup()
         {
             m_faces[i]->Setup();
         }
-
-        /// Set up orientation vectors with correct amount of elements.
-        m_eorient.resize(kNedges);
-        m_forient.resize(kNfaces);
-
-        SetUpLocalEdges();
-        SetUpLocalVertices();
-        SetUpEdgeOrientation();
-        SetUpFaceOrientation();
         SetUpXmap();
         SetUpCoeffs(m_xmap->GetNcoeffs());
         m_setupState = true;

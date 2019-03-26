@@ -96,6 +96,7 @@
         <PARAM NAME="OutputFrequency">1</PARAM>
         <PARAM NAME="Points">
           0.5 0.5 0.5
+          0.5 0.5 0.0
         </PARAM>
       </FILTER>
     </FILTERS>

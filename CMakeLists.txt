@@ -5,6 +5,7 @@ RelWithDebInfo MinSizeRel.")
 
 PROJECT(Nektar++ C CXX)
 
+CMAKE_POLICY(SET CMP0022 NEW)
 # Nektar++ requires C++11. Try to infer this for older CMake versions (less than
 # 3.1.0)
 IF ("${CMAKE_VERSION}" VERSION_LESS "3.1")
@@ -141,6 +142,7 @@ OPTION(NEKTAR_BUILD_UTILITIES  "Build utilities."               ON)
 OPTION(NEKTAR_BUILD_UNIT_TESTS "Build unit tests."              ON)
 OPTION(NEKTAR_BUILD_TESTS      "Build regression tests."        ON)
 OPTION(NEKTAR_BUILD_TIMINGS    "Build benchmark timing codes."  OFF)
+OPTION(NEKTAR_BUILD_PYTHON     "Build Nektar++ Python bindings" OFF)
 OPTION(NEKTAR_BUILD_PACKAGES   "Build Nektar++ binary packages" OFF)
 MARK_AS_ADVANCED(NEKTAR_BUILD_PACKAGES)
 
@@ -206,6 +208,7 @@ INCLUDE (ThirdPartyScotch)
 INCLUDE (ThirdPartyPtScotch)
 INCLUDE (ThirdPartyZlib)
 INCLUDE (ThirdPartyBoost)
+INCLUDE (ThirdPartyPython)
 INCLUDE (ThirdPartyFFTW)
 INCLUDE (ThirdPartyArpack)
 INCLUDE (ThirdPartyMPI)

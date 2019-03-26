@@ -82,10 +82,17 @@ void WallViscousBC::v_Apply(
     {
         nBCEdgePts = m_fields[0]->GetBndCondExpansions()[m_bcRegion]->
             GetExp(e)->GetTotPoints();
-        id1  = m_fields[0]->GetBndCondExpansions()[m_bcRegion]->
+        id1 = m_fields[0]->GetBndCondExpansions()[m_bcRegion]->
             GetPhys_Offset(e);
         id2 = m_fields[0]->GetTrace()->GetPhys_Offset(traceBndMap[m_offset+e]);
 
+        // Boundary condition for epsilon term.
+        if (nVariables == m_spacedim+3)
+        {
+            Vmath::Zero(nBCEdgePts, &Fwd[nVariables-1][id2], 1);
+        }
+
+        // V = - Vin
         for (i = 0; i < m_spacedim; i++)
         {
             Vmath::Neg(nBCEdgePts, &Fwd[i+1][id2], 1);

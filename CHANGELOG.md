@@ -59,6 +59,7 @@ v5.0.0
 - If only `NEKTAR_BUILD_LIBRARY` is enabled, only libraries up to and including
   `MultiRegions` will be built by default (!945)
 - Fix missing metadata import from Hdf5 files (!971)
+- Fix integration weights on prisms and pyramids if not using the default integration rule (!998)
 
 **NekMesh**:
 - Add feature to read basic 2D geo files as CAD (!731)

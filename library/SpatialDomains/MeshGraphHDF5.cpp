@@ -43,6 +43,13 @@
 #include <SpatialDomains/MeshPartition.h>
 #include <SpatialDomains/MeshGraphHDF5.h>
 
+#define TIME_RESULT(verb, msg, timer)                            \
+    if (verb)                                                    \
+    {                                                            \
+        std::cout << "  - " << msg << ": "                       \
+                  << timer.TimePerTest(1) << std::endl;          \
+    }
+
 using namespace std;
 using namespace Nektar::LibUtilities;
 
@@ -293,10 +300,15 @@ void MeshGraphHDF5::PartitionMesh(LibUtilities::SessionReaderSharedPtr session)
     comm->Block();
     t.Stop();
 
-    if (rank == 0)
+    bool verbRoot = rank == 0 &&
+        m_session->DefinesCmdLineArgument("verbose");
+
+    if (verbRoot)
     {
-        std::cout << "initial read: " << t.TimePerTest(1) << std::endl;;
+        std::cout << "Reading HDF5 geometry..." << std::endl;
     }
+
+    TIME_RESULT(verbRoot, "initial read", t);
 
     // Check to see we have at least as many processors as elements.
     size_t numElmt = elmts.size();
@@ -384,9 +396,8 @@ void MeshGraphHDF5::PartitionMesh(LibUtilities::SessionReaderSharedPtr session)
     partitioner->PartitionMesh(nproc, true, false, nLocal);
 
     // Now we need to distribute vertex IDs to all the different processors.
-
     t.Stop();
-    if (rank == 0) cout << "partitioning: " << t.TimePerTest(1) << endl;
+    TIME_RESULT(verbRoot, "partitioning", t);
 
     // Each process now knows which rows of the dataset it needs to read for the
     // elements of dimension m_meshDimension.
@@ -420,7 +431,7 @@ void MeshGraphHDF5::PartitionMesh(LibUtilities::SessionReaderSharedPtr session)
         toRead.clear();
         UniqueValues(toRead, hexData, pyrData, prismData, tetData);
         t.Stop();
-        if (rank == 0) cout << "read 3D: " << t.TimePerTest(1) << endl;
+        TIME_RESULT(verbRoot, "read 3D elements", t);
     }
 
     if (m_meshDimension >= 2)
@@ -433,7 +444,7 @@ void MeshGraphHDF5::PartitionMesh(LibUtilities::SessionReaderSharedPtr session)
         toRead.clear();
         UniqueValues(toRead, triData, quadData);
         t.Stop();
-        if (rank == 0) cout << "read 2D: " << t.TimePerTest(1) << endl;
+        TIME_RESULT(verbRoot, "read 2D elements", t);
     }
 
     if (m_meshDimension >= 1)
@@ -445,19 +456,19 @@ void MeshGraphHDF5::PartitionMesh(LibUtilities::SessionReaderSharedPtr session)
         toRead.clear();
         UniqueValues(toRead, segData);
         t.Stop();
-        if (rank == 0) cout << "read 1D: " << t.TimePerTest(1) << endl;
+        TIME_RESULT(verbRoot, "read 1D elements", t);
     }
 
     t.Start();
     ReadGeometryData(m_vertSet, "vert", toRead, vertIDs, vertData);
     t.Stop();
-    if (rank == 0) cout << "read 0D: " << t.TimePerTest(1) << endl;
+    TIME_RESULT(verbRoot, "read 0D elements", t);
 
     // Now start to construct geometry objects, starting from vertices upwards.
     t.Start();
     FillGeomMap(m_vertSet, CurveMap(), vertIDs, vertData);
     t.Stop();
-    if (rank == 0) cout << "construct 0D: " << t.TimePerTest(1) << endl;
+    TIME_RESULT(verbRoot, "construct 0D elements", t);
 
     if (m_meshDimension >= 1)
     {
@@ -472,7 +483,7 @@ void MeshGraphHDF5::PartitionMesh(LibUtilities::SessionReaderSharedPtr session)
         t.Start();
         FillGeomMap(m_segGeoms, m_curvedEdges, segIDs, segData);
         t.Stop();
-        if (rank == 0) cout << "construct 1D: " << t.TimePerTest(1) << endl;
+        TIME_RESULT(verbRoot, "construct 1D elements", t);
     }
 
     if (m_meshDimension >= 2)
@@ -493,7 +504,7 @@ void MeshGraphHDF5::PartitionMesh(LibUtilities::SessionReaderSharedPtr session)
         FillGeomMap(m_triGeoms, m_curvedFaces, triIDs, triData);
         FillGeomMap(m_quadGeoms, m_curvedFaces, quadIDs, quadData);
         t.Stop();
-        if (rank == 0) cout << "construct 2D: " << t.TimePerTest(1) << endl;
+        TIME_RESULT(verbRoot, "construct 2D elements", t);
     }
 
     if (m_meshDimension >= 3)
@@ -504,10 +515,10 @@ void MeshGraphHDF5::PartitionMesh(LibUtilities::SessionReaderSharedPtr session)
         FillGeomMap(m_pyrGeoms, CurveMap(), pyrIDs, pyrData);
         FillGeomMap(m_tetGeoms, CurveMap(), tetIDs, tetData);
         t.Stop();
-        if (rank == 0) cout << "construct 3D: " << t.TimePerTest(1) << endl;
+        TIME_RESULT(verbRoot, "construct 3D elements", t);
     }
     all.Stop();
-    if (rank == 0) cout << "total time: " << all.TimePerTest(1) << endl;
+    TIME_RESULT(verbRoot, "total time", all);
 }
 
 template<class T, typename DataType> void MeshGraphHDF5::ConstructGeomObject(
@@ -1369,16 +1380,6 @@ void MeshGraphHDF5::WriteGeometry(
     // Write composites and domain.
     WriteComposites(m_meshComposites);
     WriteDomain(m_domain);
-}
-
-void MeshGraphHDF5::WriteGeometry(std::string outname,
-                                  std::vector<std::set<unsigned int>> elements,
-                                  std::vector<unsigned int> partitions)
-{
-    //if we hit this function we need to be aware that the mesh
-    //already exisits in the file so it only needs ammending
-    //but it may have partition information already so need to delte it
-    //first
 }
 
 }

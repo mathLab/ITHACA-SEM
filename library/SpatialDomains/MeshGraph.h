@@ -59,6 +59,9 @@ namespace Nektar
 {
 namespace SpatialDomains
 {
+typedef std::map<int, std::pair<LibUtilities::ShapeType, std::vector<int>>>
+CompositeDescriptor;
+
 enum ExpansionType
 {
     eNoExpansionType,
@@ -415,6 +418,10 @@ public:
         bool             fillGraph) = 0;
     SPATIAL_DOMAINS_EXPORT virtual void PartitionMesh(
         LibUtilities::SessionReaderSharedPtr session) = 0;
+
+    SPATIAL_DOMAINS_EXPORT std::map<int, MeshEntity>
+        CreateMeshEntities();
+    SPATIAL_DOMAINS_EXPORT CompositeDescriptor CreateCompositeDescriptor();
 
 protected:
 

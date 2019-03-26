@@ -123,8 +123,6 @@ protected:
     void WriteDomain(TiXmlElement *geomTag, vector<CompositeMap> &domain);
     void WriteDefaultExpansion(TiXmlElement *root);
 
-    std::map<int, MeshEntity> CreateMeshEntities();
-    CompositeDescriptor CreateCompositeDescriptor();
     CompositeOrdering CreateCompositeOrdering();
 };
 

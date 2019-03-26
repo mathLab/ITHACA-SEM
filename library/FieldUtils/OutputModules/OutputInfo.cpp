@@ -55,7 +55,9 @@ ModuleKey OutputInfo::m_className =
 
 OutputInfo::OutputInfo(FieldSharedPtr f) : OutputModule(f)
 {
-    m_config["nparts"] = ConfigOption(false, "NotSet", "Number of partitions over which to create the info file");
+    m_config["nparts"] = ConfigOption(
+        false, "NotSet",
+        "Number of partitions over which to create the info file");
 }
 
 OutputInfo::~OutputInfo()
@@ -72,10 +74,6 @@ void OutputInfo::Process(po::variables_map &vm)
     ASSERTL0(m_config["nparts"].as<string>().compare("NotSet") != 0,
              "Need to specify nparts for info output");
     int nparts = m_config["nparts"].as<int>();
-
-    LibUtilities::CommSharedPtr vComm = std::shared_ptr<FieldConvertComm>(
-        new FieldConvertComm(0, NULL, nparts, 0));
-    vComm->SplitComm(1, nparts);
 
     // define new session with pseudo parallel communicator
     string xml_ending    = "xml";
@@ -94,10 +92,8 @@ void OutputInfo::Process(po::variables_map &vm)
         files.push_back(m_f->m_inputfiles[xml_gz_ending][j]);
     }
 
-    LibUtilities::SessionReaderSharedPtr vSession =
-        std::shared_ptr<LibUtilities::SessionReader>(
-            new LibUtilities::SessionReader(0, 0, files, vComm));
-    vSession->InitSession();
+    ASSERTL0(m_f->m_comm->GetSize() == 1,
+             "OutputInfo module should be run in serial.");
 
     // Default partitioner to use is Metis. Use Scotch as default
     // if it is installed. Override default with command-line flags
@@ -107,27 +103,23 @@ void OutputInfo::Process(po::variables_map &vm)
     {
         vPartitionerName = "Scotch";
     }
-    if (vSession->DefinesCmdLineArgument("use-metis"))
+    if (m_f->m_session->DefinesCmdLineArgument("use-metis"))
     {
         vPartitionerName = "Metis";
     }
-    if (vSession->DefinesCmdLineArgument("use-scotch"))
+    if (m_f->m_session->DefinesCmdLineArgument("use-scotch"))
     {
         vPartitionerName = "Scotch";
     }
 
-    // Construct MeshGraph to read geometry.
-    SpatialDomains::MeshGraphSharedPtr mesh =
-        SpatialDomains::GetMeshGraphFactory().CreateInstance(
-            vSession->GetGeometryType());
-
-    /*
-    SpatialDomains::MeshPartitionSharedPtr vMeshPartition =
+    // Construct mesh partitioning.
+    SpatialDomains::MeshPartitionSharedPtr meshPartition =
         SpatialDomains::GetMeshPartitionFactory().CreateInstance(
-            vPartitionerName, vSession, mesh->GetComposites());
-    mesh->ReadGeometry(SpatialDomains::NullDomainRangeShPtr, false);
+            vPartitionerName, m_f->m_session, m_f->m_graph->GetMeshDimension(),
+            m_f->m_graph->CreateMeshEntities(),
+            m_f->m_graph->CreateCompositeDescriptor());
 
-    vMeshPartition->PartitionMesh(nparts, true);
+    meshPartition->PartitionMesh(nparts, true);
 
     // get hold of local partition ids
     std::vector<std::vector<unsigned int> > ElementIDs(nparts);
@@ -136,7 +128,7 @@ void OutputInfo::Process(po::variables_map &vm)
     for (i = 0; i < nparts; ++i)
     {
         std::vector<unsigned int> tmp;
-        vMeshPartition->GetElementIDs(i, tmp);
+        meshPartition->GetElementIDs(i, tmp);
         ElementIDs[i] = tmp;
     }
 
@@ -155,7 +147,6 @@ void OutputInfo::Process(po::variables_map &vm)
         std::static_pointer_cast<LibUtilities::FieldIOXml>(
             LibUtilities::GetFieldIOFactory().CreateInstance("Xml", c, true));
     fldXml->WriteMultiFldFileIDs(filename, filenames, ElementIDs);
-    */
 }
 }
 }

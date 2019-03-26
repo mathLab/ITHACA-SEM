@@ -59,11 +59,6 @@ public:
         const LibUtilities::FieldMetaDataMap &metadata
                                          = LibUtilities::NullFieldMetaDataMap);
 
-    SPATIAL_DOMAINS_EXPORT virtual void WriteGeometry(
-        std::string outname,
-        std::vector<std::set<unsigned int>> elements,
-        std::vector<unsigned int> partitions);
-
     virtual ~MeshGraphHDF5()
     {
     }

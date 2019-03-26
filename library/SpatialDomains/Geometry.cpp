@@ -343,28 +343,59 @@ void Geometry::v_Setup()
  */
 void Geometry::GenBoundingBox()
 {
-    PointGeomSharedPtr p = GetVertex(0);
     NekDouble minx, miny, minz, maxx, maxy, maxz;
-    NekDouble x, y, z;
-    p->GetCoords(x, y, z);
-    minx = x - NekConstants::kGeomFactorsTol;
-    maxx = x + NekConstants::kGeomFactorsTol;
-    miny = y - NekConstants::kGeomFactorsTol;
-    maxy = y + NekConstants::kGeomFactorsTol;
-    minz = z - NekConstants::kGeomFactorsTol;
-    maxz = z + NekConstants::kGeomFactorsTol;
-    for (int i = 1; i < GetNumVerts(); ++i)
-    {
-        p = GetVertex(i);
-        p->GetCoords(x, y, z);
-        minx = (x < minx ? x : minx);
-        maxx = (x > maxx ? x : maxx);
-        miny = (y < miny ? y : miny);
-        maxy = (y > maxy ? y : maxy);
-        minz = (z < minz ? z : minz);
-        maxz = (z > maxz ? z : maxz);
-    }
+	if (GetGeomFactors()->GetGtype() == eRegular) {
+		PointGeomSharedPtr p = GetVertex(0);
+		NekDouble x, y, z;
+		p->GetCoords(x, y, z);
+		minx = x - NekConstants::kGeomFactorsTol;
+		maxx = x + NekConstants::kGeomFactorsTol;
+		miny = y - NekConstants::kGeomFactorsTol;
+		maxy = y + NekConstants::kGeomFactorsTol;
+		minz = z - NekConstants::kGeomFactorsTol;
+		maxz = z + NekConstants::kGeomFactorsTol;
+		for (int i = 1; i < GetNumVerts(); ++i)
+		{
+			p = GetVertex(i);
+			p->GetCoords(x, y, z);
+			minx = (x < minx ? x : minx);
+			maxx = (x > maxx ? x : maxx);
+			miny = (y < miny ? y : miny);
+			maxy = (y > maxy ? y : maxy);
+			minz = (z < minz ? z : minz);
+			maxz = (z > maxz ? z : maxz);
+		}
+	}
+	else {
+		const int nq = GetGeomFactors()->GetXmap()->GetTotPoints();
+		Array<OneD, NekDouble> x, y, z;
+		GetGeomFactors()->GetXmap()->GetCoords(x, y, z);
+		minx = x[0] - NekConstants::kGeomFactorsTol;
+		maxx = x[0] + NekConstants::kGeomFactorsTol;
+		miny = y[0] - NekConstants::kGeomFactorsTol;
+		maxy = y[0] + NekConstants::kGeomFactorsTol;
+		minz = z[0] - NekConstants::kGeomFactorsTol;
+		maxz = z[0] + NekConstants::kGeomFactorsTol;
 
+		for (int i = 1; i < nq; ++i) {
+			minx = (x[i] < minx ? x[i] : minx);
+			maxx = (x[i] > maxx ? x[i] : maxx);
+			miny = (y[i] < miny ? y[i] : miny);
+			maxy = (y[i] > maxy ? y[i] : maxy);
+			minz = (z[i] < minz ? z[i] : minz);
+			maxz = (z[i] > maxz ? z[i] : maxz);
+		}
+		
+		const int xlen = maxx - minx;
+		const int ylen = maxy - miny;
+		const int zlen = maxz - minz;
+		maxx += 0.1*xlen;
+		minx -= 0.1*xlen;
+		maxy += 0.1*ylen;
+		miny -= 0.1*ylen;
+		maxz += 0.1*zlen;
+		minz -= 0.1*zlen;
+	}
     BgPoint pmin(minx, miny, minz);
     BgPoint pmax(maxx, maxy, maxz);
     m_boundingBox = BgBox(pmin, pmax);

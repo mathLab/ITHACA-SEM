@@ -131,6 +131,9 @@ namespace SpatialDomains
             /// Computes a hash of this GeomFactors element.
             inline size_t GetHash();
 
+            /// Return the Xmap;
+            inline StdRegions::StdExpansionSharedPtr &GetXmap();
+
     protected:
             /// Type of geometry (e.g. eRegular, eDeformed, eMovingRegular).
             GeomType m_type;
@@ -154,8 +157,6 @@ namespace SpatialDomains
             /// DerivFactors vector cache
             std::map<LibUtilities::PointsKeyVector, Array<TwoD, NekDouble> >
                                                 m_derivFactorCache;
-            /// Return the Xmap;
-            inline StdRegions::StdExpansionSharedPtr &GetXmap();
 
         private:
             /// Tests if the element is valid and not self-intersecting.

@@ -1456,13 +1456,12 @@ namespace Nektar
         }
 
 
-        int ExpList::GetExpIndex(const Array<OneD, const NekDouble> &gloCoords,
-                                 Array<OneD, NekDouble> &locCoords,
-                                 NekDouble tol,
-                                 bool returnNearestElmt)
+        int ExpList::GetExpIndex(
+                const Array<OneD, const NekDouble> &gloCoords,
+                      Array<OneD, NekDouble> &locCoords,
+                NekDouble tol,
+                bool returnNearestElmt)
         {
-            NekDouble nearpt = 1e6;
-
             if (GetNumElmts() == 0)
             {
                 return -1;
@@ -1476,13 +1475,17 @@ namespace Nektar
                 = MemoryManager<SpatialDomains::PointGeom>::AllocateSharedPtr(
                         GetExp(0)->GetCoordim(), -1, x, y, z);
 
+            // Get the list of elements whose bounding box contains the desired
+            // point.
             std::vector<SpatialDomains::BgRtreeValue> elmts =
                     m_graph->GetElementsContainingPoint(p);
 
-            int min_id  = 0;
+            NekDouble nearpt = 1e6;
             NekDouble nearpt_min = 1e6;
+            int       min_id  = 0;
             Array<OneD, NekDouble> savLocCoords(locCoords.num_elements());
 
+            // Check each element in turn to see if point lies within it.
             for (int i = 0; i < elmts.size(); ++i)
             {
                 if ((*m_exp)[m_elmtToExpId[elmts[i].second]]->
@@ -1494,6 +1497,8 @@ namespace Nektar
                 }
                 else
                 {
+                    // If it does not lie within, keep track of which element
+                    // is nearest.
                     if(nearpt < nearpt_min)
                     {
                         min_id    = m_elmtToExpId[elmts[i].second];
@@ -1503,6 +1508,9 @@ namespace Nektar
                     }
                 }
             }
+            
+            // If the calling function is with just the nearest element, return
+            // that. Otherwise return -1 to indicate no matching elemenet found.
             if(returnNearestElmt)
             {
 

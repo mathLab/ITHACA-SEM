@@ -83,9 +83,8 @@ namespace Nektar
     }
 
 
-    void SubSteppingExtrapolate::v_SubSteppingTimeIntegration(
-        int intMethod,
-        const LibUtilities::TimeIntegrationWrapperSharedPtr &IntegrationScheme)
+    void SubSteppingExtrapolate::v_SubSteppingTimeIntegration(       int                                     intMethod,
+                                                               const LibUtilities::TimeIntegratorSharedPtr & IntegrationScheme )
     {
         int i;
 
@@ -103,7 +102,7 @@ namespace Nektar
                     vSubStepIntScheme = m_session->GetSolverInfo("SubStepIntScheme");
                 }
 
-                m_subStepIntegrationScheme = LibUtilities::GetTimeIntegrationWrapperFactory().CreateInstance(vSubStepIntScheme);
+                m_subStepIntegrationScheme = LibUtilities::GetTimeIntegratorFactory().CreateInstance( vSubStepIntScheme );
 
                 int nvel = m_velocity.num_elements();
 
@@ -127,7 +126,7 @@ namespace Nektar
                     vSubStepIntScheme = m_session->GetSolverInfo("SubStepIntScheme");
                 }
 
-                m_subStepIntegrationScheme = LibUtilities::GetTimeIntegrationWrapperFactory().CreateInstance(vSubStepIntScheme);
+                m_subStepIntegrationScheme = LibUtilities::GetTimeIntegratorFactory().CreateInstance( vSubStepIntScheme );
 
                 int nvel = m_velocity.num_elements();
 
@@ -358,8 +357,7 @@ namespace Nektar
             // with calls to EvaluateAdvection_SetPressureBCs and
             // SolveUnsteadyStokesSystem
             LibUtilities::TimeIntegrationSolutionSharedPtr
-                SubIntegrationSoln = m_subStepIntegrationScheme->
-                InitializeScheme(dt, fields, time, m_subStepIntegrationOps);
+                SubIntegrationSoln = m_subStepIntegrationScheme->InitializeIntegrator( dt, fields, time, m_subStepIntegrationOps );
 
             for(n = 0; n < nsubsteps; ++n)
             {

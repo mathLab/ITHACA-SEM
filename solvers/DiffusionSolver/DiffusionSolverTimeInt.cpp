@@ -37,7 +37,7 @@
 
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <LibUtilities/BasicUtils/FieldIO.h>
-#include <LibUtilities/TimeIntegration/TimeIntegrationWrapper.h>
+#include <LibUtilities/TimeIntegration/TimeIntegratorBase.h>
 #include <SpatialDomains/MeshGraph.h>
 #include <MultiRegions/ContField2D.h>
 
@@ -65,12 +65,12 @@ class Diffusion
         SpatialDomains::MeshGraphSharedPtr              graph;
         MultiRegions::ContField2DSharedPtr              field;
 
-        LibUtilities::TimeIntegrationWrapperSharedPtr   IntScheme;
+        LibUtilities::TimeIntegratorSharedPtr           m_IntScheme;
         LibUtilities::TimeIntegrationSolutionSharedPtr  u;
         LibUtilities::TimeIntegrationSchemeOperators    ode;
         Array<OneD, Array<OneD, NekDouble> >            fields;
 
-        string                                          scheme;
+        string                                          m_scheme;
         unsigned int                                    nSteps;
         NekDouble                                       delta_t;
         NekDouble                                       epsilon;
@@ -81,10 +81,10 @@ class Diffusion
 };
 
 
-Diffusion::Diffusion(int argc, char* argv[])
+Diffusion::Diffusion( int argc, char* argv[] )
 {
     // Create session reader.
-    session     = LibUtilities::SessionReader::CreateInstance(argc, argv);
+    session     = LibUtilities::SessionReader::CreateInstance( argc, argv );
 
     // Read the geometry and the expansion information
     graph       = SpatialDomains::MeshGraph::Read(session);
@@ -94,10 +94,10 @@ Diffusion::Diffusion(int argc, char* argv[])
 
     // Get some information from the session
     sessionName = session->GetSessionName();
-    scheme      = session->GetSolverInfo("TimeIntegrationMethod");
-    nSteps      = session->GetParameter("NumSteps");
-    delta_t     = session->GetParameter("TimeStep");
-    epsilon     = session->GetParameter("epsilon");
+    m_scheme    = session->GetSolverInfo( "TimeIntegrationMethod" );
+    nSteps      = session->GetParameter( "NumSteps" );
+    delta_t     = session->GetParameter( "TimeStep" );
+    epsilon     = session->GetParameter( "epsilon" );
     lambda      = 1.0/delta_t/epsilon;
 
     // Set up the field
@@ -125,26 +125,25 @@ Diffusion::~Diffusion()
 
 void Diffusion::TimeIntegrate()
 {
-    IntScheme = LibUtilities::GetTimeIntegrationWrapperFactory().
-                    CreateInstance(scheme);
+    LibUtilities::TimeIntegratorFactory & fac = LibUtilities::GetTimeIntegratorFactory();
+    m_IntScheme = fac.CreateInstance( m_scheme );
 
-    ode.DefineImplicitSolve(&Diffusion::DoImplicitSolve, this);
+    ode.DefineImplicitSolve( &Diffusion::DoImplicitSolve, this );
 
     // Initialise the scheme for actual time integration scheme
-    u = IntScheme->InitializeScheme(delta_t, fields, 0.0, ode);
+    u = m_IntScheme->InitializeIntegrator( delta_t, fields, 0.0, ode );
 
     // Zero field coefficients for initial guess for linear solver.
     Vmath::Zero(field->GetNcoeffs(), field->UpdateCoeffs(), 1);
 
     for (int n = 0; n < nSteps; ++n)
     {
-        fields = IntScheme->TimeIntegrate(n, delta_t, u, ode);
+        fields = m_IntScheme->TimeIntegrate( n, delta_t, u, ode );
     }
-    Vmath::Vcopy(field->GetNpoints(), fields[0], 1, field->UpdatePhys(), 1);
+    Vmath::Vcopy( field->GetNpoints(), fields[0], 1, field->UpdatePhys(), 1 );
 
     WriteSolution();
     ExactSolution();
-
 }
 
 

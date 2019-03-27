@@ -83,7 +83,7 @@
 #include <boost/program_options.hpp>
 #include <boost/algorithm/string.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
-#include <LibUtilities/TimeIntegration/TimeIntegrationScheme.h>
+#include <LibUtilities/TimeIntegration/TimeIntegratorBase.h>
 
 using namespace std;
 using namespace Nektar;
@@ -179,27 +179,24 @@ private:
 
 int main(int argc, char *argv[])
 {
-    po::options_description desc("Available options");
+    po::options_description desc("Usage:");
     desc.add_options()
-        ("help,h",      "Produce this help message.")
-        ("points,p",    po::value<int>(),
-                        "Number of grid points to be used.")
-        ("timesteps,t", po::value<int>(),
-                        "Number of timesteps to be used.")
-        ("method,m",    po::value<int>(),
-                    "TimeIntegrationMethod is a number in the range [1,8].\n"
-                    "It defines the time-integration method to be used:\n"
-                    "- 1: 1st order multi-step IMEX scheme\n"
-                    "     (Euler Backwards/Euler Forwards)\n"
+        ("help, h",      "Display this help message.")
+        ("Npoints, np",    po::value<int>(),
+                          "Specify the number of grid points to be used.")
+        ("Ntimesteps, nt", po::value<int>(),
+                          "Specify the number of timesteps to be used.")
+        ("TimeIntegrationMethod, m", po::value<int>(),
+                    "TimeIntegrationMethod is a number in the range [1,8]\n"
+                    "and defines the time-integration method to be used:\n"
+                    "- 1: 1st order multi-step IMEX scheme (Euler Backwards/Euler Forwards)\n"
                     "- 2: 2nd order multi-step IMEX scheme\n"
                     "- 3: 3rd order multi-step IMEX scheme\n"
                     "- 4: 2nd order multi-stage DIRK IMEX scheme\n"
                     "- 5: 3nd order multi-stage DIRK IMEX scheme\n"
                     "- 6: 2nd order IMEX Gear (Extrapolated Gear/SBDF-2)\n"
                     "- 7: 2nd order Crank-Nicolson/Adams-Bashforth (CNAB)\n"
-                    "- 8: 2nd order Modified Crank-Nicolson/Adams-Bashforth\n"
-                    "     (MCNAB)"
-        );
+                    "- 8: 2nd order Modified Crank-Nicolson/Adams-Bashforth (MCNAB)" );
     po::variables_map vm;
     try
     {
@@ -214,17 +211,16 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    if (!vm.count("points") || !vm.count("timesteps") || !vm.count("method")
-            || vm.count("help"))
+    if( !vm.count("Npoints") || !vm.count("Ntimesteps") || !vm.count("TimeIntegrationMethod") || vm.count("help") )
     {
         cout << "Please specify points, timesteps and method." << endl << endl;
         cout << desc;
         return 1;
     }
 
-    int nPoints = vm["points"].as<int>();
-    int nTimesteps = vm["timesteps"].as<int>();
-    int nMethod = vm["method"].as<int>();
+    int nPoints = vm["Npoints"].as<int>();
+    int nTimesteps = vm["Ntimesteps"].as<int>();
+    int nMethod = vm["TimeIntegrationMethod"].as<int>();
 
     // Open a file for writing the solution
     ofstream outfile;
@@ -240,7 +236,7 @@ int main(int argc, char *argv[])
     //    Create an object of the OneDfinDiffAdvDiffSolver class.
     //    This class can be thought of as representing the
     //    spatial (finite difference) discretisation.
-    OneDfinDiffAdvDiffSolver* solver = new OneDfinDiffAdvDiffSolver(nPoints,nTimesteps);
+    OneDfinDiffAdvDiffSolver* solver = new OneDfinDiffAdvDiffSolver( nPoints, nTimesteps );
     //    After this spatial discretisation, the PDE has actually been
     //    reduced (through the method-of-lines) to an ODE.
     //    In order to use the time-stepping framework, we need to give it the necessary
@@ -251,134 +247,70 @@ int main(int argc, char *argv[])
     //    - implicit solve routine (i.e. the Helmholtz solver)
     //    - projection operator (i.e. the identity operator in this case)
     LibUtilities::TimeIntegrationSchemeOperators ode;
-    ode.DefineOdeRhs        (&OneDfinDiffAdvDiffSolver::EvaluateAdvectionTerm,solver);
-    ode.DefineImplicitSolve (&OneDfinDiffAdvDiffSolver::HelmSolve,            solver);
-    ode.DefineProjection    (&OneDfinDiffAdvDiffSolver::Project,              solver);
+    ode.DefineOdeRhs       ( &OneDfinDiffAdvDiffSolver::EvaluateAdvectionTerm, solver );
+    ode.DefineImplicitSolve( &OneDfinDiffAdvDiffSolver::HelmSolve,             solver );
+    ode.DefineProjection   ( &OneDfinDiffAdvDiffSolver::Project,               solver );
 
     // 2. THE TEMPORAL DISCRETISATION
-    // 2.1 Read in which method should be used.
-    //     For a multi-step scheme, also set up
-    //     which method should be used for appropriately
-    //     starting up the system
-    Array<OneD, TimeIntegrationMethod> method;
-    int nSteps = 1;
-    switch (nMethod)
+    // 2.1 Read in which method should be used.  Create time integrator
+    //
+    LibUtilities::TimeIntegratorSharedPtr timeIntegrator;
+
+    switch( nMethod )
     {
-    case 1 :
-        {
-            nSteps = 1;
-            method = Array<OneD, TimeIntegrationMethod>(nSteps);
-            method[0] = eIMEXOrder1;
-        }
-        break;
-    case 2 :
-        {
-            nSteps = 2;
-            method = Array<OneD, TimeIntegrationMethod>(nSteps);
-            method[0] = eIMEXdirk_2_3_2; // the start-up method for step 1
-            method[1] = eIMEXOrder2;
-        }
-        break;
-    case 3 :
-        {
-            nSteps = 3;
-            method = Array<OneD, TimeIntegrationMethod>(nSteps);
-            method[0] = eIMEXdirk_3_4_3; // the start-up method for step 1
-            method[1] = eIMEXdirk_3_4_3; // the start-up method for step 2
-            method[2] = eIMEXOrder3;
-        }
-        break;
-    case 4 :
-        {
-            nSteps = 1;
-            method = Array<OneD, TimeIntegrationMethod>(nSteps);
-            method[0] = eIMEXdirk_2_3_2;
-        }
-        break;
-    case 5 :
-        {
-            nSteps = 1;
-            method = Array<OneD, TimeIntegrationMethod>(nSteps);
-            method[0] = eIMEXdirk_3_4_3;
-        }
-        break;
-    case 6 :
-        {
-            nSteps = 2;
-            method = Array<OneD, TimeIntegrationMethod>(nSteps);
-            method[0] = eIMEXdirk_2_2_2;
-            method[1] = eIMEXGear;
-
-        }
-        break;
-    case 7 :
-        {
-            nSteps = 3;
-            method = Array<OneD, TimeIntegrationMethod>(nSteps);
-            method[0] = eIMEXdirk_3_4_3;
-            method[1] = eIMEXdirk_3_4_3;
-            method[2] = eCNAB;
-
-        }
-        break;
-    case 8 :
-        {
-            nSteps = 3;
-            method = Array<OneD, TimeIntegrationMethod>(nSteps);
-            method[0] = eIMEXdirk_3_4_3;
-            method[1] = eIMEXdirk_3_4_3;
-            method[2] = eMCNAB;
-
-        }
-        break;
+    case 1 : timeIntegrator = LibUtilities::GetTimeIntegratorFactory().CreateInstance( "IMEXOrder1" );     break;
+    case 2 : timeIntegrator = LibUtilities::GetTimeIntegratorFactory().CreateInstance( "IMEXOrder2" );     break;
+    case 3 : timeIntegrator = LibUtilities::GetTimeIntegratorFactory().CreateInstance( "IMEXOrder3" );     break;
+    case 4 : timeIntegrator = LibUtilities::GetTimeIntegratorFactory().CreateInstance( "IMEXdirk_2_3_2" ); break;
+    case 5 : timeIntegrator = LibUtilities::GetTimeIntegratorFactory().CreateInstance( "IMEXdirk_3_4_3" ); break;
+    case 6 : timeIntegrator = LibUtilities::GetTimeIntegratorFactory().CreateInstance( "IMEXGear" );       break;
+    case 7 : timeIntegrator = LibUtilities::GetTimeIntegratorFactory().CreateInstance( "CNAB" );           break;
+    case 8 : timeIntegrator = LibUtilities::GetTimeIntegratorFactory().CreateInstance( "MCNAB" );          break;
     default :
-        {
-            cout << "Invalid method." << endl << endl;
-            cout << desc;
-            exit(1);
-        }
+      {
+        cerr << "The third argument defines the time-integration method to be used:\n\n";
+        cout << desc;
+        exit( 1 );
+      }
     }
 
-
-    // 2.2 Create objects of the time-integration framework.
-    //     These can later be used for actually doing the time-integration
-    Array<OneD, LibUtilities::TimeIntegrationSchemeSharedPtr> IntScheme(nSteps);
-    for(int i = 0; i < nSteps; i++)
-    {
-        TimeIntegrationSchemeKey IntKey(method[i]);
-        IntScheme[i] = LibUtilities::TimeIntegrationSchemeManager()[IntKey];
-    }
-
-    // 2.3 Initialise some arrays that contain the numerical and
-    //     analytical solutions
+    // 2.2 Initialise the arrays that contain the numerical and analytical solutions:
+    //
     double t0 = solver->GetInitialTime();
+
+    // Note, fidifsol (finite difference solution) is an array of arrays, though in this current
+    // example, we only ever use one array (ie: fidifsol[0]).  This is because, in this demo, we are only
+    // solving for one variable.  
+
     Array<OneD, Array<OneD, double> > fidifsol(1); // Array containing the numerical solution
     Array<OneD, Array<OneD, double> > exactsol(1); // Array containing the exact solution
-    fidifsol[0] = Array<OneD, double>(nPoints);
-    exactsol[0] = Array<OneD, double>(nPoints);
-    solver->EvaluateExactSolution(fidifsol,t0);  // Set the initial condition
-    solver->EvaluateExactSolution(exactsol,t0);  // Set the initial condition
-    solver->AppendOutput(outfile,fidifsol,exactsol); // Write the initial condition to a file
+    fidifsol[0] = Array<OneD, double>( nPoints );
+    exactsol[0] = Array<OneD, double>( nPoints );
+    solver->EvaluateExactSolution( fidifsol, t0 );  // Set the initial condition
 
-    // 2.4 Initialize the time-integration scheme
+    // I've commented out the following two lines as they duplicate what is done in the
+    // first iteration of the below for loop (part 2.5).  
+    // 
+    //    solver->EvaluateExactSolution(exactsol,t0);  // Set the initial condition
+    //    solver->AppendOutput(outfile,fidifsol,exactsol); // Write the initial condition to a file
+
+    // 2.3 Initialize the time-integration scheme:
+    //
     double dt = solver->GetTimeStep();
+
     LibUtilities::TimeIntegrationSolutionSharedPtr sol;
-    sol = IntScheme[nSteps-1]->InitializeScheme(dt,fidifsol,t0,ode);
+    sol = timeIntegrator->InitializeIntegrator( dt, fidifsol, t0, ode );
 
-    // 2.5 Do the time-integration
-    double t  = t0;
-    int whichscheme;
-    for(int i = 0; i < nTimesteps; i++)
+    // 2.4 Do the time-integration:
+    //
+    for( int i = 0; i < nTimesteps; i++ )
     {
-        t = t0 + i*dt;
+        double t = t0 + i*dt;
 
-        whichscheme = (i<nSteps)?i:(nSteps-1); // For multi-step schemes,
-                                               // the first steps should use the start-up scheme
-        fidifsol = IntScheme[whichscheme]->TimeIntegrate(dt,sol,ode); // Time-integration for 1 time-step
+        fidifsol = timeIntegrator->TimeIntegrate( i, dt, sol, ode ); // Time-integration for 1 time-step
 
-
-        solver->EvaluateExactSolution(exactsol,t);       // Calculate the exact solution
-        solver->AppendOutput(outfile,fidifsol,exactsol); // Dump the output to a file
+        solver->EvaluateExactSolution( exactsol, t );        // Calculate the exact solution
+        solver->AppendOutput( outfile, fidifsol, exactsol ); // Dump the output to a file
     }
 
     // Calculate the error and dump to screen
@@ -388,10 +320,9 @@ int main(int argc, char *argv[])
     solver->GenerateGnuplotScript();
     outfile.close();
 
-
     delete solver;
 
-  return 0;
+    return 0;
 }
 
 void OneDfinDiffAdvDiffSolver::HelmSolve(const Array<OneD, const Array<OneD, double> >& inarray,
@@ -441,9 +372,14 @@ void OneDfinDiffAdvDiffSolver::EvaluateAdvectionTerm(const Array<OneD, const  Ar
                                                      const NekDouble time) const
 {
     // The advection term can be evaluated using central or upwind differences
-    if(true)
+    if( true )
     {
-        // central differences
+        // Note: We are using a periodic boundary condition where the 1st point and last point are actually
+        // the same point.  This is why the 1st (and last) point in the output array (index 0 and m_nPoints-1 respectively)
+        // are NOT used for the central differences, and instead the 2nd point (index 1) and 2nd to last point
+        // are used.
+      
+        // Central differences:
         outarray[0][0]           = - m_U * (inarray[0][1]-inarray[0][m_nPoints-2]) / (2.0 * m_dx);
         outarray[0][m_nPoints-1] = outarray[0][0];
 
@@ -517,19 +453,22 @@ void OneDfinDiffAdvDiffSolver::EvaluateExactSolution(Array<OneD, Array<OneD, dou
             sin( 2.0 * m_wavenumber * M_PI * (x - m_U*time) );
     }
 }
+
+// Note, this routine returns the Relative Error L2 Norm (as opposed to the absolute L2 norm)...
 double OneDfinDiffAdvDiffSolver::EvaluateL2Error(const Array<OneD, const  Array<OneD, double> >& approx,
                                                  const Array<OneD, const  Array<OneD, double> >& exact) const
 {
     double a = 0.0;
     double b = 0.0;
 
-    for(int i = 0; i < m_nPoints; i++)
+    for( int i = 0; i < m_nPoints; i++ )
     {
-        a += (approx[0][i]-exact[0][i])*(approx[0][i]-exact[0][i]);
-        b += exact[0][i]*exact[0][i];
+        a += ( approx[0][i] - exact[0][i] ) * ( approx[0][i] - exact[0][i] );
+        b += exact[0][i] * exact[0][i];
     }
 
-    return sqrt(a/b);
+    // Note: Returning Relative Error L2 Norm.
+    return sqrt( a / b );
 }
 
 void OneDfinDiffAdvDiffSolver::AppendOutput(ofstream& outfile,

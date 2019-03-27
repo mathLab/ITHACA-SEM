@@ -136,8 +136,8 @@ namespace Nektar
         void SubStepAdvance(const LibUtilities::TimeIntegrationSolutionSharedPtr &integrationSoln, 
                             int nstep,  NekDouble time);
         NekDouble GetSubstepTimeStep();
-        void SetUpSubSteppingTimeIntegration(int intMethod,
-                         const LibUtilities::TimeIntegrationWrapperSharedPtr &IntegrationScheme);
+        void SetUpSubSteppingTimeIntegration(       int                                     intMethod,
+                                              const LibUtilities::TimeIntegratorSharedPtr & IntegrationScheme );
 
         void SubStepAdvection(const Array<OneD, const Array<OneD, NekDouble> > &inarray,  
                               Array<OneD, Array<OneD, NekDouble> > &outarray,
@@ -154,7 +154,7 @@ namespace Nektar
 
         Array<OneD, NekDouble> GetMaxStdVelocity(const Array<OneD, Array<OneD,NekDouble> > inarray);
 
-        LibUtilities::TimeIntegrationWrapperSharedPtr m_subStepIntegrationScheme;
+        LibUtilities::TimeIntegratorSharedPtr         m_subStepIntegrationScheme;
         LibUtilities::TimeIntegrationSchemeOperators  m_subStepIntegrationOps;
 
         int m_intSteps;

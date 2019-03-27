@@ -1,3 +1,5 @@
+#pragma once
+
 ///////////////////////////////////////////////////////////////////////////////
 //
 // File: TimeIntegrationScheme.h
@@ -33,20 +35,23 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_LIB_UTILITIES_FOUNDATIONS_TIMEINTEGRATIONSCHEME_H
-#define NEKTAR_LIB_UTILITIES_FOUNDATIONS_TIMEINTEGRATIONSCHEME_H
-
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/BasicUtils/NekManager.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
 #include <LibUtilities/LibUtilitiesDeclspec.h>
 
+///////////////////////////////////////////////////////////////////////////////
+
+#define LUE LIB_UTILITIES_EXPORT
+
+///////////////////////////////////////////////////////////////////////////////
+
 namespace Nektar
 {
     namespace LibUtilities
     {
-        // Forward declaration of all classes in this file
+        // Forward declaration of some of the classes in this file...
         class TimeIntegrationScheme;
         class TimeIntegrationSolution;
 
@@ -269,7 +274,7 @@ namespace Nektar
 
         private:
 
-        };
+        }; // end class TimeIntegrationSchemeOperators()
 
         // =========================================================================
         // ==== DEFINITION OF THE CLASS TimeIntegrationSchemeKey
@@ -280,11 +285,11 @@ namespace Nektar
             
             struct opLess
             {
-                LIB_UTILITIES_EXPORT bool operator()(const TimeIntegrationSchemeKey &lhs, const TimeIntegrationSchemeKey &rhs) const;
+                LUE bool operator()(const TimeIntegrationSchemeKey &lhs, const TimeIntegrationSchemeKey &rhs) const;
             };
             
-            TimeIntegrationSchemeKey(const TimeIntegrationMethod &method): 
-            m_method(method)
+            TimeIntegrationSchemeKey(const TimeIntegrationMethod &method) :
+              m_method( method )
             {
             }
             
@@ -292,12 +297,12 @@ namespace Nektar
             {
             }
 
-            TimeIntegrationSchemeKey(const TimeIntegrationSchemeKey &key)
+            TimeIntegrationSchemeKey( const TimeIntegrationSchemeKey &key )
             {
                 *this = key; // defer to assignment operator
             }
 
-            TimeIntegrationSchemeKey& operator=(const TimeIntegrationSchemeKey &key)
+            TimeIntegrationSchemeKey& operator=( const TimeIntegrationSchemeKey &key )
             {
                 m_method  = key.m_method;
                 
@@ -309,7 +314,7 @@ namespace Nektar
                 return m_method;
             }
 
-            inline bool operator==(const TimeIntegrationSchemeKey &key)
+            inline bool operator==( const TimeIntegrationSchemeKey &key )
             {
                 return (m_method == key.m_method);
             }
@@ -329,9 +334,9 @@ namespace Nektar
                 return (!(*this == *y));
             }
 
-            LIB_UTILITIES_EXPORT friend bool operator==(const TimeIntegrationSchemeKey &lhs, const TimeIntegrationSchemeKey &rhs);
-            LIB_UTILITIES_EXPORT friend bool operator<(const TimeIntegrationSchemeKey &lhs, const TimeIntegrationSchemeKey &rhs);
-            LIB_UTILITIES_EXPORT friend bool opLess::operator()(const TimeIntegrationSchemeKey &lhs, const TimeIntegrationSchemeKey &rhs) const;
+            LUE friend bool operator==(const TimeIntegrationSchemeKey &lhs, const TimeIntegrationSchemeKey &rhs);
+            LUE friend bool operator<(const TimeIntegrationSchemeKey &lhs, const TimeIntegrationSchemeKey &rhs);
+            LUE friend bool opLess::operator()(const TimeIntegrationSchemeKey &lhs, const TimeIntegrationSchemeKey &rhs) const;
 
         protected:
             TimeIntegrationMethod m_method;  //!< integration method
@@ -340,14 +345,14 @@ namespace Nektar
             // This should never be called
             TimeIntegrationSchemeKey()
             {
-                NEKERROR(ErrorUtil::efatal,"Default Constructor for the TimeIntegrationSchemeKey class should not be called");
+                NEKERROR( ErrorUtil::efatal, "Default Constructor for the TimeIntegrationSchemeKey class should not be called!" );
             }
-        };
+        }; // end class TimeIntegrationSchemeKey
 
         static const TimeIntegrationSchemeKey NullTimeIntegrationSchemeKey(eNoTimeIntegrationMethod);
-        LIB_UTILITIES_EXPORT bool operator==(const TimeIntegrationSchemeKey &lhs, const TimeIntegrationSchemeKey &rhs);
-        LIB_UTILITIES_EXPORT bool operator<(const TimeIntegrationSchemeKey &lhs, const TimeIntegrationSchemeKey &rhs);
-        LIB_UTILITIES_EXPORT std::ostream& operator<<(std::ostream& os, const TimeIntegrationSchemeKey& rhs);
+        LUE bool operator==(const TimeIntegrationSchemeKey &lhs, const TimeIntegrationSchemeKey &rhs);
+        LUE bool operator<(const TimeIntegrationSchemeKey &lhs, const TimeIntegrationSchemeKey &rhs);
+        LUE std::ostream& operator<<(std::ostream& os, const TimeIntegrationSchemeKey& rhs);
 
         // =====================================================================
 
@@ -359,10 +364,10 @@ namespace Nektar
         // time integration schemes. It returns you the NekManager 
         // singleton which manages all the time integration schemes...
         //
-        typedef NekManager<TimeIntegrationSchemeKey, 
-                           TimeIntegrationScheme, 
-                           TimeIntegrationSchemeKey::opLess> TimeIntegrationSchemeManagerT;
-        LIB_UTILITIES_EXPORT TimeIntegrationSchemeManagerT &TimeIntegrationSchemeManager(void);
+        typedef NekManager<TimeIntegrationSchemeKey, TimeIntegrationScheme, TimeIntegrationSchemeKey::opLess> TimeIntegrationSchemeManagerT;
+
+        LUE
+        TimeIntegrationSchemeManagerT & GetTimeIntegrationSchemeManager();
         // =====================================================================
 
         // =====================================================================
@@ -485,10 +490,10 @@ namespace Nektar
              * \return An object of the class TimeIntegrationSolution which represents the vectors \f$\boldsymbol{y}^{[n]}\f$ and \f$t^{[n]}\f$
              *  that can be used to start the actual integration.
              */
-            LIB_UTILITIES_EXPORT TimeIntegrationSolutionSharedPtr InitializeScheme(const NekDouble timestep,
-                                                                    ConstDoubleArray               &y_0    ,
-                                                              const NekDouble                      time    ,
-                                                              const TimeIntegrationSchemeOperators &op     );
+            LUE TimeIntegrationSolutionSharedPtr InitializeScheme( const NekDouble                        timestep,
+                                                                         ConstDoubleArray               & y_0,
+                                                                   const NekDouble                        time,
+                                                                   const TimeIntegrationSchemeOperators & op     );
 
             /**
              * \brief Explicit integration of an ODE.
@@ -498,7 +503,7 @@ namespace Nektar
              * \frac{d\boldsymbol{y}}{dt}=\boldsymbol{f}(t,\boldsymbol{y})
              * \f]
              *
-             * \param timestep The size of the timestep, i.e. \f$\Delta t\f$.
+             * \param delta_t The size of the timestep, i.e. \f$\Delta t\f$.
              * \param f an object of the class FuncType, where FuncType should have a method FuncType::ODEforcing
              *       to evaluate the right hand side \f$f(t,\boldsymbol{y})\f$ of the ODE.
              * \param y on input: the vectors \f$\boldsymbol{y}^{[n-1]}\f$ and \f$t^{[n-1]}\f$ (which corresponds to the 
@@ -508,9 +513,9 @@ namespace Nektar
              * \return The actual solution \f$\boldsymbol{y}^{n}\f$ at the new time level 
              *    (which in fact is also embedded in the argument y).
              */
-            LIB_UTILITIES_EXPORT ConstDoubleArray& TimeIntegrate(const NekDouble   timestep,          
-                                                  TimeIntegrationSolutionSharedPtr &y      ,
-                                            const TimeIntegrationSchemeOperators   &op     );
+            LUE ConstDoubleArray& TimeIntegrate( const NekDouble                          delta_t,
+                                                       TimeIntegrationSolutionSharedPtr & y,
+                                                 const TimeIntegrationSchemeOperators   & op     );
 
             inline const Array<OneD, const unsigned int>& GetTimeLevelOffset()
             {
@@ -518,7 +523,33 @@ namespace Nektar
             }
 
 
-        protected:
+      //protected: <- Dd: don't think anything is inheriting from this, so don't need protected...
+        private:
+
+            friend class AdamsBashforthOrder2TimeIntegrator;
+            friend class AdamsBashforthOrder3TimeIntegrator;
+            friend class AdamsMoultonOrder2TimeIntegrator;
+            friend class BackwardEulerTimeIntegrator;
+            friend class BDFImplicitOrder2TimeIntegrator;
+            friend class ClassicalRungeKutta4TimeIntegrator;
+            friend class CNABTimeIntegrator;
+            friend class DirkOrder2TimeIntegrator;
+            friend class DirkOrder3TimeIntegrator;
+            friend class ForwardEulerTimeIntegrator;
+            friend class IMEXDirk_1_2_2TimeIntegrator;
+            friend class IMEXDirk_2_2_2TimeIntegrator;
+            friend class IMEXDirk_2_3_2TimeIntegrator;
+            friend class IMEXDirk_3_4_3TimeIntegrator;
+            friend class IMEXGearTimeIntegrator;
+            friend class IMEXOrder1TimeIntegrator;
+            friend class IMEXOrder2TimeIntegrator;
+            friend class IMEXOrder3TimeIntegrator;
+            friend class MCNABTimeIntegrator;
+            friend class RungeKutta2TimeIntegrator;
+            friend class RungeKutta2_ImprovedEulerTimeIntegrator;
+            friend class RungeKutta2_SSPTimeIntegrator;
+            friend class RungeKutta3_SSPTimeIntegrator;
+
             TimeIntegrationSchemeKey  m_schemeKey; 
             TimeIntegrationSchemeType m_schemeType;
             unsigned int              m_numsteps;   //< Number of steps in multi-step component. 
@@ -547,7 +578,6 @@ namespace Nektar
             Array<TwoD,NekDouble>               m_U;
             Array<TwoD,NekDouble>               m_V;
 
-        private: 
             bool m_initialised;   /// bool to identify if array has been initialised 
             int  m_nvar;          /// The number of variables in integration scheme. 
             int  m_npoints;       /// The size of inner data which is stored for reuse. 
@@ -560,9 +590,10 @@ namespace Nektar
             NekDouble   m_T;     ///  Time at the different stages
 
             template <typename> friend class Nektar::MemoryManager;
-            LIB_UTILITIES_EXPORT friend TimeIntegrationSchemeManagerT &TimeIntegrationSchemeManager(void);
 
-            LIB_UTILITIES_EXPORT static std::shared_ptr<TimeIntegrationScheme> Create(const TimeIntegrationSchemeKey &key);
+            LUE friend TimeIntegrationSchemeManagerT & GetTimeIntegrationSchemeManager();
+
+            LUE static TimeIntegrationSchemeSharedPtr Create( const TimeIntegrationSchemeKey & key );
 
             TimeIntegrationScheme(const TimeIntegrationSchemeKey &key);
             
@@ -577,18 +608,19 @@ namespace Nektar
                 NEKERROR(ErrorUtil::efatal,"Copy Constructor for the TimeIntegrationScheme class should not be called");
             }
 
-            LIB_UTILITIES_EXPORT bool VerifyIntegrationSchemeType(TimeIntegrationSchemeType type,
+            LUE bool VerifyIntegrationSchemeType(TimeIntegrationSchemeType type,
                                              const Array<OneD, const Array<TwoD, NekDouble> >& A,
                                              const Array<OneD, const Array<TwoD, NekDouble> >& B,
                                              const Array<TwoD, const NekDouble>& U,
                                              const Array<TwoD, const NekDouble>& V) const;
 
-            LIB_UTILITIES_EXPORT void TimeIntegrate(const NekDouble timestep,
-                                     ConstTripleArray               &y_old  ,
-                                     ConstSingleArray               &t_old  ,
-                                     TripleArray                    &y_new  ,
-                                     SingleArray                    &t_new  ,
-                               const TimeIntegrationSchemeOperators &op     );
+            // Internal implementation of TimeIntegrate - does the actual work... Called by the public TimeIntegrate() above.
+            LUE void TimeIntegrate( const NekDouble                        timestep,
+                                          ConstTripleArray               & y_old,
+                                          ConstSingleArray               & t_old,
+                                          TripleArray                    & y_new,
+                                          SingleArray                    & t_new,
+                                    const TimeIntegrationSchemeOperators & op     );
 
 
             inline int GetFirstDim(ConstTripleArray &y) const
@@ -601,26 +633,26 @@ namespace Nektar
                 return y[0][0].num_elements();
             }
 
-            LIB_UTILITIES_EXPORT bool CheckTimeIntegrateArguments(const NekDouble timestep,
+            LUE bool CheckTimeIntegrateArguments(const NekDouble timestep,
                                                    ConstTripleArray               &y_old  ,
                                                    ConstSingleArray               &t_old  ,
                                                    TripleArray                    &y_new  ,
                                                    SingleArray                    &t_new  ,
                                              const TimeIntegrationSchemeOperators &op) const;
 
-            LIB_UTILITIES_EXPORT bool CheckIfFirstStageEqualsOldSolution(const Array<OneD, const Array<TwoD, NekDouble> >& A,
+            LUE bool CheckIfFirstStageEqualsOldSolution(const Array<OneD, const Array<TwoD, NekDouble> >& A,
                                                     const Array<OneD, const Array<TwoD, NekDouble> >& B,
                                                     const Array<TwoD, const NekDouble>& U,
                                                     const Array<TwoD, const NekDouble>& V) const;
             
-            LIB_UTILITIES_EXPORT bool CheckIfLastStageEqualsNewSolution(const Array<OneD, const Array<TwoD, NekDouble> >& A,
+            LUE bool CheckIfLastStageEqualsNewSolution(const Array<OneD, const Array<TwoD, NekDouble> >& A,
                                                    const Array<OneD, const Array<TwoD, NekDouble> >& B,
                                                    const Array<TwoD, const NekDouble>& U,
                                                    const Array<TwoD, const NekDouble>& V) const;
 
 
 
-        };
+        }; // end class TimeIntegrationScheme
 
 
         // =========================================================================
@@ -633,18 +665,18 @@ namespace Nektar
             typedef Array<OneD, Array<OneD, NekDouble> >               DoubleArray;
             
             // Constructor for single step methods
-            LIB_UTILITIES_EXPORT TimeIntegrationSolution(const TimeIntegrationSchemeKey &key, 
+            LUE TimeIntegrationSolution(const TimeIntegrationSchemeKey &key, 
                                     const DoubleArray& y, 
                                     const NekDouble time, 
                                     const NekDouble timestep);
             // Constructor for multi-step methods
-            LIB_UTILITIES_EXPORT TimeIntegrationSolution(const TimeIntegrationSchemeKey &key, 
+            LUE TimeIntegrationSolution(const TimeIntegrationSchemeKey &key, 
                                     const TripleArray& y, 
                                     const Array<OneD, NekDouble>& t);
-            LIB_UTILITIES_EXPORT TimeIntegrationSolution(const TimeIntegrationSchemeKey &key,
+            LUE TimeIntegrationSolution(const TimeIntegrationSchemeKey &key,
                                     unsigned int nvar,
                                     unsigned int npoints);
-            LIB_UTILITIES_EXPORT TimeIntegrationSolution(const TimeIntegrationSchemeKey &key);
+            LUE TimeIntegrationSolution(const TimeIntegrationSchemeKey &key);
 
             inline const TimeIntegrationSchemeSharedPtr& GetIntegrationScheme() const
             {
@@ -859,12 +891,11 @@ namespace Nektar
         // =========================================================================
 
 
-        LIB_UTILITIES_EXPORT std::ostream& operator<<(std::ostream& os, const TimeIntegrationScheme& rhs);
-        LIB_UTILITIES_EXPORT std::ostream& operator<<(std::ostream& os, const TimeIntegrationSchemeSharedPtr& rhs);
+        LUE std::ostream& operator<<(std::ostream& os, const TimeIntegrationScheme& rhs);
+        LUE std::ostream& operator<<(std::ostream& os, const TimeIntegrationSchemeSharedPtr& rhs);
         
         // =========================================================================
 
-    }; // end of namespace
-} // end of namespace 
+    } // end of namespace LibUtilities
+} // end of namespace Nektar
 
-#endif //NEKTAR_LIB_UTILITIES_FOUNDATIONS_TIMEINTEGRATIONSCHEME_H

@@ -32,9 +32,36 @@
 // Description: implementation of time integration key class
 //
 ///////////////////////////////////////////////////////////////////////////////
+
 #include <LibUtilities/TimeIntegration/TimeIntegrationScheme.h>
+
+#include <LibUtilities/TimeIntegration/AdamsBashforthOrder2TimeIntegrator.h>
+#include <LibUtilities/TimeIntegration/AdamsBashforthOrder3TimeIntegrator.h>
+#include <LibUtilities/TimeIntegration/AdamsMoultonOrder2TimeIntegrator.h>
+#include <LibUtilities/TimeIntegration/BackwardEulerTimeIntegrator.h>
+#include <LibUtilities/TimeIntegration/BDFImplicitOrder1TimeIntegrator.h>
+#include <LibUtilities/TimeIntegration/BDFImplicitOrder2TimeIntegrator.h>
+#include <LibUtilities/TimeIntegration/ClassicalRungeKutta4TimeIntegrator.h>
+#include <LibUtilities/TimeIntegration/CNABTimeIntegrator.h>
+#include <LibUtilities/TimeIntegration/DirkOrder2TimeIntegrator.h>
+#include <LibUtilities/TimeIntegration/DirkOrder3TimeIntegrator.h>
+#include <LibUtilities/TimeIntegration/ForwardEulerTimeIntegrator.h>
+#include <LibUtilities/TimeIntegration/IMEXDirk_1_2_2TimeIntegrator.h>
+#include <LibUtilities/TimeIntegration/IMEXDirk_2_2_2TimeIntegrator.h>
+#include <LibUtilities/TimeIntegration/IMEXDirk_2_3_2TimeIntegrator.h>
+#include <LibUtilities/TimeIntegration/IMEXDirk_3_4_3TimeIntegrator.h>
+#include <LibUtilities/TimeIntegration/IMEXGearTimeIntegrator.h>
+#include <LibUtilities/TimeIntegration/IMEXOrder1TimeIntegrator.h>
+#include <LibUtilities/TimeIntegration/IMEXOrder2TimeIntegrator.h>
+#include <LibUtilities/TimeIntegration/IMEXOrder3TimeIntegrator.h>
+#include <LibUtilities/TimeIntegration/MCNABTimeIntegrator.h>
+#include <LibUtilities/TimeIntegration/RungeKutta2TimeIntegrator.h>
+#include <LibUtilities/TimeIntegration/RungeKutta2_ImprovedEulerTimeIntegrator.h>
+#include <LibUtilities/TimeIntegration/RungeKutta3_SSPTimeIntegrator.h>
+
 #include <LibUtilities/BasicUtils/VmathArray.hpp>
 #include <LibUtilities/BasicConst/NektarUnivConsts.hpp>
+
 #include <iostream>
 #include <math.h>
 
@@ -42,10 +69,10 @@ namespace Nektar
 {
     namespace LibUtilities 
     {  
-        TimeIntegrationSchemeManagerT &TimeIntegrationSchemeManager(void)
+        TimeIntegrationSchemeManagerT & GetTimeIntegrationSchemeManager()
         {
             static TimeIntegrationSchemeManagerT instance;
-            instance.RegisterGlobalCreator(TimeIntegrationScheme::Create);
+            instance.RegisterGlobalCreator( TimeIntegrationScheme::Create );
             return instance;
         }
         
@@ -72,11 +99,11 @@ namespace Nektar
             return os;
         }
 
-        TimeIntegrationSolution::TimeIntegrationSolution(const TimeIntegrationSchemeKey &key, 
-                                                         const DoubleArray& y, 
-                                                         const NekDouble time, 
-                                                         const NekDouble timestep):
-            m_scheme(TimeIntegrationSchemeManager()[key]),
+        TimeIntegrationSolution::TimeIntegrationSolution( const TimeIntegrationSchemeKey & key, 
+                                                          const DoubleArray              & y, 
+                                                          const NekDouble                  time, 
+                                                          const NekDouble                  timestep ):
+            m_scheme( GetTimeIntegrationSchemeManager()[key] ),
             m_solVector(m_scheme->GetNsteps()),
             m_t(m_scheme->GetNsteps())
         {
@@ -109,7 +136,7 @@ namespace Nektar
         TimeIntegrationSolution::TimeIntegrationSolution(const TimeIntegrationSchemeKey &key, 
                                                          const TripleArray& y, 
                                                          const Array<OneD, NekDouble>& t):
-            m_scheme(TimeIntegrationSchemeManager()[key]),
+            m_scheme( GetTimeIntegrationSchemeManager()[key] ),
             m_solVector(y),
             m_t(t)
         {
@@ -119,7 +146,7 @@ namespace Nektar
         TimeIntegrationSolution::TimeIntegrationSolution(const TimeIntegrationSchemeKey &key, 
                                                          unsigned int nvar,
                                                          unsigned int npoints):
-            m_scheme(TimeIntegrationSchemeManager()[key]),
+            m_scheme( GetTimeIntegrationSchemeManager()[key] ),
             m_solVector(m_scheme->GetNsteps()),
             m_t(m_scheme->GetNsteps())
         {
@@ -134,922 +161,102 @@ namespace Nektar
         }
 
         TimeIntegrationSolution::TimeIntegrationSolution(const TimeIntegrationSchemeKey &key):
-            m_scheme(TimeIntegrationSchemeManager()[key]),
+            m_scheme( GetTimeIntegrationSchemeManager()[key] ),
             m_solVector(m_scheme->GetNsteps()),
             m_t(m_scheme->GetNsteps())
         {      
         }
         
+        // This is a class static function.
         TimeIntegrationSchemeSharedPtr TimeIntegrationScheme::Create(const TimeIntegrationSchemeKey &key)
         {
-            TimeIntegrationSchemeSharedPtr returnval(
-                MemoryManager<TimeIntegrationScheme>::AllocateSharedPtr(key));
+            TimeIntegrationSchemeSharedPtr returnval( MemoryManager<TimeIntegrationScheme>::AllocateSharedPtr( key ) );
             return returnval;
         }
 
         TimeIntegrationScheme::TimeIntegrationScheme(const TimeIntegrationSchemeKey &key):
-            m_schemeKey(key),
-            m_initialised(false)
+            m_schemeKey( key ),
+            m_initialised( false )
         {
-            switch(key.GetIntegrationMethod())
+
+          cout << "this is " << this << "\n";
+          cout << "TimeIntegrationScheme() constructor with key: \n";
+          cout << "Key: " << key << "\n";
+          
+            switch( key.GetIntegrationMethod() )
             {
             case eForwardEuler:
-            case eAdamsBashforthOrder1:
-                {
-                    m_numsteps = 1;
-                    m_numstages = 1;
-
-                    m_A = Array<OneD, Array<TwoD,NekDouble> >(1);
-                    m_B = Array<OneD, Array<TwoD,NekDouble> >(1);
-
-                    m_A[0] = Array<TwoD,NekDouble>(m_numstages,m_numstages,0.0);
-                    m_B[0] = Array<TwoD,NekDouble>(m_numsteps ,m_numstages,1.0);
-                    m_U    = Array<TwoD,NekDouble>(m_numstages,m_numsteps, 1.0);
-                    m_V    = Array<TwoD,NekDouble>(m_numsteps ,m_numsteps, 1.0);
-
-                    m_schemeType = eExplicit;
-                    m_numMultiStepValues = 1;
-                    m_numMultiStepDerivs = 0;
-                    m_timeLevelOffset = Array<OneD,unsigned int>(m_numsteps);
-                    m_timeLevelOffset[0] = 0;
-                }
-                break;
-            case eAdamsBashforthOrder2:
-                {
-                    m_numsteps = 2;
-                    m_numstages = 1;
-
-                    m_A = Array<OneD, Array<TwoD,NekDouble> >(1);
-                    m_B = Array<OneD, Array<TwoD,NekDouble> >(1);
-
-                    m_A[0] = Array<TwoD,NekDouble>(m_numstages,m_numstages,0.0);
-                    m_B[0] = Array<TwoD,NekDouble>(m_numsteps ,m_numstages);
-                    m_U    = Array<TwoD,NekDouble>(m_numstages,m_numsteps,0.0);
-                    m_V    = Array<TwoD,NekDouble>(m_numsteps ,m_numsteps,0.0);
-
-                    m_B[0][0][0] = 3.0/2.0;
-                    m_B[0][1][0] = 1.0;
-
-                    m_U[0][0] = 1.0;
-
-                    m_V[0][0] = 1.0;
-                    m_V[0][1] = -0.5;
-
-                    m_schemeType = eExplicit;
-                    m_numMultiStepValues = 1;
-                    m_numMultiStepDerivs = 1;
-                    m_timeLevelOffset = Array<OneD,unsigned int>(m_numsteps);
-                    m_timeLevelOffset[0] = 0;
-                    m_timeLevelOffset[1] = 1;
-                }
-                break;
-            case eAdamsBashforthOrder3:
-                {
-                    m_numsteps = 4;
-                    m_numstages = 1;
-
-                    m_A = Array<OneD, Array<TwoD,NekDouble> >(1);
-                    m_B = Array<OneD, Array<TwoD,NekDouble> >(1);
-
-                    m_A[0] = Array<TwoD,NekDouble>(m_numstages,m_numstages,0.0);
-                    m_B[0] = Array<TwoD,NekDouble>(m_numsteps ,m_numstages,0.0);
-                    m_U    = Array<TwoD,NekDouble>(m_numstages,m_numsteps,0.0);
-                    m_V    = Array<TwoD,NekDouble>(m_numsteps ,m_numsteps,0.0);
-
-                    m_B[0][1][0] = 1.0;
-
-                    m_U[0][0] = 1.0;
-                    m_U[0][1] = 23.0/12.0;
-                    m_U[0][2] = -4.0/3.0;
-                    m_U[0][3] = 5.0/12.0;
-
-                    m_V[0][0] = 1.0;
-                    m_V[0][1] = 23.0/12.0;
-                    m_V[0][2] = -4.0/3.0;
-                    m_V[0][3] = 5.0/12.0;
-                    m_V[2][1] = 1.0;
-                    m_V[3][2] = 1.0;
-
-                    m_schemeType = eExplicit;
-                    m_numMultiStepValues = 1;
-                    m_numMultiStepDerivs = 3;
-                    m_timeLevelOffset = Array<OneD,unsigned int>(m_numsteps);
-                    m_timeLevelOffset[0] = 0;
-                    m_timeLevelOffset[1] = 1;
-                    m_timeLevelOffset[2] = 2;
-                    m_timeLevelOffset[3] = 3;
-                }
-                break;
+            case eAdamsBashforthOrder1:  ForwardEulerTimeIntegrator::SetupScheme( this );         break;
+            case eAdamsBashforthOrder2:  AdamsBashforthOrder2TimeIntegrator::SetupScheme( this ); break;
+            case eAdamsBashforthOrder3:  AdamsBashforthOrder3TimeIntegrator::SetupScheme( this ); break;
             case eBackwardEuler:
             case eBDFImplicitOrder1:
-            case eAdamsMoultonOrder1:
-                {
-                    m_numsteps = 1;
-                    m_numstages = 1;
-
-                    m_A = Array<OneD, Array<TwoD,NekDouble> >(1);
-                    m_B = Array<OneD, Array<TwoD,NekDouble> >(1);
-
-                    m_A[0] = Array<TwoD,NekDouble>(m_numstages,m_numstages,1.0);
-                    m_B[0] = Array<TwoD,NekDouble>(m_numsteps ,m_numstages,1.0);
-                    m_U    = Array<TwoD,NekDouble>(m_numstages,m_numsteps, 1.0);
-                    m_V    = Array<TwoD,NekDouble>(m_numsteps ,m_numsteps, 1.0);
-
-                    m_schemeType = eDiagonallyImplicit;
-                    m_numMultiStepValues = 1;
-                    m_numMultiStepDerivs = 0;
-                    m_timeLevelOffset = Array<OneD,unsigned int>(m_numsteps);
-                    m_timeLevelOffset[0] = 0; // SJS: Not sure whether this is correct
-                }
-                break;
-            case eIMEXOrder1:
-                {
-                    m_numsteps  = 2;
-                    m_numstages = 1;
-
-                    m_A = Array<OneD, Array<TwoD,NekDouble> >(2);
-                    m_B = Array<OneD, Array<TwoD,NekDouble> >(2);
-
-                    m_A[0] = Array<TwoD,NekDouble>(m_numstages,m_numstages,1.0);
-                    m_B[0] = Array<TwoD,NekDouble>(m_numsteps ,m_numstages,1.0);
-                    m_A[1] = Array<TwoD,NekDouble>(m_numstages,m_numstages,0.0);
-                    m_B[1] = Array<TwoD,NekDouble>(m_numsteps ,m_numstages,1.0);
-                    m_U    = Array<TwoD,NekDouble>(m_numstages,m_numsteps, 1.0);
-                    m_V    = Array<TwoD,NekDouble>(m_numsteps ,m_numsteps, 0.0);
-                    
-                    m_B[0][1][0] = 0.0;
-                    m_B[1][0][0] = 0.0;
-                    m_V[0][0] = 1.0;
-                    m_V[0][1] = 1.0;
-
-                    m_schemeType = eIMEX;
-                    m_numMultiStepValues = 1;
-                    m_numMultiStepDerivs = 1;
-                    m_timeLevelOffset = Array<OneD,unsigned int>(m_numsteps);
-                    m_timeLevelOffset[0] = 0;
-                    m_timeLevelOffset[1] = 0;
-                }
-                break;
-            case eIMEXOrder2:
-                {
-                    NekDouble third = 1.0/3.0;
-                    m_numsteps  = 4;
-                    m_numstages = 1;
-
-                    m_A = Array<OneD, Array<TwoD,NekDouble> >(2);
-                    m_B = Array<OneD, Array<TwoD,NekDouble> >(2);
-
-                    m_A[0] = Array<TwoD,NekDouble>(m_numstages,m_numstages,2*third);
-                    m_B[0] = Array<TwoD,NekDouble>(m_numsteps ,m_numstages,0.0);
-                    m_A[1] = Array<TwoD,NekDouble>(m_numstages,m_numstages,0.0);
-                    m_B[1] = Array<TwoD,NekDouble>(m_numsteps ,m_numstages,0.0);
-                    m_U    = Array<TwoD,NekDouble>(m_numstages,m_numsteps, 4*third);
-                    m_V    = Array<TwoD,NekDouble>(m_numsteps ,m_numsteps, 0.0);
-                    
-                    m_B[0][0][0] = 2*third;
-                    m_B[1][2][0] = 1.0;
-                    m_U[0][1] = -third;
-                    m_U[0][3] = -2*third;
-
-                    m_V[0][0] =  4*third;
-                    m_V[0][1] = -third;
-                    m_V[0][2] =  4*third;
-                    m_V[0][3] = -2*third;
-                    m_V[1][0] =  1.0;
-                    m_V[3][2] =  1.0;
-
-                    m_schemeType = eIMEX;
-                    m_numMultiStepValues = 2;
-                    m_numMultiStepDerivs = 2;
-                    m_timeLevelOffset = Array<OneD,unsigned int>(m_numsteps);
-                    m_timeLevelOffset[0] = 0;
-                    m_timeLevelOffset[1] = 1;
-                    m_timeLevelOffset[2] = 0;
-                    m_timeLevelOffset[3] = 1;
-                }
-                break;
-            case eIMEXOrder3:
-                {
-                    NekDouble eleventh = 1.0/11.0;
-                    m_numsteps  = 6;
-                    m_numstages = 1;
-
-                    m_A = Array<OneD, Array<TwoD,NekDouble> >(2);
-                    m_B = Array<OneD, Array<TwoD,NekDouble> >(2);
-
-                    m_A[0] = Array<TwoD,NekDouble>(m_numstages,m_numstages,6*eleventh);
-                    m_B[0] = Array<TwoD,NekDouble>(m_numsteps ,m_numstages,0.0);
-                    m_A[1] = Array<TwoD,NekDouble>(m_numstages,m_numstages,0.0);
-                    m_B[1] = Array<TwoD,NekDouble>(m_numsteps ,m_numstages,0.0);
-                    m_U    = Array<TwoD,NekDouble>(m_numstages,m_numsteps, 18*eleventh);
-                    m_V    = Array<TwoD,NekDouble>(m_numsteps ,m_numsteps, 0.0);
-                    
-                    m_B[0][0][0] = 6*eleventh;
-                    m_B[1][3][0] = 1.0;
-                    m_U[0][1] = -9*eleventh;
-                    m_U[0][2] =  2*eleventh;
-                    m_U[0][4] = -18*eleventh;
-                    m_U[0][5] =  6*eleventh;
-
-                    m_V[0][0] =  18*eleventh;
-                    m_V[0][1] = -9*eleventh;
-                    m_V[0][2] =  2*eleventh;
-                    m_V[0][3] =  18*eleventh;
-                    m_V[0][4] = -18*eleventh;
-                    m_V[0][5] =  6*eleventh;
-                    m_V[1][0] =  1.0;
-                    m_V[2][1] =  1.0;
-                    m_V[4][3] =  1.0;
-                    m_V[5][4] =  1.0;
-
-                    m_schemeType = eIMEX;
-                    m_numMultiStepValues = 3;
-                    m_numMultiStepDerivs = 3;
-                    m_timeLevelOffset = Array<OneD,unsigned int>(m_numsteps);
-                    m_timeLevelOffset[0] = 0;
-                    m_timeLevelOffset[1] = 1;
-                    m_timeLevelOffset[2] = 2;
-                    m_timeLevelOffset[3] = 0;
-                    m_timeLevelOffset[4] = 1;
-                    m_timeLevelOffset[5] = 2;
-                }
-                break;
-            case eAdamsMoultonOrder2:
-                {
-                    m_numsteps  = 2;
-                    m_numstages = 1;
-
-                    m_A = Array<OneD, Array<TwoD,NekDouble> >(1);
-                    m_B = Array<OneD, Array<TwoD,NekDouble> >(1);
-
-                    m_A[0] = Array<TwoD,NekDouble>(m_numstages,m_numstages,0.5);
-                    m_B[0] = Array<TwoD,NekDouble>(m_numsteps, m_numstages,0.0);
-                    m_U    = Array<TwoD,NekDouble>(m_numstages,m_numsteps, 0.0);
-                    m_V    = Array<TwoD,NekDouble>(m_numsteps, m_numsteps, 0.0);
-
-                    m_B[0][0][0] = 0.5;
-                    m_B[0][1][0] = 1.0;
-
-                    m_U[0][0] = 1.0;
-                    m_U[0][1] = 0.5;
-
-                    m_V[0][0] = 1.0;
-                    m_V[0][1] = 0.5;
-
-
-                    m_schemeType = eDiagonallyImplicit;
-                    m_numMultiStepValues = 1;
-                    m_numMultiStepDerivs = 1;
-                    m_timeLevelOffset = Array<OneD,unsigned int>(m_numsteps);
-                    m_timeLevelOffset[0] = 0;
-                    m_timeLevelOffset[1] = 0;
-                }
-                break;
-            case eBDFImplicitOrder2:
-                {
-                    NekDouble third = 1.0/3.0;
-                    m_numsteps  = 2;
-                    m_numstages = 1;
-                    
-                    m_A = Array<OneD, Array<TwoD,NekDouble> >(1);
-                    m_B = Array<OneD, Array<TwoD,NekDouble> >(1);
-                    
-                    m_A[0] = Array<TwoD,NekDouble>(m_numstages,m_numstages,2*third);
-                    m_B[0] = Array<TwoD,NekDouble>(m_numsteps, m_numstages,0.0);
-                    m_U    = Array<TwoD,NekDouble>(m_numstages,m_numsteps, 0.0);
-                    m_V    = Array<TwoD,NekDouble>(m_numsteps, m_numsteps, 0.0);
-                    
-                    m_B[0][0][0] = 2*third;
-                    m_B[0][1][0] = 0.0;
-                    
-                    m_U[0][0] = 4*third;
-                    m_U[0][1] = -third;
-                    
-                    m_V[0][0] = 4*third;
-                    m_V[0][1] = -third;
-                    m_V[1][0] = 1.0;
-                    
-                    m_schemeType = eDiagonallyImplicit;
-                    m_numMultiStepValues = 2;
-                    m_numMultiStepDerivs = 0;
-                    m_timeLevelOffset = Array<OneD,unsigned int>(m_numsteps);
-                    m_timeLevelOffset[0] = 0;
-                    m_timeLevelOffset[1] = 1;
-                }
-                break;
+            case eAdamsMoultonOrder1:    BackwardEulerTimeIntegrator::SetupScheme( this );        break;
+            case eIMEXOrder1:            IMEXOrder1TimeIntegrator::SetupScheme( this );           break;
+            case eIMEXOrder2:            IMEXOrder2TimeIntegrator::SetupScheme( this );           break;
+            case eIMEXOrder3:            IMEXOrder3TimeIntegrator::SetupScheme( this );           break;
+            case eAdamsMoultonOrder2:    AdamsMoultonOrder2TimeIntegrator::SetupScheme( this );   break;
+            case eBDFImplicitOrder2:     BDFImplicitOrder2TimeIntegrator::SetupScheme( this );    break;
             case eMidpoint:
-            case eRungeKutta2:
-                {
-                    m_numsteps = 1;
-                    m_numstages = 2;
-
-                    m_A = Array<OneD, Array<TwoD,NekDouble> >(1);
-                    m_B = Array<OneD, Array<TwoD,NekDouble> >(1);
-
-                    m_A[0] = Array<TwoD,NekDouble>(m_numstages,m_numstages,0.0);
-                    m_B[0] = Array<TwoD,NekDouble>(m_numsteps, m_numstages,0.0);
-                    m_U    = Array<TwoD,NekDouble>(m_numstages,m_numsteps, 1.0);
-                    m_V    = Array<TwoD,NekDouble>(m_numsteps, m_numsteps, 1.0);
-
-                    m_A[0][1][0] = 0.5;
-                    m_B[0][0][1] = 1.0;
-
-                    m_schemeType = eExplicit;
-                    m_numMultiStepValues = 1; 
-                    m_numMultiStepDerivs = 0;
-                    m_timeLevelOffset = Array<OneD,unsigned int>(m_numsteps);
-                    m_timeLevelOffset[0] = 0;
-                }
-                break;
+            case eRungeKutta2:           RungeKutta2TimeIntegrator::SetupScheme( this );          break;
             case eRungeKutta2_ImprovedEuler:
-            case eRungeKutta2_SSP:
-                {
-                    m_numsteps = 1;
-                    m_numstages = 2;
-                    
-                    m_A = Array<OneD, Array<TwoD,NekDouble> >(1);
-                    m_B = Array<OneD, Array<TwoD,NekDouble> >(1);
-                    
-                    m_A[0] = Array<TwoD,NekDouble>(m_numstages,m_numstages,0.0);
-                    m_B[0] = Array<TwoD,NekDouble>(m_numsteps, m_numstages,0.0);
-                    m_U    = Array<TwoD,NekDouble>(m_numstages,m_numsteps, 1.0);
-                    m_V    = Array<TwoD,NekDouble>(m_numsteps, m_numsteps, 1.0);
-                    
-                    m_A[0][1][0] = 1.0;
-                    
-                    m_B[0][0][0] = 0.5;
-                    m_B[0][0][1] = 0.5;
-                    
-                    m_schemeType = eExplicit;
-                    m_numMultiStepValues = 1;
-                    m_numMultiStepDerivs = 0;
-                    m_timeLevelOffset = Array<OneD,unsigned int>(m_numsteps);
-                    m_timeLevelOffset[0] = 0;
-                }
-                break;
-            case eRungeKutta3_SSP:
-                {
-                    m_numsteps = 1;
-                    m_numstages = 3;
-                    
-                    m_A = Array<OneD, Array<TwoD,NekDouble> >(1);
-                    m_B = Array<OneD, Array<TwoD,NekDouble> >(1);
-                    
-                    m_A[0] = Array<TwoD,NekDouble>(m_numstages,m_numstages,0.0);
-                    m_B[0] = Array<TwoD,NekDouble>(m_numsteps, m_numstages,0.0);
-                    m_U    = Array<TwoD,NekDouble>(m_numstages,m_numsteps, 1.0);
-                    m_V    = Array<TwoD,NekDouble>(m_numsteps, m_numsteps, 1.0);
-                    
-                    m_A[0][1][0] = 1.0;
-                    m_A[0][2][0] = 0.25;
-                    m_A[0][2][1] = 0.25;
-                    
-                    m_B[0][0][0] = 1.0/6.0;
-                    m_B[0][0][1] = 1.0/6.0;
-                    m_B[0][0][2] = 2.0/3.0;
-                    
-                    m_schemeType = eExplicit;
-                    m_numMultiStepValues = 1;
-                    m_numMultiStepDerivs = 0;
-                    m_timeLevelOffset = Array<OneD,unsigned int>(m_numsteps);
-                    m_timeLevelOffset[0] = 0;
-                }
-                break;
+            case eRungeKutta2_SSP:       RungeKutta2_ImprovedEulerTimeIntegrator::SetupScheme( this ); break;
+            case eRungeKutta3_SSP:       RungeKutta3_SSPTimeIntegrator::SetupScheme( this );      break;
             case eClassicalRungeKutta4:
-            case eRungeKutta4:
-                {
-                    m_numsteps = 1;
-                    m_numstages = 4;
-
-                    m_A = Array<OneD, Array<TwoD,NekDouble> >(1);
-                    m_B = Array<OneD, Array<TwoD,NekDouble> >(1);
-
-                    m_A[0] = Array<TwoD,NekDouble>(m_numstages,m_numstages,0.0);
-                    m_B[0] = Array<TwoD,NekDouble>(m_numsteps, m_numstages,0.0);
-                    m_U    = Array<TwoD,NekDouble>(m_numstages,m_numsteps, 1.0);
-                    m_V    = Array<TwoD,NekDouble>(m_numsteps, m_numsteps, 1.0);
-
-                    m_A[0][1][0] = 0.5;
-                    m_A[0][2][1] = 0.5;
-                    m_A[0][3][2] = 1.0;
-
-                    m_B[0][0][0] = 1.0/6.0;
-                    m_B[0][0][1] = 1.0/3.0;
-                    m_B[0][0][2] = 1.0/3.0;
-                    m_B[0][0][3] = 1.0/6.0;
-
-                    m_schemeType = eExplicit;
-                    m_numMultiStepValues = 1;
-                    m_numMultiStepDerivs = 0;
-                    m_timeLevelOffset = Array<OneD,unsigned int>(m_numsteps);
-                    m_timeLevelOffset[0] = 0;
-                }
-                break;
-            case eDIRKOrder2:
-                {
-                    m_numsteps = 1;
-                    m_numstages = 2;
-
-                    m_A = Array<OneD, Array<TwoD,NekDouble> >(1);
-                    m_B = Array<OneD, Array<TwoD,NekDouble> >(1);
-
-                    m_A[0] = Array<TwoD,NekDouble>(m_numstages,m_numstages,0.0);
-                    m_B[0] = Array<TwoD,NekDouble>(m_numsteps, m_numstages,0.0);
-                    m_U    = Array<TwoD,NekDouble>(m_numstages,m_numsteps, 1.0);
-                    m_V    = Array<TwoD,NekDouble>(m_numsteps, m_numsteps, 1.0);
-
-                    NekDouble lambda = (2.0-sqrt(2.0))/2.0;
-
-                    m_A[0][0][0] = lambda;
-                    m_A[0][1][0] = 1.0 - lambda;
-                    m_A[0][1][1] = lambda;
-
-                    m_B[0][0][0] = 1.0 - lambda;
-                    m_B[0][0][1] = lambda;
-
-                    m_schemeType = eDiagonallyImplicit;
-                    m_numMultiStepValues = 1;
-                    m_numMultiStepDerivs = 0;
-                    m_timeLevelOffset = Array<OneD,unsigned int>(m_numsteps);
-                    m_timeLevelOffset[0] = 0;
-                }
-                break;
-            case eDIRKOrder3:
-                {
-                    m_numsteps = 1;
-                    m_numstages = 3;
-
-                    m_A = Array<OneD, Array<TwoD,NekDouble> >(1);
-                    m_B = Array<OneD, Array<TwoD,NekDouble> >(1);
-
-                    m_A[0] = Array<TwoD,NekDouble>(m_numstages,m_numstages,0.0);
-                    m_B[0] = Array<TwoD,NekDouble>(m_numsteps, m_numstages,0.0);
-                    m_U    = Array<TwoD,NekDouble>(m_numstages,m_numsteps, 1.0);
-                    m_V    = Array<TwoD,NekDouble>(m_numsteps, m_numsteps, 1.0);
-
-                    NekDouble lambda = 0.4358665215;
-
-                    m_A[0][0][0] = lambda;
-                    m_A[0][1][0] = 0.5  * (1.0 - lambda);
-                    m_A[0][2][0] = 0.25 * (-6.0*lambda*lambda + 16.0*lambda - 1.0);
-                    m_A[0][1][1] = lambda;
-                    m_A[0][2][1] = 0.25 * ( 6.0*lambda*lambda - 20.0*lambda + 5.0);
-                    m_A[0][2][2] = lambda;
-
-                    m_B[0][0][0] = 0.25 * (-6.0*lambda*lambda + 16.0*lambda - 1.0);
-                    m_B[0][0][1] = 0.25 * ( 6.0*lambda*lambda - 20.0*lambda + 5.0);
-                    m_B[0][0][2] = lambda;
-
-                    m_schemeType = eDiagonallyImplicit;
-                    m_numMultiStepValues = 1;
-                    m_numMultiStepDerivs = 0;
-                    m_timeLevelOffset = Array<OneD,unsigned int>(m_numsteps);
-                    m_timeLevelOffset[0] = 0;
-                }
-                break;
-            case eIMEXdirk_2_3_2:
-                {
-                    m_numsteps  = 1;
-                    m_numstages = 3;
-
-                    m_A = Array<OneD, Array<TwoD,NekDouble> >(2);
-                    m_B = Array<OneD, Array<TwoD,NekDouble> >(2);
-
-                    m_A[0] = Array<TwoD,NekDouble>(m_numstages,m_numstages,0.0);
-                    m_B[0] = Array<TwoD,NekDouble>(m_numsteps, m_numstages,0.0);
-                    m_A[1] = Array<TwoD,NekDouble>(m_numstages,m_numstages,0.0);
-                    m_B[1] = Array<TwoD,NekDouble>(m_numsteps, m_numstages,0.0);
-                    m_U    = Array<TwoD,NekDouble>(m_numstages,m_numsteps, 1.0);
-                    m_V    = Array<TwoD,NekDouble>(m_numsteps, m_numsteps, 1.0);
-
-                    NekDouble lambda = (2.0-sqrt(2.0))/2.0;
-                    NekDouble delta = -2.0*sqrt(2.0)/3.0;
-
-                    m_A[0][1][1] = lambda;
-                    m_A[0][2][1] = 1.0 - lambda;
-                    m_A[0][2][2] = lambda;
-
-                    m_B[0][0][1] = 1.0 - lambda;
-                    m_B[0][0][2] = lambda;
-
-                    m_A[1][1][0] = lambda;
-                    m_A[1][2][0] = delta;
-                    m_A[1][2][1] = 1.0 - delta;
-
-                    m_B[1][0][1] = 1.0 - lambda;
-                    m_B[1][0][2] = lambda;
-
-                    m_schemeType = eIMEX;
-                    m_numMultiStepValues = 1;
-                    m_numMultiStepDerivs = 0;
-                    m_timeLevelOffset = Array<OneD,unsigned int>(m_numsteps);
-                    m_timeLevelOffset[0] = 0;
-                }
-                break;
-            case eIMEXdirk_3_4_3:
-                {
-                    m_numsteps  = 1;
-                    m_numstages = 4;
-
-                    m_A = Array<OneD, Array<TwoD,NekDouble> >(2);
-                    m_B = Array<OneD, Array<TwoD,NekDouble> >(2);
-
-                    m_A[0] = Array<TwoD,NekDouble>(m_numstages,m_numstages,0.0);
-                    m_B[0] = Array<TwoD,NekDouble>(m_numsteps, m_numstages,0.0);
-                    m_A[1] = Array<TwoD,NekDouble>(m_numstages,m_numstages,0.0);
-                    m_B[1] = Array<TwoD,NekDouble>(m_numsteps, m_numstages,0.0);
-                    m_U    = Array<TwoD,NekDouble>(m_numstages,m_numsteps, 1.0);
-                    m_V    = Array<TwoD,NekDouble>(m_numsteps, m_numsteps, 1.0);
-
-                    NekDouble lambda = 0.4358665215;
-
-                    m_A[0][1][1] = lambda;
-                    m_A[0][2][1] = 0.5  * (1.0 - lambda);
-                    m_A[0][3][1] = 0.25 * (-6.0*lambda*lambda + 16.0*lambda - 1.0);
-                    m_A[0][2][2] = lambda;
-                    m_A[0][3][2] = 0.25 * ( 6.0*lambda*lambda - 20.0*lambda + 5.0);
-                    m_A[0][3][3] = lambda;
-
-                    m_B[0][0][1] = 0.25 * (-6.0*lambda*lambda + 16.0*lambda - 1.0);
-                    m_B[0][0][2] = 0.25 * ( 6.0*lambda*lambda - 20.0*lambda + 5.0);
-                    m_B[0][0][3] = lambda;
-
-                    m_A[1][1][0] = 0.4358665215;
-                    m_A[1][2][0] = 0.3212788860;
-                    m_A[1][2][1] = 0.3966543747;
-                    m_A[1][3][0] =-0.105858296;
-                    m_A[1][3][1] = 0.5529291479;
-                    m_A[1][3][2] = 0.5529291479;
-
-                    m_B[1][0][1] = 0.25 * (-6.0*lambda*lambda + 16.0*lambda - 1.0);
-                    m_B[1][0][2] = 0.25 * ( 6.0*lambda*lambda - 20.0*lambda + 5.0);
-                    m_B[1][0][3] = lambda;
-
-                    m_schemeType = eIMEX;
-                    m_numMultiStepValues = 1;
-                    m_numMultiStepDerivs = 0;
-                    m_timeLevelOffset = Array<OneD,unsigned int>(m_numsteps);
-                    m_timeLevelOffset[0] = 0;
-                }
-                break;
-            case eCNAB:
-                {
-                    NekDouble secondth = 1.0/2.0;
-                    m_numsteps  = 4;
-                    m_numstages = 1;
-
-                    m_A = Array<OneD, Array<TwoD,NekDouble> >(2);
-                    m_B = Array<OneD, Array<TwoD,NekDouble> >(2);
-
-                    m_A[0] = Array<TwoD,NekDouble>(m_numstages,m_numstages,secondth);
-                    m_B[0] = Array<TwoD,NekDouble>(m_numsteps ,m_numstages,0.0);
-                    m_A[1] = Array<TwoD,NekDouble>(m_numstages,m_numstages,0.0);
-                    m_B[1] = Array<TwoD,NekDouble>(m_numsteps ,m_numstages,0.0);
-                    m_U    = Array<TwoD,NekDouble>(m_numstages,m_numsteps,secondth);
-                    m_V    = Array<TwoD,NekDouble>(m_numsteps ,m_numsteps, 0.0);
-
-                    m_B[0][0][0] = secondth;
-                    m_B[0][1][0] = 1.0;
-                    m_B[1][2][0] = 1.0;
-                    m_U[0][0] = 2*secondth;
-                    m_U[0][2] = 3*secondth;
-                    m_U[0][3] = -1*secondth;
-
-                    m_V[0][0] = 2*secondth;
-                    m_V[0][1] = secondth;
-                    m_V[0][2] = 3*secondth;
-                    m_V[0][3] = -1*secondth;
-                    m_V[3][2] =  1.0;
-
-                    m_schemeType = eIMEX;
-                    m_numMultiStepValues = 1;
-                    m_numMultiStepDerivs = 3;
-                    m_timeLevelOffset = Array<OneD,unsigned int>(m_numsteps);
-                    m_timeLevelOffset[0] = 0;
-                    m_timeLevelOffset[1] = 0;
-                    m_timeLevelOffset[2] = 0;
-                    m_timeLevelOffset[3] = 1;
-                }
-                break;
-            case eIMEXGear:
-                {
-                    NekDouble twothirdth = 2.0/3.0;
-		    		m_numsteps  = 2;
-                    m_numstages = 1;
-
-                    m_A = Array<OneD, Array<TwoD,NekDouble> >(2);
-                    m_B = Array<OneD, Array<TwoD,NekDouble> >(2);
-
-                    m_A[0] = Array<TwoD,NekDouble>(m_numstages,m_numstages,twothirdth);
-                    m_B[0] = Array<TwoD,NekDouble>(m_numsteps ,m_numstages,0.0);
-                    m_A[1] = Array<TwoD,NekDouble>(m_numstages,m_numstages,0.0);
-                    m_B[1] = Array<TwoD,NekDouble>(m_numsteps ,m_numstages,0.0);
-                    m_U    = Array<TwoD,NekDouble>(m_numstages,m_numsteps,twothirdth);
-                    m_V    = Array<TwoD,NekDouble>(m_numsteps ,m_numsteps, 0.0);
-
-                    m_B[0][0][0] = twothirdth;
-                    m_B[1][0][0] = twothirdth;
-                    m_U[0][0] = 2*twothirdth;
-                    m_U[0][1] = -0.5*twothirdth;
-
-                    m_V[0][0] = 2*twothirdth;
-                    m_V[0][1] = -0.5*twothirdth;
-                    m_V[1][0] = 1.0;
-
-                    m_schemeType = eIMEX;
-                    m_numMultiStepValues = 2;
-                    m_numMultiStepDerivs = 0;
-                    m_timeLevelOffset = Array<OneD,unsigned int>(m_numsteps);
-                    m_timeLevelOffset[0] = 0;
-                    m_timeLevelOffset[1] = 1;
-                }
-                break;
-            case eMCNAB:
-                {
-                    NekDouble sixthx = 9.0/16.0;
-                    m_numsteps  = 5;
-                    m_numstages = 1;
-
-                    m_A = Array<OneD, Array<TwoD,NekDouble> >(2);
-                    m_B = Array<OneD, Array<TwoD,NekDouble> >(2);
-
-                    m_A[0] = Array<TwoD,NekDouble>(m_numstages,m_numstages,sixthx);
-                    m_B[0] = Array<TwoD,NekDouble>(m_numsteps ,m_numstages,0.0);
-                    m_A[1] = Array<TwoD,NekDouble>(m_numstages,m_numstages,0.0);
-                    m_B[1] = Array<TwoD,NekDouble>(m_numsteps ,m_numstages,0.0);
-                    m_U    = Array<TwoD,NekDouble>(m_numstages,m_numsteps, 0.0);
-                    m_V    = Array<TwoD,NekDouble>(m_numsteps ,m_numsteps, 0.0);
-
-                    m_B[0][0][0] = sixthx;
-                    m_B[0][1][0] = 1.0;
-                    m_B[1][3][0] = 1.0;
-                    m_U[0][0] = 1.0;
-                    m_U[0][1] = 6.0/16.0;
-                    m_U[0][2] = 1.0/16.0;
-                    m_U[0][3] = 1.5;
-                    m_U[0][4] = -0.5;
-
-                    m_V[0][0] = 1.0;
-                    m_V[0][1] = 6.0/16.0;
-                    m_V[0][2] = 1.0/16.0;
-                    m_V[0][3] = 1.5;
-                    m_V[0][4] = -0.5;
-                    m_V[2][1] = 1.0;
-                    m_V[4][3] = 1.0;
-
-                    m_schemeType = eIMEX;
-                    m_numMultiStepValues = 1;
-                    m_numMultiStepDerivs = 4;
-                    m_timeLevelOffset = Array<OneD,unsigned int>(m_numsteps);
-                    m_timeLevelOffset[0] = 0;
-                    m_timeLevelOffset[1] = 0;
-                    m_timeLevelOffset[2] = 1;
-                    m_timeLevelOffset[3] = 0;
-                    m_timeLevelOffset[4] = 1;
-                }
-                break;
-            case eIMEXdirk_2_2_2:
-                {
-                    m_numsteps  = 1;
-                    m_numstages = 3;
-
-                    m_A = Array<OneD, Array<TwoD,NekDouble> >(2);
-                    m_B = Array<OneD, Array<TwoD,NekDouble> >(2);
-
-                    m_A[0] = Array<TwoD,NekDouble>(m_numstages,m_numstages,0.0);
-                    m_B[0] = Array<TwoD,NekDouble>(m_numsteps, m_numstages,0.0);
-                    m_A[1] = Array<TwoD,NekDouble>(m_numstages,m_numstages,0.0);
-                    m_B[1] = Array<TwoD,NekDouble>(m_numsteps, m_numstages,0.0);
-                    m_U    = Array<TwoD,NekDouble>(m_numstages,m_numsteps, 1.0);
-                    m_V    = Array<TwoD,NekDouble>(m_numsteps, m_numsteps, 1.0);
-
-                    NekDouble glambda =  0.788675134594813;
-                    NekDouble gdelta =  0.366025403784439;
-
-                    m_A[0][1][1] = glambda;
-                    m_A[0][2][1] = 1.0 - glambda;
-                    m_A[0][2][2] = glambda;
-
-                    m_B[0][0][1] = 1.0 - glambda;
-                    m_B[0][0][2] = glambda;
-
-                    m_A[1][1][0] = glambda;
-                    m_A[1][2][0] = gdelta;
-                    m_A[1][2][1] = 1.0 - gdelta;
-
-                    m_B[1][0][0] = gdelta;
-                    m_B[1][0][1] = 1.0 - gdelta;
-
-                    m_schemeType = eIMEX;
-                    m_numMultiStepValues = 1;
-                    m_numMultiStepDerivs = 0;
-                    m_timeLevelOffset = Array<OneD,unsigned int>(m_numsteps);
-                    m_timeLevelOffset[0] = 0;
-                }
-                break;
+            case eRungeKutta4:           ClassicalRungeKutta4TimeIntegrator::SetupScheme( this ); break;
+            case eDIRKOrder2:            DirkOrder2TimeIntegrator::SetupScheme( this );           break;
+            case eDIRKOrder3:            DirkOrder3TimeIntegrator::SetupScheme( this );           break;
+            case eIMEXdirk_2_3_2:        IMEXDirk_2_3_2TimeIntegrator::SetupScheme( this );       break;
+            case eIMEXdirk_3_4_3:        IMEXDirk_3_4_3TimeIntegrator::SetupScheme( this );       break;
+            case eCNAB:                  CNABTimeIntegrator::SetupScheme( this );                 break;
+            case eIMEXGear:              IMEXGearTimeIntegrator::SetupScheme( this );             break;
+            case eMCNAB:                 MCNABTimeIntegrator::SetupScheme( this );                break;
+            case eIMEXdirk_2_2_2:        IMEXDirk_2_2_2TimeIntegrator::SetupScheme( this );       break;
             case eIMEXdirk_2_3_3:
                 {
-                    m_numsteps  = 1;
-                    m_numstages = 3;
-
-                    m_A = Array<OneD, Array<TwoD,NekDouble> >(2);
-                    m_B = Array<OneD, Array<TwoD,NekDouble> >(2);
-
-                    m_A[0] = Array<TwoD,NekDouble>(m_numstages,m_numstages,0.0);
-                    m_B[0] = Array<TwoD,NekDouble>(m_numsteps, m_numstages,0.0);
-                    m_A[1] = Array<TwoD,NekDouble>(m_numstages,m_numstages,0.0);
-                    m_B[1] = Array<TwoD,NekDouble>(m_numsteps, m_numstages,0.0);
-                    m_U    = Array<TwoD,NekDouble>(m_numstages,m_numsteps, 1.0);
-                    m_V    = Array<TwoD,NekDouble>(m_numsteps, m_numsteps, 1.0);
-
-                    NekDouble glambda =  0.788675134594813;
-
-                    m_A[0][1][1] = glambda;
-                    m_A[0][2][1] = 1.0 - 2.0*glambda;
-                    m_A[0][2][2] = glambda;
-
-                    m_B[0][0][1] = 0.5;
-                    m_B[0][0][2] = 0.5;
-
-                    m_A[1][1][0] = glambda;
-                    m_A[1][2][0] = glambda - 1.0;
-                    m_A[1][2][1] = 2.0*(1-glambda);
-
-                    m_B[1][0][1] = 0.5;
-                    m_B[1][0][2] = 0.5;
-
-                    m_schemeType = eIMEX;
-                    m_numMultiStepValues = 1;
-                    m_numMultiStepDerivs = 0;
-                    m_timeLevelOffset = Array<OneD,unsigned int>(m_numsteps);
-                    m_timeLevelOffset[0] = 0;
+                  cout << "error with eIMEXdirk_2_3_3\n";
+                  throw "not done yet";
                 }
                 break;
             case eIMEXdirk_1_1_1:
                 {
-                    m_numsteps  = 1;
-                    m_numstages = 2;
-
-                    m_A = Array<OneD, Array<TwoD,NekDouble> >(2);
-                    m_B = Array<OneD, Array<TwoD,NekDouble> >(2);
-
-                    m_A[0] = Array<TwoD,NekDouble>(m_numstages,m_numstages,0.0);
-                    m_B[0] = Array<TwoD,NekDouble>(m_numsteps, m_numstages,0.0);
-                    m_A[1] = Array<TwoD,NekDouble>(m_numstages,m_numstages,0.0);
-                    m_B[1] = Array<TwoD,NekDouble>(m_numsteps, m_numstages,0.0);
-                    m_U    = Array<TwoD,NekDouble>(m_numstages,m_numsteps, 1.0);
-                    m_V    = Array<TwoD,NekDouble>(m_numsteps, m_numsteps, 1.0);
-
-                    m_A[0][1][1] = 1.0;
-
-                    m_B[0][0][1] = 1.0;
-
-                    m_A[1][1][0] = 1.0;
-
-                    m_B[1][0][0] = 1.0;
-
-                    m_schemeType = eIMEX;
-                    m_numMultiStepValues = 1;
-                    m_numMultiStepDerivs = 0;
-                    m_timeLevelOffset = Array<OneD,unsigned int>(m_numsteps);
-                    m_timeLevelOffset[0] = 0;
+                  cout << "error with eIMEXdirk_1_1_1\n";
+                  throw "not done yet";
                 }
                 break;
             case eIMEXdirk_1_2_1:
                 {
-                    m_numsteps  = 1;
-                    m_numstages = 2;
-
-                    m_A = Array<OneD, Array<TwoD,NekDouble> >(2);
-                    m_B = Array<OneD, Array<TwoD,NekDouble> >(2);
-
-                    m_A[0] = Array<TwoD,NekDouble>(m_numstages,m_numstages,0.0);
-                    m_B[0] = Array<TwoD,NekDouble>(m_numsteps, m_numstages,0.0);
-                    m_A[1] = Array<TwoD,NekDouble>(m_numstages,m_numstages,0.0);
-                    m_B[1] = Array<TwoD,NekDouble>(m_numsteps, m_numstages,0.0);
-                    m_U    = Array<TwoD,NekDouble>(m_numstages,m_numsteps, 1.0);
-                    m_V    = Array<TwoD,NekDouble>(m_numsteps, m_numsteps, 1.0);
-
-
-                    m_A[0][1][1] = 1.0;
-
-                    m_B[0][0][1] = 1.0;
-
-                    m_A[1][1][0] = 1.0;
-
-                    m_B[1][0][1] = 1.0;
-
-                    m_schemeType = eIMEX;
-                    m_numMultiStepValues = 1;
-                    m_numMultiStepDerivs = 0;
-                    m_timeLevelOffset = Array<OneD,unsigned int>(m_numsteps);
-                    m_timeLevelOffset[0] = 0;
+                  cout << "error with eIMEXdirk_1_2_1\n";
+                  throw "not done yet";
                 }
                 break;
-            case eIMEXdirk_1_2_2:
-                {
-                    m_numsteps  = 1;
-                    m_numstages = 2;
-
-                    m_A = Array<OneD, Array<TwoD,NekDouble> >(2);
-                    m_B = Array<OneD, Array<TwoD,NekDouble> >(2);
-
-                    m_A[0] = Array<TwoD,NekDouble>(m_numstages,m_numstages,0.0);
-                    m_B[0] = Array<TwoD,NekDouble>(m_numsteps, m_numstages,0.0);
-                    m_A[1] = Array<TwoD,NekDouble>(m_numstages,m_numstages,0.0);
-                    m_B[1] = Array<TwoD,NekDouble>(m_numsteps, m_numstages,0.0);
-                    m_U    = Array<TwoD,NekDouble>(m_numstages,m_numsteps, 1.0);
-                    m_V    = Array<TwoD,NekDouble>(m_numsteps, m_numsteps, 1.0);
-
-                    m_A[0][1][1] = 1.0/2.0;
-
-                    m_B[0][0][1] = 1.0;
-
-                    m_A[1][1][0] = 1.0/2.0;
-
-                    m_B[1][0][1] = 1.0;
-
-                    m_schemeType = eIMEX;
-                    m_numMultiStepValues = 1;
-                    m_numMultiStepDerivs = 0;
-                    m_timeLevelOffset = Array<OneD,unsigned int>(m_numsteps);
-                    m_timeLevelOffset[0] = 0;
-                }
-                break;
+            case eIMEXdirk_1_2_2:        IMEXDirk_1_2_2TimeIntegrator::SetupScheme( this );       break;
             case eIMEXdirk_4_4_3:
                 {
-                    m_numsteps  = 1;
-                    m_numstages = 5;
-
-                    m_A = Array<OneD, Array<TwoD,NekDouble> >(2);
-                    m_B = Array<OneD, Array<TwoD,NekDouble> >(2);
-
-                    m_A[0] = Array<TwoD,NekDouble>(m_numstages,m_numstages,0.0);
-                    m_B[0] = Array<TwoD,NekDouble>(m_numsteps, m_numstages,0.0);
-                    m_A[1] = Array<TwoD,NekDouble>(m_numstages,m_numstages,0.0);
-                    m_B[1] = Array<TwoD,NekDouble>(m_numsteps, m_numstages,0.0);
-                    m_U    = Array<TwoD,NekDouble>(m_numstages,m_numsteps, 1.0);
-                    m_V    = Array<TwoD,NekDouble>(m_numsteps, m_numsteps, 1.0);
-
-                    m_A[0][1][1] = 1.0/2.0;
-                    m_A[0][2][1] = 1.0/6.0;
-                    m_A[0][2][2] = 1.0/2.0;
-                    m_A[0][3][1] = -1.0/2.0;
-                    m_A[0][3][2] = 1.0/2.0;
-                    m_A[0][3][3] = 1.0/2.0;
-                    m_A[0][4][1] = 3.0/2.0;
-                    m_A[0][4][2] = -3.0/2.0;
-                    m_A[0][4][3] = 1.0/2.0;
-                    m_A[0][4][4] = 1.0/2.0;
-
-                    m_B[0][0][1] = 3.0/2.0;
-                    m_B[0][0][2] = -3.0/2.0;
-                    m_B[0][0][3] = 1.0/2.0;
-                    m_B[0][0][4] = 1.0/2.0;
-
-                    m_A[1][1][0] = 1.0/2.0;
-                    m_A[1][2][0] = 11.0/18.0;
-                    m_A[1][2][1] = 1.0/18.0;
-                    m_A[1][3][0] = 5.0/6.0;
-                    m_A[1][3][1] = -5.0/6.0;
-                    m_A[1][3][2] = 1.0/2.0;
-                    m_A[1][4][0] = 1.0/4.0;
-                    m_A[1][4][1] = 7.0/4.0;
-                    m_A[1][4][2] = 3.0/4.0;
-                    m_A[1][4][3] = -7.0/4.0;
-
-                    m_B[1][0][0] = 1.0/4.0;
-                    m_B[1][0][1] = 7.0/4.0;
-                    m_B[1][0][2] = 3.0/4.0;
-                    m_B[1][0][3] = -7.0/4.0;
-
-                    m_schemeType = eIMEX;
-                    m_numMultiStepValues = 1;
-                    m_numMultiStepDerivs = 0;
-                    m_timeLevelOffset = Array<OneD,unsigned int>(m_numsteps);
-                    m_timeLevelOffset[0] = 0;
+                  cout << "error with eIMEXdirk_4_4_3\n";
+                  throw "not done yet";
                 }
                 break;
             default:
                 {
-                    NEKERROR(ErrorUtil::efatal,"Invalid Time Integration Scheme");
+                    NEKERROR( ErrorUtil::efatal, "Invalid Time Integration Scheme" );
                 }
             }
+            
+            m_firstStageEqualsOldSolution = CheckIfFirstStageEqualsOldSolution( m_A, m_B, m_U, m_V );
+            m_lastStageEqualsNewSolution  = CheckIfLastStageEqualsNewSolution( m_A, m_B, m_U, m_V );
 
-            m_firstStageEqualsOldSolution = CheckIfFirstStageEqualsOldSolution(m_A,m_B,m_U,m_V);
-            m_lastStageEqualsNewSolution  = CheckIfLastStageEqualsNewSolution(m_A,m_B,m_U,m_V);
-
-            ASSERTL1(VerifyIntegrationSchemeType(m_schemeType,m_A,m_B,m_U,m_V),
-                     "Time integration scheme coefficients do not match its type");
+            ASSERTL1( VerifyIntegrationSchemeType(m_schemeType,m_A,m_B,m_U,m_V ),
+                      "Time integration scheme coefficients do not match its type" );
         }
 
 
         bool TimeIntegrationScheme::
-        VerifyIntegrationSchemeType(TimeIntegrationSchemeType type,
-                                    const Array<OneD, const Array<TwoD, NekDouble> >& A,
-                                    const Array<OneD, const Array<TwoD, NekDouble> >& B,
-                                    const Array<TwoD, const NekDouble>& U,
-                                    const Array<TwoD, const NekDouble>& V) const
+        VerifyIntegrationSchemeType( TimeIntegrationSchemeType type,
+                                     const Array<OneD, const Array<TwoD, NekDouble> >& A,
+                                     const Array<OneD, const Array<TwoD, NekDouble> >& B,
+                                     const Array<TwoD, const NekDouble>& U,
+                                     const Array<TwoD, const NekDouble>& V ) const
         {
             int i;
             int j;
@@ -1057,7 +264,7 @@ namespace Nektar
             int  IMEXdim = A.num_elements();
             int  dim     = A[0].GetRows();
 
-            Array<OneD, TimeIntegrationSchemeType> vertype(IMEXdim,eExplicit);
+            Array<OneD, TimeIntegrationSchemeType> vertype( IMEXdim, eExplicit );
 
             for(m = 0; m < IMEXdim; m++)
             {
@@ -1100,26 +307,31 @@ namespace Nektar
         }
 
         TimeIntegrationSolutionSharedPtr 
-        TimeIntegrationScheme::InitializeScheme(const NekDouble   timestep,
-                                                ConstDoubleArray  &y_0    ,
-                                                const NekDouble   time    ,
-                                                const TimeIntegrationSchemeOperators &op)
+        TimeIntegrationScheme::InitializeScheme( const NekDouble                        timestep,
+                                                       ConstDoubleArray               & y_0,
+                                                 const NekDouble                        time,
+                                                 const TimeIntegrationSchemeOperators & op)
         {
+          cout << "THIS IS " << this << "\n";
+          cout << "aaaaaaaaa: " << m_schemeKey << "\n";
+
             // create a TimeIntegrationSolution object based upon the
             // initial value. Initialise all other multi-step values
             // and derivatives to zero
             TimeIntegrationSolutionSharedPtr y_out = 
-                MemoryManager<TimeIntegrationSolution>::AllocateSharedPtr(m_schemeKey,y_0,time,timestep); 
+                MemoryManager<TimeIntegrationSolution>::AllocateSharedPtr( m_schemeKey, y_0, time, timestep );
 
-            if( GetIntegrationSchemeType() == eExplicit)
+          cout << "AAAAAAAAA\n";
+            if( GetIntegrationSchemeType() == eExplicit )
             {
                 // ensure initial solution is in correct space
-                op.DoProjection(y_0,y_out->UpdateSolution(),time);
+                op.DoProjection( y_0, y_out->UpdateSolution(), time );
             }
+          cout << "aaaaaaaaa\n";
 
             // calculate the initial derivative, if is part of the
             // solution vector of the current scheme
-            if(m_numMultiStepDerivs)
+            if( m_numMultiStepDerivs )
             {
                 if(m_timeLevelOffset[m_numMultiStepValues] == 0)
                 {
@@ -1137,19 +349,20 @@ namespace Nektar
                     // multiply by the step size
                     for(i = 0; i < nvar; i++)
                     {
-                        Blas::Dscal(npoints,timestep,f_y_0[i].get(),1);
+                        Blas::Dscal( npoints, timestep, f_y_0[i].get(), 1 );
                     }
-                    y_out->SetDerivative(0,f_y_0,timestep);
+                    y_out->SetDerivative( 0, f_y_0, timestep );
                 }
             }
            
+            cout << "bbbbbbbbb\n";
             return y_out;
         }
         
         TimeIntegrationScheme::ConstDoubleArray& 
-        TimeIntegrationScheme::TimeIntegrate(const NekDouble    timestep, 
-                                             TimeIntegrationSolutionSharedPtr &solvector,
-                                             const TimeIntegrationSchemeOperators   &op)
+        TimeIntegrationScheme::TimeIntegrate( const NekDouble                          delta_t, 
+                                                    TimeIntegrationSolutionSharedPtr & solvector,
+                                              const TimeIntegrationSchemeOperators   & op )
         {
             ASSERTL1(!(GetIntegrationSchemeType() == eImplicit),
                      "Fully Implicit integration scheme cannot be handled by this routine.");
@@ -1229,7 +442,7 @@ namespace Nektar
 
                     // Set the required derivative in the input
                     // solution vector of the current scheme
-                    solvector_in->SetDerivative(curTimeLevels[n],dtFy_n,timestep);
+                    solvector_in->SetDerivative( curTimeLevels[n], dtFy_n, delta_t );
                 }
 
                 // STEP 2: time-integrate for one step using the
@@ -1237,11 +450,12 @@ namespace Nektar
                 TimeIntegrationSolutionSharedPtr solvector_out = MemoryManager<TimeIntegrationSolution>:: AllocateSharedPtr(GetIntegrationSchemeKey(),nvar,npoints);  // output solution vector of the current scheme
 
                 // integrate
-                TimeIntegrate(timestep, solvector_in->GetSolutionVector(),
-                              solvector_in->GetTimeVector(),  
-                              solvector_out->UpdateSolutionVector(),
-                              solvector_out->UpdateTimeVector(),op);
-
+                TimeIntegrate( delta_t,
+                               solvector_in->GetSolutionVector(),
+                               solvector_in->GetTimeVector(),  
+                               solvector_out->UpdateSolutionVector(),
+                               solvector_out->UpdateTimeVector(),
+                               op );
 
                 // STEP 3: copy the information contained in the
                 //         output vector of the current scheme to the
@@ -1309,15 +523,14 @@ namespace Nektar
                     // multiply by dt (as required by the General Linear Method framework)
                     for(j = 0; j < nvar; j++)
                     {
-                        Vmath::Smul(npoints,timestep,f_n[j],1,
-                                    f_n[j],1);
+                        Vmath::Smul( npoints, delta_t, f_n[j], 1, f_n[j], 1 );
                     }
                     
                     // Rotate the solution vector 
                     // (i.e. updating without calculating/inserting new values)
                     solvector->RotateSolutionVector();
                     // Set the calculated derivative in the master solution vector
-                    solvector->SetDerivative(newDerivTimeLevel,f_n,timestep);
+                    solvector->SetDerivative( newDerivTimeLevel, f_n, delta_t );
                 }
                 else
                 {
@@ -1353,7 +566,7 @@ namespace Nektar
 
                     // Set the calculated derivative in the master
                     // solution vector
-                    solvector->SetDerivative(curTimeLevels[n],dtFy_n,timestep);
+                    solvector->SetDerivative( curTimeLevels[n], dtFy_n, delta_t );
                 }
             }
             else
@@ -1362,24 +575,26 @@ namespace Nektar
                 
                 TimeIntegrationSolutionSharedPtr solvector_new = MemoryManager<TimeIntegrationSolution>::AllocateSharedPtr(key,nvar,npoints); 
                 
-                TimeIntegrate(timestep,solvector->GetSolutionVector(),
-                              solvector->GetTimeVector(),
-                              solvector_new->UpdateSolutionVector(),
-                              solvector_new->UpdateTimeVector(),op); 
+                TimeIntegrate( delta_t,
+                               solvector->GetSolutionVector(),
+                               solvector->GetTimeVector(),
+                               solvector_new->UpdateSolutionVector(),
+                               solvector_new->UpdateTimeVector(),
+                               op );
                 
                 solvector = solvector_new;
             }
             return solvector->GetSolution();
         }
 
-        void TimeIntegrationScheme::TimeIntegrate(const NekDouble    timestep,
-                                                  ConstTripleArray   &y_old  ,
-                                                  ConstSingleArray   &t_old  ,
-                                                  TripleArray        &y_new  ,
-                                                  SingleArray        &t_new  ,
-                                                  const TimeIntegrationSchemeOperators &op)
+        void TimeIntegrationScheme::TimeIntegrate( const NekDouble                        delta_t,
+                                                         ConstTripleArray               & y_old,
+                                                         ConstSingleArray               & t_old,
+                                                         TripleArray                    & y_new,
+                                                         SingleArray                    & t_new,
+                                                   const TimeIntegrationSchemeOperators & op)
         {
-            ASSERTL1(CheckTimeIntegrateArguments(timestep,y_old,t_old,y_new,t_new,op), "Arguments not well defined");    
+            ASSERTL1( CheckTimeIntegrateArguments( delta_t, y_old, t_old, y_new, t_new, op ), "Arguments not well defined" );
             
             unsigned int i,j,k;
             TimeIntegrationSchemeType type = GetIntegrationSchemeType();
@@ -1482,34 +697,33 @@ namespace Nektar
                     {
                         for(k = 0; k < m_nvar; k++)
                         {
-                            Vmath::Smul(m_npoints,timestep*A(i,0),m_F[0][k],1,
-                                        m_tmp[k],1);
+                            Vmath::Smul( m_npoints, delta_t*A(i,0), m_F[0][k], 1, m_tmp[k], 1 );
                             
                             if(type == eIMEX)       
                             {
-                                Vmath::Svtvp(m_npoints,timestep*A_IMEX(i,0),
-                                             m_F_IMEX[0][k],1,
-                                             m_tmp[k],1,m_tmp[k],1);
+                                Vmath::Svtvp( m_npoints, delta_t*A_IMEX(i,0),
+                                              m_F_IMEX[0][k], 1,
+                                              m_tmp[k], 1, m_tmp[k], 1 );
                             }
                         }
                     }          
-                    m_T = A(i,0)*timestep;
+                    m_T = A(i,0)*delta_t;
                         
                     for( j = 1; j < i; j++ )
                     {
                         for(k = 0; k < m_nvar; k++)
                         {
-                            Vmath::Svtvp(m_npoints,timestep*A(i,j),m_F[j][k],1,
+                            Vmath::Svtvp(m_npoints,delta_t*A(i,j),m_F[j][k],1,
                                          m_tmp[k],1,m_tmp[k],1);
                             if(type == eIMEX)       
                             {
-                                Vmath::Svtvp(m_npoints,timestep*A_IMEX(i,j),
+                                Vmath::Svtvp(m_npoints,delta_t*A_IMEX(i,j),
                                              m_F_IMEX[j][k],1,
                                              m_tmp[k],1,m_tmp[k],1);
                             }
                         }          
                         
-                        m_T += A(i,j)*timestep;
+                        m_T += A(i,j)*delta_t;
                     }
                     
                     // 2: the imported multi-step solution of the
@@ -1530,54 +744,54 @@ namespace Nektar
                 {
                     if(m_numstages==1)
                     {
-                        m_T= t_old[0]+timestep;
+                        m_T= t_old[0]+delta_t;
                     }
                     else 
                     {
                         m_T= t_old[0];
                         for(int j=0; j<=i; ++j)
                         {
-                            m_T += A(i,j)*timestep;
+                            m_T += A(i,j)*delta_t;
                         }
                     }
                     
-                    op.DoImplicitSolve(m_tmp, m_Y, m_T, A(i,i)*timestep);
+                    op.DoImplicitSolve(m_tmp, m_Y, m_T, A(i,i)*delta_t);
                     
                     for(k = 0; k < m_nvar; k++)
                     {
                         Vmath::Vsub(m_npoints,m_Y[k],1,m_tmp[k],1,m_F[i][k],1);
-                        Vmath::Smul(m_npoints,1.0/(A(i,i)*timestep),m_F[i][k],1,m_F[i][k],1);
+                        Vmath::Smul(m_npoints,1.0/(A(i,i)*delta_t),m_F[i][k],1,m_F[i][k],1);
                     }
                 }
                 else if(type == eIMEX)
                 { 
                     if(m_numstages==1)
                     {
-                        m_T= t_old[0]+timestep;
+                        m_T= t_old[0]+delta_t;
                     }
                     else 
                     {
                         m_T= t_old[0];
                         for(int j=0; j<=i; ++j)
                         {
-                            m_T += A(i,j)*timestep;
+                            m_T += A(i,j)*delta_t;
                         }
                     }	
                     
                     if(fabs(A(i,i)) > NekConstants::kNekZeroTol)
                     {
-                        op.DoImplicitSolve(m_tmp, m_Y, m_T, A(i,i)*timestep);
+                        op.DoImplicitSolve(m_tmp, m_Y, m_T, A(i,i)*delta_t);
                         
                         for(k = 0; k < m_nvar; k++)
                         {
                             Vmath::Vsub(m_npoints,m_Y[k],1,m_tmp[k],1,m_F[i][k],1);
-                            Vmath::Smul(m_npoints,1.0/(A(i,i)*timestep),
+                            Vmath::Smul(m_npoints,1.0/(A(i,i)*delta_t),
                                         m_F[i][k],1,m_F[i][k],1);
                         }
                     }
                     op.DoOdeRhs(m_Y, m_F_IMEX[i], m_T);
                 }
-                else if( type == eExplicit)
+                else if( type == eExplicit )
                 {
                     // Avoid projecting the same solution twice
                     if( ! ((i==0) && m_firstStageEqualsOldSolution) )
@@ -1602,23 +816,23 @@ namespace Nektar
             // needs not be calculated explicitly but can simply be
             // copied. This saves a solve. 	   	
             int i_start = 0;
-            if( (m_lastStageEqualsNewSolution) ) 
+            if( m_lastStageEqualsNewSolution ) 
             {
-                for(k = 0; k < m_nvar; k++)
+                for( k = 0; k < m_nvar; k++ )
                 {
                     Vmath::Vcopy(m_npoints,m_Y[k],1,y_new[0][k],1);
                 }
 		
-                if (m_numstages==1 && type == eIMEX)
+                if( m_numstages==1 && type == eIMEX)
                 {
-                    t_new[0] = t_old[0]+timestep;
+                    t_new[0] = t_old[0]+delta_t;
                 }
                 else 
                 {
-                    t_new[0] = B(0,0)*timestep;
+                    t_new[0] = B(0,0)*delta_t;
                     for(j = 1; j < m_numstages; j++)
                     {
-                        t_new[0] += B(0,j)*timestep;
+                        t_new[0] += B(0,j)*delta_t;
                     }
                     for(j = 0; j < m_numsteps; j++)
                     {
@@ -1635,19 +849,19 @@ namespace Nektar
                 // 1: the stage derivatives
                 for(k = 0; k < m_nvar; k++)
                 {
-                    Vmath::Smul(m_npoints,timestep*B(i,0),m_F[0][k],1,
+                    Vmath::Smul(m_npoints,delta_t*B(i,0),m_F[0][k],1,
                                 y_new[i][k],1);
                     
                     if(type == eIMEX)
                     {
-                        Vmath::Svtvp(m_npoints,timestep*B_IMEX(i,0),
+                        Vmath::Svtvp(m_npoints,delta_t*B_IMEX(i,0),
                                      m_F_IMEX[0][k],1,y_new[i][k],1,
                                      y_new[i][k],1);
                     }
                 }
                 if(m_numstages != 1 || type != eIMEX)
                 {
-                    t_new[i] = B(i,0)*timestep;
+                    t_new[i] = B(i,0)*delta_t;
                 }
                 
 		
@@ -1655,19 +869,19 @@ namespace Nektar
                 {
                     for(k = 0; k < m_nvar; k++)
                     {					
-                        Vmath::Svtvp(m_npoints,timestep*B(i,j),m_F[j][k],1,
+                        Vmath::Svtvp(m_npoints,delta_t*B(i,j),m_F[j][k],1,
                                      y_new[i][k],1,y_new[i][k],1);
                         
                         if(type == eIMEX)
                         {
-                            Vmath::Svtvp(m_npoints,timestep*B_IMEX(i,j),
+                            Vmath::Svtvp(m_npoints,delta_t*B_IMEX(i,j),
                                          m_F_IMEX[j][k],1,y_new[i][k],1,
                                          y_new[i][k],1);
                         }
                     }
                     if(m_numstages != 1 || type != eIMEX)
                     {
-                        t_new[i] += B(i,j)*timestep; 
+                        t_new[i] += B(i,j)*delta_t; 
                     }
                 }			
                 
@@ -1766,12 +980,12 @@ namespace Nektar
             return true;
         }
         
-        bool TimeIntegrationScheme::CheckTimeIntegrateArguments(const NekDouble                      timestep,      
-                                                                      ConstTripleArray               &y_old  ,
-                                                                      ConstSingleArray               &t_old  ,
-                                                                      TripleArray                    &y_new  ,
-                                                                      SingleArray                    &t_new  ,
-                                                                const TimeIntegrationSchemeOperators &op) const
+        bool TimeIntegrationScheme::CheckTimeIntegrateArguments( const NekDouble                        delta_t,      
+                                                                       ConstTripleArray               & y_old,
+                                                                       ConstSingleArray               & t_old,
+                                                                       TripleArray                    & y_new,
+                                                                       SingleArray                    & t_new,
+                                                                 const TimeIntegrationSchemeOperators & op) const
         {
             // Check if arrays are all of consistent size
             ASSERTL1(y_old.num_elements()==m_numsteps,"Non-matching number of steps.");    

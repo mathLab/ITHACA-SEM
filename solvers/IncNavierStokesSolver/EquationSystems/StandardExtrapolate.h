@@ -36,14 +36,14 @@
 #ifndef NEKTAR_SOLVERS_STANDARDEXTRAPOLATE_H
 #define NEKTAR_SOLVERS_STANDARDEXTRAPOLATE_H
 
-#include <LibUtilities/BasicUtils/NekFactory.hpp>
-#include <LibUtilities/Memory/NekMemoryManager.hpp>
-#include <LibUtilities/BasicUtils/SessionReader.h>
-#include <MultiRegions/ExpList.h>
-#include <LibUtilities/BasicUtils/SharedArray.hpp>
-#include <LibUtilities/TimeIntegration/TimeIntegrationWrapper.h>
-#include <SolverUtils/AdvectionSystem.h>
 #include <IncNavierStokesSolver/EquationSystems/Extrapolate.h>
+#include <LibUtilities/BasicUtils/NekFactory.hpp>
+#include <LibUtilities/BasicUtils/SessionReader.h>
+#include <LibUtilities/BasicUtils/SharedArray.hpp>
+#include <LibUtilities/Memory/NekMemoryManager.hpp>
+#include <LibUtilities/TimeIntegration/TimeIntegratorBase.h>
+#include <MultiRegions/ExpList.h>
+#include <SolverUtils/AdvectionSystem.h>
 
 namespace Nektar
 {
@@ -91,7 +91,7 @@ namespace Nektar
         
         virtual void v_SubSteppingTimeIntegration(
             int intMethod,
-            const LibUtilities::TimeIntegrationWrapperSharedPtr &IntegrationScheme);
+            const LibUtilities::TimeIntegratorSharedPtr &IntegrationScheme );
 
         virtual void v_SubStepSaveFields(
             int nstep);

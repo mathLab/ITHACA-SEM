@@ -36,7 +36,7 @@
 #ifndef NEKTAR_SOLVERS_INCNAVIERSTOKES_H
 #define NEKTAR_SOLVERS_INCNAVIERSTOKES_H
 
-#include <LibUtilities/TimeIntegration/TimeIntegrationWrapper.h>
+#include <LibUtilities/TimeIntegration/TimeIntegratorBase.h>
 #include <SolverUtils/UnsteadySystem.h>
 #include <SolverUtils/AdvectionSystem.h>
 #include <LibUtilities/BasicUtils/SessionReader.h>

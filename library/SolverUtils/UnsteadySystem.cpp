@@ -36,7 +36,7 @@
 #include <iostream>
 #include <iomanip>
 
-#include <LibUtilities/TimeIntegration/TimeIntegrationWrapper.h>
+#include <LibUtilities/TimeIntegration/TimeIntegratorBase.h>
 #include <LibUtilities/BasicUtils/Timer.h>
 #include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
 #include <SolverUtils/UnsteadySystem.h>
@@ -102,9 +102,7 @@ namespace Nektar
             // For steady problems, we do not initialise the time integration
             if (m_session->DefinesSolverInfo("TIMEINTEGRATIONMETHOD"))
             {
-                m_intScheme = LibUtilities::GetTimeIntegrationWrapperFactory().
-                    CreateInstance(m_session->GetSolverInfo(
-                                       "TIMEINTEGRATIONMETHOD"));
+                m_intScheme = LibUtilities::GetTimeIntegratorFactory().CreateInstance( m_session->GetSolverInfo( "TIMEINTEGRATIONMETHOD" ) );
 
                 // Load generic input parameters
                 m_session->LoadParameter("IO_InfoSteps", m_infosteps, 0);
@@ -157,7 +155,7 @@ namespace Nektar
         NekDouble UnsteadySystem::MaxTimeStepEstimator()
         {
             NekDouble TimeStability = 0.0;
-            switch(m_intScheme->GetIntegrationMethod())
+            switch( m_intScheme->GetIntegrationMethod() )
             {
                 case LibUtilities::eForwardEuler:
                 case LibUtilities::eClassicalRungeKutta4:
@@ -240,11 +238,10 @@ namespace Nektar
             }
             
             // Initialise time integration scheme
-            m_intSoln = m_intScheme->InitializeScheme(
-                m_timestep, fields, m_time, m_ode);
+            m_intSoln = m_intScheme->InitializeIntegrator( m_timestep, fields, m_time, m_ode );
 
             // Initialise filters
-            for (auto &x : m_filters)
+            for( auto &x : m_filters )
             {
                 x->Initialise(m_fields, m_time);
             }

@@ -37,11 +37,11 @@
 #define NEKTAR_SOLVERS_EXTRAPOLATE_H
 
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
-#include <LibUtilities/Memory/NekMemoryManager.hpp>
 #include <LibUtilities/BasicUtils/SessionReader.h>
-#include <MultiRegions/ExpList.h>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
-#include <LibUtilities/TimeIntegration/TimeIntegrationWrapper.h>
+#include <LibUtilities/Memory/NekMemoryManager.hpp>
+#include <LibUtilities/TimeIntegration/TimeIntegratorBase.h>
+#include <MultiRegions/ExpList.h>
 #include <SolverUtils/AdvectionSystem.h>
 
 
@@ -90,7 +90,7 @@ namespace Nektar
 
         inline void SubSteppingTimeIntegration(
             const int intMethod,
-            const LibUtilities::TimeIntegrationWrapperSharedPtr &IntegrationScheme);
+            const LibUtilities::TimeIntegratorSharedPtr &IntegrationScheme );
 
         inline void SubStepSaveFields(
             const int nstep);
@@ -161,7 +161,7 @@ namespace Nektar
 
        virtual void v_SubSteppingTimeIntegration(
             int intMethod,        
-            const LibUtilities::TimeIntegrationWrapperSharedPtr &IntegrationScheme)=0;
+            const LibUtilities::TimeIntegratorSharedPtr &IntegrationScheme ) = 0;
 
         virtual void v_SubStepSaveFields(
             int nstep)=0;
@@ -350,7 +350,7 @@ namespace Nektar
      */
     inline void Extrapolate::SubSteppingTimeIntegration(
         int intMethod,
-        const LibUtilities::TimeIntegrationWrapperSharedPtr &IntegrationScheme)
+        const LibUtilities::TimeIntegratorSharedPtr &IntegrationScheme )
     {
         v_SubSteppingTimeIntegration(intMethod, IntegrationScheme);
     }

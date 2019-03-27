@@ -41,10 +41,9 @@ using namespace std;
 
 namespace Nektar
 {
-    string UnsteadyAdvectionDiffusion::className
-        = SolverUtils::GetEquationSystemFactory().RegisterCreatorFunction(
-                "UnsteadyAdvectionDiffusion",
-                UnsteadyAdvectionDiffusion::create);
+    string UnsteadyAdvectionDiffusion::className = SolverUtils::GetEquationSystemFactory().RegisterCreatorFunction(
+                                                                                                                    "UnsteadyAdvectionDiffusion",
+                                                                                                                    UnsteadyAdvectionDiffusion::create );
     
     UnsteadyAdvectionDiffusion::UnsteadyAdvectionDiffusion(
         const LibUtilities::SessionReaderSharedPtr& pSession,
@@ -505,8 +504,7 @@ namespace Nektar
             // with calls to EvaluateAdvection_SetPressureBCs and
             // SolveUnsteadyStokesSystem
             LibUtilities::TimeIntegrationSolutionSharedPtr 
-                SubIntegrationSoln = m_subStepIntegrationScheme->
-                InitializeScheme(dt, fields, time, m_subStepIntegrationOps);
+                SubIntegrationSoln = m_subStepIntegrationScheme->InitializeIntegrator( dt, fields, time, m_subStepIntegrationOps );
             
             for(n = 0; n < nsubsteps; ++n)
             {
@@ -552,7 +550,7 @@ namespace Nektar
 
     void UnsteadyAdvectionDiffusion::SetUpSubSteppingTimeIntegration(
                                                                      int intMethod,
-                                                                     const LibUtilities::TimeIntegrationWrapperSharedPtr &IntegrationScheme)
+                                                                     const LibUtilities::TimeIntegratorSharedPtr &IntegrationScheme)
     {
         // Set to 1 for first step and it will then be increased in
         // time advance routines
@@ -561,13 +559,13 @@ namespace Nektar
         case LibUtilities::eBackwardEuler:
         case LibUtilities::eBDFImplicitOrder1: 
             {
-                m_subStepIntegrationScheme = LibUtilities::GetTimeIntegrationWrapperFactory().CreateInstance("ForwardEuler");
+                m_subStepIntegrationScheme = LibUtilities::GetTimeIntegratorFactory().CreateInstance("ForwardEuler");
                 
             }
             break;
         case LibUtilities::eBDFImplicitOrder2:
             {
-                m_subStepIntegrationScheme = LibUtilities::GetTimeIntegrationWrapperFactory().CreateInstance("RungeKutta2_ImprovedEuler");
+                m_subStepIntegrationScheme = LibUtilities::GetTimeIntegratorFactory().CreateInstance("RungeKutta2_ImprovedEuler");
             }
             break;
         default:
@@ -860,4 +858,5 @@ namespace Nektar
 		
         return maxV;
     }
-}
+
+} // end namespace Nektar

@@ -188,40 +188,50 @@ void MeshGraph::FillGraph()
 void MeshGraph::FillBoundingBoxTree()
 {
     m_boundingBoxTree.clear();
-    for (auto &x : m_segGeoms) 
-    {
-        BgBox b = x.second->GetBoundingBox();
-        m_boundingBoxTree.insert(std::make_pair(b, x.first));
-    }
-    for (auto &x : m_triGeoms) 
-    {
-        BgBox b = x.second->GetBoundingBox();
-        m_boundingBoxTree.insert(std::make_pair(b, x.first));
-    }
-    for (auto &x : m_quadGeoms) 
-    {
-        BgBox b = x.second->GetBoundingBox();
-        m_boundingBoxTree.insert(std::make_pair(b, x.first));
-    }
-    for (auto &x : m_tetGeoms) 
-    {
-        BgBox b = x.second->GetBoundingBox();
-        m_boundingBoxTree.insert(std::make_pair(b, x.first));
-    }
-    for (auto &x : m_prismGeoms) 
-    {
-        BgBox b = x.second->GetBoundingBox();
-        m_boundingBoxTree.insert(std::make_pair(b, x.first));
-    }
-    for (auto &x : m_pyrGeoms) 
-    {
-        BgBox b = x.second->GetBoundingBox();
-        m_boundingBoxTree.insert(std::make_pair(b, x.first));
-    }
-    for (auto &x : m_hexGeoms) 
-    {
-        BgBox b = x.second->GetBoundingBox();
-        m_boundingBoxTree.insert(std::make_pair(b, x.first));
+    switch (m_meshDimension) {
+        case 1:
+            for (auto &x : m_segGeoms) 
+            {
+                BgBox b = x.second->GetBoundingBox();
+                m_boundingBoxTree.insert(std::make_pair(b, x.first));
+            }
+            break;
+        case 2:
+            for (auto &x : m_triGeoms) 
+            {
+                BgBox b = x.second->GetBoundingBox();
+                m_boundingBoxTree.insert(std::make_pair(b, x.first));
+            }
+            for (auto &x : m_quadGeoms) 
+            {
+                BgBox b = x.second->GetBoundingBox();
+                m_boundingBoxTree.insert(std::make_pair(b, x.first));
+            }
+            break;
+        case 3:
+            for (auto &x : m_tetGeoms) 
+            {
+                BgBox b = x.second->GetBoundingBox();
+                m_boundingBoxTree.insert(std::make_pair(b, x.first));
+            }
+            for (auto &x : m_prismGeoms) 
+            {
+                BgBox b = x.second->GetBoundingBox();
+                m_boundingBoxTree.insert(std::make_pair(b, x.first));
+            }
+            for (auto &x : m_pyrGeoms) 
+            {
+                BgBox b = x.second->GetBoundingBox();
+                m_boundingBoxTree.insert(std::make_pair(b, x.first));
+            }
+            for (auto &x : m_hexGeoms) 
+            {
+                BgBox b = x.second->GetBoundingBox();
+                m_boundingBoxTree.insert(std::make_pair(b, x.first));
+            }
+            break;
+        default:
+            ASSERTL0(false, "Unknown dim");
     }
 }
 

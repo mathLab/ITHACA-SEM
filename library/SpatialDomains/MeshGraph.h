@@ -38,6 +38,7 @@
 
 #include <unordered_map>
 
+#include <boost/geometry/geometry.hpp>
 #include <boost/geometry/index/rtree.hpp>
 namespace bg = boost::geometry;
 

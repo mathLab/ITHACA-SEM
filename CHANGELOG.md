@@ -111,7 +111,8 @@ v5.0.0
 - Add module for counting the total number of DOF (!948)
 - Fixed wss module for compressible flows (!958)
 - Add module for removing fields from .fld files (!978)
-- Added if statement to fix case of 1D manifold interpolation in 2D space (!999)
+- Added if statement to fix case of 1D/2D manifold interpolation in 1D/2D space,
+  added check on dimensions for interpolation, fixed seg interp (!999)
 
 **IncNavierStokesSolver**
 - Replace steady-state check based on difference of norms by check based on

@@ -1483,11 +1483,20 @@ namespace Nektar
                                                               locCoords,
                                                               tol, nearpt))
                     {
-                        w.SetX(gloCoords[0]);
-                        w.SetY(gloCoords[1]);
-                        if (GetExp(0)->GetCoordim() > 2)
+                        switch (GetExp(0)->GetCoordim())
                         {
-                            w.SetZ(gloCoords[2]);
+                            case 3:
+                                w.SetX(gloCoords[0]);
+                                w.SetY(gloCoords[1]);
+                                w.SetZ(gloCoords[2]);
+                                break;
+                            case 2:
+                                w.SetX(gloCoords[0]);
+                                w.SetY(gloCoords[1]);
+                                break;
+                            case 1:
+                                w.SetX(gloCoords[0]);
+                                break;
                         }
 
                         // Find closest vertex

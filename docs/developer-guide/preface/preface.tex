@@ -15,14 +15,14 @@ by Dr. Igor Lomtev,  Dr. Tim Warburton, Dr. Mike Kirby, etc., all under the PhD 
 graduated from Princeton under George's supervision in 1995 and went on to Imperial College London 
 as a faculty member; Mike graduated from Brown under George's supervision in 2002 and went on to the
 University of Utah in 2002.  In 2004, Mike and Spencer teamed up to re-write \emph{Nektar} in light of modern
-C++ programming practices and in light of what had been learned in the decade or so since its foundation.
+{\em C++} programming practices and in light of what had been learned in the decade or so since its foundation.
 
 What were the observations that motivated \nek{}?  The first observation was that \emph{Nektar}'s origin
 was triangular and tetrahedral \shp{} elements as applied to incompressible fluid mechanics 
 problems (i.e., the incompressible Navier-Stokes equations).  These ideas were extended to 
 the compressible Navier-Stokes by Lomtev and the two parallel paths joined and extended into
 what is often called Hybrid \emph{Nektar} by Tim Warburton. Hybrid \emph{Nektar} (referred to as \emph{Nektar} from
-here on out) used the C++ programming paradigm to facilitate hybrid elements:  triangles and
+here on out) used the {\em C++} programming paradigm to facilitate hybrid elements:  triangles and
 quadrilaterals in 2D and tetrahedra, hexahedra, prisms and pyramids in 3D.   In addition, Warburton
 structured the code in a way that allowed extension to the Arbitrary Lagrangian Eulerian (ALE) formulation
 within \emph{Nektar}, as well as various other features such as the \emph{Nektar} Magneto-Hydrodynamics (MHD) solver.
@@ -47,7 +47,7 @@ community for discussing and disseminating the ideas surrounding high-order fini
 correspondingly a fruitful environment for cross-pollination of ideas and programming practices.
 
 With all this in mind, Mike and Spencer set out to re-architect \emph{Nektar} from the ground up, and in homage
-to its C++ core, this new software suite was called \nek{}.  \nek{} 
+to its {\em C++} core, this new software suite was called \nek{}.  \nek{} 
 is an open-source software framework designed to support the development
 of high-performance scalable solvers for partial differential equations using
 the \shp{} element method. High-order methods are gaining prominence in
@@ -56,7 +56,7 @@ over low-order techniques at reduced computational cost for a given number of de
 their proliferation is often limited by their complexity, which makes
 these methods challenging to implement and use. \nek{} is an initiative to
 overcome this limitation by encapsulating the mathematical complexities of the underlying method within an
-efficient C++ framework, making the techniques more accessible to the broader 
+efficient {\em C++} framework, making the techniques more accessible to the broader 
 scientific and industrial communities.  Given the commonalities and connections between various strong-form
 and weak-form methods and their implementations, we use the term \shp methods to refer to the entire family of
 methods, from traditional FEM to discontinuous Galerkin (dG) to Flux Reconstruction (FR) and beyond.

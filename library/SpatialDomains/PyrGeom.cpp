@@ -124,8 +124,8 @@ bool PyrGeom::v_ContainsPoint(const Array<OneD, const NekDouble> &gloCoord,
 
     // Check local coordinate is within std region bounds.
     if (locCoord[0] >= -(1 + tol) && locCoord[1] >= -(1 + tol) &&
-        locCoord[2] >= -(1 + tol) && locCoord[0] + locCoord[1] <= tol &&
-        locCoord[0] + locCoord[2] <= tol)
+        locCoord[2] >= -(1 + tol) && locCoord[0] + locCoord[2] <= tol &&
+        locCoord[1] + locCoord[2] <= tol)
     {
         return true;
     }
@@ -205,7 +205,7 @@ NekDouble PyrGeom::v_GetLocCoords(const Array<OneD, const NekDouble> &coords,
     v_FillGeom();
 
     // calculate local coordinate for coord
-    if (GetMetricInfo()->GetGtype() == eRegular)
+    if (GetMetricInfo()->GetGtype() == eRegular&&0)  // This method does not currently work and so is disabled
     { // Based on Spen's book, page 99
 
         // Point inside tetrahedron
@@ -248,8 +248,49 @@ NekDouble PyrGeom::v_GetLocCoords(const Array<OneD, const NekDouble> &coords,
     }
     else
     {
-        NEKERROR(ErrorUtil::efatal,
-                 "inverse mapping must be set up to use this call");
+
+        v_FillGeom();
+
+        // Determine nearest point of coords  to values in m_xmap
+        int npts = m_xmap->GetTotPoints();
+        Array<OneD, NekDouble> ptsx(npts), ptsy(npts), ptsz(npts);
+        Array<OneD, NekDouble> tmp1(npts), tmp2(npts);
+
+        m_xmap->BwdTrans(m_coeffs[0], ptsx);
+        m_xmap->BwdTrans(m_coeffs[1], ptsy);
+        m_xmap->BwdTrans(m_coeffs[2], ptsz);
+
+        const Array<OneD, const NekDouble> za = m_xmap->GetPoints(0);
+        const Array<OneD, const NekDouble> zb = m_xmap->GetPoints(1);
+        const Array<OneD, const NekDouble> zc = m_xmap->GetPoints(2);
+
+        // guess the first local coords based on nearest point
+        Vmath::Sadd(npts, -coords[0], ptsx, 1, tmp1, 1);
+        Vmath::Vmul(npts, tmp1, 1, tmp1, 1, tmp1, 1);
+        Vmath::Sadd(npts, -coords[1], ptsy, 1, tmp2, 1);
+        Vmath::Vvtvp(npts, tmp2, 1, tmp2, 1, tmp1, 1, tmp1, 1);
+        Vmath::Sadd(npts, -coords[2], ptsz, 1, tmp2, 1);
+        Vmath::Vvtvp(npts, tmp2, 1, tmp2, 1, tmp1, 1, tmp1, 1);
+
+        int min_i = Vmath::Imin(npts, tmp1, 1);
+
+        // distance from coordinate to nearest point for return value.
+        ptdist = sqrt(tmp1[min_i]);
+
+        // Get collapsed coordinate
+        int qa = za.num_elements(), qb = zb.num_elements();
+        Lcoords[2] = zc[min_i / (qa * qb)];
+        min_i = min_i % (qa * qb);
+        Lcoords[1] = zb[min_i / qa];
+        Lcoords[0] = za[min_i % qa];
+
+        // recover cartesian coordinate from collapsed coordinate.
+        Lcoords[0] = (1.0 + Lcoords[0]) * (1.0 - Lcoords[2]) / 2 - 1.0;
+        Lcoords[1] = (1.0 + Lcoords[1]) * (1.0 - Lcoords[2]) / 2 - 1.0;
+
+        // Perform newton iteration to find local coordinates
+        NekDouble resid = 0.0;
+        NewtonIterationForLocCoord(coords, ptsx, ptsy, ptsz, Lcoords, resid);
     }
     
     return ptdist;

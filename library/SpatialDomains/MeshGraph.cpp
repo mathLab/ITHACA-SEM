@@ -243,7 +243,9 @@ std::vector<BgRtreeValue> MeshGraph::GetElementsContainingPoint(
         FillBoundingBoxTree();
     }
 
-    NekDouble x, y, z;
+    NekDouble x = 0.0;
+    NekDouble y = 0.0;
+    NekDouble z = 0.0;
     std::vector<BgRtreeValue> vals;
 
     p->GetCoords(x, y, z);

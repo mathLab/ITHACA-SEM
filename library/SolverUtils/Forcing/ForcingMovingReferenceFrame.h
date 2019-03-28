@@ -47,68 +47,70 @@
 
 
 namespace Nektar {
-    namespace SolverUtils {
-        class ForcingMovingReferenceFrame : public Forcing {
-        public:
+namespace SolverUtils {
 
-            friend class MemoryManager<ForcingMovingReferenceFrame>;
+class ForcingMovingReferenceFrame : public Forcing
+{
 
-            /// Creates an instance of this class
-            SOLVER_UTILS_EXPORT static ForcingSharedPtr create(
-                    const LibUtilities::SessionReaderSharedPtr &pSession,
-                    const std::weak_ptr<EquationSystem> &pEquation,
-                    const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
-                    const unsigned int &pNumForcingFields,
-                    const TiXmlElement *pForce) {
-                ForcingSharedPtr p = MemoryManager<ForcingMovingReferenceFrame>::
-                AllocateSharedPtr(pSession, pEquation);
-                p->InitObject(pFields, pNumForcingFields, pForce);
-                return p;
-            }
+public:
+    friend class MemoryManager<ForcingMovingReferenceFrame>;
 
-            ///Name of the class
-            static std::string classNameBody;
-            static std::string classNameField;
-
-        protected:
-            SOLVER_UTILS_EXPORT virtual void v_InitObject(
-                    const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
-                    const unsigned int &pNumForcingFields,
-                    const TiXmlElement *pForce);
-
-            SOLVER_UTILS_EXPORT virtual void v_Apply(
-                    const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
-                    const Array<OneD, Array<OneD, NekDouble> > &inarray,
-                    Array<OneD, Array<OneD, NekDouble> > &outarray,
-                    const NekDouble &time);
-
-        private:
-            std::string m_funcName;
-            Array<OneD, NekDouble> m_frameVelocity;
-            Array<OneD, Array<OneD, NekDouble>> m_grad;
-            NekInt m_spacedim;
-            bool m_transform;
-            bool m_homogen_dealiasing;
-            bool m_SingleMode;
-            bool m_HalfMode;
-
-
-            ForcingMovingReferenceFrame(
-                    const LibUtilities::SessionReaderSharedPtr &pSession,
-                    const std::weak_ptr<EquationSystem> &pEquation);
-
-            virtual ~ForcingMovingReferenceFrame(void) {};
-
-            void CalculateGradient(
-                    const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields
-            );
-
-            void Update(
-                    const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
-                    const NekDouble &time);
-        };
-
+    /// Creates an instance of this class
+    SOLVER_UTILS_EXPORT static ForcingSharedPtr create(
+            const LibUtilities::SessionReaderSharedPtr &pSession,
+            const std::weak_ptr<EquationSystem> &pEquation,
+            const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
+            const unsigned int &pNumForcingFields,
+            const TiXmlElement *pForce) {
+        ForcingSharedPtr p = MemoryManager<ForcingMovingReferenceFrame>::
+        AllocateSharedPtr(pSession, pEquation);
+        p->InitObject(pFields, pNumForcingFields, pForce);
+        return p;
     }
+
+    ///Name of the class
+    static std::string classNameBody;
+    static std::string classNameField;
+
+protected:
+    SOLVER_UTILS_EXPORT virtual void v_InitObject(
+            const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
+            const unsigned int &pNumForcingFields,
+            const TiXmlElement *pForce);
+
+    SOLVER_UTILS_EXPORT virtual void v_Apply(
+            const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
+            const Array<OneD, Array<OneD, NekDouble> > &inarray,
+            Array<OneD, Array<OneD, NekDouble> > &outarray,
+            const NekDouble &time);
+
+private:
+    std::string m_funcName;
+    Array<OneD, NekDouble> m_frameVelocity;
+    Array<OneD, Array<OneD, NekDouble>> m_grad;
+    NekInt m_spacedim;
+    bool m_transform;
+    bool m_homogen_dealiasing;
+    bool m_SingleMode;
+    bool m_HalfMode;
+
+
+    ForcingMovingReferenceFrame(
+            const LibUtilities::SessionReaderSharedPtr &pSession,
+            const std::weak_ptr<EquationSystem> &pEquation);
+
+    virtual ~ForcingMovingReferenceFrame(void) {};
+
+    void CalculateGradient(
+            const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields
+    );
+
+    void Update(
+            const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
+            const NekDouble &time);
+};
+
+}
 }
 
 #endif

@@ -34,7 +34,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <SolverUtils/Forcing/ForcingMovingFrame.h>
+#include <SolverUtils/Forcing/ForcingMovingReferenceFrame.h>
 #include <MultiRegions/ExpList.h>
 #include <LibUtilities/BasicUtils/Vmath.hpp>
 
@@ -45,23 +45,23 @@ namespace Nektar
     namespace SolverUtils
     {
 
-        std::string ForcingMovingFrame::classNameBody = GetForcingFactory().
-                RegisterCreatorFunction("MovingFrame",
-                                        ForcingMovingFrame::create,
+        std::string ForcingMovingReferenceFrame::classNameBody = GetForcingFactory().
+                RegisterCreatorFunction("MovingReferenceFrame",
+                                        ForcingMovingReferenceFrame::create,
                                         "Moving Frame");
-        std::string ForcingMovingFrame::classNameField = GetForcingFactory().
+        std::string ForcingMovingReferenceFrame::classNameField = GetForcingFactory().
                 RegisterCreatorFunction("Field",
-                                        ForcingMovingFrame::create,
+                                        ForcingMovingReferenceFrame::create,
                                         "Field Forcing");
 
-        ForcingMovingFrame::ForcingMovingFrame(
+        ForcingMovingReferenceFrame::ForcingMovingReferenceFrame(
                 const LibUtilities::SessionReaderSharedPtr &pSession,
                 const std::weak_ptr<EquationSystem> &pEquation)
                 : Forcing(pSession, pEquation)
         {
         }
 
-        void ForcingMovingFrame::v_InitObject(
+        void ForcingMovingReferenceFrame::v_InitObject(
                 const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
                 const unsigned int &pNumForcingFields,
                 const TiXmlElement *pForce)
@@ -127,7 +127,7 @@ namespace Nektar
             Update(pFields, 0.0);
         }
 
-        void ForcingMovingFrame::CalculateGradient(
+        void ForcingMovingReferenceFrame::CalculateGradient(
                 const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields)
         {
             int npoints = pFields[0]->GetNpoints();
@@ -227,7 +227,7 @@ namespace Nektar
         }
 
 
-        void ForcingMovingFrame::Update(
+        void ForcingMovingReferenceFrame::Update(
                 const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
                 const NekDouble &time)
         {
@@ -310,7 +310,7 @@ namespace Nektar
         }
 
 
-        void ForcingMovingFrame::v_Apply(
+        void ForcingMovingReferenceFrame::v_Apply(
                 const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
                 const Array<OneD, Array<OneD, NekDouble> > &inarray,
                 Array<OneD, Array<OneD, NekDouble> > &outarray,

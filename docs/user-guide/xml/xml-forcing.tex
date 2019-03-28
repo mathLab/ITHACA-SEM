@@ -12,7 +12,7 @@ The force type can be any of the following:
 \begin{itemize}
     \item "Absorption"
     \item "Body"
-    \item "MovingFrame"
+    \item "MovingReferenceFrame"
     \item "Programmatic"
     \item "Noise"
 \end{itemize}
@@ -46,11 +46,11 @@ This force type specifies the name of a body forcing function expressed in the \
 </FORCE>
 \end{lstlisting}
 
-\subsection{MovingFrame}
+\subsection{MovingReferenceFrame}
 This force type specifies the name of a moving frame function expressed in the \inltt{CONDITIONS} section.
 
 \begin{lstlisting}[style=XMLStyle]
-<FORCE TYPE="MovingFrame">
+<FORCE TYPE="MovingReferenceFrame">
     <FRAMEVELOCITY> [FUNCTION NAME] <FRAMEVELOCITY/>
 </FORCE>
 \end{lstlisting}
@@ -58,7 +58,7 @@ This force type specifies the name of a moving frame function expressed in the \
 The frame velocity functions defines the constant velocity of the reference frame.
 
 \begin{lstlisting}[style=XMLStyle]
-<FUNCTION NAME="MovingFrame">
+<FUNCTION NAME="MovingReferenceFrame">
     <E VAR="u" VALUE="1" />
     <E VAR="v" VALUE="0" />
 </FUNCTION>

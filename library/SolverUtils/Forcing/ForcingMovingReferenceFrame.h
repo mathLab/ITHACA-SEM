@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File: ForcingMovingBody.h
+// File: ForcingMovingReferenceFrame.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -34,8 +34,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_SOLVERUTILS_FORCINGMOVINGFRAME
-#define NEKTAR_SOLVERUTILS_FORCINGMOVINGFRAME
+#ifndef NEKTAR_SOLVERUTILS_FORCINGMOVINGREFERENCEFRAME
+#define NEKTAR_SOLVERUTILS_FORCINGMOVINGREFERENCEFRAME
 
 #include <string>
 
@@ -48,10 +48,10 @@
 
 namespace Nektar {
     namespace SolverUtils {
-        class ForcingMovingFrame : public Forcing {
+        class ForcingMovingReferenceFrame : public Forcing {
         public:
 
-            friend class MemoryManager<ForcingMovingFrame>;
+            friend class MemoryManager<ForcingMovingReferenceFrame>;
 
             /// Creates an instance of this class
             SOLVER_UTILS_EXPORT static ForcingSharedPtr create(
@@ -60,7 +60,7 @@ namespace Nektar {
                     const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
                     const unsigned int &pNumForcingFields,
                     const TiXmlElement *pForce) {
-                ForcingSharedPtr p = MemoryManager<ForcingMovingFrame>::
+                ForcingSharedPtr p = MemoryManager<ForcingMovingReferenceFrame>::
                 AllocateSharedPtr(pSession, pEquation);
                 p->InitObject(pFields, pNumForcingFields, pForce);
                 return p;
@@ -93,11 +93,11 @@ namespace Nektar {
             bool m_HalfMode;
 
 
-            ForcingMovingFrame(
+            ForcingMovingReferenceFrame(
                     const LibUtilities::SessionReaderSharedPtr &pSession,
                     const std::weak_ptr<EquationSystem> &pEquation);
 
-            virtual ~ForcingMovingFrame(void) {};
+            virtual ~ForcingMovingReferenceFrame(void) {};
 
             void CalculateGradient(
                     const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields

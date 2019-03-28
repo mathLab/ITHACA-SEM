@@ -59,7 +59,10 @@ v5.0.0
 - If only `NEKTAR_BUILD_LIBRARY` is enabled, only libraries up to and including
   `MultiRegions` will be built by default (!945)
 - Fix missing metadata import from Hdf5 files (!971)
+- Fix missing flags for periodic BC in DiffusionLDG (!985)
 - Add the moving reference frame as a forcing (!987)
+- Fix integration weights on prisms and pyramids if not using the default
+  integration rule (!998)
 
 **NekMesh**:
 - Add feature to read basic 2D geo files as CAD (!731)
@@ -93,6 +96,7 @@ v5.0.0
 - Fix surface string parsin in BL splitting (!937)
 - Fix issue with MLSC after Scotch conversion (!943)
 - Add support for Gmsh 4.0 mesh file format (!964)
+- Fix surface extraction, added regression test (!994)
 
 **FieldConvert**:
 - Add input module for Semtex field files (!777)
@@ -163,8 +167,9 @@ v4.4.2
 - Fix deadlock in DiffusionLDG (!885)
 - Fix uninitialised coefficients in DirectFull solver (!898)
 - Updated PETSc to 3.7.7 (!916)
-- Fix typecase to an integer which set Lz < 1 to zero when postprocess hdf5 output (!922)
+- Fix typecast to an integer which set Lz < 1 to zero when postprocess hdf5 output (!922)
 - Fix program options errors on Windows in debug mode (!986)
+- Fix potential clobbered output of ModArnoldi EVs when run in parallel (!983)
 
 **IncNavierStokesSolver**
 - Add a test for imaginary shift to be only used with Homogenous and SingleMode on. (!928)

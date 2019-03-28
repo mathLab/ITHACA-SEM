@@ -60,6 +60,7 @@ v5.0.0
   `MultiRegions` will be built by default (!945)
 - Fix missing metadata import from Hdf5 files (!971)
 - Added rtree for element bounding box lookup to accelerate interpolation (!996)
+- Fix integration weights on prisms and pyramids if not using the default integration rule (!998)
 
 **NekMesh**:
 - Add feature to read basic 2D geo files as CAD (!731)

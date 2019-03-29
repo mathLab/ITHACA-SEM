@@ -55,8 +55,7 @@ public:
                                    std::vector<NodeSharedPtr> pNodeList,
                                    std::vector<int> pTagList)
     {
-        return std::make_shared<Tetrahedron>(
-            pConf, pNodeList, pTagList);
+        return std::make_shared<Tetrahedron>(pConf, pNodeList, pTagList);
     }
     /// Element type
     static LibUtilities::ShapeType m_type;

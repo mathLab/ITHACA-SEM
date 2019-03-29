@@ -55,8 +55,7 @@ public:
                                    std::vector<NodeSharedPtr> pNodeList,
                                    std::vector<int> pTagList)
     {
-        return MemoryManager<Prism>::AllocateSharedPtr(
-            pConf, pNodeList, pTagList);
+        return std::make_shared<Prism>(pConf, pNodeList, pTagList);
     }
     /// Element type
     static LibUtilities::ShapeType m_type;

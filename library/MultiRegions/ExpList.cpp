@@ -1466,12 +1466,11 @@ namespace Nektar
             {
                 return -1;
             }
-            std::vector<std::pair<int,NekDouble> > elmtIdDist;
 
             NekDouble x = (gloCoords.num_elements() > 0 ? gloCoords[0] : 0.0);
             NekDouble y = (gloCoords.num_elements() > 1 ? gloCoords[1] : 0.0);
             NekDouble z = (gloCoords.num_elements() > 2 ? gloCoords[2] : 0.0);
-            SpatialDomains::PointGeomSharedPtr p 
+            SpatialDomains::PointGeomSharedPtr p
                 = MemoryManager<SpatialDomains::PointGeom>::AllocateSharedPtr(
                         GetExp(0)->GetCoordim(), -1, x, y, z);
 
@@ -1480,9 +1479,9 @@ namespace Nektar
             std::vector<SpatialDomains::BgRtreeValue> elmts =
                     m_graph->GetElementsContainingPoint(p);
 
-            NekDouble nearpt = 1e6;
+            NekDouble nearpt     = 1e6;
             NekDouble nearpt_min = 1e6;
-            int       min_id  = 0;
+            int       min_id     = 0;
             Array<OneD, NekDouble> savLocCoords(locCoords.num_elements());
 
             // Check each element in turn to see if point lies within it.

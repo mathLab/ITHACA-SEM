@@ -76,8 +76,8 @@ MeshPartition::MeshPartition(const LibUtilities::SessionReaderSharedPtr session,
                              int                                        meshDim,
                              std::map<int, MeshEntity>                  element,
                              CompositeDescriptor                        compMap)
-    : m_dim(meshDim), m_numFields(0), m_session(session), m_elements(element),
-      m_fieldNameToId(), m_comm(session->GetComm()), m_compMap(compMap),
+    : m_session(session), m_dim(meshDim), m_numFields(0), m_elements(element),
+      m_compMap(compMap), m_fieldNameToId(), m_comm(session->GetComm()),
       m_weightingRequired(false), m_weightBnd(false), m_weightDofs(false),
       m_parallel(false)
 {
@@ -588,7 +588,6 @@ void MeshPartition::PartitionGraph(int nParts, bool overlapping)
 {
     int i;
     int nGraphVerts = boost::num_vertices(m_graph);
-    int nGraphEdges = boost::num_edges(m_graph);
     int nGhost = m_ghostElmts.size();
     int nLocal = nGraphVerts - nGhost;
 

@@ -395,31 +395,31 @@ void MeshGraphXml::ReadGeometry(
         if (attrName == "DIM")
         {
             err = attr->QueryIntValue(&m_meshDimension);
-            ASSERTL1(err == TIXML_SUCCESS, "Unable to read mesh dimension.");
+            ASSERTL0(err == TIXML_SUCCESS, "Unable to read mesh dimension.");
         }
         else if (attrName == "SPACE")
         {
             err = attr->QueryIntValue(&m_spaceDimension);
-            ASSERTL1(err == TIXML_SUCCESS, "Unable to read space dimension.");
+            ASSERTL0(err == TIXML_SUCCESS, "Unable to read space dimension.");
         }
         else if (attrName == "PARTITION")
         {
             err = attr->QueryIntValue(&m_partition);
-            ASSERTL1(err == TIXML_SUCCESS, "Unable to read partition.");
+            ASSERTL0(err == TIXML_SUCCESS, "Unable to read partition.");
             m_meshPartitioned = true;
         }
         else
         {
             std::string errstr("Unknown attribute: ");
             errstr += attrName;
-            ASSERTL1(false, errstr.c_str());
+            ASSERTL0(false, errstr.c_str());
         }
 
         // Get the next attribute.
         attr = attr->Next();
     }
 
-    ASSERTL1(m_meshDimension <= m_spaceDimension,
+    ASSERTL0(m_meshDimension <= m_spaceDimension,
              "Mesh dimension greater than space dimension");
 
     ReadVertices();

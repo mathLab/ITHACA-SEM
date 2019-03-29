@@ -68,41 +68,31 @@ void OutputInfo::Process(po::variables_map &vm)
 {
     // Extract the output filename and extension
     string filename = m_config["outfile"].as<string>();
-    int i;
+    int i = 0;
 
     // partition mesh
     ASSERTL0(m_config["nparts"].as<string>().compare("NotSet") != 0,
              "Need to specify nparts for info output");
-    int nparts = m_config["nparts"].as<int>();
-
-    // define new session with pseudo parallel communicator
-    string xml_ending    = "xml";
-    string xml_gz_ending = "xml.gz";
+    const int nparts = m_config["nparts"].as<int>();
 
     std::vector<std::string> files;
     // load .xml ending
-    for (int i = 0; i < m_f->m_inputfiles[xml_ending].size(); ++i)
-    {
-        files.push_back(m_f->m_inputfiles[xml_ending][i]);
+    for (auto &x : m_f->m_inputfiles["xml"]) {
+        files.push_back(x);
     }
 
     // load any .xml.gz endings
-    for (int j = 0; j < m_f->m_inputfiles[xml_gz_ending].size(); ++j)
+    for (auto &x: m_f->m_inputfiles["xml.gz"])
     {
-        files.push_back(m_f->m_inputfiles[xml_gz_ending][j]);
+        files.push_back(x);
     }
 
     ASSERTL0(m_f->m_comm->GetSize() == 1,
              "OutputInfo module should be run in serial.");
 
-    // Default partitioner to use is Metis. Use Scotch as default
-    // if it is installed. Override default with command-line flags
-    // if they are set.
-    string vPartitionerName = "Metis";
-    if (SpatialDomains::GetMeshPartitionFactory().ModuleExists("Scotch"))
-    {
-        vPartitionerName = "Scotch";
-    }
+    // Default partitioner to use is Scotch. Override default with
+    // command-line flags if they are set.
+    string vPartitionerName = "Scotch";
     if (m_f->m_session->DefinesCmdLineArgument("use-metis"))
     {
         vPartitionerName = "Metis";

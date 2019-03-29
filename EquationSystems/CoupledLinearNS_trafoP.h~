@@ -42,53 +42,18 @@
 #include <MultiRegions/ExpList2D.h>
 #include <boost/shared_ptr.hpp>
 #include <LibUtilities/LinearAlgebra/NekTypeDefs.hpp>
+#include "../Eigen/Dense"
 //#include <MultiRegions/GlobalLinSysDirectStaticCond.h>
 
 namespace Nektar
 {     
 
-    typedef struct coupledSolverMatrices
-    {
-        /**  \brief Boundary-interior Laplacian plus linearised convective
-         *             terms pre-multiplying Cinv: 
-         *             \f$ m\_BCinv[n,m] = (\nabla \phi^b_n, \nu \nabla
-         *             \phi^i_j) + (\phi^b_n,{\bf U \cdot \nabla} \phi^i_j) +
-         *             (\phi^b_n \nabla^T {\bf U} \phi^i_j)  m_Cinv[j,m]\f$  
-         */
-        DNekScalBlkMatSharedPtr m_BCinv;
-        
-        /** \brief Interior-boundary Laplacian plus linearised convective terms
-         * \f$ m\_Btilde^T[n,m] = (\nabla \phi^i_n, \nu \nabla \phi^b_m) +
-         * (\phi^i_n,{\bf U \cdot \nabla} \phi^b_m) + (\phi^i_n \nabla^T
-         * {\bf U} \phi^b_m) \f$ */
-        DNekScalBlkMatSharedPtr m_Btilde;
-        
-        /** \brief Interior-Interior Laplaican plus linearised convective
-         *   terms inverted, i.e. the inverse of 
-         *   \f$ m\_C[n,m] = (\nabla \phi^i_n, \nu \nabla
-         *   \phi^i_m) + (\phi^i_n,{\bf U \cdot \nabla} \phi^i_m) +
-         *   (\phi^i_n \nabla^T {\bf U} \phi^i_m),\f$ */
-        DNekScalBlkMatSharedPtr  m_Cinv; 
-        
-        /** \brief Inner product of pressure system with divergence of the
-         *   boundary velocity space  
-         *   \f$ m\_D\_{bnd}[n,m] = (\psi_n,\nabla \phi^b_m),\f$ 
-         */
-        DNekScalBlkMatSharedPtr  m_D_bnd; 
-        
-        /** \brief Inner product of pressure system with divergence of the
-         *  interior velocity space  
-         *  \f$ m\_D\_{int}[n,m] = (\psi_j,\nabla \phi^i_m) \f$
-         */
-        DNekScalBlkMatSharedPtr  m_D_int; 
-        
-        MultiRegions::GlobalLinSysSharedPtr m_CoupledBndSys;
-    } CoupledSolverMatrices;
   
     class CoupledLinearNS_trafoP: public CoupledLinearNS
     {
     public:
         friend class MemoryManager<CoupledLinearNS_trafoP>;
+        //friend class CoupledLinearNS_TT;
         
         /// Creates an instance of this class
         static SolverUtils::EquationSystemSharedPtr create(
@@ -152,15 +117,42 @@ namespace Nektar
         
         void L2Norm(Array<OneD, Array<OneD, NekDouble> > &inarray,
                     Array<OneD, NekDouble> &outarray);
+                    
+        // Unpack solution 
+        Array<OneD, NekDouble> InverseTrafo(Array<OneD, NekDouble> &solution, int mode, MultiRegions::ExpListSharedPtr &pressure);
         
         void DefineForcingTerm(void);
         Array<OneD, Array<OneD, NekDouble> > m_ForcingTerm;
         Array<OneD, Array<OneD, NekDouble> > m_ForcingTerm_Coeffs;
         
         Array<OneD, CoupledLocalToGlobalC0ContMapSharedPtr> m_locToGloMap;
-        
-    protected:
+
         CoupledLinearNS_trafoP(const LibUtilities::SessionReaderSharedPtr &pSesssion);
+        
+        void DoInitialiseAdv(Array<OneD, NekDouble> myAdvField_x, Array<OneD, NekDouble> myAdvField_y);
+        Eigen::MatrixXd DoTrafo(Array<OneD, Array<OneD, NekDouble> > snapshot_x_collection, Array<OneD, Array<OneD, NekDouble> > snapshot_y_collection, Array<OneD, NekDouble> param_vector);
+	Array<OneD, Array<OneD, NekDouble> > DoSolve_at_param(Array<OneD, NekDouble> init_snapshot_x, Array<OneD, NekDouble> init_snapshot_y, NekDouble parameter);
+	
+	Array<OneD, Array<OneD, NekDouble> > DoSolve_at_param_with_Newton(Array<OneD, NekDouble> init_snapshot_x, Array<OneD, NekDouble> init_snapshot_y, NekDouble parameter);
+
+	Eigen::VectorXd curr_f_bnd;
+	Eigen::VectorXd curr_f_p;
+	Eigen::VectorXd curr_f_int;
+
+	NekDouble Get_m_kinvis(void);
+	void Set_m_kinvis(NekDouble);
+	
+	
+	//perform my continuation method
+	void continuation_method(NekDouble param);
+	bool use_deflation, converged, deflate;
+	int number_of_deflations, total_solutions_found, different_solutions_found;
+	Array<OneD, Array<OneD, NekDouble> > solution_x_continuation_deflation;
+	Array<OneD, Array<OneD, NekDouble> > solution_y_continuation_deflation;
+	std::vector<int> local_indices_to_be_continued;
+
+    protected:
+
         
         virtual void v_InitObject();
         

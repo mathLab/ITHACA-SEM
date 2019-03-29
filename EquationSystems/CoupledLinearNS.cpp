@@ -1454,8 +1454,10 @@ namespace Nektar
                 Checkpoint_Output(Check);
                 Check++;
                 
+                cout<<"Before first solve";
                 cout<<"We execute INITIALLY SolveSteadyNavierStokes for m_kinvis = "<<m_kinvis<<" (<=> Re = "<<1/m_kinvis<<")"<<endl;
                 SolveSteadyNavierStokes();
+                cout<<"After first solve";
                 
                 while(m_kinvis > m_kinvisMin)
                 {		
@@ -1612,7 +1614,7 @@ namespace Nektar
             {
                 EvaluateNewtonRHS(Velocity_Phys, RHS_Coeffs);
                 
-                if(m_counter%m_MatrixSetUpStep == 0) //Setting Up the matrix is expensive. We do it at each "m_MatrixSetUpStep" step.
+                if(m_counter%m_MatrixSetUpStep == 0) /*Setting Up the matrix is expensive. We do it at each "m_MatrixSetUpStep" step.*/
                 {
                     SetUpCoupledMatrix(0.0, Velocity_Phys, true);
                 }

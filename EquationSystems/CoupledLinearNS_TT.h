@@ -53,6 +53,7 @@ namespace Nektar
     {
     public:
         friend class MemoryManager<CoupledLinearNS_TT>;
+        //friend class CoupledLinearNS_trafoP;
         
         /// Creates an instance of this class
         static SolverUtils::EquationSystemSharedPtr create(
@@ -200,6 +201,7 @@ namespace Nektar
 
 	NekDouble Get_m_kinvis(void);
 	void Set_m_kinvis(NekDouble);
+	
 
     protected:
         

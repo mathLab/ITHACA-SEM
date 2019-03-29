@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File CoupledLinearNS_trafoP.cpp
+// File CoupledLinearNS.cpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -36,7 +36,7 @@
 #include <boost/algorithm/string.hpp>
 
 #include <LibUtilities/TimeIntegration/TimeIntegrationWrapper.h>
-#include "./CoupledLinearNS_trafoP.h"
+#include "./CoupledLinearNS.h"
 #include <LibUtilities/BasicUtils/Timer.h>
 #include <LocalRegions/MatrixKey.h>
 #include <MultiRegions/GlobalLinSysDirectStaticCond.h>
@@ -46,24 +46,24 @@ using namespace std;
 namespace Nektar
 {
 
-    string CoupledLinearNS_trafoP::className = SolverUtils::GetEquationSystemFactory().RegisterCreatorFunction("CoupledLinearisedNS", CoupledLinearNS_trafoP::create);
+    string CoupledLinearNS::className = SolverUtils::GetEquationSystemFactory().RegisterCreatorFunction("CoupledLinearisedNS", CoupledLinearNS::create);
 
 
     /**
-     *  @class CoupledLinearNS_trafoP 
+     *  @class CoupledLinearNS 
      *
      * Set up expansion field for velocity and pressure, the local to
      * global mapping arrays and the basic memory definitions for
      * coupled matrix system
      */ 
-    CoupledLinearNS_trafoP::CoupledLinearNS_trafoP(const LibUtilities::SessionReaderSharedPtr &pSession):
+    CoupledLinearNS::CoupledLinearNS(const LibUtilities::SessionReaderSharedPtr &pSession):
         UnsteadySystem(pSession),
         IncNavierStokes(pSession),
         m_zeroMode(false)
     {
     }
 
-    void CoupledLinearNS_trafoP::v_InitObject()
+    void CoupledLinearNS::v_InitObject()
     {
         IncNavierStokes::v_InitObject();
 
@@ -177,7 +177,7 @@ namespace Nektar
      * SetUpCoupledMatrix.
      * 
      */
-    void CoupledLinearNS_trafoP::SetUpCoupledMatrix(const NekDouble lambda,  const Array< OneD, Array< OneD, NekDouble > > &Advfield, bool IsLinearNSEquation)
+    void CoupledLinearNS::SetUpCoupledMatrix(const NekDouble lambda,  const Array< OneD, Array< OneD, NekDouble > > &Advfield, bool IsLinearNSEquation)
     {
         
         int nz;
@@ -373,7 +373,7 @@ namespace Nektar
      *
      */
     
-    void CoupledLinearNS_trafoP::SetUpCoupledMatrix(const NekDouble lambda,  const Array< OneD, Array< OneD, NekDouble > > &Advfield, bool IsLinearNSEquation,const int HomogeneousMode, CoupledSolverMatrices &mat, CoupledLocalToGlobalC0ContMapSharedPtr &locToGloMap, const NekDouble lambda_imag)
+    void CoupledLinearNS::SetUpCoupledMatrix(const NekDouble lambda,  const Array< OneD, Array< OneD, NekDouble > > &Advfield, bool IsLinearNSEquation,const int HomogeneousMode, CoupledSolverMatrices &mat, CoupledLocalToGlobalC0ContMapSharedPtr &locToGloMap, const NekDouble lambda_imag)
     {
         int  n,i,j,k,eid;
         int  nel  = m_fields[m_velocity[0]]->GetNumElmts();
@@ -1199,12 +1199,12 @@ namespace Nektar
         cout << "Multilevel condensation: " << timer.TimePerTest(1) << endl;
     }
     
-    void CoupledLinearNS_trafoP::v_GenerateSummary(SolverUtils::SummaryList& s)
+    void CoupledLinearNS::v_GenerateSummary(SolverUtils::SummaryList& s)
     {
         SolverUtils::AddSummaryItem(s, "Solver Type", "Coupled Linearised NS");
     }
     
-    void CoupledLinearNS_trafoP::v_DoInitialise(void)
+    void CoupledLinearNS::v_DoInitialise(void)
     {
         switch(m_equationType)
         {
@@ -1229,9 +1229,9 @@ namespace Nektar
 //                m_integrationScheme = LibUtilities::GetTimeIntegrationWrapperFactory().CreateInstance(LibUtilities::TimeIntegrationMethodMap[intMethod]);
                 
                 // Could defind this from IncNavierStokes class? 
-                m_ode.DefineOdeRhs(&CoupledLinearNS_trafoP::EvaluateAdvection, this);
+                m_ode.DefineOdeRhs(&CoupledLinearNS::EvaluateAdvection, this);
                 
-                m_ode.DefineImplicitSolve(&CoupledLinearNS_trafoP::SolveUnsteadyStokesSystem,this);
+                m_ode.DefineImplicitSolve(&CoupledLinearNS::SolveUnsteadyStokesSystem,this);
                 
                 // Set initial condition using time t=0
                 
@@ -1345,11 +1345,11 @@ namespace Nektar
             break;
         case eNoEquationType:
         default:
-            ASSERTL0(false,"Unknown or undefined equation type for CoupledLinearNS_trafoP");
+            ASSERTL0(false,"Unknown or undefined equation type for CoupledLinearNS");
         }
     }
     
-    void CoupledLinearNS_trafoP::EvaluateAdvection(const Array<OneD, const Array<OneD, NekDouble> > &inarray, 
+    void CoupledLinearNS::EvaluateAdvection(const Array<OneD, const Array<OneD, NekDouble> > &inarray, 
                                             Array<OneD, Array<OneD, NekDouble> > &outarray,
                                             const NekDouble time)
     {  	    
@@ -1363,7 +1363,7 @@ namespace Nektar
         }
     }
     
-    void CoupledLinearNS_trafoP::SolveUnsteadyStokesSystem(const Array<OneD, const Array<OneD, NekDouble> > &inarray, 
+    void CoupledLinearNS::SolveUnsteadyStokesSystem(const Array<OneD, const Array<OneD, NekDouble> > &inarray, 
                                                     Array<OneD, Array<OneD, NekDouble> > &outarray, 
                                                     const NekDouble time, 
                                                     const NekDouble aii_Dt)
@@ -1403,7 +1403,7 @@ namespace Nektar
     }
     
     
-    void CoupledLinearNS_trafoP::v_TransCoeffToPhys(void)
+    void CoupledLinearNS::v_TransCoeffToPhys(void)
     {
         int nfields = m_fields.num_elements();
         for (int k=0 ; k < nfields; ++k)
@@ -1415,7 +1415,7 @@ namespace Nektar
         
     }
     
-    void CoupledLinearNS_trafoP::v_TransPhysToCoeff(void)
+    void CoupledLinearNS::v_TransPhysToCoeff(void)
     {
         int nfields = m_fields.num_elements();
         for (int k=0 ; k < nfields; ++k)
@@ -1427,7 +1427,7 @@ namespace Nektar
         }
     }
     
-    void CoupledLinearNS_trafoP::v_DoSolve(void)
+    void CoupledLinearNS::v_DoSolve(void)
     {
         switch(m_equationType)
         {
@@ -1454,8 +1454,10 @@ namespace Nektar
                 Checkpoint_Output(Check);
                 Check++;
                 
+                cout<<"Before first solve";
                 cout<<"We execute INITIALLY SolveSteadyNavierStokes for m_kinvis = "<<m_kinvis<<" (<=> Re = "<<1/m_kinvis<<")"<<endl;
                 SolveSteadyNavierStokes();
+                cout<<"After first solve";
                 
                 while(m_kinvis > m_kinvisMin)
                 {		
@@ -1486,7 +1488,7 @@ namespace Nektar
             }
             case eNoEquationType:
             default:
-                ASSERTL0(false,"Unknown or undefined equation type for CoupledLinearNS_trafoP");
+                ASSERTL0(false,"Unknown or undefined equation type for CoupledLinearNS");
         }
     }
     
@@ -1496,12 +1498,12 @@ namespace Nektar
      * Arnoldi solves. For Coupledd solver this is true since Stokes
      * operator is set up as a LHS rather than RHS operation
      */
-    bool CoupledLinearNS_trafoP::v_NegatedOp(void)
+    bool CoupledLinearNS::v_NegatedOp(void)
     {
         return true; 
     }
     
-    void CoupledLinearNS_trafoP::Solve(void)
+    void CoupledLinearNS::Solve(void)
     {
         const unsigned int ncmpt = m_velocity.num_elements();
         Array<OneD, Array<OneD, NekDouble> > forcing_phys(ncmpt);
@@ -1530,7 +1532,7 @@ namespace Nektar
         SolveLinearNS(forcing);
     }
     
-    void CoupledLinearNS_trafoP::DefineForcingTerm(void)
+    void CoupledLinearNS::DefineForcingTerm(void)
     {
         m_ForcingTerm = Array<OneD, Array<OneD, NekDouble> > (m_velocity.num_elements());
         m_ForcingTerm_Coeffs = Array<OneD, Array<OneD, NekDouble> > (m_velocity.num_elements());
@@ -1560,8 +1562,9 @@ namespace Nektar
         }
     }
     
-    void CoupledLinearNS_trafoP::SolveSteadyNavierStokes(void)
+    void CoupledLinearNS::SolveSteadyNavierStokes(void)
     {
+    		cout<<"ma entri?";
         Timer Newtontimer;
         Newtontimer.Start();
         
@@ -1572,6 +1575,7 @@ namespace Nektar
         Array<OneD, NekDouble > L2_norm(m_velocity.num_elements(), 1.0);
         Array<OneD, NekDouble > Inf_norm(m_velocity.num_elements(), 1.0);
         
+        cout<<"test-1 ";
         for(int i = 0; i < m_velocity.num_elements(); ++i)
         {				
             delta_velocity_Phys[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),1.0); 
@@ -1585,6 +1589,7 @@ namespace Nektar
         //while(max(Inf_norm[0], Inf_norm[1]) > m_tol)
         while(max(L2_norm[0], L2_norm[1]) > m_tol)
         {
+        		cout<<"test0 ";
             if(m_counter == 1) 
                 //At the first Newton step, we use the solution of the
                 //Stokes problem (if Restart=0 in input file) Or the
@@ -1608,11 +1613,12 @@ namespace Nektar
                 SolveLinearNS(RHS_Coeffs);
                 m_initialStep = false; 
             }
+            cout<<"test1 ";
             if(m_counter > 1)
             {
                 EvaluateNewtonRHS(Velocity_Phys, RHS_Coeffs);
                 
-                if(m_counter%m_MatrixSetUpStep == 0) //Setting Up the matrix is expensive. We do it at each "m_MatrixSetUpStep" step.
+                if(m_counter%m_MatrixSetUpStep == 0) /*Setting Up the matrix is expensive. We do it at each "m_MatrixSetUpStep" step.*/
                 {
                     SetUpCoupledMatrix(0.0, Velocity_Phys, true);
                 }
@@ -1625,6 +1631,7 @@ namespace Nektar
                 m_fields[m_velocity[i]]->BwdTrans_IterPerExp(m_fields[m_velocity[i]]->GetCoeffs(), delta_velocity_Phys[i]); 
             }
             
+            cout<<"test2 ";
             for(int i = 0; i < m_velocity.num_elements(); ++i)
             {
                 Vmath::Vadd(Velocity_Phys[i].num_elements(),Velocity_Phys[i], 1, delta_velocity_Phys[i], 1, 
@@ -1643,6 +1650,7 @@ namespace Nektar
             
             cout << "\n";
             m_counter++;
+            cout<<"m_counter="<<m_counter<<endl;
         }	
         
         if (m_counter > 1) //We save u:=u+\delta u in u->Coeffs
@@ -1658,7 +1666,7 @@ namespace Nektar
     }
     
     
-    void CoupledLinearNS_trafoP::Continuation(void)
+    void CoupledLinearNS::Continuation(void)
     {
         Array<OneD, Array<OneD, NekDouble> > u_N(m_velocity.num_elements());
         Array<OneD, Array<OneD, NekDouble> > tmp_RHS(m_velocity.num_elements());
@@ -1703,7 +1711,7 @@ namespace Nektar
     }		
     
     
-    void  CoupledLinearNS_trafoP::InfNorm(Array<OneD, Array<OneD, NekDouble> > &inarray,
+    void  CoupledLinearNS::InfNorm(Array<OneD, Array<OneD, NekDouble> > &inarray,
                                    Array<OneD, NekDouble> &outarray)
     {
         for(int i = 0; i < m_velocity.num_elements(); ++i)
@@ -1720,7 +1728,7 @@ namespace Nektar
         }
     }
     
-    void  CoupledLinearNS_trafoP::L2Norm(Array<OneD, Array<OneD, NekDouble> > &inarray,
+    void  CoupledLinearNS::L2Norm(Array<OneD, Array<OneD, NekDouble> > &inarray,
                                   Array<OneD, NekDouble> &outarray)
     {
         for(int i = 0; i < m_velocity.num_elements(); ++i)
@@ -1736,7 +1744,7 @@ namespace Nektar
     }
     
     
-    void CoupledLinearNS_trafoP::EvaluateNewtonRHS(Array<OneD, Array<OneD, NekDouble> > &Velocity,
+    void CoupledLinearNS::EvaluateNewtonRHS(Array<OneD, Array<OneD, NekDouble> > &Velocity,
                                             Array<OneD, Array<OneD, NekDouble> > &outarray)
     {
         Array<OneD, Array<OneD, NekDouble> > Eval_Adv(m_velocity.num_elements());
@@ -1780,7 +1788,7 @@ namespace Nektar
     
     
     
-    const SpatialDomains::ExpansionMap &CoupledLinearNS_trafoP::GenPressureExp(const SpatialDomains::ExpansionMap &VelExp)
+    const SpatialDomains::ExpansionMap &CoupledLinearNS::GenPressureExp(const SpatialDomains::ExpansionMap &VelExp)
     {
         int i;
         SpatialDomains::ExpansionMapShPtr returnval;
@@ -1880,7 +1888,7 @@ namespace Nektar
      * We then unpack the solution back to the MultiRegion structures
      * #m_velocity and #m_pressure
      */
-    void CoupledLinearNS_trafoP::SolveLinearNS(const Array<OneD, Array<OneD, NekDouble> > &forcing)
+    void CoupledLinearNS::SolveLinearNS(const Array<OneD, Array<OneD, NekDouble> > &forcing)
     {
         int i,n;
         Array<OneD,  MultiRegions::ExpListSharedPtr> vel_fields(m_velocity.num_elements());
@@ -1919,7 +1927,7 @@ namespace Nektar
         }
     }
     
-    void CoupledLinearNS_trafoP::SolveLinearNS(const Array<OneD, Array<OneD, NekDouble> > &forcing,  Array<OneD, MultiRegions::ExpListSharedPtr> &fields, MultiRegions::ExpListSharedPtr &pressure,  const int mode)
+    void CoupledLinearNS::SolveLinearNS(const Array<OneD, Array<OneD, NekDouble> > &forcing,  Array<OneD, MultiRegions::ExpListSharedPtr> &fields, MultiRegions::ExpListSharedPtr &pressure,  const int mode)
     {
         int i,j,k,n,eid,cnt,cnt1;
         int nbnd,nint,offset;
@@ -2196,7 +2204,7 @@ namespace Nektar
         }
     }
     
-    void CoupledLinearNS_trafoP::v_Output(void)
+    void CoupledLinearNS::v_Output(void)
     {    
         std::vector<Array<OneD, NekDouble> > fieldcoeffs(m_fields.num_elements()+1);
         std::vector<std::string> variables(m_fields.num_elements()+1);
@@ -2234,12 +2242,12 @@ namespace Nektar
         WriteFld(outname,m_fields[0],fieldcoeffs,variables);
     }
     
-    int CoupledLinearNS_trafoP::v_GetForceDimension()
+    int CoupledLinearNS::v_GetForceDimension()
     {
         return m_session->GetVariables().size();
     }
 }
 
 /**
- * $Log: CoupledLinearNS_trafoP.cpp,v $
+ * $Log: CoupledLinearNS.cpp,v $
  **/

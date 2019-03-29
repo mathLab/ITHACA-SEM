@@ -43,6 +43,7 @@
 #include <boost/shared_ptr.hpp>
 #include <LibUtilities/LinearAlgebra/NekTypeDefs.hpp>
 #include "../Eigen/Dense"
+#include <vector>
 //#include <MultiRegions/GlobalLinSysDirectStaticCond.h>
 
 namespace Nektar
@@ -53,6 +54,7 @@ namespace Nektar
     {
     public:
         friend class MemoryManager<CoupledLinearNS_trafoP>;
+        //friend class CoupledLinearNS_TT;
         
         /// Creates an instance of this class
         static SolverUtils::EquationSystemSharedPtr create(
@@ -116,6 +118,9 @@ namespace Nektar
         
         void L2Norm(Array<OneD, Array<OneD, NekDouble> > &inarray,
                     Array<OneD, NekDouble> &outarray);
+                    
+        // Unpack solution 
+        Array<OneD, NekDouble> InverseTrafo(Array<OneD, NekDouble> &solution, int mode, MultiRegions::ExpListSharedPtr &pressure);
         
         void DefineForcingTerm(void);
         Array<OneD, Array<OneD, NekDouble> > m_ForcingTerm;
@@ -128,6 +133,8 @@ namespace Nektar
         void DoInitialiseAdv(Array<OneD, NekDouble> myAdvField_x, Array<OneD, NekDouble> myAdvField_y);
         Eigen::MatrixXd DoTrafo(Array<OneD, Array<OneD, NekDouble> > snapshot_x_collection, Array<OneD, Array<OneD, NekDouble> > snapshot_y_collection, Array<OneD, NekDouble> param_vector);
 	Array<OneD, Array<OneD, NekDouble> > DoSolve_at_param(Array<OneD, NekDouble> init_snapshot_x, Array<OneD, NekDouble> init_snapshot_y, NekDouble parameter);
+	
+	Array<OneD, Array<OneD, NekDouble> > DoSolve_at_param_with_Newton(Array<OneD, NekDouble> init_snapshot_x, Array<OneD, NekDouble> init_snapshot_y, NekDouble parameter);
 
 	Eigen::VectorXd curr_f_bnd;
 	Eigen::VectorXd curr_f_p;
@@ -135,6 +142,15 @@ namespace Nektar
 
 	NekDouble Get_m_kinvis(void);
 	void Set_m_kinvis(NekDouble);
+	
+	
+	//perform my continuation method
+	void continuation_method(NekDouble param);
+	bool use_deflation, converged, deflate;
+	int number_of_deflations, total_solutions_found, different_solutions_found;
+	Array<OneD, Array<OneD, NekDouble> > solution_x_continuation_deflation;
+	Array<OneD, Array<OneD, NekDouble> > solution_y_continuation_deflation;
+	std::vector<int> local_indices_to_be_continued;
 
     protected:
 

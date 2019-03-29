@@ -1994,7 +1994,7 @@ namespace Nektar
         int nvel = m_velocity.num_elements();
         int nel  = fields[0]->GetNumElmts();
         Array<OneD, unsigned int> bmap, imap; 
-        
+     
         Array<OneD, NekDouble > f_bnd(m_mat[mode].m_BCinv->GetRows());
         NekVector< NekDouble  > F_bnd(f_bnd.num_elements(), f_bnd, eWrapper);
         Array<OneD, NekDouble > f_int(m_mat[mode].m_BCinv->GetColumns());
@@ -2213,8 +2213,7 @@ namespace Nektar
         }
         
         //  Set Weak BC into f_bnd and Dirichlet Dofs in bnd
-        const Array<OneD,const int>& bndmap
-        = m_locToGloMap[mode]->GetBndCondCoeffsToGlobalCoeffsMap();
+        const Array<OneD,const int>& bndmap = m_locToGloMap[mode]->GetBndCondCoeffsToGlobalCoeffsMap();
         
 /*          ofstream myfilebndmap ("BndCondCoeffsToGlobalCoeffsMap.txt");
 	  if (myfilebndmap.is_open())
@@ -2890,6 +2889,8 @@ namespace Nektar
 
     void CoupledLinearNS_TT::v_DoInitialise(void)
     {
+    	
+    	cout<<"In CoupledLinearNS_TT::v_DoInitialise() in clns_TT\n";
         switch(m_equationType)
         {
             case eUnsteadyStokes:
@@ -2961,6 +2962,7 @@ namespace Nektar
         case eSteadyNavierStokes:
             {				
                 m_session->LoadParameter("KinvisMin", m_kinvisMin);
+                cout<<"kinvismin initialised to "<<m_kinvisMin<<"in CopledLinearNS_TT.cpp\n";
                 m_session->LoadParameter("KinvisPercentage", m_KinvisPercentage);
                 m_session->LoadParameter("Tolerence", m_tol);
                 m_session->LoadParameter("MaxIteration", m_maxIt);
@@ -3054,7 +3056,7 @@ namespace Nektar
 	return RB_via_POD;
     }
 
-    void CoupledLinearNS_TT::set_MtM()
+	void CoupledLinearNS_TT::set_MtM()
     {
 	nBndDofs = m_locToGloMap[0]->GetNumGlobalBndCoeffs();  // number of global bnd dofs
         const Array<OneD,const int>& loctoglobndmap = m_locToGloMap[0]->GetLocalToGlobalBndMap();
@@ -3162,6 +3164,7 @@ namespace Nektar
 		
 	}
 
+	// change from Nektar array to Eigen matrix
 	eigen_phys_basis_x = Eigen::MatrixXd::Zero(GetNpoints(), RBsize);
 	eigen_phys_basis_y = Eigen::MatrixXd::Zero(GetNpoints(), RBsize);
 	for (int index_phys_base=0; index_phys_base<GetNpoints(); index_phys_base++)
@@ -3173,6 +3176,7 @@ namespace Nektar
 		}
 	}
 
+	// modified iterative Gram-Schmidt 
 	Eigen::VectorXd curr_col = eigen_phys_basis_x.col(0);
 	double norm_curr_col = curr_col.norm();
 	eigen_phys_basis_x.col(0) = curr_col / norm_curr_col;
@@ -3195,6 +3199,7 @@ namespace Nektar
 		eigen_phys_basis_y.col(orth_iter) = orthogonal_complement / norm_curr_col;
 	}
 
+	// orthonormalized ones again as Nektar array
 	orth_PhysBaseVec_x = Array<OneD, Array<OneD, double> > (RBsize); 
 	orth_PhysBaseVec_y = Array<OneD, Array<OneD, double> > (RBsize); 
 	for (int index_RBsize=0; index_RBsize<RBsize; index_RBsize++)
@@ -3214,6 +3219,7 @@ namespace Nektar
     void CoupledLinearNS_TT::gen_proj_adv_terms()
     {
 	RBsize = RB.cols();
+	cout<<"number rows and columns of RB "<<RB.rows()<<" "<<RB.cols()<<endl;
 	adv_mats_proj_x = Array<OneD, Eigen::MatrixXd > (RBsize);
 	adv_mats_proj_y = Array<OneD, Eigen::MatrixXd > (RBsize);
 	adv_vec_proj_x = Array<OneD, Eigen::VectorXd > (RBsize);
@@ -3240,6 +3246,8 @@ namespace Nektar
 
 		adv_mats_proj_x[trafo_iter] = adv_mat_proj;
 		adv_vec_proj_x[trafo_iter] = adv_rhs_proj;
+		
+		
 		DoInitialiseAdv(PhysBase_zero , curr_PhysBaseVec_y ); // call with parameter in phys state
 		adv_matrix = Get_advection_matrix();
 		add_to_rhs_adv = adv_matrix * f_bnd_dbc_full_size;   
@@ -3262,6 +3270,7 @@ namespace Nektar
 	for (int i=0; i<Nmax; i++)
 	{
 		Set_m_kinvis( param_vector[i] );	
+		cout<<"DoTrafo with Nmax="<<Nmax<<", I'm observing the parameter number "<<i<<endl;
 //		cout << "CLNS_trafo.Get_m_kinvis " << CLNS_trafo.Get_m_kinvis() << endl;
 	//	CLNS_trafo.DoInitialise();
 		DoInitialiseAdv(snapshot_x_collection[i], snapshot_y_collection[i]); // replaces .DoInitialise();
@@ -3325,6 +3334,8 @@ namespace Nektar
 	curr_xy_projected = Eigen::MatrixXd::Zero(curr_x_proj.rows(), 2);
 	curr_xy_projected.col(0) = curr_x_proj;
 	curr_xy_projected.col(1) = curr_y_proj;
+	
+	cout<<"eigen_phys_basis_x rows and columns: "<<eigen_phys_basis_x.rows()<<" "<<eigen_phys_basis_x.cols()<<endl;
 
 	return curr_xy_projected;
 
@@ -3332,6 +3343,9 @@ namespace Nektar
 
     void CoupledLinearNS_TT::online_phase()
     {
+    	int number_of_snapshots = m_session->GetParameter("number_of_snapshots");
+    	if(number_of_snapshots > 1)
+    	{
 	Eigen::MatrixXd mat_compare = Eigen::MatrixXd::Zero(f_bnd_dbc_full_size.rows(), 3);  // is of size M_truth_size
 	// start sweeping 
 	for (int iter_index = 0; iter_index < Nmax; ++iter_index)
@@ -3357,45 +3371,83 @@ namespace Nektar
 		mat_compare.col(2) = mat_compare.col(1) - mat_compare.col(0);
 //		cout << mat_compare << endl;
 		cout << "relative error norm: " << mat_compare.col(2).norm() / mat_compare.col(0).norm() << endl;
-
-		// here now manipulate m_fields with local dof and then call WriteFld
-		// Unpack solution from Bnd and F_int to v_coeffs 
-      int cnt = 0;
-      int cnt1 = 0;
-      /*for(int i = 0; i < nel; ++i) // loop over elements
-      {
-        eid  = fields[m_velocity[0]]->GetOffset_Elmt_Id(i);
-        fields[0]->GetExp(eid)->GetBoundaryMap(bmap);
-        fields[0]->GetExp(eid)->GetInteriorMap(imap);
-        nbnd   = bmap.num_elements();
-        nint   = imap.num_elements();
-        offset = fields[0]->GetCoeff_Offset(eid);
+		
+		cout<<"reconstruct_solution.rows() "<<reconstruct_solution.rows()<<" reconstruct_solution.cols() "<<reconstruct_solution.cols()<<endl;
+		
+		std::vector<Array<OneD, NekDouble> > fieldcoeffs(m_fields.num_elements()+1);
+    	std::vector<std::string> variables(m_fields.num_elements()+1);
+    	int i,j;
+		Array<OneD, MultiRegions::ExpListSharedPtr> m_fields_t = UpdateFields();
+		
+		
+		for(i=0; i<m_fields.num_elements()+1; i++)
+		{
+    		fieldcoeffs[i] = Array<OneD, NekDouble>(m_fields_t[0]->UpdateCoeffs().num_elements());
+		}
+		
+		//m_fields_t[0]->FwdTrans(m_fields_t[0]->UpdatePhys(), m_fields_t[0]->UpdateCoeffs());
+		//m_fields_t[1]->FwdTrans(m_fields_t[1]->UpdatePhys(), m_fields_t[1]->UpdateCoeffs());
+		
+		
+		cout<<"m_pressure.num_elements()="<<m_pressure->GetNcoeffs()<<endl;
+		cout<<"m_fields[0].num_elements()="<<m_fields_t[0]->GetNcoeffs()<<endl;   // la sommma delle 2 velocita' e della pressione e' effettivamente la dimensione di reconstruct_solution!
+		cout<<"m_fields_t[0]->UpdateCoeffs().num_elements() "<<m_fields_t[0]->UpdateCoeffs().num_elements()<<endl; // uguale a m_fields[0]->GetNcoeffs()
+		cout<<"m_fields_t[0]->UpdatePhys().num_elements() "<<m_fields_t[0]->UpdatePhys().num_elements()<<endl;
+		cout<<"m_singleMode="<<m_singleMode<<endl;
         
-        for(int j = 0; j < nvel; ++j) // loop over velocity fields 
+    	for(i = 0; i < m_fields.num_elements(); ++i)
+    	{
+     	   //fieldcoeffs[i] = m_fields_t[i]->UpdateCoeffs();
+     	   	for(j=0; j<m_fields[0]->GetNcoeffs(); j++)
+     	   	{   
+     	   		fieldcoeffs[i][j]=reconstruct_solution[2*j+i];
+     	   	}
+     	   	variables[i]   = m_boundaryConditions->GetVariable(i);
+      	   	cout<<fieldcoeffs[i][53];
+    	}
+    
+       // project pressure field to velocity space        
+        if(m_singleMode==true)
         {
-           for(int n = 0; n < nz_loc; ++n)
-           {
-               for(int k = 0; k < nbnd; ++k)
-		         {  
-                 //fields[j]->SetCoeff(n*nplanecoeffs + offset+bmap[k],f_bnd[cnt+k]);
-               }
-             
-               for(k = 0; k < nint; ++k)
-               {
-               //   fields[j]->SetCoeff(n*nplanecoeffs + offset+imap[k],f_int[cnt1+k]);
-               }
-               cnt  += nbnd;
-               cnt1 += nint;
-           }
+            Array<OneD, NekDouble > tmpfieldcoeffs (m_fields[0]->GetNcoeffs()/2);
+            m_pressure->GetPlane(0)->BwdTrans_IterPerExp(m_pressure->GetPlane(0)->GetCoeffs(), m_pressure->GetPlane(0)->UpdatePhys());
+            m_pressure->GetPlane(1)->BwdTrans_IterPerExp(m_pressure->GetPlane(1)->GetCoeffs(), m_pressure->GetPlane(1)->UpdatePhys()); 
+            m_fields[0]->GetPlane(0)->FwdTrans_IterPerExp(m_pressure->GetPlane(0)->GetPhys(),fieldcoeffs[i]);
+            m_fields[0]->GetPlane(1)->FwdTrans_IterPerExp(m_pressure->GetPlane(1)->GetPhys(),tmpfieldcoeffs);
+            for(int e=0; e<m_fields[0]->GetNcoeffs()/2; e++)
+            {
+                fieldcoeffs[i][e+m_fields[0]->GetNcoeffs()/2] = tmpfieldcoeffs[e];
+            }          
         }
-      }
-      
-      for(i = 0; i < nel; ++i)
-      {
-      	SetCoef(i,fields[i]);
-      }*/
-      WriteFld(m_sessionName+".fld");
+        else
+        {
+            m_pressure->BwdTrans_IterPerExp(m_pressure->GetCoeffs(),m_pressure->UpdatePhys());
+            m_fields[0]->FwdTrans_IterPerExp(m_pressure->GetPhys(),fieldcoeffs[i]);
+        }
+        variables[i] = "p";   
+    
+    	std::stringstream sstm, sstm2;
+		sstm << "_" << m_sessionName <<"_param_" << current_nu<<"_online.fld";
+		std::string outname = sstm.str();
+		
+		/*for(i=0; i<m_fields_t[0]->UpdateCoeffs().num_elements(); i++)
+		{	
+			fieldcoeffs[0][i] = 10;//reconstruct_solution[i+j];
+			fieldcoeffs[1][i] = 5;//reconstruct_solution[i+j];
+			fieldcoeffs[2][i] = 2;
+			m_fields_t[0]->SetCoeff(i,9.7565);
+			
+			//m_fields_t[0]->SetCoeff(i,reconstruct_solution[i]);
+		}
+		
+		m_fields_t[0]->BwdTrans(m_fields_t[0]->GetCoeffs(), m_fields_t[0]->UpdatePhys());
+		m_fields_t[1]->BwdTrans(m_fields_t[1]->GetCoeffs(), m_fields_t[1]->UpdatePhys());*/
+		
+    	WriteFld(outname,m_fields[0],fieldcoeffs,variables);  
+    	
+		
 
+	}
 	}
     }
 	
@@ -3406,6 +3458,11 @@ namespace Nektar
 	double POD_tolerance = m_session->GetParameter("POD_tolerance");
 	ref_param_index = m_session->GetParameter("ref_param_index");
 	ref_param_nu = m_session->GetParameter("ref_param_nu");
+	
+	m_session->SetSolverInfo("SolverType", "CoupledLinearisedNS_trafoP");
+	CoupledLinearNS_trafoP babyCLNS_trafo(m_session);
+	babyCLNS_trafo.InitObject();
+	
 	if (m_session->DefinesParameter("globally_connected")) // this sets how the truth system global coupling is enforced
 	{
 		globally_connected = m_session->GetParameter("globally_connected");
@@ -3422,7 +3479,7 @@ namespace Nektar
 	param_vector[1] = 0.5;
 	param_vector[2] = 1;
 	param_vector[3] = 10;  	*/
-        for(int i = 0; i < number_of_snapshots; ++i)
+        for(int i = 0; i < number_of_snapshots; i++)
         {
 		// generate the correct string
 		std::stringstream sstm;
@@ -3440,12 +3497,20 @@ namespace Nektar
 	}
 	else
 	{
-		compute_snapshots(number_of_snapshots);
+		if(number_of_snapshots == 1)
+		{
+			cout<<"Start continuation_method(param) with param_vector[0]="<<param_vector[0]<<"\n";
+			babyCLNS_trafo.continuation_method();	
+		}
+		else
+		{
+			compute_snapshots(number_of_snapshots);
+		}
 	}
-	DoInitialise(); 
-	DoSolve();
-	m_session->SetSolverInfo("SolverType", "CoupledLinearisedNS_trafoP");
-	CoupledLinearNS_trafoP babyCLNS_trafo(m_session);
+	if(number_of_snapshots > 1)
+	{
+		DoInitialise(); 
+	DoSolve(); // get internal dimensions right
 	babyCLNS_trafo.InitObject();
 	//Eigen::MatrixXd collect_f_all = babyCLNS_trafo.DoTrafo(snapshot_x_collection, snapshot_y_collection, param_vector);
 	collect_f_all = babyCLNS_trafo.DoTrafo(snapshot_x_collection, snapshot_y_collection, param_vector);
@@ -3500,8 +3565,9 @@ namespace Nektar
 	cout << "finished gen_proj_adv_terms " << endl;
 	gen_reference_matrices();
 	cout << "finished gen_reference_matrices " << endl;
-    }
-
+	}
+   }
+   
     Eigen::MatrixXd CoupledLinearNS_TT::gen_affine_mat_proj(double current_nu)
     {
 	Eigen::MatrixXd recovered_affine_adv_mat_proj_xy = Eigen::MatrixXd::Zero(RBsize, RBsize);
@@ -3570,6 +3636,7 @@ namespace Nektar
 	babyCLNS_trafo.InitObject();
 	//Eigen::MatrixXd collect_f_all = babyCLNS_trafo.DoTrafo(snapshot_x_collection, snapshot_y_collection, param_vector);
 	Array<OneD, NekDouble> zero_phys_init(GetNpoints(), 0.0);
+	cout<<"Npoints="<<GetNpoints()<<endl;
 	snapshot_x_collection = Array<OneD, Array<OneD, NekDouble> > (number_of_snapshots);
 	snapshot_y_collection = Array<OneD, Array<OneD, NekDouble> > (number_of_snapshots);
         for(int i = 0; i < number_of_snapshots; ++i)
@@ -3668,7 +3735,7 @@ namespace Nektar
         int i;
         
         for(i = 0; i < m_fields.num_elements(); ++i)
-        {
+        {        	
             fieldcoeffs[i] = m_fields[i]->UpdateCoeffs();
             variables[i]   = m_boundaryConditions->GetVariable(i);
         }

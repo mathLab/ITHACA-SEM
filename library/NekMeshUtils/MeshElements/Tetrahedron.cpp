@@ -54,13 +54,20 @@ LibUtilities::ShapeType Tetrahedron::m_type =
     GetElementFactory().RegisterCreatorFunction(
         LibUtilities::eTetrahedron, Tetrahedron::create, "Tetrahedron");
 
-/// Vertex IDs that make up tetrahedron faces.
-int Tetrahedron::m_faceIds[4][3] = {
+/// Local vertices that make up each tetrahedral edge.
+int Tetrahedron::m_edgeVertMap[6][2] = {
+    {0, 1}, {1, 2}, {0, 2}, {0, 3}, {1, 3}, {2, 3}
+};
+
+/// Local vertices that make up each tetrahedral face.
+int Tetrahedron::m_faceVertMap[4][3] = {
     {0, 1, 2}, {0, 1, 3}, {1, 2, 3}, {0, 2, 3}
 };
 
-int edgeVertMap[6][2] = { {0, 1}, {1, 2}, {0, 2}, {0, 3}, {1, 3}, {2, 3} };
-int faceEdgeMap[4][3] = { {0,1,2}, {0,4,3}, {1,5,4}, {2,5,3} };
+/// Local edges that make up each tetrahedral face.
+int Tetrahedron::m_faceEdgeMap[4][3] = {
+    {0, 1, 2}, {0, 4, 3}, {1, 5, 4}, {2, 5, 3}
+};
 
 /**
  * @brief Create a tetrahedron element.
@@ -109,14 +116,14 @@ Tetrahedron::Tetrahedron(ElmtConfig pConf,
         bool rev = false;
         for (int j = 0; j < 6; ++j)
         {
-            if (edgeVertMap[i][0] == m_origVertMap[edgeVertMap[j][0]] &&
-                edgeVertMap[i][1] == m_origVertMap[edgeVertMap[j][1]])
+            if (m_edgeVertMap[i][0] == m_origVertMap[m_edgeVertMap[j][0]] &&
+                m_edgeVertMap[i][1] == m_origVertMap[m_edgeVertMap[j][1]])
             {
                 origEdge = j;
                 break;
             }
-            else if (edgeVertMap[i][0] == m_origVertMap[edgeVertMap[j][1]] &&
-                     edgeVertMap[i][1] == m_origVertMap[edgeVertMap[j][0]])
+            else if (m_edgeVertMap[i][0] == m_origVertMap[m_edgeVertMap[j][1]] &&
+                     m_edgeVertMap[i][1] == m_origVertMap[m_edgeVertMap[j][0]])
             {
                 origEdge = j;
                 rev = true;
@@ -131,16 +138,16 @@ Tetrahedron::Tetrahedron(ElmtConfig pConf,
         if (rev)
         {
             m_edge[i] = std::make_shared<Edge>(
-                m_vertex[edgeVertMap[i][1]],
-                m_vertex[edgeVertMap[i][0]],
+                m_vertex[m_edgeVertMap[i][1]],
+                m_vertex[m_edgeVertMap[i][0]],
                 edgeNodes,
                 m_conf.m_edgeCurveType);
         }
         else
         {
             m_edge[i] = std::make_shared<Edge>(
-                m_vertex[edgeVertMap[i][0]],
-                m_vertex[edgeVertMap[i][1]],
+                m_vertex[m_edgeVertMap[i][0]],
+                m_vertex[m_edgeVertMap[i][1]],
                 edgeNodes,
                 m_conf.m_edgeCurveType);
         }
@@ -157,8 +164,8 @@ Tetrahedron::Tetrahedron(ElmtConfig pConf,
 
         for (int k = 0; k < 3; ++k)
         {
-            faceVertices[k] = m_vertex[m_faceIds[j][k]];
-            faceEdges[k] = m_edge[faceEdgeMap[j][k]];
+            faceVertices[k] = m_vertex[m_faceVertMap[j][k]];
+            faceEdges[k] = m_edge[m_faceEdgeMap[j][k]];
         }
 
         // When face curvature is supplied, it may have been the case
@@ -198,9 +205,9 @@ Tetrahedron::Tetrahedron(ElmtConfig pConf,
 
             // Find the original face vertex IDs.
             vector<int> origFaceIds(3);
-            origFaceIds[0] = pNodeList[m_faceIds[origFace][0]]->m_id;
-            origFaceIds[1] = pNodeList[m_faceIds[origFace][1]]->m_id;
-            origFaceIds[2] = pNodeList[m_faceIds[origFace][2]]->m_id;
+            origFaceIds[0] = pNodeList[m_faceVertMap[origFace][0]]->m_id;
+            origFaceIds[1] = pNodeList[m_faceVertMap[origFace][1]]->m_id;
+            origFaceIds[2] = pNodeList[m_faceVertMap[origFace][2]]->m_id;
 
             // Construct a HOTriangle object which performs the
             // orientation magically for us.
@@ -246,11 +253,11 @@ SpatialDomains::GeometrySharedPtr Tetrahedron::GetGeom(int coordDim)
 StdRegions::Orientation Tetrahedron::GetEdgeOrient(
     int edgeId, EdgeSharedPtr edge)
 {
-    if (edge->m_n1 == m_vertex[edgeVertMap[edgeId][0]])
+    if (edge->m_n1 == m_vertex[m_edgeVertMap[edgeId][0]])
     {
         return StdRegions::eForwards;
     }
-    else if (edge->m_n1 == m_vertex[edgeVertMap[edgeId][1]])
+    else if (edge->m_n1 == m_vertex[m_edgeVertMap[edgeId][1]])
     {
         return StdRegions::eBackwards;
     }
@@ -430,34 +437,17 @@ void Tetrahedron::GetCurvedNodes(std::vector<NodeSharedPtr> &nodeList) const
               nodeList.begin() + k);
 }
 
+/**
+ * @brief Helper function to sort 3 numbers using sorting network.
+ */
 template<typename K>
 void sort3(K& x, K& y, K& z)
 {
-    if (y < x) {
-        if (z < x) {
-            if (z < y) {
-                swap(x, z);
-            } else {
-                K tmp = std::move(x);
-                x = std::move(y);
-                y = std::move(z);
-                z = std::move(tmp);
-            }
-        } else {
-            swap(x, y);
-        }
-    } else {
-        if (z < y) {
-            if (z < x) {
-                K tmp = std::move(z);
-                z = std::move(y);
-                y = std::move(x);
-                x = std::move(tmp);
-            } else {
-                swap(y, z);
-            }
-        }
-    }
+#define SWAP(a,b) if (a > b) std::swap(a,b);
+    SWAP(y, z);
+    SWAP(x, z);
+    SWAP(x, y);
+#undef SWAP
 }
 
 /**
@@ -481,9 +471,9 @@ void Tetrahedron::OrientTet()
     int orig_faces[4][3];
     for (int i = 0; i < 4; ++i)
     {
-        int v0id = m_vertex[m_faceIds[i][0]]->m_id;
-        int v1id = m_vertex[m_faceIds[i][1]]->m_id;
-        int v2id = m_vertex[m_faceIds[i][2]]->m_id;
+        int v0id = m_vertex[m_faceVertMap[i][0]]->m_id;
+        int v1id = m_vertex[m_faceVertMap[i][1]]->m_id;
+        int v2id = m_vertex[m_faceVertMap[i][2]]->m_id;
         sort3(v0id, v1id, v2id);
         orig_faces[i][0] = v0id;
         orig_faces[i][1] = v1id;
@@ -578,9 +568,9 @@ void Tetrahedron::OrientTet()
     // this to construct the #orientationMap.
     for (int i = 0; i < 4; ++i)
     {
-        int v0id = m_vertex[m_faceIds[i][0]]->m_id;
-        int v1id = m_vertex[m_faceIds[i][1]]->m_id;
-        int v2id = m_vertex[m_faceIds[i][2]]->m_id;
+        int v0id = m_vertex[m_faceVertMap[i][0]]->m_id;
+        int v1id = m_vertex[m_faceVertMap[i][1]]->m_id;
+        int v2id = m_vertex[m_faceVertMap[i][2]]->m_id;
         sort3(v0id, v1id, v2id);
 
         for (int j = 0; j < 4; ++j)

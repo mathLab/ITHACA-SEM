@@ -899,7 +899,7 @@ void InputStar::InitCCM(void)
     m_ccmErr     = CCMIOOpenFile(NULL, fname.c_str(), kCCMIORead, &root);
     ASSERTL0(m_ccmErr == kCCMIONoErr,"Error opening file");
 
-    CCMIOSize_t i = CCMIOSIZEC(0);
+    int i = 0;
     CCMIOID state, problem;
 
     // We are going to assume that we have a state with a
@@ -923,7 +923,8 @@ void InputStar::InitCCM(void)
 void InputStar::ReadNodes(std::vector<NodeSharedPtr> &Nodes)
 {
     CCMIOID mapID, vertices;
-    CCMIOSize_t nVertices, size, dims = CCMIOSIZEC(1);
+    CCMIOSize nVertices, size;
+    int dims = 1;
 
     CCMIOReadProcessor(
         &m_ccmErr, m_ccmProcessor, &vertices, &m_ccmTopology, NULL, NULL);
@@ -937,7 +938,7 @@ void InputStar::ReadNodes(std::vector<NodeSharedPtr> &Nodes)
     // appropriate scaling factor.  The offset is just to show you can read
     // any chunk.  Normally this would be in a for loop.
     float scale;
-    int nvert  = nVertices.getValue();
+    int nvert  = nVertices;
     vector<int> mapData;
     mapData.resize(nvert);
     vector<float> verts;
@@ -955,14 +956,14 @@ void InputStar::ReadNodes(std::vector<NodeSharedPtr> &Nodes)
                        &scale,
                        &mapID,
                        &verts[0],
-                       CCMIOINDEXC(0),
-                       CCMIOINDEXC(0 + nVertices));
+                       0,
+                       nVertices);
     ASSERTL0(m_ccmErr == kCCMIONoErr,"Error Reading Vertices in ReadNodes");
     CCMIOReadMap(&m_ccmErr,
                  mapID,
                  &mapData[0],
-                 CCMIOINDEXC(0),
-                 CCMIOINDEXC(0 + nVertices));
+                 0,
+                 nVertices);
     ASSERTL0(m_ccmErr == kCCMIONoErr,"Error Reading Map in ReadNodes");
 
     for (int i = 0; i < nVertices; ++i)
@@ -977,14 +978,14 @@ void InputStar::ReadInternalFaces(map<int, vector<int> > &FacesNodes,
 {
 
     CCMIOID mapID, id;
-    CCMIOSize_t nFaces, size;
+    CCMIOSize nFaces, size;
     vector<int> faces, faceCells, mapData;
 
     // Read the internal faces.
     CCMIOGetEntity(&m_ccmErr, m_ccmTopology, kCCMIOInternalFaces, 0, &id);
     CCMIOEntitySize(&m_ccmErr, id, &nFaces, NULL);
 
-    int nf = TOINT64(nFaces);
+    int nf = nFaces;
     mapData.resize(nf);
     faceCells.resize(2 * nf);
 
@@ -994,28 +995,28 @@ void InputStar::ReadInternalFaces(map<int, vector<int> > &FacesNodes,
                    NULL,
                    &size,
                    NULL,
-                   CCMIOINDEXC(kCCMIOStart),
-                   CCMIOINDEXC(kCCMIOEnd));
-    faces.resize(TOINT64(size));
+                   kCCMIOStart,
+                   kCCMIOEnd);
+    faces.resize((size_t)size);
     CCMIOReadFaces(&m_ccmErr,
                    id,
                    kCCMIOInternalFaces,
                    &mapID,
                    NULL,
                    &faces[0],
-                   CCMIOINDEXC(kCCMIOStart),
-                   CCMIOINDEXC(kCCMIOEnd));
+                   kCCMIOStart,
+                   kCCMIOEnd);
     CCMIOReadFaceCells(&m_ccmErr,
                        id,
                        kCCMIOInternalFaces,
                        &faceCells[0],
-                       CCMIOINDEXC(kCCMIOStart),
-                       CCMIOINDEXC(kCCMIOEnd));
+                       kCCMIOStart,
+                       kCCMIOEnd);
     CCMIOReadMap(&m_ccmErr,
                  mapID,
                  &mapData[0],
-                 CCMIOINDEXC(kCCMIOStart),
-                 CCMIOINDEXC(kCCMIOEnd));
+                 kCCMIOStart,
+                 kCCMIOEnd);
 
     // Add face nodes
     int cnt = 0;
@@ -1072,9 +1073,9 @@ void InputStar::ReadBoundaryFaces(vector<vector<int> > &BndElementFaces,
                                   vector<string> &Facelabels)
 {
     // Read the boundary faces.
-    CCMIOSize_t index = CCMIOSIZEC(0);
+    int index = 0;
     CCMIOID mapID, id;
-    CCMIOSize_t nFaces, size;
+    CCMIOSize nFaces, size;
     vector<int> faces, faceCells, mapData;
     vector<string> facelabel;
 
@@ -1085,7 +1086,7 @@ void InputStar::ReadBoundaryFaces(vector<vector<int> > &BndElementFaces,
         int boundaryVal;
 
         CCMIOEntitySize(&m_ccmErr, id, &nFaces, NULL);
-        int nf = TOINT64(nFaces);
+        CCMIOSize nf = nFaces;
         mapData.resize(nf);
         faceCells.resize(nf);
         CCMIOReadFaces(&m_ccmErr,
@@ -1094,29 +1095,29 @@ void InputStar::ReadBoundaryFaces(vector<vector<int> > &BndElementFaces,
                        NULL,
                        &size,
                        NULL,
-                       CCMIOINDEXC(kCCMIOStart),
-                       CCMIOINDEXC(kCCMIOEnd));
+                       kCCMIOStart,
+                       kCCMIOEnd);
 
-        faces.resize(TOINT64(size));
+        faces.resize((size_t)size);
         CCMIOReadFaces(&m_ccmErr,
                        id,
                        kCCMIOBoundaryFaces,
                        &mapID,
                        NULL,
                        &faces[0],
-                       CCMIOINDEXC(kCCMIOStart),
-                       CCMIOINDEXC(kCCMIOEnd));
+                       kCCMIOStart,
+                       kCCMIOEnd);
         CCMIOReadFaceCells(&m_ccmErr,
                            id,
                            kCCMIOBoundaryFaces,
                            &faceCells[0],
-                           CCMIOINDEXC(kCCMIOStart),
-                           CCMIOINDEXC(kCCMIOEnd));
+                           kCCMIOStart,
+                           kCCMIOEnd);
         CCMIOReadMap(&m_ccmErr,
                      mapID,
                      &mapData[0],
-                     CCMIOINDEXC(kCCMIOStart),
-                     CCMIOINDEXC(kCCMIOEnd));
+                     kCCMIOStart,
+                     kCCMIOEnd);
 
         CCMIOGetEntityIndex(&m_ccmErr, id, &boundaryVal);
 

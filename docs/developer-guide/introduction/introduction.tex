@@ -4,9 +4,9 @@
 \nek{} \cite{CantwellMCBRMGYLEJXMENVBKS2015}, is an open-source software framework designed to support the development of 
 high-performance scalable solvers for partial differential equations using the spectral/{\em hp\/} element method.   
 What in part makes \nek{} unique is that it is  
-an initiative to overcome the mathematical complexities of the methods by encapsulating them within an efficient cross-platform C++ software environment, consequently making the techniques more accessible to the broader scientific and industrial communities. The software supports a variety of discretization techniques and 
+an initiative to overcome the mathematical complexities of the methods by encapsulating them within an efficient cross-platform {\em C++} software environment, consequently making the techniques more accessible to the broader scientific and industrial communities. The software supports a variety of discretization techniques and 
 implementation strategies \cite{VosSK2010,CantwellSKK2011a,CantwellSKK2011b,BolisCKS2014},
-supporting methods research as well as application-focused computation, and the multi-layered structure of the framework allows the user to embrace as much or as little of the complexity as they need. The libraries capture the mathematical constructs of spectral/{\em hp\/} element methods in the form of a hierarchy of C++ components, while the associated collection of pre-written PDE solvers provides out-of-the-box functionality across a range of application areas, as well as a template for users who wish to develop solutions for addressing questions in their own scientific domains.
+supporting methods research as well as application-focused computation, and the multi-layered structure of the framework allows the user to embrace as much or as little of the complexity as they need. The libraries capture the mathematical constructs of spectral/{\em hp\/} element methods in the form of a hierarchy of {\em C++} components, while the associated collection of pre-written PDE solvers provides out-of-the-box functionality across a range of application areas, as well as a template for users who wish to develop solutions for addressing questions in their own scientific domains.
 
 % Overview of Nektar++ and its goals/features
 The cross-platform nature of the software libraries enables the rapid development of solvers for use in a wide variety of computing environments. The code accommodates both small research problems, suitable for desktop computers, and large-scale industrial simulations, requiring modern HPC infrastructure, where there is a need to maintain efficiency and scalability up to many thousands of processor cores.
@@ -159,7 +159,7 @@ we support differentiation and integration.
 data structures, and the mapping information (such as Jacobians) from StdRegions to LocalRegions.
 
 \noindent{\textbf{LocalRegions:}}  This library contains objects that express data and operations on individual physical elements of the computational mesh.  Local regions are \shp{} elements in
-world-space (either straight-/planar-sided or curved-sided).  Using C++ terminology, a local region object {\em is-a} standard region object and {\em has-a} spatial domain object.
+world-space (either straight-/planar-sided or curved-sided).  Using {\em C++} terminology, a local region object {\em is-a} standard region object and {\em has-a} spatial domain object.
 
 \noindent{\textbf{MultiRegions:}} This library holds the data structures that represent sets of elements (local regions).  At the most fundamental 
 level, these represent the union of local regions into a (geometrically-contiguous) space.  By specifying the interaction of these elements, the function space they represent and/or the approximation method is defined.  It is at this point in the hierarchy that a set of (local region) elements can be thought of as representing a dG or cG field.
@@ -185,7 +185,7 @@ take the view of understanding the geometric regions over which we build approxi
 we define our canonical standard regions.  There are seven fundamental regions supported by \nek{}:  segments (1D), triangles and quadrilaterals (2D) and tetrahedra, hexahedra,
 prisms and pyramids (3D).  Since we principally employ Gaussian quadrature, these regions are defined by various tensor-product and collapsing of the
 compact interval $[-1,1]$.  For the purposes of illustration, let us use a quadrilateral as our example.  The StdQuadExp is a region defined on $[-1,1] \times [-1,1]$
-over which we can build approximations $\Psi(\xi_1,\xi_2)$.  Typically $\Psi$ is based upon polynomials in each coordinate direction; using linear functions
+over which we can build approximations $\phi^e(\xi_1,\xi_2)$.  Typically $\phi^e$ is based upon polynomials in each coordinate direction; using linear functions
 in both directions yields the traditional $Q(1)$ space in traditional finite elements.   
 
 \begin{figure}[htb]
@@ -195,14 +195,14 @@ in both directions yields the traditional $Q(1)$ space in traditional finite ele
 \label{intro:stdtolocal}
 \end{figure}
 
-Since $\Psi$ lives on $E_S = [-1,1] \times [-1,1]$ (i.e. $\Psi:E_S\rightarrow\mathbb{R}$) and is for this example polynomial, we can integrate it exactly (to machine precision) using Gaussian integration, and we can differentiate it by writing it in a Lagrange basis and forming a differential operator matrix to act on values of the function evaluated at points.   If the function were not polynomial but instead only a smooth function, we could approximate it with quadrature and decide an appropriate basis by which to 
+Since $\phi^e(\xi_1,\xi_2)$ lives on ${\mathcal Q} = [-1,1] \times [-1,1]$ (i.e. $\phi^e:{\mathcal Q}\rightarrow\mathbb{R}$) and is for this example polynomial, we can integrate it exactly (to machine precision) using Gaussian integration, and we can differentiate it by writing it in a Lagrange basis and forming a differential operator matrix to act on values of the function evaluated at points.   If the function were not polynomial but instead only a smooth function, we could approximate it with quadrature and decide an appropriate basis by which to 
 approximate its derivatives.  All the routines needed for differentiating and integrating polynomials over various standard regions are contained within the StdRegions 
 directory (and will be discussed in Chapter \ref{chap:stdregions}).   A local region expansion, such as a basis defined on a quadrilateral element, QuadExp, is a linear combination of basis functions over its corresponding standard region as mapped by
-information contained within its spatial domain mapping.  Local region class definitions are in the LocalRegions directory (and will be discussed in Chapter \ref{chap:localregions}).  Using the inheritance language of C++, we would say that a local region {\em is-a} standard region and
-{\em has-a} spatial domain object.  The SpatialDomains directory contains information that expresses the mapping function $\chi(\cdot)$ from the standard region
+information contained within its spatial domain mapping.  Local region class definitions are in the LocalRegions directory (and will be discussed in Chapter \ref{chap:localregions}).  Using the inheritance language of {\em C++}, we would say that a local region {\em is-a} standard region and
+{\em has-a} spatial domain object.  The SpatialDomains directory contains information that expresses the mapping function $\chi_e(\cdot)$ from the standard region
 to a local region.  SpatialDomains is explored in Chapter \ref{chap:spatialdomains}.  In the case of our quad example, the SpatialDomain object held by a QuadExp would connect the local region to its StdRegion parent,
-and correspondingly would allow integration and differentiation in world space (i.e., the natural coordinates in which the local expansion lives).  If $E$ denotes our
-geometric region in world space and if $F:E\rightarrow\mathbb{R}$ is built upon polynomials over its standard region, then we obtain $F(x_1,x_2) = \Psi(\chi^{-1}(x_1,x_2))$.  Note that even though $\Psi$ is polynomial and $\chi$ is polynomial, the composition using the inverse of $\chi$ is not guaranteed to be polynomial: it is only
+and correspondingly would allow integration and differentiation in world space (i.e., the natural coordinates in which the local expansion lives).  If ${\mathcal E}$ denotes our
+geometric region in world space and if $F:{\mathcal E}\rightarrow\mathbb{R}$ is built upon polynomials over its standard region, then we obtain $F(x_1,x_2) = \phi^e(\chi_e^{-1}(x_1,x_2))$.  Note that even though $\phi^e$ is polynomial and $\chi_e$ is polynomial, the composition using the inverse of $\chi_e$ is not guaranteed to be polynomial: it is only
 guaranteed to be a smooth function. 
 
 Putting this in the context of MultiRegions, we arrive at Figure \ref{intro:structure1}.  The MultiRegions directory (which will be discussed in Chapter \ref{chap:multiregions}) contains various data structures that combine
@@ -211,7 +211,7 @@ Conceptually, one can have a set of local region objects that have no relationsh
 meaningful to us for solving approximation properties.  Most often we want to think of sets of local regions as being collections of elements that are geometrically
 contiguous -- that is, given any two elements in the set, we expect that there exists a path that allows us to trace from one element to the next.   Assuming
 a geometrically continuous collection of elements, we can now ask if the functions built over those elements form a piece-wise discontinuous approximation
-of a function over our multiregion or a piece-wise continuous $C^0$ approximation of a function over our multiregion.
+of a function over our Multiregion or a piece-wise continuous $C^0$ approximation of a function over our Multiregion.
 
 \begin{figure}[htb]
 \centering

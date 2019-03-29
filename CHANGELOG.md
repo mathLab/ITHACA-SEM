@@ -60,6 +60,7 @@ v5.0.0
   `MultiRegions` will be built by default (!945)
 - Fix missing metadata import from Hdf5 files (!971)
 - Fix missing flags for periodic BC in DiffusionLDG (!985)
+- Add the moving reference frame as a forcing (!987)
 - Fix integration weights on prisms and pyramids if not using the default
   integration rule (!998)
 

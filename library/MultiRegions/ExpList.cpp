@@ -163,13 +163,13 @@ namespace Nektar
         {
             SetExpType(eNoType);
         }
-        
+
         /**
          * Copies the eIds elements from an existing expansion list.
          * @param   in              Source expansion list.
          * @param   in              elements that will be in the new exp list.
          */
-        ExpList::ExpList(const ExpList &in, 
+        ExpList::ExpList(const ExpList &in,
                          const std::vector<unsigned int> &eIDs,
                          const bool DeclareCoeffPhysArrays):
             m_comm(in.m_comm),
@@ -188,7 +188,7 @@ namespace Nektar
             m_WaveSpace(false)
         {
             SetExpType(eNoType);
-            
+
             for (int i=0; i < eIDs.size(); ++i)
             {
                 (*m_exp).push_back( (*(in.m_exp))[eIDs[i]]);
@@ -253,7 +253,7 @@ namespace Nektar
             m_phys_offset    = Array<OneD,int>(m_exp->size());
 
             m_ncoeffs = m_npoints = 0;
-            
+
             for(i = 0; i < m_exp->size(); ++i)
             {
                 m_coeff_offset[i]   = m_ncoeffs;
@@ -642,7 +642,7 @@ namespace Nektar
                 {
                     PhysDeriv(xDir, Vel[yDir], Vx);
                     PhysDeriv(yDir, Vel[xDir], Uy);
-                    
+
 
                     Vmath::Vsub(nq, Vx, 1, Uy, 1, Dummy, 1);
 
@@ -1035,7 +1035,7 @@ namespace Nektar
                     const MultiRegions::GlobalMatrixKey vKey(gkey, vType);
                     if (cnt < m_coeff_offset.num_elements())
                     {
-                        eid = cnt; 
+                        eid = cnt;
                         MultiplyByBlockMatrix(vKey,inarray + m_coeff_offset[eid],
                                               tmp_outarray = outarray + m_coeff_offset[eid]);
                         cnt += num_elmts[n];
@@ -1508,7 +1508,7 @@ namespace Nektar
                     }
                 }
             }
-            
+
             // If the calling function is with just the nearest element, return
             // that. Otherwise return -1 to indicate no matching elemenet found.
             if(returnNearestElmt)
@@ -1520,7 +1520,7 @@ namespace Nektar
                         + " using local point ("
                         + boost::lexical_cast<std::string>(locCoords[0]) +","
                         + boost::lexical_cast<std::string>(locCoords[1]) +","
-                        + boost::lexical_cast<std::string>(locCoords[1]) 
+                        + boost::lexical_cast<std::string>(locCoords[1])
                         + ") in element: "
                         + boost::lexical_cast<std::string>(min_id);
                 WARNINGL1(false,msg.c_str());
@@ -2046,13 +2046,13 @@ namespace Nektar
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
         }
-        
+
         void ExpList::v_ClearGlobalLinSysManager(void)
         {
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
         }
-        
+
         void ExpList::ExtractFileBCs(
             const std::string               &fileName,
             LibUtilities::CommSharedPtr      comm,
@@ -2140,7 +2140,7 @@ namespace Nektar
                                                   std::vector<unsigned int> &HomoSIDs,
                                                   std::vector<unsigned int> &HomoZIDs,
                                                   std::vector<unsigned int> &HomoYIDs)
-        {   
+        {
             int startenum = (int) LibUtilities::eSegment;
             int endenum   = (int) LibUtilities::eHexahedron;
             int s         = 0;
@@ -2605,7 +2605,7 @@ namespace Nektar
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
         }
-        
+
         const vector<bool> &ExpList::v_GetLeftAdjacentFaces(void) const
         {
             ASSERTL0(false,
@@ -2730,7 +2730,7 @@ namespace Nektar
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
         }
-        
+
         void ExpList::v_NormVectorIProductWRTBase(
                                 Array<OneD, Array<OneD, NekDouble> > &V,
                                 Array<OneD, NekDouble> &outarray)
@@ -2743,7 +2743,7 @@ namespace Nektar
                     for(int i = 0; i < GetExpSize(); ++i)
                     {
                         (*m_exp)[i]->NormVectorIProductWRTBase(
-                                        V[0] + GetPhys_Offset(i), 
+                                        V[0] + GetPhys_Offset(i),
                                         tmp = outarray + GetCoeff_Offset(i));
                     }
                 }
@@ -2937,7 +2937,7 @@ namespace Nektar
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
         }
-        
+
         /**
          */
         void ExpList::v_GetBndElmtExpansion(int i,
@@ -2947,7 +2947,7 @@ namespace Nektar
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
         }
-        
+
         /**
          */
         void ExpList::v_ExtractElmtToBndPhys(const int i,
@@ -2957,36 +2957,36 @@ namespace Nektar
             int n, cnt;
             Array<OneD, NekDouble> tmp1, tmp2;
             LocalRegions::ExpansionSharedPtr elmt;
-            
+
             Array<OneD, int> ElmtID,EdgeID;
             GetBoundaryToElmtMap(ElmtID,EdgeID);
-            
+
             // Initialise result
-            boundary = Array<OneD, NekDouble> 
+            boundary = Array<OneD, NekDouble>
                             (GetBndCondExpansions()[i]->GetTotPoints(), 0.0);
-            
+
             // Skip other boundary regions
             for (cnt = n = 0; n < i; ++n)
             {
                 cnt += GetBndCondExpansions()[n]->GetExpSize();
             }
-            
+
             int offsetBnd;
             int offsetElmt = 0;
             for (n = 0; n < GetBndCondExpansions()[i]->GetExpSize(); ++n)
             {
                 offsetBnd = GetBndCondExpansions()[i]->GetPhys_Offset(n);
-                
+
                 elmt   = GetExp(ElmtID[cnt+n]);
                 elmt->GetTracePhysVals(EdgeID[cnt+n],
                                       GetBndCondExpansions()[i]->GetExp(n),
                                       tmp1 = element + offsetElmt,
                                       tmp2 = boundary + offsetBnd);
-                
+
                 offsetElmt += elmt->GetTotPoints();
             }
         }
-        
+
         /**
          */
         void ExpList::v_ExtractPhysToBndElmt(const int i,
@@ -2994,26 +2994,26 @@ namespace Nektar
                             Array<OneD, NekDouble> &bndElmt)
         {
             int n, cnt, nq;
-            
+
             Array<OneD, int> ElmtID,EdgeID;
             GetBoundaryToElmtMap(ElmtID,EdgeID);
-            
+
             // Skip other boundary regions
             for (cnt = n = 0; n < i; ++n)
             {
                 cnt += GetBndCondExpansions()[n]->GetExpSize();
             }
-            
+
             // Count number of points
             int npoints = 0;
             for (n = 0; n < GetBndCondExpansions()[i]->GetExpSize(); ++n)
             {
                 npoints += GetExp(ElmtID[cnt+n])->GetTotPoints();
             }
-            
+
             // Initialise result
             bndElmt = Array<OneD, NekDouble> (npoints, 0.0);
-            
+
             // Extract data
             int offsetPhys;
             int offsetElmt = 0;
@@ -3074,30 +3074,30 @@ namespace Nektar
             int coordim = GetCoordim(0);
             Array<OneD, NekDouble> tmp;
             LocalRegions::ExpansionSharedPtr elmt;
-            
+
             Array<OneD, int> ElmtID,EdgeID;
             GetBoundaryToElmtMap(ElmtID,EdgeID);
-            
+
             // Initialise result
             normals = Array<OneD, Array<OneD, NekDouble> > (coordim);
             for (j = 0; j < coordim; ++j)
             {
-                normals[j] = Array<OneD, NekDouble> ( 
+                normals[j] = Array<OneD, NekDouble> (
                                 GetBndCondExpansions()[i]->GetTotPoints(), 0.0);
             }
-            
+
             // Skip other boundary regions
             for (cnt = n = 0; n < i; ++n)
             {
                 cnt += GetBndCondExpansions()[n]->GetExpSize();
             }
-            
+
             int offset;
             for (n = 0; n < GetBndCondExpansions()[i]->GetExpSize(); ++n)
             {
                 offset = GetBndCondExpansions()[i]->GetPhys_Offset(n);
                 nq = GetBndCondExpansions()[i]->GetExp(n)->GetTotPoints();
-                
+
                 elmt   = GetExp(ElmtID[cnt+n]);
                 const Array<OneD, const Array<OneD, NekDouble> > normalsElmt
                             = elmt->GetSurfaceNormal(EdgeID[cnt+n]);
@@ -3118,7 +3118,7 @@ namespace Nektar
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
         }
-        
+
         /**
          */
         void ExpList::v_ReadGlobalOptimizationParameters()
@@ -3351,7 +3351,7 @@ namespace Nektar
                 }
             }
         }
-        
+
         void ExpList::ClearGlobalLinSysManager(void)
         {
             v_ClearGlobalLinSysManager();

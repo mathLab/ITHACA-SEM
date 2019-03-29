@@ -63,6 +63,7 @@ v5.0.0
 - Add the moving reference frame as a forcing (!987)
 - Fix integration weights on prisms and pyramids if not using the default
   integration rule (!998)
+- Fix missing ContainsPoint in Pyramid expansion (!1000)
 
 **NekMesh**:
 - Add feature to read basic 2D geo files as CAD (!731)

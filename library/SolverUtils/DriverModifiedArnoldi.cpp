@@ -531,7 +531,10 @@ void DriverModifiedArnoldi::EV_post(
                 + boost::lexical_cast<std::string>(j)
                 + ".fld";
 
-            WriteEvs(cout, j, wr[j], wi[j]);
+            if (m_comm->GetRank() == 0)
+            {
+                WriteEvs(cout, j, wr[j], wi[j]);
+            }
             WriteFld(file,Kseq[j]);
         }
     }

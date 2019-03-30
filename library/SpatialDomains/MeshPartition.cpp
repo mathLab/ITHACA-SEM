@@ -106,8 +106,8 @@ MeshPartition::~MeshPartition()
 void MeshPartition::PartitionMesh(
     int nParts, bool shared, bool overlapping, int nLocal)
 {
-    //ASSERTL0(m_parallel || m_elements.size() >= nParts,
-    //         "Too few elements for this many processes.");
+    ASSERTL0(m_parallel || m_elements.size() >= nParts,
+             "Too few elements for this many processes.");
     m_shared = shared;
 
     ASSERTL0(!m_parallel || shared,
@@ -789,26 +789,26 @@ void MeshPartition::PartitionGraph(int nParts, bool overlapping)
 
     // If the overlapping option is set (for post-processing purposes),
     // add vertices that correspond to the neighbouring elements.
-    // if (overlapping)
-    // {
-    //     ASSERTL0(!m_parallel, "Overlapping partitioning not supported in "
-    //              "parallel execution");
+    if (overlapping)
+    {
+        ASSERTL0(!m_parallel, "Overlapping partitioning not supported in "
+                 "parallel execution");
 
-    //     for (boost::tie(vertit, vertit_end) = boost::vertices(m_graph);
-    //          vertit != vertit_end; ++vertit)
-    //     {
-    //         for (boost::tie(adjvertit, adjvertit_end) =
-    //                  boost::adjacent_vertices(*vertit, m_graph);
-    //              adjvertit != adjvertit_end; ++adjvertit)
-    //         {
-    //             if (part[*adjvertit] != part[*vertit])
-    //             {
-    //                 boost::add_vertex(*adjvertit,
-    //                                   m_localPartition[part[*vertit]]);
-    //             }
-    //         }
-    //     }
-    // }
+        for (boost::tie(vertit, vertit_end) = boost::vertices(m_graph);
+             vertit != vertit_end; ++vertit)
+        {
+            for (boost::tie(adjvertit, adjvertit_end) =
+                     boost::adjacent_vertices(*vertit, m_graph);
+                 adjvertit != adjvertit_end; ++adjvertit)
+            {
+                if (part[*adjvertit] != part[*vertit])
+                {
+                    m_localPartition[part[*vertit]].push_back(
+                        m_graph[*adjvertit].id);
+                }
+            }
+        }
+    }
 }
 
 void MeshPartition::CheckPartitions(int nParts, Array<OneD, int> &pPart)

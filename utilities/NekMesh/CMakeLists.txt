@@ -74,6 +74,8 @@ ADD_NEKTAR_TEST(Nektar++/InvalidQuads)
 ADD_NEKTAR_TEST(Nektar++/Tube45Refinement)
 ADD_NEKTAR_TEST(Nektar++/Tube45Refinement_extractsurf)
 ADD_NEKTAR_TEST(Nektar++/CylQuadBl)
+ADD_NEKTAR_TEST(Nektar++/SurfaceExtractionCurvedEdge)
+ADD_NEKTAR_TEST(Nektar++/SurfaceExtractionCurvedFace)
 # Gmsh tests
 ADD_NEKTAR_TEST(Gmsh/CubeAllElements_2_2)
 ADD_NEKTAR_TEST(Gmsh/CubeHex_2_2)

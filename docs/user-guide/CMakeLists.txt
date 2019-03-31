@@ -7,6 +7,10 @@ FIND_PROGRAM(HTLATEX htlatex)
 MARK_AS_ADVANCED(HTLATEX)
 ADD_CUSTOM_TARGET(user-guide-html
     export TEXINPUTS=${CMAKE_SOURCE_DIR}//:${USERGUIDESRC}//: &&
+    ${HTLATEX} ${USERGUIDESRC}/user-guide.tex
+    "${USERGUIDESRC}/styling.cfg,html,3,next,NoFonts"
+    COMMAND BIBINPUTS=${CMAKE_SOURCE_DIR}/docs ${BIBTEX} user-guide.aux
+    COMMAND TEXINPUTS=${CMAKE_SOURCE_DIR}//:${USERGUIDESRC}//:
     ${HTLATEX} ${USERGUIDESRC}/user-guide.tex 
     "${USERGUIDESRC}/styling.cfg,html,3,next,NoFonts"
     WORKING_DIRECTORY ${USERGUIDE}/html
@@ -42,7 +46,8 @@ MARK_AS_ADVANCED(MAKEINDEX)
 ADD_CUSTOM_TARGET(user-guide-pdf
     export TEXINPUTS=${CMAKE_SOURCE_DIR}//: && 
     ${PDFLATEX} --output-directory ${USERGUIDE} ${USERGUIDESRC}/user-guide.tex
-    COMMAND TEXMFOUTPUT=${USERGUIDE} ${BIBTEX} ${USERGUIDE}/user-guide.aux
+    COMMAND BIBINPUTS=${CMAKE_SOURCE_DIR}/docs TEXMFOUTPUT=${USERGUIDE}
+    ${BIBTEX} ${USERGUIDE}/user-guide.aux
     COMMAND TEXMFOUTPUT=${USERGUIDE} ${MAKEINDEX} ${USERGUIDE}/user-guide.idx
     COMMAND TEXINPUTS=${CMAKE_SOURCE_DIR}//:  
     ${PDFLATEX} --output-directory ${USERGUIDE} ${USERGUIDESRC}/user-guide.tex

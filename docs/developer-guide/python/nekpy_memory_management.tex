@@ -80,7 +80,8 @@ It is unusual for the Python programmer to manually modify the way Python uses m
 Python enables the programmer to increase or decrease the reference counter of the object 
 using \texttt{Py\_XINCREF} and \texttt{Py\_XDECREF} respectively \cite{PythonManualMemory}.
 
-\section{Passing C++ arrays to Python \footnote{The file implementing the below procedure: \texttt{LibUtilities\/Python\/LinearAlgebra\/NekMatrix.cpp}} }
+\section{Passing C++ arrays to Python}
+The file implementing the below procedure: \texttt{LibUtilities\/Python\/LinearAlgebra\/NekMatrix.cpp}.
 
 In many situations arrays created by Nektar++ (usually a \texttt{shared\_ptr} of 
 \texttt{NekMatrix<D, StandardMatrixTag>} type) in C++ need to be passed to Python - 
@@ -211,8 +212,8 @@ has to be converted to a datatype Python recognises. The test runs the different
 compares the final result to the fixed expected value. The test is automatically run as a part of 
 \texttt{ctest} command if both the Python wrapper and the tutorials have been built.
 
-\subsection{Passing Python data to C++ 
-\footnote{The files implementing the below procedure are: \texttt{LibUtilities/Python/BasicUtils/SharedArray.cpp} and \texttt{LibUtilities/BasicUtils/SharedArray.hpp}} }
+\subsection{Passing Python data to C++} 
+The files implementing the below procedure are: \texttt{LibUtilities/Python/BasicUtils/SharedArray.cpp} and \texttt{LibUtilities/BasicUtils/SharedArray.hpp}
 
 Conversely, a similar problem exists when data is created in Python and has to be passed to 
 the C++ program. In this case, as the data is managed by Python, the main reference counter 

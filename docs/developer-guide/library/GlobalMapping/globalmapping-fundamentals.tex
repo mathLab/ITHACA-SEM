@@ -19,10 +19,10 @@ require for a 2-dimensional manifold embedded in a 3-dimensional space.
 In order to express these operators in curvilinear coordinates we start by
 assuming that we have a smooth surface parametrization given by
 \begin{align*}
-	\bm{x}(\xi^1,\xi^2):=(x^1(\xi^1,\xi^2),x^2(\xi^1,\xi^2),x^3(\xi^1,\xi^2)).
+	\mathbf{x}(\xi^1,\xi^2):=(x^1(\xi^1,\xi^2),x^2(\xi^1,\xi^2),x^3(\xi^1,\xi^2)).
 %    \label{A:parametrization}
 \end{align*}
-Next we will define the Jacobian of $\bm{x}$ as the tensor
+Next we will define the Jacobian of $\mathbf{x}$ as the tensor
 \begin{align*}
         J_i^j = \frac{\partial x^j}{\partial \xi^i}
 %    \label{A:jacobian}
@@ -52,16 +52,16 @@ satisfy the condition
 \end{align*}
 % %
 To construct the divergence operator we will also need the derivative of 
-$g$ with respect to components of the metric, $g_{ij}$. We know that $\bm{g}$ 
+$g$ with respect to components of the metric, $g_{ij}$. We know that $\mathbf{g}$ 
 is invertible and from linear algebra we have that the inverse of the metric 
 \eqref{A:conj_tensor} satisfies 
-$\bm{g}^{-1} = \frac{1}{g}\tilde{\bm{g}}^{\top}$, where $\bm{\tilde{g}}$ is the
-cofactor matrix of $\bm{g}$. Therefore $\bm{\tilde{g}}^{\top} = g\BM{g}^{-1}$, 
+$\mathbf{g}^{-1} = \frac{1}{g}\tilde{\mathbf{g}}^{\top}$, where $\mathbf{\tilde{g}}$ is the
+cofactor matrix of $\mathbf{g}$. Therefore $\mathbf{\tilde{g}}^{\top} = g\BM{g}^{-1}$, 
 or in components $\tilde{g}^{ij} = g(\BM{g}^{-1})_{ji}$. Using Jacobi's formula 
 for the derivative of a matrix determinant with respect its entries, and since 
-$\bm{g}$ is invertible, the derivative of the metric determinant is
+$\mathbf{g}$ is invertible, the derivative of the metric determinant is
 \begin{align}
-    \frac{\partial g}{\partial g_{ij}} = \mathrm{tr}\left(\tilde{\bm{g}}^{\top}\frac{\partial \bm{g}}{\partial g_{ij}}\right)
+    \frac{\partial g}{\partial g_{ij}} = \mathrm{tr}\left(\tilde{\mathbf{g}}^{\top}\frac{\partial \mathbf{g}}{\partial g_{ij}}\right)
         = \tilde{g}^{ij} = g(\BM{g}^{-1})_{ji} = gg^{ij}.
 \label{A:g_deriv}
 \end{align}
@@ -100,7 +100,7 @@ derivatives of the metric tensor in terms of the Christoffel symbols as
 \end{align*}
 
 We now define the divergence operator on the manifold,
-$\nabla\cdot \bm{X} = \nabla_k X^k$. Consider first the derivative of the 
+$\nabla\cdot \mathbf{X} = \nabla_k X^k$. Consider first the derivative of the 
 determinant of the metric tensor $g$ with respect to 
 the components of some local coordinates system $\xi^1,\xi^2$. We apply the 
 chain rule, making use of the derivative of the metric tensor with respect to 
@@ -126,7 +126,7 @@ divergence operator
 \end{align*}
 we can deduce a formula for divergence of a contravariant vector as
 \begin{align}
-\nabla\cdot \bm{X} = \nabla_k X^k = \frac{\left(X^k\sqrt{g}\right)_{,k}}{\sqrt{g}}
+\nabla\cdot \mathbf{X} = \nabla_k X^k = \frac{\left(X^k\sqrt{g}\right)_{,k}}{\sqrt{g}}
 \label{A:div}
 \end{align}
 
@@ -160,17 +160,17 @@ on the manifold as
  \end{align}
  Therefore the surface conductivity tensor can be computed using the Jacobian tensor and the inverse metric as
  \begin{align}
-     \bm{\tilde{\sigma}} = \bm{g^{-1}J\sigma J^{\top} g^{-1}}.
+     \mathbf{\tilde{\sigma}} = \mathbf{g^{-1}J\sigma J^{\top} g^{-1}}.
  \end{align}
 
 
 \subsection{Anisotropic Laplacian operator}
 \label{s:anisotropic}
 Anisotropic diffusion is important in many applications. In the ambient 
-Euclidean space, this can be represented by a diffusivity tensor $\bm{\sigma}$ 
+Euclidean space, this can be represented by a diffusivity tensor $\mathbf{\sigma}$ 
 in the Laplacian operator as
 \begin{align*}
-\Delta_M = \nabla \cdot \bm{\sigma} \nabla.
+\Delta_M = \nabla \cdot \mathbf{\sigma} \nabla.
 \end{align*}
 On our manifold, we seek the generalisation of \ref{A:surf_lapl}, in the form
 \begin{align*}
@@ -182,7 +182,7 @@ For a contravariant surface vector $a^j$ we can find the associated
 space vector $A^i$ as $A^i = J^i_j a^j$. Similarly if $A_i$ is a covariant space vector, then $a_j=J^i_j A_i$ is a covariant surface vector. 
 % %
 Using these we can construct the anisotropic
-diffusivity tensor $\tilde{\bm{\sigma}}$ on the manifold by constraining the ambient diffusivity tensor $\bm{\sigma}$ to the surface. The contravariant surface gradient $\nabla^i \phi$ is mapped to the corresponding space vector, which lies in the tangent plane to the surface. This is scaled by the ambient diffusivity and then projected back to a covariant surface vector. Finally, we use the conjugate metric to convert back to a contravariant form. The resulting surface Laplacian is 
+diffusivity tensor $\tilde{\mathbf{\sigma}}$ on the manifold by constraining the ambient diffusivity tensor $\mathbf{\sigma}$ to the surface. The contravariant surface gradient $\nabla^i \phi$ is mapped to the corresponding space vector, which lies in the tangent plane to the surface. This is scaled by the ambient diffusivity and then projected back to a covariant surface vector. Finally, we use the conjugate metric to convert back to a contravariant form. The resulting surface Laplacian is 
 \begin{align*}
     \tilde{\Delta}_M \phi = \nabla_m g^{lm}J^k_l\sigma_{jk}J^j_i \nabla^i \phi.
 \end{align*}
@@ -190,7 +190,7 @@ Following on from this we deduce that
 \begin{align*}
     \tilde{\sigma}_i^j = g^{jm} J^l_m \sigma_{lk} J^k_i.
 \end{align*}
-It can be seen that in the case of isotropic diffusion that $\tilde{\sigma}_i^j = \delta^i_j \Leftrightarrow \bm{\sigma} = \bm{I}$,
+It can be seen that in the case of isotropic diffusion that $\tilde{\sigma}_i^j = \delta^i_j \Leftrightarrow \mathbf{\sigma} = \mathbf{I}$,
 \begin{align*}
     \tilde{\sigma}_i^j = g^{im} J^k_m \sigma_{lk} J^l_j = g^{im} J^k_m J^k_j = g^{im} g_{mj} = \delta^i_j.
 \end{align*}

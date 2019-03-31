@@ -356,11 +356,8 @@ NekDouble SegGeom::v_GetLocCoords(const Array<OneD, const NekDouble> &coords,
         {
             m_xmap->BwdTrans(m_coeffs[i], pts);
             len += (pts[npts - 1] - pts[0]) * (pts[npts - 1] - pts[0]);
-            xi += (coords[i] - pts[0]) * (coords[i] - pts[0]);
+            xi += (coords[i] - pts[0]) * (pts[npts-1] - pts[0]);
         }
-
-        len = sqrt(len);
-        xi = sqrt(xi);
 
         Lcoords[0] = 2 * xi / len - 1.0;
     }

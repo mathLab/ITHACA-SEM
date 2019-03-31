@@ -185,6 +185,81 @@ void MeshGraph::FillGraph()
     }
 }
 
+void MeshGraph::FillBoundingBoxTree()
+{
+    m_boundingBoxTree.clear();
+    switch (m_meshDimension) {
+        case 1:
+            for (auto &x : m_segGeoms) 
+            {
+                BgBox b = x.second->GetBoundingBox();
+                m_boundingBoxTree.insert(std::make_pair(b, x.first));
+            }
+            break;
+        case 2:
+            for (auto &x : m_triGeoms) 
+            {
+                BgBox b = x.second->GetBoundingBox();
+                m_boundingBoxTree.insert(std::make_pair(b, x.first));
+            }
+            for (auto &x : m_quadGeoms) 
+            {
+                BgBox b = x.second->GetBoundingBox();
+                m_boundingBoxTree.insert(std::make_pair(b, x.first));
+            }
+            break;
+        case 3:
+            for (auto &x : m_tetGeoms) 
+            {
+                BgBox b = x.second->GetBoundingBox();
+                m_boundingBoxTree.insert(std::make_pair(b, x.first));
+            }
+            for (auto &x : m_prismGeoms) 
+            {
+                BgBox b = x.second->GetBoundingBox();
+                m_boundingBoxTree.insert(std::make_pair(b, x.first));
+            }
+            for (auto &x : m_pyrGeoms) 
+            {
+                BgBox b = x.second->GetBoundingBox();
+                m_boundingBoxTree.insert(std::make_pair(b, x.first));
+            }
+            for (auto &x : m_hexGeoms) 
+            {
+                BgBox b = x.second->GetBoundingBox();
+                m_boundingBoxTree.insert(std::make_pair(b, x.first));
+            }
+            break;
+        default:
+            ASSERTL0(false, "Unknown dim");
+    }
+}
+
+std::vector<BgRtreeValue> MeshGraph::GetElementsContainingPoint(
+            PointGeomSharedPtr p)
+{
+    if (m_boundingBoxTree.empty())
+    {
+        FillBoundingBoxTree();
+    }
+
+    NekDouble x = 0.0;
+    NekDouble y = 0.0;
+    NekDouble z = 0.0;
+    std::vector<BgRtreeValue> vals;
+
+    p->GetCoords(x, y, z);
+
+    BgBox b( BgPoint(x, y, z), BgPoint(x, y, z) );
+
+    m_boundingBoxTree.query(bg::index::intersects( b ),
+                            std::back_inserter( vals ));
+
+    return vals;
+}
+
+
+
 void MeshGraph::SetDomainRange(NekDouble xmin, NekDouble xmax, NekDouble ymin,
                                NekDouble ymax, NekDouble zmin, NekDouble zmax)
 {

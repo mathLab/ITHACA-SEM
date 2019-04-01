@@ -127,5 +127,9 @@ IF(NEKTAR_USE_MESHGEN)
     ENDIF() 
 ENDIF()
 
+IF (NEKTAR_USE_HDF5)
+    ADD_NEKTAR_TEST(Gmsh/CubeTet_4_0_hdf5)
+ENDIF()
+
 # varopti tests
 ADD_NEKTAR_TEST(MeshGen/varopti_cubesphere LENGTHY)

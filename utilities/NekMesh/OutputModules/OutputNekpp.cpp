@@ -79,23 +79,20 @@ OutputNekpp::~OutputNekpp()
 {
 }
 
-/*
-template <typename T> void TestElmts(SpatialDomains::MeshGraphSharedPtr &graph)
+template <typename T> void TestElmts(
+    const std::map<int, std::shared_ptr<T> > &geomMap,
+    SpatialDomains::MeshGraphSharedPtr       &graph)
 {
-    const std::map<int, std::shared_ptr<T> > &tmp =
-        graph->GetAllElementsOfType<T>();
-
     SpatialDomains::CurveMap &curvedEdges = graph->GetCurvedEdges();
     SpatialDomains::CurveMap &curvedFaces = graph->GetCurvedFaces();
 
-    for (auto it1 = tmp.begin(), it2 = tmp.end(); it1 != it2; ++it1)
+    for (auto &geomIt : geomMap)
     {
-        SpatialDomains::GeometrySharedPtr geom = it1->second;
+        SpatialDomains::GeometrySharedPtr geom = geomIt.second;
         geom->FillGeom();
         geom->Reset(curvedEdges, curvedFaces);
     }
 }
-*/
 
 void OutputNekpp::Process()
 {
@@ -147,29 +144,38 @@ void OutputNekpp::Process()
     string out = m_config["outfile"].as<string>();
     graph->WriteGeometry(out, true, m_mesh->m_metadata);
 
-    /*
     // Test the resulting XML file (with a basic test) by loading it
     // with the session reader, generating the MeshGraph and testing if
     // each element is valid.
     if (m_config["test"].beenSet)
     {
         vector<string> filenames(1);
-        filenames[0] = filename;
 
+        if (type == "HDF5")
+        {
+            vector<string> tmp;
+            boost::split(tmp, filename, boost::is_any_of("."));
+            filenames[0] = tmp[0] + ".xml";
+        }
+        else
+        {
+            filenames[0] = filename;
+        }
+
+        char *prgname = "NekMesh";
         LibUtilities::SessionReaderSharedPtr vSession =
-            LibUtilities::SessionReader::CreateInstance(0, NULL, filenames);
-        SpatialDomains::MeshGraphSharedPtr graphShPt =
+            LibUtilities::SessionReader::CreateInstance(1, &prgname, filenames);
+        SpatialDomains::MeshGraphSharedPtr graph =
             SpatialDomains::MeshGraph::Read(vSession);
 
-        TestElmts<SpatialDomains::SegGeom>(graphShPt);
-        TestElmts<SpatialDomains::TriGeom>(graphShPt);
-        TestElmts<SpatialDomains::QuadGeom>(graphShPt);
-        TestElmts<SpatialDomains::TetGeom>(graphShPt);
-        TestElmts<SpatialDomains::PrismGeom>(graphShPt);
-        TestElmts<SpatialDomains::PyrGeom>(graphShPt);
-        TestElmts<SpatialDomains::HexGeom>(graphShPt);
+        TestElmts(graph->GetAllSegGeoms(), graph);
+        TestElmts(graph->GetAllTriGeoms(), graph);
+        TestElmts(graph->GetAllQuadGeoms(), graph);
+        TestElmts(graph->GetAllTetGeoms(), graph);
+        TestElmts(graph->GetAllPrismGeoms(), graph);
+        TestElmts(graph->GetAllPyrGeoms(), graph);
+        TestElmts(graph->GetAllHexGeoms(), graph);
     }
-    */
 }
 
 void OutputNekpp::TransferVertices(MeshGraphSharedPtr graph)

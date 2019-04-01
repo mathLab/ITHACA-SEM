@@ -57,6 +57,7 @@ ADD_UTILITIES_EXECUTABLE(NekMesh COMPONENT nekmesh
 
 IF (NEKTAR_USE_CCM)
    TARGET_LINK_LIBRARIES(NekMesh LINK_PRIVATE ${CCMIO_LIBRARIES})
+   ADD_DEPENDENCIES(NekMesh libccmio-2.6.1)
 ENDIF (NEKTAR_USE_CCM)
 
 IF (NEKTAR_USE_VTK)
@@ -73,6 +74,8 @@ ADD_NEKTAR_TEST(Nektar++/InvalidQuads)
 ADD_NEKTAR_TEST(Nektar++/Tube45Refinement)
 ADD_NEKTAR_TEST(Nektar++/Tube45Refinement_extractsurf)
 ADD_NEKTAR_TEST(Nektar++/CylQuadBl)
+ADD_NEKTAR_TEST(Nektar++/SurfaceExtractionCurvedEdge)
+ADD_NEKTAR_TEST(Nektar++/SurfaceExtractionCurvedFace)
 # Gmsh tests
 ADD_NEKTAR_TEST(Gmsh/CubeAllElements_2_2)
 ADD_NEKTAR_TEST(Gmsh/CubeHex_2_2)
@@ -118,6 +121,10 @@ IF(NEKTAR_USE_MESHGEN)
     ADD_NEKTAR_TEST(MeshGen/t106c)
     ADD_NEKTAR_TEST(MeshGen/t106step)
     ADD_NEKTAR_TEST(MeshGen/rev LENGTHY)
+
+    IF(NEKTAR_USE_CCM)              
+        ADD_NEKTAR_TEST(StarCCM/Ahmed_body)
+    ENDIF() 
 ENDIF()
 
 # varopti tests

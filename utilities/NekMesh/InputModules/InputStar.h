@@ -38,7 +38,7 @@
 
 #include <NekMeshUtils/Module/Module.h>
 
-#include "ccmio.h"
+#include <libccmio/ccmio.h>
 
 namespace Nektar
 {

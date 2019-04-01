@@ -38,6 +38,10 @@
 
 #include <unordered_map>
 
+#include <boost/geometry/geometry.hpp>
+#include <boost/geometry/index/rtree.hpp>
+namespace bg = boost::geometry;
+
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <LibUtilities/BasicUtils/FieldIO.h>
 
@@ -157,6 +161,9 @@ typedef std::shared_ptr<std::vector<std::pair<GeometrySharedPtr, int>>>
 
 typedef std::map<std::string, std::string> MeshMetaDataMap;
 
+typedef std::pair<BgBox, int> BgRtreeValue;
+typedef bg::index::rtree< BgRtreeValue, bg::index::rstar<16, 4> > BgRtree;
+
 class MeshGraph;
 typedef std::shared_ptr<MeshGraph> MeshGraphSharedPtr;
 
@@ -192,6 +199,11 @@ public:
 
     /*transfers the minial data structure to full meshgraph*/
     SPATIAL_DOMAINS_EXPORT void FillGraph();
+
+    SPATIAL_DOMAINS_EXPORT void FillBoundingBoxTree();
+
+    SPATIAL_DOMAINS_EXPORT std::vector<BgRtreeValue> GetElementsContainingPoint(
+            PointGeomSharedPtr p);
 
     ////////////////////
     ////////////////////
@@ -460,6 +472,8 @@ protected:
 
     CompositeOrdering m_compOrder;
     BndRegionOrdering m_bndRegOrder;
+
+    BgRtree m_boundingBoxTree;
 };
 typedef std::shared_ptr<MeshGraph> MeshGraphSharedPtr;
 typedef LibUtilities::NekFactory<std::string, MeshGraph> MeshGraphFactory;

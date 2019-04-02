@@ -124,6 +124,8 @@ private:
     LibUtilities::H5::PListSharedPtr m_readPL;
     LibUtilities::H5::GroupSharedPtr m_mesh;
     LibUtilities::H5::GroupSharedPtr m_maps;
+
+    static const unsigned int FORMAT_VERSION;
 };
 
 } // end of namespace

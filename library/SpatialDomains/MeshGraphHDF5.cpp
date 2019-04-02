@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: BoundaryConditions.cpp
+//  File: MeshGraphHDF5.cpp
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,8 +29,7 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description:
-//
+//  Description: HDF5-based mesh format for Nektar++.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -57,6 +56,10 @@ namespace Nektar
 {
 namespace SpatialDomains
 {
+
+/// Version of the Nektar++ HDF5 geometry format, which is embedded into the
+/// main NEKTAR/GEOMETRY group as an attribute.
+const unsigned int MeshGraphHDF5::FORMAT_VERSION = 1;
 
 std::string MeshGraphHDF5::className =
     GetMeshGraphFactory().RegisterCreatorFunction(
@@ -180,12 +183,12 @@ void MeshGraphHDF5::PartitionMesh(LibUtilities::SessionReaderSharedPtr session)
         if (attrName == "DIM")
         {
             err = attr->QueryIntValue(&m_meshDimension);
-            ASSERTL1(err == TIXML_SUCCESS, "Unable to read mesh dimension.");
+            ASSERTL0(err == TIXML_SUCCESS, "Unable to read mesh dimension.");
         }
         else if (attrName == "SPACE")
         {
             err = attr->QueryIntValue(&m_spaceDimension);
-            ASSERTL1(err == TIXML_SUCCESS, "Unable to read space dimension.");
+            ASSERTL0(err == TIXML_SUCCESS, "Unable to read space dimension.");
         }
         else if (attrName == "PARTITION")
         {
@@ -212,9 +215,9 @@ void MeshGraphHDF5::PartitionMesh(LibUtilities::SessionReaderSharedPtr session)
         attr = attr->Next();
     }
 
-    ASSERTL0(m_hdf5Name.size() > 0, "unable to obtain mesh file name");
-    ASSERTL1(m_meshDimension <= m_spaceDimension,
-             "Mesh dimension greater than space dimension");
+    ASSERTL0(m_hdf5Name.size() > 0, "Unable to obtain mesh file name.");
+    ASSERTL0(m_meshDimension <= m_spaceDimension,
+             "Mesh dimension greater than space dimension.");
 
     // Open handle to the HDF5 mesh
     LibUtilities::H5::PListSharedPtr parallelProps = H5::PList::Default();
@@ -231,20 +234,48 @@ void MeshGraphHDF5::PartitionMesh(LibUtilities::SessionReaderSharedPtr session)
     }
 
     m_file = H5::File::Open(m_hdf5Name, H5F_ACC_RDONLY, parallelProps);
-    m_mesh = m_file->OpenGroup("mesh");
-    m_maps = m_file->OpenGroup("maps");
+
+    auto root = m_file->OpenGroup("NEKTAR");
+    ASSERTL0(root, "Cannot find NEKTAR group in HDF5 file.");
+
+    auto root2 = root->OpenGroup("GEOMETRY");
+    ASSERTL0(root2, "Cannot find NEKTAR/GEOMETRY group in HDF5 file.");
+
+    // Check format version
+    unsigned int formatVersion;
+    H5::Group::AttrIterator attrIt  = root2->attr_begin();
+    H5::Group::AttrIterator attrEnd = root2->attr_end();
+    for (; attrIt != attrEnd; ++attrIt)
+    {
+        if (*attrIt == "FORMAT_VERSION")
+        {
+            break;
+        }
+    }
+    ASSERTL0(attrIt != attrEnd,
+             "Unable to determine Nektar++ geometry HDF5 file version.");
+    root2->GetAttribute("FORMAT_VERSION", formatVersion);
+
+    ASSERTL0(formatVersion <= FORMAT_VERSION,
+             "File format in " + m_hdf5Name + " is higher than supported in "
+             "this version of Nektar++");
+
+    m_mesh = root2->OpenGroup("MESH");
+    ASSERTL0(m_mesh, "Cannot find NEKTAR/GEOMETRY/MESH group in HDF5 file.");
+    m_maps = root2->OpenGroup("MAPS");
+    ASSERTL0(m_mesh, "Cannot find NEKTAR/GEOMETRY/MAPS group in HDF5 file.");
 
     // Depending on dimension, read element IDs.
     std::map<int, std::vector<std::tuple<
         std::string, int, LibUtilities::ShapeType>>> dataSets;
 
-    dataSets[1] = { make_tuple("seg", 2, LibUtilities::eSegment) };
-    dataSets[2] = { make_tuple("tri", 3, LibUtilities::eTriangle),
-                    make_tuple("quad", 4, LibUtilities::eQuadrilateral) };
-    dataSets[3] = { make_tuple("tet", 4, LibUtilities::eTetrahedron),
-                    make_tuple("pyr", 5, LibUtilities::ePyramid),
-                    make_tuple("prism", 5, LibUtilities::ePrism),
-                    make_tuple("hex", 6, LibUtilities::eHexahedron) };
+    dataSets[1] = { make_tuple("SEG", 2, LibUtilities::eSegment) };
+    dataSets[2] = { make_tuple("TRI", 3, LibUtilities::eTriangle),
+                    make_tuple("QUAD", 4, LibUtilities::eQuadrilateral) };
+    dataSets[3] = { make_tuple("TET", 4, LibUtilities::eTetrahedron),
+                    make_tuple("PYR", 5, LibUtilities::ePyramid),
+                    make_tuple("PRISM", 5, LibUtilities::ePrism),
+                    make_tuple("HEX", 6, LibUtilities::eHexahedron) };
 
     // Read IDs for partitioning purposes
     std::vector<MeshEntity> elmts;
@@ -341,7 +372,7 @@ void MeshGraphHDF5::PartitionMesh(LibUtilities::SessionReaderSharedPtr session)
 
     // Now identify ghost vertices for the graph. This could probably be
     // improved.
-    int nLocal = vcnt, nGhost = 0;
+    int nLocal = vcnt;
     for (int i = 0; i < numElmt; ++i)
     {
         // Ignore anything we already read.
@@ -423,10 +454,10 @@ void MeshGraphHDF5::PartitionMesh(LibUtilities::SessionReaderSharedPtr session)
     {
         t.Start();
         // Read 3D data
-        ReadGeometryData(m_hexGeoms, "hex", toRead, hexIDs, hexData);
-        ReadGeometryData(m_pyrGeoms, "pyr", toRead, pyrIDs, pyrData);
-        ReadGeometryData(m_prismGeoms, "prism", toRead, prismIDs, prismData);
-        ReadGeometryData(m_tetGeoms, "tet", toRead, tetIDs, tetData);
+        ReadGeometryData(m_hexGeoms, "HEX", toRead, hexIDs, hexData);
+        ReadGeometryData(m_pyrGeoms, "PYR", toRead, pyrIDs, pyrData);
+        ReadGeometryData(m_prismGeoms, "PRISM", toRead, prismIDs, prismData);
+        ReadGeometryData(m_tetGeoms, "TET", toRead, tetIDs, tetData);
 
         toRead.clear();
         UniqueValues(toRead, hexData, pyrData, prismData, tetData);
@@ -438,8 +469,8 @@ void MeshGraphHDF5::PartitionMesh(LibUtilities::SessionReaderSharedPtr session)
     {
         t.Start();
         // Read 2D data
-        ReadGeometryData(m_triGeoms, "tri", toRead, triIDs, triData);
-        ReadGeometryData(m_quadGeoms, "quad", toRead, quadIDs, quadData);
+        ReadGeometryData(m_triGeoms, "TRI", toRead, triIDs, triData);
+        ReadGeometryData(m_quadGeoms, "QUAD", toRead, quadIDs, quadData);
 
         toRead.clear();
         UniqueValues(toRead, triData, quadData);
@@ -451,7 +482,7 @@ void MeshGraphHDF5::PartitionMesh(LibUtilities::SessionReaderSharedPtr session)
     {
         t.Start();
         // Read 2D data
-        ReadGeometryData(m_segGeoms, "seg", toRead, segIDs, segData);
+        ReadGeometryData(m_segGeoms, "SEG", toRead, segIDs, segData);
 
         toRead.clear();
         UniqueValues(toRead, segData);
@@ -460,7 +491,7 @@ void MeshGraphHDF5::PartitionMesh(LibUtilities::SessionReaderSharedPtr session)
     }
 
     t.Start();
-    ReadGeometryData(m_vertSet, "vert", toRead, vertIDs, vertData);
+    ReadGeometryData(m_vertSet, "VERT", toRead, vertIDs, vertData);
     t.Stop();
     TIME_RESULT(verbRoot, "read 0D elements", t);
 
@@ -478,7 +509,7 @@ void MeshGraphHDF5::PartitionMesh(LibUtilities::SessionReaderSharedPtr session)
         {
             toRead.insert(edge);
         }
-        ReadCurveMap(m_curvedEdges, "curve_edge", toRead);
+        ReadCurveMap(m_curvedEdges, "CURVE_EDGE", toRead);
 
         t.Start();
         FillGeomMap(m_segGeoms, m_curvedEdges, segIDs, segData);
@@ -498,7 +529,7 @@ void MeshGraphHDF5::PartitionMesh(LibUtilities::SessionReaderSharedPtr session)
         {
             toRead.insert(face);
         }
-        ReadCurveMap(m_curvedFaces, "curve_face", toRead);
+        ReadCurveMap(m_curvedFaces, "CURVE_FACE", toRead);
 
         t.Start();
         FillGeomMap(m_triGeoms, m_curvedFaces, triIDs, triData);
@@ -806,12 +837,10 @@ void MeshGraphHDF5::ReadCurveMap(
         curveMap[newIds[i]] = curve;
     }
 
-    //cout << "read " << curveInfo.size() << " " << curveSel.size() << endl;
-
     curveInfo.clear();
 
     // Open node data spacee.
-    H5::DataSetSharedPtr nodeData = m_mesh->OpenDataSet("curve_nodes");
+    H5::DataSetSharedPtr nodeData = m_mesh->OpenDataSet("CURVE_NODES");
     H5::DataSpaceSharedPtr nodeSpace = nodeData->GetSpace();
 
     nodeSpace->ClearRange();
@@ -839,7 +868,7 @@ void MeshGraphHDF5::ReadCurveMap(
 void MeshGraphHDF5::ReadDomain()
 {
     map<int, CompositeSharedPtr> fullDomain;
-    H5::DataSetSharedPtr dst = m_mesh->OpenDataSet("domain");
+    H5::DataSetSharedPtr dst = m_mesh->OpenDataSet("DOMAIN");
     H5::DataSpaceSharedPtr space = dst->GetSpace();
 
     vector<string> data;
@@ -850,7 +879,7 @@ void MeshGraphHDF5::ReadDomain()
 
 void MeshGraphHDF5::ReadComposites()
 {
-    string nm = "composite";
+    string nm = "COMPOSITE";
 
     H5::DataSetSharedPtr data = m_mesh->OpenDataSet(nm);
     H5::DataSpaceSharedPtr space = data->GetSpace();
@@ -1000,7 +1029,7 @@ CompositeDescriptor MeshGraphHDF5::CreateCompositeDescriptor(
 {
     CompositeDescriptor ret;
 
-    string nm = "composite";
+    string nm = "COMPOSITE";
 
     H5::DataSetSharedPtr data = m_mesh->OpenDataSet(nm);
     H5::DataSpaceSharedPtr space = data->GetSpace();
@@ -1220,7 +1249,7 @@ void MeshGraphHDF5::WriteCurvePoints(MeshCurvedPts &curvedPts)
     H5::DataTypeSharedPtr tp = H5::DataType::OfObject(vertData[0]);
     H5::DataSpaceSharedPtr ds =
         std::shared_ptr<H5::DataSpace>(new H5::DataSpace(dims));
-    H5::DataSetSharedPtr dst = m_mesh->CreateDataSet("curve_nodes", tp, ds);
+    H5::DataSetSharedPtr dst = m_mesh->CreateDataSet("CURVE_NODES", tp, ds);
     dst->Write(vertData, ds);
 }
 
@@ -1246,12 +1275,12 @@ void MeshGraphHDF5::WriteComposites(CompositeMap &composites)
 
     H5::DataTypeSharedPtr tp  = H5::DataType::String();
     H5::DataSpaceSharedPtr ds = H5::DataSpace::OneD(comps.size());
-    H5::DataSetSharedPtr dst  = m_mesh->CreateDataSet("composite", tp, ds);
+    H5::DataSetSharedPtr dst  = m_mesh->CreateDataSet("COMPOSITE", tp, ds);
     dst->WriteVectorString(comps, tp);
 
     tp  = H5::DataType::OfObject(c_map[0]);
     ds  = H5::DataSpace::OneD(c_map.size());
-    dst = m_maps->CreateDataSet("composite", tp, ds);
+    dst = m_maps->CreateDataSet("COMPOSITE", tp, ds);
     dst->Write(c_map, ds);
 }
 
@@ -1268,7 +1297,7 @@ void MeshGraphHDF5::WriteDomain(vector<CompositeMap> &domain)
 
     H5::DataTypeSharedPtr tp  = H5::DataType::String();
     H5::DataSpaceSharedPtr ds = H5::DataSpace::OneD(doms.size());
-    H5::DataSetSharedPtr dst  = m_mesh->CreateDataSet("domain", tp, ds);
+    H5::DataSetSharedPtr dst  = m_mesh->CreateDataSet("DOMAIN", tp, ds);
     dst->WriteVectorString(doms, tp);
 }
 
@@ -1350,31 +1379,38 @@ void MeshGraphHDF5::WriteGeometry(
     // HDF5 part
     //////////////////
 
-    //this is serial IO so we will just override any exisiting file
+    // This is serial IO so we will just override any existing file.
     m_file = H5::File::Create(filenameHdf5, H5F_ACC_TRUNC);
-    m_mesh = m_file->CreateGroup("mesh");
-    m_maps = m_file->CreateGroup("maps");
+    auto hdfRoot = m_file->CreateGroup("NEKTAR");
+    auto hdfRoot2 = hdfRoot->CreateGroup("GEOMETRY");
 
-    WriteGeometryMap(m_vertSet, "vert");
-    WriteGeometryMap(m_segGeoms, "seg");
+    // Write format version.
+    hdfRoot2->SetAttribute("FORMAT_VERSION", FORMAT_VERSION);
+
+    // Create main groups.
+    m_mesh = hdfRoot2->CreateGroup("MESH");
+    m_maps = hdfRoot2->CreateGroup("MAPS");
+
+    WriteGeometryMap(m_vertSet, "VERT");
+    WriteGeometryMap(m_segGeoms, "SEG");
     if (m_meshDimension > 1)
     {
-        WriteGeometryMap(m_triGeoms, "tri");
-        WriteGeometryMap(m_quadGeoms, "quad");
+        WriteGeometryMap(m_triGeoms, "TRI");
+        WriteGeometryMap(m_quadGeoms, "QUAD");
     }
     if (m_meshDimension > 2)
     {
-        WriteGeometryMap(m_tetGeoms, "tet");
-        WriteGeometryMap(m_pyrGeoms, "pyr");
-        WriteGeometryMap(m_prismGeoms, "prism");
-        WriteGeometryMap(m_hexGeoms, "hex");
+        WriteGeometryMap(m_tetGeoms, "TET");
+        WriteGeometryMap(m_pyrGeoms, "PYR");
+        WriteGeometryMap(m_prismGeoms, "PRISM");
+        WriteGeometryMap(m_hexGeoms, "HEX");
     }
 
     // Write curves
     int ptOffset = 0, newIdx = 0;
     MeshCurvedPts curvePts;
-    WriteCurveMap(m_curvedEdges, "curve_edge", curvePts, ptOffset, newIdx);
-    WriteCurveMap(m_curvedFaces, "curve_face", curvePts, ptOffset, newIdx);
+    WriteCurveMap(m_curvedEdges, "CURVE_EDGE", curvePts, ptOffset, newIdx);
+    WriteCurveMap(m_curvedFaces, "CURVE_FACE", curvePts, ptOffset, newIdx);
     WriteCurvePoints(curvePts);
 
     // Write composites and domain.

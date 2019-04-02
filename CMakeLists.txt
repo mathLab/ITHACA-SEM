@@ -169,6 +169,14 @@ OPTION(NEKTAR_USE_MEMORY_POOLS
     "Use memory pools to accelerate memory allocation." ON)
 MARK_AS_ADVANCED(NEKTAR_USE_MEMORY_POOLS)
 
+# Thread safety
+OPTION(NEKTAR_USE_THREAD_SAFETY
+    "Guarantee thread safety in certain core Nektar++ classes." OFF)
+MARK_AS_ADVANCED(NEKTAR_USE_THREAD_SAFETY)
+IF (NEKTAR_USE_THREAD_SAFETY)
+    ADD_DEFINITIONS(-DNEKTAR_USE_THREAD_SAFETY)
+ENDIF()
+
 IF (MSVC)
     # Needed for M_PI to be visible in visual studio.
     ADD_DEFINITIONS(-D_USE_MATH_DEFINES)

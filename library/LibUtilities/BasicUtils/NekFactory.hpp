@@ -41,12 +41,23 @@
 #include <string>
 #include <memory>
 
+#ifdef NEKTAR_USE_THREAD_SAFETY
+#include <boost/thread/shared_mutex.hpp>
+#include <boost/thread/locks.hpp>
+#endif
+
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 
 namespace Nektar
 {
 namespace LibUtilities
 {
+
+#ifdef NEKTAR_USE_THREAD_SAFETY
+// Generate parameter typenames with default type of 'none'
+typedef boost::unique_lock<boost::shared_mutex> WriteLock;
+typedef boost::shared_lock<boost::shared_mutex> ReadLock;
+#endif
 
 /**
  * @class NekFactory
@@ -121,7 +132,7 @@ public:
     typedef std::map<tKey, ModuleEntry, tPredicator> TMapFactory;
 
 public:
-    NekFactory()  {}
+    NekFactory() = default;
 
     /**
      * @brief Create an instance of the class referred to by \c idKey.
@@ -134,6 +145,10 @@ public:
      */
     tBaseSharedPtr CreateInstance(tKey idKey, tParam... args)
     {
+#ifdef NEKTAR_USE_THREAD_SAFETY
+        ReadLock vReadLock(m_mutex);
+#endif
+
         // Now try and find the key in the map.
         auto it = getMapFactory()->find(idKey);
 
@@ -142,6 +157,9 @@ public:
         if (it != getMapFactory()->end())
         {
             ModuleEntry *tmp = &(it->second);
+#ifdef NEKTAR_USE_THREAD_SAFETY
+            vReadLock.unlock();
+#endif
 
             if (tmp->m_func)
             {
@@ -183,6 +201,10 @@ public:
     tKey RegisterCreatorFunction(tKey idKey, CreatorFunction classCreator,
                                  tDescription pDesc = "")
     {
+#ifdef NEKTAR_USE_THREAD_SAFETY
+        WriteLock vWriteLock(m_mutex);
+#endif
+
         ModuleEntry e(classCreator, pDesc);
         getMapFactory()->insert(std::pair<tKey,ModuleEntry>(idKey, e));
         return idKey;
@@ -194,6 +216,10 @@ public:
      */
     bool ModuleExists(tKey idKey)
     {
+#ifdef NEKTAR_USE_THREAD_SAFETY
+        ReadLock vReadLock(m_mutex);
+#endif
+
         // Now try and find the key in the map.
         auto it = getMapFactory()->find(idKey);
 
@@ -210,6 +236,10 @@ public:
      */
     void PrintAvailableClasses(std::ostream& pOut = std::cout)
     {
+#ifdef NEKTAR_USE_THREAD_SAFETY
+        ReadLock vReadLock(m_mutex);
+#endif
+
         pOut << std::endl << "Available classes: " << std::endl;
         for (auto &it : *getMapFactory())
         {
@@ -232,6 +262,10 @@ public:
      */
     tKey GetKey(tDescription pDesc)
     {
+#ifdef NEKTAR_USE_THREAD_SAFETY
+        ReadLock vReadLock(m_mutex);
+#endif
+
         for (auto &it : *getMapFactory())
         {
             if (it.second.m_desc == pDesc)
@@ -251,6 +285,10 @@ public:
      */
     std::string GetClassDescription(tKey idKey)
     {
+#ifdef NEKTAR_USE_THREAD_SAFETY
+        ReadLock vReadLock(m_mutex);
+#endif
+
         // Now try and find the key in the map.
         auto it = getMapFactory()->find(idKey);
 
@@ -275,6 +313,11 @@ private:
     NekFactory& operator=(const NekFactory& rhs);
 
     TMapFactory mMapFactory;
+
+#ifdef NEKTAR_USE_THREAD_SAFETY
+    boost::shared_mutex m_mutex;
+#endif
+
 };
 
 }

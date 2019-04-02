@@ -77,6 +77,12 @@ void InputNekpp::Process()
     SpatialDomains::MeshGraphSharedPtr graph =
         SpatialDomains::MeshGraph::Read(pSession);
 
+    auto comm = pSession->GetComm();
+    if (comm->GetType().find("MPI") != std::string::npos)
+    {
+        m_mesh->m_comm = comm;
+    }
+
     m_mesh->m_expDim   = graph->GetMeshDimension();
     m_mesh->m_spaceDim = graph->GetSpaceDimension();
 

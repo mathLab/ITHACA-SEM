@@ -164,7 +164,8 @@ void OutputNekpp::Process()
 
         char *prgname = "NekMesh";
         LibUtilities::SessionReaderSharedPtr vSession =
-            LibUtilities::SessionReader::CreateInstance(1, &prgname, filenames);
+            LibUtilities::SessionReader::CreateInstance(1, &prgname, filenames,
+                                                        m_mesh->m_comm);
         SpatialDomains::MeshGraphSharedPtr graph =
             SpatialDomains::MeshGraph::Read(vSession);
 

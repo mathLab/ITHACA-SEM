@@ -73,6 +73,12 @@ void InputMCF::ParseFile(string nm)
         LibUtilities::SessionReader::CreateInstance(0, NULL, filename);
     pSession->InitSession();
 
+    auto comm = pSession->GetComm();
+    if (comm->GetType().find("MPI") != std::string::npos)
+    {
+        m_mesh->m_comm = comm;
+    }
+
     ASSERTL0(pSession->DefinesElement("NEKTAR/MESHING"), "no meshing tag");
     ASSERTL0(pSession->DefinesElement("NEKTAR/MESHING/INFORMATION"),
              "no information tag");

@@ -32,6 +32,7 @@
 // Description: Metis partitioner interface
 //
 ///////////////////////////////////////////////////////////////////////////////
+
 #ifndef NEKTAR_SPATIALDOMAINS_MESHPARTITIONMETIS_H
 #define NEKTAR_SPATIALDOMAINS_MESHPARTITIONMETIS_H
 
@@ -51,7 +52,7 @@ public:
         const LibUtilities::SessionReaderSharedPtr session,
         int                                        meshDim,
         std::map<int, MeshEntity>                  element,
-        CompositeDescriptor                        compMap);
+        CompositeDescriptor                        compMap)
     {
         return MemoryManager<MeshPartitionMetis>::AllocateSharedPtr(
             session, meshDim, element, compMap);

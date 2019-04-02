@@ -125,6 +125,8 @@ void MeshGraphXml::PartitionMesh(
             ASSERTL0(comm->GetSize() == 1,
                      "The 'part-only' option should be used in serial.");
 
+            ReadGeometry(NullDomainRangeShPtr, false);
+
             // Number of partitions is specified by the parameter.
             int nParts;
             auto comp = CreateCompositeDescriptor();

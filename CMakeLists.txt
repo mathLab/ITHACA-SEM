@@ -201,6 +201,10 @@ IF (NOT EXISTS ${TPSRC})
 ENDIF ()
 
 # Find ThirdParty libraries and headers.
+# --------------------------------------
+
+# Need to find MPI first, as other packages depend on the compiler wrappers
+INCLUDE (ThirdPartyMPI)
 INCLUDE (ThirdPartyTinyxml)
 INCLUDE (ThirdPartyMetis)
 INCLUDE (ThirdPartyHDF5)
@@ -210,7 +214,6 @@ INCLUDE (ThirdPartyBoost)
 INCLUDE (ThirdPartyPython)
 INCLUDE (ThirdPartyFFTW)
 INCLUDE (ThirdPartyArpack)
-INCLUDE (ThirdPartyMPI)
 INCLUDE (ThirdPartyVTK)
 INCLUDE (ThirdPartyOCE)
 INCLUDE (ThirdPartyTriangle)

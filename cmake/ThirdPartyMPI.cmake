@@ -49,6 +49,7 @@ IF( NEKTAR_USE_MPI )
     ADD_DEFINITIONS(-DNEKTAR_USE_MPI)
 
     IF (THIRDPARTY_BUILD_GSMPI)
+        INCLUDE(ExternalProject)
         EXTERNALPROJECT_ADD(
             gsmpi-1.2.1
             URL ${TPURL}/gsmpi-1.2.1_1.tar.bz2

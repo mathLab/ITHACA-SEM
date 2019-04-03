@@ -55,8 +55,7 @@ public:
                                    std::vector<NodeSharedPtr> pNodeList,
                                    std::vector<int> pTagList)
     {
-        return std::shared_ptr<Element>(
-            new Quadrilateral(pConf, pNodeList, pTagList));
+        return std::make_shared<Quadrilateral>(pConf, pNodeList, pTagList);
     }
     /// Element type
     static LibUtilities::ShapeType m_type;

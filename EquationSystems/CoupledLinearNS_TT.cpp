@@ -3499,8 +3499,7 @@ namespace Nektar
 	{
 		if(number_of_snapshots == 1)
 		{
-			cout<<"Start continuation_method(param) with param_vector[0]="<<param_vector[0]<<"\n";
-			babyCLNS_trafo.continuation_method(param_vector[0]);	
+			babyCLNS_trafo.Continuation_method(param_vector[0]);	
 		}
 		else
 		{

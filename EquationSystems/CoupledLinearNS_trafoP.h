@@ -118,9 +118,6 @@ namespace Nektar
         
         void L2Norm(Array<OneD, Array<OneD, NekDouble> > &inarray,
                     Array<OneD, NekDouble> &outarray);
-                    
-        // Unpack solution 
-        Array<OneD, NekDouble> InverseTrafo(Array<OneD, NekDouble> &solution, int mode, MultiRegions::ExpListSharedPtr &pressure);
         
         void DefineForcingTerm(void);
         Array<OneD, Array<OneD, NekDouble> > m_ForcingTerm;
@@ -145,7 +142,13 @@ namespace Nektar
 	
 	
 	//perform my continuation method
-	void continuation_method(NekDouble param);
+	void Continuation_method(NekDouble param);
+	//get a vector with, in position i, the index of its mirrored phys point
+	std::vector<int> GetFlipperMap(std::vector<double> &x, std::vector<double> &y);
+	//flip each solutions and try to obtain new solutions but different from the previous ones
+	Array<OneD, Array<OneD, NekDouble> > FlipAndCheck(std::vector<int> &flipperMap, int *flipCounter);
+	
+	//Array<OneD, NekDouble > my_f_bnd, my_f_int;
 	bool use_deflation, converged, deflate;
 	int number_of_deflations, total_solutions_found, different_solutions_found;
 	Array<OneD, Array<OneD, NekDouble> > solution_x_continuation_deflation;

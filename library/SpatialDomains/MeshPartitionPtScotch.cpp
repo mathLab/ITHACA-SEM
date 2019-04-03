@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File MeshPartitionMetis.cpp
+// File MeshPartitionPtScotch.cpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,41 +29,51 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Metis partitioner interface
+// Description: PtScotch partitioner interface
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <SpatialDomains/MeshPartitionMetis.h>
-#include <LibUtilities/BasicUtils/Metis.hpp>
+#include <LibUtilities/Communication/CommMpi.h>
+#include <SpatialDomains/MeshPartitionPtScotch.h>
+
+#include <ptscotch.h>
+
+#define SCOTCH_CALL(scotchFunc, args)                                   \
+    {                                                                   \
+        ASSERTL0(scotchFunc args == 0,                                  \
+                 std::string("Error in Scotch calling function ")       \
+                 + std::string(#scotchFunc));                           \
+    }
 
 namespace Nektar
 {
 namespace SpatialDomains
 {
 
-std::string MeshPartitionMetis::className =
+std::string MeshPartitionPtScotch::className =
     GetMeshPartitionFactory().RegisterCreatorFunction(
-        "Metis", MeshPartitionMetis::create,
-        "Partitioning using the METIS library.");
+        "PtScotch", MeshPartitionPtScotch::create,
+        "Parallel partitioning using the PtScotch library.");
 
-std::string MeshPartitionMetis::cmdSwitch =
+std::string MeshPartitionPtScotch::cmdSwitch =
     LibUtilities::SessionReader::RegisterCmdLineFlag(
-        "use-metis", "", "Use METIS for mesh partitioning.");
+        "use-ptscotch", "", "Use PtScotch for parallel mesh partitioning.");
 
-MeshPartitionMetis::MeshPartitionMetis(
+MeshPartitionPtScotch::MeshPartitionPtScotch(
     const LibUtilities::SessionReaderSharedPtr session,
     int                                        meshDim,
     std::map<int, MeshEntity>                  element,
     CompositeDescriptor                        compMap)
     : MeshPartition(session, meshDim, element, compMap)
 {
+    m_parallel = true;
 }
 
-MeshPartitionMetis::~MeshPartitionMetis()
+MeshPartitionPtScotch::~MeshPartitionPtScotch()
 {
 }
 
-void MeshPartitionMetis::PartitionGraphImpl(
+void MeshPartitionPtScotch::PartitionGraphImpl(
     int &nVerts, int &nVertConds, Nektar::Array<Nektar::OneD, int> &xadj,
     Nektar::Array<Nektar::OneD, int> &adjcy,
     Nektar::Array<Nektar::OneD, int> &vertWgt,
@@ -71,8 +81,24 @@ void MeshPartitionMetis::PartitionGraphImpl(
     Nektar::Array<Nektar::OneD, int> &edgeWgt, int &nparts, int &volume,
     Nektar::Array<Nektar::OneD, int> &part)
 {
-    Metis::PartGraphVKway(nVerts, nVertConds, xadj, adjcy, vertWgt, vertSize,
-                          edgeWgt, nparts, volume, part);
+    LibUtilities::CommMpiSharedPtr mpiComm = std::dynamic_pointer_cast<
+        LibUtilities::CommMpi>(m_comm->GetRowComm());
+
+    ASSERTL0(mpiComm, "PtScotch not supported in serial execution.");
+
+    SCOTCH_Dgraph scGraph;
+    SCOTCH_CALL(SCOTCH_dgraphInit, (&scGraph, mpiComm->GetComm()));
+    SCOTCH_CALL(SCOTCH_dgraphBuild,
+                (&scGraph, 0, nVerts, nVerts, &xadj[0], &xadj[1], &vertWgt[0],
+                 NULL, adjcy.num_elements(), adjcy.num_elements(),
+                 &adjcy[0], NULL, NULL));
+    SCOTCH_CALL(SCOTCH_dgraphCheck, (&scGraph));
+
+    SCOTCH_Strat strat;
+    SCOTCH_CALL(SCOTCH_stratInit, (&strat));
+
+    SCOTCH_CALL(SCOTCH_dgraphPart, (&scGraph, nparts, &strat, &part[0]));
 }
+
 }
 }

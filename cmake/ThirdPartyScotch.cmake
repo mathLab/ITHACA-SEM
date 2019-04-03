@@ -12,15 +12,29 @@ IF (NOT WIN32)
 ENDIF(NOT WIN32)
 
 IF (NEKTAR_USE_SCOTCH)
-    # First search for system TinyXML installs. Hint /opt/local for MacPorts.
+    # Assume we build scotch by default
+    SET(BUILD_SCOTCH OFF)
+
+    # First search for system serial scotch installs. Hint /opt/local for MacPorts.
     FIND_LIBRARY(SCOTCH_LIBRARY    NAMES scotch PATHS ${MACPORTS_PREFIX}/lib)
     FIND_LIBRARY(SCOTCHERR_LIBRARY NAMES scotcherr PATHS ${MACPORTS_PREFIX}/lib)
-    FIND_PATH   (SCOTCH_INCLUDE_DIR scotch.h PATHS ${MACPORTS_PREFIX}/include)
+    FIND_PATH   (SCOTCH_INCLUDE_DIR scotch.h PATHS ${MACPORTS_PREFIX}/include PATH_SUFFIXES scotch)
 
-    IF (SCOTCH_LIBRARY AND SCOTCHERR_LIBRARY AND SCOTCH_INCLUDE_DIR)
-        SET(BUILD_SCOTCH OFF)
-    ELSE()
+    # If not found, we need to build scotch
+    IF (NOT SCOTCH_LIBRARY OR NOT SCOTCHERR_LIBRARY OR NOT SCOTCH_INCLUDE_DIR)
         SET(BUILD_SCOTCH ON)
+    ENDIF ()
+
+    # If we are also using MPI, search for PT-Scotch library
+    IF (NEKTAR_USE_MPI)
+        FIND_LIBRARY(PTSCOTCH_LIBRARY    NAMES ptscotch PATHS ${MACPORTS_PREFIX}/lib)
+        FIND_LIBRARY(PTSCOTCHERR_LIBRARY NAMES ptscotcherr PATHS ${MACPORTS_PREFIX}/lib)
+        FIND_PATH   (PTSCOTCH_INCLUDE_DIR ptscotch.h PATHS ${MACPORTS_PREFIX}/include PATH_SUFFIXES scotch)
+
+        # If we cannot find PT-Scotch, we need to build them
+        IF (NOT PTSCOTCH_LIBRARY OR NOT PTSCOTCHERR_LIBRARY OR NOT PTSCOTCH_INCLUDE_DIR)
+            SET(BUILD_SCOTCH ON)
+        ENDIF ()
     ENDIF ()
 
     CMAKE_DEPENDENT_OPTION(THIRDPARTY_BUILD_SCOTCH
@@ -30,6 +44,8 @@ IF (NEKTAR_USE_SCOTCH)
     ADD_DEFINITIONS(-DNEKTAR_USE_SCOTCH)
 
     IF (THIRDPARTY_BUILD_SCOTCH)
+        INCLUDE(ExternalProject)
+
         UNSET(FLEX CACHE)
         FIND_PROGRAM(FLEX flex)
         IF(NOT FLEX)
@@ -45,16 +61,23 @@ IF (NEKTAR_USE_SCOTCH)
         IF (APPLE)
             SET(SCOTCH_MAKE Makefile.inc.i686_mac_darwin8)
             SET(SCOTCH_LDFLAGS "")
-            SET(SCOTCH_CFLAGS "-O3 -Drestrict=__restrict -DCOMMON_PTHREAD -DCOMMON_RANDOM_FIXED_SEED -DCOMMON_TIMING_OLD -DSCOTCH_PTHREAD -DSCOTCH_RENAME -DCOMMON_PTHREAD_BARRIER")
+            SET(SCOTCH_CFLAGS "-O3 -Drestrict=__restrict -DCOMMON_PTHREAD -DCOMMON_RANDOM_FIXED_SEED -DCOMMON_TIMING_OLD -DSCOTCH_RENAME -DCOMMON_PTHREAD_BARRIER")
         ELSE ()
             IF (CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64")
                 SET(SCOTCH_MAKE Makefile.inc.x86-64_pc_linux2)
-                SET(SCOTCH_CFLAGS "-O3 -DCOMMON_FILE_COMPRESS_GZ -DCOMMON_PTHREAD -DCOMMON_RANDOM_FIXED_SEED -DSCOTCH_RENAME -DSCOTCH_PTHREAD -Drestrict=__restrict -DIDXSIZE64")
+                SET(SCOTCH_CFLAGS "-O3 -DCOMMON_FILE_COMPRESS_GZ -DCOMMON_PTHREAD -DCOMMON_RANDOM_FIXED_SEED -DSCOTCH_RENAME -Drestrict=__restrict -DIDXSIZE64")
             ELSE ()
                 SET(SCOTCH_MAKE Makefile.inc.i686_pc_linux2)
-                SET(SCOTCH_CFLAGS "-O3 -DCOMMON_FILE_COMPRESS_GZ -DCOMMON_PTHREAD -DCOMMON_RANDOM_FIXED_SEED -DSCOTCH_RENAME -DSCOTCH_PTHREAD -Drestrict=__restrict")
+                SET(SCOTCH_CFLAGS "-O3 -DCOMMON_FILE_COMPRESS_GZ -DCOMMON_PTHREAD -DCOMMON_RANDOM_FIXED_SEED -DSCOTCH_RENAME -Drestrict=__restrict")
             ENDIF ()
             SET(SCOTCH_LDFLAGS "-lz -lm -lrt -lpthread")
+        ENDIF ()
+        
+        SET(SCOTCH_BUILD_TARGET "scotch")
+        SET(SCOTCH_C_COMPILER ${CMAKE_C_COMPILER})
+        IF (NEKTAR_USE_MPI)
+            SET(SCOTCH_BUILD_TARGET "ptscotch")
+            SET(SCOTCH_C_COMPILER ${MPI_C_COMPILER})
         ENDIF ()
 
         INCLUDE(ExternalProject)
@@ -76,7 +99,10 @@ IF (NEKTAR_USE_SCOTCH)
             BUILD_COMMAND $(MAKE) -C ${SCOTCH_SRC}
                 "CFLAGS=-I${TPDIST}/include ${SCOTCH_CFLAGS}"
                 "LDFLAGS=-L${TPDIST}/lib ${SCOTCH_LDFLAGS}"
-                "CLIBFLAGS=-fPIC" scotch
+                "CLIBFLAGS=-fPIC"
+                "CCP=${SCOTCH_C_COMPILER}"
+                "CCD=${SCOTCH_C_COMPILER}"
+                ${SCOTCH_BUILD_TARGET}
             INSTALL_COMMAND $(MAKE) -C ${SCOTCH_SRC}
                 prefix=${TPDIST} install
         )
@@ -85,8 +111,14 @@ IF (NEKTAR_USE_SCOTCH)
             DESCRIPTION "Scotch library")
         THIRDPARTY_LIBRARY(SCOTCHERR_LIBRARY STATIC scotcherr
             DESCRIPTION "Scotch error library")
+        THIRDPARTY_LIBRARY(PTSCOTCH_LIBRARY STATIC ptscotch
+            DESCRIPTION "PT-Scotch library")
+        THIRDPARTY_LIBRARY(PTSCOTCHERR_LIBRARY STATIC ptscotcherr
+            DESCRIPTION "PT-Scotch error library")
         SET(SCOTCH_INCLUDE_DIR ${TPDIST}/include CACHE FILEPATH
             "Scotch include directory" FORCE)
+        SET(PTSCOTCH_INCLUDE_DIR ${TPDIST}/include CACHE FILEPATH
+            "PT-Scotch include directory" FORCE)
         MESSAGE(STATUS "Build Scotch: ${SCOTCH_LIBRARY}")
         SET(SCOTCH_CONFIG_INCLUDE_DIR ${TPINC})
     ELSE (THIRDPARTY_BUILD_SCOTCH)
@@ -99,5 +131,8 @@ IF (NEKTAR_USE_SCOTCH)
 
     MARK_AS_ADVANCED(SCOTCH_LIBRARY)
     MARK_AS_ADVANCED(SCOTCHERR_LIBRARY)
+    MARK_AS_ADVANCED(PTSCOTCH_LIBRARY)
+    MARK_AS_ADVANCED(PTSCOTCHERR_LIBRARY)
     MARK_AS_ADVANCED(SCOTCH_INCLUDE_DIR)
+    MARK_AS_ADVANCED(PTSCOTCH_INCLUDE_DIR)
 ENDIF()

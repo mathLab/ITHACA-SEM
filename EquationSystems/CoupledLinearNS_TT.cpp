@@ -595,6 +595,12 @@ namespace Nektar
 
     void CoupledLinearNS_TT::SetUpCoupledMatrix(const NekDouble lambda,  const Array< OneD, Array< OneD, NekDouble > > &Advfield, bool IsLinearNSEquation,const int HomogeneousMode, CoupledSolverMatrices &mat, CoupledLocalToGlobalC0ContMapSharedPtr &locToGloMap, const NekDouble lambda_imag)
     {
+
+	if(use_Newton)        
+	{
+		IsLinearNSEquation = true;
+	}
+
         int  n,i,j,k,eid;
         int  nel  = m_fields[m_velocity[0]]->GetNumElmts();
         int  nvel   = m_velocity.num_elements();
@@ -1377,11 +1383,17 @@ namespace Nektar
                                         Ah_data[j+(k*nz_loc+n1)*nbmap + 
                                         (i+(nv*nz_loc+n1)*nbmap)*AhRows] +=
                                         coeffs[bmap[j]];
+                                        A_adv_data[j+(k*nz_loc+n1)*nbmap + 
+                                        (i+(nv*nz_loc+n1)*nbmap)*AhRows] +=
+                                        coeffs[bmap[j]];
                                     }
                                     
                                     for(j = 0; j < nimap; ++j)
                                     {
                                         C_data[i+(nv*nz_loc+n1)*nbmap + 
+                                        (j+(k*nz_loc+n1)*nimap)*nbndry] += 
+                                        coeffs[imap[j]];
+                                        C_adv_data[i+(nv*nz_loc+n1)*nbmap + 
                                         (j+(k*nz_loc+n1)*nimap)*nbndry] += 
                                         coeffs[imap[j]];
                                     }
@@ -1555,11 +1567,17 @@ namespace Nektar
                                         B_data[j+(k*nz_loc+n1)*nbmap + 
                                         (i+(nv*nz_loc+n1)*nimap)*nbndry] += 
                                         coeffs[bmap[j]];
+                                        B_adv_data[j+(k*nz_loc+n1)*nbmap + 
+                                        (i+(nv*nz_loc+n1)*nimap)*nbndry] += 
+                                        coeffs[bmap[j]];
                                     }
                                     
                                     for(j = 0; j < nimap; ++j)
                                     {
                                         D_data[j+(k*nz_loc+n1)*nimap +  
+                                        (i+(nv*nz_loc+n1)*nimap)*nint] += 
+                                        coeffs[imap[j]];
+                                        D_adv_data[j+(k*nz_loc+n1)*nimap +  
                                         (i+(nv*nz_loc+n1)*nimap)*nint] += 
                                         coeffs[imap[j]];
                                     }
@@ -3375,6 +3393,14 @@ namespace Nektar
 	{
 		globally_connected = 0;
 	}
+	if (m_session->DefinesParameter("use_Newton")) // this sets how the truth system global coupling is enforced
+	{
+		use_Newton = m_session->GetParameter("use_Newton");
+	}
+	else
+	{
+		use_Newton = 0;
+	}
 	Nmax = number_of_snapshots;
 	param_vector = Array<OneD, NekDouble> (Nmax);
         for(int i = 0; i < number_of_snapshots; ++i)
@@ -3400,6 +3426,7 @@ namespace Nektar
 	m_session->SetSolverInfo("SolverType", "CoupledLinearisedNS_trafoP");
 	CoupledLinearNS_trafoP babyCLNS_trafo(m_session);
 	babyCLNS_trafo.InitObject();
+	babyCLNS_trafo.use_Newton = use_Newton;
 	collect_f_all = babyCLNS_trafo.DoTrafo(snapshot_x_collection, snapshot_y_collection, param_vector);
 	Eigen::BDCSVD<Eigen::MatrixXd> svd_collect_f_all(collect_f_all, Eigen::ComputeThinU);
 	cout << "svd_collect_f_all.singularValues() " << svd_collect_f_all.singularValues() << endl << endl;
@@ -3520,6 +3547,7 @@ namespace Nektar
     {
 	CoupledLinearNS_trafoP babyCLNS_trafo(m_session);
 	babyCLNS_trafo.InitObject();
+	babyCLNS_trafo.use_Newton = use_Newton;
 	Array<OneD, NekDouble> zero_phys_init(GetNpoints(), 0.0);
 	snapshot_x_collection = Array<OneD, Array<OneD, NekDouble> > (number_of_snapshots);
 	snapshot_y_collection = Array<OneD, Array<OneD, NekDouble> > (number_of_snapshots);

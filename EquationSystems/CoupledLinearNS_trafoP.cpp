@@ -375,6 +375,12 @@ namespace Nektar
     
     void CoupledLinearNS_trafoP::SetUpCoupledMatrix(const NekDouble lambda,  const Array< OneD, Array< OneD, NekDouble > > &Advfield, bool IsLinearNSEquation,const int HomogeneousMode, CoupledSolverMatrices &mat, CoupledLocalToGlobalC0ContMapSharedPtr &locToGloMap, const NekDouble lambda_imag)
     {
+
+	if(use_Newton)        
+	{
+		IsLinearNSEquation = true;
+	}
+
         int  n,i,j,k,eid;
         int  nel  = m_fields[m_velocity[0]]->GetNumElmts();
         int  nvel   = m_velocity.num_elements();

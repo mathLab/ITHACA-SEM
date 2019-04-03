@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File MeshPartitionMetis.h
+// File MeshPartitionPtScotch.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,12 +29,11 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Metis partitioner interface
+// Description: PtScotch partitioner interface
 //
 ///////////////////////////////////////////////////////////////////////////////
-
-#ifndef NEKTAR_SPATIALDOMAINS_MESHPARTITIONMETIS_H
-#define NEKTAR_SPATIALDOMAINS_MESHPARTITIONMETIS_H
+#ifndef NEKTAR_SPATIALDOMAINS_MESHPARTITIONPTSCOTCH_H
+#define NEKTAR_SPATIALDOMAINS_MESHPARTITIONPTSCOTCH_H
 
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 #include <SpatialDomains/MeshPartition.h>
@@ -44,7 +43,7 @@ namespace Nektar
 namespace SpatialDomains
 {
 
-class MeshPartitionMetis : public MeshPartition
+class MeshPartitionPtScotch : public MeshPartition
 {
 public:
     /// Creates an instance of this class
@@ -54,7 +53,7 @@ public:
         std::map<int, MeshEntity>                  element,
         CompositeDescriptor                        compMap)
     {
-        return MemoryManager<MeshPartitionMetis>::AllocateSharedPtr(
+        return MemoryManager<MeshPartitionPtScotch>::AllocateSharedPtr(
             session, meshDim, element, compMap);
     }
 
@@ -62,11 +61,11 @@ public:
     static std::string className;
     static std::string cmdSwitch;
 
-    MeshPartitionMetis(const LibUtilities::SessionReaderSharedPtr session,
-                       int                                        meshDim,
-                       std::map<int, MeshEntity>                  element,
-                       CompositeDescriptor                        compMap);
-    virtual ~MeshPartitionMetis();
+    MeshPartitionPtScotch(const LibUtilities::SessionReaderSharedPtr session,
+                          int                                        meshDim,
+                          std::map<int, MeshEntity>                  element,
+                          CompositeDescriptor                        compMap);
+    virtual ~MeshPartitionPtScotch();
 
 private:
     virtual void PartitionGraphImpl(int &nVerts, int &nVertConds,

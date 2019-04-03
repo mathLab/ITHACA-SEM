@@ -52,8 +52,10 @@ namespace SpatialDomains
 
     MeshPartitionScotch::MeshPartitionScotch(
         const LibUtilities::SessionReaderSharedPtr session,
-        const MeshGraphSharedPtr meshGraph)
-        : MeshPartition(session, meshGraph)
+        int                                        meshDim,
+        std::map<int, MeshEntity>                  element,
+        CompositeDescriptor                        compMap)
+        : MeshPartition(session, meshDim, element, compMap)
     {
     }
 
@@ -132,7 +134,7 @@ namespace SpatialDomains
         // If no communication load   data provided
         if (vsize2 == NULL) {
             if (PartGraph2 (n, xadj, adjncy, vwgt2, NULL, numflag, nparts,
-                            part, SCOTCH_STRATDEFAULT, 0.01) != 0)
+                            part, SCOTCH_STRATQUALITY, 0.01) != 0)
                 return;
         }
 
@@ -173,7 +175,7 @@ namespace SpatialDomains
             }
 
             o = PartGraph2 (n, xadj, adjncy, vwgt2, edlotax + baseval, numflag,
-                            nparts, part, SCOTCH_STRATDEFAULT, 0.01);
+                            nparts, part, SCOTCH_STRATQUALITY, 0.01);
 
             free (edlotax + baseval);
 

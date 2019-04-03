@@ -65,6 +65,7 @@ v5.0.0
 - Fix integration weights on prisms and pyramids if not using the default
   integration rule (!998)
 - Fix missing ContainsPoint in Pyramid expansion (!1000)
+- Added path prefixes to find packaged Scotch (!979)
 
 **NekMesh**:
 - Add feature to read basic 2D geo files as CAD (!731)

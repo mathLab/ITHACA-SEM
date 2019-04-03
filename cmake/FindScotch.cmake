@@ -8,11 +8,24 @@
 #   SCOTCHERR_LIBRARY - Location of scotcherr library
 #   SCOTCH_FOUND - TRUE if Scotch found
 #   SCOTCH_VERSION - Version of scotch library found
+#
+# If the component 'ptscotch' is specified
+#   PTSCOTCH_LIBRARY - Location of the ptscotch main library
+#   PTSCOTCHERR_LIBRARY - Location of the ptscotcherr library
+#
+# The following environmental variables are used to help find the library:
+#   SCOTCH_DIR
+#   SCOTCH_INCDIR
+#
+# Usage:
+#   FIND_PACKAGE(Scotch)    - find any version of serial scotch
+#   FIND_PACKAGE(Scotch 5)  - find at least version 5 of serial scotch
+#   FIND_PACKAGE(Scotch 5 COMPONENTS ptscotch)
+#                           - find at least version 5 of PT-scotch
+
 
 # Determine if we are looking for PT-scotch, or just scotch
-SET(SCOTCH_COMPONENTS SERIAL PARALLEL)
 SET(PARALLEL OFF)
-LIST(FIND Scotch_FIND_COMPONENTS "scotch" FIND_SERIAL)
 LIST(FIND Scotch_FIND_COMPONENTS "ptscotch" FIND_PARALLEL)
 IF (FIND_PARALLEL GREATER -1)
     SET(PARALLEL ON)

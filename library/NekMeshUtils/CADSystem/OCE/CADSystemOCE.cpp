@@ -709,60 +709,26 @@ TopoDS_Shape CADSystemOCE::BuildGeo(string geo)
         gp_Pnt centre = cPoints[data[1]];
         gp_Pnt end    = cPoints[data[2]];
 
-        gp_Vec axis(centre, end);
-        Standard_Real radius = centre.Distance(start);
-
+        Standard_Real radius = start.Distance(centre);
         gce_MakeCirc mkArc(
             centre, gce_MakePln(start, centre, end).Value(), radius);
 
         const gp_Circ &circ = mkArc.Value();
-        Standard_Real alpha1 = ElCLib::Parameter(circ, start);
-        Standard_Real alpha2 = ElCLib::Parameter(circ, end);
         Handle(Geom_Circle) c = new Geom_Circle(circ);
 
-        
-        Handle(Geom_TrimmedCurve) tc = new Geom_TrimmedCurve(c, alpha1, alpha2, false);
-
-        // cout << tc->FirstParameter() << " " << tc->LastParameter() << endl;
-
-        BRepBuilderAPI_MakeEdge em(tc);
-        em.Build();
-        cEdges[it->first] = em.Edge();
-
-        /*
-        
-        NekDouble r1 = start.Distance(centre);
-        NekDouble r2 = end.Distance(centre);
-        ASSERTL0(fabs(r1 - r2) < 1e-7, "Non-matching radii");
-
-        gp_Ax2 ax(centre, );
-
-        gp_Circ c;
-        c.SetLocation(centre);
-        c.SetRadius(r1);
-        Handle(Geom_Circle) gc = new Geom_Circle(c);
-
-        ShapeAnalysis_Curve sac;
-        NekDouble p1, p2;
-        sac.Project(gc, start, 1e-8, start, p1);
-        sac.Project(gc, end, 1e-8, end, p2);
-
-        cout << "DATA: " << data[0] << " " << data[1] << " " << data[2] << endl;
-        cout << p1 << " " << p2 << endl;
-
-        // Make sure the arc is always of length less than pi
-        if ((p1 > p2) ^ (fabs(p2 - p1) > M_PI))
+        Standard_Real alpha1 = ElCLib::Parameter(circ, start);
+        Standard_Real alpha2 = ElCLib::Parameter(circ, end);
+        if ((alpha1 > alpha2) ^ (fabs(alpha2 - alpha1) > M_PI))
         {
-            cout << "swapping" << endl;
-            swap(p1, p2);
+            std::swap(alpha1, alpha2);
         }
 
-        Handle(Geom_TrimmedCurve) tc = new Geom_TrimmedCurve(gc, p1, p2, false);
+        Handle(Geom_TrimmedCurve) tc = new Geom_TrimmedCurve(
+            c, alpha1, alpha2, false);
 
         BRepBuilderAPI_MakeEdge em(tc);
         em.Build();
         cEdges[it->first] = em.Edge();
-        */
     }
     for (it = ellipses.begin(); it != ellipses.end(); it++)
     {
@@ -839,7 +805,7 @@ TopoDS_Shape CADSystemOCE::BuildGeo(string geo)
         ASSERTL0(data.size() == 1,
                  "Ruled surface should have only one curve loop");
 
-        BRepOffsetAPI_MakeFilling fill;
+        BRepFill_Filling fill(2, 30);
         TopExp_Explorer ex;
 
         for (ex.Init(cWires[data[0]], TopAbs_EDGE); ex.More(); ex.Next())
@@ -849,16 +815,37 @@ TopoDS_Shape CADSystemOCE::BuildGeo(string geo)
         }
 
         fill.Build();
+        TopoDS_Face fixedFace = fill.Face();
+        cFaces[surf.first] = fixedFace;
 
-        //StlAPI_Writer writer;
-        TopoDS_Face face = TopoDS::Face(fill.Shape());
-        //BRepMesh_IncrementalMesh Mesh( face, 10.0 );
-        //Mesh.Perform();
-        // StlAPI_Writer asd;
-        //std::string outfname = "out-" + boost::lexical_cast<std::string>(surf.first) + ".stl";
-        //asd.Write(face, outfname.c_str());
+        /*
+        TopExp_Explorer ex;
+        std::vector<Handle(GeomFill_SimpleBound)> bounds;
 
-        cFaces[surf.first] = face;
+        for (ex.Init(cWires[data[0]], TopAbs_EDGE); ex.More(); ex.Next())
+        {
+            double s0, s1;
+            Handle(Geom_Curve) c = BRep_Tool::Curve(
+                TopoDS::Edge(ex.Current()), s0, s1);
+            Handle(GeomAdaptor_HCurve) Curve = new GeomAdaptor_HCurve(c, s0, s1);
+            bounds.push_back(new GeomFill_SimpleBound(Curve, 0.001, 0.001));
+        }
+
+        GeomFill_ConstrainedFilling fill(2, 8);
+        fill.Init(bounds[0], bounds[1], bounds[2]);
+
+        Handle(Geom_BSplineSurface) fillSurf = fill.Surface();
+        BRepBuilderAPI_MakeFace mf(fillSurf, cWires[data[0]]);
+        mf.Build();
+        cFaces[surf.first] = mf.Face();
+
+        StlAPI_Writer writer;
+        BRepMesh_IncrementalMesh Mesh(cFaces[surf.first], 10.0);
+        Mesh.Perform();
+        std::string outfname = "out-" + boost::lexical_cast<std::string>(
+            surf.first) + ".stl";
+        writer.Write(cFaces[surf.first], outfname.c_str());
+        */
     }
 
     map<int, TopoDS_Shell> cShells;
@@ -871,19 +858,17 @@ TopoDS_Shape CADSystemOCE::BuildGeo(string geo)
 
         for (int i = 0; i < data.size(); ++i)
         {
-            cout << "adding " << data[i] << endl;
             shellMaker.Add(cFaces[data[i]]);
         }
 
-        cout << "cock" << endl;
         shellMaker.Perform();
 
         TopoDS_Shape shell = shellMaker.SewedShape();
-        BRepMesh_IncrementalMesh Mesh( shell, 200.0 );
-        Mesh.Perform();
-        StlAPI_Writer asd;
-        std::string outfname = "out.stl";
-        asd.Write(shell, outfname.c_str());
+        // BRepMesh_IncrementalMesh Mesh( shell, 200.0 );
+        // Mesh.Perform();
+        // StlAPI_Writer asd;
+        // std::string outfname = "out.stl";
+        // asd.Write(shell, outfname.c_str());
 
         return shell;
     }

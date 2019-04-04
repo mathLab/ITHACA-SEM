@@ -13,9 +13,9 @@ ENDIF(NOT WIN32)
 
 IF (NEKTAR_USE_SCOTCH)
     IF (NEKTAR_USE_MPI)
-        FIND_PACKAGE(Scotch 5 COMPONENTS ptscotch)
+        FIND_PACKAGE(Scotch 6 COMPONENTS ptscotch)
     ELSE()
-        FIND_PACKAGE(Scotch 5)
+        FIND_PACKAGE(Scotch 6)
     ENDIF()
 
     IF (SCOTCH_FOUND)

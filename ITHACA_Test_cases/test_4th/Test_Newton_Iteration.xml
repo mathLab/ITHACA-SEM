@@ -49,7 +49,6 @@
             <P> POD_tolerance = .999999       </P>
             <P> use_Newton = 1       </P>
             <P> A             = 0.65               </P>
-            <P> omega         = 2*PI*f               </P>
             <P> MappingPressureTolerance  = 1e-5               </P>
             <P> MappingViscousTolerance   = 1e-5               </P>
             <P> kdim = 16 </P>

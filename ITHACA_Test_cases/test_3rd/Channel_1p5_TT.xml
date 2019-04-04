@@ -49,7 +49,6 @@
             <P> globally_connected = 2      </P>   <!-- 0 = row1M, 1 = allM, 2 = noM -->
             <P> POD_tolerance = .9999       </P>
             <P> A             = 0.65               </P>
-            <P> omega         = 2*PI*f                         </P>
             <P> MappingPressureTolerance  = 1e-5               </P>
             <P> MappingViscousTolerance   = 1e-5               </P>
             <P> kdim = 16 </P>

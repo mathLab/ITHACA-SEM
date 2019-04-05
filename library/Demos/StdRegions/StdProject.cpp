@@ -68,36 +68,33 @@ static double pow_loc(const double val, const int i)
 int main(int argc, char *argv[])
 {
     string shape, ntype;
-    vector<string> basis(3, "NoBasisType");
+    vector<string> basis(3, "NoBasisType"), pointstype(3, "NoPointsType");
     vector<int> order, points;
     po::options_description desc("Available options");
     desc.add_options()
-            ("help,h",
-             "Produce this help message and list basis and shape types.")
-
-             ("nodal,n",
-              po::value<string>(&ntype),
-             "Optional nodal type, autofills shape and basis choices.")
-
-             ("shape,s",
-              po::value<string>(&shape),
-             "Region shape to project function on.")
-
-             ("basis,b",
-              po::value<vector<string>>(&basis)->multitoken(),
-             "Basis type, separate by spaces for higher dimensions.")
-
-             ("order,o",
-              po::value<vector<int>>(&order)->multitoken()->required(),
-             "Order of basis sets, separate by spaces for higher dimensions.")
-
-             ("points,p",
-              po::value<vector<int>>(&points)->multitoken()->required(),
-             "Number of quadrature points, separate by spaces for "
-             "higher dimensions.")
-
-             ("diff,d",
-             "Project derivative.");
+        ("help,h",
+         "Produce this help message and list basis and shape types.")
+        ("nodal,n",
+         po::value<string>(&ntype),
+         "Optional nodal type, autofills shape and basis choices.")
+        ("shape,s",
+         po::value<string>(&shape),
+         "Region shape to project function on.")
+        ("basis,b",
+         po::value<vector<string>>(&basis)->multitoken(),
+         "Basis type, separate by spaces for higher dimensions.")
+        ("order,o",
+         po::value<vector<int>>(&order)->multitoken()->required(),
+         "Order of basis sets, separate by spaces for higher dimensions.")
+        ("points,p",
+         po::value<vector<int>>(&points)->multitoken()->required(),
+         "Number of quadrature points, separate by spaces for "
+         "higher dimensions.")
+        ("pointstype,P",
+         po::value<vector<string>>(&pointstype)->multitoken(),
+         "Optional points type, separate by spaces for higher dimensions.")
+        ("diff,d",
+         "Project derivative.");
 
     po::variables_map vm;
     try
@@ -121,6 +118,12 @@ int main(int argc, char *argv[])
             {
                 cout << BasisTypeMap[i] << endl;
             };
+            cout << endl << "All points types, -P [ --pointstype ], are:"
+                 << endl;
+            for (int i = 1; i < SIZE_PointsType; ++i)
+            {
+                cout << kPointsTypeStr[i] << endl;
+            };
             return 1;
         }
         po::notify(vm);
@@ -129,6 +132,27 @@ int main(int argc, char *argv[])
     {
         cerr << "Error: " << e.what() << endl << desc;
         return 0;
+    }
+
+    vector<PointsType> ptype;
+    if (vm.count("pointstype"))
+    {
+        for (auto &p : pointstype)
+        {
+            PointsType tmp = eNoPointsType;
+            for (int i = 1; i < SIZE_PointsType; ++i) // starts at nodal points
+            {
+                if (boost::iequals(kPointsTypeStr[i], p))
+                {
+                    tmp = static_cast<PointsType>(i);
+                    break;
+                }
+                ASSERTL0(i != SIZE_PointsType - 1,
+                         "The points type '" + p + "' does not exist");
+            }
+
+            ptype.push_back(tmp);
+        }
     }
 
     //Convert string input argument to nodal type
@@ -218,6 +242,9 @@ int main(int argc, char *argv[])
              "Number of orders supplied should match shape dimension");
     ASSERTL0(points.size() == dimension,
              "Number of points supplied should match shape dimension");
+    ASSERTL0(ptype.size() == dimension || ptype.size() == 0,
+             "Number of points types should match shape dimension if "
+             "supplied.");
 
     if (!vm.count("nodal"))
     {
@@ -242,49 +269,40 @@ int main(int argc, char *argv[])
     //check basis selection is permitted for chosen shape
     map<ShapeType, vector<vector<BasisType>>> allowableBasis;
     allowableBasis[ePoint] = {
-            {eOrtho_A, eModified_A, eFourier, eGLL_Lagrange, eGauss_Lagrange,
-                    eLegendre, eChebyshev, eMonomial, eFourierSingleMode,
-                    eFourierHalfModeRe, eFourierHalfModeIm}
+        {eOrtho_A, eModified_A, eFourier, eGLL_Lagrange, eGauss_Lagrange,
+         eLegendre, eChebyshev, eMonomial, eFourierSingleMode,
+         eFourierHalfModeRe, eFourierHalfModeIm}
     };
-    allowableBasis[eSegment] = {
-            {eOrtho_A, eModified_A, eFourier, eGLL_Lagrange, eGauss_Lagrange,
-                    eLegendre, eChebyshev, eMonomial, eFourierSingleMode,
-                    eFourierHalfModeRe, eFourierHalfModeIm}
-    };
+    allowableBasis[eSegment] = { allowableBasis[ePoint][0] };
     allowableBasis[eTriangle] = {
-            {eOrtho_A, eModified_A, eGLL_Lagrange, eGauss_Lagrange},
-            {eOrtho_B, eModified_B, eGLL_Lagrange, eGauss_Lagrange}
+        {eOrtho_A, eModified_A, eGLL_Lagrange, eGauss_Lagrange},
+        {eOrtho_B, eModified_B, eGLL_Lagrange, eGauss_Lagrange}
     };
     allowableBasis[eQuadrilateral] = {
-            {eOrtho_A, eModified_A, eFourier, eGLL_Lagrange, eGauss_Lagrange,
-                    eLegendre, eChebyshev, eMonomial, eFourierSingleMode,
-                    eFourierHalfModeRe, eFourierHalfModeIm},
-            {eOrtho_A, eModified_A, eFourier, eGLL_Lagrange, eGauss_Lagrange,
-                    eLegendre, eChebyshev, eMonomial, eFourierSingleMode,
-                    eFourierHalfModeRe, eFourierHalfModeIm}
+        allowableBasis[eSegment][0], allowableBasis[eSegment][0]
     };
     allowableBasis[eTetrahedron] = {
-            {eOrtho_A, eModified_A, eGLL_Lagrange, eGauss_Lagrange},
-            {eOrtho_B, eModified_B, eGLL_Lagrange, eGauss_Lagrange},
-            {eOrtho_C, eModified_C, eGLL_Lagrange, eGauss_Lagrange}
+        {eOrtho_A, eModified_A, eGLL_Lagrange, eGauss_Lagrange},
+        {eOrtho_B, eModified_B, eGLL_Lagrange, eGauss_Lagrange},
+        {eOrtho_C, eModified_C, eGLL_Lagrange, eGauss_Lagrange}
     };
     allowableBasis[ePyramid] = {
-            {eOrtho_A,    eModified_A,    eGLL_Lagrange, eGauss_Lagrange},
-            {eOrtho_A,    eModified_A,    eGLL_Lagrange, eGauss_Lagrange},
-            {eOrthoPyr_C, eModifiedPyr_C, eGLL_Lagrange, eGauss_Lagrange}
+        {eOrtho_A,    eModified_A,    eGLL_Lagrange, eGauss_Lagrange},
+        {eOrtho_A,    eModified_A,    eGLL_Lagrange, eGauss_Lagrange},
+        {eOrthoPyr_C, eModifiedPyr_C, eGLL_Lagrange, eGauss_Lagrange}
     };
     allowableBasis[ePrism] = {
-            {eOrtho_A, eModified_A, eGLL_Lagrange, eGauss_Lagrange},
-            {eOrtho_A, eModified_A, eGLL_Lagrange, eGauss_Lagrange},
-            {eOrtho_B, eModified_B, eGLL_Lagrange, eGauss_Lagrange}
+        {eOrtho_A, eModified_A, eGLL_Lagrange, eGauss_Lagrange},
+        {eOrtho_A, eModified_A, eGLL_Lagrange, eGauss_Lagrange},
+        {eOrtho_B, eModified_B, eGLL_Lagrange, eGauss_Lagrange}
     };
     allowableBasis[eHexahedron] = {
-            {eOrtho_A, eModified_A, eFourier, eGLL_Lagrange, eGauss_Lagrange,
-                    eLegendre, eChebyshev, eMonomial},
-            {eOrtho_A, eModified_A, eFourier, eGLL_Lagrange, eGauss_Lagrange,
-                    eLegendre, eChebyshev, eMonomial},
-            {eOrtho_A, eModified_A, eFourier, eGLL_Lagrange, eGauss_Lagrange,
-                    eLegendre, eChebyshev, eMonomial}
+        {eOrtho_A, eModified_A, eFourier, eGLL_Lagrange, eGauss_Lagrange,
+         eLegendre, eChebyshev, eMonomial},
+        {eOrtho_A, eModified_A, eFourier, eGLL_Lagrange, eGauss_Lagrange,
+         eLegendre, eChebyshev, eMonomial},
+        {eOrtho_A, eModified_A, eFourier, eGLL_Lagrange, eGauss_Lagrange,
+         eLegendre, eChebyshev, eMonomial}
     };
 
     for (int i = 0; i < dimension; ++i)
@@ -305,39 +323,43 @@ int main(int argc, char *argv[])
     }
 
     //Declaration of other variables needed
-    vector<PointsType> pointstype(3, eNoPointsType);
     StdExpansion *E = nullptr;
 
-    //Assign points type according to basis type selection
-    for (int i = 0; i < dimension; ++i)
+    // Assign points type according to basis type selection, if not already
+    // assigned.
+    if (ptype.size() == 0)
     {
-        if (btype[i] == eFourier)
+        ptype.resize(dimension);
+        for (int i = 0; i < dimension; ++i)
         {
-            pointstype[i] = eFourierEvenlySpaced;
-        }
-        else if (btype[i] == eFourierSingleMode ||
-                 btype[i] == eFourierHalfModeRe ||
-                 btype[i] == eFourierHalfModeIm)
-        {
-            pointstype[i] = eFourierSingleModeSpaced;
-        }
-        else
-        {
-            if (i == 1 && (stype == eTriangle || stype == eTetrahedron))
+            if (btype[i] == eFourier)
             {
-                pointstype[i] = eGaussRadauMAlpha1Beta0;
+                ptype[i] = eFourierEvenlySpaced;
             }
-            else if (i == 2 && (stype == eTetrahedron || stype == ePyramid))
+            else if (btype[i] == eFourierSingleMode ||
+                     btype[i] == eFourierHalfModeRe ||
+                     btype[i] == eFourierHalfModeIm)
             {
-                pointstype[i] = eGaussRadauMAlpha2Beta0;
-            }
-            else if (i == 2 && stype == ePrism)
-            {
-                pointstype[i] = eGaussRadauMAlpha1Beta0;
+                ptype[i] = eFourierSingleModeSpaced;
             }
             else
             {
-                pointstype[i] = eGaussLobattoLegendre;
+                if (i == 1 && (stype == eTriangle || stype == eTetrahedron))
+                {
+                    ptype[i] = eGaussRadauMAlpha1Beta0;
+                }
+                else if (i == 2 && (stype == eTetrahedron || stype == ePyramid))
+                {
+                    ptype[i] = eGaussRadauMAlpha2Beta0;
+                }
+                else if (i == 2 && stype == ePrism)
+                {
+                    ptype[i] = eGaussRadauMAlpha1Beta0;
+                }
+                else
+                {
+                    ptype[i] = eGaussLobattoLegendre;
+                }
             }
         }
     }
@@ -346,7 +368,7 @@ int main(int argc, char *argv[])
     vector<BasisKey> bkey;
     for (int i = 0; i < dimension; ++i)
     {
-        pkey.emplace_back(PointsKey(points[i], pointstype[i]));
+        pkey.emplace_back(PointsKey(points[i], ptype[i]));
         bkey.emplace_back(BasisKey(btype[i], order[i], pkey[i]));
     }
 
@@ -514,6 +536,46 @@ int main(int argc, char *argv[])
         }
         cout << "\b\b): " << nsol - sol[0] << endl;
     }
+
+    // Calculate integral of known function to test different quadrature
+    // distributions on each element.
+    for (int i = 0; i < totPoints; ++i)
+    {
+        sol[i] = dimension == 1 ? exp(x[i]) : dimension == 2 ?
+            exp(x[i]) * sin(y[i]) : exp(x[i] + y[i] + z[i]);
+    }
+
+    NekDouble exact = 0.0;
+    switch(stype)
+    {
+        case eSegment:
+            exact = M_E - 1.0 / M_E;
+            break;
+        case eTriangle:
+            exact = -0.5 * (sin(1.0) + cos(1.0) + M_E * M_E *
+                            (sin(1.0) - cos(1.0))) / M_E;
+            break;
+        case eQuadrilateral:
+            exact = 2.0 * (M_E - 1.0 / M_E) * sin(1.0);
+            break;
+        case eTetrahedron:
+            exact = 1.0 / M_E - 1.0 / M_E / M_E / M_E;
+            break;
+        case ePrism:
+            exact = M_E - 1.0 / M_E / M_E / M_E;
+            break;
+        case ePyramid:
+            exact = - 1.0 / M_E / M_E / M_E - 4.0 / M_E + M_E;
+            break;
+        case eHexahedron:
+            exact = pow((M_E * M_E - 1.0) / M_E, 3.0);
+            break;
+        default:
+            ASSERTL0(false, "Exact solution not known.");
+            break;
+    }
+    std::cout << "Integral error: " << fabs(exact - E->Integral(sol))
+              << std::endl;
 
     return 0;
 }

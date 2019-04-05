@@ -142,6 +142,7 @@ OPTION(NEKTAR_BUILD_UTILITIES  "Build utilities."               ON)
 OPTION(NEKTAR_BUILD_UNIT_TESTS "Build unit tests."              ON)
 OPTION(NEKTAR_BUILD_TESTS      "Build regression tests."        ON)
 OPTION(NEKTAR_BUILD_TIMINGS    "Build benchmark timing codes."  OFF)
+OPTION(NEKTAR_BUILD_PYTHON     "Build Nektar++ Python bindings" OFF)
 OPTION(NEKTAR_BUILD_PACKAGES   "Build Nektar++ binary packages" OFF)
 MARK_AS_ADVANCED(NEKTAR_BUILD_PACKAGES)
 
@@ -167,6 +168,14 @@ ENDIF (${CMAKE_COMPILER_IS_GNUCXX})
 OPTION(NEKTAR_USE_MEMORY_POOLS
     "Use memory pools to accelerate memory allocation." ON)
 MARK_AS_ADVANCED(NEKTAR_USE_MEMORY_POOLS)
+
+# Thread safety
+OPTION(NEKTAR_USE_THREAD_SAFETY
+    "Guarantee thread safety in certain core Nektar++ classes." OFF)
+MARK_AS_ADVANCED(NEKTAR_USE_THREAD_SAFETY)
+IF (NEKTAR_USE_THREAD_SAFETY)
+    ADD_DEFINITIONS(-DNEKTAR_USE_THREAD_SAFETY)
+ENDIF()
 
 IF (MSVC)
     # Needed for M_PI to be visible in visual studio.
@@ -200,15 +209,19 @@ IF (NOT EXISTS ${TPSRC})
 ENDIF ()
 
 # Find ThirdParty libraries and headers.
+# --------------------------------------
+
+# Need to find MPI first, as other packages depend on the compiler wrappers
+INCLUDE (ThirdPartyMPI)
 INCLUDE (ThirdPartyTinyxml)
 INCLUDE (ThirdPartyMetis)
 INCLUDE (ThirdPartyHDF5)
 INCLUDE (ThirdPartyScotch)
 INCLUDE (ThirdPartyZlib)
 INCLUDE (ThirdPartyBoost)
+INCLUDE (ThirdPartyPython)
 INCLUDE (ThirdPartyFFTW)
 INCLUDE (ThirdPartyArpack)
-INCLUDE (ThirdPartyMPI)
 INCLUDE (ThirdPartyVTK)
 INCLUDE (ThirdPartyOCE)
 INCLUDE (ThirdPartyTriangle)

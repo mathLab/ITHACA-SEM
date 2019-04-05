@@ -37,6 +37,7 @@
 #include <chrono>
 #include <boost/algorithm/string.hpp>
 #include <LibUtilities/BasicConst/GitRevision.h>
+#include <LibUtilities/BasicUtils/Timer.h>
 #include <boost/program_options.hpp>
 #include <boost/asio/ip/host_name.hpp>
 #include <boost/format.hpp>
@@ -270,7 +271,15 @@ int main(int argc, char* argv[])
     // Run mesh process.
     for (int i = 0; i < modules.size(); ++i)
     {
+        Nektar::LibUtilities::Timer t;
+        t.Start();
         modules[i]->Process();
+        t.Stop();
+
+        if (mesh->m_verbose)
+        {
+            std::cout << "Module elapsed time: " << t.TimePerTest(1) << std::endl;
+        }
     }
 
     return 0;

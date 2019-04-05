@@ -34,6 +34,7 @@
 
 #include <Collections/CollectionOptimisation.h>
 #include <LibUtilities/BasicUtils/ParseUtils.h>
+#include <LibUtilities/BasicUtils/Timer.h>
 
 using namespace std;
 

@@ -54,6 +54,7 @@ using namespace std;
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 #include <LibUtilities/BasicUtils/ParseUtils.h>
 #include <LibUtilities/BasicUtils/FileSystem.h>
+#include <LibUtilities/Interpreter/AnalyticExpressionEvaluator.hpp>
 
 #include <boost/program_options.hpp>
 #include <boost/format.hpp>
@@ -2439,6 +2440,11 @@ namespace Nektar
         void SessionReader::SetUpXmlDoc(void)
         {
             m_xmlDoc = MergeDoc(m_filenames);
+        }
+
+        ExpressionEvaluatorShPtr SessionReader::GetExpressionEvaluator()
+        {
+            return m_exprEvaluator;
         }
     }
 }

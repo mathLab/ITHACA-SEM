@@ -38,6 +38,8 @@
 #include <LibUtilities/BasicUtils/CompressData.h>
 #include <LibUtilities/BasicUtils/FileSystem.h>
 #include <LibUtilities/BasicUtils/ParseUtils.h>
+#include <LibUtilities/BasicUtils/CompressData.h>
+
 #include <SpatialDomains/MeshEntities.hpp>
 
 // These are required for the Write(...) and Import(...) functions.

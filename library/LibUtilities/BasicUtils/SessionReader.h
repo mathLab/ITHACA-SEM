@@ -42,7 +42,6 @@
 #include <LibUtilities/Communication/Comm.h>
 #include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
 #include <LibUtilities/LibUtilitiesDeclspec.h>
-#include <LibUtilities/Interpreter/AnalyticExpressionEvaluator.hpp>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/program_options/variables_map.hpp>
@@ -98,6 +97,10 @@ namespace Nektar
 
         class Equation;
         typedef std::shared_ptr<Equation> EquationSharedPtr;
+
+        class AnalyticExpressionEvaluator;
+        typedef std::shared_ptr<AnalyticExpressionEvaluator>
+            ExpressionEvaluatorShPtr;
 
         struct FunctionVariableDefinition
         {
@@ -377,10 +380,8 @@ namespace Nektar
 
             /// Returns the instance of AnalyticExpressionEvaluator specific to
             /// this session.
-            LIB_UTILITIES_EXPORT ExpressionEvaluatorShPtr GetExpressionEvaluator()
-            {
-                return m_exprEvaluator;
-            }
+            LIB_UTILITIES_EXPORT ExpressionEvaluatorShPtr
+                GetExpressionEvaluator();
 
             /* ------ TAGS ------ */
             /// Checks if a specified tag is defined.

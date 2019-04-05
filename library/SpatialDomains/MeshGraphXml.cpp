@@ -36,6 +36,7 @@
 #include <SpatialDomains/MeshGraphXml.h>
 #include <SpatialDomains/MeshPartition.h>
 
+#include <LibUtilities/Interpreter/AnalyticExpressionEvaluator.hpp>
 #include <LibUtilities/BasicUtils/ParseUtils.h>
 #include <LibUtilities/BasicUtils/FileSystem.h>
 #include <LibUtilities/BasicUtils/FieldIOXml.h>

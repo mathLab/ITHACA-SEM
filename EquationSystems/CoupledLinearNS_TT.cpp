@@ -3476,6 +3476,77 @@ namespace Nektar
 			locExp->IProductWRTDerivBase(0, deriv_1, coeffs_1_0);
 			locExp->IProductWRTDerivBase(1, deriv_1, coeffs_1_1);
 
+			for (int k = 0; k < 2; ++k)
+			{
+				for (int j = 0; j < nbmap; ++j)
+				{
+					C_ele_vec[ j+k*nbmap + (i+k*nimap)*nsize_bndry ] += mKinvis * detT * ( c00*coeffs_0_0[int(bmap[j])] + c01*(coeffs_0_1[int(bmap[j])] + coeffs_1_0[int(bmap[j])]) + c11*coeffs_1_1[int(bmap[j])] );
+				}
+				for (int j = 0; j < nimap; ++j)
+				{
+					D_ele_vec[i+k*nimap + (j+k*nimap)*nsize_int] += mKinvis * detT * ( c00*coeffs_0_0[int(imap[j])] + c01*(coeffs_0_1[int(imap[j])] + coeffs_1_0[int(imap[j])]) + c11*coeffs_1_1[int(imap[j])] );
+				}
+				if (k == 0)
+				{
+					Array<OneD, double> tmpphys_x(nphys, 0.0);
+					std::transform( curr_snap_x_part.begin(), curr_snap_x_part.end(), deriv_0.begin(), tmpphys_x.begin(),  std::multiplies<double>() ); 
+					Array<OneD, double> tmpphys_y(nphys, 0.0);
+					std::transform( curr_snap_x_part.begin(), curr_snap_x_part.end(), deriv_1.begin(), tmpphys_y.begin(),  std::multiplies<double>() ); 
+					locExp->IProductWRTBase(tmpphys_x, adv_x_coeffs);
+					locExp->IProductWRTBase(tmpphys_y, adv_y_coeffs);
+					for (int nv = 0; nv < 2; ++nv)
+					{
+						for (int j = 0; j < nbmap; ++j)
+						{
+							B_ele_vec[ j+nv*nbmap + (i+nv*nimap)*nsize_bndry ] += detT * (Ta * adv_x_coeffs[int(bmap[j])] + Tc * adv_y_coeffs[int(bmap[j])]);
+						}
+						for (int j = 0; j < nimap; ++j)
+						{
+							D_ele_vec[ j+nv*nimap + (i+nv*nimap)*nsize_int ]  += detT * (Ta * adv_x_coeffs[int(imap[j])] + Tc * adv_y_coeffs[int(imap[j])]);
+						}
+					}
+			            	int psize   = m_pressure->GetExp(curr_elem)->GetNcoeffs();
+			               	Array<OneD, NekDouble> pcoeffs_x(psize);
+			               	Array<OneD, NekDouble> pcoeffs_y(psize);
+					m_pressure->GetExp(curr_elem)->IProductWRTBase(deriv_0,pcoeffs_x);
+					m_pressure->GetExp(curr_elem)->IProductWRTBase(deriv_1,pcoeffs_y);
+					for (int il = 0; il < nsize_p; ++il)
+					{
+						Dint_ele_vec[ (k*nimap + i)*nsize_p + il ] = detT * (Ta * pcoeffs_x[il] + Tc * pcoeffs_y[il]);
+					}
+				}
+				if (k == 1)
+				{
+					Array<OneD, double> tmpphys_x(nphys, 0.0);
+					std::transform( curr_snap_y_part.begin(), curr_snap_y_part.end(), deriv_0.begin(), tmpphys_x.begin(),  std::multiplies<double>() ); 
+					Array<OneD, double> tmpphys_y(nphys, 0.0);
+					std::transform( curr_snap_y_part.begin(), curr_snap_y_part.end(), deriv_1.begin(), tmpphys_y.begin(),  std::multiplies<double>() ); 
+					locExp->IProductWRTBase(tmpphys_x, adv_x_coeffs);
+					locExp->IProductWRTBase(tmpphys_y, adv_y_coeffs);
+					for (int nv = 0; nv < 2; ++nv)
+					{
+						for (int j = 0; j < nbmap; ++j)
+						{
+							B_ele_vec[ j+nv*nbmap + (i+nv*nimap)*nsize_bndry ] += detT * (Tb * adv_x_coeffs[int(bmap[j])] + Td * adv_y_coeffs[int(bmap[j])]);
+						}
+						for (int j = 0; j < nimap; ++j)
+						{
+							D_ele_vec[ j+nv*nimap + (i+nv*nimap)*nsize_int ]  += detT * (Tb * adv_x_coeffs[int(imap[j])] + Td * adv_y_coeffs[int(imap[j])]);
+						}
+					}
+			            	int psize   = m_pressure->GetExp(curr_elem)->GetNcoeffs();
+			               	Array<OneD, NekDouble> pcoeffs_x(psize);
+			               	Array<OneD, NekDouble> pcoeffs_y(psize);
+					m_pressure->GetExp(curr_elem)->IProductWRTBase(deriv_0,pcoeffs_x);
+					m_pressure->GetExp(curr_elem)->IProductWRTBase(deriv_1,pcoeffs_y);
+					for (int il = 0; il < nsize_p; ++il)
+					{
+						Dint_ele_vec[ (k*nimap + i)*nsize_p + il ] = detT * (Tb * pcoeffs_x[il] + Td * pcoeffs_y[il]);
+					}
+				}
+			} //for (int k = 0; k < 2; ++k)
+
+
 		}
  
 	}

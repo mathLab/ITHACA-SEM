@@ -112,6 +112,13 @@ namespace SpatialDomains
             inline const Array<TwoD, const NekDouble> GetDerivFactors(
                     const LibUtilities::PointsKeyVector &keyTgt);
 
+            /// Returns moving frames
+            inline void GetMovingFrames(
+                    const LibUtilities::PointsKeyVector &keyTgt,
+                    const SpatialDomains::GeomMMF MMFdir,
+                    const Array<OneD, const NekDouble> &CircCentre,
+                          Array<OneD, Array<OneD, NekDouble> > &outarray);
+
             /// Returns whether the geometry is regular or deformed.
             inline GeomType GetGtype();
 
@@ -133,6 +140,10 @@ namespace SpatialDomains
             int m_coordDim;
             /// Validity of element (Jacobian positive)
             bool m_valid;
+
+            /// Principle tangent direction for MMF.
+            enum GeomMMF m_MMFDir;
+
             /// Stores information about the expansion.
             StdRegions::StdExpansionSharedPtr m_xmap;
             /// Stores coordinates of the geometry.
@@ -166,6 +177,12 @@ namespace SpatialDomains
             SPATIAL_DOMAINS_EXPORT Array<TwoD, NekDouble> ComputeDerivFactors(
                     const LibUtilities::PointsKeyVector &keyTgt) const;
 
+            SPATIAL_DOMAINS_EXPORT void ComputeMovingFrames(
+                    const LibUtilities::PointsKeyVector &keyTgt,
+                    const SpatialDomains::GeomMMF MMFdir,
+                    const Array<OneD, const NekDouble> &CircCentre,
+                          Array<OneD, Array<OneD, NekDouble> > &movingframes);
+
             /// Perform interpolation of data between two point
             /// distributions.
             void Interp(
@@ -178,6 +195,19 @@ namespace SpatialDomains
             void Adjoint(
                     const Array<TwoD, const NekDouble>& src,
                     Array<TwoD, NekDouble>& tgt) const;
+
+            void ComputePrincipleDirection(
+                    const LibUtilities::PointsKeyVector& keyTgt,
+                    const SpatialDomains::GeomMMF MMFdir,
+                    const Array<OneD, const NekDouble> &CircCentre,
+                          Array<OneD,Array<OneD,NekDouble> > &output);
+
+            void VectorNormalise(Array<OneD, Array<OneD, NekDouble> > &array);
+
+            void VectorCrossProd(
+                    const Array<OneD, const Array<OneD, NekDouble> > &v1,
+                    const Array<OneD, const Array<OneD, NekDouble> > &v2,
+                          Array<OneD,       Array<OneD, NekDouble> > &v3);
 
     };
 
@@ -268,6 +298,14 @@ namespace SpatialDomains
 
         return m_derivFactorCache[keyTgt];
 
+    }
+    
+    inline void GeomFactors::GetMovingFrames(const LibUtilities::PointsKeyVector &keyTgt,
+                                             const SpatialDomains::GeomMMF MMFdir,
+                                             const Array<OneD, const NekDouble> &CircCentre,
+                                             Array<OneD, Array<OneD, NekDouble> > &outarray)
+    {
+        ComputeMovingFrames(keyTgt,MMFdir,CircCentre,outarray);
     }
 
 

@@ -69,9 +69,17 @@ void InputMCF::ParseFile(string nm)
 {
     vector<string> filename;
     filename.push_back(nm);
+
+    char *prgname = "NekMesh";
     LibUtilities::SessionReaderSharedPtr pSession =
-        LibUtilities::SessionReader::CreateInstance(0, NULL, filename);
+        LibUtilities::SessionReader::CreateInstance(1, &prgname, filename);
     pSession->InitSession();
+
+    auto comm = pSession->GetComm();
+    if (comm->GetType().find("MPI") != std::string::npos)
+    {
+        m_mesh->m_comm = comm;
+    }
 
     ASSERTL0(pSession->DefinesElement("NEKTAR/MESHING"), "no meshing tag");
     ASSERTL0(pSession->DefinesElement("NEKTAR/MESHING/INFORMATION"),

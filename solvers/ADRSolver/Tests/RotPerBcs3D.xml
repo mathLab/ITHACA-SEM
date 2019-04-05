@@ -18,8 +18,8 @@
     <GLOBALSYSSOLNINFO>
       <V VAR="u">
         <I PROPERTY="GlobalSysSoln"       VALUE="IterativeStaticCond" />
-        <I PROPERTY="Preconditioner"       VALUE="LowEnergyBlock"/>
-        <I PROPERTY="IterativeSolverTolerance"    VALUE="1e-8"/>
+        <I PROPERTY="Preconditioner"       VALUE="Diagonal"/>
+        <I PROPERTY="IterativeSolverTolerance"    VALUE="1e-10"/>
       </V>
     </GLOBALSYSSOLNINFO>
 
@@ -39,22 +39,22 @@
 
     <BOUNDARYCONDITIONS>
       <REGION REF="1">
-        <D VAR="u" VALUE="(z^2+y^2)*cos(12*ang(y,z))" />
+        <D VAR="u" VALUE="(z^2+y^2)" />
       </REGION>
       <REGION REF="2">
-        <D VAR="u" VALUE="(z^2+y^2)*cos(12*ang(y,z))" />
+        <D VAR="u" VALUE="(z^2+y^2)" />
       </REGION>
       <REGION REF="3">
-	<D VAR="u" VALUE="(z^2+y^2)*cos(12*ang(y,z))" />
+	<D VAR="u" VALUE="(z^2+y^2)" />
       </REGION>
       <REGION REF="4">
-	<D VAR="u" VALUE="(z^2+y^2)*cos(12*ang(y,z))" />
+	<D VAR="u" VALUE="(z^2+y^2)" />
       </REGION>
       <REGION REF="5">
-	<D VAR="u" VALUE="(z^2+y^2)*cos(12*ang(y,z))" />
+	<D VAR="u" VALUE="(z^2+y^2)" />
       </REGION>
       <REGION REF="6">
-	<D VAR="u" VALUE="(z^2+y^2)*cos(12*ang(y,z))" />
+	<D VAR="u" VALUE="(z^2+y^2)" />
       </REGION>
       <REGION REF="7">
         <P VAR="u" USERDEFINEDTYPE="Rotated:x:-PI/6:1e-6" VALUE="[8]" />
@@ -64,10 +64,10 @@
       </REGION>
     </BOUNDARYCONDITIONS>
     <FUNCTION NAME="Forcing">
-      <E VAR="u" VALUE="4*cos(12*ang(y,z)) - 144*cos(12*ang(y,z)) - Lambda*((z^2+y^2)*cos(12*ang(y,z)))" />
+      <E VAR="u" VALUE="4 - Lambda*((z^2+y^2))" />
     </FUNCTION>
     <FUNCTION NAME="ExactSolution">
-      <E VAR="u" VALUE="(z^2+y^2)*cos(12*ang(y,z))" />
+      <E VAR="u" VALUE="(z^2+y^2)" />
     </FUNCTION>
   </CONDITIONS>
     <GEOMETRY DIM="3" SPACE="3">

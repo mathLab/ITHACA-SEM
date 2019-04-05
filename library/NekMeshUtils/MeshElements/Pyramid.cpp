@@ -177,7 +177,16 @@ SpatialDomains::GeometrySharedPtr Pyramid::GetGeom(int coordDim)
 unsigned int Pyramid::GetNumNodes(ElmtConfig pConf)
 {
     int n = pConf.m_order;
-    return 5 + 8 * (n - 1);
+
+    if (pConf.m_faceNodes)
+    {
+        // @todo currently only valid for 2nd order pyramids
+        return 5 + 8 * (n - 1) + (n - 1)*(n - 1);
+    }
+    else
+    {
+        return 5 + 8 * (n - 1);
+    }
 }
 }
 }

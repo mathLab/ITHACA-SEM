@@ -61,9 +61,12 @@ int main(int argc, char *argv[])
         // Create driver
         drv = GetDriverFactory().CreateInstance(vDriverModule, session); 
 
+cout<<"hi"<<endl;
 	CoupledLinearNS_TT CLNS(session);
 	CLNS.offline_phase();
 	CLNS.online_phase();
+	
+	cout<<"Online phase finished"<<endl;
 
         session->Finalise();
     }

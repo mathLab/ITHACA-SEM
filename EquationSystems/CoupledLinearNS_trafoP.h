@@ -130,8 +130,6 @@ namespace Nektar
         void DoInitialiseAdv(Array<OneD, NekDouble> myAdvField_x, Array<OneD, NekDouble> myAdvField_y);
         Eigen::MatrixXd DoTrafo(Array<OneD, Array<OneD, NekDouble> > snapshot_x_collection, Array<OneD, Array<OneD, NekDouble> > snapshot_y_collection, Array<OneD, NekDouble> param_vector);
 	Array<OneD, Array<OneD, NekDouble> > DoSolve_at_param(Array<OneD, NekDouble> init_snapshot_x, Array<OneD, NekDouble> init_snapshot_y, NekDouble parameter);
-	
-	Array<OneD, Array<OneD, NekDouble> > DoSolve_at_param_with_Newton(Array<OneD, NekDouble> init_snapshot_x, Array<OneD, NekDouble> init_snapshot_y, NekDouble parameter);
 
 	Eigen::VectorXd curr_f_bnd;
 	Eigen::VectorXd curr_f_p;
@@ -148,12 +146,13 @@ namespace Nektar
 	//flip each solutions and try to obtain new solutions but different from the previous ones
 	Array<OneD, Array<OneD, NekDouble> > FlipAndCheck(std::vector<int> &flipperMap, int *flipCounter);
 	
-	//Array<OneD, NekDouble > my_f_bnd, my_f_int;
 	bool use_deflation, converged, deflate;
 	int number_of_deflations, total_solutions_found, different_solutions_found;
-	Array<OneD, Array<OneD, NekDouble> > solution_x_continuation_deflation;
-	Array<OneD, Array<OneD, NekDouble> > solution_y_continuation_deflation;
+	Array<OneD, Array<OneD, NekDouble> > solution_x_continuation_deflation, solution_y_continuation_deflation;
+	//Array<OneD, Array<OneD, NekDouble> > solution_pres_continuation_deflation;
 	std::vector<int> local_indices_to_be_continued;
+	
+	int use_Newton;
 
     protected:
 

@@ -5,6 +5,7 @@ RelWithDebInfo MinSizeRel.")
 
 PROJECT(Nektar++ C CXX)
 
+CMAKE_POLICY(SET CMP0022 NEW)
 # Nektar++ requires C++11. Try to infer this for older CMake versions (less than
 # 3.1.0)
 IF ("${CMAKE_VERSION}" VERSION_LESS "3.1")
@@ -299,21 +300,19 @@ INSTALL(FILES ${CMAKE_BINARY_DIR}/Nektar++Config.cmake
     COMPONENT dev)
 
 # Install ThirdParty headers to subdirectory of ${NEKTAR_INCLUDE_DIR}
-IF (EXISTS ${TPDIST}/include)
-    INSTALL(DIRECTORY ${TPDIST}/include/
-        DESTINATION ${NEKTAR_INCLUDE_DIR}/ThirdParty
-        COMPONENT dev
-        )
-ENDIF()
+INSTALL(DIRECTORY ${TPDIST}/include/
+    DESTINATION ${NEKTAR_INCLUDE_DIR}/ThirdParty
+    COMPONENT dev
+    OPTIONAL
+    )
 
 # Install ThirdParty libraries into ${NEKTAR_LIB_DIR}. These are shipped with
 # the LibUtilities library.
-IF (EXISTS ${TPDIST}/lib)
-    INSTALL(DIRECTORY ${TPDIST}/lib/
-        DESTINATION ${NEKTAR_LIB_DIR}
-        COMPONENT libutilities
-        )
-ENDIF()
+INSTALL(DIRECTORY ${TPDIST}/lib/
+    DESTINATION ${NEKTAR_LIB_DIR}
+    COMPONENT libutilities
+    OPTIONAL
+    )
 
 ADD_SUBDIRECTORY(docs)
 

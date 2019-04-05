@@ -167,39 +167,25 @@ namespace Nektar
                 std::vector<SubGraphSharedPtr>& leaves) const;
             MULTI_REGIONS_EXPORT int  CutLeaves();
             MULTI_REGIONS_EXPORT int  CutEmptyLeaves();
-            MULTI_REGIONS_EXPORT inline int GetNdaughterGraphs() const;
+            MULTI_REGIONS_EXPORT inline int GetNdaughterGraphs() const
+            {
+                return m_daughterGraphs.size();
+            }
 
             inline const SubGraphSharedPtr GetBndDofsGraph() const
             {
                 return m_BndDofs;
             }
 
-            inline void SetLeftDaughterGraph(
-                MultiLevelBisectedGraphSharedPtr graph)
+            inline
+            std::vector<MultiLevelBisectedGraphSharedPtr> &GetDaughterGraphs()
             {
-                m_leftDaughterGraph = graph;
-            }
-
-            inline void SetRightDaughterGraph(
-                MultiLevelBisectedGraphSharedPtr graph)
-            {
-                m_rightDaughterGraph = graph;
-            }
-
-            inline MultiLevelBisectedGraphSharedPtr GetLeftDaughterGraph()
-            {
-                return m_leftDaughterGraph;
-            }
-
-            inline MultiLevelBisectedGraphSharedPtr GetRightDaughterGraph()
-            {
-                return m_rightDaughterGraph;
+                return m_daughterGraphs;
             }
 
         protected:
-            SubGraphSharedPtr                m_BndDofs;
-            MultiLevelBisectedGraphSharedPtr m_leftDaughterGraph;
-            MultiLevelBisectedGraphSharedPtr m_rightDaughterGraph;
+            SubGraphSharedPtr                             m_BndDofs;
+            std::vector<MultiLevelBisectedGraphSharedPtr> m_daughterGraphs;
         };
 
 

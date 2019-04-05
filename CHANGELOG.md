@@ -39,7 +39,7 @@ v5.0.0
 - Added in sum factorisation version for pyramid expnasions and orthogonal
   expansion in pyramids (!750)
 - Switch MeshGraph to use factory pattern and add HDF5 geometry support (!900,
-  !904)
+  !904, !941)
 - Restructure the low energy preconditioner to handle pyramidic and variable
   p expansions (!920)
 - Remove requirement for modmetis, switch to SCOTCH by default (!899)
@@ -51,9 +51,14 @@ v5.0.0
   alignment (!921)
 - Fix naming issue of duplicate Unit tests (!924) 
 - Fix warnings about missing virtual destructors in abstract classes (!932)
+- Fix ability to have periodic boundary conditions that are aligned by a 
+  rotation rather than just a translation (!933)
 - Added a coupling interface to exchange data between solvers at run time
   and a DummySolver to test the implementations (!853, !931)
 - Fix compilation issue with newer Boost versions and clang (!940)
+- If only `NEKTAR_BUILD_LIBRARY` is enabled, only libraries up to and including
+  `MultiRegions` will be built by default (!945)
+- Fix missing metadata import from Hdf5 files (!971)
 
 **NekMesh**:
 - Add feature to read basic 2D geo files as CAD (!731)
@@ -84,6 +89,9 @@ v5.0.0
 - Order nodes in Gmsh output (!912)
 - Fix manifold face curvature nodes (!913)
 - Fix writing 1D surfaces (!930)
+- Fix surface string parsin in BL splitting (!937)
+- Fix issue with MLSC after Scotch conversion (!943)
+- Add support for Gmsh 4.0 mesh file format (!964)
 
 **FieldConvert**:
 - Add input module for Semtex field files (!777)
@@ -99,6 +107,8 @@ v5.0.0
 - Add Lambda 2 vortex detection criteria (!882)
 - Add module for modifying/adding fields from expressions (!889, !903)
 - Add module for evaluating the mean of variables on the domain (!894)
+- Add module for counting the total number of DOF (!948)
+- Fixed wss module for compressible flows (!958)
 
 **IncNavierStokesSolver**
 - Replace steady-state check based on difference of norms by check based on
@@ -116,12 +126,22 @@ v5.0.0
 - Fix compressible solver with NUMMODES=1 (!868)
 - Introduce equations of state to account for real gas effects (!880)
 
-**APESolver:**
+**AcousticSolver:**
 - Added two new boundary conditions to the APE system: RiemannInvariantBC
   and WhiteNoise (!782)
+- Store base flow fields in a discontinuous projection (!918)
+- Enabled 1D cases (!918)
+- The APE system now uses u_i, c^2 and rho as base flow fields (!918)
+- Added the Linearized Euler Equations (LEE) (!918)
+
+**APESolver:**
+- APESolver was replaced with AcousticSolver (!918)
 
 **Documentation**:
 - Added the developer-guide repository as a submodule (!751)
+
+**Tester**
+- Fix build with boost 1.67 (!947)
 
 v4.4.2
 ------
@@ -154,6 +174,7 @@ v4.4.2
 
 **FieldConvert**
 - Allow passing input name with trailing separator (!879)
+- Fix the interpcoord option  of the interppointdatatofld module (!952)
 
 **Utilities**
 - Fix VtkToPng to account for deprecated VTK API for VTK version > 8.1 (!925)

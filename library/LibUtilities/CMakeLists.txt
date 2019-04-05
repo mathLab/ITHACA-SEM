@@ -15,6 +15,7 @@ SET(BasicUtilsHeaders
     ./BasicUtils/FieldIOXml.h
     ./BasicUtils/FileSystem.h
     ./BasicUtils/ErrorUtil.hpp
+    ./BasicUtils/Interpolator.h
     ./BasicUtils/HashUtils.hpp
     ./BasicUtils/NekManager.hpp
     ./BasicUtils/NekFactory.hpp
@@ -45,6 +46,7 @@ SET(BasicUtilsSources
     ./BasicUtils/FieldIO.cpp
     ./BasicUtils/FieldIOXml.cpp
     ./BasicUtils/FileSystem.cpp
+    ./BasicUtils/Interpolator.cpp
     ./BasicUtils/ParseUtils.cpp
     ./BasicUtils/PtsField.cpp
     ./BasicUtils/PtsIO.cpp
@@ -377,7 +379,7 @@ TARGET_LINK_LIBRARIES(LibUtilities LINK_PUBLIC
     ${Boost_PROGRAM_OPTIONS_LIBRARY}
     ${Boost_FILESYSTEM_LIBRARY}
     ${Boost_SYSTEM_LIBRARY}
-    ${ZLIB_LIBRARIES}
+    optimized ${ZLIB_LIBRARIES} debug ${ZLIB_LIBRARIES_DEBUG}
 )
 
 # TinyXML

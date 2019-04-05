@@ -478,7 +478,7 @@ void SessionFunction::EvaluatePts(string pFieldName,
     }
     else
     {
-        interp = FieldUtils::Interpolator(Nektar::FieldUtils::eShepard);
+        interp = FieldUtils::Interpolator(LibUtilities::eShepard);
         if (m_session->GetComm()->GetRank() == 0)
         {
             interp.SetProgressCallback(&SessionFunction::PrintProgressbar,

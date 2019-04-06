@@ -98,7 +98,7 @@ IF (NEKTAR_USE_SCOTCH)
             DESCRIPTION "Scotch library")
         THIRDPARTY_LIBRARY(SCOTCHERR_LIBRARY STATIC scotcherr
             DESCRIPTION "Scotch error library")
-        THIRDPARTY_LIBRARY(PTSCOTCH_LIBRARY STATIC ptscotch
+        THIRDPARTY_LIBRARY(PTSCOTCH_LIBRARY STATIC ptscotch;scotch
             DESCRIPTION "PT-Scotch library")
         THIRDPARTY_LIBRARY(PTSCOTCHERR_LIBRARY STATIC ptscotcherr
             DESCRIPTION "PT-Scotch error library")

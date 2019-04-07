@@ -239,31 +239,31 @@ namespace SpatialDomains
             double                      kbalval)
     {
         // Scotch graph object to interface with libScotch
-        SCOTCH_Graph        grafdat;
+        SCOTCH_Graph *      grafdat = SCOTCH_graphAlloc();
         SCOTCH_Strat        stradat;
         SCOTCH_Num          baseval;
         SCOTCH_Num          vertnbr;
         int                 o;
 
-        SCOTCH_graphInit (&grafdat);
+        SCOTCH_graphInit (grafdat);
 
         baseval = *numflag;
         vertnbr = *n;
 
         o = 1; // Assume something will go wrong
-        if (SCOTCH_graphBuild (&grafdat, baseval, vertnbr, xadj, xadj + 1,
+        if (SCOTCH_graphBuild (grafdat, baseval, vertnbr, xadj, xadj + 1,
                                vwgt, NULL, xadj[vertnbr] - baseval, adjncy,
                                adjwgt) == 0) {
             SCOTCH_stratInit          (&stradat);
             SCOTCH_stratGraphMapBuild (&stradat, flagval, *nparts, kbalval);
 #ifdef SCOTCH_DEBUG_ALL
             // TRICK: next instruction called only if graph is consistent
-            if (SCOTCH_graphCheck (&grafdat) == 0)
+            if (SCOTCH_graphCheck (grafdat) == 0)
 #endif /* SCOTCH_DEBUG_ALL */
-                o = SCOTCH_graphPart (&grafdat, *nparts, &stradat, part);
+                o = SCOTCH_graphPart (grafdat, *nparts, &stradat, part);
             SCOTCH_stratExit (&stradat);
         }
-        SCOTCH_graphExit (&grafdat);
+        SCOTCH_graphExit (grafdat);
 
         if (o != 0)
             return (1);

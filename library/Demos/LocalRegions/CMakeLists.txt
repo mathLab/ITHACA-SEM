@@ -1,15 +1,5 @@
-ADD_NEKTAR_EXECUTABLE(LocProject1D
-    COMPONENT demos DEPENDS LocalRegions SOURCES LocProject1D.cpp)
-ADD_NEKTAR_EXECUTABLE(LocProject2D
-    COMPONENT demos DEPENDS LocalRegions SOURCES LocProject2D.cpp)
-ADD_NEKTAR_EXECUTABLE(LocProject3D
-    COMPONENT demos DEPENDS LocalRegions SOURCES LocProject3D.cpp)
-ADD_NEKTAR_EXECUTABLE(LocProject_Diff1D
-    COMPONENT demos DEPENDS LocalRegions SOURCES LocProject_Diff1D.cpp)
-ADD_NEKTAR_EXECUTABLE(LocProject_Diff2D
-    COMPONENT demos DEPENDS LocalRegions SOURCES LocProject_Diff2D.cpp)
-ADD_NEKTAR_EXECUTABLE(LocProject_Diff3D
-    COMPONENT demos DEPENDS LocalRegions SOURCES LocProject_Diff3D.cpp)
+ADD_NEKTAR_EXECUTABLE(LocProject
+        COMPONENT demos DEPENDS LocalRegions SOURCES LocProject.cpp)
 
 # Generate list of available subdirectories
 FILE(GLOB dir_list "*")

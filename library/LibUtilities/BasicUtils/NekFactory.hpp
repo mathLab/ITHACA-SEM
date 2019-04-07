@@ -39,6 +39,7 @@
 #include <iostream>
 #include <map>
 #include <string>
+#include <sstream>
 #include <memory>
 
 #ifdef NEKTAR_USE_THREAD_SAFETY

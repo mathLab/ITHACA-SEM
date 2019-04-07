@@ -37,7 +37,6 @@
 
 #include <iostream>
 #include <stdexcept>
-#include <sstream>
 
 #include <LibUtilities/LibUtilitiesDeclspec.h>
 
@@ -90,15 +89,13 @@ struct ErrorUtil
         // flagged appropriately.  Printing the error messages to cerr made the
         // unit test output hard to parse.
 
-        std::stringstream ss;
-
-        ss << "Level " << level << " assertion violation" << std::endl;
+        std::string baseMsg = "Level " + std::to_string(level) +
+            " assertion violation\n";
 #if defined(NEKTAR_DEBUG) || defined(NEKTAR_FULLDEBUG)
-        ss << "Where   : " routine << "[" << lineNumber << "]" << std::endl;
+        baseMsg += "Where   : " + std::string(routine) + "[" +
+            std::to_string(lineNumber) + "]\n";
 #endif
-        ss << msg;
-
-        std::string baseMsg = ss.str();
+        baseMsg += std::string(msg);
 
         // Default rank is zero. If MPI used and initialised, populate with
         // the correct rank. Messages are only printed on rank zero.
@@ -185,41 +182,45 @@ private:
 /// considered code critical, even under
 /// optimized compilation.
 
-#define NEKERROR(type, msg) \
-    ErrorUtil::Error(type, __FILE__, __LINE__, msg, 0);
+#define NEKERROR(type, msg)                                     \
+    Nektar::ErrorUtil::Error(type, __FILE__, __LINE__, msg, 0);
 
 
-#define ROOTONLY_NEKERROR(type, msg)                                     \
-    ErrorUtil::Error(type, __FILE__, __LINE__, msg, 0,true);
+#define ROOTONLY_NEKERROR(type, msg)                                    \
+    Nektar::ErrorUtil::Error(type, __FILE__, __LINE__, msg, 0, true);
 
-#define ASSERTL0(condition,msg) \
-    if(!(condition)) \
-{ \
-    ErrorUtil::Error(ErrorUtil::efatal, __FILE__, __LINE__, msg, 0); \
-}
+#define ASSERTL0(condition,msg)                                         \
+    if(!(condition))                                                    \
+    {                                                                   \
+        Nektar::ErrorUtil::Error(                                       \
+            Nektar::ErrorUtil::efatal, __FILE__, __LINE__, msg, 0);     \
+    }
 
-#define WARNINGL0(condition,msg) \
-    if(!(condition)) \
-{ \
-    ErrorUtil::Error(ErrorUtil::ewarning, __FILE__, __LINE__, msg, 0); \
-}
-
+#define WARNINGL0(condition,msg)                                        \
+    if(!(condition))                                                    \
+    {                                                                   \
+        Nektar::ErrorUtil::Error(                                       \
+            Nektar::ErrorUtil::ewarning, __FILE__, __LINE__, msg, 0);   \
+    }
 
 /// Assert Level 1 -- Debugging which is used whether in FULLDEBUG or
 /// DEBUG compilation mode.  This level assert is designed for aiding
 /// in standard debug (-g) mode
 #if defined(NEKTAR_DEBUG) || defined(NEKTAR_FULLDEBUG)
 
-#define ASSERTL1(condition,msg) \
-    if(!(condition)) \
-{ \
-    ErrorUtil::Error(ErrorUtil::efatal, __FILE__, __LINE__, msg, 1); \
-}
-#define WARNINGL1(condition,msg) \
-    if(!(condition)) \
-{ \
-    ErrorUtil::Error(ErrorUtil::ewarning, __FILE__, __LINE__, msg, 1); \
-}
+#define ASSERTL1(condition,msg)                                         \
+    if(!(condition))                                                    \
+    {                                                                   \
+        Nektar::ErrorUtil::Error(                                       \
+            Nektar::ErrorUtil::efatal, __FILE__, __LINE__, msg, 1);     \
+    }
+
+#define WARNINGL1(condition,msg)                                        \
+    if(!(condition))                                                    \
+    {                                                                   \
+        Nektar::ErrorUtil::Error(                                       \
+            Nektar::ErrorUtil::ewarning, __FILE__, __LINE__, msg, 1);   \
+    }
 
 #else //defined(NEKTAR_DEBUG) || defined(NEKTAR_FULLDEBUG)
 #define ASSERTL1(condition,msg)
@@ -232,16 +233,18 @@ private:
 /// checks within the code (such as bounds checking, etc.).
 #ifdef NEKTAR_FULLDEBUG
 
-#define ASSERTL2(condition,msg) \
-    if(!(condition)) \
-{ \
-    ErrorUtil::Error(ErrorUtil::efatal, __FILE__, __LINE__, msg, 2); \
-}
-#define WARNINGL2(condition,msg) \
-    if(!(condition)) \
-{ \
-    ErrorUtil::Error(ErrorUtil::ewarning, __FILE__, __LINE__, msg, 2); \
-}
+#define ASSERTL2(condition,msg)                                         \
+    if(!(condition))                                                    \
+    {                                                                   \
+        Nektar::ErrorUtil::Error(                                       \
+            Nektar::ErrorUtil::efatal, __FILE__, __LINE__, msg, 2);     \
+    }
+#define WARNINGL2(condition,msg)                                        \
+    if(!(condition))                                                    \
+    {                                                                   \
+        Nektar::ErrorUtil::Error(                                       \
+            Nektar::ErrorUtil::ewarning, __FILE__, __LINE__, msg, 2);   \
+    }
 
 #else //NEKTAR_FULLDEBUG
 #define ASSERTL2(condition,msg)

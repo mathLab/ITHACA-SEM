@@ -53,7 +53,11 @@ using std::cout;
 using std::endl;
 
 #ifdef NEKTAR_USE_SCOTCH
+#ifdef NEKTAR_USE_MPI
+#include <ptscotch.h>
+#else
 #include <scotch.h>
+#endif
 
 #define SCOTCH_CALL(scotchFunc, args)                                   \
     {                                                                   \

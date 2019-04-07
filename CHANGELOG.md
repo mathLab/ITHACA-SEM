@@ -66,6 +66,8 @@ v5.0.0
   integration rule (!998)
 - Fix missing ContainsPoint in Pyramid expansion (!1000)
 - Added path prefixes to find packaged Scotch (!979)
+- Add HDF5 geometry format (!977)
+- Combine and generalise demo code in StdRegions and LocalRegions (!993)
 
 **NekMesh**:
 - Add feature to read basic 2D geo files as CAD (!731)

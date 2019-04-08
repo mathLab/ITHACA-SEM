@@ -174,7 +174,7 @@ struct ErrorUtil
     }
 
 private:
-    static std::ostream *m_outStream;
+    LIB_UTILITIES_EXPORT static std::ostream *m_outStream;
 };
 
 /// Assert Level 0 -- Fundamental assert which

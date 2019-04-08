@@ -50,8 +50,11 @@
 
 #include <BRepOffsetAPI_MakeFilling.hxx>
 #include <BRepBuilderAPI_MakeShell.hxx>
+#include <BRepBuilderAPI_MakeSolid.hxx>
+#include <ShapeFix_Solid.hxx>
 #include <GC_MakeArcOfCircle.hxx>
 #include <StlAPI_Writer.hxx>
+#include <TopoDS_Solid.hxx>
 
 using namespace std;
 
@@ -164,8 +167,8 @@ bool CADSystemOCE::LoadCAD()
             shell++;
         }
 
-        ASSERTL0(shell == 1,
-             "Was not able to form a topological water tight shell");
+        /*ASSERTL0(shell == 1,
+          "Was not able to form a topological water tight shell");*/
     }
 
     // build map of verticies
@@ -557,6 +560,7 @@ TopoDS_Shape CADSystemOCE::BuildGeo(string geo)
     map<int, string> planeSurfs;
     map<int, string> ruledSurfs;
     map<int, string> surfLoops;
+    map<int, string> volumes;
 
     string fline;
     string flinetmp;
@@ -637,6 +641,11 @@ TopoDS_Shape CADSystemOCE::BuildGeo(string geo)
         else if (boost::iequals(type, "Surface Loop"))
         {
             surfLoops[id] = var;
+        }
+        else if (boost::iequals(type, "Volume"))
+        {
+            boost::erase_all(var, "-");
+            volumes[id] = var;
         }
         else
         {
@@ -798,6 +807,17 @@ TopoDS_Shape CADSystemOCE::BuildGeo(string geo)
 
     // build ruled surfaces
     map<int, TopoDS_Face> cFaces;
+    for (auto &surf : planeSurfs)
+    {
+        vector<unsigned int> data;
+        ParseUtils::GenerateVector(surf.second, data);
+        ASSERTL0(data.size() == 1,
+                 "Ruled surface should have only one curve loop");
+
+        BRepBuilderAPI_MakeFace faceBuilder(cWires[data[0]]);
+
+        cFaces[surf.first] = faceBuilder.Face();
+    }
     for (auto &surf : ruledSurfs)
     {
         vector<unsigned int> data;
@@ -863,14 +883,55 @@ TopoDS_Shape CADSystemOCE::BuildGeo(string geo)
 
         shellMaker.Perform();
 
-        TopoDS_Shape shell = shellMaker.SewedShape();
+        cShells[sloop.first] = TopoDS::Shell(shellMaker.SewedShape());
+
         // BRepMesh_IncrementalMesh Mesh( shell, 200.0 );
         // Mesh.Perform();
         // StlAPI_Writer asd;
         // std::string outfname = "out.stl";
         // asd.Write(shell, outfname.c_str());
+    }
 
-        return shell;
+    map<int, TopoDS_Shape> cVolumes;
+    for (auto &vol : volumes)
+    {
+        vector<unsigned int> data;
+        ParseUtils::GenerateVector(vol.second, data);
+
+        BRepBuilderAPI_MakeSolid solidMaker;
+
+        for (int i = 0; i < data.size(); ++i)
+        {
+            solidMaker.Add(cShells[data[i]]);
+
+            if (i == 0)
+            {
+                continue;
+            }
+
+            // For each shell that's being removed from the solid, add centroid
+            // for tetrahedralisation purposes. In general this won't work so
+            // well because we could have a non-convex shell, but let's assume
+            // it is a decent guess for now.
+            GProp_GProps props;
+            BRepGProp::VolumeProperties(cShells[data[i]], props);
+            gp_Pnt centroid = props.CentreOfMass();
+
+            Array<OneD, NekDouble> voidPt(3);
+            voidPt[0] = centroid.X();
+            voidPt[1] = centroid.Y();
+            voidPt[2] = centroid.Z();
+            m_voidPoints.push_back(voidPt);
+        }
+
+        TopoDS_Solid s = solidMaker.Solid();
+
+        // Perform fix on solid
+        ShapeFix_Solid solidFix(s);
+
+        solidFix.Perform();
+
+        return solidFix.Solid();
     }
 
     // make surface, at this point assuming its 2D (therefore only 1)

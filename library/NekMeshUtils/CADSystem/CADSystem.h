@@ -199,6 +199,14 @@ public:
     }
 
     /**
+     * @brief Gets void points for tetrahedral meshing.
+     */
+    std::vector<Array<OneD, NekDouble>> GetVoidPoints()
+    {
+        return m_voidPoints;
+    }
+
+    /**
      * @brief Return the vector of translation from one curve to another to
      * allow
      *        for periodic mesh generation in 2D.
@@ -223,6 +231,8 @@ protected:
     bool m_cfiMesh;
     /// string of 4 digit NACA code to be created
     std::string m_naca;
+    /// Points contained within volume voids for tetrahedralisation
+    std::vector<Array<OneD, NekDouble>> m_voidPoints;
 
     /**
      * @brief Reports basic properties to screen.

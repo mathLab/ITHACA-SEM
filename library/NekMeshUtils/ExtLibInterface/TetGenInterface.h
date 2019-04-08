@@ -63,7 +63,10 @@ public:
     /**
      * @brief Default constructor
      */
-    TetGenInterface(){};
+    TetGenInterface(std::vector<Array<OneD, NekDouble>> holes)
+    {
+        m_holes = holes;
+    }
 
     /**
      * @brief Assign parameters for meshing
@@ -95,6 +98,9 @@ public:
 private:
     /// TetGen objects
     tetgenio surface, output, input, additional;
+
+    /// Holes in volume
+    std::vector<Array<OneD, NekDouble>> m_holes;
 };
 
 typedef std::shared_ptr<TetGenInterface> TetGenInterfaceSharedPtr;

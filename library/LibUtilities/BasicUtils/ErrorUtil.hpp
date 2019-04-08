@@ -37,6 +37,7 @@
 
 #include <iostream>
 #include <stdexcept>
+#include <string>
 
 #include <LibUtilities/LibUtilitiesDeclspec.h>
 

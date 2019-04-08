@@ -135,6 +135,9 @@ public:
     OctreeSharedPtr                 m_octree;
     /// Metadata map for storing any mesh generation parameters
     LibUtilities::FieldMetaDataMap  m_metadata;
+    /// MPI communicator in case we end up using MPI multiple times from
+    /// Nektar++ SessionReader object.
+    LibUtilities::CommSharedPtr     m_comm;
 
     /// Returns the total number of elements in the mesh with
     /// dimension expDim.

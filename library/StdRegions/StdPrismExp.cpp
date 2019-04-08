@@ -1990,7 +1990,7 @@ namespace Nektar
                 default:
                     for(i = 0; i < nquad2; ++i)
                     {
-                        Blas::Dscal(nquad0*nquad1,0.25*(1-z2[i])*w2[i],
+                        Blas::Dscal(nquad0*nquad1,0.5*(1-z2[i])*w2[i],
                                     &outarray[0]+i*nquad0*nquad1,1);
                     }
                     break;

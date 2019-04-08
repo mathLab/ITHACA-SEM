@@ -52,8 +52,10 @@ std::string MeshPartitionMetis::cmdSwitch =
 
 MeshPartitionMetis::MeshPartitionMetis(
     const LibUtilities::SessionReaderSharedPtr session,
-    const MeshGraphSharedPtr meshGraph)
-    : MeshPartition(session, meshGraph)
+    int                                        meshDim,
+    std::map<int, MeshEntity>                  element,
+    CompositeDescriptor                        compMap)
+    : MeshPartition(session, meshDim, element, compMap)
 {
 }
 

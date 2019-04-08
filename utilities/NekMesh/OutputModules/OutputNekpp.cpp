@@ -392,6 +392,31 @@ void OutputNekpp::TransferCurves(MeshGraphSharedPtr graph)
         }
     }
 
+    if(m_mesh->m_expDim == 1 && m_mesh->m_spaceDim > 1)
+    {
+        for(int e = 0; e < m_mesh->m_element[1].size(); e++)
+        {
+            ElementSharedPtr el = m_mesh->m_element[1][e];
+            vector<NodeSharedPtr> ns;
+            el->GetCurvedNodes(ns);
+            if(ns.size() > 0)
+            {
+                CurveSharedPtr curve = MemoryManager<Curve>::AllocateSharedPtr(
+                    el->GetId(), el->GetCurveType());
+
+                for(int i = 0; i < ns.size(); i++)
+                {
+                    PointGeomSharedPtr vert = MemoryManager<PointGeom>::AllocateSharedPtr(
+                        m_mesh->m_spaceDim, edgecnt, ns[i]->m_x, ns[i]->m_y, ns[i]->m_z);
+                    curve->m_points.push_back(vert);
+                }
+
+                edges[el->GetId()] = curve;
+                edgecnt++;
+            }
+        }
+    }
+
     CurveMap &faces = graph->GetCurvedFaces();
 
     int facecnt = 0;

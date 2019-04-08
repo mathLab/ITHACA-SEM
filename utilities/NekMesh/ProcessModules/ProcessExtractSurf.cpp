@@ -91,7 +91,7 @@ void ProcessExtractSurf::Process()
 
     // Clear existing vertices, edges and faces.
     m_mesh->m_vertexSet.clear();
-    
+
     m_mesh->m_edgeSet.clear();
     m_mesh->m_faceSet.clear();
 
@@ -158,7 +158,7 @@ void ProcessExtractSurf::Process()
         if (e)
         {
             elmt->SetId(e->m_id);
-            m_mesh->m_edgeSet.insert(e);
+            elmt->SetVolumeNodes(e->m_edgeNodes);
         }
         else if (f)
         {

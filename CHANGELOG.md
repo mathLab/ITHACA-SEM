@@ -59,6 +59,12 @@ v5.0.0
 - If only `NEKTAR_BUILD_LIBRARY` is enabled, only libraries up to and including
   `MultiRegions` will be built by default (!945)
 - Fix missing metadata import from Hdf5 files (!971)
+- Fix missing flags for periodic BC in DiffusionLDG (!985)
+- Add the moving reference frame as a forcing (!987)
+- Added rtree for element bounding box lookup to accelerate interpolation (!996)
+- Fix integration weights on prisms and pyramids if not using the default
+  integration rule (!998)
+- Fix missing ContainsPoint in Pyramid expansion (!1000)
 
 **NekMesh**:
 - Add feature to read basic 2D geo files as CAD (!731)
@@ -111,6 +117,8 @@ v5.0.0
 - Add module for counting the total number of DOF (!948)
 - Fixed wss module for compressible flows (!958)
 - Add module for removing fields from .fld files (!978)
+- Added if statement to fix case of 1D/2D manifold interpolation in 1D/2D space,
+  added check on dimensions for interpolation, fixed seg interp (!999)
 
 **IncNavierStokesSolver**
 - Replace steady-state check based on difference of norms by check based on

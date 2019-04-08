@@ -79,23 +79,20 @@ OutputNekpp::~OutputNekpp()
 {
 }
 
-/*
-template <typename T> void TestElmts(SpatialDomains::MeshGraphSharedPtr &graph)
+template <typename T> void TestElmts(
+    const std::map<int, std::shared_ptr<T> > &geomMap,
+    SpatialDomains::MeshGraphSharedPtr       &graph)
 {
-    const std::map<int, std::shared_ptr<T> > &tmp =
-        graph->GetAllElementsOfType<T>();
-
     SpatialDomains::CurveMap &curvedEdges = graph->GetCurvedEdges();
     SpatialDomains::CurveMap &curvedFaces = graph->GetCurvedFaces();
 
-    for (auto it1 = tmp.begin(), it2 = tmp.end(); it1 != it2; ++it1)
+    for (auto &geomIt : geomMap)
     {
-        SpatialDomains::GeometrySharedPtr geom = it1->second;
+        SpatialDomains::GeometrySharedPtr geom = geomIt.second;
         geom->FillGeom();
         geom->Reset(curvedEdges, curvedFaces);
     }
 }
-*/
 
 void OutputNekpp::Process()
 {
@@ -135,8 +132,10 @@ void OutputNekpp::Process()
     graph->Empty(m_mesh->m_expDim, m_mesh->m_spaceDim);
 
     TransferVertices(graph);
-    TransferEdges(graph);
-    TransferFaces(graph);
+
+    std::unordered_map<int, SegGeomSharedPtr> segMap;
+    TransferEdges(graph, segMap);
+    TransferFaces(graph, segMap);
     TransferElements(graph);
     TransferCurves(graph);
     TransferComposites(graph);
@@ -145,29 +144,39 @@ void OutputNekpp::Process()
     string out = m_config["outfile"].as<string>();
     graph->WriteGeometry(out, true, m_mesh->m_metadata);
 
-    /*
     // Test the resulting XML file (with a basic test) by loading it
     // with the session reader, generating the MeshGraph and testing if
     // each element is valid.
     if (m_config["test"].beenSet)
     {
         vector<string> filenames(1);
-        filenames[0] = filename;
 
+        if (type == "HDF5")
+        {
+            vector<string> tmp;
+            boost::split(tmp, filename, boost::is_any_of("."));
+            filenames[0] = tmp[0] + ".xml";
+        }
+        else
+        {
+            filenames[0] = filename;
+        }
+
+        char *prgname = "NekMesh";
         LibUtilities::SessionReaderSharedPtr vSession =
-            LibUtilities::SessionReader::CreateInstance(0, NULL, filenames);
-        SpatialDomains::MeshGraphSharedPtr graphShPt =
+            LibUtilities::SessionReader::CreateInstance(1, &prgname, filenames,
+                                                        m_mesh->m_comm);
+        SpatialDomains::MeshGraphSharedPtr graph =
             SpatialDomains::MeshGraph::Read(vSession);
 
-        TestElmts<SpatialDomains::SegGeom>(graphShPt);
-        TestElmts<SpatialDomains::TriGeom>(graphShPt);
-        TestElmts<SpatialDomains::QuadGeom>(graphShPt);
-        TestElmts<SpatialDomains::TetGeom>(graphShPt);
-        TestElmts<SpatialDomains::PrismGeom>(graphShPt);
-        TestElmts<SpatialDomains::PyrGeom>(graphShPt);
-        TestElmts<SpatialDomains::HexGeom>(graphShPt);
+        TestElmts(graph->GetAllSegGeoms(), graph);
+        TestElmts(graph->GetAllTriGeoms(), graph);
+        TestElmts(graph->GetAllQuadGeoms(), graph);
+        TestElmts(graph->GetAllTetGeoms(), graph);
+        TestElmts(graph->GetAllPrismGeoms(), graph);
+        TestElmts(graph->GetAllPyrGeoms(), graph);
+        TestElmts(graph->GetAllHexGeoms(), graph);
     }
-    */
 }
 
 void OutputNekpp::TransferVertices(MeshGraphSharedPtr graph)
@@ -182,7 +191,9 @@ void OutputNekpp::TransferVertices(MeshGraphSharedPtr graph)
     }
 }
 
-void OutputNekpp::TransferEdges(MeshGraphSharedPtr graph)
+void OutputNekpp::TransferEdges(
+    MeshGraphSharedPtr graph,
+    std::unordered_map<int, SegGeomSharedPtr> &edgeMap)
 {
     if (m_mesh->m_expDim >= 2)
     {
@@ -193,12 +204,15 @@ void OutputNekpp::TransferEdges(MeshGraphSharedPtr graph)
                                            graph->GetVertex(it->m_n2->m_id)};
             SegGeomSharedPtr edge = MemoryManager<SegGeom>::AllocateSharedPtr(
                                 it->m_id, m_mesh->m_spaceDim, verts);
-            segMap[it->m_id] = edge;
+            segMap [it->m_id] = edge;
+            edgeMap[it->m_id] = edge;
         }
     }
 }
 
-void OutputNekpp::TransferFaces(MeshGraphSharedPtr graph)
+void OutputNekpp::TransferFaces(
+    MeshGraphSharedPtr graph,
+    std::unordered_map<int, SegGeomSharedPtr> &edgeMap)
 {
     if(m_mesh->m_expDim == 3)
     {
@@ -210,9 +224,9 @@ void OutputNekpp::TransferFaces(MeshGraphSharedPtr graph)
             {
                 SegGeomSharedPtr edges[TriGeom::kNedges] =
                 {
-                    graph->GetSegGeom(it->m_edgeList[0]->m_id),
-                    graph->GetSegGeom(it->m_edgeList[1]->m_id),
-                    graph->GetSegGeom(it->m_edgeList[2]->m_id)
+                    edgeMap[it->m_edgeList[0]->m_id],
+                    edgeMap[it->m_edgeList[1]->m_id],
+                    edgeMap[it->m_edgeList[2]->m_id]
                 };
 
                 TriGeomSharedPtr tri = MemoryManager<TriGeom>::AllocateSharedPtr(it->m_id, edges);
@@ -222,10 +236,10 @@ void OutputNekpp::TransferFaces(MeshGraphSharedPtr graph)
             {
                 SegGeomSharedPtr edges[QuadGeom::kNedges] =
                 {
-                    graph->GetSegGeom(it->m_edgeList[0]->m_id),
-                    graph->GetSegGeom(it->m_edgeList[1]->m_id),
-                    graph->GetSegGeom(it->m_edgeList[2]->m_id),
-                    graph->GetSegGeom(it->m_edgeList[3]->m_id)
+                    edgeMap[it->m_edgeList[0]->m_id],
+                    edgeMap[it->m_edgeList[1]->m_id],
+                    edgeMap[it->m_edgeList[2]->m_id],
+                    edgeMap[it->m_edgeList[3]->m_id]
                 };
 
                 QuadGeomSharedPtr quad = MemoryManager<QuadGeom>::AllocateSharedPtr(it->m_id, edges);
@@ -419,6 +433,7 @@ void OutputNekpp::TransferCurves(MeshGraphSharedPtr graph)
         }
     }
 
+    /*
     if(m_mesh->m_expDim == 2 && m_mesh->m_spaceDim == 3)
     {
         //manifold case
@@ -451,6 +466,7 @@ void OutputNekpp::TransferCurves(MeshGraphSharedPtr graph)
             }
         }
     }
+    */
 }
 
 void OutputNekpp::TransferComposites(MeshGraphSharedPtr graph)

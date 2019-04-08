@@ -177,12 +177,15 @@ void Interpolator::Interpolate(
     NekDouble def_value)
 {
     ASSERTL0(expInField.size() == ptsOutField->GetNFields(),
-             "number of fields does not match");
+        "number of fields does not match");
     ASSERTL0(expInField[0]->GetCoordim(0) <= GetDim(),
-             "too many dimesions in inField");
-    ASSERTL0(ptsOutField->GetDim() <= GetDim(), "too many dimesions in outField");
+        "too many dimesions in inField");
+    ASSERTL0(ptsOutField->GetDim() <= GetDim(),
+        "too many dimesions in outField");
+    ASSERTL0(ptsOutField->GetDim() >= expInField[0]->GetCoordim(0),
+        "too few dimesions in outField");
     ASSERTL0(GetInterpMethod() == LibUtilities::eNoMethod,
-             "only direct evaluation supported for this interpolation");
+        "only direct evaluation supported for this interpolation");
 
     m_expInField  = expInField;
     m_ptsOutField = ptsOutField;

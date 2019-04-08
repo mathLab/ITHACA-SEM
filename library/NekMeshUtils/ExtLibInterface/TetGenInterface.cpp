@@ -86,7 +86,7 @@ void TetGenInterface::InitialMesh(map<int, NodeSharedPtr>  tgidton,
         p->vertexlist[0]           = tri[i][0];
         p->vertexlist[1]           = tri[i][1];
         p->vertexlist[2]           = tri[i][2];
-        surface.facetmarkerlist[i] = 0;
+        surface.facetmarkerlist[i] = 1;
     }
 
     string cmd = "pYzqQ";

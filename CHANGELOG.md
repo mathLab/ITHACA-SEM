@@ -54,7 +54,7 @@ v5.0.0
 - Fix ability to have periodic boundary conditions that are aligned by a
   rotation rather than just a translation (!933)
 - Added a coupling interface to exchange data between solvers at run time
-  and a DummySolver to test the implementations (!853, !931 !973)
+  and a DummySolver to test the implementations (!853, !931, !950, !973)
 - Fix compilation issue with newer Boost versions and clang (!940)
 - If only `NEKTAR_BUILD_LIBRARY` is enabled, only libraries up to and including
   `MultiRegions` will be built by default (!945)

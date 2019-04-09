@@ -4,7 +4,7 @@
     xsi:noNamespaceSchemaLocation="http://www.nektar.info/schema/nektar.xsd">
 
     <EXPANSIONS>
-        <E COMPOSITE="C[0]" NUMMODES="4" FIELDS="u,v" TYPE="MODIFIED" />
+        <E COMPOSITE="C[0]" NUMMODES="6" FIELDS="u,v" TYPE="MODIFIED" />
 	<!--        <E COMPOSITE="C[0]" NUMMODES="7" FIELDS="u,v,p" TYPE="MODIFIED" />     -->
     </EXPANSIONS>
 
@@ -43,11 +43,12 @@
             <P> param1 = 0.5       </P>
             <P> param2 = 1       </P>
             <P> param3 = 10       </P>
-            <P> param4 = 0.75       </P>
+            <P> param4 = 0.1       </P>
             <P> ref_param_index = 2       </P>
             <P> ref_param_nu = 1       </P>
             <P> POD_tolerance = .999999       </P>
             <P> use_Newton = 1       </P>
+	    <P> globally_connected = 2      </P>
             <P> A             = 0.65               </P>
             <P> MappingPressureTolerance  = 1e-5               </P>
             <P> MappingViscousTolerance   = 1e-5               </P>

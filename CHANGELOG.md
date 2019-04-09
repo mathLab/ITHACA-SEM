@@ -99,6 +99,7 @@ v5.0.0
 - Fix manifold face curvature nodes (!913)
 - Fix writing 1D surfaces (!930)
 - Fix surface string parsin in BL splitting (!937)
+- Enable use of distributed packages for triangle and TetGen (!953)
 - Fix issue with MLSC after Scotch conversion (!943)
 - Add support for Gmsh 4.0 mesh file format (!964)
 - Fix surface extraction, added regression test (!994)

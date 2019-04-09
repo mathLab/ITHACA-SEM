@@ -99,6 +99,7 @@ v5.0.0
 - Fix manifold face curvature nodes (!913)
 - Fix writing 1D surfaces (!930)
 - Fix surface string parsin in BL splitting (!937)
+- Enable use of distributed packages for triangle and TetGen (!953)
 - Fix issue with MLSC after Scotch conversion (!943)
 - Add support for Gmsh 4.0 mesh file format (!964)
 - Fix issue with extracting 1D curved surface from 2D file (!984)
@@ -120,6 +121,7 @@ v5.0.0
 - Add module for evaluating the mean of variables on the domain (!894)
 - Add module for counting the total number of DOF (!948)
 - Fixed wss module for compressible flows (!958)
+- Made Sutherland's law non-dimensional (!972)
 - Add module for removing fields from .fld files (!978)
 - Added if statement to fix case of 1D/2D manifold interpolation in 1D/2D space,
   added check on dimensions for interpolation, fixed seg interp (!999)
@@ -139,6 +141,7 @@ v5.0.0
   seg, quad and hex elements (!771, !862)
 - Fix compressible solver with NUMMODES=1 (!868)
 - Introduce equations of state to account for real gas effects (!880)
+- Made Sutherland's law non-dimensional (!972)
 - Modified pressure outlet BCs to allow for the reference static pressure to be
   set from the VALUE fields (!981)
 

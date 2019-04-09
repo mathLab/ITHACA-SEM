@@ -369,6 +369,11 @@ void ProcessWSS::GetViscosity(
             Vmath::Smul(npoints, cv_inv, energy, 1, temperature, 1 );
 
             // Variable viscosity through the Sutherland's law
+            //
+            // WARNING, if this routine is modified the same must be done in the
+            // CompressibleFlowSolver function in VariableConverter.cpp
+            // (this class should be restructured).
+
             const NekDouble C = .38175;
             NekDouble mu_star = m_mu;
             NekDouble T_star  = m_pInf / (m_rhoInf * m_gasConstant);

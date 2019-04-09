@@ -769,7 +769,6 @@ void PrismGeom::SetUpFaceOrientation()
             dotproduct1 += elementAaxis[i] * faceAaxis[i];
         }
 
-        NekDouble norm = fabs(dotproduct1) / elementAaxis_length / faceAaxis_length;
         orientation = 0;
 
         // if the innerproduct is equal to the (absolute value of the ) products
@@ -791,9 +790,10 @@ void PrismGeom::SetUpFaceOrientation()
                 dotproduct2 += elementBaxis[i] * faceBaxis[i];
             }
 
-            norm = fabs(dotproduct2 / elementBaxis_length / faceBaxis_length);
-            ASSERTL1(fabs(norm - 1.0) < NekConstants::kNekZeroTol,
-                     "These vectors should be parallel");
+            ASSERTL1(
+                fabs(fabs(dotproduct2 / elementBaxis_length / faceBaxis_length)
+                     - 1.0) < NekConstants::kNekZeroTol,
+                "These vectors should be parallel");
 
             // if the inner product is negative, both B-axis point
             // in reverse direction
@@ -816,9 +816,10 @@ void PrismGeom::SetUpFaceOrientation()
             }
 
             // check that both these axis are indeed parallel
-            norm = fabs(dotproduct1) / elementAaxis_length / faceBaxis_length;
-            ASSERTL1(fabs(norm - 1.0) < NekConstants::kNekZeroTol,
-                     "These vectors should be parallel");
+            ASSERTL1(
+                fabs(fabs(dotproduct1) / elementAaxis_length / faceBaxis_length
+                     - 1.0) < NekConstants::kNekZeroTol,
+                "These vectors should be parallel");
 
             // if the result is negative, both axis point in reverse
             // directions
@@ -834,9 +835,10 @@ void PrismGeom::SetUpFaceOrientation()
                 dotproduct2 += elementBaxis[i] * faceAaxis[i];
             }
 
-            norm = fabs(dotproduct2) / elementBaxis_length / faceAaxis_length;
-            ASSERTL1(fabs(norm - 1.0) < NekConstants::kNekZeroTol,
-                     "These vectors should be parallel");
+            ASSERTL1(
+                fabs(fabs(dotproduct2) / elementBaxis_length / faceAaxis_length
+                     - 1.0) < NekConstants::kNekZeroTol,
+                "These vectors should be parallel");
 
             if (dotproduct2 < 0.0)
             {

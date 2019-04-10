@@ -153,6 +153,7 @@ namespace Nektar
 	std::vector<int> local_indices_to_be_continued;
 	
 	int use_Newton;
+	Array<OneD, Array<OneD, NekDouble> > myAdvField;
 
     protected:
 

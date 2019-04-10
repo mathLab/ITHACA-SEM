@@ -600,6 +600,8 @@ TopoDS_Shape CADSystemOCE::BuildGeo(string geo)
 
         if (boost::iequals(type, "Point"))
         {
+            ASSERTL0(points.find(id) == points.end(),
+                     "Duplicate point " + std::to_string(id));
             points[id] = var;
         }
         else if (boost::iequals(type, "Line"))

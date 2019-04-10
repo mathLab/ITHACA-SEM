@@ -122,6 +122,7 @@ v5.0.0
 - Fixed wss module for compressible flows (!958)
 - Made Sutherland's law non-dimensional (!972)
 - Add module for removing fields from .fld files (!978)
+- Fixed nparts option in FieldConvert and automated Info.xml generation (!995)
 - Added if statement to fix case of 1D/2D manifold interpolation in 1D/2D space,
   added check on dimensions for interpolation, fixed seg interp (!999)
 

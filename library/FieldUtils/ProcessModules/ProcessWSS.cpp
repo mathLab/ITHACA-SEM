@@ -70,19 +70,6 @@ void ProcessWSS::Process(po::variables_map &vm)
     int expdim  = m_f->m_graph->GetSpaceDimension();
     m_spacedim  = expdim + m_f->m_numHomogeneousDir;
 
-    if (m_spacedim == 2)
-    {
-        m_f->m_variables.push_back("Shear_x");
-        m_f->m_variables.push_back("Shear_y");
-        m_f->m_variables.push_back("Shear_mag");
-    }
-    else
-    {
-        m_f->m_variables.push_back("Shear_x");
-        m_f->m_variables.push_back("Shear_y");
-        m_f->m_variables.push_back("Shear_z");
-        m_f->m_variables.push_back("Shear_mag");
-    }
 
     if (m_f->m_exp[0]->GetNumElmts() == 0)
     {
@@ -108,11 +95,14 @@ void ProcessWSS::Process(po::variables_map &vm)
     Array<OneD, MultiRegions::ExpListSharedPtr> BndExp(nshear);
     Array<OneD, MultiRegions::ExpListSharedPtr> BndElmtExp(nfields);
 
-    // Resize m_exp
-    m_f->m_exp.resize(nfields + nshear);
-    for (i = 0; i < nshear; ++i)
+    // will resuse nfields expansions to write shear components.
+    if(nshear > nfields)
     {
-        m_f->m_exp[nfields + i] = m_f->AppendExpList(m_f->m_numHomogeneousDir);
+        m_f->m_exp.resize(nshear);
+        for (i = nfields; i < nshear; ++i)
+        {
+            m_f->m_exp[nfields + i] = m_f->AppendExpList(m_f->m_numHomogeneousDir);
+        }
     }
 
     // Create map of boundary ids for partitioned domains
@@ -137,8 +127,7 @@ void ProcessWSS::Process(po::variables_map &vm)
             // bnd
             for (i = 0; i < nshear; i++)
             {
-                BndExp[i] =
-                    m_f->m_exp[nfields + i]->UpdateBndCondExpansion(bnd);
+                BndExp[i] = m_f->m_exp[i]->UpdateBndCondExpansion(bnd);
             }
             for (i = 0; i < nfields; i++)
             {
@@ -293,6 +282,20 @@ void ProcessWSS::Process(po::variables_map &vm)
             BndExp[nshear - 1]->FwdTrans_IterPerExp(fshear[nshear - 1],
                                          BndExp[nshear - 1]->UpdateCoeffs());
         }
+    }
+
+    if (m_spacedim == 2)
+    {
+        m_f->m_variables[0] = "Shear_x";
+        m_f->m_variables[1] = "Shear_y";
+        m_f->m_variables[2] = "Shear_mag";
+    }
+    else
+    {
+        m_f->m_variables[0] = "Shear_x";
+        m_f->m_variables[1] = "Shear_y";
+        m_f->m_variables[2] = "Shear_z";
+        m_f->m_variables[3] = "Shear_mag";
     }
 }
 

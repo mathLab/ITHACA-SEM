@@ -175,6 +175,19 @@ namespace Nektar
         {
             LibUtilities::CommSharedPtr comm = m_session->GetComm();
 
+            if (comm->IsSerial())
+            {
+                // Do not try and generate a communicator if we have a serial
+                // communicator. Arises with a FieldConvert communicator when
+                // using --nparts in FieldConvert. Just set communicator to comm
+                // in this case.
+                for (auto &it : m_boundaryRegions)
+                {
+                    m_boundaryCommunicators[it.first] = comm;
+                }
+                return;
+            }
+
             std::set<int> allids = ShareAllBoundaryIDs(m_boundaryRegions, comm);
 
             for (auto &it : allids)

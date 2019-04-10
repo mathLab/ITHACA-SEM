@@ -125,6 +125,7 @@ void MeshGraphXml::PartitionMesh(
             ASSERTL0(comm->GetSize() == 1,
                      "The 'part-only' option should be used in serial.");
 
+            // Read 'lite' geometry information
             ReadGeometry(NullDomainRangeShPtr, false);
 
             // Number of partitions is specified by the parameter.

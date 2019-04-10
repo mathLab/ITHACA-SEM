@@ -378,12 +378,10 @@ namespace Nektar
     
     void CoupledLinearNS_trafoP::SetUpCoupledMatrix(const NekDouble lambda,  const Array< OneD, Array< OneD, NekDouble > > &Advfield, bool IsLinearNSEquation,const int HomogeneousMode, CoupledSolverMatrices &mat, CoupledLocalToGlobalC0ContMapSharedPtr &locToGloMap, const NekDouble lambda_imag)
     {
-    	//use_Newton = 0;
-    	//if(total_solutions_found>0) use_Newton = 1;
-	if(use_Newton)        
-	{
-		IsLinearNSEquation = true;
-	}
+		if(use_Newton)        
+		{
+			IsLinearNSEquation = true;
+		}
 
         int  n,i,j,k,eid;
         int  nel  = m_fields[m_velocity[0]]->GetNumElmts();
@@ -1096,17 +1094,17 @@ namespace Nektar
 				{
 					norm_i=0;
 					int curr_j = local_indices_to_be_continued[j];
-					for(int i = 0; i < solution_x_continuation_deflation[curr_j].num_elements(); i++)  //L2 norm
+					for(int i = 0; i < sol_x_cont_defl[curr_j].num_elements(); i++)  //L2 norm
 					{
-						//norm_i += (solution_x_continuation_deflation[curr_j][i] - Advfield[0][i]) * (solution_x_continuation_deflation[curr_j][i] - Advfield[0][i]);
-						//norm_i += (solution_y_continuation_deflation[curr_j][i] - Advfield[1][i]) * (solution_y_continuation_deflation[curr_j][i] - Advfield[1][i]);
-						norm_i += (solution_x_continuation_deflation[curr_j][i] - solution_x_continuation_deflation[total_solutions_found][i]) 
-								* (solution_x_continuation_deflation[curr_j][i] - solution_x_continuation_deflation[total_solutions_found][i]);
-						norm_i += (solution_y_continuation_deflation[curr_j][i] - solution_y_continuation_deflation[total_solutions_found][i]) 
-								* (solution_y_continuation_deflation[curr_j][i] - solution_y_continuation_deflation[total_solutions_found][i]);
+						//norm_i += (sol_x_cont_defl[curr_j][i] - Advfield[0][i]) * (sol_x_cont_defl[curr_j][i] - Advfield[0][i]);
+						//norm_i += (sol_y_cont_defl[curr_j][i] - Advfield[1][i]) * (sol_y_cont_defl[curr_j][i] - Advfield[1][i]);
+						norm_i += (sol_x_cont_defl[curr_j][i] - sol_x_cont_defl[total_solutions_found][i]) 
+								* (sol_x_cont_defl[curr_j][i] - sol_x_cont_defl[total_solutions_found][i]);
+						norm_i += (sol_y_cont_defl[curr_j][i] - sol_y_cont_defl[total_solutions_found][i]) 
+								* (sol_y_cont_defl[curr_j][i] - sol_y_cont_defl[total_solutions_found][i]);
 					}  
 					
-					norm_i = sqrt(norm_i);///solution_x_continuation_deflation[curr_j].num_elements();
+					norm_i = sqrt(norm_i);///sol_x_cont_defl[curr_j].num_elements();
 					
 					norm_i = 1+1/norm_i;
 					norm *= norm_i;
@@ -1484,6 +1482,10 @@ namespace Nektar
 //	DoInitialise();
 //	DoSolve();
 	double rel_err = 1.0;
+	
+	m_mat[0].m_CoupledBndSys->my_tau_defl = 1;
+	m_mat[0].m_CoupledBndSys->my_deflate = deflate;
+	
 	int iterations = 0, max_iterations = 300;
 	Array<OneD, MultiRegions::ExpListSharedPtr> m_fields_t;
 	
@@ -1494,8 +1496,8 @@ namespace Nektar
 	//Eigen::VectorXd old_pressure(pres_dof);
 	if(total_solutions_found>1)
 	{
-		solution_x_continuation_deflation[total_solutions_found] = init_snapshot_x;
-		solution_y_continuation_deflation[total_solutions_found] = init_snapshot_y;		
+		sol_x_cont_defl[total_solutions_found] = init_snapshot_x;
+		sol_y_cont_defl[total_solutions_found] = init_snapshot_y;		
 		//solution_pres_continuation_deflation[total_solutions_found] = Array<OneD, NekDouble>(pres_dof, 0.0);
 	}
 	
@@ -1544,64 +1546,66 @@ namespace Nektar
 //		cout << "csy0.norm() " << csy0.norm() << endl;
 //		cout << "csy0_trafo.norm() " << csy0_trafo.norm() << endl;
 		rel_err = std::abs(csx0_trafo.norm() - csx0.norm()) / csx0.norm() + std::abs(csy0_trafo.norm() - csy0.norm()) / csy0.norm();
-		//if((++iterations)%100==0)
-			//cout << "rel_err " << rel_err << endl; // if you enter here you are propably not converging
+		if((++iterations)%500==0)
+			cout << "rel_err " << rel_err << endl; // if you enter here you are propably not converging
 			
 		if(deflate)
         { 
         	double norm_i, tau = 1, scal_product, M_inv;
-        	int power = 2;
+        	int power = 10, nvel = sol_x_cont_defl[0].num_elements();
 			for(int j = 0; j < local_indices_to_be_continued.size(); j++)
 			{
 				norm_i = 0;
-				scal_product = 0;
 				int curr_j = local_indices_to_be_continued[j];
-				for(int i = 0; i < solution_x_continuation_deflation[curr_j].num_elements(); i++)
+				for(int i = 0; i < nvel; i++)
 				{
 					//I compute the norm					
-					norm_i += (out_field_trafo_x[i] - solution_x_continuation_deflation[curr_j][i]) * (out_field_trafo_x[i] - solution_x_continuation_deflation[curr_j][i]);
-					norm_i += (out_field_trafo_y[i] - solution_y_continuation_deflation[curr_j][i]) * (out_field_trafo_y[i] - solution_y_continuation_deflation[curr_j][i]);
-					//I compute the first sum of the scalar_product
-					//scal_product += out_field_trafo_x[i] - init_snapshot_x[i];
-					//scal_product += out_field_trafo_y[i] - init_snapshot_y[i];
+					norm_i += (out_field_trafo_x[i] - sol_x_cont_defl[curr_j][i]) * (out_field_trafo_x[i] - sol_x_cont_defl[curr_j][i]);
+					norm_i += (out_field_trafo_y[i] - sol_y_cont_defl[curr_j][i]) * (out_field_trafo_y[i] - sol_y_cont_defl[curr_j][i]);
 				}   
-				/*for(int i = 0; i < pres_dof; i++)
-				{
-					//I compute the norm					
-					norm_i += (solution_pres_continuation_deflation[curr_j][i] - solution_pres_continuation_deflation[total_solutions_found][i]) 
-							* (solution_pres_continuation_deflation[curr_j][i] - solution_pres_continuation_deflation[total_solutions_found][i]);
-					//I compute the first sum of the scalar_product
-					scal_product += solution_pres_continuation_deflation[total_solutions_found][i] - old_pressure[i];
-				} */
 				norm_i = sqrt(norm_i);
-				cout<<"norm_i "<<norm_i;
+				cout<<"Deflate vs curr_j = "<<curr_j<<", norm_i "<<norm_i;
+				
 				if(power == 1)	// deflate with power 1 or 2
 				{
-					M_inv = 1/(1+1/norm_i);  
+					M_inv = norm_i/(norm_i+1);  
 					norm_i = norm_i*norm_i*norm_i;  
 				}
 				else
 				{
-					M_inv = 1/(1+1/norm_i/norm_i);  
-					norm_i = norm_i*norm_i*norm_i*norm_i;
+					if(power==2)
+					{
+						M_inv = 1/(1+1/norm_i/norm_i);  
+						norm_i = norm_i*norm_i*norm_i*norm_i;
+					}
+					else //to try with a general power
+					{
+						double norm_ip = 1;
+						for(int k = 0; k < power; k++)
+							norm_ip *= norm_i;
+						M_inv = 1/(1+1/norm_ip);
+						norm_i = norm_ip * norm_i * norm_i;
+					}
 				}
 				
-				//I compute the second sum of the scalar product
-				for(int i = 0; i < solution_x_continuation_deflation[curr_j].num_elements(); i++)
+				//I compute the scalar product
+				scal_product = 0;
+				for(int i = 0; i < nvel; i++)
 				{
-					scal_product -= power * (out_field_trafo_x[i] - solution_x_continuation_deflation[curr_j][i]) * (out_field_trafo_x[i] - init_snapshot_x[i]) / norm_i;
-					scal_product -= power * (out_field_trafo_y[i] - solution_y_continuation_deflation[curr_j][i]) * (out_field_trafo_y[i] - init_snapshot_y[i]) / norm_i;
+					scal_product -= (out_field_trafo_x[i] - sol_x_cont_defl[curr_j][i]) * (out_field_trafo_x[i] - init_snapshot_x[i]);
+					scal_product -= (out_field_trafo_y[i] - sol_y_cont_defl[curr_j][i]) * (out_field_trafo_y[i] - init_snapshot_y[i]);
 				}  
-				/*for(int i = 0; i < pres_dof; i++)
-				{
-					scal_product -= power * (solution_pres_continuation_deflation[total_solutions_found][i] - solution_pres_continuation_deflation[curr_j][i]) 
-										* (solution_pres_continuation_deflation[total_solutions_found][i] - old_pressure[i]) / norm_i;
-				} */
-				tau *= 1 + M_inv * scal_product / (1 - M_inv * scal_product); 
+				scal_product *= power / norm_i;
+				//tau *= 1 + (M_inv * scal_product) / (1 - M_inv * scal_product); 
+				tau *= 1 / (1 - M_inv * scal_product);
+				//tau = tau/fabs(tau); //to try to speed up the escape from the solution
+				
 				cout<<", tau "<<tau<<", scal_product "<<scal_product<<", M_inv "<<M_inv<<endl;
-			}  
-			 
-			for(int i = 0; i < solution_x_continuation_deflation[0].num_elements(); i++)
+				m_mat[0].m_CoupledBndSys->my_tau_defl = tau;
+			cout << out_field_trafo_x[23]<<" "<<init_snapshot_x[23]<< endl;  
+			
+			//I update the solution
+			for(int i = 0; i < nvel; i++)
 			{
 				out_field_trafo_x[i] = tau * out_field_trafo_x[i] + (1 - tau) * init_snapshot_x[i];
 				out_field_trafo_y[i] = tau * out_field_trafo_y[i] + (1 - tau) * init_snapshot_y[i];
@@ -1610,14 +1614,14 @@ namespace Nektar
 
 		double rel_err2 = 0;
 		double norm_x = 0, norm_y = 0;
-		for(int i = 0; i < solution_x_continuation_deflation[0].num_elements(); i++)
+		for(int i = 0; i < sol_x_cont_defl[0].num_elements(); i++)
 		{
 			norm_x += init_snapshot_x[i] * init_snapshot_x[i];
 			norm_y += init_snapshot_y[i] * init_snapshot_y[i];
 		}  
-		norm_x = sqrt(norm_x);
-		norm_y = sqrt(norm_y);
-		for(int i = 0; i < solution_x_continuation_deflation[0].num_elements(); i++)
+		norm_x = sqrt(norm_x)+1e-10;
+		norm_y = sqrt(norm_y)+1e-10;
+		for(int i = 0; i < sol_x_cont_defl[0].num_elements(); i++)
 		{
 			rel_err2 += (out_field_trafo_x[i] - init_snapshot_x[i]) * (out_field_trafo_x[i] - init_snapshot_x[i]) / norm_x;
 			rel_err2 += (out_field_trafo_y[i] - init_snapshot_y[i]) * (out_field_trafo_y[i] - init_snapshot_y[i]) / norm_y;
@@ -1627,8 +1631,8 @@ namespace Nektar
 		
 		init_snapshot_x = out_field_trafo_x;
 		init_snapshot_y = out_field_trafo_y;
-		solution_x_continuation_deflation[total_solutions_found] = out_field_trafo_x;
-		solution_y_continuation_deflation[total_solutions_found] = out_field_trafo_y;
+		sol_x_cont_defl[total_solutions_found] = out_field_trafo_x;
+		sol_y_cont_defl[total_solutions_found] = out_field_trafo_y;
 		
 	}
 	
@@ -1638,6 +1642,7 @@ namespace Nektar
 	if(iterations>=max_iterations)
 	{
 		converged=false;
+		cout<<"DoSolve_at_param didn't converge"<<endl;
 		return converged_solution;
 	}
 	converged=true;
@@ -2318,35 +2323,35 @@ namespace Nektar
             }
         }
         
-		double norm = 1,norm_i, scale_factor = 1;
-       /* if(deflate)
+		/*double norm = 1,norm_i, scale_factor = 1;
+        if(deflate)
         {
 			for(int j = 0; j < local_indices_to_be_continued.size(); j++)
 			{
 				norm_i=0;
 				int curr_j = local_indices_to_be_continued[j];
-				for(int i = 0; i < solution_x_continuation_deflation[curr_j].num_elements(); i++)
+				for(int i = 0; i < sol_x_cont_defl[curr_j].num_elements(); i++)
 				{
-					norm_i += (solution_x_continuation_deflation[curr_j][i] - solution_x_continuation_deflation[total_solutions_found][i]) 
-								* (solution_x_continuation_deflation[curr_j][i] - solution_x_continuation_deflation[total_solutions_found][i]);
-					norm_i += (solution_y_continuation_deflation[curr_j][i] - solution_y_continuation_deflation[total_solutions_found][i]) 
-								* (solution_y_continuation_deflation[curr_j][i] - solution_y_continuation_deflation[total_solutions_found][i]);
+					norm_i += (sol_x_cont_defl[curr_j][i] - sol_x_cont_defl[total_solutions_found][i]) 
+								* (sol_x_cont_defl[curr_j][i] - sol_x_cont_defl[total_solutions_found][i]);
+					norm_i += (sol_y_cont_defl[curr_j][i] - sol_y_cont_defl[total_solutions_found][i]) 
+								* (sol_y_cont_defl[curr_j][i] - sol_y_cont_defl[total_solutions_found][i]);
 				}   
 				
-				norm_i = sqrt(norm_i);///solution_x_continuation_deflation[curr_j].num_elements();
+				norm_i = sqrt(norm_i);///sol_x_cont_defl[curr_j].num_elements();
+				norm_i = 1+1/norm_i;
 				
-				cout<<norm_i<<" --> "<<1+1/norm_i<<" --> "<<norm*(1+1/norm_i)<<" with 400-th node "<<solution_x_continuation_deflation[curr_j][400]<<" and "<<solution_x_continuation_deflation[total_solutions_found][400]<<endl;
-				nif(deflorm_i = 1+1/norm_i;
-				norm *= norm_i;
+				cout<<norm_i<<" --> "<<1+1/norm_i<<" --> "<<norm*(1+1/norm_i)<<" with 400-th node "<<sol_x_cont_defl[curr_j][400]<<" and "<<sol_x_cont_defl[total_solutions_found][400]<<endl;
 				
 				//norm_i += 1e-13;
 				//if(norm_i < norm)
 				//	norm = norm_i;
+				scale_factor *= 1/norm_i;
 				
 			}
 			cout<<endl;
-			scale_factor = norm;
-			//cout<<"scale factor = "<<scale_factor<<", local indices to be continued.size()="<<local_indices_to_be_continued.size()<<" num elementss()="<<solution_x_continuation_deflation[local_indices_to_be_continued.size()-1].num_elements()<<endl;
+			//scale_factor = norm;
+			//cout<<"scale factor = "<<scale_factor<<", local indices to be continued.size()="<<local_indices_to_be_continued.size()<<" num elementss()="<<sol_x_cont_defl[local_indices_to_be_continued.size()-1].num_elements()<<endl;
 			
        		Vmath::Smul(f_bnd.num_elements(), scale_factor, f_bnd,1,f_bnd,1);  
        		Vmath::Smul(f_int.num_elements(), scale_factor, f_int,1,f_int,1); 
@@ -2715,27 +2720,25 @@ namespace Nektar
         m_session->LoadParameter("MaxIteration", m_maxIt);
         m_session->LoadParameter("Restart", m_Restart);
         m_session->LoadParameter("KinvisStep", step);
+        m_session->LoadParameter("UseDeflation", use_deflation);
                 
 		//CoupledLinearNS_trafoP babyCLNS_trafo(m_session);
 		//babyCLNS_trafo.InitObject();
 		
-		solution_x_continuation_deflation = Array<OneD, Array<OneD, NekDouble> > (m_maxIt);
-		solution_y_continuation_deflation = Array<OneD, Array<OneD, NekDouble> > (m_maxIt);
+		sol_x_cont_defl = Array<OneD, Array<OneD, NekDouble> > (m_maxIt);
+		sol_y_cont_defl = Array<OneD, Array<OneD, NekDouble> > (m_maxIt);
 		//solution_pres_continuation_deflation = Array<OneD, Array<OneD, NekDouble> > (m_maxIt);
 				
-		solution_x_continuation_deflation[0] = Array<OneD, NekDouble> (GetNpoints(), 0.0);
-		solution_y_continuation_deflation[0] = Array<OneD, NekDouble> (GetNpoints(), 0.0);
+		sol_x_cont_defl[0] = Array<OneD, NekDouble> (GetNpoints(), 0.0);
+		sol_y_cont_defl[0] = Array<OneD, NekDouble> (GetNpoints(), 0.0);
 		//solution_pres_continuation_deflation[0] = Array<OneD, NekDouble> (m_pressure->UpdatePhys().num_elements(), 0.0);
 		
 		int number_of_iterations = 0, deflated_solutions_found = 0, curr_i, indexFlip;
 		int previous_step_solutions = 1, previous_previous_step_solutions;  //number of solutions found in the step k-1 and k-2 when the current step is the k-th
-		bool continue_deflation, lost_solution = true, use_arclength;
+		bool lost_solution = true, use_arclength;
 		Array<OneD, NekDouble> guess_x, guess_y, guess_tmp;
 		number_of_deflations = 0;
-		//total_solutions_found = 0;
-		//different_solutions_found = 1; // to start from the zero solution
-		use_deflation = true;
-		continue_deflation = use_deflation;
+		
 		Set_m_kinvis(param);
 		std::vector<int> indices_to_be_continued; //for the next value of the parameter
 		//std::vector<int> local_indices_to_be_continued(0); //for the current value of the parameter
@@ -2763,11 +2766,11 @@ namespace Nektar
 			deflate = false;
 			//compute first solution
 			cout<<"Compute first solution\n"<<endl;
-			converged_solution = DoSolve_at_param(solution_x_continuation_deflation[0], solution_y_continuation_deflation[0], m_kinvis);
+			converged_solution = DoSolve_at_param(sol_x_cont_defl[0], sol_y_cont_defl[0], m_kinvis);
 			for (int j=0; j < GetNpoints(); ++j)
 			{
-				solution_x_continuation_deflation[0][j] = converged_solution[0][j];
-				solution_y_continuation_deflation[0][j] = converged_solution[1][j];
+				sol_x_cont_defl[0][j] = converged_solution[0][j];
+				sol_y_cont_defl[0][j] = converged_solution[1][j];
 			}
 			indices_to_be_continued.push_back(0);
 			total_solutions_found = 1;
@@ -2776,7 +2779,7 @@ namespace Nektar
 			std::ofstream outfile;
 			outfile.open("bif_diagr.txt", std::ios::out);
  
-			outfile<<m_kinvis<<" "<<solution_y_continuation_deflation[0][index]<<endl; 
+			outfile<<m_kinvis<<" "<<sol_y_cont_defl[0][index]<<endl; 
 			
 			while(m_kinvis > m_kinvisMin && number_of_iterations < m_maxIt)
 			{
@@ -2799,32 +2802,32 @@ namespace Nektar
 				for(int i = 0; i < indices_to_be_continued.size(); i++)
 				{		
 					curr_i = indices_to_be_continued[i];
-					if(use_arclength) // pseudo arc-length only if I didn't found or loose any solution  
+					if(use_arclength && total_solutions_found>1) // pseudo arc-length only if I didn't found or loose any solution  
 					{
 						for (int j=0; j < GetNpoints(); ++j)  //to perform u(x_k+1) = u(x_k)+step*{u'(x_k)} = u(x_k)+step*{[u(x_k)-u(x_k-1)]/step} = 2*u(x_k)-u(x_k-1)
 						{
-							guess_x[j] = 2*solution_x_continuation_deflation[curr_i][j] - solution_x_continuation_deflation[curr_i-previous_step_solutions][j];
-							guess_y[j] = 2*solution_y_continuation_deflation[curr_i][j] - solution_y_continuation_deflation[curr_i-previous_step_solutions][j];
+							guess_x[j] = 2*sol_x_cont_defl[curr_i][j] - sol_x_cont_defl[curr_i-previous_step_solutions][j];
+							guess_y[j] = 2*sol_y_cont_defl[curr_i][j] - sol_y_cont_defl[curr_i-previous_step_solutions][j];
 						}
 					}
 					else
 					{
-						guess_x = solution_x_continuation_deflation[curr_i];
-						guess_y = solution_y_continuation_deflation[curr_i];
+						guess_x = sol_x_cont_defl[curr_i];
+						guess_y = sol_y_cont_defl[curr_i];
 					}
 					lost_solution = false;
 					converged_solution = DoSolve_at_param(guess_x, guess_y, m_kinvis);	
 					if(converged)
 					{
-						solution_x_continuation_deflation[total_solutions_found] = Array<OneD, NekDouble> (GetNpoints(), 0.0);
-						solution_y_continuation_deflation[total_solutions_found] = Array<OneD, NekDouble> (GetNpoints(), 0.0);
+						sol_x_cont_defl[total_solutions_found] = Array<OneD, NekDouble> (GetNpoints(), 0.0);
+						sol_y_cont_defl[total_solutions_found] = Array<OneD, NekDouble> (GetNpoints(), 0.0);
 						for (int j=0; j < GetNpoints(); ++j)
 						{
-							solution_x_continuation_deflation[total_solutions_found][j] = converged_solution[0][j];
-							solution_y_continuation_deflation[total_solutions_found][j] = converged_solution[1][j];
+							sol_x_cont_defl[total_solutions_found][j] = converged_solution[0][j];
+							sol_y_cont_defl[total_solutions_found][j] = converged_solution[1][j];
 						}
 						local_indices_to_be_continued.push_back(total_solutions_found);
-						outfile<<m_kinvis<<" "<<solution_y_continuation_deflation[total_solutions_found][index]<<endl; 
+						outfile<<m_kinvis<<" "<<sol_y_cont_defl[total_solutions_found][index]<<endl; 
 						total_solutions_found++;
 						previous_step_solutions++;
 					}
@@ -2845,24 +2848,24 @@ namespace Nektar
 					
 					for (int j=0; j < GetNpoints(); ++j)  //to perform u(x_k+1) = u(x_k)+step*{u'(x_k)} = u(x_k)+step*{[u(x_k)-u(x_k-1)]/step} = 2*u(x_k)-u(x_k-1)
 					{
-						guess_x[j] = 0*solution_x_continuation_deflation[curr_i][j]*(1+0*(((double)rand())/RAND_MAX-0.5)/2/1e10);
-						guess_y[j] = 0*solution_y_continuation_deflation[curr_i][j]*(1+0*(((double)rand())/RAND_MAX-0.5)/2/1e10);
+						guess_x[j] = 0*sol_x_cont_defl[curr_i][j]*(1+(((double)rand())/RAND_MAX-0.5)/2/1e10);
+						guess_y[j] = 0*sol_y_cont_defl[curr_i][j]*(1+(((double)rand())/RAND_MAX-0.5)/2/1e10);
 					}					
 					
 					while(converged)
 					{
-						converged_solution = DoSolve_at_param(guess_x/*solution_x_continuation_deflation[curr_i]*/, guess_y/*solution_y_continuation_deflation[curr_i]*/, m_kinvis);
+						converged_solution = DoSolve_at_param(guess_x/*sol_x_cont_defl[curr_i]*/, guess_y/*sol_y_cont_defl[curr_i]*/, m_kinvis);
 						if(converged)
 						{
-							solution_x_continuation_deflation[total_solutions_found] = Array<OneD, NekDouble> (GetNpoints(), 0.0);
-							solution_y_continuation_deflation[total_solutions_found] = Array<OneD, NekDouble> (GetNpoints(), 0.0);
+							sol_x_cont_defl[total_solutions_found] = Array<OneD, NekDouble> (GetNpoints(), 0.0);
+							sol_y_cont_defl[total_solutions_found] = Array<OneD, NekDouble> (GetNpoints(), 0.0);
 							for (int j=0; j < GetNpoints(); ++j)
 							{
-								solution_x_continuation_deflation[total_solutions_found][j] = converged_solution[0][j];
-								solution_y_continuation_deflation[total_solutions_found][j] = converged_solution[1][j];
+								sol_x_cont_defl[total_solutions_found][j] = converged_solution[0][j];
+								sol_y_cont_defl[total_solutions_found][j] = converged_solution[1][j];
 							}
 							local_indices_to_be_continued.push_back(total_solutions_found);
-							outfile<<m_kinvis<<" "<<solution_y_continuation_deflation[total_solutions_found][index]<<endl;
+							outfile<<m_kinvis<<" "<<sol_y_cont_defl[total_solutions_found][index]<<endl;
 							total_solutions_found++;
 							previous_step_solutions++;
 						}
@@ -2878,15 +2881,15 @@ namespace Nektar
 					converged_solution = DoSolve_at_param(possible_solutions[i], possible_solutions[i+1], m_kinvis);	
 					if(converged)
 					{
-						solution_x_continuation_deflation[total_solutions_found] = Array<OneD, NekDouble> (GetNpoints(), 0.0);
-						solution_y_continuation_deflation[total_solutions_found] = Array<OneD, NekDouble> (GetNpoints(), 0.0);
+						sol_x_cont_defl[total_solutions_found] = Array<OneD, NekDouble> (GetNpoints(), 0.0);
+						sol_y_cont_defl[total_solutions_found] = Array<OneD, NekDouble> (GetNpoints(), 0.0);
 						for (int j=0; j < GetNpoints(); ++j)
 						{
-							solution_x_continuation_deflation[total_solutions_found][j] = converged_solution[0][j];
-							solution_y_continuation_deflation[total_solutions_found][j] = converged_solution[1][j];
+							sol_x_cont_defl[total_solutions_found][j] = converged_solution[0][j];
+							sol_y_cont_defl[total_solutions_found][j] = converged_solution[1][j];
 						}
 						local_indices_to_be_continued.push_back(total_solutions_found);
-						outfile<<m_kinvis<<" "<<solution_y_continuation_deflation[total_solutions_found][index]<<endl; 
+						outfile<<m_kinvis<<" "<<sol_y_cont_defl[total_solutions_found][index]<<endl; 
 						total_solutions_found++;
 						previous_step_solutions++;
 					}
@@ -2927,8 +2930,8 @@ namespace Nektar
 	Array<OneD, Array<OneD, NekDouble> > CoupledLinearNS_trafoP::FlipAndCheck(std::vector<int> &flipperMap, int *flipCounter)
 	{
 		Array<OneD, NekDouble> guess_tmp, guess_x, guess_y;
-		guess_x = Array<OneD, NekDouble>(solution_x_continuation_deflation[0].num_elements(),0.0);
-		guess_y = Array<OneD, NekDouble>(solution_x_continuation_deflation[0].num_elements(),0.0);
+		guess_x = Array<OneD, NekDouble>(sol_x_cont_defl[0].num_elements(),0.0);
+		guess_y = Array<OneD, NekDouble>(sol_x_cont_defl[0].num_elements(),0.0);
 		int num_sol = local_indices_to_be_continued.size();
 		Array<OneD, Array<OneD, NekDouble> > possible_solutions = Array<OneD, Array<OneD, NekDouble> >(2*num_sol) ;
 		double norm;
@@ -2940,10 +2943,10 @@ namespace Nektar
 			int curr_j = local_indices_to_be_continued[j];
 			
 			//flip
-			for(int i = 0; i < solution_x_continuation_deflation[curr_j].num_elements(); i++)
+			for(int i = 0; i < sol_x_cont_defl[curr_j].num_elements(); i++)
 			{
-				guess_x[i] += solution_x_continuation_deflation[curr_j][flipperMap[i]];
-				guess_y[i] -= solution_y_continuation_deflation[curr_j][flipperMap[i]];
+				guess_x[i] += sol_x_cont_defl[curr_j][flipperMap[i]];
+				guess_y[i] -= sol_y_cont_defl[curr_j][flipperMap[i]];
 			}   
 			
 			//check
@@ -2952,12 +2955,12 @@ namespace Nektar
 			{
 				norm = 0;
 				int curr_k = local_indices_to_be_continued[k];
-				for(int l = 0; l < solution_x_continuation_deflation[curr_k].num_elements(); l++)
+				for(int l = 0; l < sol_x_cont_defl[curr_k].num_elements(); l++)
 				{
-					norm += (guess_x[l]-solution_x_continuation_deflation[curr_k][l]) * (guess_x[l]-solution_x_continuation_deflation[curr_k][l]);
-					norm += (guess_y[l]-solution_y_continuation_deflation[curr_k][l]) * (guess_y[l]-solution_y_continuation_deflation[curr_k][l]);
+					norm += (guess_x[l]-sol_x_cont_defl[curr_k][l]) * (guess_x[l]-sol_x_cont_defl[curr_k][l]);
+					norm += (guess_y[l]-sol_y_cont_defl[curr_k][l]) * (guess_y[l]-sol_y_cont_defl[curr_k][l]);
 				}  
-				norm = sqrt(norm)/(2*solution_x_continuation_deflation[curr_k].num_elements());
+				norm = sqrt(norm)/(2*sol_x_cont_defl[curr_k].num_elements());
 				cout<<"The norm of the difference between the solution "<<j<<" flipped and the solution "<<k<<" is "<<norm<<endl;
 				if(norm < 1e-5)
 					possible = false;

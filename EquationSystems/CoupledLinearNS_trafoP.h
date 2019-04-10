@@ -146,9 +146,9 @@ namespace Nektar
 	//flip each solutions and try to obtain new solutions but different from the previous ones
 	Array<OneD, Array<OneD, NekDouble> > FlipAndCheck(std::vector<int> &flipperMap, int *flipCounter);
 	
-	bool use_deflation, converged, deflate;
-	int number_of_deflations, total_solutions_found, different_solutions_found;
-	Array<OneD, Array<OneD, NekDouble> > solution_x_continuation_deflation, solution_y_continuation_deflation;
+	bool converged, deflate;
+	int number_of_deflations, use_deflation, total_solutions_found, different_solutions_found;
+	Array<OneD, Array<OneD, NekDouble> > sol_x_cont_defl, sol_y_cont_defl;
 	//Array<OneD, Array<OneD, NekDouble> > solution_pres_continuation_deflation;
 	std::vector<int> local_indices_to_be_continued;
 	

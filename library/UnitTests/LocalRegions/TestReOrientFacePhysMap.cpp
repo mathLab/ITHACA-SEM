@@ -112,21 +112,7 @@ namespace Nektar
             BOOST_CHECK_EQUAL(idmap[7], 5);
             BOOST_CHECK_EQUAL(idmap[8], 8);
 
-            // not sure if the function might be wrong, it is not passing
             orient = StdRegions::eDir1FwdDir2_Dir2BwdDir1;
-            exp3d->ReOrientFacePhysMap(nvert, orient, nq0, nq1, idmap);
-            BOOST_CHECK_EQUAL(idmap[0], 6);
-            BOOST_CHECK_EQUAL(idmap[1], 3);
-            BOOST_CHECK_EQUAL(idmap[2], 0);
-            BOOST_CHECK_EQUAL(idmap[3], 7);
-            BOOST_CHECK_EQUAL(idmap[4], 4);
-            BOOST_CHECK_EQUAL(idmap[5], 1);
-            BOOST_CHECK_EQUAL(idmap[6], 8);
-            BOOST_CHECK_EQUAL(idmap[7], 5);
-            BOOST_CHECK_EQUAL(idmap[8], 2);
-
-            // not sure if the function might be wrong, it is not passing
-            orient = StdRegions::eDir1BwdDir2_Dir2FwdDir1;
             exp3d->ReOrientFacePhysMap(nvert, orient, nq0, nq1, idmap);
             BOOST_CHECK_EQUAL(idmap[0], 2);
             BOOST_CHECK_EQUAL(idmap[1], 5);
@@ -137,6 +123,18 @@ namespace Nektar
             BOOST_CHECK_EQUAL(idmap[6], 0);
             BOOST_CHECK_EQUAL(idmap[7], 3);
             BOOST_CHECK_EQUAL(idmap[8], 6);
+
+            orient = StdRegions::eDir1BwdDir2_Dir2FwdDir1;
+            exp3d->ReOrientFacePhysMap(nvert, orient, nq0, nq1, idmap);
+            BOOST_CHECK_EQUAL(idmap[0], 6);
+            BOOST_CHECK_EQUAL(idmap[1], 3);
+            BOOST_CHECK_EQUAL(idmap[2], 0);
+            BOOST_CHECK_EQUAL(idmap[3], 7);
+            BOOST_CHECK_EQUAL(idmap[4], 4);
+            BOOST_CHECK_EQUAL(idmap[5], 1);
+            BOOST_CHECK_EQUAL(idmap[6], 8);
+            BOOST_CHECK_EQUAL(idmap[7], 5);
+            BOOST_CHECK_EQUAL(idmap[8], 2);
 
             orient = StdRegions::eDir1BwdDir2_Dir2BwdDir1;
             exp3d->ReOrientFacePhysMap(nvert, orient, nq0, nq1, idmap);

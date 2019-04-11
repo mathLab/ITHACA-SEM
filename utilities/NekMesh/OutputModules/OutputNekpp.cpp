@@ -44,10 +44,11 @@ using namespace std;
 namespace io = boost::iostreams;
 
 #include <tinyxml.h>
+#include <LibUtilities/Interpreter/AnalyticExpressionEvaluator.hpp>
 #include <SpatialDomains/MeshGraph.h>
 #include <SpatialDomains/PointGeom.h>
-
 #include <NekMeshUtils/MeshElements/Element.h>
+
 #include "OutputNekpp.h"
 
 using namespace Nektar::NekMeshUtils;
@@ -71,17 +72,23 @@ OutputNekpp::OutputNekpp(MeshSharedPtr m) : OutputModule(m)
 {
     m_config["test"] = ConfigOption(
         true, "0", "Attempt to load resulting mesh and create meshgraph.");
+    m_config["stats"] = ConfigOption(
+        true, "0", "Print out basic mesh statistics.");
     m_config["uncompress"] = ConfigOption(true, "0", "Uncompress xml sections");
     m_config["order"] = ConfigOption(false, "-1", "Enforce a polynomial order");
+    m_config["testcond"] = ConfigOption(
+        false, "", "Test a condition.");
 }
 
 OutputNekpp::~OutputNekpp()
 {
 }
 
-template <typename T> void TestElmts(
-    const std::map<int, std::shared_ptr<T> > &geomMap,
-    SpatialDomains::MeshGraphSharedPtr       &graph)
+template <typename T> bool TestElmts(
+    const std::map<int, std::shared_ptr<T> >  &geomMap,
+    SpatialDomains::MeshGraphSharedPtr        &graph,
+    LibUtilities::AnalyticExpressionEvaluator &strEval,
+    int                                        exprId)
 {
     SpatialDomains::CurveMap &curvedEdges = graph->GetCurvedEdges();
     SpatialDomains::CurveMap &curvedFaces = graph->GetCurvedFaces();
@@ -91,7 +98,36 @@ template <typename T> void TestElmts(
         SpatialDomains::GeometrySharedPtr geom = geomIt.second;
         geom->FillGeom();
         geom->Reset(curvedEdges, curvedFaces);
+
+        if (exprId != -1)
+        {
+            int nq = geom->GetXmap()->GetTotPoints();
+            Array<OneD, Array<OneD, NekDouble>> coords(3);
+
+            for (int i = 0; i < 3; ++i)
+            {
+                coords[i] = Array<OneD, NekDouble>(nq, 0.0);
+            }
+
+            for (int i = 0; i < geom->GetCoordim(); ++i)
+            {
+                geom->GetXmap()->BwdTrans(geom->GetCoeffs(i), coords[i]);
+            }
+
+            for (int i = 0; i < nq; ++i)
+            {
+                NekDouble output = strEval.Evaluate(
+                    exprId, coords[0][i], coords[1][i], coords[2][i], 0.0);
+
+                if (output == 0.0)
+                {
+                    return false;
+                }
+            }
+        }
     }
+
+    return true;
 }
 
 void OutputNekpp::Process()
@@ -110,6 +146,11 @@ void OutputNekpp::Process()
 
     string file = m_config["outfile"].as<string>();
     string ext = boost::filesystem::extension(file);
+
+    if (m_config["stats"].beenSet)
+    {
+        m_mesh->PrintStats(std::cout);
+    }
 
     // Default to compressed XML output.
     std::string type = "XmlCompressed";
@@ -149,6 +190,16 @@ void OutputNekpp::Process()
     // each element is valid.
     if (m_config["test"].beenSet)
     {
+        // Create an equation based on the test condition. Should evaluate to 1
+        // or 0 using boolean logic.
+        string testcond = m_config["testcond"].as<string>();
+        int exprId = -1;
+
+        if (testcond.length() > 0)
+        {
+            exprId = m_strEval.DefineFunction("x y z", testcond);
+        }
+
         vector<string> filenames(1);
 
         if (type == "HDF5")
@@ -169,13 +220,17 @@ void OutputNekpp::Process()
         SpatialDomains::MeshGraphSharedPtr graph =
             SpatialDomains::MeshGraph::Read(vSession);
 
-        TestElmts(graph->GetAllSegGeoms(), graph);
-        TestElmts(graph->GetAllTriGeoms(), graph);
-        TestElmts(graph->GetAllQuadGeoms(), graph);
-        TestElmts(graph->GetAllTetGeoms(), graph);
-        TestElmts(graph->GetAllPrismGeoms(), graph);
-        TestElmts(graph->GetAllPyrGeoms(), graph);
-        TestElmts(graph->GetAllHexGeoms(), graph);
+        bool s = false;
+
+        s = TestElmts(graph->GetAllSegGeoms(),   graph, m_strEval, exprId);
+        s = TestElmts(graph->GetAllTriGeoms(),   graph, m_strEval, exprId);
+        s = TestElmts(graph->GetAllQuadGeoms(),  graph, m_strEval, exprId);
+        s = TestElmts(graph->GetAllTetGeoms(),   graph, m_strEval, exprId);
+        s = TestElmts(graph->GetAllPrismGeoms(), graph, m_strEval, exprId);
+        s = TestElmts(graph->GetAllPyrGeoms(),   graph, m_strEval, exprId);
+        s = TestElmts(graph->GetAllHexGeoms(),   graph, m_strEval, exprId);
+
+        std::cout << "GOT " << s << std::endl;
     }
 }
 

@@ -54,7 +54,7 @@ v5.0.0
 - Fix ability to have periodic boundary conditions that are aligned by a
   rotation rather than just a translation (!933)
 - Added a coupling interface to exchange data between solvers at run time
-  and a DummySolver to test the implementations (!853, !931 !973)
+  and a DummySolver to test the implementations (!853, !931, !950, !973)
 - Fix compilation issue with newer Boost versions and clang (!940)
 - If only `NEKTAR_BUILD_LIBRARY` is enabled, only libraries up to and including
   `MultiRegions` will be built by default (!945)
@@ -123,6 +123,7 @@ v5.0.0
 - Fixed wss module for compressible flows (!958)
 - Made Sutherland's law non-dimensional (!972)
 - Add module for removing fields from .fld files (!978)
+- Fixed nparts option in FieldConvert and automated Info.xml generation (!995)
 - Added if statement to fix case of 1D/2D manifold interpolation in 1D/2D space,
   added check on dimensions for interpolation, fixed seg interp (!999)
 

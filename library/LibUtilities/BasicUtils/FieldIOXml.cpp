@@ -794,7 +794,6 @@ void FieldIOXml::ImportFieldDefs(
     while (loopXml)
     {
         TiXmlElement *element = loopXml->FirstChildElement("ELEMENTS");
-        ASSERTL0(element, "Unable to find ELEMENTS tag within nektar tag.");
 
         while (element)
         {

@@ -195,7 +195,19 @@ int main(int argc, char *argv[])
 
             fs::path source = specPath / source_file;
             fs::path dest   = tmpDir   / source_file.filename();
-            fs::copy_file(source, dest);
+            fs::copy(source, dest);
+
+            // If source is a directory, then only directory name is
+            // created, so call copy again to copy files.
+            if (fs::is_directory(source))
+            {
+                for (const auto& dirEnt :
+                         fs::recursive_directory_iterator{source})
+                {
+                    fs::path newdest = dest / dirEnt.path().filename();
+                    fs::copy(dirEnt.path(), newdest);
+                }
+            }
         }
 
         // If we're Python, copy script too.

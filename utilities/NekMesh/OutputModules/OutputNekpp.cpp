@@ -84,24 +84,23 @@ OutputNekpp::~OutputNekpp()
 {
 }
 
-template <typename T> bool TestElmts(
+template <typename T> void TestElmts(
     const std::map<int, std::shared_ptr<T> >  &geomMap,
     SpatialDomains::MeshGraphSharedPtr        &graph,
     LibUtilities::AnalyticExpressionEvaluator &strEval,
     int                                        exprId)
 {
-    SpatialDomains::CurveMap &curvedEdges = graph->GetCurvedEdges();
-    SpatialDomains::CurveMap &curvedFaces = graph->GetCurvedFaces();
-
     for (auto &geomIt : geomMap)
     {
         SpatialDomains::GeometrySharedPtr geom = geomIt.second;
+        geom->Setup();
         geom->FillGeom();
-        geom->Reset(curvedEdges, curvedFaces);
 
         if (exprId != -1)
         {
             int nq = geom->GetXmap()->GetTotPoints();
+            int dim = geom->GetCoordim();
+
             Array<OneD, Array<OneD, NekDouble>> coords(3);
 
             for (int i = 0; i < 3; ++i)
@@ -109,7 +108,7 @@ template <typename T> bool TestElmts(
                 coords[i] = Array<OneD, NekDouble>(nq, 0.0);
             }
 
-            for (int i = 0; i < geom->GetCoordim(); ++i)
+            for (int i = 0; i < dim; ++i)
             {
                 geom->GetXmap()->BwdTrans(geom->GetCoeffs(i), coords[i]);
             }
@@ -118,16 +117,23 @@ template <typename T> bool TestElmts(
             {
                 NekDouble output = strEval.Evaluate(
                     exprId, coords[0][i], coords[1][i], coords[2][i], 0.0);
-
-                if (output == 0.0)
-                {
-                    return false;
-                }
+                ASSERTL0(output == 1.0, "Output mesh failed coordinate test");
             }
+
+            // Also evaluate at mid-point to test for deformed vs. regular
+            // elements.
+            Array<OneD, NekDouble> eta(dim, 0.0), evalPt(3, 0.0);
+            for (int i = 0; i < dim; ++i)
+            {
+                evalPt[i] = geom->GetXmap()->PhysEvaluate(eta, coords[i]);
+            }
+
+            NekDouble output = strEval.Evaluate(
+                exprId, evalPt[0], evalPt[1], evalPt[2], 0.0);
+            ASSERTL0(output == 1.0,
+                     "Output mesh failed coordinate midpoint test");
         }
     }
-
-    return true;
 }
 
 void OutputNekpp::Process()
@@ -220,17 +226,13 @@ void OutputNekpp::Process()
         SpatialDomains::MeshGraphSharedPtr graph =
             SpatialDomains::MeshGraph::Read(vSession);
 
-        bool s = false;
-
-        s = TestElmts(graph->GetAllSegGeoms(),   graph, m_strEval, exprId);
-        s = TestElmts(graph->GetAllTriGeoms(),   graph, m_strEval, exprId);
-        s = TestElmts(graph->GetAllQuadGeoms(),  graph, m_strEval, exprId);
-        s = TestElmts(graph->GetAllTetGeoms(),   graph, m_strEval, exprId);
-        s = TestElmts(graph->GetAllPrismGeoms(), graph, m_strEval, exprId);
-        s = TestElmts(graph->GetAllPyrGeoms(),   graph, m_strEval, exprId);
-        s = TestElmts(graph->GetAllHexGeoms(),   graph, m_strEval, exprId);
-
-        std::cout << "GOT " << s << std::endl;
+        TestElmts(graph->GetAllSegGeoms(),   graph, m_strEval, exprId);
+        TestElmts(graph->GetAllTriGeoms(),   graph, m_strEval, exprId);
+        TestElmts(graph->GetAllQuadGeoms(),  graph, m_strEval, exprId);
+        TestElmts(graph->GetAllTetGeoms(),   graph, m_strEval, exprId);
+        TestElmts(graph->GetAllPrismGeoms(), graph, m_strEval, exprId);
+        TestElmts(graph->GetAllPyrGeoms(),   graph, m_strEval, exprId);
+        TestElmts(graph->GetAllHexGeoms(),   graph, m_strEval, exprId);
     }
 }
 
@@ -468,7 +470,7 @@ void OutputNekpp::TransferCurves(MeshGraphSharedPtr graph)
             ElementSharedPtr el = m_mesh->m_element[1][e];
             vector<NodeSharedPtr> ns;
             el->GetCurvedNodes(ns);
-            if(ns.size() > 0)
+            if(ns.size() > 2)
             {
                 CurveSharedPtr curve = MemoryManager<Curve>::AllocateSharedPtr(
                     el->GetId(), el->GetCurveType());

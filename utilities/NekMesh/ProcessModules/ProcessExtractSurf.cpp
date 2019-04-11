@@ -158,11 +158,6 @@ void ProcessExtractSurf::Process()
         if (e)
         {
             elmt->SetId(e->m_id);
-            if (e->m_edgeNodes.size() > 0)
-            {
-                //elmt->SetVolumeNodes(e->m_edgeNodes);
-                //elmt->SetCurveType(e->m_curveType);
-            }
         }
         else if (f)
         {

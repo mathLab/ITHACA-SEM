@@ -1037,7 +1037,7 @@ namespace Nektar
         for(int i=0;i<nTracePts;i++)
         {
             tmpMat = MemoryManager<DNekMat>
-                    ::AllocateSharedPtr(nvariables, nDeriv);
+                    ::AllocateSharedPtr(nvariables, nDeriv,0.0);
             DerivJac->SetBlock(i,i,tmpMat);
         }
 
@@ -1055,13 +1055,17 @@ namespace Nektar
         {}
         else
         {
-            TraceJacDerivSign = Array<OneD, Array<OneD, NekDouble> >(2);
-            TraceJacDerivSign[0]    =  Array<OneD, NekDouble> (nTracePts,-1.0); 
-            TraceJacDerivSign[1]    =  Array<OneD, NekDouble> (nTracePts,0.0); 
-            m_fields[0]->FillBwdWITHBoundDeriv(0,TraceJacDerivSign[0],TraceJacDerivSign[1]);
+            // TraceJacDerivSign = Array<OneD, Array<OneD, NekDouble> >(2);
+            // TraceJacDerivSign[0]    =  Array<OneD, NekDouble> (nTracePts,-1.0); 
+            // TraceJacDerivSign[1]    =  Array<OneD, NekDouble> (nTracePts,0.0); 
+            // m_fields[0]->FillBwdWITHBoundDeriv(0,TraceJacDerivSign[0],TraceJacDerivSign[1]);
 
-            Vmath::Vadd(nTracePts,TraceJacDerivSign[0],1,TraceJacDerivSign[1],1,TraceJacDerivSign[0],1);
-            Vmath::Ssub(nTracePts,-2.0,TraceJacDerivSign[0],1,TraceJacDerivSign[1],1);
+            // Vmath::Vadd(nTracePts,TraceJacDerivSign[0],1,TraceJacDerivSign[1],1,TraceJacDerivSign[0],1);
+            // Vmath::Ssub(nTracePts,-2.0,TraceJacDerivSign[0],1,TraceJacDerivSign[1],1);
+
+            TraceJacDerivSign = Array<OneD, Array<OneD, NekDouble> >(2);
+            TraceJacDerivSign[0]    =  Array<OneD, NekDouble> (nTracePts,1.0); 
+            TraceJacDerivSign[1]    =  Array<OneD, NekDouble> (nTracePts,1.0); 
         }
 #endif
     }

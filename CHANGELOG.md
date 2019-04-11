@@ -68,6 +68,7 @@ v5.0.0
 - Added path prefixes to find packaged Scotch (!979)
 - Add HDF5 geometry format (!977)
 - Combine and generalise demo code in StdRegions and LocalRegions (!993)
+- Fixed bug in ReOrientQuadFacePhysMap (!1003)
 
 **NekMesh**:
 - Add feature to read basic 2D geo files as CAD (!731)

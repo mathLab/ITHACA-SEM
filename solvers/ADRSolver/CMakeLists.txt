@@ -99,6 +99,9 @@ IF( NEKTAR_SOLVER_ADR )
     ADD_NEKTAR_TEST(Advection3D_m12_DG_prism_VarP)
     ADD_NEKTAR_TEST(Advection3D_m12_DG_tet)
     ADD_NEKTAR_TEST(Advection3D_m12_DG_tet_VarP)
+    # face rotation test
+    ADD_NEKTAR_TEST(Advection3D_DG_hex_faceRotation1122)
+    ADD_NEKTAR_TEST(Advection3D_DG_hex_faceRotation1221)
 
     # 1D inviscid Burger (DG/FR)
     ADD_NEKTAR_TEST(InviscidBurger1D_FRDG_GLL_LAGRANGE_SEM LENGTHY)

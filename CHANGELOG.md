@@ -102,6 +102,7 @@ v5.0.0
 - Enable use of distributed packages for triangle and TetGen (!953)
 - Fix issue with MLSC after Scotch conversion (!943)
 - Add support for Gmsh 4.0 mesh file format (!964)
+- Fix issue with extracting 1D curved surface from 2D file (!984)
 - Fix surface extraction, added regression test (!994)
 
 **FieldConvert**:

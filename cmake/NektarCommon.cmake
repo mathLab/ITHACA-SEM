@@ -279,8 +279,7 @@ MACRO(ADD_NEKPY_LIBRARY name)
     # Install __init__.py files.
     CONFIGURE_FILE(${CMAKE_SOURCE_DIR}/cmake/python/init.py.in
         ${CMAKE_BINARY_DIR}/NekPy/${name}/__init__.py)
-    SET_TARGET_PROPERTIES(_${name} PROPERTIES
-        LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/NekPy/${name})
+    INSTALL(TARGETS _${name} DESTINATION ${CMAKE_BINARY_DIR}/NekPy/${name})
 ENDMACRO()
 
 MACRO(ADD_NEKPY_EXECUTABLE name source)

@@ -55,9 +55,10 @@ int main(int argc, char *argv[])
     // with missing file.
     try
     {
-        char const *fake_argv[2] = {"ErrorStream", "missing.xml"};
+        char *fake_argv[3] = {
+            (char *)"ErrorStream", (char *)"missing.xml", NULL };
         LibUtilities::SessionReaderSharedPtr session =
-            LibUtilities::SessionReader::CreateInstance(2, &fake_argv[0]);
+            LibUtilities::SessionReader::CreateInstance(2, fake_argv);
         session->InitSession();
     }
     catch (const ErrorUtil::NekError &e)

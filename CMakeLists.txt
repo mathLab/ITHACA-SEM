@@ -102,17 +102,18 @@ INCLUDE(GetGitRevisionDescription)
 get_git_head_revision(GIT_REFSPEC GIT_SHA1)
 
 # Set library, binary, include, share and doc paths.
-SET(LIB_DIR "lib/nektar++-${NEKTAR_VERSION}")
+SET(LIB_DIR "lib/nektar++")
 IF( CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64" AND NOT APPLE )
-    SET(LIB_DIR "lib64/nektar++-${NEKTAR_VERSION}")
+    SET(LIB_DIR "lib64/nektar++")
 ENDIF()
 SET(CMAKE_INCLUDE_SYSTEM_FLAG_CXX "-isystem ")
 
 SET(NEKTAR_BIN_DIR bin)
 SET(NEKTAR_LIB_DIR ${LIB_DIR})
-SET(NEKTAR_INCLUDE_DIR include/nektar++-${NEKTAR_VERSION})
-SET(NEKTAR_SHARE_DIR share/nektar++-${NEKTAR_VERSION})
-SET(NEKTAR_DOC_DIR share/doc/nektar++-${NEKTAR_VERSION})
+SET(NEKTAR_INCLUDE_DIR include/nektar++)
+SET(NEKTAR_SHARE_DIR share/nektar++)
+SET(NEKTAR_DOC_DIR share/doc/nektar++)
+SET(NEKTAR_CMAKE_DIR ${LIB_DIR}/cmake)
 
 # Build shared libraries.
 SET(NEKTAR_LIBRARY_TYPE "SHARED")
@@ -175,6 +176,12 @@ OPTION(NEKTAR_USE_THREAD_SAFETY
 MARK_AS_ADVANCED(NEKTAR_USE_THREAD_SAFETY)
 IF (NEKTAR_USE_THREAD_SAFETY)
     ADD_DEFINITIONS(-DNEKTAR_USE_THREAD_SAFETY)
+ENDIF()
+
+# Disable backups
+OPTION(NEKTAR_DISABLE_BACKUPS "Disable automatic backup file creation" OFF)
+IF (NEKTAR_DISABLE_BACKUPS)
+    ADD_DEFINITIONS(-DNEKTAR_DISABLE_BACKUPS)
 ENDIF()
 
 IF (MSVC)
@@ -281,7 +288,7 @@ IF (NEKTAR_BUILD_LIBRARY)
     SET(NEKTAR++_LIBRARIES "" CACHE INTERNAL "")
 
     ADD_SUBDIRECTORY(library)
-    INSTALL(EXPORT Nektar++Libraries DESTINATION ${LIB_DIR}/cmake COMPONENT dev)
+    INSTALL(EXPORT Nektar++Libraries DESTINATION ${NEKTAR_CMAKE_DIR} COMPONENT dev)
 ENDIF (NEKTAR_BUILD_LIBRARY)
 
 IF (NEKTAR_BUILD_TESTS)
@@ -309,7 +316,7 @@ CONFIGURE_FILE(${CMAKE_SOURCE_DIR}/cmake/Nektar++Config.cmake.in
 
 # Install Nektar++ CMake configuration file
 INSTALL(FILES ${CMAKE_BINARY_DIR}/Nektar++Config.cmake
-    DESTINATION ${NEKTAR_LIB_DIR}/cmake/
+    DESTINATION ${NEKTAR_CMAKE_DIR}
     COMPONENT dev)
 
 # Install ThirdParty headers to subdirectory of ${NEKTAR_INCLUDE_DIR}

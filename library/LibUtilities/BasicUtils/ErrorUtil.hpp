@@ -52,8 +52,9 @@
 namespace Nektar
 {
 
-struct ErrorUtil
+class ErrorUtil
 {
+public:
     class NekError : public std::runtime_error
     {
     public:
@@ -75,7 +76,7 @@ struct ErrorUtil
 
     inline static bool HasCustomErrorStream()
     {
-        return m_outStream == &std::cerr;
+        return m_outStream != &std::cerr;
     }
 
     inline static void Error(ErrType       type,
@@ -94,7 +95,7 @@ struct ErrorUtil
             " assertion violation\n";
 #if defined(NEKTAR_DEBUG) || defined(NEKTAR_FULLDEBUG)
         baseMsg += "Where   : " + std::string(routine) + "[" +
-            std::to_string(lineNumber) + "]\n";
+            std::to_string(lineNumber) + "]\n Message : ";
 #endif
         baseMsg += std::string(msg);
 

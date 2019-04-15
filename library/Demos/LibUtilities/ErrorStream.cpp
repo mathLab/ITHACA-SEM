@@ -55,16 +55,9 @@ int main(int argc, char *argv[])
     // with missing file.
     try
     {
-        std::vector<std::string> arguments = {"ErrorStream", "missing.xml"};
-        std::vector<char*> argv;
-        for (const auto& arg : arguments)
-        {
-            argv.push_back((char*)arg.data());
-        }
-        argv.push_back(nullptr);
-
+        char const *fake_argv[2] = {"ErrorStream", "missing.xml"};
         LibUtilities::SessionReaderSharedPtr session =
-            LibUtilities::SessionReader::CreateInstance(2, &argv[0]);
+            LibUtilities::SessionReader::CreateInstance(2, &fake_argv[0]);
         session->InitSession();
     }
     catch (const ErrorUtil::NekError &e)

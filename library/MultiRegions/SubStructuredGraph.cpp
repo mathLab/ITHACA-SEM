@@ -40,7 +40,6 @@
 #include <iostream>
 #include <iomanip>
 #include <algorithm>
-#include <boost/lexical_cast.hpp>
 #include <boost/config.hpp>
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/cuthill_mckee_ordering.hpp>
@@ -838,7 +837,7 @@ namespace Nektar
                 boost::replace_all(strat_str, "<BBAL>", "0.1");
                 boost::replace_all(
                     strat_str, "<TSTS>",
-                    "vert>"+boost::lexical_cast<std::string>(mdswitch));
+                    "vert>"+std::to_string(mdswitch));
 
                 // Set up the re-ordering strategy.
                 SCOTCH_Strat strat;
@@ -931,7 +930,7 @@ namespace Nektar
                 for (i = 0; i < nGraphVerts; ++i)
                 {
                     ASSERTL1(perm[iperm[i]] == i, "Perm error "
-                             + boost::lexical_cast<std::string>(i));
+                             + std::to_string(i));
                 }
 
                 // If we were passed a graph with disconnected regions, we need

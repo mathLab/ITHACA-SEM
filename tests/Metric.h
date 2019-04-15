@@ -40,15 +40,8 @@
 #include <string>
 #include <map>
 #include <boost/filesystem.hpp>
-#include <exception>
 
-struct TesterException : public std::runtime_error
-{
-    TesterException(const std::string &msg) : std::runtime_error(msg) {}
-};
-
-#define ASSERTL0(condition, msg) \
-    if (!(condition)) { throw TesterException(msg); }
+#include <TestException.hpp>
 
 namespace fs = boost::filesystem;
 
@@ -56,7 +49,6 @@ std::string PortablePath(const boost::filesystem::path& path);
 
 namespace Nektar
 {
-
     /**
      * @brief Check to see whether the given string @p s is empty (or null).
      */
@@ -88,7 +80,7 @@ namespace Nektar
         {
             return m_id;
         }
-        
+
     protected:
         /// Stores the ID of this metric.
         int m_id;
@@ -110,8 +102,9 @@ namespace Nektar
 
     /// Datatype of the NekFactory used to instantiate classes derived from the
     /// Advection class.
-    struct MetricFactory
+    class MetricFactory
     {
+    public:
         typedef MetricSharedPtr (*CreatorFunction)(TiXmlElement *, bool);
 
         std::string RegisterCreatorFunction(std::string key, CreatorFunction func)
@@ -132,6 +125,5 @@ namespace Nektar
 
     MetricFactory& GetMetricFactory();
 }
-
 
 #endif

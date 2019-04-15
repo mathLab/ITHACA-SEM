@@ -37,8 +37,7 @@
 #include <boost/algorithm/string.hpp>
 
 #include <TestData.h>
-
-#define ASSERTL0(condition,msg)
+#include <TestException.hpp>
 
 using namespace std;
 

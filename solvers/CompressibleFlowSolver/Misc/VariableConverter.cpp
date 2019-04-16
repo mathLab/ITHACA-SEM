@@ -72,7 +72,7 @@ VariableConverter::~VariableConverter()
 
 /**
  * @brief Compute the specific internal energy
- *        \f$ e = (E - rho*V^2/2)/rho \$.
+ *        \f$ e = (E - rho*V^2/2)/rho \f$.
  */
 void VariableConverter::GetInternalEnergy(
     const Array<OneD, const Array<OneD, NekDouble>> &physfield,
@@ -98,7 +98,7 @@ void VariableConverter::GetInternalEnergy(
 }
 
 /**
- * @brief Compute the specific enthalpy \f$ h = e + p/rho \$.
+ * @brief Compute the specific enthalpy \f$ h = e + p/rho \f$.
  */
 void VariableConverter::GetEnthalpy(
     const Array<OneD, const Array<OneD, NekDouble>> &physfield,
@@ -344,7 +344,7 @@ void VariableConverter::GetTemperature(
 }
 
 /**
- * @brief Compute the sound speed \f$ using the equation of state.
+ * @brief Compute the sound speed using the equation of state.
  *
  * @param physfield    Input physical field
  * @param soundspeed   The resulting sound speed \f$ c \f$.
@@ -365,7 +365,7 @@ void VariableConverter::GetSoundSpeed(
 }
 
 /**
- * @brief Compute the entropy \f$ using the equation of state.
+ * @brief Compute the entropy using the equation of state.
  *
  * @param physfield    Input physical field
  * @param soundspeed   The resulting sound speed \f$ c \f$.
@@ -386,7 +386,7 @@ void VariableConverter::GetEntropy(
 }
 
 /**
- * @brief Compute e(rho,p) \f$ using the equation of state.
+ * @brief Compute \f$ e(rho,p) \f$ using the equation of state.
  *
  * @param rho          Input density
  * @param pressure     Input pressure
@@ -405,7 +405,7 @@ void VariableConverter::GetEFromRhoP(const Array<OneD, NekDouble> &rho,
 }
 
 /**
- * @brief Compute rho(p,T) \f$ using the equation of state.
+ * @brief Compute \f$ rho(p,T) \f$ using the equation of state.
  *
  * @param pressure     Input pressure
  * @param temperature  Input temperature

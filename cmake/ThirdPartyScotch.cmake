@@ -60,9 +60,12 @@ IF (NEKTAR_USE_SCOTCH)
             SET(SCOTCH_LDFLAGS "-lz -lm -lrt -lpthread")
         ENDIF ()
         
+        # Determine the build target and compiler to use for scotch.
+        # We use the normal C compiler by default. If MPI is being used and is
+        # not built into the normal compiler, we use the MPI-specified compiler.
         SET(SCOTCH_BUILD_TARGET "scotch")
         SET(SCOTCH_C_COMPILER ${CMAKE_C_COMPILER})
-        IF (NEKTAR_USE_MPI)
+        IF (NEKTAR_USE_MPI AND NOT MPI_BUILTIN)
             SET(SCOTCH_BUILD_TARGET "ptscotch")
             SET(SCOTCH_C_COMPILER ${MPI_C_COMPILER})
         ENDIF ()

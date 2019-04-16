@@ -153,7 +153,7 @@ v5.0.0
 - Added two new boundary conditions: AInflow and UInflow
 
 **Documentation**:
-- Added the developer-guide repository as a submodule (!751)
+- Added an initial developer's guide (!1001)
 
 **Tester**
 - Fix build with boost 1.67 (!947)

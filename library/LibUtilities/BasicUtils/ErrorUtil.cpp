@@ -40,5 +40,6 @@ namespace Nektar {
 
 // Defines default outstream in library.
 std::ostream *ErrorUtil::m_outStream = &std::cerr;
+bool          ErrorUtil::m_printBacktrace = true;
 
 }

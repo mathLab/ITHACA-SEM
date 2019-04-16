@@ -46,6 +46,7 @@ int main(int argc, char *argv[])
     // Set up a stringstream to catch any error output.
     std::stringstream ss;
     ErrorUtil::SetErrorStream(ss);
+    ErrorUtil::SetPrintBacktrace(false);
 
     // Set up output that will be overwritten with exception error (any
     // non-empty string).

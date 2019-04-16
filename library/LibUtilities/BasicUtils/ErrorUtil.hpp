@@ -74,6 +74,11 @@ public:
         m_outStream = &o;
     }
 
+    inline static void SetPrintBacktrace(bool b)
+    {
+        m_printBacktrace = b;
+    }
+
     inline static bool HasCustomErrorStream()
     {
         return m_outStream != &std::cerr;
@@ -117,18 +122,21 @@ public:
         std::string btMessage("");
 #if defined(NEKTAR_FULLDEBUG)
 #ifndef _WIN32
-        void *btArray[40];
-        int btSize;
-        char **btStrings;
-
-        btSize = backtrace(btArray, 40);
-        btStrings = backtrace_symbols(btArray, btSize);
-
-        for (int i = 0 ; i < btSize ; ++i)
+        if (m_printBacktrace)
         {
-            btMessage +=  std::string(btStrings[i]) + "\n";
+            void *btArray[40];
+            int btSize;
+            char **btStrings;
+
+            btSize = backtrace(btArray, 40);
+            btStrings = backtrace_symbols(btArray, btSize);
+
+            for (int i = 0 ; i < btSize ; ++i)
+            {
+                btMessage +=  std::string(btStrings[i]) + "\n";
+            }
+            free(btStrings);
         }
-        free(btStrings);
 #endif
 #endif
 
@@ -137,7 +145,10 @@ public:
         case efatal:
             if (!rank)
             {
-                (*m_outStream) << btMessage;
+                if (m_printBacktrace)
+                {
+                    (*m_outStream) << btMessage;
+                }
                 (*m_outStream) << "Fatal   : " << baseMsg << std::endl;
             }
 
@@ -155,7 +166,10 @@ public:
         case ewarning:
             if (!rank)
             {
-                (*m_outStream) << btMessage;
+                if (m_printBacktrace)
+                {
+                    (*m_outStream) << btMessage;
+                }
                 (*m_outStream) << "Warning: " << baseMsg << std::endl;
             }
             break;
@@ -176,6 +190,7 @@ public:
 
 private:
     LIB_UTILITIES_EXPORT static std::ostream *m_outStream;
+    LIB_UTILITIES_EXPORT static bool          m_printBacktrace;
 };
 
 /// Assert Level 0 -- Fundamental assert which

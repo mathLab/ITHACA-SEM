@@ -31,10 +31,14 @@ IF (NEKTAR_BUILD_DOC)
         DESTINATION ${NEKTAR_DOC_DIR})
 
     CONFIGURE_FILE(${CMAKE_SOURCE_DIR}/docs/doxygen/Doxyfile.in     
-                   ${PROJECT_BINARY_DIR}/Doxyfile @ONLY IMMEDIATE)
+                   ${PROJECT_BINARY_DIR}/docs/doxygen/Doxyfile @ONLY IMMEDIATE)
+
     ADD_CUSTOM_TARGET(doc
-        COMMAND ${DOXYGEN_EXECUTABLE} ${PROJECT_BINARY_DIR}/Doxyfile
-        SOURCES ${PROJECT_BINARY_DIR}/Doxyfile)
+        COMMAND ${CMAKE_COMMAND} -E copy
+        ${CMAKE_SOURCE_DIR}/docs/doxygen/doxygen-fixed-width.css
+        ${PROJECT_BINARY_DIR}/docs/doxygen/doxygen-fixed-width.css
+        COMMAND ${DOXYGEN_EXECUTABLE} ${PROJECT_BINARY_DIR}/docs/doxygen/Doxyfile
+        SOURCES ${PROJECT_BINARY_DIR}/docs/doxygen/Doxyfile)
 
 ENDIF (NEKTAR_BUILD_DOC)
 

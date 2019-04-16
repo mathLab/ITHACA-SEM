@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File: Metric.cpp
+// File: Metric.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,54 +29,31 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Implementation of the metric base class.
+// Description: Definition of the metric base class.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <Metric.h>
-#include <boost/algorithm/string.hpp>
+#ifndef NEKTAR_TESTS_TESTEXCEPTION_H
+#define NEKTAR_TESTS_TESTEXCEPTION_H
 
-using namespace std;
+#include <exception>
 
 namespace Nektar
 {
-    MetricFactory& GetMetricFactory()
-    {
-        static MetricFactory instance;
-        return instance;
-    }
-    
-    /**
-     * @brief Constructor.
-     */
-    Metric::Metric(TiXmlElement *metric, bool generate) :
-        m_generate(generate), m_metric(metric)
-    {
-        if (!metric->Attribute("id"))
-        {
-            cerr << "Metric has no ID" << endl;
-        }
-        if (!metric->Attribute("type"))
-        {
-            cerr << "Metric has no type" << endl;
-        }
-        m_id = atoi(metric->Attribute("id"));
-        m_type = boost::to_upper_copy(string(metric->Attribute("type")));
-    }
 
-    /**
-     * @brief Test a line of output from an executible.
-     */
-    bool Metric::Test(std::istream& pStdout, std::istream& pStderr)
+/**
+ * @brief Subclass of std::runtime_error to handle exceptions raised by Tester.
+ */
+struct TesterException : public std::runtime_error
+{
+    TesterException(const std::string &msg) : std::runtime_error(msg)
     {
-        if (m_generate)
-        {
-            v_Generate(pStdout, pStderr);
-            return true;
-        }
-        else
-        {
-            return v_Test(pStdout, pStderr);
-        }
     }
+};
+
+#define ASSERTL0(condition, msg) \
+    if (!(condition)) { throw TesterException(msg); }
+
 }
+
+#endif

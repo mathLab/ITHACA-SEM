@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File: Metric.cpp
+// File ErrorUtil.cpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,54 +29,17 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Implementation of the metric base class.
+// Description: error related utilities
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <Metric.h>
-#include <boost/algorithm/string.hpp>
+#include <iostream>
+#include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 
-using namespace std;
+namespace Nektar {
 
-namespace Nektar
-{
-    MetricFactory& GetMetricFactory()
-    {
-        static MetricFactory instance;
-        return instance;
-    }
-    
-    /**
-     * @brief Constructor.
-     */
-    Metric::Metric(TiXmlElement *metric, bool generate) :
-        m_generate(generate), m_metric(metric)
-    {
-        if (!metric->Attribute("id"))
-        {
-            cerr << "Metric has no ID" << endl;
-        }
-        if (!metric->Attribute("type"))
-        {
-            cerr << "Metric has no type" << endl;
-        }
-        m_id = atoi(metric->Attribute("id"));
-        m_type = boost::to_upper_copy(string(metric->Attribute("type")));
-    }
+// Defines default outstream in library.
+std::ostream *ErrorUtil::m_outStream = &std::cerr;
+bool          ErrorUtil::m_printBacktrace = true;
 
-    /**
-     * @brief Test a line of output from an executible.
-     */
-    bool Metric::Test(std::istream& pStdout, std::istream& pStderr)
-    {
-        if (m_generate)
-        {
-            v_Generate(pStdout, pStderr);
-            return true;
-        }
-        else
-        {
-            return v_Test(pStdout, pStderr);
-        }
-    }
 }

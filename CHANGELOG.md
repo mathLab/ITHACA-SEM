@@ -68,6 +68,7 @@ v5.0.0
 - Added path prefixes to find packaged Scotch (!979)
 - Add HDF5 geometry format (!977)
 - Combine and generalise demo code in StdRegions and LocalRegions (!993)
+- Fix for error output to allow for custom error streams (!944)
 - Fixed bug in ReOrientQuadFacePhysMap (!1003)
 - Add NekPy Python interface (!962, !990, !989, !1004)
 

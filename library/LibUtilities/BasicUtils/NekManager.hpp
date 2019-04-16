@@ -40,6 +40,8 @@
 #include <memory>
 #include <functional>
 
+#include <boost/lexical_cast.hpp>
+
 #ifdef NEKTAR_USE_THREAD_SAFETY
 #include <boost/thread/shared_mutex.hpp>
 #include <boost/thread/locks.hpp>

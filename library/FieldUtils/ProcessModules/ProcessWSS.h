@@ -74,7 +74,8 @@ public:
     }
 
 protected:
-    void GetViscosity(NekDouble &kinvis, NekDouble &lambda);
+    void GetViscosity(const Array<OneD, MultiRegions::ExpListSharedPtr> exp,
+                      Array<OneD, NekDouble > &mu, NekDouble &lambda);
 
     void GetVelocity(const Array<OneD, MultiRegions::ExpListSharedPtr> exp,
                      Array<OneD, Array<OneD, NekDouble> > &vel);

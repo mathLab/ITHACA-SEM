@@ -249,3 +249,42 @@ MACRO(ADD_NEKTAR_TEST name)
             COMMAND Tester ${CMAKE_CURRENT_SOURCE_DIR}/Tests/${name}.tst)
     ENDIF()
 ENDMACRO(ADD_NEKTAR_TEST)
+
+#
+# ADD_NEKPY_LIBRARY(name SOURCES src1 src2 ...)
+#
+# Adds a new NekPy library with the given sources.
+#
+MACRO(ADD_NEKPY_LIBRARY name)
+    CMAKE_PARSE_ARGUMENTS(NEKPY "" "" "SOURCES" ${ARGN})
+    SET(NEKPY_NAME ${name})
+
+    # Create library.
+    ADD_LIBRARY(_${name} SHARED ${NEKPY_SOURCES})
+
+    # Python requires a .so extension, even on OS X.
+    SET_TARGET_PROPERTIES(_${name} PROPERTIES PREFIX "")
+    SET_TARGET_PROPERTIES(_${name} PROPERTIES SUFFIX ".so")
+
+    ADD_DEPENDENCIES(_${name} boost-numpy)
+
+    # Add target link libraries.
+    TARGET_LINK_LIBRARIES(_${name}
+        ${Boost_SYSTEM_LIBRARY}
+        ${BOOST_PYTHON_LIB}
+        ${BOOST_NUMPY_LIB}
+        ${PYTHON_LIBRARIES}
+        ${name})
+
+    # Install __init__.py files.
+    CONFIGURE_FILE(${CMAKE_SOURCE_DIR}/cmake/python/init.py.in
+        ${CMAKE_BINARY_DIR}/NekPy/${name}/__init__.py)
+    INSTALL(TARGETS _${name} DESTINATION ${CMAKE_BINARY_DIR}/NekPy/${name})
+ENDMACRO()
+
+MACRO(ADD_NEKPY_EXECUTABLE name source)
+    # Copy the files into binary directory.
+    INSTALL(FILES ${source} DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
+    FILE(COPY ${source} DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+    ADD_CUSTOM_TARGET(${name} SOURCES ${source})
+ENDMACRO()

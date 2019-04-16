@@ -35,16 +35,16 @@
 
 #include <boost/lexical_cast.hpp>
 #include <boost/algorithm/string.hpp>
-#include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 
 #include <TestData.h>
+#include <TestException.hpp>
 
 using namespace std;
 
 namespace Nektar
 {
     TestData::TestData(const fs::path& pFilename, po::variables_map& pVm)
-            : m_cmdoptions(pVm)
+            : m_cmdoptions(pVm), m_pythonTest(false)
     {
         // Process test file format.
         m_doc = new TiXmlDocument(pFilename.string().c_str());
@@ -86,6 +86,11 @@ namespace Nektar
     const unsigned int& TestData::GetNProcesses() const
     {
         return m_processes;
+    }
+
+    bool TestData::IsPythonTest() const
+    {
+        return m_pythonTest;
     }
 
     std::string TestData::GetMetricType(unsigned int pId) const
@@ -152,10 +157,16 @@ namespace Nektar
             tmp = testElement->FirstChildElement("executable");
             ASSERTL0(tmp, "Cannot find 'executable' for test.");
             m_executable = fs::path(tmp->GetText());
+
+            // Test to see if this test requires Python
+            std::string needsPython;
+            tmp->QueryStringAttribute("python", &needsPython);
+            m_pythonTest = needsPython == "true";
+
 #if defined(RELWITHDEBINFO)
-            m_executable += "-rg";
+            m_executable += m_pythonTest ? "" : "-rg";
 #elif !defined(NDEBUG)
-            m_executable += "-g";
+            m_executable += m_pythonTest ? "" : "-g";
 #endif
         }
 

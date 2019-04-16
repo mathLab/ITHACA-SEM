@@ -140,10 +140,13 @@ void CouplingCwipi::v_Init()
         "recvFieldNames", m_config["RECEIVEVARIABLES"].c_str());
     cwipi_add_local_string_control_parameter("sendFieldNames",
                                              m_config["SENDVARIABLES"].c_str());
-    m_recvTag =
-        boost::hash<std::string>()(m_couplingName + m_config["REMOTENAME"] +
-                                   m_config["LOCALNAME"]) %
-        INT_MAX;
+
+    // MPI_TAG_UB is guaranteed to be at least 32767, so we make
+    // sure m_recvTag < 32767. Only caveat: m_recvTag is not guaranteed to be
+    // unique.
+    m_recvTag = boost::hash<std::string>()(m_couplingName +
+                    m_config["REMOTENAME"] + m_config["LOCALNAME"]) % 32767;
+
     cwipi_add_local_int_control_parameter("receiveTag", m_recvTag);
 
     m_spacedim = m_evalField->GetGraph()->GetSpaceDimension();

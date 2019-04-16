@@ -65,7 +65,7 @@ v5.0.0
 - Fix integration weights on prisms and pyramids if not using the default
   integration rule (!998)
 - Fix missing ContainsPoint in Pyramid expansion (!1000)
-- Added path prefixes to find packaged Scotch (!979)
+- Added path prefixes to find packaged Scotch (!979, !1008)
 - Add HDF5 geometry format (!977)
 - Combine and generalise demo code in StdRegions and LocalRegions (!993)
 - Fix for error output to allow for custom error streams (!944)

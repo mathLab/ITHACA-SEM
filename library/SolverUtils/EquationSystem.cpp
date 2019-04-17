@@ -38,7 +38,6 @@
 
 #include <LocalRegions/MatrixKey.h>
 #include <LibUtilities/BasicUtils/Equation.h>
-#include <MultiRegions/ContField1D.h>
 #include <MultiRegions/ContField.h>
 #include <MultiRegions/ContField3DHomogeneous1D.h>
 #include <MultiRegions/ContField3DHomogeneous2D.h>
@@ -314,7 +313,7 @@ namespace Nektar
                             for (i = 0; i < m_fields.num_elements(); i++)
                             {
                                 m_fields[i] = MemoryManager
-                                <MultiRegions::ContField1D>::
+                                <MultiRegions::ContField>::
                                     AllocateSharedPtr(
                                         m_session, m_graph,
                                         m_session->GetVariable(i));

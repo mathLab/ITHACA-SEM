@@ -99,7 +99,7 @@ namespace Nektar
 
 
         /**
-         * Given a mesh \a graph2D, containing information about the domain and
+         * Given a mesh \a graph, containing information about the domain and
          * the spectral/hp element expansion, this constructor fills the list
          * of local expansions #m_exp with the proper expansions, calculates
          * the total number of quadrature points \f$\boldsymbol{x}_i\f$ and
@@ -113,7 +113,7 @@ namespace Nektar
          * bcs, by expressing them in terms of the coefficient of the expansion
          * on the boundary.
          *
-         * @param   graph2D     A mesh, containing information about the domain
+         * @param   graph       A mesh, containing information about the domain
          *                      and the spectral/hp element expansion.
          * @param   bcs         The boundary conditions.
          * @param   variable    An optional parameter to indicate for which
@@ -222,6 +222,25 @@ namespace Nektar
         {
         }
 
+        /**
+         * Constructs a continuous field as a copy of an existing
+         * explist  field and adding all the boundary conditions.
+         *
+         * @param In Existing explist1D field .
+         */
+         ContField::ContField
+         (const LibUtilities::SessionReaderSharedPtr &pSession,
+          const ExpList & In):
+             DisContField(In),
+             m_locToGloMap(),
+             m_globalLinSysManager
+                 (std::bind(&ContField::GenGlobalLinSys,
+                            this, std::placeholders::_1),
+                  std::string("GlobalLinSys"))
+         {
+             m_locToGloMap = MemoryManager<AssemblyMapCG>
+                 ::AllocateSharedPtr(pSession, m_ncoeffs, In);
+         }
 
         /**
          *

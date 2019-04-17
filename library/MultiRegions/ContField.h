@@ -83,6 +83,11 @@ namespace Nektar
             MULTI_REGIONS_EXPORT ContField
                 (const ContField &In, bool DeclareCoeffPhysArrays = true);
 
+            /// Copy constructor.
+            MULTI_REGIONS_EXPORT ContField
+                (const LibUtilities::SessionReaderSharedPtr &pSession,
+                 const ExpList & In);
+
             /// The default destructor.
             MULTI_REGIONS_EXPORT virtual ~ContField();
 

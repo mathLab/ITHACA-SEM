@@ -45,7 +45,6 @@
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <SpatialDomains/MeshGraph.h>
 
-#include <MultiRegions/ContField1D.h>
 #include <MultiRegions/ContField.h>
 #include <MultiRegions/ContField3DHomogeneous1D.h>
 #include <MultiRegions/ContField3DHomogeneous2D.h>
@@ -239,9 +238,10 @@ struct Field
 
                     if (m_declareExpansionAsContField)
                     {
-                        Exp1D = MemoryManager<MultiRegions::ContField1D>::
+                        Exp1D = MemoryManager<MultiRegions::ContField>::
                             AllocateSharedPtr(m_session, m_graph,
                                               m_session->GetVariable(0),
+                                              true,false,
                                               Collections::eNoCollection);
                     }
                     else if (m_declareExpansionAsDisContField)
@@ -523,11 +523,11 @@ struct Field
                 {
                     if (m_declareExpansionAsContField)
                     {
-                        MultiRegions::ContField1DSharedPtr tmp2 =
+                        MultiRegions::ContFieldSharedPtr tmp2 =
                             std::dynamic_pointer_cast<
-                                MultiRegions::ContField1D>(m_exp[0]);
+                                MultiRegions::ContField>(m_exp[0]);
 
-                        tmp = MemoryManager<MultiRegions::ContField1D>::
+                        tmp = MemoryManager<MultiRegions::ContField>::
                             AllocateSharedPtr(m_session, m_graph, var);
                     }
                     else if (m_declareExpansionAsDisContField)
@@ -740,7 +740,7 @@ struct Field
                 ASSERTL0(false, "Expansion dimension not recognised");
                 break;
         }
-
+        
         return tmp;
     }
 

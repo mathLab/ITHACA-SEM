@@ -13,11 +13,11 @@ FIND_PROGRAM(HTLATEX htlatex)
 MARK_AS_ADVANCED(HTLATEX)
 
 ADD_CUSTOM_TARGET(developer-guide-html
-    TEXINPUTS=${CMAKE_SOURCE_DIR}//:${DEVGUIDESRC}//:
+    TEXINPUTS=${CMAKE_SOURCE_DIR}:${DEVGUIDESRC}//:
     ${HTLATEX} ${DEVGUIDESRC}/developers-guide.tex 
     "${DEVGUIDESRC}/styling.cfg,html,3,next,NoFonts"
     COMMAND BIBINPUTS=${DEVGUIDESRC} ${BIBTEX} developers-guide.aux
-    COMMAND TEXINPUTS=${CMAKE_SOURCE_DIR}//:${DEVGUIDESRC}//:
+    COMMAND TEXINPUTS=${CMAKE_SOURCE_DIR}:${DEVGUIDESRC}//:
     ${HTLATEX} ${DEVGUIDESRC}/developers-guide.tex 
     "${DEVGUIDESRC}/styling.cfg,html,3,next,NoFonts"
     WORKING_DIRECTORY ${DEVGUIDE}/html

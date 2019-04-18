@@ -247,13 +247,14 @@ namespace SolverUtils
             const NekDouble &time)
     {
         int nq = m_Forcing[0].num_elements();
-        Array<OneD, NekDouble> tmp(nq, 0.0);
+        int ncoeff = outarray[m_NumVariable-1].num_elements();
+        Array<OneD, NekDouble> tmp(ncoeff, 0.0);
         CalculateForcing(fields,inarray,time);
 
         for (int i = 0; i < m_NumVariable; i++)
         {
             fields[i]->FwdTrans(m_Forcing[i],tmp);
-            Vmath::Vadd(nq, tmp, 1,
+            Vmath::Vadd(ncoeff, tmp, 1,
                         outarray[i], 1, outarray[i], 1);
         }
     }

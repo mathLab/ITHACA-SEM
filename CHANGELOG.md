@@ -58,6 +58,7 @@ v5.0.0
 - Fix compilation issue with newer Boost versions and clang (!940)
 - If only `NEKTAR_BUILD_LIBRARY` is enabled, only libraries up to and including
   `MultiRegions` will be built by default (!945)
+- Dont add doxygen documentation to the all target (!834)
 - Fix missing metadata import from Hdf5 files (!971)
 - Fix missing flags for periodic BC in DiffusionLDG (!985)
 - Add the moving reference frame as a forcing (!987)

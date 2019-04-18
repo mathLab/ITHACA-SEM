@@ -13,7 +13,7 @@ v5.0.0
 - Fix caching of FUNCTION tags that read from file and provide the same
   functionality in FUNCTIONs defined for forcings (!759)
 - Transition to C++11 (!795, !847)
-- Add patch to tinyxml to fix size_t vs int bug (!820)
+- Add patch to tinyxml to fix size_t vs int bug (!820, !1006)
 - Add ARPACK thirdparty build capabilities (!828)
 - Added native support for csv files in addititon to pts (!760, !835, !906)
 - Utilize LAPACK_DIR env variable to find the native blas/lapack install (!827)
@@ -54,10 +54,11 @@ v5.0.0
 - Fix ability to have periodic boundary conditions that are aligned by a
   rotation rather than just a translation (!933)
 - Added a coupling interface to exchange data between solvers at run time
-  and a DummySolver to test the implementations (!853, !931 !973)
+  and a DummySolver to test the implementations (!853, !931, !950, !973)
 - Fix compilation issue with newer Boost versions and clang (!940)
 - If only `NEKTAR_BUILD_LIBRARY` is enabled, only libraries up to and including
   `MultiRegions` will be built by default (!945)
+- Dont add doxygen documentation to the all target (!834)
 - Fix missing metadata import from Hdf5 files (!971)
 - Fix missing flags for periodic BC in DiffusionLDG (!985)
 - Add the moving reference frame as a forcing (!987)
@@ -65,6 +66,12 @@ v5.0.0
 - Fix integration weights on prisms and pyramids if not using the default
   integration rule (!998)
 - Fix missing ContainsPoint in Pyramid expansion (!1000)
+- Added path prefixes to find packaged Scotch (!979, !1008)
+- Add HDF5 geometry format (!977)
+- Combine and generalise demo code in StdRegions and LocalRegions (!993)
+- Fix for error output to allow for custom error streams (!944)
+- Fixed bug in ReOrientQuadFacePhysMap (!1003)
+- Add NekPy Python interface (!962, !990, !989, !1004)
 
 **NekMesh**:
 - Add feature to read basic 2D geo files as CAD (!731)
@@ -96,8 +103,10 @@ v5.0.0
 - Fix manifold face curvature nodes (!913)
 - Fix writing 1D surfaces (!930)
 - Fix surface string parsin in BL splitting (!937)
+- Enable use of distributed packages for triangle and TetGen (!953)
 - Fix issue with MLSC after Scotch conversion (!943)
 - Add support for Gmsh 4.0 mesh file format (!964)
+- Fix issue with extracting 1D curved surface from 2D file (!984)
 - Fix surface extraction, added regression test (!994)
 
 **FieldConvert**:
@@ -116,7 +125,9 @@ v5.0.0
 - Add module for evaluating the mean of variables on the domain (!894)
 - Add module for counting the total number of DOF (!948)
 - Fixed wss module for compressible flows (!958)
+- Made Sutherland's law non-dimensional (!972)
 - Add module for removing fields from .fld files (!978)
+- Fixed nparts option in FieldConvert and automated Info.xml generation (!995)
 - Added if statement to fix case of 1D/2D manifold interpolation in 1D/2D space,
   added check on dimensions for interpolation, fixed seg interp (!999)
 
@@ -135,6 +146,7 @@ v5.0.0
   seg, quad and hex elements (!771, !862)
 - Fix compressible solver with NUMMODES=1 (!868)
 - Introduce equations of state to account for real gas effects (!880)
+- Made Sutherland's law non-dimensional (!972)
 - Modified pressure outlet BCs to allow for the reference static pressure to be
   set from the VALUE fields (!981)
 

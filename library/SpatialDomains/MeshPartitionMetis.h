@@ -32,6 +32,7 @@
 // Description: Metis partitioner interface
 //
 ///////////////////////////////////////////////////////////////////////////////
+
 #ifndef NEKTAR_SPATIALDOMAINS_MESHPARTITIONMETIS_H
 #define NEKTAR_SPATIALDOMAINS_MESHPARTITIONMETIS_H
 
@@ -49,10 +50,12 @@ public:
     /// Creates an instance of this class
     static MeshPartitionSharedPtr create(
         const LibUtilities::SessionReaderSharedPtr session,
-        const MeshGraphSharedPtr meshGraph)
+        int                                        meshDim,
+        std::map<int, MeshEntity>                  element,
+        CompositeDescriptor                        compMap)
     {
         return MemoryManager<MeshPartitionMetis>::AllocateSharedPtr(
-            session, meshGraph);
+            session, meshDim, element, compMap);
     }
 
     /// Name of class
@@ -60,7 +63,9 @@ public:
     static std::string cmdSwitch;
 
     MeshPartitionMetis(const LibUtilities::SessionReaderSharedPtr session,
-                       const MeshGraphSharedPtr meshGraph);
+                       int                                        meshDim,
+                       std::map<int, MeshEntity>                  element,
+                       CompositeDescriptor                        compMap);
     virtual ~MeshPartitionMetis();
 
 private:

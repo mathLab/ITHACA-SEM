@@ -78,6 +78,8 @@ public:
     SPATIAL_DOMAINS_EXPORT int GetDir(const int faceidx,
                                       const int facedir) const;
 
+    SPATIAL_DOMAINS_EXPORT static const int kDim = 3;
+
 protected:
     PointGeomVector                      m_verts;
     SegGeomVector                        m_edges;

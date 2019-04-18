@@ -218,6 +218,9 @@ void OutputFileBase::Process(po::variables_map &vm)
                         PrintErrorFromExp();
                     }
                 }
+
+                // put outfile back to filename in case of nparts option
+                RegisterConfig("outfile", filename);
             }
             // Restore m_exp
             exp.swap(m_f->m_exp);

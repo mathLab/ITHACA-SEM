@@ -95,6 +95,7 @@ ADD_NEKTAR_TEST(Gmsh/CubePrism_4_0)
 ADD_NEKTAR_TEST(Gmsh/CubePrismLinear_4_0)
 ADD_NEKTAR_TEST(Gmsh/CubeTet_4_0)
 ADD_NEKTAR_TEST(Gmsh/CubeTetLinear_4_0)
+ADD_NEKTAR_TEST(Gmsh/SquareCirc_4_0)
 ADD_NEKTAR_TEST(Gmsh/SquareQuad_4_0)
 ADD_NEKTAR_TEST(Gmsh/SquareQuadLinear_4_0)
 ADD_NEKTAR_TEST(Gmsh/SquareTri_4_0)
@@ -125,6 +126,10 @@ IF(NEKTAR_USE_MESHGEN)
     IF(NEKTAR_USE_CCM)              
         ADD_NEKTAR_TEST(StarCCM/Ahmed_body)
     ENDIF() 
+ENDIF()
+
+IF (NEKTAR_USE_HDF5)
+    ADD_NEKTAR_TEST(Gmsh/CubeTet_4_0_hdf5)
 ENDIF()
 
 # varopti tests

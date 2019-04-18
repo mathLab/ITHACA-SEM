@@ -419,7 +419,7 @@ void MeshGraphXmlCompressed::ReadCurves()
             int idx = cpts.index[offset + j];
 
             PointGeomSharedPtr vert(MemoryManager<PointGeom>::AllocateSharedPtr(
-                m_meshDimension, edginfo[i].id, cpts.pts[idx].x,
+                m_spaceDimension, edginfo[i].id, cpts.pts[idx].x,
                 cpts.pts[idx].y, cpts.pts[idx].z));
             curve->m_points.push_back(vert);
         }
@@ -441,7 +441,7 @@ void MeshGraphXmlCompressed::ReadCurves()
             int idx = cpts.index[offset + j];
 
             PointGeomSharedPtr vert(MemoryManager<PointGeom>::AllocateSharedPtr(
-                m_meshDimension, facinfo[i].id, cpts.pts[idx].x,
+                m_spaceDimension, facinfo[i].id, cpts.pts[idx].x,
                 cpts.pts[idx].y, cpts.pts[idx].z));
             curve->m_points.push_back(vert);
         }
@@ -1006,7 +1006,9 @@ void MeshGraphXmlCompressed::WriteVertices(TiXmlElement *geomTag,
     {
         MeshVertex v;
         v.id = i.first;
-        i.second->GetCoords(v.x,v.y,v.z);
+        v.x = i.second->x();
+        v.y = i.second->y();
+        v.z = i.second->z();
         vertInfo.push_back(v);
     }
 
@@ -1323,7 +1325,9 @@ void MeshGraphXmlCompressed::WriteCurves(TiXmlElement *geomTag, CurveMap &edges,
         {
             MeshVertex v;
             v.id = newIdx;
-            i.second->m_points[j]->GetCoords(v.x,v.y,v.z);
+            v.x = i.second->m_points[j]->x();
+            v.y = i.second->m_points[j]->y();
+            v.z = i.second->m_points[j]->z();
             curvedPts.pts.push_back(v);
             curvedPts.index.push_back(newIdx);
             newIdx++;
@@ -1347,7 +1351,9 @@ void MeshGraphXmlCompressed::WriteCurves(TiXmlElement *geomTag, CurveMap &edges,
         {
             MeshVertex v;
             v.id = newIdx;
-            i.second->m_points[j]->GetCoords(v.x,v.y,v.z);
+            v.x = i.second->m_points[j]->x();
+            v.y = i.second->m_points[j]->y();
+            v.z = i.second->m_points[j]->z();
             curvedPts.pts.push_back(v);
             curvedPts.index.push_back(newIdx);
             newIdx++;

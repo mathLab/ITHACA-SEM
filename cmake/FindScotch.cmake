@@ -23,18 +23,6 @@
 #   FIND_PACKAGE(Scotch 5 COMPONENTS ptscotch)
 #                           - find at least version 5 of PT-scotch
 
-            FIND_PROGRAM(LSB_RELEASE_EXEC lsb_release)
-            EXECUTE_PROCESS(COMMAND ${LSB_RELEASE_EXEC} -is
-                OUTPUT_VARIABLE LSB_RELEASE_ID_SHORT
-                OUTPUT_STRIP_TRAILING_WHITESPACE)
-
-            MESSAGE("Linux flavor is " ${LSB_RELEASE_ID_SHORT})
-            STRING(COMPARE EQUAL ${LSB_RELEASE_ID_SHORT} "Ubuntu" IS_UBUNTU)
-            IF (IS_UBUNTU)
-                MESSAGE(STATUS "Ubuntu!!")
-            ENDIF()
-
-
 
 # Determine if we are looking for PT-scotch, or just scotch
 SET(PARALLEL OFF)
@@ -117,16 +105,24 @@ IF (SCOTCH_LIBRARY AND SCOTCHERR_LIBRARY AND SCOTCH_INCLUDE_DIR)
         IF (PTSCOTCH_LIBRARY AND PTSCOTCHERR_LIBRARY)
             SET(Scotch_ptscotch_FOUND TRUE)
 
-            # Finally, re-search for Scotch library because on Fedora/CentOS,
-            # for some reason, libptscotch is missing a bunch of symbols.
-            FIND_PROGRAM(LSB_RELEASE_EXEC lsb_release)
-            EXECUTE_PROCESS(COMMAND ${LSB_RELEASE_EXEC} -is
-                OUTPUT_VARIABLE LSB_RELEASE_ID_SHORT
-                OUTPUT_STRIP_TRAILING_WHITESPACE)
+            # Finally, test if serial library needs to be linked as well.
+            TRY_COMPILE( COMPILE_RESULT
+                ${CMAKE_CURRENT_BINARY_DIR}/
+                ${CMAKE_CURRENT_SOURCE_DIR}/cmake/scripts/get-scotch-version.c
+                CMAKE_FLAGS -DINCLUDE_DIRECTORIES=${SCOTCH_INCLUDE_DIR}
+                    -DLINK_DIRECTORIES=${SCOTCH_LIBRARY_DIR}
+                LINK_LIBRARIES "ptscotch" "ptscotcherr"
+                OUTPUT_VARIABLE COMPILER_OUTPUT)
 
-            STRING(COMPARE EQUAL ${LSB_RELEASE_ID_SHORT} "CentOS" IS_CENTOS)
-            STRING(COMPARE EQUAL ${LSB_RELEASE_ID_SHORT} "Fedora" IS_FEDORA)
-            IF (IS_CENTOS OR IS_FEDORA)
+            IF (COMPILE_RESULT)
+                MESSAGE(STATUS "Guessing that serial Scotch does not need to be linked")
+                SET(IS_SERIAL_NEEDED FALSE)
+            ELSE()
+                MESSAGE(STATUS "Guessing that serial Scotch needs to be linked as well")
+                SET(IS_SERIAL_NEEDED TRUE)
+            ENDIF()
+
+            IF (IS_SERIAL_NEEDED)
                 FIND_LIBRARY(SCOTCH_LIBRARY2 NAMES scotch
                     PATHS ${SCOTCH_LIBRARY_DIR} SCOTCH_LIBRARY2 NO_DEFAULT_PATH)
                 IF (SCOTCH_LIBRARY2)

@@ -23,7 +23,6 @@
 #   FIND_PACKAGE(Scotch 5 COMPONENTS ptscotch)
 #                           - find at least version 5 of PT-scotch
 
-
 # Determine if we are looking for PT-scotch, or just scotch
 SET(PARALLEL OFF)
 LIST(FIND Scotch_FIND_COMPONENTS "ptscotch" FIND_PARALLEL)
@@ -93,6 +92,9 @@ IF (SCOTCH_LIBRARY AND SCOTCHERR_LIBRARY AND SCOTCH_INCLUDE_DIR)
     SET(Scotch_scotch_FOUND TRUE)
 
     IF (PARALLEL)
+        # Start from clean slate
+        UNSET(PTSCOTCH_LIBRARY CACHE)
+
         IF (DEFINED ENV{LD_LIBRARY_PATH})
             STRING(REPLACE ":" ";" SEARCH_LIB_PATH $ENV{LD_LIBRARY_PATH})
         ENDIF()
@@ -123,10 +125,12 @@ IF (SCOTCH_LIBRARY AND SCOTCHERR_LIBRARY AND SCOTCH_INCLUDE_DIR)
             ENDIF()
 
             IF (IS_SERIAL_NEEDED)
-                FIND_LIBRARY(SCOTCH_LIBRARY2 NAMES scotch
-                    PATHS ${SCOTCH_LIBRARY_DIR} SCOTCH_LIBRARY2 NO_DEFAULT_PATH)
-                IF (SCOTCH_LIBRARY2)
-                    SET(PTSCOTCH_LIBRARY ${PTSCOTCH_LIBRARY} ${SCOTCH_LIBRARY2}
+                GET_FILENAME_COMPONENT(PTSCOTCH_BASE_DIR ${PTSCOTCH_LIBRARY} DIRECTORY)
+                FIND_LIBRARY(PTSCOTCH_LIBRARY_SERIAL NAMES scotch
+                    PATHS ${PTSCOTCH_BASE_DIR} PTSCOTCH_LIBRARY_SERIAL NO_DEFAULT_PATH)
+                MARK_AS_ADVANCED(PTSCOTCH_LIBRARY_SERIAL)
+                IF (PTSCOTCH_LIBRARY_SERIAL)
+                    SET(PTSCOTCH_LIBRARY ${PTSCOTCH_LIBRARY} ${PTSCOTCH_LIBRARY_SERIAL}
                         CACHE FILEPATH "PtScotch library" FORCE)
                 ENDIF()
             ENDIF()

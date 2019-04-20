@@ -40,7 +40,6 @@
 #include <iomanip>
 //#include <sstream>
 #include <MultiRegions/ExpList.h>
-#include <MultiRegions/ContField1D.h>
 #include <MultiRegions/ContField.h>
 #include <LocalRegions/SegExp.h>
 #include <LocalRegions/QuadExp.h>
@@ -195,7 +194,7 @@ int main(int argc, char *argv[])
     //the mesh file should have 2 component: set output fields
     //fields has to be of the SAME dimension of the mesh (that's why there is
     //the changefile as an input)
-    //a contfield2D is needed to extract boundary conditions!!!
+    //a contfield is needed to extract boundary conditions!!!
 
     // store name of the file to change
     string changefile(argv[argc-2]);
@@ -405,12 +404,12 @@ int main(int argc, char *argv[])
 
     //fieds to force continuity:
     const SpatialDomains::BoundaryRegionCollection    &bregions = bcs.GetBoundaryRegions();
-    MultiRegions::ContField1DSharedPtr  Cont_y;
+    MultiRegions::ContFieldSharedPtr  Cont_y;
     MultiRegions::ExpListSharedPtr yexp;
 
     yexp = MemoryManager<MultiRegions::ExpList>
         ::AllocateSharedPtr(vSession,*(bregions.find(lastIregion)->second), graphShPt, true);
-    Cont_y = MemoryManager<MultiRegions::ContField1D>
+    Cont_y = MemoryManager<MultiRegions::ContField>
                                 ::AllocateSharedPtr(vSession, *yexp);
     //--------------------------------------
     /*@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@*/

@@ -62,7 +62,7 @@ namespace Nektar
             // the precon iteration count.
             ASSERTL0(value->Attribute("tolerance"),
                      "Missing tolerance in preconditioner metric");
-            ASSERTL0(value->GetText() || value->GetText() == "",
+            ASSERTL0(!EmptyString(value->GetText()),
                      "Missing value in preconditioner metric.");
 
             MetricRegexFieldValue val;

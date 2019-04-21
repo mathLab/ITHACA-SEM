@@ -58,6 +58,8 @@ public:
     SPATIAL_DOMAINS_EXPORT Geometry0D(const int coordim);
     SPATIAL_DOMAINS_EXPORT virtual ~Geometry0D();
 
+    SPATIAL_DOMAINS_EXPORT static const int kDim = 0;
+
 protected:
     virtual int v_GetShapeDim() const;
 };

@@ -61,9 +61,15 @@ public:
     virtual void Process();
 
 private:
+    LibUtilities::AnalyticExpressionEvaluator m_strEval;
+
     void TransferVertices(SpatialDomains::MeshGraphSharedPtr graph);
-    void TransferEdges(SpatialDomains::MeshGraphSharedPtr graph);
-    void TransferFaces(SpatialDomains::MeshGraphSharedPtr graph);
+    void TransferEdges(
+        SpatialDomains::MeshGraphSharedPtr graph,
+        std::unordered_map<int, SpatialDomains::SegGeomSharedPtr> &edgeMap);
+    void TransferFaces(
+        SpatialDomains::MeshGraphSharedPtr graph,
+        std::unordered_map<int, SpatialDomains::SegGeomSharedPtr> &edgeMap);
     void TransferElements(SpatialDomains::MeshGraphSharedPtr graph);
     void TransferCurves(SpatialDomains::MeshGraphSharedPtr graph);
     void TransferComposites(SpatialDomains::MeshGraphSharedPtr graph);

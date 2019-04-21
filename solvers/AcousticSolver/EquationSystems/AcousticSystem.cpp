@@ -149,7 +149,7 @@ bool AcousticSystem::v_PreIntegrate(int step)
         {
             for (int i = 0; i < x->GetForces().num_elements(); ++i)
             {
-                phys[m_fields.num_elements() + m_bfNames.size() + f] =
+                phys[m_fields.num_elements() + m_bfNames.size() + f + i] =
                     x->GetForces()[i];
                 varNames.push_back("F_" + boost::lexical_cast<string>(f) + "_" +
                                    m_session->GetVariable(i));

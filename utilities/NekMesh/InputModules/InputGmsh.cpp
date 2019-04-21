@@ -708,6 +708,16 @@ InputGmsh::~InputGmsh()
 }
 
 /**
+ * @brief Representation of Gmsh entity so that we can extract physical tag IDs.
+ */
+struct GmshEntity
+{
+    double minX, minY, minZ;
+    double maxX, maxY, maxZ;
+    std::vector<int> physicalTags;
+};
+
+/**
  * Gmsh file contains a list of nodes and their coordinates, along with a list
  * of elements and those nodes which define them. We read in and store the list
  * of nodes in #m_node and store the list of elements in #m_element. Each new
@@ -738,6 +748,8 @@ void InputGmsh::Process()
         cout << "InputGmsh: Start reading file..." << endl;
     }
 
+    std::vector<std::map<int, GmshEntity>> entityMap(4);
+
     while (!m_mshFile.eof())
     {
         getline(m_mshFile, line);
@@ -753,6 +765,44 @@ void InputGmsh::Process()
             s >> m_version;
             s >> fileType;
             ASSERTL0(fileType == 0, "Cannot read binary Gmsh files.")
+        }
+        // Process entities (v4+)
+        else if (word == "$Entities")
+        {
+            size_t nEntity[4];
+            getline(m_mshFile, line);
+            stringstream s(line);
+
+            s >> nEntity[0] >> nEntity[1] >> nEntity[2] >> nEntity[3];
+
+            for (int i = 0; i < 4; ++i)
+            {
+                for (int j = 0; j < nEntity[i]; ++j)
+                {
+                    getline(m_mshFile, line);
+                    stringstream si(line);
+                    GmshEntity ent;
+
+                    int entityId;
+                    si >> entityId >> ent.minX >> ent.minY >> ent.minZ;
+
+                    if (i > 0)
+                    {
+                        si >> ent.maxX >> ent.maxY >> ent.maxZ;
+                    }
+
+                    int nPhysTags, tmp;
+                    si >> nPhysTags;
+
+                    for (int k = 0; k < nPhysTags; ++k)
+                    {
+                        si >> tmp;
+                        ent.physicalTags.push_back(tmp);
+                    }
+
+                    entityMap[i][entityId] = ent;
+                }
+            }
         }
         // Process nodes.
         else if (word == "$Nodes")
@@ -800,12 +850,30 @@ void InputGmsh::Process()
                 {
                     getline(m_mshFile, line);
                     stringstream si(line);
-                    si >> tag >> tmp >> elm_type >> nElements;
 
-                    for (int j = 0; j < nElements; ++j)
+                    int tagDim;
+                    si >> tag >> tagDim >> elm_type >> nElements;
+
+                    // Query tag in map & don't bother constructing non-physical
+                    // surfaces.
+                    std::vector<int> physIds = entityMap[tagDim][tag].physicalTags;
+
+                    if (physIds.size() == 0)
                     {
-                        ReadNextElement(tag, elm_type);
+                        for (int j = 0; j < nElements; ++j)
+                        {
+                            getline(m_mshFile, line);
+                        }
                     }
+                    else
+                    {
+                        tag = physIds[0];
+                        for (int j = 0; j < nElements; ++j)
+                        {
+                            ReadNextElement(tag, elm_type);
+                        }
+                    }
+
                 }
             }
             else
@@ -931,13 +999,6 @@ void InputGmsh::ReadNextNode()
         }
         else
         {
-            /*
-            // No longer true in Gmsh 4.0
-            // Was it true before?
-            cerr << "Gmsh vertex ids should be contiguous" << endl;
-            abort();
-            */
-            
             // Build m_idMap so far
             for (int i = 0; i < m_mesh->m_node.size(); ++i)
             {
@@ -980,7 +1041,7 @@ void InputGmsh::ReadNextElement(int tag, int elm_type)
         abort();
     }
 
-    // Read element tags
+    // Read element tags (version 2 only)
     vector<int> tags;
     for (int j = 0; j < num_tag; ++j)
     {

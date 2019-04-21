@@ -105,7 +105,10 @@ IF (NEKTAR_USE_MPI)
     ADD_NEKTAR_TEST(Helmholtz2D_CG_P7_Modes_AllBCs_iter_ml_par3)
     ADD_NEKTAR_TEST(Helmholtz2D_CG_P7_Modes_xxt_ml)
     ADD_NEKTAR_TEST(Helmholtz3D_CG_Hex_AllBCs_iter_ml_par3)
+<<<<<<< HEAD
     ADD_NEKTAR_TEST(Helmholtz3D_CG_Prism_iter_ml_par5)
+=======
+>>>>>>> master
     ADD_NEKTAR_TEST(Helmholtz3D_CG_Hex_AllBCs_xxt_sc_par3 LENGTHY)
     ADD_NEKTAR_TEST(Helmholtz2D_CG_P14_xxt_per)
     ADD_NEKTAR_TEST(Helmholtz2D_CG_varP_Modes_par)

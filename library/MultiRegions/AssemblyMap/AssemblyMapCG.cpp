@@ -1537,13 +1537,9 @@ namespace Nektar
             // IncNavierStokesSolver can work.
             int nExtraDirichlet;
             int mdswitch;
-<<<<<<< HEAD
-            m_session->LoadParameter("MDSwitch", mdswitch, 10);
-=======
             m_session->LoadParameter(
                 "MDSwitch", mdswitch, 10);
 
->>>>>>> master
             int nGraphVerts =
                 CreateGraph(locExp, bndCondExp, bndCondVec,
                             checkIfSystemSingular, periodicVerts, periodicEdges,

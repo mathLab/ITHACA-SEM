@@ -1022,28 +1022,11 @@ namespace Nektar
                 
             for(int i= 0; i < (*m_exp).size(); ++i)
             {
-<<<<<<< HEAD
                 // need to be initialised with zero size for non
                 // variable coefficient case
                 StdRegions::VarCoeffMap varcoeffs;
                 
                 if(nvarcoeffs>0)
-=======
-                if(doBlockMatOp[n])
-                {
-                    const LibUtilities::ShapeType vType
-                                    = m_globalOptParam->GetShapeList()[n];
-                    const MultiRegions::GlobalMatrixKey vKey(gkey, vType);
-                    if (cnt < m_coeff_offset.num_elements())
-                    {
-                        eid = cnt;
-                        MultiplyByBlockMatrix(vKey,inarray + m_coeff_offset[eid],
-                                              tmp_outarray = outarray + m_coeff_offset[eid]);
-                        cnt += num_elmts[n];
-                    }
-                }
-                else
->>>>>>> master
                 {
                     for (auto &x : gkey.GetVarCoeffs())
                     {

@@ -93,6 +93,7 @@ v5.0.0
 - Fix issue with MLSC after Scotch conversion (!943)
 - Add support for Gmsh 4.0 mesh file format (!964)
 - Fix surface extraction, added regression test (!994)
+- Fix 2D meshing running out of memory due to missing else (!1012)
 
 **FieldConvert**:
 - Add input module for Semtex field files (!777)

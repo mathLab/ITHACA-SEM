@@ -64,7 +64,9 @@ SmoothShockCapture::SmoothShockCapture(
     m_session->LoadParameter ("SensorOffset",  m_offset,         1);
 
     ROOTONLY_NEKERROR(Nektar::ErrorUtil::ewarning,
-        "h/p Lambda scaling not implemented for SmoothShockCapture.")
+        "h/p Lambda scaling not implemented for SmoothShockCapture."
+        "There seems to be something wrong with the boundary conditions "
+        "as well.")
 }
 
 void SmoothShockCapture::v_DoArtificialDiffusion(

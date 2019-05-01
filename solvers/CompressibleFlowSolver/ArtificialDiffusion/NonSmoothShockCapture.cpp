@@ -85,6 +85,7 @@ void NonSmoothShockCapture::v_GetArtificialViscosity(
         LambdaElmt = Vmath::Vmax(nElmtPoints, tmp = Lambda + physOffset, 1);
 
         // Scale viscosity by the maximum wave speed
+        LambdaElmt *= m_mu0;
         Vmath::Smul(nElmtPoints, LambdaElmt, tmp = mu + physOffset, 1,
             tmp = mu + physOffset, 1);
 

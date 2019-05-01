@@ -63,6 +63,9 @@ ArtificialDiffusion::ArtificialDiffusion(
                         &ArtificialDiffusion::GetArtificialViscosity, this);
     m_diffusion->InitObject (m_session, m_fields);
 
+    // Get constant scaling
+    m_session->LoadParameter("mu0", m_mu0, 1.0);
+
     // Init h/p scaling
     int nElements = m_fields[0]->GetExpSize();
     m_hOverP = Array<OneD, NekDouble>(nElements, 0.0);

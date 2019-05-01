@@ -47,19 +47,19 @@
 
 namespace Nektar
 {
-//  Forward declaration
+// Forward declaration
 class ArtificialDiffusion;
 
-/// A shared pointer to a artificial diffusion object
+// A shared pointer to a artificial diffusion object
 typedef std::shared_ptr<ArtificialDiffusion> ArtificialDiffusionSharedPtr;
 
-/// Declaration of the artificial diffusion factory
+// Declaration of the artificial diffusion factory
 typedef LibUtilities::NekFactory<std::string, ArtificialDiffusion,
         const LibUtilities::SessionReaderSharedPtr&,
         const Array<OneD, MultiRegions::ExpListSharedPtr>&,
         const int > ArtificialDiffusionFactory;
 
-/// Declaration of the artificial diffusion factory singleton
+// Declaration of the artificial diffusion factory singleton
 ArtificialDiffusionFactory& GetArtificialDiffusionFactory();
 
 /**
@@ -71,29 +71,31 @@ class ArtificialDiffusion
     public:
         virtual ~ArtificialDiffusion() {}
 
-        /// Apply the artificial diffusion
+        // Apply the artificial diffusion
         void DoArtificialDiffusion(
             const Array<OneD, const Array<OneD, NekDouble> > &inarray,
             Array<OneD,       Array<OneD, NekDouble> > &outarray);
 
-        /// Calculate the artificial viscosity
+        // Calculate the artificial viscosity
         void GetArtificialViscosity(
             const Array<OneD, Array<OneD, NekDouble> > &physfield,
                   Array<OneD, NekDouble  >             &mu);
 
-        /// h/p scaling
-        Array<OneD, NekDouble>               m_hOverP;
+        // h/p scaling
+        Array<OneD, NekDouble>                      m_hOverP;
     protected:
-        /// Session reader
+        // Session reader
         LibUtilities::SessionReaderSharedPtr        m_session;
-        /// Array of fields
+        // Array of fields
         Array<OneD, MultiRegions::ExpListSharedPtr> m_fields;
-        /// Auxiliary object to convert variables
+        // Auxiliary object to convert variables
         VariableConverterSharedPtr                  m_varConv;
-        /// LDG Diffusion operator
+        // LDG Diffusion operator
         SolverUtils::DiffusionSharedPtr             m_diffusion;
+        // Constant scaling
+        NekDouble                                   m_mu0;
 
-        /// Constructor
+        // Constructor
         ArtificialDiffusion(
                 const LibUtilities::SessionReaderSharedPtr& pSession,
                 const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields,

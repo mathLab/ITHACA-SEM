@@ -81,6 +81,8 @@ class ArtificialDiffusion
             const Array<OneD, Array<OneD, NekDouble> > &physfield,
                   Array<OneD, NekDouble  >             &mu);
 
+        /// h/p scaling
+        Array<OneD, NekDouble>               m_hOverP;
     protected:
         /// Session reader
         LibUtilities::SessionReaderSharedPtr        m_session;

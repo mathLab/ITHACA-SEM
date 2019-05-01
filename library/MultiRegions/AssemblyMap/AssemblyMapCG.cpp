@@ -215,6 +215,13 @@ namespace Nektar
             int n = vComm->GetSize();
             int p = vComm->GetRank();
 
+            if(vComm->IsSerial())
+            {
+                // for FieldConvert Comm this is true and it resets
+                // parallel processing back to serial case
+                n = 1;
+                p = 0;
+            }
             // At this point, graph only contains information from Dirichlet
             // boundaries. Therefore make a global list of the vert and edge
             // information on all processors.
@@ -384,7 +391,7 @@ namespace Nektar
             // partitions
             for (i = 0; i < nTotVerts; ++i)
             {
-                if (vComm->GetRank() == vertprocs[i])
+                if (p == vertprocs[i]) // rank = vertproc[i]
                 {
                     extraDirVerts.insert(vertids[i]);
                 }
@@ -393,7 +400,7 @@ namespace Nektar
             // Set up list of edges that need to be shared to other partitions
             for (i = 0; i < nTotEdges; ++i)
             {
-                if (vComm->GetRank() == edgeprocs[i])
+                if (p == edgeprocs[i]) // rank = vertproc[i]
                 {
                     extraDirEdges.insert(edgeids[i]);
                 }
@@ -1530,6 +1537,7 @@ namespace Nektar
             int mdswitch;
             m_session->LoadParameter(
                 "MDSwitch", mdswitch, 10);
+
             int nGraphVerts =
                 CreateGraph(locExp, bndCondExp, bndCondVec,
                             checkIfSystemSingular, periodicVerts, periodicEdges,

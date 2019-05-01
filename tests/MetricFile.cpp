@@ -187,7 +187,6 @@ namespace Nektar
     void MetricFile::v_Generate(std::istream& pStdout, std::istream& pStderr)
     {
         std::map<std::string, std::string>::iterator it;
-        bool success = true;
 
         // Update SHA1 hashes.
         for (it = m_filehash.begin(); it != m_filehash.end(); ++it)

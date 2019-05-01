@@ -175,6 +175,19 @@ namespace Nektar
         {
             LibUtilities::CommSharedPtr comm = m_session->GetComm();
 
+            if (comm->IsSerial())
+            {
+                // Do not try and generate a communicator if we have a serial
+                // communicator. Arises with a FieldConvert communicator when
+                // using --nparts in FieldConvert. Just set communicator to comm
+                // in this case.
+                for (auto &it : m_boundaryRegions)
+                {
+                    m_boundaryCommunicators[it.first] = comm;
+                }
+                return;
+            }
+
             std::set<int> allids = ShareAllBoundaryIDs(m_boundaryRegions, comm);
 
             for (auto &it : allids)
@@ -283,7 +296,10 @@ namespace Nektar
                                     "once!");
 
                     m_meshGraph->GetCompositeList(indxStr, *boundaryRegion);
-                    m_boundaryRegions[indx] = boundaryRegion;
+                    if (boundaryRegion->size() > 0)
+                    {
+                        m_boundaryRegions[indx] = boundaryRegion;
+                    }
                 }
 
                 boundaryRegionsElement =
@@ -333,6 +349,12 @@ namespace Nektar
                 std::string boundaryRegionIDStr;
                 std::ostringstream boundaryRegionIDStrm(boundaryRegionIDStr);
                 boundaryRegionIDStrm << boundaryRegionID;
+
+                if (m_boundaryRegions.count(boundaryRegionID) == 0)
+                {
+                    regionElement = regionElement->NextSiblingElement("REGION");
+                    continue;
+                }
 
                 ASSERTL0(m_boundaryRegions.count(boundaryRegionID) == 1,
                         "Boundary region " + boost::lexical_cast < string

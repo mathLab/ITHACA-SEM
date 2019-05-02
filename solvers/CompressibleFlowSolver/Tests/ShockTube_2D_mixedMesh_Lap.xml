@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<NEKTAR>
+    <EXPANSIONS>
+      <E
+        COMPOSITE="C[1]"
+        BASISTYPE="Modified_A,Modified_B" NUMMODES="4,4"
+        POINTSTYPE="GaussLobattoLegendre,GaussRadauMAlpha1Beta0" NUMPOINTS="5,4"
+        FIELDS="rho,rhou,rhov,E"
+      />
+      <E
+        COMPOSITE="C[2]"
+        BASISTYPE="Modified_A,Modified_A" NUMMODES="4,4"
+        POINTSTYPE="GaussLobattoLegendre,GaussLobattoLegendre" NUMPOINTS="5,5"
+        FIELDS="rho,rhou,rhov,E"
+      />
+    </EXPANSIONS>
+
+  <CONDITIONS>
+    <PARAMETERS>
+        <P> TimeStep             = 1.0e-8                         </P>
+        <P> NumSteps             = 1                              </P>
+        <P> IO_CheckSteps        = 100                            </P>
+        <P> IO_InfoSteps         = 1                              </P>
+
+        <!-- Stationary shock -->
+        <P> GasConstant          = 287.058                        </P>
+        <P> Gamma                = 1.4                            </P>
+        <P> Gp1                  = Gamma + 1.0                    </P>
+        <P> Gm1                  = Gamma - 1.0                    </P>
+        <P> G2                   = 2.0 * Gamma                    </P>
+        <P> x0                   = 0.50                           </P>
+        <P> st                   = 0.01                           </P>
+        <!-- Left State -->
+        <P> Ml                   = 8.0                            </P>
+        <P> Tl                   = 298                            </P>
+        <P> cl                   = sqrt(Gamma * GasConstant * Tl) </P>
+        <P> rhol                 = 1.2                            </P>
+        <P> ul                   = cl * Ml                        </P>
+        <P> vl                   = 0.0                            </P>
+        <P> pl                   = GasConstant * rhol * Tl        </P>
+        <P> El = pl / Gm1 + 0.5 * rhol * (ul*ul + vl*vl)          </P>
+        <!-- Right State -->
+        <P> rhor_rhol            = Gp1 * Ml^2 /( 2.0 + Gm1* Ml^2) </P>
+        <P> rhor                 = rhol * rhor_rhol               </P>
+        <P> pr_pl                = 1 + G2/Gp1*(Ml^2-1)            </P>
+        <P> pr                   = pl * pr_pl                     </P>
+        <P> ur                   = ul / rhor_rhol                 </P>
+        <P> vr                   = 0.0                            </P>
+        <P> Er = pr / Gm1 + 0.5 * rhor * (ur*ur + vr*vr)          </P>
+        <P> Pr                   = 0.72                           </P>
+        <P> Cp                   = (Gamma / Gm1 )*GasConstant     </P>
+    </PARAMETERS>
+
+    <SOLVERINFO>
+        <I PROPERTY="EQType"                VALUE="EulerCFE"            />
+        <I PROPERTY="Projection"            VALUE="DisContinuous"       />
+        <I PROPERTY="AdvectionType"         VALUE="WeakDG"              />
+        <I PROPERTY="TimeIntegrationMethod" VALUE="ForwardEuler"        />
+        <I PROPERTY="UpwindType"            VALUE="Roe"                 />
+        <I PROPERTY="ProblemType"           VALUE="General"             />
+        <I PROPERTY="ShockCaptureType"      VALUE="NonSmooth"           />
+    </SOLVERINFO>
+
+    <VARIABLES>
+      <V ID="0"> rho  </V>
+      <V ID="1"> rhou </V>
+      <V ID="2"> rhov </V>
+      <V ID="3"> E    </V>
+    </VARIABLES>
+
+    <BOUNDARYREGIONS>
+      <!-- Inflow -->
+      <B ID="0"> C[300] </B>
+      <!-- Slip -->
+      <B ID="1"> C[100] </B>
+      <!-- Outflow -->
+      <B ID="2"> C[400] </B>
+      <!-- Slip -->
+      <B ID="3"> C[200] </B>
+    </BOUNDARYREGIONS>
+
+    <BOUNDARYCONDITIONS>
+       <!-- Periodic -->
+      <REGION REF="1">
+        <P VAR="rho"  VALUE="[3]" />
+        <P VAR="rhou" VALUE="[3]" />
+        <P VAR="rhov" VALUE="[3]" />
+        <P VAR="E"    VALUE="[3]" />
+      </REGION>
+      <REGION REF="3">
+        <P VAR="rho"  VALUE="[1]" />
+        <P VAR="rhou" VALUE="[1]" />
+        <P VAR="rhov" VALUE="[1]" />
+        <P VAR="E"    VALUE="[1]" />
+      </REGION>
+      <!-- Inflow -->
+      <REGION REF="0">
+        <D VAR="rho"  VALUE="rhol" />
+        <D VAR="rhou" VALUE="rhol * ul" />
+        <D VAR="rhov" VALUE="rhol * vl" />
+        <D VAR="E"    VALUE="El" />
+      </REGION>
+      <!-- Outflow -->
+      <REGION REF="2">
+        <D VAR="rho"  VALUE="rhor" />
+        <D VAR="rhou" VALUE="rhor * ur" />
+        <D VAR="rhov" VALUE="rhor * vr" />
+        <D VAR="E"    VALUE="Er" />
+      </REGION>
+    </BOUNDARYCONDITIONS>
+     <FUNCTION NAME="InitialConditions">
+        <E VAR="rho"  VALUE="rhol + 0.5*(1+tanh((x-x0)/st))*(rhor-rhol)" />
+        <E VAR="rhou" VALUE="rhol * ul + 0.5*(1+tanh((x-x0)/st))*(rhor*ur-rhol*ul)" />
+        <E VAR="rhov" VALUE="0" />
+        <E VAR="E"    VALUE="El + 0.5*(1+tanh((x-x0)/st))*(Er-El)" />
+      </FUNCTION>
+
+    <FUNCTION NAME="ExactSolution">
+        <E VAR="rho"  VALUE="rhol + 0.5*(1+tanh((x-x0)/st))*(rhor-rhol)" />
+        <E VAR="rhou" VALUE="rhol * ul + 0.5*(1+tanh((x-x0)/st))*(rhor*ur-rhol*ul)" />
+        <E VAR="rhov" VALUE="0" />
+        <E VAR="E"    VALUE="El + 0.5*(1+tanh((x-x0)/st))*(Er-El)" />
+    </FUNCTION>
+
+    </CONDITIONS>
+</NEKTAR>

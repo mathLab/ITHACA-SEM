@@ -135,6 +135,8 @@ namespace Nektar
 
 	NekDouble Get_m_kinvis(void);
 	void Set_m_kinvis(NekDouble);
+	int use_Newton;
+	Array<OneD, Array<OneD, NekDouble> > myAdvField;
 
     protected:
 

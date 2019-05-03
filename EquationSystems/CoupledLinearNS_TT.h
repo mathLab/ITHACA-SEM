@@ -136,6 +136,7 @@ namespace Nektar
 	int Nmax;
 	int RBsize;
 	int globally_connected;
+	int use_Newton;
 
         Eigen::MatrixXd MtM;
         Eigen::MatrixXd Mtrafo;

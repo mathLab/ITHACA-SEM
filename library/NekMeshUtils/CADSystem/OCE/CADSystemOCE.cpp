@@ -556,7 +556,7 @@ TopoDS_Shape CADSystemOCE::BuildGeo(string geo)
     map<int, string> bsplines;
     map<int, string> circles;
     map<int, string> ellipses;
-    map<int, string> loops;
+    map<int, string> lineloops;
     map<int, string> planeSurfs;
     map<int, string> ruledSurfs;
     map<int, string> surfLoops;
@@ -601,57 +601,85 @@ TopoDS_Shape CADSystemOCE::BuildGeo(string geo)
         if (boost::iequals(type, "Point"))
         {
             ASSERTL0(points.find(id) == points.end(),
-                     "Duplicate point " + std::to_string(id));
+             "Duplicate "+ type + "(" 
+             + std::to_string(id) + ")");
             points[id] = var;
         }
         else if (boost::iequals(type, "Line"))
         {
+            ASSERTL0(lines.find(id) == lines.end(),
+             "Duplicate "+ type + "(" 
+             + std::to_string(id) + ")");
             lines[id] = var;
         }
         else if (boost::iequals(type, "Spline"))
         {
+            ASSERTL0(splines.find(id) == splines.end(),
+             "Duplicate "+ type + "(" 
+             + std::to_string(id) + ")");
             splines[id] = var;
         }
         else if (boost::iequals(type, "BSpline"))
         {
+            ASSERTL0(bsplines.find(id) == bsplines.end(),
+             "Duplicate "+ type + "(" 
+             + std::to_string(id) + ")");
             bsplines[id] = var;
         }
         else if (boost::iequals(type, "Circle"))
         {
+            ASSERTL0(circles.find(id) == circles.end(),
+             "Duplicate "+ type + "(" 
+             + std::to_string(id) + ")");
             circles[id] = var;
         }
         else if (boost::iequals(type, "Ellipse"))
         {
+            ASSERTL0(ellipses.find(id) == ellipses.end(),
+             "Duplicate "+ type + "(" 
+             + std::to_string(id) + ")");
             ellipses[id] = var;
         }
         else if (boost::iequals(type, "Line Loop"))
         {
-            // line loops sometimes have negative entries for gmsh
-            // orientaton purposes
-            // we dont care so remove it
+            ASSERTL0(lineloops.find(id) == lineloops.end(),
+             "Duplicate "+ type + "(" 
+             + std::to_string(id) + ")");
             boost::erase_all(var, "-");
-            loops[id] = var;
+            lineloops[id] = var;
         }
         else if (boost::iequals(type, "Plane Surface"))
         {
+            ASSERTL0(planeSurfs.find(id) == planeSurfs.end(),
+             "Duplicate "+ type + "(" 
+             + std::to_string(id) + ")");
             planeSurfs[id] = var;
         }
         else if (boost::iequals(type, "Ruled Surface"))
         {
+            ASSERTL0(ruledSurfs.find(id) == ruledSurfs.end(),
+             "Duplicate "+ type + "(" 
+             + std::to_string(id) + ")");
             ruledSurfs[id] = var;
         }
         else if (boost::iequals(type, "Surface Loop"))
         {
+            ASSERTL0(surfLoops.find(id) == surfLoops.end(),
+             "Duplicate "+ type + "(" 
+             + std::to_string(id) + ")");
             surfLoops[id] = var;
         }
         else if (boost::iequals(type, "Volume"))
         {
+            ASSERTL0(volumes.find(id) == volumes.end(),
+             "Duplicate "+ type + "(" 
+             + std::to_string(id) + ")");
             boost::erase_all(var, "-");
             volumes[id] = var;
         }
         else
         {
-            cout << "not sure " << type << endl;
+            cout << "Geometry Command Unknown: " << type << endl;
         }
     }
 
@@ -795,7 +823,7 @@ TopoDS_Shape CADSystemOCE::BuildGeo(string geo)
 
     // build wires
     map<int, TopoDS_Wire> cWires;
-    for (it = loops.begin(); it != loops.end(); it++)
+    for (it = lineloops.begin(); it != lineloops.end(); it++)
     {
         vector<unsigned int> data;
         ParseUtils::GenerateVector(it->second, data);
@@ -806,158 +834,164 @@ TopoDS_Shape CADSystemOCE::BuildGeo(string geo)
         }
         cWires[it->first] = wm.Wire();
     }
-
-    // build ruled surfaces
-    map<int, TopoDS_Face> cFaces;
-    for (auto &surf : planeSurfs)
+    //Check if 2D
+    if (ruledSurfs.size() == 0)
     {
-        vector<unsigned int> data;
-        ParseUtils::GenerateVector(surf.second, data);
-        ASSERTL0(data.size() == 1,
-                 "Ruled surface should have only one curve loop");
-
-        BRepBuilderAPI_MakeFace faceBuilder(cWires[data[0]]);
-
-        cFaces[surf.first] = faceBuilder.Face();
-    }
-    for (auto &surf : ruledSurfs)
-    {
-        vector<unsigned int> data;
-        ParseUtils::GenerateVector(surf.second, data);
-        ASSERTL0(data.size() == 1,
-                 "Ruled surface should have only one curve loop");
-
-        BRepFill_Filling fill(2, 30);
-        TopExp_Explorer ex;
-
-        for (ex.Init(cWires[data[0]], TopAbs_EDGE); ex.More(); ex.Next())
+        if (planeSurfs.size() == 1)
         {
-            const TopoDS_Edge &shape = TopoDS::Edge(ex.Current());
-            fill.Add(shape, GeomAbs_C0);
-        }
-
-        fill.Build();
-        TopoDS_Face fixedFace = fill.Face();
-        cFaces[surf.first] = fixedFace;
-
-        /*
-        TopExp_Explorer ex;
-        std::vector<Handle(GeomFill_SimpleBound)> bounds;
-
-        for (ex.Init(cWires[data[0]], TopAbs_EDGE); ex.More(); ex.Next())
-        {
-            double s0, s1;
-            Handle(Geom_Curve) c = BRep_Tool::Curve(
-                TopoDS::Edge(ex.Current()), s0, s1);
-            Handle(GeomAdaptor_HCurve) Curve = new GeomAdaptor_HCurve(c, s0, s1);
-            bounds.push_back(new GeomFill_SimpleBound(Curve, 0.001, 0.001));
-        }
-
-        GeomFill_ConstrainedFilling fill(2, 8);
-        fill.Init(bounds[0], bounds[1], bounds[2]);
-
-        Handle(Geom_BSplineSurface) fillSurf = fill.Surface();
-        BRepBuilderAPI_MakeFace mf(fillSurf, cWires[data[0]]);
-        mf.Build();
-        cFaces[surf.first] = mf.Face();
-
-        StlAPI_Writer writer;
-        BRepMesh_IncrementalMesh Mesh(cFaces[surf.first], 10.0);
-        Mesh.Perform();
-        std::string outfname = "out-" + boost::lexical_cast<std::string>(
-            surf.first) + ".stl";
-        writer.Write(cFaces[surf.first], outfname.c_str());
-        */
-    }
-
-    map<int, TopoDS_Shell> cShells;
-    for (auto &sloop : surfLoops)
-    {
-        vector<unsigned int> data;
-        ParseUtils::GenerateVector(sloop.second, data);
-
-        BRepBuilderAPI_Sewing shellMaker;
-
-        for (int i = 0; i < data.size(); ++i)
-        {
-            shellMaker.Add(cFaces[data[i]]);
-        }
-
-        shellMaker.Perform();
-
-        cShells[sloop.first] = TopoDS::Shell(shellMaker.SewedShape());
-
-        // BRepMesh_IncrementalMesh Mesh( shell, 200.0 );
-        // Mesh.Perform();
-        // StlAPI_Writer asd;
-        // std::string outfname = "out.stl";
-        // asd.Write(shell, outfname.c_str());
-    }
-
-    map<int, TopoDS_Shape> cVolumes;
-    for (auto &vol : volumes)
-    {
-        vector<unsigned int> data;
-        ParseUtils::GenerateVector(vol.second, data);
-
-        BRepBuilderAPI_MakeSolid solidMaker;
-
-        for (int i = 0; i < data.size(); ++i)
-        {
-            solidMaker.Add(cShells[data[i]]);
-
-            if (i == 0)
+            //Build Plane Surface
+            it = planeSurfs.begin();
+            vector<unsigned int> data;
+            ParseUtils::GenerateVector(it->second, data);
+            BRepBuilderAPI_MakeFace face(cWires[data[0]], true);
+            for (int i = 1; i < data.size(); i++)
             {
-                continue;
+                face.Add(cWires[data[i]]);
             }
 
-            // For each shell that's being removed from the solid, add centroid
-            // for tetrahedralisation purposes. In general this won't work so
-            // well because we could have a non-convex shell, but let's assume
-            // it is a decent guess for now.
-            GProp_GProps props;
-            BRepGProp::VolumeProperties(cShells[data[i]], props);
-            gp_Pnt centroid = props.CentreOfMass();
+            ASSERTL0(face.Error() == BRepBuilderAPI_FaceDone, "build geo failed");
 
-            Array<OneD, NekDouble> voidPt(3);
-            voidPt[0] = centroid.X();
-            voidPt[1] = centroid.Y();
-            voidPt[2] = centroid.Z();
-            m_voidPoints.push_back(voidPt);
+            ShapeFix_Face sf(face.Face());
+            sf.FixOrientation();
+
+            return sf.Face();    
         }
-
-        TopoDS_Solid s = solidMaker.Solid();
-
-        // Perform fix on solid
-        ShapeFix_Solid solidFix(s);
-
-        solidFix.Perform();
-
-        return solidFix.Solid();
+                
     }
-
-    // make surface, at this point assuming its 2D (therefore only 1)
-    // also going to assume that the first loop in the list is the outer domain
-    /*
-    ASSERTL0(planeSurfs.size() == 1, "more than 1 surf");
-    it = planeSurfs.begin();
-    vector<unsigned int> data;
-    ParseUtils::GenerateVector(it->second, data);
-    BRepBuilderAPI_MakeFace face(cWires[data[0]], true);
-    for (int i = 1; i < data.size(); i++)
+    //Run 3D
+    else
     {
-        face.Add(cWires[data[i]]);
+        // Build Surfaces
+        map<int, TopoDS_Face> cFaces;
+        // Build Place Surfaces
+        for (auto &surf : planeSurfs)
+        {
+            vector<unsigned int> data;
+            ParseUtils::GenerateVector(surf.second, data);
+            ASSERTL0(data.size() == 1,
+                    "Ruled surface should have only one curve loop");
+
+            BRepBuilderAPI_MakeFace faceBuilder(cWires[data[0]]);
+
+            cFaces[surf.first] = faceBuilder.Face();
+        }
+        // Build Ruled Surfaces
+        for (auto &surf : ruledSurfs)
+        {
+            vector<unsigned int> data;
+            ParseUtils::GenerateVector(surf.second, data);
+            ASSERTL0(data.size() == 1,
+                    "Ruled surface should have only one curve loop");
+
+            BRepFill_Filling fill(2, 30);
+            TopExp_Explorer ex;
+
+            for (ex.Init(cWires[data[0]], TopAbs_EDGE); ex.More(); ex.Next())
+            {
+                const TopoDS_Edge &shape = TopoDS::Edge(ex.Current());
+                fill.Add(shape, GeomAbs_C0);
+            }
+
+            fill.Build();
+            TopoDS_Face fixedFace = fill.Face();
+            cFaces[surf.first] = fixedFace;
+
+            /*
+            TopExp_Explorer ex;
+            std::vector<Handle(GeomFill_SimpleBound)> bounds;
+
+            for (ex.Init(cWires[data[0]], TopAbs_EDGE); ex.More(); ex.Next())
+            {
+                double s0, s1;
+                Handle(Geom_Curve) c = BRep_Tool::Curve(
+                    TopoDS::Edge(ex.Current()), s0, s1);
+                Handle(GeomAdaptor_HCurve) Curve = new GeomAdaptor_HCurve(c, s0, s1);
+                bounds.push_back(new GeomFill_SimpleBound(Curve, 0.001, 0.001));
+            }
+
+            GeomFill_ConstrainedFilling fill(2, 8);
+            fill.Init(bounds[0], bounds[1], bounds[2]);
+
+            Handle(Geom_BSplineSurface) fillSurf = fill.Surface();
+            BRepBuilderAPI_MakeFace mf(fillSurf, cWires[data[0]]);
+            mf.Build();
+            cFaces[surf.first] = mf.Face();
+
+            StlAPI_Writer writer;
+            BRepMesh_IncrementalMesh Mesh(cFaces[surf.first], 10.0);
+            Mesh.Perform();
+            std::string outfname = "out-" + boost::lexical_cast<std::string>(
+                surf.first) + ".stl";
+            writer.Write(cFaces[surf.first], outfname.c_str());
+            */
+        }
+        // Build Shells
+        map<int, TopoDS_Shell> cShells;
+        for (auto &sloop : surfLoops)
+        {
+            vector<unsigned int> data;
+            ParseUtils::GenerateVector(sloop.second, data);
+
+            BRepBuilderAPI_Sewing shellMaker;
+
+            for (int i = 0; i < data.size(); ++i)
+            {
+                shellMaker.Add(cFaces[data[i]]);
+            }
+
+            shellMaker.Perform();
+
+            cShells[sloop.first] = TopoDS::Shell(shellMaker.SewedShape());
+
+            // BRepMesh_IncrementalMesh Mesh( shell, 200.0 );
+            // Mesh.Perform();
+            // StlAPI_Writer asd;
+            // std::string outfname = "out.stl";
+            // asd.Write(shell, outfname.c_str());
+        }
+        // Build Volumes
+        map<int, TopoDS_Shape> cVolumes;
+        for (auto &vol : volumes)
+        {
+            vector<unsigned int> data;
+            ParseUtils::GenerateVector(vol.second, data);
+
+            BRepBuilderAPI_MakeSolid solidMaker;
+
+            for (int i = 0; i < data.size(); ++i)
+            {
+                solidMaker.Add(cShells[data[i]]);
+
+                if (i == 0)
+                {
+                    continue;
+                }
+
+                // For each shell that's being removed from the solid, add centroid
+                // for tetrahedralisation purposes. In general this won't work so
+                // well because we could have a non-convex shell, but let's assume
+                // it is a decent guess for now.
+                GProp_GProps props;
+                BRepGProp::VolumeProperties(cShells[data[i]], props);
+                gp_Pnt centroid = props.CentreOfMass();
+
+                Array<OneD, NekDouble> voidPt(3);
+                voidPt[0] = centroid.X();
+                voidPt[1] = centroid.Y();
+                voidPt[2] = centroid.Z();
+                m_voidPoints.push_back(voidPt);
+            }
+
+            TopoDS_Solid s = solidMaker.Solid();
+
+            // Perform fix on solid
+            ShapeFix_Solid solidFix(s);
+
+            solidFix.Perform();
+
+            return solidFix.Solid();
+        }
     }
-
-    ASSERTL0(face.Error() == BRepBuilderAPI_FaceDone, "build geo failed");
-
-
-
-    ShapeFix_Face sf(face.Face());
-    sf.FixOrientation();
-
-    return sf.Face();
-    */
 }
 }
 }

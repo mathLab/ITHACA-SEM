@@ -68,7 +68,7 @@ ArtificialDiffusion::ArtificialDiffusion(
 
     // Init h/p scaling
     int nElements = m_fields[0]->GetExpSize();
-    m_hOverP = Array<OneD, NekDouble>(nElements, 0.0);
+    m_hOverP = Array<OneD, NekDouble>(nElements, 1.0);
 }
 
 /**
@@ -118,6 +118,14 @@ void ArtificialDiffusion::GetArtificialViscosity(
                   Array<OneD, NekDouble  >             &mu)
 {
     v_GetArtificialViscosity(physfield, mu);
+}
+
+/**
+ *
+ */
+void ArtificialDiffusion::SetElmtHP(const Array<OneD, NekDouble> &hOverP)
+{
+    m_hOverP = hOverP;
 }
 
 }

@@ -365,7 +365,7 @@ namespace Nektar
         if (m_shockCaptureType != "Off")
         {
             // Get min h/p
-            m_artificialDiffusion->m_hOverP = GetElmtMinHP();
+            m_artificialDiffusion->SetElmtHP(GetElmtMinHP());
             m_artificialDiffusion->DoArtificialDiffusion(inarray, outarray);
         }
     }
@@ -890,7 +890,7 @@ namespace Nektar
             if (m_artificialDiffusion)
             {
                 // Get min h/p
-                m_artificialDiffusion->m_hOverP = GetElmtMinHP();
+                m_artificialDiffusion->SetElmtHP(GetElmtMinHP());
                 // reuse pressure
                 Array<OneD, NekDouble> sensorFwd(nCoeffs);
                 m_artificialDiffusion->GetArtificialViscosity(tmp, pressure);

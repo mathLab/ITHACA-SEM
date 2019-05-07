@@ -77,20 +77,16 @@ void NonSmoothShockCapture::v_GetArtificialViscosity(
     Array<OneD, NekDouble> tmp;
     for (int e = 0; e < nElements; e++)
     {
-        int physOffset      = m_fields[0]->GetPhys_Offset(e);
-        int nElmtPoints     = m_fields[0]->GetExp(e)->GetTotPoints();
+        int physOffset  = m_fields[0]->GetPhys_Offset(e);
+        int nElmtPoints = m_fields[0]->GetExp(e)->GetTotPoints();
 
         // Get max wavespeed per element
         NekDouble LambdaElmt = 0.0;
         LambdaElmt = Vmath::Vmax(nElmtPoints, tmp = Lambda + physOffset, 1);
 
-        // Scale viscosity by the maximum wave speed
-        LambdaElmt *= m_mu0;
+        // Scale viscosity by the maximum wave speed and h/p
+        LambdaElmt *= m_mu0 * m_hOverP[e];
         Vmath::Smul(nElmtPoints, LambdaElmt, tmp = mu + physOffset, 1,
-            tmp = mu + physOffset, 1);
-
-        // Scale viscosity by h/p
-        Vmath::Smul(nElmtPoints, m_hOverP[e], tmp = mu + physOffset, 1,
             tmp = mu + physOffset, 1);
     }
 }

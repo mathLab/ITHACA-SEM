@@ -53,7 +53,7 @@ namespace Nektar
     {
     public:
         friend class MemoryManager<CoupledLinearNS_TT>;
-        friend class CoupledLinearNS_trafoP;
+        //friend class CoupledLinearNS_trafoP;
         
         /// Creates an instance of this class
         static SolverUtils::EquationSystemSharedPtr create(
@@ -126,6 +126,7 @@ namespace Nektar
 	int Nmax;
 	int RBsize;
 	int globally_connected;
+	int use_Newton;
 
         Eigen::MatrixXd MtM;
         Eigen::MatrixXd Mtrafo;
@@ -237,6 +238,7 @@ namespace Nektar
         virtual void v_DoInitialise(void);
 
         virtual void v_Output(void);
+        
 
     };
     

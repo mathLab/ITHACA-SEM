@@ -186,7 +186,6 @@ namespace Nektar
         int nz;
         if(m_singleMode)
         {
-            
             NekDouble lambda_imag; 
             
             // load imaginary component of any potential shift
@@ -1119,7 +1118,6 @@ namespace Nektar
 				//cout<<"The norm is "<<norm<<endl;    
             	//cout<<endl<<endl;   
             } */
-            
             mat.m_BCinv->SetBlock(n,n,loc_mat = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,B));
             mat.m_Btilde->SetBlock(n,n,loc_mat = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,C));
             mat.m_Cinv->SetBlock(n,n,loc_mat = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,D));
@@ -1225,7 +1223,6 @@ namespace Nektar
         timer.Stop();
  //      cout << "Matrix Setup Costs: " << timer.TimePerTest(1) << endl;
         
-        
         timer.Start();
         // Set up global coupled boundary solver. 
         // This is a key to define the solution matrix type
@@ -1245,7 +1242,6 @@ namespace Nektar
     
     void CoupledLinearNS_trafoP::v_DoInitialise(void)
     {
-    	cout<<"In CoupledLinearNS_trafoP::v_DoInitialise() in clns_trafop\n";
         switch(m_equationType)
         {
             case eUnsteadyStokes:
@@ -1476,32 +1472,85 @@ namespace Nektar
     {
 	m_kinvis = input;
     }
-
+    
     Array<OneD, Array<OneD, NekDouble> > CoupledLinearNS_trafoP::DoSolve_at_param(Array<OneD, NekDouble> init_snapshot_x, Array<OneD, NekDouble> init_snapshot_y, NekDouble parameter)
+	{
+		//	DoInitialise();
+		//	DoSolve();
+		double rel_err = 1.0;
+		while (rel_err > 1e-13)
+		{
+			Set_m_kinvis( parameter );
+			DoInitialiseAdv(init_snapshot_x, init_snapshot_y); // replaces .DoInitialise();
+			DoSolve();
+			// compare the accuracy
+			Array<OneD, MultiRegions::ExpListSharedPtr> m_fields_t = UpdateFields();
+			m_fields_t[0]->BwdTrans(m_fields_t[0]->GetCoeffs(), m_fields_t[0]->UpdatePhys());
+			m_fields_t[1]->BwdTrans(m_fields_t[1]->GetCoeffs(), m_fields_t[1]->UpdatePhys());
+			Array<OneD, NekDouble> out_field_trafo_x(GetNpoints(), 0.0);
+			Array<OneD, NekDouble> out_field_trafo_y(GetNpoints(), 0.0);
+		
+			Eigen::VectorXd csx0_trafo(GetNpoints());
+			Eigen::VectorXd csy0_trafo(GetNpoints());
+			Eigen::VectorXd csx0(GetNpoints());
+			Eigen::VectorXd csy0(GetNpoints());
+		
+			CopyFromPhysField(0, out_field_trafo_x); 
+			CopyFromPhysField(1, out_field_trafo_y);
+		
+			for( int index_conv = 0; index_conv < GetNpoints(); ++index_conv)
+			{
+				csx0_trafo(index_conv) = out_field_trafo_x[index_conv];
+				csy0_trafo(index_conv) = out_field_trafo_y[index_conv];
+				csx0(index_conv) = init_snapshot_x[index_conv];
+				csy0(index_conv) = init_snapshot_y[index_conv];
+			}
+		
+		//		cout << "csx0.norm() " << csx0.norm() << endl;
+		//		cout << "csx0_trafo.norm() " << csx0_trafo.norm() << endl;
+		//		cout << "csy0.norm() " << csy0.norm() << endl;
+		//		cout << "csy0_trafo.norm() " << csy0_trafo.norm() << endl;
+			rel_err = std::abs(csx0_trafo.norm() - csx0.norm()) / csx0.norm() + std::abs(csy0_trafo.norm() - csy0.norm()) / csy0.norm();
+		//		cout << "rel_err " << rel_err << endl;
+		
+			init_snapshot_x = out_field_trafo_x;
+			init_snapshot_y = out_field_trafo_y;
+		}
+		
+		
+		
+		Array<OneD, Array<OneD, NekDouble> > converged_solution( 2 );
+		converged_solution[0] = Array<OneD, NekDouble>(GetNpoints(), 0.0);
+		converged_solution[1] = Array<OneD, NekDouble>(GetNpoints(), 0.0);
+		converged_solution[0] = init_snapshot_x;
+		converged_solution[1] = init_snapshot_y;
+		
+		//	cout << " curr_f_bnd.size()+curr_f_int.size() " <<  curr_f_bnd.size()+curr_f_int.size() << endl;
+		//	cout << " GetNcoeffs() " <<  GetNcoeffs() << endl;
+		
+		return converged_solution;
+	}
+
+    Array<OneD, Array<OneD, NekDouble> > CoupledLinearNS_trafoP::DoSolve_at_param_continuation(Array<OneD, NekDouble> init_snapshot_x, Array<OneD, NekDouble> init_snapshot_y, NekDouble parameter)
     {
-//	DoInitialise();
-//	DoSolve();
-	double rel_err = 1.0;
+	double rel_err = 1.0, use_heuristic = true;
+	int iterations = 0, max_iterations = 100;
+	bool change_method = use_Newton;
 	
-	m_mat[0].m_CoupledBndSys->my_tau_defl = 1;
-	m_mat[0].m_CoupledBndSys->my_deflate = deflate;
-	
-	int iterations = 0, max_iterations = 300;
+	if(start_with_Oseen)
+		use_Newton = false;
+		
 	Array<OneD, MultiRegions::ExpListSharedPtr> m_fields_t;
 	
-	//m_pressure->BwdTrans_IterPerExp(m_pressure->GetCoeffs(),m_pressure->UpdatePhys());
-	//Eigen::VectorXd pressure(m_pressure->UpdatePhys().num_elements());
-		//cout<<m_pressure->UpdatePhys().num_elements()<<endl;
-	//	int pres_dof = 3225;//m_pressure->UpdatePhys().num_elements();
-	//Eigen::VectorXd old_pressure(pres_dof);
 	if(total_solutions_found>1)
 	{
 		sol_x_cont_defl[total_solutions_found] = init_snapshot_x;
-		sol_y_cont_defl[total_solutions_found] = init_snapshot_y;		
-		//solution_pres_continuation_deflation[total_solutions_found] = Array<OneD, NekDouble>(pres_dof, 0.0);
+		sol_y_cont_defl[total_solutions_found] = init_snapshot_y;	
 	}
 	
-	while (rel_err > 1e-13 && (iterations < max_iterations || !use_deflation))
+	double last_tau = 0, strength = 1;
+	
+	while (rel_err > 1e-10 && (iterations < max_iterations || !use_deflation))
 	{
 		Set_m_kinvis( parameter );
 		DoInitialiseAdv(init_snapshot_x, init_snapshot_y); // replaces .DoInitialise();
@@ -1510,25 +1559,19 @@ namespace Nektar
 		m_fields_t = UpdateFields();
 		m_fields_t[0]->BwdTrans(m_fields_t[0]->GetCoeffs(), m_fields_t[0]->UpdatePhys());
 		m_fields_t[1]->BwdTrans(m_fields_t[1]->GetCoeffs(), m_fields_t[1]->UpdatePhys());
-		//m_pressure->BwdTrans(m_pressure->GetCoeffs(), m_pressure->UpdatePhys());
 		Array<OneD, NekDouble> out_field_trafo_x(GetNpoints(), 0.0);
 		Array<OneD, NekDouble> out_field_trafo_y(GetNpoints(), 0.0);
+		Array<OneD, NekDouble> diff_x(GetNpoints(), 0.0);
+		Array<OneD, NekDouble> diff_y(GetNpoints(), 0.0);
 
+		Array<OneD, NekDouble> last_out_field_trafo_x(GetNpoints(), 0.0);
+		Array<OneD, NekDouble> last_out_field_trafo_y(GetNpoints(), 0.0);
+		
 		Eigen::VectorXd csx0_trafo(GetNpoints());
 		Eigen::VectorXd csy0_trafo(GetNpoints());
 		Eigen::VectorXd csx0(GetNpoints());
 		Eigen::VectorXd csy0(GetNpoints());
 		
-		/*for(int i = 0; i < pres_dof; i++)
-		{//cout<<"prima "<<iterations<<endl;
-			if(iterations == 0)
-			
-				old_pressure[i] = (m_pressure->UpdatePhys())[i];
-			else
-				old_pressure[i] = solution_pres_continuation_deflation[total_solutions_found][i];
-				//cout<<"hi"<<endl;
-			solution_pres_continuation_deflation[total_solutions_found][i] = (m_pressure->UpdatePhys())[i];
-		}*/
 
 		CopyFromPhysField(0, out_field_trafo_x); 
 		CopyFromPhysField(1, out_field_trafo_y);
@@ -1547,29 +1590,63 @@ namespace Nektar
 //		cout << "csy0_trafo.norm() " << csy0_trafo.norm() << endl;
 		rel_err = std::abs(csx0_trafo.norm() - csx0.norm()) / csx0.norm() + std::abs(csy0_trafo.norm() - csy0.norm()) / csy0.norm();
 
-		if((++iterations)%500==0)
+		if((++iterations)%1==0)
 			cout << "rel_err " << rel_err << endl; // if you enter here you are propably not converging
 			
 		if(deflate)
         { 
-        	double norm_i, tau = 1, scal_product, M_inv;
-        	int power = 10, nvel = sol_x_cont_defl[0].num_elements();
+        	double norm_i, norm_ix, norm_iy, norm_0, tau = 2, tau_i = 1, scal_product, M_inv, norm_max = 0;
+        	int power = 1, nvel = sol_x_cont_defl[0].num_elements();
+        	bool danger = false, far_from_everything = true;
 			for(int j = 0; j < local_indices_to_be_continued.size(); j++)
 			{
 				norm_i = 0;
 				int curr_j = local_indices_to_be_continued[j];
-				for(int i = 0; i < nvel; i++)
+			/*	for(int i = 0; i < nvel; i++)
 				{
 					//I compute the norm					
 					norm_i += (out_field_trafo_x[i] - sol_x_cont_defl[curr_j][i]) * (out_field_trafo_x[i] - sol_x_cont_defl[curr_j][i]);
 					norm_i += (out_field_trafo_y[i] - sol_y_cont_defl[curr_j][i]) * (out_field_trafo_y[i] - sol_y_cont_defl[curr_j][i]);
 				}   
-				norm_i = sqrt(norm_i);
-				cout<<"Deflate vs curr_j = "<<curr_j<<", norm_i "<<norm_i;
+				norm_i = sqrt(norm_i/(1));*/
+				
+				Vmath::Vsub(out_field_trafo_x.num_elements(), out_field_trafo_x, 1, sol_x_cont_defl[curr_j], 1, diff_x, 1);
+				Vmath::Vsub(out_field_trafo_y.num_elements(), out_field_trafo_y, 1, sol_y_cont_defl[curr_j], 1, diff_y, 1);
+				norm_ix = m_fields[0]->L2(diff_x);
+				norm_iy = m_fields[1]->L2(diff_y);
+				//norm_0 = sqrt(m_fields[0]->L2(sol_x_cont_defl[curr_j])*m_fields[0]->L2(sol_x_cont_defl[curr_j]) + m_fields[1]->L2(sol_y_cont_defl[curr_j])*m_fields[1]->L2(sol_y_cont_defl[curr_j]));
+				norm_i = sqrt(norm_ix*norm_ix + norm_iy*norm_iy);
+						
+				
+				if(norm_i < 1e2)   
+					far_from_everything = false;
+				if(norm_i < 5*1e-5) 
+					danger = true;
+				
+				if(norm_i > 1e15) // to avoid the useless remaining iterations
+					iterations = 99999;
+					
+				if(change_method && norm_i > 1e4) // try to avoid divergence using some Oseen steps
+				{
+					if(last_tau < -9.9)
+					{
+						Vmath::Vcopy(out_field_trafo_x.num_elements(), last_out_field_trafo_x, 1, out_field_trafo_x, 1 );
+						Vmath::Vcopy(out_field_trafo_y.num_elements(), last_out_field_trafo_y, 1, out_field_trafo_y, 1 );
+						use_heuristic = false;
+					}
+					else
+					{
+						use_Newton = false;
+					}
+				}
+				if(change_method && rel_err < 1e-2) // use again Newton if you are converging
+					use_Newton = true;
+				
+				cout<<"norm_i "<<norm_i<<endl;
 				
 				if(power == 1)	// deflate with power 1 or 2
 				{
-					M_inv = norm_i/(norm_i+1);  
+					M_inv = 1/(1 + 1/norm_i);  
 					norm_i = norm_i*norm_i*norm_i;  
 				}
 				else
@@ -1598,13 +1675,80 @@ namespace Nektar
 				}  
 				scal_product *= power / norm_i;
 				//tau *= 1 + (M_inv * scal_product) / (1 - M_inv * scal_product); 
-				tau *= 1 / (1 - M_inv * scal_product);
-				//tau = tau/fabs(tau); //to try to speed up the escape from the solution
-				
-				cout<<", tau "<<tau<<", scal_product "<<scal_product<<", M_inv "<<M_inv<<endl;
+				tau_i *= 1 / (1 - M_inv * scal_product);
+				if(tau_i<tau)
+					tau = tau_i;
+				if(norm_max < norm_i)
+					norm_max = norm_i;
+					
 			}
-			m_mat[0].m_CoupledBndSys->my_tau_defl = tau;
-			cout << out_field_trafo_x[23]<<" "<<init_snapshot_x[23]<< endl;  
+			// the heuristic
+			if(use_heuristic)
+			{
+				if(tau>0)
+				{
+					if(last_tau < 0)
+					{
+						if(last_tau > -10)
+							tau = 0.9 * tau + 0.1 * last_tau; // momentum for tau for maintaining small values of tau, if they were too big I don't want to explode
+							
+						if(tau > 0)
+						{
+							strength *= 1.5;
+						}
+						else
+						{
+							tau *= strength;
+						}
+						last_tau = tau;
+					}
+					//else
+					//{
+						if(tau < 0.5)
+						{
+							tau = 0.5;
+							last_tau = tau;
+						}
+						if(tau > 1) // to avoid overshooting
+							tau = 1;
+						if(danger) //I want to change a lot my solution because I'm in the region of attraction of a previous solution
+						{						
+							tau = -1e2*strength;
+							last_tau = -9.9999;
+							strength *= 1.5;
+							cout<<"tau manually set to "<<tau<<endl;
+						}
+					//}
+				}
+				else
+				{
+					if(!far_from_everything && strength*tau>-100)  //I don't want to use the strength factor if I'm far from everything or if tau is already negative enough
+						tau = -strength*fabs(tau);
+					if(norm_max * tau < -200)
+						tau = max(tau / min(norm_max, strength), -100/norm_max);
+					if(tau > -0.25)
+						tau = -0.2;
+					if(tau < -9.9)
+					{
+						Vmath::Vcopy(out_field_trafo_x.num_elements(), out_field_trafo_x, 1, last_out_field_trafo_x, 1 );
+						Vmath::Vcopy(out_field_trafo_y.num_elements(), out_field_trafo_y, 1, last_out_field_trafo_y, 1 );
+					}
+					last_tau = tau;
+				}
+			}
+			else
+			{
+				cout<<"Trying to reuse the old solution with tau divided by 2"<<endl;
+				use_heuristic = true;
+				tau = last_tau / 2;
+				last_tau = tau;
+			}
+				
+				cout<<"tau "<<tau<<", scal_product "<<scal_product<<", M_inv "<<M_inv<<", strength "<<strength<<endl;
+			//}
+			//m_mat[0].m_CoupledBndSys->my_tau_defl = tau;
+			cout<<"Deflated, computed and old values at iterations number "<<iterations<<": "<<tau * out_field_trafo_x[23] + (1 - tau) * init_snapshot_x[23]
+																			<<", "<<out_field_trafo_x[23]<<", "<<init_snapshot_x[23]<<"\n"<<endl;  
 			
 			//I update the solution
 			for(int i = 0; i < nvel; i++)
@@ -1612,9 +1756,14 @@ namespace Nektar
 				out_field_trafo_x[i] = tau * out_field_trafo_x[i] + (1 - tau) * init_snapshot_x[i];
 				out_field_trafo_y[i] = tau * out_field_trafo_y[i] + (1 - tau) * init_snapshot_y[i];
 			}  
-       	}    
+       	} 
+       	else
+       	{
+       		if(iterations >= max_iterations/2 && change_method)
+       			use_Newton = 0;
+       	}   
 
-		double rel_err2 = 0;
+		/*double rel_err2 = 0;
 		double norm_x = 0, norm_y = 0;
 		for(int i = 0; i < sol_x_cont_defl[0].num_elements(); i++)
 		{
@@ -1629,7 +1778,7 @@ namespace Nektar
 			rel_err2 += (out_field_trafo_y[i] - init_snapshot_y[i]) * (out_field_trafo_y[i] - init_snapshot_y[i]) / norm_y;
 		}  
 		cout << "rel_err(1,2) (" << rel_err <<" , "<<rel_err2<<") "<<out_field_trafo_x[23]<<" "<<init_snapshot_x[23]<<"\n"<< endl;  
-		rel_err += rel_err2;
+		rel_err += rel_err2;*/
 		
 		init_snapshot_x = out_field_trafo_x;
 		init_snapshot_y = out_field_trafo_y;
@@ -1638,16 +1787,27 @@ namespace Nektar
 		
 	}
 	
+	if(change_method)
+		use_Newton = 1;
+	
 	Array<OneD, Array<OneD, NekDouble> > converged_solution( 2 );
 	converged_solution[0] = Array<OneD, NekDouble>(GetNpoints(), 0.0);
 	converged_solution[1] = Array<OneD, NekDouble>(GetNpoints(), 0.0);
 	if(iterations>=max_iterations)
 	{
-		converged=false;
+		converged = false;
 		cout<<"DoSolve_at_param didn't converge"<<endl;
 		return converged_solution;
 	}
-	converged=true;
+	converged = true;
+	
+	if(total_solutions_found > 2)
+	{
+		cout<<"arclength_step from "<<arclength_step<<" to "<<max(0.2 * arclength_step, min( min(1.2 * arclength_step, max_step), (arclength_step * 6)/((double)iterations) ))<<endl;
+		arclength_step = max(0.2 * arclength_step, min( min(1.2 * arclength_step, max_step), (arclength_step * 6)/((double)iterations) ));
+		//cout<<"step_multiplier = "<<max(0.2, min(1.2, 6/((double)iterations) ))<<endl;
+		step_multiplier = max(0.2, min(1.2, 6/((double)iterations) ));
+	}
 	
 	converged_solution[0] = init_snapshot_x;
 	converged_solution[1] = init_snapshot_y;
@@ -1685,7 +1845,8 @@ namespace Nektar
         variables[i] = "p";   
     
     std::stringstream sstm;
-	sstm << "_" << m_sessionName <<"_snapshot_" << parameter<<"_of_"<<total_solutions_found<<".fld";
+	//sstm << "_" << m_sessionName <<"_snapshot_" << parameter<<"_of_"<<total_solutions_found<<".fld";
+	sstm << "TestSnap"<<(total_solutions_found + 1)<<".fld";
 	std::string outname = sstm.str();
         
     WriteFld(outname,m_fields_t[0],fieldcoeffs,variables);
@@ -1838,9 +1999,6 @@ namespace Nektar
     
     void CoupledLinearNS_trafoP::Solve(void)
     {
-
-//	cout << "Ciao from trafoP::Solve function" << endl;
-
         const unsigned int ncmpt = m_velocity.num_elements();
         Array<OneD, Array<OneD, NekDouble> > forcing_phys(ncmpt);
         Array<OneD, Array<OneD, NekDouble> > forcing     (ncmpt);
@@ -2031,6 +2189,114 @@ namespace Nektar
         cout<<"We have done "<< m_counter-1 << " iteration(s) in " << Newtontimer.TimePerTest(1)/60 << " minute(s). \n\n";
     }
     
+    double CoupledLinearNS_trafoP::ComputeContinuationGuess(int curr_i, int prev_i)
+    {
+		// bordering algorithm present in Keller's book (with same notation) 
+    	
+    	Array<OneD, Array<OneD, NekDouble> > u_N(m_velocity.num_elements());
+        Array<OneD, Array<OneD, NekDouble> > tmp_RHS(m_velocity.num_elements());
+        Array<OneD, Array<OneD, NekDouble> > RHS(m_velocity.num_elements());
+        Array<OneD, Array<OneD, NekDouble> > y(m_velocity.num_elements());
+        Array<OneD, Array<OneD, NekDouble> > z(m_velocity.num_elements());
+        Array<OneD, Array<OneD, NekDouble> > guess(m_velocity.num_elements());
+        
+        sol_x_cont_defl[total_solutions_found] = Array<OneD, NekDouble>(sol_x_cont_defl[0].num_elements(),0.0);	
+        sol_y_cont_defl[total_solutions_found] = Array<OneD, NekDouble>(sol_y_cont_defl[0].num_elements(),0.0);	
+        
+        Array<OneD, NekDouble> cx(sol_x_cont_defl[curr_i].num_elements()); // I build the vector c using a secant method
+        Array<OneD, NekDouble> cy(sol_y_cont_defl[curr_i].num_elements());
+        for(int i = 0; i < cx.num_elements(); i++)
+        	cx[i] = (sol_x_cont_defl[curr_i][i] - sol_x_cont_defl[prev_i][i])/(arclength_step);
+        for(int i = 0; i < cy.num_elements(); i++)
+        	cy[i] = (sol_y_cont_defl[curr_i][i] - sol_y_cont_defl[prev_i][i])/(arclength_step);
+        
+        guess[0] = Array<OneD, NekDouble> (m_fields[m_velocity[0]]->GetTotPoints(),0.0);
+        guess[1] = Array<OneD, NekDouble> (m_fields[m_velocity[1]]->GetTotPoints(),0.0);
+        
+        guess[0] = sol_x_cont_defl[curr_i];
+        guess[1] = sol_y_cont_defl[curr_i];
+        
+        DoInitialiseAdv(guess[0], guess[1]);
+        DoSolve();
+        for(int i = 0; i < m_velocity.num_elements(); ++i)
+        {
+            z[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),0.0);	
+            m_fields[m_velocity[i]]->BwdTrans_IterPerExp(m_fields[m_velocity[i]]->GetCoeffs(), z[i]);
+        } 	
+        
+        for(int i = 0; i < m_velocity.num_elements(); ++i)
+        {
+            //u_N[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),0.0);	
+            //m_fields[m_velocity[i]]->BwdTrans_IterPerExp(m_fields[m_velocity[i]]->GetCoeffs(), u_N[i]);
+            
+            u_N[i] = guess[i];
+            
+            RHS[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),0.0);	
+            tmp_RHS[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),0.0);	
+            
+            m_fields[m_velocity[i]]->PhysDeriv(i, u_N[i], tmp_RHS[i]);
+            Vmath::Smul(tmp_RHS[i].num_elements(), m_kinvis, tmp_RHS[i], 1, tmp_RHS[i], 1);
+            //Vmath::Smul(tmp_RHS[i].num_elements(), param_vector[curr_i], tmp_RHS[i], 1, tmp_RHS[i], 1);
+            
+            bool waveSpace = m_fields[m_velocity[i]]->GetWaveSpace();
+            m_fields[m_velocity[i]]->SetWaveSpace(true);
+            m_fields[m_velocity[i]]->IProductWRTDerivBase(i, tmp_RHS[i], RHS[i]);
+            m_fields[m_velocity[i]]->SetWaveSpace(waveSpace);
+        }
+        
+        SetUpCoupledMatrix(0.0, u_N, true);
+        SolveLinearNS(RHS);
+        
+        for(int i = 0; i < m_velocity.num_elements(); ++i)
+        {
+            y[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),0.0);	
+            m_fields[m_velocity[i]]->BwdTrans_IterPerExp(m_fields[m_velocity[i]]->GetCoeffs(), y[i]);
+            
+            Vmath::Smul(y[i].num_elements(), m_kinvis, y[i], 1, y[i], 1);
+            //Vmath::Smul(y[i].num_elements(), param_vector[curr_i], y[i], 1, y[i], 1);
+            Vmath::Vadd(y[i].num_elements(), y[i], 1, u_N[i], 1, y[i], 1);
+            
+            //m_fields[m_velocity[i]]->FwdTrans(u_star[i], m_fields[m_velocity[i]]->UpdateCoeffs());
+            //m_fields[m_velocity[i]]->BwdTrans(m_fields[m_velocity[i]]->GetCoeffs(), m_fields[m_velocity[i]]->UpdatePhys());
+        }
+        for(int i = 0; i < guess.num_elements(); i++)
+        {
+        	guess[i] = y[i];
+        }
+        
+        double c_dot_z, c_dot_y, csi;
+        c_dot_z = Vmath::Dot(cx.num_elements(), cx, z[0]);
+        c_dot_z += Vmath::Dot(cy.num_elements(), cy, z[1]);
+        
+        c_dot_y = Vmath::Dot(cx.num_elements(), cx, y[0]);
+        c_dot_y += Vmath::Dot(cy.num_elements(), cy, y[1]);
+        
+        csi = (arclength_step - c_dot_z) / ((param_vector[curr_i] - param_vector[prev_i])/arclength_step - c_dot_y);
+        for(int i = 0; i < guess.num_elements(); i++)
+        {
+        	Vmath::Smul(y[i].num_elements(), csi, y[i], 1, y[i], 1);
+        	Vmath::Vsub(y[i].num_elements(), z[i], 1, u_N[i], 1, z[i], 1);
+    	}
+       
+		
+        for(int i = 0; i < sol_x_cont_defl[total_solutions_found].num_elements(); i++)
+        {
+        	sol_x_cont_defl[total_solutions_found][i] = sol_x_cont_defl[curr_i][i] + z[0][i];
+        	sol_y_cont_defl[total_solutions_found][i] = sol_y_cont_defl[curr_i][i] + z[1][i];
+        }  
+        m_kinvis -= csi;
+        //m_kinvis = param_vector[curr_i] - csi;
+        
+        m_fields[0]->FwdTrans(sol_x_cont_defl[total_solutions_found], m_fields[0]->UpdateCoeffs());
+        m_fields[1]->FwdTrans(sol_y_cont_defl[total_solutions_found], m_fields[1]->UpdateCoeffs());
+        
+        m_fields[0]->BwdTrans(m_fields[0]->GetCoeffs(), m_fields[0]->UpdatePhys());
+        m_fields[1]->BwdTrans(m_fields[1]->GetCoeffs(), m_fields[1]->UpdatePhys());
+        
+        //m_kinvis -= m_kinvis*m_KinvisPercentage/100;
+        cout<<"end of computeguess with m_kinvis = "<<m_kinvis<<endl;
+        return csi;
+    }		
     
     void CoupledLinearNS_trafoP::Continuation(void)
     {
@@ -2259,7 +2525,6 @@ namespace Nektar
         int i,n;
         Array<OneD,  MultiRegions::ExpListSharedPtr> vel_fields(m_velocity.num_elements());
         Array<OneD, Array<OneD, NekDouble> > force(m_velocity.num_elements());
-        
         if(m_HomogeneousType == eHomogeneous1D)
         {
             int ncoeffsplane = m_fields[m_velocity[0]]->GetPlane(0)->GetNcoeffs();
@@ -2629,11 +2894,7 @@ namespace Nektar
 
     void CoupledLinearNS_trafoP::DoInitialiseAdv(Array<OneD, NekDouble> myAdvField_x, Array<OneD, NekDouble> myAdvField_y)
     {
-    	switch(m_equationType)
-    	{
-    	    case eSteadyOseen:
-			{
-				// only covers case eSteadyOseen
+    	// only covers case eSteadyOseen
 
 	// moved to .h	Array<OneD, Array<OneD, NekDouble> > myAdvField(2);
 	myAdvField = Array<OneD, Array<OneD, NekDouble> > (2);
@@ -2707,7 +2968,65 @@ namespace Nektar
         return m_session->GetVariables().size();
     }
     
-   void CoupledLinearNS_trafoP::Continuation_method(NekDouble param)
+    void CoupledLinearNS_trafoP::WritePhysCoordIndicesMapping()
+    {
+    	MultiRegions::ExpListSharedPtr pressure_collector = GetPressure();   
+
+        int nPoints = m_fields[0]->GetTotPoints();
+        Array<OneD, NekDouble> coords0(nPoints);
+        Array<OneD, NekDouble> coords1(nPoints);
+        Array<OneD, NekDouble> coords2(nPoints);
+
+        m_fields[0]->GetCoords(coords0, coords1, coords2);
+
+        /*ofstream myfile ("mf0.txt");
+      	if (myfile.is_open())
+      	{
+        	for (int counter = 0; counter < nPoints; ++counter)
+        	{
+        	    myfile << std::setprecision(17) << coords0[counter] << " ";
+        	    myfile << std::setprecision(17) << coords1[counter] << " ";
+       		    myfile << std::setprecision(17) << coords2[counter] << " ";
+          	  myfile << "\n";
+       		}
+            myfile.close();
+      	}
+      	else cout << "Unable to open file";*/
+
+        m_fields[1]->GetCoords(coords0, coords1, coords2);
+
+        ofstream myfile1 ("mf1.txt");
+      	if (myfile1.is_open())
+      	{
+        	for (int counter = 0; counter < nPoints; ++counter)
+        	{
+            	myfile1 << std::setprecision(17) << coords0[counter] << " ";
+            	myfile1 << std::setprecision(17) << coords1[counter] << " ";
+            	myfile1 << std::setprecision(17) << coords2[counter] << " ";
+            	myfile1 << "\n";
+        	}
+            myfile1.close();
+      	}
+      	else cout << "Unable to open file";
+
+     /*   pressure_collector->GetCoords(coords0, coords1, coords2);
+
+        ofstream myfile2 ("pc.txt");
+      	if (myfile2.is_open())
+      	{
+        	for (int counter = 0; counter < nPoints; ++counter)
+        	{
+            	myfile2 << std::setprecision(17) << coords0[counter] << " ";
+            	myfile2 << std::setprecision(17) << coords1[counter] << " ";
+            	myfile2 << std::setprecision(17) << coords2[counter] << " ";
+            	myfile2 << "\n";
+        	}
+            myfile2.close();
+      	}
+      	else cout << "Unable to open file";  */
+    }
+    
+   Array<OneD, Array<OneD, Array<OneD, NekDouble> > > CoupledLinearNS_trafoP::Continuation_method(NekDouble param)
    {
    		double m_kinvisMin, m_KinvisPercentage, m_tol, m_maxIt, m_MatrixSetUpStep, m_Restart, step;
    		m_session->LoadParameter("KinvisMin", m_kinvisMin);
@@ -2717,31 +3036,41 @@ namespace Nektar
         m_session->LoadParameter("Restart", m_Restart);
         m_session->LoadParameter("KinvisStep", step);
         m_session->LoadParameter("UseDeflation", use_deflation);
-                
-		//CoupledLinearNS_trafoP babyCLNS_trafo(m_session);
-		//babyCLNS_trafo.InitObject();
-		
+        
+        arclength_step = step;
+        max_step = step;
+        start_with_Oseen = false;
+        step_multiplier = 1;
+        
 		sol_x_cont_defl = Array<OneD, Array<OneD, NekDouble> > (m_maxIt);
 		sol_y_cont_defl = Array<OneD, Array<OneD, NekDouble> > (m_maxIt);
-		//solution_pres_continuation_deflation = Array<OneD, Array<OneD, NekDouble> > (m_maxIt);
-				
-		sol_x_cont_defl[0] = Array<OneD, NekDouble> (GetNpoints(), 0.0);
-		sol_y_cont_defl[0] = Array<OneD, NekDouble> (GetNpoints(), 0.0);
-		//solution_pres_continuation_deflation[0] = Array<OneD, NekDouble> (m_pressure->UpdatePhys().num_elements(), 0.0);
 		
-		int number_of_iterations = 0, deflated_solutions_found = 0, curr_i, indexFlip;
-		int previous_step_solutions = 1, previous_previous_step_solutions;  //number of solutions found in the step k-1 and k-2 when the current step is the k-th
-		bool lost_solution = true, use_arclength;
+		sol_x_cont_defl[0] = Array<OneD, NekDouble> (GetNpoints(), 0.0);
+		sol_y_cont_defl[0] = Array<OneD, NekDouble> (GetNpoints(), 0.0);                    
+		
+		Array<OneD, Array<OneD, Array<OneD, NekDouble> > > result = Array<OneD, Array<OneD, Array<OneD, NekDouble> > > (2);
+		result[0] = sol_x_cont_defl;
+		result[1] = sol_y_cont_defl;		
+		
+		int deflated_solutions_found = 0, curr_i, indexFlip;
+		int previous_step_solutions = 1, previous_previous_step_solutions, last_bif_point_solutions_found = 0;  //number of solutions found in the step k-1 and k-2 when the current step is the k-th
+		bool lost_solution = true, use_arclength, used_deflation;
+		double last_param, delta_param, csi, use_deflation_now = false, use_guessGivenNi = true;
 		Array<OneD, NekDouble> guess_x, guess_y, guess_tmp;
+		//Eigen::MatrixXd complete_matrix;
 		number_of_deflations = 0;
+		total_solutions_found = 0;
 		
 		Set_m_kinvis(param);
 		std::vector<int> indices_to_be_continued; //for the next value of the parameter
 		//std::vector<int> local_indices_to_be_continued(0); //for the current value of the parameter
-		Array<OneD, Array<OneD, NekDouble> > converged_solution, possible_solutions;
+		Array<OneD, Array<OneD, NekDouble> > converged_solution(2), possible_solutions;
 		
+		
+		//int index = 43; // random number
+		WritePhysCoordIndicesMapping();
 			std::ifstream infile;
-			infile.open("coords.txt", std::ios::in);
+			infile.open("mf1.txt", std::ios::in);
 			
 			double x1,y1,z1;
 			bool finito = false;
@@ -2757,12 +3086,13 @@ namespace Nektar
 					x.push_back(x1);
 					y.push_back(y1);
 			}
-			flipperMap = GetFlipperMap(x,y);
+			flipperMap = GetFlipperMap(x,y); 
+			index = 300;
 			
 			deflate = false;
 			//compute first solution
 			cout<<"Compute first solution\n"<<endl;
-			converged_solution = DoSolve_at_param(sol_x_cont_defl[0], sol_y_cont_defl[0], m_kinvis);
+			converged_solution = DoSolve_at_param_continuation(sol_x_cont_defl[0], sol_y_cont_defl[0], m_kinvis);
 			for (int j=0; j < GetNpoints(); ++j)
 			{
 				sol_x_cont_defl[0][j] = converged_solution[0][j];
@@ -2771,13 +3101,22 @@ namespace Nektar
 			indices_to_be_continued.push_back(0);
 			total_solutions_found = 1;
 			different_solutions_found = 1; 	
+			last_param = m_kinvis;
 			
 			std::ofstream outfile;
 			outfile.open("bif_diagr.txt", std::ios::out);
+			
+			std::ofstream outfile2;
+			outfile2.open("arclength.txt", std::ios::out);
  
 			outfile<<m_kinvis<<" "<<sol_y_cont_defl[0][index]<<endl; 
+			outfile2<<arclength_step<<endl; 
+			param_vector.push_back(m_kinvis);
+			total_solutions_found = 0;
+			//FarrelOutput(flipperMap, outfile, FarrelOutputSign(x,y));
+			total_solutions_found = 1;
 			
-			while(m_kinvis > m_kinvisMin && number_of_iterations < m_maxIt)
+			while(m_kinvis > m_kinvisMin && total_solutions_found < m_maxIt)
 			{
 				local_indices_to_be_continued.resize(0);
 				
@@ -2786,6 +3125,12 @@ namespace Nektar
 				if(previous_step_solutions == previous_previous_step_solutions && !lost_solution)
 				{
 					use_arclength = true;
+					if(use_guessGivenNi)
+					{
+						delta_param = findMinParam(indices_to_be_continued);
+						delta_param = max(0.0001, min(0.01, delta_param));
+						cout<<"delta_param = "<<delta_param<<endl;
+					}
 				}
 				else
 				{
@@ -2794,36 +3139,56 @@ namespace Nektar
 				previous_previous_step_solutions = previous_step_solutions;
 				previous_step_solutions = 0;
 				deflate = false;
-				Set_m_kinvis(m_kinvis-step);
-				for(int i = 0; i < indices_to_be_continued.size(); i++)
+				//use_arclength = true;
+				if(!(use_arclength && total_solutions_found>1))
+					Set_m_kinvis(m_kinvis-step);
+				for(int i = 0; i < indices_to_be_continued.size() && total_solutions_found < m_maxIt; i++)
 				{		
 					curr_i = indices_to_be_continued[i];
 					if(use_arclength && total_solutions_found>1) // pseudo arc-length only if I didn't found or loose any solution  
-					{
-						for (int j=0; j < GetNpoints(); ++j)  //to perform u(x_k+1) = u(x_k)+step*{u'(x_k)} = u(x_k)+step*{[u(x_k)-u(x_k-1)]/step} = 2*u(x_k)-u(x_k-1)
+					{					
+						if(!use_guessGivenNi)
+							ComputeContinuationGuess(curr_i, curr_i-previous_previous_step_solutions);
+						else
 						{
-							guess_x[j] = 2*sol_x_cont_defl[curr_i][j] - sol_x_cont_defl[curr_i-previous_step_solutions][j];
-							guess_y[j] = 2*sol_y_cont_defl[curr_i][j] - sol_y_cont_defl[curr_i-previous_step_solutions][j];
+							ComputeContinuationGuessGivenNi(curr_i, curr_i-previous_previous_step_solutions, delta_param);
 						}
+						guess_x = sol_x_cont_defl[total_solutions_found];
+						guess_y = sol_y_cont_defl[total_solutions_found];
+						//cout<<"valore prima"<<guess_x[23]<<endl;
 					}
 					else
 					{
 						guess_x = sol_x_cont_defl[curr_i];
 						guess_y = sol_y_cont_defl[curr_i];
+						//cout<<"valore prima"<<guess_x[23]<<endl;
 					}
 					lost_solution = false;
-					converged_solution = DoSolve_at_param(guess_x, guess_y, m_kinvis);	
+					converged_solution = DoSolve_at_param_continuation(guess_x, guess_y, m_kinvis);
+					if(use_arclength && total_solutions_found>1)
+					{
+						if(use_guessGivenNi && i < indices_to_be_continued.size() - 1)
+							m_kinvis += delta_param;
+					}
 					if(converged)
 					{
 						sol_x_cont_defl[total_solutions_found] = Array<OneD, NekDouble> (GetNpoints(), 0.0);
 						sol_y_cont_defl[total_solutions_found] = Array<OneD, NekDouble> (GetNpoints(), 0.0);
+						
+						double norma = 0;
 						for (int j=0; j < GetNpoints(); ++j)
 						{
 							sol_x_cont_defl[total_solutions_found][j] = converged_solution[0][j];
 							sol_y_cont_defl[total_solutions_found][j] = converged_solution[1][j];
+							norma += (converged_solution[0][j] - guess_x[j]) * (converged_solution[0][j] - guess_x[j]) ;
+							norma += (converged_solution[1][j] - guess_y[j]) * (converged_solution[1][j] - guess_y[j]) ;
 						}
+						cout<<"La norma é "<<norma<<" e un punto a caso vale "<<guess_x[23]<<" oppure "<<sol_x_cont_defl[curr_i][23]<<" -> "<<converged_solution[0][23]<<endl;
 						local_indices_to_be_continued.push_back(total_solutions_found);
+						param_vector.push_back(m_kinvis);
 						outfile<<m_kinvis<<" "<<sol_y_cont_defl[total_solutions_found][index]<<endl; 
+						outfile2<<arclength_step<<endl; 
+						//FarrelOutput(flipperMap, outfile, FarrelOutputSign(x,y));
 						total_solutions_found++;
 						previous_step_solutions++;
 					}
@@ -2831,26 +3196,55 @@ namespace Nektar
 					{
 						lost_solution = true;
 					}
+					deflate = true;
+				}
+				
+				
+				if(use_arclength)  // Change of arclength_step to improve the continuation and activate or deactivate deflation when I need it
+				{
+					//if(arclength_step * step_multiplier < max_step)
+						//arclength_step *= step_multiplier; 
+					cout<<"Step_multiplier = "<<step_multiplier<<endl;	
+					used_deflation = use_deflation_now;
+					if(step_multiplier < 0.75)
+					{
+						use_deflation_now = use_deflation;
+					}
+					else
+					{
+						use_deflation_now = false;
+					}
+					
+					if(!used_deflation && use_deflation_now)
+						last_bif_point_solutions_found = 0;
+					if(last_bif_point_solutions_found > 1)
+						use_deflation_now = false;
+						
 				}
 				
 				//deflation
 				cout<<"\nBegin deflation"<<endl;
 				deflate = true;
 				int prev_solutions = local_indices_to_be_continued.size();
-				for(int i = 0; i < prev_solutions && use_deflation; i++)
+				
+				//if((m_kinvis>9.28 && m_kinvis<9.7 && local_indices_to_be_continued.size()<3) || (m_kinvis>3 && m_kinvis<4.3 && local_indices_to_be_continued.size()<4))
+				{
+					use_deflation_now = true;
+				}
+				for(int i = 0; i < prev_solutions && use_deflation_now && total_solutions_found < m_maxIt; i++)// && ((m_kinvis>9.28 && m_kinvis<9.7 && local_indices_to_be_continued.size()<3) || (m_kinvis>3 && m_kinvis<4.3 && local_indices_to_be_continued.size()<4)); i++)
 				{
 					curr_i = local_indices_to_be_continued[i];
 					converged = true;
 					
-					for (int j=0; j < GetNpoints(); ++j)  //to perform u(x_k+1) = u(x_k)+step*{u'(x_k)} = u(x_k)+step*{[u(x_k)-u(x_k-1)]/step} = 2*u(x_k)-u(x_k-1)
+					for (int j=0; j < GetNpoints(); ++j) 
 					{
-						guess_x[j] = 0*sol_x_cont_defl[curr_i][j]*(1+(((double)rand())/RAND_MAX-0.5)/2/1e10);
-						guess_y[j] = 0*sol_y_cont_defl[curr_i][j]*(1+(((double)rand())/RAND_MAX-0.5)/2/1e10);
-					}					
+						guess_x[j] = sol_x_cont_defl[curr_i][j]*(1+(((double)rand())/RAND_MAX-0.5)/2/1e2);
+						guess_y[j] = sol_y_cont_defl[curr_i][j]*(1+(((double)rand())/RAND_MAX-0.5)/2/1e2);
+					}				
 					
 					while(converged)
 					{
-						converged_solution = DoSolve_at_param(guess_x/*sol_x_cont_defl[curr_i]*/, guess_y/*sol_y_cont_defl[curr_i]*/, m_kinvis);
+						converged_solution = DoSolve_at_param_continuation(guess_x, guess_y, m_kinvis);
 						if(converged)
 						{
 							sol_x_cont_defl[total_solutions_found] = Array<OneD, NekDouble> (GetNpoints(), 0.0);
@@ -2861,43 +3255,77 @@ namespace Nektar
 								sol_y_cont_defl[total_solutions_found][j] = converged_solution[1][j];
 							}
 							local_indices_to_be_continued.push_back(total_solutions_found);
+							param_vector.push_back(m_kinvis);
 							outfile<<m_kinvis<<" "<<sol_y_cont_defl[total_solutions_found][index]<<endl;
+							outfile2<<arclength_step<<endl; 
+							//FarrelOutput(flipperMap, outfile, FarrelOutputSign(x,y));
 							total_solutions_found++;
 							previous_step_solutions++;
+							last_bif_point_solutions_found++;
 						}
 					}
 				}
 				
 				//here I want to flip the solutions and check if they are different from the previous ones, if so I use them as initial guess trying to converge to new solutions
-				indexFlip = 0;				
-				possible_solutions = FlipAndCheck(flipperMap, &indexFlip);
+				//cout<<"I want to flip because there is local_indices_to_be_continued.size() = "<<local_indices_to_be_continued.size() <<endl;
+				if(local_indices_to_be_continued.size() % 2 == 0)
+				{ 
+					indexFlip = 0;				
+					possible_solutions = FlipAndCheck(flipperMap, &indexFlip);
+					last_param = m_kinvis;
 				
-				for(int i = 0; i < indexFlip; i+=2)
-				{		
-					converged_solution = DoSolve_at_param(possible_solutions[i], possible_solutions[i+1], m_kinvis);	
-					if(converged)
-					{
-						sol_x_cont_defl[total_solutions_found] = Array<OneD, NekDouble> (GetNpoints(), 0.0);
-						sol_y_cont_defl[total_solutions_found] = Array<OneD, NekDouble> (GetNpoints(), 0.0);
-						for (int j=0; j < GetNpoints(); ++j)
+					for(int i = 0; i < indexFlip && total_solutions_found < m_maxIt; i+=2)
+					{	
+						start_with_Oseen = true;
+						//m_kinvis = possible_solutions[indexFlip][i/2];
+						//Vmath::Vcopy(possible_solutions[i].num_elements(), possible_solutions[i], 1, m_fields[0]->UpdatePhys(), 1 );
+						//Vmath::Vcopy(possible_solutions[i+1].num_elements(), possible_solutions[i+1], 1, m_fields[1]->UpdatePhys(), 1 );
+						
+						
+						//m_fields[0]->FwdTrans(m_fields[0]->GetPhys(), m_fields[0]->UpdateCoeffs());
+						//m_fields[1]->FwdTrans(m_fields[1]->GetPhys(), m_fields[1]->UpdateCoeffs());
+						
+						converged_solution = DoSolve_at_param_continuation(possible_solutions[i], possible_solutions[i+1], m_kinvis);
+						if(converged)
 						{
-							sol_x_cont_defl[total_solutions_found][j] = converged_solution[0][j];
-							sol_y_cont_defl[total_solutions_found][j] = converged_solution[1][j];
+							sol_x_cont_defl[total_solutions_found] = Array<OneD, NekDouble> (GetNpoints(), 0.0);
+							sol_y_cont_defl[total_solutions_found] = Array<OneD, NekDouble> (GetNpoints(), 0.0);
+							for (int j=0; j < GetNpoints(); ++j)
+							{
+								sol_x_cont_defl[total_solutions_found][j] = converged_solution[0][j];
+								sol_y_cont_defl[total_solutions_found][j] = converged_solution[1][j];
+							}
+							local_indices_to_be_continued.push_back(total_solutions_found);
+							param_vector.push_back(m_kinvis);
+							outfile<<m_kinvis<<" "<<sol_y_cont_defl[total_solutions_found][index]<<endl; 
+							outfile2<<arclength_step<<endl; 
+							//FarrelOutput(flipperMap, outfile, FarrelOutputSign(x,y));
+							total_solutions_found++;
+							previous_step_solutions++;
+							last_bif_point_solutions_found++;
 						}
-						local_indices_to_be_continued.push_back(total_solutions_found);
-						outfile<<m_kinvis<<" "<<sol_y_cont_defl[total_solutions_found][index]<<endl; 
-						total_solutions_found++;
-						previous_step_solutions++;
 					}
-				}
+					m_kinvis = last_param;
+					start_with_Oseen = false;  
+				} 
 				
 				indices_to_be_continued.clear();
 				indices_to_be_continued = std::vector<int>(local_indices_to_be_continued);
 			}
 			outfile.close();
+			outfile2.close();
+			
+		result[0] = Array<OneD, Array<OneD, NekDouble> > (total_solutions_found);
+		result[1] = Array<OneD, Array<OneD, NekDouble> > (total_solutions_found);	
+		
+		for(int i = 0; i < total_solutions_found; i++)
+		{
+			result[0][i] = 	sol_x_cont_defl[i];
+			result[1][i] = 	sol_y_cont_defl[i];
+		}
 		
 		cout<<"\nEnd of continuation_method()\n";
- 
+ 		return result;
    }
    
    
@@ -2905,7 +3333,7 @@ namespace Nektar
 	{
 		std::vector<int> flipperMap;
 		bool found;
-		double tol = 1e-12, center = 4.5;
+		double tol = 1e-5, center = 3.75;
 		
 		for(int i = 0; i < x.size(); i++)
 		{
@@ -2923,20 +3351,22 @@ namespace Nektar
 		return flipperMap;
 	}
 	
+	//the output is the set of possible solutions (u1,v1,u2,v2,u3,v3,...) obtained flipping the previous ones, the last array contains the associated parameters
 	Array<OneD, Array<OneD, NekDouble> > CoupledLinearNS_trafoP::FlipAndCheck(std::vector<int> &flipperMap, int *flipCounter)
 	{
 		Array<OneD, NekDouble> guess_tmp, guess_x, guess_y;
-		guess_x = Array<OneD, NekDouble>(sol_x_cont_defl[0].num_elements(),0.0);
-		guess_y = Array<OneD, NekDouble>(sol_x_cont_defl[0].num_elements(),0.0);
-		int num_sol = local_indices_to_be_continued.size();
-		Array<OneD, Array<OneD, NekDouble> > possible_solutions = Array<OneD, Array<OneD, NekDouble> >(2*num_sol) ;
+		unsigned int num_sol = local_indices_to_be_continued.size();
+		Array<OneD, Array<OneD, NekDouble> > possible_solutions = Array<OneD, Array<OneD, NekDouble> >(2*num_sol );//+ 1) ;
+		//possible_solutions[2*num_sol] = Array<OneD, NekDouble>(num_sol,0.0);
 		double norm;
 		bool possible;
 		(*flipCounter) = 0;
 		
-		for(int j = 0; j < num_sol; j++)
+		for(unsigned int j = 0; j < num_sol; j++)
 		{
-			int curr_j = local_indices_to_be_continued[j];
+			guess_x = Array<OneD, NekDouble>(sol_x_cont_defl[0].num_elements(),0.0);
+			guess_y = Array<OneD, NekDouble>(sol_x_cont_defl[0].num_elements(),0.0);
+			unsigned int curr_j = local_indices_to_be_continued[j];
 			
 			//flip
 			for(int i = 0; i < sol_x_cont_defl[curr_j].num_elements(); i++)
@@ -2947,30 +3377,344 @@ namespace Nektar
 			
 			//check
 			possible = true;
-			for(int k = 0; k < num_sol; k++)
+			for(unsigned int k = 0; k < num_sol; k++)
 			{
 				norm = 0;
 				int curr_k = local_indices_to_be_continued[k];
-				for(int l = 0; l < sol_x_cont_defl[curr_k].num_elements(); l++)
+				for(unsigned int l = 0; l < sol_x_cont_defl[curr_k].num_elements(); l++)
 				{
 					norm += (guess_x[l]-sol_x_cont_defl[curr_k][l]) * (guess_x[l]-sol_x_cont_defl[curr_k][l]);
 					norm += (guess_y[l]-sol_y_cont_defl[curr_k][l]) * (guess_y[l]-sol_y_cont_defl[curr_k][l]);
 				}  
 				norm = sqrt(norm)/(2*sol_x_cont_defl[curr_k].num_elements());
 				cout<<"The norm of the difference between the solution "<<j<<" flipped and the solution "<<k<<" is "<<norm<<endl;
-				if(norm < 1e-5)
+				if(norm < 1e-3)
 					possible = false;
 			}
 			
 			//add to possible_solutions if it is a new possible solution
 			if(possible)
 			{
-				possible_solutions[(*flipCounter)] = guess_x;
-				possible_solutions[(*flipCounter)+1] = guess_y;
+				possible_solutions[(*flipCounter)] = Array<OneD, NekDouble>(sol_x_cont_defl[0].num_elements(),0.0);
+				possible_solutions[(*flipCounter)+1] = Array<OneD, NekDouble>(sol_y_cont_defl[0].num_elements(),0.0);
+				for(unsigned int i = 0; i < sol_x_cont_defl[curr_j].num_elements(); i++)
+				{
+					possible_solutions[(*flipCounter)][i] = guess_x[i];
+					possible_solutions[(*flipCounter)+1][i] = guess_y[i];
+				}
+				//possible_solutions[2*num_sol][(*flipCounter)/2] = param_vector[curr_j]; 
 				(*flipCounter) += 2;
 			}
 		}
 		return possible_solutions;
+	}
+	
+	void CoupledLinearNS_trafoP::FarrelOutput(std::vector<int> &flipperMap, std::ofstream &outfile, int sign)
+	{
+		Array<OneD, NekDouble> guess_tmp, sol_x, sol_y;
+		sol_x = Array<OneD, NekDouble>(sol_x_cont_defl[0].num_elements(),0.0);
+		//sol_y = Array<OneD, NekDouble>(sol_x_cont_defl[0].num_elements(),0.0);
+		
+		for(unsigned int i = 0; i < sol_x_cont_defl[0].num_elements(); i++)
+		{
+			sol_x[i] = sol_x_cont_defl[total_solutions_found][i] - sol_x_cont_defl[total_solutions_found][flipperMap[i]];
+		}   
+		
+		for(unsigned int i = 0; i < sol_x_cont_defl[0].num_elements(); i++)
+		{
+			sol_x[i] = fabs(sol_x[i]);
+		}   
+		
+		outfile<<m_kinvis<<" "<<sign * m_fields[0]->L2(sol_x)<<endl;
+	}
+	
+	
+	int CoupledLinearNS_trafoP::FarrelOutputSign(std::vector<double> &x, std::vector<double> &y)
+	{
+		double sign = 0;
+		for(unsigned int i = 0; i < sol_y_cont_defl[0].num_elements(); i++)
+		{
+			sign += sol_y_cont_defl[total_solutions_found][i];
+		}  
+		return round(sign/fabs(sign));		
+	}
+	
+	double CoupledLinearNS_trafoP::findMinParam(std::vector<int> &indices_to_be_continued)
+	{
+		// bordering algorithm present in Keller's book (with same notation) 
+    	
+    	Array<OneD, Array<OneD, NekDouble> > u_N(m_velocity.num_elements());
+        Array<OneD, Array<OneD, NekDouble> > tmp_RHS(m_velocity.num_elements());
+        Array<OneD, Array<OneD, NekDouble> > RHS(m_velocity.num_elements());
+        Array<OneD, Array<OneD, NekDouble> > y(m_velocity.num_elements());
+        Array<OneD, Array<OneD, NekDouble> > z(m_velocity.num_elements());
+        Array<OneD, Array<OneD, NekDouble> > guess(m_velocity.num_elements());
+        double csi_min = 1e20;
+        unsigned int curr_i, prev_i;
+        
+        for(unsigned int j = 0 ; j < indices_to_be_continued.size(); j++)
+        {
+        	curr_i = indices_to_be_continued[j];
+        	prev_i = curr_i - indices_to_be_continued.size();
+        	
+	        Array<OneD, NekDouble> cx(sol_x_cont_defl[curr_i].num_elements()); // I build the vector c using a secant method
+	        Array<OneD, NekDouble> cy(sol_y_cont_defl[curr_i].num_elements());
+	        
+	        for(unsigned int i = 0; i < cx.num_elements(); i++)
+	        	cx[i] = (sol_x_cont_defl[curr_i][i] - sol_x_cont_defl[prev_i][i])/(arclength_step);
+	        for(unsigned int i = 0; i < cy.num_elements(); i++)
+	        	cy[i] = (sol_y_cont_defl[curr_i][i] - sol_y_cont_defl[prev_i][i])/(arclength_step);
+	        
+	        guess[0] = Array<OneD, NekDouble> (m_fields[m_velocity[0]]->GetTotPoints(),0.0);
+	        guess[1] = Array<OneD, NekDouble> (m_fields[m_velocity[1]]->GetTotPoints(),0.0);
+	        guess[0] = sol_x_cont_defl[curr_i];
+	        guess[1] = sol_y_cont_defl[curr_i];
+	        
+	        DoInitialiseAdv(guess[0], guess[1]);
+	        DoSolve();
+	        for(unsigned int i = 0; i < m_velocity.num_elements(); ++i)
+	        {
+	            z[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),0.0);	
+	            m_fields[m_velocity[i]]->BwdTrans_IterPerExp(m_fields[m_velocity[i]]->GetCoeffs(), z[i]);
+	        } 	
+	        
+	        for(unsigned int i = 0; i < m_velocity.num_elements(); ++i)
+	        {
+	            //u_N[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),0.0);	
+	            //m_fields[m_velocity[i]]->BwdTrans_IterPerExp(m_fields[m_velocity[i]]->GetCoeffs(), u_N[i]);
+	            
+	            u_N[i] = guess[i];
+	            
+	            RHS[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),0.0);	
+	            tmp_RHS[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),0.0);	
+	            
+	            m_fields[m_velocity[i]]->PhysDeriv(i, u_N[i], tmp_RHS[i]);
+	            Vmath::Smul(tmp_RHS[i].num_elements(), m_kinvis, tmp_RHS[i], 1, tmp_RHS[i], 1);
+	            //Vmath::Smul(tmp_RHS[i].num_elements(), param_vector[curr_i], tmp_RHS[i], 1, tmp_RHS[i], 1);
+	            
+	            bool waveSpace = m_fields[m_velocity[i]]->GetWaveSpace();
+	            m_fields[m_velocity[i]]->SetWaveSpace(true);
+	            m_fields[m_velocity[i]]->IProductWRTDerivBase(i, tmp_RHS[i], RHS[i]);
+	            m_fields[m_velocity[i]]->SetWaveSpace(waveSpace);
+	        }
+	        
+	        SetUpCoupledMatrix(0.0, u_N, true);
+	        SolveLinearNS(RHS);
+	        
+	        for(unsigned int i = 0; i < m_velocity.num_elements(); ++i)
+	        {
+	            y[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),0.0);	
+	            m_fields[m_velocity[i]]->BwdTrans_IterPerExp(m_fields[m_velocity[i]]->GetCoeffs(), y[i]);
+	            
+	            Vmath::Smul(y[i].num_elements(), m_kinvis, y[i], 1, y[i], 1);
+	            //Vmath::Smul(y[i].num_elements(), param_vector[curr_i], y[i], 1, y[i], 1);
+	            Vmath::Vadd(y[i].num_elements(), y[i], 1, u_N[i], 1, y[i], 1);
+	            
+	            //m_fields[m_velocity[i]]->FwdTrans(u_star[i], m_fields[m_velocity[i]]->UpdateCoeffs());
+	            //m_fields[m_velocity[i]]->BwdTrans(m_fields[m_velocity[i]]->GetCoeffs(), m_fields[m_velocity[i]]->UpdatePhys());
+	        }
+	        for(unsigned int i = 0; i < guess.num_elements(); i++)
+	        {
+	        	guess[i] = y[i];
+	        }
+	        
+	        double c_dot_z, c_dot_y, csi;
+	        c_dot_z = Vmath::Dot(cx.num_elements(), cx, z[0]);
+	        c_dot_z += Vmath::Dot(cy.num_elements(), cy, z[1]);
+	        
+	        c_dot_y = Vmath::Dot(cx.num_elements(), cx, y[0]);
+	        c_dot_y += Vmath::Dot(cy.num_elements(), cy, y[1]);
+	        
+	        csi = (arclength_step - c_dot_z) / ((param_vector[curr_i] - param_vector[prev_i])/arclength_step - c_dot_y);
+	        if(fabs(csi) < csi_min)
+	        	csi_min = csi;
+        }
+        return csi_min;
+	}
+	
+	void CoupledLinearNS_trafoP::ComputeContinuationGuessGivenNi(int curr_i, int prev_i, double delta_param)
+	{		
+    	/*Array<OneD, Array<OneD, NekDouble> > u_N(m_velocity.num_elements());
+        Array<OneD, Array<OneD, NekDouble> > tmp_RHS(m_velocity.num_elements());
+        Array<OneD, Array<OneD, NekDouble> > RHS(m_velocity.num_elements());
+        Array<OneD, Array<OneD, NekDouble> > guess(m_velocity.num_elements());
+		guess[0] = Array<OneD, NekDouble> (m_fields[m_velocity[0]]->GetTotPoints(),0.0);
+        guess[1] = Array<OneD, NekDouble> (m_fields[m_velocity[1]]->GetTotPoints(),0.0);
+        
+        guess[0] = sol_x_cont_defl[curr_i];
+        guess[1] = sol_y_cont_defl[curr_i];
+        
+		const unsigned int ncmpt = m_velocity.num_elements();
+        Array<OneD, Array<OneD, NekDouble> > forcing_phys(ncmpt);
+        Array<OneD, Array<OneD, NekDouble> > forcing     (ncmpt);
+
+        for(unsigned int i = 0; i < ncmpt; ++i)
+        {
+            forcing_phys[i] = Array<OneD, NekDouble> (m_fields[m_velocity[0]]->GetNpoints(), 0.0);
+            forcing[i]      = Array<OneD, NekDouble> (m_fields[m_velocity[0]]->GetNcoeffs(),0.0);
+        }
+
+        std::vector<SolverUtils::ForcingSharedPtr>::const_iterator x;
+        for (x = m_forcing.begin(); x != m_forcing.end(); ++x)
+        {
+            const NekDouble time = 0;
+            (*x)->Apply(m_fields, forcing_phys, forcing_phys, time);
+        }
+
+        Array<OneD, Array<OneD, NekDouble> > AdvField(m_velocity.num_elements());
+		Array<OneD, Array<OneD, NekDouble> > Eval_Adv(m_velocity.num_elements());
+		Array<OneD, Array<OneD, NekDouble> > AdvTerm(m_velocity.num_elements());
+        for(unsigned int il = 0; il < m_velocity.num_elements(); ++il)
+        {
+            AdvField[il] = Array<OneD, NekDouble> (m_fields[m_velocity[il]]->GetTotPoints(),0.0);
+			Eval_Adv[il] = Array<OneD, NekDouble> (m_fields[m_velocity[il]]->GetTotPoints(),0.0);
+			AdvTerm[il] = Array<OneD, NekDouble> (m_fields[m_velocity[il]]->GetNcoeffs(),0.0);
+        }
+                 
+        ASSERTL0(m_session->DefinesFunction("AdvectionVelocity"),
+             "Advection Velocity section must be defined in "
+             "session file.");
+                 
+        std::vector<std::string> fieldStr;
+        for(unsigned int il = 0; il < m_velocity.num_elements(); ++il)
+        {
+        	fieldStr.push_back(m_boundaryConditions->GetVariable(m_velocity[il]));
+        }
+        EvaluateFunction(fieldStr,AdvField,"AdvectionVelocity");
+
+		// here myAdvField
+		EvaluateAdvectionTerms(myAdvField, Eval_Adv);
+		// actually have the right Adv velo
+
+        for (unsigned int i = 0; i < ncmpt; ++i)
+        {
+            bool waveSpace = m_fields[m_velocity[i]]->GetWaveSpace();
+            m_fields[i]->SetWaveSpace(true);
+            m_fields[i]->IProductWRTBase(forcing_phys[i], forcing[i]);
+            m_fields[m_velocity[i]]->IProductWRTBase(Eval_Adv[i], AdvTerm[i]); //(w, (u.grad)u)
+	    	if (use_Newton)
+	    	{
+				for (unsigned int il = 0; il < forcing[i].num_elements(); ++il)
+	        	{
+					forcing[i][il] = forcing[i][il] - AdvTerm[i][il];
+				}
+	    	}
+        	m_fields[i]->SetWaveSpace(waveSpace);
+        }
+        
+        for(unsigned int i = 0; i < ncmpt; ++i)
+        {
+            u_N[i] = guess[i];
+            
+            RHS[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),0.0);	
+            tmp_RHS[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),0.0);	
+            
+            m_fields[m_velocity[i]]->PhysDeriv(i, u_N[i], tmp_RHS[i]);
+            Vmath::Smul(tmp_RHS[i].num_elements(), m_kinvis * delta_param, tmp_RHS[i], 1, tmp_RHS[i], 1);
+            
+            bool waveSpace = m_fields[m_velocity[i]]->GetWaveSpace();
+            m_fields[m_velocity[i]]->SetWaveSpace(true);
+            m_fields[m_velocity[i]]->IProductWRTDerivBase(i, tmp_RHS[i], RHS[i]);
+            m_fields[m_velocity[i]]->SetWaveSpace(waveSpace);
+            
+            Vmath::Vsub(tmp_RHS[i].num_elements(),forcing[i],1,RHS[i],1,RHS[i],1);
+        }
+        
+        SetUpCoupledMatrix(0.0, u_N, true);
+        SolveLinearNS(RHS);
+        
+        sol_x_cont_defl[total_solutions_found] = Array<OneD, NekDouble>(sol_x_cont_defl[0].num_elements(),0.0);	
+        sol_y_cont_defl[total_solutions_found] = Array<OneD, NekDouble>(sol_y_cont_defl[0].num_elements(),0.0);	
+        
+        m_fields[0]->BwdTrans(m_fields[0]->GetCoeffs(), m_fields[0]->UpdatePhys());
+        m_fields[1]->BwdTrans(m_fields[1]->GetCoeffs(), m_fields[1]->UpdatePhys());
+        
+		CopyFromPhysField(0, sol_x_cont_defl[total_solutions_found]); 
+		CopyFromPhysField(1, sol_y_cont_defl[total_solutions_found]);	
+        
+        m_kinvis -= delta_param;*/
+        
+    	
+    	Array<OneD, Array<OneD, NekDouble> > u_N(m_velocity.num_elements());
+        Array<OneD, Array<OneD, NekDouble> > tmp_RHS(m_velocity.num_elements());
+        Array<OneD, Array<OneD, NekDouble> > RHS(m_velocity.num_elements());
+        Array<OneD, Array<OneD, NekDouble> > y(m_velocity.num_elements());
+        Array<OneD, Array<OneD, NekDouble> > z(m_velocity.num_elements());
+        Array<OneD, Array<OneD, NekDouble> > guess(m_velocity.num_elements());
+        
+        sol_x_cont_defl[total_solutions_found] = Array<OneD, NekDouble>(sol_x_cont_defl[0].num_elements(),0.0);	
+        sol_y_cont_defl[total_solutions_found] = Array<OneD, NekDouble>(sol_y_cont_defl[0].num_elements(),0.0);	
+        
+        Array<OneD, NekDouble> cx(sol_x_cont_defl[curr_i].num_elements()); // I build the vector c using a secant method
+        Array<OneD, NekDouble> cy(sol_y_cont_defl[curr_i].num_elements());
+        for(int i = 0; i < cx.num_elements(); i++)
+        	cx[i] = (sol_x_cont_defl[curr_i][i] - sol_x_cont_defl[prev_i][i])/(arclength_step);
+        for(int i = 0; i < cy.num_elements(); i++)
+        	cy[i] = (sol_y_cont_defl[curr_i][i] - sol_y_cont_defl[prev_i][i])/(arclength_step);
+        
+        guess[0] = Array<OneD, NekDouble> (m_fields[m_velocity[0]]->GetTotPoints(),0.0);
+        guess[1] = Array<OneD, NekDouble> (m_fields[m_velocity[1]]->GetTotPoints(),0.0);
+        
+        guess[0] = sol_x_cont_defl[curr_i];
+        guess[1] = sol_y_cont_defl[curr_i];
+        
+        DoInitialiseAdv(guess[0], guess[1]);
+        DoSolve();
+        for(int i = 0; i < m_velocity.num_elements(); ++i)
+        {
+            z[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),0.0);	
+            m_fields[m_velocity[i]]->BwdTrans_IterPerExp(m_fields[m_velocity[i]]->GetCoeffs(), z[i]);
+        } 	
+        
+        for(int i = 0; i < m_velocity.num_elements(); ++i)
+        {
+            u_N[i] = guess[i];
+            
+            RHS[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),0.0);	
+            tmp_RHS[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),0.0);	
+            
+            m_fields[m_velocity[i]]->PhysDeriv(i, u_N[i], tmp_RHS[i]);
+            Vmath::Smul(tmp_RHS[i].num_elements(), m_kinvis, tmp_RHS[i], 1, tmp_RHS[i], 1);
+            
+            bool waveSpace = m_fields[m_velocity[i]]->GetWaveSpace();
+            m_fields[m_velocity[i]]->SetWaveSpace(true);
+            m_fields[m_velocity[i]]->IProductWRTDerivBase(i, tmp_RHS[i], RHS[i]);
+            m_fields[m_velocity[i]]->SetWaveSpace(waveSpace);
+        }
+        
+        SetUpCoupledMatrix(0.0, u_N, true);
+        SolveLinearNS(RHS);
+        
+        for(int i = 0; i < m_velocity.num_elements(); ++i)
+        {
+            y[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),0.0);	
+            m_fields[m_velocity[i]]->BwdTrans_IterPerExp(m_fields[m_velocity[i]]->GetCoeffs(), y[i]);
+            
+            //Vmath::Smul(y[i].num_elements(), m_kinvis, y[i], 1, y[i], 1);
+            //Vmath::Vadd(y[i].num_elements(), y[i], 1, u_N[i], 1, y[i], 1);
+        }
+        
+        for(int i = 0; i < guess.num_elements(); i++)
+        {
+        	Vmath::Smul(y[i].num_elements(), delta_param, y[i], 1, y[i], 1);
+        	Vmath::Vsub(y[i].num_elements(), z[i], 1, u_N[i], 1, z[i], 1);
+    	}
+       
+		
+        for(int i = 0; i < sol_x_cont_defl[total_solutions_found].num_elements(); i++)
+        {
+        	sol_x_cont_defl[total_solutions_found][i] = sol_x_cont_defl[curr_i][i] + z[0][i];
+        	sol_y_cont_defl[total_solutions_found][i] = sol_y_cont_defl[curr_i][i] + z[1][i];
+        }  
+        m_kinvis -= delta_param;
+        
+        m_fields[0]->FwdTrans(sol_x_cont_defl[total_solutions_found], m_fields[0]->UpdateCoeffs());
+        m_fields[1]->FwdTrans(sol_y_cont_defl[total_solutions_found], m_fields[1]->UpdateCoeffs());
+        
+        m_fields[0]->BwdTrans(m_fields[0]->GetCoeffs(), m_fields[0]->UpdatePhys());
+        m_fields[1]->BwdTrans(m_fields[1]->GetCoeffs(), m_fields[1]->UpdatePhys());
+        
+        cout<<"end of ComputeContinuationGuessGivenNi with m_kinvis = "<<m_kinvis<<endl;
 	}
 
 }

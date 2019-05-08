@@ -118,7 +118,7 @@ namespace Nektar
                 &NavierStokesCFE::GetViscousFluxVectorConservVar, this);
             m_diffusion->SetFunctorDerivBndCond(
                 &NavierStokesCFE::SetBoundaryConditionsDeriv, this);
-            
+
             m_diffusion->SetSpecialBndTreat(
                 &NavierStokesCFE::SpecialBndTreat, this);
 
@@ -155,7 +155,7 @@ namespace Nektar
 
         // Concluding initialisation of diffusion operator
         m_diffusion->InitObject         (m_session, m_fields);
-        
+
         //Only NavierStokes equation and using weakDG,LDGNS can temparary use the codes
         m_session->LoadSolverInfo("AdvectionType", advName, "WeakDG");
 	    m_session->LoadSolverInfo("DiffusionType", diffName, "LDGNS");
@@ -234,7 +234,7 @@ namespace Nektar
             m_varConv->GetVelocityVector(inarray, inarrayDiff);
 
             // Repeat calculation for trace space
-            if (pFwd == NullNekDoubleArrayofArray || 
+            if (pFwd == NullNekDoubleArrayofArray ||
                 pBwd == NullNekDoubleArrayofArray)
             {
                 inFwd = NullNekDoubleArrayofArray;
@@ -331,7 +331,7 @@ namespace Nektar
             m_varConv->GetVelocityVector(inarray, inarrayDiff);
 
             // Repeat calculation for trace space
-            if (pFwd == NullNekDoubleArrayofArray || 
+            if (pFwd == NullNekDoubleArrayofArray ||
                 pBwd == NullNekDoubleArrayofArray)
             {
                 inFwd = NullNekDoubleArrayofArray;
@@ -386,7 +386,7 @@ namespace Nektar
         {
             outarrayDiff[i] = Array<OneD, NekDouble>(npoints,0.0);
         }
-        
+
         string diffName;
         m_session->LoadSolverInfo("DiffusionType", diffName, "LDGNS");
         if("InteriorPenalty"==diffName)
@@ -410,7 +410,7 @@ namespace Nektar
             Array<OneD, Array<OneD, NekDouble>> inFwd;
             Array<OneD, Array<OneD, NekDouble>> inBwd;
             Array<OneD,Array<OneD, Array<OneD, NekDouble>>> inarrayDiffderivative(nDim);
-            
+
             //Allocate memory
             inarrayDiff=Array<OneD, Array<OneD, NekDouble>> (nvariables - 1);
             inFwd=Array<OneD, Array<OneD, NekDouble>>(nvariables - 1);
@@ -801,8 +801,8 @@ namespace Nektar
         const Array<OneD, Array<OneD, NekDouble> >                      &inarray,
         const Array<OneD, Array<OneD, Array<OneD, NekDouble> > >        &qfields,
               Array<OneD, Array<OneD, Array<OneD, NekDouble> > >        &outarray,
-              Array< OneD, int >                                        &nonZeroIndex,    
-        const Array<OneD, Array<OneD, NekDouble> >                      &normal,         
+              Array< OneD, int >                                        &nonZeroIndex,
+        const Array<OneD, Array<OneD, NekDouble> >                      &normal,
         const Array<OneD, NekDouble>                                    &ArtifDiffFactor)
     {
         int nPts=inarray[0].num_elements();
@@ -876,7 +876,7 @@ namespace Nektar
         if(ArtifDiffFactor.num_elements())
         {
             n_nonZero   =   nConvectiveFields;
-            
+
             if(normal.num_elements())
             {
                 Array<OneD, NekDouble> tmparray(nPts,0.0);
@@ -917,12 +917,12 @@ namespace Nektar
     void NavierStokesCFE::SpecialBndTreat(
         const int                                           nConvectiveFields,
               Array<OneD,       Array<OneD, NekDouble> >    &consvar)
-    {            
+    {
         int ndens       = 0;
         int nengy       = nConvectiveFields-1;
         int nvelst      = ndens + 1;
         int nveled      = nengy;
-        
+
         int cnt;
         int j, e;
         int id2;
@@ -930,7 +930,7 @@ namespace Nektar
         int nBndEdgePts, nBndEdges, nBndRegions;
 
         NekDouble InternalEnergy  =   m_eos->GetInternalEnergy(m_Twall);
-        
+
         Array<OneD, NekDouble> wallTotEngy;
         int nLengthArray    =0;
 
@@ -958,7 +958,7 @@ namespace Nektar
                 GetPhys_Offset(m_fields[0]->GetTraceMap()->
                             GetBndCondTraceToGlobalTraceMap(cnt++));
 
-                // Imposing Temperature Twall at the wall 
+                // Imposing Temperature Twall at the wall
                 if (boost::iequals(m_fields[nengy]->GetBndConditions()[j]->
                     GetUserDefined(),"WallViscous"))
                 {
@@ -978,12 +978,12 @@ namespace Nektar
                     }
                     Vmath::Vdiv(nBndEdgePts,&wallTotEngy[0],1,&consvar[ndens][id2],1,&wallTotEngy[0],1);
                     Vmath::Svtvp(nBndEdgePts,InternalEnergy,&consvar[ndens][id2],1,&wallTotEngy[0],1,&wallTotEngy[0],1);
-                    
 
-                    Vmath::Vcopy(nBndEdgePts, 
-                                &wallTotEngy[0], 1, 
+
+                    Vmath::Vcopy(nBndEdgePts,
+                                &wallTotEngy[0], 1,
                                 &consvar[nengy][id2], 1);
-                }                    
+                }
             }
         }
     }
@@ -991,7 +991,7 @@ namespace Nektar
     void NavierStokesCFE::GetArtificialViscosity(
         const Array<OneD, Array<OneD, NekDouble> >  &inarray,
               Array<OneD,             NekDouble  >  &muav)
-    {            
+    {
         m_artificialDiffusion->GetArtificialViscosity(inarray,muav);
     }
 
@@ -1001,7 +1001,7 @@ namespace Nektar
         const Array<OneD, Array<OneD, NekDouble> >                      &inaverg,
         const Array<OneD, Array<OneD, NekDouble > >                     &inarray,
         Array<OneD, Array<OneD, Array<OneD, NekDouble> > >              &outarray,
-        Array< OneD, int >                                              &nonZeroIndex,    
+        Array< OneD, int >                                              &nonZeroIndex,
         const Array<OneD, Array<OneD, NekDouble> >                      &normals)
     {
         int nPts                = inaverg[nConvectiveFields-1].num_elements();
@@ -1148,24 +1148,87 @@ namespace Nektar
             Vmath::Neg(nPts,&tmp1[0],1);
             Vmath::Vvtvp(nPts,&u[DerivDirection][0],1,&injumpp[FluxDirection_plus_one][0],1,&tmp1[0],1,&tmp1[0],1);
             Vmath::Vmul(nPts,&tmp[0],1,&tmp1[0],1,&outtmp[nDim_plus_one][0],1);
-            
+
         }
+    }
+
+    /**
+    * @brief Calculate the physical artificial viscosity
+    *
+    * @param physfield  Input field.
+    */
+    void NavierStokesCFE::GetPhysicalAV(
+        const Array<OneD, const Array<OneD, NekDouble>> &physfield)
+    {
+        int nPts = physfield[0].num_elements();
+        if ( m_muav == NullNekDouble1DArray )
+        {
+            m_muav = Array<OneD, NekDouble>(nPts, 0.0);
+        }
+        int nElements = m_fields[0]->GetExpSize();
+        Array <OneD, NekDouble > hOverP(nElements, 0.0);
+        hOverP = GetElmtMinHP();
+
+        // Determine the maximum wavespeed
+        Array <OneD, NekDouble > Lambdas(nPts, 0.0);
+        Array <OneD, NekDouble > soundspeed(nPts, 0.0);
+        Array <OneD, NekDouble > absVelocity(nPts, 0.0);
+        m_varConv->GetSoundSpeed(physfield, soundspeed);
+        m_varConv->GetAbsoluteVelocity(physfield, absVelocity);
+
+        Vmath::Vadd(nPts, absVelocity, 1, soundspeed, 1, Lambdas, 1);
+
+        // Compute sensor based on rho
+        Array<OneD, NekDouble> Sensor(nPts, 0.0);
+        m_varConv->GetSensor(m_fields[0], physfield, Sensor, m_muav, 1);
+
+        Array<OneD, NekDouble> tmp;
+        for (int e = 0; e < nElements; e++)
+        {
+            int physOffset      = m_fields[0]->GetPhys_Offset(e);
+            int nElmtPoints     = m_fields[0]->GetExp(e)->GetTotPoints();
+
+            // Scale viscosity by the maximum wave speed
+            NekDouble LambdaElmt = 0.0;
+            LambdaElmt = Vmath::Vmax(nElmtPoints, tmp = Lambdas + physOffset, 1);
+            Vmath::Smul(nElmtPoints, LambdaElmt, tmp = m_muav + physOffset, 1,
+                tmp = m_muav + physOffset, 1);
+
+            // Scale viscosity by average bounded density
+            NekDouble rhoAve = Vmath::Vsum(nElmtPoints, tmp = physfield[0]
+                + physOffset, 1);
+            rhoAve = rhoAve / nElmtPoints;
+ // rhoAve = Smath::Smax(rhoAve , 1.0e-4, 1.0e+4);
+            Vmath::Smul(nElmtPoints, rhoAve, tmp = m_muav + physOffset, 1,
+                tmp = m_muav + physOffset, 1);
+
+            // Scale viscosity by h/p
+            Vmath::Smul(nElmtPoints, hOverP[e], tmp = m_muav + physOffset, 1,
+                tmp = m_muav + physOffset, 1);
+        }
+        // // Scale viscosity by bounded density
+        // Array <OneD, NekDouble > rho(nPts, physfield[0]);
+        // for (int i = 0; i < nPts; i++)
+        // {
+        //     rho[i] = Smath::Smax(rho[i] , 1.0e-4, 1.0e+4);
+        // }
+        // Vmath::Vmul(nPts, rho, 1, m_muav, 1, m_muav, 1);
     }
 
 #ifdef DEMO_IMPLICITSOLVER_JFNK_COEFF
 
     /**
-     * @brief return part of viscous Jacobian: 
-     * \todo flux derived with Qx=[drho_dx,drhou_dx,drhov_dx,drhoE_dx] 
+     * @brief return part of viscous Jacobian:
+     * \todo flux derived with Qx=[drho_dx,drhou_dx,drhov_dx,drhoE_dx]
      * Input:
      * normals:Point normals
      * U=[rho,rhou,rhov,rhoE]
      * Output: 2D 3*4 Matrix (flux with rho is zero)
      */
-    void NavierStokesCFE::GetdFlux_dQx_2D( 
+    void NavierStokesCFE::GetdFlux_dQx_2D(
         const Array<OneD, NekDouble>    &normals,
         const NekDouble                 &mu,
-        const Array<OneD, NekDouble>    &U, 
+        const Array<OneD, NekDouble>    &U,
               DNekMatSharedPtr          &OutputMatrix )
     {
         NekDouble nx=normals[0];
@@ -1184,7 +1247,7 @@ namespace Nektar
         //q_x=-kappa*dT_dx;
         NekDouble kappa=m_thermalConductivity;
         NekDouble Pr= Cp *mu / kappa;
-        //To notice, here is positive, which is consistent with 
+        //To notice, here is positive, which is consistent with
         //"SYMMETRIC INTERIOR PENALTY DG METHODS FOR THE COMPRESSIBLE NAVIER-STOKES EQUATIONS"
         //But opposite to "I Do like CFD"
         NekDouble tmp=mu/rho;
@@ -1208,17 +1271,17 @@ namespace Nektar
     }
 
      /**
-     * @brief return part of viscous Jacobian: 
-     * \todo flux derived with Qx=[drho_dy,drhou_dy,drhov_dy,drhoE_dy] 
+     * @brief return part of viscous Jacobian:
+     * \todo flux derived with Qx=[drho_dy,drhou_dy,drhov_dy,drhoE_dy]
      * Input:
      * normals:Point normals
      * U=[rho,rhou,rhov,rhoE]
      * Output: 2D 3*4 Matrix (flux with rho is zero)
      */
-    void NavierStokesCFE::GetdFlux_dQy_2D( 
+    void NavierStokesCFE::GetdFlux_dQy_2D(
         const Array<OneD, NekDouble>    &normals,
         const NekDouble                 &mu,
-        const Array<OneD, NekDouble>    &U, 
+        const Array<OneD, NekDouble>    &U,
               DNekMatSharedPtr          &OutputMatrix )
     {
         NekDouble nx=normals[0];
@@ -1237,11 +1300,11 @@ namespace Nektar
         //q_x=-kappa*dT_dx;
         NekDouble kappa=m_thermalConductivity;
         NekDouble Pr= Cp *mu / kappa;
-        //To notice, here is positive, which is consistent with 
+        //To notice, here is positive, which is consistent with
         //"SYMMETRIC INTERIOR PENALTY DG METHODS FOR THE COMPRESSIBLE NAVIER-STOKES EQUATIONS"
         //But opposite to "I Do like CFD"
         NekDouble tmp=mu/rho;
-           
+
         (*OutputMatrix)(0,0)=tmp*(2.0/3.0*v*nx-u*ny);
         (*OutputMatrix)(0,1)=tmp*ny;
         (*OutputMatrix)(0,2)=tmp*(-2.0/3.0)*nx;
@@ -1266,13 +1329,13 @@ namespace Nektar
      * U=[rho,rhou,rhov,rhow,rhoE]
      * dir: means whether derive with
      * Qx=[drho_dx,drhou_dx,drhov_dx,drhow_dx,drhoE_dx]
-     * Output: 3D 4*5 Matrix (flux about rho is zero) 
+     * Output: 3D 4*5 Matrix (flux about rho is zero)
      * OutputMatrix(dir=0)= dF_dQx;
      */
-    void NavierStokesCFE::GetdFlux_dQx_3D( 
+    void NavierStokesCFE::GetdFlux_dQx_3D(
         const Array<OneD, NekDouble>    &normals,
         const NekDouble                 &mu,
-        const Array<OneD, NekDouble>    &U, 
+        const Array<OneD, NekDouble>    &U,
               DNekMatSharedPtr          &OutputMatrix )
     {
         NekDouble nx=normals[0];
@@ -1293,7 +1356,7 @@ namespace Nektar
         //q_x=-kappa*dT_dx;
         NekDouble kappa=m_thermalConductivity;
         NekDouble Pr= Cp *mu / kappa;
-        //To notice, here is positive, which is consistent with 
+        //To notice, here is positive, which is consistent with
         //"SYMMETRIC INTERIOR PENALTY DG METHODS FOR THE COMPRESSIBLE NAVIER-STOKES EQUATIONS"
         //But opposite to "I do like CFD"
         NekDouble tmp=mu/rho;
@@ -1330,13 +1393,13 @@ namespace Nektar
      * U=[rho,rhou,rhov,rhow,rhoE]
      * dir: means whether derive with
      * Qy=[drho_dy,drhou_dy,drhov_dy,drhow_dy,drhoE_dy]
-     * Output: 3D 4*5 Matrix (flux about rho is zero) 
+     * Output: 3D 4*5 Matrix (flux about rho is zero)
      * OutputMatrix(dir=1)= dF_dQy;
      */
-    void NavierStokesCFE::GetdFlux_dQy_3D( 
+    void NavierStokesCFE::GetdFlux_dQy_3D(
         const Array<OneD, NekDouble>    &normals,
         const NekDouble                 &mu,
-        const Array<OneD, NekDouble>    &U, 
+        const Array<OneD, NekDouble>    &U,
               DNekMatSharedPtr          &OutputMatrix )
     {
         NekDouble nx=normals[0];
@@ -1357,7 +1420,7 @@ namespace Nektar
         //q_x=-kappa*dT_dx;
         NekDouble kappa=m_thermalConductivity;
         NekDouble Pr= Cp *mu / kappa;
-        //To notice, here is positive, which is consistent with 
+        //To notice, here is positive, which is consistent with
         //"SYMMETRIC INTERIOR PENALTY DG METHODS FOR THE COMPRESSIBLE NAVIER-STOKES EQUATIONS"
         //But opposite to "I do like CFD"
         NekDouble tmp=mu/rho;
@@ -1394,13 +1457,13 @@ namespace Nektar
      * U=[rho,rhou,rhov,rhow,rhoE]
      * dir: means whether derive with
      * Qz=[drho_dz,drhou_dz,drhov_dz,drhow_dz,drhoE_dz]
-     * Output: 3D 4*5 Matrix (flux about rho is zero) 
+     * Output: 3D 4*5 Matrix (flux about rho is zero)
      * OutputMatrix(dir=2)= dF_dQz;
      */
-    void NavierStokesCFE::GetdFlux_dQz_3D( 
+    void NavierStokesCFE::GetdFlux_dQz_3D(
         const Array<OneD, NekDouble>    &normals,
         const NekDouble                 &mu,
-        const Array<OneD, NekDouble>    &U, 
+        const Array<OneD, NekDouble>    &U,
               DNekMatSharedPtr          &OutputMatrix )
     {
         NekDouble nx=normals[0];
@@ -1421,7 +1484,7 @@ namespace Nektar
         //q_x=-kappa*dT_dx;
         NekDouble kappa=m_thermalConductivity;
         NekDouble Pr= Cp *mu / kappa;
-        //To notice, here is positive, which is consistent with 
+        //To notice, here is positive, which is consistent with
         //"SYMMETRIC INTERIOR PENALTY DG METHODS FOR THE COMPRESSIBLE NAVIER-STOKES EQUATIONS"
         //But opposite to "I do like CFD"
         NekDouble tmp=mu/rho;
@@ -1452,7 +1515,7 @@ namespace Nektar
     }
 
     /**
-     * @brief return part of viscous Jacobian 
+     * @brief return part of viscous Jacobian
      * Input:
      * normals:Point normals
      * mu: dynamicviscosity
@@ -1462,8 +1525,8 @@ namespace Nektar
      * OutputMatrix dFLux_dU,  the matrix sign is consistent with SIPG
      */
     void NavierStokesCFE::GetdFlux_dU_2D(
-        const Array<OneD, NekDouble>                        &normals, 
-        const NekDouble                                     mu, 
+        const Array<OneD, NekDouble>                        &normals,
+        const NekDouble                                     mu,
         const NekDouble                                     dmu_dT,
         const Array<OneD, NekDouble>                        &U,
         const Array<OneD, const Array<OneD, NekDouble> >    &qfield,
@@ -1496,7 +1559,7 @@ namespace Nektar
         orho2=1.0/(U1*U1);
         orho3=orho1*orho2;
         orho4=orho2*orho2;
-        
+
         //Assume Fn=mu*Sn
         //Sn=Sx*nx+Sy*ny
 
@@ -1523,7 +1586,7 @@ namespace Nektar
         tmp[2]=snv-qn/mu;
         Array<OneD,NekDouble> dT_dU (4,0.0);
         dT_dU[0]=oCv*(-orho2*U4+orho3*U2*U2+orho3*U3*U3);
-        dT_dU[1]=-oCv*orho2*U2;   
+        dT_dU[1]=-oCv*orho2*U2;
         dT_dU[2]=-oCv*orho2*U3;
         dT_dU[3]=oCv*orho1;
         for(int i=0;i<3;i++)
@@ -1533,7 +1596,7 @@ namespace Nektar
                 (*OutputMatrix)(i,j)=dmu_dT*dT_dU[j]*tmp[i];
             }
         }
-        
+
         //Term 2 +mu*dSn_dU
         NekDouble du_dx_dU1,du_dx_dU2;
         NekDouble du_dy_dU1,du_dy_dU2;
@@ -1615,7 +1678,7 @@ namespace Nektar
         std::shared_ptr<LocalRegions::ExpansionVector> expvect =    m_fields[0]->GetExp();
         int ntotElmt            = (*expvect).size();
         int nPts            = m_fields[0]->GetTotPoints();
-        int nSpaceDim           = m_graph->GetSpaceDimension();  
+        int nSpaceDim           = m_graph->GetSpaceDimension();
         Array<OneD, NekDouble> normals;
         Array<OneD, Array<OneD, NekDouble> > normal3D(3);
         for(int i = 0; i < 3; i++)
@@ -1653,7 +1716,7 @@ namespace Nektar
         Array<OneD, Array<OneD, NekDouble> > pointDerv(nSpaceDim);
         Array<OneD, Array<OneD, Array<OneD, NekDouble> > > locDerv(nSpaceDim);
         for(int j = 0; j < nSpaceDim; j++)
-        {   
+        {
             pointDerv[j] = Array<OneD, NekDouble>(nConvectiveFields,0.0);
             locDerv[j]   = Array<OneD, Array<OneD, NekDouble> >(nConvectiveFields);
         }
@@ -1665,14 +1728,14 @@ namespace Nektar
         {
             int nElmtPnt            = (*expvect)[nelmt]->GetTotPoints();
             int noffest             = GetPhys_Offset(nelmt);
-                 
+
             for(int j = 0; j < nConvectiveFields; j++)
-            {   
+            {
                 locVars[j] = inarray[j]+noffest;
             }
 
             for(int j = 0; j < nSpaceDim; j++)
-            {   
+            {
                 for(int k = 0; k < nConvectiveFields; k++)
                 {
                     locDerv[j][k] = qfields[j][k]+noffest;
@@ -1687,7 +1750,7 @@ namespace Nektar
                     pointVar[j] = locVars[j][npnt];
                 }
                 for(int j = 0; j < nSpaceDim; j++)
-                {   
+                {
                     for(int k = 0; k < nConvectiveFields; k++)
                     {
                         pointDerv[j][k] = locDerv[j][k][npnt];
@@ -1712,11 +1775,11 @@ namespace Nektar
     // TODO: currently only for 2D
     void NavierStokesCFE::v_GetDiffusionFluxJacPoint(
             const int                                           nelmt,
-            const Array<OneD, NekDouble>                        &conservVar, 
-            const Array<OneD, const Array<OneD, NekDouble> >    &conseDeriv, 
+            const Array<OneD, NekDouble>                        &conservVar,
+            const Array<OneD, const Array<OneD, NekDouble> >    &conseDeriv,
             const NekDouble                                     mu,
             const NekDouble                                     DmuDT,
-            const Array<OneD, NekDouble>                        &normals, 
+            const Array<OneD, NekDouble>                        &normals,
                  DNekMatSharedPtr                               &fluxJac)
     {
         GetdFlux_dU_2D(normals,mu,DmuDT,conservVar,conseDeriv,fluxJac);
@@ -1733,8 +1796,8 @@ namespace Nektar
         std::shared_ptr<LocalRegions::ExpansionVector> expvect =    explist->GetExp();
         int ntotElmt            = (*expvect).size();
         int nPts                = explist->GetTotPoints();
-        int nSpaceDim           = m_graph->GetSpaceDimension();  
-        
+        int nSpaceDim           = m_graph->GetSpaceDimension();
+
         //Debug
         if(!ElmtJac.num_elements())
         {
@@ -1783,14 +1846,14 @@ namespace Nektar
                 {
                     int nElmtPnt            = (*expvect)[nelmt]->GetTotPoints();
                     int noffest             = explist->GetPhys_Offset(nelmt);
-                        
+
                     for(int j = 0; j < nConvectiveFields; j++)
-                    {   
+                    {
                         locVars[j] = inarray[j]+noffest;
                     }
 
                     for(int j = 0; j < nSpaceDim; j++)
-                    {   
+                    {
                         locnormal[j] = normals[j]+noffest;
                     }
 
@@ -1802,7 +1865,7 @@ namespace Nektar
                             pointVar[j] = locVars[j][npnt];
                         }
                         for(int j = 0; j < nSpaceDim; j++)
-                        {   
+                        {
                             pointnormals[j] = locnormal[j][npnt];
                         }
 
@@ -1831,14 +1894,14 @@ namespace Nektar
                 {
                     int nElmtPnt            = (*expvect)[nelmt]->GetTotPoints();
                     int noffest             = explist->GetPhys_Offset(nelmt);
-                        
+
                     for(int j = 0; j < nConvectiveFields; j++)
-                    {   
+                    {
                         locVars[j] = inarray[j]+noffest;
                     }
 
                     for(int j = 0; j < nSpaceDim; j++)
-                    {   
+                    {
                         locnormal[j] = normals[j]+noffest;
                     }
 
@@ -1850,12 +1913,12 @@ namespace Nektar
                             pointVar[j] = locVars[j][npnt];
                         }
                         for(int j = 0; j < nSpaceDim; j++)
-                        {   
+                        {
                             pointnormals[j] = locnormal[j][npnt];
                         }
 
                         pointmu     = locmu[npnt];
-                        
+
                         GetdFlux_dQy_2D(pointnormals,pointmu,pointVar,PointFJac);
                         for (int j =0; j < nConvectiveFields; j++)
                         {
@@ -1893,10 +1956,10 @@ namespace Nektar
     //     std::shared_ptr<LocalRegions::ExpansionVector> expvect =    explist->GetExp();
     //     int ntotElmt            = (*expvect).size();
     //     int nPts                = explist->GetTotPoints();
-    //     int nSpaceDim           = m_graph->GetSpaceDimension();  
+    //     int nSpaceDim           = m_graph->GetSpaceDimension();
 
     //     int nDim                = nSpaceDim;
-        
+
     //     //Debug
     //     if(!ElmtJac.num_elements())
     //     {
@@ -1930,7 +1993,7 @@ namespace Nektar
     //         {
     //             int nElmtPnt            = (*expvect)[nelmt]->GetTotPoints();
     //             int noffest             = explist->GetPhys_Offset(nelmt);
-                    
+
     //             for(int npnt = 0; npnt < nElmtPnt; npnt++)
     //             {
     //                 for (int i =0; i < nConvectiveFields; i++)
@@ -1945,7 +2008,7 @@ namespace Nektar
 
     //     return;
     // }
-    
+
     void NavierStokesCFE::v_CalphysDeriv(
             const Array<OneD, const Array<OneD, NekDouble> >                &inarray,
                   Array<OneD,       Array<OneD, Array<OneD, NekDouble> > >  &qfield)

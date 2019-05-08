@@ -46,6 +46,8 @@
 #include <SolverUtils/Diffusion/Diffusion.h>
 #include <SolverUtils/Forcing/Forcing.h>
 #include <MultiRegions/GlobalMatrixKey.h>
+#include <LocalRegions/Expansion3D.h>
+#include <LocalRegions/Expansion2D.h>
 
 namespace Nektar
 {
@@ -68,6 +70,8 @@ namespace Nektar
         Array<OneD, NekDouble> GetStabilityLimitVector(
             const Array<OneD,int> &ExpOrder);
 
+        /// Function to get estimate of min h/p factor per element
+        Array<OneD, NekDouble>  GetElmtMinHP(void);
     protected:
         SolverUtils::DiffusionSharedPtr     m_diffusion;
         ArtificialDiffusionSharedPtr        m_artificialDiffusion;
@@ -80,6 +84,9 @@ namespace Nektar
         NekDouble                           m_filterExponent;
         NekDouble                           m_filterCutoff;
         bool                                m_useFiltering;
+
+        /// Store physical artificial viscosity
+        Array<OneD, NekDouble>              m_muav;
 
         // Parameters for local time-stepping
         bool                                m_useLocalTimeStep;
@@ -158,7 +165,7 @@ namespace Nektar
             Array<OneD, Array<OneD, NekDouble> >                            &TraceJacDerivSign);
 
         void ElmtVarInvMtrx(Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray);
-        
+
         void GetTraceJac(
             const Array<OneD, const Array<OneD, NekDouble> >                &inarray,
             const Array<OneD, const Array<OneD, Array<OneD, NekDouble> > >  &qfield,
@@ -185,7 +192,7 @@ namespace Nektar
             const NekDouble efix,   const NekDouble fsw);
 
         void CoutBlkMat(
-            DNekBlkMatSharedPtr &gmtx, 
+            DNekBlkMatSharedPtr &gmtx,
             const unsigned int nwidthcolm=12);
 
         void CoutStandardMat(
@@ -195,7 +202,7 @@ namespace Nektar
         void Cout1DArrayBlkMat(
             Array<OneD, DNekBlkMatSharedPtr> &gmtxarray,
             const unsigned int nwidthcolm=12);
-        
+
         void Cout2DArrayBlkMat(
             Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray,
             const unsigned int nwidthcolm=12);
@@ -240,11 +247,11 @@ namespace Nektar
 
         void DebugNumCalJac_coeff(
             Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray);
-            
+
         void DebugNumCalElmtJac_coeff(
             Array<OneD, Array<OneD, DNekMatSharedPtr> > &ElmtPrecMatVars,
             const int nelmt);
-        
+
         void NonlinSysEvaluator_coeff(
                 Array<OneD, Array<OneD, NekDouble> > &inarray,
                 Array<OneD, Array<OneD, NekDouble> > &out);
@@ -262,7 +269,7 @@ namespace Nektar
                 Array<OneD,       Array<OneD, NekDouble> > &outarray,
             const NekDouble                                   time);
 
-        
+
         void DoAdvection_coeff(
             const Array<OneD, const Array<OneD, NekDouble> > &inarray,
                 Array<OneD,       Array<OneD, NekDouble> > &outarray,
@@ -278,10 +285,10 @@ namespace Nektar
             const Array<OneD, const Array<OneD, NekDouble> >    &inarray,
                   Array<OneD, Array<OneD, DNekMatSharedPtr> >   &ElmtJac);
         void GetFluxVectorJacPoint(
-            const Array<OneD, NekDouble>                &conservVar, 
-            const Array<OneD, NekDouble>                &normals, 
+            const Array<OneD, NekDouble>                &conservVar,
+            const Array<OneD, NekDouble>                &normals,
                  DNekMatSharedPtr                       &fluxJac);
-        
+
         void CalTraceNumericalFlux(
             const int                                                           nConvectiveFields,
             const int                                                           nDim,
@@ -346,11 +353,11 @@ namespace Nektar
                   Array<OneD, Array<OneD, DNekMatSharedPtr> >               &ElmtJac);
         void GetDiffusionFluxJacPoint(
             const int                                           nelmt,
-            const Array<OneD, NekDouble>                        &conservVar, 
-            const Array<OneD, const Array<OneD, NekDouble> >    &conseDeriv, 
+            const Array<OneD, NekDouble>                        &conservVar,
+            const Array<OneD, const Array<OneD, NekDouble> >    &conseDeriv,
             const NekDouble                                     mu,
             const NekDouble                                     DmuDT,
-            const Array<OneD, NekDouble>                        &normals, 
+            const Array<OneD, NekDouble>                        &normals,
                   DNekMatSharedPtr                              &fluxJac)
         {
             v_GetDiffusionFluxJacPoint(nelmt,conservVar,conseDeriv,mu,DmuDT,normals,fluxJac);
@@ -385,7 +392,7 @@ namespace Nektar
         void SetBoundaryConditions(
             Array<OneD, Array<OneD, NekDouble> >             &physarray,
             NekDouble                                         time);
-        
+
         void SetBoundaryConditionsBwdWeight();
 
         void SetBoundaryConditionsDeriv(
@@ -405,7 +412,7 @@ namespace Nektar
             const Array<OneD, Array<OneD, NekDouble> >                      &inaverg,
             const Array<OneD, Array<OneD, NekDouble > >                     &inarray,
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > >              &outarray,
-            Array< OneD, int >                                              &nonZeroIndex,    
+            Array< OneD, int >                                              &nonZeroIndex,
             const Array<OneD, Array<OneD, NekDouble> >                      &normals)
         {
             v_GetViscousSymmtrFluxConservVar(nConvectiveFields,nSpaceDim,inaverg,inarray,outarray,nonZeroIndex,normals);
@@ -480,16 +487,16 @@ namespace Nektar
             const Array<OneD, Array<OneD, NekDouble> >                      &inaverg,
             const Array<OneD, Array<OneD, NekDouble > >                     &inarray,
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > >              &outarray,
-            Array< OneD, int >                                              &nonZeroIndex,    
+            Array< OneD, int >                                              &nonZeroIndex,
             const Array<OneD, Array<OneD, NekDouble> >                      &normals);
 #ifdef DEMO_IMPLICITSOLVER_JFNK_COEFF
         virtual void v_GetDiffusionFluxJacPoint(
             const int                                           nelmt,
-            const Array<OneD, NekDouble>                        &conservVar, 
-            const Array<OneD, const Array<OneD, NekDouble> >    &conseDeriv, 
+            const Array<OneD, NekDouble>                        &conservVar,
+            const Array<OneD, const Array<OneD, NekDouble> >    &conseDeriv,
             const NekDouble                                     mu,
             const NekDouble                                     DmuDT,
-            const Array<OneD, NekDouble>                        &normals, 
+            const Array<OneD, NekDouble>                        &normals,
                   DNekMatSharedPtr                              &fluxJac);
         virtual void v_CalphysDeriv(
             const Array<OneD, const Array<OneD, NekDouble> >                &inarray,

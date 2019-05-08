@@ -50,7 +50,7 @@ namespace Nektar
         public:
             /// Destructor
             SOLVER_UTILS_EXPORT virtual ~UnsteadySystem();
-		            
+
             /// Calculate the larger time-step mantaining the problem stable.
             SOLVER_UTILS_EXPORT NekDouble GetTimeStep(
                 const Array<OneD, const Array<OneD, NekDouble> > &inarray);
@@ -61,7 +61,7 @@ namespace Nektar
             NekDouble m_CFLGrowth;
             /// maximun cfl in cfl growth
             NekDouble m_CFLEnd;
-            
+
 
         protected:
             /// Number of time steps between outputting status information.
@@ -105,14 +105,14 @@ namespace Nektar
 #ifdef DEMO_IMPLICITSOLVER_JFNK_COEFF
             /// coefff of spacial derivatives(rhs or m_F in GLM) in calculating the residual of the whole equation(used in unsteady time integrations)
             NekDouble                                       m_TimeIntegLambda=0.0;
-            
+
             NekDouble                                       m_TimeIntegLambdaPrcMat=0.0;
 
             NekDouble                                       m_Res0PreviousStep=-1.0;
 
             ///Solution of The kth iteration in the Newton method(Nonlinear iteration)
             Array<OneD,       Array<OneD, NekDouble> >      m_TimeIntegtSol_k;
-            
+
             /// Solution at time step n(input valure from timeintegration)
             Array<OneD,       Array<OneD, NekDouble> >      m_TimeIntegtSol_n;
             /// Residual of the nonlinear system at the kth iteration in the Newton method(Nonlinear iteration)
@@ -136,7 +136,7 @@ namespace Nektar
             NekDouble   m_inArrayNorm=-1.0;
 
             bool m_CalcuPrecMatFlag     = true;
-            int  m_CalcuPrecMatCounter   = 1E200;
+            int  m_CalcuPrecMatCounter  = NekConstants::kNekLargeInt;
 
             int m_TotLinItePerStep=600;
 
@@ -148,7 +148,7 @@ namespace Nektar
 
             /// Init object for UnsteadySystem class.
             SOLVER_UTILS_EXPORT virtual void v_InitObject();
-            
+
             /// Get the maximum timestep estimator for cfl control.
             SOLVER_UTILS_EXPORT NekDouble MaxTimeStepEstimator();
 
@@ -160,7 +160,7 @@ namespace Nektar
 
             /// Print a summary of time stepping parameters.
             SOLVER_UTILS_EXPORT virtual void v_GenerateSummary(SummaryList& s);
-            
+
             /// Print the solution at each solution point in a txt file
             SOLVER_UTILS_EXPORT virtual void v_AppendOutput1D(
                 Array<OneD, Array<OneD, NekDouble> > &solution1D);
@@ -182,9 +182,9 @@ namespace Nektar
             /// according to Moura's paper where it should
             /// proportional to h time velocity
             SOLVER_UTILS_EXPORT void SVVVarDiffCoeff(const Array<OneD, Array<OneD, NekDouble> >
-                                                     vel, 
+                                                     vel,
                                                      StdRegions::VarCoeffMap &varCoeffMap);
-        
+
 
         private:
 
@@ -193,7 +193,7 @@ namespace Nektar
             bool CheckSteadyState(int step);
             bool CheckSteadyState(int step, NekDouble totCPUTime);
         };
-        
+
     }
 }
 

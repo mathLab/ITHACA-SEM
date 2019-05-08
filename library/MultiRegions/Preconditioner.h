@@ -134,7 +134,7 @@ namespace Nektar
             const std::weak_ptr<GlobalLinSys>   m_linsys;
             PreconditionerType                  m_preconType;
             DNekMatSharedPtr                    m_preconditioner;
-            std::shared_ptr<AssemblyMap>        m_locToGloMap;
+            std::weak_ptr<AssemblyMap>          m_locToGloMap;
             LibUtilities::CommSharedPtr         m_comm;
 
             virtual DNekScalMatSharedPtr v_TransformedSchurCompl(

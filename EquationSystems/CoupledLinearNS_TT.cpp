@@ -3130,6 +3130,12 @@ namespace Nektar
 	PhysBaseVec_x = Array<OneD, Array<OneD, double> > (RBsize); 
 	PhysBaseVec_y = Array<OneD, Array<OneD, double> > (RBsize);
 	
+	if (debug_mode)
+	{
+		cout << " number of local dofs per velocity direction " << GetNcoeffs() << endl;
+		cout << " number of quadrature dofs per velocity direction " << GetNpoints() << endl;
+	}
+
 	for (int curr_trafo_iter=0; curr_trafo_iter < RBsize; curr_trafo_iter++)
 	{
 		Eigen::VectorXd f_bnd = PODmodes.block(0, curr_trafo_iter, curr_f_bnd.size(), 1);
@@ -3449,7 +3455,138 @@ namespace Nektar
 		mat_compare.col(2) = mat_compare.col(1) - mat_compare.col(0);
 //		cout << mat_compare << endl;
 		cout << "relative error norm: " << mat_compare.col(2).norm() / mat_compare.col(0).norm() << endl;
+
+		if (debug_mode)
+		{
+			cout << "snapshot_x_collection.num_elements() " << snapshot_x_collection.num_elements() << " snapshot_x_collection[0].num_elements() " << snapshot_x_collection[0].num_elements() << endl;
+
+			recover_snapshot_data(reconstruct_solution, current_index);
+		}
+
+
 	}
+    }
+
+    void CoupledLinearNS_TT::recover_snapshot_data(Eigen::VectorXd reconstruct_solution, int current_index)
+    {
+
+	Eigen::VectorXd f_bnd = reconstruct_solution.head(curr_f_bnd.size());
+	Eigen::VectorXd f_int = reconstruct_solution.tail(curr_f_int.size());
+	Array<OneD, MultiRegions::ExpListSharedPtr> fields = UpdateFields(); 
+	Array<OneD, unsigned int> bmap, imap; 
+	Array<OneD, double> field_0(GetNcoeffs());
+	Array<OneD, double> field_1(GetNcoeffs());
+	Array<OneD, double> curr_PhysBaseVec_x(GetNpoints(), 0.0);
+	Array<OneD, double> curr_PhysBaseVec_y(GetNpoints(), 0.0);
+	int cnt = 0;
+	int cnt1 = 0;
+	int nvel = 2;
+	int nz_loc = 1;
+	int  nplanecoeffs = fields[0]->GetNcoeffs();
+	int  nel  = m_fields[0]->GetNumElmts();
+	for(int i = 0; i < nel; ++i) 
+	{
+	      int eid  = i;
+	      fields[0]->GetExp(eid)->GetBoundaryMap(bmap);
+	      fields[0]->GetExp(eid)->GetInteriorMap(imap);
+	      int nbnd   = bmap.num_elements();
+	      int nint   = imap.num_elements();
+	      int offset = fields[0]->GetCoeff_Offset(eid);
+	            
+	      for(int j = 0; j < nvel; ++j)
+	      {
+	           for(int n = 0; n < nz_loc; ++n)
+	           {
+	                    for(int k = 0; k < nbnd; ++k)
+	                    {
+	                        fields[j]->SetCoeff(n*nplanecoeffs + offset+bmap[k], f_bnd(cnt+k));
+	                    }
+	                    
+	                    for(int k = 0; k < nint; ++k)
+	                    {
+	                        fields[j]->SetCoeff(n*nplanecoeffs + offset+imap[k], f_int(cnt1+k));
+	                    }
+	                    cnt  += nbnd;
+	                    cnt1 += nint;
+	           }
+	      }
+	}
+	Array<OneD, double> test_nn = fields[0]->GetCoeffs();
+	fields[0]->BwdTrans_IterPerExp(fields[0]->GetCoeffs(), curr_PhysBaseVec_x);
+	fields[1]->BwdTrans_IterPerExp(fields[1]->GetCoeffs(), curr_PhysBaseVec_y);
+
+	Eigen::VectorXd eigen_phys_basis_x = Eigen::VectorXd::Zero(GetNpoints());
+	Eigen::VectorXd eigen_phys_basis_y = Eigen::VectorXd::Zero(GetNpoints());
+	Eigen::VectorXd eigen_phys_basis_x_snap = Eigen::VectorXd::Zero(GetNpoints());
+	Eigen::VectorXd eigen_phys_basis_y_snap = Eigen::VectorXd::Zero(GetNpoints());
+
+	for (int index_phys_base=0; index_phys_base<GetNpoints(); index_phys_base++)
+	{
+		eigen_phys_basis_x(index_phys_base) = curr_PhysBaseVec_x[index_phys_base];
+		eigen_phys_basis_y(index_phys_base) = curr_PhysBaseVec_y[index_phys_base];
+		
+		eigen_phys_basis_x_snap(index_phys_base) = snapshot_x_collection[current_index][index_phys_base];
+		eigen_phys_basis_y_snap(index_phys_base) = snapshot_y_collection[current_index][index_phys_base];
+
+	}
+
+	cout << "eigen_phys_basis_x.norm() " << eigen_phys_basis_x.norm() << endl;
+	cout << "eigen_phys_basis_x_snap.norm() " << eigen_phys_basis_x_snap.norm() << endl;
+	cout << "(eigen_phys_basis_x - eigen_phys_basis_x_snap).norm() " << (eigen_phys_basis_x - eigen_phys_basis_x_snap).norm() << endl;
+	cout << "eigen_phys_basis_y.norm() " << eigen_phys_basis_y.norm() << endl;
+	cout << "eigen_phys_basis_y_snap.norm() " << eigen_phys_basis_y_snap.norm() << endl;
+	cout << "(eigen_phys_basis_y - eigen_phys_basis_y_snap).norm() " << (eigen_phys_basis_y - eigen_phys_basis_y_snap).norm() << endl;
+
+
+
+
+
+        std::vector<Array<OneD, NekDouble> > fieldcoeffs(m_fields.num_elements()+1);
+        std::vector<std::string> variables(m_fields.num_elements()+1);
+        int i;
+        
+        for(i = 0; i < m_fields.num_elements(); ++i)
+        {
+            fieldcoeffs[i] = fields[i]->UpdateCoeffs();
+            variables[i]   = m_boundaryConditions->GetVariable(i);
+	    cout << "variables[i] " << variables[i] << endl;
+        }
+
+	cout << "m_singleMode " << m_singleMode << endl;	
+	fieldcoeffs[i] = Array<OneD, NekDouble>(m_fields[0]->GetNcoeffs(), 0.0);  
+        variables[i] = "p"; 
+
+	WriteFld("Test.fld",m_fields[0],fieldcoeffs,variables);
+
+/*        fieldcoeffs[i] = Array<OneD, NekDouble>(m_fields[0]->GetNcoeffs());  
+        // project pressure field to velocity space        
+        if(m_singleMode==true)
+        {
+            Array<OneD, NekDouble > tmpfieldcoeffs (m_fields[0]->GetNcoeffs()/2);
+            m_pressure->GetPlane(0)->BwdTrans_IterPerExp(m_pressure->GetPlane(0)->GetCoeffs(), m_pressure->GetPlane(0)->UpdatePhys());
+            m_pressure->GetPlane(1)->BwdTrans_IterPerExp(m_pressure->GetPlane(1)->GetCoeffs(), m_pressure->GetPlane(1)->UpdatePhys()); 
+            m_fields[0]->GetPlane(0)->FwdTrans_IterPerExp(m_pressure->GetPlane(0)->GetPhys(),fieldcoeffs[i]);
+            m_fields[0]->GetPlane(1)->FwdTrans_IterPerExp(m_pressure->GetPlane(1)->GetPhys(),tmpfieldcoeffs);
+            for(int e=0; e<m_fields[0]->GetNcoeffs()/2; e++)
+            {
+                fieldcoeffs[i][e+m_fields[0]->GetNcoeffs()/2] = tmpfieldcoeffs[e];
+            }          
+        }
+        else
+        {
+            m_pressure->BwdTrans_IterPerExp(m_pressure->GetCoeffs(),m_pressure->UpdatePhys());
+            m_fields[0]->FwdTrans_IterPerExp(m_pressure->GetPhys(),fieldcoeffs[i]);
+        }
+        variables[i] = "p"; 
+        
+        std::string outname = m_sessionName + ".fld";
+        
+        WriteFld(outname,m_fields[0],fieldcoeffs,variables);
+*/
+
+
+
+
     }
 	
     void CoupledLinearNS_TT::offline_phase()
@@ -3804,7 +3941,7 @@ namespace Nektar
         
         WriteFld(outname,m_fields[0],fieldcoeffs,variables);
 
-
+/*
 //        Array<OneD, NekDouble> glo_fieldcoeffs(m_fields[0]->GetNcoeffs(), 1234.5678);
         Array<OneD, NekDouble> glo_fieldcoeffs(fieldcoeffs[2].num_elements(), 1234.5678);
 	m_fields[0]->LocalToGlobal(fieldcoeffs[2], glo_fieldcoeffs);
@@ -3963,7 +4100,7 @@ namespace Nektar
                 myfile_t.close();
 	  }
 	  else cout << "Unable to open file"; 
-
+*/
 
 
 

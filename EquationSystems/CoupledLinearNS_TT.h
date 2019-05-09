@@ -125,6 +125,8 @@ namespace Nektar
 
 	void gen_proj_adv_terms();
 
+	void recover_snapshot_data(Eigen::VectorXd, int);
+
 	void offline_phase();
 	void online_phase();
 	Array<OneD, NekDouble> param_vector;

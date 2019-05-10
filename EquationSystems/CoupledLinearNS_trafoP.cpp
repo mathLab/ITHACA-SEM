@@ -1478,7 +1478,7 @@ namespace Nektar
 		//	DoInitialise();
 		//	DoSolve();
 		double rel_err = 1.0;
-		while (rel_err > 1e-13)
+		while (rel_err > 1e-8)
 		{
 			Set_m_kinvis( parameter );
 			DoInitialiseAdv(init_snapshot_x, init_snapshot_y); // replaces .DoInitialise();
@@ -1510,7 +1510,8 @@ namespace Nektar
 		//		cout << "csx0_trafo.norm() " << csx0_trafo.norm() << endl;
 		//		cout << "csy0.norm() " << csy0.norm() << endl;
 		//		cout << "csy0_trafo.norm() " << csy0_trafo.norm() << endl;
-			rel_err = std::abs(csx0_trafo.norm() - csx0.norm()) / csx0.norm() + std::abs(csy0_trafo.norm() - csy0.norm()) / csy0.norm();
+			//rel_err = std::abs(csx0_trafo.norm() - csx0.norm()) / csx0.norm() + std::abs(csy0_trafo.norm() - csy0.norm()) / csy0.norm();
+			rel_err = (csx0_trafo - csx0).norm() / csx0.norm() + (csy0_trafo - csy0).norm() / csy0.norm();
 		//		cout << "rel_err " << rel_err << endl;
 		
 			init_snapshot_x = out_field_trafo_x;
@@ -1588,7 +1589,8 @@ namespace Nektar
 //		cout << "csx0_trafo.norm() " << csx0_trafo.norm() << endl;
 //		cout << "csy0.norm() " << csy0.norm() << endl;
 //		cout << "csy0_trafo.norm() " << csy0_trafo.norm() << endl;
-		rel_err = std::abs(csx0_trafo.norm() - csx0.norm()) / csx0.norm() + std::abs(csy0_trafo.norm() - csy0.norm()) / csy0.norm();
+		//rel_err = std::abs(csx0_trafo.norm() - csx0.norm()) / csx0.norm() + std::abs(csy0_trafo.norm() - csy0.norm()) / csy0.norm();
+		rel_err = (csx0_trafo - csx0).norm() / csx0.norm() + (csy0_trafo - csy0).norm() / csy0.norm();
 
 		if((++iterations)%1==0)
 			cout << "rel_err " << rel_err << endl; // if you enter here you are propably not converging
@@ -1762,23 +1764,6 @@ namespace Nektar
        		if(iterations >= max_iterations/2 && change_method)
        			use_Newton = 0;
        	}   
-
-		/*double rel_err2 = 0;
-		double norm_x = 0, norm_y = 0;
-		for(int i = 0; i < sol_x_cont_defl[0].num_elements(); i++)
-		{
-			norm_x += init_snapshot_x[i] * init_snapshot_x[i];
-			norm_y += init_snapshot_y[i] * init_snapshot_y[i];
-		}  
-		norm_x = sqrt(norm_x)+1e-10;
-		norm_y = sqrt(norm_y)+1e-10;
-		for(int i = 0; i < sol_x_cont_defl[0].num_elements(); i++)
-		{
-			rel_err2 += (out_field_trafo_x[i] - init_snapshot_x[i]) * (out_field_trafo_x[i] - init_snapshot_x[i]) / norm_x;
-			rel_err2 += (out_field_trafo_y[i] - init_snapshot_y[i]) * (out_field_trafo_y[i] - init_snapshot_y[i]) / norm_y;
-		}  
-		cout << "rel_err(1,2) (" << rel_err <<" , "<<rel_err2<<") "<<out_field_trafo_x[23]<<" "<<init_snapshot_x[23]<<"\n"<< endl;  
-		rel_err += rel_err2;*/
 		
 		init_snapshot_x = out_field_trafo_x;
 		init_snapshot_y = out_field_trafo_y;
@@ -1867,7 +1852,8 @@ namespace Nektar
 	Eigen::MatrixXd collect_f_int( curr_f_int.size() , Nmax );
 	for (int i=0; i<Nmax; i++)
 	{
-		Set_m_kinvis( param_vector[i] );	
+		Set_m_kinvis( param_vector[i] );
+		cout<<"\nparam_vector["<<i<<"] = "<<param_vector[i]<<endl;	
 	//	CLNS_trafo.DoInitialise();
 		DoInitialiseAdv(snapshot_x_collection[i], snapshot_y_collection[i]); // replaces .DoInitialise();
 		DoSolve();
@@ -3026,7 +3012,7 @@ namespace Nektar
       	else cout << "Unable to open file";  */
     }
     
-   Array<OneD, Array<OneD, Array<OneD, NekDouble> > > CoupledLinearNS_trafoP::Continuation_method(NekDouble param)
+   Array<OneD, Array<OneD, Array<OneD, NekDouble> > > CoupledLinearNS_trafoP::Continuation_method(Eigen::VectorXd *params)
    {
    		double m_kinvisMin, m_KinvisPercentage, m_tol, m_maxIt, m_MatrixSetUpStep, m_Restart, step;
    		m_session->LoadParameter("KinvisMin", m_kinvisMin);
@@ -3061,7 +3047,7 @@ namespace Nektar
 		number_of_deflations = 0;
 		total_solutions_found = 0;
 		
-		Set_m_kinvis(param);
+		Set_m_kinvis((*params)[0]);
 		std::vector<int> indices_to_be_continued; //for the next value of the parameter
 		//std::vector<int> local_indices_to_be_continued(0); //for the current value of the parameter
 		Array<OneD, Array<OneD, NekDouble> > converged_solution(2), possible_solutions;
@@ -3109,11 +3095,11 @@ namespace Nektar
 			std::ofstream outfile2;
 			outfile2.open("arclength.txt", std::ios::out);
  
-			outfile<<m_kinvis<<" "<<sol_y_cont_defl[0][index]<<endl; 
+			//outfile<<m_kinvis<<" "<<sol_y_cont_defl[0][index]<<endl; 
 			outfile2<<arclength_step<<endl; 
 			param_vector.push_back(m_kinvis);
 			total_solutions_found = 0;
-			//FarrelOutput(flipperMap, outfile, FarrelOutputSign(x,y));
+			FarrelOutput(flipperMap, outfile, FarrelOutputSign(x,y));
 			total_solutions_found = 1;
 			
 			while(m_kinvis > m_kinvisMin && total_solutions_found < m_maxIt)
@@ -3128,7 +3114,7 @@ namespace Nektar
 					if(use_guessGivenNi)
 					{
 						delta_param = findMinParam(indices_to_be_continued);
-						delta_param = max(0.0001, min(0.01, delta_param));
+						delta_param = max(0.0005, min(0.01, delta_param));
 						cout<<"delta_param = "<<delta_param<<endl;
 					}
 				}
@@ -3186,9 +3172,9 @@ namespace Nektar
 						cout<<"La norma é "<<norma<<" e un punto a caso vale "<<guess_x[23]<<" oppure "<<sol_x_cont_defl[curr_i][23]<<" -> "<<converged_solution[0][23]<<endl;
 						local_indices_to_be_continued.push_back(total_solutions_found);
 						param_vector.push_back(m_kinvis);
-						outfile<<m_kinvis<<" "<<sol_y_cont_defl[total_solutions_found][index]<<endl; 
+						//outfile<<m_kinvis<<" "<<sol_y_cont_defl[total_solutions_found][index]<<endl; 
 						outfile2<<arclength_step<<endl; 
-						//FarrelOutput(flipperMap, outfile, FarrelOutputSign(x,y));
+						FarrelOutput(flipperMap, outfile, FarrelOutputSign(x,y));
 						total_solutions_found++;
 						previous_step_solutions++;
 					}
@@ -3227,10 +3213,7 @@ namespace Nektar
 				deflate = true;
 				int prev_solutions = local_indices_to_be_continued.size();
 				
-				//if((m_kinvis>9.28 && m_kinvis<9.7 && local_indices_to_be_continued.size()<3) || (m_kinvis>3 && m_kinvis<4.3 && local_indices_to_be_continued.size()<4))
-				{
-					use_deflation_now = true;
-				}
+				use_deflation_now = true;
 				for(int i = 0; i < prev_solutions && use_deflation_now && total_solutions_found < m_maxIt; i++)// && ((m_kinvis>9.28 && m_kinvis<9.7 && local_indices_to_be_continued.size()<3) || (m_kinvis>3 && m_kinvis<4.3 && local_indices_to_be_continued.size()<4)); i++)
 				{
 					curr_i = local_indices_to_be_continued[i];
@@ -3256,9 +3239,9 @@ namespace Nektar
 							}
 							local_indices_to_be_continued.push_back(total_solutions_found);
 							param_vector.push_back(m_kinvis);
-							outfile<<m_kinvis<<" "<<sol_y_cont_defl[total_solutions_found][index]<<endl;
+							//outfile<<m_kinvis<<" "<<sol_y_cont_defl[total_solutions_found][index]<<endl;
 							outfile2<<arclength_step<<endl; 
-							//FarrelOutput(flipperMap, outfile, FarrelOutputSign(x,y));
+							FarrelOutput(flipperMap, outfile, FarrelOutputSign(x,y));
 							total_solutions_found++;
 							previous_step_solutions++;
 							last_bif_point_solutions_found++;
@@ -3307,7 +3290,7 @@ namespace Nektar
 					}
 					m_kinvis = last_param;
 					start_with_Oseen = false;  
-				} 
+				}  
 				
 				indices_to_be_continued.clear();
 				indices_to_be_continued = std::vector<int>(local_indices_to_be_continued);
@@ -3318,10 +3301,12 @@ namespace Nektar
 		result[0] = Array<OneD, Array<OneD, NekDouble> > (total_solutions_found);
 		result[1] = Array<OneD, Array<OneD, NekDouble> > (total_solutions_found);	
 		
+		params->resize(param_vector.size());		
 		for(int i = 0; i < total_solutions_found; i++)
 		{
 			result[0][i] = 	sol_x_cont_defl[i];
 			result[1][i] = 	sol_y_cont_defl[i];
+			(*params)[i] = param_vector[i];
 		}
 		
 		cout<<"\nEnd of continuation_method()\n";

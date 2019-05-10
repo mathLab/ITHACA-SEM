@@ -3358,8 +3358,16 @@ namespace Nektar
 
     void CoupledLinearNS_TT::online_phase()
     {
+    	std::ofstream outfile_rb;
+		outfile_rb.open("bif_diagr_rb.txt", std::ios::out);
+		for(int i = 0; i<RB.cols(); i++)
+		{
+			outfile_rb<<i<<" "<<RB.col(i).sum()<<endl;
+		}
+				
+		
 		Eigen::MatrixXd mat_compare = Eigen::MatrixXd::Zero(f_bnd_dbc_full_size.rows(), 3);  // is of size M_truth_size
-		bool continuation = true;
+		bool continuation = false;
 		if(!continuation)
 		{
 			// start sweeping 
@@ -3391,14 +3399,14 @@ namespace Nektar
 		else
 		{
 			/*unsigned int iterations;
-			double first_param = 2.5, last_param = 2.3, rel_err;
+			double first_param = m_session->GetParameter("param0"), last_param = 2.3, rel_err;
 			std::ofstream outfile_online;
 			outfile_online.open("bif_diagr_online.txt", std::ios::out);
 			
 			Eigen::VectorXd reconstruct_solution, solve_affine;
 			Eigen::VectorXd last_sol = Eigen::VectorXd::Zero(RBsize); 
 			Eigen::MatrixXd curr_xy_proj = project_onto_basis(snapshot_x_collection[0], snapshot_y_collection[0]);
-			for(double current_nu = first_param; current_nu > last_param; current_nu -= (first_param - last_param)/300.0)
+			for(double current_nu = first_param; current_nu > last_param; current_nu -= (first_param - last_param)/50.0)
 			{
 				//Eigen::MatrixXd curr_xy_proj = project_onto_basis(Array<OneD,NekDouble>(snapshot_x_collection[0].num_elements(),0.0), Array<OneD,NekDouble>(snapshot_y_collection[0].num_elements(),0.0));				
 				
@@ -3446,7 +3454,7 @@ namespace Nektar
 			cout<<"First solution"<<endl;
 			rel_err = 1;
 			iterations = 0;
-			while(rel_err > 1e-12 && ++iterations<500)
+			while(rel_err > 1e-12 && ++iterations<200)
 			{
 				Eigen::MatrixXd affine_mat_proj = gen_affine_mat_proj(first_param);
 				Eigen::VectorXd affine_vec_proj = gen_affine_vec_proj(first_param);
@@ -3470,6 +3478,7 @@ namespace Nektar
 					Eigen::VectorXd reconstruct_solution = reconstruct_solution_w_dbc(repro_solve_affine);
 					solve_affine.push_back(temp_solve_affine);
 					outfile_online<<first_param<<" "<<reconstruct_solution[1196]<<endl; 
+					plotRepro(reconstruct_solution, 0);
 					cout<<endl;
 				}
 			}
@@ -3495,7 +3504,7 @@ namespace Nektar
 					}
 					rel_err = 1;
 					iterations = 0;
-					while(rel_err > 1e-12 && ++iterations<500)
+					while(rel_err > 1e-12 && ++iterations<200)
 					{
 						Eigen::MatrixXd affine_mat_proj = gen_affine_mat_proj(current_nu);
 						Eigen::VectorXd affine_vec_proj = gen_affine_vec_proj(current_nu);
@@ -3522,6 +3531,8 @@ namespace Nektar
 							local_indices_to_be_continued.push_back(total_solutions);
 							total_solutions++;
 							
+							plotRepro(reconstruct_solution, total_solutions);
+							
 							outfile_online<<current_nu<<" "<<reconstruct_solution[1196]<<endl; 
 							cout<<endl;
 						}
@@ -3544,8 +3555,13 @@ namespace Nektar
 					}
 					rel_err = 1;
 					iterations = 0;
-					while(rel_err > 1e-12 && ++iterations<500)
+					while(rel_err > 1e-12 && ++iterations<200)
 					{						
+						double M = 1;
+						for(int k = 0; k < local_indices_to_be_continued.size(); k++)
+						{
+							M = max(M,(temp_solve_affine - solve_affine[curr_j]).norm());
+						}
 						Eigen::MatrixXd affine_mat_proj = M * gen_affine_mat_proj(current_nu);
 						Eigen::VectorXd affine_vec_proj = M * gen_affine_vec_proj(current_nu);
 						temp_solve_affine = affine_mat_proj.colPivHouseholderQr().solve(affine_vec_proj);
@@ -3558,7 +3574,7 @@ namespace Nektar
 						}
 						
 						
-						//computation of tau
+					/*	//computation of tau
 						double norm_min = 1e20;
 						int closest_sol;
 						for(int k = 0; k < indices_to_be_continued.size(); k++)
@@ -3575,8 +3591,9 @@ namespace Nektar
 						
 						rel_err = (temp_solve_affine-last_sol).norm()/last_sol.norm();
 						last_sol = temp_solve_affine;
+						cout<<"tau "<<tau; */
 						
-						cout<<"tau "<<tau<<", rel_err = "<<rel_err<<endl;
+						cout<<", rel_err = "<<rel_err<<endl;
 						if(rel_err <= 1e-12)
 						{
 							cout<<"Converged!!!"<<endl;
@@ -3586,6 +3603,8 @@ namespace Nektar
 							solve_affine.push_back(temp_solve_affine);
 							local_indices_to_be_continued.push_back(total_solutions);
 							total_solutions++;
+							
+							plotRepro(reconstruct_solution, total_solutions);
 							
 							outfile_online<<current_nu<<" "<<reconstruct_solution[1196]<<endl; 
 							cout<<endl;
@@ -3659,12 +3678,16 @@ namespace Nektar
 			Nmax = number_of_snapshots;
 			for(int i = 1; i < Nmax; i++)
 				param_vector[i] = param_vector[i-1] * 0.999;
+		}
 	}
 	else
 	{
 		if(number_of_snapshots == 1)
 		{
-			snapshots_from_continuation = babyCLNS_trafo.Continuation_method(param_vector[0]);	
+			Eigen::VectorXd params;
+			params.resize(1);
+			params[0] = param_vector[0];
+			snapshots_from_continuation = babyCLNS_trafo.Continuation_method(&params);	
 			
 			number_of_snapshots = snapshots_from_continuation[0].num_elements();
 			snapshot_x_collection = Array<OneD, Array<OneD, NekDouble> > (number_of_snapshots);
@@ -3683,11 +3706,15 @@ namespace Nektar
 			
 			//snapshot_x_collection = snapshots_from_continuation[0];
 			//snapshot_y_collection = snapshots_from_continuation[1];
+			param_vector = Array<OneD, NekDouble> (params.size());
+			for(int i = 0; i < params.size(); i++)
+				param_vector[i] = params[i]; 
 			
-			param_vector = Array<OneD, NekDouble> (number_of_snapshots);
-			param_vector[0] = 10.0;
-			param_vector[1] = 9.9;
-			param_vector[2] = 9.95;
+			number_of_snapshots = params.size();
+			Nmax = params.size();
+			
+			ref_param_index = 0;
+			ref_param_nu = 1;
 		}
 		else
 		{
@@ -3840,7 +3867,7 @@ namespace Nektar
 			snapshot_x_collection[i][j] = converged_solution[0][j];
 			snapshot_y_collection[i][j] = converged_solution[1][j];
 		}
-		cout<<"snapshot "<<i<<"computed"<<endl;
+		cout<<"snapshot "<<i<<" computed"<<endl;
 	}
 
 
@@ -4150,6 +4177,61 @@ namespace Nektar
 //	const std::vector< std::string > filnam = m_session->GetFilenames();
 //	cout << "loaded filename: " << filnam[0] << endl;  
 
+    }
+    
+    void CoupledLinearNS_TT::plotRepro(Eigen::VectorXd solution, int id)
+    {
+    	cout<<"In plot "<<m_fields[0]->UpdatePhys().num_elements()<<" "<<m_fields[0]->UpdateCoeffs().num_elements()<<" "<<solution.size()<<endl;
+    	/*for(int i = 0; i < solution.size(); i++)
+		{
+			if(i < solution.size()/2)
+				m_fields[0]->UpdatePhys()[i] = solution(i);
+			else
+				m_fields[1]->UpdatePhys()[i] = solution(i);
+		}
+		
+		for(int k = 0; k < m_fields.num_elements(); k++)
+			m_fields[k]->FwdTrans(m_fields[k]->GetPhys(), m_fields[k]->UpdateCoeffs());
+			
+		std::vector<Array<OneD, NekDouble> > fieldcoeffs(m_fields.num_elements()+1);
+	    std::vector<std::string> variables(m_fields.num_elements()+1);
+	    int i;
+	        
+	    for(i = 0; i < m_fields.num_elements(); ++i)
+	    {
+	        fieldcoeffs[i] = m_fields[i]->UpdateCoeffs();
+	        variables[i]   = m_boundaryConditions->GetVariable(i);
+	    }
+    
+        
+    	fieldcoeffs[i] = Array<OneD, NekDouble>(m_fields[0]->GetNcoeffs()); 
+        // project pressure field to velocity space        
+        if(m_singleMode==true)
+        {
+            Array<OneD, NekDouble > tmpfieldcoeffs (m_fields[0]->GetNcoeffs()/2);
+            m_pressure->GetPlane(0)->BwdTrans_IterPerExp(m_pressure->GetPlane(0)->GetCoeffs(), m_pressure->GetPlane(0)->UpdatePhys());
+            m_pressure->GetPlane(1)->BwdTrans_IterPerExp(m_pressure->GetPlane(1)->GetCoeffs(), m_pressure->GetPlane(1)->UpdatePhys()); 
+            m_fields[0]->GetPlane(0)->FwdTrans_IterPerExp(m_pressure->GetPlane(0)->GetPhys(),fieldcoeffs[i]);
+            m_fields[0]->GetPlane(1)->FwdTrans_IterPerExp(m_pressure->GetPlane(1)->GetPhys(),tmpfieldcoeffs);
+            for(int e=0; e<m_fields[0]->GetNcoeffs()/2; e++)
+            {
+                fieldcoeffs[i][e+m_fields[0]->GetNcoeffs()/2] = tmpfieldcoeffs[e];
+            }          
+        }
+        else
+        {
+            m_pressure->BwdTrans_IterPerExp(m_pressure->GetCoeffs(),m_pressure->UpdatePhys());
+            m_fields[0]->FwdTrans_IterPerExp(m_pressure->GetPhys(),fieldcoeffs[i]);
+        }
+        variables[i] = "p";   
+    
+    	std::stringstream sstm;
+		//sstm << "_" << m_sessionName <<"_snapshot_" << parameter<<"_of_"<<total_solutions_found<<".fld";
+		sstm << "Online_"<<id<<".fld";
+		std::string outname = sstm.str();
+        
+    	WriteFld(outname,m_fields[0],fieldcoeffs,variables);*/
+						
     }
 
 }

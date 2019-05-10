@@ -146,7 +146,7 @@ namespace Nektar
 	Array<OneD, Array<OneD, NekDouble> > DoSolve_at_param_continuation(Array<OneD, NekDouble> init_snapshot_x, Array<OneD, NekDouble> init_snapshot_y, NekDouble parameter);
 	double findMinParam(std::vector<int> &indices_to_be_continued);
 	//perform my continuation method
-	Array<OneD, Array<OneD, Array<OneD, NekDouble> > > Continuation_method(NekDouble param);
+	Array<OneD, Array<OneD, Array<OneD, NekDouble> > > Continuation_method(Eigen::VectorXd *params);
 	//get a vector with, in position i, the index of its mirrored phys point
 	std::vector<int> GetFlipperMap(std::vector<double> &x, std::vector<double> &y);
 	//flip each solutions and try to obtain new solutions but different from the previous ones

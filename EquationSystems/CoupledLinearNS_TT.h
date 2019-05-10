@@ -239,6 +239,8 @@ namespace Nektar
 
         virtual void v_Output(void);
         
+        void plotRepro(Eigen::VectorXd solution, int id);
+        
 
     };
     

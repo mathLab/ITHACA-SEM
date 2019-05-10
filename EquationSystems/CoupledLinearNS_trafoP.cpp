@@ -1480,7 +1480,7 @@ namespace Nektar
 //		cout << "csx0_trafo.norm() " << csx0_trafo.norm() << endl;
 //		cout << "csy0.norm() " << csy0.norm() << endl;
 //		cout << "csy0_trafo.norm() " << csy0_trafo.norm() << endl;
-		rel_err = std::abs(csx0_trafo.norm() - csx0.norm()) / csx0.norm() + std::abs(csy0_trafo.norm() - csy0.norm()) / csy0.norm();
+		rel_err = (csx0_trafo - csx0).norm() / csx0.norm() + (csy0_trafo - csy0).norm() / csy0.norm();
 		cout << "rel_err " << rel_err << endl;
 
 		init_snapshot_x = out_field_trafo_x;

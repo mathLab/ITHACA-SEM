@@ -862,11 +862,6 @@ namespace Nektar
             }
 
             StdRegions::Orientation orient = GetEorient(edge);
-            if (edge == 2)
-            {
-                orient = orient == StdRegions::eForwards ?
-                    StdRegions::eBackwards : StdRegions::eForwards;
-            }
 
             //Reverse data if necessary
             if(orient == StdRegions::eBackwards)

@@ -3079,7 +3079,10 @@ namespace Nektar
         const Array<OneD,const NekDouble>& loctoglobndsign = m_locToGloMap[0]->GetLocalToGlobalBndSign();
 //	Eigen::MatrixXd Mtrafo(RB_A.rows(), nBndDofs);
 	M_truth_size = curr_f_bnd.size() + curr_f_p.size() + curr_f_int.size();  // compare_vec1.rows() corresponds to nBndDofs
-	cout << "Local dof size, also M_truth_size is " << curr_f_bnd.size() + curr_f_p.size() + curr_f_int.size() << endl;
+	if (debug_mode)
+	{
+		cout << "Local dof size, also M_truth_size is " << curr_f_bnd.size() + curr_f_p.size() + curr_f_int.size() << endl;
+	}
 	M_truth_size_without_DBC = no_not_dbc_in_loc + curr_f_p.size() + curr_f_int.size();
 	Mtrafo = Eigen::MatrixXd (RB_A.rows(), nBndDofs);
 	Array<OneD, MultiRegions::ExpListSharedPtr> m_fields = UpdateFields();
@@ -3270,14 +3273,14 @@ namespace Nektar
 
 		if (use_Newton)
 		{
-			Eigen::VectorXd add_to_rhs_adv_newton(M_truth_size); 
-			add_to_rhs_adv_newton = adv_matrix * PODmodes * PODmodes.transpose() * collect_f_all.col(3);      
-			Eigen::VectorXd adv_rhs_add_newton = remove_rows(add_to_rhs_adv_newton, elem_loc_dbc);
+//			Eigen::VectorXd add_to_rhs_adv_newton(M_truth_size); 
+//			add_to_rhs_adv_newton = adv_matrix * PODmodes * PODmodes.transpose() * collect_f_all.col(3);      
+//			Eigen::VectorXd adv_rhs_add_newton = remove_rows(add_to_rhs_adv_newton, elem_loc_dbc);
 			// alt: not working
 //			adv_rhs_add_newton = adv_matrix_simplified * remove_rows(collect_f_all.col(3), elem_loc_dbc);
 			// end alt
-			Eigen::VectorXd adv_rhs_proj_newton = RB.transpose() * adv_rhs_add_newton;
-			adv_vec_proj_x_newton[trafo_iter] = adv_rhs_proj_newton;
+//			Eigen::VectorXd adv_rhs_proj_newton = RB.transpose() * adv_rhs_add_newton;
+//			adv_vec_proj_x_newton[trafo_iter] = adv_rhs_proj_newton;
 
 			for(int RB_counter = 0; RB_counter < RBsize; RB_counter++)
 			{			
@@ -3312,11 +3315,11 @@ namespace Nektar
 
 		if (use_Newton)
 		{
-			Eigen::VectorXd add_to_rhs_adv_newton(M_truth_size); 
-			add_to_rhs_adv_newton = adv_matrix  * PODmodes * PODmodes.transpose() *  collect_f_all.col(3);      
-			Eigen::VectorXd adv_rhs_add_newton = remove_rows(add_to_rhs_adv_newton, elem_loc_dbc);
-			Eigen::VectorXd adv_rhs_proj_newton = RB.transpose() * adv_rhs_add_newton;
-			adv_vec_proj_y_newton[trafo_iter] = adv_rhs_proj_newton;
+//			Eigen::VectorXd add_to_rhs_adv_newton(M_truth_size); 
+//			add_to_rhs_adv_newton = adv_matrix  * PODmodes * PODmodes.transpose() *  collect_f_all.col(3);      
+//			Eigen::VectorXd adv_rhs_add_newton = remove_rows(add_to_rhs_adv_newton, elem_loc_dbc);
+//			Eigen::VectorXd adv_rhs_proj_newton = RB.transpose() * adv_rhs_add_newton;
+//			adv_vec_proj_y_newton[trafo_iter] = adv_rhs_proj_newton;
 
 
 			for(int RB_counter = 0; RB_counter < RBsize; RB_counter++)
@@ -3370,10 +3373,13 @@ namespace Nektar
 			csy0(index_conv) = snapshot_y_collection[i][index_conv];
 		}
 
-		cout << "csx0.norm() " << csx0.norm() << endl;
-		cout << "csx0_trafo.norm() " << csx0_trafo.norm() << endl;
-		cout << "csy0.norm() " << csy0.norm() << endl;
-		cout << "csy0_trafo.norm() " << csy0_trafo.norm() << endl;
+		if (debug_mode)
+		{
+			cout << "csx0.norm() " << csx0.norm() << endl;
+			cout << "csx0_trafo.norm() " << csx0_trafo.norm() << endl;
+			cout << "csy0.norm() " << csy0.norm() << endl;
+			cout << "csy0_trafo.norm() " << csy0_trafo.norm() << endl;
+		}
 		
 		Eigen::VectorXd trafo_f_bnd = curr_f_bnd;
 		Eigen::VectorXd trafo_f_p = curr_f_p;
@@ -3980,12 +3986,16 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 		mat_compare.col(1) = reconstruct_solution; // sembra abbastanza bene
 		mat_compare.col(2) = mat_compare.col(1) - mat_compare.col(0);
 //		cout << mat_compare << endl;
-		cout << "relative error norm: " << mat_compare.col(2).norm() / mat_compare.col(0).norm() << endl;
+		cout << "relative error norm: " << mat_compare.col(2).norm() / mat_compare.col(0).norm() << " of snapshot number " << iter_index << endl;
+
 
 		if (debug_mode)
 		{
 			cout << "snapshot_x_collection.num_elements() " << snapshot_x_collection.num_elements() << " snapshot_x_collection[0].num_elements() " << snapshot_x_collection[0].num_elements() << endl;
+		}
 
+		if (write_ROM_field)
+		{
 			recover_snapshot_data(reconstruct_solution, current_index);
 		}
 
@@ -4056,13 +4066,15 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 
 	}
 
-	cout << "eigen_phys_basis_x.norm() " << eigen_phys_basis_x.norm() << endl;
-	cout << "eigen_phys_basis_x_snap.norm() " << eigen_phys_basis_x_snap.norm() << endl;
-	cout << "(eigen_phys_basis_x - eigen_phys_basis_x_snap).norm() " << (eigen_phys_basis_x - eigen_phys_basis_x_snap).norm() << endl;
-	cout << "eigen_phys_basis_y.norm() " << eigen_phys_basis_y.norm() << endl;
-	cout << "eigen_phys_basis_y_snap.norm() " << eigen_phys_basis_y_snap.norm() << endl;
-	cout << "(eigen_phys_basis_y - eigen_phys_basis_y_snap).norm() " << (eigen_phys_basis_y - eigen_phys_basis_y_snap).norm() << endl;
-
+	if (debug_mode)
+	{
+		cout << "eigen_phys_basis_x.norm() " << eigen_phys_basis_x.norm() << endl;
+		cout << "eigen_phys_basis_x_snap.norm() " << eigen_phys_basis_x_snap.norm() << endl;
+		cout << "(eigen_phys_basis_x - eigen_phys_basis_x_snap).norm() " << (eigen_phys_basis_x - eigen_phys_basis_x_snap).norm() << endl;
+		cout << "eigen_phys_basis_y.norm() " << eigen_phys_basis_y.norm() << endl;
+		cout << "eigen_phys_basis_y_snap.norm() " << eigen_phys_basis_y_snap.norm() << endl;
+		cout << "(eigen_phys_basis_y - eigen_phys_basis_y_snap).norm() " << (eigen_phys_basis_y - eigen_phys_basis_y_snap).norm() << endl;
+	}
 
 
 
@@ -4075,10 +4087,17 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
         {
             fieldcoeffs[i] = fields[i]->UpdateCoeffs();
             variables[i]   = m_boundaryConditions->GetVariable(i);
-	    cout << "variables[i] " << variables[i] << endl;
+	    if (debug_mode)
+	    {
+		    cout << "variables[i] " << variables[i] << endl;
+	    }
         }
 
-	cout << "m_singleMode " << m_singleMode << endl;	
+	if (debug_mode)
+	{
+		cout << "m_singleMode " << m_singleMode << endl;	
+	}
+
 	fieldcoeffs[i] = Array<OneD, NekDouble>(m_fields[0]->GetNcoeffs(), 0.0);  
         variables[i] = "p"; 
 
@@ -4154,8 +4173,22 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 	{
 		debug_mode = 0;
 	} 
-
-
+	if (m_session->DefinesParameter("write_ROM_field")) 
+	{
+		write_ROM_field = m_session->GetParameter("write_ROM_field");
+	}
+	else
+	{
+		write_ROM_field = 0;
+	} 
+	if (m_session->DefinesParameter("snapshot_computation_plot_rel_errors")) 
+	{
+		snapshot_computation_plot_rel_errors = m_session->GetParameter("snapshot_computation_plot_rel_errors");
+	}
+	else
+	{
+		snapshot_computation_plot_rel_errors = 0;
+	} 
 	Nmax = number_of_snapshots;
 	if (parameter_space_dimension == 1)
 	{
@@ -4342,6 +4375,7 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 		CoupledLinearNS_trafoP babyCLNS_trafo(m_session);
 		babyCLNS_trafo.InitObject();
 		babyCLNS_trafo.use_Newton = use_Newton;
+		babyCLNS_trafo.debug_mode = debug_mode;
 		collect_f_all = babyCLNS_trafo.DoTrafo(snapshot_x_collection, snapshot_y_collection, param_vector);
 	}
 	else if (parameter_space_dimension == 2)
@@ -4351,7 +4385,10 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 	Eigen::BDCSVD<Eigen::MatrixXd> svd_collect_f_all(collect_f_all, Eigen::ComputeThinU);
 	cout << "svd_collect_f_all.singularValues() " << svd_collect_f_all.singularValues() << endl << endl;
 	Eigen::VectorXd singular_values = svd_collect_f_all.singularValues();
-	cout << "sum singular values " << singular_values.sum() << endl << endl;
+	if (debug_mode)
+	{
+		cout << "sum singular values " << singular_values.sum() << endl << endl;
+	}
 	Eigen::VectorXd rel_singular_values = singular_values / singular_values.sum();
 	cout << "relative singular value percents: " << rel_singular_values << endl;
 	// determine RBsize corresponding to the chosen POD_tolerance
@@ -4365,8 +4402,11 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 			RBsize = i+2;
 		}		
 	}
-	cout << "cumulative relative singular value percentages: " << cum_rel_singular_values << endl;
-	cout << "RBsize: " << RBsize << endl;
+	if (debug_mode)
+	{
+		cout << "cumulative relative singular value percentages: " << cum_rel_singular_values << endl;
+		cout << "RBsize: " << RBsize << endl;
+	}
 	
 
 
@@ -4384,21 +4424,36 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 	{
 		setDBC_M(collect_f_all);
 	}
-	cout << "M_no_dbc_in_loc " << M_no_dbc_in_loc << endl;
-	cout << "no_dbc_in_loc " << no_dbc_in_loc << endl;
-	cout << "M_no_not_dbc_in_loc " << M_no_not_dbc_in_loc << endl;
-	cout << "no_not_dbc_in_loc " <<	no_not_dbc_in_loc << endl;
+	if (debug_mode)
+	{
+		cout << "M_no_dbc_in_loc " << M_no_dbc_in_loc << endl;
+		cout << "no_dbc_in_loc " << no_dbc_in_loc << endl;
+		cout << "M_no_not_dbc_in_loc " << M_no_not_dbc_in_loc << endl;
+		cout << "no_not_dbc_in_loc " <<	no_not_dbc_in_loc << endl;
+	}
 	//Eigen::VectorXd f_bnd_dbc_full_size = CLNS.f_bnd_dbc_full_size;
 	// c_f_all_PODmodes_wo_dbc becomes CLNS.RB
 	Eigen::MatrixXd c_f_all_PODmodes_wo_dbc = RB;
-	cout << "c_f_all_PODmodes_wo_dbc.rows() " << c_f_all_PODmodes_wo_dbc.rows() << endl;
-	cout << "c_f_all_PODmodes_wo_dbc.cols() " << c_f_all_PODmodes_wo_dbc.cols() << endl;
+	if (debug_mode)
+	{
+		cout << "c_f_all_PODmodes_wo_dbc.rows() " << c_f_all_PODmodes_wo_dbc.rows() << endl;
+		cout << "c_f_all_PODmodes_wo_dbc.cols() " << c_f_all_PODmodes_wo_dbc.cols() << endl;
+	}
 	gen_phys_base_vecs();
-	cout << "finished gen_phys_base_vecs " << endl;
+	if (debug_mode)	
+	{
+		cout << "finished gen_phys_base_vecs " << endl;
+	}
 	gen_proj_adv_terms();
-	cout << "finished gen_proj_adv_terms " << endl;
+	if (debug_mode)	
+	{
+		cout << "finished gen_proj_adv_terms " << endl;
+	}
 	gen_reference_matrices();
-	cout << "finished gen_reference_matrices " << endl;
+	if (debug_mode)	
+	{
+		cout << "finished gen_reference_matrices " << endl;
+	}
     }
 
     Eigen::MatrixXd CoupledLinearNS_TT::gen_affine_mat_proj(double current_nu)
@@ -4453,33 +4508,33 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 			recovered_affine_adv_mat_proj_xy += adv_mats_proj_x[i] * curr_xy_projected(i,0) + adv_mats_proj_y[i] * curr_xy_projected(i,1);
 			recovered_affine_adv_rhs_proj_xy_newton_RB -= adv_vec_proj_x_newton_RB[i] * curr_xy_projected(i,0) + adv_vec_proj_y_newton_RB[i] * curr_xy_projected(i,1);
 		}
-		cout << "recovered_affine_adv_mat_proj_xy.rows() " << recovered_affine_adv_mat_proj_xy.rows() << " recovered_affine_adv_mat_proj_xy.cols() " << recovered_affine_adv_mat_proj_xy.cols() << endl;
-		cout << "collect_f_all.rows() " << collect_f_all.rows() << " collect_f_all.cols() " << collect_f_all.cols() << endl;
+//		cout << "recovered_affine_adv_mat_proj_xy.rows() " << recovered_affine_adv_mat_proj_xy.rows() << " recovered_affine_adv_mat_proj_xy.cols() " << recovered_affine_adv_mat_proj_xy.cols() << endl;
+//		cout << "collect_f_all.rows() " << collect_f_all.rows() << " collect_f_all.cols() " << collect_f_all.cols() << endl;
 		Eigen::VectorXd current_f_all = Eigen::VectorXd::Zero(collect_f_all.rows());
 		current_f_all = collect_f_all.col(current_index);
 		Eigen::VectorXd current_f_all_wo_dbc = remove_rows(current_f_all, elem_loc_dbc);
 		Eigen::VectorXd proj_current_f_all_wo_dbc = RB.transpose() * current_f_all_wo_dbc;
 		proj_current_f_all_wo_dbc = PODmodes.transpose() * current_f_all;
-		cout << "proj_current_f_all_wo_dbc " << proj_current_f_all_wo_dbc << endl;
+//		cout << "proj_current_f_all_wo_dbc " << proj_current_f_all_wo_dbc << endl;
 
 		if (use_Newton)
 		{
 			add_rhs_Newton = recovered_affine_adv_rhs_proj_xy_newton_RB.transpose() * proj_current_f_all_wo_dbc;
-			cout << "add_rhs_Newton " << add_rhs_Newton << endl;
+//			cout << "add_rhs_Newton " << add_rhs_Newton << endl;
 			add_rhs_Newton = recovered_affine_adv_rhs_proj_xy_newton_RB * proj_current_f_all_wo_dbc;
-			cout << "add_rhs_Newton 2 " << add_rhs_Newton << endl;
+//			cout << "add_rhs_Newton 2 " << add_rhs_Newton << endl;
 		}
 
 
 		for (int i = 0; i < RBsize; ++i)
 		{
-			recovered_affine_adv_rhs_proj_xy_newton -= adv_vec_proj_x_newton[i] * curr_xy_projected(i,0) + adv_vec_proj_y_newton[i] * curr_xy_projected(i,1);
+//			recovered_affine_adv_rhs_proj_xy_newton -= adv_vec_proj_x_newton[i] * curr_xy_projected(i,0) + adv_vec_proj_y_newton[i] * curr_xy_projected(i,1);
 //			cout << "adv_vec_proj_x_newton_RB.rows() " << adv_vec_proj_x_newton_RB[i].rows() << " adv_vec_proj_x_newton_RB.cols() " << adv_vec_proj_x_newton_RB[i].cols() << endl;
 //			cout << "adv_vec_proj_y_newton_RB.rows() " << adv_vec_proj_y_newton_RB[i].rows() << " adv_vec_proj_y_newton_RB.cols() " << adv_vec_proj_y_newton_RB[i].cols() << endl;
 //			recovered_affine_adv_rhs_proj_xy_newton_RB -= adv_vec_proj_x_newton_RB[i] * curr_xy_projected(i,0) + adv_vec_proj_y_newton_RB[i] * curr_xy_projected(i,1);
 		}	
 
-		cout << "recovered_affine_adv_rhs_proj_xy_newton " << -0.5*recovered_affine_adv_rhs_proj_xy_newton << endl;
+//		cout << "recovered_affine_adv_rhs_proj_xy_newton " << -0.5*recovered_affine_adv_rhs_proj_xy_newton << endl;
 
 
 	}
@@ -4524,7 +4579,7 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 	the_const_one_rhs_simplified = remove_rows(the_const_one_rhs, elem_loc_dbc);
 	the_ABCD_one_rhs_proj = RB.transpose() * the_ABCD_one_rhs_simplified;
 	the_const_one_rhs_proj = RB.transpose() * the_const_one_rhs_simplified;
-	cout << "the_const_one_rhs_proj " << the_const_one_rhs_proj << endl;
+//	cout << "the_const_one_rhs_proj " << the_const_one_rhs_proj << endl;
     }
 
 
@@ -4533,6 +4588,7 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 	CoupledLinearNS_trafoP babyCLNS_trafo(m_session);
 	babyCLNS_trafo.InitObject();
 	babyCLNS_trafo.use_Newton = use_Newton;
+	babyCLNS_trafo.snapshot_computation_plot_rel_errors = snapshot_computation_plot_rel_errors;
 	Array<OneD, NekDouble> zero_phys_init(GetNpoints(), 0.0);
 	snapshot_x_collection = Array<OneD, Array<OneD, NekDouble> > (number_of_snapshots);
 	snapshot_y_collection = Array<OneD, Array<OneD, NekDouble> > (number_of_snapshots);

@@ -1481,7 +1481,10 @@ namespace Nektar
 //		cout << "csy0.norm() " << csy0.norm() << endl;
 //		cout << "csy0_trafo.norm() " << csy0_trafo.norm() << endl;
 		rel_err = (csx0_trafo - csx0).norm() / csx0.norm() + (csy0_trafo - csy0).norm() / csy0.norm();
-		cout << "rel_err " << rel_err << endl;
+		if (snapshot_computation_plot_rel_errors)
+		{
+			cout << "rel_err " << rel_err << endl;
+		}
 
 		init_snapshot_x = out_field_trafo_x;
 		init_snapshot_y = out_field_trafo_y;
@@ -1544,10 +1547,13 @@ namespace Nektar
 			csy0(index_conv) = snapshot_y_collection[i][index_conv];
 		}
 
-		cout << "csx0.norm() " << csx0.norm() << endl;
-		cout << "csx0_trafo.norm() " << csx0_trafo.norm() << endl;
-		cout << "csy0.norm() " << csy0.norm() << endl;
-		cout << "csy0_trafo.norm() " << csy0_trafo.norm() << endl;
+		if (debug_mode)
+		{
+			cout << "csx0.norm() " << csx0.norm() << endl;
+			cout << "csx0_trafo.norm() " << csx0_trafo.norm() << endl;
+			cout << "csy0.norm() " << csy0.norm() << endl;
+			cout << "csy0_trafo.norm() " << csy0_trafo.norm() << endl;
+		}
 		
 		Eigen::VectorXd trafo_f_bnd = curr_f_bnd;
 		Eigen::VectorXd trafo_f_p = curr_f_p;

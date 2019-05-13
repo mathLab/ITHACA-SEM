@@ -280,6 +280,34 @@ namespace Nektar
         const Array<OneD, NekDouble>                        &U,
         const Array<OneD, const Array<OneD, NekDouble> >    &qfield,
               DNekMatSharedPtr                              &OutputMatrix);
+    
+    /**
+     * @brief return part of viscous Jacobian 
+     * Input:
+     * normals:Point normals
+     * mu: dynamicviscosity
+     * dmu_dT: mu's derivative with T using Sutherland's law
+     * U=[rho,rhou,rhov,rhoE]
+     * Output: 4*5 Matrix (the flux about rho is zero)
+     * OutputMatrix dFLux_dU,  the matrix sign is consistent with SIPG
+    */
+    void GetdFlux_dU_3D(
+        const Array<OneD, NekDouble>                        &normals, 
+        const NekDouble                                     mu, 
+        const NekDouble                                     dmu_dT,
+        const Array<OneD, NekDouble>                        &U,
+        const Array<OneD, const Array<OneD, NekDouble> >    &qfield,
+              DNekMatSharedPtr                              &OutputMatrix);
+    
+    /////////////////////////////////////
+    //Yu Pan's test
+    void test();
+    
+    void PrintArray(Array<OneD, NekDouble> &Array);
+
+    void PrintMatrix(DNekMatSharedPtr &Matrix);
+    ////////////////////////////////////
+    
 #endif
     
   };

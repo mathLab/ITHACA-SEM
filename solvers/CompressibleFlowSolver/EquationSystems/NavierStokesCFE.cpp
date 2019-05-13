@@ -173,6 +173,11 @@ namespace Nektar
                 }
             }
         }
+
+        //////////////////////////////////////////////////
+        //Yu Pan's test
+        test();
+        //////////////////////////////////////////////////
     }
 
     void NavierStokesCFE::v_DoDiffusion(
@@ -1500,23 +1505,26 @@ namespace Nektar
         //Assume Fn=mu*Sn
         //Sn=Sx*nx+Sy*ny
 
-        //Term1 mu's derivative with U: dmu_dU*Sn
+        NekDouble TwoThrid=2./3.;
+        NekDouble FourThird=4./3.;
         NekDouble u=U2/U1;
         NekDouble v=U3/U1;
         NekDouble du_dx=orho1*(dU2_dx-u*dU1_dx);
-        NekDouble dv_dy=orho1*(dU3_dy-v*dU1_dy);
-        NekDouble du_dy=orho1*(dU2_dy-u*dU1_dy);
         NekDouble dv_dx=orho1*(dU3_dx-v*dU1_dx);
-        NekDouble s12=4./3.*du_dx-2./3.*dv_dy;
+        NekDouble du_dy=orho1*(dU2_dy-u*dU1_dy);
+        NekDouble dv_dy=orho1*(dU3_dy-v*dU1_dy);
+        NekDouble s12=FourThird*du_dx-TwoThrid*dv_dy;
         NekDouble s13=du_dy+dv_dx;
         NekDouble s22=s13;
-        NekDouble s23=4./3.*dv_dy-2./3.*du_dx;
+        NekDouble s23=FourThird*dv_dy-TwoThrid*du_dx;
         NekDouble snx=s12*nx+s22*ny;
         NekDouble sny=s13*nx+s23*ny;
         NekDouble snv=snx*u+sny*v;
         NekDouble qx=-gamma*mu/Pr*(orho1*dU4_dx-U[3]*orho2*dU1_dx-u*(orho1*dU2_dx-U[1]*orho2*dU1_dx)-v*(orho1*dU3_dx-U[2]*orho2*dU1_dx));
         NekDouble qy=-gamma*mu/Pr*(orho1*dU4_dy-U[3]*orho2*dU1_dy-u*(orho1*dU2_dy-U[1]*orho2*dU1_dy)-v*(orho1*dU3_dy-U[2]*orho2*dU1_dy));
         NekDouble qn=qx*nx+qy*ny;
+
+        //Term1 mu's derivative with U: dmu_dU*Sn
         Array<OneD,NekDouble> tmp(3,0.0);
         tmp[0]=snx;
         tmp[1]=sny;
@@ -1533,6 +1541,11 @@ namespace Nektar
                 (*OutputMatrix)(i,j)=dmu_dT*dT_dU[j]*tmp[i];
             }
         }
+
+        ////////////////////////
+        //Yu Pan's Test check same
+        // PrintMatrix(OutputMatrix);
+        ///////////////////////
         
         //Term 2 +mu*dSn_dU
         NekDouble du_dx_dU1,du_dx_dU2;
@@ -1555,18 +1568,18 @@ namespace Nektar
         dv_dx_dU3=du_dx_dU2;
         dv_dy_dU1=-orho2*dU3_dy+2*orho3*U3*dU1_dy;
         dv_dy_dU3=du_dy_dU2;
-        ds12_dU1=4./3.*du_dx_dU1-2./3.*dv_dy_dU1;
-        ds12_dU2=4./3.*du_dx_dU2;
-        ds12_dU3=-2./3.*dv_dy_dU3;
+        ds12_dU1=FourThird*du_dx_dU1-TwoThrid*dv_dy_dU1;
+        ds12_dU2=FourThird*du_dx_dU2;
+        ds12_dU3=-TwoThrid*dv_dy_dU3;
         ds13_dU1=du_dy_dU1+dv_dx_dU1;
         ds13_dU2=du_dy_dU2;
         ds13_dU3=dv_dx_dU3;
         ds22_dU1=ds13_dU1;
         ds22_dU2=ds13_dU2;
         ds22_dU3=ds13_dU3;
-        ds23_dU1=4./3.*dv_dy_dU1-2./3.*du_dx_dU1;
-        ds23_dU2=-2./3.*du_dx_dU2;
-        ds23_dU3=4./3.*dv_dy_dU3;
+        ds23_dU1=FourThird*dv_dy_dU1-TwoThrid*du_dx_dU1;
+        ds23_dU2=-TwoThrid*du_dx_dU2;
+        ds23_dU3=FourThird*dv_dy_dU3;
         dsnx_dU1=ds12_dU1*nx+ds22_dU1*ny;
         dsnx_dU2=ds12_dU2*nx+ds22_dU2*ny;
         dsnx_dU3=ds12_dU3*nx+ds22_dU3*ny;
@@ -1586,6 +1599,13 @@ namespace Nektar
         (*OutputMatrix)(2,1)=(*OutputMatrix)(2,1)+mu*dsnv_dU2;
         (*OutputMatrix)(2,2)=(*OutputMatrix)(2,2)+mu*dsnv_dU3;
 
+
+        ////////////////////////
+        //Yu Pan's Test 
+        // PrintMatrix(OutputMatrix);
+        // cout<<"2D"<<(*OutputMatrix)(0,1)<<endl;
+        ///////////////////////
+
         //Consider qn's effect (does not include mu's effect)
         NekDouble dqx_dU1,dqx_dU2,dqx_dU3,dqx_dU4;
         NekDouble dqy_dU1,dqy_dU2,dqy_dU3,dqy_dU4;
@@ -1603,7 +1623,399 @@ namespace Nektar
         (*OutputMatrix)(2,1)=(*OutputMatrix)(2,1)-dqx_dU2-dqy_dU2;
         (*OutputMatrix)(2,2)=(*OutputMatrix)(2,2)-dqx_dU3-dqy_dU3;
         (*OutputMatrix)(2,3)=(*OutputMatrix)(2,3)-dqx_dU4-dqy_dU4;
+
+        ////////////////////////
+        //Yu Pan's Test 
+        // PrintMatrix(OutputMatrix);
+        ///////////////////////
     }
+
+     /**
+     * @brief return part of viscous Jacobian 
+     * Input:
+     * normals:Point normals
+     * mu: dynamicviscosity
+     * dmu_dT: mu's derivative with T using Sutherland's law
+     * U=[rho,rhou,rhov,rhoE]
+     * Output: 4*5 Matrix (the flux about rho is zero)
+     * OutputMatrix dFLux_dU,  the matrix sign is consistent with SIPG
+     */
+    void NavierStokesCFE::GetdFlux_dU_3D(
+        const Array<OneD, NekDouble>                        &normals, 
+        const NekDouble                                     mu, 
+        const NekDouble                                     dmu_dT,
+        const Array<OneD, NekDouble>                        &U,
+        const Array<OneD, const Array<OneD, NekDouble> >    &qfield,
+              DNekMatSharedPtr                              &OutputMatrix)
+    {
+        NekDouble nx=normals[0];
+        NekDouble ny=normals[1];
+        NekDouble nz=normals[2];
+        NekDouble U1=U[0];
+        NekDouble U2=U[1];
+        NekDouble U3=U[2];
+        NekDouble U4=U[3];
+        NekDouble U5=U[4];
+        NekDouble dU1_dx=qfield[0][0];
+        NekDouble dU2_dx=qfield[0][1];
+        NekDouble dU3_dx=qfield[0][2];
+        NekDouble dU4_dx=qfield[0][3];
+        NekDouble dU5_dx=qfield[0][4];
+        NekDouble dU1_dy=qfield[1][0];
+        NekDouble dU2_dy=qfield[1][1];
+        NekDouble dU3_dy=qfield[1][2];
+        NekDouble dU4_dy=qfield[1][3];
+        NekDouble dU5_dy=qfield[1][4];
+        NekDouble dU1_dz=qfield[2][0];
+        NekDouble dU2_dz=qfield[2][1];
+        NekDouble dU3_dz=qfield[2][2];
+        NekDouble dU4_dz=qfield[2][3];
+        NekDouble dU5_dz=qfield[2][4];
+        NekDouble R =m_varConv->GetGasconstant();
+        NekDouble gamma=m_gamma;
+        NekDouble kappa=m_thermalConductivity;
+        NekDouble Cp=gamma / (gamma - 1.0) *R;
+        NekDouble Cv=1.0/(gamma-1)*R;
+        NekDouble Pr= Cp *mu / kappa;
+
+        NekDouble orho1,orho2,orho3,orho4;
+        NekDouble oCv=1./Cv;
+        orho1=1.0/U1;
+        orho2=1.0/(U1*U1);
+        orho3=orho1*orho2;
+        orho4=orho2*orho2;
+
+        //Assume Fn=mu*Sn
+        //Sn=Sx*nx+Sy*ny+Sz*nz
+        NekDouble TwoThrid=2./3.;
+        NekDouble FourThird=4./3.;
+        NekDouble tmp2=gamma*mu/Pr;
+        NekDouble u=U2/U1;
+        NekDouble v=U3/U1;
+        NekDouble w=U4/U1;
+        NekDouble du_dx=orho1*(dU2_dx-u*dU1_dx);
+        NekDouble dv_dx=orho1*(dU3_dx-v*dU1_dx);
+        NekDouble dw_dx=orho1*(dU4_dx-w*dU1_dx);
+        NekDouble du_dy=orho1*(dU2_dy-u*dU1_dy);
+        NekDouble dv_dy=orho1*(dU3_dy-v*dU1_dy);
+        NekDouble dw_dy=orho1*(dU4_dy-w*dU1_dy);
+        NekDouble du_dz=orho1*(dU2_dz-u*dU1_dz);
+        NekDouble dv_dz=orho1*(dU3_dz-v*dU1_dz);
+        NekDouble dw_dz=orho1*(dU4_dz-w*dU1_dz);
+        NekDouble s12=FourThird*du_dx-TwoThrid*dv_dy-TwoThrid*dw_dz;
+        NekDouble s13=du_dy+dv_dx;
+        NekDouble s14=dw_dx+du_dz;
+        NekDouble s22=s13;
+        NekDouble s23=FourThird*dv_dy-TwoThrid*du_dx-TwoThrid*dw_dz;
+        NekDouble s24=dv_dz+dw_dy;
+        NekDouble s32=s14;
+        NekDouble s33=s24;
+        NekDouble s34=FourThird*dw_dz-TwoThrid*du_dx-TwoThrid*dv_dy;
+        NekDouble snx=s12*nx+s22*ny+s32*nz;
+        NekDouble sny=s13*nx+s23*ny+s33*nz;
+        NekDouble snz=s14*nz+s24*ny+s34*nz;
+        NekDouble snv=snx*u+sny*v+snz*w;
+        NekDouble qx=-tmp2*(orho1*dU5_dx-U5*orho2*dU1_dx-u*(orho1*dU2_dx-U2*orho2*dU1_dx)-v*(orho1*dU3_dx-U3*orho2*dU1_dx)-w*(orho1*dU4_dx-U4*orho2*dU1_dx));
+        NekDouble qy=-tmp2*(orho1*dU5_dy-U5*orho2*dU1_dy-u*(orho1*dU2_dy-U2*orho2*dU1_dy)-v*(orho1*dU3_dy-U3*orho2*dU1_dy)-w*(orho1*dU4_dy-U4*orho2*dU1_dy));
+        NekDouble qz=-tmp2*(orho1*dU5_dz-U5*orho2*dU1_dz-u*(orho1*dU2_dz-U2*orho2*dU1_dz)-v*(orho1*dU3_dz-U3*orho2*dU1_dz)-w*(orho1*dU4_dz-U4*orho2*dU1_dz));
+        NekDouble qn=qx*nx+qy*ny+qz*nz;
+
+        //Term1 mu's derivative with U: dmu_dU*Sn
+        Array<OneD,NekDouble> tmp(4,0.0);
+        tmp[0]=snx;
+        tmp[1]=sny;
+        tmp[2]=snz;
+        tmp[3]=snv-qn/mu;
+        Array<OneD,NekDouble> dT_dU (5,0.0);
+        dT_dU[0]=oCv*(-orho2*U5+orho3*U2*U2+orho3*U3*U3+orho3*U4*U4);
+        dT_dU[1]=-oCv*orho2*U2;   
+        dT_dU[2]=-oCv*orho2*U3;
+        dT_dU[3]=-oCv*orho2*U4;
+        dT_dU[4]=oCv*orho1;
+        for(int i=0;i<4;i++)
+        {
+            for(int j=0;j<5;j++)
+            {
+                (*OutputMatrix)(i,j)=dmu_dT*dT_dU[j]*tmp[i];
+            }
+        }
+
+        ////////////////////////
+        //Yu Pan's Test
+        // PrintMatrix(OutputMatrix);
+        ///////////////////////
+
+        //Term 2 +mu*dSn_dU
+        NekDouble du_dx_dU1,du_dx_dU2;
+        NekDouble du_dy_dU1,du_dy_dU2;
+        NekDouble du_dz_dU1,du_dz_dU2;
+        NekDouble dv_dx_dU1,dv_dx_dU3;
+        NekDouble dv_dy_dU1,dv_dy_dU3;
+        NekDouble dv_dz_dU1,dv_dz_dU3;
+        NekDouble dw_dx_dU1,dw_dx_dU4;
+        NekDouble dw_dy_dU1,dw_dy_dU4;
+        NekDouble dw_dz_dU1,dw_dz_dU4;
+        NekDouble ds12_dU1,ds12_dU2,ds12_dU3,ds12_dU4;
+        NekDouble ds13_dU1,ds13_dU2,ds13_dU3;
+        NekDouble ds14_dU1,ds14_dU2,ds14_dU4;
+        NekDouble ds22_dU1,ds22_dU2,ds22_dU3;
+        NekDouble ds23_dU1,ds23_dU2,ds23_dU3,ds23_dU4;
+        NekDouble ds24_dU1,ds24_dU3,ds24_dU4; 
+        NekDouble ds32_dU1,ds32_dU2,ds32_dU4;
+        NekDouble ds33_dU1,ds33_dU3,ds33_dU4;
+        NekDouble ds34_dU1,ds34_dU2,ds34_dU3,ds34_dU4;    
+        NekDouble dsnx_dU1,dsnx_dU2,dsnx_dU3,dsnx_dU4;
+        NekDouble dsny_dU1,dsny_dU2,dsny_dU3,dsny_dU4;
+        NekDouble dsnz_dU1,dsnz_dU2,dsnz_dU3,dsnz_dU4;
+        NekDouble dsnv_dU1,dsnv_dU2,dsnv_dU3,dsnv_dU4;
+
+        du_dx_dU1=-orho2*dU2_dx+2*orho3*U2*dU1_dx;
+        du_dx_dU2=-orho2*dU1_dx;
+        du_dy_dU1=-orho2*dU2_dy+2*orho3*U2*dU1_dy;
+        du_dy_dU2=-orho2*dU1_dy;
+        du_dz_dU1=-orho2*dU2_dz+2*orho3*U2*dU1_dz;
+        du_dz_dU2=-orho2*dU1_dz;
+        dv_dx_dU1=-orho2*dU3_dx+2*orho3*U3*dU1_dx;
+        dv_dx_dU3=-orho2*dU1_dx;
+        dv_dy_dU1=-orho2*dU3_dy+2*orho3*U3*dU1_dy;
+        dv_dy_dU3=-orho2*dU1_dy;
+        dv_dz_dU1=-orho2*dU3_dz+2*orho3*U3*dU1_dz;
+        dv_dz_dU3=-orho2*dU1_dz;
+        dw_dx_dU1=-orho2*dU4_dx+2*orho3*U4*dU1_dx;
+        dw_dx_dU4=-orho2*dU1_dx;
+        dw_dy_dU1=-orho2*dU4_dy+2*orho3*U4*dU1_dy;
+        dw_dy_dU4=-orho2*dU1_dy;
+        dw_dz_dU1=-orho2*dU4_dz+2*orho3*U4*dU1_dz;
+        dw_dz_dU4=-orho2*dU1_dz;
+        ds12_dU1=FourThird*du_dx_dU1-TwoThrid*dv_dy_dU1-TwoThrid*dw_dz_dU1;
+        ds12_dU2=FourThird*du_dx_dU2;
+        ds12_dU3=-TwoThrid*dv_dy_dU3;
+        ds12_dU4=-TwoThrid*dw_dz_dU4;
+        ds13_dU1=du_dy_dU1+dv_dx_dU1;
+        ds13_dU2=du_dy_dU2;
+        ds13_dU3=dv_dx_dU3;
+        ds14_dU1=dw_dx_dU1+du_dz_dU1;
+        ds14_dU2=du_dz_dU2;
+        ds14_dU4=dw_dx_dU4;
+        ds22_dU1=du_dy_dU1+dv_dx_dU1;
+        ds22_dU2=du_dy_dU2;
+        ds22_dU3=dv_dx_dU3;
+        ds23_dU1=FourThird*dv_dy_dU1-TwoThrid*du_dx_dU1-TwoThrid*dw_dz_dU1;
+        ds23_dU2=-TwoThrid*du_dx_dU2;
+        ds23_dU3=FourThird*dv_dy_dU3;
+        ds23_dU4=-TwoThrid*dw_dz_dU4;
+        ds24_dU1=dv_dz_dU1+dw_dy_dU1;
+        ds24_dU3=dv_dz_dU3;
+        ds24_dU4=dw_dy_dU4;
+        ds32_dU1=dw_dx_dU1+du_dz_dU1;
+        ds32_dU2=du_dz_dU2;
+        ds32_dU4=dw_dx_dU4;
+        ds33_dU1=dv_dz_dU1+dw_dy_dU1;
+        ds33_dU3=dv_dz_dU3;
+        ds33_dU4=dw_dy_dU4;
+        ds34_dU1=FourThird*dw_dz_dU1-TwoThrid*du_dx_dU1-TwoThrid*dv_dy_dU1;
+        ds34_dU2=-TwoThrid*du_dx_dU2;
+        ds34_dU3=-TwoThrid*dv_dy_dU3;
+        ds34_dU4=FourThird*dw_dz_dU4;
+        dsnx_dU1=ds12_dU1*nx+ds22_dU1*ny+ds32_dU1*nz;
+        dsnx_dU2=ds12_dU2*nx+ds22_dU2*ny+ds32_dU2*nz;
+        dsnx_dU3=ds12_dU3*nx+ds22_dU3*ny;
+        dsnx_dU4=ds12_dU4*nx+ds32_dU4*nz;
+        dsny_dU1=ds13_dU1*nx+ds23_dU1*ny+ds33_dU1*nz;
+        dsny_dU2=ds13_dU2*nx+ds23_dU2*ny;
+        dsny_dU3=ds13_dU3*nx+ds23_dU3*ny+ds33_dU3*nz;
+        dsny_dU4=ds23_dU4*ny+ds33_dU4*nz;
+        dsnz_dU1=ds14_dU1*nx+ds24_dU1*ny+ds34_dU1*nz;
+        dsnz_dU2=ds14_dU2*nx+ds34_dU2*nz;
+        dsnz_dU3=ds24_dU3*ny+ds34_dU3*nz;
+        //? why there is value if 2D
+        dsnz_dU4=ds14_dU4*nx+ds24_dU4*ny+ds34_dU4*nz;
+        dsnv_dU1=u*dsnx_dU1+v*dsny_dU1+w*dsnz_dU1-orho2*U2*snx-orho2*U3*sny-orho2*U4*snz;
+        dsnv_dU2=u*dsnx_dU2+v*dsny_dU2+w*dsnz_dU2+orho1*snx;
+        dsnv_dU3=u*dsnx_dU3+v*dsny_dU3+w*dsnz_dU3+orho1*sny;
+        dsnv_dU4=u*dsnx_dU4+v*dsny_dU4+w*dsnz_dU4+orho1*snz;
+        (*OutputMatrix)(0,0)=(*OutputMatrix)(0,0)+mu*dsnx_dU1;
+        (*OutputMatrix)(0,1)=(*OutputMatrix)(0,1)+mu*dsnx_dU2;
+        (*OutputMatrix)(0,2)=(*OutputMatrix)(0,2)+mu*dsnx_dU3;
+        (*OutputMatrix)(0,3)=(*OutputMatrix)(0,3)+mu*dsnx_dU4;
+        (*OutputMatrix)(1,0)=(*OutputMatrix)(1,0)+mu*dsny_dU1;
+        (*OutputMatrix)(1,1)=(*OutputMatrix)(1,1)+mu*dsny_dU2;
+        (*OutputMatrix)(1,2)=(*OutputMatrix)(1,2)+mu*dsny_dU3;
+        (*OutputMatrix)(1,3)=(*OutputMatrix)(1,3)+mu*dsny_dU4;
+        (*OutputMatrix)(2,0)=(*OutputMatrix)(2,0)+mu*dsnz_dU1;
+        (*OutputMatrix)(2,1)=(*OutputMatrix)(2,1)+mu*dsnz_dU2;
+        (*OutputMatrix)(2,2)=(*OutputMatrix)(2,2)+mu*dsnz_dU3;
+        (*OutputMatrix)(2,3)=(*OutputMatrix)(2,3)+mu*dsnz_dU4;
+        (*OutputMatrix)(3,0)=(*OutputMatrix)(3,0)+mu*dsnv_dU1;
+        (*OutputMatrix)(3,1)=(*OutputMatrix)(3,1)+mu*dsnv_dU2;
+        (*OutputMatrix)(3,2)=(*OutputMatrix)(3,2)+mu*dsnv_dU3;
+        (*OutputMatrix)(3,3)=(*OutputMatrix)(3,3)+mu*dsnv_dU4;
+
+
+        ////////////////////////
+        //Yu Pan's Test
+        // PrintMatrix(OutputMatrix);
+        // cout<<"3D"<<(*OutputMatrix)(0,1)<<endl;
+        ///////////////////////
+
+        //Consider qn's effect (does not include mu's effect)
+        NekDouble dqx_dU1,dqx_dU2,dqx_dU3,dqx_dU4,dqx_dU5;
+        NekDouble dqy_dU1,dqy_dU2,dqy_dU3,dqy_dU4,dqy_dU5;
+        NekDouble dqz_dU1,dqz_dU2,dqz_dU3,dqz_dU4,dqz_dU5;
+        NekDouble tmpx=-nx*tmp2;
+        dqx_dU1=tmpx*(-orho2*dU5_dx+2*orho3*U5*dU1_dx+2*orho3*U2*dU2_dx-3*orho4*U2*U2*dU1_dx+2*orho3*U3*dU3_dx-3*orho4*U3*U3*dU1_dx+2*orho3*U4*dU4_dx-3*orho4*U4*U4*dU1_dx);
+        dqx_dU2=tmpx*(-orho2*dU2_dx+2*orho3*U2*dU1_dx);
+        dqx_dU3=tmpx*(-orho2*dU3_dx+2*orho3*U3*dU1_dx);
+        dqx_dU4=tmpx*(-orho2*dU4_dx+2*orho3*U4*dU1_dx);
+        dqx_dU5=-tmpx*orho2*dU1_dx;
+        NekDouble tmpy=-ny*tmp2;
+        dqy_dU1=tmpy*(-orho2*dU5_dy+2*orho3*U5*dU1_dy+2*orho3*U2*dU2_dy-3*orho4*U2*U2*dU1_dy+2*orho3*U3*dU3_dy-3*orho4*U3*U3*dU1_dy+2*orho3*U4*dU4_dy-3*orho4*U4*U4*dU1_dy);
+        dqy_dU2=tmpy*(-orho2*dU2_dy+2*orho3*U2*dU1_dy);
+        dqy_dU3=tmpy*(-orho2*dU3_dy+2*orho3*U3*dU1_dy);
+        dqy_dU4=tmpy*(-orho2*dU4_dy+2*orho3*U4*dU1_dy);
+        dqy_dU5=-tmpy*orho2*dU1_dy;
+        NekDouble tmpz=-nz*tmp2;
+        dqz_dU1=tmpz*(-orho2*dU5_dz+2*orho3*U5*dU1_dz+2*orho3*U2*dU2_dz-3*orho4*U2*U2*dU1_dz+2*orho3*U3*dU3_dz-3*orho4*U3*U3*dU1_dz+2*orho3*U4*dU4_dz-3*orho4*U4*U4*dU1_dz);
+        dqz_dU2=tmpz*(-orho2*dU2_dz+2*orho3*U2*dU1_dz);
+        dqz_dU3=tmpz*(-orho2*dU3_dz+2*orho3*U3*dU1_dz);
+        dqz_dU4=tmpz*(-orho2*dU4_dz+2*orho3*U4*dU1_dz);
+        dqz_dU5=-tmpz*orho2*dU1_dz;
+        (*OutputMatrix)(3,0)=(*OutputMatrix)(3,0)-dqx_dU1-dqy_dU1-dqz_dU1;
+        (*OutputMatrix)(3,1)=(*OutputMatrix)(3,1)-dqx_dU2-dqy_dU2-dqz_dU2;
+        (*OutputMatrix)(3,2)=(*OutputMatrix)(3,2)-dqx_dU3-dqy_dU3-dqz_dU3;
+        (*OutputMatrix)(3,3)=(*OutputMatrix)(3,3)-dqx_dU4-dqy_dU4-dqz_dU4;
+        (*OutputMatrix)(3,4)=(*OutputMatrix)(3,4)-dqx_dU5-dqy_dU5-dqz_dU5;
+
+        ////////////////////////
+        //Yu Pan's Test
+        // PrintMatrix(OutputMatrix);
+        ///////////////////////
+    }
+
+    //////////////////////////////////////////////
+    //Yu Pan's test
+    void NavierStokesCFE::test()
+    {
+        NekDouble                           mu=0.1;
+        NekDouble                           dmu_dT=0.01;
+        NekDouble rho,rhou,rhov,rhow,rhoE;
+        NekDouble x,y,z;
+        NekDouble u,v,w,T,E;
+        NekDouble R =m_varConv->GetGasconstant();
+        NekDouble gamma=m_gamma;
+        NekDouble kappa=m_thermalConductivity;
+        NekDouble Cp=gamma / (gamma - 1.0) *R;
+        NekDouble Cv=1.0/(gamma-1)*R;
+        NekDouble Pr= Cp *mu / kappa;
+        
+        x=1;
+        y=2;
+        z=0;
+        
+        rho=1.0+x+2.*y*y;
+        u=2.+2.*x+3*y;
+        v=3.+x*x*x+2*y;
+        w=0;
+        T=100+x+y;
+        E=Cv*T+0.5*(u*u+v*v+w*w);
+        rhou=rho*u;
+        rhov=rho*v;
+        rhow=rho*w;
+        rhoE=rho*E;
+        NekDouble drho_dx,drho_dy,drho_dz;
+        NekDouble du_dx,du_dy,du_dz;
+        NekDouble dv_dx,dv_dy,dv_dz;
+        NekDouble dw_dx,dw_dy,dw_dz;
+        NekDouble dE_dx,dE_dy,dE_dz;
+        drho_dx=1.;
+        drho_dy=4*y;
+        drho_dz=0.0;
+        du_dx=2.;
+        du_dy=3.;
+        du_dz=0.0;
+        dv_dx=2*x;
+        dv_dy=2.;
+        dv_dz=0.0;
+        dw_dx=0.0;
+        dw_dy=0.0;
+        dw_dz=0.0;
+        dE_dx=Cv*1.+u*du_dx+v*dv_dx+w*dw_dx;
+        dE_dy=Cv*1.+u*du_dy+v*dv_dy+w*dw_dy;
+        dE_dz=Cv*2*0+u*du_dz+v*dv_dz+w*dw_dz;
+        NekDouble drhou_dx=rho*du_dx+drho_dx*u;
+        NekDouble drhou_dy=rho*du_dy+drho_dy*u;
+        NekDouble drhou_dz=rho*du_dz+drho_dz*u;
+        NekDouble drhov_dx=rho*dv_dx+drho_dx*v;
+        NekDouble drhov_dy=rho*dv_dy+drho_dy*v;
+        NekDouble drhov_dz=rho*dv_dz+drho_dz*v;
+        NekDouble drhow_dx=rho*dw_dx+drho_dx*w;
+        NekDouble drhow_dy=rho*dw_dy+drho_dy*w;
+        NekDouble drhow_dz=rho*dw_dz+drho_dz*w;
+        NekDouble drhoE_dx=rho*dE_dx+drho_dx*E;
+        NekDouble drhoE_dy=rho*dE_dy+drho_dy*E;
+        NekDouble drhoE_dz=rho*dE_dz+drho_dz*E;
+
+        Array<OneD, NekDouble>              normal2D(2,0.0);
+        Array<OneD, NekDouble>              normal3D(3,0.0);
+        Array<OneD, NekDouble>              U2D(4,0.0);
+        Array<OneD, NekDouble>              U3D(5,0.0);
+        Array<OneD, Array<OneD, NekDouble> >    q2D(2);
+        Array<OneD, Array<OneD, NekDouble> >    q3D(3);
+        normal2D[0]=sqrt(2);
+        normal2D[1]=sqrt(2);
+        normal3D[0]=sqrt(2);
+        normal3D[1]=sqrt(2);
+        normal3D[2]=0.0;
+        U2D[0]=rho;
+        U2D[1]=rhou;
+        U2D[2]=rhov;
+        U2D[3]=rhoE;
+        U3D[0]=rho;
+        U3D[1]=rhou;
+        U3D[2]=rhov;
+        U3D[3]=rhow;
+        U3D[4]=rhoE;
+        q2D[0]= Array<OneD, NekDouble>(4,0.0);
+        q2D[1]= Array<OneD, NekDouble>(4,0.0);
+        q3D[0]= Array<OneD, NekDouble>(5,0.0);
+        q3D[1]= Array<OneD, NekDouble>(5,0.0);
+        q3D[2]= Array<OneD, NekDouble>(5,0.0);
+        q2D[0][0]=drho_dx;
+        q2D[0][1]=drhou_dx;
+        q2D[0][2]=drhov_dx;
+        q2D[0][3]=drhoE_dx;
+        q2D[1][0]=drho_dy;
+        q2D[1][1]=drhou_dy;
+        q2D[1][2]=drhov_dy;
+        q2D[1][3]=drhoE_dy;
+        q3D[0][0]=drho_dx;
+        q3D[0][1]=drhou_dx;
+        q3D[0][2]=drhov_dx;
+        q3D[0][3]=drhow_dx;
+        q3D[0][4]=drhoE_dx;
+        q3D[1][0]=drho_dy;
+        q3D[1][1]=drhou_dy;
+        q3D[1][2]=drhov_dy;
+        q3D[1][3]=drhow_dy;
+        q3D[1][4]=drhoE_dy;
+        q3D[2][0]=drho_dz;
+        q3D[2][1]=drhou_dz;
+        q3D[2][2]=drhov_dz;
+        q3D[2][3]=drhow_dz;
+        q3D[2][4]=drhoE_dz;
+        DNekMatSharedPtr Matrix2D = MemoryManager<DNekMat>::AllocateSharedPtr(3, 4,0.0);
+        DNekMatSharedPtr Matrix3D = MemoryManager<DNekMat>::AllocateSharedPtr(4, 5,0.0);
+        // PrintArray(q2D[0]);
+        // PrintArray(q2D[1]);
+        GetdFlux_dU_2D(normal2D,mu,dmu_dT,U2D,q2D,Matrix2D);
+        // PrintArray(q3D[0]);
+        // PrintArray(q3D[1]);
+        // PrintArray(q3D[2]);
+        GetdFlux_dU_3D(normal3D,mu,dmu_dT,U3D,q3D,Matrix3D);
+        // PrintMatrix(Matrix2D);
+        // PrintMatrix(Matrix3D);
+    }
+    ///////////////////////////////////////////////
 
     void NavierStokesCFE::v_MinusDiffusionFluxJacDirctn(
         const int                                                       nDirctn,
@@ -1968,6 +2380,59 @@ namespace Nektar
         }
         m_diffusion->DiffuseCalculateDerivative(nConvectiveFields,m_fields,inarray,qfield,pFwd,pBwd);
     }
+    
+    void NavierStokesCFE::PrintArray(Array<OneD, NekDouble> &Array)
+    {
+        int ncoeff = Array.num_elements();
+        for (int i = 0; i < ncoeff; i++)
+        {
+            cout << setprecision(1) << "Array [" << i + 1
+                << "]=" << setprecision(16) << Array[i] << endl;
+        }
+    }
+
+    void NavierStokesCFE::PrintMatrix(DNekMatSharedPtr &Matrix)
+    {
+    int nrows                = Matrix->GetRows();
+    int ncols                = Matrix->GetColumns();
+    MatrixStorage matStorage = Matrix->GetStorageType();
+    for (int i = 0; i < nrows; i++)
+    {
+        if (matStorage == eFULL)
+        {
+            for (int j = 0; j < ncols; j++)
+            {
+                cout << setprecision(1) << "Matrix [" << i + 1 << "][" << j + 1
+                     << "]=" << setprecision(16) << (*Matrix)(i, j) << endl;
+            }
+        }
+        else if (matStorage == eUPPER_TRIANGULAR)
+        {
+            for (int j = i; j < ncols; j++)
+            {
+                cout << setprecision(1) << "Matrix [" << i + 1 << "][" << j + 1
+                     << "]=" << setprecision(16) << (*Matrix)(i, j) << endl;
+            }
+        }
+        else if (matStorage == eLOWER_TRIANGULAR)
+        {
+            for (int j = 0; j <= i; j++)
+            {
+                cout << setprecision(1) << "Matrix [" << i + 1 << "][" << j + 1
+                     << "]=" << setprecision(16) << (*Matrix)(i, j) << endl;
+            }
+        }
+        else if (matStorage == eDIAGONAL)
+        {
+            cout << setprecision(1) << "Matrix [" << i + 1 << "][" << i + 1
+                 << "]=" << setprecision(16) << (*Matrix)(i, i) << endl;
+        }
+        else
+        {
+            ASSERTL0(false, "Undifined Matrix");
+        }
+    }
+}
 #endif
 
 }

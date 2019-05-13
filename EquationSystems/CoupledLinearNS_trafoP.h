@@ -136,6 +136,8 @@ namespace Nektar
 	NekDouble Get_m_kinvis(void);
 	void Set_m_kinvis(NekDouble);
 	int use_Newton;
+	int snapshot_computation_plot_rel_errors;
+	int debug_mode;
 	Array<OneD, Array<OneD, NekDouble> > myAdvField;
 
     protected:

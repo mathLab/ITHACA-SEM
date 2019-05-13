@@ -135,6 +135,8 @@ namespace Nektar
 	int globally_connected;
 	int use_Newton;
 	int debug_mode;
+	int write_ROM_field;
+	int snapshot_computation_plot_rel_errors;
 
         Eigen::MatrixXd MtM;
         Eigen::MatrixXd Mtrafo;

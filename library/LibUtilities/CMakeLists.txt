@@ -32,6 +32,7 @@ SET(BasicUtilsHeaders
     ./BasicUtils/ThreadBoost.h
     ./BasicUtils/Vmath.hpp
     ./BasicUtils/VmathArray.hpp
+    ./BasicUtils/Smath.h
     ./BasicUtils/Metis.hpp
     ./BasicUtils/VtkUtil.hpp
 )
@@ -52,6 +53,7 @@ SET(BasicUtilsSources
     ./BasicUtils/ThreadBoost.cpp
     ./BasicUtils/Timer.cpp
     ./BasicUtils/Vmath.cpp
+    ./BasicUtils/Smath.cpp
 )
 
 # HDF5
@@ -230,7 +232,7 @@ SET(LinearAlgebraSources
     ./LinearAlgebra/StorageSmvBsr.cpp
     ./LinearAlgebra/SparseDiagBlkMatrix.cpp
     ./LinearAlgebra/SparseMatrix.cpp
-    ./LinearAlgebra/NekLinSysIterative.cpp    
+    ./LinearAlgebra/NekLinSysIterative.cpp
 )
 
 SET(MemoryHeaders

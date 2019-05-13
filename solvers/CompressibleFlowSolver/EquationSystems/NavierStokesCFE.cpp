@@ -34,6 +34,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <CompressibleFlowSolver/EquationSystems/NavierStokesCFE.h>
+#include <LibUtilities/BasicUtils/Smath.h>
 
 using namespace std;
 
@@ -125,7 +126,7 @@ namespace Nektar
             m_diffusion->SetDiffusionSymmFluxCons(
                 &NavierStokesCFE::v_GetViscousSymmtrFluxConservVar, this);
 
-            if (m_shockCaptureType != "Off")
+            if (m_artificialDiffusion)
             {
                 m_diffusion->SetArtificialDiffusionVector(
                     &NavierStokesCFE::GetArtificialViscosity, this);
@@ -146,7 +147,7 @@ namespace Nektar
             m_diffusion->SetDiffusionSymmFluxCons(
                 &NavierStokesCFE::v_GetViscousSymmtrFluxConservVar, this);
 
-            if (m_shockCaptureType != "Off")
+            if (m_artificialDiffusion)
             {
                 m_diffusion->SetArtificialDiffusionVector(
                     &NavierStokesCFE::GetArtificialViscosity, this);
@@ -171,6 +172,110 @@ namespace Nektar
                 {
                     WARNINGL0(false, "useUnifiedWeakIntegration not coded for these parameters of Diffusion");
                 }
+            }
+        }
+    }
+
+    void NavierStokesCFE::v_ExtraFldOutput(
+        std::vector<Array<OneD, NekDouble> > &fieldcoeffs,
+        std::vector<std::string>             &variables)
+    {
+        bool extraFields;
+        m_session->MatchSolverInfo("OutputExtraFields","True",
+                                   extraFields, true);
+        if (extraFields)
+        {
+            const int nPhys   = m_fields[0]->GetNpoints();
+            const int nCoeffs = m_fields[0]->GetNcoeffs();
+            Array<OneD, Array<OneD, NekDouble> > tmp(m_fields.num_elements());
+
+            for (int i = 0; i < m_fields.num_elements(); ++i)
+            {
+                tmp[i] = m_fields[i]->GetPhys();
+            }
+
+            Array<OneD, Array<OneD, NekDouble> > velocity(m_spacedim);
+            Array<OneD, Array<OneD, NekDouble> > velFwd  (m_spacedim);
+            for (int i = 0; i < m_spacedim; ++i)
+            {
+                velocity[i] = Array<OneD, NekDouble> (nPhys);
+                velFwd[i]   = Array<OneD, NekDouble> (nCoeffs);
+            }
+
+            Array<OneD, NekDouble> pressure(nPhys), temperature(nPhys);
+            Array<OneD, NekDouble> entropy(nPhys);
+            Array<OneD, NekDouble> soundspeed(nPhys), mach(nPhys);
+            Array<OneD, NekDouble> sensor(nPhys), SensorKappa(nPhys);
+
+            m_varConv->GetVelocityVector(tmp, velocity);
+            m_varConv->GetPressure  (tmp, pressure);
+            m_varConv->GetTemperature(tmp, temperature);
+            m_varConv->GetEntropy   (tmp, entropy);
+            m_varConv->GetSoundSpeed(tmp, soundspeed);
+            m_varConv->GetMach      (tmp, soundspeed, mach);
+
+            int sensorOffset;
+            m_session->LoadParameter ("SensorOffset", sensorOffset, 1);
+            m_varConv->GetSensor (m_fields[0], tmp, sensor, SensorKappa,
+                                    sensorOffset);
+
+            Array<OneD, NekDouble> pFwd(nCoeffs), TFwd(nCoeffs);
+            Array<OneD, NekDouble> sFwd(nCoeffs);
+            Array<OneD, NekDouble> aFwd(nCoeffs), mFwd(nCoeffs);
+            Array<OneD, NekDouble> sensFwd(nCoeffs);
+
+            string velNames[3] = {"u", "v", "w"};
+            for (int i = 0; i < m_spacedim; ++i)
+            {
+                m_fields[0]->FwdTrans_IterPerExp(velocity[i], velFwd[i]);
+                variables.push_back(velNames[i]);
+                fieldcoeffs.push_back(velFwd[i]);
+            }
+
+            m_fields[0]->FwdTrans_IterPerExp(pressure,   pFwd);
+            m_fields[0]->FwdTrans_IterPerExp(temperature,TFwd);
+            m_fields[0]->FwdTrans_IterPerExp(entropy,    sFwd);
+            m_fields[0]->FwdTrans_IterPerExp(soundspeed, aFwd);
+            m_fields[0]->FwdTrans_IterPerExp(mach,       mFwd);
+            m_fields[0]->FwdTrans_IterPerExp(sensor,     sensFwd);
+
+            variables.push_back  ("p");
+            variables.push_back  ("T");
+            variables.push_back  ("s");
+            variables.push_back  ("a");
+            variables.push_back  ("Mach");
+            variables.push_back  ("Sensor");
+            fieldcoeffs.push_back(pFwd);
+            fieldcoeffs.push_back(TFwd);
+            fieldcoeffs.push_back(sFwd);
+            fieldcoeffs.push_back(aFwd);
+            fieldcoeffs.push_back(mFwd);
+            fieldcoeffs.push_back(sensFwd);
+
+            if (m_artificialDiffusion)
+            {
+                // Get min h/p
+                // m_artificialDiffusion->m_hOverP = GetElmtMinHP();
+                // reuse pressure
+                Array<OneD, NekDouble> sensorFwd(nCoeffs);
+                m_artificialDiffusion->GetArtificialViscosity(tmp, pressure);
+                m_fields[0]->FwdTrans_IterPerExp(pressure,   sensorFwd);
+
+                variables.push_back  ("ArtificialVisc");
+                fieldcoeffs.push_back(sensorFwd);
+
+            }
+
+            if (m_shockCaptureType == "Physical")
+            {
+                if ( m_muav == NullNekDouble1DArray )
+                {
+                    GetPhysicalAV(tmp);
+                }
+                Array<OneD, NekDouble> muavFwd(nCoeffs);
+                m_fields[0]->FwdTrans_IterPerExp(m_muav,   muavFwd);
+                variables.push_back  ("ArtificialVisc");
+                fieldcoeffs.push_back(muavFwd);
             }
         }
     }
@@ -252,6 +357,12 @@ namespace Nektar
                 m_varConv->GetVelocityVector(pBwd, inBwd);
             }
 
+            // get artificial viscosity
+            if (m_shockCaptureType == "Physical")
+            {
+                GetPhysicalAV(inarray);
+            }
+
             // Diffusion term in physical rhs form
             m_diffusion->Diffuse(nvariables, m_fields, inarrayDiff, outarrayDiff,
                                 inFwd, inBwd);
@@ -263,7 +374,7 @@ namespace Nektar
                             outarray[i], 1,
                             outarray[i], 1);
             }
-            if (m_shockCaptureType != "Off")
+            if (m_artificialDiffusion)
             {
                 m_artificialDiffusion->DoArtificialDiffusion(inarray, outarray);
             }
@@ -362,7 +473,7 @@ namespace Nektar
             }
 
             // m_diffusion->v_Diffuse_coeff(inarray, outarray, pFwd, pBwd);
-            if (m_shockCaptureType != "Off")
+            if (m_artificialDiffusion)
             {
                 m_artificialDiffusion->DoArtificialDiffusion_coeff(inarray, outarray);
             }
@@ -468,7 +579,7 @@ namespace Nektar
             m_diffusion->DiffuseTraceFlux(nvariables, m_fields, inarrayDiff,inarrayDiffderivative,VolumeFlux,TraceFlux, inFwd, inBwd);
 
             //Artificial Diffusion need to implement
-            if (m_shockCaptureType != "Off")
+            if (m_artificialDiffusion)
             {
                 m_artificialDiffusion->DoArtificialDiffusionFlux(inarray, VolumeFlux,TraceFlux);
             }
@@ -492,7 +603,7 @@ namespace Nektar
         const NekDouble lambda = -2.0/3.0;
 
         // Auxiliary variables
-        Array<OneD, NekDouble > mu                 (nPts, 0.0);
+        Array<OneD, NekDouble > mu                 (nPts, m_mu);
         Array<OneD, NekDouble > thermalConductivity(nPts, 0.0);
         Array<OneD, NekDouble > divVel             (nPts, 0.0);
 
@@ -500,15 +611,31 @@ namespace Nektar
         if (m_ViscosityType == "Variable")
         {
             m_varConv->GetDynamicViscosity(physfield[nVariables-2], mu);
-            NekDouble tRa = m_Cp / m_Prandtl;
-            Vmath::Smul(nPts, tRa, mu, 1, thermalConductivity, 1);
         }
-        else
+
+        // Add artificial viscosity if wanted
+        if (m_shockCaptureType == "Physical")
         {
-            Vmath::Fill(nPts, m_mu, mu, 1);
-            Vmath::Fill(nPts, m_thermalConductivity,
-                        thermalConductivity, 1);
+            // // Apply Ducros sensor
+            // if (m_physicalSensorType == "Ducros")
+            // {
+            //     ducros(m_muav);
+            // }
+            // // Make approximate C0 projection
+            // if (m_smoothing == "C0")
+            // {
+            //     C0Smooth(m_muav);
+            //     if (Vmath::Vmin(nPts, m_muav, 1) < 0.0)
+            //     {
+            //         WARNINGL0(false, "Artificial viscosity is negative after smoothing.")
+            //     }
+            // }
+            Vmath::Vadd(nPts, mu, 1, m_muav, 1, mu, 1);
         }
+
+        // Set thermal conductivity
+        NekDouble tRa = m_Cp / m_Prandtl;
+        Vmath::Smul(nPts, tRa, mu, 1, thermalConductivity, 1);
 
         // Velocity divergence
         for (j = 0; j < m_spacedim; ++j)
@@ -1161,10 +1288,6 @@ namespace Nektar
         const Array<OneD, const Array<OneD, NekDouble>> &physfield)
     {
         int nPts = physfield[0].num_elements();
-        if ( m_muav == NullNekDouble1DArray )
-        {
-            m_muav = Array<OneD, NekDouble>(nPts, 0.0);
-        }
         int nElements = m_fields[0]->GetExpSize();
         Array <OneD, NekDouble > hOverP(nElements, 0.0);
         hOverP = GetElmtMinHP();
@@ -1198,7 +1321,7 @@ namespace Nektar
             NekDouble rhoAve = Vmath::Vsum(nElmtPoints, tmp = physfield[0]
                 + physOffset, 1);
             rhoAve = rhoAve / nElmtPoints;
- // rhoAve = Smath::Smax(rhoAve , 1.0e-4, 1.0e+4);
+            rhoAve = Smath::Smax(rhoAve , 1.0e-4, 1.0e+4);
             Vmath::Smul(nElmtPoints, rhoAve, tmp = m_muav + physOffset, 1,
                 tmp = m_muav + physOffset, 1);
 

@@ -82,7 +82,8 @@ namespace Nektar
         {
             if (m_shockCaptureType == "Physical")
             {
-                m_muav = NullNekDouble1DArray;
+                int nPts = m_fields[0]->GetTotPoints();
+                m_muav = Array<OneD, NekDouble>(nPts, 0.0);
             }
             else
             {

@@ -38,6 +38,7 @@
 
 #include <CompressibleFlowSolver/EquationSystems/CompressibleFlowSystem.h>
 #include <CompressibleFlowSolver/Misc/EquationOfState.h>
+#include <LibUtilities/BasicUtils/Smath.h>
 
 namespace Nektar
 {
@@ -113,6 +114,10 @@ namespace Nektar
               Array<OneD, Array<OneD, NekDouble> >                      &outarray);
 
     virtual void v_InitObject();
+
+    virtual void v_ExtraFldOutput(
+            std::vector<Array<OneD, NekDouble> > &fieldcoeffs,
+            std::vector<std::string>             &variables);
 
     virtual void v_DoDiffusion(
         const Array<OneD, const Array<OneD, NekDouble> > &inarray,

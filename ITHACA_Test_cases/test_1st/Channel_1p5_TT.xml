@@ -46,6 +46,7 @@
             <P> ref_param_index = 2       </P>
             <P> ref_param_nu = 1       </P>
             <P> POD_tolerance = .9999       </P>
+	    <P> globally_connected = 2      </P>
             <P> A             = 0.65               </P>
             <P> MappingPressureTolerance  = 1e-5               </P>
             <P> MappingViscousTolerance   = 1e-5               </P>

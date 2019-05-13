@@ -4119,6 +4119,14 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
     {
 	int load_snapshot_data_from_files = m_session->GetParameter("load_snapshot_data_from_files");
 	int number_of_snapshots = m_session->GetParameter("number_of_snapshots");
+	if (m_session->DefinesParameter("parameter_space_dimension")) 
+	{
+		parameter_space_dimension = m_session->GetParameter("parameter_space_dimension");	
+	}
+	else
+	{
+		parameter_space_dimension = 1;
+	}
 	double POD_tolerance = m_session->GetParameter("POD_tolerance");
 	ref_param_index = m_session->GetParameter("ref_param_index");
 	ref_param_nu = m_session->GetParameter("ref_param_nu");
@@ -4143,6 +4151,26 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 		debug_mode = m_session->GetParameter("debug_mode");
 	}
 	else
+	{
+		debug_mode = 0;
+	} 
+
+
+	Nmax = number_of_snapshots;
+	if (parameter_space_dimension == 1)
+	{
+		param_vector = Array<OneD, NekDouble> (Nmax);
+	        for(int i = 0; i < number_of_snapshots; ++i)
+	        {
+			// generate the correct string
+			std::stringstream sstm;
+			sstm << "param" << i;
+			std::string result = sstm.str();
+		//	const char* rr = result.c_str();
+		        param_vector[i] = m_session->GetParameter(result);
+	        }
+	}
+	else if (parameter_space_dimension == 2)
 	{
 		general_param_vector = Array<OneD, Array<OneD, NekDouble> > (Nmax);
 		int number_of_snapshots_dir0 = m_session->GetParameter("number_of_snapshots_dir0");
@@ -4306,6 +4334,7 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 	DoSolve();
 
 	cout << "DoInitialise and DoSolve done" << endl;
+	cout << "parameter_space_dimension " << parameter_space_dimension << endl;
 
 	m_session->SetSolverInfo("SolverType", "CoupledLinearisedNS_trafoP");
 	if (parameter_space_dimension == 1)

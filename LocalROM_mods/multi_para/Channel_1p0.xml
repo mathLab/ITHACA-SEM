@@ -38,7 +38,7 @@
             <P> Kinvis = 1       </P>
             <!-- <P> Kinvis = .01       </P> -->
             <P> parameter_space_dimension = 2      </P>
-            <P> parameter_space_tensor_grid = 1    </P>   <!--  like a bool: 1 is yes, else is no  -->
+            <P> parameter_space_tensor_grid = 1    </P>   <!--  like a bool: 0 is no, else is yes  -->
             <P> number_of_snapshots = 20       </P>
             <P> number_of_snapshots_dir0 = 4       </P>
             <P> number_of_snapshots_dir1 = 5       </P>

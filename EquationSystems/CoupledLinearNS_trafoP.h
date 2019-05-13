@@ -156,7 +156,7 @@ namespace Nektar
 	int FarrelOutputSign(std::vector<double> &x, std::vector<double> &y);
 	
 	bool converged, deflate;
-	int number_of_deflations, use_deflation, total_solutions_found, different_solutions_found;
+	int number_of_deflations, use_deflation, total_solutions_found;
 	Array<OneD, Array<OneD, NekDouble> > sol_x_cont_defl, sol_y_cont_defl;
 	std::vector<double> param_vector;
 	double arclength_step, step_multiplier, max_step, start_with_Oseen;

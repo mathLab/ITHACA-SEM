@@ -1604,13 +1604,6 @@ namespace Nektar
 			{
 				norm_i = 0;
 				int curr_j = local_indices_to_be_continued[j];
-			/*	for(int i = 0; i < nvel; i++)
-				{
-					//I compute the norm					
-					norm_i += (out_field_trafo_x[i] - sol_x_cont_defl[curr_j][i]) * (out_field_trafo_x[i] - sol_x_cont_defl[curr_j][i]);
-					norm_i += (out_field_trafo_y[i] - sol_y_cont_defl[curr_j][i]) * (out_field_trafo_y[i] - sol_y_cont_defl[curr_j][i]);
-				}   
-				norm_i = sqrt(norm_i/(1));*/
 				
 				Vmath::Vsub(out_field_trafo_x.num_elements(), out_field_trafo_x, 1, sol_x_cont_defl[curr_j], 1, diff_x, 1);
 				Vmath::Vsub(out_field_trafo_y.num_elements(), out_field_trafo_y, 1, sol_y_cont_defl[curr_j], 1, diff_y, 1);
@@ -1809,7 +1802,7 @@ namespace Nektar
     
         
     fieldcoeffs[i] = Array<OneD, NekDouble>(m_fields[0]->GetNcoeffs()); 
-        // project pressure field to velocity space        
+        // project pressure field to velocity space   
         if(m_singleMode==true)
         {
             Array<OneD, NekDouble > tmpfieldcoeffs (m_fields[0]->GetNcoeffs()/2);
@@ -1824,6 +1817,7 @@ namespace Nektar
         }
         else
         {
+        	//2D simulations
             m_pressure->BwdTrans_IterPerExp(m_pressure->GetCoeffs(),m_pressure->UpdatePhys());
             m_fields[0]->FwdTrans_IterPerExp(m_pressure->GetPhys(),fieldcoeffs[i]);
         }
@@ -1834,7 +1828,7 @@ namespace Nektar
 	sstm << "TestSnap"<<(total_solutions_found + 1)<<".fld";
 	std::string outname = sstm.str();
         
-    WriteFld(outname,m_fields_t[0],fieldcoeffs,variables);
+    //WriteFld(outname,m_fields_t[0],fieldcoeffs,variables); 
 
 	return converged_solution;
     }
@@ -3032,14 +3026,10 @@ namespace Nektar
 		sol_y_cont_defl = Array<OneD, Array<OneD, NekDouble> > (m_maxIt);
 		
 		sol_x_cont_defl[0] = Array<OneD, NekDouble> (GetNpoints(), 0.0);
-		sol_y_cont_defl[0] = Array<OneD, NekDouble> (GetNpoints(), 0.0);                    
-		
-		Array<OneD, Array<OneD, Array<OneD, NekDouble> > > result = Array<OneD, Array<OneD, Array<OneD, NekDouble> > > (2);
-		result[0] = sol_x_cont_defl;
-		result[1] = sol_y_cont_defl;		
+		sol_y_cont_defl[0] = Array<OneD, NekDouble> (GetNpoints(), 0.0);                    	
 		
 		int deflated_solutions_found = 0, curr_i, indexFlip;
-		int previous_step_solutions = 1, previous_previous_step_solutions, last_bif_point_solutions_found = 0;  //number of solutions found in the step k-1 and k-2 when the current step is the k-th
+		int previous_step_solutions = 1, previous_previous_step_solutions = 0, last_bif_point_solutions_found = 0;  //number of solutions found in the step k-1 and k-2 when the current step is the k-th
 		bool lost_solution = true, use_arclength, used_deflation;
 		double last_param, delta_param, csi, use_deflation_now = false, use_guessGivenNi = true;
 		Array<OneD, NekDouble> guess_x, guess_y, guess_tmp;
@@ -3047,7 +3037,7 @@ namespace Nektar
 		number_of_deflations = 0;
 		total_solutions_found = 0;
 		
-		Set_m_kinvis((*params)[0]);
+		Set_m_kinvis((*params)[0] + step);
 		std::vector<int> indices_to_be_continued; //for the next value of the parameter
 		//std::vector<int> local_indices_to_be_continued(0); //for the current value of the parameter
 		Array<OneD, Array<OneD, NekDouble> > converged_solution(2), possible_solutions;
@@ -3086,7 +3076,6 @@ namespace Nektar
 			}
 			indices_to_be_continued.push_back(0);
 			total_solutions_found = 1;
-			different_solutions_found = 1; 	
 			last_param = m_kinvis;
 			
 			std::ofstream outfile;
@@ -3107,8 +3096,9 @@ namespace Nektar
 				local_indices_to_be_continued.resize(0);
 				
 				//continuation
-				cout<<"\nBegin continuation"<<endl;
-				if(previous_step_solutions == previous_previous_step_solutions && !lost_solution)
+				cout<<"\nBegin continuation"<<endl;			
+				
+				if(previous_step_solutions == previous_previous_step_solutions && !lost_solution) 
 				{
 					use_arclength = true;
 					if(use_guessGivenNi)
@@ -3151,11 +3141,6 @@ namespace Nektar
 					}
 					lost_solution = false;
 					converged_solution = DoSolve_at_param_continuation(guess_x, guess_y, m_kinvis);
-					if(use_arclength && total_solutions_found>1)
-					{
-						if(use_guessGivenNi && i < indices_to_be_continued.size() - 1)
-							m_kinvis += delta_param;
-					}
 					if(converged)
 					{
 						sol_x_cont_defl[total_solutions_found] = Array<OneD, NekDouble> (GetNpoints(), 0.0);
@@ -3183,6 +3168,10 @@ namespace Nektar
 						lost_solution = true;
 					}
 					deflate = true;
+					if(use_arclength && total_solutions_found>1 && use_guessGivenNi && i < indices_to_be_continued.size() - 1)
+					{
+						m_kinvis += delta_param;
+					}
 				}
 				
 				
@@ -3250,7 +3239,7 @@ namespace Nektar
 				}
 				
 				//here I want to flip the solutions and check if they are different from the previous ones, if so I use them as initial guess trying to converge to new solutions
-				//cout<<"I want to flip because there is local_indices_to_be_continued.size() = "<<local_indices_to_be_continued.size() <<endl;
+				cout<<"I want to flip because there is local_indices_to_be_continued.size() = "<<local_indices_to_be_continued.size() <<endl;
 				if(local_indices_to_be_continued.size() % 2 == 0)
 				{ 
 					indexFlip = 0;				
@@ -3298,6 +3287,10 @@ namespace Nektar
 			outfile.close();
 			outfile2.close();
 			
+			
+		Array<OneD, Array<OneD, Array<OneD, NekDouble> > > result = Array<OneD, Array<OneD, Array<OneD, NekDouble> > > (2);
+		result[0] = sol_x_cont_defl;
+		result[1] = sol_y_cont_defl;	
 		result[0] = Array<OneD, Array<OneD, NekDouble> > (total_solutions_found);
 		result[1] = Array<OneD, Array<OneD, NekDouble> > (total_solutions_found);	
 		

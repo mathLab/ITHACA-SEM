@@ -119,7 +119,15 @@ namespace Nektar
 	Array<OneD, Eigen::MatrixXd> adv_mats_proj_y;
 	Array<OneD, Eigen::VectorXd> adv_vec_proj_x;
 	Array<OneD, Eigen::VectorXd> adv_vec_proj_y;
+	Array<OneD, Eigen::VectorXd> adv_vec_proj_x_newton;
+	Array<OneD, Eigen::VectorXd> adv_vec_proj_y_newton;
+	Array<OneD, Eigen::MatrixXd> adv_vec_proj_x_newton_RB;
+	Array<OneD, Eigen::MatrixXd> adv_vec_proj_y_newton_RB;
+
 	void gen_proj_adv_terms();
+
+	void recover_snapshot_data(Eigen::VectorXd, int);
+
 	void offline_phase();
 	void online_phase();
 	Array<OneD, NekDouble> param_vector;
@@ -127,6 +135,7 @@ namespace Nektar
 	int RBsize;
 	int globally_connected;
 	int use_Newton;
+	int debug_mode;
 
         Eigen::MatrixXd MtM;
         Eigen::MatrixXd Mtrafo;
@@ -158,7 +167,7 @@ namespace Nektar
 	Eigen::VectorXd the_ABCD_one_rhs_proj;
 	Eigen::VectorXd the_const_one_rhs_proj;
 	Eigen::MatrixXd gen_affine_mat_proj(double);
-	Eigen::VectorXd gen_affine_vec_proj(double);
+	Eigen::VectorXd gen_affine_vec_proj(double, int);
 
 	int no_dbc_in_loc;
 	int no_not_dbc_in_loc;
@@ -202,6 +211,9 @@ namespace Nektar
 
 	NekDouble Get_m_kinvis(void);
 	void Set_m_kinvis(NekDouble);
+	
+	
+	Eigen::VectorXd gen_affine_vec(double current_nu, Eigen::VectorXd approximation);
 	
 
     protected:

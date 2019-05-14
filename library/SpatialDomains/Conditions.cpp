@@ -487,8 +487,6 @@ void BoundaryConditions::ReadBoundaryConditions(TiXmlElement *conditions)
                                 AllocateSharedPtr(m_session, "0"));
                         (*boundaryConditions)[*iter] = neumannCondition;
                     }
-
-                    attr = attr->Next();
                 }
             }
             else if (conditionType == "D")
@@ -592,8 +590,6 @@ void BoundaryConditions::ReadBoundaryConditions(TiXmlElement *conditions)
                                 AllocateSharedPtr(m_session, "0"));
                         (*boundaryConditions)[*iter] = dirichletCondition;
                     }
-
-                    attr = attr->Next();
                 }
             }
             else if (conditionType == "R") // Read du/dn +  PRIMCOEFF u = VALUE
@@ -712,8 +708,6 @@ void BoundaryConditions::ReadBoundaryConditions(TiXmlElement *conditions)
                         robinCondition->SetIsTimeDependent(isTimeDependent);
                         (*boundaryConditions)[*iter] = robinCondition;
                     }
-
-                    attr = attr->Next();
                 }
             }
             else if (conditionType == "P")
@@ -797,8 +791,6 @@ void BoundaryConditions::ReadBoundaryConditions(TiXmlElement *conditions)
                         ASSERTL0(false, "Periodic boundary conditions should "
                                         "be explicitely defined");
                     }
-
-                    attr = attr->Next();
                 }
             }
             else if (conditionType == "C")

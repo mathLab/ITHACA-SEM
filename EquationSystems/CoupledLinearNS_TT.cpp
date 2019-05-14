@@ -3078,7 +3078,10 @@ namespace Nektar
         const Array<OneD,const NekDouble>& loctoglobndsign = m_locToGloMap[0]->GetLocalToGlobalBndSign();
 //	Eigen::MatrixXd Mtrafo(RB_A.rows(), nBndDofs);
 	M_truth_size = curr_f_bnd.size() + curr_f_p.size() + curr_f_int.size();  // compare_vec1.rows() corresponds to nBndDofs
-	cout << "Local dof size, also M_truth_size is " << curr_f_bnd.size() + curr_f_p.size() + curr_f_int.size() << endl;
+	if (debug_mode)
+	{
+		cout << "Local dof size, also M_truth_size is " << curr_f_bnd.size() + curr_f_p.size() + curr_f_int.size() << endl;
+	}
 	M_truth_size_without_DBC = no_not_dbc_in_loc + curr_f_p.size() + curr_f_int.size();
 	Mtrafo = Eigen::MatrixXd (RB_A.rows(), nBndDofs);
 	Array<OneD, MultiRegions::ExpListSharedPtr> m_fields = UpdateFields();
@@ -3255,7 +3258,7 @@ namespace Nektar
 	Array<OneD, double> PhysBase_zero(GetNpoints(), 0.0);
 	for(int trafo_iter = 0; trafo_iter < RBsize; trafo_iter++)
 	{
-		cout<<"trafo_iter1 = "<<trafo_iter<<endl;
+		cout<<"trafo_iter in gen_proj_adv_terms() = "<<trafo_iter<<endl;
 		Array<OneD, double> curr_PhysBaseVec_x = orth_PhysBaseVec_x[trafo_iter];
 		Array<OneD, double> curr_PhysBaseVec_y = orth_PhysBaseVec_y[trafo_iter];
 
@@ -3274,14 +3277,11 @@ namespace Nektar
 
 		if (use_Newton)
 		{
-			Eigen::VectorXd add_to_rhs_adv_newton(M_truth_size); 
-			add_to_rhs_adv_newton = adv_matrix * PODmodes * PODmodes.transpose() * collect_f_all.col(trafo_iter);  
-			Eigen::VectorXd adv_rhs_add_newton = remove_rows(add_to_rhs_adv_newton, elem_loc_dbc);
 			// alt: not working
 //			adv_rhs_add_newton = adv_matrix_simplified * remove_rows(collect_f_all.col(3), elem_loc_dbc);
 			// end alt
-			Eigen::VectorXd adv_rhs_proj_newton = RB.transpose() * adv_rhs_add_newton;
-			adv_vec_proj_x_newton[trafo_iter] = adv_rhs_proj_newton;
+//			Eigen::VectorXd adv_rhs_proj_newton = RB.transpose() * adv_rhs_add_newton;
+//			adv_vec_proj_x_newton[trafo_iter] = adv_rhs_proj_newton;
 
 			for(int RB_counter = 0; RB_counter < RBsize; RB_counter++)
 			{			
@@ -3317,13 +3317,6 @@ namespace Nektar
 
 		if (use_Newton)
 		{
-			Eigen::VectorXd add_to_rhs_adv_newton(M_truth_size); 
-			add_to_rhs_adv_newton = adv_matrix  * PODmodes * PODmodes.transpose() *  collect_f_all.col(trafo_iter);      
-			Eigen::VectorXd adv_rhs_add_newton = remove_rows(add_to_rhs_adv_newton, elem_loc_dbc);
-			Eigen::VectorXd adv_rhs_proj_newton = RB.transpose() * adv_rhs_add_newton;
-			adv_vec_proj_y_newton[trafo_iter] = adv_rhs_proj_newton;
-
-
 			for(int RB_counter = 0; RB_counter < RBsize; RB_counter++)
 			{			
 				Eigen::VectorXd add_to_rhs_adv_newton_RB(M_truth_size); 
@@ -3376,10 +3369,13 @@ namespace Nektar
 			csy0(index_conv) = snapshot_y_collection[i][index_conv];
 		}
 
-		cout << "csx0.norm() " << csx0.norm() << endl;
-		cout << "csx0_trafo.norm() " << csx0_trafo.norm() << endl;
-		cout << "csy0.norm() " << csy0.norm() << endl;
-		cout << "csy0_trafo.norm() " << csy0_trafo.norm() << endl;
+		if (debug_mode)
+		{
+			cout << "csx0.norm() " << csx0.norm() << endl;
+			cout << "csx0_trafo.norm() " << csx0_trafo.norm() << endl;
+			cout << "csy0.norm() " << csy0.norm() << endl;
+			cout << "csy0_trafo.norm() " << csy0_trafo.norm() << endl;
+		}
 		
 		Eigen::VectorXd trafo_f_bnd = curr_f_bnd;
 		Eigen::VectorXd trafo_f_p = curr_f_p;
@@ -3478,17 +3474,9 @@ namespace Nektar
 
     void CoupledLinearNS_TT::online_phase()
     {
-    	std::ofstream outfile_rb;
-		outfile_rb.open("bif_diagr_rb.txt", std::ios::out);
-		for(int i = 0; i<RB.cols(); i++)
-		{
-			outfile_rb<<i<<" "<<RB.col(i).sum()<<endl;
-		}
-				
-		
 		Eigen::MatrixXd mat_compare = Eigen::MatrixXd::Zero(f_bnd_dbc_full_size.rows(), 3);  // is of size M_truth_size
 		bool continuation = true;
-		use_Newton = false;
+		use_Newton = true;
 		if(!continuation)
 		{
 			// start sweeping 
@@ -3511,65 +3499,72 @@ namespace Nektar
 				{
 					mat_compare.col(0) = collect_f_all.col(current_index);
 				}
+				
 				mat_compare.col(1) = reconstruct_solution; // sembra abbastanza bene
 				mat_compare.col(2) = mat_compare.col(1) - mat_compare.col(0);
-				//	cout << mat_compare << endl;
-				cout << "relative error norm for solution "<<iter_index<<": " << mat_compare.col(2).norm() / mat_compare.col(0).norm() << endl;
+		//		cout << mat_compare << endl;
+				cout << "relative error norm: " << mat_compare.col(2).norm() / mat_compare.col(0).norm() << " of snapshot number " << iter_index << endl;
+		
+		
+				if (debug_mode)
+				{
+					cout << "snapshot_x_collection.num_elements() " << snapshot_x_collection.num_elements() << " snapshot_x_collection[0].num_elements() " << snapshot_x_collection[0].num_elements() << endl;
+				}
+		
+				if (write_ROM_field)
+				{
+					recover_snapshot_data(reconstruct_solution, current_index);
+				}
 			}
 		}
 		else
 		{
 			
 			unsigned int iterations, curr_j;
-			double first_param = m_session->GetParameter("param0"), last_param = 0.5, rel_err, M, total_steps = 5.0;
+			double first_param = m_session->GetParameter("param0"), last_param = 0.965, rel_err, M, total_steps = 20.0, tol = 1e-13;
 			unsigned int total_solutions = 0;
 			std::vector<int> indices_to_be_continued, local_indices_to_be_continued;
 			std::ofstream outfile_online;
 			outfile_online.open("bif_diagr_online.txt", std::ios::out);
 			
-			Eigen::VectorXd reconstruct_solution, temp_solve_affine;
+			Eigen::VectorXd reconstruct_solution, temp_solve_affine, repro_solve_affine;
 			std::vector<Eigen::VectorXd> solve_affine;
 			Eigen::VectorXd last_sol = Eigen::VectorXd::Zero(RBsize); 
 			Eigen::MatrixXd curr_xy_proj = project_onto_basis(snapshot_x_collection[0], snapshot_y_collection[0]);
+			Eigen::VectorXd affine_vec_proj = gen_affine_vec_proj(first_param, 0);
 			
 			//I compute the first solution						////////////////////////////////////////////////////////////////////////////////////////////////////
-			cout<<"First solution"<<endl;
-			for(int i = 0; i < curr_xy_projected.rows(); i++)
-			{
-				if(i < temp_solve_affine.size()/2)
-					last_sol[i] = curr_xy_projected(i,0);
-				else
-					last_sol[i] = curr_xy_projected(i,1);
-			}
+			cout<<"First solution with viscosity = "<<first_param<<endl;
 			rel_err = 1;
 			iterations = 0;
-			while(rel_err > 1e-12 && ++iterations<100)
+			while(rel_err > tol && ++iterations<5)
 			{
 				Eigen::MatrixXd affine_mat_proj = gen_affine_mat_proj(first_param);
-				Eigen::VectorXd affine_vec_proj = gen_affine_vec(first_param, last_sol);
 				temp_solve_affine = affine_mat_proj.colPivHouseholderQr().solve(affine_vec_proj);
-				for(int i = 0; i < temp_solve_affine.size(); i++)
-				{
-					if(i < temp_solve_affine.size()/2)
-						curr_xy_projected(i,0) = temp_solve_affine(i);
-					else
-						curr_xy_projected(i,1) = temp_solve_affine(i);
-				}
-				
 				rel_err = (temp_solve_affine-last_sol).norm()/last_sol.norm();
-				cout<<"rel_err = "<<rel_err<<" the first coeff is "<<temp_solve_affine[0]<<" "<<last_sol[0]<<endl;
+				cout<<"rel_err = "<<rel_err<<endl;
 				last_sol = temp_solve_affine;
 				
-				if(rel_err <= 1e-12)
+				
+				repro_solve_affine = RB * temp_solve_affine;
+				reconstruct_solution = reconstruct_solution_w_dbc(repro_solve_affine);	
+				std::vector< Array<OneD, double> > reprojection = reproject_back(reconstruct_solution);
+				curr_xy_proj = project_onto_basis(reprojection[0], reprojection[1]);
+				
+				
+				if(rel_err <= tol)
 				{
 					cout<<"Converged!!!"<<endl;
-					Eigen::VectorXd repro_solve_affine = RB * temp_solve_affine;
-					Eigen::VectorXd reconstruct_solution = reconstruct_solution_w_dbc(repro_solve_affine);
 					solve_affine.push_back(temp_solve_affine);
 					outfile_online<<first_param<<" "<<reconstruct_solution[1196]<<endl; 
-					plotRepro(reconstruct_solution, 0);
 					cout<<endl;
+					
+					if (write_ROM_field)
+					{
+						recover_snapshot_data(reconstruct_solution, 1);
+					}
 				}
+				affine_vec_proj = gen_affine_vec(first_param, reconstruct_solution);
 			}
 			indices_to_be_continued.push_back(0);
 			total_solutions = 1;
@@ -3584,20 +3579,20 @@ namespace Nektar
 				{
 					curr_j = indices_to_be_continued[j];
 					cout<<"curr_j = "<<curr_j<<endl;
-					for(int i = 0; i < temp_solve_affine.size(); i++)
-					{
-						if(i < temp_solve_affine.size()/2)
-							curr_xy_projected(i,0) = (solve_affine[curr_j])(i);
-						else
-							curr_xy_projected(i,1) = (solve_affine[curr_j])(i);
-					}
 					rel_err = 1;
 					iterations = 0;
 					last_sol = solve_affine[curr_j];
-					while(rel_err > 1e-12 && ++iterations<100)
+					
+					repro_solve_affine = RB * last_sol;
+					reconstruct_solution = reconstruct_solution_w_dbc(repro_solve_affine);	
+					std::vector< Array<OneD, double> > reprojection = reproject_back(reconstruct_solution);
+					curr_xy_proj = project_onto_basis(reprojection[0], reprojection[1]);
+					affine_vec_proj = gen_affine_vec(current_nu, reconstruct_solution);
+					
+					while(rel_err > tol && ++iterations<100)
 					{
 						Eigen::MatrixXd affine_mat_proj = gen_affine_mat_proj(current_nu);
-						Eigen::VectorXd affine_vec_proj = gen_affine_vec(current_nu, last_sol);
+						//Eigen::VectorXd affine_vec_proj = gen_affine_vec(current_nu, last_sol);
 						temp_solve_affine = affine_mat_proj.colPivHouseholderQr().solve(affine_vec_proj);
 						for(int i = 0; i < temp_solve_affine.size(); i++)
 						{
@@ -3611,53 +3606,57 @@ namespace Nektar
 						last_sol = temp_solve_affine;
 						
 						cout<<"rel_err = "<<rel_err<<endl;
-						if(rel_err <= 1e-12)
+						
+						repro_solve_affine = RB * temp_solve_affine;
+						reconstruct_solution = reconstruct_solution_w_dbc(repro_solve_affine);	
+						std::vector< Array<OneD, double> > reprojection = reproject_back(reconstruct_solution);
+						curr_xy_proj = project_onto_basis(reprojection[0], reprojection[1]);
+				
+						if(rel_err <= tol)
 						{
 							cout<<"Converged!!!"<<endl;
-							Eigen::VectorXd repro_solve_affine = RB * temp_solve_affine;
-							Eigen::VectorXd reconstruct_solution = reconstruct_solution_w_dbc(repro_solve_affine);
-							
 							solve_affine.push_back(temp_solve_affine);
 							local_indices_to_be_continued.push_back(total_solutions);
 							total_solutions++;
 							
-							plotRepro(reconstruct_solution, total_solutions);
-							
 							outfile_online<<current_nu<<" "<<reconstruct_solution[1196]<<endl; 
 							cout<<endl;
+							
+							if (write_ROM_field)
+							{
+								recover_snapshot_data(reconstruct_solution, total_solutions);
+							}
 						}
+						affine_vec_proj = gen_affine_vec(current_nu, reconstruct_solution);
 					}
 				}
 				
 				//deflation						////////////////////////////////////////////////////////////////////////////////////////////////////
 				cout<<"Deflation over "<<local_indices_to_be_continued.size()<<" solutions"<<endl;
+				Eigen::MatrixXd massMatrix = the_const_one_proj; //Get_no_advection_matrix_ABCD();
+				//cout<<massMatrix.rows()<<" "<<massMatrix.cols()<<" "<<temp_solve_affine.rows()<<endl;
 				for(int j = 0; j < local_indices_to_be_continued.size(); j++)
 				{
 					curr_j = local_indices_to_be_continued[j];
 					cout<<"curr_j = "<<curr_j<<endl;
-					for(int i = 0; i < temp_solve_affine.size(); i++)
-					{
-						if(i < temp_solve_affine.size()/2)
-							curr_xy_projected(i,0) = (solve_affine[curr_j])(i)*(1+(((double)rand())/RAND_MAX-0.5)/2/1e2);
-						else
-							curr_xy_projected(i,1) = (solve_affine[curr_j])(i)*(1+(((double)rand())/RAND_MAX-0.5)/2/1e4);
-						temp_solve_affine[i] = (solve_affine[curr_j])(i)*(1+(((double)rand())/RAND_MAX-0.5)/2/1e4);
-					}
 					rel_err = 1;
 					iterations = 0;
 					last_sol = solve_affine[curr_j];
-					while(rel_err > 1e-12 && ++iterations<200)
+					
+					for(int i = 0; i < last_sol.size(); i++)
+						last_sol[i] = last_sol[i] * (1+(((double)rand())/RAND_MAX-0.5)/2/1e2);
+					
+					repro_solve_affine = RB * last_sol;
+					reconstruct_solution = reconstruct_solution_w_dbc(repro_solve_affine);	
+					std::vector< Array<OneD, double> > reprojection = reproject_back(reconstruct_solution);
+					curr_xy_proj = project_onto_basis(reprojection[0], reprojection[1]);
+					affine_vec_proj = gen_affine_vec(current_nu, reconstruct_solution);
+					
+					while(rel_err > tol && ++iterations<200)
 					{	
 						Eigen::MatrixXd affine_mat_proj = gen_affine_mat_proj(current_nu);
-						Eigen::VectorXd affine_vec_proj = gen_affine_vec(current_nu, last_sol);
+						//Eigen::VectorXd affine_vec_proj = gen_affine_vec(current_nu, last_sol);
 						temp_solve_affine = affine_mat_proj.colPivHouseholderQr().solve(affine_vec_proj);
-						for(int i = 0; i < temp_solve_affine.size(); i++)
-						{
-							if(i < temp_solve_affine.size()/2)
-								curr_xy_projected(i,0) = temp_solve_affine(i);
-							else
-								curr_xy_projected(i,1) = temp_solve_affine(i);
-						}
 						
 						//computation of tau
 						double norm_min = 1e20;
@@ -3667,34 +3666,46 @@ namespace Nektar
 							if((temp_solve_affine - solve_affine[curr_j]).norm() < norm_min)
 							{
 								norm_min = (temp_solve_affine - solve_affine[curr_j]).norm();
+								//norm_min = (temp_solve_affine - solve_affine[curr_j]).transpose() * massMatrix * (temp_solve_affine - solve_affine[curr_j]);
 								closest_sol = curr_j;
 							}
 						}
 						norm_min /= solve_affine[closest_sol].norm();
 						double scalar_product = (temp_solve_affine - solve_affine[curr_j]).dot(temp_solve_affine - last_sol);
 						double tau = 1 / (1 - 1/(1+1/norm_min) * scalar_product / (norm_min * norm_min * norm_min));	
-						tau = tau/fabs(tau);				
+						//tau = tau/fabs(tau);
+						if(tau < 0 && tau > -0.1)
+							tau = -0.1;
+						if(tau > 0 && tau < 0.5)
+							tau = 0.5;				
 						temp_solve_affine = tau * temp_solve_affine + (1-tau) * last_sol;
 						
 						rel_err = (temp_solve_affine-last_sol).norm()/last_sol.norm();
 						last_sol = temp_solve_affine;
 						cout<<"tau "<<tau; 
 						cout<<", rel_err = "<<rel_err<<endl;
-						if(rel_err <= 1e-12)
+						
+						repro_solve_affine = RB * temp_solve_affine;
+						reconstruct_solution = reconstruct_solution_w_dbc(repro_solve_affine);	
+						std::vector< Array<OneD, double> > reprojection = reproject_back(reconstruct_solution);
+						curr_xy_proj = project_onto_basis(reprojection[0], reprojection[1]);
+						
+						if(rel_err <= tol)
 						{
 							cout<<"Converged!!!"<<endl;
-							Eigen::VectorXd repro_solve_affine = RB * temp_solve_affine;
-							Eigen::VectorXd reconstruct_solution = reconstruct_solution_w_dbc(repro_solve_affine);
-							
 							solve_affine.push_back(temp_solve_affine);
 							local_indices_to_be_continued.push_back(total_solutions);
 							total_solutions++;
 							
-							plotRepro(reconstruct_solution, total_solutions);
-							
 							outfile_online<<current_nu<<" "<<reconstruct_solution[1196]<<endl; 
 							cout<<endl;
-						}
+							
+							if (write_ROM_field)
+							{
+								recover_snapshot_data(reconstruct_solution, total_solutions);
+							}
+						}						
+						affine_vec_proj = gen_affine_vec(current_nu, reconstruct_solution);
 					}
 				} 
 				cout<<endl; 
@@ -3703,7 +3714,7 @@ namespace Nektar
 				indices_to_be_continued = std::vector<int>(local_indices_to_be_continued);
 			}
 		}
-    }
+	}
 
     void CoupledLinearNS_TT::recover_snapshot_data(Eigen::VectorXd reconstruct_solution, int current_index)
     {
@@ -3768,13 +3779,15 @@ namespace Nektar
 
 	}
 
-	cout << "eigen_phys_basis_x.norm() " << eigen_phys_basis_x.norm() << endl;
-	cout << "eigen_phys_basis_x_snap.norm() " << eigen_phys_basis_x_snap.norm() << endl;
-	cout << "(eigen_phys_basis_x - eigen_phys_basis_x_snap).norm() " << (eigen_phys_basis_x - eigen_phys_basis_x_snap).norm() << endl;
-	cout << "eigen_phys_basis_y.norm() " << eigen_phys_basis_y.norm() << endl;
-	cout << "eigen_phys_basis_y_snap.norm() " << eigen_phys_basis_y_snap.norm() << endl;
-	cout << "(eigen_phys_basis_y - eigen_phys_basis_y_snap).norm() " << (eigen_phys_basis_y - eigen_phys_basis_y_snap).norm() << endl;
-
+	if (debug_mode)
+	{
+		cout << "eigen_phys_basis_x.norm() " << eigen_phys_basis_x.norm() << endl;
+		cout << "eigen_phys_basis_x_snap.norm() " << eigen_phys_basis_x_snap.norm() << endl;
+		cout << "(eigen_phys_basis_x - eigen_phys_basis_x_snap).norm() " << (eigen_phys_basis_x - eigen_phys_basis_x_snap).norm() << endl;
+		cout << "eigen_phys_basis_y.norm() " << eigen_phys_basis_y.norm() << endl;
+		cout << "eigen_phys_basis_y_snap.norm() " << eigen_phys_basis_y_snap.norm() << endl;
+		cout << "(eigen_phys_basis_y - eigen_phys_basis_y_snap).norm() " << (eigen_phys_basis_y - eigen_phys_basis_y_snap).norm() << endl;
+	}
 
 
 
@@ -3787,14 +3800,24 @@ namespace Nektar
         {
             fieldcoeffs[i] = fields[i]->UpdateCoeffs();
             variables[i]   = m_boundaryConditions->GetVariable(i);
-	    cout << "variables[i] " << variables[i] << endl;
+	    if (debug_mode)
+	    {
+		    cout << "variables[i] " << variables[i] << endl;
+	    }
         }
 
-	cout << "m_singleMode " << m_singleMode << endl;	
+	if (debug_mode)
+	{
+		cout << "m_singleMode " << m_singleMode << endl;	
+	}
+
 	fieldcoeffs[i] = Array<OneD, NekDouble>(m_fields[0]->GetNcoeffs(), 0.0);  
         variables[i] = "p"; 
 
-	WriteFld("Test.fld",m_fields[0],fieldcoeffs,variables);
+	std::stringstream sstm;
+	sstm << "TestOnline"<<current_index<<".fld";
+	std::string outname = sstm.str();
+	WriteFld(outname,m_fields[0],fieldcoeffs,variables);
 
 /*        fieldcoeffs[i] = Array<OneD, NekDouble>(m_fields[0]->GetNcoeffs());  
         // project pressure field to velocity space        
@@ -3832,6 +3855,7 @@ namespace Nektar
 	InitObject();
 	int load_snapshot_data_from_files = m_session->GetParameter("load_snapshot_data_from_files");
 	int number_of_snapshots = m_session->GetParameter("number_of_snapshots");
+	int use_continuation = m_session->GetParameter("use_continuation");
 	double POD_tolerance = m_session->GetParameter("POD_tolerance");
 	ref_param_index = m_session->GetParameter("ref_param_index");
 	ref_param_nu = m_session->GetParameter("ref_param_nu");
@@ -3866,6 +3890,22 @@ namespace Nektar
 	{
 		debug_mode = 0;
 	} 
+	if (m_session->DefinesParameter("write_ROM_field")) 
+	{
+		write_ROM_field = m_session->GetParameter("write_ROM_field");
+	}
+	else
+	{
+		write_ROM_field = 0;
+	} 
+	if (m_session->DefinesParameter("snapshot_computation_plot_rel_errors")) 
+	{
+		snapshot_computation_plot_rel_errors = m_session->GetParameter("snapshot_computation_plot_rel_errors");
+	}
+	else
+	{
+		snapshot_computation_plot_rel_errors = 0;
+	} 
 	Nmax = number_of_snapshots;
 //	Array<OneD, NekDouble> param_vector(Nmax);
 	param_vector = Array<OneD, NekDouble> (Nmax);
@@ -3895,7 +3935,7 @@ namespace Nektar
 	}
 	else
 	{
-		if(number_of_snapshots == 1)
+		if(use_continuation)
 		{
 			Eigen::VectorXd params;
 			params.resize(1);
@@ -3925,7 +3965,7 @@ namespace Nektar
 			for(int i = 0; i < Nmax; i++)
 			{
 				param_vector[i] = params[i+1];  
-				cout<<"param_vector["<<i<<"] = "<<param_vector[i]<<endl;
+				//cout<<"param_vector["<<i<<"] = "<<param_vector[i]<<endl;
 			}
 			
 			ref_param_index = 0;
@@ -3936,22 +3976,31 @@ namespace Nektar
 			compute_snapshots(number_of_snapshots);
 		}		
 	}
-	if(number_of_snapshots > 1)
-	{
 		DoInitialise(); 
 		cout<<"Initialised"<<endl;
 	DoSolve(); // get internal dimensions right
 	babyCLNS_trafo.InitObject();
-
 	//Eigen::MatrixXd collect_f_all = babyCLNS_trafo.DoTrafo(snapshot_x_collection, snapshot_y_collection, param_vector);
+
+	babyCLNS_trafo.use_Newton = use_Newton;
+	babyCLNS_trafo.debug_mode = debug_mode;
 
 	collect_f_all = babyCLNS_trafo.DoTrafo(snapshot_x_collection, snapshot_y_collection, param_vector);
 	Eigen::BDCSVD<Eigen::MatrixXd> svd_collect_f_all(collect_f_all, Eigen::ComputeThinU);
-	cout << "svd_collect_f_all.singularValues() " << svd_collect_f_all.singularValues() << endl << endl;
+	if (debug_mode)
+	{
+		cout << "svd_collect_f_all.singularValues() " << svd_collect_f_all.singularValues() << endl << endl;
+	}
 	Eigen::VectorXd singular_values = svd_collect_f_all.singularValues();
-	cout << "sum singular values " << singular_values.sum() << endl << endl;
+	if (debug_mode)
+	{
+		cout << "sum singular values " << singular_values.sum() << endl << endl;
+	}
 	Eigen::VectorXd rel_singular_values = singular_values / singular_values.sum();
-	cout << "relative singular value percents: " << rel_singular_values << endl;
+	if (debug_mode)	
+	{
+		cout << "relative singular value percents: " << rel_singular_values << endl;
+	}
 	// determine RBsize corresponding to the chosen POD_tolerance
 	RBsize = 1; // the case of using all POD modes
 	Eigen::VectorXd cum_rel_singular_values = Eigen::VectorXd::Zero(singular_values.rows());
@@ -3963,8 +4012,11 @@ namespace Nektar
 			RBsize = i+2;
 		}		
 	}
-	cout << "cumulative relative singular value percentages: " << cum_rel_singular_values << endl;
-	cout << "RBsize: " << RBsize << endl;
+	if (debug_mode)
+	{
+		cout << "cumulative relative singular value percentages: " << cum_rel_singular_values << endl;
+		cout << "RBsize: " << RBsize << endl;
+	}
 	
 
 
@@ -3977,26 +4029,39 @@ namespace Nektar
 	PODmodes = Eigen::MatrixXd::Zero(collect_f_all_PODmodes.rows(), RBsize);  
 	PODmodes = collect_f_all_PODmodes.leftCols(RBsize);
 	set_MtM();
-	cout << "RBsize: " << RBsize << endl;
 	if (globally_connected == 1)
 	{
 		setDBC_M(collect_f_all);
 	}
-	cout << "M_no_dbc_in_loc " << M_no_dbc_in_loc << endl;
-	cout << "no_dbc_in_loc " << no_dbc_in_loc << endl;
-	cout << "M_no_not_dbc_in_loc " << M_no_not_dbc_in_loc << endl;
-	cout << "no_not_dbc_in_loc " <<	no_not_dbc_in_loc << endl;
+	if (debug_mode)
+	{
+		cout << "M_no_dbc_in_loc " << M_no_dbc_in_loc << endl;
+		cout << "no_dbc_in_loc " << no_dbc_in_loc << endl;
+		cout << "M_no_not_dbc_in_loc " << M_no_not_dbc_in_loc << endl;
+		cout << "no_not_dbc_in_loc " <<	no_not_dbc_in_loc << endl;
+	}
 	//Eigen::VectorXd f_bnd_dbc_full_size = CLNS.f_bnd_dbc_full_size;
 	// c_f_all_PODmodes_wo_dbc becomes CLNS.RB
 	Eigen::MatrixXd c_f_all_PODmodes_wo_dbc = RB;
-	cout << "c_f_all_PODmodes_wo_dbc.rows() " << c_f_all_PODmodes_wo_dbc.rows() << endl;
-	cout << "c_f_all_PODmodes_wo_dbc.cols() " << c_f_all_PODmodes_wo_dbc.cols() << endl;
+	if (debug_mode)
+	{
+		cout << "c_f_all_PODmodes_wo_dbc.rows() " << c_f_all_PODmodes_wo_dbc.rows() << endl;
+		cout << "c_f_all_PODmodes_wo_dbc.cols() " << c_f_all_PODmodes_wo_dbc.cols() << endl;
+	}
 	gen_phys_base_vecs();
-	cout << "finished gen_phys_base_vecs " << endl;
+	if (debug_mode)	
+	{
+		cout << "finished gen_phys_base_vecs " << endl;
+	}
 	gen_proj_adv_terms();
-	cout << "finished gen_proj_adv_terms " << endl;
+	if (debug_mode)	
+	{
+		cout << "finished gen_proj_adv_terms " << endl;
+	}
 	gen_reference_matrices();
-	cout << "finished gen_reference_matrices " << endl;
+	if (debug_mode)	
+	{
+		cout << "finished gen_reference_matrices " << endl;
 	}
    }
    
@@ -4039,6 +4104,8 @@ namespace Nektar
 	{
 		recovered_affine_adv_rhs_proj_xy -= adv_vec_proj_x[i] * curr_xy_projected(i,0) + adv_vec_proj_y[i] * curr_xy_projected(i,1);
 	}	
+	//cout<<"adv_vec_proj_x[0] = "<<adv_vec_proj_x[0]<<endl;
+	//cout<<"adv_vec_proj_y[0] = "<<adv_vec_proj_y[0]<<endl;
 	Eigen::VectorXd add_rhs_Newton = Eigen::VectorXd::Zero(RBsize); 
 	Eigen::VectorXd recovered_affine_adv_rhs_proj_xy_newton = Eigen::VectorXd::Zero(RBsize);
 	Eigen::MatrixXd recovered_affine_adv_rhs_proj_xy_newton_RB = Eigen::MatrixXd::Zero(RBsize,RBsize);  
@@ -4052,13 +4119,11 @@ namespace Nektar
 			recovered_affine_adv_mat_proj_xy += adv_mats_proj_x[i] * curr_xy_projected(i,0) + adv_mats_proj_y[i] * curr_xy_projected(i,1);
 			recovered_affine_adv_rhs_proj_xy_newton_RB -= adv_vec_proj_x_newton_RB[i] * curr_xy_projected(i,0) + adv_vec_proj_y_newton_RB[i] * curr_xy_projected(i,1);
 		}
-		//cout << "recovered_affine_adv_mat_proj_xy.rows() " << recovered_affine_adv_mat_proj_xy.rows() << " recovered_affine_adv_mat_proj_xy.cols() " << recovered_affine_adv_mat_proj_xy.cols() << endl;
-		//cout << "collect_f_all.rows() " << collect_f_all.rows() << " collect_f_all.cols() " << collect_f_all.cols() << endl;
 		Eigen::VectorXd current_f_all = Eigen::VectorXd::Zero(collect_f_all.rows());
 		current_f_all = collect_f_all.col(current_index);
-		Eigen::VectorXd current_f_all_wo_dbc = remove_rows(current_f_all, elem_loc_dbc);
-		Eigen::VectorXd proj_current_f_all_wo_dbc = RB.transpose() * current_f_all_wo_dbc;
-		proj_current_f_all_wo_dbc = PODmodes.transpose() * current_f_all;
+	//	Eigen::VectorXd current_f_all_wo_dbc = remove_rows(current_f_all, elem_loc_dbc);
+	//	Eigen::VectorXd proj_current_f_all_wo_dbc = RB.transpose() * current_f_all_wo_dbc;
+		Eigen::VectorXd proj_current_f_all_wo_dbc = PODmodes.transpose() * current_f_all;
 		//cout << "proj_current_f_all_wo_dbc " << proj_current_f_all_wo_dbc << endl;
 
 		if (use_Newton)
@@ -4069,10 +4134,9 @@ namespace Nektar
 			//cout << "add_rhs_Newton 2 " << add_rhs_Newton << endl;
 		}
 
-
 		for (int i = 0; i < RBsize; ++i)
 		{
-			recovered_affine_adv_rhs_proj_xy_newton -= adv_vec_proj_x_newton[i] * curr_xy_projected(i,0) + adv_vec_proj_y_newton[i] * curr_xy_projected(i,1);
+//			recovered_affine_adv_rhs_proj_xy_newton -= adv_vec_proj_x_newton[i] * curr_xy_projected(i,0) + adv_vec_proj_y_newton[i] * curr_xy_projected(i,1);
 //			cout << "adv_vec_proj_x_newton_RB.rows() " << adv_vec_proj_x_newton_RB[i].rows() << " adv_vec_proj_x_newton_RB.cols() " << adv_vec_proj_x_newton_RB[i].cols() << endl;
 //			cout << "adv_vec_proj_y_newton_RB.rows() " << adv_vec_proj_y_newton_RB[i].rows() << " adv_vec_proj_y_newton_RB.cols() " << adv_vec_proj_y_newton_RB[i].cols() << endl;
 //			recovered_affine_adv_rhs_proj_xy_newton_RB -= adv_vec_proj_x_newton_RB[i] * curr_xy_projected(i,0) + adv_vec_proj_y_newton_RB[i] * curr_xy_projected(i,1);
@@ -4086,7 +4150,7 @@ namespace Nektar
 	return -the_const_one_rhs_proj - current_nu * the_ABCD_one_rhs_proj + recovered_affine_adv_rhs_proj_xy  -0.5*add_rhs_Newton ;  
     }
     
-    Eigen::VectorXd CoupledLinearNS_TT::gen_affine_vec(double current_nu, Eigen::VectorXd approximation)
+    Eigen::VectorXd CoupledLinearNS_TT::gen_affine_vec(double current_nu, Eigen::VectorXd solution)
     {
 	Eigen::VectorXd recovered_affine_adv_rhs_proj_xy = Eigen::VectorXd::Zero(RBsize); 
 	for (int i = 0; i < RBsize; ++i)
@@ -4108,13 +4172,8 @@ namespace Nektar
 		}
 		//cout << "recovered_affine_adv_mat_proj_xy.rows() " << recovered_affine_adv_mat_proj_xy.rows() << " recovered_affine_adv_mat_proj_xy.cols() " << recovered_affine_adv_mat_proj_xy.cols() << endl;
 		//cout << "collect_f_all.rows() " << collect_f_all.rows() << " collect_f_all.cols() " << collect_f_all.cols() << endl;
-	/*	Eigen::VectorXd current_f_all = Eigen::VectorXd::Zero(collect_f_all.rows());
-		current_f_all = collect_f_all.col(current_index);
-		Eigen::VectorXd current_f_all_wo_dbc = remove_rows(current_f_all, elem_loc_dbc);
-		Eigen::VectorXd proj_current_f_all_wo_dbc = RB.transpose() * current_f_all_wo_dbc;
-		proj_current_f_all_wo_dbc = PODmodes.transpose() * current_f_all;*/
-		Eigen::VectorXd proj_current_f_all_wo_dbc = approximation;
-		//cout << "proj_current_f_all_wo_dbc " << proj_current_f_all_wo_dbc << endl;
+		Eigen::VectorXd proj_current_f_all_wo_dbc = PODmodes.transpose() * solution;
+		
 
 		if (use_Newton)
 		{
@@ -4127,14 +4186,11 @@ namespace Nektar
 
 		for (int i = 0; i < RBsize; ++i)
 		{
-			recovered_affine_adv_rhs_proj_xy_newton -= adv_vec_proj_x_newton[i] * curr_xy_projected(i,0) + adv_vec_proj_y_newton[i] * curr_xy_projected(i,1);
+//			recovered_affine_adv_rhs_proj_xy_newton -= adv_vec_proj_x_newton[i] * curr_xy_projected(i,0) + adv_vec_proj_y_newton[i] * curr_xy_projected(i,1);
 //			cout << "adv_vec_proj_x_newton_RB.rows() " << adv_vec_proj_x_newton_RB[i].rows() << " adv_vec_proj_x_newton_RB.cols() " << adv_vec_proj_x_newton_RB[i].cols() << endl;
 //			cout << "adv_vec_proj_y_newton_RB.rows() " << adv_vec_proj_y_newton_RB[i].rows() << " adv_vec_proj_y_newton_RB.cols() " << adv_vec_proj_y_newton_RB[i].cols() << endl;
 //			recovered_affine_adv_rhs_proj_xy_newton_RB -= adv_vec_proj_x_newton_RB[i] * curr_xy_projected(i,0) + adv_vec_proj_y_newton_RB[i] * curr_xy_projected(i,1);
 		}	
-
-		//cout << "recovered_affine_adv_rhs_proj_xy_newton " << -0.5*recovered_affine_adv_rhs_proj_xy_newton << endl;
-
 
 	}
 //	return -the_const_one_rhs_proj - current_nu * the_ABCD_one_rhs_proj + recovered_affine_adv_rhs_proj_xy  -0.5*recovered_affine_adv_rhs_proj_xy_newton ;
@@ -4178,7 +4234,7 @@ namespace Nektar
 	the_const_one_rhs_simplified = remove_rows(the_const_one_rhs, elem_loc_dbc);
 	the_ABCD_one_rhs_proj = RB.transpose() * the_ABCD_one_rhs_simplified;
 	the_const_one_rhs_proj = RB.transpose() * the_const_one_rhs_simplified;
-	cout << "the_const_one_rhs_proj " << the_const_one_rhs_proj << endl;
+//	cout << "the_const_one_rhs_proj " << the_const_one_rhs_proj << endl;
     }
 
 
@@ -4189,6 +4245,7 @@ namespace Nektar
 	//Eigen::MatrixXd collect_f_all = babyCLNS_trafo.DoTrafo(snapshot_x_collection, snapshot_y_collection, param_vector);
 
 	babyCLNS_trafo.use_Newton = use_Newton;
+	babyCLNS_trafo.snapshot_computation_plot_rel_errors = snapshot_computation_plot_rel_errors;
 	Array<OneD, NekDouble> zero_phys_init(GetNpoints(), 0.0);
 	snapshot_x_collection = Array<OneD, Array<OneD, NekDouble> > (number_of_snapshots);
 	snapshot_y_collection = Array<OneD, Array<OneD, NekDouble> > (number_of_snapshots);
@@ -4514,61 +4571,72 @@ namespace Nektar
 
     }
     
-    void CoupledLinearNS_TT::plotRepro(Eigen::VectorXd solution, int id)
+    std::vector< Array<OneD, double> > CoupledLinearNS_TT::reproject_back(Eigen::VectorXd reconstruct_solution)
     {
-    	cout<<"In plot "<<m_fields[0]->UpdatePhys().num_elements()<<" "<<m_fields[0]->UpdateCoeffs().num_elements()<<" "<<solution.size()<<endl;
-    	/*for(int i = 0; i < solution.size(); i++)
-		{
-			if(i < solution.size()/2)
-				m_fields[0]->UpdatePhys()[i] = solution(i);
-			else
-				m_fields[1]->UpdatePhys()[i] = solution(i);
-		}
+    	Eigen::VectorXd f_bnd = reconstruct_solution.head(curr_f_bnd.size());
+		Eigen::VectorXd f_int = reconstruct_solution.tail(curr_f_int.size());
+		Array<OneD, MultiRegions::ExpListSharedPtr> fields = UpdateFields(); 
+		Array<OneD, unsigned int> bmap, imap; 
+		Array<OneD, double> field_0(GetNcoeffs());
+		Array<OneD, double> field_1(GetNcoeffs());
 		
-		for(int k = 0; k < m_fields.num_elements(); k++)
-			m_fields[k]->FwdTrans(m_fields[k]->GetPhys(), m_fields[k]->UpdateCoeffs());
-			
-		std::vector<Array<OneD, NekDouble> > fieldcoeffs(m_fields.num_elements()+1);
-	    std::vector<std::string> variables(m_fields.num_elements()+1);
-	    int i;
-	        
-	    for(i = 0; i < m_fields.num_elements(); ++i)
-	    {
-	        fieldcoeffs[i] = m_fields[i]->UpdateCoeffs();
-	        variables[i]   = m_boundaryConditions->GetVariable(i);
-	    }
-    
-        
-    	fieldcoeffs[i] = Array<OneD, NekDouble>(m_fields[0]->GetNcoeffs()); 
-        // project pressure field to velocity space        
-        if(m_singleMode==true)
-        {
-            Array<OneD, NekDouble > tmpfieldcoeffs (m_fields[0]->GetNcoeffs()/2);
-            m_pressure->GetPlane(0)->BwdTrans_IterPerExp(m_pressure->GetPlane(0)->GetCoeffs(), m_pressure->GetPlane(0)->UpdatePhys());
-            m_pressure->GetPlane(1)->BwdTrans_IterPerExp(m_pressure->GetPlane(1)->GetCoeffs(), m_pressure->GetPlane(1)->UpdatePhys()); 
-            m_fields[0]->GetPlane(0)->FwdTrans_IterPerExp(m_pressure->GetPlane(0)->GetPhys(),fieldcoeffs[i]);
-            m_fields[0]->GetPlane(1)->FwdTrans_IterPerExp(m_pressure->GetPlane(1)->GetPhys(),tmpfieldcoeffs);
-            for(int e=0; e<m_fields[0]->GetNcoeffs()/2; e++)
-            {
-                fieldcoeffs[i][e+m_fields[0]->GetNcoeffs()/2] = tmpfieldcoeffs[e];
-            }          
-        }
-        else
-        {
-            m_pressure->BwdTrans_IterPerExp(m_pressure->GetCoeffs(),m_pressure->UpdatePhys());
-            m_fields[0]->FwdTrans_IterPerExp(m_pressure->GetPhys(),fieldcoeffs[i]);
-        }
-        variables[i] = "p";   
-    
-    	std::stringstream sstm;
-		//sstm << "_" << m_sessionName <<"_snapshot_" << parameter<<"_of_"<<total_solutions_found<<".fld";
-		sstm << "Online_"<<id<<".fld";
-		std::string outname = sstm.str();
-        
-    	WriteFld(outname,m_fields[0],fieldcoeffs,variables);*/
-						
+		std::vector< Array<OneD, double> > output;
+		output.resize(2);
+		output[0] = Array<OneD, double> (GetNpoints(), 0.0);
+		output[1] = Array<OneD, double> (GetNpoints(), 0.0);
+		
+		/*Array<OneD, double> curr_PhysBaseVec_x(GetNpoints(), 0.0);
+		Array<OneD, double> curr_PhysBaseVec_y(GetNpoints(), 0.0);*/
+		
+		int cnt = 0;
+		int cnt1 = 0;
+		int nvel = 2;
+		int nz_loc = 1;
+		int  nplanecoeffs = fields[0]->GetNcoeffs();
+		int  nel  = m_fields[0]->GetNumElmts();
+		for(int i = 0; i < nel; ++i) 
+		{
+		      int eid  = i;
+		      fields[0]->GetExp(eid)->GetBoundaryMap(bmap);
+		      fields[0]->GetExp(eid)->GetInteriorMap(imap);
+		      int nbnd   = bmap.num_elements();
+		      int nint   = imap.num_elements();
+		      int offset = fields[0]->GetCoeff_Offset(eid);
+		            
+		      for(int j = 0; j < nvel; ++j)
+		      {
+		           for(int n = 0; n < nz_loc; ++n)
+		           {
+		                    for(int k = 0; k < nbnd; ++k)
+		                    {
+		                        fields[j]->SetCoeff(n*nplanecoeffs + offset+bmap[k], f_bnd(cnt+k));
+		                    }
+		                    
+		                    for(int k = 0; k < nint; ++k)
+		                    {
+		                        fields[j]->SetCoeff(n*nplanecoeffs + offset+imap[k], f_int(cnt1+k));
+		                    }
+		                    cnt  += nbnd;
+		                    cnt1 += nint;
+		           }
+		      }
+		}
+		Array<OneD, double> test_nn = fields[0]->GetCoeffs();
+		
+		fields[0]->BwdTrans_IterPerExp(fields[0]->GetCoeffs(), output[0]);
+		fields[1]->BwdTrans_IterPerExp(fields[1]->GetCoeffs(), output[1]);
+		/*fields[0]->BwdTrans_IterPerExp(fields[0]->GetCoeffs(), curr_PhysBaseVec_x);
+		fields[1]->BwdTrans_IterPerExp(fields[1]->GetCoeffs(), curr_PhysBaseVec_y);
+		
+		for(int i = 0; i < GetNPoints(); i++)
+		{
+			curr_xy_projected(i,0) = curr_PhysBaseVec_x[i];
+			curr_xy_projected(i,1) = curr_PhysBaseVec_y[i];
+		}*/
+		
+		return output;
     }
-
+    
 }
 
 /**

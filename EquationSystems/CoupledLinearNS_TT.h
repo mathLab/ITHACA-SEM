@@ -136,6 +136,8 @@ namespace Nektar
 	int globally_connected;
 	int use_Newton;
 	int debug_mode;
+	int write_ROM_field;
+	int snapshot_computation_plot_rel_errors;
 
         Eigen::MatrixXd MtM;
         Eigen::MatrixXd Mtrafo;
@@ -213,7 +215,10 @@ namespace Nektar
 	void Set_m_kinvis(NekDouble);
 	
 	
-	Eigen::VectorXd gen_affine_vec(double current_nu, Eigen::VectorXd approximation);
+	Eigen::VectorXd gen_affine_vec(double, Eigen::VectorXd);
+	
+	
+	std::vector< Array<OneD, double> > reproject_back(Eigen::VectorXd);
 	
 
     protected:
@@ -250,9 +255,7 @@ namespace Nektar
         virtual void v_DoInitialise(void);
 
         virtual void v_Output(void);
-        
-        void plotRepro(Eigen::VectorXd solution, int id);
-        
+               
 
     };
     

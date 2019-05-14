@@ -1592,8 +1592,11 @@ namespace Nektar
 		//rel_err = std::abs(csx0_trafo.norm() - csx0.norm()) / csx0.norm() + std::abs(csy0_trafo.norm() - csy0.norm()) / csy0.norm();
 		rel_err = (csx0_trafo - csx0).norm() / csx0.norm() + (csy0_trafo - csy0).norm() / csy0.norm();
 
-		if((++iterations)%1==0)
-			cout << "rel_err " << rel_err << endl; // if you enter here you are propably not converging
+		if (snapshot_computation_plot_rel_errors)
+		{
+			if((++iterations)%1==0)
+				cout << "rel_err " << rel_err << endl;
+		}
 			
 		if(deflate)
         { 
@@ -1874,10 +1877,13 @@ namespace Nektar
 			csy0(index_conv) = snapshot_y_collection[i][index_conv];
 		}
 
-		cout << "csx0.norm() " << csx0.norm() << endl;
-		cout << "csx0_trafo.norm() " << csx0_trafo.norm() << endl;
-		cout << "csy0.norm() " << csy0.norm() << endl;
-		cout << "csy0_trafo.norm() " << csy0_trafo.norm() << endl;
+		if (debug_mode)
+		{
+			cout << "csx0.norm() " << csx0.norm() << endl;
+			cout << "csx0_trafo.norm() " << csx0_trafo.norm() << endl;
+			cout << "csy0.norm() " << csy0.norm() << endl;
+			cout << "csy0_trafo.norm() " << csy0_trafo.norm() << endl;
+		}
 		
 		Eigen::VectorXd trafo_f_bnd = curr_f_bnd;
 		Eigen::VectorXd trafo_f_p = curr_f_p;
@@ -3239,7 +3245,7 @@ namespace Nektar
 				}
 				
 				//here I want to flip the solutions and check if they are different from the previous ones, if so I use them as initial guess trying to converge to new solutions
-				cout<<"I want to flip because there is local_indices_to_be_continued.size() = "<<local_indices_to_be_continued.size() <<endl;
+				cout<<"Do I want to flip? --> local_indices_to_be_continued.size() = "<<local_indices_to_be_continued.size() <<endl;
 				if(local_indices_to_be_continued.size() % 2 == 0)
 				{ 
 					indexFlip = 0;				

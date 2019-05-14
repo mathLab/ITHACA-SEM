@@ -297,6 +297,12 @@ namespace Nektar
             outarrayDiff[i] = Array<OneD, NekDouble>(npoints,0.0);
         }
 
+        // get artificial viscosity
+        if (m_shockCaptureType == "Physical")
+        {
+            GetPhysicalAV(inarray);
+        }
+
         string diffName;
         m_session->LoadSolverInfo("DiffusionType", diffName, "LDGNS");
         if("InteriorPenalty"==diffName)
@@ -357,11 +363,7 @@ namespace Nektar
                 m_varConv->GetVelocityVector(pBwd, inBwd);
             }
 
-            // get artificial viscosity
-            if (m_shockCaptureType == "Physical")
-            {
-                GetPhysicalAV(inarray);
-            }
+
 
             // Diffusion term in physical rhs form
             m_diffusion->Diffuse(nvariables, m_fields, inarrayDiff, outarrayDiff,
@@ -724,7 +726,7 @@ namespace Nektar
         const NekDouble lambda = -2.0/3.0;
 
         // Auxiliary variables
-        Array<OneD, NekDouble > mu                 (nPts, 0.0);
+        Array<OneD, NekDouble > mu                 (nPts, m_mu);
         Array<OneD, NekDouble > thermalConductivity(nPts, 0.0);
         Array<OneD, NekDouble > divVel             (nPts, 0.0);
 
@@ -732,15 +734,31 @@ namespace Nektar
         if (m_ViscosityType == "Variable")
         {
             m_varConv->GetDynamicViscosity(physfield[nVariables-2], mu);
-            NekDouble tRa = m_Cp / m_Prandtl;
-            Vmath::Smul(nPts, tRa, mu, 1, thermalConductivity, 1);
         }
-        else
+
+        // Add artificial viscosity if wanted
+        if (m_shockCaptureType == "Physical")
         {
-            Vmath::Fill(nPts, m_mu, mu, 1);
-            Vmath::Fill(nPts, m_thermalConductivity,
-                        thermalConductivity, 1);
+            // // Apply Ducros sensor
+            // if (m_physicalSensorType == "Ducros")
+            // {
+            //     ducros(m_muav);
+            // }
+            // // Make approximate C0 projection
+            // if (m_smoothing == "C0")
+            // {
+            //     C0Smooth(m_muav);
+            //     if (Vmath::Vmin(nPts, m_muav, 1) < 0.0)
+            //     {
+            //         WARNINGL0(false, "Artificial viscosity is negative after smoothing.")
+            //     }
+            // }
+            Vmath::Vadd(nPts, mu, 1, m_muav, 1, mu, 1);
         }
+
+        // Set thermal conductivity
+        NekDouble tRa = m_Cp / m_Prandtl;
+        Vmath::Smul(nPts, tRa, mu, 1, thermalConductivity, 1);
 
         // Interpolate inputs and initialise interpolated output
         Array<OneD, Array<OneD, NekDouble> > vel_interp(m_spacedim);
@@ -1167,7 +1185,7 @@ namespace Nektar
         int nPts                = inaverg[nConvectiveFields-1].num_elements();
         int nDim=m_spacedim;
         // Auxiliary variables
-        Array<OneD, NekDouble > mu                 (nPts, 0.0);
+        Array<OneD, NekDouble > mu                 (nPts, m_mu);
 
         // Variable viscosity through the Sutherland's law
         if (m_ViscosityType == "Variable")
@@ -1176,10 +1194,28 @@ namespace Nektar
             m_varConv->GetTemperature(inaverg,temperature);
             m_varConv->GetDynamicViscosity(temperature, mu);
         }
-        else
+
+        // Add artificial viscosity if wanted
+        if (m_shockCaptureType == "Physical")
         {
-            Vmath::Fill(nPts, m_mu, mu, 1);
+            // // Apply Ducros sensor
+            // if (m_physicalSensorType == "Ducros")
+            // {
+            //     ducros(m_muav);
+            // }
+            // // Make approximate C0 projection
+            // if (m_smoothing == "C0")
+            // {
+            //     C0Smooth(m_muav);
+            //     if (Vmath::Vmin(nPts, m_muav, 1) < 0.0)
+            //     {
+            //         WARNINGL0(false, "Artificial viscosity is negative after smoothing.")
+            //     }
+            // }
+            Vmath::Vadd(nPts, mu, 1, m_muav, 1, mu, 1);
         }
+
+        // What about thermal conductivity?
 
         Array<OneD,Array<OneD, NekDouble>> outtmp = outarray;
         for(int i=0; i<nConvectiveFields;i++)
@@ -1814,7 +1850,7 @@ namespace Nektar
         normals =   normal3D[nDirctn];
 
         // Auxiliary variables
-        Array<OneD, NekDouble > mu                 (nPts, 0.0);
+        Array<OneD, NekDouble > mu                 (nPts, m_mu);
         Array<OneD, NekDouble > DmuDT              (nPts, 0.0);
 
         // Variable viscosity through the Sutherland's law
@@ -1825,10 +1861,29 @@ namespace Nektar
             m_varConv->GetDynamicViscosity(temperature, mu);
             m_varConv->GetDmuDT(temperature,mu,DmuDT);
         }
-        else
+        // Add artificial viscosity if wanted
+        if (m_shockCaptureType == "Physical")
         {
-            Vmath::Fill(nPts, m_mu, mu, 1);
+            // // Apply Ducros sensor
+            // if (m_physicalSensorType == "Ducros")
+            // {
+            //     ducros(m_muav);
+            // }
+            // // Make approximate C0 projection
+            // if (m_smoothing == "C0")
+            // {
+            //     C0Smooth(m_muav);
+            //     if (Vmath::Vmin(nPts, m_muav, 1) < 0.0)
+            //     {
+            //         WARNINGL0(false, "Artificial viscosity is negative after smoothing.")
+            //     }
+            // }
+            Vmath::Vadd(nPts, mu, 1, m_muav, 1, mu, 1);
+            // Get numerical DmuDT
         }
+
+        // What about thermal conductivity?
+
 
         NekDouble pointmu       = 0.0;
         NekDouble pointDmuDT    = 0.0;
@@ -1937,7 +1992,7 @@ namespace Nektar
             }
         }
         // Auxiliary variables
-        Array<OneD, NekDouble > mu                 (nPts, 0.0);
+        Array<OneD, NekDouble > mu                 (nPts, m_mu);
 
         // Variable viscosity through the Sutherland's law
         if (m_ViscosityType == "Variable")
@@ -1946,10 +2001,29 @@ namespace Nektar
             m_varConv->GetTemperature(inarray,temperature);
             m_varConv->GetDynamicViscosity(temperature, mu);
         }
-        else
+
+        // Add artificial viscosity if wanted
+        if (m_shockCaptureType == "Physical")
         {
-            Vmath::Fill(nPts, m_mu, mu, 1);
+            // // Apply Ducros sensor
+            // if (m_physicalSensorType == "Ducros")
+            // {
+            //     ducros(m_muav);
+            // }
+            // // Make approximate C0 projection
+            // if (m_smoothing == "C0")
+            // {
+            //     C0Smooth(m_muav);
+            //     if (Vmath::Vmin(nPts, m_muav, 1) < 0.0)
+            //     {
+            //         WARNINGL0(false, "Artificial viscosity is negative after smoothing.")
+            //     }
+            // }
+            Vmath::Vadd(nPts, mu, 1, m_muav, 1, mu, 1);
+            // Get numerical DmuDT
         }
+
+        // What about thermal conductivity?
 
         NekDouble pointmu       = 0.0;
         Array<OneD, NekDouble> locmu;

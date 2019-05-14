@@ -450,10 +450,7 @@ namespace Nektar
             const Array<OneD, Array<OneD, NekDouble> >       &pFwd,
             const Array<OneD, Array<OneD, NekDouble> >       &pBwd)
         {
-            if (m_shockCaptureType != "Off")
-            {
-                m_artificialDiffusion->DoArtificialDiffusion(inarray, outarray);
-            }
+            // Do nothing by default
         }
 
         virtual void v_DoDiffusion_coeff(

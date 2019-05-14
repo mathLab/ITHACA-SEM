@@ -407,9 +407,6 @@ namespace Nektar
                         }
                         else
                         {
-                            // Use the iterator from above, which must point to the variable.
-                            attr = attr->Next();
-
                             if (attr)
                             {
                                 std::string equation, userDefined, filename;
@@ -419,7 +416,11 @@ namespace Nektar
 
                                     attrName = attr->Name();
 
-                                    if (attrName == "USERDEFINEDTYPE")
+                                    if (attrName == "VAR")
+                                    {
+                                        //if VAR do nothing
+                                    }
+                                    else if (attrName == "USERDEFINEDTYPE")
                                     {
                                         // Do stuff for the user defined attribute
                                         attrData = attr->Value();
@@ -489,6 +490,8 @@ namespace Nektar
                                                 m_session, "0"));
                                 (*boundaryConditions)[*iter] = neumannCondition;
                             }
+
+                            attr = attr->Next();
                         }
                     }
                     else if (conditionType == "D")
@@ -507,9 +510,6 @@ namespace Nektar
                         }
                         else
                         {
-                            // Use the iterator from above, which must point to the variable.
-                            attr = attr->Next();
-
                             if (attr)
                             {
                                 std::string equation, userDefined, filename;
@@ -519,7 +519,11 @@ namespace Nektar
 
                                     attrName = attr->Name();
 
-                                    if (attrName == "USERDEFINEDTYPE")
+                                    if (attrName == "VAR")
+                                    {
+                                        //if VAR do nothing
+                                    }
+                                    else if (attrName == "USERDEFINEDTYPE")
                                     {
 
                                         // Do stuff for the user defined attribute
@@ -591,6 +595,8 @@ namespace Nektar
                                 (*boundaryConditions)[*iter] =
                                         dirichletCondition;
                             }
+
+                            attr = attr->Next();
                         }
                     }
                     else if (conditionType == "R") // Read du/dn +  PRIMCOEFF u = VALUE
@@ -609,10 +615,6 @@ namespace Nektar
                         }
                         else
                         {
-                            // Use the iterator from above, which must
-                            // point to the variable.  Read the A and
-                            // B attributes.
-                            attr = attr->Next();
 
                             if (attr)
                             {
@@ -627,7 +629,12 @@ namespace Nektar
 
                                     attrName1 = attr->Name();
 
-                                    if (attrName1=="USERDEFINEDTYPE") {
+                                    if (attrName == "VAR")
+                                    {
+                                        //if VAR do nothing
+                                    }
+                                    else if (attrName == "USERDEFINEDTYPE")
+                                    {
 
                                         // Do stuff for the user defined attribute
                                         attrData1 = attr->Value();
@@ -695,6 +702,8 @@ namespace Nektar
                                 robinCondition->SetIsTimeDependent(isTimeDependent);
                                 (*boundaryConditions)[*iter] = robinCondition;
                             }
+
+                            attr = attr->Next();
                         }
                     }
                     else if (conditionType == "P")
@@ -707,7 +716,6 @@ namespace Nektar
                         }
                         else
                         {
-                            attr = attr->Next();
 
                             if (attr)
                             {
@@ -717,7 +725,11 @@ namespace Nektar
                                 {
                                     attrName1 = attr->Name();
 
-                                    if (attrName1 == "USERDEFINEDTYPE")
+                                    if (attrName == "VAR")
+                                    {
+                                        //if VAR do nothing
+                                    }
+                                    else if (attrName == "USERDEFINEDTYPE")
                                     {
                                         // Do stuff for the user defined attribute
                                         attrData1 = attr->Value();
@@ -752,6 +764,8 @@ namespace Nektar
                                         "Periodic boundary conditions should "
                                          "be explicitely defined");
                             }
+
+                            attr = attr->Next();
                         }
                     }
                     else if (conditionType == "C")

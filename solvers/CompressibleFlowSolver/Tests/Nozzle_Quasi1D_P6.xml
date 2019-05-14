@@ -81,7 +81,7 @@
 
     <EXPANSIONS>
         <E COMPOSITE="C[0]" BASISTYPE="Modified_A" NUMMODES="6"
-           POINTSTYPE="GaussLobattoLegendre" NUMPOINTS="12"
+           POINTSTYPE="GaussLobattoLegendre" NUMPOINTS="13"
            FIELDS="rho,rhou,E" />
     </EXPANSIONS>
 
@@ -90,7 +90,7 @@
    <CONDITIONS>
         <PARAMETERS>
             <!-- Simulation parameters -->
-            <P> TimeStep       = 1e-5               </P>
+            <P> TimeStep       = 5e-8               </P>
             <P> NumSteps       = 100  </P>
             <P> IO_InfoSteps   = 100                </P>
             <P> IO_CheckSteps  = 0                </P>

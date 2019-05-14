@@ -73,6 +73,7 @@ v5.0.0
 - Fixed bug in ReOrientQuadFacePhysMap (!1003)
 - Add NekPy Python interface (!962, !990, !989, !1004)
 - Fix edge case for ThirdPartyScotch and FindScoth (!1009)
+- Fix XML attributes in conditions.cpp to be unordered (!1015)
 
 **NekMesh**:
 - Add feature to read basic 2D geo files as CAD (!731)

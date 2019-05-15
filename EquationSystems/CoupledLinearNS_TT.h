@@ -91,7 +91,7 @@ namespace Nektar
         Eigen::MatrixXd DoTrafo(Array<OneD, Array<OneD, NekDouble> > snapshot_x_collection, Array<OneD, Array<OneD, NekDouble> > snapshot_y_collection, Array<OneD, NekDouble> param_vector);
 
 	void load_snapshots(int number_of_snapshots);
-	void load_snapshots_geometry_params();
+	void load_snapshots_geometry_params(int );
 	void compute_snapshots(int number_of_snapshots);
 	void compute_snapshots_geometry_params();
 	void do_geo_trafo();

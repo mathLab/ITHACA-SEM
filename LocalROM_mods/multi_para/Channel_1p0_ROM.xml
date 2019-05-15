@@ -55,7 +55,6 @@
             <P> param2_dir1 = 0.6       </P>
             <P> param3_dir1 = 0.8       </P>
             <P> param4_dir1 = 1.0       </P>
-            <P> param4_dir1 = 1.0       </P>
 	    <P> type_para1 = 1        </P> <!-- 0=kin_visc, 1=geo   -->
 	    <P> type_para2 = 0   	</P>
 	    <P> number_elem_trafo = 5   </P>

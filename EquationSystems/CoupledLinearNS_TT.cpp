@@ -3529,6 +3529,16 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
         int nsize_p_m1 = nsize_p-nz_loc;
         int Ahrows = nsize_bndry_p1;
 
+	Array<OneD, Eigen::MatrixXd > Ah_elem(m_fields[0]->GetNumElmts()); // , nsize_bndry_p1, nsize_bndry_p1
+	Array<OneD, Eigen::MatrixXd > B_elem(m_fields[0]->GetNumElmts()); // , nsize_bndry, nsize_int
+	Array<OneD, Eigen::MatrixXd > C_elem(m_fields[0]->GetNumElmts()); // , nsize_bndry, nsize_int
+	Array<OneD, Eigen::MatrixXd > D_elem(m_fields[0]->GetNumElmts()); // , nsize_int, nsize_int
+	Array<OneD, Eigen::MatrixXd > Dbnd_elem(m_fields[0]->GetNumElmts()); // , nsize_p, nsize_bndry
+	Array<OneD, Eigen::MatrixXd > Dint_elem(m_fields[0]->GetNumElmts()); // , nsize_p, nsize_int
+	Array<OneD, Eigen::MatrixXd > Ch_elem(m_fields[0]->GetNumElmts()); // nsize_p_m1, nsize_bndry_p1
+	Array<OneD, Eigen::MatrixXd > Dh_elem(m_fields[0]->GetNumElmts()); // nsize_p_m1, nsize_p_m1
+	
+
 	for (int curr_elem = 0; curr_elem < m_fields[0]->GetNumElmts(); ++curr_elem)
 	{
 		int curr_elem_pos = get_curr_elem_pos(curr_elem);
@@ -3772,8 +3782,78 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 
 
 		}
+
  
-	}
+		// possible alternatives:
+		// build instead the sing_* matrices directly
+		// or copy for test purposes from setupcoupledmats??
+
+		Ah_elem[curr_elem] = Eigen::MatrixXd::Zero(nsize_bndry_p1, nsize_bndry_p1);
+		for (int i = 0; i < nsize_bndry_p1; ++i)
+		{
+			for (int j = 0; j < nsize_bndry_p1; ++j)
+			{
+				Ah_elem[curr_elem](i,j) = Ah_ele_vec[ i + j*Ahrows ];
+			}
+		} 
+		B_elem[curr_elem] = Eigen::MatrixXd::Zero(nsize_bndry, nsize_int);
+		for (int i = 0; i < nsize_bndry; ++i)
+		{
+			for (int j = 0; j < nsize_int; ++j)
+			{
+				B_elem[curr_elem](i,j) = B_ele_vec[ i + j*nsize_bndry ];
+			}
+		} 
+		C_elem[curr_elem] = Eigen::MatrixXd::Zero(nsize_bndry, nsize_int);
+		for (int i = 0; i < nsize_bndry; ++i)
+		{
+			for (int j = 0; j < nsize_int; ++j)
+			{
+				C_elem[curr_elem](i,j) = C_ele_vec[ i + j*nsize_bndry ];
+			}
+		} 
+		D_elem[curr_elem] = Eigen::MatrixXd::Zero(nsize_int, nsize_int);
+		for (int i = 0; i < nsize_int; ++i)
+		{
+			for (int j = 0; j < nsize_int; ++j)
+			{
+				D_elem[curr_elem](i,j) = D_ele_vec[ i + j*nsize_int];
+			}
+		} 
+		Dbnd_elem[curr_elem] = Eigen::MatrixXd::Zero(nsize_p, nsize_bndry);
+		for (int i = 0; i < nsize_p; ++i)
+		{
+			for (int j = 0; j < nsize_bndry; ++j)
+			{
+				Dbnd_elem[curr_elem](i,j) = Dbnd_ele_vec[ i + j*nsize_p];
+			}
+		} 
+		Dint_elem[curr_elem] = Eigen::MatrixXd::Zero(nsize_p, nsize_int);
+		for (int i = 0; i < nsize_p; ++i)
+		{
+			for (int j = 0; j < nsize_int; ++j)
+			{
+				Dint_elem[curr_elem](i,j) = Dint_ele_vec[ i + j*nsize_p];
+			}
+		} 
+
+		
+		D_elem[curr_elem] = D_elem[curr_elem].inverse();
+		B_elem[curr_elem] = B_elem[curr_elem] * D_elem[curr_elem];
+		Ah_elem[curr_elem].block(0,0,nsize_bndry,nsize_bndry) = Ah_elem[curr_elem].block(0,0,nsize_bndry,nsize_bndry) - B_elem[curr_elem] * C_elem[curr_elem].transpose();
+		Eigen::MatrixXd Elem_Cinv = D_elem[curr_elem];
+
+
+//		sing_A[]
+
+
+
+		cout << "finished curr_elem " << curr_elem << endl;
+
+
+	} // loop over curr_elem
+
+
 
 /*
 
@@ -3905,6 +3985,9 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
     void CoupledLinearNS_TT::do_geo_trafo()
     {
  
+	// setting collect_f_all, making use of snapshot_x_collection, snapshot_y_collection
+	cout << "entering CoupledLinearNS_TT::do_geo_trafo() " << endl;
+
 	Eigen::MatrixXd collect_f_bnd( curr_f_bnd.size() , Nmax );
 	Eigen::MatrixXd collect_f_p( curr_f_p.size() , Nmax );
 	Eigen::MatrixXd collect_f_int( curr_f_int.size() , Nmax );
@@ -3919,6 +4002,7 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 		// here now [0] is geometry 'w' and [1] is k_invis
 		trafo_current_para(snapshot_x_collection[i], snapshot_y_collection[i], general_param_vector[i]); // setting collect_f_all, making use of snapshot_x_collection, snapshot_y_collection
 	}
+	cout << "finished CoupledLinearNS_TT::do_geo_trafo() " << endl;
     }
 
     void CoupledLinearNS_TT::compute_snapshots_geometry_params()
@@ -4327,27 +4411,28 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 //	cout << "general_param_vector[1].num_elements() " << general_param_vector[1].num_elements() << endl;
 //	cout << "general_param_vector[2].num_elements() " << general_param_vector[2].num_elements() << endl;
 //	cout << "general_param_vector[19].num_elements() " << general_param_vector[19].num_elements() << endl;
-	for(int i0 = 0; i0 < general_param_vector.num_elements(); ++i0)
+
+/*	for(int i0 = 0; i0 < general_param_vector.num_elements(); ++i0)
 	{
 		for(int i1 = 0; i1 < general_param_vector[i0].num_elements(); ++i1)
 		{
-//			cout << "general_param_vector[i0][i1] " << general_param_vector[i0][i1] << endl;
+			cout << "general_param_vector[i0][i1] " << general_param_vector[i0][i1] << endl;
 		}
-	}
+	}*/
 
 //	cout << Geo_T( 0.2 , 0, 0) << endl;;
 
 	InitObject();
 	if ( load_snapshot_data_from_files )
 	{
-//		if (parameter_space_dimension == 1)
-//		{
+		if (parameter_space_dimension == 1)
+		{
 			load_snapshots(number_of_snapshots);
-//		}
-//		else if (parameter_space_dimension == 2)
-//		{
-//			load_snapshots_geometry_params(); // not needed ?
-//		}
+		}
+		else if (parameter_space_dimension == 2)
+		{
+			load_snapshots_geometry_params(number_of_snapshots); 
+		}
 	}
 	else
 	{
@@ -4605,6 +4690,47 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 		}
 	}
 
+
+    }
+
+    void CoupledLinearNS_TT::load_snapshots_geometry_params(int number_of_snapshots)
+    {
+
+	// assuming it is prepared in the correct ordering - i.e. - outer loop dir0, inner loop dir1
+
+	int nvelo = 2;
+        Array<OneD, Array<OneD, NekDouble> > test_load_snapshot(nvelo); // for a 2D problem
+
+        for(int i = 0; i < nvelo; ++i)
+        {
+            test_load_snapshot[i] = Array<OneD, NekDouble> (GetNpoints(), 0.0);  // number of phys points
+        }
+
+        std::vector<std::string> fieldStr;
+        for(int i = 0; i < nvelo; ++i)
+        {
+           fieldStr.push_back(m_session->GetVariable(i));
+        }
+
+	snapshot_x_collection = Array<OneD, Array<OneD, NekDouble> > (number_of_snapshots);
+	snapshot_y_collection = Array<OneD, Array<OneD, NekDouble> > (number_of_snapshots);
+        for(int i = 0; i < number_of_snapshots; ++i)
+        {
+		// generate the correct string
+		std::stringstream sstm;
+		sstm << "TestSnap" << i+1;
+		std::string result = sstm.str();
+		const char* rr = result.c_str();
+
+	        EvaluateFunction(fieldStr, test_load_snapshot, result);
+		snapshot_x_collection[i] = Array<OneD, NekDouble> (GetNpoints(), 0.0);
+		snapshot_y_collection[i] = Array<OneD, NekDouble> (GetNpoints(), 0.0);
+		for (int j=0; j < GetNpoints(); ++j)
+		{
+			snapshot_x_collection[i][j] = test_load_snapshot[0][j];
+			snapshot_y_collection[i][j] = test_load_snapshot[1][j];
+		}
+        }
 
     }
 

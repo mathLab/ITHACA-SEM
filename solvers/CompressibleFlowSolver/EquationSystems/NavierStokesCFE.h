@@ -306,6 +306,20 @@ namespace Nektar
     void PrintArray(Array<OneD, NekDouble> &Array);
 
     void PrintMatrix(DNekMatSharedPtr &Matrix);
+
+    void OutputMatrix(DNekMatSharedPtr &Matrix);
+    
+    void test2D(const Array<OneD, NekDouble> &normal2D,
+                                const NekDouble mu,
+                                const NekDouble dmu_dT,
+                                const Array<OneD, NekDouble> &U2D,
+                                const Array<OneD,const Array<OneD, NekDouble> > &q2D);
+    
+    void test3D(const Array<OneD, NekDouble> &normal3D,
+                                const NekDouble mu,
+                                const NekDouble dmu_dT,
+                                const Array<OneD, NekDouble> &U3D,
+                                const Array<OneD,const Array<OneD, NekDouble> > &q3D);
     ////////////////////////////////////
     
 #endif

@@ -278,9 +278,9 @@ MACRO(ADD_NEKPY_LIBRARY name)
     # Install __init__.py files.
     SET(TMPOUT "")
     IF (NEKPY_DEPENDS)
-        STRING(APPEND TMPOUT "from ..${NEKPY_DEPENDS} import _${NEKPY_DEPENDS}\n")
+        SET(TMPOUT "from ..${NEKPY_DEPENDS} import _${NEKPY_DEPENDS}\n")
     ENDIF()
-    STRING(APPEND TMPOUT "from ._${name} import *")
+    SET(TMPOUT "${TMPOUT}from ._${name} import *")
 
     FILE(WRITE ${CMAKE_BINARY_DIR}/NekPy/${name}/__init__.py ${TMPOUT})
     INSTALL(TARGETS _${name} DESTINATION ${CMAKE_BINARY_DIR}/NekPy/${name})

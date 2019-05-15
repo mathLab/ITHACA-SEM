@@ -194,7 +194,7 @@ namespace Nektar
 
         string advName;
         m_session->LoadSolverInfo("AdvectionType", advName, "WeakDG");
-	    // m_session->LoadSolverInfo("useUnifiedWeakIntegration", m_useUnifiedWeakIntegration, false);
+        // m_session->LoadSolverInfo("useUnifiedWeakIntegration", m_useUnifiedWeakIntegration, false);
         // m_session->LoadParameter("useUnifiedWeakIntegration", m_useUnifiedWeakIntegration, false);
         m_session->MatchSolverInfo(
             "useUnifiedWeakIntegration", "True", m_useUnifiedWeakIntegration, false);
@@ -1529,26 +1529,29 @@ namespace Nektar
         // TODO: auto precondition recompute. use random vector&L1 norm relative error.
         if(m_CalcuPrecMatFlag||(m_TimeIntegLambdaPrcMat!=m_TimeIntegLambda))
         {
-            int nphspnt = inpnts[0].num_elements();
-            Array<OneD, Array<OneD, NekDouble> > intmp(nvariables);
-            for(int i = 0; i < nvariables; i++)
+            if(0!=m_JFNKPrecondStep)
             {
-                intmp[i]    =   Array<OneD, NekDouble>(nphspnt,0.0);
-            }
+                int nphspnt = inpnts[0].num_elements();
+                Array<OneD, Array<OneD, NekDouble> > intmp(nvariables);
+                for(int i = 0; i < nvariables; i++)
+                {
+                    intmp[i]    =   Array<OneD, NekDouble>(nphspnt,0.0);
+                }
 
-            DoOdeProjection(inpnts,intmp,m_BndEvaluateTime);
+                DoOdeProjection(inpnts,intmp,m_BndEvaluateTime);
 
-            GetpreconditionerNSBlkDiag_coeff(intmp,m_PrecMatVars,m_TraceJac,m_TraceJacDeriv,m_TraceJacDerivSign);
-            // cout << "GetpreconditionerNSBlkDiag_coeff"<<endl;
-            m_CalcuPrecMatFlag = false;
-            m_TimeIntegLambdaPrcMat = m_TimeIntegLambda;
-            // cout << "m_TotNonLinItePrecMat  =   "<<m_TotNonLinItePrecMat<<endl;
-            // m_TotNonLinItePrecMat = 0;
+                GetpreconditionerNSBlkDiag_coeff(intmp,m_PrecMatVars,m_TraceJac,m_TraceJacDeriv,m_TraceJacDerivSign);
+                // cout << "GetpreconditionerNSBlkDiag_coeff"<<endl;
+                m_CalcuPrecMatFlag = false;
+                m_TimeIntegLambdaPrcMat = m_TimeIntegLambda;
+                // cout << "m_TotNonLinItePrecMat  =   "<<m_TotNonLinItePrecMat<<endl;
+                // m_TotNonLinItePrecMat = 0;
 
-            // to free the storage
-            for(int i = 0; i < nvariables; i++)
-            {
-                intmp[i]    =   Array<OneD, NekDouble>(1,0.0);
+                // to free the storage
+                for(int i = 0; i < nvariables; i++)
+                {
+                    intmp[i]    =   Array<OneD, NekDouble>(1,0.0);
+                }
             }
         }
 

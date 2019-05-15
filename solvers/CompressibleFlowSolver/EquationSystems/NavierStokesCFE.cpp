@@ -159,7 +159,7 @@ namespace Nektar
 
         //Only NavierStokes equation and using weakDG,LDGNS can temparary use the codes
         m_session->LoadSolverInfo("AdvectionType", advName, "WeakDG");
-	    m_session->LoadSolverInfo("DiffusionType", diffName, "LDGNS");
+        m_session->LoadSolverInfo("DiffusionType", diffName, "LDGNS");
         if(m_useUnifiedWeakIntegration)
         {
             if(advName=="WeakDG" && ((diffName=="LDGNS")||(diffName=="InteriorPenalty")))
@@ -999,6 +999,7 @@ namespace Nektar
                     Vmath::Vvtvp(nPts,&normal[nd][0],1,&fluxVec[nd][j][0],1,&outarray[0][j][0],1,&outarray[0][j][0],1);
                 }
             }
+            ApplyFluxBndConds(nConvectiveFields,outarray[0]);
         }
         else
         {
@@ -1122,12 +1123,69 @@ namespace Nektar
                         Vmath::Vvtvp(nBndEdgePts,&consvar[k][id2],1,&consvar[k][id2],1,&wallTotEngy[0],1,&wallTotEngy[0],1);
                     }
                     Vmath::Vdiv(nBndEdgePts,&wallTotEngy[0],1,&consvar[ndens][id2],1,&wallTotEngy[0],1);
+                    Vmath::Smul(nBndEdgePts,0.5,&wallTotEngy[0],1,&wallTotEngy[0],1);
                     Vmath::Svtvp(nBndEdgePts,InternalEnergy,&consvar[ndens][id2],1,&wallTotEngy[0],1,&wallTotEngy[0],1);
 
 
                     Vmath::Vcopy(nBndEdgePts,
                                 &wallTotEngy[0], 1,
                                 &consvar[nengy][id2], 1);
+                }
+            }
+        }
+    }
+
+    /**
+     * @brief aplly Neuman boundary conditions on flux
+     *        Currently only consider WallAdiabatic
+     *
+     */
+    void NavierStokesCFE::ApplyFluxBndConds(
+        const int                                           nConvectiveFields,
+              Array<OneD,       Array<OneD, NekDouble> >    &flux)
+    {
+        int ndens       = 0;
+        int nengy       = nConvectiveFields-1;
+        int nvelst      = ndens + 1;
+        int nveled      = nengy;
+
+        int cnt;
+        int j, e;
+        int id2;
+
+        int nBndEdgePts, nBndEdges, nBndRegions;
+
+        int nLengthArray    =0;
+
+        // Compute boundary conditions  for Energy
+        cnt = 0;
+        nBndRegions = m_fields[nengy]->
+        GetBndCondExpansions().num_elements();
+        for (j = 0; j < nBndRegions; ++j)
+        {
+            if (m_fields[nengy]->GetBndConditions()[j]->
+                GetBoundaryConditionType() ==
+                SpatialDomains::ePeriodic)
+            {
+                continue;
+            }
+
+            nBndEdges = m_fields[nengy]->
+            GetBndCondExpansions()[j]->GetExpSize();
+            for (e = 0; e < nBndEdges; ++e)
+            {
+                nBndEdgePts = m_fields[nengy]->
+                GetBndCondExpansions()[j]->GetExp(e)->GetTotPoints();
+
+                id2 = m_fields[0]->GetTrace()->
+                GetPhys_Offset(m_fields[0]->GetTraceMap()->
+                            GetBndCondTraceToGlobalTraceMap(cnt++));
+
+                // Imposing Temperature Twall at the wall
+                if (boost::iequals(m_fields[nengy]->GetBndConditions()[j]->
+                    GetUserDefined(),"WallAdiabatic"))
+                {
+                    Vmath::Zero(nBndEdgePts, &flux[nengy][id2], 1);
                 }
             }
         }

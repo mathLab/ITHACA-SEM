@@ -173,13 +173,6 @@ namespace Nektar
                 }
             }
         }
-
-        //////////////////////////////////////////////////
-        //Yu Pan's test
-        test();
-
-
-        //////////////////////////////////////////////////
     }
 
     void NavierStokesCFE::v_DoDiffusion(
@@ -1183,10 +1176,9 @@ namespace Nektar
         NekDouble E=U[3]/U[0];
         NekDouble q2=u*u+v*v;
         NekDouble e=E-0.5*q2;
-        NekDouble R =m_varConv->GetGasconstant();
         NekDouble gamma=m_gamma;
-        NekDouble Cp=gamma / (gamma - 1.0) *R;
-        NekDouble Cv=1.0/(gamma-1)*R;
+        NekDouble Cv=m_Cv;
+        NekDouble Cp=m_Cp;
         NekDouble T=e/Cv;
         //q_x=-kappa*dT_dx;
         NekDouble tRa = m_Cp / m_Prandtl;
@@ -1196,23 +1188,26 @@ namespace Nektar
         //"SYMMETRIC INTERIOR PENALTY DG METHODS FOR THE COMPRESSIBLE NAVIER-STOKES EQUATIONS"
         //But opposite to "I Do like CFD"
         NekDouble tmp=mu/rho;
-
-        // TODO: replace repeated divid by multiply
-        (*OutputMatrix)(0,0)=tmp*(-4.0/3.0*u*nx-v*ny);
-        (*OutputMatrix)(0,1)=tmp*(4.0/3.0*nx);
+        NekDouble tmp2=gamma/Pr;
+        NekDouble OneThird,TwoThird,FourThird;
+        OneThird=1.0/3.0;
+        TwoThird=2.0/3.0;
+        FourThird=4.0/3.0;
+        (*OutputMatrix)(0,0)=tmp*(-FourThird*u*nx-v*ny);
+        (*OutputMatrix)(0,1)=tmp*(FourThird*nx);
         (*OutputMatrix)(0,2)=tmp*ny;
         (*OutputMatrix)(0,3)=0.0;
-        (*OutputMatrix)(1,0)=tmp*(-v*nx+2.0/3.0*u*ny);
-        (*OutputMatrix)(1,1)=tmp*(-2.0/3.0*ny);
+        (*OutputMatrix)(1,0)=tmp*(-v*nx+TwoThird*u*ny);
+        (*OutputMatrix)(1,1)=tmp*(-TwoThird*ny);
         (*OutputMatrix)(1,2)=tmp*nx;
         (*OutputMatrix)(1,3)=0.0;
-        (*OutputMatrix)(2,0)=(4.0/3.0*u*u+v*v+gamma/Pr*(E-q2))*nx+1.0/3.0*u*v*ny;
+        (*OutputMatrix)(2,0)=(FourThird*u*u+v*v+tmp2*(E-q2))*nx+OneThird*u*v*ny;
         (*OutputMatrix)(2,0)=-tmp*(*OutputMatrix)(2,0);
-        (*OutputMatrix)(2,1)=(4.0/3.0-gamma/Pr)*u*nx-2.0/3.0*v*ny;
+        (*OutputMatrix)(2,1)=(FourThird-tmp2)*u*nx-TwoThird*v*ny;
         (*OutputMatrix)(2,1)=tmp*(*OutputMatrix)(2,1);
-        (*OutputMatrix)(2,2)=(1-gamma/Pr)*v*nx+u*ny;
+        (*OutputMatrix)(2,2)=(1-tmp2)*v*nx+u*ny;
         (*OutputMatrix)(2,2)=tmp*(*OutputMatrix)(2,2);
-        (*OutputMatrix)(2,3)=tmp*gamma/Pr*nx;
+        (*OutputMatrix)(2,3)=tmp*tmp2*nx;
     }
 
      /**
@@ -1237,10 +1232,9 @@ namespace Nektar
         NekDouble E=U[3]/U[0];
         NekDouble q2=u*u+v*v;
         NekDouble e=E-0.5*q2;
-        NekDouble R =m_varConv->GetGasconstant();
         NekDouble gamma=m_gamma;
-        NekDouble Cp=gamma / (gamma - 1.0) *R;
-        NekDouble Cv=1.0/(gamma-1)*R;
+        NekDouble Cp=m_Cp;
+        NekDouble Cv=m_Cv;
         NekDouble T=e/Cv;
         //q_x=-kappa*dT_dx;
         NekDouble tRa = m_Cp / m_Prandtl;
@@ -1250,22 +1244,27 @@ namespace Nektar
         //"SYMMETRIC INTERIOR PENALTY DG METHODS FOR THE COMPRESSIBLE NAVIER-STOKES EQUATIONS"
         //But opposite to "I Do like CFD"
         NekDouble tmp=mu/rho;
+        NekDouble tmp2=gamma/Pr;
+        NekDouble OneThird,TwoThird,FourThird;
+        OneThird=1.0/3.0;
+        TwoThird=2.0/3.0;
+        FourThird=4.0/3.0;
            
-        (*OutputMatrix)(0,0)=tmp*(2.0/3.0*v*nx-u*ny);
+        (*OutputMatrix)(0,0)=tmp*(TwoThird*v*nx-u*ny);
         (*OutputMatrix)(0,1)=tmp*ny;
-        (*OutputMatrix)(0,2)=tmp*(-2.0/3.0)*nx;
+        (*OutputMatrix)(0,2)=tmp*(-TwoThird)*nx;
         (*OutputMatrix)(0,3)=0.0;
-        (*OutputMatrix)(1,0)=tmp*(-u*nx-4.0/3.0*v*ny);
+        (*OutputMatrix)(1,0)=tmp*(-u*nx-FourThird*v*ny);
         (*OutputMatrix)(1,1)=tmp*nx;
-        (*OutputMatrix)(1,2)=tmp*(4.0/3.0*ny);
+        (*OutputMatrix)(1,2)=tmp*(FourThird*ny);
         (*OutputMatrix)(1,3)=0.0;
-        (*OutputMatrix)(2,0)=1.0/3.0*u*v*nx+(4.0/3.0*v*v+u*u+gamma/Pr*(E-q2))*ny;
+        (*OutputMatrix)(2,0)=OneThird*u*v*nx+(FourThird*v*v+u*u+tmp2*(E-q2))*ny;
         (*OutputMatrix)(2,0)=-tmp*(*OutputMatrix)(2,0);
-        (*OutputMatrix)(2,1)=(1-gamma/Pr)*u*ny+v*nx;
+        (*OutputMatrix)(2,1)=(1-tmp2)*u*ny+v*nx;
         (*OutputMatrix)(2,1)=tmp*(*OutputMatrix)(2,1);
-        (*OutputMatrix)(2,2)=(4.0/3.0-gamma/Pr)*v*ny-2.0/3.0*u*nx;
+        (*OutputMatrix)(2,2)=(FourThird-tmp2)*v*ny-TwoThird*u*nx;
         (*OutputMatrix)(2,2)=tmp*(*OutputMatrix)(2,2);
-        (*OutputMatrix)(2,3)=tmp*gamma/Pr*ny;
+        (*OutputMatrix)(2,3)=tmp*tmp2*ny;
     }
 
     /**
@@ -1294,10 +1293,9 @@ namespace Nektar
         NekDouble E=U[4]/U[0];
         NekDouble q2=u*u+v*v+w*w;
         NekDouble e=E-0.5*q2;
-        NekDouble R =m_varConv->GetGasconstant();
         NekDouble gamma=m_gamma;
-        NekDouble Cp=gamma / (gamma - 1.0) *R;
-        NekDouble Cv=1.0/(gamma-1)*R;
+        NekDouble Cp=m_Cp;
+        NekDouble Cv=m_Cv;
         NekDouble T=e/Cv;
         //q_x=-kappa*dT_dx;
         NekDouble tRa = m_Cp / m_Prandtl;
@@ -1310,27 +1308,32 @@ namespace Nektar
         NekDouble tmpx=tmp*nx;
         NekDouble tmpy=tmp*ny;
         NekDouble tmpz=tmp*nz;
+        NekDouble tmp2=gamma/Pr;
+        NekDouble OneThird,TwoThird,FourThird;
+        OneThird=1.0/3.0;
+        TwoThird=2.0/3.0;
+        FourThird=4.0/3.0;
 
-        (*OutputMatrix)(0,0)=tmpx*(-4.0/3.0*u)+tmpy*(-v)+tmpz*(-w);
-        (*OutputMatrix)(0,1)=tmpx*(4.0/3.0);
+        (*OutputMatrix)(0,0)=tmpx*(-FourThird*u)+tmpy*(-v)+tmpz*(-w);
+        (*OutputMatrix)(0,1)=tmpx*FourThird;
         (*OutputMatrix)(0,2)=tmpy;
         (*OutputMatrix)(0,3)=tmpz;
         (*OutputMatrix)(0,4)=0.0;
-        (*OutputMatrix)(1,0)=tmpx*(-v)+tmpy*(2./3.*u);
-        (*OutputMatrix)(1,1)=tmpy*(-2./3.);
+        (*OutputMatrix)(1,0)=tmpx*(-v)+tmpy*(TwoThird*u);
+        (*OutputMatrix)(1,1)=tmpy*(-TwoThird);
         (*OutputMatrix)(1,2)=tmpx;
         (*OutputMatrix)(1,3)=0.0;
         (*OutputMatrix)(1,4)=0.0;
-        (*OutputMatrix)(2,0)=tmpx*(-w)+tmpz*(2./3.*u);
-        (*OutputMatrix)(2,1)=tmpz*(-2./3);
+        (*OutputMatrix)(2,0)=tmpx*(-w)+tmpz*(TwoThird*u);
+        (*OutputMatrix)(2,1)=tmpz*(-TwoThird);
         (*OutputMatrix)(2,2)=0.0;
         (*OutputMatrix)(2,3)=tmpx;
         (*OutputMatrix)(2,4)=0.0;
-        (*OutputMatrix)(3,0)=-tmpx*(4./3.*u*u+v*v+w*w+gamma/Pr*(E-q2))+tmpy*(-1./3.*u*v)+tmpz*(-1./3.*u*w);
-        (*OutputMatrix)(3,1)=tmpx*(4./3.-gamma/Pr)*u+tmpy*(-2./3.*v)+tmpz*(-2./3.*w);
-        (*OutputMatrix)(3,2)=tmpx*(1.0-gamma/Pr)*v+tmpy*u;
-        (*OutputMatrix)(3,3)=tmpx*(1.0-gamma/Pr)*w+tmpz*u;
-        (*OutputMatrix)(3,4)=tmpx*gamma/Pr;
+        (*OutputMatrix)(3,0)=-tmpx*(FourThird*u*u+v*v+w*w+tmp2*(E-q2))+tmpy*(-OneThird*u*v)+tmpz*(-OneThird*u*w);
+        (*OutputMatrix)(3,1)=tmpx*(FourThird-tmp2)*u+tmpy*(-TwoThird*v)+tmpz*(-TwoThird*w);
+        (*OutputMatrix)(3,2)=tmpx*(1.0-tmp2)*v+tmpy*u;
+        (*OutputMatrix)(3,3)=tmpx*(1.0-tmp2)*w+tmpz*u;
+        (*OutputMatrix)(3,4)=tmpx*tmp2;
     }
 
     /**
@@ -1359,10 +1362,9 @@ namespace Nektar
         NekDouble E=U[4]/U[0];
         NekDouble q2=u*u+v*v+w*w;
         NekDouble e=E-0.5*q2;
-        NekDouble R =m_varConv->GetGasconstant();
         NekDouble gamma=m_gamma;
-        NekDouble Cp=gamma / (gamma - 1.0) *R;
-        NekDouble Cv=1.0/(gamma-1)*R;
+        NekDouble Cp=m_Cp;
+        NekDouble Cv=m_Cv;
         NekDouble T=e/Cv;
         //q_x=-kappa*dT_dx;
         NekDouble tRa = m_Cp / m_Prandtl;
@@ -1375,27 +1377,32 @@ namespace Nektar
         NekDouble tmpx=tmp*nx;
         NekDouble tmpy=tmp*ny;
         NekDouble tmpz=tmp*nz;
+        NekDouble tmp2=gamma/Pr;
+        NekDouble OneThird,TwoThird,FourThird;
+        OneThird=1.0/3.0;
+        TwoThird=2.0/3.0;
+        FourThird=4.0/3.0;
 
-        (*OutputMatrix)(0,0)=tmpx*(2./3.*v)+tmpy*(-u);
+        (*OutputMatrix)(0,0)=tmpx*(TwoThird*v)+tmpy*(-u);
         (*OutputMatrix)(0,1)=tmpy;
-        (*OutputMatrix)(0,2)=tmpx*(-2./3.);
+        (*OutputMatrix)(0,2)=tmpx*(-TwoThird);
         (*OutputMatrix)(0,3)=0.0;
         (*OutputMatrix)(0,4)=0.0;
-        (*OutputMatrix)(1,0)=tmpx*(-u)+tmpy*(-4./3.*v)+tmpz*(-w);
+        (*OutputMatrix)(1,0)=tmpx*(-u)+tmpy*(-FourThird*v)+tmpz*(-w);
         (*OutputMatrix)(1,1)=tmpx;
-        (*OutputMatrix)(1,2)=tmpy*(4./3.);
+        (*OutputMatrix)(1,2)=tmpy*FourThird;
         (*OutputMatrix)(1,3)=tmpz;
         (*OutputMatrix)(1,4)=0.0;
-        (*OutputMatrix)(2,0)=tmpy*(-w)+tmpz*(2./3.*v);
+        (*OutputMatrix)(2,0)=tmpy*(-w)+tmpz*(TwoThird*v);
         (*OutputMatrix)(2,1)=0.0;
-        (*OutputMatrix)(2,2)=tmpz*(-2./3.);
+        (*OutputMatrix)(2,2)=tmpz*(-TwoThird);
         (*OutputMatrix)(2,3)=tmpy;
         (*OutputMatrix)(2,4)=0.0;
-        (*OutputMatrix)(3,0)=tmpx*(-1./3.*u*v)-tmpy*(u*u+4./3.*v*v+w*w+gamma/Pr*(E-q2))+tmpz*(-1./3.*v*w);
-        (*OutputMatrix)(3,1)=tmpx*v+tmpy*(1-gamma/Pr)*u;
-        (*OutputMatrix)(3,2)=tmpx*(-2./3.*u)+tmpy*(4./3.-gamma/Pr)*v+tmpz*(-2./3.*w);
-        (*OutputMatrix)(3,3)=tmpy*(1-gamma/Pr)*w+tmpz*v;
-        (*OutputMatrix)(3,4)=tmpy*gamma/Pr;
+        (*OutputMatrix)(3,0)=tmpx*(-OneThird*u*v)-tmpy*(u*u+FourThird*v*v+w*w+tmp2*(E-q2))+tmpz*(-OneThird*v*w);
+        (*OutputMatrix)(3,1)=tmpx*v+tmpy*(1-tmp2)*u;
+        (*OutputMatrix)(3,2)=tmpx*(-TwoThird*u)+tmpy*(FourThird-tmp2)*v+tmpz*(-TwoThird*w);
+        (*OutputMatrix)(3,3)=tmpy*(1-tmp2)*w+tmpz*v;
+        (*OutputMatrix)(3,4)=tmpy*tmp2;
     }
 
     /**
@@ -1424,10 +1431,9 @@ namespace Nektar
         NekDouble E=U[4]/U[0];
         NekDouble q2=u*u+v*v+w*w;
         NekDouble e=E-0.5*q2;
-        NekDouble R =m_varConv->GetGasconstant();
         NekDouble gamma=m_gamma;
-        NekDouble Cp=gamma / (gamma - 1.0) *R;
-        NekDouble Cv=1.0/(gamma-1)*R;
+        NekDouble Cp=m_Cp;
+        NekDouble Cv=m_Cv;
         NekDouble T=e/Cv;
         //q_x=-kappa*dT_dx;
         NekDouble tRa = m_Cp / m_Prandtl;
@@ -1440,27 +1446,32 @@ namespace Nektar
         NekDouble tmpx=tmp*nx;
         NekDouble tmpy=tmp*ny;
         NekDouble tmpz=tmp*nz;
+        NekDouble tmp2=gamma/Pr;
+        NekDouble OneThird,TwoThird,FourThird;
+        OneThird=1.0/3.0;
+        TwoThird=2.0/3.0;
+        FourThird=4.0/3.0;
 
-        (*OutputMatrix)(0,0)=tmpx*(2./3.*w)+tmpz*(-u);
+        (*OutputMatrix)(0,0)=tmpx*(TwoThird*w)+tmpz*(-u);
         (*OutputMatrix)(0,1)=tmpz;
         (*OutputMatrix)(0,2)=0.0;
-        (*OutputMatrix)(0,3)=tmpx*(-2./3.);
+        (*OutputMatrix)(0,3)=tmpx*(-TwoThird);
         (*OutputMatrix)(0,4)=0.0;
-        (*OutputMatrix)(1,0)=tmpy*(2./3.*w)+tmpz*(-v);
+        (*OutputMatrix)(1,0)=tmpy*(TwoThird*w)+tmpz*(-v);
         (*OutputMatrix)(1,1)=0.0;
         (*OutputMatrix)(1,2)=tmpz;
-        (*OutputMatrix)(1,3)=tmpy*(-2./3.);
+        (*OutputMatrix)(1,3)=tmpy*(-TwoThird);
         (*OutputMatrix)(1,4)=0.0;
-        (*OutputMatrix)(2,0)=tmpx*(-u)+tmpy*(-v)+tmpz*(-4./3.*w);
+        (*OutputMatrix)(2,0)=tmpx*(-u)+tmpy*(-v)+tmpz*(-FourThird*w);
         (*OutputMatrix)(2,1)=tmpx;
         (*OutputMatrix)(2,2)=tmpy;
-        (*OutputMatrix)(2,3)=tmpz*(4./3.);
+        (*OutputMatrix)(2,3)=tmpz*FourThird;
         (*OutputMatrix)(2,4)=0.0;
-        (*OutputMatrix)(3,0)=tmpx*(-1./3.*u*w)+tmpy*(-1./3.*v*w)-tmpz*(u*u+v*v+4./3.*w*w+gamma/Pr*(E-q2));
-        (*OutputMatrix)(3,1)=tmpx*w+tmpz*(1-gamma/Pr)*u;
-        (*OutputMatrix)(3,2)=tmpy*w+tmpz*(1-gamma/Pr)*v;
-        (*OutputMatrix)(3,3)=tmpx*(-2./3.*u)+tmpy*(-2./3.*v)+tmpz*(4./3.-gamma/Pr)*w;
-        (*OutputMatrix)(3,4)=tmpz*gamma/Pr;
+        (*OutputMatrix)(3,0)=tmpx*(-OneThird*u*w)+tmpy*(-OneThird*v*w)-tmpz*(u*u+v*v+FourThird*w*w+tmp2*(E-q2));
+        (*OutputMatrix)(3,1)=tmpx*w+tmpz*(1-tmp2)*u;
+        (*OutputMatrix)(3,2)=tmpy*w+tmpz*(1-tmp2)*v;
+        (*OutputMatrix)(3,3)=tmpx*(-TwoThird*u)+tmpy*(-TwoThird*v)+tmpz*(FourThird-tmp2)*w;
+        (*OutputMatrix)(3,4)=tmpz*tmp2;
     }
 
     /**
@@ -1495,13 +1506,9 @@ namespace Nektar
         NekDouble dU2_dy=qfield[1][1];
         NekDouble dU3_dy=qfield[1][2];
         NekDouble dU4_dy=qfield[1][3];
-        NekDouble R =m_varConv->GetGasconstant();
         NekDouble gamma=m_gamma;
-        NekDouble Cp=gamma / (gamma - 1.0) *R;
-        NekDouble Cv=1.0/(gamma-1)*R;
-        NekDouble tRa = m_Cp / m_Prandtl;
+        NekDouble Cv=m_Cv;
         NekDouble Pr=  m_Prandtl;
-        NekDouble kappa=mu*tRa;
 
         NekDouble orho1,orho2,orho3,orho4;
         NekDouble oCv=1./Cv;
@@ -1549,11 +1556,6 @@ namespace Nektar
                 (*OutputMatrix)(i,j)=dmu_dT*dT_dU[j]*tmp[i];
             }
         }
-
-        ////////////////////////
-        //Yu Pan's Test check same
-        // PrintMatrix(OutputMatrix);
-        ///////////////////////
         
         //Term 2 +mu*dSn_dU
         NekDouble du_dx_dU1,du_dx_dU2;
@@ -1607,14 +1609,7 @@ namespace Nektar
         (*OutputMatrix)(2,1)=(*OutputMatrix)(2,1)+mu*dsnv_dU2;
         (*OutputMatrix)(2,2)=(*OutputMatrix)(2,2)+mu*dsnv_dU3;
 
-
-        ////////////////////////
-        //Yu Pan's Test 
-        // PrintMatrix(OutputMatrix);
-        // cout<<"2D"<<(*OutputMatrix)(0,1)<<endl;
-        ///////////////////////
-
-        //Consider qn's effect (does not include mu's effect)
+        //Consider +qn's effect (does not include mu's effect)
         NekDouble dqx_dU1,dqx_dU2,dqx_dU3,dqx_dU4;
         NekDouble dqy_dU1,dqy_dU2,dqy_dU3,dqy_dU4;
         NekDouble tmpx=-nx*mu*gamma/Pr;
@@ -1631,11 +1626,6 @@ namespace Nektar
         (*OutputMatrix)(2,1)=(*OutputMatrix)(2,1)-dqx_dU2-dqy_dU2;
         (*OutputMatrix)(2,2)=(*OutputMatrix)(2,2)-dqx_dU3-dqy_dU3;
         (*OutputMatrix)(2,3)=(*OutputMatrix)(2,3)-dqx_dU4-dqy_dU4;
-
-        ////////////////////////
-        //Yu Pan's Test 
-        // PrintMatrix(OutputMatrix);
-        ///////////////////////
     }
 
      /**
@@ -1644,7 +1634,7 @@ namespace Nektar
      * normals:Point normals
      * mu: dynamicviscosity
      * dmu_dT: mu's derivative with T using Sutherland's law
-     * U=[rho,rhou,rhov,rhoE]
+     * U=[rho,rhou,rhov,rhow,rhoE]
      * Output: 4*5 Matrix (the flux about rho is zero)
      * OutputMatrix dFLux_dU,  the matrix sign is consistent with SIPG
      */
@@ -1679,18 +1669,14 @@ namespace Nektar
         NekDouble dU3_dz=qfield[2][2];
         NekDouble dU4_dz=qfield[2][3];
         NekDouble dU5_dz=qfield[2][4];
-        NekDouble R =m_varConv->GetGasconstant();
         NekDouble gamma=m_gamma;
-        NekDouble Cp=gamma / (gamma - 1.0) *R;
-        NekDouble Cv=1.0/(gamma-1)*R;
-        NekDouble tRa = m_Cp / m_Prandtl;
+        NekDouble Cv=m_Cv;
         NekDouble Pr=  m_Prandtl;
-        NekDouble kappa=mu*tRa;
 
         NekDouble orho1,orho2,orho3,orho4;
         NekDouble oCv=1./Cv;
         orho1=1.0/U1;
-        orho2=1.0/(U1*U1);
+        orho2=orho1*orho1;
         orho3=orho1*orho2;
         orho4=orho2*orho2;
 
@@ -1748,11 +1734,6 @@ namespace Nektar
                 (*OutputMatrix)(i,j)=dmu_dT*dT_dU[j]*tmp[i];
             }
         }
-
-        ////////////////////////
-        //Yu Pan's Test
-        // PrintMatrix(OutputMatrix);
-        ///////////////////////
 
         //Term 2 +mu*dSn_dU
         NekDouble du_dx_dU1,du_dx_dU2;
@@ -1860,14 +1841,7 @@ namespace Nektar
         (*OutputMatrix)(3,2)=(*OutputMatrix)(3,2)+mu*dsnv_dU3;
         (*OutputMatrix)(3,3)=(*OutputMatrix)(3,3)+mu*dsnv_dU4;
 
-
-        ////////////////////////
-        //Yu Pan's Test
-        // PrintMatrix(OutputMatrix);
-        // cout<<"3D"<<(*OutputMatrix)(0,1)<<endl;
-        ///////////////////////
-
-        //Consider qn's effect (does not include mu's effect)
+        //Consider heat flux qn's effect (does not include mu's effect)
         NekDouble dqx_dU1,dqx_dU2,dqx_dU3,dqx_dU4,dqx_dU5;
         NekDouble dqy_dU1,dqy_dU2,dqy_dU3,dqy_dU4,dqy_dU5;
         NekDouble dqz_dU1,dqz_dU2,dqz_dU3,dqz_dU4,dqz_dU5;
@@ -1894,896 +1868,7 @@ namespace Nektar
         (*OutputMatrix)(3,2)=(*OutputMatrix)(3,2)-dqx_dU3-dqy_dU3-dqz_dU3;
         (*OutputMatrix)(3,3)=(*OutputMatrix)(3,3)-dqx_dU4-dqy_dU4-dqz_dU4;
         (*OutputMatrix)(3,4)=(*OutputMatrix)(3,4)-dqx_dU5-dqy_dU5-dqz_dU5;
-
-        ////////////////////////
-        //Yu Pan's Test
-        // PrintMatrix(OutputMatrix);
-        ///////////////////////
     }
-
-    //////////////////////////////////////////////
-    //Yu Pan's test
-    /*
-    void NavierStokesCFE::test()
-    {
-        
-        NekDouble rho,rhou,rhov,rhow,rhoE;
-        NekDouble x,y,z;
-        NekDouble u,v,w,T,E,P;
-
-        //////////////////////////
-        //2D
-        // x=1;
-        // y=2;
-        // z=0;
-        // T=300+x+y;
-        //3D
-        x=1;
-        y=2;
-        z=1;
-        T=300+x+y;
-        /////////////////////////
-        NekDouble mu_star = m_mu;
-        NekDouble R=m_varConv->GetGasconstant();
-        //Constant
-        // NekDouble mu=m_mu;
-        // NekDouble dmu_dT=0.0;
-        //Variable
-        NekDouble m_pInf=101325;
-        NekDouble m_rhoInf=1.225;
-        NekDouble T_star  = m_pInf / (m_rhoInf *R);
-        NekDouble ratio=T/T_star;
-        NekDouble sqrtratio=sqrt(ratio);
-        NekDouble mu=mu_star * ratio * sqrt(ratio) * (T_star + 110.0) /(T + 110.0);
-        NekDouble dmu_dT=  (0.5*T+1.5*110.0)/(T*(T+110.0));
-        NekDouble gamma=m_gamma;
-        NekDouble Cp=gamma / (gamma - 1.0) *R;
-        NekDouble Cv=1.0/(gamma-1)*R;
-        NekDouble tRa = m_Cp / m_Prandtl;
-        NekDouble Pr=  m_Prandtl;
-        NekDouble kappa=mu*tRa;
-
-
-        ////////////////////////////////////
-        //2D
-
-        
-        // rho=1.0+0.01*x+0.1*y;
-        // u=2.+2.*x+3*y;
-        // v=3.+x*x*x+2*y;
-        // w=0.0;
- 
-        // E=Cv*T+0.5*(u*u+v*v+w*w);
-        // rhou=rho*u;
-        // rhov=rho*v;
-        // rhow=rho*w;
-        // rhoE=rho*E;
-        // NekDouble drho_dx,drho_dy,drho_dz;
-        // NekDouble du_dx,du_dy,du_dz;
-        // NekDouble dv_dx,dv_dy,dv_dz;
-        // NekDouble dw_dx,dw_dy,dw_dz;
-        // NekDouble dE_dx,dE_dy,dE_dz;
-        // drho_dx=0.01;
-        // drho_dy=0.1;
-        // drho_dz=0.0;
-        // du_dx=2.;
-        // du_dy=3.;
-        // du_dz=0.0;
-        // dv_dx=3*x*x;
-        // dv_dy=2.;
-        // dv_dz=0.0;
-        // dw_dx=0.0;
-        // dw_dy=0.0;
-        // dw_dz=0.0;
-        // dE_dx=Cv*1.+u*du_dx+v*dv_dx+w*dw_dx;
-        // dE_dy=Cv*1.+u*du_dy+v*dv_dy+w*dw_dy;
-        // dE_dz=Cv*0+u*du_dz+v*dv_dz+w*dw_dz;
-        ///////////////////////////////////////
-        
-
-        //////////////////////////////////
-        //3D
-        rho=1.0+0.01*x+0.01*y+0.02*z;
-        u=2.+2.*x+3*y+z;
-        v=3.+x+2*y+z;
-        w=1+x+y+z;
- 
-        E=Cv*T+0.5*(u*u+v*v+w*w);
-        P=Cv*T*rho/(gamma-1);
-        rhou=rho*u;
-        rhov=rho*v;
-        rhow=rho*w;
-        rhoE=rho*E;
-        NekDouble drho_dx,drho_dy,drho_dz;
-        NekDouble du_dx,du_dy,du_dz;
-        NekDouble dv_dx,dv_dy,dv_dz;
-        NekDouble dw_dx,dw_dy,dw_dz;
-        NekDouble dE_dx,dE_dy,dE_dz;
-        drho_dx=0.01;
-        drho_dy=0.01;
-        drho_dz=0.02;
-        du_dx=2.;
-        du_dy=3.;
-        du_dz=1.0;
-        dv_dx=1;
-        dv_dy=2;
-        dv_dz=1.0;
-        dw_dx=1.0;
-        dw_dy=1.0;
-        dw_dz=1.0;
-        dE_dx=Cv*1.+u*du_dx+v*dv_dx+w*dw_dx;
-        dE_dy=Cv*1.+u*du_dy+v*dv_dy+w*dw_dy;
-        dE_dz=Cv*0.+u*du_dz+v*dv_dz+w*dw_dz;
-        ///////////////////////////////////////////////////////
-        NekDouble drhou_dx=rho*du_dx+drho_dx*u;
-        NekDouble drhou_dy=rho*du_dy+drho_dy*u;
-        NekDouble drhou_dz=rho*du_dz+drho_dz*u;
-        NekDouble drhov_dx=rho*dv_dx+drho_dx*v;
-        NekDouble drhov_dy=rho*dv_dy+drho_dy*v;
-        NekDouble drhov_dz=rho*dv_dz+drho_dz*v;
-        NekDouble drhow_dx=rho*dw_dx+drho_dx*w;
-        NekDouble drhow_dy=rho*dw_dy+drho_dy*w;
-        NekDouble drhow_dz=rho*dw_dz+drho_dz*w;
-        NekDouble drhoE_dx=rho*dE_dx+drho_dx*E;
-        NekDouble drhoE_dy=rho*dE_dy+drho_dy*E;
-        NekDouble drhoE_dz=rho*dE_dz+drho_dz*E;
-
-        Array<OneD, NekDouble>              normal2D(2,0.0);
-        Array<OneD, NekDouble>              normal3D(3,0.0);
-        Array<OneD, NekDouble>              U2D(4,0.0);
-        Array<OneD, NekDouble>              U3D(5,0.0);
-        Array<OneD, Array<OneD, NekDouble> >    q2D(2);
-        Array<OneD, Array<OneD, NekDouble> >    q3D(3);
-        normal2D[0]=1./sqrt(2);
-        normal2D[1]=1./sqrt(2);
-        normal3D[0]=0.0;
-        normal3D[1]=1.0;
-        normal3D[2]=0.0;
-        U2D[0]=rho;
-        U2D[1]=rhou;
-        U2D[2]=rhov;
-        U2D[3]=rhoE;
-        U3D[0]=rho;
-        U3D[1]=rhou;
-        U3D[2]=rhov;
-        U3D[3]=rhow;
-        U3D[4]=rhoE;
-        q2D[0]= Array<OneD, NekDouble>(4,0.0);
-        q2D[1]= Array<OneD, NekDouble>(4,0.0);
-        q3D[0]= Array<OneD, NekDouble>(5,0.0);
-        q3D[1]= Array<OneD, NekDouble>(5,0.0);
-        q3D[2]= Array<OneD, NekDouble>(5,0.0);
-        q2D[0][0]=drho_dx;
-        q2D[0][1]=drhou_dx;
-        q2D[0][2]=drhov_dx;
-        q2D[0][3]=drhoE_dx;
-        q2D[1][0]=drho_dy;
-        q2D[1][1]=drhou_dy;
-        q2D[1][2]=drhov_dy;
-        q2D[1][3]=drhoE_dy;
-        q3D[0][0]=drho_dx;
-        q3D[0][1]=drhou_dx;
-        q3D[0][2]=drhov_dx;
-        q3D[0][3]=drhow_dx;
-        q3D[0][4]=drhoE_dx;
-        q3D[1][0]=drho_dy;
-        q3D[1][1]=drhou_dy;
-        q3D[1][2]=drhov_dy;
-        q3D[1][3]=drhow_dy;
-        q3D[1][4]=drhoE_dy;
-        q3D[2][0]=drho_dz;
-        q3D[2][1]=drhou_dz;
-        q3D[2][2]=drhov_dz;
-        q3D[2][3]=drhow_dz;
-        q3D[2][4]=drhoE_dz;
-        DNekMatSharedPtr Matrix2D = MemoryManager<DNekMat>::AllocateSharedPtr(3, 4,0.0);
-        DNekMatSharedPtr Matrix3D = MemoryManager<DNekMat>::AllocateSharedPtr(4, 5,0.0);
-        // PrintArray(q2D[0]);
-        // PrintArray(q2D[1]);
-        GetdFlux_dU_2D(normal2D,mu,dmu_dT,U2D,q2D,Matrix2D);
-        // PrintArray(q3D[0]);
-        // PrintArray(q3D[1]);
-        // PrintArray(q3D[2]);
-        GetdFlux_dU_3D(normal3D,mu,dmu_dT,U3D,q3D,Matrix3D);
-        // PrintMatrix(Matrix2D);
-        // PrintMatrix(Matrix3D);
-
-        //////////////////////////////////////////////////
-        //Use finite difference method to debug JacobiMatrix 2D
-        DNekMatSharedPtr Matrix2D_Qx = MemoryManager<DNekMat>::AllocateSharedPtr(3, 4,0.0);
-        DNekMatSharedPtr Matrix2D_Qy = MemoryManager<DNekMat>::AllocateSharedPtr(3, 4,0.0);
-        DNekMatSharedPtr NumericalJacobian2D= MemoryManager<DNekMat>::AllocateSharedPtr(3, 4,0.0);
-        Array<OneD,NekDouble> Flux2D1(4,0.0);
-        Array<OneD,NekDouble> Flux2D2(4,0.0);
-        Array<OneD,NekDouble> Flux2D_Analytical(4,0.0);
-        Array<OneD,NekDouble> U2D2(4,0.0);
-        GetdFlux_dQx_2D(normal2D,mu,U2D,Matrix2D_Qx);
-        GetdFlux_dQy_2D(normal2D,mu,U2D,Matrix2D_Qy);
-        Vmath::Vcopy(4,U2D,1,U2D2,1);
-        for(int i=0;i<3;i++)
-        {
-            for(int j=0;j<4;j++)
-            {
-                Flux2D1[i+1]=Flux2D1[i+1]+(*Matrix2D_Qx)(i,j)*q2D[0][j]+(*Matrix2D_Qy)(i,j)*q2D[1][j];
-            }
-        }
-        Flux2D_Analytical[0]=0.0;
-        NekDouble sxx=4./3.*du_dx-2./3.*dv_dy;
-        NekDouble sxy=dv_dx+du_dy;
-        NekDouble syx=sxy;
-        NekDouble syy=4./3.*dv_dy-2./3.*du_dx;
-        Flux2D_Analytical[1]=normal2D[0]*mu*sxx+normal2D[1]*mu*syx;
-        Flux2D_Analytical[2]=normal2D[0]*mu*sxy+normal2D[1]*mu*syy;
-        NekDouble eps=1e-8;
-        NekDouble oeps=1./eps;
-        for(int k=0;k<4;k++)
-        {
-            Vmath::Vcopy(4,U2D,1,U2D2,1);
-            //Constant
-            U2D2[k]=U2D[k]+eps;
-            //Variable
-            u=U2D2[1]/U2D2[0];
-            v=U2D2[2]/U2D2[0];
-            T=U2D2[3]/U2D2[0]-0.5*(u*u+v*v);
-            T=T/Cv;
-            ratio=T/T_star;
-            NekDouble mu_after=mu_star * ratio * sqrt(ratio) * (T_star + 110.0) /(T + 110.0);
-            GetdFlux_dQx_2D(normal2D,mu_after,U2D2,Matrix2D_Qx);
-            GetdFlux_dQy_2D(normal2D,mu_after,U2D2,Matrix2D_Qy);
-            Vmath::Zero(4,Flux2D2,1);
-            for(int i=0;i<3;i++)
-            {
-                for(int j=0;j<4;j++)
-                {
-                    Flux2D2[i+1]=Flux2D2[i+1]+(*Matrix2D_Qx)(i,j)*q2D[0][j]+(*Matrix2D_Qy)(i,j)*q2D[1][j];
-                }
-            }
-            //ToDo
-            NekDouble orho=1./rho;
-            du_dx=orho*(drhou_dx-u*drho_dx);
-            dv_dx=orho*(drhov_dx-v*drho_dx);
-            du_dy=orho*(drhou_dy-u*drho_dy);
-            dv_dy=orho*(drhov_dy-v*drho_dy);
-            sxx=4./3.*du_dx-2./3.*dv_dy;
-            sxy=dv_dx+du_dy;
-            syx=sxy;
-            syy=4./3.*dv_dy-2./3.*du_dx;
-            Flux2D_Analytical[1]=normal2D[0]*mu_after*sxx+normal2D[1]*mu_after*syx;
-            Flux2D_Analytical[2]=normal2D[0]*mu_after*sxy+normal2D[1]*mu_after*syy;
-            for(int i=0;i<3;i++)
-            {
-               (*NumericalJacobian2D)(i,k)=(Flux2D2[i+1]-Flux2D1[i+1])*oeps;
-            }
-        }
-
-        OutputMatrix(Matrix2D);
-        OutputMatrix(NumericalJacobian2D);
-        cout<<"End"<<endl;
-
-        ////////////////////////////////////////////////
-        //Use finite difference method to debug 3D Jacobian
-        DNekMatSharedPtr Matrix3D_Qx = MemoryManager<DNekMat>::AllocateSharedPtr(4, 5,0.0);
-        DNekMatSharedPtr Matrix3D_Qy = MemoryManager<DNekMat>::AllocateSharedPtr(4, 5,0.0);
-        DNekMatSharedPtr Matrix3D_Qz = MemoryManager<DNekMat>::AllocateSharedPtr(4, 5,0.0);
-        DNekMatSharedPtr NumericalJacobian3D= MemoryManager<DNekMat>::AllocateSharedPtr(4, 5,0.0);
-        Array<OneD,NekDouble> Flux3D1(5,0.0);
-        Array<OneD,NekDouble> Flux3D2(5,0.0);
-        Array<OneD,NekDouble> U3D2(5,0.0);
-        GetdFlux_dQx_3D(normal3D,mu,U3D,Matrix3D_Qx);
-        GetdFlux_dQy_3D(normal3D,mu,U3D,Matrix3D_Qy);
-        GetdFlux_dQz_3D(normal3D,mu,U3D,Matrix3D_Qz);
-        Vmath::Vcopy(5,U3D,1,U3D2,1);
-        for(int i=0;i<4;i++)
-        {
-            for(int j=0;j<5;j++)
-            {
-                Flux3D1[i+1]=Flux3D1[i+1]+(*Matrix3D_Qx)(i,j)*q3D[0][j]+(*Matrix3D_Qy)(i,j)*q3D[1][j]+(*Matrix3D_Qz)(i,j)*q3D[2][j];
-            }
-        }
-        eps=1e-8;
-        oeps=1./eps;
-        for(int k=0;k<5;k++)
-        {
-            Vmath::Vcopy(5,U3D,1,U3D2,1);
-            //Constant
-            U3D2[k]=U3D[k]+eps;
-            //Variable
-            u=U3D2[1]/U3D2[0];
-            v=U3D2[2]/U3D2[0];
-            w=U3D2[3]/U3D2[0];
-            T=U3D2[4]/U3D2[0]-0.5*(u*u+v*v+w*w);
-            T=T/Cv;
-            ratio=T/T_star;
-            NekDouble mu_after=mu_star * ratio * sqrt(ratio) * (T_star + 110.0) /(T + 110.0);
-            GetdFlux_dQx_3D(normal3D,mu_after,U3D2,Matrix3D_Qx);
-            GetdFlux_dQy_3D(normal3D,mu_after,U3D2,Matrix3D_Qy);
-            GetdFlux_dQz_3D(normal3D,mu_after,U3D2,Matrix3D_Qz);
-            Vmath::Zero(5,Flux3D2,1);
-            for(int i=0;i<4;i++)
-            {
-                for(int j=0;j<5;j++)
-                {
-                    Flux3D2[i+1]=Flux3D2[i+1]+(*Matrix3D_Qx)(i,j)*q3D[0][j]+(*Matrix3D_Qy)(i,j)*q3D[1][j]+(*Matrix3D_Qz)(i,j)*q3D[2][j];
-                }
-            }
-            for(int i=0;i<4;i++)
-            {
-               (*NumericalJacobian3D)(i,k)=(Flux3D2[i+1]-Flux3D1[i+1])*oeps;
-            }
-        }
-
-        OutputMatrix(Matrix3D);
-        OutputMatrix(NumericalJacobian3D);
-        cout<<"End"<<endl;
-    }
-    */
-    ////////////////////////////////////////////////////////////////
-
-
-     void NavierStokesCFE::test()
-    {
-        
-        NekDouble rho,rhou,rhov,rhow,rhoE;
-        NekDouble x,y,z;
-        NekDouble u,v,w,T,E,P;
-
-        //////////////////////////
-        //2D
-        // #define  Dim2
-        #ifdef Dim2
-        x=1;
-        y=2;
-        z=0;
-        #endif
-        //3D
-        #define  Dim3
-        #ifdef Dim3
-        x=1;
-        y=2;
-        z=1;
-        #endif
-
-        NekDouble R=m_varConv->GetGasconstant();
-        NekDouble gamma=m_gamma;
-        NekDouble Cv=1.0/(gamma-1.0)*R;
-        NekDouble Cp=gamma*Cv;
-
-
-
-     
-        //////////////////////////////////
-        //2D
-        #ifdef Dim2
-        
-        rho=1.0+0.01*x+0.01*y;
-        rhou=2.+2.*x+3*y;
-        rhov=3.+x+2*y;
-        rhow=0;
-        rhoE=200000+x*x+y*y;
-        NekDouble drho_dx=0.01;
-        NekDouble drho_dy=0.01;
-        NekDouble drho_dz=0.0;
-        NekDouble drhou_dx=2;
-        NekDouble drhou_dy=3;
-        NekDouble drhou_dz=0;
-        NekDouble drhov_dx=1;
-        NekDouble drhov_dy=2;
-        NekDouble drhov_dz=0;
-        NekDouble drhow_dx=0;
-        NekDouble drhow_dy=0;
-        NekDouble drhow_dz=0;
-        NekDouble drhoE_dx=2*x;
-        NekDouble drhoE_dy=2*y;
-        NekDouble drhoE_dz=0;
-        #endif
-        //3D
-        #ifdef Dim3
-        rho=1.0+0.01*x+0.01*y+0.02*z;
-        rhou=2.+2.*x+3*y+z;
-        rhov=3.+x+2*y+z;
-        rhow=1+x+y+z;
-        rhoE=200000+x*x+y*y+z*z;
-        NekDouble drho_dx=0.01;
-        NekDouble drho_dy=0.01;
-        NekDouble drho_dz=0.02;
-        NekDouble drhou_dx=2;
-        NekDouble drhou_dy=3;
-        NekDouble drhou_dz=1;
-        NekDouble drhov_dx=1;
-        NekDouble drhov_dy=2;
-        NekDouble drhov_dz=1;
-        NekDouble drhow_dx=1;
-        NekDouble drhow_dy=1;
-        NekDouble drhow_dz=1;
-        NekDouble drhoE_dx=2*x;
-        NekDouble drhoE_dy=2*y;
-        NekDouble drhoE_dz=2*z;
-        #endif
-
-        u=rhou/rho;
-        v=rhov/rho;
-        w=rhow/rho;
-        E=rhoE/rho;
-        T=1./Cv*(E-0.5*(u*u+v*v+w*w));
-        
-        /////////////////////////
-        //Constant
-        // #define Constant
-        #ifdef Constant
-        NekDouble mu=0.1;
-        NekDouble dmu_dT= 0.0;
-        #endif
-        //Variable
-        #define Variable
-        #ifdef Variable
-        NekDouble mu_star = m_mu;
-        NekDouble m_pInf=101325;
-        NekDouble m_rhoInf=1.225;
-        NekDouble T_star  = m_pInf / (m_rhoInf *R);
-        NekDouble ratio=T/T_star;
-        NekDouble sqrtratio=sqrt(ratio);
-        NekDouble mu=mu_star * ratio * sqrt(ratio) * (T_star + 110.0) /(T + 110.0);
-        NekDouble dmu_dT=  mu*(0.5*T+1.5*110.0)/(T*(T+110.0));
-        #endif
-
-        NekDouble tRa = m_Cp / m_Prandtl;
-        NekDouble Pr=  m_Prandtl;
-        NekDouble kappa=mu*tRa;
-
-        P=rho*R*T;
-
-        NekDouble du_dx,du_dy,du_dz;
-        NekDouble dv_dx,dv_dy,dv_dz;
-        NekDouble dw_dx,dw_dy,dw_dz;
-        NekDouble dE_dx,dE_dy,dE_dz;
-        NekDouble orho=1./rho;
-        NekDouble orho2,orho3,orho4;
-        du_dx=orho*(drhou_dx-u*drho_dx);
-        dv_dx=orho*(drhov_dx-v*drho_dx);
-        du_dy=orho*(drhou_dy-u*drho_dy);
-        dv_dy=orho*(drhov_dy-v*drho_dy);
-
-        Array<OneD, NekDouble>              normal2D(2,0.0);
-        Array<OneD, NekDouble>              normal3D(3,0.0);
-        Array<OneD, NekDouble>              U2D(4,0.0);
-        Array<OneD, NekDouble>              U3D(5,0.0);
-        Array<OneD, Array<OneD, NekDouble> >    q2D(2);
-        Array<OneD, Array<OneD, NekDouble> >    q3D(3);
-        normal2D[0]=1.0/sqrt(2);
-        normal2D[1]=1.0/sqrt(2);
-        normal3D[0]=1./sqrt(3);
-        normal3D[1]=1./sqrt(3);
-        normal3D[2]=1./sqrt(3);
-        U2D[0]=rho;
-        U2D[1]=rhou;
-        U2D[2]=rhov;
-        U2D[3]=rhoE;
-        U3D[0]=rho;
-        U3D[1]=rhou;
-        U3D[2]=rhov;
-        U3D[3]=rhow;
-        U3D[4]=rhoE;
-        q2D[0]= Array<OneD, NekDouble>(4,0.0);
-        q2D[1]= Array<OneD, NekDouble>(4,0.0);
-        q3D[0]= Array<OneD, NekDouble>(5,0.0);
-        q3D[1]= Array<OneD, NekDouble>(5,0.0);
-        q3D[2]= Array<OneD, NekDouble>(5,0.0);
-        q2D[0][0]=drho_dx;
-        q2D[0][1]=drhou_dx;
-        q2D[0][2]=drhov_dx;
-        q2D[0][3]=drhoE_dx;
-        q2D[1][0]=drho_dy;
-        q2D[1][1]=drhou_dy;
-        q2D[1][2]=drhov_dy;
-        q2D[1][3]=drhoE_dy;
-        q3D[0][0]=drho_dx;
-        q3D[0][1]=drhou_dx;
-        q3D[0][2]=drhov_dx;
-        q3D[0][3]=drhow_dx;
-        q3D[0][4]=drhoE_dx;
-        q3D[1][0]=drho_dy;
-        q3D[1][1]=drhou_dy;
-        q3D[1][2]=drhov_dy;
-        q3D[1][3]=drhow_dy;
-        q3D[1][4]=drhoE_dy;
-        q3D[2][0]=drho_dz;
-        q3D[2][1]=drhou_dz;
-        q3D[2][2]=drhov_dz;
-        q3D[2][3]=drhow_dz;
-        q3D[2][4]=drhoE_dz;
-        DNekMatSharedPtr Matrix2D = MemoryManager<DNekMat>::AllocateSharedPtr(3, 4,0.0);
-        DNekMatSharedPtr Matrix3D = MemoryManager<DNekMat>::AllocateSharedPtr(4, 5,0.0);
-        // PrintArray(q2D[0]);
-        // PrintArray(q2D[1]);
-        GetdFlux_dU_2D(normal2D,mu,dmu_dT,U2D,q2D,Matrix2D);
-        // PrintArray(q3D[0]);
-        // PrintArray(q3D[1]);
-        // PrintArray(q3D[2]);
-        GetdFlux_dU_3D(normal3D,mu,dmu_dT,U3D,q3D,Matrix3D);
-        // PrintMatrix(Matrix2D);
-        // PrintMatrix(Matrix3D);
-
-        //////////////////////////////////////////////////
-        //Use finite difference method to debug JacobiMatrix 2D
-        DNekMatSharedPtr Matrix2D_Qx = MemoryManager<DNekMat>::AllocateSharedPtr(3, 4,0.0);
-        DNekMatSharedPtr Matrix2D_Qy = MemoryManager<DNekMat>::AllocateSharedPtr(3, 4,0.0);
-        DNekMatSharedPtr NumericalJacobian2D= MemoryManager<DNekMat>::AllocateSharedPtr(3, 4,0.0);
-        Array<OneD,NekDouble> Flux2D1(4,0.0);
-        Array<OneD,NekDouble> Flux2D2(4,0.0);
-        Array<OneD,NekDouble> Flux2D3(4,0.0);
-        Array<OneD,NekDouble> Flux2D_Analytical(4,0.0);
-        Array<OneD,NekDouble> Flux2D_Analytical2(4,0.0);
-        Array<OneD,NekDouble> U2D2(4,0.0);
-        Array<OneD,NekDouble> U2D3(4,0.0);
-        GetdFlux_dQx_2D(normal2D,mu,U2D,Matrix2D_Qx);
-        GetdFlux_dQy_2D(normal2D,mu,U2D,Matrix2D_Qy);
-        Vmath::Vcopy(4,U2D,1,U2D2,1);
-        Vmath::Vcopy(4,U2D,1,U2D3,1);
-        for(int i=0;i<3;i++)
-        {
-            for(int j=0;j<4;j++)
-            {
-                Flux2D1[i+1]=Flux2D1[i+1]+(*Matrix2D_Qx)(i,j)*q2D[0][j]+(*Matrix2D_Qy)(i,j)*q2D[1][j];
-            }
-        }
-        // Flux2D_Analytical[0]=0.0;
-        // NekDouble sxx=4./3.*du_dx-2./3.*dv_dy;
-        // NekDouble sxy=dv_dx+du_dy;
-        // NekDouble syx=sxy;
-        // NekDouble syy=4./3.*dv_dy-2./3.*du_dx;
-        // Flux2D_Analytical[1]=normal2D[0]*mu*sxx+normal2D[1]*mu*syx;
-        // Flux2D_Analytical[2]=normal2D[0]*mu*sxy+normal2D[1]*mu*syy;
-        NekDouble eps=1e-10;
-        NekDouble oeps=1./eps;
-        for(int k=0;k<4;k++)
-        {
-            Vmath::Vcopy(4,U2D,1,U2D2,1);
-            //Constant
-            #ifdef Constant
-            U2D2[k]=U2D[k]+eps;
-            GetdFlux_dQx_2D(normal2D,mu,U2D2,Matrix2D_Qx);
-            GetdFlux_dQy_2D(normal2D,mu,U2D2,Matrix2D_Qy);
-            #endif
-            //Variable
-            #ifdef Variable
-            U2D2[k]=U2D[k]+eps;
-            u=U2D2[1]/U2D2[0];
-            v=U2D2[2]/U2D2[0];
-            T=U2D2[3]/U2D2[0]-0.5*(u*u+v*v);
-            T=T/Cv;
-            ratio=T/T_star;
-            NekDouble mu_after=mu_star * ratio * sqrt(ratio) * (T_star + 110.0) /(T + 110.0);
-            // dmu_dT=  (0.5*T+1.5*110.0)/(T*(T+110.0));T should be original T
-            GetdFlux_dQx_2D(normal2D,mu_after,U2D2,Matrix2D_Qx);
-            GetdFlux_dQy_2D(normal2D,mu_after,U2D2,Matrix2D_Qy);
-
-            Vmath::Zero(4,Flux2D2,1);
-            for(int i=0;i<3;i++)
-            {
-                for(int j=0;j<4;j++)
-                {
-                    Flux2D2[i+1]=Flux2D2[i+1]+(*Matrix2D_Qx)(i,j)*q2D[0][j]+(*Matrix2D_Qy)(i,j)*q2D[1][j];
-                }
-            }
-            
-            //Add another U to use central difference
-            // Vmath::Vcopy(4,U2D,1,U2D3,1);
-            // U2D3[k]=U2D[k]-eps;
-            // u=U2D3[1]/U2D3[0];
-            // v=U2D3[2]/U2D3[0];
-            // T=U2D3[3]/U2D3[0]-0.5*(u*u+v*v);
-            // T=T/Cv;
-            // ratio=T/T_star;
-            // mu_after=mu_star * ratio * sqrt(ratio) * (T_star + 110.0) /(T + 110.0);
-            // GetdFlux_dQx_2D(normal2D,mu_after,U2D3,Matrix2D_Qx);
-            // GetdFlux_dQy_2D(normal2D,mu_after,U2D3,Matrix2D_Qy);
-
-            // Vmath::Zero(4,Flux2D3,1);
-            // for(int i=0;i<3;i++)
-            // {
-            //     for(int j=0;j<4;j++)
-            //     {
-            //         Flux2D3[i+1]=Flux2D3[i+1]+(*Matrix2D_Qx)(i,j)*q2D[0][j]+(*Matrix2D_Qy)(i,j)*q2D[1][j];
-            //     }
-            // }
-            #endif
-            
-
-            //////////////////////
-            //Analytical Solution 2D
-            /*
-            u=U2D2[1]/U2D2[0];
-            v=U2D2[2]/U2D2[0];
-            T=U2D2[3]/U2D2[0]-0.5*(u*u+v*v);
-            T=T/Cv;
-            ratio=T/T_star;
-            mu_after=mu_star * ratio * sqrt(ratio) * (T_star + 110.0) /(T + 110.0);
-            orho=1./rho;
-            orho2=orho*orho;
-            du_dx=orho*(drhou_dx-u*drho_dx);
-            dv_dx=orho*(drhov_dx-v*drho_dx);
-            du_dy=orho*(drhou_dy-u*drho_dy);
-            dv_dy=orho*(drhov_dy-v*drho_dy);
-            NekDouble qx=-gamma*mu_after/Pr*(orho*q2D[0][3]-U2D2[3]*orho2*q2D[0][0]-u*(orho*q2D[0][1]-U2D2[1]*orho2*q2D[0][0])-v*(orho*q2D[0][2]-U2D2[2]*orho2*q2D[0][0]));
-            NekDouble qy=-gamma*mu_after/Pr*(orho*q2D[1][3]-U2D2[3]*orho2*q2D[1][0]-u*(orho*q2D[1][1]-U2D2[1]*orho2*q2D[1][0])-v*(orho*q2D[1][2]-U2D2[2]*orho2*q2D[1][0]));
-            NekDouble qn=qx*normal2D[0]+qy*normal2D[1];
-            NekDouble sxx=4./3.*du_dx-2./3.*dv_dy;
-            NekDouble sxy=dv_dx+du_dy;
-            NekDouble syx=sxy;
-            NekDouble syy=4./3.*dv_dy-2./3.*du_dx;
-            NekDouble snx=normal2D[0]*mu_after*sxx+normal2D[1]*mu_after*syx;
-            NekDouble sny=normal2D[0]*mu_after*sxy+normal2D[1]*mu_after*syy;
-            Flux2D_Analytical[0]=0.0;
-            Flux2D_Analytical[1]=snx;
-            Flux2D_Analytical[2]=sny;
-            Flux2D_Analytical[3]=u*snx+v*sny-qn;
-
-            u=U2D3[1]/U2D3[0];
-            v=U2D3[2]/U2D3[0];
-            T=U2D3[3]/U2D3[0]-0.5*(u*u+v*v);
-            T=T/Cv;
-            ratio=T/T_star;
-            mu_after=mu_star * ratio * sqrt(ratio) * (T_star + 110.0) /(T + 110.0);
-            orho=1./rho;
-            orho2=orho*orho;
-            du_dx=orho*(drhou_dx-u*drho_dx);
-            dv_dx=orho*(drhov_dx-v*drho_dx);
-            du_dy=orho*(drhou_dy-u*drho_dy);
-            dv_dy=orho*(drhov_dy-v*drho_dy);
-            qx=-gamma*mu_after/Pr*(orho*q2D[0][3]-U2D3[3]*orho2*q2D[0][0]-u*(orho*q2D[0][1]-U2D3[1]*orho2*q2D[0][0])-v*(orho*q2D[0][2]-U2D3[2]*orho2*q2D[0][0]));
-            qy=-gamma*mu_after/Pr*(orho*q2D[1][3]-U2D3[3]*orho2*q2D[1][0]-u*(orho*q2D[1][1]-U2D3[1]*orho2*q2D[1][0])-v*(orho*q2D[1][2]-U2D3[2]*orho2*q2D[1][0]));
-            qn=qx*normal2D[0]+qy*normal2D[1];
-            sxx=4./3.*du_dx-2./3.*dv_dy;
-            sxy=dv_dx+du_dy;
-            syx=sxy;
-            syy=4./3.*dv_dy-2./3.*du_dx;
-            snx=normal2D[0]*mu_after*sxx+normal2D[1]*mu_after*syx;
-            sny=normal2D[0]*mu_after*sxy+normal2D[1]*mu_after*syy;
-            Flux2D_Analytical2[0]=0.0;
-            Flux2D_Analytical2[1]=snx;
-            Flux2D_Analytical2[2]=sny;
-            Flux2D_Analytical2[3]=u*snx+v*sny-qn;
-            */
-            /////////////////////////////////////////////////////////////
-
-            for(int i=0;i<3;i++)
-            {
-                //    (*NumericalJacobian2D)(i,k)=(Flux2D1[i+1]-Flux2D3[i+1])*oeps;
-            //    (*NumericalJacobian2D)(i,k)=(Flux2D2[i+1]-Flux2D3[i+1])*oeps*0.5;
-                (*NumericalJacobian2D)(i,k)=(Flux2D2[i+1]-Flux2D1[i+1])*oeps;
-                //   (*NumericalJacobian2D)(i,k)=(Flux2D_Analytical[i+1]-Flux2D1[i+1])*oeps;
-                //  (*NumericalJacobian2D)(i,k)=(Flux2D_Analytical[i+1]-Flux2D_Analytical2[i+1])*oeps*0.5;
-            }
-        }
-
-        OutputMatrix(Matrix2D);
-        OutputMatrix(NumericalJacobian2D);
-        cout<<"End"<<endl;
-
-        ////////////////////////////////////////////////
-        //Use finite difference method to debug 3D Jacobian
-        DNekMatSharedPtr Matrix3D_Qx = MemoryManager<DNekMat>::AllocateSharedPtr(4, 5,0.0);
-        DNekMatSharedPtr Matrix3D_Qy = MemoryManager<DNekMat>::AllocateSharedPtr(4, 5,0.0);
-        DNekMatSharedPtr Matrix3D_Qz = MemoryManager<DNekMat>::AllocateSharedPtr(4, 5,0.0);
-        DNekMatSharedPtr NumericalJacobian3D= MemoryManager<DNekMat>::AllocateSharedPtr(4, 5,0.0);
-        Array<OneD,NekDouble> Flux3D1(5,0.0);
-        Array<OneD,NekDouble> Flux3D2(5,0.0);
-        Array<OneD,NekDouble> U3D2(5,0.0);
-        GetdFlux_dQx_3D(normal3D,mu,U3D,Matrix3D_Qx);
-        GetdFlux_dQy_3D(normal3D,mu,U3D,Matrix3D_Qy);
-        GetdFlux_dQz_3D(normal3D,mu,U3D,Matrix3D_Qz);
-        Vmath::Vcopy(5,U3D,1,U3D2,1);
-        for(int i=0;i<4;i++)
-        {
-            for(int j=0;j<5;j++)
-            {
-                Flux3D1[i+1]=Flux3D1[i+1]+(*Matrix3D_Qx)(i,j)*q3D[0][j]+(*Matrix3D_Qy)(i,j)*q3D[1][j]+(*Matrix3D_Qz)(i,j)*q3D[2][j];
-            }
-        }
-        eps=1e-6;
-        oeps=1./eps;
-        for(int k=0;k<5;k++)
-        {
-            Vmath::Vcopy(5,U3D,1,U3D2,1);
-            //Constant
-            #ifdef Constant
-            U3D2[k]=U3D[k]+eps;
-            GetdFlux_dQx_3D(normal3D,mu,U3D2,Matrix3D_Qx);
-            GetdFlux_dQy_3D(normal3D,mu,U3D2,Matrix3D_Qy);
-            GetdFlux_dQz_3D(normal3D,mu,U3D2,Matrix3D_Qz);
-            #endif
-            // //Variable
-            #ifdef Variable
-            U3D2[k]=U3D[k]+eps;
-            u=U3D2[1]/U3D2[0];
-            v=U3D2[2]/U3D2[0];
-            w=U3D2[3]/U3D2[0];
-            T=U3D2[4]/U3D2[0]-0.5*(u*u+v*v+w*w);
-            T=T/Cv;
-            ratio=T/T_star;
-            NekDouble mu_after=mu_star * ratio * sqrt(ratio) * (T_star + 110.0) /(T + 110.0);
-            // dmu_dT=  (0.5*T+1.5*110.0)/(T*(T+110.0));T should be original T
-            GetdFlux_dQx_3D(normal3D,mu_after,U3D2,Matrix3D_Qx);
-            GetdFlux_dQy_3D(normal3D,mu_after,U3D2,Matrix3D_Qy);
-            GetdFlux_dQz_3D(normal3D,mu_after,U3D2,Matrix3D_Qz);
-            #endif
-
-            Vmath::Zero(5,Flux3D2,1);
-            for(int i=0;i<4;i++)
-            {
-                for(int j=0;j<5;j++)
-                {
-                    Flux3D2[i+1]=Flux3D2[i+1]+(*Matrix3D_Qx)(i,j)*q3D[0][j]+(*Matrix3D_Qy)(i,j)*q3D[1][j]+(*Matrix3D_Qz)(i,j)*q3D[2][j];
-                }
-            }
-            for(int i=0;i<4;i++)
-            {
-               (*NumericalJacobian3D)(i,k)=(Flux3D2[i+1]-Flux3D1[i+1])*oeps;
-            }
-        }
-
-        OutputMatrix(Matrix3D);
-        OutputMatrix(NumericalJacobian3D);
-        cout<<"End"<<endl;
-    }
-
-
-
-    //Use real fluid field
-     //////////////////////////////////////////////
-    //Yu Pan's test 2D
-    void NavierStokesCFE::test2D(const Array<OneD, NekDouble> &normal2D,
-                                const NekDouble mu,
-                                const NekDouble dmu_dT,
-                                const Array<OneD, NekDouble> &U2D,
-                                const Array<OneD,const Array<OneD, NekDouble> > &q2D)
-    {
-
-        NekDouble R =m_varConv->GetGasconstant();
-        NekDouble gamma=m_gamma;
-        NekDouble Cp=gamma / (gamma - 1.0) *R;
-        NekDouble Cv=1.0/(gamma-1)*R;
-        NekDouble tRa = m_Cp / m_Prandtl;
-        NekDouble Pr=  m_Prandtl;
-        NekDouble kappa=mu*tRa;
-        DNekMatSharedPtr Matrix2D = MemoryManager<DNekMat>::AllocateSharedPtr(3, 4,0.0);
-        GetdFlux_dU_2D(normal2D,mu,dmu_dT,U2D,q2D,Matrix2D);
-
-        DNekMatSharedPtr Matrix2D_Qx = MemoryManager<DNekMat>::AllocateSharedPtr(3, 4,0.0);
-        DNekMatSharedPtr Matrix2D_Qy = MemoryManager<DNekMat>::AllocateSharedPtr(3, 4,0.0);
-        DNekMatSharedPtr NumericalJacobian2D= MemoryManager<DNekMat>::AllocateSharedPtr(3, 4,0.0);
-        Array<OneD,NekDouble> Flux2D1(4,0.0);
-        Array<OneD,NekDouble> Flux2D2(4,0.0);
-        Array<OneD,NekDouble> U2D2(4,0.0);
-        NekDouble u,v,T;
-        u=U2D[1]/U2D[0];
-        v=U2D[2]/U2D[0];
-        T=U2D[3]/U2D[0]-0.5*(u*u+v*v);
-        T=T/Cv;
-        GetdFlux_dQx_2D(normal2D,mu,U2D,Matrix2D_Qx);
-        GetdFlux_dQy_2D(normal2D,mu,U2D,Matrix2D_Qy);
-        Vmath::Vcopy(4,U2D,1,U2D2,1);
-        for(int i=0;i<3;i++)
-        {
-            for(int j=0;j<4;j++)
-            {
-                Flux2D1[i+1]=Flux2D1[i+1]+(*Matrix2D_Qx)(i,j)*q2D[0][j]+(*Matrix2D_Qy)(i,j)*q2D[1][j];
-            }
-        }
-        NekDouble eps=1e-8;
-        NekDouble oeps=1./eps;
-        for(int k=0;k<4;k++)
-        {
-            Vmath::Vcopy(4,U2D,1,U2D2,1);
-            U2D2[k]=U2D[k]+eps;
-            //////////////////////////////////
-            //Constant mu Debug
-            GetdFlux_dQx_2D(normal2D,mu,U2D2,Matrix2D_Qx);
-            GetdFlux_dQy_2D(normal2D,mu,U2D2,Matrix2D_Qy);
-            ////////////////////////////////////////////////
-
-            /////////////////////////////////////////////
-            //Variable mu Debug
-            // u=U2D2[1]/U2D2[0];
-            // v=U2D2[2]/U2D2[0];
-            // T=U2D2[3]/U2D2[0]-0.5*(u*u+v*v);
-            // T=T/Cv;
-            // NekDouble mu_star = m_mu;
-            // NekDouble m_pInf=101325;
-            // NekDouble m_rhoInf=1.225;
-            // NekDouble T_star  = m_pInf / (m_rhoInf *R);
-            // NekDouble ratio=T/T_star;
-            // NekDouble mu_after=mu_star * ratio * sqrt(ratio) * (T_star + 110.0) /(T + 110.0);
-            // GetdFlux_dQx_2D(normal2D,mu_after,U2D2,Matrix2D_Qx);
-            // GetdFlux_dQy_2D(normal2D,mu_after,U2D2,Matrix2D_Qy);
-            /////////////////////////////////////////////////////////////////////
-            Vmath::Zero(4,Flux2D2,1);
-            for(int i=0;i<3;i++)
-            {
-                for(int j=0;j<4;j++)
-                {
-                    Flux2D2[i+1]=Flux2D2[i+1]+(*Matrix2D_Qx)(i,j)*q2D[0][j]+(*Matrix2D_Qy)(i,j)*q2D[1][j];
-                }
-            }
-            for(int i=0;i<3;i++)
-            {
-               (*NumericalJacobian2D)(i,k)=(Flux2D2[i+1]-Flux2D1[i+1])*oeps;
-            }
-        }
-
-        OutputMatrix(Matrix2D);
-        OutputMatrix(NumericalJacobian2D);
-        cout<<"End"<<endl;
-    }
-
-
-      //Yu Pan's test 3D
-    void NavierStokesCFE::test3D(const Array<OneD, NekDouble> &normal3D,
-                                const NekDouble mu,
-                                const NekDouble dmu_dT,
-                                const Array<OneD, NekDouble> &U3D,
-                                const Array<OneD,const Array<OneD, NekDouble> > &q3D)
-    {
-
-        NekDouble R =m_varConv->GetGasconstant();
-        NekDouble gamma=m_gamma;
-        NekDouble Cp=gamma / (gamma - 1.0) *R;
-        NekDouble Cv=1.0/(gamma-1)*R;
-        NekDouble tRa = m_Cp / m_Prandtl;
-        NekDouble Pr=  m_Prandtl;
-        NekDouble kappa=mu*tRa;
-        DNekMatSharedPtr Matrix3D = MemoryManager<DNekMat>::AllocateSharedPtr(4, 5,0.0);
-        GetdFlux_dU_3D(normal3D,mu,dmu_dT,U3D,q3D,Matrix3D);
-
-        DNekMatSharedPtr Matrix3D_Qx = MemoryManager<DNekMat>::AllocateSharedPtr(4, 5,0.0);
-        DNekMatSharedPtr Matrix3D_Qy = MemoryManager<DNekMat>::AllocateSharedPtr(4, 5,0.0);
-        DNekMatSharedPtr Matrix3D_Qz = MemoryManager<DNekMat>::AllocateSharedPtr(4, 5,0.0);
-        DNekMatSharedPtr NumericalJacobian3D= MemoryManager<DNekMat>::AllocateSharedPtr(4, 5,0.0);
-        Array<OneD,NekDouble> Flux3D1(5,0.0);
-        Array<OneD,NekDouble> Flux3D2(5,0.0);
-        Array<OneD,NekDouble> U3D2(5,0.0);
-        GetdFlux_dQx_3D(normal3D,mu,U3D,Matrix3D_Qx);
-        GetdFlux_dQy_3D(normal3D,mu,U3D,Matrix3D_Qy);
-        GetdFlux_dQy_3D(normal3D,mu,U3D,Matrix3D_Qz);
-        Vmath::Vcopy(5,U3D,1,U3D2,1);
-        for(int i=0;i<4;i++)
-        {
-            for(int j=0;j<5;j++)
-            {
-                Flux3D1[i+1]=Flux3D1[i+1]+(*Matrix3D_Qx)(i,j)*q3D[0][j]+(*Matrix3D_Qy)(i,j)*q3D[1][j]+(*Matrix3D_Qz)(i,j)*q3D[2][j];
-            }
-        }
-        NekDouble eps=1e-8;
-        NekDouble oeps=1./eps;
-        for(int k=0;k<5;k++)
-        {
-            Vmath::Vcopy(5,U3D,1,U3D2,1);
-            U3D2[k]=U3D[k]+eps;
-            GetdFlux_dQx_3D(normal3D,mu,U3D2,Matrix3D_Qx);
-            GetdFlux_dQy_3D(normal3D,mu,U3D2,Matrix3D_Qy);
-            GetdFlux_dQy_3D(normal3D,mu,U3D2,Matrix3D_Qz);
-            Vmath::Zero(5,Flux3D2,1);
-            for(int i=0;i<4;i++)
-            {
-                for(int j=0;j<5;j++)
-                {
-                    Flux3D2[i+1]=Flux3D2[i+1]+(*Matrix3D_Qx)(i,j)*q3D[0][j]+(*Matrix3D_Qy)(i,j)*q3D[1][j];
-                }
-            }
-            for(int i=0;i<3;i++)
-            {
-               (*NumericalJacobian3D)(i,k)=(Flux3D2[i+1]-Flux3D1[i+1])*oeps;
-            }
-        }
-
-        OutputMatrix(Matrix3D);
-        OutputMatrix(NumericalJacobian3D);
-        cout<<"End"<<endl;
-    }
-
-
-
-    ///////////////////////////////////////////////
 
     void NavierStokesCFE::v_MinusDiffusionFluxJacDirctn(
         const int                                                       nDirctn,
@@ -2900,11 +1985,6 @@ namespace Nektar
                  DNekMatSharedPtr                               &fluxJac)
     {
         GetdFlux_dU_2D(normals,mu,DmuDT,conservVar,conseDeriv,fluxJac);
-        ///////////////////////
-        //Yu Pan's Test
-        // DNekMatSharedPtr Matrix2D = MemoryManager<DNekMat>::AllocateSharedPtr(3, 4,0.0);;
-        test2D(normals,mu,DmuDT,conservVar,conseDeriv);
-        ///////////////////////////
     }
 
     void NavierStokesCFE::v_GetFluxDerivJacDirctn(
@@ -3154,77 +2234,6 @@ namespace Nektar
         m_diffusion->DiffuseCalculateDerivative(nConvectiveFields,m_fields,inarray,qfield,pFwd,pBwd);
     }
     
-    void NavierStokesCFE::PrintArray(Array<OneD, NekDouble> &Array)
-    {
-        int ncoeff = Array.num_elements();
-        for (int i = 0; i < ncoeff; i++)
-        {
-            cout << setprecision(1) << "Array [" << i + 1
-                << "]=" << setprecision(16) << Array[i] << endl;
-        }
-    }
-
-    void NavierStokesCFE::PrintMatrix(DNekMatSharedPtr &Matrix)
-    {
-    int nrows                = Matrix->GetRows();
-    int ncols                = Matrix->GetColumns();
-    MatrixStorage matStorage = Matrix->GetStorageType();
-    for (int i = 0; i < nrows; i++)
-    {
-        if (matStorage == eFULL)
-        {
-            for (int j = 0; j < ncols; j++)
-            {
-                cout << setprecision(1) << "Matrix [" << i + 1 << "][" << j + 1
-                     << "]=" << setprecision(16) << (*Matrix)(i, j) << endl;
-            }
-        }
-        else if (matStorage == eUPPER_TRIANGULAR)
-        {
-            for (int j = i; j < ncols; j++)
-            {
-                cout << setprecision(1) << "Matrix [" << i + 1 << "][" << j + 1
-                     << "]=" << setprecision(16) << (*Matrix)(i, j) << endl;
-            }
-        }
-        else if (matStorage == eLOWER_TRIANGULAR)
-        {
-            for (int j = 0; j <= i; j++)
-            {
-                cout << setprecision(1) << "Matrix [" << i + 1 << "][" << j + 1
-                     << "]=" << setprecision(16) << (*Matrix)(i, j) << endl;
-            }
-        }
-        else if (matStorage == eDIAGONAL)
-        {
-            cout << setprecision(1) << "Matrix [" << i + 1 << "][" << i + 1
-                 << "]=" << setprecision(16) << (*Matrix)(i, i) << endl;
-        }
-        else
-        {
-            ASSERTL0(false, "Undifined Matrix");
-        }
-    }
-    }
-
-    void NavierStokesCFE::OutputMatrix(DNekMatSharedPtr &Matrix)
-    {
-        int nrows                = Matrix->GetRows();
-        int ncols                = Matrix->GetColumns();
-        ofstream outfile;
-        outfile.open("./Matrix.txt");
-        for (int i = 0; i < nrows; i++)
-        {
-
-                for (int j = 0; j < ncols; j++)
-                {
-                    outfile<< setprecision(1) << "Matrix [" << i + 1 << "][" << j + 1
-                        << "]=" << setprecision(16) << (*Matrix)(i, j) << endl;
-                }
-        
-        }
-        outfile.close();
-    }
 #endif
 
 }

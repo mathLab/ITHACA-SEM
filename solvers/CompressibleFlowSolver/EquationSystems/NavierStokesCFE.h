@@ -287,7 +287,7 @@ namespace Nektar
      * normals:Point normals
      * mu: dynamicviscosity
      * dmu_dT: mu's derivative with T using Sutherland's law
-     * U=[rho,rhou,rhov,rhoE]
+     * U=[rho,rhou,rhov,rhow,rhoE]
      * Output: 4*5 Matrix (the flux about rho is zero)
      * OutputMatrix dFLux_dU,  the matrix sign is consistent with SIPG
     */
@@ -298,29 +298,6 @@ namespace Nektar
         const Array<OneD, NekDouble>                        &U,
         const Array<OneD, const Array<OneD, NekDouble> >    &qfield,
               DNekMatSharedPtr                              &OutputMatrix);
-    
-    /////////////////////////////////////
-    //Yu Pan's test
-    void test();
-    
-    void PrintArray(Array<OneD, NekDouble> &Array);
-
-    void PrintMatrix(DNekMatSharedPtr &Matrix);
-
-    void OutputMatrix(DNekMatSharedPtr &Matrix);
-    
-    void test2D(const Array<OneD, NekDouble> &normal2D,
-                                const NekDouble mu,
-                                const NekDouble dmu_dT,
-                                const Array<OneD, NekDouble> &U2D,
-                                const Array<OneD,const Array<OneD, NekDouble> > &q2D);
-    
-    void test3D(const Array<OneD, NekDouble> &normal3D,
-                                const NekDouble mu,
-                                const NekDouble dmu_dT,
-                                const Array<OneD, NekDouble> &U3D,
-                                const Array<OneD,const Array<OneD, NekDouble> > &q3D);
-    ////////////////////////////////////
     
 #endif
     

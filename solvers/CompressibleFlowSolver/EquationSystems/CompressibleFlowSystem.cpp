@@ -3177,58 +3177,6 @@ namespace Nektar
         ASSERTL0(false, "not coded");
     }
 
-      void CompressibleFlowSystem::PrintArray(Array<OneD, NekDouble> &Array)
-    {
-        int ncoeff = Array.num_elements();
-        for (int i = 0; i < ncoeff; i++)
-        {
-            cout << setprecision(1) << "Array [" << i + 1
-                << "]=" << setprecision(16) << Array[i] << endl;
-        }
-    }
-
-    void CompressibleFlowSystem::PrintMatrix(DNekMatSharedPtr &Matrix)
-    {
-        int nrows                = Matrix->GetRows();
-        int ncols                = Matrix->GetColumns();
-        MatrixStorage matStorage = Matrix->GetStorageType();
-        for (int i = 0; i < nrows; i++)
-        {
-            if (matStorage == eFULL)
-            {
-                for (int j = 0; j < ncols; j++)
-                {
-                    cout << setprecision(1) << "Matrix [" << i + 1 << "][" << j + 1
-                        << "]=" << setprecision(16) << (*Matrix)(i, j) << endl;
-                }
-            }
-            else if (matStorage == eUPPER_TRIANGULAR)
-            {
-                for (int j = i; j < ncols; j++)
-                {
-                    cout << setprecision(1) << "Matrix [" << i + 1 << "][" << j + 1
-                        << "]=" << setprecision(16) << (*Matrix)(i, j) << endl;
-                }
-            }
-            else if (matStorage == eLOWER_TRIANGULAR)
-            {
-                for (int j = 0; j <= i; j++)
-                {
-                    cout << setprecision(1) << "Matrix [" << i + 1 << "][" << j + 1
-                        << "]=" << setprecision(16) << (*Matrix)(i, j) << endl;
-                }
-            }
-            else if (matStorage == eDIAGONAL)
-            {
-                cout << setprecision(1) << "Matrix [" << i + 1 << "][" << i + 1
-                    << "]=" << setprecision(16) << (*Matrix)(i, i) << endl;
-            }
-            else
-            {
-                ASSERTL0(false, "Undifined Matrix");
-            }
-        }
-    }
 #endif
 
 }

@@ -2229,14 +2229,14 @@ namespace Nektar
 
         //////////////////////////
         //2D
-        #define  Dim2
+        // #define  Dim2
         #ifdef Dim2
         x=1;
         y=2;
         z=0;
         #endif
         //3D
-        // #define  Dim3
+        #define  Dim3
         #ifdef Dim3
         x=1;
         y=2;
@@ -2245,8 +2245,8 @@ namespace Nektar
 
         NekDouble R=m_varConv->GetGasconstant();
         NekDouble gamma=m_gamma;
-        NekDouble Cp=gamma / (gamma - 1.0) *R;
-        NekDouble Cv=1.0/(gamma-1)*R;
+        NekDouble Cv=1.0/(gamma-1.0)*R;
+        NekDouble Cp=gamma*Cv;
 
 
 
@@ -2254,11 +2254,27 @@ namespace Nektar
         //////////////////////////////////
         //2D
         #ifdef Dim2
+        
         rho=1.0+0.01*x+0.01*y;
         rhou=2.+2.*x+3*y;
         rhov=3.+x+2*y;
         rhow=0;
         rhoE=200000+x*x+y*y;
+        NekDouble drho_dx=0.01;
+        NekDouble drho_dy=0.01;
+        NekDouble drho_dz=0.0;
+        NekDouble drhou_dx=2;
+        NekDouble drhou_dy=3;
+        NekDouble drhou_dz=0;
+        NekDouble drhov_dx=1;
+        NekDouble drhov_dy=2;
+        NekDouble drhov_dz=0;
+        NekDouble drhow_dx=0;
+        NekDouble drhow_dy=0;
+        NekDouble drhow_dz=0;
+        NekDouble drhoE_dx=2*x;
+        NekDouble drhoE_dy=2*y;
+        NekDouble drhoE_dz=0;
         #endif
         //3D
         #ifdef Dim3
@@ -2267,6 +2283,21 @@ namespace Nektar
         rhov=3.+x+2*y+z;
         rhow=1+x+y+z;
         rhoE=200000+x*x+y*y+z*z;
+        NekDouble drho_dx=0.01;
+        NekDouble drho_dy=0.01;
+        NekDouble drho_dz=0.02;
+        NekDouble drhou_dx=2;
+        NekDouble drhou_dy=3;
+        NekDouble drhou_dz=1;
+        NekDouble drhov_dx=1;
+        NekDouble drhov_dy=2;
+        NekDouble drhov_dz=1;
+        NekDouble drhow_dx=1;
+        NekDouble drhow_dy=1;
+        NekDouble drhow_dz=1;
+        NekDouble drhoE_dx=2*x;
+        NekDouble drhoE_dy=2*y;
+        NekDouble drhoE_dz=2*z;
         #endif
 
         u=rhou/rho;
@@ -2292,57 +2323,21 @@ namespace Nektar
         NekDouble ratio=T/T_star;
         NekDouble sqrtratio=sqrt(ratio);
         NekDouble mu=mu_star * ratio * sqrt(ratio) * (T_star + 110.0) /(T + 110.0);
-        NekDouble dmu_dT=  (0.5*T+1.5*110.0)/(T*(T+110.0));
+        NekDouble dmu_dT=  mu*(0.5*T+1.5*110.0)/(T*(T+110.0));
         #endif
 
         NekDouble tRa = m_Cp / m_Prandtl;
         NekDouble Pr=  m_Prandtl;
         NekDouble kappa=mu*tRa;
 
-        P=Cv*T*rho/(gamma-1);
-        ///////////////////////////////////////////////////////
-        //2D
-        #ifdef Dim2
-        NekDouble drho_dx=0.01;
-        NekDouble drho_dy=0.01;
-        NekDouble drho_dz=0.0;
-        NekDouble drhou_dx=2;
-        NekDouble drhou_dy=3;
-        NekDouble drhou_dz=0;
-        NekDouble drhov_dx=1;
-        NekDouble drhov_dy=2;
-        NekDouble drhov_dz=0;
-        NekDouble drhow_dx=0;
-        NekDouble drhow_dy=0;
-        NekDouble drhow_dz=0;
-        NekDouble drhoE_dx=2*x;
-        NekDouble drhoE_dy=2*y;
-        NekDouble drhoE_dz=0;
-        #endif
-        //3D
-        #ifdef Dim3
-        NekDouble drho_dx=0.01;
-        NekDouble drho_dy=0.01;
-        NekDouble drho_dz=0.02;
-        NekDouble drhou_dx=2;
-        NekDouble drhou_dy=3;
-        NekDouble drhou_dz=1;
-        NekDouble drhov_dx=1;
-        NekDouble drhov_dy=2;
-        NekDouble drhov_dz=1;
-        NekDouble drhow_dx=1;
-        NekDouble drhow_dy=1;
-        NekDouble drhow_dz=1;
-        NekDouble drhoE_dx=2*x;
-        NekDouble drhoE_dy=2*y;
-        NekDouble drhoE_dz=2*z;
-        #endif
+        P=rho*R*T;
 
         NekDouble du_dx,du_dy,du_dz;
         NekDouble dv_dx,dv_dy,dv_dz;
         NekDouble dw_dx,dw_dy,dw_dz;
         NekDouble dE_dx,dE_dy,dE_dz;
         NekDouble orho=1./rho;
+        NekDouble orho2,orho3,orho4;
         du_dx=orho*(drhou_dx-u*drho_dx);
         dv_dx=orho*(drhov_dx-v*drho_dx);
         du_dy=orho*(drhou_dy-u*drho_dy);
@@ -2354,8 +2349,8 @@ namespace Nektar
         Array<OneD, NekDouble>              U3D(5,0.0);
         Array<OneD, Array<OneD, NekDouble> >    q2D(2);
         Array<OneD, Array<OneD, NekDouble> >    q3D(3);
-        normal2D[0]=1./sqrt(2);
-        normal2D[1]=1./sqrt(2);
+        normal2D[0]=1.0/sqrt(2);
+        normal2D[1]=1.0/sqrt(2);
         normal3D[0]=1./sqrt(3);
         normal3D[1]=1./sqrt(3);
         normal3D[2]=1./sqrt(3);
@@ -2415,11 +2410,15 @@ namespace Nektar
         DNekMatSharedPtr NumericalJacobian2D= MemoryManager<DNekMat>::AllocateSharedPtr(3, 4,0.0);
         Array<OneD,NekDouble> Flux2D1(4,0.0);
         Array<OneD,NekDouble> Flux2D2(4,0.0);
+        Array<OneD,NekDouble> Flux2D3(4,0.0);
         Array<OneD,NekDouble> Flux2D_Analytical(4,0.0);
+        Array<OneD,NekDouble> Flux2D_Analytical2(4,0.0);
         Array<OneD,NekDouble> U2D2(4,0.0);
+        Array<OneD,NekDouble> U2D3(4,0.0);
         GetdFlux_dQx_2D(normal2D,mu,U2D,Matrix2D_Qx);
         GetdFlux_dQy_2D(normal2D,mu,U2D,Matrix2D_Qy);
         Vmath::Vcopy(4,U2D,1,U2D2,1);
+        Vmath::Vcopy(4,U2D,1,U2D3,1);
         for(int i=0;i<3;i++)
         {
             for(int j=0;j<4;j++)
@@ -2434,7 +2433,7 @@ namespace Nektar
         // NekDouble syy=4./3.*dv_dy-2./3.*du_dx;
         // Flux2D_Analytical[1]=normal2D[0]*mu*sxx+normal2D[1]*mu*syx;
         // Flux2D_Analytical[2]=normal2D[0]*mu*sxy+normal2D[1]*mu*syy;
-        NekDouble eps=1e-8;
+        NekDouble eps=1e-10;
         NekDouble oeps=1./eps;
         for(int k=0;k<4;k++)
         {
@@ -2454,10 +2453,10 @@ namespace Nektar
             T=T/Cv;
             ratio=T/T_star;
             NekDouble mu_after=mu_star * ratio * sqrt(ratio) * (T_star + 110.0) /(T + 110.0);
+            // dmu_dT=  (0.5*T+1.5*110.0)/(T*(T+110.0));T should be original T
             GetdFlux_dQx_2D(normal2D,mu_after,U2D2,Matrix2D_Qx);
             GetdFlux_dQy_2D(normal2D,mu_after,U2D2,Matrix2D_Qy);
-            #endif
-            
+
             Vmath::Zero(4,Flux2D2,1);
             for(int i=0;i<3;i++)
             {
@@ -2466,21 +2465,94 @@ namespace Nektar
                     Flux2D2[i+1]=Flux2D2[i+1]+(*Matrix2D_Qx)(i,j)*q2D[0][j]+(*Matrix2D_Qy)(i,j)*q2D[1][j];
                 }
             }
-            //ToDo
-            // orho=1./rho;
-            // du_dx=orho*(drhou_dx-u*drho_dx);
-            // dv_dx=orho*(drhov_dx-v*drho_dx);
-            // du_dy=orho*(drhou_dy-u*drho_dy);
-            // dv_dy=orho*(drhov_dy-v*drho_dy);
-            // sxx=4./3.*du_dx-2./3.*dv_dy;
-            // sxy=dv_dx+du_dy;
-            // syx=sxy;
-            // syy=4./3.*dv_dy-2./3.*du_dx;
-            // Flux2D_Analytical[1]=normal2D[0]*mu_after*sxx+normal2D[1]*mu_after*syx;
-            // Flux2D_Analytical[2]=normal2D[0]*mu_after*sxy+normal2D[1]*mu_after*syy;
+            
+            //Add another U to use central difference
+            // Vmath::Vcopy(4,U2D,1,U2D3,1);
+            // U2D3[k]=U2D[k]-eps;
+            // u=U2D3[1]/U2D3[0];
+            // v=U2D3[2]/U2D3[0];
+            // T=U2D3[3]/U2D3[0]-0.5*(u*u+v*v);
+            // T=T/Cv;
+            // ratio=T/T_star;
+            // mu_after=mu_star * ratio * sqrt(ratio) * (T_star + 110.0) /(T + 110.0);
+            // GetdFlux_dQx_2D(normal2D,mu_after,U2D3,Matrix2D_Qx);
+            // GetdFlux_dQy_2D(normal2D,mu_after,U2D3,Matrix2D_Qy);
+
+            // Vmath::Zero(4,Flux2D3,1);
+            // for(int i=0;i<3;i++)
+            // {
+            //     for(int j=0;j<4;j++)
+            //     {
+            //         Flux2D3[i+1]=Flux2D3[i+1]+(*Matrix2D_Qx)(i,j)*q2D[0][j]+(*Matrix2D_Qy)(i,j)*q2D[1][j];
+            //     }
+            // }
+            #endif
+            
+
+            //////////////////////
+            //Analytical Solution 2D
+            /*
+            u=U2D2[1]/U2D2[0];
+            v=U2D2[2]/U2D2[0];
+            T=U2D2[3]/U2D2[0]-0.5*(u*u+v*v);
+            T=T/Cv;
+            ratio=T/T_star;
+            mu_after=mu_star * ratio * sqrt(ratio) * (T_star + 110.0) /(T + 110.0);
+            orho=1./rho;
+            orho2=orho*orho;
+            du_dx=orho*(drhou_dx-u*drho_dx);
+            dv_dx=orho*(drhov_dx-v*drho_dx);
+            du_dy=orho*(drhou_dy-u*drho_dy);
+            dv_dy=orho*(drhov_dy-v*drho_dy);
+            NekDouble qx=-gamma*mu_after/Pr*(orho*q2D[0][3]-U2D2[3]*orho2*q2D[0][0]-u*(orho*q2D[0][1]-U2D2[1]*orho2*q2D[0][0])-v*(orho*q2D[0][2]-U2D2[2]*orho2*q2D[0][0]));
+            NekDouble qy=-gamma*mu_after/Pr*(orho*q2D[1][3]-U2D2[3]*orho2*q2D[1][0]-u*(orho*q2D[1][1]-U2D2[1]*orho2*q2D[1][0])-v*(orho*q2D[1][2]-U2D2[2]*orho2*q2D[1][0]));
+            NekDouble qn=qx*normal2D[0]+qy*normal2D[1];
+            NekDouble sxx=4./3.*du_dx-2./3.*dv_dy;
+            NekDouble sxy=dv_dx+du_dy;
+            NekDouble syx=sxy;
+            NekDouble syy=4./3.*dv_dy-2./3.*du_dx;
+            NekDouble snx=normal2D[0]*mu_after*sxx+normal2D[1]*mu_after*syx;
+            NekDouble sny=normal2D[0]*mu_after*sxy+normal2D[1]*mu_after*syy;
+            Flux2D_Analytical[0]=0.0;
+            Flux2D_Analytical[1]=snx;
+            Flux2D_Analytical[2]=sny;
+            Flux2D_Analytical[3]=u*snx+v*sny-qn;
+
+            u=U2D3[1]/U2D3[0];
+            v=U2D3[2]/U2D3[0];
+            T=U2D3[3]/U2D3[0]-0.5*(u*u+v*v);
+            T=T/Cv;
+            ratio=T/T_star;
+            mu_after=mu_star * ratio * sqrt(ratio) * (T_star + 110.0) /(T + 110.0);
+            orho=1./rho;
+            orho2=orho*orho;
+            du_dx=orho*(drhou_dx-u*drho_dx);
+            dv_dx=orho*(drhov_dx-v*drho_dx);
+            du_dy=orho*(drhou_dy-u*drho_dy);
+            dv_dy=orho*(drhov_dy-v*drho_dy);
+            qx=-gamma*mu_after/Pr*(orho*q2D[0][3]-U2D3[3]*orho2*q2D[0][0]-u*(orho*q2D[0][1]-U2D3[1]*orho2*q2D[0][0])-v*(orho*q2D[0][2]-U2D3[2]*orho2*q2D[0][0]));
+            qy=-gamma*mu_after/Pr*(orho*q2D[1][3]-U2D3[3]*orho2*q2D[1][0]-u*(orho*q2D[1][1]-U2D3[1]*orho2*q2D[1][0])-v*(orho*q2D[1][2]-U2D3[2]*orho2*q2D[1][0]));
+            qn=qx*normal2D[0]+qy*normal2D[1];
+            sxx=4./3.*du_dx-2./3.*dv_dy;
+            sxy=dv_dx+du_dy;
+            syx=sxy;
+            syy=4./3.*dv_dy-2./3.*du_dx;
+            snx=normal2D[0]*mu_after*sxx+normal2D[1]*mu_after*syx;
+            sny=normal2D[0]*mu_after*sxy+normal2D[1]*mu_after*syy;
+            Flux2D_Analytical2[0]=0.0;
+            Flux2D_Analytical2[1]=snx;
+            Flux2D_Analytical2[2]=sny;
+            Flux2D_Analytical2[3]=u*snx+v*sny-qn;
+            */
+            /////////////////////////////////////////////////////////////
+
             for(int i=0;i<3;i++)
             {
-               (*NumericalJacobian2D)(i,k)=(Flux2D2[i+1]-Flux2D1[i+1])*oeps;
+                //    (*NumericalJacobian2D)(i,k)=(Flux2D1[i+1]-Flux2D3[i+1])*oeps;
+            //    (*NumericalJacobian2D)(i,k)=(Flux2D2[i+1]-Flux2D3[i+1])*oeps*0.5;
+                (*NumericalJacobian2D)(i,k)=(Flux2D2[i+1]-Flux2D1[i+1])*oeps;
+                //   (*NumericalJacobian2D)(i,k)=(Flux2D_Analytical[i+1]-Flux2D1[i+1])*oeps;
+                //  (*NumericalJacobian2D)(i,k)=(Flux2D_Analytical[i+1]-Flux2D_Analytical2[i+1])*oeps*0.5;
             }
         }
 
@@ -2508,7 +2580,7 @@ namespace Nektar
                 Flux3D1[i+1]=Flux3D1[i+1]+(*Matrix3D_Qx)(i,j)*q3D[0][j]+(*Matrix3D_Qy)(i,j)*q3D[1][j]+(*Matrix3D_Qz)(i,j)*q3D[2][j];
             }
         }
-        eps=1e-8;
+        eps=1e-6;
         oeps=1./eps;
         for(int k=0;k<5;k++)
         {
@@ -2530,6 +2602,7 @@ namespace Nektar
             T=T/Cv;
             ratio=T/T_star;
             NekDouble mu_after=mu_star * ratio * sqrt(ratio) * (T_star + 110.0) /(T + 110.0);
+            // dmu_dT=  (0.5*T+1.5*110.0)/(T*(T+110.0));T should be original T
             GetdFlux_dQx_3D(normal3D,mu_after,U3D2,Matrix3D_Qx);
             GetdFlux_dQy_3D(normal3D,mu_after,U3D2,Matrix3D_Qy);
             GetdFlux_dQz_3D(normal3D,mu_after,U3D2,Matrix3D_Qz);
@@ -2582,6 +2655,11 @@ namespace Nektar
         Array<OneD,NekDouble> Flux2D1(4,0.0);
         Array<OneD,NekDouble> Flux2D2(4,0.0);
         Array<OneD,NekDouble> U2D2(4,0.0);
+        NekDouble u,v,T;
+        u=U2D[1]/U2D[0];
+        v=U2D[2]/U2D[0];
+        T=U2D[3]/U2D[0]-0.5*(u*u+v*v);
+        T=T/Cv;
         GetdFlux_dQx_2D(normal2D,mu,U2D,Matrix2D_Qx);
         GetdFlux_dQy_2D(normal2D,mu,U2D,Matrix2D_Qy);
         Vmath::Vcopy(4,U2D,1,U2D2,1);
@@ -2592,7 +2670,7 @@ namespace Nektar
                 Flux2D1[i+1]=Flux2D1[i+1]+(*Matrix2D_Qx)(i,j)*q2D[0][j]+(*Matrix2D_Qy)(i,j)*q2D[1][j];
             }
         }
-        NekDouble eps=1e-10;
+        NekDouble eps=1e-8;
         NekDouble oeps=1./eps;
         for(int k=0;k<4;k++)
         {
@@ -2600,24 +2678,24 @@ namespace Nektar
             U2D2[k]=U2D[k]+eps;
             //////////////////////////////////
             //Constant mu Debug
-            // GetdFlux_dQx_2D(normal2D,mu,U2D2,Matrix2D_Qx);
-            // GetdFlux_dQy_2D(normal2D,mu,U2D2,Matrix2D_Qy);
+            GetdFlux_dQx_2D(normal2D,mu,U2D2,Matrix2D_Qx);
+            GetdFlux_dQy_2D(normal2D,mu,U2D2,Matrix2D_Qy);
             ////////////////////////////////////////////////
 
             /////////////////////////////////////////////
             //Variable mu Debug
-            NekDouble u=U2D2[1]/U2D2[0];
-            NekDouble v=U2D2[2]/U2D2[0];
-            NekDouble T=U2D2[3]/U2D2[0]-0.5*(u*u+v*v);
-            T=T/Cv;
-            NekDouble mu_star = m_mu;
-            NekDouble m_pInf=101325;
-            NekDouble m_rhoInf=1.225;
-            NekDouble T_star  = m_pInf / (m_rhoInf *R);
-            NekDouble ratio=T/T_star;
-            NekDouble mu_after=mu_star * ratio * sqrt(ratio) * (T_star + 110.0) /(T + 110.0);
-            GetdFlux_dQx_2D(normal2D,mu_after,U2D2,Matrix2D_Qx);
-            GetdFlux_dQy_2D(normal2D,mu_after,U2D2,Matrix2D_Qy);
+            // u=U2D2[1]/U2D2[0];
+            // v=U2D2[2]/U2D2[0];
+            // T=U2D2[3]/U2D2[0]-0.5*(u*u+v*v);
+            // T=T/Cv;
+            // NekDouble mu_star = m_mu;
+            // NekDouble m_pInf=101325;
+            // NekDouble m_rhoInf=1.225;
+            // NekDouble T_star  = m_pInf / (m_rhoInf *R);
+            // NekDouble ratio=T/T_star;
+            // NekDouble mu_after=mu_star * ratio * sqrt(ratio) * (T_star + 110.0) /(T + 110.0);
+            // GetdFlux_dQx_2D(normal2D,mu_after,U2D2,Matrix2D_Qx);
+            // GetdFlux_dQy_2D(normal2D,mu_after,U2D2,Matrix2D_Qy);
             /////////////////////////////////////////////////////////////////////
             Vmath::Zero(4,Flux2D2,1);
             for(int i=0;i<3;i++)

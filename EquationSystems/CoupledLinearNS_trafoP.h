@@ -154,6 +154,7 @@ namespace Nektar
 	// write output on a file
 	void FarrelOutput(std::vector<int> &flipperMap, std::ofstream &outfile, int sign);
 	int FarrelOutputSign(std::vector<double> &x, std::vector<double> &y);
+	std::vector<int> getFlipperMap() { return flipperMap; };
 	
 	bool converged, deflate;
 	int number_of_deflations, use_deflation, total_solutions_found;
@@ -166,6 +167,7 @@ namespace Nektar
 	int snapshot_computation_plot_rel_errors;
 	int debug_mode;
 	Array<OneD, Array<OneD, NekDouble> > myAdvField;
+	std::vector<int> flipperMap;
 
     protected:
 

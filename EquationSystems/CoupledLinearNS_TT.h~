@@ -215,10 +215,13 @@ namespace Nektar
 	void Set_m_kinvis(NekDouble);
 	
 	
-	Eigen::VectorXd gen_affine_vec(double current_nu, Eigen::VectorXd approximation);
+	Eigen::VectorXd gen_affine_vec(double, Eigen::VectorXd);
 	
 	
 	std::vector< Array<OneD, double> > reproject_back(Eigen::VectorXd);
+	double FarrelOutput(Eigen::VectorXd);
+	
+	std::vector<int> flipperMap;
 	
 
     protected:

@@ -3519,25 +3519,27 @@ namespace Nektar
 		}
 		else
 		{
-			
-			unsigned int iterations, curr_j;
-			double first_param = m_session->GetParameter("param0"), last_param = 0.965, rel_err, M, total_steps = 20.0, tol = 1e-13;
-			unsigned int total_solutions = 0;
-			std::vector<int> indices_to_be_continued, local_indices_to_be_continued;
 			std::ofstream outfile_online;
 			outfile_online.open("bif_diagr_online.txt", std::ios::out);
+			for(int starting_guess = 0; starting_guess < Nmax; starting_guess++)
+			{
+			unsigned int iterations, curr_j;
+			double first_param = param_vector[starting_guess], last_param = param_vector[param_vector.num_elements()-1], rel_err, M, total_steps = 200.0, tol = 1e-13;
+			unsigned int total_solutions = 0;
+			std::vector<int> indices_to_be_continued, local_indices_to_be_continued;
+			Array<OneD, double> old_reprojection_x(GetNpoints(), 0.0), old_reprojection_y(GetNpoints(), 0.0);
 			
 			Eigen::VectorXd reconstruct_solution, temp_solve_affine, repro_solve_affine;
 			std::vector<Eigen::VectorXd> solve_affine;
 			Eigen::VectorXd last_sol = Eigen::VectorXd::Zero(RBsize); 
-			Eigen::MatrixXd curr_xy_proj = project_onto_basis(snapshot_x_collection[0], snapshot_y_collection[0]);
-			Eigen::VectorXd affine_vec_proj = gen_affine_vec_proj(first_param, 0);
+			Eigen::MatrixXd curr_xy_proj = project_onto_basis(snapshot_x_collection[starting_guess], snapshot_y_collection[starting_guess]);
+			Eigen::VectorXd affine_vec_proj = gen_affine_vec_proj(first_param, starting_guess);
 			
 			//I compute the first solution						////////////////////////////////////////////////////////////////////////////////////////////////////
 			cout<<"First solution with viscosity = "<<first_param<<endl;
 			rel_err = 1;
 			iterations = 0;
-			while(rel_err > tol && ++iterations<5)
+			while(rel_err > tol && ++iterations<100)
 			{
 				Eigen::MatrixXd affine_mat_proj = gen_affine_mat_proj(first_param);
 				temp_solve_affine = affine_mat_proj.colPivHouseholderQr().solve(affine_vec_proj);
@@ -3556,12 +3558,13 @@ namespace Nektar
 				{
 					cout<<"Converged!!!"<<endl;
 					solve_affine.push_back(temp_solve_affine);
-					outfile_online<<first_param<<" "<<reconstruct_solution[1196]<<endl; 
+					//outfile_online<<first_param<<" "<<reconstruct_solution[1196]<<endl; 
+					outfile_online<<first_param<<" "<<FarrelOutput(reconstruct_solution)<<endl; 
 					cout<<endl;
 					
 					if (write_ROM_field)
 					{
-						recover_snapshot_data(reconstruct_solution, 1);
+						recover_snapshot_data(reconstruct_solution, 0);
 					}
 				}
 				affine_vec_proj = gen_affine_vec(first_param, reconstruct_solution);
@@ -3569,7 +3572,11 @@ namespace Nektar
 			indices_to_be_continued.push_back(0);
 			total_solutions = 1;
 				
-			for(double current_nu = first_param - (first_param - last_param)/total_steps; current_nu > last_param; current_nu -= (first_param - last_param)/total_steps)
+			if(rel_err > tol)
+				cout<<"The first step didn't converge"<<endl;
+			else
+			{
+			for(double current_nu = first_param - (param_vector[0] - param_vector[param_vector.num_elements()-1])/total_steps; current_nu > param_vector[param_vector.num_elements()-1]; current_nu -= (param_vector[0] - param_vector[param_vector.num_elements()-1])/total_steps)
 			{
 				local_indices_to_be_continued.resize(0);
 				
@@ -3619,42 +3626,43 @@ namespace Nektar
 							local_indices_to_be_continued.push_back(total_solutions);
 							total_solutions++;
 							
-							outfile_online<<current_nu<<" "<<reconstruct_solution[1196]<<endl; 
+							//outfile_online<<current_nu<<" "<<reconstruct_solution[1196]<<endl; 
+							outfile_online<<current_nu<<" "<<FarrelOutput(reconstruct_solution)<<endl; 
 							cout<<endl;
 							
 							if (write_ROM_field)
 							{
-								recover_snapshot_data(reconstruct_solution, total_solutions);
+								recover_snapshot_data(reconstruct_solution, 0);
 							}
 						}
-						affine_vec_proj = gen_affine_vec(current_nu, reconstruct_solution);
+						else
+						{
+							affine_vec_proj = gen_affine_vec(current_nu, reconstruct_solution);
+						}
 					}
 				}
 				
 				//deflation						////////////////////////////////////////////////////////////////////////////////////////////////////
 				cout<<"Deflation over "<<local_indices_to_be_continued.size()<<" solutions"<<endl;
-				Eigen::MatrixXd massMatrix = the_const_one_proj; //Get_no_advection_matrix_ABCD();
+				Eigen::MatrixXd massMatrix = the_ABCD_one_proj; //Get_no_advection_matrix_ABCD();
 				//cout<<massMatrix.rows()<<" "<<massMatrix.cols()<<" "<<temp_solve_affine.rows()<<endl;
-				for(int j = 0; j < local_indices_to_be_continued.size(); j++)
+				//cout << "The eigenvalues of the_const_one_proj are:" << endl << massMatrix.eigenvalues() << endl; //the smallest eigenvalues are small but negative!!
+				//cout << "The eigenvalues of the_ABCD_one_proj are:" << endl << the_ABCD_one_proj.eigenvalues() << endl;
+				for(int j = 0; j < local_indices_to_be_continued.size()*0; j++)
 				{
 					curr_j = local_indices_to_be_continued[j];
 					cout<<"curr_j = "<<curr_j<<endl;
-					for(int i = 0; i < temp_solve_affine.size(); i++)
-					{
-						if(i < temp_solve_affine.size()/2)
-							curr_xy_projected(i,0) = (solve_affine[curr_j])(i)*(1+(((double)rand())/RAND_MAX-0.5)/2/1e2);
-						else
-							curr_xy_projected(i,1) = (solve_affine[curr_j])(i)*(1+(((double)rand())/RAND_MAX-0.5)/2/1e4);
-						temp_solve_affine[i] = (solve_affine[curr_j])(i)*(1+(((double)rand())/RAND_MAX-0.5)/2/1e4);
-					}
 					rel_err = 1;
 					iterations = 0;
 					last_sol = solve_affine[curr_j];
 					
+					for(int i = 0; i < last_sol.size(); i++)
+						last_sol[i] = last_sol[i] * (1+(((double)rand())/RAND_MAX-0.5)/2/1e2);
+					
 					repro_solve_affine = RB * last_sol;
 					reconstruct_solution = reconstruct_solution_w_dbc(repro_solve_affine);	
 					std::vector< Array<OneD, double> > reprojection = reproject_back(reconstruct_solution);
-					curr_xy_proj = project_onto_basis(reprojection[0], reprojection[1])*1.1;
+					curr_xy_proj = project_onto_basis(reprojection[0], reprojection[1]);
 					affine_vec_proj = gen_affine_vec(current_nu, reconstruct_solution);
 					
 					while(rel_err > tol && ++iterations<200)
@@ -3663,21 +3671,61 @@ namespace Nektar
 						//Eigen::VectorXd affine_vec_proj = gen_affine_vec(current_nu, last_sol);
 						temp_solve_affine = affine_mat_proj.colPivHouseholderQr().solve(affine_vec_proj);
 						
+						repro_solve_affine = RB * temp_solve_affine;
+						reconstruct_solution = reconstruct_solution_w_dbc(repro_solve_affine);	
+						std::vector< Array<OneD, double> > reprojection = reproject_back(reconstruct_solution);
+						curr_xy_proj = project_onto_basis(reprojection[0], reprojection[1]);
+						
 						//computation of tau
-						double norm_min = 1e20;
+						double norm_min = 1e20, norm_i;
 						int closest_sol;
 						for(int k = 0; k < indices_to_be_continued.size(); k++)
 						{
-							if((temp_solve_affine - solve_affine[curr_j]).norm() < norm_min)
+							/*std::vector< Array<OneD, double> > reprojection_other_sol = reproject_back(reconstruct_solution_w_dbc(RB*solve_affine[local_indices_to_be_continued[k]]));
+							for(int i = 0; i < GetNpoints(); i++)
 							{
-								norm_min = (temp_solve_affine - solve_affine[curr_j]).norm();
-								//norm_min = (temp_solve_affine - solve_affine[curr_j]).transpose() * massMatrix * (temp_solve_affine - solve_affine[curr_j]);
-								closest_sol = curr_j;
+								m_fields[0]->UpdatePhys()[i] = reprojection[0][i] - reprojection_other_sol[0][i];;
+								m_fields[1]->UpdatePhys()[i] = reprojection[1][i] - reprojection_other_sol[1][i];
+							}
+							double norm_ix = m_fields[0]->L2(m_fields[0]->UpdatePhys());
+							double norm_iy = m_fields[1]->L2(m_fields[1]->UpdatePhys());
+							double norm_i = sqrt(norm_ix*norm_ix + norm_iy*norm_iy);
+							
+							if(norm_i < norm_min)
+							{
+								norm_min = norm_i;
+								closest_sol = k;
+							}*/
+							//if((temp_solve_affine - solve_affine[local_indices_to_be_continued[k]]).norm() < norm_min)
+							if((temp_solve_affine - solve_affine[local_indices_to_be_continued[k]]).transpose() * massMatrix * (temp_solve_affine - solve_affine[local_indices_to_be_continued[k]]) < norm_min)
+							{
+								//norm_min = (temp_solve_affine - solve_affine[local_indices_to_be_continued[k]]).norm();
+								norm_min = (temp_solve_affine - solve_affine[local_indices_to_be_continued[k]]).transpose() * massMatrix * (temp_solve_affine - solve_affine[local_indices_to_be_continued[k]]);
+								closest_sol = local_indices_to_be_continued[k];
 							}
 						}
-						norm_min /= solve_affine[closest_sol].norm();
-						double scalar_product = (temp_solve_affine - solve_affine[curr_j]).dot(temp_solve_affine - last_sol);
-						double tau = 1 / (1 - 1/(1+1/norm_min) * scalar_product / (norm_min * norm_min * norm_min));	
+						
+						/*std::vector< Array<OneD, double> > reprojection_other_sol = reproject_back(reconstruct_solution_w_dbc(RB*solve_affine[local_indices_to_be_continued[closest_sol]]));
+						for(int i = 0; i < GetNpoints(); i++)
+						{
+							m_fields[0]->UpdatePhys()[i] = (reprojection[0][i] - reprojection_other_sol[0][i]) * (reprojection[0][i] - old_reprojection_x[i]);
+							m_fields[1]->UpdatePhys()[i] = (reprojection[1][i] - reprojection_other_sol[1][i]) * (reprojection[0][i] - old_reprojection_y[i]);
+						}						
+						double scalar_product = -(m_fields[0]->Integral(m_fields[0]->GetPhys()) + m_fields[1]->Integral(m_fields[1]->GetPhys()));*/
+						
+						
+						
+						norm_min /= solve_affine[closest_sol].transpose() * massMatrix * solve_affine[closest_sol];
+						//double scalar_product = -(temp_solve_affine - solve_affine[closest_sol]).dot(temp_solve_affine - last_sol);
+						double scalar_product = -(temp_solve_affine - solve_affine[closest_sol]).transpose() * massMatrix * (temp_solve_affine - last_sol);
+						double tau;
+						int power = 2;
+						if(power == 1)
+							tau = 1 / (1 - 1/(1+1/norm_min) * scalar_product / (norm_min * norm_min * norm_min));	
+						if(power == 2)
+							tau = 2 / (1 - 1/(1+1/norm_min/norm_min) * scalar_product / (norm_min * norm_min * norm_min * norm_min));								
+							
+						cout<<"real tau "<<tau; 
 						//tau = tau/fabs(tau);
 						if(tau < 0 && tau > -0.1)
 							tau = -0.1;
@@ -3687,13 +3735,11 @@ namespace Nektar
 						
 						rel_err = (temp_solve_affine-last_sol).norm()/last_sol.norm();
 						last_sol = temp_solve_affine;
-						cout<<"tau "<<tau; 
+						cout<<", tau "<<tau<<", scal_prod "<<scalar_product<<", norm "<<norm_min<<", M_inv "<<1/(1+1/norm_min); 
 						cout<<", rel_err = "<<rel_err<<endl;
 						
-						repro_solve_affine = RB * temp_solve_affine;
-						reconstruct_solution = reconstruct_solution_w_dbc(repro_solve_affine);	
-						std::vector< Array<OneD, double> > reprojection = reproject_back(reconstruct_solution);
-						curr_xy_proj = project_onto_basis(reprojection[0], reprojection[1]);
+												
+						
 						
 						if(rel_err <= tol)
 						{
@@ -3702,15 +3748,18 @@ namespace Nektar
 							local_indices_to_be_continued.push_back(total_solutions);
 							total_solutions++;
 							
-							outfile_online<<current_nu<<" "<<reconstruct_solution[1196]<<endl; 
+							//outfile_online<<current_nu<<" "<<reconstruct_solution[1196]<<endl; 
+							outfile_online<<current_nu<<" "<<FarrelOutput(reconstruct_solution)<<endl; 
 							cout<<endl;
 							
 							if (write_ROM_field)
 							{
-								recover_snapshot_data(reconstruct_solution, total_solutions);
+								recover_snapshot_data(reconstruct_solution, 0);
 							}
 						}						
 						affine_vec_proj = gen_affine_vec(current_nu, reconstruct_solution);
+						old_reprojection_x = reprojection[0];
+						old_reprojection_y = reprojection[1];
 					}
 				} 
 				cout<<endl; 
@@ -3718,6 +3767,8 @@ namespace Nektar
 				indices_to_be_continued.clear();
 				indices_to_be_continued = std::vector<int>(local_indices_to_be_continued);
 			}
+		}
+		}
 		}
 	}
 
@@ -3946,6 +3997,7 @@ namespace Nektar
 			params.resize(1);
 			params[0] = param_vector[0];
 			snapshots_from_continuation = babyCLNS_trafo.Continuation_method(&params);	
+			flipperMap = babyCLNS_trafo.getFlipperMap();
 			
 			number_of_snapshots = params.size() -1; 
 			Nmax = number_of_snapshots;
@@ -4626,20 +4678,78 @@ namespace Nektar
 		           }
 		      }
 		}
-		Array<OneD, double> test_nn = fields[0]->GetCoeffs();
 		
 		fields[0]->BwdTrans_IterPerExp(fields[0]->GetCoeffs(), output[0]);
 		fields[1]->BwdTrans_IterPerExp(fields[1]->GetCoeffs(), output[1]);
-		/*fields[0]->BwdTrans_IterPerExp(fields[0]->GetCoeffs(), curr_PhysBaseVec_x);
-		fields[1]->BwdTrans_IterPerExp(fields[1]->GetCoeffs(), curr_PhysBaseVec_y);
-		
-		for(int i = 0; i < GetNPoints(); i++)
-		{
-			curr_xy_projected(i,0) = curr_PhysBaseVec_x[i];
-			curr_xy_projected(i,1) = curr_PhysBaseVec_y[i];
-		}*/
-		
 		return output;
+    }
+    
+    double CoupledLinearNS_TT::FarrelOutput(Eigen::VectorXd reconstruct_solution)
+    {
+    	Eigen::VectorXd f_bnd = reconstruct_solution.head(curr_f_bnd.size());
+		Eigen::VectorXd f_int = reconstruct_solution.tail(curr_f_int.size());
+		Array<OneD, MultiRegions::ExpListSharedPtr> fields = UpdateFields(); 
+		Array<OneD, unsigned int> bmap, imap; 
+		Array<OneD, double> field_0(GetNcoeffs());
+		Array<OneD, double> field_1(GetNcoeffs());
+		
+		std::vector< Array<OneD, double> > output;
+		output.resize(2);
+		output[0] = Array<OneD, double> (GetNpoints(), 0.0);
+		output[1] = Array<OneD, double> (GetNpoints(), 0.0);
+		
+		int cnt = 0;
+		int cnt1 = 0;
+		int nvel = 2;
+		int nz_loc = 1;
+		int  nplanecoeffs = fields[0]->GetNcoeffs();
+		int  nel  = m_fields[0]->GetNumElmts();
+		for(int i = 0; i < nel; ++i) 
+		{
+		      int eid  = i;
+		      fields[0]->GetExp(eid)->GetBoundaryMap(bmap);
+		      fields[0]->GetExp(eid)->GetInteriorMap(imap);
+		      int nbnd   = bmap.num_elements();
+		      int nint   = imap.num_elements();
+		      int offset = fields[0]->GetCoeff_Offset(eid);
+		            
+		      for(int j = 0; j < nvel; ++j)
+		      {
+		           for(int n = 0; n < nz_loc; ++n)
+		           {
+		                    for(int k = 0; k < nbnd; ++k)
+		                    {
+		                        fields[j]->SetCoeff(n*nplanecoeffs + offset+bmap[k], f_bnd(cnt+k));
+		                    }
+		                    
+		                    for(int k = 0; k < nint; ++k)
+		                    {
+		                        fields[j]->SetCoeff(n*nplanecoeffs + offset+imap[k], f_int(cnt1+k));
+		                    }
+		                    cnt  += nbnd;
+		                    cnt1 += nint;
+		           }
+		      }
+		}		
+		fields[0]->BwdTrans_IterPerExp(fields[0]->GetCoeffs(), output[0]);
+		fields[1]->BwdTrans_IterPerExp(fields[1]->GetCoeffs(), output[1]);
+		
+		
+		Array<OneD, NekDouble> farr_x;
+		farr_x = Array<OneD, NekDouble>(output[0].num_elements(),0.0);
+		for(unsigned int i = 0; i < output[0].num_elements(); i++)
+		{
+			farr_x[i] = fabs(output[0][i] - output[0][flipperMap[i]]);
+		}   
+		
+		double sign = 0;
+		for(unsigned int i = 0; i < output[0].num_elements(); i++)
+		{
+			sign += output[1][i];
+		}  
+		sign = round(sign/fabs(sign));	
+		
+		return sign * m_fields[0]->L2(farr_x);
     }
     
 }

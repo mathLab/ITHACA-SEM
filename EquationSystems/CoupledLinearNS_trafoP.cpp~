@@ -1549,7 +1549,7 @@ namespace Nektar
 		sol_y_cont_defl[total_solutions_found] = init_snapshot_y;	
 	}
 	
-	double last_tau = 0, strength = 1;
+	double last_tau = 0, strength = 1, norm_i, norm_ix, norm_iy, norm_0, norm_0x, norm_0y;
 	
 	while (rel_err > 1e-10 && (iterations < max_iterations || !use_deflation))
 	{
@@ -1592,15 +1592,27 @@ namespace Nektar
 		//rel_err = std::abs(csx0_trafo.norm() - csx0.norm()) / csx0.norm() + std::abs(csy0_trafo.norm() - csy0.norm()) / csy0.norm();
 		rel_err = (csx0_trafo - csx0).norm() / csx0.norm() + (csy0_trafo - csy0).norm() / csy0.norm();
 
+		// to use a better error estimate
+		Vmath::Vsub(out_field_trafo_x.num_elements(), out_field_trafo_x, 1, init_snapshot_x, 1, diff_x, 1);
+		Vmath::Vsub(out_field_trafo_y.num_elements(), out_field_trafo_y, 1, init_snapshot_y, 1, diff_y, 1);
+		norm_ix = m_fields[0]->L2(diff_x);
+		norm_iy = m_fields[1]->L2(diff_y);
+		norm_i = sqrt(norm_ix*norm_ix + norm_iy*norm_iy);
+		norm_0x = m_fields[0]->L2(init_snapshot_x);
+		norm_0y = m_fields[1]->L2(init_snapshot_y);
+		norm_0 = sqrt(norm_0x*norm_0x + norm_0y*norm_0y);
+		rel_err = norm_i / (norm_0+1e-30);
+		
+		iterations++;
 		if (snapshot_computation_plot_rel_errors)
 		{
-			if((++iterations)%1==0)
-				cout << "rel_err " << rel_err << endl;
+			if((iterations)%1==0)   // if one doesn't want to have the screen filled with errors but sometimes one is necessary
+				cout <<"rel_err " << rel_err << endl;
 		}
 			
 		if(deflate)
         { 
-        	double norm_i, norm_ix, norm_iy, norm_0, tau = 2, tau_i = 1, scal_product, M_inv, norm_max = 0;
+        	double norm_0, tau = 2, tau_i = 1, scal_product, M_inv, norm_max = 0;
         	int power = 1, nvel = sol_x_cont_defl[0].num_elements();
         	bool danger = false, far_from_everything = true;
 			for(int j = 0; j < local_indices_to_be_continued.size(); j++)
@@ -1612,10 +1624,8 @@ namespace Nektar
 				Vmath::Vsub(out_field_trafo_y.num_elements(), out_field_trafo_y, 1, sol_y_cont_defl[curr_j], 1, diff_y, 1);
 				norm_ix = m_fields[0]->L2(diff_x);
 				norm_iy = m_fields[1]->L2(diff_y);
-				//norm_0 = sqrt(m_fields[0]->L2(sol_x_cont_defl[curr_j])*m_fields[0]->L2(sol_x_cont_defl[curr_j]) + m_fields[1]->L2(sol_y_cont_defl[curr_j])*m_fields[1]->L2(sol_y_cont_defl[curr_j]));
 				norm_i = sqrt(norm_ix*norm_ix + norm_iy*norm_iy);
 						
-				
 				if(norm_i < 1e2)   
 					far_from_everything = false;
 				if(norm_i < 5*1e-5) 
@@ -1665,12 +1675,20 @@ namespace Nektar
 				}
 				
 				//I compute the scalar product
-				scal_product = 0;
+				/*scal_product = 0;
 				for(int i = 0; i < nvel; i++)
 				{
 					scal_product -= (out_field_trafo_x[i] - sol_x_cont_defl[curr_j][i]) * (out_field_trafo_x[i] - init_snapshot_x[i]);
 					scal_product -= (out_field_trafo_y[i] - sol_y_cont_defl[curr_j][i]) * (out_field_trafo_y[i] - init_snapshot_y[i]);
-				}  
+				}  */
+				
+				for(int i = 0; i < nvel; i++)
+				{
+					m_fields_t[0]->UpdatePhys()[i] = (out_field_trafo_x[i] - sol_x_cont_defl[curr_j][i]) * (out_field_trafo_x[i] - init_snapshot_x[i]);
+					m_fields_t[1]->UpdatePhys()[i] = (out_field_trafo_y[i] - sol_y_cont_defl[curr_j][i]) * (out_field_trafo_y[i] - init_snapshot_y[i]);
+				}
+				scal_product = -(m_fields_t[0]->Integral(m_fields_t[0]->GetPhys()) + m_fields_t[1]->Integral(m_fields_t[1]->GetPhys()));
+				
 				scal_product *= power / norm_i;
 				//tau *= 1 + (M_inv * scal_product) / (1 - M_inv * scal_product); 
 				tau_i *= 1 / (1 - M_inv * scal_product);
@@ -1831,7 +1849,7 @@ namespace Nektar
 	sstm << "TestSnap"<<(total_solutions_found + 1)<<".fld";
 	std::string outname = sstm.str();
         
-    WriteFld(outname,m_fields_t[0],fieldcoeffs,variables); 
+    //WriteFld(outname,m_fields_t[0],fieldcoeffs,variables); 
 
 	return converged_solution;
     }
@@ -3057,7 +3075,7 @@ namespace Nektar
 			double x1,y1,z1;
 			bool finito = false;
 			int index=0;
-			std::vector<int> flipperMap;
+			//std::vector<int> flipperMap;
 			std::vector<double> x, y;
 			while(infile >> x1 >>y1 >> z1)
 			{
@@ -3110,7 +3128,7 @@ namespace Nektar
 					if(use_guessGivenNi)
 					{
 						delta_param = findMinParam(indices_to_be_continued);
-						delta_param = max(0.0005, min(0.01, delta_param));
+						delta_param = max(m_kinvis/2000.0, min(step * m_kinvis, delta_param));
 						cout<<"delta_param = "<<delta_param<<endl;
 					}
 				}
@@ -3123,7 +3141,10 @@ namespace Nektar
 				deflate = false;
 				//use_arclength = true;
 				if(!(use_arclength && total_solutions_found>1))
-					Set_m_kinvis(m_kinvis-step);
+				{
+					Set_m_kinvis( m_kinvis * (1-step/2*(total_solutions_found>1)) );
+					//Set_m_kinvis( m_kinvis - step );
+				}
 				for(int i = 0; i < indices_to_be_continued.size() && total_solutions_found < m_maxIt; i++)
 				{		
 					curr_i = indices_to_be_continued[i];
@@ -3208,7 +3229,8 @@ namespace Nektar
 				deflate = true;
 				int prev_solutions = local_indices_to_be_continued.size();
 				
-				use_deflation_now = true;
+				//use_deflation_now = true;
+				use_deflation_now = (local_indices_to_be_continued.size()<3);
 				for(int i = 0; i < prev_solutions && use_deflation_now && total_solutions_found < m_maxIt; i++)// && ((m_kinvis>9.28 && m_kinvis<9.7 && local_indices_to_be_continued.size()<3) || (m_kinvis>3 && m_kinvis<4.3 && local_indices_to_be_continued.size()<4)); i++)
 				{
 					curr_i = local_indices_to_be_continued[i];

@@ -219,6 +219,9 @@ namespace Nektar
 	
 	
 	std::vector< Array<OneD, double> > reproject_back(Eigen::VectorXd);
+	double FarrelOutput(Eigen::VectorXd);
+	
+	std::vector<int> flipperMap;
 	
 
     protected:

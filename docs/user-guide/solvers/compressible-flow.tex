@@ -444,22 +444,39 @@ Under the two following sections it is possible to define the initial conditions
 
 \section{Examples}
 \subsection{Shock capturing}
-Compressible flow is characterised by abrupt changes in density within the flow domain often referred to as shocks. These discontinuities lead to numerical instabilities (Gibbs phenomena). This problem is prevented by locally adding a diffusion term to the equations to damp the numerical fluctuations. These fluctuations in an element are identified using a sensor algorithm which quantifies the smoothness of the solution within an element. The value of the sensor in an element is defined as
-\begin{equation}\label{eq:sensor}
-S_e=\frac{||\rho^p_e-\rho^{p-1}_e||_{L_2}}{||\rho_e^p||_{L_2}}
-\end{equation}
+Compressible flows can be characterised by abrupt changes in density within the flow domain often referred to as shocks. These discontinuities lead to numerical instabilities (Gibbs phenomena). This problem is prevented by locally adding a diffusion term to the equations to damp the numerical oscillations.
 An artificial diffusion term is introduced locally to the Euler equations to deal with flow discontinuity and the consequential numerical oscillations. Two models are implemented, a non-smooth and a smooth artificial viscosity model.
+
 \subsubsection{Non-smooth artificial viscosity model}
-For the non-smooth artificial viscosity model the added artificial viscosity is constant in each element and discontinuous between the elements. The Euler system is augmented by an added laplacian term on right hand side of equation \ref{eq:euler}. The diffusivity of the system is controlled by a variable viscosity coefficient $\epsilon$. The value of $\epsilon$ is dependent on $\epsilon_0$, which is the maximum viscosity that is dependent on the polynomial order ($p$), the mesh size ($h$) and the maximum wave speed and the local sensor value. Based on pre-defined sensor threshold values, the variable viscosity is set accordingly
+For the non-smooth artificial viscosity model the added artificial viscosity is constant in each element and discontinuous between the elements. The Euler system is augmented by an added Laplacian term on right hand side of equation \ref{eq:euler} \cite{persson2006sub}.
+The diffusivity of the system is controlled by a variable viscosity coefficient $\varepsilon$.
+For consistency $\varepsilon$ is proportional to the element size and inversely proportional to the polynomial order.
+Finally, from physical considerations $\varepsilon$ needs to be proportional to the maximum characteristic speed of the problem.
+The final form of the artificial viscosity is
 \begin{equation}
-   \epsilon
-=\epsilon_0\left \{ \begin{array}{l}
-    0\	\	\	\	\	\	\	\	\	\	\	\	\	\	\	\	\	\	\	\	\	\	\	\	\	\	\	\	\	\	\	\	\	 \mbox{if}\		\	 s_e<s_\kappa-\kappa\\
-    0.5\left(1+\sin{\frac{\pi\left(S_e-s_\kappa\right)}{2\kappa}}\right)\	\	\	\	\	\	\mbox{if}\		\	 s_\kappa-\kappa<S_e<s_\kappa+\kappa\\
-    1\	\	\	\	\	\	\	\	\	\	\	\	\	\	\	\	\	\	\	\	\	\	\	\	\	\	\	\	\	\	\	\	\	 \mbox{if}\		\ s_e > s_\kappa+\kappa
-      \end{array}
-    \right.
+  \varepsilon = \varepsilon_0 \frac{h}{p} \lambda_{max} S,
 \end{equation}
+where $S$ is a sensor.
+
+As shock sensor, a modal resolution-based indicator is used
+\begin{equation}\label{eq:sensor}
+  s_e = log_{10}\left( \frac{\langle q - \tilde{q}, q - \tilde{q}  \rangle}{\langle q, q \rangle} \right) ,
+\end{equation}
+where $\langle \cdot, \cdot \rangle$ represents a $L^2$ inner product, $q$ and $\tilde{q}$ are the full and truncated expansions of a state variable (in our case density)
+\begin{equation}
+  q(x) = \sum_{i=1}^{N(P)} \hat{q}_i \phi_i , \quad \tilde{q}(x) = \sum_{i=1}^{N(P-1)} \hat{q}_i \phi_i ,
+\end{equation}
+then the constant element-wise sensor is computed as follows
+\begin{equation}
+   S_\varepsilon
+=  \left \{ \begin{array}{lll}
+    0 &	 \mbox{if} & s_e<s_0-\kappa \\
+    \frac{1}{2}\left(1+\sin{\frac{\pi\left(s_e-s_0\right)}{2\kappa}}\right) &	\mbox{if} &	| s_e - s_0| \le \kappa\\
+    1 &	 \mbox{if} & s_e > s_0+\kappa
+      \end{array}
+    \right.,
+\end{equation}
+where $s_0 = s_\kappa - 4.25\;log_{10}(p)$.
 
 To enable the non-smooth viscosity model, the following line has to be added to the \inltt{SOLVERINFO} section:
 \begin{lstlisting}[style=XmlStyle]
@@ -467,22 +484,20 @@ To enable the non-smooth viscosity model, the following line has to be added to 
 <I PROPERTY="ShockCaptureType"      VALUE="NonSmooth"               />
  <SOLVERINFO>
 \end{lstlisting}
-The diffusivity is controlled by the following parameters:
+The diffusivity and the sensor can be controlled by the following parameters:
 \begin{lstlisting}[style=XmlStyle]
 <PARAMETERS>
 <P> Skappa 	 	= -1.3                     </P>
 <P> Kappa 	 	= 0.2                      </P>
-<P> mu0 	 	= 1.0                      </P>
+<P> mu0 	  	= 1.0                      </P>
 </PARAMETERS>
 \end{lstlisting}
-where mu0 is the maximum values for the viscosity coefficient,
-Kappa is half of the width of the transition interval and Skappa is
-the value of the centre of the interval.
+
 \begin{figure}[!htbp]
 \begin{center}
 \includegraphics[width = 0.47 \textwidth]{img/Mach_P4.pdf}
 \includegraphics[width = 0.47 \textwidth]{img/ArtVisc_P4.pdf}
-\caption{(a) Steady state solution for $M=0.8$ flow at $\alpha = 1.25^\circ$ past a NACA 0012 profile, (b) Artificial viscosity ($\epsilon$) distribution}
+\caption{(a) Steady state solution for $M=0.8$ flow at $\alpha = 1.25^\circ$ past a NACA 0012 profile, (b) Artificial viscosity ($\varepsilon$) distribution}
 \label{fig:}
 \end{center}
 \end{figure}
@@ -569,7 +584,7 @@ Q_{min}= P_{exp}+\frac{max(2P_{exp},P_{geom})}{2} + \frac{3}{2}
 where $Q_{min}$ is the minimum required number of quadrature
 points to exactly integrate the highest-degree of nonlinearity,
 $P_{exp}$ being the order of the polynomial expansion and $P_{geom}$
-being the geometric order of the mesh. Bear in mind thatwe are
+being the geometric order of the mesh. Bear in mind that we are
 using a discontinuous discretisation, meaning that aliasing
 effect are not fully controlled, since the boundary terms
 introduce non-polynomial functions into the problem.

@@ -132,6 +132,7 @@ v5.0.0
 - Fixed nparts option in FieldConvert and automated Info.xml generation (!995)
 - Added if statement to fix case of 1D/2D manifold interpolation in 1D/2D space,
   added check on dimensions for interpolation, fixed seg interp (!999)
+- Fix OutputTecplot in 3DH1 (!1016)
 
 **IncNavierStokesSolver**
 - Replace steady-state check based on difference of norms by check based on

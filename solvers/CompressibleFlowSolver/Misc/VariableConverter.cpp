@@ -209,7 +209,7 @@ void VariableConverter::GetDmuDT(
 
     for (int i = 0; i < nPts; ++i)
     {
-        tmp         = (0.5*temperature[i]+1.5*110.0)/(temperature[i]*(temperature[i]+110.0));
+        tmp         = 0.5*(temperature[i]+3.0*110.0)/(temperature[i]*(temperature[i]+110.0));
         DmuDT[i]    = mu[i]*tmp;
     }
 }

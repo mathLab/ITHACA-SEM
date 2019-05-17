@@ -245,16 +245,24 @@ void OutputTecplot::OutputFromExp(po::variables_map &vm)
     int nBases = m_f->m_exp[0]->GetExp(0)->GetNumBases();
 
     m_coordim = m_f->m_exp[0]->GetExp(0)->GetCoordim();
+    int totpoints = m_f->m_exp[0]->GetTotPoints();
+    int nPlanes = 0;
 
     if (m_f->m_numHomogeneousDir > 0)
     {
-        int nPlanes = m_f->m_exp[0]->GetZIDs().num_elements();
+        nPlanes = m_f->m_exp[0]->GetZIDs().num_elements();
         if (nPlanes == 1) // halfMode case
         {
             // do nothing
         }
         else
         {
+            // If Fourier points, output extra plane to fill domain
+            if (m_f->m_exp[0]->GetExpType() == MultiRegions::e3DH1D)
+            {
+                nPlanes += 1;
+                totpoints += m_f->m_exp[0]->GetPlane(0)->GetTotPoints();
+            }
             nBases += m_f->m_numHomogeneousDir;
             m_coordim += m_f->m_numHomogeneousDir;
             NekDouble tmp = m_numBlocks * (nPlanes - 1);
@@ -272,8 +280,6 @@ void OutputTecplot::OutputFromExp(po::variables_map &vm)
         Array<OneD, Array<OneD, NekDouble> >(m_f->m_variables.size()+m_coordim);
 
     // Get coordinates
-    int totpoints = m_f->m_exp[0]->GetTotPoints();
-
     for (int i = 0; i < m_coordim; ++i)
     {
         m_fields[i] = Array<OneD, NekDouble>(totpoints);
@@ -292,10 +298,60 @@ void OutputTecplot::OutputFromExp(po::variables_map &vm)
         m_f->m_exp[0]->GetCoords(m_fields[0], m_fields[1], m_fields[2]);
     }
 
-    // Add references to m_fields
-    for (int i = 0; i < m_f->m_variables.size(); ++i)
+    if (m_f->m_exp[0]->GetExpType() == MultiRegions::e3DH1D)
     {
-        m_fields[i + m_coordim] = m_f->m_exp[i]->UpdatePhys();
+        // Copy values
+        for (int i = 0; i < m_f->m_variables.size(); ++i)
+        {
+            m_fields[i + m_coordim] = Array<OneD, NekDouble>(totpoints);
+            Vmath::Vcopy( m_f->m_exp[0]->GetTotPoints(),
+                          m_f->m_exp[i]->UpdatePhys(), 1,
+                          m_fields[i + m_coordim], 1);
+        }
+    }
+    else
+    {
+        // Add references to m_fields
+        for (int i = 0; i < m_f->m_variables.size(); ++i)
+        {
+            m_fields[i + m_coordim] = m_f->m_exp[i]->UpdatePhys();
+        }
+    }
+
+    // If Fourier, fill extra plane with data
+    if (m_f->m_exp[0]->GetExpType() == MultiRegions::e3DH1D)
+    {
+        int points_on_plane = m_f->m_exp[0]->GetPlane(0)->GetTotPoints();
+        // update last extra plane points with the first plane values
+        for (int i = 0; i < m_f->m_variables.size(); ++i)
+        {
+            for(int j=0; j<points_on_plane; ++j)
+            {
+                m_fields[i + m_coordim][totpoints-1-points_on_plane+j] =
+                        m_fields[i + m_coordim][j];
+            }
+        }
+
+        //traverse elements, and get last plane coordinates using m_conn
+        for (int i = 0; i < m_f->m_exp[0]->GetNumElmts();++i)
+        {
+            int nq0 = m_f->m_exp[0]->GetExp(i)->GetNumPoints(0);
+            int nq1 = m_f->m_exp[0]->GetExp(i)->GetNumPoints(1);
+
+            auto conn = m_conn[i];
+            NekDouble z = m_fields[2][conn[nq0*nq1*(nPlanes-1)]] +
+                          (m_fields[2][conn[nq0*nq1]] - m_fields[2][conn[0]]);
+
+            for(int j=0; j<nq0*nq1; ++j)
+            {
+                m_fields[0][conn[conn.num_elements()-nq0*nq1+j]] =
+                        m_fields[0][conn[j]];
+                m_fields[1][conn[conn.num_elements()-nq0*nq1+j]] =
+                        m_fields[1][conn[j]];
+                m_fields[2][conn[conn.num_elements()-nq0*nq1+j]] =
+                        m_fields[2][conn[j]]+z;
+            }
+        }
     }
 
     WriteTecplotFile(vm);
@@ -802,7 +858,7 @@ void OutputTecplot::WriteTecplotConnectivity(std::ofstream &outfile)
     }
     else
     {
-        int cnt = 1; 
+        int cnt = 1;
         for (int i = 0; i < m_conn.size(); ++i)
         {
             const int nConn = m_conn[i].num_elements();
@@ -995,9 +1051,12 @@ void OutputTecplot::CalculateConnectivity()
                 // default to 2D case for HalfMode when nPlanes = 1
                 if (nPlanes > 1)
                 {
+                    // If Fourier points, output extra plane to fill domain
+                    nPlanes += 1;
                     totPoints = m_f->m_exp[0]->GetPlane(0)->GetTotPoints();
 
-                    Array<OneD, int> conn(8 * (np1 - 1) * (np0 - 1) * (nPlanes - 1));
+                    Array<OneD, int>
+                            conn(8 * (np1 - 1) * (np0 - 1) * (nPlanes - 1));
 
                     for (int n = 1; n < nPlanes; ++n)
                     {

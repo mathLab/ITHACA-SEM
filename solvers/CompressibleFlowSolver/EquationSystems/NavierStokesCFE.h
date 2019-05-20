@@ -64,6 +64,12 @@ namespace Nektar
     static std::string className;
 
     virtual ~NavierStokesCFE();
+    
+    typedef std::function<void (
+            const Array<OneD, NekDouble>    &,
+            const NekDouble                 &,
+            const Array<OneD, NekDouble>    &, 
+                DNekMatSharedPtr            &)> GetdFlux_dDeriv;
 
   protected:
     std::string                         m_ViscosityType;
@@ -76,6 +82,8 @@ namespace Nektar
     NekDouble                            m_Twall;
     /// Equation of system for computing temperature
     EquationOfStateSharedPtr             m_eos;
+
+    Array<OneD, GetdFlux_dDeriv>        m_GetdFlux_dDeriv_Array;
 
     NavierStokesCFE(const LibUtilities::SessionReaderSharedPtr& pSession,
                     const SpatialDomains::MeshGraphSharedPtr& pGraph);
@@ -188,7 +196,7 @@ namespace Nektar
     virtual void v_CalphysDeriv(
             const Array<OneD, const Array<OneD, NekDouble> >                &inarray,
                   Array<OneD,       Array<OneD, Array<OneD, NekDouble> > >  &qfield);
-  
+      
     /**
      * @brief return part of viscous Jacobian: 
      * \todo flux derived with Qx=[drho_dx,drhou_dx,drhov_dx,drhoE_dx] 

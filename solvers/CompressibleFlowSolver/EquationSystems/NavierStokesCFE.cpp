@@ -173,6 +173,49 @@ namespace Nektar
                 }
             }
         }
+
+        m_GetdFlux_dDeriv_Array = Array<OneD, GetdFlux_dDeriv> (m_spacedim);
+        switch (m_spacedim)
+        {
+        case 2:
+            /* code */
+            m_GetdFlux_dDeriv_Array[0] = std::bind(
+            &NavierStokesCFE::GetdFlux_dQx_2D, this, std::placeholders::_1,
+                                                     std::placeholders::_2,
+                                                     std::placeholders::_3,
+                                                     std::placeholders::_4);
+            
+            m_GetdFlux_dDeriv_Array[1] = std::bind(
+            &NavierStokesCFE::GetdFlux_dQy_2D, this, std::placeholders::_1,
+                                                     std::placeholders::_2,
+                                                     std::placeholders::_3,
+                                                     std::placeholders::_4);
+            break;
+        case 3:
+            /* code */
+            m_GetdFlux_dDeriv_Array[0] = std::bind(
+            &NavierStokesCFE::GetdFlux_dQx_3D, this, std::placeholders::_1,
+                                                     std::placeholders::_2,
+                                                     std::placeholders::_3,
+                                                     std::placeholders::_4);
+            
+            m_GetdFlux_dDeriv_Array[1] = std::bind(
+            &NavierStokesCFE::GetdFlux_dQy_3D, this, std::placeholders::_1,
+                                                     std::placeholders::_2,
+                                                     std::placeholders::_3,
+                                                     std::placeholders::_4);
+            m_GetdFlux_dDeriv_Array[2] = std::bind(
+            &NavierStokesCFE::GetdFlux_dQz_3D, this, std::placeholders::_1,
+                                                     std::placeholders::_2,
+                                                     std::placeholders::_3,
+                                                     std::placeholders::_4);
+            
+            break;
+        
+        default:
+
+            break;
+        }
     }
 
     void NavierStokesCFE::v_DoDiffusion(
@@ -1211,7 +1254,7 @@ namespace Nektar
     }
 
 #ifdef DEMO_IMPLICITSOLVER_JFNK_COEFF
-
+  
     /**
      * @brief return part of viscous Jacobian: 
      * \todo flux derived with Qx=[drho_dx,drhou_dx,drhov_dx,drhoE_dx] 
@@ -2032,7 +2075,6 @@ namespace Nektar
         }
     }
 
-    // TODO: currently only for 2D
     void NavierStokesCFE::v_GetDiffusionFluxJacPoint(
             const int                                           nelmt,
             const Array<OneD, NekDouble>                        &conservVar, 
@@ -2042,7 +2084,20 @@ namespace Nektar
             const Array<OneD, NekDouble>                        &normals, 
                  DNekMatSharedPtr                               &fluxJac)
     {
-        GetdFlux_dU_2D(normals,mu,DmuDT,conservVar,conseDeriv,fluxJac);
+        switch (m_spacedim)
+        {
+        case 2:
+            GetdFlux_dU_2D(normals,mu,DmuDT,conservVar,conseDeriv,fluxJac);
+            break;
+
+        case 3:
+            GetdFlux_dU_3D(normals,mu,DmuDT,conservVar,conseDeriv,fluxJac);
+            break;
+        
+        default:
+            ASSERTL0(false, "v_GetDiffusionFluxJacPoint not coded");
+            break;
+        }
     }
 
     void NavierStokesCFE::v_GetFluxDerivJacDirctn(
@@ -2097,11 +2152,20 @@ namespace Nektar
 
         DNekMatSharedPtr PointFJac = MemoryManager<DNekMat>
                                 ::AllocateSharedPtr(nConvectiveFields-1, nConvectiveFields);
+        // GetdFlux_dDeriv functor = NavierStokesCFE::GetdFlux_dQx_2D;
 
-        switch (nDervDir)
-        {
-            case 0:
-            {
+        // // store a free function
+        // std::function<void(int)> f_display;
+
+        // f_display = std::bind(
+        //     &NavierStokesCFE::print_num, this, std::placeholders::_1);
+        // f_display(-9);
+
+        // switch (nDervDir)
+        // {
+        //     case 0:
+        //     {
+                
                 for(int  nelmt = 0; nelmt < ntotElmt; nelmt++)
                 {
                     int nElmtPnt            = (*expvect)[nelmt]->GetTotPoints();
@@ -2131,7 +2195,9 @@ namespace Nektar
 
                         pointmu     = locmu[npnt];
 
-                        GetdFlux_dQx_2D(pointnormals,pointmu,pointVar,PointFJac);
+                        // GetdFlux_dQx_2D(pointnormals,pointmu,pointVar,PointFJac);
+                        // functor(pointnormals,pointmu,pointVar,PointFJac);
+                        m_GetdFlux_dDeriv_Array[nDervDir](pointnormals,pointmu,pointVar,PointFJac);
                         for (int j =0; j < nConvectiveFields; j++)
                         {
                             (*ElmtJac[nelmt][npnt])(0,j) =  0.0;
@@ -2146,63 +2212,111 @@ namespace Nektar
                         // (*ElmtJac[nelmt][npnt]) =   (*PointFJac);
                     }
                 }
-                break;
-            }
-            case 1:
-            {
-                for(int  nelmt = 0; nelmt < ntotElmt; nelmt++)
-                {
-                    int nElmtPnt            = (*expvect)[nelmt]->GetTotPoints();
-                    int noffest             = explist->GetPhys_Offset(nelmt);
+        //         break;
+        //     }
+        //     case 1:
+        //     {
+        //         for(int  nelmt = 0; nelmt < ntotElmt; nelmt++)
+        //         {
+        //             int nElmtPnt            = (*expvect)[nelmt]->GetTotPoints();
+        //             int noffest             = explist->GetPhys_Offset(nelmt);
                         
-                    for(int j = 0; j < nConvectiveFields; j++)
-                    {   
-                        locVars[j] = inarray[j]+noffest;
-                    }
+        //             for(int j = 0; j < nConvectiveFields; j++)
+        //             {   
+        //                 locVars[j] = inarray[j]+noffest;
+        //             }
 
-                    for(int j = 0; j < nSpaceDim; j++)
-                    {   
-                        locnormal[j] = normals[j]+noffest;
-                    }
+        //             for(int j = 0; j < nSpaceDim; j++)
+        //             {   
+        //                 locnormal[j] = normals[j]+noffest;
+        //             }
 
-                    locmu       =   mu      + noffest;
-                    for(int npnt = 0; npnt < nElmtPnt; npnt++)
-                    {
-                        for(int j = 0; j < nConvectiveFields; j++)
-                        {
-                            pointVar[j] = locVars[j][npnt];
-                        }
-                        for(int j = 0; j < nSpaceDim; j++)
-                        {   
-                            pointnormals[j] = locnormal[j][npnt];
-                        }
+        //             locmu       =   mu      + noffest;
+        //             for(int npnt = 0; npnt < nElmtPnt; npnt++)
+        //             {
+        //                 for(int j = 0; j < nConvectiveFields; j++)
+        //                 {
+        //                     pointVar[j] = locVars[j][npnt];
+        //                 }
+        //                 for(int j = 0; j < nSpaceDim; j++)
+        //                 {   
+        //                     pointnormals[j] = locnormal[j][npnt];
+        //                 }
 
-                        pointmu     = locmu[npnt];
+        //                 pointmu     = locmu[npnt];
                         
-                        GetdFlux_dQy_2D(pointnormals,pointmu,pointVar,PointFJac);
-                        for (int j =0; j < nConvectiveFields; j++)
-                        {
-                            (*ElmtJac[nelmt][npnt])(0,j) =  0.0;
-                        }
-                        for (int i =0; i < nConvectiveFields-1; i++)
-                        {
-                            for (int j =0; j < nConvectiveFields; j++)
-                            {
-                                (*ElmtJac[nelmt][npnt])(i+1,j) =  (*PointFJac)(i,j);
-                            }
-                        }
-                        // (*ElmtJac[nelmt][npnt]) =   (*PointFJac);
-                    }
-                }
-                break;
-            }
-            default:
-            {
-                ASSERTL0(false, "only for 2D");
-                break;
-            }
-        }
-        return;
+        //                 GetdFlux_dQy_2D(pointnormals,pointmu,pointVar,PointFJac);
+        //                 for (int j =0; j < nConvectiveFields; j++)
+        //                 {
+        //                     (*ElmtJac[nelmt][npnt])(0,j) =  0.0;
+        //                 }
+        //                 for (int i =0; i < nConvectiveFields-1; i++)
+        //                 {
+        //                     for (int j =0; j < nConvectiveFields; j++)
+        //                     {
+        //                         (*ElmtJac[nelmt][npnt])(i+1,j) =  (*PointFJac)(i,j);
+        //                     }
+        //                 }
+        //                 // (*ElmtJac[nelmt][npnt]) =   (*PointFJac);
+        //             }
+        //         }
+        //         break;
+        //     }
+        //     // case 2:
+        //     // {
+        //     //     for(int  nelmt = 0; nelmt < ntotElmt; nelmt++)
+        //     //     {
+        //     //         int nElmtPnt            = (*expvect)[nelmt]->GetTotPoints();
+        //     //         int noffest             = explist->GetPhys_Offset(nelmt);
+                        
+        //     //         for(int j = 0; j < nConvectiveFields; j++)
+        //     //         {   
+        //     //             locVars[j] = inarray[j]+noffest;
+        //     //         }
+
+        //     //         for(int j = 0; j < nSpaceDim; j++)
+        //     //         {   
+        //     //             locnormal[j] = normals[j]+noffest;
+        //     //         }
+
+        //     //         locmu       =   mu      + noffest;
+        //     //         for(int npnt = 0; npnt < nElmtPnt; npnt++)
+        //     //         {
+        //     //             for(int j = 0; j < nConvectiveFields; j++)
+        //     //             {
+        //     //                 pointVar[j] = locVars[j][npnt];
+        //     //             }
+        //     //             for(int j = 0; j < nSpaceDim; j++)
+        //     //             {   
+        //     //                 pointnormals[j] = locnormal[j][npnt];
+        //     //             }
+
+        //     //             pointmu     = locmu[npnt];
+                        
+        //     //             GetdFlux_dQz_3D(pointnormals,pointmu,pointVar,PointFJac);
+        //     //             for (int j =0; j < nConvectiveFields; j++)
+        //     //             {
+        //     //                 (*ElmtJac[nelmt][npnt])(0,j) =  0.0;
+        //     //             }
+        //     //             for (int i =0; i < nConvectiveFields-1; i++)
+        //     //             {
+        //     //                 for (int j =0; j < nConvectiveFields; j++)
+        //     //                 {
+        //     //                     (*ElmtJac[nelmt][npnt])(i+1,j) =  (*PointFJac)(i,j);
+        //     //                 }
+        //     //             }
+        //     //             // (*ElmtJac[nelmt][npnt]) =   (*PointFJac);
+        //     //         }
+        //     //     }
+        //     //     break;
+        //     // }
+        //     default:
+        //     {
+        //         ASSERTL0(false, "only for 2D");
+        //         break;
+        //     }
+        // }
+        // return;
     }
 
     // void NavierStokesCFE::v_GetFluxDerivJacDirctn(
@@ -2291,7 +2405,6 @@ namespace Nektar
         }
         m_diffusion->DiffuseCalculateDerivative(nConvectiveFields,m_fields,inarray,qfield,pFwd,pBwd);
     }
-    
 #endif
 
 }

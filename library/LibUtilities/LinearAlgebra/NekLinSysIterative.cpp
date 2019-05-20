@@ -428,13 +428,13 @@ namespace Nektar
         eps     =   eps*m_prec_factor;
         eta[0] = sqrt(eps);
 
-        // If input residual is less than tolerance skip solve.
-        // if (eps * m_prec_factor < m_tolerance * m_tolerance * m_rhs_magnitude)
-        if (eps < m_tolerance * m_tolerance * m_rhs_magnitude)
-        {
-            m_converged = true;
-            return eps;
-        }
+        // // If input residual is less than tolerance skip solve.
+        // // if (eps * m_prec_factor < m_tolerance * m_tolerance * m_rhs_magnitude)
+        // if (eps < m_tolerance * m_tolerance * m_rhs_magnitude)
+        // {
+        //     m_converged = true;
+        //     return eps;
+        // }
 
         // Give an order for the entries in Hessenburg matrix
         for(int nd = 0; nd < m_maxstorage; ++nd)
@@ -501,7 +501,7 @@ namespace Nektar
             if((!truncted) || (nd < m_maxhesband))
             {
                 // if (eps * m_prec_factor < m_tolerance * m_tolerance * m_rhs_magnitude )
-                if (eps < m_tolerance * m_tolerance * m_rhs_magnitude )
+                if ((eps < m_tolerance * m_tolerance * m_rhs_magnitude)&&nd>1 )
                 {
                     m_converged = true;
                 }

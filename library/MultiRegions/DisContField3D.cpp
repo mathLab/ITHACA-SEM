@@ -550,6 +550,14 @@ using namespace std;
             m_locTraceToTraceMap = MemoryManager<LocTraceToTraceMap>::
                 AllocateSharedPtr(*this, m_trace, elmtToTrace,
                                   m_leftAdjacentFaces);
+
+            
+            Array<OneD, Array<OneD, Array<OneD, int > > >   map;
+            bool flag;
+            CalcuTracephysToLeftRightExpphysMap(flag,map);
+            m_locTraceToTraceMap->SetTracephysToLeftRightExpphysMap(map);
+            m_locTraceToTraceMap->SetflagTracephysToLeftRightExpphysMap(flag);
+
          }
 
         /**
@@ -2708,5 +2716,78 @@ using namespace std;
                 }
             }
         }
+
+
+#ifdef DEMO_IMPLICITSOLVER_JFNK_COEFF
+
+// // int n, cnt, npts, e;
+
+//             // Zero vectors.
+//             Vmath::Zero(Fwd.num_elements(), Fwd, 1);
+//             Vmath::Zero(Bwd.num_elements(), Bwd, 1);
+             
+//             Array<OneD, NekDouble> facevals(m_locTraceToTraceMap->
+//                                             GetNLocTracePts());
+//             m_locTraceToTraceMap->LocTracesFromField(field,facevals);
+//             m_locTraceToTraceMap->InterpLocFacesToTrace(0, facevals, Fwd);
+            
+//             Array<OneD, NekDouble> invals = facevals + m_locTraceToTraceMap->
+//                                                         GetNFwdLocTracePts();
+//             m_locTraceToTraceMap->InterpLocFacesToTrace(1, invals, Bwd);
+
+//             DisContField3D::v_PeriodicBwdCopy(Fwd,Bwd);
+
+
+        void DisContField3D::v_AddTraceIntegralToOffDiag(
+            const Array<OneD, const NekDouble> &FwdFlux, 
+            const Array<OneD, const NekDouble> &BwdFlux, 
+                  Array<OneD,       NekDouble> &outarray)
+        {
+            Array<OneD, NekDouble> FCoeffs(m_trace->GetNcoeffs());
+
+            m_trace->IProductWRTBase(FwdFlux,FCoeffs);
+            m_locTraceToTraceMap->AddTraceCoeffsToFieldCoeffs(1,FCoeffs,outarray);
+            m_trace->IProductWRTBase(BwdFlux,FCoeffs);
+            m_locTraceToTraceMap->AddTraceCoeffsToFieldCoeffs(0,FCoeffs,outarray);
+        }
+
+
+        void DisContField3D::v_CalcTraceJacMatIntegral(
+            const Array<OneD, const NekDouble> &Fn, 
+                  Array<OneD,       NekDouble> &outarray)
+        {
+            // Basis definition on each element
+            LibUtilities::BasisSharedPtr basis = (*m_exp)[0]->GetBasis(0);
+            if (basis->GetBasisType() != LibUtilities::eGauss_Lagrange)
+            {
+                Array<OneD, NekDouble> Fcoeffs(m_trace->GetNcoeffs());
+                m_trace->IProductWRTBase(Fn, Fcoeffs);
+            
+                m_locTraceToTraceMap->AddTraceCoeffsToFieldCoeffs(Fcoeffs,
+                                                               outarray);
+            }
+            else
+            {
+                int e, n, offset, t_offset;
+                Array<OneD, NekDouble> e_outarray;
+                Array<OneD, Array<OneD, LocalRegions::ExpansionSharedPtr> >
+                    &elmtToTrace = m_traceMap->GetElmtToTrace();
+
+                for(n = 0; n < GetExpSize(); ++n)
+                {
+                    offset = GetCoeff_Offset(n);
+                    for(e = 0; e < (*m_exp)[n]->GetNedges(); ++e)
+                    {
+                        t_offset = GetTrace()->GetPhys_Offset(
+                            elmtToTrace[n][e]->GetElmtId());
+                        (*m_exp)[n]->AddEdgeNormBoundaryInt(
+                            e, elmtToTrace[n][e],
+                            Fn+t_offset,
+                            e_outarray = outarray+offset);
+                    }
+                }
+            }
+        }
+#endif
     } // end of namespace
 } // end of namespace

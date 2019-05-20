@@ -1615,8 +1615,15 @@ namespace Nektar
                     resmaxm = max(resmaxm,abs(NonlinSysRes_1D[i]));
                 }
                 v_Comm->AllReduce(resmaxm, Nektar::LibUtilities::ReduceMax);
-                if(resmaxm<tol2Max)
+                if((resmaxm<tol2Max)&&k>0)
                 {
+                    // if(l_verbose)
+                    // {
+                    //     cout    << " resratio= "<<resratio<< " tol2Ratio= "<<tol2Ratio
+                    //             << " resnorm= "<<resnorm<< " tol2= "<<tol2
+                    //             << " resmaxm= "<<resmaxm<< " tol2Max= "<<tol2Max<< endl;
+                    // }
+                    
                 // at least one Newton Iteration 
                 // or else the flow field will not update 
                 // if(k>0)

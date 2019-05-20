@@ -189,6 +189,14 @@ namespace Nektar
                     SetUpPhysNormals();
                 }
             }
+            if(DeclareCoeffPhysArrays)
+            {
+                Array<OneD, Array<OneD, Array<OneD, int > > >   map;
+                bool flag;
+                CalcuTracephysToLeftRightExpphysMap(flag,map);
+                m_locTraceToTraceMap->SetTracephysToLeftRightExpphysMap(map);
+                m_locTraceToTraceMap->SetflagTracephysToLeftRightExpphysMap(flag);
+            }
         }
 
 
@@ -582,13 +590,6 @@ namespace Nektar
             m_locTraceToTraceMap = MemoryManager<LocTraceToTraceMap>::
                 AllocateSharedPtr(*this, m_trace, elmtToTrace,
                                   m_leftAdjacentEdges);
-
-            Array<OneD, Array<OneD, Array<OneD, int > > >   map;
-            bool flag;
-            CalcuTracephysToLeftRightExpphysMap(flag,map);
-            m_locTraceToTraceMap->SetTracephysToLeftRightExpphysMap(map);
-            m_locTraceToTraceMap->SetflagTracephysToLeftRightExpphysMap(flag);
-
             // set up the trace normal direction element length.
             // SetupElmtLengthTraceNormal();
         }
